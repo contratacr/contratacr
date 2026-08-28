@@ -11,7 +11,7 @@ function isNativeRequest(req: Request) {
   return /(?:^|;\s*)ccr_platform=native(?:;|$)/.test(req.headers.get("cookie") ?? "");
 }
 import { sendNotificationPush } from "@/lib/push/notify";
-import { sendBrevoEmail } from "@/lib/email/send";
+import { brandedEmailDocument, sendBrevoEmail } from "@/lib/email/send";
 import { notifyRecipientOutsideApp, usersWithActivePush } from "@/lib/direct-chat/outside-app-notify";
 
 type ConversationRow = {
@@ -413,8 +413,10 @@ export async function PATCH(req: Request) {
       to: "soporte@contratacr.com",
       replyTo: user.email ?? undefined,
       subject: `[Reporte] Mensaje directo bloqueado — conversación ${conversationId.slice(0, 8)}`,
-      html: `<div style="font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#374151;line-height:1.6;">
-        <h2 style="margin:0 0 12px;color:#162543;">Reporte desde el chat — ContrataCR</h2>
+      html: brandedEmailDocument({
+        title: "Reporte desde el chat — ContrataCR",
+        bodyHtml: `<div style="font-size:14px;color:#374151;line-height:1.6;">
+        <h1 style="font-size:20px;line-height:1.3;margin:0 0 12px;color:#162543;">Reporte desde el chat</h1>
         <p style="margin:0 0 6px;"><strong>Conversación:</strong> ${conversationId}</p>
         <p style="margin:0 0 6px;"><strong>Reportado por:</strong> ${user.email ?? "—"} (${reportingAsClient ? "cliente" : "profesional"})</p>
         <p style="margin:0 0 6px;"><strong>Usuario reportado:</strong> ${reportingAsClient ? `profesional ${conversation.professional_id ?? "—"}` : `cliente ${conversation.client_id}`}</p>
@@ -422,6 +424,7 @@ export async function PATCH(req: Request) {
         <div style="white-space:pre-wrap;">${escaped}</div>
         <p style="margin:16px 0 0;color:#6b7280;font-size:12px;">La conversación quedó bloqueada de inmediato para ambas partes. Revisa el reporte en el panel de administración.</p>
       </div>`,
+      }),
     }).catch((error) => console.error("[direct-chat] report email failed:", error));
     return NextResponse.json({ ok: true, blocked: true });
   }

@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocale } from "next-intl";
 import { useSearchParams } from "next/navigation";
-import { CheckCircle2, Search, X } from "lucide-react";
+import { CheckCircle2, Search, UsersRound, X } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { FollowButton, getLocalFollowIds } from "@/components/professionals/follow-button";
 import { useAuth } from "@/hooks/use-auth";
@@ -249,8 +249,13 @@ export function FollowNetworkTab({ onBack, initialView }: { onBack?: () => void;
           ) : loading && showLoadingSkeleton ? (
             <NetworkRowsSkeleton />
           ) : items.length === 0 ? (
-            <div className="grid h-full min-h-[230px] place-items-center text-center text-sm font-medium text-[#6b7280]">
-              {query ? (es ? "No encontramos resultados." : "No results found.") : (es ? "Todavía no hay perfiles aquí." : "No profiles here yet.")}
+            <div className="flex h-full min-h-[230px] flex-col items-center justify-center text-center">
+              <span className="grid h-12 w-12 place-items-center rounded-full bg-[#eaf7fc] text-[#009fd9]">
+                <UsersRound className="h-5 w-5" strokeWidth={2} />
+              </span>
+              <p className="mt-3 text-sm font-semibold text-[#374151]">
+                {query ? (es ? "No encontramos resultados." : "No results found.") : (es ? "Todavía no hay perfiles aquí." : "No profiles here yet.")}
+              </p>
             </div>
           ) : (
             <NetworkList items={items} view={view} es={es} onBack={onBack} removingFollowerId={removingFollowerId} removeFollower={removeFollower} />

@@ -17,7 +17,7 @@ import { getProfessionalDisplayName } from "@/lib/display-name";
 import { ResponsiveVerifiedName } from "@/components/professionals/responsive-verified-name";
 import { ProgressiveImage } from "@/components/ui/progressive-image";
 
-type SavedFilter = "professionals" | "offers" | "jobs";
+type SavedFilter = "all" | "professionals" | "offers" | "jobs";
 type SavedItemKind = "offer" | "job";
 
 type SavedItem = {
@@ -158,10 +158,11 @@ function SavedGenericCard({ item, onRemove }: { item: SavedItem; onRemove: (item
 
 export function SavedProfessionalsTab() {
   const t = useTranslations("savedPros");
+  const locale = useLocale();
   const { user, loading: authLoading } = useAuth();
   const [savedPros, setSavedPros] = useState<SavedPro[]>([]);
   const [savedItems, setSavedItems] = useState<SavedItem[]>([]);
-  const [filter, setFilter] = useState<SavedFilter>("professionals");
+  const [filter, setFilter] = useState<SavedFilter>("all");
   const [mounted, setMounted] = useState(false);
 
   const refreshPros = useCallback(() => {
@@ -225,34 +226,39 @@ export function SavedProfessionalsTab() {
   const offers = useMemo(() => savedItems.filter((item) => item.item_type === "offer"), [savedItems]);
   const jobs = useMemo(() => savedItems.filter((item) => item.item_type === "job"), [savedItems]);
   const total = savedPros.length + offers.length + jobs.length;
-  const showPros = filter === "professionals";
-  const showOffers = filter === "offers";
-  const showJobs = filter === "jobs";
+  const showPros = filter === "all" || filter === "professionals";
+  const showOffers = filter === "all" || filter === "offers";
+  const showJobs = filter === "all" || filter === "jobs";
 
-  // These are the three saveable content types. Keep every filter visible even
-  // when its current count is zero; only the former aggregate “Todos” filter is
-  // intentionally absent.
-  const availableFilters: SavedFilter[] = ["professionals", "offers", "jobs"];
+  // Los tres tipos que se pueden guardar, con "Todos" al frente (valor por
+  // defecto): al entrar se ve todo lo guardado y los chips refinan.
+  const availableFilters: SavedFilter[] = ["all", "professionals", "offers", "jobs"];
 
   if (!mounted || authLoading) return <PanelListSkeleton rows={3} hasData={total > 0} />;
 
   const tabs = availableFilters.map((id) => ({ id }));
   const tabLabels: Record<string, string> = {
+    all: locale === "en" ? "All" : "Todos",
     professionals: t("professionalsTab"),
     offers: t("offersTab"),
     jobs: t("jobsTab"),
   };
   const tabCounts = {
+    all: savedPros.length + offers.length + jobs.length,
     professionals: savedPros.length,
     offers: offers.length,
     jobs: jobs.length,
   };
-  const selectedCount = showPros ? savedPros.length : showOffers ? offers.length : jobs.length;
-  const selectedEmptyLabel = showPros
+  const selectedCount = filter === "all"
+    ? savedPros.length + offers.length + jobs.length
+    : filter === "professionals" ? savedPros.length : filter === "offers" ? offers.length : jobs.length;
+  const selectedEmptyLabel = filter === "professionals"
     ? t("emptyProfessionals")
-    : showOffers
+    : filter === "offers"
       ? t("emptyOffers")
-      : t("emptyJobs");
+      : filter === "jobs"
+        ? t("emptyJobs")
+        : (locale === "en" ? "You have not saved anything yet." : "Todavía no has guardado nada.");
 
   return (
     <div className="ccr-native-safe-list-end space-y-4">
@@ -262,9 +268,10 @@ export function SavedProfessionalsTab() {
         onChange={(id) => setFilter(id as SavedFilter)}
         counts={tabCounts}
         labelFor={(id) => tabLabels[id] ?? id}
+        variant="chips"
       />
 
-      <div className="overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white divide-y divide-[#f3f4f6]">
+      <div className="overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm divide-y divide-[#f3f4f6]">
         {showPros && savedPros.map((pro) => <SavedProCard key={`pro-${pro.id}`} pro={pro} onUnsave={handleUnsavePro} />)}
         {showOffers && offers.map((item) => <SavedGenericCard key={item.id} item={item} onRemove={handleRemoveItem} />)}
         {showJobs && jobs.map((item) => <SavedGenericCard key={item.id} item={item} onRemove={handleRemoveItem} />)}
@@ -272,7 +279,7 @@ export function SavedProfessionalsTab() {
           <div className="space-y-3 px-4 py-8 text-center">
             <Bookmark className="mx-auto h-7 w-7 text-[#009FD9]" aria-hidden="true" />
             <p className="text-sm font-semibold text-[#6b7280]">{selectedEmptyLabel}</p>
-            {showPros && (
+            {(filter === "all" || filter === "professionals") && (
               <Button asChild><Link href="/buscar">{t("searchPros")}</Link></Button>
             )}
           </div>

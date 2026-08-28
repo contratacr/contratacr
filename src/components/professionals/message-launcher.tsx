@@ -33,6 +33,10 @@ function buildDraftHref({
   initialMessage,
 }: MessageLauncherProps) {
   const params = new URLSearchParams({ draftChat: "1" });
+  if (typeof window !== "undefined") {
+    const origin = (window.location.pathname + window.location.search).replace(/^\/(?:es|en)(?=\/|$)/u, "") || "/";
+    params.set("back", origin);
+  }
   if (professionalId) params.set("professionalId", professionalId);
   if (professionalName) params.set("professionalName", professionalName);
   if (bookingId) params.set("bookingId", bookingId);
@@ -70,7 +74,10 @@ export function MessageLauncher(props: MessageLauncherProps) {
       return;
     }
 
-    const draftHref = buildDraftHref(props);
+    const autoMessage = initialMessage || (contextTitle && (bookingId || projectId || proposalId)
+      ? (isEn ? `Hi, I'm writing about "${contextTitle}".` : `Hola, te escribo por "${contextTitle}".`)
+      : "");
+    const draftHref = buildDraftHref({ ...props, initialMessage: autoMessage });
     if (!user) {
       router.push(`/login?redirect=${encodeURIComponent(draftHref)}`);
       return;
@@ -93,7 +100,8 @@ export function MessageLauncher(props: MessageLauncherProps) {
       });
       const payload = await response.json().catch(() => ({}));
       if (response.ok && payload.conversationId) {
-        router.push(`/mensajes?conversation=${encodeURIComponent(String(payload.conversationId))}`);
+        const origin = (window.location.pathname + window.location.search).replace(/^\/(?:es|en)(?=\/|$)/u, "") || "/";
+        router.push(`/mensajes?conversation=${encodeURIComponent(String(payload.conversationId))}&back=${encodeURIComponent(origin)}${autoMessage ? `&draftMessage=${encodeURIComponent(autoMessage)}` : ""}`);
         return;
       }
       router.push(draftHref);

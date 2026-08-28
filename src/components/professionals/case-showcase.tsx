@@ -39,8 +39,9 @@ export function CaseShowcase({
   const locale = useLocale();
   const t = useTranslations("profile");
   const tg = useTranslations("gallery");
-  // Filter is always a real profession (no "Todas") — defaults to the first with cases.
-  const [active, setActive] = useState<string>(professions[0] ?? "");
+  // "Todas" primero y por defecto: el visitante ve TODO el trabajo del pro al
+  // entrar; los chips por profesión refinan.
+  const [active, setActive] = useState<string>("all");
   // The opened case (detail modal) + the current photo index — null when closed.
   const [detail, setDetail] = useState<ShowcaseCase | null>(null);
   const [pi, setPi] = useState(0);
@@ -57,11 +58,12 @@ export function CaseShowcase({
     const extras = [...new Set(cases.map((c) => c.profession))].filter((p) => p && !professions.includes(p));
     return [...inOrder, ...extras];
   }, [professions, cases]);
-  // Keep the active filter valid (no "Todas") — fall back to the first profession with cases.
-  const showFilter = distinctProfs.length > 1;
+  // Con dos profesiones o más el refinamiento ya aporta (los chips no compiten
+  // con las pestañas de sección: son otro lenguaje visual).
+  const showFilter = distinctProfs.length >= 2;
   const countFor = (p: string) => cases.filter((c) => c.profession === p).length;
-  const selectedActive = distinctProfs.includes(active) ? active : distinctProfs[0] ?? "";
-  const shown = cases.filter((c) => c.profession === selectedActive);
+  const selectedActive = distinctProfs.includes(active) ? active : "all";
+  const shown = selectedActive === "all" ? cases : cases.filter((c) => c.profession === selectedActive);
 
   useEffect(() => {
     if (!initialCaseId || detail) return;
@@ -120,12 +122,12 @@ export function CaseShowcase({
     <div className="flex flex-col gap-5">
       {showFilter && (
         <StatusFilterTabs
-          tabs={distinctProfs.map((p) => ({ id: p }))}
+          tabs={[{ id: "all" }, ...distinctProfs.map((p) => ({ id: p }))]}
           value={selectedActive}
           onChange={setActive}
-          labelFor={profLabel}
-          counts={Object.fromEntries(distinctProfs.map((p) => [p, countFor(p)]))}
-          mobileLayout="wrap"
+          labelFor={(id) => (id === "all" ? (locale === "en" ? "All" : "Todas") : profLabel(id))}
+          counts={{ all: cases.length, ...Object.fromEntries(distinctProfs.map((p) => [p, countFor(p)])) }}
+          variant="chips"
         />
       )}
 
@@ -177,6 +179,7 @@ export function CaseShowcase({
                     </span>
                   </div>
                 )}
+
               </div>
             </div>
           );

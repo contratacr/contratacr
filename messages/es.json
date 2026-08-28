@@ -649,7 +649,7 @@
     "availPublicNote": "Hay horarios disponibles. Usa <b>Ver disponibilidad</b> para elegir una fecha y hora y reservar directamente.",
     "availPrivateTitle": "La disponibilidad de este perfil no es pública.",
     "availPrivateDesc": "Contáctalo directamente y conoce sus horarios.",
-    "casosSubtitle": "Fotos de trabajos anteriores de {name}.",
+    "casosSubtitle": "Trabajos y proyectos de {name}.",
     "otherWorks": "Otros trabajos",
     "noCasos": "Todavía no hay casos de éxito.",
     "likeLabel": "Me gusta",
@@ -1853,6 +1853,9 @@
       "ignoreOptional": "Ignorar pasos opcionales",
       "ignoredCount": "{count, plural, one {# ignorado} other {# ignorados}}",
       "compactProgress": "{percent}% completado",
+      "nextStep": "Siguiente paso",
+      "groupCore": "Esenciales",
+      "groupOptional": "Para destacar",
       "viewSteps": "Ver pasos"
     },
     "modeUse": "Modo cliente",

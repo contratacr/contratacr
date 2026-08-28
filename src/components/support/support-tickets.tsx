@@ -1,6 +1,7 @@
 "use client";
 
 import { isNativeAppRuntime } from "@/hooks/use-native-app";
+import { lockBodyScroll } from "@/lib/body-scroll-lock";
 
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
@@ -14,7 +15,6 @@ import { supportTicketRef } from "@/lib/support-ticket";
 import { LONG_TEXT_MAX_LENGTH, limitText } from "@/lib/text-limits";
 import { useAppDialog } from "@/hooks/use-app-dialog";
 import { PanelEmptyState, PanelListSkeleton } from "@/components/ui/content-loading";
-import { lockBodyScroll } from "@/lib/body-scroll-lock";
 
 type Ticket = {
   id: string;
@@ -73,6 +73,15 @@ const LEGACY_SUBJECT_TO_KEY: Record<string, (typeof SUPPORT_SUBJECT_KEYS)[number
 };
 
 type SupportThreadState = { open: boolean; title: string | null; reference: string | null };
+
+// One expired-token retry after refreshing the session — a stale token was
+// surfacing as "No pudimos cargar soporte" right after resuming the app.
+async function fetchWithSessionRetry(input: string, init?: RequestInit) {
+  const res = await fetch(input, init);
+  if (res.status !== 401) return res;
+  try { await createClient().auth.refreshSession(); } catch { /* retry answers */ }
+  return fetch(input, init);
+}
 
 export function SupportTickets({
   onUnreadChange,
@@ -137,7 +146,9 @@ export function SupportTickets({
 
   useLayoutEffect(() => {
     const native = isNativeAppRuntime();
-    if ((!openId && !(showNewTicketPage && native)) || !window.matchMedia("(max-width: 1023px)").matches) return;
+    // Solo el HILO va a pantalla completa, igual que el chat de mensajes: un
+    // encabezado, sin barra inferior. El formulario nuevo es una sección normal.
+    if (!openId || !window.matchMedia("(max-width: 1023px)").matches) return;
     const root = document.documentElement;
     const body = document.body;
     root.classList.add("contratacr-chat-thread-open");
@@ -148,7 +159,7 @@ export function SupportTickets({
       body.classList.remove("contratacr-chat-thread-open");
       releaseBodyScroll();
     };
-  }, [openId, showNewTicketPage]);
+  }, [openId]);
 
   useEffect(() => {
     if (!openId) return;
@@ -200,7 +211,7 @@ export function SupportTickets({
   const load = useCallback(() => {
     setLoading(true);
     setLoadError(false);
-    fetch("/api/support")
+    fetchWithSessionRetry("/api/support")
       .then(async (r) => {
         const data = await r.json().catch(() => ({}));
         if (!r.ok) throw new Error(data?.error ?? "support-load-failed");
@@ -221,7 +232,7 @@ export function SupportTickets({
   const openTicket = useCallback(async (id: string) => {
     setOpenId(id);
     setThreadLoading(true);
-    fetch(`/api/support?id=${id}`)
+    fetchWithSessionRetry(`/api/support?id=${id}`)
       .then(async (r) => {
         const data = await r.json().catch(() => ({}));
         if (!r.ok) throw new Error(data?.error ?? "support-ticket-load-failed");
@@ -361,7 +372,9 @@ export function SupportTickets({
       <>
       <div className="ccr-support-thread flex min-h-0 flex-1 flex-col">
         {threadLoading || !ticket ? (
-          <PanelListSkeleton rows={2} hasData={!!ticket} />
+          <div className="grid min-h-0 flex-1 place-items-center px-4">
+            <PanelListSkeleton rows={2} hasData={!!ticket} />
+          </div>
         ) : (
           <div className="ccr-support-thread-card flex min-h-0 flex-1 flex-col overflow-hidden bg-white">
             <header className="grid min-h-[64px] shrink-0 grid-cols-[40px_minmax(0,1fr)] items-center gap-2 border-b border-[#e3ebf1] bg-white px-3 py-2 shadow-[0_8px_22px_-24px_rgba(15,23,42,0.45)] sm:grid-cols-[44px_minmax(0,1fr)] sm:gap-3 sm:px-5">

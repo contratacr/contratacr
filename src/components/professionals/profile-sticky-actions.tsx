@@ -18,6 +18,8 @@ export function ProfileStickyActions({
   isOwn,
   canCall,
   contactCardId = "perfil-contacto",
+  onAvailability,
+  availabilityActive,
 }: {
   professionalId: string;
   professionalName: string;
@@ -25,13 +27,17 @@ export function ProfileStickyActions({
   isOwn: boolean;
   canCall?: boolean;
   contactCardId?: string;
+  /** Cuando existe, el botón Disponibilidad cambia a la pestaña en vez de scrollear. */
+  onAvailability?: () => void;
+  /** Re-arma el observer cuando la pestaña Disponibilidad entra/sale. */
+  availabilityActive?: boolean;
 }) {
   const locale = useLocale();
   const [show, setShow] = useState(false);
 
   useEffect(() => {
     const card = document.getElementById(contactCardId);
-    if (!card) return;
+    if (!card) { setShow(true); return; }
     const observer = new IntersectionObserver(
       (entries) => {
         const entry = entries[0];
@@ -43,7 +49,7 @@ export function ProfileStickyActions({
     );
     observer.observe(card);
     return () => observer.disconnect();
-  }, [contactCardId]);
+  }, [contactCardId, availabilityActive]);
 
   if (isOwn || !show) return null;
 
@@ -57,7 +63,7 @@ export function ProfileStickyActions({
       <div className="mx-auto flex max-w-xl items-center gap-2">
         <button
           type="button"
-          onClick={scrollToCard}
+          onClick={() => (onAvailability ? onAvailability() : scrollToCard())}
           className="inline-flex h-11 shrink-0 items-center justify-center gap-1.5 rounded-full border border-[#cfe6f5] bg-[#EBF5FB] px-3.5 text-[13px] font-bold text-[#0089bb]"
         >
           <CalendarDays className="h-4 w-4" />

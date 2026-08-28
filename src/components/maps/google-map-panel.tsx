@@ -78,13 +78,12 @@ const MAP_CSS =
   ".ccr-pop-top{display:flex;gap:10px;align-items:flex-start;}" +
   ".ccr-av{position:relative;width:42px;height:42px;border-radius:9999px;overflow:hidden;background:#EBF5FB;color:#009FD9;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;flex-shrink:0;}" +
   ".ccr-av img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}" +
-  ".ccr-pop-name{font-weight:700;color:#111827;font-size:14px;line-height:1.2;padding-right:18px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}" +
+  ".ccr-pop-name{font-weight:700;color:#111827;font-size:14px;line-height:1.2;padding-right:18px;display:flex;align-items:center;gap:4px;min-width:0;}"
+  + ".ccr-pop-name-text{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}" +
   ".ccr-pop-sub{color:#6b7280;font-size:11px;font-weight:600;line-height:1.25;margin-top:2px;}" +
-  // "Verificado" pill — EXACTLY the /buscar card's badge: solid brand-blue #009FD9
-  // rounded-full pill, white text, font-size 10px / weight 600, padding 2px 8px
-  // (= card `rounded-full bg-[#009FD9] px-2 py-0.5 text-[10px] font-semibold text-white`).
-  // NO green, NO check icon.
-  ".ccr-ver{display:inline-flex;width:14px;height:14px;color:#009FD9;margin-left:4px;vertical-align:middle;}" +
+  // Verification seal — the SAME Instagram-style solid badge as <VerifiedSeal />
+  // (see src/components/ui/verified-seal.tsx), inlined because this card is raw HTML.
+  ".ccr-ver{display:inline-flex;flex:none;width:14px;height:14px;color:#009FD9;}" +
   ".ccr-ver svg{display:block;width:14px;height:14px;}" +
   ".ccr-pop-prof{display:flex;align-items:center;gap:4px;color:#6b7280;font-size:12px;margin-top:2px;line-height:1.3;}" +
   ".ccr-pop-more{display:inline-flex;align-items:center;font-size:10px;font-weight:800;color:#526277;line-height:1;}" +
@@ -321,7 +320,8 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
     if (popupRef.current && popupKeyRef.current === pro.id) return; // already showing this pin
     closePopup();
     popupKeyRef.current = pro.id;
-    const href = `/${locale}/profesionales/${pro.slug}`;
+    const from = encodeURIComponent(window.location.pathname + window.location.search);
+    const href = `/${locale}/profesionales/${pro.slug}?from=${from}`;
     const professionLabels = (pro.professions ?? []).filter(Boolean);
     const primaryProfession = professionLabels[0] || pro.categoryLabel || "";
     const extraProfessions = Math.max(0, professionLabels.length - 1);
@@ -330,7 +330,7 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
     const secondaryName = displayName.secondaryDesktop;
     const verifiedLabel = locale === "en" ? "Verified by ContrataCR" : "Verificado por ContrataCR";
     const verifiedMarkup = pro.verified
-      ? `<span class="ccr-ver" role="img" aria-label="${verifiedLabel}" title="${verifiedLabel}"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/><path d="m8.3 12.1 2.3 2.3 5.2-5.2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>`
+      ? `<span class="ccr-ver" role="img" aria-label="${verifiedLabel}" title="${verifiedLabel}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z" fill="currentColor"/><path d="m9 12 2 2 4-4" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>`
       : "";
     const ratingMetric = pro.popupMetricLabel?.match(/^★\s*([0-9.]+)\s*\((.+)\)$/);
     const metricMarkup = ratingMetric
@@ -348,7 +348,7 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
         `<div class="ccr-pop-top">` +
           `<div class="ccr-av">${avatarMarkup}</div>` +
           `<div style="min-width:0;">` +
-            `<div class="ccr-pop-name">${esc(primaryName)}${verifiedMarkup}</div>` +
+            `<div class="ccr-pop-name"><span class="ccr-pop-name-text">${esc(primaryName)}</span>${verifiedMarkup}</div>` +
             (secondaryName ? `<div class="ccr-pop-sub">${esc(secondaryName)}</div>` : "") +
             (primaryProfession ? `<div class="ccr-pop-prof"><span>${esc(primaryProfession)}</span>${extraProfessions > 0 ? `<span class="ccr-pop-more">+${extraProfessions}</span>` : ""}</div>` : "") +
             metricMarkup +
@@ -357,6 +357,7 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
         `</div>` +
       `</a>`;
     wrap.querySelector(".ccr-pop-x")?.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); hidePopup(); });
+    wrap.querySelector("a.ccr-pop")?.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); hidePopup(); router.push(href); });
     popupRef.current = createGoogleMarker(g, { map, position: pos, content: wrap, zIndex: 100000 });
     popupContentElRef.current = wrap; // measured by the proximity-hide on mousemove
     if (canHoverRef.current) neutralizePopup(popupRef.current, wrap); // desktop hover anti-flicker only; touch maps must keep native gestures
@@ -536,7 +537,7 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
         if (canHover) {
           // DESKTOP CLICK → go straight to the professional (reliable navigation).
           hidePopup();
-          router.push(`/${locale}/profesionales/${pro.slug}`);
+          router.push(`/${locale}/profesionales/${pro.slug}?from=${encodeURIComponent(window.location.pathname + window.location.search)}`);
         } else {
           // MOBILE TAP → show the stable mini-card (tap the card itself to open the profile).
           showPinPopup();
@@ -545,7 +546,7 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
       marker.addListener?.("click", () => {
         if (canHover) {
           hidePopup();
-          router.push(`/${locale}/profesionales/${pro.slug}`);
+          router.push(`/${locale}/profesionales/${pro.slug}?from=${encodeURIComponent(window.location.pathname + window.location.search)}`);
         } else {
           showPinPopup();
         }

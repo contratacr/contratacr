@@ -257,7 +257,7 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
   return <main className="min-h-[calc(100vh-72px)] overflow-x-clip bg-white pb-16 text-[#162543] lg:bg-[#f4f7fa]">
     {showingMobileDetail && selected && (
       <section className="lg:hidden">
-        <header className="sticky top-0 z-20 flex h-14 items-center justify-center border-b border-[#dfe6ec] bg-white px-14">
+        <header className="ccr-marketplace-sticky sticky top-0 z-20 flex h-14 items-center justify-center border-b border-[#dfe6ec] bg-white px-14">
           <Link
             href={detailBackHref}
             aria-label={detailBackLabel}
@@ -278,7 +278,7 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
         />
       </section>
     )}
-    <section className={`${showingMobileDetail ? "hidden " : ""}sticky top-0 z-20 border-b border-[#d5d8dc] bg-white lg:hidden`}>
+    <section className={`${showingMobileDetail ? "hidden " : ""}ccr-marketplace-sticky sticky top-0 z-20 border-b border-[#d5d8dc] bg-white lg:hidden`}>
       <div className="px-0">
         <div className="relative flex min-h-[56px] items-center justify-center px-14">
           <button type="button" onClick={() => window.dispatchEvent(new Event("ccr:open-mobile-menu"))} aria-label={copy.openMenu} className="absolute left-3 top-1/2 grid h-11 w-11 -translate-y-1/2 place-items-center text-[#162543] transition hover:bg-[#eef5f9]">

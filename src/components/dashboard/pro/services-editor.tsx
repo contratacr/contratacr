@@ -17,6 +17,7 @@ import { useCustomCategories } from "@/lib/data/use-custom-categories";
 import { PRICING_TYPES, TAX_INCLUDED_SUFFIX, formatServicePrice, splitPricingLabel, type PricingType } from "@/lib/pricing";
 import { useReportSaveStatus } from "@/components/dashboard/save-status-context";
 import { UnsavedChangesGuard } from "@/components/dashboard/unsaved-changes-guard";
+import { useAppDialog } from "@/hooks/use-app-dialog";
 import { parseMoneyAmount } from "@/lib/money-limits";
 import { AppTooltip } from "@/components/ui/app-tooltip";
 import { IMAGE_ACCEPT } from "@/lib/upload-validation";
@@ -233,6 +234,7 @@ export function ServicesEditor({
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [dirty, setDirty] = useState(false);
+  const { dialogNode, confirm } = useAppDialog();
   const [pendingNewCategory, setPendingNewCategory] = useState<string | null>(null);
   const [imageUploading, setImageUploading] = useState(false);
   const serviceImageInputRef = useRef<HTMLInputElement>(null);
@@ -369,18 +371,29 @@ export function ServicesEditor({
     const next = [id, ...professions.filter((p) => p !== id)];
     setProfessions(next);
     setSaved(false);
-    setDirty(true);
+    void persist(next, services, { intent: "internal" });
   }
 
   // Remove a service entirely (the category + its info), while keeping at least one active service.
-  function removeService(id: string) {
+  // Se aplica de inmediato, así que se confirma antes.
+  async function removeService(id: string) {
     const next = professions.filter((p) => p !== id);
     const nextServices = services.filter((s) => effectiveCategory(s) !== id);
     if (!ensureAtLeastOneActiveService(next, nextServices)) return;
+    const result = await confirm({
+      title: locale === "en" ? "Delete service" : "Eliminar servicio",
+      description: locale === "en"
+        ? "This service and its information will be removed from your profile."
+        : "Este servicio y su información se quitarán de tu perfil.",
+      confirmLabel: locale === "en" ? "Delete" : "Eliminar",
+      cancelLabel: locale === "en" ? "Cancel" : "Cancelar",
+      tone: "danger",
+    });
+    if (!result.confirmed) return;
     setProfessions(next);
     setServices(nextServices);
     setSaved(false);
-    setDirty(true);
+    await persist(next, nextServices, { intent: "internal" });
   }
 
   // Toggle a service active/inactive (inactive = paused, hidden from clients). Stored on
@@ -397,7 +410,7 @@ export function ServicesEditor({
     if (!ensureAtLeastOneActiveService(professions, next)) return;
     setServices(next);
     setSaved(false);
-    setDirty(true);
+    void persist(professions, next, { intent: "internal" });
   }
 
   // Open the info editor for a service, pre-filled from its current info.
@@ -613,7 +626,7 @@ export function ServicesEditor({
   }
 
   const listActions = (
-    <div className="flex flex-col gap-2 border-t border-[#f3f4f6] pt-4 sm:flex-row sm:justify-end">
+    <div className="hidden">
       <button
         type="button"
         onClick={cancelListChanges}
@@ -647,6 +660,7 @@ export function ServicesEditor({
 
   return (
     <div className="flex flex-col gap-4">
+      {dialogNode}
       {formError && !formOpen ? (
         <p className="rounded-lg border border-red-100 bg-red-50 px-3 py-2 text-sm text-red-600">{formError}</p>
       ) : null}
@@ -741,7 +755,7 @@ export function ServicesEditor({
                       <AppTooltip label={t("removeProfession")}>
                         <button
                           type="button"
-                          onClick={() => removeService(prof)}
+                          onClick={() => void removeService(prof)}
                           aria-label={t("removeProfession")}
                           className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-[#9ca3af] transition-colors hover:bg-red-50 hover:text-red-500"
                         >
@@ -806,8 +820,9 @@ export function ServicesEditor({
               </Button>
             </>
           }
+          bodyClassName="bg-[#f4f7fa] px-4 py-5"
         >
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-4 rounded-2xl border border-[#e5e7eb] bg-white p-5 shadow-sm">
             <div ref={categoryFieldRef}>
               <label className="mb-1.5 block text-sm font-medium text-[#374151]">{t("serviceLabel")}</label>
               <CategorySearch

@@ -272,7 +272,7 @@ export function NotificationLiveToast({ scope = "all" }: { scope?: NotificationS
       : `Mientras no estabas en la app ${unreadCount === 1 ? "llegó 1 notificación" : `llegaron ${unreadCount} notificaciones`}.`;
     const targetHref = notificationsCenterHref(locale);
     return (
-      <div className="fixed bottom-24 left-3 right-3 z-[180] sm:bottom-auto sm:left-auto sm:right-5 sm:top-20 sm:w-[360px]">
+      <div className="fixed left-3 right-3 top-[calc(var(--ccr-native-header-height,4rem)+0.75rem)] z-[180] sm:left-auto sm:right-5 sm:top-20 sm:w-[360px]">
         <div className="rounded-2xl border border-[#d8e8f1] bg-white shadow-[0_18px_45px_-20px_rgba(15,23,42,0.35)]">
           <button type="button" onClick={() => {
             setPostLoginUnreadCount(null);
@@ -331,7 +331,7 @@ export function NotificationLiveToast({ scope = "all" }: { scope?: NotificationS
   }
 
   return (
-    <div className="fixed bottom-24 left-3 right-3 z-[180] sm:bottom-auto sm:left-auto sm:right-5 sm:top-20 sm:w-[360px]">
+    <div className="fixed left-3 right-3 top-[calc(var(--ccr-native-header-height,4rem)+0.75rem)] z-[180] sm:left-auto sm:right-5 sm:top-20 sm:w-[360px]">
       <div className="rounded-2xl border border-[#d8e8f1] bg-white shadow-[0_18px_45px_-20px_rgba(15,23,42,0.35)]">
         <button type="button" onClick={openToast} className="flex w-full items-center gap-3 px-4 py-3 pr-10 text-left">
           <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#EAF7FD] text-[#009FD9]">

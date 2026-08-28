@@ -333,22 +333,22 @@ export function OfferForm({ professionalId, serviceOptions, backHref = "/ofertas
   }
 
   return (
-    <main className={presentation === "modal" ? "bg-white text-[#162543]" : "min-h-[calc(100vh-72px)] bg-white text-[#162543] lg:bg-[#f4f7fa] lg:px-6 lg:py-8"}>
+    <main className={presentation === "modal" ? "bg-[#f4f7fa] text-[#162543]" : "min-h-[calc(100vh-72px)] bg-[#f4f7fa] text-[#162543] lg:px-6 lg:py-10"}>
       <header className={presentation === "modal" ? "hidden" : "sticky top-0 z-20 border-b border-[#dfe8f0] bg-white lg:hidden"}>
         <div className="relative flex min-h-[56px] items-center justify-center px-14">
           <Link href={backHref} aria-label={copy.back} className="absolute left-3 top-1/2 grid h-11 w-11 -translate-y-1/2 place-items-center text-[#162543]"><ArrowLeft className="h-6 w-6 stroke-[2.4]" /></Link>
           <h1 className="truncate text-center text-[17px] font-extrabold">{editing ? copy.editTitle : copy.publishTitle}</h1>
         </div>
       </header>
-      <div className={presentation === "modal" ? "mx-auto max-w-3xl" : "mx-auto max-w-3xl px-4 py-5 sm:px-6 lg:px-0 lg:py-0"}>
+      <div className={presentation === "modal" ? "mx-auto max-w-3xl px-4 py-5" : "mx-auto max-w-3xl px-4 py-5 sm:px-6 lg:px-0 lg:py-0"}>
         <div className={presentation === "modal" ? "hidden" : "mb-4 hidden items-center justify-between gap-4 rounded-lg border border-[#dfe8f0] bg-white px-4 py-3 shadow-sm lg:flex"}>
           <Link href={backHref} aria-label={copy.backToOffers} className="inline-flex h-10 items-center gap-2 rounded-lg px-2 text-sm font-extrabold text-[#162543] transition hover:bg-[#f1f9fc] hover:text-[#008fc3]"><ArrowLeft className="h-5 w-5 stroke-[2.4]" />{copy.backToOffers}</Link>
           <div className="min-w-0 flex-1 text-center"><h1 className="truncate text-xl font-extrabold">{editing ? copy.editTitle : copy.publishTitle}</h1><p className="truncate text-sm text-[#65758c]">{copy.subtitle}</p></div>
           <div className="h-10 w-[128px]" aria-hidden="true" />
         </div>
-        <form onSubmit={submit} noValidate className={presentation === "modal" ? "bg-white" : "rounded-lg border border-[#dfe8f0] bg-white p-5 sm:p-7"}>
+        <form onSubmit={submit} noValidate className="rounded-2xl border border-[#e5e7eb] bg-white p-5 shadow-sm">
           <div className="grid gap-5 sm:grid-cols-2">
-            <label className="text-sm font-semibold sm:col-span-2">
+            <label className="text-sm font-medium text-[#374151] sm:col-span-2">
               <RequiredLabel>{copy.title}</RequiredLabel>
               <input name="title" maxLength={120} defaultValue={initialOffer?.title ?? ""} placeholder={copy.titlePlaceholder} className={FIELD_CLASS} />
               <FieldError>{fieldErrors.title}</FieldError>
@@ -437,7 +437,7 @@ export function OfferForm({ professionalId, serviceOptions, backHref = "/ofertas
               </div>
               <FieldError>{fieldErrors.service}</FieldError>
             </div>
-            <label className="text-sm font-semibold sm:col-span-2">
+            <label className="text-sm font-medium text-[#374151] sm:col-span-2">
               <RequiredLabel>{copy.description}</RequiredLabel>
               <textarea name="description" maxLength={3000} defaultValue={initialOffer?.description ?? ""} placeholder={copy.descriptionPlaceholder} className={TEXTAREA_CLASS} />
               <FieldError>{fieldErrors.description}</FieldError>
@@ -467,11 +467,11 @@ export function OfferForm({ professionalId, serviceOptions, backHref = "/ofertas
 
           <div className="my-6 border-t border-[#e6edf3] pt-6"><h2 className="font-bold">{copy.priceAndValidity}</h2></div>
           <div className="grid gap-4 sm:grid-cols-2">
-            <label className="text-sm font-semibold"><RequiredLabel>{copy.currentPrice}</RequiredLabel><input name="price_now" inputMode="numeric" maxLength={String(MAX_MONEY_AMOUNT).length} defaultValue={initialOffer?.price_now ?? ""} placeholder="25000" className={FIELD_CLASS} /><FieldError>{fieldErrors.price}</FieldError></label>
-            <label className="text-sm font-semibold">{copy.previousPrice} <span className="font-normal text-[#9ca3af]">({copy.optional})</span><input name="price_before" inputMode="numeric" maxLength={String(MAX_MONEY_AMOUNT).length} defaultValue={initialOffer?.price_before ?? ""} placeholder="35000" className={FIELD_CLASS} /><FieldError>{fieldErrors.priceBefore}</FieldError></label>
+            <label className="text-sm font-medium text-[#374151]"><RequiredLabel>{copy.currentPrice}</RequiredLabel><input name="price_now" inputMode="numeric" maxLength={String(MAX_MONEY_AMOUNT).length} defaultValue={initialOffer?.price_now ?? ""} placeholder="25000" className={FIELD_CLASS} /><FieldError>{fieldErrors.price}</FieldError></label>
+            <label className="text-sm font-medium text-[#374151]">{copy.previousPrice} <span className="font-normal text-[#9ca3af]">({copy.optional})</span><input name="price_before" inputMode="numeric" maxLength={String(MAX_MONEY_AMOUNT).length} defaultValue={initialOffer?.price_before ?? ""} placeholder="35000" className={FIELD_CLASS} /><FieldError>{fieldErrors.priceBefore}</FieldError></label>
             <SelectMenu label={copy.currency} value={currency} onChange={setCurrency} options={[{ value: "CRC", label: copy.colones }, { value: "USD", label: copy.dollars }]} />
             <SelectMenu label={copy.unit} value={priceUnit} onChange={setPriceUnit} options={Object.keys(OFFER_PRICE_UNITS).map((value) => ({ value, label: offerPriceUnitLabel(value as keyof typeof OFFER_PRICE_UNITS, locale) }))} />
-            <label className="text-sm font-semibold">{copy.quantity} <span className="font-normal text-[#9ca3af]">({copy.optional})</span><input name="quantity_available" inputMode="numeric" maxLength={7} defaultValue={initialOffer?.quantity_available ?? ""} placeholder="10" className={FIELD_CLASS} /><FieldError>{fieldErrors.quantity}</FieldError></label>
+            <label className="text-sm font-medium text-[#374151]">{copy.quantity} <span className="font-normal text-[#9ca3af]">({copy.optional})</span><input name="quantity_available" inputMode="numeric" maxLength={7} defaultValue={initialOffer?.quantity_available ?? ""} placeholder="10" className={FIELD_CLASS} /><FieldError>{fieldErrors.quantity}</FieldError></label>
             <div className="text-sm font-semibold">
               {copy.availableUntil} <span className="font-normal text-[#9ca3af]">({copy.optional})</span>
               <div className="mt-1.5"><FutureDatePicker value={validUntil} onChange={setValidUntil} /></div>

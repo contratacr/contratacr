@@ -113,7 +113,7 @@ export function Modal({
           )}
         >
           <div className={cn("min-w-0", fullscreenMobile && "px-10 text-center sm:px-0 sm:text-left")}>
-            <h2 className="text-lg font-bold text-[#111827] leading-tight">{title}</h2>
+            <h2 className={cn("leading-tight text-[#111827]", fullscreenMobile ? "text-[17px] font-extrabold sm:text-lg sm:font-bold" : "text-lg font-bold")}>{title}</h2>
             {subtitle && <p className="mt-0.5 text-xs text-[#6b7280]">{subtitle}</p>}
           </div>
           <button

@@ -8,7 +8,9 @@
 // are handled by LoadingMarkImage instead. Timings match globals.css.
 export const LOADING_MARK_HANDOFF_SCRIPT =
   '(function(){var s=document.currentScript,e=s&&s.previousElementSibling;if(!e||!e.classList.contains("ccr-page-route-loading"))return;' +
-  'var n=performance.now(),a=window.__ccrLoadingMarkAt;if(a==null){window.__ccrLoadingMarkAt=n;return}' +
-  'var el=n-a,r=Math.max(0,600-el),m=e.querySelector(".ccr-brand-loading-mark");' +
+  'var n=performance.now(),a=window.__ccrLoadingMarkAt;' +
+  'var c=window.Capacitor;if(a==null&&c&&c.isNativePlatform&&c.isNativePlatform()){a=n-250;window.__ccrLoadingMarkAt=a}' +
+  'if(a==null){window.__ccrLoadingMarkAt=n;return}' +
+  'var el=n-a,r=Math.max(0,250-el),m=e.querySelector(".ccr-brand-loading-mark");' +
   'if(r>0){e.style.animationDelay=r+"ms";if(m)m.style.animationDelay=r+"ms"}' +
-  'else{e.style.animation="none";e.style.opacity="1";if(m)m.style.animationDelay="-"+((el-600)%2400)+"ms"}})();';
+  'else{e.style.animation="none";e.style.opacity="1";if(m)m.style.animationDelay="-"+((el-250)%2400)+"ms"}})();';

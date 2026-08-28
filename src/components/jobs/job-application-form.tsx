@@ -300,7 +300,7 @@ export function JobApplicationForm({
     ].filter(Boolean);
     const coverLetter = [message || copy.noMessage, ...extraLinks].join("\n\n");
 
-    const { error: insertError } = await createClient().from("job_applications").insert({
+    const { data: createdApplication, error: insertError } = await createClient().from("job_applications").insert({
       job_id: jobId,
       applicant_id: userId,
       applicant_email: email,
@@ -308,8 +308,14 @@ export function JobApplicationForm({
       phone,
       resume_url: resumeUrl,
       portfolio_url: portfolioUrl || linkedinUrl || null,
-    });
-    if (!insertError) trackInteraction({ type: "job_application_sent", source: "jobs", metadata: { jobId } });
+    }).select("id").single();
+    if (!insertError) {
+      trackInteraction({ type: "job_application_sent", source: "jobs", metadata: { jobId } });
+      if (createdApplication?.id) {
+        // The employer hears about the new application (server re-verifies).
+        void fetch("/api/jobs/notify", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ kind: "application", applicationId: createdApplication.id }) });
+      }
+    }
     if (insertError) {
       console.error("[jobs] job application insert failed", {
         code: insertError.code,

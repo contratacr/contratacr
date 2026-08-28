@@ -389,6 +389,7 @@ export function ProfessionalCard({ professional, className, highlightMetric = "r
                   itemTestId="professional-card-mobile-service"
                   moreTestId="professional-card-more-services"
                   moreClassName={moreProfessionsClass}
+                  moreSuffix={locale === "en" ? "services" : "servicios"}
                   separator="·"
                 />
               )}
@@ -414,6 +415,7 @@ export function ProfessionalCard({ professional, className, highlightMetric = "r
                 profileHref={profileHref}
                 moreTitle={tCard("moreProfessions")}
                 featuredLabel={professional.isFeatured ? tCard("featured") : undefined}
+                moreSuffix={locale === "en" ? "services" : "servicios"}
               />
             </div>
             </>

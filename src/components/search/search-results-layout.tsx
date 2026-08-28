@@ -300,9 +300,7 @@ export function SearchResultsLayout({ children, filters, quickFilters, drawerFil
         const dy = Math.abs(dyUp);
         if (dx < 4 && dy < 4) return;
         if (dx > dy) { mode = "native"; return; }
-        const expanded = startH >= max - 0.01;
-        const pullingDownFromTop = list.scrollTop <= 0 && dyUp < 0;
-        mode = !inList || !expanded || pullingDownFromTop ? "sheet" : "native";
+        mode = inList ? "native" : "sheet";
         if (mode === "native") return;
         draggingRef.current = true;
         setDragging(true);

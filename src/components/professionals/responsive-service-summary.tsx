@@ -17,6 +17,9 @@ type ResponsiveServiceSummaryProps = {
   moreTestId?: string;
   /** Rendered between services (e.g. "·") so tight rows still read as a list. */
   separator?: string;
+  /** Word after the +N counter (e.g. "servicios") so the counter can't be read
+   *  as anything else on a card that also shows a "+N" of locations. */
+  moreSuffix?: string;
 };
 
 export function ResponsiveServiceSummary({
@@ -32,6 +35,7 @@ export function ResponsiveServiceSummary({
   itemTestId,
   moreTestId,
   separator,
+  moreSuffix,
 }: ResponsiveServiceSummaryProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const measureRef = useRef<HTMLDivElement>(null);
@@ -56,7 +60,9 @@ export function ResponsiveServiceSummary({
       const widths = labelWidths.slice(0, count).reduce((sum, width) => sum + width, 0);
       const moreWidth = hiddenCount > 0 ? (moreWidths[hiddenCount] ?? 0) : 0;
       const itemCount = count + (hiddenCount > 0 ? 1 : 0) + (featuredWidth > 0 ? 1 : 0);
-      const required = widths + moreWidth + featuredWidth + Math.max(0, itemCount - 1) * gap;
+      // Un par de píxeles de holgura: sin ellos el "+N" cae justo en el borde
+      // y el navegador lo recorta.
+      const required = widths + moreWidth + featuredWidth + Math.max(0, itemCount - 1) * gap + 2;
       if (required <= available) {
         nextCount = count;
         break;
@@ -69,7 +75,12 @@ export function ResponsiveServiceSummary({
     measure();
     const observer = new ResizeObserver(measure);
     if (containerRef.current) observer.observe(containerRef.current);
-    return () => observer.disconnect();
+    // La primera medida usa la tipografía de reserva; al cargar la definitiva
+    // las etiquetas crecen y el "+N" se salía de la fila.
+    let cancelado = false;
+    const fuentes = (document as Document & { fonts?: { ready: Promise<unknown> } }).fonts;
+    void fuentes?.ready.then(() => { if (!cancelado) measure(); });
+    return () => { cancelado = true; observer.disconnect(); };
   }, [measure]);
 
   const shown = labels.slice(0, visibleCount);
@@ -99,7 +110,7 @@ export function ResponsiveServiceSummary({
           data-testid={moreTestId}
           className={moreClassName}
         >
-          +{hiddenCount}
+          +{hiddenCount}{moreSuffix ? ` ${moreSuffix}` : ""}
         </Link>
       )}
       {featuredLabel && (
@@ -110,10 +121,10 @@ export function ResponsiveServiceSummary({
 
       <div ref={measureRef} aria-hidden="true" className="pointer-events-none absolute invisible flex items-center gap-2 whitespace-nowrap">
         {labels.map((label) => (
-          <span key={`measure-${label}`} data-service-measure className="text-[11px] font-semibold leading-snug">{label}</span>
+          <span key={`measure-${label}`} data-service-measure className={itemClassName}>{label}</span>
         ))}
         {Array.from({ length: totalCount + 1 }, (_, count) => (
-          <span key={`more-${count}`} data-more-measure={count} className="text-[10px] font-bold">+{count}</span>
+          <span key={`more-${count}`} data-more-measure={count} className={moreClassName}>+{count}{moreSuffix ? ` ${moreSuffix}` : ""}</span>
         ))}
         {featuredLabel && <span data-featured-measure className="rounded-full px-2 py-0.5 text-[10px] font-semibold">{featuredLabel}</span>}
         {separator && <span data-separator-measure className="text-[11px] leading-none">{separator}</span>}

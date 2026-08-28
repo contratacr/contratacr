@@ -129,7 +129,7 @@ export function SelectMenu({ value, onChange, options, placeholder, label, error
 
   return (
     <div ref={rootRef} className={cn("flex w-full min-w-0 flex-col gap-1", className)}>
-      {label && <label htmlFor={id} className="text-xs font-medium text-[#6b7280]">{label}</label>}
+      {label && <label htmlFor={id} className="text-sm font-medium text-[#374151]">{label}</label>}
       <button
         ref={triggerRef}
         id={id}

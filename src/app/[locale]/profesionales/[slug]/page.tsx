@@ -4,10 +4,11 @@ import { useState, useEffect, useCallback, useRef, type ReactNode } from "react"
 import { useTranslations, useLocale } from "next-intl";
 import { useParams } from "next/navigation";
 import {
-  MapPin, Shield, ArrowLeft, Star, Briefcase, Banknote, BadgeCheck, CheckCircle2, Languages,
+  MapPin, Shield, ArrowLeft, Star, Briefcase, Banknote, BadgeCheck, Languages,
   Share2, Flag, Award, SearchX, Globe, BadgePercent, Users,
 } from "lucide-react";
 import { Modal } from "@/components/ui/modal";
+import { VerifiedSeal } from "@/components/ui/verified-seal";
 import { InstagramIcon, FacebookIcon, TikTokIcon, LinkedInIcon } from "@/components/icons/social-icons";
 import { buildSocialUrl, buildWebsiteUrl } from "@/lib/social";
 import { Link } from "@/i18n/navigation";
@@ -49,14 +50,14 @@ import { ProgressiveImage } from "@/components/ui/progressive-image";
 // ─── WhatsApp icon ────────────────────────────────────────────────────────────
 // ─── Sub-rating row ───────────────────────────────────────────────────────────
 // ─── Tab types ────────────────────────────────────────────────────────────────
-type Tab = "servicios" | "ofertas" | "empleos" | "casos" | "certificaciones" | "resenas" | "sobre";
+type Tab = "disponibilidad" | "servicios" | "ofertas" | "empleos" | "casos" | "certificaciones" | "resenas" | "sobre";
 
 function initialTabFromUrl(): Tab {
-  if (typeof window === "undefined") return "servicios";
+  if (typeof window === "undefined") return "disponibilidad";
   const tab = new URLSearchParams(window.location.search).get("tab");
-  return (["servicios", "ofertas", "empleos", "casos", "certificaciones", "resenas", "sobre"] as const).includes(tab as Tab)
+  return (["disponibilidad", "servicios", "ofertas", "empleos", "casos", "certificaciones", "resenas", "sobre"] as const).includes(tab as Tab)
     ? (tab as Tab)
-    : "servicios";
+    : "disponibilidad";
 }
 function searchParamFromUrl(key: string): string | null {
   if (typeof window === "undefined") return null;
@@ -79,8 +80,11 @@ function safeProfileReturnHref(value: string | null): string {
     || path === "/empleos"
     || path.startsWith("/empleos/")
     || path.startsWith("/dashboard/cliente")
-    || path.startsWith("/dashboard/profesional");
-  return allowed ? href : "/buscar";
+    || path.startsWith("/dashboard/profesional")
+    || path === "/mensajes";
+  // The i18n <Link> re-adds the locale: hand back a bare path even when the
+  // sender included one, so the return never becomes /es/es/... .
+  return allowed ? href.replace(/^\/(?:es|en)(?=\/|$)/u, "") || "/" : "/buscar";
 }
 
 function profileReturnLabel(href: string, locale: string) {
@@ -94,6 +98,7 @@ function profileReturnLabel(href: string, locale: string) {
     if (params.get("tab") === "saved") return locale === "en" ? "Back to favorites" : "Volver a favoritos";
     return locale === "en" ? "Back to my dashboard" : "Volver a mi panel";
   }
+  if (path.startsWith("/mensajes")) return locale === "en" ? "Back to messages" : "Volver a mensajes";
   if (path === "/") return locale === "en" ? "Back to home" : "Volver al inicio";
   return locale === "en" ? "Back to results" : "Volver a resultados";
 }
@@ -176,6 +181,23 @@ export default function ProfilePage() {
   const [bookingOpen, setBookingOpen] = useState(false);
   const [bookingReg, setBookingReg] = useState(false);
   const [serviceDescriptionOpen, setServiceDescriptionOpen] = useState<{ title: string; description: string } | null>(null);
+
+  // Recarga puntual del perfil (tras publicar una reseña, por ejemplo): pide
+  // los datos frescos y actualiza lista, promedio y contador.
+  const reloadProfessional = useCallback(async () => {
+    if (!routeSlug) return;
+    try {
+      const res = await fetch(`/api/professionals/${routeSlug}`, { cache: "no-store" });
+      if (!res.ok) return;
+      const fresh: ProfessionalDetail | null = await res.json();
+      if (!fresh) return;
+      setProfessional((current) => (current ? { ...current, ...fresh } : fresh));
+      const cached = getDashboardCache<ProfilePageData>(`profile:${routeSlug}`);
+      if (cached) setDashboardCache(`profile:${routeSlug}`, { ...cached, pro: fresh });
+    } catch {
+      /* una recarga fallida deja los datos que ya estaban */
+    }
+  }, [routeSlug]);
 
   useEffect(() => {
     async function load() {
@@ -454,6 +476,7 @@ export default function ProfilePage() {
   };
   const displayName = getProfessionalDisplayName(professional.fullName, professional.businessName);
   const TABS: Array<{ id: Tab; label: string }> = [
+    { id: "disponibilidad", label: locale === "en" ? "Availability" : "Disponibilidad" },
     { id: "servicios",      label: t("tabs.servicios") },
     { id: "resenas",        label: t("tabs.resenas") },
     ...(hasCasos ? [{ id: "casos" as Tab, label: t("tabs.casos") }] : []),
@@ -511,8 +534,8 @@ export default function ProfilePage() {
                     <h1 data-testid="professional-profile-name" className="min-w-0 text-[17px] font-bold leading-[1.15] text-[#111827] [overflow-wrap:anywhere] sm:text-2xl sm:leading-tight sm:[overflow-wrap:normal]">
                       {displayName.primaryDesktop}
                       {professional.verificationStatus === "verified" && (
-                        <CheckCircle2
-                          aria-label={t("identityVerified")}
+                        <VerifiedSeal
+                          label={t("identityVerified")}
                           className="mb-[0.08em] ml-1 inline-block h-4 w-4 shrink-0 align-middle text-[#009FD9] sm:h-5 sm:w-5"
                         />
                       )}
@@ -524,7 +547,7 @@ export default function ProfilePage() {
                       <span>{locationText}</span>
                     </div>
                   )}
-                  <div className="mt-3 grid w-[320px] max-w-full grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-2">
+                  <div className="mt-3 flex w-[360px] max-w-full items-center gap-2">
                     <FollowButton
                       professionalId={professional.id}
                       isOwn={isOwn}
@@ -532,14 +555,22 @@ export default function ProfilePage() {
                       initialFollowers={professional.followerCount ?? 0}
                       onCountChange={updateFollowerCount}
                       onSelfAction={() => setSelfMsg(SELF_MSG.follow)}
-                      className="box-border h-10 w-full min-w-0 rounded-xl border border-transparent bg-[#009fd9] px-3 text-white hover:bg-[#008fc3] aria-pressed:border-transparent aria-pressed:bg-[#f0f2f5] aria-pressed:text-[#111827] aria-pressed:hover:bg-[#e5e9ee]"
+                      className="box-border h-9 min-w-0 flex-1 rounded-xl border border-transparent bg-[#009fd9] px-3 text-white hover:bg-[#008fc3] aria-pressed:border-transparent aria-pressed:bg-[#f0f2f5] aria-pressed:text-[#111827] aria-pressed:hover:bg-[#e5e9ee]"
                     />
                     <SaveButton
                       pro={savedPro}
                       isOwn={isOwn}
                       withLabel
-                      className="box-border h-10 w-full min-w-0 whitespace-nowrap rounded-xl border border-[#d9e1ea] bg-white px-3 py-0 text-[#102746] hover:border-[#b8c6d6] hover:bg-[#f7f9fb] hover:text-[#102746] aria-pressed:border-transparent aria-pressed:bg-[#f0f2f5] aria-pressed:text-[#111827] aria-pressed:hover:border-transparent aria-pressed:hover:bg-[#e5e9ee] aria-pressed:hover:text-[#111827]"
+                      className="box-border h-9 min-w-0 flex-1 whitespace-nowrap rounded-xl border border-[#d9e1ea] bg-white px-3 py-0 text-[#102746] hover:border-[#b8c6d6] hover:bg-[#f7f9fb] hover:text-[#102746] aria-pressed:border-transparent aria-pressed:bg-[#f0f2f5] aria-pressed:text-[#111827] aria-pressed:hover:border-transparent aria-pressed:hover:bg-[#e5e9ee] aria-pressed:hover:text-[#111827]"
                     />
+                    <button
+                      type="button"
+                      onClick={shareProfile}
+                      aria-label={t("shareProfile")}
+                      className="grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-[#d9e1ea] bg-white text-[#102746] transition-colors hover:border-[#b8c6d6] hover:bg-[#f7f9fb]"
+                    >
+                      <Share2 className="h-4 w-4" />
+                    </button>
                   </div>
                 </div>
               </div>
@@ -582,115 +613,7 @@ export default function ProfilePage() {
 
           <div className="flex flex-col lg:flex-row gap-6">
 
-            {/* ── LEFT STICKY CARD ── */}
-            <aside id="perfil-contacto" className="order-2 w-full shrink-0 scroll-mt-20 lg:w-80">
-              <div className="bg-white rounded-2xl shadow-sm border border-[#e5e7eb] p-5 lg:sticky lg:top-24 flex flex-col gap-4">
-
-                {/* "Desde" price — mirrors the right side of the /buscar card. Identity
-                    (avatar/name/verificado/rating/location) now lives in the HEADER card
-                    above, so it's not repeated here. */}
-                <div>
-                  {(() => {
-                    const label = primaryPricingLabel(professional.pricing, professional.hourlyRate, locale);
-                    const { amount, unit, taxSuffix } = splitPricingLabel(label);
-                    return (
-                      <p className="leading-tight">
-                        <span className="text-xl font-bold text-[#009FD9]">{amount}</span>
-                        {unit && <span className="text-sm font-medium text-[#9ca3af]"> {unit}</span>}
-                        {taxSuffix && <span className="block text-[10px] font-semibold tracking-wide text-[#9ca3af]">{taxSuffix}</span>}
-                      </p>
-                    );
-                  })()}
-                </div>
-
-                {/* Schedule + booking/contact buttons — REUSES the /buscar card's
-                    ProfessionalSchedule in a STACKED layout: location tabs + that location's
-                    3-day strip, then the mutually-exclusive buttons (bookable → "Ver horario
-                    completo" + "Solicitar servicio"; no public schedule → "Contáctanos por
-                    WhatsApp" + "Contáctanos por llamada"). It owns its booking modal +
-                    self-action handling, so no separate WhatsApp/Llamar/Correo buttons here. */}
-                <ProfessionalSchedule
-                  stacked
-                  professional={professional}
-                  activeCategory={activeCategory}
-                  categoryName={catLabel(professional.categoryId)}
-                  availabilityPublic={professional.availabilityPublic ?? true}
-                  contactPreference={professional.contactPreference ?? "ambas"}
-                  slots={profileSlots}
-                  isOwn={isOwn}
-                  placeFallback={placeFallback}
-                  placeAddress={placeAddress}
-                  businessName={professional.businessName ?? ""}
-                />
-
-                {/* Social links — usernames the pro shared; we build the URL. Only
-                    the networks filled in show; icons only, open in a new tab.
-                    Additive to "casos de éxito". */}
-                {(() => {
-                  const sl = professional.socialLinks;
-                  const items = [
-                    { k: "website", href: buildWebsiteUrl(sl?.website), Icon: Globe },
-                    { k: "instagram", href: buildSocialUrl("instagram", sl?.instagram), Icon: InstagramIcon },
-                    { k: "facebook", href: buildSocialUrl("facebook", sl?.facebook), Icon: FacebookIcon },
-                    { k: "tiktok", href: buildSocialUrl("tiktok", sl?.tiktok), Icon: TikTokIcon },
-                    { k: "linkedin", href: buildSocialUrl("linkedin", sl?.linkedin), Icon: LinkedInIcon },
-                  ].filter((x) => x.href);
-                  if (items.length === 0) return null;
-                  return (
-                    <div className="flex items-center justify-center gap-2 pt-1">
-                      {items.map(({ k, href, Icon }) => (
-                        <a
-                          key={k}
-                          href={href as string}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          aria-label={k}
-                          onClick={() => trackInteraction({
-                            type: "external_link_click",
-                            professionalId: professional.id,
-                            source: "profile_social",
-                            locale,
-                            metadata: { channel: k },
-                          })}
-                          className="flex h-9 w-9 items-center justify-center rounded-full border border-[#e5e7eb] text-[#374151] hover:border-[#009FD9] hover:text-[#009FD9] transition-colors"
-                        >
-                          <Icon className="h-4 w-4" />
-                        </a>
-                      ))}
-                    </div>
-                  );
-                })()}
-
-                {/* Own-profile self-action notice (shared across the page's actions). */}
-                <SelfActionModal open={!!selfMsg} onClose={() => setSelfMsg(null)} message={selfMsg ?? ""} />
-
-                <div className="border-t border-[#f3f4f6] pt-3">
-                  <div className="flex items-center justify-center gap-4 text-xs font-medium">
-                    <button
-                      type="button"
-                      onClick={shareProfile}
-                      className="flex items-center gap-1.5 text-[#6b7280] transition-colors hover:text-[#009FD9]"
-                    >
-                      <Share2 className="h-3.5 w-3.5" />
-                      {t("shareProfile")}
-                    </button>
-                    {!isOwn && (
-                      <>
-                        <span className="h-4 w-px bg-[#e5e7eb]" aria-hidden />
-                        <button
-                          type="button"
-                          onClick={() => setReportOpen(true)}
-                          className="flex items-center gap-1.5 text-[#9ca3af] transition-colors hover:text-[#ef4444]"
-                        >
-                          <Flag className="h-3.5 w-3.5" />
-                          {t("reportProfile")}
-                        </button>
-                      </>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </aside>
+            {/* La tarjeta de horario vive ahora en la pestaña "Disponibilidad". */}
 
             {/* ── TABBED CONTENT (LEFT on desktop; contact card is the right aside) ── */}
             <div id="resenas" className="order-1 flex-1 min-w-0 scroll-mt-24 [.ccr-native-app_&]:scroll-mt-0">
@@ -723,6 +646,84 @@ export default function ProfilePage() {
 
                 {/* Tab content */}
                 <div className="p-6">
+
+                  {/* ── TAB: Disponibilidad y contacto (primera sección) ── */}
+                  {activeTab === "disponibilidad" && (
+                    <div id="perfil-contacto" className="mx-auto flex w-full max-w-md flex-col gap-4 lg:mx-0">
+                      <div>
+                        {(() => {
+                          const label = primaryPricingLabel(professional.pricing, professional.hourlyRate, locale);
+                          const { amount, unit, taxSuffix } = splitPricingLabel(label);
+                          return (
+                            <p className="leading-tight">
+                              <span className="text-xl font-bold text-[#009FD9]">{amount}</span>
+                              {unit && <span className="text-sm font-medium text-[#9ca3af]"> {unit}</span>}
+                              {taxSuffix && <span className="block text-[10px] font-semibold tracking-wide text-[#9ca3af]">{taxSuffix}</span>}
+                            </p>
+                          );
+                        })()}
+                      </div>
+                      <ProfessionalSchedule
+                        stacked
+                        professional={professional}
+                        activeCategory={activeCategory}
+                        categoryName={catLabel(professional.categoryId)}
+                        availabilityPublic={professional.availabilityPublic ?? true}
+                        contactPreference={professional.contactPreference ?? "ambas"}
+                        slots={profileSlots}
+                        isOwn={isOwn}
+                        placeFallback={placeFallback}
+                        placeAddress={placeAddress}
+                        businessName={professional.businessName ?? ""}
+                      />
+                      {(() => {
+                        const sl = professional.socialLinks;
+                        const items = [
+                          { k: "website", href: buildWebsiteUrl(sl?.website), Icon: Globe },
+                          { k: "instagram", href: buildSocialUrl("instagram", sl?.instagram), Icon: InstagramIcon },
+                          { k: "facebook", href: buildSocialUrl("facebook", sl?.facebook), Icon: FacebookIcon },
+                          { k: "tiktok", href: buildSocialUrl("tiktok", sl?.tiktok), Icon: TikTokIcon },
+                          { k: "linkedin", href: buildSocialUrl("linkedin", sl?.linkedin), Icon: LinkedInIcon },
+                        ].filter((x) => x.href);
+                        if (items.length === 0) return null;
+                        return (
+                          <div className="flex items-center justify-center gap-2 pt-1">
+                            {items.map(({ k, href, Icon }) => (
+                              <a
+                                key={k}
+                                href={href as string}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                aria-label={k}
+                                onClick={() => trackInteraction({
+                                  type: "external_link_click",
+                                  professionalId: professional.id,
+                                  source: "profile_social",
+                                  locale,
+                                  metadata: { channel: k },
+                                })}
+                                className="flex h-9 w-9 items-center justify-center rounded-full border border-[#e5e7eb] text-[#374151] hover:border-[#009FD9] hover:text-[#009FD9] transition-colors"
+                              >
+                                <Icon className="h-4 w-4" />
+                              </a>
+                            ))}
+                          </div>
+                        );
+                      })()}
+                      {!isOwn && (
+                        <div className="mt-1 border-t border-[#f3f4f6] pt-3">
+                          <button
+                            type="button"
+                            onClick={() => setReportOpen(true)}
+                            className="inline-flex h-10 !min-h-0 w-full items-center justify-center gap-1.5 rounded-xl border border-[#f3d9d9] bg-[#fffafa] text-sm font-bold text-[#b3453f] transition hover:bg-[#fdf0f0]"
+                          >
+                            <Flag className="h-4 w-4" />
+                            {t("reportProfile")}
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
 
                   {/* ── TAB: Servicios ── */}
                   {activeTab === "servicios" && (() => {
@@ -825,12 +826,6 @@ export default function ProfilePage() {
                                       )}
                                     </div>
                                     <div className="mt-3 space-y-2 text-sm">
-                                      {serviceYears ? (
-                                        <p className="flex items-center gap-2 text-[#374151]">
-                                          <Briefcase className="h-4 w-4 shrink-0 text-[#009FD9]" />
-                                          <span className="font-semibold">{t("yearsExperienceValue", { years: serviceYears })}</span>
-                                        </p>
-                                      ) : null}
                                       <p className="hidden items-center gap-2 text-[#111827]">
                                         <Banknote className="h-4 w-4 shrink-0 text-[#009FD9]" />
                                         <span className="font-bold [overflow-wrap:anywhere]">
@@ -850,7 +845,6 @@ export default function ProfilePage() {
                                         </p>
                                       )}
                                     </div>
-                                    {canBookService ? <button type="button" onClick={() => requestService(cat)} className="mt-auto pt-4"><span className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#009FD9] px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#0089bb]">{t("serviceRequest")}</span></button> : <DirectChatLauncher professionalId={professional.id} professionalName={professional.fullName} contextTitle={catLabel(cat)} isOwn={isOwn} onSelfAction={() => setSelfMsg(SELF_MSG.request)} buttonLabel="WhatsApp" analyticsSource="profile_service" className="mt-auto w-full rounded-xl px-4 py-2.5 text-sm font-semibold" />}
                                   </div>
                                 </article>
                               );
@@ -1046,6 +1040,7 @@ export default function ProfilePage() {
                         ratingAvg={professional.ratingAvg}
                         reviews={professional.reviews}
                         isAuthenticated={isAuthenticated}
+                        onReviewSubmitted={reloadProfessional}
                       />
                     </div>
                   )}
@@ -1185,12 +1180,15 @@ export default function ProfilePage() {
 
       {/* Room for the pinned action bar on phones, so the footer stays reachable. */}
       <div aria-hidden className="h-20 lg:hidden" />
+      <SelfActionModal open={!!selfMsg} onClose={() => setSelfMsg(null)} message={selfMsg ?? ""} />
       <ProfileStickyActions
         professionalId={professional.id}
         professionalName={professional.fullName}
         contextTitle={catLabel(professional.categoryId)}
         isOwn={isOwn}
         canCall={professional.hasCallPhone ?? (professional.allowPhoneCall !== false && !!(professional.callPhone || professional.whatsapp))}
+        onAvailability={() => { setActiveTab("disponibilidad"); requestAnimationFrame(() => { document.getElementById("resenas")?.scrollIntoView({ block: "start" }); }); }}
+        availabilityActive={activeTab === "disponibilidad"}
       />
       <LandingFooter />
     </div>

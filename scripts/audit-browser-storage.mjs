@@ -13,6 +13,7 @@ const reviewed = new Map([
   ["src/components/auth/otp-verification.tsx", { count: 2, reason: "short-lived OTP auto-resend cooldown; auth state stays in Supabase" }],
   ["src/components/auth/client-registration-modal.tsx", { count: 2, reason: "short-lived booking registration handoff" }],
   ["src/components/booking/booking-modal.tsx", { count: 4, reason: "short-lived booking registration handoff" }],
+  ["src/components/dashboard/direct-chat-inbox.tsx", { count: 6, reason: "unsent composer drafts kept per conversation as a device convenience; sent messages live in Supabase" }],
   ["src/components/dashboard/pro/profile-completion.tsx", { count: 5, reason: "dismissed and ignored optional checklist presentation state; completion truth remains in Supabase" }],
   ["src/components/landing/landing-navbar.tsx", { count: 4, reason: "language preference and coarse current-location search cache; no account-owned records" }],
   ["src/components/marketplace/marketplace-controls.tsx", { count: 2, reason: "device-local marketplace recent-search history" }],

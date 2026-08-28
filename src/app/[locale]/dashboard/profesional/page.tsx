@@ -14,6 +14,7 @@ import { Navbar } from "@/components/layout/navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { VerifiedSeal } from "@/components/ui/verified-seal";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ProfileEditor } from "@/components/dashboard/pro/profile-editor";
@@ -561,11 +562,22 @@ export default function DashboardPage() {
   const locale = useLocale();
   const rawRequestedTab = searchParams.get("tab");
   const legacyVerificationTab = rawRequestedTab === "verificacion";
-  const requestedTab = (legacyVerificationTab ? "profile" : rawRequestedTab) as Tab | null;
+  const normalizedTab = legacyVerificationTab ? "profile" : rawRequestedTab;
+  // Un ?tab= desconocido mostraba una sección vacía titulada con el id crudo:
+  // se ignora y cae al inicio del panel.
+  const requestedTab = (normalizedTab && ALL_TABS.has(normalizedTab as Tab) ? normalizedTab : null) as Tab | null;
   const requestedMode = searchParams.get("mode");
   const urlModeParam: Mode | null = requestedMode === "use" || requestedMode === "offer" ? requestedMode : null;
   const requestedReturnTo = searchParams.get("returnTo");
-  const externalReturnTo = requestedReturnTo === "/ofertas" || requestedReturnTo === "/empleos" ? requestedReturnTo : null;
+  const externalReturnTo = requestedReturnTo === "/ofertas" || requestedReturnTo === "/empleos"
+    ? requestedReturnTo
+    : requestedReturnTo?.startsWith("/mensajes") && !requestedReturnTo.startsWith("//") && !requestedReturnTo.includes("\\")
+      ? requestedReturnTo
+      : null;
+  // Captured at arrival: the dashboard's own URL rewrites drop the param long
+  // before the back arrow is pressed.
+  const chatReturnRef = useRef<string | null>(null);
+  if (externalReturnTo?.startsWith("/mensajes")) chatReturnRef.current = externalReturnTo;
   const shouldCheckOpportunityWelcome = searchParams.get("welcomeOpportunities") === "1";
   const opportunityWelcomeParamCount = Math.max(0, Number.parseInt(searchParams.get("welcomeOpportunityCount") ?? "0", 10) || 0);
 
@@ -1474,6 +1486,34 @@ export default function DashboardPage() {
     setTab("proposals");
   }
 
+  // Una sola barra superior: dentro de una sección, la barra de la app muestra
+  // "← Título" en vez del logo. El panel publica el título y atiende el atrás;
+  // si la barra no confirma (ack), la cabecera propia sigue apareciendo.
+  const mobileSectionHeaderTitle = activeTab === "home"
+    ? null
+    : (supportThreadTitle ?? mobileProfileSectionTitle ?? (activeTab === "services" ? t("servicesHeading") : panelTabLabel(activeTab)));
+  const sectionBackRef = useRef<(() => void) | null>(null);
+  const [navbarOwnsHeader, setNavbarOwnsHeader] = useState(false);
+  useEffect(() => {
+    const onBack = () => sectionBackRef.current?.();
+    const onAck = () => setNavbarOwnsHeader(true);
+    window.addEventListener("ccr:section-back", onBack);
+    window.addEventListener("ccr:section-header-ack", onAck);
+    return () => {
+      window.removeEventListener("ccr:section-back", onBack);
+      window.removeEventListener("ccr:section-header-ack", onAck);
+    };
+  }, []);
+  useEffect(() => {
+    if (!mobileSectionHeaderTitle) setNavbarOwnsHeader(false);
+    const publicar = (title: string | null) => {
+      (window as unknown as { __ccrSectionHeader?: string | null }).__ccrSectionHeader = title;
+      window.dispatchEvent(new CustomEvent("ccr:section-header", { detail: title ? { title } : null }));
+    };
+    publicar(mobileSectionHeaderTitle);
+    return () => publicar(null);
+  }, [mobileSectionHeaderTitle]);
+
   // Never render the client dashboard as a temporary fallback for an account
   // marked as a provider whose professional row is still missing. Keep the
   // route behind the loading guard while fetchPro retries, then the effect
@@ -1552,6 +1592,8 @@ export default function DashboardPage() {
   const mobileFullScreenTab = activeTab !== "home";
   const mobileSectionOpen = activeTab !== "home" || mobilePanelOpen;
   const singleSurfaceTab = activeTab === "profile";
+  // Editores del panel: mismo lenguaje que "Publicar oferta" (gris + tarjeta).
+  const editorSurfaceTab = activeTab === "availability" || activeTab === "verificacion" || activeTab === "cuenta";
   const profileCompletionPercent = proForCompletion ? computeCompletion(proForCompletion).percent : null;
   const showProfileCompletion =
     mode === "offer" &&
@@ -1839,7 +1881,7 @@ export default function DashboardPage() {
           title={t("identityVerified")}
           className="inline-flex shrink-0 text-[#009FD9]"
         >
-          <CheckCircle2 aria-hidden="true" className="h-4 w-4 sm:h-5 sm:w-5" />
+          <VerifiedSeal className="h-4 w-4 sm:h-5 sm:w-5" />
         </span>
       );
     }
@@ -1924,23 +1966,23 @@ export default function DashboardPage() {
           {/* Header card - identity and status grouped in one surface on desktop. */}
           <div className={cn("mx-auto mb-6 w-full max-w-[79.5rem]", mobileSectionOpen ? "hidden lg:block" : "block")}>
             <div className="rounded-2xl border border-[#dfe8f0] bg-white px-5 py-5 shadow-sm sm:px-6 sm:py-5">
-            <div className="grid min-w-0 grid-cols-[auto_minmax(0,1fr)] items-center gap-4 sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:gap-5">
-              <div ref={headerPhotoMenuRef} className="relative h-[72px] w-[72px] shrink-0 sm:h-20 sm:w-20">
+            <div className="flex min-w-0 flex-wrap items-center gap-x-4 gap-y-3 sm:grid sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:items-center sm:gap-5">
+              <div ref={headerPhotoMenuRef} className="relative h-[84px] w-[84px] shrink-0 sm:h-20 sm:w-20 sm:self-center">
                 <button
                   type="button"
                   onClick={() => setHeaderPhotoMenuOpen((open) => !open)}
                   disabled={headerPhotoUploading}
-                  className="relative block h-[88px] w-[88px] rounded-full outline-none transition focus-visible:ring-2 focus-visible:ring-[#009FD9] focus-visible:ring-offset-2 disabled:opacity-70 sm:h-20 sm:w-20"
+                  className="relative block h-[84px] w-[84px] rounded-full outline-none transition focus-visible:ring-2 focus-visible:ring-[#009FD9] focus-visible:ring-offset-2 disabled:opacity-70 sm:h-20 sm:w-20"
                   aria-label={locale === "en" ? "Profile photo options" : "Opciones de foto de perfil"}
                 >
-                  <Avatar className="h-[88px] w-[88px] bg-transparent sm:h-20 sm:w-20">
+                  <Avatar className="h-[84px] w-[84px] bg-transparent sm:h-20 sm:w-20">
                     <AvatarImage src={headerAvatar ?? undefined} />
                     <AvatarFallback className="bg-[#EBF5FB] text-lg font-bold text-[#009FD9]">
                       {getInitials(displayName || "?")}
                     </AvatarFallback>
                   </Avatar>
                   <span className="absolute bottom-0 right-0 flex h-7 w-7 items-center justify-center rounded-full border-2 border-white bg-[#009FD9] text-white shadow-sm">
-                    {headerPhotoUploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Camera className="h-3.5 w-3.5" />}
+                    {headerPhotoUploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Plus className="h-4 w-4" strokeWidth={3} />}
                   </span>
                 </button>
                 {headerPhotoMenuOpen && (
@@ -1990,7 +2032,7 @@ export default function DashboardPage() {
                   onOpenChange={setHeaderPhotoPreviewOpen}
                 />
               </div>
-              <div className="min-w-0 self-center">
+              <div className="flex min-w-0 flex-1 flex-col items-start gap-1.5 text-left sm:block sm:flex-none sm:self-center sm:py-0">
                 <div className="flex min-w-0 items-center gap-1.5 sm:hidden">
                   <h1 data-testid="dashboard-identity-name" className="min-w-0 truncate text-[18px] font-bold leading-[1.15] text-[#162543]" title={displayName}>
                     {mobileHeaderName || displayName}
@@ -2003,28 +2045,59 @@ export default function DashboardPage() {
                   </h1>
                   <div className="flex shrink-0 items-center">{identityBadge()}</div>
                 </div>
-                <div data-testid="dashboard-identity-actions" className="mt-2.5 flex min-h-[40px] items-end justify-between gap-3 sm:mt-1 sm:min-h-[22px] sm:justify-start">
+                <div data-testid="dashboard-identity-actions" className="mt-1 flex items-start justify-start gap-3 sm:mt-1 sm:min-h-[22px]">
                   <div className="flex min-w-0 items-center">
                     <FollowNetworkSummaryLink onOpen={setNetworkModal} />
                   </div>
-                  {publicProfileHref && (
-                    <Link
-                      href={publicProfileHref}
-                      onClick={openInNewTabOnDesktop}
-                      aria-label={locale === "en" ? "View public profile" : "Ver perfil público"}
-                      data-testid="dashboard-mobile-view-profile"
-                      className="inline-flex shrink-0 items-center gap-1 pb-0.5 text-[13px] font-semibold leading-normal text-[#526277] underline-offset-2 transition hover:text-[#009FD9] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9] sm:hidden"
-                    >
-                      <span>{locale === "en" ? "View profile" : "Ver perfil"}</span>
-                      <ExternalLink className="h-3.5 w-3.5 shrink-0 self-center text-[#162543]" />
-                    </Link>
-                  )}
+                  
                 </div>
               </div>
+              {publicProfileHref && (
+                <div className="mt-1 grid w-full grid-cols-2 gap-2 sm:hidden">
+                  <Link
+                    href={`${publicProfileHref}?from=${encodeURIComponent("/dashboard/profesional")}`}
+                    onClick={openInNewTabOnDesktop}
+                    aria-label={locale === "en" ? "View public profile" : "Ver perfil público"}
+                    data-testid="dashboard-mobile-view-profile"
+                    className="inline-flex h-10 w-full items-center justify-center gap-1.5 rounded-xl border border-[#d7e1ea] bg-[#f8fbfd] text-sm font-bold text-[#3c4c61] transition active:bg-[#eef6fb]"
+                  >
+                    <ExternalLink className="h-4 w-4" />
+                    {locale === "en" ? "View profile" : "Ver perfil"}
+                  </Link>
+                  <button
+                    type="button"
+                    data-testid="dashboard-mobile-share-profile"
+                    onClick={() => {
+                      const url = `${window.location.origin}/${locale}${publicProfileHref}`;
+                      if (navigator.share) {
+                        void navigator.share({ url }).catch(() => {});
+                      } else {
+                        void navigator.clipboard?.writeText(url).then(() => {
+                          window.alert(locale === "en" ? "Profile link copied." : "Enlace del perfil copiado.");
+                        }).catch(() => {});
+                      }
+                    }}
+                    className="inline-flex h-10 !min-h-0 w-full items-center justify-center gap-1.5 rounded-xl border border-[#d7e1ea] bg-[#f8fbfd] text-sm font-bold text-[#3c4c61] transition active:bg-[#eef6fb]"
+                  >
+                    <Users className="h-4 w-4" />
+                    {locale === "en" ? "Share" : "Compartir"}
+                  </button>
+                </div>
+              )}
+              {showProfileCompletion && proForCompletion && (
+                <div className="w-full sm:hidden">
+                  <ProfileCompletion
+                    pro={proForCompletion}
+                    variant="header"
+                    onViewSteps={() => setTab("completion", true)}
+                    onGo={(tab, field) => requestUnsavedAction(() => openCompletionTarget(tab, field))}
+                  />
+                </div>
+              )}
               <div className="col-span-2 hidden flex-wrap items-center justify-center gap-2 border-t border-[#eef3f7] pt-3 sm:col-span-1 sm:flex sm:justify-end sm:border-t-0 sm:pt-0">
                 {publicProfileHref && (
                   <Link
-                    href={publicProfileHref}
+                    href={`${publicProfileHref}?from=${encodeURIComponent("/dashboard/profesional")}`}
                     onClick={openInNewTabOnDesktop}
                     aria-label={locale === "en" ? "View public profile" : "Ver perfil público"}
                     className="hidden h-9 items-center gap-1.5 text-sm font-bold text-[#526277] underline-offset-2 transition hover:text-[#0089bb] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9] sm:inline-flex"
@@ -2101,11 +2174,20 @@ export default function DashboardPage() {
           ) : (
             <>
               {activeTab !== "home" && (
-                <div className="sticky top-0 z-20 grid min-h-16 grid-cols-[64px_minmax(0,1fr)_64px] items-center border-b border-[#e5e7eb] bg-white px-2 py-2 text-[#162543] lg:hidden">
+                <div className={cn(
+                  "sticky top-0 z-20 grid min-h-16 grid-cols-[64px_minmax(0,1fr)_64px] items-center border-b border-[#e5e7eb] bg-white px-2 py-2 text-[#162543] lg:hidden",
+                  navbarOwnsHeader && "hidden",
+                )}>
                   <button
                     type="button"
                     onClick={() => {
                       requestUnsavedAction(() => {
+                        const chatReturn = chatReturnRef.current;
+                        if (chatReturn) {
+                          chatReturnRef.current = null;
+                          router.push(chatReturn);
+                          return;
+                        }
                         if (hasActiveCompletionFlow()) {
                           if (activeTab === "profile" && mobileProfileSectionTitle) {
                             window.dispatchEvent(new Event("ccr:profile-mobile-close-section"));
@@ -2121,12 +2203,15 @@ export default function DashboardPage() {
                           window.dispatchEvent(new Event("ccr:support-close-thread"));
                           return;
                         }
-                        if ((activeTab === "offers" || activeTab === "jobs") && externalReturnTo) {
-                          router.push(`/${locale}${externalReturnTo}`);
+                        if (externalReturnTo && (activeTab === "offers" || activeTab === "jobs" || externalReturnTo.startsWith("/mensajes"))) {
+                          router.push(externalReturnTo);
                           return;
                         }
                         setTab("home");
                       });
+                    }}
+                    ref={(node) => {
+                      sectionBackRef.current = node ? () => node.click() : null;
                     }}
                     aria-label={t("backToPanel")}
                     className="inline-flex h-10 shrink-0 items-center gap-1 justify-self-start rounded-lg px-2 text-sm font-semibold text-[#374151] transition-colors hover:bg-[#f3f4f6]"
@@ -2134,12 +2219,12 @@ export default function DashboardPage() {
                     <ArrowLeft className="h-5 w-5" />
                   </button>
                   {supportThreadTitle ? (
-                    <h2 className="flex min-w-0 items-baseline justify-center gap-1.5 px-1 text-center text-base font-bold">
+                    <h2 className="flex min-w-0 items-baseline justify-center gap-1.5 px-1 text-center text-[17px] font-extrabold">
                       <span className="min-w-0 truncate">{supportThreadTitle}</span>
                       {supportThreadRef && <span className="shrink-0 text-[11px] font-semibold text-[#6b7280]">#{supportThreadRef}</span>}
                     </h2>
                   ) : (
-                    <h2 className="min-w-0 truncate px-2 text-center text-base font-bold">{mobileProfileSectionTitle ?? (activeTab === "services" ? t("servicesHeading") : panelTabLabel(activeTab))}</h2>
+                    <h2 className="min-w-0 truncate px-2 text-center text-[17px] font-extrabold">{mobileProfileSectionTitle ?? (activeTab === "services" ? t("servicesHeading") : panelTabLabel(activeTab))}</h2>
                   )}
                   <div className="flex shrink-0 justify-self-end" />
                 </div>
@@ -2181,25 +2266,16 @@ export default function DashboardPage() {
                         )}
                       </CardHeader>}
                       <CardContent className={mobileSectionOpen ? cn(
-                        "dashboard-section-content min-h-[calc(100svh-var(--ccr-native-header-height,124px)-var(--ccr-responsive-footer-reserve,72px)-64px)] bg-white px-4 pb-6 pt-4 sm:px-5 lg:min-h-0 lg:px-6 lg:pb-6 lg:pt-5",
-                        singleSurfaceTab && "!bg-transparent lg:px-0 lg:pb-0 lg:pt-0"
+                        "dashboard-section-content ccr-editor-surface min-h-[calc(100svh-var(--ccr-native-header-height,124px)-var(--ccr-responsive-footer-reserve,72px)-64px)] bg-[#f4f7fa] px-4 pb-6 pt-4 sm:px-5 lg:min-h-0 lg:px-6 lg:pb-6 lg:pt-5",
+                        editorSurfaceTab && "px-4 py-5",
+                        singleSurfaceTab && "px-4 py-5 lg:!bg-transparent lg:px-0 lg:pb-0 lg:pt-0"
                       ) : cn(
                         "px-4 pt-0 pb-4 sm:px-6 sm:pt-1 sm:pb-6",
-                        activeTab === "home" && "ccr-dashboard-mobile-home px-0 sm:px-0",
+                        activeTab === "home" && "ccr-dashboard-mobile-home bg-[#f4f7fa] px-0 sm:px-0",
                         singleSurfaceTab && "!bg-transparent px-0 pt-0 pb-0 sm:px-0 sm:pt-0 sm:pb-0",
                       )}>
                         {activeTab === "home" && (
                           <>
-                            {showProfileCompletion && proForCompletion && !mobileProfileSectionTitle && (
-                              <div className="pb-4 empty:pb-0 lg:hidden empty:hidden">
-                                <ProfileCompletion
-                                  pro={proForCompletion}
-                                  variant="summary"
-                                  onViewSteps={() => setTab("completion", true)}
-                                  onGo={(tab, field) => requestUnsavedAction(() => openCompletionTarget(tab, field))}
-                                />
-                              </div>
-                            )}
                             <div className="lg:hidden">
                               <div>
                                 <div className="overflow-hidden rounded-[22px] border border-[#dfe8f0] bg-white shadow-[0_12px_34px_-28px_rgba(15,23,42,0.55)]">
@@ -2300,10 +2376,11 @@ export default function DashboardPage() {
                             initialItems={pro.portfolio_items ?? undefined}
                             professions={(pro.professions && pro.professions.length > 0) ? pro.professions : (pro.category_id ? [pro.category_id] : [])}
                             services={pro.services ?? []}
-                            onSaved={() => handleSaved("section")}
+                            onSaved={(intent) => handleSaved(intent ?? "section")}
                           />
                         )}
                         {activeTab === "availability" && pro && (
+                          <div className="rounded-2xl border border-[#e5e7eb] bg-white p-5 shadow-sm">
                           <AvailabilityEditor
                             professionalId={pro.id}
                             initialPublic={pro.availability_public ?? true}
@@ -2314,6 +2391,7 @@ export default function DashboardPage() {
                             initialVideoConsultation={!!pro.videoconsulta}
                             onSaved={() => handleSaved("section")}
                           />
+                          </div>
                         )}
                         {activeTab === "suscripcion" && PAYMENTS_ENABLED && <SubscriptionPanel />}
                         {activeTab === "bookings" && <BookingRequests />}

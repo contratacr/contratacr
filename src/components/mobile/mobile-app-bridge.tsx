@@ -201,6 +201,15 @@ export function MobileAppBridge() {
       maxTimer = window.setTimeout(hideSplashNow, MAX_SPLASH_MS);
     };
 
+    const w = window as unknown as { __ccrLoadingMarkAt?: number };
+    if (w.__ccrLoadingMarkAt == null) w.__ccrLoadingMarkAt = performance.now() - 600;
+    document.querySelectorAll<HTMLElement>(".ccr-page-route-loading").forEach((el) => {
+      el.style.animation = "none";
+      el.style.opacity = "1";
+      const mark = el.querySelector<HTMLElement>(".ccr-brand-loading-mark");
+      if (mark) mark.style.animationDelay = "0ms";
+    });
+
     if (!firstRunPending) {
       hideAfterPaint();
     }

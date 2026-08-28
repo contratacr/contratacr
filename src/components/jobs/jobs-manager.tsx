@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { ArrowLeft, CalendarDays, ChevronDown, FileText, Mail, MoreVertical, Phone, Plus, UserRound, Users } from "lucide-react";
+import { ArrowLeft, BriefcaseBusiness, CalendarDays, ChevronDown, ExternalLink, FileText, Mail, MoreVertical, Phone, Plus, UserRound, Users } from "lucide-react";
+import { buildWebsiteUrl } from "@/lib/social";
 import { Link, useRouter } from "@/i18n/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { invalidateAppData } from "@/lib/app-data-invalidation";
@@ -124,6 +125,8 @@ export function JobsManager({ initialJobs, embedded = false, backHref = "/dashbo
   async function updateApplication(jobId: string, applicationId: string, status: string) {
     const { error } = await createClient().from("job_applications").update({ status }).eq("id", applicationId);
     if (!error) {
+      // The applicant hears about the decision (server re-verifies ownership).
+      void fetch("/api/jobs/notify", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ kind: "application_status", applicationId }) });
       setJobs((current) => current.map((job) => job.id === jobId ? { ...job, applications: job.applications.map((item) => item.id === applicationId ? { ...item, status } : item) } : job));
       invalidateAppData("jobs");
     }
@@ -153,7 +156,7 @@ export function JobsManager({ initialJobs, embedded = false, backHref = "/dashbo
           {jobs.map((job) => {
             const isOpen = openId === job.id;
             return (
-              <article key={job.id} className={cn("relative overflow-visible rounded-2xl border border-[#d9e6ef] bg-white shadow-[0_2px_8px_rgba(15,23,42,0.06)]", actionsOpen === job.id && "z-40")}>
+              <article key={job.id} className={cn("relative overflow-visible rounded-2xl border border-[#e5e7eb] bg-white shadow-[0_2px_8px_rgba(15,23,42,0.06)]", actionsOpen === job.id && "z-40")}>
                 <button type="button" onClick={() => setOpenId(isOpen ? null : job.id)} className="flex h-24 w-full items-center gap-3 px-4 text-left sm:px-5">
                   <div className="min-w-0 flex-1">
                     <h2 className="truncate text-[15px] font-extrabold leading-tight text-[#111827] sm:text-base">{job.title}</h2>
@@ -178,7 +181,7 @@ export function JobsManager({ initialJobs, embedded = false, backHref = "/dashbo
                       <div className="relative">
                         <button type="button" onClick={() => setActionsOpen((current) => current === job.id ? null : job.id)} aria-label={copy.more} aria-haspopup="menu" aria-expanded={actionsOpen === job.id} className="grid h-10 w-10 place-items-center rounded-lg border border-[#d7e1ea] text-[#718096] transition hover:border-[#b9c8d6] hover:bg-[#f6f9fb] hover:text-[#162543]"><MoreVertical className="h-5 w-5" /></button>
                         {actionsOpen === job.id && (
-                          <div role="menu" className="absolute bottom-[calc(100%+6px)] right-0 z-50 w-44 overflow-hidden rounded-xl border border-[#dfe8f0] bg-white p-1.5 shadow-[0_18px_45px_-22px_rgba(15,23,42,0.55)]">
+                          <div role="menu" className="absolute bottom-[calc(100%+6px)] right-0 z-50 w-44 overflow-hidden rounded-xl border border-[#e5e7eb] bg-white p-1.5 shadow-[0_18px_45px_-22px_rgba(15,23,42,0.55)]">
                             {job.status !== "published" && <button role="menuitem" onClick={() => { setActionsOpen(null); updateJobStatus(job.id, "published"); }} className="block w-full rounded-lg px-3 py-2.5 text-left text-sm font-bold text-[#008fc3] hover:bg-[#f0f9fc]">{copy.publish}</button>}
                             {job.status === "published" && <button role="menuitem" onClick={() => { setActionsOpen(null); updateJobStatus(job.id, "paused"); }} className="block w-full rounded-lg px-3 py-2.5 text-left text-sm font-bold text-[#162543] hover:bg-[#f4f8fb]">{copy.pause}</button>}
                             {job.status !== "closed" && <button role="menuitem" onClick={() => { setActionsOpen(null); updateJobStatus(job.id, "closed"); }} className="block w-full rounded-lg px-3 py-2.5 text-left text-sm font-bold text-red-700 hover:bg-red-50">{copy.close}</button>}
@@ -190,7 +193,7 @@ export function JobsManager({ initialJobs, embedded = false, backHref = "/dashbo
                       <h3 className="text-sm font-bold">{copy.applicationsTitle}</h3>
                       {job.applications.length > 0 && <span className="text-xs font-semibold text-[#708096]">{job.applications.length} {job.applications.length === 1 ? copy.candidate : copy.candidates}</span>}
                     </div>
-                    <div className={cn(job.applications.length > 0 && "overflow-hidden rounded-xl border border-[#dfe8f0] bg-white divide-y divide-[#e6edf3]")}>
+                    <div className={cn(job.applications.length > 0 && "overflow-hidden rounded-xl border border-[#e5e7eb] bg-white divide-y divide-[#e6edf3]")}>
                       {job.applications.map((application) => (
                         <section key={application.id} className="px-4 py-4 sm:px-5">
                           <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_160px] sm:items-start">
@@ -218,7 +221,10 @@ export function JobsManager({ initialJobs, embedded = false, backHref = "/dashbo
                           {(application.resume_url || application.portfolio_url) && (
                             <div className="mt-3 flex flex-wrap gap-2">
                               {application.resume_url && <a href={`/api/jobs/applications/${application.id}/resume`} target="_blank" rel="noreferrer" className="inline-flex h-9 items-center gap-2 rounded-lg border border-[#cbdbe7] px-3 text-xs font-bold text-[#162543] hover:bg-[#f6f9fb]"><FileText className="h-4 w-4 text-[#008fc3]" />{copy.viewCv}</a>}
-                              {application.portfolio_url && <a href={application.portfolio_url} target="_blank" rel="noreferrer" className="inline-flex h-9 items-center rounded-lg border border-[#cbdbe7] px-3 text-xs font-bold text-[#162543] hover:bg-[#f6f9fb]">{copy.viewPortfolio}</a>}
+                              {(() => {
+                                const portfolioHref = buildWebsiteUrl(application.portfolio_url);
+                                return portfolioHref ? <a href={portfolioHref} target="_blank" rel="noreferrer" className="inline-flex h-9 items-center gap-2 rounded-lg border border-[#cbdbe7] px-3 text-xs font-bold text-[#162543] hover:bg-[#f6f9fb]"><ExternalLink className="h-4 w-4 text-[#008fc3]" />{copy.viewPortfolio}</a> : null;
+                              })()}
                             </div>
                           )}
                         </section>
@@ -235,21 +241,31 @@ export function JobsManager({ initialJobs, embedded = false, backHref = "/dashbo
               "px-6 py-12 text-center",
               embedded
                 ? "rounded-xl border border-dashed border-[#d8e4ec] bg-[#f8fbfd]"
-                : "rounded-2xl border border-[#dfe8f0] bg-white shadow-[0_2px_8px_rgba(15,23,42,0.05)]"
+                : "rounded-2xl border border-[#e5e7eb] bg-white shadow-[0_2px_8px_rgba(15,23,42,0.05)]"
             )}>
-              <h2 className="font-bold">{copy.emptyTitle}</h2>
+              <span className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-[#eaf7fc] text-[#009fd9]">
+                <BriefcaseBusiness className="h-6 w-6" strokeWidth={2} />
+              </span>
+              <h2 className="mt-4 font-bold text-[#162543]">{copy.emptyTitle}</h2>
               <p className="mt-1 text-sm text-[#68778d]">{copy.emptyBody}</p>
+              <button
+                type="button"
+                onClick={() => setPublishOpen(true)}
+                className="mt-5 inline-flex h-11 items-center justify-center gap-1.5 rounded-full bg-[#009FD9] px-6 text-sm font-bold text-white transition-colors hover:bg-[#0089bb]"
+              >
+                <Plus className="h-4 w-4" /> {copy.publishTitle}
+              </button>
             </div>
           )}
         </div>
       </div>
       {publishOpen && professionalId && (
-        <Modal onClose={() => setPublishOpen(false)} title={copy.publishTitle} subtitle={copy.publishSubtitle} size="lg" bodyClassName="px-5 py-5 sm:px-6">
+        <Modal onClose={() => setPublishOpen(false)} title={copy.publishTitle} subtitle={copy.publishSubtitle} size="lg" bodyClassName="bg-[#f4f7fa] px-0 py-0">
           <JobPostForm professionalId={professionalId} presentation="modal" backHref={backHref} onSaved={(id) => { setPublishOpen(false); onRefresh?.(); router.push(`/empleos/${id}?from=panel`); }} />
         </Modal>
       )}
       {editingJob && professionalId && (
-        <Modal onClose={() => setEditingJob(null)} title={copy.editTitle} subtitle={copy.editSubtitle} size="lg" bodyClassName="px-5 py-5 sm:px-6">
+        <Modal onClose={() => setEditingJob(null)} title={copy.editTitle} subtitle={copy.editSubtitle} size="lg" bodyClassName="bg-[#f4f7fa] px-0 py-0">
           <JobPostForm key={editingJob.id} professionalId={professionalId} initialJob={editingJob} presentation="modal" backHref={backHref} onSaved={() => { setEditingJob(null); onRefresh?.(); router.refresh(); }} />
         </Modal>
       )}

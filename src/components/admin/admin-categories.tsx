@@ -986,10 +986,10 @@ export function AdminCategories() {
                           <Toggle checked={flags.supportsVideoconsulta} label="Video" onChange={(v) => setFlagEdits((p) => ({ ...p, [i.id]: { ...flags, supportsVideoconsulta: v } }))} />
                         </div>
                         <div className="flex flex-wrap justify-end gap-2 xl:pt-5">
-                          <button onClick={() => decide(i, "approved")} disabled={busy === i.id} className="inline-flex h-9 items-center gap-1 rounded-lg bg-[#16a34a] px-3 text-sm font-medium text-white hover:bg-[#15803d] disabled:opacity-50">
+                          <button onClick={() => decide(i, "approved")} disabled={busy !== null} className="inline-flex h-9 items-center gap-1 rounded-lg bg-[#16a34a] px-3 text-sm font-medium text-white hover:bg-[#15803d] disabled:opacity-50">
                             {busy === i.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />} Aprobar
                           </button>
-                          <button onClick={() => decide(i, "rejected")} disabled={busy === i.id} className="inline-flex h-9 items-center gap-1 rounded-lg border border-[#e5e7eb] bg-white px-3 text-sm font-medium text-[#374151] hover:bg-gray-50 disabled:opacity-50">
+                          <button onClick={() => decide(i, "rejected")} disabled={busy !== null} className="inline-flex h-9 items-center gap-1 rounded-lg border border-[#e5e7eb] bg-white px-3 text-sm font-medium text-[#374151] hover:bg-gray-50 disabled:opacity-50">
                             <X className="h-4 w-4" /> Rechazar
                           </button>
                         </div>

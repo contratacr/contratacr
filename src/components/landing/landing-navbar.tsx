@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useMemo, useCallback, type ReactNode } from "react";
 import {
-  X, Menu, ChevronDown, ChevronRight, Search, MapPin, List, Map as MapIcon,
+  X, Menu, ChevronDown, ChevronRight, Search, MapPin, List, Map as MapIcon, ArrowLeft,
   Bot, Briefcase, Compass, Wrench,
   UserRound, UserRoundPlus, LogOut, FileText, ShieldCheck, MessageSquareText, Settings,
   HelpCircle, ListChecks, Lightbulb, Headset, Globe2, Shield, Mail,
@@ -766,7 +766,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   const [hydrated, setHydrated] = useState(false);
   const nativeHeaderShell = hydrated && nativeApp;
   const nativeBottomShell = hydrated && nativeApp;
-  const { user, loading: authLoading } = useAuth();
+  const { user, avatarUrl, loading: authLoading } = useAuth();
   const nativeSearchRoute = /(^|\/)buscar(?:\/|$)/.test(pathname ?? "");
   // Search is a full-viewport map + results sheet. Do not merely hide the nav
   // with CSS: leaving it mounted keeps its layout class and safe-area reserve
@@ -1053,6 +1053,28 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   const mobileDrawerSubItemClass =
     "flex w-full items-center gap-2.5 rounded-xl px-2 py-2.5 text-left text-[14px] font-semibold leading-snug text-[#374151] transition-colors hover:bg-[#f4f7fa] hover:text-[#009FD9]";
 
+  // Una sola barra superior: si la pantalla actual publica un título de sección
+  // ("ccr:section-header"), la barra muestra "← Título" en lugar del logo y
+  // confirma con "ccr:section-header-ack" para que la pantalla oculte la suya.
+  const [sectionTitle, setSectionTitle] = useState<string | null>(null);
+  useEffect(() => {
+    // La pantalla puede haber publicado su título antes de que esta barra
+    // montara, así que se lee también el valor global.
+    const inicial = (window as unknown as { __ccrSectionHeader?: string | null }).__ccrSectionHeader ?? null;
+    if (inicial) {
+      setSectionTitle(inicial);
+      window.dispatchEvent(new Event("ccr:section-header-ack"));
+    }
+    const onHeader = (event: Event) => {
+      const detail = (event as CustomEvent<{ title?: string | null } | null>).detail;
+      const title = detail?.title ?? null;
+      setSectionTitle(title);
+      if (title) window.dispatchEvent(new Event("ccr:section-header-ack"));
+    };
+    window.addEventListener("ccr:section-header", onHeader as EventListener);
+    return () => window.removeEventListener("ccr:section-header", onHeader as EventListener);
+  }, []);
+
   const openMobileMenu = useCallback(() => {
     setMobileLegalOpen(false);
     setMobileHelpOpen(false);
@@ -1065,16 +1087,21 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
     return () => window.removeEventListener("ccr:open-mobile-menu", handleExternalMenuOpen);
   }, [openMobileMenu]);
 
-  const nativeBottomNavClass = useCallback(
+  const isNativeTabActive = useCallback(
     (href: string) => {
       const baseHref = href.split("?")[0] ?? href;
-      const isActive = nativePendingHref === href || pathname === baseHref || (baseHref === panelHref && pathname.startsWith(panelHref));
-      return cn(
-        "flex min-w-0 flex-col items-center justify-center gap-0.5 overflow-hidden rounded-xl px-0.5 py-1 text-[9px] font-extrabold leading-tight text-[#526277] transition-colors active:text-[#009FD9] min-[360px]:px-1 min-[360px]:text-[10px]",
-        isActive && "text-[#009FD9]",
-      );
+      return nativePendingHref === href || pathname === baseHref || (baseHref === panelHref && pathname.startsWith(panelHref));
     },
     [nativePendingHref, panelHref, pathname],
+  );
+
+  const nativeBottomNavClass = useCallback(
+    (href: string) =>
+      cn(
+        "flex min-w-0 flex-col items-center justify-center gap-0.5 overflow-hidden rounded-xl px-0.5 py-1 text-[10px] font-semibold leading-tight text-[#526277] transition-colors active:text-[#009FD9] min-[360px]:px-1 min-[360px]:text-[11px]",
+        isNativeTabActive(href) && "font-bold text-[#009FD9]",
+      ),
+    [isNativeTabActive],
   );
 
   const prepareNativeNavigation = useCallback(
@@ -1101,6 +1128,12 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
     },
     [nativeApp, prepareNativeNavigation, router],
   );
+
+  useEffect(() => {
+    const clearAssistant = () => setNativePendingHref((current) => (current === "assistant" ? null : current));
+    window.addEventListener("contratacr:close-ai", clearAssistant);
+    return () => window.removeEventListener("contratacr:close-ai", clearAssistant);
+  }, []);
 
   useEffect(() => {
     const id = window.setTimeout(() => setNativePendingHref(null), 0);
@@ -1452,6 +1485,21 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                   ? "justify-start gap-1.5"
                   : "justify-start gap-2",
               )}>
+                {sectionTitle ? (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => window.dispatchEvent(new Event("ccr:section-back"))}
+                      data-ccr-section-back=""
+                      className="grid h-10 w-10 shrink-0 place-items-center rounded-xl text-[#162543] transition-colors hover:bg-gray-50"
+                      aria-label={locale === "en" ? "Back" : "Volver"}
+                    >
+                      <ArrowLeft className="h-5 w-5" />
+                    </button>
+                    <h1 data-ccr-section-title="" className="mr-auto min-w-0 truncate pr-2 text-[17px] font-extrabold text-[#162543]">{sectionTitle}</h1>
+                  </>
+                ) : (
+                  <>
                 <button
                   type="button"
                   onClick={openMobileMenu}
@@ -1466,6 +1514,8 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                 <Link href="/" aria-label="ContrataCR inicio" className={cn("shrink-0", nativeHeaderShell && "mr-auto flex min-w-0 items-center justify-start")}>
                   {mobileInline ? <ContrataCRMark className="h-8 w-8" /> : <ContrataCRLogo size="lg" />}
                 </Link>
+                  </>
+                )}
 
                 {!nativeHeaderShell && mobileInline && (
                   <div className="flex min-w-0 flex-1 items-center gap-2">{mobileInline}</div>
@@ -2231,11 +2281,11 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
             >
               <div className="mx-auto grid w-full max-w-[520px] grid-cols-[repeat(5,minmax(0,1fr))] gap-0.5 min-[360px]:gap-1">
                 <Link href="/buscar" onTouchStart={() => prepareNativeNavigation("/buscar")} onPointerDown={() => prepareNativeNavigation("/buscar")} className={nativeBottomNavClass("/buscar")}>
-                  <Search className="h-5 w-5" />
+                  <Search className="h-5 w-5" strokeWidth={isNativeTabActive("/buscar") ? 2.5 : 2} />
                   <span className="max-w-full truncate">{locale === "en" ? "Search" : "Buscar"}</span>
                 </Link>
                 <Link href="/ofertas" onClick={(event) => navigateNativeMarketplace(event, "/ofertas")} onPointerDown={() => prepareNativeNavigation("/ofertas")} className={nativeBottomNavClass("/ofertas")}>
-                  <OfferTagPercentIcon className="h-5 w-5" />
+                  <OfferTagPercentIcon className="h-5 w-5" strokeWidth={isNativeTabActive("/ofertas") ? 2.5 : 2} />
                   <span className="max-w-full truncate">{locale === "en" ? "Deals" : "Ofertas"}</span>
                 </Link>
                 <button
@@ -2247,15 +2297,29 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                   className={nativeBottomNavClass("assistant")}
                   aria-label={locale === "en" ? "Open assistant" : "Abrir asistente"}
                 >
-                  <Bot className="h-5 w-5" />
+                  <Bot className="h-5 w-5" strokeWidth={isNativeTabActive("assistant") ? 2.5 : 2} />
                   <span className="max-w-full truncate">{locale === "en" ? "Assistant" : "Asistente"}</span>
                 </button>
                 <Link href="/empleos" onClick={(event) => navigateNativeMarketplace(event, "/empleos")} onPointerDown={() => prepareNativeNavigation("/empleos")} className={nativeBottomNavClass("/empleos")}>
-                  <Briefcase className="h-5 w-5" />
+                  <Briefcase className="h-5 w-5" strokeWidth={isNativeTabActive("/empleos") ? 2.5 : 2} />
                   <span className="max-w-full truncate">{locale === "en" ? "Jobs" : "Empleos"}</span>
                 </Link>
                 <Link href={nativePanelHref} onPointerDown={() => prepareNativeNavigation(nativePanelHref)} className={nativeBottomNavClass(nativePanelHref)}>
-                  <UserRound className="h-5 w-5" />
+                  <span className="grid h-5 w-5 shrink-0 place-items-center">
+                    {avatarUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element -- tiny fixed-size avatar; the optimizer is a no-op on Cloudflare
+                      <img
+                        src={avatarUrl}
+                        alt=""
+                        className={cn(
+                          "h-[22px] w-[22px] max-w-none rounded-full object-cover",
+                          isNativeTabActive(nativePanelHref) ? "ring-2 ring-[#009FD9]" : "ring-1 ring-[#d5dfe9]",
+                        )}
+                      />
+                    ) : (
+                      <UserRound className="h-5 w-5" strokeWidth={isNativeTabActive(nativePanelHref) ? 2.5 : 2} />
+                    )}
+                  </span>
                   <span className="max-w-full truncate">Panel</span>
                 </Link>
               </div>

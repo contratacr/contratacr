@@ -17,6 +17,8 @@ interface ReviewSectionProps {
   reviewCount: number;
   ratingAvg: number;
   reviews: Review[];
+  /** Recarga los datos del perfil tras publicar/editar una reseña. */
+  onReviewSubmitted?: () => void | Promise<void>;
   isAuthenticated: boolean;
 }
 
@@ -44,6 +46,7 @@ export function ReviewSection({
   reviewCount,
   ratingAvg,
   reviews,
+  onReviewSubmitted,
   isAuthenticated,
 }: ReviewSectionProps) {
   const t = useTranslations("profile");
@@ -113,18 +116,6 @@ export function ReviewSection({
         </div>
       </div>
 
-      <div className="mb-6">
-        <LeaveReviewModal
-          professionalId={professionalId}
-          professionalName={professionalName}
-          embedded
-          isAuthenticated={isAuthenticated}
-          loginRedirectPath={reviewRedirectPath}
-          onClose={() => undefined}
-          onSuccess={() => router.refresh()}
-        />
-      </div>
-
       <div className="flex flex-col gap-5">
         {reviews.map((review) => {
           const clientName = review.clientName === "Cliente" && locale === "en" ? "Client" : review.clientName;
@@ -154,10 +145,26 @@ export function ReviewSection({
         })}
 
         {reviews.length === 0 && (
-          <p className="text-sm text-[#9ca3af] text-center py-6">
-            {t("noReviews")}
-          </p>
+          <div className="flex flex-col items-center py-8 text-center">
+            <span className="grid h-12 w-12 place-items-center rounded-full bg-[#fff6ec] text-[#ff9b32]">
+              <Star className="h-5 w-5" />
+            </span>
+            <p className="mt-3 text-sm font-semibold text-[#374151]">{t("noReviews")}</p>
+          </div>
         )}
+      </div>
+
+      {/* Leave/edit-your-review comes AFTER the social proof. */}
+      <div className="mt-6">
+        <LeaveReviewModal
+          professionalId={professionalId}
+          professionalName={professionalName}
+          embedded
+          isAuthenticated={isAuthenticated}
+          loginRedirectPath={reviewRedirectPath}
+          onClose={() => undefined}
+          onSuccess={() => { void onReviewSubmitted?.(); router.refresh(); }}
+        />
       </div>
     </>
   );

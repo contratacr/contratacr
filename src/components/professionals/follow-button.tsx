@@ -79,13 +79,22 @@ export async function applyPendingFollow(userId?: string): Promise<boolean> {
 export function FollowButton({ professionalId, isOwn = false, compact = false, className, showCount = false, initialFollowers = 0, labelOverride, onCountChange, onSelfAction }: FollowButtonProps) {
   const locale = useLocale();
   const { user, loading: authLoading } = useAuth();
-  const [following, setFollowing] = useState(false);
+  const [following, setFollowing] = useState<boolean>(() => {
+    try { return Boolean(user && getLocalFollowIds(user.id).includes(professionalId)); } catch { return false; }
+  });
   const [followers, setFollowers] = useState(initialFollowers);
   const [busy, setBusy] = useState(false);
   const [resolvedScope, setResolvedScope] = useState<string | null>(null);
   const mutationEpoch = useRef(0);
   const refreshRequestId = useRef(0);
   const es = locale !== "en";
+
+  // Anti-parpadeo: si este dispositivo ya siguió al pro, mostrar "Siguiendo" de
+  // inmediato (lectura síncrona de localStorage) sin esperar al servidor.
+  useEffect(() => {
+    if (!user) return;
+    try { if (getLocalFollowIds(user.id).includes(professionalId)) setFollowing(true); } catch { /* noop */ }
+  }, [user, professionalId]);
 
   const refresh = useCallback(async () => {
     const requestId = ++refreshRequestId.current;
@@ -104,7 +113,12 @@ export function FollowButton({ professionalId, isOwn = false, compact = false, c
     const nextFollowers = countResult.count ?? initialFollowers;
     setFollowers(nextFollowers);
     onCountChange?.(nextFollowers);
-    setFollowing(Boolean(stateResult.data) || Boolean(user && getLocalFollowIds(user.id).includes(professionalId)));
+    const serverFollowing = Boolean(stateResult.data);
+    setFollowing(serverFollowing || Boolean(user && getLocalFollowIds(user.id).includes(professionalId)));
+    if (user && serverFollowing) {
+      // Persistir para que la próxima carga nazca en "Siguiendo" sin parpadeo.
+      try { if (!getLocalFollowIds(user.id).includes(professionalId)) addLocalFollow(user.id, professionalId); } catch { /* noop */ }
+    }
     setResolvedScope(viewerScope);
   }, [initialFollowers, onCountChange, professionalId, user]);
 
@@ -156,6 +170,10 @@ export function FollowButton({ professionalId, isOwn = false, compact = false, c
         return;
       }
       if (following) removeLocalFollow(user.id, professionalId);
+      if (!following) {
+        // The profile owner learns about the new follower (server re-verifies).
+        void fetch("/api/professional-followers/notify", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ professionalId }) });
+      }
       const delta = following ? (localOnlyFollow ? 0 : -1) : 1;
       const nextFollowers = Math.max(0, followers + delta);
       setFollowing(!following);

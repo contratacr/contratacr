@@ -188,7 +188,7 @@ function JobTitleInput({ defaultValue, error, locale, copy }: { defaultValue?: s
   }
 
   return (
-    <label className="text-sm font-semibold sm:col-span-2">
+    <label className="text-sm font-medium text-[#374151] sm:col-span-2">
       <RequiredLabel>{copy.position}</RequiredLabel>
       <div className="relative mt-1.5">
         {completion && (
@@ -384,27 +384,26 @@ export function JobPostForm({ professionalId, backHref = "/empleos", initialJob 
   }
 
   return (
-    <main className={presentation === "modal" ? "bg-white text-[#162543]" : "min-h-[calc(100vh-72px)] bg-white text-[#162543] lg:bg-[#f4f7fa] lg:px-6 lg:py-10"}>
+    <main className={presentation === "modal" ? "bg-[#f4f7fa] text-[#162543]" : "min-h-[calc(100vh-72px)] bg-[#f4f7fa] text-[#162543] lg:px-6 lg:py-10"}>
       <header className={presentation === "modal" ? "hidden" : "sticky top-0 z-20 border-b border-[#dfe8f0] bg-white lg:hidden"}>
         <div className="relative flex min-h-[56px] items-center justify-center px-14">
           <Link href={backHref} aria-label={copy.back} className="absolute left-3 top-1/2 grid h-11 w-11 -translate-y-1/2 place-items-center text-[#162543]"><ArrowLeft className="h-6 w-6 stroke-[2.4]" /></Link>
           <h1 className="truncate text-center text-[17px] font-extrabold">{editing ? copy.editJob : copy.publishJob}</h1>
         </div>
       </header>
-      <div className={presentation === "modal" ? "mx-auto max-w-3xl" : "mx-auto max-w-3xl px-4 py-5 sm:px-6 lg:px-0 lg:py-0"}>
+      <div className={presentation === "modal" ? "mx-auto max-w-3xl px-4 py-5" : "mx-auto max-w-3xl px-4 py-5 sm:px-6 lg:px-0 lg:py-0"}>
         <div className={presentation === "modal" ? "hidden" : "mb-4 hidden items-center gap-3 lg:flex"}>
           <Link href={backHref} aria-label={copy.backToJobs} className="grid h-10 w-10 place-items-center rounded-lg text-[#162543] hover:bg-white"><ArrowLeft className="h-5 w-5" /></Link>
           <div><h1 className="text-2xl font-bold">{editing ? copy.editJob : copy.publishJob}</h1><p className="text-sm text-[#65758c]">{copy.subtitle}</p></div>
         </div>
-        <form onSubmit={submit} noValidate className={presentation === "modal" ? "bg-white" : "rounded-lg border border-[#dfe8f0] bg-white p-5 sm:p-7"}>
-          <div className="mb-6 flex items-center gap-3 border-b border-[#e6edf3] pb-5"><span className="grid h-10 w-10 place-items-center rounded-lg bg-[#eaf7fc] text-[#009fd9]"><BriefcaseBusiness className="h-5 w-5" /></span><h2 className="font-bold">{copy.jobInformation}</h2></div>
+        <form onSubmit={submit} noValidate className="rounded-2xl border border-[#e5e7eb] bg-white p-5 shadow-sm">
           <div className="grid gap-5 sm:grid-cols-2">
             <JobTitleInput defaultValue={initialJob?.title ?? ""} error={fieldErrors.title} locale={locale} copy={copy} />
             <SelectMenu label={<RequiredLabel>{copy.employmentType}</RequiredLabel>} value={employmentType} onChange={setEmploymentType} options={(Object.keys(EMPLOYMENT_TYPES) as EmploymentType[]).map((value) => ({ value, label: employmentTypeLabel(value, locale) }))} />
             <SelectMenu label={<RequiredLabel>{copy.workplaceType}</RequiredLabel>} value={workplaceType} onChange={setWorkplaceType} options={(Object.keys(WORKPLACE_TYPES) as WorkplaceType[]).map((value) => ({ value, label: workplaceTypeLabel(value, locale) }))} />
             <SelectMenu label={<RequiredLabel>{copy.experience}</RequiredLabel>} value={experienceLevel} onChange={setExperienceLevel} options={(Object.keys(EXPERIENCE_LEVELS) as ExperienceLevel[]).map((value) => ({ value, label: experienceLevelLabel(value, locale) }))} />
             {showsDurationField && (
-              <label className="text-sm font-semibold sm:col-span-2">
+              <label className="text-sm font-medium text-[#374151] sm:col-span-2">
                 {copy.duration} <span className="font-normal text-[#9ca3af]">({copy.optional})</span>
                 <input name="duration_label" maxLength={80} defaultValue={initialJob?.duration_label ?? ""} placeholder={copy.durationPlaceholder} className={FIELD_CLASS} />
               </label>
@@ -430,7 +429,7 @@ export function JobPostForm({ professionalId, backHref = "/empleos", initialJob 
                 <FieldError>{fieldErrors.location}</FieldError>
               </div>
             )}
-            <label className="text-sm font-semibold sm:col-span-2"><RequiredLabel>{copy.description}</RequiredLabel><textarea name="description" maxLength={5000} defaultValue={initialJob?.description ?? ""} placeholder={copy.descriptionPlaceholder} className={TEXTAREA_CLASS} /><FieldError>{fieldErrors.description}</FieldError></label>
+            <label className="text-sm font-medium text-[#374151] sm:col-span-2"><RequiredLabel>{copy.description}</RequiredLabel><textarea name="description" maxLength={5000} defaultValue={initialJob?.description ?? ""} placeholder={copy.descriptionPlaceholder} className={TEXTAREA_CLASS} /><FieldError>{fieldErrors.description}</FieldError></label>
             <EditableList title={copy.responsibilities} values={responsibilities} onChange={setResponsibilities} placeholder={copy.responsibilityPlaceholder} addLabel={copy.addResponsibility} optionalLabel={copy.optional} removeLabel={copy.remove} error={fieldErrors.responsibilities} />
             <EditableList title={copy.requirements} values={requirements} onChange={setRequirements} placeholder={copy.requirementPlaceholder} addLabel={copy.addRequirement} optionalLabel={copy.optional} removeLabel={copy.remove} error={fieldErrors.requirements} />
             <EditableList title={copy.benefits} optional values={benefits} onChange={setBenefits} placeholder={copy.benefitPlaceholder} addLabel={copy.addBenefit} optionalLabel={copy.optional} removeLabel={copy.remove} />
@@ -438,11 +437,11 @@ export function JobPostForm({ professionalId, backHref = "/empleos", initialJob 
 
           <div className="my-6 border-t border-[#e6edf3] pt-6"><h2 className="font-bold">{copy.salaryAndValidity}</h2><p className="mt-1 text-xs text-[#68778d]">{copy.optionalInformation}</p></div>
           <div className="grid gap-4 sm:grid-cols-2">
-            <label className="text-sm font-semibold">{copy.salaryFrom} <span className="font-normal text-[#9ca3af]">({copy.optional})</span><input name="salary_min" inputMode="numeric" maxLength={String(MAX_MONEY_AMOUNT).length} defaultValue={initialJob?.salary_min ?? ""} placeholder="450000" className={FIELD_CLASS} /></label>
-            <label className="text-sm font-semibold">{copy.salaryTo} <span className="font-normal text-[#9ca3af]">({copy.optional})</span><input name="salary_max" inputMode="numeric" maxLength={String(MAX_MONEY_AMOUNT).length} defaultValue={initialJob?.salary_max ?? ""} placeholder="650000" className={FIELD_CLASS} /><FieldError>{fieldErrors.salary}</FieldError></label>
+            <label className="text-sm font-medium text-[#374151]">{copy.salaryFrom} <span className="font-normal text-[#9ca3af]">({copy.optional})</span><input name="salary_min" inputMode="numeric" maxLength={String(MAX_MONEY_AMOUNT).length} defaultValue={initialJob?.salary_min ?? ""} placeholder="450000" className={FIELD_CLASS} /></label>
+            <label className="text-sm font-medium text-[#374151]">{copy.salaryTo} <span className="font-normal text-[#9ca3af]">({copy.optional})</span><input name="salary_max" inputMode="numeric" maxLength={String(MAX_MONEY_AMOUNT).length} defaultValue={initialJob?.salary_max ?? ""} placeholder="650000" className={FIELD_CLASS} /><FieldError>{fieldErrors.salary}</FieldError></label>
             <SelectMenu label={copy.currency} value={currency} onChange={setCurrency} options={[{ value: "CRC", label: copy.colones }, { value: "USD", label: copy.dollars }]} />
             <SelectMenu label={copy.salaryPeriod} value={salaryPeriod} onChange={setSalaryPeriod} options={(Object.keys(SALARY_PERIODS) as SalaryPeriod[]).map((value) => ({ value, label: salaryPeriodLabel(value, locale) }))} />
-            <label className="text-sm font-semibold">{copy.openings} <span className="font-normal text-[#9ca3af]">({copy.optional})</span><input name="openings" type="number" min={1} max={100} defaultValue={initialJob?.openings ?? 1} className={FIELD_CLASS} /><FieldError>{fieldErrors.openings}</FieldError></label>
+            <label className="text-sm font-medium text-[#374151]">{copy.openings} <span className="font-normal text-[#9ca3af]">({copy.optional})</span><input name="openings" type="number" min={1} max={100} defaultValue={initialJob?.openings ?? 1} className={FIELD_CLASS} /><FieldError>{fieldErrors.openings}</FieldError></label>
             <div className="text-sm font-semibold">
               {copy.deadline} <span className="font-normal text-[#9ca3af]">({copy.optional})</span>
               <div className="mt-1.5"><FutureDatePicker value={deadline} onChange={setDeadline} /></div>

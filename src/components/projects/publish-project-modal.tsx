@@ -355,7 +355,8 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
           {!profileReady ? (
             <FormLoadingState label={t("loadingProfile")} />
           ) : (
-          <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto overscroll-contain px-5 py-5 sm:max-h-[calc(90vh-145px)] sm:flex-none sm:px-6">
+          <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain bg-[#f4f7fa] px-4 py-5 sm:max-h-[calc(90vh-145px)] sm:flex-none">
+            <div className="flex flex-col gap-5 rounded-2xl border border-[#e5e7eb] bg-white p-5 shadow-sm">
             {/* Category */}
             <div ref={categoryFieldRef}>
               <label className="text-sm font-medium text-[#374151] block mb-1.5">
@@ -461,7 +462,7 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
                 optional filter (mirrors the old empty-option default). */}
             {selectedIsHealth && (
               <div className="border-t border-[#edf1f5] pt-3">
-                <label className="text-sm font-semibold text-[#374151] block mb-2.5">
+                <label className="text-sm font-medium text-[#374151] block mb-1.5">
                   {t("forWho.question")}
                 </label>
                 <div className="grid grid-cols-2 gap-2">
@@ -486,7 +487,7 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
                 {form.forSomeoneElse && (
                   <div className="mt-3 flex flex-col gap-3 border-l-2 border-[#d8eef8] pl-3">
                     <div ref={beneficiaryNameFieldRef}>
-                      <label className="text-xs font-medium text-[#374151] block mb-1.5">
+                      <label className="text-sm font-medium text-[#374151] block mb-1.5">
                         {t("forWho.nameLabel")} <span className="text-red-500">*</span>
                       </label>
                       <input
@@ -499,7 +500,7 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
                       />
                     </div>
                     <div ref={beneficiaryDobFieldRef}>
-                      <label className="text-xs font-medium text-[#374151] block mb-1.5">
+                      <label className="text-sm font-medium text-[#374151] block mb-1.5">
                         {t("forWho.dobLabel")} <span className="text-red-500">*</span>
                       </label>
                       <DateOfBirthPicker value={form.beneficiaryDob} onChange={(v) => update("beneficiaryDob", v)} />
@@ -582,6 +583,7 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
                 {identityNotice}
               </p>
             )}
+            </div>
           </div>
           )}
 

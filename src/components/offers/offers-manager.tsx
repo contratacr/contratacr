@@ -150,7 +150,7 @@ export function OffersManager({ initialOffers, embedded = false, backHref = "/da
             const imageUrl = offer.image_urls[0];
             const displayStatus = effectiveOfferStatus(offer, crTodayISO());
             return (
-              <article key={offer.id} className={cn("relative overflow-visible rounded-2xl border border-[#d9e6ef] bg-white shadow-[0_2px_8px_rgba(15,23,42,0.06)]", actionsOpen === offer.id && "z-40")}>
+              <article key={offer.id} className={cn("relative overflow-visible rounded-2xl border border-[#e5e7eb] bg-white shadow-[0_2px_8px_rgba(15,23,42,0.06)]", actionsOpen === offer.id && "z-40")}>
                 <button type="button" onClick={() => setOpenId(isOpen ? null : offer.id)} className="relative grid h-28 w-full grid-cols-[52px_minmax(0,1fr)] items-center gap-3 px-4 pr-[116px] text-left sm:h-24 sm:grid-cols-[56px_minmax(0,1fr)] sm:gap-4 sm:px-5 sm:pr-[132px]">
                   <div className="grid h-[52px] w-[52px] min-h-0 min-w-0 shrink-0 place-items-center overflow-hidden rounded-lg text-[#009fd9] sm:h-14 sm:w-14">
                     {imageUrl ? (
@@ -163,10 +163,9 @@ export function OffersManager({ initialOffers, embedded = false, backHref = "/da
                     {offer.service_label && (
                       <p className="mt-1 line-clamp-2 text-xs font-bold leading-4 text-[#008fc3]" title={offer.service_label}>{offer.service_label}</p>
                     )}
-                    <p className="mt-1 flex min-w-0 items-center gap-x-1.5 text-xs font-semibold text-[#65758c]">
-                      <span className="min-w-0 truncate">{offerTypeLabel(offer.offer_type, locale)}</span>
-                      <span aria-hidden="true" className="shrink-0 text-[#b8c4d1]">·</span>
-                      <span className="shrink-0">{formatOfferPrice(offer, locale)}</span>
+                    <p className="mt-1 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5 text-xs font-semibold text-[#65758c]">
+                      <span className="min-w-0 whitespace-nowrap">{offerTypeLabel(offer.offer_type, locale)}</span>
+                      <span className="whitespace-nowrap">{formatOfferPrice(offer, locale)}</span>
                     </p>
                   </div>
                   <div className="absolute right-3 top-1/2 flex -translate-y-1/2 items-center gap-1.5 sm:right-4 sm:gap-2">
@@ -184,7 +183,7 @@ export function OffersManager({ initialOffers, embedded = false, backHref = "/da
                       <div className="relative">
                         <button type="button" onClick={() => setActionsOpen((current) => current === offer.id ? null : offer.id)} aria-label={copy.more} aria-haspopup="menu" aria-expanded={actionsOpen === offer.id} className="grid h-10 w-10 place-items-center rounded-lg border border-[#d7e1ea] text-[#718096] transition hover:border-[#b9c8d6] hover:bg-[#f6f9fb] hover:text-[#162543]"><MoreVertical className="h-5 w-5" /></button>
                         {actionsOpen === offer.id && (
-                          <div role="menu" className="absolute bottom-[calc(100%+6px)] right-0 z-50 w-44 overflow-hidden rounded-xl border border-[#dfe8f0] bg-white p-1.5 shadow-[0_18px_45px_-22px_rgba(15,23,42,0.55)]">
+                          <div role="menu" className="absolute bottom-[calc(100%+6px)] right-0 z-50 w-44 overflow-hidden rounded-xl border border-[#e5e7eb] bg-white p-1.5 shadow-[0_18px_45px_-22px_rgba(15,23,42,0.55)]">
                             {displayStatus !== "published" && displayStatus !== "expired" && <button role="menuitem" onClick={() => { setActionsOpen(null); updateStatus(offer.id, "published"); }} className="block w-full rounded-lg px-3 py-2.5 text-left text-sm font-bold text-[#008fc3] hover:bg-[#f0f9fc]">{copy.publish}</button>}
                             {displayStatus === "published" && <button role="menuitem" onClick={() => { setActionsOpen(null); updateStatus(offer.id, "paused"); }} className="block w-full rounded-lg px-3 py-2.5 text-left text-sm font-bold text-[#162543] hover:bg-[#f4f8fb]">{copy.pause}</button>}
                             {offer.status !== "sold_out" && <button role="menuitem" onClick={() => { setActionsOpen(null); updateStatus(offer.id, "sold_out"); }} className="block w-full rounded-lg px-3 py-2.5 text-left text-sm font-bold text-[#162543] hover:bg-[#f4f8fb]">{copy.soldOut}</button>}
@@ -203,21 +202,31 @@ export function OffersManager({ initialOffers, embedded = false, backHref = "/da
               "px-6 py-12 text-center",
               embedded
                 ? "rounded-xl border border-dashed border-[#d8e4ec] bg-[#f8fbfd]"
-                : "rounded-2xl border border-[#dfe8f0] bg-white shadow-[0_2px_8px_rgba(15,23,42,0.05)]"
+                : "rounded-2xl border border-[#e5e7eb] bg-white shadow-[0_2px_8px_rgba(15,23,42,0.05)]"
             )}>
-              <h2 className="font-bold">{copy.emptyTitle}</h2>
+              <span className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-[#eaf7fc] text-[#009fd9]">
+                <BadgePercent className="h-6 w-6" strokeWidth={2} />
+              </span>
+              <h2 className="mt-4 font-bold text-[#162543]">{copy.emptyTitle}</h2>
               <p className="mt-1 text-sm text-[#68778d]">{copy.emptyBody}</p>
+              <button
+                type="button"
+                onClick={() => setPublishOpen(true)}
+                className="mt-5 inline-flex h-11 items-center justify-center gap-1.5 rounded-full bg-[#009FD9] px-6 text-sm font-bold text-white transition-colors hover:bg-[#0089bb]"
+              >
+                <Plus className="h-4 w-4" /> {copy.publishTitle}
+              </button>
             </div>
           )}
         </div>
       </div>
       {publishOpen && professionalId && (
-        <Modal onClose={() => setPublishOpen(false)} title={copy.publishTitle} subtitle={copy.publishSubtitle} size="lg" bodyClassName="px-5 py-5 sm:px-6">
+        <Modal onClose={() => setPublishOpen(false)} title={copy.publishTitle} subtitle={copy.publishSubtitle} size="lg" bodyClassName="bg-[#f4f7fa] px-0 py-0">
           <OfferForm professionalId={professionalId} serviceOptions={serviceOptions} presentation="modal" backHref={backHref} onSaved={(id) => { setPublishOpen(false); onRefresh?.(); router.push(`/ofertas/${id}?from=panel`); }} />
         </Modal>
       )}
       {editingOffer && professionalId && (
-        <Modal onClose={() => setEditingOffer(null)} title={copy.editTitle} subtitle={copy.editSubtitle} size="lg" bodyClassName="px-5 py-5 sm:px-6">
+        <Modal onClose={() => setEditingOffer(null)} title={copy.editTitle} subtitle={copy.editSubtitle} size="lg" bodyClassName="bg-[#f4f7fa] px-0 py-0">
           <OfferForm key={editingOffer.id} professionalId={professionalId} serviceOptions={serviceOptions} initialOffer={editingOffer} presentation="modal" backHref={backHref} onSaved={() => { setEditingOffer(null); onRefresh?.(); router.refresh(); }} />
         </Modal>
       )}

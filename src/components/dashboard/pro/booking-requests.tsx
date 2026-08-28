@@ -475,7 +475,7 @@ export function BookingRequests() {
                       aria-haspopup="menu"
                       aria-expanded={actionsMenuFor === booking.id}
                       onClick={() => setActionsMenuFor((current) => current === booking.id ? null : booking.id)}
-                      className="grid h-10 w-10 place-items-center rounded-lg border border-[#d7e1ea] text-[#718096] transition hover:border-[#b9c8d6] hover:bg-[#f6f9fb] hover:text-[#162543]"
+                      className="grid h-10 w-10 place-items-center rounded-lg border border-[#d7e1ea] text-[#718096] transition hover:border-[#b9c8d6] hover:bg-[#f6f9fb] hover:text-[#162543] [.ccr-native-app_&]:h-11 [.ccr-native-app_&]:w-11"
                     >
                       <MoreVertical className="h-5 w-5" />
                     </button>

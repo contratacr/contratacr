@@ -37,6 +37,32 @@ export function emailLogoMarkup(origin = "https://contratacr.com") {
   `;
 }
 
+/**
+ * One branded shell for EVERY ContrataCR email: light/dark logo centered on a
+ * white card — the exact structure of the password-reset email — so no sender
+ * hand-rolls its own header again. `bodyHtml` renders inside the card.
+ */
+export function brandedEmailDocument({ title, bodyHtml, origin = "https://contratacr.com" }: { title: string; bodyHtml: string; origin?: string }) {
+  return `<!doctype html>
+    <html lang="es">
+    <head>
+      <meta charset="utf-8">
+      <meta name="color-scheme" content="light dark">
+      <meta name="supported-color-schemes" content="light dark">
+      <title>${title}</title>
+      <style>${EMAIL_LOGO_DARK_MODE_STYLES}</style>
+    </head>
+    <body style="margin:0;padding:0;background:#f4f7fa;color:#162543;font-family:Arial,Helvetica,sans-serif">
+      <div style="padding:28px 14px">
+        <div style="max-width:532px;margin:0 auto;padding:30px 34px;background:#fff;border:1px solid #e6edf3;border-radius:18px">
+          <div style="margin:0 auto 24px">${emailLogoMarkup(origin)}</div>
+          ${bodyHtml}
+        </div>
+      </div>
+    </body>
+    </html>`;
+}
+
 export type DeliveryStatus = "sent" | "failed" | "skipped";
 export type EmailResult = { ok: boolean; status: DeliveryStatus; detail: string | null };
 

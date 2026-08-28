@@ -3,7 +3,7 @@ export const runtime = "nodejs";
 import { NextRequest, NextResponse } from "next/server";
 import { enforceRateLimit } from "@/lib/rate-limit";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { sendBrevoEmail } from "@/lib/email/send";
+import { brandedEmailDocument, sendBrevoEmail } from "@/lib/email/send";
 import { auditUserAction } from "@/lib/audit/user-action";
 import { writeSourceColumns } from "@/lib/security/write-guard";
 
@@ -68,12 +68,10 @@ export async function POST(req: NextRequest) {
     }
 
     const profileUrl = `https://contratacr.com/es/profesionales/${professionalSlug}`;
-    const html = `
-      <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:24px;background:#f4f7fa;border-radius:8px;">
-        <div style="background:#1a2744;color:white;padding:16px 24px;border-radius:8px 8px 0 0;">
-          <h2 style="margin:0;font-size:18px;">Reporte de perfil — ContrataCR</h2>
-        </div>
-        <div style="background:white;padding:24px;border:1px solid #e5e7eb;border-top:none;border-radius:0 0 8px 8px;">
+    const html = brandedEmailDocument({
+      title: "Reporte de perfil — ContrataCR",
+      bodyHtml: `
+          <h1 style="font-size:20px;line-height:1.3;margin:0 0 16px">Reporte de perfil</h1>
           <table style="width:100%;border-collapse:collapse;margin-bottom:16px;font-size:14px;">
             <tr><td style="padding:6px 0;color:#6b7280;width:120px;">Profesional:</td><td style="padding:6px 0;font-weight:600;color:#111827;">${professionalName ?? "—"}</td></tr>
             <tr><td style="padding:6px 0;color:#6b7280;">Perfil:</td><td style="padding:6px 0;"><a href="${profileUrl}" style="color:#009FD9;">${profileUrl}</a></td></tr>
@@ -81,9 +79,8 @@ export async function POST(req: NextRequest) {
           </table>
           <hr style="border:none;border-top:1px solid #f3f4f6;margin:12px 0;"/>
           <p style="font-size:13px;color:#6b7280;margin:0 0 6px;">Motivo:</p>
-          <div style="font-size:14px;color:#374151;line-height:1.6;white-space:pre-wrap;">${String(reason ?? "Sin detalle").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</div>
-        </div>
-      </div>`;
+          <div style="font-size:14px;color:#374151;line-height:1.6;white-space:pre-wrap;">${String(reason ?? "Sin detalle").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</div>`,
+    });
 
     const r = await sendBrevoEmail({
       to: SUPPORT_TO,

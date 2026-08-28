@@ -126,6 +126,8 @@ export function MarketplaceSearch({
   const rootRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const fullInputRef = useRef<HTMLInputElement>(null);
+  const fullSecondaryInputRef = useRef<HTMLInputElement>(null);
+  const desktopSecondaryInputRef = useRef<HTMLInputElement>(null);
   const cleanValue = value.trim().toLocaleLowerCase("es-CR");
   const uniqueSuggestions = useMemo(() => {
     const seen = new Set<string>();
@@ -224,6 +226,13 @@ export function MarketplaceSearch({
     if (!normalized) return;
     onChange(normalized);
     saveRecent(normalized);
+    // Completing the first field hands the focus to the second; only when both
+    // are answered does the sheet close (the results are already filtering).
+    if (secondary && !secondary.value.trim()) {
+      setMobileField("secondary");
+      window.setTimeout(() => fullSecondaryInputRef.current?.focus(), 60);
+      return;
+    }
     closeMobileSearch();
   }
 
@@ -235,12 +244,19 @@ export function MarketplaceSearch({
   function choosePrimarySuggestion(suggestion: string) {
     onChange(suggestion);
     saveRecent(suggestion);
+    if (secondary && !secondary.value.trim()) {
+      setDesktopField("secondary");
+      window.setTimeout(() => desktopSecondaryInputRef.current?.focus(), 60);
+      return;
+    }
     setDesktopField(null);
   }
 
   function chooseSecondarySuggestion(suggestion: string) {
     secondary?.onChange(suggestion);
     setDesktopField(null);
+    // Second field answered: the search is done — close the mobile sheet.
+    if (open) closeMobileSearch();
   }
 
   return (
@@ -291,7 +307,7 @@ export function MarketplaceSearch({
             <span aria-hidden="true" className="hidden h-6 w-px shrink-0 bg-[#dfe5eb] lg:block" />
             <div className="relative hidden min-w-[140px] flex-1 lg:block xl:min-w-[180px]">
               <SecondaryIcon className="pointer-events-none absolute left-0 top-1/2 h-5 w-5 -translate-y-1/2 text-[#a1adbb]" aria-hidden="true" />
-              <input value={secondary.value} onChange={(event) => { secondary.onChange(event.target.value); setDesktopField("secondary"); }} onFocus={() => setDesktopField("secondary")} placeholder={secondary.placeholder} aria-label={secondary.ariaLabel ?? secondary.placeholder} className="h-10 w-full bg-transparent pl-8 pr-8 text-base font-normal text-gray-700 outline-none placeholder:text-gray-400" />
+              <input ref={desktopSecondaryInputRef} value={secondary.value} onChange={(event) => { secondary.onChange(event.target.value); setDesktopField("secondary"); }} onFocus={() => setDesktopField("secondary")} placeholder={secondary.placeholder} aria-label={secondary.ariaLabel ?? secondary.placeholder} className="h-10 w-full bg-transparent pl-8 pr-8 text-base font-normal text-gray-700 outline-none placeholder:text-gray-400" />
               {secondary.value && <button type="button" onClick={() => secondary.onChange("")} aria-label={secondaryClearLabel} className="absolute right-0 top-1/2 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-full text-[#8b96a5] hover:bg-[#edf3f7]"><X className="h-4 w-4" /></button>}
             {desktopField === "secondary" && visibleSecondarySuggestions.length > 0 && (
               <div className="absolute left-0 right-0 top-[calc(100%+8px)] z-50 overflow-hidden rounded-xl border border-[#d7e1ea] bg-white py-1 shadow-[0_16px_38px_-24px_rgba(15,23,42,0.8)]">
@@ -327,6 +343,11 @@ export function MarketplaceSearch({
                 onKeyDown={(event) => {
                   if (event.key === "Enter") {
                     submitSearch();
+                    if (secondary && !secondary.value.trim()) {
+                      setMobileField("secondary");
+                      window.setTimeout(() => fullSecondaryInputRef.current?.focus(), 60);
+                      return;
+                    }
                     closeMobileSearch();
                   }
                 }}
@@ -341,9 +362,12 @@ export function MarketplaceSearch({
                   <SecondaryIcon className="h-6 w-6 text-[#162543]" />
                 </span>
                 <input
+                  ref={fullSecondaryInputRef}
                   value={secondary.value}
                   onChange={(event) => { secondary.onChange(event.target.value); setMobileField("secondary"); }}
                   onFocus={() => setMobileField("secondary")}
+                  onKeyDown={(event) => { if (event.key === "Enter") closeMobileSearch(); }}
+                  enterKeyHint="search"
                   placeholder={secondary.placeholder}
                   aria-label={secondary.ariaLabel ?? secondary.placeholder}
                   className="min-w-0 flex-1 bg-transparent px-2 text-[17px] font-semibold text-[#162543] outline-none placeholder:text-[#9aa8ba]"
@@ -442,6 +466,8 @@ export function MarketplaceFilterChip({ label, value, options, onChange }: { lab
   const [open, setOpen] = useState(false);
   const [pending, setPending] = useState(value);
   const rootRef = useRef<HTMLDivElement>(null);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
   const selectedLabel = options.find(([item]) => item === value)?.[1] ?? label;
   const active = value !== options[0]?.[0];
 
@@ -454,6 +480,27 @@ export function MarketplaceFilterChip({ label, value, options, onChange }: { lab
     document.addEventListener("pointerdown", close);
     return () => document.removeEventListener("pointerdown", close);
   }, [open, value]);
+
+  const sheetBody = (
+    <>
+      <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-[#c7d2dc] lg:hidden" />
+      <div className="flex min-h-12 items-center justify-between border-b border-[#e7edf2] lg:min-h-10">
+        <h2 className="text-lg font-bold lg:text-base">{label}</h2>
+        <button type="button" onClick={() => setOpen(false)} aria-label={copy.close} className="grid h-10 w-10 place-items-center"><X className="h-5 w-5" /></button>
+      </div>
+      <div className="py-2">
+        {options.map(([itemValue, itemLabel]) => (
+          <button key={itemValue} type="button" onClick={() => setPending(itemValue)} className="flex min-h-12 w-full items-center justify-between gap-4 text-left text-sm font-semibold">
+            <span>{itemLabel}</span>
+            <span className={`grid h-6 w-6 shrink-0 place-items-center rounded-full border ${pending === itemValue ? "border-[#009fd9] bg-[#009fd9] text-white" : "border-[#b9c5d1]"}`}>
+              {pending === itemValue && <Check className="h-4 w-4" />}
+            </span>
+          </button>
+        ))}
+      </div>
+      <button type="button" onClick={() => { onChange(pending); setOpen(false); }} className="h-12 w-full rounded-lg bg-[#009fd9] text-sm font-bold text-white hover:bg-[#008fc3]">{copy.showResults}</button>
+    </>
+  );
 
   return (
     <div ref={rootRef} className={`relative shrink-0 ${open ? "z-[140]" : "z-[1]"}`}>
@@ -468,25 +515,21 @@ export function MarketplaceFilterChip({ label, value, options, onChange }: { lab
       </button>
       {open && (
         <>
-          <button type="button" aria-label={copy.closeFilter} onClick={() => setOpen(false)} className="fixed inset-0 z-[1190] bg-[#0f172a]/35 lg:hidden" />
-          <div className="fixed inset-x-0 bottom-0 z-[1200] rounded-t-2xl bg-white px-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] pt-3 shadow-2xl lg:absolute lg:inset-auto lg:left-0 lg:top-[calc(100%+8px)] lg:z-[120] lg:w-80 lg:rounded-xl lg:border lg:border-[#dfe8f0] lg:p-4">
-            <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-[#c7d2dc] lg:hidden" />
-            <div className="flex min-h-12 items-center justify-between border-b border-[#e7edf2] lg:min-h-10">
-              <h2 className="text-lg font-bold lg:text-base">{label}</h2>
-              <button type="button" onClick={() => setOpen(false)} aria-label={copy.close} className="grid h-10 w-10 place-items-center"><X className="h-5 w-5" /></button>
-            </div>
-            <div className="py-2">
-              {options.map(([itemValue, itemLabel]) => (
-                <button key={itemValue} type="button" onClick={() => setPending(itemValue)} className="flex min-h-12 w-full items-center justify-between gap-4 text-left text-sm font-semibold">
-                  <span>{itemLabel}</span>
-                  <span className={`grid h-6 w-6 shrink-0 place-items-center rounded-full border ${pending === itemValue ? "border-[#009fd9] bg-[#009fd9] text-white" : "border-[#b9c5d1]"}`}>
-                    {pending === itemValue && <Check className="h-4 w-4" />}
-                  </span>
-                </button>
-              ))}
-            </div>
-            <button type="button" onClick={() => { onChange(pending); setOpen(false); }} className="h-12 w-full rounded-lg bg-[#009fd9] text-sm font-bold text-white hover:bg-[#008fc3]">{copy.showResults}</button>
+          {/* Desktop: panel anclado al chip, como siempre. */}
+          <div className="absolute left-0 top-[calc(100%+8px)] z-[120] hidden w-80 rounded-xl border border-[#dfe8f0] bg-white p-4 shadow-2xl lg:block">
+            {sheetBody}
           </div>
+          {/* Móvil: portal a <body> — el sticky (isolation) encerraba el sheet en
+              su stacking context y las cards pintaban encima. */}
+          {mounted && createPortal(
+            <div className="lg:hidden">
+              <button type="button" aria-label={copy.closeFilter} onClick={() => setOpen(false)} className="fixed inset-0 z-[1190] bg-[#0f172a]/35" />
+              <div className="fixed inset-x-0 bottom-0 z-[1200] rounded-t-2xl bg-white px-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] pt-3 shadow-2xl">
+                {sheetBody}
+              </div>
+            </div>,
+            document.body,
+          )}
         </>
       )}
     </div>

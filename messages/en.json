@@ -648,7 +648,7 @@
     "availPublicNote": "There are available times. Use <b>View availability</b> to pick a date and time and book directly.",
     "availPrivateTitle": "This profile's availability isn't public.",
     "availPrivateDesc": "Contact them directly to learn their schedule.",
-    "casosSubtitle": "Photos of {name}'s past work.",
+    "casosSubtitle": "Work and projects by {name}.",
     "otherWorks": "Other work",
     "noCasos": "No past work added yet.",
     "likeLabel": "Like",
@@ -1441,6 +1441,9 @@
       "ignoreOptional": "Ignore optional steps",
       "ignoredCount": "{count, plural, one {# ignored} other {# ignored}}",
       "compactProgress": "{percent}% complete",
+      "nextStep": "Next step",
+      "groupCore": "Essentials",
+      "groupOptional": "Stand out",
       "viewSteps": "View steps"
     },
     "modeUse": "Client mode",

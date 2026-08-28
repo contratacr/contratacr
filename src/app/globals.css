@@ -66,9 +66,34 @@
   overscroll-behavior-y: contain;
 }
 
+/* Marketplace sticky bars (search/filters) ride their own compositor layer:
+   without it, WKWebView re-pins them a frame late on fast momentum scrolls and
+   the composited cards underneath flash through the bar. */
+.ccr-marketplace-sticky {
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  isolation: isolate;
+}
+
+/* In the app the top bar is SOLID: the web's translucent white + backdrop
+   blur lags WKWebView's compositor during fast momentum scrolls, letting the
+   content show through the header band. Opaque + own layer = no bleed. */
+body.ccr-native-app .ccr-app-header {
+  background: #fff !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  transform: translateZ(0);
+}
+
 .ccr-native-app .ccr-page-route-loading {
   z-index: 100000;
   background: #f4f7fa !important;
+  /* The app shows its loading mark immediately, like any native screen. */
+  animation-delay: 0ms;
+}
+
+.ccr-native-app .ccr-page-route-loading .ccr-brand-loading-mark {
+  animation-delay: 0ms;
 }
 
 html.ccr-native-app.ccr-native-first-run-pending .ccr-page-route-loading {
@@ -406,6 +431,10 @@ html.ccr-native-bottom-nav-visible body .ccr-search-bottom-sheet {
     background: #fff;
   }
 
+  body.ccr-native-app.ccr-native-bottom-nav-visible .dashboard-section-content.ccr-editor-surface {
+    background: #f4f7fa !important;
+  }
+
   body.ccr-native-app.ccr-native-bottom-nav-visible .dashboard-section-content {
     min-height: 0 !important;
     padding-bottom: var(--ccr-native-panel-end-gap) !important;
@@ -415,9 +444,17 @@ html.ccr-native-bottom-nav-visible body .ccr-search-bottom-sheet {
     -webkit-overflow-scrolling: touch;
   }
 
+  body.ccr-native-app.ccr-native-bottom-nav-visible .dashboard-panel-content,
+  body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-dashboard-main {
+    /* El lienzo se pinta en el contenedor de fondo, no estirando cada sección:
+       forzar el alto rompía el chat de soporte, que va a pantalla completa. */
+    background: #f4f7fa !important;
+  }
+
   body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-dashboard-mobile-home {
     padding-bottom: 0 !important;
     margin-bottom: 0 !important;
+    background: #f4f7fa !important;
   }
 
   body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-dashboard-mobile-home > :last-child {
@@ -589,7 +626,7 @@ html.ccr-native-app body.ccr-native-bottom-nav-visible .ccr-search-bottom-sheet 
 }
 
 .ccr-native-app .ccr-search-results-list {
-  background: #fff !important;
+  background: #eef2f6 !important;
   padding-bottom: calc(var(--ccr-native-content-end-gap) + env(safe-area-inset-bottom)) !important;
 }
 
@@ -775,9 +812,9 @@ html body.ccr-search-filters-open .ccr-search-bottom-sheet {
   /* Fast navigations (most of them) must not flash the logo: the mark only
      appears when the new page has taken longer than a third of a second. */
   opacity: 0;
-  /* 600ms: a navigation that completes sooner never shows the mark at all — a
+  /* 250ms: a navigation that completes sooner never shows the mark at all — a
      mark that starts fading in just as the page lands reads as a blink. */
-  animation: ccr-loading-reveal 200ms ease-out 600ms forwards;
+  animation: ccr-loading-reveal 180ms ease-out 250ms forwards;
 }
 
 @media (max-width: 767px) {
@@ -831,7 +868,7 @@ body {
 
 .ccr-delayed-loading {
   opacity: 0;
-  animation: ccr-loading-reveal 140ms ease-out 320ms forwards;
+  animation: ccr-loading-reveal 140ms ease-out 180ms forwards;
 }
 
 .ccr-skeleton-shimmer {
@@ -938,6 +975,12 @@ html[data-self-action-modal-open="true"] [data-save-button] {
 @media (max-width: 640px) {
   .app-modal-screen.app-modal-screen {
     padding-bottom: 0;
+  }
+
+  /* A pantalla completa el diálogo llega al borde superior: sin esta reserva su
+     encabezado queda debajo de la barra de estado del móvil. */
+  .app-fullscreen-modal {
+    padding-top: var(--ccr-safe-top, env(safe-area-inset-top));
   }
 
   /* Compact dialogs use equal inset spacing so flex centering is not shifted
@@ -1229,6 +1272,7 @@ body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-native-fab {
     height: var(--app-visual-viewport-height) !important;
     max-height: var(--app-visual-viewport-height) !important;
   }
+
 
   html[data-keyboard-open] .ccr-support-thread-composer {
     padding-bottom: 0.5rem !important;

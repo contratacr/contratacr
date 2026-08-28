@@ -1,5 +1,5 @@
 import { createAdminClient } from "@/lib/supabase/admin";
-import { sendBrevoEmail } from "@/lib/email/send";
+import { brandedEmailDocument, sendBrevoEmail } from "@/lib/email/send";
 import { sendNotificationPush } from "@/lib/push/notify";
 
 const PRO_LINK = "/es/dashboard/profesional?tab=profile&mode=offer&focus=verification";
@@ -211,22 +211,21 @@ function emailShell(
   headline: string,
   accent: string,
   bodyHtml: string,
-  cta: string
+  cta?: string | null
 ): string {
-  return `
-    <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:24px;background:#f4f7fa;border-radius:8px;">
-      <div style="background:#1a2744;color:white;padding:16px 24px;border-radius:8px 8px 0 0;">
-        <h2 style="margin:0;font-size:18px;">${headline} — ContrataCR</h2>
-      </div>
-      <div style="background:white;padding:24px;border:1px solid #e5e7eb;border-top:none;border-radius:0 0 8px 8px;">
-        <p style="font-size:15px;color:#111827;">Hola ${escapeHtml(firstName)},</p>
-        <p style="font-size:14px;color:#374151;line-height:1.6;">${bodyHtml}</p>
+  return brandedEmailDocument({
+    title: `${headline} — ContrataCR`,
+    bodyHtml: `
+      <h1 style="font-size:21px;line-height:1.25;margin:0 0 10px">${headline}</h1>
+      <p style="font-size:15px;color:#111827;margin:0 0 8px">Hola ${escapeHtml(firstName)},</p>
+      <p style="font-size:14px;color:#374151;line-height:1.65;margin:0 0 24px">${bodyHtml}</p>${cta ? `
+      <div style="text-align:center">
         <a href="https://contratacr.com${PRO_LINK}"
-           style="display:inline-block;background:${accent};color:white;text-decoration:none;font-weight:bold;padding:10px 20px;border-radius:8px;font-size:14px;margin-top:8px;">
+           style="display:inline-block;padding:14px 28px;background:${accent};border-radius:12px;color:#fff;font-size:15px;font-weight:700;text-decoration:none">
           ${cta}
         </a>
-      </div>
-    </div>`;
+      </div>` : ""}`,
+  });
 }
 
 // ── First contact when a professional lands in manual review ─────────────────
@@ -264,7 +263,7 @@ export async function notifyVerificationOutreach(professionalId: string): Promis
       "una foto de un trabajo reciente",
     ];
     const title = "Para activar tu insignia de verificado";
-    const message = `Hola ${firstName}, tu perfil quedó en revisión manual. Para marcarte como verificado necesitamos: 1) ${steps[0]}, 2) ${steps[1]} y 3) ${steps[2]}. Envíalas por WhatsApp o responde a nuestro correo y activamos tu insignia.`;
+    const message = `Hola ${firstName}, tu perfil quedó en revisión manual. Para marcarte como verificado necesitamos: 1) ${steps[0]}, 2) ${steps[1]} y 3) ${steps[2]}. Envíalas por WhatsApp al +506 8962 4340 o responde a nuestro correo y activamos tu insignia.`;
     const notification = { user_id: pro.profile_id, type: "verification_outreach", title, message, data: { href: PRO_LINK } };
     await admin.from("notifications").insert(notification);
     await sendNotificationPush({ userId: pro.profile_id, title, message, data: notification.data });
@@ -276,8 +275,8 @@ export async function notifyVerificationOutreach(professionalId: string): Promis
         "#009FD9",
         `Tu perfil quedó en revisión manual. Para activar la insignia de verificado necesitamos:<br/><br/>` +
           `1) ${escapeHtml(steps[0])}<br/>2) ${escapeHtml(steps[1])}<br/>3) ${escapeHtml(steps[2])}<br/><br/>` +
-          `Responde a este correo con las fotos o escríbenos por WhatsApp y te activamos la insignia en cuanto las revisemos.`,
-        "Ver mi verificación"
+          `Responde a este correo con las fotos o envíalas por WhatsApp al <a href="https://wa.me/50689624340" style="color:#009FD9;font-weight:700;text-decoration:none">+506&nbsp;8962&nbsp;4340</a> y te activamos la insignia en cuanto las revisemos.`,
+        null
       );
       await sendBrevoEmail({ to: profile.email, subject: "Para activar tu insignia de verificado en ContrataCR", html, replyTo: "soporte@contratacr.com" });
     }

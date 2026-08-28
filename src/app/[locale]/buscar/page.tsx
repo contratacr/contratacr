@@ -9,7 +9,7 @@ import { ProfessionalCard } from "@/components/professionals/professional-card";
 import { SaveableCard } from "@/components/professionals/save-button";
 import type { ProService } from "@/lib/queries/professionals";
 import { primaryPricingLabel } from "@/lib/pricing";
-import { getCategoryLabel, isHealthCategory, supportsVideoConsultCategory } from "@/lib/data/categories";
+import { getAllCategories, getCategoryLabel, isHealthCategory, normalizeText, supportsVideoConsultCategory } from "@/lib/data/categories";
 import { haversineKm, PROVINCES } from "@/lib/data/cr-geography";
 import { SearchResultsLayout } from "@/components/search/search-results-layout";
 import { SearchResultsInfinite } from "@/components/search/search-results-infinite";
@@ -248,7 +248,19 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   const numbering: Record<string, number> = {};
   orderedResults.forEach((pro, index) => { numbering[pro.id] = index + 1; });
 
-  const activeCategoryId = params.categoria && params.categoria !== "todas" ? params.categoria : undefined;
+  // Con ?categoria= viene explícito. Si se buscó escribiendo el servicio, se
+  // resuelve desde el texto para que la tarjeta destaque ese y no la lista
+  // completa de servicios del profesional.
+  const categoryFromText = (() => {
+    if (params.categoria && params.categoria !== "todas") return undefined;
+    const texto = normalizeText((params.q ?? "").trim());
+    if (texto.length < 3) return undefined;
+    const match = getAllCategories().find((cat) => normalizeText(getCategoryLabel(cat.id, locale)) === texto);
+    return match?.id;
+  })();
+  const activeCategoryId = params.categoria && params.categoria !== "todas"
+    ? params.categoria
+    : categoryFromText;
   const activeProvince = selectedProvinceId
     ? PROVINCES.find((p) => p.id === selectedProvinceId)
     : undefined;

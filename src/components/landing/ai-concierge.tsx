@@ -17,7 +17,7 @@ import {
   Minus,
   RotateCcw,
   Search,
-  Send,
+  SendHorizontal,
   Sparkles,
   Star,
   Wrench,
@@ -294,6 +294,15 @@ export function AiConcierge({ embedded = false, onBack }: { embedded?: boolean; 
     window.addEventListener("contratacr:open-ai", openAssistant);
     return () => window.removeEventListener("contratacr:open-ai", openAssistant);
   }, [embedded]);
+
+  // The assistant is an overlay, not a route: closing it never changes the
+  // pathname, so the bottom-nav highlight can only clear via this signal.
+  const wasOpenRef = useRef(false);
+  useEffect(() => {
+    if (embedded) return;
+    if (wasOpenRef.current && !open) window.dispatchEvent(new Event("contratacr:close-ai"));
+    wasOpenRef.current = open;
+  }, [embedded, open]);
 
   useEffect(() => {
     const frame = requestAnimationFrame(() => {
@@ -673,7 +682,7 @@ export function AiConcierge({ embedded = false, onBack }: { embedded?: boolean; 
               aria-label={copy.send}
               className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-[#eef1f4] text-[#9aa3ad] transition enabled:bg-[#009FD9] enabled:text-white disabled:opacity-80"
             >
-              {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
+              {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <SendHorizontal className="h-5 w-5" />}
             </button>
           </form>
           <p className="ccr-ai-footer-notice mt-2 text-center text-[10px] font-semibold leading-snug text-[#7d8fa8] sm:text-[11px]">{copy.notice}</p>

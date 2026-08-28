@@ -82,21 +82,21 @@ export function FollowNetworkSummaryLink({ onOpen }: { onOpen?: (view: "followin
   if (!user) return null;
 
   return (
-    <div className="inline-flex items-start gap-4 text-[13px] font-semibold leading-none text-[#526277] sm:gap-4 sm:text-xs">
+    <div className="inline-flex items-center gap-4 text-[14px] font-semibold leading-none text-[#526277] sm:gap-4 sm:text-xs">
       <button
         type="button"
         onClick={() => onOpen?.("following")}
-        className="flex min-w-12 flex-col items-center gap-1 rounded-md text-center transition hover:text-[#009FD9] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9]"
+        className="inline-flex !min-h-0 items-baseline gap-1.5 rounded-md transition hover:text-[#009FD9] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9] sm:flex sm:min-w-12 sm:flex-col sm:items-center sm:justify-end sm:gap-1 sm:text-center"
       >
-        <strong className="text-lg leading-none text-[#162543] sm:text-sm">{counts.following}</strong>
+        <strong className="text-[15px] leading-none text-[#162543] sm:text-sm">{counts.following}</strong>
         <span className="whitespace-nowrap">{es ? "seguidos" : "following"}</span>
       </button>
       <button
         type="button"
         onClick={() => onOpen?.("followers")}
-        className="flex min-w-12 flex-col items-center gap-1 rounded-md text-center transition hover:text-[#009FD9] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9]"
+        className="inline-flex !min-h-0 items-baseline gap-1.5 rounded-md transition hover:text-[#009FD9] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9] sm:flex sm:min-w-12 sm:flex-col sm:items-center sm:justify-end sm:gap-1 sm:text-center"
       >
-        <strong className="text-lg leading-none text-[#162543] sm:text-sm">{counts.followers}</strong>
+        <strong className="text-[15px] leading-none text-[#162543] sm:text-sm">{counts.followers}</strong>
         <span className="whitespace-nowrap">{es ? "seguidores" : "followers"}</span>
       </button>
     </div>

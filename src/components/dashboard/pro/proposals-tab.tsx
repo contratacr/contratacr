@@ -16,7 +16,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useCachedResource } from "@/hooks/use-cached-resource";
 import { computeAge } from "@/lib/age";
 import { TAX_INCLUDED_SUFFIX, formatColonesTaxIncluded, splitPricingLabel } from "@/lib/pricing";
-import { StatusFilterTabs, PROYECTO_TABS, proposalMatches, proposalBucket, proposalStatusRedundant, bucketCounts } from "@/components/dashboard/status-filter-tabs";
+import { StatusFilterTabs, proposalBucket, proposalStatusRedundant, bucketCounts } from "@/components/dashboard/status-filter-tabs";
 import { ExpandableText } from "@/components/ui/expandable-text";
 import { ExpandToggle } from "@/components/dashboard/expand-toggle";
 import { useAppDialog } from "@/hooks/use-app-dialog";
@@ -95,10 +95,10 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
   const { dialogNode, showMessage } = useAppDialog();
   const errorTitle = locale === "en" ? "Something went wrong" : "No se pudo completar la acción";
 
-  // Filter "Oportunidades" by profession — the user's ACTUAL professions only (no "all"
-  // option); only surfaced when they have 2+ (defaults to the first profession).
-  const profTabs = useMemo(() => professions.map((p) => ({ id: p })), [professions]);
-  const profLabel = (id: string) => getCategoryLabel(id, locale);
+  // Filter "Oportunidades" by profession. "Todas" is the default so the pro sees
+  // EVERY open opportunity at once; the per-profession chips (built after the
+  // counts, ordered by how many each has, empty ones hidden) refine from there.
+  const profLabel = (id: string) => (id === "all" ? (locale === "en" ? "All" : "Todas") : getCategoryLabel(id, locale));
   const showProfFilter = professions.length > 1;
 
   // Significant words (≥4 chars) from the pro's service names — used to flag
@@ -124,7 +124,13 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
     return t(`projStatus.${k}`);
   };
   const { user } = useAuth();
-  const [view, setView] = useState<"browse" | "mine">("browse");
+  // UNA sola lista con etapas estilo Soporte: Nuevas (oportunidades sin
+  // propuesta) · Activas · Finalizadas · Canceladas (tus propuestas).
+  // DOS pestañas: las oportunidades son una lista larga (necesita su vista y
+  // sus chips); las propuestas propias son pocas (mediana 4) y se leen mejor
+  // TODAS juntas, agrupadas por etapa, que repartidas en pestañas casi vacías.
+  type StageKey = "nuevas" | "mias";
+  const [stage, setStage] = useState<StageKey>("nuevas");
   // Both lists live in the shared cache (same keys the notification prefetch
   // warms): switching tabs or coming back paints them at once, then refreshes.
   // The key ignores `categoryId`: the API matches by the pro's professions and
@@ -149,7 +155,7 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
   );
   const { data: openProjects } = openResource;
   const { data: myProposals, setData: setMyProposals } = mineResource;
-  const loading = view === "browse" ? openResource.loading || mineResource.loading : mineResource.loading;
+  const loading = openResource.loading || mineResource.loading;
   const [expandedProject, setExpandedProject] = useState<string | null>(null);
   const [expandedMine, setExpandedMine] = useState<string | null>(null);
   const [proposalForms, setProposalForms] = useState<Record<string, { price: string; message: string }>>({});
@@ -165,7 +171,6 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
     }
     return next;
   }, [myProposals, submittedOverrides]);
-  const [projectFilter, setProjectFilter] = useState("activas");
   const refreshTimerRef = useRef<number | null>(null);
   const lastSilentRefreshRef = useRef(0);
   const targetProjectRetryRef = useRef(0);
@@ -175,14 +180,71 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
   // ("No me interesa") opportunities.
   const [profFilter, setProfFilter] = useState<string>("");
   const [dismissed, setDismissed] = useState<Set<string>>(new Set());
-  // The active profession (no "all"): the chosen one, else the first profession.
-  const activeProf = professions.includes(profFilter) ? profFilter : (professions[0] ?? "");
+  // Nivel 2 dentro de "Mis propuestas": chips por etapa ("" = todas, agrupadas).
+  const [mineStage, setMineStage] = useState<string>("");
+  // The active profession resolves AFTER profTabs (first = most opportunities).
   // Count of AVAILABLE opportunities per profession (excludes proposed/dismissed) → the
   // count badge on each filter tab.
   const profCounts = useMemo(() => {
     const visible = openProjects.filter((p) => !submitted.has(p.id) && !dismissed.has(p.id));
-    return Object.fromEntries(professions.map((p) => [p, visible.filter((o) => o.category_id === p).length]));
+    const counts: Record<string, number> = Object.fromEntries(professions.map((p) => [p, visible.filter((o) => o.category_id === p).length]));
+    counts.all = visible.length;
+    return counts;
   }, [openProjects, submitted, dismissed, professions]);
+
+  const stageCounts = useMemo(() => {
+    const buckets = bucketCounts(myProposals.map((item) => proposalBucket(item.status, item.projects?.status)));
+    const nuevas = openProjects.filter((item) => !submitted.has(item.id) && !dismissed.has(item.id)).length;
+    void buckets;
+    return { nuevas, mias: myProposals.length };
+  }, [myProposals, openProjects, submitted, dismissed]);
+
+  // Etapa fina de una propuesta: separa "esperando respuesta" de "en curso"
+  // (ambas caen en el bucket "activas" del modelo compartido).
+  const fineStage = useCallback((proposalStatus: string, projectStatus?: string | null) => {
+    const bucket = proposalBucket(proposalStatus, projectStatus);
+    if (bucket !== "activas") return bucket;
+    return proposalStatus === "pending" ? "esperando" : "en_curso";
+  }, []);
+
+  const mineStageDefs = useMemo(() => [
+    { key: "en_curso", label: locale === "en" ? "Accepted" : "Aceptadas" },
+    { key: "esperando", label: locale === "en" ? "Waiting" : "En espera" },
+    { key: "finalizadas", label: locale === "en" ? "Completed" : "Finalizadas" },
+    { key: "canceladas", label: locale === "en" ? "Cancelled" : "Canceladas" },
+  ], [locale]);
+
+  const mineStageCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const item of myProposals) {
+      const key = fineStage(item.status, item.projects?.status);
+      counts[key] = (counts[key] ?? 0) + 1;
+    }
+    return counts;
+  }, [myProposals, fineStage]);
+
+  // Etapas con contenido, en orden de prioridad de acción; SIEMPRE hay una
+  // seleccionada (si la elegida se vacía, cae a la primera disponible).
+  const availableMineStages = useMemo(
+    () => mineStageDefs.filter((group) => (mineStageCounts[group.key] ?? 0) > 0),
+    [mineStageDefs, mineStageCounts],
+  );
+  const effectiveMineStage = availableMineStages.some((group) => group.key === mineStage)
+    ? mineStage
+    : (availableMineStages[0]?.key ?? "");
+  const stageLabel = (id: string) =>
+    id === "nuevas"
+      ? (locale === "en" ? "New" : "Nuevas")
+      : (locale === "en" ? "My proposals" : "Mis propuestas");
+
+  const profTabs = useMemo(() => {
+    const withCount = professions.filter((p) => (profCounts[p] ?? 0) > 0);
+    withCount.sort((a, b) => (profCounts[b] ?? 0) - (profCounts[a] ?? 0));
+    return [{ id: "all" }, ...withCount.map((p) => ({ id: p }))];
+  }, [professions, profCounts]);
+
+  // The chosen profession, else the FIRST chip (the one with most opportunities).
+  const activeProf = professions.includes(profFilter) ? profFilter : "all";
 
   // Re-fetch quietly; cached rows stay on screen until the answer lands.
   const refreshOpen = openResource.refresh;
@@ -201,13 +263,13 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
     const delay = elapsed < 1600 ? 1600 - elapsed : 700;
     refreshTimerRef.current = window.setTimeout(() => {
       lastSilentRefreshRef.current = Date.now();
-      if (view === "browse") void fetchOpenProjects().then(() => setSubmittedOverrides({}));
-      else void fetchMyProposals();
+      void fetchOpenProjects().then(() => setSubmittedOverrides({}));
+      void fetchMyProposals();
     }, delay);
     // fetchOpenProjects/fetchMyProposals are intentionally not dependencies; their
-    // inputs are read from the current render through `view` and refreshed again by polling.
+    // inputs are read from the current render and refreshed again by polling.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [view]);
+  }, []);
 
   useEffect(() => {
     if (loading) return;
@@ -237,8 +299,8 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
       targetProjectRetryRef.current = 0;
       targetProjectHandledRef.current = true;
       const id = window.setTimeout(() => {
-        setView("mine");
-        setProjectFilter(proposalBucket(mine.status, mine.projects?.status));
+        setStage("mias");
+        setMineStage(fineStage(mine.status, mine.projects?.status));
         setExpandedMine(mine.id);
         window.setTimeout(() => document.getElementById(`project-${projectId}`)?.scrollIntoView({ block: "center", behavior: "smooth" }), 80);
       }, 0);
@@ -250,7 +312,7 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
       targetProjectRetryRef.current = 0;
       targetProjectHandledRef.current = true;
       const id = window.setTimeout(() => {
-        setView("browse");
+        setStage("nuevas");
         if (open.category_id && professions.includes(open.category_id)) setProfFilter(open.category_id);
         setDismissed((prev) => {
           if (!prev.has(projectId)) return prev;
@@ -258,7 +320,6 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
           next.delete(projectId);
           return next;
         });
-        setProjectFilter("activas");
         setExpandedProject(projectId);
         window.setTimeout(() => document.getElementById(`project-${projectId}`)?.scrollIntoView({ block: "center", behavior: "smooth" }), 160);
       }, 0);
@@ -372,7 +433,7 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
         next.delete(withdrawTarget.project_id);
         return next;
       });
-      setProjectFilter("activas");
+      setStage("nuevas");
       const opportunity = openProjects.find((project) => project.id === withdrawTarget.project_id);
       if (opportunity?.category_id && professions.includes(opportunity.category_id)) setProfFilter(opportunity.category_id);
       void fetchOpenProjects().then(() => setSubmittedOverrides({}));
@@ -567,38 +628,33 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
   }
 
   if (loading) {
-    const hasLoadedItems = view === "browse" ? openProjects.length > 0 : myProposals.length > 0;
+    const hasLoadedItems = openProjects.length > 0 || myProposals.length > 0;
     return <PanelListSkeleton rows={3} withTabs hasData={hasLoadedItems} />;
   }
 
   return (
     <div>
-      {/* Sub-nav */}
-      <div className="flex gap-1 bg-[#f3f4f6] rounded-xl p-1 mb-6">
-        {(["browse", "mine"] as const).map((v) => (
-          <button
-            key={v}
-            onClick={() => setView(v)}
-            className={cn(
-              "flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all",
-              view === v ? "bg-white text-[#009FD9] shadow-sm" : "text-[#6b7280] hover:text-[#374151]"
-            )}
-          >
-            {v === "browse" ? t("browse") : t("mine")}
-          </button>
-        ))}
+      {/* Etapas — mismo patrón que Soporte: segmentado con contadores. */}
+      <div className="mb-6">
+        <StatusFilterTabs
+          tabs={[{ id: "nuevas" }, { id: "mias" }]}
+          value={stage}
+          onChange={(id) => setStage(id as StageKey)}
+          labelFor={stageLabel}
+          counts={stageCounts}
+        />
       </div>
 
-      {/* Browse open projects */}
-      {view === "browse" && (
+      {/* Nuevas — oportunidades abiertas sin propuesta */}
+      {stage === "nuevas" && (
         <div>
           {openProjects.length === 0 ? (
             <PanelEmptyState icon={Handshake} title={t("emptyBrowse")} description={t("emptyBrowseSub")} />
           ) : (
             <div className="flex flex-col gap-4">
               {/* Filter by the pro's professions — only when they have more than one. */}
-              {showProfFilter && (
-                <StatusFilterTabs tabs={profTabs} value={activeProf} onChange={setProfFilter} labelFor={profLabel} counts={profCounts} mobileLayout="wrap" />
+              {showProfFilter && profTabs.length > 2 && (
+                <StatusFilterTabs tabs={profTabs} value={activeProf} onChange={setProfFilter} labelFor={profLabel} counts={profCounts} variant="chips" />
               )}
               {(() => {
                 // Hide opportunities already proposed to (they live in "Mis propuestas") and
@@ -606,7 +662,7 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
                 // visible to everyone); surface service matches first.
                 const list = openProjects
                   .filter((p) => !submitted.has(p.id) && !dismissed.has(p.id))
-                  .filter((p) => !p.category_id || p.category_id === activeProf)
+                  .filter((p) => activeProf === "all" || !p.category_id || p.category_id === activeProf)
                   .sort((a, b) => Number(matchesServices(b)) - Number(matchesServices(a)));
                 if (list.length === 0) return <p className="text-sm text-[#6b7280] text-center py-12">{t("noneInView")}</p>;
                 return (
@@ -651,18 +707,39 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
         </div>
       )}
 
-      {/* My proposals */}
-      {view === "mine" && (
+      {/* Propuestas por etapa */}
+      {stage !== "nuevas" && (
         <div>
           {myProposals.length === 0 ? (
             <PanelEmptyState icon={Handshake} title={t("emptyMine")} description={t("emptyMineSub")} />
           ) : (
             <div className="ccr-native-safe-list-end flex flex-col gap-4">
-              <StatusFilterTabs tabs={PROYECTO_TABS} value={projectFilter} onChange={setProjectFilter} counts={bucketCounts(myProposals.map((p) => proposalBucket(p.status, p.projects?.status)))} />
+              {availableMineStages.length > 1 && (
+                <StatusFilterTabs
+                  tabs={availableMineStages.map((group) => ({ id: group.key }))}
+                  value={effectiveMineStage}
+                  onChange={setMineStage}
+                  labelFor={(id) => mineStageDefs.find((group) => group.key === id)?.label ?? id}
+                  counts={mineStageCounts}
+                  variant="chips"
+                />
+              )}
               {(() => {
-                const shown = myProposals.filter((p) => proposalMatches(projectFilter, p.status, p.projects?.status));
-                if (shown.length === 0) return <p className="text-sm text-[#6b7280] text-center py-8">{t("noneInView")}</p>;
-                return shown.map((p) => {
+                // Orden por prioridad de acción: lo que exige trabajo primero,
+                // el historial al final. Un grupo vacío no se dibuja; con un chip
+                // activo se muestra solo esa etapa (sin encabezado redundante).
+                const grouped = new Map<string, typeof myProposals>();
+                for (const item of myProposals) {
+                  const key = fineStage(item.status, item.projects?.status);
+                  const list = grouped.get(key) ?? [];
+                  list.push(item);
+                  grouped.set(key, list);
+                }
+                const visibleGroups = availableMineStages.filter((group) => group.key === effectiveMineStage);
+                if (visibleGroups.length === 0) return <p className="text-sm text-[#6b7280] text-center py-8">{t("noneInView")}</p>;
+                return visibleGroups.map((group) => (
+                  <section key={group.key} className="flex flex-col gap-3">
+                    {(grouped.get(group.key) ?? []).map((p) => {
                   const isOpen = expandedMine === p.id;
                   const ps = p.projects?.status;
                   const phone = p.projects?.profiles?.phone;
@@ -791,7 +868,7 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
                                 {actions.length > 0 && <div className="grid min-w-0 flex-1 grid-cols-2 gap-2 sm:flex sm:flex-wrap">{actions}</div>}
                                 {secondaryActions.length > 0 && (
                                   <div className="relative ml-auto shrink-0" data-proposal-actions={p.id}>
-                                    <button type="button" aria-label={locale === "en" ? "More options" : "Más opciones"} aria-haspopup="menu" aria-expanded={actionsMenuFor === p.id} onClick={() => setActionsMenuFor((current) => current === p.id ? null : p.id)} className="grid h-10 w-10 place-items-center rounded-lg border border-[#d7e1ea] text-[#718096] transition hover:border-[#b9c8d6] hover:bg-[#f6f9fb] hover:text-[#162543]">
+                                    <button type="button" aria-label={locale === "en" ? "More options" : "Más opciones"} aria-haspopup="menu" aria-expanded={actionsMenuFor === p.id} onClick={() => setActionsMenuFor((current) => current === p.id ? null : p.id)} className="grid h-10 w-10 place-items-center rounded-lg border border-[#d7e1ea] text-[#718096] transition hover:border-[#b9c8d6] hover:bg-[#f6f9fb] hover:text-[#162543] [.ccr-native-app_&]:h-11 [.ccr-native-app_&]:w-11">
                                       <MoreVertical className="h-5 w-5" />
                                     </button>
                                     {actionsMenuFor === p.id && <div role="menu" className="absolute bottom-[calc(100%+6px)] right-0 z-50 max-h-[calc(100dvh-2rem)] w-48 overflow-y-auto rounded-xl border border-[#dfe8f0] bg-white p-1.5 shadow-[0_18px_45px_-22px_rgba(15,23,42,0.55)]">{secondaryActions}</div>}
@@ -830,7 +907,9 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
                       )}
                     </Card>
                   );
-                });
+                    })}
+                  </section>
+                ));
               })()}
             </div>
           )}

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { createPortal } from "react-dom";
-import { Archive, ArchiveRestore, ArrowLeft, Download, FileText, Flag, Loader2, MessageSquareMore, Paperclip, Search, Send, Trash2, X } from "lucide-react";
+import { Archive, ArchiveRestore, ArrowLeft, ChevronRight, Download, FileText, Flag, Loader2, MessageSquareMore, Paperclip, Search, SendHorizontal, Trash2, X } from "lucide-react";
 import { useLocale } from "next-intl";
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "@/i18n/navigation";
@@ -15,7 +15,7 @@ import { useContainedTouchScroll } from "@/hooks/use-contained-touch-scroll";
 import { lockBodyScroll } from "@/lib/body-scroll-lock";
 import { createClient } from "@/lib/supabase/client";
 import { AppTooltip } from "@/components/ui/app-tooltip";
-import { PanelEmptyState } from "@/components/ui/content-loading";
+import { BrandLoadingMark, PanelEmptyState } from "@/components/ui/content-loading";
 import { IMAGE_DOC_ACCEPT } from "@/lib/upload-validation";
 import { getImageUploadPreparationErrorCode, prepareImageForUpload } from "@/lib/client-image-upload";
 import { readCachedConversations, storeConversations } from "@/lib/direct-chat/conversations-cache";
@@ -75,6 +75,40 @@ function resizeMessageTextarea(textarea: HTMLTextAreaElement | null) {
   const nextHeight = Math.min(textarea.scrollHeight, 144);
   textarea.style.height = `${nextHeight}px`;
   textarea.style.overflowY = textarea.scrollHeight > 144 ? "auto" : "hidden";
+}
+
+// A chat photo shows its exact frame with a soft tone and a centered loading
+// circle until the file paints — never a bare white box (signed Supabase URLs
+// have no blurred derivative to show, unlike Cloudinary sources).
+function ChatImage({ href, alt }: { href: string; alt: string }) {
+  const boxRef = useRef<HTMLSpanElement | null>(null);
+  const [loaded, setLoaded] = useState(false);
+  useEffect(() => {
+    const box = boxRef.current;
+    if (!box) return;
+    const check = () => {
+      const img = box.querySelector("img");
+      if (img && img.complete && img.naturalWidth > 0) setLoaded(true);
+    };
+    check();
+    const onLoad = () => setLoaded(true);
+    box.addEventListener("load", onLoad, true);
+    box.addEventListener("error", onLoad, true);
+    return () => {
+      box.removeEventListener("load", onLoad, true);
+      box.removeEventListener("error", onLoad, true);
+    };
+  }, [href]);
+  return (
+    <span ref={boxRef} className="relative block aspect-[4/3] w-full">
+      <ProgressiveImage src={href} alt={alt} fit="cover" wrapperClassName="block h-full w-full" className="h-full w-full" />
+      {!loaded && (
+        <span className="absolute inset-0 grid place-items-center bg-[#e5edf3]">
+          <span className="grid h-10 w-10 place-items-center rounded-full bg-black/30"><Loader2 className="h-5 w-5 animate-spin text-white" /></span>
+        </span>
+      )}
+    </span>
+  );
 }
 
 function attachmentLabel(bytes: number) {
@@ -144,12 +178,52 @@ function findExistingDraftConversation(rows: Conversation[], payload: PendingDra
   }) ?? null;
 }
 
+// A session refresh can race these calls right after the app resumes; one
+// retry after refreshing turns a spurious "No autorizado" into a normal load.
+async function fetchWithSessionRetry(input: string, init?: RequestInit) {
+  const res = await fetch(input, init);
+  if (res.status !== 401) return res;
+  try { await createClient().auth.refreshSession(); } catch { /* the retry answers */ }
+  return fetch(input, init);
+}
+
+// "Isaac Alberto Sanchez Monge" reads as "Isaac Sanchez" in the thread header:
+// long legal names wrapped to two lines and pushed the actions off the bar.
+function compactPersonName(name: string) {
+  const words = name.trim().split(/\s+/);
+  if (words.length >= 4) return `${words[0]} ${words[2]}`;
+  if (words.length === 3) return `${words[0]} ${words[1]}`;
+  return name;
+}
+
+const DRAFTS_STORAGE_PREFIX = "ccr:chat:drafts:";
+const PENDING_DRAFT_STORAGE_PREFIX = "ccr:chat:pending-draft:";
+type StoredPendingDraft = { payload: PendingDraft; name: string; text: string };
+function readStoredDrafts(userId: string): Record<string, string> {
+  try { return JSON.parse(window.localStorage.getItem(DRAFTS_STORAGE_PREFIX + userId) || "{}") as Record<string, string>; } catch { return {}; }
+}
+function writeStoredDrafts(userId: string, drafts: Record<string, string>) {
+  try {
+    if (Object.keys(drafts).length) window.localStorage.setItem(DRAFTS_STORAGE_PREFIX + userId, JSON.stringify(drafts));
+    else window.localStorage.removeItem(DRAFTS_STORAGE_PREFIX + userId);
+  } catch { /* drafts are a convenience */ }
+}
+function readStoredPendingDraft(userId: string): StoredPendingDraft | null {
+  try { return JSON.parse(window.localStorage.getItem(PENDING_DRAFT_STORAGE_PREFIX + userId) || "null") as StoredPendingDraft | null; } catch { return null; }
+}
+function writeStoredPendingDraft(userId: string, value: StoredPendingDraft | null) {
+  try {
+    if (value) window.localStorage.setItem(PENDING_DRAFT_STORAGE_PREFIX + userId, JSON.stringify(value));
+    else window.localStorage.removeItem(PENDING_DRAFT_STORAGE_PREFIX + userId);
+  } catch { /* drafts are a convenience */ }
+}
+
 export function DirectChatInbox() {
   const locale = useLocale();
   const isEn = locale === "en";
   const searchParams = useSearchParams();
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const nativeApp = useNativeApp();
   const userId = user?.id ?? null;
   const initialPendingDraft = useMemo(() => buildPendingDraft(searchParams, user?.id, isEn), [isEn, searchParams, user?.id]);
@@ -174,10 +248,18 @@ export function DirectChatInbox() {
   const [reportReason, setReportReason] = useState("");
   const [reportBusy, setReportBusy] = useState(false);
   const [mobileThread, setMobileThread] = useState(!!searchParams.get("conversation"));
+  const [storedDrafts, setStoredDrafts] = useState<Record<string, string>>({});
   const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const selectedAttachmentsRef = useRef<SelectedAttachment[]>([]);
+  const draftConversationRef = useRef<string | null>(null);
+  const urlDraftRef = useRef(searchParams.get("draftMessage") || "");
+  const backHrefRef = useRef((() => {
+    const raw = searchParams.get("back") || "";
+    if (!raw.startsWith("/") || raw.startsWith("//") || raw.includes("\\")) return "";
+    return raw.replace(/^\/(?:es|en)(?=\/|$)/u, "") || "/";
+  })());
   useContainedTouchScroll(scrollRef, mobileThread);
 
   useEffect(() => {
@@ -275,7 +357,7 @@ export function DirectChatInbox() {
     }
     setError("");
     try {
-      const res = await fetch(`/api/direct-chat${showArchived ? "?status=archived" : ""}`, { cache: "no-store" });
+      const res = await fetchWithSessionRetry(`/api/direct-chat${showArchived ? "?status=archived" : ""}`, { cache: "no-store" });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || "Error");
       const rows = json.conversations ?? [];
@@ -312,29 +394,109 @@ export function DirectChatInbox() {
     }
     // A thread opened before paints from the cache at once and refreshes quietly.
     const threadKey = userId ? `chat:thread:${userId}:${id}` : null;
-    const warm = threadKey ? getDashboardCache<DirectMessage[]>(threadKey) : null;
+    const warmEntry = threadKey ? getDashboardCache<DirectMessage[] | { rows: DirectMessage[]; signedAt: number }>(threadKey) : null;
+    const warm = Array.isArray(warmEntry) ? warmEntry : warmEntry?.rows ?? null;
+    const warmFresh = Boolean(warmEntry) && !Array.isArray(warmEntry) && Date.now() - (warmEntry as { signedAt: number }).signedAt < 45 * 60 * 1000;
     if (warm) setMessages(warm);
     else if (!quiet) setThreadLoading(true);
     try {
-      const res = await fetch(`/api/direct-chat?id=${encodeURIComponent(id)}`, { cache: "no-store" });
+      const res = await fetchWithSessionRetry(`/api/direct-chat?id=${encodeURIComponent(id)}`, { cache: "no-store" });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || "Error");
       const rows = (json.messages ?? []) as DirectMessage[];
-      if (threadKey) setDashboardCache(threadKey, rows);
-      setMessages(rows);
+      // Reuse this session's still-fresh signed attachment URLs: the server
+      // mints a new token per load, which defeated the browser cache and
+      // re-downloaded every image on each open.
+      const merged = warmFresh && warm ? rows.map((row) => {
+        const cached = warm.find((w) => w.id === row.id);
+        if (!cached?.attachment_urls?.length || !row.attachment_urls?.length) return row;
+        return { ...row, attachment_urls: row.attachment_urls.map((a) => {
+          const kept = cached.attachment_urls?.find((x) => x.path && x.path === a.path && x.url);
+          return kept ? { ...a, url: kept.url } : a;
+        }) };
+      }) : rows;
+      if (threadKey) setDashboardCache(threadKey, { rows: merged, signedAt: warmFresh && warmEntry && !Array.isArray(warmEntry) ? warmEntry.signedAt : Date.now() });
+      setMessages(merged);
       setConversations((prev) => prev.map((item) => item.id === id ? { ...item, client_unread_count: 0, professional_unread_count: 0 } : item));
     } catch (err) {
       setError(err instanceof Error ? err.message : isEn ? "Could not load the conversation." : "No se pudo cargar la conversación.");
     } finally { if (!quiet) setThreadLoading(false); }
   }, [isEn, userId]);
 
-  useEffect(() => { queueMicrotask(() => void loadConversations()); }, [loadConversations]);
-  useEffect(() => { if (activeId) queueMicrotask(() => void loadThread(activeId)); }, [activeId, loadThread]);
+  useEffect(() => {
+    if (authLoading) return;
+    if (!user) {
+      // A guest deep-link lands on login and returns to this exact chat after
+      // signing in or registering (the login page honors /mensajes redirects).
+      router.replace(`/login?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`);
+      return;
+    }
+    queueMicrotask(() => void loadConversations());
+  }, [authLoading, user, router, loadConversations]);
+  useEffect(() => {
+    if (authLoading || !user || !activeId) return;
+    queueMicrotask(() => void loadThread(activeId));
+  }, [authLoading, user, activeId, loadThread]);
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
     el.scrollTo({ top: el.scrollHeight });
   }, [messages, threadLoading, selectedAttachments]);
+  // ── Composer drafts survive leaving the chat ────────────────────────────
+  useEffect(() => {
+    if (!userId) return;
+    queueMicrotask(() => setStoredDrafts(readStoredDrafts(userId)));
+  }, [userId]);
+  const pendingDraftName = pendingDraft
+    ? pendingDraft.professionals?.profiles?.full_name || pendingDraft.client_profile?.full_name || ""
+    : "";
+  useEffect(() => {
+    if (!userId || !activeId) return;
+    if (draftConversationRef.current !== activeId) {
+      // Conversation switch: recover ITS saved text instead of persisting the
+      // previous conversation's words under the wrong id.
+      draftConversationRef.current = activeId;
+      const saved = readStoredDrafts(userId)[activeId];
+      const urlDraft = urlDraftRef.current;
+      urlDraftRef.current = "";
+      setDraft(saved ?? (activeId === DRAFT_CONVERSATION_ID ? pendingDraftPayload?.draftMessage || "" : urlDraft));
+      return;
+    }
+    const text = draft.trim() ? draft : "";
+    setStoredDrafts((current) => {
+      if ((current[activeId] ?? "") === text) return current;
+      const next = { ...current };
+      if (text) next[activeId] = text; else delete next[activeId];
+      writeStoredDrafts(userId, next);
+      return next;
+    });
+    if (activeId === DRAFT_CONVERSATION_ID && pendingDraftPayload) {
+      writeStoredPendingDraft(userId, text ? { payload: pendingDraftPayload, name: pendingDraftName, text } : null);
+    }
+  }, [draft, activeId, userId, pendingDraftPayload, pendingDraftName]);
+  // A draft chat that kept its text comes back in the list on the next visit;
+  // one that was left empty is simply gone.
+  useEffect(() => {
+    if (!userId || pendingDraft) return;
+    if (searchParams.get("draftChat") === "1" || searchParams.get("conversation")) return;
+    const stored = readStoredPendingDraft(userId);
+    if (!stored?.text.trim()) return;
+    const params = new URLSearchParams({ draftChat: "1" });
+    if (stored.payload.professionalId) params.set("professionalId", stored.payload.professionalId);
+    if (stored.name) params.set("professionalName", stored.name);
+    if (stored.payload.bookingId) params.set("bookingId", stored.payload.bookingId);
+    if (stored.payload.projectId) params.set("projectId", stored.payload.projectId);
+    if (stored.payload.proposalId) params.set("proposalId", stored.payload.proposalId);
+    if (stored.payload.contextTitle) params.set("contextTitle", stored.payload.contextTitle);
+    params.set("draftMessage", stored.text);
+    const revived = buildPendingDraft(params, userId, isEn);
+    if (revived.conversation) {
+      queueMicrotask(() => {
+        setPendingDraft(revived.conversation);
+        setPendingDraftPayload(revived.payload);
+      });
+    }
+  }, [userId, pendingDraft, searchParams, isEn]);
   const keepComposerVisible = useCallback(() => {
     if (!mobileThread) return;
     window.setTimeout(() => {
@@ -345,6 +507,8 @@ export function DirectChatInbox() {
   }, [mobileThread]);
   useEffect(() => {
     resizeMessageTextarea(textareaRef.current);
+    const frame = window.requestAnimationFrame(() => resizeMessageTextarea(textareaRef.current));
+    return () => window.cancelAnimationFrame(frame);
   }, [draft]);
   useEffect(() => {
     selectedAttachmentsRef.current = selectedAttachments;
@@ -387,9 +551,35 @@ export function DirectChatInbox() {
   }
 
   function selectConversation(id: string) {
+    backHrefRef.current = "";
     setActiveId(id); setMobileThread(true); setError("");
     if (id === DRAFT_CONVERSATION_ID) return;
     router.replace(`/mensajes${showArchived ? "?chatStatus=archived&" : "?"}conversation=${id}`, { scroll: false });
+  }
+
+  function openActiveProfile() {
+    if (!activePerson?.profileHref) return;
+    const path = window.location.pathname.replace(/^\/(?:es|en)(?=\/|$)/u, "") || "/";
+    const from = encodeURIComponent(path + window.location.search);
+    router.push(`${activePerson.profileHref}?from=${from}`);
+  }
+
+  function closeThread() {
+    // Opened from outside (a profile, request or project): back goes THERE.
+    if (backHrefRef.current) {
+      const target = backHrefRef.current;
+      backHrefRef.current = "";
+      router.push(target);
+      return;
+    }
+    // Leaving an empty draft chat drops it from the list; typed text keeps it.
+    if (activeId === DRAFT_CONVERSATION_ID && !draft.trim()) {
+      setPendingDraft(null);
+      setPendingDraftPayload(null);
+      if (userId) writeStoredPendingDraft(userId, null);
+      setActiveId(conversations[0]?.id ?? null);
+    }
+    setMobileThread(false);
   }
 
   async function addAttachments(files: FileList | null) {
@@ -440,7 +630,7 @@ export function DirectChatInbox() {
     if (reportReason.trim().length < 3) return;
     setReportBusy(true);
     setError("");
-    const response = await fetch("/api/direct-chat", {
+    const response = await fetchWithSessionRetry("/api/direct-chat", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ conversationId: active.id, action: "block_and_report", reason: reportReason }),
@@ -481,7 +671,7 @@ export function DirectChatInbox() {
       const formData = new FormData();
       formData.set("conversationId", conversationId);
       formData.set("file", attachment.file);
-      const res = await fetch("/api/direct-chat/attachments", { method: "POST", body: formData });
+      const res = await fetchWithSessionRetry("/api/direct-chat/attachments", { method: "POST", body: formData });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || "Error");
       uploaded.push(json.attachment);
@@ -504,7 +694,7 @@ export function DirectChatInbox() {
     try {
       let targetConversationId = activeId;
       if (activeId === DRAFT_CONVERSATION_ID && selectedAttachments.length) {
-        const openRes = await fetch("/api/direct-chat", {
+        const openRes = await fetchWithSessionRetry("/api/direct-chat", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -531,10 +721,20 @@ export function DirectChatInbox() {
           message: body,
         }
         : { conversationId: targetConversationId, message: body, attachmentUrls };
-      const res = await fetch("/api/direct-chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+      const res = await fetchWithSessionRetry("/api/direct-chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || "Error");
       clearSelectedAttachments();
+      if (userId) {
+        setStoredDrafts((current) => {
+          const next = { ...current };
+          delete next[activeId];
+          delete next[DRAFT_CONVERSATION_ID];
+          writeStoredDrafts(userId, next);
+          return next;
+        });
+        writeStoredPendingDraft(userId, null);
+      }
       if (activeId === DRAFT_CONVERSATION_ID && json.conversationId) {
         setPendingDraft(null);
         setPendingDraftPayload(null);
@@ -552,7 +752,7 @@ export function DirectChatInbox() {
 
   async function toggleArchiveActive() {
     if (!activeId) return;
-    const res = await fetch("/api/direct-chat", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ conversationId: activeId, status: showArchived ? "open" : "archived" }) });
+    const res = await fetchWithSessionRetry("/api/direct-chat", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ conversationId: activeId, status: showArchived ? "open" : "archived" }) });
     if (!res.ok) { const json = await res.json().catch(() => ({})); setError(json.error || (isEn ? "Could not update the conversation." : "No se pudo actualizar la conversación.")); return; }
     const remaining = conversations.filter((item) => item.id !== activeId);
     const nextId = remaining[0]?.id ?? null;
@@ -563,7 +763,7 @@ export function DirectChatInbox() {
 
   async function deleteArchivedActive() {
     if (!activeId || !showArchived || activeId === DRAFT_CONVERSATION_ID) return;
-    const res = await fetch("/api/direct-chat", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ conversationId: activeId }) });
+    const res = await fetchWithSessionRetry("/api/direct-chat", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ conversationId: activeId }) });
     if (!res.ok) {
       const json = await res.json().catch(() => ({}));
       setError(json.error || (isEn ? "Could not delete the conversation." : "No se pudo eliminar la conversación."));
@@ -584,9 +784,8 @@ export function DirectChatInbox() {
   }
 
   if (loading) return (
-    <div className="ccr-delayed-loading flex min-h-[calc(100dvh-153px)] flex-col items-center justify-center gap-2 px-4 text-center sm:min-h-[520px]" aria-busy="true" role="status">
-      <Loader2 className="h-7 w-7 animate-spin text-[#009FD9]" aria-hidden />
-      <p className="text-sm font-extrabold text-[#162543]">{isEn ? "Loading" : "Cargando"}</p>
+    <div className="ccr-delayed-loading flex min-h-[calc(100dvh-153px)] items-center justify-center px-4 sm:min-h-[520px]" aria-busy="true" role="status">
+      <BrandLoadingMark />
     </div>
   );
 
@@ -628,6 +827,13 @@ export function DirectChatInbox() {
   })();
   const activeContextTitle = activeContext?.title || "";
   const activeContextAction = active ? contextActionFor(active) : "";
+  // One compact, descriptive line: "Solicitud · Cámaras de seguridad" instead
+  // of a bare uppercase label stacked over the title.
+  const headerContextLine = activeContext
+    ? activeContext.type !== "profile" && activeContextTitle
+      ? `${activeContext.label} · ${activeContextTitle}`
+      : activeContextTitle
+    : "";
   return (
     <div className={cn(
       "direct-chat-shell grid h-[calc(100dvh-153px)] min-h-[360px] grid-cols-[minmax(0,1fr)] overflow-hidden bg-white lg:h-[min(760px,calc(100dvh-220px))] lg:min-h-[500px] lg:grid-cols-[320px_minmax(0,1fr)] xl:grid-cols-[340px_minmax(0,1fr)]",
@@ -656,10 +862,10 @@ export function DirectChatInbox() {
               {archivedCount > 0 && <span className="grid h-5 min-w-5 place-items-center rounded-full bg-[#e8eef4] px-1.5 text-[10px] font-extrabold text-[#526277]">{archivedCount > 99 ? "99+" : archivedCount}</span>}
             </button>
           )}
-          {filtered.map((item) => { const person = personFor(item); const summary = contextSummaryFor(item); const unread = user?.id === item.client_id ? item.client_unread_count : item.professional_unread_count; return (
+          {filtered.map((item) => { const person = personFor(item); const unread = user?.id === item.client_id ? item.client_unread_count : item.professional_unread_count; return (
             <button key={item.id} type="button" onClick={() => selectConversation(item.id)} className={cn("flex w-full gap-3 border-b border-[#e7eef3] p-4 text-left transition hover:bg-white", item.id === activeId && "lg:bg-white lg:shadow-[inset_3px_0_0_#009FD9]")}>
               <Avatar className="h-11 w-11"><AvatarImage src={person.avatar ?? undefined} /><AvatarFallback className="bg-[#e8f8ff] font-bold text-[#009FD9]">{getInitials(person.name)}</AvatarFallback></Avatar>
-              <span className="min-w-0 flex-1"><span className="flex items-center gap-2"><strong className="min-w-0 flex-1 truncate text-sm text-[#162543]">{person.name}</strong><time className="shrink-0 text-[11px] text-[#8492a5]">{timeLabel(item.last_message_at, locale)}</time></span><span className="mt-0.5 block line-clamp-2 text-xs font-bold leading-snug text-[#0090c7]">{summary}</span><span className="mt-1 flex items-center gap-2"><span className="min-w-0 flex-1 truncate text-xs text-[#6b7a90]">{item.last_message || (isEn ? "Conversation started" : "Conversación iniciada")}</span>{!!unread && <span className="grid h-5 min-w-5 place-items-center rounded-full bg-[#009FD9] px-1 text-[10px] font-bold text-white">{unread}</span>}</span></span>
+              <span className="min-w-0 flex-1"><span className="flex items-center gap-2"><strong className="min-w-0 flex-1 truncate text-sm text-[#162543]">{person.name}</strong><time className="shrink-0 text-[11px] text-[#8492a5]">{timeLabel(item.last_message_at, locale)}</time></span><span className="mt-1 flex items-center gap-2"><span className={cn("min-w-0 flex-1 truncate text-xs", storedDrafts[item.id] ? "italic text-[#8a94a6]" : "text-[#6b7a90]")}>{storedDrafts[item.id] ? `${isEn ? "Draft" : "Borrador"}: ${storedDrafts[item.id]}` : item.last_message || (isEn ? "Conversation started" : "Conversación iniciada")}</span>{!!unread && <span className="grid h-5 min-w-5 place-items-center rounded-full bg-[#009FD9] px-1 text-[10px] font-bold text-white">{unread}</span>}</span></span>
             </button>); })}
           {!filtered.length && <p className="p-6 text-center text-sm text-[#6b7a90]">{isEn ? "No matching conversations." : "No hay conversaciones que coincidan."}</p>}
         </div>
@@ -667,25 +873,20 @@ export function DirectChatInbox() {
 
       <section className={cn("min-h-0 flex-col", mobileThread ? "flex" : "hidden lg:flex")}>
         <header className="ccr-direct-chat-thread-header flex min-h-[65px] shrink-0 items-center gap-2.5 border-b border-[#e3ebf1] bg-white px-3 py-2.5 shadow-[0_8px_22px_-24px_rgba(15,23,42,0.45)] sm:gap-3 sm:px-5 sm:py-3">
-          <button type="button" data-native-back="conversations" onClick={() => setMobileThread(false)} className="grid h-10 w-10 shrink-0 place-items-center rounded-full text-[#526277] transition active:bg-[#eef6fb] lg:hidden" aria-label={isEn ? "Back to conversations" : "Volver a conversaciones"}><ArrowLeft className="h-5 w-5" /></button>
-          <button type="button" onClick={() => activePerson?.profileHref && router.push(activePerson.profileHref)} disabled={!activePerson?.profileHref} className={cn("shrink-0 rounded-full", activePerson?.profileHref && "transition hover:ring-2 hover:ring-[#9fd8ec]")}>
+          <button type="button" data-native-back="conversations" onClick={closeThread} className="grid h-10 w-10 shrink-0 place-items-center rounded-full text-[#526277] transition active:bg-[#eef6fb] lg:hidden" aria-label={isEn ? "Back to conversations" : "Volver a conversaciones"}><ArrowLeft className="h-5 w-5" /></button>
+          <button type="button" onClick={openActiveProfile} disabled={!activePerson?.profileHref} className={cn("shrink-0 rounded-full", activePerson?.profileHref && "transition hover:ring-2 hover:ring-[#9fd8ec]")}>
             <Avatar className="h-9 w-9 sm:h-10 sm:w-10"><AvatarImage src={activePerson?.avatar ?? undefined} /><AvatarFallback className="bg-[#e8f8ff] text-sm font-bold text-[#009FD9]">{getInitials(activePersonName)}</AvatarFallback></Avatar>
           </button>
           <div className="min-w-0 flex-1">
             {activePerson?.profileHref ? (
-              <button type="button" onClick={() => router.push(activePerson.profileHref!)} className="block max-w-full text-left text-[15px] font-extrabold leading-tight text-[#162543] transition hover:text-[#009FD9] hover:underline line-clamp-2 lg:truncate">
-                {activePerson.name}
+              <button type="button" onClick={openActiveProfile} className="flex !min-h-0 min-w-0 max-w-full items-center gap-0.5 text-left text-[15px] font-extrabold leading-tight text-[#162543] transition hover:text-[#009FD9]">
+                <span className="min-w-0 truncate">{compactPersonName(activePerson.name)}</span>
+                <ChevronRight className="h-4 w-4 shrink-0 text-[#8ea0b5]" />
               </button>
             ) : (
-              <p className={nativeApp ? "text-[15px] font-extrabold leading-tight text-[#162543] line-clamp-2 lg:truncate" : "truncate text-[15px] font-extrabold leading-tight text-[#162543]"}>{activePerson?.name}</p>
+              <p className={nativeApp ? "text-[15px] font-extrabold leading-tight text-[#162543] truncate" : "truncate text-[15px] font-extrabold leading-tight text-[#162543]"}>{activePerson ? compactPersonName(activePerson.name) : ""}</p>
             )}
-            {active && activeContext && activeContext.type !== "profile" && <p className="mt-0.5 truncate text-[11px] font-extrabold uppercase tracking-[0.12em] text-[#008fc4]">{activeContext.label}</p>}
-            {activeContextTitle && <p className="mt-0.5 line-clamp-1 text-xs font-semibold leading-snug text-[#63748a] sm:line-clamp-2">{activeContextTitle}</p>}
-            {detailHref && (
-              <button type="button" onClick={() => router.push(detailHref)} className="mt-0.5 block max-w-full truncate text-left text-xs font-extrabold text-[#008fc4] transition hover:text-[#007fac] hover:underline">
-                {activeContextAction}
-              </button>
-            )}
+
           </div>
           {nativeApp && <ChatActionButton label={isEn ? "Report and block" : "Reportar y bloquear"} onClick={() => setReportOpen(true)} className="grid h-9 w-9 place-items-center rounded-lg border border-red-100 bg-white text-red-500 shadow-sm transition hover:border-red-200 hover:bg-red-50 hover:text-red-600"><Flag className="h-4 w-4" /></ChatActionButton>}
           <ChatActionButton label={archiveLabel} onClick={() => void toggleArchiveActive()} className="grid h-9 w-9 place-items-center rounded-lg border border-[#d6e4ed] bg-[#f7fbfd] text-[#526277] shadow-sm transition hover:border-[#9fd8ec] hover:bg-[#eef9fd] hover:text-[#009FD9]">{showArchived ? <ArchiveRestore className="h-4 w-4" /> : <Archive className="h-4 w-4" />}</ChatActionButton>
@@ -696,8 +897,25 @@ export function DirectChatInbox() {
           )}
         </header>
         <div ref={scrollRef} className="ccr-direct-chat-thread-scroll min-h-0 flex-1 space-y-2 overflow-y-auto overscroll-contain bg-[#f3f7fa] px-4 py-5 sm:px-6">
+          {!threadLoading && headerContextLine && activeContext?.type !== "profile" && (
+            <button
+              type="button"
+              onClick={() => {
+                if (!detailHref) return;
+                const chatPath = activeId ? `/mensajes?conversation=${encodeURIComponent(activeId)}` : "/mensajes";
+                router.push(`${detailHref}&returnTo=${encodeURIComponent(chatPath)}`);
+              }}
+              disabled={!detailHref}
+              className="mx-auto flex max-w-full items-center gap-2 rounded-full border border-[#cfe8f4] bg-[#eaf7fd] px-3.5 py-1.5 text-xs font-bold text-[#00789f] transition enabled:hover:bg-[#ddf1fb]"
+            >
+              <FileText className="h-3.5 w-3.5 shrink-0" />
+              <span className="min-w-0 truncate">{headerContextLine}</span>
+              {detailHref && <ChevronRight className="h-3.5 w-3.5 shrink-0" />}
+            </button>
+          )}
           {threadLoading ? <div className="ccr-delayed-loading grid h-full place-items-center"><Loader2 className="h-6 w-6 animate-spin text-[#009FD9]" /></div> : messages.map((message) => {
             const mine = message.sender_id === user?.id;
+            const uploading = message.id.startsWith("pending-");
             return (
               <div key={message.id} className={cn("flex items-end gap-2", mine && "justify-end")}>
                 {!mine && (
@@ -735,9 +953,14 @@ export function DirectChatInbox() {
                             aria-label={isEn ? `Open ${attachment.name}` : `Abrir ${attachment.name}`}
                           >
                             {href ? (
-                              <ProgressiveImage src={href} alt={attachment.name} fit="cover" wrapperClassName="block w-full" className="max-h-72 min-h-36" />
+                              <ChatImage href={href} alt={attachment.name} />
                             ) : (
-                              <span className="grid min-h-36 place-items-center"><Loader2 className="h-5 w-5 animate-spin" /></span>
+                              <span className="grid aspect-[4/3] w-full place-items-center"><Loader2 className="h-5 w-5 animate-spin" /></span>
+                            )}
+                            {uploading && href && (
+                              <span className="absolute inset-0 grid place-items-center bg-black/25">
+                                <span className="grid h-10 w-10 place-items-center rounded-full bg-black/45"><Loader2 className="h-5 w-5 animate-spin text-white" /></span>
+                              </span>
                             )}
                           </button>
                         ) : (
@@ -752,7 +975,7 @@ export function DirectChatInbox() {
                             )}
                           >
                             <span className={cn("grid h-10 w-10 shrink-0 place-items-center rounded-lg", mine ? "bg-white/15 text-white" : "bg-white text-[#009FD9]")}>
-                              <FileText className="h-5 w-5" />
+                              {uploading ? <Loader2 className="h-5 w-5 animate-spin" /> : <FileText className="h-5 w-5" />}
                             </span>
                             <span className="min-w-0 flex-1">
                               <span className="block truncate text-xs font-extrabold">{attachment.name}</span>
@@ -835,7 +1058,10 @@ export function DirectChatInbox() {
             <Paperclip className="h-5 w-5" />
           </button>
           <textarea
-            ref={textareaRef}
+            ref={(el) => {
+              textareaRef.current = el;
+              resizeMessageTextarea(el);
+            }}
             rows={1}
             value={draft}
             onChange={(e) => {
@@ -859,7 +1085,7 @@ export function DirectChatInbox() {
             className="grid h-[52px] w-[52px] shrink-0 place-items-center rounded-[18px] bg-[#009FD9] text-white shadow-[0_8px_18px_-12px_rgba(0,159,217,0.85)] transition hover:bg-[#008fca] disabled:bg-[#d8e4e9] disabled:shadow-none"
             aria-label={isEn ? "Send" : "Enviar"}
           >
-            {sending ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
+            {sending ? <Loader2 className="h-5 w-5 animate-spin" /> : <SendHorizontal className="h-5 w-5" />}
           </button>
           </div>
         </form>

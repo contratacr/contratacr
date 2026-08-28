@@ -10,6 +10,22 @@ const BREATH_PERIOD_MS = 2400;
 // A loading screen that replaces another within this window is the same wait
 // continuing (root fallback -> route fallback -> nested fallback), not a new one.
 const HANDOFF_WINDOW_MS = 500;
+// How long the ghost of a departed route overlay keeps covering the swap.
+const GHOST_MS = 160;
+
+function spawnGhost(screen: HTMLElement, phaseMs: number) {
+  const ghost = screen.cloneNode(true) as HTMLElement;
+  ghost.querySelectorAll("script").forEach((s) => s.remove());
+  ghost.style.animation = "none";
+  ghost.style.opacity = "1";
+  ghost.style.pointerEvents = "none";
+  ghost.setAttribute("aria-hidden", "true");
+  ghost.setAttribute("data-ccr-loading-ghost", "");
+  const mark = ghost.querySelector<HTMLElement>(".ccr-brand-loading-mark");
+  if (mark) mark.style.animationDelay = `-${phaseMs}ms`;
+  document.body.appendChild(ghost);
+  window.setTimeout(() => ghost.remove(), GHOST_MS);
+}
 
 // Where the previous mark was in its breath when it disappeared. The next mark
 // picks up from there instead of fading in again and restarting the breath,
@@ -36,29 +52,40 @@ export function LoadingMarkImage() {
     const img = ref.current;
     if (!img) return;
     const now = performance.now();
-    const screen = img.closest<HTMLElement>(".ccr-page-route-loading");
+    const screen = img.closest<HTMLElement>(".ccr-page-route-loading, .ccr-delayed-loading");
+    const isRouteOverlay = screen?.classList.contains("ccr-page-route-loading") ?? false;
     // When the breath reaches phase 0; before that the mark is still fading in.
     let breathStartsAt: number;
+    // When the mark actually becomes visible (its wrapper's reveal delay).
+    let visibleAt: number;
     if (now - previousHiddenAt < HANDOFF_WINDOW_MS) {
       const phase = (previousPhaseMs + (now - previousHiddenAt)) % BREATH_PERIOD_MS;
       img.style.animationDelay = `-${phase}ms`;
       if (screen) {
+        // Continue visibly at once — the departed mark's ghost covers any
+        // transient successor, so instant reveal can never flash.
         screen.style.animation = "none";
         screen.style.opacity = "1";
       }
       breathStartsAt = now - phase;
+      visibleAt = now;
     } else {
       breathStartsAt = now - breathElapsed(img);
+      const revealDelay = screen ? Number.parseFloat(getComputedStyle(screen).animationDelay) * 1000 : 0;
+      visibleAt = now + (Number.isFinite(revealDelay) && revealDelay > 0 ? revealDelay : 0);
     }
     return () => {
       const end = performance.now();
-      if (end < breathStartsAt) {
+      if (end < visibleAt) {
         // Gone before it ever showed: the next screen starts its own quiet wait.
         previousHiddenAt = Number.NEGATIVE_INFINITY;
         return;
       }
       previousHiddenAt = end;
-      previousPhaseMs = (end - breathStartsAt) % BREATH_PERIOD_MS;
+      // A mark that vanished mid fade-in (breath not yet started) hands over
+      // phase 0 — the next one continues at natural size, no restart.
+      previousPhaseMs = end >= breathStartsAt ? (end - breathStartsAt) % BREATH_PERIOD_MS : 0;
+      if (isRouteOverlay && screen) spawnGhost(screen, previousPhaseMs);
     };
   }, []);
 

@@ -5,7 +5,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { enforceRateLimit } from "@/lib/rate-limit";
 import { createClient } from "@/lib/supabase/server";
 import { validateUpload, IMAGE_KINDS, DOC_KINDS } from "@/lib/upload-validation";
-import { sendBrevoEmail } from "@/lib/email/send";
+import { brandedEmailDocument, sendBrevoEmail } from "@/lib/email/send";
 import { notifyUserTicketCreated, supportTicketCreatedAutoMessage } from "@/lib/support-notify";
 import { supportTicketRef } from "@/lib/support-ticket";
 import { LONG_TEXT_MAX_LENGTH, NAME_MAX_LENGTH, SHORT_TEXT_MAX_LENGTH, limitTrimmedText } from "@/lib/text-limits";
@@ -78,12 +78,10 @@ async function parseRequest(req: NextRequest) {
 
 /* ─── HTML email body ─── */
 function buildHtml(name: string, email: string, subject: string, message: string, filenames: string[]) {
-  return `
-    <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:24px;background:#f9fafb;border-radius:8px;">
-      <div style="background:#1a2744;color:white;padding:16px 24px;border-radius:8px 8px 0 0;">
-        <h2 style="margin:0;font-size:18px;">Nuevo mensaje de soporte — ContrataCR</h2>
-      </div>
-      <div style="background:white;padding:24px;border:1px solid #e5e7eb;border-top:none;border-radius:0 0 8px 8px;">
+  return brandedEmailDocument({
+    title: "Nuevo mensaje de soporte — ContrataCR",
+    bodyHtml: `
+        <h1 style="font-size:20px;line-height:1.3;margin:0 0 16px">Nuevo mensaje de soporte</h1>
         <table style="width:100%;border-collapse:collapse;margin-bottom:20px;">
           <tr>
             <td style="padding:8px 0;color:#6b7280;font-size:13px;width:80px;">De:</td>
@@ -102,9 +100,8 @@ function buildHtml(name: string, email: string, subject: string, message: string
         <hr style="border:none;border-top:1px solid #f3f4f6;margin:16px 0;"/>
         <div style="font-size:14px;color:#374151;line-height:1.7;white-space:pre-wrap;">${message.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</div>
         <hr style="border:none;border-top:1px solid #f3f4f6;margin:24px 0 16px;"/>
-        <p style="font-size:12px;color:#9ca3af;margin:0;">Responde directamente a este correo para contestar al usuario.</p>
-      </div>
-    </div>`;
+        <p style="font-size:12px;color:#9ca3af;margin:0;">Responde directamente a este correo para contestar al usuario.</p>`,
+  });
 }
 
 /* ─── Send the new-ticket notification to the support inbox via Brevo ─── */

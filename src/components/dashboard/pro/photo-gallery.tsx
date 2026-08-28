@@ -48,7 +48,7 @@ interface PhotoGalleryProps {
   professions?: string[];
   /** The pro's services — only used to DERIVE the profession of legacy serviceId-tagged photos. */
   services?: ServiceLike[];
-  onSaved?: () => void;
+  onSaved?: (intent?: "section" | "internal") => void;
 }
 
 function genId() {
@@ -85,7 +85,7 @@ export function seedCases(items: (SuccessCase | LegacyItem)[] | undefined, urls:
 export function PhotoGallery({ professionalId, initialUrls = [], initialItems, professions = [], services = [], onSaved }: PhotoGalleryProps) {
   const locale = useLocale();
   const t = useTranslations("photoGallery");
-  const { dialogNode, showMessage } = useAppDialog();
+  const { dialogNode, showMessage, confirm } = useAppDialog();
   const errorTitle = locale === "en" ? "Something went wrong" : "No se pudo completar la acción";
   const rich = { strong: (c: React.ReactNode) => <strong>{c}</strong> };
   const primary = professions[0];
@@ -109,9 +109,10 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
   const label = (id: string) => getCategoryLabel(id, locale);
   const countFor = (prof: string) => cases.filter((c) => c.profession === prof).length;
   const selectedProf = professions.includes(activeProf) ? activeProf : professions[0] ?? "";
+  const targetProf = selectedProf;
   const inputClass = "h-11 w-full rounded-xl border border-[#e5e7eb] bg-white px-3.5 text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all";
 
-  async function persist(next: SuccessCase[]) {
+  async function persist(next: SuccessCase[], options: { intent?: "section" | "internal" } = {}) {
     setCases(next);
     setSaving(true);
     try {
@@ -130,7 +131,7 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
       setDirty(false);
       initialCasesRef.current = next;
       setTimeout(() => setJustSaved(false), 2500);
-      onSaved?.();
+      onSaved?.(options.intent ?? "section");
       return true;
     } catch {
       void showMessage({
@@ -145,7 +146,7 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
   }
 
   function openAdd() {
-    const prof = selectedProf || primary || "";
+    const prof = targetProf || primary || "";
     setDraft({ id: genId(), profession: prof, photos: [] });
   }
   function openEdit(c: SuccessCase) { setDraft({ ...c, photos: [...c.photos] }); }
@@ -184,13 +185,23 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
     const exists = cases.some((c) => c.id === draft.id);
     const next = exists ? cases.map((c) => (c.id === draft.id ? draft : c)) : [...cases, draft];
     setDraft(null);
-    setCases(next);
-    setDirty(true);
+    void persist(next, { intent: "internal" });
   }
-  function deleteCase(id: string) {
-    setCases(cases.filter((c) => c.id !== id));
-    setDirty(true);
+  // Se elimina de inmediato, así que se pregunta antes: ya no hay un "Guardar"
+  // que permita deshacerlo saliendo de la sección.
+  async function deleteCase(id: string) {
+    const result = await confirm({
+      title: locale === "en" ? "Delete success story" : "Eliminar caso de éxito",
+      description: locale === "en"
+        ? "This success story and its photos will be removed from your profile."
+        : "Este caso de éxito y sus fotos se quitarán de tu perfil.",
+      confirmLabel: locale === "en" ? "Delete" : "Eliminar",
+      cancelLabel: locale === "en" ? "Cancel" : "Cancelar",
+      tone: "danger",
+    });
+    if (!result.confirmed) return;
     setJustSaved(false);
+    await persist(cases.filter((c) => c.id !== id), { intent: "internal" });
   }
 
   function cancelChanges() {
@@ -203,7 +214,7 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
   }
 
   const shownCases = cases.filter((c) => c.profession === selectedProf);
-  const addProf = selectedProf || primary || "";
+  const addProf = targetProf || primary || "";
   const addFull = !!addProf && countFor(addProf) >= MAX_CASES_PER_PROFESSION;
   const draftIsEdit = !!draft && cases.some((c) => c.id === draft.id);
 
@@ -230,7 +241,7 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
           onChange={setActiveProf}
           labelFor={label}
           counts={Object.fromEntries(professions.map((p) => [p, countFor(p)]))}
-          mobileLayout="wrap"
+          variant="chips"
         />
       )}
 
@@ -276,7 +287,7 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
                       <button onClick={() => openEdit(c)} className="flex h-8 w-8 items-center justify-center rounded-lg text-[#6b7280] hover:bg-[#EBF5FB] hover:text-[#009FD9] transition-colors" aria-label={t("edit")}><Pencil className="h-3.5 w-3.5" /></button>
                     </AppTooltip>
                     <AppTooltip label={t("remove")}>
-                      <button onClick={() => deleteCase(c.id)} className="flex h-8 w-8 items-center justify-center rounded-lg text-[#6b7280] hover:bg-red-50 hover:text-red-500 transition-colors" aria-label={t("remove")}><Trash2 className="h-3.5 w-3.5" /></button>
+                      <button onClick={() => void deleteCase(c.id)} className="flex h-8 w-8 items-center justify-center rounded-lg text-[#6b7280] hover:bg-red-50 hover:text-red-500 transition-colors" aria-label={t("remove")}><Trash2 className="h-3.5 w-3.5" /></button>
                     </AppTooltip>
                   </div>
                 </div>
@@ -307,7 +318,7 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
       </div>
 
       {/* ── Add / edit case ─────────────────────────────────────────────── */}
-      <div className="flex flex-col gap-2 pt-1 sm:flex-row sm:justify-end">
+      <div className="hidden">
         <button
           type="button"
           onClick={cancelChanges}

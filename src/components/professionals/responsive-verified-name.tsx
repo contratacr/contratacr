@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useLayoutEffect, useRef, useState } from "react";
-import { CheckCircle2 } from "lucide-react";
+import { VerifiedSeal } from "@/components/ui/verified-seal";
 
 let sharedCanvas: HTMLCanvasElement | null = null;
 function measureCanvas() {
@@ -67,8 +67,8 @@ export function ResponsiveVerifiedName({
     <span ref={containerRef} className="relative flex w-full min-w-0 items-center">
       <span className="min-w-0 whitespace-nowrap">{visibleName}</span>
       {verified && (
-        <CheckCircle2
-          aria-label={verifiedLabel}
+        <VerifiedSeal
+          label={verifiedLabel}
           className="ml-1 h-3.5 w-3.5 shrink-0 text-[#009FD9]"
         />
       )}

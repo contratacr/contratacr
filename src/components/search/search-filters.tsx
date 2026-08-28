@@ -865,6 +865,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
       setModalities([]);
       setInsurers([]);
       applyFilters({ q: query, categoria: "", aseguradora: "", modalidad: "" });
+      if (!locationQuery.trim()) window.setTimeout(() => locationInputRef.current?.focus(), 80);
     }
   }
 
@@ -884,6 +885,8 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
     setQuery(getCategoryLabel(id, locale));
     setSearchOpen(false);
     applyFilters({ categoria: id, q: "", aseguradora: serializeMultiParam(nextInsurers), modalidad: serializeMultiParam(nextModalities) });
+    // Service answered → hand the focus to the location field (if still empty).
+    if (!locationQuery.trim()) window.setTimeout(() => locationInputRef.current?.focus(), 80);
   }
 
   function clearQuery() {
@@ -987,6 +990,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
     applyFilters({ provincia: "", canton: "", lat: "", lng: "", ubicacion: "" });
   }
 
+  const locationInputRef = useRef<HTMLInputElement>(null);
   function handleLocationKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
     if (e.key === "ArrowDown" && locationSug.length > 0) {
       e.preventDefault();
@@ -1069,13 +1073,13 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
           <button data-testid="mobile-language-filter" type="button" onClick={() => setOpenChip("language")} className={pill}>
             <span className="min-w-0 whitespace-nowrap">{languageText}</span><ChevronDown className="h-3 w-3 shrink-0 min-[390px]:h-3.5 min-[390px]:w-3.5" />
           </button>
+          {showVideoFilter && <button type="button" onClick={() => setOpenChip("modality")} className={pill}>
+            <span className="min-w-0 whitespace-nowrap">{modalities.length ? `${t("filters.attention")} (${modalities.length})` : t("filters.attention")}</span><ChevronDown className="h-3.5 w-3.5 shrink-0" />
+          </button>}
+          {showInsurerFilter && <button type="button" onClick={() => setOpenChip("insurer")} className={pill}>
+            <span className="min-w-0 whitespace-nowrap">{insurers.length ? `${t("filters.insurer")} (${insurers.length})` : t("filters.insurer")}</span><ChevronDown className="h-3.5 w-3.5 shrink-0" />
+          </button>}
         </div>
-        {showVideoFilter && <button type="button" onClick={() => setOpenChip("modality")} className={pill}>
-          <span>{modalities.length ? `${t("filters.attention")} (${modalities.length})` : t("filters.attention")}</span><ChevronDown className="h-3.5 w-3.5 shrink-0" />
-        </button>}
-        {showInsurerFilter && <button type="button" onClick={() => setOpenChip("insurer")} className={pill}>
-          <span>{insurers.length ? `${t("filters.insurer")} (${insurers.length})` : t("filters.insurer")}</span><ChevronDown className="h-3.5 w-3.5 shrink-0" />
-        </button>}
         <FilterSheet
           open={openChip === "sort"}
           title={locale === "en" ? "Sort" : "Ordenar"}
@@ -1274,6 +1278,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
               }}
               onFocus={() => setLocationOpen(locationQuery.trim().length >= 2)}
               onBlur={() => { locationBlurRef.current = setTimeout(() => setLocationOpen(false), 150); }}
+              ref={locationInputRef}
               onKeyDown={handleLocationKeyDown}
               placeholder={t("filters.locationPlaceholder")}
               role="combobox"

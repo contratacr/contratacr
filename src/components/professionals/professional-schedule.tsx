@@ -417,7 +417,7 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
     ? visibleLocationOptions
     : (placeFallback ? [{ id: "__fallback", label: placeFallback }] : []);
   const primaryLocationTabs = useMemo(() => {
-    if (locTabs.length <= 3) return locTabs;
+    if (locTabs.length <= 2) return locTabs;
     const selected = locTabs.find((option) => option.id === effectiveId);
     if (!selected || locTabs.slice(0, 2).some((option) => option.id === selected.id)) {
       return locTabs.slice(0, 2);
@@ -437,11 +437,16 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
   const selectedLocationLabel = hasRealLoc && effectiveId && !isVideoLocation
     ? visibleLocationOptions.find((o) => o.id === effectiveId)?.label?.trim() ?? ""
     : "";
-  const addressLine = isVideoLocation
+  const addressLineRaw = isVideoLocation
     ? ""
     : hasRealLoc
       ? (workplaceAddr || selectedLocationLabel)
       : (placeAddress || "");
+  // The tabs row already names the place: a "whole province" note or a repeat of
+  // the selected tab adds nothing, so only REAL street addresses render below.
+  const addressLine = /^(toda la provincia|all of )/i.test(addressLineRaw.trim()) || (selectedLocationLabel.trim() !== "" && addressLineRaw.trim() === selectedLocationLabel.trim())
+    ? ""
+    : addressLineRaw;
   const venueName = workplaceAddr ? businessName.trim() : "";
   useEffect(() => {
     if (!locationMenuOpen) return;

@@ -36,8 +36,10 @@ export function StatusFilterTabs({
   /** Show a small "needs attention" red dot on a tab (e.g. an unread reply). */
   dotFor?: (id: string) => boolean;
   /** "underline" (default) = status tabs with count badges; "pills" = filter chips
-   *  (e.g. the profession filter), no counts. */
-  variant?: "underline" | "pills";
+   *  (e.g. the profession filter), no counts; "chips" = small outlined pills on a
+   *  rail, for a FILTER that sits near a segmented view switcher and must not
+   *  look like a second one. */
+  variant?: "underline" | "pills" | "chips";
   /** Short status labels can share the available mobile width evenly. Long,
    * dynamic labels (such as professions) wrap into complete, visible rows. */
   mobileLayout?: "scroll" | "wrap" | "equal";
@@ -48,12 +50,39 @@ export function StatusFilterTabs({
   const useScrollableLayout = !useSegmentedLayout;
   // A segmented cell is narrow on a 320px screen. Short status words never
   // break: under 400px every count pill sits below its label so the row stays
-  // uniform; long dynamic labels (service names on the photos tab) may break
-  // anywhere so the row never overflows.
+  // uniform; long dynamic labels may break anywhere so the row never overflows.
   const shortLabels = tabs.every((tab) => label(tab.id).length <= 12);
 
   // PILLS — same segmented language, without count badges. Used for profession
   // filters where labels can be long; 2–4 fit the row, 5+ become a clean rail.
+  // CHIPS — visually distinct from segmented sub-navs: small outlined pills,
+  // active in light blue, with count badges, on a scrollable rail.
+  if (variant === "chips") {
+    return (
+      <div data-status-filter-tabs="" data-filter-layout="chips" className="relative w-full max-w-full min-w-0 overflow-hidden">
+        <div className="scrollbar-none flex gap-1.5 overflow-x-auto py-0.5">
+          {tabs.map((tab) => {
+            const active = value === tab.id;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => onChange(active ? "" : tab.id)}
+                className={cn(
+                  "inline-flex h-7 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border px-4 text-[13px] font-semibold transition-colors",
+                  active ? "border-[#009FD9] bg-[#009FD9] text-white" : "border-[#dfe6ec] bg-white text-[#526277] hover:border-[#c3d2de]",
+                )}
+              >
+                <span className="max-w-[14rem] truncate">{label(tab.id)}</span>
+                {dotFor?.(tab.id) && <span className={cn("h-1.5 w-1.5 shrink-0 rounded-full", active ? "bg-white" : "bg-[#009FD9]")} aria-hidden />}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+
   if (variant === "pills") {
     const usePillSegmentedLayout = tabs.length >= 2 && tabs.length <= 4;
     return (
@@ -62,7 +91,7 @@ export function StatusFilterTabs({
         data-filter-layout={usePillSegmentedLayout ? "segmented-pills" : "scroll-pills"}
         className={cn(
           "relative w-full max-w-full min-w-0",
-          usePillSegmentedLayout ? "rounded-xl bg-[#f3f4f6] p-1" : "overflow-hidden",
+          usePillSegmentedLayout ? "rounded-xl bg-[#e6edf4] p-1" : "overflow-hidden",
         )}
       >
         <RailOrGrid
@@ -70,7 +99,7 @@ export function StatusFilterTabs({
           className={cn(
             usePillSegmentedLayout
               ? "grid items-stretch gap-1"
-              : "flex gap-1 rounded-xl bg-[#f3f4f6] p-1",
+              : "flex gap-1 rounded-xl bg-[#e6edf4] p-1",
             usePillSegmentedLayout && tabs.length === 2 && "grid-cols-2",
             usePillSegmentedLayout && tabs.length === 3 && "grid-cols-3",
             usePillSegmentedLayout && tabs.length === 4 && "grid-cols-4",
@@ -108,7 +137,7 @@ export function StatusFilterTabs({
     <div
       className={cn(
         "relative w-full max-w-full min-w-0",
-        useSegmentedLayout && "rounded-xl bg-[#f3f4f6] p-1",
+        useSegmentedLayout && "rounded-xl bg-[#e6edf4] p-1",
         useScrollableLayout && "overflow-hidden",
       )}
       data-status-filter-tabs=""
@@ -117,7 +146,7 @@ export function StatusFilterTabs({
       <RailOrGrid scroll={!useSegmentedLayout} className={cn(
         useSegmentedLayout
           ? "grid items-stretch gap-1"
-          : "flex gap-1 rounded-xl bg-[#f3f4f6] p-1",
+          : "flex gap-1 rounded-xl bg-[#e6edf4] p-1",
         useSegmentedLayout && tabs.length === 2 && "grid-cols-2",
         useSegmentedLayout && tabs.length === 3 && "grid-cols-3",
         useSegmentedLayout && tabs.length === 4 && "grid-cols-4",
@@ -141,7 +170,7 @@ export function StatusFilterTabs({
             )}
             aria-pressed={active}
           >
-            {label(tab.id)}
+            <span className="min-w-0 max-w-full truncate">{label(tab.id)}</span>
             {count > 0 && (
               // The count is part of the label, not decoration: brand blue on the
               // active tab, slate on the rest, always large enough to read at a glance.
@@ -225,6 +254,7 @@ export function proposalBucket(proposalStatus: string, projectStatus?: string | 
   return "activas";
 }
 export function proposalMatches(filter: string, proposalStatus: string, projectStatus?: string | null): boolean {
+  if (!filter) return true; // toggle cleared → all proposals
   return proposalBucket(proposalStatus, projectStatus) === filter;
 }
 

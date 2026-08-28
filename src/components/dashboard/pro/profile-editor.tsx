@@ -871,10 +871,8 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
       {/* ONE cohesive settings card (instead of 6 separate boxes) — the sections are
           divider-separated rows; each expands inline into a soft inset field panel. */}
       <div className={cn(
-        "bg-white sm:overflow-hidden sm:rounded-2xl sm:border sm:border-[#dfe8f0] sm:shadow-[0_10px_28px_-24px_rgba(15,23,42,0.65)]",
-        mobileSectionFocused
-          ? "rounded-none border-0 shadow-none"
-          : "overflow-hidden rounded-2xl border border-[#dfe8f0] shadow-[0_10px_28px_-24px_rgba(15,23,42,0.65)]"
+        "bg-white sm:overflow-hidden sm:rounded-2xl sm:border sm:border-[#e5e7eb] sm:shadow-[0_10px_28px_-24px_rgba(15,23,42,0.65)]",
+        "overflow-hidden rounded-2xl border border-[#e5e7eb] shadow-[0_10px_28px_-24px_rgba(15,23,42,0.65)]"
       )}>
       <div className={cn(!mobileSectionFocused && "divide-y divide-[#eef3f7]")}>
       <div className="hidden px-4 pb-4 pt-5 sm:block sm:px-5 sm:pt-6">
