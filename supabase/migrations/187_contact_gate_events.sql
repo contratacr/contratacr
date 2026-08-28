@@ -1,4 +1,4 @@
--- 178: measure the account gate in front of direct contact.
+-- 187: measure the account gate in front of direct contact.
 --
 -- Since contact requires an account (WhatsApp, call, email), a guest tapping
 -- "Contactar" no longer produces a whatsapp_click — the gate intercepts first.
@@ -6,6 +6,9 @@
 -- fact the taps are simply no longer counted. `contact_gate_shown` records the
 -- attempt (metadata.channel = whatsapp | phone | email), so the ratio
 -- attempts -> registrations is measurable and the gate can be judged.
+--
+-- The list below is 184's plus the new type: this constraint is replaced whole,
+-- so every previously allowed event MUST be repeated or it stops being writable.
 
 alter table public.interaction_events
   drop constraint if exists interaction_events_event_type_check;
@@ -33,5 +36,6 @@ alter table public.interaction_events
     'job_application_sent',
     'offer_view',
     'assistant_question',
+    'page_freeze',
     'contact_gate_shown'
   ));
