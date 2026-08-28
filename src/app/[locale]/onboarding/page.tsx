@@ -10,6 +10,7 @@ import { isSigningOut } from "@/lib/auth/sign-out";
 import { FocusedHeader } from "@/components/layout/focused-header";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { PageRouteLoading } from "@/components/ui/route-loading";
+import { trackMetaEvent } from "@/lib/analytics/meta-pixel";
 
 export default function OnboardingPage() {
   const { user, avatarUrl, loading: authLoading } = useAuth();
@@ -131,6 +132,12 @@ export default function OnboardingPage() {
       );
     } catch (err) {
       console.error("[onboarding] profile upsert failed:", err);
+    }
+
+    // A social sign-in that picks "Busco" IS a completed client registration;
+    // the professional branch reports its own event at the end of that flow.
+    if (role === "client") {
+      trackMetaEvent("CompleteRegistration", { content_name: "client_registration", status: "client" });
     }
 
     // "Ofrezco" → complete the professional profile to unlock offering. "Busco" →

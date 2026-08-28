@@ -4,6 +4,7 @@ import { useCallback, useRef, useState, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
 import { Check } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
+import { trackInteraction } from "@/lib/analytics/interaction-events";
 import { ClientRegistrationModal, type ContactIntent } from "@/components/auth/client-registration-modal";
 import { BrandIconBadge } from "@/components/ui/brand-icon-badge";
 
@@ -15,9 +16,11 @@ import { BrandIconBadge } from "@/components/ui/brand-icon-badge";
 type GateOptions = {
   professionalName: string;
   intent: Exclude<ContactIntent, "booking">;
+  professionalId?: string;
+  source?: string;
 };
 
-export function useContactGate({ professionalName, intent }: GateOptions) {
+export function useContactGate({ professionalName, intent, professionalId, source = "profile" }: GateOptions) {
   const { user } = useAuth();
   const t = useTranslations("contactGate");
   const [registering, setRegistering] = useState(false);
@@ -27,10 +30,13 @@ export function useContactGate({ professionalName, intent }: GateOptions) {
   // Returns true when the caller may proceed right away.
   const requireAccount = useCallback((run: () => void) => {
     if (user) return true;
+    // The tap itself is the signal: without this the funnel would show contacts
+    // collapsing when guests are simply no longer counted.
+    trackInteraction({ type: "contact_gate_shown", professionalId: professionalId ?? null, source, metadata: { channel: intent } });
     pending.current = run;
     setRegistering(true);
     return false;
-  }, [user]);
+  }, [user, intent, professionalId, source]);
 
   const resume = () => {
     const run = pending.current;

@@ -20,6 +20,7 @@ export const INTERACTION_EVENT_TYPES = [
   "offer_view",
   "assistant_question",
   "page_freeze",
+  "contact_gate_shown",
 ] as const;
 
 export type InteractionEventType = (typeof INTERACTION_EVENT_TYPES)[number];

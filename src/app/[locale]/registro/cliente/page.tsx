@@ -8,6 +8,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { createClient } from "@/lib/supabase/client";
 import { SocialSignupButtons } from "@/components/auth/social-signup-buttons";
 import { readAttribution } from "@/lib/analytics/attribution";
+import { trackMetaEvent } from "@/lib/analytics/meta-pixel";
 import { Navbar } from "@/components/layout/navbar";
 import { FocusedHeader } from "@/components/layout/focused-header";
 import { Button } from "@/components/ui/button";
@@ -51,6 +52,9 @@ export default function RegisterClientPage() {
   async function completeSuccess() {
     const { data } = await createClient().auth.getUser();
     if (data.user?.id) await applyPendingFollow(data.user.id);
+    // Same conversion the modal reports, so the "Registro de cliente" custom
+    // conversion counts accounts created from this page too.
+    trackMetaEvent("CompleteRegistration", { content_name: "client_registration", status: "client" });
     setOtpEmail(null);
     setSuccess(true);
   }

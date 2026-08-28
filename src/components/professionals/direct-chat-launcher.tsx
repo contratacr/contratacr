@@ -48,7 +48,7 @@ export function DirectChatLauncher({
   const nativeApp = useNativeApp();
   const [loading, setLoading] = useState(false);
   const whatsappLabel = isEn ? "Contact on WhatsApp" : "Contactar por WhatsApp";
-  const { requireAccount, modals } = useContactGate({ professionalName, intent: "whatsapp" });
+  const { requireAccount, modals } = useContactGate({ professionalName, intent: "whatsapp", professionalId, source: analyticsSource });
 
   if (nativeApp) {
     const safeLabel = buttonLabel && !/whatsapp/i.test(buttonLabel) ? buttonLabel : undefined;

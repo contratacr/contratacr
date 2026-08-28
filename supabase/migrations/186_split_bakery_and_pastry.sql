@@ -1,4 +1,4 @@
--- Migration 184: split the bakery service into pastry and bread.
+-- Migration 186: split the bakery service into pastry and bread.
 --
 -- "Panaderías y reposterías" mixed two businesses a client picks between: the
 -- neighbourhood bakery (bread, a shop with a counter) and whoever bakes a
