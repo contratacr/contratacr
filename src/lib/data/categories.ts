@@ -322,8 +322,13 @@ const BASE_CATEGORY_GROUPS: CategoryGroup[] = [
     emoji: "🏪",
     items: [
       { id: "restaurantes_comida", label: "Restaurantes y comida", keywords: ["restaurante", "restaurantes", "soda", "sodas", "comida", "almuerzo", "cena", "casado", "comida rapida", "comida a domicilio", "delivery de comida"] },
-      { id: "cafeterias", label: "Cafeterías", keywords: ["cafeteria", "cafe", "coffee shop", "reposteria", "desayuno", "meriendas"] },
-      { id: "panaderias", label: "Panaderías y reposterías", keywords: ["panaderia", "pan", "reposteria", "pasteleria", "queques", "postres", "bolleria"] },
+      { id: "cafeterias", label: "Cafeterías", keywords: ["cafeteria", "cafe", "coffee shop", "desayuno", "meriendas", "pasteles de cafeteria"] },
+      // OJO con los ids: `panaderias` (plural) es la PASTELERÍA y `panaderia` (singular) es
+      // el PAN. En agosto 2026 el servicio original "Panaderías y reposterías" se dividió;
+      // los profesionales que ya estaban hacían queques, así que conservaron su id y el pan
+      // se abrió aparte. Renombrar un id habría sacado a esa gente de sus búsquedas.
+      { id: "panaderias", label: "Pastelería y repostería", keywords: ["pasteleria", "pastelero", "pastelera", "reposteria", "repostero", "repostera", "queque", "queques", "queque de cumpleanos", "queque de boda", "torta", "tortas", "pastel", "pasteles", "cupcakes", "postres", "bizcocho", "brownies", "reposteria fina"] },
+      { id: "panaderia", label: "Panadería", keywords: ["panaderia", "pan", "panadero", "panadera", "pan casero", "pan artesanal", "bolleria", "pan dulce", "baguette", "pan de masa madre"] },
       { id: "farmacias", label: "Farmacias", keywords: ["farmacia", "medicamentos", "recetas", "botica", "medicina", "farmaceutica"] },
       { id: "gasolineras", label: "Gasolineras", keywords: ["gasolinera", "combustible", "gasolina", "diesel", "estacion de servicio", "servicentro"] },
       { id: "supermercados_minisuper", label: "Supermercados y minisúper", keywords: ["supermercado", "super", "minisuper", "pulperia", "abarrotes", "conveniencia"] },
@@ -1266,6 +1271,7 @@ export const NATURAL_SERVICE_SCENARIOS: Record<string, string[]> = {
   restaurantes_comida: ["quiero comer algo cerca"],
   cafeterias: ["busco un lugar para cafe"],
   panaderias: ["ocupo un queque de cumpleanos"],
+  panaderia: ["quiero pan artesanal recien horneado"],
   farmacias: ["necesito comprar medicinas"],
   gasolineras: ["ocupo echar gasolina"],
   supermercados_minisuper: ["necesito comprar diario"],
@@ -1585,7 +1591,8 @@ export const CATEGORY_LABELS_EN: Record<string, string> = {
   // Comercios
   restaurantes_comida: "Restaurants & food",
   cafeterias: "Coffee shops",
-  panaderias: "Bakeries & pastry shops",
+  panaderias: "Pastry & cakes",
+  panaderia: "Bakery",
   farmacias: "Pharmacies",
   gasolineras: "Gas stations",
   supermercados_minisuper: "Supermarkets & convenience stores",
