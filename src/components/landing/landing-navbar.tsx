@@ -1492,7 +1492,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                       onClick={() => window.dispatchEvent(new Event("ccr:section-back"))}
                       data-ccr-section-back=""
                       className="grid h-10 w-10 shrink-0 place-items-center rounded-xl text-[#162543] transition-colors hover:bg-gray-50"
-                      aria-label={locale === "en" ? "Back" : "Volver"}
+                      aria-label={t("back")}
                     >
                       <ArrowLeft className="h-5 w-5" />
                     </button>
@@ -1962,7 +1962,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                   <button
                     type="button"
                     onClick={closeNativeSearch}
-                    aria-label={locale === "en" ? "Back" : "Volver"}
+                    aria-label={t("back")}
                     className="grid h-10 w-10 shrink-0 place-items-center text-[#1A2744]"
                   >
                     <ChevronRight className="h-6 w-6 rotate-180" />

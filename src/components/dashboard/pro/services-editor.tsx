@@ -381,12 +381,10 @@ export function ServicesEditor({
     const nextServices = services.filter((s) => effectiveCategory(s) !== id);
     if (!ensureAtLeastOneActiveService(next, nextServices)) return;
     const result = await confirm({
-      title: locale === "en" ? "Delete service" : "Eliminar servicio",
-      description: locale === "en"
-        ? "This service and its information will be removed from your profile."
-        : "Este servicio y su información se quitarán de tu perfil.",
-      confirmLabel: locale === "en" ? "Delete" : "Eliminar",
-      cancelLabel: locale === "en" ? "Cancel" : "Cancelar",
+      title: t("deleteTitle"),
+      description: t("deleteBody"),
+      confirmLabel: t("deleteConfirm"),
+      cancelLabel: t("deleteCancel"),
       tone: "danger",
     });
     if (!result.confirmed) return;

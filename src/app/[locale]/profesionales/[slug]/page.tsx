@@ -476,7 +476,7 @@ export default function ProfilePage() {
   };
   const displayName = getProfessionalDisplayName(professional.fullName, professional.businessName);
   const TABS: Array<{ id: Tab; label: string }> = [
-    { id: "disponibilidad", label: locale === "en" ? "Availability" : "Disponibilidad" },
+    { id: "disponibilidad", label: t("availabilityTab") },
     { id: "servicios",      label: t("tabs.servicios") },
     { id: "resenas",        label: t("tabs.resenas") },
     ...(hasCasos ? [{ id: "casos" as Tab, label: t("tabs.casos") }] : []),

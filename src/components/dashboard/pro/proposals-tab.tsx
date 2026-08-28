@@ -98,7 +98,7 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
   // Filter "Oportunidades" by profession. "Todas" is the default so the pro sees
   // EVERY open opportunity at once; the per-profession chips (built after the
   // counts, ordered by how many each has, empty ones hidden) refine from there.
-  const profLabel = (id: string) => (id === "all" ? (locale === "en" ? "All" : "Todas") : getCategoryLabel(id, locale));
+  const profLabel = (id: string) => (id === "all" ? t("allServices") : getCategoryLabel(id, locale));
   const showProfFilter = professions.length > 1;
 
   // Significant words (≥4 chars) from the pro's service names — used to flag
@@ -208,10 +208,10 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
   }, []);
 
   const mineStageDefs = useMemo(() => [
-    { key: "en_curso", label: locale === "en" ? "Accepted" : "Aceptadas" },
-    { key: "esperando", label: locale === "en" ? "Waiting" : "En espera" },
-    { key: "finalizadas", label: locale === "en" ? "Completed" : "Finalizadas" },
-    { key: "canceladas", label: locale === "en" ? "Cancelled" : "Canceladas" },
+    { key: "en_curso", label: t("stageAccepted") },
+    { key: "esperando", label: t("stageWaiting") },
+    { key: "finalizadas", label: t("stageCompleted") },
+    { key: "canceladas", label: t("stageCancelled") },
   ], [locale]);
 
   const mineStageCounts = useMemo(() => {
@@ -234,8 +234,8 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
     : (availableMineStages[0]?.key ?? "");
   const stageLabel = (id: string) =>
     id === "nuevas"
-      ? (locale === "en" ? "New" : "Nuevas")
-      : (locale === "en" ? "My proposals" : "Mis propuestas");
+      ? t("tabNew")
+      : t("tabMine");
 
   const profTabs = useMemo(() => {
     const withCount = professions.filter((p) => (profCounts[p] ?? 0) > 0);
@@ -868,7 +868,7 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
                                 {actions.length > 0 && <div className="grid min-w-0 flex-1 grid-cols-2 gap-2 sm:flex sm:flex-wrap">{actions}</div>}
                                 {secondaryActions.length > 0 && (
                                   <div className="relative ml-auto shrink-0" data-proposal-actions={p.id}>
-                                    <button type="button" aria-label={locale === "en" ? "More options" : "Más opciones"} aria-haspopup="menu" aria-expanded={actionsMenuFor === p.id} onClick={() => setActionsMenuFor((current) => current === p.id ? null : p.id)} className="grid h-10 w-10 place-items-center rounded-lg border border-[#d7e1ea] text-[#718096] transition hover:border-[#b9c8d6] hover:bg-[#f6f9fb] hover:text-[#162543] [.ccr-native-app_&]:h-11 [.ccr-native-app_&]:w-11">
+                                    <button type="button" aria-label={t("moreOptions")} aria-haspopup="menu" aria-expanded={actionsMenuFor === p.id} onClick={() => setActionsMenuFor((current) => current === p.id ? null : p.id)} className="grid h-10 w-10 place-items-center rounded-lg border border-[#d7e1ea] text-[#718096] transition hover:border-[#b9c8d6] hover:bg-[#f6f9fb] hover:text-[#162543] [.ccr-native-app_&]:h-11 [.ccr-native-app_&]:w-11">
                                       <MoreVertical className="h-5 w-5" />
                                     </button>
                                     {actionsMenuFor === p.id && <div role="menu" className="absolute bottom-[calc(100%+6px)] right-0 z-50 max-h-[calc(100dvh-2rem)] w-48 overflow-y-auto rounded-xl border border-[#dfe8f0] bg-white p-1.5 shadow-[0_18px_45px_-22px_rgba(15,23,42,0.55)]">{secondaryActions}</div>}

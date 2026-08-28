@@ -238,7 +238,7 @@ export function SavedProfessionalsTab() {
 
   const tabs = availableFilters.map((id) => ({ id }));
   const tabLabels: Record<string, string> = {
-    all: locale === "en" ? "All" : "Todos",
+    all: t("allFilter"),
     professionals: t("professionalsTab"),
     offers: t("offersTab"),
     jobs: t("jobsTab"),
@@ -258,7 +258,7 @@ export function SavedProfessionalsTab() {
       ? t("emptyOffers")
       : filter === "jobs"
         ? t("emptyJobs")
-        : (locale === "en" ? "You have not saved anything yet." : "Todavía no has guardado nada.");
+        : t("emptyNothingSaved");
 
   return (
     <div className="ccr-native-safe-list-end space-y-4">

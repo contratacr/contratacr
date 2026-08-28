@@ -134,7 +134,8 @@
     "modeProShort": "Professional",
     "modeSwitchAria": "Switch between client and professional mode",
     "receivedRequests": "Requests",
-    "myProposals": "My proposals"
+    "myProposals": "My proposals",
+    "back": "Back"
   },
   "home": {
     "accountDeletion": {
@@ -332,7 +333,8 @@
     "verifiedShort": "Verified",
     "unverifiedShort": "Unverified",
     "email": "Contact by email",
-    "priceConsult": "Ask price"
+    "priceConsult": "Ask price",
+    "servicesSuffix": "services"
   },
   "locationPicker": {
     "searchPlaceholder": "Search your place's address… example: Escazú Centro",
@@ -450,7 +452,8 @@
     "workAlt": "Work {n}",
     "close": "Close",
     "prev": "Previous",
-    "next": "Next"
+    "next": "Next",
+    "allServices": "All"
   },
   "report": {
     "title": "Report profile",
@@ -693,7 +696,9 @@
     "reviewOf": "Review of “{title}”",
     "noReviews": "No reviews yet.",
     "whatItMeans": "What does it mean?",
-    "close": "Close"
+    "close": "Close",
+    "backToMessages": "Back to messages",
+    "availabilityTab": "Availability"
   },
   "auth": {
     "login": {
@@ -2047,7 +2052,11 @@
     "maxPhotosAlert": "Max {max} photos per case.",
     "edit": "Edit",
     "cancel": "Cancel",
-    "save": "Save"
+    "save": "Save",
+    "deleteTitle": "Delete success story",
+    "deleteBody": "This success story and its photos will be removed from your profile.",
+    "deleteConfirm": "Delete",
+    "deleteCancel": "Cancel"
   },
   "unsavedGuard": {
     "title": "You have unsaved changes",
@@ -2157,7 +2166,15 @@
     "fieldSent": "Sent:",
     "fieldPhone": "Phone:",
     "budgetTBD": "To be agreed",
-    "charLimit": "You've reached the {max}-character limit."
+    "charLimit": "You've reached the {max}-character limit.",
+    "allServices": "All",
+    "stageAccepted": "Accepted",
+    "stageWaiting": "Waiting",
+    "stageCompleted": "Completed",
+    "stageCancelled": "Cancelled",
+    "tabNew": "New",
+    "tabMine": "My proposals",
+    "moreOptions": "More options"
   },
   "servicesEditor": {
     "servicesOf": "Services of",
@@ -2246,7 +2263,11 @@
     "emptyTitle": "You don't offer any services yet",
     "emptyHelp": "Add at least one service to appear in search.",
     "pickerBack": "Back to services",
-    "pickerOptionsCount": "{count, plural, one {# option} other {# options}}"
+    "pickerOptionsCount": "{count, plural, one {# option} other {# options}}",
+    "deleteTitle": "Delete service",
+    "deleteBody": "This service and its information will be removed from your profile.",
+    "deleteConfirm": "Delete",
+    "deleteCancel": "Cancel"
   },
   "availabilityEditor": {
     "interval30": "Every 30 min",
@@ -2859,7 +2880,9 @@
     "count": "{count, plural, one {# favorite professional} other {# favorite professionals}}",
     "noReviews": "No reviews",
     "videoConsult": "Video consultation",
-    "locationUnavailable": "Location not specified"
+    "locationUnavailable": "Location not specified",
+    "allFilter": "All",
+    "emptyNothingSaved": "You have not saved anything yet."
   },
   "clientConnections": {
     "emptyTitle": "You don't have any connections yet",

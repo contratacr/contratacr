@@ -125,7 +125,7 @@ export function CaseShowcase({
           tabs={[{ id: "all" }, ...distinctProfs.map((p) => ({ id: p }))]}
           value={selectedActive}
           onChange={setActive}
-          labelFor={(id) => (id === "all" ? (locale === "en" ? "All" : "Todas") : profLabel(id))}
+          labelFor={(id) => (id === "all" ? tg("allServices") : profLabel(id))}
           counts={{ all: cases.length, ...Object.fromEntries(distinctProfs.map((p) => [p, countFor(p)])) }}
           variant="chips"
         />

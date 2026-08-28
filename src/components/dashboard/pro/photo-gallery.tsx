@@ -191,12 +191,10 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
   // que permita deshacerlo saliendo de la sección.
   async function deleteCase(id: string) {
     const result = await confirm({
-      title: locale === "en" ? "Delete success story" : "Eliminar caso de éxito",
-      description: locale === "en"
-        ? "This success story and its photos will be removed from your profile."
-        : "Este caso de éxito y sus fotos se quitarán de tu perfil.",
-      confirmLabel: locale === "en" ? "Delete" : "Eliminar",
-      cancelLabel: locale === "en" ? "Cancel" : "Cancelar",
+      title: t("deleteTitle"),
+      description: t("deleteBody"),
+      confirmLabel: t("deleteConfirm"),
+      cancelLabel: t("deleteCancel"),
       tone: "danger",
     });
     if (!result.confirmed) return;

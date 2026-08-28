@@ -134,7 +134,8 @@
     "modeProShort": "Profesional",
     "modeSwitchAria": "Cambiar entre modo cliente y modo profesional",
     "receivedRequests": "Solicitudes recibidas",
-    "myProposals": "Mis propuestas"
+    "myProposals": "Mis propuestas",
+    "back": "Volver"
   },
   "home": {
     "accountDeletion": {
@@ -332,7 +333,8 @@
     "viewCertifications": "Formación",
     "verifiedShort": "Verificado",
     "unverifiedShort": "Sin verificar",
-    "email": "Contactar por correo"
+    "email": "Contactar por correo",
+    "servicesSuffix": "servicios"
   },
   "locationPicker": {
     "searchPlaceholder": "Busca la dirección de tu local… ejemplo: Escazú Centro",
@@ -450,7 +452,8 @@
     "workAlt": "Trabajo {n}",
     "close": "Cerrar",
     "prev": "Anterior",
-    "next": "Siguiente"
+    "next": "Siguiente",
+    "allServices": "Todas"
   },
   "report": {
     "title": "Reportar perfil",
@@ -693,7 +696,9 @@
     "reviewOf": "Reseña de “{title}”",
     "noReviews": "Aún no hay reseñas. Solo los clientes que completaron un servicio pueden dejar una.",
     "whatItMeans": "¿Qué significa?",
-    "close": "Cerrar"
+    "close": "Cerrar",
+    "backToMessages": "Volver a mensajes",
+    "availabilityTab": "Disponibilidad"
   },
   "auth": {
     "login": {
@@ -2047,7 +2052,11 @@
     "maxPhotosAlert": "Máximo {max} fotos por caso.",
     "edit": "Editar",
     "cancel": "Cancelar",
-    "save": "Guardar"
+    "save": "Guardar",
+    "deleteTitle": "Eliminar caso de éxito",
+    "deleteBody": "Este caso de éxito y sus fotos se quitarán de tu perfil.",
+    "deleteConfirm": "Eliminar",
+    "deleteCancel": "Cancelar"
   },
   "unsavedGuard": {
     "title": "Tienes cambios sin guardar",
@@ -2157,7 +2166,15 @@
     "fieldSent": "Enviada:",
     "fieldPhone": "Tel:",
     "budgetTBD": "A convenir",
-    "charLimit": "Has alcanzado el límite de {max} caracteres."
+    "charLimit": "Has alcanzado el límite de {max} caracteres.",
+    "allServices": "Todas",
+    "stageAccepted": "Aceptadas",
+    "stageWaiting": "En espera",
+    "stageCompleted": "Finalizadas",
+    "stageCancelled": "Canceladas",
+    "tabNew": "Nuevas",
+    "tabMine": "Mis propuestas",
+    "moreOptions": "Más opciones"
   },
   "servicesEditor": {
     "servicesOf": "Servicios de",
@@ -2246,7 +2263,11 @@
     "emptyTitle": "Aún no ofreces servicios",
     "emptyHelp": "Agrega al menos un servicio para aparecer en búsqueda.",
     "pickerBack": "Volver a servicios",
-    "pickerOptionsCount": "{count, plural, one {# opción} other {# opciones}}"
+    "pickerOptionsCount": "{count, plural, one {# opción} other {# opciones}}",
+    "deleteTitle": "Eliminar servicio",
+    "deleteBody": "Este servicio y su información se quitarán de tu perfil.",
+    "deleteConfirm": "Eliminar",
+    "deleteCancel": "Cancelar"
   },
   "availabilityEditor": {
     "interval30": "Cada 30 min",
@@ -2859,7 +2880,9 @@
     "count": "{count, plural, one {# profesional favorito} other {# profesionales favoritos}}",
     "noReviews": "Sin reseñas",
     "videoConsult": "Videoconsulta",
-    "locationUnavailable": "Ubicación sin especificar"
+    "locationUnavailable": "Ubicación sin especificar",
+    "allFilter": "Todos",
+    "emptyNothingSaved": "Todavía no has guardado nada."
   },
   "clientConnections": {
     "emptyTitle": "Aún no tienes conexiones",

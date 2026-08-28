@@ -96,7 +96,7 @@ export function ResponsiveServiceSummary({
     >
       {shown.map((label, index) => (
         <span key={label} className="contents">
-          {separator && index > 0 && <span aria-hidden className="shrink-0 text-[11px] leading-none text-[#9ca3af]">{separator}</span>}
+          {separator && index > 0 && <span aria-hidden className="-ml-1 shrink-0 text-[11px] leading-none text-[#9ca3af]">{separator}</span>}
           <span data-testid={itemTestId} className={itemClassName} title={label}>
             {label}
           </span>
