@@ -236,6 +236,35 @@ export function MarketplaceSearch({
     closeMobileSearch();
   }
 
+  // El Intro del teclado salta al campo que falta y solo busca cuando no
+  // queda nada por completar; el teclado lo anuncia con "Siguiente"/"Buscar".
+  const faltaSecundario = !!secondary && !secondary.value.trim();
+  const faltaPrincipal = !value.trim();
+  const pistaPrincipal = value.trim() && faltaSecundario ? "next" : "search";
+  const pistaSecundaria = secondary?.value.trim() && faltaPrincipal ? "next" : "search";
+
+  function introDesdePrincipal() {
+    if (value.trim() && faltaSecundario) {
+      setMobileField("secondary");
+      setDesktopField("secondary");
+      window.setTimeout(() => (fullSecondaryInputRef.current ?? desktopSecondaryInputRef.current)?.focus(), 60);
+      return;
+    }
+    closeMobileSearch();
+    submitSearch();
+  }
+
+  function introDesdeSecundario() {
+    if (secondary?.value.trim() && faltaPrincipal) {
+      setMobileField("primary");
+      setDesktopField("primary");
+      window.setTimeout(() => inputRef.current?.focus(), 60);
+      return;
+    }
+    closeMobileSearch();
+    submitSearch();
+  }
+
   function submitSearch() {
     saveRecent();
     onSubmit?.();
@@ -271,9 +300,9 @@ export function MarketplaceSearch({
             onFocus={() => { openMobileSearch(); if (window.innerWidth >= 1024) setDesktopField("primary"); }}
             onClick={openMobileSearch}
             placeholder={desktopPlaceholder}
-            enterKeyHint="search"
+            enterKeyHint={pistaPrincipal}
             onKeyDown={(event) => {
-              if (event.key === "Enter") submitSearch();
+              if (event.key === "Enter") { event.preventDefault(); introDesdePrincipal(); }
             }}
             className="h-11 w-full min-w-0 bg-transparent pr-9 text-[15px] font-semibold text-[#162543] outline-none placeholder:text-[#8f9aaa] lg:text-base lg:font-normal lg:text-gray-700 lg:placeholder:text-gray-400"
           />
@@ -341,18 +370,10 @@ export function MarketplaceSearch({
                 onChange={(event) => { onChange(event.target.value); setMobileField("primary"); }}
                 onFocus={() => setMobileField("primary")}
                 onKeyDown={(event) => {
-                  if (event.key === "Enter") {
-                    submitSearch();
-                    if (secondary && !secondary.value.trim()) {
-                      setMobileField("secondary");
-                      window.setTimeout(() => fullSecondaryInputRef.current?.focus(), 60);
-                      return;
-                    }
-                    closeMobileSearch();
-                  }
+                  if (event.key === "Enter") { event.preventDefault(); introDesdePrincipal(); }
                 }}
                 placeholder={placeholder}
-                enterKeyHint="search"
+                enterKeyHint={pistaPrincipal}
                 className="min-w-0 flex-1 bg-transparent px-2 text-[17px] font-semibold text-[#1A2744] outline-none placeholder:text-[#a5afbd]"
               />
             </div>
@@ -366,8 +387,8 @@ export function MarketplaceSearch({
                   value={secondary.value}
                   onChange={(event) => { secondary.onChange(event.target.value); setMobileField("secondary"); }}
                   onFocus={() => setMobileField("secondary")}
-                  onKeyDown={(event) => { if (event.key === "Enter") closeMobileSearch(); }}
-                  enterKeyHint="search"
+                  onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); introDesdeSecundario(); } }}
+                  enterKeyHint={pistaSecundaria}
                   placeholder={secondary.placeholder}
                   aria-label={secondary.ariaLabel ?? secondary.placeholder}
                   className="min-w-0 flex-1 bg-transparent px-2 text-[17px] font-semibold text-[#162543] outline-none placeholder:text-[#9aa8ba]"

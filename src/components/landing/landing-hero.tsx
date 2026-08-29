@@ -343,6 +343,12 @@ export function LandingHero() {
   // mobile both mount; the hidden one has a 0×0 rect, so its dropdown renders nothing).
   const svcDesktopRef = useRef<HTMLDivElement>(null);
   const svcMobileRef = useRef<HTMLDivElement>(null);
+  const servicioInputRef = useRef<HTMLInputElement>(null);
+  // Al elegir una sugerencia se rellena el campo, y ese cambio de texto volvía
+  // a disparar la búsqueda de sugerencias: el panel reaparecía sobre el campo
+  // de ubicación al que se acababa de saltar.
+  const recienElegidoRef = useRef(false);
+  const ubicacionInputRef = useRef<HTMLInputElement>(null);
   const locDesktopRef = useRef<HTMLDivElement>(null);
   const locMobileRef = useRef<HTMLDivElement>(null);
   // Location is a typeable autocomplete over provinces + cantones AND Google Places addresses.
@@ -382,6 +388,7 @@ export function LandingHero() {
         const { suggestions } = await res.json();
         setSuggestions(suggestions ?? []);
         setActiveIdx(-1);
+        if (recienElegidoRef.current) { recienElegidoRef.current = false; return; }
         setOpenSug(true);
       } catch {
         /* ignore — search still works without suggestions */
@@ -435,13 +442,20 @@ export function LandingHero() {
 
   // Selecting a service suggestion FILLS the field — it does NOT search. The
   // search runs only on Buscar/Enter (see runSearch).
-  function selectSuggestion(s: SearchSuggestion) {
+  function selectSuggestion(s: SearchSuggestion, correrBusqueda = false) {
+    recienElegidoRef.current = true;
     setService(s.label);
     setServiceSel(s);
     setOpenSug(false);
+    if (!location.trim()) {
+      // Falta la ubicación: se pasa el foco en lugar de buscar a medias.
+      setTimeout(() => ubicacionInputRef.current?.focus(), 0);
+      return;
+    }
+    if (correrBusqueda) runSearch(s);
   }
 
-  function selectLocation(s: LocationSuggestion) {
+  function selectLocation(s: LocationSuggestion, correrBusqueda = false) {
     setLocation(s.label);
     setLocationSel(s);
     pickedAddrRef.current = null;
@@ -449,6 +463,11 @@ export function LandingHero() {
     setGeoError(null);
     setAddrSug([]);
     setOpenLoc(false);
+    if (!service.trim()) {
+      setTimeout(() => servicioInputRef.current?.focus(), 0);
+      return;
+    }
+    if (correrBusqueda) runSearch(undefined, { kind: "taxonomy", sug: s });
   }
 
   // Picking a Google address → resolve its province/cantón (from admin areas) + lat/lng, so the
@@ -567,17 +586,23 @@ export function LandingHero() {
         return;
       } else if (e.key === "Enter") {
         e.preventDefault();
-        // Resolve the partial term to the highlighted OR the FIRST (best) suggestion and search it.
-        runSearch(suggestions[activeIdx >= 0 ? activeIdx : 0]);
+        // Se completa con la sugerencia marcada (o la mejor) y se salta al otro
+        // campo; la búsqueda solo corre si ya están los dos.
+        selectSuggestion(suggestions[activeIdx >= 0 ? activeIdx : 0], true);
         return;
       } else if (e.key === "Escape") {
         setOpenSug(false);
         return;
       }
     }
-    // No suggestions → run the search with the literal/exact text (graceful fallback).
+    // Sin sugerencias: con la ubicación vacía se salta a ella; si ya está, se busca.
     if (e.key === "Enter") {
       e.preventDefault();
+      if (service.trim() && !location.trim()) {
+        setOpenSug(false);
+        ubicacionInputRef.current?.focus();
+        return;
+      }
       runSearch();
     }
   }
@@ -599,16 +624,19 @@ export function LandingHero() {
         // ADDRESS results exist, resolve the first one first (its ref is set before the
         // promise resolves), then search. Either way location is filled + applied.
         e.preventDefault();
+        const faltaServicio = !service.trim();
         if (locSug.length > 0) {
           const chosen = locSug[locActive >= 0 ? locActive : 0];
           setLocation(chosen.label);
           setLocationSel(chosen);
           pickedAddrRef.current = null;
           setOpenLoc(false);
+          if (faltaServicio) { setTimeout(() => servicioInputRef.current?.focus(), 0); return; }
           runSearch(undefined, { kind: "taxonomy", sug: chosen });
         } else {
           setOpenLoc(false);
           await selectAddress(addrSug[0]);
+          if (faltaServicio) { setTimeout(() => servicioInputRef.current?.focus(), 0); return; }
           const p = pickedAddrRef.current;
           runSearch(undefined, p && (p.provinceId || p.lat != null)
             ? { kind: "address", provinceId: p.provinceId, cantonId: p.cantonId, lat: p.lat, lng: p.lng }
@@ -697,7 +725,9 @@ export function LandingHero() {
                 <input
                   type="text"
                   value={service}
-                  onChange={(e) => { setService(e.target.value); setServiceSel(null); }}
+                  onChange={(e) => { recienElegidoRef.current = false; setService(e.target.value); setServiceSel(null); }}
+                  ref={servicioInputRef}
+                  enterKeyHint={service.trim() && !location.trim() ? "next" : "search"}
                   onKeyDown={handleKeyDown}
                   onFocus={() => { if (suggestions.length > 0) setOpenSug(true); }}
                   onBlur={() => setTimeout(() => setOpenSug(false), 120)}
@@ -707,7 +737,7 @@ export function LandingHero() {
                   aria-expanded={openSug}
                   aria-autocomplete="list"
                 />
-                <SuggestionsDropdown anchorRef={svcDesktopRef} open={openSug} suggestions={suggestions} activeIdx={activeIdx} onPick={selectSuggestion} />
+                <SuggestionsDropdown anchorRef={svcDesktopRef} open={openSug} suggestions={suggestions} activeIdx={activeIdx} onPick={(s) => selectSuggestion(s, true)} />
               </div>
               {/* Divider + location autocomplete */}
               <div className="w-px bg-gray-200 self-stretch my-3 mx-2 shrink-0" />
@@ -717,6 +747,8 @@ export function LandingHero() {
                   type="text"
                   value={location}
                   onChange={(e) => handleLocationChange(e.target.value)}
+                  ref={ubicacionInputRef}
+                  enterKeyHint={location.trim() && !service.trim() ? "next" : "search"}
                   onKeyDown={handleLocKeyDown}
                   onFocus={() => { ensureMaps(); setOpenLoc(location.trim().length >= 2); }}
                   onBlur={() => setTimeout(() => setOpenLoc(false), 120)}
@@ -726,7 +758,7 @@ export function LandingHero() {
                   aria-expanded={openLoc}
                   aria-autocomplete="list"
                 />
-                <LocationDropdown anchorRef={locDesktopRef} open={openLoc && location.trim().length >= 2} suggestions={locSug} addresses={addrSug} activeIdx={locActive} onPick={selectLocation} onPickAddress={selectAddress} onNearMe={requestNearMe} nearMeLabel={t("nearMe")} geoLoading={geoLoading} />
+                <LocationDropdown anchorRef={locDesktopRef} open={openLoc && location.trim().length >= 2} suggestions={locSug} addresses={addrSug} activeIdx={locActive} onPick={(s) => selectLocation(s, true)} onPickAddress={selectAddress} onNearMe={requestNearMe} nearMeLabel={t("nearMe")} geoLoading={geoLoading} />
               </div>
               {/* Buscar button */}
               <button
@@ -746,7 +778,9 @@ export function LandingHero() {
                 <input
                   type="text"
                   value={service}
-                  onChange={(e) => { setService(e.target.value); setServiceSel(null); }}
+                  onChange={(e) => { recienElegidoRef.current = false; setService(e.target.value); setServiceSel(null); }}
+                  ref={servicioInputRef}
+                  enterKeyHint={service.trim() && !location.trim() ? "next" : "search"}
                   onKeyDown={handleKeyDown}
                   onFocus={() => { if (suggestions.length > 0) setOpenSug(true); }}
                   onBlur={() => setTimeout(() => setOpenSug(false), 120)}
@@ -757,7 +791,7 @@ export function LandingHero() {
                   aria-autocomplete="list"
                 />
               </div>
-              <SuggestionsDropdown anchorRef={svcMobileRef} open={openSug} suggestions={suggestions} activeIdx={activeIdx} onPick={selectSuggestion} />
+              <SuggestionsDropdown anchorRef={svcMobileRef} open={openSug} suggestions={suggestions} activeIdx={activeIdx} onPick={(s) => selectSuggestion(s, true)} />
             </div>
             <div ref={locMobileRef} className="relative">
               <div className="flex items-center h-12 bg-white border border-gray-200 rounded-[6px] overflow-hidden pl-4 pr-3 shadow-[0_4px_24px_rgba(0,0,0,0.10)]">
@@ -766,6 +800,8 @@ export function LandingHero() {
                   type="text"
                   value={location}
                   onChange={(e) => handleLocationChange(e.target.value)}
+                  ref={ubicacionInputRef}
+                  enterKeyHint={location.trim() && !service.trim() ? "next" : "search"}
                   onKeyDown={handleLocKeyDown}
                   onFocus={() => { ensureMaps(); setOpenLoc(location.trim().length >= 2); }}
                   onBlur={() => setTimeout(() => setOpenLoc(false), 120)}
@@ -776,7 +812,7 @@ export function LandingHero() {
                   aria-autocomplete="list"
                 />
               </div>
-              <LocationDropdown anchorRef={locMobileRef} open={openLoc && location.trim().length >= 2} suggestions={locSug} addresses={addrSug} activeIdx={locActive} onPick={selectLocation} onPickAddress={selectAddress} onNearMe={requestNearMe} nearMeLabel={t("nearMe")} geoLoading={geoLoading} />
+              <LocationDropdown anchorRef={locMobileRef} open={openLoc && location.trim().length >= 2} suggestions={locSug} addresses={addrSug} activeIdx={locActive} onPick={(s) => selectLocation(s, true)} onPickAddress={selectAddress} onNearMe={requestNearMe} nearMeLabel={t("nearMe")} geoLoading={geoLoading} />
             </div>
             <button
               type="submit"

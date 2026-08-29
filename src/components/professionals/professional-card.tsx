@@ -145,9 +145,13 @@ export function ProfessionalCard({ professional, className, highlightMetric = "r
     activeCategory && allProfessions.includes(activeCategory)
       ? [activeCategory]
       : allProfessions;
+  // Si se buscó un servicio concreto, la tarjeta muestra ESE y nada más: el
+  // resto va al contador "+N". Antes se anteponía el buscado pero se dejaba la
+  // lista detrás, así que en pantallas anchas cabían dos y se veían servicios
+  // que no se habían buscado.
   const mobileDisplayProfessions =
     activeCategory && allProfessions.includes(activeCategory)
-      ? [activeCategory, ...allProfessions.filter((id) => id !== activeCategory)]
+      ? [activeCategory]
       : allProfessions;
   const mobileProfessionList = mobileDisplayProfessions.slice(0, 1);
   // Price split so the AMOUNT can be brand-blue and the /unit muted grey (matches the

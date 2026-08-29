@@ -744,6 +744,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   const compactLocRef = useRef<HTMLDivElement>(null);
   const nativeSearchInputRef = useRef<HTMLInputElement>(null);
   const nativeLocationInputRef = useRef<HTMLInputElement>(null);
+  const navLocationInputRef = useRef<HTMLInputElement>(null);
   const nativePendingTimer = useRef<number | null>(null);
   const nativeBottomNavRef = useRef<HTMLElement>(null);
   // Drives a SHORTER search placeholder on small screens so it never clips.
@@ -1425,8 +1426,10 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
     }
     if (e.key === "Enter") {
       e.preventDefault();
-      if (nativeSearchOpen && !navLocation.trim()) {
-        nativeLocationInputRef.current?.focus();
+      // Falta la ubicación: se salta a ella en vez de buscar a medias (antes
+      // esto solo ocurría dentro de la app).
+      if (searchQuery.trim() && !navLocation.trim()) {
+        (nativeSearchOpen ? nativeLocationInputRef.current : navLocationInputRef.current)?.focus();
         setNavLocOpen(false);
         return;
       }
@@ -1701,6 +1704,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                                 type="text"
                                 value={searchQuery}
                                 onChange={(e) => { setSearchQuery(repairVisibleText(e.target.value)); setSearchCategoryId(null); setSearchActiveIdx(-1); }}
+                                enterKeyHint={searchQuery.trim() && !navLocation.trim() ? "next" : "search"}
                                 onKeyDown={handleCompactSearchKeyDown}
                                 onFocus={() => { if (searchBlurTimer.current) clearTimeout(searchBlurTimer.current); setSearchFocused(true); }}
                                 onBlur={() => { searchBlurTimer.current = setTimeout(() => setSearchFocused(false), 150); }}
@@ -1718,6 +1722,8 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                               <MapPin className="h-5 w-5 text-gray-300 shrink-0" />
                               <input
                                 type="text"
+                                ref={navLocationInputRef}
+                                enterKeyHint={navLocation.trim() && !searchQuery.trim() ? "next" : "search"}
                                 value={navLocation}
                                 onChange={(e) => {
                                   const value = repairVisibleText(e.target.value);
@@ -2115,7 +2121,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
             for these `fixed` elements, breaking full-viewport positioning). */}
           <div
             className={cn(
-              "lg:hidden fixed inset-0 z-[100] bg-transparent transition-opacity duration-300",
+              "lg:hidden fixed inset-0 z-[10050] bg-transparent transition-opacity duration-300",
               mobileOpen ? "opacity-100" : "opacity-0 pointer-events-none"
             )}
             onClick={() => setMobileOpen(false)}
@@ -2133,7 +2139,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
               drawerTouchX.current = null;
             }}
             className={cn(
-              "lg:hidden fixed top-0 left-0 bottom-0 z-[101] w-[76vw] max-w-[320px] bg-white shadow-[18px_0_46px_-24px_rgba(15,23,42,0.65)] flex flex-col transition-[transform,visibility] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] will-change-transform",
+              "lg:hidden fixed top-0 left-0 bottom-0 z-[10060] w-[76vw] max-w-[320px] bg-white shadow-[18px_0_46px_-24px_rgba(15,23,42,0.65)] flex flex-col transition-[transform,visibility] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] will-change-transform",
               mobileOpen ? "visible translate-x-0 pointer-events-auto" : "invisible -translate-x-full pointer-events-none"
             )}
           >

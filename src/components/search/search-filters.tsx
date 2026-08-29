@@ -857,6 +857,11 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
     debounceRef.current = setTimeout(() => applyFilters({ q: value, categoria: "", aseguradora: "", modalidad: "" }), 400);
   }
 
+  // Misma regla en los cuatro buscadores: el Intro completa lo que falta y
+  // solo busca cuando ya no queda campo vacío.
+  const pistaServicio: "next" | "search" = query.trim() && !locationQuery.trim() ? "next" : "search";
+  const pistaUbicacion: "next" | "search" = locationQuery.trim() && !query.trim() && !category ? "next" : "search";
+
   function handleQueryKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
     if (e.key === "Enter") {
       if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -990,6 +995,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
   }
 
   const locationInputRef = useRef<HTMLInputElement>(null);
+  const serviceInputRef = useRef<HTMLInputElement>(null);
   function handleLocationKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
     if (e.key === "ArrowDown" && locationSug.length > 0) {
       e.preventDefault();
@@ -1015,6 +1021,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
       }
       const selected = locationSug[locationActiveIndex >= 0 ? locationActiveIndex : 0] ?? resolveLocation(trimmed);
       if (selected) pickLocationOption(selected);
+      if (!query.trim() && !category) window.setTimeout(() => serviceInputRef.current?.focus(), 80);
     }
   }
 
@@ -1175,6 +1182,8 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
             <label className={fieldLabel}>{t("filters.service")}</label>
             <div ref={searchFieldRef} className="relative">
               <input
+                ref={serviceInputRef}
+                enterKeyHint={pistaServicio}
                 type="text"
                 value={query}
                 onChange={(e) => { handleQueryChange(e.target.value); setSearchActive(-1); setSearchOpen(true); }}
@@ -1201,6 +1210,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
                     if (e.key === "Enter") {
                       e.preventDefault();
                       pickCategory(searchSug[searchActive >= 0 ? searchActive : 0].id);
+                      if (!locationQuery.trim()) window.setTimeout(() => locationInputRef.current?.focus(), 80);
                       return;
                     }
                     if (e.key === "Escape") { setSearchOpen(false); return; }
@@ -1278,6 +1288,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
               onFocus={() => setLocationOpen(locationQuery.trim().length >= 2)}
               onBlur={() => { locationBlurRef.current = setTimeout(() => setLocationOpen(false), 150); }}
               ref={locationInputRef}
+              enterKeyHint={pistaUbicacion}
               onKeyDown={handleLocationKeyDown}
               placeholder={t("filters.locationPlaceholder")}
               role="combobox"
