@@ -201,6 +201,7 @@ export function AdminAnalytics({ data }: { data: AdminReports }) {
   const platformTotal = insights.platform.web + insights.platform.native;
   const nativeShare = pct(insights.platform.native, platformTotal);
   const respRate = pct(activity.solicitudesResponded, activity.solicitudesTotal);
+  const gateSince = insights.gateSince ? new Date(insights.gateSince).toLocaleDateString("es-CR", { day: "numeric", month: "short" }) : null;
   const pendingTickets = support.byStatus.filter((s) => s.label !== "Resuelto").reduce((sum, s) => sum + s.value, 0);
 
   return (
@@ -232,9 +233,15 @@ export function AdminAnalytics({ data }: { data: AdminReports }) {
           <Funnel steps={[
             { label: "Búsquedas", value: insights.funnel.searches, help: "Buscaron un servicio o profesional" },
             { label: "Vistas de perfil", value: insights.funnel.profileViews, help: "Abrieron el perfil de un profesional" },
-            { label: "Contactos", value: insights.funnel.contacts, help: "WhatsApp, llamar, enlace o solicitud iniciada" },
+            { label: "Intentaron contactar", value: insights.funnel.contactAttempts, help: "Tocaron WhatsApp, llamar o correo — con cuenta o sin ella" },
+            { label: "Contactaron", value: insights.funnel.contacts, help: "Ya con cuenta: el contacto se completó. La diferencia con el paso anterior es la gente que se detuvo en el registro" },
             { label: "Solicitudes creadas", value: insights.funnel.requests, help: "Pidieron un servicio o publicaron un proyecto" },
           ]} />
+          {gateSince && (
+            <p className="mt-3 text-xs text-[#64748b]">
+              Los intentos de contacto se registran desde el <strong className="text-[#0f172a]">{gateSince}</strong>; antes de esa fecha solo se contaban los contactos completados.
+            </p>
+          )}
           {respRate != null && (
             <p className="mt-4 text-xs text-[#64748b]">
               Solicitudes atendidas por profesionales: <strong className="text-[#0f172a]">{respRate}%</strong> <span className="text-[#94a3b8]">({fmt(activity.solicitudesResponded)} de {fmt(activity.solicitudesTotal)}, histórico)</span>

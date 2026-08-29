@@ -31,7 +31,9 @@ export type WeekCompare = { now: number; prev: number };
 export type DemandRow = { id: string; label: string; demand: number; searches: number; projects: number; supply: number; gap: boolean };
 export type AdminInsights = {
   week: { pros: WeekCompare; clients: WeekCompare; searches: WeekCompare; requests: WeekCompare; contacts: WeekCompare; applications: WeekCompare };
-  funnel: { searches: number; profileViews: number; contacts: number; requests: number };
+  funnel: { searches: number; profileViews: number; contactAttempts: number; contacts: number; requests: number };
+  /** When contact_gate_shown started being recorded — before it, attempts are undercounted. */
+  gateSince: string | null;
   demand: DemandRow[];
   platform: { web: number; native: number };
   tracking: { since: string | null; events14d: number };
@@ -105,7 +107,8 @@ export async function getAdminReports(locale = "es"): Promise<AdminReports> {
   const empty: AdminReports = {
     insights: {
       week: { pros: { now: 0, prev: 0 }, clients: { now: 0, prev: 0 }, searches: { now: 0, prev: 0 }, requests: { now: 0, prev: 0 }, contacts: { now: 0, prev: 0 }, applications: { now: 0, prev: 0 } },
-      funnel: { searches: 0, profileViews: 0, contacts: 0, requests: 0 },
+      funnel: { searches: 0, profileViews: 0, contactAttempts: 0, contacts: 0, requests: 0 },
+      gateSince: null,
       demand: [],
       platform: { web: 0, native: 0 },
       tracking: { since: null, events14d: 0 },
@@ -282,6 +285,10 @@ export async function getAdminReports(locale = "es"): Promise<AdminReports> {
     const countWeek = (times: string[]): WeekCompare => ({ now: times.filter(inLast7).length, prev: times.filter(inPrev7).length });
     const eventTimes = (types: string[]) => events.filter((e) => types.includes(e.event_type)).map((e) => e.created_at);
     const CONTACT_TYPES = ["whatsapp_click", "phone_click", "service_request_started", "external_link_click"];
+    // A guest who taps "Contactar" is stopped by the account gate, so the attempt
+    // is only in contact_gate_shown; a signed-in visitor goes straight through.
+    // Attempts = both, and the drop between them is what the gate costs.
+    const gateEvents = events.filter((e) => e.event_type === "contact_gate_shown");
 
     empty.insights.week = {
       pros: countWeek(proCreated),
@@ -294,9 +301,13 @@ export async function getAdminReports(locale = "es"): Promise<AdminReports> {
     empty.insights.funnel = {
       searches: eventTimes(["search_performed"]).filter(inLast7).length,
       profileViews: eventTimes(["profile_view"]).filter(inLast7).length,
+      contactAttempts: eventTimes([...CONTACT_TYPES, "contact_gate_shown"]).filter(inLast7).length,
       contacts: eventTimes(CONTACT_TYPES).filter(inLast7).length,
       requests: requestCreated.filter(inLast7).length,
     };
+    empty.insights.gateSince = gateEvents.length > 0
+      ? gateEvents.map((e) => e.created_at).sort()[0]
+      : null;
     const platform = { web: 0, native: 0 };
     for (const e of events) {
       if (!inLast7(e.created_at)) continue;
