@@ -29,12 +29,20 @@ export type ProfessionalInteraction = {
 
 export type WeekCompare = { now: number; prev: number };
 export type DemandRow = { id: string; label: string; demand: number; searches: number; projects: number; supply: number; gap: boolean };
+export type EmptySearch = { label: string; count: number };
+export type SearchQuality = {
+  total: number;
+  empty: number;
+  /** What people typed (or the place they filtered by) and found nobody. */
+  topEmpty: EmptySearch[];
+};
 export type AdminInsights = {
   week: { pros: WeekCompare; clients: WeekCompare; searches: WeekCompare; requests: WeekCompare; contacts: WeekCompare; applications: WeekCompare };
   funnel: { searches: number; profileViews: number; contactAttempts: number; contacts: number; requests: number };
   /** When contact_gate_shown started being recorded — before it, attempts are undercounted. */
   gateSince: string | null;
   demand: DemandRow[];
+  searchQuality: SearchQuality;
   platform: { web: number; native: number };
   tracking: { since: string | null; events14d: number };
 };
@@ -110,6 +118,7 @@ export async function getAdminReports(locale = "es"): Promise<AdminReports> {
       funnel: { searches: 0, profileViews: 0, contactAttempts: 0, contacts: 0, requests: 0 },
       gateSince: null,
       demand: [],
+      searchQuality: { total: 0, empty: 0, topEmpty: [] },
       platform: { web: 0, native: 0 },
       tracking: { since: null, events14d: 0 },
     },
@@ -308,6 +317,29 @@ export async function getAdminReports(locale = "es"): Promise<AdminReports> {
     empty.insights.gateSince = gateEvents.length > 0
       ? gateEvents.map((e) => e.created_at).sort()[0]
       : null;
+
+    // A search that returns nobody is the clearest reason a visitor leaves: the
+    // event carries `results`, so empty searches and what they asked for are
+    // countable. This is what tells the owner which professionals to recruit.
+    const searchRows = events.filter((e) => e.event_type === "search_performed" && inLast7(e.created_at));
+    const emptyLabels = new Map<string, number>();
+    let emptyCount = 0;
+    for (const row of searchRows) {
+      const meta = (row.metadata ?? {}) as Record<string, unknown>;
+      const results = Number(meta.results);
+      if (!Number.isFinite(results) || results > 0) continue;
+      emptyCount += 1;
+      const typed = typeof meta.q === "string" ? meta.q.trim() : "";
+      const category = row.category_id ? getCategoryLabel(row.category_id, locale) : "";
+      const place = typeof meta.canton === "string" && meta.canton ? meta.canton : typeof meta.provincia === "string" ? meta.provincia : "";
+      const label = [typed || category || "Búsqueda general", place].filter(Boolean).join(" · ");
+      emptyLabels.set(label, (emptyLabels.get(label) ?? 0) + 1);
+    }
+    empty.insights.searchQuality = {
+      total: searchRows.length,
+      empty: emptyCount,
+      topEmpty: [...emptyLabels.entries()].sort((a, b) => b[1] - a[1]).slice(0, 8).map(([label, count]) => ({ label, count })),
+    };
     const platform = { web: 0, native: 0 };
     for (const e of events) {
       if (!inLast7(e.created_at)) continue;

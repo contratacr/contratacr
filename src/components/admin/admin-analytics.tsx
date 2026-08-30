@@ -237,6 +237,25 @@ export function AdminAnalytics({ data }: { data: AdminReports }) {
             { label: "Contactaron", value: insights.funnel.contacts, help: "Ya con cuenta: el contacto se completó. La diferencia con el paso anterior es la gente que se detuvo en el registro" },
             { label: "Solicitudes creadas", value: insights.funnel.requests, help: "Pidieron un servicio o publicaron un proyecto" },
           ]} />
+          {insights.searchQuality.total > 0 && (
+            <p className="mt-3 text-xs text-[#64748b]">
+              <strong className={insights.searchQuality.empty > 0 ? "text-red-600" : "text-[#0f172a]"}>{pct(insights.searchQuality.empty, insights.searchQuality.total)}%</strong> de las búsquedas no encontraron a nadie
+              <span className="text-[#94a3b8]"> ({fmt(insights.searchQuality.empty)} de {fmt(insights.searchQuality.total)})</span>
+            </p>
+          )}
+          {insights.searchQuality.topEmpty.length > 0 && (
+            <div className="mt-3">
+              <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-[#94a3b8]">Buscaron y no había nadie</p>
+              <ul className="divide-y divide-[#f1f5f9]">
+                {insights.searchQuality.topEmpty.map((row) => (
+                  <li key={row.label} className="flex items-center justify-between gap-3 py-1.5 text-sm">
+                    <span className="min-w-0 truncate text-[#334155]">{row.label}</span>
+                    <span className="shrink-0 font-semibold tabular-nums text-[#0f172a]">{fmt(row.count)}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
           {gateSince && (
             <p className="mt-3 text-xs text-[#64748b]">
               Los intentos de contacto se registran desde el <strong className="text-[#0f172a]">{gateSince}</strong>; antes de esa fecha solo se contaban los contactos completados.
