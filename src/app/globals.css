@@ -52,8 +52,39 @@
   --radius-2xl: 1.5rem;
 }
 
+/* Arranque del contenido pegado al encabezado: notificaciones y mensajes
+   reservaban 27-35px de aire por sus paddings pensados para la web. */
+body.ccr-native-app .ccr-notifications-page-main,
+body.ccr-native-app [data-messages-page-main] {
+  padding-top: 0 !important;
+}
+
+body.ccr-native-app .ccr-notifications-page-panel {
+  padding-top: 0.5rem !important;
+}
+
+body.ccr-native-app [data-messages-page-shell] {
+  padding-top: 0 !important;
+}
+
 .ccr-native-app .ccr-app-footer {
   display: none;
+}
+
+/* La portada de acceso es de la web móvil: en la app la muestra el armazón
+   sobre cualquier pantalla, así que aquí el formulario manda desde el inicio. */
+.ccr-native-app .ccr-login-portada {
+  display: none;
+}
+
+@media (max-width: 1023px) {
+  .ccr-login-formulario-oculto {
+    display: none;
+  }
+}
+
+.ccr-native-app .ccr-login-formulario-oculto {
+  display: flex;
 }
 
 .ccr-native-app {
@@ -274,7 +305,9 @@ body.ccr-native-app.ccr-native-search-route button:not([aria-label]) {
 
 .ccr-native-app .ccr-notification-bell-menu {
   position: fixed !important;
-  top: calc(var(--ccr-native-header-height, 64px) + 0.35rem) !important;
+  /* La posición exacta la fija el propio componente desde el botón; esto es el
+     respaldo mientras se mide. */
+  top: calc(var(--ccr-native-header-height, 64px) + 0.35rem);
   right: max(1rem, calc(env(safe-area-inset-right) + 1rem)) !important;
   left: auto !important;
   /* Keep this a desktop-like popover, not a centred mobile sheet. */
@@ -302,7 +335,9 @@ body.ccr-native-app.ccr-native-search-route button:not([aria-label]) {
   --ccr-native-header-height: 64px;
   --ccr-native-bottom-nav-height: calc(64px + max(env(safe-area-inset-bottom), 0.2rem));
   --ccr-native-bottom-nav-total: var(--ccr-native-bottom-nav-height);
-  --ccr-native-panel-end-gap: 1.5rem;
+  /* El contenido llega casi hasta la barra de pestañas, como en Facebook: 24px
+     dejaban una franja vacía en todas las secciones. */
+  --ccr-native-panel-end-gap: 0.5rem;
   --ccr-native-content-end-gap: var(--ccr-native-panel-end-gap);
   --ccr-native-content-height: calc(var(--app-visual-viewport-height, 100svh) - var(--ccr-native-header-height) - var(--ccr-native-bottom-nav-total));
 }
@@ -373,7 +408,9 @@ html.ccr-native-bottom-nav-visible body .ccr-search-bottom-sheet {
     overscroll-behavior: contain;
     background: #fff;
     box-sizing: border-box;
-    padding-bottom: var(--ccr-native-content-end-gap) !important;
+    /* El panel ya termina encima de la barra (bottom): reservar además el hueco
+       aquí dejaba una franja blanca fija sobre el menú en todas las secciones. */
+    padding-bottom: 0 !important;
     scroll-padding-bottom: var(--ccr-native-content-end-gap);
     -webkit-overflow-scrolling: touch;
   }
@@ -403,7 +440,7 @@ html.ccr-native-bottom-nav-visible body .ccr-search-bottom-sheet {
   }
 
   body.ccr-native-app.ccr-native-bottom-nav-visible:not(.ccr-native-search-route) .ccr-direct-chat-composer {
-    padding-bottom: calc(0.75rem + env(safe-area-inset-bottom)) !important;
+    padding-bottom: 0.6rem !important;
   }
 
   body.ccr-native-app.ccr-native-bottom-nav-visible:not(.ccr-native-search-route) .dashboard-panel-content {
@@ -479,7 +516,9 @@ html.ccr-native-bottom-nav-visible body .ccr-search-bottom-sheet {
   body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-notifications-page-panel {
     height: 100%;
     min-height: 0;
-    padding: 1rem 1rem var(--ccr-native-panel-end-gap) !important;
+    /* Pegado al encabezado y a la barra, como en Facebook: la lista se recorta
+       contra la barra en vez de dejar una franja blanca. */
+    padding: 0.5rem 0 0 !important;
   }
 
   body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-notifications-list {
@@ -493,7 +532,9 @@ html.ccr-native-bottom-nav-visible body .ccr-search-bottom-sheet {
   }
 
   body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-notifications-items {
-    padding-bottom: var(--ccr-native-panel-end-gap);
+    /* La última fila se recorta contra la barra; una franja blanca ahí se lee
+       como que la lista terminó. */
+    padding-bottom: 0;
   }
 
   body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-native-safe-list-end {
@@ -503,7 +544,9 @@ html.ccr-native-bottom-nav-visible body .ccr-search-bottom-sheet {
   }
 
   body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-support-thread {
-    height: calc(100dvh - var(--ccr-native-header-height, 124px));
+    /* El tiquete termina encima de la barra de pestañas; con el teclado abierto
+       la reserva vale 0 porque el teclado ya la cubre. */
+    height: calc(100dvh - var(--ccr-native-header-height, 124px) - var(--ccr-reserva-barra, 0px));
     min-height: 0;
     background: #fff;
   }
@@ -520,7 +563,11 @@ html.ccr-native-bottom-nav-visible body .ccr-search-bottom-sheet {
   }
 
   body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-support-thread-composer {
-    padding-bottom: calc(0.75rem + env(safe-area-inset-bottom));
+    padding-bottom: 0.6rem;
+  }
+
+  body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-ai-composer {
+    padding-bottom: 0.6rem !important;
   }
 
   .ccr-native-app .ccr-native-compact-page {
@@ -561,6 +608,8 @@ html.ccr-native-bottom-nav-visible body .ccr-search-bottom-sheet {
   margin-top: 0 !important;
   padding-top: 0 !important;
   padding-bottom: max(env(safe-area-inset-bottom), 0.2rem) !important;
+  /* Solo un filete separa la barra de lo que tiene encima: una sombra la haría
+     parecer una capa flotando sobre el contenido. */
   box-shadow: none !important;
   overflow: hidden;
 }
@@ -597,6 +646,65 @@ html.ccr-native-app body.ccr-native-bottom-nav-visible .ccr-search-bottom-sheet 
   padding-bottom: env(safe-area-inset-bottom) !important;
 }
 
+/* En /buscar el panel se apoya sobre la barra de pestañas en lugar de taparla. */
+body.ccr-native-app.ccr-native-bottom-nav-visible.ccr-native-search-route .ccr-search-bottom-sheet,
+html.ccr-native-app body.ccr-native-app.ccr-native-bottom-nav-visible.ccr-native-search-route .ccr-search-bottom-sheet {
+  bottom: var(--ccr-native-bottom-nav-total) !important;
+  padding-bottom: 0 !important;
+  max-height: calc(
+    var(--app-visual-viewport-height) - var(--ccr-native-header-height) - var(--ccr-native-bottom-nav-total) - 58px
+  ) !important;
+}
+
+/* Con el teclado abierto la barra estorba: se retira mientras se escribe y el
+   panel recupera el borde inferior. */
+/* Con el teclado abierto la barra no se esconde: se desplaza detrás de él, que
+   es lo que se ve como "el teclado la tapa". Cuando el sistema abre solo su
+   barra de accesorios —más baja que la barra— sí se retira, porque si no
+   quedaría asomando por arriba. */
+html[data-keyboard-visible] .ccr-native-bottom-nav {
+  display: none !important;
+}
+
+/* Con el teclado abierto el área segura de abajo la cubre el propio teclado: si
+   la seguimos reservando, el campo de escribir queda flotando sobre él. */
+body.ccr-native-app {
+  --ccr-extra-teclado: 0px;
+}
+
+html[data-keyboard-open] body.ccr-native-app {
+  --ccr-extra-teclado: env(safe-area-inset-bottom);
+}
+
+html[data-keyboard-open].ccr-native-app .ccr-direct-chat-composer,
+html[data-keyboard-open].ccr-native-app .ccr-support-thread-composer,
+html[data-keyboard-open].ccr-native-app .ccr-ai-composer {
+  padding-bottom: 0.35rem !important;
+}
+
+/* Los paneles de chat y asistente se pintan por encima de la barra y le tapaban
+   el borde superior: la barra manda sobre ellos. */
+body.contratacr-chat-thread-open .ccr-native-bottom-nav,
+body.contratacr-ai-open .ccr-native-bottom-nav,
+html.contratacr-chat-thread-open .ccr-native-bottom-nav,
+html.contratacr-ai-open .ccr-native-bottom-nav {
+  z-index: 130 !important;
+}
+
+body.ccr-native-app.ccr-native-bottom-nav-visible {
+  --ccr-reserva-barra: var(--ccr-native-bottom-nav-total);
+}
+
+html[data-keyboard-visible] body.ccr-native-app.ccr-native-bottom-nav-visible {
+  --ccr-reserva-barra: 0px;
+}
+
+html[data-keyboard-visible] body.ccr-native-app.ccr-native-bottom-nav-visible.ccr-native-search-route .ccr-search-bottom-sheet {
+  bottom: 0 !important;
+  padding-bottom: env(safe-area-inset-bottom) !important;
+  max-height: calc(var(--app-visual-viewport-height) - var(--ccr-native-header-height) - 58px) !important;
+}
+
 .ccr-native-app .ccr-search-bottom-sheet::before {
   content: "";
   position: absolute;
@@ -619,6 +727,19 @@ html.ccr-native-app body.ccr-native-bottom-nav-visible .ccr-search-bottom-sheet 
   scroll-padding-bottom: calc(var(--ccr-native-content-end-gap) + 1rem);
 }
 
+/* Con la barra de pestañas visible, el último control del panel no puede quedar
+   debajo de ella. */
+body.ccr-native-app.ccr-native-bottom-nav-visible.ccr-native-search-route .ccr-search-sheet-scroll,
+body.ccr-native-app.ccr-native-bottom-nav-visible.ccr-native-search-route .ccr-search-results-list {
+  padding-bottom: calc(var(--ccr-native-bottom-nav-total) + var(--ccr-native-content-end-gap)) !important;
+  scroll-padding-bottom: calc(var(--ccr-native-bottom-nav-total) + var(--ccr-native-content-end-gap));
+}
+
+html[data-keyboard-visible] body.ccr-native-app.ccr-native-search-route .ccr-search-sheet-scroll,
+html[data-keyboard-visible] body.ccr-native-app.ccr-native-search-route .ccr-search-results-list {
+  padding-bottom: calc(var(--ccr-native-content-end-gap) + 1rem) !important;
+}
+
 .ccr-native-app .ccr-search-sheet-scroll > *,
 .ccr-native-app .ccr-search-results-list,
 .ccr-native-app [data-search-empty-state] {
@@ -634,9 +755,10 @@ html.ccr-native-app body.ccr-native-bottom-nav-visible .ccr-search-bottom-sheet 
   background: #fff !important;
 }
 
-html.ccr-native-app.ccr-native-search-route .ccr-native-bottom-nav,
-html.ccr-native-app body.ccr-native-search-route .ccr-native-bottom-nav,
-body.ccr-native-app.ccr-native-search-route .ccr-native-bottom-nav {
+/* /buscar conserva su pestaña: el panel se apoya sobre la barra (regla de
+   arriba) y solo el teclado la retira. */
+html[data-keyboard-open].ccr-native-app.ccr-native-search-route .ccr-native-bottom-nav,
+html[data-keyboard-open].ccr-native-app body.ccr-native-search-route .ccr-native-bottom-nav {
   display: none !important;
 }
 
@@ -1218,10 +1340,8 @@ body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-native-fab {
 
   .contratacr-chat-thread-open .dashboard-mobile-nav,
   .contratacr-chat-thread-open .ccr-app-header,
-  .contratacr-chat-thread-open .ccr-native-bottom-nav,
   .contratacr-chat-thread-open [data-ai-concierge-button],
-  .contratacr-ai-open .dashboard-mobile-nav,
-  .contratacr-ai-open .ccr-native-bottom-nav {
+  .contratacr-ai-open .dashboard-mobile-nav {
     display: none !important;
   }
 
@@ -1242,15 +1362,17 @@ body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-native-fab {
     bottom: auto;
     left: var(--app-visual-viewport-left);
     z-index: 110;
-    height: var(--app-visual-viewport-height);
+    height: calc(var(--app-visual-viewport-height) - var(--ccr-reserva-barra, 0px));
     width: var(--app-visual-viewport-width);
     min-height: 0;
     border-radius: 0;
     overscroll-behavior: none;
   }
   html.ccr-native-app.contratacr-chat-thread-open .direct-chat-shell--thread {
-    height: var(--app-visual-viewport-height) !important;
-    max-height: var(--app-visual-viewport-height) !important;
+    /* Deja fuera el alto de la barra de pestañas: si no, el compositor queda
+       detrás de ella y no se puede escribir. */
+    height: calc(var(--app-visual-viewport-height) - var(--ccr-reserva-barra, 0px) + var(--ccr-extra-teclado, 0px)) !important;
+    max-height: calc(var(--app-visual-viewport-height) - var(--ccr-reserva-barra, 0px) + var(--ccr-extra-teclado, 0px)) !important;
   }
 
   .contratacr-chat-thread-open .ccr-support-thread {
@@ -1269,8 +1391,10 @@ body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-native-fab {
     background: #fff;
   }
   html.ccr-native-app.contratacr-chat-thread-open .ccr-support-thread {
-    height: var(--app-visual-viewport-height) !important;
-    max-height: var(--app-visual-viewport-height) !important;
+    /* El tiquete ya arranca bajo su propio encabezado: sumarle el área segura
+       lo empujaba por detrás del teclado. */
+    height: calc(var(--app-visual-viewport-height) - var(--ccr-reserva-barra, 0px)) !important;
+    max-height: calc(var(--app-visual-viewport-height) - var(--ccr-reserva-barra, 0px)) !important;
   }
 
 
@@ -1323,7 +1447,7 @@ body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-native-fab {
     bottom: auto !important;
     left: var(--app-visual-viewport-left, 0px) !important;
     right: auto !important;
-    height: var(--app-visual-viewport-height, 100dvh) !important;
+    height: calc(var(--app-visual-viewport-height, 100dvh) - var(--ccr-reserva-barra, 0px)) !important;
     width: var(--app-visual-viewport-width, 100vw) !important;
     min-height: 0 !important;
     max-height: none !important;
@@ -1790,3 +1914,31 @@ body.ccr-search-sheet-page {
   content-visibility: auto;
   contain-intrinsic-size: auto 320px;
 }
+
+/* Buscador de la app: el panel terminaba siempre a la altura de la barra
+   inferior, pero esa barra se esconde al abrir el teclado. Por esa franja se
+   asomaban los botones de la tarjeta de abajo ("Enviar mensaje"). El panel
+   sigue exactamente la misma regla que la barra: se detiene sobre ella cuando
+   está, y llega hasta el borde cuando no. */
+.ccr-native-search-panel { bottom: 0; }
+body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-native-search-panel {
+  bottom: var(--ccr-native-bottom-nav-total);
+}
+html[data-keyboard-visible] body.ccr-native-app .ccr-native-search-panel { bottom: 0; }
+
+/* Hueco de una imagen que todavía viaja: el mismo tamaño que tendrá la foto,
+   con un brillo que la recorre. Antes era un gris plano con una ruedita dentro
+   de un círculo oscuro, que pesaba más que la propia imagen. */
+.ccr-image-skeleton {
+  background: linear-gradient(100deg, #e8eef4 30%, #f4f8fb 48%, #e8eef4 66%);
+  background-size: 220% 100%;
+  animation: ccr-image-skeleton-sweep 1.4s ease-in-out infinite;
+}
+@keyframes ccr-image-skeleton-sweep {
+  from { background-position: 140% 0; }
+  to { background-position: -40% 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ccr-image-skeleton { animation: none; }
+}
+

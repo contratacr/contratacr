@@ -1,3 +1,4 @@
+import { DiagTempProbe } from "@/components/diag-temp-probe";
 import type { Metadata, Viewport } from "next";
 import { Suspense } from "react";
 import { getMessages } from "next-intl/server";
@@ -167,6 +168,7 @@ export default async function LocaleLayout({
         <AppResumeRecovery />
         <MobileAppBridge />
         <NativeFirstRunOnboarding />
+        <DiagTempProbe />
         <CustomCategoriesLoader />
         <NotificationLiveToast scope="all" />
         <OperationalStatusBanner locale={locale} status={operationalStatus} />

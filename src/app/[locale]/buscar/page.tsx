@@ -134,7 +134,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   const canFilterByInsurer = isHealthCategory(params.categoria);
   // Language is a single-choice filter. Older shared URLs may still contain a
   // comma-separated value, so keep the first valid choice for compatibility.
-  const languageId = parseMultiParam(params.idioma)[0];
+  const languageIds = parseMultiParam(params.idioma);
 
   // The same resolver the "load more" endpoint uses, so the first screen and
   // every later slice come from one ordered list (kept for a minute).
@@ -329,7 +329,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     sortBy: params.sortBy,
     modalidad: params.modalidad,
     aseguradora: params.aseguradora,
-    idioma: languageId,
+    idioma: languageIds.join(","),
     precio: priceType,
     unidadPrecio: priceUnits.join(",") || undefined,
     ubicacion: params.ubicacion ?? (activeCanton && activeProvince ? `${activeCanton.name}, ${activeProvince.name}` : activeProvince?.name),
@@ -379,7 +379,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     !!activeProvince ||
     !!activeCanton ||
     !!mapBounds ||
-    !!languageId ||
+    languageIds.length > 0 ||
     !!priceType ||
     priceUnits.length > 0 ||
     !!nearLat ||

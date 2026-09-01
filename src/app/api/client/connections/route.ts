@@ -6,6 +6,8 @@ import { repairVisibleText } from "@/lib/text/repair-visible-text";
 
 const BOOKING_CONNECTION_STATUSES = ["confirmed", "in_progress", "awaiting_confirmation", "completed"];
 const PROJECT_CONNECTION_STATUSES = ["in_progress", "awaiting_confirmation", "completed"];
+// Conversaciones y clics a WhatsApp: trato real aunque no haya solicitud.
+const CONTACT_EVENT_TYPES = ["whatsapp_click"];
 
 type Connection = {
   professionalId: string;
@@ -16,7 +18,7 @@ type Connection = {
   categoryId: string | null;
   categoryLabel: string | null;
   lastInteractionAt: string | null;
-  source: "booking" | "project" | "both";
+  source: "booking" | "project" | "contact" | "both";
   status: string;
   title: string | null;
   count: number;
@@ -28,7 +30,7 @@ export async function GET() {
   if (!user) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
 
   const admin = createAdminClient();
-  const [bookingsResult, projectsResult] = await Promise.all([
+  const [bookingsResult, projectsResult, chatsResult, whatsappResult] = await Promise.all([
     admin
       .from("bookings")
       .select("id, professional_id, status, service_description, category_id, scheduled_date, created_at, updated_at")
@@ -40,6 +42,15 @@ export async function GET() {
       .eq("client_id", user.id)
       .in("status", PROJECT_CONNECTION_STATUSES)
       .not("accepted_professional_id", "is", null),
+    admin
+      .from("direct_conversations")
+      .select("professional_id, last_message_at, created_at")
+      .eq("client_id", user.id),
+    admin
+      .from("interaction_events")
+      .select("professional_id, created_at")
+      .eq("viewer_user_id", user.id)
+      .in("event_type", CONTACT_EVENT_TYPES),
   ]);
 
   if (bookingsResult.error) {
@@ -67,6 +78,22 @@ export async function GET() {
       title: repairVisibleText(String(row.title || "")) || null,
       categoryId: row.category_id ? String(row.category_id) : null,
       date: String(row.completed_at || row.work_done_at || row.updated_at || row.created_at || ""),
+    })),
+    ...((chatsResult.data ?? []) as Array<Record<string, unknown>>).map((row) => ({
+      professionalId: String(row.professional_id ?? ""),
+      source: "contact" as const,
+      status: "contact",
+      title: null as string | null,
+      categoryId: null as string | null,
+      date: String(row.last_message_at || row.created_at || ""),
+    })),
+    ...((whatsappResult.data ?? []) as Array<Record<string, unknown>>).map((row) => ({
+      professionalId: String(row.professional_id ?? ""),
+      source: "contact" as const,
+      status: "contact",
+      title: null as string | null,
+      categoryId: null as string | null,
+      date: String(row.created_at || ""),
     })),
   ].filter((row) => row.professionalId);
 

@@ -51,14 +51,16 @@ type Booking = {
 };
 
 // ONE shared status→colour mapping (sprint 440), identical to the client side:
-// active/upcoming + awaiting confirmation = brand-blue (default), finished = green,
-// cancelled = red, reprogramada = grey.
+// UN color por significado, no un color por estado: azul de marca = está vivo
+// ahora; gris = pasó o está en pausa; rojo = SOLO lo que salió mal (cancelado,
+// no seleccionado). Un empleo cerrado suele ser el final feliz — pintarlo de
+// rojo lo hacía leer como error, y con todo de colores el color deja de decir.
 const STATUS_VARIANT: Record<BookingStatus, "warning" | "success" | "error" | "default" | "muted"> = {
   pending: "default",
   confirmed: "default",
   in_progress: "default",
   awaiting_confirmation: "default",
-  completed: "success",
+  completed: "muted",
   cancelled: "error",
   rescheduled: "muted",
 };
@@ -124,7 +126,7 @@ export function BookingRequests() {
     NO_BOOKINGS,
   );
   const { data: bookings, setData: setBookings, loading } = bookingsResource;
-  const [filter, setFilter] = useState("activas");
+  const [filter, setFilter] = useState("en_curso");
   const refreshTimerRef = useRef<number | null>(null);
   const lastSilentRefreshRef = useRef(0);
   // Accordion: at most one card expanded at a time (essentials collapsed by default).
@@ -279,7 +281,10 @@ export function BookingRequests() {
 
   // Every tab shows its count.
   const counts = bucketCounts(bookings.map((b) => solicitudBucket(b.status, b.scheduled_date)));
-  const filtered = bookings.filter((b) => solicitudBucket(b.status, b.scheduled_date) === filter);
+  // Solo etapas con contenido; si la elegida quedó vacía, la primera disponible.
+  const visibleTabs = SOLICITUD_TABS.filter((tab) => (counts[tab.id] ?? 0) > 0);
+  const effectiveFilter = visibleTabs.some((tab) => tab.id === filter) ? filter : (visibleTabs[0]?.id ?? filter);
+  const filtered = bookings.filter((b) => solicitudBucket(b.status, b.scheduled_date) === effectiveFilter);
 
   function BookingCard({ booking }: { booking: Booking }) {
     const clientName = cleanVisibleSpanishText(booking.client_name) || t("thePerson");
@@ -520,7 +525,9 @@ export function BookingRequests() {
 
   return (
     <div className="space-y-5">
-      <StatusFilterTabs tabs={SOLICITUD_TABS} value={filter} onChange={setFilter} counts={counts} />
+      {visibleTabs.length > 0 && (
+        <StatusFilterTabs tabs={visibleTabs} value={effectiveFilter} onChange={setFilter} counts={counts} />
+      )}
       {filtered.length === 0 ? (
         <p className="text-sm text-[#6b7280] text-center py-8">{t("noneInView")}</p>
       ) : (

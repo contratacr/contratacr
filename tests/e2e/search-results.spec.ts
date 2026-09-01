@@ -143,7 +143,7 @@ test.describe("@seeded search results", () => {
       const hiddenCount = Number(await row.getAttribute("data-hidden-count"));
       if (hiddenCount > 0) {
         const more = row.getByTestId("professional-card-more-services");
-        await expect(more).toHaveText(`+${hiddenCount}`);
+        await expect(more).toHaveText(new RegExp(`^\\+${hiddenCount}\\b`));
         const lastService = row.locator('[data-testid="professional-card-mobile-service"]').last();
         const [chipBox, moreBox] = await Promise.all([lastService.boundingBox(), more.boundingBox()]);
         expect(chipBox).not.toBeNull();
@@ -163,6 +163,7 @@ test.describe("@seeded search results", () => {
     const search = page.getByRole("combobox", { name: /Qu[eé] servicio|Qu[eé] necesitas|What service|What do you need/i }).first();
     await search.fill("plomeria");
     await search.press("Enter");
+    await page.keyboard.press("Enter");
     await expect(page).toHaveURL(/\/es\/buscar/);
     await expect(
       page.locator("article").first().or(page.getByText(/No encontramos resultados/i).first()),
@@ -235,7 +236,8 @@ test.describe("@seeded search results", () => {
       await languageChip.click();
       const languageDialog = page.getByRole("dialog", { name: /Idioma de atenci[oó]n|Service language/i });
       await expect(languageDialog).toBeVisible();
-      await expect(languageDialog.getByRole("button", { name: /Todos los idiomas|All languages/i })).toBeVisible();
+      await expect(languageDialog.getByRole("button", { name: /^Espa[nñ]ol$|^Spanish$/i })).toBeVisible();
+      await expect(languageDialog.getByRole("button", { name: /Ver resultados|Show results/i })).toBeVisible();
     } else {
       await expect(page.getByText(/Idioma de atenci[oó]n|Service language/i).filter({ visible: true }).first()).toBeVisible();
       await expect(page.getByRole("combobox", { name: /Idioma de atenci[oó]n|Service language/i }).filter({ visible: true }).first()).toContainText(/Cualquier idioma|Any language/i);

@@ -41,6 +41,11 @@ export function ViewportEnvironment() {
       }
     };
 
+    // En los chats a pantalla completa el WebView encoge también el viewport de
+    // maquetación, así que innerHeight ya no sirve de referencia. Se recuerda el
+    // alto sin teclado (el que hay cuando no se está escribiendo) y se mide contra él.
+    let altoSinTeclado = window.visualViewport?.height ?? window.innerHeight;
+
     const update = () => {
       const vv = window.visualViewport;
       const height = vv?.height ?? window.innerHeight;
@@ -48,7 +53,13 @@ export function ViewportEnvironment() {
       const top = vv?.offsetTop ?? 0;
       const left = vv?.offsetLeft ?? 0;
       const scale = vv?.scale ?? 1;
-      const keyboardInset = Math.max(0, window.innerHeight - height - top);
+      if (!isEditable(document.activeElement) && height > altoSinTeclado) altoSinTeclado = height;
+      // Dos formas de abrir teclado en el WebView: dejando el viewport de
+      // maquetación quieto y tapando (se mide con innerHeight − alto − desfase),
+      // o encogiéndolo y desplazándolo (se mide contra el alto sin teclado).
+      const insetPorAltura = Math.max(0, altoSinTeclado - height);
+      const insetPorDesplazamiento = Math.max(0, window.innerHeight - height - top);
+      const keyboardInset = Math.max(insetPorAltura, insetPorDesplazamiento);
 
       root.style.setProperty("--app-visual-viewport-height", `${height}px`);
       root.style.setProperty("--app-visual-viewport-width", `${width}px`);
@@ -58,6 +69,9 @@ export function ViewportEnvironment() {
       root.style.setProperty("--app-visual-viewport-scale", `${scale}`);
       root.style.setProperty("--app-keyboard-inset-bottom", `${keyboardInset}px`);
       root.toggleAttribute("data-keyboard-open", keyboardInset > 80);
+      // Cualquier cosa que el sistema abra desde abajo (barra de accesorios o
+      // teclado completo) tiene que retirar la barra de pestañas.
+      root.toggleAttribute("data-keyboard-visible", keyboardInset > 24);
       if (keyboardInset > 80) scheduleFocusedFieldCheck();
     };
 

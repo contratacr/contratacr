@@ -6,7 +6,7 @@ import { ProfessionalSchedule, type ScheduleSlot } from "@/components/profession
 import { Link } from "@/i18n/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getInitials } from "@/lib/utils";
-import { getCategoryLabel } from "@/lib/data/categories";
+import { supportsVideoConsultCategory, getCategoryLabel } from "@/lib/data/categories";
 import { primaryPricingLabel, splitPricingLabel, type PricingTier } from "@/lib/pricing";
 import { getProfessionalDisplayName } from "@/lib/display-name";
 import { ResponsiveServiceSummary } from "@/components/professionals/responsive-service-summary";
@@ -326,7 +326,15 @@ export function ProfessionalCard({ professional, className, highlightMetric = "r
   // FALLBACK tab (province/cantón, shown when there are no named workplaces) and
   // the general province/cantón address. Video-only national coverage uses this
   // same row with "Videoconsulta" so the card never looks location-empty.
-  const placeFallback = professional.cantonName || professional.provinceName || (professional.videoconsulta || professional.coverage?.country ? tSchedule("videoconsulta") : "");
+  // La videoconsulta pertenece al servicio, no al perfil: si lo que se buscó no
+  // se atiende por video (una niñera), la tarjeta no la ofrece aunque el mismo
+  // profesional tenga otro servicio (tutorías) que sí. Sin búsqueda específica
+  // se muestran ambas cosas: sus lugares y la videoconsulta.
+  const videoAplicaBusqueda = !activeCategory || supportsVideoConsultCategory(activeCategory);
+  const placeFallback = professional.cantonName || professional.provinceName
+    || (videoAplicaBusqueda && (professional.videoconsulta || professional.coverage?.country)
+      ? tSchedule("videoconsulta")
+      : professional.coverage?.country ? tSchedule("countryCoverage") : "");
   const placeAddress = [professional.cantonName, professional.provinceName].filter(Boolean).join(", ");
 
   // ── LEFT-column professional info (slotted into ProfessionalSchedule, which owns the
@@ -450,6 +458,7 @@ export function ProfessionalCard({ professional, className, highlightMetric = "r
         slots={slots}
         slotsInitiallyLoaded={slotsInitiallyLoaded}
         activeCategory={activeCategory}
+        videoConsultApplies={videoAplicaBusqueda}
         isOwn={isOwn}
         placeFallback={placeFallback}
         placeAddress={placeAddress}

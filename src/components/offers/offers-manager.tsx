@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useNativeApp } from "@/hooks/use-native-app";
 import { ArrowLeft, BadgePercent, ChevronDown, MoreVertical, Plus } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { useLocale } from "next-intl";
@@ -56,14 +57,17 @@ const OFFERS_MANAGER_COPY = {
   },
 } as const;
 
+// UN color por significado, no un color por estado: azul de marca = está vivo
+// ahora; gris = pasó o está en pausa; rojo = SOLO lo que salió mal (cancelado,
+// no seleccionado). Un empleo cerrado suele ser el final feliz — pintarlo de
+// rojo lo hacía leer como error, y con todo de colores el color deja de decir.
 function statusClass(status: ProfessionalOffer["status"]) {
-  if (status === "published") return "bg-[#e8f8f3] text-[#08775c]";
-  if (status === "expired" || status === "sold_out") return "bg-[#fff1f2] text-[#be123c]";
-  if (status === "paused") return "bg-[#fff7ed] text-[#c2410c]";
+  if (status === "published") return "bg-[#EBF5FB] text-[#0089bb]";
   return "bg-[#eef2f6] text-[#60708a]";
 }
 
 export function OffersManager({ initialOffers, embedded = false, backHref = "/dashboard/profesional?mode=offer&tab=offers", professionalId, serviceOptions = [], onRefresh }: { initialOffers: ProfessionalOffer[]; embedded?: boolean; backHref?: string; professionalId?: string; serviceOptions?: SelectMenuOption[]; onRefresh?: () => void }) {
+  const nativeApp = useNativeApp();
   const router = useRouter();
   const searchParams = useSearchParams();
   const locale = marketplaceLocale(useLocale());
@@ -129,7 +133,7 @@ export function OffersManager({ initialOffers, embedded = false, backHref = "/da
       <div className={embedded ? "w-full" : "mx-auto max-w-4xl"}>
         <div className="mb-5 flex items-center justify-between gap-4">
           <div className="min-w-0">
-            {!embedded && (
+            {!embedded && !nativeApp && (
               <div className="mb-1.5 flex items-center gap-2">
                 <Link href={backHref} aria-label={copy.back} className="grid h-9 w-9 shrink-0 place-items-center rounded-lg text-[#162543] hover:bg-white">
                   <ArrowLeft className="h-5 w-5" />
@@ -141,7 +145,7 @@ export function OffersManager({ initialOffers, embedded = false, backHref = "/da
           </div>
           <>
             <button type="button" onClick={() => setPublishOpen(true)} className="hidden h-10 shrink-0 items-center gap-2 rounded-lg bg-[#009fd9] px-4 text-sm font-bold text-white lg:inline-flex"><Plus className="h-4 w-4" />{copy.publish}</button>
-            <Link href="/ofertas/publicar?from=panel" className="inline-flex h-10 shrink-0 items-center gap-2 rounded-lg bg-[#009fd9] px-4 text-sm font-bold text-white lg:hidden"><Plus className="h-4 w-4" />{copy.publish}</Link>
+            <Link href="/ofertas/publicar?from=panel" className="inline-flex h-10 shrink-0 items-center gap-2 rounded-lg bg-[#009fd9] px-4 text-sm font-bold text-white transition-colors hover:bg-[#0089bb] lg:hidden"><Plus className="h-4 w-4" />{copy.publish}</Link>
           </>
         </div>
         <div className="space-y-3.5">

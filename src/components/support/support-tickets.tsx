@@ -425,7 +425,8 @@ export function SupportTickets({
             )}
             {ticket.status === "resolved" && ticket.user_confirmed && (
               <div className="shrink-0 border-t border-[#e5e7eb] bg-[#f0fdf4] px-4 py-2.5 text-sm text-[#166534]">
-                {t("confirmedResolved")}
+                <span className="block font-semibold">{t("confirmedResolved")}</span>
+                <span className="mt-0.5 block text-[13px] text-[#3f7a55]">{t("reopenHint")}</span>
               </div>
             )}
 
@@ -437,7 +438,7 @@ export function SupportTickets({
                   onFocus={() => window.requestAnimationFrame(() => keepLatestMessageVisible())}
                   maxLength={LONG_TEXT_MAX_LENGTH}
                   rows={1}
-                  placeholder={t("messagePlaceholder")}
+                  placeholder={ticket.status === "resolved" ? t("reopenPlaceholder") : t("messagePlaceholder")}
                   className="min-h-11 min-w-0 flex-1 resize-none rounded-[22px] border border-[#d8e5ee] bg-white px-4 py-2.5 text-[15px] leading-6 outline-none transition focus:border-[#009FD9] focus:ring-2 focus:ring-[#009FD9]/10"
                 />
                 <button onClick={sendReply} disabled={sending || !reply.trim()} className="grid h-11 w-11 place-items-center rounded-full bg-[#009FD9] text-white shadow-[0_8px_18px_-12px_rgba(0,159,217,0.85)] transition hover:bg-[#008fca] disabled:bg-[#cfdde5] disabled:shadow-none" aria-label={sending ? t("sending") : t("send")}>
@@ -456,18 +457,17 @@ export function SupportTickets({
   // ── List view ──
   return (
     <div className="mx-auto w-full max-w-[34rem] space-y-4 px-4 sm:max-w-none sm:px-0">
-      <div className="flex justify-end">
-        {/* Header action shows ONLY once tickets have loaded AND there's at least one
-            (the persistent action above the list). It must NOT render while loading
-            (that flashed the "has tickets" treatment before data arrived) nor in the
-            EMPTY state (the centered empty-state card carries the single "Contactar
-            soporte" button, so it never appears twice). The heading above stays always. */}
-        {!loading && items.length > 0 && (
-          <button onClick={openNewTicket} className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-[#009FD9] text-white text-sm font-semibold px-4 py-2.5 hover:bg-[#0089bb] shrink-0 w-full sm:w-auto">
+      {/* La acción vive flotando sobre la lista (igual que "Crear" en Mis
+          proyectos): en escritorio se queda arriba a la derecha, donde hay sitio.
+          No se dibuja mientras carga ni en el estado vacío, que ya trae su propio
+          botón centrado. */}
+      {!loading && items.length > 0 && (
+        <div className="flex justify-end">
+          <button onClick={openNewTicket} className="inline-flex h-10 shrink-0 items-center gap-2 rounded-lg bg-[#009FD9] px-4 text-sm font-bold text-white transition-colors hover:bg-[#0089bb]">
             <Plus className="h-4 w-4" /> {t("newTicket")}
           </button>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Status filter — the SHARED tab style (consistent with solicitudes/proyectos):
           per-status COUNT badge only. Hidden until loading resolves so it never

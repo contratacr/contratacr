@@ -2,6 +2,9 @@
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import {
+  MessageSquareText,
+  Bell,
+  Menu,
   ArrowLeft,
   ArrowRight,
   BadgeCheck,
@@ -24,7 +27,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import { useLocale } from "next-intl";
-import { usePathname, useRouter } from "@/i18n/navigation";
+import { Link, usePathname, useRouter } from "@/i18n/navigation";
 import { useAuth } from "@/hooks/use-auth";
 import { useContainedTouchScroll } from "@/hooks/use-contained-touch-scroll";
 import { useNativeApp } from "@/hooks/use-native-app";
@@ -114,6 +117,7 @@ const COPY = {
     closedLabel: "Abrir asistente de ContrataCR",
     minimize: "Minimizar asistente",
     title: "Asistente ContrataCR",
+    shortTitle: "Asistente",
     send: "Enviar mensaje",
     thinking: "Buscando la mejor respuesta...",
     viewProfile: "Ver perfil",
@@ -140,6 +144,7 @@ const COPY = {
     closedLabel: "Open ContrataCR assistant",
     minimize: "Minimize assistant",
     title: "ContrataCR Assistant",
+    shortTitle: "Assistant",
     send: "Send message",
     thinking: "Finding the best answer...",
     viewProfile: "View profile",
@@ -268,12 +273,17 @@ export function AiConcierge({ embedded = false, onBack }: { embedded?: boolean; 
   const [conversationId, setConversationId] = useState("");
   const [suggestingIndex, setSuggestingIndex] = useState<number | null>(null);
   const [compactViewport, setCompactViewport] = useState(false);
+  const [hidratado, setHidratado] = useState(false);
   const [draft, setDraft] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
   const sessionHydratedRef = useRef(false);
   const previousPathnameRef = useRef(pathname);
   useContainedTouchScroll(scrollRef, open || embedded);
+
+  useEffect(() => {
+    setHidratado(true);
+  }, []);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -489,6 +499,9 @@ export function AiConcierge({ embedded = false, onBack }: { embedded?: boolean; 
 
   const insideDashboard = pathname.startsWith("/dashboard/") || pathname.includes("/dashboard/");
   const nativeAssistantShell = nativeApp && compactViewport;
+  // El encabezado de índice solo existe en el cliente: pintarlo antes de hidratar
+  // deja el árbol distinto al del servidor y React tira toda la pantalla.
+  const barraDeIndice = hidratado && nativeAssistantShell && !embedded;
   if ((!embedded && !sessionHydrated) || pathname.startsWith("/admin")) return null;
   // The assistant is a native-app feature. Keep the web experience focused on
   // search and direct navigation, even if an old browser event tries to open it.
@@ -544,19 +557,35 @@ export function AiConcierge({ embedded = false, onBack }: { embedded?: boolean; 
         )}
       >
         <header className="relative flex shrink-0 items-center gap-1.5 border-b border-[#e3ebf1] bg-white px-2.5 py-3 sm:gap-3 sm:px-5 sm:py-4">
-          {(embedded || nativeAssistantShell) && (
+          {barraDeIndice && (
+            <>
+              <button
+                type="button"
+                onClick={() => window.dispatchEvent(new Event("ccr:open-mobile-menu"))}
+                aria-label={lang === "en" ? "Open menu" : "Abrir menú"}
+                className="grid h-9 w-9 shrink-0 place-items-center rounded-xl text-[#162543] transition hover:bg-[#eef5f9] sm:h-10 sm:w-10"
+              >
+                <Menu className="h-5 w-5" strokeWidth={2.5} />
+              </button>
+              <Link href="/" aria-label="ContrataCR inicio" className="-ml-0.5 shrink-0">
+                {/* eslint-disable-next-line @next/next/no-img-element -- marca de 28px; el optimizador no actúa en Cloudflare */}
+                <img src="/logo-mark-transparent.png" alt="ContrataCR" width={28} height={28} className="h-7 w-7 select-none" />
+              </Link>
+            </>
+          )}
+          {embedded && (
             <button
               type="button"
-              onClick={embedded ? onBack : () => setOpen(false)}
+              onClick={onBack}
               aria-label={lang === "en" ? "Back" : "Atrás"}
               className="ccr-ai-back-action grid h-9 w-9 shrink-0 place-items-center rounded-full text-[#102f5b] transition hover:bg-[#eef7ff] sm:h-10 sm:w-10"
             >
               <ArrowLeft className="h-5 w-5" />
             </button>
           )}
-          <div className="-my-2 -ml-1.5 h-[58px] w-[58px] shrink-0 sm:-my-3 sm:-ml-2 sm:h-[92px] sm:w-[92px]"><Image src="/brand/ai-assistant-robot.webp" alt="" width={112} height={112} priority className="h-full w-full object-contain drop-shadow-[0_10px_16px_rgba(0,99,189,0.18)]" /></div>
+          <div className={cn("-my-2 -ml-1.5 h-[58px] w-[58px] shrink-0 sm:-my-3 sm:-ml-2 sm:h-[92px] sm:w-[92px]", barraDeIndice && "hidden")}><Image src="/brand/ai-assistant-robot.webp" alt="" width={112} height={112} priority className="h-full w-full object-contain drop-shadow-[0_10px_16px_rgba(0,99,189,0.18)]" /></div>
           <div className="min-w-0 flex-1 py-1">
-            <h2 className="truncate text-[14px] font-black text-[#102746] min-[380px]:text-[15px] sm:text-lg">{copy.title}</h2>
+            <h2 className="truncate text-[14px] font-black text-[#102746] min-[380px]:text-[15px] sm:text-lg">{barraDeIndice ? copy.shortTitle : copy.title}</h2>
           </div>
           <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
             <button
@@ -626,10 +655,10 @@ export function AiConcierge({ embedded = false, onBack }: { embedded?: boolean; 
           {messages.length === 0 && (
             <div className="flex min-h-full flex-col justify-center space-y-4">
               <div className="flex flex-col items-center px-2 text-center">
-                {/* In the app the robot already identifies the assistant in the header. */}
-                {!nativeApp && <div className="h-20 w-20"><Image src="/brand/ai-assistant-robot.webp" alt="" width={128} height={128} className="h-full w-full object-contain drop-shadow-[0_12px_18px_rgba(0,99,189,0.18)]" /></div>}
+                {/* La cara del asistente vive en el saludo: se ve una vez, grande,
+                    y el encabezado queda para ubicarte. */}
+                <div className="h-24 w-24"><Image src="/brand/ai-assistant-robot.webp" alt="" width={128} height={128} className="h-full w-full object-contain drop-shadow-[0_12px_18px_rgba(0,99,189,0.18)]" /></div>
                 <h3 className="mt-1 text-[19px] font-black leading-tight text-[#102746]">{copy.emptyTitle}</h3>
-                <p className="mt-1.5 max-w-[19rem] text-[13px] font-medium leading-relaxed text-[#5c718c]">{copy.emptySubtitle}</p>
               </div>
 
               <div className="overflow-hidden rounded-[22px] border border-[#dbe7f0] bg-white shadow-[0_10px_30px_-24px_rgba(0,91,145,0.5)]">

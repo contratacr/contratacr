@@ -135,7 +135,11 @@
     "modeSwitchAria": "Cambiar entre modo cliente y modo profesional",
     "receivedRequests": "Solicitudes recibidas",
     "myProposals": "Mis propuestas",
-    "back": "Volver"
+    "back": "Volver",
+    "projects": "Proyectos",
+    "recent": "Recientes",
+    "recentClear": "Limpiar",
+    "recentlyViewed": "Vistos recientemente"
   },
   "home": {
     "accountDeletion": {
@@ -419,7 +423,8 @@
     "whatsappShort": "WhatsApp",
     "callShort": "Llamar",
     "call": "Contactar por llamada",
-    "email": "Correo"
+    "email": "Correo",
+    "countryCoverage": "Todo Costa Rica"
   },
   "selfAction": {
     "title": "Este es tu perfil",
@@ -698,7 +703,8 @@
     "whatItMeans": "¿Qué significa?",
     "close": "Cerrar",
     "backToMessages": "Volver a mensajes",
-    "availabilityTab": "Disponibilidad"
+    "availabilityTab": "Disponibilidad",
+    "appBarTitle": "Perfil profesional"
   },
   "auth": {
     "login": {
@@ -722,7 +728,8 @@
       "redirecting": "Redirigiendo…",
       "continueGoogle": "Continuar con Google",
       "emailChangedTitle": "Correo actualizado",
-      "emailChangedLogin": "El cambio quedó confirmado. Inicia sesión con tu correo nuevo."
+      "emailChangedLogin": "El cambio quedó confirmado. Inicia sesión con tu correo nuevo.",
+      "back": "Volver"
     },
     "register": {
       "title": "Crear cuenta",
@@ -1561,15 +1568,15 @@
           "cta": "Ir a favoritos"
         },
         "clientConnections": {
-          "title": "Conexiones",
+          "title": "Volver a contratar",
           "short": "Profesionales con historial",
-          "body": "Conexiones muestra profesionales con los que confirmaste o completaste un servicio.",
+          "body": "Volver a contratar reúne a los profesionales que ya te atendieron, para escribirles sin buscarlos de nuevo.",
           "steps": [
             "Revisa profesionales con historial contigo.",
             "Abre su perfil si quieres contratarlos otra vez.",
             "Usa el historial para dar seguimiento con más confianza."
           ],
-          "cta": "Ir a conexiones"
+          "cta": "Ir a volver a contratar"
         },
         "clientProfile": {
           "title": "Perfil cliente",
@@ -1798,7 +1805,9 @@
           ],
           "cta": "Ir a perfil profesional"
         }
-      }
+      },
+      "searchPlaceholder": "Buscar en las guías",
+      "searchEmpty": "No encontramos una guía con esa palabra."
     },
     "subtitles": {
       "network": "Administra los profesionales que sigues y las personas que siguen tu perfil.",
@@ -2168,10 +2177,6 @@
     "budgetTBD": "A convenir",
     "charLimit": "Has alcanzado el límite de {max} caracteres.",
     "allServices": "Todas",
-    "stageAccepted": "Aceptadas",
-    "stageWaiting": "En espera",
-    "stageCompleted": "Finalizadas",
-    "stageCancelled": "Canceladas",
     "tabNew": "Nuevas",
     "tabMine": "Mis propuestas",
     "moreOptions": "Más opciones"
@@ -2858,7 +2863,12 @@
       "subject4": "Solicitudes, publicaciones o propuestas",
       "subject5": "Otro"
     },
-    "updated": "Actualizado {date}"
+    "updated": "Actualizado {date}",
+    "headerMessages": "Mensajes",
+    "headerNotifications": "Notificaciones",
+    "newTicketShort": "Contactar",
+    "reopenHint": "Si el problema vuelve, escribe aquí y el tiquete se reabre.",
+    "reopenPlaceholder": "Escribe para reabrir el tiquete…"
   },
   "savedPros": {
     "viewProfile": "Ver perfil",
@@ -2885,25 +2895,27 @@
     "emptyNothingSaved": "Todavía no has guardado nada."
   },
   "clientConnections": {
-    "emptyTitle": "Aún no tienes conexiones",
-    "emptyDescription": "Aquí aparecerán los profesionales con los que hayas tenido una solicitud confirmada o un proyecto aceptado.",
+    "emptyTitle": "Todavía no hay nadie a quien volver a contratar",
+    "emptyDescription": "Aquí aparecerán los profesionales que ya te atendieron, con solicitud confirmada o proyecto aceptado.",
     "searchProfessionals": "Buscar profesionales",
     "searchPlaceholder": "Buscar profesional o servicio",
-    "count": "{count, plural, one {# conexión} other {# conexiones}}",
+    "count": "{count, plural, one {# profesional} other {# profesionales}}",
     "verified": "Verificado",
     "viewProfile": "Ver perfil",
-    "noResults": "No encontramos conexiones con ese texto.",
+    "noResults": "No encontramos profesionales con ese texto.",
     "source": {
       "booking": "Solicitud",
       "project": "Proyecto",
-      "both": "Solicitud y proyecto"
+      "both": "Solicitud y proyecto",
+      "contact": "Contacto"
     },
     "status": {
       "completed": "Completado",
       "awaitingConfirmation": "Por confirmar",
       "inProgress": "En progreso",
       "confirmed": "Confirmado",
-      "connected": "Conectado"
+      "connected": "Conectado",
+      "contact": "Contactado"
     }
   },
   "registerChoice": {
@@ -3154,8 +3166,6 @@
     "cancel": "Cancelar",
     "noneList": "No tienes notificaciones.",
     "emptySub": "Cuando haya novedades sobre solicitudes, empleos, ofertas, profesionales que sigues o tu cuenta, aparecerán aquí.",
-    "filterAll": "Todas",
-    "filterUnread": "No leídas",
     "noUnread": "No tienes notificaciones sin leer.",
     "publishedAt": "Publicado {time}",
     "types": {
@@ -3195,7 +3205,13 @@
       "followed_professional_activity": "Nueva publicación",
       "direct_message": "Nuevo mensaje"
     },
-    "viewAll": "Ver todas"
+    "viewAll": "Ver todas",
+    "todayGroup": "Hoy",
+    "earlierGroup": "Anteriores",
+    "newGroup": "Nuevas",
+    "yesterdayGroup": "Ayer",
+    "week7Group": "Últimos 7 días",
+    "month30Group": "Últimos 30 días"
   },
   "projects": {
     "title": "Publicar una solicitud",
@@ -3393,7 +3409,9 @@
     "suggestSending": "Enviando…",
     "cancel": "Cancelar",
     "suggestThanks": "Gracias. Enviamos tu sugerencia al equipo para revisión.",
-    "optionsCount": "{count, plural, one {# opción} other {# opciones}}"
+    "optionsCount": "{count, plural, one {# opción} other {# opciones}}",
+    "messages": "Mensajes",
+    "notifications": "Notificaciones"
   },
   "installGuide": {
     "eyebrow": "Acceso rápido",
@@ -3710,7 +3728,10 @@
     "canceladas": "Canceladas",
     "activos": "Activos",
     "finalizados": "Finalizados",
-    "cancelados": "Cancelados"
+    "cancelados": "Cancelados",
+    "en_curso": "En curso",
+    "enviadas": "Enviadas",
+    "publicados": "Publicados"
   },
   "soporte": {
     "headerTitle": "Centro de soporte",
@@ -3865,5 +3886,13 @@
     "cancel": "Cancelar",
     "taken": "Ese horario ya está reservado. Elige otra hora.",
     "error": "No se pudo reprogramar. Intenta de nuevo."
+  },
+  "sectionTitles": {
+    "messages": "Mensajes",
+    "notifications": "Notificaciones",
+    "support": "Soporte",
+    "help": "Ayuda",
+    "myOffers": "Mis ofertas",
+    "myJobs": "Mis empleos"
   }
 }

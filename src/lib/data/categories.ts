@@ -1742,7 +1742,7 @@ export const VIDEO_CONSULT_CATEGORY_IDS = new Set<string>([
   "notaria", "auditoria", "asesoria_financiera", "corredor_seguros",
   "asesoria_tributaria", "recursos_humanos", "marketing_digital", "publicidad",
   "diseno", "redaccion_contenido", "capacitacion_empresarial", "gestoria_tramites",
-  "bienes_raices", "avaluos", "consultoria_ambiental", "coaching",
+  "bienes_raices", "consultoria_ambiental", "coaching",
   "arquitectura", "ingenieria_civil", "ingenieria_electrica", "ingenieria_mecanica",
   "desarrollo_web", "diseno_grafico", "diseno_apps", "soporte_tecnico",
   "ciberseguridad", "consultoria_ti",

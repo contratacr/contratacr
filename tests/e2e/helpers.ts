@@ -238,12 +238,20 @@ export async function expectNoHorizontalOverflow(page: Page) {
   expect(size.scrollWidth, "Page should not overflow horizontally").toBeLessThanOrEqual(size.clientWidth + 4);
 }
 
+export async function openLoginForm(page: Page) {
+  const portada = page.locator(".ccr-login-portada");
+  if (!(await portada.isVisible().catch(() => false))) return;
+  await portada.getByRole("button", { name: /Inicia sesión|Log in/i }).first().click();
+  await page.locator("main form").first().waitFor({ state: "visible", timeout: 10_000 });
+}
+
 export async function loginAs(page: Page, email: string, password: string) {
   let lastError: unknown;
   for (let attempt = 0; attempt < 2; attempt += 1) {
     await resetAuth(page);
     await gotoOK(page, "/es/login");
     await waitForInteractivePage(page);
+    await openLoginForm(page);
 
     const main = page.locator("main");
     await expectVisibleText(main, /Bienvenido de vuelta|Welcome back/i);

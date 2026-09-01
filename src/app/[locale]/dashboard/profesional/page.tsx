@@ -49,7 +49,6 @@ import { canOffer } from "@/lib/auth/capabilities";
 import { anyVideoConsultCategory } from "@/lib/data/categories";
 import { useMode, type Mode } from "@/hooks/use-mode";
 import { ImagePreviewDialog } from "@/components/ui/image-preview-dialog";
-import { Modal } from "@/components/ui/modal";
 import { notificationContext } from "@/lib/notification-link";
 import { Link, useRouter } from "@/i18n/navigation";
 import { openInNewTabOnDesktop } from "@/lib/desktop-new-tab";
@@ -138,7 +137,7 @@ const PANEL_TAB_LABELS: Partial<Record<Tab, { es: string; en: string }>> = {
   sent_bookings: { es: "Mis solicitudes", en: "My requests" },
   sent_projects: { es: "Mis proyectos", en: "My projects" },
   applications: { es: "Mis postulaciones", en: "My applications" },
-  connections: { es: "Conexiones", en: "Connections" },
+  connections: { es: "Volver a contratar", en: "Hire again" },
   photos: { es: "Casos de éxito", en: "Success cases" },
   availability: { es: "Disponibilidad", en: "Availability" },
   services: { es: "Servicios", en: "Services" },
@@ -280,35 +279,39 @@ function rememberSeenOpportunityKeys(userId: string, keys: string[]) {
   }
 }
 
-function QuickGuidesModal({
-  open,
-  onClose,
+// Guías es una PANTALLA del panel, no un modal: llegar por navegación (o por el
+// enlace ?tab=guides) dejaba la sección en blanco porque el contenido solo vivía
+// dentro del modal. Este cuerpo se usa en los dos sitios.
+function GuidesBody({
   isProvider,
   onGo,
+  onClose,
 }: {
-  open: boolean;
-  onClose: () => void;
   isProvider: boolean;
   onGo: (guide: GuideItem) => void;
+  onClose?: () => void;
 }) {
   const t = useTranslations("proPanel.guides");
   const locale = useLocale();
-  const guideSections = [
-    { id: "client", title: t("sections.client"), guides: GUIDE_ITEMS.filter((guide) => guide.section === "client") },
-    { id: "professional", title: t("sections.professional"), guides: GUIDE_ITEMS.filter((guide) => guide.section === "professional") },
-    { id: "shared", title: t("sections.shared"), guides: GUIDE_ITEMS.filter((guide) => guide.section === "shared") },
-  ];
+  const [busqueda, setBusqueda] = useState("");
   const [selectedGuideId, setSelectedGuideId] = useState<string | null>(null);
-  const selectedGuide = selectedGuideId ? GUIDE_ITEMS.find((guide) => guide.id === selectedGuideId) : null;
 
-  useEffect(() => {
-    if (open) queueMicrotask(() => setSelectedGuideId(null));
-  }, [open]);
-
-  if (!open) return null;
+  // A quien todavía no ofrece servicios, las guías de profesional le van al
+  // final: no son su trabajo de hoy, son la invitación a dar el paso.
+  const orden: GuideItem["section"][] = isProvider
+    ? ["professional", "shared", "client"]
+    : ["client", "shared", "professional"];
+  const consulta = busqueda.trim().toLocaleLowerCase();
+  const coincide = (guide: GuideItem) => {
+    if (!consulta) return true;
+    return `${t(`items.${guide.id}.title`)} ${t(`items.${guide.id}.body`)}`.toLocaleLowerCase().includes(consulta);
+  };
+  const secciones = orden
+    .map((id) => ({ id, title: t(`sections.${id}`), guides: GUIDE_ITEMS.filter((g) => g.section === id && coincide(g)) }))
+    .filter((seccion) => seccion.guides.length > 0);
 
   const go = (guide: GuideItem) => {
-    onClose();
+    onClose?.();
     if (!isProvider && guide.section === "professional") {
       window.location.assign(`/${locale}/registro/profesional`);
       return;
@@ -321,93 +324,97 @@ function QuickGuidesModal({
   };
 
   return (
-    <Modal
-      onClose={onClose}
-      title={t("modalTitle")}
-      subtitle={t("modalSubtitle")}
-      size="lg"
-      mobilePresentation="fullscreen"
-      bodyClassName="bg-white px-5 py-5 pb-[max(env(safe-area-inset-bottom),1rem)] sm:px-7 sm:py-6"
-    >
-      <div className="mx-auto max-w-[620px]">
-        <p className="mx-auto max-w-[520px] text-center text-xs font-semibold leading-relaxed text-[#7c8ba0]">
-          {isProvider ? (
-            <>
-              {t("providerNoteBody")}
-            </>
-          ) : (
-            <>
-              {t("clientNoteBody")}
-            </>
-          )}
-        </p>
+    <div data-guides-section="" className="mx-auto w-full max-w-[620px]">
+      <p className="text-sm leading-relaxed text-[#526277]">
+        {isProvider ? t("providerNoteBody") : t("clientNoteBody")}
+      </p>
 
-        <div className="mt-5 overflow-hidden rounded-lg border border-[#dfe5ec]">
-          {guideSections.map((section) => (
-            <div key={section.id} className="border-b border-[#dfe5ec] last:border-b-0">
-              <div className="bg-white px-4 py-2 text-xs font-extrabold uppercase tracking-[0.06em] text-[#7c8ba0]">
-                {section.title}
-              </div>
-              {section.guides.map((guide, guideIndex) => {
-                const selected = selectedGuide?.id === guide.id;
-                return (
-                  <div key={guide.id} className="border-t border-white first:border-t-0">
-                    <button
-                      type="button"
-                      onClick={() => setSelectedGuideId(selected ? "" : guide.id)}
-                      className={cn(
-                        "flex w-full items-center gap-3 bg-[#e9edf2] px-4 py-2.5 text-left text-sm font-semibold text-[#162543] transition hover:bg-[#dfe5ec]",
-                        selected && "bg-[#dfe5ec]",
-                      )}
-                    >
-                      <span className="w-10 shrink-0 whitespace-nowrap text-right tabular-nums">{guideIndex + 1} -</span>
-                      <span className="min-w-0 flex-1 truncate">{t(`items.${guide.id}.title`)}</span>
-                    </button>
-                    {selected && (
-                      <div className="bg-white px-4 py-4">
-                        <p className="text-sm leading-relaxed text-[#526277]">{t(`items.${guide.id}.body`)}</p>
-                        <ol className="mt-3 space-y-2">
-                          {Array.from({ length: guide.stepCount }, (_, stepIndex) => (
-                            <li key={stepIndex} className="flex gap-2 text-sm leading-relaxed text-[#374151]">
-                              <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[#009FD9]" />
-                              <span>{t(`items.${guide.id}.steps.${stepIndex}`)}</span>
-                            </li>
-                          ))}
-                        </ol>
-                        <Button type="button" className="mt-4 rounded-full px-5" onClick={() => go(guide)}>
-                          {!isProvider && guide.section === "professional" ? t("activateProfessionalCta") : t(`items.${guide.id}.cta`)}
-                          <ArrowRight className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          ))}
-        </div>
-
-        <div className="mt-5 rounded-2xl border border-[#dfe8f0] bg-[#f8fbfe] px-4 py-4 sm:px-5">
-          <p className="text-sm font-semibold text-[#162543]">{t("supportTitle")}</p>
-          <p className="mt-1 text-sm leading-relaxed text-[#526277]">{t("supportBody")}</p>
-          <Button
-            type="button"
-            variant="outline"
-            className="mt-4 rounded-full px-5"
-            onClick={() => {
-              onClose();
-              window.location.assign(`/${locale}/dashboard/profesional?tab=soporte`);
-            }}
-          >
-            {t("supportCta")}
-            <ArrowRight className="h-4 w-4" />
-          </Button>
-        </div>
-
+      <div className="mt-4 flex h-11 items-center gap-2 rounded-xl border border-[#dfe6ec] bg-white px-3">
+        <Search className="h-4 w-4 shrink-0 text-[#9aa8b9]" />
+        <input
+          value={busqueda}
+          onChange={(event) => setBusqueda(event.target.value)}
+          placeholder={t("searchPlaceholder")}
+          aria-label={t("searchPlaceholder")}
+          className="min-w-0 flex-1 bg-transparent text-sm text-[#162543] outline-none placeholder:text-[#9aa8b9]"
+        />
       </div>
-    </Modal>
+
+      {secciones.length === 0 && (
+        <p className="mt-8 text-center text-sm text-[#6b7280]">{t("searchEmpty")}</p>
+      )}
+
+      {secciones.map((seccion) => (
+        <section key={seccion.id} className="mt-6">
+          <h3 className="px-1 text-[11px] font-extrabold uppercase tracking-[0.08em] text-[#8494a8]">{seccion.title}</h3>
+          <div className="mt-2 flex flex-col gap-2">
+            {seccion.guides.map((guide) => {
+              const abierta = selectedGuideId === guide.id;
+              return (
+                <div key={guide.id} className="overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedGuideId(abierta ? null : guide.id)}
+                    aria-expanded={abierta}
+                    className="flex w-full items-center gap-3 px-4 py-3.5 text-left transition-colors hover:bg-[#f9fbfd]"
+                  >
+                    <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-[#EBF5FB] text-[#0089bb]">
+                      {guideIcon(guide.id)}
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-[15px] font-bold leading-snug text-[#162543]">{t(`items.${guide.id}.title`)}</span>
+                      {!abierta && (
+                        <span className="mt-0.5 block truncate text-[13px] text-[#6b7280]">{t(`items.${guide.id}.body`)}</span>
+                      )}
+                    </span>
+                    <ChevronDown className={cn("h-4 w-4 shrink-0 text-[#9aa8b9] transition-transform", abierta && "rotate-180")} />
+                  </button>
+                  {abierta && (
+                    <div className="border-t border-[#f1f5f9] px-4 pb-4 pt-3">
+                      <p className="text-sm leading-relaxed text-[#526277]">{t(`items.${guide.id}.body`)}</p>
+                      <ol className="mt-3 space-y-2">
+                        {Array.from({ length: guide.stepCount }, (_, stepIndex) => (
+                          <li key={stepIndex} className="flex gap-2 text-sm leading-relaxed text-[#374151]">
+                            <span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-[#EBF5FB] text-[11px] font-extrabold text-[#0089bb]">
+                              {stepIndex + 1}
+                            </span>
+                            <span>{t(`items.${guide.id}.steps.${stepIndex}`)}</span>
+                          </li>
+                        ))}
+                      </ol>
+                      <Button type="button" className="mt-4 w-full rounded-full px-5 sm:w-auto" onClick={() => go(guide)}>
+                        {!isProvider && guide.section === "professional" ? t("activateProfessionalCta") : t(`items.${guide.id}.cta`)}
+                        <ArrowRight className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      ))}
+
+      <div className="mt-6 rounded-2xl border border-[#dfe8f0] bg-[#f8fbfe] px-4 py-4 sm:px-5">
+        <p className="text-sm font-semibold text-[#162543]">{t("supportTitle")}</p>
+        <p className="mt-1 text-sm leading-relaxed text-[#526277]">{t("supportBody")}</p>
+        <Button
+          type="button"
+          variant="outline"
+          className="mt-4 rounded-full px-5"
+          onClick={() => {
+            onClose?.();
+            window.location.assign(`/${locale}/dashboard/profesional?tab=soporte`);
+          }}
+        >
+          {t("supportCta")}
+          <ArrowRight className="h-4 w-4" />
+        </Button>
+      </div>
+    </div>
   );
 }
+
 function GuidePreview({ id, t }: { id: string; t: ReturnType<typeof useTranslations<"proPanel.guides">> }) {
   if (id === "services") {
     return (
@@ -569,11 +576,14 @@ export default function DashboardPage() {
   const requestedMode = searchParams.get("mode");
   const urlModeParam: Mode | null = requestedMode === "use" || requestedMode === "offer" ? requestedMode : null;
   const requestedReturnTo = searchParams.get("returnTo");
-  const externalReturnTo = requestedReturnTo === "/ofertas" || requestedReturnTo === "/empleos"
+  const externalReturnTo = requestedReturnTo === "/ofertas" || requestedReturnTo === "/empleos" || requestedReturnTo === "/notificaciones"
     ? requestedReturnTo
     : requestedReturnTo?.startsWith("/mensajes") && !requestedReturnTo.startsWith("//") && !requestedReturnTo.includes("\\")
       ? requestedReturnTo
       : null;
+  // El panel reescribe su URL, así que el origen se guarda al llegar.
+  const returnToRef = useRef<string | null>(null);
+  if (externalReturnTo) returnToRef.current = externalReturnTo;
   // Captured at arrival: the dashboard's own URL rewrites drop the param long
   // before the back arrow is pressed.
   const chatReturnRef = useRef<string | null>(null);
@@ -602,7 +612,6 @@ export default function DashboardPage() {
   const [supportThreadRef, setSupportThreadRef] = useState<string | null>(null);
   const [proLoadError, setProLoadError] = useState(false);
   const [mobilePanelOpen, setMobilePanelOpen] = useState(false);
-  const [guidesOpen, setGuidesOpen] = useState(false);
   const [networkModal, setNetworkModal] = useState<"following" | "followers" | null>(null);
   const [preferMobileMenuDefault, setPreferMobileMenuDefault] = useState(false);
   const [opportunityWelcomeCount, setOpportunityWelcomeCount] = useState<number | null>(null);
@@ -907,11 +916,21 @@ export default function DashboardPage() {
     } catch (error) {
       if (requestSequence !== proFetchSequenceRef.current) return null;
       console.error("[dashboard] professional load timed out or failed", error);
-      if (!silent) {
-        setProLoadError(true);
-        setLoading(false);
+      try {
+        result = await withPromiseTimeout(
+          supabase.from("professionals").select("*").eq("profile_id", user.id).maybeSingle(),
+          8_000,
+          "dashboard-professional-timeout-retry",
+        );
+      } catch (segundoError) {
+        if (requestSequence !== proFetchSequenceRef.current) return null;
+        console.error("[dashboard] professional load failed twice", segundoError);
+        if (!silent) {
+          setProLoadError(true);
+          setLoading(false);
+        }
+        return null;
       }
-      return null;
     }
     const { data, error } = result;
 
@@ -1692,10 +1711,6 @@ export default function DashboardPage() {
         key={tab}
         data-testid={`panel-tab-${tab}`}
         onClick={() => {
-          if (tab === "guides") {
-            setGuidesOpen(true);
-            return;
-          }
           requestUnsavedAction(() => openPanelDestination(tab));
         }}
         className={cn(
@@ -1725,10 +1740,6 @@ export default function DashboardPage() {
         type="button"
         data-testid={`panel-tab-${tab}`}
         onClick={() => {
-          if (tab === "guides") {
-            setGuidesOpen(true);
-            return;
-          }
           requestUnsavedAction(() => openPanelDestination(tab));
         }}
         className={cn(
@@ -1760,10 +1771,6 @@ export default function DashboardPage() {
         type="button"
         data-testid={`panel-tab-${tab}`}
         onClick={() => {
-          if (tab === "guides") {
-            setGuidesOpen(true);
-            return;
-          }
           requestUnsavedAction(() => openPanelDestination(tab));
         }}
         className={cn(
@@ -1817,10 +1824,6 @@ export default function DashboardPage() {
           if (tab === "home") {
             setMobilePanelOpen(true);
             scrollDashboardToPageTop();
-            return;
-          }
-          if (tab === "guides") {
-            setGuidesOpen(true);
             return;
           }
           requestUnsavedAction(() => openPanelDestination(tab));
@@ -1900,17 +1903,6 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen flex flex-col bg-[#fafafa]">
       <Navbar mobileSearch={false} />
-      <QuickGuidesModal
-        open={guidesOpen}
-        onClose={() => setGuidesOpen(false)}
-        isProvider={isProvider}
-        onGo={(guide) => {
-          requestUnsavedAction(() => {
-            if (guide.targetMode) setMode(guide.targetMode);
-            setTab(guide.actionTab ?? "home");
-          });
-        }}
-      />
       {networkModal && (
         <FollowNetworkTab initialView={networkModal} onBack={() => setNetworkModal(null)} />
       )}
@@ -2108,7 +2100,7 @@ export default function DashboardPage() {
                 )}
                 <button
                   type="button"
-                  onClick={() => setGuidesOpen(true)}
+                  onClick={() => requestUnsavedAction(() => openPanelDestination("guides"))}
                   className="inline-flex h-9 items-center gap-1.5 rounded-full px-3 text-sm font-bold text-[#526277] transition hover:bg-[#f3f7fa] hover:text-[#0089bb]"
                 >
                   <FileText className="h-4 w-4" />
@@ -2203,8 +2195,9 @@ export default function DashboardPage() {
                           window.dispatchEvent(new Event("ccr:support-close-thread"));
                           return;
                         }
-                        if (externalReturnTo && (activeTab === "offers" || activeTab === "jobs" || externalReturnTo.startsWith("/mensajes"))) {
-                          router.push(externalReturnTo);
+                        const volverA = externalReturnTo ?? returnToRef.current;
+                        if (volverA && (activeTab === "offers" || activeTab === "jobs" || volverA.startsWith("/mensajes") || volverA === "/notificaciones")) {
+                          router.push(volverA);
                           return;
                         }
                         setTab("home");
@@ -2411,6 +2404,17 @@ export default function DashboardPage() {
                         {activeTab === "connections" && <ClientConnections />}
                         {activeTab === "network" && <FollowNetworkTab onBack={() => requestUnsavedAction(() => setTab("home"))} />}
                         {activeTab === "notifications" && <NotificationsList />}
+                        {activeTab === "guides" && (
+                          <GuidesBody
+                            isProvider={isProvider}
+                            onGo={(guide) => {
+                              requestUnsavedAction(() => {
+                                if (guide.targetMode) setMode(guide.targetMode);
+                                setTab(guide.actionTab ?? "home");
+                              });
+                            }}
+                          />
+                        )}
                         {activeTab === "soporte" && (
                           <SupportTickets
                             onUnreadChange={setSupportUnread}

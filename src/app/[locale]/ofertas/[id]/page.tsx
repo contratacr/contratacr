@@ -19,6 +19,7 @@ import { createClient } from "@/lib/supabase/server";
 import { recordServerInteraction } from "@/lib/analytics/server-events";
 import { repairVisibleText } from "@/lib/text/repair-visible-text";
 import { crTodayISO } from "@/lib/time-cr";
+import { RecordRecentVisit } from "@/components/mobile/record-recent-visit";
 import { marketplaceReturnLabel, safeMarketplaceReturnHref } from "@/lib/navigation/marketplace-return";
 
 export const dynamic = "force-dynamic";
@@ -110,6 +111,16 @@ export default async function OfferDetailPage({ params, searchParams }: { params
   return (
     <main className="min-h-[calc(100vh-72px)] bg-[#f4f7fa] text-[#162543]">
       <OfferDetailNavbarSearch title={offer.title} />
+      <RecordRecentVisit
+        surface="ofertas"
+        visita={{
+          id: String(offer.id),
+          titulo: offer.title,
+          subtitulo: offer.professional_name ?? undefined,
+          imagen: offer.image_urls?.[0],
+          href: `/ofertas/${offer.id}`,
+        }}
+      />
       <header className="sticky top-0 z-30 border-b border-[#dfe8f0] bg-white shadow-[0_8px_24px_rgba(15,23,42,0.06)] lg:hidden">
         <div className="relative flex min-h-[58px] items-center justify-center px-14">
           <Link href={backHref} aria-label={copy.back} className="absolute left-3 top-1/2 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-full text-[#162543] transition hover:bg-[#eef5f9]">

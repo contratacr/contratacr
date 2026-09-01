@@ -3,7 +3,7 @@
 import { startTransition, useCallback, useMemo, useState } from "react";
 import { useLocale } from "next-intl";
 import { useTranslations } from "next-intl";
-import { LandingNavbar } from "@/components/landing/landing-navbar";
+import { ContrataCRMark, HeaderMessagesLink, HeaderNotificationsLink, LandingNavbar } from "@/components/landing/landing-navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { CategorySuggestionBox } from "@/components/ui/category-suggestion";
 import { Link, useRouter } from "@/i18n/navigation";
@@ -144,25 +144,47 @@ export default function ServiciosPage() {
       <main className="flex-1 bg-white lg:bg-[#f7fafc]">
         <section data-services-mobile="" className="mx-auto w-full bg-white pb-[calc(2rem+env(safe-area-inset-bottom))] [.ccr-native-app_&]:pb-3 lg:hidden">
           <header className="sticky top-0 z-20 border-b border-[#d5d8dc] bg-white">
-            <div className="relative flex min-h-[56px] items-center justify-center px-14">
-              <button
-                type="button"
-                onClick={() => {
-                  if (mobileGroup) {
-                    setMobileGroupKey(null);
-                    return;
-                  }
-                  window.dispatchEvent(new Event("ccr:open-mobile-menu"));
-                }}
-                className="absolute left-3 top-1/2 grid h-11 w-11 -translate-y-1/2 place-items-center text-[#162543]"
-                aria-label={mobileGroup ? (locale === "en" ? "Back to categories" : "Volver a categorías") : (locale === "en" ? "Open menu" : "Abrir menú")}
-              >
-                {mobileGroup ? <ArrowLeft className="h-7 w-7 stroke-[2.2]" /> : <Menu className="h-5 w-5 stroke-[2.5]" />}
-              </button>
-              <h1 className="truncate text-center text-[21px] font-extrabold text-[#162543]">
-                {mobileGroup ? mobileGroup.label : servicesTitle}
-              </h1>
-            </div>
+            {mobileGroup ? (
+              <div className="relative flex min-h-[56px] items-center justify-center px-14">
+                <button
+                  type="button"
+                  onClick={() => setMobileGroupKey(null)}
+                  className="absolute left-3 top-1/2 grid h-11 w-11 -translate-y-1/2 place-items-center text-[#162543]"
+                  aria-label={locale === "en" ? "Back to categories" : "Volver a categorías"}
+                >
+                  <ArrowLeft className="h-7 w-7 stroke-[2.2]" />
+                </button>
+                <h1 className="truncate text-center text-[21px] font-extrabold text-[#162543]">
+                  {mobileGroup.label}
+                </h1>
+              </div>
+            ) : (
+              <div className="flex min-h-[56px] items-center gap-1 px-2">
+                <button
+                  type="button"
+                  onClick={() => window.dispatchEvent(new Event("ccr:open-mobile-menu"))}
+                  className="grid h-11 w-11 shrink-0 place-items-center rounded-xl text-[#162543] transition hover:bg-[#eef5f9]"
+                  aria-label={locale === "en" ? "Open menu" : "Abrir menú"}
+                >
+                  <Menu className="h-5 w-5" strokeWidth={2.5} />
+                </button>
+                <Link href="/" aria-label="ContrataCR inicio" className="-ml-1 shrink-0">
+                  <ContrataCRMark className="h-7 w-7" />
+                </Link>
+                <h1 className="min-w-0 truncate pl-1.5 text-[17px] font-extrabold text-[#162543]">{servicesTitle}</h1>
+                <div className="ml-auto flex shrink-0 items-center gap-0.5">
+                  <HeaderMessagesLink
+                    unreadCount={0}
+                    label={tp("messages")}
+                    href={`/login?redirect=${encodeURIComponent(`/${locale}/mensajes`)}`}
+                  />
+                  <HeaderNotificationsLink
+                    href={`/login?redirect=${encodeURIComponent(`/${locale}/notificaciones`)}`}
+                    label={tp("notifications")}
+                  />
+                </div>
+              </div>
+            )}
 
             <form onSubmit={submitSearch} data-testid="services-page-mobile-search" className="px-4 pb-4">
               <div className="flex h-12 w-full items-center gap-3 rounded-xl bg-white px-3 shadow-[0_4px_14px_rgba(15,23,42,0.08)] ring-1 ring-[#dfe5eb] transition focus-within:ring-2 focus-within:ring-[#009FD9]/25">

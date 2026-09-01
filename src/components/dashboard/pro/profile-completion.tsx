@@ -293,7 +293,7 @@ export function ProfileCompletion({
   }
 
   return (
-    <section className="w-full bg-white py-1">
+    <section className="w-full py-1">
       <div className="w-full">
         <button
           type="button"

@@ -80,7 +80,7 @@ export type SearchFilters = {
   insurerId?: string;
   insurerIds?: string[];
   /** Filter by a language the professional can attend in. */
-  languageId?: string;
+  languageIds?: string[];
   /** Filter by service price type without ranking incompatible prices. */
   priceType?: "visible" | "quote";
   priceUnit?: Extract<PricingType, "por_hora" | "por_consulta" | "por_proyecto">;
@@ -294,7 +294,7 @@ function normalizeSearchFilters(filters: SearchFilters): SearchFilters {
     query: filters.query?.trim() || undefined,
     verifiedOnly: filters.verifiedOnly || undefined,
     insurerIds: insurerIds.length > 0 ? insurerIds : undefined,
-    languageId: filters.languageId?.trim() || undefined,
+    languageIds: filters.languageIds?.filter(Boolean),
     priceType: filters.priceType || undefined,
     priceUnits: priceUnits.length > 0 ? priceUnits : undefined,
     modalities: modalities.length > 0 ? modalities : undefined,
@@ -349,7 +349,7 @@ async function searchProfessionalsUncached(
   filters: SearchFilters
 ): Promise<ProfessionalCardData[]> {
   const selectedInsurerIds = filters.insurerIds ?? [];
-  const selectedLanguageId = filters.languageId;
+  const selectedLanguageIds = filters.languageIds ?? [];
   const selectedPriceUnits = filters.priceUnits ?? [];
   const selectedModalities = filters.modalities ?? [];
   const videoOnly = selectedModalities.length === 1 && selectedModalities[0] === "video";
@@ -597,8 +597,10 @@ async function searchProfessionalsUncached(
         mapped = mapped.filter((p) => (p.professions ?? []).some((id) => requestedCategoryIds.has(id)));
       }
 
-      if (selectedLanguageId) {
-        const wanted = new Set(languageSearchValues(selectedLanguageId).map((value) => normalizeText(value)));
+      if (selectedLanguageIds.length > 0) {
+        const wanted = new Set(
+          selectedLanguageIds.flatMap((id) => languageSearchValues(id)).map((value) => normalizeText(value)),
+        );
         mapped = mapped.filter((p) => (p.languages ?? []).some((language) => wanted.has(normalizeText(language))));
       }
 

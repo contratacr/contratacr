@@ -135,7 +135,11 @@
     "modeSwitchAria": "Switch between client and professional mode",
     "receivedRequests": "Requests",
     "myProposals": "My proposals",
-    "back": "Back"
+    "back": "Back",
+    "projects": "Projects",
+    "recent": "Recent",
+    "recentClear": "Clear",
+    "recentlyViewed": "Recently viewed"
   },
   "home": {
     "accountDeletion": {
@@ -419,7 +423,8 @@
     "whatsappShort": "WhatsApp",
     "callShort": "Call",
     "call": "Contact us by phone",
-    "email": "Email"
+    "email": "Email",
+    "countryCoverage": "All of Costa Rica"
   },
   "selfAction": {
     "title": "This is your profile",
@@ -698,7 +703,8 @@
     "whatItMeans": "What does it mean?",
     "close": "Close",
     "backToMessages": "Back to messages",
-    "availabilityTab": "Availability"
+    "availabilityTab": "Availability",
+    "appBarTitle": "Professional profile"
   },
   "auth": {
     "login": {
@@ -722,7 +728,8 @@
       "redirecting": "Redirecting…",
       "continueGoogle": "Continue with Google",
       "emailChangedTitle": "Email updated",
-      "emailChangedLogin": "The change was confirmed. Sign in with your new email."
+      "emailChangedLogin": "The change was confirmed. Sign in with your new email.",
+      "back": "Back"
     },
     "register": {
       "title": "Create account",
@@ -1678,15 +1685,15 @@
           "cta": "Go to favorites"
         },
         "clientConnections": {
-          "title": "Connections",
+          "title": "Hire again",
           "short": "Professionals with history",
-          "body": "Connections shows professionals with confirmed or completed service history with you.",
+          "body": "Hire again gathers the professionals who already served you, so you can reach them without searching again.",
           "steps": [
             "Review professionals with history.",
             "Open their profile if you want to hire them again.",
             "Use the context to follow up with more confidence."
           ],
-          "cta": "Go to connections"
+          "cta": "Go to hire again"
         },
         "clientProfile": {
           "title": "Client profile",
@@ -1915,7 +1922,9 @@
           ],
           "cta": "Go to professional profile"
         }
-      }
+      },
+      "searchPlaceholder": "Search the guides",
+      "searchEmpty": "No guide matches that word."
     }
   },
   "bookingRequests": {
@@ -2168,10 +2177,6 @@
     "budgetTBD": "To be agreed",
     "charLimit": "You've reached the {max}-character limit.",
     "allServices": "All",
-    "stageAccepted": "Accepted",
-    "stageWaiting": "Waiting",
-    "stageCompleted": "Completed",
-    "stageCancelled": "Cancelled",
     "tabNew": "New",
     "tabMine": "My proposals",
     "moreOptions": "More options"
@@ -2858,7 +2863,12 @@
       "subject4": "Requests, projects, or proposals",
       "subject5": "Other"
     },
-    "updated": "Updated {date}"
+    "updated": "Updated {date}",
+    "headerMessages": "Messages",
+    "headerNotifications": "Notifications",
+    "newTicketShort": "Contact",
+    "reopenHint": "If it happens again, write here and the ticket reopens.",
+    "reopenPlaceholder": "Write to reopen the ticket…"
   },
   "savedPros": {
     "viewProfile": "View profile",
@@ -2885,25 +2895,27 @@
     "emptyNothingSaved": "You have not saved anything yet."
   },
   "clientConnections": {
-    "emptyTitle": "You don't have any connections yet",
-    "emptyDescription": "Professionals linked to a confirmed request or an accepted project will appear here.",
+    "emptyTitle": "No one to hire again yet",
+    "emptyDescription": "Professionals who already served you — confirmed request or accepted project — will appear here.",
     "searchProfessionals": "Find professionals",
     "searchPlaceholder": "Search by professional or service",
-    "count": "{count, plural, one {# connection} other {# connections}}",
+    "count": "{count, plural, one {# professional} other {# professionals}}",
     "verified": "Verified",
     "viewProfile": "View profile",
-    "noResults": "We couldn't find connections matching that text.",
+    "noResults": "No professionals match that text.",
     "source": {
       "booking": "Request",
       "project": "Project",
-      "both": "Request and project"
+      "both": "Request and project",
+      "contact": "Contact"
     },
     "status": {
       "completed": "Completed",
       "awaitingConfirmation": "Awaiting confirmation",
       "inProgress": "In progress",
       "confirmed": "Confirmed",
-      "connected": "Connected"
+      "connected": "Connected",
+      "contact": "Contacted"
     }
   },
   "registerChoice": {
@@ -3154,8 +3166,6 @@
     "cancel": "Cancel",
     "noneList": "You have no notifications.",
     "emptySub": "Updates about requests, jobs, offers, professionals you follow, or your account will appear here.",
-    "filterAll": "All",
-    "filterUnread": "Unread",
     "noUnread": "You have no unread notifications.",
     "publishedAt": "Published {time}",
     "types": {
@@ -3195,7 +3205,13 @@
       "followed_professional_activity": "New post",
       "direct_message": "New message"
     },
-    "viewAll": "View all"
+    "viewAll": "View all",
+    "todayGroup": "Today",
+    "earlierGroup": "Older",
+    "newGroup": "New",
+    "yesterdayGroup": "Yesterday",
+    "week7Group": "Last 7 days",
+    "month30Group": "Last 30 days"
   },
   "projects": {
     "title": "Create a project",
@@ -3393,7 +3409,9 @@
     "suggestSending": "Sending…",
     "cancel": "Cancel",
     "suggestThanks": "Thanks. We sent your suggestion to the team for review.",
-    "optionsCount": "{count, plural, one {# option} other {# options}}"
+    "optionsCount": "{count, plural, one {# option} other {# options}}",
+    "messages": "Messages",
+    "notifications": "Notifications"
   },
   "installGuide": {
     "eyebrow": "Quick access",
@@ -3706,11 +3724,14 @@
     "activas": "Active",
     "pendientes": "Pending",
     "confirmadas": "Confirmed",
-    "finalizadas": "Completed",
+    "finalizadas": "Finished",
     "canceladas": "Cancelled",
     "activos": "Active",
-    "finalizados": "Completed",
-    "cancelados": "Cancelled"
+    "finalizados": "Finished",
+    "cancelados": "Cancelled",
+    "en_curso": "In progress",
+    "enviadas": "Sent",
+    "publicados": "Published"
   },
   "soporte": {
     "headerTitle": "Support center",
@@ -3865,5 +3886,13 @@
     "cancel": "Cancel",
     "taken": "That time was just booked. Pick another time.",
     "error": "Couldn't reschedule. Please try again."
+  },
+  "sectionTitles": {
+    "messages": "Messages",
+    "notifications": "Notifications",
+    "support": "Support",
+    "help": "Help",
+    "myOffers": "My offers",
+    "myJobs": "My jobs"
   }
 }

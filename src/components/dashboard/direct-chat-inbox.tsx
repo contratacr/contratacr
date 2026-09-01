@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { createPortal } from "react-dom";
-import { Archive, ArchiveRestore, ArrowLeft, ChevronRight, Download, FileText, Flag, Loader2, MessageSquareMore, Paperclip, Search, SendHorizontal, Trash2, X } from "lucide-react";
+import { Archive, ArchiveRestore, ArrowLeft, CalendarClock, ChevronDown, ChevronRight, ClipboardList, Download, FileText, Flag, Handshake, Loader2, MessageSquareMore, Paperclip, Search, SendHorizontal, Trash2, X } from "lucide-react";
 import { useLocale } from "next-intl";
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "@/i18n/navigation";
@@ -33,6 +33,15 @@ type Conversation = {
   professional_has_app?: boolean;
   professional_whatsapp?: string | null;
   professionals?: { id?: string; slug?: string | null; business_name?: string | null; profiles?: Person | null } | null;
+  contexts?: Array<{
+    type: "booking" | "project" | "proposal" | "profile";
+    bookingId?: string | null;
+    projectId?: string | null;
+    proposalId?: string | null;
+    title?: string | null;
+    status?: string | null;
+    at?: string | null;
+  }>;
   context?: { type: "booking" | "project" | "proposal" | "profile"; title?: string | null; service_description?: string | null; status?: string | null; proposal_status?: string | null };
 };
 type DirectAttachment = { path?: string; name: string; type: string; size: number; url?: string | null };
@@ -80,33 +89,45 @@ function resizeMessageTextarea(textarea: HTMLTextAreaElement | null) {
 // A chat photo shows its exact frame with a soft tone and a centered loading
 // circle until the file paints — never a bare white box (signed Supabase URLs
 // have no blurred derivative to show, unlike Cloudinary sources).
+// Mientras la imagen viaja, el hueco ya tiene su tamaño: un rectángulo con
+// brillo que recorre, sin ruedita ni círculo oscuro. Al llegar, la caja toma la
+// proporción real de la foto con una transición corta —así no se recorta ni da
+// un salto— y la imagen aparece con un fundido.
 function ChatImage({ href, alt }: { href: string; alt: string }) {
-  const boxRef = useRef<HTMLSpanElement | null>(null);
-  const [loaded, setLoaded] = useState(false);
+  const [proporcion, setProporcion] = useState<number | null>(null);
+  const [cargada, setCargada] = useState(false);
+
   useEffect(() => {
-    const box = boxRef.current;
-    if (!box) return;
-    const check = () => {
-      const img = box.querySelector("img");
-      if (img && img.complete && img.naturalWidth > 0) setLoaded(true);
-    };
-    check();
-    const onLoad = () => setLoaded(true);
-    box.addEventListener("load", onLoad, true);
-    box.addEventListener("error", onLoad, true);
-    return () => {
-      box.removeEventListener("load", onLoad, true);
-      box.removeEventListener("error", onLoad, true);
-    };
+    setProporcion(null);
+    setCargada(false);
   }, [href]);
+
+  const registrar = (img: HTMLImageElement | null) => {
+    if (!img || !img.naturalWidth || !img.naturalHeight) return;
+    // Entre panorámica y vertical: una foto muy alta ocuparía todo el hilo.
+    const cruda = img.naturalWidth / img.naturalHeight;
+    setProporcion(Math.min(Math.max(cruda, 0.75), 1.9));
+    setCargada(true);
+  };
+
   return (
-    <span ref={boxRef} className="relative block aspect-[4/3] w-full">
-      <ProgressiveImage src={href} alt={alt} fit="cover" wrapperClassName="block h-full w-full" className="h-full w-full" />
-      {!loaded && (
-        <span className="absolute inset-0 grid place-items-center bg-[#e5edf3]">
-          <span className="grid h-10 w-10 place-items-center rounded-full bg-black/30"><Loader2 className="h-5 w-5 animate-spin text-white" /></span>
-        </span>
-      )}
+    <span
+      className="relative block w-full overflow-hidden"
+      style={{
+        aspectRatio: proporcion ?? 4 / 3,
+        transition: "aspect-ratio 220ms ease-out",
+      }}
+    >
+      <ProgressiveImage
+        src={href}
+        alt={alt}
+        fit="cover"
+        wrapperClassName="block h-full w-full"
+        className="h-full w-full"
+        onLoad={(event) => registrar(event.currentTarget)}
+        onError={() => setCargada(true)}
+      />
+      {!cargada && <span className="ccr-image-skeleton absolute inset-0" aria-hidden />}
     </span>
   );
 }
@@ -299,6 +320,30 @@ export function DirectChatInbox() {
   );
   const active = useMemo(() => displayedConversations.find((item) => item.id === activeId) ?? null, [activeId, displayedConversations]);
 
+  const [origenesAbiertos, setOrigenesAbiertos] = useState(false);
+  useEffect(() => { setOrigenesAbiertos(false); }, [activeId]);
+  const origenesFijados = useMemo(() => {
+    const lista = (active?.contexts ?? []).filter((origen) => origen.type !== "profile" && origen.title);
+    if (lista.length > 0) return lista;
+    // Conversaciones anteriores a la fusión: su único origen viene en `context`.
+    if (active?.context && active.context.type !== "profile") {
+      const titulo = active.context.service_description || active.context.title || null;
+      if (titulo) {
+        return [{
+          type: active.context.type,
+          bookingId: active.booking_id ?? null,
+          projectId: active.project_id ?? null,
+          proposalId: active.proposal_id ?? null,
+          title: titulo,
+          status: active.context.status ?? null,
+          at: null,
+        }];
+      }
+    }
+    return [];
+  }, [active]);
+
+
   useEffect(() => {
     const next = buildPendingDraft(searchParams, user?.id, isEn);
     if (!next.conversation) return;
@@ -386,6 +431,27 @@ export function DirectChatInbox() {
     } finally { if (!quiet) setLoading(false); }
   }, [isEn, pendingDraft, pendingDraftPayload, router, showArchived]);
 
+  // Al recargar el hilo, cada mensaje volvía como un objeto nuevo aunque fuera
+  // el mismo: React rehacía todas las burbujas y las imágenes se volvían a
+  // pedir, y eso se veía como un parpadeo al enviar. Los mensajes que no
+  // cambiaron conservan su objeto, así el navegador no vuelve a pintarlos.
+  const conservarMensajes = useCallback((previos: DirectMessage[], nuevos: DirectMessage[]) => {
+    const porId = new Map(previos.map((mensaje) => [mensaje.id, mensaje]));
+    let iguales = previos.length === nuevos.length;
+    const fusionados = nuevos.map((nuevo, indice) => {
+      const anterior = porId.get(nuevo.id);
+      if (!anterior) { iguales = false; return nuevo; }
+      const mismo =
+        anterior.body === nuevo.body &&
+        anterior.created_at === nuevo.created_at &&
+        (anterior.attachment_urls?.length ?? 0) === (nuevo.attachment_urls?.length ?? 0);
+      if (!mismo) { iguales = false; return nuevo; }
+      if (previos[indice]?.id !== nuevo.id) iguales = false;
+      return anterior;
+    });
+    return iguales ? previos : fusionados;
+  }, []);
+
   const loadThread = useCallback(async (id: string, quiet = false) => {
     if (id === DRAFT_CONVERSATION_ID) {
       setMessages([]);
@@ -416,12 +482,12 @@ export function DirectChatInbox() {
         }) };
       }) : rows;
       if (threadKey) setDashboardCache(threadKey, { rows: merged, signedAt: warmFresh && warmEntry && !Array.isArray(warmEntry) ? warmEntry.signedAt : Date.now() });
-      setMessages(merged);
+      setMessages((previos) => conservarMensajes(previos, merged));
       setConversations((prev) => prev.map((item) => item.id === id ? { ...item, client_unread_count: 0, professional_unread_count: 0 } : item));
     } catch (err) {
       setError(err instanceof Error ? err.message : isEn ? "Could not load the conversation." : "No se pudo cargar la conversación.");
     } finally { if (!quiet) setThreadLoading(false); }
-  }, [isEn, userId]);
+  }, [conservarMensajes, isEn, userId]);
 
   useEffect(() => {
     if (authLoading) return;
@@ -525,7 +591,7 @@ export function DirectChatInbox() {
       .on("postgres_changes", { event: "*", schema: "public", table: "direct_conversations" }, () => void loadConversations(true))
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "direct_messages" }, (payload) => {
         const row = payload.new as DirectMessage & { conversation_id?: string };
-        if (row.conversation_id === activeId) void loadThread(activeId, true);
+        if (row.conversation_id === activeId && row.sender_id !== user.id) void loadThread(activeId, true);
         void loadConversations(true);
       }).subscribe();
     return () => { void supabase.removeChannel(channel); };
@@ -741,6 +807,9 @@ export function DirectChatInbox() {
         setActiveId(json.conversationId);
         router.replace(`/mensajes?conversation=${json.conversationId}`, { scroll: false });
         await Promise.all([loadThread(json.conversationId, true), loadConversations(true)]);
+      } else if (json.message) {
+        setMessages((current) => current.map((mensaje) => (mensaje.id === optimisticId ? (json.message as DirectMessage) : mensaje)));
+        void loadConversations(true);
       } else {
         await Promise.all([loadThread(activeId, true), loadConversations(true)]);
       }
@@ -805,6 +874,27 @@ export function DirectChatInbox() {
   const activePerson = active ? personFor(active) : null;
   const activeContext = active ? contextFor(active) : null;
   const detailHref = active ? contextHref(active) : null;
+
+  // ── Orígenes fijados del hilo ──────────────────────────────────────────────
+  const etiquetaDeOrigen = (tipo: string) =>
+    contextFor({ ...(active ?? ({} as Conversation)), context: { type: tipo as "booking" } }).label;
+  const hrefDeOrigen = (origen: { bookingId?: string | null; projectId?: string | null }) => {
+    const soyCliente = user?.id === active?.client_id;
+    if (origen.bookingId) return `/dashboard/profesional?tab=${soyCliente ? "sent_bookings" : "bookings"}&booking=${origen.bookingId}`;
+    if (origen.projectId) return `/dashboard/profesional?tab=${soyCliente ? "sent_projects" : "proposals"}&project=${origen.projectId}`;
+    return null;
+  };
+  const abrirOrigen = (origen: { bookingId?: string | null; projectId?: string | null }) => {
+    const href = hrefDeOrigen(origen);
+    if (!href) return;
+    const chatPath = activeId ? `/mensajes?conversation=${encodeURIComponent(activeId)}` : "/mensajes";
+    router.push(`${href}&returnTo=${encodeURIComponent(chatPath)}`);
+  };
+  function IconoDeOrigen({ tipo }: { tipo: string }) {
+    if (tipo === "booking") return <CalendarClock className="h-4 w-4 shrink-0 text-[#8b9bb0]" />;
+    if (tipo === "proposal") return <Handshake className="h-4 w-4 shrink-0 text-[#8b9bb0]" />;
+    return <ClipboardList className="h-4 w-4 shrink-0 text-[#8b9bb0]" />;
+  }
   const archiveLabel = showArchived ? (isEn ? "Unarchive" : "Desarchivar") : (isEn ? "Archive" : "Archivar");
   const deleteLabel = isEn ? "Delete" : "Eliminar";
   const activePersonName = activePerson?.name || "";
@@ -839,10 +929,10 @@ export function DirectChatInbox() {
       "direct-chat-shell grid h-[calc(100dvh-153px)] min-h-[360px] grid-cols-[minmax(0,1fr)] overflow-hidden bg-white lg:h-[min(760px,calc(100dvh-220px))] lg:min-h-[500px] lg:grid-cols-[320px_minmax(0,1fr)] xl:grid-cols-[340px_minmax(0,1fr)]",
       mobileThread && "direct-chat-shell--thread",
     )}>
-      <aside className={cn("flex min-h-0 flex-col border-r border-[#e3ebf1] bg-[#f8fbfd]", mobileThread && "hidden lg:block")}>
-        <div className="shrink-0 border-b border-[#e3ebf1] p-4">
+      <aside className={cn("flex min-h-0 flex-col border-r border-[#e3ebf1] bg-white", mobileThread && "hidden lg:block")}>
+        <div className={cn("shrink-0 border-b border-[#e3ebf1] p-4", nativeApp && "px-4 pb-3 pt-2")}>
           <div className="flex items-center justify-between gap-3">
-            <h2 className="text-lg font-extrabold text-[#162543]">{showArchived ? (isEn ? "Archived" : "Archivados") : (isEn ? "Messages" : "Mensajes")}</h2>
+            <h2 className={cn("text-lg font-extrabold text-[#162543]", nativeApp && !showArchived && "sr-only")}>{showArchived ? (isEn ? "Archived" : "Archivados") : (isEn ? "Messages" : "Mensajes")}</h2>
             {showArchived && (
               <button type="button" onClick={() => updateArchiveView(false)} className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-extrabold text-[#008fc4] transition hover:bg-[#eef9fd]">
                 <ArrowLeft className="h-3.5 w-3.5" />
@@ -863,9 +953,9 @@ export function DirectChatInbox() {
             </button>
           )}
           {filtered.map((item) => { const person = personFor(item); const unread = user?.id === item.client_id ? item.client_unread_count : item.professional_unread_count; return (
-            <button key={item.id} type="button" onClick={() => selectConversation(item.id)} className={cn("flex w-full gap-3 border-b border-[#e7eef3] p-4 text-left transition hover:bg-white", item.id === activeId && "lg:bg-white lg:shadow-[inset_3px_0_0_#009FD9]")}>
+            <button key={item.id} type="button" onClick={() => selectConversation(item.id)} className={cn("flex w-full gap-3 border-b border-[#eef3f7] bg-white p-4 text-left transition last:border-b-0 hover:bg-[#f7fafc]", item.id === activeId && "lg:bg-[#f2f9fd] lg:shadow-[inset_3px_0_0_#009FD9]")}>
               <Avatar className="h-11 w-11"><AvatarImage src={person.avatar ?? undefined} /><AvatarFallback className="bg-[#e8f8ff] font-bold text-[#009FD9]">{getInitials(person.name)}</AvatarFallback></Avatar>
-              <span className="min-w-0 flex-1"><span className="flex items-center gap-2"><strong className="min-w-0 flex-1 truncate text-sm text-[#162543]">{person.name}</strong><time className="shrink-0 text-[11px] text-[#8492a5]">{timeLabel(item.last_message_at, locale)}</time></span><span className="mt-1 flex items-center gap-2"><span className={cn("min-w-0 flex-1 truncate text-xs", storedDrafts[item.id] ? "italic text-[#8a94a6]" : "text-[#6b7a90]")}>{storedDrafts[item.id] ? `${isEn ? "Draft" : "Borrador"}: ${storedDrafts[item.id]}` : item.last_message || (isEn ? "Conversation started" : "Conversación iniciada")}</span>{!!unread && <span className="grid h-5 min-w-5 place-items-center rounded-full bg-[#009FD9] px-1 text-[10px] font-bold text-white">{unread}</span>}</span></span>
+              <span className="min-w-0 flex-1"><span className="flex items-center gap-2"><strong className="min-w-0 flex-1 truncate text-sm text-[#162543]">{person.name}</strong><time className="shrink-0 text-[11px] text-[#8492a5]">{timeLabel(item.last_message_at, locale)}</time></span>{contextFor(item).type !== "profile" && (<span className="mt-0.5 block truncate text-[11px] font-semibold text-[#8b9bb0]">{contextSummaryFor(item)}</span>)}<span className="mt-1 flex items-center gap-2"><span className={cn("min-w-0 flex-1 truncate text-xs", storedDrafts[item.id] ? "italic text-[#8a94a6]" : "text-[#6b7a90]")}>{storedDrafts[item.id] ? `${isEn ? "Draft" : "Borrador"}: ${storedDrafts[item.id]}` : item.last_message || (isEn ? "Conversation started" : "Conversación iniciada")}</span>{!!unread && <span className="grid h-5 min-w-5 place-items-center rounded-full bg-[#009FD9] px-1 text-[10px] font-bold text-white">{unread}</span>}</span></span>
             </button>); })}
           {!filtered.length && <p className="p-6 text-center text-sm text-[#6b7a90]">{isEn ? "No matching conversations." : "No hay conversaciones que coincidan."}</p>}
         </div>
@@ -896,23 +986,57 @@ export function DirectChatInbox() {
             </ChatActionButton>
           )}
         </header>
+        {/* Orígenes del hilo: la conversación es de la persona y cada solicitud,
+            proyecto o propuesta se va anclando aquí. Se muestra el más reciente
+            y, si hay más, se despliegan hasta cuatro como en los fijados de
+            WhatsApp. */}
+        {!threadLoading && origenesFijados.length > 0 && (
+          <div className="border-b border-[#e6eef4] bg-white">
+            <div className="flex items-center">
+              <button
+                type="button"
+                onClick={() => abrirOrigen(origenesFijados[0])}
+                disabled={!hrefDeOrigen(origenesFijados[0])}
+                className="flex min-w-0 flex-1 items-center gap-2.5 px-4 py-2 text-left transition active:bg-[#f4f9fc] disabled:opacity-70 sm:px-6"
+              >
+                <IconoDeOrigen tipo={origenesFijados[0].type} />
+                <span className="min-w-0 flex-1 truncate text-[13px] leading-snug">
+                  <span className="font-semibold text-[#8b9bb0]">{etiquetaDeOrigen(origenesFijados[0].type)} · </span>
+                  <span className="font-bold text-[#162543]">{origenesFijados[0].title}</span>
+                </span>
+                {hrefDeOrigen(origenesFijados[0]) && <ChevronRight className="h-4 w-4 shrink-0 text-[#8b9bb0]" />}
+              </button>
+              {origenesFijados.length > 1 && (
+                <button
+                  type="button"
+                  onClick={() => setOrigenesAbiertos((abierto) => !abierto)}
+                  aria-expanded={origenesAbiertos}
+                  className="mr-2 inline-flex h-7 shrink-0 items-center gap-1 rounded-full bg-[#eef4f9] px-2.5 text-[12px] font-extrabold text-[#526277] sm:mr-4"
+                >
+                  +{origenesFijados.length - 1}
+                  <ChevronDown className={cn("h-3.5 w-3.5 transition-transform", origenesAbiertos && "rotate-180")} />
+                </button>
+              )}
+            </div>
+            {origenesAbiertos && origenesFijados.slice(1, 4).map((origen, indice) => (
+              <button
+                key={`${origen.type}-${origen.bookingId ?? origen.projectId ?? origen.proposalId ?? indice}`}
+                type="button"
+                onClick={() => abrirOrigen(origen)}
+                disabled={!hrefDeOrigen(origen)}
+                className="flex w-full items-center gap-2.5 border-t border-[#f1f5f9] px-4 py-2 text-left transition active:bg-[#f4f9fc] disabled:opacity-70 sm:px-6"
+              >
+                <IconoDeOrigen tipo={origen.type} />
+                <span className="min-w-0 flex-1 truncate text-[13px] leading-snug">
+                  <span className="font-semibold text-[#8b9bb0]">{etiquetaDeOrigen(origen.type)} · </span>
+                  <span className="font-bold text-[#162543]">{origen.title}</span>
+                </span>
+                {hrefDeOrigen(origen) && <ChevronRight className="h-4 w-4 shrink-0 text-[#8b9bb0]" />}
+              </button>
+            ))}
+          </div>
+        )}
         <div ref={scrollRef} className="ccr-direct-chat-thread-scroll min-h-0 flex-1 space-y-2 overflow-y-auto overscroll-contain bg-[#f3f7fa] px-4 py-5 sm:px-6">
-          {!threadLoading && headerContextLine && activeContext?.type !== "profile" && (
-            <button
-              type="button"
-              onClick={() => {
-                if (!detailHref) return;
-                const chatPath = activeId ? `/mensajes?conversation=${encodeURIComponent(activeId)}` : "/mensajes";
-                router.push(`${detailHref}&returnTo=${encodeURIComponent(chatPath)}`);
-              }}
-              disabled={!detailHref}
-              className="mx-auto flex max-w-full items-center gap-2 rounded-full border border-[#cfe8f4] bg-[#eaf7fd] px-3.5 py-1.5 text-xs font-bold text-[#00789f] transition enabled:hover:bg-[#ddf1fb]"
-            >
-              <FileText className="h-3.5 w-3.5 shrink-0" />
-              <span className="min-w-0 truncate">{headerContextLine}</span>
-              {detailHref && <ChevronRight className="h-3.5 w-3.5 shrink-0" />}
-            </button>
-          )}
           {threadLoading ? <div className="ccr-delayed-loading grid h-full place-items-center"><Loader2 className="h-6 w-6 animate-spin text-[#009FD9]" /></div> : messages.map((message) => {
             const mine = message.sender_id === user?.id;
             const uploading = message.id.startsWith("pending-");
@@ -947,7 +1071,7 @@ export function DirectChatInbox() {
                             onClick={() => href && setImagePreview(attachment)}
                             disabled={!href}
                             className={cn(
-                              "group relative min-h-36 overflow-hidden rounded-xl border text-left transition",
+                              "group relative overflow-hidden rounded-xl border text-left transition",
                               mine ? "border-white/30 bg-white/10 hover:bg-white/15" : "border-[#dce8f0] bg-[#f7fbfd] hover:border-[#b9d8e8]",
                             )}
                             aria-label={isEn ? `Open ${attachment.name}` : `Abrir ${attachment.name}`}

@@ -154,7 +154,7 @@ test.describe("@mobile native shell contracts", () => {
 
   test("signed-out public pages reserve the compact native header and keep the offer-services icon", async ({ page }) => {
     await resetAuth(page);
-    await gotoOK(page, "/es/login");
+    await gotoOK(page, "/es/ofertas");
 
     const header = page.locator("header.ccr-app-header");
     const main = page.locator("main");

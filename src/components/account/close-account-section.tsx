@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, EyeOff } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { clearAccountLocalCache } from "@/lib/account-cache";
 import { prepareForAccountSignOut } from "@/lib/auth/sign-out";
@@ -103,9 +103,9 @@ export function CloseAccountSection({ initialDisabled = false }: { initialDisabl
 
   if (disabled) {
     return (
-      <div className="rounded-xl border border-[#fde68a] bg-[#fffbeb] p-4">
-        <p className="text-sm font-semibold text-[#92400e]">{t("disabledTitle")}</p>
-        <p className="text-xs text-[#92400e] mt-0.5">{t("disabledBody")}</p>
+      <div className="rounded-2xl border border-[#bfdbfe] bg-[#f8fbfe] p-4">
+        <p className="text-sm font-semibold text-[#162543]">{t("disabledTitle")}</p>
+        <p className="mt-0.5 text-xs leading-relaxed text-[#4b6270]">{t("disabledBody")}</p>
         {error && <p className="mt-2 text-xs text-red-600">{error}</p>}
         <button onClick={reactivate} disabled={busy} className="mt-3 rounded-lg bg-[#009FD9] text-white text-sm font-semibold px-4 py-2 hover:bg-[#0089bb] disabled:opacity-60">
           {busy ? t("reactivating") : t("reactivate")}
@@ -116,14 +116,14 @@ export function CloseAccountSection({ initialDisabled = false }: { initialDisabl
 
   return (
     <div className="space-y-3">
-      <div className="rounded-xl border border-[#fde68a] bg-[#fffbeb] p-4">
-        <div className="flex items-start gap-2">
-          <AlertTriangle className="h-4 w-4 text-[#b45309] shrink-0 mt-0.5" />
+      <div className="rounded-2xl border border-[#e5e7eb] bg-white p-4">
+        <div className="flex items-start gap-3">
+          <EyeOff className="mt-0.5 h-4 w-4 shrink-0 text-[#6b7280]" />
           <div className="flex-1">
-            <p className="text-sm font-semibold text-[#92400e]">{t("disableTitle")}</p>
-            <p className="text-xs text-[#92400e] mt-0.5">{t("disableBody")}</p>
+            <p className="text-sm font-semibold text-[#111827]">{t("disableTitle")}</p>
+            <p className="mt-0.5 text-xs leading-relaxed text-[#6b7280]">{t("disableBody")}</p>
           {!open ? (
-            <button onClick={() => setOpen(true)} className="mt-3 rounded-lg border border-[#b45309] text-[#92400e] text-sm font-semibold px-4 py-2 hover:bg-amber-50">
+            <button onClick={() => setOpen(true)} className="mt-3 rounded-lg border border-[#d8e2ea] px-4 py-2 text-sm font-semibold text-[#374151] hover:bg-[#f8fafc]">
               {t("disableCta")}
             </button>
           ) : (
@@ -138,7 +138,7 @@ export function CloseAccountSection({ initialDisabled = false }: { initialDisabl
               />
               {error && <p className="text-xs text-red-600">{error}</p>}
               <div className="flex gap-2">
-                <button onClick={disableAccount} disabled={busy} className="rounded-lg bg-[#b91c1c] text-white text-sm font-semibold px-4 py-2 hover:bg-[#991b1b] disabled:opacity-60">
+                <button onClick={disableAccount} disabled={busy} className="rounded-lg bg-[#009FD9] px-4 py-2 text-sm font-semibold text-white hover:bg-[#0089bb] disabled:opacity-60">
                   {busy ? t("disabling") : t("confirmDisable")}
                 </button>
                 <button onClick={() => { setOpen(false); setError(null); }} className="rounded-lg text-sm text-[#6b7280] px-3 py-2 hover:text-[#374151]">{t("cancel")}</button>
@@ -149,12 +149,12 @@ export function CloseAccountSection({ initialDisabled = false }: { initialDisabl
         </div>
       </div>
 
-      <div className="rounded-xl border border-[#fecaca] bg-[#fef2f2] p-4">
-        <div className="flex items-start gap-2">
-          <AlertTriangle className="h-4 w-4 text-[#b91c1c] shrink-0 mt-0.5" />
+      <div className="rounded-2xl border border-[#f3d3d3] bg-white p-4">
+        <div className="flex items-start gap-3">
+          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-[#b91c1c]" />
           <div className="flex-1">
             <p className="text-sm font-semibold text-[#b91c1c]">{t("deleteTitle")}</p>
-            <p className="text-xs text-[#7f1d1d] mt-0.5">{t("deleteBody")}</p>
+            <p className="mt-0.5 text-xs leading-relaxed text-[#6b7280]">{t("deleteBody")}</p>
             {!deleteOpen ? (
               <button onClick={() => setDeleteOpen(true)} className="mt-3 rounded-lg border border-[#b91c1c] text-[#b91c1c] text-sm font-semibold px-4 py-2 hover:bg-red-50">
                 {t("deleteCta")}

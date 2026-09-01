@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { useNativeApp } from "@/hooks/use-native-app";
 import { ArrowLeft, BriefcaseBusiness, CalendarDays, ChevronDown, ExternalLink, FileText, Mail, MoreVertical, Phone, Plus, UserRound, Users } from "lucide-react";
 import { buildWebsiteUrl } from "@/lib/social";
 import { Link, useRouter } from "@/i18n/navigation";
@@ -54,14 +55,17 @@ function applicantInitials(name: string) {
   return name.split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]).join("").toUpperCase();
 }
 
+// UN color por significado, no un color por estado: azul de marca = está vivo
+// ahora; gris = pasó o está en pausa; rojo = SOLO lo que salió mal (cancelado,
+// no seleccionado). Un empleo cerrado suele ser el final feliz — pintarlo de
+// rojo lo hacía leer como error, y con todo de colores el color deja de decir.
 function statusClass(status: JobPost["status"]) {
-  if (status === "published") return "bg-[#e8f8f3] text-[#08775c]";
-  if (status === "closed") return "bg-[#fff1f2] text-[#be123c]";
-  if (status === "paused") return "bg-[#fff7ed] text-[#c2410c]";
+  if (status === "published") return "bg-[#EBF5FB] text-[#0089bb]";
   return "bg-[#eef2f6] text-[#60708a]";
 }
 
 export function JobsManager({ initialJobs, embedded = false, backHref = "/dashboard/profesional?mode=offer&tab=jobs", professionalId, onRefresh }: { initialJobs: ManagedJob[]; embedded?: boolean; backHref?: string; professionalId?: string; onRefresh?: () => void }) {
+  const nativeApp = useNativeApp();
   const locale = marketplaceLocale(useLocale());
   const copy = JOBS_MANAGER_COPY[locale];
   const router = useRouter();
@@ -137,7 +141,7 @@ export function JobsManager({ initialJobs, embedded = false, backHref = "/dashbo
       <div className={embedded ? "w-full" : "mx-auto max-w-4xl"}>
         <div className="mb-5 flex items-center justify-between gap-4">
           <div className="min-w-0">
-            {!embedded && (
+            {!embedded && !nativeApp && (
               <div className="mb-1.5 flex items-center gap-2">
                 <Link href={backHref} aria-label={copy.back} className="grid h-9 w-9 shrink-0 place-items-center rounded-lg text-[#162543] hover:bg-white">
                   <ArrowLeft className="h-5 w-5" />
@@ -149,7 +153,7 @@ export function JobsManager({ initialJobs, embedded = false, backHref = "/dashbo
           </div>
           <>
             <button type="button" onClick={() => setPublishOpen(true)} className="hidden h-10 shrink-0 items-center gap-2 rounded-lg bg-[#009fd9] px-4 text-sm font-bold text-white lg:inline-flex"><Plus className="h-4 w-4" />{copy.publish}</button>
-            <Link href="/empleos/publicar?from=panel" className="inline-flex h-10 shrink-0 items-center gap-2 rounded-lg bg-[#009fd9] px-4 text-sm font-bold text-white lg:hidden"><Plus className="h-4 w-4" />{copy.publish}</Link>
+            <Link href="/empleos/publicar?from=panel" className="inline-flex h-10 shrink-0 items-center gap-2 rounded-lg bg-[#009fd9] px-4 text-sm font-bold text-white transition-colors hover:bg-[#0089bb] lg:hidden"><Plus className="h-4 w-4" />{copy.publish}</Link>
           </>
         </div>
         <div className="space-y-3.5">

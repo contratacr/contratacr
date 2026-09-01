@@ -7,6 +7,9 @@ import { cldLarge } from "@/lib/cloudinary";
 import { ScrollRail } from "@/components/ui/scroll-rail";
 import { useRouter, useSearchParams } from "next/navigation";
 import { CalendarDays, Mail, MapPin, Menu, Phone, Store } from "lucide-react";
+import { ContrataCRMark, HeaderMessagesLink, HeaderNotificationsLink } from "@/components/landing/landing-navbar";
+import { NotificationBell } from "@/components/notifications/notification-bell";
+import { useDirectMessageUnread } from "@/hooks/use-direct-message-unread";
 import { Link } from "@/i18n/navigation";
 import { DirectChatLauncher } from "@/components/professionals/direct-chat-launcher";
 import { trackInteraction } from "@/lib/analytics/interaction-events";
@@ -63,6 +66,8 @@ const OFFERS_COPY = {
     offers: "Ofertas",
     promotions: "Promociones de profesionales",
     openMenu: "Abrir menú",
+    messages: "Mensajes",
+    notifications: "Notificaciones",
     offer: "oferta",
     offerPlural: "ofertas",
     country: "Costa Rica",
@@ -103,6 +108,8 @@ const OFFERS_COPY = {
     offers: "Offers",
     promotions: "Promotions from professionals",
     openMenu: "Open menu",
+    messages: "Messages",
+    notifications: "Notifications",
     offer: "offer",
     offerPlural: "offers",
     country: "Costa Rica",
@@ -137,6 +144,7 @@ export function OffersBoard({
 }: Props) {
   const locale = marketplaceLocale(useLocale());
   const copy = OFFERS_COPY[locale];
+  const mensajesSinLeer = useDirectMessageUnread();
   const nativeApp = useNativeApp();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -159,6 +167,9 @@ export function OffersBoard({
   const deferredQuery = useDeferredValue(query);
   const deferredServiceQuery = useDeferredValue(serviceQuery);
   const [now, setNow] = useState(0);
+
+  // Sin sesión, los avisos llevan a la pantalla de acceso y de ahí a su destino.
+  const accesoHref = (destino: string) => `/login?redirect=${encodeURIComponent(`/${locale}${destino}`)}`;
 
   useEffect(() => {
     if (!nativeApp) return;
@@ -295,6 +306,7 @@ export function OffersBoard({
       placeholder={copy.searchPlaceholder}
       suggestions={suggestions}
       recentStorageKey="ccr-offer-search-recents"
+      visitSurface="ofertas"
       secondary={{
         value: serviceQuery,
         onChange: setServiceQuery,
@@ -375,20 +387,34 @@ export function OffersBoard({
     <main className="min-h-[calc(100vh-72px)] overflow-x-clip bg-white pb-16 text-[#162543] lg:bg-[#f4f7fa]">
       <section className="ccr-marketplace-sticky sticky top-0 z-20 border-b border-[#d5d8dc] bg-white lg:hidden">
         <div className="px-0">
-          <div className="relative flex min-h-[56px] items-center justify-center px-14">
+          <div className="flex min-h-[56px] items-center gap-1 px-2">
             <button
               type="button"
               onClick={() =>
                 window.dispatchEvent(new Event("ccr:open-mobile-menu"))
               }
               aria-label={copy.openMenu}
-              className="absolute left-3 top-1/2 grid h-11 w-11 -translate-y-1/2 place-items-center text-[#162543] transition hover:bg-[#eef5f9]"
+              className="grid h-11 w-11 shrink-0 place-items-center rounded-xl text-[#162543] transition hover:bg-[#eef5f9]"
             >
               <Menu className="h-5 w-5" strokeWidth={2.5} />
             </button>
-            <h1 className="truncate text-center text-[21px] font-extrabold text-[#162543]">
-              {copy.offers}
-            </h1>
+            <Link href="/" aria-label="ContrataCR inicio" className="-ml-1 shrink-0">
+              <ContrataCRMark className="h-7 w-7" />
+            </Link>
+            <h1 className="min-w-0 truncate pl-1.5 text-[17px] font-extrabold text-[#162543]">{copy.offers}</h1>
+            <div className="ml-auto flex shrink-0 items-center gap-0.5">
+              {currentUserId ? (
+                <>
+                  <HeaderMessagesLink unreadCount={mensajesSinLeer} label={copy.messages} />
+                  <NotificationBell scope="all" />
+                </>
+              ) : (
+                <>
+                  <HeaderMessagesLink unreadCount={0} label={copy.messages} href={accesoHref("/mensajes")} />
+                  <HeaderNotificationsLink href={accesoHref("/notificaciones")} label={copy.notifications} />
+                </>
+              )}
+            </div>
           </div>
           <div className="px-4 pb-3">{renderSearch()}</div>
           <ScrollRail className="ccr-chip-row flex gap-1.5 px-4 pb-4">

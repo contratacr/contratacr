@@ -1,11 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { usePathname } from "next/navigation";
 import { useRouter } from "@/i18n/navigation";
 import { useAuth } from "@/hooks/use-auth";
 import { useNativeApp } from "@/hooks/use-native-app";
+import { WelcomeAccessScreen, type WelcomeRole } from "@/components/mobile/welcome-access-screen";
 import {
   NATIVE_ONBOARDING_AUTH_SESSION_KEY,
   NATIVE_ONBOARDING_COMPLETED_EVENT,
@@ -16,12 +17,11 @@ import {
 
 // Bump this key whenever the first-run journey changes materially so an
 // existing native installation gets one clean chance to see the new flow.
-type Role = "client" | "professional";
+type Role = WelcomeRole;
 
-const ROLE_IMAGES: Record<Role, string> = {
-  client: "/mobile/contratacr-welcome-client-v1.webp",
-  professional: "/mobile/contratacr-welcome-professional-v1.webp",
-};
+// Cambiar de idioma navega a la otra ruta y desmonta la pantalla: se recuerda
+// que estaba abierta para volver a mostrarla al llegar.
+const ACCESO_ABIERTO_KEY = "ccr:acceso-abierto:v1";
 
 function routeWithoutLocale(pathname: string | null) {
   return (pathname ?? "/").replace(/^\/(?:es|en)(?=\/|$)/, "") || "/";
@@ -32,6 +32,10 @@ function readPendingPath(): NativeOnboardingPendingPath | null {
   return value === "/login" || value === "/registro/cliente" || value === "/registro/profesional"
     ? value
     : null;
+}
+
+function esRutaDeAcceso(path: string) {
+  return path === "/login" || path === "/registro";
 }
 
 function isPendingJourneyPath(path: string): path is NativeOnboardingPendingPath {
@@ -64,13 +68,57 @@ export function NativeFirstRunOnboarding() {
   const [visible, setVisible] = useState(false);
   const [selectedRole, setSelectedRole] = useState<Role>("client");
   const [heroReady, setHeroReady] = useState(false);
+  // Abierta fuera del primer arranque: desde "Ingresar" del menú ("menu") o
+  // porque la app llegó a una ruta de acceso ("ruta").
+  const [origenAcceso, setOrigenAcceso] = useState<"menu" | "ruta" | null>(null);
+  const abiertaManualmente = origenAcceso !== null;
+  // Ruta de acceso a la que la propia bienvenida acaba de mandar: ahí sí se
+  // muestra el formulario, o se entraría en bucle.
+  const accesoPermitidoRef = useRef<string | null>(null);
+  // Ruta desde la que la bienvenida acaba de ceder el paso: el efecto se vuelve
+  // a ejecutar antes de que cambie la ruta y sin esto la levantaría de nuevo.
+  const rutaEntregadaRef = useRef<string | null>(null);
   const english = pathname?.startsWith("/en") ?? false;
 
   useEffect(() => {
     if (!nativeApp) return;
+    const abrir = () => {
+      window.sessionStorage.setItem(ACCESO_ABIERTO_KEY, "menu");
+      setOrigenAcceso("menu");
+      document.documentElement.classList.add("ccr-native-first-run-pending");
+      setVisible(true);
+    };
+    window.addEventListener("ccr:open-access", abrir);
+    // Estaba abierta antes de cambiar de idioma: se vuelve a mostrar.
+    if (window.sessionStorage.getItem(ACCESO_ABIERTO_KEY) === "menu" && !user) abrir();
+    return () => window.removeEventListener("ccr:open-access", abrir);
+  }, [nativeApp, user]);
+
+  useEffect(() => {
+    if (!nativeApp) return;
     const syncFirstRunState = () => {
+      if (abiertaManualmente) return;
+      if (!user && window.sessionStorage.getItem(ACCESO_ABIERTO_KEY) === "menu") return;
       const completed = window.localStorage.getItem(NATIVE_ONBOARDING_COMPLETED_KEY) === "1";
+      const ruta = routeWithoutLocale(pathname);
+      if (!esRutaDeAcceso(ruta)) accesoPermitidoRef.current = null;
+      if (rutaEntregadaRef.current !== null && rutaEntregadaRef.current !== ruta) rutaEntregadaRef.current = null;
+      if (
+        completed &&
+        !user &&
+        !authLoading &&
+        esRutaDeAcceso(ruta) &&
+        accesoPermitidoRef.current !== ruta &&
+        rutaEntregadaRef.current !== ruta
+      ) {
+        document.documentElement.classList.add("ccr-native-first-run-pending");
+        setOrigenAcceso("ruta");
+        setVisible(true);
+        hideNativeSplashAfterPaint();
+        return;
+      }
       if (completed || user) {
+        if (user) window.sessionStorage.removeItem(ACCESO_ABIERTO_KEY);
         if (user && !completed) {
           window.localStorage.setItem(NATIVE_ONBOARDING_COMPLETED_KEY, "1");
           window.dispatchEvent(new Event(NATIVE_ONBOARDING_COMPLETED_EVENT));
@@ -126,7 +174,7 @@ export function NativeFirstRunOnboarding() {
       window.removeEventListener("focus", syncFirstRunState);
       document.removeEventListener("visibilitychange", syncFirstRunState);
     };
-  }, [authLoading, nativeApp, pathname, router, user]);
+  }, [abiertaManualmente, authLoading, nativeApp, pathname, router, user]);
 
   useEffect(() => {
     if (!visible) return;
@@ -154,12 +202,9 @@ export function NativeFirstRunOnboarding() {
     return () => window.cancelAnimationFrame(firstFrame);
   }, [heroReady, nativeApp, visible]);
 
-  useEffect(() => {
-    if (!visible || heroReady) return;
-    // A broken/slow image must not strand the app behind the native splash.
-    const timeout = window.setTimeout(() => setHeroReady(true), 1500);
-    return () => window.clearTimeout(timeout);
-  }, [heroReady, visible]);
+  const marcarHeroListo = useCallback(() => {
+    setHeroReady(true);
+  }, []);
 
   const destinationFor = useCallback((role: Role) => {
     if (role === "client") return "/registro/cliente";
@@ -167,145 +212,68 @@ export function NativeFirstRunOnboarding() {
   }, []);
 
   const continuePendingJourney = useCallback((destination: NativeOnboardingPendingPath) => {
+    window.sessionStorage.removeItem(ACCESO_ABIERTO_KEY);
+    accesoPermitidoRef.current = destination;
+    rutaEntregadaRef.current = routeWithoutLocale(pathname);
+    setOrigenAcceso(null);
     window.localStorage.removeItem(NATIVE_ONBOARDING_PENDING_PATH_KEY);
     window.sessionStorage.setItem(NATIVE_ONBOARDING_AUTH_SESSION_KEY, "1");
     document.documentElement.classList.remove("ccr-native-first-run-pending");
     setVisible(false);
     router.push(destination);
     hideNativeSplashAfterPaint();
-  }, [router]);
+  }, [pathname, router]);
 
   const continueWithRole = useCallback(() => {
     const destination = destinationFor(selectedRole);
     continuePendingJourney(destination);
   }, [continuePendingJourney, destinationFor, selectedRole]);
 
+  const cerrarAcceso = useCallback(() => {
+    // Si llegó por una ruta de acceso, cerrar es volver a lo anterior; si se
+    // abrió desde el menú, basta con quitarla de encima.
+    window.sessionStorage.removeItem(ACCESO_ABIERTO_KEY);
+    const volver = origenAcceso === "ruta";
+    rutaEntregadaRef.current = routeWithoutLocale(pathname);
+    setOrigenAcceso(null);
+    document.documentElement.classList.remove("ccr-native-first-run-pending");
+    setVisible(false);
+    if (volver) {
+      // Si la app entró directo a /login no hay nada atrás: se vuelve al inicio.
+      if (window.history.length > 1) router.back();
+      else router.replace("/");
+    }
+    hideNativeSplashAfterPaint();
+  }, [origenAcceso, pathname, router]);
+
   const goToLogin = useCallback(() => {
+    window.sessionStorage.removeItem(ACCESO_ABIERTO_KEY);
+    accesoPermitidoRef.current = "/login";
+    rutaEntregadaRef.current = routeWithoutLocale(pathname);
+    setOrigenAcceso(null);
     window.localStorage.removeItem(NATIVE_ONBOARDING_PENDING_PATH_KEY);
     window.sessionStorage.setItem(NATIVE_ONBOARDING_AUTH_SESSION_KEY, "1");
     document.documentElement.classList.remove("ccr-native-first-run-pending");
     setVisible(false);
     router.push("/login");
     hideNativeSplashAfterPaint();
-  }, [router]);
+  }, [pathname, router]);
 
   if (!visible || !nativeApp) return null;
 
   return createPortal(
-    <div
-      className={`fixed inset-0 z-[220] overflow-hidden text-white ${heroReady ? "bg-[#f4f7fa]" : "bg-transparent"}`}
-      data-testid="native-first-run-onboarding"
-      data-native-onboarding-ready="true"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="native-onboarding-title"
-    >
-      {(Object.entries(ROLE_IMAGES) as Array<[Role, string]>).map(([role, src]) => (
-        <img
-          key={role}
-          src={src}
-          alt=""
-          aria-hidden="true"
-          fetchPriority={selectedRole === role ? "high" : "auto"}
-          onLoad={role === selectedRole ? () => setHeroReady(true) : undefined}
-          onError={role === selectedRole ? () => setHeroReady(true) : undefined}
-          className={`absolute inset-0 h-full w-full object-cover object-center transition-opacity duration-500 motion-reduce:transition-none ${
-            selectedRole === role ? "opacity-100" : "opacity-0"
-          }`}
-        />
-      ))}
-      <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(5,18,31,0.03)_0%,rgba(5,18,31,0.08)_34%,rgba(8,28,52,0.68)_58%,#081c34_75%,#081c34_100%)]" />
-      <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(2,13,23,0.12),transparent_48%,rgba(2,13,23,0.06))]" />
-
-      <main className="relative mx-auto flex h-[100dvh] w-full max-w-lg flex-col px-6 pb-[max(24px,env(safe-area-inset-bottom))] pt-[max(22px,env(safe-area-inset-top))]">
-        <section className="mt-auto pb-1 text-center" data-testid="native-onboarding-role-step">
-          <div className="mb-4 inline-flex items-center" aria-label="ContrataCR">
-            <img src="/logo-mark-dark.png" alt="" className="h-9 w-9 object-contain drop-shadow-lg" />
-            <span className="-ml-0.5 text-[24px] font-black tracking-[-0.055em] drop-shadow-sm">
-              Contrata<span className="text-[#38bdf8]">CR</span>
-            </span>
-          </div>
-
-          <h1
-            id="native-onboarding-title"
-            className="mx-auto max-w-[22rem] text-[clamp(1.55rem,6.5vw,2rem)] font-extrabold leading-tight tracking-[-0.035em] text-balance"
-          >
-            {english ? "Choose how you want to start" : "Elige cómo quieres comenzar"}
-          </h1>
-
-          <div
-            className="mt-5 grid grid-cols-2 overflow-hidden rounded-full border border-white/85 bg-[#081c34]/50 shadow-[0_16px_42px_rgba(0,0,0,0.24)] backdrop-blur-[3px]"
-            aria-label={english ? "Choose how to start" : "Elige cómo empezar"}
-          >
-            <RoleButton
-              label={english ? "Find services" : "Buscar servicios"}
-              selected={selectedRole === "client"}
-              onClick={() => {
-                setHeroReady(false);
-                setSelectedRole("client");
-              }}
-            />
-            <RoleButton
-              label={english ? "Offer services" : "Ofrecer servicios"}
-              selected={selectedRole === "professional"}
-              onClick={() => {
-                setHeroReady(false);
-                setSelectedRole("professional");
-              }}
-              divided
-            />
-          </div>
-
-          <button
-            type="button"
-            onClick={continueWithRole}
-            className="mt-4 min-h-14 w-full rounded-full bg-[#08a7df] px-5 text-[15px] font-extrabold text-white shadow-[0_14px_32px_rgba(0,159,217,0.3)] transition hover:bg-[#0796ca] active:scale-[0.99] motion-reduce:transform-none"
-          >
-            {english ? "Create an account" : "Crear una cuenta"}
-          </button>
-
-          <button
-            type="button"
-            onClick={goToLogin}
-            className="mt-2 min-h-11 w-full text-center text-sm font-semibold text-white/76"
-          >
-            {english ? "Already have an account? " : "¿Ya tienes una cuenta? "}
-            <span className="font-extrabold text-white underline decoration-white/45 underline-offset-4">
-              {english ? "Log in" : "Inicia sesión"}
-            </span>
-          </button>
-        </section>
-      </main>
-    </div>,
+    <WelcomeAccessScreen
+      className="fixed inset-0 z-[220]"
+      testId="native-first-run-onboarding"
+      titleId="native-onboarding-title"
+      english={english}
+      selectedRole={selectedRole}
+      onSelectRole={setSelectedRole}
+      onCreateAccount={continueWithRole}
+      onLogin={goToLogin}
+      onClose={abiertaManualmente ? cerrarAcceso : undefined}
+      onHeroReady={marcarHeroListo}
+    />,
     document.body,
-  );
-}
-
-function RoleButton({
-  label,
-  selected,
-  onClick,
-  divided = false,
-}: {
-  label: string;
-  selected: boolean;
-  onClick: () => void;
-  divided?: boolean;
-}) {
-  return (
-    <button
-      type="button"
-      aria-pressed={selected}
-      onClick={onClick}
-      className={`min-h-14 px-3 text-[14px] font-extrabold transition ${
-        divided ? "border-l border-white/80" : ""
-      } ${
-        selected
-          ? "bg-white text-[#071523] shadow-[0_2px_10px_rgba(255,255,255,0.12)]"
-          : "text-white hover:bg-white/10 active:bg-white/15"
-      }`}
-    >
-      {label}
-    </button>
   );
 }

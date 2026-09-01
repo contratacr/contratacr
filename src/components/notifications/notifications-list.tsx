@@ -1,12 +1,14 @@
 "use client";
 
 import { useCallback, useEffect, useId, useRef, useState } from "react";
+import { useNativeApp } from "@/hooks/use-native-app";
 import { createPortal } from "react-dom";
 import { useTranslations, useLocale } from "next-intl";
 import { Bell, CheckCheck, Check, Trash2, AlertTriangle, MoreHorizontal } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { BrandIconBadge } from "@/components/ui/brand-icon-badge";
 import { createClient } from "@/lib/supabase/client";
+import { useActorPhotos } from "@/lib/notifications/use-actor-photos";
 import { useAuth } from "@/hooks/use-auth";
 import { cn, formatRelativeOrDate } from "@/lib/utils";
 import { notificationActionHref, notificationInMode } from "@/lib/notification-link";
@@ -42,7 +44,9 @@ type Notification = {
 // Shared notifications list. The standalone /notificaciones page shows the full
 // account history; the legacy panel tab can still scope by the active mode.
 export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" } = {}) {
-  const { user } = useAuth();
+  const nativeApp = useNativeApp();
+  // El contador solo informaba; como filtro sirve para algo.
+  const { user, loading: sesionCargando } = useAuth();
   const t = useTranslations("notifications");
   const locale = useLocale();
   const router = useRouter();
@@ -64,7 +68,28 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [expandedIds, setExpandedIds] = useState<Set<string>>(() => new Set());
   const [globalMenuOpen, setGlobalMenuOpen] = useState(false);
+  // Entrar a la pantalla es leerlas: el globo se limpia solo, como en Instagram.
+  // El punto azul dura lo que dura la visita, que es cuando sirve.
+  useEffect(() => {
+    if (!nativeApp || scope !== "all" || unread === 0) return;
+    const marcar = window.setTimeout(() => { void markAllRead(); }, 1500);
+    return () => window.clearTimeout(marcar);
+  });
+
+  useEffect(() => {
+    const abrir = () => setGlobalMenuOpen((abierto) => !abierto);
+    window.addEventListener("ccr:section-menu", abrir);
+    return () => window.removeEventListener("ccr:section-menu", abrir);
+  }, []);
   const [itemMenuOpenId, setItemMenuOpenId] = useState<string | null>(null);
+  // Deslizar revela el botón de borrar (como Mail): nunca borra por el gesto,
+  // que sería irreversible sin querer.
+  const ANCHO_BORRAR = 88;
+  const arrastreRef = useRef<{ id: string; x: number; y: number; base: number; horizontal: boolean } | null>(null);
+  const [arrastre, setArrastre] = useState<{ id: string; dx: number } | null>(null);
+  const [filaAbierta, setFilaAbierta] = useState<string | null>(null);
+  const desplazamientoDe = (id: string) =>
+    arrastre?.id === id ? arrastre.dx : filaAbierta === id ? -ANCHO_BORRAR : 0;
   const [itemMenuPosition, setItemMenuPosition] = useState<{ top: number; right: number } | null>(null);
   const instanceId = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const globalMenuRef = useRef<HTMLDivElement | null>(null);
@@ -96,9 +121,9 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
     const cached = readCachedNotifications(user?.id) as Notification[] | null;
     queueMicrotask(() => {
       setNotificationState({ userId: user?.id, items: cached ?? [] });
-      setBusy(!!user && cached === null);
+      setBusy(sesionCargando || (!!user && cached === null));
     });
-  }, [user]);
+  }, [sesionCargando, user]);
 
   useEffect(() => {
     if (!user) return;
@@ -142,6 +167,9 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
     function onPointerDown(event: MouseEvent) {
       const target = event.target as Node;
       if (globalMenuOpen && globalMenuRef.current?.contains(target)) return;
+      // El disparador vive en la barra de la app, fuera de este contenedor: sin
+      // esto el toque cerraba el menú y el propio botón lo reabría.
+      if (target instanceof Element && target.closest("[data-ccr-section-menu]")) return;
       if (itemMenuOpenId && itemMenuRefs.current[itemMenuOpenId]?.contains(target)) return;
       if (itemMenuOpenId && itemMenuPortalRef.current?.contains(target)) return;
       setGlobalMenuOpen(false);
@@ -178,9 +206,26 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
   // Only the active mode's notifications are shown / acted on here.
   const visible = scope === "all" ? items : items.filter((n) => notificationInMode(n.type, mode));
   const unread = visible.filter((n) => !n.read).length;
+  // Como Facebook: primero todas las nuevas, luego las leídas por fecha. Si se
+  // ordenara solo por fecha, los encabezados de grupo se repetirían.
+  const ordenadas = [...visible].sort((a, b) => Number(a.read) - Number(b.read));
   const hasVisibleNotifications = visible.length > 0;
   const notificationTitle = (n: Notification) => localizedNotificationCopy(n, locale).title;
   const notificationMessage = (n: Notification) => localizedNotificationCopy(n, locale).message;
+  // Agrupación por fecha: orienta cuando hay cien avisos seguidos.
+  const fotoDe = useActorPhotos(items);
+
+  const grupoDe = (n: Notification) => {
+    if (!n.read) return "newGroup" as const;
+    const dia = 24 * 60 * 60 * 1000;
+    const edad = Date.now() - new Date(n.created_at).getTime();
+    if (edad < dia) return "todayGroup" as const;
+    if (edad < 2 * dia) return "yesterdayGroup" as const;
+    if (edad < 7 * dia) return "week7Group" as const;
+    if (edad < 30 * dia) return "month30Group" as const;
+    return "earlierGroup" as const;
+  };
+
   const notificationTime = (n: Notification) => {
     const projectCreatedAt = getNotificationProjectCreatedAt(n, projectTimes);
     return projectCreatedAt
@@ -254,7 +299,23 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
         window.dispatchEvent(new CustomEvent("notificationsChanged"));
       });
     }
-    if (href) router.push(href);
+    if (!href) return;
+    const destino =
+      href.includes("/dashboard/") && !href.includes("returnTo=")
+        ? `${href}${href.includes("?") ? "&" : "?"}returnTo=${encodeURIComponent("/notificaciones")}`
+        : href;
+    router.push(destino);
+  }
+
+  async function borrarPorDeslizar(id: string) {
+    setNotificationState((prev) => {
+      const next = prev.items.filter((item) => item.id !== id);
+      cacheNotifications(user?.id, next);
+      return { userId: user?.id, items: next };
+    });
+    const supabase = createClient();
+    await supabase.from("notifications").delete().eq("id", id);
+    window.dispatchEvent(new CustomEvent("notificationsChanged"));
   }
 
   async function dismiss(e: React.MouseEvent, id: string) {
@@ -290,21 +351,25 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
 
   return (
     <div className="ccr-notifications-list flex h-full min-h-0 flex-col">
-      <div className="ccr-notifications-list-header mb-3 flex shrink-0 items-center justify-between gap-3 rounded-2xl bg-white px-1 py-1 sm:px-0 sm:py-0">
+      <div className={cn("ccr-notifications-list-header mb-3 flex shrink-0 items-center justify-between gap-3 rounded-2xl bg-white px-1 py-1 sm:px-0 sm:py-0", nativeApp && scope === "all" && "!m-0 !p-0 h-0 overflow-visible")}>
         <div className="min-w-0">
           {scope === "all" ? (
-            <h1 className="text-xl font-extrabold leading-tight text-[#162543] sm:text-2xl">{headingTitle}</h1>
+            // En la app el nombre lo da la barra: repetirlo aquí sobra.
+            <h1 className={cn("text-xl font-extrabold leading-tight text-[#162543] sm:text-2xl", nativeApp && "sr-only")}>{headingTitle}</h1>
           ) : (
             <h3 className="text-lg font-extrabold leading-tight text-[#162543] sm:text-[1.15rem]">{headingTitle}</h3>
           )}
-          <p className="mt-1 inline-flex w-fit items-center rounded-full bg-[#eef6fb] px-2.5 py-1 text-xs font-extrabold text-[#526277]">
-            {unread > 0
-              ? locale === "en" ? `${unread} unread` : `${unread} sin leer`
-              : locale === "en" ? "All caught up" : "Todo al día"}
-          </p>
+          {unread === 0 && (
+            <p className={cn(
+              "mt-1 inline-flex w-fit items-center rounded-full bg-[#eef6fb] px-2.5 py-1 text-xs font-extrabold text-[#526277]",
+              nativeApp && scope === "all" && "sr-only",
+            )}>
+              {locale === "en" ? "All caught up" : "Todo al día"}
+            </p>
+          )}
         </div>
         {hasVisibleNotifications && (
-        <div ref={globalMenuRef} className="relative shrink-0">
+        <div ref={globalMenuRef} className={cn("relative shrink-0", nativeApp && scope === "all" && "[&>button]:sr-only")}>
           <button
             type="button"
             aria-label={locale === "en" ? "Notification options" : "Opciones de notificaciones"}
@@ -319,7 +384,12 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
             <MoreHorizontal className="h-5 w-5" strokeWidth={3} />
           </button>
           {globalMenuOpen && (
-            <div role="menu" className="absolute right-0 top-full z-30 mt-1 min-w-[220px] overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white py-1.5 shadow-xl">
+            <div role="menu" className={cn(
+              "min-w-[220px] overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white py-1.5 shadow-xl",
+              nativeApp && scope === "all"
+                ? "fixed right-3 top-[calc(var(--ccr-native-header-height,64px)+6px)] z-[240] shadow-xl"
+                : "absolute right-0 top-full z-30 mt-1",
+            )}>
               {unread > 0 && (
                 <button
                   type="button"
@@ -334,6 +404,7 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
                   {t("markAllRead")}
                 </button>
               )}
+              {!nativeApp && (
               <button
                 type="button"
                 role="menuitem"
@@ -346,6 +417,7 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
                 <Trash2 className="h-4 w-4" />
                 {t("deleteAll")}
               </button>
+              )}
             </div>
           )}
         </div>
@@ -372,7 +444,7 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
           </div>
         </div>
       )}
-      <div className="ccr-notifications-scroll min-h-0 flex-1 rounded-2xl border border-[#e5e7eb] bg-white overflow-hidden">
+      <div className="ccr-notifications-scroll min-h-0 flex-1 bg-white overflow-hidden">
         {busy ? (
           <PanelListSkeleton
             rows={4}
@@ -393,16 +465,80 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
           />
         ) : (
           <ul className="ccr-notifications-items">
-            {visible.map((n) => {
+            {ordenadas.map((n, indice) => {
+              const grupo = grupoDe(n);
+              const abreGrupo = indice === 0 || grupoDe(ordenadas[indice - 1]) !== grupo;
               const message = notificationMessage(n);
               const canExpand = message.length > 180;
               const expanded = expandedIds.has(n.id);
               return (
-              <li key={n.id} className={cn("relative group border-b border-[#f3f4f6] last:border-0", !n.read && "bg-[#f3f9fd]")}>
+              <li
+                key={n.id}
+                className={cn("relative group border-b border-[#f3f4f6] last:border-0", !n.read && "bg-[#f3f9fd]")}
+                onTouchStart={(event) => {
+                  if (!nativeApp) return;
+                  arrastreRef.current = {
+                    id: n.id,
+                    x: event.touches[0].clientX,
+                    y: event.touches[0].clientY,
+                    base: filaAbierta === n.id ? -ANCHO_BORRAR : 0,
+                    horizontal: false,
+                  };
+                }}
+                onTouchMove={(event) => {
+                  const inicio = arrastreRef.current;
+                  if (!inicio || inicio.id !== n.id) return;
+                  const recorridoX = event.touches[0].clientX - inicio.x;
+                  const recorridoY = event.touches[0].clientY - inicio.y;
+                  if (!inicio.horizontal) {
+                    if (Math.abs(recorridoY) > 10 && Math.abs(recorridoY) > Math.abs(recorridoX)) {
+                      arrastreRef.current = null;
+                      return;
+                    }
+                    if (Math.abs(recorridoX) < 12) return;
+                    inicio.horizontal = true;
+                  }
+                  const dx = Math.max(-ANCHO_BORRAR - 24, Math.min(0, inicio.base + recorridoX));
+                  setArrastre({ id: n.id, dx });
+                }}
+                onTouchEnd={() => {
+                  const movido = arrastre?.id === n.id ? arrastre.dx : desplazamientoDe(n.id);
+                  arrastreRef.current = null;
+                  setArrastre(null);
+                  // Pasada la mitad se queda abierta; si no, vuelve a su sitio.
+                  setFilaAbierta(movido < -ANCHO_BORRAR / 2 ? n.id : null);
+                }}
+              >
+                {abreGrupo && (
+                  <p className="bg-white px-4 pb-1 pt-3 text-[11px] font-extrabold uppercase tracking-wide text-[#8b95a5]">
+                    {t(grupo)}
+                  </p>
+                )}
+                {/* El botón vive con la fila, no con el encabezado del grupo. */}
+                <div className="relative overflow-hidden">
+                {nativeApp && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFilaAbierta(null);
+                      void borrarPorDeslizar(n.id);
+                    }}
+                    aria-label={t("delete")}
+                    className="absolute inset-y-0 right-0 grid w-[88px] place-items-center bg-[#dc2626] text-white"
+                  >
+                    <Trash2 className="h-5 w-5" />
+                  </button>
+                )}
                 <div
                   role="button"
                   tabIndex={0}
-                  onClick={() => open(n)}
+                  onClick={() => {
+                    if (filaAbierta === n.id) {
+                      setFilaAbierta(null);
+                      return;
+                    }
+                    open(n);
+                  }}
                   onKeyDown={(event) => {
                     if (event.key === "Enter" || event.key === " ") {
                       event.preventDefault();
@@ -410,24 +546,44 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
                     }
                   }}
                   className={cn(
-                    "w-full text-left px-4 py-3 pr-16 transition-colors",
+                    // Fondo propio: si fuera transparente, el botón rojo de
+                    // borrar se vería por debajo sin haber deslizado.
+                    "relative w-full px-4 py-3 pr-16 text-left transition-colors",
+                    n.read ? "bg-white" : "bg-[#f3f9fd]",
                     notificationActionHref(n, role, locale) ? "cursor-pointer hover:bg-[#f9fafb]" : "cursor-default",
+                    arrastre?.id === n.id ? "transition-none" : "transition-transform duration-200",
                   )}
+                  style={{ transform: `translateX(${desplazamientoDe(n.id)}px)` }}
                 >
                   {/* Per-type leading icon (grey circle) + a brand-blue unread dot at its corner. */}
                   <div className="flex items-start gap-3">
                     <div className="relative shrink-0">
-                      <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#f3f4f6] text-[#374151]">
-                        <NotificationSourceIcon type={n.type} className="h-4 w-4" />
-                      </span>
+                      {fotoDe(n) ? (
+                        // eslint-disable-next-line @next/next/no-img-element -- miniatura fija; el optimizador no actúa en Cloudflare
+                        <img
+                          src={fotoDe(n) as string}
+                          alt=""
+                          className="h-9 w-9 rounded-full object-cover"
+                        />
+                      ) : (
+                        <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#EBF5FB] text-[#0089bb]">
+                          <NotificationSourceIcon type={n.type} className="h-4 w-4" />
+                        </span>
+                      )}
                       {!n.read && <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-[#009FD9] ring-2 ring-white" />}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className={cn("text-sm [overflow-wrap:anywhere] break-words line-clamp-2", n.read ? "font-medium text-[#374151]" : "font-semibold text-[#162543]")}>{notificationTitle(n)}</p>
+                      {/* Una fila = un hecho: el mensaje manda y la hora va al
+                          final. El título del tipo no distinguía nada y el icono
+                          ya dice de qué se trata. */}
                       <p className={cn(
-                        "mt-0.5 whitespace-pre-line text-xs leading-snug text-[#6b7280] [overflow-wrap:anywhere] break-words",
+                        "whitespace-pre-line text-sm leading-snug [overflow-wrap:anywhere] break-words",
                         !expanded && "line-clamp-3",
-                      )}>{message}</p>
+                        n.read ? "font-medium text-[#374151]" : "font-semibold text-[#162543]",
+                      )}>
+                        {message || notificationTitle(n)}
+                        <span className="ml-1.5 whitespace-nowrap text-xs font-medium text-[#9ca3af]">· {notificationTime(n)}</span>
+                      </p>
                       {canExpand && (
                         <button
                           type="button"
@@ -447,7 +603,6 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
                             : (locale === "en" ? "Show more" : "Ver más")}
                         </button>
                       )}
-                      <p className="text-xs text-[#9ca3af] mt-1">{notificationTime(n)}</p>
                     </div>
                   </div>
                 </div>
@@ -457,7 +612,7 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
                   ref={(node) => {
                     itemMenuRefs.current[n.id] = node;
                   }}
-                  className="absolute top-2.5 right-2.5"
+                  className={cn("absolute top-2.5 right-2.5", nativeApp && "hidden")}
                 >
                   <AppTooltip label={locale === "en" ? "Notification options" : "Opciones"}>
                     <button
@@ -502,6 +657,7 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
                     </div>,
                     document.body,
                   )}
+                </div>
                 </div>
               </li>
               );

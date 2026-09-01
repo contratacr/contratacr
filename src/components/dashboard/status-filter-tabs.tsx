@@ -11,7 +11,11 @@ function RailOrGrid({ scroll, className, children }: { scroll: boolean; classNam
 
 // Shared pill status-filter tabs — used identically in the client and professional
 // panels for solicitudes AND proyectos so both feel the same. The SAME four buckets
-// (Pendientes · Confirmadas · Finalizadas · Canceladas) organize both lifecycles.
+// El ritmo es el mismo en toda la app —esperando → trabajando → cerrado— pero
+// cada pantalla nombra su primer paso con la palabra que le corresponde
+// (Enviadas, Publicados). Las solicitudes se auto-confirman, así que ahí no hay
+// paso de espera: solo En curso y Finalizadas. Lo terminado y lo cancelado
+// comparten pestaña; la tarjeta dice cuál de los dos fue.
 // `id` doubles as the statusTabs i18n key, so labels translate per locale.
 export type FilterTab = { id: string };
 
@@ -46,11 +50,22 @@ export function StatusFilterTabs({
 }) {
   const tr = useTranslations("statusTabs");
   const label = (id: string) => (labelFor ? labelFor(id) : tr(id));
-  const useSegmentedLayout = tabs.length >= 2 && tabs.length <= 4 && mobileLayout !== "scroll";
+  // Con una sola etapa no hay nada que elegir: un control con un botón miente.
+  // Se resume en una línea, como hacen las listas que solo tienen un estado.
+  if (tabs.length === 1 && variant === "underline") {
+    const unica = tabs[0];
+    const total = counts?.[unica.id] ?? 0;
+    return (
+      <p data-status-filter-tabs="" data-filter-layout="summary" className="px-1 text-[13px] font-semibold text-[#6b7280]">
+        {label(unica.id)}
+        {total > 0 && <span className="ml-1.5 font-extrabold text-[#162543]">{total}</span>}
+      </p>
+    );
+  }
+  const useSegmentedLayout = tabs.length >= 2 && tabs.length <= 5 && mobileLayout !== "scroll";
   const useScrollableLayout = !useSegmentedLayout;
-  // A segmented cell is narrow on a 320px screen. Short status words never
-  // break: under 400px every count pill sits below its label so the row stays
-  // uniform; long dynamic labels may break anywhere so the row never overflows.
+  // Una celda segmentada es angosta en 320 px: con cuatro o más etapas el
+  // conteo se apila bajo el rótulo para que ninguno se corte.
   const shortLabels = tabs.every((tab) => label(tab.id).length <= 12);
 
   // PILLS — same segmented language, without count badges. Used for profession
@@ -60,7 +75,7 @@ export function StatusFilterTabs({
   if (variant === "chips") {
     return (
       <div data-status-filter-tabs="" data-filter-layout="chips" className="relative w-full max-w-full min-w-0 overflow-hidden">
-        <div className="scrollbar-none flex gap-1.5 overflow-x-auto py-0.5">
+        <div className="scrollbar-none flex gap-1.5 overflow-x-auto py-0">
           {tabs.map((tab) => {
             const active = value === tab.id;
             return (
@@ -68,9 +83,12 @@ export function StatusFilterTabs({
                 key={tab.id}
                 type="button"
                 onClick={() => onChange(active ? "" : tab.id)}
+                aria-pressed={active}
                 className={cn(
-                  "inline-flex h-7 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border px-4 text-[13px] font-semibold transition-colors",
-                  active ? "border-[#009FD9] bg-[#009FD9] text-white" : "border-[#dfe6ec] bg-white text-[#526277] hover:border-[#c3d2de]",
+                  "inline-flex h-[26px] shrink-0 items-center gap-1 whitespace-nowrap rounded-full border px-2.5 text-[11.5px] font-semibold transition-colors",
+                  active
+                    ? "border-[#009FD9] bg-[#009FD9] text-white"
+                    : "border-[#dfe6ec] bg-white text-[#526277] hover:border-[#c3d2de]",
                 )}
               >
                 <span className="max-w-[14rem] truncate">{label(tab.id)}</span>
@@ -130,9 +148,9 @@ export function StatusFilterTabs({
     );
   }
 
-  // UNDERLINE — one modern segmented pattern everywhere. With 2–4 filters we
-  // distribute the available width; with 5+ filters we keep the same visual
-  // language but let the row scroll horizontally without exposing a scrollbar.
+  // ESTADOS — pastilla segmentada: fondo gris, la activa en blanco. Con dos a
+  // cinco etapas se reparte el ancho; con dos se ajusta a su contenido para no
+  // ocupar la pantalla entera por dos opciones.
   return (
     <div
       className={cn(
@@ -150,6 +168,7 @@ export function StatusFilterTabs({
         useSegmentedLayout && tabs.length === 2 && "grid-cols-2",
         useSegmentedLayout && tabs.length === 3 && "grid-cols-3",
         useSegmentedLayout && tabs.length === 4 && "grid-cols-4",
+        useSegmentedLayout && tabs.length === 5 && "grid-cols-5",
       )}>
       {tabs.map((tab) => {
         const active = value === tab.id;
@@ -160,9 +179,14 @@ export function StatusFilterTabs({
             type="button"
             onClick={() => onChange(tab.id)}
             className={cn(
-              "group relative inline-flex min-h-10 max-w-full items-center justify-center gap-1.5 rounded-lg py-2 text-center font-semibold leading-tight transition-all sm:text-[14px]",
+              "group relative inline-flex min-h-9 max-w-full items-center justify-center gap-1 rounded-lg py-1.5 text-center font-semibold leading-tight transition-all",
               useSegmentedLayout
-                ? cn("min-w-0 px-1 text-[12px] min-[400px]:text-[13px] sm:px-3", shortLabels ? "flex-col gap-0.5 whitespace-nowrap min-[400px]:flex-row min-[400px]:gap-1.5" : "whitespace-normal [overflow-wrap:anywhere]")
+                ? cn(
+                    "min-w-0 px-1.5 text-[12px] min-[400px]:text-[13px] sm:px-3",
+                    shortLabels
+                      ? cn("whitespace-nowrap", tabs.length >= 4 && "flex-col gap-0.5 min-[520px]:flex-row min-[520px]:gap-1.5")
+                      : "whitespace-normal [overflow-wrap:anywhere]",
+                  )
                 : "min-w-[8.25rem] flex-none whitespace-normal px-3 text-[13px] [overflow-wrap:anywhere]",
               active
                 ? "bg-white text-[#009FD9] shadow-sm"
@@ -170,10 +194,12 @@ export function StatusFilterTabs({
             )}
             aria-pressed={active}
           >
-            <span className="min-w-0 max-w-full truncate">{label(tab.id)}</span>
+            <span className={cn("min-w-0 max-w-full", shortLabels ? "truncate" : "whitespace-normal [overflow-wrap:anywhere]")}>
+              {label(tab.id)}
+            </span>
             {count > 0 && (
-              // The count is part of the label, not decoration: brand blue on the
-              // active tab, slate on the rest, always large enough to read at a glance.
+              // El conteo es parte del rótulo, no adorno: azul de marca en la
+              // activa, pizarra en el resto, siempre legible de un vistazo.
               <span className={cn(
                 "inline-flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full px-1.5 text-[11px] font-extrabold leading-none tabular-nums transition-colors",
                 active
@@ -198,13 +224,15 @@ export function StatusFilterTabs({
 // proposals) all use **Activas · Finalizadas · Canceladas** — "Activas" replaces the
 // old "Confirmadas"/"Pendientes" (an active/ongoing item), so the names match the
 // auto-confirm reality and read the same across Solicitudes and Proyectos.
-const STATUS_TABS: readonly FilterTab[] = [
-  { id: "activas" },
+export const PROYECTO_TABS: readonly FilterTab[] = [
+  { id: "pendientes" },
+  { id: "en_curso" },
   { id: "finalizadas" },
-  { id: "canceladas" },
 ];
-export const PROYECTO_TABS = STATUS_TABS;
-export const SOLICITUD_TABS = STATUS_TABS;
+export const SOLICITUD_TABS: readonly FilterTab[] = [
+  { id: "en_curso" },
+  { id: "finalizadas" },
+];
 
 // A booking's appointment day has fully passed (compared to now, end-of-day).
 function isPastAppointment(scheduledDate?: string | null): boolean {
@@ -218,11 +246,12 @@ function isPastAppointment(scheduledDate?: string | null): boolean {
 // Status (+ scheduled date) → the four buckets. A CONFIRMED/in-progress
 // appointment whose date already passed is treated as Finalizada.
 export function solicitudBucket(status: string, scheduledDate?: string | null): string {
-  if (status === "cancelled" || status === "rescheduled") return "canceladas";
+  if (status === "cancelled" || status === "rescheduled") return "finalizadas";
   if (status === "completed" || status === "awaiting_confirmation") return "finalizadas";
   if (isPastAppointment(scheduledDate)) return "finalizadas";
-  // pending (legacy) + confirmed + in_progress are all active → Activas.
-  return "activas";
+  // pending es herencia: desde el auto-confirmado ninguna cita queda esperando
+  // aprobación, así que esas viejas se leen como citas vivas.
+  return "en_curso";
 }
 export function solicitudMatches(filter: string, status: string, scheduledDate?: string | null): boolean {
   return solicitudBucket(status, scheduledDate) === filter;
@@ -232,10 +261,10 @@ export function solicitudMatches(filter: string, status: string, scheduledDate?:
 // open (receiving proposals) → Pendientes; assigned/in progress → Confirmadas;
 // completed → Finalizadas; cancelled → Canceladas.
 export function proyectoBucket(status: string): string {
-  if (status === "cancelled") return "canceladas";
-  if (status === "completed") return "finalizadas";
-  // open (receiving propuestas) + in_progress + awaiting are all live → Activas.
-  return "activas";
+  if (status === "cancelled" || status === "completed") return "finalizadas";
+  if (status === "open") return "pendientes"; // publicado, recibiendo propuestas
+  // in_progress + awaiting_confirmation: ya hay profesional trabajando.
+  return "en_curso";
 }
 export function proyectoMatches(filter: string, status: string): boolean {
   return proyectoBucket(status) === filter;
@@ -246,12 +275,11 @@ export function proyectoMatches(filter: string, status: string): boolean {
 // if the project moved on with someone else), then the project's lifecycle once
 // the proposal was accepted.
 export function proposalBucket(proposalStatus: string, projectStatus?: string | null): string {
-  if (proposalStatus === "declined") return "canceladas";
-  if (proposalStatus === "pending") return "activas"; // your live proposal (awaiting a decision)
+  if (proposalStatus === "declined") return "finalizadas";
+  if (proposalStatus === "pending") return "pendientes"; // enviada, esperando la decisión
   // accepted → follow the project
-  if (projectStatus === "cancelled") return "canceladas";
-  if (projectStatus === "completed") return "finalizadas";
-  return "activas";
+  if (projectStatus === "cancelled" || projectStatus === "completed") return "finalizadas";
+  return "en_curso";
 }
 export function proposalMatches(filter: string, proposalStatus: string, projectStatus?: string | null): boolean {
   if (!filter) return true; // toggle cleared → all proposals
@@ -260,7 +288,7 @@ export function proposalMatches(filter: string, proposalStatus: string, projectS
 
 // Build a {bucket: count} map for the count badges. Pass the items' resolved buckets.
 export function bucketCounts(buckets: string[]): Record<string, number> {
-  const counts: Record<string, number> = { activas: 0, finalizadas: 0, canceladas: 0 };
+  const counts: Record<string, number> = { pendientes: 0, en_curso: 0, finalizadas: 0 };
   for (const b of buckets) counts[b] = (counts[b] ?? 0) + 1;
   return counts;
 }
@@ -271,31 +299,26 @@ export function bucketCounts(buckets: string[]): Record<string, number> {
 // the badge again. Genuine SUB-states (in_progress, awaiting_confirmation,
 // rescheduled, declined-vs-cancelled, …) return false → the badge IS still shown.
 const SOLICITUD_PRIMARY: Record<string, string[]> = {
-  activas: ["confirmed", "pending"], // both read as an active appointment
-  finalizadas: ["completed", "confirmed"], // a past confirmed also reads as finalizada
-  canceladas: ["cancelled"],
+  en_curso: ["confirmed", "in_progress", "pending"],
+  // En Finalizadas conviven completadas y canceladas: la insignia debe distinguirlas.
+  finalizadas: [],
 };
 export function solicitudStatusRedundant(status: string, scheduledDate?: string | null): boolean {
   return SOLICITUD_PRIMARY[solicitudBucket(status, scheduledDate)]?.includes(status) ?? false;
 }
 const PROYECTO_PRIMARY: Record<string, string[]> = {
-  // Inside "Activas", `open` (receiving proposals) and `in_progress` (already assigned)
-  // are the normal active states, so their badges repeat the tab/details. Awaiting
-  // confirmation still shows because it needs the client's attention.
-  activas: ["open", "in_progress"],
-  finalizadas: ["completed"],
-  canceladas: ["cancelled"],
+  // Awaiting confirmation keeps its badge because it needs the client's attention.
+  pendientes: ["open"],
+  en_curso: ["in_progress"],
+  finalizadas: [],
 };
 export function proyectoStatusRedundant(status: string): boolean {
   return PROYECTO_PRIMARY[proyectoBucket(status)]?.includes(status) ?? false;
 }
 export function proposalStatusRedundant(proposalStatus: string, projectStatus?: string | null): boolean {
   if (proposalStatus === "declined") return false; // Show "No seleccionada" inside Canceladas.
-  if (proposalStatus === "accepted") {
-    if (projectStatus === "in_progress") return true; // Activas (primary)
-    if (projectStatus === "completed") return true; // Finalizadas (primary)
-  }
-  // pending (En espera, awaiting a decision) + accepted+awaiting + accepted+cancelled →
-  // keep the sub-state badge so the live "Activas" tab still distinguishes them.
+  if (proposalStatus === "pending") return true; // repite la pestaña Pendientes
+  if (proposalStatus === "accepted" && projectStatus === "in_progress") return true; // En curso (primary)
+  // accepted+awaiting + accepted+cancelled keep the sub-state badge.
   return false;
 }

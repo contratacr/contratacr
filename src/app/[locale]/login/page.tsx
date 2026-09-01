@@ -3,11 +3,12 @@
 import { useTranslations, useLocale } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { useSearchParams } from "next/navigation";
+import { useRouter } from "@/i18n/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowRight, AlertCircle, CheckCircle2 } from "lucide-react";
+import { ArrowRight, ArrowLeft, AlertCircle, CheckCircle2 } from "lucide-react";
 import { Navbar } from "@/components/layout/navbar";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -19,6 +20,8 @@ import { nativeSocialSignIn } from "@/lib/auth/native-social-login";
 import { GoogleSignInButton } from "@/components/auth/google-sign-in-button";
 import { OtpVerification } from "@/components/auth/otp-verification";
 import { PageRouteLoading } from "@/components/ui/route-loading";
+import { cn } from "@/lib/utils";
+import { WelcomeAccessScreen, type WelcomeRole } from "@/components/mobile/welcome-access-screen";
 import type { User } from "@supabase/supabase-js";
 import { withPromiseTimeout } from "@/lib/promise-timeout";
 
@@ -126,6 +129,13 @@ export default function LoginPage() {
   // When a manual login fails because the email is a Google-only account, highlight
   // the provider button and show a specific message.
   const [socialHint, setSocialHint] = useState<"google" | "apple" | null>(null);
+  const router = useRouter();
+  const [rolPortada, setRolPortada] = useState<WelcomeRole>("client");
+  const [formularioAbierto, setFormularioAbierto] = useState(false);
+  const [hidratado, setHidratado] = useState(false);
+  useEffect(() => {
+    setHidratado(true);
+  }, []);
   const registerRedirect = searchParams.get("redirect");
   const registerHref = registerRedirect ? `/registro?redirect=${encodeURIComponent(registerRedirect)}` : "/registro";
 
@@ -447,6 +457,33 @@ export default function LoginPage() {
       {/* Visual only: the press that opens Google's window must still reach its
           iframe underneath, so the cover never intercepts pointer events. */}
       {leaving && <div className="contents pointer-events-none"><PageRouteLoading /></div>}
+
+      {/* Portada de acceso: la misma pantalla que recibe en la app. Solo en la
+          web móvil — en la app la muestra el propio armazón, y en escritorio
+          manda la tarjeta. Se oculta al abrir el formulario. */}
+      {hidratado && !formularioAbierto && (
+        <div className="ccr-login-portada relative min-h-[100svh] w-full lg:hidden">
+          <WelcomeAccessScreen
+            className="absolute inset-0"
+            titleId="login-portada-title"
+            english={locale === "en"}
+            selectedRole={rolPortada}
+            onSelectRole={setRolPortada}
+            onCreateAccount={() =>
+              router.push(rolPortada === "client" ? "/registro/cliente" : "/registro/profesional")
+            }
+            onLogin={() => setFormularioAbierto(true)}
+            onClose={() => {
+              // Misma regla que en la app: volver a lo anterior, o al inicio si
+              // se entró directo a /login.
+              if (window.history.length > 1) router.back();
+              else router.push("/");
+            }}
+          />
+        </div>
+      )}
+
+      <div className={cn("flex flex-1 flex-col", !formularioAbierto && "ccr-login-formulario-oculto")}>
       <Navbar mobileSearch={false} />
       <main className="flex-1 flex items-center justify-center py-12 px-4">
         <div className="w-full max-w-md">
@@ -454,6 +491,14 @@ export default function LoginPage() {
               professional registrations — clean white card, hairline border, soft
               shadow, p-8 — so the whole auth flow (login + both signups) is consistent. */}
           <div className="bg-white rounded-3xl shadow-sm border border-[#e5e7eb] p-8">
+          <button
+            type="button"
+            onClick={() => setFormularioAbierto(false)}
+            className="-mt-2 mb-4 inline-flex items-center gap-1 text-sm font-semibold text-[#6b7280] lg:hidden"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            {t("back")}
+          </button>
           <div className="text-center mb-8">
             <h1 className="text-2xl font-bold text-[#111827]">{t("title")}</h1>
             <p className="text-[#6b7280] text-sm mt-1">{t("subtitle")}</p>
@@ -593,6 +638,7 @@ export default function LoginPage() {
         </div>
       </main>
       <LandingFooter />
+      </div>
     </div>
   );
 }

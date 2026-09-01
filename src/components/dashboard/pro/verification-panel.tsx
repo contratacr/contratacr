@@ -508,7 +508,7 @@ function CurrentIdentificationPanel({
   onChangeClick: () => void;
 }) {
   return (
-    <section className="rounded-xl bg-[#f8fafc] px-4 py-3 sm:px-5">
+    <section className="rounded-2xl border border-[#e5e7eb] bg-white px-4 py-3.5 sm:px-5">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex min-w-0 items-center gap-3">
           <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white text-[#009FD9] shadow-sm ring-1 ring-[#e5eef6]">

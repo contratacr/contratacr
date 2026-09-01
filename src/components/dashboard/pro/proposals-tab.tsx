@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
-import { FileText, Handshake, Phone, MapPin, CalendarClock, CalendarDays, Clock, EyeOff, MoreVertical, Users } from "lucide-react";
+import { FileText, Handshake, Phone, MapPin, CalendarClock, CalendarDays, Clock, EyeOff, MoreVertical, Users, Wrench } from "lucide-react";
 import { DirectChatLauncher } from "@/components/professionals/direct-chat-launcher";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
@@ -35,6 +35,7 @@ type MyProposal = {
   projects?: {
     title: string;
     status: string;
+    category_id?: string | null;
     profiles: { full_name: string; phone?: string; avatar_url?: string };
   };
 };
@@ -60,19 +61,21 @@ type OpenProject = {
   beneficiary_is_minor?: boolean;
 };
 
-const STATUS_VARIANT: Record<ProposalStatus, "default" | "success" | "error"> = {
+// UN color por significado, no un color por estado: azul de marca = está vivo
+// ahora; gris = pasó o está en pausa; rojo = SOLO lo que salió mal (cancelado,
+// no seleccionado). Un empleo cerrado suele ser el final feliz — pintarlo de
+// rojo lo hacía leer como error, y con todo de colores el color deja de decir.
+const STATUS_VARIANT: Record<ProposalStatus, "default" | "muted" | "error"> = {
   pending: "default",
-  accepted: "success",
+  accepted: "default",
   declined: "error",
 };
 
-function projStatusVariant(status?: string): "warning" | "success" | "error" | "default" {
+function projStatusVariant(status?: string): "muted" | "error" | "default" {
   switch (status) {
-    case "completed": return "success";
+    case "completed": return "muted";
     case "cancelled": return "error";
-    case "in_progress": return "default";
-    case "awaiting_confirmation": return "default";
-    default: return "success";
+    default: return "default";
   }
 }
 
@@ -90,6 +93,7 @@ const NO_MY_PROPOSALS: MyProposal[] = [];
 
 export function ProposalsTab({ categoryId, professions = [], services = [] }: ProposalsTabProps) {
   const t = useTranslations("proposalsTab");
+  const tEtapas = useTranslations("statusTabs");
   const locale = useLocale();
   const searchParams = useSearchParams();
   const { dialogNode, showMessage } = useAppDialog();
@@ -124,12 +128,12 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
     return t(`projStatus.${k}`);
   };
   const { user } = useAuth();
-  // UNA sola lista con etapas estilo Soporte: Nuevas (oportunidades sin
-  // propuesta) · Activas · Finalizadas · Canceladas (tus propuestas).
-  // DOS pestañas: las oportunidades son una lista larga (necesita su vista y
-  // sus chips); las propuestas propias son pocas (mediana 4) y se leen mejor
-  // TODAS juntas, agrupadas por etapa, que repartidas en pestañas casi vacías.
-  type StageKey = "nuevas" | "mias";
+  // UNA sola fila de navegación: el embudo completo del profesional, desde la
+  // oportunidad sin postular hasta lo que no se concretó. Solo se dibujan las
+  // etapas con contenido, así que lo normal son dos o tres pestañas, no cinco.
+  // El filtro por servicio es nivel 2 y vive en un chip con hoja, no en una
+  // segunda fila que compita con esta.
+  type StageKey = "nuevas" | "pendientes" | "en_curso" | "finalizadas";
   const [stage, setStage] = useState<StageKey>("nuevas");
   // Both lists live in the shared cache (same keys the notification prefetch
   // warms): switching tabs or coming back paints them at once, then refreshes.
@@ -180,67 +184,56 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
   // ("No me interesa") opportunities.
   const [profFilter, setProfFilter] = useState<string>("");
   const [dismissed, setDismissed] = useState<Set<string>>(new Set());
-  // Nivel 2 dentro de "Mis propuestas": chips por etapa ("" = todas, agrupadas).
-  const [mineStage, setMineStage] = useState<string>("");
+  const stageCounts = useMemo(() => {
+    const buckets = bucketCounts(myProposals.map((item) => proposalBucket(item.status, item.projects?.status)));
+    const nuevas = openProjects.filter((item) => !submitted.has(item.id) && !dismissed.has(item.id)).length;
+    const counts: Record<string, number> = { ...buckets, nuevas };
+    return counts;
+  }, [myProposals, openProjects, submitted, dismissed]);
+
+  // El modelo compartido ya separa "pendientes" de "en_curso": la etapa de una
+  // propuesta es directamente su cubeta.
+  const fineStage = useCallback(
+    (proposalStatus: string, projectStatus?: string | null) => proposalBucket(proposalStatus, projectStatus),
+    [],
+  );
+
+  // Orden de línea de tiempo: sin postular → esperando → trabajando → terminó
+  // → no pasó. Las cuatro últimas son las mismas de solicitudes y proyectos.
+  const stageDefs = useMemo(() => [
+    { key: "nuevas", label: t("tabNew") },
+    { key: "pendientes", label: tEtapas("enviadas") },
+    { key: "en_curso", label: tEtapas("en_curso") },
+    { key: "finalizadas", label: tEtapas("finalizadas") },
+  ], [locale]);
+
+  // "Nuevas" siempre está (es la puerta a las oportunidades); las etapas de tus
+  // propuestas solo aparecen cuando tienen algo.
+  const availableStages = useMemo(
+    () => stageDefs.filter((group) => group.key === "nuevas" || (stageCounts[group.key] ?? 0) > 0),
+    [stageDefs, stageCounts],
+  );
+  const effectiveStage = (availableStages.some((group) => group.key === stage)
+    ? stage
+    : (availableStages[0]?.key ?? "nuevas")) as StageKey;
+  const stageLabel = (id: string) => stageDefs.find((group) => group.key === id)?.label ?? id;
+
   // The active profession resolves AFTER profTabs (first = most opportunities).
   // Count of AVAILABLE opportunities per profession (excludes proposed/dismissed) → the
   // count badge on each filter tab.
   const profCounts = useMemo(() => {
-    const visible = openProjects.filter((p) => !submitted.has(p.id) && !dismissed.has(p.id));
-    const counts: Record<string, number> = Object.fromEntries(professions.map((p) => [p, visible.filter((o) => o.category_id === p).length]));
-    counts.all = visible.length;
+    const visibles = openProjects
+      .filter((p) => !submitted.has(p.id) && !dismissed.has(p.id))
+      .map((p) => p.category_id ?? null);
+    const counts: Record<string, number> = Object.fromEntries(professions.map((p) => [p, visibles.filter((id) => id === p).length]));
+    counts.all = visibles.length;
     return counts;
   }, [openProjects, submitted, dismissed, professions]);
 
-  const stageCounts = useMemo(() => {
-    const buckets = bucketCounts(myProposals.map((item) => proposalBucket(item.status, item.projects?.status)));
-    const nuevas = openProjects.filter((item) => !submitted.has(item.id) && !dismissed.has(item.id)).length;
-    void buckets;
-    return { nuevas, mias: myProposals.length };
-  }, [myProposals, openProjects, submitted, dismissed]);
-
-  // Etapa fina de una propuesta: separa "esperando respuesta" de "en curso"
-  // (ambas caen en el bucket "activas" del modelo compartido).
-  const fineStage = useCallback((proposalStatus: string, projectStatus?: string | null) => {
-    const bucket = proposalBucket(proposalStatus, projectStatus);
-    if (bucket !== "activas") return bucket;
-    return proposalStatus === "pending" ? "esperando" : "en_curso";
-  }, []);
-
-  const mineStageDefs = useMemo(() => [
-    { key: "en_curso", label: t("stageAccepted") },
-    { key: "esperando", label: t("stageWaiting") },
-    { key: "finalizadas", label: t("stageCompleted") },
-    { key: "canceladas", label: t("stageCancelled") },
-  ], [locale]);
-
-  const mineStageCounts = useMemo(() => {
-    const counts: Record<string, number> = {};
-    for (const item of myProposals) {
-      const key = fineStage(item.status, item.projects?.status);
-      counts[key] = (counts[key] ?? 0) + 1;
-    }
-    return counts;
-  }, [myProposals, fineStage]);
-
-  // Etapas con contenido, en orden de prioridad de acción; SIEMPRE hay una
-  // seleccionada (si la elegida se vacía, cae a la primera disponible).
-  const availableMineStages = useMemo(
-    () => mineStageDefs.filter((group) => (mineStageCounts[group.key] ?? 0) > 0),
-    [mineStageDefs, mineStageCounts],
-  );
-  const effectiveMineStage = availableMineStages.some((group) => group.key === mineStage)
-    ? mineStage
-    : (availableMineStages[0]?.key ?? "");
-  const stageLabel = (id: string) =>
-    id === "nuevas"
-      ? t("tabNew")
-      : t("tabMine");
-
   const profTabs = useMemo(() => {
-    const withCount = professions.filter((p) => (profCounts[p] ?? 0) > 0);
-    withCount.sort((a, b) => (profCounts[b] ?? 0) - (profCounts[a] ?? 0));
-    return [{ id: "all" }, ...withCount.map((p) => ({ id: p }))];
+    const conDatos = professions.filter((p) => (profCounts[p] ?? 0) > 0);
+    conDatos.sort((a, b) => (profCounts[b] ?? 0) - (profCounts[a] ?? 0));
+    return [{ id: "all" }, ...conDatos.map((p) => ({ id: p }))];
   }, [professions, profCounts]);
 
   // The chosen profession, else the FIRST chip (the one with most opportunities).
@@ -299,8 +292,7 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
       targetProjectRetryRef.current = 0;
       targetProjectHandledRef.current = true;
       const id = window.setTimeout(() => {
-        setStage("mias");
-        setMineStage(fineStage(mine.status, mine.projects?.status));
+        setStage(fineStage(mine.status, mine.projects?.status) as StageKey);
         setExpandedMine(mine.id);
         window.setTimeout(() => document.getElementById(`project-${projectId}`)?.scrollIntoView({ block: "center", behavior: "smooth" }), 80);
       }, 0);
@@ -634,28 +626,34 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
 
   return (
     <div>
-      {/* Etapas — mismo patrón que Soporte: segmentado con contadores. */}
-      <div className="mb-6">
-        <StatusFilterTabs
-          tabs={[{ id: "nuevas" }, { id: "mias" }]}
-          value={stage}
-          onChange={(id) => setStage(id as StageKey)}
-          labelFor={stageLabel}
-          counts={stageCounts}
-        />
-      </div>
+      {/* El servicio encabeza "Nuevas", donde la lista puede pasar de quince. En
+          las etapas de tus propias propuestas el servicio se lee en la tarjeta. */}
+      {effectiveStage === "nuevas" && showProfFilter && profTabs.length > 2 && (
+        <div className="mb-3">
+          <StatusFilterTabs tabs={profTabs} value={activeProf} onChange={setProfFilter} labelFor={profLabel} counts={profCounts} variant="chips" />
+        </div>
+      )}
+
+      {/* El embudo completo en una sola fila. */}
+      {availableStages.length > 0 && (
+        <div className="mb-4">
+          <StatusFilterTabs
+            tabs={availableStages.map((group) => ({ id: group.key }))}
+            value={effectiveStage}
+            onChange={(id) => setStage(id as StageKey)}
+            labelFor={stageLabel}
+            counts={stageCounts}
+          />
+        </div>
+      )}
 
       {/* Nuevas — oportunidades abiertas sin propuesta */}
-      {stage === "nuevas" && (
+      {effectiveStage === "nuevas" && (
         <div>
           {openProjects.length === 0 ? (
             <PanelEmptyState icon={Handshake} title={t("emptyBrowse")} description={t("emptyBrowseSub")} />
           ) : (
             <div className="flex flex-col gap-4">
-              {/* Filter by the pro's professions — only when they have more than one. */}
-              {showProfFilter && profTabs.length > 2 && (
-                <StatusFilterTabs tabs={profTabs} value={activeProf} onChange={setProfFilter} labelFor={profLabel} counts={profCounts} variant="chips" />
-              )}
               {(() => {
                 // Hide opportunities already proposed to (they live in "Mis propuestas") and
                 // ones the pro dismissed; show the active profession's projects (+ uncategorized,
@@ -689,6 +687,12 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
                                 <ExpandToggle open={isExpanded} className="mt-0 shrink-0" />
                               </div>
                               <div className="mt-2 flex flex-col items-start gap-1.5 text-[13px]">
+                                {project.category_id && (
+                                  <span className="inline-flex w-full max-w-full items-center gap-2 text-[#374151]">
+                                    <Wrench className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
+                                    <span className="min-w-0 truncate"><span className="font-medium text-[#9ca3af]">{t("fieldService")}</span> <span className="text-[#374151]">{getCategoryLabel(project.category_id, locale)}</span></span>
+                                  </span>
+                                )}
                                 <span className="inline-flex w-full max-w-full items-center text-[#374151]">
                                   <span className="min-w-0 truncate"><span className="font-medium text-[#9ca3af]">{t("fieldBudget")}</span> <span className={hasBudget(project) ? "font-semibold text-[#111827]" : "text-[#374151]"}>{budgetTextFor(project)}</span></span>
                                 </span>
@@ -708,25 +712,15 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
       )}
 
       {/* Propuestas por etapa */}
-      {stage !== "nuevas" && (
+      {effectiveStage !== "nuevas" && (
         <div>
           {myProposals.length === 0 ? (
             <PanelEmptyState icon={Handshake} title={t("emptyMine")} description={t("emptyMineSub")} />
           ) : (
             <div className="ccr-native-safe-list-end flex flex-col gap-4">
-              {availableMineStages.length > 1 && (
-                <StatusFilterTabs
-                  tabs={availableMineStages.map((group) => ({ id: group.key }))}
-                  value={effectiveMineStage}
-                  onChange={setMineStage}
-                  labelFor={(id) => mineStageDefs.find((group) => group.key === id)?.label ?? id}
-                  counts={mineStageCounts}
-                  variant="chips"
-                />
-              )}
               {(() => {
                 // Orden por prioridad de acción: lo que exige trabajo primero,
-                // el historial al final. Un grupo vacío no se dibuja; con un chip
+                // lo anterior al final. Un grupo vacío no se dibuja; con un chip
                 // activo se muestra solo esa etapa (sin encabezado redundante).
                 const grouped = new Map<string, typeof myProposals>();
                 for (const item of myProposals) {
@@ -735,7 +729,7 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
                   list.push(item);
                   grouped.set(key, list);
                 }
-                const visibleGroups = availableMineStages.filter((group) => group.key === effectiveMineStage);
+                const visibleGroups = availableStages.filter((group) => group.key === effectiveStage);
                 if (visibleGroups.length === 0) return <p className="text-sm text-[#6b7280] text-center py-8">{t("noneInView")}</p>;
                 return visibleGroups.map((group) => (
                   <section key={group.key} className="flex flex-col gap-3">

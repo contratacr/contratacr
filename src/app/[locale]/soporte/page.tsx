@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { LandingNavbar } from "@/components/landing/landing-navbar";
+import { SectionHeaderTitle } from "@/components/mobile/section-header-title";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { useAuth } from "@/hooks/use-auth";
 import { ArrowLeft, Headset, Home } from "lucide-react";
@@ -13,6 +14,7 @@ import { SpamNotice } from "@/components/ui/spam-notice";
 import { canOffer } from "@/lib/auth/capabilities";
 
 export default function SoportePage() {
+  const tSeccion = useTranslations("sectionTitles");
   const t = useTranslations("soporte");
   const { user } = useAuth();
   const panelHref = "/dashboard/profesional?tab=soporte";
@@ -30,6 +32,7 @@ export default function SoportePage() {
     return (
       <div className="min-h-screen flex flex-col bg-white">
         <LandingNavbar />
+      <SectionHeaderTitle title={tSeccion("support")} fallbackHref="/" />
         <div className="ccr-navbar-spacer h-16" aria-hidden />
         <main className="flex flex-1 items-center justify-center px-4 pb-20 pt-12">
           {/* Confirmation — tight visual hierarchy: prominent title + ONE concise
@@ -103,6 +106,7 @@ export default function SoportePage() {
   return (
     <div className="min-h-screen flex flex-col bg-[#f4f7fa]">
       <LandingNavbar />
+      <SectionHeaderTitle title={tSeccion("support")} fallbackHref="/" />
       <div className="ccr-navbar-spacer h-16" aria-hidden />
       <main className="ccr-native-compact-page flex-1 px-4 pb-16 pt-12">
         <div className="mx-auto max-w-xl">

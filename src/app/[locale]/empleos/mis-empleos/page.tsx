@@ -1,4 +1,7 @@
 import { redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
+import { LandingNavbar } from "@/components/landing/landing-navbar";
+import { SectionHeaderTitle } from "@/components/mobile/section-header-title";
 import { getLocale } from "next-intl/server";
 import { JobsManager } from "@/components/jobs/jobs-manager";
 import { type JobPost } from "@/lib/jobs";
@@ -9,6 +12,7 @@ import { repairVisibleText } from "@/lib/text/repair-visible-text";
 export const dynamic = "force-dynamic";
 
 export default async function MyJobsPage() {
+  const tSecciones = await getTranslations("sectionTitles");
   const locale = await getLocale();
   const supabase = await createClient();
   const user = await safeGetUser(supabase);
@@ -26,6 +30,8 @@ export default async function MyJobsPage() {
   })) as Array<JobPost & { applications: Array<{ id: string; status: string; created_at: string; cover_letter: string; applicant_email: string | null; phone: string | null; resume_url: string | null; portfolio_url: string | null; applicant_name: string }> }>;
   return (
     <main data-route-content="jobs-manager">
+      <LandingNavbar mobileSearch={false} />
+      <SectionHeaderTitle title={tSecciones("myJobs")} fallbackHref="/empleos" />
       <JobsManager initialJobs={jobs} />
     </main>
   );

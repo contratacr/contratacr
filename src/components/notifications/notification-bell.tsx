@@ -11,6 +11,7 @@ import { notificationActionHref, notificationInMode } from "@/lib/notification-l
 import { localizedNotificationCopy } from "@/lib/localized-notification";
 import { cacheNotifications, readCachedNotifications, uniqueNotifications } from "@/lib/notifications-cache";
 import { NotificationSourceIcon } from "@/components/notifications/notification-source-icon";
+import { useActorPhotos } from "@/lib/notifications/use-actor-photos";
 import { cn, formatRelativeOrDate } from "@/lib/utils";
 import { useNativeApp } from "@/hooks/use-native-app";
 
@@ -36,6 +37,7 @@ export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "o
   const [hasSyncedNotifications, setHasSyncedNotifications] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const portalHost = typeof document === "undefined" ? null : document.body;
+  const [posicionPanel, setPosicionPanel] = useState<{ top: number; right: number } | null>(null);
   const nativeApp = useNativeApp();
   const menuRef = useRef<HTMLDivElement | null>(null);
   const menuPanelRef = useRef<HTMLDivElement | null>(null);
@@ -62,7 +64,8 @@ export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "o
       ? notificationUnread.use + notificationUnread.neutral
       : notificationUnread.offer + notificationUnread.use + notificationUnread.neutral;
   const unreadCount = Math.max(cachedUnreadCount, serverUnreadCount);
-  const previewItems = visible.slice(0, 4);
+  const previewItems = visible.slice(0, 5);
+  const fotoDe = useActorPhotos(previewItems);
 
   const fetchNotifications = useCallback(() => {
     if (!user) return;
@@ -180,18 +183,33 @@ export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "o
 
   // The panel is anchored to the bell on the website; inside the app it is
   // portalled to <body> and pinned to the viewport, above the native header.
+  useEffect(() => {
+    if (!menuOpen || !nativeApp) return;
+    const situar = () => {
+      const boton = menuRef.current?.querySelector("button");
+      if (!boton) return;
+      const caja = boton.getBoundingClientRect();
+      setPosicionPanel({
+        top: Math.round(caja.bottom + 8),
+        right: Math.max(12, Math.round(window.innerWidth - caja.right)),
+      });
+    };
+    situar();
+    window.addEventListener("resize", situar);
+    window.addEventListener("scroll", situar, true);
+    return () => {
+      window.removeEventListener("resize", situar);
+      window.removeEventListener("scroll", situar, true);
+    };
+  }, [menuOpen, nativeApp]);
+
   const menuPanel = (
-        <div ref={menuPanelRef} className={cn(nativeApp ? "ccr-notification-bell-menu fixed right-4 top-16 z-[230]" : "absolute right-0 top-11 z-[90]", "w-[min(22rem,calc(100vw-1rem))] overflow-hidden rounded-2xl border border-[#dbe4ee] bg-white shadow-[0_18px_45px_-18px_rgba(15,23,42,0.45)]")}>
+        <div ref={menuPanelRef} style={nativeApp && posicionPanel ? { top: posicionPanel.top, right: posicionPanel.right } : undefined} className={cn(nativeApp ? "ccr-notification-bell-menu fixed right-4 top-16 z-[230]" : "absolute right-0 top-11 z-[90]", "w-[min(22rem,calc(100vw-1rem))] overflow-hidden rounded-2xl border border-[#dbe4ee] bg-white shadow-[0_18px_45px_-18px_rgba(15,23,42,0.45)]")}>
           <div className="flex items-center justify-between gap-3 border-b border-[#eef2f6] px-4 py-3">
             <div className="min-w-0">
               <p className="text-sm font-extrabold text-[#111827]">{t("title")}</p>
-              <p className="mt-0.5 text-xs font-semibold text-[#64748b]">
-                {unreadCount > 0
-                  ? locale === "en" ? `${unreadCount} unread` : `${unreadCount} sin leer`
-                  : locale === "en" ? "All caught up" : "Todo al día"}
-              </p>
             </div>
-            {unreadCount > 0 && (
+            {false && (
               <button
                 type="button"
                 onClick={() => void markAllRead()}
@@ -217,16 +235,22 @@ export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "o
                     !item.read && "bg-[#f8fcff]",
                   )}
                 >
-                  <span className={cn("mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-full", item.read ? "bg-[#f1f5f9] text-[#64748b]" : "bg-[#e8f8fe] text-[#009FD9]")}>
-                    <NotificationSourceIcon type={item.type} className="h-4 w-4" />
-                  </span>
+                  {fotoDe(item) ? (
+                    // eslint-disable-next-line @next/next/no-img-element -- miniatura fija; el optimizador no actúa en Cloudflare
+                    <img src={fotoDe(item) as string} alt="" className="mt-0.5 h-9 w-9 shrink-0 rounded-full object-cover" />
+                  ) : (
+                    <span className="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#EBF5FB] text-[#0089bb]">
+                      <NotificationSourceIcon type={item.type} className="h-4 w-4" />
+                    </span>
+                  )}
                   <span className="min-w-0 flex-1">
                     <span className="flex min-w-0 items-start gap-2">
-                      <span className="min-w-0 flex-1 truncate text-sm font-bold text-[#111827]">{copy.title}</span>
+                      <span className={cn("min-w-0 flex-1 line-clamp-3 text-sm leading-snug", item.read ? "font-medium text-[#374151]" : "font-semibold text-[#111827]")}>
+                        {copy.message || copy.title}
+                        <span className="ml-1.5 whitespace-nowrap text-[11px] font-medium text-[#94a3b8]">· {formatRelativeOrDate(item.created_at, locale)}</span>
+                      </span>
                       {!item.read && <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-[#009FD9]" />}
                     </span>
-                    <span className="mt-0.5 line-clamp-2 text-xs leading-snug text-[#64748b]">{copy.message}</span>
-                    <span className="mt-1 block text-[11px] font-semibold text-[#94a3b8]">{formatRelativeOrDate(item.created_at, locale)}</span>
                   </span>
                 </button>
                 );

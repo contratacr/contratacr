@@ -99,6 +99,7 @@ export function JobMarketplaceHeader({ initialQuery = "", initialLocation = "", 
       placeholder={copy.placeholder}
       suggestions={mergedSuggestions}
       recentStorageKey="ccr-job-search-recents"
+      visitSurface="empleos"
       secondary={{
         value: location,
         onChange: setLocation,

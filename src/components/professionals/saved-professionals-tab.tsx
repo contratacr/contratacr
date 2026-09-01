@@ -17,7 +17,7 @@ import { getProfessionalDisplayName } from "@/lib/display-name";
 import { ResponsiveVerifiedName } from "@/components/professionals/responsive-verified-name";
 import { ProgressiveImage } from "@/components/ui/progressive-image";
 
-type SavedFilter = "all" | "professionals" | "offers" | "jobs";
+type SavedFilter = "professionals" | "offers" | "jobs";
 type SavedItemKind = "offer" | "job";
 
 type SavedItem = {
@@ -162,7 +162,7 @@ export function SavedProfessionalsTab() {
   const { user, loading: authLoading } = useAuth();
   const [savedPros, setSavedPros] = useState<SavedPro[]>([]);
   const [savedItems, setSavedItems] = useState<SavedItem[]>([]);
-  const [filter, setFilter] = useState<SavedFilter>("all");
+  const [filter, setFilter] = useState<SavedFilter>("professionals");
   const [mounted, setMounted] = useState(false);
 
   const refreshPros = useCallback(() => {
@@ -226,32 +226,28 @@ export function SavedProfessionalsTab() {
   const offers = useMemo(() => savedItems.filter((item) => item.item_type === "offer"), [savedItems]);
   const jobs = useMemo(() => savedItems.filter((item) => item.item_type === "job"), [savedItems]);
   const total = savedPros.length + offers.length + jobs.length;
-  const showPros = filter === "all" || filter === "professionals";
-  const showOffers = filter === "all" || filter === "offers";
-  const showJobs = filter === "all" || filter === "jobs";
+  const showPros = filter === "professionals";
+  const showOffers = filter === "offers";
+  const showJobs = filter === "jobs";
 
-  // Los tres tipos que se pueden guardar, con "Todos" al frente (valor por
-  // defecto): al entrar se ve todo lo guardado y los chips refinan.
-  const availableFilters: SavedFilter[] = ["all", "professionals", "offers", "jobs"];
+  // Los tres tipos que se pueden guardar. Se abre en Profesionales, que es lo
+  // que casi siempre se viene a buscar.
+  const availableFilters: SavedFilter[] = ["professionals", "offers", "jobs"];
 
   if (!mounted || authLoading) return <PanelListSkeleton rows={3} hasData={total > 0} />;
 
   const tabs = availableFilters.map((id) => ({ id }));
   const tabLabels: Record<string, string> = {
-    all: t("allFilter"),
     professionals: t("professionalsTab"),
     offers: t("offersTab"),
     jobs: t("jobsTab"),
   };
   const tabCounts = {
-    all: savedPros.length + offers.length + jobs.length,
     professionals: savedPros.length,
     offers: offers.length,
     jobs: jobs.length,
   };
-  const selectedCount = filter === "all"
-    ? savedPros.length + offers.length + jobs.length
-    : filter === "professionals" ? savedPros.length : filter === "offers" ? offers.length : jobs.length;
+  const selectedCount = filter === "professionals" ? savedPros.length : filter === "offers" ? offers.length : jobs.length;
   const selectedEmptyLabel = filter === "professionals"
     ? t("emptyProfessionals")
     : filter === "offers"
@@ -268,7 +264,6 @@ export function SavedProfessionalsTab() {
         onChange={(id) => setFilter(id as SavedFilter)}
         counts={tabCounts}
         labelFor={(id) => tabLabels[id] ?? id}
-        variant="chips"
       />
 
       <div className="overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm divide-y divide-[#f3f4f6]">
@@ -279,7 +274,7 @@ export function SavedProfessionalsTab() {
           <div className="space-y-3 px-4 py-8 text-center">
             <Bookmark className="mx-auto h-7 w-7 text-[#009FD9]" aria-hidden="true" />
             <p className="text-sm font-semibold text-[#6b7280]">{selectedEmptyLabel}</p>
-            {(filter === "all" || filter === "professionals") && (
+            {filter === "professionals" && (
               <Button asChild><Link href="/buscar">{t("searchPros")}</Link></Button>
             )}
           </div>

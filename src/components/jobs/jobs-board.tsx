@@ -9,6 +9,10 @@ import { useSearchParams } from "next/navigation";
 import { useLocale } from "next-intl";
 import { ArrowLeft, BriefcaseBusiness, Building2, Menu } from "lucide-react";
 import { Link, useRouter } from "@/i18n/navigation";
+import { recordRecentVisit } from "@/lib/recent-visits";
+import { ContrataCRMark, HeaderMessagesLink, HeaderNotificationsLink } from "@/components/landing/landing-navbar";
+import { NotificationBell } from "@/components/notifications/notification-bell";
+import { useDirectMessageUnread } from "@/hooks/use-direct-message-unread";
 import { MarketplaceFilterChip, MarketplaceNavbarPortal, MarketplaceSearch } from "@/components/marketplace/marketplace-controls";
 import { Modal } from "@/components/ui/modal";
 import { JobPostForm } from "@/components/jobs/job-post-form";
@@ -41,6 +45,8 @@ const JOBS_COPY = {
     remoteCountry: "Costa Rica (Remoto)", country: "Costa Rica", noApplicants: "Sin postulantes", applicant: "postulante", applicants: "postulantes",
     searchPlaceholder: "¿Qué empleo estás buscando?", published: "Publicado", anyDate: "Cualquier fecha", last24Hours: "Últimas 24 horas", lastWeek: "Última semana", lastMonth: "Último mes",
     workplace: "Modalidad", anyWorkplace: "Cualquier modalidad", experience: "Experiencia", anyExperience: "Cualquier experiencia", employmentType: "Tipo de empleo", anyEmploymentType: "Cualquier tipo",
+    messages: "Mensajes",
+    notifications: "Notificaciones",
     myJobs: "Mis empleos", publishJob: "Publicar empleo", jobs: "Empleos", opportunities: "Oportunidades en Costa Rica", job: "Empleo", openMenu: "Abrir menú",
     salary: "Salario", publishedBy: "Publicado por", editJob: "Editar empleo", manageJob: "Administrar empleo", applicationSent: "Postulación enviada", apply: "Postularme",
     noResults: "No encontramos empleos", noJobs: "Todavía no hay empleos", emptyHelp: "Prueba otra búsqueda o cambia los filtros.", futureJobs: "Las nuevas oportunidades laborales aparecerán aquí.", viewAll: "Ver todos los empleos", publishFirst: "Publicar el primer empleo", publishSubtitle: "Describe la oportunidad con información clara y verificable.", editSubtitle: "Actualiza la información de esta publicación.", sendApplication: "Enviar postulación",
@@ -52,6 +58,8 @@ const JOBS_COPY = {
     remoteCountry: "Costa Rica (Remote)", country: "Costa Rica", noApplicants: "No applicants", applicant: "applicant", applicants: "applicants",
     searchPlaceholder: "What job are you looking for?", published: "Posted", anyDate: "Any date", last24Hours: "Past 24 hours", lastWeek: "Past week", lastMonth: "Past month",
     workplace: "Workplace", anyWorkplace: "Any workplace", experience: "Experience", anyExperience: "Any experience", employmentType: "Job type", anyEmploymentType: "Any type",
+    messages: "Messages",
+    notifications: "Notifications",
     myJobs: "My jobs", publishJob: "Post a job", jobs: "Jobs", opportunities: "Opportunities in Costa Rica", job: "Job", openMenu: "Open menu",
     salary: "Salary", publishedBy: "Posted by", editJob: "Edit job", manageJob: "Manage job", applicationSent: "Application sent", apply: "Apply",
     noResults: "No jobs found", noJobs: "There are no jobs yet", emptyHelp: "Try another search or change the filters.", futureJobs: "New job opportunities will appear here.", viewAll: "View all jobs", publishFirst: "Post the first job", publishSubtitle: "Describe the opportunity with clear, verifiable information.", editSubtitle: "Update this job post.", sendApplication: "Submit application",
@@ -101,6 +109,7 @@ function JobMetaLine({ job, className = "", showApplicants = true }: { job: JobP
 
 export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo = null, currentProfessionalId = null, currentUserId = null, currentUserEmail = null, currentUserPhone = null, currentUserLinkedIn = null, appliedJobIds = [], detailOnly = false }: Props) {
   const locale = marketplaceLocale(useLocale());
+  const mensajesSinLeer = useDirectMessageUnread();
   const copy = JOBS_COPY[locale];
   const nativeApp = useNativeApp();
   const router = useRouter();
@@ -118,6 +127,9 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
   const [published, setPublished] = useState("all");
   const [selectedId, setSelectedId] = useState(() => searchParams.get("job") ?? searchParams.get("apply") ?? initialSelectedJobId ?? jobs[0]?.id ?? "");
   const [now, setNow] = useState(0);
+
+  // Sin sesión, los avisos llevan a la pantalla de acceso y de ahí a su destino.
+  const accesoHref = (destino: string) => `/login?redirect=${encodeURIComponent(`/${locale}${destino}`)}`;
 
   useEffect(() => {
     if (!nativeApp) return;
@@ -168,6 +180,7 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
   }), [employment, experience, jobs, locationFilter, now, published, query, workplace]);
 
   const selected = filtered.find((job) => job.id === selectedId) ?? filtered[0] ?? null;
+
   const suggestions = [...new Set([...jobs.map((job) => job.title), ...COMMON_JOB_TITLES])];
   const locationSuggestions = useMemo(
     () => [...new Set(jobs.map((job) => job.location_label?.trim()).filter((value): value is string => Boolean(value)))],
@@ -207,6 +220,7 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
       placeholder={copy.searchPlaceholder}
       suggestions={suggestions}
       recentStorageKey="ccr-job-search-recents"
+      visitSurface="empleos"
       secondary={{
         value: locationFilter,
         onChange: setLocationFilter,
@@ -251,6 +265,17 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
   );
 
   const showingMobileDetail = Boolean(initialSelectedJobId && selected);
+  // Abrir un empleo lo deja en "vistos recientemente" del buscador.
+  useEffect(() => {
+    if (!showingMobileDetail || !selected) return;
+    recordRecentVisit("empleos", {
+      id: String(selected.id),
+      titulo: selected.title,
+      subtitulo: selected.employer_name ?? undefined,
+      imagen: selected.employer_avatar_url ?? undefined,
+      href: `/empleos/${selected.id}`,
+    });
+  }, [selected, showingMobileDetail]);
   const detailBackHref = safeMarketplaceReturnHref(returnTo, "/empleos");
   const detailBackLabel = marketplaceReturnLabel(detailBackHref, "/empleos", locale);
 
@@ -280,11 +305,27 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
     )}
     <section className={`${showingMobileDetail ? "hidden " : ""}ccr-marketplace-sticky sticky top-0 z-20 border-b border-[#d5d8dc] bg-white lg:hidden`}>
       <div className="px-0">
-        <div className="relative flex min-h-[56px] items-center justify-center px-14">
-          <button type="button" onClick={() => window.dispatchEvent(new Event("ccr:open-mobile-menu"))} aria-label={copy.openMenu} className="absolute left-3 top-1/2 grid h-11 w-11 -translate-y-1/2 place-items-center text-[#162543] transition hover:bg-[#eef5f9]">
+        <div className="flex min-h-[56px] items-center gap-1 px-2">
+          <button type="button" onClick={() => window.dispatchEvent(new Event("ccr:open-mobile-menu"))} aria-label={copy.openMenu} className="grid h-11 w-11 shrink-0 place-items-center rounded-xl text-[#162543] transition hover:bg-[#eef5f9]">
             <Menu className="h-5 w-5" strokeWidth={2.5} />
           </button>
-          <h1 className="truncate text-center text-[21px] font-extrabold text-[#162543]">{copy.jobs}</h1>
+          <Link href="/" aria-label="ContrataCR inicio" className="-ml-1 shrink-0">
+            <ContrataCRMark className="h-7 w-7" />
+          </Link>
+          <h1 className="min-w-0 truncate pl-1.5 text-[17px] font-extrabold text-[#162543]">{copy.jobs}</h1>
+          <div className="ml-auto flex shrink-0 items-center gap-0.5">
+            {currentUserId ? (
+              <>
+                <HeaderMessagesLink unreadCount={mensajesSinLeer} label={copy.messages} />
+                <NotificationBell scope="all" />
+              </>
+            ) : (
+              <>
+                <HeaderMessagesLink unreadCount={0} label={copy.messages} href={accesoHref("/mensajes")} />
+                <HeaderNotificationsLink href={accesoHref("/notificaciones")} label={copy.notifications} />
+              </>
+            )}
+          </div>
         </div>
         <div className="px-4 pb-3">{renderSearch()}</div>
         <ScrollRail className="ccr-chip-row flex gap-1.5 px-4 pb-4">{renderFilters()}</ScrollRail>

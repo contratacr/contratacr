@@ -34,6 +34,9 @@ interface ProfessionalScheduleProps {
   slotsInitiallyLoaded?: boolean;
   /** When the client searched a specific profession, only show that one's slots. */
   activeCategory?: string;
+  /** False when the searched service does not support video consultations: the
+   *  card then hides the Videoconsulta place even if the profile has it on. */
+  videoConsultApplies?: boolean;
   /** True when the viewer owns this profile — no self-service actions. */
   isOwn?: boolean;
   /** The LEFT-column professional info (photo, name, price, tags, rating),
@@ -104,7 +107,7 @@ function monthShort(locale: string, monthIndex: number) {
  *    "Ver disponibilidad" link to the full profile.
  *  - Private: lock state with "Contáctanos por Whatsapp" + "por llamada".
  */
-export function ProfessionalSchedule({ professional, categoryName, availabilityPublic, contactPreference = "ambas", slots: allSlots, slotsInitiallyLoaded = true, activeCategory, isOwn = false, info, placeFallback = "", placeAddress = "", businessName = "", stacked = false, forceContactOnly = false, preferredLocationId, restrictToPreferredLocation = false, syncWithSearchLoading = false }: ProfessionalScheduleProps) {
+export function ProfessionalSchedule({ professional, categoryName, availabilityPublic, contactPreference = "ambas", videoConsultApplies = true, slots: allSlots, slotsInitiallyLoaded = true, activeCategory, isOwn = false, info, placeFallback = "", placeAddress = "", businessName = "", stacked = false, forceContactOnly = false, preferredLocationId, restrictToPreferredLocation = false, syncWithSearchLoading = false }: ProfessionalScheduleProps) {
   const t = useTranslations("schedule");
   const tLoading = useTranslations("loading");
   const locale = useLocale();
@@ -340,6 +343,7 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
       const rawLabel = (w as { label?: unknown }).label;
       const label = w.name?.trim() || (typeof rawLabel === "string" ? rawLabel.trim() : "");
       const isVideoWorkplace = label.trim().toLocaleLowerCase() === normalizedVideoLabel || (w as { type?: unknown }).type === "video";
+      if (isVideoWorkplace && !videoConsultApplies) continue;
       const id = isVideoWorkplace ? "videoconsulta" : (w.id || (professional.workplaces?.length === 1 ? "general" : ""));
       if (id && label) map.set(id, label);
     }
@@ -350,12 +354,12 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
       if (id && id !== "general" && label && label !== t("location") && !map.has(id)) map.set(id, label);
     }
     const hasVideoOption = map.has("videoconsulta") || Array.from(map.values()).some((label) => label.trim().toLocaleLowerCase() === normalizedVideoLabel);
-    if ((professional.videoconsulta || professional.coverage?.country) && !hasVideoOption) {
+    if (videoConsultApplies && (professional.videoconsulta || professional.coverage?.country) && !hasVideoOption) {
       map.set("videoconsulta", videoLabel);
     }
     return Array.from(map, ([id, label]) => ({ id, label }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [professional.coverage?.country, professional.workplaces, professional.videoconsulta, slots, t]);
+  }, [professional.coverage?.country, professional.workplaces, professional.videoconsulta, slots, t, videoConsultApplies]);
 
   const visibleLocationOptions = useMemo(() => {
     if ((forceContactOnly || restrictToPreferredLocation) && preferredLocationId) {
@@ -478,7 +482,7 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
         >
           {primaryLocationTabs.map((o, locationIndex) => {
             const active = hasRealLoc ? o.id === effectiveId : true;
-            const isVideoTab = o.id === "videoconsulta" || (!hasRealLoc && (professional.videoconsulta || professional.coverage?.country));
+            const isVideoTab = o.id === "videoconsulta" || (!hasRealLoc && videoConsultApplies && (professional.videoconsulta || professional.coverage?.country));
             return (
               <button
                 key={o.id}
@@ -743,7 +747,7 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
   // OUTLINED/secondary (when it sits BELOW "Ver disponibilidad"). Calls are blocked on
   // the pro's OWN card (shows a self note instead). Rendered only when showCall is true.
   const contactSource = stacked ? "profile" : "search";
-  const secondaryContactClass = "w-full inline-flex items-center justify-center gap-1.5 rounded-full border border-[#e5e7eb] bg-white py-2.5 text-[13px] font-semibold text-[#374151] transition-colors hover:bg-[#f9fafb] disabled:opacity-60";
+  const secondaryContactClass = "w-full inline-flex h-10 items-center justify-center gap-1.5 rounded-full border border-[#e5e7eb] bg-white py-0 text-[13px] font-semibold text-[#374151] transition-colors hover:bg-[#f9fafb] disabled:opacity-60";
   // Profile page uses the short label "Llamar"; /buscar keeps "Contáctanos por llamada".
   const renderCall = () => (
     <ContactButton
@@ -773,7 +777,7 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
       label={t("email")}
     />
   );
-  const messageButtonClass = "w-full rounded-full py-2.5 text-[13px] font-semibold";
+  const messageButtonClass = "w-full h-10 rounded-full py-0 text-[13px] font-semibold";
   const searchMessageButtonClass = `${messageButtonClass} bg-[#009FD9] hover:bg-[#0089bb] focus-visible:ring-[#009FD9]`;
   const contactButtons = (
     <>
@@ -786,20 +790,36 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
 
   const profileContactButtons = (
     <>
-      <DirectChatLauncher
-        professionalId={professional.id}
-        professionalName={professional.fullName}
-        contextTitle={categoryName}
-        isOwn={isOwn}
-        onSelfAction={() => setSelfMsg(SELF_MSG.whatsapp)}
-        analyticsSource="profile"
-        tone={hasSchedule ? "contrast" : "primary"}
-        className={messageButtonClass}
-      />
-      {(showCall || showEmail) && (
-        <div className={`grid gap-2 ${showCall && showEmail ? "grid-cols-2" : "grid-cols-1"}`}>
-          {showCall && renderCall()}
-          {showEmail && renderEmail(`${secondaryContactClass} px-3`)}
+      {showCall ? (
+        <div className="grid grid-cols-2 gap-2">
+          <DirectChatLauncher
+            professionalId={professional.id}
+            professionalName={professional.fullName}
+            contextTitle={categoryName}
+            isOwn={isOwn}
+            onSelfAction={() => setSelfMsg(SELF_MSG.whatsapp)}
+            analyticsSource="profile"
+            tone={hasSchedule ? "contrast" : "primary"}
+            buttonLabel="WhatsApp"
+            className={messageButtonClass}
+          />
+          {renderCall()}
+        </div>
+      ) : (
+        <DirectChatLauncher
+          professionalId={professional.id}
+          professionalName={professional.fullName}
+          contextTitle={categoryName}
+          isOwn={isOwn}
+          onSelfAction={() => setSelfMsg(SELF_MSG.whatsapp)}
+          analyticsSource="profile"
+          tone={hasSchedule ? "contrast" : "primary"}
+          className={messageButtonClass}
+        />
+      )}
+      {showEmail && (
+        <div className="grid grid-cols-1 gap-2">
+          {renderEmail(`${secondaryContactClass} px-3`)}
         </div>
       )}
     </>

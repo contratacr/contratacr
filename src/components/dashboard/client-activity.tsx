@@ -105,16 +105,16 @@ type Proposal = {
 };
 
 // ONE shared status→colour mapping (sprint 440), identical to the pro side so a
-// booking's state reads the SAME everywhere: ACTIVE/upcoming = brand-blue (default),
-// awaiting confirmation = brand-blue/info, FINISHED = green, cancelled = red.
-// (Previously active states were green "success" — reading as done/closed — and the
-// finished state was muted grey: the open-vs-closed state looked inverted.)
+// UN color por significado, no un color por estado: azul de marca = está vivo
+// ahora; gris = pasó o está en pausa; rojo = SOLO lo que salió mal (cancelado,
+// no seleccionado). Un empleo cerrado suele ser el final feliz — pintarlo de
+// rojo lo hacía leer como error, y con todo de colores el color deja de decir.
 const STATUS_VARIANT: Record<BookingStatus, "warning" | "success" | "error" | "default" | "muted"> = {
   pending: "default",
   confirmed: "default",
   in_progress: "default",
   awaiting_confirmation: "default",
-  completed: "success",
+  completed: "muted",
   cancelled: "error",
   rescheduled: "muted",
 };
@@ -152,6 +152,7 @@ async function fetchClientProjects(): Promise<Project[]> {
 export function ClientActivity({ section }: { section: ClientActivitySection }) {
   const { user } = useAuth();
   const t = useTranslations("clientActivity");
+  const tEtapas = useTranslations("statusTabs");
   const locale = useLocale();
   const searchParams = useSearchParams();
   const dateLocale = locale === "en" ? "en-US" : "es-CR";
@@ -190,8 +191,8 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
   const [reviewModal, setReviewModal] = useState<{ professionalId: string; professionalName: string; bookingId?: string; projectId?: string } | null>(null);
   const [myReviews, setMyReviews] = useState<{ professional_id: string; booking_id?: string | null; project_id?: string | null; rating: number }[]>([]);
   // One unified filter set (sprint 430): Activas · Finalizadas · Canceladas.
-  const [bookingFilter, setBookingFilter] = useState("activas");
-  const [projectFilter, setProjectFilter] = useState("activas");
+  const [bookingFilter, setBookingFilter] = useState("en_curso");
+  const [projectFilter, setProjectFilter] = useState("pendientes");
   const [expandedProject, setExpandedProject] = useState<string | null>(null);
   // Solicitudes is now a collapsible accordion too (sprint 440) — same card language
   // as the professional Solicitudes / Proyectos sections and Mis proyectos.
@@ -580,10 +581,18 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
     return <PanelListSkeleton rows={3} withTabs hasData={currentItems.length > 0} />;
   }
 
-  const filteredBookings = bookings.filter((b) => solicitudMatches(bookingFilter, b.status, b.scheduled_date));
-  const filteredProjects = projects.filter((p) => proyectoMatches(projectFilter, p.status));
   const bookingCounts = bucketCounts(bookings.map((b) => solicitudBucket(b.status, b.scheduled_date)));
   const projectCounts = bucketCounts(projects.map((p) => proyectoBucket(p.status)));
+  // Solo se ofrecen las etapas con contenido; si la elegida quedó vacía se cae
+  // a la primera disponible (mismo patrón que las propuestas del profesional).
+  const bookingTabs = SOLICITUD_TABS.filter((tab) => (bookingCounts[tab.id] ?? 0) > 0);
+  const effectiveBookingFilter = bookingTabs.some((tab) => tab.id === bookingFilter)
+    ? bookingFilter : (bookingTabs[0]?.id ?? bookingFilter);
+  const projectTabs = PROYECTO_TABS.filter((tab) => (projectCounts[tab.id] ?? 0) > 0);
+  const effectiveProjectFilter = projectTabs.some((tab) => tab.id === projectFilter)
+    ? projectFilter : (projectTabs[0]?.id ?? projectFilter);
+  const filteredBookings = bookings.filter((b) => solicitudMatches(effectiveBookingFilter, b.status, b.scheduled_date));
+  const filteredProjects = projects.filter((p) => proyectoMatches(effectiveProjectFilter, p.status));
   return (
     <>
       {/* SENT SOLICITUDES */}
@@ -598,7 +607,9 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
             />
           ) : (
             <>
-              <StatusFilterTabs tabs={SOLICITUD_TABS} value={bookingFilter} onChange={setBookingFilter} counts={bookingCounts} />
+              {bookingTabs.length > 0 && (
+                <StatusFilterTabs tabs={bookingTabs} value={effectiveBookingFilter} onChange={setBookingFilter} counts={bookingCounts} />
+              )}
               {filteredBookings.length === 0 ? (
                 <p className="text-sm text-[#6b7280] text-center py-8">{t("noBookingsView")}</p>
               ) : (
@@ -830,7 +841,25 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
             />
           ) : (
             <div className="ccr-native-safe-list-end flex flex-col gap-3.5">
-              <StatusFilterTabs tabs={PROYECTO_TABS} value={projectFilter} onChange={setProjectFilter} counts={projectCounts} />
+              <div className="flex justify-end lg:hidden">
+                <button
+                  type="button"
+                  onClick={() => setShowPublish(true)}
+                  className="inline-flex h-10 shrink-0 items-center gap-2 rounded-lg bg-[#009FD9] px-4 text-sm font-bold text-white transition-colors hover:bg-[#0089bb]"
+                >
+                  <Plus className="h-4 w-4" />
+                  {t("publishShort")}
+                </button>
+              </div>
+              {projectTabs.length > 0 && (
+                <StatusFilterTabs
+                  tabs={projectTabs}
+                  value={effectiveProjectFilter}
+                  onChange={setProjectFilter}
+                  counts={projectCounts}
+                  labelFor={(id) => tEtapas(id === "pendientes" ? "publicados" : id === "finalizadas" ? "finalizados" : id)}
+                />
+              )}
               {filteredProjects.length === 0 && (
                 <p className="text-sm text-[#6b7280] text-center py-8">{t("noProjectsView")}</p>
               )}
@@ -839,11 +868,9 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                 const proposalList = projectProposals[project.id];
                 const proposalCount = project.proposals?.length ?? 0;
                 const zone = [project.cantones?.name, project.provincias?.name].filter(Boolean).join(", ");
-                const statusVariant = project.status === "awaiting_confirmation" ? "default"
-                  : project.status === "in_progress" ? "default"
-                  : project.status === "completed" ? "success"
-                    : project.status === "cancelled" ? "error"
-                      : "default";
+                const statusVariant = project.status === "completed" ? "muted"
+                  : project.status === "cancelled" ? "error"
+                    : "default";
                 const statusLabel = project.status === "in_progress" ? t("projAssigned")
                   : project.status === "awaiting_confirmation" ? t("projAwaiting")
                     : project.status === "completed" ? t("projCompleted")
@@ -1127,18 +1154,6 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                 );
               })}
 
-              {/* MOBILE floating action button (FAB) — the section's primary action.
-                  There is no dashboard bottom tab bar now, so keep it close to the safe
-                  area instead of floating too high. */}
-              <button
-                type="button"
-                onClick={() => setShowPublish(true)}
-                aria-label={t("publishProject")}
-                className="ccr-native-fab lg:hidden fixed right-4 bottom-[calc(1rem+env(safe-area-inset-bottom))] z-30 inline-flex items-center gap-2 rounded-full bg-[#009FD9] px-5 py-3.5 text-sm font-semibold text-white shadow-lg shadow-[#009FD9]/30 transition-transform active:scale-95 hover:bg-[#0089bb]"
-              >
-                <Plus className="h-5 w-5" />
-                {t("publishShort")}
-              </button>
             </div>
           )}
         </div>

@@ -1,5 +1,8 @@
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
+import { LandingNavbar } from "@/components/landing/landing-navbar";
+import { SectionHeaderTitle } from "@/components/mobile/section-header-title";
 import { getLocale } from "next-intl/server";
 import { OffersManager } from "@/components/offers/offers-manager";
 import { PageRouteLoading } from "@/components/ui/route-loading";
@@ -19,6 +22,7 @@ export default function MyOffersPage() {
 }
 
 async function MyOffersContent() {
+  const tSecciones = await getTranslations("sectionTitles");
   const locale = await getLocale();
   const supabase = await createClient();
   const user = await safeGetUser(supabase);
@@ -34,6 +38,8 @@ async function MyOffersContent() {
   })) as ProfessionalOffer[];
   return (
     <main data-route-content="offers-manager">
+      <LandingNavbar mobileSearch={false} />
+      <SectionHeaderTitle title={tSecciones("myOffers")} fallbackHref="/ofertas" />
       <OffersManager initialOffers={offers} />
     </main>
   );

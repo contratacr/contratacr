@@ -10,8 +10,13 @@ const BREATH_PERIOD_MS = 2400;
 // A loading screen that replaces another within this window is the same wait
 // continuing (root fallback -> route fallback -> nested fallback), not a new one.
 const HANDOFF_WINDOW_MS = 500;
-// How long the ghost of a departed route overlay keeps covering the swap.
-const GHOST_MS = 160;
+// How long the ghost of a departed route overlay keeps covering the swap. La
+// pantalla nueva a veces tarda más de un cuadro en pintar (mapa, listas), y el
+// fantasma se iba antes: ese hueco era el parpadeo raro que quedaba. Ahora
+// cubre más tiempo y se va desvaneciendo, así que aunque la pantalla llegue
+// tarde el relevo es un cruce suave y no un corte.
+const GHOST_MS = 320;
+const GHOST_FADE_MS = 180;
 
 function spawnGhost(screen: HTMLElement, phaseMs: number) {
   const ghost = screen.cloneNode(true) as HTMLElement;
@@ -23,8 +28,13 @@ function spawnGhost(screen: HTMLElement, phaseMs: number) {
   ghost.setAttribute("data-ccr-loading-ghost", "");
   const mark = ghost.querySelector<HTMLElement>(".ccr-brand-loading-mark");
   if (mark) mark.style.animationDelay = `-${phaseMs}ms`;
+  ghost.style.transition = `opacity ${GHOST_FADE_MS}ms linear`;
   document.body.appendChild(ghost);
-  window.setTimeout(() => ghost.remove(), GHOST_MS);
+  const desvanecer = window.setTimeout(() => { ghost.style.opacity = "0"; }, GHOST_MS - GHOST_FADE_MS);
+  window.setTimeout(() => {
+    window.clearTimeout(desvanecer);
+    ghost.remove();
+  }, GHOST_MS);
 }
 
 // Where the previous mark was in its breath when it disappeared. The next mark

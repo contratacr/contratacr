@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { CalendarCheck, CheckCircle2, ClipboardList, ExternalLink, Search, Users, Wrench } from "lucide-react";
+import { CalendarCheck, CheckCircle2, ClipboardList, ExternalLink, MessageSquareText, Search, Users, Wrench } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -22,13 +22,14 @@ type Connection = {
   categoryId: string | null;
   categoryLabel: string | null;
   lastInteractionAt: string | null;
-  source: "booking" | "project" | "both";
+  source: "booking" | "project" | "contact" | "both";
   status: string;
   title: string | null;
   count: number;
 };
 
 function SourceIcon({ source }: { source: Connection["source"] }) {
+  if (source === "contact") return <MessageSquareText className="h-3.5 w-3.5 shrink-0 text-[#009FD9]" />;
   if (source === "project") return <ClipboardList className="h-3.5 w-3.5 shrink-0 text-[#009FD9]" />;
   return <CalendarCheck className="h-3.5 w-3.5 shrink-0 text-[#009FD9]" />;
 }
@@ -114,7 +115,9 @@ export function ClientConnections() {
                         ? t("status.inProgress")
                         : item.status === "confirmed"
                           ? t("status.confirmed")
-                          : t("status.connected")}
+                          : item.status === "contact"
+                            ? t("status.contact")
+                            : t("status.connected")}
                 </span>
               </div>
               <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs font-semibold text-[#6b7280]">
@@ -130,7 +133,9 @@ export function ClientConnections() {
                     ? t("source.booking")
                     : item.source === "project"
                       ? t("source.project")
-                      : t("source.both")}
+                      : item.source === "contact"
+                        ? t("source.contact")
+                        : t("source.both")}
                 </span>
               </div>
               {item.title && <p className="mt-1 truncate text-xs text-[#6b7280]">{item.title}</p>}

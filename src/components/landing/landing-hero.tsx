@@ -343,12 +343,21 @@ export function LandingHero() {
   // mobile both mount; the hidden one has a 0×0 rect, so its dropdown renders nothing).
   const svcDesktopRef = useRef<HTMLDivElement>(null);
   const svcMobileRef = useRef<HTMLDivElement>(null);
+  // La portada dibuja las DOS variantes a la vez (una oculta por CSS) y ambas
+  // llevaban el mismo ref: React se quedaba con la última, la de teléfono, así
+  // que en escritorio el foco iba a un campo invisible y el Enter no hacía nada.
   const servicioInputRef = useRef<HTMLInputElement>(null);
+  const servicioMobileRef = useRef<HTMLInputElement>(null);
+  const enfocarVisible = (...refs: Array<React.RefObject<HTMLInputElement | null>>) => {
+    const visible = refs.map((r) => r.current).find((el) => el && el.offsetParent !== null);
+    (visible ?? refs[0]?.current)?.focus();
+  };
   // Al elegir una sugerencia se rellena el campo, y ese cambio de texto volvía
   // a disparar la búsqueda de sugerencias: el panel reaparecía sobre el campo
   // de ubicación al que se acababa de saltar.
   const recienElegidoRef = useRef(false);
   const ubicacionInputRef = useRef<HTMLInputElement>(null);
+  const ubicacionMobileRef = useRef<HTMLInputElement>(null);
   const locDesktopRef = useRef<HTMLDivElement>(null);
   const locMobileRef = useRef<HTMLDivElement>(null);
   // Location is a typeable autocomplete over provinces + cantones AND Google Places addresses.
@@ -449,7 +458,7 @@ export function LandingHero() {
     setOpenSug(false);
     if (!location.trim()) {
       // Falta la ubicación: se pasa el foco en lugar de buscar a medias.
-      setTimeout(() => ubicacionInputRef.current?.focus(), 0);
+      setTimeout(() => enfocarVisible(ubicacionInputRef, ubicacionMobileRef), 0);
       return;
     }
     if (correrBusqueda) runSearch(s);
@@ -464,7 +473,7 @@ export function LandingHero() {
     setAddrSug([]);
     setOpenLoc(false);
     if (!service.trim()) {
-      setTimeout(() => servicioInputRef.current?.focus(), 0);
+      setTimeout(() => enfocarVisible(servicioInputRef, servicioMobileRef), 0);
       return;
     }
     if (correrBusqueda) runSearch(undefined, { kind: "taxonomy", sug: s });
@@ -600,7 +609,7 @@ export function LandingHero() {
       e.preventDefault();
       if (service.trim() && !location.trim()) {
         setOpenSug(false);
-        ubicacionInputRef.current?.focus();
+        enfocarVisible(ubicacionInputRef, ubicacionMobileRef);
         return;
       }
       runSearch();
@@ -631,12 +640,12 @@ export function LandingHero() {
           setLocationSel(chosen);
           pickedAddrRef.current = null;
           setOpenLoc(false);
-          if (faltaServicio) { setTimeout(() => servicioInputRef.current?.focus(), 0); return; }
+          if (faltaServicio) { setTimeout(() => enfocarVisible(servicioInputRef, servicioMobileRef), 0); return; }
           runSearch(undefined, { kind: "taxonomy", sug: chosen });
         } else {
           setOpenLoc(false);
           await selectAddress(addrSug[0]);
-          if (faltaServicio) { setTimeout(() => servicioInputRef.current?.focus(), 0); return; }
+          if (faltaServicio) { setTimeout(() => enfocarVisible(servicioInputRef, servicioMobileRef), 0); return; }
           const p = pickedAddrRef.current;
           runSearch(undefined, p && (p.provinceId || p.lat != null)
             ? { kind: "address", provinceId: p.provinceId, cantonId: p.cantonId, lat: p.lat, lng: p.lng }
@@ -779,7 +788,7 @@ export function LandingHero() {
                   type="text"
                   value={service}
                   onChange={(e) => { recienElegidoRef.current = false; setService(e.target.value); setServiceSel(null); }}
-                  ref={servicioInputRef}
+                  ref={servicioMobileRef}
                   enterKeyHint={service.trim() && !location.trim() ? "next" : "search"}
                   onKeyDown={handleKeyDown}
                   onFocus={() => { if (suggestions.length > 0) setOpenSug(true); }}
@@ -800,7 +809,7 @@ export function LandingHero() {
                   type="text"
                   value={location}
                   onChange={(e) => handleLocationChange(e.target.value)}
-                  ref={ubicacionInputRef}
+                  ref={ubicacionMobileRef}
                   enterKeyHint={location.trim() && !service.trim() ? "next" : "search"}
                   onKeyDown={handleLocKeyDown}
                   onFocus={() => { ensureMaps(); setOpenLoc(location.trim().length >= 2); }}

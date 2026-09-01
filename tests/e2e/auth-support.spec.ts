@@ -1,12 +1,13 @@
 import { createClient } from "@supabase/supabase-js";
 import { expect, test } from "playwright/test";
-import { expectNoHorizontalOverflow, gotoOK, loginAs, resetAuth, waitForInteractivePage } from "./helpers";
+import { expectNoHorizontalOverflow, gotoOK, loginAs, openLoginForm, resetAuth, waitForInteractivePage } from "./helpers";
 import { canRunSeededRegression, regressionAdminClient } from "./seed";
 import { cleanupDisposableAccount, createDisposableAccount } from "./disposable-account";
 
 test.describe("@smoke auth and support", () => {
   test("login page exposes password and OAuth entry points without submitting", async ({ page }) => {
     await gotoOK(page, "/es/login");
+    await openLoginForm(page);
 
     await expect(page.getByRole("heading", { name: /Bienvenido de vuelta/i })).toBeVisible();
     await expect(page.getByLabel(/Correo/i).first()).toBeVisible();

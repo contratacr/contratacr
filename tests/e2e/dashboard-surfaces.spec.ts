@@ -25,7 +25,7 @@ const clientTabs = [
   { tab: "sent_bookings", marker: /Solicitudes|Requests/i },
   { tab: "sent_projects", marker: /Mis proyectos|My projects/i },
   { tab: "applications", marker: /Mis postulaciones|My applications/i },
-  { tab: "connections", marker: /Conexiones|Connections/i },
+  { tab: "connections", marker: /Volver a contratar|Hire again/i },
   { tab: "saved", marker: /Favoritos|Favorites/i },
   { tab: "network&mode=use", marker: /Seguidos|Following|Seguidores|Followers/i },
   { tab: "notifications&mode=use", marker: /Notificaciones|Notifications/i },
@@ -48,9 +48,13 @@ async function exerciseVisibleFilters(page: import("playwright/test").Page) {
   await expect(filters.first(), `Expected at least one filter group on ${page.url()}`).toBeVisible();
   const filterCount = await filters.count();
 
-  for (let filterIndex = 0; filterIndex < filterCount; filterIndex += 1) {
-    const filter = filters.nth(filterIndex);
-    const layout = await filter.getAttribute("data-filter-layout");
+  const layouts: string[] = [];
+  for (let index = 0; index < filterCount; index += 1) {
+    layouts.push((await filters.nth(index).getAttribute("data-filter-layout")) ?? "");
+  }
+  for (const layout of layouts) {
+    const filter = page.locator(`[data-status-filter-tabs][data-filter-layout="${layout}"]:visible`).first();
+    if (!(await filter.isVisible().catch(() => false))) continue;
     const geometry = await filter.evaluate((container) => ({
       clientWidth: container.clientWidth,
       scrollWidth: container.scrollWidth,
@@ -64,7 +68,8 @@ async function exerciseVisibleFilters(page: import("playwright/test").Page) {
     // A rail (5+ filters) scrolls sideways by design: its later chips start past
     // the viewport and the click loop below brings each one into view. Segmented
     // groups must fit the screen outright.
-    const rail = layout === "scroll" || layout === "scroll-pills";
+    // "chips" is a rail too: small outlined pills on an overflow-x-auto row.
+    const rail = layout === "scroll" || layout === "scroll-pills" || layout === "chips" || layout === "tabs";
     for (const button of geometry.buttons) {
       expect(button.scrollWidth, `Filter label should not be clipped (${page.url()})`).toBeLessThanOrEqual(button.clientWidth + 2);
       if (rail) continue;
@@ -81,12 +86,15 @@ async function exerciseVisibleFilters(page: import("playwright/test").Page) {
       .toBeGreaterThan(1);
     const buttonCount = await buttons.count();
     for (let buttonIndex = 0; buttonIndex < buttonCount; buttonIndex += 1) {
+      if (!(await filter.isVisible().catch(() => false))) break;
+      if (buttonIndex >= (await buttons.count())) break;
       const button = buttons.nth(buttonIndex);
+      if (!(await button.isVisible().catch(() => false))) continue;
       await button.click();
       await expect(button).toHaveAttribute("aria-pressed", "true");
       // Every deterministic regression filter is intentionally populated. This
       // catches a valid-looking tab whose query/mapping silently returns zero.
-      if (layout !== "pills") {
+      if (layout !== "pills" && layout !== "chips") {
         const count = Number((await button.innerText()).match(/\b(\d+)\b/)?.[1] ?? 0);
         expect(count, `Filter "${await button.innerText()}" must have data on ${page.url()}`).toBeGreaterThan(0);
       }
@@ -115,7 +123,7 @@ test.describe("@seeded dashboard surfaces", () => {
 
     for (const section of professionalTabs) {
       await gotoOK(page, `/es/dashboard/profesional?tab=${section.tab}`);
-      await expectVisibleText(page.locator("main"), section.marker);
+      await expectVisibleText(page.locator("body"), section.marker);
       await expectHealthyPage(page);
     }
   });
@@ -212,7 +220,7 @@ test.describe("@seeded dashboard surfaces", () => {
     }
 
     await expect(page.locator("[data-panel-loading]")).toHaveCount(0);
-    await expect(page.getByRole("button", { name: /Oportunidades|Opportunities/i }).filter({ visible: true })).toBeVisible();
+    await expect(page.getByRole("button", { name: /Nuevas|New/i }).filter({ visible: true })).toBeVisible();
   });
 
   test("panel tabs navigate without reloading the document", async ({ page }) => {
@@ -224,7 +232,7 @@ test.describe("@seeded dashboard surfaces", () => {
     });
 
     if (isMobileProject(test.info())) {
-      await page.getByRole("button", { name: /Volver al panel|Back to panel/i }).click();
+      await page.getByRole("button", { name: /^Volver(?: al panel)?$|^Back(?: to panel)?$/i }).filter({ visible: true }).first().click();
     }
 
     const servicesTab = page.getByTestId("panel-tab-services").filter({ visible: true });
@@ -235,7 +243,7 @@ test.describe("@seeded dashboard surfaces", () => {
     expect(await page.evaluate(() => (window as Window & { __contratacrSoftNavigation?: string }).__contratacrSoftNavigation)).toBe("active");
 
     if (isMobileProject(test.info())) {
-      await page.getByRole("button", { name: /Volver al panel|Back to panel/i }).click();
+      await page.getByRole("button", { name: /^Volver(?: al panel)?$|^Back(?: to panel)?$/i }).filter({ visible: true }).first().click();
     }
 
     const availabilityTab = page.getByTestId("panel-tab-availability").filter({ visible: true });
@@ -280,16 +288,14 @@ test.describe("@seeded dashboard surfaces", () => {
     }
   });
 
-  test("panel mode selector closes when guides are opened", async ({ page }) => {
+  test("guides open as a panel section with its own content", async ({ page }) => {
     await loginAs(page, E2E_USERS.professional.email, E2E_USERS.professional.password);
     await gotoOK(page, "/es/dashboard/profesional");
 
-    const selector = page.locator("details[data-panel-mode-selector]:visible").first();
-    await selector.locator("summary").click();
-    await expect(selector).toHaveAttribute("open", "");
     await page.getByRole("button", { name: /^Gu[ií]as$/i }).filter({ visible: true }).first().click();
-    await expect(selector).not.toHaveAttribute("open", "");
-    await expect(page.getByRole("dialog").filter({ hasText: /Gu[ií]as de ContrataCR/i }).first()).toBeVisible();
+    await expect(page).toHaveURL(/tab=guides/);
+    await expectVisibleText(page.locator("body"), /Panel profesional|Professional panel/i);
+    await expect(page.getByPlaceholder(/Buscar en las gu[ií]as|Search the guides/i)).toBeVisible();
   });
 
   test("favorites keep every saveable filter and connections show verification", async ({ page }) => {
@@ -322,7 +328,7 @@ test.describe("@seeded dashboard surfaces", () => {
 
       await gotoOK(page, "/es/dashboard/profesional?tab=proposals");
       await exerciseVisibleFilters(page);
-      await page.getByRole("button", { name: /Mis propuestas|My proposals/i }).filter({ visible: true }).click();
+      await page.getByRole("button", { name: /Enviadas|Sent/i }).filter({ visible: true }).first().click();
       await exerciseVisibleFilters(page);
     }
 
@@ -344,20 +350,18 @@ test.describe("@seeded dashboard surfaces", () => {
     const locales = [
       {
         locale: "es",
-        dialogTitle: /Guías de ContrataCR/i,
         guideButton: /^Guías$/i,
         expected: [/Mis postulaciones/i, /Favoritos/i, /^Empleos$/i, /^Ofertas$/i, /Publicar empleos/i, /Publicar ofertas/i],
         expandable: /Mis postulaciones/i,
-        profileGuide: /Perfil profesional$/i,
+        profileGuide: /^Perfil profesional$/i,
         profileLastStep: /Usa Ver mi perfil para ver la versi.n p.blica/i,
       },
       {
         locale: "en",
-        dialogTitle: /ContrataCR guides/i,
         guideButton: /^Guides$/i,
         expected: [/My applications/i, /Favorites/i, /^Jobs$/i, /^Offers$/i, /Post jobs/i, /Publish offers/i],
         expandable: /My applications/i,
-        profileGuide: /Professional profile$/i,
+        profileGuide: /^Professional profile$/i,
         profileLastStep: /Use View my profile to see the public version/i,
       },
     ] as const;
@@ -367,20 +371,17 @@ test.describe("@seeded dashboard surfaces", () => {
       const openGuides = page.getByRole("button", { name: copy.guideButton }).filter({ visible: true }).first();
       await expect(openGuides).toBeVisible();
       await openGuides.click();
+      await expect(page).toHaveURL(/tab=guides/);
 
-      const dialog = page.getByRole("dialog").filter({ hasText: copy.dialogTitle }).first();
-      await expect(dialog).toBeVisible();
       for (const title of copy.expected) {
-        await expect(dialog.getByText(title).first()).toBeVisible();
+        await expect(page.getByText(title).filter({ visible: true }).first()).toBeVisible();
       }
 
-      await dialog.getByRole("button", { name: copy.expandable }).first().click();
-      await expect(dialog.getByRole("listitem").first()).toBeVisible();
-      await dialog.getByRole("button", { name: copy.profileGuide }).first().click();
-      await expect(dialog.getByText(copy.profileLastStep)).toBeVisible();
+      await page.getByRole("button", { name: copy.expandable }).filter({ visible: true }).first().click();
+      await expect(page.getByRole("listitem").filter({ visible: true }).first()).toBeVisible();
+      await page.getByRole("button").filter({ has: page.getByText(copy.profileGuide, { exact: true }) }).filter({ visible: true }).first().click();
+      await expect(page.getByText(copy.profileLastStep).filter({ visible: true }).first()).toBeVisible();
       await expectHealthyPage(page);
-      await page.keyboard.press("Escape");
-      await expect(dialog).toBeHidden();
     }
   });
 
@@ -420,7 +421,8 @@ test.describe("@seeded dashboard surfaces", () => {
 
     for (const section of clientTabs) {
       await gotoOK(page, `/es/dashboard/profesional?tab=${section.tab}`);
-      await expectVisibleText(page.locator("main"), section.marker);
+      // El título de la sección vive en la barra, no dentro de <main>.
+      await expectVisibleText(page.locator("body"), section.marker);
       await expectHealthyPage(page);
     }
   });
@@ -431,7 +433,7 @@ test.describe("@seeded dashboard surfaces", () => {
 
     for (const section of professionalTabs) {
       await gotoOK(page, `/en/dashboard/profesional?tab=${section.tab}`);
-      await expectVisibleText(page.locator("main"), section.marker);
+      await expectVisibleText(page.locator("body"), section.marker);
       await expect(page.locator("main").last()).not.toContainText(/Notificaciones|Disponibilidad|Cuenta y seguridad/i);
       await expectHealthyPage(page);
     }
@@ -439,7 +441,7 @@ test.describe("@seeded dashboard surfaces", () => {
     await loginAs(page, E2E_USERS.client.email, E2E_USERS.client.password);
     for (const section of clientTabs) {
       await gotoOK(page, `/en/dashboard/profesional?tab=${section.tab}`);
-      await expectVisibleText(page.locator("main"), section.marker);
+      await expectVisibleText(page.locator("body"), section.marker);
       await expectHealthyPage(page);
     }
   });

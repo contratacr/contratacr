@@ -120,8 +120,16 @@ export function formatRelativeOrDate(date: string | Date, locale: string = "es")
   if (hr < 24) return en ? `${hr} hour${hr !== 1 ? "s" : ""} ago` : `hace ${hr} hora${hr !== 1 ? "s" : ""}`;
   const day = Math.floor(hr / 24);
   if (day < 7) return en ? `${day} day${day !== 1 ? "s" : ""} ago` : `hace ${day} día${day !== 1 ? "s" : ""}`;
-  // ~1 week or more → the actual date (e.g. "22 jun 2026"), never "hace N semanas/meses".
-  return d.toLocaleDateString(en ? "en-US" : "es-CR", { day: "numeric", month: "short", year: "numeric" }).replace(".", "");
+  // ~1 semana o más → la fecha. El año solo si no es el actual: dentro del año
+  // en curso sobra y alarga la línea ("13 ago" en vez de "13 ago 2026").
+  const mismoAno = d.getFullYear() === new Date().getFullYear();
+  return d
+    .toLocaleDateString(en ? "en-US" : "es-CR", {
+      day: "numeric",
+      month: "short",
+      ...(mismoAno ? {} : { year: "numeric" }),
+    })
+    .replace(".", "");
 }
 
 export function getInitials(name: string) {

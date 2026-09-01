@@ -38,6 +38,7 @@ export function OfferDetailNavbarSearch({ title }: { title: string }) {
               placeholder={copy.placeholder}
               suggestions={[title]}
               recentStorageKey="ccr-offer-search-recents"
+      visitSurface="ofertas"
             />
           </div>
         </div>

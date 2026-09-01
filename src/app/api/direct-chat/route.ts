@@ -89,6 +89,13 @@ async function signMessageAttachments(db: ReturnType<typeof createAdminClient>, 
   }));
 }
 
+// La columna `contexts` llega con la migración 188: hasta que esté aplicada, el
+// chat sigue funcionando sin ella y simplemente no acumula orígenes.
+function missingContextsColumn(error: { code?: string; message?: string } | null | undefined) {
+  const message = error?.message ?? "";
+  return error?.code === "42703" || message.includes("contexts");
+}
+
 function missingParticipantDeleteColumns(error: { code?: string; message?: string } | null | undefined) {
   const message = error?.message ?? "";
   return error?.code === "42703" || message.includes("client_deleted_at") || message.includes("professional_deleted_at");
@@ -97,9 +104,20 @@ function missingParticipantDeleteColumns(error: { code?: string; message?: strin
 async function enrichConversations(db: ReturnType<typeof createAdminClient>, rows: ConversationRow[]) {
   if (!rows.length) return [];
   const clientIds = [...new Set(rows.map((row) => row.client_id))];
-  const bookingIds = rows.flatMap((row) => row.booking_id ? [row.booking_id] : []);
-  const projectIds = rows.flatMap((row) => row.project_id ? [row.project_id] : []);
-  const proposalIds = rows.flatMap((row) => row.proposal_id ? [row.proposal_id] : []);
+  // Un hilo puede arrastrar varios orígenes (una solicitud, luego un proyecto…).
+  const listaContextos = (row: ConversationRow) => (Array.isArray(row.contexts) ? row.contexts as Array<Record<string, unknown>> : []);
+  const bookingIds = [...new Set(rows.flatMap((row) => [
+    ...(row.booking_id ? [row.booking_id] : []),
+    ...listaContextos(row).flatMap((ctx) => (ctx.bookingId ? [String(ctx.bookingId)] : [])),
+  ]))];
+  const projectIds = [...new Set(rows.flatMap((row) => [
+    ...(row.project_id ? [row.project_id] : []),
+    ...listaContextos(row).flatMap((ctx) => (ctx.projectId ? [String(ctx.projectId)] : [])),
+  ]))];
+  const proposalIds = [...new Set(rows.flatMap((row) => [
+    ...(row.proposal_id ? [row.proposal_id] : []),
+    ...listaContextos(row).flatMap((ctx) => (ctx.proposalId ? [String(ctx.proposalId)] : [])),
+  ]))];
   const [clientsResult, bookingsResult, projectsResult, proposalsResult] = await Promise.all([
     db.from("profiles").select("id, full_name, avatar_url").in("id", clientIds),
     bookingIds.length ? db.from("bookings").select("id, service_description, status").in("id", bookingIds) : Promise.resolve({ data: [] }),
@@ -129,6 +147,24 @@ async function enrichConversations(db: ReturnType<typeof createAdminClient>, row
       : row.project_id
         ? { type: row.proposal_id ? "proposal" : "project", ...(projects.get(row.project_id) ?? {}), proposal_status: row.proposal_id ? proposals.get(row.proposal_id)?.status : null }
         : { type: "profile", title: row.subject ?? null, status: "open" },
+    contexts: listaContextos(row).map((ctx) => {
+      const bookingId = ctx.bookingId ? String(ctx.bookingId) : null;
+      const projectId = ctx.projectId ? String(ctx.projectId) : null;
+      const proposalId = ctx.proposalId ? String(ctx.proposalId) : null;
+      const booking = bookingId ? bookings.get(bookingId) : null;
+      const project = projectId ? projects.get(projectId) : null;
+      return {
+        type: proposalId ? "proposal" : projectId ? "project" : bookingId ? "booking" : "profile",
+        bookingId,
+        projectId,
+        proposalId,
+        title: (booking?.service_description as string | undefined)
+          || (project?.title as string | undefined)
+          || (ctx.title ? String(ctx.title) : null),
+        status: (booking?.status as string | undefined) || (project?.status as string | undefined) || null,
+        at: ctx.at ? String(ctx.at) : null,
+      };
+    }),
     };
   });
 }
@@ -252,11 +288,14 @@ export async function POST(req: Request) {
     if (clientId === professionalProfileId) return NextResponse.json({ error: "No puedes abrir un chat contigo mismo." }, { status: 400 });
     if (user.id !== clientId && user.id !== professionalProfileId) return NextResponse.json({ error: "No autorizado" }, { status: 403 });
 
-    let query = db.from("direct_conversations").select("*").eq("client_id", clientId).eq("professional_id", resolvedProfessionalId).eq("status", "open");
-    if (resolvedBookingId) query = query.eq("booking_id", resolvedBookingId);
-    else if (resolvedProjectId) query = query.eq("project_id", resolvedProjectId);
-    else query = query.is("booking_id", null).is("project_id", null).is("proposal_id", null);
-    const { data: existing } = await query.limit(1).maybeSingle();
+    const { data: existing } = await db.from("direct_conversations")
+      .select("*")
+      .eq("client_id", clientId)
+      .eq("professional_id", resolvedProfessionalId)
+      .eq("status", "open")
+      .order("last_message_at", { ascending: false, nullsFirst: false })
+      .limit(1)
+      .maybeSingle();
     conversation = existing as ConversationRow | null;
     if (conversation && contextTitle && !resolvedBookingId && !resolvedProjectId) {
       let { error: subjectError } = await db.from("direct_conversations")
@@ -286,14 +325,60 @@ export async function POST(req: Request) {
       conversation.client_deleted_at = null;
       conversation.professional_deleted_at = null;
     }
+    const nuevoOrigen = resolvedBookingId || resolvedProjectId || resolvedProposalId
+      ? {
+        type: resolvedProposalId ? "proposal" : resolvedProjectId ? "project" : "booking",
+        bookingId: resolvedBookingId,
+        projectId: resolvedProjectId,
+        proposalId: resolvedProposalId,
+        title: subject,
+        at: new Date().toISOString(),
+      }
+      : null;
+
     if (!conversation) {
-      const { data: inserted, error } = await db.from("direct_conversations").insert({
+      const base = {
         client_id: clientId, professional_id: resolvedProfessionalId, professional_profile_id: professionalProfileId,
         booking_id: resolvedBookingId, project_id: resolvedProjectId, proposal_id: resolvedProposalId, subject,
-      }).select("*").single();
+      };
+      let { data: inserted, error } = await db.from("direct_conversations")
+        .insert({ ...base, contexts: nuevoOrigen ? [nuevoOrigen] : [] })
+        .select("*").single();
+      if (error && missingContextsColumn(error)) {
+        ({ data: inserted, error } = await db.from("direct_conversations").insert(base).select("*").single());
+      }
       if (error) return NextResponse.json({ error: error.message }, { status: 500 });
       conversation = inserted as ConversationRow;
       conversationCreated = true;
+    } else if (nuevoOrigen) {
+      // El origen se agrega al frente y sin repetir: la barra fijada muestra el
+      // más reciente y detrás quedan los anteriores.
+      const previos = Array.isArray(conversation.contexts) ? conversation.contexts : [];
+      const mismaClave = (item: Record<string, unknown>) =>
+        (item.bookingId ?? null) === nuevoOrigen.bookingId
+        && (item.projectId ?? null) === nuevoOrigen.projectId
+        && (item.proposalId ?? null) === nuevoOrigen.proposalId;
+      if (!previos.some((item) => mismaClave(item as Record<string, unknown>))) {
+        const siguientes = [nuevoOrigen, ...previos].slice(0, 12);
+        const { error: ctxError } = await db.from("direct_conversations")
+          .update({
+            contexts: siguientes,
+            booking_id: resolvedBookingId ?? conversation.booking_id,
+            project_id: resolvedProjectId ?? conversation.project_id,
+            proposal_id: resolvedProposalId ?? conversation.proposal_id,
+            subject,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", conversation.id);
+        if (ctxError && !missingContextsColumn(ctxError)) {
+          return NextResponse.json({ error: ctxError.message }, { status: 500 });
+        }
+        conversation.contexts = siguientes;
+        conversation.subject = subject;
+        conversation.booking_id = resolvedBookingId ?? conversation.booking_id;
+        conversation.project_id = resolvedProjectId ?? conversation.project_id;
+        conversation.proposal_id = resolvedProposalId ?? conversation.proposal_id;
+      }
     }
   }
 

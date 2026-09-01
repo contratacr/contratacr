@@ -242,9 +242,9 @@ function MultiFilterSheetContent({
                 key={option.value}
                 type="button"
                 onClick={() => setDraftValues((current) => toggleMultiValue(current, option.value))}
-                className="flex min-h-[56px] w-full items-center justify-between gap-4 border-b border-[#f0f3f6] py-3 text-left last:border-b-0"
+                className="flex min-h-[58px] w-full items-center justify-between gap-4 border-b border-[#f0f3f6] py-3 text-left last:border-b-0"
               >
-                <span className={cn("text-[15px] font-semibold", selected ? "text-[#008fbe]" : "text-[#162543]")}>{option.label}</span>
+                <span className={cn("text-[16px] font-semibold", selected ? "text-[#008fbe]" : "text-[#162543]")}>{option.label}</span>
                 <span className={cn("grid h-6 w-6 shrink-0 place-items-center rounded-[6px] border-2", selected ? "border-[#009FD9] bg-[#009FD9]" : "border-[#cbd5df] bg-white")}>
                   {selected && <Check className="h-4 w-4 stroke-[3] text-white" />}
                 </span>
@@ -577,7 +577,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
   const [insurers, setInsurers] = useState(() =>
     isHealthCategory(initialCategory) ? parseMultiParam(initialParam("aseguradora")) : []
   );
-  const [language, setLanguage] = useState(() => parseSingleParam(initialParam("idioma")));
+  const [languages, setLanguages] = useState<string[]>(() => parseMultiParam(initialParam("idioma")));
   const initialPrice = initialParam("precio");
   const initialPriceUnits = parseMultiParam(initialParam("unidadPrecio") || initialPrice).map(normalizePriceUnit).filter(Boolean);
   const [priceFilter, setPriceFilter] = useState(normalizePriceFilter(initialPrice));
@@ -610,7 +610,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
     const nextSort = params.get("sortBy") ?? initialValues?.sortBy ?? "";
     const nextModalities = parseMultiParam(params.get("modalidad") ?? initialValues?.modalidad ?? "").filter((value) => value === "video" || value === "in_person");
     const nextInsurers = parseMultiParam(params.get("aseguradora") ?? initialValues?.aseguradora ?? "");
-    const nextLanguage = parseSingleParam(params.get("idioma") ?? initialValues?.idioma ?? "");
+    const nextLanguages = parseMultiParam(params.get("idioma") ?? initialValues?.idioma ?? "");
     const nextPrice = params.get("precio") ?? initialValues?.precio ?? "";
     const nextPriceUnitRaw = params.get("unidadPrecio") ?? initialValues?.unidadPrecio ?? "";
     const nextPriceUnits = parseMultiParam(nextPriceUnitRaw || nextPrice).map(normalizePriceUnit).filter(Boolean);
@@ -628,7 +628,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
     setSortBy(nextLat && nextLng && normalizedNextSort === "cercania" ? "rating" : normalizedNextSort);
     setModalities(supportsVideoConsultCategory(nextCategory) ? nextModalities : []);
     setInsurers(isHealthCategory(nextCategory) ? nextInsurers : []);
-    setLanguage(nextLanguage);
+    setLanguages(nextLanguages);
     setPriceFilter(normalizePriceFilter(nextPrice));
     setPriceUnits(nextPriceUnits);
     setLocationQuery(
@@ -764,7 +764,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
         sortBy,
         modalidad: serializeMultiParam(modalities),
         aseguradora: serializeMultiParam(insurers),
-        idioma: language,
+        idioma: serializeMultiParam(languages),
         precio: priceFilter,
         unidadPrecio: serializeMultiParam(priceUnits),
         lat: params.get("lat") ?? "",
@@ -806,7 +806,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
       }
       router.push(`${pathname}?${next.toString()}`);
     },
-    [query, category, province, canton, sortBy, modalities, insurers, language, priceFilter, priceUnits, params, router, pathname, variant]
+    [query, category, province, canton, sortBy, modalities, insurers, languages, priceFilter, priceUnits, params, router, pathname, variant]
   );
 
   // Request geolocation on demand. Coordinates define the search area while
@@ -1026,7 +1026,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
   }
 
   function clearAll() {
-    setQuery(""); setCategory(""); setProvince(""); setCanton(""); setLocationQuery(""); setSortBy("rating"); setModalities([]); setInsurers([]); setLanguage(""); setPriceFilter(""); setPriceUnits([]);
+    setQuery(""); setCategory(""); setProvince(""); setCanton(""); setLocationQuery(""); setSortBy("rating"); setModalities([]); setInsurers([]); setLanguages([]); setPriceFilter(""); setPriceUnits([]);
     setAddressSuggestions([]);
     if (debounceRef.current) clearTimeout(debounceRef.current);
     router.push(pathname);
@@ -1045,7 +1045,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
     (showInsurerFilter && insurers.length ? 1 : 0) +
     (priceFilter ? 1 : 0) +
     (priceUnits.length ? 1 : 0) +
-    (language ? 1 : 0);
+    (languages.length > 0 ? 1 : 0);
 
   // -- MOBILE chips variant --------------------------------------------------
   // A single horizontally-scrollable row of pill controls (NO vertical sidebar, NO
@@ -1063,9 +1063,11 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
     ];
     const priceChoice = priceChoiceFromFilters(priceFilter, priceUnits);
     const priceText = priceChoice === ANY_PRICE ? t("filters.price") : t(`priceFilter.${priceChoice}`);
-    const languageText = language
-      ? languageOptions.find((option) => option.value === language)?.label ?? t("filters.language")
-      : locale === "en" ? "Language" : "Idioma";
+    const languageText = languages.length === 1
+      ? languageOptions.find((option) => option.value === languages[0])?.label ?? t("filters.language")
+      : languages.length > 1
+        ? `${t("filters.language")} · ${languages.length}`
+        : locale === "en" ? "Language" : "Idioma";
     const pill = "ccr-search-filter-chip inline-flex h-8 w-max shrink-0 items-center justify-center gap-1 whitespace-nowrap rounded-full border border-[#d8e2ea] bg-white px-2 text-[9px] font-bold text-[#162543] shadow-sm min-[350px]:px-2.5 min-[350px]:text-[10px] min-[390px]:text-[11px]";
     return (
       <div className="scrollbar-none flex w-full min-w-0 items-center gap-1 overflow-x-auto overflow-y-visible pb-0.5">
@@ -1111,16 +1113,15 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
             setOpenChip(null);
           }}
         />
-        <FilterSheet
+        <MultiFilterSheet
           open={openChip === "language"}
           title={t("filters.language")}
-          value={language || ANY_LANGUAGE}
-          options={languageOptions}
+          values={languages}
+          options={languageOptions.filter((option) => option.value !== ANY_LANGUAGE)}
           onClose={() => setOpenChip(null)}
-          onSelect={(value) => {
-            const nextLanguage = value === ANY_LANGUAGE ? "" : value;
-            setLanguage(nextLanguage);
-            applyFilters({ idioma: nextLanguage });
+          onApply={(next) => {
+            setLanguages(next);
+            applyFilters({ idioma: serializeMultiParam(next) });
             setOpenChip(null);
           }}
         />
@@ -1414,11 +1415,12 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
         <div>
           <label className={fieldLabel}>{t("filters.language")}</label>
           <Select
-            value={language || ANY_LANGUAGE}
+            value={languages[0] ?? ANY_LANGUAGE}
             onValueChange={(value) => {
-              const nextLanguage = value === ANY_LANGUAGE ? "" : value;
-              setLanguage(nextLanguage);
-              applyFilters({ idioma: nextLanguage });
+              // En escritorio se elige de a uno; la app permite varios.
+              const siguientes = value === ANY_LANGUAGE ? [] : [value];
+              setLanguages(siguientes);
+              applyFilters({ idioma: serializeMultiParam(siguientes) });
             }}
           >
             <SelectTrigger className={FILTER_TRIGGER} aria-label={t("filters.language")}><SelectValue /></SelectTrigger>

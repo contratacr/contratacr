@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { expect, test } from "playwright/test";
-import { apiJson, expectNoHorizontalOverflow, gotoOK, loginAs, resetAuth } from "./helpers";
+import { apiJson, expectNoHorizontalOverflow, gotoOK, loginAs, openLoginForm, resetAuth } from "./helpers";
 import { canRunSeededRegression, E2E_USERS, ensureRegressionSeed, regressionAdminClient, type RegressionSeedState } from "./seed";
 import { getCategoryLabel } from "../../src/lib/data/categories";
 
@@ -279,6 +279,7 @@ test.describe("@seeded core regression", () => {
 
   test("email-change states render cleanly without stacking duplicate messages", async ({ page }) => {
     await gotoOK(page, "/es/login?emailChanged=1");
+    await openLoginForm(page);
     await expect(page.getByText("Correo actualizado").first()).toBeVisible();
     await expect(page.getByText("Inicia sesión con tu correo nuevo.").first()).toBeVisible();
     await expectNoHorizontalOverflow(page);

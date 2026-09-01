@@ -83,14 +83,14 @@ export function parseSearchParams(params: SearchPageParams) {
     ? { north: Number(params.n), south: Number(params.s), east: Number(params.e), west: Number(params.w) }
     : undefined;
   const mapBounds = parsedMapBounds && Object.values(parsedMapBounds).every(Number.isFinite) ? parsedMapBounds : undefined;
-  const languageId = parseMultiParam(params.idioma)[0];
+  const languageIds = parseMultiParam(params.idioma);
   // Insurers only narrow health services; elsewhere the parameter is ignored.
   const insurerIds = isHealthCategory(params.categoria) ? parseMultiParam(params.aseguradora) : [];
 
   return {
     requestedSortBy, sortBy, priceType, priceUnits, modalities, videoOnly, inPersonOnly,
     selectedCategory, selectedCantonId, selectedProvinceId, effectiveQuery,
-    nearLat, nearLng, mapBounds, languageId, insurerIds,
+    nearLat, nearLng, mapBounds, languageIds, insurerIds,
   };
 }
 
@@ -231,7 +231,7 @@ async function resolveSearchResultsUncached(params: SearchPageParams) {
     sortBy: filters.sortBy,
     query: filters.effectiveQuery,
     insurerIds: filters.insurerIds,
-    languageId: filters.languageId,
+    languageIds: filters.languageIds,
     priceType: filters.priceType,
     priceUnits: filters.priceUnits,
     modalities: filters.modalities,

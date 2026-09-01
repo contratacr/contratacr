@@ -2,11 +2,14 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { Check, ChevronDown, ChevronRight, Clock3, MapPin, Search, Wrench, X } from "lucide-react";
 import { useLocale } from "next-intl";
+import { Link } from "@/i18n/navigation";
+import { readRecentVisits, type RecentVisit, type RecentVisitSurface } from "@/lib/recent-visits";
 
 const MARKETPLACE_CONTROL_COPY = {
   es: {
     clearSearch: "Limpiar búsqueda",
     recents: "Recientes",
+    visited: "Vistos recientemente",
     clearAll: "Borrar todo",
     removeRecent: (value: string) => `Eliminar ${value} de búsquedas recientes`,
     clearService: "Limpiar servicio",
@@ -24,6 +27,7 @@ const MARKETPLACE_CONTROL_COPY = {
   en: {
     clearSearch: "Clear search",
     recents: "Recent",
+    visited: "Recently viewed",
     clearAll: "Clear all",
     removeRecent: (value: string) => `Remove ${value} from recent searches`,
     clearService: "Clear service",
@@ -105,6 +109,7 @@ export function MarketplaceSearch({
   onSubmit,
   secondary,
   recentStorageKey = MARKETPLACE_RECENTS_KEY,
+  visitSurface,
 }: {
   value: string;
   onChange: (value: string) => void;
@@ -113,6 +118,8 @@ export function MarketplaceSearch({
   onSubmit?: () => void;
   secondary?: MarketplaceSecondarySearch;
   recentStorageKey?: string;
+  // Lo último que se abrió en esta sección, con su foto.
+  visitSurface?: RecentVisitSurface;
 }) {
   const locale = useLocale() === "en" ? "en" : "es";
   const copy = MARKETPLACE_CONTROL_COPY[locale];
@@ -123,6 +130,7 @@ export function MarketplaceSearch({
   const [desktopField, setDesktopField] = useState<"primary" | "secondary" | null>(null);
   const [mobileField, setMobileField] = useState<"primary" | "secondary">("primary");
   const [recents, setRecents] = useState<string[]>([]);
+  const [visitas, setVisitas] = useState<RecentVisit[]>([]);
   const rootRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const fullInputRef = useRef<HTMLInputElement>(null);
@@ -180,6 +188,7 @@ export function MarketplaceSearch({
   useEffect(() => {
     if (!open) return;
     setRecents(readRecentSearches(recentStorageKey));
+    if (visitSurface) setVisitas(readRecentVisits(visitSurface));
     const timer = window.setTimeout(() => fullInputRef.current?.focus(), 60);
     document.body.style.overflow = "hidden";
     return () => {
@@ -450,6 +459,36 @@ export function MarketplaceSearch({
                 </>
               ) : (
                 <>
+                  {visitas.length > 0 && (
+                    <div className="mb-1">
+                      <span className="block px-1 pb-1 text-xs font-extrabold uppercase tracking-wide text-[#68778d]">
+                        {copy.visited}
+                      </span>
+                      {visitas.map((visita) => (
+                        <Link
+                          key={visita.id}
+                          href={visita.href}
+                          onClick={closeMobileSearch}
+                          className="flex min-h-14 w-full items-center gap-4 rounded-xl px-1 text-left transition hover:bg-[#f4f8fb]"
+                        >
+                          <span className="grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-full bg-[#eef5f9] text-[13px] font-extrabold text-[#0d5c86]">
+                            {visita.imagen ? (
+                              // eslint-disable-next-line @next/next/no-img-element -- miniatura fija; el optimizador no actúa en Cloudflare
+                              <img src={visita.imagen} alt="" className="h-full w-full object-cover" />
+                            ) : (
+                              visita.iniciales ?? visita.titulo.slice(0, 2).toUpperCase()
+                            )}
+                          </span>
+                          <span className="min-w-0">
+                            <span className="block truncate text-base font-bold">{visita.titulo}</span>
+                            {visita.subtitulo && (
+                              <span className="block truncate text-sm font-semibold text-[#7a8798]">{visita.subtitulo}</span>
+                            )}
+                          </span>
+                        </Link>
+                      ))}
+                    </div>
+                  )}
                   {recents.map((recent) => (
                     <div key={recent} className="group flex min-h-14 w-full items-center gap-2 rounded-xl px-1 transition hover:bg-[#f4f8fb]">
                       <button type="button" onClick={() => chooseSearch(recent)} className="flex min-w-0 flex-1 items-center gap-4 text-left">
@@ -529,7 +568,7 @@ export function MarketplaceFilterChip({ label, value, options, onChange }: { lab
         type="button"
         onClick={() => setOpen(true)}
         title={active ? selectedLabel : label}
-        className={`inline-flex h-9 max-w-[calc(100vw-2rem)] items-center gap-1.5 rounded-lg border px-3 text-[13px] font-bold lg:max-w-[18rem] ${active ? "border-[#009fd9] bg-[#eaf7fc] text-[#007fae]" : "border-[#cbd7e2] bg-white text-[#24344d]"}`}
+        className={`inline-flex h-9 max-w-[calc(100vw-2rem)] items-center gap-1.5 rounded-full border px-3.5 text-[13px] font-bold lg:max-w-[18rem] ${active ? "border-[#009fd9] bg-[#eaf7fc] text-[#007fae]" : "border-[#cbd7e2] bg-white text-[#24344d]"}`}
       >
         <span className="truncate">{active ? selectedLabel : label}</span>
         <ChevronDown className="h-3.5 w-3.5 shrink-0" />

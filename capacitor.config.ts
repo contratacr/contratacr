@@ -7,6 +7,11 @@ const config: CapacitorConfig = {
   server: {
     url: "https://contratacr.com/es",
     allowNavigation: [
+      // localhost/127.0.0.1: al apuntar la app al servidor local, Capacitor solo
+      // considera "de la app" las URLs que empiezan por server.url; sin estos
+      // hosts cualquier otra ruta se abría en Safari en vez de la app.
+      "localhost",
+      "127.0.0.1",
       "contratacr.com",
       "*.contratacr.com",
       "*.supabase.co",

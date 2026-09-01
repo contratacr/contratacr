@@ -17,6 +17,7 @@ import { LandingFooter } from "@/components/landing/landing-footer";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ImagePreviewDialog } from "@/components/ui/image-preview-dialog";
 import { getInitials, proDisplayName, cn } from "@/lib/utils";
+import { RecordRecentVisit } from "@/components/mobile/record-recent-visit";
 import { anyVideoConsultCategory, getCategoryLabel } from "@/lib/data/categories";
 import { casoProfession, countCases } from "@/lib/services";
 import { addTaxIncludedToPriceLabel, formatServicePrice, primaryPricingLabel, splitPricingLabel } from "@/lib/pricing";
@@ -160,6 +161,7 @@ export default function ProfilePage() {
     }
   }, [activeTab]);
   const [profileReturnHref] = useState(initialProfileReturnHref);
+  const [navbarOwnsHeader, setNavbarOwnsHeader] = useState(false);
   // Deep-link support: /profesionales/[slug]?tab=casos opens that tab.
   // Preview mode (?preview=1): a pro opened "Ver cómo me ven los clientes" from
   // their panel → show a clear "Volver a mi panel" bar so they never get stuck.
@@ -172,6 +174,63 @@ export default function ProfilePage() {
   const [viewerId, setViewerId] = useState<string | null>(null);
   const [slug, setSlug] = useState("");
   const [reportOpen, setReportOpen] = useState(false);
+  const nombreEnBarra = professional
+    ? getProfessionalDisplayName(professional.fullName, professional.businessName).primaryMobile
+    : "";
+  const [nombreFueraDeVista, setNombreFueraDeVista] = useState(false);
+  // Arriba dice a dónde te devuelve la flecha (convención de iOS); al desplazar,
+  // cuando el nombre ya no está a la vista, la barra pasa a decir de quién es el
+  // perfil.
+  const tituloBarra =
+    nombreFueraDeVista && nombreEnBarra ? nombreEnBarra : profileReturnLabel(profileReturnHref, locale);
+  useEffect(() => {
+    if (previewMode) return;
+    const global = window as unknown as {
+      __ccrSectionHeader?: string | null;
+      __ccrSectionActive?: boolean;
+      __ccrSectionShare?: boolean;
+    };
+    global.__ccrSectionHeader = tituloBarra;
+    global.__ccrSectionActive = true;
+    global.__ccrSectionShare = false;
+    window.dispatchEvent(new CustomEvent("ccr:section-header", { detail: { title: tituloBarra } }));
+    return () => {
+      global.__ccrSectionHeader = null;
+      global.__ccrSectionActive = false;
+      global.__ccrSectionShare = false;
+      setNavbarOwnsHeader(false);
+      window.dispatchEvent(new CustomEvent("ccr:section-header", { detail: null }));
+    };
+  }, [previewMode, tituloBarra]);
+
+  // El nombre de la tarjeta decide qué muestra la barra.
+  useEffect(() => {
+    if (previewMode || !professional) return;
+    const nodo = document.querySelector('[data-testid="professional-profile-name"]');
+    if (!nodo) return;
+    const observador = new IntersectionObserver(
+      ([entrada]) => setNombreFueraDeVista(!entrada.isIntersecting),
+      { threshold: 0 },
+    );
+    observador.observe(nodo);
+    return () => observador.disconnect();
+  }, [previewMode, professional]);
+
+  const volverRef = useRef<(() => void) | null>(null);
+  const compartirRef = useRef<(() => void) | null>(null);
+  useEffect(() => {
+    const onBack = () => volverRef.current?.();
+    const onShare = () => compartirRef.current?.();
+    const onAck = () => setNavbarOwnsHeader(true);
+    window.addEventListener("ccr:section-back", onBack);
+    window.addEventListener("ccr:section-share", onShare);
+    window.addEventListener("ccr:section-header-ack", onAck);
+    return () => {
+      window.removeEventListener("ccr:section-back", onBack);
+      window.removeEventListener("ccr:section-share", onShare);
+      window.removeEventListener("ccr:section-header-ack", onAck);
+    };
+  }, []);
   // Own-profile self-actions are blocked with a friendly modal (buttons stay visible).
   const [selfMsg, setSelfMsg] = useState<string | null>(null);
   // "Solicitar servicio" (per service card) → the SAME existing request flow as the
@@ -475,6 +534,14 @@ export default function ProfilePage() {
     coverage: professional.coverage,
   };
   const displayName = getProfessionalDisplayName(professional.fullName, professional.businessName);
+  const visitaProfesional = {
+    id: professional.slug ?? slug,
+    titulo: displayName.primaryMobile,
+    subtitulo: professional.cantonName ?? undefined,
+    imagen: professional.avatarUrl ?? undefined,
+    iniciales: getInitials(professional.fullName),
+    href: `/profesionales/${professional.slug ?? slug}`,
+  };
   const TABS: Array<{ id: Tab; label: string }> = [
     { id: "disponibilidad", label: t("availabilityTab") },
     { id: "servicios",      label: t("tabs.servicios") },
@@ -494,6 +561,7 @@ export default function ProfilePage() {
         <div className="mx-auto max-w-7xl px-4 pt-0 sm:px-6 lg:px-8 [.ccr-native-app_&]:pt-4">
 
           {/* Preview mode → a clear way back to the panel. Otherwise, back to search. */}
+          {!previewMode && <RecordRecentVisit surface="profesionales" visita={visitaProfesional} />}
           {previewMode ? (
             <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <p className="text-sm text-[#6b7280] font-medium">{t("previewNote")}</p>
@@ -502,10 +570,20 @@ export default function ProfilePage() {
               </Link>
             </div>
           ) : (
-            <Link href={profileReturnHref} className="inline-flex items-center gap-1.5 text-sm text-[#6b7280] hover:text-[#009FD9] transition-colors mb-6">
-              <ArrowLeft className="h-4 w-4" />
-              {profileReturnLabel(profileReturnHref, locale)}
-            </Link>
+            <div className={cn(
+              "-mx-4 mb-6 flex items-center justify-between gap-3 border-b border-[#e5e7eb] bg-white px-4 py-2.5 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8",
+              navbarOwnsHeader && "hidden",
+            )}>
+              <Link
+                href={profileReturnHref}
+                ref={(node) => { volverRef.current = node ? () => node.click() : null; }}
+                className="inline-flex min-w-0 items-center gap-1.5 text-sm font-semibold text-[#374151] transition-colors hover:text-[#009FD9]"
+              >
+                <ArrowLeft className="h-4 w-4 shrink-0" />
+                <span className="truncate">{profileReturnLabel(profileReturnHref, locale)}</span>
+              </Link>
+
+            </div>
           )}
 
           {/* No unverified-identity notice in the client preview: the ABSENCE of the
@@ -580,7 +658,7 @@ export default function ProfilePage() {
                 "grid w-full shrink-0 gap-2 self-start sm:w-auto sm:self-center sm:border-l sm:border-[#f3f4f6] sm:pl-5",
                 expYears > 0 ? "grid-cols-3 sm:min-w-[18rem]" : "grid-cols-2 sm:min-w-[13rem]",
               )}>
-                <button type="button" onClick={() => setActiveTab("resenas")} className="min-w-0 text-center">
+                <button type="button" onClick={() => setActiveTab("resenas")} className="flex min-w-0 flex-col items-center justify-start text-center">
                   <div className="flex items-center justify-center gap-1">
                     <Star className="h-4 w-4 fill-[#ff9b32] text-[#ff9b32]" />
                     <span className="text-[15px] font-bold text-[#111827]">{professional.ratingAvg.toFixed(1)}</span>
@@ -588,7 +666,7 @@ export default function ProfilePage() {
                   <p className="mt-0.5 whitespace-nowrap text-[10px] font-medium leading-none text-[#8b95a5] sm:text-[11px]">{t("reviewCountLabel", { count: professional.reviewCount })}</p>
                 </button>
                 {expYears > 0 && (
-                  <div className="min-w-0 text-center">
+                  <div className="flex min-w-0 flex-col items-center justify-start text-center">
                     <div className="flex items-center justify-center gap-1">
                       <Briefcase className="h-4 w-4 text-[#009FD9]" />
                       <span className="text-[15px] font-bold text-[#111827]">{expYears}</span>
@@ -596,7 +674,7 @@ export default function ProfilePage() {
                     <p className="mt-0.5 whitespace-nowrap text-[10px] font-medium leading-none tracking-[-0.02em] text-[#8b95a5] sm:text-[11px] sm:tracking-normal">{t("statYears")}</p>
                   </div>
                 )}
-                <div className="min-w-0 text-center">
+                <div className="flex min-w-0 flex-col items-center justify-start text-center">
                   <div className="flex items-center justify-center gap-1">
                     <Users className="h-4 w-4 text-[#009FD9]" />
                     <span data-follower-count className="text-[15px] font-bold text-[#111827]">{professional.followerCount ?? 0}</span>
@@ -687,7 +765,7 @@ export default function ProfilePage() {
                         ].filter((x) => x.href);
                         if (items.length === 0) return null;
                         return (
-                          <div className="flex items-center justify-center gap-2 pt-1">
+                          <div className="flex flex-wrap items-center justify-center gap-2 pt-1">
                             {items.map(({ k, href, Icon }) => (
                               <a
                                 key={k}
@@ -711,13 +789,13 @@ export default function ProfilePage() {
                         );
                       })()}
                       {!isOwn && (
-                        <div className="mt-1 border-t border-[#f3f4f6] pt-3">
+                        <div className="mt-3 flex items-center justify-center">
                           <button
                             type="button"
                             onClick={() => setReportOpen(true)}
-                            className="inline-flex h-10 !min-h-0 w-full items-center justify-center gap-1.5 rounded-xl border border-[#f3d9d9] bg-[#fffafa] text-sm font-bold text-[#b3453f] transition hover:bg-[#fdf0f0]"
+                            className="inline-flex !min-h-0 items-center gap-1.5 rounded-lg px-2 py-1 text-[12px] font-medium text-[#9aa3ad] transition-colors hover:text-[#6b7280]"
                           >
-                            <Flag className="h-4 w-4" />
+                            <Flag className="h-3.5 w-3.5" />
                             {t("reportProfile")}
                           </button>
                         </div>

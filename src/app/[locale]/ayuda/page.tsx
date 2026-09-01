@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { LandingNavbar } from "@/components/landing/landing-navbar";
+import { SectionHeaderTitle } from "@/components/mobile/section-header-title";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { InstallAppGuide } from "@/components/landing/install-app-card";
 import { Link } from "@/i18n/navigation";
@@ -31,6 +32,7 @@ const TOPICS = [
 ];
 
 export default function AyudaPage() {
+  const tSeccion = useTranslations("sectionTitles");
   const t = useTranslations("ayuda");
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [showInstallGuide, setShowInstallGuide] = useState(false);
@@ -57,6 +59,7 @@ export default function AyudaPage() {
   return (
     <div className="flex min-h-screen flex-col bg-white">
       <LandingNavbar />
+      <SectionHeaderTitle title={tSeccion("help")} fallbackHref="/" />
       <div className="ccr-navbar-spacer h-16" aria-hidden />
       <main className="flex-1">
         <section className="border-b border-[#e5e7eb] px-4 pb-10 pt-12 sm:pb-12 sm:pt-12">
