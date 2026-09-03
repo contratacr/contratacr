@@ -460,7 +460,9 @@ export function BookingRequests() {
                 <div className="flex items-start gap-2 border-t border-[#eef2f6] pt-3">
                   <div className="grid min-w-0 flex-1 grid-cols-2 gap-2">
                     {isActive && (
-                      <DirectChatLauncher bookingId={booking.id} professionalName={clientName} contextTitle={serviceDescription} buttonLabel={t("contact")} tone="contrast" className={primaryActionClass} />
+                      // Navy only while the brand-blue "Finalizar" sits beside it: one
+                      // filled brand button per card (design guide R3).
+                      <DirectChatLauncher bookingId={booking.id} professionalName={clientName} contextTitle={serviceDescription} buttonLabel={t("contact")} tone={isActive ? "contrast" : "primary"} compact className={primaryActionClass} />
                     )}
                     {isActive && (
                       <Button

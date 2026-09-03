@@ -176,14 +176,20 @@ test.describe("@visual recent bug contracts", () => {
     const booking = page.locator('[id^="booking-"]').first();
     await expect(booking).toBeVisible();
     await booking.locator(":scope > button[aria-expanded='false']").click();
-    const actions = booking.locator("button, a").filter({ hasText: /Enviar mensaje|WhatsApp|Marcar completado/i });
+    const actions = booking.locator("button, a").filter({ hasText: /Enviar mensaje|Mensaje|WhatsApp|Finalizar/i });
     await expect(actions).toHaveCount(2);
     const boxes = await actions.evaluateAll((nodes) => nodes.map((node) => {
       const box = node.getBoundingClientRect();
-      return { width: box.width, height: box.height };
+      // A label that no longer fits pushes scrollWidth past the visible width.
+      return { width: box.width, height: box.height, scrollWidth: node.scrollWidth, clientWidth: node.clientWidth };
     }));
     expect(Math.abs(boxes[0].height - boxes[1].height)).toBeLessThanOrEqual(1);
     expect(Math.abs(boxes[0].width - boxes[1].width)).toBeLessThanOrEqual(2);
+    // Both labels stay on ONE line at 390px — no overflow, no second row.
+    for (const box of boxes) {
+      expect(box.scrollWidth).toBeLessThanOrEqual(box.clientWidth + 1);
+      expect(box.height).toBeLessThanOrEqual(48);
+    }
 
     // Use the professional's own public profile: the blocked self-action is the
     // compact informational dialog from the recent responsive bug report.

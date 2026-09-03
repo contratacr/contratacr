@@ -21,6 +21,8 @@ type MessageLauncherProps = {
   initialMessage?: string;
   onSelfAction?: () => void;
   tone?: "primary" | "contrast";
+  /** Half-width card rows: "Mensaje" keeps the label on one line beside the icon. */
+  compact?: boolean;
 };
 
 function buildDraftHref({
@@ -60,13 +62,14 @@ export function MessageLauncher(props: MessageLauncherProps) {
     initialMessage = "",
     onSelfAction,
     tone = "primary",
+    compact = false,
   } = props;
   const locale = useLocale();
   const isEn = locale === "en";
   const router = useRouter();
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
-  const label = buttonLabel || (isEn ? "Send message" : "Enviar mensaje");
+  const label = buttonLabel || (compact ? (isEn ? "Message" : "Mensaje") : (isEn ? "Send message" : "Enviar mensaje"));
 
   async function openMessage() {
     if (isOwn) {

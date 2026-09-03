@@ -1151,7 +1151,6 @@
           "rescheduled": "Rescheduled"
         },
         "confirm": "Confirm",
-        "markComplete": "Mark complete",
         "markInProgress": "In progress",
         "cancel": "Cancel"
       },
@@ -1968,7 +1967,7 @@
     "liveUpdated": "Updated with recent changes.",
     "confirm": "Confirm",
     "cancel": "Cancel",
-    "markCompleted": "Mark completed",
+    "markCompleted": "Finish",
     "inProgress": "In progress",
     "markWorkDone": "Mark work done",
     "whatsapp": "WhatsApp",
@@ -2146,7 +2145,7 @@
     "edit": "Edit",
     "cancel": "Cancel",
     "cancelConfirm": "Cancel this proposal?",
-    "markCompleted": "Mark as completed",
+    "markCompleted": "Finish",
     "clientCancelled": "The client cancelled this project.",
     "whatsapp": "WhatsApp",
     "waMessage": "Hi {name}, I'm the one who sent the proposal you accepted on ContrataCR for \"{title}\".",

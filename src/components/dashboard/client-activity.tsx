@@ -743,7 +743,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                                 primary = <Button variant="outline" size="sm" className={`${actionButtonClass} sm:min-w-[10rem] sm:flex-1`} onClick={() => setReviewModal({ professionalId: b.professional_id, professionalName: b.professionals?.profiles?.full_name ?? t("professional"), bookingId: b.id })}>{rev ? t("editReview") : t("leaveReview")}</Button>;
                               } else if (canMessage && b.professional_id) {
                                 primary = (
-                                  <DirectChatLauncher professionalId={b.professional_id} professionalName={b.professionals?.profiles?.full_name || t("professional")} bookingId={b.id} contextTitle={b.service_description} buttonLabel={t("contact")} analyticsSource="booking" className={`${actionButtonClass} sm:min-w-[10rem] sm:flex-1`} />
+                                  <DirectChatLauncher professionalId={b.professional_id} professionalName={b.professionals?.profiles?.full_name || t("professional")} bookingId={b.id} contextTitle={b.service_description} buttonLabel={t("contact")} analyticsSource="booking" compact className={`${actionButtonClass} sm:min-w-[10rem] sm:flex-1`} />
                                 );
                               }
                               return (
@@ -767,7 +767,6 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                                           setCancelNote("");
                                         }}
                                       >
-                                        <CalendarClock className="h-4 w-4" />
                                         {t("reschedule")}
                                       </Button>
                                       <Button variant="outline" size="sm" className={`${actionButtonClass} border-[#fecaca] text-[#dc2626] hover:border-[#fca5a5] hover:bg-[#fef2f2] hover:text-[#b91c1c] sm:min-w-[10rem] sm:flex-1`} onClick={() => openCancelBooking(b.id)}>
@@ -1122,7 +1121,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                                       <Button size="sm" className="w-full px-3 sm:w-auto sm:min-w-[150px] sm:flex-none" onClick={() => confirmProjectCompletion(project.id)}>{t("confirmCompletion")}</Button>
                                     )}
                                     {proposal.professionals?.id && (
-                                      <DirectChatLauncher professionalId={proposal.professionals.id} professionalName={proposal.professionals.profiles?.full_name || t("professional")} projectId={project.id} proposalId={proposal.id} contextTitle={project.title} buttonLabel={t("openChat")} openDirectly initialMessage={t("proposalChatGreeting", { title: project.title })} tone={(proposal.status === "pending" && !locked) || (project.status === "awaiting_confirmation" && isAccepted) ? "contrast" : "primary"} className="h-10 w-full rounded-lg px-3 text-sm font-bold disabled:cursor-wait sm:w-auto sm:min-w-[156px] sm:flex-none" />
+                                      <DirectChatLauncher professionalId={proposal.professionals.id} professionalName={proposal.professionals.profiles?.full_name || t("professional")} projectId={project.id} proposalId={proposal.id} contextTitle={project.title} buttonLabel={t("openChat")} openDirectly initialMessage={t("proposalChatGreeting", { title: project.title })} tone={(proposal.status === "pending" && !locked) || (project.status === "awaiting_confirmation" && isAccepted) ? "contrast" : "primary"} compact className="h-10 w-full rounded-lg px-3 text-sm font-bold disabled:cursor-wait sm:w-auto sm:min-w-[156px] sm:flex-none" />
                                     )}
                                   </div>
                                 </div>
