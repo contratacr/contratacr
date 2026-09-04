@@ -57,9 +57,13 @@ export async function GET(
   }
 
   const fileName = resumeOriginalName(path) ?? "CV";
+  // `?ver=1` entrega el archivo para VERLO, no para bajarlo: dentro de la app no
+  // hay pestañas ni carpeta de descargas, así que una descarga no lleva a
+  // ninguna parte. Sin el parámetro se conserva la descarga de siempre.
+  const verEnPantalla = new URL(request.url).searchParams.get("ver") === "1";
   const { data, error } = await admin.storage
     .from(JOB_RESUME_BUCKET)
-    .createSignedUrl(path, 5 * 60, { download: fileName });
+    .createSignedUrl(path, 5 * 60, verEnPantalla ? undefined : { download: fileName });
 
   if (error || !data?.signedUrl) {
     return NextResponse.json({ error: "No pudimos preparar este CV." }, { status: 404 });

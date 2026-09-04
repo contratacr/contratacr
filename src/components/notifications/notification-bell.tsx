@@ -35,6 +35,9 @@ export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "o
     items: [] as Notification[],
   }));
   const [hasSyncedNotifications, setHasSyncedNotifications] = useState(false);
+  // Conteo real de no leídas en el servidor: la lista local solo trae las 20 más
+  // recientes y dejaba fuera las viejas sin leer, así el globo nunca bajaba.
+  const [unreadTotal, setUnreadTotal] = useState<number | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const portalHost = typeof document === "undefined" ? null : document.body;
   const [posicionPanel, setPosicionPanel] = useState<{ top: number; right: number } | null>(null);
@@ -63,7 +66,12 @@ export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "o
     : scope === "use"
       ? notificationUnread.use + notificationUnread.neutral
       : notificationUnread.offer + notificationUnread.use + notificationUnread.neutral;
-  const unreadCount = Math.max(cachedUnreadCount, serverUnreadCount);
+  // El conteo del servidor viene fijo en el primer render; una vez que la
+  // campana sincronizó su propia lista, manda ella (si no, marcar leídas
+  // dejaba el globo clavado en el número viejo hasta recargar la página).
+  const unreadCount = scope === "all" && unreadTotal !== null
+    ? unreadTotal
+    : hasSyncedNotifications ? cachedUnreadCount : Math.max(cachedUnreadCount, serverUnreadCount);
   const previewItems = visible.slice(0, 5);
   const fotoDe = useActorPhotos(previewItems);
 
@@ -82,6 +90,14 @@ export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "o
         cacheNotifications(user.id, next);
         setHasSyncedNotifications(true);
       });
+    void supabase
+      .from("notifications")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", user.id)
+      .eq("read", false)
+      .then(({ count, error }) => {
+        if (!error && typeof count === "number") setUnreadTotal(count);
+      });
   }, [user]);
 
   useEffect(() => {
@@ -96,9 +112,15 @@ export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "o
     fetchNotifications();
   }, [fetchNotifications]);
 
+  // Solo se escribe el caché tras una sincronización real y para el usuario
+  // correcto. En el montaje este efecto corría con el estado inicial (vacío)
+  // ANTES de que la siembra leyera el caché bueno, y lo pisaba con []: la
+  // lista entonces creía saber que no había nada y el vacío destellaba medio
+  // segundo hasta que llegaba la consulta.
   useEffect(() => {
-    cacheNotifications(user?.id, notifications);
-  }, [notifications, user?.id]);
+    if (!hasSyncedNotifications || !user?.id || notificationState.userId !== user.id) return;
+    cacheNotifications(user.id, notifications);
+  }, [hasSyncedNotifications, notificationState.userId, notifications, user?.id]);
 
   useEffect(() => {
     if (!user) return;
@@ -286,7 +308,8 @@ export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "o
   return (
     <div ref={menuRef} className="relative">
       <button
-        onClick={() => setMenuOpen((next) => !next)}
+        // En la app la campana abre la pantalla completa; el panel flotante es de la web.
+        onClick={() => (nativeApp ? openNotifications() : setMenuOpen((next) => !next))}
         className="relative grid h-10 w-10 place-items-center rounded-xl text-[#1A2744] transition-colors hover:bg-[#f3f4f6] hover:text-[#009FD9]"
         aria-label={t("title")}
         aria-expanded={menuOpen}

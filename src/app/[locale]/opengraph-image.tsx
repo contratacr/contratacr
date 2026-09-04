@@ -1,7 +1,5 @@
 import { ImageResponse } from "next/og";
-import { Buffer } from "node:buffer";
-import { readFile } from "node:fs/promises";
-import { join } from "node:path";
+import { LOGO_PALABRA, LOGO_SIMBOLO } from "@/lib/og-logos";
 
 export const alt = "ContrataCR";
 export const size = {
@@ -11,28 +9,12 @@ export const size = {
 
 export const contentType = "image/png";
 
-let logoWordmarkCache: string | null = null;
-let logoMarkCache: string | null = null;
-
-async function logoWordmarkDataUrl() {
-  if (logoWordmarkCache) return logoWordmarkCache;
-  const bytes = await readFile(join(process.cwd(), "public", "logo-wordmark-transparent.png"));
-  logoWordmarkCache = `data:image/png;base64,${Buffer.from(bytes).toString("base64")}`;
-  return logoWordmarkCache;
-}
-
-async function logoMarkDataUrl() {
-  if (logoMarkCache) return logoMarkCache;
-  const bytes = await readFile(join(process.cwd(), "public", "logo-mark-transparent.png"));
-  logoMarkCache = `data:image/png;base64,${Buffer.from(bytes).toString("base64")}`;
-  return logoMarkCache;
-}
 
 export default async function Image({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   const isEn = locale === "en";
-  const wordmarkSrc = await logoWordmarkDataUrl();
-  const markSrc = await logoMarkDataUrl();
+  const wordmarkSrc = LOGO_PALABRA;
+  const markSrc = LOGO_SIMBOLO;
   const subtitle = isEn
     ? { lead: "Offer", middle: " and find services in ", place: "Costa Rica." }
     : { lead: "Ofrece", middle: " y encuentra servicios en ", place: "Costa Rica." };

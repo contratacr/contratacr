@@ -1,0 +1,95 @@
+name: Inactivity reminders
+
+# Nothing in the app warns BEFORE a job is forgotten. Once a day this asks the
+# site to look for work that has been stalled for 3 and 7 days and send one
+# notice to whoever can act on it. The endpoint de-duplicates on its own, so a
+# retry — or a manual run on the same day — never notifies anyone twice.
+
+on:
+  schedule:
+    - cron: "0 15 * * *" # Daily at 9:00 AM Costa Rica time (UTC-6, no DST).
+  workflow_dispatch:
+    inputs:
+      target:
+        description: "Environment to run the reminders against."
+        required: true
+        type: choice
+        options:
+          - test
+          - production
+
+concurrency:
+  group: inactivity-reminders-${{ github.event_name == 'schedule' && 'production' || inputs.target }}
+  cancel-in-progress: false
+
+jobs:
+  remind:
+    name: Send reminders on ${{ github.event_name == 'schedule' && 'production' || inputs.target }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: ${{ github.event_name == 'schedule' && 'production' || inputs.target }}
+    permissions:
+      contents: read
+    env:
+      TARGET: ${{ github.event_name == 'schedule' && 'production' || inputs.target }}
+      APP_URL: ${{ secrets.NEXT_PUBLIC_APP_URL }}
+      CRON_SECRET: ${{ secrets.CRON_SECRET }}
+    steps:
+      - name: Validate target and secrets
+        run: |
+          set -euo pipefail
+          if [ -z "$CRON_SECRET" ]; then
+            echo "::error::Missing CRON_SECRET in the $TARGET GitHub Environment. It must match the CRON_SECRET the site runs with."
+            exit 1
+          fi
+          if [ -z "$APP_URL" ]; then
+            echo "::error::Missing NEXT_PUBLIC_APP_URL in the $TARGET GitHub Environment."
+            exit 1
+          fi
+          case "$APP_URL" in
+            https://*) ;;
+            *) echo "::error::NEXT_PUBLIC_APP_URL must be an https URL."; exit 1 ;;
+          esac
+
+      - name: Run the reminder pass
+        run: |
+          set -euo pipefail
+          base="${APP_URL%/}"
+          body="$(mktemp)"
+          # The secret only ever travels in a header written from the
+          # environment: it must not reach the command line or the log.
+          status="$(curl -sS -o "$body" -w '%{http_code}' \
+            --retry 3 --retry-delay 10 --retry-all-errors --max-time 120 \
+            -X POST "$base/api/internal/recordatorios" \
+            -H "Authorization: Bearer $CRON_SECRET" \
+            -H "Content-Type: application/json" \
+            -d '{}')"
+
+          echo "HTTP $status"
+          # The response carries only counters, never notification content.
+          cat "$body"
+          echo
+
+          if [ "$status" != "200" ]; then
+            echo "::error::The reminder endpoint answered HTTP $status."
+            exit 1
+          fi
+          if ! grep -q '"ok":true' "$body"; then
+            echo "::error::The reminder pass reported a failure."
+            exit 1
+          fi
+          # A pass that ran but could not store its notices still means people
+          # were never told. Green must mean "everyone who needed a nudge got it".
+          if ! grep -q '"fallidos":0' "$body"; then
+            echo "::error::Some reminders could not be stored. Check that the notification type allowlist migration is applied on $TARGET."
+            exit 1
+          fi
+
+          {
+            echo "### Inactivity reminders — $TARGET"
+            echo
+            echo '```json'
+            cat "$body"
+            echo
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"

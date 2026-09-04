@@ -70,6 +70,8 @@ function getMatchingLocationIds(raw: string): LocationQueryMatch[] {
 
 export type SearchFilters = {
   categoryId?: string;
+  /** Familia completa: se busca en TODAS estas categorías a la vez. */
+  categoryIds?: string[];
   provinceId?: string;
   cantonId?: string;
   sortBy?: string;
@@ -288,6 +290,7 @@ function normalizeSearchFilters(filters: SearchFilters): SearchFilters {
   ))];
   const normalized: SearchFilters = {
     categoryId: filters.categoryId || undefined,
+    categoryIds: filters.categoryIds?.filter(Boolean).length ? [...new Set(filters.categoryIds.filter(Boolean))] : undefined,
     provinceId: filters.provinceId || undefined,
     cantonId: filters.cantonId || undefined,
     sortBy: filters.sortBy || undefined,
@@ -393,7 +396,15 @@ async function searchProfessionalsUncached(
           query = query.or("videoconsulta.eq.true,coverage_country.eq.true");
         }
 
-        if (filters.categoryId && filters.categoryId !== "todas") {
+        // Una familia entera ("Todos los servicios de Agro"): la misma condición
+        // por cada categoría suya, unidas por O.
+        if (filters.categoryIds && filters.categoryIds.length > 0) {
+          query = query.or(filters.categoryIds.flatMap((id) => [
+            `category_id.eq.${id}`,
+            `professions.cs.{${id}}`,
+            serviceCategoryContains(id),
+          ]).join(","));
+        } else if (filters.categoryId && filters.categoryId !== "todas") {
           // Match the professional if the selected service is their main category,
           // one of their professions, or one of the service rows they added in the
           // professional panel. The last case matters for multi-service profiles.
@@ -590,6 +601,7 @@ async function searchProfessionalsUncached(
 
       const requestedCategoryIds = new Set<string>();
       if (filters.categoryId && filters.categoryId !== "todas") requestedCategoryIds.add(filters.categoryId);
+      for (const id of filters.categoryIds ?? []) requestedCategoryIds.add(id);
       if (filters.query) {
         for (const id of getMatchingCategoryIds(filters.query.trim())) requestedCategoryIds.add(id);
       }

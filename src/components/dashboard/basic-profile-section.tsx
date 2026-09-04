@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { Lock, Camera, X, Info, Briefcase, ChevronDown, ChevronLeft, Pencil, Eye, Trash2 } from "lucide-react";
+import { Lock, Camera, X, Info, Briefcase, ChevronDown, ChevronLeft, Pencil, Eye, Trash2, Loader2 } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Link, useRouter } from "@/i18n/navigation";
 import { detectIdType } from "@/lib/cedula";
 import { Button } from "@/components/ui/button";
@@ -363,8 +364,52 @@ export function BasicProfileSection({
         </div>
       </div>
       <ProfileSection id="basic" title={t("secBasic")} desc={t("secBasicDesc")} open={openSections.has("basic")} mobileFocused={mobileSectionFocused} onToggle={toggleSection} onActivate={setActiveDirtySection} footer={makeProfileFooter("basic")}>
-      {/* Datos — nombre + teléfono */}
+      {/* Datos — foto + nombre + teléfono */}
       <div className="flex flex-col gap-4">
+        <div className="flex items-center gap-4">
+          <button
+            type="button"
+            onClick={() => photoInputRef.current?.click()}
+            className="relative h-20 w-20 shrink-0 rounded-full outline-none transition focus-visible:ring-2 focus-visible:ring-[#009FD9] focus-visible:ring-offset-2"
+            aria-label={profileAvatar ? t("changePhoto") : t("addPhoto")}
+          >
+            <Avatar className="h-20 w-20 bg-transparent">
+              <AvatarImage src={profileAvatar ?? undefined} alt="" />
+              <AvatarFallback className="bg-[#EBF5FB] text-lg font-bold text-[#009FD9]">{getInitials(displayName)}</AvatarFallback>
+            </Avatar>
+            <span className="absolute bottom-0 right-0 flex h-7 w-7 items-center justify-center rounded-full border-2 border-white bg-[#009FD9] text-white shadow-sm">
+              {photoUploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Camera className="h-3.5 w-3.5" />}
+            </span>
+          </button>
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => photoInputRef.current?.click()}
+                className="inline-flex h-9 items-center rounded-full border border-[#d6e4ed] bg-white px-3.5 text-sm font-bold text-[#162543] transition hover:border-[#9fd8ec] hover:text-[#009FD9]"
+              >
+                {profileAvatar ? t("changePhoto") : t("addPhoto")}
+              </button>
+              {profileAvatar && (
+                <button
+                  type="button"
+                  onClick={handlePhotoRemove}
+                  className="inline-flex h-9 items-center rounded-full px-3 text-sm font-bold text-[#526277] transition hover:bg-[#f3f7fa] hover:text-[#b91c1c]"
+                >
+                  {t("removePhoto")}
+                </button>
+              )}
+            </div>
+            <p className="mt-1.5 text-xs text-[#6b7280]">{t("photoHint")}</p>
+          </div>
+          <input
+            ref={photoInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
+            className="hidden"
+            onChange={handlePhotoUpload}
+          />
+        </div>
         <div>
           <label className="text-sm font-medium text-[#374151] mb-1.5 flex items-center gap-1.5">
             {t("fullName")} <span className="text-red-500">*</span>

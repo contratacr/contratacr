@@ -1,7 +1,6 @@
 "use client";
 
 import type { ElementType, ReactNode } from "react";
-import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTranslations } from "next-intl";
 import { LoadingMarkImage } from "@/components/ui/loading-mark-image";
@@ -22,12 +21,17 @@ export function BrandLoadingMark({ className, children }: { className?: string; 
 
 export function PanelSectionLoading({ title, description, className }: { rows?: number; title?: ReactNode; description?: ReactNode; className?: string } = {}) {
   const t = useTranslations("loading");
+  // Sin ruedita: la espera se dibuja como skeleton. Barras neutras, no
+  // tarjetas, porque aún no se sabe si la sección tendrá registros.
   return (
-    <div data-panel-loading="" className={cn("ccr-delayed-loading ccr-panel-section-loading flex min-h-[14rem] flex-col items-center justify-center gap-2 px-4 py-8 text-center sm:min-h-[16rem]", className)} aria-busy="true" role="status">
-      <Loader2 className="h-7 w-7 animate-spin text-[#009FD9]" aria-hidden />
-      <div>
-        <p className="text-sm font-extrabold text-[#162543]">{title ?? t("generic")}</p>
-        {description && <p className="mt-1 text-xs font-medium text-[#6b7280]">{description}</p>}
+    <div data-panel-loading="" className={cn("ccr-delayed-loading ccr-panel-section-loading min-h-[14rem] px-4 py-6 sm:min-h-[16rem]", className)} aria-busy="true" role="status">
+      <span className="sr-only">{title ?? t("generic")}</span>
+      {description && <span className="sr-only">{description}</span>}
+      <div className="mx-auto w-full max-w-xl space-y-3">
+        <Skeleton className="h-4 w-2/5 rounded-full" />
+        <Skeleton className="h-3 w-4/5 rounded-full" />
+        <Skeleton className="h-3 w-3/5 rounded-full" />
+        <Skeleton className="h-24 w-full rounded-2xl" />
       </div>
     </div>
   );
@@ -108,7 +112,14 @@ export function PanelEmptyState({
       <Icon className="mx-auto mb-3 h-12 w-12 text-[#e5e7eb]" />
       <p className="font-semibold text-[#374151]">{title}</p>
       {description && <p className="mt-1 max-w-sm text-sm text-[#6b7280]">{description}</p>}
-      {action && <div className="mt-5">{action}</div>}
+      {/* En un estado vacío la acción ES la pantalla: ancha, centrada y con
+          altura cómoda. Con lista, en cambio, el botón de crear va compacto
+          arriba para no competir con el contenido. */}
+      {action && (
+        <div className="mt-5 flex w-full max-w-xs justify-center [&>a]:h-11 [&>a]:w-full [&>button]:h-11 [&>button]:w-full">
+          {action}
+        </div>
+      )}
     </div>
   );
 }

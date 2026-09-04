@@ -1653,6 +1653,18 @@ function repairCategoryLabel(label: string): string {
   return repairVisibleText(label);
 }
 
+/* ─── La familia a la que pertenece un servicio ─── */
+// Un servicio no tiene icono propio: hereda el de su familia. Con cientos de
+// servicios y unas quince familias, inventar un pictograma por servicio daría
+// dibujos ambiguos (¿cómo se distingue "Abogados" de "Notariado"?); el icono
+// sirve para decir de qué rubro es, y para eso el de la familia basta.
+export function getCategoryGroupId(id: string): string | undefined {
+  const catalogo = ALL_CATEGORIES.find((c) => c.id === id);
+  if (catalogo) return catalogo.groupId;
+  const custom = CUSTOM_CATEGORIES.find((c) => c.id === id);
+  return custom?.groupId;
+}
+
 /* ─── Get category label from ID (locale-aware) ─── */
 export function getCategoryLabel(id: string, locale?: string): string {
   const override = CATEGORY_CATALOG_OVERRIDES.get(id);

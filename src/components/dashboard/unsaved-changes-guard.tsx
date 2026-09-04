@@ -202,8 +202,8 @@ export function UnsavedChangesGuard({
         >
           <div className="px-5 pb-5 pt-5 sm:px-6 sm:pb-6">
             <div className="flex flex-col items-center text-center">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#EBF5FB] ring-1 ring-inset ring-[#009FD9]/20">
-                <AlertTriangle className="h-5 w-5 text-[#009FD9]" />
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#fef6e7] ring-1 ring-inset ring-[#f5b73f]/30">
+                <AlertTriangle className="h-5 w-5 text-[#d97706]" />
               </div>
               <div className="mt-3 min-w-0">
                 <Dialog.Title className="text-base font-bold text-[#111827]">

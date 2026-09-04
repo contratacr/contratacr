@@ -4,6 +4,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { notifyUserOfReply } from "@/lib/support-notify";
 import { LONG_TEXT_MAX_LENGTH, limitTrimmedText } from "@/lib/text-limits";
 import { sendNotificationPush } from "@/lib/push/notify";
+import { buildSupportCloseMessage, supportCloseReason } from "@/lib/support/close-reasons";
 
 const STATUSES = ["open", "in_progress", "resolved"];
 
@@ -55,13 +56,19 @@ export async function PATCH(req: Request) {
   const admin = await getApiAdmin();
   if (!admin) return NextResponse.json({ error: "No autorizado" }, { status: 403 });
 
-  const { id, status } = await req.json();
+  const { id, status, reason, note } = await req.json();
   if (!id || !STATUSES.includes(status)) {
     return NextResponse.json({ error: "Datos inválidos" }, { status: 400 });
   }
   const db = createAdminClient();
-  const { data: ticket } = await db.from("support_tickets").select("status").eq("id", id).single();
+  const { data: ticket } = await db.from("support_tickets").select("*").eq("id", id).single();
   if (!ticket) return NextResponse.json({ error: "Ticket no encontrado" }, { status: 404 });
+
+  // Cerrar exige un motivo: es lo que el usuario va a leer en el hilo.
+  const cerrando = status === "resolved" && ticket.status !== "resolved";
+  if (cerrando && !supportCloseReason(String(reason ?? ""))) {
+    return NextResponse.json({ error: "Elegí el motivo del cierre." }, { status: 400 });
+  }
 
   // One-way flow: open→in_progress→resolved (open→resolved allowed). Never move
   // BACKWARD (in_progress/resolved → open). Reopen happens only via a new reply.
@@ -73,11 +80,52 @@ export async function PATCH(req: Request) {
   if (!ok) return NextResponse.json({ error: "Transición no permitida." }, { status: 400 });
 
   const now = new Date().toISOString();
+  const cuerpoCierre = cerrando
+    ? buildSupportCloseMessage(String(reason), limitTrimmedText(note, LONG_TEXT_MAX_LENGTH))
+    : null;
+
   const { error } = await db
     .from("support_tickets")
-    .update({ status, reviewed_at: now, handled_by: admin.id, handled_by_name: admin.fullName, handled_at: now })
+    .update({
+      status,
+      reviewed_at: now,
+      handled_by: admin.id,
+      handled_by_name: admin.fullName,
+      handled_at: now,
+      ...(cuerpoCierre ? { last_reply_at: now, last_reply_role: "admin", user_confirmed: false } : {}),
+    })
     .eq("id", id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  // El cierre se cuenta como cualquier respuesta de soporte: queda escrito en el
+  // hilo y llega por correo y campana. Un caso que se cierra en silencio deja a
+  // la persona sin saber si la leyeron.
+  if (cuerpoCierre) {
+    await db.from("support_ticket_messages").insert({
+      ticket_id: id, sender_role: "admin", sender_id: admin.id, sender_name: admin.fullName, body: cuerpoCierre,
+    });
+
+    let panel: "cliente" | "profesional" = "cliente";
+    if (ticket.user_id) {
+      const { data: prof } = await db.from("profiles").select("role").eq("id", ticket.user_id).maybeSingle();
+      if (prof?.role === "professional") panel = "profesional";
+    }
+    if (ticket.email) {
+      await notifyUserOfReply({ toEmail: ticket.email, toName: ticket.name, subject: ticket.subject, body: cuerpoCierre, hasAccount: !!ticket.user_id, panel, ticketId: id });
+    }
+    if (ticket.user_id) {
+      const notification = {
+        user_id: ticket.user_id,
+        type: "support_reply",
+        title: "Caso de soporte cerrado",
+        message: `Soporte cerró tu caso "${ticket.subject}". Podés responder si el problema continúa.`,
+        data: { link: `/es/dashboard/${panel}?tab=soporte&ticket=${id}`, ticketId: id, ticket_subject: ticket.subject },
+      };
+      await db.from("notifications").insert(notification);
+      await sendNotificationPush({ userId: notification.user_id, ...notification });
+    }
+  }
+
   return NextResponse.json({ ok: true });
 }
 

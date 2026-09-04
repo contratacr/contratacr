@@ -1,12 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { BriefcaseBusiness, CalendarDays, ChevronDown, Download, ExternalLink, FileText, MapPin } from "lucide-react";
+import { BriefcaseBusiness, CalendarDays, ChevronDown, ExternalLink, FileText, MapPin } from "lucide-react";
 import { useLocale } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { PanelEmptyState, PanelListSkeleton } from "@/components/ui/content-loading";
+import { VisorDeCv } from "@/components/jobs/visor-cv";
 import { EMPLOYMENT_TYPES, WORKPLACE_TYPES, type EmploymentType, type WorkplaceType } from "@/lib/jobs";
 import { formatRelativeOrDate, getInitials } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
@@ -66,9 +67,6 @@ export function ClientJobApplications() {
   );
   const [openId, setOpenId] = useState<string | null>(null);
 
-  function resumeDownloadUrl(application: Application) {
-    return application.resumeUrl ?? "";
-  }
   if (loading) return <PanelListSkeleton rows={3} hasData={applications.length > 0} />;
   if (!applications.length) return (
     <PanelEmptyState
@@ -118,7 +116,7 @@ export function ClientJobApplications() {
                       <div className="min-w-0 flex-1">
                         <div className="flex min-w-0 items-center gap-1.5">
                           <p className="truncate text-sm font-bold text-[#162543]">{application.resumeName || "CV"}</p>
-                          <a href={resumeDownloadUrl(application)} download={application.resumeName || "CV"} aria-label={isEn ? "Download CV" : "Descargar CV"} title={isEn ? "Download CV" : "Descargar CV"} className="grid h-7 w-7 shrink-0 place-items-center text-[#008fc3] hover:text-[#00749f]"><Download className="h-4 w-4" /></a>
+                          <VisorDeCv applicationId={application.id} nombreArchivo={application.resumeName} variante="icono" className="grid h-7 w-7 shrink-0 place-items-center text-[#008fc3] hover:text-[#00749f]" />
                         </div>
                         <p className="text-[11px] font-medium text-[#78869a]">{isEn ? "Submitted" : "Enviado"} {formatRelativeOrDate(application.createdAt, locale)}</p>
                       </div>

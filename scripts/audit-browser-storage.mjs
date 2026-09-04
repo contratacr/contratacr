@@ -17,6 +17,7 @@ const reviewed = new Map([
   ["src/components/dashboard/pro/profile-completion.tsx", { count: 4, reason: "dismissed and ignored optional checklist presentation state; completion truth remains in Supabase" }],
   ["src/components/landing/landing-navbar.tsx", { count: 4, reason: "language preference and coarse current-location search cache; no account-owned records" }],
   ["src/components/marketplace/marketplace-controls.tsx", { count: 2, reason: "device-local marketplace recent-search history" }],
+  ["src/lib/recent-visits.ts", { count: 8, reason: "device-local list of recently opened records and recent searches, offered back by the search screen, each removable one by one; nothing account-owned" }],
   ["src/components/landing/ai-concierge.tsx", { count: 8, reason: "tab-scoped anonymous conversation and post-auth intent handoff; authenticated history persists in Supabase" }],
   ["src/components/dashboard/pro/proposals-tab.tsx", { count: 2, reason: "dismissed opportunity UI state" }],
   ["src/components/status/operational-status-banner.tsx", { count: 2, reason: "dismissed operational notice" }],
@@ -25,6 +26,7 @@ const reviewed = new Map([
   ["src/components/professionals/follow-button.tsx", { count: 8, reason: "Supabase-backed follows cache (now written through on confirm, to stop the Seguir/Siguiendo flicker) and short-lived post-login follow handoff" }],
   ["src/components/professionals/leave-review-modal.tsx", { count: 6, reason: "short-lived profile review draft handoff before login; submitted reviews persist in Supabase" }],
   ["src/components/professionals/follow-network-summary-link.tsx", { count: 2, reason: "account-keyed backend follow-count render cache; Supabase remains authoritative" }],
+  ["src/lib/data/use-custom-categories.ts", { count: 2, reason: "session snapshot of the public service catalog so a newly approved service paints on the first frame; the API stays authoritative and revalidates on every start" }],
   ["src/lib/dashboard-prefetch-cache.ts", { count: 9, reason: "five-minute backend response cache, session-scoped and cleared on sign-out; Supabase remains authoritative" }],
   ["src/app/layout.tsx", { count: 8, reason: "pre-hydration read of the native first-run flag to pre-paint the onboarding screen; presentation only" }],
   ["src/components/mobile/mobile-app-bridge.tsx", { count: 3, reason: "native first-run flag and hardware-back root marker; presentation only" }],
@@ -33,7 +35,6 @@ const reviewed = new Map([
   ["src/components/analytics/attribution-capture.tsx", { count: 2, reason: "session marker that the account already claimed its first-touch attribution; the attribution itself persists server-side" }],
   ["src/lib/account-cache.ts", { count: 1, reason: "account-scoped removal of reviewed browser caches during disable/deletion" }],
   ["src/lib/app-data-invalidation.ts", { count: 2, reason: "cross-tab cache invalidation timestamp/domain signal; no account-owned records" }],
-  ["src/components/professionals/case-like-button.tsx", { count: 3, reason: "anonymous like guard; count persists in backend" }],
   ["src/components/notifications/notification-live-toast.tsx", { count: 3, reason: "notification presentation state; records persist in backend" }],
   ["src/components/notifications/notification-bell.tsx", { count: 2, reason: "backend notification render cache" }],
   ["src/components/analytics/meta-pixel.tsx", { count: 1, reason: "measurement preference; no account-owned data" }],
@@ -45,7 +46,10 @@ const reviewed = new Map([
 
 const trackedSource = execFileSync("git", ["ls-files", "src"], { encoding: "utf8" })
   .split(/\r?\n/)
-  .filter((file) => /\.(?:js|jsx|mjs|ts|tsx)$/.test(file));
+  .filter((file) => /\.(?:js|jsx|mjs|ts|tsx)$/.test(file))
+  // Un archivo borrado y todavía sin confirmar sigue apareciendo en el índice:
+  // no hay nada que auditar en él y leerlo rompía la comprobación entera.
+  .filter((file) => fs.existsSync(file));
 
 const storagePattern = /\b(?:localStorage|sessionStorage|indexedDB|CacheStorage)\b/g;
 const findings = [];

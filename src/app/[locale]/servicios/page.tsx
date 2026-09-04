@@ -1,6 +1,8 @@
 "use client";
 
 import { startTransition, useCallback, useMemo, useState } from "react";
+import { useHairlineOnScroll } from "@/components/util/use-hairline-on-scroll";
+import { cn } from "@/lib/utils";
 import { useLocale } from "next-intl";
 import { useTranslations } from "next-intl";
 import { ContrataCRMark, HeaderMessagesLink, HeaderNotificationsLink, LandingNavbar } from "@/components/landing/landing-navbar";
@@ -8,7 +10,7 @@ import { LandingFooter } from "@/components/landing/landing-footer";
 import { CategorySuggestionBox } from "@/components/ui/category-suggestion";
 import { Link, useRouter } from "@/i18n/navigation";
 import { useCustomCategories } from "@/lib/data/use-custom-categories";
-import { categorySearchScore, getAllCategories, getAllCategoryGroups, getCategoryGroupLabel, getCategoryLabel, isOtherCategoryGroup, normalizeText, searchCategories } from "@/lib/data/categories";
+import { categorySearchScore, getAllCategories, getAllCategoryGroups, getCategoryGroupLabel, getCategoryLabel, isOtherCategoryGroup, normalizeText, searchCategories, getCategoryGroupId } from "@/lib/data/categories";
 import { getCategoryGroupIcon } from "@/lib/data/category-group-visuals";
 import {
   ArrowLeft,
@@ -27,6 +29,10 @@ export default function ServiciosPage() {
   const [query, setQuery] = useState("");
   const [activeGroupKey, setActiveGroupKey] = useState("hogar");
   const [mobileGroupKey, setMobileGroupKey] = useState<string | null>(null);
+  // La línea bajo el buscador solo cuando hay contenido pasando por debajo:
+  // en reposo el encabezado y la página son un mismo blanco y la raya era un
+  // corte sin trabajo que hacer.
+  const { sentinelaRef, cabeceraRef, conLinea } = useHairlineOnScroll();
   const categoryCatalogVersion = JSON.stringify(customCategories);
   const groups = useMemo(() => {
     void categoryCatalogVersion;
@@ -143,7 +149,8 @@ export default function ServiciosPage() {
 
       <main className="flex-1 bg-white lg:bg-[#f7fafc]">
         <section data-services-mobile="" className="mx-auto w-full bg-white pb-[calc(2rem+env(safe-area-inset-bottom))] [.ccr-native-app_&]:pb-3 lg:hidden">
-          <header className="sticky top-0 z-20 border-b border-[#d5d8dc] bg-white">
+          <div ref={sentinelaRef} aria-hidden className="h-px" />
+          <header ref={cabeceraRef} className={cn("sticky top-0 z-20 border-b bg-white transition-colors duration-200", conLinea ? "border-[#e5e7eb]" : "border-transparent")}>
             {mobileGroup ? (
               <div className="relative flex min-h-[56px] items-center justify-center px-14">
                 <button
@@ -234,9 +241,12 @@ export default function ServiciosPage() {
               <p className="border-b border-[#d7dbe0] px-4 py-3 text-[13px] font-bold uppercase tracking-wide text-[#64748b]">
                 {serviceResultsTitle}
               </p>
-              {searchResults.map(({ id, groupLabel }) => (
-                <Link key={id} href={`/buscar?categoria=${id}`} className="flex min-h-[62px] items-center justify-between gap-4 border-b border-[#d7dbe0] px-4 py-3 last:border-b-0">
-                  <span className="min-w-0">
+              {searchResults.map(({ id, groupLabel }) => {
+                const IconoFamilia = getCategoryGroupIcon(getCategoryGroupId(id));
+                return (
+                <Link key={id} href={`/buscar?categoria=${id}`} className="flex min-h-[62px] items-center justify-between gap-3 border-b border-[#d7dbe0] px-4 py-3 last:border-b-0">
+                  <IconoFamilia className="h-5 w-5 shrink-0 text-[#64748b]" />
+                  <span className="min-w-0 flex-1">
                     <span className="block text-[16px] font-extrabold leading-tight text-[#162543] [overflow-wrap:anywhere]">
                       {getCategoryLabel(id, locale)}
                     </span>
@@ -244,14 +254,18 @@ export default function ServiciosPage() {
                   </span>
                   <ChevronRight className="h-6 w-6 shrink-0 text-[#c2c7cc]" />
                 </Link>
-              ))}
+                );
+              })}
             </section>
           ) : mobileGroup ? (
             <section className="mx-4 mt-3 overflow-hidden rounded border border-[#d2d6dc] bg-white">
               <Link
                 href={`/buscar?grupo=${mobileGroup.key}`}
-                className="flex min-h-[62px] items-center border-b border-[#d7dbe0] px-4 py-3 text-[16px] font-extrabold leading-tight text-[#009FD9]"
+                className="flex min-h-[62px] items-center gap-3 border-b border-[#d7dbe0] px-4 py-3 text-[16px] font-extrabold leading-tight text-[#009FD9]"
               >
+                <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#eef8fc] text-[#009FD9]">
+                  <mobileGroup.Icon className="h-[18px] w-[18px]" />
+                </span>
                 {locale === "en" ? `All ${mobileGroup.label} services` : `Todos los servicios de ${mobileGroup.label}`}
               </Link>
               {mobileGroup.visibleIds.map((id) => (
@@ -266,18 +280,24 @@ export default function ServiciosPage() {
             <>
               <p className="mx-4 mt-4 text-[15px] font-bold text-[#526277]">{allCategoriesTitle}</p>
               <section className="mx-4 mt-2 overflow-hidden rounded border border-[#d2d6dc] bg-white">
-                {mobileGroups.map((group) => (
+                {mobileGroups.map((group) => {
+                  const IconoGrupo = group.Icon;
+                  return (
                   <button
                     key={group.key}
                     type="button"
                     data-testid="services-mobile-group-option"
                     onClick={() => selectGroup(group.key, true)}
-                    className="flex min-h-[62px] w-full items-center justify-between gap-4 border-b border-[#d7dbe0] bg-white px-4 py-3 text-left last:border-b-0"
+                    className="flex min-h-[62px] w-full items-center justify-between gap-3 border-b border-[#d7dbe0] bg-white px-4 py-3 text-left last:border-b-0"
                   >
-                    <span className="min-w-0 text-[16px] font-extrabold leading-tight text-[#162543] [overflow-wrap:anywhere]">{group.label}</span>
+                    <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#eef8fc] text-[#009FD9]">
+                      <IconoGrupo className="h-[18px] w-[18px]" />
+                    </span>
+                    <span className="min-w-0 flex-1 text-[16px] font-extrabold leading-tight text-[#162543] [overflow-wrap:anywhere]">{group.label}</span>
                     <ChevronRight className="h-6 w-6 shrink-0 text-[#c2c7cc]" />
                   </button>
-                ))}
+                  );
+                })}
               </section>
             </>
           )}

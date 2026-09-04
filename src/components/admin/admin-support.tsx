@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { SUPPORT_CLOSE_REASONS } from "@/lib/support/close-reasons";
 import { Headset, ArrowLeft, Send, User, Shield, UserSearch, Loader2, Trash2 } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { AdminUserSearch } from "@/components/admin/admin-user-search";
@@ -126,6 +127,12 @@ export function AdminSupport() {
     else void showMessage({ title: "No se pudo enviar la respuesta", description: "Inténtalo de nuevo en unos segundos.", tone: "danger" });
   }
 
+  const [cerrando, setCerrando] = useState(false);
+  const [cerrandoEnCurso, setCerrandoEnCurso] = useState(false);
+  const [motivo, setMotivo] = useState("");
+  const [notaCierre, setNotaCierre] = useState("");
+  const [cierreError, setCierreError] = useState("");
+
   async function removeTicket() {
     if (!openId || !window.confirm("Esta eliminación es permanente: el caso y todos sus mensajes desaparecen. ¿Deseas continuar?")) return;
     const res = await fetch(`/api/admin/support?id=${encodeURIComponent(openId)}`, { method: "DELETE" });
@@ -137,14 +144,35 @@ export function AdminSupport() {
     load(status);
   }
 
+  // Cerrar pide motivo: ese texto es lo que la persona lee en su hilo. Los otros
+  // cambios de estado son internos y siguen siendo directos.
   async function changeStatus(next: string) {
     if (!openId) return;
+    if (next === "resolved" && ticket?.status !== "resolved") { setCerrando(true); return; }
     await fetch("/api/admin/support", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id: openId, status: next }),
     });
     setTicket((t) => (t ? { ...t, status: next } : t));
+  }
+
+  async function cerrarCaso() {
+    if (!openId || !motivo) return;
+    setCerrandoEnCurso(true);
+    const res = await fetch("/api/admin/support", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: openId, status: "resolved", reason: motivo, note: notaCierre }),
+    });
+    setCerrandoEnCurso(false);
+    if (!res.ok) { const json = await res.json().catch(() => ({})); setCierreError(json.error || "No se pudo cerrar el caso."); return; }
+    setCerrando(false);
+    setMotivo("");
+    setNotaCierre("");
+    setCierreError("");
+    setTicket((t) => (t ? { ...t, status: "resolved" } : t));
+    openTicket(openId);
   }
 
   // ── Thread view ──
@@ -208,6 +236,42 @@ export function AdminSupport() {
               </select>
               </div>
             </div>
+
+            {/* Cerrar con motivo: el texto elegido se publica en el hilo firmado
+                por soporte, y sale por correo y campana como cualquier respuesta. */}
+            {cerrando && (
+              <div className="border-b border-[#e5e7eb] bg-[#f8fafc] p-5">
+                <p className="text-sm font-semibold text-[#0f172a]">¿Por qué se cierra este caso?</p>
+                <p className="mt-1 text-xs text-[#6b7280]">La persona recibe este mensaje en su hilo. Responder ahí reabre el mismo caso.</p>
+                <div className="mt-3 space-y-2">
+                  {SUPPORT_CLOSE_REASONS.map((r) => (
+                    <label key={r.id} className={`flex cursor-pointer gap-2.5 rounded-xl border p-3 text-left transition ${motivo === r.id ? "border-[#009FD9] bg-white shadow-sm" : "border-[#e5e7eb] bg-white hover:border-[#cbd5e1]"}`}>
+                      <input type="radio" name="motivo-cierre" value={r.id} checked={motivo === r.id} onChange={() => { setMotivo(r.id); setCierreError(""); }} className="mt-0.5" />
+                      <span className="min-w-0">
+                        <span className="block text-sm font-semibold text-[#0f172a]">{r.label.es}</span>
+                        <span className="mt-0.5 block text-xs leading-relaxed text-[#6b7280]">{r.message.es}</span>
+                      </span>
+                    </label>
+                  ))}
+                </div>
+                <textarea
+                  value={notaCierre}
+                  onChange={(e) => setNotaCierre(e.target.value)}
+                  rows={2}
+                  placeholder="Nota adicional (opcional): se agrega debajo del mensaje."
+                  className="mt-3 w-full rounded-xl border border-[#e5e7eb] bg-white p-3 text-sm text-[#374151] outline-none focus:border-[#009FD9]"
+                />
+                {cierreError && <p className="mt-2 text-xs font-semibold text-[#b91c1c]">{cierreError}</p>}
+                <div className="mt-3 flex items-center gap-2">
+                  <button type="button" onClick={() => void cerrarCaso()} disabled={!motivo || cerrandoEnCurso} className="inline-flex h-9 items-center rounded-lg bg-[#0f172a] px-3.5 text-sm font-semibold text-white disabled:opacity-50">
+                    {cerrandoEnCurso ? "Cerrando…" : "Cerrar caso"}
+                  </button>
+                  <button type="button" onClick={() => { setCerrando(false); setCierreError(""); }} className="inline-flex h-9 items-center rounded-lg px-3 text-sm font-medium text-[#374151] hover:bg-[#f3f4f6]">
+                    Cancelar
+                  </button>
+                </div>
+              </div>
+            )}
 
             {/* Thread */}
             <div className="p-5 flex flex-col gap-3 max-h-[460px] overflow-y-auto bg-[#f9fafb]">

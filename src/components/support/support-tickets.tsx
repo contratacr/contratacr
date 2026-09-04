@@ -1,6 +1,7 @@
 "use client";
 
 import { isNativeAppRuntime } from "@/hooks/use-native-app";
+import { confirmarSalidaSinGuardar } from "@/lib/confirmar-salida";
 import { lockBodyScroll } from "@/lib/body-scroll-lock";
 
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
@@ -328,8 +329,11 @@ export function SupportTickets({
 
   useEffect(() => {
     const handler = () => {
-      setShowNewTicketPage(false);
-      closeThread();
+      // Con un tiquete a medio escribir, el guardián pide confirmación.
+      confirmarSalidaSinGuardar(() => {
+        setShowNewTicketPage(false);
+        closeThread();
+      });
     };
     window.addEventListener("ccr:support-close-thread", handler);
     return () => window.removeEventListener("ccr:support-close-thread", handler);
@@ -356,10 +360,8 @@ export function SupportTickets({
     return (
       <>
         <div className="ccr-support-new-ticket flex min-h-0 flex-1 flex-col bg-white">
-          <div className="min-h-0 flex-1 overflow-y-auto bg-[#f4f7fa] px-4 py-5 pb-[calc(1.5rem+env(safe-area-inset-bottom))]">
-            <div className="rounded-2xl border border-[#e5e7eb] bg-white p-5 shadow-sm">
-              <SupportForm onSuccess={handleNewTicketSubmitted} />
-            </div>
+          <div className="min-h-0 flex-1 overflow-y-auto bg-[#f4f7fa] py-5">
+            <SupportForm onSuccess={handleNewTicketSubmitted} />
           </div>
         </div>
         {dialogNode}
@@ -457,18 +459,6 @@ export function SupportTickets({
   // ── List view ──
   return (
     <div className="mx-auto w-full max-w-[34rem] space-y-4 px-4 sm:max-w-none sm:px-0">
-      {/* La acción vive flotando sobre la lista (igual que "Crear" en Mis
-          proyectos): en escritorio se queda arriba a la derecha, donde hay sitio.
-          No se dibuja mientras carga ni en el estado vacío, que ya trae su propio
-          botón centrado. */}
-      {!loading && items.length > 0 && (
-        <div className="flex justify-end">
-          <button onClick={openNewTicket} className="inline-flex h-10 shrink-0 items-center gap-2 rounded-lg bg-[#009FD9] px-4 text-sm font-bold text-white transition-colors hover:bg-[#0089bb]">
-            <Plus className="h-4 w-4" /> {t("newTicket")}
-          </button>
-        </div>
-      )}
-
       {/* Status filter — the SHARED tab style (consistent with solicitudes/proyectos):
           per-status COUNT badge only. Hidden until loading resolves so it never
           flashes before the tickets arrive. */}
@@ -483,6 +473,16 @@ export function SupportTickets({
             mobileLayout="equal"
           />
         </div>
+      )}
+
+      {/* El botón va DEBAJO de los filtros, en su propia fila de lado a lado:
+          el mismo orden y el mismo traje que en Casos de éxito, Servicios,
+          Ofertas y Empleos. No se dibuja mientras carga ni en el estado vacío,
+          que ya trae su propio botón. */}
+      {!loading && items.length > 0 && (
+        <button onClick={openNewTicket} className="flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-[#009FD9] px-4 text-sm font-bold text-white transition-colors hover:bg-[#0089bb]">
+          <Plus className="h-4 w-4" /> {t("newTicket")}
+        </button>
       )}
 
       {loading ? (

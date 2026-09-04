@@ -194,7 +194,7 @@ export async function GET(req: NextRequest) {
         const profiles = p.status === "accepted"
           ? prof
           : prof ? { full_name: prof.full_name, avatar_url: prof.avatar_url } : prof;
-        p.projects = { title: pj.title, status: pj.status, category_id: pj.category_id ?? null, profiles };
+        p.projects = { title: pj.title, status: pj.status, category_id: pj.category_id ?? null, client_id: pj.client_id ?? null, profiles };
       } else {
         p.projects = null;
       }
@@ -252,6 +252,69 @@ export async function PATCH(req: NextRequest) {
       }
       const { error } = await admin.from("proposals").update({ archived_by_professional: true }).eq("id", id);
       if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+      return NextResponse.json({ success: true });
+    }
+
+    // ── El profesional se retira de un proyecto que ya estaba en curso ──────
+    // Hasta ahora, una vez aceptada la propuesta no había salida: cancelar
+    // estaba autorizado solo para el cliente, así que un trabajo que se cae
+    // dejaba el proyecto en curso para siempre. Retirarse devuelve el proyecto
+    // a la lista para que el cliente reciba otras propuestas, y se le avisa.
+    if (action === "withdraw_accepted") {
+      const { data: pro } = await supabase.from("professionals").select("id, business_name, profile_id").eq("profile_id", user.id).maybeSingle();
+      if (!pro) return NextResponse.json({ error: "No autorizado" }, { status: 403 });
+      const admin = createAdminClient();
+      const { data: prop } = await admin
+        .from("proposals")
+        .select("professional_id, status, project_id, projects:project_id(title, status, client_id, accepted_professional_id)")
+        .eq("id", id)
+        .maybeSingle();
+      if (!prop || prop.professional_id !== pro.id) return NextResponse.json({ error: "No autorizado" }, { status: 403 });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const project = (prop.projects as any) ?? {};
+      if (prop.status !== "accepted" || project.accepted_professional_id !== pro.id) {
+        return NextResponse.json({ error: "Solo puedes retirarte de un proyecto que aceptaste." }, { status: 409 });
+      }
+      if (project.status === "completed") {
+        return NextResponse.json({ error: "Este proyecto ya se completó." }, { status: 409 });
+      }
+
+      // `declined` es el mismo valor que usa el rechazo del cliente: sin estas
+      // dos columnas no había forma de distinguir quién soltó el trabajo.
+      const motivoRetiro = typeof (body as { reason?: unknown }).reason === "string"
+        ? (body as { reason: string }).reason.trim().slice(0, 200)
+        : "";
+      const { error: proposalError } = await admin
+        .from("proposals")
+        .update({ status: "declined", withdrawn_at: new Date().toISOString(), withdraw_reason: motivoRetiro || null })
+        .eq("id", id);
+      if (proposalError) return NextResponse.json({ error: proposalError.message }, { status: 500 });
+      const { error: projectError } = await admin
+        .from("projects")
+        .update({ status: "open", accepted_professional_id: null })
+        .eq("id", prop.project_id);
+      if (projectError) return NextResponse.json({ error: projectError.message }, { status: 500 });
+
+      if (project.client_id) {
+        const titulo = project.title ?? "tu proyecto";
+        const quien = (pro.business_name ?? "").trim() || "El profesional";
+        const notification = {
+          user_id: project.client_id as string,
+          type: "project_professional_withdrew",
+          title: "El profesional se retiró",
+          message: motivoRetiro
+            ? `${quien} ya no puede realizar "${titulo}": ${motivoRetiro}. Tu proyecto volvió a estar abierto para recibir otras propuestas.`
+            : `${quien} ya no puede realizar "${titulo}". Tu proyecto volvió a estar abierto para recibir otras propuestas.`,
+          data: {
+            link: "/es/dashboard/cliente?tab=projects",
+            project_id: prop.project_id,
+            project_title: titulo,
+            professional_name: quien,
+          },
+        };
+        await admin.from("notifications").insert(notification);
+        await sendNotificationPush({ userId: notification.user_id, ...notification });
+      }
       return NextResponse.json({ success: true });
     }
 

@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { cn } from "@/lib/utils";
+import { useHairlineOnScroll } from "@/components/util/use-hairline-on-scroll";
 import { ScrollRail } from "@/components/ui/scroll-rail";
 import { X } from "lucide-react";
 import { useLocale } from "next-intl";
@@ -68,6 +70,7 @@ function buildJobsUrl({ query, location, published, workplace, experience, emplo
 }
 
 export function JobMarketplaceHeader({ initialQuery = "", initialLocation = "", suggestions = [] }: JobMarketplaceHeaderProps) {
+  const { sentinelaRef, cabeceraRef, conLinea } = useHairlineOnScroll();
   const router = useRouter();
   const locale = marketplaceLocale(useLocale());
   const copy = JOB_HEADER_COPY[locale];
@@ -121,7 +124,8 @@ export function JobMarketplaceHeader({ initialQuery = "", initialLocation = "", 
 
   return (
     <>
-      <section className="sticky top-0 z-20 border-b border-[#d5d8dc] bg-white lg:hidden">
+      <div ref={sentinelaRef} aria-hidden className="h-px lg:hidden" />
+      <section ref={cabeceraRef} className={cn("sticky top-0 z-20 border-b bg-white transition-colors duration-200 lg:hidden", conLinea ? "border-[#e5e7eb]" : "border-transparent")}>
         <div className="relative flex min-h-[56px] items-center justify-center px-14">
           <Link href="/empleos" aria-label={copy.close} className="absolute left-3 top-1/2 grid h-11 w-11 -translate-y-1/2 place-items-center text-[#162543] transition hover:bg-[#eef5f9]">
             <X className="h-7 w-7" strokeWidth={2.2} />

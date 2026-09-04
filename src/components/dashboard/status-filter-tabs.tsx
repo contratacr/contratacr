@@ -67,6 +67,10 @@ export function StatusFilterTabs({
   // Una celda segmentada es angosta en 320 px: con cuatro o más etapas el
   // conteo se apila bajo el rótulo para que ninguno se corte.
   const shortLabels = tabs.every((tab) => label(tab.id).length <= 12);
+  // Con cuatro o cinco etapas la celda es angosta: el conteo se queda a la
+  // derecha del rótulo —como en el resto de la app— y lo que se aprieta es el
+  // relleno, la separación y el tamaño del conteo, no la disposición.
+  const compacto = useSegmentedLayout && tabs.length >= 4;
 
   // PILLS — same segmented language, without count badges. Used for profession
   // filters where labels can be long; 2–4 fit the row, 5+ become a clean rail.
@@ -163,12 +167,12 @@ export function StatusFilterTabs({
     >
       <RailOrGrid scroll={!useSegmentedLayout} className={cn(
         useSegmentedLayout
-          ? "grid items-stretch gap-1"
+          ? compacto
+            ? "flex items-stretch gap-1"
+            : "grid items-stretch gap-1"
           : "flex gap-1 rounded-xl bg-[#e6edf4] p-1",
-        useSegmentedLayout && tabs.length === 2 && "grid-cols-2",
-        useSegmentedLayout && tabs.length === 3 && "grid-cols-3",
-        useSegmentedLayout && tabs.length === 4 && "grid-cols-4",
-        useSegmentedLayout && tabs.length === 5 && "grid-cols-5",
+        useSegmentedLayout && !compacto && tabs.length === 2 && "grid-cols-2",
+        useSegmentedLayout && !compacto && tabs.length === 3 && "grid-cols-3",
       )}>
       {tabs.map((tab) => {
         const active = value === tab.id;
@@ -179,15 +183,21 @@ export function StatusFilterTabs({
             type="button"
             onClick={() => onChange(tab.id)}
             className={cn(
-              "group relative inline-flex min-h-9 max-w-full items-center justify-center gap-1 rounded-lg py-1.5 text-center font-semibold leading-tight transition-all",
+              "group relative inline-flex min-h-9 max-w-full items-center justify-center rounded-lg py-1.5 text-center font-semibold leading-tight transition-all",
               useSegmentedLayout
                 ? cn(
-                    "min-w-0 px-1.5 text-[12px] min-[400px]:text-[13px] sm:px-3",
-                    shortLabels
-                      ? cn("whitespace-nowrap", tabs.length >= 4 && "flex-col gap-0.5 min-[520px]:flex-row min-[520px]:gap-1.5")
-                      : "whitespace-normal [overflow-wrap:anywhere]",
+                    "min-w-0",
+                    compacto
+                      // Cada etapa toma el ancho de su rótulo y crece con el
+                      // sobrante. Debajo de 380px (iPhone SE y parecidos) la
+                      // pastilla del conteo se apila bajo el rótulo.
+                      ? "flex-auto gap-1 px-1 text-[11px] max-[379px]:flex-col max-[379px]:gap-0.5 min-[460px]:text-[12px] min-[560px]:text-[13px]"
+                      : "gap-1 px-1.5 text-[12px] min-[400px]:text-[13px] sm:px-3",
+                    shortLabels ? "whitespace-nowrap" : "whitespace-normal [overflow-wrap:anywhere]",
                   )
-                : "min-w-[8.25rem] flex-none whitespace-normal px-3 text-[13px] [overflow-wrap:anywhere]",
+                : "gap-1"
+                ,
+              !useSegmentedLayout && "min-w-[8.25rem] flex-none whitespace-normal px-3 text-[13px] [overflow-wrap:anywhere]",
               active
                 ? "bg-white text-[#009FD9] shadow-sm"
                 : "text-[#6b7280] hover:text-[#374151]"
@@ -239,6 +249,12 @@ export const SOLICITUD_TABS: readonly FilterTab[] = [
   { id: "en_curso" },
   { id: "finalizadas" },
 ];
+/** Solicitudes recibidas: lo nuevo primero, después lo que ya está andando. */
+export const SOLICITUD_TABS_PRO: readonly FilterTab[] = [
+  { id: "nuevas" },
+  { id: "en_curso" },
+  { id: "finalizadas" },
+];
 
 // A booking's appointment day has fully passed (compared to now, end-of-day).
 function isPastAppointment(scheduledDate?: string | null): boolean {
@@ -255,9 +271,17 @@ export function solicitudBucket(status: string, scheduledDate?: string | null): 
   if (status === "cancelled" || status === "rescheduled") return "finalizadas";
   if (status === "completed" || status === "awaiting_confirmation") return "finalizadas";
   if (isPastAppointment(scheduledDate)) return "finalizadas";
-  // pending es herencia: desde el auto-confirmado ninguna cita queda esperando
-  // aprobación, así que esas viejas se leen como citas vivas.
+  // Del lado del cliente una cita recién enviada y una ya confirmada son lo
+  // mismo: las dos están vivas y él ya sabe cuáles mandó.
   return "en_curso";
+}
+
+/** El profesional sí separa lo que acaba de llegar: una solicitud sin responder
+ *  no es lo mismo que una cita ya confirmada, y mezclarlas esconde la que le
+ *  toca atender primero. */
+export function solicitudBucketPro(status: string, scheduledDate?: string | null): string {
+  const base = solicitudBucket(status, scheduledDate);
+  return base === "en_curso" && status === "pending" ? "nuevas" : base;
 }
 export function solicitudMatches(filter: string, status: string, scheduledDate?: string | null): boolean {
   return solicitudBucket(status, scheduledDate) === filter;
@@ -302,6 +326,7 @@ export function bucketCounts(buckets: string[]): Record<string, number> {
 // the badge again. Genuine SUB-states (in_progress, awaiting_confirmation,
 // rescheduled, declined-vs-cancelled, …) return false → the badge IS still shown.
 const SOLICITUD_PRIMARY: Record<string, string[]> = {
+  nuevas: ["pending"],
   en_curso: ["confirmed", "in_progress", "pending"],
   // En Finalizadas conviven completadas y canceladas: la insignia debe distinguirlas.
   finalizadas: [],

@@ -36,6 +36,12 @@ export const TRANSLATED_NOTIFICATION_TYPES = new Set([
   "followed_professional_activity",
   "job_application",
   "job_application_status",
+  "project_professional_withdrew",
+  "project_proposals_waiting",
+  "booking_pending_reminder",
+  "project_in_progress_idle",
+  "project_confirmation_pending",
+  "booking_past_date_idle",
 ]);
 
 type NotificationCopyInput = {
@@ -83,6 +89,11 @@ const TITLES: Record<string, Record<NotificationLocale, string>> = {
   followed_professional_activity: { es: "Nueva publicación", en: "New post" },
   job_application: { es: "Nueva postulación", en: "New application" },
   job_application_status: { es: "Actualización de postulación", en: "Application update" },
+  project_professional_withdrew: { es: "El profesional se retiró", en: "The professional stepped away" },
+  project_in_progress_idle: { es: "¿Ya terminaste este trabajo?", en: "Did you finish this job?" },
+  project_confirmation_pending: { es: "Confirmá si el trabajo quedó listo", en: "Confirm the job is done" },
+  booking_pending_reminder: { es: "Tenés una solicitud sin responder", en: "You have an unanswered request" },
+  booking_past_date_idle: { es: "¿Se realizó esta cita?", en: "Did this appointment happen?" },
 };
 
 function normalizeLegacyNotificationText(value: string): string {
@@ -465,6 +476,71 @@ export function localizedNotificationCopy(notification: NotificationCopyInput, l
       ? (en ? `Your suggestion "${service}" was approved and is now available in search.` : `Tu sugerencia "${service}" fue aprobada y ya está disponible para la búsqueda.`)
       : (en ? `Your suggestion "${service}" was not approved.` : `Tu sugerencia "${service}" no fue aprobada.`);
     return { title, message: appendReason(body, reason, language) };
+  }
+
+  // Recordatorios por inactividad. El aviso guardado ya trae el texto en
+  // español; los datos (hito, título, cuántas) permiten rehacerlo en inglés.
+  if (notification.type === "project_proposals_waiting") {
+    const pendientes = Number(data?.pendientes) || 1;
+    const proyecto = stringData(data, "project_title") || (en ? "your project" : "tu proyecto");
+    const dias = Number(data?.hito) || 3;
+    return {
+      title: en
+        ? (pendientes === 1 ? "You have an unanswered proposal" : `You have ${pendientes} unanswered proposals`)
+        : (pendientes === 1 ? "Tenés una propuesta sin responder" : `Tenés ${pendientes} propuestas sin responder`),
+      message: en
+        ? `No one has been answered on "${proyecto}" for ${dias} days. Review the proposals and pick the one that works for you.`
+        : `Nadie ha respondido en "${proyecto}" desde hace ${dias} días. Revisá las propuestas y elegí a quien te sirva.`,
+    };
+  }
+
+  if (notification.type === "project_in_progress_idle") {
+    const proyecto = stringData(data, "project_title") || (en ? "a project" : "un proyecto");
+    const dias = Number(data?.hito) || 3;
+    return {
+      title,
+      message: en
+        ? `"${proyecto}" has had no movement for ${dias} days. If you already did it, mark it as completed; if you can't, step away so the client can find someone else.`
+        : `"${proyecto}" lleva ${dias} días sin movimiento. Si ya lo hiciste, marcalo como completado; si no vas a poder, retirate para que el cliente busque a otra persona.`,
+    };
+  }
+
+  if (notification.type === "project_confirmation_pending") {
+    const proyecto = stringData(data, "project_title") || (en ? "your project" : "tu proyecto");
+    const dias = Number(data?.hito) || 3;
+    return {
+      title,
+      message: en
+        ? `The professional marked "${proyecto}" as finished ${dias} days ago. Confirm it to close the project and leave your review.`
+        : `El profesional marcó "${proyecto}" como terminado hace ${dias} días. Confirmalo para cerrar el proyecto y dejar tu reseña.`,
+    };
+  }
+
+  if (notification.type === "booking_pending_reminder" || notification.type === "booking_past_date_idle") {
+    const servicio = stringData(data, "service_description", "service_name") || quotedValue(normalizedMessage) || (en ? "a request" : "una solicitud");
+    const dias = Number(data?.hito) || 3;
+    const esperando = notification.type === "booking_pending_reminder";
+    return {
+      title,
+      message: en
+        ? (esperando
+          ? `"${servicio}" has been waiting for an answer for ${dias} days. Confirm it or cancel it so the client knows where they stand.`
+          : `The date for "${servicio}" passed ${dias} days ago. Mark it as completed or cancel it so it doesn't stay pending.`)
+        : (esperando
+          ? `"${servicio}" lleva ${dias} días esperando respuesta. Confirmala o cancelala para que el cliente sepa a qué atenerse.`
+          : `La fecha de "${servicio}" pasó hace ${dias} días. Marcala como completada o cancelala para que no quede pendiente.`),
+    };
+  }
+
+  if (notification.type === "project_professional_withdrew") {
+    const proyecto = stringData(data, "project_title") || quotedValue(normalizedMessage) || (en ? "your project" : "tu proyecto");
+    const quien = stringData(data, "professional_name") || (en ? "The professional" : "El profesional");
+    return {
+      title,
+      message: en
+        ? `${quien} can no longer do "${proyecto}". Your project is open again and can receive other proposals.`
+        : `${quien} ya no puede realizar "${proyecto}". Tu proyecto volvió a estar abierto para recibir otras propuestas.`,
+    };
   }
 
   if (notification.type === "direct_message") return { title, message: normalizedMessage };

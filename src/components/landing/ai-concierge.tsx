@@ -301,8 +301,13 @@ export function AiConcierge({ embedded = false, onBack }: { embedded?: boolean; 
   useEffect(() => {
     if (embedded) return;
     const openAssistant = () => setOpen(true);
+    const closeAssistant = () => setOpen(false);
     window.addEventListener("contratacr:open-ai", openAssistant);
-    return () => window.removeEventListener("contratacr:open-ai", openAssistant);
+    window.addEventListener("contratacr:close-ai", closeAssistant);
+    return () => {
+      window.removeEventListener("contratacr:open-ai", openAssistant);
+      window.removeEventListener("contratacr:close-ai", closeAssistant);
+    };
   }, [embedded]);
 
   // The assistant is an overlay, not a route: closing it never changes the
@@ -312,6 +317,13 @@ export function AiConcierge({ embedded = false, onBack }: { embedded?: boolean; 
     if (embedded) return;
     if (wasOpenRef.current && !open) window.dispatchEvent(new Event("contratacr:close-ai"));
     wasOpenRef.current = open;
+  }, [embedded, open]);
+
+  // La barra de abajo marca "Asistente" leyendo este anuncio, no adivinando:
+  // cubre también cuando la ventana se restaura sola desde la sesión.
+  useEffect(() => {
+    if (embedded) return;
+    window.dispatchEvent(new CustomEvent("contratacr:ai-open-changed", { detail: { open } }));
   }, [embedded, open]);
 
   useEffect(() => {
@@ -567,7 +579,20 @@ export function AiConcierge({ embedded = false, onBack }: { embedded?: boolean; 
               >
                 <Menu className="h-5 w-5" strokeWidth={2.5} />
               </button>
-              <Link href="/" aria-label="ContrataCR inicio" className="-ml-0.5 shrink-0">
+              <Link
+                href="/"
+                aria-label="ContrataCR inicio"
+                className="-ml-0.5 shrink-0"
+                onClick={(event) => {
+                  // El logo SIEMPRE deja al usuario en la portada: cierra esta
+                  // ventana y, si la ruta de abajo no era la portada, navega.
+                  // Sin esto, abierto desde la portada era un no-viaje mudo.
+                  event.preventDefault();
+                  setOpen(false);
+                  const enPortada = /^\/(?:es|en)?\/?$/.test(window.location.pathname);
+                  if (!enPortada) router.push("/");
+                }}
+              >
                 {/* eslint-disable-next-line @next/next/no-img-element -- marca de 28px; el optimizador no actúa en Cloudflare */}
                 <img src="/logo-mark-transparent.png" alt="ContrataCR" width={28} height={28} className="h-7 w-7 select-none" />
               </Link>

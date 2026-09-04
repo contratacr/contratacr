@@ -5,7 +5,7 @@ import { LandingNavbar } from "@/components/landing/landing-navbar";
 import { SectionHeaderTitle } from "@/components/mobile/section-header-title";
 import { getLocale } from "next-intl/server";
 import { OffersManager } from "@/components/offers/offers-manager";
-import { PageRouteLoading } from "@/components/ui/route-loading";
+import { LienzoNeutro } from "@/components/ui/section-skeletons";
 import { type ProfessionalOffer } from "@/lib/offers";
 import { safeGetUser } from "@/lib/supabase/get-user";
 import { createClient } from "@/lib/supabase/server";
@@ -15,7 +15,7 @@ export const dynamic = "force-dynamic";
 
 export default function MyOffersPage() {
   return (
-    <Suspense fallback={<PageRouteLoading />}>
+    <Suspense fallback={<LienzoNeutro />}>
       <MyOffersContent />
     </Suspense>
   );

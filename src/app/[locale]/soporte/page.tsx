@@ -132,9 +132,7 @@ export default function SoportePage() {
           </div>
 
           {/* Primary: support ticket form (shared SupportForm component) */}
-          <div className="bg-white rounded-3xl border border-[#e5e7eb] shadow-sm p-8">
-            <SupportForm onSuccess={(email) => { setSuccessEmail(email); setSuccess(true); }} />
-          </div>
+          <SupportForm onSuccess={(email) => { setSuccessEmail(email); setSuccess(true); }} />
 
         </div>
       </main>

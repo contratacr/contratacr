@@ -1,6 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { UnsavedChangesGuard } from "@/components/dashboard/unsaved-changes-guard";
+import { cn } from "@/lib/utils";
+import { useHairlineOnScroll } from "@/components/util/use-hairline-on-scroll";
 import { ArrowLeft, Check, ChevronDown, ImagePlus, Search, X } from "lucide-react";
 import { useLocale } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
@@ -18,6 +21,7 @@ import {
 } from "@/lib/client-image-upload";
 import { IMAGE_ACCEPT } from "@/lib/upload-validation";
 import { invalidateAppData } from "@/lib/app-data-invalidation";
+import { Button } from "@/components/ui/button";
 
 type OfferFormProps = {
   professionalId: string;
@@ -156,16 +160,21 @@ function RequiredLabel({ children }: { children: React.ReactNode }) {
 }
 
 function FieldError({ children }: { children?: string }) {
-  return children ? <p className="mt-1.5 text-xs font-medium text-red-600">{children}</p> : null;
+  return children ? <p data-campo-con-error="" role="alert" className="mt-1.5 text-xs font-medium text-red-600">{children}</p> : null;
 }
 
 export function OfferForm({ professionalId, serviceOptions, backHref = "/ofertas", initialOffer = null, presentation = "page", onSaved }: OfferFormProps) {
+  const { sentinelaRef, cabeceraRef, conLinea } = useHairlineOnScroll();
   const locale = marketplaceLocale(useLocale());
   const copy = OFFER_FORM_COPY[locale];
   const localeCode = locale === "en" ? "en-US" : "es-CR";
   const editing = Boolean(initialOffer?.id);
   const router = useRouter();
   const [saving, setSaving] = useState(false);
+  // El formulario se referencia para llevar la vista al primer campo señalado,
+  // y recuerda si hay algo escrito para avisar antes de salir sin publicar.
+  const formRef = useRef<HTMLFormElement>(null);
+  const [conCambios, setConCambios] = useState(false);
   const [error, setError] = useState("");
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [files, setFiles] = useState<File[]>([]);
@@ -195,6 +204,7 @@ export function OfferForm({ professionalId, serviceOptions, backHref = "/ofertas
   const selectedServiceOption = useMemo(() => {
     return serviceOptions.find((option) => option.value === selectedServiceValue) ?? null;
   }, [selectedServiceValue, serviceOptions]);
+
 
   const previews = useMemo(() => files.map((file) => ({ file, url: URL.createObjectURL(file) })), [files]);
   useEffect(() => () => previews.forEach((preview) => URL.revokeObjectURL(preview.url)), [previews]);
@@ -285,6 +295,12 @@ export function OfferForm({ professionalId, serviceOptions, backHref = "/ofertas
       return;
     }
     setFieldErrors(nextErrors);
+    if (Object.keys(nextErrors).length) {
+      // Llevar la vista al primer campo señalado.
+      requestAnimationFrame(() => {
+        formRef.current?.querySelector("[data-campo-con-error]")?.scrollIntoView({ behavior: "smooth", block: "center" });
+      });
+    }
     if (Object.keys(nextErrors).length > 0) {
       setError(copy.reviewError);
       return;
@@ -322,6 +338,7 @@ export function OfferForm({ professionalId, serviceOptions, backHref = "/ofertas
         return;
       }
       const returnToPanel = backHref.includes("/dashboard/profesional");
+      setConCambios(false);
       router.replace(`/ofertas/${data.id}${returnToPanel ? "?from=panel" : ""}`);
       router.refresh();
     } catch (err) {
@@ -334,7 +351,8 @@ export function OfferForm({ professionalId, serviceOptions, backHref = "/ofertas
 
   return (
     <main className={presentation === "modal" ? "bg-[#f4f7fa] text-[#162543]" : "min-h-[calc(100vh-72px)] bg-[#f4f7fa] text-[#162543] lg:px-6 lg:py-10"}>
-      <header className={presentation === "modal" ? "hidden" : "sticky top-0 z-20 border-b border-[#dfe8f0] bg-white lg:hidden"}>
+      {presentation !== "modal" && <div ref={sentinelaRef} aria-hidden className="h-px lg:hidden" />}
+      <header ref={cabeceraRef} className={presentation === "modal" ? "hidden" : cn("sticky top-0 z-20 border-b bg-white transition-colors duration-200 lg:hidden", conLinea ? "border-[#e5e7eb]" : "border-transparent")}>
         <div className="relative flex min-h-[56px] items-center justify-center px-14">
           <Link href={backHref} aria-label={copy.back} className="absolute left-3 top-1/2 grid h-11 w-11 -translate-y-1/2 place-items-center text-[#162543]"><ArrowLeft className="h-6 w-6 stroke-[2.4]" /></Link>
           <h1 className="truncate text-center text-[17px] font-extrabold">{editing ? copy.editTitle : copy.publishTitle}</h1>
@@ -346,7 +364,8 @@ export function OfferForm({ professionalId, serviceOptions, backHref = "/ofertas
           <div className="min-w-0 flex-1 text-center"><h1 className="truncate text-xl font-extrabold">{editing ? copy.editTitle : copy.publishTitle}</h1><p className="truncate text-sm text-[#65758c]">{copy.subtitle}</p></div>
           <div className="h-10 w-[128px]" aria-hidden="true" />
         </div>
-        <form onSubmit={submit} noValidate className="rounded-2xl border border-[#e5e7eb] bg-white p-5 shadow-sm">
+        <form ref={formRef} onSubmit={submit} onInput={() => setConCambios(true)} onChange={() => setConCambios(true)} noValidate>
+          <div className="rounded-2xl border border-[#e5e7eb] bg-white p-5 shadow-sm">
           <div className="grid gap-5 sm:grid-cols-2">
             <label className="text-sm font-medium text-[#374151] sm:col-span-2">
               <RequiredLabel>{copy.title}</RequiredLabel>
@@ -498,8 +517,14 @@ export function OfferForm({ professionalId, serviceOptions, backHref = "/ofertas
             </div>
           </div>
           {error && <p role="alert" className="mt-5 rounded-lg bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">{error}</p>}
-          <button disabled={saving} className="mt-7 h-12 w-full rounded-lg bg-[#009fd9] text-sm font-bold text-white hover:bg-[#008fc3] disabled:cursor-not-allowed disabled:opacity-50">{saving ? (editing ? copy.saving : copy.publishing) : (editing ? copy.save : copy.publish)}</button>
+          </div>
+          <div className="ccr-pie-formulario sticky bottom-0 z-10 -mx-4 mt-5 border-t border-[#e5e7eb] bg-white px-4 py-4 pb-[max(env(safe-area-inset-bottom),1rem)] sm:-mx-6 sm:px-6">
+            <div>
+              <Button type="submit" size="lg" loading={saving} className="w-full">{editing ? copy.save : copy.publish}</Button>
+            </div>
+          </div>
         </form>
+        <UnsavedChangesGuard dirty={conCambios && !saving} />
       </div>
     </main>
   );

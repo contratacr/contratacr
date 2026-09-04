@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, createElement, useContext, useEffect, useState, type ReactNode } from "react";
+import { createContext, createElement, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import type { User } from "@supabase/supabase-js";
 import { createClient, hasSupabaseBrowserConfig } from "@/lib/supabase/client";
 import { APP_RESUME_EVENT } from "@/lib/app-events";
@@ -102,6 +102,9 @@ function useAuthState(
     }
   });
   const [loading, setLoading] = useState(true);
+  // El efecto de sesión corre una sola vez; este ref le da el último usuario
+  // conocido sin volver a suscribirse en cada render.
+  const usuarioConocidoRef = useRef(initialResolvedUser);
 
   async function syncAvatar(u: User) {
     // The SOCIAL photo (Google/Facebook) lives in user_metadata.avatar_url / picture.
@@ -152,6 +155,7 @@ function useAuthState(
   }
 
   useEffect(() => {
+    const lastAppliedRef = { current: null as User | null };
     if (!hasSupabaseBrowserConfig()) {
       setUser(null);
       cacheUser(null);
@@ -167,6 +171,15 @@ function useAuthState(
     let resumeSyncRunning = false;
     const sessionTimeout = window.setTimeout(() => {
       if (!mounted || sessionSettled) return;
+      // Con una sesión ya conocida (servidor o caché de este navegador), agotar
+      // el plazo significa "la red va lenta", no "cerró sesión": vaciar el
+      // usuario aquí expulsaba al login desde Mensajes con la sesión intacta.
+      // El cierre real llega igual por onAuthStateChange.
+      if (usuarioConocidoRef.current) {
+        setAvatarReady(true);
+        setLoading(false);
+        return;
+      }
       setUser(null);
       cacheUser(null);
       setAvatarUrl(null);
@@ -181,6 +194,7 @@ function useAuthState(
         sessionSettled = true;
         window.clearTimeout(sessionTimeout);
         const u = data.session?.user ?? null;
+        lastAppliedRef.current = u;
         setUser(u);
         cacheUser(u);
         if (u) syncAvatar(u);
@@ -205,6 +219,16 @@ function useAuthState(
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_, session) => {
       const u = session?.user ?? null;
+      // La renovación del token al volver de segundo plano trae un objeto
+      // nuevo con el mismo usuario: aplicarlo re-renderizaba media app justo
+      // cuando la persona está navegando. Mismo contenido → mismo estado.
+      if (u && lastAppliedRef.current &&
+          u.id === lastAppliedRef.current.id &&
+          u.updated_at === lastAppliedRef.current.updated_at) {
+        lastAppliedRef.current = u;
+        return;
+      }
+      lastAppliedRef.current = u;
       setUser(u);
       cacheUser(u);
       if (u) {
@@ -221,6 +245,7 @@ function useAuthState(
     // header name/avatar update IMMEDIATELY even if the metadata change came from a
     // different Supabase client instance that didn't fire our onAuthStateChange.
     const applyUser = (u: User | null) => {
+      lastAppliedRef.current = u;
       setUser(u);
       cacheUser(u);
       if (u) {
@@ -237,7 +262,15 @@ function useAuthState(
       try {
         const { data } = await withTimeout(supabase.auth.getSession(), RESUME_AUTH_TIMEOUT_MS);
         if (!mounted) return;
-        applyUser(data.session?.user ?? null);
+        const siguiente = data.session?.user ?? null;
+        // Mismo usuario y sin cambios → no se toca el estado: un objeto nuevo
+        // con el mismo contenido re-renderizaba media app en cada vuelta de foco.
+        if (siguiente && lastAppliedRef.current &&
+            siguiente.id === lastAppliedRef.current.id &&
+            siguiente.updated_at === lastAppliedRef.current.updated_at) {
+          return;
+        }
+        applyUser(siguiente);
       } catch {
         // Keep the last known state. A temporary resume/network timeout must not
         // sign the user out or leave the interface blocked.

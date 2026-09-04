@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useLocale, useTranslations } from "next-intl";
+import { useHairlineOnScroll } from "@/components/util/use-hairline-on-scroll";
 import { isSigningOut, signOutToHome } from "@/lib/auth/sign-out";
 import { useSearchParams } from "next/navigation";
 import {
@@ -54,7 +55,7 @@ import { Link, useRouter } from "@/i18n/navigation";
 import { openInNewTabOnDesktop } from "@/lib/desktop-new-tab";
 import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
-import { DashboardRouteLoading } from "@/components/ui/route-loading";
+import { PanelSkeleton } from "@/components/ui/section-skeletons";
 import { withPromiseTimeout } from "@/lib/promise-timeout";
 import { getDashboardCache, setDashboardCache } from "@/lib/dashboard-prefetch-cache";
 import {
@@ -395,21 +396,30 @@ function GuidesBody({
         </section>
       ))}
 
-      <div className="mt-6 rounded-2xl border border-[#dfe8f0] bg-[#f8fbfe] px-4 py-4 sm:px-5">
-        <p className="text-sm font-semibold text-[#162543]">{t("supportTitle")}</p>
-        <p className="mt-1 text-sm leading-relaxed text-[#526277]">{t("supportBody")}</p>
-        <Button
+      {/* La salida a soporte cierra las guías: era una tarjeta pálida con un
+          botón de contorno, y se leía apagada justo donde alguien pide ayuda.
+          Ahora es una tarjeta como las demás y su botón pesa como los otros. */}
+      <div className="mt-6 flex flex-col gap-4 rounded-2xl border border-[#e5e7eb] bg-white p-5 shadow-sm">
+        <div className="flex items-start gap-3">
+          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-[#ccecf8] bg-[#EAF7FD] text-[#0089bb]">
+            <Headset className="h-5 w-5" />
+          </span>
+          <div className="min-w-0">
+            <p className="text-[15px] font-bold leading-snug text-[#162543]">{t("supportTitle")}</p>
+            <p className="mt-1 text-sm leading-relaxed text-[#526277]">{t("supportBody")}</p>
+          </div>
+        </div>
+        <button
           type="button"
-          variant="outline"
-          className="mt-4 rounded-full px-5"
           onClick={() => {
             onClose?.();
             window.location.assign(`/${locale}/dashboard/profesional?tab=soporte`);
           }}
+          className="flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-[#009FD9] px-4 text-sm font-bold text-white transition-colors hover:bg-[#0089bb]"
         >
           {t("supportCta")}
           <ArrowRight className="h-4 w-4" />
-        </Button>
+        </button>
       </div>
     </div>
   );
@@ -562,6 +572,7 @@ function GuidePreview({ id, t }: { id: string; t: ReturnType<typeof useTranslati
 
 export default function DashboardPage() {
   const { user, loading: authLoading } = useAuth();
+  const { sentinelaRef, cabeceraRef, conLinea } = useHairlineOnScroll();
   const router = useRouter();
   const searchParams = useSearchParams();
   const t = useTranslations("proPanel");
@@ -645,11 +656,22 @@ export default function DashboardPage() {
   // navbar quick link) overrides it, and is persisted below so everything stays in sync.
   // A non-provider has no offer world: always "use".
   const { mode: globalMode, setMode } = useMode(isProvider);
+  // ── Ser profesional no se "desaprende" a media sesión ─────────────────────
+  // `pro` puede volver nulo un instante cuando sus datos se vuelven a pedir
+  // (por ejemplo al guardar en Disponibilidad). En ese parpadeo, las secciones
+  // que solo existen para profesionales quedaban prohibidas y la pantalla
+  // saltaba a otra: eso era "me saca de la sección". Una vez confirmado, el
+  // dato se conserva mientras dure la sesión.
+  const [profesionalConfirmado, setProfesionalConfirmado] = useState(false);
+  useEffect(() => {
+    if (isProvider) setProfesionalConfirmado(true);
+  }, [isProvider]);
+  const esProfesional = isProvider || profesionalConfirmado;
   const requestedOfferOnlyTab = !!requestedTab && OFFER_ONLY.has(requestedTab);
-  const allowedRequestedTab = requestedTab && (!requestedOfferOnlyTab || isProvider) ? requestedTab : null;
+  const allowedRequestedTab = requestedTab && (!requestedOfferOnlyTab || esProfesional) ? requestedTab : null;
   const urlForcedMode: Mode | null =
-    legacyVerificationTab && isProvider ? "offer" : requestedOfferOnlyTab && isProvider ? "offer" : requestedTab && USE_ONLY.has(requestedTab) ? "use" : urlModeParam;
-  const mode: Mode = !isProvider ? "use" : urlForcedMode ?? globalMode;
+    legacyVerificationTab && esProfesional ? "offer" : requestedOfferOnlyTab && esProfesional ? "offer" : requestedTab && USE_ONLY.has(requestedTab) ? "use" : urlModeParam;
+  const mode: Mode = !esProfesional ? "use" : urlForcedMode ?? globalMode;
   const defaultTab: Tab = mode === "offer" ? "bookings" : "sent_bookings";
   const activeTab: Tab = allowedRequestedTab ?? (preferMobileMenuDefault ? "home" : defaultTab);
 
@@ -1356,7 +1378,13 @@ export default function DashboardPage() {
       return;
     }
 
-    setTab("home", true);
+    // Guardar NO es salir: se sigue en la sección. Antes, cada guardado
+    // devolvía al inicio del panel, así que ajustar un horario y querer
+    // ajustar el siguiente obligaba a volver a entrar. Quien quiera salir usa
+    // la flecha. Los dos casos de arriba se mantienen porque ahí sí venías de
+    // otro sitio al que hay que devolverte (la lista de tu perfil incompleto o
+    // la sección que te trajo).
+    scrollDashboardToPageTop();
   }
 
   function handleSaved(intent: "section" | "internal" = "section") {
@@ -1540,7 +1568,7 @@ export default function DashboardPage() {
   const professionalRecordResolving = !!user && canOffer(user) && !pro && !proLoadError;
   if (isSigningOut()) return null;
   if (authLoading || loading || !user || (pendingProfessionalSignup && !pro) || professionalRecordResolving) {
-    return <DashboardRouteLoading />;
+    return <PanelSkeleton />;
   }
 
   const proProfile = Array.isArray(pro?.profiles) ? pro?.profiles[0] : pro?.profiles;
@@ -1666,7 +1694,7 @@ export default function DashboardPage() {
 
     return (
       <details data-panel-mode-selector className="group relative z-30 w-full">
-        <summary className="flex min-h-[56px] cursor-pointer list-none items-center gap-3 rounded-none bg-white px-4 text-left text-[15px] font-semibold text-[#162543] transition-colors hover:bg-[#f8fbfd] lg:px-5 lg:text-[14px] lg:font-semibold [&::-webkit-details-marker]:hidden">
+        <summary className="flex min-h-[60px] cursor-pointer list-none items-center gap-3 rounded-2xl border border-[#e5edf4] bg-white px-4 text-left text-[15px] font-semibold text-[#162543] shadow-[0_10px_26px_-24px_rgba(15,23,42,0.6)] transition-colors hover:bg-[#f8fbfd] group-open:rounded-b-none lg:px-5 lg:text-[14px] lg:font-semibold [&::-webkit-details-marker]:hidden">
           <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#eef8fc] text-[#009FD9]">
             {mode === "offer" ? <BriefcaseBusiness className="h-4 w-4" /> : <User className="h-4 w-4" />}
           </span>
@@ -1813,6 +1841,26 @@ export default function DashboardPage() {
     );
   }
 
+  function cambiarPanelCard() {
+    if (!isProvider) return null;
+    const destino: Mode = mode === "offer" ? "use" : "offer";
+    const etiqueta = destino === "use" ? t("goToClientPanel") : t("goToProfessionalPanel");
+    return (
+      <button
+        type="button"
+        data-testid="panel-mode-switch"
+        onClick={() => requestUnsavedAction(() => changePanelFromHeader(destino))}
+        className="flex min-h-[60px] w-full items-center gap-3 rounded-2xl border border-[#e5edf4] bg-white px-4 py-3.5 text-left text-[15px] font-semibold text-[#162543] shadow-[0_10px_26px_-24px_rgba(15,23,42,0.6)] transition-colors hover:bg-[#f8fbfd]"
+      >
+        <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[#64748b] [&>svg]:h-5 [&>svg]:w-5">
+          {destino === "use" ? <User /> : <BriefcaseBusiness />}
+        </span>
+        <span className="min-w-0 flex-1 truncate">{etiqueta}</span>
+        <ChevronRight className="h-4 w-4 shrink-0 text-[#b6c4d4]" />
+      </button>
+    );
+  }
+
   function mobileSectionButton(tab: Tab) {
     const label = panelTabLabel(tab);
     return (
@@ -1828,12 +1876,13 @@ export default function DashboardPage() {
           }
           requestUnsavedAction(() => openPanelDestination(tab));
         }}
-        className="flex min-h-[56px] w-full items-center gap-3 px-4 py-3 text-left text-[15px] font-semibold text-[#162543] transition-colors hover:bg-[#f8fbfd]"
+        className="flex min-h-[60px] w-full items-center gap-3 rounded-2xl border border-[#e5edf4] bg-white px-4 py-3.5 text-left text-[15px] font-semibold text-[#162543] shadow-[0_10px_26px_-24px_rgba(15,23,42,0.6)] transition-colors hover:bg-[#f8fbfd]"
       >
         <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[#64748b] [&>svg]:h-5 [&>svg]:w-5">
           {TAB_ICONS[tab]}
         </span>
         <span className="min-w-0 flex-1 truncate">{label}</span>
+        <ChevronRight className="h-4 w-4 shrink-0 text-[#b6c4d4]" />
       </button>
     );
   }
@@ -1843,13 +1892,11 @@ export default function DashboardPage() {
     label,
     icon,
     onClick,
-    danger = false,
   }: {
     keyName: string;
     label: string;
     icon: React.ReactNode;
     onClick: () => void;
-    danger?: boolean;
   }) {
     return (
       <button
@@ -1858,15 +1905,12 @@ export default function DashboardPage() {
         onClick={onClick}
         className={cn(
           "flex min-h-14 w-full items-center gap-3 rounded-xl px-3.5 py-3 text-left text-[15px] font-semibold transition-colors",
-          danger
-            ? "text-[#b91c1c] hover:bg-[#fef2f2]"
-            : "text-[#374151] hover:bg-[#f8fbfd]",
+          "text-[#374151] hover:bg-[#f8fbfd]",
         )}
       >
         <span
           className={cn(
-            "inline-flex h-8 w-8 shrink-0 items-center justify-center [&>svg]:h-5 [&>svg]:w-5",
-            danger ? "text-[#b91c1c]" : "text-[#64748b]",
+            "inline-flex h-8 w-8 shrink-0 items-center justify-center text-[#64748b] [&>svg]:h-5 [&>svg]:w-5",
           )}
         >
           {icon}
@@ -1897,14 +1941,14 @@ export default function DashboardPage() {
   // The proxy normally handles this before the page is served. Keep this
   // client-side guard for SPA transitions and stale prefetched dashboard trees.
   if (!authLoading && user && pendingProfessionalSignup) {
-    return <DashboardRouteLoading />;
+    return <PanelSkeleton />;
   }
 
   return (
     <div className="min-h-screen flex flex-col bg-[#fafafa]">
       <Navbar mobileSearch={false} />
       {networkModal && (
-        <FollowNetworkTab initialView={networkModal} onBack={() => setNetworkModal(null)} />
+        <FollowNetworkTab initialView={networkModal} title={displayName} onBack={() => setNetworkModal(null)} />
       )}
       {opportunityWelcomeCount !== null && (
         <div className="app-modal-screen app-centered-modal-screen fixed inset-0 z-[90] flex items-center justify-center bg-[#0f172a]/45 p-4 backdrop-blur-sm">
@@ -2109,7 +2153,7 @@ export default function DashboardPage() {
                 <button
                   type="button"
                   onClick={() => signOutToHome(locale)}
-                  className="inline-flex h-9 items-center gap-1.5 rounded-full px-3 text-sm font-bold text-[#526277] transition hover:bg-[#fef2f2] hover:text-[#b91c1c]"
+                  className="inline-flex h-9 items-center gap-1.5 rounded-full px-3 text-sm font-bold text-[#526277] transition hover:bg-[#f3f7fa] hover:text-[#0089bb]"
                 >
                   <LogOut className="h-4 w-4" />
                   {locale === "en" ? "Sign out" : "Cerrar sesión"}
@@ -2166,8 +2210,11 @@ export default function DashboardPage() {
           ) : (
             <>
               {activeTab !== "home" && (
-                <div className={cn(
-                  "sticky top-0 z-20 grid min-h-16 grid-cols-[64px_minmax(0,1fr)_64px] items-center border-b border-[#e5e7eb] bg-white px-2 py-2 text-[#162543] lg:hidden",
+                <>
+                <div ref={sentinelaRef} aria-hidden className="h-px lg:hidden" />
+                <div ref={cabeceraRef as React.RefObject<HTMLDivElement>} className={cn(
+                  "sticky top-0 z-20 grid min-h-16 grid-cols-[64px_minmax(0,1fr)_64px] items-center border-b bg-white px-2 py-2 text-[#162543] transition-colors duration-200 lg:hidden",
+                  conLinea ? "border-[#e5e7eb]" : "border-transparent",
                   navbarOwnsHeader && "hidden",
                 )}>
                   <button
@@ -2221,6 +2268,7 @@ export default function DashboardPage() {
                   )}
                   <div className="flex shrink-0 justify-self-end" />
                 </div>
+                </>
               )}
 
               <div className="flex flex-col gap-5 lg:flex-row lg:items-start">
@@ -2271,19 +2319,23 @@ export default function DashboardPage() {
                           <>
                             <div className="lg:hidden">
                               <div>
-                                <div className="overflow-hidden rounded-[22px] border border-[#dfe8f0] bg-white shadow-[0_12px_34px_-28px_rgba(15,23,42,0.55)]">
-                                  <div className="divide-y divide-[#eef3f7]">
-                                    {panelModeSelector()}
+                                <div>
+                                  <div className="flex flex-col gap-2.5">
+                                    {cambiarPanelCard()}
                                     {mobileSectionTabs.map(mobileSectionButton)}
                                   </div>
-                                  <div className="mx-4 border-t border-[#eef3f7]" />
-                                  {mobileUtilityButton({
-                                    keyName: "mobile-signout",
-                                    label: locale === "en" ? "Sign out" : "Cerrar sesión",
-                                    icon: <LogOut className="h-5 w-5" />,
-                                    onClick: () => signOutToHome(locale),
-                                    danger: true,
-                                  })}
+                                  <div className="pt-2.5">
+                                    <button
+                                      type="button"
+                                      onClick={() => signOutToHome(locale)}
+                                      className="flex min-h-[60px] w-full items-center gap-3 rounded-2xl border border-[#e5edf4] bg-white px-4 py-3.5 text-left text-[15px] font-semibold text-[#162543] shadow-[0_10px_26px_-24px_rgba(15,23,42,0.6)] transition-colors hover:bg-[#f8fbfd]"
+                                    >
+                                      <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[#64748b]">
+                                        <LogOut className="h-5 w-5" />
+                                      </span>
+                                      <span className="min-w-0 flex-1 truncate">{locale === "en" ? "Sign out" : "Cerrar sesión"}</span>
+                                    </button>
+                                  </div>
                                 </div>
                               </div>
                             </div>
@@ -2382,7 +2434,7 @@ export default function DashboardPage() {
                             coverageCountry={!!pro.coverage_country}
                             videoConsultationAllowed={anyVideoConsultCategory((pro.professions && pro.professions.length > 0) ? pro.professions : (pro.category_id ? [pro.category_id] : []))}
                             initialVideoConsultation={!!pro.videoconsulta}
-                            onSaved={() => handleSaved("section")}
+                            onSaved={(intent) => handleSaved(intent ?? "section")}
                           />
                           </div>
                         )}
@@ -2402,7 +2454,7 @@ export default function DashboardPage() {
                         {activeTab === "applications" && <ClientJobApplications />}
                         {activeTab === "saved" && <ClientActivity section="saved" />}
                         {activeTab === "connections" && <ClientConnections />}
-                        {activeTab === "network" && <FollowNetworkTab onBack={() => requestUnsavedAction(() => setTab("home"))} />}
+                        {activeTab === "network" && <FollowNetworkTab title={displayName} onBack={() => requestUnsavedAction(() => setTab("home"))} />}
                         {activeTab === "notifications" && <NotificationsList />}
                         {activeTab === "guides" && (
                           <GuidesBody

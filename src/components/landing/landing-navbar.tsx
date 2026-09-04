@@ -1,14 +1,15 @@
 "use client";
 
 import { useState, useEffect, useRef, useMemo, useCallback, useTransition, type ReactNode } from "react";
+import { soltarFoco } from "@/lib/soltar-foco";
 import {
   X, Menu, ChevronDown, ChevronRight, Search, MapPin, List, Map as MapIcon, ArrowLeft, Share2,
-  Bot, Briefcase, Compass, Wrench,
+  Briefcase, Compass, Wrench,
   UserRound, UserRoundPlus, LogOut, FileText, MessageSquareText, Settings, Bell, MoreHorizontal,
   HelpCircle, ListChecks, Lightbulb, Headset, Globe2, Shield, Mail, ClipboardList, Clock,
 } from "lucide-react";
 import { Link, useRouter, usePathname } from "@/i18n/navigation";
-import { readRecentVisits, leerBusquedasRecientes, guardarBusquedaReciente, olvidarBusquedasRecientes, type RecentVisit } from "@/lib/recent-visits";
+import { readRecentVisits, leerBusquedasRecientes, guardarBusquedaReciente, olvidarBusquedaReciente, olvidarBusquedasRecientes, removeRecentVisit, type RecentVisit } from "@/lib/recent-visits";
 import { useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
@@ -24,7 +25,7 @@ import { prefetchDashboardBootstrap } from "@/lib/dashboard-bootstrap-cache";
 import { prefetchConversations } from "@/lib/direct-chat/conversations-cache";
 import { trackMetaEvent } from "@/lib/analytics/meta-pixel";
 import { useNativeApp } from "@/hooks/use-native-app";
-import { ALL_CATEGORIES, CATEGORY_GROUPS, searchCategories, normalizeText, getCategoryLabel, getCategoryGroupLabel, resolveCategoryIntent, getAllCategories, getAllCategoryGroups } from "@/lib/data/categories";
+import { ALL_CATEGORIES, CATEGORY_GROUPS, searchCategories, normalizeText, getCategoryLabel, getCategoryGroupLabel, resolveCategoryIntent, getAllCategories, getAllCategoryGroups, getCategoryGroupId } from "@/lib/data/categories";
 import { getCategoryGroupIcon } from "@/lib/data/category-group-visuals";
 import { useCustomCategories } from "@/lib/data/use-custom-categories";
 import { allLocationSuggestions, searchLocations, resolveLocation, type LocationSuggestion } from "@/lib/data/location-search";
@@ -791,7 +792,6 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   const nativeLocationInputRef = useRef<HTMLInputElement>(null);
   const navLocationInputRef = useRef<HTMLInputElement>(null);
   const nativePendingTimer = useRef<number | null>(null);
-  const nativeBottomNavRef = useRef<HTMLElement>(null);
   // Drives a SHORTER search placeholder on small screens so it never clips.
   const [isSmallScreen, setIsSmallScreen] = useState(true);
   const searchBlurTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -808,11 +808,63 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   const pathname = usePathname();
   const currentSearchParams = useSearchParams();
   const nativeApp = useNativeApp();
+  // En la app, la línea y la sombra de la barra solo se retiran cuando debajo
+  // hay un lienzo de OTRO color que ya separa por sí solo (el gris del panel,
+  // el mapa de /buscar). Sobre contenido blanco la línea se queda: sin ella no
+  // habría ninguna división entre la barra y la página.
+  const [contenidoDebajo, setContenidoDebajo] = useState(false);
+  const [lienzoBlanco, setLienzoBlanco] = useState(true);
+  useEffect(() => {
+    if (!nativeApp) return;
+    const transparente = /rgba\(0, 0, 0, 0\)|transparent/;
+    const fondoDe = (desde: Element | null): string | null => {
+      let nodo: Element | null = desde;
+      while (nodo) {
+        const fondo = getComputedStyle(nodo).backgroundColor;
+        if (fondo && !transparente.test(fondo)) return fondo;
+        nodo = nodo.parentElement;
+      }
+      return null;
+    };
+    const medir = () => {
+      const barra = document.querySelector(".ccr-app-header");
+      if (!barra) return;
+      const r = barra.getBoundingClientRect();
+      if (r.height === 0) return;
+      const debajo = fondoDe(document.elementFromPoint(16, Math.round(r.bottom + 4)));
+      setLienzoBlanco(!debajo || debajo === "rgb(255, 255, 255)");
+    };
+    const cuadro = requestAnimationFrame(() => requestAnimationFrame(medir));
+    const tarde = window.setTimeout(medir, 700);
+    window.addEventListener("resize", medir);
+    return () => {
+      cancelAnimationFrame(cuadro);
+      window.clearTimeout(tarde);
+      window.removeEventListener("resize", medir);
+    };
+  }, [nativeApp, pathname]);
+  useEffect(() => {
+    if (!nativeApp) return;
+    const leer = (objetivo: EventTarget | null): number | null => {
+      if (objetivo === document || objetivo === window) {
+        return (document.scrollingElement ?? document.documentElement).scrollTop;
+      }
+      if (objetivo instanceof HTMLElement && objetivo.tagName === "MAIN") return objetivo.scrollTop;
+      return null;
+    };
+    const onScroll = (evento: Event) => {
+      const arriba = leer(evento.target);
+      if (arriba !== null) setContenidoDebajo(arriba > 4);
+    };
+    const principal = document.querySelector("main");
+    setContenidoDebajo(((document.scrollingElement?.scrollTop ?? 0) > 4) || ((principal?.scrollTop ?? 0) > 4));
+    document.addEventListener("scroll", onScroll, { capture: true, passive: true });
+    return () => document.removeEventListener("scroll", onScroll, { capture: true });
+  }, [nativeApp]);
   const nativeMessageUnread = useDirectMessageUnread(nativeApp);
   const [hydrated, setHydrated] = useState(false);
   const nativeHeaderShell = hydrated && nativeApp;
-  const nativeBottomShell = hydrated && nativeApp;
-  const { user, avatarUrl, loading: authLoading } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const nativeSearchRoute = /(^|\/)buscar(?:\/|$)/.test(pathname ?? "");
   // Search is a full-viewport map + results sheet. Do not merely hide the nav
   // with CSS: leaving it mounted keeps its layout class and safe-area reserve
@@ -821,7 +873,6 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   const enMensajes = /(^|\/)mensajes(?:\/|$)/.test(pathname ?? "");
   const enNotificaciones = /(^|\/)notificaciones(?:\/|$)/.test(pathname ?? "");
   const nativeFullscreenRoute = /(^|\/)(?:publicar-proyecto|(?:empleos|ofertas)\/publicar)(?:\/|$)/.test(pathname ?? "");
-  const nativeBottomNavVisible = nativeBottomShell && !nativeFullscreenRoute;
   const [accountCapability, setAccountCapability] = useState<{
     userId: string;
     role: string | null;
@@ -876,10 +927,17 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
     showMobileNavbarSearch && !nativeSearchOpen && !searchQuery.trim(),
   );
   const headerCategoryId = currentSearchParams.get("categoria");
+  // Una FAMILIA entera ("Todos los servicios de Agro") también es contexto de
+  // búsqueda: sin esto la barra se quedaba con su texto de ayuda —"¿Qué
+  // servicio estás buscando?"— aunque la búsqueda ya estuviera hecha.
+  const headerGroupId = currentSearchParams.get("grupo");
+  const headerGroupLabel = headerGroupId && getAllCategoryGroups().some((group) => group.id === headerGroupId)
+    ? getCategoryGroupLabel(headerGroupId, locale)
+    : "";
   const explicitHeaderService =
     headerCategoryId && headerCategoryId !== "todas"
       ? getCategoryLabel(headerCategoryId, locale)
-      : currentSearchParams.get("q")?.trim() || "";
+      : headerGroupLabel || currentSearchParams.get("q")?.trim() || "";
   const headerServiceLabel =
     explicitHeaderService || mobileSlidingService.current || nativeSearchServices[0] || (locale === "en" ? "electrician" : "electricista");
   const headerCantonId = currentSearchParams.get("canton");
@@ -913,14 +971,14 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
     let active = true;
     queueMicrotask(() => {
       if (!active) return;
-      setSearchQuery(explicitHeaderService);
+      setSearchQuery(headerGroupLabel ? "" : explicitHeaderService);
       setSearchCategoryId(headerCategoryId && headerCategoryId !== "todas" ? headerCategoryId : null);
       setNavLocation(explicitHeaderLocation);
       setNavLocationSel(headerLocationSuggestion);
       setNavCurrentCoords(headerCoordinates);
     });
     return () => { active = false; };
-  }, [explicitHeaderLocation, explicitHeaderService, headerCategoryId, headerCoordinates, headerLocationSuggestion, pathname]);
+  }, [explicitHeaderLocation, explicitHeaderService, headerCategoryId, headerGroupLabel, headerCoordinates, headerLocationSuggestion, pathname]);
 
   useEffect(() => {
     queueMicrotask(() => setHydrated(true));
@@ -968,34 +1026,6 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
       roots.forEach((item) => item.classList.remove("ccr-mobile-navbar-search-visible"));
     };
   }, [showMobileNavbarSearch]);
-
-  useEffect(() => {
-    const roots = [document.documentElement, document.body];
-    roots.forEach((root) => root.classList.toggle("ccr-native-bottom-nav-visible", nativeBottomNavVisible));
-    return () => roots.forEach((root) => root.classList.remove("ccr-native-bottom-nav-visible"));
-  }, [nativeBottomNavVisible]);
-
-  useEffect(() => {
-    if (!nativeBottomNavVisible || !nativeBottomNavRef.current) return;
-    const nav = nativeBottomNavRef.current;
-    const root = document.documentElement;
-    const updateHeight = () => {
-      root.style.setProperty("--ccr-native-bottom-nav-height", `${Math.ceil(nav.getBoundingClientRect().height)}px`);
-    };
-    updateHeight();
-    const observer = new ResizeObserver(updateHeight);
-    observer.observe(nav);
-    window.addEventListener("resize", updateHeight);
-    window.visualViewport?.addEventListener("resize", updateHeight);
-    window.visualViewport?.addEventListener("scroll", updateHeight);
-    return () => {
-      observer.disconnect();
-      window.removeEventListener("resize", updateHeight);
-      window.visualViewport?.removeEventListener("resize", updateHeight);
-      window.visualViewport?.removeEventListener("scroll", updateHeight);
-      root.style.removeProperty("--ccr-native-bottom-nav-height");
-    };
-  }, [nativeBottomNavVisible]);
 
   // "Ingresar" routes to the robust /login PAGE (forgot-password, role-aware
   // post-login redirect to the correct panel, waitForAuthCookie, OAuth `next`,
@@ -1095,6 +1125,33 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   }, [nativeApp, primaryPanelHref, router, user]);
 
   const visibleResourceLinks = useMemo(() => RESOURCES_LINKS, []);
+  const enRutaDelCajon = (href: string) => {
+    const base = href.split("?")[0] ?? href;
+    const actual = pathname ?? "/";
+    return base === "/" ? actual === "/" : actual === base || actual.startsWith(`${base}/`);
+  };
+  const claseCajon = (href: string) =>
+    cn(mobileDrawerItemClass, enRutaDelCajon(href) && "font-extrabold text-[#009FD9]");
+
+  const irAlInicio = useCallback((event: React.MouseEvent<HTMLAnchorElement>) => {
+    if (!nativeApp) return;
+    event.preventDefault();
+    event.stopPropagation();
+    // Con el asistente encima, el logo primero lo aparta — si la ruta de abajo
+    // ya era la portada, sin esto el toque "no hacía nada".
+    window.dispatchEvent(new Event("contratacr:close-ai"));
+    const destino = `/${locale}`;
+    if (window.location.pathname === destino) {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      document.querySelector("main")?.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+    // Nunca location.assign como respaldo: una recarga completa del documento
+    // vuelve a pintar la marca de arranque, que dentro de la app no va jamás.
+    // Si la navegación tarda, la pantalla anterior sigue visible hasta llegar.
+    router.push("/");
+  }, [locale, nativeApp, router]);
+
   const mobileDrawerItemClass =
     "flex w-full items-center gap-3 rounded-2xl px-2 py-3 text-left text-[16px] font-semibold leading-snug text-[#162543] transition-colors hover:bg-[#f4f7fa] hover:text-[#009FD9]";
   const mobileDrawerTextClass = "min-w-0 flex-1 whitespace-normal break-words";
@@ -1165,18 +1222,10 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   const isNativeTabActive = useCallback(
     (href: string) => {
       const baseHref = href.split("?")[0] ?? href;
-      return nativePendingHref === href || pathname === baseHref || (baseHref === panelHref && pathname.startsWith(panelHref));
+      if (nativePendingHref) return nativePendingHref === href;
+      return pathname === baseHref || (baseHref === panelHref && pathname.startsWith(panelHref));
     },
     [nativePendingHref, panelHref, pathname],
-  );
-
-  const nativeBottomNavClass = useCallback(
-    (href: string) =>
-      cn(
-        "flex min-w-0 flex-col items-center justify-center gap-0.5 overflow-hidden rounded-xl px-0.5 py-1 text-[10px] font-semibold leading-tight text-[#526277] transition-colors active:text-[#009FD9] min-[360px]:px-1 min-[360px]:text-[11px]",
-        isNativeTabActive(href) && "font-bold text-[#009FD9]",
-      ),
-    [isNativeTabActive],
   );
 
   const prepareNativeNavigation = useCallback(
@@ -1368,6 +1417,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   }
 
   function closeNativeSearch() {
+    soltarFoco();
     setNativeSearchOpen(false);
     setSearchFocused(false);
     setNavLocOpen(false);
@@ -1516,6 +1566,9 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
       // Falta la ubicación: se salta a ella en vez de buscar a medias (antes
       // esto solo ocurría dentro de la app).
       if (searchQuery.trim() && !navLocation.trim()) {
+        // El salto a la ubicación no pierde lo buscado: queda en recientes ya.
+        guardarBusquedaReciente(searchQuery.trim());
+        setBusquedasRecientes(leerBusquedasRecientes());
         (nativeSearchOpen ? nativeLocationInputRef.current : navLocationInputRef.current)?.focus();
         setNavLocOpen(false);
         return;
@@ -1560,7 +1613,14 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
           data-hydrated={hydrated ? "true" : "false"}
           data-compact-search={effectiveCompact ? "visible" : "hidden"}
           className={cn(
-            "ccr-app-header fixed top-0 left-0 right-0 z-50 bg-white/96 backdrop-blur-md shadow-[0_10px_34px_-24px_rgba(15,23,42,0.55)] border-b border-gray-100/80",
+            "ccr-app-header fixed top-0 left-0 right-0 z-50 border-b bg-white/96 backdrop-blur-md",
+            // En la web la barra translúcida conserva su sombra fija; en la app
+            // la línea y la sombra aparecen solo al desplazar.
+            nativeApp
+              ? cn("transition-[border-color,box-shadow] duration-200", contenidoDebajo || lienzoBlanco
+                  ? "border-gray-100/80 shadow-[0_10px_34px_-24px_rgba(15,23,42,0.55)]"
+                  : "border-transparent shadow-none")
+              : "border-gray-100/80 shadow-[0_10px_34px_-24px_rgba(15,23,42,0.55)]",
             drawerOnly && "hidden",
           )}
         >
@@ -1585,7 +1645,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                     >
                       <Menu className="h-5 w-5 stroke-[2.5]" />
                     </button>
-                    <Link href="/" aria-label="ContrataCR inicio" className="-ml-1 shrink-0">
+                    <Link href="/" aria-label="ContrataCR inicio" onClick={irAlInicio} className="-ml-1 shrink-0">
                       <ContrataCRMark className="h-7 w-7" />
                     </Link>
                     <h1 data-ccr-section-title="" className="mr-auto min-w-0 truncate pl-1.5 text-[17px] font-extrabold text-[#162543]">{sectionTitle}</h1>
@@ -1617,7 +1677,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                   <Menu className="h-5 w-5 stroke-[2.5]" />
                 </button>
 
-                <Link href="/" aria-label="ContrataCR inicio" className={cn("shrink-0", nativeHeaderShell && "mr-auto flex min-w-0 items-center justify-start")}>
+                <Link href="/" aria-label="ContrataCR inicio" onClick={irAlInicio} className={cn("shrink-0", nativeHeaderShell && "mr-auto flex min-w-0 items-center justify-start")}>
                   {mobileInline ? <ContrataCRMark className="h-8 w-8" /> : <ContrataCRLogo size="lg" />}
                 </Link>
                   </>
@@ -1630,7 +1690,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                 {nativeHeaderShell ? (
                   !nativeFullscreenRoute ? (
                     <div className="flex h-10 shrink-0 items-center justify-end gap-1">
-                      {!enMensajes && !enNotificaciones && (
+                      {!enMensajes && (
                         <HeaderMessagesLink
                           unreadCount={user ? nativeMessageUnread : 0}
                           label={locale === "en" ? "Messages" : "Mensajes"}
@@ -1726,7 +1786,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
               )}
 
               <div className="relative hidden h-16 items-center gap-2 min-[1200px]:flex xl:gap-3">
-                <Link href="/" aria-label="ContrataCR inicio" className="shrink-0">
+                <Link href="/" aria-label="ContrataCR inicio" onClick={irAlInicio} className="shrink-0">
                   {mobileInline ? (
                     <>
                       {/* Compact mark on mobile ONLY when the inline search is present (it needs the
@@ -2213,19 +2273,31 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                             </button>
                           </div>
                           {busquedasRecientes.map((termino) => (
-                            <button
-                              key={termino}
-                              type="button"
-                              onClick={() => {
-                                setSearchQuery(termino);
-                                setSearchCategoryId(null);
-                                window.setTimeout(() => runCompactSearch(), 0);
-                              }}
-                              className="flex w-full items-center gap-4 rounded-xl px-2 py-3 text-left active:bg-[#eef9fd]"
-                            >
-                              <Clock className="h-5 w-5 shrink-0 text-[#8b95a5]" />
-                              <span className="min-w-0 flex-1 truncate text-[16px] font-bold text-[#1A2744]">{termino}</span>
-                            </button>
+                            <div key={termino} className="flex w-full items-center rounded-xl active:bg-[#eef9fd]">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setSearchQuery(termino);
+                                  setSearchCategoryId(null);
+                                  window.setTimeout(() => runCompactSearch(), 0);
+                                }}
+                                className="flex min-w-0 flex-1 items-center gap-4 rounded-xl px-2 py-3 text-left"
+                              >
+                                <Clock className="h-5 w-5 shrink-0 text-[#8b95a5]" />
+                                <span className="min-w-0 flex-1 truncate text-[16px] font-bold text-[#1A2744]">{termino}</span>
+                              </button>
+                              <button
+                                type="button"
+                                aria-label={locale === "en" ? `Remove ${termino}` : `Quitar ${termino}`}
+                                onClick={() => {
+                                  olvidarBusquedaReciente(termino);
+                                  setBusquedasRecientes((previas) => previas.filter((item) => item !== termino));
+                                }}
+                                className="grid h-11 w-11 shrink-0 place-items-center rounded-xl text-[#8b95a5] active:bg-[#e3f2fa]"
+                              >
+                                <X className="h-4 w-4" />
+                              </button>
+                            </div>
                           ))}
                         </>
                       )}
@@ -2235,12 +2307,12 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                             {t("recentlyViewed")}
                           </p>
                           {visitasRecientes.map((visita) => (
-                            <Link
-                              key={visita.id}
-                              href={visita.href}
-                              onClick={closeNativeSearch}
-                              className="flex w-full items-center gap-3 rounded-xl px-2 py-2.5 text-left active:bg-[#eef9fd]"
-                            >
+                            <div key={visita.id} className="flex w-full items-center rounded-xl active:bg-[#eef9fd]">
+                              <Link
+                                href={visita.href}
+                                onClick={closeNativeSearch}
+                                className="flex min-w-0 flex-1 items-center gap-3 rounded-xl px-2 py-2.5 text-left"
+                              >
                               {visita.imagen ? (
                                 // eslint-disable-next-line @next/next/no-img-element -- miniatura fija; el optimizador no actúa en Cloudflare
                                 <img src={visita.imagen} alt="" className="h-9 w-9 shrink-0 rounded-full object-cover" />
@@ -2255,7 +2327,19 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                                   <span className="block truncate text-[12px] font-semibold text-[#6b7280]">{visita.subtitulo}</span>
                                 )}
                               </span>
-                            </Link>
+                              </Link>
+                              <button
+                                type="button"
+                                aria-label={locale === "en" ? `Remove ${visita.titulo}` : `Quitar ${visita.titulo}`}
+                                onClick={() => {
+                                  removeRecentVisit("profesionales", visita.id);
+                                  setVisitasRecientes((previas) => previas.filter((item) => item.id !== visita.id));
+                                }}
+                                className="grid h-11 w-11 shrink-0 place-items-center rounded-xl text-[#8b95a5] active:bg-[#e3f2fa]"
+                              >
+                                <X className="h-4 w-4" />
+                              </button>
+                            </div>
                           ))}
                         </>
                       )}
@@ -2337,7 +2421,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                 {user ? (
                   <>
                     {!nativeApp && (
-                      <Link href={primaryPanelHref} onClick={() => setMobileOpen(false)} className={mobileDrawerStrongItemClass}>
+                      <Link href={primaryPanelHref} onClick={() => setMobileOpen(false)} className={cn(mobileDrawerStrongItemClass, enRutaDelCajon(primaryPanelHref) && "text-[#009FD9]")}>
                         <DrawerIcon><UserRound /></DrawerIcon>
                         <span className={mobileDrawerTextClass}>{locale === "en" ? "My dashboard" : "Mi panel"}</span>
                       </Link>
@@ -2347,24 +2431,24 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                       <span className={mobileDrawerTextClass}>{t("publishRequest")}</span>
                     </Link>
                     {!isPro && (
-                      <Link href={projectsHref} onClick={() => setMobileOpen(false)} className={mobileDrawerItemClass}>
+                      <Link href={projectsHref} onClick={() => setMobileOpen(false)} className={claseCajon(projectsHref)}>
                         <DrawerIcon><ClipboardList /></DrawerIcon>
                         <span className={mobileDrawerTextClass}>{t("projects")}</span>
                       </Link>
                     )}
                   </>
                 ) : null}
-                <Link href="/servicios" onClick={() => setMobileOpen(false)} className={mobileDrawerItemClass}>
+                <Link href="/servicios" onClick={() => setMobileOpen(false)} className={claseCajon("/servicios")}>
                   <DrawerIcon><Wrench /></DrawerIcon>
                   <span className={mobileDrawerTextClass}>{t("categories")}</span>
                 </Link>
                 {!nativeApp && (
                   <>
-                <Link href="/empleos" onClick={(event) => { setMobileOpen(false); navigateNativeMarketplace(event, "/empleos"); }} className={mobileDrawerItemClass}>
+                <Link href="/empleos" onClick={(event) => { setMobileOpen(false); navigateNativeMarketplace(event, "/empleos"); }} className={claseCajon("/empleos")}>
                   <DrawerIcon><Briefcase /></DrawerIcon>
                   <span className={mobileDrawerTextClass}>{locale === "en" ? "Jobs" : "Empleos"}</span>
                 </Link>
-                <Link href="/ofertas" onClick={(event) => { setMobileOpen(false); navigateNativeMarketplace(event, "/ofertas"); }} className={mobileDrawerItemClass}>
+                <Link href="/ofertas" onClick={(event) => { setMobileOpen(false); navigateNativeMarketplace(event, "/ofertas"); }} className={claseCajon("/ofertas")}>
                   <DrawerIcon><OfferTagPercentIcon className="h-5 w-5" /></DrawerIcon>
                   <span className={mobileDrawerTextClass}>{locale === "en" ? "Deals" : "Ofertas"}</span>
                 </Link>
@@ -2454,84 +2538,26 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                 </button>
               </nav>
               {user && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setMobileHelpOpen(false);
-                    setMobileOpen(false);
-                    void handleSignOut();
-                  }}
-                  className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-[#eef2f6] px-4 py-3.5 text-base font-extrabold text-[#162543] transition-colors hover:bg-[#e2e8f0]"
-                >
-                  <LogOut className="h-5 w-5" />
-                  {locale === "en" ? "Sign out" : "Cerrar sesión"}
-                </button>
+                <>
+                  {/* Misma fila que los demás destinos del menú: una pastilla
+                      rellena lo hacía ver como la acción principal del cajón,
+                      que no lo es. */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMobileHelpOpen(false);
+                      setMobileOpen(false);
+                      void handleSignOut();
+                    }}
+                    className={mobileDrawerItemClass}
+                  >
+                    <DrawerIcon><LogOut /></DrawerIcon>
+                    <span className={mobileDrawerTextClass}>{locale === "en" ? "Sign out" : "Cerrar sesión"}</span>
+                  </button>
+                </>
               )}
             </div>
           </div>
-          {nativeBottomNavVisible && (
-            <nav
-              ref={nativeBottomNavRef}
-              aria-label={locale === "en" ? "App navigation" : "Navegacion de la app"}
-              className="ccr-native-bottom-nav lg:hidden fixed inset-x-0 bottom-0 z-[90] bg-white px-1.5 min-[360px]:px-2"
-            >
-              <div className="mx-auto grid w-full max-w-[520px] grid-cols-[repeat(5,minmax(0,1fr))] gap-0.5 min-[360px]:gap-1">
-                <Link href="/buscar" onTouchStart={() => prepareNativeNavigation("/buscar")} onPointerDown={() => prepareNativeNavigation("/buscar")} className={nativeBottomNavClass("/buscar")}>
-                  <Search className="h-5 w-5" strokeWidth={isNativeTabActive("/buscar") ? 2.5 : 2} />
-                  <span className="max-w-full truncate">{locale === "en" ? "Search" : "Buscar"}</span>
-                </Link>
-                <Link href="/ofertas" onClick={(event) => navigateNativeMarketplace(event, "/ofertas")} onPointerDown={() => prepareNativeNavigation("/ofertas")} className={nativeBottomNavClass("/ofertas")}>
-                  <OfferTagPercentIcon className="h-5 w-5" strokeWidth={isNativeTabActive("/ofertas") ? 2.5 : 2} />
-                  <span className="max-w-full truncate">{locale === "en" ? "Deals" : "Ofertas"}</span>
-                </Link>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setNativePendingHref("assistant");
-                    window.dispatchEvent(new Event("contratacr:open-ai"));
-                  }}
-                  className={nativeBottomNavClass("assistant")}
-                  aria-label={locale === "en" ? "Open assistant" : "Abrir asistente"}
-                >
-                  <Bot className="h-5 w-5" strokeWidth={isNativeTabActive("assistant") ? 2.5 : 2} />
-                  <span className="max-w-full truncate">{locale === "en" ? "Assistant" : "Asistente"}</span>
-                </button>
-                <Link href="/empleos" onClick={(event) => navigateNativeMarketplace(event, "/empleos")} onPointerDown={() => prepareNativeNavigation("/empleos")} className={nativeBottomNavClass("/empleos")}>
-                  <Briefcase className="h-5 w-5" strokeWidth={isNativeTabActive("/empleos") ? 2.5 : 2} />
-                  <span className="max-w-full truncate">{locale === "en" ? "Jobs" : "Empleos"}</span>
-                </Link>
-                {user ? (
-                <Link href={nativePanelHref} onPointerDown={() => prepareNativeNavigation(nativePanelHref)} className={nativeBottomNavClass(nativePanelHref)}>
-                  <span className="grid h-5 w-5 shrink-0 place-items-center">
-                    {avatarUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element -- tiny fixed-size avatar; the optimizer is a no-op on Cloudflare
-                      <img
-                        src={avatarUrl}
-                        alt=""
-                        className={cn(
-                          "h-[22px] w-[22px] max-w-none rounded-full object-cover",
-                          isNativeTabActive(nativePanelHref) ? "ring-2 ring-[#009FD9]" : "ring-1 ring-[#d5dfe9]",
-                        )}
-                      />
-                    ) : (
-                      <UserRound className="h-5 w-5" strokeWidth={isNativeTabActive(nativePanelHref) ? 2.5 : 2} />
-                    )}
-                  </span>
-                  <span className="max-w-full truncate">Panel</span>
-                </Link>
-                ) : (
-                <button
-                  type="button"
-                  onClick={() => window.dispatchEvent(new Event("ccr:open-access"))}
-                  className={nativeBottomNavClass("acceso")}
-                >
-                  <UserRound className="h-5 w-5" strokeWidth={2} />
-                  <span className="max-w-full truncate">{t("login")}</span>
-                </button>
-                )}
-              </div>
-            </nav>
-          )}
       </>
     </>
   );

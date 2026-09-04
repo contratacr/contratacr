@@ -184,10 +184,16 @@ export function syncSavedPros(userId: string, force = false): Promise<SavedPro[]
       return getSavedPros(userId);
     }
 
-    setSavedPros(remote, userId);
     localStorage.setItem(migrationKey, "1");
     lastSyncAt.set(userId, Date.now());
-    window.dispatchEvent(new CustomEvent("savedProsChanged"));
+    // Una LECTURA que no encontró cambios no anuncia cambios: este evento lo
+    // escucha el refresco global de datos, y anunciarlo en cada sincronización
+    // re-pedía la ruta entera al servidor justo después de pintarla — el
+    // "refresh" fantasma al entrar a una sección tras estar inactivo.
+    if (JSON.stringify(getSavedPros(userId)) !== JSON.stringify(remote)) {
+      setSavedPros(remote, userId);
+      window.dispatchEvent(new CustomEvent("savedProsChanged"));
+    }
     return remote;
   })();
 

@@ -21,6 +21,17 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  // Volver a una sección ya visitada no debe recargarla: el armazón de cada
+  // página queda en el caché del cliente y la navegación es instantánea, sin
+  // skeleton ni marca. Los datos frescos los piden las propias pantallas
+  // (paneles, chat, tablones cachean y refrescan por su cuenta), así que
+  // cachear el armazón unos minutos no muestra nada viejo.
+  experimental: {
+    staleTimes: {
+      dynamic: 300,
+      static: 1800,
+    },
+  },
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "randomuser.me" },

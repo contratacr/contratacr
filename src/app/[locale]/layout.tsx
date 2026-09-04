@@ -21,6 +21,7 @@ import { notificationContext } from "@/lib/notification-link";
 import { WhatsAppReviewFollowUp } from "@/components/reviews/whatsapp-review-followup";
 import { PushTokenManager } from "@/components/push/push-token-manager";
 import { AppResumeRecovery } from "@/components/util/app-resume-recovery";
+import { NativeBottomNav } from "@/components/mobile/native-bottom-nav";
 import { MobileAppBridge } from "@/components/mobile/mobile-app-bridge";
 import { NativeFirstRunOnboarding } from "@/components/mobile/native-first-run-onboarding";
 import { AppIntlProvider } from "@/components/app-intl-provider";
@@ -178,6 +179,7 @@ export default async function LocaleLayout({
         </Suspense>
         <PushTokenManager />
         {children}
+        <NativeBottomNav />
         <WhatsAppReviewFollowUp />
         <AiConcierge />
         <FreezeMonitor />

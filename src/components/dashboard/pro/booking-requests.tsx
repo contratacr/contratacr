@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { CalendarCheck, CalendarClock, Clock, FileText, Phone, IdCard, Wrench, MapPin, UserRound, MoreVertical, Flag } from "lucide-react";
@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { cn, formatRelativeOrDate } from "@/lib/utils";
-import { StatusFilterTabs, SOLICITUD_TABS, solicitudBucket, solicitudStatusRedundant, bucketCounts } from "@/components/dashboard/status-filter-tabs";
+import { StatusFilterTabs, SOLICITUD_TABS_PRO, solicitudBucketPro, solicitudStatusRedundant, bucketCounts } from "@/components/dashboard/status-filter-tabs";
 import { ExpandToggle } from "@/components/dashboard/expand-toggle";
 import { ExpandableText } from "@/components/ui/expandable-text";
 import { ReportModal } from "@/components/dashboard/report-modal";
@@ -100,6 +100,7 @@ const NO_BOOKINGS: Booking[] = [];
 export function BookingRequests() {
   const locale = useLocale();
   const t = useTranslations("bookingRequests");
+  const tEtapas = useTranslations("statusTabs");
   const searchParams = useSearchParams();
   const dateLocale = locale === "en" ? "en-US" : "es-CR";
   const { dialogNode, showMessage } = useAppDialog();
@@ -215,7 +216,7 @@ export function BookingRequests() {
     targetRetryRef.current = 0;
     targetBookingHandledRef.current = true;
     const id = window.setTimeout(() => {
-      setFilter(solicitudBucket(booking.status, booking.scheduled_date));
+      setFilter(solicitudBucketPro(booking.status, booking.scheduled_date));
       setExpandedId(bookingId);
       window.setTimeout(() => document.getElementById(`booking-${bookingId}`)?.scrollIntoView({ block: "center", behavior: "smooth" }), 80);
     }, 0);
@@ -269,6 +270,39 @@ export function BookingRequests() {
     return res.ok;
   }
 
+  // Every tab shows its count.
+  const counts = bucketCounts(bookings.map((b) => solicitudBucketPro(b.status, b.scheduled_date)));
+  // Solo etapas con contenido; si la elegida quedó vacía, la primera disponible.
+  const visibleTabs = SOLICITUD_TABS_PRO.filter((tab) => (counts[tab.id] ?? 0) > 0);
+  const effectiveFilter = visibleTabs.some((tab) => tab.id === filter) ? filter : (visibleTabs[0]?.id ?? filter);
+  const enEtapa = bookings.filter((b) => solicitudBucketPro(b.status, b.scheduled_date) === effectiveFilter);
+
+  // ── Filtro de servicio, la misma regla que en Proyectos Recibidos ─────────
+  // Cada tarjeta ya dice su servicio: leer alcanza mientras la lista es corta.
+  // Los chips aparecen cuando descartar de un toque ahorra de verdad — más de
+  // seis solicitudes en la etapa y al menos dos servicios entre los que separar.
+  const [catFilter, setCatFilter] = useState("");
+  const catCounts = useMemo(() => {
+    const counts: Record<string, number> = { all: enEtapa.length };
+    for (const b of enEtapa) {
+      if (b.category_id) counts[b.category_id] = (counts[b.category_id] ?? 0) + 1;
+    }
+    return counts;
+  }, [enEtapa]);
+  const catTabs = useMemo(() => {
+    const ids = Object.keys(catCounts).filter((id) => id !== "all");
+    ids.sort((a, b) => (catCounts[b] ?? 0) - (catCounts[a] ?? 0));
+    return [{ id: "all" }, ...ids.map((id) => ({ id }))];
+  }, [catCounts]);
+  const activeCat = catCounts[catFilter] ? catFilter : "all";
+  const showCatChips = enEtapa.length > 6 && catTabs.length > 2;
+  const catLabel = (id: string) => (id === "all" ? t("allServices") : getCategoryLabel(id, locale));
+  // "En curso" mentiría acá: el grupo incluye citas agendadas que todavía no
+  // han pasado. "Activas" es cierto de todas. En Proyectos la etiqueta sí
+  // corresponde y se deja.
+  const etapaLabel = (id: string) => tEtapas(id === "en_curso" ? "solicitudes_activas" : id === "nuevas" ? "nuevas_solicitudes" : id);
+  const filtered = enEtapa.filter((b) => activeCat === "all" || !b.category_id || b.category_id === activeCat);
+
   if (loading) {
     return <PanelListSkeleton rows={2} withTabs hasData={bookings.length > 0} />;
   }
@@ -279,12 +313,6 @@ export function BookingRequests() {
     );
   }
 
-  // Every tab shows its count.
-  const counts = bucketCounts(bookings.map((b) => solicitudBucket(b.status, b.scheduled_date)));
-  // Solo etapas con contenido; si la elegida quedó vacía, la primera disponible.
-  const visibleTabs = SOLICITUD_TABS.filter((tab) => (counts[tab.id] ?? 0) > 0);
-  const effectiveFilter = visibleTabs.some((tab) => tab.id === filter) ? filter : (visibleTabs[0]?.id ?? filter);
-  const filtered = bookings.filter((b) => solicitudBucket(b.status, b.scheduled_date) === effectiveFilter);
 
   function BookingCard({ booking }: { booking: Booking }) {
     const clientName = cleanVisibleSpanishText(booking.client_name) || t("thePerson");
@@ -455,24 +483,29 @@ export function BookingRequests() {
 
             {/* Frequent actions stay visible; exceptional actions live in the overflow menu. */}
             {!panelOpen && (() => {
-              const primaryActionClass = "h-10 w-full rounded-lg px-3 text-sm font-bold";
+              // Sin icono y con un escalón de tipografía en pantallas angostas, "Enviar
+              // mensaje" y "Marcar completado" caben lado a lado en una sola línea.
+              const primaryActionClass = "h-11 w-auto shrink-0 grow whitespace-nowrap rounded-full px-4 text-[13px] font-bold";
+              // Escribir sigue teniendo sentido después de marcar el trabajo hecho
+              // —falta que el cliente confirme— y después de cerrarlo: una garantía,
+              // un detalle, un comprobante. Solo se corta si la solicitud se canceló.
+              const canMessage = isActive || booking.status === "awaiting_confirmation" || booking.status === "completed";
               return (
                 <div className="flex items-start gap-2 border-t border-[#eef2f6] pt-3">
-                  <div className="grid min-w-0 flex-1 grid-cols-2 gap-2">
-                    {isActive && (
-                      // Navy only while the brand-blue "Finalizar" sits beside it: one
-                      // filled brand button per card (design guide R3).
-                      <DirectChatLauncher bookingId={booking.id} professionalName={clientName} contextTitle={serviceDescription} buttonLabel={t("contact")} tone={isActive ? "contrast" : "primary"} compact className={primaryActionClass} />
-                    )}
+                  <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
                     {isActive && (
                       <Button
                         type="button"
                         size="sm"
+                        variant="chat"
                         className={primaryActionClass}
                         onClick={() => updateStatus(booking.id, "awaiting_confirmation")}
                       >
                         {t("markCompleted")}
                       </Button>
+                    )}
+                    {canMessage && (
+                      <DirectChatLauncher bookingId={booking.id} professionalName={clientName} contextTitle={serviceDescription} buttonLabel={t("contact")} className="h-11 w-auto shrink-0 grow whitespace-nowrap rounded-full px-4 text-[13px] font-bold" />
                     )}
                   </div>
                   <div className="relative shrink-0" data-booking-actions={booking.id}>
@@ -482,7 +515,7 @@ export function BookingRequests() {
                       aria-haspopup="menu"
                       aria-expanded={actionsMenuFor === booking.id}
                       onClick={() => setActionsMenuFor((current) => current === booking.id ? null : booking.id)}
-                      className="grid h-10 w-10 place-items-center rounded-lg border border-[#d7e1ea] text-[#718096] transition hover:border-[#b9c8d6] hover:bg-[#f6f9fb] hover:text-[#162543] [.ccr-native-app_&]:h-11 [.ccr-native-app_&]:w-11"
+                      className="grid h-11 w-11 place-items-center rounded-full border border-[#d7e1ea] text-[#718096] transition hover:border-[#b9c8d6] hover:bg-[#f6f9fb] hover:text-[#162543] [.ccr-native-app_&]:h-11 [.ccr-native-app_&]:w-11"
                     >
                       <MoreVertical className="h-5 w-5" />
                     </button>
@@ -528,7 +561,10 @@ export function BookingRequests() {
   return (
     <div className="space-y-5">
       {visibleTabs.length > 0 && (
-        <StatusFilterTabs tabs={visibleTabs} value={effectiveFilter} onChange={setFilter} counts={counts} />
+        <StatusFilterTabs tabs={visibleTabs} value={effectiveFilter} onChange={setFilter} labelFor={etapaLabel} counts={counts} />
+      )}
+      {showCatChips && (
+        <StatusFilterTabs tabs={catTabs} value={activeCat} onChange={setCatFilter} labelFor={catLabel} counts={catCounts} variant="chips" />
       )}
       {filtered.length === 0 ? (
         <p className="text-sm text-[#6b7280] text-center py-8">{t("noneInView")}</p>

@@ -98,7 +98,7 @@
     "resourceLinks": {
       "howItWorks": "How to use",
       "helpCenter": "Help center",
-      "proTips": "Professional tips",
+      "proTips": "Tips",
       "support": "Support",
       "contact": "Contact",
       "terms": "Terms",
@@ -1925,7 +1925,9 @@
       },
       "searchPlaceholder": "Search the guides",
       "searchEmpty": "No guide matches that word."
-    }
+    },
+    "goToClientPanel": "Go to my client panel",
+    "goToProfessionalPanel": "Go to my professional panel"
   },
   "bookingRequests": {
     "empty": "You don't have any requests yet",
@@ -1968,9 +1970,9 @@
     "liveUpdated": "Updated with recent changes.",
     "confirm": "Confirm",
     "cancel": "Cancel",
-    "markCompleted": "Finish",
+    "markCompleted": "Mark completed",
     "inProgress": "In progress",
-    "markWorkDone": "Mark work done",
+    "markWorkDone": "Mark work completed",
     "whatsapp": "WhatsApp",
     "contact": "WhatsApp",
     "archive": "Delete",
@@ -2022,7 +2024,8 @@
     "reportR3": "Disrespectful",
     "reportR4": "Other",
     "reportDetails": "Describe what happened",
-    "reportSubmit": "Report"
+    "reportSubmit": "Report",
+    "allServices": "All"
   },
   "photoGallery": {
     "intro": "Up to {max} photos total.",
@@ -2065,11 +2068,14 @@
     "deleteTitle": "Delete success story",
     "deleteBody": "This success story and its photos will be removed from your profile.",
     "deleteConfirm": "Delete",
-    "deleteCancel": "Cancel"
+    "deleteCancel": "Cancel",
+    "casePhotosRequired": "Add at least one photo of the work.",
+    "optional": "optional",
+    "caseTitleRequired": "Write what work you did."
   },
   "unsavedGuard": {
     "title": "You have unsaved changes",
-    "body": "If you leave now, the changes you made to your profile will be lost. What would you like to do?",
+    "body": "If you leave now, the changes you made will be lost. What would you like to do?",
     "incompleteTitle": "Required information is missing",
     "incompleteBody": "{error} You can keep editing or leave without saving these changes.",
     "saving": "Saving...",
@@ -2148,7 +2154,7 @@
     "edit": "Edit",
     "cancel": "Cancel",
     "cancelConfirm": "Cancel this proposal?",
-    "markCompleted": "Finish",
+    "markCompleted": "Mark completed",
     "clientCancelled": "The client cancelled this project.",
     "whatsapp": "WhatsApp",
     "waMessage": "Hi {name}, I'm the one who sent the proposal you accepted on ContrataCR for \"{title}\".",
@@ -2184,7 +2190,21 @@
     "moreOptions": "More options",
     "messagePlaceholder": "Say what you can do, when you could come and how you charge. e.g. \"I can stop by tomorrow afternoon to take a look. The visit is ₡10,000 and it comes off the price if I do the job.\"",
     "sentNote": "The client has your reply. If they're interested, they'll message you on WhatsApp.",
-    "yourMessageLabel": "Your reply"
+    "yourMessageLabel": "Your reply",
+    "leaveProject": "Leave this project",
+    "leaveProjectTitle": "Leave this project?",
+    "leaveProjectBody": "The project will reopen and the client can choose another professional. They will be told the reason you write.",
+    "leaveProjectConfirm": "Yes, leave it",
+    "leaveProjectError": "We could not remove you from the project. Please try again.",
+    "reportClient": "Report client",
+    "reportTitle": "Report client",
+    "reportBody": "Your report is confidential and helps keep ContrataCR safe.",
+    "reportDetails": "Describe what happened",
+    "reportSubmit": "Report",
+    "reportThanks": "Thanks. We received your report and will review it.",
+    "reportError": "Couldn't send the report. Try again.",
+    "leaveProjectReason": "Reason",
+    "leaveProjectReasonPlaceholder": "Tell the client why you cannot do it. Example: another job came up this week."
   },
   "servicesEditor": {
     "servicesOf": "Services of",
@@ -2417,7 +2437,9 @@
     "blockedDatesHelp": "Mark specific days when you're not available (vacations, holidays, etc.)",
     "blockedAdd": "Add",
     "noBlockedDates": "No blocked dates",
-    "blockedRemove": "Remove"
+    "blockedRemove": "Remove",
+    "dayAdd": "Add",
+    "dayApply": "Apply"
   },
   "profileEditor": {
     "secBasic": "Basic info",
@@ -2701,7 +2723,10 @@
     "resolveNobody": "I solved it another way",
     "resolveConfirm": "Close request",
     "resolveError": "Couldn't close the request. Try again.",
-    "helpedBy": "Helped you"
+    "helpedBy": "Helped you",
+    "publishCta": "Request a professional",
+    "bookingHappened": "Mark completed",
+    "bookAgain": "Hire again"
   },
   "clientPage": {
     "greeting": "Hi, {name} 👋",
@@ -2848,7 +2873,7 @@
     "resolvedAsk": "We marked this ticket as resolved. Was your problem solved?",
     "yesResolved": "Yes, it's resolved",
     "noStillIssue": "No, I still have the problem",
-    "confirmedResolved": "✓ You confirmed this ticket is resolved.",
+    "confirmedResolved": "✓ You confirmed this case is resolved.",
     "messagePlaceholder": "Write your message…",
     "send": "Send",
     "sending": "Sending…",
@@ -2885,8 +2910,8 @@
     "headerMessages": "Messages",
     "headerNotifications": "Notifications",
     "newTicketShort": "Contact",
-    "reopenHint": "If it happens again, write here and the ticket reopens.",
-    "reopenPlaceholder": "Write to reopen the ticket…"
+    "reopenHint": "If it happens again, send a new message and the case reopens.",
+    "reopenPlaceholder": "Send a message to reopen…"
   },
   "savedPros": {
     "viewProfile": "View profile",
@@ -3127,7 +3152,7 @@
     "errPublish": "Couldn't post it. Try again.",
     "errUnexpected": "Unexpected error. Try again.",
     "successTitle": "Done, it's posted!",
-    "successBody": "Professionals who offer that service in your area will see your project and can send proposals.",
+    "successBody": "Professionals offering that service in your area will see it and can send you proposals.",
     "viewProjects": "View my projects",
     "goToPanel": "Go to my dashboard",
     "title": "Post a request",
@@ -3135,7 +3160,7 @@
     "category": "What do you need?",
     "categoryHelp": "",
     "categoryPlaceholder": "e.g. plumbing, electrician, painting…",
-    "projectTitle": "Project title",
+    "projectTitle": "Title of what you need",
     "titlePlaceholder": "example: Painting living and dining room, 50m²",
     "description": "Tell us what needs doing",
     "descriptionPlaceholder": "e.g. There is a leak under the kitchen sink. It is urgent.",
@@ -3174,7 +3199,16 @@
     "zoneHelp": "So professionals in your area can write to you.",
     "successNotified": "{count, plural, =0 {There are no professionals for this service in your area yet, but we kept it posted for when they join.} one {We notified # {service} professional.} other {We notified # {service} professionals.}}",
     "successNext": "We'll let you know as soon as someone replies. Then you message whoever you like on WhatsApp.",
-    "successView": "View my request"
+    "successView": "View my request",
+    "dirTitle": "What would you like to do?",
+    "dirNeedTitle": "I need someone to do a job",
+    "dirNeedBody": "Describe what you need and professionals in your area send you proposals.",
+    "dirOfferTitle": "I want to offer my services",
+    "dirOfferBody": "Publish an offer so clients can find you.",
+    "dirOfferBodyNew": "Create your professional profile and start receiving requests.",
+    "avisoAnuncio": "This reads as if you were offering a service. This section is for requesting, not offering.",
+    "avisoAnuncioCta": "Publish it as an offer",
+    "avisoAnuncioCtaNew": "Create your professional profile"
   },
   "notifications": {
     "title": "Notifications",
@@ -3747,16 +3781,20 @@
     "activas": "Active",
     "pendientes": "Pending",
     "confirmadas": "Confirmed",
-    "finalizadas": "Finished",
+    "finalizadas": "Completed",
     "canceladas": "Cancelled",
     "activos": "Active",
-    "finalizados": "Finished",
+    "finalizados": "Completed",
     "cancelados": "Cancelled",
     "en_curso": "In progress",
     "enviadas": "Sent",
     "publicados": "Published",
     "respondidas": "Answered",
-    "nuevas": "New"
+    "nuevas": "New",
+    "solicitudes_activas": "Active",
+    "abiertos": "Open",
+    "nuevos": "New",
+    "nuevas_solicitudes": "New"
   },
   "soporte": {
     "headerTitle": "Support center",
@@ -3920,5 +3958,60 @@
     "help": "Help",
     "myOffers": "My offers",
     "myJobs": "My jobs"
+  },
+  "followNetwork": {
+    "suggestedTitle": "Suggested for you",
+    "reasonFollowsYou": "Follows you",
+    "reasonHired": "You hired them",
+    "reasonVerified": "Verified in your province",
+    "dismiss": "Dismiss",
+    "message": "Message",
+    "back": "Back",
+    "followers": "Followers",
+    "following": "Following",
+    "followersTab": "{count, plural, one {# follower} other {# followers}}",
+    "followingTab": "{count} following",
+    "search": "Search",
+    "loading": "Loading connections",
+    "noResults": "No results found.",
+    "emptyFollowing": "You don't follow any professionals yet.",
+    "emptyFollowers": "Nobody follows your profile yet.",
+    "moreOptions": "More options",
+    "unfollow": "Unfollow",
+    "unfollowError": "We could not unfollow this profile.",
+    "removeFollower": "Remove follower",
+    "removeFollowerTitle": "Remove follower?",
+    "removeFollowerBody": "{name} will stop following your profile. We won't notify them.",
+    "removeFollowerConfirm": "Remove",
+    "cancel": "Cancel",
+    "removeFollowerError": "We could not remove this follower.",
+    "verified": "Verified",
+    "professional": "Professional",
+    "user": "User"
+  },
+  "directChat": {
+    "threadEmpty": "No messages yet",
+    "threadEmptySub": "Write the first one to start the conversation.",
+    "archive": "Archive",
+    "unarchive": "Unarchive",
+    "delete": "Delete",
+    "confirmDelete": "Sure?",
+    "loadingConversations": "Loading conversations",
+    "loadingMessages": "Loading messages",
+    "archived": "Archived",
+    "back": "Back",
+    "draft": "Draft",
+    "started": "Conversation started",
+    "messages": "Messages",
+    "viewArchived": "View archived",
+    "copy": "Copy",
+    "copied": "Message copied"
+  },
+  "bottomNav": {
+    "search": "Search",
+    "deals": "Deals",
+    "assistant": "Assistant",
+    "jobs": "Jobs",
+    "aria": "App navigation"
   }
 }

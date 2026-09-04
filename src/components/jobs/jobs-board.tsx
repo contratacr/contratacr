@@ -1,6 +1,8 @@
 "use client";
 
 import { ProgressiveImage } from "@/components/ui/progressive-image";
+import { cn } from "@/lib/utils";
+import { useHairlineOnScroll } from "@/components/util/use-hairline-on-scroll";
 
 import { useEffect, useMemo, useState } from "react";
 import { cldThumb } from "@/lib/cloudinary";
@@ -108,6 +110,7 @@ function JobMetaLine({ job, className = "", showApplicants = true }: { job: JobP
 }
 
 export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo = null, currentProfessionalId = null, currentUserId = null, currentUserEmail = null, currentUserPhone = null, currentUserLinkedIn = null, appliedJobIds = [], detailOnly = false }: Props) {
+  const { sentinelaRef, cabeceraRef, conLinea } = useHairlineOnScroll();
   const locale = marketplaceLocale(useLocale());
   const mensajesSinLeer = useDirectMessageUnread();
   const copy = JOBS_COPY[locale];
@@ -280,9 +283,10 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
   const detailBackLabel = marketplaceReturnLabel(detailBackHref, "/empleos", locale);
 
   return <main className="min-h-[calc(100vh-72px)] overflow-x-clip bg-white pb-16 text-[#162543] lg:bg-[#f4f7fa]">
+    <div ref={sentinelaRef} aria-hidden className="h-px lg:hidden" />
     {showingMobileDetail && selected && (
       <section className="lg:hidden">
-        <header className="ccr-marketplace-sticky sticky top-0 z-20 flex h-14 items-center justify-center border-b border-[#dfe6ec] bg-white px-14">
+        <header className={cn("ccr-marketplace-sticky sticky top-0 z-20 flex h-14 items-center justify-center border-b bg-white px-14 transition-colors duration-200", conLinea ? "border-[#e5e7eb]" : "border-transparent")}>
           <Link
             href={detailBackHref}
             aria-label={detailBackLabel}
@@ -303,7 +307,7 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
         />
       </section>
     )}
-    <section className={`${showingMobileDetail ? "hidden " : ""}ccr-marketplace-sticky sticky top-0 z-20 border-b border-[#d5d8dc] bg-white lg:hidden`}>
+    <section ref={cabeceraRef} className={cn(showingMobileDetail && "hidden", "ccr-marketplace-sticky sticky top-0 z-20 border-b bg-white transition-colors duration-200 lg:hidden", conLinea ? "border-[#e5e7eb]" : "border-transparent")}>
       <div className="px-0">
         <div className="flex min-h-[56px] items-center gap-1 px-2">
           <button type="button" onClick={() => window.dispatchEvent(new Event("ccr:open-mobile-menu"))} aria-label={copy.openMenu} className="grid h-11 w-11 shrink-0 place-items-center rounded-xl text-[#162543] transition hover:bg-[#eef5f9]">
@@ -417,7 +421,7 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
       </div>
     </div>}
     {publishOpen && currentProfessionalId && (
-      <Modal onClose={() => setPublishOpen(false)} title={copy.publishJob} subtitle={copy.publishSubtitle} size="lg" bodyClassName="px-5 py-5 sm:px-6">
+      <Modal onClose={() => setPublishOpen(false)} title={copy.publishJob} size="lg" bodyClassName="px-5 py-5 sm:px-6">
         <JobPostForm
           professionalId={currentProfessionalId}
           presentation="modal"
@@ -432,7 +436,7 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
       </Modal>
     )}
     {editingJob && currentProfessionalId && (
-      <Modal onClose={() => setEditingJob(null)} title={copy.editJob} subtitle={copy.editSubtitle} size="lg" bodyClassName="px-5 py-5 sm:px-6">
+      <Modal onClose={() => setEditingJob(null)} title={copy.editJob} size="lg" bodyClassName="px-5 py-5 sm:px-6">
         <JobPostForm
           professionalId={currentProfessionalId}
           initialJob={editingJob}

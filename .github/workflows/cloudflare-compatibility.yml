@@ -146,6 +146,7 @@ jobs:
           CLOUDINARY_CLOUD_NAME: ${{ secrets.CLOUDINARY_CLOUD_NAME }}
           CLOUDINARY_API_KEY: ${{ secrets.CLOUDINARY_API_KEY }}
           CLOUDINARY_API_SECRET: ${{ secrets.CLOUDINARY_API_SECRET }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
         run: |
           node - <<'NODE'
           const fs = require("node:fs");
@@ -169,7 +170,8 @@ jobs:
             "R2_PUBLIC_BASE_URL",
             "CLOUDINARY_CLOUD_NAME",
             "CLOUDINARY_API_KEY",
-            "CLOUDINARY_API_SECRET"
+            "CLOUDINARY_API_SECRET",
+            "CRON_SECRET"
           ];
           const secrets = {};
           for (const name of names) {

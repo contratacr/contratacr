@@ -14,7 +14,6 @@ const LEGACY_EVENTS = [
   "ccr:profile-updated",
   "ccr:identity-updated",
   "ccr:availability-changed",
-  "notificationsChanged",
   "savedItemsChanged",
   "savedProsChanged",
   "professionalFollowsChanged",
@@ -28,9 +27,16 @@ export function GlobalDataRefresh() {
   const lastPathRef = useRef(pathname);
 
   useEffect(() => {
+    // Lo persistido ANTES de esta carga ya está servido fresco por el servidor:
+    // solo cuentan las mutaciones que ocurran de aquí en adelante. Sin esto,
+    // cualquier sello viejo ya guardado refrescaba la ruta entera en la
+    // primera vuelta de visibilidad — el "refresh" fantasma al volver del
+    // segundo plano.
+    lastSeenRef.current = Math.max(lastSeenRef.current, readLastAppDataInvalidation()?.at ?? 0);
     const refresh = (invalidation?: AppDataInvalidation | null) => {
-      if (invalidation?.at && invalidation.at <= lastSeenRef.current) return;
-      if (invalidation?.at) lastSeenRef.current = invalidation.at;
+      // Sin constancia de una mutación pendiente no hay nada que refrescar.
+      if (!invalidation?.at || invalidation.at <= lastSeenRef.current) return;
+      lastSeenRef.current = invalidation.at;
       if (timerRef.current) window.clearTimeout(timerRef.current);
       timerRef.current = window.setTimeout(() => router.refresh(), 80);
     };
@@ -62,7 +68,13 @@ export function GlobalDataRefresh() {
     const invalidation = readLastAppDataInvalidation();
     // A mutation followed immediately by navigation may land on a prefetched RSC
     // payload. Refresh the new route once, silently, without changing scroll/state.
-    if (invalidation && Date.now() - invalidation.at < 60_000) router.refresh();
+    // UNA vez por mutación: refresh() ya purga el caché del router entero, así
+    // que las navegaciones siguientes piden fresco solas — repetirlo hacía que
+    // cada cambio de sección durante un minuto se sintiera como un refresh.
+    if (invalidation && Date.now() - invalidation.at < 60_000 && invalidation.at > lastSeenRef.current) {
+      lastSeenRef.current = invalidation.at;
+      router.refresh();
+    }
   }, [pathname, router]);
 
   return null;

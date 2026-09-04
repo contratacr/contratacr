@@ -1,6 +1,8 @@
 "use client";
 
 import { ProgressiveImage } from "@/components/ui/progressive-image";
+import { cn } from "@/lib/utils";
+import { useHairlineOnScroll } from "@/components/util/use-hairline-on-scroll";
 
 import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import { cldLarge } from "@/lib/cloudinary";
@@ -142,6 +144,7 @@ export function OffersBoard({
   currentUserId = null,
   serviceOptions: publishServiceOptions,
 }: Props) {
+  const { sentinelaRef, cabeceraRef, conLinea } = useHairlineOnScroll();
   const locale = marketplaceLocale(useLocale());
   const copy = OFFERS_COPY[locale];
   const mensajesSinLeer = useDirectMessageUnread();
@@ -385,7 +388,8 @@ export function OffersBoard({
 
   return (
     <main className="min-h-[calc(100vh-72px)] overflow-x-clip bg-white pb-16 text-[#162543] lg:bg-[#f4f7fa]">
-      <section className="ccr-marketplace-sticky sticky top-0 z-20 border-b border-[#d5d8dc] bg-white lg:hidden">
+      <div ref={sentinelaRef} aria-hidden className="h-px lg:hidden" />
+      <section ref={cabeceraRef} className={cn("ccr-marketplace-sticky sticky top-0 z-20 border-b bg-white transition-colors duration-200 lg:hidden", conLinea ? "border-[#e5e7eb]" : "border-transparent")}>
         <div className="px-0">
           <div className="flex min-h-[56px] items-center gap-1 px-2">
             <button
@@ -522,7 +526,7 @@ export function OffersBoard({
         <Modal
           onClose={() => setPublishOpen(false)}
           title={copy.publishOffer}
-          subtitle={copy.publishSubtitle}
+         
           size="lg"
           bodyClassName="px-5 py-5 sm:px-6"
         >
@@ -542,7 +546,7 @@ export function OffersBoard({
         <Modal
           onClose={() => setEditingOffer(null)}
           title={copy.editOffer}
-          subtitle={copy.editSubtitle}
+         
           size="lg"
           bodyClassName="px-5 py-5 sm:px-6"
         >

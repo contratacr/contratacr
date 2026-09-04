@@ -5,6 +5,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useLocale } from "next-intl";
 import { cn } from "@/lib/utils";
 import { getCategoryGroupLabel, getCategoryLabel, normalizeCategoryGroupId, sortCategoryGroups, type CategoryItem } from "@/lib/data/categories";
+import { getCategoryGroupIcon } from "@/lib/data/category-group-visuals";
 
 export type CategoryPickerGroup = {
   id: string;
@@ -61,7 +62,7 @@ export function CategoryGroupPicker({
           <ChevronLeft className="h-4 w-4 shrink-0" />
           {backLabel}
         </button>
-        <div className="grid grid-cols-1 gap-1 sm:grid-cols-2">
+        <div className="grid grid-cols-1">
           {activeGroup.items.map((item) => (
             <button
               key={item.id}
@@ -85,8 +86,10 @@ export function CategoryGroupPicker({
   }
 
   return (
-    <div className={cn("grid grid-cols-1 gap-1", className)}>
-      {normalizedGroups.map((group) => (
+    <div className={cn("grid grid-cols-1", className)}>
+      {normalizedGroups.map((group) => {
+        const IconoFamilia = getCategoryGroupIcon(group.id);
+        return (
         <button
           key={group.id}
           type="button"
@@ -96,7 +99,10 @@ export function CategoryGroupPicker({
             groupClassName
           )}
         >
-          <span className="min-w-0">
+          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#eef8fc] text-[#009FD9]">
+            <IconoFamilia className="h-[18px] w-[18px]" />
+          </span>
+          <span className="min-w-0 flex-1">
             <span className="block text-sm font-semibold text-[#162543] [overflow-wrap:anywhere]">
               {getCategoryGroupLabel(group.id, locale)}
             </span>
@@ -106,7 +112,8 @@ export function CategoryGroupPicker({
           </span>
           <ChevronRight className="h-4 w-4 shrink-0 text-[#009FD9]" />
         </button>
-      ))}
+        );
+      })}
     </div>
   );
 }

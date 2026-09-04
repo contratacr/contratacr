@@ -394,6 +394,38 @@ export function AdminCategories() {
     return name || i.suggestedByEmail || "";
   }
 
+  // El inglés sigue al español mientras nadie lo haya escrito a mano DESPUÉS
+  // del último cambio en español. Se recuerda de qué texto salió el inglés
+  // actual: si el español ya no es ese, toca traducir de nuevo. Antes la
+  // condición era "el inglés todavía es la conjetura local", así que en cuanto
+  // llegaba una traducción de verdad el campo quedaba congelado para siempre.
+  const traducidoDe = useRef<Record<string, string>>({});
+  const temporizadores = useRef<Record<string, number>>({});
+  const [traduciendo, setTraduciendo] = useState<Record<string, boolean>>({});
+  const [sinTraductor, setSinTraductor] = useState(false);
+
+  function anotarIngles(clave: string, textoEs: string) {
+    traducidoDe.current[clave] = textoEs.trim();
+  }
+
+  function programarTraduccion(clave: string, textoEs: string, aplicar: (ingles: string) => void) {
+    window.clearTimeout(temporizadores.current[clave]);
+    const limpio = textoEs.trim();
+    if (!limpio || traducidoDe.current[clave] === limpio) return;
+    setTraduciendo((prev) => ({ ...prev, [clave]: true }));
+    temporizadores.current[clave] = window.setTimeout(async () => {
+      const ingles = await fetchEnglishSuggestion(limpio);
+      setTraduciendo((prev) => ({ ...prev, [clave]: false }));
+      if (!ingles) return;
+      traducidoDe.current[clave] = limpio;
+      aplicar(ingles);
+    }, 500);
+  }
+
+  useEffect(() => () => {
+    for (const id of Object.values(temporizadores.current)) window.clearTimeout(id);
+  }, []);
+
   async function fetchEnglishSuggestion(label: string) {
     const clean = label.trim();
     if (!clean) return "";
@@ -405,6 +437,7 @@ export function AdminCategories() {
       });
       if (!res.ok) return autoEnglishCategoryLabel(clean);
       const data = await res.json();
+      if (data.configurado === false) setSinTraductor(true);
       return typeof data.labelEn === "string" && data.labelEn.trim() ? data.labelEn.trim() : autoEnglishCategoryLabel(clean);
     } catch {
       return autoEnglishCategoryLabel(clean);
@@ -465,9 +498,12 @@ export function AdminCategories() {
   }
 
   async function refreshNewServiceEnglish() {
-    if (newServiceNameEnManual) return;
-    const translated = await fetchEnglishSuggestion(newServiceName);
-    if (translated && !newServiceNameEnManual) setNewServiceNameEn(translated);
+    const limpio = newServiceName.trim();
+    if (!limpio || traducidoDe.current["nuevo-servicio"] === limpio) return;
+    const translated = await fetchEnglishSuggestion(limpio);
+    if (!translated) return;
+    traducidoDe.current["nuevo-servicio"] = limpio;
+    setNewServiceNameEn(translated);
   }
 
   async function refreshNewServiceSpanish() {
@@ -489,12 +525,11 @@ export function AdminCategories() {
   }
 
   async function refreshCatalogEnglish(item: CatalogCategory) {
-    const draft = draftOf(item);
-    const previousAuto = autoEnglishCategoryLabel(draft.label);
-    const shouldRefreshEnglish = draft.labelEn === previousAuto || normalizeText(draft.labelEn) === normalizeText(draft.label);
-    if (!shouldRefreshEnglish) return;
-    const translated = await fetchEnglishSuggestion(draft.label);
+    const limpio = draftOf(item).label.trim();
+    if (!limpio || traducidoDe.current[item.id] === limpio) return;
+    const translated = await fetchEnglishSuggestion(limpio);
     if (!translated) return;
+    traducidoDe.current[item.id] = limpio;
     setCatalogDrafts((prev) => ({ ...prev, [item.id]: { ...draftOf(item), labelEn: translated } }));
   }
 
@@ -1005,6 +1040,11 @@ export function AdminCategories() {
 
       {view === "services" && (
         <section className="space-y-4">
+          {sinTraductor && (
+            <p className="rounded-xl border border-[#fde68a] bg-[#fffbeb] px-3.5 py-2.5 text-xs font-semibold text-[#92400e]">
+              El traductor automático no está configurado en este entorno (falta GOOGLE_TRANSLATE_API_KEY): el campo en inglés se llena con una conjetura local y hay que revisarlo a mano.
+            </p>
+          )}
           <form onSubmit={addService} className="rounded-2xl border border-[#e5e7eb] bg-white p-4 shadow-sm">
             <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_220px_auto] lg:items-end">
               <div>
@@ -1015,7 +1055,8 @@ export function AdminCategories() {
                     const nextLabel = e.target.value;
                     setNewServiceNameManual(true);
                     setNewServiceName(nextLabel);
-                    if (!newServiceNameEnManual) setNewServiceNameEn(autoEnglishCategoryLabel(nextLabel));
+                    setNewServiceNameEnManual(false);
+                    programarTraduccion("nuevo-servicio", nextLabel, setNewServiceNameEn);
                   }}
                   onBlur={refreshNewServiceEnglish}
                   placeholder=""
@@ -1023,12 +1064,16 @@ export function AdminCategories() {
                 />
               </div>
               <div>
-                <FieldLabel>Servicio en inglés</FieldLabel>
+                <FieldLabel>
+                  Servicio en inglés
+                  {traduciendo["nuevo-servicio"] && <span className="ml-1.5 font-medium text-[#6b7280]">traduciendo…</span>}
+                </FieldLabel>
                 <input
                   value={newServiceNameEn}
                   onChange={(e) => {
                     setNewServiceNameEnManual(true);
                     setNewServiceNameEn(e.target.value);
+                    anotarIngles("nuevo-servicio", newServiceName);
                   }}
                   onBlur={refreshNewServiceSpanish}
                   placeholder=""
@@ -1114,20 +1159,22 @@ export function AdminCategories() {
                   <div className="grid min-w-0 gap-2 sm:grid-cols-2">
                     <input
                       value={draftOf(item).label}
-                      onChange={(e) => setCatalogDrafts((prev) => {
-                        const draft = draftOf(item);
-                        const previousAuto = autoEnglishCategoryLabel(draft.label);
+                      onChange={(e) => {
                         const nextLabel = e.target.value;
-                        const shouldRefreshEnglish = draft.labelEn === previousAuto || normalizeText(draft.labelEn) === normalizeText(draft.label);
-                        return { ...prev, [item.id]: { ...draft, label: nextLabel, labelEn: shouldRefreshEnglish ? autoEnglishCategoryLabel(nextLabel) : draft.labelEn } };
-                      })}
+                        setCatalogDrafts((prev) => ({ ...prev, [item.id]: { ...draftOf(item), label: nextLabel } }));
+                        programarTraduccion(item.id, nextLabel, (ingles) =>
+                          setCatalogDrafts((prev) => ({ ...prev, [item.id]: { ...draftOf(item), labelEn: ingles } })));
+                      }}
                       onBlur={() => refreshCatalogEnglish(item)}
                       aria-label="Nombre del servicio"
                       className="h-10 rounded-lg border border-[#e5e7eb] bg-white px-3 text-sm font-semibold text-[#111827] outline-none focus:border-[#009FD9] focus:ring-2 focus:ring-[#009FD9]/15"
                     />
                     <input
                       value={draftOf(item).labelEn}
-                      onChange={(e) => setCatalogDrafts((prev) => ({ ...prev, [item.id]: { ...draftOf(item), labelEn: e.target.value } }))}
+                      onChange={(e) => {
+                        setCatalogDrafts((prev) => ({ ...prev, [item.id]: { ...draftOf(item), labelEn: e.target.value } }));
+                        anotarIngles(item.id, draftOf(item).label);
+                      }}
                       aria-label="Nombre del servicio en inglés"
                       className="h-10 rounded-lg border border-[#e5e7eb] bg-white px-3 text-sm text-[#374151] outline-none focus:border-[#009FD9] focus:ring-2 focus:ring-[#009FD9]/15"
                     />

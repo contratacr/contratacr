@@ -1,6 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { UnsavedChangesGuard } from "@/components/dashboard/unsaved-changes-guard";
+import { cn } from "@/lib/utils";
+import { useHairlineOnScroll } from "@/components/util/use-hairline-on-scroll";
 import { ArrowLeft, BriefcaseBusiness, Plus, Trash2 } from "lucide-react";
 import { useLocale } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
@@ -23,6 +26,7 @@ import { PROVINCES, getCantonById, getCantonsByProvince, getProvinceById } from 
 import { MAX_MONEY_AMOUNT, formatNumberForMessage, isWholeNumberInRange, parseOptionalWholeNumber } from "@/lib/forms/numeric-validation";
 import { employmentTypeLabel, experienceLevelLabel, marketplaceLocale, salaryPeriodLabel, workplaceTypeLabel } from "@/lib/marketplace-copy";
 import { invalidateAppData } from "@/lib/app-data-invalidation";
+import { Button } from "@/components/ui/button";
 
 type FieldErrors = Partial<Record<"title" | "location" | "description" | "responsibilities" | "requirements" | "salary" | "openings" | "deadline", string>>;
 
@@ -167,7 +171,9 @@ function RequiredLabel({ children }: { children: React.ReactNode }) {
 }
 
 function FieldError({ children }: { children?: string }) {
-  return children ? <p className="mt-1.5 text-xs font-medium text-red-600">{children}</p> : null;
+  // `data-campo-con-error` deja que el formulario encuentre el primero y se
+  // desplace hasta él: un error fuera de pantalla es un error invisible.
+  return children ? <p data-campo-con-error="" role="alert" className="mt-1.5 text-xs font-medium text-red-600">{children}</p> : null;
 }
 
 function JobTitleInput({ defaultValue, error, locale, copy }: { defaultValue?: string; error?: string; locale: "es" | "en"; copy: JobPostCopy }) {
@@ -284,6 +290,7 @@ function EditableList({
 type JobPostFormInitial = Partial<Pick<JobPost, "id" | "title" | "description" | "responsibilities" | "requirements" | "benefits" | "duration_label" | "employment_type" | "experience_level" | "workplace_type" | "location_label" | "salary_min" | "salary_max" | "salary_period" | "currency" | "show_salary" | "openings" | "application_deadline" | "status">>;
 
 export function JobPostForm({ professionalId, backHref = "/empleos", initialJob = null, presentation = "page", onSaved }: { professionalId: string; backHref?: string; initialJob?: JobPostFormInitial | null; presentation?: "page" | "modal"; onSaved?: (id: string) => void }) {
+  const { sentinelaRef, cabeceraRef, conLinea } = useHairlineOnScroll();
   const editing = Boolean(initialJob?.id);
   const router = useRouter();
   const locale = marketplaceLocale(useLocale());
@@ -292,6 +299,10 @@ export function JobPostForm({ professionalId, backHref = "/empleos", initialJob 
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
+  // El formulario se referencia para llevar la vista al primer campo señalado,
+  // y recuerda si hay algo escrito para avisar antes de salir sin publicar.
+  const formRef = useRef<HTMLFormElement>(null);
+  const [conCambios, setConCambios] = useState(false);
   const [workplaceType, setWorkplaceType] = useState<string>(initialJob?.workplace_type ?? "onsite");
   const [locationProvince, setLocationProvince] = useState(savedLocation.province);
   const [locationCanton, setLocationCanton] = useState(savedLocation.canton);
@@ -302,6 +313,7 @@ export function JobPostForm({ professionalId, backHref = "/empleos", initialJob 
   const [deadline, setDeadline] = useState(initialJob?.application_deadline ?? "");
   const [responsibilities, setResponsibilities] = useState<string[]>(Array.isArray(initialJob?.responsibilities) && initialJob.responsibilities.length ? initialJob.responsibilities : [""]);
   const [requirements, setRequirements] = useState<string[]>(Array.isArray(initialJob?.requirements) && initialJob.requirements.length ? initialJob.requirements : [""]);
+
   const [benefits, setBenefits] = useState<string[]>(Array.isArray(initialJob?.benefits) ? initialJob.benefits : []);
   const [showSalary, setShowSalary] = useState(initialJob?.show_salary ?? true);
   const locationCantons = getCantonsByProvince(locationProvince);
@@ -333,6 +345,12 @@ export function JobPostForm({ professionalId, backHref = "/empleos", initialJob 
     if (!isWholeNumberInRange(salaryMin, 0, MAX_MONEY_AMOUNT) || !isWholeNumberInRange(salaryMax, 0, MAX_MONEY_AMOUNT)) nextErrors.salary = copy.salaryRange(formatNumberForMessage(MAX_MONEY_AMOUNT));
     if (!Number.isInteger(openings) || openings < 1 || openings > 100) nextErrors.openings = copy.openingsRange;
     setFieldErrors(nextErrors);
+    if (Object.keys(nextErrors).length) {
+      // Llevar la vista al primer campo señalado.
+      requestAnimationFrame(() => {
+        formRef.current?.querySelector("[data-campo-con-error]")?.scrollIntoView({ behavior: "smooth", block: "center" });
+      });
+    }
     if (Object.keys(nextErrors).length) {
       setError(copy.reviewFields);
       return;
@@ -373,6 +391,7 @@ export function JobPostForm({ professionalId, backHref = "/empleos", initialJob 
         setSaving(false);
         return;
       }
+      setConCambios(false);
       const returnToPanel = backHref.includes("/dashboard/profesional");
       router.replace(`/empleos/${data.id}${returnToPanel ? "?from=panel" : ""}`);
       router.refresh();
@@ -385,7 +404,8 @@ export function JobPostForm({ professionalId, backHref = "/empleos", initialJob 
 
   return (
     <main className={presentation === "modal" ? "bg-[#f4f7fa] text-[#162543]" : "min-h-[calc(100vh-72px)] bg-[#f4f7fa] text-[#162543] lg:px-6 lg:py-10"}>
-      <header className={presentation === "modal" ? "hidden" : "sticky top-0 z-20 border-b border-[#dfe8f0] bg-white lg:hidden"}>
+      {presentation !== "modal" && <div ref={sentinelaRef} aria-hidden className="h-px lg:hidden" />}
+      <header ref={cabeceraRef} className={presentation === "modal" ? "hidden" : cn("sticky top-0 z-20 border-b bg-white transition-colors duration-200 lg:hidden", conLinea ? "border-[#e5e7eb]" : "border-transparent")}>
         <div className="relative flex min-h-[56px] items-center justify-center px-14">
           <Link href={backHref} aria-label={copy.back} className="absolute left-3 top-1/2 grid h-11 w-11 -translate-y-1/2 place-items-center text-[#162543]"><ArrowLeft className="h-6 w-6 stroke-[2.4]" /></Link>
           <h1 className="truncate text-center text-[17px] font-extrabold">{editing ? copy.editJob : copy.publishJob}</h1>
@@ -396,7 +416,8 @@ export function JobPostForm({ professionalId, backHref = "/empleos", initialJob 
           <Link href={backHref} aria-label={copy.backToJobs} className="grid h-10 w-10 place-items-center rounded-lg text-[#162543] hover:bg-white"><ArrowLeft className="h-5 w-5" /></Link>
           <div><h1 className="text-2xl font-bold">{editing ? copy.editJob : copy.publishJob}</h1><p className="text-sm text-[#65758c]">{copy.subtitle}</p></div>
         </div>
-        <form onSubmit={submit} noValidate className="rounded-2xl border border-[#e5e7eb] bg-white p-5 shadow-sm">
+        <form ref={formRef} onSubmit={submit} onInput={() => setConCambios(true)} onChange={() => setConCambios(true)} noValidate>
+          <div className="rounded-2xl border border-[#e5e7eb] bg-white p-5 shadow-sm">
           <div className="grid gap-5 sm:grid-cols-2">
             <JobTitleInput defaultValue={initialJob?.title ?? ""} error={fieldErrors.title} locale={locale} copy={copy} />
             <SelectMenu label={<RequiredLabel>{copy.employmentType}</RequiredLabel>} value={employmentType} onChange={setEmploymentType} options={(Object.keys(EMPLOYMENT_TYPES) as EmploymentType[]).map((value) => ({ value, label: employmentTypeLabel(value, locale) }))} />
@@ -460,8 +481,14 @@ export function JobPostForm({ professionalId, backHref = "/empleos", initialJob 
             <ToggleSwitch checked={showSalary} />
           </button>
           {error && <p role="alert" className="mt-5 rounded-lg bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">{error}</p>}
-          <button disabled={saving} className="mt-7 h-12 w-full rounded-lg bg-[#009fd9] text-sm font-bold text-white hover:bg-[#008fc3] disabled:opacity-60">{saving ? (editing ? copy.saving : copy.publishing) : (editing ? copy.saveChanges : copy.publishJob)}</button>
+          </div>
+          <div className="ccr-pie-formulario sticky bottom-0 z-10 -mx-4 mt-5 border-t border-[#e5e7eb] bg-white px-4 py-4 pb-[max(env(safe-area-inset-bottom),1rem)] sm:-mx-6 sm:px-6">
+            <div>
+              <Button type="submit" size="lg" loading={saving} className="w-full">{editing ? copy.saveChanges : copy.publishJob}</Button>
+            </div>
+          </div>
         </form>
+        <UnsavedChangesGuard dirty={conCambios && !saving} />
       </div>
     </main>
   );

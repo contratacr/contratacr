@@ -9,7 +9,7 @@ import { ProfessionalCard } from "@/components/professionals/professional-card";
 import { SaveableCard } from "@/components/professionals/save-button";
 import type { ProService } from "@/lib/queries/professionals";
 import { primaryPricingLabel } from "@/lib/pricing";
-import { getAllCategories, getCategoryLabel, isHealthCategory, normalizeText, supportsVideoConsultCategory } from "@/lib/data/categories";
+import { getAllCategories, getAllCategoryGroups, getCategoryGroupLabel, getCategoryLabel, isHealthCategory, normalizeText, supportsVideoConsultCategory } from "@/lib/data/categories";
 import { haversineKm, PROVINCES } from "@/lib/data/cr-geography";
 import { SearchResultsLayout } from "@/components/search/search-results-layout";
 import { SearchResultsInfinite } from "@/components/search/search-results-infinite";
@@ -22,6 +22,7 @@ import { recordServerInteraction } from "@/lib/analytics/server-events";
 interface SearchPageProps {
   searchParams: Promise<{
     categoria?: string;
+    grupo?: string;
     provincia?: string;
     canton?: string;
     sortBy?: string;
@@ -103,6 +104,10 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   const videoOnly = modalities.length === 1 && modalities[0] === "video";
   const inPersonOnly = modalities.length === 1 && modalities[0] === "in_person";
   const selectedCategory = params.categoria && params.categoria !== "todas" ? params.categoria : undefined;
+  // "Todos los servicios de Agro": una familia entera, no una sola categoría.
+  const selectedGroupId = !selectedCategory && params.grupo
+    ? (getAllCategoryGroups().find((group) => group.id === params.grupo)?.id)
+    : undefined;
   const selectedCantonId = params.canton && params.canton !== "todos" ? params.canton : undefined;
   const selectedProvinceId = params.provincia && params.provincia !== "todas"
     ? params.provincia
@@ -313,7 +318,9 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
 
   const pageTitle = activeCategoryId
     ? catLabel(activeCategoryId)
-    : t("title.default");
+    : selectedGroupId
+      ? getCategoryGroupLabel(selectedGroupId, locale)
+      : t("title.default");
 
   // Area-aware count label: exact map bounds -> "esta area"; otherwise canton
   // (most specific) -> province -> generic "en Costa Rica".
@@ -324,6 +331,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   const filterInitialValues = {
     q: params.q,
     categoria: params.categoria,
+    grupo: selectedGroupId,
     provincia: selectedProvinceId,
     canton: selectedCantonId,
     sortBy: params.sortBy,
@@ -376,6 +384,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   );
   const hasActiveFilters =
     !!selectedCategory ||
+    !!selectedGroupId ||
     !!activeProvince ||
     !!activeCanton ||
     !!mapBounds ||

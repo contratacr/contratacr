@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { PushNotifications, type Token } from "@capacitor/push-notifications";
 import { Capacitor } from "@capacitor/core";
-import { Bell, X } from "lucide-react";
+import { Bell, Handshake, MessagesSquare, Star, X } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useRouter } from "@/i18n/navigation";
 import { useAuth } from "@/hooks/use-auth";
@@ -352,7 +352,14 @@ export function PushTokenManager() {
 
   if (loading || !promptVisible || !user || !isNativeMobile()) return null;
 
-  const copy = "Te avisaremos sobre mensajes, solicitudes, propuestas, reseñas y cambios importantes.";
+  // Tres motivos concretos convencen más que una lista corrida: cada fila dice
+  // QUÉ aviso llega y POR QUÉ conviene. El texto sirve igual para quien busca
+  // y para quien ofrece.
+  const motivos = [
+    { Icono: MessagesSquare, titulo: "Mensajes al instante", detalle: "Respondé apenas te escriban, sin abrir la app a revisar." },
+    { Icono: Handshake, titulo: "Solicitudes y propuestas", detalle: "Enterate al momento cuando algo tuyo avanza." },
+    { Icono: Star, titulo: "Reseñas y avisos importantes", detalle: "Nuevas reseñas y cambios que afectan tu cuenta." },
+  ];
 
   return createPortal(
     <div
@@ -377,33 +384,49 @@ export function PushTokenManager() {
         >
           <X className="h-4 w-4" />
         </button>
-        <div className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-full bg-[#e8f8fe] text-[#009FD9] shadow-[0_14px_35px_-20px_rgba(0,159,217,0.7)]">
-          <Bell className="h-7 w-7" />
+        <div className="relative mx-auto mb-4 grid h-16 w-16 place-items-center rounded-2xl bg-gradient-to-br from-[#00b4f0] to-[#0080b8] text-white shadow-[0_16px_38px_-18px_rgba(0,159,217,0.85)]">
+          <Bell className="h-8 w-8" />
+          {/* La bolita roja del aviso: el dibujo dice "notificación" solo. */}
+          <span className="absolute right-3 top-3 h-3 w-3 rounded-full border-2 border-white bg-[#ef4444]" aria-hidden />
         </div>
-        <h2 id="push-permission-title" className="mb-1.5 text-lg font-bold leading-tight tracking-[-0.03em] text-[#111827]">
-          Activa notificaciones
+        <h2 id="push-permission-title" className="mb-1 text-xl font-extrabold leading-tight tracking-[-0.03em] text-[#111827]">
+          No te pierdas nada
         </h2>
-        <p className="mx-auto mb-5 max-w-[18rem] text-sm leading-relaxed text-[#64748b]">{copy}</p>
-        <div className="flex gap-3">
-          <button
-            type="button"
-            onClick={dismissPrompt}
-            className="flex-1 rounded-xl border border-[#e2e8f0] bg-white px-4 py-2.5 text-sm font-semibold text-[#334155] transition hover:bg-[#f8fafc]"
-          >
-            Ahora no
-          </button>
-          <button
-            type="button"
-            onClick={requestNotifications}
-            disabled={requesting}
-            className={cn(
-              "flex-1 rounded-xl bg-[#009FD9] px-4 py-2.5 text-sm font-semibold text-white shadow-[0_12px_28px_-18px_rgba(0,159,217,0.8)] transition hover:bg-[#0089BB]",
-              requesting && "cursor-wait opacity-70",
-            )}
-          >
-            {requesting ? "Activando..." : "Activar"}
-          </button>
-        </div>
+        <p className="mx-auto mb-5 max-w-[19rem] text-sm leading-relaxed text-[#64748b]">
+          Activá las notificaciones y ContrataCR te avisa cuando importa:
+        </p>
+        <ul className="mb-5 flex flex-col gap-3 text-left">
+          {motivos.map(({ Icono, titulo, detalle }) => (
+            <li key={titulo} className="flex items-start gap-3">
+              <span className="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#e8f8fe] text-[#009FD9]">
+                <Icono className="h-[18px] w-[18px]" />
+              </span>
+              <span className="min-w-0">
+                <span className="block text-[13.5px] font-bold leading-snug text-[#162543]">{titulo}</span>
+                <span className="block text-[12.5px] leading-snug text-[#64748b]">{detalle}</span>
+              </span>
+            </li>
+          ))}
+        </ul>
+        <button
+          type="button"
+          onClick={requestNotifications}
+          disabled={requesting}
+          className={cn(
+            "w-full rounded-xl bg-[#009FD9] px-4 py-3 text-[15px] font-bold text-white shadow-[0_12px_28px_-18px_rgba(0,159,217,0.8)] transition hover:bg-[#0089BB]",
+            requesting && "cursor-wait opacity-70",
+          )}
+        >
+          {requesting ? "Activando..." : "Activar notificaciones"}
+        </button>
+        <button
+          type="button"
+          onClick={dismissPrompt}
+          className="mt-2 w-full rounded-xl px-4 py-2.5 text-sm font-semibold text-[#64748b] transition hover:bg-[#f8fafc] hover:text-[#334155]"
+        >
+          Ahora no
+        </button>
+        <p className="mt-3 text-[11.5px] text-[#94a3b8]">Las podés apagar cuando quieras desde tu panel.</p>
       </div>
     </div>,
     document.body,

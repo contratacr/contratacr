@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useNativeApp } from "@/hooks/use-native-app";
-import { ArrowLeft, BriefcaseBusiness, CalendarDays, ChevronDown, ExternalLink, FileText, Mail, MoreVertical, Phone, Plus, UserRound, Users } from "lucide-react";
+import { ArrowLeft, BriefcaseBusiness, CalendarDays, ChevronDown, ExternalLink, Mail, MoreVertical, Phone, Plus, UserRound, Users } from "lucide-react";
 import { buildWebsiteUrl } from "@/lib/social";
 import { Link, useRouter } from "@/i18n/navigation";
 import { createClient } from "@/lib/supabase/client";
@@ -16,6 +16,7 @@ import { cn } from "@/lib/utils";
 import { openInNewTabOnDesktop } from "@/lib/desktop-new-tab";
 import { useLocale } from "next-intl";
 import { employmentTypeLabel, marketplaceLocale, type MarketplaceLocale } from "@/lib/marketplace-copy";
+import { VisorDeCv } from "@/components/jobs/visor-cv";
 
 type Application = { id: string; status: string; created_at: string; cover_letter: string; applicant_email: string | null; phone: string | null; resume_url: string | null; portfolio_url: string | null; applicant_name: string };
 export type ManagedJob = JobPost & { applications: Application[] };
@@ -24,7 +25,7 @@ const JOBS_MANAGER_COPY = {
   es: {
     applicationStates: { submitted: "Recibida", reviewing: "En revisión", shortlisted: "Finalista", rejected: "Descartada", hired: "Contratada" },
     jobStates: { published: "Publicado", paused: "Pausado", closed: "Cerrado", draft: "Borrador" },
-    back: "Volver al panel", title: "Mis empleos", subtitle: "Administra vacantes y revisa postulaciones.", publish: "Publicar",
+    back: "Volver al panel", title: "Mis empleos", subtitle: "Administra vacantes y revisa postulaciones.", publish: "Publicar empleo",
     application: "postulación", applications: "postulaciones", view: "Ver empleo", edit: "Editar", more: "Más opciones",
     pause: "Pausar", close: "Cerrar vacante", applicationsTitle: "Postulaciones", candidate: "candidato", candidates: "candidatos",
     received: "Postulación recibida", message: "Mensaje", viewCv: "Ver CV", viewPortfolio: "Ver portafolio",
@@ -35,7 +36,7 @@ const JOBS_MANAGER_COPY = {
   en: {
     applicationStates: { submitted: "Received", reviewing: "In review", shortlisted: "Shortlisted", rejected: "Rejected", hired: "Hired" },
     jobStates: { published: "Published", paused: "Paused", closed: "Closed", draft: "Draft" },
-    back: "Back to dashboard", title: "My jobs", subtitle: "Manage openings and review applications.", publish: "Post",
+    back: "Back to dashboard", title: "My jobs", subtitle: "Manage openings and review applications.", publish: "Post job",
     application: "application", applications: "applications", view: "View job", edit: "Edit", more: "More options",
     pause: "Pause", close: "Close opening", applicationsTitle: "Applications", candidate: "candidate", candidates: "candidates",
     received: "Application received", message: "Message", viewCv: "View resume", viewPortfolio: "View portfolio",
@@ -139,7 +140,7 @@ export function JobsManager({ initialJobs, embedded = false, backHref = "/dashbo
   return (
     <div className={embedded ? "text-[#162543]" : "min-h-[calc(100vh-72px)] bg-[#f4f7fa] px-4 py-6 text-[#162543] sm:px-6 sm:py-10"}>
       <div className={embedded ? "w-full" : "mx-auto max-w-4xl"}>
-        <div className="mb-5 flex items-center justify-between gap-4">
+        <div className="mb-5 flex flex-col gap-4">
           <div className="min-w-0">
             {!embedded && !nativeApp && (
               <div className="mb-1.5 flex items-center gap-2">
@@ -149,11 +150,10 @@ export function JobsManager({ initialJobs, embedded = false, backHref = "/dashbo
                 <h1 className="truncate text-2xl font-bold">{copy.title}</h1>
               </div>
             )}
-            <p className="text-sm text-[#65758c]">{copy.subtitle}</p>
           </div>
           <>
-            <button type="button" onClick={() => setPublishOpen(true)} className="hidden h-10 shrink-0 items-center gap-2 rounded-lg bg-[#009fd9] px-4 text-sm font-bold text-white lg:inline-flex"><Plus className="h-4 w-4" />{copy.publish}</button>
-            <Link href="/empleos/publicar?from=panel" className="inline-flex h-10 shrink-0 items-center gap-2 rounded-lg bg-[#009fd9] px-4 text-sm font-bold text-white transition-colors hover:bg-[#0089bb] lg:hidden"><Plus className="h-4 w-4" />{copy.publish}</Link>
+            <button type="button" onClick={() => setPublishOpen(true)} className="hidden h-11 w-full items-center justify-center gap-2 rounded-lg bg-[#009FD9] px-4 text-sm font-bold text-white transition-colors hover:bg-[#0089bb] lg:flex"><Plus className="h-4 w-4" />{copy.publish}</button>
+            <Link href="/empleos/publicar?from=panel" className="flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-[#009FD9] px-4 text-sm font-bold text-white transition-colors hover:bg-[#0089bb] lg:hidden"><Plus className="h-4 w-4" />{copy.publish}</Link>
           </>
         </div>
         <div className="space-y-3.5">
@@ -180,8 +180,8 @@ export function JobsManager({ initialJobs, embedded = false, backHref = "/dashbo
                     {job.description && <p className="mb-4 whitespace-pre-line break-words text-sm leading-6 text-[#52627a] [overflow-wrap:anywhere]">{job.description}</p>}
                     <div data-job-actions={job.id} className="relative mb-5 grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_40px] gap-2">
                       <Link href={`/empleos/${job.id}?from=panel`} onClick={openInNewTabOnDesktop} className="inline-flex h-10 w-full items-center justify-center rounded-lg border border-[#d7e1ea] px-3 text-xs font-bold text-[#162543]">{copy.view}</Link>
-                      <button type="button" onClick={() => setEditingJob(job)} className="hidden h-10 w-full items-center justify-center rounded-lg bg-[#009fd9] px-3 text-xs font-bold text-white transition hover:bg-[#008fc3] lg:inline-flex">{copy.edit}</button>
-                      <Link href={`/empleos/${job.id}/editar?from=panel`} className="inline-flex h-10 w-full items-center justify-center rounded-lg bg-[#009fd9] px-3 text-xs font-bold text-white transition hover:bg-[#008fc3] lg:hidden">{copy.edit}</Link>
+                      <button type="button" onClick={() => setEditingJob(job)} className="hidden h-10 w-full items-center justify-center rounded-lg bg-[#009FD9] px-3 text-xs font-bold text-white transition-colors hover:bg-[#0089bb] lg:inline-flex">{copy.edit}</button>
+                      <Link href={`/empleos/${job.id}/editar?from=panel`} className="inline-flex h-10 w-full items-center justify-center rounded-lg bg-[#009FD9] px-3 text-xs font-bold text-white transition-colors hover:bg-[#0089bb] lg:hidden">{copy.edit}</Link>
                       <div className="relative">
                         <button type="button" onClick={() => setActionsOpen((current) => current === job.id ? null : job.id)} aria-label={copy.more} aria-haspopup="menu" aria-expanded={actionsOpen === job.id} className="grid h-10 w-10 place-items-center rounded-lg border border-[#d7e1ea] text-[#718096] transition hover:border-[#b9c8d6] hover:bg-[#f6f9fb] hover:text-[#162543]"><MoreVertical className="h-5 w-5" /></button>
                         {actionsOpen === job.id && (
@@ -224,7 +224,7 @@ export function JobsManager({ initialJobs, embedded = false, backHref = "/dashbo
                           </div>
                           {(application.resume_url || application.portfolio_url) && (
                             <div className="mt-3 flex flex-wrap gap-2">
-                              {application.resume_url && <a href={`/api/jobs/applications/${application.id}/resume`} target="_blank" rel="noreferrer" className="inline-flex h-9 items-center gap-2 rounded-lg border border-[#cbdbe7] px-3 text-xs font-bold text-[#162543] hover:bg-[#f6f9fb]"><FileText className="h-4 w-4 text-[#008fc3]" />{copy.viewCv}</a>}
+                              {application.resume_url && <VisorDeCv applicationId={application.id} className="inline-flex h-9 items-center gap-2 rounded-lg border border-[#cbdbe7] px-3 text-xs font-bold text-[#162543] hover:bg-[#f6f9fb]" />}
                               {(() => {
                                 const portfolioHref = buildWebsiteUrl(application.portfolio_url);
                                 return portfolioHref ? <a href={portfolioHref} target="_blank" rel="noreferrer" className="inline-flex h-9 items-center gap-2 rounded-lg border border-[#cbdbe7] px-3 text-xs font-bold text-[#162543] hover:bg-[#f6f9fb]"><ExternalLink className="h-4 w-4 text-[#008fc3]" />{copy.viewPortfolio}</a> : null;
@@ -264,12 +264,12 @@ export function JobsManager({ initialJobs, embedded = false, backHref = "/dashbo
         </div>
       </div>
       {publishOpen && professionalId && (
-        <Modal onClose={() => setPublishOpen(false)} title={copy.publishTitle} subtitle={copy.publishSubtitle} size="lg" bodyClassName="bg-[#f4f7fa] px-0 py-0">
+        <Modal onClose={() => setPublishOpen(false)} title={copy.publishTitle} size="lg" bodyClassName="bg-[#f4f7fa] px-0 py-0">
           <JobPostForm professionalId={professionalId} presentation="modal" backHref={backHref} onSaved={(id) => { setPublishOpen(false); onRefresh?.(); router.push(`/empleos/${id}?from=panel`); }} />
         </Modal>
       )}
       {editingJob && professionalId && (
-        <Modal onClose={() => setEditingJob(null)} title={copy.editTitle} subtitle={copy.editSubtitle} size="lg" bodyClassName="bg-[#f4f7fa] px-0 py-0">
+        <Modal onClose={() => setEditingJob(null)} title={copy.editTitle} size="lg" bodyClassName="bg-[#f4f7fa] px-0 py-0">
           <JobPostForm key={editingJob.id} professionalId={professionalId} initialJob={editingJob} presentation="modal" backHref={backHref} onSaved={() => { setEditingJob(null); onRefresh?.(); router.refresh(); }} />
         </Modal>
       )}

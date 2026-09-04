@@ -10,12 +10,28 @@ type ConversationUnread = {
   professional_unread_count?: number;
 };
 
+// El último conteo conocido, por cuenta. La cabecera se vuelve a montar en
+// cada navegación, y arrancar de cero hacía que la burbuja de mensajes
+// desapareciera y volviera en cada cambio de sección. Con esta memoria el
+// número que ya se conocía se pinta de una vez y la consulta lo confirma
+// después, sin parpadeo. Vive en memoria: se pierde al recargar, que es
+// justo cuando sí conviene volver a preguntar.
+let ultimoConteo: { userId: string; total: number } | null = null;
+
 export function useDirectMessageUnread(enabled = true) {
   const { user } = useAuth();
-  const [unread, setUnread] = useState(0);
+  const [unread, setUnread] = useState(() => (
+    user && ultimoConteo?.userId === user.id ? ultimoConteo.total : 0
+  ));
+
+  const recordar = useCallback((total: number) => {
+    if (user) ultimoConteo = { userId: user.id, total };
+    setUnread(total);
+  }, [user]);
 
   const refresh = useCallback(async () => {
     if (!enabled || !user) {
+      ultimoConteo = null;
       setUnread(0);
       return;
     }
@@ -27,14 +43,16 @@ export function useDirectMessageUnread(enabled = true) {
         ? Number(conversation.client_unread_count ?? 0)
         : Number(conversation.professional_unread_count ?? 0))
     ), 0);
-    setUnread(Math.max(0, total));
-  }, [enabled, user]);
+    recordar(Math.max(0, total));
+  }, [enabled, recordar, user]);
 
   useEffect(() => {
     if (!enabled || !user) {
       queueMicrotask(() => setUnread(0));
       return;
     }
+    // Al volver a montar con un conteo recordado, se pinta ya mismo.
+    if (ultimoConteo?.userId === user.id) setUnread(ultimoConteo.total);
 
     let stopped = false;
     const supabase = createClient();

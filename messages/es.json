@@ -98,7 +98,7 @@
     "resourceLinks": {
       "howItWorks": "Cómo usar",
       "helpCenter": "Centro de ayuda",
-      "proTips": "Para profesionales",
+      "proTips": "Consejos",
       "support": "Soporte",
       "contact": "Contacto",
       "terms": "Términos",
@@ -160,7 +160,7 @@
       "professionals": "Servicios",
       "provinces": "Provincias",
       "rating": "Calificación promedio",
-      "jobs": "Trabajos completados"
+      "jobs": "Trabajos finalizados"
     },
     "categories": {
       "title": "¿Qué servicio necesitas?",
@@ -1148,7 +1148,7 @@
           "confirmed": "Confirmada",
           "in_progress": "En curso",
           "cancelled": "Cancelada",
-          "completed": "Completada",
+          "completed": "Finalizada",
           "rescheduled": "Reprogramada"
         },
         "confirm": "Confirmar",
@@ -1197,7 +1197,7 @@
           "pending": "Pendiente",
           "confirmed": "Confirmada",
           "in_progress": "En curso",
-          "completed": "Completada",
+          "completed": "Finalizada",
           "cancelled": "Cancelada",
           "rescheduled": "Reprogramada"
         }
@@ -1214,7 +1214,7 @@
         "status": {
           "open": "Abierto",
           "in_progress": "En curso",
-          "completed": "Completado",
+          "completed": "Finalizado",
           "cancelled": "Cancelado"
         }
       },
@@ -1925,7 +1925,9 @@
       "saved": "Favoritos",
       "moreTitle": "Más opciones",
       "close": "Cerrar"
-    }
+    },
+    "goToClientPanel": "Ir a mi panel cliente",
+    "goToProfessionalPanel": "Ir a mi panel profesional"
   },
   "bookingRequests": {
     "empty": "No tienes solicitudes todavía",
@@ -1968,9 +1970,9 @@
     "liveUpdated": "Actualizado con cambios recientes.",
     "confirm": "Confirmar",
     "cancel": "Cancelar",
-    "markCompleted": "Finalizar",
+    "markCompleted": "Marcar completado",
     "inProgress": "En curso",
-    "markWorkDone": "Marcar trabajo realizado",
+    "markWorkDone": "Marcar trabajo finalizado",
     "whatsapp": "WhatsApp",
     "contact": "WhatsApp",
     "archive": "Eliminar",
@@ -2022,7 +2024,8 @@
     "reportR3": "Trato irrespetuoso",
     "reportR4": "Otro",
     "reportDetails": "Describe qué pasó",
-    "reportSubmit": "Reportar"
+    "reportSubmit": "Reportar",
+    "allServices": "Todas"
   },
   "photoGallery": {
     "intro": "Máximo {max} fotos en total.",
@@ -2065,11 +2068,14 @@
     "deleteTitle": "Eliminar caso de éxito",
     "deleteBody": "Este caso de éxito y sus fotos se quitarán de tu perfil.",
     "deleteConfirm": "Eliminar",
-    "deleteCancel": "Cancelar"
+    "deleteCancel": "Cancelar",
+    "casePhotosRequired": "Agregá al menos una foto del trabajo.",
+    "optional": "opcional",
+    "caseTitleRequired": "Escribí qué trabajo hiciste."
   },
   "unsavedGuard": {
-    "title": "Tienes cambios sin guardar",
-    "body": "Si sales ahora, se perderán los cambios que hiciste en tu perfil. ¿Qué quieres hacer?",
+    "title": "Tenés cambios sin guardar",
+    "body": "Si salís ahora, se van a perder los cambios que hiciste. ¿Qué querés hacer?",
     "incompleteTitle": "Falta información obligatoria",
     "incompleteBody": "{error} Puedes seguir editando o salir sin guardar estos cambios.",
     "saving": "Guardando...",
@@ -2148,7 +2154,7 @@
     "edit": "Editar",
     "cancel": "Cancelar",
     "cancelConfirm": "¿Cancelar esta propuesta?",
-    "markCompleted": "Finalizar",
+    "markCompleted": "Marcar completado",
     "clientCancelled": "El cliente canceló esta solicitud.",
     "whatsapp": "WhatsApp",
     "waMessage": "Hola {name}, soy quien envió la propuesta que aceptaste en ContrataCR para \"{title}\".",
@@ -2184,7 +2190,21 @@
     "moreOptions": "Más opciones",
     "messagePlaceholder": "Decile qué podés hacer, cuándo podrías ir y cómo cobrás. Ej.: \"Puedo pasar mañana en la tarde a revisar. La visita cuesta ₡10 000 y se descuenta si hago el trabajo.\"",
     "sentNote": "El cliente ya tiene tu respuesta. Si le interesa, te escribe por WhatsApp.",
-    "yourMessageLabel": "Tu respuesta"
+    "yourMessageLabel": "Tu respuesta",
+    "leaveProject": "Retirarme del proyecto",
+    "leaveProjectTitle": "¿Retirarte de este proyecto?",
+    "leaveProjectBody": "El proyecto volverá a estar abierto y el cliente podrá elegir a otro profesional. Se le avisará con el motivo que escribas.",
+    "leaveProjectConfirm": "Sí, retirarme",
+    "leaveProjectError": "No pudimos retirarte del proyecto. Intentalo de nuevo.",
+    "reportClient": "Reportar cliente",
+    "reportTitle": "Reportar cliente",
+    "reportBody": "Tu reporte es confidencial y nos ayuda a mantener ContrataCR seguro.",
+    "reportDetails": "Describe qué pasó",
+    "reportSubmit": "Reportar",
+    "reportThanks": "Gracias. Recibimos tu reporte y lo vamos a revisar.",
+    "reportError": "No se pudo enviar el reporte. Intenta de nuevo.",
+    "leaveProjectReason": "Motivo",
+    "leaveProjectReasonPlaceholder": "Contale al cliente por qué no vas a poder. Ejemplo: se me atravesó otro trabajo esta semana."
   },
   "servicesEditor": {
     "servicesOf": "Servicios de",
@@ -2417,7 +2437,9 @@
     "blockedDatesHelp": "Marca días específicos en los que no estás disponible (vacaciones, feriados, etc.)",
     "blockedAdd": "Agregar",
     "noBlockedDates": "Sin fechas bloqueadas",
-    "blockedRemove": "Eliminar"
+    "blockedRemove": "Eliminar",
+    "dayAdd": "Agregar",
+    "dayApply": "Aplicar"
   },
   "profileEditor": {
     "secBasic": "Datos básicos",
@@ -2623,7 +2645,7 @@
     "archiveError": "No se pudo eliminar. Intenta de nuevo.",
     "waBooking": "Hola, te contacto por mi solicitud en ContrataCR.",
     "report": "Reportar",
-    "pEmpty": "Todavía no has publicado solicitudes",
+    "pEmpty": "Todavía no has pedido ningún profesional",
     "pEmptySub": "Contá qué necesitás y los profesionales te escriben.",
     "publishProject": "Publicar una solicitud",
     "publishShort": "Publicar",
@@ -2701,7 +2723,10 @@
     "resolveNobody": "Lo resolví por otro lado",
     "resolveConfirm": "Cerrar solicitud",
     "resolveError": "No se pudo cerrar la solicitud. Intentá de nuevo.",
-    "helpedBy": "Te ayudó"
+    "helpedBy": "Te ayudó",
+    "publishCta": "Pedir un profesional",
+    "bookingHappened": "Marcar finalizada",
+    "bookAgain": "Volver a contratar"
   },
   "clientPage": {
     "greeting": "Hola, {name} 👋",
@@ -2848,7 +2873,7 @@
     "resolvedAsk": "Marcamos este tiquete como resuelto. ¿Se solucionó tu problema?",
     "yesResolved": "Sí, está resuelto",
     "noStillIssue": "No, sigo con el problema",
-    "confirmedResolved": "✓ Confirmaste que este tiquete quedó resuelto.",
+    "confirmedResolved": "✓ Confirmaste que este caso quedó resuelto.",
     "messagePlaceholder": "Escribe tu mensaje…",
     "send": "Enviar",
     "sending": "Enviando…",
@@ -2885,8 +2910,8 @@
     "headerMessages": "Mensajes",
     "headerNotifications": "Notificaciones",
     "newTicketShort": "Contactar",
-    "reopenHint": "Si el problema vuelve, escribe aquí y el tiquete se reabre.",
-    "reopenPlaceholder": "Escribe para reabrir el tiquete…"
+    "reopenHint": "Si el problema vuelve, envía un mensaje nuevo y el caso se reabre.",
+    "reopenPlaceholder": "Envía un mensaje y se reabre…"
   },
   "savedPros": {
     "viewProfile": "Ver perfil",
@@ -2928,9 +2953,9 @@
       "contact": "Contacto"
     },
     "status": {
-      "completed": "Completado",
+      "completed": "Finalizado",
       "awaitingConfirmation": "Por confirmar",
-      "inProgress": "En progreso",
+      "inProgress": "En curso",
       "confirmed": "Confirmado",
       "connected": "Conectado",
       "contact": "Contactado"
@@ -3127,7 +3152,7 @@
     "errPublish": "No se pudo publicar. Intentá de nuevo.",
     "errUnexpected": "Error inesperado. Intentá de nuevo.",
     "successTitle": "¡Listo, ya está publicada!",
-    "successBody": "Los profesionales que ofrecen ese servicio en tu zona verán tu proyecto y podrán enviarte propuestas.",
+    "successBody": "Los profesionales que ofrecen ese servicio en tu zona lo verán y podrán enviarte propuestas.",
     "viewProjects": "Ver mis proyectos",
     "goToPanel": "Ir a mi panel",
     "title": "Publicar una solicitud",
@@ -3135,7 +3160,7 @@
     "category": "¿Qué necesitás?",
     "categoryHelp": "",
     "categoryPlaceholder": "Ej.: plomería, electricista, pintura…",
-    "projectTitle": "Título del proyecto",
+    "projectTitle": "Título de lo que necesitás",
     "titlePlaceholder": "Ejemplo: Pintura de sala y comedor, 50m²",
     "description": "Contanos qué hay que hacer",
     "descriptionPlaceholder": "Ej.: Tengo una fuga debajo del lavamanos de la cocina. Es urgente.",
@@ -3160,7 +3185,7 @@
     "cancel": "Cancelar",
     "close": "Listo",
     "publishing": "Publicando…",
-    "publish": "Publicar",
+    "publish": "Pedir profesionales",
     "forWho": {
       "question": "¿Para quién es?",
       "me": "Para mí",
@@ -3174,7 +3199,16 @@
     "zoneHelp": "Para que te escriban profesionales de tu zona.",
     "successNotified": "{count, plural, =0 {Todavía no hay profesionales de este servicio en tu zona, pero la dejamos publicada para cuando se sumen.} one {Le avisamos a # profesional de {service}.} other {Le avisamos a # profesionales de {service}.}}",
     "successNext": "Te avisamos apenas alguien te responda. Después les escribís por WhatsApp al que quieras.",
-    "successView": "Ver mi solicitud"
+    "successView": "Ver mi solicitud",
+    "dirTitle": "¿Qué querés hacer?",
+    "dirNeedTitle": "Necesito que alguien haga un trabajo",
+    "dirNeedBody": "Contás lo que necesitás y los profesionales de tu zona te mandan propuestas.",
+    "dirOfferTitle": "Quiero ofrecer mis servicios",
+    "dirOfferBody": "Publicá una oferta para que los clientes te encuentren.",
+    "dirOfferBodyNew": "Creá tu perfil profesional y empezá a recibir solicitudes.",
+    "avisoAnuncio": "Esto se lee como si estuvieras ofreciendo un servicio. Acá se pide, no se ofrece.",
+    "avisoAnuncioCta": "Publicalo como oferta",
+    "avisoAnuncioCtaNew": "Creá tu perfil profesional"
   },
   "notifications": {
     "title": "Notificaciones",
@@ -3194,7 +3228,7 @@
     "types": {
       "booking_received": "Nueva solicitud",
       "booking_confirmed": "Solicitud confirmada",
-      "booking_completed": "Servicio completado",
+      "booking_completed": "Servicio finalizado",
       "booking_completed_by_client": "Finalización confirmada",
       "booking_cancelled": "Solicitud cancelada",
       "booking_cancelled_by_client": "Solicitud cancelada por el cliente",
@@ -3756,7 +3790,11 @@
     "enviadas": "Enviadas",
     "publicados": "Publicados",
     "respondidas": "Respondidas",
-    "nuevas": "Nuevas"
+    "nuevas": "Nuevas",
+    "solicitudes_activas": "Activas",
+    "abiertos": "Abiertos",
+    "nuevos": "Nuevos",
+    "nuevas_solicitudes": "Nuevas"
   },
   "soporte": {
     "headerTitle": "Centro de soporte",
@@ -3920,5 +3958,60 @@
     "help": "Ayuda",
     "myOffers": "Mis ofertas",
     "myJobs": "Mis empleos"
+  },
+  "followNetwork": {
+    "suggestedTitle": "Sugeridos para ti",
+    "reasonFollowsYou": "Te sigue",
+    "reasonHired": "Lo contrataste",
+    "reasonVerified": "Verificado en tu provincia",
+    "dismiss": "Descartar",
+    "message": "Mensaje",
+    "back": "Volver",
+    "followers": "Seguidores",
+    "following": "Seguidos",
+    "followersTab": "{count, plural, one {# seguidor} other {# seguidores}}",
+    "followingTab": "{count, plural, one {# seguido} other {# seguidos}}",
+    "search": "Buscar",
+    "loading": "Cargando conexiones",
+    "noResults": "No encontramos resultados.",
+    "emptyFollowing": "Todavía no sigues a ningún profesional.",
+    "emptyFollowers": "Todavía nadie sigue tu perfil.",
+    "moreOptions": "Más opciones",
+    "unfollow": "Dejar de seguir",
+    "unfollowError": "No pudimos dejar de seguir este perfil.",
+    "removeFollower": "Quitar seguidor",
+    "removeFollowerTitle": "¿Quitar seguidor?",
+    "removeFollowerBody": "{name} dejará de seguir tu perfil. No le avisaremos.",
+    "removeFollowerConfirm": "Quitar",
+    "cancel": "Cancelar",
+    "removeFollowerError": "No pudimos quitar este seguidor.",
+    "verified": "Verificado",
+    "professional": "Profesional",
+    "user": "Usuario"
+  },
+  "directChat": {
+    "threadEmpty": "Todavía no hay mensajes",
+    "threadEmptySub": "Escribí el primero para empezar la conversación.",
+    "archive": "Archivar",
+    "unarchive": "Desarchivar",
+    "delete": "Eliminar",
+    "confirmDelete": "¿Seguro?",
+    "loadingConversations": "Cargando conversaciones",
+    "loadingMessages": "Cargando mensajes",
+    "archived": "Archivados",
+    "back": "Volver",
+    "draft": "Borrador",
+    "started": "Conversación iniciada",
+    "messages": "Mensajes",
+    "viewArchived": "Ver archivadas",
+    "copy": "Copiar",
+    "copied": "Mensaje copiado"
+  },
+  "bottomNav": {
+    "search": "Buscar",
+    "deals": "Ofertas",
+    "assistant": "Asistente",
+    "jobs": "Empleos",
+    "aria": "Navegación de la app"
   }
 }

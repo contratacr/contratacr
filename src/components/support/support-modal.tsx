@@ -23,7 +23,7 @@ export function SupportModal({ onClose, onSubmitted }: { onClose: () => void; on
   const [doneEmail, setDoneEmail] = useState<string | null>(null);
 
   return (
-    <Modal onClose={onClose} title={t("headerTitle")} subtitle={t("headerSubtitle")} size="lg" closeLabel={t("close")} mobilePresentation="fullscreen">
+    <Modal onClose={onClose} title={t("headerTitle")} subtitle={t("headerSubtitle")} size="lg" closeLabel={t("close")} mobilePresentation="fullscreen" bodyClassName="bg-[#f4f7fa] py-5">
       {doneEmail === null ? (
         <SupportForm onSuccess={(email) => (onSubmitted ? onSubmitted(email) : setDoneEmail(email))} />
       ) : (

@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  AlarmClock,
   Bell,
   BriefcaseBusiness,
   CalendarCheck,
@@ -47,6 +48,14 @@ export function NotificationSourceIcon({ type, className }: { type: string; clas
     case "proposal_updated":
     case "proposal_withdrawn":
     case "project_work_done":
+      return <ClipboardList className={className} />;
+    case "project_proposals_waiting":
+    case "booking_pending_reminder":
+    case "project_in_progress_idle":
+    case "project_confirmation_pending":
+    case "booking_past_date_idle":
+      return <AlarmClock className={className} />;
+    case "project_professional_withdrew":
       return <ClipboardList className={className} />;
     case "support_reply":
       return <Headset className={className} />;

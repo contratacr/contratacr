@@ -1,4 +1,5 @@
 import { createServerClient } from "@supabase/ssr";
+import { isAuthRetryableFetchError } from "@supabase/supabase-js";
 import createIntlMiddleware from "next-intl/middleware";
 import { type NextRequest, NextResponse } from "next/server";
 import { routing } from "./i18n/routing";
@@ -134,17 +135,28 @@ export async function middleware(request: NextRequest) {
   );
 
   let user = null;
+  // "No se pudo comprobar" no es "no hay sesión". Un corte de red o un 5xx de
+  // Supabase no debe borrar las cookies: eso deslogueaba de verdad a alguien con
+  // sesión válida (y en Mensajes lo mandaba al login). Solo un rechazo definitivo
+  // —token inválido/expirado— limpia la sesión.
+  let sesionSinComprobar = false;
   try {
     const { data, error } = await withPromiseTimeout(supabase.auth.getUser(), 6_000, "proxy-auth-timeout");
-    if (!error) user = data.user ?? null;
+    if (error) sesionSinComprobar = isAuthRetryableFetchError(error);
+    else user = data.user ?? null;
   } catch (error) {
     // A temporary Supabase/network stall must not leave the previous page behind
     // an endless route loader or erase a potentially valid session. Let the page
     // render; its browser auth guard will reconcile the cookie once connectivity
     // returns. Definite invalid-session responses still follow the cleanup below.
     if (error instanceof PromiseTimeoutError) return response;
+    sesionSinComprobar = isAuthRetryableFetchError(error);
     user = null;
   }
+
+  // Igual que el timeout: se pinta la página con las cookies intactas y el
+  // guardia del navegador reconcilia cuando vuelve la conexión.
+  if (sesionSinComprobar) return response;
 
   if (!user) {
     clearAuthCookies(request, response);

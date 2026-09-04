@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { UnsavedChangesGuard } from "@/components/dashboard/unsaved-changes-guard";
 import { useLocale, useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
 import { AlertCircle, Paperclip, X } from "lucide-react";
@@ -10,6 +11,7 @@ import { SelectMenu } from "@/components/ui/select-menu";
 import { LONG_TEXT_MAX_LENGTH, NAME_MAX_LENGTH, SHORT_TEXT_MAX_LENGTH, limitText } from "@/lib/text-limits";
 import { IMAGE_DOC_ACCEPT } from "@/lib/upload-validation";
 import { getImageUploadPreparationErrorCode, prepareImageForUpload } from "@/lib/client-image-upload";
+import { Button } from "@/components/ui/button";
 
 // The support ticket form — SINGLE SOURCE OF TRUTH for the fields, validation and
 // submit. Rendered on the public /soporte page (the in-dashboard Soporte section uses
@@ -36,6 +38,8 @@ export function SupportForm({ onSuccess }: { onSuccess?: (email: string) => void
   const [form, setForm] = useState({ name: "", email: "", topic: "", subject: "", message: "" });
   const [attachments, setAttachments] = useState<AttachedFile[]>([]);
   const [submitting, setSubmitting] = useState(false);
+  // Un mensaje a medio escribir no se pierde en silencio al tocar atrás.
+  const [conCambios, setConCambios] = useState(false);
   const [preparingAttachments, setPreparingAttachments] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -189,6 +193,7 @@ export function SupportForm({ onSuccess }: { onSuccess?: (email: string) => void
         setError(data.error ?? t("errSend"));
         return;
       }
+      setConCambios(false);
       onSuccess?.(form.email);
     } catch {
       setError(t("errUnexpected"));
@@ -201,7 +206,8 @@ export function SupportForm({ onSuccess }: { onSuccess?: (email: string) => void
     "w-full h-11 rounded-xl border border-[#e5e7eb] bg-white px-4 text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all";
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+    <form onSubmit={handleSubmit} onInput={() => setConCambios(true)} className="flex flex-col">
+      <div className="mx-4 flex flex-col gap-5 rounded-2xl sm:mx-0 border border-[#e5e7eb] bg-white p-5 shadow-sm">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
           <label className="text-sm font-medium text-[#374151] block mb-1.5">
@@ -306,11 +312,12 @@ export function SupportForm({ onSuccess }: { onSuccess?: (email: string) => void
         </div>
       )}
 
-      <button type="submit" disabled={submitting}
-        className="h-12 w-full rounded-xl bg-[#009FD9] hover:bg-[#0089bb] text-white font-bold text-sm transition-all active:scale-[0.98] disabled:opacity-60 flex items-center justify-center gap-2">
-        {submitting && <span className="h-4 w-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />}
-        {submitting ? t("submitting") : t("submit")}
-      </button>
+      </div>
+      {/* El botón vive en su propia barra al pie, fuera de la tarjeta. */}
+      <div className="ccr-pie-formulario sticky bottom-0 z-10 -mx-4 mt-5 border-t border-[#e5e7eb] bg-white px-4 py-4 pb-[max(env(safe-area-inset-bottom),1rem)] sm:mx-0 sm:rounded-b-2xl sm:border-x sm:px-5">
+        <Button type="submit" size="lg" loading={submitting} className="w-full">{t("submit")}</Button>
+      </div>
+      <UnsavedChangesGuard dirty={conCambios && !submitting} />
     </form>
   );
 }

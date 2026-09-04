@@ -11,10 +11,15 @@ export async function POST(req: Request) {
   const target = body.target === "es" ? "es" : "en";
   if (!text) return NextResponse.json(target === "es" ? { labelEs: "" } : { labelEn: "" });
 
+  // Sin credenciales el traductor cae a un diccionario local que, ante una
+  // palabra que no conoce, devuelve el mismo español. Se informa para que el
+  // panel lo diga en voz alta en vez de aparentar una traducción.
+  const configurado = Boolean(process.env.GOOGLE_TRANSLATE_API_KEY?.trim() || process.env.GOOGLE_CLOUD_PROJECT_ID?.trim());
+
   if (target === "es") {
     const labelEs = await suggestSpanishServiceLabel(text);
-    return NextResponse.json({ labelEs });
+    return NextResponse.json({ labelEs, configurado });
   }
   const labelEn = await suggestEnglishServiceLabel(text);
-  return NextResponse.json({ labelEn });
+  return NextResponse.json({ labelEn, configurado });
 }

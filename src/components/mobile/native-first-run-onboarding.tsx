@@ -126,7 +126,6 @@ export function NativeFirstRunOnboarding() {
         window.localStorage.removeItem(NATIVE_ONBOARDING_PENDING_PATH_KEY);
         document.documentElement.classList.remove("ccr-native-first-run-pending");
         setVisible(false);
-        hideNativeSplashAfterPaint();
         return;
       }
 
@@ -137,7 +136,6 @@ export function NativeFirstRunOnboarding() {
       if (authSession && isPendingJourneyPath(currentRoute)) {
         document.documentElement.classList.remove("ccr-native-first-run-pending");
         setVisible(false);
-        hideNativeSplashAfterPaint();
         return;
       }
 

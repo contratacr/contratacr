@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { ArrowLeft, CalendarDays, MapPin, PackageCheck, Tag } from "lucide-react";
+import { StickyHairlineHeader } from "@/components/util/sticky-hairline-header";
 import { Link } from "@/i18n/navigation";
 import { OfferImageGallery } from "@/components/offers/offer-image-gallery";
 import { OfferDetailNavbarSearch } from "@/components/offers/offer-detail-navbar-search";
@@ -121,14 +122,14 @@ export default async function OfferDetailPage({ params, searchParams }: { params
           href: `/ofertas/${offer.id}`,
         }}
       />
-      <header className="sticky top-0 z-30 border-b border-[#dfe8f0] bg-white shadow-[0_8px_24px_rgba(15,23,42,0.06)] lg:hidden">
+      <StickyHairlineHeader shadow className="z-30 lg:hidden">
         <div className="relative flex min-h-[58px] items-center justify-center px-14">
           <Link href={backHref} aria-label={copy.back} className="absolute left-3 top-1/2 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-full text-[#162543] transition hover:bg-[#eef5f9]">
             <ArrowLeft className="h-6 w-6 stroke-[2.4]" />
           </Link>
           <h1 className="truncate text-center text-lg font-extrabold">{copy.title}</h1>
         </div>
-      </header>
+      </StickyHairlineHeader>
       <div className="mx-auto hidden max-w-6xl px-4 pt-6 sm:px-6 lg:block">
         <Link href={backHref} className="inline-flex h-10 items-center gap-2 rounded-lg px-2 text-sm font-extrabold text-[#008fc3] transition hover:bg-[#eaf7fc]">
           <ArrowLeft className="h-4 w-4 stroke-[2.4]" />

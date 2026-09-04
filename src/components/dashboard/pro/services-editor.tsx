@@ -1,12 +1,13 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
+import { confirmarSalidaSinGuardar } from "@/lib/confirmar-salida";
+import { soltarFoco } from "@/lib/soltar-foco";
 import { useLocale, useTranslations } from "next-intl";
-import { AlertCircle, BadgeCheck, ImagePlus, Loader2, Plus, Trash2, Pencil, Search, X } from "lucide-react";
+import { AlertCircle, BadgeCheck, Check, ChevronRight, ImagePlus, Loader2, Pencil, Plus, Search, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PriceInput } from "@/components/ui/price-input";
 import { Modal } from "@/components/ui/modal";
-import { CategorySearch } from "@/components/ui/category-search";
 import { CategorySuggestionBox } from "@/components/ui/category-suggestion";
 import { CategoryGroupPicker, type CategoryPickerGroup } from "@/components/ui/category-group-picker";
 import { SelectMenu } from "@/components/ui/select-menu";
@@ -221,6 +222,7 @@ export function ServicesEditor({
     return customCategoryRefreshKey ? categories : categories;
   }, [customCategoryRefreshKey]);
   function closePicker() {
+    soltarFoco();
     setPickerMode(null);
     setPickerQuery("");
     setActivePickerGroupId(null);
@@ -230,6 +232,7 @@ export function ServicesEditor({
   const [editCategory, setEditCategory] = useState<string>("");
   const [editOriginalCategory, setEditOriginalCategory] = useState<string>("");
   const [form, setForm] = useState<ServiceFormState>(EMPTY_FORM);
+  const formAbiertoConRef = useRef<string>("");
   const [formError, setFormError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -416,7 +419,7 @@ export function ServicesEditor({
     const rep = serviceInfo(prof);
     const isAsk = rep?.priceType === "a_convenir";
     const suggestedCredential = professionalCredentialSuggestion(prof, locale);
-    setForm({
+    const siguiente = {
       description: rep?.description ?? "",
       priceUnit: rep?.priceType && !isAsk ? rep.priceType : "por_hora",
       priceAmount: rep?.priceAmount != null ? String(rep.priceAmount) : "",
@@ -426,7 +429,9 @@ export function ServicesEditor({
       professionalCredentialLabel: rep?.professionalCredentialLabel ?? suggestedCredential?.label ?? "",
       professionalCredentialNumber: rep?.professionalCredentialNumber ?? "",
       professionalCredentialIssuer: rep?.professionalCredentialIssuer ?? suggestedCredential?.issuer ?? "",
-    });
+    };
+    formAbiertoConRef.current = JSON.stringify({ ...siguiente, categoria: prof });
+    setForm(siguiente);
     setFormError(null);
     if (professions.includes(prof)) setPendingNewCategory(null);
     setEditOriginalCategory(prof);
@@ -482,12 +487,20 @@ export function ServicesEditor({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [focusField, focusKey]);
 
-  function cancelForm() {
+  const formConCambios = editCategory !== "" && formAbiertoConRef.current !== "" &&
+    formAbiertoConRef.current !== JSON.stringify({ ...form, categoria: editCategory });
+
+  function cancelFormDirecto() {
     setEditCategory("");
     setEditOriginalCategory("");
     setForm(EMPTY_FORM);
     setFormError(null);
     setPendingNewCategory(null);
+  }
+
+  function cancelForm() {
+    if (!formConCambios) { cancelFormDirecto(); return; }
+    confirmarSalidaSinGuardar(cancelFormDirecto);
   }
 
   const formOpen = editCategory !== "";
@@ -647,12 +660,9 @@ export function ServicesEditor({
     <button
       type="button"
       onClick={() => { setPickerMode("add"); setPickerQuery(""); setActivePickerGroupId(null); }}
-      className="group flex w-full max-w-full items-center justify-center gap-2.5 rounded-2xl border border-[#bfdbfe] bg-[#f8fbfe] py-4 text-sm font-bold text-[#0089bb] shadow-sm transition-all hover:border-[#009FD9] hover:bg-[#EBF5FB] hover:shadow"
+      className="flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-[#009FD9] px-4 text-sm font-bold text-white transition-colors hover:bg-[#0089bb]"
     >
-      <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#009FD9] text-white shadow-sm transition-transform group-hover:scale-105">
-        <Plus className="h-4 w-4" strokeWidth={2.5} />
-      </span>
-      {t("addProfession")}
+      <Plus className="h-4 w-4" /> {t("addProfession")}
     </button>
   );
 
@@ -671,10 +681,12 @@ export function ServicesEditor({
           </span>
           <p className="text-[15px] font-bold text-[#162543]">{t("emptyTitle")}</p>
           <p className="mx-auto mt-1 max-w-xs text-sm text-[#6b7280]">{t("emptyHelp")}</p>
-          <div className="mx-auto mt-5 max-w-xs">{addServiceButton}</div>
+          <div className="mx-auto mt-5 flex w-full max-w-xs [&>button]:h-11 [&>button]:w-full [&>button]:justify-center">{addServiceButton}</div>
         </div>
       ) : (
         <>
+          {/* El botón de crear arriba a la derecha, como en todas las secciones. */}
+          {addServiceButton}
           {/* ONE service per card: name + price (focal), description, then clearly grouped
               actions. No catalog image in the panel (it's for the public profile only). */}
           <div className="grid min-w-0 grid-cols-1 gap-3.5">
@@ -767,8 +779,6 @@ export function ServicesEditor({
             })}
           </div>
 
-          {/* The single, elegant list-level add action. */}
-          {addServiceButton}
           {listActions}
         </>
       )}
@@ -777,8 +787,8 @@ export function ServicesEditor({
       {formOpen && (
         <Modal
           onClose={cancelForm}
-          title={getCategoryLabel(editCategory, locale)}
-          subtitle={t("editInfo")}
+          mobilePresentation="fullscreen"
+          title={t("editInfo")}
           closeLabel={t("cancel")}
           footerNotice={formError ? (
             <div
@@ -792,43 +802,41 @@ export function ServicesEditor({
             </div>
           ) : undefined}
           footer={
-            <>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={cancelForm}
-                disabled={saving || imageUploading}
-                className="min-w-0 flex-1 select-none sm:flex-none"
-              >
-                {t("cancel")}
-              </Button>
-              <Button
-                type="button"
-                onClick={handleFormSave}
-                loading={saving}
-                disabled={saving || imageUploading}
-                data-testid="service-edit-save"
-                className="min-w-0 flex-1 select-none sm:min-w-[10.5rem] sm:flex-none"
-              >
-                {saving
-                  ? t("saving")
-                  : imageUploading
-                    ? (locale === "en" ? "Uploading image…" : "Subiendo imagen…")
-                    : t("saveChanges")}
-              </Button>
-            </>
+            <Button
+              type="button"
+              size="lg"
+              onClick={handleFormSave}
+              loading={saving}
+              disabled={saving || imageUploading}
+              data-testid="service-edit-save"
+              className="w-full select-none"
+            >
+              {saving
+                ? t("saving")
+                : imageUploading
+                  ? (locale === "en" ? "Uploading image…" : "Subiendo imagen…")
+                  : t("saveChanges")}
+            </Button>
           }
+          footerClassName="block"
           bodyClassName="bg-[#f4f7fa] px-4 py-5"
         >
           <div className="flex flex-col gap-4 rounded-2xl border border-[#e5e7eb] bg-white p-5 shadow-sm">
             <div ref={categoryFieldRef}>
-              <label className="mb-1.5 block text-sm font-medium text-[#374151]">{t("serviceLabel")}</label>
-              <CategorySearch
-                value={editCategory}
-                onChange={changeEditingService}
-                placeholder={t("pickerSearch")}
-                clearable={false}
-              />
+              <label className="mb-1.5 block text-sm font-medium text-[#374151]">{t("serviceLabel")} <span className="text-red-500">*</span></label>
+              <button
+                type="button"
+                onClick={() => { setPickerMode("change"); setPickerQuery(""); setActivePickerGroupId(null); }}
+                className="flex h-12 w-full items-center justify-between gap-3 rounded-xl border border-[#e5e7eb] bg-white px-4 text-left transition-colors hover:border-[#b9d9e8] focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[#009FD9]"
+              >
+                <span className="min-w-0 truncate text-[15px] font-semibold text-[#162543]">
+                  {editCategory ? getCategoryLabel(editCategory, locale) : t("pickerSearch")}
+                </span>
+                <span className="inline-flex shrink-0 items-center gap-1 text-[12px] font-bold text-[#009FD9]">
+                  {t("changeServiceTitle").replace(/ .*/, "")}
+                  <ChevronRight className="h-3.5 w-3.5" />
+                </span>
+              </button>
             </div>
 
             <div>
@@ -999,7 +1007,7 @@ export function ServicesEditor({
                 </div>
               </div>
             )}
-          </div>
+            </div>
         </Modal>
       )}
 
@@ -1010,72 +1018,91 @@ export function ServicesEditor({
           title={pickerMode === "change" ? t("changeServiceTitle") : t("pickerTitle")}
           closeLabel={t("cancel")}
           mobilePresentation="fullscreen"
-          bodyClassName="flex flex-col overflow-hidden px-0 py-0"
+          bodyClassName="flex flex-col overflow-hidden bg-[#f4f7fa] px-0 py-0"
         >
           <div data-testid="services-add-picker" className="flex min-h-0 flex-1 flex-col">
-            <div className="shrink-0 bg-white px-5 pb-3 pt-4 sm:px-6">
+            <div className="sticky top-0 z-10 shrink-0 bg-[#f4f7fa] px-4 pb-3 pt-4 sm:px-5">
               <div className="relative">
-                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9ca3af]" />
+                <Search className="pointer-events-none absolute left-3.5 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-[#9ca3af]" />
                 <input
                   value={pickerQuery}
                   onChange={(e) => { setPickerQuery(e.target.value); setActivePickerGroupId(null); }}
                   placeholder={t("pickerSearch")}
-                  className="h-11 w-full rounded-xl border border-[#e5e7eb] bg-white pl-9 pr-4 text-sm text-[#111827] transition-all placeholder:text-[#9ca3af] focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[#009FD9]"
+                  className="h-12 w-full rounded-2xl border border-[#e5edf4] bg-white pl-10 pr-4 text-[15px] text-[#111827] shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition-all placeholder:text-[#9ca3af] focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[#009FD9]"
                 />
               </div>
             </div>
             <div data-testid="services-add-picker-scroll" className={cn(
-              "min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 pb-4 sm:px-4",
-              pickerList.length === 0 && pickerQuery.trim() ? "pt-0" : "pt-2"
+              "min-h-0 flex-1 overflow-y-auto overscroll-contain bg-[#f4f7fa] px-4 pb-5 sm:px-5",
+              pickerList.length === 0 && pickerQuery.trim() ? "pt-0" : "pt-1"
             )}>
+              {/* Sin resultados no se deja el lienzo en blanco: se dice que no
+                  hay nada y se apunta a la barra de abajo, que es la salida. */}
               {pickerList.length === 0 && pickerQuery.trim() ? (
-                null
-              ) : pickerQuery.trim() ? (
-                <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
+              <div className="flex flex-col items-center px-6 pt-12 text-center">
+                <span className="grid h-12 w-12 place-items-center rounded-full bg-white text-[#9ca3af] shadow-[0_10px_26px_-24px_rgba(15,23,42,0.6)]">
+                  <Search className="h-5 w-5" />
+                </span>
+                <p className="mt-3 text-sm font-semibold text-[#162543]">{t("pickerNoResults")}</p>
+                <p className="mt-1 text-sm leading-relaxed text-[#6b7280]">{t("pickerNoResultsHint")}</p>
+              </div>
+              ) : (
+              <div className="overflow-hidden rounded-2xl border border-[#e5edf4] bg-white shadow-[0_10px_26px_-24px_rgba(15,23,42,0.6)]">
+              {pickerQuery.trim() ? (
+                <div className="grid grid-cols-1">
                   {pickerList.map((cat) => (
                     <button
                       key={cat.id}
                       type="button"
                       onClick={() => pickerMode === "change" ? changeEditingService(cat.id) : addService(cat.id)}
-                      className="group flex items-center justify-between gap-2 rounded-xl border border-[#e5e7eb] bg-white px-3.5 py-2.5 text-left text-sm font-medium text-[#374151] transition-all hover:border-[#009FD9] hover:bg-[#f8fbfe] hover:text-[#0089bb]"
+                      className={cn(
+                        "group flex items-center justify-between gap-2 border-b border-[#eef3f7] bg-white px-4 py-3.5 text-left text-sm font-medium text-[#374151] transition-colors last:border-b-0 hover:bg-[#f8fbfe] hover:text-[#0089bb]",
+                        pickerMode === "change" && cat.id === editCategory && "bg-[#f2fafe] font-semibold text-[#0089bb]",
+                      )}
                     >
                       <span className="min-w-0 [overflow-wrap:anywhere]">{getCategoryLabel(cat.id, locale)}</span>
-                      <Plus className="h-4 w-4 shrink-0 text-[#009FD9]" />
+                      {pickerMode === "change" && cat.id === editCategory
+                        ? <Check className="h-4 w-4 shrink-0 text-[#009FD9]" />
+                        : <Plus className="h-4 w-4 shrink-0 text-[#009FD9]" />}
                     </button>
                   ))}
                 </div>
               ) : (
                 <CategoryGroupPicker
                   groups={pickerGroups}
+                  selectedId={pickerMode === "change" ? editCategory : undefined}
                   activeGroupId={activePickerGroupId}
                   onActiveGroupChange={setActivePickerGroupId}
                   onSelect={(id) => pickerMode === "change" ? changeEditingService(id) : addService(id)}
                   backLabel={t("pickerBack")}
                   countLabel={(count) => t("pickerOptionsCount", { count })}
                   optionAction={<Plus className="h-4 w-4 shrink-0 text-[#009FD9]" />}
-                  className="gap-1"
-                  groupClassName="rounded-xl border border-[#e5e7eb] bg-white py-2 hover:border-[#009FD9] hover:bg-[#f8fbfe]"
-                  optionClassName="rounded-xl border border-[#e5e7eb] bg-white hover:border-[#009FD9] hover:bg-[#f8fbfe]"
+                  className="gap-0"
+                  groupClassName="rounded-none border-b border-[#eef3f7] px-4 py-3.5 last:border-b-0 hover:bg-[#f8fbfe]"
+                  optionClassName="rounded-none border-b border-[#eef3f7] px-4 py-4 last:border-b-0 hover:bg-[#f8fbfe]"
                 />
               )}
-
-              <div className={cn("text-center", pickerList.length === 0 && pickerQuery.trim() ? "mt-1" : "mt-4")}>
-                <p className="text-sm font-extrabold text-[#162543]">{tp("notListed")}</p>
-                <p className="mx-auto mt-1 max-w-[280px] text-xs leading-5 text-[#6b7280]">
-                  {tp("suggestDescription")}
-                </p>
-                <CategorySuggestionBox
-                  className="mt-3"
-                  prominent
-                  notListedLabel={tp("suggestCta")}
-                  placeholder={t("suggestNamePlaceholder")}
-                  sendLabel={t("suggestSend")}
-                  sendingLabel={t("suggestSending")}
-                  cancelLabel={t("cancel")}
-                  thanksLabel={t("suggestThanks")}
-                  defaultName={pickerQuery}
-                />
               </div>
+              )}
+            </div>
+            {/* La salida cuando nada de la lista sirve vive en su propia barra
+                al pie, fija, igual que el botón de publicar en las demás
+                pantallas. Al final de una lista de catorce grupos había que
+                recorrerla entera para encontrarla, y al abrirse el campo el
+                teclado la perseguía. Aquí ya está donde el teclado la deja. */}
+            <div className="shrink-0 border-t border-[#e5e7eb] bg-white px-4 py-4 pb-[max(env(safe-area-inset-bottom),1rem)]">
+              <CategorySuggestionBox
+                variante="boton"
+                prominent
+                rowTitle={tp("notListed")}
+                notListedLabel={tp("suggestCta")}
+                placeholder={t("suggestNamePlaceholder")}
+                sendLabel={t("suggestSend")}
+                sendingLabel={t("suggestSending")}
+                cancelLabel={t("cancel")}
+                thanksLabel={t("suggestThanks")}
+                defaultName={pickerQuery}
+              />
             </div>
           </div>
         </Modal>

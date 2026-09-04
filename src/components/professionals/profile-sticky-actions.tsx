@@ -64,7 +64,7 @@ export function ProfileStickyActions({
         <button
           type="button"
           onClick={() => (onAvailability ? onAvailability() : scrollToCard())}
-          className="inline-flex h-11 shrink-0 items-center justify-center gap-1.5 rounded-full border border-[#cfe6f5] bg-[#EBF5FB] px-3.5 text-[13px] font-bold text-[#0089bb]"
+          className="inline-flex h-11 shrink-0 items-center justify-center gap-1.5 rounded-full bg-[#162543] px-3.5 text-[13px] font-bold text-white hover:bg-[#233a5f]"
         >
           <CalendarDays className="h-4 w-4" />
           {locale === "en" ? "Availability" : "Disponibilidad"}
@@ -76,7 +76,6 @@ export function ProfileStickyActions({
           isOwn={isOwn}
           analyticsSource="profile"
           tone="primary"
-          compact
           className="h-11 min-w-0 flex-1 rounded-full text-[13px] font-bold"
         />
         {canCall && (

@@ -44,7 +44,7 @@ import { trackInteraction } from "@/lib/analytics/interaction-events";
 import { cldLarge, cldThumb } from "@/lib/cloudinary";
 import { formatOfferPrice, type ProfessionalOffer } from "@/lib/offers";
 import { formatJobSalary, WORKPLACE_TYPES, type JobPost } from "@/lib/jobs";
-import { PageRouteLoading } from "@/components/ui/route-loading";
+import { PerfilSkeleton } from "@/components/ui/section-skeletons";
 import { ProfileStickyActions } from "@/components/professionals/profile-sticky-actions";
 import { ProgressiveImage } from "@/components/ui/progressive-image";
 
@@ -160,7 +160,14 @@ export default function ProfilePage() {
       card.scrollIntoView({ block: "start", behavior: "auto" });
     }
   }, [activeTab]);
-  const [profileReturnHref] = useState(initialProfileReturnHref);
+  // El destino de "volver" depende de la URL, y la primera pintura ocurre en el
+  // servidor, donde no hay URL: calcularlo ahí dejaba el botón clavado en
+  // "Volver a resultados" aunque vinieras del panel. Se resuelve en el cliente,
+  // apenas monta, y de ahí no vuelve a cambiar.
+  const [profileReturnHref, setProfileReturnHref] = useState("/buscar");
+  useEffect(() => {
+    setProfileReturnHref(initialProfileReturnHref());
+  }, []);
   const [navbarOwnsHeader, setNavbarOwnsHeader] = useState(false);
   // Deep-link support: /profesionales/[slug]?tab=casos opens that tab.
   // Preview mode (?preview=1): a pro opened "Ver cómo me ven los clientes" from
@@ -395,7 +402,7 @@ export default function ProfilePage() {
   }, [professional]);
 
   if (loading) {
-    return <PageRouteLoading />;
+    return <PerfilSkeleton />;
   }
 
   if (proNotFound || !professional) {
@@ -1257,17 +1264,17 @@ export default function ProfilePage() {
       )}
 
       {/* Room for the pinned action bar on phones, so the footer stays reachable. */}
-      <div aria-hidden className="h-20 lg:hidden" />
+      {activeTab === "disponibilidad" && <div aria-hidden className="h-20 lg:hidden" />}
       <SelfActionModal open={!!selfMsg} onClose={() => setSelfMsg(null)} message={selfMsg ?? ""} />
-      <ProfileStickyActions
+      {activeTab === "disponibilidad" && <ProfileStickyActions
         professionalId={professional.id}
         professionalName={professional.fullName}
         contextTitle={catLabel(professional.categoryId)}
         isOwn={isOwn}
         canCall={professional.hasCallPhone ?? (professional.allowPhoneCall !== false && !!(professional.callPhone || professional.whatsapp))}
         onAvailability={() => { setActiveTab("disponibilidad"); requestAnimationFrame(() => { document.getElementById("resenas")?.scrollIntoView({ block: "start" }); }); }}
-        availabilityActive={activeTab === "disponibilidad"}
-      />
+        availabilityActive
+      />}
       <LandingFooter />
     </div>
   );

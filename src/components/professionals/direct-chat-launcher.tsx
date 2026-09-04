@@ -24,8 +24,7 @@ type DirectChatLauncherProps = {
   openDirectly?: boolean;
   initialMessage?: string;
   onSelfAction?: () => void;
-  tone?: "primary" | "contrast";
-  compact?: boolean;
+  tone?: "primary" | "contrast" | "outline";
   analyticsSource?: "search" | "profile" | "profile_service" | "booking" | "favorites" | "unknown";
 };
 
@@ -42,7 +41,6 @@ export function DirectChatLauncher({
   initialMessage = "",
   onSelfAction,
   tone = "primary",
-  compact = false,
   analyticsSource = "unknown",
 }: DirectChatLauncherProps) {
   const locale = useLocale();
@@ -68,7 +66,6 @@ export function DirectChatLauncher({
         initialMessage={initialMessage}
         onSelfAction={onSelfAction}
         tone={tone}
-        compact={compact}
       />
     );
   }

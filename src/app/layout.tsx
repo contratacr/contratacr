@@ -1,4 +1,5 @@
 import { Suspense, type ReactNode } from "react";
+import { cookies } from "next/headers";
 import { Inter } from "next/font/google";
 import { NativeDebugLogger } from "@/components/mobile/native-debug-logger";
 import { LoadingMarkImage } from "@/components/ui/loading-mark-image";
@@ -13,27 +14,50 @@ const inter = Inter({
   weight: ["400", "500", "600", "700", "800", "900"],
 });
 
-export default function RootLayout({ children }: { children: ReactNode }) {
+export default async function RootLayout({ children }: { children: ReactNode }) {
+  // La app nativa se reconoce por su cookie ya EN EL SERVIDOR: las clases del
+  // armazón viajan pintadas en el HTML y React las reconoce como suyas. Cuando
+  // las sembraba un script antes del primer cuadro, la hidratación las borraba
+  // y el acomodo nativo se caía y volvía — el salto del arranque (main 0→64).
+  const esApp = (await cookies()).get("ccr_platform")?.value === "native";
+  const clasesNativas = esApp ? " ccr-native-app ccr-native-bottom-nav-visible" : "";
   return (
     <html
       lang="es"
-      className={`${inter.variable} h-full antialiased`}
+      className={`${inter.variable} h-full antialiased${clasesNativas}`}
       data-scroll-behavior="smooth"
       suppressHydrationWarning
     >
       <head>
+        {/* PRIMERO el viewport, antes de cualquier script síncrono: WebKit hace
+            el primer layout al toparse con el script, y si el meta aún no llegó
+            usa el viewport por defecto (568pt) — la página pintaba a escala
+            1.68x y se reacomodaba después: el parpadeo del arranque en la app. */}
+        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
         <script
           type="text/javascript"
           suppressHydrationWarning
           dangerouslySetInnerHTML={{
-            __html: `try{var k=${JSON.stringify(NATIVE_ONBOARDING_COMPLETED_KEY)};var p=new URLSearchParams(window.location.search);var local=/^(localhost|127\\.0\\.0\\.1)$/i.test(window.location.hostname);if(local&&p.get("resetNativeOnboarding")==="1"&&window.localStorage){window.localStorage.removeItem(k)}if(local&&p.get("nativePreview")==="1"){document.documentElement.classList.add("ccr-native-app");window.sessionStorage&&window.sessionStorage.setItem("ccr:native-preview","1")}else if(local&&window.sessionStorage&&window.sessionStorage.getItem("ccr:native-preview")==="1"){document.documentElement.classList.add("ccr-native-app")}if(window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform()){document.documentElement.classList.add("ccr-native-app")}if(document.documentElement.classList.contains("ccr-native-app")&&window.localStorage&&window.localStorage.getItem(k)!=="1"){document.documentElement.classList.add("ccr-native-first-run-pending")}}catch(e){}`,
+            __html: `try{var k=${JSON.stringify(NATIVE_ONBOARDING_COMPLETED_KEY)};var p=new URLSearchParams(window.location.search);var local=/^(localhost|127\\.0\\.0\\.1)$/i.test(window.location.hostname);if(local&&p.get("resetNativeOnboarding")==="1"&&window.localStorage){window.localStorage.removeItem(k)}if(local&&p.get("nativePreview")==="1"){document.documentElement.classList.add("ccr-native-app");window.sessionStorage&&window.sessionStorage.setItem("ccr:native-preview","1")}else if(local&&window.sessionStorage&&window.sessionStorage.getItem("ccr:native-preview")==="1"){document.documentElement.classList.add("ccr-native-app")}if(window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform()){document.documentElement.classList.add("ccr-native-app")}if(/(?:^|;\\s*)ccr_platform=native(?:;|$)/.test(document.cookie||"")){document.documentElement.classList.add("ccr-native-app")}if(document.documentElement.classList.contains("ccr-native-app")&&window.localStorage&&window.localStorage.getItem(k)!=="1"){document.documentElement.classList.add("ccr-native-first-run-pending")}}catch(e){}`,
           }}
         />
       </head>
-      <body className="min-h-full flex flex-col bg-white">
+      <body className={`min-h-full flex flex-col bg-white${clasesNativas}`}>
+        {/* Corre apenas el <body> existe, antes del primer cuadro: siembra las
+            clases del armazón nativo que hasta ahora ponía la hidratación. Sin
+            esto, la portada pintaba una vez con acomodo web y un instante
+            después saltaba al nativo (barra de abajo, contenedor fijo) — el
+            parpadeo del arranque. La hidratación después solo confirma. */}
+        <script
+          type="text/javascript"
+          suppressHydrationWarning
+          dangerouslySetInnerHTML={{
+            __html: `try{if(document.documentElement.classList.contains("ccr-native-app")){document.body.classList.add("ccr-native-app");var r=window.location.pathname;if(!/(^|\/)(publicar-proyecto|(empleos|ofertas)\/publicar)(\/|$)/.test(r)){document.documentElement.classList.add("ccr-native-bottom-nav-visible");document.body.classList.add("ccr-native-bottom-nav-visible")}if(/(^|\/)buscar(\/|$)/.test(r)){document.documentElement.classList.add("ccr-native-search-route");document.body.classList.add("ccr-native-search-route")}}}catch(e){}`,
+          }}
+        />
         <StaticNativeFirstRunPrepaint />
         <NativeDebugLogger />
-        <Suspense fallback={<InitialRouteLoading />}>
+        <Suspense fallback={<InitialRouteLoading neutro={esApp} />}>
           {children}
         </Suspense>
       </body>
@@ -67,7 +91,19 @@ function StaticNativeFirstRunPrepaint() {
   );
 }
 
-function InitialRouteLoading() {
+function InitialRouteLoading({ neutro = false }: { neutro?: boolean } = {}) {
+  // En la app, una carga de documento solo ocurre en el arranque (cubierto por
+  // el splash nativo, que ya trae la marca) o cuando iOS recicla el WebView y
+  // recarga la página en el lugar. En ambos casos la web pinta lienzo neutro:
+  // la marca no debe aparecer nunca desde adentro.
+  if (neutro) {
+    return (
+      <main className="ccr-page-route-loading fixed inset-0 z-[100000] bg-[#f4f7fa]" aria-busy="true" role="status">
+        <div className="h-16 bg-white shadow-[0_1px_0_#e5e7eb]" />
+        <span className="sr-only">Cargando...</span>
+      </main>
+    );
+  }
   return (
     <>
       <main

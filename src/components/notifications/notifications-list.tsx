@@ -69,10 +69,12 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
   const [expandedIds, setExpandedIds] = useState<Set<string>>(() => new Set());
   const [globalMenuOpen, setGlobalMenuOpen] = useState(false);
   // Entrar a la pantalla es leerlas: el globo se limpia solo, como en Instagram.
-  // El punto azul dura lo que dura la visita, que es cuando sirve.
+  // El punto azul dura lo que dura la visita, que es cuando sirve. Se marca
+  // una vez por visita, aunque lo no leído sea más viejo que lo que se cargó.
+  const marcadoEnEstaVisita = useRef(false);
   useEffect(() => {
-    if (!nativeApp || scope !== "all" || unread === 0) return;
-    const marcar = window.setTimeout(() => { void markAllRead(); }, 1500);
+    if (!nativeApp || scope !== "all" || !user || marcadoEnEstaVisita.current) return;
+    const marcar = window.setTimeout(() => { marcadoEnEstaVisita.current = true; void markAllRead(); }, 1500);
     return () => window.clearTimeout(marcar);
   });
 
@@ -121,7 +123,9 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
     const cached = readCachedNotifications(user?.id) as Notification[] | null;
     queueMicrotask(() => {
       setNotificationState({ userId: user?.id, items: cached ?? [] });
-      setBusy(sesionCargando || (!!user && cached === null));
+      // Un caché vacío no distingue "no hay nada" de "aún no se sabe": solo
+      // una lista cacheada CON contenido permite pintar sin esperar.
+      setBusy(sesionCargando || (!!user && (cached === null || cached.length === 0)));
     });
   }, [sesionCargando, user]);
 
@@ -238,12 +242,18 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
 
   async function markAllRead() {
     if (!user) return;
-    const ids = visible.filter((n) => !n.read).map((n) => n.id);
-    if (ids.length === 0) return;
     const supabase = createClient();
-    await supabase.from("notifications").update({ read: true }).in("id", ids);
+    const ids = visible.filter((n) => !n.read).map((n) => n.id);
+    if (scope === "all") {
+      // Toda la cuenta, no solo lo cargado: las no leídas más viejas que el
+      // límite de la lista también cuentan en el globo.
+      await supabase.from("notifications").update({ read: true }).eq("user_id", user.id).eq("read", false);
+    } else {
+      if (ids.length === 0) return;
+      await supabase.from("notifications").update({ read: true }).in("id", ids);
+    }
     setNotificationState((prev) => {
-      const next = prev.items.map((n) => (ids.includes(n.id) ? { ...n, read: true } : n));
+      const next = prev.items.map((n) => (scope === "all" || ids.includes(n.id) ? { ...n, read: true } : n));
       cacheNotifications(user.id, next);
       return { userId: user.id, items: next };
     });

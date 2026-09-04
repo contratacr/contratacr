@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Loader2, RefreshCw, SlidersHorizontal } from "lucide-react";
 import { GoogleMapPanel, type MapFocusTarget, type MapProfessional } from "@/components/maps/google-map-panel";
@@ -44,6 +44,18 @@ function mobileSheetSnapPoints(): readonly number[] {
   return [MAP_PEEK, oneCard, expanded];
 }
 
+// El panel se desplaza hacia abajo para "asomar" en vez de cambiar de alto (así
+// no se recalculan todas las tarjetas). El precio es que ese trozo desplazado
+// queda FUERA de la pantalla — y con él, el final de la lista: por eso no se
+// podía llegar al último profesional. Aquí se publica cuánto quedó fuera para
+// que la zona desplazable se recorte exactamente igual.
+function colocarHoja(hoja: HTMLElement | null, fuera: number) {
+  if (!hoja) return;
+  hoja.style.transform = `translate3d(0, ${fuera * 100}dvh, 0)`;
+  // Aviso para que la lista vuelva a medir cuánto quedó fuera de la pantalla.
+  window.dispatchEvent(new Event("ccr:search-sheet-moved"));
+}
+
 function snapIndex(value: number, points = mobileSheetSnapPoints()) {
   return points.reduce((nearestIndex, point, index) =>
     Math.abs(point - value) < Math.abs(points[nearestIndex] - value) ? index : nearestIndex
@@ -68,7 +80,56 @@ export function SearchResultsLayout({ children, filters, quickFilters, drawerFil
   const [showFilters, setShowFilters] = useState(false); // full-filter drawer (mobile + lg-xl)
   const sheetRef = useRef<HTMLDivElement | null>(null);
   const listRef = useRef<HTMLDivElement | null>(null);
+
+  // ── Cuánto de la zona desplazable quedó FUERA de la pantalla ──────────────
+  // El panel asoma desplazándose hacia abajo, así que su parte final —y con
+  // ella el último profesional— puede quedar bajo el borde. En vez de
+  // calcularlo desde el transform (las unidades del WKWebView no siempre
+  // cuadran con dvh), se MIDE el rectángulo real contra el área visible y esa
+  // cifra exacta se convierte en espacio extra al final del desplazamiento.
+  const medirColaDeLista = useCallback(() => {
+    const zona = listRef.current;
+    if (!zona) return;
+    const vv = window.visualViewport;
+    const limite = vv ? vv.offsetTop + vv.height : window.innerHeight;
+    const fuera = Math.max(0, Math.round(zona.getBoundingClientRect().bottom - limite));
+    zona.style.setProperty("--ccr-cola-fuera", `${fuera}px`);
+  }, []);
+  useEffect(() => {
+    const programar = () => {
+      requestAnimationFrame(medirColaDeLista);
+      // El panel llega a su sitio con transición: se re-mide cuando termina.
+      window.setTimeout(medirColaDeLista, 220);
+      window.setTimeout(medirColaDeLista, 450);
+    };
+    programar();
+    window.addEventListener("ccr:search-sheet-moved", programar);
+    window.addEventListener("resize", programar);
+    window.visualViewport?.addEventListener("resize", programar);
+    // El menú de abajo se auto-esconde al scrollear y el panel BAJA a ocupar su
+    // lugar: eso mueve la lista sin disparar ningún resize. El cambio se ve en
+    // las clases de la raíz; se re-mide ahí — si no, esa franja del alto del
+    // menú quedaba fuera del alcance y el último profesional no terminaba de
+    // subir (el fallo que solo se veía en el teléfono).
+    const observador = new MutationObserver(programar);
+    observador.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+    observador.observe(document.body, { attributes: true, attributeFilter: ["class"] });
+    return () => {
+      observador.disconnect();
+      window.removeEventListener("ccr:search-sheet-moved", programar);
+      window.removeEventListener("resize", programar);
+      window.visualViewport?.removeEventListener("resize", programar);
+    };
+  }, [medirColaDeLista]);
+
   const [heightFr, setHeightFr] = useState(CARD_PEEK);
+  // Cada cambio de posición del panel re-mide la cola (también al terminar la
+  // transición con la que llega a su sitio).
+  useEffect(() => {
+    medirColaDeLista();
+    const tarde = window.setTimeout(medirColaDeLista, 350);
+    return () => window.clearTimeout(tarde);
+  }, [heightFr, medirColaDeLista]);
   const [dragging, setDragging] = useState(false);
   const [areaSearching, setAreaSearching] = useState(false);
   const [searchAreaVisible, setSearchAreaVisible] = useState(false);
@@ -155,7 +216,7 @@ export function SearchResultsLayout({ children, filters, quickFilters, drawerFil
       setHeightFr(target);
       window.requestAnimationFrame(() => {
         const max = points[points.length - 1];
-        if (sheetRef.current) sheetRef.current.style.transform = `translate3d(0, ${Math.max(0, max - target) * 100}dvh, 0)`;
+        colocarHoja(sheetRef.current, Math.max(0, max - target));
         window.dispatchEvent(new Event("resize"));
       });
     };
@@ -211,7 +272,7 @@ export function SearchResultsLayout({ children, filters, quickFilters, drawerFil
     curRef.current = h;
     // Move the already-laid-out sheet on the compositor layer. Animating its
     // height would force the browser to recalculate every result card.
-    if (sheetRef.current) sheetRef.current.style.transform = `translate3d(0, ${Math.max(0, max - h) * 100}dvh, 0)`;
+    colocarHoja(sheetRef.current, Math.max(0, max - h));
   }
   // Where a released gesture lands. A short but deliberate move (≥12px) or a flick
   // goes to the next state in that direction — Yelp-style, the panel answers the
@@ -311,7 +372,7 @@ export function SearchResultsLayout({ children, filters, quickFilters, drawerFil
       const vh = window.innerHeight || 1;
       const h = Math.min(max, Math.max(min, startH + dyUp / vh));
       curRef.current = h;
-      if (sheetRef.current) sheetRef.current.style.transform = `translate3d(0, ${Math.max(0, max - h) * 100}dvh, 0)`;
+      colocarHoja(sheetRef.current, Math.max(0, max - h));
     };
     const onEnd = () => {
       const wasSheet = mode === "sheet";

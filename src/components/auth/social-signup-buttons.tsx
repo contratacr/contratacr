@@ -117,8 +117,14 @@ export function SocialSignupButtons({ nextPath }: { nextPath?: string }) {
   return (
     <div className="flex flex-col gap-3">
       {covering && (
-        <div className="fixed inset-0 z-[300] grid place-items-center bg-[#f4f7fa]" aria-busy="true">
-          <BrandLoadingMark />
+        <div className="fixed inset-0 z-[300] bg-[#f4f7fa]" aria-busy="true">
+          {/* En la app la marca es solo del splash nativo; el velo del OAuth es
+              neutro. En la web conserva la marca. */}
+          {runtime === "native" ? (
+            <div className="h-16 bg-white shadow-[0_1px_0_#e5e7eb]" />
+          ) : (
+            <div className="grid min-h-full place-items-center"><BrandLoadingMark /></div>
+          )}
         </div>
       )}
       {runtime === "native" && (

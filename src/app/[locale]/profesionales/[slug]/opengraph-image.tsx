@@ -1,7 +1,5 @@
 import { ImageResponse } from "next/og";
-import { Buffer } from "node:buffer";
-import { readFile } from "node:fs/promises";
-import { join } from "node:path";
+import { LOGO_PALABRA } from "@/lib/og-logos";
 import { getProfessionalBySlug } from "@/lib/queries/professionals";
 import { getCategoryLabel } from "@/lib/data/categories";
 import { proDisplayName } from "@/lib/utils";
@@ -15,14 +13,6 @@ export const contentType = "image/png";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-let logoWordmarkCache: string | null = null;
-
-async function logoWordmarkDataUrl() {
-  if (logoWordmarkCache) return logoWordmarkCache;
-  const bytes = await readFile(join(process.cwd(), "public", "logo-wordmark-transparent.png"));
-  logoWordmarkCache = `data:image/png;base64,${Buffer.from(bytes).toString("base64")}`;
-  return logoWordmarkCache;
-}
 
 function LogoWordmark({
   src,
@@ -107,7 +97,7 @@ export default async function Image({ params }: { params: Promise<{ locale: stri
   const serviceFontSize = serviceTypography(visibleServices);
   const serviceText = visibleServices.join("  ·  ");
   const location = [pro?.cantonName, pro?.provinceName].filter(Boolean).join(", ");
-  const logoSrc = await logoWordmarkDataUrl();
+  const logoSrc = LOGO_PALABRA;
   const avatarDataUrl = await imageDataUrl(pro?.avatarUrl);
   const brandLine = isEn
     ? { lead: "Offer", middle: " and find services in ", place: "Costa Rica." }

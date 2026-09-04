@@ -1,14 +1,14 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { confirmarSalidaSinGuardar } from "@/lib/confirmar-salida";
 import { useLocale, useTranslations } from "next-intl";
-import { ImageUp, X, Loader2, Plus, Pencil, Trash2, Images, CalendarDays, Heart } from "lucide-react";
+import { AlertCircle, CalendarDays, Check, ImageUp, Images, Loader2, Pencil, Plus, Trash2, X } from "lucide-react";
 import { useReportSaveStatus } from "@/components/dashboard/save-status-context";
 import { UnsavedChangesGuard } from "@/components/dashboard/unsaved-changes-guard";
 import { StatusFilterTabs } from "@/components/dashboard/status-filter-tabs";
 import { Modal } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import { cldThumb } from "@/lib/cloudinary";
@@ -32,7 +32,6 @@ export type SuccessCase = {
   recipient?: string;   // for whom (name / short description)
   date?: string;        // when (free text, e.g. "Mayo 2024")
   photos: string[];     // up to MAX_PHOTOS_PER_CASE
-  likes?: number;       // public likes (read-only here)
 };
 // Legacy item shape (photos-only) — read for back-compat so nothing is lost.
 type LegacyItem = { url?: string; serviceId?: string; profession?: string };
@@ -174,14 +173,32 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
           void showMessage({ title: errorTitle, description: code === "too_large" ? t("uploadTooLarge") : code === "unsupported" ? t("uploadUnsupported") : t("uploadError"), tone: "danger" });
         }
       }
-      if (urls.length) setDraft((d) => (d ? { ...d, photos: [...d.photos, ...urls].slice(0, MAX_PHOTOS_PER_CASE) } : d));
+      if (urls.length) {
+        // Resuelto lo que faltaba, el aviso se retira solo.
+        setFaltanFotos(false);
+        setDraft((d) => (d ? { ...d, photos: [...d.photos, ...urls].slice(0, MAX_PHOTOS_PER_CASE) } : d));
+      }
     } catch {
       void showMessage({ title: errorTitle, description: t("uploadError"), tone: "danger" });
     } finally { setUploading(false); }
   }
 
+  const fotosRef = useRef<HTMLDivElement | null>(null);
+  const tituloRef = useRef<HTMLDivElement | null>(null);
+  const [faltanFotos, setFaltanFotos] = useState(false);
+  const [faltaTitulo, setFaltaTitulo] = useState(false);
+
   function saveCase() {
-    if (!draft || draft.photos.length === 0) return;
+    if (!draft) return;
+    const sinFotos = draft.photos.length === 0;
+    const sinTitulo = !draft.title?.trim();
+    setFaltanFotos(sinFotos);
+    setFaltaTitulo(sinTitulo);
+    if (sinFotos || sinTitulo) {
+      // Se lleva la vista al primero que falte, de arriba hacia abajo.
+      (sinFotos ? fotosRef : tituloRef).current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      return;
+    }
     const exists = cases.some((c) => c.id === draft.id);
     const next = exists ? cases.map((c) => (c.id === draft.id ? draft : c)) : [...cases, draft];
     setDraft(null);
@@ -216,12 +233,24 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
   const addFull = !!addProf && countFor(addProf) >= MAX_CASES_PER_PROFESSION;
   const draftIsEdit = !!draft && cases.some((c) => c.id === draft.id);
 
-  function closeDraft() {
+  function closeDraftDirecto() {
     if (draft) {
       const retainedUrls = new Set(cases.flatMap((item) => item.photos));
       void deleteOwnedMediaUrls(draft.photos.filter((url) => !retainedUrls.has(url)));
     }
     setDraft(null);
+  }
+
+  function closeDraft() {
+    // Un borrador con algo escrito o con fotos no se descarta en silencio.
+    const original = draftIsEdit ? cases.find((c) => c.id === draft?.id) : null;
+    const conContenido = !!draft && (
+      original
+        ? JSON.stringify(original) !== JSON.stringify(draft)
+        : draft.photos.length > 0 || Boolean(draft.title?.trim() || draft.description?.trim() || draft.recipient?.trim() || draft.date?.trim())
+    );
+    if (!conContenido) { closeDraftDirecto(); return; }
+    confirmarSalidaSinGuardar(closeDraftDirecto);
   }
 
   return (
@@ -236,11 +265,31 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
         <StatusFilterTabs
           tabs={professions.map((p) => ({ id: p }))}
           value={selectedProf}
-          onChange={setActiveProf}
+          // Aquí siempre hay un portafolio elegido: tocar el chip activo no lo
+          // "des-selecciona" (eso saltaba al primer servicio sin pedirlo).
+          onChange={(id) => { if (id) setActiveProf(id); }}
           labelFor={label}
           counts={Object.fromEntries(professions.map((p) => [p, countFor(p)]))}
           variant="chips"
         />
+      )}
+
+      {/* El botón de crear ocupa su propia fila, de lado a lado, debajo de los
+          filtros: al lado de ellos se mezclaba, y arriba a la derecha competía
+          con el título. Sólido: es la acción principal de la sección y así se lee de
+          una. */}
+      {shownCases.length > 0 && (
+        <div className="flex flex-col gap-1">
+          <button
+            type="button"
+            onClick={openAdd}
+            disabled={addFull || professions.length === 0}
+            className="flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-[#009FD9] px-4 text-sm font-bold text-white transition-colors hover:bg-[#0089bb] disabled:cursor-not-allowed disabled:bg-[#cbd5e1]"
+          >
+            <Plus className="h-4 w-4" /> {t("addCase")}
+          </button>
+          {addFull && <p className="text-center text-xs text-[#9ca3af]">{t("maxCasesHint", { max: MAX_CASES_PER_PROFESSION })}</p>}
+        </div>
       )}
 
       {/* One-per-row case cards: outcome summary + small proof photo stack. */}
@@ -278,7 +327,6 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
                   <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] text-[#9ca3af]">
                     {c.photos.length > 0 && <span className="inline-flex items-center gap-1"><Images className="h-3 w-3 text-[#374151]" /> {t("photosCount", { count: c.photos.length })}</span>}
                     {c.date && <span className="inline-flex items-center gap-1"><CalendarDays className="h-3 w-3 text-[#374151]" /> {c.date}</span>}
-                    {typeof c.likes === "number" && c.likes > 0 && <span className="inline-flex items-center gap-1"><Heart className="h-3 w-3 text-[#374151]" /> {c.likes}</span>}
                   </div>
                   <div className="flex shrink-0 items-center gap-0.5">
                     <AppTooltip label={t("edit")}>
@@ -295,25 +343,24 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
         </div>
       )}
 
-      {/* Agregar nuevo caso de éxito (dashed, full width). */}
-      <div className={cn(shownCases.length === 0 && "ccr-empty-state flex min-h-[18rem] items-center sm:min-h-[20rem]")}>
-        <button
-          type="button"
-          onClick={openAdd}
-          disabled={addFull || professions.length === 0}
-          className={cn(
-            "flex w-full flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed px-5 py-8 text-center transition-colors",
-            shownCases.length === 0 && "min-h-40",
-            addFull || professions.length === 0 ? "cursor-not-allowed border-[#e5e7eb] opacity-60" : "border-[#bfdbfe] hover:border-[#009FD9] hover:bg-[#EBF5FB]",
-          )}
-        >
-          <span className="grid h-11 w-11 place-items-center rounded-full bg-[#EBF5FB] text-[#009FD9]">
-            <Plus className="h-5 w-5" />
+      {/* Estado vacío: como el de Servicios o Soporte, con el botón centrado. */}
+      {shownCases.length === 0 && (
+        <div className="ccr-empty-state flex min-h-[18rem] flex-col items-center justify-center px-4 py-12 text-center sm:min-h-[20rem]">
+          <span className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-[#EBF5FB]">
+            <Plus className="h-6 w-6 text-[#009FD9]" />
           </span>
-          <span className="text-base font-bold text-[#0089bb]">{t("addCase")}</span>
-          <span className="max-w-sm text-sm leading-relaxed text-[#9ca3af]">{addFull ? t("maxCasesHint", { max: MAX_CASES_PER_PROFESSION }) : t("addCaseHint")}</span>
-        </button>
-      </div>
+          <p className="text-[15px] font-bold text-[#162543]">{t("addCase")}</p>
+          <p className="mx-auto mt-1 max-w-sm text-sm leading-relaxed text-[#6b7280]">{t("addCaseHint")}</p>
+          <button
+            type="button"
+            onClick={openAdd}
+            disabled={addFull || professions.length === 0}
+            className="mt-5 inline-flex h-11 w-full max-w-xs items-center justify-center gap-2 rounded-lg bg-[#009FD9] px-4 text-sm font-bold text-white transition-colors hover:bg-[#0089bb] disabled:cursor-not-allowed disabled:bg-[#cbd5e1]"
+          >
+            <Plus className="h-4 w-4" /> {t("addCase")}
+          </button>
+        </div>
+      )}
 
       {/* ── Add / edit case ─────────────────────────────────────────────── */}
       <div className="hidden">
@@ -341,29 +388,63 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
           closeLabel={t("cancel")}
           mobilePresentation="fullscreen"
           footer={
-            <>
-              <Button type="button" variant="outline" onClick={closeDraft}>{t("cancel")}</Button>
-              <Button type="button" onClick={saveCase} loading={saving} disabled={draft.photos.length === 0}>{t("save")}</Button>
-            </>
+            <Button type="button" size="lg" onClick={saveCase} loading={saving} className="w-full select-none">
+              {t("save")}
+            </Button>
           }
+          footerClassName="block"
+          bodyClassName="bg-[#f4f7fa] px-4 py-5"
         >
-          <div className="flex flex-col gap-4">
+          {/* Mismo lienzo que Publicar empleo: fondo gris y los campos dentro
+              de una tarjeta blanca. Sueltos sobre blanco, este formulario se
+              leía como otra familia de pantallas. */}
+          <div className="flex flex-col gap-4 rounded-2xl border border-[#e5e7eb] bg-white p-5 shadow-sm">
+            {/* El botón vive DENTRO de la tarjeta, pegado a su borde inferior y
+                fijo al desplazar: idéntico a Publicar empleo. Una barra aparte
+                al fondo lo hacía parecer de otra pantalla. */}
+            {/* El desplegable escondía la respuesta detrás de un toque. Como
+                pastillas se ve de una a cuál portafolio va el caso y se cambia
+                sin abrir nada: el mismo lenguaje que el filtro de esta sección. */}
             {professions.length > 1 && (
               <div>
-                <label className="mb-1.5 block text-sm font-medium text-[#374151]">{t("caseProfession")}</label>
-                <Select value={draft.profession} onValueChange={(value) => setDraft((d) => (d ? { ...d, profession: value } : d))}>
-                  <SelectTrigger className="border-[#e5e7eb] px-3.5 text-[#111827] focus-visible:ring-2 focus-visible:ring-[#009FD9]/20">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {professions.map((p) => <SelectItem key={p} value={p}>{label(p)}</SelectItem>)}
-                  </SelectContent>
-                </Select>
+                <label className="mb-1.5 block text-sm font-medium text-[#374151]">{t("caseProfession")} <span className="text-red-500">*</span></label>
+                {(
+                  <div className="flex flex-wrap gap-2">
+                    {professions.map((p) => {
+                      const elegido = draft.profession === p;
+                      return (
+                        <button
+                          key={p}
+                          type="button"
+                          aria-pressed={elegido}
+                          onClick={() => setDraft((d) => (d ? { ...d, profession: p } : d))}
+                          className={cn(
+                            "inline-flex min-h-10 items-center gap-1.5 rounded-full border px-3.5 text-[13px] font-semibold transition-colors",
+                            elegido
+                              ? "border-[#009FD9] bg-[#009FD9] text-white"
+                              : "border-[#dfe6ec] bg-white text-[#526277] hover:border-[#c3d2de]",
+                          )}
+                        >
+                          {elegido && <Check className="h-3.5 w-3.5 shrink-0" />}
+                          <span className="max-w-[13rem] truncate">{label(p)}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             )}
 
-            <div>
-              <label className="mb-1.5 block text-sm font-medium text-[#374151]">{t("casePhotos", { max: MAX_PHOTOS_PER_CASE })}</label>
+            <div ref={fotosRef}>
+              <label className="mb-1.5 block text-sm font-medium text-[#374151]">
+                {t("casePhotos", { max: MAX_PHOTOS_PER_CASE })} <span className="text-red-500">*</span>
+              </label>
+              {faltanFotos && (
+                <p role="alert" className="mb-2 flex items-start gap-1.5 text-[13px] font-semibold leading-snug text-[#dc2626]">
+                  <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
+                  {t("casePhotosRequired")}
+                </p>
+              )}
               <div className="grid grid-cols-3 gap-2">
                 {draft.photos.map((url) => (
                   <div key={url} className="relative aspect-square overflow-hidden rounded-xl border border-[#e5e7eb]">
@@ -383,20 +464,26 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
               <input ref={fileRef} type="file" accept={IMAGE_ACCEPT} multiple className="hidden" onChange={(e) => { if (e.target.files?.length) uploadPhotos(e.target.files); e.target.value = ""; }} />
             </div>
 
-            <div>
-              <label className="mb-1.5 block text-sm font-medium text-[#374151]">{t("caseTitle")}</label>
-              <input value={draft.title ?? ""} onChange={(e) => setDraft((d) => (d ? { ...d, title: e.target.value } : d))} placeholder={t("caseTitlePlaceholder")} maxLength={80} className={inputClass} />
+            <div ref={tituloRef}>
+              <label className="mb-1.5 block text-sm font-medium text-[#374151]">{t("caseTitle")} <span className="text-red-500">*</span></label>
+              {faltaTitulo && (
+                <p role="alert" className="mb-2 flex items-start gap-1.5 text-[13px] font-semibold leading-snug text-[#dc2626]">
+                  <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
+                  {t("caseTitleRequired")}
+                </p>
+              )}
+              <input value={draft.title ?? ""} onChange={(e) => { if (e.target.value.trim()) setFaltaTitulo(false); setDraft((d) => (d ? { ...d, title: e.target.value } : d)); }} placeholder={t("caseTitlePlaceholder")} maxLength={80} className={inputClass} />
             </div>
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-[#374151]">{t("caseDescription")}</label>
+              <label className="mb-1.5 block text-sm font-medium text-[#374151]">{t("caseDescription")} <span className="font-normal text-[#9ca3af]">({t("optional")})</span></label>
               <textarea value={draft.description ?? ""} onChange={(e) => setDraft((d) => (d ? { ...d, description: e.target.value } : d))} placeholder={t("caseDescriptionPlaceholder")} maxLength={200} rows={3} className="w-full rounded-xl border border-[#e5e7eb] bg-white px-3.5 py-2.5 text-sm text-[#111827] placeholder:text-[#9ca3af] resize-none focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all" />
             </div>
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-[#374151]">{t("caseRecipient")}</label>
+              <label className="mb-1.5 block text-sm font-medium text-[#374151]">{t("caseRecipient")} <span className="font-normal text-[#9ca3af]">({t("optional")})</span></label>
               <input value={draft.recipient ?? ""} onChange={(e) => setDraft((d) => (d ? { ...d, recipient: e.target.value } : d))} placeholder={t("caseRecipientPlaceholder")} maxLength={120} className={inputClass} />
             </div>
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-[#374151]">{t("caseDate")}</label>
+              <label className="mb-1.5 block text-sm font-medium text-[#374151]">{t("caseDate")} <span className="font-normal text-[#9ca3af]">({t("optional")})</span></label>
               <input value={draft.date ?? ""} onChange={(e) => setDraft((d) => (d ? { ...d, date: e.target.value } : d))} placeholder={t("caseDatePlaceholder")} maxLength={20} className={inputClass} />
             </div>
           </div>

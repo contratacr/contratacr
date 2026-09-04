@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { UnsavedChangesGuard } from "@/components/dashboard/unsaved-changes-guard";
 import { useLocale, useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -12,7 +13,6 @@ import { TimeSelect, to12h } from "@/components/ui/time-select";
 import { SelectMenu } from "@/components/ui/select-menu";
 import { FormLoadingState } from "@/components/ui/loading-state";
 import { useReportSaveStatus } from "@/components/dashboard/save-status-context";
-import { UnsavedChangesGuard } from "@/components/dashboard/unsaved-changes-guard";
 import { Link } from "@/i18n/navigation";
 import { stableWorkplaceId } from "@/lib/workplaces";
 
@@ -131,7 +131,7 @@ interface AvailabilityEditorProps {
   coverageCountry?: boolean;
   videoConsultationAllowed?: boolean;
   initialVideoConsultation?: boolean;
-  onSaved?: () => void;
+  onSaved?: (intent?: "section" | "internal") => void;
 }
 
 export function AvailabilityEditor({
@@ -182,6 +182,11 @@ export function AvailabilityEditor({
   // The recurring template + date exceptions are the source of truth (the editor
   // edits these); they MATERIALIZE into availability_slots.
   const [weekly, setWeekly] = useState<WeeklyRow[]>([]);
+  // Foto del horario tal como está guardado: comparar contra ella dice si hay
+  // cambios sin guardar, igual que en las otras secciones del panel.
+  const [horarioGuardado, setHorarioGuardado] = useState<string>("[]");
+  // Al descartar, se vuelve a leer lo guardado subiendo esta clave.
+  const [recargaClave, setRecargaClave] = useState(0);
   const [exceptions, setExceptions] = useState<ExcRow[]>([]);
   // Appointment length is ONE global value (applies to every block/location).
   const [durationPref, setDurationPref] = useState(60);
@@ -413,7 +418,7 @@ export function AvailabilityEditor({
       }
       if (!silent) {
         pulseSaved();
-        onSaved?.();
+        onSaved?.("internal");
       }
       return true;
     } catch (error) {
@@ -450,6 +455,7 @@ export function AvailabilityEditor({
         ]);
       }
       setWeekly(wkRows);
+      setHorarioGuardado(huellaHorario(wkRows, excRows, wkRows[0]?.slot_minutes ?? excRows[0]?.slot_minutes ?? 60));
       setExceptions(excRows);
       setDurationPref(wkRows[0]?.slot_minutes ?? excRows[0]?.slot_minutes ?? 60);
       setLoading(false);
@@ -460,7 +466,7 @@ export function AvailabilityEditor({
     })();
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [professionalId]);
+  }, [professionalId, recargaClave]);
 
   // -- Unified per-day blocks (ALL locations together) -----------------------
   // The appointment length is one global value applied to every block.
@@ -538,6 +544,21 @@ export function AvailabilityEditor({
 
   // A new block's SMART default: 8 AM-5 PM when it wouldn't conflict with the day's
   // other blocks, else EMPTY (so the pro freely picks a non-conflicting time).
+  // Huella estable del horario: mismo contenido → misma cadena, sin importar
+  // el orden en que llegaron las filas.
+  function huellaHorario(filas: WeeklyRow[], excepciones: ExcRow[] = [], duracion = 0) {
+    return JSON.stringify({
+      semana: filas
+        .filter((r) => r.start && r.end)
+        .map((r) => `${r.location_id}|${r.weekday}|${r.start}|${r.end}|${r.slot_minutes ?? ""}`)
+        .sort(),
+      dias: excepciones
+        .map((e) => `${e.location_id}|${e.date}|${e.mode}|${e.start ?? ""}|${e.end ?? ""}|${e.slot_minutes ?? ""}`)
+        .sort(),
+      duracion,
+    });
+  }
+
   function smartDefaultBlock(weekday: number, existing: Block[], loc: string): Block {
     const probe = validateDayBlocks(weekday, [...existing.filter(isCompleteFranja), { id: "_probe", locationId: loc, start: "08:00", end: "17:00" }], loc);
     return probe ? { id: genId(), locationId: loc, start: "", end: "" } : { id: genId(), locationId: loc, start: "08:00", end: "17:00" };
@@ -547,31 +568,77 @@ export function AvailabilityEditor({
   // Backend model unchanged: each COMPLETE block writes its own `availability_weekly`
   // row (category_id null -> absorbs legacy). INCOMPLETE drafts stay in LOCAL state so
   // the row shows, but are NOT validated/written/materialized.
-  async function persistDay(weekday: number, blocks: Block[], loc: string = activeLocationId) {
+  // Solo toca el BORRADOR local; escribir es trabajo de "Guardar cambios".
+  function persistDay(weekday: number, blocks: Block[], loc: string = activeLocationId) {
     const complete = blocks.filter(isCompleteFranja);
     const c = validateDayBlocks(weekday, complete, loc);
     if (c) { setConflict(c); return; }
-    if (scheduleSaveInFlightRef.current) return;
-    scheduleSaveInFlightRef.current = true;
-
     const next = weekly.filter((r) => !(r.weekday === weekday && r.location_id === loc));
     for (const b of blocks) next.push({ location_id: b.locationId, category_id: null, weekday, start: b.start, end: b.end, slot_minutes: durationPref });
-    const supabase = createClient();
-    const previousWeekly = weekly;
     setWeekly(next);
+  }
+
+  // Escribe el horario completo del profesional (todas las ubicaciones y días)
+  // en una sola pasada y vuelve a publicar las horas. Reemplazar todo evita
+  // tener que llevar la cuenta de qué días cambiaron.
+  async function guardarTodo(): Promise<boolean> {
+    // Pasar a privada retira las horas publicadas: se pregunta antes de escribir.
+    if (!draftIsPublic && isPublic) {
+      setShowPrivateConfirm(true);
+      return false;
+    }
+    const okHorario = await guardarHorario();
+    if (!okHorario) return false;
+    if (draftIsPublic && !isPublic) await makePublic();
+    if (draftIsVideoConsultation !== isVideoConsultation) {
+      await persistVideoConsultation(draftIsVideoConsultation);
+    }
+    return true;
+  }
+
+  async function guardarHorario(): Promise<boolean> {
+    if (scheduleSaveInFlightRef.current) return false;
+    scheduleSaveInFlightRef.current = true;
+    const completos = weekly.filter((r) => r.start && r.end);
+    const supabase = createClient();
     setBusy(true);
     try {
-      const { error: deleteError } = await supabase.from("availability_weekly").delete().eq("professional_id", professionalId).eq("weekday", weekday).eq("location_id", loc);
+      const { error: deleteError } = await supabase.from("availability_weekly").delete().eq("professional_id", professionalId);
       if (deleteError) throw deleteError;
-      if (complete.length > 0) {
-        const { error: insertError } = await supabase.from("availability_weekly").insert(complete.map((b) => ({ professional_id: professionalId, location_id: b.locationId, category_id: null, weekday, start_time: b.start, end_time: b.end, slot_minutes: durationPref })));
+      if (completos.length > 0) {
+        const { error: insertError } = await supabase.from("availability_weekly").insert(completos.map((r) => ({
+          professional_id: professionalId,
+          location_id: r.location_id,
+          category_id: null,
+          weekday: r.weekday,
+          start_time: r.start,
+          end_time: r.end,
+          slot_minutes: r.slot_minutes ?? durationPref,
+        })));
         if (insertError) throw insertError;
       }
-      await regenerate(next, exceptions); // skips incomplete drafts
+      // Los días específicos siguen la misma idea: se reemplazan enteros.
+      const { error: borrarDias } = await supabase.from("availability_exceptions").delete().eq("professional_id", professionalId);
+      if (borrarDias) throw borrarDias;
+      if (exceptions.length > 0) {
+        const { error: insertarDias } = await supabase.from("availability_exceptions").insert(exceptions.map((e) => ({
+          professional_id: professionalId,
+          location_id: e.location_id,
+          category_id: null,
+          exception_date: e.date,
+          mode: e.mode,
+          start_time: e.start,
+          end_time: e.end,
+          slot_minutes: e.slot_minutes ?? durationPref,
+        })));
+        if (insertarDias) throw insertarDias;
+      }
+      await regenerate(weekly, exceptions);
+      return true;
     } catch (error) {
-      setWeekly(previousWeekly);
       reportSaveFailure("weekly save failed", error);
       setBusy(false);
+      return false;
     } finally {
       scheduleSaveInFlightRef.current = false;
     }
@@ -643,100 +710,43 @@ export function AvailabilityEditor({
     }
   }
 
-  async function setDuration(dur: number) {
-    if (scheduleSaveInFlightRef.current) return;
-    scheduleSaveInFlightRef.current = true;
-    const next = weekly.map((r) => ({ ...r, slot_minutes: dur }));
-    const supabase = createClient();
-    setBusy(true);
-    try {
-      const { error } = await supabase.from("availability_weekly").update({ slot_minutes: dur }).eq("professional_id", professionalId);
-      if (error) throw error;
-      setDurationPref(dur);
-      setWeekly(next);
-      await regenerate(next, exceptions);
-    } catch (error) {
-      reportSaveFailure("duration save failed", error);
-      setBusy(false);
-    } finally {
-      scheduleSaveInFlightRef.current = false;
-    }
+  function setDuration(dur: number) {
+    setDurationPref(dur);
+    setWeekly(weekly.map((r) => ({ ...r, slot_minutes: dur })));
+    setExceptions(exceptions.map((e) => ({ ...e, slot_minutes: dur })));
   }
 
   // -- Exceptions ("¿Un día distinto?") --------------------------------------
   // Returns false (without writing) when the proposed hours overlap another location
   // - or this location's own weekly hours when ADDING extra - on that date.
-  async function saveException(date: string, mode: ExcMode, franjas: Franja[], dur: number): Promise<boolean> {
-    if (scheduleSaveInFlightRef.current) return false;
+  // Solo toca el BORRADOR: escribir es trabajo de "Guardar cambios".
+  function saveException(date: string, mode: ExcMode, franjas: Franja[], dur: number): boolean {
     if (mode !== "closed") {
       const proposed = franjas.map((f) => [toMins(f.start), toMins(f.end)] as [number, number]).filter(([s, e]) => e > s);
-      // `extra` ADDS to the weekly hours (they still apply that date), so the extra
-      // franjas must not overlap THIS location's weekly base for that weekday - block
-      // with a message that names the real conflict (the usual hours). `custom`/`closed`
-      // REPLACE the weekly hours, so they get no weekly base to clear (only the
-      // cross-location check below applies).
       const ownBase: [number, number][] = mode === "extra"
         ? weekly.filter((r) => r.location_id === activeLocationId && r.weekday === weekdayOf(date) && isCompleteFranja(r)).map((r) => [toMins(r.start), toMins(r.end)])
         : [];
       const c = findOverlapConflict(activeLocationId, proposed, { date }, ownBase, t("conflictExtraWeekly"));
       if (c) { setConflict(c); return false; }
     }
-
     const next = exceptions.filter((e) => !(sameLoc(e.location_id) && e.date === date));
     if (mode === "closed") {
       next.push({ location_id: activeLocationId, category_id: null, date, mode: "closed", start: null, end: null, slot_minutes: dur });
     } else {
       for (const f of franjas) next.push({ location_id: activeLocationId, category_id: null, date, mode, start: f.start, end: f.end, slot_minutes: dur });
     }
-    const supabase = createClient();
-    scheduleSaveInFlightRef.current = true;
-    setBusy(true);
-    try {
-      const { error: deleteError } = await supabase.from("availability_exceptions").delete().eq("professional_id", professionalId).eq("location_id", activeLocationId).eq("exception_date", date);
-      if (deleteError) throw deleteError;
-      const rows: { professional_id: string; location_id: string; category_id: string | null; exception_date: string; mode: ExcMode; start_time: string | null; end_time: string | null; slot_minutes: number }[] =
-        mode === "closed"
-          ? [{ professional_id: professionalId, location_id: activeLocationId, category_id: null, exception_date: date, mode, start_time: null, end_time: null, slot_minutes: dur }]
-          : franjas.map((f) => ({ professional_id: professionalId, location_id: activeLocationId, category_id: null, exception_date: date, mode, start_time: f.start, end_time: f.end, slot_minutes: dur }));
-      if (rows.length > 0) {
-        const { error: insertError } = await supabase.from("availability_exceptions").insert(rows);
-        if (insertError) throw insertError;
-      }
-      setExceptions(next);
-      const ok = await regenerate(weekly, next);
-      return ok;
-    } catch (error) {
-      reportSaveFailure("exception save failed", error);
-      setBusy(false);
-      return false;
-    } finally {
-      scheduleSaveInFlightRef.current = false;
-    }
+    setExceptions(next);
+    return true;
   }
 
-  async function removeException(date: string) {
-    if (scheduleSaveInFlightRef.current) return;
-    scheduleSaveInFlightRef.current = true;
-    const next = exceptions.filter((e) => !(sameLoc(e.location_id) && e.date === date));
-    const supabase = createClient();
-    setBusy(true);
-    try {
-      const { error } = await supabase.from("availability_exceptions").delete().eq("professional_id", professionalId).eq("location_id", activeLocationId).eq("exception_date", date);
-      if (error) throw error;
-      setExceptions(next);
-      await regenerate(weekly, next);
-    } catch (error) {
-      reportSaveFailure("exception remove failed", error);
-      setBusy(false);
-    } finally {
-      scheduleSaveInFlightRef.current = false;
-    }
+  function removeException(date: string) {
+    setExceptions(exceptions.filter((e) => !(sameLoc(e.location_id) && e.date === date)));
   }
 
-  const settingsDirty = draftIsPublic !== isPublic || draftIsVideoConsultation !== isVideoConsultation;
 
   // -- Visibility (privada) --------------------------------------------------
   function toggleVisibilityDraft() {
+    if (savingVisibility || busy) return;
     setDraftIsPublic((value) => !value);
   }
   async function makePublic() {
@@ -760,11 +770,15 @@ export function AvailabilityEditor({
     setShowPrivateConfirm(false);
     setIsPublic(false);
     setDraftIsPublic(false);
+    // Confirmado el paso a privada, se completa el guardado de la sección:
+    // horario, días específicos y videoconsulta van en la misma tanda.
+    await guardarHorario();
     if (draftIsVideoConsultation !== isVideoConsultation) {
       await persistVideoConsultation(draftIsVideoConsultation);
     }
+    setHorarioGuardado(huellaHorario(weekly, exceptions, durationPref));
     pulseSaved();
-    onSaved?.();
+    onSaved?.("internal");
   }
   async function persistVideoConsultation(next: boolean) {
     setIsVideoConsultation(next);
@@ -790,24 +804,9 @@ export function AvailabilityEditor({
       }
       setDraftIsVideoConsultation(next);
       pulseSaved();
-      onSaved?.();
+      onSaved?.("internal");
     }
     setSavingVideoConsultation(false);
-  }
-  function cancelAvailabilitySettings() {
-    setDraftIsPublic(isPublic);
-    setDraftIsVideoConsultation(isVideoConsultation);
-  }
-  async function saveAvailabilitySettings() {
-    if (!settingsDirty || savingVisibility || savingVideoConsultation || busy) return;
-    if (!draftIsPublic && isPublic) {
-      setShowPrivateConfirm(true);
-      return;
-    }
-    if (draftIsPublic && !isPublic) await makePublic();
-    if (draftIsVideoConsultation !== isVideoConsultation) {
-      await persistVideoConsultation(draftIsVideoConsultation);
-    }
   }
   useEffect(() => {
     if (!showPrivateConfirm) return;
@@ -836,9 +835,30 @@ export function AvailabilityEditor({
   const openWeekdays = WEEKDAY_ORDER.filter((wd) => blocksFor(wd).length > 0);
   const closedWeekdays = WEEKDAY_ORDER.filter((wd) => blocksFor(wd).length === 0);
   const hasSchedulableLocation = locationOptions.length > 0;
-  const scheduleControlsDisabled = busy || savingVisibility || savingVideoConsultation || settingsDirty;
+  const horarioConCambios = !loading && (
+    huellaHorario(weekly, exceptions, durationPref) !== horarioGuardado
+    || draftIsPublic !== isPublic
+    || draftIsVideoConsultation !== isVideoConsultation
+  );
 
-  useReportSaveStatus(savingVisibility || savingVideoConsultation || busy, justSaved, settingsDirty);
+  async function guardarCambios() {
+    if (!horarioConCambios || busy) return true;
+    const ok = await guardarTodo();
+    if (ok) {
+      setHorarioGuardado(huellaHorario(weekly, exceptions, durationPref));
+      pulseSaved();
+      onSaved?.("internal");
+    }
+    return ok;
+  }
+
+  function descartarCambios() {
+    setRecargaClave((n) => n + 1);
+  }
+
+  const scheduleControlsDisabled = busy || savingVisibility || savingVideoConsultation;
+
+  useReportSaveStatus(savingVisibility || savingVideoConsultation || busy, justSaved, horarioConCambios);
 
   const availabilityToggleCard = ({
     title,
@@ -898,7 +918,10 @@ export function AvailabilityEditor({
             title: t("videoLabel"),
             description: t("videoDesc"),
             checked: draftIsVideoConsultation,
-            onToggle: () => setDraftIsVideoConsultation((value) => !value),
+            onToggle: () => {
+              if (savingVideoConsultation || busy) return;
+              setDraftIsVideoConsultation((value) => !value);
+            },
             icon: Video,
             loading: savingVideoConsultation,
             disabled: savingVideoConsultation,
@@ -1150,15 +1173,19 @@ export function AvailabilityEditor({
       )}
       </div>
 
-      {/* "Aplicar a otros días" modal */}
+      {/* Mismo pie que el resto del panel: el botón gobierna TODO el horario
+          (días y franjas), se enciende en cuanto hay algo por guardar, y salir
+          sin pulsarlo pide confirmación. Los dos interruptores de arriba son
+          la excepción deliberada: un interruptor que no hace efecto hasta
+          pulsar otro botón miente, y pasar a privada ya tiene su confirmación. */}
       <div className="flex flex-col gap-2 border-t border-[#edf2f7] px-4 py-4 sm:flex-row sm:justify-end sm:px-5">
         <Button
           type="button"
           variant="ghost"
           size="md"
           className="hidden sm:inline-flex sm:w-auto"
-          onClick={cancelAvailabilitySettings}
-          disabled={!settingsDirty || savingVisibility || savingVideoConsultation || busy}
+          onClick={descartarCambios}
+          disabled={!horarioConCambios || busy}
         >
           {t("cancel")}
         </Button>
@@ -1166,18 +1193,18 @@ export function AvailabilityEditor({
           type="button"
           size="md"
           className="w-full sm:w-auto"
-          onClick={saveAvailabilitySettings}
-          disabled={!settingsDirty || savingVisibility || savingVideoConsultation || busy}
-          loading={savingVisibility || savingVideoConsultation}
+          onClick={() => void guardarCambios()}
+          disabled={!horarioConCambios || busy}
+          loading={busy}
         >
           {locale === "en" ? "Save changes" : "Guardar cambios"}
         </Button>
       </div>
 
       <UnsavedChangesGuard
-        dirty={settingsDirty}
-        onSave={saveAvailabilitySettings}
-        onDiscard={cancelAvailabilitySettings}
+        dirty={horarioConCambios}
+        onSave={guardarCambios}
+        onDiscard={descartarCambios}
       />
 
       {applyModal && (
@@ -1482,9 +1509,15 @@ function DayModal({ initialDate, existing, markedDates, defaultDuration, dateLoc
           </div>
         </div>
 
-        <div className="flex justify-end gap-3 border-t border-[#f3f4f6] p-4 sm:p-5">
-          <Button type="button" variant="outline" size="md" onClick={onClose} disabled={saving}>{t("cancel")}</Button>
-          <Button type="button" size="md" disabled={invalid || saving} loading={saving} onClick={async () => { setSaving(true); const ok = await onSave(date, mode, franjas, dur); if (!ok) setSaving(false); }}>{t("saveDay")}</Button>
+        {/* "Guardar" ya existe como acción general de la sección: aquí la
+            acción se llama por lo que hace — Agregar un día nuevo o Aplicar
+            los cambios de uno existente. Mitades fijas: el ancho no salta
+            cuando el spinner entra. */}
+        <div className="flex gap-3 border-t border-[#f3f4f6] p-4 sm:p-5">
+          <Button type="button" variant="outline" size="md" className="flex-1" onClick={onClose} disabled={saving}>{t("cancel")}</Button>
+          <Button type="button" size="md" className="flex-1" disabled={invalid || saving} loading={saving} onClick={async () => { setSaving(true); const ok = await onSave(date, mode, franjas, dur); if (!ok) setSaving(false); }}>
+            {existing.some((e) => e.date === date) ? t("dayApply") : t("dayAdd")}
+          </Button>
         </div>
       </div>
     </div>

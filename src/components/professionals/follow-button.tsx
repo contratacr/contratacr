@@ -53,7 +53,7 @@ function addLocalFollow(userId: string, professionalId: string) {
   setLocalFollowIds(userId, [...getLocalFollowIds(userId), professionalId]);
 }
 
-function removeLocalFollow(userId: string, professionalId: string) {
+export function removeLocalFollow(userId: string, professionalId: string) {
   setLocalFollowIds(userId, getLocalFollowIds(userId).filter((id) => id !== professionalId));
 }
 

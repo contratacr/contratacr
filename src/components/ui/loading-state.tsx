@@ -1,17 +1,22 @@
 "use client";
 
-import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTranslations } from "next-intl";
 
 export function FormLoadingState({ label, minHeight = "min-h-[360px]" }: { label?: string; minHeight?: string }) {
   const t = useTranslations("loading");
   const resolvedLabel = label ?? t("generic");
+  // Un formulario que carga se anuncia con la silueta de sus campos, no con
+  // una ruedita: etiqueta corta, campo, etiqueta, campo y el botón al final.
   return (
-    <div className={cn("ccr-delayed-loading ccr-form-loading-state flex flex-1 items-center justify-center px-5 py-10 sm:px-6", minHeight)}>
-      <div className="flex flex-col items-center gap-3 text-center">
-        <Loader2 className="h-5 w-5 animate-spin text-[#009FD9]" />
-        <p className="text-sm font-medium text-[#6b7280]">{resolvedLabel}</p>
+    <div className={cn("ccr-delayed-loading ccr-form-loading-state flex-1 px-5 py-8 sm:px-6", minHeight)} aria-busy="true" role="status">
+      <span className="sr-only">{resolvedLabel}</span>
+      <div className="mx-auto w-full max-w-md space-y-4">
+        <span className="ccr-skeleton-shimmer block h-3.5 w-1/3 rounded-full" />
+        <span className="ccr-skeleton-shimmer block h-11 w-full rounded-xl" />
+        <span className="ccr-skeleton-shimmer block h-3.5 w-2/5 rounded-full" />
+        <span className="ccr-skeleton-shimmer block h-11 w-full rounded-xl" />
+        <span className="ccr-skeleton-shimmer block h-11 w-full rounded-xl" />
       </div>
     </div>
   );
@@ -20,12 +25,7 @@ export function FormLoadingState({ label, minHeight = "min-h-[360px]" }: { label
 export function CardListSkeleton({ rows = 3, withFilters = true, label, className }: { rows?: number; withFilters?: boolean; label?: string; className?: string }) {
   return (
     <div className={cn("flex flex-col gap-3.5", className)}>
-      {label ? (
-        <div className="flex items-center gap-2 text-sm font-medium text-[#6b7280]">
-          <Loader2 className="h-4 w-4 animate-spin text-[#009FD9]" />
-          <span>{label}</span>
-        </div>
-      ) : null}
+      {label ? <p className="text-sm font-medium text-[#6b7280]">{label}</p> : null}
       {withFilters ? (
         <div className="flex gap-2 rounded-2xl bg-[#f3f4f6] p-1">
           {[0, 1, 2].map((i) => (

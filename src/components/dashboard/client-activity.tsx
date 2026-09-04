@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
-import { CalendarDays, FolderOpen, ClipboardList, Plus, CalendarClock, Wrench, Users, FileText, Flag, CheckCircle2, MessageCircle } from "lucide-react";
+import { CalendarDays, FolderOpen, ClipboardList, Plus, CalendarClock, Wrench, Users, MapPin, FileText, Flag, CheckCircle2, MessageCircle } from "lucide-react";
 import { DirectChatLauncher } from "@/components/professionals/direct-chat-launcher";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -153,6 +153,9 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
   const { user } = useAuth();
   const t = useTranslations("clientActivity");
   const tEtapas = useTranslations("statusTabs");
+  // Ver la nota en booking-requests: el grupo de solicitudes incluye citas que
+  // todavía no han pasado, así que "en curso" no las describe.
+  const etapaSolicitudLabel = (id: string) => tEtapas(id === "en_curso" ? "solicitudes_activas" : id);
   const locale = useLocale();
   const searchParams = useSearchParams();
   const dateLocale = locale === "en" ? "en-US" : "es-CR";
@@ -573,7 +576,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
           ) : (
             <>
               {bookingTabs.length > 0 && (
-                <StatusFilterTabs tabs={bookingTabs} value={effectiveBookingFilter} onChange={setBookingFilter} counts={bookingCounts} />
+                <StatusFilterTabs tabs={bookingTabs} value={effectiveBookingFilter} onChange={setBookingFilter} labelFor={etapaSolicitudLabel} counts={bookingCounts} />
               )}
               {filteredBookings.length === 0 ? (
                 <p className="text-sm text-[#6b7280] text-center py-8">{t("noBookingsView")}</p>
@@ -699,66 +702,67 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                             {(() => {
                               const isActiveB = ["pending", "confirmed", "in_progress"].includes(b.status);
                               const canContactAfterProCancel = b.status === "cancelled" && b.cancelled_by === "professional";
-                              const canMessage = canContactAfterProCancel || (b.status !== "cancelled" && b.status !== "completed");
-                              const actionButtonClass = "min-h-10 w-full rounded-lg px-3 text-sm font-bold";
+                              const canMessage = b.status === "cancelled" ? canContactAfterProCancel : true;
+                              // Cuando la fecha pasa y nadie cierra la cita, la solicitud se muda
+                              // sola al grupo Finalizadas pero su estado sigue vivo: nunca se pide
+                              // reseña ni cuenta como trabajo hecho. El profesional conserva su
+                              // botón; el cliente se quedaba sin ninguna salida.
+                              const fechaYaPaso = isActiveB && solicitudBucket(b.status, b.scheduled_date) === "finalizadas";
+                              const actionButtonClass = "h-11 w-auto shrink-0 grow whitespace-nowrap rounded-full px-4 text-[13px] font-bold";
                               let primary: ReactNode = null;
                               if (b.status === "awaiting_confirmation") {
-                                primary = <Button size="sm" className={`${actionButtonClass} sm:min-w-[10rem] sm:flex-1`} onClick={() => confirmBookingDone(b.id)}>{t("confirmCompletion")}</Button>;
+                                primary = <Button size="sm" variant="chat" className={actionButtonClass} onClick={() => confirmBookingDone(b.id)}>{t("confirmCompletion")}</Button>;
+                              } else if (fechaYaPaso) {
+                                primary = <Button size="sm" variant="chat" className={actionButtonClass} onClick={() => confirmBookingDone(b.id)}>{t("bookingHappened")}</Button>;
                               } else if (b.status === "completed") {
-                                primary = <Button variant="outline" size="sm" className={`${actionButtonClass} sm:min-w-[10rem] sm:flex-1`} onClick={() => setReviewModal({ professionalId: b.professional_id, professionalName: b.professionals?.profiles?.full_name ?? t("professional"), bookingId: b.id })}>{rev ? t("editReview") : t("leaveReview")}</Button>;
-                              } else if (canMessage && b.professional_id) {
-                                primary = (
-                                  <DirectChatLauncher professionalId={b.professional_id} professionalName={b.professionals?.profiles?.full_name || t("professional")} bookingId={b.id} contextTitle={b.service_description} buttonLabel={t("contact")} analyticsSource="booking" compact className={`${actionButtonClass} sm:min-w-[10rem] sm:flex-1`} />
-                                );
+                                primary = <Button size="sm" variant="chat" className={actionButtonClass} onClick={() => setReviewModal({ professionalId: b.professional_id, professionalName: b.professionals?.profiles?.full_name ?? t("professional"), bookingId: b.id })}>{rev ? t("editReview") : t("leaveReview")}</Button>;
                               }
+                              const messageAction = canMessage && b.professional_id ? (
+                                <DirectChatLauncher professionalId={b.professional_id} professionalName={b.professionals?.profiles?.full_name || t("professional")} bookingId={b.id} contextTitle={b.service_description} buttonLabel={t("contact")} analyticsSource="booking" className="h-11 w-auto shrink-0 grow whitespace-nowrap rounded-full px-4 text-[13px] font-bold" />
+                              ) : null;
+                              // Lo frecuente se ve; lo excepcional vive en el menú, igual que en
+                              // las tarjetas del profesional. Antes esta tarjeta mostraba las cinco
+                              // acciones en línea y ocupaba tres renglones.
+                              const menu: CardAction[] = [];
+                              if (isActiveB) {
+                                menu.push({
+                                  label: t("reschedule"),
+                                  onClick: () => {
+                                    setReschedule({
+                                      id: b.id,
+                                      professionalId: b.professional_id,
+                                      when: formatBookingDate(b, dateLocale),
+                                      locationId: b.slot_location_id ?? null,
+                                      locationLabel: b.slot_location_label ?? null,
+                                    });
+                                    setCancelTarget(null);
+                                    setCancelNote("");
+                                  },
+                                });
+                                menu.push({ label: t("cancel"), onClick: () => openCancelBooking(b.id), destructive: true });
+                              }
+                              if (b.status === "cancelled") {
+                                menu.push({ label: t("archive"), onClick: () => archiveBooking(b.id), destructive: true });
+                              }
+                              menu.push({ label: t("reportTitle"), onClick: () => setReportProFor(b.id), destructive: true });
+                              // Terminada o caída, lo que el cliente puede querer es repetir con la
+                              // misma persona. Antes la tarjeta no ofrecía ninguna salida hacia eso.
+                              const puedeRecontratar = (b.status === "completed" || b.status === "cancelled") && b.professionals?.slug;
                               return (
-                                <div className="grid grid-cols-2 gap-2 border-t border-[#eef2f6] pt-3 sm:flex sm:flex-wrap sm:items-center">
+                                <div className="flex items-start gap-2 border-t border-[#eef2f6] pt-3">
+                                  <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
                                   {primary}
-                                  {isActiveB && (
-                                    <>
-                                      <Button
-                                        variant="outline"
-                                        size="sm"
-                                        className={`${actionButtonClass} border-[#bfdbfe] text-[#0089bb] hover:bg-[#f8fcff] sm:min-w-[10rem] sm:flex-1`}
-                                        onClick={() => {
-                                          setReschedule({
-                                            id: b.id,
-                                            professionalId: b.professional_id,
-                                            when: formatBookingDate(b, dateLocale),
-                                            locationId: b.slot_location_id ?? null,
-                                            locationLabel: b.slot_location_label ?? null,
-                                          });
-                                          setCancelTarget(null);
-                                          setCancelNote("");
-                                        }}
-                                      >
-                                        {t("reschedule")}
-                                      </Button>
-                                      <Button variant="outline" size="sm" className={`${actionButtonClass} border-[#fecaca] text-[#dc2626] hover:border-[#fca5a5] hover:bg-[#fef2f2] hover:text-[#b91c1c] sm:min-w-[10rem] sm:flex-1`} onClick={() => openCancelBooking(b.id)}>
-                                        {t("cancel")}
-                                      </Button>
-                                    </>
-                                  )}
-                                  {b.status === "cancelled" && (
-                                    <Button
-                                      variant="outline"
-                                      size="sm"
-                                      className={`${actionButtonClass} border-red-100 text-red-600 hover:bg-red-50 sm:min-w-[10rem] sm:flex-1`}
-                                      onClick={() => archiveBooking(b.id)}
+                                  {puedeRecontratar && (
+                                    <Link
+                                      href={`/profesionales/${b.professionals?.slug}?from=${encodeURIComponent("/dashboard/cliente")}`}
+                                      className={`${actionButtonClass} inline-flex items-center justify-center border-2 border-[#162543] bg-white text-[#162543] hover:bg-[#eef1f6]`}
                                     >
-                                      {t("archive")}
-                                    </Button>
+                                      {t("bookAgain")}
+                                    </Link>
                                   )}
-                                  <button
-                                    type="button"
-                                    aria-label={t("reportTitle")}
-                                    title={t("reportTitle")}
-                                    onClick={() => setReportProFor(b.id)}
-                                    className="inline-flex min-h-10 w-full items-center justify-center gap-1.5 rounded-lg px-3 text-xs font-bold text-[#9ca3af] transition-colors hover:bg-[#f9fafb] hover:text-[#dc2626] sm:ml-auto sm:w-auto sm:min-w-[10rem]"
-                                  >
-                                    <Flag className="h-3.5 w-3.5" />
-                                    <span>{t("reportTitle")}</span>
-                                  </button>
+                                  {messageAction}
+                                  </div>
+                                  {menu.length > 0 && <div className="shrink-0"><CardActionsMenu actions={menu} label={t("actions")} /></div>}
                                 </div>
                               );
                             })()}

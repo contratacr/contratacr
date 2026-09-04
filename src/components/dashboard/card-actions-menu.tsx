@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { MoreVertical } from "lucide-react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import { MoreHorizontal, MoreVertical } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 /**
@@ -16,9 +16,10 @@ export type CardAction = {
   label: string;
   onClick: () => void;
   destructive?: boolean;
+  icon?: ReactNode;
 };
 
-export function CardActionsMenu({ actions, label }: { actions: CardAction[]; label: string }) {
+export function CardActionsMenu({ actions, label, placement = "up", horizontal = false, triggerClassName, menuClassName, itemClassName }: { actions: CardAction[]; label: string; placement?: "up" | "down"; horizontal?: boolean; triggerClassName?: string; menuClassName?: string; itemClassName?: string }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -49,14 +50,21 @@ export function CardActionsMenu({ actions, label }: { actions: CardAction[]; lab
         aria-haspopup="menu"
         aria-expanded={open}
         aria-label={label}
-        className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-[#e5e7eb] text-[#718096] transition-colors hover:border-[#b9c8d6] hover:bg-[#f3f4f6] hover:text-[#162543]"
+        className={cn(
+          "inline-flex h-11 w-11 items-center justify-center rounded-full border border-[#e5e7eb] text-[#718096] transition-colors hover:border-[#b9c8d6] hover:bg-[#f3f4f6] hover:text-[#162543]",
+          triggerClassName,
+        )}
       >
-        <MoreVertical className="h-5 w-5" />
+        {horizontal ? <MoreHorizontal className="h-5 w-5" /> : <MoreVertical className="h-5 w-5" />}
       </button>
       {open && (
         <div
           role="menu"
-          className="absolute bottom-[calc(100%+6px)] right-0 z-50 max-h-[calc(100dvh-2rem)] min-w-[190px] overflow-y-auto rounded-xl border border-gray-100 bg-white py-1 shadow-xl"
+          className={cn(
+            "absolute right-0 z-50 max-h-[calc(100dvh-2rem)] min-w-[190px] overflow-y-auto rounded-xl border border-gray-100 bg-white py-1 shadow-xl",
+            placement === "down" ? "top-[calc(100%+6px)]" : "bottom-[calc(100%+6px)]",
+            menuClassName,
+          )}
         >
           {actions.map((a, i) => (
             <button
@@ -65,10 +73,12 @@ export function CardActionsMenu({ actions, label }: { actions: CardAction[]; lab
               type="button"
               onClick={() => { setOpen(false); a.onClick(); }}
               className={cn(
-                "block w-full px-3.5 py-2.5 text-left text-sm transition-colors",
+                "flex w-full items-center gap-3 px-3.5 py-2.5 text-left text-sm transition-colors",
                 a.destructive ? "text-red-600 hover:bg-red-50" : "text-[#374151] hover:bg-[#f9fafb]",
+                itemClassName,
               )}
             >
+              {a.icon}
               {a.label}
             </button>
           ))}

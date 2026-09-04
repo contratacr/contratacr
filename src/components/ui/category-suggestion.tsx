@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { soltarFoco } from "@/lib/soltar-foco";
 import { useLocale } from "next-intl";
-import { Check } from "lucide-react";
+import { Check, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
 
@@ -17,6 +18,8 @@ export function CategorySuggestionBox({
   thanksLabel,
   className,
   prominent = false,
+  variante = "pastilla",
+  rowTitle,
   defaultName = "",
   onActiveChange,
 }: {
@@ -29,6 +32,10 @@ export function CategorySuggestionBox({
   className?: string;
   /** Prominent = no loose top divider + pill CTA style for contained cards. */
   prominent?: boolean;
+  /** Botón: ocupa el ancho de su barra, como el de publicar en las demás pantallas. */
+  variante?: "pastilla" | "boton";
+  /** Título que encabeza el panel al abrirse. */
+  rowTitle?: string;
   defaultName?: string;
   /** Lets hosts (like dropdowns) keep open while suggestion input is focused. */
   onActiveChange?: (active: boolean) => void;
@@ -39,6 +46,7 @@ export function CategorySuggestionBox({
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
   const rootRef = useRef<HTMLDivElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
   const locale = useLocale();
   const { user } = useAuth();
 
@@ -46,13 +54,37 @@ export function CategorySuggestionBox({
     onActiveChange?.(suggesting || sent);
   }, [suggesting, sent, onActiveChange]);
 
+  // ── Acomodar el panel encima del teclado ───────────────────────────────
+  // Se apunta al BORDE INFERIOR del panel, no al centro del campo: así el campo
+  // y sus dos botones quedan a la vista y el teclado empieza justo debajo de
+  // "Cancelar" y "Enviar". La pantalla que lo contiene ya se encoge con el
+  // teclado, así que el fondo de su zona desplazable es el borde del teclado.
+  //
+  // El teclado no aparece de inmediato ni de un salto: llega unos cientos de
+  // milisegundos después y mueve todo mientras sube. Por eso no basta un solo
+  // ajuste —de ahí el "en veces no se ve el campo"—: se repite mientras el
+  // teclado se acomoda y cada vez que el área visible cambia de tamaño.
+  const acomodar = useCallback((suave: boolean) => {
+    panelRef.current?.scrollIntoView({ behavior: suave ? "smooth" : "auto", block: "end" });
+  }, []);
+
   useEffect(() => {
     if (!suggesting) return;
-    const id = requestAnimationFrame(() => {
-      rootRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
-    });
-    return () => cancelAnimationFrame(id);
-  }, [suggesting]);
+    const cuadro = requestAnimationFrame(() => acomodar(true));
+    const esperas = [160, 380, 620].map((espera) => window.setTimeout(() => acomodar(false), espera));
+    const vv = window.visualViewport;
+    const alCambiarElArea = () => {
+      // Solo mientras se escribe aquí: si el foco ya salió, mover la pantalla
+      // sería quitarle el sitio a otra cosa.
+      if (panelRef.current?.contains(document.activeElement)) acomodar(false);
+    };
+    vv?.addEventListener("resize", alCambiarElArea);
+    return () => {
+      cancelAnimationFrame(cuadro);
+      for (const id of esperas) window.clearTimeout(id);
+      vv?.removeEventListener("resize", alCambiarElArea);
+    };
+  }, [suggesting, acomodar]);
 
   async function send() {
     const clean = name.trim();
@@ -76,6 +108,7 @@ export function CategorySuggestionBox({
         return;
       }
 
+      soltarFoco();
       setSent(true);
       setName("");
       setSuggesting(false);
@@ -90,7 +123,11 @@ export function CategorySuggestionBox({
     <div
       ref={rootRef}
       className={cn(
-        prominent ? (suggesting ? "w-full sm:w-auto sm:min-w-[360px]" : "") : "border-t border-[#f3f4f6] px-3 py-2.5",
+        variante === "boton"
+          ? ""
+          : prominent
+            ? (suggesting ? "w-full sm:w-auto sm:min-w-[360px]" : "")
+            : "border-t border-[#f3f4f6] px-3 py-2.5",
         className,
       )}
     >
@@ -99,7 +136,10 @@ export function CategorySuggestionBox({
           <Check className="h-3.5 w-3.5" /> {thanksLabel}
         </p>
       ) : suggesting ? (
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+        <div ref={panelRef} className="scroll-mb-4 flex flex-col gap-3">
+          {rowTitle && variante === "boton" && (
+            <p className="text-sm font-semibold text-[#162543]">{rowTitle}</p>
+          )}
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
@@ -111,27 +151,34 @@ export function CategorySuggestionBox({
             }}
             placeholder={placeholder}
             autoFocus
-            className="h-9 min-w-0 flex-1 rounded-lg border border-[#e5e7eb] px-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#009FD9]/20"
-          />
-          <button
-            type="button"
-            disabled={!name.trim() || sending}
-            onClick={send}
-            className="h-9 shrink-0 rounded-lg bg-[#009FD9] px-3 text-sm font-medium text-white disabled:opacity-50"
-          >
-            {sending ? sendingLabel : sendLabel}
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setSuggesting(false);
-              setError("");
+            onFocus={() => {
+              window.setTimeout(() => acomodar(false), 0);
+              window.setTimeout(() => acomodar(false), 240);
             }}
-            className="h-9 shrink-0 px-2 text-sm text-[#9ca3af] hover:text-[#374151]"
-          >
-            {cancelLabel}
-          </button>
-          {error && <p className="w-full text-xs font-medium text-[#dc2626] sm:col-span-3">{error}</p>}
+            className="h-12 w-full min-w-0 rounded-xl border border-[#d7e3ee] bg-white px-4 text-[15px] text-[#162543] placeholder:text-[#9ca3af] transition-shadow focus:border-[#009FD9] focus:outline-none focus:ring-4 focus:ring-[#009FD9]/15"
+          />
+          <div className="flex items-center gap-2.5">
+            <button
+              type="button"
+              onClick={() => {
+                soltarFoco();
+                setSuggesting(false);
+                setError("");
+              }}
+              className="h-11 flex-1 rounded-xl border border-[#d7e3ee] bg-white text-sm font-semibold text-[#162543] transition-colors hover:bg-[#f4f7fa]"
+            >
+              {cancelLabel}
+            </button>
+            <button
+              type="button"
+              disabled={!name.trim() || sending}
+              onClick={send}
+              className="h-11 flex-1 rounded-xl bg-[#009FD9] text-sm font-semibold text-white transition-colors hover:bg-[#0089bb] disabled:cursor-not-allowed disabled:opacity-45"
+            >
+              {sending ? sendingLabel : sendLabel}
+            </button>
+          </div>
+          {error && <p className="text-xs font-medium text-[#dc2626]">{error}</p>}
         </div>
       ) : (
         <button
@@ -142,12 +189,19 @@ export function CategorySuggestionBox({
             setSuggesting(true);
           }}
           className={cn(
-            prominent
-              ? "inline-flex items-center justify-center rounded-full bg-[#009FD9] px-4 py-2 text-sm font-semibold text-white hover:bg-[#0089bb] transition-colors"
-              : "text-xs font-medium text-[#009FD9] hover:underline",
+            variante === "boton"
+              ? "flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-[#009FD9] px-4 text-sm font-bold text-white transition-colors hover:bg-[#0089bb]"
+              : prominent
+                ? "inline-flex items-center justify-center rounded-full bg-[#009FD9] px-4 py-2 text-sm font-semibold text-white hover:bg-[#0089bb] transition-colors"
+                : "text-xs font-medium text-[#009FD9] hover:underline",
           )}
         >
-          {notListedLabel}
+          {variante === "boton" ? (
+            <>
+              <Plus className="h-4 w-4 shrink-0" />
+              {notListedLabel}
+            </>
+          ) : notListedLabel}
         </button>
       )}
     </div>

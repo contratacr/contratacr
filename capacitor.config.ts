@@ -28,6 +28,9 @@ const config: CapacitorConfig = {
   },
   ios: {
     contentInset: "never",
+    // Sin esto el WebView arranca en negro y se ve un cuadro oscuro antes del
+    // splash: el parpadeo al abrir la app por primera vez.
+    backgroundColor: "#F4F7FA",
   },
   plugins: {
     SplashScreen: {

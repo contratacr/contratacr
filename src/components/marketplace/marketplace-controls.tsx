@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
+import { soltarFoco } from "@/lib/soltar-foco";
 import { Check, ChevronDown, ChevronRight, Clock3, MapPin, Search, Wrench, X } from "lucide-react";
 import { useLocale } from "next-intl";
 import { Link } from "@/i18n/navigation";
@@ -226,6 +227,11 @@ export function MarketplaceSearch({
   }
 
   function closeMobileSearch() {
+    // Los resultados filtran EN VIVO: si la hoja se cierra con algo escrito,
+    // esa búsqueda ya ocurrió y merece quedar en recientes. Antes solo se
+    // guardaba al pulsar Intro con ambos campos llenos — casi nunca.
+    if (value.trim()) saveRecent();
+    soltarFoco();
     setOpen(false);
     inputRef.current?.blur();
   }
@@ -254,6 +260,9 @@ export function MarketplaceSearch({
 
   function introDesdePrincipal() {
     if (value.trim() && faltaSecundario) {
+      // Saltar al campo que falta no borra la intención: lo escrito ya está
+      // filtrando resultados, se guarda desde ya.
+      saveRecent();
       setMobileField("secondary");
       setDesktopField("secondary");
       window.setTimeout(() => (fullSecondaryInputRef.current ?? desktopSecondaryInputRef.current)?.focus(), 60);

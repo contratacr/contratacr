@@ -20,9 +20,7 @@ type MessageLauncherProps = {
   buttonLabel?: string;
   initialMessage?: string;
   onSelfAction?: () => void;
-  tone?: "primary" | "contrast";
-  /** Half-width card rows: "Mensaje" keeps the label on one line beside the icon. */
-  compact?: boolean;
+  tone?: "primary" | "contrast" | "outline";
 };
 
 function buildDraftHref({
@@ -62,14 +60,13 @@ export function MessageLauncher(props: MessageLauncherProps) {
     initialMessage = "",
     onSelfAction,
     tone = "primary",
-    compact = false,
   } = props;
   const locale = useLocale();
   const isEn = locale === "en";
   const router = useRouter();
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
-  const label = buttonLabel || (compact ? (isEn ? "Message" : "Mensaje") : (isEn ? "Send message" : "Enviar mensaje"));
+  const label = buttonLabel || (isEn ? "Send message" : "Enviar mensaje");
 
   async function openMessage() {
     if (isOwn) {
@@ -120,7 +117,7 @@ export function MessageLauncher(props: MessageLauncherProps) {
       disabled={loading}
       aria-busy={loading}
       className={cn(
-        buttonVariants({ variant: tone === "contrast" ? "chat" : "default", size: "md" }),
+        buttonVariants({ variant: tone === "contrast" ? "chat" : tone === "outline" ? "secondary" : "default", size: "md" }),
         "gap-1.5 disabled:opacity-60",
         className || "w-full rounded-full py-2.5 text-[13px] font-semibold",
       )}

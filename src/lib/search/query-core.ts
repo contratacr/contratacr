@@ -1,5 +1,5 @@
 import { searchProfessionals, type ProService } from "@/lib/queries/professionals";
-import { isHealthCategory, supportsVideoConsultCategory } from "@/lib/data/categories";
+import { getAllCategories, isHealthCategory, supportsVideoConsultCategory } from "@/lib/data/categories";
 import { haversineKm, PROVINCES } from "@/lib/data/cr-geography";
 
 // Everything /buscar needs to turn a URL into an ordered list of professionals,
@@ -13,6 +13,8 @@ const PRICE_UNIT_OPTIONS = new Set(["por_hora", "por_consulta", "por_proyecto"])
 
 export type SearchPageParams = {
   categoria?: string;
+  /** Familia de servicios: "Todos los servicios de Agro". */
+  grupo?: string;
   provincia?: string;
   canton?: string;
   sortBy?: string;
@@ -67,13 +69,20 @@ export function parseSearchParams(params: SearchPageParams) {
   const videoOnly = modalities.length === 1 && modalities[0] === "video";
   const inPersonOnly = modalities.length === 1 && modalities[0] === "in_person";
   const selectedCategory = params.categoria && params.categoria !== "todas" ? params.categoria : undefined;
+  // Una familia entera: se expande a sus categorías visibles. Si el grupo no
+  // existe o quedó sin categorías, se ignora en vez de buscar sin filtro.
+  const grupoPedido = !selectedCategory && params.grupo ? params.grupo : undefined;
+  const selectedGroupCategoryIds = grupoPedido
+    ? getAllCategories().filter((category) => category.groupId === grupoPedido).map((category) => category.id)
+    : [];
+  const selectedGroupId = selectedGroupCategoryIds.length > 0 ? grupoPedido : undefined;
   const selectedCantonId = params.canton && params.canton !== "todos" ? params.canton : undefined;
   const selectedProvinceId = params.provincia && params.provincia !== "todas"
     ? params.provincia
     : selectedCantonId
       ? PROVINCES.find((province) => province.cantons.some((canton) => canton.id === selectedCantonId))?.id
       : undefined;
-  const effectiveQuery = selectedCategory ? undefined : params.q;
+  const effectiveQuery = selectedCategory || selectedGroupId ? undefined : params.q;
   const parsedNearLat = params.lat ? Number(params.lat) : undefined;
   const parsedNearLng = params.lng ? Number(params.lng) : undefined;
   const nearLat = typeof parsedNearLat === "number" && Number.isFinite(parsedNearLat) ? parsedNearLat : undefined;
@@ -89,7 +98,7 @@ export function parseSearchParams(params: SearchPageParams) {
 
   return {
     requestedSortBy, sortBy, priceType, priceUnits, modalities, videoOnly, inPersonOnly,
-    selectedCategory, selectedCantonId, selectedProvinceId, effectiveQuery,
+    selectedCategory, selectedGroupId, selectedGroupCategoryIds, selectedCantonId, selectedProvinceId, effectiveQuery,
     nearLat, nearLng, mapBounds, languageIds, insurerIds,
   };
 }
@@ -226,6 +235,7 @@ async function resolveSearchResultsUncached(params: SearchPageParams) {
   const filters = parseSearchParams(params);
   const results = await searchProfessionals({
     categoryId: filters.selectedCategory,
+    categoryIds: filters.selectedGroupCategoryIds,
     provinceId: filters.selectedProvinceId,
     cantonId: filters.selectedCantonId,
     sortBy: filters.sortBy,

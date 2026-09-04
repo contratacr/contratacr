@@ -33,6 +33,10 @@ const PRO_TYPES = new Set([
   "project_cancelled",
   "project_deleted",
   "project_completed",
+  // Recordatorios de inactividad dirigidos al profesional.
+  "booking_pending_reminder",
+  "project_in_progress_idle",
+  "booking_past_date_idle",
 ]);
 
 const CLIENT_TYPES = new Set([
@@ -47,6 +51,10 @@ const CLIENT_TYPES = new Set([
   "project_work_done",
   "job_application_status",
   "followed_professional_activity",
+  "project_professional_withdrew",
+  // Recordatorios de inactividad dirigidos al cliente.
+  "project_proposals_waiting",
+  "project_confirmation_pending",
 ]);
 
 export function notificationContext(type: string): NotificationContext {

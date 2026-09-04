@@ -123,6 +123,19 @@ body.ccr-native-app .ccr-app-header {
   animation-delay: 0ms;
 }
 
+/* ── El logo del arranque es UNO SOLO: el del splash nativo ────────────────
+   La pantalla de carga de la web se elige en el servidor con la cookie de
+   plataforma; en el primer arranque —o si la cookie aún no viajó— el servidor
+   no sabe que es la app y manda la versión CON logo. Ese segundo logo se
+   centra en el WebView (que empieza bajo la barra de estado), o sea más abajo
+   que el del splash: eso es el salto. La clase `ccr-native-app` la pone un
+   script antes del primer cuadro, así que aquí sí se sabe: dentro de la app la
+   marca de la web no se pinta nunca y el lienzo queda neutro. */
+html.ccr-native-app .ccr-page-route-loading .ccr-brand-loading-mark,
+html.ccr-native-app .ccr-page-route-loading [data-ccr-loading-mark] {
+  display: none !important;
+}
+
 .ccr-native-app .ccr-page-route-loading .ccr-brand-loading-mark {
   animation-delay: 0ms;
 }
@@ -384,6 +397,14 @@ html.ccr-native-bottom-nav-visible body .ccr-search-bottom-sheet {
   }
 }
 
+/* La última conversación normalmente no lleva línea abajo: sobra cuando la
+   lista sigue más allá de la pantalla, porque la línea queda pegada a la barra
+   de abajo. Pero cuando la lista termina antes del final, sin esa línea parece
+   cortada a la mitad. Ahí sí se pinta. */
+.ccr-direct-chat-list[data-lista-cabe="true"] > :last-child {
+  border-bottom-width: 1px;
+}
+
 @media (max-width: 1023px) {
   body.ccr-native-app.ccr-native-bottom-nav-visible:not(.ccr-native-search-route) {
     height: 100svh;
@@ -395,12 +416,19 @@ html.ccr-native-bottom-nav-visible body .ccr-search-bottom-sheet {
     background: #fff;
   }
 
+  /* Con la barra retirada por el desplazamiento, el contenido ocupa también su
+   sitio; el alto se acompaña con la misma duración del deslizamiento para que
+   no se sienta un salto. */
+  body.ccr-native-bottom-nav-hidden {
+    --ccr-native-bottom-nav-total: 0px;
+  }
+
   body.ccr-native-app.ccr-native-bottom-nav-visible:not(.ccr-native-search-route) main {
+    transition: bottom 200ms ease-out;
     position: fixed;
     inset-inline: 0;
     top: var(--ccr-native-header-height);
-    /* Keep route content above the fixed nav. Individual scroll areas still get
-       a small end gap, but the nav no longer covers the final section. */
+    /* El contenido termina justo encima de la barra anclada. */
     bottom: var(--ccr-native-bottom-nav-total);
     height: auto;
     min-height: 0;
@@ -408,8 +436,6 @@ html.ccr-native-bottom-nav-visible body .ccr-search-bottom-sheet {
     overscroll-behavior: contain;
     background: #fff;
     box-sizing: border-box;
-    /* El panel ya termina encima de la barra (bottom): reservar además el hueco
-       aquí dejaba una franja blanca fija sobre el menú en todas las secciones. */
     padding-bottom: 0 !important;
     scroll-padding-bottom: var(--ccr-native-content-end-gap);
     -webkit-overflow-scrolling: touch;
@@ -432,11 +458,14 @@ html.ccr-native-bottom-nav-visible body .ccr-search-bottom-sheet {
     scroll-padding-bottom: var(--ccr-native-content-end-gap);
   }
 
+  /* El compositor va en flujo debajo del hilo: reservar aquí el alto de la
+     barra dejaba ~90px vacíos bajo el último mensaje (se notaba al abrir el
+     teclado, que desplaza el hilo hasta el fondo). */
   body.ccr-native-app.ccr-native-bottom-nav-visible:not(.ccr-native-search-route) .ccr-direct-chat-thread-scroll {
     padding-top: 1rem !important;
-    padding-bottom: calc(5.5rem + env(safe-area-inset-bottom)) !important;
+    padding-bottom: 1rem !important;
     scroll-padding-top: 1rem;
-    scroll-padding-bottom: calc(5.5rem + env(safe-area-inset-bottom));
+    scroll-padding-bottom: 1rem;
   }
 
   body.ccr-native-app.ccr-native-bottom-nav-visible:not(.ccr-native-search-route) .ccr-direct-chat-composer {
@@ -601,6 +630,21 @@ html.ccr-native-bottom-nav-visible body .ccr-search-bottom-sheet {
   }
 }
 
+/* Mientras React monta, la barra ya tiene cuerpo: una franja blanca fija con
+   su filete, pintada solo con CSS sobre las clases sembradas antes del primer
+   cuadro. Sin ella, la portada pintaba completa y la barra "caía" después —
+   el parpadeo del arranque. Al montar la barra real, la franja se retira. */
+html.ccr-native-app.ccr-native-bottom-nav-visible:not(.ccr-nav-montada) body::after {
+  content: "";
+  position: fixed;
+  inset-inline: 0;
+  bottom: 0;
+  z-index: 89;
+  height: var(--ccr-native-bottom-nav-height);
+  background: #fff;
+  border-top: 1px solid #dce6ef;
+}
+
 .ccr-native-app .ccr-native-bottom-nav {
   isolation: isolate;
   background: #fff !important;
@@ -608,7 +652,7 @@ html.ccr-native-bottom-nav-visible body .ccr-search-bottom-sheet {
   margin-top: 0 !important;
   padding-top: 0 !important;
   padding-bottom: max(env(safe-area-inset-bottom), 0.2rem) !important;
-  /* Solo un filete separa la barra de lo que tiene encima: una sombra la haría
+  /* Solo un filete la separa de lo que tiene encima: una sombra la haría
      parecer una capa flotando sobre el contenido. */
   box-shadow: none !important;
   overflow: hidden;
@@ -656,6 +700,7 @@ html.ccr-native-app body.ccr-native-app.ccr-native-bottom-nav-visible.ccr-native
   ) !important;
 }
 
+
 /* Con el teclado abierto la barra estorba: se retira mientras se escribe y el
    panel recupera el borde inferior. */
 /* Con el teclado abierto la barra no se esconde: se desplaza detrás de él, que
@@ -699,6 +744,13 @@ html[data-keyboard-visible] body.ccr-native-app.ccr-native-bottom-nav-visible {
   --ccr-reserva-barra: 0px;
 }
 
+/* El pie de los formularios de creación (empleo, oferta, proyecto, soporte) se
+   apoya SOBRE el menú de abajo. Sin esto el botón quedaba debajo del menú y no
+   se podía pulsar; en la web, donde la reserva no existe, cae a 0. */
+.ccr-pie-formulario {
+  bottom: var(--ccr-reserva-barra, 0px);
+}
+
 html[data-keyboard-visible] body.ccr-native-app.ccr-native-bottom-nav-visible.ccr-native-search-route .ccr-search-bottom-sheet {
   bottom: 0 !important;
   padding-bottom: env(safe-area-inset-bottom) !important;
@@ -723,21 +775,29 @@ html[data-keyboard-visible] body.ccr-native-app.ccr-native-bottom-nav-visible.cc
 .ccr-native-app .ccr-search-sheet-scroll {
   min-height: 100%;
   background: #fff !important;
-  padding-bottom: calc(var(--ccr-native-content-end-gap) + 1rem) !important;
-  scroll-padding-bottom: calc(var(--ccr-native-content-end-gap) + 1rem);
+  /* `--ccr-cola-fuera`: píxeles de la lista medidos fuera de la pantalla. */
+  padding-bottom: calc(var(--ccr-native-content-end-gap) + 1rem + var(--ccr-cola-fuera, 0px)) !important;
+  scroll-padding-bottom: calc(var(--ccr-native-content-end-gap) + 1rem + var(--ccr-cola-fuera, 0px));
 }
 
 /* Con la barra de pestañas visible, el último control del panel no puede quedar
    debajo de ella. */
-body.ccr-native-app.ccr-native-bottom-nav-visible.ccr-native-search-route .ccr-search-sheet-scroll,
 body.ccr-native-app.ccr-native-bottom-nav-visible.ccr-native-search-route .ccr-search-results-list {
-  padding-bottom: calc(var(--ccr-native-bottom-nav-total) + var(--ccr-native-content-end-gap)) !important;
-  scroll-padding-bottom: calc(var(--ccr-native-bottom-nav-total) + var(--ccr-native-content-end-gap));
+  padding-bottom: 0 !important;
+  scroll-padding-bottom: 0;
 }
 
-html[data-keyboard-visible] body.ccr-native-app.ccr-native-search-route .ccr-search-sheet-scroll,
+body.ccr-native-app.ccr-native-bottom-nav-visible.ccr-native-search-route .ccr-search-sheet-scroll {
+  padding-bottom: calc(var(--ccr-native-bottom-nav-total) + var(--ccr-native-content-end-gap) + var(--ccr-cola-fuera, 0px)) !important;
+  scroll-padding-bottom: calc(var(--ccr-native-bottom-nav-total) + var(--ccr-native-content-end-gap) + var(--ccr-cola-fuera, 0px));
+}
+
 html[data-keyboard-visible] body.ccr-native-app.ccr-native-search-route .ccr-search-results-list {
-  padding-bottom: calc(var(--ccr-native-content-end-gap) + 1rem) !important;
+  padding-bottom: 0 !important;
+}
+
+html[data-keyboard-visible] body.ccr-native-app.ccr-native-search-route .ccr-search-sheet-scroll {
+  padding-bottom: calc(var(--ccr-native-content-end-gap) + 1rem + var(--ccr-cola-fuera, 0px)) !important;
 }
 
 .ccr-native-app .ccr-search-sheet-scroll > *,
@@ -748,7 +808,9 @@ html[data-keyboard-visible] body.ccr-native-app.ccr-native-search-route .ccr-sea
 
 .ccr-native-app .ccr-search-results-list {
   background: #eef2f6 !important;
-  padding-bottom: calc(var(--ccr-native-content-end-gap) + env(safe-area-inset-bottom)) !important;
+  /* El espacio del final lo pone la zona desplazable, que es blanca: este
+     relleno pintaba una franja gris bajo el último profesional. */
+  padding-bottom: 0 !important;
 }
 
 .ccr-native-app [data-search-empty-state] {
@@ -817,8 +879,8 @@ html body.ccr-search-filters-open .ccr-search-bottom-sheet {
 
   .ccr-native-app .ccr-search-sheet-scroll {
     background: #f4f7fa;
-    padding-bottom: 0 !important;
-    scroll-padding-bottom: 0;
+    padding-bottom: var(--ccr-cola-fuera, 0px) !important;
+    scroll-padding-bottom: var(--ccr-cola-fuera, 0px);
   }
 }
 
@@ -1406,9 +1468,9 @@ body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-native-fab {
   html.ccr-native-app body.ccr-native-app.ccr-native-bottom-nav-visible.contratacr-chat-thread-open:not(.ccr-native-search-route) .ccr-direct-chat-thread-scroll,
   body.ccr-native-app.ccr-native-bottom-nav-visible.contratacr-chat-thread-open:not(.ccr-native-search-route) .ccr-direct-chat-thread-scroll {
     padding-top: 1rem !important;
-    padding-bottom: calc(5.5rem + env(safe-area-inset-bottom)) !important;
+    padding-bottom: 1rem !important;
     scroll-padding-top: 1rem;
-    scroll-padding-bottom: calc(5.5rem + env(safe-area-inset-bottom));
+    scroll-padding-bottom: 1rem;
   }
 
   html[data-keyboard-open].ccr-native-app.contratacr-chat-thread-open .ccr-direct-chat-composer,
@@ -1913,6 +1975,13 @@ body.ccr-search-sheet-page {
 .ccr-search-card-slot {
   content-visibility: auto;
   contain-intrinsic-size: auto 320px;
+}
+
+/* Con el menú de lugares abierto, la tarjeta suelta el aislamiento de pintado:
+   si no, el recorte del contenedor cortaba el menú al borde de la tarjeta. */
+.ccr-search-card-slot.ccr-menu-abierto {
+  content-visibility: visible;
+  contain-intrinsic-size: none;
 }
 
 /* Buscador de la app: el panel terminaba siempre a la altura de la barra

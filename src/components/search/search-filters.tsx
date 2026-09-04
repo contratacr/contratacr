@@ -9,7 +9,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { matchProvinceCanton, PROVINCES } from "@/lib/data/cr-geography";
 import { AnchoredDropdown } from "@/components/ui/anchored-dropdown";
-import { searchCategories, getCategoryLabel, isHealthCategory, supportsVideoConsultCategory } from "@/lib/data/categories";
+import { getCategoryGroupLabel, getCategoryLabel, isHealthCategory, searchCategories, supportsVideoConsultCategory } from "@/lib/data/categories";
 import { resolveLocation, searchLocations, type LocationSuggestion } from "@/lib/data/location-search";
 import { INSURERS } from "@/lib/data/insurers";
 import { LANGUAGES, languageLabel } from "@/lib/data/languages";
@@ -504,6 +504,7 @@ function useSearchExamplePlaceholder(examples: string[], active: boolean) {
 type SearchFiltersInitialValues = {
   q?: string;
   categoria?: string;
+  grupo?: string;
   provincia?: string;
   canton?: string;
   sortBy?: string;
@@ -541,8 +542,18 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
   // shows "X" in the field instead of an empty box).
   const initialParam = useCallback((key: keyof SearchFiltersInitialValues) => params.get(key) ?? initialValues?.[key] ?? "", [initialValues, params]);
   const initialCategory = initialParam("categoria");
+  // Llegar por una familia ("Todos los servicios de Tecnología") también tiene
+  // que verse en el campo: si no, la búsqueda filtra pero el campo se ve vacío
+  // y parece que no se buscó nada.
+  const etiquetaDeGrupo = useCallback(
+    (id: string) => (id ? getCategoryGroupLabel(id, locale) : ""),
+    [locale],
+  );
+  const initialGroup = initialParam("grupo");
   const [query, setQuery] = useState(
-    initialParam("q") || (initialCategory ? getCategoryLabel(initialCategory, locale) : "")
+    initialParam("q")
+      || (initialCategory ? getCategoryLabel(initialCategory, locale) : "")
+      || etiquetaDeGrupo(initialGroup)
   );
   // Service autocomplete for the sidebar text search (our categories taxonomy).
   const [searchOpen, setSearchOpen] = useState(false);
@@ -604,6 +615,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
 
   useEffect(() => {
     const nextCategory = params.get("categoria") ?? initialValues?.categoria ?? "";
+    const nextGroup = params.get("grupo") ?? initialValues?.grupo ?? "";
     const nextQuery = params.get("q") ?? initialValues?.q ?? "";
     const nextProvince = params.get("provincia") ?? initialValues?.provincia ?? "";
     const nextCanton = params.get("canton") ?? initialValues?.canton ?? "";
@@ -621,7 +633,11 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
     // URL navigation is the external source of truth for the filter controls.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setCategory(nextCategory);
-    setQuery(nextQuery || (nextCategory && nextCategory !== "todas" ? getCategoryLabel(nextCategory, locale) : ""));
+    setQuery(
+      nextQuery
+      || (nextCategory && nextCategory !== "todas" ? getCategoryLabel(nextCategory, locale) : "")
+      || etiquetaDeGrupo(nextGroup),
+    );
     setProvince(nextProvince);
     setCanton(nextCanton);
     const normalizedNextSort = normalizeSort(nextSort);
@@ -648,6 +664,8 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
     initialValues?.aseguradora,
     initialValues?.canton,
     initialValues?.categoria,
+    initialValues?.grupo,
+    etiquetaDeGrupo,
     initialValues?.idioma,
     initialValues?.precio,
     initialValues?.unidadPrecio,
@@ -783,6 +801,9 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
         Object.prototype.hasOwnProperty.call(overrides, "lng") ||
         Object.prototype.hasOwnProperty.call(overrides, "ubicacion");
       const hasSelectedCategory = !!(vals.categoria && vals.categoria !== "todas");
+      // Cambiar de servicio abandona la familia: si se quedara en la dirección,
+      // seguiría filtrando por ella a espaldas de lo que dice el campo.
+      next.delete("grupo");
       if (vals.q && !hasSelectedCategory) next.set("q", vals.q);
       if (hasSelectedCategory) next.set("categoria", vals.categoria);
       if (vals.provincia && vals.provincia !== "todas") next.set("provincia", vals.provincia);

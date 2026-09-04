@@ -1,6 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useSearchParams } from "next/navigation";
+import { normalizeText } from "@/lib/data/categories";
+import { PROVINCES } from "@/lib/data/cr-geography";
 import { fetchAvailabilityBatched } from "@/lib/availability-batch";
 import { useTranslations, useLocale } from "next-intl";
 import { CalendarDays, Check, ChevronDown, ChevronLeft, ChevronRight, MapPin, Video } from "lucide-react";
@@ -111,6 +114,8 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
   const t = useTranslations("schedule");
   const tLoading = useTranslations("loading");
   const locale = useLocale();
+  // Qué ubicación se está buscando, para poner delante los lugares que sirven.
+  const searchParams = useSearchParams();
   const nativeApp = useNativeApp();
   const scheduleRootRef = useRef<HTMLDivElement>(null);
   const [shouldAutoRefresh, setShouldAutoRefresh] = useState(stacked || !slotsInitiallyLoaded);
@@ -420,17 +425,53 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
   const locTabs = hasRealLoc
     ? visibleLocationOptions
     : (placeFallback ? [{ id: "__fallback", label: placeFallback }] : []);
-  const primaryLocationTabs = useMemo(() => {
-    if (locTabs.length <= 2) return locTabs;
-    const selected = locTabs.find((option) => option.id === effectiveId);
-    if (!selected || locTabs.slice(0, 2).some((option) => option.id === selected.id)) {
-      return locTabs.slice(0, 2);
+  // Los lugares que se muestran no pueden ser "los dos primeros de la lista":
+  // si alguien busca en Cartago y el profesional atiende en San José, Heredia y
+  // Cartago, la tarjeta enseñaba los dos que NO le sirven y escondía el bueno
+  // detrás del "+2". Se ordenan poniendo delante los que coinciden con la
+  // ubicación que se está buscando.
+  const zonasBuscadas = useMemo(() => {
+    const terminos: string[] = [];
+    const ubicacion = searchParams?.get("ubicacion");
+    if (ubicacion) terminos.push(ubicacion);
+    const cantonId = searchParams?.get("canton");
+    const provinciaId = searchParams?.get("provincia");
+    for (const provincia of PROVINCES) {
+      if (provinciaId && provincia.id === provinciaId) terminos.push(provincia.name);
+      for (const canton of provincia.cantons) {
+        if (cantonId && canton.id === cantonId) terminos.push(canton.name, provincia.name);
+      }
     }
-    return [locTabs[0], selected];
-  }, [effectiveId, locTabs]);
+    return terminos.flatMap((termino) => normalizeText(termino).split(/[\s,]+/)).filter((parte) => parte.length >= 4);
+  }, [searchParams]);
+
+  const coincideConLaBusqueda = useMemo(() => {
+    if (zonasBuscadas.length === 0) return () => false;
+    return (option: { id: string; label: string }) => {
+      const texto = normalizeText(`${option.label} ${locAddress(option.id)}`);
+      return zonasBuscadas.some((parte) => texto.includes(parte));
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [zonasBuscadas, professional.workplaces]);
+
+  const locTabsOrdenados = useMemo(() => {
+    if (locTabs.length <= 2 || zonasBuscadas.length === 0) return locTabs;
+    const cerca = locTabs.filter(coincideConLaBusqueda);
+    if (cerca.length === 0) return locTabs;
+    return [...cerca, ...locTabs.filter((option) => !cerca.some((c) => c.id === option.id))];
+  }, [locTabs, zonasBuscadas, coincideConLaBusqueda]);
+
+  const primaryLocationTabs = useMemo(() => {
+    if (locTabsOrdenados.length <= 2) return locTabsOrdenados;
+    const selected = locTabsOrdenados.find((option) => option.id === effectiveId);
+    if (!selected || locTabsOrdenados.slice(0, 2).some((option) => option.id === selected.id)) {
+      return locTabsOrdenados.slice(0, 2);
+    }
+    return [locTabsOrdenados[0], selected];
+  }, [effectiveId, locTabsOrdenados]);
   const hiddenLocationTabs = useMemo(
-    () => locTabs.filter((option) => !primaryLocationTabs.some((visible) => visible.id === option.id)),
-    [locTabs, primaryLocationTabs],
+    () => locTabsOrdenados.filter((option) => !primaryLocationTabs.some((visible) => visible.id === option.id)),
+    [locTabsOrdenados, primaryLocationTabs],
   );
   const extraLocationCount = hiddenLocationTabs.length;
   // Address under the tabs: follow the selected tab. If a workplace has no exact
@@ -458,7 +499,15 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
       if (!locationMenuRef.current?.contains(event.target as Node)) setLocationMenuOpen(false);
     };
     document.addEventListener("pointerdown", closeOnOutsideClick);
-    return () => document.removeEventListener("pointerdown", closeOnOutsideClick);
+    // La tarjeta de /buscar aísla su pintado (content-visibility) y ese
+    // recorte cortaba el menú justo al borde de la tarjeta. Mientras el menú
+    // está abierto, la tarjeta suelta el aislamiento; al cerrarlo, vuelve.
+    const tarjeta = locationMenuRef.current?.closest(".ccr-search-card-slot");
+    tarjeta?.classList.add("ccr-menu-abierto");
+    return () => {
+      document.removeEventListener("pointerdown", closeOnOutsideClick);
+      tarjeta?.classList.remove("ccr-menu-abierto");
+    };
   }, [locationMenuOpen]);
   const locationControl = locTabs.length > 0 ? (
     <div
@@ -738,8 +787,9 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
     <button
       type="button"
       onClick={(e) => { e.stopPropagation(); openBooking(); }}
-      className="w-full rounded-full bg-[#009FD9] py-2.5 text-sm font-semibold text-white hover:bg-[#0089bb] transition-colors"
+      className="inline-flex h-11 w-full items-center justify-center gap-1.5 rounded-full bg-[#162543] text-[13px] font-bold text-white transition-colors hover:bg-[#233a5f]"
     >
+      <CalendarDays className="h-4 w-4" />
       {t("viewFullSchedule")}
     </button>
   );
@@ -777,7 +827,7 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
       label={t("email")}
     />
   );
-  const messageButtonClass = "w-full h-10 rounded-full py-0 text-[13px] font-semibold";
+  const messageButtonClass = "w-full h-11 rounded-full py-0 text-[13px] font-bold";
   const searchMessageButtonClass = `${messageButtonClass} bg-[#009FD9] hover:bg-[#0089bb] focus-visible:ring-[#009FD9]`;
   const contactButtons = (
     <>
@@ -799,7 +849,6 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
             isOwn={isOwn}
             onSelfAction={() => setSelfMsg(SELF_MSG.whatsapp)}
             analyticsSource="profile"
-            tone={hasSchedule ? "contrast" : "primary"}
             buttonLabel="WhatsApp"
             className={messageButtonClass}
           />
@@ -813,7 +862,6 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
           isOwn={isOwn}
           onSelfAction={() => setSelfMsg(SELF_MSG.whatsapp)}
           analyticsSource="profile"
-          tone={hasSchedule ? "contrast" : "primary"}
           className={messageButtonClass}
         />
       )}

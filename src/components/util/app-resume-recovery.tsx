@@ -9,6 +9,9 @@ const RECOVERY_THROTTLE_MS = 2_000;
 export function AppResumeRecovery() {
   const router = useRouter();
   const lastRecoveryRef = useRef(0);
+  // Solo un corte de red REAL justifica reconciliar contra el servidor: al
+  // volver de segundo plano iOS dispara `online` sin haber estado sin red.
+  const wasOfflineRef = useRef(false);
 
   useEffect(() => {
     const path = window.location.pathname;
@@ -57,17 +60,26 @@ export function AppResumeRecovery() {
     };
 
     const onFocus = () => recover();
-    const onOnline = () => recover(true);
+    const onOffline = () => {
+      wasOfflineRef.current = true;
+    };
+    const onOnline = () => {
+      const force = wasOfflineRef.current;
+      wasOfflineRef.current = false;
+      recover(force);
+    };
 
     document.addEventListener("visibilitychange", onVisibilityChange);
     window.addEventListener("pageshow", onPageShow);
     window.addEventListener("focus", onFocus);
+    window.addEventListener("offline", onOffline);
     window.addEventListener("online", onOnline);
 
     return () => {
       document.removeEventListener("visibilitychange", onVisibilityChange);
       window.removeEventListener("pageshow", onPageShow);
       window.removeEventListener("focus", onFocus);
+      window.removeEventListener("offline", onOffline);
       window.removeEventListener("online", onOnline);
     };
   }, [router]);

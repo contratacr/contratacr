@@ -81,6 +81,21 @@ export function guardarBusquedaReciente(termino: string) {
   }
 }
 
+/** Borra UNA búsqueda. Sin esto la única salida era vaciar todo el historial,
+ *  que es demasiado castigo para quitarse de encima un término mal escrito. */
+export function olvidarBusquedaReciente(termino: string) {
+  if (typeof window === "undefined") return;
+  try {
+    const quedan = leerBusquedasRecientes().filter(
+      (item) => item.toLocaleLowerCase("es-CR") !== termino.trim().toLocaleLowerCase("es-CR"),
+    );
+    if (quedan.length === 0) window.localStorage.removeItem(CLAVE_BUSQUEDAS);
+    else window.localStorage.setItem(CLAVE_BUSQUEDAS, JSON.stringify(quedan));
+  } catch {
+    // Sin almacenamiento no hay historial que borrar.
+  }
+}
+
 export function olvidarBusquedasRecientes() {
   if (typeof window === "undefined") return;
   try {

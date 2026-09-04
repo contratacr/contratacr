@@ -46,13 +46,13 @@ export function ReportModal({
   if (typeof document === "undefined") return null;
 
   return createPortal(
-    <div className="app-modal-screen fixed inset-0 z-[220] flex items-end justify-center sm:items-center">
+    <div className="app-modal-screen app-centered-modal-screen fixed inset-0 z-[220] flex items-center justify-center px-4">
       <div className="absolute inset-0 bg-black/50" onClick={() => !submitting && onClose()} aria-hidden />
       <div
         role="dialog"
         aria-modal="true"
         aria-label={title}
-        className="app-bottom-sheet relative w-full overflow-y-auto overscroll-contain rounded-t-2xl bg-white p-5 pb-[max(env(safe-area-inset-bottom),1.25rem)] shadow-2xl sm:max-w-sm sm:rounded-2xl"
+        className="app-centered-modal relative max-h-[calc(var(--app-visual-viewport-height)-2rem)] w-full max-w-sm overflow-y-auto overscroll-contain rounded-2xl bg-white p-5 shadow-2xl"
       >
         {submitted ? (
           <div className="flex flex-col items-center px-4 py-8 text-center">

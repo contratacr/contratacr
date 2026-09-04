@@ -9,7 +9,7 @@ import { createClient } from "@/lib/supabase/client";
 import { isSigningOut } from "@/lib/auth/sign-out";
 import { FocusedHeader } from "@/components/layout/focused-header";
 import { LandingFooter } from "@/components/landing/landing-footer";
-import { PageRouteLoading } from "@/components/ui/route-loading";
+import { LienzoNeutro } from "@/components/ui/section-skeletons";
 import { trackMetaEvent } from "@/lib/analytics/meta-pixel";
 
 export default function OnboardingPage() {
@@ -149,7 +149,7 @@ export default function OnboardingPage() {
   // so the role-selection cards never flash for someone who already has an account.
   // The same brand mark the previous screen was showing, so the hand-off from
   // Google reads as one continuous wait rather than logo → spinner → cards.
-  if (authLoading || !user || checkingExisting) return <PageRouteLoading />;
+  if (authLoading || !user || checkingExisting) return <LienzoNeutro />;
 
   const displayName = (
     (user.user_metadata?.full_name as string) ??
