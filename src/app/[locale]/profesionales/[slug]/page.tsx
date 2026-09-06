@@ -43,7 +43,7 @@ import { trackMetaEvent } from "@/lib/analytics/meta-pixel";
 import { trackInteraction } from "@/lib/analytics/interaction-events";
 import { cldLarge, cldThumb } from "@/lib/cloudinary";
 import { formatOfferPrice, type ProfessionalOffer } from "@/lib/offers";
-import { formatJobSalary, WORKPLACE_TYPES, type JobPost } from "@/lib/jobs";
+import { type JobPost } from "@/lib/jobs";
 import { PerfilSkeleton } from "@/components/ui/section-skeletons";
 import { ProfileStickyActions } from "@/components/professionals/profile-sticky-actions";
 import { ProgressiveImage } from "@/components/ui/progressive-image";
@@ -138,7 +138,6 @@ export default function ProfilePage() {
   const [professional, setProfessional] = useState<ProfessionalDetail | null>(null);
   const [profileSlots, setProfileSlots] = useState<ScheduleSlot[]>([]);
   const [publicOffers, setPublicOffers] = useState<ProfessionalOffer[]>([]);
-  const [publicJobs, setPublicJobs] = useState<JobPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [proNotFound, setProNotFound] = useState(false);
   // The logged-in viewer's role-aware panel route — drives the "Volver a mi panel"
@@ -276,7 +275,6 @@ export default function ProfilePage() {
         setProfessional(warm.pro);
         setProfileSlots(warm.slots);
         setPublicOffers(warm.offers);
-        setPublicJobs(warm.jobs);
         setLoading(false);
       } else {
         setLoading(true);
@@ -323,7 +321,6 @@ export default function ProfilePage() {
       setProfessional(fresh.pro);
       setProfileSlots(fresh.slots);
       setPublicOffers(fresh.offers);
-      setPublicJobs(fresh.jobs);
       const { data: { user } } = authResult;
       setIsAuthenticated(!!user);
       setViewerId(user?.id ?? null);
@@ -555,8 +552,8 @@ export default function ProfilePage() {
     { id: "resenas",        label: t("tabs.resenas") },
     ...(hasCasos ? [{ id: "casos" as Tab, label: t("tabs.casos") }] : []),
     ...(publicOffers.length > 0 ? [{ id: "ofertas" as Tab, label: locale === "en" ? "Offers" : "Ofertas" }] : []),
-    ...(publicJobs.length > 0 ? [{ id: "empleos" as Tab, label: locale === "en" ? "Jobs" : "Empleos" }] : []),
-    ...(hasCerts ? [{ id: "certificaciones" as Tab, label: t("tabs.certificaciones") }] : []),
+    // Empleos está pausado en toda la app y la formación se lee dentro de
+    // Información: seis pestañas eran demasiadas para una sola pantalla.
     { id: "sobre",          label: t("tabs.sobre") },
   ];
 
@@ -565,7 +562,7 @@ export default function ProfilePage() {
       <Navbar />
 
       <main className="flex-1 py-8 [.ccr-native-app_&]:!pt-0">
-        <div className="mx-auto max-w-7xl px-4 pt-0 sm:px-6 lg:px-8 [.ccr-native-app_&]:pt-4">
+        <div className="mx-auto max-w-4xl px-4 pt-0 sm:px-6 lg:px-8 [.ccr-native-app_&]:pt-4">
 
           {/* Preview mode → a clear way back to the panel. Otherwise, back to search. */}
           {!previewMode && <RecordRecentVisit surface="profesionales" visita={visitaProfesional} />}
@@ -640,19 +637,18 @@ export default function ProfilePage() {
                       initialFollowers={professional.followerCount ?? 0}
                       onCountChange={updateFollowerCount}
                       onSelfAction={() => setSelfMsg(SELF_MSG.follow)}
-                      className="box-border h-9 min-w-0 flex-1 rounded-xl border border-transparent bg-[#009fd9] px-3 text-white hover:bg-[#008fc3] aria-pressed:border-transparent aria-pressed:bg-[#f0f2f5] aria-pressed:text-[#111827] aria-pressed:hover:bg-[#e5e9ee]"
+                      className="box-border h-10 min-w-0 flex-1 rounded-full border-2 border-[#162543] bg-white px-3 text-[13px] text-[#162543] hover:bg-[#eef1f6] aria-pressed:border-[#e5e7eb] aria-pressed:bg-[#f0f2f5] aria-pressed:text-[#111827] aria-pressed:hover:bg-[#e5e9ee]"
                     />
                     <SaveButton
                       pro={savedPro}
                       isOwn={isOwn}
-                      withLabel
-                      className="box-border h-9 min-w-0 flex-1 whitespace-nowrap rounded-xl border border-[#d9e1ea] bg-white px-3 py-0 text-[#102746] hover:border-[#b8c6d6] hover:bg-[#f7f9fb] hover:text-[#102746] aria-pressed:border-transparent aria-pressed:bg-[#f0f2f5] aria-pressed:text-[#111827] aria-pressed:hover:border-transparent aria-pressed:hover:bg-[#e5e9ee] aria-pressed:hover:text-[#111827]"
+                      className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-[#d9e1ea] bg-white transition-colors hover:border-[#b8c6d6] hover:bg-[#f7f9fb]"
                     />
                     <button
                       type="button"
                       onClick={shareProfile}
                       aria-label={t("shareProfile")}
-                      className="grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-[#d9e1ea] bg-white text-[#102746] transition-colors hover:border-[#b8c6d6] hover:bg-[#f7f9fb]"
+                      className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-[#d9e1ea] bg-white text-[#102746] transition-colors hover:border-[#b8c6d6] hover:bg-[#f7f9fb]"
                     >
                       <Share2 className="h-4 w-4" />
                     </button>
@@ -734,7 +730,7 @@ export default function ProfilePage() {
 
                   {/* ── TAB: Disponibilidad y contacto (primera sección) ── */}
                   {activeTab === "disponibilidad" && (
-                    <div id="perfil-contacto" className="mx-auto flex w-full max-w-md flex-col gap-4 lg:mx-0">
+                    <div id="perfil-contacto" className="mx-auto flex w-full max-w-md flex-col gap-4">
                       <div>
                         {(() => {
                           const label = primaryPricingLabel(professional.pricing, professional.hourlyRate, locale);
@@ -994,48 +990,6 @@ export default function ProfilePage() {
                     </section>
                   )}
 
-                  {activeTab === "empleos" && (
-                    <section className="space-y-5">
-                      <div>
-                        <h2 className="text-lg font-semibold text-[#111827]">
-                          {locale === "en" ? "Jobs" : "Empleos"}
-                        </h2>
-                        <p className="mt-1 text-sm text-[#6b7280]">
-                          {locale === "en"
-                            ? "Open opportunities published by this professional."
-                            : "Oportunidades abiertas publicadas por este profesional."}
-                        </p>
-                      </div>
-                      <div className="divide-y divide-[#e5eaf0] overflow-hidden rounded-xl border border-[#dbe4ee] bg-white">
-                        {publicJobs.map((job) => (
-                          <Link
-                            key={job.id}
-                            href={`/empleos/${job.id}?from=${encodeURIComponent(`/profesionales/${routeSlug}?tab=empleos`)}`}
-                            className="group block min-w-0 px-5 py-4 transition-colors hover:bg-[#f4fbfe]"
-                          >
-                            <span className="block min-w-0">
-                              <span className="block truncate text-base font-semibold text-[#111827] group-hover:text-[#009FD9]">
-                                {job.title}
-                              </span>
-                              <span className="mt-1 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-sm text-[#6b7280]">
-                                <span>{WORKPLACE_TYPES[job.workplace_type]}</span>
-                                {job.location_label && (
-                                  <>
-                                    <span aria-hidden="true" className="text-[#c4ccd6]">&middot;</span>
-                                    <span className="min-w-0 truncate">{job.location_label}</span>
-                                  </>
-                                )}
-                              </span>
-                              <span className="mt-1.5 block text-sm font-bold text-[#009FD9]">
-                                {formatJobSalary(job)}
-                              </span>
-                            </span>
-                          </Link>
-                        ))}
-                      </div>
-                    </section>
-                  )}
-
                   {activeTab === "casos" && (
                     <div className="flex flex-col gap-6">
                       <div>
@@ -1081,9 +1035,9 @@ export default function ProfilePage() {
                     </div>
                   )}
 
-                  {/* ── TAB: Certificaciones (text only, no images) ── */}
-                  {activeTab === "certificaciones" && (
-                    <div>
+                  {/* ── Formación (dentro de Información; texto, sin imágenes) ── */}
+                  {activeTab === "sobre" && hasCerts && (
+                    <div className="mb-8 border-b border-[#eef2f6] pb-8">
                       <h2 className="text-lg font-semibold text-[#111827] mb-1">{t("tabs.certificaciones")}</h2>
                       <p className="text-sm text-[#9ca3af] mb-4">{t("certsSubtitle")}</p>
                       <div className="flex flex-col gap-5">
