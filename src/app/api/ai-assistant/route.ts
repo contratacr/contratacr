@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { EMPLEOS_VISIBLE } from "@/lib/feature-flags";
 import { recordServerInteraction } from "@/lib/analytics/server-events";
 import {
   categorySearchScore,
@@ -759,8 +760,8 @@ const PRODUCT_INTENTS: ProductIntent[] = [
   {
     test: (n) => /^(ayuda|help|\?+|necesito algo|no se|que puedes hacer|que haces|what can you do|menu)[\s?!.]*$/.test(n),
     answer: {
-      es: "Puedo hacer tres cosas: buscar profesionales por servicio y zona (escribe, por ejemplo, «ocupo un plomero en Cartago»), explicarte cómo agendar, chatear, publicar un proyecto o dejar una reseña, y ayudarte con tu cuenta (contraseña, cédula, notificaciones). ¿Por dónde empezamos?",
-      en: "I can do three things: find professionals by service and area (for example \"I need a plumber in Cartago\"), explain how to book, chat, publish a project or leave a review, and help with your account (password, ID, notifications). Where do we start?",
+      es: "Puedo hacer tres cosas: buscar profesionales por servicio y zona (escribe, por ejemplo, «ocupo un plomero en Cartago»), explicarte cómo reservar, chatear, publicar una solicitud o dejar una reseña, y ayudarte con tu cuenta (contraseña, cédula, notificaciones). ¿Por dónde empezamos?",
+      en: "I can do three things: find professionals by service and area (for example \"I need a plumber in Cartago\"), explain how to book, chat, post a request or leave a review, and help with your account (password, ID, notifications). Where do we start?",
     },
   },
   {
@@ -841,8 +842,7 @@ const PRODUCT_INTENTS: ProductIntent[] = [
     href: (locale) => `/${locale}/dashboard/profesional?tab=offers`,
   },
   {
-    test: (n) => /(public|cre[oa]|sub[oi]|pon[eg]|hac[eo]|busco|necesito|ocupo|publish|create|post|hire).{0,15}(un empleo|empleo|empleos|vacante|puesto|plaza|un trabajo para|personal|empleado|empleada|a job|job post|vacancy)/.test(n) && !/(postul|aplic|apply)/.test(n),
-    action: "open_dashboard",
+    test: (n) => EMPLEOS_VISIBLE && (/(public|cre[oa]|sub[oi]|pon[eg]|hac[eo]|busco|necesito|ocupo|publish|create|post|hire).{0,15}(un empleo|empleo|empleos|vacante|puesto|plaza|un trabajo para|personal|empleado|empleada|a job|job post|vacancy)/.test(n) && !/(postul|aplic|apply)/.test(n)),    action: "open_dashboard",
     answer: {
       es: "Para contratar personal, publica un empleo desde tu panel: pestaña Empleos → «Publicar empleo» (puesto, tipo de contrato, lugar, salario si quieres mostrarlo). Las personas postulan desde la sección Empleos y tú ves las postulaciones ahí mismo.",
       en: "To hire staff, publish a job from your panel: Jobs tab → \"Publish job\" (position, contract type, place, salary if you want to show it). People apply from the Jobs section and you see the applications right there.",
@@ -851,8 +851,7 @@ const PRODUCT_INTENTS: ProductIntent[] = [
     href: (locale) => `/${locale}/dashboard/profesional?tab=jobs`,
   },
   {
-    test: (n) => /(postular|postulo|postularme|aplicar|aplico|apply|applying).{0,20}(trabajo|empleo|puesto|vacante|job|position)/.test(n) || /(trabajo|empleo|job).{0,20}(postular|aplicar|apply)/.test(n),
-    action: "help",
+    test: (n) => EMPLEOS_VISIBLE && (/(postular|postulo|postularme|aplicar|aplico|apply|applying).{0,20}(trabajo|empleo|puesto|vacante|job|position)/.test(n) || /(trabajo|empleo|job).{0,20}(postular|aplicar|apply)/.test(n)),    action: "help",
     answer: {
       es: "Entra a Empleos, abre el puesto que te interesa y toca «Postular»: adjuntas tu currículum y un mensaje. Tus postulaciones quedan en tu panel, pestaña Postulaciones.",
       en: "Go to Jobs, open the position you like and tap \"Apply\": attach your résumé and a message. Your applications stay in your panel, Applications tab.",
@@ -861,8 +860,7 @@ const PRODUCT_INTENTS: ProductIntent[] = [
     href: (locale) => `/${locale}/empleos`,
   },
   {
-    test: (n) => /(ver|buscar|hay|busco|donde|where|see|find|show).{0,15}(ofertas de trabajo|ofertas de empleo|empleos|trabajos|vacantes|puestos|jobs|job offers|vacancies)/.test(n) || /^(empleos|trabajos|vacantes|jobs)[\s?!.]*$/.test(n),
-    action: "help",
+    test: (n) => EMPLEOS_VISIBLE && (/(ver|buscar|hay|busco|donde|where|see|find|show).{0,15}(ofertas de trabajo|ofertas de empleo|empleos|trabajos|vacantes|puestos|jobs|job offers|vacancies)/.test(n) || /^(empleos|trabajos|vacantes|jobs)[\s?!.]*$/.test(n)),    action: "help",
     answer: {
       es: "Los empleos disponibles están en la sección Empleos: puedes filtrar por lugar y tipo de contrato, y postular desde cada puesto.",
       en: "Open jobs are in the Jobs section: filter by place and contract type, and apply from each position.",
@@ -871,13 +869,13 @@ const PRODUCT_INTENTS: ProductIntent[] = [
     href: (locale) => `/${locale}/empleos`,
   },
   {
-    test: (n) => /(editar|modificar|cambiar|corregir|retirar|borrar|edit|change|withdraw).{0,15}(mi propuesta|una propuesta|la propuesta|propuesta|proposal)/.test(n),
+    test: (n) => /(editar|modificar|cambiar|corregir|retirar|borrar|edit|change|withdraw).{0,15}(mi propuesta|una propuesta|la propuesta|propuesta|mi respuesta|la respuesta|respuesta|proposal|reply)/.test(n),
     action: "open_dashboard",
     answer: {
-      es: "En tu panel abre Oportunidades → «Mis propuestas»: en la propuesta toca los tres puntos para editar el precio y el mensaje, o retirarla. Se puede editar mientras el cliente no la haya aceptado.",
-      en: "In your panel open Opportunities → \"My proposals\": on the proposal tap the three dots to edit the price and message, or withdraw it. It can be edited until the client accepts it.",
+      es: "Las respuestas no se editan: si quieres cambiar algo, escríbele al cliente directamente. En tu panel → Solicitudes de clientes → «Respondidas» ves lo que enviaste.",
+      en: "Replies can't be edited: if you want to change something, write to the client directly. In your panel → Client requests → \"Respondidas\" you can see what you sent.",
     },
-    cta: { es: "Ver mis propuestas", en: "See my proposals" },
+    cta: { es: "Ver mis respuestas", en: "See my replies" },
     href: (locale) => `/${locale}/dashboard/profesional?tab=proposals`,
   },
   {
@@ -913,10 +911,10 @@ const PRODUCT_INTENTS: ProductIntent[] = [
     test: (n) => /(dej|pon|escrib|hac|dar|doy|leave|write|give).{0,15}(una resena|resena|calificacion|opinion|review|rating)/.test(n) || /(calific|resen|rate|review).{0,15}(profesional|servicio|professional|service)/.test(n),
     action: "open_dashboard",
     answer: {
-      es: "Cuando el servicio termina, en tu panel → Solicitudes enviadas (o Proyectos, si fue un proyecto) aparece «Dejar reseña» junto a ese servicio: pones estrellas y un comentario, y se muestra en el perfil del profesional.",
-      en: "When the service is done, in your panel → Sent requests (or Projects, if it was a project) you'll see \"Leave a review\" next to that service: give stars and a comment, and it shows on the professional's profile.",
+      es: "Cuando el servicio termina, en tu panel → Mis reservas (o Mis solicitudes, si publicaste una) aparece «Dejar reseña» junto a ese servicio: pones estrellas y un comentario, y se muestra en el perfil del profesional.",
+      en: "When the service is done, in your panel → My bookings (or My requests, if you posted one) you'll see \"Leave a review\" next to that service: give stars and a comment, and it shows on the professional's profile.",
     },
-    cta: { es: "Ver mis solicitudes", en: "See my requests" },
+    cta: { es: "Ver mis reservas", en: "See my bookings" },
     href: (locale) => `/${locale}/dashboard/profesional?mode=use&tab=sent_bookings`,
   },
   {

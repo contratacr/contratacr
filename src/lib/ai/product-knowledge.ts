@@ -1,6 +1,6 @@
 export const CONTRATACR_PRODUCT_KNOWLEDGE = `
 PRODUCT IDENTITY
-- ContrataCR is a Costa Rica service marketplace for finding professionals and businesses, creating projects, receiving proposals and coordinating work.
+- ContrataCR is a Costa Rica service marketplace for finding professionals and businesses, booking them, posting requests, getting replies and coordinating work.
 - Core use is currently free. ContrataCR does not add a commission to the price agreed between client and professional. Never promise future prices or plans.
 - Spanish and English are available. Costa Rican Spanish must be clear and formal, without voseo or tuteo.
 
@@ -22,24 +22,24 @@ PROFESSIONAL PROFILES AND CONTACT
 - Reviews can be left from a professional profile by signed-in users. If the person is not signed in, send them to login/register and return them to the profile reviews tab. Reviews from requests, projects, or WhatsApp follow-ups may keep that context, and users can edit an existing review.
 
 CLIENT REQUESTS AND BOOKINGS
-- A client can request a service from a professional profile, choose the relevant service/location/date/time when available and see the request in the client panel.
-- A professional receives the request, can manage it from Requests and the parties receive the applicable in-app notifications.
-- Only the client can reschedule an active appointment from My requests in client mode. A professional cannot move the client's appointment unilaterally; the professional may cancel with an optional reason and coordinate another time through WhatsApp.
+- A client can book (Reservar) a service from a professional profile, choose the relevant service/location/date/time when available and see it in My bookings (Mis reservas). The note about what is needed is optional.
+- A professional receives the booking in Received bookings (Reservas recibidas), can message the client, cancel with a reason or report, and both parties receive the applicable in-app notifications.
+- Only the client can reschedule an active appointment from My bookings. A professional cannot move the client's appointment unilaterally; the professional may cancel with an optional reason and coordinate another time.
 - A cancelled appointment cannot be rescheduled. The client must book a new available time or coordinate another time with the professional through WhatsApp.
 - The system prevents double booking. A video consultation may share configured availability with one physical workplace, but once a time is booked it blocks that capacity in both modalities.
-- A professional marks work as completed; the client confirms finalization. The app may automatically confirm after the displayed waiting period.
+- Nobody marks work as completed or confirms anything: a booking with a date closes automatically once its day has passed; a booking without a date is closed by the client with "Ya me atendieron". After that the client can leave a review.
 - Cancellation notifications go to the affected opposite party, not back to the person who performed the cancellation.
 - Requests, projects, and professional profiles can lead to reviews. Cancelled records can be removed/archived where the UI offers that action; do not promise deletion of legal or system records.
 
-PROJECTS AND PROPOSALS
-- A client can create a project describing the service needed, location, timing and details. Matching professionals see it as a project available for proposals.
-- A professional can directly edit or withdraw a pending proposal while the project allows it. Editing does not require withdrawing and resending it. Accepted, rejected or withdrawn proposals are no longer editable. The client can review, reject or accept proposals.
-- Rejected or withdrawn proposals must not regain active actions incorrectly. Reopening a project creates a new proposal cycle; old proposals do not become current proposals for the reopened project.
-- Only the owner can change their project/proposal and only the appropriate opposite party should receive lifecycle notifications.
-- Direct profile contacts are requests. Marketplace work created to receive proposals is always called a project for both clients and professionals.
+REQUESTS (SOLICITUDES)
+- A client posts a request (Publicar una solicitud) with two fields: the service and what needs doing; the area is optional and remembered from the last time. Entry points: the link under the home search, the empty search results, the menu and My requests → Publicar.
+- Matching professionals see it under Client requests (Solicitudes de clientes) → Nuevas and reply with one message; the request then moves to Respondidas. Replies cannot be edited: the professional writes to the client instead.
+- The client reads the replies in My requests (Mis solicitudes) → Activas, writes to whoever they like (in-app chat inside the app, WhatsApp on the web) and closes the request with "Ya lo resolví", choosing who helped (optional review). The professional chosen sees "Te eligió".
+- There is no accept, assign, mark-done or confirm step. An open request with no activity for 30 days closes automatically and the client is told.
+- Direct profile contacts are bookings (Reservas). Posted needs are requests (Solicitudes) for both clients and professionals. Never call them projects or proposals.
 
 PROFESSIONAL PANEL
-- Main sections include Requests, Projects, Notifications, Profile, Services, Availability, Success cases, Verification, Support and Account/security. Proposals sent by the professional live inside Projects.
+- Main sections: Received bookings, Client requests, Offers, Success cases, Availability, Services, Support, Profile and Guides (Jobs is paused and hidden). Replies sent by the professional live under Client requests → Respondidas.
 - Profile completion helps public visibility. A professional needs at least one active service to appear correctly in public search.
 - Services can have a public description, price and experience information. Prices are CRC and displayed as I.V.A.I. where applicable.
 - Work areas can be exact map pins, cantons, whole provinces or nationwide video coverage for compatible services.
@@ -48,7 +48,7 @@ PROFESSIONAL PANEL
 - Verification uses the saved identity and may require manual review when the identification is not found in the Costa Rican registry.
 
 CLIENT PANEL
-- Main sections include My bookings, My requests, Favorites, Notifications, Profile, Support and Account/security.
+- Main sections: My bookings, My requests, Hire again, Favorites, Support, Profile and Guides.
 - A user who also offers services can switch between client and professional panels; actions and records remain separated by their role/context.
 
 NOTIFICATIONS
@@ -63,7 +63,7 @@ SUPPORT
 
 REGISTRATION, LOGIN AND ACCOUNT SECURITY
 - A person can register as client or professional, or add professional mode later. Email confirmation and onboarding may be required before all features are available.
-- Creating a project requires signing in so proposals and notifications remain attached to the correct account. A guest is sent to sign in and can create an account there.
+- Posting a request requires signing in so replies and notifications remain attached to the correct account. A guest is sent to sign in and can create an account there.
 - Google sign-in may be offered when configured. Do not claim Facebook sign-in is available.
 - Forgot-password responses are privacy-safe: they do not confirm whether an email has an account. Recovery links can expire and the newest link should be used.
 - Email changes require confirmation at the new address. Password and email changes live under Account/security.
@@ -77,7 +77,7 @@ PRIVACY, SAFETY AND LIMITS
 - ContrataCR cannot guarantee third-party delivery or uptime for email, Google OAuth, maps, Cloudinary or phone providers.
 
 NAVIGATION
-- /servicios browses the catalog; /buscar shows professionals; /publicar-proyecto creates a client project; /como-funciona explains the platform; /ayuda provides guides; /soporte opens support.
+- /servicios browses the catalog; /buscar shows professionals; posting a request opens from the home link, the panel (My requests → Publicar) or the menu; /como-funciona explains the platform; /ayuda provides guides; /soporte opens support.
 - /registro/cliente creates a client account; /registro/profesional creates or starts a professional profile; /login signs in; /olvide-contrasena starts recovery.
 - Dashboard links must preserve the user's intended action after authentication when the app supports it.
 `.trim();
@@ -95,7 +95,7 @@ export function assistantPageContext(pathname: string, authenticated: boolean) {
           : path.includes("/servicios")
             ? "service catalog"
             : path.includes("/publicar-proyecto")
-              ? "create project"
+              ? "post a request"
               : path.includes("/soporte")
                 ? "support"
                 : "public site";
