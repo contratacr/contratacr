@@ -1,4 +1,5 @@
 "use client";
+import { EMPLEOS_VISIBLE } from "@/lib/feature-flags";
 
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
@@ -20,16 +21,19 @@ import {
   UserCheck,
 } from "lucide-react";
 
+// `cat` es el índice del texto (cat0Title…), fijo aunque se esconda un tema.
 const TOPICS = [
-  { icon: UserCheck, faq: 1 },
-  { icon: Search, faq: 3 },
-  { icon: ShieldCheck, faq: 2 },
-  { icon: CalendarDays, faq: 6 },
-  { icon: Star, faq: 5 },
-  { icon: Smartphone, faq: 8 },
-  { icon: BriefcaseBusiness, faq: 9 },
-  { icon: Tags, faq: 10 },
-];
+  { icon: UserCheck, faq: 1, cat: 0 },
+  { icon: Search, faq: 3, cat: 1 },
+  { icon: ShieldCheck, faq: 2, cat: 2 },
+  { icon: CalendarDays, faq: 6, cat: 3 },
+  { icon: Star, faq: 5, cat: 4 },
+  { icon: Smartphone, faq: 8, cat: 5 },
+  { icon: BriefcaseBusiness, faq: 9, cat: 6 },
+  { icon: Tags, faq: 10, cat: 7 },
+].filter((topic) => EMPLEOS_VISIBLE || topic.cat !== 6);
+// La pregunta 9 es sobre postularse a un empleo.
+const FAQS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].filter((faq) => EMPLEOS_VISIBLE || faq !== 9);
 
 export default function AyudaPage() {
   const tSeccion = useTranslations("sectionTitles");
@@ -83,10 +87,10 @@ export default function AyudaPage() {
               <h2 className="text-sm font-extrabold text-[#162543]">{t("topicsTitle")}</h2>
               <p className="mt-1 text-sm leading-6 text-[#6b7280]">{t("topicsSubtitle")}</p>
               <nav className="mt-5 space-y-2" aria-label={t("topicsTitle")}>
-                {TOPICS.map(({ icon: Icon, faq }, index) => (
-                  <button key={index} type="button" onClick={() => selectTopic(faq)} className={`flex w-full items-center gap-3 rounded-lg border px-4 py-3 text-left transition-colors ${openFaq === faq ? "border-[#9bd8ef] bg-[#eaf7fd] text-[#0089bb]" : "border-[#dfe5eb] bg-white text-[#162543] hover:border-[#b8dcea]"}`}>
+                {TOPICS.map(({ icon: Icon, faq, cat }) => (
+                  <button key={cat} type="button" onClick={() => selectTopic(faq)} className={`flex w-full items-center gap-3 rounded-lg border px-4 py-3 text-left transition-colors ${openFaq === faq ? "border-[#9bd8ef] bg-[#eaf7fd] text-[#0089bb]" : "border-[#dfe5eb] bg-white text-[#162543] hover:border-[#b8dcea]"}`}>
                     <Icon className="h-4 w-4 shrink-0" />
-                    <span className="text-sm font-bold">{t(`cat${index}Title`)}</span>
+                    <span className="text-sm font-bold">{t(`cat${cat}Title`)}</span>
                   </button>
                 ))}
               </nav>
@@ -97,7 +101,7 @@ export default function AyudaPage() {
                 <h2 className="text-xl font-extrabold text-[#162543]">{t("faqTitle")}</h2>
                 <p className="mt-1 text-sm text-[#6b7280]">{t("faqSubtitle")}</p>
               </div>
-              {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map((index) => (
+              {FAQS.map((index) => (
                 <div key={index} id={`faq-${index}`} className="scroll-mt-28 border-b border-[#edf0f3] last:border-0">
                   <button type="button" onClick={() => setOpenFaq(openFaq === index ? null : index)} aria-expanded={openFaq === index} className="flex w-full items-center justify-between gap-4 py-5 text-left">
                     <span className="text-sm font-bold leading-6 text-[#162543]">{t(`faq${index}Q`)}</span>
