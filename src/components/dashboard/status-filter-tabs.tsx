@@ -249,9 +249,9 @@ export const SOLICITUD_TABS: readonly FilterTab[] = [
   { id: "en_curso" },
   { id: "finalizadas" },
 ];
-/** Solicitudes recibidas: lo nuevo primero, después lo que ya está andando. */
+/** Reservas recibidas: una reserva nace confirmada, así que no hay "nuevas"
+ *  que esperen respuesta; el profesional ve las mismas dos etapas que el cliente. */
 export const SOLICITUD_TABS_PRO: readonly FilterTab[] = [
-  { id: "nuevas" },
   { id: "en_curso" },
   { id: "finalizadas" },
 ];
@@ -276,12 +276,10 @@ export function solicitudBucket(status: string, scheduledDate?: string | null): 
   return "en_curso";
 }
 
-/** El profesional sí separa lo que acaba de llegar: una solicitud sin responder
- *  no es lo mismo que una cita ya confirmada, y mezclarlas esconde la que le
- *  toca atender primero. */
+/** Mismas cubetas para el profesional: "pending" es un residuo de datos viejos y
+ *  se lee como una reserva viva. */
 export function solicitudBucketPro(status: string, scheduledDate?: string | null): string {
-  const base = solicitudBucket(status, scheduledDate);
-  return base === "en_curso" && status === "pending" ? "nuevas" : base;
+  return solicitudBucket(status, scheduledDate);
 }
 export function solicitudMatches(filter: string, status: string, scheduledDate?: string | null): boolean {
   return solicitudBucket(status, scheduledDate) === filter;

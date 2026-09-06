@@ -416,7 +416,7 @@
     "nextLocations": "More locations",
     "dayUnavailable": "Not available",
     "viewFullSchedule": "View availability",
-    "requestService": "Request service",
+    "requestService": "Book",
     "location": "Location",
     "videoconsulta": "Video consultation",
     "atHome": "At your location",
@@ -945,7 +945,7 @@
     "code": "Error 404"
   },
   "booking": {
-    "title": "Request service",
+    "title": "Book",
     "step1": {
       "title": "Who is the service for?",
       "forMe": "For me",
@@ -1060,7 +1060,7 @@
     "back": "Back",
     "continue": "Continue",
     "close": "Close",
-    "requestService": "Request service",
+    "requestService": "Book",
     "charLimit": "You've reached the {max}-character limit."
   },
   "dashboard": {
@@ -2726,7 +2726,7 @@
     "resolveError": "Couldn't close the request. Try again.",
     "helpedBy": "Helped you",
     "publishCta": "Request a professional",
-    "bookingHappened": "Mark completed",
+    "bookingHappened": "It's done",
     "bookAgain": "Hire again"
   },
   "clientPage": {

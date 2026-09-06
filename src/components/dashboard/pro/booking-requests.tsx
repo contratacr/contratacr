@@ -14,11 +14,11 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { cn, formatRelativeOrDate } from "@/lib/utils";
-import { StatusFilterTabs, SOLICITUD_TABS_PRO, solicitudBucketPro, solicitudStatusRedundant, bucketCounts } from "@/components/dashboard/status-filter-tabs";
+import { StatusFilterTabs, SOLICITUD_TABS_PRO, solicitudBucketPro, bucketCounts } from "@/components/dashboard/status-filter-tabs";
 import { ExpandToggle } from "@/components/dashboard/expand-toggle";
 import { ExpandableText } from "@/components/ui/expandable-text";
 import { ReportModal } from "@/components/dashboard/report-modal";
-import { AUTO_CONFIRM_DAYS } from "@/lib/completion";
+import { formatBookingWhen } from "@/lib/booking-when";
 import { useAppDialog } from "@/hooks/use-app-dialog";
 import type { BookingStatus } from "@/types";
 import { PanelEmptyState, PanelListSkeleton } from "@/components/ui/content-loading";
@@ -65,10 +65,6 @@ const STATUS_VARIANT: Record<BookingStatus, "warning" | "success" | "error" | "d
   rescheduled: "muted",
 };
 
-function PendingStatusText({ label }: { label: string }) {
-  return <Badge variant="default" className="shrink-0 text-[11px] font-semibold">{label}</Badge>;
-}
-
 // "50688888888" / "88888888" → "+506 8888 8888" (readable). Non-standard → as-is.
 function formatPhoneCR(raw?: string | null): string | null {
   if (!raw) return null;
@@ -79,16 +75,6 @@ function formatPhoneCR(raw?: string | null): string | null {
 }
 
 // "13:00" → "1:00 pm" (12-hour, matches the prototype).
-function to12h(time?: string): string | null {
-  if (!time) return null;
-  const [hRaw, mRaw] = time.split(":");
-  const h = Number(hRaw);
-  const m = Number(mRaw ?? 0);
-  if (Number.isNaN(h)) return null;
-  const ap = h < 12 ? "am" : "pm";
-  const h12 = h % 12 === 0 ? 12 : h % 12;
-  return `${h12}:${String(Number.isNaN(m) ? 0 : m).padStart(2, "0")} ${ap}`;
-}
 
 function cleanVisibleSpanishText(value?: string | null): string | null {
   if (!value) return null;
@@ -223,15 +209,6 @@ export function BookingRequests() {
     return () => window.clearTimeout(id);
   }, [bookings, loadBookings, searchParams]);
 
-  async function updateStatus(id: string, status: BookingStatus) {
-    await fetch("/api/bookings", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id, status }),
-    });
-    setBookings((prev) => prev.map((b) => (b.id === id ? { ...b, status } : b)));
-  }
-
   // Cancel WITH a reason — the client is notified with the motivo. This is the pro's
   // clean way to decline ANY booking (incl. an unverified client). Frees the slot.
   async function submitCancel(id: string) {
@@ -320,16 +297,8 @@ export function BookingRequests() {
     const beneficiaryName = cleanVisibleSpanishText(booking.beneficiary_name);
     // Appointment date — "Mar, 23 jun · 1:00 pm" (capitalised weekday, 12-hour time),
     // distinct from the REQUEST date in the status header.
-    const dateStr = (() => {
-      if (!booking.scheduled_date) return cleanVisibleSpanishText(booking.preferred_date_text) || null;
-      const [y, m, d] = booking.scheduled_date.split("-").map(Number);
-      const dt = new Date(y, m - 1, d);
-      const wdRaw = dt.toLocaleDateString(dateLocale, { weekday: "short" }).replace(".", "");
-      const wd = wdRaw.charAt(0).toUpperCase() + wdRaw.slice(1);
-      const dm = dt.toLocaleDateString(dateLocale, { day: "numeric", month: "short" }).replace(".", "");
-      const time = to12h(booking.scheduled_time);
-      return `${wd}, ${dm}${time ? ` - ${time}` : ""}`;
-    })();
+    const dateStr = formatBookingWhen(booking.scheduled_date, booking.scheduled_time, dateLocale)
+      ?? cleanVisibleSpanishText(booking.preferred_date_text) ?? null;
 
     const category = cleanVisibleSpanishText(booking.category_id ? getCategoryLabel(booking.category_id, locale) : null);
     const location = cleanVisibleSpanishText(booking.slot_location_label);
@@ -379,12 +348,8 @@ export function BookingRequests() {
               <span className="min-w-0 flex flex-1 items-center gap-2 flex-wrap text-[15px] font-bold leading-snug text-[#162543] [overflow-wrap:anywhere] sm:text-base">
                 {clientName}
               </span>
-              {!solicitudStatusRedundant(booking.status, booking.scheduled_date) && (
-                booking.status === "pending" ? (
-                  <PendingStatusText label={t(`status.${booking.status}`)} />
-                ) : (
-                  <Badge variant={STATUS_VARIANT[booking.status]} className="shrink-0 text-[11px] font-semibold">{t(`status.${booking.status}`)}</Badge>
-                )
+              {(booking.status === "cancelled" || booking.status === "rescheduled") && (
+                <Badge variant={STATUS_VARIANT[booking.status]} className="shrink-0 text-[11px] font-semibold">{t(`status.${booking.status}`)}</Badge>
               )}
             </div>
             <div className="mt-2 flex flex-col items-start gap-1.5 text-[13px]">
@@ -475,35 +440,17 @@ export function BookingRequests() {
               </div>
             )}
 
-            {booking.status === "awaiting_confirmation" && (
-              <p className="rounded-lg border border-[#e5e7eb] bg-[#fbfdff] px-2.5 py-2 text-xs font-medium text-[#4b5563]">
-                {t("awaitingConfirmNote", { days: AUTO_CONFIRM_DAYS })}
-              </p>
-            )}
-
             {/* Frequent actions stay visible; exceptional actions live in the overflow menu. */}
             {!panelOpen && (() => {
-              // Sin icono y con un escalón de tipografía en pantallas angostas, "Enviar
-              // mensaje" y "Marcar completado" caben lado a lado en una sola línea.
-              const primaryActionClass = "h-11 w-auto shrink-0 grow whitespace-nowrap rounded-full px-4 text-[13px] font-bold";
-              // Escribir sigue teniendo sentido después de marcar el trabajo hecho
-              // —falta que el cliente confirme— y después de cerrarlo: una garantía,
-              // un detalle, un comprobante. Solo se corta si la solicitud se canceló.
+              // La reserva se cierra sola cuando pasa su fecha: el profesional no
+              // "marca completado". Lo suyo es escribirle al cliente; cancelar y
+              // reportar viven en el menú.
+              // Escribir sigue teniendo sentido después de cerrada: una garantía,
+              // un detalle, un comprobante. Solo se corta si la reserva se canceló.
               const canMessage = isActive || booking.status === "awaiting_confirmation" || booking.status === "completed";
               return (
                 <div className="flex items-start gap-2 border-t border-[#eef2f6] pt-3">
                   <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
-                    {isActive && (
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="chat"
-                        className={primaryActionClass}
-                        onClick={() => updateStatus(booking.id, "awaiting_confirmation")}
-                      >
-                        {t("markCompleted")}
-                      </Button>
-                    )}
                     {canMessage && (
                       <DirectChatLauncher bookingId={booking.id} professionalName={clientName} contextTitle={serviceDescription} buttonLabel={t("contact")} className="h-11 w-auto shrink-0 grow whitespace-nowrap rounded-full px-4 text-[13px] font-bold" />
                     )}

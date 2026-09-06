@@ -416,7 +416,7 @@
     "nextLocations": "Más ubicaciones",
     "dayUnavailable": "No disponible",
     "viewFullSchedule": "Ver disponibilidad",
-    "requestService": "Solicitar servicio",
+    "requestService": "Reservar",
     "location": "Ubicación",
     "videoconsulta": "Videoconsulta",
     "atHome": "A domicilio",
@@ -945,7 +945,7 @@
     "code": "Error 404"
   },
   "booking": {
-    "title": "Solicitar servicio",
+    "title": "Reservar",
     "step1": {
       "title": "¿Para quién es el servicio?",
       "forMe": "Para mí",
@@ -1060,7 +1060,7 @@
     "back": "Atrás",
     "continue": "Continuar",
     "close": "Cerrar",
-    "requestService": "Solicitar servicio",
+    "requestService": "Reservar",
     "charLimit": "Has alcanzado el límite de {max} caracteres."
   },
   "dashboard": {
@@ -2726,7 +2726,7 @@
     "resolveError": "No se pudo cerrar la solicitud. Intentá de nuevo.",
     "helpedBy": "Te ayudó",
     "publishCta": "Pedir un profesional",
-    "bookingHappened": "Marcar finalizada",
+    "bookingHappened": "Ya me atendieron",
     "bookAgain": "Volver a contratar"
   },
   "clientPage": {

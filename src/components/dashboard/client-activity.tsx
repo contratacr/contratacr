@@ -6,6 +6,7 @@ import { useSearchParams } from "next/navigation";
 import { CalendarDays, FolderOpen, ClipboardList, Plus, CalendarClock, Wrench, Users, FileText, CheckCircle2, MessageCircle } from "lucide-react";
 import { DirectChatLauncher } from "@/components/professionals/direct-chat-launcher";
 import { CardActionsMenu, type CardAction } from "@/components/dashboard/card-actions-menu";
+import { formatBookingWhen } from "@/lib/booking-when";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -16,7 +17,7 @@ import { getCategoryLabel } from "@/lib/data/categories";
 import { computeAge } from "@/lib/age";
 import { formatColonesTaxIncluded, splitPricingLabel } from "@/lib/pricing";
 import { getInitials, cn, formatRelativeOrDate } from "@/lib/utils";
-import { StatusFilterTabs, SOLICITUD_TABS, PROYECTO_TABS, solicitudMatches, solicitudBucket, solicitudStatusRedundant, proyectoMatches, proyectoBucket, bucketCounts } from "@/components/dashboard/status-filter-tabs";
+import { StatusFilterTabs, SOLICITUD_TABS, PROYECTO_TABS, solicitudMatches, solicitudBucket, proyectoMatches, proyectoBucket, bucketCounts } from "@/components/dashboard/status-filter-tabs";
 import { ExpandToggle } from "@/components/dashboard/expand-toggle";
 import { ExpandableText } from "@/components/ui/expandable-text";
 import { ReportModal } from "@/components/dashboard/report-modal";
@@ -120,19 +121,9 @@ const STATUS_VARIANT: Record<BookingStatus, "warning" | "success" | "error" | "d
   rescheduled: "muted",
 };
 
-function PendingStatusText({ label }: { label: string }) {
-  return <Badge variant="default" className="shrink-0 text-[11px] font-semibold">{label}</Badge>;
-}
 
 function formatBookingDate(b: Booking, dateLocale: string) {
-  if (b.scheduled_date) {
-    const [y, m, d] = b.scheduled_date.split("-").map(Number);
-    const label = new Date(y, m - 1, d)
-      .toLocaleDateString(dateLocale, { day: "numeric", month: "short", year: "numeric" })
-      .replace(".", "");
-    return b.scheduled_time ? `${label} · ${b.scheduled_time}` : label;
-  }
-  return b.preferred_date_text ?? null;
+  return formatBookingWhen(b.scheduled_date, b.scheduled_time, dateLocale) ?? b.preferred_date_text ?? null;
 }
 
 const NO_BOOKINGS: Booking[] = [];
@@ -642,12 +633,8 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                                   {b.professionals?.profiles?.full_name ?? t("professional")}
                                 </span>
                               )}
-                              {!solicitudStatusRedundant(b.status, b.scheduled_date) && (
-                                b.status === "pending" ? (
-                                  <PendingStatusText label={t(`bStatus.${b.status}`)} />
-                                ) : (
-                                  <Badge variant={STATUS_VARIANT[b.status]} className="shrink-0 text-[11px] font-semibold">{t(`bStatus.${b.status}`)}</Badge>
-                                )
+                              {(b.status === "cancelled" || b.status === "rescheduled") && (
+                                <Badge variant={STATUS_VARIANT[b.status]} className="shrink-0 text-[11px] font-semibold">{t(`bStatus.${b.status}`)}</Badge>
                               )}
                             </div>
                             {/* Appointment date with a grey calendar icon (no "Fecha:" label). */}
@@ -713,15 +700,13 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                               const isActiveB = ["pending", "confirmed", "in_progress"].includes(b.status);
                               const canContactAfterProCancel = b.status === "cancelled" && b.cancelled_by === "professional";
                               const canMessage = b.status === "cancelled" ? canContactAfterProCancel : true;
-                              // Cuando la fecha pasa y nadie cierra la cita, la solicitud se muda
-                              // sola al grupo Finalizadas pero su estado sigue vivo: nunca se pide
-                              // reseña ni cuenta como trabajo hecho. El profesional conserva su
-                              // botón; el cliente se quedaba sin ninguna salida.
+                              // Una reserva con fecha se cierra sola cuando su día pasa (la API lo
+                              // hace al listar). La que no tiene fecha la cierra el cliente con
+                              // "Ya me atendieron", y de una vez puede dejar la reseña.
                               const fechaYaPaso = isActiveB && solicitudBucket(b.status, b.scheduled_date) === "finalizadas";
+                              const sinFecha = isActiveB && !b.scheduled_date;
                               let primary: ReactNode = null;
-                              if (b.status === "awaiting_confirmation") {
-                                primary = <Button size="sm" variant="chat" className={actionButtonClass} onClick={() => confirmBookingDone(b.id)}>{t("confirmCompletion")}</Button>;
-                              } else if (fechaYaPaso) {
+                              if (sinFecha || fechaYaPaso) {
                                 primary = <Button size="sm" variant="chat" className={actionButtonClass} onClick={() => confirmBookingDone(b.id)}>{t("bookingHappened")}</Button>;
                               } else if (b.status === "completed") {
                                 primary = <Button size="sm" variant="chat" className={actionButtonClass} onClick={() => setReviewModal({ professionalId: b.professional_id, professionalName: b.professionals?.profiles?.full_name ?? t("professional"), bookingId: b.id })}>{rev ? t("editReview") : t("leaveReview")}</Button>;

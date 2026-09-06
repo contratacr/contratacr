@@ -12,16 +12,20 @@ import { writeSourceColumns } from "@/lib/security/write-guard";
 import { recordServerInteraction } from "@/lib/analytics/server-interactions";
 import { sendNotificationPush } from "@/lib/push/notify";
 
-// Lazy auto-confirm: a booking the pro marked "trabajo realizado" auto-completes
-// after AUTO_CONFIRM_DAYS if the client never confirmed. Best-effort.
-async function autoConfirmStale(admin: ReturnType<typeof createAdminClient>, filter: { professional_id?: string; client_id?: string }) {
+// Cierre perezoso: las reservas ya no piden "marcar realizado" ni "confirmar".
+// Una cita con fecha se finaliza sola cuando su día pasó (en hora de Costa Rica);
+// las filas heredadas en "awaiting_confirmation" se finalizan de una vez. La que
+// no tiene fecha la cierra el cliente con "Ya me atendieron". Best-effort.
+async function autoCloseStale(admin: ReturnType<typeof createAdminClient>, filter: { professional_id?: string; client_id?: string }) {
   try {
-    const cutoff = new Date(Date.now() - AUTO_CONFIRM_DAYS * 24 * 60 * 60 * 1000).toISOString();
-    let q = admin.from("bookings").update({ status: "completed", completed_at: new Date().toISOString() })
-      .eq("status", "awaiting_confirmation").lt("work_done_at", cutoff);
-    if (filter.professional_id) q = q.eq("professional_id", filter.professional_id);
-    if (filter.client_id) q = q.eq("client_id", filter.client_id);
-    await q;
+    const now = new Date();
+    const hoyCR = new Date(now.getTime() - 6 * 60 * 60 * 1000).toISOString().slice(0, 10);
+    const cerrada = { status: "completed", completed_at: now.toISOString(), updated_at: now.toISOString() };
+    let vencidas = admin.from("bookings").update(cerrada).in("status", ["pending", "confirmed", "in_progress"]).lt("scheduled_date", hoyCR);
+    let heredadas = admin.from("bookings").update(cerrada).eq("status", "awaiting_confirmation");
+    if (filter.professional_id) { vencidas = vencidas.eq("professional_id", filter.professional_id); heredadas = heredadas.eq("professional_id", filter.professional_id); }
+    if (filter.client_id) { vencidas = vencidas.eq("client_id", filter.client_id); heredadas = heredadas.eq("client_id", filter.client_id); }
+    await Promise.all([vencidas, heredadas]);
   } catch { /* column may not be migrated yet */ }
 }
 
@@ -316,7 +320,7 @@ export async function GET(req: NextRequest) {
     if (!pro) return NextResponse.json({ bookings: [] });
 
     const adminPro = createAdminClient();
-    await autoConfirmStale(adminPro, { professional_id: pro.id });
+    await autoCloseStale(adminPro, { professional_id: pro.id });
 
     // Read via the service-role client (authorized above by pro.id). The embedded
     // client profile needs `is_flagged` (a moderation column) which migration 047
@@ -340,7 +344,7 @@ export async function GET(req: NextRequest) {
   // (authorized by the session above). RLS row-policy changes on `bookings` would
   // otherwise silently filter the client's own sent requests to an empty list.
   const adminClient = createAdminClient();
-  await autoConfirmStale(adminClient, { client_id: user.id });
+  await autoCloseStale(adminClient, { client_id: user.id });
   // NOTE: professionals↔categories has no FK (category_id is plain text), so an
   // embedded categories(...) join 500s and silently drops every booking. Select
   // category_id as a column instead.
