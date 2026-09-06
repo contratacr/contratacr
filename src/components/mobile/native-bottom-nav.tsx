@@ -1,4 +1,5 @@
 "use client";
+import { EMPLEOS_VISIBLE } from "@/lib/feature-flags";
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Search, Bot, Briefcase, UserRound } from "lucide-react";
@@ -91,7 +92,7 @@ export function NativeBottomNav() {
   useEffect(() => {
     if (!visible) return;
     const id = window.setTimeout(() => {
-      for (const destino of ["/", "/buscar", "/ofertas", "/empleos", primaryPanelHref]) router.prefetch(destino);
+      for (const destino of ["/", "/buscar", "/ofertas", ...(EMPLEOS_VISIBLE ? ["/empleos"] : []), primaryPanelHref]) router.prefetch(destino);
     }, 800);
     return () => window.clearTimeout(id);
   }, [pathname, primaryPanelHref, router, visible]);
@@ -242,7 +243,7 @@ export function NativeBottomNav() {
         escondida && "pointer-events-none translate-y-full",
       )}
     >
-      <div className="mx-auto grid w-full max-w-[520px] grid-cols-[repeat(5,minmax(0,1fr))] gap-0.5 min-[360px]:gap-1">
+      <div className={cn("mx-auto grid w-full max-w-[520px] gap-0.5 min-[360px]:gap-1", EMPLEOS_VISIBLE ? "grid-cols-[repeat(5,minmax(0,1fr))]" : "grid-cols-[repeat(4,minmax(0,1fr))]")}>
         <Link
           href="/buscar"
           prefetch={true}
@@ -278,17 +279,19 @@ export function NativeBottomNav() {
           {rotulo(etiquetas.asistente)}
         </button>
 
-        <Link
-          href="/empleos"
-          prefetch={true}
-          aria-label={etiquetas.empleos}
-          onClick={(event) => irA(event, "/empleos")}
-          className={itemClass("/empleos")}
-        >
-          {marca("/empleos")}
-          <Briefcase className="h-5 w-5" strokeWidth={isActive("/empleos") ? 2.4 : 2} />
-          {rotulo(etiquetas.empleos)}
-        </Link>
+        {EMPLEOS_VISIBLE && (
+          <Link
+            href="/empleos"
+            prefetch={true}
+            aria-label={etiquetas.empleos}
+            onClick={(event) => irA(event, "/empleos")}
+            className={itemClass("/empleos")}
+          >
+            {marca("/empleos")}
+            <Briefcase className="h-5 w-5" strokeWidth={isActive("/empleos") ? 2.4 : 2} />
+            {rotulo(etiquetas.empleos)}
+          </Link>
+        )}
 
         {user ? (
           <Link

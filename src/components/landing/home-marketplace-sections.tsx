@@ -1,3 +1,4 @@
+import { EMPLEOS_VISIBLE } from "@/lib/feature-flags";
 import { CalendarDays, MapPin } from "lucide-react";
 import type { ReactNode } from "react";
 import { Link } from "@/i18n/navigation";
@@ -104,7 +105,7 @@ export async function HomeMarketplaceSections() {
         </section>
       )}
 
-      {jobs.length > 0 && (
+      {EMPLEOS_VISIBLE && jobs.length > 0 && (
         <section className="bg-[#f4f7fa] py-10 sm:py-14" aria-labelledby="home-jobs-title">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <HomeSectionHeading

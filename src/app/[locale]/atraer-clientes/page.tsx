@@ -1,5 +1,6 @@
 "use client";
 
+import { EMPLEOS_VISIBLE } from "@/lib/feature-flags";
 import { useTranslations } from "next-intl";
 import { LandingNavbar } from "@/components/landing/landing-navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
@@ -73,12 +74,14 @@ export default function AtraerClientesPage() {
               <p className="mt-2 text-sm leading-6 text-[#6b7280]">{t("growthToolsSubtitle")}</p>
             </div>
             <div className="grid overflow-hidden rounded-lg border border-[#dfe5eb] bg-white md:grid-cols-2 md:divide-x md:divide-[#e5e7eb]">
+              {EMPLEOS_VISIBLE && (
               <article className="border-b border-[#e5e7eb] p-6 md:border-b-0">
                 <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#eaf7fd] text-[#0089bb]"><BriefcaseBusiness className="h-5 w-5" /></div>
                 <h3 className="mt-4 text-base font-bold text-[#162543]">{t("jobsTitle")}</h3>
                 <p className="mt-2 text-sm leading-6 text-[#6b7280]">{t("jobsBody")}</p>
                 <Link href="/empleos" className="mt-4 inline-flex items-center gap-2 text-sm font-bold text-[#0089bb] hover:text-[#007aa7]">{t("jobsCta")}<ArrowRight className="h-4 w-4" /></Link>
               </article>
+              )}
               <article className="p-6">
                 <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#eaf7fd] text-[#0089bb]"><Tags className="h-5 w-5" /></div>
                 <h3 className="mt-4 text-base font-bold text-[#162543]">{t("offersTitle")}</h3>

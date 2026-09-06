@@ -1,3 +1,4 @@
+import { EMPLEOS_VISIBLE } from "@/lib/feature-flags";
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { getTranslations } from "next-intl/server";
@@ -126,6 +127,7 @@ export default async function ComoFuncionaPage() {
               <p className="mt-2 text-sm leading-6 text-[#6b7280]">{t("marketplaceSubtitle")}</p>
             </div>
             <div className="mt-7 grid gap-4 sm:grid-cols-2">
+              {EMPLEOS_VISIBLE && (
               <Link href="/empleos" className="group flex min-h-40 flex-col justify-between rounded-lg border border-[#dfe5eb] bg-white p-5 transition-colors hover:border-[#9bd8ef]">
                 <div>
                   <BriefcaseBusiness className="h-5 w-5 text-[#009fd9]" />
@@ -136,6 +138,7 @@ export default async function ComoFuncionaPage() {
                   {t("marketplaceJobsCta")}<ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
                 </span>
               </Link>
+              )}
               <Link href="/ofertas" className="group flex min-h-40 flex-col justify-between rounded-lg border border-[#dfe5eb] bg-white p-5 transition-colors hover:border-[#9bd8ef]">
                 <div>
                   <Tags className="h-5 w-5 text-[#009fd9]" />

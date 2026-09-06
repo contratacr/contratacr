@@ -1,4 +1,5 @@
 "use client";
+import { EMPLEOS_VISIBLE } from "@/lib/feature-flags";
 
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useLocale, useTranslations } from "next-intl";
@@ -125,11 +126,12 @@ const OFFER_ONLY = new Set<Tab>(["services", "photos", "availability", "bookings
 const USE_ONLY = new Set<Tab>(["sent_bookings", "sent_projects", "applications", "saved", "connections"]);
 
 // Sidebar order per mode (+ a shared block appended below).
-const OFFER_TABS: Tab[] = [
+const OFFER_TABS: Tab[] = ([
   "bookings", "proposals", "jobs", "offers", "photos", "availability", "services", "soporte", "profile", "guides",
   ...(PAYMENTS_ENABLED ? (["suscripcion"] as Tab[]) : []),
-];
-const USE_TABS: Tab[] = ["sent_bookings", "sent_projects", "applications", "connections", "saved", "soporte", "profile", "guides"];
+] as Tab[]).filter((tab) => EMPLEOS_VISIBLE || tab !== "jobs");
+const USE_TABS: Tab[] = (["sent_bookings", "sent_projects", "applications", "connections", "saved", "soporte", "profile", "guides"] as Tab[])
+  .filter((tab) => EMPLEOS_VISIBLE || tab !== "applications");
 const OPPORTUNITY_MODAL_SEEN_STORAGE_PREFIX = "contratacr:seen-opportunity-modal";
 
 const PANEL_TAB_LABELS: Partial<Record<Tab, { es: string; en: string }>> = {
@@ -160,7 +162,7 @@ type GuideItem = {
   stepCount: number;
 };
 
-const GUIDE_ITEMS: GuideItem[] = [
+const GUIDE_ITEMS: GuideItem[] = ([
   { id: "clientPanel", section: "client", actionTab: "sent_bookings", targetMode: "use", stepCount: 5 },
   { id: "clientRequests", section: "client", actionTab: "sent_bookings", targetMode: "use", stepCount: 3 },
   { id: "clientProjects", section: "client", actionTab: "sent_projects", targetMode: "use", stepCount: 3 },
@@ -186,7 +188,7 @@ const GUIDE_ITEMS: GuideItem[] = [
   { id: "jobsPanel", section: "professional", actionTab: "jobs", targetMode: "offer", stepCount: 4 },
   { id: "offersPanel", section: "professional", actionTab: "offers", targetMode: "offer", stepCount: 4 },
   { id: "professionalProfile", section: "professional", actionTab: "profile", targetMode: "offer", stepCount: 5 },
-];
+] as GuideItem[]).filter((guide) => EMPLEOS_VISIBLE || !["jobsGuide", "jobsPanel", "clientApplications"].includes(guide.id));
 
 function guideIcon(id: string) {
   switch (id) {
