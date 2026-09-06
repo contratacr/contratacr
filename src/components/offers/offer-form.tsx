@@ -66,6 +66,7 @@ const OFFER_FORM_COPY = {
     dollars: "Dólares (USD)",
     unit: "Unidad",
     quantity: "Cantidad disponible",
+    moreOptions: "Más opciones (moneda, unidad, cantidad)",
     availableUntil: "Disponible hasta",
     availabilityHelp: "La oferta se ocultará automáticamente después de esta fecha.",
     location: "Ubicación",
@@ -123,6 +124,7 @@ const OFFER_FORM_COPY = {
     dollars: "US dollars (USD)",
     unit: "Unit",
     quantity: "Available quantity",
+    moreOptions: "More options (currency, unit, quantity)",
     availableUntil: "Available until",
     availabilityHelp: "The offer will be hidden automatically after this date.",
     location: "Location",
@@ -488,9 +490,16 @@ export function OfferForm({ professionalId, serviceOptions, backHref = "/ofertas
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="text-sm font-medium text-[#374151]"><RequiredLabel>{copy.currentPrice}</RequiredLabel><input name="price_now" inputMode="numeric" maxLength={String(MAX_MONEY_AMOUNT).length} defaultValue={initialOffer?.price_now ?? ""} placeholder="25000" className={FIELD_CLASS} /><FieldError>{fieldErrors.price}</FieldError></label>
             <label className="text-sm font-medium text-[#374151]">{copy.previousPrice} <span className="font-normal text-[#9ca3af]">({copy.optional})</span><input name="price_before" inputMode="numeric" maxLength={String(MAX_MONEY_AMOUNT).length} defaultValue={initialOffer?.price_before ?? ""} placeholder="35000" className={FIELD_CLASS} /><FieldError>{fieldErrors.priceBefore}</FieldError></label>
-            <SelectMenu label={copy.currency} value={currency} onChange={setCurrency} options={[{ value: "CRC", label: copy.colones }, { value: "USD", label: copy.dollars }]} />
-            <SelectMenu label={copy.unit} value={priceUnit} onChange={setPriceUnit} options={Object.keys(OFFER_PRICE_UNITS).map((value) => ({ value, label: offerPriceUnitLabel(value as keyof typeof OFFER_PRICE_UNITS, locale) }))} />
-            <label className="text-sm font-medium text-[#374151]">{copy.quantity} <span className="font-normal text-[#9ca3af]">({copy.optional})</span><input name="quantity_available" inputMode="numeric" maxLength={7} defaultValue={initialOffer?.quantity_available ?? ""} placeholder="10" className={FIELD_CLASS} /><FieldError>{fieldErrors.quantity}</FieldError></label>
+            {/* Casi toda oferta es en colones, sin unidad especial ni cupo: esos tres
+                campos se pliegan para que el formulario se lea en una pasada. */}
+            <details className="rounded-lg border border-[#e6edf3] px-4 py-3 sm:col-span-2" open={Boolean(initialOffer && (initialOffer.currency === "USD" || initialOffer.quantity_available))}>
+              <summary className="cursor-pointer text-sm font-semibold text-[#162543]">{copy.moreOptions}</summary>
+              <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                <SelectMenu label={copy.currency} value={currency} onChange={setCurrency} options={[{ value: "CRC", label: copy.colones }, { value: "USD", label: copy.dollars }]} />
+                <SelectMenu label={copy.unit} value={priceUnit} onChange={setPriceUnit} options={Object.keys(OFFER_PRICE_UNITS).map((value) => ({ value, label: offerPriceUnitLabel(value as keyof typeof OFFER_PRICE_UNITS, locale) }))} />
+                <label className="text-sm font-medium text-[#374151]">{copy.quantity} <span className="font-normal text-[#9ca3af]">({copy.optional})</span><input name="quantity_available" inputMode="numeric" maxLength={7} defaultValue={initialOffer?.quantity_available ?? ""} placeholder="10" className={FIELD_CLASS} /><FieldError>{fieldErrors.quantity}</FieldError></label>
+              </div>
+            </details>
             <div className="text-sm font-semibold">
               {copy.availableUntil} <span className="font-normal text-[#9ca3af]">({copy.optional})</span>
               <div className="mt-1.5"><FutureDatePicker value={validUntil} onChange={setValidUntil} /></div>
