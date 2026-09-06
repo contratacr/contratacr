@@ -52,7 +52,7 @@ function validateCedulaFormat(v: string): boolean {
 
 // Schemas are built INSIDE the component (useMemo) so their messages localize —
 // see `makeSchemas` near the top of RegisterProfessionalPage.
-type Step1Data = { fullName: string; cedula: string; email: string; password: string; confirmPassword: string };
+type Step1Data = { fullName: string; cedula: string; email: string; password: string };
 type Step2Data = { category: string; whatsapp: string; address?: string };
 type Step3Data = { yearsExperience?: string; hourlyRate?: string };
 
@@ -411,11 +411,6 @@ export default function RegisterProfessionalPage() {
           .regex(/[a-z]/, tRp("ruleLower"))
           .regex(/[0-9]/, tRp("ruleNumber"))
           .regex(/[!@#$%^&*]/, tRp("ruleSpecial")),
-        confirmPassword: z.string(),
-      })
-      .refine((d) => d.password === d.confirmPassword, {
-        message: tRp("passwordsDontMatch"),
-        path: ["confirmPassword"],
       }),
     step2Schema: z.object({
       category: z.string().min(1, t("valCategoryRequired")),
@@ -487,7 +482,7 @@ export default function RegisterProfessionalPage() {
   const form1 = useForm<Step1Data>({
     resolver: zodResolver(step1Schema),
     mode: "onBlur",
-    defaultValues: { fullName: "", cedula: "", email: "", password: "", confirmPassword: "" },
+    defaultValues: { fullName: "", cedula: "", email: "", password: "" },
   });
   const form2 = useForm<Step2Data>({
     resolver: zodResolver(step2Schema),
@@ -533,22 +528,8 @@ export default function RegisterProfessionalPage() {
   }
 
   const watchedPassword = form1.watch("password") ?? "";
-  const watchedConfirmPassword = form1.watch("confirmPassword") ?? "";
   const watchedEmail = form1.watch("email") ?? "";
   const watchedCedula = form1.watch("cedula") ?? "";
-  const confirmPasswordFieldError = form1.formState.errors.confirmPassword?.message;
-  const confirmPasswordMismatch = watchedConfirmPassword.length > 0 && watchedPassword !== watchedConfirmPassword;
-  const confirmPasswordMatches = watchedConfirmPassword.length > 0 && watchedPassword === watchedConfirmPassword;
-  const confirmPasswordError = confirmPasswordMismatch
-    ? tRp("passwordsDontMatch")
-    : confirmPasswordMatches
-      ? undefined
-      : confirmPasswordFieldError;
-
-  useEffect(() => {
-    if (!watchedConfirmPassword && !confirmPasswordFieldError) return;
-    void form1.trigger("confirmPassword");
-  }, [confirmPasswordFieldError, form1, watchedPassword, watchedConfirmPassword]);
 
   // Real-time duplicate detection (email/password identity step)
   const emailCheck = useAvailabilityCheck(watchedEmail, "email", !currentUser);
@@ -1125,14 +1106,6 @@ export default function RegisterProfessionalPage() {
                 <PasswordChecklist password={watchedPassword} />
               </div>
 
-              <Input
-                label={<>{t("confirmPassword")} <span className="text-red-500">*</span></>}
-                type="password"
-                placeholder="••••••••"
-                error={confirmPasswordError}
-                {...form1.register("confirmPassword")}
-              />
-
               <Button type="submit" size="lg" className="mt-2" loading={submitting} disabled={submitting}>
                 {t("continue")} <ArrowRight className="h-4 w-4" />
               </Button>
@@ -1370,7 +1343,6 @@ export default function RegisterProfessionalPage() {
                   onClick={() => {
                     if (!currentUser) {
                       form1.setValue("password", "");
-                      form1.setValue("confirmPassword", "");
                     }
                     setStep(0);
                   }}
