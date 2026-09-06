@@ -1,4 +1,5 @@
 "use client";
+import { EMPLEOS_VISIBLE } from "@/lib/feature-flags";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Bookmark, BriefcaseBusiness, ExternalLink, MapPin, Star, Tag, Trash2, Video, Wrench } from "lucide-react";
@@ -232,7 +233,7 @@ export function SavedProfessionalsTab() {
 
   // Los tres tipos que se pueden guardar. Se abre en Profesionales, que es lo
   // que casi siempre se viene a buscar.
-  const availableFilters: SavedFilter[] = ["professionals", "offers", "jobs"];
+  const availableFilters: SavedFilter[] = (["professionals", "offers", "jobs"] as SavedFilter[]).filter((f) => EMPLEOS_VISIBLE || f !== "jobs");
 
   if (!mounted || authLoading) return <PanelListSkeleton rows={3} hasData={total > 0} />;
 
