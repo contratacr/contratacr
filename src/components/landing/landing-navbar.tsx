@@ -659,6 +659,10 @@ export function AccountMenu({
               <UserRound className="h-4 w-4 text-[#009FD9]" />
               {t("myPanel")}
             </Link>
+            <Link href={`${projectsHref}&openPublish=1`} onClick={() => setOpen(false)} className={menuItemClass}>
+              <ClipboardList className="h-4 w-4 text-[#009FD9]" />
+              {t("publishRequest")}
+            </Link>
             {!isPro && (
               <Link href={projectsHref} onClick={() => setOpen(false)} className={menuItemClass}>
                 <ClipboardList className="h-4 w-4 text-[#009FD9]" />
@@ -2338,6 +2342,10 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                         <span className={mobileDrawerTextClass}>{locale === "en" ? "My dashboard" : "Mi panel"}</span>
                       </Link>
                     )}
+                    <Link href={`${projectsHref}&openPublish=1`} onClick={() => setMobileOpen(false)} className={mobileDrawerItemClass}>
+                      <DrawerIcon><ClipboardList /></DrawerIcon>
+                      <span className={mobileDrawerTextClass}>{t("publishRequest")}</span>
+                    </Link>
                     {!isPro && (
                       <Link href={projectsHref} onClick={() => setMobileOpen(false)} className={mobileDrawerItemClass}>
                         <DrawerIcon><ClipboardList /></DrawerIcon>

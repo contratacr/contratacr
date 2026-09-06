@@ -407,9 +407,9 @@ test.describe("@seeded ContrataCR AI", () => {
     });
     expect(requestReady.status).toBe(200);
     expect(requestReady.body.action).toBe("publish_request");
-    expect(requestReady.body.answer).toMatch(/crear proyecto/i);
+    expect(requestReady.body.answer).toMatch(/publicar solicitud/i);
     expect(requestReady.body.answer).not.toMatch(/voy a (?:proceder|crear|publicar)|creare|publicare/i);
-    expect(requestReady.body.ctaLabel).toBe("Crear proyecto");
+    expect(requestReady.body.ctaLabel).toBe("Publicar solicitud");
     expect(requestReady.body.searchHref).toContain("tab=sent_projects");
     expect(requestReady.body.searchHref).toContain("openPublish=1");
     expect(requestReady.body.searchHref).toContain("categoria=carpinteria");

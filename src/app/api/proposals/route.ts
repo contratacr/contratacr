@@ -112,10 +112,19 @@ export async function POST(req: NextRequest) {
           professional_name: profile?.full_name ?? "Un profesional",
           project_title: project.title ?? "tu solicitud",
         };
+        const notification = {
+          user_id: project.client_id,
+          type: "proposal_received",
+          title: `${profile?.full_name ?? "Un profesional"} te respondió`,
+          message: `Respondió a "${project.title ?? "tu solicitud"}". Entrá a leerlo y, si te interesa, escribile por WhatsApp.`,
+          data: pushData,
+        };
+        const stored = await admin.from("notifications").insert(notification);
+        if (stored.error) console.error("[POST /api/proposals] notification insert failed:", stored.error.message);
         await sendNotificationPush({
           userId: project.client_id,
-          title: "Nueva propuesta recibida",
-          message: `${profile?.full_name ?? "Un profesional"} envio una propuesta para "${project.title ?? "tu solicitud"}".`,
+          title: notification.title,
+          message: notification.message,
           data: pushData,
         });
       }

@@ -132,10 +132,10 @@ const USE_TABS: Tab[] = ["sent_bookings", "sent_projects", "applications", "conn
 const OPPORTUNITY_MODAL_SEEN_STORAGE_PREFIX = "contratacr:seen-opportunity-modal";
 
 const PANEL_TAB_LABELS: Partial<Record<Tab, { es: string; en: string }>> = {
-  bookings: { es: "Solicitudes Recibidas", en: "Received requests" },
-  proposals: { es: "Proyectos Recibidos", en: "Received projects" },
-  sent_bookings: { es: "Mis solicitudes", en: "My requests" },
-  sent_projects: { es: "Mis proyectos", en: "My projects" },
+  bookings: { es: "Reservas recibidas", en: "Received bookings" },
+  proposals: { es: "Solicitudes de clientes", en: "Client requests" },
+  sent_bookings: { es: "Mis reservas", en: "My bookings" },
+  sent_projects: { es: "Mis solicitudes", en: "My requests" },
   applications: { es: "Mis postulaciones", en: "My applications" },
   connections: { es: "Volver a contratar", en: "Hire again" },
   photos: { es: "Casos de éxito", en: "Success cases" },

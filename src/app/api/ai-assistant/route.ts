@@ -1076,7 +1076,7 @@ function localAnswer(message: string, locale: Locale): AssistantPayload {
       answer: locale === "en"
         ? "Create a project with what you need, the area and the details. ContrataCR will notify professionals related to that service so they can send proposals."
         : "Crea un proyecto con lo que necesitas, la zona y los detalles. ContrataCR notificará a profesionales relacionados con ese servicio para que puedan enviar propuestas.",
-      ctaLabel: locale === "en" ? "Create project" : "Crear proyecto",
+      ctaLabel: locale === "en" ? "Post a request" : "Publicar solicitud",
     };
   }
 
@@ -1316,7 +1316,7 @@ function actionHref(payload: AssistantPayload, originalMessage: string, locale: 
 function defaultCtaLabel(action: AssistantAction | undefined, locale: Locale) {
   const english = locale === "en";
   if (action === "search_professionals") return english ? "See all results" : "Ver todos los resultados";
-  if (action === "publish_request") return english ? "Create project" : "Crear proyecto";
+  if (action === "publish_request") return english ? "Post a request" : "Publicar solicitud";
   if (action === "how_it_works") return english ? "See how it works" : "Ver cómo funciona";
   if (action === "support") return english ? "Open support" : "Ir a soporte";
   if (action === "browse_services") return english ? "Browse services" : "Ver servicios";
@@ -1582,8 +1582,8 @@ function normalizePayload(
       ...payload,
       action: "open_dashboard",
       answer: locale === "en"
-        ? "Open Received projects in your professional dashboard to review opportunities related to your services and manage your proposals."
-        : "Abre Proyectos recibidos en tu panel profesional para revisar oportunidades relacionadas con tus servicios y administrar sus propuestas.",
+        ? "Open Client requests in your professional dashboard to review requests related to your services and manage your proposals."
+        : "Abre Solicitudes de clientes en tu panel profesional para revisar solicitudes relacionadas con tus servicios y administrar sus propuestas.",
       ctaLabel: locale === "en" ? "Open projects" : "Ver proyectos",
     };
   }
@@ -1731,8 +1731,8 @@ function normalizePayload(
       locationText: publishPlaceLabel,
       answer: locale === "en"
         ? `Done — I added ${serviceLabel} in ${publishPlaceLabel} to your project. Tap "Create project" to complete the details and publish it.`
-        : `Listo: agregué ${serviceLabel} en ${publishPlaceLabel} a tu proyecto. Toca "Crear proyecto" para completar los detalles y publicarlo.`,
-      ctaLabel: locale === "en" ? "Create project" : "Crear proyecto",
+        : `Listo: agregué ${serviceLabel} en ${publishPlaceLabel} a tu solicitud. Toca "Publicar solicitud" para revisarla y publicarla.`,
+      ctaLabel: locale === "en" ? "Post a request" : "Publicar solicitud",
     };
   }
   if (includesAny(normalized, ["olvide mi contrasena", "olvide la contrasena", "recuperar contrasena", "forgot password", "forgot my password", "reset password"])) {
@@ -2240,7 +2240,7 @@ export async function POST(req: Request) {
         ? actionHref({ ...payload, action: "publish_request" }, rawMessage, locale)
         : singleProfessionalHref ?? searchHref,
       ctaLabel: noResults
-        ? locale === "en" ? "Create project" : "Crear proyecto"
+        ? locale === "en" ? "Post a request" : "Publicar solicitud"
         : hasResults ? resultCta : payload.ctaLabel || defaultCtaLabel(payload.action, locale),
       professionals: assistantProfessionals,
       suggestedService,

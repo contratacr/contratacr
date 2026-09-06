@@ -157,15 +157,6 @@ test.describe("@visual recent bug contracts", () => {
       await expectHealthyPage(page);
     }
 
-    // Accepted proposals expose exactly two frequent actions and intentionally
-    // have no overflow menu. A pending proposal has the secondary Withdraw
-    // action, so it is the correct proposal state for the three-dot contract.
-    await gotoOK(page, "/es/dashboard/profesional?tab=proposals");
-    await page.getByRole("button", { name: /Mis propuestas|My proposals/i }).click();
-    const pendingProposal = page.locator('[id^="project-"]').filter({ hasText: "ContrataCR: proyecto open" }).first();
-    await expect(pendingProposal).toBeVisible();
-    await pendingProposal.getByRole("button", { expanded: false }).first().click();
-    await expectVerticalMenuInsideViewport(page, pendingProposal.getByRole("button", { name: /M[aá]s opciones|More options/i }));
     await expectHealthyPage(page);
   });
 

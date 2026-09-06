@@ -224,10 +224,16 @@ export function StatusFilterTabs({
 // proposals) all use **Activas · Finalizadas · Canceladas** — "Activas" replaces the
 // old "Confirmadas"/"Pendientes" (an active/ongoing item), so the names match the
 // auto-confirm reality and read the same across Solicitudes and Proyectos.
+// Solicitudes publicadas (proyectos): la app ya no asigna ni confirma — una
+// solicitud está viva hasta que el cliente la resuelve o la cancela.
 export const PROYECTO_TABS: readonly FilterTab[] = [
-  { id: "pendientes" },
-  { id: "en_curso" },
+  { id: "activas" },
   { id: "finalizadas" },
+];
+// El profesional solo distingue lo que aún no respondió de lo que ya respondió.
+export const PROPUESTA_TABS: readonly FilterTab[] = [
+  { id: "nuevas" },
+  { id: "respondidas" },
 ];
 export const SOLICITUD_TABS: readonly FilterTab[] = [
   { id: "en_curso" },
@@ -262,9 +268,8 @@ export function solicitudMatches(filter: string, status: string, scheduledDate?:
 // completed → Finalizadas; cancelled → Canceladas.
 export function proyectoBucket(status: string): string {
   if (status === "cancelled" || status === "completed") return "finalizadas";
-  if (status === "open") return "pendientes"; // publicado, recibiendo propuestas
-  // in_progress + awaiting_confirmation: ya hay profesional trabajando.
-  return "en_curso";
+  // open, y los estados heredados in_progress / awaiting_confirmation: sigue viva.
+  return "activas";
 }
 export function proyectoMatches(filter: string, status: string): boolean {
   return proyectoBucket(status) === filter;
@@ -274,21 +279,19 @@ export function proyectoMatches(filter: string, status: string): boolean {
 // Bucketed by the PROPOSAL first (so a declined proposal lands in Canceladas even
 // if the project moved on with someone else), then the project's lifecycle once
 // the proposal was accepted.
-export function proposalBucket(proposalStatus: string, projectStatus?: string | null): string {
-  if (proposalStatus === "declined") return "finalizadas";
-  if (proposalStatus === "pending") return "pendientes"; // enviada, esperando la decisión
-  // accepted → follow the project
-  if (projectStatus === "cancelled" || projectStatus === "completed") return "finalizadas";
-  return "en_curso";
+export function proposalBucket(): string {
+  // Toda respuesta enviada vive en "Respondidas"; el estado de la solicitud se
+  // lee en la tarjeta, no en una pestaña.
+  return "respondidas";
 }
-export function proposalMatches(filter: string, proposalStatus: string, projectStatus?: string | null): boolean {
+export function proposalMatches(filter: string): boolean {
   if (!filter) return true; // toggle cleared → all proposals
-  return proposalBucket(proposalStatus, projectStatus) === filter;
+  return proposalBucket() === filter;
 }
 
 // Build a {bucket: count} map for the count badges. Pass the items' resolved buckets.
 export function bucketCounts(buckets: string[]): Record<string, number> {
-  const counts: Record<string, number> = { pendientes: 0, en_curso: 0, finalizadas: 0 };
+  const counts: Record<string, number> = { activas: 0, en_curso: 0, finalizadas: 0 };
   for (const b of buckets) counts[b] = (counts[b] ?? 0) + 1;
   return counts;
 }
@@ -307,18 +310,13 @@ export function solicitudStatusRedundant(status: string, scheduledDate?: string 
   return SOLICITUD_PRIMARY[solicitudBucket(status, scheduledDate)]?.includes(status) ?? false;
 }
 const PROYECTO_PRIMARY: Record<string, string[]> = {
-  // Awaiting confirmation keeps its badge because it needs the client's attention.
-  pendientes: ["open"],
-  en_curso: ["in_progress"],
+  activas: ["open", "in_progress", "awaiting_confirmation"],
   finalizadas: [],
 };
 export function proyectoStatusRedundant(status: string): boolean {
   return PROYECTO_PRIMARY[proyectoBucket(status)]?.includes(status) ?? false;
 }
 export function proposalStatusRedundant(proposalStatus: string, projectStatus?: string | null): boolean {
-  if (proposalStatus === "declined") return false; // Show "No seleccionada" inside Canceladas.
-  if (proposalStatus === "pending") return true; // repite la pestaña Pendientes
-  if (proposalStatus === "accepted" && projectStatus === "in_progress") return true; // En curso (primary)
-  // accepted+awaiting + accepted+cancelled keep the sub-state badge.
-  return false;
+  // La única insignia útil es la de la solicitud (resuelta / cancelada / te eligió).
+  return proposalStatus === "pending" && (!projectStatus || projectStatus === "open");
 }

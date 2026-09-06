@@ -48,7 +48,7 @@ PROFESSIONAL PANEL
 - Verification uses the saved identity and may require manual review when the identification is not found in the Costa Rican registry.
 
 CLIENT PANEL
-- Main sections include My requests, My projects, Favorites, Notifications, Profile, Support and Account/security.
+- Main sections include My bookings, My requests, Favorites, Notifications, Profile, Support and Account/security.
 - A user who also offers services can switch between client and professional panels; actions and records remain separated by their role/context.
 
 NOTIFICATIONS

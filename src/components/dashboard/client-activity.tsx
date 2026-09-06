@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
-import { CalendarDays, FolderOpen, ClipboardList, Plus, CalendarClock, Wrench, Users, MapPin, FileText, Flag, CheckCircle2 } from "lucide-react";
+import { CalendarDays, FolderOpen, ClipboardList, Plus, CalendarClock, Wrench, Users, FileText, Flag, CheckCircle2, MessageCircle } from "lucide-react";
 import { DirectChatLauncher } from "@/components/professionals/direct-chat-launcher";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -15,8 +15,7 @@ import { getCategoryLabel } from "@/lib/data/categories";
 import { computeAge } from "@/lib/age";
 import { formatColonesTaxIncluded, splitPricingLabel } from "@/lib/pricing";
 import { getInitials, cn, formatRelativeOrDate } from "@/lib/utils";
-import { StatusFilterTabs, SOLICITUD_TABS, PROYECTO_TABS, solicitudMatches, solicitudBucket, solicitudStatusRedundant, proyectoMatches, proyectoBucket, proyectoStatusRedundant, bucketCounts } from "@/components/dashboard/status-filter-tabs";
-import { CardActionsMenu, type CardAction } from "@/components/dashboard/card-actions-menu";
+import { StatusFilterTabs, SOLICITUD_TABS, PROYECTO_TABS, solicitudMatches, solicitudBucket, solicitudStatusRedundant, proyectoMatches, proyectoBucket, bucketCounts } from "@/components/dashboard/status-filter-tabs";
 import { ExpandToggle } from "@/components/dashboard/expand-toggle";
 import { ExpandableText } from "@/components/ui/expandable-text";
 import { ReportModal } from "@/components/dashboard/report-modal";
@@ -81,6 +80,7 @@ type Project = {
   provincias?: { name: string };
   cantones?: { name: string };
   proposals?: { id: string; status: string }[];
+  accepted_professional_id?: string | null;
   archived_by_client?: boolean;
   for_someone_else?: boolean;
   beneficiary_name?: string | null;
@@ -192,7 +192,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
   const [myReviews, setMyReviews] = useState<{ professional_id: string; booking_id?: string | null; project_id?: string | null; rating: number }[]>([]);
   // One unified filter set (sprint 430): Activas · Finalizadas · Canceladas.
   const [bookingFilter, setBookingFilter] = useState("en_curso");
-  const [projectFilter, setProjectFilter] = useState("pendientes");
+  const [projectFilter, setProjectFilter] = useState("activas");
   const [expandedProject, setExpandedProject] = useState<string | null>(null);
   // Solicitudes is now a collapsible accordion too (sprint 440) — same card language
   // as the professional Solicitudes / Proyectos sections and Mis proyectos.
@@ -448,20 +448,6 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
     refreshProjects();
   }
 
-  async function archiveProject(projectId: string) {
-    const res = await fetch("/api/projects", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: projectId, action: "archive" }),
-    });
-    if (!res.ok) {
-      void showMessage({ title: errorTitle, description: t("archiveError"), tone: "danger" });
-      return;
-    }
-    setProjects((prev) => prev.filter((p) => p.id !== projectId));
-    if (expandedProject === projectId) setExpandedProject(null);
-  }
-
   function openCancelProject(projectId: string) {
     setCancelProjectTarget(projectId);
     setExpandedProject(projectId);
@@ -474,20 +460,40 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
     setCancelProjectTarget(null);
   }
 
-  async function confirmProjectCompletion(projectId: string) {
+  // "Ya lo resolví": cierra la solicitud y, si eligió a alguien de los que
+  // respondieron, lo deja registrado para la reseña.
+  const [resolveTarget, setResolveTarget] = useState<string | null>(null);
+  const [resolveChoice, setResolveChoice] = useState<string>("");
+  const [resolving, setResolving] = useState(false);
+
+  async function openResolve(projectId: string) {
+    await loadProposals(projectId);
+    setResolveChoice("");
+    setResolveTarget(projectId);
+  }
+
+  async function confirmResolve() {
+    if (!resolveTarget) return;
+    const projectId = resolveTarget;
+    setResolving(true);
     const res = await fetch("/api/projects", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: projectId, action: "confirm" }),
+      body: JSON.stringify({ id: projectId, action: "resolve", professionalId: resolveChoice || null }),
     });
+    setResolving(false);
     if (!res.ok) {
-      void showMessage({ title: errorTitle, description: t("confirmError"), tone: "danger" });
+      void showMessage({ title: errorTitle, description: t("resolveError"), tone: "danger" });
       return;
     }
-    setProjects((prev) => prev.map((p) => (p.id === projectId ? { ...p, status: "completed" } : p)));
+    const chosen = (projectProposals[projectId] ?? []).find((p) => p.professionals?.id === resolveChoice);
+    setProjects((prev) => prev.map((p) => (p.id === projectId ? { ...p, status: "completed", accepted_professional_id: chosen?.professionals?.id ?? null } : p)));
+    setResolveTarget(null);
+    setProjectFilter("finalizadas");
     refreshProjects();
-    // Immediately invite a review (optional — close = skip; already completed).
-    reviewProjectPro(projectId);
+    if (chosen?.professionals?.id) {
+      setReviewModal({ professionalId: chosen.professionals.id, professionalName: chosen.professionals.profiles?.full_name ?? t("professional"), projectId });
+    }
   }
 
   async function confirmDeleteProject() {
@@ -520,56 +526,15 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
       list = json.proposals ?? [];
       setProjectProposals((prev) => ({ ...prev, [projectId]: list }));
     }
-    const accepted = (list ?? []).find((p) => p.status === "accepted");
-    const pro = accepted?.professionals;
+    const project = projects.find((p) => p.id === projectId);
+    const chosen = (list ?? []).find((p) => p.professionals?.id && p.professionals.id === project?.accepted_professional_id)
+      ?? (list ?? []).find((p) => p.status === "accepted");
+    const pro = chosen?.professionals;
     if (pro?.id) {
       setReviewModal({ professionalId: pro.id, professionalName: pro.profiles?.full_name ?? t("professional"), projectId });
     } else {
       void showMessage({ title: errorTitle, description: t("noAssignedPro"), tone: "danger" });
     }
-  }
-
-  async function acceptProposal(proposalId: string, projectId: string) {
-    await fetch("/api/proposals", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: proposalId, status: "accepted" }),
-    });
-    setProjectProposals((prev) => ({
-      ...prev,
-      [projectId]: (prev[projectId] ?? []).map((p) => {
-        if (p.id === proposalId) return { ...p, status: "accepted" };
-        if (p.status === "pending") return { ...p, status: "declined" };
-        return p;
-      }),
-    }));
-    setProjects((prev) => prev.map((p) => (p.id === projectId ? { ...p, status: "in_progress" } : p)));
-    refreshProjects();
-  }
-
-  async function declineProposal(proposalId: string, projectId: string) {
-    await fetch("/api/proposals", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: proposalId, status: "declined" }),
-    });
-    setProjectProposals((prev) => ({
-      ...prev,
-      [projectId]: (prev[projectId] ?? []).map((p) => (p.id === proposalId ? { ...p, status: "declined" } : p)),
-    }));
-  }
-
-  async function revertProposal(proposalId: string, projectId: string) {
-    await fetch("/api/proposals", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: proposalId, status: "pending" }),
-    });
-    setProjectProposals((prev) => ({
-      ...prev,
-      [projectId]: (prev[projectId] ?? []).map((p) => (p.id === proposalId ? { ...p, status: "pending" } : p)),
-    }));
-    setProjects((prev) => prev.map((p) => (p.id === projectId ? { ...p, status: "open" } : p)));
   }
 
   if (section === "saved") {
@@ -828,7 +793,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
         </div>
       )}
 
-      {/* PUBLISHED PROJECTS */}
+      {/* SOLICITUDES PUBLICADAS — lo que el cliente pidió y quién le respondió. */}
       {section === "projects" && (
         <div>
           {projects.length === 0 ? (
@@ -836,75 +801,64 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
               icon={FolderOpen}
               title={t("pEmpty")}
               description={t("pEmptySub")}
-              action={<Button className="lg:hidden" onClick={() => setShowPublish(true)}>{t("publishProject")}</Button>}
+              action={<Button size="lg" className="rounded-xl" onClick={() => setShowPublish(true)}><Plus className="h-4 w-4" />{t("publishProject")}</Button>}
             />
           ) : (
             <div className="ccr-native-safe-list-end flex flex-col gap-3.5">
-              <div className="flex justify-end lg:hidden">
+              <div className="flex items-center gap-3">
+                <div className="min-w-0 flex-1">
+                  <StatusFilterTabs
+                    tabs={PROYECTO_TABS}
+                    value={effectiveProjectFilter}
+                    onChange={setProjectFilter}
+                    counts={projectCounts}
+                    labelFor={(id) => tEtapas(id)}
+                  />
+                </div>
                 <button
                   type="button"
                   onClick={() => setShowPublish(true)}
-                  className="inline-flex h-10 shrink-0 items-center gap-2 rounded-lg bg-[#009FD9] px-4 text-sm font-bold text-white transition-colors hover:bg-[#0089bb]"
+                  className="inline-flex h-10 shrink-0 items-center gap-1.5 rounded-xl bg-[#009FD9] px-4 text-sm font-bold text-white transition-colors hover:bg-[#0089bb]"
                 >
                   <Plus className="h-4 w-4" />
                   {t("publishShort")}
                 </button>
               </div>
-              {projectTabs.length > 0 && (
-                <StatusFilterTabs
-                  tabs={projectTabs}
-                  value={effectiveProjectFilter}
-                  onChange={setProjectFilter}
-                  counts={projectCounts}
-                  labelFor={(id) => tEtapas(id === "pendientes" ? "publicados" : id === "finalizadas" ? "finalizados" : id)}
-                />
-              )}
               {filteredProjects.length === 0 && (
-                <p className="text-sm text-[#6b7280] text-center py-8">{t("noProjectsView")}</p>
+                <p className="py-8 text-center text-sm text-[#6b7280]">{t("noProjectsView")}</p>
               )}
               {filteredProjects.map((project) => {
                 const isExpanded = expandedProject === project.id;
                 const proposalList = projectProposals[project.id];
-                const proposalCount = project.proposals?.length ?? 0;
+                const replyCount = project.proposals?.length ?? 0;
                 const zone = [project.cantones?.name, project.provincias?.name].filter(Boolean).join(", ");
-                const statusVariant = project.status === "completed" ? "muted"
-                  : project.status === "cancelled" ? "error"
-                    : "default";
-                const statusLabel = project.status === "in_progress" ? t("projAssigned")
-                  : project.status === "awaiting_confirmation" ? t("projAwaiting")
-                    : project.status === "completed" ? t("projCompleted")
-                      : project.status === "cancelled" ? t("projCancelled")
-                        : t("projOpen");
-                const showStatusBadge = !proyectoStatusRedundant(project.status) && !(projectFilter === "finalizadas" && project.status === "completed");
+                const isActive = project.status !== "completed" && project.status !== "cancelled";
+                const headline = project.status === "completed" ? t("projResolved")
+                  : project.status === "cancelled" ? t("projCancelled")
+                    : t("replyCount", { count: replyCount });
+                const headlineClass = project.status === "cancelled" ? "text-[#b91c1c]"
+                  : project.status === "completed" ? "text-[#6b7280]"
+                    : replyCount > 0 ? "text-[#0089bb]" : "text-[#6b7280]";
 
                 return (
-                  <Card id={`project-${project.id}`} key={project.id} className={cn("rounded-2xl border-[#e5e7eb] bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md", isExpanded && "shadow-md ring-1 ring-[#d8eef8]")}>
+                  <Card id={`project-${project.id}`} key={project.id} className={cn("rounded-2xl border-[#e5e7eb] bg-white shadow-sm transition-all", isExpanded && "shadow-md ring-1 ring-[#cfe9f5]")}>
                     <button
                       type="button"
                       onClick={async () => {
-                        if (!isExpanded && proposalCount > 0) await loadProposals(project.id);
+                        if (!isExpanded) await loadProposals(project.id);
                         setExpandedProject(isExpanded ? null : project.id);
                       }}
                       aria-expanded={isExpanded}
-                      className={cn("group w-full text-left p-4 sm:p-5 hover:bg-[#f9fbfd] transition-colors", isExpanded ? "rounded-t-2xl bg-[#fbfdff]" : "rounded-2xl")}
+                      className={cn("group w-full p-4 text-left transition-colors hover:bg-[#f9fbfd] sm:p-5", isExpanded ? "rounded-t-2xl bg-[#fbfdff]" : "rounded-2xl")}
                     >
                       <div className="flex items-start gap-3.5">
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#ccecf8] bg-[#EAF7FD] text-[#0089bb] shadow-[0_8px_20px_-18px_rgba(0,159,217,0.9)]">
-                          <ClipboardList className="h-[18px] w-[18px]" />
+                        <div className={cn("flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border", isActive && replyCount > 0 ? "border-[#ccecf8] bg-[#EAF7FD] text-[#0089bb]" : "border-[#e5e7eb] bg-[#f4f7fa] text-[#9ca3af]")}>
+                          {isActive && replyCount > 0 ? <MessageCircle className="h-[18px] w-[18px]" /> : <ClipboardList className="h-[18px] w-[18px]" />}
                         </div>
                         <div className="min-w-0 flex-1">
-                          <div className="flex items-start justify-between gap-2">
-                            <h3 className="min-w-0 flex-1 text-[15px] font-bold leading-snug text-[#162543] [overflow-wrap:anywhere] sm:text-base">{project.title}</h3>
-                            {showStatusBadge ? (
-                              <Badge className="shrink-0 text-[11px] font-semibold" variant={statusVariant}>{statusLabel}</Badge>
-                            ) : null}
-                          </div>
-                          <div className="mt-2 flex flex-col items-start gap-1.5 text-[13px]">
-                            <span className="inline-flex w-full max-w-full items-center gap-2 text-[#6b7280]">
-                              <Users className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
-                              <span className="min-w-0 truncate"><span className="font-medium text-[#9ca3af]">{t("fieldProposals")}</span> <span className="text-[#374151]">{t("proposalsCount", { count: proposalCount })}</span></span>
-                            </span>
-                          </div>
+                          <h3 className="text-[15px] font-bold leading-snug text-[#162543] [overflow-wrap:anywhere] sm:text-base">{project.title}</h3>
+                          <p className={cn("mt-1 text-[13px] font-semibold", headlineClass)}>{headline}</p>
+                          <p className="mt-0.5 text-[12px] text-[#9ca3af]">{formatRelativeOrDate(project.created_at, locale)}{zone ? ` · ${zone}` : ""}</p>
                         </div>
                         <ExpandToggle open={isExpanded} />
                       </div>
@@ -913,50 +867,6 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                     {isExpanded && (
                       <div className="rounded-b-2xl border-t border-[#f3f4f6] bg-gradient-to-b from-[#fcfdff] to-white px-4 pb-5 pt-4 sm:px-5">
                         <div className="flex flex-col gap-4">
-                          {(project.categories?.name || zone) && (
-                            <div className="flex flex-col gap-2">
-                              {project.categories?.name && (
-                                <div className="flex items-start gap-2.5">
-                                  <Wrench className="mt-0.5 h-4 w-4 shrink-0 text-[#9ca3af]" />
-                                  <div className="min-w-0">
-                                    <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]">{t("fieldService")}</p>
-                                    <p className="mt-0.5 text-[13px] font-medium text-[#374151] [overflow-wrap:anywhere]">{project.categories.name}</p>
-                                  </div>
-                                </div>
-                              )}
-                              {zone && (
-                                <div className="flex items-start gap-2.5">
-                                  <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-[#9ca3af]" />
-                                  <div className="min-w-0">
-                                    <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]">{t("fieldZone")}</p>
-                                    <p className="mt-0.5 text-[13px] font-medium text-[#374151] [overflow-wrap:anywhere]">{zone}</p>
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                          )}
-
-                          {project.for_someone_else && (
-                            <div className="flex items-start gap-2.5">
-                              <Users className="mt-0.5 h-4 w-4 shrink-0 text-[#9ca3af]" />
-                              <div className="min-w-0">
-                                <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]">{t("projectForLabel")}</p>
-                                <p className="mt-0.5 text-[13px] font-medium text-[#374151] [overflow-wrap:anywhere]">{project.beneficiary_name || t("otherPerson")}</p>
-                                {ageLabel(project.beneficiary_dob) && (
-                                  <p className="mt-0.5 text-[12px] text-[#6b7280]">{t("fieldAge")} {ageLabel(project.beneficiary_dob)}</p>
-                                )}
-                              </div>
-                            </div>
-                          )}
-
-                          <div className="flex items-start gap-2.5">
-                            <CalendarDays className="mt-0.5 h-4 w-4 shrink-0 text-[#9ca3af]" />
-                            <div className="min-w-0">
-                              <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]">{t("fieldPublished")}</p>
-                              <p className="mt-0.5 text-[13px] font-medium text-[#374151]">{formatRelativeOrDate(project.created_at, locale)}</p>
-                            </div>
-                          </div>
-
                           {project.description && (
                             <div className="flex items-start gap-2.5">
                               <FileText className="mt-0.5 h-4 w-4 shrink-0 text-[#9ca3af]" />
@@ -967,196 +877,149 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                             </div>
                           )}
 
-                          {(() => {
-                            const st = project.status;
-                            const menu: CardAction[] = [];
-                            if (st === "open" || st === "in_progress" || st === "awaiting_confirmation") {
-                              menu.push({ label: t("cancelProject"), onClick: () => openCancelProject(project.id), destructive: true });
-                            }
-                            if (st === "cancelled") {
-                              menu.push({ label: t("archive"), onClick: () => archiveProject(project.id) });
-                            }
-                            let primary: ReactNode = null;
-                            if (st === "completed") {
-                              const rev = projectReview(project.id);
-                              primary = <Button variant="outline" size="sm" className="flex-1 sm:flex-none rounded-lg px-4" onClick={() => reviewProjectPro(project.id)}>{rev ? t("editReview") : t("leaveReview")}</Button>;
-                            } else if (st === "cancelled") {
-                              primary = <Button variant="outline" size="sm" className="flex-1 sm:flex-none rounded-lg px-4" onClick={() => updateProjectStatus(project.id, "open")}>{t("reopenProject")}</Button>;
-                            }
+                          {/* Respuestas: quién escribió, qué dijo, y WhatsApp directo. */}
+                          {proposalList && (() => {
+                            const chosenId = project.accepted_professional_id ?? null;
+                            const ordered = [...proposalList].sort((a, b) => Number(b.professionals?.id === chosenId) - Number(a.professionals?.id === chosenId));
                             return (
-                              <div className="flex flex-wrap items-center gap-2">
-                                {primary}
-                                {menu.length === 1 ? (
-                                  <Button
-                                    type="button"
-                                    variant="outline"
-                                    size="sm"
-                                    className={cn(
-                                      "ml-auto flex-1 rounded-lg px-4 sm:flex-none",
-                                      menu[0].destructive
-                                        ? "border-red-100 text-red-600 hover:bg-red-50"
-                                        : "border-red-100 text-red-600 hover:bg-red-50"
-                                    )}
-                                    onClick={menu[0].onClick}
-                                  >
-                                    {menu[0].label}
-                                  </Button>
+                              <div className="border-t border-[#f3f4f6] pt-4">
+                                <p className="mb-2.5 text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]">{t("repliesTitle")}</p>
+                                {ordered.length === 0 ? (
+                                  <p className="rounded-xl bg-[#f4f7fa] px-3.5 py-3 text-center text-[13px] leading-relaxed text-[#6b7280]">{t("noRepliesYet")}</p>
                                 ) : (
-                                  <div className="ml-auto">
-                                    <CardActionsMenu actions={menu} label={t("actions")} />
+                                  <div className="flex flex-col gap-3">
+                                    {ordered.map((proposal) => {
+                                      const isChosen = !!chosenId && proposal.professionals?.id === chosenId;
+                                      const proVerified = proposal.professionals?.verification_status === "verified";
+                                      const priceParts = proposal.price ? splitPricingLabel(formatColonesTaxIncluded(proposal.price)) : null;
+                                      return (
+                                        <div key={proposal.id} className={cn("rounded-xl border p-3.5", isChosen ? "border-[#b8e7cf] bg-[#f2fbf6]" : "border-[#e5e7eb] bg-white")}>
+                                          <div className="flex items-start gap-3">
+                                            <Avatar className="h-10 w-10 shrink-0">
+                                              <AvatarImage src={proposal.professionals?.profiles?.avatar_url} />
+                                              <AvatarFallback className="bg-[#EBF5FB] text-xs font-semibold text-[#009FD9]">{getInitials(proposal.professionals?.profiles?.full_name ?? "?")}</AvatarFallback>
+                                            </Avatar>
+                                            <div className="min-w-0 flex-1">
+                                              <div className="flex min-w-0 flex-wrap items-center gap-1.5">
+                                                {proposal.professionals?.slug ? (
+                                                  <Link href={`/profesionales/${proposal.professionals.slug}?from=${encodeURIComponent("/dashboard/profesional?tab=sent_projects")}`} className="min-w-0 text-sm font-semibold text-[#111827] hover:text-[#009FD9] hover:underline">
+                                                    {proposal.professionals?.profiles?.full_name}
+                                                  </Link>
+                                                ) : (
+                                                  <p className="min-w-0 text-sm font-semibold text-[#111827]">{proposal.professionals?.profiles?.full_name}</p>
+                                                )}
+                                                {proVerified && <Badge variant="verified" className="shrink-0">{t("verified")}</Badge>}
+                                                {isChosen && (
+                                                  <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-[#bbf7d0] bg-white px-2 py-0.5 text-[11px] font-semibold text-[#15803d]"><CheckCircle2 className="h-3 w-3" />{t("helpedBy")}</span>
+                                                )}
+                                              </div>
+                                              {priceParts && (
+                                                <p className="mt-0.5 text-xs font-bold text-[#0089bb]">{priceParts.amount}<span className="ml-1 text-[9px] font-semibold tracking-wide text-[#9ca3af]">{priceParts.taxSuffix}</span></p>
+                                              )}
+                                              <ExpandableText text={proposal.message} lines={3} className="mt-1 text-[13px] leading-relaxed text-[#374151]" />
+                                            </div>
+                                          </div>
+                                          {isActive && proposal.professionals?.id && (
+                                            <div className="mt-3">
+                                              <DirectChatLauncher professionalId={proposal.professionals.id} professionalName={proposal.professionals.profiles?.full_name || t("professional")} projectId={project.id} proposalId={proposal.id} contextTitle={project.title} buttonLabel={t("writeWhatsapp")} openDirectly initialMessage={t("proposalChatGreeting", { title: project.title })} className="h-11 w-full rounded-xl text-sm font-bold" />
+                                            </div>
+                                          )}
+                                        </div>
+                                      );
+                                    })}
                                   </div>
                                 )}
                               </div>
                             );
                           })()}
+
+                          {/* Acciones: una principal y una discreta. */}
+                          <div className="flex flex-col gap-2 border-t border-[#f3f4f6] pt-4 sm:flex-row sm:items-center">
+                            {isActive && (
+                              <>
+                                <Button size="lg" variant="outline" className="h-11 flex-1 rounded-xl border-[#b8e7cf] bg-[#f2fbf6] text-[#15803d] hover:bg-[#e6f7ee]" onClick={() => openResolve(project.id)}>
+                                  <CheckCircle2 className="h-4 w-4" /> {t("resolve")}
+                                </Button>
+                                <button type="button" className="h-11 rounded-xl px-4 text-sm font-semibold text-[#6b7280] transition-colors hover:bg-[#f4f7fa] hover:text-[#b91c1c] sm:w-auto" onClick={() => openCancelProject(project.id)}>
+                                  {t("cancelProject")}
+                                </button>
+                              </>
+                            )}
+                            {project.status === "completed" && project.accepted_professional_id && (
+                              <Button size="lg" variant="outline" className="h-11 flex-1 rounded-xl" onClick={() => reviewProjectPro(project.id)}>
+                                {projectReview(project.id) ? t("editReview") : t("leaveReview")}
+                              </Button>
+                            )}
+                            {project.status === "cancelled" && (
+                              <>
+                                <Button size="lg" variant="outline" className="h-11 flex-1 rounded-xl" onClick={() => updateProjectStatus(project.id, "open")}>{t("reopenProject")}</Button>
+                                <button type="button" className="h-11 rounded-xl px-4 text-sm font-semibold text-[#6b7280] transition-colors hover:bg-[#f4f7fa] hover:text-[#b91c1c]" onClick={() => setDeleteTarget(project.id)}>{t("delete")}</button>
+                              </>
+                            )}
+                          </div>
 
                           {cancelProjectTarget === project.id && (
                             <div className="rounded-xl border border-red-100 bg-red-50/60 p-3.5">
                               <p className="text-sm font-semibold text-[#111827]">{t("cancelProjectTitle")}</p>
-                              <p className="mt-0.5 text-xs leading-relaxed text-[#6b7280]">
-                                {t("cancelProjectBody")}
-                              </p>
+                              <p className="mt-0.5 text-xs leading-relaxed text-[#6b7280]">{t("cancelProjectBody")}</p>
                               <div className="mt-3 flex flex-wrap justify-end gap-2">
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  className="rounded-lg"
-                                  onClick={() => setCancelProjectTarget(null)}
-                                  disabled={cancellingProject}
-                                >
-                                  {t("cancelBack")}
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  className="rounded-lg bg-red-600 hover:bg-red-700"
-                                  onClick={() => confirmCancelProject(project.id)}
-                                  disabled={cancellingProject}
-                                  loading={cancellingProject}
-                                >
-                                  {t("cancelProjectConfirm")}
-                                </Button>
+                                <Button variant="outline" size="sm" className="rounded-lg" onClick={() => setCancelProjectTarget(null)} disabled={cancellingProject}>{t("cancelBack")}</Button>
+                                <Button size="sm" className="rounded-lg bg-red-600 hover:bg-red-700" onClick={() => confirmCancelProject(project.id)} disabled={cancellingProject} loading={cancellingProject}>{t("cancelProjectConfirm")}</Button>
                               </div>
                             </div>
                           )}
-
-                          {proposalList && (() => {
-                            const finalized = project.status === "completed";
-                            const locked = finalized || project.status === "cancelled";
-                            const accepted = proposalList.filter((p) => p.status === "accepted");
-                            const pending = proposalList.filter((p) => p.status === "pending");
-                            const declined = proposalList.filter((p) => p.status === "declined");
-                            const visible = finalized && accepted.length > 0 ? accepted : [...accepted, ...pending, ...declined];
-                            const hidden = finalized && accepted.length > 0 ? [...pending, ...declined] : [];
-
-                            const renderProposal = (proposal: Proposal) => {
-                              const isAccepted = proposal.status === "accepted";
-                              const proVerified = proposal.professionals?.verification_status === "verified";
-                              const proposalPriceParts = proposal.price ? splitPricingLabel(formatColonesTaxIncluded(proposal.price)) : null;
-                              return (
-                                <div key={proposal.id} className={cn("rounded-xl border p-3.5", isAccepted ? "border-[#b8e7cf] bg-[#f2fbf6] shadow-[0_10px_24px_-22px_rgba(22,163,74,0.8)]" : "border-[#e5e7eb] bg-white")}>
-                                  {isAccepted && (
-                                    <div className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-[#bbf7d0] bg-white px-2.5 py-1 text-[11px] font-semibold text-[#15803d]">
-                                      <CheckCircle2 className="h-3.5 w-3.5" />
-                                      {finalized ? t("finalized") : t("selectedProposal")}
-                                    </div>
-                                  )}
-                                  <div className="flex items-start gap-3">
-                                    <Avatar className="h-9 w-9 shrink-0">
-                                      <AvatarImage src={proposal.professionals?.profiles?.avatar_url} />
-                                      <AvatarFallback className="bg-[#EBF5FB] text-[#009FD9] text-xs font-semibold">
-                                        {getInitials(proposal.professionals?.profiles?.full_name ?? "?")}
-                                      </AvatarFallback>
-                                    </Avatar>
-                                    <div className="min-w-0 flex-1">
-                                      <div className="flex items-start justify-between gap-2">
-                                        <div className="min-w-0">
-                                          <div className="flex min-w-0 flex-wrap items-center gap-1.5">
-                                            {proposal.professionals?.slug ? (
-                                              <Link href={`/profesionales/${proposal.professionals.slug}?from=${encodeURIComponent("/dashboard/cliente")}`} className="min-w-0 text-sm font-semibold text-[#111827] hover:text-[#009FD9] hover:underline">
-                                                {proposal.professionals?.profiles?.full_name}
-                                              </Link>
-                                            ) : (
-                                              <p className="min-w-0 text-sm font-semibold text-[#111827]">{proposal.professionals?.profiles?.full_name}</p>
-                                            )}
-                                            {proVerified ? (
-                                              <Badge variant="verified" className="shrink-0">
-                                                {t("verified")}
-                                              </Badge>
-                                            ) : (
-                                              <span className="inline-flex shrink-0 items-center rounded-full border border-[#e5e7eb] bg-[#f3f4f6] px-2.5 py-0.5 text-xs font-medium text-[#6b7280]">
-                                                {t("notVerifiedBadge")}
-                                              </span>
-                                            )}
-                                          </div>
-                                          {proposal.professionals?.categories?.name && (
-                                            <p className="mt-0.5 truncate text-[11px] text-[#6b7280]">{proposal.professionals.categories.name}</p>
-                                          )}
-                                        </div>
-                                        <div className="flex shrink-0 flex-col items-end gap-1">
-                                          <p className={cn("text-xs font-bold", isAccepted ? "text-[#15803d]" : "text-[#009FD9]")}>
-                                            {proposalPriceParts ? (
-                                              <>
-                                                {proposalPriceParts.amount}
-                                                <span className="ml-1 text-[9px] font-semibold tracking-wide text-[#9ca3af]">{proposalPriceParts.taxSuffix}</span>
-                                              </>
-                                            ) : t("priceTBD")}
-                                          </p>
-                                          {proposal.status === "declined" && <Badge variant="error">{t("declined")}</Badge>}
-                                        </div>
-                                      </div>
-                                      <ExpandableText text={proposal.message} lines={2} className="mt-1 text-[13px] leading-relaxed" />
-                                    </div>
-                                  </div>
-                                  <div className="mt-3 flex flex-col justify-start gap-2 border-t border-[#eef0f2] pt-3 sm:flex-row sm:flex-wrap sm:justify-end">
-                                    {proposal.status === "pending" && !locked && (
-                                      <>
-                                        <Button size="sm" className="w-full px-3 sm:w-auto sm:min-w-[92px] sm:flex-none" onClick={() => acceptProposal(proposal.id, project.id)}>{t("accept")}</Button>
-                                        <Button size="sm" variant="outline" className="w-full px-3 sm:w-auto sm:min-w-[92px] sm:flex-none" onClick={() => declineProposal(proposal.id, project.id)}>{t("decline")}</Button>
-                                      </>
-                                    )}
-                                    {!locked && (proposal.status === "accepted" || proposal.status === "declined") && (
-                                      <Button size="sm" variant="outline" className="h-10 w-full px-3 sm:w-auto sm:min-w-[156px] sm:flex-none" onClick={() => revertProposal(proposal.id, project.id)}>{t("changeDecision")}</Button>
-                                    )}
-                                    {project.status === "awaiting_confirmation" && isAccepted && (
-                                      <Button size="sm" className="w-full px-3 sm:w-auto sm:min-w-[150px] sm:flex-none" onClick={() => confirmProjectCompletion(project.id)}>{t("confirmCompletion")}</Button>
-                                    )}
-                                    {proposal.professionals?.id && (
-                                      <DirectChatLauncher professionalId={proposal.professionals.id} professionalName={proposal.professionals.profiles?.full_name || t("professional")} projectId={project.id} proposalId={proposal.id} contextTitle={project.title} buttonLabel={t("openChat")} openDirectly initialMessage={t("proposalChatGreeting", { title: project.title })} tone={(proposal.status === "pending" && !locked) || (project.status === "awaiting_confirmation" && isAccepted) ? "contrast" : "primary"} compact className="h-10 w-full rounded-lg px-3 text-sm font-bold disabled:cursor-wait sm:w-auto sm:min-w-[156px] sm:flex-none" />
-                                    )}
-                                  </div>
-                                </div>
-                              );
-                            };
-
-                            return (
-                              <div className="border-t border-[#f3f4f6] pt-4">
-                                {proposalList.length === 0 ? (
-                                  <p className="py-2 text-center text-sm text-[#6b7280]">{t("noProposalsYet")}</p>
-                                ) : (
-                                  <div className="flex flex-col gap-3">
-                                    {visible.map(renderProposal)}
-                                    {hidden.length > 0 && (
-                                      <details className="text-xs">
-                                        <summary className="cursor-pointer text-[#6b7280] hover:text-[#374151]">{t("seeUnchosen", { count: hidden.length })}</summary>
-                                        <div className="mt-2 flex flex-col gap-3 opacity-75">{hidden.map(renderProposal)}</div>
-                                      </details>
-                                    )}
-                                  </div>
-                                )}
-                              </div>
-                            );
-                          })()}
                         </div>
                       </div>
                     )}
                   </Card>
                 );
               })}
-
             </div>
           )}
         </div>
       )}
+
+      {/* "Ya lo resolví" — ¿quién te ayudó? */}
+      {resolveTarget && (() => {
+        const list = projectProposals[resolveTarget] ?? [];
+        return (
+          <Modal
+            onClose={() => { if (!resolving) setResolveTarget(null); }}
+            title={t("resolveTitle")}
+            size="sm"
+            mobilePresentation="center"
+            footerClassName="justify-center sm:justify-end"
+            footer={(
+              <>
+                <Button variant="outline" size="sm" className="flex-1 rounded-lg sm:flex-none" onClick={() => setResolveTarget(null)} disabled={resolving}>{t("cancelBack")}</Button>
+                <Button size="sm" className="flex-1 rounded-lg sm:flex-none" onClick={confirmResolve} disabled={resolving} loading={resolving}>{t("resolveConfirm")}</Button>
+              </>
+            )}
+          >
+            <p className="mb-3 text-sm leading-6 text-[#6b7280]">{t("resolveBody")}</p>
+            <div className="flex flex-col gap-2">
+              {list.filter((p) => p.professionals?.id).map((p) => {
+                const id = p.professionals!.id;
+                const active = resolveChoice === id;
+                return (
+                  <button key={p.id} type="button" onClick={() => setResolveChoice(id)} aria-pressed={active} className={cn("flex items-center gap-3 rounded-xl border px-3 py-2.5 text-left transition-colors", active ? "border-[#009FD9] bg-[#f5fbfe]" : "border-[#e5e7eb] bg-white hover:border-[#c3d2de]")}>
+                    <Avatar className="h-9 w-9 shrink-0">
+                      <AvatarImage src={p.professionals?.profiles?.avatar_url} />
+                      <AvatarFallback className="bg-[#EBF5FB] text-xs font-semibold text-[#009FD9]">{getInitials(p.professionals?.profiles?.full_name ?? "?")}</AvatarFallback>
+                    </Avatar>
+                    <span className="min-w-0 flex-1 truncate text-sm font-semibold text-[#111827]">{p.professionals?.profiles?.full_name}</span>
+                    <span className={cn("h-4 w-4 shrink-0 rounded-full border-2", active ? "border-[#009FD9] bg-[#009FD9]" : "border-[#cbd5e1]")} aria-hidden />
+                  </button>
+                );
+              })}
+              <button type="button" onClick={() => setResolveChoice("")} aria-pressed={resolveChoice === ""} className={cn("flex items-center gap-3 rounded-xl border px-3 py-2.5 text-left text-sm font-semibold transition-colors", resolveChoice === "" ? "border-[#009FD9] bg-[#f5fbfe] text-[#0089bb]" : "border-[#e5e7eb] bg-white text-[#374151] hover:border-[#c3d2de]")}>
+                <span className="min-w-0 flex-1">{t("resolveNobody")}</span>
+                <span className={cn("h-4 w-4 shrink-0 rounded-full border-2", resolveChoice === "" ? "border-[#009FD9] bg-[#009FD9]" : "border-[#cbd5e1]")} aria-hidden />
+              </button>
+            </div>
+          </Modal>
+        );
+      })()}
 
       {reviewModal && (
         <LeaveReviewModal

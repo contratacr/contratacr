@@ -474,6 +474,13 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                   </div>
                   <h2 className="mb-2 text-xl font-semibold text-[#111827]">{t("noResults.title")}</h2>
                   <p className="mx-auto max-w-sm text-sm text-[#6b7280]">{t("noResults.desc")}</p>
+                  <Link
+                    href={`/dashboard/profesional?tab=sent_projects&openPublish=1${selectedCategory ? `&categoria=${encodeURIComponent(selectedCategory)}` : ""}`}
+                    className="mt-6 inline-flex h-12 items-center justify-center rounded-xl bg-[#009FD9] px-6 text-sm font-bold text-white transition-colors hover:bg-[#0089bb]"
+                  >
+                    {t("noResults.publishCta")}
+                  </Link>
+                  <p className="mx-auto mt-2 max-w-sm text-xs text-[#9ca3af]">{t("noResults.publishHint")}</p>
                 </div>
               ) : (
                 <>

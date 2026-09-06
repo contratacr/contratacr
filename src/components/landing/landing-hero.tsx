@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, type RefObject } from "react";
 import { createPortal } from "react-dom";
 import { Loader2, Search, MapPin } from "lucide-react";
-import { useRouter } from "@/i18n/navigation";
+import { Link, useRouter } from "@/i18n/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
@@ -831,6 +831,13 @@ export function LandingHero() {
             </button>
           </div>
         </form>
+
+        {/* Segunda puerta: quien no sabe a quién llamar publica lo que necesita. */}
+        <p className="mt-3 text-center text-[13px] leading-snug text-[#4b5563] sm:mt-4 sm:text-sm">
+          <Link href="/dashboard/profesional?tab=sent_projects&openPublish=1" className="font-semibold text-[#0089bb] underline-offset-2 hover:underline">
+            {t("publishCta")}
+          </Link>
+        </p>
 
         {/* Sentinel — IntersectionObserver in navbar watches this */}
         <div id="hero-search-sentinel" aria-hidden className="h-0" />

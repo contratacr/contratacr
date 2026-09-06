@@ -17,6 +17,16 @@ import { sendNotificationPush, sendNotificationPushRows } from "@/lib/push/notif
 
 const PROJECT_TITLE_MAX_LENGTH = 80;
 const PROJECT_DESCRIPTION_MAX_LENGTH = 300;
+// Una solicitud abierta que nadie tocó en este plazo se cierra sola y se le avisa
+// al cliente; puede volver a publicarla con un toque.
+const AUTO_CLOSE_DAYS = 30;
+
+function deriveTitle(serviceLabel: string, description: string): string {
+  const firstSentence = description.split(/[.\n!?]/)[0]?.trim() ?? "";
+  const snippet = firstSentence.length > 48 ? `${firstSentence.slice(0, 45).trimEnd()}…` : firstSentence;
+  const title = snippet ? `${serviceLabel}: ${snippet}` : serviceLabel;
+  return title.slice(0, PROJECT_TITLE_MAX_LENGTH);
+}
 
 type ClientIdentityStatus = "verified" | "pending" | "unverified";
 
@@ -76,13 +86,17 @@ export async function POST(req: NextRequest) {
     const requestedBeneficiaryName = limitTrimmedText(body.beneficiaryName, NAME_MAX_LENGTH);
     const requestedBeneficiaryDob = typeof body.beneficiaryDob === "string" ? body.beneficiaryDob : "";
 
-    if (!cleanTitle || !cleanDescription) {
-      return NextResponse.json({ error: "Titulo y descripcion son requeridos" }, { status: 400 });
+    if (!cleanDescription) {
+      return NextResponse.json({ error: "Contanos brevemente qué hay que hacer." }, { status: 400 });
     }
     // Category is required: it routes the project to matching professionals.
     if (!categoryId) {
       return NextResponse.json({ error: "Elige una categoria para tu solicitud." }, { status: 400 });
     }
+    // The form no longer asks for a title: the service name plus the start of the
+    // description reads better in every list than what people typed.
+    const derivedTitle = deriveTitle(getCategoryLabel(categoryId), cleanDescription);
+    const finalTitle = cleanTitle || derivedTitle;
     if (cedula && !isValidId(cedula)) {
       return NextResponse.json({ error: "Ingresa un numero de identificacion valido." }, { status: 400 });
     }
@@ -191,7 +205,7 @@ export async function POST(req: NextRequest) {
     const baseProject = {
       client_id: uid,
       category_id: categoryId ?? null,
-      title: cleanTitle,
+      title: finalTitle,
       description: cleanDescription,
       provincia_id: provinciaId ?? null,
       canton_id: cantonId ?? null,
@@ -248,7 +262,7 @@ export async function POST(req: NextRequest) {
       entityId: projectId,
       entityOwnerUserId: uid,
       afterData: {
-        title: cleanTitle,
+        title: finalTitle,
         category_id: categoryId ?? null,
         provincia_id: provinciaId ?? null,
         canton_id: cantonId ?? null,
@@ -271,6 +285,7 @@ export async function POST(req: NextRequest) {
       },
     });
 
+    let notifiedCount = 0;
     // Notify every professional whose profession matches the project category.
     // "Otro" is a FREEFORM catch-all: its custom text is not reliably comparable, so it
     // must never drive matching. An "Otro" project therefore notifies no one.
@@ -285,18 +300,19 @@ export async function POST(req: NextRequest) {
           (pros ?? []).map((p) => p.profile_id).filter((id): id is string => !!id && id !== uid)
         )];
 
+        notifiedCount = recipients.length;
         if (recipients.length > 0) {
           const label = getCategoryLabel(categoryId);
           const rows = recipients.map((profileId) => ({
             user_id: profileId,
             type: "new_project",
-            title: "Nueva oportunidad en tu categoria",
-            message: `Un cliente publico "${cleanTitle}" en ${label}.`,
+            title: "Nueva solicitud de un cliente",
+            message: `Un cliente publico "${finalTitle}" en ${label}. Respondele y, si le interesa, te escribe.`,
             data: {
               link: "/es/dashboard/profesional?tab=proposals",
               project_id: projectId,
               project_created_at: projectCreatedAt,
-              project_title: cleanTitle,
+              project_title: finalTitle,
               category_id: categoryId,
             },
           }));
@@ -313,7 +329,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    return NextResponse.json({ id: projectId, success: true, clientIdentityStatus });
+    return NextResponse.json({ id: projectId, notifiedCount, success: true, clientIdentityStatus });
   } catch (err) {
     console.error("[POST /api/projects] Unexpected error:", err);
     return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 });
@@ -343,7 +359,7 @@ export async function GET(req: NextRequest) {
       console.error("[GET /api/projects] client error:", error.message);
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
-    const confirmed = await autoConfirmStale(admin, data ?? []);
+    const confirmed = await autoCloseStale(admin, await autoConfirmStale(admin, data ?? []));
     return NextResponse.json({ projects: await enrichProjects(confirmed.filter((project) => !project.archived_by_client)) });
   }
 
@@ -427,6 +443,32 @@ async function autoConfirmStale(admin: any, rows: any[]): Promise<any[]> {
   return rows;
 }
 
+// Abiertas sin actividad por AUTO_CLOSE_DAYS → canceladas (el cliente puede volver
+// a publicar). Solo las filas que cambian aquí reciben el aviso, así no se repite.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function autoCloseStale(admin: any, rows: any[]): Promise<any[]> {
+  const cutoff = Date.now() - AUTO_CLOSE_DAYS * 24 * 60 * 60 * 1000;
+  const stale = rows.filter((r) => r.status === "open" && new Date(r.updated_at ?? r.created_at).getTime() < cutoff);
+  if (stale.length === 0) return rows;
+  const now = new Date().toISOString();
+  await admin.from("projects").update({ status: "cancelled", updated_at: now }).in("id", stale.map((s) => s.id));
+  const notifications = stale.map((r) => ({
+    user_id: r.client_id,
+    type: "project_cancelled",
+    title: "Cerramos tu solicitud por inactividad",
+    message: `"${r.title}" llevaba ${AUTO_CLOSE_DAYS} días sin movimiento. Si todavía la necesitás, podés volver a publicarla con un toque.`,
+    data: { link: "/es/dashboard/profesional?tab=sent_projects", project_id: r.id, project_title: r.title, project_action: "auto_closed" },
+  }));
+  try {
+    await admin.from("notifications").insert(notifications);
+    await sendNotificationPushRows(notifications);
+  } catch (e) {
+    console.error("[autoCloseStale] notify failed:", e);
+  }
+  for (const r of stale) { r.status = "cancelled"; r.updated_at = now; }
+  return rows;
+}
+
 // Project status transitions:
 //  - client: cancel/reopen their listing, confirm completion (action="confirm")
 //  - accepted professional: mark work done (action="work_done")
@@ -461,6 +503,65 @@ export async function PATCH(req: NextRequest) {
       afterData: { status: project.status, archived_by_client: true, title: project.title },
     });
     return NextResponse.json({ success: true });
+  }
+
+  // ── Client closes the request: "Ya lo resolví" (+ optionally who helped) ──
+  if (action === "resolve") {
+    const professionalId = typeof body.professionalId === "string" && body.professionalId ? body.professionalId : null;
+    const { data: project } = await admin
+      .from("projects")
+      .select("id, client_id, accepted_professional_id, title, status")
+      .eq("id", id)
+      .maybeSingle();
+    if (!project || project.client_id !== uid) return NextResponse.json({ error: "No autorizado." }, { status: 403 });
+    if (project.status === "completed") return NextResponse.json({ success: true });
+    if (project.status === "cancelled") return NextResponse.json({ error: "La solicitud está cancelada." }, { status: 409 });
+
+    let chosenProfessionalId: string | null = null;
+    if (professionalId) {
+      // Only someone who actually replied can be credited (that is what a review hangs on).
+      const { data: reply } = await admin
+        .from("proposals")
+        .select("id, professional_id")
+        .eq("project_id", id)
+        .eq("professional_id", professionalId)
+        .maybeSingle();
+      if (reply) {
+        chosenProfessionalId = reply.professional_id;
+        await admin.from("proposals").update({ status: "accepted" }).eq("id", reply.id);
+      }
+    }
+    const now = new Date().toISOString();
+    const { error } = await admin
+      .from("projects")
+      .update({ status: "completed", completed_at: now, updated_at: now, accepted_professional_id: chosenProfessionalId })
+      .eq("id", id);
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    await auditUserAction(admin, req, {
+      actorUserId: uid,
+      actorRole: "client",
+      action: "project.resolve",
+      entityTable: "projects",
+      entityId: id,
+      entityOwnerUserId: project.client_id,
+      beforeData: { status: project.status, accepted_professional_id: project.accepted_professional_id, title: project.title },
+      afterData: { status: "completed", accepted_professional_id: chosenProfessionalId, title: project.title },
+    });
+    if (chosenProfessionalId) {
+      const { data: pro } = await admin.from("professionals").select("profile_id").eq("id", chosenProfessionalId).maybeSingle();
+      if (pro?.profile_id) {
+        const notification = {
+          user_id: pro.profile_id,
+          type: "project_completed",
+          title: "El cliente te eligió",
+          message: `El cliente cerró "${project.title}" y marcó que lo resolviste vos. ¡Buen trabajo!`,
+          data: { link: "/es/dashboard/profesional?tab=proposals", project_id: id, project_title: project.title },
+        };
+        await admin.from("notifications").insert(notification);
+        await sendNotificationPush({ userId: notification.user_id, title: notification.title, message: notification.message, data: notification.data });
+      }
+    }
+    return NextResponse.json({ success: true, professionalId: chosenProfessionalId });
   }
 
   // ── Pro marks "trabajo realizado" → awaiting_confirmation ───────────────
