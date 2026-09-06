@@ -116,7 +116,7 @@ export async function POST(req: NextRequest) {
           user_id: project.client_id,
           type: "proposal_received",
           title: `${profile?.full_name ?? "Un profesional"} te respondió`,
-          message: `Respondió a "${project.title ?? "tu solicitud"}". Entrá a leerlo y, si te interesa, escribile por WhatsApp.`,
+          message: `Respondió a "${project.title ?? "tu solicitud"}". Entrá a leerlo y, si te interesa, escribile.`,
           data: pushData,
         };
         const stored = await admin.from("notifications").insert(notification);

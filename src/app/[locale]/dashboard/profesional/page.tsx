@@ -663,9 +663,7 @@ export default function DashboardPage() {
   // saltaba a otra: eso era "me saca de la sección". Una vez confirmado, el
   // dato se conserva mientras dure la sesión.
   const [profesionalConfirmado, setProfesionalConfirmado] = useState(false);
-  useEffect(() => {
-    if (isProvider) setProfesionalConfirmado(true);
-  }, [isProvider]);
+  if (isProvider && !profesionalConfirmado) setProfesionalConfirmado(true);
   const esProfesional = isProvider || profesionalConfirmado;
   const requestedOfferOnlyTab = !!requestedTab && OFFER_ONLY.has(requestedTab);
   const allowedRequestedTab = requestedTab && (!requestedOfferOnlyTab || esProfesional) ? requestedTab : null;

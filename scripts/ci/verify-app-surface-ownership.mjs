@@ -32,6 +32,7 @@ const handlerRules = [
   [/^\/api\/(?:jobs|offers)(?:\/|$)/, "marketplace-lifecycle.spec.ts"],
   [/^\/api\/direct-chat(?:\/|$)/, "direct-chat.spec.ts", true],
   [/^\/api\/(?:push|internal\/push)(?:\/|$)/, "push-outbox-contract.spec.ts"],
+  [/^\/api\/internal\/recordatorios$/, "reminders-contract.spec.ts"],
   [/^\/api\/payments(?:\/|$)/, "product-contract.spec.ts"],
   [/^\/api\/(?:search|categories|insurers)(?:\/|$)/, "api-smoke.spec.ts"],
   [/^\/api\/contact(?:\/|$)/, "whatsapp-review-followup.spec.ts"],

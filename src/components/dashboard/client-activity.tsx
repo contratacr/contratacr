@@ -3,8 +3,9 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
-import { CalendarDays, FolderOpen, ClipboardList, Plus, CalendarClock, Wrench, Users, MapPin, FileText, Flag, CheckCircle2, MessageCircle } from "lucide-react";
+import { CalendarDays, FolderOpen, ClipboardList, Plus, CalendarClock, Wrench, Users, FileText, CheckCircle2, MessageCircle } from "lucide-react";
 import { DirectChatLauncher } from "@/components/professionals/direct-chat-launcher";
+import { CardActionsMenu, type CardAction } from "@/components/dashboard/card-actions-menu";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -148,6 +149,10 @@ async function fetchClientProjects(): Promise<Project[]> {
   const { projects } = await res.json();
   return projects ?? [];
 }
+
+// Silueta única de las acciones de tarjeta (Reservas y Solicitudes): la misma
+// píldora de 44px/13px del botón "Enviar mensaje" del perfil profesional.
+const actionButtonClass = "h-11 w-auto shrink-0 grow whitespace-nowrap rounded-full px-4 text-[13px] font-bold";
 
 export function ClientActivity({ section }: { section: ClientActivitySection }) {
   const { user } = useAuth();
@@ -470,8 +475,11 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
   const [resolving, setResolving] = useState(false);
 
   async function openResolve(projectId: string) {
-    await loadProposals(projectId);
-    setResolveChoice("");
+    const lista = await loadProposals(projectId);
+    // Con una sola respuesta, casi siempre fue esa persona: viene marcada para
+    // que un cierre rápido no le quite el crédito (ni la reseña).
+    const unico = lista.length === 1 ? lista[0]?.professionals?.id ?? "" : "";
+    setResolveChoice(unico);
     setResolveTarget(projectId);
   }
 
@@ -514,11 +522,13 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
     setDeleteTarget(null);
   }
 
-  async function loadProposals(projectId: string, force = false) {
-    if (!force && projectProposals[projectId]) return;
+  async function loadProposals(projectId: string, force = false): Promise<Proposal[]> {
+    if (!force && projectProposals[projectId]) return projectProposals[projectId];
     const res = await fetch(`/api/proposals?project=${projectId}`, { cache: "no-store" });
     const { proposals } = await res.json();
-    setProjectProposals((prev) => ({ ...prev, [projectId]: proposals ?? [] }));
+    const lista: Proposal[] = proposals ?? [];
+    setProjectProposals((prev) => ({ ...prev, [projectId]: lista }));
+    return lista;
   }
 
   async function reviewProjectPro(projectId: string) {
@@ -708,7 +718,6 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                               // reseña ni cuenta como trabajo hecho. El profesional conserva su
                               // botón; el cliente se quedaba sin ninguna salida.
                               const fechaYaPaso = isActiveB && solicitudBucket(b.status, b.scheduled_date) === "finalizadas";
-                              const actionButtonClass = "h-11 w-auto shrink-0 grow whitespace-nowrap rounded-full px-4 text-[13px] font-bold";
                               let primary: ReactNode = null;
                               if (b.status === "awaiting_confirmation") {
                                 primary = <Button size="sm" variant="chat" className={actionButtonClass} onClick={() => confirmBookingDone(b.id)}>{t("confirmCompletion")}</Button>;
@@ -822,7 +831,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                 <button
                   type="button"
                   onClick={() => setShowPublish(true)}
-                  className="inline-flex h-10 shrink-0 items-center gap-1.5 rounded-xl bg-[#009FD9] px-4 text-sm font-bold text-white transition-colors hover:bg-[#0089bb]"
+                  className="inline-flex h-11 shrink-0 items-center gap-1.5 rounded-full bg-[#009FD9] px-4 text-[13px] font-bold text-white transition-colors hover:bg-[#0089bb]"
                 >
                   <Plus className="h-4 w-4" />
                   {t("publishShort")}
@@ -925,7 +934,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                                           </div>
                                           {isActive && proposal.professionals?.id && (
                                             <div className="mt-3">
-                                              <DirectChatLauncher professionalId={proposal.professionals.id} professionalName={proposal.professionals.profiles?.full_name || t("professional")} projectId={project.id} proposalId={proposal.id} contextTitle={project.title} buttonLabel={t("writeWhatsapp")} openDirectly initialMessage={t("proposalChatGreeting", { title: project.title })} className="h-11 w-full rounded-xl text-sm font-bold" />
+                                              <DirectChatLauncher professionalId={proposal.professionals.id} professionalName={proposal.professionals.profiles?.full_name || t("professional")} projectId={project.id} proposalId={proposal.id} contextTitle={project.title} buttonLabel={t("writeWhatsapp")} openDirectly initialMessage={t("proposalChatGreeting", { title: project.title })} className="h-11 w-full rounded-full text-[13px] font-bold" />
                                             </div>
                                           )}
                                         </div>
@@ -937,28 +946,29 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                             );
                           })()}
 
-                          {/* Acciones: una principal y una discreta. */}
-                          <div className="flex flex-col gap-2 border-t border-[#f3f4f6] pt-4 sm:flex-row sm:items-center">
-                            {isActive && (
-                              <>
-                                <Button size="lg" variant="outline" className="h-11 flex-1 rounded-xl border-[#b8e7cf] bg-[#f2fbf6] text-[#15803d] hover:bg-[#e6f7ee]" onClick={() => openResolve(project.id)}>
-                                  <CheckCircle2 className="h-4 w-4" /> {t("resolve")}
+                          {/* Acciones con la misma silueta que Reservas: la que avanza en marino,
+                              lo destructivo en el menú ⋮. */}
+                          <div className="flex items-start gap-2 border-t border-[#f3f4f6] pt-4">
+                            <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
+                              {isActive && (
+                                <Button size="sm" variant="chat" className={actionButtonClass} onClick={() => openResolve(project.id)}>{t("resolve")}</Button>
+                              )}
+                              {project.status === "completed" && project.accepted_professional_id && (
+                                <Button size="sm" variant="chat" className={actionButtonClass} onClick={() => reviewProjectPro(project.id)}>
+                                  {projectReview(project.id) ? t("editReview") : t("leaveReview")}
                                 </Button>
-                                <button type="button" className="h-11 rounded-xl px-4 text-sm font-semibold text-[#6b7280] transition-colors hover:bg-[#f4f7fa] hover:text-[#b91c1c] sm:w-auto" onClick={() => openCancelProject(project.id)}>
-                                  {t("cancelProject")}
-                                </button>
-                              </>
-                            )}
-                            {project.status === "completed" && project.accepted_professional_id && (
-                              <Button size="lg" variant="outline" className="h-11 flex-1 rounded-xl" onClick={() => reviewProjectPro(project.id)}>
-                                {projectReview(project.id) ? t("editReview") : t("leaveReview")}
-                              </Button>
-                            )}
-                            {project.status === "cancelled" && (
-                              <>
-                                <Button size="lg" variant="outline" className="h-11 flex-1 rounded-xl" onClick={() => updateProjectStatus(project.id, "open")}>{t("reopenProject")}</Button>
-                                <button type="button" className="h-11 rounded-xl px-4 text-sm font-semibold text-[#6b7280] transition-colors hover:bg-[#f4f7fa] hover:text-[#b91c1c]" onClick={() => setDeleteTarget(project.id)}>{t("delete")}</button>
-                              </>
+                              )}
+                              {project.status === "cancelled" && (
+                                <Button size="sm" variant="chat" className={actionButtonClass} onClick={() => updateProjectStatus(project.id, "open")}>{t("reopenProject")}</Button>
+                              )}
+                            </div>
+                            {(isActive || project.status === "cancelled") && (
+                              <CardActionsMenu
+                                label={t("actions")}
+                                actions={isActive
+                                  ? [{ label: t("cancelProject"), onClick: () => openCancelProject(project.id), destructive: true }]
+                                  : [{ label: t("delete"), onClick: () => setDeleteTarget(project.id), destructive: true }]}
+                              />
                             )}
                           </div>
 

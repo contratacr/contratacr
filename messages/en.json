@@ -1400,7 +1400,7 @@
       "bookings": "Requests your clients sent you.",
       "proposals": "What clients are asking for in your service. Reply and, if they're interested, they'll message you.",
       "sent_bookings": "Bookings you made from a professional's profile.",
-      "sent_projects": "What you asked for. Professionals reply here and you message them on WhatsApp.",
+      "sent_projects": "What you asked for. Professionals reply here and you write to whoever you like.",
       "saved": "Profiles you saved to hire later.",
       "connections": "Professionals with whom you confirmed or completed a service."
     },
@@ -2123,12 +2123,12 @@
     "tipLabel": "Tip:",
     "tipBody": "Send a clear proposal and highlight your experience to improve your chances.",
     "proposalFree": "It's free and the client decides whether to contact you.",
-    "alreadyProposedNote": "You already answered this request. If the client is interested, they'll message you on WhatsApp.",
+    "alreadyProposedNote": "You already replied to this request. If the client is interested, they'll write to you.",
     "dismiss": "Not interested",
     "sendProposal": "Send reply",
     "sendProposalError": "Couldn't send it. Try again.",
     "emptyMine": "You haven't answered any yet",
-    "emptyMineSub": "Answer a request and the client messages you on WhatsApp if interested.",
+    "emptyMineSub": "Reply to a request and the client writes to you if they're interested.",
     "myProposal": "My proposal",
     "noneInView": "No requests in this view.",
     "status": {
@@ -2189,7 +2189,7 @@
     "tabMine": "Answered",
     "moreOptions": "More options",
     "messagePlaceholder": "Say what you can do, when you could come and how you charge. e.g. \"I can stop by tomorrow afternoon to take a look. The visit is ₡10,000 and it comes off the price if I do the job.\"",
-    "sentNote": "The client has your reply. If they're interested, they'll message you on WhatsApp.",
+    "sentNote": "The client has your reply. If they're interested, they'll write to you.",
     "yourMessageLabel": "Your reply",
     "leaveProject": "Leave this project",
     "leaveProjectTitle": "Leave this project?",
@@ -2204,7 +2204,8 @@
     "reportThanks": "Thanks. We received your report and will review it.",
     "reportError": "Couldn't send the report. Try again.",
     "leaveProjectReason": "Reason",
-    "leaveProjectReasonPlaceholder": "Tell the client why you cannot do it. Example: another job came up this week."
+    "leaveProjectReasonPlaceholder": "Tell the client why you cannot do it. Example: another job came up this week.",
+    "sentTitle": "Reply sent"
   },
   "servicesEditor": {
     "servicesOf": "Services of",
@@ -3198,7 +3199,7 @@
     "zone": "Where?",
     "zoneHelp": "So professionals in your area can write to you.",
     "successNotified": "{count, plural, =0 {There are no professionals for this service in your area yet, but we kept it posted for when they join.} one {We notified # {service} professional.} other {We notified # {service} professionals.}}",
-    "successNext": "We'll let you know as soon as someone replies. Then you message whoever you like on WhatsApp.",
+    "successNext": "We'll let you know as soon as someone replies. Then you write to whoever you like.",
     "successView": "View my request",
     "dirTitle": "What would you like to do?",
     "dirNeedTitle": "I need someone to do a job",
@@ -3208,7 +3209,8 @@
     "dirOfferBodyNew": "Create your professional profile and start receiving requests.",
     "avisoAnuncio": "This reads as if you were offering a service. This section is for requesting, not offering.",
     "avisoAnuncioCta": "Publish it as an offer",
-    "avisoAnuncioCtaNew": "Create your professional profile"
+    "avisoAnuncioCtaNew": "Create your professional profile",
+    "dismiss": "Close"
   },
   "notifications": {
     "title": "Notifications",

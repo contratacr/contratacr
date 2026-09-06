@@ -22,10 +22,12 @@ const PROJECT_DESCRIPTION_MAX_LENGTH = 300;
 const AUTO_CLOSE_DAYS = 30;
 
 function deriveTitle(serviceLabel: string, description: string): string {
+  // El título es la primera frase de lo que pidió; el servicio ya va aparte en
+  // la tarjeta, y anteponerlo repetía la categoría y la descripción dos veces.
   const firstSentence = description.split(/[.\n!?]/)[0]?.trim() ?? "";
-  const snippet = firstSentence.length > 48 ? `${firstSentence.slice(0, 45).trimEnd()}…` : firstSentence;
-  const title = snippet ? `${serviceLabel}: ${snippet}` : serviceLabel;
-  return title.slice(0, PROJECT_TITLE_MAX_LENGTH);
+  if (firstSentence.length < 6) return serviceLabel.slice(0, PROJECT_TITLE_MAX_LENGTH);
+  const snippet = firstSentence.length > 60 ? `${firstSentence.slice(0, 57).replace(/\s+\S*$/, "").trimEnd()}…` : firstSentence;
+  return (snippet.charAt(0).toUpperCase() + snippet.slice(1)).slice(0, PROJECT_TITLE_MAX_LENGTH);
 }
 
 type ClientIdentityStatus = "verified" | "pending" | "unverified";

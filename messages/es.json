@@ -1814,7 +1814,7 @@
       "bookings": "Solicitudes que te enviaron tus clientes.",
       "proposals": "Lo que los clientes están pidiendo de tu servicio. Respondé y, si les interesa, te escriben.",
       "sent_bookings": "Reservas que hiciste desde el perfil de un profesional.",
-      "sent_projects": "Lo que pediste. Los profesionales te responden aquí y vos les escribís por WhatsApp.",
+      "sent_projects": "Lo que pediste. Los profesionales te responden aquí y vos le escribís al que quieras.",
       "saved": "Perfiles que guardaste para contratar más adelante.",
       "connections": "Profesionales con quienes confirmaste o completaste un servicio."
     },
@@ -2123,12 +2123,12 @@
     "tipLabel": "Consejo:",
     "tipBody": "Envía una propuesta clara y destaca tu experiencia para aumentar tus opciones.",
     "proposalFree": "Es gratis y el cliente decidirá si te contacta.",
-    "alreadyProposedNote": "Ya respondiste esta solicitud. Si al cliente le interesa, te escribe por WhatsApp.",
+    "alreadyProposedNote": "Ya respondiste esta solicitud. Si al cliente le interesa, te escribe.",
     "dismiss": "No me interesa",
     "sendProposal": "Enviar respuesta",
     "sendProposalError": "No se pudo enviar. Intentá de nuevo.",
     "emptyMine": "Todavía no has respondido ninguna",
-    "emptyMineSub": "Respondé una solicitud y el cliente te escribe por WhatsApp si le interesa.",
+    "emptyMineSub": "Respondé una solicitud y el cliente te escribe si le interesa.",
     "myProposal": "Mi propuesta",
     "noneInView": "No hay solicitudes en esta vista.",
     "status": {
@@ -2189,7 +2189,7 @@
     "tabMine": "Respondidas",
     "moreOptions": "Más opciones",
     "messagePlaceholder": "Decile qué podés hacer, cuándo podrías ir y cómo cobrás. Ej.: \"Puedo pasar mañana en la tarde a revisar. La visita cuesta ₡10 000 y se descuenta si hago el trabajo.\"",
-    "sentNote": "El cliente ya tiene tu respuesta. Si le interesa, te escribe por WhatsApp.",
+    "sentNote": "El cliente ya tiene tu respuesta. Si le interesa, te escribe.",
     "yourMessageLabel": "Tu respuesta",
     "leaveProject": "Retirarme del proyecto",
     "leaveProjectTitle": "¿Retirarte de este proyecto?",
@@ -2204,7 +2204,8 @@
     "reportThanks": "Gracias. Recibimos tu reporte y lo vamos a revisar.",
     "reportError": "No se pudo enviar el reporte. Intenta de nuevo.",
     "leaveProjectReason": "Motivo",
-    "leaveProjectReasonPlaceholder": "Contale al cliente por qué no vas a poder. Ejemplo: se me atravesó otro trabajo esta semana."
+    "leaveProjectReasonPlaceholder": "Contale al cliente por qué no vas a poder. Ejemplo: se me atravesó otro trabajo esta semana.",
+    "sentTitle": "Respuesta enviada"
   },
   "servicesEditor": {
     "servicesOf": "Servicios de",
@@ -3198,7 +3199,7 @@
     "zone": "¿Dónde?",
     "zoneHelp": "Para que te escriban profesionales de tu zona.",
     "successNotified": "{count, plural, =0 {Todavía no hay profesionales de este servicio en tu zona, pero la dejamos publicada para cuando se sumen.} one {Le avisamos a # profesional de {service}.} other {Le avisamos a # profesionales de {service}.}}",
-    "successNext": "Te avisamos apenas alguien te responda. Después les escribís por WhatsApp al que quieras.",
+    "successNext": "Te avisamos apenas alguien te responda. Después le escribís al que quieras.",
     "successView": "Ver mi solicitud",
     "dirTitle": "¿Qué querés hacer?",
     "dirNeedTitle": "Necesito que alguien haga un trabajo",
@@ -3208,7 +3209,8 @@
     "dirOfferBodyNew": "Creá tu perfil profesional y empezá a recibir solicitudes.",
     "avisoAnuncio": "Esto se lee como si estuvieras ofreciendo un servicio. Acá se pide, no se ofrece.",
     "avisoAnuncioCta": "Publicalo como oferta",
-    "avisoAnuncioCtaNew": "Creá tu perfil profesional"
+    "avisoAnuncioCtaNew": "Creá tu perfil profesional",
+    "dismiss": "Cerrar"
   },
   "notifications": {
     "title": "Notificaciones",

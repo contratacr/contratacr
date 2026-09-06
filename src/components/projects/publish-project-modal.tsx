@@ -11,11 +11,32 @@ import { PROVINCES } from "@/lib/data/cr-geography";
 import { getCategoryLabel } from "@/lib/data/categories";
 import { useLocale } from "next-intl";
 import { lockBodyScroll } from "@/lib/body-scroll-lock";
+import { useAuth } from "@/hooks/use-auth";
+import { Link } from "@/i18n/navigation";
 
 const PROJECT_DESCRIPTION_MAX_LENGTH = 300;
 const LAST_ZONE_KEY = "ccr:last-request-zone";
 
 type ProjectErrorField = "category" | "description";
+
+// En producción, los primeros "proyectos" fueron profesionales ofreciendo sus
+// servicios. Estas señales, de a dos, delatan un anuncio: se avisa y se manda
+// a la puerta correcta (oferta o registro profesional), sin bloquear.
+const SENALES_DE_ANUNCIO: RegExp[] = [
+  /\b(?:ofrezco|ofrecemos|brindo|brindamos|realizo|realizamos|elaboro|elaboramos|confecciono|vendo|hago|hacemos|dise[ñn]amos)\b/i,
+  /\bcreo\s+(?!que\b)/i,
+  /\b(?:necesit[áa]s|buscas|busc[áa]s|quer[ée]s|requer[íi]s|ten[ée]s)\b/i,
+  /\b(?:cont[áa]ctame|contactame|escr[íi]beme|escribime|ll[áa]mame|llamame|consultas?\s+al|inbox|mi whatsapp)\b/i,
+  /\b(?:mis servicios|mi servicio|a tu gusto|a su gusto|presupuesto sin compromiso|a domicilio|precios accesibles|entrega r[áa]pida)\b/i,
+  /\b(?:a[ñn]os de experiencia|calidad garantizada|100%|satisfacci[óo]n garantizada)\b/i,
+];
+
+/** Dos señales, no una: cualquiera suelta también aparece en pedidos reales. */
+export function pareceAnuncioDeServicio(texto: string): boolean {
+  const limpio = (texto ?? "").trim();
+  if (limpio.length < 25) return false;
+  return SENALES_DE_ANUNCIO.filter((r) => r.test(limpio)).length >= 2;
+}
 
 // Publicar una solicitud: el cliente elige el servicio, cuenta qué hay que hacer y
 // publica. La zona se recuerda de la última vez. Sin título (lo arma el servidor),
@@ -25,6 +46,8 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
   const t = useTranslations("publicarProyecto");
   const locale = useLocale();
   const searchParams = useSearchParams();
+  const { user } = useAuth();
+  const yaEsProfesional = user?.user_metadata?.is_provider === true;
   const initialCategoryId = searchParams.get("categoria") || "";
 
   const [form, setForm] = useState({
@@ -143,7 +166,7 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
           <button
             type="button"
             onClick={onClose}
-            aria-label={t("close")}
+            aria-label={t("dismiss")}
             className="absolute left-4 top-1/2 flex h-9 w-9 -translate-y-1/2 shrink-0 items-center justify-center rounded-lg text-[#162543] transition-colors hover:bg-[#f3f4f6] sm:static sm:h-8 sm:w-8 sm:translate-y-0"
           >
             <ArrowLeft className="h-5 w-5 sm:hidden" />
@@ -189,6 +212,17 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
                   />
                   {form.description.length >= PROJECT_DESCRIPTION_MAX_LENGTH && (
                     <p className="mt-1 text-xs text-[#b45309]">{t("charLimit", { max: PROJECT_DESCRIPTION_MAX_LENGTH })}</p>
+                  )}
+                  {pareceAnuncioDeServicio(form.description) && (
+                    <div role="status" className="mt-2.5 flex flex-col gap-2 rounded-xl border border-[#fde68a] bg-[#fffbeb] px-3.5 py-3 text-[13px] leading-relaxed text-[#92400e]">
+                      <p className="font-medium">{t("avisoAnuncio")}</p>
+                      <Link
+                        href={yaEsProfesional ? "/ofertas/publicar" : "/registro/profesional"}
+                        className="inline-flex h-9 w-fit items-center rounded-full bg-[#b45309] px-3.5 text-[13px] font-bold text-white transition-colors hover:bg-[#92400e]"
+                      >
+                        {yaEsProfesional ? t("avisoAnuncioCta") : t("avisoAnuncioCtaNew")}
+                      </Link>
+                    </div>
                   )}
                 </div>
 
