@@ -1466,7 +1466,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
 
                   <div>
                     <label className="text-sm font-medium text-[#374151] block mb-1.5">
-                      {t("step4.description")} <span className="text-red-500">*</span>
+                      {t("step4.description")} <span className="font-normal text-[#9ca3af]">({t("optional")})</span>
                     </label>
                     <textarea
                       className="w-full rounded-xl border border-[#e5e7eb] bg-white px-4 py-3 text-sm text-[#111827] placeholder:text-[#9ca3af] min-h-[110px] resize-none break-words focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
@@ -1514,7 +1514,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                   {renderSelfNameField()}
                   <div>
                     <label className="text-sm font-medium text-[#374151] block mb-1.5">
-                      {t("step4.email")} <span className="text-[#9ca3af] font-normal">(opcional)</span>
+                      {t("step4.email")} <span className="text-[#9ca3af] font-normal">({t("optional")})</span>
                     </label>
                     <input
                       type="email"
@@ -1699,14 +1699,12 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                     size="md"
                     className="flex-1"
                     disabled={
-                      !description.trim()
-                      || (forSomeoneElse && (!benName.trim() || !benDob))
+                      (forSomeoneElse && (!benName.trim() || !benDob))
                       || (proIsHealth && !forSomeoneElse && hasStoredCedula && !effectiveSelfDob)
                       || detailsPhoneInvalid
                     }
                     loading={submitting}
                     onClick={async () => {
-                      if (!description.trim()) return;
                       // Booking for a dependent needs the beneficiary's name + DOB (age).
                       if (forSomeoneElse && (!benName.trim() || !benDob)) return;
                       // Health services require the patient's DOB. For "para mí" we only
