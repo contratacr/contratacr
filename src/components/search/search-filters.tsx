@@ -1089,7 +1089,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
       : languages.length > 1
         ? `${t("filters.language")} · ${languages.length}`
         : locale === "en" ? "Language" : "Idioma";
-    const pill = "ccr-search-filter-chip inline-flex h-8 w-max shrink-0 items-center justify-center gap-1 whitespace-nowrap rounded-full border border-[#d8e2ea] bg-white px-2 text-[9px] font-bold text-[#162543] shadow-sm min-[350px]:px-2.5 min-[350px]:text-[10px] min-[390px]:text-[11px]";
+    const pill = "ccr-search-filter-chip inline-flex h-9 w-max shrink-0 items-center justify-center gap-1 whitespace-nowrap rounded-full border border-[#d8e2ea] bg-white px-2.5 text-[10px] font-bold text-[#162543] shadow-sm min-[350px]:px-3 min-[350px]:text-[11px] min-[390px]:text-[12px]";
     return (
       <div className="scrollbar-none flex w-full min-w-0 items-center gap-1 overflow-x-auto overflow-y-visible pb-0.5">
         <div className="flex w-max min-w-full items-center justify-start gap-1">
@@ -1099,15 +1099,16 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
           <button type="button" onClick={() => setOpenChip("price")} className={pill}>
             <span className="min-w-0 whitespace-nowrap">{priceText}</span><ChevronDown className="h-3 w-3 shrink-0 min-[390px]:h-3.5 min-[390px]:w-3.5" />
           </button>
-          <button data-testid="mobile-language-filter" type="button" onClick={() => setOpenChip("language")} className={pill}>
-            <span className="min-w-0 whitespace-nowrap">{languageText}</span><ChevronDown className="h-3 w-3 shrink-0 min-[390px]:h-3.5 min-[390px]:w-3.5" />
-          </button>
           {showVideoFilter && <button type="button" onClick={() => setOpenChip("modality")} className={pill}>
             <span className="min-w-0 whitespace-nowrap">{modalities.length ? `${t("filters.attention")} (${modalities.length})` : t("filters.attention")}</span><ChevronDown className="h-3.5 w-3.5 shrink-0" />
           </button>}
           {showInsurerFilter && <button type="button" onClick={() => setOpenChip("insurer")} className={pill}>
             <span className="min-w-0 whitespace-nowrap">{insurers.length ? `${t("filters.insurer")} (${insurers.length})` : t("filters.insurer")}</span><ChevronDown className="h-3.5 w-3.5 shrink-0" />
           </button>}
+          {/* El idioma se usa poco: va de último para no empujar lo que sí depende de la categoría. */}
+          <button data-testid="mobile-language-filter" type="button" onClick={() => setOpenChip("language")} className={pill}>
+            <span className="min-w-0 whitespace-nowrap">{languageText}</span><ChevronDown className="h-3 w-3 shrink-0 min-[390px]:h-3.5 min-[390px]:w-3.5" />
+          </button>
         </div>
         <FilterSheet
           open={openChip === "sort"}

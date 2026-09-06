@@ -215,7 +215,8 @@
   "search": {
     "title": {
       "default": "All services",
-      "withCategory": "{category}"
+      "withCategory": "{category}",
+      "withQuery": "Results for “{q}”"
     },
     "resultsIn": "{count} professionals in {location}",
     "thisArea": "this area",
@@ -226,7 +227,9 @@
     "close": "Close",
     "noResults": {
       "title": "No results found",
-      "desc": "Try a different category or expand your search area."
+      "desc": "Try a different category or expand your search area.",
+      "publishCta": "Post a request",
+      "publishHint": "Tell us what you need and professionals in that category will reply."
     },
     "pagination": {
       "label": "Results pagination",

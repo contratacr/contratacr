@@ -316,11 +316,16 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     return !matchesSelectedPhysicalLocation(pro);
   }
 
+  // Con una búsqueda escrita que no cayó en una categoría, el título repite lo
+  // que la persona escribió; "Todos los servicios" la desorientaba.
+  const queryText = typeof params.q === "string" ? params.q.trim() : "";
   const pageTitle = activeCategoryId
     ? catLabel(activeCategoryId)
     : selectedGroupId
       ? getCategoryGroupLabel(selectedGroupId, locale)
-      : t("title.default");
+      : queryText
+        ? t("title.withQuery", { q: queryText })
+        : t("title.default");
 
   // Area-aware count label: exact map bounds -> "esta area"; otherwise canton
   // (most specific) -> province -> generic "en Costa Rica".
@@ -485,7 +490,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                   <p className="mx-auto max-w-sm text-sm text-[#6b7280]">{t("noResults.desc")}</p>
                   <Link
                     href={`/dashboard/profesional?tab=sent_projects&openPublish=1${selectedCategory ? `&categoria=${encodeURIComponent(selectedCategory)}` : ""}`}
-                    className="mt-6 inline-flex h-12 items-center justify-center rounded-xl bg-[#009FD9] px-6 text-sm font-bold text-white transition-colors hover:bg-[#0089bb]"
+                    className="mt-6 inline-flex h-11 items-center justify-center rounded-full bg-[#009FD9] px-5 text-[13px] font-bold text-white transition-colors hover:bg-[#0089bb]"
                   >
                     {t("noResults.publishCta")}
                   </Link>

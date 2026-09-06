@@ -215,7 +215,8 @@
   "search": {
     "title": {
       "default": "Todos los servicios",
-      "withCategory": "{category}"
+      "withCategory": "{category}",
+      "withQuery": "Resultados para «{q}»"
     },
     "resultsIn": "{count} profesionales en {location}",
     "thisArea": "esta área",
@@ -226,7 +227,9 @@
     "close": "Cerrar",
     "noResults": {
       "title": "No encontramos resultados",
-      "desc": "Intenta con otra categoría o amplía la zona de búsqueda."
+      "desc": "Intenta con otra categoría o amplía la zona de búsqueda.",
+      "publishCta": "Publicar una solicitud",
+      "publishHint": "Contá qué necesitás y los profesionales de esa categoría te responden."
     },
     "pagination": {
       "label": "Paginación de resultados",
