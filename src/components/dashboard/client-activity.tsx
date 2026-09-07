@@ -806,15 +806,8 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
             />
           ) : (
             <div className="ccr-native-safe-list-end flex flex-col gap-3.5">
-              {/* El filtro dice QUÉ se ve; publicar es otra cosa. Apretados en la
-                  misma fila competían y el filtro perdía espacio: el botón va aparte. */}
-              <StatusFilterTabs
-                tabs={PROYECTO_TABS}
-                value={effectiveProjectFilter}
-                onChange={setProjectFilter}
-                counts={projectCounts}
-                labelFor={(id) => tEtapas(id)}
-              />
+              {/* Publicar va ARRIBA: el filtro tiene que quedar pegado a la lista que
+                  filtra. En medio, el botón cortaba esa relación. */}
               <button
                 type="button"
                 onClick={() => setShowPublish(true)}
@@ -823,6 +816,13 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                 <Plus className="h-4 w-4" />
                 {t("publishProject")}
               </button>
+              <StatusFilterTabs
+                tabs={PROYECTO_TABS}
+                value={effectiveProjectFilter}
+                onChange={setProjectFilter}
+                counts={projectCounts}
+                labelFor={(id) => tEtapas(id)}
+              />
               {filteredProjects.length === 0 && (
                 <p className="py-8 text-center text-sm text-[#6b7280]">{t("noProjectsView")}</p>
               )}
