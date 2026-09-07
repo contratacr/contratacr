@@ -444,7 +444,7 @@
   },
   "categorySearch": {
     "placeholderDefault": "Type your specialty or search…",
-    "searchPlaceholder": "Type your service… example: psychologist, plumber, nanny",
+    "searchPlaceholder": "Search service",
     "noResults": "We couldn't find that service",
     "noResultsHint": "Try another name or search from the home page.",
     "suggestThanks": "Thanks. We sent your suggestion to the team for review.",
@@ -455,7 +455,8 @@
     "notListed": "Suggest a service",
     "back": "Back to services",
     "optionsCount": "{count, plural, one {# option} other {# options}}",
-    "sheetTitle": "Choose the service"
+    "sheetTitle": "Choose the service",
+    "searchExamples": "For example: plumber, psychologist, nanny, electrician."
   },
   "gallery": {
     "workAlt": "Work {n}",

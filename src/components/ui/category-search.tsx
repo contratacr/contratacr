@@ -237,6 +237,9 @@ export function CategorySearch({
                 </button>
               )}
             </div>
+            {/* Los ejemplos van debajo, no dentro del campo: en el teléfono el
+                marcador se cortaba a media palabra ("...psicólogo, plome"). */}
+            {!query && <p className="mt-1.5 px-1 text-xs text-[#9ca3af]">{t("searchExamples")}</p>}
           </div>
 
           {/* Results */}

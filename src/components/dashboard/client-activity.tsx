@@ -806,25 +806,23 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
             />
           ) : (
             <div className="ccr-native-safe-list-end flex flex-col gap-3.5">
-              <div className="flex items-center gap-3">
-                <div className="min-w-0 flex-1">
-                  <StatusFilterTabs
-                    tabs={PROYECTO_TABS}
-                    value={effectiveProjectFilter}
-                    onChange={setProjectFilter}
-                    counts={projectCounts}
-                    labelFor={(id) => tEtapas(id)}
-                  />
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setShowPublish(true)}
-                  className="inline-flex h-11 shrink-0 items-center gap-1.5 rounded-full bg-[#009FD9] px-4 text-[13px] font-bold text-white transition-colors hover:bg-[#0089bb]"
-                >
-                  <Plus className="h-4 w-4" />
-                  {t("publishShort")}
-                </button>
-              </div>
+              {/* El filtro dice QUÉ se ve; publicar es otra cosa. Apretados en la
+                  misma fila competían y el filtro perdía espacio: el botón va aparte. */}
+              <StatusFilterTabs
+                tabs={PROYECTO_TABS}
+                value={effectiveProjectFilter}
+                onChange={setProjectFilter}
+                counts={projectCounts}
+                labelFor={(id) => tEtapas(id)}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPublish(true)}
+                className="inline-flex h-11 w-full items-center justify-center gap-1.5 rounded-full bg-[#009FD9] px-4 text-[13px] font-bold text-white transition-colors hover:bg-[#0089bb] sm:w-auto sm:self-start"
+              >
+                <Plus className="h-4 w-4" />
+                {t("publishProject")}
+              </button>
               {filteredProjects.length === 0 && (
                 <p className="py-8 text-center text-sm text-[#6b7280]">{t("noProjectsView")}</p>
               )}

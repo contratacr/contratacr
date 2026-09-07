@@ -444,7 +444,7 @@
   },
   "categorySearch": {
     "placeholderDefault": "Escribe tu especialidad o busca…",
-    "searchPlaceholder": "Escribe tu servicio… ejemplo: psicólogo, plomero, niñera",
+    "searchPlaceholder": "Buscar servicio",
     "noResults": "No encontramos ese servicio",
     "noResultsHint": "Prueba con otro nombre o búscalo desde el inicio.",
     "suggestThanks": "Gracias. Enviamos tu sugerencia al equipo para revisión.",
@@ -455,7 +455,8 @@
     "notListed": "Sugerir servicio",
     "back": "Volver a servicios",
     "optionsCount": "{count, plural, one {# opción} other {# opciones}}",
-    "sheetTitle": "Elegí el servicio"
+    "sheetTitle": "Elegí el servicio",
+    "searchExamples": "Por ejemplo: plomero, psicólogo, niñera, electricista."
   },
   "gallery": {
     "workAlt": "Trabajo {n}",
