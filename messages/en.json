@@ -454,7 +454,8 @@
     "cancel": "Cancel",
     "notListed": "Suggest a service",
     "back": "Back to services",
-    "optionsCount": "{count, plural, one {# option} other {# options}}"
+    "optionsCount": "{count, plural, one {# option} other {# options}}",
+    "sheetTitle": "Choose the service"
   },
   "gallery": {
     "workAlt": "Work {n}",
@@ -3163,7 +3164,7 @@
     "cancel": "Cancel",
     "close": "Done",
     "publishing": "Posting…",
-    "publish": "Post",
+    "publish": "Post request",
     "forWho": {
       "question": "Who is this for?",
       "me": "For me",
@@ -3824,7 +3825,8 @@
       "popular": "Popular:",
       "installLink": "Add app to phone",
       "proCta": "Offer my services",
-      "publishCta": "Not sure who to call? Post what you need and let them write to you"
+      "publishCta": "Post what I need",
+      "publishHint": "Not sure who to call? Tell us what you need and professionals write to you."
     },
     "pros": {
       "headingPre": "Services for whatever you need in",

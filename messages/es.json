@@ -454,7 +454,8 @@
     "cancel": "Cancelar",
     "notListed": "Sugerir servicio",
     "back": "Volver a servicios",
-    "optionsCount": "{count, plural, one {# opción} other {# opciones}}"
+    "optionsCount": "{count, plural, one {# opción} other {# opciones}}",
+    "sheetTitle": "Elegí el servicio"
   },
   "gallery": {
     "workAlt": "Trabajo {n}",
@@ -3163,7 +3164,7 @@
     "cancel": "Cancelar",
     "close": "Listo",
     "publishing": "Publicando…",
-    "publish": "Pedir profesionales",
+    "publish": "Publicar solicitud",
     "forWho": {
       "question": "¿Para quién es?",
       "me": "Para mí",
@@ -3824,7 +3825,8 @@
       "popular": "Popular:",
       "installLink": "Agregar app al celular",
       "proCta": "Ofrecer mis servicios",
-      "publishCta": "¿No sabés a quién llamar? Publicá lo que necesitás y que te escriban"
+      "publishCta": "Publicar lo que necesito",
+      "publishHint": "¿No sabés a quién llamar? Contá qué necesitás y los profesionales te escriben."
     },
     "pros": {
       "headingPre": "Servicios para lo que necesitas en",
