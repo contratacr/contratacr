@@ -1682,7 +1682,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
             {/* Footer actions — elegir el servicio ES la acción de ese paso: sin
                 nada que confirmar, la barra de abajo se queda vacía y estorba. */}
             {step !== "success" && !(step === "calendar" && needsProfessionPick) && (
-              <div className="flex shrink-0 gap-3 border-t border-[#f3f4f6] bg-white px-5 py-3.5 pb-[max(env(safe-area-inset-bottom),0.875rem)] md:px-6 md:py-4 md:pb-4">
+              <div className="relative flex shrink-0 gap-3 border-t border-[#f3f4f6] bg-white px-5 py-3.5 pb-[max(env(safe-area-inset-bottom),0.875rem)] after:absolute after:inset-x-0 after:top-full after:h-24 after:bg-white after:content-[''] md:px-6 md:py-4 md:pb-4">
                 {step === "calendar" && !needsProfessionPick && (
                   <div className="flex flex-1 items-center justify-between gap-3">
                     <span className="min-w-0 truncate text-sm text-[#6b7280]">
@@ -1769,7 +1769,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
             )}
 
             {step === "success" && (
-              <div className="flex shrink-0 flex-col gap-2.5 border-t border-[#f3f4f6] bg-white px-5 py-3.5 pb-[max(env(safe-area-inset-bottom),0.875rem)] md:px-6 md:py-4 md:pb-4">
+              <div className="relative flex shrink-0 flex-col gap-2.5 border-t border-[#f3f4f6] bg-white px-5 py-3.5 pb-[max(env(safe-area-inset-bottom),0.875rem)] after:absolute after:inset-x-0 after:top-full after:h-24 after:bg-white after:content-[''] md:px-6 md:py-4 md:pb-4">
                 {/* Lead to the just-made request (it's at the top of Solicitudes), not a
                     dead-end "Listo". Closing still refreshes /buscar so the slot disappears. */}
                 <Button size="md" className="w-full" onClick={goToMyRequest}>
