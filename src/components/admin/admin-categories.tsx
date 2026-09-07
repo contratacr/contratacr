@@ -806,7 +806,7 @@ export function AdminCategories() {
     setDialog({
       title: isBase ? "Ocultar servicio" : "Eliminar servicio",
       description: isBase
-        ? `"${item.label}" dejará de aparecer para nuevos perfiles, búsquedas y solicitudes.`
+        ? `"${item.label}" dejará de aparecer para nuevos perfiles, búsquedas y proyectos.`
         : `"${item.label}" dejará de aparecer en el catálogo de la app.`,
       detail: "Los datos históricos se mantienen.",
       confirmLabel: isBase ? "Ocultar servicio" : "Eliminar servicio",

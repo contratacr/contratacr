@@ -70,11 +70,11 @@ const TITLES: Record<string, Record<NotificationLocale, string>> = {
   proposal_accepted: { es: "¡El cliente te eligió!", en: "The client chose you!" },
   project_proposal_accepted: { es: "¡El cliente te eligió!", en: "The client chose you!" },
   project_proposal_declined: { es: "Propuesta no seleccionada", en: "Proposal not selected" },
-  new_project: { es: "Nueva solicitud", en: "New request" },
+  new_project: { es: "Nuevo proyecto", en: "New project" },
   project_work_done: { es: "Confirma la finalización del trabajo", en: "Confirm job completion" },
   project_completed: { es: "Oportunidad finalizada", en: "Project completed" },
-  project_cancelled: { es: "Solicitud cancelada", en: "Request cancelled" },
-  project_deleted: { es: "Solicitud eliminada", en: "Request deleted" },
+  project_cancelled: { es: "Proyecto cancelado", en: "Project cancelled" },
+  project_deleted: { es: "Proyecto eliminado", en: "Project deleted" },
   support_reply: { es: "Respuesta de soporte", en: "Support reply" },
   verification: { es: "Actualización de verificación", en: "Verification update" },
   verification_approved: { es: "¡Tu identidad fue verificada!", en: "Your identity was verified!" },
@@ -341,7 +341,7 @@ export function localizedNotificationCopy(notification: NotificationCopyInput, l
     ]);
     const professional = stringData(data, "professional_name") || legacy?.[1] || (en ? "A professional" : "Un profesional");
     const project = stringData(data, "project_title") || legacy?.[2] || "";
-    return { title, message: en ? `${professional} replied to your request${project ? ` "${project}"` : ""}.` : `${professional} respondió a tu solicitud${project ? ` "${project}"` : ""}.` };
+    return { title, message: en ? `${professional} replied to your project${project ? ` "${project}"` : ""}.` : `${professional} respondió a tu proyecto${project ? ` "${project}"` : ""}.` };
   }
 
   if (["proposal_updated", "proposal_withdrawn", "proposal_accepted", "project_proposal_accepted", "project_proposal_declined"].includes(notification.type)) {
@@ -365,7 +365,7 @@ export function localizedNotificationCopy(notification: NotificationCopyInput, l
       /^Un cliente public[oó] ["“](.+?)["”] en (.+?)\.$/i,
       /^A client published ["“](.+?)["”] in (.+?)\.$/i,
     ]);
-    const project = stringData(data, "project_title") || legacy?.[1] || (en ? "a new request" : "una nueva solicitud");
+    const project = stringData(data, "project_title") || legacy?.[1] || (en ? "a new project" : "un nuevo proyecto");
     const categoryId = stringData(data, "category_id");
     const category = categoryId
       ? getCategoryLabel(categoryId, language)
@@ -380,10 +380,10 @@ export function localizedNotificationCopy(notification: NotificationCopyInput, l
   }
 
   if (["project_completed", "project_cancelled", "project_deleted"].includes(notification.type)) {
-    const project = stringData(data, "project_title") || quotedValue(normalizedMessage) || (en ? "the request" : "la solicitud");
+    const project = stringData(data, "project_title") || quotedValue(normalizedMessage) || (en ? "the project" : "el proyecto");
     if (notification.type === "project_completed") return { title, message: en ? `The client confirmed completion of "${project}". Great work.` : `El cliente confirmó la finalización de "${project}". Buen trabajo.` };
     const deleted = notification.type === "project_deleted";
-    return { title, message: en ? `The client ${deleted ? "deleted" : "cancelled"} the request "${project}". It is no longer active.` : `El cliente ${deleted ? "eliminó" : "canceló"} la solicitud "${project}". Ya no está activa.` };
+    return { title, message: en ? `The client ${deleted ? "deleted" : "cancelled"} the project "${project}". It is no longer active.` : `El cliente ${deleted ? "eliminó" : "canceló"} la solicitud "${project}". Ya no está activa.` };
   }
 
   if (notification.type === "support_reply") {
@@ -511,8 +511,8 @@ export function localizedNotificationCopy(notification: NotificationCopyInput, l
     return {
       title,
       message: en
-        ? `The professional marked "${proyecto}" as finished ${dias} days ago. Confirm it to close the request and leave your review.`
-        : `El profesional marcó "${proyecto}" como terminado hace ${dias} días. Confírmalo para cerrar la solicitud y dejar tu reseña.`,
+        ? `The professional marked "${proyecto}" as finished ${dias} days ago. Confirm it to close the project and leave your review.`
+        : `El profesional marcó "${proyecto}" como terminado hace ${dias} días. Confírmalo para cerrar el proyecto y dejar tu reseña.`,
     };
   }
 
@@ -538,8 +538,8 @@ export function localizedNotificationCopy(notification: NotificationCopyInput, l
     return {
       title,
       message: en
-        ? `${quien} can no longer do "${proyecto}". Your request is still open and can receive other replies.`
-        : `${quien} ya no puede realizar "${proyecto}". Tu solicitud sigue abierta para recibir otras respuestas.`,
+        ? `${quien} can no longer do "${proyecto}". Your project is still open and can receive other replies.`
+        : `${quien} ya no puede realizar "${proyecto}". Tu proyecto sigue abierto para recibir otras respuestas.`,
     };
   }
 

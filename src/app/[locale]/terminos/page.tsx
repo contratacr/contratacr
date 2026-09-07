@@ -77,7 +77,7 @@ const ES_SECTIONS: LegalSection[] = [
     body: [
       { k: "p", text: "Los mensajes sirven para coordinar servicios. Los participantes son responsables de lo que envían. Puede adjuntar únicamente imágenes o documentos legítimos, necesarios y seguros; no debe incluir información sensible innecesaria." },
       { k: "p", text: "ContrataCR puede aplicar controles automáticos, límites, bloqueo de archivos y revisión asociada a reportes o seguridad. No supervisamos de forma permanente todas las conversaciones." },
-      { k: "p", text: "Si activa notificaciones, podemos enviar avisos sobre mensajes, solicitudes, propuestas, citas, reseñas, seguridad y actividad de su cuenta. Puede desactivarlas desde el sistema operativo, aunque ciertos correos esenciales de cuenta o seguridad seguirán enviándose." },
+      { k: "p", text: "Si activa notificaciones, podemos enviar avisos sobre mensajes, citas, proyectos, respuestas, reseñas, seguridad y actividad de su cuenta. Puede desactivarlas desde el sistema operativo, aunque ciertos correos esenciales de cuenta o seguridad seguirán enviándose." },
     ],
   },
   {

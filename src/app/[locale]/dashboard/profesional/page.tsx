@@ -154,9 +154,9 @@ function agruparPestanas(tabs: Tab[], etiqueta: (id: string) => string) {
 
 const PANEL_TAB_LABELS: Partial<Record<Tab, { es: string; en: string }>> = {
   bookings: { es: "Citas", en: "Appointments" },
-  proposals: { es: "Solicitudes de clientes", en: "Client requests" },
+  proposals: { es: "Proyectos de clientes", en: "Client projects" },
   sent_bookings: { es: "Mis citas", en: "My appointments" },
-  sent_projects: { es: "Mis solicitudes", en: "My requests" },
+  sent_projects: { es: "Mis proyectos", en: "My projects" },
   applications: { es: "Mis postulaciones", en: "My applications" },
   connections: { es: "Volver a contratar", en: "Hire again" },
   photos: { es: "Casos de éxito", en: "Success cases" },

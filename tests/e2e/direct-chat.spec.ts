@@ -152,7 +152,7 @@ test.describe("@seeded contextual direct chat", () => {
     expect(created.status).toBe(200); conversationIds.push(created.body.conversationId!);
     await gotoOK(page, `/es/mensajes?conversation=${created.body.conversationId}`);
     await expect(page.getByText("E2E reparación contextual").last()).toBeVisible();
-    await expect(page.getByRole("button", { name: /Ver solicitud|View request/i })).toBeVisible();
+    await expect(page.getByRole("button", { name: /Ver cita|View appointment/i })).toBeVisible();
 
     const outsider = await createDisposableAccount({ prefix: "direct-chat-outsider" });
     try {

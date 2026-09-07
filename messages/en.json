@@ -58,8 +58,8 @@
     "account": "Account",
     "sentRequests": "My appointments",
     "myRequests": "My appointments",
-    "publishedProjects": "My requests",
-    "myProjects": "My requests",
+    "publishedProjects": "My projects",
+    "myProjects": "My projects",
     "favorites": "My favorites",
     "notifications": "Notifications",
     "supportTickets": "Support",
@@ -135,11 +135,11 @@
     "modeSwitchAria": "Switch between client and professional mode",
     "receivedRequests": "Appointments",
     "back": "Back",
-    "projects": "My requests",
+    "projects": "My projects",
     "recent": "Recent",
     "recentClear": "Clear",
     "recentlyViewed": "Recently viewed",
-    "publishRequest": "Post a request"
+    "publishRequest": "Post what I need"
   },
   "home": {
     "accountDeletion": {
@@ -227,7 +227,7 @@
     "noResults": {
       "title": "No results found",
       "desc": "Try a different category or expand your search area.",
-      "publishCta": "Post a request",
+      "publishCta": "Post what I need",
       "publishHint": "Tell us what you need and professionals in that category will reply."
     },
     "pagination": {
@@ -437,7 +437,7 @@
       "whatsapp": "You can't send a message to yourself. This is how clients message you to coordinate.",
       "call": "You can't call yourself. This is how clients reach you by phone.",
       "email": "You can't email yourself. This is how clients reach you by email.",
-      "proposal": "You can't reply to your own request.",
+      "proposal": "You can't reply to your own project.",
       "favorite": "You can't add yourself to your own favorites. Favorites is where clients collect profiles to review later.",
       "follow": "You can't follow your own profile. This is how other people can follow your updates."
     }
@@ -923,7 +923,7 @@
       "search": "Find services",
       "categories": "Categories",
       "howItWorks": "How to use",
-      "publish": "Post a request"
+      "publish": "Post what I need"
     },
     "pros": {
       "title": "For professionals",
@@ -1078,7 +1078,7 @@
         "photos": "Photos",
         "availability": "Availability",
         "bookings": "Appointments",
-        "proposals": "Requests"
+        "proposals": "Projects"
       },
       "profile": {
         "title": "Profile information",
@@ -1162,11 +1162,11 @@
         "cancel": "Cancel"
       },
       "proposals": {
-        "title": "Client requests",
-        "empty": "No client requests in your area",
-        "emptyHint": "Client requests in your category will appear here.",
+        "title": "Client projects",
+        "empty": "No client projects in your area",
+        "emptyHint": "Client projects in your category will appear here.",
         "myProposals": "My replies",
-        "browse": "Requests",
+        "browse": "Projects",
         "send": "Send reply",
         "price": "Your price (₡)",
         "pricePlaceholder": "example: 50000",
@@ -1186,7 +1186,7 @@
       "title": "Client dashboard",
       "nav": {
         "bookings": "Appointments",
-        "projects": "Requests",
+        "projects": "Projects",
         "saved": "Favorites",
         "notifications": "Notifications",
         "profile": "My profile"
@@ -1209,10 +1209,10 @@
         }
       },
       "projects": {
-        "title": "My requests",
-        "publish": "Post a request",
-        "empty": "You haven't posted any requests yet",
-        "emptyHint": "Post a request and professionals reply.",
+        "title": "My projects",
+        "publish": "Post what I need",
+        "empty": "You haven't posted any projects yet",
+        "emptyHint": "Post what you need and professionals reply.",
         "proposals": "reply(ies)",
         "noProposals": "No replies yet",
         "accept": "Choose this reply",
@@ -1275,11 +1275,11 @@
       "chat": "Messages",
       "assistant": "Assistant",
       "bookings": "Appointments",
-      "proposals": "Client requests",
+      "proposals": "Client projects",
       "verificacion": "Verification",
       "suscripcion": "Subscription",
       "sent_bookings": "My appointments",
-      "sent_projects": "My requests",
+      "sent_projects": "My projects",
       "saved": "My favorites",
       "network": "Following and followers",
       "guides": "Guides",
@@ -1290,10 +1290,10 @@
     "home": {
       "useEyebrow": "Client panel",
       "useTitle": "You are using ContrataCR as a client",
-      "useBody": "If you offer services, you can switch to the professional panel to receive appointments, reply to client requests and manage your profile.",
+      "useBody": "If you offer services, you can switch to the professional panel to receive appointments, reply to client projects and manage your profile.",
       "offerEyebrow": "Professional panel",
       "offerTitle": "You are using ContrataCR as a professional",
-      "offerBody": "You can also switch to the client panel to search for services, book appointments, post requests or save professionals.",
+      "offerBody": "You can also switch to the client panel to search for services, book appointments, post what you need or save professionals.",
       "switchToUse": "Switch to client panel",
       "switchToOffer": "Switch to professional panel",
       "quickActions": "Quick actions",
@@ -1336,8 +1336,8 @@
         "linkMany": "{count} links added",
         "requestOne": "1 appointment received",
         "requestMany": "{count} appointments received",
-        "opportunityOne": "1 open client request",
-        "opportunityMany": "{count} open client requests",
+        "opportunityOne": "1 open client project",
+        "opportunityMany": "{count} open client projects",
         "clientRequestOne": "1 appointment booked",
         "clientRequestMany": "{count} appointments booked",
         "postOne": "1 listing created",
@@ -1347,8 +1347,8 @@
       },
       "actions": {
         "publish": {
-          "title": "Post a request",
-          "body": "Tell us what you need and professionals reply."
+          "title": "Post what I need",
+          "body": "Say what you need and professionals reply."
         },
         "search": {
           "title": "Search professionals",
@@ -1367,8 +1367,8 @@
           "body": "See the appointments clients booked from your profile."
         },
         "opportunities": {
-          "title": "Client requests",
-          "body": "Reply to open client requests that match your services."
+          "title": "Client projects",
+          "body": "Reply to open client projects that match your services."
         },
         "services": {
           "title": "Services",
@@ -1472,9 +1472,9 @@
     "offerInviteTitle": "Do you offer services?",
     "offerInviteCta": "Offer my services",
     "opportunityWelcome": {
-      "title": "We found {count, plural, one {# client request for your services} other {# client requests for your services}}",
-      "body": "These are client requests that match the services you just added.",
-      "view": "View requests",
+      "title": "We found {count, plural, one {# client project for your services} other {# client projects for your services}}",
+      "body": "These are client projects that match the services you just added.",
+      "view": "View projects",
       "later": "Later",
       "close": "Close"
     },
@@ -1482,14 +1482,14 @@
       "title": "You have new activity",
       "body": "While you were away, you received: {summary}.",
       "parts": {
-        "opportunities": "{count, plural, one {# client request} other {# client requests}}",
+        "opportunities": "{count, plural, one {# client project} other {# client projects}}",
         "requests": "{count, plural, one {# appointment} other {# appointments}}",
         "proposals": "{count, plural, one {# reply} other {# replies}}",
         "support": "{count, plural, one {# support reply} other {# support replies}}",
         "notifications": "{count, plural, one {# notification} other {# notifications}}"
       },
       "cta": {
-        "opportunities": "View client requests",
+        "opportunities": "View client projects",
         "requests": "View appointments",
         "proposals": "See replies",
         "support": "View support",
@@ -1506,10 +1506,10 @@
       "chat": "Messages",
       "assistant": "Assistant",
       "bookings": "Appointments",
-      "proposals": "Requests",
+      "proposals": "Projects",
       "verificacion": "Verification",
       "sent_bookings": "Appointments",
-      "sent_projects": "Requests",
+      "sent_projects": "Projects",
       "notifications": "Notifications",
       "soporte": "Support",
       "cuenta": "Account",
@@ -1613,7 +1613,7 @@
         "opportunities": {
           "title": "Open opportunity",
           "project": "Website for a local business",
-          "body": "A client request waiting for professionals' replies.",
+          "body": "A client project waiting for professionals' replies.",
           "cta": "Send reply"
         },
         "jobs": {
@@ -1633,7 +1633,7 @@
       "items": {
         "clientPanel": {
           "title": "Client panel",
-          "short": "Appointments, requests, applications and favorites",
+          "short": "Appointments, projects, applications and favorites",
           "body": "The client panel gathers what you need to hire, follow up on applications and save content to favorites.",
           "steps": [
             "Review your requests and projects from their sections.",
@@ -1656,15 +1656,15 @@
           "cta": "Go to my appointments"
         },
         "clientProjects": {
-          "title": "My requests",
+          "title": "My projects",
           "short": "What you asked for and the replies",
-          "body": "My requests lets you say what you need and have professionals reply.",
+          "body": "My projects lets you say what you need and have professionals reply.",
           "steps": [
             "Create a clear post with service, location and description.",
             "Compare received proposals.",
             "Choose the professional that fits the job best."
           ],
-          "cta": "Go to my requests"
+          "cta": "Go to my projects"
         },
         "clientApplications": {
           "title": "My applications",
@@ -1704,7 +1704,7 @@
         "clientProfile": {
           "title": "Client profile",
           "short": "Data for hiring",
-          "body": "Your client profile helps identify you when you book appointments or post requests.",
+          "body": "Your client profile helps identify you when you book appointments or post a project.",
           "steps": [
             "Keep name and contact updated.",
             "Review account and security when changing sensitive data.",
@@ -1740,7 +1740,7 @@
         "notificationsGuide": {
           "title": "Notifications",
           "short": "Important alerts and updates",
-          "body": "Notifications gathers changes to appointments, requests, applications, followers, reviews, support and relevant news.",
+          "body": "Notifications gathers changes to appointments, projects, applications, followers, reviews, support and relevant news.",
           "steps": [
             "Check the badge in the navbar when you have pending alerts.",
             "Receive status changes for applications, requests and projects.",
@@ -1812,7 +1812,7 @@
         "professionalPanel": {
           "title": "Professional panel",
           "short": "Manage your professional presence",
-          "body": "The professional panel gathers appointments, client requests, past work, availability, services, jobs, offers, support, profile and guides.",
+          "body": "The professional panel gathers appointments, client projects, past work, availability, services, jobs, offers, support, profile and guides.",
           "steps": [
             "Start with Complete your profile if you have pending steps.",
             "Keep services, coverage, contact and availability updated.",
@@ -1845,15 +1845,15 @@
           "cta": "Go to appointments"
         },
         "opportunities": {
-          "title": "Client requests",
+          "title": "Client projects",
           "short": "Posts where you can propose",
-          "body": "Client requests shows what clients are asking for in your services; reply and, if they're interested, they write to you.",
+          "body": "Client projects shows what clients are asking for in your services; reply and, if they're interested, they write to you.",
           "steps": [
             "Review whether the project fits what you offer.",
             "Send a clear proposal with scope and price.",
             "Follow up if the client replies or accepts."
           ],
-          "cta": "Go to client requests"
+          "cta": "Go to client projects"
         },
         "successCases": {
           "title": "Success stories",
@@ -2098,9 +2098,9 @@
     "keepEditing": "Keep editing"
   },
   "proposalsTab": {
-    "browse": "Client requests",
+    "browse": "Client projects",
     "mine": "My replies",
-    "emptyBrowse": "No new requests right now",
+    "emptyBrowse": "No new projects right now",
     "emptyBrowseSub": "When a client posts something in your service, we'll notify you and it shows up here.",
     "close": "Close",
     "propose": "Propose",
@@ -2109,7 +2109,7 @@
     "pricePlaceholder": "example: 50000",
     "yourMessage": "Your reply",
     "allProfessions": "All services",
-    "availableTitle": "Client requests",
+    "availableTitle": "Client projects",
     "liveUpdated": "Updated with recent changes.",
     "postedAgo": "Created {time}",
     "agoHours": "{count}h ago",
@@ -2122,7 +2122,7 @@
     "timelineLabel": "Desired date",
     "clientInfo": "Client information",
     "verificationLabel": "Verification",
-    "projectForLabel": "The request is for",
+    "projectForLabel": "The project is for",
     "otherPerson": "Another person",
     "fieldAge": "Age:",
     "yearsOld": "{count, plural, one {# year} other {# years}}",
@@ -2132,12 +2132,12 @@
     "clientIdentityUnverified": "Unverified client",
     "tipLabel": "Tip:",
     "proposalFree": "It's free and the client decides whether to contact you.",
-    "alreadyProposedNote": "You already replied to this request. If the client is interested, they'll write to you.",
+    "alreadyProposedNote": "You already replied to this project. If the client is interested, they'll write to you.",
     "dismiss": "Not interested",
     "sendProposal": "Send reply",
     "sendProposalError": "Couldn't send it. Try again.",
     "emptyMine": "You haven't answered any yet",
-    "emptyMineSub": "Reply to a request and the client writes to you if they're interested.",
+    "emptyMineSub": "Reply to a project and the client writes to you if they're interested.",
     "status": {
       "pending": "Pending",
       "accepted": "Accepted",
@@ -2152,7 +2152,7 @@
       "open": "Open",
       "chosen": "Chose you"
     },
-    "projectFallback": "Request",
+    "projectFallback": "Project",
     "openChat": "WhatsApp",
     "proposalChatGreeting": "Hi, I saw you were interested in my reply to \"{title}\" and I'd like to coordinate the details.",
     "yourPriceLabel": "Your price:",
@@ -2161,7 +2161,7 @@
     "edit": "Edit",
     "cancel": "Cancel",
     "cancelConfirm": "Cancel this reply?",
-    "clientCancelled": "The client cancelled this request.",
+    "clientCancelled": "The client cancelled this project.",
     "whatsapp": "WhatsApp",
     "markWorkDoneError": "Couldn't mark the work as done. Try again.",
     "actions": "Actions",
@@ -2205,21 +2205,21 @@
     "withdraw": "Withdraw my reply",
     "withdrawing": "Withdrawing…",
     "withdrawTitle": "Withdraw your reply?",
-    "withdrawBody": "The client stops seeing it and the request goes back to New, so you can reply again with the right details.",
+    "withdrawBody": "The client stops seeing it and the project goes back to New, so you can reply again with the right details.",
     "withdrawDoneTitle": "Reply withdrawn",
-    "withdrawDone": "The request went back to New. You can reply again whenever you want.",
+    "withdrawDone": "The project went back to New. You can reply again whenever you want.",
     "withdrawErrorTitle": "Couldn't withdraw",
     "withdrawError": "Try again in a moment.",
     "moreActions": "More actions",
     "chosenNote": "The client chose you for this job. Coordinate the details by message.",
     "drop": "I can no longer do it",
     "dropTitle": "Can't do this job anymore?",
-    "dropBody": "We tell the client your reason and their request goes back to open for other professionals.",
+    "dropBody": "We tell the client your reason and their project goes back to open for other professionals.",
     "dropConfirm": "Notify and step away",
     "dropReasonLabel": "Reason (the client reads it)",
     "dropReasonPlaceholder": "E.g.: another job ran late and I can't make that date.",
     "dropDoneTitle": "We told the client",
-    "dropDone": "The request is open again for other professionals."
+    "dropDone": "The project is open again for other professionals."
   },
   "servicesEditor": {
     "servicesOf": "Services of",
@@ -2628,17 +2628,17 @@
     "reportProPrompt": "What happened? (no-show / service not done / other). Your report helps moderation.",
     "reportThanks": "Thanks. We received your report and will review it.",
     "reportError": "Couldn't send the report.",
-    "projectUpdateError": "Could not update the request. Try again.",
+    "projectUpdateError": "Could not update the project. Try again.",
     "confirmError": "Couldn't confirm. Try again.",
-    "deleteProjectConfirm": "Delete this request? This action cannot be undone.",
-    "deleteProjectError": "Could not delete the request. Try again.",
+    "deleteProjectConfirm": "Delete this project? This action cannot be undone.",
+    "deleteProjectError": "Could not delete the project. Try again.",
     "noAssignedPro": "We couldn't find the assigned service to review.",
     "professional": "the service",
     "requestedToLabel": "Professional",
     "serviceField": "Service",
     "descriptionField": "Description",
     "apptForLabel": "The appointment is for",
-    "projectForLabel": "The request is for",
+    "projectForLabel": "The project is for",
     "bookingFor": "For: {name}",
     "forOtherPerson": "For someone else",
     "otherPerson": "Another person",
@@ -2660,7 +2660,7 @@
     "report": "Report",
     "pEmpty": "You haven't posted any requests yet",
     "pEmptySub": "Tell us what you need and professionals will write to you.",
-    "publishProject": "Post a request",
+    "publishProject": "Post what I need",
     "publishShort": "Post",
     "projAssigned": "Assigned",
     "projAwaiting": "To confirm",
@@ -2669,8 +2669,8 @@
     "projOpen": "Open",
     "publishedOn": "Created {date}",
     "seeLess": "See less",
-    "cancelProject": "Cancel request",
-    "cancelProjectTitle": "Cancel this request?",
+    "cancelProject": "Cancel project",
+    "cancelProjectTitle": "Cancel this project?",
     "cancelProjectBody": "Professionals will stop seeing it.",
     "cancelProjectConfirm": "Yes, cancel",
     "reopenProject": "Post again",
@@ -2720,10 +2720,10 @@
     "writeWhatsapp": "WhatsApp",
     "resolve": "I got it done",
     "resolveTitle": "Who helped you?",
-    "resolveBody": "That closes the request and, if you like, you can leave a review.",
+    "resolveBody": "That closes the project and, if you like, you can leave a review.",
     "resolveNobody": "I solved it another way",
-    "resolveConfirm": "Close request",
-    "resolveError": "Couldn't close the request. Try again.",
+    "resolveConfirm": "Close project",
+    "resolveError": "Couldn't close the project. Try again.",
     "helpedBy": "Helped you",
     "publishCta": "Request a professional",
     "bookingHappened": "It's done",
@@ -2734,10 +2734,10 @@
     "bActiveEmptySub": "When you book an appointment, you'll see it here with its date and time.",
     "bDoneEmpty": "No finished appointments yet",
     "bDoneEmptySub": "Past appointments stay here, along with the reviews you can leave.",
-    "pActiveEmpty": "No active requests",
+    "pActiveEmpty": "No active projects",
     "pActiveEmptySub": "Post what you need and get replies from professionals in your area.",
-    "pDoneEmpty": "No finished requests yet",
-    "pDoneEmptySub": "Requests you resolved or cancelled stay here."
+    "pDoneEmpty": "No finished projects yet",
+    "pDoneEmptySub": "Projects you resolved or cancelled stay here."
   },
   "clientPage": {
     "greeting": "Hi, {name} 👋",
@@ -2745,7 +2745,7 @@
     "searchPros": "Find services",
     "signOut": "Sign out",
     "tabBookings": "Appointments",
-    "tabProjects": "Requests",
+    "tabProjects": "Projects",
     "tabSaved": "Favorites",
     "tabNotifications": "Notifications",
     "tabSupport": "Support",
@@ -2754,7 +2754,7 @@
     "savedHeading": "Favorites",
     "bookingsHeading": "My appointments",
     "bookingsSubtitle": "Appointments you booked with a professional.",
-    "projectsHeading": "My requests",
+    "projectsHeading": "My projects",
     "notificationsHeading": "Notifications",
     "supportHeading": "Support",
     "secBasic": "Basic details",
@@ -2912,7 +2912,7 @@
       "subject1": "Account, login, or personal details",
       "subject2": "Report a user or content",
       "subject3": "Professional profile or verification",
-      "subject4": "Appointments, requests or listings",
+      "subject4": "Appointments, projects or listings",
       "subject5": "Other"
     },
     "updated": "Updated {date}",
@@ -2962,7 +2962,7 @@
   },
   "clientConnections": {
     "emptyTitle": "No one to hire again yet",
-    "emptyDescription": "Professionals who already served you — a confirmed appointment or a resolved request — will appear here.",
+    "emptyDescription": "Professionals who already served you — a confirmed appointment or a resolved project — will appear here.",
     "searchProfessionals": "Find professionals",
     "searchPlaceholder": "Search by professional or service",
     "count": "{count, plural, one {# professional} other {# professionals}}",
@@ -2971,8 +2971,8 @@
     "noResults": "No results",
     "source": {
       "booking": "Appointment",
-      "project": "Request",
-      "both": "Appointment and request",
+      "project": "Project",
+      "both": "Appointment and project",
       "contact": "Contact"
     },
     "status": {
@@ -3178,7 +3178,7 @@
     "successTitle": "Done, it's posted!",
     "successBody": "Professionals in that service in your area will see it and reply.",
     "goToPanel": "Go to my dashboard",
-    "title": "Post a request",
+    "title": "Tell us what you need",
     "subtitle": "Tell us what you need and professionals will write to you.",
     "category": "What do you need?",
     "categoryHelp": "",
@@ -3192,7 +3192,7 @@
     "cedulaLabel": "ID",
     "cedulaOwnerBody": "When you continue, your account will use this official name.",
     "noCedula": "I don't have an ID",
-    "noCedulaNotice": "You'll post your request <strong>without a verified ID</strong>. Professionals will see that and decide whether to reply.",
+    "noCedulaNotice": "You'll post your project <strong>without a verified ID</strong>. Professionals will see that and decide whether to reply.",
     "haveCedula": "I have an ID",
     "provincia": "Province",
     "optional": "(optional)",
@@ -3206,7 +3206,7 @@
     "cancel": "Cancel",
     "close": "Done",
     "publishing": "Posting…",
-    "publish": "Post request",
+    "publish": "Post",
     "forWho": {
       "question": "Who is this for?",
       "me": "For me",
@@ -3220,8 +3220,8 @@
     "zoneHelp": "So professionals in your area can write to you.",
     "successNotified": "{count, plural, =0 {There are no professionals for this service in your area yet, but we kept it posted for when they join.} one {We notified # {service} professional.} other {We notified # {service} professionals.}}",
     "successNext": "We'll let you know as soon as someone replies. Then you write to whoever you like.",
-    "successView": "View my request",
-    "dirOfferBodyNew": "Create your professional profile and start receiving appointments and requests.",
+    "successView": "View my project",
+    "dirOfferBodyNew": "Create your professional profile and start receiving appointments and projects.",
     "avisoAnuncio": "This reads as if you were offering a service. This section is for requesting, not offering.",
     "avisoAnuncioCta": "Publish it as an offer",
     "avisoAnuncioCtaNew": "Create your professional profile",
@@ -3239,7 +3239,7 @@
     "deleteAllBody": "This action can't be undone.",
     "cancel": "Cancel",
     "noneList": "You have no notifications.",
-    "emptySub": "When there's news about appointments, requests, jobs, offers, professionals you follow or your account, it will show up here.",
+    "emptySub": "When there's news about appointments, projects, jobs, offers, professionals you follow or your account, it will show up here.",
     "noUnread": "You have no unread notifications.",
     "publishedAt": "Published {time}",
     "types": {
@@ -3259,11 +3259,11 @@
       "booking_update": "Appointment update",
       "project_proposal_accepted": "You were chosen!",
       "project_proposal_declined": "Not chosen this time",
-      "new_project": "New request",
+      "new_project": "New project",
       "project_work_done": "Confirm job completion",
-      "project_completed": "Request resolved",
-      "project_cancelled": "Request cancelled",
-      "project_deleted": "Request deleted",
+      "project_completed": "Project resolved",
+      "project_cancelled": "Project cancelled",
+      "project_deleted": "Project deleted",
       "support_reply": "Support reply",
       "verification": "Verification update",
       "verification_approved": "Identity verified",
@@ -3288,11 +3288,11 @@
     "month30Group": "Last 30 days"
   },
   "projects": {
-    "title": "Post a request",
+    "title": "Tell us what you need",
     "subtitle": "Tell us what you need and professionals reply.",
     "category": "Service",
     "categoryPlaceholder": "Select a service",
-    "projectTitle": "Request title",
+    "projectTitle": "Project title",
     "titlePlaceholder": "example: Paint living and dining room, 50m²",
     "description": "Description",
     "descPlaceholder": "Tell us briefly what you need. Example: Paint the living room and dining room, about 50 m².",
@@ -3309,13 +3309,13 @@
       "flexible": "I'm flexible",
       "planning": "I'm planning ahead"
     },
-    "submit": "Post a request",
+    "submit": "Post",
     "submitting": "Creating...",
     "cancel": "Cancel",
     "success": {
       "title": "Done, it's posted!",
-      "desc": "Professionals in that service in your area will see your request and reply.",
-      "dashboard": "See my requests"
+      "desc": "Professionals in that service in your area will see your project and reply.",
+      "dashboard": "See my projects"
     }
   },
   "categories": {
@@ -3496,7 +3496,7 @@
     "androidTab": "Android",
     "homeEyebrow": "Quick access",
     "homeTitle": "Save ContrataCR to your Home Screen",
-    "homeBody": "Open it like an app from your phone whenever you need to find a service, post a request, or coordinate work.",
+    "homeBody": "Open it like an app from your phone whenever you need to find a service, post what you need, or coordinate work.",
     "homeGuideLink": "See how to do it",
     "installCta": "Add to Home Screen",
     "mockAppLine": "Services in Costa Rica",
@@ -3538,19 +3538,19 @@
   },
   "comoFunciona": {
     "metaTitle": "How to use ContrataCR | Guide for clients and professionals",
-    "metaDesc": "Learn how to use ContrataCR to find professionals, post requests, find jobs, discover offers and offer your services in Costa Rica.",
+    "metaDesc": "Learn how to use ContrataCR to find professionals, post projects, find jobs, discover offers and offer your services in Costa Rica.",
     "eyebrow": "Quick guide",
     "title": "How to use ContrataCR",
-    "subtitle": "Find professionals, post a request, find jobs, discover offers or offer your services from a single account.",
+    "subtitle": "Find professionals, post what you need, find jobs, discover offers or offer your services from a single account.",
     "metric0Value": "2 ways",
-    "metric0Label": "Find professionals or post a request.",
+    "metric0Label": "Find professionals or post what you need.",
     "metric1Value": "0 commissions",
     "metric1Label": "Client and professional coordinate payment directly.",
     "metric2Value": "Costa Rica",
     "metric2Label": "Built for cantons, local areas, and how services are coordinated here.",
     "pathsEyebrow": "Get started",
     "pathsTitle": "Choose the way that works best for you",
-    "pathsSubtitle": "If you already know who you want to contact, search for a professional. If you prefer to receive options, post a request.",
+    "pathsSubtitle": "If you already know who you want to contact, search for a professional. If you prefer to receive options, post what you need.",
     "clientPathBadge": "Option 1",
     "clientPathTitle": "Find professionals",
     "clientPathDesc": "Find professionals by service, location, availability, reviews, and profile. It is ideal when you want to compare and contact quickly.",
@@ -3562,15 +3562,15 @@
     "clientStep2Body": "Book an appointment, choose a time when available, and use the enabled contact options.",
     "clientPathCta": "View professionals",
     "publishPathBadge": "Option 2",
-    "publishPathTitle": "Post a request",
+    "publishPathTitle": "Post what you need",
     "publishPathDesc": "Tell us what needs doing once and professionals in your area reply.",
     "publishStep0Title": "Tell us what you need",
     "publishStep0Body": "Pick the service and tell us what needs doing. The area is optional and remembered for next time.",
     "publishStep1Title": "Get replies",
-    "publishStep1Body": "Professionals in that service see your request and reply with a message.",
+    "publishStep1Body": "Professionals in that service see your project and reply with a message.",
     "publishStep2Title": "Accept the best option",
-    "publishStep2Body": "Write to whoever suits you, agree on the details and close the request with \"It's solved\".",
-    "publishPathCta": "Post a request",
+    "publishStep2Body": "Write to whoever suits you, agree on the details and close the project with \"It's solved\".",
+    "publishPathCta": "Post what I need",
     "clientsEyebrow": "Benefits for clients",
     "clientsBadge": "Clients",
     "clientsTitle": "Less fuss, more clarity",
@@ -3582,7 +3582,7 @@
     "clientBenefit2Title": "Clear schedules",
     "clientBenefit2Body": "When a professional posts their availability, you can choose a date and time without messages back and forth. If they coordinate directly, you do it by WhatsApp.",
     "clientBenefit3Title": "Favorites and tracking",
-    "clientBenefit3Body": "Save professionals, offers and jobs; review your appointments, requests and applications, and leave reviews from your panel.",
+    "clientBenefit3Body": "Save professionals, offers and jobs; review your appointments, projects and applications, and leave reviews from your panel.",
     "prosEyebrow": "Benefits for professionals",
     "prosBadge": "Professionals",
     "prosTitle": "A profile that works for you",
@@ -3593,8 +3593,8 @@
     "proStep0Body": "Add a photo, description, services, years of experience, reference prices, languages, and areas where you work.",
     "proStep1Title": "Showcase your work",
     "proStep1Body": "Publish success stories with photos, complete your workplaces, and verify your identity to build more trust.",
-    "proStep2Title": "Manage appointments and requests",
-    "proStep2Body": "Receive appointments, reply to client requests, post jobs, create offers and manage applications from your professional panel.",
+    "proStep2Title": "Manage appointments and projects",
+    "proStep2Body": "Receive appointments, reply to client projects, post jobs, create offers and manage applications from your professional panel.",
     "proBenefit0Title": "Verified identity",
     "proBenefit0Body": "The verification badge helps clients know they are talking to a real, verifiable person.",
     "proBenefit1Title": "Success stories",
@@ -3602,11 +3602,11 @@
     "proBenefit2Title": "Work areas",
     "proBenefit2Body": "Define cantons, exact locations, or areas where you serve to appear in relevant searches.",
     "proBenefit3Title": "Notifications",
-    "proBenefit3Body": "Get notified about appointments, requests, applications, changes, cancellations and support, with links to each detail.",
+    "proBenefit3Body": "Get notified about appointments, projects, applications, changes, cancellations and support, with links to each detail.",
     "proBenefit4Title": "No service commissions",
     "proBenefit4Body": "The client pays you directly. The platform does not hold money or charge a percentage on each job.",
     "proBenefit5Title": "More ways to grow",
-    "proBenefit5Body": "Besides replying to requests, you can post jobs and offers related to your services.",
+    "proBenefit5Body": "Besides replying to projects, you can post jobs and offers related to your services.",
     "prosCta": "Create a professional profile",
     "marketplaceEyebrow": "More opportunities",
     "marketplaceTitle": "Jobs and offers in the same ecosystem",
@@ -3625,7 +3625,7 @@
     "trust1Title": "Verified reviews",
     "trust1Body": "Reviews require an account and are moderated to keep the community trustworthy.",
     "trust2Title": "WhatsApp for coordination",
-    "trust2Body": "ContrataCR organizes search, appointments and requests; final coordination happens by message, WhatsApp or phone.",
+    "trust2Body": "ContrataCR organizes search, appointments and projects; final coordination happens by message, WhatsApp or phone.",
     "trust3Title": "Optional phone and email",
     "trust3Body": "The professional decides whether to offer contact by phone or email within their service options.",
     "trust4Title": "Video consultation when applicable",
@@ -3637,7 +3637,7 @@
     "compareSubtitle": "Instead of relying solely on isolated recommendations, everything becomes a clear flow.",
     "compare0Title": "Before: contacts scattered everywhere",
     "compare0Body": "Chats, groups, recommendations, and posts all get mixed up. It is hard to compare and keep track.",
-    "compare1Title": "Now: profiles and requests in one place",
+    "compare1Title": "Now: profiles and projects in one place",
     "compare1Body": "You search, post, get replies, save items and review your history from your panel.",
     "compare2Title": "Always with direct control",
     "compare2Body": "ContrataCR does not get involved in payment or the final agreement. Client and professional decide together.",
@@ -3649,13 +3649,13 @@
     "faq1Q": "What does it mean for a profile to be verified?",
     "faq1A": "It means we confirmed the person's identity when the ID can be validated. It is not a guarantee of quality or outcome, so reviews and success cases also matter.",
     "faq2Q": "Can I use the app if I don't know exactly what service I need?",
-    "faq2A": "Yes. You can type a normal phrase in search or post a request explaining the problem. The app tries to connect you with related services.",
+    "faq2A": "Yes. You can type a normal phrase in search or post a project explaining the problem. The app tries to connect you with related services.",
     "faq3Q": "What happens after booking an appointment?",
     "faq3A": "The appointment stays in your panel and the professional gets notified. You can coordinate by message, WhatsApp or phone. If the professional uses public availability, you pick the time when booking.",
-    "faq4Q": "What happens if I post a request?",
-    "faq4A": "Professionals in that service reply with a message. You compare profile and reply, write to the one you prefer and close the request once it's solved.",
+    "faq4Q": "What happens if I post a project?",
+    "faq4A": "Professionals in that service reply with a message. You compare profile and reply, write to the one you prefer and close the project once it's solved.",
     "faq5Q": "How does it work for professionals?",
-    "faq5A": "Create your profile, add services, areas, reference prices, photos, and availability. Then you can receive appointments and reply to client requests.",
+    "faq5A": "Create your profile, add services, areas, reference prices, photos, and availability. Then you can receive appointments and reply to client projects.",
     "faq6Q": "Will my data be made public?",
     "faq6A": "We do not publish your ID. Contact is handled in a controlled way, and each professional chooses which channels to enable.",
     "faq7Q": "Is it suitable for both large and small services?",
@@ -3663,7 +3663,7 @@
     "ctaTitle": "Try it and share it",
     "ctaSubtitle": "If you need help, find professionals. You can also explore jobs and offers or create your profile to offer services.",
     "ctaSearch": "Find professionals",
-    "ctaPublish": "Post a request",
+    "ctaPublish": "Post what I need",
     "ctaOffer": "Offer my services",
     "helpCta": "Go to the help center"
   },
@@ -3679,8 +3679,8 @@
     "cat1Desc": "Find professionals by service, province, and canton. Search understands synonyms.",
     "cat2Title": "Identity verification",
     "cat2Desc": "How we confirm identity against official records when applicable.",
-    "cat3Title": "Appointments and requests",
-    "cat3Desc": "How to book an appointment, post a request and read the replies.",
+    "cat3Title": "Appointments and projects",
+    "cat3Desc": "How to book an appointment, post a project and read the replies.",
     "cat4Title": "Reviews and ratings",
     "cat4Desc": "How to leave and manage profile reviews.",
     "cat5Title": "Install ContrataCR",
@@ -3700,11 +3700,11 @@
     "faq3Q": "How do I find professionals?",
     "faq3A": "Use the search bar on the home page or Find professionals. You can search by service, province, and canton, and sort by rating. Search understands synonyms: typing 'nanny' can also find childcare professionals.",
     "faq4Q": "How do I coordinate the service?",
-    "faq4A": "If you search directly, open the profile and use one of the enabled contact options. If you post a request, read the replies and write to the professional you prefer.",
+    "faq4A": "If you search directly, open the profile and use one of the enabled contact options. If you post a project, read the replies and write to the professional you prefer.",
     "faq5Q": "How do I leave a review?",
     "faq5A": "Open the professional's profile and go to Reviews. If you are not signed in, ContrataCR asks you to log in or create an account, then brings you back to the profile.",
-    "faq6Q": "What is posting a request?",
-    "faq6A": "Posting a request is an alternative to searching directly. You describe what you need (for example: 'paint a 4x4 m living room') and professionals in that service reply with a message; then you write to the one you prefer.",
+    "faq6Q": "What is posting a project?",
+    "faq6A": "Posting a project is an alternative to searching directly. You describe what you need (for example: 'paint a 4x4 m living room') and professionals in that service reply with a message; then you write to the one you prefer.",
     "faq7Q": "Is my personal information safe?",
     "faq7A": "Your identity document is not published, and contact details are shown only through the options enabled on the platform. We process personal information under Costa Rica's Data Protection Law 8968.",
     "faq8Q": "How do I add ContrataCR to my home screen?",
@@ -3753,7 +3753,7 @@
     "tip7Body": "If you are busy for two weeks, mark it on your calendar. Updated availability avoids misunderstandings and shows the client that your profile is current.",
     "tip7Highlight": "An updated calendar avoids unnecessary inquiries and impossible appointments.",
     "growthToolsTitle": "More ways to grow on ContrataCR",
-    "growthToolsSubtitle": "Besides receiving appointments and requests, you can post promotions from your professional panel.",
+    "growthToolsSubtitle": "Besides receiving appointments and projects, you can post promotions from your professional panel.",
     "jobsTitle": "Publish and manage jobs",
     "jobsBody": "Create openings with location, workplace type, experience and salary. Review applications, download the submitted CV and update each candidate's status from Jobs.",
     "jobsCta": "Explore jobs",
@@ -3834,7 +3834,7 @@
     "subject1": "Account, login, or personal details",
     "subject2": "Report a user or content",
     "subject3": "Professional profile or verification",
-    "subject4": "Appointments, requests or listings",
+    "subject4": "Appointments, projects or listings",
     "subject5": "Other",
     "messageLabel": "Message",
     "messagePlaceholder": "Describe your inquiry in as much detail as possible. If it's a technical problem, describe what happened and which screen you're on.",
@@ -3912,7 +3912,7 @@
       "point3Title": "Choose with more confidence",
       "point3Desc": "Each profile shows verification, reviews, coverage, experience, and the professional's work.",
       "pitchTitle": "Do you offer services?",
-      "pitchDesc": "Your profile appears in searches; you can receive appointments, manage availability, reply to requests and build reviews.",
+      "pitchDesc": "Your profile appears in searches; you can receive appointments, manage availability, reply to projects and build reviews.",
       "pitchCta": "Offer my services",
       "pitchHow": "How it works",
       "guideCta": "See how it works",

@@ -34,13 +34,13 @@ export async function POST(req: NextRequest) {
       console.error("[POST /api/proposals] professional lookup failed:", proError);
       return NextResponse.json({ error: "No se pudo validar tu perfil profesional." }, { status: 500 });
     }
-    if (!pro) return NextResponse.json({ error: "Solo los profesionales pueden responder solicitudes." }, { status: 403 });
+    if (!pro) return NextResponse.json({ error: "Solo los profesionales pueden responder proyectos." }, { status: 403 });
 
     // No self-service: a professional cannot send a proposal to their OWN project.
     const { data: project } = await admin
       .from("projects").select("client_id, title").eq("id", projectId).maybeSingle();
     if (project?.client_id === user.id) {
-      return NextResponse.json({ error: "No puedes responder tu propia solicitud." }, { status: 400 });
+      return NextResponse.json({ error: "No puedes responder tu propio proyecto." }, { status: 400 });
     }
 
     const profile = pro.profiles as { full_name?: string | null; email?: string | null } | null;
@@ -68,7 +68,7 @@ export async function POST(req: NextRequest) {
 
     if (error) {
       if (error.code === "23505") {
-        return NextResponse.json({ error: "Ya respondiste esta solicitud." }, { status: 409 });
+        return NextResponse.json({ error: "Ya respondiste este proyecto." }, { status: 409 });
       }
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
@@ -110,13 +110,13 @@ export async function POST(req: NextRequest) {
           project_id: projectId,
           proposal_id: data.id,
           professional_name: profile?.full_name ?? "Un profesional",
-          project_title: project.title ?? "tu solicitud",
+          project_title: project.title ?? "tu proyecto",
         };
         const notification = {
           user_id: project.client_id,
           type: "proposal_received",
           title: `${profile?.full_name ?? "Un profesional"} te respondió`,
-          message: `Respondió a "${project.title ?? "tu solicitud"}". Entra a leerla y, si te interesa, escríbele.`,
+          message: `Respondió a "${project.title ?? "tu proyecto"}". Entra a leerla y, si te interesa, escríbele.`,
           data: pushData,
         };
         const stored = await admin.from("notifications").insert(notification);
@@ -302,8 +302,8 @@ export async function PATCH(req: NextRequest) {
           type: "project_professional_withdrew",
           title: "El profesional se retiró",
           message: motivoRetiro
-            ? `${quien} ya no puede realizar "${titulo}": ${motivoRetiro}. Tu solicitud sigue abierta para recibir otras respuestas.`
-            : `${quien} ya no puede realizar "${titulo}". Tu solicitud sigue abierta para recibir otras respuestas.`,
+            ? `${quien} ya no puede realizar "${titulo}": ${motivoRetiro}. Tu proyecto sigue abierto para recibir otras respuestas.`
+            : `${quien} ya no puede realizar "${titulo}". Tu proyecto sigue abierto para recibir otras respuestas.`,
           data: {
             link: "/es/dashboard/cliente?tab=projects",
             project_id: prop.project_id,
@@ -388,7 +388,7 @@ export async function PATCH(req: NextRequest) {
           if (status === "declined") {
             const { data: pro } = await admin.from("professionals").select("profile_id").eq("id", prop.professional_id).maybeSingle();
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const title = (prop.projects as any)?.title ?? "tu solicitud";
+            const title = (prop.projects as any)?.title ?? "tu proyecto";
             if (pro?.profile_id) {
               const notification = {
                 user_id: pro.profile_id,
@@ -549,11 +549,11 @@ export async function DELETE(req: NextRequest) {
         user_id: project.client_id,
         type: "proposal_withdrawn",
         title: "Respuesta retirada",
-        message: `Un profesional retiró su respuesta a "${project.title ?? "tu solicitud"}".`,
+        message: `Un profesional retiró su respuesta a "${project.title ?? "tu proyecto"}".`,
         data: {
           link: "/es/dashboard/profesional?tab=sent_projects",
           project_id: prop.project_id,
-          project_title: project.title ?? "tu solicitud",
+          project_title: project.title ?? "tu proyecto",
         },
       };
       await admin.from("notifications").insert(notification);

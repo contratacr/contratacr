@@ -67,6 +67,8 @@ const LEGACY_SUBJECT_TO_KEY: Record<string, (typeof SUPPORT_SUBJECT_KEYS)[number
   "Problems with a booking or request": "subject4",
   "Solicitudes, proyectos o propuestas": "subject4",
   "Solicitudes, publicaciones o propuestas": "subject4",
+  "Citas, solicitudes o publicaciones": "subject4",
+  "Citas, proyectos o publicaciones": "subject4",
   "Requests, projects, or proposals": "subject4",
   "Requests, posts, or proposals": "subject4",
   "Otro": "subject5",

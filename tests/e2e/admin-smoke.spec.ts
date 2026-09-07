@@ -11,7 +11,7 @@ const adminRoutes = [
   { path: "/es/admin/aseguradoras", marker: /Aseguradoras/i },
   { path: "/es/admin/servicios", marker: /Servicios/i },
   { path: "/es/admin/categorias", marker: /Servicios/i },
-  { path: "/es/admin/solicitudes", marker: /Solicitudes/i },
+  { path: "/es/admin/solicitudes", marker: /Citas/i },
   { path: "/es/admin/publicaciones", marker: /Proyectos/i },
   { path: "/es/admin/empleos", marker: /Empleos/i },
   { path: "/es/admin/ofertas", marker: /Ofertas/i },

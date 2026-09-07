@@ -8,8 +8,8 @@ const professionalTabs = [
   { tab: "services", marker: /Servicios|Services/i },
   { tab: "photos", marker: /Casos de exito|Casos de .xito|Success cases|Success stories/i },
   { tab: "availability", marker: /Disponibilidad|Availability/i },
-  { tab: "bookings", marker: /Solicitudes|Requests/i },
-  { tab: "proposals", marker: /Solicitudes de clientes|Client requests/i },
+  { tab: "bookings", marker: /Citas|Appointments/i },
+  { tab: "proposals", marker: /Proyectos de clientes|Client projects/i },
   { tab: "jobs", marker: /Empleos|Jobs/i },
   { tab: "offers", marker: /Ofertas|Offers/i },
   { tab: "network", marker: /Seguidos|Following|Seguidores|Followers/i },
@@ -23,7 +23,7 @@ const clientTabs = [
   { tab: "home&mode=use", marker: /Mis citas|My appointments/i },
   { tab: "profile&mode=use", marker: /Perfil|Profile/i },
   { tab: "sent_bookings", marker: /Citas|Appointments/i },
-  { tab: "sent_projects", marker: /Mis solicitudes|My requests/i },
+  { tab: "sent_projects", marker: /Mis proyectos|My projects/i },
   { tab: "applications", marker: /Mis postulaciones|My applications/i },
   { tab: "connections", marker: /Volver a contratar|Hire again/i },
   { tab: "saved", marker: /Favoritos|Favorites/i },
@@ -37,7 +37,7 @@ async function exerciseVisibleFilters(page: import("playwright/test").Page) {
   const filters = page.locator("[data-status-filter-tabs]:visible");
   const visibleFilterEmptyState = page
     .getByText(
-      /^(?:No hay (?:solicitudes|oportunidades|proyectos|tiquetes) en esta vista\.|No tienes (?:profesionales favoritos|ofertas favoritas|empleos favoritos)\.)$/i,
+      /^(?:No tienes (?:citas|proyectos) activ[oa]s|Todav[ií]a no (?:hay|tienes) (?:citas|proyectos|tiquetes) finalizad[oa]s|No hay proyectos nuevos por ahora|No tienes tiquetes pendientes|No hay tiquetes en proceso|No tienes (?:profesionales favoritos|ofertas favoritas|empleos favoritos)\.)$/i,
       { exact: true },
     )
     .filter({ visible: true });

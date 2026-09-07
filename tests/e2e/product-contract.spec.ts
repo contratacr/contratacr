@@ -92,7 +92,7 @@ test.describe("@contract product safety contracts", () => {
   test("structured notification metadata localizes dates, categories, ratings, and legacy verification", () => {
     const booking = {
       type: "booking_received",
-      title: "Nueva solicitud",
+      title: "Nueva cita",
       message: "Ana solicitó 'Desarrollo web'.",
       data: {
         client_name: "Ana",

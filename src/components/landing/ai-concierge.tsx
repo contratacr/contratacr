@@ -130,7 +130,7 @@ const COPY = {
     reset: "Nuevo chat",
     resetHint: "Limpia esta conversacion y empieza de cero.",
     emptyTitle: "¿En qué te ayudo?",
-    emptySubtitle: "Te guío dentro de ContrataCR con información de la app: profesionales, solicitudes, empleos y tu cuenta.",
+    emptySubtitle: "Te guío dentro de ContrataCR con información de la app: profesionales, citas, proyectos, empleos y tu cuenta.",
     topics: [
       { label: "Buscar un profesional", example: "Necesito un profesional", prompt: "Quiero buscar un profesional", icon: "search" },
       { label: "Publicar un proyecto", example: "Quiero publicar un proyecto", prompt: "Quiero publicar un proyecto", icon: "request" },

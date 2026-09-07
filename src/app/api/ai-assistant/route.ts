@@ -760,8 +760,8 @@ const PRODUCT_INTENTS: ProductIntent[] = [
   {
     test: (n) => /^(ayuda|help|\?+|necesito algo|no se|que puedes hacer|que haces|what can you do|menu)[\s?!.]*$/.test(n),
     answer: {
-      es: "Puedo hacer tres cosas: buscar profesionales por servicio y zona (escribe, por ejemplo, «ocupo un plomero en Cartago»), explicarte cómo reservar una cita, chatear, publicar una solicitud o dejar una reseña, y ayudarte con tu cuenta (contraseña, cédula, notificaciones). ¿Por dónde empezamos?",
-      en: "I can do three things: find professionals by service and area (for example \"I need a plumber in Cartago\"), explain how to book an appointment, chat, post a request or leave a review, and help with your account (password, ID, notifications). Where do we start?",
+      es: "Puedo hacer tres cosas: buscar profesionales por servicio y zona (escribe, por ejemplo, «ocupo un plomero en Cartago»), explicarte cómo reservar una cita, chatear, publicar lo que necesitas o dejar una reseña, y ayudarte con tu cuenta (contraseña, cédula, notificaciones). ¿Por dónde empezamos?",
+      en: "I can do three things: find professionals by service and area (for example \"I need a plumber in Cartago\"), explain how to book an appointment, chat, post what you need or leave a review, and help with your account (password, ID, notifications). Where do we start?",
     },
   },
   {
@@ -795,7 +795,7 @@ const PRODUCT_INTENTS: ProductIntent[] = [
     test: (n) => /(elimin|borr|cerr|dar de baja|desactiv|delete|close|deactivate|remove).{0,20}(mi cuenta|la cuenta|cuenta|my account|account)/.test(n),
     action: "open_dashboard",
     answer: {
-      es: "En tu panel, abre Cuenta y seguridad y baja hasta «Eliminar cuenta». Se borran tu perfil, tus solicitudes y tus mensajes; no se puede deshacer.",
+      es: "En tu panel, abre Cuenta y seguridad y baja hasta «Eliminar cuenta». Se borran tu perfil, tus citas, tus proyectos y tus mensajes; no se puede deshacer.",
       en: "In your panel, open Account & security and scroll to \"Delete account\". Your profile, requests and messages are removed; it cannot be undone.",
     },
     cta: { es: "Ir a Cuenta y seguridad", en: "Open Account & security" },
@@ -872,8 +872,8 @@ const PRODUCT_INTENTS: ProductIntent[] = [
     test: (n) => /(editar|modificar|cambiar|corregir|retirar|borrar|edit|change|withdraw).{0,15}(mi propuesta|una propuesta|la propuesta|propuesta|mi respuesta|la respuesta|respuesta|proposal|reply)/.test(n),
     action: "open_dashboard",
     answer: {
-      es: "Las respuestas no se editan: si quieres cambiar algo, escríbele al cliente directamente. En tu panel → Solicitudes de clientes → «Respondidas» ves lo que enviaste.",
-      en: "Replies can't be edited: if you want to change something, write to the client directly. In your panel → Client requests → \"Respondidas\" you can see what you sent.",
+      es: "Las respuestas no se editan: si quieres cambiar algo, escríbele al cliente directamente. En tu panel → Proyectos de clientes → «Respondidas» ves lo que enviaste. Si aún nadie te eligió puedes retirar tu respuesta y volver a responder; si ya te eligieron, usa «Ya no puedo hacerlo» para avisarle al cliente.",
+      en: "Replies can't be edited: if you want to change something, write to the client directly. In your panel → Client projects → \"Respondidas\" you can see what you sent. While nobody has chosen you, you can withdraw the reply and answer again; once chosen, use \"I can no longer do it\" so the client is told.",
     },
     cta: { es: "Ver mis respuestas", en: "See my replies" },
     href: (locale) => `/${locale}/dashboard/profesional?tab=proposals`,
@@ -911,8 +911,8 @@ const PRODUCT_INTENTS: ProductIntent[] = [
     test: (n) => /(dej|pon|escrib|hac|dar|doy|leave|write|give).{0,15}(una resena|resena|calificacion|opinion|review|rating)/.test(n) || /(calific|resen|rate|review).{0,15}(profesional|servicio|professional|service)/.test(n),
     action: "open_dashboard",
     answer: {
-      es: "Cuando el servicio termina, en tu panel → Mis citas (o Mis solicitudes, si publicaste una) aparece «Dejar reseña» junto a ese servicio: pones estrellas y un comentario, y se muestra en el perfil del profesional.",
-      en: "When the service is done, in your panel → My appointments (or My requests, if you posted one) you'll see \"Leave a review\" next to that service: give stars and a comment, and it shows on the professional's profile.",
+      es: "Cuando el servicio termina, en tu panel → Mis citas (o Mis proyectos, si publicaste uno) aparece «Dejar reseña» junto a ese servicio: pones estrellas y un comentario, y se muestra en el perfil del profesional.",
+      en: "When the service is done, in your panel → My appointments (or My projects, if you posted one) you'll see \"Leave a review\" next to that service: give stars and a comment, and it shows on the professional's profile.",
     },
     cta: { es: "Ver mis citas", en: "See my appointments" },
     href: (locale) => `/${locale}/dashboard/profesional?mode=use&tab=sent_bookings`,
@@ -1027,7 +1027,7 @@ function localAnswer(message: string, locale: Locale): AssistantPayload {
       documented: true,
       answer: locale === "en"
         ? "Create a client account to save professionals, book appointments, post requests and read the replies from your panel."
-        : "Crea una cuenta de cliente para guardar profesionales, reservar citas, publicar solicitudes y leer las respuestas desde tu panel.",
+        : "Crea una cuenta de cliente para guardar profesionales, reservar citas, publicar lo que necesitas y leer las respuestas desde tu panel.",
       ctaLabel: locale === "en" ? "Create client account" : "Crear cuenta de cliente",
     };
   }
@@ -1038,8 +1038,8 @@ function localAnswer(message: string, locale: Locale): AssistantPayload {
       confidence: 1,
       documented: true,
       answer: locale === "en"
-        ? "Open sign in to access your panel, messages, saved professionals, appointments and requests."
-        : "Abre inicio de sesión para entrar a tu panel, mensajes, favoritos, citas y solicitudes.",
+        ? "Open sign in to access your panel, messages, saved professionals, appointments and projects."
+        : "Abre inicio de sesión para entrar a tu panel, mensajes, favoritos, citas y proyectos.",
       ctaLabel: locale === "en" ? "Sign in" : "Iniciar sesión",
     };
   }
@@ -1074,7 +1074,7 @@ function localAnswer(message: string, locale: Locale): AssistantPayload {
       answer: locale === "en"
         ? "Create a project with what you need, the area and the details. ContrataCR will notify professionals related to that service so they can send proposals."
         : "Crea un proyecto con lo que necesitas, la zona y los detalles. ContrataCR notificará a profesionales relacionados con ese servicio para que puedan enviar propuestas.",
-      ctaLabel: locale === "en" ? "Post a request" : "Publicar solicitud",
+      ctaLabel: locale === "en" ? "Post what I need" : "Publicar lo que necesito",
     };
   }
 
@@ -1314,7 +1314,7 @@ function actionHref(payload: AssistantPayload, originalMessage: string, locale: 
 function defaultCtaLabel(action: AssistantAction | undefined, locale: Locale) {
   const english = locale === "en";
   if (action === "search_professionals") return english ? "See all results" : "Ver todos los resultados";
-  if (action === "publish_request") return english ? "Post a request" : "Publicar solicitud";
+  if (action === "publish_request") return english ? "Post what I need" : "Publicar lo que necesito";
   if (action === "how_it_works") return english ? "See how it works" : "Ver cómo funciona";
   if (action === "support") return english ? "Open support" : "Ir a soporte";
   if (action === "browse_services") return english ? "Browse services" : "Ver servicios";
@@ -1580,9 +1580,9 @@ function normalizePayload(
       ...payload,
       action: "open_dashboard",
       answer: locale === "en"
-        ? "Open Client requests in your professional dashboard to review requests related to your services and reply to them."
-        : "Abre Solicitudes de clientes en tu panel profesional para revisar solicitudes relacionadas con tus servicios y responderlas.",
-      ctaLabel: locale === "en" ? "Open client requests" : "Ver solicitudes de clientes",
+        ? "Open Client projects in your professional dashboard to review projects related to your services and reply to them."
+        : "Abre Proyectos de clientes en tu panel profesional para revisar proyectos relacionados con tus servicios y responderlos.",
+      ctaLabel: locale === "en" ? "Open client projects" : "Ver proyectos de clientes",
     };
   }
   if (includesAny(normalized, ["hablar con soporte", "contactar soporte", "abrir soporte", "ticket de soporte", "support ticket", "contact support"])) {
@@ -1729,8 +1729,8 @@ function normalizePayload(
       locationText: publishPlaceLabel,
       answer: locale === "en"
         ? `Done — I added ${serviceLabel} in ${publishPlaceLabel} to your project. Tap "Create project" to complete the details and publish it.`
-        : `Listo: agregué ${serviceLabel} en ${publishPlaceLabel} a tu solicitud. Toca "Publicar solicitud" para revisarla y publicarla.`,
-      ctaLabel: locale === "en" ? "Post a request" : "Publicar solicitud",
+        : `Listo: agregué ${serviceLabel} en ${publishPlaceLabel} a tu proyecto. Toca "Publicar" para revisarlo y publicarlo.`,
+      ctaLabel: locale === "en" ? "Post what I need" : "Publicar lo que necesito",
     };
   }
   if (includesAny(normalized, ["olvide mi contrasena", "olvide la contrasena", "recuperar contrasena", "forgot password", "forgot my password", "reset password"])) {
@@ -1864,7 +1864,7 @@ function sensitiveOrUnsafeAnswer(message: string, locale: Locale): AssistantPayl
       action: "answer",
       answer: locale === "en"
         ? "I cannot reveal private user data. Please use the public profile, request form or official support channel for legitimate coordination."
-        : "No puedo revelar datos privados de usuarios. Usa el perfil público, el formulario de solicitud o Soporte para una coordinación legítima.",
+        : "No puedo revelar datos privados de usuarios. Usa el perfil público, el formulario de publicación o Soporte para una coordinación legítima.",
     };
   }
 
@@ -2238,7 +2238,7 @@ export async function POST(req: Request) {
         ? actionHref({ ...payload, action: "publish_request" }, rawMessage, locale)
         : singleProfessionalHref ?? searchHref,
       ctaLabel: noResults
-        ? locale === "en" ? "Post a request" : "Publicar solicitud"
+        ? locale === "en" ? "Post what I need" : "Publicar lo que necesito"
         : hasResults ? resultCta : payload.ctaLabel || defaultCtaLabel(payload.action, locale),
       professionals: assistantProfessionals,
       suggestedService,

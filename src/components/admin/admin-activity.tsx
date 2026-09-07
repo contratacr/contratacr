@@ -15,7 +15,7 @@ export function AdminActivity({ events }: { events: ActivityEvent[] }) {
     <div className="flex flex-col gap-5">
       <div>
         <h1 className="text-2xl font-bold text-[#0f172a]">Actividad</h1>
-        <p className="mt-0.5 text-sm text-[#64748b]">Eventos recientes en la plataforma (altas, citas, solicitudes y soporte).</p>
+        <p className="mt-0.5 text-sm text-[#64748b]">Eventos recientes en la plataforma (altas, citas, proyectos y soporte).</p>
       </div>
 
       <div className="rounded-2xl border border-[#e5e7eb] bg-white p-4 sm:p-5">

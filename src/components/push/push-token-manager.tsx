@@ -357,7 +357,7 @@ export function PushTokenManager() {
   // y para quien ofrece.
   const motivos = [
     { Icono: MessagesSquare, titulo: "Mensajes al instante", detalle: "Responde apenas te escriban, sin abrir la app a revisar." },
-    { Icono: Handshake, titulo: "Solicitudes y propuestas", detalle: "Enterate al momento cuando algo tuyo avanza." },
+    { Icono: Handshake, titulo: "Citas y proyectos", detalle: "Entérate al momento cuando algo tuyo avanza." },
     { Icono: Star, titulo: "Reseñas y avisos importantes", detalle: "Nuevas reseñas y cambios que afectan tu cuenta." },
   ];
 

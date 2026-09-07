@@ -627,7 +627,7 @@ export function AdminUserProfile({
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0">
             <p className="text-sm font-bold text-[#991b1b]">Eliminar esta cuenta al 100%</p>
-            <p className="mt-0.5 text-xs text-[#7f1d1d]">Borra el acceso, el perfil, las fotos y todo lo que creó (citas, solicitudes, publicaciones, reseñas, mensajes). Las personas con algo abierto con esta cuenta reciben un aviso. No se puede deshacer.</p>
+            <p className="mt-0.5 text-xs text-[#7f1d1d]">Borra el acceso, el perfil, las fotos y todo lo que creó (citas, proyectos, publicaciones, reseñas, mensajes). Las personas con algo abierto con esta cuenta reciben un aviso. No se puede deshacer.</p>
             {deleteError && <p className="mt-2 text-xs font-semibold text-[#b91c1c]">{deleteError}</p>}
           </div>
           <button type="button" disabled={deleting} onClick={() => void deleteAccount()} className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-lg bg-[#b91c1c] px-3 text-xs font-semibold text-white hover:bg-[#991b1b] disabled:opacity-60">

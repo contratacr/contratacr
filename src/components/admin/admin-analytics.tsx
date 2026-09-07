@@ -219,7 +219,7 @@ export function AdminAnalytics({ data }: { data: AdminReports }) {
           <Kpi label="Clientes nuevos" data={week.clients} />
           <Kpi label="Búsquedas" data={week.searches} />
           <Kpi label="Contactos" data={week.contacts} help="WhatsApp, llamadas, enlaces y citas iniciadas" />
-          <Kpi label="Citas y solicitudes" data={week.requests} help="Citas reservadas y solicitudes publicadas por clientes" />
+          <Kpi label="Citas y proyectos" data={week.requests} help="Citas reservadas y proyectos publicados por clientes" />
           <Kpi label="Postulaciones" data={week.applications} help="Postulaciones a empleos" />
         </div>
       </Section>
@@ -235,7 +235,7 @@ export function AdminAnalytics({ data }: { data: AdminReports }) {
             { label: "Vistas de perfil", value: insights.funnel.profileViews, help: "Abrieron el perfil de un profesional" },
             { label: "Intentaron contactar", value: insights.funnel.contactAttempts, help: "Tocaron WhatsApp, llamar o correo — con cuenta o sin ella" },
             { label: "Contactaron", value: insights.funnel.contacts, help: "Ya con cuenta: el contacto se completó. La diferencia con el paso anterior es la gente que se detuvo en el registro" },
-            { label: "Citas y solicitudes creadas", value: insights.funnel.requests, help: "Reservaron una cita o publicaron una solicitud" },
+            { label: "Citas y proyectos creados", value: insights.funnel.requests, help: "Reservaron una cita o publicaron un proyecto" },
           ]} />
           {insights.searchQuality.total > 0 && (
             <p className="mt-3 text-xs text-[#64748b]">

@@ -166,7 +166,7 @@ export async function GET(req: Request) {
     const proposals = row.proposals ?? [];
     return {
       id: row.id,
-      title: row.title ?? "Solicitud sin titulo",
+      title: row.title ?? "Proyecto sin titulo",
       description: row.description,
       status: row.status ?? "open",
       category_id: row.category_id,

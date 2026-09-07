@@ -285,7 +285,7 @@ export async function GET(req: Request) {
         profile: "Perfil",
         profile_service: "Servicio del perfil",
         profile_social: "Redes del perfil",
-        booking: "Solicitud",
+        booking: "Cita",
         project: "Proyecto",
         favorites: "Favoritos",
         api: "Guardado en backend",

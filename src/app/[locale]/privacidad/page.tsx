@@ -22,7 +22,7 @@ const ES_SECTIONS: LegalSection[] = [
       ] },
       { k: "sub", text: "2.2 Actividad como Cliente" },
       { k: "ul", items: [
-        "Solicitudes, proyectos, propuestas recibidas, citas, reseñas y favoritos.",
+        "Citas, proyectos, respuestas recibidas, reseñas y favoritos.",
         "Información incluida por usted en descripciones, notas, reportes y conversaciones.",
         "Zona, ubicación o punto geográfico cuando lo proporciona o autoriza.",
       ] },
@@ -31,7 +31,7 @@ const ES_SECTIONS: LegalSection[] = [
         "Nombre o nombre comercial, servicios, descripción, teléfonos, correo de contacto y enlaces profesionales.",
         "Provincia, cantón, lugares de trabajo, zonas de cobertura y, si lo agrega, un punto en el mapa.",
         "Fotografía de perfil, portafolio, certificaciones, idiomas, aseguradoras, disponibilidad y horarios.",
-        "Citas recibidas, solicitudes, respuestas, reseñas, casos de éxito y demás actividad relacionada con su perfil.",
+        "Citas recibidas, proyectos, respuestas, reseñas, casos de éxito y demás actividad relacionada con su perfil.",
       ] },
       { k: "sub", text: "2.4 Mensajes, soporte y archivos" },
       { k: "ul", items: [
@@ -44,7 +44,7 @@ const ES_SECTIONS: LegalSection[] = [
       { k: "sub", text: "2.6 Dispositivo, uso y analítica" },
       { k: "ul", items: [
         "Dirección IP, tipo de dispositivo y navegador, sistema operativo, idioma, versión de la aplicación, identificadores técnicos y registros de seguridad.",
-        "Interacciones con perfiles, servicios, botones de contacto, favoritos, solicitudes y funciones de la Plataforma.",
+        "Interacciones con perfiles, servicios, botones de contacto, favoritos, proyectos y funciones de la Plataforma.",
         "Token de notificaciones push, plataforma, identificador del dispositivo y estado del permiso cuando activa notificaciones.",
         "Cookies y tecnologías similares necesarias para sesión, idioma, seguridad y funcionamiento; además de medición publicitaria cuando corresponda.",
       ] },
@@ -57,7 +57,7 @@ const ES_SECTIONS: LegalSection[] = [
       { k: "ul", items: [
         "Crear, autenticar y administrar su cuenta.",
         "Publicar perfiles profesionales y conectar Clientes con Profesionales.",
-        "Gestionar búsquedas, solicitudes, citas, propuestas, mensajes, archivos, reseñas y soporte.",
+        "Gestionar búsquedas, citas, proyectos, respuestas, mensajes, archivos, reseñas y soporte.",
         "Personalizar resultados según servicio, zona y preferencias indicadas.",
         "Enviar correos y notificaciones relacionados con su cuenta o actividad.",
         "Operar el asistente de IA y conservar su historial cuando corresponda.",

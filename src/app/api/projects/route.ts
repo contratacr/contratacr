@@ -93,7 +93,7 @@ export async function POST(req: NextRequest) {
     }
     // Category is required: it routes the project to matching professionals.
     if (!categoryId) {
-      return NextResponse.json({ error: "Elige una categoria para tu solicitud." }, { status: 400 });
+      return NextResponse.json({ error: "Elige una categoria para tu proyecto." }, { status: 400 });
     }
     // The form no longer asks for a title: the service name plus the start of the
     // description reads better in every list than what people typed.
@@ -252,7 +252,7 @@ export async function POST(req: NextRequest) {
     }
     const projectId = data?.id;
     if (!projectId) {
-      return NextResponse.json({ error: "No se pudo crear la solicitud." }, { status: 500 });
+      return NextResponse.json({ error: "No se pudo crear el proyecto." }, { status: 500 });
     }
     const projectCreatedAt = data?.created_at ?? null;
 
@@ -308,7 +308,7 @@ export async function POST(req: NextRequest) {
           const rows = recipients.map((profileId) => ({
             user_id: profileId,
             type: "new_project",
-            title: "Nueva solicitud de un cliente",
+            title: "Nuevo proyecto de un cliente",
             message: `Un cliente publico "${finalTitle}" en ${label}. Respondele y, si le interesa, te escribe.`,
             data: {
               link: "/es/dashboard/profesional?tab=proposals",
@@ -457,7 +457,7 @@ async function autoCloseStale(admin: any, rows: any[]): Promise<any[]> {
   const notifications = stale.map((r) => ({
     user_id: r.client_id,
     type: "project_cancelled",
-    title: "Cerramos tu solicitud por inactividad",
+    title: "Cerramos tu proyecto por inactividad",
     message: `"${r.title}" llevaba ${AUTO_CLOSE_DAYS} días sin movimiento. Si todavía la necesitas, puedes volver a publicarla con un toque.`,
     data: { link: "/es/dashboard/profesional?tab=sent_projects", project_id: r.id, project_title: r.title, project_action: "auto_closed" },
   }));
@@ -491,7 +491,7 @@ export async function PATCH(req: NextRequest) {
   if (action === "archive") {
     const { data: project } = await admin.from("projects").select("client_id, status, title").eq("id", id).maybeSingle();
     if (!project || project.client_id !== uid) return NextResponse.json({ error: "No autorizado." }, { status: 403 });
-    if (project.status !== "cancelled") return NextResponse.json({ error: "Solo puedes archivar solicitudes canceladas." }, { status: 409 });
+    if (project.status !== "cancelled") return NextResponse.json({ error: "Solo puedes archivar proyectos cancelados." }, { status: 409 });
     const { error } = await admin.from("projects").update({ archived_by_client: true }).eq("id", id);
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     await auditUserAction(admin, req, {
@@ -517,7 +517,7 @@ export async function PATCH(req: NextRequest) {
       .maybeSingle();
     if (!project || project.client_id !== uid) return NextResponse.json({ error: "No autorizado." }, { status: 403 });
     if (project.status === "completed") return NextResponse.json({ success: true });
-    if (project.status === "cancelled") return NextResponse.json({ error: "La solicitud está cancelada." }, { status: 409 });
+    if (project.status === "cancelled") return NextResponse.json({ error: "El proyecto está cancelado." }, { status: 409 });
 
     let chosenProfessionalId: string | null = null;
     if (professionalId) {
@@ -576,10 +576,10 @@ export async function PATCH(req: NextRequest) {
       .eq("id", id)
       .maybeSingle();
     if (!project || project.accepted_professional_id !== pro.id) {
-      return NextResponse.json({ error: "No autorizado para esta solicitud." }, { status: 403 });
+      return NextResponse.json({ error: "No autorizado para este proyecto." }, { status: 403 });
     }
     if (project.status !== "in_progress") {
-      return NextResponse.json({ error: "La solicitud no está en progreso." }, { status: 409 });
+      return NextResponse.json({ error: "El proyecto no está en progreso." }, { status: 409 });
     }
     await admin.from("projects").update({ status: "awaiting_confirmation", work_done_at: new Date().toISOString() }).eq("id", id);
     await auditUserAction(admin, req, {
@@ -673,7 +673,7 @@ export async function PATCH(req: NextRequest) {
   const { data: ownRow } = await admin.from("projects").select("client_id, status, title").eq("id", id).maybeSingle();
   if (!ownRow || ownRow.client_id !== uid) return NextResponse.json({ error: "No autorizado." }, { status: 403 });
   if (status === "open" && ownRow.status !== "cancelled") {
-    return NextResponse.json({ error: "Solo puedes volver a publicar solicitudes canceladas." }, { status: 409 });
+    return NextResponse.json({ error: "Solo puedes volver a publicar proyectos cancelados." }, { status: 409 });
   }
   if (status === "open") {
     await admin.from("proposals").delete().eq("project_id", id);
@@ -745,8 +745,8 @@ async function notifyAssignedPro(admin: any, projectId: string, kind: "cancelled
     const notifications = recipients.map((userId) => ({
       user_id: userId,
       type: kind === "deleted" ? "project_deleted" : "project_cancelled",
-      title: kind === "deleted" ? "Solicitud eliminada" : "Solicitud cancelada",
-      message: `El cliente ${kind === "deleted" ? "eliminó" : "canceló"} la solicitud "${project.title}". Ya no está activa.`,
+      title: kind === "deleted" ? "Proyecto eliminado" : "Proyecto cancelado",
+      message: `El cliente ${kind === "deleted" ? "eliminó" : "canceló"} el proyecto "${project.title}". Ya no está activo.`,
       data: {
         link: "/es/dashboard/profesional?tab=proposals",
         project_id: projectId,
@@ -778,7 +778,7 @@ export async function DELETE(req: NextRequest) {
   if (!ownRow) return NextResponse.json({ success: true }); // already gone
   if (ownRow.client_id !== user.id) return NextResponse.json({ error: "No autorizado." }, { status: 403 });
   if (ownRow.status !== "cancelled") {
-    return NextResponse.json({ error: "Solo puedes eliminar solicitudes canceladas." }, { status: 409 });
+    return NextResponse.json({ error: "Solo puedes eliminar proyectos cancelados." }, { status: 409 });
   }
 
   // Notify the affected professionals before the row (and its proposals) cascade away.

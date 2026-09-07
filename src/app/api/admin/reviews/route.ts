@@ -79,7 +79,7 @@ export async function GET(req: Request) {
     const source = row.whatsapp_contact_id
       ? "WhatsApp"
       : row.booking_id
-        ? "Solicitud"
+        ? "Cita"
         : row.project_id
           ? "Proyecto"
           : "Perfil";

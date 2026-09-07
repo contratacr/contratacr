@@ -14,7 +14,7 @@ async function sendTestPush() {
     const result = await sendUserPush({
       userId: user.id,
       title: "Nueva propuesta recibida",
-      body: "Un profesional envio una propuesta para tu solicitud. Revisala desde tu panel.",
+      body: "Un profesional respondio a tu proyecto. Revisalo desde tu panel.",
       url: "/es/dashboard/profesional?tab=sent_projects",
     });
 
