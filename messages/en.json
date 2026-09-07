@@ -1944,7 +1944,6 @@
   "bookingRequests": {
     "empty": "You don't have any requests yet",
     "emptySub": "When clients contact you, they'll appear here.",
-    "noneInView": "No requests in this view.",
     "status": {
       "pending": "Pending",
       "confirmed": "Confirmed",
@@ -2035,7 +2034,11 @@
     "reportR4": "Other",
     "reportDetails": "Describe what happened",
     "reportSubmit": "Report",
-    "allServices": "All"
+    "allServices": "All",
+    "emptyActiveTitle": "No active bookings",
+    "emptyActiveBody": "When someone books an appointment with you, it shows up here with its date and time.",
+    "emptyDoneTitle": "No finished bookings yet",
+    "emptyDoneBody": "Past appointments stay here, with the review if the client leaves one."
   },
   "photoGallery": {
     "intro": "Up to {max} photos total.",
@@ -2135,7 +2138,6 @@
     "sendProposalError": "Couldn't send it. Try again.",
     "emptyMine": "You haven't answered any yet",
     "emptyMineSub": "Reply to a request and the client writes to you if they're interested.",
-    "noneInView": "No requests in this view.",
     "status": {
       "pending": "Pending",
       "accepted": "Accepted",
@@ -2630,7 +2632,6 @@
     "bEmpty": "You don't have any requests yet",
     "bEmptySub": "Find a service and make your first request.",
     "searchPros": "Find services",
-    "noBookingsView": "No requests in this view.",
     "leaveReview": "Leave a review",
     "editReview": "Edit review",
     "cancel": "Cancel",
@@ -2643,7 +2644,6 @@
     "pEmptySub": "Tell us what you need and professionals will write to you.",
     "publishProject": "Post a request",
     "publishShort": "Post",
-    "noProjectsView": "No requests in this view.",
     "projAssigned": "Assigned",
     "projAwaiting": "To confirm",
     "projCompleted": "Completed",
@@ -2711,7 +2711,15 @@
     "bookingHappened": "It's done",
     "bookAgain": "Hire again",
     "reviewsCount": "{count, plural, one {# review} other {# reviews}}",
-    "noReviewsYet": "No reviews yet"
+    "noReviewsYet": "No reviews yet",
+    "bActiveEmpty": "No active bookings",
+    "bActiveEmptySub": "When you book an appointment, you'll see it here with its date and time.",
+    "bDoneEmpty": "No finished bookings yet",
+    "bDoneEmptySub": "Past appointments stay here, along with the reviews you can leave.",
+    "pActiveEmpty": "No active requests",
+    "pActiveEmptySub": "Post what you need and get replies from professionals in your area.",
+    "pDoneEmpty": "No finished requests yet",
+    "pDoneEmptySub": "Requests you resolved or cancelled stay here."
   },
   "clientPage": {
     "greeting": "Hi, {name} 👋",
@@ -2871,7 +2879,6 @@
     "empty": "You don't have any tickets yet",
     "emptySub": "If you need help, contact us from this section.",
     "openTicket": "Contact support",
-    "noneInView": "No tickets in this view.",
     "loadError": "We couldn't load support.",
     "retry": "Try again",
     "newReply": "New reply",
@@ -2895,7 +2902,21 @@
     "headerNotifications": "Notifications",
     "newTicketShort": "Contact",
     "reopenHint": "If it happens again, send a new message and the case reopens.",
-    "reopenPlaceholder": "Send a message to reopen…"
+    "reopenPlaceholder": "Send a message to reopen…",
+    "viewEmpty": {
+      "open": {
+        "title": "No pending tickets",
+        "body": "New tickets stay here until support picks them up."
+      },
+      "in_progress": {
+        "title": "No tickets in progress",
+        "body": "Tickets with an open conversation with support show up here."
+      },
+      "resolved": {
+        "title": "No resolved tickets yet",
+        "body": "Tickets support has closed stay here."
+      }
+    }
   },
   "savedPros": {
     "viewProfile": "View profile",
@@ -2929,7 +2950,7 @@
     "count": "{count, plural, one {# professional} other {# professionals}}",
     "verified": "Verified",
     "viewProfile": "View profile",
-    "noResults": "No professionals match that text.",
+    "noResults": "No results",
     "source": {
       "booking": "Request",
       "project": "Project",
@@ -2943,7 +2964,8 @@
       "confirmed": "Confirmed",
       "connected": "Connected",
       "contact": "Contacted"
-    }
+    },
+    "noResultsSub": "No professionals match that name or service."
   },
   "registerChoice": {
     "title": "Create your account",

@@ -29,7 +29,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useCachedResource } from "@/hooks/use-cached-resource";
 import { useAppDialog } from "@/hooks/use-app-dialog";
 import type { BookingStatus } from "@/types";
-import { PanelEmptyState, PanelListSkeleton } from "@/components/ui/content-loading";
+import { PanelEmptyState, PanelFilterEmpty, PanelListSkeleton } from "@/components/ui/content-loading";
 
 /**
  * Shared "acting as a client" activity views — the user's SENT solicitudes,
@@ -562,13 +562,13 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
 
   const bookingCounts = bucketCounts(bookings.map((b) => solicitudBucket(b.status, b.scheduled_date)));
   const projectCounts = bucketCounts(projects.map((p) => proyectoBucket(p.status)));
-  // Solo se ofrecen las etapas con contenido; si la elegida quedó vacía se cae
-  // a la primera disponible (mismo patrón que las propuestas del profesional).
-  // Las dos etapas siempre visibles (con su 0 si hace falta), igual que en Reservas recibidas.
+  // Las dos etapas siempre visibles (con su 0 si hace falta), igual que en Reservas
+  // recibidas: la pestaña que el cliente elige manda aunque esté vacía —antes
+  // saltaba sola a la otra— y la vista vacía explica qué va a aparecer ahí.
   const bookingTabs = SOLICITUD_TABS;
   const effectiveBookingFilter = bookingTabs.some((tab) => tab.id === bookingFilter)
     ? bookingFilter : (bookingTabs[0]?.id ?? bookingFilter);
-  const projectTabs = PROYECTO_TABS.filter((tab) => (projectCounts[tab.id] ?? 0) > 0);
+  const projectTabs = PROYECTO_TABS;
   const effectiveProjectFilter = projectTabs.some((tab) => tab.id === projectFilter)
     ? projectFilter : (projectTabs[0]?.id ?? projectFilter);
   const filteredBookings = bookings.filter((b) => solicitudMatches(effectiveBookingFilter, b.status, b.scheduled_date));
@@ -591,7 +591,14 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                 <StatusFilterTabs tabs={bookingTabs} value={effectiveBookingFilter} onChange={setBookingFilter} labelFor={etapaSolicitudLabel} counts={bookingCounts} />
               )}
               {filteredBookings.length === 0 ? (
-                <p className="text-sm text-[#6b7280] text-center py-8">{t("noBookingsView")}</p>
+                <PanelFilterEmpty
+                  icon={effectiveBookingFilter === "finalizadas" ? CheckCircle2 : CalendarClock}
+                  title={effectiveBookingFilter === "finalizadas" ? t("bDoneEmpty") : t("bActiveEmpty")}
+                  description={effectiveBookingFilter === "finalizadas" ? t("bDoneEmptySub") : t("bActiveEmptySub")}
+                  action={effectiveBookingFilter === "finalizadas" ? undefined : (
+                    <Button asChild variant="outline"><Link href="/buscar">{t("searchPros")}</Link></Button>
+                  )}
+                />
               ) : (
                 <div className="ccr-native-safe-list-end flex flex-col gap-3.5">
                   {filteredBookings.map((b) => {
@@ -832,7 +839,11 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                 labelFor={(id) => tEtapas(id)}
               />
               {filteredProjects.length === 0 && (
-                <p className="py-8 text-center text-sm text-[#6b7280]">{t("noProjectsView")}</p>
+                <PanelFilterEmpty
+                  icon={effectiveProjectFilter === "finalizadas" ? CheckCircle2 : FolderOpen}
+                  title={effectiveProjectFilter === "finalizadas" ? t("pDoneEmpty") : t("pActiveEmpty")}
+                  description={effectiveProjectFilter === "finalizadas" ? t("pDoneEmptySub") : t("pActiveEmptySub")}
+                />
               )}
               {filteredProjects.map((project) => {
                 const isExpanded = expandedProject === project.id;

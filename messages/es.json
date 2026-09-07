@@ -1944,7 +1944,6 @@
   "bookingRequests": {
     "empty": "No tienes solicitudes todavía",
     "emptySub": "Cuando los clientes te contacten, aparecerán aquí.",
-    "noneInView": "No hay solicitudes en esta vista.",
     "status": {
       "pending": "Pendiente",
       "confirmed": "Confirmada",
@@ -2035,7 +2034,11 @@
     "reportR4": "Otro",
     "reportDetails": "Describe qué pasó",
     "reportSubmit": "Reportar",
-    "allServices": "Todas"
+    "allServices": "Todas",
+    "emptyActiveTitle": "No tienes reservas activas",
+    "emptyActiveBody": "Cuando alguien reserve una cita contigo, aparece aquí con su fecha y hora.",
+    "emptyDoneTitle": "Todavía no hay reservas finalizadas",
+    "emptyDoneBody": "Aquí quedan las citas que ya pasaron, con su reseña si el cliente la deja."
   },
   "photoGallery": {
     "intro": "Máximo {max} fotos en total.",
@@ -2135,7 +2138,6 @@
     "sendProposalError": "No se pudo enviar. Intentá de nuevo.",
     "emptyMine": "Todavía no has respondido ninguna",
     "emptyMineSub": "Respondé una solicitud y el cliente te escribe si le interesa.",
-    "noneInView": "No hay solicitudes en esta vista.",
     "status": {
       "pending": "Pendiente",
       "accepted": "Aceptada",
@@ -2630,7 +2632,6 @@
     "bEmpty": "Todavía no tienes solicitudes",
     "bEmptySub": "Busca un servicio y haz tu primera solicitud.",
     "searchPros": "Buscar profesionales",
-    "noBookingsView": "No hay solicitudes en esta vista.",
     "leaveReview": "Dejar reseña",
     "editReview": "Editar reseña",
     "cancel": "Cancelar",
@@ -2643,7 +2644,6 @@
     "pEmptySub": "Contá qué necesitás y los profesionales te escriben.",
     "publishProject": "Publicar una solicitud",
     "publishShort": "Publicar",
-    "noProjectsView": "No hay solicitudes en esta vista.",
     "projAssigned": "Asignada",
     "projAwaiting": "Por confirmar",
     "projCompleted": "Finalizado",
@@ -2711,7 +2711,15 @@
     "bookingHappened": "Ya me atendieron",
     "bookAgain": "Volver a contratar",
     "reviewsCount": "{count, plural, one {# reseña} other {# reseñas}}",
-    "noReviewsYet": "Sin reseñas todavía"
+    "noReviewsYet": "Sin reseñas todavía",
+    "bActiveEmpty": "No tienes reservas activas",
+    "bActiveEmptySub": "Cuando reserves una cita, la ves aquí con su fecha y hora.",
+    "bDoneEmpty": "Todavía no tienes reservas finalizadas",
+    "bDoneEmptySub": "Aquí quedan las citas que ya pasaron y las reseñas que puedes dejar.",
+    "pActiveEmpty": "No tienes solicitudes activas",
+    "pActiveEmptySub": "Publica lo que necesitas y recibe respuestas de profesionales de tu zona.",
+    "pDoneEmpty": "Todavía no hay solicitudes finalizadas",
+    "pDoneEmptySub": "Aquí quedan las solicitudes que ya resolviste o cancelaste."
   },
   "clientPage": {
     "greeting": "Hola, {name} 👋",
@@ -2871,7 +2879,6 @@
     "empty": "Todavía no tienes tiquetes",
     "emptySub": "Si necesitas ayuda, contáctanos desde esta sección.",
     "openTicket": "Contactar soporte",
-    "noneInView": "No hay tiquetes en esta vista.",
     "loadError": "No pudimos cargar soporte.",
     "retry": "Intentar de nuevo",
     "newReply": "Nueva respuesta",
@@ -2895,7 +2902,21 @@
     "headerNotifications": "Notificaciones",
     "newTicketShort": "Contactar",
     "reopenHint": "Si el problema vuelve, envía un mensaje nuevo y el caso se reabre.",
-    "reopenPlaceholder": "Envía un mensaje y se reabre…"
+    "reopenPlaceholder": "Envía un mensaje y se reabre…",
+    "viewEmpty": {
+      "open": {
+        "title": "No tienes tiquetes pendientes",
+        "body": "Los tiquetes nuevos se quedan aquí hasta que soporte los toma."
+      },
+      "in_progress": {
+        "title": "No hay tiquetes en proceso",
+        "body": "Aquí ves los tiquetes con una conversación abierta con soporte."
+      },
+      "resolved": {
+        "title": "Todavía no hay tiquetes resueltos",
+        "body": "Aquí quedan los tiquetes que soporte ya cerró."
+      }
+    }
   },
   "savedPros": {
     "viewProfile": "Ver perfil",
@@ -2929,7 +2950,7 @@
     "count": "{count, plural, one {# profesional} other {# profesionales}}",
     "verified": "Verificado",
     "viewProfile": "Ver perfil",
-    "noResults": "No encontramos profesionales con ese texto.",
+    "noResults": "Sin resultados",
     "source": {
       "booking": "Solicitud",
       "project": "Proyecto",
@@ -2943,7 +2964,8 @@
       "confirmed": "Confirmado",
       "connected": "Conectado",
       "contact": "Contactado"
-    }
+    },
+    "noResultsSub": "No encontramos profesionales con ese nombre o servicio."
   },
   "registerChoice": {
     "title": "Crear cuenta",

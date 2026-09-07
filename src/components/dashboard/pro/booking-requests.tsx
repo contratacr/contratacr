@@ -21,7 +21,7 @@ import { ReportModal } from "@/components/dashboard/report-modal";
 import { formatBookingWhen } from "@/lib/booking-when";
 import { useAppDialog } from "@/hooks/use-app-dialog";
 import type { BookingStatus } from "@/types";
-import { PanelEmptyState, PanelListSkeleton } from "@/components/ui/content-loading";
+import { PanelEmptyState, PanelFilterEmpty, PanelListSkeleton } from "@/components/ui/content-loading";
 import { repairVisibleText } from "@/lib/text/repair-visible-text";
 
 type Booking = {
@@ -515,7 +515,11 @@ export function BookingRequests() {
         <StatusFilterTabs tabs={catTabs} value={activeCat} onChange={setCatFilter} labelFor={catLabel} counts={catCounts} variant="chips" />
       )}
       {filtered.length === 0 ? (
-        <p className="text-sm text-[#6b7280] text-center py-8">{t("noneInView")}</p>
+        <PanelFilterEmpty
+          icon={effectiveFilter === "finalizadas" ? CalendarCheck : CalendarClock}
+          title={effectiveFilter === "finalizadas" ? t("emptyDoneTitle") : t("emptyActiveTitle")}
+          description={effectiveFilter === "finalizadas" ? t("emptyDoneBody") : t("emptyActiveBody")}
+        />
       ) : (
         <div className="ccr-native-safe-list-end flex flex-col gap-3.5 overflow-visible pb-4">
           {filtered.map((b) => <BookingCard key={b.id} booking={b} />)}

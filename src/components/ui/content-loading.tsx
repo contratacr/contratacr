@@ -94,6 +94,41 @@ export function PanelListSkeleton({
   );
 }
 
+/**
+ * Vacío de UNA pestaña de filtro (Activas, Finalizadas…), no de la sección entera.
+ * Es más bajo que `PanelEmptyState` y va en una caja punteada: se lee como
+ * "esta vista está vacía", no como "no tienes nada". Con una línea gris suelta
+ * la pantalla parecía rota.
+ */
+export function PanelFilterEmpty({
+  icon: Icon,
+  title,
+  description,
+  action,
+  className,
+}: {
+  icon: ElementType;
+  title: ReactNode;
+  description?: ReactNode;
+  action?: ReactNode;
+  className?: string;
+}) {
+  return (
+    <div className={cn("ccr-empty-state flex flex-col items-center justify-center rounded-2xl border border-dashed border-[#dbe4ee] bg-[#fafcfe] px-5 py-9 text-center", className)}>
+      <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-full border border-[#e3edf5] bg-white text-[#9ec9de]">
+        <Icon className="h-[18px] w-[18px]" />
+      </div>
+      <p className="text-[15px] font-bold leading-snug text-[#162543]">{title}</p>
+      {description && <p className="mt-1.5 max-w-xs text-[13px] leading-relaxed text-[#6b7280]">{description}</p>}
+      {action && (
+        <div className="mt-4 flex w-full max-w-[15rem] justify-center [&>a]:h-11 [&>a]:w-full [&>button]:h-11 [&>button]:w-full">
+          {action}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function PanelEmptyState({
   icon: Icon,
   title,

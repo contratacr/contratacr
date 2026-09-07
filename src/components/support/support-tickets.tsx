@@ -6,7 +6,7 @@ import { lockBodyScroll } from "@/lib/body-scroll-lock";
 
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { Headset, ArrowLeft, SendHorizontal, User, Shield, Plus, Clock3 } from "lucide-react";
+import { Headset, ArrowLeft, SendHorizontal, User, Shield, Plus, Clock3, CheckCircle2 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { createClient } from "@/lib/supabase/client";
 import { SupportModal } from "@/components/support/support-modal";
@@ -15,7 +15,7 @@ import { StatusFilterTabs } from "@/components/dashboard/status-filter-tabs";
 import { supportTicketRef } from "@/lib/support-ticket";
 import { LONG_TEXT_MAX_LENGTH, limitText } from "@/lib/text-limits";
 import { useAppDialog } from "@/hooks/use-app-dialog";
-import { PanelEmptyState, PanelListSkeleton } from "@/components/ui/content-loading";
+import { PanelEmptyState, PanelFilterEmpty, PanelListSkeleton } from "@/components/ui/content-loading";
 
 type Ticket = {
   id: string;
@@ -508,7 +508,11 @@ export function SupportTickets({
           )}
         />
       ) : filtered.length === 0 ? (
-        <p className="text-sm text-[#9ca3af] text-center py-8">{t("noneInView")}</p>
+        <PanelFilterEmpty
+          icon={filter === "resolved" ? CheckCircle2 : filter === "in_progress" ? Headset : Clock3}
+          title={t(`viewEmpty.${filter}.title`)}
+          description={t(`viewEmpty.${filter}.body`)}
+        />
       ) : (
         <div className="flex flex-col gap-3">
           {filtered.map((tk) => {

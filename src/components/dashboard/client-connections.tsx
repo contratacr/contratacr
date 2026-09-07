@@ -6,7 +6,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { PanelEmptyState, PanelListSkeleton } from "@/components/ui/content-loading";
+import { PanelEmptyState, PanelFilterEmpty, PanelListSkeleton } from "@/components/ui/content-loading";
 import { getInitials, formatRelativeOrDate } from "@/lib/utils";
 import { openInNewTabOnDesktop } from "@/lib/desktop-new-tab";
 import { getCategoryLabel } from "@/lib/data/categories";
@@ -154,7 +154,7 @@ export function ClientConnections() {
           </article>
         ))}
       </div>
-      {filtered.length === 0 && <p className="py-8 text-center text-sm font-semibold text-[#6b7280]">{t("noResults")}</p>}
+      {filtered.length === 0 && <PanelFilterEmpty icon={Search} title={t("noResults")} description={t("noResultsSub")} />}
     </div>
   );
 }
