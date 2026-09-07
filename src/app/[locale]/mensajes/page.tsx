@@ -5,12 +5,35 @@ import { LandingFooter } from "@/components/landing/landing-footer";
 import { LandingNavbar } from "@/components/landing/landing-navbar";
 import { SectionHeaderTitle } from "@/components/mobile/section-header-title";
 import { useTranslations } from "next-intl";
+import { notFound } from "next/navigation";
+import { useEffect, useState } from "react";
+import { isNativeAppRuntime } from "@/hooks/use-native-app";
 
-// Los mensajes viven en la app y también en la web con sesión: un profesional
-// en escritorio necesita leer y contestar el chat interno. Sin sesión, la
-// bandeja manda al login.
+// La app se reconoce por el runtime de Capacitor o por la marca que el propio
+// armazón nativo deja en la cookie; cualquiera de las dos alcanza.
+function esLaApp() {
+  if (isNativeAppRuntime()) return true;
+  if (typeof document === "undefined") return false;
+  return /(?:^|;\s*)ccr_platform=native(?:;|$)/.test(document.cookie);
+}
+
 export default function MessagesPage() {
   const tSeccion = useTranslations("sectionTitles");
+  // Los mensajes son de la app: en la web esta ruta no existe. Capacitor tarda
+  // unos milisegundos en anunciarse, así que solo se descarta cuando ya se sabe.
+  const [entorno, setEntorno] = useState<"pendiente" | "app" | "web">(
+    () => (esLaApp() ? "app" : "pendiente"),
+  );
+  useEffect(() => {
+    if (entorno === "app") return;
+    const revisar = () => { if (esLaApp()) setEntorno("app"); };
+    const tiempos = [0, 50, 250, 750].map((espera) => window.setTimeout(revisar, espera));
+    const final = window.setTimeout(() => { if (!esLaApp()) setEntorno("web"); }, 900);
+    return () => { tiempos.forEach(window.clearTimeout); window.clearTimeout(final); };
+  }, [entorno]);
+
+  if (entorno === "web") notFound();
+  if (entorno === "pendiente") return <div className="min-h-screen bg-[#f5f8fb]" />;
 
   return (
     <div className="flex min-h-screen flex-col bg-[#f5f8fb]">

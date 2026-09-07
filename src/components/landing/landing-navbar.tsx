@@ -858,14 +858,14 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
       if (arriba !== null) setContenidoDebajo(arriba > 4);
     };
     const principal = document.querySelector("main");
-    queueMicrotask(() => setContenidoDebajo(((document.scrollingElement?.scrollTop ?? 0) > 4) || ((principal?.scrollTop ?? 0) > 4)));
+    setContenidoDebajo(((document.scrollingElement?.scrollTop ?? 0) > 4) || ((principal?.scrollTop ?? 0) > 4));
     document.addEventListener("scroll", onScroll, { capture: true, passive: true });
     return () => document.removeEventListener("scroll", onScroll, { capture: true });
   }, [nativeApp]);
+  const nativeMessageUnread = useDirectMessageUnread(nativeApp);
   const [hydrated, setHydrated] = useState(false);
   const nativeHeaderShell = hydrated && nativeApp;
   const { user, loading: authLoading } = useAuth();
-  const nativeMessageUnread = useDirectMessageUnread(Boolean(user));
   const nativeSearchRoute = /(^|\/)buscar(?:\/|$)/.test(pathname ?? "");
   // Search is a full-viewport map + results sheet. Do not merely hide the nav
   // with CSS: leaving it mounted keeps its layout class and safe-area reserve
@@ -1713,9 +1713,6 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                   )
                 ) : (
                 <div className="ml-auto flex shrink-0 items-center gap-0.5">
-                  {user && !enMensajes && (
-                    <HeaderMessagesLink unreadCount={nativeMessageUnread} label={locale === "en" ? "Messages" : "Mensajes"} />
-                  )}
                   {user && <NotificationBell scope="all" />}
                   {!user && !sectionShare && <span className="h-10 w-10" aria-hidden />}
                 </div>
@@ -2092,7 +2089,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                   ) : user ? (
                     <div className="flex w-auto min-w-0 items-center justify-end gap-1">
 
-                      {!enMensajes && (
+                      {nativeApp && nativeHeaderShell && (
                         <HeaderMessagesLink unreadCount={nativeMessageUnread} label={locale === "en" ? "Messages" : "Mensajes"} />
                       )}
                       <NotificationBell scope="all" />
