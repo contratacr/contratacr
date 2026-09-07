@@ -987,8 +987,8 @@
     },
     "step4": {
       "title": "¿Qué necesitas?",
-      "description": "Describe el servicio",
-      "descPlaceholder": "Cuéntanos brevemente qué necesitas...",
+      "description": "Cuéntale al profesional qué necesitas",
+      "descPlaceholder": "Ej.: instalar la red wifi de una oficina para 6 personas.",
       "date": "¿Cuándo te viene bien?",
       "datePlaceholder": "Ejemplo: Este fin de semana, Próximo lunes por la tarde...",
       "email": "Tu email",
@@ -1036,7 +1036,7 @@
     "calendar": {
       "title": "Elige fecha y hora",
       "locationPrefix": "En <b>{location}</b>.",
-      "availabilityHint": "Los días con punto azul tienen citas.",
+      "availabilityHint": "Los días con punto azul tienen horarios disponibles.",
       "privateTitle": "Disponibilidad privada",
       "privateBody": "Este profesional coordina sus horarios directamente por WhatsApp.",
       "whatsapp": "WhatsApp",
@@ -1050,7 +1050,7 @@
       "afternoon": "Tarde",
       "night": "Noche"
     },
-    "describeGreeting": "Hola, <b>{name}</b>. Describe lo que necesitas.",
+    "describeGreeting": "Hola, <b>{name}</b>.",
     "bookingAs": "Reservas como <b>{name}</b> · identificación {cedula}",
     "whatsapp": {
       "at": "a las",

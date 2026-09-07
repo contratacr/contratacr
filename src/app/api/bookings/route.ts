@@ -1,3 +1,4 @@
+import { getCategoryLabel } from "@/lib/data/categories";
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -32,10 +33,19 @@ async function autoCloseStale(admin: ReturnType<typeof createAdminClient>, filte
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { professionalId, clientCedula, clientName, clientEmail, serviceDescription, preferredDateText } = body;
+    const { professionalId, clientCedula, clientName, clientEmail, preferredDateText } = body;
+    // La descripción es opcional en el formulario: si el cliente no escribe nada,
+    // la cita se describe con el servicio elegido. Antes esto devolvía un 400 en
+    // inglés y el cliente perdía todo lo que había elegido.
+    const descripcionEscrita = typeof body.serviceDescription === "string" ? body.serviceDescription.trim() : "";
+    const serviceDescription = descripcionEscrita
+      || (typeof body.categoryId === "string" && body.categoryId ? getCategoryLabel(body.categoryId) : "");
 
-    if (!professionalId || !serviceDescription) {
-      return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+    if (!professionalId) {
+      return NextResponse.json({ error: "Falta el profesional." }, { status: 400 });
+    }
+    if (!serviceDescription) {
+      return NextResponse.json({ error: "Cuéntanos qué necesitas o elige un servicio." }, { status: 400 });
     }
 
     const supabase = await createClient();

@@ -325,9 +325,17 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
     };
   }, [open]);
 
+  // El borrado del estado solo ocurre al ABRIR el modal. Este efecto también
+  // vuelve a correr cuando la página se refresca por detrás (router.refresh tras
+  // un cambio de perfil o de disponibilidad) y sus dependencias llegan nuevas;
+  // sin esta guarda, ese refresco tiraba al cliente al primer paso a mitad de
+  // la reserva —o le borraba la pantalla de éxito— sin que hubiera hecho nada.
+  const abiertoAntesRef = useRef(false);
   useEffect(() => {
+    const recienAbierto = open && !abiertoAntesRef.current;
+    abiertoAntesRef.current = open;
     if (!open) return;
-    queueMicrotask(() => {
+    if (recienAbierto) queueMicrotask(() => {
       setStep("calendar");
       // Reset the picked service so a NEW booking re-asks which profession (for a
       // multi-profession pro) instead of locking onto the previous booking's choice.
@@ -678,6 +686,10 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
           const phoneChanged = cleanPhone !== phoneDigits(profilePhoneInitial);
+          // Solo se guarda —y se avisa al resto de la app— si el teléfono de verdad
+          // cambió. Antes se avisaba en CADA envío: el refresco global volvía a montar
+          // la tarjeta con el modal y, si el servidor respondía con error, el cliente
+          // veía el aviso medio segundo y el modal volvía solo al primer paso.
           if (phoneChanged) {
             const { error: profilePhoneError } = await supabase.from("profiles").update({ phone: cleanPhone }).eq("id", user.id);
             if (profilePhoneError) {
@@ -685,16 +697,16 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
               setSubmitError(locale === "en" ? "Couldn't save your contact phone. Try again." : "No se pudo guardar tu teléfono de contacto. Intenta de nuevo.");
               return;
             }
+            const { error: professionalPhoneError } = await supabase.from("professionals").update({ whatsapp: cleanPhone }).eq("profile_id", user.id);
+            if (professionalPhoneError) {
+              setSubmitting(false);
+              setSubmitError(locale === "en" ? "Couldn't save your contact phone. Try again." : "No se pudo guardar tu teléfono de contacto. Intenta de nuevo.");
+              return;
+            }
+            setProfilePhoneInitial(cleanPhone);
+            setProfilePhone(cleanPhone);
+            window.dispatchEvent(new Event("ccr:profile-updated"));
           }
-          const { error: professionalPhoneError } = await supabase.from("professionals").update({ whatsapp: cleanPhone }).eq("profile_id", user.id);
-          if (professionalPhoneError) {
-            setSubmitting(false);
-            setSubmitError(locale === "en" ? "Couldn't save your contact phone. Try again." : "No se pudo guardar tu teléfono de contacto. Intenta de nuevo.");
-            return;
-          }
-          setProfilePhoneInitial(cleanPhone);
-          setProfilePhone(cleanPhone);
-          window.dispatchEvent(new Event("ccr:profile-updated"));
         }
       }
       const res = await fetch("/api/bookings", {
@@ -706,7 +718,8 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
           clientEmail: clientEmail || null,
           clientCedula: (overrideCedula ?? profileCedula) || null,
           clientPhone: effectivePhone || null,
-          serviceDescription,
+          // Sin descripción, la cita se llama como el servicio elegido.
+          serviceDescription: serviceDescription.trim() || getCategoryLabel(effectiveCategory ?? professional.categoryId ?? "", locale),
           scheduledDate: selectedDate || null,
           scheduledTime: selectedTime || null,
           // (service + location) context of the picked slot.
@@ -1266,7 +1279,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                           >
                             <ChevronLeft className="h-4 w-4" />
                           </button>
-                          <span className="text-sm font-semibold text-[#111827] capitalize">
+                          <span className="text-sm font-semibold text-[#111827]">
                             {calendarMonthLabel(currentYear, currentMonth, locale)}
                           </span>
                           <button
@@ -1332,7 +1345,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                           <p className="text-sm text-[#9ca3af] text-center py-6">{t("calendar.noSlots")}</p>
                         ) : (
                           <>
-                            <p className="mb-3 text-sm font-semibold text-[#111827] capitalize">{formatDateDisplay(selectedDate, locale)}</p>
+                            <p className="mb-3 text-sm font-semibold text-[#111827]">{formatDateDisplay(selectedDate, locale)}</p>
                             {[
                               { key: "morning", label: t("calendar.morning"), Icon: Sun, items: slots.filter((s) => parseInt(s, 10) < 12) },
                               { key: "afternoon", label: t("calendar.afternoon"), Icon: Sunset, items: slots.filter((s) => { const h = parseInt(s, 10); return h >= 12 && h < 18; }) },
@@ -1678,7 +1691,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                   <div className="flex flex-1 items-center justify-between gap-3">
                     <span className="min-w-0 truncate text-sm text-[#6b7280]">
                       {selectedDate && selectedTime ? (
-                        <span className="capitalize">{formatDateDisplay(selectedDate, locale)} · <span className="font-semibold text-[#111827]">{selectedTime}</span></span>
+                        <span className="">{formatDateDisplay(selectedDate, locale)} · <span className="font-semibold text-[#111827]">{selectedTime}</span></span>
                       ) : (
                         t("calendar.selectDateTime")
                       )}
