@@ -1197,6 +1197,24 @@ html[data-self-action-modal-open="true"] [data-save-button] {
     box-shadow: 0 0 0 100lvh rgba(0, 0, 0, 0.5);
   }
 
+  /* Con el teclado abierto queda una franja entre el pie del modal y la barra
+     del teclado (el alto que reporta el WebView no coincide al píxel con lo que
+     se ve). El pie la pinta de blanco mientras se escribe; sin teclado no se
+     dibuja nada, para que el pie conserve el alto de Publicar empleo. */
+  html[data-keyboard-open] .ccr-booking-modal-panel .ccr-pie-formulario {
+    position: relative;
+  }
+
+  html[data-keyboard-open] .ccr-booking-modal-panel .ccr-pie-formulario::after {
+    content: "";
+    position: absolute;
+    inset-inline: 0;
+    top: 100%;
+    height: 8rem;
+    background: #fff;
+    pointer-events: none;
+  }
+
   /* El modal de reserva no lleva .app-modal-screen y su regla nativa fija
      `inset: 0` con más peso: se le repite aquí el anclaje al área visible, para
      que con el teclado abierto no se descuelgue y deje ver /buscar por debajo. */
