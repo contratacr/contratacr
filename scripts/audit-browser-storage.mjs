@@ -41,6 +41,7 @@ const reviewed = new Map([
   ["src/components/analytics/meta-pixel.tsx", { count: 1, reason: "measurement preference; no account-owned data" }],
   ["src/components/push/push-token-manager.tsx", { count: 15, reason: "native push permission presentation, navigation handoff, and legacy token-cache cleanup; active tokens persist in Supabase" }],
   ["src/lib/notifications-cache.ts", { count: 2, reason: "backend notification render cache; Supabase remains the source of truth" }],
+  ["src/lib/notifications/use-actor-photos.ts", { count: 2, reason: "avatar render cache for notification rows; profiles remain the source of truth" }],
   ["src/app/[locale]/login/page.tsx", { count: 1, reason: "short-lived post-login presentation handoff" }],
   ["src/app/[locale]/dashboard/profesional/page.tsx", { count: 12, reason: "seen opportunity presentation state, section-return handoff, and profile-completion navigation cache; backend remains authoritative" }],
 ]);

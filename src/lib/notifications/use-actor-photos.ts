@@ -3,13 +3,46 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 
+// Las fotos ya resueltas viven fuera del componente y en el navegador: al volver
+// a Notificaciones las filas se pintan con la foto desde el primer cuadro, en vez
+// de mostrar el icono y cambiarlo un segundo después. Solo se consulta lo nuevo.
+const CLAVE_ALMACEN = "ccr:notification-actor-photos";
+const cacheFotos = new Map<string, string>();
+let cargadoDelAlmacen = false;
+
+function leerAlmacen(): void {
+  if (cargadoDelAlmacen || typeof window === "undefined") return;
+  cargadoDelAlmacen = true;
+  try {
+    const crudo = window.localStorage.getItem(CLAVE_ALMACEN);
+    if (!crudo) return;
+    for (const [id, url] of Object.entries(JSON.parse(crudo) as Record<string, string>)) {
+      if (typeof url === "string") cacheFotos.set(id, url);
+    }
+  } catch {
+    // El caché es una comodidad: sin él solo se vuelve a consultar.
+  }
+}
+
+function guardarAlmacen(): void {
+  if (typeof window === "undefined") return;
+  try {
+    // Se guardan las últimas 200: son ids cortos y urls, no crece sin control.
+    const recientes = [...cacheFotos.entries()].slice(-200);
+    window.localStorage.setItem(CLAVE_ALMACEN, JSON.stringify(Object.fromEntries(recientes)));
+  } catch {
+    // Sin espacio de almacenamiento, el caché en memoria sigue sirviendo.
+  }
+}
+
 // La notificación no guarda al autor, pero deja rastros para llegar a él: el
 // profesional de una publicación, la propuesta que apunta a su profesional, o
 // el perfil de quien empezó a seguirte. Se resuelve por lotes, nunca por fila.
 type ConDatos = { data?: Record<string, unknown> | null };
 
 export function useActorPhotos(items: ConDatos[]) {
-  const [fotos, setFotos] = useState<Record<string, string>>({});
+  leerAlmacen();
+  const [fotos, setFotos] = useState<Record<string, string>>(() => Object.fromEntries(cacheFotos));
 
   useEffect(() => {
     const idsProfesional = new Set<string>();
@@ -17,9 +50,10 @@ export function useActorPhotos(items: ConDatos[]) {
     const idsPerfil = new Set<string>();
     for (const item of items) {
       const datos = (item.data ?? {}) as Record<string, unknown>;
-      if (typeof datos.professional_id === "string") idsProfesional.add(datos.professional_id);
-      if (typeof datos.proposal_id === "string") idsPropuesta.add(datos.proposal_id);
-      if (typeof datos.follower_id === "string") idsPerfil.add(datos.follower_id);
+      // Lo ya conocido no se vuelve a pedir.
+      if (typeof datos.professional_id === "string" && !cacheFotos.has(datos.professional_id)) idsProfesional.add(datos.professional_id);
+      if (typeof datos.proposal_id === "string" && !cacheFotos.has(datos.proposal_id)) idsPropuesta.add(datos.proposal_id);
+      if (typeof datos.follower_id === "string" && !cacheFotos.has(datos.follower_id)) idsPerfil.add(datos.follower_id);
     }
     if (idsProfesional.size === 0 && idsPropuesta.size === 0 && idsPerfil.size === 0) return;
 
@@ -61,6 +95,8 @@ export function useActorPhotos(items: ConDatos[]) {
       for (const [idPropuesta, idProfesional] of Object.entries(profesionalPorPropuesta)) {
         if (siguiente[idProfesional]) siguiente[idPropuesta] = siguiente[idProfesional];
       }
+      for (const [id, url] of Object.entries(siguiente)) cacheFotos.set(id, url);
+      guardarAlmacen();
       setFotos((previas) => ({ ...previas, ...siguiente }));
     })();
 
