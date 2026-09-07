@@ -1224,7 +1224,7 @@
       "saved": {
         "title": "Favoritos",
         "empty": "No tienes favoritos todavía",
-        "emptyHint": "Agrega profesionales y ofertas a favoritos para encontrarlos fácilmente."
+        "emptyHint": "Agrega profesionales, ofertas y empleos a favoritos para encontrarlos fácilmente."
       },
       "notifications": {
         "title": "Notificaciones",
@@ -1409,7 +1409,7 @@
       "supportCta": "Contactar soporte",
       "heroEyebrow": "Guía rápida",
       "heroTitle": "Usa ContrataCR con orden",
-      "heroBody": "Estas guías explican cómo buscar profesionales, manejar tu panel, publicar ofertas y completar tu perfil sin perderte.",
+      "heroBody": "Estas guías explican cómo buscar profesionales, manejar tu panel, publicar empleos u ofertas y completar tu perfil sin perderte.",
       "exampleProfile": {
         "verified": "Verificado",
         "service": "Desarrollo web",
@@ -1456,7 +1456,7 @@
       "providerNoteTitle": "Si eres profesional:",
       "providerNoteBody": "Como profesional también puedes usar el panel cliente con la misma cuenta.",
       "clientNoteTitle": "Si solo usas ContrataCR como cliente:",
-      "clientNoteBody": "Las guías profesionales quedan disponibles si luego quieres ofrecer servicios o publicar ofertas.",
+      "clientNoteBody": "Las guías profesionales quedan disponibles si luego quieres ofrecer servicios, publicar empleos u ofertas.",
       "activateProfessionalCta": "Crear perfil profesional",
       "sections": {
         "client": "Para clientes",
@@ -1513,8 +1513,8 @@
       "items": {
         "clientPanel": {
           "title": "Panel cliente",
-          "short": "Reservas, solicitudes y favoritos",
-          "body": "El panel cliente reúne lo que necesitas para contratar y guardar contenido en favoritos.",
+          "short": "Reservas, solicitudes, postulaciones y favoritos",
+          "body": "El panel cliente reúne lo que necesitas para contratar, dar seguimiento a postulaciones y guardar contenido en favoritos.",
           "steps": [
             "Revisa tus solicitudes y proyectos desde sus secciones.",
             "Consulta el estado de los empleos a los que te postulaste.",
@@ -1561,7 +1561,7 @@
         "clientSaved": {
           "title": "Favoritos",
           "short": "Tus favoritos",
-          "body": "Favoritos reúne profesionales y ofertas que quieres revisar después.",
+          "body": "Favoritos reúne profesionales, ofertas y empleos que quieres revisar después.",
           "steps": [
             "Agrega profesionales a favoritos desde Buscar o desde su perfil.",
             "Guarda empleos y ofertas desde sus detalles.",
@@ -1620,7 +1620,7 @@
         "notificationsGuide": {
           "title": "Notificaciones",
           "short": "Avisos importantes y novedades",
-          "body": "Notificaciones reúne cambios de reservas, solicitudes, seguidores, reseñas, soporte y novedades relevantes.",
+          "body": "Notificaciones reúne cambios de reservas, solicitudes, postulaciones, seguidores, reseñas, soporte y novedades relevantes.",
           "steps": [
             "Revisa el contador en el navbar cuando tengas avisos pendientes.",
             "Recibe cambios de estado de postulaciones, solicitudes y proyectos.",
@@ -1692,7 +1692,7 @@
         "professionalPanel": {
           "title": "Panel profesional",
           "short": "Gestiona tu presencia profesional",
-          "body": "El panel profesional reúne reservas, solicitudes de clientes, casos de éxito, disponibilidad, servicios, ofertas, soporte, perfil y guías.",
+          "body": "El panel profesional reúne reservas, solicitudes de clientes, casos de éxito, disponibilidad, servicios, empleos, ofertas, soporte, perfil y guías.",
           "steps": [
             "Empieza por Completa tu perfil si tienes pasos pendientes.",
             "Mantén servicios, cobertura, contacto y disponibilidad actualizados.",
@@ -3196,7 +3196,7 @@
     "deleteAllBody": "Esta acción no se puede deshacer.",
     "cancel": "Cancelar",
     "noneList": "No tienes notificaciones.",
-    "emptySub": "Cuando haya novedades sobre reservas, solicitudes, ofertas, profesionales que sigues o tu cuenta, aparecerán aquí.",
+    "emptySub": "Cuando haya novedades sobre reservas, solicitudes, empleos, ofertas, profesionales que sigues o tu cuenta, aparecerán aquí.",
     "noUnread": "No tienes notificaciones sin leer.",
     "publishedAt": "Publicado {time}",
     "types": {
@@ -3495,10 +3495,10 @@
   },
   "comoFunciona": {
     "metaTitle": "Cómo usar ContrataCR | Guía para clientes y profesionales",
-    "metaDesc": "Conoce cómo usar ContrataCR para buscar profesionales, publicar solicitudes, descubrir ofertas y ofrecer servicios en Costa Rica.",
+    "metaDesc": "Conoce cómo usar ContrataCR para buscar profesionales, publicar solicitudes, encontrar empleos, descubrir ofertas y ofrecer servicios en Costa Rica.",
     "eyebrow": "Guía rápida",
     "title": "Cómo usar ContrataCR",
-    "subtitle": "Busca profesionales, publica una solicitud, descubre ofertas u ofrece tus servicios desde una sola cuenta.",
+    "subtitle": "Busca profesionales, publica una solicitud, encuentra empleos, descubre ofertas u ofrece tus servicios desde una sola cuenta.",
     "metric0Value": "2 formas",
     "metric0Label": "Buscar profesionales o publicar una solicitud.",
     "metric1Value": "0 comisiones",
@@ -3539,19 +3539,19 @@
     "clientBenefit2Title": "Horarios claros",
     "clientBenefit2Body": "Cuando el profesional publica disponibilidad, puedes elegir fecha y hora sin escribir de ida y vuelta. Si coordina directamente, lo haces por WhatsApp.",
     "clientBenefit3Title": "Favoritos y seguimiento",
-    "clientBenefit3Body": "Guarda profesionales y ofertas; revisa tus reservas y solicitudes y deja reseñas desde tu panel.",
+    "clientBenefit3Body": "Guarda profesionales, ofertas y empleos; revisa tus reservas, solicitudes y postulaciones, y deja reseñas desde tu panel.",
     "prosEyebrow": "Beneficios para profesionales",
     "prosBadge": "Profesionales",
     "prosTitle": "Un perfil que trabaja por ti",
     "prosSubtitle": "ContrataCR ayuda a que te encuentren, te comparen con confianza y te contacten sin quitarte control de tu agenda ni de tus precios.",
     "proFlowTitle": "Cómo empiezas a recibir clientes",
-    "proFlowDesc": "Crea tu perfil, explica tus servicios, mantén tu disponibilidad al día y publica ofertas cuando lo necesites.",
+    "proFlowDesc": "Crea tu perfil, explica tus servicios, mantén tu disponibilidad al día y publica empleos u ofertas cuando lo necesites.",
     "proStep0Title": "Crea tu perfil profesional",
     "proStep0Body": "Agrega foto, descripción, servicios, años de experiencia, precios de referencia, idiomas y zonas donde trabajas.",
     "proStep1Title": "Muestra tu trabajo",
     "proStep1Body": "Publica casos de éxito con fotos, completa tus lugares de trabajo y verifica tu identidad para generar más confianza.",
     "proStep2Title": "Gestiona solicitudes y publicaciones",
-    "proStep2Body": "Recibe reservas, responde solicitudes de clientes y crea ofertas desde tu panel profesional.",
+    "proStep2Body": "Recibe reservas, responde solicitudes de clientes, publica empleos, crea ofertas y administra postulaciones desde tu panel profesional.",
     "proBenefit0Title": "Identidad verificada",
     "proBenefit0Body": "El sello de verificación ayuda a que los clientes sepan que están hablando con una persona real y verificable.",
     "proBenefit1Title": "Casos de éxito",
@@ -3559,14 +3559,14 @@
     "proBenefit2Title": "Zonas de trabajo",
     "proBenefit2Body": "Define cantones, lugares exactos o zonas donde atiendes para aparecer en búsquedas relevantes.",
     "proBenefit3Title": "Notificaciones",
-    "proBenefit3Body": "Recibe avisos de reservas, solicitudes, cambios, cancelaciones y soporte con enlaces a cada detalle.",
+    "proBenefit3Body": "Recibe avisos de reservas, solicitudes, postulaciones, cambios, cancelaciones y soporte con enlaces a cada detalle.",
     "proBenefit4Title": "Sin comisiones por servicio",
     "proBenefit4Body": "El cliente te paga directamente. La plataforma no retiene dinero ni cobra porcentaje por cada trabajo.",
     "proBenefit5Title": "Más formas de crecer",
-    "proBenefit5Body": "Además de responder solicitudes, puedes publicar ofertas relacionadas con tus servicios.",
+    "proBenefit5Body": "Además de responder solicitudes, puedes publicar empleos y ofertas relacionadas con tus servicios.",
     "prosCta": "Crear perfil profesional",
     "marketplaceEyebrow": "Más oportunidades",
-    "marketplaceTitle": "Ofertas en el mismo ecosistema",
+    "marketplaceTitle": "Empleos y ofertas en el mismo ecosistema",
     "marketplaceSubtitle": "Explora oportunidades laborales y promociones sin salir de ContrataCR.",
     "marketplaceJobsTitle": "Encuentra empleos",
     "marketplaceJobsBody": "Busca por puesto, modalidad, experiencia y fecha. Postúlate con tus datos y CV, y sigue el estado desde tu panel.",
@@ -3618,7 +3618,7 @@
     "faq7Q": "¿Sirve para servicios grandes y pequeños?",
     "faq7A": "Sí. Puedes buscar desde una reparación rápida hasta servicios profesionales, salud, educación, tecnología, hogar, eventos y más.",
     "ctaTitle": "Pruébala y compártela",
-    "ctaSubtitle": "Si necesitas ayuda, busca profesionales. También puedes explorar ofertas o crear tu perfil para ofrecer servicios.",
+    "ctaSubtitle": "Si necesitas ayuda, busca profesionales. También puedes explorar empleos y ofertas o crear tu perfil para ofrecer servicios.",
     "ctaSearch": "Buscar profesionales",
     "ctaPublish": "Publicar una solicitud",
     "ctaOffer": "Ofrecer mis servicios",
@@ -3672,7 +3672,7 @@
     "faq10Q": "¿Cómo funcionan las ofertas?",
     "faq10A": "Busca por nombre o servicio y revisa las imágenes, el precio, la vigencia, la ubicación y las condiciones. Puedes guardar la oferta en Favoritos o contactar al profesional desde la publicación.",
     "faq11Q": "¿Qué puedo agregar a Favoritos?",
-    "faq11A": "Puedes guardar profesionales y ofertas. En el panel cliente usa los filtros de Favoritos para ver cada tipo por separado.",
+    "faq11A": "Puedes guardar profesionales, ofertas y empleos. En el panel cliente usa los filtros de Favoritos para ver cada tipo por separado.",
     "contactTitle": "¿No encontraste lo que buscas?",
     "contactSubtitle": "Nuestro equipo responde rápido.",
     "contactCta": "Contactar soporte",

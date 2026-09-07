@@ -1224,7 +1224,7 @@
       "saved": {
         "title": "Favorites",
         "empty": "No favorites yet",
-        "emptyHint": "Add professionals and offers to favorites to find them easily."
+        "emptyHint": "Add professionals, offers and jobs to favorites to find them easily."
       },
       "notifications": {
         "title": "Notifications",
@@ -1526,7 +1526,7 @@
       "supportCta": "Contact support",
       "heroEyebrow": "Quick guide",
       "heroTitle": "Use ContrataCR with clarity",
-      "heroBody": "These guides explain how to find professionals, manage your panel, post offers and complete your profile without getting lost.",
+      "heroBody": "These guides explain how to find professionals, manage your panel, post jobs or offers and complete your profile without getting lost.",
       "exampleProfile": {
         "verified": "Verified",
         "service": "Web development",
@@ -1573,7 +1573,7 @@
       "providerNoteTitle": "If you are a professional:",
       "providerNoteBody": "As a professional, you can also use the client panel with the same account.",
       "clientNoteTitle": "If you only use ContrataCR as a client:",
-      "clientNoteBody": "The professional guides stay available if you later want to offer services or post offers.",
+      "clientNoteBody": "The professional guides stay available if you later want to offer services or post jobs or offers.",
       "activateProfessionalCta": "Create professional profile",
       "sections": {
         "client": "For clients",
@@ -1630,8 +1630,8 @@
       "items": {
         "clientPanel": {
           "title": "Client panel",
-          "short": "Bookings, requests and favorites",
-          "body": "The client panel gathers what you need to hire and save content to favorites.",
+          "short": "Bookings, requests, applications and favorites",
+          "body": "The client panel gathers what you need to hire, follow up on applications and save content to favorites.",
           "steps": [
             "Review your requests and projects from their sections.",
             "Check the status of jobs you applied to.",
@@ -1678,7 +1678,7 @@
         "clientSaved": {
           "title": "Favorites",
           "short": "Your favorites",
-          "body": "Favorites gathers professionals and offers you want to review later.",
+          "body": "Favorites gathers professionals, offers and jobs you want to review later.",
           "steps": [
             "Add professionals to favorites from Search or from their profile.",
             "Save jobs and offers from their details.",
@@ -1737,7 +1737,7 @@
         "notificationsGuide": {
           "title": "Notifications",
           "short": "Important alerts and updates",
-          "body": "Notifications gathers changes to bookings, requests, followers, reviews, support and relevant news.",
+          "body": "Notifications gathers changes to bookings, requests, applications, followers, reviews, support and relevant news.",
           "steps": [
             "Check the badge in the navbar when you have pending alerts.",
             "Receive status changes for applications, requests and projects.",
@@ -1809,7 +1809,7 @@
         "professionalPanel": {
           "title": "Professional panel",
           "short": "Manage your professional presence",
-          "body": "The professional panel gathers bookings, client requests, past work, availability, services, offers, support, profile and guides.",
+          "body": "The professional panel gathers bookings, client requests, past work, availability, services, jobs, offers, support, profile and guides.",
           "steps": [
             "Start with Complete your profile if you have pending steps.",
             "Keep services, coverage, contact and availability updated.",
@@ -3196,7 +3196,7 @@
     "deleteAllBody": "This action can't be undone.",
     "cancel": "Cancel",
     "noneList": "You have no notifications.",
-    "emptySub": "When there's news about bookings, requests, offers, professionals you follow or your account, it will show up here.",
+    "emptySub": "When there's news about bookings, requests, jobs, offers, professionals you follow or your account, it will show up here.",
     "noUnread": "You have no unread notifications.",
     "publishedAt": "Published {time}",
     "types": {
@@ -3495,10 +3495,10 @@
   },
   "comoFunciona": {
     "metaTitle": "How to use ContrataCR | Guide for clients and professionals",
-    "metaDesc": "Learn how to use ContrataCR to find professionals, post requests, discover offers and offer your services in Costa Rica.",
+    "metaDesc": "Learn how to use ContrataCR to find professionals, post requests, find jobs, discover offers and offer your services in Costa Rica.",
     "eyebrow": "Quick guide",
     "title": "How to use ContrataCR",
-    "subtitle": "Find professionals, post a request, discover offers or offer your services from a single account.",
+    "subtitle": "Find professionals, post a request, find jobs, discover offers or offer your services from a single account.",
     "metric0Value": "2 ways",
     "metric0Label": "Find professionals or create a project.",
     "metric1Value": "0 commissions",
@@ -3539,19 +3539,19 @@
     "clientBenefit2Title": "Clear schedules",
     "clientBenefit2Body": "When a professional posts their availability, you can choose a date and time without messages back and forth. If they coordinate directly, you do it by WhatsApp.",
     "clientBenefit3Title": "Favorites and tracking",
-    "clientBenefit3Body": "Save professionals and offers; review your bookings and requests and leave reviews from your panel.",
+    "clientBenefit3Body": "Save professionals, offers and jobs; review your bookings, requests and applications, and leave reviews from your panel.",
     "prosEyebrow": "Benefits for professionals",
     "prosBadge": "Professionals",
     "prosTitle": "A profile that works for you",
     "prosSubtitle": "ContrataCR helps you get found, compared with confidence, and contacted without taking away control of your schedule or your prices.",
     "proFlowTitle": "How do you start getting clients?",
-    "proFlowDesc": "Create your profile, describe your services, keep your availability current and post offers when you need to.",
+    "proFlowDesc": "Create your profile, describe your services, keep your availability current and post jobs or offers when you need to.",
     "proStep0Title": "Create your professional profile",
     "proStep0Body": "Add a photo, description, services, years of experience, reference prices, languages, and areas where you work.",
     "proStep1Title": "Showcase your work",
     "proStep1Body": "Publish success stories with photos, complete your workplaces, and verify your identity to build more trust.",
     "proStep2Title": "Manage requests and listings",
-    "proStep2Body": "Receive bookings, reply to client requests and create offers from your professional panel.",
+    "proStep2Body": "Receive bookings, reply to client requests, post jobs, create offers and manage applications from your professional panel.",
     "proBenefit0Title": "Verified identity",
     "proBenefit0Body": "The verification badge helps clients know they are talking to a real, verifiable person.",
     "proBenefit1Title": "Success stories",
@@ -3559,14 +3559,14 @@
     "proBenefit2Title": "Work areas",
     "proBenefit2Body": "Define cantons, exact locations, or areas where you serve to appear in relevant searches.",
     "proBenefit3Title": "Notifications",
-    "proBenefit3Body": "Get notified about bookings, requests, changes, cancellations and support, with links to each detail.",
+    "proBenefit3Body": "Get notified about bookings, requests, applications, changes, cancellations and support, with links to each detail.",
     "proBenefit4Title": "No service commissions",
     "proBenefit4Body": "The client pays you directly. The platform does not hold money or charge a percentage on each job.",
     "proBenefit5Title": "More ways to grow",
-    "proBenefit5Body": "Besides replying to requests, you can post offers related to your services.",
+    "proBenefit5Body": "Besides replying to requests, you can post jobs and offers related to your services.",
     "prosCta": "Create a professional profile",
     "marketplaceEyebrow": "More opportunities",
-    "marketplaceTitle": "Offers in the same ecosystem",
+    "marketplaceTitle": "Jobs and offers in the same ecosystem",
     "marketplaceSubtitle": "Explore job opportunities and promotions without leaving ContrataCR.",
     "marketplaceJobsTitle": "Find jobs",
     "marketplaceJobsBody": "Search by role, work mode, experience, and date. Apply with your details and CV, then track the status from your dashboard.",
@@ -3618,7 +3618,7 @@
     "faq7Q": "Is it suitable for both large and small services?",
     "faq7A": "Yes. You can search for everything from quick repairs to professional services, health, education, technology, home, events, and more.",
     "ctaTitle": "Try it and share it",
-    "ctaSubtitle": "If you need help, find professionals. You can also explore offers or create your profile to offer services.",
+    "ctaSubtitle": "If you need help, find professionals. You can also explore jobs and offers or create your profile to offer services.",
     "ctaSearch": "Find professionals",
     "ctaPublish": "Post a request",
     "ctaOffer": "Offer my services",
@@ -3672,7 +3672,7 @@
     "faq10Q": "How do offers work?",
     "faq10A": "Search by name or service and review images, price, availability period, location, and terms. You can save the offer to Favorites or contact the professional from the listing.",
     "faq11Q": "What can I add to Favorites?",
-    "faq11A": "You can save professionals and offers. In the client panel, use the Favorites filters to see each type separately.",
+    "faq11A": "You can save professionals, offers and jobs. In the client panel, use the Favorites filters to see each type separately.",
     "contactTitle": "Didn't find what you were looking for?",
     "contactSubtitle": "Our team replies fast.",
     "contactCta": "Contact support",

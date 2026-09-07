@@ -43,7 +43,8 @@ import { trackMetaEvent } from "@/lib/analytics/meta-pixel";
 import { trackInteraction } from "@/lib/analytics/interaction-events";
 import { cldLarge, cldThumb } from "@/lib/cloudinary";
 import { formatOfferPrice, type ProfessionalOffer } from "@/lib/offers";
-import { type JobPost } from "@/lib/jobs";
+import { formatJobSalary, WORKPLACE_TYPES, type JobPost } from "@/lib/jobs";
+import { EMPLEOS_VISIBLE } from "@/lib/feature-flags";
 import { PerfilSkeleton } from "@/components/ui/section-skeletons";
 import { ProfileStickyActions } from "@/components/professionals/profile-sticky-actions";
 import { ProgressiveImage } from "@/components/ui/progressive-image";
@@ -138,6 +139,7 @@ export default function ProfilePage() {
   const [professional, setProfessional] = useState<ProfessionalDetail | null>(null);
   const [profileSlots, setProfileSlots] = useState<ScheduleSlot[]>([]);
   const [publicOffers, setPublicOffers] = useState<ProfessionalOffer[]>([]);
+  const [publicJobs, setPublicJobs] = useState<JobPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [proNotFound, setProNotFound] = useState(false);
   // The logged-in viewer's role-aware panel route — drives the "Volver a mi panel"
@@ -275,6 +277,7 @@ export default function ProfilePage() {
         setProfessional(warm.pro);
         setProfileSlots(warm.slots);
         setPublicOffers(warm.offers);
+        setPublicJobs(warm.jobs);
         setLoading(false);
       } else {
         setLoading(true);
@@ -321,6 +324,7 @@ export default function ProfilePage() {
       setProfessional(fresh.pro);
       setProfileSlots(fresh.slots);
       setPublicOffers(fresh.offers);
+      setPublicJobs(fresh.jobs);
       const { data: { user } } = authResult;
       setIsAuthenticated(!!user);
       setViewerId(user?.id ?? null);
@@ -552,8 +556,8 @@ export default function ProfilePage() {
     { id: "resenas",        label: t("tabs.resenas") },
     ...(hasCasos ? [{ id: "casos" as Tab, label: t("tabs.casos") }] : []),
     ...(publicOffers.length > 0 ? [{ id: "ofertas" as Tab, label: locale === "en" ? "Offers" : "Ofertas" }] : []),
-    // Empleos está pausado en toda la app y la formación se lee dentro de
-    // Información: seis pestañas eran demasiadas para una sola pantalla.
+    ...(EMPLEOS_VISIBLE && publicJobs.length > 0 ? [{ id: "empleos" as Tab, label: locale === "en" ? "Jobs" : "Empleos" }] : []),
+    // La formación se lee dentro de Información: ocho pestañas eran demasiadas.
     { id: "sobre",          label: t("tabs.sobre") },
   ];
 
@@ -986,6 +990,48 @@ export default function ProfilePage() {
                             </Link>
                           );
                         })}
+                      </div>
+                    </section>
+                  )}
+
+                  {activeTab === "empleos" && (
+                    <section className="space-y-5">
+                      <div>
+                        <h2 className="text-lg font-semibold text-[#111827]">
+                          {locale === "en" ? "Jobs" : "Empleos"}
+                        </h2>
+                        <p className="mt-1 text-sm text-[#6b7280]">
+                          {locale === "en"
+                            ? "Open opportunities published by this professional."
+                            : "Oportunidades abiertas publicadas por este profesional."}
+                        </p>
+                      </div>
+                      <div className="divide-y divide-[#e5eaf0] overflow-hidden rounded-xl border border-[#dbe4ee] bg-white">
+                        {publicJobs.map((job) => (
+                          <Link
+                            key={job.id}
+                            href={`/empleos/${job.id}?from=${encodeURIComponent(`/profesionales/${routeSlug}?tab=empleos`)}`}
+                            className="group block min-w-0 px-5 py-4 transition-colors hover:bg-[#f4fbfe]"
+                          >
+                            <span className="block min-w-0">
+                              <span className="block truncate text-base font-semibold text-[#111827] group-hover:text-[#009FD9]">
+                                {job.title}
+                              </span>
+                              <span className="mt-1 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-sm text-[#6b7280]">
+                                <span>{WORKPLACE_TYPES[job.workplace_type]}</span>
+                                {job.location_label && (
+                                  <>
+                                    <span aria-hidden="true" className="text-[#c4ccd6]">&middot;</span>
+                                    <span className="min-w-0 truncate">{job.location_label}</span>
+                                  </>
+                                )}
+                              </span>
+                              <span className="mt-1.5 block text-sm font-bold text-[#009FD9]">
+                                {formatJobSalary(job)}
+                              </span>
+                            </span>
+                          </Link>
+                        ))}
                       </div>
                     </section>
                   )}
