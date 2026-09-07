@@ -3,8 +3,22 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import {
-  X, MapPin, Shield, ShieldAlert, ArrowLeft, ChevronLeft, ChevronRight, Lock, CalendarPlus,
-  Check, Sun, Sunset, Moon, CalendarCheck, MessageCircle,
+  X,
+  MapPin,
+  Shield,
+  ShieldAlert,
+  ArrowLeft,
+  ChevronLeft,
+  ChevronRight,
+  Lock,
+  CalendarPlus,
+  Check,
+  Sun,
+  Sunset,
+  Moon,
+  CalendarCheck,
+  MessageCircle,
+  CalendarDays,
 } from "lucide-react";
 import { SuccessIcon } from "@/components/ui/success-icon";
 import { useTranslations, useLocale } from "next-intl";
@@ -1649,6 +1663,17 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                     <h3 className="text-xl font-bold text-[#111827] mb-2">{t("success.title")}</h3>
                     <p className="text-sm text-[#6b7280] max-w-xs mx-auto">{t("success.desc")}</p>
                   </div>
+                  {/* Lo que acaba de reservar, en una línea por dato: la pantalla de
+                      éxito decía "quedó agendada" sin decir cuándo ni de qué. */}
+                  <div className="w-full max-w-xs rounded-2xl border border-[#e3edf5] bg-[#f8fbfd] px-4 py-3 text-left text-[13px] leading-relaxed text-[#374151]">
+                    <p className="font-semibold text-[#162543]">{description.trim() || (effectiveCategory ? getCategoryLabel(effectiveCategory, locale) : categoryName || getCategoryLabel(professional.categoryId ?? "", locale))}</p>
+                    {selectedDate && (
+                      <p className="mt-1 inline-flex items-center gap-1.5"><CalendarDays className="h-4 w-4 text-[#0089bb]" />{formatDateDisplay(selectedDate, locale)}{selectedTime ? ` · ${selectedTime}` : ""}</p>
+                    )}
+                    {initialLocationLabel && (
+                      <p className="mt-0.5 inline-flex items-center gap-1.5"><MapPin className="h-4 w-4 text-[#0089bb]" />{initialLocationLabel}</p>
+                    )}
+                  </div>
                   {createdBookingId && <DirectChatLauncher professionalId={professional.id} professionalName={professional.fullName} bookingId={createdBookingId} contextTitle={description || categoryName} buttonLabel="WhatsApp" analyticsSource="booking" className="w-full max-w-xs rounded-xl px-5 py-3 text-sm font-semibold" />}
                   {selectedDate && selectedTime && (
                     <button
@@ -1656,7 +1681,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                       className="inline-flex items-center justify-center gap-2 w-full max-w-xs border border-[#e5e7eb] text-[#374151] hover:border-[#009FD9] hover:text-[#009FD9] font-semibold py-2.5 rounded-xl transition-colors text-sm"
                     >
                       <CalendarPlus className="h-4 w-4" />
-                      Agregar a mi calendario
+                      {t("success.addToCalendar")}
                     </button>
                   )}
                 </div>
@@ -1776,7 +1801,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
               <div className="shrink-0 flex flex-col gap-2.5 border-t border-[#f3f4f6] bg-white px-5 py-3.5 shadow-[0_-10px_24px_rgba(15,23,42,0.06)] md:px-6 md:py-4 md:shadow-none">
                 {/* Lead to the just-made request (it's at the top of Solicitudes), not a
                     dead-end "Listo". Closing still refreshes /buscar so the slot disappears. */}
-                <Button size="md" className="w-full" onClick={goToMyRequest}>
+                <Button size="md" className="w-full bg-[#162543] hover:bg-[#233a5f]" onClick={goToMyRequest}>
                   {t("success.viewRequest")}
                 </Button>
                 <Button variant="outline" size="md" className="w-full" onClick={resetAndClose}>

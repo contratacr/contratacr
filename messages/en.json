@@ -1013,7 +1013,8 @@
       "desc": "Your appointment is booked. You can coordinate the details with the professional.",
       "whatsapp": "WhatsApp",
       "viewRequest": "View my appointment",
-      "close": "Done"
+      "close": "Done",
+      "addToCalendar": "Add to my calendar"
     },
     "verified": "Verified",
     "verifiedTitle": "Verified identity",

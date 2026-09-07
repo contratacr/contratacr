@@ -1013,7 +1013,8 @@
       "desc": "Tu cita quedó agendada. Puedes coordinar los detalles con el profesional.",
       "whatsapp": "WhatsApp",
       "viewRequest": "Ver mi cita",
-      "close": "Listo"
+      "close": "Listo",
+      "addToCalendar": "Agregar a mi calendario"
     },
     "verified": "Verificado",
     "verifiedTitle": "Identidad verificada",
