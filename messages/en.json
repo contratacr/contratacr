@@ -3865,7 +3865,8 @@
       "installLink": "Add app to phone",
       "proCta": "Offer my services",
       "publishCardTitle": "Post what you need",
-      "publishCardBody": "Professionals in your area reply and you choose."
+      "publishCardBody": "Professionals in your area reply and you choose.",
+      "publishOr": "or"
     },
     "pros": {
       "headingPre": "Services for whatever you need in",

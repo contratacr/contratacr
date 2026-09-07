@@ -1121,7 +1121,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
           onFocusOutside={keepSelectMenuOpen}
           className={cn(
             "ccr-booking-modal-panel fixed inset-0 z-50 lg:inset-x-auto lg:bottom-auto lg:left-1/2 lg:top-1/2 lg:-translate-x-1/2 lg:-translate-y-1/2",
-            "h-[var(--app-visual-viewport-height)] max-h-[var(--app-visual-viewport-height)] w-full overflow-hidden rounded-none bg-[#f4f7fa] shadow-none lg:h-auto lg:max-h-[720px] lg:w-[95vw] lg:max-w-xl lg:rounded-3xl lg:shadow-2xl",
+            "h-dvh max-h-dvh min-h-[100svh] w-full overflow-hidden rounded-none bg-[#f4f7fa] shadow-none lg:h-auto lg:min-h-0 lg:max-h-[720px] lg:w-[95vw] lg:max-w-xl lg:rounded-3xl lg:shadow-2xl",
             "flex flex-col",
             "lg:max-h-[720px]",
             "data-[state=open]:animate-in data-[state=closed]:animate-out",

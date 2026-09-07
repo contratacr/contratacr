@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, type RefObject } from "react";
 import { createPortal } from "react-dom";
-import { ChevronRight, ClipboardList, Loader2, Search, MapPin } from "lucide-react";
+import { ArrowRight, Loader2, Search, MapPin } from "lucide-react";
 import { Link, useRouter } from "@/i18n/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import Image from "next/image";
@@ -832,23 +832,23 @@ export function LandingHero() {
           </div>
         </form>
 
-        {/* La segunda puerta, como tarjeta: un enlace dentro de un párrafo es un
-            blanco diminuto y se lee como una nota al pie. Aquí toda la fila es
-            tocable —icono, texto y flecha—, se ve que lleva a algún lado y sigue
-            sin competir con "Buscar", que es el único botón lleno del bloque. */}
+        {/* La segunda puerta: separador "o" y una píldora de contorno. La tarjeta
+            con icono pesaba como un aviso y competía con el buscador; así se lee
+            como lo que es —la otra forma de empezar— sin robarle el primer plano
+            a "Buscar", que sigue siendo el único botón lleno. */}
+        <div className="mt-4 flex items-center gap-3 sm:mx-auto sm:mt-5 sm:max-w-md">
+          <span className="h-px flex-1 bg-[#dbe4ee]" />
+          <span className="text-[12px] font-medium uppercase tracking-[0.14em] text-[#9ca3af]">{t("publishOr")}</span>
+          <span className="h-px flex-1 bg-[#dbe4ee]" />
+        </div>
         <Link
           href="/dashboard/profesional?tab=sent_projects&openPublish=1"
-          className="group mt-3 flex w-full items-center gap-3 rounded-2xl border border-[#dfe8f0] bg-white/95 px-4 py-3 text-left shadow-[0_10px_28px_-24px_rgba(15,23,42,0.55)] transition-colors hover:border-[#9bd8ef] hover:bg-white sm:mx-auto sm:mt-3.5 sm:w-auto sm:self-center sm:px-5"
+          className="group mt-3 inline-flex h-12 w-full items-center justify-center gap-2 rounded-full border border-[#cfdce8] bg-white/95 px-6 text-[15px] font-bold text-[#162543] transition-colors hover:border-[#9bd8ef] hover:bg-white hover:text-[#0089bb] sm:mx-auto sm:w-auto"
         >
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#ccecf8] bg-[#EAF7FD] text-[#0089bb]">
-            <ClipboardList className="h-[18px] w-[18px]" />
-          </span>
-          <span className="min-w-0 flex-1">
-            <span className="block text-[15px] font-bold leading-tight text-[#162543]">{t("publishCardTitle")}</span>
-            <span className="mt-0.5 block text-[13px] leading-snug text-[#6b7280]">{t("publishCardBody")}</span>
-          </span>
-          <ChevronRight className="h-5 w-5 shrink-0 text-[#9ca3af] transition-colors group-hover:text-[#0089bb]" />
+          {t("publishCardTitle")}
+          <ArrowRight className="h-4 w-4 text-[#9ca3af] transition-transform group-hover:translate-x-0.5 group-hover:text-[#0089bb]" />
         </Link>
+        <p className="mt-2 text-center text-[13px] leading-snug text-[#6b7280]">{t("publishCardBody")}</p>
 
         {/* Sentinel — IntersectionObserver in navbar watches this */}
         <div id="hero-search-sentinel" aria-hidden className="h-0" />

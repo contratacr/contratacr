@@ -3865,7 +3865,8 @@
       "installLink": "Agregar app al celular",
       "proCta": "Ofrecer mis servicios",
       "publishCardTitle": "Publica lo que necesitas",
-      "publishCardBody": "Los profesionales de tu zona te responden y tú eliges."
+      "publishCardBody": "Los profesionales de tu zona te responden y tú eliges.",
+      "publishOr": "o"
     },
     "pros": {
       "headingPre": "Servicios para lo que necesitas en",
