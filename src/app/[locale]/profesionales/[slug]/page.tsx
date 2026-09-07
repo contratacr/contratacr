@@ -5,7 +5,7 @@ import { useTranslations, useLocale } from "next-intl";
 import { useParams } from "next/navigation";
 import {
   MapPin, Shield, ArrowLeft, Star, Briefcase, Banknote, BadgeCheck, Languages,
-  Share2, Flag, Award, SearchX, Globe, BadgePercent, Users,
+  Share2, Check, Flag, Award, SearchX, Globe, BadgePercent, Users,
 } from "lucide-react";
 import { Modal } from "@/components/ui/modal";
 import { VerifiedSeal } from "@/components/ui/verified-seal";
@@ -505,6 +505,7 @@ export default function ProfilePage() {
     else setBookingReg(true);
   }
 
+  const [linkCopiado, setLinkCopiado] = useState(false);
   async function shareProfile() {
     if (!professional) return;
     trackInteraction({ type: "profile_share", professionalId: professional.id, source: "profile", locale });
@@ -513,11 +514,18 @@ export default function ProfilePage() {
     const text = professional.businessName?.trim()
       ? `${professional.businessName.trim()} en ContrataCR`
       : `${proDisplayName(professional.fullName)} en ContrataCR`;
+    // En el teléfono abre la hoja nativa de compartir (WhatsApp, Mensajes, copiar…);
+    // cancelarla no es un error. Sin hoja (escritorio), copia el enlace y lo dice:
+    // antes el botón no daba ninguna señal de que algo había pasado.
     if (navigator.share) {
-      await navigator.share({ title: text, text, url });
+      try { await navigator.share({ title: text, text, url }); } catch { /* cancelado */ }
       return;
     }
-    await navigator.clipboard?.writeText(url);
+    try {
+      await navigator.clipboard?.writeText(url);
+      setLinkCopiado(true);
+      window.setTimeout(() => setLinkCopiado(false), 2000);
+    } catch { /* sin portapapeles: no hay nada mejor que hacer */ }
   }
 
   // Favorites: the SAME system as the /buscar cards. Keyed on `professional.id`
@@ -636,7 +644,7 @@ export default function ProfilePage() {
                   {/* Una sola familia: los tres botones con la misma altura, el mismo
                       grosor de borde y la misma píldora. "Seguir" no se estira (su ancho
                       lo da el texto) y los dos íconos quedan pegados a él, no sueltos. */}
-                  <div className="mt-3 flex flex-wrap items-center gap-2">
+                  <div className="mt-3 flex w-[360px] max-w-full items-center gap-2">
                     <FollowButton
                       professionalId={professional.id}
                       isOwn={isOwn}
@@ -644,20 +652,26 @@ export default function ProfilePage() {
                       initialFollowers={professional.followerCount ?? 0}
                       onCountChange={updateFollowerCount}
                       onSelfAction={() => setSelfMsg(SELF_MSG.follow)}
-                      className="box-border h-10 w-auto min-w-[104px] shrink-0 rounded-full border border-[#162543] bg-white px-5 text-[13px] text-[#162543] hover:bg-[#eef1f6] aria-pressed:border-[#d9e1ea] aria-pressed:bg-[#f0f2f5] aria-pressed:text-[#111827] aria-pressed:hover:bg-[#e5e9ee]"
+                      className="box-border h-9 min-w-0 flex-1 rounded-xl border border-transparent bg-[#009fd9] px-3 text-white hover:bg-[#008fc3] aria-pressed:border-transparent aria-pressed:bg-[#f0f2f5] aria-pressed:text-[#111827] aria-pressed:hover:bg-[#e5e9ee]"
                     />
                     <SaveButton
                       pro={savedPro}
                       isOwn={isOwn}
-                      className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-[#d9e1ea] bg-white text-[#526277] transition-colors hover:border-[#b8c6d6] hover:bg-[#f7f9fb]"
+                      withLabel
+                      className="box-border h-9 min-w-0 flex-1 whitespace-nowrap rounded-xl border border-[#d9e1ea] bg-white px-3 py-0 text-[#102746] hover:border-[#b8c6d6] hover:bg-[#f7f9fb] hover:text-[#102746] aria-pressed:border-transparent aria-pressed:bg-[#f0f2f5] aria-pressed:text-[#111827] aria-pressed:hover:border-transparent aria-pressed:hover:bg-[#e5e9ee] aria-pressed:hover:text-[#111827]"
                     />
                     <button
                       type="button"
                       onClick={shareProfile}
-                      aria-label={t("shareProfile")}
-                      className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-[#d9e1ea] bg-white text-[#526277] transition-colors hover:border-[#b8c6d6] hover:bg-[#f7f9fb]"
+                      aria-label={linkCopiado ? t("linkCopied") : t("shareProfile")}
+                      title={linkCopiado ? t("linkCopied") : t("shareProfile")}
+                      className={cn(
+                        "grid h-9 w-9 shrink-0 place-items-center rounded-xl border bg-white transition-colors",
+                        linkCopiado ? "border-[#b8e7cf] bg-[#f2fbf6] text-[#15803d]" : "border-[#d9e1ea] text-[#102746] hover:border-[#b8c6d6] hover:bg-[#f7f9fb]",
+                      )}
                     >
-                      <Share2 className="h-4 w-4" />
+                      {linkCopiado ? <Check className="h-4 w-4" /> : <Share2 className="h-4 w-4" />}
+                      <span className="sr-only" aria-live="polite">{linkCopiado ? t("linkCopied") : ""}</span>
                     </button>
                   </div>
                 </div>

@@ -709,7 +709,8 @@
     "close": "Close",
     "backToMessages": "Back to messages",
     "availabilityTab": "Availability",
-    "appBarTitle": "Professional profile"
+    "appBarTitle": "Professional profile",
+    "linkCopied": "Link copied"
   },
   "auth": {
     "login": {

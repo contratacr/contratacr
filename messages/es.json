@@ -709,7 +709,8 @@
     "close": "Cerrar",
     "backToMessages": "Volver a mensajes",
     "availabilityTab": "Disponibilidad",
-    "appBarTitle": "Perfil profesional"
+    "appBarTitle": "Perfil profesional",
+    "linkCopied": "Enlace copiado"
   },
   "auth": {
     "login": {
