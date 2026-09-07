@@ -890,6 +890,17 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
 
   const calendarDays = getCalendarDays(currentYear, currentMonth);
   const slots = selectedDate ? getSlotsForDate(selectedDate) : [];
+
+  // Tira de días: el mes entero ocupaba tanto que las horas quedaban fuera de
+  // pantalla y había que desplazarse para ver si servían. Con los próximos días
+  // disponibles en una fila, la fecha y la hora se eligen sin bajar. El mes
+  // completo sigue a un toque, para fechas lejanas.
+  const [verMesCompleto, setVerMesCompleto] = useState(false);
+  const proximosDias: Date[] = [];
+  for (let i = 0; proximosDias.length < 14 && i < 120; i += 1) {
+    const dia = new Date(today.getFullYear(), today.getMonth(), today.getDate() + i);
+    if (isDayAvailable(dia)) proximosDias.push(dia);
+  }
   const hasAnyAvailability = usesExplicitSlots || Object.values(availability).some((d) => d.enabled);
 
   // Cédula is requested at booking for EVERY client who doesn't have one on file
@@ -1261,9 +1272,48 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                     </div>
                   ) : (
                     // Two sub-columns on desktop: CALENDAR (left) and that day's SLOTS (right).
-                    <div className="grid gap-5 md:grid-cols-2">
+                    <div className="grid min-w-0 gap-5 md:grid-cols-2">
                       {/* CALENDAR */}
-                      <div>
+                      <div className="min-w-0">
+                        {!verMesCompleto && proximosDias.length > 0 ? (
+                          <>
+                            <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                              {proximosDias.map((dia) => {
+                                const iso = formatDateISO(dia);
+                                const elegido = selectedDate === iso;
+                                const esHoy = iso === formatDateISO(today);
+                                return (
+                                  <button
+                                    key={iso}
+                                    type="button"
+                                    onClick={() => { setSelectedDate(iso); setSelectedTime(""); }}
+                                    className={cn(
+                                      "flex h-[68px] w-[62px] shrink-0 flex-col items-center justify-center gap-0.5 rounded-2xl border transition-colors",
+                                      elegido ? "border-[#009FD9] bg-[#009FD9] text-white" : "border-[#e5e7eb] bg-white text-[#162543] hover:border-[#009FD9]",
+                                    )}
+                                  >
+                                    <span className={cn("text-[11px] font-semibold uppercase tracking-wide", elegido ? "text-white/80" : "text-[#9ca3af]")}>
+                                      {esHoy ? t("calendar.today") : dia.toLocaleDateString(dateLocale(locale), { weekday: "short" }).replace(".", "")}
+                                    </span>
+                                    <span className="text-[17px] font-bold leading-none">{dia.getDate()}</span>
+                                    <span className={cn("text-[11px] leading-none", elegido ? "text-white/80" : "text-[#9ca3af]")}>
+                                      {dia.toLocaleDateString(dateLocale(locale), { month: "short" }).replace(".", "")}
+                                    </span>
+                                  </button>
+                                );
+                              })}
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => setVerMesCompleto(true)}
+                              className="mt-2 inline-flex items-center gap-1.5 text-[13px] font-semibold text-[#0089bb] hover:text-[#006e96]"
+                            >
+                              <CalendarDays className="h-4 w-4" />
+                              {t("calendar.seeMonth")}
+                            </button>
+                          </>
+                        ) : (
+                          <>
                         {/* Month navigation */}
                         <div className="flex items-center justify-between mb-3">
                           <button
@@ -1326,10 +1376,21 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                             );
                           })}
                         </div>
+                      
+                            <button
+                              type="button"
+                              onClick={() => setVerMesCompleto(false)}
+                              className="mt-2 inline-flex items-center gap-1.5 text-[13px] font-semibold text-[#0089bb] hover:text-[#006e96]"
+                            >
+                              <ChevronLeft className="h-4 w-4" />
+                              {t("calendar.seeDays")}
+                            </button>
+                          </>
+                        )}
                       </div>
 
                       {/* SLOTS for the selected day, grouped by franja (Mañana / Tarde / Noche). */}
-                      <div ref={slotsRef} className="md:border-l md:border-[#f3f4f6] md:pl-5 scroll-mt-4">
+                      <div ref={slotsRef} className="min-w-0 md:border-l md:border-[#f3f4f6] md:pl-5 scroll-mt-4">
                         {!selectedDate ? (
                           <div className="flex h-full min-h-[180px] flex-col items-center justify-center rounded-2xl border border-[#e5e7eb] bg-[#f9fafb] px-4 text-center">
                             <CalendarCheck className="h-7 w-7 text-[#cbd5e1]" />

@@ -1049,7 +1049,9 @@
       "noSlots": "No times available for this day.",
       "morning": "Morning",
       "afternoon": "Afternoon",
-      "night": "Evening"
+      "night": "Evening",
+      "seeMonth": "See full month",
+      "seeDays": "See next days"
     },
     "describeGreeting": "Hi, <b>{name}</b>.",
     "bookingAs": "Booking as <b>{name}</b> · ID {cedula}",

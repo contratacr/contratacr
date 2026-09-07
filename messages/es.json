@@ -1049,7 +1049,9 @@
       "noSlots": "Sin horarios disponibles para este día.",
       "morning": "Mañana",
       "afternoon": "Tarde",
-      "night": "Noche"
+      "night": "Noche",
+      "seeMonth": "Ver mes completo",
+      "seeDays": "Ver próximos días"
     },
     "describeGreeting": "Hola, <b>{name}</b>.",
     "bookingAs": "Reservas como <b>{name}</b> · identificación {cedula}",
