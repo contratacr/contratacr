@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { useLocale, useTranslations } from "next-intl";
-import { Search, X, ChevronDown } from "lucide-react";
+import { Search, X, ChevronDown, ArrowLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAnchoredPosition } from "@/components/ui/anchored-dropdown";
 import { CategorySuggestionBox } from "@/components/ui/category-suggestion";
@@ -43,6 +43,16 @@ export function CategorySearch({
   const customCategories = useCustomCategories();
   void customCategories;
   const [open, setOpen] = useState(autoFocus);
+  // En el teléfono el desplegable de 340px quedaba a medias detrás del teclado:
+  // ahí el selector ocupa toda la pantalla, con el buscador arriba y filas grandes.
+  const [pantallaChica, setPantallaChica] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 639px)");
+    const actualizar = () => setPantallaChica(mq.matches);
+    queueMicrotask(actualizar);
+    mq.addEventListener("change", actualizar);
+    return () => mq.removeEventListener("change", actualizar);
+  }, []);
   const [query, setQuery] = useState("");
   const [activeGroupId, setActiveGroupId] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -173,10 +183,10 @@ export function CategorySearch({
       {/* Dropdown — portaled to <body> so no parent overflow can clip it, and
           positioned absolute in DOCUMENT coords so it stays attached below the
           field (no detach when the page/keyboard shifts). */}
-      {open && pos && typeof document !== "undefined" && createPortal(
+      {open && typeof document !== "undefined" && (pantallaChica || pos) && createPortal(
         <div
           ref={panelRef}
-          style={{
+          style={pantallaChica || !pos ? undefined : {
             position: "absolute",
             left: pos.left,
             width: pos.width,
@@ -184,8 +194,27 @@ export function CategorySearch({
             maxHeight: pos.maxH,
             zIndex: 9999,
           }}
-          className="bg-white border border-[#e5e7eb] rounded-xl shadow-2xl overflow-hidden flex flex-col"
+          className={cn(
+            "bg-white overflow-hidden flex flex-col",
+            pantallaChica
+              ? "app-fullscreen-modal fixed inset-0 z-[9999] h-[var(--app-visual-viewport-height,100dvh)]"
+              : "border border-[#e5e7eb] rounded-xl shadow-2xl",
+          )}
         >
+          {pantallaChica && (
+            <div className="grid h-14 shrink-0 grid-cols-[52px_minmax(0,1fr)_52px] items-center border-b border-[#f3f4f6] px-1">
+              <button
+                type="button"
+                onClick={() => { setOpen(false); setQuery(""); setActiveGroupId(null); }}
+                aria-label={t("back")}
+                className="grid h-11 w-11 place-items-center rounded-full text-[#111827] transition-colors hover:bg-[#f3f4f6]"
+              >
+                <ArrowLeft className="h-5 w-5" />
+              </button>
+              <p className="truncate text-center text-base font-bold text-[#111827]">{t("sheetTitle")}</p>
+              <span />
+            </div>
+          )}
           {/* Search input */}
           <div className="p-2 border-b border-[#f3f4f6]">
             <div className="relative flex items-center">
@@ -196,7 +225,11 @@ export function CategorySearch({
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder={t("searchPlaceholder")}
-                className="w-full pl-9 pr-3 py-2 text-sm text-[#111827] placeholder:text-[#9ca3af] bg-[#f9fafb] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#009FD9]/20"
+                enterKeyHint="search"
+                className={cn(
+                  "w-full pl-9 pr-3 text-[#111827] placeholder:text-[#9ca3af] bg-[#f9fafb] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#009FD9]/20",
+                  pantallaChica ? "h-11 text-base" : "py-2 text-sm",
+                )}
               />
               {query && (
                 <button type="button" onClick={() => setQuery("")} className="absolute right-2 text-[#9ca3af] hover:text-[#374151]">
