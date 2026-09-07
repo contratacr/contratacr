@@ -21,6 +21,7 @@ const availabilityCache = new Map<string, { availabilityPublic: boolean; slots: 
 import { trackMetaEvent } from "@/lib/analytics/meta-pixel";
 import { trackInteraction } from "@/lib/analytics/interaction-events";
 import { DirectChatLauncher } from "@/components/professionals/direct-chat-launcher";
+import { cn } from "@/lib/utils";
 import { ContactButton } from "@/components/professionals/contact-button";
 import { useNativeApp } from "@/hooks/use-native-app";
 
@@ -783,11 +784,19 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
   // All actions are blocked on the pro's OWN card.
   const hasSchedule = canBook && hasUpcoming;
 
+  // Mismo botón (píldora, calendario, rótulo) en todos lados; el relleno dice la
+  // jerarquía según dónde está: en la tarjeta de /buscar es la ÚNICA acción, así
+  // que lleva el turquesa de marca y la lista queda uniforme con las tarjetas que
+  // solo tienen "Enviar mensaje"; en el perfil convive con "Enviar mensaje" y
+  // va en marino para que las dos acciones se distingan.
   const verHorarioButton = (
     <button
       type="button"
       onClick={(e) => { e.stopPropagation(); openBooking(); }}
-      className="inline-flex h-11 w-full items-center justify-center gap-1.5 rounded-full bg-[#162543] text-[13px] font-bold text-white transition-colors hover:bg-[#233a5f]"
+      className={cn(
+        "inline-flex h-11 w-full items-center justify-center gap-1.5 rounded-full text-[13px] font-bold text-white transition-colors",
+        stacked ? "bg-[#162543] hover:bg-[#233a5f]" : "bg-[#009FD9] hover:bg-[#0089bb]",
+      )}
     >
       <CalendarDays className="h-4 w-4" />
       {t("viewFullSchedule")}
