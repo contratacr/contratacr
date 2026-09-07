@@ -47,12 +47,14 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
             clases del armazón nativo que hasta ahora ponía la hidratación. Sin
             esto, la portada pintaba una vez con acomodo web y un instante
             después saltaba al nativo (barra de abajo, contenedor fijo) — el
-            parpadeo del arranque. La hidratación después solo confirma. */}
+            parpadeo del arranque. La hidratación después solo confirma.
+            Ojo con las barras: dentro de la plantilla hay que escribir \\/ para que
+            al navegador le llegue \\/ y la expresión regular no quede rota. */}
         <script
           type="text/javascript"
           suppressHydrationWarning
           dangerouslySetInnerHTML={{
-            __html: `try{if(document.documentElement.classList.contains("ccr-native-app")){document.body.classList.add("ccr-native-app");var r=window.location.pathname;if(!/(^|\/)(publicar-proyecto|(empleos|ofertas)\/publicar)(\/|$)/.test(r)){document.documentElement.classList.add("ccr-native-bottom-nav-visible");document.body.classList.add("ccr-native-bottom-nav-visible")}if(/(^|\/)buscar(\/|$)/.test(r)){document.documentElement.classList.add("ccr-native-search-route");document.body.classList.add("ccr-native-search-route")}}}catch(e){}`,
+            __html: `try{if(document.documentElement.classList.contains("ccr-native-app")){document.body.classList.add("ccr-native-app");var r=window.location.pathname;if(!/(^|\\/)(publicar-proyecto|(empleos|ofertas)\\/publicar)(\\/|$)/.test(r)){document.documentElement.classList.add("ccr-native-bottom-nav-visible");document.body.classList.add("ccr-native-bottom-nav-visible")}if(/(^|\\/)buscar(\\/|$)/.test(r)){document.documentElement.classList.add("ccr-native-search-route");document.body.classList.add("ccr-native-search-route")}}}catch(e){}`,
           }}
         />
         <StaticNativeFirstRunPrepaint />

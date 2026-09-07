@@ -182,6 +182,9 @@ export default function ProfilePage() {
   const [viewerId, setViewerId] = useState<string | null>(null);
   const [slug, setSlug] = useState("");
   const [reportOpen, setReportOpen] = useState(false);
+  // Aviso de "enlace copiado" del botón Compartir. Vive aquí, con el resto de
+  // los hooks: debajo de los `return` de carga React contaba un hook de más.
+  const [linkCopiado, setLinkCopiado] = useState(false);
   const nombreEnBarra = professional
     ? getProfessionalDisplayName(professional.fullName, professional.businessName).primaryMobile
     : "";
@@ -505,7 +508,6 @@ export default function ProfilePage() {
     else setBookingReg(true);
   }
 
-  const [linkCopiado, setLinkCopiado] = useState(false);
   async function shareProfile() {
     if (!professional) return;
     trackInteraction({ type: "profile_share", professionalId: professional.id, source: "profile", locale });
