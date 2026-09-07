@@ -25,8 +25,8 @@ import { useAuth } from "@/hooks/use-auth";
 import { Modal } from "@/components/ui/modal";
 import { CategorySuggestionBox } from "@/components/ui/category-suggestion";
 import { CategoryGroupPicker, type CategoryPickerGroup } from "@/components/ui/category-group-picker";
-import { anyVideoConsultCategory, getCategoryLabel, getAllCategories, normalizeText } from "@/lib/data/categories";
-import { useCustomCategories } from "@/lib/data/use-custom-categories";
+import { anyVideoConsultCategory, getCategoryLabel, getAllCategories, normalizeText, ALL_CATEGORIES } from "@/lib/data/categories";
+import { refreshCustomCategories, useCustomCategories } from "@/lib/data/use-custom-categories";
 import { WorkplacesPicker, type Workplace } from "@/components/maps/workplaces-picker";
 import { computeSearchAreas, primaryArea } from "@/lib/location";
 import { useAvailabilityCheck } from "@/hooks/use-availability-check";
@@ -207,9 +207,18 @@ function ServiceCatalogModal({
     setActiveGroupId(null);
   }
 
+  // Al abrir sin catálogo dinámico, se pide otra vez: así el listado se completa
+  // solo en vez de quedarse corto hasta recargar la página.
+  useEffect(() => {
+    if (open && getAllCategories().length === 0) void refreshCustomCategories({ force: true });
+  }, [open]);
+
   const pickerList = useMemo(() => {
     const excluded = new Set(excludedIds);
-    const base = getAllCategories().filter((c) => !excluded.has(c.id));
+    // Si el catálogo dinámico aún no llegó (o llegó vacío), se usa el fijo: una
+    // lista en blanco dejaba la pantalla muerta, sin servicios ni explicación.
+    const catalogo = getAllCategories();
+    const base = (catalogo.length > 0 ? catalogo : ALL_CATEGORIES).filter((c) => !excluded.has(c.id));
     const q = normalizeText(query.trim());
     if (!q) return base;
     return base.filter(
@@ -597,11 +606,21 @@ export default function RegisterProfessionalPage() {
       if (!cancelled && data) {
         setRedirecting(true);
         writeStoredMode("offer");
-        router.replace("/dashboard/profesional?mode=offer");
+        router.replace(destinoTrasCrear().replace(/^\/(es|en)/, ""));
       }
     })();
     return () => { cancelled = true; };
   }, [authLoading, currentUser, router]);
+
+  // Quien llegó aquí para publicar algo (o para reservar) vuelve a eso al
+  // terminar; sin destino guardado, al panel profesional de siempre.
+  function destinoTrasCrear(sufijo = ""): string {
+    const guardado = typeof window === "undefined" ? null : new URLSearchParams(window.location.search).get("redirect");
+    if (guardado && guardado.startsWith("/") && !guardado.startsWith("//")) {
+      return /^\/(es|en)(\/|$)/.test(guardado) ? guardado : `/${locale}${guardado}`;
+    }
+    return `/${locale}/dashboard/profesional?mode=offer${sufijo}`;
+  }
 
   function handlePhotoSelect(file: File) {
     setPhotoFile(file);
@@ -904,7 +923,7 @@ export default function RegisterProfessionalPage() {
       // next tick could cancel it, and the registration would never reach Meta.
       // The loader is already on screen, so the pause is invisible.
       window.setTimeout(() => {
-        window.location.href = `/${locale}/dashboard/profesional?mode=offer${welcomeParams}`;
+        window.location.href = destinoTrasCrear(welcomeParams);
       }, 300);
       return;
     } catch (err: unknown) {
@@ -1244,7 +1263,7 @@ export default function RegisterProfessionalPage() {
                         }}
                       />
                     </>
-                  ) : (
+                  ) : form2.watch("category") ? (
                     <button
                       type="button"
                       onClick={() => {
@@ -1255,7 +1274,7 @@ export default function RegisterProfessionalPage() {
                     >
                       <Plus className="h-4 w-4" /> {t("addAnotherProfession")}
                     </button>
-                  )}
+                  ) : null}
                   </div>
                 </div>
 
