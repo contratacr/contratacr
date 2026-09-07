@@ -336,13 +336,18 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
 
   useEffect(() => {
     if (typeof document === "undefined") return;
+    // La clase va en <body> y en <html>: hay reglas que miran uno u otro.
+    const raiz = document.documentElement;
     if (!open) {
       document.body.classList.remove("ccr-booking-modal-open");
+      raiz.classList.remove("ccr-booking-modal-open");
       return;
     }
     document.body.classList.add("ccr-booking-modal-open");
+    raiz.classList.add("ccr-booking-modal-open");
     return () => {
       document.body.classList.remove("ccr-booking-modal-open");
+      raiz.classList.remove("ccr-booking-modal-open");
     };
   }, [open]);
 
@@ -1132,7 +1137,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
           onFocusOutside={keepSelectMenuOpen}
           className={cn(
             "ccr-booking-modal-panel fixed inset-0 z-50 lg:inset-x-auto lg:bottom-auto lg:left-1/2 lg:top-1/2 lg:-translate-x-1/2 lg:-translate-y-1/2",
-            "h-dvh max-h-dvh min-h-[100svh] w-full overflow-hidden rounded-none bg-[#f4f7fa] shadow-none lg:h-auto lg:min-h-0 lg:max-h-[720px] lg:w-[95vw] lg:max-w-xl lg:rounded-3xl lg:shadow-2xl",
+            "h-dvh max-h-dvh w-full overflow-hidden rounded-none bg-[#f4f7fa] shadow-none lg:h-auto lg:max-h-[720px] lg:w-[95vw] lg:max-w-xl lg:rounded-3xl lg:shadow-2xl",
             "flex flex-col",
             "lg:max-h-[720px]",
             "data-[state=open]:animate-in data-[state=closed]:animate-out",

@@ -825,7 +825,8 @@ html[data-keyboard-open].ccr-native-app body.ccr-native-search-route .ccr-native
 }
 
 body.ccr-booking-modal-open .ccr-search-bottom-sheet,
-html body.ccr-booking-modal-open .ccr-search-bottom-sheet {
+html body.ccr-booking-modal-open .ccr-search-bottom-sheet,
+html.ccr-booking-modal-open .ccr-search-bottom-sheet {
   visibility: hidden !important;
   pointer-events: none !important;
 }
@@ -852,10 +853,8 @@ html body.ccr-search-filters-open .ccr-search-bottom-sheet {
 }
 
 @media (max-width: 1023px) {
-  body.ccr-booking-modal-open .ccr-booking-modal-panel,
-  html body.ccr-booking-modal-open .ccr-booking-modal-panel,
-  body.ccr-native-app.ccr-booking-modal-open .ccr-booking-modal-panel,
-  html.ccr-native-app body.ccr-booking-modal-open .ccr-booking-modal-panel {
+  html:not([data-keyboard-open]) body.ccr-booking-modal-open .ccr-booking-modal-panel,
+  html:not([data-keyboard-open]).ccr-native-app body.ccr-booking-modal-open .ccr-booking-modal-panel {
     inset: 0 !important;
     left: 0 !important;
     right: 0 !important;
