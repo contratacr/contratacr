@@ -339,8 +339,15 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
   useEffect(() => {
     if (section !== "projects") return;
     const openPublish = () => setShowPublish(true);
+    // El formulario puede abrirse fuera de esta sección (desde el inicio): al
+    // publicar avisa por este evento para que la lista traiga la nueva solicitud.
+    const alPublicar = () => { void refreshProjectRows(); };
     window.addEventListener(OPEN_PUBLISH_PROJECT_EVENT, openPublish);
-    return () => window.removeEventListener(OPEN_PUBLISH_PROJECT_EVENT, openPublish);
+    window.addEventListener("contratacr:projects-changed", alPublicar);
+    return () => {
+      window.removeEventListener(OPEN_PUBLISH_PROJECT_EVENT, openPublish);
+      window.removeEventListener("contratacr:projects-changed", alPublicar);
+    };
   }, [section]);
 
   useEffect(() => {
@@ -557,7 +564,8 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
   const projectCounts = bucketCounts(projects.map((p) => proyectoBucket(p.status)));
   // Solo se ofrecen las etapas con contenido; si la elegida quedó vacía se cae
   // a la primera disponible (mismo patrón que las propuestas del profesional).
-  const bookingTabs = SOLICITUD_TABS.filter((tab) => (bookingCounts[tab.id] ?? 0) > 0);
+  // Las dos etapas siempre visibles (con su 0 si hace falta), igual que en Reservas recibidas.
+  const bookingTabs = SOLICITUD_TABS;
   const effectiveBookingFilter = bookingTabs.some((tab) => tab.id === bookingFilter)
     ? bookingFilter : (bookingTabs[0]?.id ?? bookingFilter);
   const projectTabs = PROYECTO_TABS.filter((tab) => (projectCounts[tab.id] ?? 0) > 0);

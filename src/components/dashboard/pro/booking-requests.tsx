@@ -249,8 +249,9 @@ export function BookingRequests() {
 
   // Every tab shows its count.
   const counts = bucketCounts(bookings.map((b) => solicitudBucketPro(b.status, b.scheduled_date)));
-  // Solo etapas con contenido; si la elegida quedó vacía, la primera disponible.
-  const visibleTabs = SOLICITUD_TABS_PRO.filter((tab) => (counts[tab.id] ?? 0) > 0);
+  // Las dos etapas siempre visibles (con su 0 si hace falta): una sola pestaña
+  // suelta desorientaba y no dejaba ver que existe la otra.
+  const visibleTabs = SOLICITUD_TABS_PRO;
   const effectiveFilter = visibleTabs.some((tab) => tab.id === filter) ? filter : (visibleTabs[0]?.id ?? filter);
   const enEtapa = bookings.filter((b) => solicitudBucketPro(b.status, b.scheduled_date) === effectiveFilter);
 

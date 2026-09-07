@@ -57,6 +57,7 @@ import { openInNewTabOnDesktop } from "@/lib/desktop-new-tab";
 import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
 import { PanelSkeleton } from "@/components/ui/section-skeletons";
+import { PublishProjectModal } from "@/components/projects/publish-project-modal";
 import { withPromiseTimeout } from "@/lib/promise-timeout";
 import { getDashboardCache, setDashboardCache } from "@/lib/dashboard-prefetch-cache";
 import {
@@ -594,6 +595,24 @@ export default function DashboardPage() {
   const { sentinelaRef, cabeceraRef, conLinea } = useHairlineOnScroll();
   const router = useRouter();
   const searchParams = useSearchParams();
+  // Publicar una solicitud desde el inicio abre el formulario DE UNA VEZ, encima
+  // de lo que esté cargando: antes se veía medio segundo del panel antes del modal.
+  const [publicarDirecto, setPublicarDirecto] = useState(() => searchParams.get("openPublish") === "1");
+  const publicarLimpiadoRef = useRef(false);
+  useEffect(() => {
+    if (!publicarDirecto || publicarLimpiadoRef.current) return;
+    publicarLimpiadoRef.current = true;
+    // Se quita el parámetro para que la sección no abra un segundo formulario.
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("openPublish");
+    router.replace(`?${params.toString()}`, { scroll: false });
+  }, [publicarDirecto, router, searchParams]);
+  const formularioPublicar = publicarDirecto ? (
+    <PublishProjectModal
+      onClose={() => setPublicarDirecto(false)}
+      onSuccess={() => window.dispatchEvent(new Event("contratacr:projects-changed"))}
+    />
+  ) : null;
   const t = useTranslations("proPanel");
   const tc = useTranslations("clientActivity");
   const locale = useLocale();
@@ -1585,7 +1604,7 @@ export default function DashboardPage() {
   const professionalRecordResolving = !!user && canOffer(user) && !pro && !proLoadError;
   if (isSigningOut()) return null;
   if (authLoading || loading || !user || (pendingProfessionalSignup && !pro) || professionalRecordResolving) {
-    return <PanelSkeleton />;
+    return <>{formularioPublicar}<PanelSkeleton /></>;
   }
 
   const proProfile = Array.isArray(pro?.profiles) ? pro?.profiles[0] : pro?.profiles;
@@ -1965,12 +1984,13 @@ export default function DashboardPage() {
   // The proxy normally handles this before the page is served. Keep this
   // client-side guard for SPA transitions and stale prefetched dashboard trees.
   if (!authLoading && user && pendingProfessionalSignup) {
-    return <PanelSkeleton />;
+    return <>{formularioPublicar}<PanelSkeleton /></>;
   }
 
   return (
     <div className="min-h-screen flex flex-col bg-[#fafafa]">
       <Navbar mobileSearch={false} />
+      {formularioPublicar}
       {networkModal && (
         <FollowNetworkTab initialView={networkModal} title={displayName} onBack={() => setNetworkModal(null)} />
       )}
