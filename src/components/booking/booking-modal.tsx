@@ -20,6 +20,7 @@ import {
   MessageCircle,
   CalendarDays,
   BadgeCheck,
+  UserRound,
 } from "lucide-react";
 import { SuccessIcon } from "@/components/ui/success-icon";
 import { useTranslations, useLocale } from "next-intl";
@@ -1120,7 +1121,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
           onFocusOutside={keepSelectMenuOpen}
           className={cn(
             "ccr-booking-modal-panel fixed inset-0 z-50 lg:inset-x-auto lg:bottom-auto lg:left-1/2 lg:top-1/2 lg:-translate-x-1/2 lg:-translate-y-1/2",
-            "h-dvh max-h-dvh w-full overflow-hidden rounded-none bg-white shadow-none lg:h-auto lg:w-[95vw] lg:max-w-xl lg:rounded-3xl lg:shadow-2xl",
+            "h-dvh max-h-dvh w-full overflow-hidden rounded-none bg-[#f4f7fa] shadow-none lg:h-auto lg:w-[95vw] lg:max-w-xl lg:rounded-3xl lg:shadow-2xl",
             "flex flex-col",
             "lg:max-h-[720px]",
             "data-[state=open]:animate-in data-[state=closed]:animate-out",
@@ -1131,7 +1132,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
           <Dialog.Title className="sr-only">
             {`${t("title")} - ${proDisplayName(professional.fullName)}`}
           </Dialog.Title>
-          <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-white">
+          <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-[#f4f7fa]">
             {/* Cabecera con el mismo patrón que las demás pantallas: salida a la
                 izquierda (flecha en el teléfono, X en escritorio), título centrado y
                 el avance en una barra fina bajo la línea, en vez de puntitos. */}
@@ -1159,7 +1160,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
             )}
 
             {/* Step content */}
-            <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto bg-[#f4f7fa] px-4 py-4 md:px-6">
+            <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto bg-[#f4f7fa] px-4 pb-[max(env(safe-area-inset-bottom),1rem)] pt-4 md:px-6 md:pb-4">
               {/* Con quién es la cita: una fila compacta, no medio modal. */}
               {step !== "success" && (
                 <div className="flex shrink-0 items-center gap-3 rounded-2xl border border-[#e5edf4] bg-white px-4 py-3">
@@ -1307,7 +1308,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                                 disabled={!available}
                                 onClick={() => { setSelectedDate(dateStr); setSelectedTime(""); }}
                                 className={cn(
-                                  "relative aspect-square flex items-center justify-center rounded-xl text-sm font-medium transition-all",
+                                  "relative aspect-square flex items-center justify-center rounded-full text-sm font-medium transition-all",
                                   isSelected && "bg-[#162543] text-white shadow-sm",
                                   !isSelected && available && "hover:bg-[#EBF5FB] text-[#111827] cursor-pointer",
                                   !isSelected && available && isToday && "text-[#009FD9]",
@@ -1338,7 +1339,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                           <p className="text-sm text-[#9ca3af] text-center py-6">{t("calendar.noSlots")}</p>
                         ) : (
                           <>
-                            <p className="mb-3 text-sm font-semibold text-[#111827]">{formatDateDisplay(selectedDate, locale)}</p>
+                            <p className="mb-3 text-sm font-semibold text-[#162543]">{formatDateDisplay(selectedDate, locale)}</p>
                             {[
                               { key: "morning", label: t("calendar.morning"), Icon: Sun, items: slots.filter((s) => parseInt(s, 10) < 12) },
                               { key: "afternoon", label: t("calendar.afternoon"), Icon: Sunset, items: slots.filter((s) => { const h = parseInt(s, 10); return h >= 12 && h < 18; }) },
@@ -1354,7 +1355,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                                       key={slot}
                                       onClick={() => setSelectedTime(slot)}
                                       className={cn(
-                                        "w-full rounded-xl border px-2 py-2 text-sm font-medium tabular-nums text-center transition-all",
+                                        "h-11 w-full rounded-full border text-sm font-semibold tabular-nums transition-all",
                                         selectedTime === slot
                                           ? "bg-[#162543] text-white border-[#162543]"
                                           : "bg-white text-[#374151] border-[#e5e7eb] hover:border-[#162543] hover:text-[#162543]"
@@ -1380,22 +1381,21 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                 <div className="flex flex-col gap-5">
                   <div>
                     <h3 className="text-lg font-semibold text-[#111827]">{t("step4.title")}</h3>
+                    {/* Lo ya elegido, en el mismo bloque de resumen que la pantalla final:
+                        antes eran tres líneas sueltas —un emoji en turquesa, un saludo y la
+                        identificación en verde— que parecían avisos y no un resumen. */}
                     {selectedDate && (
-                      <p className="text-sm text-[#009FD9] font-medium mt-1">
-                        📅 {formatDateDisplay(selectedDate, locale)}{selectedTime ? ` · ${selectedTime}` : ""}
-                      </p>
-                    )}
-                    {isLoggedIn && clientName && (
-                      <p className="text-sm text-[#6b7280] mt-1">
-                        {t.rich("describeGreeting", { name: clientName.split(" ")[0], b: (c) => <span className="font-medium text-[#374151]">{c}</span> })}
-                      </p>
-                    )}
-                    {/* Stored identity (logged-in + already has cédula) — shown, not re-asked.
-                        Name + cédula only; the DOB (health) is rendered by renderSelfDobField
-                        below so it carries the auto-filled/locked + "Corregir" treatment. */}
-                    {isLoggedIn && profileCedula && (
-                      <div className="text-xs text-[#15803d] mt-1 leading-relaxed">
-                        <span>{t.rich("bookingAs", { name: clientName || t("youLower"), cedula: profileCedula, b: (c) => <strong>{c}</strong> })}</span>
+                      <div className="mt-2.5 rounded-xl bg-[#f8fbfd] px-3.5 py-2.5 text-[13px] leading-relaxed text-[#374151]">
+                        <p className="inline-flex items-center gap-1.5">
+                          <CalendarDays className="h-4 w-4 shrink-0 text-[#0089bb]" />
+                          <span className="font-semibold text-[#162543]">{formatDateDisplay(selectedDate, locale)}{selectedTime ? ` · ${selectedTime}` : ""}</span>
+                        </p>
+                        {isLoggedIn && profileCedula && (
+                          <p className="mt-1 flex items-start gap-1.5 text-[#6b7280]">
+                            <UserRound className="mt-px h-4 w-4 shrink-0 text-[#9ca3af]" />
+                            <span>{t.rich("bookingAs", { name: clientName || t("youLower"), cedula: profileCedula, b: (c) => <span className="font-medium text-[#374151]">{c}</span> })}</span>
+                          </p>
+                        )}
                       </div>
                     )}
                   </div>
