@@ -42,7 +42,9 @@ export function ImagePreviewDialog({
           )}
         >
           {children}
-          <span className="pointer-events-none absolute inset-0 grid place-items-center rounded-full bg-[#111827]/0 text-white opacity-0 transition group-hover:bg-[#111827]/35 group-hover:opacity-100 group-focus-visible:bg-[#111827]/35 group-focus-visible:opacity-100">
+          {/* Solo con puntero fino: en el teléfono el :hover se queda pegado tras el
+              toque y la foto parecía cambiar (capa oscura + lupa encima). */}
+          <span className="pointer-events-none absolute inset-0 grid place-items-center rounded-full bg-[#111827]/0 text-white opacity-0 transition [@media(hover:hover)]:group-hover:bg-[#111827]/35 [@media(hover:hover)]:group-hover:opacity-100 group-focus-visible:bg-[#111827]/35 group-focus-visible:opacity-100">
             <ZoomIn className="h-5 w-5 drop-shadow" />
           </span>
         </button>

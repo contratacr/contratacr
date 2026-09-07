@@ -633,7 +633,10 @@ export default function ProfilePage() {
                       <span>{locationText}</span>
                     </div>
                   )}
-                  <div className="mt-3 flex w-[360px] max-w-full items-center gap-2">
+                  {/* Una sola familia: los tres botones con la misma altura, el mismo
+                      grosor de borde y la misma píldora. "Seguir" no se estira (su ancho
+                      lo da el texto) y los dos íconos quedan pegados a él, no sueltos. */}
+                  <div className="mt-3 flex flex-wrap items-center gap-2">
                     <FollowButton
                       professionalId={professional.id}
                       isOwn={isOwn}
@@ -641,18 +644,18 @@ export default function ProfilePage() {
                       initialFollowers={professional.followerCount ?? 0}
                       onCountChange={updateFollowerCount}
                       onSelfAction={() => setSelfMsg(SELF_MSG.follow)}
-                      className="box-border h-10 min-w-0 flex-1 rounded-full border-2 border-[#162543] bg-white px-3 text-[13px] text-[#162543] hover:bg-[#eef1f6] aria-pressed:border-[#e5e7eb] aria-pressed:bg-[#f0f2f5] aria-pressed:text-[#111827] aria-pressed:hover:bg-[#e5e9ee]"
+                      className="box-border h-10 w-auto min-w-[104px] shrink-0 rounded-full border border-[#162543] bg-white px-5 text-[13px] text-[#162543] hover:bg-[#eef1f6] aria-pressed:border-[#d9e1ea] aria-pressed:bg-[#f0f2f5] aria-pressed:text-[#111827] aria-pressed:hover:bg-[#e5e9ee]"
                     />
                     <SaveButton
                       pro={savedPro}
                       isOwn={isOwn}
-                      className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-[#d9e1ea] bg-white transition-colors hover:border-[#b8c6d6] hover:bg-[#f7f9fb]"
+                      className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-[#d9e1ea] bg-white text-[#526277] transition-colors hover:border-[#b8c6d6] hover:bg-[#f7f9fb]"
                     />
                     <button
                       type="button"
                       onClick={shareProfile}
                       aria-label={t("shareProfile")}
-                      className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-[#d9e1ea] bg-white text-[#102746] transition-colors hover:border-[#b8c6d6] hover:bg-[#f7f9fb]"
+                      className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-[#d9e1ea] bg-white text-[#526277] transition-colors hover:border-[#b8c6d6] hover:bg-[#f7f9fb]"
                     >
                       <Share2 className="h-4 w-4" />
                     </button>

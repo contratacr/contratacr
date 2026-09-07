@@ -3826,8 +3826,8 @@
       "popular": "Popular:",
       "installLink": "Agregar app al celular",
       "proCta": "Ofrecer mis servicios",
-      "publishCta": "Publicar lo que necesito",
-      "publishHint": "¿No sabés a quién llamar? Contá qué necesitás y los profesionales te escriben."
+      "publishCta": "Publicá tu solicitud",
+      "publishLead": "¿No sabés a quién llamar?"
     },
     "pros": {
       "headingPre": "Servicios para lo que necesitas en",

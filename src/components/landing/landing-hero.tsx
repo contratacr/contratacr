@@ -832,18 +832,17 @@ export function LandingHero() {
           </div>
         </form>
 
-        {/* Segunda puerta: quien no sabe a quién llamar publica lo que necesita.
-            Un botón de contorno bajo "Buscar", no un enlace de nota al pie: así
-            las dos formas de empezar se ven como dos opciones. */}
-        <div className="mt-3 flex flex-col items-center gap-1.5 sm:mt-4">
+        {/* La segunda puerta cierra el bloque de búsqueda, en una sola línea:
+            un botón suelto competía con "Buscar" y el párrafo sobraba. */}
+        <p className="mt-3 text-center text-[13px] leading-snug text-[#4b5563] sm:mt-3.5 sm:text-sm">
+          {t("publishLead")}{" "}
           <Link
             href="/dashboard/profesional?tab=sent_projects&openPublish=1"
-            className="inline-flex h-11 w-full items-center justify-center rounded-full border-2 border-[#162543] bg-white px-5 text-[13px] font-bold text-[#162543] transition-colors hover:bg-[#eef1f6] sm:w-auto"
+            className="font-bold text-[#0089bb] underline decoration-[#9bd8ef] decoration-2 underline-offset-4 transition-colors hover:text-[#006e96] hover:decoration-[#0089bb]"
           >
             {t("publishCta")}
           </Link>
-          <p className="max-w-sm text-center text-xs leading-snug text-[#6b7280]">{t("publishHint")}</p>
-        </div>
+        </p>
 
         {/* Sentinel — IntersectionObserver in navbar watches this */}
         <div id="hero-search-sentinel" aria-hidden className="h-0" />
