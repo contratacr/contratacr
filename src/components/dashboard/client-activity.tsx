@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
-import { CalendarDays, FolderOpen, ClipboardList, Plus, CalendarClock, Wrench, Users, FileText, CheckCircle2, MessageCircle } from "lucide-react";
+import { CalendarDays, FolderOpen, ClipboardList, Plus, CalendarClock, Wrench, Users, FileText, CheckCircle2, MessageCircle, Star } from "lucide-react";
 import { DirectChatLauncher } from "@/components/professionals/direct-chat-launcher";
 import { CardActionsMenu, type CardAction } from "@/components/dashboard/card-actions-menu";
 import { formatBookingWhen } from "@/lib/booking-when";
@@ -101,6 +101,9 @@ type Proposal = {
     slug: string;
     whatsapp?: string;
     verification_status?: string | null;
+    category_id?: string | null;
+    rating_avg?: number | null;
+    review_count?: number | null;
     profiles: { full_name: string; avatar_url?: string };
     categories: { name: string };
   };
@@ -911,6 +914,24 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                                                   <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-[#bbf7d0] bg-white px-2 py-0.5 text-[11px] font-semibold text-[#15803d]"><CheckCircle2 className="h-3 w-3" />{t("helpedBy")}</span>
                                                 )}
                                               </div>
+                                              {/* Lo mismo que muestra /buscar para elegir: rubro y calificación. El perfil
+                                                  completo (casos, reseñas) queda a un toque en el nombre. */}
+                                              {(() => {
+                                                const rubro = proposal.professionals?.category_id ? getCategoryLabel(proposal.professionals.category_id, locale) : null;
+                                                const resenas = Number(proposal.professionals?.review_count ?? 0);
+                                                const nota = Number(proposal.professionals?.rating_avg ?? 0);
+                                                return (
+                                                  <p className="mt-0.5 flex flex-wrap items-center gap-x-1.5 text-xs text-[#6b7280]">
+                                                    {rubro && <span className="truncate">{rubro}</span>}
+                                                    {rubro && <span aria-hidden>·</span>}
+                                                    {resenas > 0 ? (
+                                                      <span className="inline-flex items-center gap-1"><Star className="h-3 w-3 fill-[#f59e0b] text-[#f59e0b]" />{nota.toFixed(1)} · {t("reviewsCount", { count: resenas })}</span>
+                                                    ) : (
+                                                      <span>{t("noReviewsYet")}</span>
+                                                    )}
+                                                  </p>
+                                                );
+                                              })()}
                                               {priceParts && (
                                                 <p className="mt-0.5 text-xs font-bold text-[#0089bb]">{priceParts.amount}<span className="ml-1 text-[9px] font-semibold tracking-wide text-[#9ca3af]">{priceParts.taxSuffix}</span></p>
                                               )}

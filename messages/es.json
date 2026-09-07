@@ -2706,7 +2706,9 @@
     "helpedBy": "Te ayudó",
     "publishCta": "Pedir un profesional",
     "bookingHappened": "Ya me atendieron",
-    "bookAgain": "Volver a contratar"
+    "bookAgain": "Volver a contratar",
+    "reviewsCount": "{count, plural, one {# reseña} other {# reseñas}}",
+    "noReviewsYet": "Sin reseñas todavía"
   },
   "clientPage": {
     "greeting": "Hola, {name} 👋",
