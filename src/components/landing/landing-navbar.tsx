@@ -858,7 +858,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
       if (arriba !== null) setContenidoDebajo(arriba > 4);
     };
     const principal = document.querySelector("main");
-    setContenidoDebajo(((document.scrollingElement?.scrollTop ?? 0) > 4) || ((principal?.scrollTop ?? 0) > 4));
+    queueMicrotask(() => setContenidoDebajo(((document.scrollingElement?.scrollTop ?? 0) > 4) || ((principal?.scrollTop ?? 0) > 4)));
     document.addEventListener("scroll", onScroll, { capture: true, passive: true });
     return () => document.removeEventListener("scroll", onScroll, { capture: true });
   }, [nativeApp]);
