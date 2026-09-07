@@ -862,6 +862,13 @@ html body.ccr-search-filters-open .ccr-search-bottom-sheet {
     max-height: none !important;
     border-radius: 0 !important;
     transform: none !important;
+    bottom: calc(-1 * env(safe-area-inset-bottom)) !important;
+  }
+
+  /* Mientras la reserva está abierta, lo que asome por debajo es blanco, no el
+     gris de la página de atrás. */
+  body.ccr-booking-modal-open {
+    background: #fff !important;
   }
 }
 
