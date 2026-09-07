@@ -1933,13 +1933,7 @@
       "close": "Cerrar"
     },
     "goToClientPanel": "Ir a mi panel cliente",
-    "goToProfessionalPanel": "Ir a mi panel profesional",
-    "menuGroups": {
-      "work": "Trabajo",
-      "business": "Mi negocio",
-      "saved": "Guardado",
-      "account": "Cuenta y ayuda"
-    }
+    "goToProfessionalPanel": "Ir a mi panel profesional"
   },
   "bookingRequests": {
     "empty": "No tienes citas todavía",

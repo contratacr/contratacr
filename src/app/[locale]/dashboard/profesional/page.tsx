@@ -136,20 +136,21 @@ const USE_TABS: Tab[] = (["sent_bookings", "sent_projects", "applications", "con
 const OPPORTUNITY_MODAL_SEEN_STORAGE_PREFIX = "contratacr:seen-opportunity-modal";
 
 // Once filas planas se leían una por una; en bloques cortos el menú se recorre
-// de un vistazo. Lo que no cae en un bloque se queda al final, sin rótulo.
+// de un vistazo. Los bloques se marcan con una separación, no con rótulos: con
+// ocho o diez filas, cuatro títulos en mayúsculas pesaban más de lo que ayudaban.
 const PANEL_GROUPS: { grupo: "work" | "business" | "saved" | "account"; tabs: Tab[] }[] = [
   { grupo: "work", tabs: ["bookings", "proposals", "sent_bookings", "sent_projects"] },
   { grupo: "business", tabs: ["offers", "jobs", "photos", "availability", "services", "completion"] },
   { grupo: "saved", tabs: ["connections", "saved"] },
   { grupo: "account", tabs: ["profile", "soporte", "guides"] },
 ];
-function agruparPestanas(tabs: Tab[], etiqueta: (id: string) => string) {
+function agruparPestanas(tabs: Tab[]): Tab[][] {
   const grupos = PANEL_GROUPS
     // El orden dentro de cada bloque es el del bloque, no el de la lista de pestañas.
-    .map((g) => ({ label: etiqueta(g.grupo), tabs: g.tabs.filter((tab) => tabs.includes(tab)) }))
-    .filter((g) => g.tabs.length > 0);
+    .map((g) => g.tabs.filter((tab) => tabs.includes(tab)))
+    .filter((g) => g.length > 0);
   const sueltas = tabs.filter((tab) => !PANEL_GROUPS.some((g) => g.tabs.includes(tab)));
-  return sueltas.length > 0 ? [...grupos, { label: "", tabs: sueltas }] : grupos;
+  return sueltas.length > 0 ? [...grupos, sueltas] : grupos;
 }
 
 const PANEL_TAB_LABELS: Partial<Record<Tab, { es: string; en: string }>> = {
@@ -1868,12 +1869,9 @@ export default function DashboardPage() {
             <div className="flex flex-col">
               <nav className="flex flex-col divide-y divide-[#eef3f7]">
                 {panelModeSelector()}
-                {agruparPestanas(desktopSidebarTabs, (id) => t(`menuGroups.${id}`)).map((grupo) => (
-                  <div key={grupo.label || "otros"} className="flex flex-col divide-y divide-[#eef3f7]">
-                    {grupo.label && (
-                      <p className="bg-[#f8fafc] px-5 pb-1.5 pt-3 text-[10px] font-bold uppercase tracking-[0.08em] text-[#94a3b8]">{grupo.label}</p>
-                    )}
-                    {grupo.tabs.map(desktopSidebarButton)}
+                {agruparPestanas(desktopSidebarTabs).map((grupo, i) => (
+                  <div key={grupo[0] ?? i} className={cn("flex flex-col divide-y divide-[#eef3f7]", i > 0 && "border-t-[7px] border-[#f1f5f9]")}>
+                    {grupo.map(desktopSidebarButton)}
                   </div>
                 ))}
               </nav>
@@ -2366,12 +2364,9 @@ export default function DashboardPage() {
                                 <div>
                                   <div className="flex flex-col gap-2.5">
                                     {cambiarPanelCard()}
-                                    {agruparPestanas(mobileSectionTabs, (id) => t(`menuGroups.${id}`)).map((grupo) => (
-                                      <div key={grupo.label || "otros"} className="flex flex-col gap-2.5">
-                                        {grupo.label && (
-                                          <p className="px-2 pt-2 text-[11px] font-bold uppercase tracking-[0.08em] text-[#9ca3af]">{grupo.label}</p>
-                                        )}
-                                        {grupo.tabs.map(mobileSectionButton)}
+                                    {agruparPestanas(mobileSectionTabs).map((grupo, i) => (
+                                      <div key={grupo[0] ?? i} className={cn("flex flex-col gap-2.5", i > 0 && "mt-1.5 border-t border-[#e8eef4] pt-4")}>
+                                        {grupo.map(mobileSectionButton)}
                                       </div>
                                     ))}
                                   </div>

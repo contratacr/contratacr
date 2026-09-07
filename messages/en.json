@@ -1933,13 +1933,7 @@
       "searchEmpty": "No guide matches that word."
     },
     "goToClientPanel": "Go to my client panel",
-    "goToProfessionalPanel": "Go to my professional panel",
-    "menuGroups": {
-      "work": "Work",
-      "business": "My business",
-      "saved": "Saved",
-      "account": "Account and help"
-    }
+    "goToProfessionalPanel": "Go to my professional panel"
   },
   "bookingRequests": {
     "empty": "No appointments yet",
