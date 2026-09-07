@@ -1068,7 +1068,8 @@
     "close": "Cerrar",
     "requestService": "Reservar",
     "charLimit": "Has alcanzado el límite de {max} caracteres.",
-    "optional": "opcional"
+    "optional": "opcional",
+    "stepOf": "Paso {current} de {total}"
   },
   "dashboard": {
     "pro": {

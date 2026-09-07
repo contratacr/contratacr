@@ -19,6 +19,7 @@ import {
   CalendarCheck,
   MessageCircle,
   CalendarDays,
+  BadgeCheck,
 } from "lucide-react";
 import { SuccessIcon } from "@/components/ui/success-icon";
 import { useTranslations, useLocale } from "next-intl";
@@ -652,6 +653,15 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
   const maxMonth = new Date(maxDate.getFullYear(), maxDate.getMonth() + 1, 1);
   const canGoNext = new Date(currentYear, currentMonth + 1, 1) < maxMonth;
 
+  // La flecha de la cabecera hace lo que espera cualquiera: vuelve al paso
+  // anterior, y en el primero cierra. Por eso el pie ya no lleva "Atrás".
+  const puedeVolver = step === "details" || step === "contact" || step === "complete";
+  function pasoAtras() {
+    if (step === "contact" || step === "complete") { setStep("details"); return; }
+    if (step === "details") { setStep("calendar"); return; }
+    resetAndClose();
+  }
+
   function resetAndClose() {
     const didBook = bookedRef.current;
     bookedRef.current = false;
@@ -1095,8 +1105,8 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
           onFocusOutside={keepSelectMenuOpen}
           className={cn(
             "ccr-booking-modal-panel fixed inset-0 z-50 lg:inset-x-auto lg:bottom-auto lg:left-1/2 lg:top-1/2 lg:-translate-x-1/2 lg:-translate-y-1/2",
-            "h-dvh max-h-dvh w-full overflow-hidden rounded-none bg-white shadow-none lg:h-auto lg:w-[95vw] lg:max-w-4xl lg:rounded-3xl lg:shadow-2xl",
-            "flex flex-col lg:flex-row",
+            "h-dvh max-h-dvh w-full overflow-hidden rounded-none bg-white shadow-none lg:h-auto lg:w-[95vw] lg:max-w-xl lg:rounded-3xl lg:shadow-2xl",
+            "flex flex-col",
             "lg:max-h-[720px]",
             "data-[state=open]:animate-in data-[state=closed]:animate-out",
             "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
@@ -1106,108 +1116,52 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
           <Dialog.Title className="sr-only">
             {`${t("title")} - ${proDisplayName(professional.fullName)}`}
           </Dialog.Title>
-          {/* Cabecera del profesional: blanca y con borde, como las tarjetas del resto
-              de la app. El degradado marino que llevaba era el único de toda la app y
-              hacía sentir el modal como otra aplicación. La insignia "Verificado"
-              sigue siendo la píldora turquesa de la tarjeta de /buscar. */}
-          <div className="shrink-0 border-b border-[#e5edf4] bg-white p-5 text-[#162543] lg:flex lg:w-[320px] lg:flex-col lg:border-b-0 lg:border-r">
-            <div className="flex items-center gap-3 lg:flex-col lg:items-center lg:gap-0">
-              <Avatar className="h-14 w-14 shrink-0 lg:h-20 lg:w-20">
-                <AvatarImage src={professional.avatarUrl} alt={professional.fullName} />
-                <AvatarFallback className="bg-[#EAF7FD] text-[#0089bb] text-xl font-bold">
-                  {getInitials(professional.fullName)}
-                </AvatarFallback>
-              </Avatar>
-              <div className="lg:mt-4 lg:w-full lg:text-center">
-                <div className="flex flex-wrap items-center gap-1.5 lg:justify-center">
-                  {/* Display-only abbreviation (drop the middle given name; keep first +
-                      both surnames) via proDisplayName — consistent with the /buscar card +
-                      public profile. The DB keeps the full official name. */}
-                  <span className="text-base font-bold leading-tight lg:text-lg">{proDisplayName(professional.fullName)}</span>
-                </div>
-                {/* Verified → the SAME solid #009FD9 pill as the /buscar card. NOT verified →
-                    nothing (no badge, no "sin verificar"). `isVerified` is set by BOTH callers
-                    (the search query from `is_verified`, kept in sync on revoke/reject; the
-                    public profile from `verificationStatus === "verified"`), so it's authoritative. */}
-                {professional.isVerified && (
-                  <span title={t("verifiedTitle")} className="mt-1.5 inline-flex w-fit items-center rounded-full bg-[#009FD9] px-2 py-0.5 text-[10px] font-semibold text-white">
-                    {t("verified")}
-                  </span>
-                )}
-                <p className="mt-1 text-sm text-[#6b7280] lg:text-center">{headerProfession}</p>
-              </div>
-            </div>
-
-            <div className="mt-5 hidden space-y-2 lg:block">
-              <StarRating rating={professional.ratingAvg} showValue reviewCount={professional.reviewCount} size="sm" className="justify-center" />
-              {professional.cantonName && (
-                <div className="flex items-center gap-1.5 justify-center text-[#6b7280] text-sm">
-                  <MapPin className="h-3.5 w-3.5" />
-                  <span>{professional.cantonName}, {professional.provinceName}</span>
-                </div>
-              )}
-              {professional.hourlyRate && (
-                <div className="text-center">
-                  <span className="text-xs text-[#6b7280]">{t("from")}</span>
-                  {(() => {
-                    const label = formatServicePrice(professional.hourlyRate, "por_hora", locale) ?? "";
-                    const { amount, unit, taxSuffix } = splitPricingLabel(label);
-                    return (
-                      <p className="font-bold text-white text-lg leading-tight">
-                        {amount}
-                        {unit && <span className="text-xs font-normal text-[#6b7280]"> {unit}</span>}
-                        {taxSuffix && <span className="block text-[10px] font-semibold tracking-wide text-[#6b7280]/50">{taxSuffix}</span>}
-                      </p>
-                    );
-                  })()}
-                </div>
-              )}
-            </div>
-
-            {/* What happens next — genuinely useful to the client at booking time
-                (replaces the generic "sin comisiones" trust chips). */}
-            <div className="mt-auto hidden flex-col gap-2.5 pt-5 lg:flex">
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-[#6b7280]/50">{t("next.title")}</p>
-              {(["step1", "step2", "step3"] as const).map((key, i) => (
-                <div key={i} className="flex items-start gap-2 text-[#6b7280] text-xs">
-                  <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-white/15 text-[10px] font-semibold text-white">{i + 1}</span>
-                  <span className="leading-snug">{t(`next.${key}`)}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* RIGHT PANEL */}
-          <div className="flex-1 bg-white flex flex-col overflow-hidden">
-            {/* Header */}
-            <div className="sticky top-0 z-10 flex shrink-0 items-center justify-between border-b border-[#f3f4f6] bg-white px-5 py-3.5 shadow-sm shadow-[#0f172a]/5 lg:static lg:px-6 lg:py-4 lg:shadow-none">
-              <div>
-                <h2 className="font-bold text-[#111827]">{t("title")}</h2>
+          <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-white">
+            {/* Cabecera con el mismo patrón que las demás pantallas: salida a la
+                izquierda (flecha en el teléfono, X en escritorio), título centrado y
+                el avance en una barra fina bajo la línea, en vez de puntitos. */}
+            <div className="relative flex shrink-0 items-center justify-center border-b border-[#f3f4f6] bg-white px-14 py-3.5 lg:px-6 lg:py-4">
+              <div className="min-w-0 text-center lg:text-left">
+                <h2 className="text-lg font-bold text-[#111827]">{t("title")}</h2>
                 {step !== "success" && (
-                  <div className="flex items-center gap-1 mt-1">
-                    {Array.from({ length: totalSteps }).map((_, n) => (
-                      <span
-                        key={n}
-                        className={cn(
-                          "h-1.5 rounded-full transition-all duration-300",
-                          stepIndex[step] > n ? "bg-[#009FD9] w-4"
-                            : stepIndex[step] === n ? "bg-[#009FD9] w-6"
-                            : "bg-[#e5e7eb] w-3"
-                        )}
-                      />
-                    ))}
-                  </div>
+                  <p className="mt-0.5 text-xs text-[#6b7280]">{t("stepOf", { current: stepIndex[step] + 1, total: totalSteps })}</p>
                 )}
               </div>
-              <Dialog.Close asChild>
-                <button className="p-2 rounded-xl text-[#9ca3af] hover:bg-[#f3f4f6] hover:text-[#374151] transition-colors" aria-label={t("close")}>
-                  <X className="h-5 w-5" />
-                </button>
-              </Dialog.Close>
+              <button
+                type="button"
+                onClick={pasoAtras}
+                aria-label={puedeVolver ? t("back") : t("close")}
+                className="absolute left-4 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-lg text-[#162543] transition-colors hover:bg-[#f3f4f6] lg:right-4 lg:left-auto"
+              >
+                <ArrowLeft className="h-5 w-5 lg:hidden" />
+                <X className="hidden h-5 w-5 lg:block" />
+              </button>
             </div>
+            {step !== "success" && (
+              <div className="h-1 shrink-0 bg-[#eef3f7]">
+                <div className="h-full bg-[#009FD9] transition-all duration-300" style={{ width: `${((stepIndex[step] + 1) / totalSteps) * 100}%` }} />
+              </div>
+            )}
 
             {/* Step content */}
-            <div className="flex-1 overflow-y-auto px-5 py-5 md:px-6">
+            <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto bg-[#f4f7fa] px-4 py-4 md:px-6">
+              {/* Con quién es la cita: una fila compacta, no medio modal. */}
+              {step !== "success" && (
+                <div className="flex shrink-0 items-center gap-3 rounded-2xl border border-[#e5edf4] bg-white px-4 py-3">
+                  <Avatar className="h-10 w-10 shrink-0">
+                    <AvatarImage src={professional.avatarUrl} alt={professional.fullName} />
+                    <AvatarFallback className="bg-[#EAF7FD] text-sm font-bold text-[#0089bb]">{getInitials(professional.fullName)}</AvatarFallback>
+                  </Avatar>
+                  <div className="min-w-0 flex-1">
+                    <p className="flex items-center gap-1.5 text-[15px] font-bold leading-tight text-[#162543]">
+                      <span className="min-w-0 truncate">{proDisplayName(professional.fullName)}</span>
+                      {professional.isVerified && <BadgeCheck className="h-4 w-4 shrink-0 text-[#009FD9]" aria-label={t("verified")} />}
+                    </p>
+                    <p className="mt-0.5 truncate text-[13px] text-[#6b7280]">{headerProfession}</p>
+                  </div>
+                </div>
+              )}
+              <div className="flex min-h-0 flex-1 flex-col rounded-2xl border border-[#e5edf4] bg-white px-4 py-4 md:px-5">
 
               {/* STEP: calendar */}
               {step === "calendar" && (
@@ -1687,6 +1641,8 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                   )}
                 </div>
               )}
+
+              </div>
             </div>
 
             {/* Submit error (e.g. slot just taken) — shown above the footer actions */}
@@ -1701,18 +1657,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
 
             {/* Footer actions */}
             {step !== "success" && (
-              <div className="shrink-0 flex gap-3 border-t border-[#f3f4f6] bg-white px-5 py-3.5 shadow-[0_-10px_24px_rgba(15,23,42,0.06)] md:px-6 md:py-4 md:shadow-none">
-                {(step === "contact" || step === "details" || step === "complete") && (
-                  <Button
-                    variant="outline"
-                    size="md"
-                    onClick={() => setStep(step === "details" ? "calendar" : "details")}
-                  >
-                    <ArrowLeft className="h-4 w-4" />
-                    {t("back")}
-                  </Button>
-                )}
-
+              <div className="flex shrink-0 gap-3 border-t border-[#f3f4f6] bg-white px-5 py-3.5 pb-[max(env(safe-area-inset-bottom),0.875rem)] md:px-6 md:py-4 md:pb-4">
                 {step === "calendar" && !needsProfessionPick && (
                   <div className="flex flex-1 items-center justify-between gap-3">
                     <span className="min-w-0 truncate text-sm text-[#6b7280]">
@@ -1736,7 +1681,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                 {step === "details" && (
                   <Button
                     size="md"
-                    className="flex-1 bg-[#162543] hover:bg-[#233a5f]"
+                    className="w-full bg-[#162543] hover:bg-[#233a5f]"
                     disabled={
                       (forSomeoneElse && (!benName.trim() || !benDob))
                       || (proIsHealth && !forSomeoneElse && hasStoredCedula && !effectiveSelfDob)
@@ -1769,7 +1714,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                 {step === "contact" && (
                   <Button
                     size="md"
-                    className="flex-1 bg-[#162543] hover:bg-[#233a5f]"
+                    className="w-full bg-[#162543] hover:bg-[#233a5f]"
                     loading={submitting || checkingCedula}
                     disabled={profilePhone.replace(/\D/g, "").length < 8 || guestEmailCheck.taken || (!noCedula && !profileCedula) || (!selfHasAutoName && !clientName.trim()) || (proIsHealth && !forSomeoneElse && !effectiveSelfDob)}
                     onClick={async () => {
@@ -1787,7 +1732,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                 {step === "complete" && (
                   <Button
                     size="md"
-                    className="flex-1 bg-[#162543] hover:bg-[#233a5f]"
+                    className="w-full bg-[#162543] hover:bg-[#233a5f]"
                     loading={savingProfile || submitting}
                     disabled={savingProfile || submitting || ((needsProfile || needsCedula) && !selfHasAutoName && !clientName.trim()) || (proIsHealth && !forSomeoneElse && needsCedula && !effectiveSelfDob)}
                     onClick={saveProfileAndSubmit}
@@ -1799,7 +1744,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
             )}
 
             {step === "success" && (
-              <div className="shrink-0 flex flex-col gap-2.5 border-t border-[#f3f4f6] bg-white px-5 py-3.5 shadow-[0_-10px_24px_rgba(15,23,42,0.06)] md:px-6 md:py-4 md:shadow-none">
+              <div className="flex shrink-0 flex-col gap-2.5 border-t border-[#f3f4f6] bg-white px-5 py-3.5 pb-[max(env(safe-area-inset-bottom),0.875rem)] md:px-6 md:py-4 md:pb-4">
                 {/* Lead to the just-made request (it's at the top of Solicitudes), not a
                     dead-end "Listo". Closing still refreshes /buscar so the slot disappears. */}
                 <Button size="md" className="w-full bg-[#162543] hover:bg-[#233a5f]" onClick={goToMyRequest}>
