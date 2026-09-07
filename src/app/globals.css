@@ -857,9 +857,9 @@ html body.ccr-search-filters-open .ccr-search-bottom-sheet {
     top: 0 !important;
     bottom: 0 !important;
     width: 100vw !important;
-    height: 100dvh !important;
+    height: var(--app-visual-viewport-height, 100dvh) !important;
     max-width: none !important;
-    max-height: 100dvh !important;
+    max-height: var(--app-visual-viewport-height, 100dvh) !important;
     border-radius: 0 !important;
     transform: none !important;
   }

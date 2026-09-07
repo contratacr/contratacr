@@ -3864,9 +3864,8 @@
       "popular": "Popular:",
       "installLink": "Add app to phone",
       "proCta": "Offer my services",
-      "publishCta": "post what you need",
-      "publishLead": "Or",
-      "publishTail": "and get replies from professionals in your area."
+      "publishCardTitle": "Post what you need",
+      "publishCardBody": "Professionals in your area reply and you choose."
     },
     "pros": {
       "headingPre": "Services for whatever you need in",

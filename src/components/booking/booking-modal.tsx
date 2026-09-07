@@ -1121,7 +1121,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
           onFocusOutside={keepSelectMenuOpen}
           className={cn(
             "ccr-booking-modal-panel fixed inset-0 z-50 lg:inset-x-auto lg:bottom-auto lg:left-1/2 lg:top-1/2 lg:-translate-x-1/2 lg:-translate-y-1/2",
-            "h-dvh max-h-dvh w-full overflow-hidden rounded-none bg-[#f4f7fa] shadow-none lg:h-auto lg:w-[95vw] lg:max-w-xl lg:rounded-3xl lg:shadow-2xl",
+            "h-[var(--app-visual-viewport-height)] max-h-[var(--app-visual-viewport-height)] w-full overflow-hidden rounded-none bg-[#f4f7fa] shadow-none lg:h-auto lg:max-h-[720px] lg:w-[95vw] lg:max-w-xl lg:rounded-3xl lg:shadow-2xl",
             "flex flex-col",
             "lg:max-h-[720px]",
             "data-[state=open]:animate-in data-[state=closed]:animate-out",
@@ -1309,7 +1309,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                                 onClick={() => { setSelectedDate(dateStr); setSelectedTime(""); }}
                                 className={cn(
                                   "relative aspect-square flex items-center justify-center rounded-full text-sm font-medium transition-all",
-                                  isSelected && "bg-[#162543] text-white shadow-sm",
+                                  isSelected && "bg-[#009FD9] text-white shadow-sm",
                                   !isSelected && available && "hover:bg-[#EBF5FB] text-[#111827] cursor-pointer",
                                   !isSelected && available && isToday && "text-[#009FD9]",
                                   !isSelected && !available && "text-[#d1d5db] cursor-not-allowed"
@@ -1357,8 +1357,8 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                                       className={cn(
                                         "h-11 w-full rounded-full border text-sm font-semibold tabular-nums transition-all",
                                         selectedTime === slot
-                                          ? "bg-[#162543] text-white border-[#162543]"
-                                          : "bg-white text-[#374151] border-[#e5e7eb] hover:border-[#162543] hover:text-[#162543]"
+                                          ? "bg-[#009FD9] text-white border-[#009FD9]"
+                                          : "bg-white text-[#374151] border-[#e5e7eb] hover:border-[#009FD9] hover:text-[#009FD9]"
                                       )}
                                     >
                                       {slot}
@@ -1694,7 +1694,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                     </span>
                     <Button
                       size="md"
-                      className="shrink-0 bg-[#162543] hover:bg-[#233a5f]"
+                      className="shrink-0"
                       disabled={!selectedDate || slots.length === 0 || !selectedTime}
                       onClick={() => setStep("details")}
                     >
@@ -1706,7 +1706,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                 {step === "details" && (
                   <Button
                     size="md"
-                    className="w-full bg-[#162543] hover:bg-[#233a5f]"
+                    className="w-full"
                     disabled={
                       (forSomeoneElse && (!benName.trim() || !benDob))
                       || (proIsHealth && !forSomeoneElse && hasStoredCedula && !effectiveSelfDob)
@@ -1739,7 +1739,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                 {step === "contact" && (
                   <Button
                     size="md"
-                    className="w-full bg-[#162543] hover:bg-[#233a5f]"
+                    className="w-full"
                     loading={submitting || checkingCedula}
                     disabled={profilePhone.replace(/\D/g, "").length < 8 || guestEmailCheck.taken || (!noCedula && !profileCedula) || (!selfHasAutoName && !clientName.trim()) || (proIsHealth && !forSomeoneElse && !effectiveSelfDob)}
                     onClick={async () => {
@@ -1757,7 +1757,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                 {step === "complete" && (
                   <Button
                     size="md"
-                    className="w-full bg-[#162543] hover:bg-[#233a5f]"
+                    className="w-full"
                     loading={savingProfile || submitting}
                     disabled={savingProfile || submitting || ((needsProfile || needsCedula) && !selfHasAutoName && !clientName.trim()) || (proIsHealth && !forSomeoneElse && needsCedula && !effectiveSelfDob)}
                     onClick={saveProfileAndSubmit}
@@ -1772,7 +1772,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
               <div className="flex shrink-0 flex-col gap-2.5 border-t border-[#f3f4f6] bg-white px-5 py-3.5 pb-[max(env(safe-area-inset-bottom),0.875rem)] md:px-6 md:py-4 md:pb-4">
                 {/* Lead to the just-made request (it's at the top of Solicitudes), not a
                     dead-end "Listo". Closing still refreshes /buscar so the slot disappears. */}
-                <Button size="md" className="w-full bg-[#162543] hover:bg-[#233a5f]" onClick={goToMyRequest}>
+                <Button size="md" className="w-full" onClick={goToMyRequest}>
                   {t("success.viewRequest")}
                 </Button>
                 <Button variant="outline" size="md" className="w-full" onClick={resetAndClose}>

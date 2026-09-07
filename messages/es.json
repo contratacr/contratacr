@@ -3864,9 +3864,8 @@
       "popular": "Popular:",
       "installLink": "Agregar app al celular",
       "proCta": "Ofrecer mis servicios",
-      "publishCta": "publica lo que necesitas",
-      "publishLead": "O",
-      "publishTail": "y recibe respuestas de profesionales de tu zona."
+      "publishCardTitle": "Publica lo que necesitas",
+      "publishCardBody": "Los profesionales de tu zona te responden y tú eliges."
     },
     "pros": {
       "headingPre": "Servicios para lo que necesitas en",
