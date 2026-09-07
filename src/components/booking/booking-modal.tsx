@@ -345,7 +345,14 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
     }
     document.body.classList.add("ccr-booking-modal-open");
     raiz.classList.add("ccr-booking-modal-open");
+    const vigilante = new MutationObserver(() => {
+      if (!document.body.classList.contains("ccr-booking-modal-open")) document.body.classList.add("ccr-booking-modal-open");
+      if (!raiz.classList.contains("ccr-booking-modal-open")) raiz.classList.add("ccr-booking-modal-open");
+    });
+    vigilante.observe(document.body, { attributes: true, attributeFilter: ["class"] });
+    vigilante.observe(raiz, { attributes: true, attributeFilter: ["class"] });
     return () => {
+      vigilante.disconnect();
       document.body.classList.remove("ccr-booking-modal-open");
       raiz.classList.remove("ccr-booking-modal-open");
     };
@@ -1124,7 +1131,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
   return (
     <Dialog.Root open={open} onOpenChange={(v) => !v && resetAndClose()}>
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-50 hidden bg-black/60 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 lg:block" />
+        <Dialog.Overlay className="fixed inset-0 z-[239] hidden bg-black/60 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 lg:block" />
         <Dialog.Content
           // The SelectMenu dropdowns (DOB picker day/month/year, etc.) portal their option
           // list to <body>, OUTSIDE this dialog. Without these guards, clicking an option
@@ -1136,7 +1143,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
           onInteractOutside={keepSelectMenuOpen}
           onFocusOutside={keepSelectMenuOpen}
           className={cn(
-            "ccr-booking-modal-panel fixed inset-0 z-50 lg:inset-x-auto lg:bottom-auto lg:left-1/2 lg:top-1/2 lg:-translate-x-1/2 lg:-translate-y-1/2",
+            "ccr-booking-modal-panel fixed inset-0 z-[240] lg:inset-x-auto lg:bottom-auto lg:left-1/2 lg:top-1/2 lg:-translate-x-1/2 lg:-translate-y-1/2",
             "h-dvh max-h-dvh w-full overflow-hidden rounded-none bg-[#f4f7fa] shadow-none lg:h-auto lg:max-h-[720px] lg:w-[95vw] lg:max-w-xl lg:rounded-3xl lg:shadow-2xl",
             "flex flex-col",
             "lg:max-h-[720px]",
