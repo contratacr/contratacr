@@ -140,11 +140,12 @@ const PANEL_GROUPS: { grupo: "work" | "business" | "saved" | "account"; tabs: Ta
   { grupo: "work", tabs: ["bookings", "proposals", "sent_bookings", "sent_projects"] },
   { grupo: "business", tabs: ["offers", "jobs", "photos", "availability", "services", "completion"] },
   { grupo: "saved", tabs: ["connections", "saved"] },
-  { grupo: "account", tabs: ["soporte", "profile", "guides"] },
+  { grupo: "account", tabs: ["profile", "soporte", "guides"] },
 ];
 function agruparPestanas(tabs: Tab[], etiqueta: (id: string) => string) {
   const grupos = PANEL_GROUPS
-    .map((g) => ({ label: etiqueta(g.grupo), tabs: tabs.filter((tab) => g.tabs.includes(tab)) }))
+    // El orden dentro de cada bloque es el del bloque, no el de la lista de pestañas.
+    .map((g) => ({ label: etiqueta(g.grupo), tabs: g.tabs.filter((tab) => tabs.includes(tab)) }))
     .filter((g) => g.tabs.length > 0);
   const sueltas = tabs.filter((tab) => !PANEL_GROUPS.some((g) => g.tabs.includes(tab)));
   return sueltas.length > 0 ? [...grupos, { label: "", tabs: sueltas }] : grupos;
