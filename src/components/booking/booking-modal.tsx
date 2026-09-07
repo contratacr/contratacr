@@ -1682,7 +1682,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
             {/* Footer actions — elegir el servicio ES la acción de ese paso: sin
                 nada que confirmar, la barra de abajo se queda vacía y estorba. */}
             {step !== "success" && !(step === "calendar" && needsProfessionPick) && (
-              <div className="ccr-pie-formulario relative flex shrink-0 flex-col gap-2 border-t border-[#e5e7eb] bg-white px-4 py-4 pb-[max(env(safe-area-inset-bottom),1rem)] after:absolute after:inset-x-0 after:top-full after:h-24 after:bg-white after:content-[''] sm:px-6">
+              <div className="ccr-pie-formulario flex shrink-0 flex-col gap-2 border-t border-[#e5e7eb] bg-white px-4 py-4 pb-[max(env(safe-area-inset-bottom),1rem)] sm:px-6">
                 {step === "calendar" && !needsProfessionPick && (
                   <>
                     {/* Igual que en Publicar empleo: solo el botón. La fecha elegida ya
@@ -1769,7 +1769,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
             )}
 
             {step === "success" && (
-              <div className="ccr-pie-formulario relative flex shrink-0 flex-col gap-2 border-t border-[#e5e7eb] bg-white px-4 py-4 pb-[max(env(safe-area-inset-bottom),1rem)] after:absolute after:inset-x-0 after:top-full after:h-24 after:bg-white after:content-[''] sm:px-6">
+              <div className="ccr-pie-formulario flex shrink-0 flex-col gap-2 border-t border-[#e5e7eb] bg-white px-4 py-4 pb-[max(env(safe-area-inset-bottom),1rem)] sm:px-6">
                 {/* Lead to the just-made request (it's at the top of Solicitudes), not a
                     dead-end "Listo". Closing still refreshes /buscar so the slot disappears. */}
                 <Button size="md" className="w-full" onClick={goToMyRequest}>
