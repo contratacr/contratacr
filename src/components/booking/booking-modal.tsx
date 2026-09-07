@@ -220,6 +220,10 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
   );
   const effectiveCategory = initialCategoryId ?? pickedCategory ?? null;
   const needsProfessionPick = !effectiveCategory && proProfessions.length > 1;
+  // Elegir servicio es un paso de verdad cuando el profesional ofrece varios y
+  // el cliente no llegó filtrando por uno: cuenta en "Paso N de M" y la flecha
+  // de la cabecera regresa a él.
+  const hayPasoServicio = proProfessions.length > 1 && !initialCategoryId;
 
   // Profession shown UNDER the name: the RELEVANT one for the current context —
   //  • filtered (initialCategoryId) or selected (pickedCategory) → that profession;
@@ -655,10 +659,19 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
 
   // La flecha de la cabecera hace lo que espera cualquiera: vuelve al paso
   // anterior, y en el primero cierra. Por eso el pie ya no lleva "Atrás".
-  const puedeVolver = step === "details" || step === "contact" || step === "complete";
+  const puedeVolver = step === "details" || step === "contact" || step === "complete"
+    || (step === "calendar" && hayPasoServicio && !needsProfessionPick);
   function pasoAtras() {
     if (step === "contact" || step === "complete") { setStep("details"); return; }
     if (step === "details") { setStep("calendar"); return; }
+    // Desde el calendario se vuelve a la lista de servicios, que es de donde se
+    // venía; solo cierra cuando ya no hay paso anterior.
+    if (step === "calendar" && hayPasoServicio && !needsProfessionPick) {
+      setPickedCategory(null);
+      setSelectedDate("");
+      setSelectedTime("");
+      return;
+    }
     resetAndClose();
   }
 
@@ -914,8 +927,10 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
   const canShowDetailsPhone = isLoggedIn && profileLoaded && !needsProfile && !needsCedula;
   const showDetailsPhone = canShowDetailsPhone && (!needsPhone || profilePhoneWasPrefilled);
   const detailsPhoneInvalid = showDetailsPhone && phoneDigits(profilePhone).length < 8;
-  const totalSteps = isLoggedIn ? (needsCompleteStep ? 3 : 2) : 3;
+  const totalSteps = (isLoggedIn ? (needsCompleteStep ? 3 : 2) : 3) + (hayPasoServicio ? 1 : 0);
   const stepIndex = { calendar: 0, details: 1, contact: 2, complete: 2, success: 3 };
+  // Número de paso que se muestra: el de elegir servicio va antes del calendario.
+  const pasoActual = needsProfessionPick ? 0 : (hayPasoServicio ? 1 : 0) + stepIndex[step];
 
   // Validate the client's cédula: format always; existence in the padrón for
   // national cédulas (DIMEX/NITE aren't in the TSE roll). Returns true if OK and
@@ -1124,7 +1139,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
               <div className="min-w-0 text-center lg:text-left">
                 <h2 className="text-lg font-bold text-[#111827]">{t("title")}</h2>
                 {step !== "success" && (
-                  <p className="mt-0.5 text-xs text-[#6b7280]">{t("stepOf", { current: stepIndex[step] + 1, total: totalSteps })}</p>
+                  <p className="mt-0.5 text-xs text-[#6b7280]">{t("stepOf", { current: pasoActual + 1, total: totalSteps })}</p>
                 )}
               </div>
               <button
@@ -1139,7 +1154,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
             </div>
             {step !== "success" && (
               <div className="h-1 shrink-0 bg-[#eef3f7]">
-                <div className="h-full bg-[#009FD9] transition-all duration-300" style={{ width: `${((stepIndex[step] + 1) / totalSteps) * 100}%` }} />
+                <div className="h-full bg-[#009FD9] transition-all duration-300" style={{ width: `${((pasoActual + 1) / totalSteps) * 100}%` }} />
               </div>
             )}
 
@@ -1157,7 +1172,16 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                       <span className="min-w-0 truncate">{proDisplayName(professional.fullName)}</span>
                       {professional.isVerified && <BadgeCheck className="h-4 w-4 shrink-0 text-[#009FD9]" aria-label={t("verified")} />}
                     </p>
-                    <p className="mt-0.5 truncate text-[13px] text-[#6b7280]">{headerProfession}</p>
+                    <p className="mt-0.5 truncate text-[13px] text-[#6b7280]">
+                      {/* Mientras no haya servicio elegido, decir "Cámaras de seguridad +5"
+                          suena a que ya se eligió: ahí va la zona, que sí es un dato del
+                          profesional y no una decisión pendiente. */}
+                      {effectiveCategory
+                        ? getCategoryLabel(effectiveCategory, locale)
+                        : professional.cantonName
+                          ? `${professional.cantonName}, ${professional.provinceName}`
+                          : headerProfession}
+                    </p>
                   </div>
                 </div>
               )}
