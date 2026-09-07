@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
-import { CalendarDays, Clock, EyeOff, FileText, Inbox, MapPin, Users, Wrench } from "lucide-react";
+import { CalendarDays, Clock, EyeOff, FileText, Inbox, MapPin, Trash2, Users, Wrench } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -14,6 +14,7 @@ import { useCachedResource } from "@/hooks/use-cached-resource";
 import { StatusFilterTabs, PROPUESTA_TABS } from "@/components/dashboard/status-filter-tabs";
 import { ExpandableText } from "@/components/ui/expandable-text";
 import { ExpandToggle } from "@/components/dashboard/expand-toggle";
+import { CardActionsMenu } from "@/components/dashboard/card-actions-menu";
 import { useAppDialog } from "@/hooks/use-app-dialog";
 import { PanelEmptyState, PanelListSkeleton } from "@/components/ui/content-loading";
 
@@ -68,7 +69,8 @@ export function ProposalsTab({ categoryId }: ProposalsTabProps) {
   const locale = useLocale();
   const searchParams = useSearchParams();
   const { user } = useAuth();
-  const { dialogNode, showMessage } = useAppDialog();
+  const { dialogNode, showMessage, confirm } = useAppDialog();
+  const [retirando, setRetirando] = useState<string | null>(null);
   const errorTitle = locale === "en" ? "Something went wrong" : "No se pudo completar la acción";
 
   const openResource = useCachedResource<OpenProject[]>(
@@ -208,6 +210,66 @@ export function ProposalsTab({ categoryId }: ProposalsTabProps) {
     }
   }
 
+  // Una respuesta no se edita, se retira: se borra y la solicitud vuelve a
+  // Nuevas, así el profesional puede responder otra vez sin que al cliente le
+  // cambie bajo los pies lo que ya leyó. Solo mientras siga pendiente.
+  async function retirarRespuesta(propuesta: MyProposal) {
+    const { confirmed } = await confirm({
+      title: t("withdrawTitle"),
+      description: t("withdrawBody"),
+      confirmLabel: t("withdrawConfirm"),
+      tone: "danger",
+    });
+    if (!confirmed) return;
+    setRetirando(propuesta.id);
+    try {
+      const res = await fetch(`/api/proposals?id=${propuesta.id}`, { method: "DELETE" });
+      if (!res.ok) {
+        await showMessage({ title: t("withdrawErrorTitle"), description: t("withdrawError"), tone: "danger" });
+        return;
+      }
+      setExpandedMine(null);
+      await refreshAll();
+      await showMessage({ title: t("withdrawDoneTitle"), description: t("withdrawDone") });
+    } catch {
+      await showMessage({ title: t("withdrawErrorTitle"), description: t("withdrawError"), tone: "danger" });
+    } finally {
+      setRetirando(null);
+    }
+  }
+
+  // Si el cliente ya te eligió, desaparecer en silencio lo deja esperando: esto
+  // avisa con el motivo y su solicitud vuelve a estar abierta para otros.
+  async function soltarTrabajo(propuesta: MyProposal) {
+    const { confirmed, value } = await confirm({
+      title: t("dropTitle"),
+      description: t("dropBody"),
+      confirmLabel: t("dropConfirm"),
+      tone: "danger",
+      input: { label: t("dropReasonLabel"), placeholder: t("dropReasonPlaceholder") },
+    });
+    if (!confirmed) return;
+    setRetirando(propuesta.id);
+    try {
+      const res = await fetch("/api/proposals", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: propuesta.id, action: "withdraw_accepted", reason: value ?? "" }),
+      });
+      if (!res.ok) {
+        await showMessage({ title: t("withdrawErrorTitle"), description: t("withdrawError"), tone: "danger" });
+        return;
+      }
+      setExpandedMine(null);
+      await refreshAll();
+      await showMessage({ title: t("dropDoneTitle"), description: t("dropDone") });
+    } catch {
+      await showMessage({ title: t("withdrawErrorTitle"), description: t("withdrawError"), tone: "danger" });
+    } finally {
+      setRetirando(null);
+    }
+  }
+
   function dismissOpportunity(id: string) {
     setDismissed((prev) => {
       const next = new Set(prev); next.add(id);
@@ -226,7 +288,7 @@ export function ProposalsTab({ categoryId }: ProposalsTabProps) {
   // Estado de la solicitud que respondí, en una sola palabra.
   function replyOutcome(p: MyProposal): { label: string; variant: "default" | "muted" | "error" | "success" } | null {
     const ps = p.projects?.status;
-    if (p.status === "accepted" && ps === "completed") return { label: t("projStatus.chosen"), variant: "success" };
+    if (p.status === "accepted") return { label: t("projStatus.chosen"), variant: "success" };
     if (ps === "completed") return { label: t("projStatus.completed"), variant: "muted" };
     if (ps === "cancelled") return { label: t("projStatus.cancelled"), variant: "error" };
     return null;
@@ -343,6 +405,7 @@ export function ProposalsTab({ categoryId }: ProposalsTabProps) {
             {myProposals.map((p) => {
               const isOpen = expandedMine === p.id;
               const outcome = replyOutcome(p);
+              const trabajoVivo = p.projects?.status !== "completed" && p.projects?.status !== "cancelled";
               return (
                 <Card id={`project-${p.project_id}`} key={p.id} className={cn("rounded-2xl border-[#e5e7eb] bg-white shadow-sm transition-all", isOpen && "shadow-md ring-1 ring-[#cfe9f5]")}>
                   <button
@@ -378,7 +441,28 @@ export function ProposalsTab({ categoryId }: ProposalsTabProps) {
                           <ExpandableText text={p.message} lines={6} className="mt-0.5 min-w-0 text-[13px] leading-relaxed text-[#4b5563]" />
                         </div>
                       </div>
-                      {!outcome && <p className="rounded-xl bg-[#f4f7fa] px-3.5 py-2.5 text-[13px] leading-relaxed text-[#4b5563]">{t("sentNote")}</p>}
+                      {p.status === "pending" && <p className="rounded-xl bg-[#f4f7fa] px-3.5 py-2.5 text-[13px] leading-relaxed text-[#4b5563]">{t("sentNote")}</p>}
+                      {p.status === "accepted" && trabajoVivo && (
+                        <p className="rounded-xl bg-[#f0fdf4] px-3.5 py-2.5 text-[13px] leading-relaxed text-[#166534]">{t("chosenNote")}</p>
+                      )}
+                      {(p.status === "pending" || (p.status === "accepted" && trabajoVivo)) && (
+                        <div className="flex justify-end">
+                          <CardActionsMenu
+                            label={t("moreActions")}
+                            actions={[p.status === "pending" ? {
+                              label: retirando === p.id ? t("withdrawing") : t("withdraw"),
+                              onClick: () => { if (retirando !== p.id) void retirarRespuesta(p); },
+                              destructive: true,
+                              icon: <Trash2 className="h-4 w-4" />,
+                            } : {
+                              label: retirando === p.id ? t("withdrawing") : t("drop"),
+                              onClick: () => { if (retirando !== p.id) void soltarTrabajo(p); },
+                              destructive: true,
+                              icon: <Trash2 className="h-4 w-4" />,
+                            }]}
+                          />
+                        </div>
+                      )}
                     </div>
                   )}
                 </Card>

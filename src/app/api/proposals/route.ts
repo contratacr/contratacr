@@ -234,7 +234,6 @@ export async function PATCH(req: NextRequest) {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
 
-    // ── Professional edits their OWN pending proposal (price / message) ──────
     if (action === "archive") {
       const { data: pro } = await supabase.from("professionals").select("id").eq("profile_id", user.id).maybeSingle();
       if (!pro) return NextResponse.json({ error: "No autorizado" }, { status: 403 });
@@ -318,58 +317,10 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ success: true });
     }
 
-    if (status === undefined && (price !== undefined || message !== undefined)) {
-      const { data: pro } = await supabase.from("professionals").select("id").eq("profile_id", user.id).maybeSingle();
-      if (!pro) return NextResponse.json({ error: "No autorizado" }, { status: 403 });
-      const { data: prop } = await supabase.from("proposals").select("status, professional_id").eq("id", id).maybeSingle();
-      if (!prop || prop.professional_id !== pro.id) return NextResponse.json({ error: "No autorizado" }, { status: 403 });
-      if (prop.status !== "pending") return NextResponse.json({ error: "Solo puedes editar una respuesta pendiente." }, { status: 409 });
-      const patch: Record<string, unknown> = {};
-      if (price !== undefined) patch.price = parseMoneyAmount(price);
-      if (message !== undefined) patch.message = limitTrimmedText(message, LONG_TEXT_MAX_LENGTH);
-      // Persist with the service-role client: the RLS-bound update can silently
-      // affect 0 rows if no UPDATE policy covers the professional (edits were lost).
-      const admin = createAdminClient();
-      const { error: e } = await admin.from("proposals").update(patch).eq("id", id);
-      if (e) return NextResponse.json({ error: e.message }, { status: 500 });
-      await auditUserAction(admin, req, {
-        actorUserId: user.id,
-        actorRole: "professional",
-        action: "proposal.edit",
-        entityTable: "proposals",
-        entityId: id,
-        entityOwnerUserId: user.id,
-        afterData: patch,
-        metadata: { professional_id: pro.id },
-      });
-      try {
-        const { data: updated } = await admin
-          .from("proposals")
-          .select("project_id, projects:project_id(title, client_id)")
-          .eq("id", id)
-          .maybeSingle();
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const project = (updated as any)?.projects;
-        if (updated?.project_id && project?.client_id) {
-          const notification = {
-            user_id: project.client_id,
-            type: "proposal_updated",
-            title: "Respuesta actualizada",
-            message: `Un profesional actualizó su respuesta a "${project.title ?? "tu solicitud"}".`,
-            data: {
-              link: "/es/dashboard/profesional?tab=sent_projects",
-              project_id: updated.project_id,
-              project_title: project.title ?? "tu solicitud",
-            },
-          };
-          await admin.from("notifications").insert(notification);
-          await sendNotificationPush({ userId: notification.user_id, ...notification });
-        }
-      } catch (notifyErr) {
-        console.error("[PATCH /api/proposals] notify proposal update failed:", notifyErr);
-      }
-      return NextResponse.json({ success: true });
-    }
+    // Una respuesta enviada NO se edita: el cliente ya la pudo haber leído y una
+    // versión distinta de lo que leyó es la puerta a "me dijo otro precio". Para
+    // corregir un error está DELETE ("Retirar mi respuesta"), que la borra y deja
+    // responder de nuevo desde cero.
 
     if (!status) return NextResponse.json({ error: "Faltan campos" }, { status: 400 });
 
