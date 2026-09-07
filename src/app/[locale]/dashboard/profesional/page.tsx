@@ -136,8 +136,9 @@ const USE_TABS: Tab[] = (["sent_bookings", "sent_projects", "applications", "con
 const OPPORTUNITY_MODAL_SEEN_STORAGE_PREFIX = "contratacr:seen-opportunity-modal";
 
 // Once filas planas se leían una por una; en bloques cortos el menú se recorre
-// de un vistazo. Los bloques se marcan con una separación, no con rótulos: con
-// ocho o diez filas, cuatro títulos en mayúsculas pesaban más de lo que ayudaban.
+// de un vistazo. Sin rótulos y con UNA sola separación —la que aparta la cuenta
+// y la ayuda del trabajo—: tres o cuatro líneas seguidas volvían a llenar de
+// ruido lo único que hay que leer ahí, que son los nombres de las secciones.
 const PANEL_GROUPS: { grupo: "work" | "business" | "saved" | "account"; tabs: Tab[] }[] = [
   { grupo: "work", tabs: ["bookings", "proposals", "sent_bookings", "sent_projects"] },
   { grupo: "business", tabs: ["offers", "jobs", "photos", "availability", "services", "completion"] },
@@ -1869,8 +1870,8 @@ export default function DashboardPage() {
             <div className="flex flex-col">
               <nav className="flex flex-col divide-y divide-[#eef3f7]">
                 {panelModeSelector()}
-                {agruparPestanas(desktopSidebarTabs).map((grupo, i) => (
-                  <div key={grupo[0] ?? i} className={cn("flex flex-col divide-y divide-[#eef3f7]", i > 0 && "border-t-[7px] border-[#f1f5f9]")}>
+                {agruparPestanas(desktopSidebarTabs).map((grupo, i, todos) => (
+                  <div key={grupo[0] ?? i} className={cn("flex flex-col divide-y divide-[#eef3f7]", i === todos.length - 1 && i > 0 && "border-t-[7px] border-[#f1f5f9]")}>
                     {grupo.map(desktopSidebarButton)}
                   </div>
                 ))}
@@ -2364,8 +2365,8 @@ export default function DashboardPage() {
                                 <div>
                                   <div className="flex flex-col gap-2.5">
                                     {cambiarPanelCard()}
-                                    {agruparPestanas(mobileSectionTabs).map((grupo, i) => (
-                                      <div key={grupo[0] ?? i} className={cn("flex flex-col gap-2.5", i > 0 && "mt-1.5 border-t border-[#e8eef4] pt-4")}>
+                                    {agruparPestanas(mobileSectionTabs).map((grupo, i, todos) => (
+                                      <div key={grupo[0] ?? i} className={cn("flex flex-col gap-2.5", i === todos.length - 1 && i > 0 && "mt-1.5 border-t border-[#e8eef4] pt-4")}>
                                         {grupo.map(mobileSectionButton)}
                                       </div>
                                     ))}

@@ -15,7 +15,7 @@ import { IMAGE_ACCEPT } from "@/lib/upload-validation";
 import { getImageUploadPreparationErrorCode, prepareImageForUpload, uploadPhotoFormDataWithRetry } from "@/lib/client-image-upload";
 import { createClient } from "@/lib/supabase/client";
 import { detectIdType } from "@/lib/cedula";
-import { Camera, X, Plus, ChevronDown, ChevronLeft, Lock, Award, Globe, Pencil, Eye, Trash2 } from "lucide-react";
+import { Camera, X, Plus, ChevronDown, ChevronLeft, ChevronRight, Lock, Award, Globe, Pencil, Eye, Trash2 } from "lucide-react";
 import { InstagramIcon, FacebookIcon, TikTokIcon, LinkedInIcon } from "@/components/icons/social-icons";
 import { SOCIAL_NETWORKS, cleanUsername, cleanWebsiteUrl, isValidUsername, isValidWebsiteUrl, type SocialNetwork } from "@/lib/social";
 import { Link } from "@/i18n/navigation";
@@ -83,7 +83,14 @@ function Section({ id, title, desc, open, mobileFocused, onToggle, onActivate, c
       <button
         type="button"
         onClick={() => onToggle(id)}
-        className={cn("w-full items-center justify-between gap-3 px-4 py-4 text-left transition-colors sm:flex sm:px-5", open ? "hidden bg-[#fafafa] sm:flex" : "flex hover:bg-[#fafafa]")}
+        className={cn(
+          "w-full items-center justify-between gap-3 px-4 py-4 text-left transition-colors sm:flex sm:px-5",
+          open ? "hidden bg-[#fafafa] sm:flex" : "flex hover:bg-[#fafafa]",
+          // En el teléfono cada sección se abre a pantalla completa, o sea que ES
+          // navegación: se ve igual que una fila del menú del panel (tarjeta con
+          // borde, 60 px, flecha) en vez de una fila de acordeón con lápiz.
+          !open && "max-sm:min-h-[60px] max-sm:rounded-2xl max-sm:border max-sm:border-[#e5edf4] max-sm:bg-white max-sm:px-4 max-sm:py-3.5",
+        )}
         aria-expanded={open}
       >
         {open && (
@@ -93,10 +100,15 @@ function Section({ id, title, desc, open, mobileFocused, onToggle, onActivate, c
         )}
         <div className="min-w-0">
           <p className={cn("text-[15px] font-semibold text-[#111827] leading-tight", open && "max-sm:text-base")}>{title}</p>
-          {desc && <p className={cn("text-xs text-[#6b7280] mt-1", open && "max-sm:hidden")}>{desc}</p>}
+          {desc && <p className={cn("mt-1 text-xs text-[#6b7280] max-sm:hidden")}>{desc}</p>}
         </div>
         <span className={cn("flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[#162543] transition-colors hover:bg-[#EBF5FB] hover:text-[#009FD9]", open && "max-sm:hidden")} aria-hidden="true">
-          {open ? <ChevronDown className="h-[18px] w-[18px] rotate-180" /> : <Pencil className="h-[18px] w-[18px]" />}
+          {open ? <ChevronDown className="h-[18px] w-[18px] rotate-180" /> : (
+            <>
+              <Pencil className="hidden h-[18px] w-[18px] sm:block" />
+              <ChevronRight className="h-5 w-5 text-[#94a3b8] sm:hidden" />
+            </>
+          )}
         </span>
       </button>
       {open && (
@@ -872,9 +884,11 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
           divider-separated rows; each expands inline into a soft inset field panel. */}
       <div className={cn(
         "bg-white sm:overflow-hidden sm:rounded-2xl sm:border sm:border-[#e5e7eb] sm:shadow-[0_10px_28px_-24px_rgba(15,23,42,0.65)]",
-        "overflow-hidden rounded-2xl border border-[#e5e7eb] shadow-[0_10px_28px_-24px_rgba(15,23,42,0.65)]"
+        "overflow-hidden rounded-2xl border border-[#e5e7eb] shadow-[0_10px_28px_-24px_rgba(15,23,42,0.65)]",
+        // Con las filas convertidas en tarjetas, el contenedor sobra en el teléfono.
+        !mobileSectionFocused && "max-sm:rounded-none max-sm:border-0 max-sm:bg-transparent max-sm:shadow-none"
       )}>
-      <div className={cn(!mobileSectionFocused && "divide-y divide-[#eef3f7]")}>
+      <div className={cn(!mobileSectionFocused && "divide-y divide-[#eef3f7] max-sm:flex max-sm:flex-col max-sm:gap-2.5 max-sm:divide-y-0")}>
       <div className="hidden px-4 pb-4 pt-5 sm:block sm:px-5 sm:pt-6">
         <div className="min-w-0">
           <h2 className="text-xl font-bold text-[#111827]">{locale === "en" ? "Profile" : "Perfil"}</h2>
