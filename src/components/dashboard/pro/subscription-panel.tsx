@@ -32,7 +32,7 @@ const fmtDate = (d?: string | null) =>
 const BENEFITS = [
   "Tu perfil aparece en las búsquedas y los clientes pueden encontrarte",
   "Recibe citas y proyectos de tus clientes",
-  "Revisa proyectos de clientes y envía propuestas",
+  "Revisa proyectos publicados y responde",
   "Mantén tu perfil profesional activo para seguir recibiendo clientes",
 ];
 

@@ -34,13 +34,13 @@ APPOINTMENTS (CITAS)
 
 PROJECTS (PROYECTOS)
 - A client posts a project ("Publicar lo que necesito") with two fields: the service and what needs doing; the area is optional and remembered from the last time. Entry points: the link under the home search, the empty search results, the menu and My projects → Publicar.
-- Matching professionals see it under Client projects (Proyectos de clientes) → Nuevas and reply with one message; the project then moves to Respondidas. Replies cannot be edited. A pending reply can be withdrawn ("Retirar mi respuesta"), which deletes it and lets the professional reply again; once the client chose them, the professional can only step away with a reason ("Ya no puedo hacerlo"), which reopens the project.
+- Matching professionals see it under Projects (Proyectos) → Nuevas and reply with one message; the project then moves to Respondidas. Replies cannot be edited. A pending reply can be withdrawn ("Retirar mi respuesta"), which deletes it and lets the professional reply again; once the client chose them, the professional can only step away with a reason ("Ya no puedo hacerlo"), which reopens the project.
 - The client reads the replies in My projects (Mis proyectos) → Activos, writes to whoever they like (in-app chat inside the app, WhatsApp on the web) and closes the project with "Ya lo resolví", choosing who helped (optional review). The professional chosen sees "Te eligió".
 - There is no accept, assign, mark-done or confirm step. An open project with no activity for 30 days closes automatically and the client is told.
 - Direct profile contacts are appointments (Citas): a date and time with one professional. Posted needs are projects (Proyectos) for both clients and professionals. Never call them reservas, solicitudes, opportunities or proposals.
 
 PROFESSIONAL PANEL
-- Main sections: Appointments (Citas), Client projects (Proyectos de clientes), Offers, Jobs, Success cases, Availability, Services, Support, Profile and Guides. Replies sent by the professional live under Client projects → Respondidas.
+- Main sections: Appointments (Citas), Projects (Proyectos), Offers, Jobs, Success cases, Availability, Services, Support, Profile and Guides. Replies sent by the professional live under Projects → Respondidas.
 - Profile completion helps public visibility. A professional needs at least one active service to appear correctly in public search.
 - Services can have a public description, price and experience information. Prices are CRC and displayed as I.V.A.I. where applicable.
 - Work areas can be exact map pins, cantons, whole provinces or nationwide video coverage for compatible services.

@@ -872,8 +872,8 @@ const PRODUCT_INTENTS: ProductIntent[] = [
     test: (n) => /(editar|modificar|cambiar|corregir|retirar|borrar|edit|change|withdraw).{0,15}(mi propuesta|una propuesta|la propuesta|propuesta|mi respuesta|la respuesta|respuesta|proposal|reply)/.test(n),
     action: "open_dashboard",
     answer: {
-      es: "Las respuestas no se editan: si quieres cambiar algo, escríbele al cliente directamente. En tu panel → Proyectos de clientes → «Respondidas» ves lo que enviaste. Si aún nadie te eligió puedes retirar tu respuesta y volver a responder; si ya te eligieron, usa «Ya no puedo hacerlo» para avisarle al cliente.",
-      en: "Replies can't be edited: if you want to change something, write to the client directly. In your panel → Client projects → \"Respondidas\" you can see what you sent. While nobody has chosen you, you can withdraw the reply and answer again; once chosen, use \"I can no longer do it\" so the client is told.",
+      es: "Las respuestas no se editan: si quieres cambiar algo, escríbele al cliente directamente. En tu panel → Proyectos → «Respondidas» ves lo que enviaste. Si aún nadie te eligió puedes retirar tu respuesta y volver a responder; si ya te eligieron, usa «Ya no puedo hacerlo» para avisarle al cliente.",
+      en: "Replies can't be edited: if you want to change something, write to the client directly. In your panel → Projects → \"Respondidas\" you can see what you sent. While nobody has chosen you, you can withdraw the reply and answer again; once chosen, use \"I can no longer do it\" so the client is told.",
     },
     cta: { es: "Ver mis respuestas", en: "See my replies" },
     href: (locale) => `/${locale}/dashboard/profesional?tab=proposals`,
@@ -1580,9 +1580,9 @@ function normalizePayload(
       ...payload,
       action: "open_dashboard",
       answer: locale === "en"
-        ? "Open Client projects in your professional dashboard to review projects related to your services and reply to them."
-        : "Abre Proyectos de clientes en tu panel profesional para revisar proyectos relacionados con tus servicios y responderlos.",
-      ctaLabel: locale === "en" ? "Open client projects" : "Ver proyectos de clientes",
+        ? "Open Projects in your professional dashboard to review the projects related to your services and reply to them."
+        : "Abre Proyectos en tu panel profesional para revisar los proyectos relacionados con tus servicios y responderlos.",
+      ctaLabel: locale === "en" ? "Open projects" : "Ver proyectos",
     };
   }
   if (includesAny(normalized, ["hablar con soporte", "contactar soporte", "abrir soporte", "ticket de soporte", "support ticket", "contact support"])) {

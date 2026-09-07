@@ -1162,9 +1162,9 @@
         "cancel": "Cancel"
       },
       "proposals": {
-        "title": "Client projects",
-        "empty": "No client projects in your area",
-        "emptyHint": "Client projects in your category will appear here.",
+        "title": "Projects",
+        "empty": "No projects in your area",
+        "emptyHint": "Projects in your category will appear here.",
         "myProposals": "My replies",
         "browse": "Projects",
         "send": "Send reply",
@@ -1275,7 +1275,7 @@
       "chat": "Messages",
       "assistant": "Assistant",
       "bookings": "Appointments",
-      "proposals": "Client projects",
+      "proposals": "Projects",
       "verificacion": "Verification",
       "suscripcion": "Subscription",
       "sent_bookings": "My appointments",
@@ -1367,8 +1367,8 @@
           "body": "See the appointments clients booked from your profile."
         },
         "opportunities": {
-          "title": "Client projects",
-          "body": "Reply to open client projects that match your services."
+          "title": "Projects",
+          "body": "Reply to open projects that match your services."
         },
         "services": {
           "title": "Services",
@@ -1489,7 +1489,7 @@
         "notifications": "{count, plural, one {# notification} other {# notifications}}"
       },
       "cta": {
-        "opportunities": "View client projects",
+        "opportunities": "View projects",
         "requests": "View appointments",
         "proposals": "See replies",
         "support": "View support",
@@ -1845,15 +1845,15 @@
           "cta": "Go to appointments"
         },
         "opportunities": {
-          "title": "Client projects",
+          "title": "Projects",
           "short": "Posts where you can propose",
-          "body": "Client projects shows what clients are asking for in your services; reply and, if they're interested, they write to you.",
+          "body": "Projects shows what clients post for your services; reply and, if they're interested, they write to you.",
           "steps": [
             "Review whether the project fits what you offer.",
             "Send a clear proposal with scope and price.",
             "Follow up if the client replies or accepts."
           ],
-          "cta": "Go to client projects"
+          "cta": "Go to projects"
         },
         "successCases": {
           "title": "Success stories",
@@ -2098,7 +2098,7 @@
     "keepEditing": "Keep editing"
   },
   "proposalsTab": {
-    "browse": "Client projects",
+    "browse": "Projects",
     "mine": "My replies",
     "emptyBrowse": "No new projects right now",
     "emptyBrowseSub": "When a client posts something in your service, we'll notify you and it shows up here.",
@@ -2109,7 +2109,7 @@
     "pricePlaceholder": "example: 50000",
     "yourMessage": "Your reply",
     "allProfessions": "All services",
-    "availableTitle": "Client projects",
+    "availableTitle": "Projects",
     "liveUpdated": "Updated with recent changes.",
     "postedAgo": "Created {time}",
     "agoHours": "{count}h ago",

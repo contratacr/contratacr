@@ -9,7 +9,7 @@ const professionalTabs = [
   { tab: "photos", marker: /Casos de exito|Casos de .xito|Success cases|Success stories/i },
   { tab: "availability", marker: /Disponibilidad|Availability/i },
   { tab: "bookings", marker: /Citas|Appointments/i },
-  { tab: "proposals", marker: /Proyectos de clientes|Client projects/i },
+  { tab: "proposals", marker: /Proyectos|Projects/i },
   { tab: "jobs", marker: /Empleos|Jobs/i },
   { tab: "offers", marker: /Ofertas|Offers/i },
   { tab: "network", marker: /Seguidos|Following|Seguidores|Followers/i },

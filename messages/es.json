@@ -1162,9 +1162,9 @@
         "cancel": "Cancelar"
       },
       "proposals": {
-        "title": "Proyectos de clientes",
-        "empty": "No hay proyectos de clientes en tu zona",
-        "emptyHint": "Los proyectos de clientes en tu categoría aparecerán aquí.",
+        "title": "Proyectos",
+        "empty": "No hay proyectos en tu zona",
+        "emptyHint": "Los proyectos de tu categoría aparecerán aquí.",
         "myProposals": "Mis respuestas",
         "browse": "Proyectos",
         "send": "Enviar respuesta",
@@ -1275,7 +1275,7 @@
       "chat": "Mensajes",
       "assistant": "Asistente",
       "bookings": "Citas",
-      "proposals": "Proyectos de clientes",
+      "proposals": "Proyectos",
       "verificacion": "Verificación",
       "suscripcion": "Suscripción",
       "sent_bookings": "Mis citas",
@@ -1367,7 +1367,7 @@
           "body": "Vea las citas que le reservaron desde su perfil."
         },
         "opportunities": {
-          "title": "Proyectos de clientes",
+          "title": "Proyectos",
           "body": "Responda proyectos abiertos que coinciden con sus servicios."
         },
         "services": {
@@ -1728,15 +1728,15 @@
           "cta": "Ir a citas"
         },
         "opportunities": {
-          "title": "Proyectos de clientes",
+          "title": "Proyectos",
           "short": "Publicaciones donde puedes proponer",
-          "body": "Proyectos de clientes muestra lo que piden los clientes de tus servicios; responde y, si les interesa, te escriben.",
+          "body": "Proyectos muestra lo que publican los clientes de tus servicios; responde y, si les interesa, te escriben.",
           "steps": [
             "Revisa si el proyecto calza con lo que ofreces.",
             "Envía una propuesta clara con alcance y precio.",
             "Da seguimiento si el cliente responde o acepta."
           ],
-          "cta": "Ir a proyectos de clientes"
+          "cta": "Ir a proyectos"
         },
         "successCases": {
           "title": "Casos de éxito",
@@ -1903,7 +1903,7 @@
         "notifications": "{count, plural, one {# notificación} other {# notificaciones}}"
       },
       "cta": {
-        "opportunities": "Ver proyectos de clientes",
+        "opportunities": "Ver proyectos",
         "requests": "Ver citas",
         "proposals": "Ver respuestas",
         "support": "Ver soporte",
@@ -2098,7 +2098,7 @@
     "keepEditing": "Seguir editando"
   },
   "proposalsTab": {
-    "browse": "Proyectos de clientes",
+    "browse": "Proyectos",
     "mine": "Mis respuestas",
     "emptyBrowse": "No hay proyectos nuevos por ahora",
     "emptyBrowseSub": "Cuando un cliente publique algo de tu servicio, te avisamos y aparece aquí.",
@@ -2109,7 +2109,7 @@
     "pricePlaceholder": "Ejemplo: 50000",
     "yourMessage": "Tu respuesta",
     "allProfessions": "Todos los servicios",
-    "availableTitle": "Proyectos de clientes",
+    "availableTitle": "Proyectos",
     "liveUpdated": "Actualizado con cambios recientes.",
     "postedAgo": "Publicada {time}",
     "agoHours": "hace {count} h",
