@@ -1721,13 +1721,14 @@ body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-native-fab {
   to { transform: translate3d(-25%, 0, 0); }
 }
 
-/* Banda blanca propia: varios logos no tienen fondo transparente y sobre el gris
-   se veían como cajas blancas desparejas. */
+/* Banda blanca propia: varios logos no tienen fondo transparente y sobre un fondo
+   gris se verían como cajas blancas desparejas. Cierra el inicio, así que su
+   relleno inferior deja sitio a la barra de la app. */
 .featured-brands-ribbon {
   overflow: hidden;
   border-bottom: 1px solid #dfe7ef;
   background: #fff;
-  padding-block: 0.55rem;
+  padding-block: 0.55rem var(--ccr-native-content-end-gap, 0.55rem);
 }
 .ccr-native-app .featured-brands-ribbon {
   border-bottom: 0;

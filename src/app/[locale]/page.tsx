@@ -44,10 +44,6 @@ export default async function HomePage({
         {/* Hero: rotating headline + primary search. */}
         <LandingHero />
 
-        {/* Negocios presentes: banda blanca propia (no todos los logos son
-            transparentes) entre el buscador y el catálogo de servicios. */}
-        <FeaturedBrands />
-
         {/* Services carousel. */}
         <FadeInUp>
           <ProsSection />
@@ -60,6 +56,9 @@ export default async function HomePage({
         <FadeInUp delay={40}>
           <FindByZone coverage={coverage} />
         </FadeInUp>
+
+        {/* A continuous showcase of businesses present on ContrataCR. */}
+        <FeaturedBrands />
 
       </main>
 
