@@ -1172,16 +1172,16 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                       <span className="min-w-0 truncate">{proDisplayName(professional.fullName)}</span>
                       {professional.isVerified && <BadgeCheck className="h-4 w-4 shrink-0 text-[#009FD9]" aria-label={t("verified")} />}
                     </p>
-                    <p className="mt-0.5 truncate text-[13px] text-[#6b7280]">
-                      {/* Mientras no haya servicio elegido, decir "Cámaras de seguridad +5"
-                          suena a que ya se eligió: ahí va la zona, que sí es un dato del
-                          profesional y no una decisión pendiente. */}
-                      {effectiveCategory
-                        ? getCategoryLabel(effectiveCategory, locale)
-                        : professional.cantonName
-                          ? `${professional.cantonName}, ${professional.provinceName}`
-                          : headerProfession}
-                    </p>
+                    {/* Con servicio elegido, el servicio. Mientras se elige, decir
+                        "Cámaras de seguridad +5" suena a que ya se eligió: ahí van las
+                        reseñas, que es lo que ayuda a decidir si reservar con él. */}
+                    {effectiveCategory ? (
+                      <p className="mt-0.5 truncate text-[13px] text-[#6b7280]">{getCategoryLabel(effectiveCategory, locale)}</p>
+                    ) : professional.reviewCount > 0 ? (
+                      <StarRating rating={professional.ratingAvg} reviewCount={professional.reviewCount} showValue size="sm" className="mt-0.5" />
+                    ) : (
+                      <p className="mt-0.5 truncate text-[13px] text-[#6b7280]">{t("noReviews")}</p>
+                    )}
                   </div>
                 </div>
               )}

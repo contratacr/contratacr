@@ -1069,7 +1069,8 @@
     "requestService": "Reservar",
     "charLimit": "Has alcanzado el límite de {max} caracteres.",
     "optional": "opcional",
-    "stepOf": "Paso {current} de {total}"
+    "stepOf": "Paso {current} de {total}",
+    "noReviews": "Sin reseñas todavía"
   },
   "dashboard": {
     "pro": {

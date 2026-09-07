@@ -1069,7 +1069,8 @@
     "requestService": "Book",
     "charLimit": "You've reached the {max}-character limit.",
     "optional": "optional",
-    "stepOf": "Step {current} of {total}"
+    "stepOf": "Step {current} of {total}",
+    "noReviews": "No reviews yet"
   },
   "dashboard": {
     "pro": {
