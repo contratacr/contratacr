@@ -111,11 +111,12 @@ function dateLocale(locale: string): string {
 
 function formatDateDisplay(dateStr: string, locale: string): string {
   const [y, m, d] = dateStr.split("-").map(Number);
-  return new Date(y, m - 1, d).toLocaleDateString(dateLocale(locale), {
+  const etiqueta = new Date(y, m - 1, d).toLocaleDateString(dateLocale(locale), {
     weekday: "long",
     day: "numeric",
     month: "long",
   });
+  return etiqueta.charAt(0).toUpperCase() + etiqueta.slice(1);
 }
 
 function calendarDayNames(locale: string): string[] {
@@ -1105,15 +1106,15 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
           <Dialog.Title className="sr-only">
             {`${t("title")} - ${proDisplayName(professional.fullName)}`}
           </Dialog.Title>
-          {/* LEFT PANEL — the original dark navy→blue gradient (sprint 323 reverted the
-              sprint-317 light recolor). ONLY the verified mark was kept from that change:
-              the solid #009FD9 "Verificado" pill that matches the /buscar card (it reads
-              crisply on the dark navy top too). */}
-          <div className="shrink-0 bg-gradient-to-br from-[#1a2744] via-[#13294a] to-[#009FD9] p-6 text-white lg:flex lg:w-[320px] lg:flex-col">
+          {/* Cabecera del profesional: blanca y con borde, como las tarjetas del resto
+              de la app. El degradado marino que llevaba era el único de toda la app y
+              hacía sentir el modal como otra aplicación. La insignia "Verificado"
+              sigue siendo la píldora turquesa de la tarjeta de /buscar. */}
+          <div className="shrink-0 border-b border-[#e5edf4] bg-white p-5 text-[#162543] lg:flex lg:w-[320px] lg:flex-col lg:border-b-0 lg:border-r">
             <div className="flex items-center gap-3 lg:flex-col lg:items-center lg:gap-0">
               <Avatar className="h-14 w-14 shrink-0 lg:h-20 lg:w-20">
                 <AvatarImage src={professional.avatarUrl} alt={professional.fullName} />
-                <AvatarFallback className="bg-white/20 text-white text-xl font-bold">
+                <AvatarFallback className="bg-[#EAF7FD] text-[#0089bb] text-xl font-bold">
                   {getInitials(professional.fullName)}
                 </AvatarFallback>
               </Avatar>
@@ -1133,29 +1134,29 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                     {t("verified")}
                   </span>
                 )}
-                <p className="mt-1 text-sm text-white/70 lg:text-center">{headerProfession}</p>
+                <p className="mt-1 text-sm text-[#6b7280] lg:text-center">{headerProfession}</p>
               </div>
             </div>
 
             <div className="mt-5 hidden space-y-2 lg:block">
-              <StarRating rating={professional.ratingAvg} showValue reviewCount={professional.reviewCount} size="sm" className="justify-center [&_span]:text-white" />
+              <StarRating rating={professional.ratingAvg} showValue reviewCount={professional.reviewCount} size="sm" className="justify-center" />
               {professional.cantonName && (
-                <div className="flex items-center gap-1.5 justify-center text-white/70 text-sm">
+                <div className="flex items-center gap-1.5 justify-center text-[#6b7280] text-sm">
                   <MapPin className="h-3.5 w-3.5" />
                   <span>{professional.cantonName}, {professional.provinceName}</span>
                 </div>
               )}
               {professional.hourlyRate && (
                 <div className="text-center">
-                  <span className="text-xs text-white/60">{t("from")}</span>
+                  <span className="text-xs text-[#6b7280]">{t("from")}</span>
                   {(() => {
                     const label = formatServicePrice(professional.hourlyRate, "por_hora", locale) ?? "";
                     const { amount, unit, taxSuffix } = splitPricingLabel(label);
                     return (
                       <p className="font-bold text-white text-lg leading-tight">
                         {amount}
-                        {unit && <span className="text-xs font-normal text-white/60"> {unit}</span>}
-                        {taxSuffix && <span className="block text-[10px] font-semibold tracking-wide text-white/50">{taxSuffix}</span>}
+                        {unit && <span className="text-xs font-normal text-[#6b7280]"> {unit}</span>}
+                        {taxSuffix && <span className="block text-[10px] font-semibold tracking-wide text-[#6b7280]/50">{taxSuffix}</span>}
                       </p>
                     );
                   })()}
@@ -1166,9 +1167,9 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
             {/* What happens next — genuinely useful to the client at booking time
                 (replaces the generic "sin comisiones" trust chips). */}
             <div className="mt-auto hidden flex-col gap-2.5 pt-5 lg:flex">
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-white/50">{t("next.title")}</p>
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-[#6b7280]/50">{t("next.title")}</p>
               {(["step1", "step2", "step3"] as const).map((key, i) => (
-                <div key={i} className="flex items-start gap-2 text-white/70 text-xs">
+                <div key={i} className="flex items-start gap-2 text-[#6b7280] text-xs">
                   <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-white/15 text-[10px] font-semibold text-white">{i + 1}</span>
                   <span className="leading-snug">{t(`next.${key}`)}</span>
                 </div>
@@ -1222,10 +1223,10 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                           key={cat}
                           type="button"
                           onClick={() => setPickedCategory(cat)}
-                          className="flex items-center justify-between gap-2 rounded-xl border border-[#e5e7eb] px-4 py-3 text-left text-sm font-medium text-[#374151] hover:border-[#009FD9] hover:bg-[#EBF5FB] transition-colors"
+                          className="flex min-h-[60px] items-center justify-between gap-3 rounded-2xl border border-[#e5edf4] bg-white px-4 py-3.5 text-left text-[15px] font-semibold text-[#162543] transition-colors hover:border-[#b9c8d6] hover:bg-[#f7f9fb]"
                         >
                           <span className="min-w-0 break-words">{getCategoryLabel(cat, locale)}</span>
-                          <ChevronRight className="h-4 w-4 shrink-0 text-[#9ca3af]" />
+                          <ChevronRight className="h-5 w-5 shrink-0 text-[#94a3b8]" />
                         </button>
                       ))}
                     </div>
@@ -1329,7 +1330,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                                 onClick={() => { setSelectedDate(dateStr); setSelectedTime(""); }}
                                 className={cn(
                                   "relative aspect-square flex items-center justify-center rounded-xl text-sm font-medium transition-all",
-                                  isSelected && "bg-[#009FD9] text-white shadow-sm",
+                                  isSelected && "bg-[#162543] text-white shadow-sm",
                                   !isSelected && available && "hover:bg-[#EBF5FB] text-[#111827] cursor-pointer",
                                   !isSelected && available && isToday && "text-[#009FD9]",
                                   !isSelected && !available && "text-[#d1d5db] cursor-not-allowed"
@@ -1377,8 +1378,8 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                                       className={cn(
                                         "w-full rounded-xl border px-2 py-2 text-sm font-medium tabular-nums text-center transition-all",
                                         selectedTime === slot
-                                          ? "bg-[#009FD9] text-white border-[#009FD9]"
-                                          : "bg-white text-[#374151] border-[#e5e7eb] hover:border-[#009FD9] hover:text-[#009FD9]"
+                                          ? "bg-[#162543] text-white border-[#162543]"
+                                          : "bg-white text-[#374151] border-[#e5e7eb] hover:border-[#162543] hover:text-[#162543]"
                                       )}
                                     >
                                       {slot}
@@ -1723,7 +1724,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                     </span>
                     <Button
                       size="md"
-                      className="shrink-0"
+                      className="shrink-0 bg-[#162543] hover:bg-[#233a5f]"
                       disabled={!selectedDate || slots.length === 0 || !selectedTime}
                       onClick={() => setStep("details")}
                     >
@@ -1735,7 +1736,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                 {step === "details" && (
                   <Button
                     size="md"
-                    className="flex-1"
+                    className="flex-1 bg-[#162543] hover:bg-[#233a5f]"
                     disabled={
                       (forSomeoneElse && (!benName.trim() || !benDob))
                       || (proIsHealth && !forSomeoneElse && hasStoredCedula && !effectiveSelfDob)
@@ -1768,7 +1769,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                 {step === "contact" && (
                   <Button
                     size="md"
-                    className="flex-1"
+                    className="flex-1 bg-[#162543] hover:bg-[#233a5f]"
                     loading={submitting || checkingCedula}
                     disabled={profilePhone.replace(/\D/g, "").length < 8 || guestEmailCheck.taken || (!noCedula && !profileCedula) || (!selfHasAutoName && !clientName.trim()) || (proIsHealth && !forSomeoneElse && !effectiveSelfDob)}
                     onClick={async () => {
@@ -1786,7 +1787,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                 {step === "complete" && (
                   <Button
                     size="md"
-                    className="flex-1"
+                    className="flex-1 bg-[#162543] hover:bg-[#233a5f]"
                     loading={savingProfile || submitting}
                     disabled={savingProfile || submitting || ((needsProfile || needsCedula) && !selfHasAutoName && !clientName.trim()) || (proIsHealth && !forSomeoneElse && needsCedula && !effectiveSelfDob)}
                     onClick={saveProfileAndSubmit}
