@@ -1161,7 +1161,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                   </div>
                 </div>
               )}
-              <div className="flex min-h-0 flex-1 flex-col rounded-2xl border border-[#e5edf4] bg-white px-4 py-4 md:px-5">
+              <div className="rounded-2xl border border-[#e5edf4] bg-white px-4 py-4 md:px-5">
 
               {/* STEP: calendar */}
               {step === "calendar" && (
@@ -1655,8 +1655,9 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
               </div>
             )}
 
-            {/* Footer actions */}
-            {step !== "success" && (
+            {/* Footer actions — elegir el servicio ES la acción de ese paso: sin
+                nada que confirmar, la barra de abajo se queda vacía y estorba. */}
+            {step !== "success" && !(step === "calendar" && needsProfessionPick) && (
               <div className="flex shrink-0 gap-3 border-t border-[#f3f4f6] bg-white px-5 py-3.5 pb-[max(env(safe-area-inset-bottom),0.875rem)] md:px-6 md:py-4 md:pb-4">
                 {step === "calendar" && !needsProfessionPick && (
                   <div className="flex flex-1 items-center justify-between gap-3">
