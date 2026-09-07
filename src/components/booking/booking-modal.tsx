@@ -1225,7 +1225,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                   <h3 className="text-lg font-semibold text-[#111827] mb-1">{t("calendar.title")}</h3>
                   <p className="text-sm text-[#6b7280] mb-4">
                     {initialLocationLabel ? <>{t.rich("calendar.locationPrefix", { location: initialLocationLabel, b: (c) => <span className="font-semibold text-[#374151]">{c}</span> })} </> : null}
-                    {t("calendar.availabilityHint")}
+                    {verMesCompleto ? t("calendar.availabilityHint") : null}
                   </p>
 
                   {!availabilityLoaded ? (
@@ -1401,33 +1401,54 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                         ) : (
                           <>
                             <p className="mb-3 text-sm font-semibold text-[#162543]">{formatDateDisplay(selectedDate, locale)}</p>
-                            {[
-                              { key: "morning", label: t("calendar.morning"), Icon: Sun, items: slots.filter((s) => parseInt(s, 10) < 12) },
-                              { key: "afternoon", label: t("calendar.afternoon"), Icon: Sunset, items: slots.filter((s) => { const h = parseInt(s, 10); return h >= 12 && h < 18; }) },
-                              { key: "night", label: t("calendar.night"), Icon: Moon, items: slots.filter((s) => parseInt(s, 10) >= 18) },
-                            ].filter((f) => f.items.length > 0).map((f) => (
-                              <div key={f.key} className="mb-4 last:mb-0">
-                                <div className="mb-2 flex items-center gap-1.5 text-[13px] font-semibold text-[#374151]">
-                                  <f.Icon className="h-4 w-4 text-[#9ca3af]" /> {f.label}
-                                </div>
-                                <div className="grid grid-cols-3 gap-2">
-                                  {f.items.map((slot) => (
-                                    <button
-                                      key={slot}
-                                      onClick={() => setSelectedTime(slot)}
-                                      className={cn(
-                                        "h-11 w-full rounded-full border text-sm font-semibold tabular-nums transition-all",
-                                        selectedTime === slot
-                                          ? "bg-[#009FD9] text-white border-[#009FD9]"
-                                          : "bg-white text-[#374151] border-[#e5e7eb] hover:border-[#009FD9] hover:text-[#009FD9]"
-                                      )}
-                                    >
-                                      {slot}
-                                    </button>
-                                  ))}
-                                </div>
+                            {/* Con pocas horas, los rótulos Mañana/Tarde/Noche pesaban más
+                                que lo que ordenaban: dos filas de adorno para tres botones.
+                                Se agrupa solo cuando hay bastantes; si no, una rejilla y ya.
+                                Cuatro columnas: "08:00" es corto y así caben sin desplazar. */}
+                            {slots.length <= 8 ? (
+                              <div className="grid grid-cols-3 gap-2 min-[360px]:grid-cols-4">
+                                {slots.map((slot) => (
+                                  <button
+                                    key={slot}
+                                    onClick={() => setSelectedTime(slot)}
+                                    className={cn(
+                                      "h-11 w-full rounded-full border text-sm font-semibold tabular-nums transition-all",
+                                      selectedTime === slot
+                                        ? "bg-[#009FD9] text-white border-[#009FD9]"
+                                        : "bg-white text-[#374151] border-[#e5e7eb] hover:border-[#009FD9] hover:text-[#009FD9]",
+                                    )}
+                                  >
+                                    {slot}
+                                  </button>
+                                ))}
                               </div>
-                            ))}
+                            ) : (
+                              [
+                                { key: "morning", label: t("calendar.morning"), items: slots.filter((s) => parseInt(s, 10) < 12) },
+                                { key: "afternoon", label: t("calendar.afternoon"), items: slots.filter((s) => { const h = parseInt(s, 10); return h >= 12 && h < 18; }) },
+                                { key: "night", label: t("calendar.night"), items: slots.filter((s) => parseInt(s, 10) >= 18) },
+                              ].filter((f) => f.items.length > 0).map((f) => (
+                                <div key={f.key} className="mb-4 last:mb-0">
+                                  <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-[#9ca3af]">{f.label}</p>
+                                  <div className="grid grid-cols-3 gap-2 min-[360px]:grid-cols-4">
+                                    {f.items.map((slot) => (
+                                      <button
+                                        key={slot}
+                                        onClick={() => setSelectedTime(slot)}
+                                        className={cn(
+                                          "h-11 w-full rounded-full border text-sm font-semibold tabular-nums transition-all",
+                                          selectedTime === slot
+                                            ? "bg-[#009FD9] text-white border-[#009FD9]"
+                                            : "bg-white text-[#374151] border-[#e5e7eb] hover:border-[#009FD9] hover:text-[#009FD9]",
+                                        )}
+                                      >
+                                        {slot}
+                                      </button>
+                                    ))}
+                                  </div>
+                                </div>
+                              ))
+                            )}
                           </>
                         )}
                       </div>
