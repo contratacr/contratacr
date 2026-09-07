@@ -832,12 +832,18 @@ export function LandingHero() {
           </div>
         </form>
 
-        {/* Segunda puerta: quien no sabe a quién llamar publica lo que necesita. */}
-        <p className="mt-3 text-center text-[13px] leading-snug text-[#4b5563] sm:mt-4 sm:text-sm">
-          <Link href="/dashboard/profesional?tab=sent_projects&openPublish=1" className="font-semibold text-[#0089bb] underline-offset-2 hover:underline">
+        {/* Segunda puerta: quien no sabe a quién llamar publica lo que necesita.
+            Un botón de contorno bajo "Buscar", no un enlace de nota al pie: así
+            las dos formas de empezar se ven como dos opciones. */}
+        <div className="mt-3 flex flex-col items-center gap-1.5 sm:mt-4">
+          <Link
+            href="/dashboard/profesional?tab=sent_projects&openPublish=1"
+            className="inline-flex h-11 w-full items-center justify-center rounded-full border-2 border-[#162543] bg-white px-5 text-[13px] font-bold text-[#162543] transition-colors hover:bg-[#eef1f6] sm:w-auto"
+          >
             {t("publishCta")}
           </Link>
-        </p>
+          <p className="max-w-sm text-center text-xs leading-snug text-[#6b7280]">{t("publishHint")}</p>
+        </div>
 
         {/* Sentinel — IntersectionObserver in navbar watches this */}
         <div id="hero-search-sentinel" aria-hidden className="h-0" />
