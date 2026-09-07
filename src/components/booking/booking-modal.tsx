@@ -1682,30 +1682,30 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
             {/* Footer actions — elegir el servicio ES la acción de ese paso: sin
                 nada que confirmar, la barra de abajo se queda vacía y estorba. */}
             {step !== "success" && !(step === "calendar" && needsProfessionPick) && (
-              <div className="relative flex shrink-0 gap-3 border-t border-[#f3f4f6] bg-white px-5 py-3.5 pb-[max(env(safe-area-inset-bottom),0.875rem)] after:absolute after:inset-x-0 after:top-full after:h-24 after:bg-white after:content-[''] md:px-6 md:py-4 md:pb-4">
+              <div className="ccr-pie-formulario relative flex shrink-0 flex-col gap-2.5 border-t border-[#e5e7eb] bg-white px-4 py-4 pb-[max(env(safe-area-inset-bottom),1rem)] after:absolute after:inset-x-0 after:top-full after:h-24 after:bg-white after:content-[''] sm:px-6">
                 {step === "calendar" && !needsProfessionPick && (
-                  <div className="flex flex-1 items-center justify-between gap-3">
-                    <span className="min-w-0 truncate text-sm text-[#6b7280]">
-                      {selectedDate && selectedTime ? (
-                        <span className="">{formatDateDisplay(selectedDate, locale)} · <span className="font-semibold text-[#111827]">{selectedTime}</span></span>
-                      ) : (
-                        t("calendar.selectDateTime")
-                      )}
-                    </span>
+                  <>
+                    {/* Lo elegido va ENCIMA del botón, como el pie de Publicar oferta:
+                        un texto y un botón compartiendo fila dejaban el botón angosto. */}
+                    <p className="truncate text-center text-sm text-[#6b7280]">
+                      {selectedDate && selectedTime
+                        ? <>{formatDateDisplay(selectedDate, locale)} · <span className="font-semibold text-[#111827]">{selectedTime}</span></>
+                        : t("calendar.selectDateTime")}
+                    </p>
                     <Button
-                      size="md"
-                      className="shrink-0"
+                      size="lg"
+                      className="w-full"
                       disabled={!selectedDate || slots.length === 0 || !selectedTime}
                       onClick={() => setStep("details")}
                     >
                       {t("continue")}
                     </Button>
-                  </div>
+                  </>
                 )}
 
                 {step === "details" && (
                   <Button
-                    size="md"
+                    size="lg"
                     className="w-full"
                     disabled={
                       (forSomeoneElse && (!benName.trim() || !benDob))
@@ -1738,7 +1738,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
 
                 {step === "contact" && (
                   <Button
-                    size="md"
+                    size="lg"
                     className="w-full"
                     loading={submitting || checkingCedula}
                     disabled={profilePhone.replace(/\D/g, "").length < 8 || guestEmailCheck.taken || (!noCedula && !profileCedula) || (!selfHasAutoName && !clientName.trim()) || (proIsHealth && !forSomeoneElse && !effectiveSelfDob)}
@@ -1756,7 +1756,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
 
                 {step === "complete" && (
                   <Button
-                    size="md"
+                    size="lg"
                     className="w-full"
                     loading={savingProfile || submitting}
                     disabled={savingProfile || submitting || ((needsProfile || needsCedula) && !selfHasAutoName && !clientName.trim()) || (proIsHealth && !forSomeoneElse && needsCedula && !effectiveSelfDob)}
@@ -1769,7 +1769,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
             )}
 
             {step === "success" && (
-              <div className="relative flex shrink-0 flex-col gap-2.5 border-t border-[#f3f4f6] bg-white px-5 py-3.5 pb-[max(env(safe-area-inset-bottom),0.875rem)] after:absolute after:inset-x-0 after:top-full after:h-24 after:bg-white after:content-[''] md:px-6 md:py-4 md:pb-4">
+              <div className="ccr-pie-formulario relative flex shrink-0 flex-col gap-2.5 border-t border-[#e5e7eb] bg-white px-4 py-4 pb-[max(env(safe-area-inset-bottom),1rem)] after:absolute after:inset-x-0 after:top-full after:h-24 after:bg-white after:content-[''] sm:px-6">
                 {/* Lead to the just-made request (it's at the top of Solicitudes), not a
                     dead-end "Listo". Closing still refreshes /buscar so the slot disappears. */}
                 <Button size="md" className="w-full" onClick={goToMyRequest}>

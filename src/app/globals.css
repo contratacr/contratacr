@@ -835,6 +835,11 @@ html.ccr-native-app body.ccr-booking-modal-open .ccr-native-bottom-nav {
   display: none !important;
 }
 
+body.ccr-booking-modal-open .ccr-app-header,
+html body.ccr-booking-modal-open .ccr-app-header {
+  display: none !important;
+}
+
 html.ccr-native-search-overlay-open .ccr-app-header,
 body.ccr-native-search-overlay-open .ccr-app-header {
   display: none !important;
