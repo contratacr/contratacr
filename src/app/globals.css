@@ -824,8 +824,8 @@ html[data-keyboard-open].ccr-native-app body.ccr-native-search-route .ccr-native
   display: none !important;
 }
 
-body.ccr-native-app.ccr-booking-modal-open .ccr-search-bottom-sheet,
-html.ccr-native-app body.ccr-booking-modal-open .ccr-search-bottom-sheet {
+body.ccr-booking-modal-open .ccr-search-bottom-sheet,
+html body.ccr-booking-modal-open .ccr-search-bottom-sheet {
   visibility: hidden !important;
   pointer-events: none !important;
 }
@@ -1196,6 +1196,17 @@ html[data-self-action-modal-open="true"] [data-save-button] {
        keyboard included): a spread shadow dims what the backdrop no longer
        reaches. */
     box-shadow: 0 0 0 100lvh rgba(0, 0, 0, 0.5);
+  }
+
+  /* El modal de reserva no lleva .app-modal-screen y su regla nativa fija
+     `inset: 0` con más peso: se le repite aquí el anclaje al área visible, para
+     que con el teclado abierto no se descuelgue y deje ver /buscar por debajo. */
+  html[data-keyboard-open] body.ccr-booking-modal-open .ccr-booking-modal-panel,
+  html[data-keyboard-open].ccr-native-app body.ccr-booking-modal-open .ccr-booking-modal-panel {
+    top: var(--app-visual-viewport-top) !important;
+    bottom: auto !important;
+    height: var(--app-visual-viewport-height) !important;
+    max-height: var(--app-visual-viewport-height) !important;
   }
 
   /* With the keyboard up the sheet may take the whole clamped wrapper, so the
