@@ -841,6 +841,15 @@ html body.ccr-booking-modal-open .ccr-app-header {
   display: none !important;
 }
 
+/* La página de reservar cita ocupa la pantalla completa con su propia cabecera
+   y su propio pie: las barras de la app estorbarían. */
+body.ccr-booking-route .ccr-app-header,
+html.ccr-booking-route .ccr-app-header,
+body.ccr-booking-route .ccr-native-bottom-nav,
+html.ccr-booking-route .ccr-native-bottom-nav {
+  display: none !important;
+}
+
 html.ccr-native-search-overlay-open .ccr-app-header,
 body.ccr-native-search-overlay-open .ccr-app-header {
   display: none !important;

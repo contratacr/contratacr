@@ -172,6 +172,10 @@ interface BookingModalProps {
   initialCategoryId?: string | null;
   initialLocationId?: string | null;
   initialLocationLabel?: string | null;
+  /** Página propia (/profesionales/[slug]/reservar) en vez de capa sobre otra
+   *  pantalla: sin diálogo, sin capas por debajo y con la vuelta atrás del
+   *  teléfono. El contenido es exactamente el mismo. */
+  asPage?: boolean;
 }
 
 // Radix dismiss/focus-outside guard: keep the modal open when the interaction is with
@@ -195,7 +199,7 @@ function addDateSlot(map: Record<string, string[]>, date: string, time: string) 
   map[date] = list;
 }
 
-export function BookingModal({ professional, categoryName, open, onClose, initialDate, initialTime, initialCategoryId, initialLocationId, initialLocationLabel }: BookingModalProps) {
+export function BookingModal({ professional, categoryName, open, onClose, initialDate, initialTime, initialCategoryId, initialLocationId, initialLocationLabel, asPage = false,}: BookingModalProps) {
   const t = useTranslations("booking");
   const locale = useLocale();
   const nativeApp = useNativeApp();
@@ -1128,33 +1132,9 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
     );
   }
 
-  return (
-    <Dialog.Root open={open} onOpenChange={(v) => !v && resetAndClose()}>
-      <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-[239] hidden bg-black/60 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 lg:block" />
-        <Dialog.Content
-          // The SelectMenu dropdowns (DOB picker day/month/year, etc.) portal their option
-          // list to <body>, OUTSIDE this dialog. Without these guards, clicking an option
-          // registers as an "interaction outside" → the dialog dismisses, so the picker reads
-          // as "broken / won't let me select" (most visible in the beneficiary DOB, which has
-          // no padrón auto-fill and must be picked manually). preventDefault ONLY for the
-          // SelectMenu list keeps normal overlay/Escape close working.
-          onPointerDownOutside={keepSelectMenuOpen}
-          onInteractOutside={keepSelectMenuOpen}
-          onFocusOutside={keepSelectMenuOpen}
-          className={cn(
-            "ccr-booking-modal-panel fixed inset-0 z-[240] lg:inset-x-auto lg:bottom-auto lg:left-1/2 lg:top-1/2 lg:-translate-x-1/2 lg:-translate-y-1/2",
-            "h-dvh max-h-dvh w-full overflow-hidden rounded-none bg-[#f4f7fa] shadow-none lg:h-auto lg:max-h-[720px] lg:w-[95vw] lg:max-w-xl lg:rounded-3xl lg:shadow-2xl",
-            "flex flex-col",
-            "lg:max-h-[720px]",
-            "data-[state=open]:animate-in data-[state=closed]:animate-out",
-            "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
-            "data-[state=closed]:slide-out-to-bottom-4 data-[state=open]:slide-in-from-bottom-4 lg:data-[state=closed]:zoom-out-95 lg:data-[state=open]:zoom-in-95 lg:data-[state=closed]:slide-out-to-bottom-0 lg:data-[state=open]:slide-in-from-bottom-0"
-          )}
-        >
-          <Dialog.Title className="sr-only">
-            {`${t("title")} - ${proDisplayName(professional.fullName)}`}
-          </Dialog.Title>
+  // Mismo contenido, dos armazones: página propia o capa sobre la pantalla.
+  const contenido = (
+    <>
           <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-[#f4f7fa]">
             {/* Cabecera con el mismo patrón que las demás pantallas: salida a la
                 izquierda (flecha en el teléfono, X en escritorio), título centrado y
@@ -1875,6 +1855,45 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
               </div>
             )}
           </div>
+    </>
+  );
+
+  if (asPage) {
+    return (
+      <div className="ccr-booking-page flex min-h-[100dvh] flex-col bg-[#f4f7fa]">
+        {contenido}
+      </div>
+    );
+  }
+
+  return (
+    <Dialog.Root open={open} onOpenChange={(v) => !v && resetAndClose()}>
+      <Dialog.Portal>
+        <Dialog.Overlay className="fixed inset-0 z-[239] hidden bg-black/60 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 lg:block" />
+        <Dialog.Content
+          // The SelectMenu dropdowns (DOB picker day/month/year, etc.) portal their option
+          // list to <body>, OUTSIDE this dialog. Without these guards, clicking an option
+          // registers as an "interaction outside" → the dialog dismisses, so the picker reads
+          // as "broken / won't let me select" (most visible in the beneficiary DOB, which has
+          // no padrón auto-fill and must be picked manually). preventDefault ONLY for the
+          // SelectMenu list keeps normal overlay/Escape close working.
+          onPointerDownOutside={keepSelectMenuOpen}
+          onInteractOutside={keepSelectMenuOpen}
+          onFocusOutside={keepSelectMenuOpen}
+          className={cn(
+            "ccr-booking-modal-panel fixed inset-0 z-[240] lg:inset-x-auto lg:bottom-auto lg:left-1/2 lg:top-1/2 lg:-translate-x-1/2 lg:-translate-y-1/2",
+            "h-dvh max-h-dvh w-full overflow-hidden rounded-none bg-[#f4f7fa] shadow-none lg:h-auto lg:max-h-[720px] lg:w-[95vw] lg:max-w-xl lg:rounded-3xl lg:shadow-2xl",
+            "flex flex-col",
+            "lg:max-h-[720px]",
+            "data-[state=open]:animate-in data-[state=closed]:animate-out",
+            "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
+            "data-[state=closed]:slide-out-to-bottom-4 data-[state=open]:slide-in-from-bottom-4 lg:data-[state=closed]:zoom-out-95 lg:data-[state=open]:zoom-in-95 lg:data-[state=closed]:slide-out-to-bottom-0 lg:data-[state=open]:slide-in-from-bottom-0"
+          )}
+        >
+          <Dialog.Title className="sr-only">
+            {`${t("title")} - ${proDisplayName(professional.fullName)}`}
+          </Dialog.Title>
+          {contenido}
         </Dialog.Content>
       </Dialog.Portal>
     </Dialog.Root>

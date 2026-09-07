@@ -7,7 +7,7 @@ import { PROVINCES } from "@/lib/data/cr-geography";
 import { fetchAvailabilityBatched } from "@/lib/availability-batch";
 import { useTranslations, useLocale } from "next-intl";
 import { CalendarDays, Check, ChevronDown, ChevronLeft, ChevronRight, MapPin, Video } from "lucide-react";
-import { BookingModal } from "@/components/booking/booking-modal";
+import { useRouter } from "@/i18n/navigation";
 import { ClientRegistrationModal } from "@/components/auth/client-registration-modal";
 import { useAuth } from "@/hooks/use-auth";
 import { isTooSoonCR } from "@/lib/time-cr";
@@ -140,7 +140,7 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
   const hasInitialDisplayableSlots = allSlots.some((s) => !s.locationId?.startsWith("cov_"));
   const { user } = useAuth();
   const [showRegistration, setShowRegistration] = useState(false);
-  const [showBooking, setShowBooking] = useState(false);
+  const router = useRouter();
   const [preset, setPreset] = useState<ScheduleSlot | null>(null);
   const [offset, setOffset] = useState(0);
   const locationMenuRef = useRef<HTMLDivElement>(null);
@@ -668,8 +668,26 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
       categoryId: slot.categoryId ?? activeCategory ?? null,
     });
     setPreset(slot);
-    if (user) setShowBooking(true);
+    if (user) irAReservar(slot);
     else setShowRegistration(true);
+  }
+
+  // La reserva es una PÁGINA, no una capa sobre esta pantalla: se navega con el
+  // contexto (servicio, fecha, hora y lugar) en la dirección.
+  function irAReservar(slot?: { date: string; time: string; categoryId?: string | null; locationId?: string | null } | null) {
+    const params = new URLSearchParams();
+    const categoria = slot?.categoryId ?? activeCategory ?? null;
+    if (categoria) params.set("servicio", categoria);
+    if (slot?.date) params.set("fecha", slot.date);
+    if (slot?.time) params.set("hora", slot.time);
+    const lugar = slot?.locationId ?? (effectiveId && effectiveId !== "general" ? effectiveId : null);
+    if (lugar) {
+      params.set("lugar", lugar);
+      const etiqueta = locLabel(lugar);
+      if (etiqueta) params.set("lugarNombre", etiqueta);
+    }
+    const cola = params.toString();
+    router.push(`/profesionales/${professional.slug}/reservar${cola ? `?${cola}` : ""}`);
   }
 
   function openBooking() {
@@ -687,7 +705,7 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
       categoryId: activeCategory ?? null,
     });
     setPreset(null);
-    if (user) setShowBooking(true);
+    if (user) irAReservar(null);
     else setShowRegistration(true);
   }
 
@@ -697,25 +715,8 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
       <ClientRegistrationModal
         open={showRegistration}
         onClose={() => setShowRegistration(false)}
-        onSuccess={() => { setShowRegistration(false); setShowBooking(true); }}
+        onSuccess={() => { setShowRegistration(false); irAReservar(preset); }}
         professionalName={professional.fullName}
-      />
-      <BookingModal
-        professional={professional}
-        categoryName={categoryName}
-        open={showBooking}
-        onClose={() => setShowBooking(false)}
-        initialDate={preset?.date}
-        initialTime={preset?.time}
-        // Effective booking category — the picked slot's, else the searched profession,
-        // else NOTHING. We deliberately do NOT fall back to `professional.categoryId`
-        // (the pro's PRIMARY profession): for a multi-specialty pro whose primary is
-        // medical, that fallback wrongly forced a health context (asked DOB) even when
-        // the client wanted a non-medical service. With null, the modal asks the client
-        // which service when the pro has several and there's no context (needsProfessionPick).
-        initialCategoryId={preset?.categoryId ?? activeCategory ?? null}
-        initialLocationId={preset?.locationId ?? (effectiveId && effectiveId !== "general" ? effectiveId : null)}
-        initialLocationLabel={preset?.locationId ? locLabel(preset.locationId) : (effectiveId ? locLabel(effectiveId) : null)}
       />
     </>
   );

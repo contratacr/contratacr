@@ -11,7 +11,7 @@ import { Modal } from "@/components/ui/modal";
 import { VerifiedSeal } from "@/components/ui/verified-seal";
 import { InstagramIcon, FacebookIcon, TikTokIcon, LinkedInIcon } from "@/components/icons/social-icons";
 import { buildSocialUrl, buildWebsiteUrl } from "@/lib/social";
-import { Link } from "@/i18n/navigation";
+import { Link, useRouter } from "@/i18n/navigation";
 import { Navbar } from "@/components/layout/navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -32,7 +32,6 @@ import { createClient } from "@/lib/supabase/client";
 import { getDashboardCache, setDashboardCache } from "@/lib/dashboard-prefetch-cache";
 import { ProfessionalSchedule, type ScheduleSlot } from "@/components/professionals/professional-schedule";
 import { DirectChatLauncher } from "@/components/professionals/direct-chat-launcher";
-import { BookingModal } from "@/components/booking/booking-modal";
 import { ClientRegistrationModal } from "@/components/auth/client-registration-modal";
 import { SelfActionModal, SELF_MSG } from "@/components/professionals/self-action-modal";
 import { SaveButton, type SavedPro } from "@/components/professionals/save-button";
@@ -248,7 +247,7 @@ export default function ProfilePage() {
   // contact card: bookable pros open the booking modal (registration-gated for guests);
   // WhatsApp-only pros open WhatsApp. `bookingCat` carries the card's service as context.
   const [bookingCat, setBookingCat] = useState<string | null>(null);
-  const [bookingOpen, setBookingOpen] = useState(false);
+  const router = useRouter();
   const [bookingReg, setBookingReg] = useState(false);
   const [serviceDescriptionOpen, setServiceDescriptionOpen] = useState<{ title: string; description: string } | null>(null);
 
@@ -504,8 +503,15 @@ export default function ProfilePage() {
       categoryId: cat,
     });
     setBookingCat(cat);
-    if (isAuthenticated) setBookingOpen(true);
+    // La reserva es una página propia: se navega con el servicio elegido.
+    if (isAuthenticated) irAReservar(cat);
     else setBookingReg(true);
+  }
+
+  function irAReservar(cat?: string | null) {
+    if (!professional) return;
+    const servicio = cat ?? bookingCat;
+    router.push(`/profesionales/${professional.slug}/reservar${servicio ? `?servicio=${encodeURIComponent(servicio)}` : ""}`);
   }
 
   async function shareProfile() {
@@ -1248,15 +1254,8 @@ export default function ProfilePage() {
       <ClientRegistrationModal
         open={bookingReg}
         onClose={() => setBookingReg(false)}
-        onSuccess={() => { setBookingReg(false); setBookingOpen(true); }}
+        onSuccess={() => { setBookingReg(false); irAReservar(); }}
         professionalName={professional.fullName}
-      />
-      <BookingModal
-        professional={professional}
-        categoryName={catLabel(bookingCat)}
-        open={bookingOpen}
-        onClose={() => setBookingOpen(false)}
-        initialCategoryId={bookingCat}
       />
 
       {serviceDescriptionOpen && (
