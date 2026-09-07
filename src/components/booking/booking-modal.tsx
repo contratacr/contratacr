@@ -1136,7 +1136,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
             {/* Cabecera con el mismo patrón que las demás pantallas: salida a la
                 izquierda (flecha en el teléfono, X en escritorio), título centrado y
                 el avance en una barra fina bajo la línea, en vez de puntitos. */}
-            <div className="relative flex shrink-0 items-center justify-center border-b border-[#f3f4f6] bg-white px-14 py-3.5 lg:px-6 lg:py-4">
+            <div className="relative flex shrink-0 items-center justify-center border-b border-[#f3f4f6] bg-white px-14 pb-3.5 pt-[max(env(safe-area-inset-top),0.875rem)] lg:px-6 lg:py-4">
               <div className="min-w-0 text-center lg:text-left">
                 <h2 className="text-lg font-bold text-[#111827]">{t("title")}</h2>
                 {step !== "success" && (
@@ -1147,7 +1147,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                 type="button"
                 onClick={pasoAtras}
                 aria-label={puedeVolver ? t("back") : t("close")}
-                className="absolute left-4 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-lg text-[#162543] transition-colors hover:bg-[#f3f4f6] lg:right-4 lg:left-auto"
+                className="absolute bottom-2.5 left-4 flex h-9 w-9 items-center justify-center rounded-lg text-[#162543] transition-colors hover:bg-[#f3f4f6] lg:bottom-auto lg:right-4 lg:top-1/2 lg:left-auto lg:-translate-y-1/2"
               >
                 <ArrowLeft className="h-5 w-5 lg:hidden" />
                 <X className="hidden h-5 w-5 lg:block" />
