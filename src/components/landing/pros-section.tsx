@@ -1,6 +1,7 @@
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { CategoryCarousel } from "@/components/landing/category-carousel";
+import { FeaturedBrands } from "@/components/landing/featured-brands";
 
 /* "Profesionales para cada proyecto" — heading + ONE staggered category
    carousel (see category-carousel.tsx). Card visuals use the shared ServiceImage
@@ -8,8 +9,10 @@ import { CategoryCarousel } from "@/components/landing/category-carousel";
 export async function ProsSection() {
   const t = await getTranslations("landing.carousel");
   return (
-    <section className="ccr-home-services-section pt-24 pb-16 sm:py-24 bg-[#f4f7fa] overflow-hidden">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <section className="ccr-home-services-section pb-16 pt-6 sm:pb-24 sm:pt-8 bg-[#f4f7fa] overflow-hidden">
+      {/* Los negocios presentes abren la sección: prueba social antes del catálogo. */}
+      <FeaturedBrands />
+      <div className="mx-auto max-w-7xl px-4 pt-10 sm:px-6 sm:pt-12 lg:px-8">
         <div className="text-center mb-5 sm:mb-6">
           <h2 className="text-3xl sm:text-4xl font-extrabold text-[#1a2744] leading-tight">
             {t("titlePre")} <span className="text-[#009FD9]">{t("titleHighlight")}</span>

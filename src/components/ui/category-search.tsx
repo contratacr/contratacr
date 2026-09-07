@@ -196,8 +196,11 @@ export function CategorySearch({
           }}
           className={cn(
             "bg-white overflow-hidden flex flex-col",
+            // Pantalla completa de verdad: con `inset-0` cubre siempre toda la
+            // pantalla. Fijar el alto al "viewport visual" la dejaba más corta al
+            // abrir el teclado y por debajo se asomaba el panel de atrás.
             pantallaChica
-              ? "app-fullscreen-modal fixed inset-0 z-[9999] h-[var(--app-visual-viewport-height,100dvh)]"
+              ? "fixed inset-0 z-[9999] pt-[env(safe-area-inset-top)]"
               : "border border-[#e5e7eb] rounded-xl shadow-2xl",
           )}
         >
@@ -243,7 +246,7 @@ export function CategorySearch({
           </div>
 
           {/* Results */}
-          <div className="overflow-y-auto flex-1">
+          <div className={cn("overflow-y-auto flex-1", pantallaChica && "pb-[max(env(safe-area-inset-bottom),1rem)]")}>
             {query && results.length === 0 ? (
               <div className="px-3 py-4 text-center">
                 <p className="text-sm text-[#374151] font-medium mb-1">{t("noResults")}</p>

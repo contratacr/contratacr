@@ -6,7 +6,6 @@ import { FindByZone } from "@/components/landing/find-by-zone";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { FadeInUp } from "@/components/landing/fade-in-up";
 import { getZoneCoverage } from "@/lib/queries/professionals";
-import { FeaturedBrands } from "@/components/landing/featured-brands";
 import { CheckCircle2 } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 
@@ -43,10 +42,6 @@ export default async function HomePage({
         )}
         {/* Hero: rotating headline + primary search. */}
         <LandingHero />
-
-        {/* Negocios presentes: la prueba social va arriba, justo después de la
-            búsqueda, no perdida al final de la página. */}
-        <FeaturedBrands />
 
         {/* Services carousel. */}
         <FadeInUp>
