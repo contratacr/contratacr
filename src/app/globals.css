@@ -1721,11 +1721,16 @@ body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-native-fab {
   to { transform: translate3d(-25%, 0, 0); }
 }
 
-/* La cinta abre la sección gris de "Explora servicios": sin fondo ni borde
-   propios, hereda el gris y solo aporta su respiro vertical. */
+/* Banda blanca propia: varios logos no tienen fondo transparente y sobre el gris
+   se veían como cajas blancas desparejas. */
 .featured-brands-ribbon {
   overflow: hidden;
+  border-bottom: 1px solid #dfe7ef;
+  background: #fff;
   padding-block: 0.55rem;
+}
+.ccr-native-app .featured-brands-ribbon {
+  border-bottom: 0;
 }
 .ccr-native-app .featured-brands-ribbon {
   border-bottom: 0;

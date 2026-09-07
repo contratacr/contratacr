@@ -1,5 +1,6 @@
 import { LandingNavbar } from "@/components/landing/landing-navbar";
 import { LandingHero } from "@/components/landing/landing-hero";
+import { FeaturedBrands } from "@/components/landing/featured-brands";
 import { ProsSection } from "@/components/landing/pros-section";
 import { WhyContratacr } from "@/components/landing/why-contratacr";
 import { FindByZone } from "@/components/landing/find-by-zone";
@@ -42,6 +43,10 @@ export default async function HomePage({
         )}
         {/* Hero: rotating headline + primary search. */}
         <LandingHero />
+
+        {/* Negocios presentes: banda blanca propia (no todos los logos son
+            transparentes) entre el buscador y el catálogo de servicios. */}
+        <FeaturedBrands />
 
         {/* Services carousel. */}
         <FadeInUp>
