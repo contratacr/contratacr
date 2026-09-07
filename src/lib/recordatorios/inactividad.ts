@@ -145,8 +145,8 @@ export async function enviarRecordatoriosDeInactividad(
     avisos.push({
       user_id: info.clientId,
       type: "project_proposals_waiting",
-      title: info.cuantas === 1 ? "Tenés una propuesta sin responder" : `Tenés ${info.cuantas} propuestas sin responder`,
-      message: `Nadie ha respondido en "${info.titulo}" desde hace ${hito} días. Revisá las propuestas y elegí a quien te sirva.`,
+      title: info.cuantas === 1 ? "Tienes una respuesta sin contestar" : `Tienes ${info.cuantas} respuestas sin contestar`,
+      message: `Nadie ha respondido en "${info.titulo}" desde hace ${hito} días. Revisa las respuestas y elige a quien te sirva.`,
       data: {
         link: "/es/dashboard/cliente?tab=projects",
         project_id: projectId,
@@ -173,12 +173,12 @@ export async function enviarRecordatoriosDeInactividad(
     const perfil = perfilNuevas.get(solicitud.professional_id);
     if (!hito || !perfil) continue;
     resumen.solicitudesSinResponder += 1;
-    const que = (solicitud.service_description ?? "").trim() || "una solicitud";
+    const que = (solicitud.service_description ?? "").trim() || "una cita";
     avisos.push({
       user_id: perfil,
       type: "booking_pending_reminder",
-      title: "Tenés una solicitud sin responder",
-      message: `"${que}" lleva ${hito} días esperando respuesta. Confirmala o cancelala para que el cliente sepa a qué atenerse.`,
+      title: "Tienes una cita pendiente",
+      message: `"${que}" lleva ${hito} días esperando. Escríbele al cliente para coordinar o cancélala con un motivo para que sepa a qué atenerse.`,
       data: { link: "/es/dashboard/profesional?tab=bookings", booking_id: solicitud.id, hito },
       referencia: solicitud.id,
       hito,
@@ -205,7 +205,7 @@ export async function enviarRecordatoriosDeInactividad(
       user_id: perfil,
       type: "project_in_progress_idle",
       title: "¿Ya terminaste este trabajo?",
-      message: `"${titulo}" lleva ${hito} días sin movimiento. Si ya lo hiciste, marcalo como completado; si no vas a poder, retirate para que el cliente busque a otra persona.`,
+      message: `"${titulo}" lleva ${hito} días sin movimiento. Escríbele al cliente para coordinar o retira tu respuesta si no vas a poder.`,
       data: { link: "/es/dashboard/profesional?tab=proposals", project_id: proyecto.id, project_title: titulo, hito },
       referencia: proyecto.id,
       hito,
@@ -252,12 +252,12 @@ export async function enviarRecordatoriosDeInactividad(
     const perfil = perfilCitas.get(cita.professional_id);
     if (!hito || !perfil) continue;
     resumen.citasSinCerrar += 1;
-    const que = (cita.service_description ?? "").trim() || "una solicitud";
+    const que = (cita.service_description ?? "").trim() || "una cita";
     avisos.push({
       user_id: perfil,
       type: "booking_past_date_idle",
       title: "¿Se realizó esta cita?",
-      message: `La fecha de "${que}" pasó hace ${hito} días. Marcala como completada o cancelala para que no quede pendiente.`,
+      message: `La fecha de "${que}" pasó hace ${hito} días. Si se realizó no tienes que hacer nada: se cierra sola. Si no, cancélala con un motivo.`,
       data: { link: "/es/dashboard/profesional?tab=bookings", booking_id: cita.id, hito },
       referencia: cita.id,
       hito,

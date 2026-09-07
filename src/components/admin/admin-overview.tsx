@@ -95,7 +95,7 @@ const ATTENTION: { key: string; label: string; href: string; hint: string }[] = 
 const ACTIVITY_META: Record<ActivityKind, { icon: typeof UserPlus; bg: string; fg: string; tag: string }> = {
   pro: { icon: UserPlus, bg: "bg-[#e0f2fe]", fg: "text-[#0369a1]", tag: "Profesional" },
   client: { icon: Users, bg: "bg-[#dcfce7]", fg: "text-[#15803d]", tag: "Cliente" },
-  solicitud: { icon: Briefcase, bg: "bg-[#ede9fe]", fg: "text-[#6d28d9]", tag: "Solicitud" },
+  solicitud: { icon: Briefcase, bg: "bg-[#ede9fe]", fg: "text-[#6d28d9]", tag: "Cita" },
   proyecto: { icon: FolderOpen, bg: "bg-[#fef3c7]", fg: "text-[#b45309]", tag: "Proyecto" },
   ticket: { icon: Headset, bg: "bg-[#fee2e2]", fg: "text-[#b91c1c]", tag: "Soporte" },
 };

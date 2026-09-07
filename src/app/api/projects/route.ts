@@ -458,7 +458,7 @@ async function autoCloseStale(admin: any, rows: any[]): Promise<any[]> {
     user_id: r.client_id,
     type: "project_cancelled",
     title: "Cerramos tu solicitud por inactividad",
-    message: `"${r.title}" llevaba ${AUTO_CLOSE_DAYS} días sin movimiento. Si todavía la necesitás, podés volver a publicarla con un toque.`,
+    message: `"${r.title}" llevaba ${AUTO_CLOSE_DAYS} días sin movimiento. Si todavía la necesitas, puedes volver a publicarla con un toque.`,
     data: { link: "/es/dashboard/profesional?tab=sent_projects", project_id: r.id, project_title: r.title, project_action: "auto_closed" },
   }));
   try {
@@ -556,7 +556,7 @@ export async function PATCH(req: NextRequest) {
           user_id: pro.profile_id,
           type: "project_completed",
           title: "El cliente te eligió",
-          message: `El cliente cerró "${project.title}" y marcó que lo resolviste vos. ¡Buen trabajo!`,
+          message: `El cliente cerró "${project.title}" y marcó que lo resolviste tú. ¡Buen trabajo!`,
           data: { link: "/es/dashboard/profesional?tab=proposals", project_id: id, project_title: project.title },
         };
         await admin.from("notifications").insert(notification);

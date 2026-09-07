@@ -402,7 +402,7 @@ export function ChatScreen() {
 export function SupportScreen() {
   return (
     <div className="flex h-full flex-col bg-[#f4f7fa]">
-      <AppBar title="Mi solicitud" />
+      <AppBar title="Mi cita" />
       <div className="p-3.5 space-y-3">
         <div className="rounded-xl border border-[#dcfce7] bg-[#f0fdf4] p-3.5 text-center">
           <CheckCircle2 className="mx-auto h-8 w-8 text-[#16a34a]" />
@@ -436,7 +436,7 @@ export function ProScreen() {
           <ShieldCheck className="h-4 w-4 text-[#16a34a]" />
           <span className="text-[11px] font-semibold text-[#166534]">Perfil verificado · apareces primero</span>
         </div>
-        <p className="text-[10px] font-bold uppercase tracking-wide text-[#9ca3af]">Nuevas solicitudes</p>
+        <p className="text-[10px] font-bold uppercase tracking-wide text-[#9ca3af]">Nuevas citas</p>
         {reqs.map((r) => (
           <div key={r.n} className="rounded-xl border border-[#eef1f5] bg-white p-2.5">
             <div className="flex items-center gap-2">
@@ -445,7 +445,7 @@ export function ProScreen() {
               <span className="text-[9px] text-[#9ca3af]">{r.z}</span>
             </div>
             <div className="mt-2 flex gap-1.5">
-              <span className="flex-1 rounded-md bg-[#009FD9] py-1 text-center text-[9px] font-bold text-white">Ver solicitud</span>
+              <span className="flex-1 rounded-md bg-[#009FD9] py-1 text-center text-[9px] font-bold text-white">Ver cita</span>
               <span className="grid h-5 w-5 place-items-center rounded-md border border-[#b7dcff] bg-[#eef8fd] text-[#009FD9]"><MessageCircle className="h-2.5 w-2.5" /></span>
             </div>
           </div>

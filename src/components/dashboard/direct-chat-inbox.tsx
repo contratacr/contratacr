@@ -519,7 +519,7 @@ export function DirectChatInbox() {
     }, [isEn, user?.id]);
   const contextFor = useCallback((item: Conversation) => {
     const type = item.context?.type ?? "profile";
-    const labels = isEn ? { booking: "Request", project: "Project", proposal: "Proposal", profile: "Profile" } : { booking: "Solicitud", project: "Proyecto", proposal: "Propuesta", profile: "Perfil" };
+    const labels = isEn ? { booking: "Appointment", project: "Request", proposal: "Reply", profile: "Profile" } : { booking: "Cita", project: "Solicitud", proposal: "Respuesta", profile: "Perfil" };
     return { type, label: labels[type], title: item.context?.service_description || item.context?.title || item.subject || (isEn ? "General inquiry" : "Consulta general") };
   }, [isEn]);
   const contextSummaryFor = useCallback((item: Conversation) => {
@@ -529,7 +529,7 @@ export function DirectChatInbox() {
   }, [contextFor]);
   const contextActionFor = useCallback((item: Conversation) => {
     const type = item.context?.type ?? "profile";
-    const labels = isEn ? { booking: "View request", project: "View project", proposal: "View proposal", profile: "View profile" } : { booking: "Ver solicitud", project: "Ver proyecto", proposal: "Ver propuesta", profile: "Ver perfil" };
+    const labels = isEn ? { booking: "View appointment", project: "View request", proposal: "View reply", profile: "View profile" } : { booking: "Ver cita", project: "Ver solicitud", proposal: "Ver respuesta", profile: "Ver perfil" };
     return labels[type];
   }, [isEn]);
 
@@ -1113,7 +1113,7 @@ export function DirectChatInbox() {
     <PanelEmptyState
       icon={MessageSquareMore}
       title={showArchived ? (isEn ? "No archived conversations" : "No hay conversaciones archivadas") : (isEn ? "No conversations yet" : "No hay conversaciones todavía")}
-      description={isEn ? "Messages related to profiles, requests and proposals will be organized here." : "Aquí se organizarán los mensajes relacionados con perfiles, solicitudes y propuestas."}
+      description={isEn ? "Messages related to profiles, appointments and requests will be organized here." : "Aquí se organizarán los mensajes relacionados con perfiles, citas y solicitudes."}
       action={(
         <button type="button" onClick={() => updateArchiveView(!showArchived)} className="inline-flex items-center justify-center gap-1.5 text-sm font-bold text-[#008fc4] hover:underline">
           {showArchived && <ArrowLeft className="h-4 w-4" />}

@@ -19,27 +19,28 @@ PROFESSIONAL PROFILES AND CONTACT
 - WhatsApp is the primary visible coordination channel between a client and a professional. Open WhatsApp only through public contact actions and never reveal a private number directly.
 - Phone and contact email may remain available when the professional enabled them. Never reveal a private field that is not public.
 - Favorites require an account. Sharing a profile uses its public link and generated profile image.
-- Reviews can be left from a professional profile by signed-in users. If the person is not signed in, send them to login/register and return them to the profile reviews tab. Reviews from requests, projects, or WhatsApp follow-ups may keep that context, and users can edit an existing review.
+- Reviews can be left from a professional profile by signed-in users. If the person is not signed in, send them to login/register and return them to the profile reviews tab. Reviews from appointments, requests, or WhatsApp follow-ups may keep that context, and users can edit an existing review.
 
-CLIENT REQUESTS AND BOOKINGS
-- A client can book (Reservar) a service from a professional profile, choose the relevant service/location/date/time when available and see it in My bookings (Mis reservas). The note about what is needed is optional.
-- A professional receives the booking in Received bookings (Reservas recibidas), can message the client, cancel with a reason or report, and both parties receive the applicable in-app notifications.
-- Only the client can reschedule an active appointment from My bookings. A professional cannot move the client's appointment unilaterally; the professional may cancel with an optional reason and coordinate another time.
+APPOINTMENTS (CITAS)
+- In the interface a booking is called "cita" in Spanish and "appointment" in English. Never call it "reserva", "solicitud" or "booking" in user-facing answers. A posted need is a "solicitud" / "request".
+- A client can book (Reservar) a service from a professional profile, choose the relevant service/location/date/time when available and see it in My appointments (Mis citas). The note about what is needed is optional.
+- A professional receives the appointment in Appointments (Citas), can message the client, cancel with a reason or report, and both parties receive the applicable in-app notifications.
+- Only the client can reschedule an active appointment from My appointments. A professional cannot move the client's appointment unilaterally; the professional may cancel with an optional reason and coordinate another time.
 - A cancelled appointment cannot be rescheduled. The client must book a new available time or coordinate another time with the professional through WhatsApp.
 - The system prevents double booking. A video consultation may share configured availability with one physical workplace, but once a time is booked it blocks that capacity in both modalities.
 - Nobody marks work as completed or confirms anything: a booking with a date closes automatically once its day has passed; a booking without a date is closed by the client with "Ya me atendieron". After that the client can leave a review.
 - Cancellation notifications go to the affected opposite party, not back to the person who performed the cancellation.
-- Requests, projects, and professional profiles can lead to reviews. Cancelled records can be removed/archived where the UI offers that action; do not promise deletion of legal or system records.
+- Appointments, requests and professional profiles can lead to reviews. Cancelled records can be removed/archived where the UI offers that action; do not promise deletion of legal or system records.
 
 REQUESTS (SOLICITUDES)
 - A client posts a request (Publicar una solicitud) with two fields: the service and what needs doing; the area is optional and remembered from the last time. Entry points: the link under the home search, the empty search results, the menu and My requests → Publicar.
 - Matching professionals see it under Client requests (Solicitudes de clientes) → Nuevas and reply with one message; the request then moves to Respondidas. Replies cannot be edited: the professional writes to the client instead.
 - The client reads the replies in My requests (Mis solicitudes) → Activas, writes to whoever they like (in-app chat inside the app, WhatsApp on the web) and closes the request with "Ya lo resolví", choosing who helped (optional review). The professional chosen sees "Te eligió".
 - There is no accept, assign, mark-done or confirm step. An open request with no activity for 30 days closes automatically and the client is told.
-- Direct profile contacts are bookings (Reservas). Posted needs are requests (Solicitudes) for both clients and professionals. Never call them projects or proposals.
+- Direct profile contacts are appointments (Citas): a date and time with one professional. Posted needs are requests (Solicitudes) for both clients and professionals. Never call them reservas, projects, opportunities or proposals.
 
 PROFESSIONAL PANEL
-- Main sections: Received bookings, Client requests, Offers, Success cases, Availability, Services, Support, Profile and Guides (Jobs is paused and hidden). Replies sent by the professional live under Client requests → Respondidas.
+- Main sections: Appointments (Citas), Client requests (Solicitudes de clientes), Offers, Jobs, Success cases, Availability, Services, Support, Profile and Guides. Replies sent by the professional live under Client requests → Respondidas.
 - Profile completion helps public visibility. A professional needs at least one active service to appear correctly in public search.
 - Services can have a public description, price and experience information. Prices are CRC and displayed as I.V.A.I. where applicable.
 - Work areas can be exact map pins, cantons, whole provinces or nationwide video coverage for compatible services.
@@ -48,11 +49,11 @@ PROFESSIONAL PANEL
 - Verification uses the saved identity and may require manual review when the identification is not found in the Costa Rican registry.
 
 CLIENT PANEL
-- Main sections: My bookings, My requests, Hire again, Favorites, Support, Profile and Guides.
+- Main sections: My appointments (Mis citas), My requests (Mis solicitudes), Hire again, Favorites, Support, Profile and Guides.
 - A user who also offers services can switch between client and professional panels; actions and records remain separated by their role/context.
 
 NOTIFICATIONS
-- In-app notifications cover relevant request, booking, project, proposal, completion, cancellation, support and verification events.
+- In-app notifications cover relevant appointment, request, reply, completion, cancellation, support and verification events.
 - A visible toast can appear in any non-admin area, including while the user is viewing the other panel. Opening details must route to the corresponding unified panel section and record.
 - Unread notifications can appear again after a new session until marked read. Do not say every event sends email; transactional/security email is more selective.
 

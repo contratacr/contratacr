@@ -356,7 +356,7 @@ export function PushTokenManager() {
   // QUÉ aviso llega y POR QUÉ conviene. El texto sirve igual para quien busca
   // y para quien ofrece.
   const motivos = [
-    { Icono: MessagesSquare, titulo: "Mensajes al instante", detalle: "Respondé apenas te escriban, sin abrir la app a revisar." },
+    { Icono: MessagesSquare, titulo: "Mensajes al instante", detalle: "Responde apenas te escriban, sin abrir la app a revisar." },
     { Icono: Handshake, titulo: "Solicitudes y propuestas", detalle: "Enterate al momento cuando algo tuyo avanza." },
     { Icono: Star, titulo: "Reseñas y avisos importantes", detalle: "Nuevas reseñas y cambios que afectan tu cuenta." },
   ];
@@ -426,7 +426,7 @@ export function PushTokenManager() {
         >
           Ahora no
         </button>
-        <p className="mt-3 text-[11.5px] text-[#94a3b8]">Las podés apagar cuando quieras desde tu panel.</p>
+        <p className="mt-3 text-[11.5px] text-[#94a3b8]">Las puedes apagar cuando quieras desde tu panel.</p>
       </div>
     </div>,
     document.body,

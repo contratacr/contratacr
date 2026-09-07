@@ -62,10 +62,10 @@ export async function notifyNewBooking({
     const proName: string = profile?.full_name ?? "profesional";
     const firstName = proName.split(" ")[0];
 
-    const title = "Nueva solicitud de servicio";
+    const title = "Nueva cita";
     const message = whenText
-      ? `${clientName} solicitó '${serviceDescription}' para el ${whenText}.`
-      : `${clientName} solicitó '${serviceDescription}'.`;
+      ? `${clientName} reservó '${serviceDescription}' para el ${whenText}.`
+      : `${clientName} reservó '${serviceDescription}'.`;
 
     const notification = {
       user_id: pro.profile_id,
@@ -130,11 +130,11 @@ export async function notifyBookingStatusChange(
     const whenText = formatBookingWhen(scheduledDate, scheduledTime, preferredDateText);
 
     const verb = status === "confirmed" ? "confirmó" : "canceló";
-    const title = status === "confirmed" ? "Solicitud confirmada" : "Solicitud cancelada";
+    const title = status === "confirmed" ? "Cita confirmada" : "Cita cancelada";
     const reasonText = status === "cancelled" && reason && reason.trim() ? ` Motivo: ${reason.trim()}` : "";
     const message = (whenText
-      ? `${proName} ${verb} tu solicitud de '${service}' para el ${whenText}.`
-      : `${proName} ${verb} tu solicitud de '${service}'.`) + reasonText;
+      ? `${proName} ${verb} tu cita de '${service}' para el ${whenText}.`
+      : `${proName} ${verb} tu cita de '${service}'.`) + reasonText;
 
     if (booking.client_id) {
       const notification = {
@@ -293,6 +293,6 @@ async function sendProWhatsApp(
   serviceDescription: string,
   whenText: string | null
 ): Promise<void> {
-  const body = `Hola ${proFirstName}, ${clientName} te envió una nueva solicitud${whenText ? ` para ${whenText}` : ""} en ContrataCR: ${serviceDescription}`;
+  const body = `Hola ${proFirstName}, ${clientName} reservó una cita contigo${whenText ? ` para ${whenText}` : ""} en ContrataCR: ${serviceDescription}`;
   await sendWhatsAppText(proWhatsapp, body);
 }

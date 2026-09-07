@@ -54,27 +54,27 @@ type NotificationCopyInput = {
 type NotificationLocale = "es" | "en";
 
 const TITLES: Record<string, Record<NotificationLocale, string>> = {
-  booking_received: { es: "Nueva solicitud", en: "New request" },
-  booking_confirmed: { es: "Solicitud confirmada", en: "Request confirmed" },
+  booking_received: { es: "Nueva cita", en: "New appointment" },
+  booking_confirmed: { es: "Cita confirmada", en: "Appointment confirmed" },
   booking_completed: { es: "Servicio completado", en: "Service completed" },
   booking_completed_by_client: { es: "Finalización confirmada", en: "Completion confirmed" },
-  booking_cancelled: { es: "Solicitud cancelada", en: "Request cancelled" },
-  booking_cancelled_by_client: { es: "Solicitud cancelada por el cliente", en: "Request cancelled by client" },
+  booking_cancelled: { es: "Cita cancelada", en: "Appointment cancelled" },
+  booking_cancelled_by_client: { es: "Cita cancelada por el cliente", en: "Appointment cancelled by client" },
   booking_rescheduled: { es: "Cita reprogramada", en: "Appointment rescheduled" },
-  booking_update: { es: "Actualización de solicitud", en: "Request update" },
+  booking_update: { es: "Actualización de cita", en: "Appointment update" },
   review_request: { es: "Deja tu reseña", en: "Leave your review" },
   review_received: { es: "Nueva reseña recibida", en: "New review received" },
-  proposal_received: { es: "Nueva propuesta", en: "New proposal" },
-  proposal_updated: { es: "Propuesta actualizada", en: "Proposal updated" },
-  proposal_withdrawn: { es: "Propuesta retirada", en: "Proposal withdrawn" },
-  proposal_accepted: { es: "¡Propuesta aceptada!", en: "Proposal accepted!" },
-  project_proposal_accepted: { es: "¡Propuesta aceptada!", en: "Proposal accepted!" },
+  proposal_received: { es: "Nueva respuesta", en: "New reply" },
+  proposal_updated: { es: "Respuesta actualizada", en: "Reply updated" },
+  proposal_withdrawn: { es: "Respuesta retirada", en: "Reply withdrawn" },
+  proposal_accepted: { es: "¡El cliente te eligió!", en: "The client chose you!" },
+  project_proposal_accepted: { es: "¡El cliente te eligió!", en: "The client chose you!" },
   project_proposal_declined: { es: "Propuesta no seleccionada", en: "Proposal not selected" },
-  new_project: { es: "Nuevo proyecto", en: "New project" },
+  new_project: { es: "Nueva solicitud", en: "New request" },
   project_work_done: { es: "Confirma la finalización del trabajo", en: "Confirm job completion" },
   project_completed: { es: "Oportunidad finalizada", en: "Project completed" },
-  project_cancelled: { es: "Solicitud cancelada", en: "Project cancelled" },
-  project_deleted: { es: "Solicitud eliminada", en: "Project deleted" },
+  project_cancelled: { es: "Solicitud cancelada", en: "Request cancelled" },
+  project_deleted: { es: "Solicitud eliminada", en: "Request deleted" },
   support_reply: { es: "Respuesta de soporte", en: "Support reply" },
   verification: { es: "Actualización de verificación", en: "Verification update" },
   verification_approved: { es: "¡Tu identidad fue verificada!", en: "Your identity was verified!" },
@@ -92,7 +92,7 @@ const TITLES: Record<string, Record<NotificationLocale, string>> = {
   project_professional_withdrew: { es: "El profesional se retiró", en: "The professional stepped away" },
   project_in_progress_idle: { es: "¿Ya terminaste este trabajo?", en: "Did you finish this job?" },
   project_confirmation_pending: { es: "Confirmá si el trabajo quedó listo", en: "Confirm the job is done" },
-  booking_pending_reminder: { es: "Tenés una solicitud sin responder", en: "You have an unanswered request" },
+  booking_pending_reminder: { es: "Tienes una cita pendiente", en: "You have a pending appointment" },
   booking_past_date_idle: { es: "¿Se realizó esta cita?", en: "Did this appointment happen?" },
 };
 
@@ -240,28 +240,28 @@ export function localizedNotificationCopy(notification: NotificationCopyInput, l
 
   if (notification.type === "booking_received") {
     const legacy = firstMatch(normalizedMessage, [
-      /^(.+?) solicit[oó] ['"](.+?)['"](?: para el (.+?))?\.$/i,
-      /^(.+?) requested ['"](.+?)['"](?: for (.+?))?\.$/i,
+      /^(.+?) (?:solicit[oó]|reserv[oó]) ['"](.+?)['"](?: para el (.+?))?\.$/i,
+      /^(.+?) (?:requested|booked) ['"](.+?)['"](?: for (.+?))?\.$/i,
     ]);
     const client = stringData(data, "client_name") || legacy?.[1] || (en ? "A client" : "Un cliente");
     const service = stringData(data, "service_description", "service_name") || legacy?.[2] || (en ? "a service" : "un servicio");
     const when = localizedBookingWhen(data, language, legacy?.[3] || "");
-    return { title, message: en ? `${client} requested '${service}'${when ? ` for ${when}` : ""}.` : `${client} solicitó '${service}'${when ? ` para el ${when}` : ""}.` };
+    return { title, message: en ? `${client} booked '${service}'${when ? ` for ${when}` : ""}.` : `${client} reservó '${service}'${when ? ` para el ${when}` : ""}.` };
   }
 
   if (notification.type === "booking_confirmed" || notification.type === "booking_cancelled") {
     const withReason = splitReason(normalizedMessage, data);
     const legacy = firstMatch(withReason.message, [
-      /^(.+?) (?:confirm[oó]|cancel[oó]) tu solicitud de ['"](.+?)['"](?: para el (.+?))?\.$/i,
-      /^(.+?) (?:confirmed|cancelled|canceled) your request for ['"](.+?)['"](?: for (.+?))?\.$/i,
+      /^(.+?) (?:confirm[oó]|cancel[oó]) tu (?:solicitud|cita) de ['"](.+?)['"](?: para el (.+?))?\.$/i,
+      /^(.+?) (?:confirmed|cancelled|canceled) your (?:request|appointment) for ['"](.+?)['"](?: for (.+?))?\.$/i,
     ]);
     const professional = stringData(data, "professional_name") || legacy?.[1] || (en ? "The professional" : "El profesional");
     const service = stringData(data, "service_description", "service_name") || legacy?.[2] || (en ? "the service" : "el servicio");
     const when = localizedBookingWhen(data, language, legacy?.[3] || "");
     const cancelled = notification.type === "booking_cancelled";
     const body = en
-      ? `${professional} ${cancelled ? "cancelled" : "confirmed"} your request for '${service}'${when ? ` for ${when}` : ""}.`
-      : `${professional} ${cancelled ? "canceló" : "confirmó"} tu solicitud de '${service}'${when ? ` para el ${when}` : ""}.`;
+      ? `${professional} ${cancelled ? "cancelled" : "confirmed"} your appointment for '${service}'${when ? ` for ${when}` : ""}.`
+      : `${professional} ${cancelled ? "canceló" : "confirmó"} tu cita de '${service}'${when ? ` para el ${when}` : ""}.`;
     return { title, message: appendReason(body, withReason.reason, language) };
   }
 
@@ -288,8 +288,8 @@ export function localizedNotificationCopy(notification: NotificationCopyInput, l
     return {
       title,
       message: awaiting
-        ? (en ? `Confirm completion to close the request. It will be confirmed automatically in ${days} days.` : `Confirma la finalización para cerrar la solicitud. Se confirma automáticamente en ${days} días.`)
-        : (en ? "The professional marked your request as in progress." : "El profesional marcó tu solicitud en progreso."),
+        ? (en ? `Confirm completion to close the appointment. It will be confirmed automatically in ${days} days.` : `Confirma la finalización para cerrar la cita. Se confirma automáticamente en ${days} días.`)
+        : (en ? "The professional marked your appointment as in progress." : "El profesional marcó tu cita en progreso."),
     };
   }
 
@@ -297,14 +297,14 @@ export function localizedNotificationCopy(notification: NotificationCopyInput, l
     return {
       title,
       message: notification.type === "booking_completed_by_client"
-        ? (en ? "The request was completed." : "La solicitud quedó finalizada.")
-        : (en ? "Your service request was completed." : "Tu solicitud de servicio fue completada."),
+        ? (en ? "The appointment was completed." : "La cita quedó finalizada.")
+        : (en ? "Your appointment was completed." : "Tu cita fue completada."),
     };
   }
 
   if (notification.type === "booking_cancelled_by_client") {
     const withReason = splitReason(normalizedMessage, data);
-    const body = en ? "The client cancelled their request. The time slot is available again." : "El cliente canceló su solicitud. El horario quedó libre.";
+    const body = en ? "The client cancelled their appointment. The time slot is available again." : "El cliente canceló su cita. El horario quedó libre.";
     return { title, message: appendReason(body, withReason.reason, language) };
   }
 
@@ -341,22 +341,22 @@ export function localizedNotificationCopy(notification: NotificationCopyInput, l
     ]);
     const professional = stringData(data, "professional_name") || legacy?.[1] || (en ? "A professional" : "Un profesional");
     const project = stringData(data, "project_title") || legacy?.[2] || "";
-    return { title, message: en ? `${professional} sent a proposal${project ? ` for "${project}"` : " to your project"}.` : `${professional} envió una propuesta${project ? ` para "${project}"` : " a tu proyecto"}.` };
+    return { title, message: en ? `${professional} replied to your request${project ? ` "${project}"` : ""}.` : `${professional} respondió a tu solicitud${project ? ` "${project}"` : ""}.` };
   }
 
   if (["proposal_updated", "proposal_withdrawn", "proposal_accepted", "project_proposal_accepted", "project_proposal_declined"].includes(notification.type)) {
     const project = stringData(data, "project_title") || quotedValue(normalizedMessage);
-    if (notification.type === "proposal_updated") return { title, message: en ? `A professional updated their proposal${project ? ` for "${project}"` : ""}.` : `Un profesional actualizó su propuesta${project ? ` para "${project}"` : ""}.` };
-    if (notification.type === "proposal_withdrawn") return { title, message: en ? `A professional withdrew their proposal${project ? ` for "${project}"` : ""}.` : `Un profesional retiró su propuesta${project ? ` para "${project}"` : ""}.` };
+    if (notification.type === "proposal_updated") return { title, message: en ? `A professional updated their reply${project ? ` to "${project}"` : ""}.` : `Un profesional actualizó su respuesta${project ? ` a "${project}"` : ""}.` };
+    if (notification.type === "proposal_withdrawn") return { title, message: en ? `A professional withdrew their reply${project ? ` to "${project}"` : ""}.` : `Un profesional retiró su respuesta${project ? ` a "${project}"` : ""}.` };
     if (notification.type === "project_proposal_declined") {
       const another = stringData(data, "proposal_outcome") === "another_selected" || /eligi[oó] otra|selected another/i.test(normalizedMessage);
-      return { title, message: en ? `The client ${another ? "selected another" : "did not select your"} proposal${project ? ` for "${project}"` : ""}.` : `El cliente ${another ? "eligió otra" : "no seleccionó tu"} propuesta${project ? ` para "${project}"` : ""}.` };
+      return { title, message: en ? `The client ${another ? "chose another professional" : "did not choose you"}${project ? ` for "${project}"` : ""}.` : `El cliente ${another ? "eligió a otro profesional" : "no te eligió"}${project ? ` para "${project}"` : ""}.` };
     }
     return {
       title,
       message: en
-        ? `The client accepted your proposal${project ? ` for "${project}"` : ""}. Coordinate the work and mark it as completed when finished.`
-        : `El cliente aceptó tu propuesta${project ? ` para "${project}"` : ""}. Coordina el trabajo y márcalo como realizado al terminar.`,
+        ? `The client chose you${project ? ` for "${project}"` : ""}. Coordinate the details by message.`
+        : `El cliente te eligió${project ? ` para "${project}"` : ""}. Coordinen los detalles por mensaje.`,
     };
   }
 
@@ -365,7 +365,7 @@ export function localizedNotificationCopy(notification: NotificationCopyInput, l
       /^Un cliente public[oó] ["“](.+?)["”] en (.+?)\.$/i,
       /^A client published ["“](.+?)["”] in (.+?)\.$/i,
     ]);
-    const project = stringData(data, "project_title") || legacy?.[1] || (en ? "a new project" : "un nuevo proyecto");
+    const project = stringData(data, "project_title") || legacy?.[1] || (en ? "a new request" : "una nueva solicitud");
     const categoryId = stringData(data, "category_id");
     const category = categoryId
       ? getCategoryLabel(categoryId, language)
@@ -380,10 +380,10 @@ export function localizedNotificationCopy(notification: NotificationCopyInput, l
   }
 
   if (["project_completed", "project_cancelled", "project_deleted"].includes(notification.type)) {
-    const project = stringData(data, "project_title") || quotedValue(normalizedMessage) || (en ? "the project" : "la solicitud");
+    const project = stringData(data, "project_title") || quotedValue(normalizedMessage) || (en ? "the request" : "la solicitud");
     if (notification.type === "project_completed") return { title, message: en ? `The client confirmed completion of "${project}". Great work.` : `El cliente confirmó la finalización de "${project}". Buen trabajo.` };
     const deleted = notification.type === "project_deleted";
-    return { title, message: en ? `The client ${deleted ? "deleted" : "cancelled"} the project "${project}". It is no longer active.` : `El cliente ${deleted ? "eliminó" : "canceló"} la solicitud "${project}". Ya no está activa.` };
+    return { title, message: en ? `The client ${deleted ? "deleted" : "cancelled"} the request "${project}". It is no longer active.` : `El cliente ${deleted ? "eliminó" : "canceló"} la solicitud "${project}". Ya no está activa.` };
   }
 
   if (notification.type === "support_reply") {
@@ -486,11 +486,11 @@ export function localizedNotificationCopy(notification: NotificationCopyInput, l
     const dias = Number(data?.hito) || 3;
     return {
       title: en
-        ? (pendientes === 1 ? "You have an unanswered proposal" : `You have ${pendientes} unanswered proposals`)
-        : (pendientes === 1 ? "Tenés una propuesta sin responder" : `Tenés ${pendientes} propuestas sin responder`),
+        ? (pendientes === 1 ? "You have an unanswered reply" : `You have ${pendientes} unanswered replies`)
+        : (pendientes === 1 ? "Tienes una respuesta sin contestar" : `Tienes ${pendientes} respuestas sin contestar`),
       message: en
-        ? `No one has been answered on "${proyecto}" for ${dias} days. Review the proposals and pick the one that works for you.`
-        : `Nadie ha respondido en "${proyecto}" desde hace ${dias} días. Revisá las propuestas y elegí a quien te sirva.`,
+        ? `No one has been answered on "${proyecto}" for ${dias} days. Review the replies and pick the one that works for you.`
+        : `Nadie ha respondido en "${proyecto}" desde hace ${dias} días. Revisa las respuestas y elige a quien te sirva.`,
     };
   }
 
@@ -500,8 +500,8 @@ export function localizedNotificationCopy(notification: NotificationCopyInput, l
     return {
       title,
       message: en
-        ? `"${proyecto}" has had no movement for ${dias} days. If you already did it, mark it as completed; if you can't, step away so the client can find someone else.`
-        : `"${proyecto}" lleva ${dias} días sin movimiento. Si ya lo hiciste, marcalo como completado; si no vas a poder, retirate para que el cliente busque a otra persona.`,
+        ? `"${proyecto}" has had no movement for ${dias} days. Write to the client to coordinate, or withdraw your reply if you can't do it.`
+        : `"${proyecto}" lleva ${dias} días sin movimiento. Escríbele al cliente para coordinar o retira tu respuesta si no vas a poder.`,
     };
   }
 
@@ -511,13 +511,13 @@ export function localizedNotificationCopy(notification: NotificationCopyInput, l
     return {
       title,
       message: en
-        ? `The professional marked "${proyecto}" as finished ${dias} days ago. Confirm it to close the project and leave your review.`
-        : `El profesional marcó "${proyecto}" como terminado hace ${dias} días. Confirmalo para cerrar el proyecto y dejar tu reseña.`,
+        ? `The professional marked "${proyecto}" as finished ${dias} days ago. Confirm it to close the request and leave your review.`
+        : `El profesional marcó "${proyecto}" como terminado hace ${dias} días. Confírmalo para cerrar la solicitud y dejar tu reseña.`,
     };
   }
 
   if (notification.type === "booking_pending_reminder" || notification.type === "booking_past_date_idle") {
-    const servicio = stringData(data, "service_description", "service_name") || quotedValue(normalizedMessage) || (en ? "a request" : "una solicitud");
+    const servicio = stringData(data, "service_description", "service_name") || quotedValue(normalizedMessage) || (en ? "an appointment" : "una cita");
     const dias = Number(data?.hito) || 3;
     const esperando = notification.type === "booking_pending_reminder";
     return {
@@ -538,8 +538,8 @@ export function localizedNotificationCopy(notification: NotificationCopyInput, l
     return {
       title,
       message: en
-        ? `${quien} can no longer do "${proyecto}". Your project is open again and can receive other proposals.`
-        : `${quien} ya no puede realizar "${proyecto}". Tu proyecto volvió a estar abierto para recibir otras propuestas.`,
+        ? `${quien} can no longer do "${proyecto}". Your request is still open and can receive other replies.`
+        : `${quien} ya no puede realizar "${proyecto}". Tu solicitud sigue abierta para recibir otras respuestas.`,
     };
   }
 

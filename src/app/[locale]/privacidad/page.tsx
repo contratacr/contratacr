@@ -31,7 +31,7 @@ const ES_SECTIONS: LegalSection[] = [
         "Nombre o nombre comercial, servicios, descripción, teléfonos, correo de contacto y enlaces profesionales.",
         "Provincia, cantón, lugares de trabajo, zonas de cobertura y, si lo agrega, un punto en el mapa.",
         "Fotografía de perfil, portafolio, certificaciones, idiomas, aseguradoras, disponibilidad y horarios.",
-        "Solicitudes recibidas, propuestas, reseñas, casos de éxito y demás actividad relacionada con su perfil.",
+        "Citas recibidas, solicitudes, respuestas, reseñas, casos de éxito y demás actividad relacionada con su perfil.",
       ] },
       { k: "sub", text: "2.4 Mensajes, soporte y archivos" },
       { k: "ul", items: [

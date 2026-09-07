@@ -20,9 +20,9 @@ const professionalTabs = [
 ] as const;
 
 const clientTabs = [
-  { tab: "home&mode=use", marker: /Mis solicitudes|My requests/i },
+  { tab: "home&mode=use", marker: /Mis citas|My appointments/i },
   { tab: "profile&mode=use", marker: /Perfil|Profile/i },
-  { tab: "sent_bookings", marker: /Solicitudes|Requests/i },
+  { tab: "sent_bookings", marker: /Citas|Appointments/i },
   { tab: "sent_projects", marker: /Mis solicitudes|My requests/i },
   { tab: "applications", marker: /Mis postulaciones|My applications/i },
   { tab: "connections", marker: /Volver a contratar|Hire again/i },

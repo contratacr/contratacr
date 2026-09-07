@@ -760,8 +760,8 @@ const PRODUCT_INTENTS: ProductIntent[] = [
   {
     test: (n) => /^(ayuda|help|\?+|necesito algo|no se|que puedes hacer|que haces|what can you do|menu)[\s?!.]*$/.test(n),
     answer: {
-      es: "Puedo hacer tres cosas: buscar profesionales por servicio y zona (escribe, por ejemplo, «ocupo un plomero en Cartago»), explicarte cómo reservar, chatear, publicar una solicitud o dejar una reseña, y ayudarte con tu cuenta (contraseña, cédula, notificaciones). ¿Por dónde empezamos?",
-      en: "I can do three things: find professionals by service and area (for example \"I need a plumber in Cartago\"), explain how to book, chat, post a request or leave a review, and help with your account (password, ID, notifications). Where do we start?",
+      es: "Puedo hacer tres cosas: buscar profesionales por servicio y zona (escribe, por ejemplo, «ocupo un plomero en Cartago»), explicarte cómo reservar una cita, chatear, publicar una solicitud o dejar una reseña, y ayudarte con tu cuenta (contraseña, cédula, notificaciones). ¿Por dónde empezamos?",
+      en: "I can do three things: find professionals by service and area (for example \"I need a plumber in Cartago\"), explain how to book an appointment, chat, post a request or leave a review, and help with your account (password, ID, notifications). Where do we start?",
     },
   },
   {
@@ -892,8 +892,8 @@ const PRODUCT_INTENTS: ProductIntent[] = [
     test: (n) => /(como|how).{0,12}(agend|reserv|sacar|pedir|program|book|schedule).{0,15}(cita|hora|horario|servicio|turno|appointment|service)/.test(n) || /^(agendar|reservar)( una)? (cita|hora)[\s?!.]*$/.test(n),
     unlessService: true,
     answer: {
-      es: "Busca el servicio, abre el perfil del profesional y toca un horario del calendario o «Ver horario completo»: eliges día y hora y envías la solicitud; el profesional la confirma y te avisamos. Si el profesional coordina por WhatsApp, verás «Enviar mensaje» en su lugar. Dime el servicio y la zona y te muestro opciones.",
-      en: "Search the service, open the professional's profile and tap a time in the calendar or \"See full schedule\": choose day and time and send the request; the professional confirms and we notify you. If the professional coordinates by WhatsApp you will see \"Send message\" instead. Tell me the service and the area and I'll show you options.",
+      es: "Busca el servicio, abre el perfil del profesional y toca un horario del calendario o «Ver horario completo»: eliges día y hora y tu cita queda agendada; el profesional la ve en su panel y te avisamos si algo cambia. Si el profesional coordina por WhatsApp, verás «Enviar mensaje» en su lugar. Dime el servicio y la zona y te muestro opciones.",
+      en: "Search the service, open the professional's profile and tap a time in the calendar or \"See full schedule\": choose day and time and your appointment is booked; the professional sees it in their panel and we notify you if anything changes. If the professional coordinates by WhatsApp you will see \"Send message\" instead. Tell me the service and the area and I'll show you options.",
     },
   },
   {
@@ -911,10 +911,10 @@ const PRODUCT_INTENTS: ProductIntent[] = [
     test: (n) => /(dej|pon|escrib|hac|dar|doy|leave|write|give).{0,15}(una resena|resena|calificacion|opinion|review|rating)/.test(n) || /(calific|resen|rate|review).{0,15}(profesional|servicio|professional|service)/.test(n),
     action: "open_dashboard",
     answer: {
-      es: "Cuando el servicio termina, en tu panel → Mis reservas (o Mis solicitudes, si publicaste una) aparece «Dejar reseña» junto a ese servicio: pones estrellas y un comentario, y se muestra en el perfil del profesional.",
-      en: "When the service is done, in your panel → My bookings (or My requests, if you posted one) you'll see \"Leave a review\" next to that service: give stars and a comment, and it shows on the professional's profile.",
+      es: "Cuando el servicio termina, en tu panel → Mis citas (o Mis solicitudes, si publicaste una) aparece «Dejar reseña» junto a ese servicio: pones estrellas y un comentario, y se muestra en el perfil del profesional.",
+      en: "When the service is done, in your panel → My appointments (or My requests, if you posted one) you'll see \"Leave a review\" next to that service: give stars and a comment, and it shows on the professional's profile.",
     },
-    cta: { es: "Ver mis reservas", en: "See my bookings" },
+    cta: { es: "Ver mis citas", en: "See my appointments" },
     href: (locale) => `/${locale}/dashboard/profesional?mode=use&tab=sent_bookings`,
   },
   {
@@ -1026,8 +1026,8 @@ function localAnswer(message: string, locale: Locale): AssistantPayload {
       confidence: 1,
       documented: true,
       answer: locale === "en"
-        ? "Create a client account to save professionals, create projects, receive proposals and manage your requests from your panel."
-        : "Crea una cuenta de cliente para guardar profesionales, crear proyectos, recibir propuestas y manejar tus solicitudes desde tu panel.",
+        ? "Create a client account to save professionals, book appointments, post requests and read the replies from your panel."
+        : "Crea una cuenta de cliente para guardar profesionales, reservar citas, publicar solicitudes y leer las respuestas desde tu panel.",
       ctaLabel: locale === "en" ? "Create client account" : "Crear cuenta de cliente",
     };
   }
@@ -1038,8 +1038,8 @@ function localAnswer(message: string, locale: Locale): AssistantPayload {
       confidence: 1,
       documented: true,
       answer: locale === "en"
-        ? "Open sign in to access your panel, messages, saved professionals, requests and projects."
-        : "Abre inicio de sesión para entrar a tu panel, mensajes, favoritos, solicitudes y proyectos.",
+        ? "Open sign in to access your panel, messages, saved professionals, appointments and requests."
+        : "Abre inicio de sesión para entrar a tu panel, mensajes, favoritos, citas y solicitudes.",
       ctaLabel: locale === "en" ? "Sign in" : "Iniciar sesión",
     };
   }
@@ -1540,8 +1540,8 @@ function normalizePayload(
       ...payload,
       action: "answer",
       answer: locale === "en"
-        ? "No. The client reschedules an active appointment from My requests in client mode. The professional can cancel it with an optional reason and coordinate another time through WhatsApp, but cannot move the appointment unilaterally."
-        : "No. El cliente reprograma una cita activa desde Mis solicitudes en modo cliente. El profesional puede cancelarla con un motivo opcional y coordinar otro horario por WhatsApp, pero no puede mover la cita unilateralmente.",
+        ? "No. The client reschedules an active appointment from My appointments in client mode. The professional can cancel it with an optional reason and coordinate another time through WhatsApp, but cannot move the appointment unilaterally."
+        : "No. El cliente reprograma una cita activa desde Mis citas en modo cliente. El profesional puede cancelarla con un motivo opcional y coordinar otro horario por WhatsApp, pero no puede mover la cita unilateralmente.",
       ctaLabel: null,
     };
   }
@@ -1551,7 +1551,7 @@ function normalizePayload(
       action: "answer",
       answer: locale === "en"
         ? "You will receive a notification and the appointment will appear as cancelled. A cancelled appointment cannot be rescheduled; book a new available time or coordinate another time with the professional through WhatsApp."
-        : "Recibirás una notificación y la cita aparecerá como cancelada. Una cita cancelada no se puede reprogramar; reserva un nuevo horario disponible o coordine otro momento con el profesional por WhatsApp.",
+        : "Recibirás una notificación y la cita aparecerá como cancelada. Una cita cancelada no se puede reprogramar; reserva una nueva cita en un horario disponible o coordina otro momento con el profesional por WhatsApp.",
       ctaLabel: null,
     };
   }
@@ -1580,9 +1580,9 @@ function normalizePayload(
       ...payload,
       action: "open_dashboard",
       answer: locale === "en"
-        ? "Open Client requests in your professional dashboard to review requests related to your services and manage your proposals."
-        : "Abre Solicitudes de clientes en tu panel profesional para revisar solicitudes relacionadas con tus servicios y administrar sus propuestas.",
-      ctaLabel: locale === "en" ? "Open projects" : "Ver proyectos",
+        ? "Open Client requests in your professional dashboard to review requests related to your services and reply to them."
+        : "Abre Solicitudes de clientes en tu panel profesional para revisar solicitudes relacionadas con tus servicios y responderlas.",
+      ctaLabel: locale === "en" ? "Open client requests" : "Ver solicitudes de clientes",
     };
   }
   if (includesAny(normalized, ["hablar con soporte", "contactar soporte", "abrir soporte", "ticket de soporte", "support ticket", "contact support"])) {

@@ -97,8 +97,8 @@ async function seedNotifications(userId: string, locale: Locale) {
     {
       user_id: userId,
       type: "booking_confirmed",
-      title: "Solicitud confirmada",
-      message: `${professionalName} confirmó tu solicitud de '${serviceName}'.`,
+      title: "Cita confirmada",
+      message: `${professionalName} confirmó tu cita de '${serviceName}'.`,
       data: {
         regression_run: runId,
         push_suppressed: true,
@@ -176,7 +176,7 @@ test.describe("@notifications-guides disposable bilingual UI regression", () => 
       const copy = locale === "en"
         ? {
             heading: "Notifications",
-            bookingMessage: `${seeded.professionalName} confirmed your request for '${seeded.serviceName}'.`,
+            bookingMessage: `${seeded.professionalName} confirmed your appointment for '${seeded.serviceName}'.`,
             globalOptions: "Notification options",
             markAll: "Mark all read",
             rowOptions: "Notification options",
@@ -186,7 +186,7 @@ test.describe("@notifications-guides disposable bilingual UI regression", () => 
           }
         : {
             heading: "Notificaciones",
-            bookingMessage: `${seeded.professionalName} confirmó tu solicitud de '${seeded.serviceName}'.`,
+            bookingMessage: `${seeded.professionalName} confirmó tu cita de '${seeded.serviceName}'.`,
             globalOptions: "Opciones de notificaciones",
             markAll: "Marcar todas como leídas",
             rowOptions: "Opciones",

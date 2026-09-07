@@ -67,7 +67,7 @@ export async function PATCH(req: Request) {
   // Cerrar exige un motivo: es lo que el usuario va a leer en el hilo.
   const cerrando = status === "resolved" && ticket.status !== "resolved";
   if (cerrando && !supportCloseReason(String(reason ?? ""))) {
-    return NextResponse.json({ error: "Elegí el motivo del cierre." }, { status: 400 });
+    return NextResponse.json({ error: "Elige el motivo del cierre." }, { status: 400 });
   }
 
   // One-way flow: open→in_progress→resolved (open→resolved allowed). Never move
@@ -118,7 +118,7 @@ export async function PATCH(req: Request) {
         user_id: ticket.user_id,
         type: "support_reply",
         title: "Caso de soporte cerrado",
-        message: `Soporte cerró tu caso "${ticket.subject}". Podés responder si el problema continúa.`,
+        message: `Soporte cerró tu caso "${ticket.subject}". Puedes responder si el problema continúa.`,
         data: { link: `/es/dashboard/${panel}?tab=soporte&ticket=${id}`, ticketId: id, ticket_subject: ticket.subject },
       };
       await db.from("notifications").insert(notification);

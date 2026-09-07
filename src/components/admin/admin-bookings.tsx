@@ -157,7 +157,7 @@ export function AdminBookings() {
 
   const [deletingId, setDeletingId] = useState<string | null>(null);
   async function removeBooking(id: string) {
-    if (!window.confirm("Esta eliminación es permanente: la solicitud desaparece para el cliente y el profesional. ¿Deseas continuar?")) return;
+    if (!window.confirm("Esta eliminación es permanente: la cita desaparece para el cliente y el profesional. ¿Deseas continuar?")) return;
     setDeletingId(id);
     try {
       const res = await fetch(`/api/admin/bookings?id=${encodeURIComponent(id)}`, { method: "DELETE" });
@@ -194,8 +194,8 @@ export function AdminBookings() {
         <div className="flex items-center gap-2">
           <CalendarCheck className="h-5 w-5 text-[#009FD9]" />
           <div>
-            <h1 className="text-xl font-bold text-[#111827]">Solicitudes</h1>
-            <p className="mt-0.5 text-sm text-[#6b7280]">Reservas directas hechas desde perfiles profesionales.</p>
+            <h1 className="text-xl font-bold text-[#111827]">Citas</h1>
+            <p className="mt-0.5 text-sm text-[#6b7280]">Citas reservadas desde perfiles profesionales.</p>
           </div>
         </div>
         {!loading && (
@@ -207,7 +207,7 @@ export function AdminBookings() {
 
       <div className="mb-4 rounded-xl border border-[#e5e7eb] bg-white p-4">
         <label className="text-xs font-semibold text-[#6b7280]" htmlFor="admin-bookings-search">
-          Buscar solicitud
+          Buscar cita
         </label>
         <div className="relative mt-2">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9ca3af]" />
@@ -219,7 +219,7 @@ export function AdminBookings() {
             className="h-11 w-full rounded-xl border border-[#dbe2ea] bg-white pl-10 pr-3 text-sm text-[#111827] outline-none transition focus:border-[#009FD9] focus:ring-2 focus:ring-[#bfefff]"
           />
         </div>
-        <p className="mt-2 text-xs text-[#9ca3af]">Incluye solicitudes activas, finalizadas, canceladas y archivadas por usuarios.</p>
+        <p className="mt-2 text-xs text-[#9ca3af]">Incluye citas activas, finalizadas, canceladas y archivadas por usuarios.</p>
       </div>
 
       <AdminFilterTabs tabs={FILTERS} value={filter} onChange={changeFilter} counts={filterCounts} />
@@ -232,7 +232,7 @@ export function AdminBookings() {
         ) : items.length === 0 ? (
           <div className="py-16 text-center">
             <CalendarCheck className="mx-auto mb-2 h-10 w-10 text-[#cbd5e1]" />
-            <p className="text-sm text-[#6b7280]">No hay solicitudes en esta vista.</p>
+            <p className="text-sm text-[#6b7280]">No hay citas en esta vista.</p>
           </div>
         ) : (
           <ul className="divide-y divide-[#f3f4f6]">
@@ -295,7 +295,7 @@ export function AdminBookings() {
                           onClick={() => void removeBooking(booking.id)}
                           className="inline-flex h-8 items-center gap-1 rounded-lg px-2.5 text-xs font-semibold text-[#b91c1c] hover:bg-[#fef2f2] disabled:opacity-60"
                         >
-                          {deletingId === booking.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />} Eliminar solicitud
+                          {deletingId === booking.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />} Eliminar cita
                         </button>
                       </div>
                     </div>

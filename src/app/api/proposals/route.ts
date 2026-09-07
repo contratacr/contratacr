@@ -34,13 +34,13 @@ export async function POST(req: NextRequest) {
       console.error("[POST /api/proposals] professional lookup failed:", proError);
       return NextResponse.json({ error: "No se pudo validar tu perfil profesional." }, { status: 500 });
     }
-    if (!pro) return NextResponse.json({ error: "Solo profesionales pueden enviar propuestas" }, { status: 403 });
+    if (!pro) return NextResponse.json({ error: "Solo los profesionales pueden responder solicitudes." }, { status: 403 });
 
     // No self-service: a professional cannot send a proposal to their OWN project.
     const { data: project } = await admin
       .from("projects").select("client_id, title").eq("id", projectId).maybeSingle();
     if (project?.client_id === user.id) {
-      return NextResponse.json({ error: "No puedes enviar una propuesta a tu propia solicitud." }, { status: 400 });
+      return NextResponse.json({ error: "No puedes responder tu propia solicitud." }, { status: 400 });
     }
 
     const profile = pro.profiles as { full_name?: string | null; email?: string | null } | null;
@@ -68,12 +68,12 @@ export async function POST(req: NextRequest) {
 
     if (error) {
       if (error.code === "23505") {
-        return NextResponse.json({ error: "Ya enviaste una propuesta para esta solicitud" }, { status: 409 });
+        return NextResponse.json({ error: "Ya respondiste esta solicitud." }, { status: 409 });
       }
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
     if (!data?.id) {
-      return NextResponse.json({ error: "No se pudo crear la propuesta." }, { status: 500 });
+      return NextResponse.json({ error: "No se pudo enviar la respuesta." }, { status: 500 });
     }
 
     await auditUserAction(admin, req, {
@@ -116,7 +116,7 @@ export async function POST(req: NextRequest) {
           user_id: project.client_id,
           type: "proposal_received",
           title: `${profile?.full_name ?? "Un profesional"} te respondió`,
-          message: `Respondió a "${project.title ?? "tu solicitud"}". Entrá a leerlo y, si te interesa, escribile.`,
+          message: `Respondió a "${project.title ?? "tu solicitud"}". Entra a leerla y, si te interesa, escríbele.`,
           data: pushData,
         };
         const stored = await admin.from("notifications").insert(notification);
@@ -248,7 +248,7 @@ export async function PATCH(req: NextRequest) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const projectStatus = (prop.projects as any)?.status;
       if (prop.status !== "declined" && projectStatus !== "cancelled") {
-        return NextResponse.json({ error: "Solo puedes archivar propuestas canceladas." }, { status: 409 });
+        return NextResponse.json({ error: "Solo puedes archivar respuestas canceladas." }, { status: 409 });
       }
       const { error } = await admin.from("proposals").update({ archived_by_professional: true }).eq("id", id);
       if (error) return NextResponse.json({ error: error.message }, { status: 500 });
@@ -303,8 +303,8 @@ export async function PATCH(req: NextRequest) {
           type: "project_professional_withdrew",
           title: "El profesional se retiró",
           message: motivoRetiro
-            ? `${quien} ya no puede realizar "${titulo}": ${motivoRetiro}. Tu proyecto volvió a estar abierto para recibir otras propuestas.`
-            : `${quien} ya no puede realizar "${titulo}". Tu proyecto volvió a estar abierto para recibir otras propuestas.`,
+            ? `${quien} ya no puede realizar "${titulo}": ${motivoRetiro}. Tu solicitud sigue abierta para recibir otras respuestas.`
+            : `${quien} ya no puede realizar "${titulo}". Tu solicitud sigue abierta para recibir otras respuestas.`,
           data: {
             link: "/es/dashboard/cliente?tab=projects",
             project_id: prop.project_id,
@@ -323,7 +323,7 @@ export async function PATCH(req: NextRequest) {
       if (!pro) return NextResponse.json({ error: "No autorizado" }, { status: 403 });
       const { data: prop } = await supabase.from("proposals").select("status, professional_id").eq("id", id).maybeSingle();
       if (!prop || prop.professional_id !== pro.id) return NextResponse.json({ error: "No autorizado" }, { status: 403 });
-      if (prop.status !== "pending") return NextResponse.json({ error: "Solo puedes editar una propuesta pendiente." }, { status: 409 });
+      if (prop.status !== "pending") return NextResponse.json({ error: "Solo puedes editar una respuesta pendiente." }, { status: 409 });
       const patch: Record<string, unknown> = {};
       if (price !== undefined) patch.price = parseMoneyAmount(price);
       if (message !== undefined) patch.message = limitTrimmedText(message, LONG_TEXT_MAX_LENGTH);
@@ -354,8 +354,8 @@ export async function PATCH(req: NextRequest) {
           const notification = {
             user_id: project.client_id,
             type: "proposal_updated",
-            title: "Propuesta actualizada",
-            message: `Un profesional actualizó su propuesta para "${project.title ?? "tu solicitud"}".`,
+            title: "Respuesta actualizada",
+            message: `Un profesional actualizó su respuesta a "${project.title ?? "tu solicitud"}".`,
             data: {
               link: "/es/dashboard/profesional?tab=sent_projects",
               project_id: updated.project_id,
@@ -442,8 +442,8 @@ export async function PATCH(req: NextRequest) {
               const notification = {
                 user_id: pro.profile_id,
                 type: "project_proposal_declined",
-                title: "Propuesta no seleccionada",
-                message: `El cliente no seleccionó tu propuesta para "${title}".`,
+                title: "El cliente eligió a otro profesional",
+                message: `El cliente no te eligió para "${title}".`,
                 data: {
                   link: "/es/dashboard/profesional?tab=proposals",
                   project_id: prop.project_id,
@@ -490,7 +490,7 @@ export async function PATCH(req: NextRequest) {
             .eq("status", "pending");
           const { data: pro } = await admin.from("professionals").select("profile_id").eq("id", prop.professional_id).maybeSingle();
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const title = (prop.projects as any)?.title ?? "tu propuesta";
+          const title = (prop.projects as any)?.title ?? "tu respuesta";
           const otherProfessionalIds = [...new Set((otherPending ?? []).map((p) => p.professional_id).filter(Boolean))];
           if (otherProfessionalIds.length > 0) {
             const { data: otherPros } = await admin
@@ -500,8 +500,8 @@ export async function PATCH(req: NextRequest) {
             const rows = (otherPros ?? []).filter((p) => p.profile_id).map((p) => ({
               user_id: p.profile_id,
               type: "project_proposal_declined",
-              title: "Propuesta no seleccionada",
-              message: `El cliente eligió otra propuesta para "${title}".`,
+              title: "El cliente eligió a otro profesional",
+              message: `El cliente eligió a otro profesional para "${title}".`,
               data: {
                 link: "/es/dashboard/profesional?tab=proposals",
                 project_id: prop.project_id,
@@ -518,8 +518,8 @@ export async function PATCH(req: NextRequest) {
             const notification = {
               user_id: pro.profile_id,
               type: "project_proposal_accepted",
-              title: "¡Tu propuesta fue aceptada!",
-              message: `El cliente aceptó tu propuesta para "${title}". Coordina el trabajo y márcalo como realizado al terminar.`,
+              title: "¡El cliente te eligió!",
+              message: `El cliente te eligió para "${title}". Coordinen los detalles por mensaje.`,
               data: {
                 link: "/es/dashboard/profesional?tab=proposals",
                 project_id: prop.project_id,
@@ -571,7 +571,7 @@ export async function DELETE(req: NextRequest) {
     .eq("id", id)
     .maybeSingle();
   if (!prop || prop.professional_id !== pro.id) return NextResponse.json({ error: "No autorizado" }, { status: 403 });
-  if (prop.status !== "pending") return NextResponse.json({ error: "Solo puedes cancelar una propuesta pendiente." }, { status: 409 });
+  if (prop.status !== "pending") return NextResponse.json({ error: "Solo puedes retirar una respuesta pendiente." }, { status: 409 });
 
   // Delete via the service-role client: an RLS-bound delete silently affects 0 rows when
   // no DELETE policy covers the professional, so "Retirar propuesta" appeared to work but
@@ -597,8 +597,8 @@ export async function DELETE(req: NextRequest) {
       const notification = {
         user_id: project.client_id,
         type: "proposal_withdrawn",
-        title: "Propuesta retirada",
-        message: `Un profesional retiró su propuesta para "${project.title ?? "tu solicitud"}".`,
+        title: "Respuesta retirada",
+        message: `Un profesional retiró su respuesta a "${project.title ?? "tu solicitud"}".`,
         data: {
           link: "/es/dashboard/profesional?tab=sent_projects",
           project_id: prop.project_id,

@@ -111,7 +111,7 @@ export async function HomeMarketplaceSections() {
             <HomeSectionHeading
               id="home-jobs-title"
               title="Empleos recientes"
-              subtitle="Descubrí nuevas oportunidades laborales en Costa Rica."
+              subtitle="Descubre nuevas oportunidades laborales en Costa Rica."
               href="/empleos"
             />
             <HorizontalRail>

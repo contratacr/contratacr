@@ -35,10 +35,10 @@ export async function collectCounterparties(db: SupabaseClient, userId: string):
   // Direct requests (bookings) still open, from either side.
   const { data: asClient } = await db.from("bookings").select("professional_id, status").eq("client_id", userId).in("status", OPEN_BOOKING);
   const owners = await proOwner([...new Set((asClient ?? []).map((row) => row.professional_id as string).filter(Boolean))]);
-  for (const row of asClient ?? []) add(owners.get(row.professional_id as string), "una solicitud de servicio abierta");
+  for (const row of asClient ?? []) add(owners.get(row.professional_id as string), "una cita abierta");
   if (ownProIds.length) {
     const { data: asPro } = await db.from("bookings").select("client_id, status").in("professional_id", ownProIds).in("status", OPEN_BOOKING);
-    for (const row of asPro ?? []) add(row.client_id as string, "una solicitud de servicio abierta");
+    for (const row of asPro ?? []) add(row.client_id as string, "una cita abierta");
   }
 
   // Projects: the accepted professional of an open project, professionals with

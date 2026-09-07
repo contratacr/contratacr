@@ -23,9 +23,9 @@ export async function getAdminActivity(limit = 40, locale = "es"): Promise<Activ
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     for (const c of (clients.data ?? []) as any[]) events.push({ id: `cli-${c.id}`, kind: "client", title: c.full_name || "Cliente", sub: "Nuevo cliente", createdAt: c.created_at });
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    for (const b of (bookings.data ?? []) as any[]) events.push({ id: `sol-${b.id}`, kind: "solicitud", title: b.client_name || "Cliente", sub: `Solicitud: ${(b.service_description || "").slice(0, 60) || "servicio"}`, createdAt: b.created_at });
+    for (const b of (bookings.data ?? []) as any[]) events.push({ id: `sol-${b.id}`, kind: "solicitud", title: b.client_name || "Cliente", sub: `Cita: ${(b.service_description || "").slice(0, 60) || "servicio"}`, createdAt: b.created_at });
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    for (const pr of (projects.data ?? []) as any[]) events.push({ id: `proy-${pr.id}`, kind: "proyecto", title: pr.title || "Proyecto", sub: `Proyecto publicado${pr.category_id ? ` · ${getCategoryLabel(pr.category_id, locale)}` : ""}`, createdAt: pr.created_at });
+    for (const pr of (projects.data ?? []) as any[]) events.push({ id: `proy-${pr.id}`, kind: "proyecto", title: pr.title || "Solicitud", sub: `Solicitud publicada${pr.category_id ? ` · ${getCategoryLabel(pr.category_id, locale)}` : ""}`, createdAt: pr.created_at });
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     for (const t of (tickets.data ?? []) as any[]) events.push({ id: `tic-${t.id}`, kind: "ticket", title: t.name || "Soporte", sub: `Ticket: ${(t.subject || "consulta").slice(0, 60)}`, createdAt: t.created_at });
 

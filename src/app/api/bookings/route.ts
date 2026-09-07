@@ -389,7 +389,7 @@ export async function PATCH(req: NextRequest) {
     .select("id, professional_id, client_id, status")
     .eq("id", id)
     .maybeSingle();
-  if (!bookingRow) return NextResponse.json({ error: "Solicitud no encontrada." }, { status: 404 });
+  if (!bookingRow) return NextResponse.json({ error: "Cita no encontrada." }, { status: 404 });
 
   const isOwnerPro = !!actorPro && bookingRow.professional_id === actorPro.id;
   const isOwnerClient = bookingRow.client_id === user.id;
@@ -399,7 +399,7 @@ export async function PATCH(req: NextRequest) {
 
   if (action === "archive") {
     if (bookingRow.status !== "cancelled" && bookingRow.status !== "rescheduled") {
-      return NextResponse.json({ error: "Solo puedes archivar solicitudes canceladas." }, { status: 409 });
+      return NextResponse.json({ error: "Solo puedes archivar citas canceladas." }, { status: 409 });
     }
     const archivePatch = isOwnerPro ? { archived_by_professional: true } : { archived_by_client: true };
     const { error: archiveError } = await admin.from("bookings").update(archivePatch).eq("id", id);
@@ -491,8 +491,8 @@ export async function PATCH(req: NextRequest) {
   try {
     const otherUserId = isOwnerPro ? bookingRow.client_id : null;
     const labelMap: Record<string, { title: string; message: string }> = {
-      awaiting_confirmation: { title: "El profesional marcó el trabajo como realizado", message: `Confirma la finalización para cerrar la solicitud. Se confirma automáticamente en ${AUTO_CONFIRM_DAYS} días.` },
-      in_progress: { title: "Tu solicitud está en progreso", message: "El profesional marcó tu solicitud en progreso." },
+      awaiting_confirmation: { title: "El profesional marcó el trabajo como realizado", message: `Confirma la finalización para cerrar la cita. Se confirma automáticamente en ${AUTO_CONFIRM_DAYS} días.` },
+      in_progress: { title: "Tu cita está en progreso", message: "El profesional marcó tu cita en progreso." },
     };
     if (isOwnerPro && otherUserId && labelMap[status]) {
       const notification = {
@@ -518,7 +518,7 @@ export async function PATCH(req: NextRequest) {
           user_id: pr.profile_id,
           type: "booking_completed_by_client",
           title: "El cliente confirmó la finalización",
-          message: "La solicitud quedó finalizada.",
+          message: "La cita quedó finalizada.",
           data: { link: "/es/dashboard/profesional?tab=bookings", booking_id: id, booking_status: "completed" },
         };
         await admin.from("notifications").insert(notification);
@@ -534,8 +534,8 @@ export async function PATCH(req: NextRequest) {
         const notification = {
           user_id: pr.profile_id,
           type: "booking_cancelled_by_client",
-          title: "El cliente canceló la solicitud",
-          message: `El cliente canceló su solicitud. El horario quedó libre.${motivo}`,
+          title: "El cliente canceló la cita",
+          message: `El cliente canceló su cita. El horario quedó libre.${motivo}`,
           data: {
             link: "/es/dashboard/profesional?tab=bookings",
             booking_id: id,

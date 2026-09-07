@@ -64,7 +64,7 @@ export async function FollowingActivityFeed() {
         <HomeSectionHeading
           id="following-updates-title"
           title="Novedades de quienes sigues"
-          subtitle="Mirá las publicaciones más recientes de tu red."
+          subtitle="Mira las publicaciones más recientes de tu red."
           href="/dashboard/profesional?tab=network&network=following"
         />
 

@@ -73,7 +73,7 @@ export function AdminShell({
     { id: "resumen", label: "Resumen", icon: LayoutGrid, href: "/admin", badge: 0 },
     { id: "verificacion", label: "Verificación", icon: ShieldCheck, href: "/admin/verificacion", badge: counts.verificacion ?? 0 },
     { id: "usuarios", label: "Usuarios", icon: Users, href: "/admin/usuarios", badge: 0 },
-    { id: "solicitudes", label: "Solicitudes", icon: CalendarCheck, href: "/admin/solicitudes", badge: 0 },
+    { id: "solicitudes", label: "Citas", icon: CalendarCheck, href: "/admin/solicitudes", badge: 0 },
     { id: "publicaciones", label: "Proyectos", icon: ClipboardList, href: "/admin/publicaciones", badge: 0 },
     { id: "resenas", label: "Reseñas", icon: Star, href: "/admin/resenas", badge: 0 },
     { id: "empleos", label: "Empleos", icon: Briefcase, href: "/admin/empleos", badge: 0 },

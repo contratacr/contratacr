@@ -218,8 +218,8 @@ export function AdminAnalytics({ data }: { data: AdminReports }) {
           <Kpi label="Profesionales nuevos" data={week.pros} />
           <Kpi label="Clientes nuevos" data={week.clients} />
           <Kpi label="Búsquedas" data={week.searches} />
-          <Kpi label="Contactos" data={week.contacts} help="WhatsApp, llamadas, enlaces y solicitudes iniciadas" />
-          <Kpi label="Solicitudes" data={week.requests} help="Solicitudes y proyectos creados por clientes" />
+          <Kpi label="Contactos" data={week.contacts} help="WhatsApp, llamadas, enlaces y citas iniciadas" />
+          <Kpi label="Citas y solicitudes" data={week.requests} help="Citas reservadas y solicitudes publicadas por clientes" />
           <Kpi label="Postulaciones" data={week.applications} help="Postulaciones a empleos" />
         </div>
       </Section>
@@ -235,7 +235,7 @@ export function AdminAnalytics({ data }: { data: AdminReports }) {
             { label: "Vistas de perfil", value: insights.funnel.profileViews, help: "Abrieron el perfil de un profesional" },
             { label: "Intentaron contactar", value: insights.funnel.contactAttempts, help: "Tocaron WhatsApp, llamar o correo — con cuenta o sin ella" },
             { label: "Contactaron", value: insights.funnel.contacts, help: "Ya con cuenta: el contacto se completó. La diferencia con el paso anterior es la gente que se detuvo en el registro" },
-            { label: "Solicitudes creadas", value: insights.funnel.requests, help: "Pidieron un servicio o publicaron un proyecto" },
+            { label: "Citas y solicitudes creadas", value: insights.funnel.requests, help: "Reservaron una cita o publicaron una solicitud" },
           ]} />
           {insights.searchQuality.total > 0 && (
             <p className="mt-3 text-xs text-[#64748b]">
@@ -263,7 +263,7 @@ export function AdminAnalytics({ data }: { data: AdminReports }) {
           )}
           {respRate != null && (
             <p className="mt-4 text-xs text-[#64748b]">
-              Solicitudes atendidas por profesionales: <strong className="text-[#0f172a]">{respRate}%</strong> <span className="text-[#94a3b8]">({fmt(activity.solicitudesResponded)} de {fmt(activity.solicitudesTotal)}, histórico)</span>
+              Citas atendidas por profesionales: <strong className="text-[#0f172a]">{respRate}%</strong> <span className="text-[#94a3b8]">({fmt(activity.solicitudesResponded)} de {fmt(activity.solicitudesTotal)}, histórico)</span>
             </p>
           )}
         </Section>

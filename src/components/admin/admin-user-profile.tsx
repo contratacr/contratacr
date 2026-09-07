@@ -462,15 +462,15 @@ export function AdminUserProfile({
       {/* ── 3. As a client ── */}
       <Section icon={FolderOpen} title="Como cliente" sub="Lo que pidió o publicó">
         <div className="grid grid-cols-2 gap-3 p-4 md:grid-cols-4">
-          <Tile label="Solicitudes enviadas" value={bookings.length} />
+          <Tile label="Citas reservadas" value={bookings.length} />
           <Tile label="Proyectos publicados" value={projects.length} />
           <Tile label="Postulaciones a empleos" value={applications.length} />
           <Tile label="Activas · completadas" value={`${clientActive} · ${clientCompleted}`} />
         </div>
         <div className="grid gap-0 border-t border-[#f3f4f6] lg:grid-cols-3 lg:divide-x lg:divide-[#f3f4f6]">
           <div>
-            <p className="px-4 pt-3 text-[11px] font-semibold uppercase tracking-wide text-[#9ca3af]">Solicitudes enviadas</p>
-            {bookings.length === 0 ? <Empty text="Sin solicitudes." /> : <ul className="divide-y divide-[#f3f4f6]">{bookings.slice(0, 8).map((b) => <Row key={b.id} title={b.service_description} meta={`${b.preferred_date ? `Fecha: ${fmtDate(b.preferred_date)} · ` : ""}${fmt(b.created_at)}`} status={b.status} />)}</ul>}
+            <p className="px-4 pt-3 text-[11px] font-semibold uppercase tracking-wide text-[#9ca3af]">Citas reservadas</p>
+            {bookings.length === 0 ? <Empty text="Sin citas." /> : <ul className="divide-y divide-[#f3f4f6]">{bookings.slice(0, 8).map((b) => <Row key={b.id} title={b.service_description} meta={`${b.preferred_date ? `Fecha: ${fmtDate(b.preferred_date)} · ` : ""}${fmt(b.created_at)}`} status={b.status} />)}</ul>}
           </div>
           <div>
             <p className="px-4 pt-3 text-[11px] font-semibold uppercase tracking-wide text-[#9ca3af]">Proyectos publicados</p>
@@ -488,7 +488,7 @@ export function AdminUserProfile({
         <>
           <Section icon={Inbox} title="Como profesional" sub="Lo que recibió y publicó">
             <div className="grid grid-cols-2 gap-3 p-4 md:grid-cols-3 xl:grid-cols-6">
-              <Tile label="Solicitudes recibidas" value={receivedBookings.length} />
+              <Tile label="Citas recibidas" value={receivedBookings.length} />
               <Tile label="Proyectos recibidos" value={receivedProjects.length} />
               <Tile label="Reseñas recibidas" value={receivedReviews.length} />
               <Tile label="Calificación" value={averageRating != null ? `${averageRating.toFixed(1)} ★` : "—"} />
@@ -497,8 +497,8 @@ export function AdminUserProfile({
             </div>
             <div className="grid gap-0 border-t border-[#f3f4f6] lg:grid-cols-2 lg:divide-x lg:divide-[#f3f4f6]">
               <div>
-                <p className="px-4 pt-3 text-[11px] font-semibold uppercase tracking-wide text-[#9ca3af]">Solicitudes recibidas</p>
-                {receivedBookings.length === 0 ? <Empty text="Todavía no recibe solicitudes." /> : <ul className="divide-y divide-[#f3f4f6]">{receivedBookings.slice(0, 8).map((b) => <Row key={b.id} title={b.service_description} meta={`${b.client_name ? `${b.client_name} · ` : ""}${fmt(b.created_at)}`} status={b.status} />)}</ul>}
+                <p className="px-4 pt-3 text-[11px] font-semibold uppercase tracking-wide text-[#9ca3af]">Citas recibidas</p>
+                {receivedBookings.length === 0 ? <Empty text="Todavía no recibe citas." /> : <ul className="divide-y divide-[#f3f4f6]">{receivedBookings.slice(0, 8).map((b) => <Row key={b.id} title={b.service_description} meta={`${b.client_name ? `${b.client_name} · ` : ""}${fmt(b.created_at)}`} status={b.status} />)}</ul>}
               </div>
               <div>
                 <p className="px-4 pt-3 text-[11px] font-semibold uppercase tracking-wide text-[#9ca3af]">Reseñas recibidas</p>
@@ -542,7 +542,7 @@ export function AdminUserProfile({
                     <Tile label="Vistas de perfil" value={analytics.profileViews} />
                     <Tile label="Visitantes únicos" value={analytics.uniqueVisitors} />
                     <Tile label="Contactos (WhatsApp + llamadas)" value={analytics.whatsappClicks + analytics.phoneClicks} />
-                    <Tile label="Solicitudes creadas" value={analytics.serviceRequestsCreated} />
+                    <Tile label="Citas creadas" value={analytics.serviceRequestsCreated} />
                   </div>
                   <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
                     <Tile label="Agregado a favoritos" value={analytics.favorites} />
@@ -627,7 +627,7 @@ export function AdminUserProfile({
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0">
             <p className="text-sm font-bold text-[#991b1b]">Eliminar esta cuenta al 100%</p>
-            <p className="mt-0.5 text-xs text-[#7f1d1d]">Borra el acceso, el perfil, las fotos y todo lo que creó (solicitudes, proyectos, publicaciones, reseñas, mensajes). Las personas con algo abierto con esta cuenta reciben un aviso. No se puede deshacer.</p>
+            <p className="mt-0.5 text-xs text-[#7f1d1d]">Borra el acceso, el perfil, las fotos y todo lo que creó (citas, solicitudes, publicaciones, reseñas, mensajes). Las personas con algo abierto con esta cuenta reciben un aviso. No se puede deshacer.</p>
             {deleteError && <p className="mt-2 text-xs font-semibold text-[#b91c1c]">{deleteError}</p>}
           </div>
           <button type="button" disabled={deleting} onClick={() => void deleteAccount()} className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-lg bg-[#b91c1c] px-3 text-xs font-semibold text-white hover:bg-[#991b1b] disabled:opacity-60">
