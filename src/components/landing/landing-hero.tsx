@@ -841,7 +841,8 @@ export function LandingHero() {
             className="font-bold text-[#0089bb] underline decoration-[#9bd8ef] decoration-2 underline-offset-4 transition-colors hover:text-[#006e96] hover:decoration-[#0089bb]"
           >
             {t("publishCta")}
-          </Link>
+          </Link>{" "}
+          {t("publishTail")}
         </p>
 
         {/* Sentinel — IntersectionObserver in navbar watches this */}

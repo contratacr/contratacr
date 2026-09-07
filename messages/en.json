@@ -3826,8 +3826,9 @@
       "popular": "Popular:",
       "installLink": "Add app to phone",
       "proCta": "Offer my services",
-      "publishCta": "Post your request",
-      "publishLead": "Prefer they reach out to you?"
+      "publishCta": "post your request",
+      "publishLead": "You can also",
+      "publishTail": "and get replies."
     },
     "pros": {
       "headingPre": "Services for whatever you need in",
