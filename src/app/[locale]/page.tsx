@@ -1,6 +1,5 @@
 import { LandingNavbar } from "@/components/landing/landing-navbar";
 import { LandingHero } from "@/components/landing/landing-hero";
-import { PublishNeedRow } from "@/components/landing/publish-need-row";
 import { FeaturedBrands } from "@/components/landing/featured-brands";
 import { ProsSection } from "@/components/landing/pros-section";
 import { WhyContratacr } from "@/components/landing/why-contratacr";
@@ -44,9 +43,6 @@ export default async function HomePage({
         )}
         {/* Hero: rotating headline + primary search. */}
         <LandingHero />
-
-        {/* La segunda puerta, ya fuera del buscador. */}
-        <PublishNeedRow />
 
         {/* Services carousel. */}
         <FadeInUp>
