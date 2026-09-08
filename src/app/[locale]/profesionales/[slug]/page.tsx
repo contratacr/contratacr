@@ -627,17 +627,16 @@ export default function ProfilePage() {
                       <span>{locationText}</span>
                     </div>
                   )}
-                  {/* Una sola familia: misma altura, mismo borde, misma píldora. El
-                      relleno lo lleva GUARDAR, que es el gesto que el cliente entiende
-                      ("lo quiero encontrar después"); Seguir queda de contorno: son
-                      casi lo mismo a los ojos de la gente y dos botones llenos hacían
-                      que no eligiera ninguno. */}
+                  {/* Guardar y compartir son gestos de apoyo, no la acción del perfil:
+                      quedan arriba junto al nombre pero en blanco, para que el único
+                      turquesa de la pantalla sea agendar. Antes guardar iba relleno y
+                      pesaba más que "Ver disponibilidad". */}
                   <div className="mt-3 flex w-[360px] max-w-full items-center gap-2">
                     <SaveButton
                       pro={savedPro}
                       isOwn={isOwn}
                       withLabel
-                      className="box-border h-9 min-w-0 flex-1 whitespace-nowrap rounded-xl border border-transparent bg-[#009fd9] px-3 py-0 text-white hover:bg-[#008fc3] aria-pressed:border-[#bfe3f5] aria-pressed:bg-[#EBF5FB] aria-pressed:text-[#0089bb]"
+                      className="box-border h-9 min-w-0 shrink whitespace-nowrap rounded-xl border border-[#d9e1ea] bg-white px-3 py-0 text-[#102746] hover:border-[#b8c6d6] hover:bg-[#f7f9fb] aria-pressed:border-[#bfe3f5] aria-pressed:bg-[#EBF5FB] aria-pressed:text-[#0089bb]"
                     />
                     <button
                       type="button"
