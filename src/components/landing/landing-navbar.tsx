@@ -899,7 +899,12 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   const effectiveMarketplaceDesktop = marketplaceDesktop || (isMarketplaceRoute && !isMarketplaceEditor);
   const compactEnabled = true;
   const effectiveCompact = compactEnabled && (forceCompactSearch || !isHomePage || compact);
-  const showDesktopCompactSearch = forceCompactSearch && effectiveCompact && !effectiveMarketplaceDesktop;
+  // En escritorio el buscador compacto del navbar aparece en el home al pasar el
+  // hero y SIEMPRE en el resto de páginas públicas (perfil, oficios, ayuda…).
+  // Se oculta donde no hay nada que buscar: panel, admin, cuenta, mensajes,
+  // reservar, y los tableros de empleos/ofertas, que traen su propio buscador.
+  const rutaSinBuscador = drawerOnly || /\/(?:dashboard|admin|login|registro|onboarding|mensajes|notificaciones|reset-password|olvide-contrasena|completar-perfil|eliminar-cuenta|publicar-proyecto)(?:\/|$)|\/reservar(?:\/|$)/.test(pathname ?? "");
+  const showDesktopCompactSearch = effectiveCompact && !effectiveMarketplaceDesktop && !rutaSinBuscador;
   // The global navbar is navigation-only. /buscar explicitly opts into its
   // contextual professional search; every other destination owns its search.
   const showMobileNavbarSearch = mobileSearch && effectiveCompact && !mobileInline;
@@ -1634,10 +1639,10 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
           <div className="px-4 sm:px-6 lg:px-8">
             <div className={cn(
               "relative h-16 transition-[height] duration-200",
-              showMobileNavbarSearch && "h-[124px] min-[1200px]:h-16",
+              showMobileNavbarSearch && "h-[124px] lg:h-16",
             )}>
               <div className={cn(
-                "absolute left-0 right-0 top-0 flex h-16 items-center min-[1200px]:hidden",
+                "absolute left-0 right-0 top-0 flex h-16 items-center lg:hidden",
                 nativeHeaderShell
                   ? "justify-start gap-1.5"
                   : "justify-start gap-2",
@@ -1750,7 +1755,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
               {/* -- Default row -- */}
               {showMobileNavbarSearch && (
                 <div
-                  className="absolute -left-4 -right-4 top-16 z-10 flex h-[56px] items-start px-4 text-left min-[1200px]:hidden"
+                  className="absolute -left-4 -right-4 top-16 z-10 flex h-[56px] items-start px-4 text-left lg:hidden"
                 >
                   <div className="flex h-12 w-full items-center gap-3 rounded-xl bg-white px-3 shadow-[0_6px_18px_rgba(15,23,42,0.10)] ring-1 ring-[#dfe5eb] transition focus-within:ring-2 focus-within:ring-[#009FD9]/25">
                     <button
@@ -1792,7 +1797,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                 </div>
               )}
 
-              <div className="relative hidden h-16 items-center gap-2 min-[1200px]:flex xl:gap-3">
+              <div className="relative hidden h-16 items-center gap-2 lg:flex xl:gap-3">
                 <Link href="/" aria-label="ContrataCR inicio" onClick={irAlInicio} className="shrink-0">
                   {mobileInline ? (
                     <>
@@ -1882,7 +1887,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                 </nav>
 
                 {effectiveMarketplaceDesktop ? (
-                  <div className="pointer-events-auto relative z-[75] mr-2 hidden h-11 min-w-[360px] flex-1 min-[1200px]:block xl:mr-3 xl:min-w-[430px]">
+                  <div className="pointer-events-auto relative z-[75] mr-2 hidden h-11 min-w-[360px] flex-1 lg:block xl:mr-3 xl:min-w-[430px]">
                     <div id="ccr-marketplace-navbar-slot" className="h-full w-full" />
                   </div>
                 ) : (
@@ -2035,7 +2040,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                 )}
 
                 {/* Right actions */}
-                <div className="relative z-[60] ml-auto hidden min-w-0 shrink-0 items-center justify-end gap-1.5 min-[1200px]:flex xl:gap-2.5">
+                <div className="relative z-[60] ml-auto hidden min-w-0 shrink-0 items-center justify-end gap-1.5 lg:flex xl:gap-2.5">
                   {/* Sobre ContrataCR: visible con y sin sesión. */}
                   <div
                     ref={resourcesMenuRef}
