@@ -1,4 +1,5 @@
 import { createServerClient } from "@supabase/ssr";
+import { RUTAS_DEL_SITIO } from "@/lib/site-routes";
 import { isAuthRetryableFetchError } from "@supabase/supabase-js";
 import createIntlMiddleware from "next-intl/middleware";
 import { type NextRequest, NextResponse } from "next/server";
@@ -64,10 +65,11 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL(VANITY[pathname], request.url), 307);
   }
 
-  // Enlace corto de cada profesional: /@su-slug → su perfil. Es el enlace que
-  // comparte desde el panel; el largo con /es/profesionales sigue funcionando.
-  const perfilCorto = /^\/@([A-Za-z0-9][A-Za-z0-9-]{1,80})$/.exec(pathname);
-  if (perfilCorto) {
+  // Enlace público de cada profesional: contratacr.com/nombre-apellido (y la
+  // forma con @ que se compartió antes). Solo entra aquí lo que no es una
+  // sección del sitio (RUTAS_DEL_SITIO, verificada en CI).
+  const perfilCorto = /^\/@?([a-z0-9][a-z0-9-]{2,80})$/.exec(pathname.toLowerCase());
+  if (perfilCorto && !RUTAS_DEL_SITIO.has(perfilCorto[1])) {
     const locale = request.cookies.get("NEXT_LOCALE")?.value === "en" ? "en" : "es";
     const destino = new URL(`/${locale}/profesionales/${perfilCorto[1]}`, request.url);
     destino.search = request.nextUrl.search;

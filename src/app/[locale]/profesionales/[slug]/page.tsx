@@ -1,5 +1,6 @@
 "use client";
 
+import { enlacePerfil } from "@/lib/profile-url";
 import { useState, useEffect, useCallback, useRef, type ReactNode } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { useParams, useSearchParams } from "next/navigation";
@@ -509,8 +510,7 @@ export default function ProfilePage() {
   async function shareProfile() {
     if (!professional) return;
     trackInteraction({ type: "profile_share", professionalId: professional.id, source: "profile", locale });
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || window.location.origin;
-    const url = `${baseUrl}/${locale}/profesionales/${professional.slug}`;
+    const url = enlacePerfil(professional.slug, process.env.NEXT_PUBLIC_APP_URL || window.location.origin);
     const text = professional.businessName?.trim()
       ? `${professional.businessName.trim()} en ContrataCR`
       : `${proDisplayName(professional.fullName)} en ContrataCR`;

@@ -1,4 +1,4 @@
-import { existsSync, readdirSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { relative, resolve } from "node:path";
 
 const root = process.cwd();
@@ -86,6 +86,23 @@ if (JSON.stringify(parkedPages) !== JSON.stringify(expectedParkedPages)) {
 }
 if (JSON.stringify(parkedHandlers) !== JSON.stringify(expectedParkedHandlers)) {
   throw new Error(`Parked handlers changed: ${JSON.stringify(parkedHandlers)}.`);
+}
+
+// El enlace corto de un perfil (contratacr.com/nombre-apellido) vive en la raíz:
+// si una sección nueva no está en RUTAS_DEL_SITIO, el middleware la mandaría al
+// buscador de perfiles y la sección quedaría muerta.
+const rutasSitio = new Set(
+  [...readFileSync(resolve(root, "src/lib/site-routes.ts"), "utf8").matchAll(/"([^"]+)"/g)].map((m) => m[1]),
+);
+const carpetas = [
+  ...readdirSync(appRoot, { withFileTypes: true }),
+  ...readdirSync(resolve(appRoot, "[locale]"), { withFileTypes: true }),
+]
+  .filter((entry) => entry.isDirectory() && entry.name !== "[locale]" && !entry.name.startsWith("["))
+  .map((entry) => entry.name);
+const sinDeclarar = [...new Set(carpetas)].filter((name) => !rutasSitio.has(name)).sort();
+if (sinDeclarar.length) {
+  throw new Error(`Missing from RUTAS_DEL_SITIO in src/lib/site-routes.ts: ${sinDeclarar.join(", ")}.`);
 }
 
 console.log(`Verified regression ownership for ${pages.length} pages and ${handlers.length} route handlers.`);

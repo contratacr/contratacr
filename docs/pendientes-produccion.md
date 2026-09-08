@@ -53,3 +53,23 @@ bloque no se muestra: no rompe nada, simplemente no aparece.
   Admin quedaron fuera. Quien quiera pone precio en sus servicios y quien no,
   no; el filtro de precio de /buscar ya deja al cliente elegir. La 191 dejó
   permitido el tipo de aviso `pricing_request`, que no usa nadie.
+
+## 5. Enlace público de cada profesional
+
+Desde el 8-sep el enlace que se comparte es **`contratacr.com/nombre-apellido`**
+(sin `/es/profesionales/` y sin el sufijo aleatorio del slug). Lo resuelve
+`src/middleware.ts` con la lista `RUTAS_DEL_SITIO` (`src/lib/site-routes.ts`) y,
+en la base, `getProfessionalBySlug`, que acepta el nombre sin sufijo mientras
+solo haya un profesional con ese nombre. En producción los 283 perfiles dan 283
+nombres distintos: no hay choques hoy.
+
+- Los enlaces viejos (`/es/profesionales/nombre-apellido-977u5iku` y `/@slug`)
+  siguen funcionando, y la etiqueta canónica sigue siendo la larga: no se pierde
+  nada de lo que Google ya tenga indexado.
+- **Al agregar una sección nueva** hay que ponerla en `src/lib/site-routes.ts`.
+  No es un pendiente que se pueda olvidar: `verify-app-surface-ownership.mjs`
+  (gate de CI) falla si una carpeta de `src/app` no está en la lista.
+- La tarjeta con QR ahora imprime el enlace escrito debajo del código, y en
+  vistas previas de Vercel el kit comparte igual `contratacr.com` (antes salía
+  el dominio `…vercel.app`, que era la queja).
+

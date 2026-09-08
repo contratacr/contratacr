@@ -873,6 +873,25 @@ export async function getProfessionalBySlug(
           .eq("slug", normalizedSlug)
           .maybeSingle();
 
+        // Enlace corto: "nombre-apellido" sin el sufijo aleatorio del slug.
+        // Solo cuenta como candidato el slug que es exactamente el nombre + un
+        // sufijo de 8 caracteres (así "juan-perez" no se confunde con
+        // "juan-perez-lopez-ab12cd34"), y solo resuelve si hay uno.
+        if (!data && !error) {
+          const porNombre = await supabase
+            .from("professionals")
+            .select(select)
+            .ilike("slug", `${normalizedSlug}-%`)
+            .limit(20);
+          const exacto = new RegExp(`^${normalizedSlug.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}-[a-z0-9]{8}$`);
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const filas = (porNombre.data ?? []) as any[];
+          const candidatos = filas.filter((row) => exacto.test(String(row?.slug ?? "")));
+          if (!porNombre.error && candidatos.length === 1) {
+            data = candidatos[0];
+          }
+        }
+
         if (!data && !error) {
           const suffix = normalizedSlug.split("-").filter(Boolean).at(-1);
           if (suffix && suffix.length >= 6) {

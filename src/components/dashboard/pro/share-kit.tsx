@@ -147,6 +147,9 @@ export function ShareKit({ open, onClose, profileUrl, name, services = [], avata
         ctx.drawImage(qrImg, cx - qrSize / 2, qrY, qrSize, qrSize);
       }
       ctx.font = "700 30px Inter, -apple-system, sans-serif"; ctx.fillStyle = "#162543"; ctx.fillText(t("cardFooter"), cx, pieTextY);
+      // El enlace corto escrito, para quien prefiere teclearlo antes que escanear.
+      ctx.font = "600 26px Inter, -apple-system, sans-serif"; ctx.fillStyle = "#68778d";
+      ctx.fillText(profileUrl.replace(/^https?:\/\//, "").replace(/\/$/, ""), cx, CARD_H - 62);
       try {
         canvas.toBlob((blob) => {
           if (cancelled || !blob) return;

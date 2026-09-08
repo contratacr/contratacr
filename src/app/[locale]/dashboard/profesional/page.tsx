@@ -1,4 +1,5 @@
 "use client";
+import { enlacePerfil } from "@/lib/profile-url";
 import { EMPLEOS_VISIBLE } from "@/lib/feature-flags";
 
 import { useEffect, useState, useCallback, useRef } from "react";
@@ -2071,7 +2072,7 @@ export default function DashboardPage() {
                   <ShareKit
                     open={shareKitOpen}
                     onClose={() => setShareKitOpen(false)}
-                    profileUrl={`${process.env.NEXT_PUBLIC_APP_URL || "https://contratacr.com"}/@${pro?.slug ?? ""}`}
+                    profileUrl={enlacePerfil(pro?.slug ?? "")}
                     name={displayName}
                     services={((pro?.professions && pro.professions.length > 0) ? pro.professions : (pro?.category_id ? [pro.category_id] : [])).map((id: string) => getCategoryLabel(id, locale)).filter(Boolean)}
                     avatarUrl={headerAvatar}
