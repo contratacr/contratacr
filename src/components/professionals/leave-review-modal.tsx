@@ -46,18 +46,25 @@ export function LeaveReviewModal({
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  // La reseña propia se consulta al montar. Sin esta espera el cuadro se pintaba
+  // vacío ("Dejar tu reseña", 0 estrellas) y saltaba a la reseña existente
+  // cuando llegaba la respuesta: eso era el parpadeo.
+  const [prefilledKey, setPrefilledKey] = useState<string | null>(null);
   const pendingReviewKey = `${PENDING_REVIEW_KEY_PREFIX}${professionalId}`;
+  const query = bookingId
+    ? `bookingId=${bookingId}`
+    : projectId
+      ? `projectId=${projectId}`
+      : contactId
+        ? `contactId=${contactId}`
+        : `professionalId=${professionalId}`;
+  // Sin esta espera el cuadro se pintaba vacío ("Dejar tu reseña", 0 estrellas)
+  // y saltaba a la reseña existente cuando llegaba la respuesta: el parpadeo.
+  const prefillReady = !isAuthenticated || prefilledKey === query;
 
   useEffect(() => {
     if (!isAuthenticated) return;
     let active = true;
-    const query = bookingId
-      ? `bookingId=${bookingId}`
-      : projectId
-        ? `projectId=${projectId}`
-        : contactId
-          ? `contactId=${contactId}`
-          : `professionalId=${professionalId}`;
     void (async () => {
       try {
         const response = await fetch(`/api/reviews?${query}`);
@@ -69,10 +76,12 @@ export function LeaveReviewModal({
         }
       } catch {
         // A new review can still be written if the prefill request fails.
+      } finally {
+        if (active) setPrefilledKey(query);
       }
     })();
     return () => { active = false; };
-  }, [bookingId, contactId, isAuthenticated, professionalId, projectId]);
+  }, [isAuthenticated, query]);
 
   useEffect(() => {
     if (isAuthenticated || typeof window === "undefined") return;
@@ -222,6 +231,16 @@ export function LeaveReviewModal({
         ))}
       </div>
       <p className="text-center text-sm text-[#6b7280]">{t("thanksSub")}</p>
+    </div>
+  ) : embedded && !prefillReady ? (
+    <div
+      aria-hidden
+      className="flex animate-pulse flex-col gap-3 rounded-2xl border border-[#dbe7ef] bg-white p-3.5 shadow-[0_10px_26px_-24px_rgba(15,23,42,0.55)] sm:p-4"
+    >
+      <div className="h-4 w-32 rounded bg-[#eef2f6]" />
+      <div className="h-7 w-40 rounded bg-[#eef2f6]" />
+      <div className="h-[72px] rounded-xl bg-[#f4f7fa]" />
+      <div className="h-11 w-40 self-end rounded-full bg-[#eef2f6]" />
     </div>
   ) : (
     <form onSubmit={handleSubmit} className={`flex flex-col ${embedded ? "gap-3 rounded-2xl border border-[#dbe7ef] bg-white p-3.5 shadow-[0_10px_26px_-24px_rgba(15,23,42,0.55)] sm:p-4" : "gap-4 px-6 py-5"}`}>
