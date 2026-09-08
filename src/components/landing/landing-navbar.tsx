@@ -1904,7 +1904,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                     >
                       <form onSubmit={handleCompactSearch} className="flex min-w-0 flex-1">
                         <div className="relative w-full">
-                          <div className="flex w-full items-center h-11 bg-white border border-gray-200 rounded-[6px] overflow-hidden pl-3 sm:pl-4 shadow-[0_8px_28px_rgba(0,0,0,0.14)]">
+                          <div className="flex h-11 w-full items-center overflow-hidden rounded-full border border-[#e3ebf2] bg-[#f6f8fb] pl-3 transition-colors focus-within:border-[#009FD9] focus-within:bg-white sm:pl-4">
                             <div ref={compactSvcRef} className="flex h-full min-w-0 flex-[3_1_0%] items-center gap-2 sm:gap-3">
                               <button
                                 type="submit"
@@ -1923,7 +1923,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                                 onFocus={() => { if (searchBlurTimer.current) clearTimeout(searchBlurTimer.current); setSearchFocused(true); }}
                                 onBlur={() => { searchBlurTimer.current = setTimeout(() => setSearchFocused(false), 150); }}
                                 placeholder={locale === "en" ? "What service are you looking for?" : "¿Qué servicio estás buscando?"}
-                                className="flex-1 text-base text-gray-700 placeholder:text-gray-400 bg-transparent focus:outline-none min-w-0"
+                                className="min-w-0 flex-1 bg-transparent text-[15px] text-[#162543] placeholder:text-[#8f9aaa] focus:outline-none"
                                 role="combobox"
                                 aria-label={locale === "en" ? "Service" : "Servicio"}
                                 aria-expanded={searchFocused && searchQuery.trim().length > 0}
@@ -1931,7 +1931,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                                 aria-controls="navbar-service-suggestions"
                               />
                             </div>
-                            <div className="hidden sm:block w-px bg-gray-200 self-stretch my-3 mx-2 shrink-0" />
+                            <div className="mx-2 my-3 hidden w-px shrink-0 self-stretch bg-[#dbe4ee] sm:block" />
                             <div ref={compactLocRef} className="hidden h-full min-w-0 flex-[2_1_0%] items-center gap-2 sm:flex">
                               <MapPin className="h-5 w-5 text-gray-300 shrink-0" />
                               <input

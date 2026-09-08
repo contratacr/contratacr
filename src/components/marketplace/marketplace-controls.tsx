@@ -308,7 +308,7 @@ export function MarketplaceSearch({
 
   return (
     <div ref={rootRef} className="relative min-w-0 flex-1">
-      <div className="flex h-12 w-full items-center gap-3 rounded-xl bg-white px-3 shadow-[0_6px_18px_rgba(15,23,42,0.10)] ring-1 ring-[#dfe5eb] transition focus-within:ring-2 focus-within:ring-[#009FD9]/25 lg:h-11 lg:rounded-[6px] lg:border lg:border-[#dfe5eb] lg:bg-white lg:px-4 lg:shadow-[0_8px_28px_rgba(0,0,0,0.14)] lg:ring-0 lg:focus-within:border-[#b9d9e8] lg:focus-within:ring-0">
+      <div className="flex h-11 w-full items-center gap-3 rounded-full border border-[#e3ebf2] bg-[#f6f8fb] px-4 transition-colors focus-within:border-[#009FD9] focus-within:bg-white">
         <Search className="h-5 w-5 shrink-0 text-[#162543] lg:text-gray-300" />
         <div className="relative min-w-0 flex-[1.85]">
           <input
