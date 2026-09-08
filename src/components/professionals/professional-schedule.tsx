@@ -853,40 +853,32 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
     </>
   );
 
+  // Perfil: las dos acciones que la gente sí usa van juntas en la primera fila y
+  // en turquesa (agendar y escribir); la llamada queda debajo, en blanco. El correo
+  // salió de aquí: repetía el mensaje y mandaba la conversación fuera del app.
+  const chatLauncher = (
+    <DirectChatLauncher
+      professionalId={professional.id}
+      professionalName={professional.fullName}
+      contextTitle={categoryName}
+      isOwn={isOwn}
+      onSelfAction={() => setSelfMsg(SELF_MSG.whatsapp)}
+      analyticsSource="profile"
+      tone="primary"
+      className={messageButtonClass}
+    />
+  );
   const profileContactButtons = (
     <>
-      {showCall ? (
+      {hasSchedule ? (
         <div className="grid grid-cols-2 gap-2">
-          <DirectChatLauncher
-            professionalId={professional.id}
-            professionalName={professional.fullName}
-            contextTitle={categoryName}
-            isOwn={isOwn}
-            onSelfAction={() => setSelfMsg(SELF_MSG.whatsapp)}
-            analyticsSource="profile"
-            buttonLabel="WhatsApp"
-            tone={hasSchedule ? "contrast" : "primary"}
-            className={messageButtonClass}
-          />
-          {renderCall()}
+          {verHorarioButton}
+          {chatLauncher}
         </div>
       ) : (
-        <DirectChatLauncher
-          professionalId={professional.id}
-          professionalName={professional.fullName}
-          contextTitle={categoryName}
-          isOwn={isOwn}
-          onSelfAction={() => setSelfMsg(SELF_MSG.whatsapp)}
-          analyticsSource="profile"
-          tone={hasSchedule ? "contrast" : "primary"}
-          className={messageButtonClass}
-        />
+        chatLauncher
       )}
-      {showEmail && (
-        <div className="grid grid-cols-1 gap-2">
-          {renderEmail(`${secondaryContactClass} px-3`)}
-        </div>
-      )}
+      {showCall && renderCall()}
     </>
   );
 
@@ -1037,7 +1029,6 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
           {scheduleBody}
           {!visualScheduleLoading && (
             <div className="flex flex-col gap-2">
-              {hasSchedule && verHorarioButton}
               {profileContactButtons}
             </div>
           )}
