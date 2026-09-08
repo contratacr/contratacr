@@ -69,7 +69,20 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: "No puedes solicitarte un servicio a ti mismo." }, { status: 400 });
       }
 
-      if (cleanClientCedula) {
+      // La identificación YA guardada y verificada en la cuenta no se vuelve a
+      // consultar al padrón en cada cita: es la misma persona con el mismo
+      // número. Además, así una caída del padrón deja de bloquear las reservas
+      // de quien ya está verificado (antes cortaba a todo el mundo).
+      const { data: cuenta } = await admin
+        .from("profiles")
+        .select("cedula, client_identity_status")
+        .eq("id", user.id)
+        .maybeSingle();
+      const yaVerificada = !!cleanClientCedula
+        && cuenta?.cedula === cleanClientCedula
+        && cuenta?.client_identity_status === "verified";
+
+      if (cleanClientCedula && !yaVerificada) {
         const { data: dupe } = await admin
           .from("profiles")
           .select("id")
