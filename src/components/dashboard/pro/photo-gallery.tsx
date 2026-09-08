@@ -109,7 +109,7 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
   const countFor = (prof: string) => cases.filter((c) => c.profession === prof).length;
   const selectedProf = professions.includes(activeProf) ? activeProf : professions[0] ?? "";
   const targetProf = selectedProf;
-  const inputClass = "h-11 w-full rounded-xl border border-[#e5e7eb] bg-white px-3.5 text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all";
+  const inputClass = "h-11 w-full rounded-xl border border-[#e5e7eb] bg-white px-3.5 text-sm text-[#162543] placeholder:text-[#68778d] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all";
 
   async function persist(next: SuccessCase[], options: { intent?: "section" | "internal" } = {}) {
     setCases(next);
@@ -288,7 +288,7 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
           >
             <Plus className="h-4 w-4" /> {t("addCase")}
           </button>
-          {addFull && <p className="text-center text-xs text-[#9ca3af]">{t("maxCasesHint", { max: MAX_CASES_PER_PROFESSION })}</p>}
+          {addFull && <p className="text-center text-xs text-[#68778d]">{t("maxCasesHint", { max: MAX_CASES_PER_PROFESSION })}</p>}
         </div>
       )}
 
@@ -324,7 +324,7 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
                 </div>
 
                 <div className="mt-3 flex items-center justify-between gap-2 border-t border-[#f3f4f6] pt-3">
-                  <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] text-[#9ca3af]">
+                  <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] text-[#68778d]">
                     {c.photos.length > 0 && <span className="inline-flex items-center gap-1"><Images className="h-3 w-3 text-[#374151]" /> {t("photosCount", { count: c.photos.length })}</span>}
                     {c.date && <span className="inline-flex items-center gap-1"><CalendarDays className="h-3 w-3 text-[#374151]" /> {c.date}</span>}
                   </div>
@@ -456,7 +456,7 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
                   </div>
                 ))}
                 {draft.photos.length < MAX_PHOTOS_PER_CASE && (
-                  <button type="button" onClick={() => fileRef.current?.click()} disabled={uploading} className="flex aspect-square flex-col items-center justify-center gap-1 rounded-xl border-2 border-dashed border-[#d1d5db] text-[#9ca3af] transition-colors hover:border-[#009FD9] hover:bg-[#f9fbfe]">
+                  <button type="button" onClick={() => fileRef.current?.click()} disabled={uploading} className="flex aspect-square flex-col items-center justify-center gap-1 rounded-xl border-2 border-dashed border-[#d1d5db] text-[#68778d] transition-colors hover:border-[#009FD9] hover:bg-[#f9fbfe]">
                     {uploading ? <Loader2 className="h-5 w-5 animate-spin text-[#009FD9]" /> : <><ImageUp className="h-5 w-5" /><span className="text-[11px]">{t("addPhoto")}</span></>}
                   </button>
                 )}
@@ -475,15 +475,15 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
               <input value={draft.title ?? ""} onChange={(e) => { if (e.target.value.trim()) setFaltaTitulo(false); setDraft((d) => (d ? { ...d, title: e.target.value } : d)); }} placeholder={t("caseTitlePlaceholder")} maxLength={80} className={inputClass} />
             </div>
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-[#374151]">{t("caseDescription")} <span className="font-normal text-[#9ca3af]">({t("optional")})</span></label>
-              <textarea value={draft.description ?? ""} onChange={(e) => setDraft((d) => (d ? { ...d, description: e.target.value } : d))} placeholder={t("caseDescriptionPlaceholder")} maxLength={200} rows={3} className="w-full rounded-xl border border-[#e5e7eb] bg-white px-3.5 py-2.5 text-sm text-[#111827] placeholder:text-[#9ca3af] resize-none focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all" />
+              <label className="mb-1.5 block text-sm font-medium text-[#374151]">{t("caseDescription")} <span className="font-normal text-[#68778d]">({t("optional")})</span></label>
+              <textarea value={draft.description ?? ""} onChange={(e) => setDraft((d) => (d ? { ...d, description: e.target.value } : d))} placeholder={t("caseDescriptionPlaceholder")} maxLength={200} rows={3} className="w-full rounded-xl border border-[#e5e7eb] bg-white px-3.5 py-2.5 text-sm text-[#162543] placeholder:text-[#68778d] resize-none focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all" />
             </div>
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-[#374151]">{t("caseRecipient")} <span className="font-normal text-[#9ca3af]">({t("optional")})</span></label>
+              <label className="mb-1.5 block text-sm font-medium text-[#374151]">{t("caseRecipient")} <span className="font-normal text-[#68778d]">({t("optional")})</span></label>
               <input value={draft.recipient ?? ""} onChange={(e) => setDraft((d) => (d ? { ...d, recipient: e.target.value } : d))} placeholder={t("caseRecipientPlaceholder")} maxLength={120} className={inputClass} />
             </div>
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-[#374151]">{t("caseDate")} <span className="font-normal text-[#9ca3af]">({t("optional")})</span></label>
+              <label className="mb-1.5 block text-sm font-medium text-[#374151]">{t("caseDate")} <span className="font-normal text-[#68778d]">({t("optional")})</span></label>
               <input value={draft.date ?? ""} onChange={(e) => setDraft((d) => (d ? { ...d, date: e.target.value } : d))} placeholder={t("caseDatePlaceholder")} maxLength={20} className={inputClass} />
             </div>
           </div>

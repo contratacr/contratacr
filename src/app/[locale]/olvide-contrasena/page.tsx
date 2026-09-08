@@ -77,7 +77,7 @@ export default function OlvideContrasenaPage() {
           <div className="rounded-3xl border border-[#e5e7eb] bg-white p-7 shadow-sm sm:p-8">
           {!success && (
             <div className="text-center mb-7">
-              <h1 className="text-2xl font-bold text-[#111827]">{t("title")}</h1>
+              <h1 className="text-2xl font-bold text-[#162543]">{t("title")}</h1>
               <p className="text-[#6b7280] text-sm mt-1">{t("subtitle")}</p>
             </div>
           )}
@@ -94,7 +94,7 @@ export default function OlvideContrasenaPage() {
               <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#e8f6fc] text-[#009FD9]">
                 <MailCheck className="h-6 w-6" />
               </div>
-              <h1 className="mt-4 text-2xl font-bold text-[#111827]">{t("sentTitle")}</h1>
+              <h1 className="mt-4 text-2xl font-bold text-[#162543]">{t("sentTitle")}</h1>
               <p className="mx-auto mt-2 max-w-[320px] text-sm leading-6 text-[#4b5563]">{t("sentBody")}</p>
               {sentEmail && (
                 <p className="mx-auto mt-4 max-w-full truncate rounded-full bg-[#f4f7fa] px-4 py-2 text-sm font-semibold text-[#1a2744]">
@@ -114,7 +114,7 @@ export default function OlvideContrasenaPage() {
                     await sendReset(sentEmail);
                   })}
                   disabled={resendState.cooldown > 0 || resendState.resending}
-                  className="mx-auto mt-2 inline-flex min-h-10 items-center justify-center gap-2 rounded-lg px-4 text-sm font-semibold text-[#009FD9] transition-colors hover:bg-[#e8f6fc] disabled:text-[#9ca3af] disabled:hover:bg-transparent disabled:cursor-not-allowed"
+                  className="mx-auto mt-2 inline-flex min-h-10 items-center justify-center gap-2 rounded-lg px-4 text-sm font-semibold text-[#009FD9] transition-colors hover:bg-[#e8f6fc] disabled:text-[#68778d] disabled:hover:bg-transparent disabled:cursor-not-allowed"
                 >
                   {resendState.resending && <RefreshCw className="h-4 w-4 animate-spin" />}
                   {resendState.cooldown > 0 ? tc("resendIn", { seconds: resendState.cooldown }) : resendState.resending ? tc("resending") : tc("resend")}

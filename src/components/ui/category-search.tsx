@@ -151,11 +151,11 @@ export function CategorySearch({
         )}
       >
         <button type="button" onClick={openDropdown} className="flex h-full min-w-0 flex-1 items-center gap-2 text-left">
-          {!selectedLabel && <Search className="h-4 w-4 shrink-0 text-[#9ca3af]" />}
+          {!selectedLabel && <Search className="h-4 w-4 shrink-0 text-[#68778d]" />}
           {selectedLabel ? (
-            <span className="truncate font-medium text-[#111827]">{selectedLabel}</span>
+            <span className="truncate font-medium text-[#162543]">{selectedLabel}</span>
           ) : (
-            <span className="truncate text-[#9ca3af]">{placeholder ?? t("placeholderDefault")}</span>
+            <span className="truncate text-[#68778d]">{placeholder ?? t("placeholderDefault")}</span>
           )}
         </button>
         <div className="flex items-center gap-1 shrink-0 ml-2">
@@ -164,7 +164,7 @@ export function CategorySearch({
               type="button"
               onClick={handleClear}
               aria-label={locale === "en" ? "Clear service" : "Quitar servicio"}
-              className="text-[#9ca3af] hover:text-[#374151] p-0.5"
+              className="text-[#68778d] hover:text-[#374151] p-0.5"
             >
               <X className="h-3.5 w-3.5" />
             </button>
@@ -173,7 +173,7 @@ export function CategorySearch({
             type="button"
             onClick={openDropdown}
             aria-label={placeholder ?? t("placeholderDefault")}
-            className="grid h-7 w-7 place-items-center text-[#9ca3af]"
+            className="grid h-7 w-7 place-items-center text-[#68778d]"
           >
             <ChevronDown className={cn("h-4 w-4 transition-transform", open && "rotate-180")} />
           </button>
@@ -210,18 +210,18 @@ export function CategorySearch({
                 type="button"
                 onClick={() => { setOpen(false); setQuery(""); setActiveGroupId(null); }}
                 aria-label={t("back")}
-                className="grid h-11 w-11 place-items-center rounded-full text-[#111827] transition-colors hover:bg-[#f3f4f6]"
+                className="grid h-11 w-11 place-items-center rounded-full text-[#162543] transition-colors hover:bg-[#f3f4f6]"
               >
                 <ArrowLeft className="h-5 w-5" />
               </button>
-              <p className="truncate text-center text-base font-bold text-[#111827]">{t("sheetTitle")}</p>
+              <p className="truncate text-center text-base font-bold text-[#162543]">{t("sheetTitle")}</p>
               <span />
             </div>
           )}
           {/* Search input */}
           <div className="p-2 border-b border-[#f3f4f6]">
             <div className="relative flex items-center">
-              <Search className="absolute left-3 h-4 w-4 text-[#9ca3af] pointer-events-none" />
+              <Search className="absolute left-3 h-4 w-4 text-[#68778d] pointer-events-none" />
               <input
                 ref={inputRef}
                 type="text"
@@ -230,19 +230,19 @@ export function CategorySearch({
                 placeholder={t("searchPlaceholder")}
                 enterKeyHint="search"
                 className={cn(
-                  "w-full pl-9 pr-3 text-[#111827] placeholder:text-[#9ca3af] bg-[#f9fafb] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#009FD9]/20",
+                  "w-full pl-9 pr-3 text-[#162543] placeholder:text-[#68778d] bg-[#f9fafb] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#009FD9]/20",
                   pantallaChica ? "h-11 text-base" : "py-2 text-sm",
                 )}
               />
               {query && (
-                <button type="button" onClick={() => setQuery("")} className="absolute right-2 text-[#9ca3af] hover:text-[#374151]">
+                <button type="button" onClick={() => setQuery("")} className="absolute right-2 text-[#68778d] hover:text-[#374151]">
                   <X className="h-3.5 w-3.5" />
                 </button>
               )}
             </div>
             {/* Los ejemplos van debajo, no dentro del campo: en el teléfono el
                 marcador se cortaba a media palabra ("...psicólogo, plome"). */}
-            {!query && <p className="mt-1.5 px-1 text-xs text-[#9ca3af]">{t("searchExamples")}</p>}
+            {!query && <p className="mt-1.5 px-1 text-xs text-[#68778d]">{t("searchExamples")}</p>}
           </div>
 
           {/* Results */}
@@ -250,12 +250,12 @@ export function CategorySearch({
             {query && results.length === 0 ? (
               <div className="px-3 py-4 text-center">
                 <p className="text-sm text-[#374151] font-medium mb-1">{t("noResults")}</p>
-                <p className="text-xs text-[#9ca3af]">{t("noResultsHint")}</p>
+                <p className="text-xs text-[#68778d]">{t("noResultsHint")}</p>
               </div>
             ) : (
               query ? grouped.map(([groupLabel, items]) => (
                 <div key={groupLabel} className="px-2 py-1.5">
-                  <p className="px-1.5 pb-1.5 pt-1 text-[10px] font-bold text-[#9ca3af] uppercase tracking-widest">
+                  <p className="px-1.5 pb-1.5 pt-1 text-[10px] font-bold text-[#68778d] uppercase tracking-widest">
                     {items[0]?.groupId ? getCategoryGroupLabel(items[0].groupId, locale) : groupLabel}
                   </p>
                   <div className="grid grid-cols-1 gap-1.5">

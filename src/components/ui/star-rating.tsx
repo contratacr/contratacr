@@ -57,7 +57,7 @@ export function StarRating({
       {/* Never show a numeric score for a pro with ZERO reviews — that 0.0 (or any
           aggregate) would be fake. Stars render empty/grey; only the count shows. */}
       {showValue && reviewCount !== 0 && (
-        <span className="text-sm font-semibold text-[#111827]">{rating.toFixed(1)}</span>
+        <span className="text-sm font-semibold text-[#162543]">{rating.toFixed(1)}</span>
       )}
       {reviewCount !== undefined && (
         <span className="text-xs text-[#6b7280]">({reviewCount})</span>

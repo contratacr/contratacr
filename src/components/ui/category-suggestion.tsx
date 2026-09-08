@@ -155,7 +155,7 @@ export function CategorySuggestionBox({
               window.setTimeout(() => acomodar(false), 0);
               window.setTimeout(() => acomodar(false), 240);
             }}
-            className="h-12 w-full min-w-0 rounded-xl border border-[#d7e3ee] bg-white px-4 text-[15px] text-[#162543] placeholder:text-[#9ca3af] transition-shadow focus:border-[#009FD9] focus:outline-none focus:ring-4 focus:ring-[#009FD9]/15"
+            className="h-12 w-full min-w-0 rounded-xl border border-[#d7e3ee] bg-white px-4 text-[15px] text-[#162543] placeholder:text-[#68778d] transition-shadow focus:border-[#009FD9] focus:outline-none focus:ring-4 focus:ring-[#009FD9]/15"
           />
           <div className="flex items-center gap-2.5">
             <button

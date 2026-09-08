@@ -642,7 +642,7 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
         </div>
         <div>
           <p className="font-semibold text-[#1a2744] mb-1">Mapa no disponible</p>
-          <p className="text-xs text-[#9ca3af] max-w-[200px]">Configura NEXT_PUBLIC_GOOGLE_MAPS_API_KEY para activar el mapa.</p>
+          <p className="text-xs text-[#68778d] max-w-[200px]">Configura NEXT_PUBLIC_GOOGLE_MAPS_API_KEY para activar el mapa.</p>
         </div>
       </div>
     );

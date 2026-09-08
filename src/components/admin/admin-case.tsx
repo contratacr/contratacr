@@ -155,7 +155,7 @@ export function AdminCase({ providerId }: { providerId: string }) {
               </div>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <h1 className="text-lg font-bold text-[#111827]">{profile?.full_name ?? "Sin nombre"}</h1>
+                  <h1 className="text-lg font-bold text-[#162543]">{profile?.full_name ?? "Sin nombre"}</h1>
                   <span className={`text-xs font-medium px-2 py-0.5 rounded-md border ${verificationPillClasses(status)}`}>
                     {verificationLabel(status)}
                   </span>
@@ -190,11 +190,11 @@ export function AdminCase({ providerId }: { providerId: string }) {
 
           {/* ID / automatic assist */}
           <div className="bg-white rounded-xl border border-[#e5e7eb] p-5">
-            <h2 className="flex items-center gap-2 font-semibold text-[#111827] text-sm mb-3">
+            <h2 className="flex items-center gap-2 font-semibold text-[#162543] text-sm mb-3">
               <IdCard className="h-4 w-4 text-[#009FD9]" /> Identidad (asistencia automática)
             </h2>
             <div className="flex items-center gap-3 flex-wrap text-sm">
-              <span className="font-mono text-[#111827]">{idAssist.value ? formatId(idAssist.value) : "Sin documento"}</span>
+              <span className="font-mono text-[#162543]">{idAssist.value ? formatId(idAssist.value) : "Sin documento"}</span>
               {idAssist.typeLabel && (
                 <span className="text-xs bg-[#EBF5FB] text-[#0089bb] px-2 py-0.5 rounded-md">{idAssist.typeLabel}</span>
               )}
@@ -210,7 +210,7 @@ export function AdminCase({ providerId }: { providerId: string }) {
                 <p className="mt-1">{pro.id_document_note || "El proveedor no adjuntó una nota de documento."}</p>
               </div>
             )}
-            <p className="text-[11px] text-[#9ca3af] mt-3">
+            <p className="text-[11px] text-[#68778d] mt-3">
               La validación de formato y la confirmación de identidad contra el padrón (TSE) son automáticas. Revisa la comparación con el padrón más abajo. Las fotos de trabajo NO son criterio de verificación.
             </p>
           </div>
@@ -219,7 +219,7 @@ export function AdminCase({ providerId }: { providerId: string }) {
               are NOT a verification criterion and are intentionally not shown. */}
           {padron && (
             <div className="bg-white rounded-xl border border-[#e5e7eb] p-5">
-              <h2 className="font-semibold text-[#111827] text-sm mb-3">Comparación con el padrón (TSE)</h2>
+              <h2 className="font-semibold text-[#162543] text-sm mb-3">Comparación con el padrón (TSE)</h2>
               {padron.skipped ? (
                 <div className="rounded-lg border border-[#bfdbfe] bg-[#eff6ff] px-3 py-2 text-sm text-[#1e3a8a]">
                   <p className="font-semibold">Revisión manual requerida</p>
@@ -230,11 +230,11 @@ export function AdminCase({ providerId }: { providerId: string }) {
               ) : (
                 <div className="grid sm:grid-cols-2 gap-2.5 text-sm">
                   <div className="rounded-lg border border-[#f1f3f5] bg-[#f9fafb] px-3 py-2">
-                    <p className="text-[11px] uppercase tracking-wide text-[#9ca3af]">Nombre ingresado</p>
+                    <p className="text-[11px] uppercase tracking-wide text-[#68778d]">Nombre ingresado</p>
                     <p className="text-[#374151] font-medium mt-0.5">{profile?.full_name}</p>
                   </div>
                   <div className="rounded-lg border border-[#f1f3f5] bg-[#f9fafb] px-3 py-2">
-                    <p className="text-[11px] uppercase tracking-wide text-[#9ca3af]">Nombre en el padrón</p>
+                    <p className="text-[11px] uppercase tracking-wide text-[#68778d]">Nombre en el padrón</p>
                     <p className="text-[#374151] font-medium mt-0.5">{padron.name || "—"}</p>
                   </div>
                   <div className="sm:col-span-2">
@@ -250,12 +250,12 @@ export function AdminCase({ providerId }: { providerId: string }) {
           {/* Appeals */}
           {appeals.length > 0 && (
             <div className="bg-white rounded-xl border border-[#e5e7eb] p-5">
-              <h2 className="font-semibold text-[#111827] text-sm mb-3">Apelaciones</h2>
+              <h2 className="font-semibold text-[#162543] text-sm mb-3">Apelaciones</h2>
               <ul className="space-y-3">
                 {appeals.map((a) => (
                   <li key={a.id} className="text-sm border-l-2 border-[#fde68a] pl-3">
                     <p className="text-[#374151] whitespace-pre-wrap">{a.message}</p>
-                    <p className="text-xs text-[#9ca3af] mt-1">
+                    <p className="text-xs text-[#68778d] mt-1">
                       {new Date(a.created_at).toLocaleString("es-CR")} · {a.status === "open" ? "Abierta" : "Resuelta"}
                     </p>
                   </li>
@@ -266,14 +266,14 @@ export function AdminCase({ providerId }: { providerId: string }) {
 
           {/* ── Moderación: casos de éxito + ban ─────────────────── */}
           <div className="bg-white rounded-xl border border-[#e5e7eb] p-5">
-            <h2 className="flex items-center gap-2 font-semibold text-[#111827] text-sm mb-3">
+            <h2 className="flex items-center gap-2 font-semibold text-[#162543] text-sm mb-3">
               <ShieldAlert className="h-4 w-4 text-[#dc2626]" /> Moderación
             </h2>
 
             {/* Casos de éxito — remove fake/inappropriate photos */}
             <p className="text-xs text-[#6b7280] mb-2">Casos de éxito (fotos de trabajos)</p>
             {portfolio.length === 0 ? (
-              <p className="text-xs text-[#9ca3af] mb-4">Sin fotos.</p>
+              <p className="text-xs text-[#68778d] mb-4">Sin fotos.</p>
             ) : (
               <div className="grid grid-cols-3 gap-2 mb-4">
                 {portfolio.map((url) => (
@@ -319,7 +319,7 @@ export function AdminCase({ providerId }: { providerId: string }) {
         <div className="space-y-5">
           {/* Actions */}
           <div className="bg-white rounded-xl border border-[#e5e7eb] p-5">
-            <h2 className="flex items-center gap-2 font-semibold text-[#111827] text-sm mb-3">
+            <h2 className="flex items-center gap-2 font-semibold text-[#162543] text-sm mb-3">
               <ShieldCheck className="h-4 w-4 text-[#009FD9]" /> Decisión
             </h2>
 
@@ -370,7 +370,7 @@ export function AdminCase({ providerId }: { providerId: string }) {
                     <RotateCcw className="h-4 w-4" /> Volver a pendiente
                   </button>
                 )}
-                <p className="text-[11px] text-[#9ca3af] pt-1">
+                <p className="text-[11px] text-[#68778d] pt-1">
                   Las decisiones nunca quedan bloqueadas: puedes cambiarlas en cualquier momento.
                 </p>
               </div>
@@ -431,14 +431,14 @@ export function AdminCase({ providerId }: { providerId: string }) {
 
           {/* Audit trail */}
           <div className="bg-white rounded-xl border border-[#e5e7eb] p-5">
-            <h2 className="font-semibold text-[#111827] text-sm mb-3">Historial de decisiones</h2>
+            <h2 className="font-semibold text-[#162543] text-sm mb-3">Historial de decisiones</h2>
             {log.length === 0 ? (
               <p className="text-sm text-[#6b7280]">Sin decisiones registradas.</p>
             ) : (
               <ol className="space-y-3">
                 {log.map((l) => (
                   <li key={l.id} className="text-xs border-l-2 border-[#e5e7eb] pl-3">
-                    <p className="font-medium text-[#111827]">{auditLabel(l.action)}</p>
+                    <p className="font-medium text-[#162543]">{auditLabel(l.action)}</p>
                     <p className="text-[#6b7280]">
                       {l.admin_name ?? "Sistema"} · {new Date(l.created_at).toLocaleString("es-CR")}
                     </p>
@@ -459,7 +459,7 @@ export function AdminCase({ providerId }: { providerId: string }) {
 function Field({ label, value }: { label: string; value?: string | null }) {
   return (
     <div className="rounded-lg border border-[#f1f3f5] bg-[#f9fafb] px-3 py-2">
-      <dt className="text-[11px] uppercase tracking-wide text-[#9ca3af]">{label}</dt>
+      <dt className="text-[11px] uppercase tracking-wide text-[#68778d]">{label}</dt>
       <dd className="text-[#374151] break-words text-sm mt-0.5">{value || "—"}</dd>
     </div>
   );

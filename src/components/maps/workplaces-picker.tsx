@@ -342,7 +342,7 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
               <button
                 type="button"
                 onClick={() => removeWorkplace(wp.id)}
-                className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-[#9ca3af] transition-colors hover:bg-red-50 hover:text-red-500"
+                className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-[#68778d] transition-colors hover:bg-red-50 hover:text-red-500"
                 aria-label={t("removePlace")}
               >
                 <X className="h-4 w-4" />
@@ -362,7 +362,7 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
                 <button
                   type="button"
                   onClick={place.onRemove}
-                  className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-[#9ca3af] transition-colors hover:bg-red-50 hover:text-red-500"
+                  className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-[#68778d] transition-colors hover:bg-red-50 hover:text-red-500"
                   aria-label={place.removeLabel ?? t("removePlace")}
                 >
                   <X className="h-4 w-4" />
@@ -429,7 +429,7 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
               {/* Address search -> drops the pin. OUR standard input (single border
                   matching the section's other fields) + the app's shared dropdown. */}
               <div ref={addrFieldRef} className="relative">
-                <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#9ca3af]" />
+                <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#68778d]" />
                 <input
                   type="text"
                   value={addrQuery}
@@ -443,7 +443,7 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
                   onBlur={() => setTimeout(() => setAddrOpen(false), 150)}
                   placeholder={t("searchPlaceholder")}
                   aria-label={t("searchPlaceholder")}
-                  className="h-11 w-full rounded-xl border border-[#e5e7eb] bg-white pl-9 pr-3 text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
+                  className="h-11 w-full rounded-xl border border-[#e5e7eb] bg-white pl-9 pr-3 text-sm text-[#162543] placeholder:text-[#68778d] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
                 />
                 <AnchoredDropdown anchorRef={addrFieldRef} open={addrOpen && addrSug.length > 0} maxHeight={240}>
                   <ul className="py-1">
@@ -485,7 +485,7 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
           )}
         </div>
       ) : (
-        canton && province !== COUNTRY_OPTION && <p className="text-xs text-[#9ca3af]">{t("mapUnavailable")}</p>
+        canton && province !== COUNTRY_OPTION && <p className="text-xs text-[#68778d]">{t("mapUnavailable")}</p>
       )}
 
       {/* 3 - Add THIS zone (the one selected above). Enabled once provincia + cantón

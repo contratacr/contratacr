@@ -126,10 +126,10 @@ function AdminDialog({
         <div className="p-5">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <p id="admin-dialog-title" className="text-lg font-bold text-[#111827]">{dialog.title}</p>
+              <p id="admin-dialog-title" className="text-lg font-bold text-[#162543]">{dialog.title}</p>
               <p className="mt-2 text-sm leading-6 text-[#4b5563]">{dialog.description}</p>
             </div>
-            <button type="button" onClick={onClose} disabled={busy} aria-label="Cerrar" className="rounded-full p-1 text-[#9ca3af] transition hover:bg-[#f3f4f6] hover:text-[#111827] disabled:opacity-50">
+            <button type="button" onClick={onClose} disabled={busy} aria-label="Cerrar" className="rounded-full p-1 text-[#68778d] transition hover:bg-[#f3f4f6] hover:text-[#162543] disabled:opacity-50">
               <X className="h-5 w-5" />
             </button>
           </div>
@@ -150,7 +150,7 @@ function AdminDialog({
                 className="h-24 w-full rounded-xl border border-[#dbeafe] bg-white px-3 py-2 text-sm outline-none focus:border-[#009FD9] focus:ring-2 focus:ring-[#009FD9]/20"
               />
               {dialog.input.maxLength && (
-                <p className="text-right text-[11px] font-medium text-[#9ca3af]">
+                <p className="text-right text-[11px] font-medium text-[#68778d]">
                   {dialog.input.value.length}/{dialog.input.maxLength}
                 </p>
               )}
@@ -876,7 +876,7 @@ export function AdminCategories() {
         <div>
           <div className="mb-2 flex items-center gap-2">
             <Tag className="h-5 w-5 text-[#009FD9]" />
-            <h1 className="text-xl font-bold text-[#111827]">Catálogo de servicios</h1>
+            <h1 className="text-xl font-bold text-[#162543]">Catálogo de servicios</h1>
           </div>
           <p className="max-w-2xl text-sm text-[#6b7280]">
             Administra categorías, servicios, traducciones y reglas de salud o videoconsulta.
@@ -950,7 +950,7 @@ export function AdminCategories() {
           {loading ? (
             <div className="flex justify-center py-12"><Loader2 className="h-7 w-7 animate-spin text-[#009FD9]" /></div>
           ) : items.length === 0 ? (
-            <div className="rounded-2xl border border-[#e5e7eb] bg-white py-16 text-center text-[#9ca3af]">
+            <div className="rounded-2xl border border-[#e5e7eb] bg-white py-16 text-center text-[#68778d]">
               <Tag className="mx-auto mb-2 h-10 w-10 text-[#cbd5e1]" />
               <p className="text-sm">No hay sugerencias {status === "pending" ? "pendientes" : status === "approved" ? "aprobadas" : "rechazadas"}.</p>
             </div>
@@ -976,7 +976,7 @@ export function AdminCategories() {
                                 }
                               }}
                               onBlur={() => refreshSuggestionEnglish(i)}
-                              className="h-10 w-full rounded-lg border border-[#e5e7eb] bg-white px-3 text-sm font-semibold text-[#111827] outline-none focus:border-[#009FD9] focus:ring-2 focus:ring-[#009FD9]/15"
+                              className="h-10 w-full rounded-lg border border-[#e5e7eb] bg-white px-3 text-sm font-semibold text-[#162543] outline-none focus:border-[#009FD9] focus:ring-2 focus:ring-[#009FD9]/15"
                             />
                           </div>
                           <div>
@@ -992,9 +992,9 @@ export function AdminCategories() {
                           </div>
                         </div>
                       ) : (
-                        <p className="text-sm font-semibold text-[#111827]">{i.suggested_name || i.label}</p>
+                        <p className="text-sm font-semibold text-[#162543]">{i.suggested_name || i.label}</p>
                       )}
-                      <div className="mt-2 flex flex-wrap gap-x-2 gap-y-1 text-xs text-[#9ca3af]">
+                      <div className="mt-2 flex flex-wrap gap-x-2 gap-y-1 text-xs text-[#68778d]">
                         <span>Sugerida el {new Date(i.created_at).toLocaleDateString("es-CR")}</span>
                         {sender && <span className="text-[#64748b]">Sugerida por {sender}</span>}
                       </div>
@@ -1103,7 +1103,7 @@ export function AdminCategories() {
 
           <div className="flex flex-col gap-3 rounded-2xl border border-[#e5e7eb] bg-white p-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="relative min-w-0 flex-1">
-              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9ca3af]" />
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#68778d]" />
               <input
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
@@ -1148,10 +1148,10 @@ export function AdminCategories() {
                       className="flex w-full items-center justify-between gap-3 bg-[#f8fafc] px-4 py-3 text-left hover:bg-[#f1f5f9]"
                     >
                       <span className="min-w-0">
-                        <span className="block truncate text-sm font-bold text-[#111827]">{section.label}</span>
+                        <span className="block truncate text-sm font-bold text-[#162543]">{section.label}</span>
                         <span className="block text-xs text-[#6b7280]">{section.items.length} servicios · {withSupply} con profesionales · {sectionPros.toLocaleString("es-CR")} profesionales</span>
                       </span>
-                      <ChevronDown className={`h-4 w-4 shrink-0 text-[#9ca3af] transition-transform ${open ? "rotate-180" : ""}`} />
+                      <ChevronDown className={`h-4 w-4 shrink-0 text-[#68778d] transition-transform ${open ? "rotate-180" : ""}`} />
                     </button>
                   )}
                   {open && section.items.map((item) => (
@@ -1167,7 +1167,7 @@ export function AdminCategories() {
                       }}
                       onBlur={() => refreshCatalogEnglish(item)}
                       aria-label="Nombre del servicio"
-                      className="h-10 rounded-lg border border-[#e5e7eb] bg-white px-3 text-sm font-semibold text-[#111827] outline-none focus:border-[#009FD9] focus:ring-2 focus:ring-[#009FD9]/15"
+                      className="h-10 rounded-lg border border-[#e5e7eb] bg-white px-3 text-sm font-semibold text-[#162543] outline-none focus:border-[#009FD9] focus:ring-2 focus:ring-[#009FD9]/15"
                     />
                     <input
                       value={draftOf(item).labelEn}
@@ -1211,7 +1211,7 @@ export function AdminCategories() {
                 </div>
                 );
               })}
-              {filteredCatalog.length === 0 && <div className="py-14 text-center text-sm text-[#9ca3af]">No hay servicios con ese filtro.</div>}
+              {filteredCatalog.length === 0 && <div className="py-14 text-center text-sm text-[#68778d]">No hay servicios con ese filtro.</div>}
             </div>
           )}
         </section>
@@ -1268,7 +1268,7 @@ export function AdminCategories() {
                       value={draft.label}
                       onChange={(e) => setGroupDrafts((prev) => ({ ...prev, [group.id]: { ...draft, label: e.target.value } }))}
                       aria-label="Nombre de la categoría"
-                      className="h-10 rounded-lg border border-[#e5e7eb] bg-white px-3 text-sm font-semibold text-[#111827] outline-none focus:border-[#009FD9] focus:ring-2 focus:ring-[#009FD9]/15"
+                      className="h-10 rounded-lg border border-[#e5e7eb] bg-white px-3 text-sm font-semibold text-[#162543] outline-none focus:border-[#009FD9] focus:ring-2 focus:ring-[#009FD9]/15"
                     />
                     <input
                       value={draft.labelEn}

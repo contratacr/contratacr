@@ -658,15 +658,15 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                             {/* Appointment date with a grey calendar icon (no "Fecha:" label). */}
                             {formatBookingDate(b, dateLocale) && (
                               <span className="mt-2 inline-flex w-full max-w-full items-center gap-2 text-[13px] text-[#374151] sm:w-auto">
-                                <CalendarClock className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
-                                <span className="min-w-0 truncate"><span className="font-medium text-[#9ca3af]">{t("fieldDate")}</span> <span className="text-[#374151]">{formatBookingDate(b, dateLocale)}</span></span>
+                                <CalendarClock className="h-3.5 w-3.5 shrink-0 text-[#68778d]" />
+                                <span className="min-w-0 truncate"><span className="font-medium text-[#68778d]">{t("fieldDate")}</span> <span className="text-[#374151]">{formatBookingDate(b, dateLocale)}</span></span>
                               </span>
                             )}
                             {/* The service the request was for (grey wrench). */}
                             {bookingServiceLabel(b) && (
                               <p className="mt-2 flex items-center gap-2 text-[13px] text-[#374151] min-w-0">
-                                <Wrench className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
-                                <span className="min-w-0 truncate"><span className="font-medium text-[#9ca3af]">{t("fieldService")}</span> <span className="text-[#374151]">{bookingServiceLabel(b)}</span></span>
+                                <Wrench className="h-3.5 w-3.5 shrink-0 text-[#68778d]" />
+                                <span className="min-w-0 truncate"><span className="font-medium text-[#68778d]">{t("fieldService")}</span> <span className="text-[#374151]">{bookingServiceLabel(b)}</span></span>
                               </p>
                             )}
                             {/* For someone else — a quiet at-a-glance hint. */}
@@ -681,12 +681,12 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                               const beneAge = ageLabel(b.beneficiary_dob);
                               return (
                                 <div className="flex items-start gap-2.5">
-                                  <Users className="mt-0.5 h-4 w-4 shrink-0 text-[#9ca3af]" />
+                                  <Users className="mt-0.5 h-4 w-4 shrink-0 text-[#68778d]" />
                                   <div className="min-w-0">
-                                    <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]">{t("apptForLabel")}</p>
-                                    <p className="mt-0.5 text-[13px] font-semibold text-[#111827] [overflow-wrap:anywhere]">{b.beneficiary_name || t("otherPerson")}</p>
+                                    <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#68778d]">{t("apptForLabel")}</p>
+                                    <p className="mt-0.5 text-[13px] font-semibold text-[#162543] [overflow-wrap:anywhere]">{b.beneficiary_name || t("otherPerson")}</p>
                                     {beneAge && (
-                                      <p className="mt-0.5 text-[12px]"><span className="text-[#9ca3af]">{t("fieldAge")}</span> <span className="text-[#374151]">{beneAge}</span></p>
+                                      <p className="mt-0.5 text-[12px]"><span className="text-[#68778d]">{t("fieldAge")}</span> <span className="text-[#374151]">{beneAge}</span></p>
                                     )}
                                   </div>
                                 </div>
@@ -695,9 +695,9 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
 
                             {b.service_description && (
                               <div className="flex items-start gap-2.5">
-                                <FileText className="mt-0.5 h-4 w-4 shrink-0 text-[#9ca3af]" />
+                                <FileText className="mt-0.5 h-4 w-4 shrink-0 text-[#68778d]" />
                                 <div className="min-w-0">
-                                  <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]">{t("descriptionField")}</p>
+                                  <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#68778d]">{t("descriptionField")}</p>
                                   <ExpandableText text={b.service_description} lines={5} className="mt-0.5 text-sm leading-relaxed text-[#4b5563]" />
                                 </div>
                               </div>
@@ -707,7 +707,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                               <div className="rounded-lg bg-[#fef2f2] border border-[#fee2e2] px-2.5 py-1.5">
                                 <p className="text-[11px] font-semibold text-[#b91c1c]">{t("proCancelled")}</p>
                                 {b.cancel_reason && (
-                                  <p className="mt-0.5 text-xs"><span className="text-[#9ca3af]">{t("fieldReason")}</span> <span className="text-[#374151]">{b.cancel_reason}</span></p>
+                                  <p className="mt-0.5 text-xs"><span className="text-[#68778d]">{t("fieldReason")}</span> <span className="text-[#374151]">{b.cancel_reason}</span></p>
                                 )}
                               </div>
                             )}
@@ -780,7 +780,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                             })()}
                             {cancelTarget === b.id && (
                               <div className="rounded-xl border border-[#e5e7eb] bg-[#fafafa] p-3">
-                                <p className="text-sm font-semibold text-[#111827]">{t("cancelTitle")}</p>
+                                <p className="text-sm font-semibold text-[#162543]">{t("cancelTitle")}</p>
                                 <p className="mt-0.5 text-xs leading-relaxed text-[#6b7280]">{t("cancelBody")}</p>
                                 <label className="mt-3 block text-xs font-medium text-[#374151]">{t("cancelNoteLabel")}</label>
                                 <textarea
@@ -789,7 +789,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                                   rows={2}
                                   maxLength={300}
                                   placeholder={t("cancelNotePlaceholder")}
-                                  className="mt-1 w-full resize-none rounded-xl border border-[#e5e7eb] bg-white px-3 py-2 text-sm text-[#111827] placeholder:text-[#9ca3af] [overflow-wrap:anywhere] focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[#009FD9]"
+                                  className="mt-1 w-full resize-none rounded-xl border border-[#e5e7eb] bg-white px-3 py-2 text-sm text-[#162543] placeholder:text-[#68778d] [overflow-wrap:anywhere] focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[#009FD9]"
                                 />
                                 <div className="mt-3 flex gap-2">
                                   <Button variant="outline" size="sm" className="rounded-lg" onClick={() => setCancelTarget(null)} disabled={cancelling}>{t("cancelBack")}</Button>
@@ -870,13 +870,13 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                       className={cn("group w-full p-4 text-left transition-colors hover:bg-[#f9fbfd] sm:p-5", isExpanded ? "rounded-t-2xl bg-[#fbfdff]" : "rounded-2xl")}
                     >
                       <div className="flex items-start gap-3.5">
-                        <div className={cn("flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border", isActive && replyCount > 0 ? "border-[#ccecf8] bg-[#EAF7FD] text-[#0089bb]" : "border-[#e5e7eb] bg-[#f4f7fa] text-[#9ca3af]")}>
+                        <div className={cn("flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border", isActive && replyCount > 0 ? "border-[#ccecf8] bg-[#EAF7FD] text-[#0089bb]" : "border-[#e5e7eb] bg-[#f4f7fa] text-[#68778d]")}>
                           {isActive && replyCount > 0 ? <MessageCircle className="h-[18px] w-[18px]" /> : <ClipboardList className="h-[18px] w-[18px]" />}
                         </div>
                         <div className="min-w-0 flex-1">
                           <h3 className="text-[15px] font-bold leading-snug text-[#162543] [overflow-wrap:anywhere] sm:text-base">{project.title}</h3>
                           <p className={cn("mt-1 text-[13px] font-semibold", headlineClass)}>{headline}</p>
-                          <p className="mt-0.5 text-[12px] text-[#9ca3af]">{formatRelativeOrDate(project.created_at, locale)}{zone ? ` · ${zone}` : ""}</p>
+                          <p className="mt-0.5 text-[12px] text-[#68778d]">{formatRelativeOrDate(project.created_at, locale)}{zone ? ` · ${zone}` : ""}</p>
                         </div>
                         <ExpandToggle open={isExpanded} />
                       </div>
@@ -887,9 +887,9 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                         <div className="flex flex-col gap-4">
                           {project.description && (
                             <div className="flex items-start gap-2.5">
-                              <FileText className="mt-0.5 h-4 w-4 shrink-0 text-[#9ca3af]" />
+                              <FileText className="mt-0.5 h-4 w-4 shrink-0 text-[#68778d]" />
                               <div className="min-w-0">
-                                <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]">{t("descriptionField")}</p>
+                                <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#68778d]">{t("descriptionField")}</p>
                                 <ExpandableText text={project.description} lines={5} className="mt-0.5 text-[13px] leading-relaxed text-[#4b5563]" />
                               </div>
                             </div>
@@ -901,7 +901,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                             const ordered = [...proposalList].sort((a, b) => Number(b.professionals?.id === chosenId) - Number(a.professionals?.id === chosenId));
                             return (
                               <div className="border-t border-[#f3f4f6] pt-4">
-                                <p className="mb-2.5 text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]">{t("repliesTitle")}</p>
+                                <p className="mb-2.5 text-[10px] font-semibold uppercase tracking-[0.06em] text-[#68778d]">{t("repliesTitle")}</p>
                                 {ordered.length === 0 ? (
                                   <p className="rounded-xl bg-[#f4f7fa] px-3.5 py-3 text-center text-[13px] leading-relaxed text-[#6b7280]">{t("noRepliesYet")}</p>
                                 ) : (
@@ -920,11 +920,11 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                                             <div className="min-w-0 flex-1">
                                               <div className="flex min-w-0 flex-wrap items-center gap-1.5">
                                                 {proposal.professionals?.slug ? (
-                                                  <Link href={`/profesionales/${proposal.professionals.slug}?from=${encodeURIComponent("/dashboard/profesional?tab=sent_projects")}`} className="min-w-0 text-sm font-semibold text-[#111827] hover:text-[#009FD9] hover:underline">
+                                                  <Link href={`/profesionales/${proposal.professionals.slug}?from=${encodeURIComponent("/dashboard/profesional?tab=sent_projects")}`} className="min-w-0 text-sm font-semibold text-[#162543] hover:text-[#009FD9] hover:underline">
                                                     {proposal.professionals?.profiles?.full_name}
                                                   </Link>
                                                 ) : (
-                                                  <p className="min-w-0 text-sm font-semibold text-[#111827]">{proposal.professionals?.profiles?.full_name}</p>
+                                                  <p className="min-w-0 text-sm font-semibold text-[#162543]">{proposal.professionals?.profiles?.full_name}</p>
                                                 )}
                                                 {proVerified && <Badge variant="verified" className="shrink-0">{t("verified")}</Badge>}
                                                 {isChosen && (
@@ -950,7 +950,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                                                 );
                                               })()}
                                               {priceParts && (
-                                                <p className="mt-0.5 text-xs font-bold text-[#0089bb]">{priceParts.amount}<span className="ml-1 text-[9px] font-semibold tracking-wide text-[#9ca3af]">{priceParts.taxSuffix}</span></p>
+                                                <p className="mt-0.5 text-xs font-bold text-[#0089bb]">{priceParts.amount}<span className="ml-1 text-[9px] font-semibold tracking-wide text-[#68778d]">{priceParts.taxSuffix}</span></p>
                                               )}
                                               <ExpandableText text={proposal.message} lines={3} className="mt-1 text-[13px] leading-relaxed text-[#374151]" />
                                             </div>
@@ -997,7 +997,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
 
                           {cancelProjectTarget === project.id && (
                             <div className="rounded-xl border border-red-100 bg-red-50/60 p-3.5">
-                              <p className="text-sm font-semibold text-[#111827]">{t("cancelProjectTitle")}</p>
+                              <p className="text-sm font-semibold text-[#162543]">{t("cancelProjectTitle")}</p>
                               <p className="mt-0.5 text-xs leading-relaxed text-[#6b7280]">{t("cancelProjectBody")}</p>
                               <div className="mt-3 flex flex-wrap justify-end gap-2">
                                 <Button variant="outline" size="sm" className="rounded-lg" onClick={() => setCancelProjectTarget(null)} disabled={cancellingProject}>{t("cancelBack")}</Button>
@@ -1044,7 +1044,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                       <AvatarImage src={p.professionals?.profiles?.avatar_url} />
                       <AvatarFallback className="bg-[#EBF5FB] text-xs font-semibold text-[#009FD9]">{getInitials(p.professionals?.profiles?.full_name ?? "?")}</AvatarFallback>
                     </Avatar>
-                    <span className="min-w-0 flex-1 truncate text-sm font-semibold text-[#111827]">{p.professionals?.profiles?.full_name}</span>
+                    <span className="min-w-0 flex-1 truncate text-sm font-semibold text-[#162543]">{p.professionals?.profiles?.full_name}</span>
                     <span className={cn("h-4 w-4 shrink-0 rounded-full border-2", active ? "border-[#009FD9] bg-[#009FD9]" : "border-[#cbd5e1]")} aria-hidden />
                   </button>
                 );

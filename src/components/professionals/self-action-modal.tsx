@@ -62,7 +62,7 @@ export function SelfActionModal({
         className="app-centered-modal relative z-10 max-h-[calc(var(--app-visual-viewport-height)-2rem)] w-full max-w-sm overflow-y-auto overscroll-contain rounded-2xl bg-white p-6 text-center shadow-2xl"
       >
         <BrandIconBadge icon={Info} size={56} className="mx-auto mb-4" />
-        <h3 id="self-action-title" className="mb-1.5 text-lg font-bold text-[#111827]">{t("title")}</h3>
+        <h3 id="self-action-title" className="mb-1.5 text-lg font-bold text-[#162543]">{t("title")}</h3>
         <p id="self-action-description" className="mb-5 text-sm leading-relaxed text-[#6b7280]">
           {message ? t(`messages.${message}` as Parameters<typeof t>[0]) : ""}
         </p>

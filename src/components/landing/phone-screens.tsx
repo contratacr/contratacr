@@ -74,7 +74,7 @@ function AppBar({ title }: { title: string }) {
           <span className="text-[#1a2744]">Contrata</span><span style={{ color: "#008ce0" }}>CR</span>
         </span>
       </span>
-      <span className="text-[10px] font-medium text-[#9ca3af]">{title}</span>
+      <span className="text-[10px] font-medium text-[#68778d]">{title}</span>
     </div>
   );
 }
@@ -85,18 +85,18 @@ export function SearchScreen() {
       <AppBar title="Buscar" />
       <div className="p-3.5">
         <div className="flex items-center gap-2 rounded-xl border border-[#e5e7eb] bg-white px-3 py-2.5 shadow-sm">
-          <Search className="h-4 w-4 text-[#9ca3af]" />
+          <Search className="h-4 w-4 text-[#68778d]" />
           <span className="text-[12px] text-[#374151]">Necesito un plomero…</span>
         </div>
         <div className="mt-2 flex items-center gap-1.5 rounded-xl border border-[#e5e7eb] bg-white px-3 py-2.5">
-          <MapPin className="h-4 w-4 text-[#9ca3af]" />
+          <MapPin className="h-4 w-4 text-[#68778d]" />
           <span className="text-[12px] text-[#6b7280]">San José</span>
         </div>
-        <p className="mt-4 text-[10px] font-bold uppercase tracking-wide text-[#9ca3af]">Servicios populares</p>
+        <p className="mt-4 text-[10px] font-bold uppercase tracking-wide text-[#68778d]">Servicios populares</p>
         <div className="mt-2 space-y-1.5">
           {["Limpieza del hogar", "Plomería y tuberías", "Pintura interior", "Jardinería y poda", "Mudanzas"].map((s) => (
             <div key={s} className="flex items-center gap-2.5 rounded-lg bg-white px-3 py-2.5 border border-[#f1f3f5]">
-              <Search className="h-3.5 w-3.5 text-[#9ca3af]" />
+              <Search className="h-3.5 w-3.5 text-[#68778d]" />
               <span className="text-[12px] text-[#374151]">{s}</span>
             </div>
           ))}
@@ -142,7 +142,7 @@ function ProCard({
               price is compact so "SG Solutions" keeps room in the miniature. */}
           <div className="flex min-w-0 items-start gap-1.5">
             <div className="min-w-0 flex-1 flex flex-col gap-0">
-              <span className="min-w-0 text-[13px] font-bold leading-tight text-[#111827] [overflow-wrap:anywhere]">{company}</span>
+              <span className="min-w-0 text-[13px] font-bold leading-tight text-[#162543] [overflow-wrap:anywhere]">{company}</span>
               <span className="inline-flex w-fit items-center rounded-full bg-[#009FD9] px-1.5 py-0.5 text-[8px] font-semibold leading-none text-white">{verified}</span>
               {person ? <p className="mt-0 truncate text-[10px] font-medium leading-tight text-[#6b7280]">{person}</p> : null}
             </div>
@@ -153,7 +153,7 @@ function ProCard({
                 {price.charCodeAt(0) === 0x20a1 ? (
                   <>
                     <span className="text-[10px] font-bold text-[#009FD9]">{price}</span>
-                    {priceUnit ? <span className="text-[8px] font-medium text-[#9ca3af]"> {priceUnit}</span> : null}
+                    {priceUnit ? <span className="text-[8px] font-medium text-[#68778d]"> {priceUnit}</span> : null}
                   </>
                 ) : (
                   <span className="inline-block max-w-[58px] whitespace-normal text-right text-[9px] font-bold leading-[1.05] text-[#009FD9]">{price}</span>
@@ -177,8 +177,8 @@ function ProCard({
           )}
           <div className="mt-1 flex items-center gap-1 text-[10px]">
             <Star className="h-2.5 w-2.5 fill-[#ff9b32] text-[#ff9b32]" />
-            <span className="font-bold text-[#111827]">{rating}</span>
-            <span className="font-medium text-[#9ca3af]">({reviews})</span>
+            <span className="font-bold text-[#162543]">{rating}</span>
+            <span className="font-medium text-[#68778d]">({reviews})</span>
           </div>
         </div>
       </div>
@@ -206,7 +206,7 @@ function ProCard({
                 </div>
               ))}
             </div>
-            <ChevronRight className="mt-3 h-3 w-3 shrink-0 text-[#9ca3af]" />
+            <ChevronRight className="mt-3 h-3 w-3 shrink-0 text-[#68778d]" />
           </div>
           {/* Direct actions, matching the real search-card contact language. */}
           <button className="mt-2.5 w-full rounded-full bg-[#009FD9] py-2 text-[10px] font-semibold text-white">{viewSchedule}</button>
@@ -382,7 +382,7 @@ export function ChatScreen() {
       <div className="flex items-center gap-2.5 bg-white px-4 py-2.5 border-b border-[#eef1f5]">
         <div className="grid h-9 w-9 place-items-center rounded-full bg-[#EBF5FB] text-[11px] font-bold text-[#009FD9]">CR</div>
         <div className="min-w-0">
-          <div className="flex items-center gap-1"><span className="text-[12px] font-bold text-[#111827]">Carlos Ramírez</span><ShieldCheck className="h-3 w-3 text-[#16a34a]" /></div>
+          <div className="flex items-center gap-1"><span className="text-[12px] font-bold text-[#162543]">Carlos Ramírez</span><ShieldCheck className="h-3 w-3 text-[#16a34a]" /></div>
           <span className="text-[10px] text-[#16a34a]">en línea</span>
         </div>
       </div>
@@ -392,7 +392,7 @@ export function ChatScreen() {
         <div className="max-w-[82%] rounded-2xl rounded-tl-sm bg-white px-3 py-2 text-[11px] text-[#374151] shadow-sm">Perfecto, ahí lo espero. ¡Gracias!</div>
       </div>
       <div className="flex items-center gap-2 bg-white px-3 py-2.5">
-        <span className="flex-1 rounded-full bg-[#f3f4f6] px-3 py-1.5 text-[11px] text-[#9ca3af]">Mensaje…</span>
+        <span className="flex-1 rounded-full bg-[#f3f4f6] px-3 py-1.5 text-[11px] text-[#68778d]">Mensaje…</span>
         <span className="grid h-7 w-7 place-items-center rounded-full bg-[#25D366] text-white"><Send className="h-3.5 w-3.5" /></span>
       </div>
     </div>
@@ -406,17 +406,17 @@ export function SupportScreen() {
       <div className="p-3.5 space-y-3">
         <div className="rounded-xl border border-[#dcfce7] bg-[#f0fdf4] p-3.5 text-center">
           <CheckCircle2 className="mx-auto h-8 w-8 text-[#16a34a]" />
-          <p className="mt-2 text-[13px] font-bold text-[#111827]">Servicio completado</p>
+          <p className="mt-2 text-[13px] font-bold text-[#162543]">Servicio completado</p>
           <p className="text-[11px] text-[#6b7280]">Carlos Ramírez · Plomería</p>
         </div>
         <div className="rounded-xl border border-[#eef1f5] bg-white p-3">
-          <p className="text-[11px] font-bold text-[#111827]">¿Cómo te fue?</p>
+          <p className="text-[11px] font-bold text-[#162543]">¿Cómo te fue?</p>
           <div className="mt-1.5 flex gap-1">{[1,2,3,4,5].map((s) => <Star key={s} className="h-5 w-5 fill-[#ff9b32] text-[#ff9b32]" />)}</div>
-          <p className="mt-1 text-[10px] text-[#9ca3af]">Tu reseña ayuda a otros clientes.</p>
+          <p className="mt-1 text-[10px] text-[#68778d]">Tu reseña ayuda a otros clientes.</p>
         </div>
         <div className="flex items-center gap-3 rounded-xl border border-[#e5e7eb] bg-white p-3">
           <span className="grid h-9 w-9 place-items-center rounded-lg bg-[#EBF5FB] text-[#009FD9]"><Headset className="h-4 w-4" /></span>
-          <div><p className="text-[11px] font-bold text-[#111827]">Soporte ContrataCR</p><p className="text-[10px] text-[#6b7280]">¿Algo no salió bien? Estamos para ayudarte.</p></div>
+          <div><p className="text-[11px] font-bold text-[#162543]">Soporte ContrataCR</p><p className="text-[10px] text-[#6b7280]">¿Algo no salió bien? Estamos para ayudarte.</p></div>
         </div>
       </div>
     </div>
@@ -436,13 +436,13 @@ export function ProScreen() {
           <ShieldCheck className="h-4 w-4 text-[#16a34a]" />
           <span className="text-[11px] font-semibold text-[#166534]">Perfil verificado · apareces primero</span>
         </div>
-        <p className="text-[10px] font-bold uppercase tracking-wide text-[#9ca3af]">Nuevas citas</p>
+        <p className="text-[10px] font-bold uppercase tracking-wide text-[#68778d]">Nuevas citas</p>
         {reqs.map((r) => (
           <div key={r.n} className="rounded-xl border border-[#eef1f5] bg-white p-2.5">
             <div className="flex items-center gap-2">
               <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[#EBF5FB] text-[10px] font-bold text-[#009FD9]">{r.n[0]}</div>
-              <div className="min-w-0 flex-1"><span className="text-[12px] font-bold text-[#111827]">{r.n}</span><p className="text-[10px] text-[#6b7280] truncate">{r.s}</p></div>
-              <span className="text-[9px] text-[#9ca3af]">{r.z}</span>
+              <div className="min-w-0 flex-1"><span className="text-[12px] font-bold text-[#162543]">{r.n}</span><p className="text-[10px] text-[#6b7280] truncate">{r.s}</p></div>
+              <span className="text-[9px] text-[#68778d]">{r.z}</span>
             </div>
             <div className="mt-2 flex gap-1.5">
               <span className="flex-1 rounded-md bg-[#009FD9] py-1 text-center text-[9px] font-bold text-white">Ver cita</span>

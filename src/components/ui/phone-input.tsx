@@ -119,7 +119,7 @@ export function PhoneInput({ value, onChange, label, error, required, optional, 
       {label && (
         <label htmlFor={id} className="text-sm font-medium text-[#374151] block mb-1.5">
           {label}{required && <span className="text-red-500"> *</span>}
-          {optional && <span className="text-[#9ca3af] font-normal"> (opcional)</span>}
+          {optional && <span className="text-[#68778d] font-normal"> (opcional)</span>}
         </label>
       )}
       {/* One unified field: the prefix + input share a single border and the
@@ -160,7 +160,7 @@ export function PhoneInput({ value, onChange, label, error, required, optional, 
           value={isCR ? formatCRNational(national) : national}
           onChange={(e) => changeNational(e.target.value)}
           aria-invalid={!!error}
-          className="flex-1 min-w-0 h-full px-3 bg-transparent border-0 text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-0"
+          className="flex-1 min-w-0 h-full px-3 bg-transparent border-0 text-sm text-[#162543] placeholder:text-[#68778d] focus:outline-none focus:ring-0"
         />
       </div>
       {/* Live length hint — enforces exactly N digits for the selected country. */}

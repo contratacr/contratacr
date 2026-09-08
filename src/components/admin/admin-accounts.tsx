@@ -51,14 +51,14 @@ export function AdminAccounts() {
     <div>
       <div className="mb-5 flex items-center gap-2">
         <UserX className="h-5 w-5 text-[#009FD9]" />
-        <h1 className="text-xl font-bold text-[#111827]">Cuentas deshabilitadas y eliminaciones</h1>
-        {!loading && items.length > 0 && <span className="text-sm text-[#9ca3af]">({items.length})</span>}
+        <h1 className="text-xl font-bold text-[#162543]">Cuentas deshabilitadas y eliminaciones</h1>
+        {!loading && items.length > 0 && <span className="text-sm text-[#68778d]">({items.length})</span>}
       </div>
 
       {loading ? (
         <div className="flex justify-center py-12"><Loader2 className="h-7 w-7 animate-spin text-[#009FD9]" /></div>
       ) : items.length === 0 ? (
-        <div className="py-16 text-center text-[#9ca3af]">
+        <div className="py-16 text-center text-[#68778d]">
           <UserX className="mx-auto mb-2 h-10 w-10 text-[#cbd5e1]" />
           <p className="text-sm">No hay cuentas deshabilitadas.</p>
         </div>
@@ -68,10 +68,10 @@ export function AdminAccounts() {
             <div key={account.id} className="rounded-xl border border-[#e5e7eb] bg-white px-4 py-3">
               <div className="flex items-center justify-between gap-3">
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-semibold text-[#111827]">{account.full_name || account.email || account.id}</p>
-                  <p className="text-xs text-[#9ca3af]">{account.email} · {account.role ?? "—"}</p>
+                  <p className="truncate text-sm font-semibold text-[#162543]">{account.full_name || account.email || account.id}</p>
+                  <p className="text-xs text-[#68778d]">{account.email} · {account.role ?? "—"}</p>
                 </div>
-                <span className="shrink-0 text-xs text-[#9ca3af]">{account.disabled_at ? new Date(account.disabled_at).toLocaleDateString("es-CR") : ""}</span>
+                <span className="shrink-0 text-xs text-[#68778d]">{account.disabled_at ? new Date(account.disabled_at).toLocaleDateString("es-CR") : ""}</span>
               </div>
               {account.disabled_reason && (
                 <p className="mt-1.5 rounded-lg bg-[#f9fafb] px-2.5 py-1.5 text-xs text-[#374151]">Motivo: {account.disabled_reason}</p>

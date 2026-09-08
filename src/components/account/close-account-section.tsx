@@ -120,7 +120,7 @@ export function CloseAccountSection({ initialDisabled = false }: { initialDisabl
         <div className="flex items-start gap-3">
           <EyeOff className="mt-0.5 h-4 w-4 shrink-0 text-[#6b7280]" />
           <div className="flex-1">
-            <p className="text-sm font-semibold text-[#111827]">{t("disableTitle")}</p>
+            <p className="text-sm font-semibold text-[#162543]">{t("disableTitle")}</p>
             <p className="mt-0.5 text-xs leading-relaxed text-[#6b7280]">{t("disableBody")}</p>
           {!open ? (
             <button onClick={() => setOpen(true)} className="mt-3 rounded-lg border border-[#d8e2ea] px-4 py-2 text-sm font-semibold text-[#374151] hover:bg-[#f8fafc]">

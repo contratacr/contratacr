@@ -76,7 +76,7 @@ export function AdminReports() {
     <div>
       <div className="flex items-center gap-2 mb-5">
         <Flag className="h-5 w-5 text-[#dc2626]" />
-        <h1 className="text-xl font-bold text-[#111827]">Reportes y moderación</h1>
+        <h1 className="text-xl font-bold text-[#162543]">Reportes y moderación</h1>
       </div>
 
       <div className="flex flex-wrap gap-2 mb-4">
@@ -109,14 +109,14 @@ export function AdminReports() {
                 <div className="flex items-start justify-between gap-4 flex-wrap">
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <p className="font-medium text-[#111827] text-sm">{r.professional_name ?? "Perfil"}</p>
+                      <p className="font-medium text-[#162543] text-sm">{r.professional_name ?? "Perfil"}</p>
                       <span className={`text-xs px-2 py-0.5 rounded-md ${r.status === "open" ? "bg-[#fef3c7] text-[#b45309]" : "bg-[#dcfce7] text-[#15803d]"}`}>
                         {r.status === "open" ? "Abierto" : "Resuelto"}
                       </span>
-                      <span className="text-xs text-[#9ca3af]">{new Date(r.created_at).toLocaleString("es-CR")}</span>
+                      <span className="text-xs text-[#68778d]">{new Date(r.created_at).toLocaleString("es-CR")}</span>
                     </div>
                     <p className="text-sm text-[#374151] mt-1 whitespace-pre-wrap">{r.reason}</p>
-                    <p className="text-xs text-[#9ca3af] mt-1">Reportado por: {r.reporter_email ?? "Anónimo"}</p>
+                    <p className="text-xs text-[#68778d] mt-1">Reportado por: {r.reporter_email ?? "Anónimo"}</p>
                     <div className="flex items-center gap-3 mt-2">
                       {r.professional_slug && (
                         <a href={`/es/profesionales/${r.professional_slug}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-[#009FD9] hover:underline">

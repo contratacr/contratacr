@@ -31,13 +31,13 @@ export function SupportModal({ onClose, onSubmitted }: { onClose: () => void; on
           <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#EBF5FB]">
             <CheckCircle2 className="h-8 w-8 text-[#009FD9]" />
           </div>
-          <h3 className="text-lg font-bold text-[#111827]">{t("successTitle")}</h3>
+          <h3 className="text-lg font-bold text-[#162543]">{t("successTitle")}</h3>
           <p className="max-w-sm text-sm text-[#6b7280]">
             {user
               ? t("successUserDesc")
               : t.rich("successGuestDesc", {
                   email: doneEmail,
-                  b: (c) => <span className="font-semibold text-[#111827]">{c}</span>,
+                  b: (c) => <span className="font-semibold text-[#162543]">{c}</span>,
                 })}
           </p>
           <Button type="button" onClick={onClose} className="mt-1">{t("close")}</Button>

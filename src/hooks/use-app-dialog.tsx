@@ -133,13 +133,13 @@ export function useAppDialog() {
         </div>
         {dialog.input && (
           <label className="block">
-            <span className="mb-1.5 block text-sm font-semibold text-[#111827]">{dialog.input.label}</span>
+            <span className="mb-1.5 block text-sm font-semibold text-[#162543]">{dialog.input.label}</span>
             <textarea
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               placeholder={dialog.input.placeholder}
               rows={3}
-              className="w-full resize-none rounded-xl border border-[#d1d5db] bg-white px-3 py-2 text-sm text-[#111827] outline-none transition focus:border-[#009FD9] focus:ring-2 focus:ring-[#009FD9]/15"
+              className="w-full resize-none rounded-xl border border-[#d1d5db] bg-white px-3 py-2 text-sm text-[#162543] outline-none transition focus:border-[#009FD9] focus:ring-2 focus:ring-[#009FD9]/15"
             />
           </label>
         )}

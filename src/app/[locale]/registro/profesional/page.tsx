@@ -98,7 +98,7 @@ function StepIndicator({ current, labels }: { current: number; labels: string[] 
                 ? "bg-[#009FD9] text-white"
                 : i === current
                 ? "bg-[#009FD9] text-white ring-4 ring-[#009FD9]/20"
-                : "bg-[#e5e7eb] text-[#9ca3af]"
+                : "bg-[#e5e7eb] text-[#68778d]"
             )}
           >
             {i < current ? <CheckCircle2 className="h-4 w-4" /> : i + 1}
@@ -106,7 +106,7 @@ function StepIndicator({ current, labels }: { current: number; labels: string[] 
           <span
             className={cn(
               "text-sm font-medium hidden sm:block",
-              i === current ? "text-[#009FD9]" : "text-[#9ca3af]"
+              i === current ? "text-[#009FD9]" : "text-[#68778d]"
             )}
           >
             {label}
@@ -258,12 +258,12 @@ function ServiceCatalogModal({
     >
       <div className="sticky top-0 z-10 bg-white px-5 pb-3 pt-4 sm:px-6">
         <div className="relative">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9ca3af]" />
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#68778d]" />
           <input
             value={query}
             onChange={(e) => { setQuery(e.target.value); setActiveGroupId(null); }}
             placeholder={t("pickerSearch")}
-            className="h-11 w-full rounded-xl border border-[#e5e7eb] bg-white pl-9 pr-4 text-sm text-[#111827] transition-all placeholder:text-[#9ca3af] focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[#009FD9]"
+            className="h-11 w-full rounded-xl border border-[#e5e7eb] bg-white pl-9 pr-4 text-sm text-[#162543] transition-all placeholder:text-[#68778d] focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[#009FD9]"
           />
         </div>
       </div>
@@ -343,15 +343,15 @@ function ServicePickerTrigger({
     >
       <span className="flex min-w-0 flex-1 items-center gap-2">
         {selectedLabel ? (
-          <span className="truncate font-medium text-[#111827]">{selectedLabel}</span>
+          <span className="truncate font-medium text-[#162543]">{selectedLabel}</span>
         ) : (
           <>
-            <Search className="h-4 w-4 shrink-0 text-[#9ca3af]" />
-            <span className="truncate text-[#9ca3af]">{placeholder}</span>
+            <Search className="h-4 w-4 shrink-0 text-[#68778d]" />
+            <span className="truncate text-[#68778d]">{placeholder}</span>
           </>
         )}
       </span>
-      <ChevronDown className="h-4 w-4 shrink-0 text-[#9ca3af] transition-colors group-hover:text-[#009FD9]" />
+      <ChevronDown className="h-4 w-4 shrink-0 text-[#68778d] transition-colors group-hover:text-[#009FD9]" />
     </button>
   );
 }
@@ -390,7 +390,7 @@ function NoCrIdFields({
         error={nameError}
       />
       <p className="flex items-start gap-2 text-xs text-[#6b7280]">
-        <AlertCircle className="h-4 w-4 shrink-0 mt-0.5 text-[#9ca3af]" />
+        <AlertCircle className="h-4 w-4 shrink-0 mt-0.5 text-[#68778d]" />
         <span>{t("skipCedulaNote")}</span>
       </p>
     </div>
@@ -990,7 +990,7 @@ export default function RegisterProfessionalPage() {
   const businessNameField = (
     <div className="space-y-2.5">
       <Input
-        label={<>{t("businessName")} <span className="text-[#9ca3af] font-normal">{t("optionalParen")}</span></>}
+        label={<>{t("businessName")} <span className="text-[#68778d] font-normal">{t("optionalParen")}</span></>}
         placeholder={t("businessPlaceholder")}
         value={businessName}
         maxLength={NAME_MAX_LENGTH}
@@ -1003,7 +1003,7 @@ export default function RegisterProfessionalPage() {
       {hasBusinessName && (
         <div className="flex items-center justify-between gap-4 rounded-xl bg-[#f9fafb] p-3.5">
           <div className="min-w-0">
-            <p className="text-sm font-medium text-[#111827]">{businessNameOnlyLabel}</p>
+            <p className="text-sm font-medium text-[#162543]">{businessNameOnlyLabel}</p>
           </div>
           <button
             type="button"
@@ -1031,7 +1031,7 @@ export default function RegisterProfessionalPage() {
           <div className="bg-white rounded-3xl shadow-sm border border-[#e5e7eb] p-8">
           <div className="text-center mb-2">
             {/* Heading only — the per-step subtitles were filler (minimal-text principle). */}
-            <h1 className="text-2xl font-bold text-[#111827]">
+            <h1 className="text-2xl font-bold text-[#162543]">
               {step === 2 ? t("photoStepTitle") : currentUser ? t("completeProfileTitle") : t("title")}
             </h1>
           </div>
@@ -1062,7 +1062,7 @@ export default function RegisterProfessionalPage() {
                   <p className="text-xs font-semibold text-[#6b7280]">
                     {connectedProviderLabel ? t("oauthConfirmedWithProvider", { provider: connectedProviderLabel }) : t("oauthConfirmed")}
                   </p>
-                  <p className="truncate text-sm font-bold text-[#111827]">{currentUser.email}</p>
+                  <p className="truncate text-sm font-bold text-[#162543]">{currentUser.email}</p>
                 </div>
               </div>
             </div>
@@ -1128,7 +1128,7 @@ export default function RegisterProfessionalPage() {
               <Button type="submit" size="lg" className="mt-2" loading={submitting} disabled={submitting}>
                 {t("continue")} <ArrowRight className="h-4 w-4" />
               </Button>
-              <p className="text-center text-xs text-[#9ca3af]">
+              <p className="text-center text-xs text-[#68778d]">
                 {t.rich("termsAgree", {
                   terms: (c) => <Link href="/terminos" className="text-[#009FD9] hover:underline">{c}</Link>,
                   privacy: (c) => <Link href="/privacidad" className="text-[#009FD9] hover:underline">{c}</Link>,
@@ -1148,7 +1148,7 @@ export default function RegisterProfessionalPage() {
               ) : accountCedula ? (
                 <div className="rounded-2xl border border-[#d8eef8] bg-[#f8fbfe] px-4 py-3">
                   <p className="text-xs font-semibold text-[#6b7280]">{t("identityAlreadyRegistered")}</p>
-                  <p className="mt-1 break-words text-sm font-bold text-[#111827]">
+                  <p className="mt-1 break-words text-sm font-bold text-[#162543]">
                     {t("usesAccountId", { name: oauthFullName || t("yourAccount") })}
                   </p>
                 </div>
@@ -1302,7 +1302,7 @@ export default function RegisterProfessionalPage() {
                           <button
                             type="button"
                             onClick={() => setVideoCoverageCountry(false)}
-                            className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-[#9ca3af] transition-colors hover:bg-red-50 hover:text-red-500"
+                            className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-[#68778d] transition-colors hover:bg-red-50 hover:text-red-500"
                             aria-label={t("videoCountryRemove")}
                           >
                             <X className="h-4 w-4" />

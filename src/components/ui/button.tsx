@@ -23,7 +23,7 @@ const buttonVariants = cva(
         destructive:
           "bg-red-500 text-white hover:bg-red-600 focus-visible:ring-red-500",
         outline:
-          "border border-[#e5e7eb] bg-white hover:bg-[#f3f4f6] text-[#111827] focus-visible:ring-[#009FD9]",
+          "border border-[#e5e7eb] bg-white hover:bg-[#f3f4f6] text-[#162543] focus-visible:ring-[#009FD9]",
         whatsapp:
           "bg-[#25d366] text-white hover:bg-[#1da851] focus-visible:ring-[#25d366]",
       },

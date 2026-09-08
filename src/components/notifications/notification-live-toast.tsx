@@ -294,7 +294,7 @@ export function NotificationLiveToast({ scope = "all" }: { scope?: NotificationS
           <button
             type="button"
             onClick={() => setPostLoginUnreadCount(null)}
-            className="absolute right-2 top-2 rounded-full p-1 text-[#9ca3af] transition-colors hover:bg-[#f3f4f6] hover:text-[#374151]"
+            className="absolute right-2 top-2 rounded-full p-1 text-[#68778d] transition-colors hover:bg-[#f3f4f6] hover:text-[#374151]"
             aria-label="Cerrar"
           >
             <X className="h-3.5 w-3.5" />
@@ -347,7 +347,7 @@ export function NotificationLiveToast({ scope = "all" }: { scope?: NotificationS
         <button
           type="button"
           onClick={() => setToast(null)}
-          className="absolute right-2 top-2 rounded-full p-1 text-[#9ca3af] transition-colors hover:bg-[#f3f4f6] hover:text-[#374151]"
+          className="absolute right-2 top-2 rounded-full p-1 text-[#68778d] transition-colors hover:bg-[#f3f4f6] hover:text-[#374151]"
           aria-label="Cerrar"
         >
           <X className="h-3.5 w-3.5" />

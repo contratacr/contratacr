@@ -113,7 +113,7 @@ export function Modal({
           )}
         >
           <div className={cn("min-w-0", fullscreenMobile && "px-10 text-center sm:px-0 sm:text-left")}>
-            <h2 className={cn("leading-tight text-[#111827]", fullscreenMobile ? "text-[17px] font-extrabold sm:text-lg sm:font-bold" : "text-lg font-bold")}>{title}</h2>
+            <h2 className={cn("leading-tight text-[#162543]", fullscreenMobile ? "text-[17px] font-extrabold sm:text-lg sm:font-bold" : "text-lg font-bold")}>{title}</h2>
             {subtitle && <p className="mt-0.5 text-xs text-[#6b7280]">{subtitle}</p>}
           </div>
           <button
@@ -121,7 +121,7 @@ export function Modal({
             onClick={onClose}
             aria-label={closeLabel}
             className={cn(
-              "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[#9ca3af] transition-colors hover:bg-[#f3f4f6] hover:text-[#374151]",
+              "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[#68778d] transition-colors hover:bg-[#f3f4f6] hover:text-[#374151]",
               fullscreenMobile && "absolute left-4 top-1/2 -translate-y-1/2 sm:static sm:translate-y-0",
             )}
           >

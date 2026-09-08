@@ -348,7 +348,7 @@ export function VerificationPanel({
               onChange={(e) => setAppeal(e.target.value)}
               rows={3}
               placeholder={t("manualReviewPlaceholder")}
-              className="w-full rounded-xl border border-[#e5e7eb] p-3 text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
+              className="w-full rounded-xl border border-[#e5e7eb] p-3 text-sm text-[#162543] placeholder:text-[#68778d] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
             />
             <button
               onClick={() => runCheck(true)}
@@ -441,7 +441,7 @@ export function VerificationPanel({
             onChange={(e) => setAppeal(e.target.value)}
             rows={4}
             placeholder={t("appealPlaceholder")}
-            className="w-full rounded-xl border border-[#e5e7eb] p-3 text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
+            className="w-full rounded-xl border border-[#e5e7eb] p-3 text-sm text-[#162543] placeholder:text-[#68778d] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
           />
           <div className="flex flex-wrap gap-2 mt-3">
             <button

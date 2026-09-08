@@ -709,13 +709,13 @@ export function ServicesEditor({
                   {/* Header: focal name + price on the left, active toggle pinned far right. */}
                   <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-start gap-3 overflow-hidden">
                     <div className="min-w-0 overflow-hidden">
-                      <h3 className={cn("text-[16px] font-bold leading-tight [overflow-wrap:anywhere]", isActive ? "text-[#162543]" : "text-[#9ca3af]")}>
+                      <h3 className={cn("text-[16px] font-bold leading-tight [overflow-wrap:anywhere]", isActive ? "text-[#162543]" : "text-[#68778d]")}>
                         {getCategoryLabel(prof, locale)}
                       </h3>
-                      <p className={cn("mt-1.5 text-[13px] font-semibold", isActive ? "text-[#0089bb]" : "text-[#9ca3af]")}>
+                      <p className={cn("mt-1.5 text-[13px] font-semibold", isActive ? "text-[#0089bb]" : "text-[#68778d]")}>
                         {priceParts.amount}
                         {priceParts.unit && <span className="text-[#6b7280]"> {priceParts.unit}</span>}
-                        {priceParts.taxSuffix && <span className="ml-1 text-[10px] tracking-wide text-[#9ca3af]">{priceParts.taxSuffix}</span>}
+                        {priceParts.taxSuffix && <span className="ml-1 text-[10px] tracking-wide text-[#68778d]">{priceParts.taxSuffix}</span>}
                       </p>
                     </div>
                     {/* Active/inactive toggle — FAR RIGHT (end of the header row). */}
@@ -734,7 +734,7 @@ export function ServicesEditor({
                   {info?.description ? (
                     <p className="mt-3 text-[13px] leading-relaxed text-[#6b7280] [overflow-wrap:anywhere]">{info.description}</p>
                   ) : (
-                    <p className="mt-3 text-[13px] italic leading-relaxed text-[#9ca3af]">{t("noDescriptionYet")}</p>
+                    <p className="mt-3 text-[13px] italic leading-relaxed text-[#68778d]">{t("noDescriptionYet")}</p>
                   )}
                   <div className="mt-3 min-h-[18px]">
                     {isPrincipal ? (
@@ -767,7 +767,7 @@ export function ServicesEditor({
                           type="button"
                           onClick={() => void removeService(prof)}
                           aria-label={t("removeProfession")}
-                          className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-[#9ca3af] transition-colors hover:bg-red-50 hover:text-red-500"
+                          className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-[#68778d] transition-colors hover:bg-red-50 hover:text-red-500"
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>
@@ -841,10 +841,10 @@ export function ServicesEditor({
 
             <div>
               <label className="mb-1.5 block text-sm font-medium text-[#374151]">
-                {t("descBrief")} <span className="text-[#9ca3af] font-normal">{t("optional")}</span>
+                {t("descBrief")} <span className="text-[#68778d] font-normal">{t("optional")}</span>
               </label>
               <textarea
-                className="min-h-[150px] w-full resize-y rounded-xl border border-[#e5e7eb] bg-white px-4 py-3 text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
+                className="min-h-[150px] w-full resize-y rounded-xl border border-[#e5e7eb] bg-white px-4 py-3 text-sm text-[#162543] placeholder:text-[#68778d] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
                 placeholder={t("offerDescPlaceholder")}
                 value={form.description}
                 maxLength={SERVICE_DESCRIPTION_MAX_LENGTH}
@@ -857,7 +857,7 @@ export function ServicesEditor({
 
             <div>
               <label className="mb-1.5 block text-sm font-medium text-[#374151]">
-                {locale === "en" ? "Service image" : "Imagen de tu servicio"} <span className="font-normal text-[#9ca3af]">{t("optional")}</span>
+                {locale === "en" ? "Service image" : "Imagen de tu servicio"} <span className="font-normal text-[#68778d]">{t("optional")}</span>
               </label>
               <div className="overflow-hidden rounded-2xl border border-[#dbe7ef] bg-[#f8fbfe]">
                 {form.imageUrl ? (
@@ -974,7 +974,7 @@ export function ServicesEditor({
                   <div>
                     <p className="text-sm font-medium text-[#374151]">
                       {locale === "en" ? "Professional credential" : "Credencial profesional"}
-                      <span className="ml-1 font-normal text-[#9ca3af]">{t("optional")}</span>
+                      <span className="ml-1 font-normal text-[#68778d]">{t("optional")}</span>
                     </p>
                     <p className="mt-0.5 text-xs text-[#64748b]">
                       {locale === "en"
@@ -1023,12 +1023,12 @@ export function ServicesEditor({
           <div data-testid="services-add-picker" className="flex min-h-0 flex-1 flex-col">
             <div className="sticky top-0 z-10 shrink-0 bg-[#f4f7fa] px-4 pb-3 pt-4 sm:px-5">
               <div className="relative">
-                <Search className="pointer-events-none absolute left-3.5 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-[#9ca3af]" />
+                <Search className="pointer-events-none absolute left-3.5 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-[#68778d]" />
                 <input
                   value={pickerQuery}
                   onChange={(e) => { setPickerQuery(e.target.value); setActivePickerGroupId(null); }}
                   placeholder={t("pickerSearch")}
-                  className="h-12 w-full rounded-2xl border border-[#e5edf4] bg-white pl-10 pr-4 text-[15px] text-[#111827] shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition-all placeholder:text-[#9ca3af] focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[#009FD9]"
+                  className="h-12 w-full rounded-2xl border border-[#e5edf4] bg-white pl-10 pr-4 text-[15px] text-[#162543] shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition-all placeholder:text-[#68778d] focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[#009FD9]"
                 />
               </div>
             </div>
@@ -1040,7 +1040,7 @@ export function ServicesEditor({
                   hay nada y se apunta a la barra de abajo, que es la salida. */}
               {pickerList.length === 0 && pickerQuery.trim() ? (
               <div className="flex flex-col items-center px-6 pt-12 text-center">
-                <span className="grid h-12 w-12 place-items-center rounded-full bg-white text-[#9ca3af] shadow-[0_10px_26px_-24px_rgba(15,23,42,0.6)]">
+                <span className="grid h-12 w-12 place-items-center rounded-full bg-white text-[#68778d] shadow-[0_10px_26px_-24px_rgba(15,23,42,0.6)]">
                   <Search className="h-5 w-5" />
                 </span>
                 <p className="mt-3 text-sm font-semibold text-[#162543]">{t("pickerNoResults")}</p>

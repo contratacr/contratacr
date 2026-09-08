@@ -450,7 +450,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
           <div className="flex items-start gap-2.5">
             <span className="mt-0.5 h-6 w-1.5 shrink-0 rounded-full bg-[#009FD9]" aria-hidden />
             <div className="min-w-0">
-              <h1 className="text-xl font-bold leading-tight text-[#111827]">{pageTitle}</h1>
+              <h1 className="text-xl font-bold leading-tight text-[#162543]">{pageTitle}</h1>
               {/* On mobile the count is shown in the results panel (above the list); avoid
                   duplicating it here. Desktop keeps it in the header. */}
               <p className="hidden lg:block text-[#6b7280] text-[13px] leading-tight mt-0.5">{subtitle}</p>
@@ -486,7 +486,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                       <Search className="h-8 w-8 text-[#009FD9]" />
                     </div>
                   </div>
-                  <h2 className="mb-2 text-xl font-semibold text-[#111827]">{t("noResults.title")}</h2>
+                  <h2 className="mb-2 text-xl font-semibold text-[#162543]">{t("noResults.title")}</h2>
                   <p className="mx-auto max-w-sm text-sm text-[#6b7280]">{t("noResults.desc")}</p>
                   <Link
                     href={`/dashboard/profesional?tab=sent_projects&openPublish=1${selectedCategory ? `&categoria=${encodeURIComponent(selectedCategory)}` : ""}`}
@@ -494,7 +494,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                   >
                     {t("noResults.publishCta")}
                   </Link>
-                  <p className="mx-auto mt-2 max-w-sm text-xs text-[#9ca3af]">{t("noResults.publishHint")}</p>
+                  <p className="mx-auto mt-2 max-w-sm text-xs text-[#68778d]">{t("noResults.publishHint")}</p>
                 </div>
               ) : (
                 <>

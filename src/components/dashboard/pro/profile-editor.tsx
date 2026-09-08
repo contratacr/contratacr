@@ -99,7 +99,7 @@ function Section({ id, title, desc, open, mobileFocused, onToggle, onActivate, c
           </span>
         )}
         <div className="min-w-0">
-          <p className={cn("text-[15px] font-semibold text-[#111827] leading-tight", open && "max-sm:text-base")}>{title}</p>
+          <p className={cn("text-[15px] font-semibold text-[#162543] leading-tight", open && "max-sm:text-base")}>{title}</p>
           {desc && <p className={cn("mt-1 text-xs text-[#6b7280] max-sm:hidden")}>{desc}</p>}
         </div>
         <span className={cn("flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[#162543] transition-colors hover:bg-[#EBF5FB] hover:text-[#009FD9]", open && "max-sm:hidden")} aria-hidden="true">
@@ -146,7 +146,7 @@ function ProfileCheckRow({
       className="flex w-full items-center justify-between gap-4 py-1 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9]/35"
     >
       <span className="min-w-0">
-        <span className="block text-sm font-semibold text-[#111827]">{title}</span>
+        <span className="block text-sm font-semibold text-[#162543]">{title}</span>
         {description ? <span className="mt-0.5 block text-xs leading-5 text-[#64748b]">{description}</span> : null}
       </span>
       <ToggleSwitch checked={checked} />
@@ -891,7 +891,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
       <div className={cn(!mobileSectionFocused && "divide-y divide-[#eef3f7] max-sm:flex max-sm:flex-col max-sm:gap-2.5 max-sm:divide-y-0")}>
       <div className="hidden px-4 pb-4 pt-5 sm:block sm:px-5 sm:pt-6">
         <div className="min-w-0">
-          <h2 className="text-xl font-bold text-[#111827]">{locale === "en" ? "Profile" : "Perfil"}</h2>
+          <h2 className="text-xl font-bold text-[#162543]">{locale === "en" ? "Profile" : "Perfil"}</h2>
         </div>
       </div>
       {/* ── Datos básicos ─────────────────────────────────────────────── */}
@@ -986,7 +986,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
 
         {/* Brand / business name — optional */}
         <Input
-          label={<>{t("businessName")} <span className="text-[#9ca3af] font-normal">{t("optional")}</span></>}
+          label={<>{t("businessName")} <span className="text-[#68778d] font-normal">{t("optional")}</span></>}
           value={businessName}
           maxLength={NAME_MAX_LENGTH}
           onChange={(e) => {
@@ -1003,7 +1003,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
           <div className={`overflow-hidden rounded-xl border bg-white transition-all focus-within:border-transparent focus-within:ring-2 ${dirty && activeDirtySection === "basic" && !bio.trim() ? "border-red-400 focus-within:ring-red-400" : "border-[#e5e7eb] focus-within:ring-[#009FD9]"}`}>
             <textarea
               aria-invalid={dirty && activeDirtySection === "basic" && !bio.trim()}
-              className="block min-h-[110px] w-full resize-none overflow-y-auto border-0 bg-transparent px-4 py-3 text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none"
+              className="block min-h-[110px] w-full resize-none overflow-y-auto border-0 bg-transparent px-4 py-3 text-sm text-[#162543] placeholder:text-[#68778d] focus:outline-none"
               placeholder={t("descPlaceholder")}
               value={bio}
               maxLength={PROFILE_BIO_MAX_LENGTH}
@@ -1028,7 +1028,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
         {(professions.length > 0 ? professions : [""]).map((prof) => {
           const certsForProf = certifications.filter((c) => (c.profession || professions[0] || "") === prof);
           const draftHere = !!certDraft && (certDraft.profession ?? "") === (prof || "");
-          const inputCls = "h-10 w-full rounded-xl border border-[#e5e7eb] bg-white px-3 text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all";
+          const inputCls = "h-10 w-full rounded-xl border border-[#e5e7eb] bg-white px-3 text-sm text-[#162543] placeholder:text-[#68778d] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all";
           return (
             <div key={prof || "general"} className="flex flex-col gap-2.5 border-t border-[#f3f4f6] pt-3 first:border-t-0 first:pt-0">
               {professions.length > 1 && prof && (
@@ -1039,10 +1039,10 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
                 <div key={c.id} className="flex items-center gap-2 rounded-xl bg-[#f9fafb] px-3 py-2">
                   <Award className="h-4 w-4 text-[#009FD9] shrink-0" />
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-[#111827] truncate">{c.name}</p>
+                    <p className="text-sm font-medium text-[#162543] truncate">{c.name}</p>
                     <p className="text-xs text-[#6b7280] truncate">{[c.institution, c.year].filter(Boolean).join(" · ")}</p>
                   </div>
-                  <button type="button" onClick={() => removeCertification(c.id!)} className="h-8 w-8 rounded-lg flex items-center justify-center text-[#9ca3af] hover:text-red-500 hover:bg-red-50 transition-colors shrink-0" aria-label={t("certRemove")}>
+                  <button type="button" onClick={() => removeCertification(c.id!)} className="h-8 w-8 rounded-lg flex items-center justify-center text-[#68778d] hover:text-red-500 hover:bg-red-50 transition-colors shrink-0" aria-label={t("certRemove")}>
                     <X className="h-4 w-4" />
                   </button>
                 </div>
@@ -1093,7 +1093,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
               className="mb-4 flex w-full items-center justify-between gap-4 py-1 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9]/35"
             >
               <span className="min-w-0">
-                <span className="block text-sm font-semibold text-[#111827]">{t("videoConsultOption")}</span>
+                <span className="block text-sm font-semibold text-[#162543]">{t("videoConsultOption")}</span>
                 <span className="mt-0.5 block text-xs leading-5 text-[#64748b]">{t("videoCountryHelp")}</span>
               </span>
               <ToggleSwitch checked={videoConsult && videoCoverageCountry} />
@@ -1144,7 +1144,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
         {allowPhoneCall && (
           <div>
             <PhoneInput
-              label={<>{t("callNumber")} <span className="text-[#9ca3af] font-normal">{t("optional")}</span></>}
+              label={<>{t("callNumber")} <span className="text-[#68778d] font-normal">{t("optional")}</span></>}
               value={callPhone}
               error={dirty && activeDirtySection === "contact" && !callPhoneIsValid
                 ? (locale === "en" ? "Enter a complete call number." : "Ingresa un número para llamadas completo.")
@@ -1181,7 +1181,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
               value={contactEmail}
               aria-invalid={dirty && activeDirtySection === "contact" && !emailIsValid}
               onChange={(e) => { setContactEmail(e.target.value); touch("contact"); }}
-              className="h-11 w-full rounded-xl border border-[#e5e7eb] bg-white px-4 text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
+              className="h-11 w-full rounded-xl border border-[#e5e7eb] bg-white px-4 text-sm text-[#162543] placeholder:text-[#68778d] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
             />
             {contactEmail.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactEmail.trim()) && (
               <p className="text-xs text-red-500 mt-1">{t("emailInvalid")}</p>
@@ -1195,7 +1195,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
         <div className="flex flex-col gap-3">
           <div className="w-full sm:max-w-[40rem]">
             <label className="text-sm font-medium text-[#374151] mb-1.5 flex items-center gap-1.5">
-              <Globe className="h-4 w-4 text-[#6b7280]" strokeWidth={2.5} /> {t("website")} <span className="text-[#9ca3af] font-normal">{t("optional")}</span>
+              <Globe className="h-4 w-4 text-[#6b7280]" strokeWidth={2.5} /> {t("website")} <span className="text-[#68778d] font-normal">{t("optional")}</span>
             </label>
             <input
               type="url"
@@ -1207,7 +1207,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
               value={website}
               maxLength={120}
               onChange={(e) => { setWebsite(e.target.value.slice(0, 120)); touch("social"); }}
-              className={`h-11 w-full rounded-xl border bg-white px-4 text-sm text-[#111827] placeholder:text-[#9ca3af] outline-none transition-all focus:border-transparent focus:ring-2 focus:ring-[#009FD9] ${website.trim() && !isValidWebsiteUrl(website) ? "border-red-300" : "border-[#e5e7eb]"}`}
+              className={`h-11 w-full rounded-xl border bg-white px-4 text-sm text-[#162543] placeholder:text-[#68778d] outline-none transition-all focus:border-transparent focus:ring-2 focus:ring-[#009FD9] ${website.trim() && !isValidWebsiteUrl(website) ? "border-red-300" : "border-[#e5e7eb]"}`}
             />
             {website.trim() && !isValidWebsiteUrl(website) && <p className="text-xs text-red-500 mt-1">{t("websiteInvalid")}</p>}
           </div>
@@ -1218,7 +1218,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
             return (
               <div key={key} className="w-full sm:max-w-[40rem]">
                 <label className="text-sm font-medium text-[#374151] mb-1.5 flex items-center gap-1.5">
-                  <Icon className="h-4 w-4 text-[#6b7280]" /> {label} <span className="text-[#9ca3af] font-normal">{t("optional")}</span>
+                  <Icon className="h-4 w-4 text-[#6b7280]" /> {label} <span className="text-[#68778d] font-normal">{t("optional")}</span>
                 </label>
                 {/* Prefix shows the network so the pro types ONLY their username. */}
                 <div className={`flex h-11 rounded-xl border bg-white overflow-hidden transition-all focus-within:ring-2 focus-within:ring-[#009FD9] ${invalid ? "border-red-300" : "border-[#e5e7eb]"}`}>
@@ -1233,14 +1233,14 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
                     value={social[key]}
                     maxLength={50}
                     onChange={(e) => { setSocial((s) => ({ ...s, [key]: e.target.value.slice(0, 50) })); touch("social"); }}
-                    className="flex-1 min-w-0 px-3 text-sm text-[#111827] placeholder:text-[#9ca3af] outline-none bg-transparent"
+                    className="flex-1 min-w-0 px-3 text-sm text-[#162543] placeholder:text-[#68778d] outline-none bg-transparent"
                   />
                 </div>
                 {invalid && <p className="text-xs text-red-500 mt-1">{t("socialInvalid")}</p>}
               </div>
             );
           })}
-          {t("socialHelp") ? <p className="text-xs text-[#9ca3af]">{t("socialHelp")}</p> : null}
+          {t("socialHelp") ? <p className="text-xs text-[#68778d]">{t("socialHelp")}</p> : null}
         </div>
       </Section>
 
@@ -1252,7 +1252,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
         {/* Languages — defaults to Español; extra languages are an optional bonus */}
         <div>
           <label className="text-sm font-medium text-[#374151] block mb-1.5">
-            {t("languagesSpoken")} <span className="text-[#9ca3af] font-normal">{t("optional")}</span>
+            {t("languagesSpoken")} <span className="text-[#68778d] font-normal">{t("optional")}</span>
           </label>
           <LanguagesInput value={languages} onChange={(next) => { setLanguages(next); touch("lang"); }} />
         </div>
@@ -1261,9 +1261,9 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
         {isHealthPro && (
           <div data-field="insurers">
             <label className="text-sm font-medium text-[#374151] block mb-1.5">
-              {t("insurers")} <span className="text-[#9ca3af] font-normal">{t("optional")}</span>
+              {t("insurers")} <span className="text-[#68778d] font-normal">{t("optional")}</span>
             </label>
-            <p className="text-xs text-[#9ca3af] mb-2">{t("insurersHelp")}</p>
+            <p className="text-xs text-[#68778d] mb-2">{t("insurersHelp")}</p>
             <AseguradorasInput value={insurers} onChange={(next) => { setInsurers(next); touch("lang"); }} />
           </div>
         )}

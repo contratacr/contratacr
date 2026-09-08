@@ -109,9 +109,9 @@ function identityClass(status: string | null) {
 }
 
 function PersonLink({ id, name }: { id: string | null; name: string | null }) {
-  if (!id) return <span className="font-semibold text-[#111827]">{name || "Sin cuenta"}</span>;
+  if (!id) return <span className="font-semibold text-[#162543]">{name || "Sin cuenta"}</span>;
   return (
-    <Link href={`/admin/usuarios/${id}`} className="font-semibold text-[#111827] transition hover:text-[#009FD9]">
+    <Link href={`/admin/usuarios/${id}`} className="font-semibold text-[#162543] transition hover:text-[#009FD9]">
       {name || "Sin nombre"}
     </Link>
   );
@@ -211,7 +211,7 @@ export function AdminProjects() {
         <div className="flex items-center gap-2">
           <ClipboardList className="h-5 w-5 text-[#009FD9]" />
           <div>
-            <h1 className="text-xl font-bold text-[#111827]">Proyectos</h1>
+            <h1 className="text-xl font-bold text-[#162543]">Proyectos</h1>
             <p className="mt-0.5 text-sm text-[#6b7280]">Proyectos creados por clientes para recibir propuestas de profesionales.</p>
           </div>
         </div>
@@ -227,16 +227,16 @@ export function AdminProjects() {
           Buscar proyecto
         </label>
         <div className="relative mt-2">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9ca3af]" />
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#68778d]" />
           <input
             id="admin-projects-search"
             value={q}
             onChange={(event) => setQ(event.target.value)}
             placeholder="Titulo, cliente, profesional, servicio, identificacion o ubicacion"
-            className="h-11 w-full rounded-xl border border-[#dbe2ea] bg-white pl-10 pr-3 text-sm text-[#111827] outline-none transition focus:border-[#009FD9] focus:ring-2 focus:ring-[#bfefff]"
+            className="h-11 w-full rounded-xl border border-[#dbe2ea] bg-white pl-10 pr-3 text-sm text-[#162543] outline-none transition focus:border-[#009FD9] focus:ring-2 focus:ring-[#bfefff]"
           />
         </div>
-        <p className="mt-2 text-xs text-[#9ca3af]">Incluye proyectos activos, finalizados, cancelados y archivados.</p>
+        <p className="mt-2 text-xs text-[#68778d]">Incluye proyectos activos, finalizados, cancelados y archivados.</p>
       </div>
 
       <AdminFilterTabs tabs={FILTERS} value={filter} onChange={changeFilter} counts={filterCounts} />
@@ -263,7 +263,7 @@ export function AdminProjects() {
                         <Avatar name={project.client.name} src={project.client.avatar_url} />
                         <div className="min-w-0 flex-1">
                           <div className="flex flex-wrap items-center gap-2">
-                            <p className="min-w-0 truncate text-sm font-semibold text-[#111827]">{project.title}</p>
+                            <p className="min-w-0 truncate text-sm font-semibold text-[#162543]">{project.title}</p>
                             <span className={cn("shrink-0 rounded-md border px-2 py-1 text-xs font-semibold", meta.className)}>
                               {meta.label}
                             </span>
@@ -290,14 +290,14 @@ export function AdminProjects() {
 
                     <div className="grid gap-3 rounded-xl border border-[#eef0f2] bg-[#fbfdff] p-3 text-sm sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
                       <div className="min-w-0">
-                        <p className="text-[11px] font-semibold uppercase tracking-wide text-[#9ca3af]">Cliente</p>
+                        <p className="text-[11px] font-semibold uppercase tracking-wide text-[#68778d]">Cliente</p>
                         <p className="mt-0.5 truncate"><PersonLink id={project.client.id} name={project.client.name} /></p>
                         <p className="mt-0.5 truncate text-xs text-[#6b7280]">{project.client.email || "Sin correo"}</p>
                         {project.client.cedula && <p className="mt-0.5 text-xs text-[#6b7280]">{formatId(project.client.cedula)}</p>}
                       </div>
                       <div className="min-w-0">
-                        <p className="text-[11px] font-semibold uppercase tracking-wide text-[#9ca3af]">Propuestas</p>
-                        <p className="mt-0.5 text-sm font-semibold text-[#111827]">
+                        <p className="text-[11px] font-semibold uppercase tracking-wide text-[#68778d]">Propuestas</p>
+                        <p className="mt-0.5 text-sm font-semibold text-[#162543]">
                           {project.proposals_count} total
                           {project.pending_proposals_count > 0 ? ` · ${project.pending_proposals_count} pendiente${project.pending_proposals_count === 1 ? "" : "s"}` : ""}
                         </p>
@@ -309,9 +309,9 @@ export function AdminProjects() {
                             </p>
                           </>
                         ) : (
-                          <p className="mt-1 text-xs text-[#9ca3af]">Sin profesional aceptado</p>
+                          <p className="mt-1 text-xs text-[#68778d]">Sin profesional aceptado</p>
                         )}
-                        <p className="mt-1 text-xs text-[#9ca3af]">Creada: {fmtDateTime(project.created_at)} · ID: {project.id.slice(0, 8)}</p>
+                        <p className="mt-1 text-xs text-[#68778d]">Creada: {fmtDateTime(project.created_at)} · ID: {project.id.slice(0, 8)}</p>
                       </div>
                       <div className="sm:col-span-2 lg:col-span-1 xl:col-span-2">
                         <button

@@ -229,7 +229,7 @@ function SuggestionsDropdown({
         >
           <Search className="h-4 w-4 text-[#009FD9] shrink-0" />
           <span className="flex-1 min-w-0">
-            <span className="block text-sm text-[#111827] truncate">{s.label}</span>
+            <span className="block text-sm text-[#162543] truncate">{s.label}</span>
           </span>
           <span className="text-[10px] uppercase tracking-wide text-gray-300 shrink-0">
             Servicio
@@ -301,7 +301,7 @@ function LocationDropdown({
         >
           <MapPin className="h-4 w-4 text-[#009FD9] shrink-0" />
           <span className="flex-1 min-w-0">
-            <span className="block text-sm text-[#111827] truncate">{s.label}</span>
+            <span className="block text-sm text-[#162543] truncate">{s.label}</span>
             {s.type === "canton" && (
               <span className="block text-xs text-gray-400 truncate">{s.sublabel}</span>
             )}
@@ -323,7 +323,7 @@ function LocationDropdown({
           className="w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors hover:bg-gray-50"
         >
           <MapPin className="h-4 w-4 text-[#009FD9] shrink-0" />
-          <span className="flex-1 min-w-0 block text-sm text-[#111827] truncate">{a.label}</span>
+          <span className="flex-1 min-w-0 block text-sm text-[#162543] truncate">{a.label}</span>
           <span className="text-[10px] uppercase tracking-wide text-gray-300 shrink-0">Dirección</span>
         </button>
       ))}
@@ -838,7 +838,7 @@ export function LandingHero() {
             a "Buscar", que sigue siendo el único botón lleno. */}
         <div className="mt-4 flex items-center gap-3 sm:mx-auto sm:mt-5 sm:max-w-md">
           <span className="h-px flex-1 bg-[#dbe4ee]" />
-          <span className="text-[12px] font-medium uppercase tracking-[0.14em] text-[#9ca3af]">{t("publishOr")}</span>
+          <span className="text-[12px] font-medium uppercase tracking-[0.14em] text-[#68778d]">{t("publishOr")}</span>
           <span className="h-px flex-1 bg-[#dbe4ee]" />
         </div>
         <Link
@@ -846,7 +846,7 @@ export function LandingHero() {
           className="group mt-3 inline-flex h-12 w-full items-center justify-center gap-2 rounded-full border border-[#cfdce8] bg-white/95 px-6 text-[15px] font-bold text-[#162543] transition-colors hover:border-[#9bd8ef] hover:bg-white hover:text-[#0089bb] sm:mx-auto sm:w-auto"
         >
           {t("publishCardTitle")}
-          <ArrowRight className="h-4 w-4 text-[#9ca3af] transition-transform group-hover:translate-x-0.5 group-hover:text-[#0089bb]" />
+          <ArrowRight className="h-4 w-4 text-[#68778d] transition-transform group-hover:translate-x-0.5 group-hover:text-[#0089bb]" />
         </Link>
         <p className="mt-2 text-center text-[13px] leading-snug text-[#6b7280]">{t("publishCardBody")}</p>
 

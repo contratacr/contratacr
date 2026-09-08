@@ -80,7 +80,7 @@ export function BlockedDatesEditor({ professionalId }: BlockedDatesEditorProps) 
         <CalendarOff className="h-4 w-4 text-[#6b7280]" />
         <h3 className="text-sm font-semibold text-[#374151]">{t("blockedDatesTitle")}</h3>
       </div>
-      <p className="text-xs text-[#9ca3af] mb-4">
+      <p className="text-xs text-[#68778d] mb-4">
         {t("blockedDatesHelp")}
       </p>
 
@@ -90,7 +90,7 @@ export function BlockedDatesEditor({ professionalId }: BlockedDatesEditorProps) 
           min={today}
           value={newDate}
           onChange={(e) => setNewDate(e.target.value)}
-          className="flex-1 h-9 px-3 rounded-xl border border-[#e5e7eb] bg-white text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
+          className="flex-1 h-9 px-3 rounded-xl border border-[#e5e7eb] bg-white text-sm text-[#162543] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
         />
         <Button
           size="sm"
@@ -104,7 +104,7 @@ export function BlockedDatesEditor({ professionalId }: BlockedDatesEditorProps) 
       </div>
 
       {blockedDates.length === 0 ? (
-        <p className="text-xs text-[#9ca3af] text-center py-3">{t("noBlockedDates")}</p>
+        <p className="text-xs text-[#68778d] text-center py-3">{t("noBlockedDates")}</p>
       ) : (
         <div className="flex flex-col gap-2">
           {blockedDates.map((date) => (

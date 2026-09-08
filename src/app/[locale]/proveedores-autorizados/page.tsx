@@ -29,7 +29,7 @@ export default async function IdentityVerificationPage() {
             <div className="inline-flex items-center rounded-full bg-[#dcfce7] px-3 py-1 text-sm font-semibold text-[#15803d]">
               {t("badge")}
             </div>
-            <h1 className="mt-4 text-3xl font-bold text-[#111827]">{t("h1")}</h1>
+            <h1 className="mt-4 text-3xl font-bold text-[#162543]">{t("h1")}</h1>
             <p className="mt-3 text-[#6b7280] leading-relaxed">
               {t.rich("intro", rich)}
             </p>
@@ -38,14 +38,14 @@ export default async function IdentityVerificationPage() {
 
         {/* Steps */}
         <section className="mx-auto max-w-3xl px-4 sm:px-6 py-10">
-          <h2 className="text-lg font-bold text-[#111827] mb-5">{t("howWorks")}</h2>
+          <h2 className="text-lg font-bold text-[#162543] mb-5">{t("howWorks")}</h2>
           <div className="grid sm:grid-cols-3 gap-4">
             {STEPS.map((s) => (
               <div key={s.title} className="bg-white rounded-xl border border-[#e5e7eb] p-5">
                 <div className="mb-3">
                   <s.icon className="h-6 w-6 text-[#009FD9]" />
                 </div>
-                <h3 className="font-semibold text-[#111827] text-sm">{s.title}</h3>
+                <h3 className="font-semibold text-[#162543] text-sm">{s.title}</h3>
                 <p className="text-sm text-[#6b7280] mt-1 leading-relaxed">{s.body}</p>
               </div>
             ))}

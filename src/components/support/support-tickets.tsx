@@ -539,7 +539,7 @@ export function SupportTickets({
                       )}
                     </div>
                     <p className="mt-1 text-xs leading-relaxed text-[#6b7280]">{statusHelp(tk.status)}</p>
-                    <p className="mt-2 flex items-center gap-1.5 text-xs text-[#9ca3af]">
+                    <p className="mt-2 flex items-center gap-1.5 text-xs text-[#68778d]">
                       <Clock3 className="h-3.5 w-3.5" />
                       {t("updated", { date: fmt(tk.last_reply_at || tk.created_at) })}
                     </p>

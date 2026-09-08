@@ -172,7 +172,7 @@ export function SocialSignupButtons({ nextPath }: { nextPath?: string }) {
           <div className="w-full border-t border-[#e5e7eb]" />
         </div>
         <div className="relative flex justify-center">
-          <span className="bg-white px-4 text-xs text-[#9ca3af]">{t("or")}</span>
+          <span className="bg-white px-4 text-xs text-[#68778d]">{t("or")}</span>
         </div>
       </div>
     </div>

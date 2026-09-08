@@ -204,7 +204,7 @@ export default function RegisterClientPage() {
         <main className="flex-1 flex items-center justify-center px-4 py-12">
           <div className="w-full max-w-md text-center">
             <SuccessIcon size={80} className="mx-auto mb-5" />
-            <h1 className="text-2xl font-bold text-[#111827] mb-2">{t("successTitle")}</h1>
+            <h1 className="text-2xl font-bold text-[#162543] mb-2">{t("successTitle")}</h1>
             <p className="text-[#6b7280] mb-8">
               {t("successBody")}
             </p>
@@ -221,7 +221,7 @@ export default function RegisterClientPage() {
   }
 
   const inputClass =
-    "w-full h-11 rounded-xl border border-[#e5e7eb] bg-white px-4 text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all";
+    "w-full h-11 rounded-xl border border-[#e5e7eb] bg-white px-4 text-sm text-[#162543] placeholder:text-[#68778d] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all";
 
   return (
     <div className="min-h-screen flex flex-col bg-[#fafafa]">
@@ -233,7 +233,7 @@ export default function RegisterClientPage() {
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#EBF5FB] mx-auto mb-3">
                 <User className="h-6 w-6 text-[#009FD9]" />
               </div>
-              <h1 className="text-2xl font-bold text-[#111827]">{t("title")}</h1>
+              <h1 className="text-2xl font-bold text-[#162543]">{t("title")}</h1>
               <p className="text-sm text-[#6b7280] mt-1">{t("subtitle")}</p>
             </div>
 
@@ -255,7 +255,7 @@ export default function RegisterClientPage() {
                 )}
                 <div className="flex-1 min-w-0">
                   <p className="text-xs text-[#009FD9] font-semibold">{t("identityConfirmed")}</p>
-                  <p className="text-sm font-bold text-[#111827] truncate">{fullName || user.email}</p>
+                  <p className="text-sm font-bold text-[#162543] truncate">{fullName || user.email}</p>
                 </div>
                 <CheckCircle2 className="h-5 w-5 text-[#009FD9] shrink-0" />
               </div>
@@ -307,7 +307,7 @@ export default function RegisterClientPage() {
                         <button
                           type="button"
                           onClick={() => setShowPassword((s) => !s)}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-[#111827] hover:text-[#374151] transition-colors"
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-[#162543] hover:text-[#374151] transition-colors"
                         >
                           {showPassword ? <Eye className="h-5 w-5" /> : <EyeOff className="h-5 w-5" />}
                         </button>
@@ -331,7 +331,7 @@ export default function RegisterClientPage() {
                         <button
                           type="button"
                           onClick={() => setShowConfirm((s) => !s)}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-[#111827] hover:text-[#374151] transition-colors"
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-[#162543] hover:text-[#374151] transition-colors"
                         >
                           {showConfirm ? <Eye className="h-5 w-5" /> : <EyeOff className="h-5 w-5" />}
                         </button>
@@ -366,7 +366,7 @@ export default function RegisterClientPage() {
                 {submitting ? t("creating") : user ? t("saveContinue") : t("createFree")}
               </Button>
 
-              <p className="text-center text-xs text-[#9ca3af]">
+              <p className="text-center text-xs text-[#68778d]">
                 {t.rich("terms", {
                   terms: (c) => <a href="/terminos" className="underline hover:text-[#374151]">{c}</a>,
                   privacy: (c) => <a href="/privacidad" className="underline hover:text-[#374151]">{c}</a>,

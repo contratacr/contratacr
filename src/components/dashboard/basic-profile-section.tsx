@@ -53,7 +53,7 @@ function ProfileSection({
           </span>
         )}
         <div className="min-w-0">
-          <p className={cn("text-[15px] font-semibold text-[#111827] leading-tight", open && "max-sm:text-base")}>{title}</p>
+          <p className={cn("text-[15px] font-semibold text-[#162543] leading-tight", open && "max-sm:text-base")}>{title}</p>
           {desc && <p className={cn("text-xs text-[#6b7280] mt-1", open && "max-sm:hidden")}>{desc}</p>}
         </div>
         <span className={cn("flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[#162543] transition-colors hover:bg-[#EBF5FB] hover:text-[#009FD9]", open && "max-sm:hidden")} aria-hidden="true">
@@ -285,7 +285,7 @@ export function BasicProfileSection({
   const cedulaVerified = profileData?.client_identity_status === "verified" || (!!savedCedula && detectIdType(savedCedula) === "cedula" && !profileData?.client_identity_status);
 
   const inputClass =
-    "w-full h-10 rounded-xl border border-[#e5e7eb] bg-white px-4 text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all";
+    "w-full h-10 rounded-xl border border-[#e5e7eb] bg-white px-4 text-sm text-[#162543] placeholder:text-[#68778d] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all";
 
   function cancelProfileChanges() {
     if (!profileData) return;
@@ -355,7 +355,7 @@ export function BasicProfileSection({
       <div className={cn(!mobileSectionFocused && "divide-y divide-[#eef3f7]")}>
       <div className="hidden px-4 pb-4 pt-5 sm:block sm:px-5 sm:pt-6">
         <div className="min-w-0">
-          <h2 className="text-xl font-bold text-[#111827]">{locale === "en" ? "Profile" : "Perfil"}</h2>
+          <h2 className="text-xl font-bold text-[#162543]">{locale === "en" ? "Profile" : "Perfil"}</h2>
           <p className="mt-1 text-sm text-[#6b7280]">
             {locale === "en"
               ? "Complete your basic information and keep your account up to date."
@@ -423,7 +423,7 @@ export function BasicProfileSection({
               maxLength={NAME_MAX_LENGTH}
               onChange={(e) => { setProfileForm((f) => ({ ...f, full_name: limitText(e.target.value, NAME_MAX_LENGTH) })); touchProfile("basic"); }}
             />
-            {cedulaVerified && <Lock className="h-4 w-4 text-[#9ca3af] absolute right-3 top-1/2 -translate-y-1/2" />}
+            {cedulaVerified && <Lock className="h-4 w-4 text-[#68778d] absolute right-3 top-1/2 -translate-y-1/2" />}
           </div>
           {cedulaVerified && (
             <p className="text-xs text-[#6b7280] mt-1.5">
@@ -433,7 +433,7 @@ export function BasicProfileSection({
         </div>
         <div>
           <PhoneInput
-            label={<>{t("phone")} <span className="text-[#9ca3af] font-normal">{t("optional")}</span></>}
+            label={<>{t("phone")} <span className="text-[#68778d] font-normal">{t("optional")}</span></>}
             value={profileForm.phone}
             onChange={(digits) => { setProfileForm((f) => ({ ...f, phone: digits })); touchProfile("basic"); }}
           />
@@ -450,7 +450,7 @@ export function BasicProfileSection({
           start). Hidden once the account can offer. Minimal: a short prompt + button. */}
       {!userCanOffer && (
         <div className="border-t border-[#f3f4f6] pt-5">
-          <h3 className="text-sm font-semibold text-[#111827]">{t("offerTitle")}</h3>
+          <h3 className="text-sm font-semibold text-[#162543]">{t("offerTitle")}</h3>
           <p className="text-xs text-[#6b7280] mt-0.5 mb-3">{t("offerBody")}</p>
           <Button size="sm" onClick={() => router.push("/registro/profesional")}>
             <Briefcase className="h-4 w-4" /> {t("offerCta")}

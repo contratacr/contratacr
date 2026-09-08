@@ -160,7 +160,7 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
       >
         <div className="relative flex shrink-0 items-center justify-center gap-3 border-b border-[#f3f4f6] px-14 py-4 sm:items-start sm:justify-between sm:px-6">
           <div className="min-w-0 text-center sm:text-left">
-            <h2 id="publish-project-title" className="text-lg font-bold text-[#111827]">{t("title")}</h2>
+            <h2 id="publish-project-title" className="text-lg font-bold text-[#162543]">{t("title")}</h2>
             <p className="mt-0.5 hidden text-xs text-[#6b7280] sm:block">{t("subtitle")}</p>
           </div>
           <button
@@ -180,7 +180,7 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
               <div className="grid h-16 w-16 place-items-center rounded-full bg-[#e8f8fe] text-[#009FD9]">
                 <CheckCircle2 className="h-9 w-9" />
               </div>
-              <h3 className="text-xl font-bold text-[#111827]">{t("successTitle")}</h3>
+              <h3 className="text-xl font-bold text-[#162543]">{t("successTitle")}</h3>
               <p className="max-w-[22rem] text-[15px] font-medium leading-relaxed text-[#162543]">
                 {t("successNotified", { count: published.notifiedCount, service: published.service })}
               </p>
@@ -202,7 +202,7 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
                 <div ref={descriptionFieldRef}>
                   <label className={fieldLabel}>{t("description")}</label>
                   <textarea
-                    className="min-h-[132px] w-full resize-none break-words rounded-xl border border-[#e5e7eb] bg-white px-4 py-3 text-[15px] text-[#111827] placeholder:text-[#9ca3af] focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[#009FD9] aria-[invalid=true]:border-red-400"
+                    className="min-h-[132px] w-full resize-none break-words rounded-xl border border-[#e5e7eb] bg-white px-4 py-3 text-[15px] text-[#162543] placeholder:text-[#68778d] focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[#009FD9] aria-[invalid=true]:border-red-400"
                     placeholder={t("descriptionPlaceholder")}
                     value={form.description}
                     onChange={(e) => update("description", e.target.value)}
@@ -228,7 +228,7 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
 
                 <div>
                   <label className={fieldLabel}>
-                    {t("zone")} <span className="font-normal text-[#9ca3af]">{t("optional")}</span>
+                    {t("zone")} <span className="font-normal text-[#68778d]">{t("optional")}</span>
                   </label>
                   <div className="grid grid-cols-2 gap-3">
                     <SelectMenu
@@ -243,7 +243,7 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
                       options={[{ value: "", label: t("allM") }, ...cantons.map((c) => ({ value: c.id, label: c.name }))]}
                     />
                   </div>
-                  <p className="mt-1.5 text-xs text-[#9ca3af]">{t("zoneHelp")}</p>
+                  <p className="mt-1.5 text-xs text-[#68778d]">{t("zoneHelp")}</p>
                 </div>
               </div>
             </div>

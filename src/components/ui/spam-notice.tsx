@@ -9,5 +9,5 @@ import { cn } from "@/lib/utils";
 // one shared wording (common.spamNotice, es+en) so it reads the same everywhere.
 export function SpamNotice({ className }: { className?: string }) {
   const t = useTranslations("common");
-  return <p className={cn("text-xs text-[#9ca3af]", className)}>{t("spamNotice")}</p>;
+  return <p className={cn("text-xs text-[#68778d]", className)}>{t("spamNotice")}</p>;
 }

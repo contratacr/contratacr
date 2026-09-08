@@ -59,7 +59,7 @@ export function useContactGate({ professionalName, intent, professionalId, sourc
           <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => { setReady(false); pending.current = null; }} />
           <div role="dialog" aria-modal="true" aria-labelledby="contact-ready-title" className="app-centered-modal relative z-10 w-full max-w-sm rounded-2xl bg-white p-6 text-center shadow-2xl">
             <BrandIconBadge icon={Check} size={56} className="mx-auto mb-4" />
-            <h3 id="contact-ready-title" className="mb-1.5 text-lg font-bold text-[#111827]">{t("readyTitle")}</h3>
+            <h3 id="contact-ready-title" className="mb-1.5 text-lg font-bold text-[#162543]">{t("readyTitle")}</h3>
             <p className="mb-5 text-sm leading-relaxed text-[#6b7280]">{t("readyBody", { name: professionalName })}</p>
             <button
               type="button"

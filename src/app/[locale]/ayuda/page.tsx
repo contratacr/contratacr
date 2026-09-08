@@ -105,7 +105,7 @@ export default function AyudaPage() {
                 <div key={index} id={`faq-${index}`} className="scroll-mt-28 border-b border-[#edf0f3] last:border-0">
                   <button type="button" onClick={() => setOpenFaq(openFaq === index ? null : index)} aria-expanded={openFaq === index} className="flex w-full items-center justify-between gap-4 py-5 text-left">
                     <span className="text-sm font-bold leading-6 text-[#162543]">{t(`faq${index}Q`)}</span>
-                    <ChevronDown className={`h-5 w-5 shrink-0 text-[#9ca3af] transition-transform ${openFaq === index ? "rotate-180 text-[#009fd9]" : ""}`} />
+                    <ChevronDown className={`h-5 w-5 shrink-0 text-[#68778d] transition-transform ${openFaq === index ? "rotate-180 text-[#009fd9]" : ""}`} />
                   </button>
                   {openFaq === index && (
                     <p className="pb-5 text-sm leading-6 text-[#6b7280]">

@@ -215,7 +215,7 @@ export function LeaveReviewModal({
   const formContent = success ? (
     <div className={`flex flex-col items-center ${embedded ? "gap-2 py-4" : "gap-3 px-6 py-8"}`}>
       <SuccessIcon size={embedded ? 40 : 52} />
-      <p className={`${embedded ? "text-base" : "text-lg"} font-semibold text-[#111827]`}>{t("thanks")}</p>
+      <p className={`${embedded ? "text-base" : "text-lg"} font-semibold text-[#162543]`}>{t("thanks")}</p>
       <div className="flex gap-1" aria-hidden>
         {[1, 2, 3, 4, 5].map((star) => (
           <Star key={star} className={`h-7 w-7 ${rating >= star ? "fill-yellow-400 text-yellow-400" : "fill-[#d1d5db] text-[#d1d5db]"}`} />
@@ -259,7 +259,7 @@ export function LeaveReviewModal({
       {(!embedded || rating > 0 || isEditing) && <div>
         <div className={`flex items-center ${embedded ? "mb-1.5 justify-end" : "mb-1.5 justify-between"}`}>
           {!embedded && <p className="text-sm font-medium text-[#374151]">{t("commentLabel")}</p>}
-          <span className="text-xs tabular-nums text-[#9ca3af]">{comment.length}/300</span>
+          <span className="text-xs tabular-nums text-[#68778d]">{comment.length}/300</span>
         </div>
         <textarea
           value={comment}
@@ -267,7 +267,7 @@ export function LeaveReviewModal({
           maxLength={300}
           rows={embedded ? 3 : 4}
           placeholder={t("commentPlaceholder")}
-          className={`w-full resize-none border border-[#dbe5ed] bg-white text-sm text-[#111827] placeholder:text-[#9ca3af] transition focus:border-[#009FD9] focus:outline-none focus:ring-2 focus:ring-[#009FD9]/20 ${embedded ? "rounded-xl px-3.5 py-3" : "rounded-xl px-3.5 py-3"}`}
+          className={`w-full resize-none border border-[#dbe5ed] bg-white text-sm text-[#162543] placeholder:text-[#68778d] transition focus:border-[#009FD9] focus:outline-none focus:ring-2 focus:ring-[#009FD9]/20 ${embedded ? "rounded-xl px-3.5 py-3" : "rounded-xl px-3.5 py-3"}`}
         />
       </div>}
       {(!embedded || rating > 0 || isEditing) && error && (
@@ -284,7 +284,7 @@ export function LeaveReviewModal({
           </span>
         ) : isEditing ? t("submitUpdate") : t("submitNew")}
       </button>}
-      {!embedded && <button type="button" onClick={onClose} className="text-sm font-medium text-[#6b7280] transition hover:text-[#111827]">{t("skip")}</button>}
+      {!embedded && <button type="button" onClick={onClose} className="text-sm font-medium text-[#6b7280] transition hover:text-[#162543]">{t("skip")}</button>}
     </form>
   );
 
@@ -293,10 +293,10 @@ export function LeaveReviewModal({
       {!embedded && (
         <div className="flex items-center justify-between border-b border-[#f3f4f6] px-6 pb-4 pt-6">
           <div>
-            <h2 className="text-lg font-bold text-[#111827]">{isEditing ? t("titleEdit") : t("titleNew")}</h2>
+            <h2 className="text-lg font-bold text-[#162543]">{isEditing ? t("titleEdit") : t("titleNew")}</h2>
             <p className="mt-0.5 text-sm text-[#6b7280]">{professionalName}</p>
           </div>
-          <button type="button" onClick={onClose} className="rounded-full p-1.5 text-[#9ca3af] transition hover:bg-[#f3f4f6] hover:text-[#374151]">
+          <button type="button" onClick={onClose} className="rounded-full p-1.5 text-[#68778d] transition hover:bg-[#f3f4f6] hover:text-[#374151]">
             <X className="h-5 w-5" />
           </button>
         </div>

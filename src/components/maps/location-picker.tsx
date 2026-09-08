@@ -93,7 +93,7 @@ export function LocationPicker({ value, onChange, apiKey }: LocationPickerProps)
         const input = document.createElement("input");
         input.type = "text";
         input.placeholder = t("searchPlaceholder");
-        input.className = "h-11 w-full rounded-xl border border-[#e5e7eb] bg-white px-3 text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent";
+        input.className = "h-11 w-full rounded-xl border border-[#e5e7eb] bg-white px-3 text-sm text-[#162543] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent";
         pacEl.appendChild(input);
         const ac = new maps.places.Autocomplete(input, { componentRestrictions: { country: "cr" }, fields: ["geometry", "formatted_address", "address_components"] });
         ac.addListener("place_changed", () => {
@@ -212,8 +212,8 @@ export function LocationPicker({ value, onChange, apiKey }: LocationPickerProps)
   if (!effectiveKey) {
     return (
       <div className="rounded-xl border border-[#e5e7eb] p-4 bg-[#f9fafb] text-center">
-        <MapPin className="h-6 w-6 text-[#9ca3af] mx-auto mb-2" />
-        <p className="text-sm text-[#9ca3af]">{t("mapUnavailable")}</p>
+        <MapPin className="h-6 w-6 text-[#68778d] mx-auto mb-2" />
+        <p className="text-sm text-[#68778d]">{t("mapUnavailable")}</p>
       </div>
     );
   }
@@ -248,7 +248,7 @@ export function LocationPicker({ value, onChange, apiKey }: LocationPickerProps)
           <button
             type="button"
             onClick={clearLocation}
-            className="flex items-center gap-1.5 text-xs font-medium text-[#9ca3af] hover:text-red-500 ml-auto"
+            className="flex items-center gap-1.5 text-xs font-medium text-[#68778d] hover:text-red-500 ml-auto"
           >
             <RotateCcw className="h-3.5 w-3.5" />
             {t("clear")}

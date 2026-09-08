@@ -79,7 +79,7 @@ export function VisorDeCv({
                 type="button"
                 onClick={() => setAbierto(false)}
                 aria-label={esEn ? "Close" : "Cerrar"}
-                className="absolute right-3 top-1/2 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-lg text-[#9ca3af] transition-colors hover:bg-[#f3f4f6] sm:flex"
+                className="absolute right-3 top-1/2 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-lg text-[#68778d] transition-colors hover:bg-[#f3f4f6] sm:flex"
               >
                 <X className="h-5 w-5" />
               </button>

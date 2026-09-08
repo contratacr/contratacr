@@ -203,7 +203,7 @@ export function SupportForm({ onSuccess }: { onSuccess?: (email: string) => void
   }
 
   const inputClass =
-    "w-full h-11 rounded-xl border border-[#e5e7eb] bg-white px-4 text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all";
+    "w-full h-11 rounded-xl border border-[#e5e7eb] bg-white px-4 text-sm text-[#162543] placeholder:text-[#68778d] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all";
 
   return (
     <form onSubmit={handleSubmit} onInput={() => setConCambios(true)} className="flex flex-col">
@@ -247,7 +247,7 @@ export function SupportForm({ onSuccess }: { onSuccess?: (email: string) => void
           {t("messageLabel")} <span className="text-red-500">*</span>
         </label>
         <textarea
-          className="w-full rounded-xl border border-[#e5e7eb] bg-white px-4 py-3 text-sm text-[#111827] placeholder:text-[#9ca3af] min-h-[130px] resize-none focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
+          className="w-full rounded-xl border border-[#e5e7eb] bg-white px-4 py-3 text-sm text-[#162543] placeholder:text-[#68778d] min-h-[130px] resize-none focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
           placeholder={t("messagePlaceholder")}
           maxLength={LONG_TEXT_MAX_LENGTH}
           value={form.message} onChange={(e) => update("message", e.target.value)} required
@@ -257,7 +257,7 @@ export function SupportForm({ onSuccess }: { onSuccess?: (email: string) => void
       {/* Attachments */}
       <div>
         <label className="text-sm font-medium text-[#374151] block mb-2">
-          {t("attachmentsLabel")} <span className="text-[#9ca3af] font-normal">{t("attachmentsHint", { max: MAX_FILES, mb: MAX_FILE_MB })}</span>
+          {t("attachmentsLabel")} <span className="text-[#68778d] font-normal">{t("attachmentsHint", { max: MAX_FILES, mb: MAX_FILE_MB })}</span>
         </label>
 
         {attachments.length > 0 && (
@@ -270,9 +270,9 @@ export function SupportForm({ onSuccess }: { onSuccess?: (email: string) => void
                   <Paperclip className="h-3.5 w-3.5 text-[#009FD9] shrink-0" />
                 )}
                 <span className="max-w-[120px] truncate">{file.name}</span>
-                <span className="text-[#9ca3af]">({(file.size / 1024).toFixed(0)}KB)</span>
+                <span className="text-[#68778d]">({(file.size / 1024).toFixed(0)}KB)</span>
                 <button type="button" onClick={() => removeAttachment(i)}
-                  className="text-[#9ca3af] hover:text-red-500 transition-colors ml-1">
+                  className="text-[#68778d] hover:text-red-500 transition-colors ml-1">
                   <X className="h-3.5 w-3.5" />
                 </button>
               </div>
@@ -300,7 +300,7 @@ export function SupportForm({ onSuccess }: { onSuccess?: (email: string) => void
           multiple
           onChange={(event) => { void handleFileChange(event); }}
         />
-        <p className="text-xs text-[#9ca3af] mt-1.5">
+        <p className="text-xs text-[#68778d] mt-1.5">
           {t("formats")}
         </p>
       </div>

@@ -83,11 +83,11 @@ export function ReportProfileModal({ professionalName, professionalSlug, onClose
           <div className="flex items-center gap-2.5">
             <Flag className="h-5 w-5 shrink-0 text-red-500" />
             <div>
-              <h2 className="text-base font-bold text-[#111827]">{t("title")}</h2>
+              <h2 className="text-base font-bold text-[#162543]">{t("title")}</h2>
               <p className="text-xs text-[#6b7280]">{professionalName}</p>
             </div>
           </div>
-          <button onClick={onClose} className="rounded-full p-1.5 text-[#9ca3af] hover:bg-[#f3f4f6] hover:text-[#374151] transition-colors">
+          <button onClick={onClose} className="rounded-full p-1.5 text-[#68778d] hover:bg-[#f3f4f6] hover:text-[#374151] transition-colors">
             <X className="h-5 w-5" />
           </button>
         </div>
@@ -95,7 +95,7 @@ export function ReportProfileModal({ professionalName, professionalSlug, onClose
         {sent ? (
           <div className="flex flex-col items-center gap-3 px-6 py-10 text-center">
             <SuccessIcon size={56} />
-            <p className="text-lg font-semibold text-[#111827]">{t("sentTitle")}</p>
+            <p className="text-lg font-semibold text-[#162543]">{t("sentTitle")}</p>
             <p className="text-sm text-[#6b7280]">
               {t("sentBody")}
             </p>
@@ -144,7 +144,7 @@ export function ReportProfileModal({ professionalName, professionalSlug, onClose
 
             <div>
               <label className="text-sm font-medium text-[#374151] block mb-1.5">
-                {t("detail")} <span className="text-[#9ca3af] font-normal">{t("optional")}</span>
+                {t("detail")} <span className="text-[#68778d] font-normal">{t("optional")}</span>
               </label>
               <textarea
                 value={detail}
@@ -152,7 +152,7 @@ export function ReportProfileModal({ professionalName, professionalSlug, onClose
                 rows={3}
                 maxLength={500}
                 placeholder={t("detailPlaceholder")}
-                className="w-full resize-none rounded-xl border border-[#e5e7eb] bg-white px-3.5 py-3 text-sm text-[#111827] placeholder:text-[#9ca3af] focus:border-[#009FD9] focus:outline-none focus:ring-2 focus:ring-[#009FD9]/20 transition"
+                className="w-full resize-none rounded-xl border border-[#e5e7eb] bg-white px-3.5 py-3 text-sm text-[#162543] placeholder:text-[#68778d] focus:border-[#009FD9] focus:outline-none focus:ring-2 focus:ring-[#009FD9]/20 transition"
               />
             </div>
 

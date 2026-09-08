@@ -54,7 +54,7 @@ export function CedulaInput({
         {required ? (
           <span className="text-red-500"> *</span>
         ) : (
-          <span className="text-[#9ca3af] font-normal"> {t("optional")}</span>
+          <span className="text-[#68778d] font-normal"> {t("optional")}</span>
         )}
       </span>
       {type && (

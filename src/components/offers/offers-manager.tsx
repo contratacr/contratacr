@@ -162,7 +162,7 @@ export function OffersManager({ initialOffers, embedded = false, backHref = "/da
                     ) : <div className="grid h-full place-items-center"><BadgePercent className="h-5 w-5" /></div>}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <h2 className="truncate text-[15px] font-extrabold leading-tight text-[#111827] sm:text-base">{offer.title}</h2>
+                    <h2 className="truncate text-[15px] font-extrabold leading-tight text-[#162543] sm:text-base">{offer.title}</h2>
                     {offer.service_label && (
                       <p className="mt-1 line-clamp-2 text-xs font-bold leading-4 text-[#008fc3]" title={offer.service_label}>{offer.service_label}</p>
                     )}

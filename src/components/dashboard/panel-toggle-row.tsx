@@ -52,7 +52,7 @@ export function PanelToggleRow({
       onClick={onToggle}
       disabled={disabled}
       className={cn(
-        "inline-flex w-fit items-center gap-3 text-left text-sm font-semibold text-[#111827] transition-opacity disabled:cursor-not-allowed disabled:opacity-60",
+        "inline-flex w-fit items-center gap-3 text-left text-sm font-semibold text-[#162543] transition-opacity disabled:cursor-not-allowed disabled:opacity-60",
         className,
       )}
     >

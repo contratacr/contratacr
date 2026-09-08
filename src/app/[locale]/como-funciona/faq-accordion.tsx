@@ -22,7 +22,7 @@ export function ComoFuncionaFaq({ items }: { items: FaqItem[] }) {
             aria-expanded={open === i}
           >
             <span className="text-sm font-bold text-[#162543] sm:text-base">{item.question}</span>
-            <ChevronDown className={`h-5 w-5 shrink-0 text-[#9ca3af] transition-transform ${open === i ? "rotate-180 text-[#009FD9]" : ""}`} />
+            <ChevronDown className={`h-5 w-5 shrink-0 text-[#68778d] transition-transform ${open === i ? "rotate-180 text-[#009FD9]" : ""}`} />
           </button>
           {open === i && (
             <p className="px-5 pb-5 text-sm leading-relaxed text-[#6b7280]">{item.answer}</p>

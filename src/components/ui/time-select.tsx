@@ -87,15 +87,15 @@ export function TimeSelect({ value, onChange, min, step = 30, label, error, id, 
         aria-expanded={open}
         aria-invalid={!!error}
         className={cn(
-          "relative flex h-9 w-full items-center rounded-lg border bg-white pl-3 pr-10 text-left text-[13px] font-semibold text-[#111827] shadow-[0_1px_0_rgba(15,23,42,0.02)] transition-all",
+          "relative flex h-9 w-full items-center rounded-lg border bg-white pl-3 pr-10 text-left text-[13px] font-semibold text-[#162543] shadow-[0_1px_0_rgba(15,23,42,0.02)] transition-all",
           "focus:outline-none focus:ring-2 focus:ring-[#EBF5FB] focus:border-[#009FD9]",
           open && "border-[#009FD9] ring-2 ring-[#EBF5FB]",
           error ? "border-red-400" : "border-[#dfe7f0] hover:border-[#cbd5e1]",
           disabled && "opacity-50 cursor-not-allowed"
         )}
       >
-        {to12h(value) || <span className="text-[#9ca3af]">--:--</span>}
-        <ChevronDown className={cn("pointer-events-none absolute right-3 h-4 w-4 text-[#9ca3af] transition-transform", open && "rotate-180 text-[#009FD9]")} />
+        {to12h(value) || <span className="text-[#68778d]">--:--</span>}
+        <ChevronDown className={cn("pointer-events-none absolute right-3 h-4 w-4 text-[#68778d] transition-transform", open && "rotate-180 text-[#009FD9]")} />
       </button>
 
       {open && (
@@ -109,7 +109,7 @@ export function TimeSelect({ value, onChange, min, step = 30, label, error, id, 
             style={{ WebkitOverflowScrolling: "touch", touchAction: "pan-y" }}
           >
             {options.length === 0 ? (
-              <p className="px-3 py-2 text-xs text-[#9ca3af]">No hay horas disponibles</p>
+              <p className="px-3 py-2 text-xs text-[#68778d]">No hay horas disponibles</p>
             ) : (
               options.map((m) => {
                 const v = hhmm(m);

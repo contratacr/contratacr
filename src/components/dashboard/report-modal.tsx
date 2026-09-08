@@ -64,7 +64,7 @@ export function ReportModal({
           </div>
         ) : (
         <>
-        <h2 className="text-base font-bold text-[#111827]">{title}</h2>
+        <h2 className="text-base font-bold text-[#162543]">{title}</h2>
         <p className="mt-1 text-sm text-[#6b7280]">{body}</p>
 
         <textarea
@@ -73,7 +73,7 @@ export function ReportModal({
           maxLength={300}
           rows={2}
           placeholder={detailsPlaceholder}
-          className="mt-4 w-full rounded-xl border border-[#e5e7eb] bg-white px-3 py-2 text-sm text-[#111827] placeholder:text-[#9ca3af] break-words focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent resize-none"
+          className="mt-4 w-full rounded-xl border border-[#e5e7eb] bg-white px-3 py-2 text-sm text-[#162543] placeholder:text-[#68778d] break-words focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent resize-none"
         />
 
         {error && (

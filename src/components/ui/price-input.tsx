@@ -36,10 +36,10 @@ export function PriceInput({
   return (
     <div className="relative">
       {colonPrefix && (
-        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-[#9ca3af] pointer-events-none">₡</span>
+        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-[#68778d] pointer-events-none">₡</span>
       )}
       {suffix && (
-        <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-semibold tracking-[0.04em] text-[#9ca3af]">
+        <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-semibold tracking-[0.04em] text-[#68778d]">
           {suffix}
         </span>
       )}
@@ -56,7 +56,7 @@ export function PriceInput({
           if (["e", "E", "+", "-", ".", ","].includes(e.key)) e.preventDefault();
         }}
         className={cn(
-          "w-full h-10 rounded-xl border border-[#e5e7eb] bg-white pr-3 text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all",
+          "w-full h-10 rounded-xl border border-[#e5e7eb] bg-white pr-3 text-sm text-[#162543] placeholder:text-[#68778d] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all",
           colonPrefix ? "pl-7" : "pl-3",
           suffix && "pr-[4.75rem]",
           className

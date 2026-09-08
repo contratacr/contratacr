@@ -162,7 +162,7 @@ export function AdminQueue() {
   return (
     <div>
       <div className="flex items-center justify-between flex-wrap gap-3 mb-5">
-        <h1 className="text-xl font-bold text-[#111827]">Verificación de identidad</h1>
+        <h1 className="text-xl font-bold text-[#162543]">Verificación de identidad</h1>
         <div className="flex flex-wrap items-center gap-2">
         <button
           type="button"
@@ -174,7 +174,7 @@ export function AdminQueue() {
           {outreachBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />} Avisar por app y correo
         </button>
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#9ca3af]" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#68778d]" />
           <input
             value={q}
             onChange={(e) => setQ(e.target.value)}
@@ -221,7 +221,7 @@ export function AdminQueue() {
                     )}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="line-clamp-2 text-sm font-medium leading-snug text-[#111827] sm:truncate">
+                    <p className="line-clamp-2 text-sm font-medium leading-snug text-[#162543] sm:truncate">
                       {r.profiles?.full_name ?? "Sin nombre"}
                     </p>
                     <p className="line-clamp-2 text-xs text-[#6b7280] sm:truncate">
@@ -264,7 +264,7 @@ export function AdminQueue() {
                     <span className="hidden md:inline">{contactedAgo(r.last_contacted_at) ?? "WhatsApp"}</span>
                   </a>
                 )}
-                <Link href={r.detail_href ?? `/admin/proveedores/${r.id}`} aria-label="Abrir" className="shrink-0 text-[#9ca3af] hover:text-[#0f172a]"><ChevronRight className="h-4 w-4" /></Link>
+                <Link href={r.detail_href ?? `/admin/proveedores/${r.id}`} aria-label="Abrir" className="shrink-0 text-[#68778d] hover:text-[#0f172a]"><ChevronRight className="h-4 w-4" /></Link>
               </li>
             ))}
           </ul>

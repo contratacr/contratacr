@@ -261,7 +261,7 @@ export function ProfileCompletion({
             <ListChecks className="h-5 w-5" />
           </span>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-extrabold text-[#111827]">{t("title")}</p>
+            <p className="truncate text-sm font-extrabold text-[#162543]">{t("title")}</p>
             <p className="truncate text-xs font-semibold text-[#64748b]">{t("compactProgress", { percent })}</p>
           </div>
           <button
@@ -302,7 +302,7 @@ export function ProfileCompletion({
         >
           <div className="flex items-center justify-between gap-4">
             <div className="min-w-0">
-              <p className="text-[19px] font-extrabold leading-tight text-[#111827] sm:text-[21px]">
+              <p className="text-[19px] font-extrabold leading-tight text-[#162543] sm:text-[21px]">
                 {t("stepsLeft", { count: missing.length })}
               </p>
             </div>

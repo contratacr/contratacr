@@ -163,7 +163,7 @@ export function JobsManager({ initialJobs, embedded = false, backHref = "/dashbo
               <article key={job.id} className={cn("relative overflow-visible rounded-2xl border border-[#e5e7eb] bg-white shadow-[0_2px_8px_rgba(15,23,42,0.06)]", actionsOpen === job.id && "z-40")}>
                 <button type="button" onClick={() => setOpenId(isOpen ? null : job.id)} className="flex h-24 w-full items-center gap-3 px-4 text-left sm:px-5">
                   <div className="min-w-0 flex-1">
-                    <h2 className="truncate text-[15px] font-extrabold leading-tight text-[#111827] sm:text-base">{job.title}</h2>
+                    <h2 className="truncate text-[15px] font-extrabold leading-tight text-[#162543] sm:text-base">{job.title}</h2>
                     <div className="mt-1.5 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-xs font-semibold text-[#65758c]">
                       <span className="truncate">{employmentTypeLabel(job.employment_type, locale)}</span>
                       <span className="text-[#cbd5e1]">|</span>

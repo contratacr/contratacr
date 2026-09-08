@@ -155,10 +155,10 @@ export function SelectMenu({ value, onChange, options, placeholder, label, error
           disabled && "opacity-50 cursor-not-allowed"
         )}
       >
-        <span className={cn("block min-w-0 flex-1 overflow-hidden truncate whitespace-nowrap leading-none", selected ? "text-[#111827]" : "text-[#9ca3af]")}>
+        <span className={cn("block min-w-0 flex-1 overflow-hidden truncate whitespace-nowrap leading-none", selected ? "text-[#162543]" : "text-[#68778d]")}>
           {selected?.label ?? placeholder ?? ""}
         </span>
-        <ChevronDown className={cn("pointer-events-none absolute right-3 h-4 w-4 text-[#9ca3af] transition-transform", open && "rotate-180")} />
+        <ChevronDown className={cn("pointer-events-none absolute right-3 h-4 w-4 text-[#68778d] transition-transform", open && "rotate-180")} />
       </button>
 
       {open && pos && typeof document !== "undefined" && createPortal(
@@ -205,7 +205,7 @@ export function SelectMenu({ value, onChange, options, placeholder, label, error
             className="overflow-y-auto overscroll-contain py-1"
           >
             {options.length === 0 ? (
-              <p className="px-3 py-2 text-xs text-[#9ca3af]">—</p>
+              <p className="px-3 py-2 text-xs text-[#68778d]">—</p>
             ) : (
               options.map((opt) => {
                 const isSel = opt.value === value;

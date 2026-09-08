@@ -99,7 +99,7 @@ export function AseguradorasInput({ value, onChange }: Props) {
               else if (e.key === "Backspace" && query === "" && selectedValues.length > 0) { remove(selectedValues[selectedValues.length - 1]); }
             }}
             placeholder={selectedValues.length === 0 ? t("insurerPlaceholder") : t("addAnotherInsurer")}
-            className="flex-1 min-w-[140px] bg-transparent text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus-visible:outline-none py-1"
+            className="flex-1 min-w-[140px] bg-transparent text-sm text-[#162543] placeholder:text-[#68778d] focus:outline-none focus-visible:outline-none py-1"
           />
         </div>
 

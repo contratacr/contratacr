@@ -206,7 +206,7 @@ export function UnsavedChangesGuard({
                 <AlertTriangle className="h-5 w-5 text-[#d97706]" />
               </div>
               <div className="mt-3 min-w-0">
-                <Dialog.Title className="text-base font-bold text-[#111827]">
+                <Dialog.Title className="text-base font-bold text-[#162543]">
                   {presentedValidationError ? t("incompleteTitle") : t("title")}
                 </Dialog.Title>
                 <Dialog.Description className="mx-auto mt-1.5 max-w-[18rem] text-sm leading-5 text-[#64748b]">

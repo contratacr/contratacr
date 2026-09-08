@@ -77,7 +77,7 @@ export function AdminUserSearch({
   return (
     <div ref={boxRef} className="relative w-full">
       <div className="relative">
-        <Search className={`absolute left-3 top-1/2 -translate-y-1/2 text-[#9ca3af] ${lg ? "h-5 w-5" : "h-4 w-4"}`} />
+        <Search className={`absolute left-3 top-1/2 -translate-y-1/2 text-[#68778d] ${lg ? "h-5 w-5" : "h-4 w-4"}`} />
         <input
           value={q}
           autoFocus={autoFocus}
@@ -87,13 +87,13 @@ export function AdminUserSearch({
           placeholder={placeholder}
           className={`w-full rounded-lg border border-[#e5e7eb] bg-white pl-9 pr-9 focus:outline-none focus:ring-2 focus:ring-[#009FD9] ${lg ? "h-11 text-base" : "h-9 text-sm"}`}
         />
-        {loading && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-[#9ca3af]" />}
+        {loading && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-[#68778d]" />}
       </div>
 
       <AnchoredDropdown anchorRef={boxRef} open={open && q.trim().length >= 2} maxHeight={360} className="shadow-2xl">
         <div className="py-1.5">
           {results.length === 0 && !loading ? (
-            <p className="px-4 py-3 text-sm text-[#9ca3af]">Sin resultados para “{q.trim()}”.</p>
+            <p className="px-4 py-3 text-sm text-[#68778d]">Sin resultados para “{q.trim()}”.</p>
           ) : (
             results.map((u) => (
               <button
@@ -110,7 +110,7 @@ export function AdminUserSearch({
                   )}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium text-[#111827] truncate">{u.full_name ?? "Sin nombre"}</p>
+                  <p className="text-sm font-medium text-[#162543] truncate">{u.full_name ?? "Sin nombre"}</p>
                   <p className="text-xs text-[#6b7280] truncate">
                     {u.cedula ? `${u.cedula} · ` : ""}{u.email}
                   </p>

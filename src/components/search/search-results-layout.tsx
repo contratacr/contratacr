@@ -527,7 +527,7 @@ export function SearchResultsLayout({ children, filters, quickFilters, drawerFil
                 {quickFilters}
               </div>
             )}
-            {countLabel && <p className="px-4 pb-2 pt-0.5 text-[13px] font-semibold text-[#111827]">{countLabel}</p>}
+            {countLabel && <p className="px-4 pb-2 pt-0.5 text-[13px] font-semibold text-[#162543]">{countLabel}</p>}
             <div data-sheet-drag-handle aria-hidden="true" className="h-1 bg-[#f6f8fb] shadow-[inset_0_1px_0_rgba(226,232,240,0.58)]" />
           </div>
 

@@ -1049,7 +1049,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
           max={new Date().toISOString().slice(0, 10)}
           onChange={setSelfDobInput}
         />
-        <p className="text-[11px] text-[#9ca3af] mt-1.5">{t("dobHealthHint")}</p>
+        <p className="text-[11px] text-[#68778d] mt-1.5">{t("dobHealthHint")}</p>
       </div>
     );
   }
@@ -1107,7 +1107,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
       return (
         <div>
           <label className="text-sm font-medium text-[#374151] block mb-1.5">{t("contact.name")} <span className="text-red-500">*</span></label>
-          <div className="flex h-10 items-center rounded-xl border border-[#e5e7eb] bg-[#f9fafb] px-4 text-sm text-[#9ca3af]">Buscando…</div>
+          <div className="flex h-10 items-center rounded-xl border border-[#e5e7eb] bg-[#f9fafb] px-4 text-sm text-[#68778d]">Buscando…</div>
         </div>
       );
     }
@@ -1127,7 +1127,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
         <label className="text-sm font-medium text-[#374151] block mb-1.5">{t("contact.name")} <span className="text-red-500">*</span></label>
         <input
           type="text"
-          className="w-full h-10 rounded-xl border border-[#e5e7eb] bg-white px-4 text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
+          className="w-full h-10 rounded-xl border border-[#e5e7eb] bg-white px-4 text-sm text-[#162543] placeholder:text-[#68778d] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
           placeholder={t("contact.namePlaceholder")}
           value={clientName}
           maxLength={NAME_MAX_LENGTH}
@@ -1150,7 +1150,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                 título quedan centrados entre sí en el teléfono y en escritorio. */}
             <div className="shrink-0 border-b border-[#f3f4f6] bg-white pt-[max(env(safe-area-inset-top),0.875rem)] lg:pt-0">
               <div className="relative flex items-center justify-center px-14 pb-3.5 lg:px-6 lg:py-4">
-                <h2 className="text-lg font-bold text-[#111827]">{t("title")}</h2>
+                <h2 className="text-lg font-bold text-[#162543]">{t("title")}</h2>
                 <button
                   type="button"
                   onClick={pasoAtras}
@@ -1208,7 +1208,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                       (so we know whether it's health → date of birth). */}
                   {needsProfessionPick && (
                     <div className="flex flex-col gap-2.5">
-                      <h3 className="text-lg font-semibold text-[#111827] mb-0.5">{t("servicePick.title")}</h3>
+                      <h3 className="text-lg font-semibold text-[#162543] mb-0.5">{t("servicePick.title")}</h3>
                       <p className="text-sm text-[#6b7280] mb-1.5">{t("servicePick.body")}</p>
                       {proProfessions.map((cat) => (
                         <button
@@ -1224,7 +1224,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                     </div>
                   )}
                   {!needsProfessionPick && (<>
-                  <h3 className="text-lg font-semibold text-[#111827] mb-1">{t("calendar.title")}</h3>
+                  <h3 className="text-lg font-semibold text-[#162543] mb-1">{t("calendar.title")}</h3>
                   <p className="text-sm text-[#6b7280] mb-4">
                     {initialLocationLabel ? <>{t.rich("calendar.locationPrefix", { location: initialLocationLabel, b: (c) => <span className="font-semibold text-[#374151]">{c}</span> })} </> : null}
                     {verMesCompleto ? t("calendar.availabilityHint") : null}
@@ -1240,8 +1240,8 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                         <Lock className="h-5 w-5 text-[#009FD9]" />
                       </div>
                       <div>
-                        <p className="text-sm font-semibold text-[#111827]">{t("calendar.privateTitle")}</p>
-                        <p className="text-xs text-[#9ca3af] mt-1 max-w-xs">
+                        <p className="text-sm font-semibold text-[#162543]">{t("calendar.privateTitle")}</p>
+                        <p className="text-xs text-[#68778d] mt-1 max-w-xs">
                           {nativeApp
                             ? locale === "en"
                               ? "This professional coordinates availability by message."
@@ -1257,12 +1257,12 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                         <MessageCircle className="h-5 w-5 text-[#009FD9]" />
                       </div>
                       <div>
-                        <p className="text-sm font-semibold text-[#111827]">
+                        <p className="text-sm font-semibold text-[#162543]">
                           {nativeApp
                             ? locale === "en" ? "Coordinate by message" : "Coordinar por mensaje"
                             : t("calendar.whatsappOnlyTitle")}
                         </p>
-                        <p className="text-xs text-[#9ca3af] mt-1 max-w-xs">
+                        <p className="text-xs text-[#68778d] mt-1 max-w-xs">
                           {nativeApp
                             ? locale === "en"
                               ? "Write to the professional to ask about available times."
@@ -1294,11 +1294,11 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                                       elegido ? "border-[#009FD9] bg-[#009FD9] text-white" : "border-[#e5e7eb] bg-white text-[#162543] hover:border-[#009FD9]",
                                     )}
                                   >
-                                    <span className={cn("text-[11px] font-semibold uppercase tracking-wide", elegido ? "text-white/80" : "text-[#9ca3af]")}>
+                                    <span className={cn("text-[11px] font-semibold uppercase tracking-wide", elegido ? "text-white/80" : "text-[#68778d]")}>
                                       {esHoy ? t("calendar.today") : dia.toLocaleDateString(dateLocale(locale), { weekday: "short" }).replace(".", "")}
                                     </span>
                                     <span className="text-[17px] font-bold leading-none">{dia.getDate()}</span>
-                                    <span className={cn("text-[11px] leading-none", elegido ? "text-white/80" : "text-[#9ca3af]")}>
+                                    <span className={cn("text-[11px] leading-none", elegido ? "text-white/80" : "text-[#68778d]")}>
                                       {dia.toLocaleDateString(dateLocale(locale), { month: "short" }).replace(".", "")}
                                     </span>
                                   </button>
@@ -1325,7 +1325,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                           >
                             <ChevronLeft className="h-4 w-4" />
                           </button>
-                          <span className="text-sm font-semibold text-[#111827]">
+                          <span className="text-sm font-semibold text-[#162543]">
                             {calendarMonthLabel(currentYear, currentMonth, locale)}
                           </span>
                           <button
@@ -1340,7 +1340,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                         {/* Day headers */}
                         <div className="grid grid-cols-7 mb-1">
                           {calendarDayNames(locale).map((d) => (
-                            <div key={d} className="text-center text-xs font-medium text-[#9ca3af] py-1">{d}</div>
+                            <div key={d} className="text-center text-xs font-medium text-[#68778d] py-1">{d}</div>
                           ))}
                         </div>
 
@@ -1362,7 +1362,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                                 className={cn(
                                   "relative aspect-square flex items-center justify-center rounded-full text-sm font-medium transition-all",
                                   isSelected && "bg-[#009FD9] text-white shadow-sm",
-                                  !isSelected && available && "hover:bg-[#EBF5FB] text-[#111827] cursor-pointer",
+                                  !isSelected && available && "hover:bg-[#EBF5FB] text-[#162543] cursor-pointer",
                                   !isSelected && available && isToday && "text-[#009FD9]",
                                   !isSelected && !available && "text-[#d1d5db] cursor-not-allowed"
                                 )}
@@ -1396,10 +1396,10 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                         {!selectedDate ? (
                           <div className="flex h-full min-h-[180px] flex-col items-center justify-center rounded-2xl border border-[#e5e7eb] bg-[#f9fafb] px-4 text-center">
                             <CalendarCheck className="h-7 w-7 text-[#cbd5e1]" />
-                            <p className="mt-2 text-sm text-[#9ca3af]">{t("calendar.pickDay")}</p>
+                            <p className="mt-2 text-sm text-[#68778d]">{t("calendar.pickDay")}</p>
                           </div>
                         ) : slots.length === 0 ? (
-                          <p className="text-sm text-[#9ca3af] text-center py-6">{t("calendar.noSlots")}</p>
+                          <p className="text-sm text-[#68778d] text-center py-6">{t("calendar.noSlots")}</p>
                         ) : (
                           <>
                             <p className="mb-3 text-sm font-semibold text-[#162543]">{formatDateDisplay(selectedDate, locale)}</p>
@@ -1431,7 +1431,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                                 { key: "night", label: t("calendar.night"), items: slots.filter((s) => parseInt(s, 10) >= 18) },
                               ].filter((f) => f.items.length > 0).map((f) => (
                                 <div key={f.key} className="mb-4 last:mb-0">
-                                  <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-[#9ca3af]">{f.label}</p>
+                                  <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-[#68778d]">{f.label}</p>
                                   <div className="grid grid-cols-3 gap-2 min-[360px]:grid-cols-4">
                                     {f.items.map((slot) => (
                                       <button
@@ -1464,7 +1464,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
               {step === "details" && (
                 <div className="flex flex-col gap-5">
                   <div>
-                    <h3 className="text-lg font-semibold text-[#111827]">{t("step4.title")}</h3>
+                    <h3 className="text-lg font-semibold text-[#162543]">{t("step4.title")}</h3>
                     {/* Lo ya elegido, en el mismo bloque de resumen que la pantalla final:
                         antes eran tres líneas sueltas —un emoji en turquesa, un saludo y la
                         identificación en verde— que parecían avisos y no un resumen. */}
@@ -1476,7 +1476,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                         </p>
                         {isLoggedIn && profileCedula && (
                           <p className="mt-1 flex items-start gap-1.5 text-[#6b7280]">
-                            <UserRound className="mt-px h-4 w-4 shrink-0 text-[#9ca3af]" />
+                            <UserRound className="mt-px h-4 w-4 shrink-0 text-[#68778d]" />
                             <span>{t.rich("bookingAs", { name: clientName || t("youLower"), cedula: profileCedula, b: (c) => <span className="font-medium text-[#374151]">{c}</span> })}</span>
                           </p>
                         )}
@@ -1512,7 +1512,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                         ))}
                       </div>
                       {forSomeoneElse && (
-                        <p className="text-xs text-[#9ca3af] mt-1.5 leading-snug">{t("forWho.helper")}</p>
+                        <p className="text-xs text-[#68778d] mt-1.5 leading-snug">{t("forWho.helper")}</p>
                       )}
                     </div>
                   )}
@@ -1556,10 +1556,10 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
 
                   <div>
                     <label className="text-sm font-medium text-[#374151] block mb-1.5">
-                      {t("step4.description")} <span className="font-normal text-[#9ca3af]">({t("optional")})</span>
+                      {t("step4.description")} <span className="font-normal text-[#68778d]">({t("optional")})</span>
                     </label>
                     <textarea
-                      className="w-full rounded-xl border border-[#e5e7eb] bg-white px-4 py-3 text-sm text-[#111827] placeholder:text-[#9ca3af] min-h-[110px] resize-none break-words focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
+                      className="w-full rounded-xl border border-[#e5e7eb] bg-white px-4 py-3 text-sm text-[#162543] placeholder:text-[#68778d] min-h-[110px] resize-none break-words focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
                       placeholder={t("step4.descPlaceholder")}
                       value={description}
                       onChange={(e) => setDescription(e.target.value)}
@@ -1577,7 +1577,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                         value={profilePhone}
                         onChange={setProfilePhone}
                       />
-                      <p className="text-xs text-[#9ca3af] mt-1">{t("contact.phoneHint")}</p>
+                      <p className="text-xs text-[#68778d] mt-1">{t("contact.phoneHint")}</p>
                     </div>
                   )}
                 </div>
@@ -1586,7 +1586,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
               {/* STEP: contact (guests) */}
               {step === "contact" && (
                 <div className="flex flex-col gap-5">
-                  <h3 className="text-lg font-semibold text-[#111827]">{t("contact.title")}</h3>
+                  <h3 className="text-lg font-semibold text-[#162543]">{t("contact.title")}</h3>
                   {/* IDENTIFICATION FIRST → the name auto-fills from it below. */}
                   {!noCedula && (
                     <CedulaInput
@@ -1604,12 +1604,12 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                   {renderSelfNameField()}
                   <div>
                     <label className="text-sm font-medium text-[#374151] block mb-1.5">
-                      {t("step4.email")} <span className="text-[#9ca3af] font-normal">({t("optional")})</span>
+                      {t("step4.email")} <span className="text-[#68778d] font-normal">({t("optional")})</span>
                     </label>
                     <input
                       type="email"
                       className={cn(
-                        "w-full h-10 rounded-xl border bg-white px-4 text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all",
+                        "w-full h-10 rounded-xl border bg-white px-4 text-sm text-[#162543] placeholder:text-[#68778d] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all",
                         guestEmailCheck.taken ? "border-red-400" : "border-[#e5e7eb]"
                       )}
                       placeholder="tu@email.com"
@@ -1627,7 +1627,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                     value={profilePhone}
                     onChange={setProfilePhone}
                   />
-                  <p className="text-xs text-[#9ca3af] -mt-2">
+                  <p className="text-xs text-[#68778d] -mt-2">
                     {t("contact.phoneHint")}
                   </p>
                   {/* HEALTH service for myself → DOB, auto-filled from the cédula above. */}
@@ -1639,7 +1639,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
               {step === "complete" && (
                 <div className="flex flex-col gap-4">
                   <div>
-                    <h3 className="text-lg font-semibold text-[#111827]">
+                    <h3 className="text-lg font-semibold text-[#162543]">
                       {needsProfile ? t("completeProfileTitle") : t("whatsappNumberTitle")}
                     </h3>
                     <p className="text-sm text-[#6b7280] mt-1">
@@ -1698,7 +1698,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                       <label className="text-sm font-medium text-[#374151] block mb-1.5">{t("contact.name")} <span className="text-red-500">*</span></label>
                       <input
                         type="text"
-                        className="w-full h-10 rounded-xl border border-[#e5e7eb] bg-white px-4 text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
+                        className="w-full h-10 rounded-xl border border-[#e5e7eb] bg-white px-4 text-sm text-[#162543] placeholder:text-[#68778d] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
                         placeholder={t("contact.namePlaceholder")}
                         value={clientName}
                         maxLength={NAME_MAX_LENGTH}
@@ -1723,7 +1723,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                 <div className="flex flex-col items-center text-center gap-5 py-4">
                   <SuccessIcon size={80} />
                   <div>
-                    <h3 className="text-xl font-bold text-[#111827] mb-2">{t("success.title")}</h3>
+                    <h3 className="text-xl font-bold text-[#162543] mb-2">{t("success.title")}</h3>
                     <p className="text-sm text-[#6b7280] max-w-xs mx-auto">{t("success.desc")}</p>
                   </div>
                   {/* Lo que acaba de reservar, en una línea por dato: la pantalla de

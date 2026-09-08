@@ -309,7 +309,7 @@ export function ProposalsTab({ categoryId }: ProposalsTabProps) {
   }
 
   const rowIconClass = "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#ccecf8] bg-[#EAF7FD] text-[#0089bb]";
-  const metaLabel = "text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]";
+  const metaLabel = "text-[10px] font-semibold uppercase tracking-[0.06em] text-[#68778d]";
   const metaValue = "mt-0.5 text-[13px] font-medium text-[#374151] [overflow-wrap:anywhere]";
 
   if (loading) {
@@ -353,10 +353,10 @@ export function ProposalsTab({ categoryId }: ProposalsTabProps) {
                       </div>
                       <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px] text-[#6b7280]">
                         {project.category_id && (
-                          <span className="inline-flex items-center gap-1.5"><Wrench className="h-3.5 w-3.5 text-[#9ca3af]" />{getCategoryLabel(project.category_id, locale)}</span>
+                          <span className="inline-flex items-center gap-1.5"><Wrench className="h-3.5 w-3.5 text-[#68778d]" />{getCategoryLabel(project.category_id, locale)}</span>
                         )}
-                        {zona && <span className="inline-flex items-center gap-1.5"><MapPin className="h-3.5 w-3.5 text-[#9ca3af]" />{zona}</span>}
-                        <span className="inline-flex items-center gap-1.5"><Clock className="h-3.5 w-3.5 text-[#9ca3af]" />{formatRelativeOrDate(project.created_at, locale)}</span>
+                        {zona && <span className="inline-flex items-center gap-1.5"><MapPin className="h-3.5 w-3.5 text-[#68778d]" />{zona}</span>}
+                        <span className="inline-flex items-center gap-1.5"><Clock className="h-3.5 w-3.5 text-[#68778d]" />{formatRelativeOrDate(project.created_at, locale)}</span>
                       </div>
                       {!isExpanded && project.description && (
                         <p className="mt-2 line-clamp-2 text-[13px] leading-relaxed text-[#4b5563]">{project.description}</p>
@@ -369,7 +369,7 @@ export function ProposalsTab({ categoryId }: ProposalsTabProps) {
                       <div className="flex flex-col gap-4 p-4 sm:p-5">
                         {project.description && (
                           <div className="flex items-start gap-2.5">
-                            <FileText className="mt-0.5 h-4 w-4 shrink-0 text-[#9ca3af]" />
+                            <FileText className="mt-0.5 h-4 w-4 shrink-0 text-[#68778d]" />
                             <div className="min-w-0">
                               <p className={metaLabel}>{t("projectDescription")}</p>
                               <ExpandableText text={project.description} lines={8} className="mt-0.5 text-[13px] leading-relaxed text-[#4b5563]" />
@@ -377,7 +377,7 @@ export function ProposalsTab({ categoryId }: ProposalsTabProps) {
                           </div>
                         )}
                         <div className="flex items-start gap-2.5">
-                          <Users className="mt-0.5 h-4 w-4 shrink-0 text-[#9ca3af]" />
+                          <Users className="mt-0.5 h-4 w-4 shrink-0 text-[#68778d]" />
                           <div className="min-w-0">
                             <p className={metaLabel}>{t("verificationLabel")}</p>
                             <p className={metaValue}>{clientIdentityText(project.client_identity_status)}</p>
@@ -391,14 +391,14 @@ export function ProposalsTab({ categoryId }: ProposalsTabProps) {
                           onChange={(e) => setMessages((prev) => ({ ...prev, [project.id]: e.target.value.slice(0, MESSAGE_MAX) }))}
                           maxLength={MESSAGE_MAX}
                           placeholder={t("messagePlaceholder")}
-                          className="min-h-[120px] w-full resize-none break-words rounded-xl border border-[#e5e7eb] bg-white px-4 py-3 text-[15px] text-[#111827] placeholder:text-[#9ca3af] focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[#009FD9]"
+                          className="min-h-[120px] w-full resize-none break-words rounded-xl border border-[#e5e7eb] bg-white px-4 py-3 text-[15px] text-[#162543] placeholder:text-[#68778d] focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[#009FD9]"
                         />
                         {message.length >= MESSAGE_MAX && <p className="mt-1 text-xs text-[#b45309]">{t("charLimit", { max: MESSAGE_MAX })}</p>}
                         <Button onClick={() => sendReply(project.id)} disabled={!message.trim() || submitting === project.id} loading={submitting === project.id} size="sm" variant="chat" className="mt-3 h-11 w-full rounded-full text-[13px] font-bold">
                           {t("sendProposal")}
                         </Button>
-                        <p className="mt-2 text-center text-xs text-[#9ca3af]">{t("proposalFree")}</p>
-                        <button type="button" onClick={() => dismissOpportunity(project.id)} className="mx-auto mt-3 flex items-center gap-1.5 text-[12px] font-medium text-[#9ca3af] transition-colors hover:text-[#6b7280]">
+                        <p className="mt-2 text-center text-xs text-[#68778d]">{t("proposalFree")}</p>
+                        <button type="button" onClick={() => dismissOpportunity(project.id)} className="mx-auto mt-3 flex items-center gap-1.5 text-[12px] font-medium text-[#68778d] transition-colors hover:text-[#6b7280]">
                           <EyeOff className="h-3.5 w-3.5" /> {t("dismiss")}
                         </button>
                       </div>
@@ -439,9 +439,9 @@ export function ProposalsTab({ categoryId }: ProposalsTabProps) {
                       </div>
                       <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px] text-[#6b7280]">
                         {p.projects?.category_id && (
-                          <span className="inline-flex items-center gap-1.5"><Wrench className="h-3.5 w-3.5 text-[#9ca3af]" />{getCategoryLabel(p.projects.category_id, locale)}</span>
+                          <span className="inline-flex items-center gap-1.5"><Wrench className="h-3.5 w-3.5 text-[#68778d]" />{getCategoryLabel(p.projects.category_id, locale)}</span>
                         )}
-                        <span className="inline-flex items-center gap-1.5"><CalendarDays className="h-3.5 w-3.5 text-[#9ca3af]" />{formatRelativeOrDate(p.created_at, locale)}</span>
+                        <span className="inline-flex items-center gap-1.5"><CalendarDays className="h-3.5 w-3.5 text-[#68778d]" />{formatRelativeOrDate(p.created_at, locale)}</span>
                       </div>
                       {!isOpen && p.message && <p className="mt-2 line-clamp-2 text-[13px] leading-relaxed text-[#4b5563]">{p.message}</p>}
                     </div>
@@ -449,7 +449,7 @@ export function ProposalsTab({ categoryId }: ProposalsTabProps) {
                   {isOpen && (
                     <div className="flex flex-col gap-3.5 rounded-b-2xl border-t border-[#f3f4f6] bg-gradient-to-b from-[#fcfdff] to-white px-4 pb-5 pt-4 sm:px-5">
                       <div className="flex items-start gap-2.5">
-                        <FileText className="mt-0.5 h-4 w-4 shrink-0 text-[#9ca3af]" />
+                        <FileText className="mt-0.5 h-4 w-4 shrink-0 text-[#68778d]" />
                         <div className="min-w-0">
                           <p className={metaLabel}>{t("yourMessageLabel")}</p>
                           <ExpandableText text={p.message} lines={6} className="mt-0.5 min-w-0 text-[13px] leading-relaxed text-[#4b5563]" />

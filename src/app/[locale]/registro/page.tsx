@@ -31,7 +31,7 @@ export default function RegisterPage() {
       <main className="flex-1 flex flex-col items-center justify-center px-4 py-12">
         <div className="w-full max-w-xl">
           <div className="text-center mb-10">
-            <h1 className="text-3xl font-bold text-[#111827] mb-2">{t("title")}</h1>
+            <h1 className="text-3xl font-bold text-[#162543] mb-2">{t("title")}</h1>
             <p className="text-[#6b7280] text-base">{t("subtitle")}</p>
           </div>
 
@@ -47,7 +47,7 @@ export default function RegisterPage() {
               <div>
                 {/* The ROLE is the prominent choice; the action is supporting text:
                     Cliente → busco servicios. */}
-                <h2 className="text-2xl font-bold text-[#111827]">{t("clientRole")}</h2>
+                <h2 className="text-2xl font-bold text-[#162543]">{t("clientRole")}</h2>
                 <p className="text-sm font-semibold text-[#009FD9]">{t("clientTitle")}</p>
               </div>
               <span className="flex items-center gap-1.5 text-sm font-semibold text-[#009FD9] opacity-0 group-hover:opacity-100 transition-opacity">
@@ -65,7 +65,7 @@ export default function RegisterPage() {
               </div>
               <div>
                 {/* Profesional → ofrezco servicios. */}
-                <h2 className="text-2xl font-bold text-[#111827]">{t("proRole")}</h2>
+                <h2 className="text-2xl font-bold text-[#162543]">{t("proRole")}</h2>
                 <p className="text-sm font-semibold text-[#009FD9]">{t("proTitle")}</p>
               </div>
               <span className="flex items-center gap-1.5 text-sm font-semibold text-[#009FD9] opacity-0 group-hover:opacity-100 transition-opacity">

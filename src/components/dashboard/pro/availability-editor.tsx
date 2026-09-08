@@ -888,7 +888,7 @@ export function AvailabilityEditor({
       role="switch"
       aria-checked={checked}
       aria-label={ariaLabel}
-      className="inline-flex w-fit items-center gap-3 text-left text-sm font-semibold text-[#111827] transition-opacity disabled:cursor-not-allowed disabled:opacity-60"
+      className="inline-flex w-fit items-center gap-3 text-left text-sm font-semibold text-[#162543] transition-opacity disabled:cursor-not-allowed disabled:opacity-60"
     >
       {loading ? <Loader2 className="h-5 w-5 shrink-0 animate-spin text-[#009FD9]" /> : <AvailabilitySwitch checked={checked} disabled={disabled} />}
       <span>{title}</span>
@@ -984,7 +984,7 @@ export function AvailabilityEditor({
                       className="[&>button]:h-10 [&>button]:rounded-xl [&>button]:pl-3 [&>button]:text-sm"
                     />
                 ) : (
-                  <div className="flex h-11 items-center gap-2 rounded-xl border border-[#e5e7eb] bg-white px-3 text-sm font-medium text-[#111827]">
+                  <div className="flex h-11 items-center gap-2 rounded-xl border border-[#e5e7eb] bg-white px-3 text-sm font-medium text-[#162543]">
                     <MapPin className="h-4 w-4 shrink-0 text-[#009FD9]" />
                     <span className="min-w-0 truncate">{locationLabel(activeLocationId)}</span>
                   </div>
@@ -1020,7 +1020,7 @@ export function AvailabilityEditor({
                 return (
                   <div key={wd} className="min-w-0 px-4 py-4 lg:grid lg:grid-cols-[minmax(7rem,1fr)_minmax(7rem,1fr)_minmax(18rem,2fr)_minmax(7rem,1fr)] lg:items-start lg:gap-3 lg:px-5">
                     <div className="flex min-w-0 items-center justify-between gap-3 lg:block">
-                      <span className="min-w-0 text-sm font-semibold text-[#111827]">{t(`weekday${wd}` as `weekday${number}`)}</span>
+                      <span className="min-w-0 text-sm font-semibold text-[#162543]">{t(`weekday${wd}` as `weekday${number}`)}</span>
                       <button
                         type="button"
                         onClick={() => toggleDay(wd)}
@@ -1052,7 +1052,7 @@ export function AvailabilityEditor({
                           {blocks.map((b) => (
                             <div key={b.id} className="grid w-full min-w-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-start gap-2 md:w-[19rem] md:shrink-0 lg:w-[13.75rem] lg:grid-cols-[minmax(5.875rem,1fr)_auto_minmax(5.875rem,1fr)]">
                               <TimeSelect value={b.start} step={activeDuration} disabled={scheduleControlsDisabled} onChange={(v) => updateBlock(wd, b.id, { start: v, ...(b.end && toMins(b.end) <= toMins(v) ? { end: hhmm(Math.min(toMins(v) + activeDuration, 23 * 60 + 30)) } : {}) })} className="min-w-0 w-full [&>button]:h-8 [&>button]:rounded-md [&>button]:pl-2.5 [&>button]:pr-7 [&>button]:text-[12px] sm:[&>button]:h-9 sm:[&>button]:rounded-lg sm:[&>button]:pl-3 sm:[&>button]:pr-10 sm:[&>button]:text-[13px] [&_svg]:right-2 sm:[&_svg]:right-3" />
-                              <span className="mt-1.5 shrink-0 text-xs text-[#9ca3af] sm:mt-2 sm:text-sm">-</span>
+                              <span className="mt-1.5 shrink-0 text-xs text-[#68778d] sm:mt-2 sm:text-sm">-</span>
                               <TimeSelect value={b.end} step={activeDuration} min={b.start ? hhmm(Math.min(toMins(b.start) + activeDuration, 23 * 60 + 30)) : undefined} disabled={scheduleControlsDisabled} onChange={(v) => updateBlock(wd, b.id, { end: v })} className="min-w-0 w-full [&>button]:h-8 [&>button]:rounded-md [&>button]:pl-2.5 [&>button]:pr-7 [&>button]:text-[12px] sm:[&>button]:h-9 sm:[&>button]:rounded-lg sm:[&>button]:pl-3 sm:[&>button]:pr-10 sm:[&>button]:text-[13px] [&_svg]:right-2 sm:[&_svg]:right-3" error={b.start && b.end && toMins(b.end) <= toMins(b.start) ? t("toAfterFrom") : undefined} />
                             </div>
                           ))}
@@ -1063,7 +1063,7 @@ export function AvailabilityEditor({
                         <button type="button" onClick={() => addBlock(wd)} disabled={scheduleControlsDisabled} className="inline-flex h-8 min-w-0 shrink-0 items-center whitespace-nowrap text-xs font-semibold leading-none text-[#009FD9] hover:underline cursor-pointer disabled:cursor-not-allowed disabled:opacity-45 disabled:hover:no-underline">
                           {t("addFranja")}
                         </button>
-                        <button type="button" onClick={() => canApply && setApplyModal({ weekday: wd })} disabled={!canApply || scheduleControlsDisabled} className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-[#6b7280] hover:bg-[#f3f4f6] hover:text-[#111827] disabled:opacity-35" aria-label={t("applyToOtherDays")}>
+                        <button type="button" onClick={() => canApply && setApplyModal({ weekday: wd })} disabled={!canApply || scheduleControlsDisabled} className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-[#6b7280] hover:bg-[#f3f4f6] hover:text-[#162543] disabled:opacity-35" aria-label={t("applyToOtherDays")}>
                           <MoreVertical className="h-4 w-4" />
                         </button>
                       </div>
@@ -1071,7 +1071,7 @@ export function AvailabilityEditor({
 
                     <div className="hidden min-w-0 items-center justify-center gap-2 lg:flex">
                       {dayActions}
-                      <button type="button" onClick={() => canApply && setApplyModal({ weekday: wd })} disabled={!canApply || scheduleControlsDisabled} className="flex h-9 w-9 items-center justify-center rounded-lg text-[#6b7280] hover:bg-[#f3f4f6] hover:text-[#111827] disabled:opacity-35" aria-label={t("applyToOtherDays")}>
+                      <button type="button" onClick={() => canApply && setApplyModal({ weekday: wd })} disabled={!canApply || scheduleControlsDisabled} className="flex h-9 w-9 items-center justify-center rounded-lg text-[#6b7280] hover:bg-[#f3f4f6] hover:text-[#162543] disabled:opacity-35" aria-label={t("applyToOtherDays")}>
                         <MoreVertical className="h-4 w-4" />
                       </button>
                     </div>
@@ -1083,7 +1083,7 @@ export function AvailabilityEditor({
                   <button type="button" onClick={() => setShowClosedDays((v) => !v)} className="flex w-full items-center gap-2 text-left">
                     <ChevronDown className={cn("h-4 w-4 text-[#374151] transition-transform", showClosedDays && "rotate-180")} />
                     <div className="min-w-0">
-                      <p className="text-sm font-semibold text-[#111827]">{t("closedDays")} ({closedWeekdays.length})</p>
+                      <p className="text-sm font-semibold text-[#162543]">{t("closedDays")} ({closedWeekdays.length})</p>
                       <p className="mt-0.5 text-xs text-[#6b7280]">{closedWeekdays.map((wd) => t(`weekday${wd}` as `weekday${number}`)).join(", ")}</p>
                     </div>
                   </button>
@@ -1115,7 +1115,7 @@ export function AvailabilityEditor({
           <div className="border-t border-[#f3f4f6] p-4 sm:p-5">
             <div className="mb-6">
               <div className="min-w-0">
-                <h3 className="text-sm font-semibold text-[#111827]">{t("diffDayTitle")}</h3>
+                <h3 className="text-sm font-semibold text-[#162543]">{t("diffDayTitle")}</h3>
                 <p className="mt-0.5 text-xs text-[#6b7280]">{t("diffDaySub")}</p>
                 <p className="mt-1 text-xs font-medium text-[#6b7280]">{t("appliesTo", { place: locationLabel(activeLocationId) })}</p>
               </div>
@@ -1125,18 +1125,18 @@ export function AvailabilityEditor({
               <button
                 type="button"
                 onClick={() => setDayModal({ date: todayISO() })}
-                className="flex h-11 w-full min-w-0 items-center justify-between rounded-xl border border-[#e5e7eb] bg-white px-4 text-sm font-semibold text-[#111827] transition-all hover:border-[#cbd5e1] focus:outline-none focus:ring-2 focus:ring-[#009FD9] sm:w-[18rem]"
+                className="flex h-11 w-full min-w-0 items-center justify-between rounded-xl border border-[#e5e7eb] bg-white px-4 text-sm font-semibold text-[#162543] transition-all hover:border-[#cbd5e1] focus:outline-none focus:ring-2 focus:ring-[#009FD9] sm:w-[18rem]"
               >
                 <span className="flex min-w-0 items-center gap-2">
                   <Calendar className="h-4 w-4 shrink-0 text-[#009FD9]" />
                   <span className="truncate">{t("changeDay")}</span>
                 </span>
-                <ChevronDown className="h-4 w-4 shrink-0 text-[#9ca3af]" />
+                <ChevronDown className="h-4 w-4 shrink-0 text-[#68778d]" />
               </button>
             </div>
 
             {activeExceptions.length === 0 ? (
-              <p className="text-xs text-[#9ca3af]">{t("noExceptions")}</p>
+              <p className="text-xs text-[#68778d]">{t("noExceptions")}</p>
             ) : (
               <div className="flex flex-col gap-2">
                 {activeExceptions.map(([date, rows]) => {
@@ -1151,16 +1151,16 @@ export function AvailabilityEditor({
                     <div key={date} className="flex items-center gap-3 rounded-xl border border-[#e5e7eb] p-2.5">
                       <div className="flex h-11 w-11 shrink-0 flex-col items-center justify-center rounded-lg bg-[#f9fafb]">
                         <span className="text-[9px] font-bold uppercase text-[#009FD9] leading-none">{monthShort}</span>
-                        <span className="text-base font-bold text-[#111827] leading-tight">{d}</span>
+                        <span className="text-base font-bold text-[#162543] leading-tight">{d}</span>
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p className="text-sm font-semibold text-[#111827] capitalize">{weekdayLong}</p>
+                        <p className="text-sm font-semibold text-[#162543] capitalize">{weekdayLong}</p>
                         <p className="text-xs text-[#6b7280] truncate">{summary}</p>
                       </div>
-                      <button type="button" onClick={() => setDayModal({ date })} className="flex h-8 w-8 items-center justify-center rounded-lg text-[#6b7280] hover:bg-[#f3f4f6] hover:text-[#111827] transition-colors" aria-label={t("edit")}>
+                      <button type="button" onClick={() => setDayModal({ date })} className="flex h-8 w-8 items-center justify-center rounded-lg text-[#6b7280] hover:bg-[#f3f4f6] hover:text-[#162543] transition-colors" aria-label={t("edit")}>
                         <Pencil className="h-4 w-4" />
                       </button>
-                      <button type="button" onClick={() => removeException(date)} className="flex h-8 w-8 items-center justify-center rounded-lg text-[#9ca3af] hover:bg-[#f3f4f6] hover:text-red-500 transition-colors" aria-label={t("removeException")}>
+                      <button type="button" onClick={() => removeException(date)} className="flex h-8 w-8 items-center justify-center rounded-lg text-[#68778d] hover:bg-[#f3f4f6] hover:text-red-500 transition-colors" aria-label={t("removeException")}>
                         <Trash2 className="h-4 w-4" />
                       </button>
                     </div>
@@ -1246,7 +1246,7 @@ export function AvailabilityEditor({
             <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-amber-50">
               <Lock className="h-5 w-5 text-[#b45309]" />
             </div>
-            <h3 id="private-agenda-title" className="mb-1 text-lg font-bold text-[#111827]">{t("confirmTitle")}</h3>
+            <h3 id="private-agenda-title" className="mb-1 text-lg font-bold text-[#162543]">{t("confirmTitle")}</h3>
             <p id="private-agenda-description" className="mb-5 text-sm text-[#6b7280]">{t("confirmBody")}</p>
             <div className="flex gap-3">
               <Button variant="outline" size="md" className="flex-1" onClick={() => setShowPrivateConfirm(false)} disabled={savingVisibility}>{t("cancel")}</Button>
@@ -1289,7 +1289,7 @@ export function AvailabilityEditor({
                 </span>
               )}
             </div>
-            <h3 id="availability-conflict-title" className="mb-1.5 text-lg font-bold text-[#111827]">{conflict.title}</h3>
+            <h3 id="availability-conflict-title" className="mb-1.5 text-lg font-bold text-[#162543]">{conflict.title}</h3>
             <p id="availability-conflict-description" className="mb-5 text-sm leading-relaxed text-[#6b7280]">{conflict.body}</p>
             <Button size="md" className="w-full" onClick={() => setConflict(null)}>{t("conflictOk")}</Button>
           </div>
@@ -1321,10 +1321,10 @@ function ApplyScheduleModal({ sourceWeekday, onClose, onApply }: {
       <div className="ccr-availability-modal-panel app-bottom-sheet app-sheet-compact relative z-10 max-h-[85vh] w-full overflow-y-auto overscroll-contain rounded-t-2xl bg-white p-5 pb-[max(env(safe-area-inset-bottom),1.25rem)] shadow-2xl sm:max-w-sm sm:rounded-2xl sm:pb-5">
         <div className="mb-4 flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <h3 className="text-lg font-bold text-[#111827]">{t("applyToDaysTitle", { day: t(`weekday${sourceWeekday}` as `weekday${number}`) })}</h3>
+            <h3 className="text-lg font-bold text-[#162543]">{t("applyToDaysTitle", { day: t(`weekday${sourceWeekday}` as `weekday${number}`) })}</h3>
             <p className="mt-1 text-sm text-[#6b7280]">{t("applyToDaysBody")}</p>
           </div>
-          <button type="button" onClick={onClose} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[#9ca3af] hover:bg-[#f3f4f6] hover:text-[#111827]" aria-label={t("cancel")}>
+          <button type="button" onClick={onClose} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[#68778d] hover:bg-[#f3f4f6] hover:text-[#162543]" aria-label={t("cancel")}>
             <X className="h-4 w-4" />
           </button>
         </div>
@@ -1435,7 +1435,7 @@ function DayModal({ initialDate, existing, markedDates, defaultDuration, dateLoc
       <div className="ccr-availability-modal-panel app-bottom-sheet app-sheet-compact relative z-10 max-h-[92vh] w-full overflow-y-auto overscroll-contain rounded-t-2xl bg-white shadow-2xl sm:max-h-[90vh] sm:max-w-2xl sm:rounded-2xl">
         <div className="flex items-start justify-between gap-3 border-b border-[#f3f4f6] p-4 sm:p-5">
           <div>
-            <h3 className="text-base font-bold text-[#111827]">{t("modalTitle")}</h3>
+            <h3 className="text-base font-bold text-[#162543]">{t("modalTitle")}</h3>
             <p className="mt-0.5 text-xs text-[#6b7280]">{t("modalSub")}</p>
           </div>
           <button type="button" onClick={onClose} className="flex h-8 w-8 items-center justify-center rounded-lg text-[#6b7280] hover:bg-[#f3f4f6]" aria-label={t("close")}>
@@ -1447,7 +1447,7 @@ function DayModal({ initialDate, existing, markedDates, defaultDuration, dateLoc
           <MonthCalendar value={date} onChange={setDate} marked={markedDates} dateLocale={dateLocale} />
 
           <div className="flex flex-col gap-3">
-            <p className="text-sm font-semibold text-[#111827] capitalize">{selectedLong}</p>
+            <p className="text-sm font-semibold text-[#162543] capitalize">{selectedLong}</p>
 
             {/* Guidance: what OTHER locations already occupy this date -> pick a free slot.
                 Consecutive (touching) ranges are allowed; only true overlaps are blocked. */}
@@ -1458,7 +1458,7 @@ function DayModal({ initialDate, existing, markedDates, defaultDuration, dateLoc
                 <div className="flex flex-col gap-0.5 rounded-xl border border-[#f3f4f6] bg-[#f9fafb] p-2.5">
                   {occupied.map((o) => (
                     <p key={o.label} className="flex items-start gap-1.5 text-[11px] leading-relaxed text-[#6b7280]">
-                      <Lock className="h-3 w-3 shrink-0 mt-[3px] text-[#9ca3af]" />
+                      <Lock className="h-3 w-3 shrink-0 mt-[3px] text-[#68778d]" />
                       <span>{t("occupiedElsewhere", { ranges: fmtRanges(o.ranges), place: o.label })}</span>
                     </p>
                   ))}
@@ -1480,7 +1480,7 @@ function DayModal({ initialDate, existing, markedDates, defaultDuration, dateLoc
                       {active && <span className="h-2 w-2 rounded-full bg-[#009FD9]" />}
                     </span>
                     <span className="min-w-0">
-                      <span className="block text-sm font-medium text-[#111827]">{o.label}</span>
+                      <span className="block text-sm font-medium text-[#162543]">{o.label}</span>
                       <span className="block text-xs text-[#6b7280]">{o.desc}</span>
                     </span>
                   </button>
@@ -1494,9 +1494,9 @@ function DayModal({ initialDate, existing, markedDates, defaultDuration, dateLoc
                 {franjas.map((f) => (
                   <div key={f.id} className="flex items-center gap-1.5">
                     <TimeSelect value={f.start} step={dur} onChange={(v) => setFranjas((prev) => prev.map((x) => (x.id === f.id ? { ...x, start: v, ...(toMins(x.end) <= toMins(v) ? { end: hhmmLocal(Math.min(toMins(v) + dur, 23 * 60 + 30)) } : {}) } : x)))} className="min-w-0 flex-1 sm:flex-none sm:w-32" />
-                    <span className="shrink-0 text-[#9ca3af]">-</span>
+                    <span className="shrink-0 text-[#68778d]">-</span>
                     <TimeSelect value={f.end} step={dur} min={hhmmLocal(Math.min(toMins(f.start) + dur, 23 * 60 + 30))} onChange={(v) => setFranjas((prev) => prev.map((x) => (x.id === f.id ? { ...x, end: v } : x)))} className="min-w-0 flex-1 sm:flex-none sm:w-32" error={toMins(f.end) <= toMins(f.start) ? t("toAfterFrom") : undefined} />
-                    <button type="button" onClick={() => setFranjas((prev) => prev.filter((x) => x.id !== f.id))} className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[#9ca3af] hover:bg-[#f3f4f6] hover:text-red-500 transition-colors" aria-label={t("remove")}>
+                    <button type="button" onClick={() => setFranjas((prev) => prev.filter((x) => x.id !== f.id))} className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[#68778d] hover:bg-[#f3f4f6] hover:text-red-500 transition-colors" aria-label={t("remove")}>
                       <X className="h-4 w-4" />
                     </button>
                   </div>
@@ -1548,13 +1548,13 @@ function MonthCalendar({ value, onChange, marked, dateLocale }: { value: string;
         <button type="button" disabled={!canPrev} onClick={() => setView((v) => ({ y: v.m === 0 ? v.y - 1 : v.y, m: (v.m + 11) % 12 }))} className="flex h-7 w-7 items-center justify-center rounded-lg text-[#6b7280] enabled:hover:bg-[#f3f4f6] disabled:opacity-30" aria-label="<">
           <ChevronLeft className="h-4 w-4" />
         </button>
-        <span className="text-sm font-semibold text-[#111827] capitalize">{monthLabel}</span>
+        <span className="text-sm font-semibold text-[#162543] capitalize">{monthLabel}</span>
         <button type="button" onClick={() => setView((v) => ({ y: v.m === 11 ? v.y + 1 : v.y, m: (v.m + 1) % 12 }))} className="flex h-7 w-7 items-center justify-center rounded-lg text-[#6b7280] hover:bg-[#f3f4f6]" aria-label=">">
           <ChevronRight className="h-4 w-4" />
         </button>
       </div>
       <div className="mb-1 grid grid-cols-7 gap-0.5">
-        {weekdayMini.map((w, i) => <span key={i} className="py-1 text-center text-[10px] font-semibold uppercase text-[#9ca3af]">{w}</span>)}
+        {weekdayMini.map((w, i) => <span key={i} className="py-1 text-center text-[10px] font-semibold uppercase text-[#68778d]">{w}</span>)}
       </div>
       <div className="grid grid-cols-7 gap-0.5">
         {cells.map((iso, i) => {

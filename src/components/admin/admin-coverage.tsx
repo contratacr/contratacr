@@ -182,7 +182,7 @@ export function AdminCoverage() {
       <div className="mb-5 flex items-center gap-2">
         <MapPinned className="h-5 w-5 text-[#009FD9]" />
         <div>
-          <h1 className="text-xl font-bold text-[#111827]">Cobertura</h1>
+          <h1 className="text-xl font-bold text-[#162543]">Cobertura</h1>
           <p className="mt-0.5 text-sm text-[#6b7280]">Dónde está la oferta real: profesionales por servicio, por provincia y por cantón — incluidos los lugares y servicios sin nadie todavía.</p>
         </div>
       </div>
@@ -208,7 +208,7 @@ export function AdminCoverage() {
             <div className="grid gap-3 sm:grid-cols-3">
               <label className="block text-xs font-semibold text-[#374151]">
                 Servicio
-                <select aria-label="Servicio" value={serviceFilter} onChange={(event) => setServiceFilter(event.target.value)} className="mt-1 h-10 w-full rounded-lg border border-[#e5e7eb] bg-white px-3 text-sm font-medium text-[#111827] outline-none focus:border-[#009FD9]">
+                <select aria-label="Servicio" value={serviceFilter} onChange={(event) => setServiceFilter(event.target.value)} className="mt-1 h-10 w-full rounded-lg border border-[#e5e7eb] bg-white px-3 text-sm font-medium text-[#162543] outline-none focus:border-[#009FD9]">
                   <option value="">Todos los servicios</option>
                   {data.groups.map((group) => (
                     <optgroup key={group.id} label={group.label}>
@@ -221,14 +221,14 @@ export function AdminCoverage() {
               </label>
               <label className="block text-xs font-semibold text-[#374151]">
                 Provincia
-                <select aria-label="Provincia" value={provinceFilter} onChange={(event) => { setProvinceFilter(event.target.value); setCantonFilter(""); }} className="mt-1 h-10 w-full rounded-lg border border-[#e5e7eb] bg-white px-3 text-sm font-medium text-[#111827] outline-none focus:border-[#009FD9]">
+                <select aria-label="Provincia" value={provinceFilter} onChange={(event) => { setProvinceFilter(event.target.value); setCantonFilter(""); }} className="mt-1 h-10 w-full rounded-lg border border-[#e5e7eb] bg-white px-3 text-sm font-medium text-[#162543] outline-none focus:border-[#009FD9]">
                   <option value="">Todas las provincias</option>
                   {PROVINCES.map((province) => <option key={province.id} value={province.id}>{province.name}</option>)}
                 </select>
               </label>
               <label className="block text-xs font-semibold text-[#374151]">
                 Cantón
-                <select aria-label="Cantón" value={cantonFilter} disabled={!provinceFilter} onChange={(event) => setCantonFilter(event.target.value)} className="mt-1 h-10 w-full rounded-lg border border-[#e5e7eb] bg-white px-3 text-sm font-medium text-[#111827] outline-none focus:border-[#009FD9] disabled:bg-[#f8fafc] disabled:text-[#94a3b8]">
+                <select aria-label="Cantón" value={cantonFilter} disabled={!provinceFilter} onChange={(event) => setCantonFilter(event.target.value)} className="mt-1 h-10 w-full rounded-lg border border-[#e5e7eb] bg-white px-3 text-sm font-medium text-[#162543] outline-none focus:border-[#009FD9] disabled:bg-[#f8fafc] disabled:text-[#94a3b8]">
                   <option value="">{provinceFilter ? "Todos los cantones" : "Elige una provincia"}</option>
                   {cantonOptions.map((canton) => <option key={canton.id} value={canton.id}>{canton.name}</option>)}
                 </select>
@@ -258,7 +258,7 @@ export function AdminCoverage() {
                           ) : getInitials(pro.name)}
                         </div>
                         <div className="min-w-0 flex-1">
-                          <p className="truncate text-sm font-semibold text-[#111827]">
+                          <p className="truncate text-sm font-semibold text-[#162543]">
                             <Link href={`/admin/proveedores/${pro.id}`} className="hover:text-[#009FD9]">{pro.name}</Link>
                             {pro.personName && pro.personName !== pro.name && <span className="ml-1 text-xs font-normal text-[#6b7280]">· {pro.personName}</span>}
                           </p>
@@ -287,7 +287,7 @@ export function AdminCoverage() {
 
           <div className="mb-4 flex flex-col gap-3 rounded-2xl border border-[#e5e7eb] bg-white p-3 sm:flex-row sm:items-center">
             <div className="relative min-w-0 flex-1">
-              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9ca3af]" />
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#68778d]" />
               <input
                 value={q}
                 onChange={(event) => setQ(event.target.value)}
@@ -323,7 +323,7 @@ export function AdminCoverage() {
                   <span>Profesionales · verificados</span>
                 </div>
                 {services.length === 0 ? (
-                  <div className="py-14 text-center text-sm text-[#9ca3af]">No hay servicios con ese filtro.</div>
+                  <div className="py-14 text-center text-sm text-[#68778d]">No hay servicios con ese filtro.</div>
                 ) : (
                   <>
                   {serviceSections.map((section) => {
@@ -339,10 +339,10 @@ export function AdminCoverage() {
                         className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left hover:bg-[#f9fafb]"
                       >
                         <span className="min-w-0">
-                          <span className="block truncate text-sm font-bold text-[#111827]">{section.label}</span>
+                          <span className="block truncate text-sm font-bold text-[#162543]">{section.label}</span>
                           <span className="block text-xs text-[#6b7280]">{withSupply}/{section.items.length} servicios con profesionales</span>
                         </span>
-                        <ChevronDown className={cn("h-4 w-4 shrink-0 text-[#9ca3af] transition-transform", open && "rotate-180")} />
+                        <ChevronDown className={cn("h-4 w-4 shrink-0 text-[#68778d] transition-transform", open && "rotate-180")} />
                       </button>
                     )}
                   {open && (
@@ -352,7 +352,7 @@ export function AdminCoverage() {
                         <div className="flex items-center justify-between gap-3">
                           <button type="button" onClick={() => { setServiceFilter(service.id); window.scrollTo({ top: 0, behavior: "smooth" }); }} className="min-w-0 text-left hover:text-[#009FD9]" title="Ver profesionales de este servicio">
                           <div className="min-w-0">
-                            <p className="truncate text-sm font-semibold text-[#111827]">
+                            <p className="truncate text-sm font-semibold text-[#162543]">
                               {service.label}
                               {service.source === "custom" && <span className="ml-1.5 rounded bg-[#f1f5f9] px-1.5 py-0.5 text-[10px] font-semibold text-[#64748b]">agregado</span>}
                             </p>
@@ -404,18 +404,18 @@ export function AdminCoverage() {
                     >
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center justify-between gap-3">
-                          <p className="text-sm font-bold text-[#111827]">{province.name}</p>
+                          <p className="text-sm font-bold text-[#162543]">{province.name}</p>
                           <p className="shrink-0 text-xs font-semibold text-[#6b7280]">
                             <span className={cn("text-sm font-bold tabular-nums", province.based === 0 ? "text-[#b91c1c]" : "text-[#0f172a]")}>{province.based.toLocaleString("es-CR")}</span> con sede · {province.serving.toLocaleString("es-CR")} atienden · {province.cantons.filter((canton) => canton.based > 0).length}/{province.cantons.length} cantones con sede
                           </p>
                         </div>
                         <div className="mt-1.5"><Bar value={province.based} max={maxProvince} color="#16a34a" /></div>
                       </div>
-                      <ChevronDown className={cn("h-4 w-4 shrink-0 text-[#9ca3af] transition-transform", open && "rotate-180")} />
+                      <ChevronDown className={cn("h-4 w-4 shrink-0 text-[#68778d] transition-transform", open && "rotate-180")} />
                     </button>
                     {open && (
                       <ul className="divide-y divide-[#f1f5f9] border-t border-[#f1f5f9]">
-                        {province.cantons.length === 0 && <li className="px-4 py-3 text-sm text-[#9ca3af]">Sin cantones con ese filtro.</li>}
+                        {province.cantons.length === 0 && <li className="px-4 py-3 text-sm text-[#68778d]">Sin cantones con ese filtro.</li>}
                         {province.cantons.map((canton) => (
                           <li key={canton.id} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-4 py-2 sm:grid-cols-[minmax(0,1fr)_120px_auto]">
                             <button type="button" onClick={() => { setProvinceFilter(province.id); setCantonFilter(canton.id); window.scrollTo({ top: 0, behavior: "smooth" }); }} className="truncate text-left text-sm text-[#334155] hover:text-[#009FD9]" title="Ver profesionales de este cantón">{canton.name}</button>

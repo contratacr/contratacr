@@ -449,7 +449,7 @@ function CategoriesMegaPanel({ onNavigate }: { onNavigate: () => void }) {
                     </span>
                     <span className="min-w-0 flex-1">
                       <span className="block text-sm font-bold leading-snug">{getCategoryGroupLabel(group.id, locale)}</span>
-                      <span className="mt-0.5 block text-[11px] font-medium text-[#9ca3af]">{ts("optionsCount", { count: items.length })}</span>
+                      <span className="mt-0.5 block text-[11px] font-medium text-[#68778d]">{ts("optionsCount", { count: items.length })}</span>
                     </span>
                     <ChevronRight className={cn("h-4 w-4 shrink-0", selected ? "text-[#009FD9]" : "text-[#cbd5e1]")} />
                   </button>
@@ -465,7 +465,7 @@ function CategoriesMegaPanel({ onNavigate }: { onNavigate: () => void }) {
                     <div className="mb-3 min-w-0">
                       <p className="text-[11px] font-bold uppercase tracking-wide text-[#8a94a6]">{t("categories")}</p>
                       <h3 className="mt-0.5 truncate text-lg font-extrabold text-[#162543]">{getCategoryGroupLabel(activeGroup.group.id, locale)}</h3>
-                      <p className="mt-0.5 text-[11px] font-medium text-[#9ca3af]">{ts("optionsCount", { count: activeGroup.items.length })}</p>
+                      <p className="mt-0.5 text-[11px] font-medium text-[#68778d]">{ts("optionsCount", { count: activeGroup.items.length })}</p>
                     </div>
                     <div className={`grid gap-1.5 ${activeGroup.items.length === 1 ? "max-w-[260px] grid-cols-1" : "grid-cols-2"}`}>
                       {activeGroup.items.map((m) => {
@@ -534,7 +534,7 @@ function CategoriesMegaPanel({ onNavigate }: { onNavigate: () => void }) {
                   </span>
                   <span className="min-w-0 flex-1">
                     <span className="block text-sm font-bold leading-snug">{getCategoryGroupLabel(group.id, locale)}</span>
-                    <span className="mt-0.5 block text-[11px] font-medium text-[#9ca3af]">{ts("optionsCount", { count: group.items.length })}</span>
+                    <span className="mt-0.5 block text-[11px] font-medium text-[#68778d]">{ts("optionsCount", { count: group.items.length })}</span>
                   </span>
                   <ChevronRight className={cn("h-4 w-4 shrink-0", selected ? "text-[#009FD9]" : "text-[#cbd5e1]")} />
                 </button>

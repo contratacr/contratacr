@@ -41,7 +41,7 @@ export default function SoportePage() {
               old wall of four equal-weight lines. */}
           <div className="text-center max-w-md">
             <SuccessIcon size={80} className="mx-auto mb-5" />
-            <h1 className="text-2xl font-bold text-[#111827] mb-2">{t("successTitle")}</h1>
+            <h1 className="text-2xl font-bold text-[#162543] mb-2">{t("successTitle")}</h1>
 
             {/* Primary message (one line) */}
             <p className="text-[#6b7280]">
@@ -49,7 +49,7 @@ export default function SoportePage() {
                 ? t("successUserDesc")
                 : t.rich("successGuestDesc", {
                     email: successEmail,
-                    b: (c) => <span className="font-semibold text-[#111827]">{c}</span>,
+                    b: (c) => <span className="font-semibold text-[#162543]">{c}</span>,
                   })}
             </p>
 
@@ -94,7 +94,7 @@ export default function SoportePage() {
             {/* Secondary, subtle footnotes (spam note + guest follow-tickets hint) */}
             <div className="mt-6 space-y-1">
               <SpamNotice />
-              {!user && <p className="text-xs text-[#9ca3af]">{t("guestFollow")}</p>}
+              {!user && <p className="text-xs text-[#68778d]">{t("guestFollow")}</p>}
             </div>
           </div>
         </main>
@@ -127,7 +127,7 @@ export default function SoportePage() {
             <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#EBF5FB] mx-auto mb-3">
               <Headset className="h-6 w-6 text-[#009FD9]" />
             </div>
-            <h1 className="text-2xl font-bold text-[#111827] mb-1">{t("headerTitle")}</h1>
+            <h1 className="text-2xl font-bold text-[#162543] mb-1">{t("headerTitle")}</h1>
             <p className="text-sm text-[#6b7280]">{t("headerSubtitle")}</p>
           </div>
 

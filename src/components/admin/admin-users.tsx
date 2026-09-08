@@ -151,7 +151,7 @@ export function AdminUsers() {
         <div className="flex items-center gap-2">
           <Users className="h-5 w-5 text-[#009FD9]" />
           <div>
-            <h1 className="text-xl font-bold text-[#111827]">Usuarios</h1>
+            <h1 className="text-xl font-bold text-[#162543]">Usuarios</h1>
             <p className="mt-0.5 text-sm text-[#6b7280]">Todas las cuentas registradas en ContrataCR.</p>
           </div>
         </div>
@@ -168,13 +168,13 @@ export function AdminUsers() {
         </label>
         <div className="mt-2 grid gap-3 md:grid-cols-[minmax(0,1fr)_220px]">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9ca3af]" />
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#68778d]" />
             <input
               id="admin-users-search"
               value={q}
               onChange={(event) => setQ(event.target.value)}
               placeholder="Nombre, nombre comercial, correo, teléfono o identificación"
-              className="h-11 w-full rounded-xl border border-[#dbe2ea] bg-white pl-10 pr-3 text-sm text-[#111827] outline-none transition focus:border-[#009FD9] focus:ring-2 focus:ring-[#bfefff]"
+              className="h-11 w-full rounded-xl border border-[#dbe2ea] bg-white pl-10 pr-3 text-sm text-[#162543] outline-none transition focus:border-[#009FD9] focus:ring-2 focus:ring-[#bfefff]"
             />
           </div>
           <select
@@ -192,7 +192,7 @@ export function AdminUsers() {
             <option value="banned">Profesionales bloqueados</option>
           </select>
         </div>
-        <p className="mt-2 text-xs text-[#9ca3af]">Los resultados están paginados; puedes consultar todas las cuentas, no solo las primeras 100.</p>
+        <p className="mt-2 text-xs text-[#68778d]">Los resultados están paginados; puedes consultar todas las cuentas, no solo las primeras 100.</p>
       </div>
 
       <AdminFilterTabs tabs={FILTERS} value={filter} onChange={changeFilter} counts={filterCounts} />
@@ -226,7 +226,7 @@ export function AdminUsers() {
                     </div>
                     <div className="min-w-0">
                       <div className="flex min-w-0 flex-wrap items-center gap-2">
-                        <p className="truncate text-sm font-semibold text-[#111827]">{user.full_name ?? "Sin nombre"}</p>
+                        <p className="truncate text-sm font-semibold text-[#162543]">{user.full_name ?? "Sin nombre"}</p>
                         <span className={cn("shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold", KIND_CLASS[user.kind])}>
                           {KIND_LABEL[user.kind]}
                         </span>
@@ -247,7 +247,7 @@ export function AdminUsers() {
                   <span className={cn("w-fit rounded-md border px-2 py-1 text-xs font-medium", statusClass(user))}>
                     {statusLabel(user)}
                   </span>
-                  <div className="flex items-center justify-between gap-3 text-xs text-[#9ca3af] sm:justify-end">
+                  <div className="flex items-center justify-between gap-3 text-xs text-[#68778d] sm:justify-end">
                     <span>Registro: {fmtDate(user.created_at)}</span>
                     <ChevronRight className="h-4 w-4 shrink-0" />
                   </div>

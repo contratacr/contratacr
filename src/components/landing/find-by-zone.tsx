@@ -136,7 +136,7 @@ export function FindByZone({ coverage }: { coverage: ZoneCoverage }) {
                       {t("coverageCount", { count })}
                     </span>
                   ) : (
-                    <span className="block text-[12px] font-medium text-[#9ca3af]">{t("noPros")}</span>
+                    <span className="block text-[12px] font-medium text-[#68778d]">{t("noPros")}</span>
                   )}
                 </div>
               </div>
@@ -151,7 +151,7 @@ export function FindByZone({ coverage }: { coverage: ZoneCoverage }) {
 
             {count > 0 ? (
               <>
-                <p className="text-[11px] font-bold uppercase tracking-wide text-[#9ca3af] mb-3">{t("cantonsWithPros")}</p>
+                <p className="text-[11px] font-bold uppercase tracking-wide text-[#68778d] mb-3">{t("cantonsWithPros")}</p>
                 <div className="flex flex-wrap gap-2 mb-6">
                   {coveredCantons.map((c) => (
                     <button
@@ -189,7 +189,7 @@ export function FindByZone({ coverage }: { coverage: ZoneCoverage }) {
                 {t("useLocation")}
               </button>
               {geoError && <p className="mt-2 text-[12px] text-[#b45309]">{geoError}</p>}
-              <p className="mt-3 text-[11px] text-[#9ca3af] leading-relaxed">
+              <p className="mt-3 text-[11px] text-[#68778d] leading-relaxed">
                 {t("disclaimer")}
               </p>
             </div>

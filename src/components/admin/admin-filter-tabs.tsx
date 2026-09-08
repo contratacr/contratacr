@@ -38,7 +38,7 @@ export function AdminFilterTabs({
               <span
                 className={cn(
                   "shrink-0 text-[11px] font-semibold leading-none tabular-nums transition-colors",
-                  active ? "text-[#0089bb]" : "text-[#9ca3af] group-hover:text-[#6b7280]",
+                  active ? "text-[#0089bb]" : "text-[#68778d] group-hover:text-[#6b7280]",
                 )}
               >
                 {count.toLocaleString("es-CR")}

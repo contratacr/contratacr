@@ -449,12 +449,12 @@ function GuidePreview({ id, t }: { id: string; t: ReturnType<typeof useTranslati
         </div>
         <div className="space-y-3">
           <div className="rounded-xl border border-[#e5e7eb] p-3">
-            <p className="font-bold text-[#111827]">Desarrollo web</p>
+            <p className="font-bold text-[#162543]">Desarrollo web</p>
             <p className="mt-1 text-xs text-[#6b7280]">{t("preview.services.desc")}</p>
             <div className="mt-3 h-2 rounded-full bg-[#EBF5FB]" />
           </div>
           <div className="rounded-xl border border-[#e5e7eb] p-3">
-            <p className="font-bold text-[#111827]">Automatizaciones</p>
+            <p className="font-bold text-[#162543]">Automatizaciones</p>
             <p className="mt-1 text-xs text-[#6b7280]">{t("preview.services.detail")}</p>
           </div>
         </div>
@@ -495,7 +495,7 @@ function GuidePreview({ id, t }: { id: string; t: ReturnType<typeof useTranslati
             <img src="/brand/ai-assistant-robot.webp" alt="" className="h-full w-full object-contain" />
           </div>
         </div>
-        <p className="mt-3 text-sm font-bold text-[#111827]">{t("preview.cases.caseTitle")}</p>
+        <p className="mt-3 text-sm font-bold text-[#162543]">{t("preview.cases.caseTitle")}</p>
         <p className="mt-1 text-xs leading-relaxed text-[#6b7280]">{t("preview.cases.body")}</p>
       </div>
     );
@@ -514,7 +514,7 @@ function GuidePreview({ id, t }: { id: string; t: ReturnType<typeof useTranslati
               <BriefcaseBusiness className="h-5 w-5" />
             </div>
             <div className="min-w-0">
-              <p className="truncate text-sm font-bold text-[#111827]">{t("preview.jobs.role")}</p>
+              <p className="truncate text-sm font-bold text-[#162543]">{t("preview.jobs.role")}</p>
               <p className="mt-0.5 text-xs font-semibold text-[#526277]">ContrataCR</p>
               <p className="mt-1 text-xs text-[#6b7280]">{t("preview.jobs.meta")}</p>
             </div>
@@ -537,7 +537,7 @@ function GuidePreview({ id, t }: { id: string; t: ReturnType<typeof useTranslati
             <OfferTagPercentIcon className="h-8 w-8" />
           </div>
           <div className="p-3">
-            <p className="text-sm font-bold text-[#111827]">{t("preview.offers.offer")}</p>
+            <p className="text-sm font-bold text-[#162543]">{t("preview.offers.offer")}</p>
             <p className="mt-1 text-xs text-[#6b7280]">{t("preview.offers.meta")}</p>
           </div>
         </div>
@@ -551,7 +551,7 @@ function GuidePreview({ id, t }: { id: string; t: ReturnType<typeof useTranslati
         <h4 className="font-bold text-[#162543]">{id === "requests" ? t("preview.requests.title") : t("preview.opportunities.title")}</h4>
         <div className="mt-4 space-y-3">
           <div className="rounded-xl border border-[#e5e7eb] p-3">
-            <p className="text-sm font-bold text-[#111827]">{id === "requests" ? "Gerardo Solís" : t("preview.opportunities.project")}</p>
+            <p className="text-sm font-bold text-[#162543]">{id === "requests" ? "Gerardo Solís" : t("preview.opportunities.project")}</p>
             <p className="mt-1 text-xs text-[#6b7280]">{id === "requests" ? t("preview.requests.body") : t("preview.opportunities.body")}</p>
           </div>
           <div className="rounded-xl bg-[#009FD9] px-3 py-2 text-center text-sm font-bold text-white">{id === "requests" ? t("preview.requests.cta") : t("preview.opportunities.cta")}</div>
@@ -567,7 +567,7 @@ function GuidePreview({ id, t }: { id: string; t: ReturnType<typeof useTranslati
         <img src="/logo-mark.png" alt="" className="h-16 w-16 rounded-xl object-contain ring-1 ring-[#eef2f6]" />
         <div className="min-w-0">
           <div className="flex items-center gap-2">
-            <p className="truncate text-lg font-bold text-[#111827]">ContrataCR</p>
+            <p className="truncate text-lg font-bold text-[#162543]">ContrataCR</p>
             <Badge variant="verified">{t("exampleProfile.verified")}</Badge>
           </div>
           <p className="text-sm text-[#526277]">Isaac Alberto Sanchez Monge</p>
@@ -1993,7 +1993,7 @@ export default function DashboardPage() {
               type="button"
               onClick={closeOpportunityWelcome}
               aria-label={t("opportunityWelcome.close")}
-              className="absolute right-4 top-4 inline-flex h-9 w-9 items-center justify-center rounded-full text-[#9ca3af] transition-colors hover:bg-[#f3f4f6] hover:text-[#374151]"
+              className="absolute right-4 top-4 inline-flex h-9 w-9 items-center justify-center rounded-full text-[#68778d] transition-colors hover:bg-[#f3f4f6] hover:text-[#374151]"
             >
               <X className="h-5 w-5" />
             </button>
@@ -2001,7 +2001,7 @@ export default function DashboardPage() {
             <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-[#EBF5FB] text-[#009FD9] ring-1 ring-inset ring-[#009FD9]/15">
               <Handshake className="h-7 w-7" />
             </div>
-            <h2 id="opportunity-welcome-title" className="mx-auto max-w-[22rem] text-xl font-bold leading-tight text-[#111827] sm:text-[22px]">
+            <h2 id="opportunity-welcome-title" className="mx-auto max-w-[22rem] text-xl font-bold leading-tight text-[#162543] sm:text-[22px]">
               {t("opportunityWelcome.title", { count: opportunityWelcomeCount })}
             </h2>
             <p id="opportunity-welcome-body" className="mx-auto mt-3 max-w-sm text-sm leading-relaxed text-[#6b7280]">
@@ -2227,7 +2227,7 @@ export default function DashboardPage() {
                 <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-red-50 text-red-500">
                   <AlertCircle className="h-7 w-7" />
                 </div>
-                <h2 className="text-xl font-bold text-[#111827] mb-2">
+                <h2 className="text-xl font-bold text-[#162543] mb-2">
                   {locale === "en" ? "We couldn't load your panel" : "No pudimos cargar tu panel"}
                 </h2>
                 <p className="text-sm text-[#6b7280] max-w-md mb-6 leading-relaxed">
@@ -2247,7 +2247,7 @@ export default function DashboardPage() {
                 <div className="h-16 w-16 rounded-full bg-[#EBF5FB] ring-1 ring-inset ring-[#009FD9]/20 flex items-center justify-center mb-5">
                   <Sparkles className="h-8 w-8 text-[#009FD9]" />
                 </div>
-                <h2 className="text-xl font-bold text-[#111827] mb-2">{t("offerGateTitle")}</h2>
+                <h2 className="text-xl font-bold text-[#162543] mb-2">{t("offerGateTitle")}</h2>
                 <p className="text-sm text-[#6b7280] max-w-md mb-6 leading-relaxed">{t("offerGateBody")}</p>
                 <Button onClick={() => router.push("/registro/profesional")}>
                   {t("offerGateCta")} <ArrowRight className="h-4 w-4" />

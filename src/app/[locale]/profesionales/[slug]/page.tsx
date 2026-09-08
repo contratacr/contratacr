@@ -389,7 +389,7 @@ export default function ProfilePage() {
           <section className="mx-auto flex min-h-[calc(100dvh-64px)] max-w-3xl flex-col items-center justify-center px-6 py-14 text-center sm:px-8 sm:py-20">
             <BrandIconBadge icon={SearchX} size={76} />
             <div className="mt-7 space-y-4">
-              <h1 className="text-[28px] font-bold leading-tight text-[#111827] sm:text-3xl">{t("notFoundTitle")}</h1>
+              <h1 className="text-[28px] font-bold leading-tight text-[#162543] sm:text-3xl">{t("notFoundTitle")}</h1>
               <p className="mx-auto max-w-md text-base leading-7 text-[#6b7280] sm:text-[17px]">
                 {t("notFoundDesc")}
               </p>
@@ -613,7 +613,7 @@ export default function ProfilePage() {
                 </ImagePreviewDialog>
                 <div className="min-w-0">
                   <div className="min-w-0">
-                    <h1 data-testid="professional-profile-name" className="min-w-0 text-[17px] font-bold leading-[1.15] text-[#111827] [overflow-wrap:anywhere] sm:text-2xl sm:leading-tight sm:[overflow-wrap:normal]">
+                    <h1 data-testid="professional-profile-name" className="min-w-0 text-[17px] font-bold leading-[1.15] text-[#162543] [overflow-wrap:anywhere] sm:text-2xl sm:leading-tight sm:[overflow-wrap:normal]">
                       {displayName.primaryDesktop}
                       {professional.verificationStatus === "verified" && (
                         <VerifiedSeal
@@ -644,7 +644,7 @@ export default function ProfilePage() {
                 <button type="button" onClick={() => setActiveTab("resenas")} className="flex min-w-0 flex-col items-center justify-start text-center">
                   <div className="flex items-center justify-center gap-1">
                     <Star className="h-4 w-4 fill-[#ff9b32] text-[#ff9b32]" />
-                    <span className="text-[15px] font-bold text-[#111827]">{professional.ratingAvg.toFixed(1)}</span>
+                    <span className="text-[15px] font-bold text-[#162543]">{professional.ratingAvg.toFixed(1)}</span>
                   </div>
                   <p className="mt-0.5 whitespace-nowrap text-[10px] font-medium leading-none text-[#8b95a5] sm:text-[11px]">{t("reviewCountLabel", { count: professional.reviewCount })}</p>
                 </button>
@@ -652,7 +652,7 @@ export default function ProfilePage() {
                   <div className="flex min-w-0 flex-col items-center justify-start text-center">
                     <div className="flex items-center justify-center gap-1">
                       <Briefcase className="h-4 w-4 text-[#009FD9]" />
-                      <span className="text-[15px] font-bold text-[#111827]">{expYears}</span>
+                      <span className="text-[15px] font-bold text-[#162543]">{expYears}</span>
                     </div>
                     <p className="mt-0.5 whitespace-nowrap text-[10px] font-medium leading-none tracking-[-0.02em] text-[#8b95a5] sm:text-[11px] sm:tracking-normal">{t("statYears")}</p>
                   </div>
@@ -664,7 +664,7 @@ export default function ProfilePage() {
                   <button type="button" onClick={() => setActiveTab("casos")} className="flex min-w-0 flex-col items-center justify-start text-center">
                     <div className="flex items-center justify-center gap-1">
                       <Award className="h-4 w-4 text-[#009FD9]" />
-                      <span className="text-[15px] font-bold text-[#111827]">{casosCount}</span>
+                      <span className="text-[15px] font-bold text-[#162543]">{casosCount}</span>
                     </div>
                     <p className="mt-0.5 whitespace-nowrap text-[10px] font-medium leading-none text-[#8b95a5] sm:text-[11px]">{t("statCases", { count: casosCount })}</p>
                   </button>
@@ -745,8 +745,8 @@ export default function ProfilePage() {
                           return (
                             <p className="leading-tight">
                               <span className="text-xl font-bold text-[#009FD9]">{amount}</span>
-                              {unit && <span className="text-sm font-medium text-[#9ca3af]"> {unit}</span>}
-                              {taxSuffix && <span className="block text-[10px] font-semibold tracking-wide text-[#9ca3af]">{taxSuffix}</span>}
+                              {unit && <span className="text-sm font-semibold text-[#52627a]"> {unit}</span>}
+                              {taxSuffix && <span className="text-[11px] font-semibold tracking-wide text-[#68778d]"> · {taxSuffix}</span>}
                             </p>
                           );
                         })()}
@@ -831,10 +831,10 @@ export default function ProfilePage() {
                       .filter((c, i, a) => a.indexOf(c) === i);
                     return (
                       <div>
-                        <h2 className="text-lg font-semibold text-[#111827] mb-1">{t("servicesOffered")}</h2>
-                        <p className="text-sm text-[#6b7280] mb-5">{t("servicesOfferedSub")}</p>
+                        <h2 className="text-lg font-semibold text-[#162543] mb-1">{t("servicesOffered")}</h2>
+                        <p className="text-sm text-[#68778d] mb-5">{t("servicesOfferedSub")}</p>
                         {cats.length === 0 ? (
-                          <p className="text-sm text-[#9ca3af] py-4 text-center">{t("noServices")}</p>
+                          <p className="text-sm text-[#68778d] py-4 text-center">{t("noServices")}</p>
                         ) : (
                           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                             {cats.map((cat) => {
@@ -887,7 +887,7 @@ export default function ProfilePage() {
                                       <p className="shrink-0 text-right leading-tight">
                                         <span className="block text-sm font-bold text-[#009FD9]">{priceParts.amount}</span>
                                         {priceParts.unit && <span className="block text-[11px] font-semibold text-[#6b7280]">{priceParts.unit}</span>}
-                                        {priceParts.taxSuffix && <span className="block text-[10px] font-semibold tracking-wide text-[#9ca3af]">{priceParts.taxSuffix}</span>}
+                                        {priceParts.taxSuffix && <span className="block text-[10px] font-semibold tracking-wide text-[#68778d]">{priceParts.taxSuffix}</span>}
                                       </p>
                                     </div>
                                     <div className="mt-2.5">
@@ -909,17 +909,17 @@ export default function ProfilePage() {
                                         </>
                                       ) : (
                                         <>
-                                          <p className="text-sm leading-relaxed text-[#9ca3af]">{t("askForDetails")}</p>
+                                          <p className="text-sm leading-relaxed text-[#68778d]">{t("askForDetails")}</p>
                                         </>
                                       )}
                                     </div>
                                     <div className="mt-3 space-y-2 text-sm">
-                                      <p className="hidden items-center gap-2 text-[#111827]">
+                                      <p className="hidden items-center gap-2 text-[#162543]">
                                         <Banknote className="h-4 w-4 shrink-0 text-[#009FD9]" />
                                         <span className="font-bold [overflow-wrap:anywhere]">
                                           {priceParts.amount}
                                           {priceParts.unit && <span className="font-semibold text-[#6b7280]"> {priceParts.unit}</span>}
-                                          {priceParts.taxSuffix && <span className="ml-1 text-[10px] font-semibold tracking-wide text-[#9ca3af]">{priceParts.taxSuffix}</span>}
+                                          {priceParts.taxSuffix && <span className="ml-1 text-[10px] font-semibold tracking-wide text-[#68778d]">{priceParts.taxSuffix}</span>}
                                         </span>
                                       </p>
                                       {credentialNumber && (
@@ -951,10 +951,10 @@ export default function ProfilePage() {
                   {activeTab === "ofertas" && (
                     <section className="space-y-5">
                       <div>
-                        <h2 className="text-lg font-semibold text-[#111827]">
+                        <h2 className="text-lg font-semibold text-[#162543]">
                           {locale === "en" ? "Offers" : "Ofertas"}
                         </h2>
-                        <p className="mt-1 text-sm text-[#6b7280]">
+                        <p className="mt-1 text-sm text-[#68778d]">
                           {locale === "en"
                             ? "Active promotions from this professional."
                             : "Promociones activas de este profesional."}
@@ -1003,10 +1003,10 @@ export default function ProfilePage() {
                   {activeTab === "empleos" && (
                     <section className="space-y-5">
                       <div>
-                        <h2 className="text-lg font-semibold text-[#111827]">
+                        <h2 className="text-lg font-semibold text-[#162543]">
                           {locale === "en" ? "Jobs" : "Empleos"}
                         </h2>
-                        <p className="mt-1 text-sm text-[#6b7280]">
+                        <p className="mt-1 text-sm text-[#68778d]">
                           {locale === "en"
                             ? "Open opportunities published by this professional."
                             : "Oportunidades abiertas publicadas por este profesional."}
@@ -1047,8 +1047,8 @@ export default function ProfilePage() {
                   {activeTab === "casos" && (
                     <div className="flex flex-col gap-6">
                       <div>
-                        <h2 className="text-lg font-semibold text-[#111827] mb-1">{t("tabs.casos")}</h2>
-                        <p className="text-sm text-[#6b7280]">{t("casosSubtitle", { name: professional.fullName.split(" ")[0] })}</p>
+                        <h2 className="text-lg font-semibold text-[#162543] mb-1">{t("tabs.casos")}</h2>
+                        <p className="text-sm text-[#68778d]">{t("casosSubtitle", { name: professional.fullName.split(" ")[0] })}</p>
                       </div>
                       {hasCasos ? (
                         (() => {
@@ -1084,7 +1084,7 @@ export default function ProfilePage() {
                           return <CaseShowcase cases={caseList} professions={profsOrder} initialCaseId={searchParamFromUrl("case")} />;
                         })()
                       ) : (
-                        <p className="text-sm text-[#9ca3af]">{t("noCasos")}</p>
+                        <p className="text-sm text-[#68778d]">{t("noCasos")}</p>
                       )}
                     </div>
                   )}
@@ -1092,8 +1092,8 @@ export default function ProfilePage() {
                   {/* ── TAB: Formación (texto, sin imágenes) ── */}
                   {activeTab === "certificaciones" && hasCerts && (
                     <div>
-                      <h2 className="text-lg font-semibold text-[#111827] mb-1">{t("tabs.certificaciones")}</h2>
-                      <p className="text-sm text-[#9ca3af] mb-4">{t("certsSubtitle")}</p>
+                      <h2 className="text-lg font-semibold text-[#162543] mb-1">{t("tabs.certificaciones")}</h2>
+                      <p className="text-sm text-[#68778d] mb-4">{t("certsSubtitle")}</p>
                       <div className="flex flex-col gap-5">
                         {certGroups.map(([prof, certs]) => (
                           <div key={prof || "general"}>
@@ -1107,9 +1107,9 @@ export default function ProfilePage() {
                                     <Award className="h-4 w-4 text-[#009FD9]" />
                                   </div>
                                   <div className="min-w-0">
-                                    <p className="text-sm font-semibold text-[#111827] break-words">{c.name}</p>
+                                    <p className="text-sm font-semibold text-[#162543] break-words">{c.name}</p>
                                     {(c.institution || c.year) && (
-                                      <p className="text-xs text-[#6b7280] mt-0.5 break-words">
+                                      <p className="text-xs text-[#52627a] mt-0.5 break-words">
                                         {[c.institution, c.year].filter(Boolean).join(" · ")}
                                       </p>
                                     )}
@@ -1198,8 +1198,8 @@ export default function ProfilePage() {
                       <div className="flex flex-col gap-6">
                         {professional.bio && (
                           <section>
-                            <h2 className="text-lg font-semibold text-[#111827]">{t("tabs.sobre")}</h2>
-                            <p className="mt-2 whitespace-pre-line text-[15px] leading-7 text-[#374151] [overflow-wrap:anywhere]">
+                            <h2 className="text-lg font-semibold text-[#162543]">{t("tabs.sobre")}</h2>
+                            <p className="mt-2 whitespace-pre-line text-[15px] leading-7 text-[#3f4c63] [overflow-wrap:anywhere]">
                               {professional.bio}
                             </p>
                           </section>
@@ -1211,8 +1211,8 @@ export default function ProfilePage() {
                                 <div key={f.key} className="flex items-start gap-3.5 py-4">
                                   <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center text-[#009FD9]">{f.icon}</span>
                                   <div className="min-w-0 flex-1">
-                                    <p className="text-[11px] font-semibold uppercase tracking-wide text-[#9ca3af]">{f.label}</p>
-                                    <div className="mt-1 text-[15px] font-medium text-[#374151] [overflow-wrap:anywhere]">{f.value}</div>
+                                    <p className="text-[11px] font-semibold uppercase tracking-wide text-[#68778d]">{f.label}</p>
+                                    <div className="mt-1 text-[15px] font-semibold text-[#162543] [overflow-wrap:anywhere]">{f.value}</div>
                                     {f.caption && <div className="mt-1 text-xs leading-relaxed text-[#6b7280] [overflow-wrap:anywhere]">{f.caption}</div>}
                                   </div>
                                 </div>

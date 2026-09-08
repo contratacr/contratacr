@@ -509,7 +509,7 @@ export default function LoginPage() {
             {t("back")}
           </button>
           <div className="text-center mb-8">
-            <h1 className="text-2xl font-bold text-[#111827]">{t("title")}</h1>
+            <h1 className="text-2xl font-bold text-[#162543]">{t("title")}</h1>
             <p className="text-[#6b7280] text-sm mt-1">{t("subtitle")}</p>
           </div>
 
@@ -566,7 +566,7 @@ export default function LoginPage() {
               <div className="w-full border-t border-[#e5e7eb]" />
             </div>
             <div className="relative flex justify-center">
-              <span className="bg-white px-4 text-xs text-[#9ca3af]">{t("or")}</span>
+              <span className="bg-white px-4 text-xs text-[#68778d]">{t("or")}</span>
             </div>
           </div>
 

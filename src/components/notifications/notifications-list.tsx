@@ -445,7 +445,7 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
             className="app-centered-modal relative z-10 max-h-[calc(var(--app-visual-viewport-height)-2rem)] w-full max-w-sm overflow-y-auto overscroll-contain rounded-2xl bg-white p-6 text-center shadow-2xl"
           >
             <BrandIconBadge icon={AlertTriangle} tone="danger" size={56} className="mx-auto mb-4" />
-            <h3 id="delete-notifications-title" className="mb-1.5 text-lg font-bold text-[#111827]">{t("deleteAllConfirm")}</h3>
+            <h3 id="delete-notifications-title" className="mb-1.5 text-lg font-bold text-[#162543]">{t("deleteAllConfirm")}</h3>
             <p id="delete-notifications-description" className="mb-5 text-sm text-[#6b7280]">{t("deleteAllBody")}</p>
             <div className="flex gap-3">
               <button onClick={() => setConfirmDelete(false)} className="flex-1 rounded-xl border border-[#e5e7eb] px-4 py-2.5 text-sm font-semibold text-[#374151] hover:bg-[#f9fafb] transition-colors">{t("cancel")}</button>
@@ -592,7 +592,7 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
                         n.read ? "font-medium text-[#374151]" : "font-semibold text-[#162543]",
                       )}>
                         {message || notificationTitle(n)}
-                        <span className="ml-1.5 whitespace-nowrap text-xs font-medium text-[#9ca3af]">· {notificationTime(n)}</span>
+                        <span className="ml-1.5 whitespace-nowrap text-xs font-medium text-[#68778d]">· {notificationTime(n)}</span>
                       </p>
                       {canExpand && (
                         <button

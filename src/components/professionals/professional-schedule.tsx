@@ -952,7 +952,7 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
           disabled={!canPrev}
           onClick={(e) => { e.stopPropagation(); setOffset(() => Math.max(0, effOffset - COLS)); }}
           aria-label={t("prevDays")}
-          className="flex w-4 shrink-0 self-center items-center justify-center rounded text-[#9ca3af] enabled:hover:text-[#009FD9] disabled:opacity-25"
+          className="flex w-4 shrink-0 self-center items-center justify-center rounded text-[#68778d] enabled:hover:text-[#009FD9] disabled:opacity-25"
         >
           <ChevronLeft className="h-[15px] w-[15px]" />
         </button>
@@ -1008,7 +1008,7 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
           disabled={!canNext}
           onClick={(e) => { e.stopPropagation(); setOffset(() => Math.min(maxOffset, effOffset + COLS)); }}
           aria-label={t("nextDays")}
-          className="flex w-4 shrink-0 self-center items-center justify-center rounded text-[#9ca3af] enabled:hover:text-[#009FD9] disabled:opacity-25"
+          className="flex w-4 shrink-0 self-center items-center justify-center rounded text-[#68778d] enabled:hover:text-[#009FD9] disabled:opacity-25"
         >
           <ChevronRight className="h-[15px] w-[15px]" />
         </button>

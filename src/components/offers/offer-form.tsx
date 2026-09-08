@@ -387,7 +387,7 @@ export function OfferForm({ professionalId, serviceOptions, backHref = "/ofertas
                   onClick={() => { setServiceInput(""); setServiceSuggestionsOpen((open) => !open); }}
                   className={`flex h-11 w-full items-center justify-between gap-3 rounded-xl border bg-white px-3 text-left text-sm font-medium outline-none transition-colors ${serviceSuggestionsOpen ? "border-[#009fd9]" : "border-[#d7e1ea] hover:border-[#b8cad9]"}`}
                 >
-                  <span className={selectedServiceOption ? "truncate text-[#111827]" : "truncate text-[#9ca3af]"}>
+                  <span className={selectedServiceOption ? "truncate text-[#162543]" : "truncate text-[#68778d]"}>
                     {selectedServiceOption?.label ?? copy.selectService}
                   </span>
                   <ChevronDown className={`h-4 w-4 shrink-0 text-[#7b8ba1] transition-transform ${serviceSuggestionsOpen ? "rotate-180" : ""}`} aria-hidden="true" />
@@ -424,7 +424,7 @@ export function OfferForm({ professionalId, serviceOptions, backHref = "/ofertas
                         }}
                         placeholder={copy.servicePlaceholder}
                         autoComplete="off"
-                        className="h-10 w-full rounded-lg bg-[#f5f8fa] pl-10 pr-3 text-sm font-medium text-[#111827] outline-none placeholder:text-[#9ca3af] focus:bg-white focus:ring-1 focus:ring-[#009fd9]"
+                        className="h-10 w-full rounded-lg bg-[#f5f8fa] pl-10 pr-3 text-sm font-medium text-[#162543] outline-none placeholder:text-[#68778d] focus:bg-white focus:ring-1 focus:ring-[#009fd9]"
                       />
                     </div>
                     {serviceInput.trim().length >= 1 && (
@@ -489,7 +489,7 @@ export function OfferForm({ professionalId, serviceOptions, backHref = "/ofertas
           <div className="my-6 border-t border-[#e6edf3] pt-6"><h2 className="font-bold">{copy.priceAndValidity}</h2></div>
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="text-sm font-medium text-[#374151]"><RequiredLabel>{copy.currentPrice}</RequiredLabel><input name="price_now" inputMode="numeric" maxLength={String(MAX_MONEY_AMOUNT).length} defaultValue={initialOffer?.price_now ?? ""} placeholder="25000" className={FIELD_CLASS} /><FieldError>{fieldErrors.price}</FieldError></label>
-            <label className="text-sm font-medium text-[#374151]">{copy.previousPrice} <span className="font-normal text-[#9ca3af]">({copy.optional})</span><input name="price_before" inputMode="numeric" maxLength={String(MAX_MONEY_AMOUNT).length} defaultValue={initialOffer?.price_before ?? ""} placeholder="35000" className={FIELD_CLASS} /><FieldError>{fieldErrors.priceBefore}</FieldError></label>
+            <label className="text-sm font-medium text-[#374151]">{copy.previousPrice} <span className="font-normal text-[#68778d]">({copy.optional})</span><input name="price_before" inputMode="numeric" maxLength={String(MAX_MONEY_AMOUNT).length} defaultValue={initialOffer?.price_before ?? ""} placeholder="35000" className={FIELD_CLASS} /><FieldError>{fieldErrors.priceBefore}</FieldError></label>
             {/* Casi toda oferta es en colones, sin unidad especial ni cupo: esos tres
                 campos se pliegan para que el formulario se lea en una pasada. */}
             <details className="rounded-lg border border-[#e6edf3] px-4 py-3 sm:col-span-2" open={Boolean(initialOffer && (initialOffer.currency === "USD" || initialOffer.quantity_available))}>
@@ -497,16 +497,16 @@ export function OfferForm({ professionalId, serviceOptions, backHref = "/ofertas
               <div className="mt-4 grid gap-4 sm:grid-cols-2">
                 <SelectMenu label={copy.currency} value={currency} onChange={setCurrency} options={[{ value: "CRC", label: copy.colones }, { value: "USD", label: copy.dollars }]} />
                 <SelectMenu label={copy.unit} value={priceUnit} onChange={setPriceUnit} options={Object.keys(OFFER_PRICE_UNITS).map((value) => ({ value, label: offerPriceUnitLabel(value as keyof typeof OFFER_PRICE_UNITS, locale) }))} />
-                <label className="text-sm font-medium text-[#374151]">{copy.quantity} <span className="font-normal text-[#9ca3af]">({copy.optional})</span><input name="quantity_available" inputMode="numeric" maxLength={7} defaultValue={initialOffer?.quantity_available ?? ""} placeholder="10" className={FIELD_CLASS} /><FieldError>{fieldErrors.quantity}</FieldError></label>
+                <label className="text-sm font-medium text-[#374151]">{copy.quantity} <span className="font-normal text-[#68778d]">({copy.optional})</span><input name="quantity_available" inputMode="numeric" maxLength={7} defaultValue={initialOffer?.quantity_available ?? ""} placeholder="10" className={FIELD_CLASS} /><FieldError>{fieldErrors.quantity}</FieldError></label>
               </div>
             </details>
             <div className="text-sm font-semibold">
-              {copy.availableUntil} <span className="font-normal text-[#9ca3af]">({copy.optional})</span>
+              {copy.availableUntil} <span className="font-normal text-[#68778d]">({copy.optional})</span>
               <div className="mt-1.5"><FutureDatePicker value={validUntil} onChange={setValidUntil} /></div>
               <p className="mt-1.5 text-xs font-normal text-[#68778d]">{copy.availabilityHelp}</p>
             </div>
             <div className="sm:col-span-2">
-              <span className="text-sm font-semibold">{copy.location} <span className="font-normal text-[#9ca3af]">({copy.optional})</span></span>
+              <span className="text-sm font-semibold">{copy.location} <span className="font-normal text-[#68778d]">({copy.optional})</span></span>
               <input type="hidden" name="location_label_fallback" value={initialOffer?.location_label ?? ""} />
               <div className="mt-1.5 grid gap-3 sm:grid-cols-2">
                 <SelectMenu

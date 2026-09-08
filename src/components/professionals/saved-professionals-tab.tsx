@@ -78,11 +78,11 @@ function SavedProCard({ pro, onUnsave }: { pro: SavedPro; onUnsave: (id: string)
             <>
               <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
               <span className="text-xs font-medium text-[#374151]">{pro.ratingAvg.toFixed(1)}</span>
-              <span className="text-xs text-[#9ca3af]">({pro.reviewCount})</span>
+              <span className="text-xs text-[#68778d]">({pro.reviewCount})</span>
             </>
           ) : null}
           {pro.hourlyRate && (
-            <span className="ml-2 text-xs text-[#9ca3af]">
+            <span className="ml-2 text-xs text-[#68778d]">
               · {formatServicePrice(pro.hourlyRate, "por_hora", locale)}
             </span>
           )}

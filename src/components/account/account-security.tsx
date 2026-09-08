@@ -32,9 +32,9 @@ function OAuthGuide({
   return (
     <div>
       <div className="flex items-start gap-2.5">
-        <Info className="h-4 w-4 text-[#9ca3af] shrink-0 mt-0.5" />
+        <Info className="h-4 w-4 text-[#68778d] shrink-0 mt-0.5" />
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold text-[#111827]">{title}</p>
+          <p className="text-sm font-semibold text-[#162543]">{title}</p>
           <p className="text-xs leading-relaxed text-[#6b7280] mt-1 break-words">{intro}</p>
           {steps && steps.length > 0 && (
             <ol className="mt-2.5 space-y-2">
@@ -70,7 +70,7 @@ function OAuthGuide({
  * confirmation + friendly feedback).
  */
 const inputClass =
-  "w-full h-10 rounded-xl border border-[#e5e7eb] bg-white px-4 text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all";
+  "w-full h-10 rounded-xl border border-[#e5e7eb] bg-white px-4 text-sm text-[#162543] placeholder:text-[#68778d] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all";
 const securitySummaryClass = "grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3";
 const securityActionClass = "whitespace-nowrap text-sm font-semibold text-[#009FD9] hover:underline";
 
@@ -237,7 +237,7 @@ export function AccountSecuritySection({ showHeading = true }: { showHeading?: b
       {showHeading && (
         <div className="flex items-center gap-2">
           <ShieldCheck className="h-5 w-5 text-[#009FD9]" />
-          <h2 className="text-lg font-semibold text-[#111827]">{t("heading")}</h2>
+          <h2 className="text-lg font-semibold text-[#162543]">{t("heading")}</h2>
         </div>
       )}
 
@@ -272,7 +272,7 @@ export function AccountSecuritySection({ showHeading = true }: { showHeading?: b
         )}
         {isOAuthAccount ? (
           <div className="flex flex-col gap-3">
-            <span className="text-sm text-[#111827] font-medium break-words">{user?.email}</span>
+            <span className="text-sm text-[#162543] font-medium break-words">{user?.email}</span>
             <OAuthGuide
               title={t("emailProviderTitle", { provider: providerLabel })}
               intro={t("emailProviderIntro", { provider: providerLabel })}
@@ -302,7 +302,7 @@ export function AccountSecuritySection({ showHeading = true }: { showHeading?: b
                 type="button"
                 onClick={() => emailResend.resend(async () => { await performEmailChange(); })}
                 disabled={emailResend.cooldown > 0 || emailResend.resending}
-                className="font-semibold text-[#009FD9] hover:underline disabled:text-[#9ca3af] disabled:no-underline disabled:cursor-not-allowed"
+                className="font-semibold text-[#009FD9] hover:underline disabled:text-[#68778d] disabled:no-underline disabled:cursor-not-allowed"
               >
                 {emailResend.cooldown > 0 ? tc("resendIn", { seconds: emailResend.cooldown }) : emailResend.resending ? tc("resending") : tc("resend")}
               </button>
@@ -322,11 +322,11 @@ export function AccountSecuritySection({ showHeading = true }: { showHeading?: b
               <Button size="sm" onClick={sendEmailChange} disabled={!newEmail.trim()}>{t("sendConfirmation")}</Button>
               <Button size="sm" variant="outline" onClick={() => { setEmailMode(false); setNewEmail(""); setEmailError(null); }}>{t("cancel")}</Button>
             </div>
-            <p className="text-xs text-[#9ca3af]">{t("emailConfirmHelp")}</p>
+            <p className="text-xs text-[#68778d]">{t("emailConfirmHelp")}</p>
           </div>
         ) : (
           <div className={securitySummaryClass}>
-            <span className="min-w-0 truncate text-sm font-medium text-[#111827]" title={user?.email ?? undefined}>{user?.email}</span>
+            <span className="min-w-0 truncate text-sm font-medium text-[#162543]" title={user?.email ?? undefined}>{user?.email}</span>
             <button onClick={() => setEmailMode(true)} className={securityActionClass}>
               {t("changeEmail")}
             </button>
@@ -371,7 +371,7 @@ export function AccountSecuritySection({ showHeading = true }: { showHeading?: b
                 onChange={(e) => setNewPw(e.target.value)}
               />
               {newPw && (
-                <button type="button" onClick={() => setShowPw((s) => !s)} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#111827] hover:text-[#374151]">
+                <button type="button" onClick={() => setShowPw((s) => !s)} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#162543] hover:text-[#374151]">
                   {showPw ? <Eye className="h-5 w-5" /> : <EyeOff className="h-5 w-5" />}
                 </button>
               )}
@@ -402,7 +402,7 @@ export function AccountSecuritySection({ showHeading = true }: { showHeading?: b
                     type="button"
                     onClick={() => pwResend.resend(performReset)}
                     disabled={pwResend.cooldown > 0 || pwResend.resending}
-                    className="font-semibold text-[#009FD9] hover:underline disabled:text-[#9ca3af] disabled:no-underline disabled:cursor-not-allowed"
+                    className="font-semibold text-[#009FD9] hover:underline disabled:text-[#68778d] disabled:no-underline disabled:cursor-not-allowed"
                   >
                     {pwResend.cooldown > 0 ? tc("resendIn", { seconds: pwResend.cooldown }) : pwResend.resending ? tc("resending") : tc("resend")}
                   </button>
@@ -416,7 +416,7 @@ export function AccountSecuritySection({ showHeading = true }: { showHeading?: b
           </div>
         ) : (
           <div className={securitySummaryClass}>
-            <span className="text-sm text-[#9ca3af]">********</span>
+            <span className="text-sm text-[#68778d]">********</span>
             <button onClick={() => setPwMode(true)} className={securityActionClass}>
               {t("changePassword")}
             </button>

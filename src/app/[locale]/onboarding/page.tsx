@@ -192,7 +192,7 @@ export default function OnboardingPage() {
             )}
             <p className="text-xs text-gray-400">{user.email}</p>
 
-            <h1 className="text-3xl font-bold text-[#111827] mt-6 mb-2 text-center">
+            <h1 className="text-3xl font-bold text-[#162543] mt-6 mb-2 text-center">
               {t("title")}
             </h1>
             <p className="text-[#6b7280] text-base text-center">
@@ -216,7 +216,7 @@ export default function OnboardingPage() {
                 )}
               </div>
               <div>
-                <h2 className="text-2xl font-bold text-[#111827]">{tc("clientRole")}</h2>
+                <h2 className="text-2xl font-bold text-[#162543]">{tc("clientRole")}</h2>
                 <p className="text-sm font-semibold text-[#009FD9]">{tc("clientTitle")}</p>
               </div>
               <span className="flex items-center gap-1.5 text-sm font-semibold text-[#009FD9] opacity-0 group-hover:opacity-100 transition-opacity">
@@ -238,7 +238,7 @@ export default function OnboardingPage() {
                 )}
               </div>
               <div>
-                <h2 className="text-2xl font-bold text-[#111827]">{tc("proRole")}</h2>
+                <h2 className="text-2xl font-bold text-[#162543]">{tc("proRole")}</h2>
                 <p className="text-sm font-semibold text-[#009FD9]">{tc("proTitle")}</p>
               </div>
               <span className="flex items-center gap-1.5 text-sm font-semibold text-[#009FD9] opacity-0 group-hover:opacity-100 transition-opacity">

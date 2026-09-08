@@ -101,7 +101,7 @@ export function SubscriptionPanel() {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h3 className="text-lg font-bold text-[#111827]">Mantén tu perfil profesional activo</h3>
+        <h3 className="text-lg font-bold text-[#162543]">Mantén tu perfil profesional activo</h3>
         <p className="mt-0.5 text-sm text-[#6b7280]">La suscripción mantiene tu perfil activo para aparecer en las búsquedas y recibir clientes.</p>
       </div>
 
@@ -122,12 +122,12 @@ export function SubscriptionPanel() {
                 </span>
               )}
               <div className="flex items-center justify-between">
-                <span className="text-sm font-semibold text-[#111827]">{annual ? "Anual" : "Mensual"}</span>
+                <span className="text-sm font-semibold text-[#162543]">{annual ? "Anual" : "Mensual"}</span>
                 <span className={`flex h-5 w-5 items-center justify-center rounded-full border-2 ${selected ? "border-[#009FD9] bg-[#009FD9]" : "border-[#d1d5db]"}`}>
                   {selected && <Check className="h-3 w-3 text-white" />}
                 </span>
               </div>
-              <p className="mt-1 text-2xl font-extrabold text-[#111827]">
+              <p className="mt-1 text-2xl font-extrabold text-[#162543]">
                 {formatColones(PRICES[c])}
                 <span className="text-xs font-medium text-[#6b7280]">{annual ? "/año" : "/mes"}</span>
               </p>
@@ -148,7 +148,7 @@ export function SubscriptionPanel() {
       </ul>
 
       <div className="flex flex-col gap-3">
-        <p className="text-sm font-semibold text-[#111827]">Pago automático</p>
+        <p className="text-sm font-semibold text-[#162543]">Pago automático</p>
         <button
           type="button"
           onClick={payCard}
@@ -157,7 +157,7 @@ export function SubscriptionPanel() {
           <span className="flex items-center gap-2 text-sm font-semibold"><CreditCard className="h-5 w-5" /> Pagar con tarjeta</span>
           <span className="text-xs opacity-90">{formatColones(PRICES[cycle])}{cycle === "annual" ? "/año" : "/mes"}</span>
         </button>
-        {!gatewayReady && <p className="-mt-1 text-[11px] text-[#9ca3af]">Cobro automático y recurrente. Disponible cuando se conecte la pasarela de pago.</p>}
+        {!gatewayReady && <p className="-mt-1 text-[11px] text-[#68778d]">Cobro automático y recurrente. Disponible cuando se conecte la pasarela de pago.</p>}
         {cardMsg && <p className="text-xs text-[#b45309]">{cardMsg}</p>}
       </div>
 
@@ -171,14 +171,14 @@ function PaymentHistory({ payments }: { payments: Payment[] }) {
   if (real.length === 0) return null;
   return (
     <div>
-      <p className="mb-2 text-sm font-semibold text-[#111827]">Historial de pagos</p>
+      <p className="mb-2 text-sm font-semibold text-[#162543]">Historial de pagos</p>
       <ul className="divide-y divide-[#f3f4f6] rounded-xl border border-[#e5e7eb]">
         {real.map((p) => (
           <li key={p.id} className="flex items-center justify-between gap-3 px-4 py-3 text-sm">
             <span className="min-w-0 text-[#374151]">
               {fmtDate(p.paid_at)} · {p.method === "card" ? "Tarjeta" : "Cortesia"}{p.billing_cycle ? ` · ${p.billing_cycle === "annual" ? "anual" : "mensual"}` : ""}
             </span>
-            <span className="shrink-0 font-semibold text-[#111827]">{formatColones(p.amount)}</span>
+            <span className="shrink-0 font-semibold text-[#162543]">{formatColones(p.amount)}</span>
           </li>
         ))}
       </ul>

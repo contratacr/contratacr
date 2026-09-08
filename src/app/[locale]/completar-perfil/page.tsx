@@ -157,7 +157,7 @@ export default function CompleteProfilePage() {
   }
 
   const inputClass =
-    "w-full h-11 rounded-xl border border-[#e5e7eb] bg-white pl-10 pr-4 text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all";
+    "w-full h-11 rounded-xl border border-[#e5e7eb] bg-white pl-10 pr-4 text-sm text-[#162543] placeholder:text-[#68778d] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all";
 
   return (
     <div className="min-h-screen flex flex-col bg-[#f4f7fa]">
@@ -165,7 +165,7 @@ export default function CompleteProfilePage() {
 
       <main className="flex-1 flex flex-col items-center justify-center px-4 py-12">
         <div className="w-full max-w-md bg-white rounded-2xl border border-[#e5e7eb] shadow-sm p-8">
-          <h1 className="text-2xl font-bold text-[#111827] mb-1">{t("title")}</h1>
+          <h1 className="text-2xl font-bold text-[#162543] mb-1">{t("title")}</h1>
           <p className="text-sm text-[#6b7280] mb-6">
             {t("subtitle")}
           </p>
@@ -199,8 +199,8 @@ export default function CompleteProfilePage() {
                 )}
               </div>
               <div>
-                <p className="text-sm font-medium text-[#374151]">{t("photoLabel")} <span className="text-[#9ca3af] font-normal">{t("optional")}</span></p>
-                <p className="text-xs text-[#9ca3af]">{t("photoHelp")}</p>
+                <p className="text-sm font-medium text-[#374151]">{t("photoLabel")} <span className="text-[#68778d] font-normal">{t("optional")}</span></p>
+                <p className="text-xs text-[#68778d]">{t("photoHelp")}</p>
               </div>
               <input
                 ref={photoInputRef}
@@ -225,7 +225,7 @@ export default function CompleteProfilePage() {
                 />
               </div>
               {nameFromOAuth && (
-                <p className="text-xs text-[#9ca3af] mt-1">{t("nameOAuthHelp")}</p>
+                <p className="text-xs text-[#68778d] mt-1">{t("nameOAuthHelp")}</p>
               )}
             </div>
 

@@ -53,7 +53,7 @@ export function AdminLogin() {
   }
 
   const inputClass =
-    "w-full h-11 rounded-xl border border-[#e5e7eb] bg-white pl-10 pr-4 text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all";
+    "w-full h-11 rounded-xl border border-[#e5e7eb] bg-white pl-10 pr-4 text-sm text-[#162543] placeholder:text-[#68778d] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all";
 
   return (
     <main className="min-h-screen flex flex-col items-center justify-center bg-[#0f172a] px-4">
@@ -76,11 +76,11 @@ export function AdminLogin() {
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9ca3af] text-sm">@</span>
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#68778d] text-sm">@</span>
             <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Correo de administrador" className={inputClass} required />
           </div>
           <div className="relative">
-            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#9ca3af]" />
+            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#68778d]" />
             <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Contraseña" className={inputClass} required />
           </div>
           <button

@@ -389,7 +389,7 @@ export function PushTokenManager() {
           {/* La bolita roja del aviso: el dibujo dice "notificación" solo. */}
           <span className="absolute right-3 top-3 h-3 w-3 rounded-full border-2 border-white bg-[#ef4444]" aria-hidden />
         </div>
-        <h2 id="push-permission-title" className="mb-1 text-xl font-extrabold leading-tight tracking-[-0.03em] text-[#111827]">
+        <h2 id="push-permission-title" className="mb-1 text-xl font-extrabold leading-tight tracking-[-0.03em] text-[#162543]">
           No te pierdas nada
         </h2>
         <p className="mx-auto mb-5 max-w-[19rem] text-sm leading-relaxed text-[#64748b]">

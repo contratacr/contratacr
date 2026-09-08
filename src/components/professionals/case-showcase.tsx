@@ -152,7 +152,7 @@ export function CaseShowcase({
                   <p className="mt-2.5 flex flex-wrap items-baseline gap-x-1.5 text-[12px] [overflow-wrap:anywhere]">
                     {c.recipient && <span className="font-medium text-[#374151]">{c.recipient}</span>}
                     {c.recipient && c.date && <span className="text-[#d1d5db]">·</span>}
-                    {c.date && <span className="text-[#9ca3af]">{c.date}</span>}
+                    {c.date && <span className="text-[#68778d]">{c.date}</span>}
                   </p>
                 )}
                 </div>
@@ -250,7 +250,7 @@ export function CaseShowcase({
                     <p className="flex flex-wrap items-baseline gap-x-1.5 text-[13px] [overflow-wrap:anywhere]">
                       {c.recipient && <span className="font-medium text-[#374151]">{c.recipient}</span>}
                       {c.recipient && c.date && <span className="text-[#d1d5db]">·</span>}
-                      {c.date && <span className="text-[#9ca3af]">{c.date}</span>}
+                      {c.date && <span className="text-[#68778d]">{c.date}</span>}
                     </p>
                   )}
                   {c.description && <p className="whitespace-pre-line text-[14px] leading-relaxed text-[#4b5563] [overflow-wrap:anywhere]">{c.description}</p>}

@@ -139,7 +139,7 @@ export function ClientConnections() {
                 </span>
               </div>
               {item.title && <p className="mt-1 truncate text-xs text-[#6b7280]">{item.title}</p>}
-              {item.lastInteractionAt && <p className="mt-1 text-[11px] font-medium text-[#9ca3af]">{formatRelativeOrDate(item.lastInteractionAt, locale)}</p>}
+              {item.lastInteractionAt && <p className="mt-1 text-[11px] font-medium text-[#68778d]">{formatRelativeOrDate(item.lastInteractionAt, locale)}</p>}
             </div>
             <div className="col-span-2 flex gap-2 sm:col-span-1 sm:shrink-0">
               {item.slug ? (

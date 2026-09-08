@@ -81,7 +81,7 @@ export function HeroSearch() {
   }
 
   const inputCls =
-    "w-full h-12 rounded-xl border-0 bg-[#f3f4f6] pl-9 pr-3 text-sm text-[#111827] placeholder:text-[#6b7280] focus:outline-none focus:ring-2 focus:ring-[#009FD9]";
+    "w-full h-12 rounded-xl border-0 bg-[#f3f4f6] pl-9 pr-3 text-sm text-[#162543] placeholder:text-[#6b7280] focus:outline-none focus:ring-2 focus:ring-[#009FD9]";
 
   return (
     <form ref={formRef} onSubmit={handleSearch} className="w-full max-w-2xl mx-auto">
@@ -139,7 +139,7 @@ export function HeroSearch() {
                     className="w-full text-left px-3 py-2 text-sm text-[#374151] hover:bg-[#EBF5FB] flex items-center justify-between"
                   >
                     <span>{l.label}</span>
-                    {l.cantonId && <span className="text-xs text-[#9ca3af]">{PROVINCES.find((p) => p.id === l.provinceId)?.name}</span>}
+                    {l.cantonId && <span className="text-xs text-[#68778d]">{PROVINCES.find((p) => p.id === l.provinceId)?.name}</span>}
                   </button>
                 </li>
               ))}

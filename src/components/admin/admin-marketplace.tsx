@@ -140,11 +140,11 @@ function CreatorCard({ creator }: { creator: Creator | null }) {
       </div>
       <div className="min-w-0">
         {creator.profileId ? (
-          <Link href={`/admin/usuarios/${creator.profileId}`} className="block truncate text-sm font-semibold text-[#111827] hover:text-[#009FD9]">
+          <Link href={`/admin/usuarios/${creator.profileId}`} className="block truncate text-sm font-semibold text-[#162543] hover:text-[#009FD9]">
             {creator.name}
           </Link>
         ) : (
-          <p className="truncate text-sm font-semibold text-[#111827]">{creator.name}</p>
+          <p className="truncate text-sm font-semibold text-[#162543]">{creator.name}</p>
         )}
         <p className="truncate text-xs text-[#6b7280]">
           {creator.personName && creator.personName !== creator.name ? `${creator.personName} · ` : ""}
@@ -273,7 +273,7 @@ export function AdminMarketplace({ kind }: { kind: "jobs" | "offers" }) {
         <div className="flex items-center gap-2">
           <Icon className="h-5 w-5 text-[#009FD9]" />
           <div>
-            <h1 className="text-xl font-bold text-[#111827]">{isJobs ? "Empleos" : "Ofertas"}</h1>
+            <h1 className="text-xl font-bold text-[#162543]">{isJobs ? "Empleos" : "Ofertas"}</h1>
             <p className="mt-0.5 text-sm text-[#6b7280]">
               {isJobs ? "Vacantes publicadas por profesionales y empresas, con quién las creó y cuántas postulaciones reciben." : "Promociones, paquetes y productos publicados por profesionales, con quién los creó."}
             </p>
@@ -287,7 +287,7 @@ export function AdminMarketplace({ kind }: { kind: "jobs" | "offers" }) {
       <div className="mb-4 rounded-2xl border border-[#e5e7eb] bg-white p-4">
         <label className="mb-1.5 block text-xs font-semibold text-[#374151]">{isJobs ? "Buscar empleo" : "Buscar oferta"}</label>
         <div className="relative">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9ca3af]" />
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#68778d]" />
           <input
             value={q}
             onChange={(event) => setQ(event.target.value)}
@@ -319,7 +319,7 @@ export function AdminMarketplace({ kind }: { kind: "jobs" | "offers" }) {
                   )}
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
-                      <Link href={item.href} className="line-clamp-2 text-sm font-bold text-[#111827] hover:text-[#009FD9]">{item.title}</Link>
+                      <Link href={item.href} className="line-clamp-2 text-sm font-bold text-[#162543] hover:text-[#009FD9]">{item.title}</Link>
                       <StatusPill item={item} />
                     </div>
                     <p className="mt-0.5 text-xs text-[#6b7280]">
@@ -338,7 +338,7 @@ export function AdminMarketplace({ kind }: { kind: "jobs" | "offers" }) {
                           .join(" · ")}
                       </p>
                     )}
-                    <p className="mt-1 text-[11px] text-[#9ca3af]">
+                    <p className="mt-1 text-[11px] text-[#68778d]">
                       Creada {fmtDate(item.createdAt)}{item.updatedAt && item.updatedAt !== item.createdAt ? ` · actualizada ${fmtDate(item.updatedAt)}` : ""} · ID {item.id.slice(0, 8)}
                       {item.kind === "job" ? ` · ${item.applications} ${item.applications === 1 ? "postulación" : "postulaciones"}` : ""}
                     </p>

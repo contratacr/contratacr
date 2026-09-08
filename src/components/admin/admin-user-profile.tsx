@@ -150,9 +150,9 @@ function Section({ icon: Icon, title, count, sub, children, action }: { icon: Re
       <div className="flex items-center justify-between gap-3 border-b border-[#f3f4f6] px-4 py-3">
         <div className="flex min-w-0 items-center gap-2">
           <Icon className="h-4 w-4 shrink-0 text-[#009FD9]" />
-          <h2 className="truncate text-sm font-semibold text-[#111827]">{title}</h2>
-          {count != null && <span className="text-xs text-[#9ca3af]">({count})</span>}
-          {sub && <span className="hidden truncate text-xs text-[#9ca3af] sm:inline">· {sub}</span>}
+          <h2 className="truncate text-sm font-semibold text-[#162543]">{title}</h2>
+          {count != null && <span className="text-xs text-[#68778d]">({count})</span>}
+          {sub && <span className="hidden truncate text-xs text-[#68778d] sm:inline">· {sub}</span>}
         </div>
         {action}
       </div>
@@ -171,7 +171,7 @@ function Tile({ label, value }: { label: string; value: number | string }) {
 }
 
 function Empty({ text }: { text: string }) {
-  return <p className="px-4 py-4 text-sm text-[#9ca3af]">{text}</p>;
+  return <p className="px-4 py-4 text-sm text-[#68778d]">{text}</p>;
 }
 
 function Row({ title, meta, status, href, external }: { title: string; meta?: string; status?: string; href?: string; external?: string }) {
@@ -179,15 +179,15 @@ function Row({ title, meta, status, href, external }: { title: string; meta?: st
     <li className="flex items-center justify-between gap-3 px-4 py-2.5">
       <div className="min-w-0">
         {href ? (
-          <Link href={href} className="block truncate text-sm font-medium text-[#111827] hover:text-[#009FD9]">{title}</Link>
+          <Link href={href} className="block truncate text-sm font-medium text-[#162543] hover:text-[#009FD9]">{title}</Link>
         ) : (
-          <p className="truncate text-sm font-medium text-[#111827]">{title}</p>
+          <p className="truncate text-sm font-medium text-[#162543]">{title}</p>
         )}
-        {meta && <p className="truncate text-xs text-[#9ca3af]">{meta}</p>}
+        {meta && <p className="truncate text-xs text-[#68778d]">{meta}</p>}
       </div>
       <div className="flex shrink-0 items-center gap-2">
         {status && <StatusPill status={status} />}
-        {external && <a href={external} target="_blank" rel="noopener noreferrer" aria-label="Abrir" className="text-[#9ca3af] hover:text-[#009FD9]"><ExternalLink className="h-3.5 w-3.5" /></a>}
+        {external && <a href={external} target="_blank" rel="noopener noreferrer" aria-label="Abrir" className="text-[#68778d] hover:text-[#009FD9]"><ExternalLink className="h-3.5 w-3.5" /></a>}
       </div>
     </li>
   );
@@ -317,7 +317,7 @@ export function AdminUserProfile({
           </div>
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
-              <h1 className="text-xl font-bold text-[#111827]">{pro?.business_name || profile.full_name || "Sin nombre"}</h1>
+              <h1 className="text-xl font-bold text-[#162543]">{pro?.business_name || profile.full_name || "Sin nombre"}</h1>
               <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${professionalSignupIncomplete ? "bg-[#fff7ed] text-[#c2410c]" : "bg-gray-100 text-gray-700"}`}>{accountTypeLabel}</span>
               <span className={`rounded-md border px-2 py-0.5 text-[11px] font-medium ${verificationPillClasses(identityStatus)}`}>{verificationLabel(identityStatus)}</span>
               {pro?.is_banned && <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2 py-0.5 text-[11px] font-semibold text-red-700"><Ban className="h-3 w-3" /> Baneado</span>}
@@ -330,10 +330,10 @@ export function AdminUserProfile({
               </div>
             )}
             <div className="mt-3 grid grid-cols-1 gap-x-6 gap-y-1 text-sm text-[#374151] sm:grid-cols-2">
-              <p className="flex min-w-0 items-center gap-2"><Mail className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" /> <span className="truncate">{profile.email ?? "—"}</span></p>
-              <p className="flex min-w-0 items-center gap-2"><Phone className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" /> <span className="truncate">{wa ? fmtPhone(wa) : "—"}{call && call !== wa ? ` · llamadas: ${fmtPhone(call)}` : ""}</span></p>
-              <p className="flex items-center gap-2"><IdCard className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" /> {profile.cedula ?? "Sin identificación"}</p>
-              <p className="flex items-center gap-2"><CalendarDays className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" /> Registro: {fmtDate(profile.created_at)}{pro ? ` · perfil profesional: ${fmtDate(pro.created_at)}` : ""}</p>
+              <p className="flex min-w-0 items-center gap-2"><Mail className="h-3.5 w-3.5 shrink-0 text-[#68778d]" /> <span className="truncate">{profile.email ?? "—"}</span></p>
+              <p className="flex min-w-0 items-center gap-2"><Phone className="h-3.5 w-3.5 shrink-0 text-[#68778d]" /> <span className="truncate">{wa ? fmtPhone(wa) : "—"}{call && call !== wa ? ` · llamadas: ${fmtPhone(call)}` : ""}</span></p>
+              <p className="flex items-center gap-2"><IdCard className="h-3.5 w-3.5 shrink-0 text-[#68778d]" /> {profile.cedula ?? "Sin identificación"}</p>
+              <p className="flex items-center gap-2"><CalendarDays className="h-3.5 w-3.5 shrink-0 text-[#68778d]" /> Registro: {fmtDate(profile.created_at)}{pro ? ` · perfil profesional: ${fmtDate(pro.created_at)}` : ""}</p>
             </div>
             {(profile.is_disabled || pro?.is_banned) && (
               <div className="mt-3 rounded-lg border border-red-100 bg-red-50 px-3 py-2 text-xs text-red-700">
@@ -420,11 +420,11 @@ export function AdminUserProfile({
             </div>
             {identityReasonAction && (
               <div className="mt-4 rounded-xl border border-red-100 bg-white p-3">
-                <p className="text-sm font-semibold text-[#111827]">{identityReasonAction === "reject" ? "¿Rechazar verificación?" : "¿Quitar verificación?"}</p>
+                <p className="text-sm font-semibold text-[#162543]">{identityReasonAction === "reject" ? "¿Rechazar verificación?" : "¿Quitar verificación?"}</p>
                 <p className="mt-1 text-xs text-[#6b7280]">
                   {identityReasonAction === "reject" ? "El profesional verá este motivo y podrá corregir o apelar desde su panel." : "Se quitará la insignia Verificado, se borrará la identificación guardada y se notificará al profesional."}
                 </p>
-                <textarea value={identityReason} onChange={(event) => setIdentityReason(event.target.value)} rows={3} placeholder={identityReasonAction === "reject" ? "Explica por qué no se aprueba la verificación." : "Explica por qué se quita la verificación."} className="mt-3 w-full rounded-lg border border-[#e5e7eb] p-2.5 text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9]/30" />
+                <textarea value={identityReason} onChange={(event) => setIdentityReason(event.target.value)} rows={3} placeholder={identityReasonAction === "reject" ? "Explica por qué no se aprueba la verificación." : "Explica por qué se quita la verificación."} className="mt-3 w-full rounded-lg border border-[#e5e7eb] p-2.5 text-sm text-[#162543] placeholder:text-[#68778d] focus:outline-none focus:ring-2 focus:ring-[#009FD9]/30" />
                 <div className="mt-3 flex flex-wrap gap-2">
                   <button type="button" onClick={() => updateIdentity(identityReasonAction, identityReason)} disabled={identityBusy != null || identityReason.trim().length === 0} className="inline-flex items-center gap-1.5 rounded-lg bg-red-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60">
                     {identityBusy === identityReasonAction && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
@@ -437,20 +437,20 @@ export function AdminUserProfile({
           </div>
           {(verificationLog.length > 0 || appeals.length > 0) && (
             <details className="mt-3 rounded-xl border border-[#e5e7eb]">
-              <summary className="cursor-pointer px-4 py-2.5 text-sm font-semibold text-[#374151]"><History className="mr-1.5 inline h-4 w-4 text-[#9ca3af]" /> Historial de verificación ({verificationLog.length + appeals.length})</summary>
+              <summary className="cursor-pointer px-4 py-2.5 text-sm font-semibold text-[#374151]"><History className="mr-1.5 inline h-4 w-4 text-[#68778d]" /> Historial de verificación ({verificationLog.length + appeals.length})</summary>
               <ul className="divide-y divide-[#f3f4f6] border-t border-[#f3f4f6]">
                 {appeals.map((a) => (
                   <li key={a.id} className="px-4 py-2.5 text-sm">
-                    <p className="font-medium text-[#111827]">Apelación {a.status ? `· ${STATUS_LABEL[a.status] ?? a.status}` : ""}</p>
+                    <p className="font-medium text-[#162543]">Apelación {a.status ? `· ${STATUS_LABEL[a.status] ?? a.status}` : ""}</p>
                     {a.message && <p className="mt-0.5 text-xs text-[#6b7280]">{a.message}</p>}
-                    <p className="text-[11px] text-[#9ca3af]">{fmt(a.created_at)}</p>
+                    <p className="text-[11px] text-[#68778d]">{fmt(a.created_at)}</p>
                   </li>
                 ))}
                 {verificationLog.map((l) => (
                   <li key={l.id} className="px-4 py-2.5 text-sm">
-                    <p className="font-medium text-[#111827]">{l.decision ?? l.action ?? l.status ?? "Cambio"}{l.admin_name ? ` · por ${l.admin_name}` : ""}</p>
+                    <p className="font-medium text-[#162543]">{l.decision ?? l.action ?? l.status ?? "Cambio"}{l.admin_name ? ` · por ${l.admin_name}` : ""}</p>
                     {(l.note || l.reason) && <p className="mt-0.5 text-xs text-[#6b7280]">{l.note ?? l.reason}</p>}
-                    <p className="text-[11px] text-[#9ca3af]">{fmt(l.created_at)}</p>
+                    <p className="text-[11px] text-[#68778d]">{fmt(l.created_at)}</p>
                   </li>
                 ))}
               </ul>
@@ -469,15 +469,15 @@ export function AdminUserProfile({
         </div>
         <div className="grid gap-0 border-t border-[#f3f4f6] lg:grid-cols-3 lg:divide-x lg:divide-[#f3f4f6]">
           <div>
-            <p className="px-4 pt-3 text-[11px] font-semibold uppercase tracking-wide text-[#9ca3af]">Citas reservadas</p>
+            <p className="px-4 pt-3 text-[11px] font-semibold uppercase tracking-wide text-[#68778d]">Citas reservadas</p>
             {bookings.length === 0 ? <Empty text="Sin citas." /> : <ul className="divide-y divide-[#f3f4f6]">{bookings.slice(0, 8).map((b) => <Row key={b.id} title={b.service_description} meta={`${b.preferred_date ? `Fecha: ${fmtDate(b.preferred_date)} · ` : ""}${fmt(b.created_at)}`} status={b.status} />)}</ul>}
           </div>
           <div>
-            <p className="px-4 pt-3 text-[11px] font-semibold uppercase tracking-wide text-[#9ca3af]">Proyectos publicados</p>
+            <p className="px-4 pt-3 text-[11px] font-semibold uppercase tracking-wide text-[#68778d]">Proyectos publicados</p>
             {projects.length === 0 ? <Empty text="Sin proyectos." /> : <ul className="divide-y divide-[#f3f4f6]">{projects.slice(0, 8).map((p) => <Row key={p.id} title={p.title} meta={`${p.category_id ? `${getCategoryLabel(p.category_id)} · ` : ""}${fmt(p.created_at)}`} status={p.status} />)}</ul>}
           </div>
           <div>
-            <p className="px-4 pt-3 text-[11px] font-semibold uppercase tracking-wide text-[#9ca3af]">Postulaciones a empleos</p>
+            <p className="px-4 pt-3 text-[11px] font-semibold uppercase tracking-wide text-[#68778d]">Postulaciones a empleos</p>
             {applications.length === 0 ? <Empty text="Sin postulaciones." /> : <ul className="divide-y divide-[#f3f4f6]">{applications.slice(0, 8).map((a) => <Row key={a.id} title={a.job_title ?? "Empleo"} meta={fmt(a.created_at)} status={a.status} href={`/admin/empleos`} />)}</ul>}
           </div>
         </div>
@@ -497,36 +497,36 @@ export function AdminUserProfile({
             </div>
             <div className="grid gap-0 border-t border-[#f3f4f6] lg:grid-cols-2 lg:divide-x lg:divide-[#f3f4f6]">
               <div>
-                <p className="px-4 pt-3 text-[11px] font-semibold uppercase tracking-wide text-[#9ca3af]">Citas recibidas</p>
+                <p className="px-4 pt-3 text-[11px] font-semibold uppercase tracking-wide text-[#68778d]">Citas recibidas</p>
                 {receivedBookings.length === 0 ? <Empty text="Todavía no recibe citas." /> : <ul className="divide-y divide-[#f3f4f6]">{receivedBookings.slice(0, 8).map((b) => <Row key={b.id} title={b.service_description} meta={`${b.client_name ? `${b.client_name} · ` : ""}${fmt(b.created_at)}`} status={b.status} />)}</ul>}
               </div>
               <div>
-                <p className="px-4 pt-3 text-[11px] font-semibold uppercase tracking-wide text-[#9ca3af]">Reseñas recibidas</p>
+                <p className="px-4 pt-3 text-[11px] font-semibold uppercase tracking-wide text-[#68778d]">Reseñas recibidas</p>
                 {receivedReviews.length === 0 ? <Empty text="Todavía no tiene reseñas." /> : (
                   <ul className="divide-y divide-[#f3f4f6]">
                     {receivedReviews.slice(0, 8).map((r) => (
                       <li key={r.id} className="px-4 py-2.5">
                         <div className="flex items-center justify-between gap-3">
-                          <p className="inline-flex items-center gap-1 text-sm font-semibold text-[#111827]"><Star className="h-3.5 w-3.5 text-amber-500" /> {r.rating} · {r.client_name_snapshot || "Cliente"}</p>
+                          <p className="inline-flex items-center gap-1 text-sm font-semibold text-[#162543]"><Star className="h-3.5 w-3.5 text-amber-500" /> {r.rating} · {r.client_name_snapshot || "Cliente"}</p>
                           {r.moderation_status && r.moderation_status !== "published" && <StatusPill status={r.moderation_status} />}
                         </div>
                         {r.comment && <p className="mt-0.5 line-clamp-2 text-xs text-[#6b7280]">{r.comment}</p>}
-                        <p className="text-[11px] text-[#9ca3af]">{fmt(r.created_at)}</p>
+                        <p className="text-[11px] text-[#68778d]">{fmt(r.created_at)}</p>
                       </li>
                     ))}
                   </ul>
                 )}
               </div>
               <div className="lg:border-t lg:border-[#f3f4f6]">
-                <p className="px-4 pt-3 text-[11px] font-semibold uppercase tracking-wide text-[#9ca3af]">Proyectos recibidos</p>
+                <p className="px-4 pt-3 text-[11px] font-semibold uppercase tracking-wide text-[#68778d]">Proyectos recibidos</p>
                 {receivedProjects.length === 0 ? <Empty text="Todavía no envió propuestas a proyectos." /> : <ul className="divide-y divide-[#f3f4f6]">{receivedProjects.slice(0, 8).map((p) => <Row key={p.id} title={p.title} meta={`${p.client_name ? `${p.client_name} · ` : ""}propuesta ${money(p.price, "CRC")} · ${fmt(p.created_at)}`} status={p.proposal_status} />)}</ul>}
               </div>
               <div className="lg:border-t lg:border-[#f3f4f6]">
-                <p className="px-4 pt-3 text-[11px] font-semibold uppercase tracking-wide text-[#9ca3af]">Empleos publicados</p>
+                <p className="px-4 pt-3 text-[11px] font-semibold uppercase tracking-wide text-[#68778d]">Empleos publicados</p>
                 {jobs.length === 0 ? <Empty text="Sin empleos publicados." /> : <ul className="divide-y divide-[#f3f4f6]">{jobs.slice(0, 8).map((j) => <Row key={j.id} title={j.title} meta={`${j.applications} ${j.applications === 1 ? "postulación" : "postulaciones"} · ${fmt(j.created_at)}`} status={j.status} external={`/es/empleos/${j.id}`} />)}</ul>}
               </div>
               <div className="lg:border-t lg:border-[#f3f4f6]">
-                <p className="px-4 pt-3 text-[11px] font-semibold uppercase tracking-wide text-[#9ca3af]">Ofertas publicadas</p>
+                <p className="px-4 pt-3 text-[11px] font-semibold uppercase tracking-wide text-[#68778d]">Ofertas publicadas</p>
                 {offers.length === 0 ? <Empty text="Sin ofertas publicadas." /> : <ul className="divide-y divide-[#f3f4f6]">{offers.slice(0, 8).map((o) => <Row key={o.id} title={o.title} meta={`${money(o.price_now, o.currency)} · ${fmt(o.created_at)}`} status={o.status} external={`/es/ofertas/${o.id}`} />)}</ul>}
               </div>
             </div>

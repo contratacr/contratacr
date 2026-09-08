@@ -106,12 +106,12 @@ export function ReviewSection({
     <>
       <div className="mb-4 flex items-center justify-between">
         <div>
-          <h2 className="text-lg font-semibold text-[#111827]">
+          <h2 className="text-lg font-semibold text-[#162543]">
             {t("reviewsHeading", { count: reviewCount })}
           </h2>
           <div className="mt-1 flex items-center gap-1 text-sm text-[#374151]">
             <Star className="h-4 w-4 text-[#ff9b32] fill-[#ff9b32]" />
-            <span className="font-bold text-[#111827]">{ratingAvg.toFixed(1)}</span>
+            <span className="font-bold text-[#162543]">{ratingAvg.toFixed(1)}</span>
           </div>
         </div>
       </div>
@@ -128,13 +128,13 @@ export function ReviewSection({
               </Avatar>
               <div className="flex-1">
                 <div className="flex items-center justify-between gap-2">
-                  <span className="text-sm font-medium text-[#111827]">{clientName}</span>
+                  <span className="text-sm font-medium text-[#162543]">{clientName}</span>
                   {/* "editada" is intentionally NOT shown publicly (item 4). */}
-                  <span className="text-xs text-[#9ca3af]">{formatRelativeTime(review.createdAt, locale)}</span>
+                  <span className="text-xs text-[#68778d]">{formatRelativeTime(review.createdAt, locale)}</span>
                 </div>
                 <StarRating rating={review.rating} size="sm" className="my-1" />
                 {jobTitle && (
-                  <p className="text-xs text-[#9ca3af] mt-0.5">{t("reviewOf", { title: jobTitle })}</p>
+                  <p className="text-xs text-[#68778d] mt-0.5">{t("reviewOf", { title: jobTitle })}</p>
                 )}
                 <p className="text-sm text-[#374151] leading-relaxed mt-1">
                   {locale === "en" ? translatedComments[review.id] ?? review.comment : review.comment}

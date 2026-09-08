@@ -195,16 +195,16 @@ export function AdminSupport() {
                   <span className="rounded-full bg-[#f3f4f6] px-2 py-0.5 text-[11px] font-semibold text-[#6b7280]">
                     Caso {supportTicketRef(ticket.id, ticket.created_at, ticket.case_number)}
                   </span>
-                  <p className="font-semibold text-[#111827]">{ticket.subject}</p>
+                  <p className="font-semibold text-[#162543]">{ticket.subject}</p>
                 </div>
-                <p className="text-xs text-[#9ca3af]">
+                <p className="text-xs text-[#68778d]">
                   {ticket.name || "Sin nombre"} · {ticket.email}{ticket.topic ? ` · ${ticket.topic}` : ""}
                   <span className={`ml-1.5 inline-flex items-center rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${ticket.user_id ? "bg-[#dbeafe] text-[#1d4ed8]" : "bg-gray-100 text-gray-500"}`}>
                     {ticket.user_id ? "Registrado" : "Invitado"}
                   </span>
                 </p>
                 {ticket.handled_by_name && (
-                  <p className="text-[11px] text-[#9ca3af] mt-0.5">Atendido por Soporte ContrataCR{ticket.handled_at ? ` · ${fmt(ticket.handled_at)}` : ""}</p>
+                  <p className="text-[11px] text-[#68778d] mt-0.5">Atendido por Soporte ContrataCR{ticket.handled_at ? ` · ${fmt(ticket.handled_at)}` : ""}</p>
                 )}
                 {ticket.user_id && (
                   <Link href={`/admin/usuarios/${ticket.user_id}`} className="mt-1 inline-flex items-center gap-1 text-xs font-medium text-[#009FD9] hover:underline">
@@ -317,7 +317,7 @@ export function AdminSupport() {
     <div>
       <div className="flex items-center gap-2 mb-5">
         <Headset className="h-5 w-5 text-[#009FD9]" />
-        <h1 className="text-xl font-bold text-[#111827]">Soporte</h1>
+        <h1 className="text-xl font-bold text-[#162543]">Soporte</h1>
       </div>
 
       {/* Find any user (by name/cédula/correo) and jump to their full profile —
@@ -336,7 +336,7 @@ export function AdminSupport() {
       {loading ? (
         <div className="flex justify-center py-12"><Loader2 className="h-7 w-7 animate-spin text-[#009FD9]" /></div>
       ) : items.length === 0 ? (
-        <div className="text-center py-16 text-[#9ca3af]">
+        <div className="text-center py-16 text-[#68778d]">
           <Headset className="h-10 w-10 mx-auto mb-2 text-[#cbd5e1]" />
           <p className="text-sm">No hay tickets en esta vista.</p>
         </div>
@@ -350,14 +350,14 @@ export function AdminSupport() {
                     <span className="rounded-full bg-[#f3f4f6] px-2 py-0.5 text-[11px] font-semibold text-[#6b7280]">
                       Caso {supportTicketRef(t.id, t.created_at, t.case_number)}
                     </span>
-                    <p className="text-sm font-semibold text-[#111827]">{t.subject}</p>
+                    <p className="text-sm font-semibold text-[#162543]">{t.subject}</p>
                     <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${STATUS_COLOR[t.status] ?? "bg-gray-100 text-gray-600"}`}>{STATUS_LABEL[t.status] ?? t.status}</span>
                     <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${t.user_id ? "bg-[#dbeafe] text-[#1d4ed8]" : "bg-gray-100 text-gray-500"}`}>{t.user_id ? "Registrado" : "Invitado"}</span>
                     {t.last_reply_role === "user" && t.status !== "resolved" && (
                       <span className="flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-[#fee2e2] text-[#b91c1c]"><span className="h-1.5 w-1.5 rounded-full bg-[#b91c1c]" />Espera respuesta</span>
                     )}
                   </div>
-                  <p className="text-xs text-[#9ca3af] truncate mt-0.5">{t.name || "Sin nombre"} · {t.email} · {fmt(t.last_reply_at || t.created_at)}</p>
+                  <p className="text-xs text-[#68778d] truncate mt-0.5">{t.name || "Sin nombre"} · {t.email} · {fmt(t.last_reply_at || t.created_at)}</p>
                   <p className="text-sm text-[#6b7280] line-clamp-1 mt-1">{t.message}</p>
                 </div>
               </div>

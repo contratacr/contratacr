@@ -37,7 +37,7 @@ function renderInline(text: string, keyBase: string): React.ReactNode[] {
   return text.split(/(\*\*[^*]+\*\*)/g).filter(Boolean).map((part, i) => {
     const key = `${keyBase}-${i}`;
     if (part.startsWith("**") && part.endsWith("**")) {
-      return <strong key={key} className="font-semibold text-[#111827]">{linkifyLegalText(part.slice(2, -2), key)}</strong>;
+      return <strong key={key} className="font-semibold text-[#162543]">{linkifyLegalText(part.slice(2, -2), key)}</strong>;
     }
     return <span key={key}>{linkifyLegalText(part, key)}</span>;
   });
@@ -90,7 +90,7 @@ export async function LegalDocument({ title, updated, intro, summary, sections, 
 
           {/* Title */}
           <header className={locale === "en" ? "mt-6" : ""}>
-            <h1 className="text-3xl sm:text-4xl font-extrabold text-[#111827]">{title}</h1>
+            <h1 className="text-3xl sm:text-4xl font-extrabold text-[#162543]">{title}</h1>
             <p className="mt-2 text-[#6b7280]">{en ? "Last updated" : "Última actualización"}: {updated}</p>
           </header>
 
@@ -124,7 +124,7 @@ export async function LegalDocument({ title, updated, intro, summary, sections, 
           </details>
 
           <nav aria-label={en ? "Contents" : "Contenido"} className="mt-6 hidden rounded-xl border border-[#e5e7eb] bg-[#f9fafb] p-5 sm:block">
-            <p className="mb-3 text-xs font-bold uppercase tracking-widest text-[#9ca3af]">{en ? "Contents" : "Contenido"}</p>
+            <p className="mb-3 text-xs font-bold uppercase tracking-widest text-[#68778d]">{en ? "Contents" : "Contenido"}</p>
             <ol className="list-none columns-1 sm:columns-2 gap-x-6">
               {sections.map((s) => (
                 <li key={s.id} className="mb-2 break-inside-avoid">
@@ -137,12 +137,12 @@ export async function LegalDocument({ title, updated, intro, summary, sections, 
           <div className="mt-10 flex flex-col gap-10">
             {sections.map((s) => (
               <section key={s.id} id={s.id} className="scroll-mt-24">
-                <h2 className="text-xl font-bold text-[#111827] mb-3">{s.h}</h2>
+                <h2 className="text-xl font-bold text-[#162543] mb-3">{s.h}</h2>
                 <div className="space-y-3 text-[#374151] leading-relaxed">
                   {s.body.map((b, i) => {
                     const key = `${s.id}-${i}`;
                     if (b.k === "p") return <p key={key}>{renderInline(b.text, key)}</p>;
-                    if (b.k === "sub") return <h3 key={key} className="text-base font-semibold text-[#111827] pt-1">{renderInline(b.text, key)}</h3>;
+                    if (b.k === "sub") return <h3 key={key} className="text-base font-semibold text-[#162543] pt-1">{renderInline(b.text, key)}</h3>;
                     if (b.k === "note")
                       return (
                         <p key={key} className="rounded-xl border-l-4 border-[#009FD9] bg-[#EBF5FB] px-4 py-3 text-[#374151]">
@@ -150,7 +150,7 @@ export async function LegalDocument({ title, updated, intro, summary, sections, 
                         </p>
                       );
                     return (
-                      <ul key={key} className="list-disc pl-5 space-y-1.5 marker:text-[#9ca3af]">
+                      <ul key={key} className="list-disc pl-5 space-y-1.5 marker:text-[#68778d]">
                         {b.items.map((it, j) => <li key={`${key}-${j}`}>{renderInline(it, `${key}-${j}`)}</li>)}
                       </ul>
                     );
@@ -167,7 +167,7 @@ export async function LegalDocument({ title, updated, intro, summary, sections, 
               {en ? "Back to top" : "Volver arriba"}
             </a>
 
-            <p className="text-center text-sm italic text-[#9ca3af]">
+            <p className="text-center text-sm italic text-[#68778d]">
               ContrataCR - {en ? "Offer and find services in Costa Rica." : "Ofrece y encuentra servicios en Costa Rica."}
             </p>
           </div>

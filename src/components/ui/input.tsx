@@ -36,7 +36,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
           tabIndex={-1}
           onClick={() => setReveal((v) => !v)}
           aria-label={reveal ? "Ocultar contraseña" : "Mostrar contraseña"}
-          className="text-[#111827] hover:text-[#374151] transition-colors"
+          className="text-[#162543] hover:text-[#374151] transition-colors"
         >
           {reveal ? <Eye className="h-5 w-5" /> : <EyeOff className="h-5 w-5" />}
         </button>
@@ -56,7 +56,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
         )}
         <div className="relative">
           {leftIcon && (
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9ca3af]">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#68778d]">
               {leftIcon}
             </span>
           )}
@@ -67,7 +67,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
             value={value}
             onChange={handleChange}
             className={cn(
-              "w-full rounded-xl border bg-white px-4 py-2.5 text-sm text-[#111827] placeholder:text-[#9ca3af]",
+              "w-full rounded-xl border bg-white px-4 py-2.5 text-sm text-[#162543] placeholder:text-[#68778d]",
               "border-[#e5e7eb] transition-all duration-150 hover:border-[#cbd5e1]",
               "focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent",
               "disabled:bg-[#f3f4f6] disabled:cursor-not-allowed",
@@ -79,7 +79,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
             {...props}
           />
           {resolvedRightIcon && (
-            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9ca3af]">
+            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[#68778d]">
               {resolvedRightIcon}
             </span>
           )}

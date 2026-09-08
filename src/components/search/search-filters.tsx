@@ -311,7 +311,7 @@ function DesktopMultiSelect({
             : "border-[#e5e7eb] hover:border-[#8ccfe8] hover:bg-[#fbfdff]",
         )}
       >
-        <span className={cn("min-w-0 truncate", values.length ? "font-semibold text-[#162543]" : "text-[#9ca3af]")}>{summary}</span>
+        <span className={cn("min-w-0 truncate", values.length ? "font-semibold text-[#162543]" : "text-[#68778d]")}>{summary}</span>
         <span className="flex shrink-0 items-center gap-1.5">
           {values.length > 1 && <span className="grid h-5 min-w-5 place-items-center rounded-full bg-[#EBF5FB] px-1 text-[11px] font-extrabold text-[#008fbe]">{values.length}</span>}
           <ChevronDown className={cn("h-4 w-4 text-[#64748b] transition-transform", open && "rotate-180")} />
@@ -1164,7 +1164,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
           X lives INSIDE this white container's header; the desktop sidebar has no X. */}
       {!hideHeader && (
         <div className="mb-3 flex items-center justify-between gap-2">
-          <h2 className="text-sm font-bold text-[#111827]">{t("filters.title")}</h2>
+          <h2 className="text-sm font-bold text-[#162543]">{t("filters.title")}</h2>
           <div className="flex items-center gap-1.5">
             {activeCount > 0 && (
               // CLEAR = a LABELLED text link "Limpiar filtros (N)" - NOT a bare X (which read
@@ -1181,7 +1181,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
                 type="button"
                 onClick={() => window.dispatchEvent(new CustomEvent("ccr:close-filters"))}
                 aria-label={t("close")}
-                className="-mr-1 inline-flex h-8 w-8 items-center justify-center rounded-lg text-[#6b7280] hover:bg-[#f3f4f6] hover:text-[#111827] active:scale-95 transition-all"
+                className="-mr-1 inline-flex h-8 w-8 items-center justify-center rounded-lg text-[#6b7280] hover:bg-[#f3f4f6] hover:text-[#162543] active:scale-95 transition-all"
               >
                 <X className="h-[18px] w-[18px]" />
               </button>
@@ -1247,14 +1247,14 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
                 // EXACT same box as the Select triggers: h-10 w-full rounded-xl border, px-4
                 // left, and pr-9 ALWAYS so the right glyph sits exactly where the dropdowns'
                 // chevron does - so this field is indistinguishable in size + layout.
-                className="h-10 w-full rounded-xl border border-[#e5e7eb] bg-white pl-4 pr-9 text-base sm:text-sm text-[#111827] placeholder-[#9ca3af] transition hover:border-[#009FD9]/50 focus:border-[#009FD9] focus:outline-none focus:ring-2 focus:ring-[#009FD9]/20"
+                className="h-10 w-full rounded-xl border border-[#e5e7eb] bg-white pl-4 pr-9 text-base sm:text-sm text-[#162543] placeholder-[#9ca3af] transition hover:border-[#009FD9]/50 focus:border-[#009FD9] focus:outline-none focus:ring-2 focus:ring-[#009FD9]/20"
               />
               {/* Right-side glyph: a Search icon at rest (matches the Select chevron spot/
                   size/color), and while typing a SMALL, SUBTLE clear-X INSIDE the field - a
                   tiny icon in a hover-only circle, deliberately quieter + smaller than the
                   filled close-panel button so "clear my text" != "close the panel" (sprint 327). */}
               {query ? (
-                <button onClick={() => { clearQuery(); setSearchOpen(false); }} className="absolute right-3 top-1/2 -translate-y-1/2 inline-flex h-5 w-5 items-center justify-center rounded-full text-[#9ca3af] hover:bg-[#f3f4f6] hover:text-[#374151] transition-colors" aria-label={t("filters.clearSearch")}>
+                <button onClick={() => { clearQuery(); setSearchOpen(false); }} className="absolute right-3 top-1/2 -translate-y-1/2 inline-flex h-5 w-5 items-center justify-center rounded-full text-[#68778d] hover:bg-[#f3f4f6] hover:text-[#374151] transition-colors" aria-label={t("filters.clearSearch")}>
                   <X className="h-3.5 w-3.5" />
                 </button>
               ) : (
@@ -1318,13 +1318,13 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
               aria-label={t("filters.location")}
               aria-expanded={locationOpen}
               aria-autocomplete="list"
-              className="h-10 w-full rounded-xl border border-[#e5e7eb] bg-white pl-4 pr-9 text-base sm:text-sm text-[#111827] placeholder-[#9ca3af] transition hover:border-[#009FD9]/50 focus:border-[#009FD9] focus:outline-none focus:ring-2 focus:ring-[#009FD9]/20"
+              className="h-10 w-full rounded-xl border border-[#e5e7eb] bg-white pl-4 pr-9 text-base sm:text-sm text-[#162543] placeholder-[#9ca3af] transition hover:border-[#009FD9]/50 focus:border-[#009FD9] focus:outline-none focus:ring-2 focus:ring-[#009FD9]/20"
             />
             {locationQuery ? (
               <button
                 type="button"
                 onClick={clearLocation}
-                className="absolute right-3 top-1/2 inline-flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-full text-[#9ca3af] transition-colors hover:bg-[#f3f4f6] hover:text-[#374151]"
+                className="absolute right-3 top-1/2 inline-flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-full text-[#68778d] transition-colors hover:bg-[#f3f4f6] hover:text-[#374151]"
                 aria-label={t("filters.clearLocation")}
               >
                 <X className="h-3.5 w-3.5" />
@@ -1363,7 +1363,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
                       onClick={() => pickLocationOption(suggestion)}
                       className={`flex w-full flex-col px-3.5 py-2.5 text-left text-sm transition-colors ${i === locationActiveIndex ? "bg-[#EBF5FB]" : "hover:bg-[#f9fafb]"}`}
                     >
-                      <span className="font-semibold text-[#111827]">{suggestion.label}</span>
+                      <span className="font-semibold text-[#162543]">{suggestion.label}</span>
                       {suggestion.type !== "province" && suggestion.sublabel && <span className="text-xs text-[#6b7280]">{suggestion.sublabel}</span>}
                     </button>
                   </li>
@@ -1581,10 +1581,10 @@ export function MobileServiceSearch() {
         role="combobox"
         aria-expanded={open}
         aria-autocomplete="list"
-        className="h-10 min-w-0 w-full rounded-full border border-[#e5e7eb] bg-white pl-4 pr-9 text-base sm:text-sm text-[#111827] placeholder-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition"
+        className="h-10 min-w-0 w-full rounded-full border border-[#e5e7eb] bg-white pl-4 pr-9 text-base sm:text-sm text-[#162543] placeholder-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition"
       />
       {q && (
-        <button onClick={() => { setQ(""); setOpen(false); if (debounceRef.current) clearTimeout(debounceRef.current); pushQuery(""); }} className="absolute right-3 text-[#9ca3af] hover:text-[#374151] transition-colors" aria-label={t("filters.clearSearch")}>
+        <button onClick={() => { setQ(""); setOpen(false); if (debounceRef.current) clearTimeout(debounceRef.current); pushQuery(""); }} className="absolute right-3 text-[#68778d] hover:text-[#374151] transition-colors" aria-label={t("filters.clearSearch")}>
           <X className="h-4 w-4" />
         </button>
       )}

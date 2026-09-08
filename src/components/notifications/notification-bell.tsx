@@ -229,7 +229,7 @@ export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "o
         <div ref={menuPanelRef} style={nativeApp && posicionPanel ? { top: posicionPanel.top, right: posicionPanel.right } : undefined} className={cn(nativeApp ? "ccr-notification-bell-menu fixed right-4 top-16 z-[230]" : "absolute right-0 top-11 z-[90]", "w-[min(22rem,calc(100vw-1rem))] overflow-hidden rounded-2xl border border-[#dbe4ee] bg-white shadow-[0_18px_45px_-18px_rgba(15,23,42,0.45)]")}>
           <div className="flex items-center justify-between gap-3 border-b border-[#eef2f6] px-4 py-3">
             <div className="min-w-0">
-              <p className="text-sm font-extrabold text-[#111827]">{t("title")}</p>
+              <p className="text-sm font-extrabold text-[#162543]">{t("title")}</p>
             </div>
             {false && (
               <button
@@ -267,7 +267,7 @@ export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "o
                   )}
                   <span className="min-w-0 flex-1">
                     <span className="flex min-w-0 items-start gap-2">
-                      <span className={cn("min-w-0 flex-1 line-clamp-3 text-sm leading-snug", item.read ? "font-medium text-[#374151]" : "font-semibold text-[#111827]")}>
+                      <span className={cn("min-w-0 flex-1 line-clamp-3 text-sm leading-snug", item.read ? "font-medium text-[#374151]" : "font-semibold text-[#162543]")}>
                         {copy.message || copy.title}
                         <span className="ml-1.5 whitespace-nowrap text-[11px] font-medium text-[#94a3b8]">· {formatRelativeOrDate(item.created_at, locale)}</span>
                       </span>
@@ -283,7 +283,7 @@ export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "o
               <div className="mx-auto grid h-11 w-11 place-items-center rounded-full bg-[#eef7fb] text-[#009FD9]">
                 <Bell className="h-5 w-5" />
               </div>
-              <p className="mt-3 text-sm font-bold text-[#111827]">
+              <p className="mt-3 text-sm font-bold text-[#162543]">
                 {locale === "en" ? "No notifications yet" : "Aún no tienes notificaciones"}
               </p>
               <p className="mx-auto mt-1 max-w-[15rem] text-xs leading-snug text-[#64748b]">

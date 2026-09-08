@@ -167,7 +167,7 @@ function OtpStep({ email, onVerified }: { email: string; onVerified: () => void 
             onKeyDown={(e) => handleKeyDown(i, e)}
             disabled={verifying}
             autoComplete={i === 0 ? "one-time-code" : "off"}
-            className="w-10 h-12 text-center text-lg font-bold border-2 rounded-xl border-[#e5e7eb] bg-white text-[#111827] focus:outline-none focus:border-[#009FD9] focus:ring-2 focus:ring-[#009FD9]/20 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+            className="w-10 h-12 text-center text-lg font-bold border-2 rounded-xl border-[#e5e7eb] bg-white text-[#162543] focus:outline-none focus:border-[#009FD9] focus:ring-2 focus:ring-[#009FD9]/20 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
           />
         ))}
       </div>
@@ -431,14 +431,14 @@ export function ClientRegistrationModal({
                       )}
                     />
                   ))}
-                  <span className="text-xs text-[#9ca3af] ml-1.5">
+                  <span className="text-xs text-[#68778d] ml-1.5">
                     {currentStepNum}/4
                   </span>
                 </div>
               )}
             </div>
             <Dialog.Close asChild>
-              <button className="p-2 rounded-xl text-[#9ca3af] hover:bg-[#f3f4f6] hover:text-[#374151] transition-colors">
+              <button className="p-2 rounded-xl text-[#68778d] hover:bg-[#f3f4f6] hover:text-[#374151] transition-colors">
                 <X className="h-5 w-5" />
               </button>
             </Dialog.Close>
@@ -447,7 +447,7 @@ export function ClientRegistrationModal({
           {/* Professional context */}
           {professionalName && (
             <div className="px-6 py-3 bg-[#f9fafb] border-b border-[#f3f4f6] shrink-0">
-              <p className="text-xs text-[#9ca3af]">
+              <p className="text-xs text-[#68778d]">
                 {intent === "whatsapp" ? t("toContactWhatsapp") : intent === "phone" ? t("toCall") : intent === "email" ? t("toEmail") : t("toContact")}
               </p>
               <p className="text-sm font-semibold text-[#1a2744]">{professionalName}</p>
@@ -462,7 +462,7 @@ export function ClientRegistrationModal({
             {view === "login" && (
               <div className="flex flex-col gap-5">
                 <div>
-                  <h2 className="text-xl font-bold text-[#111827]">{t("loginTitle")}</h2>
+                  <h2 className="text-xl font-bold text-[#162543]">{t("loginTitle")}</h2>
                   {/* When we land here because the email already has an account, the amber
                       notice below is the single, more specific explanation — so the generic
                       subtitle is hidden to avoid two overlapping "use your password" lines. */}
@@ -520,7 +520,7 @@ export function ClientRegistrationModal({
 
                 {/* Step titles */}
                 <div>
-                  <h2 className="text-xl font-bold text-[#111827]">
+                  <h2 className="text-xl font-bold text-[#162543]">
                     {step === "identity" && t("titleIdentity")}
                     {step === "email" && t("titleEmail")}
                     {step === "password" && t("titlePassword")}
@@ -667,7 +667,7 @@ export function ClientRegistrationModal({
                 </div>
               ) : null}
               {view === "register" && step === "password" && (
-                <p className="text-center text-xs text-[#9ca3af] mt-3">
+                <p className="text-center text-xs text-[#68778d] mt-3">
                   {t.rich("terms", {
                     // Inside the app the legal pages open in place (a new tab would leave the app).
                     terms: (c) => nativeApp ? <Link href={`/${locale}/terminos`} className="underline hover:text-[#374151]">{c}</Link> : <a href="/terminos" target="_blank" rel="noopener noreferrer" className="underline hover:text-[#374151]">{c}</a>,

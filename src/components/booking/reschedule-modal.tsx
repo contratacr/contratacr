@@ -224,8 +224,8 @@ export function RescheduleModal({ professionalId, bookingId, currentWhen, slotLo
       >
         <div className="sticky top-0 z-10 flex items-center justify-between border-b border-[#f3f4f6] bg-white px-4 py-3">
           <div className="min-w-0">
-            <h2 className="text-base font-bold text-[#111827]">{t("title")}</h2>
-            {currentWhen && <p className="text-xs text-[#9ca3af] truncate">{t("current", { when: currentWhen })}</p>}
+            <h2 className="text-base font-bold text-[#162543]">{t("title")}</h2>
+            {currentWhen && <p className="text-xs text-[#68778d] truncate">{t("current", { when: currentWhen })}</p>}
           </div>
           <button onClick={onClose} aria-label={t("cancel")} className="p-1.5 rounded-lg text-[#6b7280] hover:bg-[#f3f4f6] transition-colors shrink-0">
             <X className="h-5 w-5" />
@@ -246,7 +246,7 @@ export function RescheduleModal({ professionalId, bookingId, currentWhen, slotLo
                 <button onClick={prevMonth} disabled={!canGoPrev} className="p-1.5 rounded-lg text-[#6b7280] hover:bg-[#f3f4f6] disabled:opacity-30 disabled:hover:bg-transparent transition-colors">
                   <ChevronLeft className="h-5 w-5" />
                 </button>
-                <span className="text-sm font-semibold text-[#111827]">{calendarMonthLabel(currentYear, currentMonth, locale)}</span>
+                <span className="text-sm font-semibold text-[#162543]">{calendarMonthLabel(currentYear, currentMonth, locale)}</span>
                 <button onClick={nextMonth} disabled={!canGoNext} className="p-1.5 rounded-lg text-[#6b7280] hover:bg-[#f3f4f6] disabled:opacity-30 disabled:hover:bg-transparent transition-colors">
                   <ChevronRight className="h-5 w-5" />
                 </button>
@@ -255,7 +255,7 @@ export function RescheduleModal({ professionalId, bookingId, currentWhen, slotLo
               {/* Day grid */}
               <div className="grid grid-cols-7 gap-1 mb-1">
                 {calendarDayNames(locale).map((d) => (
-                  <div key={d} className="text-center text-[10px] font-semibold text-[#9ca3af] py-1">{d}</div>
+                  <div key={d} className="text-center text-[10px] font-semibold text-[#68778d] py-1">{d}</div>
                 ))}
               </div>
               <div className="grid grid-cols-7 gap-1">
@@ -272,7 +272,7 @@ export function RescheduleModal({ professionalId, bookingId, currentWhen, slotLo
                       className={cn(
                         "aspect-square rounded-lg text-sm font-medium transition-colors",
                         selected ? "bg-[#009FD9] text-white" :
-                        available ? "text-[#111827] hover:bg-[#EBF5FB]" : "text-[#d1d5db] cursor-not-allowed",
+                        available ? "text-[#162543] hover:bg-[#EBF5FB]" : "text-[#d1d5db] cursor-not-allowed",
                       )}
                     >
                       {date.getDate()}
@@ -286,7 +286,7 @@ export function RescheduleModal({ professionalId, bookingId, currentWhen, slotLo
                 <div className="mt-4">
                   <p className="text-xs font-semibold text-[#374151] mb-2">{t("pickTime")}</p>
                   {slots.length === 0 ? (
-                    <p className="text-sm text-[#9ca3af] py-2">{t("noSlots")}</p>
+                    <p className="text-sm text-[#68778d] py-2">{t("noSlots")}</p>
                   ) : (
                     <div className="grid grid-cols-3 gap-2">
                       {slots.map((slot) => (

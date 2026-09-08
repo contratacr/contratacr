@@ -106,7 +106,7 @@ export function CategoryGroupPicker({
             <span className="block text-sm font-semibold text-[#162543] [overflow-wrap:anywhere]">
               {getCategoryGroupLabel(group.id, locale)}
             </span>
-            <span className="mt-0.5 block text-xs text-[#9ca3af]">
+            <span className="mt-0.5 block text-xs text-[#68778d]">
               {countLabel ? countLabel(group.items.length) : `${group.items.length}`}
             </span>
           </span>

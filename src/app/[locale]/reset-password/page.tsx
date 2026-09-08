@@ -198,7 +198,7 @@ export default function ResetPasswordPage() {
         <main className="flex-1 flex items-center justify-center py-12 px-4">
           <div className="w-full max-w-md rounded-3xl border border-[#e5e7eb] bg-white p-8 text-center shadow-sm">
             <SuccessIcon size={80} className="mx-auto mb-5" />
-            <h1 className="text-2xl font-bold text-[#111827] mb-2">{t("doneTitle")}</h1>
+            <h1 className="text-2xl font-bold text-[#162543] mb-2">{t("doneTitle")}</h1>
             <p className="text-[#6b7280] text-sm">
               {t("doneBody")}
             </p>
@@ -216,7 +216,7 @@ export default function ResetPasswordPage() {
         <div className="w-full max-w-md rounded-3xl border border-[#e5e7eb] bg-white p-8 shadow-sm">
           <div className="text-center mb-8">
             <BrandIconBadge icon={Lock} size={56} className="mx-auto mb-4" />
-            <h1 className="text-2xl font-bold text-[#111827]">{t("title")}</h1>
+            <h1 className="text-2xl font-bold text-[#162543]">{t("title")}</h1>
             <p className="text-[#6b7280] text-sm mt-1">
               {t("subtitle")}
             </p>

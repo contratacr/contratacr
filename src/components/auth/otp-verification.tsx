@@ -145,10 +145,10 @@ export function OtpVerification({ email, onVerified, autoResendOnMount = false }
 
   return (
     <div ref={containerRef} className="scroll-mt-24 text-center">
-      <h1 className="text-xl font-bold text-[#111827]">{isEn ? "Verify your email" : "Verifica tu correo"}</h1>
+      <h1 className="text-xl font-bold text-[#162543]">{isEn ? "Verify your email" : "Verifica tu correo"}</h1>
       <p className="text-sm text-[#6b7280] mt-1.5 mb-6">
         {isEn ? "Enter the 6-digit code we sent to" : "Ingresa el código de 6 dígitos que enviamos a"}{" "}
-        <strong className="text-[#111827]">{email}</strong>.
+        <strong className="text-[#162543]">{email}</strong>.
       </p>
 
       {resentOnOpen && (
@@ -180,7 +180,7 @@ export function OtpVerification({ email, onVerified, autoResendOnMount = false }
             onKeyDown={(e) => handleKeyDown(i, e)}
             disabled={verifying}
             autoComplete={i === 0 ? "one-time-code" : "off"}
-            className="w-11 h-14 text-center text-xl font-bold border-2 rounded-xl border-[#e5e7eb] bg-white text-[#111827] focus:outline-none focus:border-[#009FD9] focus:ring-2 focus:ring-[#009FD9]/20 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+            className="w-11 h-14 text-center text-xl font-bold border-2 rounded-xl border-[#e5e7eb] bg-white text-[#162543] focus:outline-none focus:border-[#009FD9] focus:ring-2 focus:ring-[#009FD9]/20 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
           />
         ))}
       </div>

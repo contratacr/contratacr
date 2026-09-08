@@ -48,7 +48,7 @@ export function AdminInsurers() {
     <div>
       <div className="flex items-center gap-2 mb-5">
         <Shield className="h-5 w-5 text-[#009FD9]" />
-        <h1 className="text-xl font-bold text-[#111827]">Aseguradoras sugeridas</h1>
+        <h1 className="text-xl font-bold text-[#162543]">Aseguradoras sugeridas</h1>
       </div>
 
       <div className="flex items-center gap-2 mb-4">
@@ -66,7 +66,7 @@ export function AdminInsurers() {
       {loading ? (
         <div className="flex justify-center py-12"><Loader2 className="h-7 w-7 animate-spin text-[#009FD9]" /></div>
       ) : items.length === 0 ? (
-        <div className="text-center py-16 text-[#9ca3af]">
+        <div className="text-center py-16 text-[#68778d]">
           <Shield className="h-10 w-10 mx-auto mb-2 text-[#cbd5e1]" />
           <p className="text-sm">No hay sugerencias {status === "pending" ? "pendientes" : status === "approved" ? "aprobadas" : "rechazadas"}.</p>
         </div>
@@ -75,8 +75,8 @@ export function AdminInsurers() {
           {items.map((i) => (
             <div key={i.id} className="flex items-center gap-3 bg-white rounded-xl border border-[#e5e7eb] px-4 py-3">
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-[#111827]">{i.suggested_name || i.label}</p>
-                <p className="text-xs text-[#9ca3af]">Sugerida el {new Date(i.created_at).toLocaleDateString("es-CR")}</p>
+                <p className="text-sm font-semibold text-[#162543]">{i.suggested_name || i.label}</p>
+                <p className="text-xs text-[#68778d]">Sugerida el {new Date(i.created_at).toLocaleDateString("es-CR")}</p>
               </div>
               {status === "pending" && (
                 <div className="flex items-center gap-2">
