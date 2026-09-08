@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ShieldCheck, Flag, Shield, Tag, Headset, Users, LayoutGrid, BarChart3, CalendarCheck, ClipboardList, ArrowLeft, Star, Briefcase, BadgePercent, MapPinned, Wallet } from "lucide-react";
+import { ShieldCheck, Flag, Shield, Tag, Headset, Users, LayoutGrid, BarChart3, CalendarCheck, ClipboardList, ArrowLeft, Star, Briefcase, BadgePercent, MapPinned, Wallet, Megaphone } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
 import { ContrataCRLogo } from "@/components/landing/landing-navbar";
@@ -9,7 +9,7 @@ import { ADMIN_REFRESH_EVENT } from "@/hooks/use-admin-auto-refresh";
 
 export type AdminTab =
   | "resumen" | "verificacion" | "usuarios" | "solicitudes" | "publicaciones" | "reportes" | "aseguradoras"
-  | "categorias" | "cuentas" | "soporte" | "analitica" | "actividad" | "resenas" | "empleos" | "ofertas" | "cobertura" | "costos";
+  | "categorias" | "cuentas" | "soporte" | "analitica" | "actividad" | "resenas" | "empleos" | "ofertas" | "cobertura" | "costos" | "campanas";
 
 // Admin chrome — a navy (#0f172a) LEFT SIDEBAR with a #38bdf8 accent (horizontal
 // scroll strip on small screens). "Resumen" is the home/overview; the other
@@ -86,6 +86,7 @@ export function AdminShell({
     { id: "soporte", label: "Soporte", icon: Headset, href: "/admin/soporte", badge: counts.soporte ?? 0 },
     { id: "cuentas", label: "Cuentas", icon: Shield, href: "/admin/cuentas", badge: counts.cuentas ?? 0 },
     { id: "analitica", label: "Analítica", icon: BarChart3, href: "/admin/analitica", badge: 0 },
+    { id: "campanas", label: "Campañas", icon: Megaphone, href: "/admin/campanas", badge: 0 },
   ];
 
   // The sidebar footer is narrow — show ONLY first name + first surname so the name
@@ -142,7 +143,7 @@ export function AdminShell({
           {[
             { label: "Principal", ids: ["resumen", "usuarios"] },
             { label: "Operación", ids: ["verificacion", "solicitudes", "publicaciones", "resenas", "reportes", "soporte"] },
-            { label: "Marketplace", ids: ["empleos", "ofertas"] },
+            { label: "Marketplace", ids: ["empleos", "ofertas", "campanas"] },
             { label: "Gestión", ids: ["categorias", "aseguradoras", "cuentas"] },
             { label: "Información", ids: ["analitica", "cobertura", "costos"] },
           ].map((group, index) => (

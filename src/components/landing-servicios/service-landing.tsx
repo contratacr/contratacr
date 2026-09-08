@@ -3,12 +3,12 @@ import { Link } from "@/i18n/navigation";
 import { LandingNavbar } from "@/components/landing/landing-navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { VerifiedSeal } from "@/components/ui/verified-seal";
-import { Star, MapPin, ArrowRight } from "lucide-react";
+import { Star, MapPin, ArrowRight, ShieldCheck } from "lucide-react";
 import { getCategoryLabel } from "@/lib/data/categories";
 import { PROVINCES, getProvinceById } from "@/lib/data/cr-geography";
 import { searchProfessionals } from "@/lib/queries/professionals";
 import { getSupplyCounts, supplyKey, MIN_SUPPLY_FOR_LANDING } from "@/lib/queries/supply";
-import { primaryPricingLabel } from "@/lib/pricing";
+import { primaryPricingLabel, formatColones, type PricingType } from "@/lib/pricing";
 import { cldThumb } from "@/lib/cloudinary";
 import { getInitials, proDisplayName } from "@/lib/utils";
 import type { ProfessionalCardData } from "@/components/professionals/professional-card";
@@ -35,6 +35,27 @@ export async function ServiceLanding({ locale, categoryId, provinceId }: { local
   const placeName = province?.name ?? "";
   const provincesWithSupply = PROVINCES.filter((p) => (supply.byCategoryProvince[supplyKey(categoryId, p.id)] ?? 0) >= MIN_SUPPLY_FOR_LANDING);
   const buscarHref = `/buscar?categoria=${encodeURIComponent(categoryId)}${province ? `&provincia=${province.id}` : ""}`;
+  // Guía de precios: rangos reales de los servicios publicados en este oficio
+  // (todo el país, para que haya datos). Solo tipos con 3 o más precios.
+  const fuentePrecios = province ? nationwide : list;
+  const porTipo = new Map<PricingType, number[]>();
+  const prosConPrecio = new Set<string>();
+  const agregar = (proId: string, tipo: PricingType | null | undefined, monto: unknown) => {
+    const valor = Number(monto);
+    if (!tipo || tipo === "a_convenir" || !Number.isFinite(valor) || valor <= 0) return;
+    (porTipo.get(tipo) ?? porTipo.set(tipo, []).get(tipo)!).push(valor);
+    prosConPrecio.add(proId);
+  };
+  for (const pro of fuentePrecios) {
+    const deServicios = (pro.services ?? []).filter((svc) => svc.active !== false && svc.category === categoryId && svc.priceAmount);
+    if (deServicios.length > 0) deServicios.forEach((svc) => agregar(pro.id, svc.priceType, svc.priceAmount));
+    else (pro.pricing ?? []).forEach((tier) => agregar(pro.id, tier.type, tier.amount));
+  }
+  const guiaPrecios = ([...porTipo.entries()] as [PricingType, number[]][])
+    .filter(([, v]) => v.length >= 3)
+    .map(([tipo, v]) => { const o = [...v].sort((a, b) => a - b); return { tipo, min: o[0], max: o[o.length - 1], mediana: o[Math.floor(o.length / 2)], n: o.length }; })
+    .sort((a, b) => b.n - a.n)
+    .slice(0, 3);
   const chip = (active: boolean) =>
     `inline-flex h-9 shrink-0 items-center rounded-full border px-3.5 text-[13px] font-bold transition-colors ${active ? "border-[#009FD9] bg-[#009FD9] text-white" : "border-[#d7e1ea] bg-white text-[#162543] hover:border-[#009FD9] hover:text-[#009FD9]"}`;
 
@@ -109,6 +130,34 @@ export async function ServiceLanding({ locale, categoryId, provinceId }: { local
             <Link href={buscarHref} className="mt-4 inline-flex h-12 w-full items-center justify-center rounded-full bg-[#009FD9] px-6 text-[15px] font-bold text-white transition-colors hover:bg-[#0089bb]">
               {t("seeAll", { count })}
             </Link>
+          </div>
+        </section>
+
+        {guiaPrecios.length > 0 && (
+          <section className="px-4 pb-6 sm:px-6">
+            <div className="mx-auto max-w-3xl rounded-2xl border border-[#e5eaf0] bg-white p-5">
+              <h2 className="text-lg font-extrabold text-[#162543]">{t("priceTitle")}</h2>
+              <p className="mt-1 text-[13px] leading-5 text-[#68778d]">{t("priceBody", { count: prosConPrecio.size, category })}</p>
+              <dl className="mt-4 grid gap-3 sm:grid-cols-3">
+                {guiaPrecios.map((g) => (
+                  <div key={g.tipo} className="rounded-xl bg-[#f4f7fa] px-4 py-3">
+                    <dt className="text-[12px] font-bold uppercase tracking-wide text-[#68778d]">{t(`priceUnit_${g.tipo}`)}</dt>
+                    <dd className="mt-1 text-[17px] font-extrabold text-[#162543]">{formatColones(g.min)} – {formatColones(g.max)}</dd>
+                    <dd className="text-[12px] font-semibold text-[#007fae]">{t("priceMedian", { value: formatColones(g.mediana) })}</dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
+          </section>
+        )}
+
+        <section className="px-4 pb-6 sm:px-6">
+          <div className="mx-auto flex max-w-3xl items-start gap-3 rounded-2xl border border-[#bfe3f5] bg-[#f4fbfe] p-5">
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-white text-[#009FD9]"><ShieldCheck className="h-5 w-5" /></span>
+            <div>
+              <h2 className="text-[15px] font-extrabold text-[#162543]">{t("guaranteeTitle")}</h2>
+              <p className="mt-0.5 text-[14px] leading-6 text-[#52627a]">{t("guaranteeBody")}</p>
+            </div>
           </div>
         </section>
 

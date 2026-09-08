@@ -48,7 +48,9 @@ interface SearchPageProps {
 }
 
 const MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "";
-const RESULTS_PER_PAGE = 20;
+// 10 en la primera pintura: con 20 el HTML pesaba 688 KB y se congelaba en 4G;
+// el resto llega al desplazarse.
+const RESULTS_PER_PAGE = 10;
 const SORT_OPTIONS = new Set(["rating", "cercania", "experience"]);
 const PRICE_AVAILABILITY_OPTIONS = new Set(["visible", "quote"]);
 const PRICE_UNIT_OPTIONS = new Set(["por_hora", "por_consulta", "por_proyecto"]);

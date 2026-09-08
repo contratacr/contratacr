@@ -27,6 +27,9 @@ type Props = {
 
 type View = "menu" | "card" | "reviews";
 
+const SELLO_SVG = "data:image/svg+xml;utf8," + encodeURIComponent(
+  '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="#009FD9" d="M12 1.8l2.3 1.7 2.8-.4 1.1 2.6 2.6 1.1-.4 2.8 1.7 2.3-1.7 2.3.4 2.8-2.6 1.1-1.1 2.6-2.8-.4L12 22.2l-2.3-1.7-2.8.4-1.1-2.6-2.6-1.1.4-2.8L1.8 12l1.7-2.3-.4-2.8 2.6-1.1 1.1-2.6 2.8.4z"/><path fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" d="M7.5 12.2l3 3 6-6.4"/></svg>',
+);
 const CARD_W = 1080;
 const CARD_H = 1350;
 
@@ -94,7 +97,8 @@ export function ShareKit({ open, onClose, profileUrl, name, categoryLabel, avata
       ctx.fillStyle = "#009FD9"; ctx.fillText("CR", x0 + wContrata, 128);
       // Foto centrada sobre el borde de la banda
       const cx = CARD_W / 2; const R = 120; const fotoCy = 260 + 100;
-      ctx.save(); ctx.beginPath(); ctx.arc(cx, fotoCy, R + 10, 0, Math.PI * 2); ctx.fillStyle = "#ffffff"; ctx.fill(); ctx.restore();
+      ctx.save(); ctx.beginPath(); ctx.arc(cx, fotoCy, R + 14, 0, Math.PI * 2); ctx.fillStyle = "#ffffff"; ctx.fill();
+      ctx.beginPath(); ctx.arc(cx, fotoCy, R + 6, 0, Math.PI * 2); ctx.fillStyle = "#cfeaf6"; ctx.fill(); ctx.restore();
       const avatar = avatarUrl ? await loadImage(`/api/media/canvas?url=${encodeURIComponent(avatarUrl)}`) : null;
       ctx.save(); ctx.beginPath(); ctx.arc(cx, fotoCy, R, 0, Math.PI * 2); ctx.clip();
       if (avatar) {
@@ -109,13 +113,18 @@ export function ShareKit({ open, onClose, profileUrl, name, categoryLabel, avata
       // Nombre, verificado, oficio, calificación
       let y = fotoCy + R + 40;
       ctx.textAlign = "center"; ctx.textBaseline = "alphabetic"; ctx.fillStyle = "#162543";
-      const size = fitText(ctx, name, CARD_W - 200, 58);
-      y += size; ctx.fillText(name, cx, y);
-      if (isVerified) { y += 44; ctx.font = "700 30px Inter, -apple-system, sans-serif"; ctx.fillStyle = "#0089bb"; ctx.fillText(`✓ ${t("cardTrust")}`, cx, y); }
+      const sello = isVerified ? await loadImage(SELLO_SVG) : null;
+      const selloW = sello ? 52 : 0;
+      const size = fitText(ctx, name, CARD_W - 200 - selloW, 58);
+      y += size;
+      const nameW = ctx.measureText(name).width;
+      ctx.textAlign = "left"; ctx.fillText(name, cx - (nameW + (sello ? selloW + 12 : 0)) / 2, y);
+      if (sello) ctx.drawImage(sello, cx - (nameW + selloW + 12) / 2 + nameW + 12, y - size * 0.82, selloW, selloW);
+      ctx.textAlign = "center";
       if (categoryLabel) { y += 46; ctx.font = "600 34px Inter, -apple-system, sans-serif"; ctx.fillStyle = "#52627a"; ctx.fillText(categoryLabel, cx, y); }
       if (reviewCount > 0) { y += 46; ctx.font = "700 32px Inter, -apple-system, sans-serif"; ctx.fillStyle = "#162543"; ctx.fillText(`★ ${ratingAvg.toFixed(1)} · ${reviewCount} ${reviewCount === 1 ? "reseña" : "reseñas"}`, cx, y); }
       // QR anclado al pie: el pie (texto + URL) se reserva primero, el QR va arriba.
-      const pieUrlY = CARD_H - 60 - 48; const pieTextY = pieUrlY - 44;
+      const pieTextY = CARD_H - 60 - 56;
       const qrSize = Math.min(420, pieTextY - 40 - (y + 40) - 24);
       const qrY = pieTextY - 40 - qrSize - 16;
       const qrData = await QRCode.toDataURL(profileUrl, { margin: 1, width: qrSize, color: { dark: "#162543", light: "#ffffff" }, errorCorrectionLevel: "M" });
@@ -126,8 +135,6 @@ export function ShareKit({ open, onClose, profileUrl, name, categoryLabel, avata
         ctx.drawImage(qrImg, cx - qrSize / 2, qrY, qrSize, qrSize);
       }
       ctx.font = "700 30px Inter, -apple-system, sans-serif"; ctx.fillStyle = "#162543"; ctx.fillText(t("cardFooter"), cx, pieTextY);
-      const urlCorta = profileUrl.replace(/^https?:\/\//, "");
-      fitText(ctx, urlCorta, CARD_W - 200, 26, "600", 16); ctx.fillStyle = "#68778d"; ctx.fillText(urlCorta, cx, pieUrlY);
       try {
         canvas.toBlob((blob) => {
           if (cancelled || !blob) return;
@@ -187,12 +194,9 @@ export function ShareKit({ open, onClose, profileUrl, name, categoryLabel, avata
     <Modal open={open} onClose={cerrar} title={t("title")} subtitle={view === "menu" ? t("subtitle") : undefined} size="sm" mobilePresentation="center" closeLabel={t("close")}>
       {view === "menu" && (
         <div className="flex flex-col gap-2.5">
-          {option(Link2, t("linkTitle"), t("linkBody"), () => { void shareLink(); })}
+          {option(copied === "link" ? Check : Link2, copied === "link" ? t("copied") : t("linkTitle"), t("linkBody"), () => { void shareLink(); })}
           {option(QrCode, t("cardTitle"), t("cardBody"), () => setView("card"))}
           {option(Star, t("reviewsTitle"), t("reviewsBody"), () => setView("reviews"))}
-          <Button type="button" variant="secondary" className="mt-1 w-full" onClick={() => void copy(profileUrl, "link")}>
-            {copied === "link" ? <><Check className="h-4 w-4" />{t("copied")}</> : t("copy")}
-          </Button>
         </div>
       )}
       {view === "card" && (
