@@ -597,7 +597,9 @@ export default function ProfilePage() {
               "destacado" ribbon. */}
           <div className="relative mb-6 rounded-2xl border border-[#e5e7eb] bg-white p-4 shadow-sm sm:p-6">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex min-w-0 items-start gap-3 sm:gap-4">
+              {/* Nombre centrado contra la foto: al bajar los botones, alinear
+                  arriba dejaba un hueco al lado del avatar. */}
+              <div className="flex min-w-0 items-center gap-3 sm:gap-4">
                 <ImagePreviewDialog
                   src={professional.avatarUrl}
                   alt={professional.fullName}
