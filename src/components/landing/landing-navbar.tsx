@@ -1910,7 +1910,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                                 type="submit"
                                 aria-label={t("search")}
                                 title={t("search")}
-                                className="hidden h-8 w-8 shrink-0 place-items-center rounded-full text-gray-400 transition-colors hover:bg-[#EBF5FB] hover:text-[#009FD9] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9]/30 sm:grid"
+                                className="hidden h-8 w-8 shrink-0 place-items-center rounded-full text-[#162543] transition-colors hover:bg-[#EBF5FB] hover:text-[#009FD9] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9]/30 sm:grid"
                               >
                                 <Search className="h-5 w-5" />
                               </button>
@@ -1933,7 +1933,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                             </div>
                             <div className="mx-2 my-3 hidden w-px shrink-0 self-stretch bg-[#dbe4ee] sm:block" />
                             <div ref={compactLocRef} className="hidden h-full min-w-0 flex-[2_1_0%] items-center gap-2 sm:flex">
-                              <MapPin className="h-5 w-5 text-gray-300 shrink-0" />
+                              <MapPin className="h-5 w-5 shrink-0 text-[#162543]" />
                               <input
                                 type="text"
                                 ref={navLocationInputRef}

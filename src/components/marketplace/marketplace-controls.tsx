@@ -309,7 +309,7 @@ export function MarketplaceSearch({
   return (
     <div ref={rootRef} className="relative min-w-0 flex-1">
       <div className="flex h-11 w-full items-center gap-3 rounded-full border border-[#e3ebf2] bg-[#f6f8fb] px-4 transition-colors focus-within:border-[#009FD9] focus-within:bg-white">
-        <Search className="h-5 w-5 shrink-0 text-[#162543] lg:text-gray-300" />
+        <Search className="h-5 w-5 shrink-0 text-[#162543]" />
         <div className="relative min-w-0 flex-[1.85]">
           <input
             ref={inputRef}
@@ -353,7 +353,7 @@ export function MarketplaceSearch({
           <>
             <span aria-hidden="true" className="hidden h-6 w-px shrink-0 bg-[#dfe5eb] lg:block" />
             <div className="relative hidden min-w-[140px] flex-1 lg:block xl:min-w-[180px]">
-              <SecondaryIcon className="pointer-events-none absolute left-0 top-1/2 h-5 w-5 -translate-y-1/2 text-[#a1adbb]" aria-hidden="true" />
+              <SecondaryIcon className="pointer-events-none absolute left-0 top-1/2 h-5 w-5 -translate-y-1/2 text-[#162543]" aria-hidden="true" />
               <input ref={desktopSecondaryInputRef} value={secondary.value} onChange={(event) => { secondary.onChange(event.target.value); setDesktopField("secondary"); }} onFocus={() => setDesktopField("secondary")} placeholder={secondary.placeholder} aria-label={secondary.ariaLabel ?? secondary.placeholder} className="h-10 w-full bg-transparent pl-8 pr-8 text-base font-normal text-gray-700 outline-none placeholder:text-gray-400" />
               {secondary.value && <button type="button" onClick={() => secondary.onChange("")} aria-label={secondaryClearLabel} className="absolute right-0 top-1/2 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-full text-[#8b96a5] hover:bg-[#edf3f7]"><X className="h-4 w-4" /></button>}
             {desktopField === "secondary" && visibleSecondarySuggestions.length > 0 && (
