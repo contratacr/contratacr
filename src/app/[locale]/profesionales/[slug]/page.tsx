@@ -701,8 +701,8 @@ export default function ProfilePage() {
                   aria-label={linkCopiado ? t("linkCopied") : t("shareProfile")}
                   title={linkCopiado ? t("linkCopied") : t("shareProfile")}
                   className={cn(
-                    "inline-flex h-11 w-full items-center justify-center gap-2 rounded-full border-[1.5px] bg-white px-4 text-[13px] font-bold transition-colors sm:w-44",
-                    linkCopiado ? "border-[#b8e7cf] bg-[#f2fbf6] text-[#15803d]" : "border-[#009FD9] text-[#009FD9] hover:bg-[#EBF5FB]",
+                    "inline-flex h-11 w-full items-center justify-center gap-2 rounded-full border bg-white px-4 text-[13px] font-bold transition-colors sm:w-44",
+                    linkCopiado ? "border-[#b8e7cf] bg-[#f2fbf6] text-[#15803d]" : "border-[#d7e1ea] text-[#162543] hover:border-[#b9c8d6] hover:bg-[#f6f9fb]",
                   )}
                 >
                   {linkCopiado && <Check className="h-4 w-4 shrink-0" />}

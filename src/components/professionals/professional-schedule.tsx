@@ -813,7 +813,7 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
   // the pro's OWN card (shows a self note instead). Rendered only when showCall is true.
   const contactSource = stacked ? "profile" : "search";
   // Secundario del app: píldora blanca con borde y texto turquesa, sin ícono.
-  const secondaryContactClass = "w-full inline-flex h-11 items-center justify-center gap-1.5 rounded-full border-[1.5px] border-[#009FD9] bg-white py-0 text-[13px] font-bold text-[#009FD9] transition-colors hover:bg-[#EBF5FB] disabled:opacity-60";
+  const secondaryContactClass = "w-full inline-flex h-11 items-center justify-center gap-1.5 rounded-full border border-[#d7e1ea] bg-white py-0 text-[13px] font-bold text-[#162543] transition-colors hover:border-[#b9c8d6] hover:bg-[#f6f9fb] disabled:opacity-60";
   // Profile page uses the short label "Llamar"; /buscar keeps "Contáctanos por llamada".
   const renderCall = (className = secondaryContactClass) => (
     <ContactButton
@@ -874,11 +874,21 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
   const profileContactButtons = (
     <>
       {hasSchedule && verHorarioButton}
+      {/* Con agenda son tres acciones y las dos de contacto comparten fila; sin
+          agenda solo hay dos y cada una ocupa su propio renglón, a lo ancho:
+          media píldora para la única forma de contactar se leía como algo menor. */}
       {showCall ? (
-        <div className="grid grid-cols-2 gap-2">
-          {chatLauncher}
-          {renderCall(`${secondaryContactClass} text-[13px] font-bold`)}
-        </div>
+        hasSchedule ? (
+          <div className="grid grid-cols-2 gap-2">
+            {chatLauncher}
+            {renderCall(`${secondaryContactClass} text-[13px] font-bold`)}
+          </div>
+        ) : (
+          <>
+            {chatLauncher}
+            {renderCall(`${secondaryContactClass} text-[13px] font-bold`)}
+          </>
+        )
       ) : (
         chatLauncher
       )}

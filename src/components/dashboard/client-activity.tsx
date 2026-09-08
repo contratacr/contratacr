@@ -770,7 +770,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                               const rebookAction = puedeRecontratar ? (
                                 <Link
                                   href={`/profesionales/${b.professionals?.slug}?from=${encodeURIComponent("/dashboard/cliente")}`}
-                                  className={`${actionButtonClass} inline-flex items-center justify-center border-[1.5px] border-[#009FD9] bg-white text-[#009FD9] hover:bg-[#EBF5FB]`}
+                                  className={`${actionButtonClass} inline-flex items-center justify-center border border-[#d7e1ea] bg-white text-[#162543] hover:border-[#b9c8d6] hover:bg-[#f6f9fb]`}
                                 >
                                   {t("bookAgain")}
                                 </Link>

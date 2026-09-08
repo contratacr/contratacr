@@ -499,15 +499,17 @@ export default function LoginPage() {
           {/* Same card container as the client ("Crear cuenta de cliente") and
               professional registrations — clean white card, hairline border, soft
               shadow, p-8 — so the whole auth flow (login + both signups) is consistent. */}
-          <div className="bg-white rounded-3xl shadow-sm border border-[#e5e7eb] p-8">
+          {/* Volver va ARRIBA de la tarjeta, no dentro: metido entre el borde y el
+              título empujaba el encabezado y se leía como parte del formulario. */}
           <button
             type="button"
             onClick={() => setFormularioAbierto(false)}
-            className="-mt-2 mb-4 inline-flex items-center gap-1 text-sm font-semibold text-[#6b7280] lg:hidden"
+            className="mb-3 -ml-2 inline-flex h-10 items-center gap-1.5 rounded-full px-2 text-sm font-bold text-[#526277] transition-colors hover:bg-[#eef4f9] hover:text-[#162543] lg:hidden"
           >
             <ArrowLeft className="h-4 w-4" />
             {t("back")}
           </button>
+          <div className="bg-white rounded-3xl shadow-sm border border-[#e5e7eb] p-8">
           <div className="text-center mb-8">
             <h1 className="text-2xl font-bold text-[#162543]">{t("title")}</h1>
             <p className="text-[#6b7280] text-sm mt-1">{t("subtitle")}</p>

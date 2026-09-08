@@ -55,7 +55,7 @@ export function QuoteBlock({ bookingId, projectId, role, canCreate = false, defa
         </button>
       )}
       {role === "pro" && canCreate && !abierta && (
-        <button type="button" onClick={() => setEditor(true)} className="inline-flex h-11 w-full items-center justify-center rounded-full border-[1.5px] border-[#009FD9] bg-white px-4 text-[13px] font-bold text-[#009FD9] transition-colors hover:bg-[#EBF5FB]">
+        <button type="button" onClick={() => setEditor(true)} className="inline-flex h-11 w-full items-center justify-center rounded-full border border-[#d7e1ea] bg-white px-4 text-[13px] font-bold text-[#162543] transition-colors hover:border-[#b9c8d6] hover:bg-[#f6f9fb]">
           {ultima ? t("sendAnother") : t("send")}
         </button>
       )}

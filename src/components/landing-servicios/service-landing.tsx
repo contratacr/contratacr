@@ -155,7 +155,7 @@ export async function ServiceLanding({ locale, categoryId, provinceId }: { local
           <div className="mx-auto max-w-3xl rounded-2xl border border-[#e5eaf0] bg-white p-5">
             <h2 className="text-lg font-extrabold text-[#162543]">{t("publishTitle")}</h2>
             <p className="mt-1 text-[14px] leading-6 text-[#52627a]">{t("publishBody", { category })}</p>
-            <Link href="/dashboard/profesional?tab=sent_projects&openPublish=1" className="mt-4 inline-flex h-11 w-full items-center justify-center rounded-full border-[1.5px] border-[#009FD9] bg-white px-5 text-[14px] font-bold text-[#009FD9] transition-colors hover:bg-[#EBF5FB] sm:w-auto">
+            <Link href="/dashboard/profesional?tab=sent_projects&openPublish=1" className="mt-4 inline-flex h-11 w-full items-center justify-center rounded-full border border-[#d7e1ea] bg-white px-5 text-[14px] font-bold text-[#162543] transition-colors hover:border-[#b9c8d6] hover:bg-[#f6f9fb] sm:w-auto">
               {t("publishCta")}
             </Link>
           </div>

@@ -2160,7 +2160,7 @@ export default function DashboardPage() {
                     onClick={openInNewTabOnDesktop}
                     aria-label={locale === "en" ? "View public profile" : "Ver perfil público"}
                     data-testid="dashboard-mobile-view-profile"
-                    className="inline-flex h-11 w-full items-center justify-center rounded-full border-[1.5px] border-[#009FD9] bg-white text-[13px] font-bold text-[#009FD9] transition active:bg-[#EBF5FB]"
+                    className="inline-flex h-11 w-full items-center justify-center rounded-full border border-[#d7e1ea] bg-white text-[13px] font-bold text-[#162543] transition active:bg-[#f6f9fb]"
                   >
                     {locale === "en" ? "View profile" : "Ver perfil"}
                   </Link>
@@ -2168,7 +2168,7 @@ export default function DashboardPage() {
                     type="button"
                     data-testid="dashboard-mobile-share-profile"
                     onClick={() => setShareKitOpen(true)}
-                    className="inline-flex h-11 !min-h-0 w-full items-center justify-center rounded-full border-[1.5px] border-[#009FD9] bg-white text-[13px] font-bold text-[#009FD9] transition active:bg-[#EBF5FB]"
+                    className="inline-flex h-11 !min-h-0 w-full items-center justify-center rounded-full border border-[#d7e1ea] bg-white text-[13px] font-bold text-[#162543] transition active:bg-[#f6f9fb]"
                   >
                     {locale === "en" ? "Share" : "Compartir"}
                   </button>
@@ -2190,7 +2190,7 @@ export default function DashboardPage() {
                     href={`${publicProfileHref}?from=${encodeURIComponent("/dashboard/profesional")}`}
                     onClick={openInNewTabOnDesktop}
                     aria-label={locale === "en" ? "View public profile" : "Ver perfil público"}
-                    className="inline-flex h-11 items-center justify-center rounded-full border-[1.5px] border-[#009FD9] bg-white px-5 text-[13px] font-bold text-[#009FD9] transition hover:bg-[#EBF5FB] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9]"
+                    className="inline-flex h-11 items-center justify-center rounded-full border border-[#d7e1ea] bg-white px-5 text-[13px] font-bold text-[#162543] transition hover:border-[#b9c8d6] hover:bg-[#f6f9fb] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9]"
                   >
                     {locale === "en" ? "View profile" : "Ver perfil"}
                   </Link>
@@ -2199,7 +2199,7 @@ export default function DashboardPage() {
                   <button
                     type="button"
                     onClick={() => setShareKitOpen(true)}
-                    className="inline-flex h-11 items-center justify-center rounded-full border-[1.5px] border-[#009FD9] bg-white px-5 text-[13px] font-bold text-[#009FD9] transition hover:bg-[#EBF5FB]"
+                    className="inline-flex h-11 items-center justify-center rounded-full border border-[#d7e1ea] bg-white px-5 text-[13px] font-bold text-[#162543] transition hover:border-[#b9c8d6] hover:bg-[#f6f9fb]"
                   >
                     {locale === "en" ? "Share" : "Compartir"}
                   </button>

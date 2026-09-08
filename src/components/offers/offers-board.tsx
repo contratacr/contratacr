@@ -691,8 +691,8 @@ export function OfferContactActions({
   }
 
   const secondaryClass = compact
-    ? "inline-flex h-9 min-w-0 items-center justify-center gap-1.5 rounded-full border-[1.5px] border-[#009FD9] bg-white px-2 text-[12px] font-bold text-[#009FD9] transition hover:bg-[#EBF5FB]"
-    : "inline-flex h-11 min-w-0 items-center justify-center gap-2 rounded-full border-[1.5px] border-[#009FD9] bg-white px-3 text-sm font-bold text-[#009FD9] transition hover:bg-[#EBF5FB]";
+    ? "inline-flex h-9 min-w-0 items-center justify-center gap-1.5 rounded-full border border-[#d7e1ea] bg-white px-2 text-[12px] font-bold text-[#162543] transition hover:border-[#b9c8d6] hover:bg-[#f6f9fb]"
+    : "inline-flex h-11 min-w-0 items-center justify-center gap-2 rounded-full border border-[#d7e1ea] bg-white px-3 text-sm font-bold text-[#162543] transition hover:border-[#b9c8d6] hover:bg-[#f6f9fb]";
   return (
     <div className="relative z-[2] mt-3 space-y-2">
       {showPrimaryContact && (

@@ -116,7 +116,7 @@ export function AdminCampaigns() {
             <label className="block"><span className="mb-1 block text-xs font-bold uppercase tracking-wide text-[#68778d]">Ruta del botón</span><input value={ctaPath} onChange={(e) => setCtaPath(e.target.value)} placeholder="/es/servicios/electricidad" className={campo} /></label>
           </div>
           <div className="flex flex-col gap-2 border-t border-[#eef2f6] pt-4 sm:flex-row">
-            <button type="button" disabled={!!enviando} onClick={() => void enviar("test")} className="inline-flex h-11 items-center justify-center gap-2 rounded-full border-[1.5px] border-[#009FD9] bg-white px-5 text-sm font-bold text-[#009FD9] transition hover:bg-[#EBF5FB] disabled:opacity-60">
+            <button type="button" disabled={!!enviando} onClick={() => void enviar("test")} className="inline-flex h-11 items-center justify-center gap-2 rounded-full border border-[#d7e1ea] bg-white px-5 text-sm font-bold text-[#162543] transition hover:border-[#b9c8d6] hover:bg-[#f6f9fb] disabled:opacity-60">
               {enviando === "test" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}Enviarme una prueba{adminEmail ? ` (${adminEmail})` : ""}
             </button>
             <button type="button" disabled={!!enviando || !clientes} onClick={() => void enviar("all")} className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[#009FD9] px-5 text-sm font-bold text-white transition hover:bg-[#0089bb] disabled:opacity-60">
@@ -140,7 +140,7 @@ export function AdminCampaigns() {
       <div className="rounded-2xl border border-[#e5e7eb] bg-white p-5">
         <h2 className="text-lg font-extrabold text-[#162543]">Profesionales sin precio</h2>
         <p className="mt-1 text-sm text-[#68778d]">{sinPrecio === null ? "Contando…" : `${sinPrecio} profesionales no publican ningún precio.`} Un aviso en el app los lleva directo a poner su precio de entrada.</p>
-        <button type="button" disabled={!!enviando || !sinPrecio} onClick={() => void avisarPrecios()} className="mt-4 inline-flex h-11 items-center justify-center gap-2 rounded-full border-[1.5px] border-[#009FD9] bg-white px-5 text-sm font-bold text-[#009FD9] transition hover:bg-[#EBF5FB] disabled:opacity-60">
+        <button type="button" disabled={!!enviando || !sinPrecio} onClick={() => void avisarPrecios()} className="mt-4 inline-flex h-11 items-center justify-center gap-2 rounded-full border border-[#d7e1ea] bg-white px-5 text-sm font-bold text-[#162543] transition hover:border-[#b9c8d6] hover:bg-[#f6f9fb] disabled:opacity-60">
           {enviando === "precios" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}Avisar a {sinPrecio ?? 0} profesionales
         </button>
       </div>
