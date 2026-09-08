@@ -161,7 +161,7 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
         <div className="relative flex shrink-0 items-center justify-center gap-3 border-b border-[#f3f4f6] px-14 py-4 sm:items-start sm:justify-between sm:px-6">
           <div className="min-w-0 text-center sm:text-left">
             <h2 id="publish-project-title" className="text-lg font-bold text-[#162543]">{t("title")}</h2>
-            <p className="mt-0.5 hidden text-xs text-[#6b7280] sm:block">{t("subtitle")}</p>
+            <p className="mt-0.5 text-xs text-[#6b7280]">{t("subtitle")}</p>
           </div>
           <button
             type="button"
