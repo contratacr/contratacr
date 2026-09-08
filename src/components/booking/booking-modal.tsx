@@ -696,15 +696,17 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
     const didBook = bookedRef.current;
     if (didBook) window.dispatchEvent(new Event("ccr:availability-changed"));
     bookedRef.current = false;
-    setStep("calendar");
-    setSelectedDate("");
-    setSelectedTime("");
-    setDescription("");
-    setCreatedBookingId(null);
+    if (!asPage) {
+      setStep("calendar");
+      setSelectedDate("");
+      setSelectedTime("");
+      setDescription("");
+      setCreatedBookingId(null);
+    }
     onClose();
     // Refresh server data so the slot we just booked stops showing as available on /buscar
     // (and the profile schedule). Only when a booking was actually made this session.
-    if (didBook) router.refresh();
+    if (didBook && !asPage) router.refresh();
   }
 
   // "Ver mi solicitud" → the client's Solicitudes section, where the just-created request sits
@@ -715,12 +717,14 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
     const params = new URLSearchParams({ tab: "sent_bookings" });
     if (createdBookingId) params.set("booking", createdBookingId);
     bookedRef.current = false;
-    setStep("calendar");
-    setSelectedDate("");
-    setSelectedTime("");
-    setDescription("");
-    setCreatedBookingId(null);
-    onClose();
+    if (!asPage) {
+      setStep("calendar");
+      setSelectedDate("");
+      setSelectedTime("");
+      setDescription("");
+      setCreatedBookingId(null);
+      onClose();
+    }
     router.push(`/dashboard/profesional?${params.toString()}`);
   }
 
@@ -1734,7 +1738,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                     )}
                   </div>
                   {createdBookingId && <DirectChatLauncher professionalId={professional.id} professionalName={professional.fullName} bookingId={createdBookingId} contextTitle={description || categoryName} buttonLabel="WhatsApp" analyticsSource="booking" className="w-full max-w-xs rounded-xl px-5 py-3 text-sm font-semibold" />}
-                  {selectedDate && selectedTime && (
+                  {selectedDate && selectedTime && !nativeApp && (
                     <button
                       onClick={downloadCalendar}
                       className="inline-flex items-center justify-center gap-2 w-full max-w-xs border border-[#e5e7eb] text-[#374151] hover:border-[#009FD9] hover:text-[#009FD9] font-semibold py-2.5 rounded-xl transition-colors text-sm"
