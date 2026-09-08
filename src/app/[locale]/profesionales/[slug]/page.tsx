@@ -40,7 +40,7 @@ import { getProfessionalDisplayName } from "@/lib/display-name";
 import { trackMetaEvent } from "@/lib/analytics/meta-pixel";
 import { trackInteraction } from "@/lib/analytics/interaction-events";
 import { cldLarge, cldThumb } from "@/lib/cloudinary";
-import { formatOfferPrice, type ProfessionalOffer } from "@/lib/offers";
+import { formatOfferPrice, offerDiscountPercent, type ProfessionalOffer } from "@/lib/offers";
 import { formatJobSalary, WORKPLACE_TYPES, type JobPost } from "@/lib/jobs";
 import { EMPLEOS_VISIBLE } from "@/lib/feature-flags";
 import { PerfilSkeleton } from "@/components/ui/section-skeletons";
@@ -558,7 +558,7 @@ export default function ProfilePage() {
     <div className="min-h-screen flex flex-col bg-[#f4f7fa]">
       <Navbar />
 
-      <main className="flex-1 py-8 [.ccr-native-app_&]:!pt-0">
+      <main className="flex-1 py-8 [.ccr-native-app_&]:!pt-0 [.ccr-native-app_&]:!pb-[calc(var(--ccr-native-bottom-nav-total,64px)+1.5rem)]">
         <div className="mx-auto max-w-4xl px-4 pt-0 sm:px-6 lg:px-8 [.ccr-native-app_&]:pt-4">
 
           {/* Preview mode → a clear way back to the panel. Otherwise, back to search. */}
@@ -957,36 +957,39 @@ export default function ProfilePage() {
                             : "Promociones activas de este profesional."}
                         </p>
                       </div>
-                      <div className="grid gap-4 sm:grid-cols-2">
+                      {/* Misma fila que en /ofertas —miniatura, título, precio y
+                          la línea de tipo · servicio— pero sin repetir el nombre del
+                          profesional, que aquí ya se sabe. */}
+                      <div className="divide-y divide-[#e5eaf0] overflow-hidden rounded-xl border border-[#dbe4ee] bg-white">
                         {publicOffers.map((offer) => {
                           const cover = offer.image_urls?.[0];
+                          const descuento = offerDiscountPercent(offer);
                           return (
                             <Link
                               key={offer.id}
                               href={`/ofertas/${offer.id}?from=${encodeURIComponent(`/profesionales/${routeSlug}?tab=ofertas`)}`}
-                              className="group overflow-hidden rounded-xl border border-[#dbe4ee] bg-white transition-colors hover:border-[#009FD9]"
+                              className="group flex min-w-0 gap-3 px-4 py-3 transition-colors hover:bg-[#f8fafc]"
                             >
-                              <div className="flex h-40 items-center justify-center overflow-hidden border-b border-[#edf1f5] bg-[#eef2f6] sm:h-44">
-                                {cover ? (
-                                  <ProgressiveImage src={cldLarge(cover, 900)} alt={offer.title} fit="cover" wrapperClassName="h-full w-full" />
-                                ) : (
-                                  <BadgePercent className="h-9 w-9 text-[#009FD9]" />
-                                )}
-                              </div>
-                              <div className="space-y-1.5 p-4">
-                                <p className="line-clamp-2 font-semibold leading-snug text-[#111827] group-hover:text-[#009FD9]">
-                                  {offer.title}
-                                </p>
-                                {offer.service_label && (
-                                  <p className="truncate text-sm text-[#6b7280]">{offer.service_label}</p>
-                                )}
-                                <div className="flex items-end justify-between gap-3">
-                                  <p className="font-bold text-[#009FD9]">{formatOfferPrice(offer)}</p>
-                                  {offer.location_label && (
-                                    <p className="truncate text-xs text-[#7b8798]">{offer.location_label}</p>
+                              <span className="grid h-[72px] w-[72px] shrink-0 place-items-center overflow-hidden rounded-xl border border-[#edf1f5] bg-[#eef2f6]">
+                                {cover
+                                  ? <ProgressiveImage src={cldLarge(cover, 300)} alt={offer.title} fit="cover" wrapperClassName="h-full w-full" />
+                                  : <BadgePercent className="h-6 w-6 text-[#009FD9]" />}
+                              </span>
+                              <span className="min-w-0 flex-1">
+                                <span className="flex min-w-0 items-center gap-2">
+                                  <span className="min-w-0 flex-1 truncate text-[15px] font-extrabold leading-5 text-[#005eaa]">{offer.title}</span>
+                                  {descuento && (
+                                    <span className="shrink-0 rounded-full bg-[#009fd9] px-2 py-0.5 text-[10px] font-extrabold leading-4 text-white">-{descuento}%</span>
                                   )}
-                                </div>
-                              </div>
+                                </span>
+                                <span className="mt-0.5 block truncate text-sm font-extrabold leading-5 text-[#007fae]">{formatOfferPrice(offer)}</span>
+                                {offer.service_label && (
+                                  <span className="mt-0.5 block truncate text-xs font-semibold leading-4 text-[#008fc3]">{offer.service_label}</span>
+                                )}
+                                {offer.location_label && (
+                                  <span className="mt-0.5 block truncate text-xs leading-4 text-[#68778d]">{offer.location_label}</span>
+                                )}
+                              </span>
                             </Link>
                           );
                         })}
@@ -1013,11 +1016,13 @@ export default function ProfilePage() {
                             href={`/empleos/${job.id}?from=${encodeURIComponent(`/profesionales/${routeSlug}?tab=empleos`)}`}
                             className="group block min-w-0 px-5 py-4 transition-colors hover:bg-[#f4fbfe]"
                           >
+                            {/* Mismo orden y colores que la lista de /empleos: título,
+                                línea de modalidad y zona, y el salario destacado. */}
                             <span className="block min-w-0">
-                              <span className="block truncate text-base font-semibold text-[#111827] group-hover:text-[#009FD9]">
+                              <span className="block truncate text-[15px] font-extrabold leading-tight text-[#005eaa]">
                                 {job.title}
                               </span>
-                              <span className="mt-1 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-sm text-[#6b7280]">
+                              <span className="mt-1 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-[13px] leading-5 text-[#52627a]">
                                 <span>{WORKPLACE_TYPES[job.workplace_type]}</span>
                                 {job.location_label && (
                                   <>
@@ -1026,7 +1031,7 @@ export default function ProfilePage() {
                                   </>
                                 )}
                               </span>
-                              <span className="mt-1.5 block text-sm font-bold text-[#009FD9]">
+                              <span className="mt-1 block truncate text-xs font-bold leading-4 text-[#008fc3]">
                                 {formatJobSalary(job)}
                               </span>
                             </span>

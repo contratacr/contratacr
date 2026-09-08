@@ -725,12 +725,12 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                               const sinFecha = isActiveB && !b.scheduled_date;
                               let primary: ReactNode = null;
                               if (sinFecha || fechaYaPaso) {
-                                primary = <Button size="sm" variant="chat" className={actionButtonClass} onClick={() => confirmBookingDone(b.id)}>{t("bookingHappened")}</Button>;
+                                primary = <Button size="sm" className={actionButtonClass} onClick={() => confirmBookingDone(b.id)}>{t("bookingHappened")}</Button>;
                               } else if (b.status === "completed") {
-                                primary = <Button size="sm" variant="chat" className={actionButtonClass} onClick={() => setReviewModal({ professionalId: b.professional_id, professionalName: b.professionals?.profiles?.full_name ?? t("professional"), bookingId: b.id })}>{rev ? t("editReview") : t("leaveReview")}</Button>;
+                                primary = <Button size="sm" className={actionButtonClass} onClick={() => setReviewModal({ professionalId: b.professional_id, professionalName: b.professionals?.profiles?.full_name ?? t("professional"), bookingId: b.id })}>{rev ? t("editReview") : t("leaveReview")}</Button>;
                               }
                               const messageAction = canMessage && b.professional_id ? (
-                                <DirectChatLauncher professionalId={b.professional_id} professionalName={b.professionals?.profiles?.full_name || t("professional")} bookingId={b.id} contextTitle={b.service_description} buttonLabel={t("contact")} analyticsSource="booking" className="h-11 w-auto shrink-0 grow whitespace-nowrap rounded-full px-4 text-[13px] font-bold" />
+                                <DirectChatLauncher professionalId={b.professional_id} professionalName={b.professionals?.profiles?.full_name || t("professional")} bookingId={b.id} contextTitle={b.service_description} buttonLabel={t("contact")} analyticsSource="booking" tone="contrast" className={actionButtonClass} />
                               ) : null;
                               // Lo frecuente se ve; lo excepcional vive en el menú, igual que en
                               // las tarjetas del profesional. Antes esta tarjeta mostraba las cinco
@@ -764,15 +764,15 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                                 <div className="flex items-start gap-2 border-t border-[#eef2f6] pt-3">
                                   <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
                                   {primary}
+                                  {messageAction}
                                   {puedeRecontratar && (
                                     <Link
                                       href={`/profesionales/${b.professionals?.slug}?from=${encodeURIComponent("/dashboard/cliente")}`}
-                                      className={`${actionButtonClass} inline-flex items-center justify-center border-2 border-[#162543] bg-white text-[#162543] hover:bg-[#eef1f6]`}
+                                      className={`${actionButtonClass} inline-flex items-center justify-center border border-[#dbe4ee] bg-white text-[#162543] hover:bg-[#f4f7fa]`}
                                     >
                                       {t("bookAgain")}
                                     </Link>
                                   )}
-                                  {messageAction}
                                   </div>
                                   {menu.length > 0 && <div className="shrink-0"><CardActionsMenu actions={menu} label={t("actions")} /></div>}
                                 </div>
