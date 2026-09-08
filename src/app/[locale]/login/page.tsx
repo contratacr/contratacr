@@ -58,6 +58,15 @@ function meaningfulRedirect(raw: string | null): string | null {
   if (path.startsWith("/dashboard")) return raw;
   const [pathname, query = ""] = path.split(/[?#]/, 2);
   if (pathname === "/mensajes") return raw;
+  // Acciones que EXIGEN cuenta: quien llegó a publicar un empleo, una oferta o
+  // una solicitud —o a reservar una cita— tiene que volver ahí después de
+  // entrar. Antes se le devolvía al panel y perdía lo que iba a hacer.
+  if (
+    pathname === "/empleos/publicar"
+    || pathname === "/ofertas/publicar"
+    || pathname === "/publicar-proyecto"
+    || /^\/profesionales\/[^/]+\/reservar$/.test(pathname)
+  ) return raw;
   const params = new URLSearchParams(query);
   if (pathname.startsWith("/profesionales/") && params.get("pendingReview") === "1") return raw;
   return null;
