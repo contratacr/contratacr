@@ -915,10 +915,16 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                           {/* Respuestas: quién escribió, qué dijo, y WhatsApp directo. */}
                           {proposalList && (() => {
                             const chosenId = project.accepted_professional_id ?? null;
-                            const ordered = [...proposalList].sort((a, b) => Number(b.professionals?.id === chosenId) - Number(a.professionals?.id === chosenId));
+                            // Proyecto cerrado: la lista de quienes no fueron elegidos ya no
+                            // decide nada. Queda solo con quien hizo el trabajo.
+                            const cerrado = project.status === "completed";
+                            const base = cerrado && chosenId
+                              ? proposalList.filter((x) => x.professionals?.id === chosenId)
+                              : proposalList;
+                            const ordered = [...base].sort((a, b) => Number(b.professionals?.id === chosenId) - Number(a.professionals?.id === chosenId));
                             return (
                               <div className="border-t border-[#f3f4f6] pt-4">
-                                <p className="mb-2.5 text-[10px] font-semibold uppercase tracking-[0.06em] text-[#68778d]">{t("repliesTitle")}</p>
+                                <p className="mb-2.5 text-[10px] font-semibold uppercase tracking-[0.06em] text-[#68778d]">{cerrado && chosenId ? t("hiredTitle") : t("repliesTitle")}</p>
                                 {ordered.length === 0 ? (
                                   <p className="rounded-xl bg-[#f4f7fa] px-3.5 py-3 text-center text-[13px] leading-relaxed text-[#6b7280]">{t("noRepliesYet")}</p>
                                 ) : (
@@ -928,7 +934,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                                       const proVerified = proposal.professionals?.verification_status === "verified";
                                       const priceParts = proposal.price ? splitPricingLabel(formatColonesTaxIncluded(proposal.price)) : null;
                                       return (
-                                        <div key={proposal.id} className={cn("rounded-xl border p-3.5", isChosen ? "border-[#b8e7cf] bg-[#f2fbf6]" : "border-[#e5e7eb] bg-white")}>
+                                        <div key={proposal.id} className={cn("rounded-xl border p-3.5", isChosen && !cerrado ? "border-[#bfe3f5] bg-[#f4fbfe]" : "border-[#e5e7eb] bg-white")}>
                                           <div className="flex items-start gap-3">
                                             <Avatar className="h-10 w-10 shrink-0">
                                               <AvatarImage src={proposal.professionals?.profiles?.avatar_url} />
@@ -944,8 +950,8 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                                                   <p className="min-w-0 text-sm font-semibold text-[#162543]">{proposal.professionals?.profiles?.full_name}</p>
                                                 )}
                                                 {proVerified && <Badge variant="verified" className="shrink-0">{t("verified")}</Badge>}
-                                                {isChosen && (
-                                                  <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-[#bbf7d0] bg-white px-2 py-0.5 text-[11px] font-semibold text-[#15803d]"><CheckCircle2 className="h-3 w-3" />{t("helpedBy")}</span>
+                                                {isChosen && !cerrado && (
+                                                  <span className="inline-flex shrink-0 items-center rounded-full bg-[#eaf7fc] px-2 py-0.5 text-[11px] font-bold text-[#0089bb]">{t("helpedBy")}</span>
                                                 )}
                                               </div>
                                               {/* Lo mismo que muestra /buscar para elegir: rubro y calificación. El perfil

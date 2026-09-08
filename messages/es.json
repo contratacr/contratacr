@@ -2651,7 +2651,7 @@
     "projAssigned": "Asignada",
     "projAwaiting": "Por confirmar",
     "projCompleted": "Finalizado",
-    "projCancelled": "Cancelada",
+    "projCancelled": "Proyecto cancelado",
     "projOpen": "Abierto",
     "publishedOn": "Publicado {date}",
     "seeLess": "Ver menos",
@@ -2699,12 +2699,12 @@
     "reportSubmit": "Reportar",
     "whatsappTo": "WhatsApp a {name}",
     "replyCount": "{count, plural, =0 {Sin respuestas todavía} one {# respuesta} other {# respuestas}}",
-    "projResolved": "Resuelta",
+    "projResolved": "Proyecto cerrado",
     "projClosedByTime": "Cerrada por inactividad",
     "repliesTitle": "Respuestas",
     "noRepliesYet": "Todavía nadie responde. Te avisamos apenas alguien lo haga.",
     "writeWhatsapp": "WhatsApp",
-    "resolve": "Ya lo resolví",
+    "resolve": "Cerrar proyecto",
     "resolveTitle": "¿Quién te ayudó?",
     "resolveBody": "Así cerramos el proyecto y, si quieres, dejas una reseña.",
     "resolveNobody": "Lo resolví por otro lado",
@@ -2723,7 +2723,8 @@
     "pActiveEmpty": "No tienes proyectos activos",
     "pActiveEmptySub": "Publica lo que necesitas y recibe respuestas de profesionales de tu zona.",
     "pDoneEmpty": "Todavía no hay proyectos finalizados",
-    "pDoneEmptySub": "Aquí quedan los proyectos que ya resolviste o cancelaste."
+    "pDoneEmptySub": "Aquí quedan los proyectos que ya resolviste o cancelaste.",
+    "hiredTitle": "Quien hizo el trabajo"
   },
   "clientPage": {
     "greeting": "Hola, {name} 👋",
