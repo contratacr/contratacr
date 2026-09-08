@@ -1626,13 +1626,14 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
           data-compact-search={effectiveCompact ? "visible" : "hidden"}
           className={cn(
             "ccr-app-header fixed top-0 left-0 right-0 z-50 border-b bg-white/96 backdrop-blur-md",
-            // En la web la barra translúcida conserva su sombra fija; en la app
-            // la línea y la sombra aparecen solo al desplazar.
+            // La barra se separa del contenido con una línea, no con sombra: en
+            // escritorio la sombra proyectada ensuciaba el borde del contenido.
+            // En la app la línea aparece solo al desplazar.
             nativeApp
               ? cn("transition-[border-color,box-shadow] duration-200", contenidoDebajo || lienzoBlanco
                   ? "border-gray-100/80 shadow-[0_10px_34px_-24px_rgba(15,23,42,0.55)]"
                   : "border-transparent shadow-none")
-              : "border-gray-100/80 shadow-[0_10px_34px_-24px_rgba(15,23,42,0.55)]",
+              : "border-[#e3ebf2] shadow-none",
             drawerOnly && "hidden",
           )}
         >

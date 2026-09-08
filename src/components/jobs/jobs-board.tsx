@@ -39,7 +39,7 @@ type Props = {
   detailOnly?: boolean;
 };
 
-const MARKETPLACE_LIST_CLASS = "ccr-marketplace-card-list min-w-0 bg-white lg:h-[calc(100dvh-190px)] lg:min-h-[420px] lg:overflow-y-scroll lg:border-r lg:border-[#dfe6ec]";
+const MARKETPLACE_LIST_CLASS = "ccr-marketplace-card-list min-w-0 bg-white lg:h-full lg:overflow-y-scroll lg:border-r lg:border-[#dfe6ec]";
 
 const JOBS_COPY = {
   es: {
@@ -282,7 +282,7 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
   const detailBackHref = safeMarketplaceReturnHref(returnTo, "/empleos");
   const detailBackLabel = marketplaceReturnLabel(detailBackHref, "/empleos", locale);
 
-  return <main className="min-h-[calc(100vh-72px)] overflow-x-clip bg-white pb-16 text-[#162543] lg:bg-[#f4f7fa]">
+  return <main className="min-h-[calc(100vh-72px)] overflow-x-clip bg-white pb-16 text-[#162543] lg:flex lg:h-[calc(100dvh-64px)] lg:min-h-0 lg:flex-col lg:overflow-hidden lg:bg-[#f4f7fa] lg:pb-0">
     <div ref={sentinelaRef} aria-hidden className="h-px lg:hidden" />
     {showingMobileDetail && selected && (
       <section className="lg:hidden">
@@ -344,7 +344,7 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
     {/* Título, acciones y filtros viven en UNA tarjeta blanca: sueltos sobre el
         fondo, en escritorio se leían como tres bloques sin relación. */}
     {!detailOnly && (
-      <div className="relative z-30 hidden border-b border-[#e3ebf2] bg-white lg:block">
+      <div className="relative z-30 hidden shrink-0 border-b border-[#e3ebf2] bg-white lg:block">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-6 py-2.5">
           <h1 className="sr-only">{copy.jobs}</h1>
           <div className="flex min-w-0 flex-wrap items-center gap-2 overflow-visible">{renderFilters()}</div>
@@ -385,8 +385,8 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
         </div>
       </div>
     )}
-    {!detailOnly && <div className={`${showingMobileDetail ? "hidden lg:block " : ""}mx-auto max-w-7xl px-0 py-0 sm:px-6 sm:py-5 lg:pb-5 lg:pt-3`}>
-      <div className={`${filtered.length > 0 ? "lg:grid lg:grid-cols-[minmax(340px,440px)_minmax(0,1fr)]" : ""} lg:max-h-[calc(100vh-190px)] lg:overflow-hidden lg:rounded-lg lg:border lg:border-[#dfe8f0] lg:bg-white`}>
+    {!detailOnly && <div className={`${showingMobileDetail ? "hidden lg:block " : ""}mx-auto w-full max-w-7xl px-0 py-0 sm:px-6 sm:py-5 lg:h-[calc(100dvh-129px)] lg:min-h-0 lg:shrink-0 lg:px-6 lg:pb-4 lg:pt-4`}>
+      <div className={`${filtered.length > 0 ? "lg:grid lg:grid-cols-[minmax(340px,440px)_minmax(0,1fr)]" : ""} lg:h-full lg:overflow-hidden lg:rounded-lg lg:border lg:border-[#dfe8f0] lg:bg-white`}>
         <section className={filtered.length > 0 ? MARKETPLACE_LIST_CLASS : "min-w-0 bg-white"}>
           <div className="border-b border-[#e7edf2] px-4 py-3"><p className="font-bold">{filtered.length} {filtered.length === 1 ? copy.job.toLocaleLowerCase(locale) : copy.jobs.toLocaleLowerCase(locale)}</p><p className="text-xs text-[#68778d]">{copy.country}</p></div>
           <div>
