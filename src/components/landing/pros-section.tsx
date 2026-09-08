@@ -1,12 +1,17 @@
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { CategoryCarousel } from "@/components/landing/category-carousel";
+import { HOME_CATEGORIES } from "@/lib/data/home-categories";
+import { getSupplyCounts } from "@/lib/queries/supply";
 
 /* "Profesionales para cada proyecto" — heading + ONE staggered category
    carousel (see category-carousel.tsx). Card visuals use the shared ServiceImage
    system (real photo or branded gradient fallback); each card → /buscar?categoria=<id>. */
 export async function ProsSection() {
   const t = await getTranslations("landing.carousel");
+  // Solo oficios con al menos 2 profesionales: la portada no debe prometer lo que no hay.
+  const supply = await getSupplyCounts();
+  const ids = HOME_CATEGORIES.filter((id) => (supply.byCategory[id] ?? 0) >= 2);
   return (
     <section className="ccr-home-services-section pb-16 pt-10 sm:py-20 bg-[#f4f7fa] overflow-hidden">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -18,7 +23,7 @@ export async function ProsSection() {
       </div>
 
       {/* Full-bleed single zigzag carousel — auto-scroll + drag/swipe + arrows. */}
-      <CategoryCarousel />
+      <CategoryCarousel ids={ids} />
 
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="text-center mt-10">

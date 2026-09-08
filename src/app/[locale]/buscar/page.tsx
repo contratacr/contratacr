@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { Suspense } from "react";
 import { getTranslations, getLocale } from "next-intl/server";
 import { ChevronLeft, ChevronRight, Search } from "lucide-react";
@@ -81,6 +82,23 @@ function isExactWorkplacePin(workplace: SearchWorkplace | undefined): workplace 
   return typeof workplace.address === "string" && workplace.address.trim().length > 0;
 }
 
+
+
+// Título propio por oficio y provincia: la página llegaba a Google y al anuncio
+// con el título genérico del sitio aunque fuera "Electricidad en Alajuela".
+export async function generateMetadata({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }): Promise<Metadata> {
+  const params = await searchParams;
+  const locale = await getLocale();
+  const categoria = params.categoria && params.categoria !== "todas" ? params.categoria : undefined;
+  if (!categoria || !getAllCategories().some((c) => c.id === categoria)) return {};
+  const category = getCategoryLabel(categoria, locale);
+  const provincia = params.provincia && params.provincia !== "todas" ? PROVINCES.find((p) => p.id === params.provincia) : undefined;
+  const place = provincia?.name ?? "Costa Rica";
+  const t = await getTranslations("search");
+  const title = t("metaTitle", { category, place });
+  const description = t("metaDesc", { category, place });
+  return { title, description, alternates: { canonical: `/${locale}/servicios/${categoria}${provincia ? `/${provincia.id}` : ""}` } };
+}
 
 export default async function SearchPage({ searchParams }: SearchPageProps) {
   const params = await searchParams;

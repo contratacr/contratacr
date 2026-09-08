@@ -299,7 +299,9 @@
       "por_hora": "Por hora",
       "por_consulta": "Por consulta",
       "por_proyecto": "Por proyecto"
-    }
+    },
+    "metaTitle": "{category} en {place} · profesionales verificados | ContrataCR",
+    "metaDesc": "Compara profesionales de {category} en {place}: verificados con cédula, con reseñas, precios y contacto directo."
   },
   "hero": {
     "categoryPlaceholder": "¿Qué servicio necesitas?",
@@ -3986,5 +3988,54 @@
     "assistant": "Asistente",
     "jobs": "Empleos",
     "aria": "Navegación de la app"
+  },
+  "serviceLanding": {
+    "title": "{category} en {place}",
+    "titleCountry": "{category} en Costa Rica",
+    "subtitle": "{count, plural, one {# profesional verificado} other {# profesionales verificados}} con cédula, reseñas reales y contacto directo.",
+    "trust": "Todos pasan verificación de identidad con el TSE antes de aparecer aquí.",
+    "whereLabel": "¿Dónde lo necesitas?",
+    "allCountry": "Todo el país",
+    "topTitle": "Los mejor calificados",
+    "viewProfile": "Ver perfil",
+    "seeAll": "Ver {count, plural, one {# profesional} other {los # profesionales}}",
+    "publishTitle": "¿Prefieres que te escriban?",
+    "publishBody": "Cuenta qué necesitas y los profesionales de {category} te responden con precio.",
+    "publishCta": "Publicar lo que necesito",
+    "howTitle": "Así funciona",
+    "how1": "Elige un profesional verificado.",
+    "how2": "Escríbele por WhatsApp o agenda una cita.",
+    "how3": "Deja tu reseña cuando termine.",
+    "metaTitle": "{category} en {place} · profesionales verificados | ContrataCR",
+    "metaTitleCountry": "{category} en Costa Rica · profesionales verificados | ContrataCR",
+    "metaDesc": "Encuentra {count} profesionales de {category} en {place} verificados con cédula, con reseñas y contacto directo por WhatsApp.",
+    "reviews": "{count, plural, one {# reseña} other {# reseñas}}",
+    "noReviews": "Sin reseñas aún",
+    "verified": "Verificado",
+    "otherPlaces": "También en"
+  },
+  "shareKit": {
+    "title": "Compartir mi perfil",
+    "subtitle": "Tus clientes de siempre son los primeros que te recomiendan.",
+    "linkTitle": "Enviar mi enlace",
+    "linkBody": "Por WhatsApp, redes o donde quieras.",
+    "cardTitle": "Tarjeta con QR",
+    "cardBody": "Una imagen lista para tu estado de WhatsApp, Instagram o para imprimir.",
+    "reviewsTitle": "Pedir reseñas",
+    "reviewsBody": "Un mensaje listo para tus clientes pasados: cada reseña te trae más clientes.",
+    "copy": "Copiar enlace",
+    "copied": "Enlace copiado",
+    "shareImage": "Compartir imagen",
+    "download": "Descargar imagen",
+    "preparing": "Preparando la tarjeta…",
+    "cardFooter": "Escanea para ver mi perfil y reseñas",
+    "cardTrust": "Identidad verificada",
+    "reviewsHint": "Envíaselo a 3 clientes que hayas atendido: con eso tu perfil deja de verse vacío.",
+    "reviewsMessage": "Hola, ¿cómo estás? Estoy en ContrataCR y me ayudaría mucho una reseña tuya del trabajo que te hice. Se deja en un minuto desde aquí: {url} ¡Gracias!",
+    "sendWhatsApp": "Enviar por WhatsApp",
+    "copyMessage": "Copiar mensaje",
+    "messageCopied": "Mensaje copiado",
+    "back": "Volver",
+    "close": "Cerrar"
   }
 }

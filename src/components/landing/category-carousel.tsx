@@ -1,5 +1,7 @@
 "use client";
 
+import { HOME_CATEGORIES } from "@/lib/data/home-categories";
+
 import { useEffect, useRef } from "react";
 import { useLocale } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
@@ -23,13 +25,6 @@ import { ServiceImage } from "@/components/professionals/service-image";
 // tecnología/empresarial/salud/belleza/eventos/seguridad/automotriz). Each → /buscar?categoria.
 // One track, all distinct — a single set is far wider than any viewport, so the off-screen
 // duplicate (for the seamless loop) never shows on screen.
-const HOME_CATEGORIES = [
-  "limpieza", "plomeria", "electricidad", "jardineria", "pintura", "carpinteria",
-  "construccion", "cerrajeria", "remodelacion", "mudanzas", "mecanica", "peluqueria",
-  "entrenamiento_personal", "masajes", "psicologia", "desarrollo_web", "soporte_tecnico",
-  "contabilidad", "marketing_digital", "fotografia", "dj_sonido", "camaras_seguridad",
-  "poda_arboles", "limpieza_piscinas", "fisioterapia", "nutricion",
-];
 
 // Time-based (px per MILLISECOND) so the speed is identical on 60/90/120 Hz
 // screens and dropped frames don't slow it down (it advances by elapsed time).
@@ -76,7 +71,8 @@ function Card({ id, lifted, onLinkClick }: { id: string; lifted: boolean; onLink
   );
 }
 
-export function CategoryCarousel() {
+export function CategoryCarousel({ ids }: { ids?: string[] } = {}) {
+  const categorias = ids && ids.length >= 6 ? ids : HOME_CATEGORIES;
   const router = useRouter();
   const viewport = useRef<HTMLDivElement>(null);
   const track = useRef<HTMLDivElement>(null);
@@ -206,7 +202,7 @@ export function CategoryCarousel() {
     tween.current = { from: pos.current, to: pos.current - dir * delta, start: performance.now() };
   };
 
-  const loop = [...HOME_CATEGORIES, ...HOME_CATEGORIES];
+  const loop = [...categorias, ...categorias];
 
   return (
     <div className="relative">

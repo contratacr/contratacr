@@ -299,7 +299,9 @@
       "por_hora": "Per hour",
       "por_consulta": "Per consultation",
       "por_proyecto": "Per project"
-    }
+    },
+    "metaTitle": "{category} in {place} · verified professionals | ContrataCR",
+    "metaDesc": "Compare {category} professionals in {place}: ID-verified, with reviews, prices and direct contact."
   },
   "hero": {
     "categoryPlaceholder": "What service do you need?",
@@ -3986,5 +3988,54 @@
     "assistant": "Assistant",
     "jobs": "Jobs",
     "aria": "App navigation"
+  },
+  "serviceLanding": {
+    "title": "{category} in {place}",
+    "titleCountry": "{category} in Costa Rica",
+    "subtitle": "{count, plural, one {# verified professional} other {# verified professionals}} with ID check, real reviews and direct contact.",
+    "trust": "Everyone passes an identity check with the TSE before appearing here.",
+    "whereLabel": "Where do you need it?",
+    "allCountry": "Whole country",
+    "topTitle": "Top rated",
+    "viewProfile": "View profile",
+    "seeAll": "See {count, plural, one {# professional} other {all # professionals}}",
+    "publishTitle": "Rather have them write to you?",
+    "publishBody": "Tell us what you need and {category} professionals reply with a price.",
+    "publishCta": "Post what I need",
+    "howTitle": "How it works",
+    "how1": "Pick a verified professional.",
+    "how2": "Message them on WhatsApp or book a visit.",
+    "how3": "Leave a review when it's done.",
+    "metaTitle": "{category} in {place} · verified professionals | ContrataCR",
+    "metaTitleCountry": "{category} in Costa Rica · verified professionals | ContrataCR",
+    "metaDesc": "Find {count} {category} professionals in {place}, ID-verified, with reviews and direct WhatsApp contact.",
+    "reviews": "{count, plural, one {# review} other {# reviews}}",
+    "noReviews": "No reviews yet",
+    "verified": "Verified",
+    "otherPlaces": "Also in"
+  },
+  "shareKit": {
+    "title": "Share my profile",
+    "subtitle": "Your existing clients are the first ones to recommend you.",
+    "linkTitle": "Send my link",
+    "linkBody": "On WhatsApp, social media or anywhere.",
+    "cardTitle": "QR card",
+    "cardBody": "An image ready for your WhatsApp status, Instagram or to print.",
+    "reviewsTitle": "Ask for reviews",
+    "reviewsBody": "A ready-made message for past clients: every review brings you more clients.",
+    "copy": "Copy link",
+    "copied": "Link copied",
+    "shareImage": "Share image",
+    "download": "Download image",
+    "preparing": "Preparing the card…",
+    "cardFooter": "Scan to see my profile and reviews",
+    "cardTrust": "Identity verified",
+    "reviewsHint": "Send it to 3 clients you've worked with: that's enough for your profile to stop looking empty.",
+    "reviewsMessage": "Hi! I'm on ContrataCR and a review from you about the work I did would help me a lot. It takes a minute here: {url} Thanks!",
+    "sendWhatsApp": "Send on WhatsApp",
+    "copyMessage": "Copy message",
+    "messageCopied": "Message copied",
+    "back": "Back",
+    "close": "Close"
   }
 }

@@ -11,12 +11,15 @@ import {
   ShieldCheck, Bell, Handshake, ClipboardList, Bookmark, Settings, Headset, CreditCard,
   ArrowLeft, ArrowRight, ChevronDown, ChevronRight, Sparkles, Plus, AlertCircle, X, MessageSquareMore, Home, LogOut, ExternalLink, Users, BookOpen, Check, CheckCircle2, FileText, Search, Camera, Eye, Trash2, Loader2,
   BriefcaseBusiness, Star,
+  Share2,
 } from "lucide-react";
 import { Navbar } from "@/components/layout/navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { VerifiedSeal } from "@/components/ui/verified-seal";
+import { ShareKit } from "@/components/dashboard/pro/share-kit";
+import { getCategoryLabel } from "@/lib/data/categories";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ProfileEditor } from "@/components/dashboard/pro/profile-editor";
@@ -662,6 +665,7 @@ export default function DashboardPage() {
   const headerPhotoInputRef = useRef<HTMLInputElement>(null);
   const headerPhotoMenuRef = useRef<HTMLDivElement>(null);
   const [headerPhotoMenuOpen, setHeaderPhotoMenuOpen] = useState(false);
+  const [shareKitOpen, setShareKitOpen] = useState(false);
   const [headerPhotoPreviewOpen, setHeaderPhotoPreviewOpen] = useState(false);
   const [headerPhotoUploading, setHeaderPhotoUploading] = useState(false);
   const opportunityWelcomeCheckedRef = useRef(false);
@@ -2092,6 +2096,19 @@ export default function DashboardPage() {
                     if (file) void handleHeaderPhotoUpload(file);
                   }}
                 />
+                {publicProfileHref && (
+                  <ShareKit
+                    open={shareKitOpen}
+                    onClose={() => setShareKitOpen(false)}
+                    profileUrl={`${process.env.NEXT_PUBLIC_APP_URL || "https://contratacr.com"}/${locale}${publicProfileHref}`}
+                    name={displayName}
+                    categoryLabel={pro?.category_id ? getCategoryLabel(pro.category_id, locale) : undefined}
+                    avatarUrl={headerAvatar}
+                    isVerified={pro?.verification_status === "verified"}
+                    ratingAvg={Number(pro?.rating_avg ?? 0)}
+                    reviewCount={Number(pro?.review_count ?? 0)}
+                  />
+                )}
                 <ImagePreviewDialog
                   src={headerAvatar}
                   alt={locale === "en" ? "Profile photo" : "Foto de perfil"}
@@ -2149,16 +2166,7 @@ export default function DashboardPage() {
                   <button
                     type="button"
                     data-testid="dashboard-mobile-share-profile"
-                    onClick={() => {
-                      const url = `${window.location.origin}/${locale}${publicProfileHref}`;
-                      if (navigator.share) {
-                        void navigator.share({ url }).catch(() => {});
-                      } else {
-                        void navigator.clipboard?.writeText(url).then(() => {
-                          window.alert(locale === "en" ? "Profile link copied." : "Enlace del perfil copiado.");
-                        }).catch(() => {});
-                      }
-                    }}
+                    onClick={() => setShareKitOpen(true)}
                     className="inline-flex h-11 !min-h-0 w-full items-center justify-center rounded-full border-[1.5px] border-[#009FD9] bg-white text-[13px] font-bold text-[#009FD9] transition active:bg-[#EBF5FB]"
                   >
                     {locale === "en" ? "Share" : "Compartir"}
@@ -2186,6 +2194,16 @@ export default function DashboardPage() {
                     <ExternalLink className="h-4 w-4" />
                     {locale === "en" ? "View public profile" : "Ver perfil público"}
                   </Link>
+                )}
+                {publicProfileHref && (
+                  <button
+                    type="button"
+                    onClick={() => setShareKitOpen(true)}
+                    className="hidden h-9 items-center gap-1.5 rounded-full px-3 text-sm font-bold text-[#526277] transition hover:bg-[#f3f7fa] hover:text-[#0089bb] sm:inline-flex"
+                  >
+                    <Share2 className="h-4 w-4" />
+                    {locale === "en" ? "Share" : "Compartir"}
+                  </button>
                 )}
                 <button
                   type="button"
