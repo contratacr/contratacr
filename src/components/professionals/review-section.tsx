@@ -116,6 +116,20 @@ export function ReviewSection({
         </div>
       </div>
 
+      {/* Dejar o corregir la reseña va ARRIBA: quien entra a esta pestaña con algo
+          que decir no debería recorrer toda la lista para encontrar dónde decirlo. */}
+      <div className="mb-6">
+        <LeaveReviewModal
+          professionalId={professionalId}
+          professionalName={professionalName}
+          embedded
+          isAuthenticated={isAuthenticated}
+          loginRedirectPath={reviewRedirectPath}
+          onClose={() => undefined}
+          onSuccess={() => { void onReviewSubmitted?.(); router.refresh(); }}
+        />
+      </div>
+
       <div className="flex flex-col gap-5">
         {reviews.map((review) => {
           const clientName = review.clientName === "Cliente" && locale === "en" ? "Client" : review.clientName;
@@ -154,18 +168,6 @@ export function ReviewSection({
         )}
       </div>
 
-      {/* Leave/edit-your-review comes AFTER the social proof. */}
-      <div className="mt-6">
-        <LeaveReviewModal
-          professionalId={professionalId}
-          professionalName={professionalName}
-          embedded
-          isAuthenticated={isAuthenticated}
-          loginRedirectPath={reviewRedirectPath}
-          onClose={() => undefined}
-          onSuccess={() => { void onReviewSubmitted?.(); router.refresh(); }}
-        />
-      </div>
     </>
   );
 }
