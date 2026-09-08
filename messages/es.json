@@ -710,7 +710,8 @@
     "backToMessages": "Volver a mensajes",
     "availabilityTab": "Disponibilidad",
     "appBarTitle": "Perfil profesional",
-    "linkCopied": "Enlace copiado"
+    "linkCopied": "Enlace copiado",
+    "statCases": "{count, plural, one {caso de éxito} other {casos de éxito}}"
   },
   "auth": {
     "login": {
@@ -1938,7 +1939,9 @@
       "close": "Cerrar"
     },
     "goToClientPanel": "Ir a mi panel cliente",
-    "goToProfessionalPanel": "Ir a mi panel profesional"
+    "goToProfessionalPanel": "Ir a mi panel profesional",
+    "headerReviews": "{count, plural, one {# reseña} other {# reseñas}}",
+    "headerNoReviews": "Aún sin reseñas"
   },
   "bookingRequests": {
     "empty": "No tienes citas todavía",

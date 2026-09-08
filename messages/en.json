@@ -710,7 +710,8 @@
     "backToMessages": "Back to messages",
     "availabilityTab": "Availability",
     "appBarTitle": "Professional profile",
-    "linkCopied": "Link copied"
+    "linkCopied": "Link copied",
+    "statCases": "{count, plural, one {past job} other {past jobs}}"
   },
   "auth": {
     "login": {
@@ -1938,7 +1939,9 @@
       "searchEmpty": "No guide matches that word."
     },
     "goToClientPanel": "Go to my client panel",
-    "goToProfessionalPanel": "Go to my professional panel"
+    "goToProfessionalPanel": "Go to my professional panel",
+    "headerReviews": "{count, plural, one {# review} other {# reviews}}",
+    "headerNoReviews": "No reviews yet"
   },
   "bookingRequests": {
     "empty": "No appointments yet",

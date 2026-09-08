@@ -653,9 +653,11 @@ export default function ProfilePage() {
                       <span>{locationText}</span>
                     </div>
                   )}
-                  {/* Una sola familia: los tres botones con la misma altura, el mismo
-                      grosor de borde y la misma píldora. "Seguir" no se estira (su ancho
-                      lo da el texto) y los dos íconos quedan pegados a él, no sueltos. */}
+                  {/* Una sola familia: misma altura, mismo borde, misma píldora. El
+                      relleno lo lleva GUARDAR, que es el gesto que el cliente entiende
+                      ("lo quiero encontrar después"); Seguir queda de contorno: son
+                      casi lo mismo a los ojos de la gente y dos botones llenos hacían
+                      que no eligiera ninguno. */}
                   <div className="mt-3 flex w-[360px] max-w-full items-center gap-2">
                     <FollowButton
                       professionalId={professional.id}
@@ -664,13 +666,13 @@ export default function ProfilePage() {
                       initialFollowers={professional.followerCount ?? 0}
                       onCountChange={updateFollowerCount}
                       onSelfAction={() => setSelfMsg(SELF_MSG.follow)}
-                      className="box-border h-9 min-w-0 flex-1 rounded-xl border border-transparent bg-[#009fd9] px-3 text-white hover:bg-[#008fc3] aria-pressed:border-transparent aria-pressed:bg-[#f0f2f5] aria-pressed:text-[#111827] aria-pressed:hover:bg-[#e5e9ee]"
+                      className="box-border h-9 min-w-0 flex-1 rounded-xl border border-[#d9e1ea] bg-white px-3 text-[#102746] hover:border-[#b8c6d6] hover:bg-[#f7f9fb] aria-pressed:border-[#bfe3f5] aria-pressed:bg-[#EBF5FB] aria-pressed:text-[#0089bb]"
                     />
                     <SaveButton
                       pro={savedPro}
                       isOwn={isOwn}
                       withLabel
-                      className="box-border h-9 min-w-0 flex-1 whitespace-nowrap rounded-xl border border-[#d9e1ea] bg-white px-3 py-0 text-[#102746] hover:border-[#b8c6d6] hover:bg-[#f7f9fb] hover:text-[#102746] aria-pressed:border-transparent aria-pressed:bg-[#f0f2f5] aria-pressed:text-[#111827] aria-pressed:hover:border-transparent aria-pressed:hover:bg-[#e5e9ee] aria-pressed:hover:text-[#111827]"
+                      className="box-border h-9 min-w-0 flex-1 whitespace-nowrap rounded-xl border border-transparent bg-[#009fd9] px-3 py-0 text-white hover:bg-[#008fc3] aria-pressed:border-[#bfe3f5] aria-pressed:bg-[#EBF5FB] aria-pressed:text-[#0089bb]"
                     />
                     <button
                       type="button"
@@ -692,7 +694,11 @@ export default function ProfilePage() {
               {/* Stats strip — rating · años de exp · casos de éxito. */}
               <div className={cn(
                 "grid w-full shrink-0 gap-2 self-start sm:w-auto sm:self-center sm:border-l sm:border-[#f3f4f6] sm:pl-5",
-                expYears > 0 ? "grid-cols-3 sm:min-w-[18rem]" : "grid-cols-2 sm:min-w-[13rem]",
+                (expYears > 0 ? 1 : 0) + (casosCount > 0 || (professional.followerCount ?? 0) > 0 ? 1 : 0) === 2
+                  ? "grid-cols-3 sm:min-w-[18rem]"
+                  : (expYears > 0 ? 1 : 0) + (casosCount > 0 || (professional.followerCount ?? 0) > 0 ? 1 : 0) === 1
+                    ? "grid-cols-2 sm:min-w-[13rem]"
+                    : "grid-cols-1 sm:min-w-[8rem]",
               )}>
                 <button type="button" onClick={() => setActiveTab("resenas")} className="flex min-w-0 flex-col items-center justify-start text-center">
                   <div className="flex items-center justify-center gap-1">
@@ -710,17 +716,30 @@ export default function ProfilePage() {
                     <p className="mt-0.5 whitespace-nowrap text-[10px] font-medium leading-none tracking-[-0.02em] text-[#8b95a5] sm:text-[11px] sm:tracking-normal">{t("statYears")}</p>
                   </div>
                 )}
-                <div className="flex min-w-0 flex-col items-center justify-start text-center">
-                  <div className="flex items-center justify-center gap-1">
-                    <Users className="h-4 w-4 text-[#009FD9]" />
-                    <span data-follower-count className="text-[15px] font-bold text-[#111827]">{professional.followerCount ?? 0}</span>
+                {/* Tercer dato: los casos de éxito, que hablan del trabajo. Los
+                    seguidores solo aparecen si de verdad hay: un "0 seguidores"
+                    es un dato en contra, no información. */}
+                {casosCount > 0 ? (
+                  <button type="button" onClick={() => setActiveTab("casos")} className="flex min-w-0 flex-col items-center justify-start text-center">
+                    <div className="flex items-center justify-center gap-1">
+                      <Award className="h-4 w-4 text-[#009FD9]" />
+                      <span className="text-[15px] font-bold text-[#111827]">{casosCount}</span>
+                    </div>
+                    <p className="mt-0.5 whitespace-nowrap text-[10px] font-medium leading-none text-[#8b95a5] sm:text-[11px]">{t("statCases", { count: casosCount })}</p>
+                  </button>
+                ) : (professional.followerCount ?? 0) > 0 ? (
+                  <div className="flex min-w-0 flex-col items-center justify-start text-center">
+                    <div className="flex items-center justify-center gap-1">
+                      <Users className="h-4 w-4 text-[#009FD9]" />
+                      <span data-follower-count className="text-[15px] font-bold text-[#111827]">{professional.followerCount ?? 0}</span>
+                    </div>
+                    <p className="mt-0.5 whitespace-nowrap text-[10px] font-medium leading-none text-[#8b95a5] sm:text-[11px]">
+                      {locale === "en"
+                        ? ((professional.followerCount ?? 0) === 1 ? "follower" : "followers")
+                        : ((professional.followerCount ?? 0) === 1 ? "seguidor" : "seguidores")}
+                    </p>
                   </div>
-                  <p className="mt-0.5 whitespace-nowrap text-[10px] font-medium leading-none text-[#8b95a5] sm:text-[11px]">
-                    {locale === "en"
-                      ? ((professional.followerCount ?? 0) === 1 ? "follower" : "followers")
-                      : ((professional.followerCount ?? 0) === 1 ? "seguidor" : "seguidores")}
-                  </p>
-                </div>
+                ) : null}
               </div>
             </div>
           </div>
