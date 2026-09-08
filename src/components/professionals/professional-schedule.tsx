@@ -871,6 +871,22 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
       className={messageButtonClass}
     />
   );
+  // En la fila compartida el rótulo largo ("Contactar por WhatsApp") no cabe en
+  // media píldora y se salía del botón; ahí basta con la marca y su logo. En la
+  // app nativa este botón es "Enviar mensaje" y el rótulo corto se ignora.
+  const chatLauncherCorto = (
+    <DirectChatLauncher
+      professionalId={professional.id}
+      professionalName={professional.fullName}
+      contextTitle={categoryName}
+      isOwn={isOwn}
+      onSelfAction={() => setSelfMsg(SELF_MSG.whatsapp)}
+      analyticsSource="profile"
+      tone="primary"
+      buttonLabel="WhatsApp"
+      className={messageButtonClass}
+    />
+  );
   const profileContactButtons = (
     <>
       {hasSchedule && verHorarioButton}
@@ -880,7 +896,7 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
       {showCall ? (
         hasSchedule ? (
           <div className="grid grid-cols-2 gap-2">
-            {chatLauncher}
+            {chatLauncherCorto}
             {renderCall(`${secondaryContactClass} text-[13px] font-bold`)}
           </div>
         ) : (

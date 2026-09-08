@@ -4055,12 +4055,14 @@
     "copy": "Copiar",
     "copied": "Copiado",
     "whatsapp": "WhatsApp",
+    "instagram": "Instagram",
     "facebook": "Facebook",
     "email": "Correo",
     "more": "Más opciones",
     "message": "Mirá el perfil de {name} en ContrataCR:",
     "emailSubject": "{name} en ContrataCR",
-    "close": "Cerrar"
+    "close": "Cerrar",
+    "instagramHint": "Enlace copiado. Pégalo en tu historia, en tu perfil o en un mensaje: Instagram no deja mandar enlaces desde el navegador."
   },
   "quotes": {
     "blockTitle": "Cotización",

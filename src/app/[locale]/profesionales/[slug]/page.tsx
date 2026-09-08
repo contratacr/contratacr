@@ -1,5 +1,6 @@
 "use client";
 
+import { useEsEscritorio } from "@/hooks/use-es-escritorio";
 import { ShareProfileModal } from "@/components/professionals/share-profile-modal";
 import { enlacePerfil } from "@/lib/profile-url";
 import { useState, useEffect, useCallback, useRef, type ReactNode } from "react";
@@ -169,6 +170,9 @@ export default function ProfilePage() {
     }
   }, [activeTab]);
   const cantidadPestanas = publicOffers.length + publicJobs.length;
+  // En computadora la disponibilidad no es una pestaña sino la columna de la
+  // derecha, así que ahí esa pestaña no existe y se cae a la siguiente.
+  const esEscritorio = useEsEscritorio();
   useEffect(() => {
     const seleccionada = document.querySelector<HTMLElement>('[data-profile-tabs] [aria-selected="true"]');
     const carril = seleccionada?.parentElement;
@@ -457,6 +461,8 @@ export default function ProfilePage() {
   // workplaces) — same data the /buscar card passes to ProfessionalSchedule.
   const placeFallback = professional.cantonName || professional.provinceName || "";
   const placeAddress = locationText;
+  // El oficio principal, para que la cabecera diga qué hace y no solo quién es.
+  const oficioPrincipal = catLabel(professional.professions?.[0] ?? professional.categoryId ?? "");
 
   const hasCasos = !!professional.portfolioUrls && professional.portfolioUrls.length > 0;
   // Count CASES, not photos: 1 caso de éxito with 3 photos must read "1", not "3"
@@ -565,12 +571,96 @@ export default function ProfilePage() {
     { id: "sobre",          label: t("tabs.sobre") },
   ];
 
+  // Precio, horarios, contacto y redes. En el teléfono es la pestaña
+  // "Disponibilidad"; en computadora es la columna fija de la derecha, como
+  // en Upwork o Thumbtack: así deja de ser un contenedor enorme con cuatro
+  // líneas adentro y lo que hace contratar queda siempre a la vista.
+  const bloqueContacto = (conAncla: boolean) => (
+    <div {...(conAncla ? { id: "perfil-contacto" } : {})} className="mx-auto flex w-full max-w-md flex-col gap-4 lg:max-w-none">
+      <div>
+        {(() => {
+          const label = primaryPricingLabel(professional.pricing, professional.hourlyRate, locale);
+          const { amount, unit, taxSuffix } = splitPricingLabel(label);
+          return (
+            <p className="leading-tight">
+              <span className="text-xl font-bold text-[#009FD9]">{amount}</span>
+              {unit && <span className="text-sm font-semibold text-[#52627a]"> {unit}</span>}
+              {taxSuffix && <span className="text-[11px] font-semibold tracking-wide text-[#68778d]"> · {taxSuffix}</span>}
+            </p>
+          );
+        })()}
+      </div>
+      <ProfessionalSchedule
+        stacked
+        professional={professional}
+        activeCategory={activeCategory}
+        categoryName={catLabel(professional.categoryId)}
+        availabilityPublic={professional.availabilityPublic ?? true}
+        contactPreference={professional.contactPreference ?? "ambas"}
+        slots={profileSlots}
+        isOwn={isOwn}
+        placeFallback={placeFallback}
+        placeAddress={placeAddress}
+        businessName={professional.businessName ?? ""}
+      />
+      {(() => {
+        const sl = professional.socialLinks;
+        const items = [
+          { k: "website", href: buildWebsiteUrl(sl?.website), Icon: Globe },
+          { k: "instagram", href: buildSocialUrl("instagram", sl?.instagram), Icon: InstagramIcon },
+          { k: "facebook", href: buildSocialUrl("facebook", sl?.facebook), Icon: FacebookIcon },
+          { k: "tiktok", href: buildSocialUrl("tiktok", sl?.tiktok), Icon: TikTokIcon },
+          { k: "linkedin", href: buildSocialUrl("linkedin", sl?.linkedin), Icon: LinkedInIcon },
+        ].filter((x) => x.href);
+        if (items.length === 0) return null;
+        return (
+          <div className="flex flex-wrap items-center justify-center gap-2 pt-1">
+            {items.map(({ k, href, Icon }) => (
+              <a
+                key={k}
+                href={href as string}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={k}
+                onClick={() => trackInteraction({
+                  type: "external_link_click",
+                  professionalId: professional.id,
+                  source: "profile_social",
+                  locale,
+                  metadata: { channel: k },
+                })}
+                className="flex h-9 w-9 items-center justify-center rounded-full border border-[#e5e7eb] text-[#374151] hover:border-[#009FD9] hover:text-[#009FD9] transition-colors"
+              >
+                <Icon className="h-4 w-4" />
+              </a>
+            ))}
+          </div>
+        );
+      })()}
+      {!isOwn && (
+        <div className="mt-3 flex items-center justify-center">
+          <button
+            type="button"
+            onClick={() => setReportOpen(true)}
+            className="inline-flex !min-h-0 items-center gap-1.5 rounded-lg px-2 py-1 text-[12px] font-medium text-[#9aa3ad] transition-colors hover:text-[#6b7280]"
+          >
+            <Flag className="h-3.5 w-3.5" />
+            {t("reportProfile")}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+
+  const primeraPestanaEscritorio = TABS.find((tab) => tab.id !== "disponibilidad")?.id ?? "sobre";
+  const tabEfectiva: Tab = esEscritorio && activeTab === "disponibilidad" ? primeraPestanaEscritorio : activeTab;
+
   return (
     <div className="min-h-screen flex flex-col bg-[#f4f7fa]">
       <Navbar />
 
       <main className="flex-1 py-8 [.ccr-native-app_&]:!pt-0 [.ccr-native-app_&]:!pb-[calc(var(--ccr-native-bottom-nav-total,64px)+1.5rem)]">
-        <div className="mx-auto max-w-5xl px-4 pt-0 sm:px-6 lg:px-8 [.ccr-native-app_&]:pt-4">
+        <div className="mx-auto max-w-7xl px-4 pt-0 sm:px-6 lg:px-8 [.ccr-native-app_&]:pt-4">
 
           {/* Preview mode → a clear way back to the panel. Otherwise, back to search. */}
           {!previewMode && <RecordRecentVisit surface="profesionales" visita={visitaProfesional} />}
@@ -602,112 +692,120 @@ export default function ProfilePage() {
               "Verificado" badge already communicates the unverified state. (The invite to
               verify lives in the pro's own panel.) */}
 
-          {/* ── HEADER CARD ── identity on the left, a right-aligned stats strip. Mirrors
-              the new /buscar card (circular avatar, solid-blue "Verificado" pill). No
-              "destacado" ribbon. */}
-          <div className="relative mb-6 rounded-2xl border border-[#e5e7eb] bg-white p-4 shadow-sm sm:grid sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:gap-x-8 sm:p-6">
-              <div className="flex min-w-0 flex-col items-center text-center sm:flex-row sm:items-center sm:gap-4 sm:text-left">
-                <ImagePreviewDialog
-                  src={professional.avatarUrl}
-                  alt={professional.fullName}
-                  openLabel={locale === "en" ? "View profile photo" : "Ver foto de perfil"}
-                  closeLabel={locale === "en" ? "Close" : "Cerrar"}
-                >
-                  <Avatar className="h-20 w-20 shrink-0 sm:h-[88px] sm:w-[88px]">
-                    <AvatarImage src={professional.avatarUrl ? cldThumb(professional.avatarUrl, 320) : undefined} loading="eager" alt={professional.fullName} className="object-cover" />
-                    <AvatarFallback className="bg-[#EBF5FB] text-xl font-bold text-[#009FD9] sm:text-2xl">{getInitials(professional.fullName)}</AvatarFallback>
-                  </Avatar>
-                </ImagePreviewDialog>
-                <div className="mt-3 min-w-0 sm:mt-0">
-                  <div className="min-w-0">
-                    <h1 data-testid="professional-profile-name" className="min-w-0 text-[17px] font-bold leading-[1.15] text-[#162543] [overflow-wrap:anywhere] sm:text-2xl sm:leading-tight sm:[overflow-wrap:normal]">
-                      {displayName.primaryDesktop}
-                      {professional.verificationStatus === "verified" && (
-                        <VerifiedSeal
-                          label={t("identityVerified")}
-                          className="mb-[0.08em] ml-1 inline-block h-4 w-4 shrink-0 align-middle text-[#009FD9] sm:h-5 sm:w-5"
-                        />
-                      )}
-                    </h1>
-                  </div>
-                  {locationText && (
-                    <p className="mt-1 flex items-center justify-center gap-1.5 text-[13px] leading-5 text-[#52627a] sm:justify-start sm:text-sm">
-                      <MapPin className="h-3.5 w-3.5 shrink-0 text-[#68778d]" />
-                      <span className="min-w-0 truncate">{locationText}</span>
-                    </p>
-                  )}
-                </div>
-              </div>
+          {/* Sin items-start: la columna derecha tiene que estirarse a lo alto de la
+              fila para que su tarjeta pueda quedarse pegada al bajar. */}
+          <div className="flex flex-col gap-6 lg:flex-row">
 
-              {/* Prueba social en columnas, como estaba: cada dato con su cifra
-                  arriba y su rótulo abajo. Solo se dibujan las columnas que
-                  tienen dato, así un perfil nuevo no muestra casillas vacías. */}
-              {(professional.reviewCount > 0 || expYears > 0 || casosCount > 0) && (
-                <div className={cn(
-                  "mt-4 grid sm:col-start-1 sm:flex sm:justify-start sm:gap-10",
-                  ((professional.reviewCount > 0 ? 1 : 0) + (expYears > 0 ? 1 : 0) + (casosCount > 0 ? 1 : 0)) === 3
-                    ? "grid-cols-3"
-                    : ((professional.reviewCount > 0 ? 1 : 0) + (expYears > 0 ? 1 : 0) + (casosCount > 0 ? 1 : 0)) === 2
-                      ? "grid-cols-2"
-                      : "grid-cols-1",
-                )}>
-                  {professional.reviewCount > 0 && (
-                    <button type="button" onClick={() => setActiveTab("resenas")} className="flex min-w-0 flex-col items-center px-2 text-center sm:items-start sm:px-0 sm:text-left">
-                      <span className="flex items-center justify-center gap-1">
-                        <Star className="h-4 w-4 shrink-0 fill-[#ff9b32] text-[#ff9b32]" />
-                        <span className="text-[15px] font-bold text-[#162543]">{professional.ratingAvg.toFixed(1)}</span>
-                      </span>
-                      <span className="mt-0.5 whitespace-nowrap text-[10px] leading-tight tracking-[-0.01em] text-[#68778d] sm:text-[11px] sm:tracking-normal">{t("reviewCountLabel", { count: professional.reviewCount })}</span>
-                    </button>
-                  )}
-                  {expYears > 0 && (
-                    <div className="flex min-w-0 flex-col items-center px-2 text-center sm:items-start sm:px-0 sm:text-left">
-                      <span className="flex items-center justify-center gap-1">
-                        <Briefcase className="h-4 w-4 shrink-0 text-[#009FD9]" />
-                        <span className="text-[15px] font-bold text-[#162543]">{expYears}</span>
-                      </span>
-                      <span className="mt-0.5 whitespace-nowrap text-[10px] leading-tight tracking-[-0.01em] text-[#68778d] sm:text-[11px] sm:tracking-normal">{t("statYears")}</span>
+            {/* ── COLUMNA IZQUIERDA: identidad y secciones ── */}
+            <div className="order-1 flex-1 min-w-0">
+            {/* ── HEADER CARD ── identity on the left, a right-aligned stats strip. Mirrors
+                the new /buscar card (circular avatar, solid-blue "Verificado" pill). No
+                "destacado" ribbon. */}
+            <div className="relative mb-6 rounded-2xl border border-[#e5e7eb] bg-white p-4 shadow-sm sm:grid sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:gap-x-8 sm:p-6">
+                <div className="flex min-w-0 flex-col items-center text-center sm:flex-row sm:items-center sm:gap-4 sm:text-left">
+                  <ImagePreviewDialog
+                    src={professional.avatarUrl}
+                    alt={professional.fullName}
+                    openLabel={locale === "en" ? "View profile photo" : "Ver foto de perfil"}
+                    closeLabel={locale === "en" ? "Close" : "Cerrar"}
+                  >
+                    <Avatar className="h-20 w-20 shrink-0 sm:h-[88px] sm:w-[88px]">
+                      <AvatarImage src={professional.avatarUrl ? cldThumb(professional.avatarUrl, 320) : undefined} loading="eager" alt={professional.fullName} className="object-cover" />
+                      <AvatarFallback className="bg-[#EBF5FB] text-xl font-bold text-[#009FD9] sm:text-2xl">{getInitials(professional.fullName)}</AvatarFallback>
+                    </Avatar>
+                  </ImagePreviewDialog>
+                  <div className="mt-3 min-w-0 sm:mt-0">
+                    <div className="min-w-0">
+                      <h1 data-testid="professional-profile-name" className="min-w-0 text-[17px] font-bold leading-[1.15] text-[#162543] [overflow-wrap:anywhere] sm:text-2xl sm:leading-tight sm:[overflow-wrap:normal]">
+                        {displayName.primaryDesktop}
+                        {professional.verificationStatus === "verified" && (
+                          <VerifiedSeal
+                            label={t("identityVerified")}
+                            className="mb-[0.08em] ml-1 inline-block h-4 w-4 shrink-0 align-middle text-[#009FD9] sm:h-5 sm:w-5"
+                          />
+                        )}
+                      </h1>
                     </div>
-                  )}
-                  {casosCount > 0 && (
-                    <button type="button" onClick={() => setActiveTab("casos")} className="flex min-w-0 flex-col items-center px-2 text-center sm:items-start sm:px-0 sm:text-left">
-                      <span className="flex items-center justify-center gap-1">
-                        <Award className="h-4 w-4 shrink-0 text-[#009FD9]" />
-                        <span className="text-[15px] font-bold text-[#162543]">{casosCount}</span>
-                      </span>
-                      <span className="mt-0.5 whitespace-nowrap text-[10px] leading-tight tracking-[-0.01em] text-[#68778d] sm:text-[11px] sm:tracking-normal">{t("statCases", { count: casosCount })}</span>
-                    </button>
-                  )}
+                    {/* Oficio y lugar: sin esta línea la cabecera quedaba con el
+                        nombre solo y mucho blanco alrededor en computadora. */}
+                    {(oficioPrincipal || locationText) && (
+                      <p className="mt-1 flex flex-wrap items-center justify-center gap-x-2 gap-y-0.5 text-[13px] leading-5 text-[#52627a] sm:justify-start sm:text-sm">
+                        {oficioPrincipal && <span className="font-semibold text-[#162543]">{oficioPrincipal}</span>}
+                        {oficioPrincipal && locationText && <span aria-hidden className="text-[#c3cdd9]">·</span>}
+                        {locationText && (
+                          <span className="inline-flex min-w-0 items-center gap-1.5">
+                            <MapPin className="h-3.5 w-3.5 shrink-0 text-[#68778d]" />
+                            <span className="min-w-0 truncate">{locationText}</span>
+                          </span>
+                        )}
+                      </p>
+                    )}
+                  </div>
                 </div>
-              )}
-              {/* Mismo botón secundario del app (píldora blanca de borde turquesa,
-                  sin ícono) que "Llamar": guardar y compartir son acciones, no
-                  enlaces sueltos. */}
-              <div className="mt-4 flex flex-col gap-2 sm:col-start-2 sm:row-start-1 sm:row-span-2 sm:mt-0 sm:justify-center">
-                <SaveButton
-                  pro={savedPro}
-                  isOwn={isOwn}
-                  withLabel
-                  className="h-11 w-full rounded-full px-4 py-0 text-[13px] sm:w-44"
-                />
-                <button
-                  type="button"
-                  onClick={shareProfile}
-                  aria-label={t("shareProfile")}
-                  title={t("shareProfile")}
-                  className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-full border border-[#d7e1ea] bg-white px-4 text-[13px] font-bold text-[#162543] transition-colors hover:border-[#b9c8d6] hover:bg-[#f6f9fb] sm:w-44"
-                >
-                  <span>{t("share")}</span>
-                </button>
-              </div>
-          </div>
 
-          <div className="flex flex-col lg:flex-row gap-6">
-
-            {/* La tarjeta de horario vive ahora en la pestaña "Disponibilidad". */}
-
-            {/* ── TABBED CONTENT (LEFT on desktop; contact card is the right aside) ── */}
-            <div id="resenas" className="order-1 flex-1 min-w-0 scroll-mt-24 [.ccr-native-app_&]:scroll-mt-0">
+                {/* Prueba social en columnas, como estaba: cada dato con su cifra
+                    arriba y su rótulo abajo. Solo se dibujan las columnas que
+                    tienen dato, así un perfil nuevo no muestra casillas vacías. */}
+                {(professional.reviewCount > 0 || expYears > 0 || casosCount > 0) && (
+                  <div className={cn(
+                    "mt-4 grid sm:col-start-1 sm:flex sm:justify-start sm:gap-10",
+                    ((professional.reviewCount > 0 ? 1 : 0) + (expYears > 0 ? 1 : 0) + (casosCount > 0 ? 1 : 0)) === 3
+                      ? "grid-cols-3"
+                      : ((professional.reviewCount > 0 ? 1 : 0) + (expYears > 0 ? 1 : 0) + (casosCount > 0 ? 1 : 0)) === 2
+                        ? "grid-cols-2"
+                        : "grid-cols-1",
+                  )}>
+                    {professional.reviewCount > 0 && (
+                      <button type="button" onClick={() => setActiveTab("resenas")} className="flex min-w-0 flex-col items-center px-2 text-center sm:items-start sm:px-0 sm:text-left">
+                        <span className="flex items-center justify-center gap-1">
+                          <Star className="h-4 w-4 shrink-0 fill-[#ff9b32] text-[#ff9b32]" />
+                          <span className="text-[15px] font-bold text-[#162543]">{professional.ratingAvg.toFixed(1)}</span>
+                        </span>
+                        <span className="mt-0.5 whitespace-nowrap text-[10px] leading-tight tracking-[-0.01em] text-[#68778d] sm:text-[11px] sm:tracking-normal">{t("reviewCountLabel", { count: professional.reviewCount })}</span>
+                      </button>
+                    )}
+                    {expYears > 0 && (
+                      <div className="flex min-w-0 flex-col items-center px-2 text-center sm:items-start sm:px-0 sm:text-left">
+                        <span className="flex items-center justify-center gap-1">
+                          <Briefcase className="h-4 w-4 shrink-0 text-[#009FD9]" />
+                          <span className="text-[15px] font-bold text-[#162543]">{expYears}</span>
+                        </span>
+                        <span className="mt-0.5 whitespace-nowrap text-[10px] leading-tight tracking-[-0.01em] text-[#68778d] sm:text-[11px] sm:tracking-normal">{t("statYears")}</span>
+                      </div>
+                    )}
+                    {casosCount > 0 && (
+                      <button type="button" onClick={() => setActiveTab("casos")} className="flex min-w-0 flex-col items-center px-2 text-center sm:items-start sm:px-0 sm:text-left">
+                        <span className="flex items-center justify-center gap-1">
+                          <Award className="h-4 w-4 shrink-0 text-[#009FD9]" />
+                          <span className="text-[15px] font-bold text-[#162543]">{casosCount}</span>
+                        </span>
+                        <span className="mt-0.5 whitespace-nowrap text-[10px] leading-tight tracking-[-0.01em] text-[#68778d] sm:text-[11px] sm:tracking-normal">{t("statCases", { count: casosCount })}</span>
+                      </button>
+                    )}
+                  </div>
+                )}
+                {/* Mismo botón secundario del app (píldora blanca de borde turquesa,
+                    sin ícono) que "Llamar": guardar y compartir son acciones, no
+                    enlaces sueltos. */}
+                <div className="mt-4 flex flex-col gap-2 sm:col-start-2 sm:row-start-1 sm:row-span-2 sm:mt-0 sm:justify-center">
+                  <SaveButton
+                    pro={savedPro}
+                    isOwn={isOwn}
+                    withLabel
+                    className="h-11 w-full rounded-full px-4 py-0 text-[13px] sm:w-44"
+                  />
+                  <button
+                    type="button"
+                    onClick={shareProfile}
+                    aria-label={t("shareProfile")}
+                    title={t("shareProfile")}
+                    className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-full border border-[#d7e1ea] bg-white px-4 text-[13px] font-bold text-[#162543] transition-colors hover:border-[#b9c8d6] hover:bg-[#f6f9fb] sm:w-44"
+                  >
+                    <span>{t("share")}</span>
+                  </button>
+                </div>
+            </div>
+            <div id="resenas" className="scroll-mt-24 [.ccr-native-app_&]:scroll-mt-0">
               <div className="rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">
 
                 {/* Tab bar — sticks under the header on the phone so any section is one tap away. */}
@@ -721,13 +819,16 @@ export default function ProfilePage() {
                       <button
                         key={tab.id}
                         role="tab"
-                        aria-selected={activeTab === tab.id}
+                        aria-selected={tabEfectiva === tab.id}
                         onClick={() => setActiveTab(tab.id)}
-                        className="relative shrink-0 px-5 py-4 text-sm font-semibold transition-colors"
-                        style={{ color: activeTab === tab.id ? "#009FD9" : "#6b7280" }}
+                        className={cn(
+                          "relative shrink-0 px-4 py-4 text-sm font-semibold transition-colors",
+                          tab.id === "disponibilidad" && "lg:hidden",
+                        )}
+                        style={{ color: tabEfectiva === tab.id ? "#009FD9" : "#6b7280" }}
                       >
                         {tab.label}
-                        {activeTab === tab.id && (
+                        {tabEfectiva === tab.id && (
                           <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#009FD9] rounded-full" />
                         )}
                       </button>
@@ -738,86 +839,12 @@ export default function ProfilePage() {
                 {/* Tab content */}
                 <div className="p-6">
 
-                  {/* ── TAB: Disponibilidad y contacto (primera sección) ── */}
-                  {activeTab === "disponibilidad" && (
-                    <div id="perfil-contacto" className="mx-auto flex w-full max-w-md flex-col gap-4">
-                      <div>
-                        {(() => {
-                          const label = primaryPricingLabel(professional.pricing, professional.hourlyRate, locale);
-                          const { amount, unit, taxSuffix } = splitPricingLabel(label);
-                          return (
-                            <p className="leading-tight">
-                              <span className="text-xl font-bold text-[#009FD9]">{amount}</span>
-                              {unit && <span className="text-sm font-semibold text-[#52627a]"> {unit}</span>}
-                              {taxSuffix && <span className="text-[11px] font-semibold tracking-wide text-[#68778d]"> · {taxSuffix}</span>}
-                            </p>
-                          );
-                        })()}
-                      </div>
-                      <ProfessionalSchedule
-                        stacked
-                        professional={professional}
-                        activeCategory={activeCategory}
-                        categoryName={catLabel(professional.categoryId)}
-                        availabilityPublic={professional.availabilityPublic ?? true}
-                        contactPreference={professional.contactPreference ?? "ambas"}
-                        slots={profileSlots}
-                        isOwn={isOwn}
-                        placeFallback={placeFallback}
-                        placeAddress={placeAddress}
-                        businessName={professional.businessName ?? ""}
-                      />
-                      {(() => {
-                        const sl = professional.socialLinks;
-                        const items = [
-                          { k: "website", href: buildWebsiteUrl(sl?.website), Icon: Globe },
-                          { k: "instagram", href: buildSocialUrl("instagram", sl?.instagram), Icon: InstagramIcon },
-                          { k: "facebook", href: buildSocialUrl("facebook", sl?.facebook), Icon: FacebookIcon },
-                          { k: "tiktok", href: buildSocialUrl("tiktok", sl?.tiktok), Icon: TikTokIcon },
-                          { k: "linkedin", href: buildSocialUrl("linkedin", sl?.linkedin), Icon: LinkedInIcon },
-                        ].filter((x) => x.href);
-                        if (items.length === 0) return null;
-                        return (
-                          <div className="flex flex-wrap items-center justify-center gap-2 pt-1">
-                            {items.map(({ k, href, Icon }) => (
-                              <a
-                                key={k}
-                                href={href as string}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                aria-label={k}
-                                onClick={() => trackInteraction({
-                                  type: "external_link_click",
-                                  professionalId: professional.id,
-                                  source: "profile_social",
-                                  locale,
-                                  metadata: { channel: k },
-                                })}
-                                className="flex h-9 w-9 items-center justify-center rounded-full border border-[#e5e7eb] text-[#374151] hover:border-[#009FD9] hover:text-[#009FD9] transition-colors"
-                              >
-                                <Icon className="h-4 w-4" />
-                              </a>
-                            ))}
-                          </div>
-                        );
-                      })()}
-                      {!isOwn && (
-                        <div className="mt-3 flex items-center justify-center">
-                          <button
-                            type="button"
-                            onClick={() => setReportOpen(true)}
-                            className="inline-flex !min-h-0 items-center gap-1.5 rounded-lg px-2 py-1 text-[12px] font-medium text-[#9aa3ad] transition-colors hover:text-[#6b7280]"
-                          >
-                            <Flag className="h-3.5 w-3.5" />
-                            {t("reportProfile")}
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  )}
+                  {/* La disponibilidad y el contacto son la columna de la derecha en
+                      computadora; en el teléfono siguen siendo esta pestaña. */}
+                  {activeTab === "disponibilidad" && <div className="lg:hidden">{bloqueContacto(true)}</div>}
 
                   {/* ── TAB: Servicios ── */}
-                  {activeTab === "servicios" && (() => {
+                  {tabEfectiva === "servicios" && (() => {
                     // Text-only service cards: ONE card per service CATEGORY (the pro's professions),
                     // with its description, price and request action. Images belong to casos/photos.
                     const rawProfs = (professional.professions && professional.professions.length > 0)
@@ -951,7 +978,7 @@ export default function ProfilePage() {
                       section here would only duplicate it. */}
 
                   {/* ── TAB: Casos de éxito (grouped per profession/service) ── */}
-                  {activeTab === "ofertas" && (
+                  {tabEfectiva === "ofertas" && (
                     <section className="space-y-5">
                       <div>
                         <h2 className="text-lg font-semibold text-[#162543]">
@@ -1003,7 +1030,7 @@ export default function ProfilePage() {
                     </section>
                   )}
 
-                  {activeTab === "empleos" && (
+                  {tabEfectiva === "empleos" && (
                     <section className="space-y-5">
                       <div>
                         <h2 className="text-lg font-semibold text-[#162543]">
@@ -1047,7 +1074,7 @@ export default function ProfilePage() {
                     </section>
                   )}
 
-                  {activeTab === "casos" && (
+                  {tabEfectiva === "casos" && (
                     <div className="flex flex-col gap-6">
                       <div>
                         <h2 className="text-lg font-semibold text-[#162543] mb-1">{t("tabs.casos")}</h2>
@@ -1093,7 +1120,7 @@ export default function ProfilePage() {
                   )}
 
                   {/* ── TAB: Formación (texto, sin imágenes) ── */}
-                  {activeTab === "certificaciones" && hasCerts && (
+                  {tabEfectiva === "certificaciones" && hasCerts && (
                     <div>
                       <h2 className="text-lg font-semibold text-[#162543] mb-1">{t("tabs.certificaciones")}</h2>
                       <p className="text-sm text-[#68778d] mb-4">{t("certsSubtitle")}</p>
@@ -1127,7 +1154,7 @@ export default function ProfilePage() {
                   )}
 
                   {/* ── TAB: Reseñas ── */}
-                  {activeTab === "resenas" && (
+                  {tabEfectiva === "resenas" && (
                     <div>
                       <ReviewSection
                         professionalId={professional.id}
@@ -1142,7 +1169,7 @@ export default function ProfilePage() {
                   )}
 
                   {/* ── TAB: Sobre mí ── */}
-                  {activeTab === "sobre" && (() => {
+                  {tabEfectiva === "sobre" && (() => {
                     // Facts in display order — each = brand-tint icon + uppercase label + value
                     // + an optional caption, laid out in a hairline-divided grid (owner mockup).
                     type Fact = { key: string; icon: ReactNode; label: string; value: ReactNode; caption?: ReactNode };
@@ -1230,6 +1257,14 @@ export default function ProfilePage() {
                 </div>
               </div>
             </div>
+            </div>
+
+            {/* ── COLUMNA DERECHA (solo computadora): contacto siempre a la vista ── */}
+            <aside className="order-2 hidden w-[352px] shrink-0 lg:block">
+              <div className="sticky top-20 rounded-2xl border border-[#e5e7eb] bg-white p-5 shadow-sm">
+                {bloqueContacto(false)}
+              </div>
+            </aside>
 
           </div>
         </div>

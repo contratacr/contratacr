@@ -4055,12 +4055,14 @@
     "copy": "Copy",
     "copied": "Copied",
     "whatsapp": "WhatsApp",
+    "instagram": "Instagram",
     "facebook": "Facebook",
     "email": "Email",
     "more": "More options",
     "message": "Check out {name} on ContrataCR:",
     "emailSubject": "{name} on ContrataCR",
-    "close": "Close"
+    "close": "Close",
+    "instagramHint": "Link copied. Paste it in your story, your bio or a message: Instagram can't take links straight from the browser."
   },
   "quotes": {
     "blockTitle": "Quote",

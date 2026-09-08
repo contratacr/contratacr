@@ -3,11 +3,10 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import QRCode from "qrcode";
-import { Share2, QrCode, Star, ChevronRight, ArrowLeft, Check } from "lucide-react";
+import { QrCode, Star, ChevronRight, ArrowLeft, Check } from "lucide-react";
 import { Modal } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
-import { ShareLinkPanel } from "@/components/ui/share-link-panel";
-import { useNativeShare } from "@/hooks/use-native-share";
+import { ShareChannels } from "@/components/ui/share-channels";
 import { getInitials } from "@/lib/utils";
 
 /**
@@ -68,13 +67,10 @@ function fitText(ctx: CanvasRenderingContext2D, text: string, maxWidth: number, 
 export function ShareKit({ open, onClose, profileUrl, name, services = [], avatarUrl, isVerified, ratingAvg = 0, reviewCount = 0 }: Props) {
   const t = useTranslations("shareKit");
   const [view, setView] = useState<View>("menu");
-  const [copied, setCopied] = useState<"link" | "message" | null>(null);
+  const [copied, setCopied] = useState<"message" | null>(null);
   const [cardBlob, setCardBlob] = useState<Blob | null>(null);
   const [cardPreview, setCardPreview] = useState<string | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  // La hoja nativa de compartir solo existe en el teléfono; en computadora la
-  // fila sobra porque el enlace ya está arriba con su botón de copiar.
-  const puedeCompartir = useNativeShare();
 
 
   // La tarjeta se dibuja en un canvas al abrir esa vista: foto, nombre, oficio,
@@ -172,13 +168,8 @@ export function ShareKit({ open, onClose, profileUrl, name, services = [], avata
     return () => { cancelled = true; };
   }, [view, cardBlob, avatarUrl, services, isVerified, name, profileUrl, ratingAvg, reviewCount, t]);
 
-  async function copy(text: string, kind: "link" | "message") {
+  async function copy(text: string, kind: "message") {
     try { await navigator.clipboard.writeText(text); setCopied(kind); window.setTimeout(() => setCopied(null), 1800); } catch { /* sin portapapeles */ }
-  }
-
-  async function shareLink() {
-    if (navigator.share) { try { await navigator.share({ title: name, url: profileUrl }); return; } catch { /* cancelado */ } }
-    await copy(profileUrl, "link");
   }
 
   async function shareCard() {
@@ -218,9 +209,9 @@ export function ShareKit({ open, onClose, profileUrl, name, services = [], avata
     <Modal open={open} onClose={cerrar} title={t("title")} subtitle={view === "menu" ? t("subtitle") : undefined} size="sm" mobilePresentation="center" closeLabel={t("close")}>
       {view === "menu" && (
         <div className="flex flex-col gap-3">
-          {/* El enlace a la vista: es corto y enseñarlo es la mitad de la gracia. */}
-          <ShareLinkPanel url={profileUrl} label={t("linkLabel")} copyLabel={t("copy")} copiedLabel={t("copied")} />
-          {puedeCompartir && option(Share2, t("shareTitle"), t("shareBody"), () => { void shareLink(); })}
+          {/* Lo mismo que ve un cliente al compartir un perfil (enlace a la vista,
+              WhatsApp, Instagram y Facebook) más lo que solo tiene el dueño. */}
+          <ShareChannels url={profileUrl} name={name} linkLabel={t("linkLabel")} copyLabel={t("copy")} />
           {option(QrCode, t("cardTitle"), t("cardBody"), () => setView("card"))}
           {option(Star, t("reviewsTitle"), t("reviewsBody"), () => setView("reviews"))}
         </div>
