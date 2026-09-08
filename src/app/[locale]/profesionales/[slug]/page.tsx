@@ -596,9 +596,6 @@ export default function ProfilePage() {
               the new /buscar card (circular avatar, solid-blue "Verificado" pill). No
               "destacado" ribbon. */}
           <div className="relative mb-6 rounded-2xl border border-[#e5e7eb] bg-white p-4 shadow-sm sm:p-6">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              {/* Nombre centrado contra la foto: al bajar los botones, alinear
-                  arriba dejaba un hueco al lado del avatar. */}
               <div className="flex min-w-0 items-center gap-3 sm:gap-4">
                 <ImagePreviewDialog
                   src={professional.avatarUrl}
@@ -623,65 +620,39 @@ export default function ProfilePage() {
                       )}
                     </h1>
                   </div>
-                  {/* Qué hace y dónde, en una línea bajo el nombre: sin esto el
-                      espacio al lado de la foto quedaba vacío y había que entrar a
-                      las pestañas para saber a qué se dedica. */}
-                  {(catLabel(principalProfession) || locationText) && (
-                    <p className="mt-1 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[13px] leading-5 text-[#52627a] sm:text-sm">
-                      {catLabel(principalProfession) && (
-                        <span className="font-semibold text-[#008fc3]">{catLabel(principalProfession)}</span>
-                      )}
-                      {catLabel(principalProfession) && locationText && <span aria-hidden className="text-[#c0cad5]">·</span>}
-                      {locationText && (
-                        <span className="inline-flex items-center gap-1">
-                          <MapPin className="h-3.5 w-3.5 shrink-0 text-[#68778d]" />
-                          {locationText}
-                        </span>
-                      )}
+                  {locationText && (
+                    <p className="mt-1 flex items-center gap-1.5 text-[13px] leading-5 text-[#52627a] sm:text-sm">
+                      <MapPin className="h-3.5 w-3.5 shrink-0 text-[#68778d]" />
+                      <span className="min-w-0 truncate">{locationText}</span>
                     </p>
                   )}
                 </div>
-              </div>
-
-              {/* Stats strip — rating · años de exp · casos de éxito. */}
-              <div className={cn(
-                "grid w-full shrink-0 gap-2 self-start sm:w-auto sm:self-center sm:border-l sm:border-[#f3f4f6] sm:pl-5",
-                (expYears > 0 ? 1 : 0) + (casosCount > 0 ? 1 : 0) === 2
-                  ? "grid-cols-3 sm:min-w-[18rem]"
-                  : (expYears > 0 ? 1 : 0) + (casosCount > 0 ? 1 : 0) === 1
-                    ? "grid-cols-2 sm:min-w-[13rem]"
-                    : "grid-cols-1 sm:min-w-[8rem]",
-              )}>
-                <button type="button" onClick={() => setActiveTab("resenas")} className="flex min-w-0 flex-col items-center justify-start text-center">
-                  <div className="flex items-center justify-center gap-1">
-                    <Star className="h-4 w-4 fill-[#ff9b32] text-[#ff9b32]" />
-                    <span className="text-[15px] font-bold text-[#162543]">{professional.ratingAvg.toFixed(1)}</span>
-                  </div>
-                  <p className="mt-0.5 whitespace-nowrap text-[10px] font-medium leading-none text-[#8b95a5] sm:text-[11px]">{t("reviewCountLabel", { count: professional.reviewCount })}</p>
-                </button>
-                {expYears > 0 && (
-                  <div className="flex min-w-0 flex-col items-center justify-start text-center">
-                    <div className="flex items-center justify-center gap-1">
-                      <Briefcase className="h-4 w-4 text-[#009FD9]" />
-                      <span className="text-[15px] font-bold text-[#162543]">{expYears}</span>
-                    </div>
-                    <p className="mt-0.5 whitespace-nowrap text-[10px] font-medium leading-none tracking-[-0.02em] text-[#8b95a5] sm:text-[11px] sm:tracking-normal">{t("statYears")}</p>
-                  </div>
-                )}
-                {/* Tercer dato: los casos de éxito, que hablan del trabajo. Los
-                    seguidores solo aparecen si de verdad hay: un "0 seguidores"
-                    es un dato en contra, no información. */}
-                {casosCount > 0 ? (
-                  <button type="button" onClick={() => setActiveTab("casos")} className="flex min-w-0 flex-col items-center justify-start text-center">
-                    <div className="flex items-center justify-center gap-1">
-                      <Award className="h-4 w-4 text-[#009FD9]" />
-                      <span className="text-[15px] font-bold text-[#162543]">{casosCount}</span>
-                    </div>
-                    <p className="mt-0.5 whitespace-nowrap text-[10px] font-medium leading-none text-[#8b95a5] sm:text-[11px]">{t("statCases", { count: casosCount })}</p>
-                  </button>
-                ) : null}
-              </div>
             </div>
+              {/* La prueba social va en UNA línea bajo la identidad y solo con lo
+                  que existe: la tira de tres columnas dejaba huecos cuando el
+                  profesional no tenía reseñas, años cargados ni casos. */}
+              {(professional.reviewCount > 0 || expYears > 0 || casosCount > 0) && (
+                <p className="mt-3 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-[12px] leading-5 text-[#52627a] sm:gap-x-2 sm:text-[13px]">
+                  {professional.reviewCount > 0 && (
+                    <button type="button" onClick={() => setActiveTab("resenas")} className="inline-flex items-center gap-1 hover:underline">
+                      <Star className="h-3.5 w-3.5 shrink-0 fill-[#ff9b32] text-[#ff9b32]" />
+                      <span className="font-bold text-[#162543]">{professional.ratingAvg.toFixed(1)}</span>
+                      <span>{t("reviewCountLabel", { count: professional.reviewCount })}</span>
+                    </button>
+                  )}
+                  {professional.reviewCount > 0 && expYears > 0 && <span aria-hidden className="text-[#c0cad5]">·</span>}
+                  {expYears > 0 && (
+                    <span><span className="font-bold text-[#162543]">{expYears}</span> {locale === "en" ? "yrs of experience" : "años de experiencia"}</span>
+                  )}
+                  {(professional.reviewCount > 0 || expYears > 0) && casosCount > 0 && <span aria-hidden className="text-[#c0cad5]">·</span>}
+                  {casosCount > 0 && (
+                    <button type="button" onClick={() => setActiveTab("casos")} className="inline-flex items-center gap-1 hover:underline">
+                      <span className="font-bold text-[#162543]">{casosCount}</span>
+                      <span>{locale === "en" ? "cases" : "casos"}</span>
+                    </button>
+                  )}
+                </p>
+              )}
               {/* Guardar y compartir son gestos de apoyo, no la acción del perfil:
                   quedan arriba junto al nombre pero en blanco, para que el único
                   turquesa de la pantalla sea agendar. Antes guardar iba relleno y
@@ -691,7 +662,7 @@ export default function ProfilePage() {
                   pro={savedPro}
                   isOwn={isOwn}
                   withLabel
-                  className="box-border h-9 min-w-0 flex-1 whitespace-nowrap rounded-full px-3 py-0 text-[13px] sm:w-auto sm:flex-none sm:px-5"
+                  className="box-border h-9 w-auto min-w-0 shrink-0 whitespace-nowrap rounded-full px-4 py-0 text-[13px]"
                 />
                 <button
                   type="button"
@@ -699,7 +670,7 @@ export default function ProfilePage() {
                   aria-label={linkCopiado ? t("linkCopied") : t("shareProfile")}
                   title={linkCopiado ? t("linkCopied") : t("shareProfile")}
                   className={cn(
-                    "inline-flex h-9 min-w-0 flex-1 items-center justify-center gap-2 rounded-full border-[1.5px] bg-white px-3 text-[13px] font-bold transition-colors sm:w-auto sm:flex-none sm:px-5",
+                    "inline-flex h-9 w-auto min-w-0 shrink-0 items-center justify-center gap-2 rounded-full border-[1.5px] bg-white px-4 text-[13px] font-bold transition-colors",
                     linkCopiado ? "border-[#b8e7cf] bg-[#f2fbf6] text-[#15803d]" : "border-[#009FD9] text-[#009FD9] hover:bg-[#EBF5FB]",
                   )}
                 >
