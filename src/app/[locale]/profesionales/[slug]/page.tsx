@@ -596,28 +596,7 @@ export default function ProfilePage() {
               the new /buscar card (circular avatar, solid-blue "Verificado" pill). No
               "destacado" ribbon. */}
           <div className="relative mb-6 rounded-2xl border border-[#e5e7eb] bg-white p-4 shadow-sm sm:p-6">
-            <div className="absolute right-3 top-3 flex items-center gap-3 sm:right-5 sm:top-5">
-              <SaveButton
-                pro={savedPro}
-                isOwn={isOwn}
-                withLabel
-                className="h-auto w-auto border-0 bg-transparent p-0 text-[13px] font-bold text-[#162543] underline decoration-[#c0cad5] underline-offset-4 hover:bg-transparent hover:text-[#0089bb]"
-              />
-              <button
-                type="button"
-                onClick={shareProfile}
-                aria-label={linkCopiado ? t("linkCopied") : t("shareProfile")}
-                title={linkCopiado ? t("linkCopied") : t("shareProfile")}
-                className={cn(
-                  "text-[13px] font-bold underline decoration-[#c0cad5] underline-offset-4 transition-colors",
-                  linkCopiado ? "text-[#15803d]" : "text-[#162543] hover:text-[#0089bb]",
-                )}
-              >
-                {linkCopiado ? t("linkCopied") : locale === "en" ? "Share" : "Compartir"}
-                <span className="sr-only" aria-live="polite">{linkCopiado ? t("linkCopied") : ""}</span>
-              </button>
-            </div>
-              <div className="mt-7 flex min-w-0 items-center gap-3 sm:mt-0 sm:gap-4 sm:pr-44">
+              <div className="flex min-w-0 items-center gap-3 sm:gap-4">
                 <ImagePreviewDialog
                   src={professional.avatarUrl}
                   alt={professional.fullName}
@@ -655,7 +634,7 @@ export default function ProfilePage() {
                   tienen dato, así un perfil nuevo no muestra casillas vacías. */}
               {(professional.reviewCount > 0 || expYears > 0 || casosCount > 0) && (
                 <div className={cn(
-                  "mt-4 grid divide-x divide-[#eef2f6] border-t border-[#eef2f6] pt-4",
+                  "mt-4 grid border-t border-[#eef2f6] pt-4",
                   ((professional.reviewCount > 0 ? 1 : 0) + (expYears > 0 ? 1 : 0) + (casosCount > 0 ? 1 : 0)) === 3
                     ? "grid-cols-3"
                     : ((professional.reviewCount > 0 ? 1 : 0) + (expYears > 0 ? 1 : 0) + (casosCount > 0 ? 1 : 0)) === 2
@@ -691,6 +670,27 @@ export default function ProfilePage() {
                   )}
                 </div>
               )}
+              <div className="mt-4 flex items-center justify-end gap-4">
+              <SaveButton
+                pro={savedPro}
+                isOwn={isOwn}
+                withLabel
+                className="h-auto w-auto border-0 bg-transparent p-0 text-[13px] font-bold text-[#162543] underline decoration-[#c0cad5] underline-offset-4 hover:bg-transparent hover:text-[#0089bb]"
+              />
+              <button
+                type="button"
+                onClick={shareProfile}
+                aria-label={linkCopiado ? t("linkCopied") : t("shareProfile")}
+                title={linkCopiado ? t("linkCopied") : t("shareProfile")}
+                className={cn(
+                  "text-[13px] font-bold underline decoration-[#c0cad5] underline-offset-4 transition-colors",
+                  linkCopiado ? "text-[#15803d]" : "text-[#162543] hover:text-[#0089bb]",
+                )}
+              >
+                {linkCopiado ? t("linkCopied") : locale === "en" ? "Share" : "Compartir"}
+                <span className="sr-only" aria-live="polite">{linkCopiado ? t("linkCopied") : ""}</span>
+              </button>
+            </div>
           </div>
 
           <div className="flex flex-col lg:flex-row gap-6">
