@@ -190,8 +190,8 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
   const { data: bookings, setData: setBookings } = bookingsResource;
   const { data: projects, setData: setProjects } = projectsResource;
   const loading = section === "bookings" ? bookingsResource.loading : section === "projects" ? projectsResource.loading : false;
-  const [reviewModal, setReviewModal] = useState<{ professionalId: string; professionalName: string; bookingId?: string; projectId?: string } | null>(null);
-  const [myReviews, setMyReviews] = useState<{ professional_id: string; booking_id?: string | null; project_id?: string | null; rating: number }[]>([]);
+  const [reviewModal, setReviewModal] = useState<{ professionalId: string; professionalName: string; bookingId?: string; projectId?: string; initialReview?: { rating?: number | null; comment?: string | null } | null } | null>(null);
+  const [myReviews, setMyReviews] = useState<{ professional_id: string; booking_id?: string | null; project_id?: string | null; rating: number; comment?: string | null }[]>([]);
   // One unified filter set (sprint 430): Activas · Finalizadas · Canceladas.
   const [bookingFilter, setBookingFilter] = useState("en_curso");
   const [projectFilter, setProjectFilter] = useState("activas");
@@ -729,7 +729,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                                 primary = <Button size="sm" className={actionButtonClass} onClick={() => confirmBookingDone(b.id)}>{t("bookingHappened")}</Button>;
                               }
                               const reviewAction = terminada ? (
-                                <Button size="sm" variant="secondary" className={actionButtonClass} onClick={() => setReviewModal({ professionalId: b.professional_id, professionalName: b.professionals?.profiles?.full_name ?? t("professional"), bookingId: b.id })}>{rev ? t("editReview") : t("leaveReview")}</Button>
+                                <Button size="sm" variant="secondary" className={actionButtonClass} onClick={() => setReviewModal({ professionalId: b.professional_id, professionalName: b.professionals?.profiles?.full_name ?? t("professional"), bookingId: b.id, initialReview: rev ? { rating: rev.rating, comment: rev.comment } : null })}>{rev ? t("editReview") : t("leaveReview")}</Button>
                               ) : null;
                               const messageAction = canMessage && b.professional_id ? (
                                 <DirectChatLauncher professionalId={b.professional_id} professionalName={b.professionals?.profiles?.full_name || t("professional")} bookingId={b.id} contextTitle={b.service_description} buttonLabel={t("contact")} analyticsSource="booking" tone={terminada && !primary ? "primary" : "outline"} className={actionButtonClass} />
@@ -771,22 +771,27 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                                 </Link>
                               ) : null;
                               const segundaFila = [reviewAction, rebookAction].filter(Boolean);
+                              // El menú ⋮ acompaña a la primera fila; la segunda cruza la
+                              // tarjeta entera para terminar a ras de ese borde.
                               return (
-                                <div className="flex items-start gap-2 border-t border-[#eef2f6] pt-3">
-                                  <div className="flex min-w-0 flex-1 flex-col gap-2">
-                                    {(primary || messageAction) && (
-                                      <div className="flex min-w-0 flex-wrap items-center gap-2">
+                                <div className="flex flex-col gap-2 border-t border-[#eef2f6] pt-3">
+                                  {(primary || messageAction) && (
+                                    <div className="flex items-start gap-2">
+                                      <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
                                         {primary}
                                         {messageAction}
                                       </div>
-                                    )}
-                                    {segundaFila.length > 0 && (
-                                      <div className={segundaFila.length === 2 ? "grid grid-cols-2 gap-2" : "flex"}>
-                                        {segundaFila}
-                                      </div>
-                                    )}
-                                  </div>
-                                  {menu.length > 0 && <div className="shrink-0"><CardActionsMenu actions={menu} label={t("actions")} /></div>}
+                                      {menu.length > 0 && <div className="shrink-0"><CardActionsMenu actions={menu} label={t("actions")} /></div>}
+                                    </div>
+                                  )}
+                                  {segundaFila.length > 0 && (
+                                    <div className={segundaFila.length === 2 ? "grid grid-cols-2 gap-2" : "flex"}>
+                                      {segundaFila}
+                                    </div>
+                                  )}
+                                  {!primary && !messageAction && menu.length > 0 && (
+                                    <div className="flex justify-end"><CardActionsMenu actions={menu} label={t("actions")} /></div>
+                                  )}
                                 </div>
                               );
                             })()}

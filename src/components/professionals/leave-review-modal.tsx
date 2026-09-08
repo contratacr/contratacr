@@ -16,6 +16,8 @@ interface LeaveReviewModalProps {
   onClose: () => void;
   onSuccess?: () => void;
   embedded?: boolean;
+  /** Reseña ya conocida por quien abre (evita esperar la consulta al abrir). */
+  initialReview?: { rating?: number | null; comment?: string | null } | null;
 }
 
 const PENDING_REVIEW_KEY_PREFIX = "contratacr:pending-profile-review:";
@@ -37,15 +39,16 @@ export function LeaveReviewModal({
   onClose,
   onSuccess,
   embedded = false,
+  initialReview = null,
 }: LeaveReviewModalProps) {
   const t = useTranslations("reviewModal");
-  const [rating, setRating] = useState(0);
+  const [rating, setRating] = useState(initialReview?.rating ?? 0);
   const [hovered, setHovered] = useState(0);
-  const [comment, setComment] = useState("");
+  const [comment, setComment] = useState(initialReview?.comment ?? "");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
+  const [isEditing, setIsEditing] = useState(Boolean(initialReview));
   // La reseña propia se consulta al montar. Sin esta espera el cuadro se pintaba
   // vacío ("Dejar tu reseña", 0 estrellas) y saltaba a la reseña existente
   // cuando llegaba la respuesta: eso era el parpadeo.
@@ -60,10 +63,10 @@ export function LeaveReviewModal({
         : `professionalId=${professionalId}`;
   // Sin esta espera el cuadro se pintaba vacío ("Dejar tu reseña", 0 estrellas)
   // y saltaba a la reseña existente cuando llegaba la respuesta: el parpadeo.
-  const prefillReady = !isAuthenticated || prefilledKey === query;
+  const prefillReady = !isAuthenticated || Boolean(initialReview) || prefilledKey === query;
 
   useEffect(() => {
-    if (!isAuthenticated) return;
+    if (!isAuthenticated || initialReview) return;
     let active = true;
     void (async () => {
       try {
@@ -81,7 +84,7 @@ export function LeaveReviewModal({
       }
     })();
     return () => { active = false; };
-  }, [isAuthenticated, query]);
+  }, [initialReview, isAuthenticated, query]);
 
   useEffect(() => {
     if (isAuthenticated || typeof window === "undefined") return;
