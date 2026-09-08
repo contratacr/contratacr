@@ -1924,8 +1924,7 @@
     },
     "goToClientPanel": "Go to my client panel",
     "goToProfessionalPanel": "Go to my professional panel",
-    "headerReviews": "{count, plural, one {# review} other {# reviews}}",
-    "headerNoReviewsYet": "No reviews yet"
+    "headerReviews": "{count, plural, one {# review} other {# reviews}}"
   },
   "bookingRequests": {
     "empty": "No appointments yet",

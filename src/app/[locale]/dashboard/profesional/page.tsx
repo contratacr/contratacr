@@ -2047,9 +2047,11 @@ export default function DashboardPage() {
                       {getInitials(displayName || "?")}
                     </AvatarFallback>
                   </Avatar>
-                  <span className="absolute bottom-0 right-0 flex h-7 w-7 items-center justify-center rounded-full border-2 border-white bg-[#009FD9] text-white shadow-sm">
-                    {headerPhotoUploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Plus className="h-4 w-4" strokeWidth={3} />}
-                  </span>
+                  {mode === "offer" && (
+                    <span className="absolute bottom-0 right-0 flex h-7 w-7 items-center justify-center rounded-full border-2 border-white bg-[#009FD9] text-white shadow-sm">
+                      {headerPhotoUploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Plus className="h-4 w-4" strokeWidth={3} />}
+                    </span>
+                  )}
                 </button>
                 {headerPhotoMenuOpen && (
                   <div className="absolute left-0 top-[calc(100%+0.5rem)] z-40 w-56 overflow-hidden rounded-xl border border-[#dbe7ef] bg-white py-1 shadow-xl">
@@ -2115,11 +2117,12 @@ export default function DashboardPage() {
                   {/* Las reseñas, que es la prueba social que mira un cliente. Los
                       seguidores se retiraron de la app: guardar ya cubre "lo quiero
                       a mano" y dos conceptos para lo mismo confundían. */}
-                  {/* Sin seguidos ni seguidores, la línea bajo el nombre dice lo que
-                      de verdad importa: cómo te califican y —si aún no hay reseñas—
-                      cuánto falta para que el perfil esté completo, que es lo que
-                      hace que lleguen clientes. */}
-                  {(pro?.review_count ?? 0) > 0 && publicProfileHref ? (
+                  {/* Solo en modo profesional: la calificación es la prueba social
+                      que un cliente mira, y solo cuando ya hay reseñas. En modo
+                      cliente no hay nada que medir —sus reseñas no existen—, así
+                      que bajo el nombre no va nada en vez de un "aún sin reseñas"
+                      que suena a reproche por algo que no le toca hacer. */}
+                  {mode === "offer" && (pro?.review_count ?? 0) > 0 && publicProfileHref && (
                     <Link
                       href={`${publicProfileHref}?tab=resenas&from=${encodeURIComponent("/dashboard/profesional")}`}
                       onClick={openInNewTabOnDesktop}
@@ -2129,8 +2132,6 @@ export default function DashboardPage() {
                       <strong className="text-[14px] leading-none text-[#162543]">{Number(pro?.rating_avg ?? 0).toFixed(1)}</strong>
                       <span className="whitespace-nowrap">{t("headerReviews", { count: pro?.review_count ?? 0 })}</span>
                     </Link>
-                  ) : (
-                    <span className="text-[13px] font-medium leading-none text-[#8b98a9]">{t("headerNoReviewsYet")}</span>
                   )}
                 </div>
               </div>
