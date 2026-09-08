@@ -1940,7 +1940,7 @@
     },
     "goToClientPanel": "Go to my client panel",
     "goToProfessionalPanel": "Go to my professional panel",
-    "headerReviews": "{count, plural, one {# review} other {# reviews}}"
+    "headerReviews": "reviews"
   },
   "bookingRequests": {
     "empty": "No appointments yet",

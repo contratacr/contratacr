@@ -2124,23 +2124,23 @@ export default function DashboardPage() {
                   <div className="flex shrink-0 items-center">{identityBadge()}</div>
                 </div>
                 <div data-testid="dashboard-identity-actions" className="mt-1 flex items-start justify-start gap-3 sm:mt-1 sm:min-h-[22px]">
-                  {/* Seguidos y seguidores, como estaban. Junto a ellos, la
-                      calificación SOLO cuando ya hay reseñas: lleva a leerlas en el
-                      perfil público y, sin ninguna, no ocupa espacio ni muestra un
-                      cero. */}
-                  <div className="flex min-w-0 flex-wrap items-center gap-x-4 gap-y-1">
-                    <FollowNetworkSummaryLink onOpen={setNetworkModal} />
+                  {/* Como en Instagram: número arriba, palabra abajo, en columnas.
+                      Las reseñas van primero —es lo que mira un cliente— y solo
+                      cuando ya hay alguna; llevan a leerlas en el perfil público.
+                      Las palabras no cambian de singular a plural: la columna
+                      bailaba con cada número. */}
+                  <div className="flex min-w-0 items-start gap-4">
                     {(pro?.review_count ?? 0) > 0 && publicProfileHref && (
                       <Link
                         href={`${publicProfileHref}?tab=resenas&from=${encodeURIComponent("/dashboard/profesional")}`}
                         onClick={openInNewTabOnDesktop}
-                        className="inline-flex items-baseline gap-1.5 text-[14px] font-semibold leading-none text-[#526277] transition hover:text-[#009FD9] sm:text-xs"
+                        className="flex flex-col items-start gap-0.5 text-left transition hover:text-[#009FD9]"
                       >
-                        <Star className="h-4 w-4 shrink-0 translate-y-0.5 fill-[#ff9b32] text-[#ff9b32]" />
-                        <strong className="text-[15px] leading-none text-[#162543] sm:text-sm">{Number(pro?.rating_avg ?? 0).toFixed(1)}</strong>
-                        <span className="whitespace-nowrap">{t("headerReviews", { count: pro?.review_count ?? 0 })}</span>
+                        <strong className="text-[16px] font-bold leading-none text-[#162543]">{pro?.review_count ?? 0}</strong>
+                        <span className="text-[12px] font-medium leading-none text-[#8b98a9]">{t("headerReviews")}</span>
                       </Link>
                     )}
+                    <FollowNetworkSummaryLink stacked onOpen={setNetworkModal} />
                   </div>
                   
                 </div>

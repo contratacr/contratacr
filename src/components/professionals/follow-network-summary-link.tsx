@@ -42,7 +42,7 @@ function cacheCounts(userId: string, counts: Counts) {
   }
 }
 
-export function FollowNetworkSummaryLink({ onOpen }: { onOpen?: (view: "following" | "followers") => void }) {
+export function FollowNetworkSummaryLink({ onOpen, stacked = false }: { stacked?: boolean; onOpen?: (view: "following" | "followers") => void }) {
   const locale = useLocale();
   const es = locale !== "en";
   const { user } = useAuth();
@@ -81,23 +81,29 @@ export function FollowNetworkSummaryLink({ onOpen }: { onOpen?: (view: "followin
 
   if (!user) return null;
 
+  // Apilado (número arriba, palabra abajo) para la cabecera del panel: en una
+  // sola línea los tres datos no caben en 390 px y se partían.
+  const clase = stacked
+    ? "flex !min-h-0 flex-col items-start gap-0.5 rounded-md text-left transition hover:text-[#009FD9] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9]/40"
+    : "inline-flex !min-h-0 items-baseline gap-1.5 rounded-md transition hover:text-[#009FD9] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9]/40";
+  const claseNumero = stacked
+    ? "text-[16px] font-bold leading-none text-[#162543]"
+    : "text-[14px] leading-none text-[#162543] sm:text-sm";
+  const claseEtiqueta = stacked ? "text-[12px] font-medium leading-none text-[#8b98a9]" : "whitespace-nowrap";
+
   return (
-    <div className="inline-flex items-center gap-4 text-[14px] font-semibold leading-none text-[#526277] sm:gap-4 sm:text-xs">
-      <button
-        type="button"
-        onClick={() => onOpen?.("following")}
-        className="inline-flex !min-h-0 items-baseline gap-1.5 rounded-md transition hover:text-[#009FD9] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9] sm:flex sm:min-w-12 sm:flex-col sm:items-center sm:justify-end sm:gap-1 sm:text-center"
-      >
-        <strong className="text-[15px] leading-none text-[#162543] sm:text-sm">{counts.following}</strong>
-        <span className="whitespace-nowrap">{es ? "seguidos" : "following"}</span>
+    <div className={stacked
+      ? "flex items-start gap-6 text-[#526277]"
+      : "inline-flex items-center gap-3 text-[13px] font-semibold leading-none text-[#526277] sm:gap-4 sm:text-xs"}>
+      <button type="button" onClick={() => onOpen?.("followers")} className={clase}>
+        <strong className={claseNumero}>{counts.followers}</strong>
+        {/* Palabra fija, como en Instagram: cambiarla entre singular y plural
+            hace bailar la columna. */}
+        <span className={claseEtiqueta}>{es ? "seguidores" : "followers"}</span>
       </button>
-      <button
-        type="button"
-        onClick={() => onOpen?.("followers")}
-        className="inline-flex !min-h-0 items-baseline gap-1.5 rounded-md transition hover:text-[#009FD9] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9] sm:flex sm:min-w-12 sm:flex-col sm:items-center sm:justify-end sm:gap-1 sm:text-center"
-      >
-        <strong className="text-[15px] leading-none text-[#162543] sm:text-sm">{counts.followers}</strong>
-        <span className="whitespace-nowrap">{es ? "seguidores" : "followers"}</span>
+      <button type="button" onClick={() => onOpen?.("following")} className={clase}>
+        <strong className={claseNumero}>{counts.following}</strong>
+        <span className={claseEtiqueta}>{es ? "seguidos" : "following"}</span>
       </button>
     </div>
   );
