@@ -550,7 +550,8 @@ export default function ProfilePage() {
     ...(hasCasos ? [{ id: "casos" as Tab, label: t("tabs.casos") }] : []),
     ...(publicOffers.length > 0 ? [{ id: "ofertas" as Tab, label: locale === "en" ? "Offers" : "Ofertas" }] : []),
     ...(EMPLEOS_VISIBLE && publicJobs.length > 0 ? [{ id: "empleos" as Tab, label: locale === "en" ? "Jobs" : "Empleos" }] : []),
-    // La formación se lee dentro de Información: ocho pestañas eran demasiadas.
+    // La formación vuelve a tener pestaña propia: solo aparece si hay algo que mostrar.
+    ...(hasCerts ? [{ id: "certificaciones" as Tab, label: t("tabs.certificaciones") }] : []),
     { id: "sobre",          label: t("tabs.sobre") },
   ];
 
@@ -1086,9 +1087,9 @@ export default function ProfilePage() {
                     </div>
                   )}
 
-                  {/* ── Formación (dentro de Información; texto, sin imágenes) ── */}
-                  {activeTab === "sobre" && hasCerts && (
-                    <div className="mb-8 border-b border-[#eef2f6] pb-8">
+                  {/* ── TAB: Formación (texto, sin imágenes) ── */}
+                  {activeTab === "certificaciones" && hasCerts && (
+                    <div>
                       <h2 className="text-lg font-semibold text-[#111827] mb-1">{t("tabs.certificaciones")}</h2>
                       <p className="text-sm text-[#9ca3af] mb-4">{t("certsSubtitle")}</p>
                       <div className="flex flex-col gap-5">
