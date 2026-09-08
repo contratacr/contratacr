@@ -801,7 +801,7 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
       onClick={(e) => { e.stopPropagation(); openBooking(); }}
       className={cn(
         "inline-flex h-11 w-full items-center justify-center gap-1.5 rounded-full text-[13px] font-bold text-white transition-colors",
-        stacked ? "bg-[#162543] hover:bg-[#233a5f]" : "bg-[#009FD9] hover:bg-[#0089bb]",
+        "bg-[#009FD9] hover:bg-[#0089bb]",
       )}
     >
       <CalendarDays className="h-4 w-4" />
@@ -865,6 +865,7 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
             onSelfAction={() => setSelfMsg(SELF_MSG.whatsapp)}
             analyticsSource="profile"
             buttonLabel="WhatsApp"
+            tone={hasSchedule ? "outline" : "primary"}
             className={messageButtonClass}
           />
           {renderCall()}
@@ -877,6 +878,7 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
           isOwn={isOwn}
           onSelfAction={() => setSelfMsg(SELF_MSG.whatsapp)}
           analyticsSource="profile"
+          tone={hasSchedule ? "outline" : "primary"}
           className={messageButtonClass}
         />
       )}
