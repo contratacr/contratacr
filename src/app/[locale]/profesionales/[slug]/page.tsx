@@ -511,7 +511,11 @@ export default function ProfilePage() {
   function irAReservar(cat?: string | null) {
     if (!professional) return;
     const servicio = cat ?? bookingCat;
-    router.push(`/profesionales/${professional.slug}/reservar${servicio ? `?servicio=${encodeURIComponent(servicio)}` : ""}`);
+    const params = new URLSearchParams();
+    if (servicio) params.set("servicio", servicio);
+    // Desde el perfil se vuelve al perfil, con el origen que este ya conocía.
+    params.set("desde", `/profesionales/${professional.slug}`);
+    router.push(`/profesionales/${professional.slug}/reservar?${params.toString()}`);
   }
 
   async function shareProfile() {

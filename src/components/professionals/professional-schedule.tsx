@@ -686,6 +686,11 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
       const etiqueta = locLabel(lugar);
       if (etiqueta) params.set("lugarNombre", etiqueta);
     }
+    // De dónde salió la reserva, para que la flecha devuelva ahí mismo.
+    if (typeof window !== "undefined") {
+      const aqui = `${window.location.pathname}${window.location.search}`.replace(/^\/(es|en)(?=\/|$)/, "");
+      if (aqui) params.set("desde", aqui);
+    }
     const cola = params.toString();
     router.push(`/profesionales/${professional.slug}/reservar${cola ? `?${cola}` : ""}`);
   }

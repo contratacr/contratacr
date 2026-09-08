@@ -59,6 +59,16 @@ export default function ReservarPage() {
     );
   }
 
+  // La flecha devuelve a DONDE SE VENÍA: /buscar, el perfil o lo que fuera.
+  // Antes llevaba siempre al perfil, aunque uno hubiera entrado desde la
+  // búsqueda, y se perdían los resultados y la posición.
+  function volver() {
+    const desde = searchParams.get("desde");
+    if (desde && desde.startsWith("/") && !desde.startsWith("//")) { router.push(desde); return; }
+    if (typeof window !== "undefined" && window.history.length > 1) { router.back(); return; }
+    router.push(`/profesionales/${slug}`);
+  }
+
   const categoria = searchParams.get("servicio");
   return (
     <BookingModal
@@ -66,7 +76,7 @@ export default function ReservarPage() {
       open
       professional={pro}
       categoryName={categoria ? getCategoryLabel(categoria, locale) : getCategoryLabel(pro.categoryId, locale)}
-      onClose={() => router.push(`/profesionales/${slug}`)}
+      onClose={volver}
       initialCategoryId={categoria}
       initialDate={searchParams.get("fecha") ?? undefined}
       initialTime={searchParams.get("hora") ?? undefined}
