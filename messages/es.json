@@ -327,7 +327,7 @@
     "videoConsultCountry": "Videoconsulta en todo Costa Rica",
     "save": "Guardar profesional",
     "unsave": "Quitar de favoritos",
-    "saveLabel": "Guardar",
+    "saveLabel": "Agregar a favoritos",
     "savedLabel": "En favoritos",
     "verified": "Verificado",
     "verifiedTitle": "Verificado por ContrataCR",
@@ -1925,7 +1925,8 @@
     },
     "goToClientPanel": "Ir a mi panel cliente",
     "goToProfessionalPanel": "Ir a mi panel profesional",
-    "headerReviews": "reseñas"
+    "headerReviews": "{count, plural, one {# reseña} other {# reseñas}}",
+    "headerNoReviewsYet": "Aún sin reseñas"
   },
   "bookingRequests": {
     "empty": "No tienes citas todavía",

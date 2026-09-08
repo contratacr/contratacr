@@ -2115,17 +2115,23 @@ export default function DashboardPage() {
                   {/* Las reseñas, que es la prueba social que mira un cliente. Los
                       seguidores se retiraron de la app: guardar ya cubre "lo quiero
                       a mano" y dos conceptos para lo mismo confundían. */}
-                  {(pro?.review_count ?? 0) > 0 && publicProfileHref && (
+                  {/* Sin seguidos ni seguidores, la línea bajo el nombre dice lo que
+                      de verdad importa: cómo te califican y —si aún no hay reseñas—
+                      cuánto falta para que el perfil esté completo, que es lo que
+                      hace que lleguen clientes. */}
+                  {(pro?.review_count ?? 0) > 0 && publicProfileHref ? (
                     <Link
                       href={`${publicProfileHref}?tab=resenas&from=${encodeURIComponent("/dashboard/profesional")}`}
                       onClick={openInNewTabOnDesktop}
-                      className="flex flex-col items-start gap-0.5 text-left transition hover:text-[#009FD9]"
+                      className="inline-flex items-baseline gap-1.5 text-[13px] font-semibold leading-none text-[#526277] transition hover:text-[#009FD9]"
                     >
-                      <strong className="text-[16px] font-bold leading-none text-[#162543]">{pro?.review_count ?? 0}</strong>
-                      <span className="text-[12px] font-medium leading-none text-[#8b98a9]">{t("headerReviews")}</span>
+                      <Star className="h-4 w-4 shrink-0 translate-y-0.5 fill-[#ff9b32] text-[#ff9b32]" />
+                      <strong className="text-[14px] leading-none text-[#162543]">{Number(pro?.rating_avg ?? 0).toFixed(1)}</strong>
+                      <span className="whitespace-nowrap">{t("headerReviews", { count: pro?.review_count ?? 0 })}</span>
                     </Link>
+                  ) : (
+                    <span className="text-[13px] font-medium leading-none text-[#8b98a9]">{t("headerNoReviewsYet")}</span>
                   )}
-                  
                 </div>
               </div>
               {publicProfileHref && (
