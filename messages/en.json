@@ -710,7 +710,8 @@
     "availabilityTab": "Availability",
     "appBarTitle": "Professional profile",
     "linkCopied": "Link copied",
-    "statCases": "{count, plural, one {past job} other {past jobs}}"
+    "statCases": "{count, plural, one {past job} other {past jobs}}",
+    "statCasesShort": "{count, plural, one {case} other {cases}}"
   },
   "auth": {
     "login": {

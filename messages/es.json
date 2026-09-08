@@ -710,7 +710,8 @@
     "availabilityTab": "Disponibilidad",
     "appBarTitle": "Perfil profesional",
     "linkCopied": "Enlace copiado",
-    "statCases": "{count, plural, one {caso de éxito} other {casos de éxito}}"
+    "statCases": "{count, plural, one {caso de éxito} other {casos de éxito}}",
+    "statCasesShort": "{count, plural, one {caso} other {casos}}"
   },
   "auth": {
     "login": {

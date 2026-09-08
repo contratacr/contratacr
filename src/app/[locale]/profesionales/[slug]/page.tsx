@@ -642,13 +642,13 @@ export default function ProfilePage() {
                   )}
                   {professional.reviewCount > 0 && expYears > 0 && <span aria-hidden className="text-[#c0cad5]">·</span>}
                   {expYears > 0 && (
-                    <span><span className="font-bold text-[#162543]">{expYears}</span> {locale === "en" ? "yrs of experience" : "años de experiencia"}</span>
+                    <span><span className="font-bold text-[#162543]">{expYears}</span> {t("statYears")}</span>
                   )}
                   {(professional.reviewCount > 0 || expYears > 0) && casosCount > 0 && <span aria-hidden className="text-[#c0cad5]">·</span>}
                   {casosCount > 0 && (
                     <button type="button" onClick={() => setActiveTab("casos")} className="inline-flex items-center gap-1 hover:underline">
                       <span className="font-bold text-[#162543]">{casosCount}</span>
-                      <span>{locale === "en" ? "cases" : "casos"}</span>
+                      <span>{t("statCasesShort", { count: casosCount })}</span>
                     </button>
                   )}
                 </p>
