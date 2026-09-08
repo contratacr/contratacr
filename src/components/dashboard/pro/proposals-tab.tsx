@@ -403,7 +403,7 @@ export function ProposalsTab({ categoryId }: ProposalsTabProps) {
                           className="min-h-[120px] w-full resize-none break-words rounded-xl border border-[#e5e7eb] bg-white px-4 py-3 text-[15px] text-[#162543] placeholder:text-[#68778d] focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[#009FD9]"
                         />
                         {message.length >= MESSAGE_MAX && <p className="mt-1 text-xs text-[#b45309]">{t("charLimit", { max: MESSAGE_MAX })}</p>}
-                        <Button onClick={() => sendReply(project.id)} disabled={!message.trim() || submitting === project.id} loading={submitting === project.id} size="sm" variant="chat" className="mt-3 h-11 w-full rounded-full text-[13px] font-bold">
+                        <Button onClick={() => sendReply(project.id)} disabled={!message.trim() || submitting === project.id} loading={submitting === project.id} size="sm" className="mt-3 h-11 w-full rounded-full text-[13px] font-bold">
                           {corrigiendo === project.id ? t("sendProposalAgain") : t("sendProposal")}
                         </Button>
                         <p className="mt-2 text-center text-xs text-[#68778d]">{t("proposalFree")}</p>

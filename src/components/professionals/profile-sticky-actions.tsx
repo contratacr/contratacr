@@ -75,7 +75,7 @@ export function ProfileStickyActions({
           contextTitle={contextTitle}
           isOwn={isOwn}
           analyticsSource="profile"
-          tone="contrast"
+          tone="outline"
           className="h-11 min-w-0 flex-1 rounded-full text-[13px] font-bold"
         />
         {canCall && (

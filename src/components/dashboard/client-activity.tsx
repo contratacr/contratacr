@@ -730,7 +730,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                                 primary = <Button size="sm" className={actionButtonClass} onClick={() => setReviewModal({ professionalId: b.professional_id, professionalName: b.professionals?.profiles?.full_name ?? t("professional"), bookingId: b.id })}>{rev ? t("editReview") : t("leaveReview")}</Button>;
                               }
                               const messageAction = canMessage && b.professional_id ? (
-                                <DirectChatLauncher professionalId={b.professional_id} professionalName={b.professionals?.profiles?.full_name || t("professional")} bookingId={b.id} contextTitle={b.service_description} buttonLabel={t("contact")} analyticsSource="booking" tone="contrast" className={actionButtonClass} />
+                                <DirectChatLauncher professionalId={b.professional_id} professionalName={b.professionals?.profiles?.full_name || t("professional")} bookingId={b.id} contextTitle={b.service_description} buttonLabel={t("contact")} analyticsSource="booking" tone="outline" className={actionButtonClass} />
                               ) : null;
                               // Lo frecuente se ve; lo excepcional vive en el menú, igual que en
                               // las tarjetas del profesional. Antes esta tarjeta mostraba las cinco
@@ -969,20 +969,20 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                             );
                           })()}
 
-                          {/* Acciones con la misma silueta que Reservas: la que avanza en marino,
+                          {/* Acciones con la misma silueta que Citas: la que avanza en turquesa,
                               lo destructivo en el menú ⋮. */}
                           <div className="flex items-start gap-2 border-t border-[#f3f4f6] pt-4">
                             <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
                               {isActive && (
-                                <Button size="sm" variant="chat" className={actionButtonClass} onClick={() => openResolve(project.id)}>{t("resolve")}</Button>
+                                <Button size="sm" className={actionButtonClass} onClick={() => openResolve(project.id)}>{t("resolve")}</Button>
                               )}
                               {project.status === "completed" && project.accepted_professional_id && (
-                                <Button size="sm" variant="chat" className={actionButtonClass} onClick={() => reviewProjectPro(project.id)}>
+                                <Button size="sm" className={actionButtonClass} onClick={() => reviewProjectPro(project.id)}>
                                   {projectReview(project.id) ? t("editReview") : t("leaveReview")}
                                 </Button>
                               )}
                               {project.status === "cancelled" && (
-                                <Button size="sm" variant="chat" className={actionButtonClass} onClick={() => updateProjectStatus(project.id, "open")}>{t("reopenProject")}</Button>
+                                <Button size="sm" className={actionButtonClass} onClick={() => updateProjectStatus(project.id, "open")}>{t("reopenProject")}</Button>
                               )}
                             </div>
                             {(isActive || project.status === "cancelled") && (
