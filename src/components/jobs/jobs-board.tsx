@@ -244,15 +244,15 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
     </>
   );
   const renderActions = () => (
-    <div className={canPost ? "grid w-full grid-cols-2 gap-2 sm:w-[296px] [&>*]:w-full" : "flex w-full sm:w-auto"}>
+    <div className={canPost ? "grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:items-center [&>*]:w-full sm:[&>*]:w-auto" : "flex w-full sm:w-auto"}>
       {canPost && (
-        <Link href="/dashboard/profesional?mode=offer&tab=jobs&returnTo=%2Fempleos" className="inline-flex h-9 items-center justify-center rounded-full border border-[#d7e1ea] bg-white px-3 text-[13px] font-bold text-[#162543] transition hover:border-[#b9c8d6] hover:bg-[#f6f9fb] lg:h-11 lg:px-4 lg:text-sm">
+        <Link href="/dashboard/profesional?mode=offer&tab=jobs&returnTo=%2Fempleos" className="inline-flex h-9 items-center justify-center rounded-full border border-[#d7e1ea] bg-white px-3 text-[13px] font-bold text-[#162543] transition hover:border-[#b9c8d6] hover:bg-[#f6f9fb] lg:h-11 lg:whitespace-nowrap lg:px-5 lg:text-sm">
           {copy.myJobs}
         </Link>
       )}
       {canPost ? (
         <>
-          <button type="button" onClick={() => setPublishOpen(true)} className="hidden h-11 items-center justify-center rounded-full bg-[#009fd9] px-5 text-sm font-bold text-white transition hover:bg-[#008fc3] lg:inline-flex">
+          <button type="button" onClick={() => setPublishOpen(true)} className="hidden h-11 items-center justify-center whitespace-nowrap rounded-full bg-[#009fd9] px-6 text-sm font-bold text-white transition hover:bg-[#008fc3] lg:inline-flex">
             {copy.publishJob}
           </button>
           <Link href="/empleos/publicar" className="inline-flex h-9 items-center justify-center rounded-full bg-[#009fd9] px-3 text-[13px] font-bold text-white transition hover:bg-[#008fc3] lg:hidden">
@@ -344,7 +344,7 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
     {/* Título, acciones y filtros viven en UNA tarjeta blanca: sueltos sobre el
         fondo, en escritorio se leían como tres bloques sin relación. */}
     {!detailOnly && (
-      <div className="relative z-30 mx-auto hidden max-w-7xl px-6 pt-5 lg:block">
+      <div className="relative z-30 mx-auto hidden max-w-7xl px-6 pt-3 lg:block">
         <div className="rounded-lg border border-[#dfe8f0] bg-white px-5 py-4">
           <div className="flex items-end justify-between gap-4">
             <div>
@@ -390,7 +390,7 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
         </div>
       </div>
     )}
-    {!detailOnly && <div className={`${showingMobileDetail ? "hidden lg:block " : ""}mx-auto max-w-7xl px-0 py-0 sm:px-6 sm:py-5 lg:pt-3`}>
+    {!detailOnly && <div className={`${showingMobileDetail ? "hidden lg:block " : ""}mx-auto max-w-7xl px-0 py-0 sm:px-6 sm:py-5 lg:pb-5 lg:pt-3`}>
       <div className={`${filtered.length > 0 ? "lg:grid lg:grid-cols-[minmax(340px,440px)_minmax(0,1fr)]" : ""} lg:max-h-[calc(100vh-190px)] lg:overflow-hidden lg:rounded-lg lg:border lg:border-[#dfe8f0] lg:bg-white`}>
         <section className={filtered.length > 0 ? MARKETPLACE_LIST_CLASS : "min-w-0 bg-white"}>
           <div className="border-b border-[#e7edf2] px-4 py-3"><p className="font-bold">{filtered.length} {filtered.length === 1 ? copy.job.toLocaleLowerCase(locale) : copy.jobs.toLocaleLowerCase(locale)}</p><p className="text-xs text-[#68778d]">{copy.country}</p></div>

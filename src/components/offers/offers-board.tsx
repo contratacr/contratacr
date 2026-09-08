@@ -350,11 +350,11 @@ export function OffersBoard({
     </>
   );
   const renderActions = () => (
-    <div className={canPost ? "grid w-full grid-cols-2 gap-2 sm:w-[296px] [&>*]:w-full" : "flex w-full sm:w-auto"}>
+    <div className={canPost ? "grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:items-center [&>*]:w-full sm:[&>*]:w-auto" : "flex w-full sm:w-auto"}>
       {canPost && (
         <Link
           href="/dashboard/profesional?mode=offer&tab=offers&returnTo=%2Fofertas"
-          className="inline-flex h-9 items-center justify-center rounded-full border border-[#d7e1ea] bg-white px-3 text-[13px] font-bold text-[#162543] transition hover:border-[#b9c8d6] hover:bg-[#f6f9fb] lg:h-11 lg:px-4 lg:text-sm"
+          className="inline-flex h-9 items-center justify-center rounded-full border border-[#d7e1ea] bg-white px-3 text-[13px] font-bold text-[#162543] transition hover:border-[#b9c8d6] hover:bg-[#f6f9fb] lg:h-11 lg:whitespace-nowrap lg:px-5 lg:text-sm"
         >
           {copy.myOffers}
         </Link>
@@ -364,7 +364,7 @@ export function OffersBoard({
           <button
             type="button"
             onClick={() => setPublishOpen(true)}
-            className="hidden h-11 items-center justify-center rounded-full bg-[#009fd9] px-5 text-sm font-bold text-white transition hover:bg-[#008fc3] lg:inline-flex"
+            className="hidden h-11 items-center justify-center whitespace-nowrap rounded-full bg-[#009fd9] px-6 text-sm font-bold text-white transition hover:bg-[#008fc3] lg:inline-flex"
           >
             {copy.publishOffer}
           </button>
@@ -437,7 +437,7 @@ export function OffersBoard({
         </section>
       </MarketplaceNavbarPortal>
       {/* Título, acciones y filtros en UNA tarjeta blanca (ver jobs-board). */}
-      <div className="relative z-30 mx-auto hidden max-w-7xl px-6 pt-5 lg:block">
+      <div className="relative z-30 mx-auto hidden max-w-7xl px-6 pt-3 lg:block">
         <div className="rounded-lg border border-[#dfe8f0] bg-white px-5 py-4">
           <div className="flex items-end justify-between gap-4">
             <div>

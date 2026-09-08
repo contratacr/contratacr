@@ -9,7 +9,7 @@ import { useSearchParams } from "next/navigation";
 import {
   User, Award, CalendarCheck, CalendarClock, CalendarDays, Wrench,
   ShieldCheck, Bell, Handshake, ClipboardList, Bookmark, Settings, Headset, CreditCard,
-  ArrowLeft, ArrowRight, ChevronDown, ChevronRight, Sparkles, Plus, AlertCircle, X, MessageSquareMore, Home, LogOut, Users, Check, CheckCircle2, FileText, Search, Camera, Eye, Trash2, Loader2,
+  ArrowLeft, ArrowRight, ChevronDown, ChevronRight, Sparkles, Plus, AlertCircle, X, MessageSquareMore, Home, LogOut, Users, CheckCircle2, FileText, Search, Camera, Eye, Trash2, Loader2,
   BriefcaseBusiness, Star,
   } from "lucide-react";
 import { Navbar } from "@/components/layout/navbar";
@@ -1688,9 +1688,6 @@ export default function DashboardPage() {
     setTab(tab);
   }
 
-  function panelModeTitle() {
-    return mode === "offer" ? t("panelProfessional") : t("panelClient");
-  }
 
   function changePanelFromHeader(nextMode: Mode) {
     if (nextMode === mode) return;
@@ -1711,56 +1708,31 @@ export default function DashboardPage() {
 
   function panelModeSelector() {
     if (!isProvider) return null;
-
     const options: Array<{ value: Mode; label: string; icon: React.ReactNode }> = [
-      {
-        value: "use",
-        label: locale === "en" ? "Client panel" : "Panel cliente",
-        icon: <User className="h-4 w-4" />,
-      },
-      {
-        value: "offer",
-        label: locale === "en" ? "Professional panel" : "Panel profesional",
-        icon: <BriefcaseBusiness className="h-4 w-4" />,
-      },
+      { value: "offer", label: locale === "en" ? "Professional" : "Profesional", icon: <BriefcaseBusiness className="h-4 w-4" /> },
+      { value: "use", label: locale === "en" ? "Client" : "Cliente", icon: <User className="h-4 w-4" /> },
     ];
-
     return (
-      <details data-panel-mode-selector className="group relative z-30 w-full">
-        <summary className="flex min-h-[60px] cursor-pointer list-none items-center gap-3 rounded-2xl border border-[#e5edf4] bg-white px-4 text-left text-[15px] font-semibold text-[#162543] shadow-[0_10px_26px_-24px_rgba(15,23,42,0.6)] transition-colors hover:bg-[#EBF5FB] group-open:rounded-b-none lg:px-5 lg:text-[14px] lg:font-semibold [&::-webkit-details-marker]:hidden">
-          <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#eef8fc] text-[#009FD9]">
-            {mode === "offer" ? <BriefcaseBusiness className="h-4 w-4" /> : <User className="h-4 w-4" />}
-          </span>
-          <span className="min-w-0 flex-1 truncate">{panelModeTitle()}</span>
-          <ChevronDown className="h-4 w-4 shrink-0 text-[#64748b] transition-transform group-open:rotate-180" />
-        </summary>
-
-        <div className="absolute left-0 right-0 top-full overflow-hidden rounded-b-xl border border-t-0 border-[#dfe8f0] bg-white p-1.5 pt-1 shadow-[0_16px_36px_-18px_rgba(15,23,42,0.45)]">
-          {options.map((option) => {
-            const active = option.value === mode;
-            return (
-              <button
-                key={option.value}
-                type="button"
-                onClick={(event) => {
-                  event.currentTarget.closest("details")?.removeAttribute("open");
-                  if (!active) requestUnsavedAction(() => changePanelFromHeader(option.value));
-                }}
-                className={cn(
-                  "flex min-h-11 w-full items-center gap-3 rounded-lg px-3 text-left text-sm font-semibold transition-colors",
-                  active ? "bg-[#eef8fc] text-[#007eae]" : "text-[#162543] hover:bg-[#EBF5FB]",
-                )}
-              >
-                <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center text-current">
-                  {option.icon}
-                </span>
-                <span className="min-w-0 flex-1 truncate">{option.label}</span>
-                {active && <Check className="h-4 w-4 shrink-0" />}
-              </button>
-            );
-          })}
-        </div>
-      </details>
+      <div data-panel-mode-selector className="mb-3 flex rounded-full bg-[#eef2f7] p-1">
+        {options.map((option) => {
+          const active = option.value === mode;
+          return (
+            <button
+              key={option.value}
+              type="button"
+              onClick={() => { if (!active) requestUnsavedAction(() => changePanelFromHeader(option.value)); }}
+              aria-pressed={active}
+              className={cn(
+                "inline-flex h-10 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-full text-[13px] font-bold transition-colors",
+                active ? "bg-white text-[#009FD9] shadow-[0_6px_16px_-10px_rgba(15,23,42,0.5)]" : "text-[#526277] hover:text-[#162543]",
+              )}
+            >
+              {option.icon}
+              <span className="truncate">{option.label}</span>
+            </button>
+          );
+        })}
+      </div>
     );
   }
 
@@ -1861,10 +1833,10 @@ export default function DashboardPage() {
     return (
       <aside className="hidden lg:block lg:w-[260px] lg:shrink-0">
         <div className="sticky top-[6.5rem]">
+          {panelModeSelector()}
           <div className="overflow-hidden rounded-[22px] border border-[#dfe8f0] bg-white shadow-[0_12px_34px_-28px_rgba(15,23,42,0.55)]">
             <div className="flex flex-col">
               <nav className="flex flex-col divide-y divide-[#eef3f7]">
-                {panelModeSelector()}
                 {agruparPestanas(desktopSidebarTabs).map((grupo, i) => (
                   <div key={grupo[0] ?? i} className="flex flex-col divide-y divide-[#eef3f7]">
                     {grupo.map(desktopSidebarButton)}
@@ -2174,16 +2146,6 @@ export default function DashboardPage() {
                   </button>
                 </div>
               )}
-              {showProfileCompletion && proForCompletion && (
-                <div className="col-span-2 w-full sm:col-span-3">
-                  <ProfileCompletion
-                    pro={proForCompletion}
-                    variant="header"
-                    onViewSteps={() => setTab("completion", true)}
-                    onGo={(tab, field) => requestUnsavedAction(() => openCompletionTarget(tab, field))}
-                  />
-                </div>
-              )}
               <div className="col-span-2 hidden flex-wrap items-center justify-center gap-2 border-t border-[#eef3f7] pt-3 sm:col-span-1 sm:flex sm:justify-end sm:border-t-0 sm:pt-0">
                 {publicProfileHref && (
                   <Link
@@ -2205,6 +2167,16 @@ export default function DashboardPage() {
                   </button>
                 )}
               </div>
+              {showProfileCompletion && proForCompletion && (
+                <div className="col-span-2 w-full sm:col-span-3">
+                  <ProfileCompletion
+                    pro={proForCompletion}
+                    variant="header"
+                    onViewSteps={() => setTab("completion", true)}
+                    onGo={(tab, field) => requestUnsavedAction(() => openCompletionTarget(tab, field))}
+                  />
+                </div>
+              )}
             </div>
             </div>
           </div>

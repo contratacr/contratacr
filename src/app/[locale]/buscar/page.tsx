@@ -466,7 +466,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
           HIDDEN on mobile (Yelp layout) so the map gets full prominence - the in-sheet
           count carries the result total there. */}
       <div className="hidden lg:block bg-[#f4f7fa]">
-        <div className="mx-auto max-w-[1920px] px-4 sm:px-6 lg:px-8 py-4">
+        <div className="mx-auto max-w-[1920px] px-4 pb-3 pt-4 sm:px-6 lg:px-8">
           <div className="flex items-start gap-2.5">
             <span className="mt-0.5 h-6 w-1.5 shrink-0 rounded-full bg-[#009FD9]" aria-hidden />
             <div className="min-w-0">
@@ -482,7 +482,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
       {/* Main content - 3-column shell (filters / results / map). On mobile the padding is
           zeroed so the Yelp map + bottom sheet go edge-to-edge; desktop keeps its gutters. */}
       <main className="flex-1 bg-[#f4f7fa]">
-        <div className="mx-auto max-w-[1920px] px-0 py-0 lg:px-8 lg:pb-0 lg:pt-4">
+        <div className="mx-auto max-w-[1920px] px-0 py-0 lg:px-8 lg:pb-0 lg:pt-0">
           <SearchResultsLayout
             mapData={mapData}
             apiKey={MAPS_API_KEY}
