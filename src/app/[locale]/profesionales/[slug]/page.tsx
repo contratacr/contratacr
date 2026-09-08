@@ -596,19 +596,19 @@ export default function ProfilePage() {
               the new /buscar card (circular avatar, solid-blue "Verificado" pill). No
               "destacado" ribbon. */}
           <div className="relative mb-6 rounded-2xl border border-[#e5e7eb] bg-white p-4 shadow-sm sm:p-6">
-              <div className="flex min-w-0 items-center gap-3 sm:gap-4">
+              <div className="flex min-w-0 flex-col items-center text-center sm:flex-row sm:items-center sm:gap-4 sm:text-left">
                 <ImagePreviewDialog
                   src={professional.avatarUrl}
                   alt={professional.fullName}
                   openLabel={locale === "en" ? "View profile photo" : "Ver foto de perfil"}
                   closeLabel={locale === "en" ? "Close" : "Cerrar"}
                 >
-                  <Avatar className="h-16 w-16 shrink-0 sm:h-[88px] sm:w-[88px]">
+                  <Avatar className="h-20 w-20 shrink-0 sm:h-[88px] sm:w-[88px]">
                     <AvatarImage src={professional.avatarUrl ? cldThumb(professional.avatarUrl, 320) : undefined} loading="eager" alt={professional.fullName} className="object-cover" />
                     <AvatarFallback className="bg-[#EBF5FB] text-xl font-bold text-[#009FD9] sm:text-2xl">{getInitials(professional.fullName)}</AvatarFallback>
                   </Avatar>
                 </ImagePreviewDialog>
-                <div className="min-w-0">
+                <div className="mt-3 min-w-0 sm:mt-0">
                   <div className="min-w-0">
                     <h1 data-testid="professional-profile-name" className="min-w-0 text-[17px] font-bold leading-[1.15] text-[#162543] [overflow-wrap:anywhere] sm:text-2xl sm:leading-tight sm:[overflow-wrap:normal]">
                       {displayName.primaryDesktop}
@@ -621,7 +621,7 @@ export default function ProfilePage() {
                     </h1>
                   </div>
                   {locationText && (
-                    <p className="mt-1 flex items-center gap-1.5 text-[13px] leading-5 text-[#52627a] sm:text-sm">
+                    <p className="mt-1 flex items-center justify-center gap-1.5 text-[13px] leading-5 text-[#52627a] sm:justify-start sm:text-sm">
                       <MapPin className="h-3.5 w-3.5 shrink-0 text-[#68778d]" />
                       <span className="min-w-0 truncate">{locationText}</span>
                     </p>
@@ -634,7 +634,7 @@ export default function ProfilePage() {
                   tienen dato, así un perfil nuevo no muestra casillas vacías. */}
               {(professional.reviewCount > 0 || expYears > 0 || casosCount > 0) && (
                 <div className={cn(
-                  "mt-4 grid border-t border-[#eef2f6] pt-4",
+                  "mt-4 grid",
                   ((professional.reviewCount > 0 ? 1 : 0) + (expYears > 0 ? 1 : 0) + (casosCount > 0 ? 1 : 0)) === 3
                     ? "grid-cols-3"
                     : ((professional.reviewCount > 0 ? 1 : 0) + (expYears > 0 ? 1 : 0) + (casosCount > 0 ? 1 : 0)) === 2
@@ -673,12 +673,12 @@ export default function ProfilePage() {
               {/* Mismo botón secundario del app (píldora blanca de borde turquesa,
                   sin ícono) que "Llamar": guardar y compartir son acciones, no
                   enlaces sueltos. */}
-              <div className="mt-4 grid grid-cols-2 gap-2">
+              <div className="mt-4 grid grid-cols-2 gap-2 sm:flex sm:justify-start">
                 <SaveButton
                   pro={savedPro}
                   isOwn={isOwn}
                   withLabel
-                  className="h-11 w-full rounded-full px-4 py-0 text-[13px]"
+                  className="h-11 w-full rounded-full px-4 py-0 text-[13px] sm:w-44"
                 />
                 <button
                   type="button"
@@ -686,7 +686,7 @@ export default function ProfilePage() {
                   aria-label={linkCopiado ? t("linkCopied") : t("shareProfile")}
                   title={linkCopiado ? t("linkCopied") : t("shareProfile")}
                   className={cn(
-                    "inline-flex h-11 w-full items-center justify-center gap-2 rounded-full border-[1.5px] bg-white px-4 text-[13px] font-bold transition-colors",
+                    "inline-flex h-11 w-full items-center justify-center gap-2 rounded-full border-[1.5px] bg-white px-4 text-[13px] font-bold transition-colors sm:w-44",
                     linkCopiado ? "border-[#b8e7cf] bg-[#f2fbf6] text-[#15803d]" : "border-[#009FD9] text-[#009FD9] hover:bg-[#EBF5FB]",
                   )}
                 >
