@@ -768,7 +768,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                                   {puedeRecontratar && (
                                     <Link
                                       href={`/profesionales/${b.professionals?.slug}?from=${encodeURIComponent("/dashboard/cliente")}`}
-                                      className={`${actionButtonClass} inline-flex items-center justify-center border border-[#dbe4ee] bg-white text-[#162543] hover:bg-[#f4f7fa]`}
+                                      className={`${actionButtonClass} inline-flex items-center justify-center border-[1.5px] border-[#009FD9] bg-white text-[#009FD9] hover:bg-[#EBF5FB]`}
                                     >
                                       {t("bookAgain")}
                                     </Link>

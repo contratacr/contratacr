@@ -8,7 +8,7 @@ import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import { cldLarge } from "@/lib/cloudinary";
 import { ScrollRail } from "@/components/ui/scroll-rail";
 import { useRouter, useSearchParams } from "next/navigation";
-import { CalendarDays, Mail, MapPin, Menu, Phone, Store } from "lucide-react";
+import { CalendarDays, ChevronRight, MapPin, Menu, Store } from "lucide-react";
 import { ContrataCRMark, HeaderMessagesLink, HeaderNotificationsLink } from "@/components/landing/landing-navbar";
 import { NotificationBell } from "@/components/notifications/notification-bell";
 import { useDirectMessageUnread } from "@/hooks/use-direct-message-unread";
@@ -615,6 +615,29 @@ function offerSaveSnapshot(offer: ProfessionalOffer, locale: MarketplaceLocale) 
   };
 }
 
+export function OfferSaveButton({
+  offer,
+  userId,
+  className = "",
+}: {
+  offer: ProfessionalOffer;
+  userId: string | null;
+  className?: string;
+}) {
+  const locale = marketplaceLocale(useLocale());
+  return (
+    <SaveItemButton
+      itemType="offer"
+      itemId={offer.id}
+      snapshot={offerSaveSnapshot(offer, locale)}
+      userId={userId}
+      loginRedirect={`/ofertas/${offer.id}`}
+      withLabel
+      className={`h-9 shrink-0 rounded-xl px-3 text-[13px] ${className}`}
+    />
+  );
+}
+
 export function OfferContactActions({
   offer,
   userId,
@@ -668,30 +691,20 @@ export function OfferContactActions({
   }
 
   const secondaryClass = compact
-    ? "inline-flex h-9 min-w-0 items-center justify-center gap-1.5 rounded-lg border border-[#d7e1ea] bg-white px-2 text-[12px] font-bold text-[#162543] transition hover:border-[#b9d9e8] hover:bg-[#f8fbfd]"
-    : "inline-flex h-11 min-w-0 items-center justify-center gap-2 rounded-lg border border-[#d7e1ea] bg-white px-3 text-sm font-bold text-[#162543] transition hover:border-[#b9d9e8] hover:bg-[#f8fbfd]";
+    ? "inline-flex h-9 min-w-0 items-center justify-center gap-1.5 rounded-lg border-[1.5px] border-[#009FD9] bg-white px-2 text-[12px] font-bold text-[#009FD9] transition hover:bg-[#EBF5FB]"
+    : "inline-flex h-11 min-w-0 items-center justify-center gap-2 rounded-lg border-[1.5px] border-[#009FD9] bg-white px-3 text-sm font-bold text-[#009FD9] transition hover:bg-[#EBF5FB]";
   return (
     <div className="relative z-[2] mt-3 space-y-2">
-      <div className={`grid gap-2 ${showPrimaryContact && offer.professional_slug ? "grid-cols-2" : "grid-cols-1"}`}>
-        {showPrimaryContact && (
-          <DirectChatLauncher
-            professionalId={offer.professional_id}
-            professionalName={offer.professional_name || copy.professional}
-            contextTitle={offer.title}
-            analyticsSource="unknown"
-            buttonLabel="WhatsApp"
-            className={`${compact ? "h-9 text-[12px]" : "h-11 text-sm"} w-full rounded-lg font-bold`}
-          />
-        )}
-        {offer.professional_slug && (
-          <Link
-            href={`/profesionales/${offer.professional_slug}?from=${encodeURIComponent(`/ofertas/${offer.id}`)}`}
-            className={`${compact ? "h-9 px-2 text-[12px]" : "h-11 px-3 text-sm"} inline-flex w-full items-center justify-center rounded-lg bg-[#009fd9] font-bold text-white transition-colors hover:bg-[#008fc3]`}
-          >
-            {copy.profile}
-          </Link>
-        )}
-      </div>
+      {showPrimaryContact && (
+        <DirectChatLauncher
+          professionalId={offer.professional_id}
+          professionalName={offer.professional_name || copy.professional}
+          contextTitle={offer.title}
+          analyticsSource="unknown"
+          buttonLabel="WhatsApp"
+          className={`${compact ? "h-9 text-[12px]" : "h-11 text-sm"} w-full rounded-lg font-bold`}
+        />
+      )}
       {(showCall || showEmail) && (
         <div
           className={`grid gap-2 ${showCall && showEmail ? "grid-cols-2" : "grid-cols-1"}`}
@@ -708,7 +721,6 @@ export function OfferContactActions({
               }}
               className={secondaryClass}
             >
-              <Phone className="h-4 w-4 shrink-0" />
                <span className="truncate">{copy.call}</span>
             </a>
           )}
@@ -724,21 +736,11 @@ export function OfferContactActions({
               }}
               className={secondaryClass}
             >
-              <Mail className="h-4 w-4 shrink-0" />
                <span className="truncate">{copy.email}</span>
             </a>
           )}
         </div>
       )}
-      <SaveItemButton
-        itemType="offer"
-        itemId={offer.id}
-         snapshot={offerSaveSnapshot(offer, locale)}
-        userId={userId}
-        loginRedirect={`/ofertas/${offer.id}`}
-        withLabel
-        className={`${compact ? "h-9 px-2 text-[12px]" : "h-11 px-3 text-sm"} w-full border-[#d7e1ea] bg-white text-[#162543] hover:border-[#b9d9e8] hover:bg-[#f8fbfd] hover:text-[#162543] aria-pressed:border-[#d7e1ea] aria-pressed:bg-white aria-pressed:text-[#162543] aria-pressed:hover:border-[#b9d9e8] aria-pressed:hover:bg-[#f8fbfd]`}
-      />
     </div>
   );
 }
@@ -845,10 +847,23 @@ function OfferPreview({
           <h2 className="text-2xl font-extrabold leading-tight">
             {offer.title}
           </h2>
-          <p className="mt-1 font-semibold text-[#52627a]">
-            {offer.professional_name}
-          </p>
+          {/* El nombre es la entrada al perfil: un botón "Ver perfil" aparte
+              competía con el contacto y decía lo mismo. */}
+          {offer.professional_slug ? (
+            <Link
+              href={`/profesionales/${offer.professional_slug}?from=${encodeURIComponent(`/ofertas/${offer.id}`)}`}
+              className="mt-1 inline-flex items-center gap-1 font-semibold text-[#005eaa] hover:underline"
+            >
+              {offer.professional_name}
+              <ChevronRight className="h-4 w-4 shrink-0" />
+            </Link>
+          ) : (
+            <p className="mt-1 font-semibold text-[#52627a]">
+              {offer.professional_name}
+            </p>
+          )}
         </div>
+        {!isOwner && <OfferSaveButton offer={offer} userId={userId} />}
       </div>
       {isOwner && (
         <div className="mt-4 grid grid-cols-2 gap-3 sm:flex sm:flex-wrap">

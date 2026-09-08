@@ -341,14 +341,10 @@ export function SaveButton({ pro, className, isOwn = false, withLabel = false }:
           aria-label={saved ? t("unsave") : t("save")}
           aria-pressed={saved}
       className={cn(
-        "inline-flex w-full items-center justify-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-semibold transition-colors duration-200",
-            saved
-              ? "border-[#009FD9] bg-[#EBF5FB] text-[#009FD9]"
-              : "border-[#e5e7eb] bg-white text-[#374151] hover:border-[#009FD9] hover:text-[#009FD9]",
+        "inline-flex w-full items-center justify-center gap-2 rounded-xl border-[1.5px] border-[#009FD9] bg-white px-4 py-2.5 text-sm font-bold text-[#009FD9] transition-colors duration-200 hover:bg-[#EBF5FB]",
         className
       )}
     >
-      <Bookmark className="h-4 w-4 shrink-0" strokeWidth={2} fill={saved ? "currentColor" : "none"} />
       {saved ? t("savedLabel") : t("saveLabel")}
     </button>
       ) : (

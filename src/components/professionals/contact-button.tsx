@@ -21,6 +21,7 @@ export function ContactButton({
   onSelfAction,
   className = "",
   iconOnly = false,
+  showIcon = true,
   label,
 }: {
   method: "phone" | "email";
@@ -33,6 +34,7 @@ export function ContactButton({
   onSelfAction?: () => void;
   className?: string;
   iconOnly?: boolean;
+  showIcon?: boolean;
   label?: string;
 }) {
   const locale = useLocale();
@@ -89,7 +91,7 @@ export function ContactButton({
         aria-label={iconOnly ? (label ?? (method === "phone" ? t("call") : t("sendEmail"))) : undefined}
         className={className}
       >
-        {loading ? <Loader2 className="h-4 w-4 shrink-0 animate-spin" /> : <Icon className="h-4 w-4 shrink-0" />}
+        {loading ? <Loader2 className="h-4 w-4 shrink-0 animate-spin" /> : (showIcon || iconOnly) && <Icon className="h-4 w-4 shrink-0" />}
         {!iconOnly && <span className="min-w-0 truncate">{label ?? (method === "phone" ? t("call") : t("sendEmail"))}</span>}
       </button>
       {modals}

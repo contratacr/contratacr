@@ -1,10 +1,10 @@
 import { notFound } from "next/navigation";
-import { ArrowLeft, CalendarDays, MapPin, PackageCheck, Tag } from "lucide-react";
+import { ArrowLeft, CalendarDays, ChevronRight, MapPin, PackageCheck, Tag } from "lucide-react";
 import { StickyHairlineHeader } from "@/components/util/sticky-hairline-header";
 import { Link } from "@/i18n/navigation";
 import { OfferImageGallery } from "@/components/offers/offer-image-gallery";
 import { OfferDetailNavbarSearch } from "@/components/offers/offer-detail-navbar-search";
-import { OfferContactActions } from "@/components/offers/offers-board";
+import { OfferContactActions, OfferSaveButton } from "@/components/offers/offers-board";
 import { OfferOwnerActions } from "@/components/offers/offer-owner-actions";
 import { getAllCategories, getCategoryLabel } from "@/lib/data/categories";
 import {
@@ -144,7 +144,19 @@ export default async function OfferDetailPage({ params, searchParams }: { params
           <div className="p-5 sm:p-8">
             <div className="flex flex-wrap gap-2"><span className="rounded-md bg-[#eaf7fc] px-2.5 py-1 text-xs font-bold text-[#0089bb]">{offerTypeLabel(offer.offer_type, locale)}</span>{offer.service_label && <span className="rounded-md bg-[#f3f6f9] px-2.5 py-1 text-xs font-bold text-[#52627a]">{offer.service_label}</span>}{discount && <span className="rounded-md bg-[#e8f8f3] px-2.5 py-1 text-xs font-extrabold text-[#08775c]">{copy.savings} {discount}%</span>}</div>
             <h1 className="mt-1 text-2xl font-bold sm:text-3xl">{offer.title}</h1>
-            <p className="mt-2 font-semibold text-[#52627a]">{offer.professional_name}</p>
+            {/* El nombre lleva al perfil: el botón "Ver perfil" decía lo mismo y
+                competía con el contacto. Guardar vive aquí, no en la pila de acciones. */}
+            <div className="mt-2 flex flex-wrap items-center justify-between gap-3">
+              {offer.professional_slug ? (
+                <Link href={`/profesionales/${offer.professional_slug}?from=${encodeURIComponent(`/ofertas/${offer.id}`)}`} className="inline-flex items-center gap-1 font-semibold text-[#005eaa] hover:underline">
+                  {offer.professional_name}
+                  <ChevronRight className="h-4 w-4 shrink-0" />
+                </Link>
+              ) : (
+                <p className="font-semibold text-[#52627a]">{offer.professional_name}</p>
+              )}
+              {!isOwner && !unavailable && <OfferSaveButton offer={offer} userId={user?.id ?? null} />}
+            </div>
             <div className="mt-5 flex flex-wrap items-end gap-3">
               <p className="text-3xl font-extrabold text-[#007fae]">{formatOfferPrice(offer, locale)}</p>
               {before && <p className="pb-1 text-sm font-bold text-[#8794a7] line-through">{before}</p>}
@@ -172,7 +184,7 @@ export default async function OfferDetailPage({ params, searchParams }: { params
         </article>
         <aside className="hidden h-fit rounded-lg border border-[#dfe8f0] bg-white p-5 lg:sticky lg:top-24 lg:block">
           <p className="text-xs font-bold uppercase text-[#7a899d]">{copy.title}</p><p className="mt-1 text-2xl font-extrabold text-[#007fae]">{formatOfferPrice(offer, locale)}</p>{before && <p className="mt-1 text-sm font-bold text-[#8794a7] line-through">{copy.before} {before}</p>}
-          <p className="mb-4 mt-4 border-y border-[#e8eef3] py-4 text-sm font-semibold text-[#52627a]">{copy.publishedBy} {offer.professional_name}</p>
+          <p className="mb-4 mt-4 border-y border-[#e8eef3] py-4 text-sm font-semibold text-[#52627a]">{copy.publishedBy}{" "}{offer.professional_slug ? (<Link href={`/profesionales/${offer.professional_slug}?from=${encodeURIComponent(`/ofertas/${offer.id}`)}`} className="text-[#005eaa] hover:underline">{offer.professional_name}</Link>) : offer.professional_name}</p>
           {isOwner ? (
             <OfferOwnerActions offer={offer} professionalId={offer.professional_id} serviceOptions={serviceOptions} fromPanel={from === "panel"} />
           ) : (

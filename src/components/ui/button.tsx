@@ -15,7 +15,7 @@ const buttonVariants = cva(
         chat:
           "bg-[#162543] text-white shadow-sm hover:bg-[#233a5f] hover:shadow-[0_4px_16px_rgba(22,37,67,0.24)] focus-visible:ring-[#162543]",
         secondary:
-          "bg-white text-[#009FD9] border-2 border-[#009FD9] hover:bg-[#EBF5FB] focus-visible:ring-[#009FD9]",
+          "bg-white text-[#009FD9] border-[1.5px] border-[#009FD9] hover:bg-[#EBF5FB] focus-visible:ring-[#009FD9]",
         accent:
           "bg-[#ff7c0a] text-white shadow-sm hover:bg-[#f05f00] focus-visible:ring-[#ff7c0a]",
         ghost:

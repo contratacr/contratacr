@@ -678,7 +678,7 @@ export default function ProfilePage() {
                   pro={savedPro}
                   isOwn={isOwn}
                   withLabel
-                  className="box-border h-9 min-w-0 flex-1 whitespace-nowrap rounded-xl border-[#d9e1ea] sm:w-auto sm:flex-none sm:px-5 bg-white px-3 py-0 text-[13px] text-[#102746] hover:border-[#b8c6d6] hover:bg-[#f7f9fb] hover:text-[#102746] aria-pressed:border-[#d9e1ea] aria-pressed:bg-white aria-pressed:text-[#102746]"
+                  className="box-border h-9 min-w-0 flex-1 whitespace-nowrap rounded-xl px-3 py-0 text-[13px] sm:w-auto sm:flex-none sm:px-5"
                 />
                 <button
                   type="button"
@@ -686,11 +686,11 @@ export default function ProfilePage() {
                   aria-label={linkCopiado ? t("linkCopied") : t("shareProfile")}
                   title={linkCopiado ? t("linkCopied") : t("shareProfile")}
                   className={cn(
-                    "inline-flex h-9 min-w-0 flex-1 items-center justify-center gap-2 rounded-xl border bg-white px-3 text-[13px] font-semibold transition-colors sm:w-auto sm:flex-none sm:px-5",
-                    linkCopiado ? "border-[#b8e7cf] bg-[#f2fbf6] text-[#15803d]" : "border-[#d9e1ea] text-[#102746] hover:border-[#b8c6d6] hover:bg-[#f7f9fb]",
+                    "inline-flex h-9 min-w-0 flex-1 items-center justify-center gap-2 rounded-xl border-[1.5px] bg-white px-3 text-[13px] font-bold transition-colors sm:w-auto sm:flex-none sm:px-5",
+                    linkCopiado ? "border-[#b8e7cf] bg-[#f2fbf6] text-[#15803d]" : "border-[#009FD9] text-[#009FD9] hover:bg-[#EBF5FB]",
                   )}
                 >
-                  {linkCopiado ? <Check className="h-4 w-4 shrink-0" /> : <Share2 className="h-4 w-4 shrink-0" />}
+                  {linkCopiado && <Check className="h-4 w-4 shrink-0" />}
                   <span>{linkCopiado ? t("linkCopied") : locale === "en" ? "Share" : "Compartir"}</span>
                   <span className="sr-only" aria-live="polite">{linkCopiado ? t("linkCopied") : ""}</span>
                 </button>

@@ -28,7 +28,7 @@ export function SaveItemButton({
   userId,
   className,
   withLabel = false,
-  showIcon = true,
+  showIcon,
   loginRedirect,
 }: SaveItemButtonProps) {
   const locale = useLocale();
@@ -109,13 +109,13 @@ export function SaveItemButton({
       aria-pressed={saved}
       className={cn(
         withLabel
-          ? "inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-[#cddae6] bg-white px-4 text-sm font-bold text-[#162543] transition hover:border-[#9fc8dd] hover:bg-[#f8fbfd]"
+          ? "inline-flex h-10 items-center justify-center gap-2 rounded-lg border-[1.5px] border-[#009FD9] bg-white px-4 text-sm font-bold text-[#009FD9] transition hover:bg-[#EBF5FB]"
           : "grid h-9 w-9 place-items-center rounded-full text-[#8fa1b6] transition hover:bg-[#eef5f9] hover:text-[#162543]",
         saved && "text-[#009fd9]",
         className,
       )}
     >
-      {showIcon && <Bookmark className={withLabel ? "h-4 w-4" : "h-[18px] w-[18px]"} fill={saved ? "currentColor" : "none"} />}
+      {(showIcon ?? !withLabel) && <Bookmark className={withLabel ? "h-4 w-4" : "h-[18px] w-[18px]"} fill={saved ? "currentColor" : "none"} />}
       {withLabel && <span>{saved ? labels.saved : labels.save}</span>}
     </button>
   );
