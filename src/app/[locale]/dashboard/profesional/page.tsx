@@ -2032,7 +2032,7 @@ export default function DashboardPage() {
           {/* Header card - identity and status grouped in one surface on desktop. */}
           <div className={cn("mx-auto mb-6 w-full max-w-[79.5rem]", mobileSectionOpen ? "hidden lg:block" : "block")}>
             <div className="rounded-2xl border border-[#dfe8f0] bg-white px-5 py-5 shadow-sm sm:px-6 sm:py-5">
-            <div className="flex min-w-0 flex-wrap items-center gap-x-4 gap-y-3 sm:grid sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:items-center sm:gap-5">
+            <div className="flex min-w-0 flex-col items-center gap-y-3 text-center sm:grid sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:items-center sm:gap-5 sm:text-left">
               <div ref={headerPhotoMenuRef} className="relative h-[84px] w-[84px] shrink-0 sm:h-20 sm:w-20 sm:self-center">
                 <button
                   type="button"
@@ -2054,7 +2054,7 @@ export default function DashboardPage() {
                   )}
                 </button>
                 {headerPhotoMenuOpen && (
-                  <div className="absolute left-0 top-[calc(100%+0.5rem)] z-40 w-56 overflow-hidden rounded-xl border border-[#dbe7ef] bg-white py-1 shadow-xl">
+                  <div className="absolute left-1/2 top-[calc(100%+0.5rem)] z-40 w-56 -translate-x-1/2 overflow-hidden rounded-xl border border-[#dbe7ef] bg-white py-1 shadow-xl sm:left-0 sm:translate-x-0">
                     {headerAvatar && (
                       <button type="button" onClick={() => { setHeaderPhotoMenuOpen(false); setHeaderPhotoPreviewOpen(true); }} className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm font-semibold text-[#162543] transition-colors hover:bg-[#f8fafc]">
                         <Eye className="h-4 w-4 text-[#009FD9]" />
@@ -2100,8 +2100,8 @@ export default function DashboardPage() {
                   onOpenChange={setHeaderPhotoPreviewOpen}
                 />
               </div>
-              <div className="flex min-w-0 flex-1 flex-col items-start gap-1.5 text-left sm:block sm:flex-none sm:self-center sm:py-0">
-                <div className="flex min-w-0 items-center gap-1.5 sm:hidden">
+              <div className="flex w-full min-w-0 flex-1 flex-col items-center gap-1.5 text-center sm:block sm:w-auto sm:flex-none sm:self-center sm:py-0 sm:text-left">
+                <div className="flex min-w-0 items-center justify-center gap-1.5 sm:hidden">
                   <h1 data-testid="dashboard-identity-name" className="min-w-0 truncate text-[18px] font-bold leading-[1.15] text-[#162543]" title={displayName}>
                     {mobileHeaderName || displayName}
                   </h1>
@@ -2142,9 +2142,8 @@ export default function DashboardPage() {
                     onClick={openInNewTabOnDesktop}
                     aria-label={locale === "en" ? "View public profile" : "Ver perfil público"}
                     data-testid="dashboard-mobile-view-profile"
-                    className="inline-flex h-10 w-full items-center justify-center gap-1.5 rounded-full border border-[#d7e1ea] bg-[#f8fbfd] text-sm font-bold text-[#3c4c61] transition active:bg-[#eef6fb]"
+                    className="inline-flex h-11 w-full items-center justify-center rounded-full border-[1.5px] border-[#009FD9] bg-white text-[13px] font-bold text-[#009FD9] transition active:bg-[#EBF5FB]"
                   >
-                    <ExternalLink className="h-4 w-4" />
                     {locale === "en" ? "View profile" : "Ver perfil"}
                   </Link>
                   <button
@@ -2160,9 +2159,8 @@ export default function DashboardPage() {
                         }).catch(() => {});
                       }
                     }}
-                    className="inline-flex h-10 !min-h-0 w-full items-center justify-center gap-1.5 rounded-full border border-[#d7e1ea] bg-[#f8fbfd] text-sm font-bold text-[#3c4c61] transition active:bg-[#eef6fb]"
+                    className="inline-flex h-11 !min-h-0 w-full items-center justify-center rounded-full border-[1.5px] border-[#009FD9] bg-white text-[13px] font-bold text-[#009FD9] transition active:bg-[#EBF5FB]"
                   >
-                    <Users className="h-4 w-4" />
                     {locale === "en" ? "Share" : "Compartir"}
                   </button>
                 </div>
