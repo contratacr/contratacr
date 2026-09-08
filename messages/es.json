@@ -713,8 +713,7 @@
     "appBarTitle": "Perfil profesional",
     "linkCopied": "Enlace copiado",
     "statCases": "{count, plural, one {caso de éxito} other {casos de éxito}}",
-    "statCasesShort": "{count, plural, one {caso} other {casos}}",
-    "guaranteeNote": "Garantía ContrataCR: si no se presenta, te ayudamos a conseguir otro el mismo día."
+    "statCasesShort": "{count, plural, one {caso} other {casos}}"
   },
   "auth": {
     "login": {
@@ -4021,9 +4020,7 @@
     "priceUnit_por_consulta": "Por consulta",
     "priceUnit_por_proyecto": "Por proyecto",
     "priceUnit_por_dia": "Por día",
-    "priceUnit_paquete": "Paquete",
-    "guaranteeTitle": "Garantía ContrataCR",
-    "guaranteeBody": "Si el profesional no se presenta o no responde, escríbenos y te ayudamos a conseguir otro el mismo día. Sin costo."
+    "priceUnit_paquete": "Paquete"
   },
   "shareKit": {
     "title": "Compartir mi perfil",

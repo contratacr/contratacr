@@ -3,7 +3,7 @@ import { Link } from "@/i18n/navigation";
 import { LandingNavbar } from "@/components/landing/landing-navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { VerifiedSeal } from "@/components/ui/verified-seal";
-import { Star, MapPin, ArrowRight, ShieldCheck } from "lucide-react";
+import { Star, MapPin, ArrowRight } from "lucide-react";
 import { getCategoryLabel } from "@/lib/data/categories";
 import { PROVINCES, getProvinceById } from "@/lib/data/cr-geography";
 import { searchProfessionals } from "@/lib/queries/professionals";
@@ -150,16 +150,6 @@ export async function ServiceLanding({ locale, categoryId, provinceId }: { local
             </div>
           </section>
         )}
-
-        <section className="px-4 pb-6 sm:px-6">
-          <div className="mx-auto flex max-w-3xl items-start gap-3 rounded-2xl border border-[#bfe3f5] bg-[#f4fbfe] p-5">
-            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-white text-[#009FD9]"><ShieldCheck className="h-5 w-5" /></span>
-            <div>
-              <h2 className="text-[15px] font-extrabold text-[#162543]">{t("guaranteeTitle")}</h2>
-              <p className="mt-0.5 text-[14px] leading-6 text-[#52627a]">{t("guaranteeBody")}</p>
-            </div>
-          </div>
-        </section>
 
         <section className="px-4 pb-6 sm:px-6">
           <div className="mx-auto max-w-3xl rounded-2xl border border-[#e5eaf0] bg-white p-5">

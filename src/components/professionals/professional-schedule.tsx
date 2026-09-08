@@ -6,7 +6,7 @@ import { normalizeText } from "@/lib/data/categories";
 import { PROVINCES } from "@/lib/data/cr-geography";
 import { fetchAvailabilityBatched } from "@/lib/availability-batch";
 import { useTranslations, useLocale } from "next-intl";
-import { CalendarDays, Check, ChevronDown, ChevronLeft, ChevronRight, MapPin, Video, ShieldCheck } from "lucide-react";
+import { CalendarDays, Check, ChevronDown, ChevronLeft, ChevronRight, MapPin, Video } from "lucide-react";
 import { useRouter } from "@/i18n/navigation";
 import { ClientRegistrationModal } from "@/components/auth/client-registration-modal";
 import { useAuth } from "@/hooks/use-auth";
@@ -113,7 +113,6 @@ function monthShort(locale: string, monthIndex: number) {
  */
 export function ProfessionalSchedule({ professional, categoryName, availabilityPublic, contactPreference = "ambas", videoConsultApplies = true, slots: allSlots, slotsInitiallyLoaded = true, activeCategory, isOwn = false, info, placeFallback = "", placeAddress = "", businessName = "", stacked = false, forceContactOnly = false, preferredLocationId, restrictToPreferredLocation = false, syncWithSearchLoading = false }: ProfessionalScheduleProps) {
   const t = useTranslations("schedule");
-  const tProfile = useTranslations("profile");
   const tLoading = useTranslations("loading");
   const locale = useLocale();
   // Qué ubicación se está buscando, para poner delante los lugares que sirven.
@@ -1034,12 +1033,6 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
           {!visualScheduleLoading && (
             <div className="flex flex-col gap-2">
               {profileContactButtons}
-              {!isOwn && (
-                <p className="mt-1 flex items-start gap-1.5 text-[12px] leading-5 text-[#52627a]">
-                  <ShieldCheck className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#009FD9]" />
-                  <span>{tProfile("guaranteeNote")}</span>
-                </p>
-              )}
             </div>
           )}
         </div>

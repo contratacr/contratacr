@@ -713,8 +713,7 @@
     "appBarTitle": "Professional profile",
     "linkCopied": "Link copied",
     "statCases": "{count, plural, one {past job} other {past jobs}}",
-    "statCasesShort": "{count, plural, one {case} other {cases}}",
-    "guaranteeNote": "ContrataCR guarantee: if they don't show up, we help you find another one the same day."
+    "statCasesShort": "{count, plural, one {case} other {cases}}"
   },
   "auth": {
     "login": {
@@ -4021,9 +4020,7 @@
     "priceUnit_por_consulta": "Per visit",
     "priceUnit_por_proyecto": "Per project",
     "priceUnit_por_dia": "Per day",
-    "priceUnit_paquete": "Package",
-    "guaranteeTitle": "ContrataCR guarantee",
-    "guaranteeBody": "If the professional doesn't show up or doesn't reply, write to us and we'll help you find another one the same day. Free."
+    "priceUnit_paquete": "Package"
   },
   "shareKit": {
     "title": "Share my profile",
