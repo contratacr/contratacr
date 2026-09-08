@@ -459,7 +459,7 @@ export function BookingRequests() {
                 <div className="flex items-start gap-2 border-t border-[#eef2f6] pt-3">
                   <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
                     {canMessage && (
-                      <DirectChatLauncher bookingId={booking.id} professionalName={clientName} contextTitle={serviceDescription} buttonLabel={t("contact")} className="h-11 w-auto shrink-0 grow whitespace-nowrap rounded-full px-4 text-[13px] font-bold" />
+                      <DirectChatLauncher bookingId={booking.id} professionalName={clientName} contextTitle={serviceDescription} buttonLabel={t("contact")} className="h-11 w-auto shrink-0 grow whitespace-nowrap rounded-full px-4 text-[13px] font-bold lg:grow-0 lg:min-w-[11rem]" />
                     )}
                   </div>
                   <div className="relative shrink-0" data-booking-actions={booking.id}>

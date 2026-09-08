@@ -148,7 +148,9 @@ async function fetchClientProjects(): Promise<Project[]> {
 
 // Silueta única de las acciones de tarjeta (Reservas y Solicitudes): la misma
 // píldora de 44px/13px del botón "Enviar mensaje" del perfil profesional.
-const actionButtonClass = "h-11 w-auto shrink-0 grow whitespace-nowrap rounded-full px-4 text-[13px] font-bold";
+// En el teléfono los botones llenan la fila; en escritorio la tarjeta mide 800px y
+// un botón de ese ancho se ve desproporcionado: quedan a su tamaño, alineados a la izquierda.
+const actionButtonClass = "h-11 w-auto shrink-0 grow whitespace-nowrap rounded-full px-4 text-[13px] font-bold lg:grow-0 lg:min-w-[11rem]";
 
 export function ClientActivity({ section }: { section: ClientActivitySection }) {
   const { user } = useAuth();
@@ -788,7 +790,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                                     </div>
                                   )}
                                   {segundaFila.length > 0 && (
-                                    <div className={segundaFila.length === 2 ? "grid grid-cols-2 gap-2" : "flex"}>
+                                    <div className={segundaFila.length === 2 ? "grid grid-cols-2 gap-2 lg:flex lg:justify-start" : "flex"}>
                                       {segundaFila}
                                     </div>
                                   )}
@@ -846,7 +848,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
               <button
                 type="button"
                 onClick={() => setShowPublish(true)}
-                className="inline-flex h-11 w-full items-center justify-center gap-1.5 rounded-full bg-[#009FD9] px-4 text-[13px] font-bold text-white transition-colors hover:bg-[#0089bb] sm:w-auto sm:self-start"
+                className="inline-flex h-11 w-full items-center justify-center gap-1.5 rounded-full bg-[#009FD9] px-4 text-[13px] font-bold text-white transition-colors hover:bg-[#0089bb] sm:w-auto sm:self-start lg:hidden"
               >
                 <Plus className="h-4 w-4" />
                 {t("publishProject")}

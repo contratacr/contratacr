@@ -1200,7 +1200,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                   </div>
                 </div>
               )}
-              <div className="flex flex-1 flex-col rounded-2xl border border-[#e5edf4] bg-white px-4 py-4 md:px-5">
+              <div className="flex flex-1 flex-col rounded-2xl border border-[#e5edf4] bg-white px-4 py-4 md:px-5 lg:flex-none">
 
               {/* STEP: calendar */}
               {step === "calendar" && (
@@ -1872,7 +1872,11 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
   if (asPage) {
     return (
       <div className="ccr-booking-page flex min-h-[100dvh] flex-col bg-[#f4f7fa]">
-        {contenido}
+        {/* En escritorio la reserva va en una columna centrada: a todo el ancho
+            quedaba un tablero vacío con el botón estirado de lado a lado. */}
+        <div className="flex min-h-[100dvh] w-full flex-col lg:mx-auto lg:max-w-3xl lg:border-x lg:border-[#e5eaf0] lg:bg-white lg:shadow-[0_0_40px_-24px_rgba(15,23,42,0.35)]">
+          {contenido}
+        </div>
       </div>
     );
   }
