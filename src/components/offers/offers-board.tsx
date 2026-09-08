@@ -445,10 +445,14 @@ export function OffersBoard({
         </div>
       </div>
 
-      <div className="mx-auto w-full max-w-7xl px-0 sm:px-6 sm:py-5 lg:h-[calc(100dvh-129px)] lg:min-h-0 lg:shrink-0 lg:px-6 lg:pb-4 lg:pt-4">
-        <div className={`${filtered.length > 0 ? "lg:grid lg:grid-cols-[minmax(340px,440px)_minmax(0,1fr)]" : ""} lg:h-full lg:overflow-hidden lg:rounded-lg lg:border lg:border-[#dfe8f0] lg:bg-white`}>
+      <p className="mx-auto hidden w-full max-w-7xl shrink-0 px-6 pb-2 pt-3 text-[13px] font-semibold text-[#52627a] lg:block">
+        <span className="font-extrabold text-[#162543]">{filtered.length} {filtered.length === 1 ? copy.offer : copy.offerPlural}</span>
+        {" · "}{copy.country}
+      </p>
+      <div className="mx-auto w-full max-w-7xl px-0 sm:px-6 sm:py-5 lg:h-[calc(100dvh-172px)] lg:min-h-0 lg:shrink-0 lg:px-6 lg:pb-0 lg:pt-0">
+        <div className={`${filtered.length > 0 ? "lg:grid lg:grid-cols-[minmax(340px,440px)_minmax(0,1fr)]" : ""} lg:h-full lg:overflow-hidden lg:rounded-lg lg:rounded-b-none lg:border lg:border-b-0 lg:border-[#dfe8f0] lg:bg-white`}>
           <section className={filtered.length > 0 ? MARKETPLACE_LIST_CLASS : "min-w-0 bg-white"}>
-            <div className="border-b border-[#e7edf2] px-4 py-3">
+            <div className="border-b border-[#e7edf2] px-4 py-3 lg:hidden">
               <p className="font-bold">
                  {filtered.length} {filtered.length === 1 ? copy.offer : copy.offerPlural}
               </p>

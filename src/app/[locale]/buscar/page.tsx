@@ -467,13 +467,13 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
           count carries the result total there. */}
       <div className="hidden lg:block bg-[#f4f7fa]">
         <div className="mx-auto max-w-[1920px] px-4 pb-3 pt-4 sm:px-6 lg:px-8">
-          <div className="flex items-start gap-2.5">
-            <span className="mt-0.5 h-6 w-1.5 shrink-0 rounded-full bg-[#009FD9]" aria-hidden />
-            <div className="min-w-0">
-              <h1 className="text-xl font-bold leading-tight text-[#162543]">{pageTitle}</h1>
+          <div className="flex items-center gap-2.5">
+            <span className="h-5 w-1.5 shrink-0 rounded-full bg-[#009FD9]" aria-hidden />
+            <div className="flex min-w-0 flex-wrap items-baseline gap-x-2">
+              <h1 className="text-lg font-bold leading-tight text-[#162543]">{pageTitle}</h1>
               {/* On mobile the count is shown in the results panel (above the list); avoid
                   duplicating it here. Desktop keeps it in the header. */}
-              <p className="hidden lg:block text-[#6b7280] text-[13px] leading-tight mt-0.5">{subtitle}</p>
+              <p className="hidden text-[13px] leading-tight text-[#6b7280] lg:block">· {subtitle}</p>
             </div>
           </div>
         </div>
