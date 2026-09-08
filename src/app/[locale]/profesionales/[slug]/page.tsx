@@ -596,7 +596,28 @@ export default function ProfilePage() {
               the new /buscar card (circular avatar, solid-blue "Verificado" pill). No
               "destacado" ribbon. */}
           <div className="relative mb-6 rounded-2xl border border-[#e5e7eb] bg-white p-4 shadow-sm sm:p-6">
-              <div className="flex min-w-0 items-center gap-3 sm:gap-4">
+            <div className="absolute right-3 top-3 flex items-center gap-3 sm:right-5 sm:top-5">
+              <SaveButton
+                pro={savedPro}
+                isOwn={isOwn}
+                withLabel
+                className="h-auto w-auto border-0 bg-transparent p-0 text-[13px] font-bold text-[#162543] underline decoration-[#c0cad5] underline-offset-4 hover:bg-transparent hover:text-[#0089bb]"
+              />
+              <button
+                type="button"
+                onClick={shareProfile}
+                aria-label={linkCopiado ? t("linkCopied") : t("shareProfile")}
+                title={linkCopiado ? t("linkCopied") : t("shareProfile")}
+                className={cn(
+                  "text-[13px] font-bold underline decoration-[#c0cad5] underline-offset-4 transition-colors",
+                  linkCopiado ? "text-[#15803d]" : "text-[#162543] hover:text-[#0089bb]",
+                )}
+              >
+                {linkCopiado ? t("linkCopied") : locale === "en" ? "Share" : "Compartir"}
+                <span className="sr-only" aria-live="polite">{linkCopiado ? t("linkCopied") : ""}</span>
+              </button>
+            </div>
+              <div className="mt-7 flex min-w-0 items-center gap-3 sm:mt-0 sm:gap-4 sm:pr-44">
                 <ImagePreviewDialog
                   src={professional.avatarUrl}
                   alt={professional.fullName}
@@ -612,14 +633,14 @@ export default function ProfilePage() {
                   <div className="min-w-0">
                     <h1 data-testid="professional-profile-name" className="min-w-0 text-[17px] font-bold leading-[1.15] text-[#162543] [overflow-wrap:anywhere] sm:text-2xl sm:leading-tight sm:[overflow-wrap:normal]">
                       {displayName.primaryDesktop}
-                      {professional.verificationStatus === "verified" && (
-                        <VerifiedSeal
-                          label={t("identityVerified")}
-                          className="mb-[0.08em] ml-1 inline-block h-4 w-4 shrink-0 align-middle text-[#009FD9] sm:h-5 sm:w-5"
-                        />
-                      )}
                     </h1>
                   </div>
+                  {professional.verificationStatus === "verified" && (
+                    <span className="mt-1.5 inline-flex items-center gap-1 rounded-full bg-[#eaf7fc] px-2 py-0.5 text-[11px] font-bold text-[#0089bb]">
+                      <BadgeCheck className="h-3.5 w-3.5 shrink-0" />
+                      {t("identityVerified")}
+                    </span>
+                  )}
                   {locationText && (
                     <p className="mt-1 flex items-center gap-1.5 text-[13px] leading-5 text-[#52627a] sm:text-sm">
                       <MapPin className="h-3.5 w-3.5 shrink-0 text-[#68778d]" />
@@ -653,32 +674,6 @@ export default function ProfilePage() {
                   )}
                 </p>
               )}
-              {/* Guardar y compartir son gestos de apoyo, no la acción del perfil:
-                  quedan arriba junto al nombre pero en blanco, para que el único
-                  turquesa de la pantalla sea agendar. Antes guardar iba relleno y
-                  pesaba más que "Ver disponibilidad". */}
-              <div className="mt-3 flex w-full flex-wrap items-center gap-2">
-                <SaveButton
-                  pro={savedPro}
-                  isOwn={isOwn}
-                  withLabel
-                  className="box-border h-9 w-auto min-w-0 shrink-0 whitespace-nowrap rounded-full px-4 py-0 text-[13px]"
-                />
-                <button
-                  type="button"
-                  onClick={shareProfile}
-                  aria-label={linkCopiado ? t("linkCopied") : t("shareProfile")}
-                  title={linkCopiado ? t("linkCopied") : t("shareProfile")}
-                  className={cn(
-                    "inline-flex h-9 w-auto min-w-0 shrink-0 items-center justify-center gap-2 rounded-full border-[1.5px] bg-white px-4 text-[13px] font-bold transition-colors",
-                    linkCopiado ? "border-[#b8e7cf] bg-[#f2fbf6] text-[#15803d]" : "border-[#009FD9] text-[#009FD9] hover:bg-[#EBF5FB]",
-                  )}
-                >
-                  {linkCopiado && <Check className="h-4 w-4 shrink-0" />}
-                  <span>{linkCopiado ? t("linkCopied") : locale === "en" ? "Share" : "Compartir"}</span>
-                  <span className="sr-only" aria-live="polite">{linkCopiado ? t("linkCopied") : ""}</span>
-                </button>
-              </div>
           </div>
 
           <div className="flex flex-col lg:flex-row gap-6">
