@@ -3,7 +3,18 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
-import { CalendarDays, Clock, EyeOff, FileText, Inbox, MapPin, Trash2, Users, Wrench } from "lucide-react";
+import {
+  CalendarDays,
+  Clock,
+  EyeOff,
+  FileText,
+  Inbox,
+  MapPin,
+  Trash2,
+  Users,
+  Wrench,
+  Pencil,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -229,7 +240,10 @@ export function ProposalsTab({ categoryId }: ProposalsTabProps) {
         return;
       }
       setExpandedMine(null);
+      setMessages((prev) => ({ ...prev, [propuesta.project_id]: propuesta.message ?? "" }));
       await refreshAll();
+      setStage("nuevas");
+      setExpandedProject(propuesta.project_id);
       await showMessage({ title: t("withdrawDoneTitle"), description: t("withdrawDone") });
     } catch {
       await showMessage({ title: t("withdrawErrorTitle"), description: t("withdrawError"), tone: "danger" });
@@ -452,8 +466,7 @@ export function ProposalsTab({ categoryId }: ProposalsTabProps) {
                             actions={[p.status === "pending" ? {
                               label: retirando === p.id ? t("withdrawing") : t("withdraw"),
                               onClick: () => { if (retirando !== p.id) void retirarRespuesta(p); },
-                              destructive: true,
-                              icon: <Trash2 className="h-4 w-4" />,
+                              icon: <Pencil className="h-4 w-4" />,
                             } : {
                               label: retirando === p.id ? t("withdrawing") : t("drop"),
                               onClick: () => { if (retirando !== p.id) void soltarTrabajo(p); },
