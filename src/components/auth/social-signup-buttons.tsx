@@ -6,7 +6,6 @@ import { createClient, hasSupabaseBrowserConfig } from "@/lib/supabase/client";
 import { isNativeAppRuntime } from "@/hooks/use-native-app";
 import { nativeSocialSignIn } from "@/lib/auth/native-social-login";
 import { GoogleSignInButton } from "@/components/auth/google-sign-in-button";
-import { BrandLoadingMark } from "@/components/ui/content-loading";
 
 // "Continuar con Google/Apple" for the REGISTRATION forms: the same providers
 // as /login, but the round trip returns HERE (next = the current page) so the
@@ -118,13 +117,8 @@ export function SocialSignupButtons({ nextPath }: { nextPath?: string }) {
     <div className="flex flex-col gap-3">
       {covering && (
         <div className="fixed inset-0 z-[300] bg-[#f4f7fa]" aria-busy="true">
-          {/* En la app la marca es solo del splash nativo; el velo del OAuth es
-              neutro. En la web conserva la marca. */}
-          {runtime === "native" ? (
-            <div className="h-16 bg-white shadow-[0_1px_0_#e5e7eb]" />
-          ) : (
-            <div className="grid min-h-full place-items-center"><BrandLoadingMark /></div>
-          )}
+          {/* Velo neutro: la marca no se usa como pantalla de carga. */}
+          <div className="h-16 bg-white shadow-[0_1px_0_#e5e7eb]" />
         </div>
       )}
       {runtime === "native" && (

@@ -2,8 +2,6 @@ import { Suspense, type ReactNode } from "react";
 import { cookies } from "next/headers";
 import { Inter } from "next/font/google";
 import { NativeDebugLogger } from "@/components/mobile/native-debug-logger";
-import { LoadingMarkImage } from "@/components/ui/loading-mark-image";
-import { LOADING_MARK_HANDOFF_SCRIPT } from "@/lib/loading-mark-handoff";
 import { NATIVE_ONBOARDING_COMPLETED_KEY } from "@/lib/mobile-onboarding";
 import "./globals.css";
 
@@ -59,7 +57,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
         />
         <StaticNativeFirstRunPrepaint />
         <NativeDebugLogger />
-        <Suspense fallback={<InitialRouteLoading neutro={esApp} />}>
+        <Suspense fallback={<InitialRouteLoading />}>
           {children}
         </Suspense>
       </body>
@@ -93,32 +91,14 @@ function StaticNativeFirstRunPrepaint() {
   );
 }
 
-function InitialRouteLoading({ neutro = false }: { neutro?: boolean } = {}) {
-  // En la app, una carga de documento solo ocurre en el arranque (cubierto por
-  // el splash nativo, que ya trae la marca) o cuando iOS recicla el WebView y
-  // recarga la página en el lugar. En ambos casos la web pinta lienzo neutro:
-  // la marca no debe aparecer nunca desde adentro.
-  if (neutro) {
-    return (
-      <main className="ccr-page-route-loading fixed inset-0 z-[100000] bg-[#f4f7fa]" aria-busy="true" role="status">
-        <div className="h-16 bg-white shadow-[0_1px_0_#e5e7eb]" />
-        <span className="sr-only">Cargando...</span>
-      </main>
-    );
-  }
+function InitialRouteLoading() {
+  // Ninguna espera muestra la marca: en la app la marca es del splash nativo y
+  // en la web el logotipo a pantalla completa se leía como una pantalla de carga
+  // más. Se pinta el lienzo con la barra y el contenido llega con esqueletos.
   return (
-    <>
-      <main
-        className="ccr-page-route-loading fixed inset-0 z-[100000] grid min-h-dvh place-items-center bg-[#f4f7fa]"
-        aria-busy="true"
-        aria-live="polite"
-        role="status"
-      >
-        {/* Keep the root suspense fallback visually identical to route loading. */}
-        <LoadingMarkImage />
-        <span className="sr-only">Cargando...</span>
-      </main>
-      <script dangerouslySetInnerHTML={{ __html: LOADING_MARK_HANDOFF_SCRIPT }} />
-    </>
+    <main className="ccr-page-route-loading fixed inset-0 z-[100000] bg-[#f4f7fa]" aria-busy="true" role="status">
+      <div className="h-16 bg-white shadow-[0_1px_0_#e5e7eb]" />
+      <span className="sr-only">Cargando...</span>
+    </main>
   );
 }
