@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { CalendarCheck, CheckCircle2, ClipboardList, ExternalLink, MessageSquareText, Search, Users, Wrench } from "lucide-react";
+import { CalendarCheck, ClipboardList, ExternalLink, MessageSquareText, Search, Users, Wrench } from "lucide-react";
+import { ResponsiveVerifiedName } from "@/components/professionals/responsive-verified-name";
 import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -99,12 +100,11 @@ export function ClientConnections() {
               <AvatarFallback className="rounded-2xl bg-[#EBF5FB] text-sm font-bold text-[#009FD9]">{getInitials(item.name)}</AvatarFallback>
             </Avatar>
             <div className="min-w-0 flex-1">
-              <div className="flex min-w-0 flex-wrap items-center gap-2">
-                <h3 className="flex min-w-0 items-center text-sm font-extrabold text-[#162543]">
-                  <span className="truncate">{item.name}</span>
-                  {item.isVerified && (
-                    <CheckCircle2 aria-label={t("verified")} className="ml-1 h-3.5 w-3.5 shrink-0 text-[#009FD9]" />
-                  )}
+              {/* El estado va SIEMPRE en la misma línea que el nombre: el nombre se
+                  recorta según el ancho disponible en vez de empujar la etiqueta abajo. */}
+              <div className="flex min-w-0 items-center gap-2">
+                <h3 className="flex min-w-0 flex-1 items-center text-sm font-extrabold text-[#162543]">
+                  <ResponsiveVerifiedName name={item.name} verified={item.isVerified} verifiedLabel={t("verified")} />
                 </h3>
                 <span className="shrink-0 rounded-full bg-[#eef8fd] px-2 py-0.5 text-[10px] font-bold text-[#0089bb]">
                   {item.status === "completed"
@@ -127,25 +127,26 @@ export function ClientConnections() {
                     {item.categoryLabel}
                   </span>
                 )}
-                <span className="inline-flex items-center gap-1">
-                  <SourceIcon source={item.source} />
-                  {item.source === "booking"
-                    ? t("source.booking")
-                    : item.source === "project"
-                      ? t("source.project")
-                      : item.source === "contact"
-                        ? t("source.contact")
-                        : t("source.both")}
-                </span>
+                {!(item.source === "contact" && item.status === "contact") && (
+                  <span className="inline-flex items-center gap-1">
+                    <SourceIcon source={item.source} />
+                    {item.source === "booking"
+                      ? t("source.booking")
+                      : item.source === "project"
+                        ? t("source.project")
+                        : item.source === "contact"
+                          ? t("source.contact")
+                          : t("source.both")}
+                  </span>
+                )}
               </div>
               {item.title && <p className="mt-1 truncate text-xs text-[#6b7280]">{item.title}</p>}
               {item.lastInteractionAt && <p className="mt-1 text-[11px] font-medium text-[#68778d]">{formatRelativeOrDate(item.lastInteractionAt, locale)}</p>}
             </div>
             <div className="col-span-2 flex gap-2 sm:col-span-1 sm:shrink-0">
               {item.slug ? (
-                <Button variant="outline" size="sm" className="min-w-0 flex-1 rounded-xl sm:flex-none" asChild>
+                <Button variant="secondary" size="sm" className="h-11 min-w-0 flex-1 text-[13px] sm:w-44 sm:flex-none" asChild>
                   <Link href={`/profesionales/${item.slug}?from=${encodeURIComponent("/dashboard/cliente?tab=connections")}`} onClick={openInNewTabOnDesktop}>
-                    <ExternalLink className="h-3.5 w-3.5" />
                     {t("viewProfile")}
                   </Link>
                 </Button>

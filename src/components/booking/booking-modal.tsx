@@ -1,5 +1,6 @@
 "use client";
 
+import { VerifiedSeal } from "@/components/ui/verified-seal";
 import { useState, useEffect, useMemo, useRef } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import {
@@ -1184,7 +1185,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                   <div className="min-w-0 flex-1">
                     <p className="flex items-center gap-1.5 text-[15px] font-bold leading-tight text-[#162543]">
                       <span className="min-w-0 truncate">{proDisplayName(professional.fullName)}</span>
-                      {professional.isVerified && <BadgeCheck className="h-4 w-4 shrink-0 text-[#009FD9]" aria-label={t("verified")} />}
+                      {professional.isVerified && <VerifiedSeal className="h-4 w-4 shrink-0 text-[#009FD9]" label={t("verified")} />}
                     </p>
                     {/* Con servicio elegido, el servicio. Mientras se elige, decir
                         "Cámaras de seguridad +5" suena a que ya se eligió: ahí van las
