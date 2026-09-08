@@ -623,11 +623,22 @@ export default function ProfilePage() {
                       )}
                     </h1>
                   </div>
-                  {locationText && (
-                    <div className="mt-1.5 flex items-center gap-1.5 text-sm text-[#6b7280]">
-                      <MapPin className="h-4 w-4 shrink-0 text-[#009FD9]" />
-                      <span>{locationText}</span>
-                    </div>
+                  {/* Qué hace y dónde, en una línea bajo el nombre: sin esto el
+                      espacio al lado de la foto quedaba vacío y había que entrar a
+                      las pestañas para saber a qué se dedica. */}
+                  {(catLabel(principalProfession) || locationText) && (
+                    <p className="mt-1 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[13px] leading-5 text-[#52627a] sm:text-sm">
+                      {catLabel(principalProfession) && (
+                        <span className="font-semibold text-[#008fc3]">{catLabel(principalProfession)}</span>
+                      )}
+                      {catLabel(principalProfession) && locationText && <span aria-hidden className="text-[#c0cad5]">·</span>}
+                      {locationText && (
+                        <span className="inline-flex items-center gap-1">
+                          <MapPin className="h-3.5 w-3.5 shrink-0 text-[#68778d]" />
+                          {locationText}
+                        </span>
+                      )}
+                    </p>
                   )}
                 </div>
               </div>

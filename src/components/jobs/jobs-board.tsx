@@ -282,7 +282,7 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
   const detailBackHref = safeMarketplaceReturnHref(returnTo, "/empleos");
   const detailBackLabel = marketplaceReturnLabel(detailBackHref, "/empleos", locale);
 
-  return <main className="min-h-[calc(100vh-72px)] overflow-x-clip bg-white pb-16 text-[#162543] lg:bg-[#f4f7fa]">
+  return <main className="min-h-[calc(100vh-72px)] overflow-x-clip bg-[#f4f7fa] pb-16 text-[#162543]">
     <div ref={sentinelaRef} aria-hidden className="h-px lg:hidden" />
     {showingMobileDetail && selected && (
       <section className="lg:hidden">
@@ -296,15 +296,19 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
           </Link>
           <h1 className="truncate text-center text-lg font-extrabold">{copy.job}</h1>
         </header>
-        <JobPreview
-          job={selected}
-          isOwner={selected.employer_id === currentProfessionalId}
-          userId={currentUserId}
-          hasApplied={submittedJobIds.has(selected.id)}
-          onApply={() => setApplyingJobId(selected.id)}
-          onEdit={() => setEditingJob(selected)}
-          mobile
-        />
+        <div className="px-3 py-3">
+          <div className="overflow-hidden rounded-2xl border border-[#e5eaf0] bg-white">
+            <JobPreview
+              job={selected}
+              isOwner={selected.employer_id === currentProfessionalId}
+              userId={currentUserId}
+              hasApplied={submittedJobIds.has(selected.id)}
+              onApply={() => setApplyingJobId(selected.id)}
+              onEdit={() => setEditingJob(selected)}
+              mobile
+            />
+          </div>
+        </div>
       </section>
     )}
     <section ref={cabeceraRef} className={cn(showingMobileDetail && "hidden", "ccr-marketplace-sticky sticky top-0 z-20 border-b bg-white transition-colors duration-200 lg:hidden", conLinea ? "border-[#e5e7eb]" : "border-transparent")}>
@@ -382,8 +386,8 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
         </div>
       </div>
     )}
-    {!detailOnly && <div className={`${showingMobileDetail ? "hidden lg:block " : ""}mx-auto max-w-7xl px-0 py-0 sm:px-6 sm:py-5 lg:pt-3`}>
-      <div className={`${filtered.length > 0 ? "lg:grid lg:grid-cols-[minmax(340px,440px)_minmax(0,1fr)]" : ""} lg:max-h-[calc(100vh-190px)] lg:overflow-hidden lg:rounded-lg lg:border lg:border-[#dfe8f0] lg:bg-white`}>
+    {!detailOnly && <div className={`${showingMobileDetail ? "hidden lg:block " : ""}mx-auto max-w-7xl px-3 py-3 sm:px-6 sm:py-5 lg:pt-3`}>
+      <div className={`${filtered.length > 0 ? "lg:grid lg:grid-cols-[minmax(340px,440px)_minmax(0,1fr)]" : ""} overflow-hidden rounded-2xl border border-[#e5eaf0] bg-white lg:max-h-[calc(100vh-190px)] lg:rounded-lg lg:border-[#dfe8f0]`}>
         <section className={filtered.length > 0 ? MARKETPLACE_LIST_CLASS : "min-w-0 bg-white"}>
           <div className="border-b border-[#e7edf2] px-4 py-3"><p className="font-bold">{filtered.length} {filtered.length === 1 ? copy.job.toLocaleLowerCase(locale) : copy.jobs.toLocaleLowerCase(locale)}</p><p className="text-xs text-[#68778d]">{copy.country}</p></div>
           <div>
