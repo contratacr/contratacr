@@ -1451,7 +1451,7 @@
       "insurers": "List your insurers",
       "insurersBenefit": "Patients filter by their insurance: showing up there brings more appointments.",
       "serviceDescription": "Describe a service",
-      "servicePrice": "Add price or quote option",
+      "servicePrice": "Set your starting price",
       "serviceExperience": "Add when you started",
       "languages": "Add languages",
       "publicLinks": "Add public links",
@@ -1467,7 +1467,8 @@
       "nextStep": "Next step",
       "groupCore": "Essentials",
       "groupOptional": "Stand out",
-      "viewSteps": "View steps"
+      "viewSteps": "View steps",
+      "priceBenefit": "Profiles with a price rank higher and get more contacts."
     },
     "modeUse": "Client mode",
     "modeOffer": "Professional mode",
@@ -1927,7 +1928,23 @@
     },
     "goToClientPanel": "Go to my client panel",
     "goToProfessionalPanel": "Go to my professional panel",
-    "headerReviews": "{count, plural, one {# review} other {# reviews}}"
+    "headerReviews": "{count, plural, one {# review} other {# reviews}}",
+    "startingPrice": {
+      "title": "Your starting price",
+      "body": "The minimum you go out for: the visit, the hour, or the smallest job you do. The full cost is quoted separately. Profiles with a price rank higher and get more contacts.",
+      "typeLabel": "How do you charge the starting price?",
+      "type_por_consulta": "Per visit or diagnosis",
+      "type_por_hora": "Per hour",
+      "type_por_proyecto": "Minimum job",
+      "amountLabel": "Price incl. VAT",
+      "amountPlaceholder": "E.g.: 8000",
+      "preview": "This is how clients will see it: {label}",
+      "save": "Save price",
+      "saving": "Saving…",
+      "saved": "Price saved",
+      "remove": "Remove price",
+      "error": "Could not save. Try again."
+    }
   },
   "bookingRequests": {
     "empty": "No appointments yet",

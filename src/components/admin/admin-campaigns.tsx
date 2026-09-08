@@ -41,10 +41,12 @@ export function AdminCampaigns() {
   const [body, setBody] = useState(PLANTILLAS[0].body);
   const [ctaLabel, setCtaLabel] = useState(PLANTILLAS[0].ctaLabel);
   const [ctaPath, setCtaPath] = useState(PLANTILLAS[0].ctaPath);
-  const [enviando, setEnviando] = useState<"test" | "all" | null>(null);
+  const [enviando, setEnviando] = useState<"test" | "all" | "precios" | null>(null);
+  const [sinPrecio, setSinPrecio] = useState<number | null>(null);
 
   useEffect(() => {
     void fetch("/api/admin/campanas").then((r) => r.json()).then((d) => { setClientes(Number(d.clients ?? 0)); setAdminEmail(String(d.adminEmail ?? "")); }).catch(() => setClientes(0));
+    void fetch("/api/admin/campanas/precios").then((r) => r.json()).then((d) => setSinPrecio(Number(d.sinPrecio ?? 0))).catch(() => setSinPrecio(0));
   }, []);
 
   function usarPlantilla(id: string) {
@@ -73,6 +75,22 @@ export function AdminCampaigns() {
     } finally {
       setEnviando(null);
     }
+  }
+
+  async function avisarPrecios() {
+    const { confirmed } = await confirm({
+      title: `¿Avisar a ${sinPrecio ?? 0} profesionales sin precio?`,
+      description: "Reciben un aviso en el app (y push) que los lleva a poner su precio de entrada. A quien ya se le avisó en los últimos 30 días no se le repite.",
+      confirmLabel: "Enviar avisos",
+    });
+    if (!confirmed) return;
+    setEnviando("precios");
+    try {
+      const res = await fetch("/api/admin/campanas/precios", { method: "POST" });
+      const d = await res.json();
+      if (!res.ok) { await showMessage({ title: "No se pudo enviar", description: d.error ?? "Intenta de nuevo.", tone: "danger" }); return; }
+      await showMessage({ title: "Avisos enviados", description: `Enviados ${d.enviados} · ya avisados ${d.omitidos} · fallidos ${d.fallidos} de ${d.total}.`, tone: "success" });
+    } finally { setEnviando(null); }
   }
 
   const campo = "w-full rounded-xl border border-[#e5e7eb] bg-white px-3 py-2.5 text-sm text-[#162543] focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[#009FD9]";
@@ -118,6 +136,13 @@ export function AdminCampaigns() {
             <p className="mt-5 text-[11px] leading-5 text-[#68778d]">Recibes este correo porque tienes una cuenta en ContrataCR. Si no quieres recibir avisos de temporada, responde con la palabra BAJA.</p>
           </div>
         </div>
+      </div>
+      <div className="rounded-2xl border border-[#e5e7eb] bg-white p-5">
+        <h2 className="text-lg font-extrabold text-[#162543]">Profesionales sin precio</h2>
+        <p className="mt-1 text-sm text-[#68778d]">{sinPrecio === null ? "Contando…" : `${sinPrecio} profesionales no publican ningún precio.`} Un aviso en el app los lleva directo a poner su precio de entrada.</p>
+        <button type="button" disabled={!!enviando || !sinPrecio} onClick={() => void avisarPrecios()} className="mt-4 inline-flex h-11 items-center justify-center gap-2 rounded-full border-[1.5px] border-[#009FD9] bg-white px-5 text-sm font-bold text-[#009FD9] transition hover:bg-[#EBF5FB] disabled:opacity-60">
+          {enviando === "precios" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}Avisar a {sinPrecio ?? 0} profesionales
+        </button>
       </div>
       {dialogNode}
     </div>

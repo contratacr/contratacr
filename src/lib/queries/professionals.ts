@@ -308,6 +308,9 @@ function normalizeSearchFilters(filters: SearchFilters): SearchFilters {
   return normalized;
 }
 
+const precioPrimero = (a: ProfessionalCardData, b: ProfessionalCardData) =>
+  Number(primaryPriceAmount(b) != null) - Number(primaryPriceAmount(a) != null);
+
 export async function searchProfessionals(
   filters: SearchFilters,
   options: { fresh?: boolean } = {},
@@ -636,9 +639,11 @@ async function searchProfessionalsUncached(
           if (aHasReviews && !bHasReviews) return -1;
           if (!aHasReviews && bHasReviews) return 1;
           if (aHasReviews && bHasReviews) {
-            return (b.ratingAvg - a.ratingAvg) || (b.reviewCount - a.reviewCount);
+            return (b.ratingAvg - a.ratingAvg) || (b.reviewCount - a.reviewCount) || precioPrimero(a, b);
           }
-          return 0;
+          // Sin reseñas de por medio, quien publica precio sale antes: es lo que
+          // el cliente compara, y el empujón para que los demás lo pongan.
+          return precioPrimero(a, b);
         });
       }
 

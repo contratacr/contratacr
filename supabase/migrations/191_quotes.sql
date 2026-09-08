@@ -71,7 +71,7 @@ alter table public.notifications add constraint notifications_type_check
     'verification_outreach','project_professional_withdrew',
     'project_proposals_waiting','booking_pending_reminder','project_in_progress_idle',
     'project_confirmation_pending','booking_past_date_idle',
-    'quote_sent','quote_accepted','quote_declined'
+    'quote_sent','quote_accepted','quote_declined','pricing_request'
   ));
 
 notify pgrst, 'reload schema';

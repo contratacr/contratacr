@@ -1853,7 +1853,7 @@
       "insurers": "Indica tus aseguradoras",
       "insurersBenefit": "Los pacientes filtran por su seguro: aparecer ahí te trae más citas.",
       "serviceDescription": "Describe un servicio",
-      "servicePrice": "Agrega precio o consultar precio",
+      "servicePrice": "Pon tu precio de entrada",
       "serviceExperience": "Indica desde cuándo trabajas",
       "languages": "Agrega idiomas",
       "publicLinks": "Agrega enlaces públicos",
@@ -1869,7 +1869,8 @@
       "nextStep": "Siguiente paso",
       "groupCore": "Esenciales",
       "groupOptional": "Para destacar",
-      "viewSteps": "Ver pasos"
+      "viewSteps": "Ver pasos",
+      "priceBenefit": "Los perfiles con precio salen más arriba y reciben más contactos."
     },
     "modeUse": "Modo cliente",
     "modeOffer": "Modo profesional",
@@ -1927,7 +1928,23 @@
     },
     "goToClientPanel": "Ir a mi panel cliente",
     "goToProfessionalPanel": "Ir a mi panel profesional",
-    "headerReviews": "{count, plural, one {# reseña} other {# reseñas}}"
+    "headerReviews": "{count, plural, one {# reseña} other {# reseñas}}",
+    "startingPrice": {
+      "title": "Tu precio de entrada",
+      "body": "Es el mínimo por el que sales a trabajar: la visita, la hora o el trabajo más pequeño que haces. El costo completo lo cotizas aparte. Los perfiles con precio salen más arriba y reciben más contactos.",
+      "typeLabel": "¿Cómo cobras la entrada?",
+      "type_por_consulta": "Por visita o diagnóstico",
+      "type_por_hora": "Por hora",
+      "type_por_proyecto": "Trabajo mínimo",
+      "amountLabel": "Precio con IVA",
+      "amountPlaceholder": "Ej.: 8000",
+      "preview": "Así lo verá el cliente: {label}",
+      "save": "Guardar precio",
+      "saving": "Guardando…",
+      "saved": "Precio guardado",
+      "remove": "Quitar precio",
+      "error": "No se pudo guardar. Intenta de nuevo."
+    }
   },
   "bookingRequests": {
     "empty": "No tienes citas todavía",

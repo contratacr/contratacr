@@ -19,6 +19,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { VerifiedSeal } from "@/components/ui/verified-seal";
 import { ShareKit } from "@/components/dashboard/pro/share-kit";
+import { StartingPriceEditor } from "@/components/dashboard/pro/starting-price-editor";
+import type { PricingTier } from "@/lib/pricing";
 import { getCategoryLabel } from "@/lib/data/categories";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -2471,6 +2473,10 @@ export default function DashboardPage() {
                         )}
 
                         {activeTab === "services" && pro && (
+                          <>
+                          <div className="mb-4">
+                            <StartingPriceEditor professionalId={pro.id} initialPricing={Array.isArray(pro.pricing) ? (pro.pricing as PricingTier[]) : null} onSaved={() => handleSaved("internal")} />
+                          </div>
                           <ServicesEditor
                             professionalId={pro.id}
                             primaryCategory={pro.category_id}
@@ -2480,6 +2486,7 @@ export default function DashboardPage() {
                             focusField={serviceFocus?.field ?? null}
                             focusKey={serviceFocus?.key}
                           />
+                          </>
                         )}
                         {activeTab === "photos" && pro && (
                           <PhotoGallery

@@ -93,7 +93,19 @@ export function formatPricingTier(tier: PricingTier, locale?: string): string {
     const base = tier.label ? `${tier.label}: ` : copy.packagePrefix;
     return tier.amount != null ? `${base}${formatColonesTaxIncluded(tier.amount)}` : `${base}${copy.fallback}`;
   }
-  return tier.amount != null ? formatAmountWithUnit(tier.amount, suffix) : copy.fallback;
+  const base = tier.amount != null ? formatAmountWithUnit(tier.amount, suffix) : copy.fallback;
+  // El precio de entrada del perfil se lee como "Desde ₡8 000 /consulta".
+  if (tier.id === STARTING_PRICE_ID && tier.amount != null) return `${pricingLocale(locale) === "en" ? "From" : "Desde"} ${base}`;
+  return base;
+}
+
+/** Nivel de entrada del perfil (professionals.pricing): el mínimo por el que sale a trabajar. */
+export const STARTING_PRICE_ID = "desde";
+export function startingPriceOf(pricing: PricingTier[] | null | undefined): PricingTier | null {
+  return (pricing ?? []).find((t) => t.id === STARTING_PRICE_ID && typeof t.amount === "number" && t.amount > 0) ?? null;
+}
+export function hasAnyPrice(services: { priceAmount?: number | null }[] | null | undefined, pricing: PricingTier[] | null | undefined) {
+  return (services ?? []).some((s) => typeof s.priceAmount === "number" && s.priceAmount > 0) || !!startingPriceOf(pricing);
 }
 
 /** Format a single service's price from its amount + type, e.g. "₡15,000 /hora I.V.A.I.". */
