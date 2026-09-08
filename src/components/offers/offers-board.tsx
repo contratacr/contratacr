@@ -633,7 +633,7 @@ export function OfferSaveButton({
       userId={userId}
       loginRedirect={`/ofertas/${offer.id}`}
       withLabel
-      className={`h-9 shrink-0 rounded-xl px-3 text-[13px] ${className}`}
+      className={`h-9 shrink-0 rounded-full px-3 text-[13px] ${className}`}
     />
   );
 }

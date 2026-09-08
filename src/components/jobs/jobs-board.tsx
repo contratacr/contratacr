@@ -375,7 +375,7 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
                 ) : (
                   <Link href={`/login?redirect=${encodeURIComponent(`/empleos/${selected.id}?apply=${selected.id}`)}`} className="inline-flex h-11 w-full items-center justify-center rounded-full bg-[#009fd9] px-5 text-sm font-bold text-white transition hover:bg-[#008fc3]">{copy.apply}</Link>
                 )}
-                <SaveItemButton itemType="job" itemId={selected.id} snapshot={jobSaveSnapshot(selected, locale)} userId={currentUserId} loginRedirect={`/empleos/${selected.id}`} withLabel className="h-11 w-full rounded-lg" />
+                <SaveItemButton itemType="job" itemId={selected.id} snapshot={jobSaveSnapshot(selected, locale)} userId={currentUserId} loginRedirect={`/empleos/${selected.id}`} withLabel className="h-11 w-full rounded-full" />
               </div>
             )}
           </aside>
@@ -527,7 +527,7 @@ function JobPreview({ job, isOwner, userId, hasApplied, onApply, onEdit, mobile 
       ) : (
         <Link href={`/login?redirect=${encodeURIComponent(`/empleos?apply=${job.id}`)}`} className="inline-flex h-11 w-full items-center justify-center overflow-visible whitespace-nowrap rounded-full bg-[#009fd9] px-4 pt-px text-sm font-bold leading-6 text-white transition hover:bg-[#008fc3] sm:w-[168px]">{copy.apply}</Link>
       )}
-      {!isOwner && <SaveItemButton itemType="job" itemId={job.id} snapshot={jobSaveSnapshot(job, locale)} userId={userId} loginRedirect={`/empleos/${job.id}`} withLabel className="h-11 w-full whitespace-nowrap rounded-lg px-4 leading-6 sm:w-[168px]" />}
+      {!isOwner && <SaveItemButton itemType="job" itemId={job.id} snapshot={jobSaveSnapshot(job, locale)} userId={userId} loginRedirect={`/empleos/${job.id}`} withLabel className="h-11 w-full whitespace-nowrap rounded-full px-4 leading-6 sm:w-[168px]" />}
     </div>}
     <dl className="mt-6 grid gap-3 border-y border-[#e7edf2] py-5 text-sm sm:grid-cols-2">{detailRows.map(([label, value]) => <div key={label} className="min-w-0"><dt className="text-xs font-bold uppercase tracking-wide text-[#7a899d]">{label}</dt><dd className="mt-0.5 break-words font-bold text-[#162543] [overflow-wrap:anywhere]">{value}</dd></div>)}</dl>
     <section className="mt-7"><h3 className="text-lg font-bold">{copy.about}</h3><p className="mt-3 whitespace-pre-line break-words text-sm leading-7 text-[#43536b] [overflow-wrap:anywhere]">{job.description}</p></section>
