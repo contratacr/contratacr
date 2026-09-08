@@ -354,7 +354,7 @@ export function OffersBoard({
       {canPost && (
         <Link
           href="/dashboard/profesional?mode=offer&tab=offers&returnTo=%2Fofertas"
-          className="inline-flex h-9 items-center justify-center rounded-full border border-[#cddae6] bg-white px-3 text-[13px] font-bold text-[#162543] transition hover:border-[#9fb6ca] hover:bg-[#f4f8fb] lg:h-[42px] lg:px-4 lg:text-sm"
+          className="inline-flex h-9 items-center justify-center rounded-full border border-[#d7e1ea] bg-white px-3 text-[13px] font-bold text-[#162543] transition hover:border-[#b9c8d6] hover:bg-[#f6f9fb] lg:h-11 lg:px-4 lg:text-sm"
         >
           {copy.myOffers}
         </Link>
@@ -364,7 +364,7 @@ export function OffersBoard({
           <button
             type="button"
             onClick={() => setPublishOpen(true)}
-            className="hidden h-[42px] items-center justify-center rounded-lg bg-[#009fd9] px-4 text-sm font-bold text-white transition hover:bg-[#008fc3] lg:inline-flex"
+            className="hidden h-11 items-center justify-center rounded-full bg-[#009fd9] px-5 text-sm font-bold text-white transition hover:bg-[#008fc3] lg:inline-flex"
           >
             {copy.publishOffer}
           </button>
