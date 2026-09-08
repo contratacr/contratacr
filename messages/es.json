@@ -4043,7 +4043,8 @@
     "copyMessage": "Copiar mensaje",
     "messageCopied": "Mensaje copiado",
     "back": "Volver",
-    "close": "Cerrar"
+    "close": "Cerrar",
+    "moreServices": "{count, plural, one {y # servicio más} other {y # servicios más}}"
   },
   "quotes": {
     "blockTitle": "Cotización",

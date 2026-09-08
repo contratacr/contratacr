@@ -64,6 +64,16 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL(VANITY[pathname], request.url), 307);
   }
 
+  // Enlace corto de cada profesional: /@su-slug → su perfil. Es el enlace que
+  // comparte desde el panel; el largo con /es/profesionales sigue funcionando.
+  const perfilCorto = /^\/@([A-Za-z0-9][A-Za-z0-9-]{1,80})$/.exec(pathname);
+  if (perfilCorto) {
+    const locale = request.cookies.get("NEXT_LOCALE")?.value === "en" ? "en" : "es";
+    const destino = new URL(`/${locale}/profesionales/${perfilCorto[1]}`, request.url);
+    destino.search = request.nextUrl.search;
+    return NextResponse.redirect(destino, 307);
+  }
+
   const hasLocalePrefix = /^\/(?:es|en)(?:\/|$)/.test(pathname);
   if (!hasLocalePrefix) {
     const cookieLocale = request.cookies.get("NEXT_LOCALE")?.value;

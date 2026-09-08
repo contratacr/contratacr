@@ -18,7 +18,7 @@ type Props = {
   onClose: () => void;
   profileUrl: string;
   name: string;
-  categoryLabel?: string;
+  services?: string[];
   avatarUrl?: string | null;
   isVerified?: boolean;
   ratingAvg?: number;
@@ -63,7 +63,7 @@ function fitText(ctx: CanvasRenderingContext2D, text: string, maxWidth: number, 
   return size;
 }
 
-export function ShareKit({ open, onClose, profileUrl, name, categoryLabel, avatarUrl, isVerified, ratingAvg = 0, reviewCount = 0 }: Props) {
+export function ShareKit({ open, onClose, profileUrl, name, services = [], avatarUrl, isVerified, ratingAvg = 0, reviewCount = 0 }: Props) {
   const t = useTranslations("shareKit");
   const [view, setView] = useState<View>("menu");
   const [copied, setCopied] = useState<"link" | "message" | null>(null);
@@ -91,10 +91,14 @@ export function ShareKit({ open, onClose, profileUrl, name, categoryLabel, avata
       ctx.save(); roundRect(ctx, 60, 60, CARD_W - 120, 200, 48); ctx.clip();
       ctx.fillStyle = "#162543"; ctx.fillRect(60, 60, CARD_W - 120, 200); ctx.restore();
       ctx.font = "800 64px Inter, -apple-system, \"Segoe UI\", Roboto, sans-serif"; ctx.textBaseline = "middle"; ctx.textAlign = "left";
+      const marca = await loadImage("/logo-mark-dark.png");
+      const marcaW = marca ? 76 : 0;
       const wContrata = ctx.measureText("Contrata").width; const wCR = ctx.measureText("CR").width;
-      const x0 = (CARD_W - wContrata - wCR) / 2;
-      ctx.fillStyle = "#ffffff"; ctx.fillText("Contrata", x0, 128);
-      ctx.fillStyle = "#009FD9"; ctx.fillText("CR", x0 + wContrata, 128);
+      const x0 = (CARD_W - wContrata - wCR - (marca ? marcaW + 18 : 0)) / 2;
+      if (marca) ctx.drawImage(marca, x0, 128 - marcaW / 2, marcaW, marcaW);
+      const xTexto = x0 + (marca ? marcaW + 18 : 0);
+      ctx.fillStyle = "#ffffff"; ctx.fillText("Contrata", xTexto, 128);
+      ctx.fillStyle = "#009FD9"; ctx.fillText("CR", xTexto + wContrata, 128);
       // Foto centrada sobre el borde de la banda
       const cx = CARD_W / 2; const R = 120; const fotoCy = 260 + 100;
       ctx.save(); ctx.beginPath(); ctx.arc(cx, fotoCy, R + 14, 0, Math.PI * 2); ctx.fillStyle = "#ffffff"; ctx.fill();
@@ -121,7 +125,15 @@ export function ShareKit({ open, onClose, profileUrl, name, categoryLabel, avata
       ctx.textAlign = "left"; ctx.fillText(name, cx - (nameW + (sello ? selloW + 12 : 0)) / 2, y);
       if (sello) ctx.drawImage(sello, cx - (nameW + selloW + 12) / 2 + nameW + 12, y - size * 0.82, selloW, selloW);
       ctx.textAlign = "center";
-      if (categoryLabel) { y += 46; ctx.font = "600 34px Inter, -apple-system, sans-serif"; ctx.fillStyle = "#52627a"; ctx.fillText(categoryLabel, cx, y); }
+      if (services.length > 0) {
+        const visibles = services.slice(0, 2).join(" · ");
+        y += 46; ctx.font = "600 32px Inter, -apple-system, sans-serif"; ctx.fillStyle = "#52627a";
+        fitText(ctx, visibles, CARD_W - 160, 32, "600", 22); ctx.fillText(visibles, cx, y);
+        if (services.length > 2) {
+          y += 38; ctx.font = "600 26px Inter, -apple-system, sans-serif"; ctx.fillStyle = "#68778d";
+          ctx.fillText(t("moreServices", { count: services.length - 2 }), cx, y);
+        }
+      }
       if (reviewCount > 0) { y += 46; ctx.font = "700 32px Inter, -apple-system, sans-serif"; ctx.fillStyle = "#162543"; ctx.fillText(`★ ${ratingAvg.toFixed(1)} · ${reviewCount} ${reviewCount === 1 ? "reseña" : "reseñas"}`, cx, y); }
       // QR anclado al pie: el pie (texto + URL) se reserva primero, el QR va arriba.
       const pieTextY = CARD_H - 60 - 56;
@@ -146,7 +158,7 @@ export function ShareKit({ open, onClose, profileUrl, name, categoryLabel, avata
       }
     })();
     return () => { cancelled = true; };
-  }, [view, cardBlob, avatarUrl, categoryLabel, isVerified, name, profileUrl, ratingAvg, reviewCount, t]);
+  }, [view, cardBlob, avatarUrl, services, isVerified, name, profileUrl, ratingAvg, reviewCount, t]);
 
   async function copy(text: string, kind: "link" | "message") {
     try { await navigator.clipboard.writeText(text); setCopied(kind); window.setTimeout(() => setCopied(null), 1800); } catch { /* sin portapapeles */ }

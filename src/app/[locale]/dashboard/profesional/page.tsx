@@ -2071,9 +2071,9 @@ export default function DashboardPage() {
                   <ShareKit
                     open={shareKitOpen}
                     onClose={() => setShareKitOpen(false)}
-                    profileUrl={`${process.env.NEXT_PUBLIC_APP_URL || "https://contratacr.com"}/${locale}${publicProfileHref}`}
+                    profileUrl={`${process.env.NEXT_PUBLIC_APP_URL || "https://contratacr.com"}/@${pro?.slug ?? ""}`}
                     name={displayName}
-                    categoryLabel={pro?.category_id ? getCategoryLabel(pro.category_id, locale) : undefined}
+                    services={((pro?.professions && pro.professions.length > 0) ? pro.professions : (pro?.category_id ? [pro.category_id] : [])).map((id: string) => getCategoryLabel(id, locale)).filter(Boolean)}
                     avatarUrl={headerAvatar}
                     isVerified={pro?.verification_status === "verified"}
                     ratingAvg={Number(pro?.rating_avg ?? 0)}
