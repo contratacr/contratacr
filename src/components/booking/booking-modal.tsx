@@ -694,6 +694,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
 
   function resetAndClose() {
     const didBook = bookedRef.current;
+    if (didBook) window.dispatchEvent(new Event("ccr:availability-changed"));
     bookedRef.current = false;
     setStep("calendar");
     setSelectedDate("");
@@ -710,6 +711,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
   // at the top (newest first). Do not use resetAndClose here: that path refreshes the
   // current profile/search page, which can race the navigation and leave the user there.
   function goToMyRequest() {
+    if (bookedRef.current) window.dispatchEvent(new Event("ccr:availability-changed"));
     const params = new URLSearchParams({ tab: "sent_bookings" });
     if (createdBookingId) params.set("booking", createdBookingId);
     bookedRef.current = false;
@@ -815,7 +817,6 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
       bookedRef.current = true;
       clearPendingBookingIdentity();
       setStep("success");
-      window.dispatchEvent(new Event("ccr:availability-changed"));
     } finally {
       setSubmitting(false);
     }
@@ -1149,11 +1150,15 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                 <button
                   type="button"
                   onClick={pasoAtras}
-                  aria-label={puedeVolver ? t("back") : t("close")}
+                  aria-label={step === "success" || !puedeVolver ? t("close") : t("back")}
                   className="absolute left-4 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-lg text-[#162543] transition-colors hover:bg-[#f3f4f6] lg:right-4 lg:left-auto"
                 >
-                  <ArrowLeft className="h-5 w-5 lg:hidden" />
-                  <X className="hidden h-5 w-5 lg:block" />
+                  {step === "success"
+                    ? <X className="h-5 w-5" />
+                    : <>
+                        <ArrowLeft className="h-5 w-5 lg:hidden" />
+                        <X className="hidden h-5 w-5 lg:block" />
+                      </>}
                 </button>
               </div>
             </div>
