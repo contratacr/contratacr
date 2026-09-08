@@ -114,12 +114,15 @@ export function PanelFilterEmpty({
   className?: string;
 }) {
   return (
-    <div className={cn("ccr-empty-state flex flex-col items-center justify-center rounded-2xl border border-dashed border-[#dbe4ee] bg-[#fafcfe] px-5 py-9 text-center", className)}>
-      <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-full border border-[#e3edf5] bg-white text-[#9ec9de]">
-        <Icon className="h-[18px] w-[18px]" />
-      </div>
-      <p className="text-[15px] font-bold leading-snug text-[#162543]">{title}</p>
-      {description && <p className="mt-1.5 max-w-xs text-[13px] leading-relaxed text-[#6b7280]">{description}</p>}
+    <div className={cn("ccr-empty-state flex flex-col items-center justify-center px-5 py-10 text-center", className)}>
+      {/* Versión compacta del mismo vacío: mismo círculo, misma tipografía. La
+          caja punteada sobraba —el vacío ya se entiende— y hacía que esta
+          pantalla no se pareciera a las demás. */}
+      <span className="grid h-12 w-12 place-items-center rounded-full bg-[#eaf7fc] text-[#009fd9]">
+        <Icon className="h-5 w-5" strokeWidth={2} />
+      </span>
+      <p className="mt-3.5 text-base font-extrabold text-[#162543]">{title}</p>
+      {description && <p className="mt-1.5 max-w-xs text-[13px] leading-6 text-[#68778d]">{description}</p>}
       {action && (
         <div className="mt-4 flex w-full max-w-[15rem] justify-center [&>a]:h-11 [&>a]:w-full [&>button]:h-11 [&>button]:w-full">
           {action}
@@ -143,10 +146,15 @@ export function PanelEmptyState({
   className?: string;
 }) {
   return (
-    <div className={cn("ccr-empty-state flex min-h-[20rem] flex-col items-center justify-center px-4 py-16 text-center sm:min-h-[22rem]", className)}>
-      <Icon className="mx-auto mb-3 h-12 w-12 text-[#e5e7eb]" />
-      <p className="font-semibold text-[#374151]">{title}</p>
-      {description && <p className="mt-1 max-w-sm text-sm text-[#6b7280]">{description}</p>}
+    <div className={cn("ccr-empty-state flex min-h-[20rem] flex-col items-center justify-center px-7 py-12 text-center sm:min-h-[22rem]", className)}>
+      {/* El mismo lenguaje que /empleos y /ofertas: el icono dentro de un
+          círculo turquesa claro, título marino y una línea de apoyo. El icono
+          gris suelto de antes casi no se veía y el título se leía apagado. */}
+      <span className="grid h-14 w-14 place-items-center rounded-full bg-[#eaf7fc] text-[#009fd9]">
+        <Icon className="h-6 w-6" strokeWidth={2} />
+      </span>
+      <h2 className="mt-4 text-lg font-extrabold text-[#162543]">{title}</h2>
+      {description && <p className="mt-1.5 max-w-sm text-sm leading-6 text-[#68778d]">{description}</p>}
       {/* En un estado vacío la acción ES la pantalla: ancha, centrada y con
           altura cómoda. Con lista, en cambio, el botón de crear va compacto
           arriba para no competir con el contenido. */}

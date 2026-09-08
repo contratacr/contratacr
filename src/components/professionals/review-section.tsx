@@ -149,7 +149,7 @@ export function ReviewSection({
             <span className="grid h-12 w-12 place-items-center rounded-full bg-[#fff6ec] text-[#ff9b32]">
               <Star className="h-5 w-5" />
             </span>
-            <p className="mt-3 text-sm font-semibold text-[#374151]">{t("noReviews")}</p>
+            <p className="mt-3.5 text-base font-extrabold text-[#162543]">{t("noReviews")}</p>
           </div>
         )}
       </div>

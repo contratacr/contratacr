@@ -394,7 +394,7 @@ export function FollowNetworkTab({ onBack, initialView, title }: { onBack?: () =
               <span className="grid h-12 w-12 place-items-center rounded-full bg-[#eaf7fc] text-[#009fd9]">
                 <UsersRound className="h-5 w-5" strokeWidth={2} />
               </span>
-              <p className="mt-3 text-sm font-semibold text-[#374151]">
+              <p className="mt-3.5 text-base font-extrabold text-[#162543]">
                 {query ? t("noResults") : view === "following" ? t("emptyFollowing") : t("emptyFollowers")}
               </p>
             </div>

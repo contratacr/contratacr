@@ -272,11 +272,13 @@ export function SavedProfessionalsTab() {
         {showOffers && offers.map((item) => <SavedGenericCard key={item.id} item={item} onRemove={handleRemoveItem} />)}
         {showJobs && jobs.map((item) => <SavedGenericCard key={item.id} item={item} onRemove={handleRemoveItem} />)}
         {selectedCount === 0 && (
-          <div className="space-y-3 px-4 py-8 text-center">
-            <Bookmark className="mx-auto h-7 w-7 text-[#009FD9]" aria-hidden="true" />
-            <p className="text-sm font-semibold text-[#6b7280]">{selectedEmptyLabel}</p>
+          <div className="flex flex-col items-center px-4 py-10 text-center">
+            <span className="grid h-12 w-12 place-items-center rounded-full bg-[#eaf7fc] text-[#009fd9]">
+              <Bookmark className="h-5 w-5" strokeWidth={2} aria-hidden="true" />
+            </span>
+            <p className="mt-3.5 text-base font-extrabold text-[#162543]">{selectedEmptyLabel}</p>
             {filter === "professionals" && (
-              <Button asChild><Link href="/buscar">{t("searchPros")}</Link></Button>
+              <Button asChild className="mt-5"><Link href="/buscar">{t("searchPros")}</Link></Button>
             )}
           </div>
         )}
