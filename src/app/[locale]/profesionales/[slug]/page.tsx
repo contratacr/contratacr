@@ -670,27 +670,31 @@ export default function ProfilePage() {
                   )}
                 </div>
               )}
-              <div className="mt-4 flex items-center justify-end gap-4">
-              <SaveButton
-                pro={savedPro}
-                isOwn={isOwn}
-                withLabel
-                className="h-auto w-auto border-0 bg-transparent p-0 text-[13px] font-bold text-[#162543] underline decoration-[#c0cad5] underline-offset-4 hover:bg-transparent hover:text-[#0089bb]"
-              />
-              <button
-                type="button"
-                onClick={shareProfile}
-                aria-label={linkCopiado ? t("linkCopied") : t("shareProfile")}
-                title={linkCopiado ? t("linkCopied") : t("shareProfile")}
-                className={cn(
-                  "text-[13px] font-bold underline decoration-[#c0cad5] underline-offset-4 transition-colors",
-                  linkCopiado ? "text-[#15803d]" : "text-[#162543] hover:text-[#0089bb]",
-                )}
-              >
-                {linkCopiado ? t("linkCopied") : locale === "en" ? "Share" : "Compartir"}
-                <span className="sr-only" aria-live="polite">{linkCopiado ? t("linkCopied") : ""}</span>
-              </button>
-            </div>
+              {/* Mismo botón secundario del app (píldora blanca de borde turquesa,
+                  sin ícono) que "Llamar": guardar y compartir son acciones, no
+                  enlaces sueltos. */}
+              <div className="mt-4 grid grid-cols-2 gap-2">
+                <SaveButton
+                  pro={savedPro}
+                  isOwn={isOwn}
+                  withLabel
+                  className="h-11 w-full rounded-full px-4 py-0 text-[13px]"
+                />
+                <button
+                  type="button"
+                  onClick={shareProfile}
+                  aria-label={linkCopiado ? t("linkCopied") : t("shareProfile")}
+                  title={linkCopiado ? t("linkCopied") : t("shareProfile")}
+                  className={cn(
+                    "inline-flex h-11 w-full items-center justify-center gap-2 rounded-full border-[1.5px] bg-white px-4 text-[13px] font-bold transition-colors",
+                    linkCopiado ? "border-[#b8e7cf] bg-[#f2fbf6] text-[#15803d]" : "border-[#009FD9] text-[#009FD9] hover:bg-[#EBF5FB]",
+                  )}
+                >
+                  {linkCopiado && <Check className="h-4 w-4 shrink-0" />}
+                  <span>{linkCopiado ? t("linkCopied") : locale === "en" ? "Share" : "Compartir"}</span>
+                  <span className="sr-only" aria-live="polite">{linkCopiado ? t("linkCopied") : ""}</span>
+                </button>
+              </div>
           </div>
 
           <div className="flex flex-col lg:flex-row gap-6">
