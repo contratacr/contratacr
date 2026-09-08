@@ -120,11 +120,11 @@ const TABS_WITH_SUBTITLE = new Set<Tab>(["proposals", "sent_bookings", "sent_pro
 // only in "use" mode; "profile" + the shared tabs are valid in both, so the mode
 // for those is taken from the URL (?mode=) or defaults to the account's capability.
 const OFFER_ONLY = new Set<Tab>(["services", "photos", "availability", "bookings", "proposals", "verificacion", "suscripcion", "jobs", "offers", "completion"]);
-const USE_ONLY = new Set<Tab>(["sent_bookings", "sent_projects", "applications", "saved", "connections"]);
+const USE_ONLY = new Set<Tab>(["sent_bookings", "sent_projects", "applications", "connections"]);
 
 // Sidebar order per mode (+ a shared block appended below).
 const OFFER_TABS: Tab[] = ([
-  "bookings", "proposals", "jobs", "offers", "photos", "availability", "services", "soporte", "profile", "guides",
+  "bookings", "proposals", "jobs", "offers", "photos", "availability", "services", "saved", "soporte", "profile", "guides",
   ...(PAYMENTS_ENABLED ? (["suscripcion"] as Tab[]) : []),
 ] as Tab[]).filter((tab) => EMPLEOS_VISIBLE || tab !== "jobs");
 const USE_TABS: Tab[] = (["sent_bookings", "sent_projects", "applications", "connections", "saved", "soporte", "profile", "guides"] as Tab[])
