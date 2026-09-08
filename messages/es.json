@@ -638,6 +638,7 @@
     "email": "Contactar por correo",
     "moreOptions": "Más opciones",
     "shareProfile": "Compartir perfil",
+    "share": "Compartir",
     "thisIsYourProfile": "Este es tu perfil",
     "reportProfile": "Reportar perfil",
     "tabs": {
@@ -4024,8 +4025,6 @@
   "shareKit": {
     "title": "Compartir mi perfil",
     "subtitle": "Los clientes que ya te conocen son los que más te recomiendan.",
-    "linkTitle": "Copiar enlace",
-    "linkBody": "Pégalo en WhatsApp, Instagram o donde quieras.",
     "cardTitle": "Tarjeta con QR",
     "cardBody": "Una imagen para tu estado de WhatsApp, tus redes o para imprimir.",
     "reviewsTitle": "Pedir una reseña",
@@ -4044,7 +4043,24 @@
     "messageCopied": "Mensaje copiado",
     "back": "Volver",
     "close": "Cerrar",
-    "moreServices": "{count, plural, one {y # servicio más} other {y # servicios más}}"
+    "moreServices": "{count, plural, one {y # servicio más} other {y # servicios más}}",
+    "linkLabel": "Tu enlace",
+    "shareTitle": "Compartir en otra app",
+    "shareBody": "WhatsApp, Instagram, Facebook o donde quieras."
+  },
+  "shareProfile": {
+    "title": "Compartir este perfil",
+    "subtitle": "Mándaselo a quien lo pueda necesitar.",
+    "linkLabel": "Enlace del perfil",
+    "copy": "Copiar",
+    "copied": "Copiado",
+    "whatsapp": "WhatsApp",
+    "facebook": "Facebook",
+    "email": "Correo",
+    "more": "Más opciones",
+    "message": "Mirá el perfil de {name} en ContrataCR:",
+    "emailSubject": "{name} en ContrataCR",
+    "close": "Cerrar"
   },
   "quotes": {
     "blockTitle": "Cotización",

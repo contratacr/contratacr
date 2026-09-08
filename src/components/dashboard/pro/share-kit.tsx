@@ -3,9 +3,11 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import QRCode from "qrcode";
-import { Link2, QrCode, Star, ChevronRight, ArrowLeft, Check } from "lucide-react";
+import { Share2, QrCode, Star, ChevronRight, ArrowLeft, Check } from "lucide-react";
 import { Modal } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
+import { ShareLinkPanel } from "@/components/ui/share-link-panel";
+import { useNativeShare } from "@/hooks/use-native-share";
 import { getInitials } from "@/lib/utils";
 
 /**
@@ -70,6 +72,9 @@ export function ShareKit({ open, onClose, profileUrl, name, services = [], avata
   const [cardBlob, setCardBlob] = useState<Blob | null>(null);
   const [cardPreview, setCardPreview] = useState<string | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  // La hoja nativa de compartir solo existe en el teléfono; en computadora la
+  // fila sobra porque el enlace ya está arriba con su botón de copiar.
+  const puedeCompartir = useNativeShare();
 
 
   // La tarjeta se dibuja en un canvas al abrir esa vista: foto, nombre, oficio,
@@ -88,19 +93,21 @@ export function ShareKit({ open, onClose, profileUrl, name, services = [], avata
       // Tarjeta blanca con banda marino arriba: el nombre de la marca en blanco
       // y "CR" en turquesa, como el logotipo.
       ctx.fillStyle = "#ffffff"; roundRect(ctx, 60, 60, CARD_W - 120, CARD_H - 120, 48); ctx.fill();
-      ctx.save(); roundRect(ctx, 60, 60, CARD_W - 120, 200, 48); ctx.clip();
-      ctx.fillStyle = "#162543"; ctx.fillRect(60, 60, CARD_W - 120, 200); ctx.restore();
+      const bandaH = 180; const bandaY2 = 60 + bandaH; const bandaCy = 60 + bandaH / 2;
+      ctx.save(); roundRect(ctx, 60, 60, CARD_W - 120, bandaH, 48); ctx.clip();
+      ctx.fillStyle = "#162543"; ctx.fillRect(60, 60, CARD_W - 120, bandaH); ctx.restore();
       ctx.font = "800 64px Inter, -apple-system, \"Segoe UI\", Roboto, sans-serif"; ctx.textBaseline = "middle"; ctx.textAlign = "left";
       const marca = await loadImage("/logo-mark-dark.png");
-      const marcaW = marca ? 76 : 0;
+      // La marca a la altura del logotipo: más chica se veía como un adorno.
+      const marcaW = marca ? 100 : 0;
       const wContrata = ctx.measureText("Contrata").width; const wCR = ctx.measureText("CR").width;
-      const x0 = (CARD_W - wContrata - wCR - (marca ? marcaW + 18 : 0)) / 2;
-      if (marca) ctx.drawImage(marca, x0, 128 - marcaW / 2, marcaW, marcaW);
-      const xTexto = x0 + (marca ? marcaW + 18 : 0);
-      ctx.fillStyle = "#ffffff"; ctx.fillText("Contrata", xTexto, 128);
-      ctx.fillStyle = "#009FD9"; ctx.fillText("CR", xTexto + wContrata, 128);
-      // Foto centrada sobre el borde de la banda
-      const cx = CARD_W / 2; const R = 120; const fotoCy = 260 + 100;
+      const x0 = (CARD_W - wContrata - wCR - (marca ? marcaW + 20 : 0)) / 2;
+      if (marca) ctx.drawImage(marca, x0, bandaCy - marcaW / 2, marcaW, marcaW);
+      const xTexto = x0 + (marca ? marcaW + 20 : 0);
+      ctx.fillStyle = "#ffffff"; ctx.fillText("Contrata", xTexto, bandaCy);
+      ctx.fillStyle = "#009FD9"; ctx.fillText("CR", xTexto + wContrata, bandaCy);
+      // La foto va completa debajo de la banda: pisándola se veía como un choque.
+      const cx = CARD_W / 2; const R = 112; const fotoCy = bandaY2 + 36 + R + 14;
       ctx.save(); ctx.beginPath(); ctx.arc(cx, fotoCy, R + 14, 0, Math.PI * 2); ctx.fillStyle = "#ffffff"; ctx.fill();
       ctx.beginPath(); ctx.arc(cx, fotoCy, R + 6, 0, Math.PI * 2); ctx.fillStyle = "#cfeaf6"; ctx.fill(); ctx.restore();
       const avatar = avatarUrl ? await loadImage(`/api/media/canvas?url=${encodeURIComponent(avatarUrl)}`) : null;
@@ -115,7 +122,7 @@ export function ShareKit({ open, onClose, profileUrl, name, services = [], avata
       }
       ctx.restore();
       // Nombre, verificado, oficio, calificación
-      let y = fotoCy + R + 40;
+      let y = fotoCy + R + 34;
       ctx.textAlign = "center"; ctx.textBaseline = "alphabetic"; ctx.fillStyle = "#162543";
       const sello = isVerified ? await loadImage(SELLO_SVG) : null;
       const selloW = sello ? 52 : 0;
@@ -135,10 +142,12 @@ export function ShareKit({ open, onClose, profileUrl, name, services = [], avata
         }
       }
       if (reviewCount > 0) { y += 46; ctx.font = "700 32px Inter, -apple-system, sans-serif"; ctx.fillStyle = "#162543"; ctx.fillText(`★ ${ratingAvg.toFixed(1)} · ${reviewCount} ${reviewCount === 1 ? "reseña" : "reseñas"}`, cx, y); }
-      // QR anclado al pie: el pie (texto + URL) se reserva primero, el QR va arriba.
-      const pieTextY = CARD_H - 60 - 56;
-      const qrSize = Math.min(420, pieTextY - 40 - (y + 40) - 24);
-      const qrY = pieTextY - 40 - qrSize - 16;
+      // QR anclado al pie: primero se reserva el pie (texto + enlace, con aire
+      // hasta el borde de la tarjeta) y el QR ocupa lo que queda arriba.
+      const urlY = CARD_H - 60 - 54;
+      const pieTextY = urlY - 46;
+      const qrSize = Math.min(420, pieTextY - 44 - 16 - (y + 44 + 16));
+      const qrY = pieTextY - 44 - 16 - qrSize;
       const qrData = await QRCode.toDataURL(profileUrl, { margin: 1, width: qrSize, color: { dark: "#162543", light: "#ffffff" }, errorCorrectionLevel: "M" });
       const qrImg = await loadImage(qrData);
       if (qrImg) {
@@ -149,7 +158,7 @@ export function ShareKit({ open, onClose, profileUrl, name, services = [], avata
       ctx.font = "700 30px Inter, -apple-system, sans-serif"; ctx.fillStyle = "#162543"; ctx.fillText(t("cardFooter"), cx, pieTextY);
       // El enlace corto escrito, para quien prefiere teclearlo antes que escanear.
       ctx.font = "600 26px Inter, -apple-system, sans-serif"; ctx.fillStyle = "#68778d";
-      ctx.fillText(profileUrl.replace(/^https?:\/\//, "").replace(/\/$/, ""), cx, CARD_H - 62);
+      ctx.fillText(profileUrl.replace(/^https?:\/\//, "").replace(/\/$/, ""), cx, urlY);
       try {
         canvas.toBlob((blob) => {
           if (cancelled || !blob) return;
@@ -191,7 +200,7 @@ export function ShareKit({ open, onClose, profileUrl, name, services = [], avata
   const reviewsMessage = t("reviewsMessage", { url: reviewsUrl });
   const waHref = `https://wa.me/?text=${encodeURIComponent(reviewsMessage)}`;
 
-  const option = (Icon: typeof Link2, title: string, body: string, onClick: () => void) => (
+  const option = (Icon: typeof QrCode, title: string, body: string, onClick: () => void) => (
     <button type="button" onClick={onClick} className="flex w-full items-center gap-3.5 rounded-2xl border border-[#e5eaf0] bg-white px-4 py-3.5 text-left transition-colors hover:border-[#bfe3f5] hover:bg-[#f8fcfe]">
       <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-[#eaf7fc] text-[#009FD9]"><Icon className="h-5 w-5" /></span>
       <span className="min-w-0 flex-1">
@@ -208,8 +217,10 @@ export function ShareKit({ open, onClose, profileUrl, name, services = [], avata
   return (
     <Modal open={open} onClose={cerrar} title={t("title")} subtitle={view === "menu" ? t("subtitle") : undefined} size="sm" mobilePresentation="center" closeLabel={t("close")}>
       {view === "menu" && (
-        <div className="flex flex-col gap-2.5">
-          {option(copied === "link" ? Check : Link2, copied === "link" ? t("copied") : t("linkTitle"), t("linkBody"), () => { void shareLink(); })}
+        <div className="flex flex-col gap-3">
+          {/* El enlace a la vista: es corto y enseñarlo es la mitad de la gracia. */}
+          <ShareLinkPanel url={profileUrl} label={t("linkLabel")} copyLabel={t("copy")} copiedLabel={t("copied")} />
+          {puedeCompartir && option(Share2, t("shareTitle"), t("shareBody"), () => { void shareLink(); })}
           {option(QrCode, t("cardTitle"), t("cardBody"), () => setView("card"))}
           {option(Star, t("reviewsTitle"), t("reviewsBody"), () => setView("reviews"))}
         </div>
@@ -218,9 +229,9 @@ export function ShareKit({ open, onClose, profileUrl, name, services = [], avata
         <div className="flex flex-col items-center gap-3">
           {cardPreview ? (
             // eslint-disable-next-line @next/next/no-img-element -- imagen generada en el navegador
-            <img src={cardPreview} alt="" className="w-full max-w-[280px] rounded-2xl border border-[#e5eaf0] shadow-sm" />
+            <img src={cardPreview} alt="" className="w-full max-w-[320px] rounded-2xl border border-[#e5eaf0] shadow-[0_10px_30px_-12px_rgba(22,37,67,0.35)]" />
           ) : (
-            <div className="grid aspect-[4/5] w-full max-w-[280px] animate-pulse place-items-center rounded-2xl bg-[#eef2f6] text-[13px] font-semibold text-[#68778d]">{t("preparing")}</div>
+            <div className="grid aspect-[4/5] w-full max-w-[320px] animate-pulse place-items-center rounded-2xl bg-[#eef2f6] text-[13px] font-semibold text-[#68778d]">{t("preparing")}</div>
           )}
           <Button type="button" className="w-full" disabled={!cardBlob} onClick={() => void shareCard()}>{t("shareImage")}</Button>
           <Button type="button" variant="secondary" className="w-full" disabled={!cardPreview} onClick={downloadCard}>{t("download")}</Button>

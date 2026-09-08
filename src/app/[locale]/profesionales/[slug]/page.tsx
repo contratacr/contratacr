@@ -1,12 +1,13 @@
 "use client";
 
+import { ShareProfileModal } from "@/components/professionals/share-profile-modal";
 import { enlacePerfil } from "@/lib/profile-url";
 import { useState, useEffect, useCallback, useRef, type ReactNode } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { useParams, useSearchParams } from "next/navigation";
 import {
   MapPin, Shield, ArrowLeft, Star, Briefcase, Banknote, BadgeCheck, Languages,
-  Share2, Check, Flag, Award, SearchX, Globe, BadgePercent, Users,
+  Flag, Award, SearchX, Globe, BadgePercent, Users,
 } from "lucide-react";
 import { Modal } from "@/components/ui/modal";
 import { VerifiedSeal } from "@/components/ui/verified-seal";
@@ -172,7 +173,14 @@ export default function ProfilePage() {
     const seleccionada = document.querySelector<HTMLElement>('[data-profile-tabs] [aria-selected="true"]');
     const carril = seleccionada?.parentElement;
     if (!seleccionada || !carril) return;
-    carril.scrollLeft = Math.max(0, seleccionada.offsetLeft - (carril.clientWidth - seleccionada.clientWidth) / 2);
+    // Solo se mueve la tira si la pestaña activa no se ve entera. Antes usaba
+    // offsetLeft, que se mide contra la tarjeta y no contra la tira: la primera
+    // pestaña quedaba cortada por la izquierda sin necesidad.
+    const tab = seleccionada.getBoundingClientRect();
+    const tira = carril.getBoundingClientRect();
+    if (tab.left >= tira.left - 1 && tab.right <= tira.right + 1) return;
+    const izquierda = tab.left - tira.left + carril.scrollLeft;
+    carril.scrollLeft = Math.max(0, izquierda - (carril.clientWidth - tab.width) / 2);
   }, [activeTab, cantidadPestanas]);
 
   // El destino de "volver" depende de la URL, y la primera pintura ocurre en el
@@ -198,7 +206,7 @@ export default function ProfilePage() {
   const [reportOpen, setReportOpen] = useState(false);
   // Aviso de "enlace copiado" del botón Compartir. Vive aquí, con el resto de
   // los hooks: debajo de los `return` de carga React contaba un hook de más.
-  const [linkCopiado, setLinkCopiado] = useState(false);
+  const [compartirAbierto, setCompartirAbierto] = useState(false);
   const nombreEnBarra = professional
     ? getProfessionalDisplayName(professional.fullName, professional.businessName).primaryMobile
     : "";
@@ -507,25 +515,12 @@ export default function ProfilePage() {
     router.push(`/profesionales/${professional.slug}/reservar?${params.toString()}`);
   }
 
-  async function shareProfile() {
+  // Compartir abre siempre la misma hoja: el enlace a la vista y WhatsApp,
+  // Facebook y correo. Antes en computadora solo copiaba, sin decir a dónde iba.
+  function shareProfile() {
     if (!professional) return;
     trackInteraction({ type: "profile_share", professionalId: professional.id, source: "profile", locale });
-    const url = enlacePerfil(professional.slug, process.env.NEXT_PUBLIC_APP_URL || window.location.origin);
-    const text = professional.businessName?.trim()
-      ? `${professional.businessName.trim()} en ContrataCR`
-      : `${proDisplayName(professional.fullName)} en ContrataCR`;
-    // En el teléfono abre la hoja nativa de compartir (WhatsApp, Mensajes, copiar…);
-    // cancelarla no es un error. Sin hoja (escritorio), copia el enlace y lo dice:
-    // antes el botón no daba ninguna señal de que algo había pasado.
-    if (navigator.share) {
-      try { await navigator.share({ title: text, text, url }); } catch { /* cancelado */ }
-      return;
-    }
-    try {
-      await navigator.clipboard?.writeText(url);
-      setLinkCopiado(true);
-      window.setTimeout(() => setLinkCopiado(false), 2000);
-    } catch { /* sin portapapeles: no hay nada mejor que hacer */ }
+    setCompartirAbierto(true);
   }
 
   // Favorites: the SAME system as the /buscar cards. Keyed on `professional.id`
@@ -575,7 +570,7 @@ export default function ProfilePage() {
       <Navbar />
 
       <main className="flex-1 py-8 [.ccr-native-app_&]:!pt-0 [.ccr-native-app_&]:!pb-[calc(var(--ccr-native-bottom-nav-total,64px)+1.5rem)]">
-        <div className="mx-auto max-w-4xl px-4 pt-0 sm:px-6 lg:px-8 [.ccr-native-app_&]:pt-4">
+        <div className="mx-auto max-w-5xl px-4 pt-0 sm:px-6 lg:px-8 [.ccr-native-app_&]:pt-4">
 
           {/* Preview mode → a clear way back to the panel. Otherwise, back to search. */}
           {!previewMode && <RecordRecentVisit surface="profesionales" visita={visitaProfesional} />}
@@ -698,16 +693,11 @@ export default function ProfilePage() {
                 <button
                   type="button"
                   onClick={shareProfile}
-                  aria-label={linkCopiado ? t("linkCopied") : t("shareProfile")}
-                  title={linkCopiado ? t("linkCopied") : t("shareProfile")}
-                  className={cn(
-                    "inline-flex h-11 w-full items-center justify-center gap-2 rounded-full border bg-white px-4 text-[13px] font-bold transition-colors sm:w-44",
-                    linkCopiado ? "border-[#b8e7cf] bg-[#f2fbf6] text-[#15803d]" : "border-[#d7e1ea] text-[#162543] hover:border-[#b9c8d6] hover:bg-[#f6f9fb]",
-                  )}
+                  aria-label={t("shareProfile")}
+                  title={t("shareProfile")}
+                  className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-full border border-[#d7e1ea] bg-white px-4 text-[13px] font-bold text-[#162543] transition-colors hover:border-[#b9c8d6] hover:bg-[#f6f9fb] sm:w-44"
                 >
-                  {linkCopiado && <Check className="h-4 w-4 shrink-0" />}
-                  <span>{linkCopiado ? t("linkCopied") : locale === "en" ? "Share" : "Compartir"}</span>
-                  <span className="sr-only" aria-live="polite">{linkCopiado ? t("linkCopied") : ""}</span>
+                  <span>{t("share")}</span>
                 </button>
               </div>
           </div>
@@ -1280,6 +1270,12 @@ export default function ProfilePage() {
       {/* Room for the pinned action bar on phones, so the footer stays reachable. */}
       {activeTab === "disponibilidad" && <div aria-hidden className="h-20 lg:hidden" />}
       <SelfActionModal open={!!selfMsg} onClose={() => setSelfMsg(null)} message={selfMsg ?? ""} />
+      <ShareProfileModal
+        open={compartirAbierto}
+        onClose={() => setCompartirAbierto(false)}
+        url={enlacePerfil(professional.slug, process.env.NEXT_PUBLIC_APP_URL || (typeof window === "undefined" ? "" : window.location.origin))}
+        name={professional.businessName?.trim() || proDisplayName(professional.fullName)}
+      />
       {activeTab === "disponibilidad" && <ProfileStickyActions
         professionalId={professional.id}
         professionalName={professional.fullName}

@@ -637,6 +637,7 @@
     "email": "Contact by email",
     "moreOptions": "More options",
     "shareProfile": "Share profile",
+    "share": "Share",
     "thisIsYourProfile": "This is your profile",
     "reportProfile": "Report profile",
     "tabs": {
@@ -4024,8 +4025,6 @@
   "shareKit": {
     "title": "Share my profile",
     "subtitle": "The clients who already know you are the ones who recommend you most.",
-    "linkTitle": "Copy link",
-    "linkBody": "Paste it on WhatsApp, Instagram or anywhere.",
     "cardTitle": "QR card",
     "cardBody": "An image for your WhatsApp status, your social media or to print.",
     "reviewsTitle": "Ask for a review",
@@ -4044,7 +4043,24 @@
     "messageCopied": "Message copied",
     "back": "Back",
     "close": "Close",
-    "moreServices": "{count, plural, one {and # more service} other {and # more services}}"
+    "moreServices": "{count, plural, one {and # more service} other {and # more services}}",
+    "linkLabel": "Your link",
+    "shareTitle": "Share in another app",
+    "shareBody": "WhatsApp, Instagram, Facebook or wherever you want."
+  },
+  "shareProfile": {
+    "title": "Share this profile",
+    "subtitle": "Send it to anyone who might need it.",
+    "linkLabel": "Profile link",
+    "copy": "Copy",
+    "copied": "Copied",
+    "whatsapp": "WhatsApp",
+    "facebook": "Facebook",
+    "email": "Email",
+    "more": "More options",
+    "message": "Check out {name} on ContrataCR:",
+    "emailSubject": "{name} on ContrataCR",
+    "close": "Close"
   },
   "quotes": {
     "blockTitle": "Quote",
