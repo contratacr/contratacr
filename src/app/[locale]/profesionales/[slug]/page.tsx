@@ -610,7 +610,7 @@ export default function ProfilePage() {
           {/* ── HEADER CARD ── identity on the left, a right-aligned stats strip. Mirrors
               the new /buscar card (circular avatar, solid-blue "Verificado" pill). No
               "destacado" ribbon. */}
-          <div className="relative mb-6 rounded-2xl border border-[#e5e7eb] bg-white p-4 shadow-sm sm:p-6">
+          <div className="relative mb-6 rounded-2xl border border-[#e5e7eb] bg-white p-4 shadow-sm sm:grid sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:gap-x-8 sm:p-6">
               <div className="flex min-w-0 flex-col items-center text-center sm:flex-row sm:items-center sm:gap-4 sm:text-left">
                 <ImagePreviewDialog
                   src={professional.avatarUrl}
@@ -649,7 +649,7 @@ export default function ProfilePage() {
                   tienen dato, así un perfil nuevo no muestra casillas vacías. */}
               {(professional.reviewCount > 0 || expYears > 0 || casosCount > 0) && (
                 <div className={cn(
-                  "mt-4 grid",
+                  "mt-4 grid sm:col-start-1 sm:flex sm:justify-start sm:gap-10",
                   ((professional.reviewCount > 0 ? 1 : 0) + (expYears > 0 ? 1 : 0) + (casosCount > 0 ? 1 : 0)) === 3
                     ? "grid-cols-3"
                     : ((professional.reviewCount > 0 ? 1 : 0) + (expYears > 0 ? 1 : 0) + (casosCount > 0 ? 1 : 0)) === 2
@@ -657,7 +657,7 @@ export default function ProfilePage() {
                       : "grid-cols-1",
                 )}>
                   {professional.reviewCount > 0 && (
-                    <button type="button" onClick={() => setActiveTab("resenas")} className="flex min-w-0 flex-col items-center px-2 text-center">
+                    <button type="button" onClick={() => setActiveTab("resenas")} className="flex min-w-0 flex-col items-center px-2 text-center sm:items-start sm:px-0 sm:text-left">
                       <span className="flex items-center justify-center gap-1">
                         <Star className="h-4 w-4 shrink-0 fill-[#ff9b32] text-[#ff9b32]" />
                         <span className="text-[15px] font-bold text-[#162543]">{professional.ratingAvg.toFixed(1)}</span>
@@ -666,7 +666,7 @@ export default function ProfilePage() {
                     </button>
                   )}
                   {expYears > 0 && (
-                    <div className="flex min-w-0 flex-col items-center px-2 text-center">
+                    <div className="flex min-w-0 flex-col items-center px-2 text-center sm:items-start sm:px-0 sm:text-left">
                       <span className="flex items-center justify-center gap-1">
                         <Briefcase className="h-4 w-4 shrink-0 text-[#009FD9]" />
                         <span className="text-[15px] font-bold text-[#162543]">{expYears}</span>
@@ -675,7 +675,7 @@ export default function ProfilePage() {
                     </div>
                   )}
                   {casosCount > 0 && (
-                    <button type="button" onClick={() => setActiveTab("casos")} className="flex min-w-0 flex-col items-center px-2 text-center">
+                    <button type="button" onClick={() => setActiveTab("casos")} className="flex min-w-0 flex-col items-center px-2 text-center sm:items-start sm:px-0 sm:text-left">
                       <span className="flex items-center justify-center gap-1">
                         <Award className="h-4 w-4 shrink-0 text-[#009FD9]" />
                         <span className="text-[15px] font-bold text-[#162543]">{casosCount}</span>
@@ -688,7 +688,7 @@ export default function ProfilePage() {
               {/* Mismo botón secundario del app (píldora blanca de borde turquesa,
                   sin ícono) que "Llamar": guardar y compartir son acciones, no
                   enlaces sueltos. */}
-              <div className="mt-4 grid grid-cols-2 gap-2 sm:flex sm:justify-start">
+              <div className="mt-4 grid grid-cols-2 gap-2 sm:col-start-2 sm:row-start-1 sm:row-span-2 sm:mt-0 sm:flex sm:flex-col sm:justify-center">
                 <SaveButton
                   pro={savedPro}
                   isOwn={isOwn}

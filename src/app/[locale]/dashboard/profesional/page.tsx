@@ -9,10 +9,9 @@ import { useSearchParams } from "next/navigation";
 import {
   User, Award, CalendarCheck, CalendarClock, CalendarDays, Wrench,
   ShieldCheck, Bell, Handshake, ClipboardList, Bookmark, Settings, Headset, CreditCard,
-  ArrowLeft, ArrowRight, ChevronDown, ChevronRight, Sparkles, Plus, AlertCircle, X, MessageSquareMore, Home, LogOut, ExternalLink, Users, BookOpen, Check, CheckCircle2, FileText, Search, Camera, Eye, Trash2, Loader2,
+  ArrowLeft, ArrowRight, ChevronDown, ChevronRight, Sparkles, Plus, AlertCircle, X, MessageSquareMore, Home, LogOut, Users, Check, CheckCircle2, FileText, Search, Camera, Eye, Trash2, Loader2,
   BriefcaseBusiness, Star,
-  Share2,
-} from "lucide-react";
+  } from "lucide-react";
 import { Navbar } from "@/components/layout/navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -2191,38 +2190,20 @@ export default function DashboardPage() {
                     href={`${publicProfileHref}?from=${encodeURIComponent("/dashboard/profesional")}`}
                     onClick={openInNewTabOnDesktop}
                     aria-label={locale === "en" ? "View public profile" : "Ver perfil público"}
-                    className="hidden h-9 items-center gap-1.5 text-sm font-bold text-[#526277] underline-offset-2 transition hover:text-[#0089bb] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9] sm:inline-flex"
+                    className="inline-flex h-11 items-center justify-center rounded-full border-[1.5px] border-[#009FD9] bg-white px-5 text-[13px] font-bold text-[#009FD9] transition hover:bg-[#EBF5FB] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9]"
                   >
-                    <ExternalLink className="h-4 w-4" />
-                    {locale === "en" ? "View public profile" : "Ver perfil público"}
+                    {locale === "en" ? "View profile" : "Ver perfil"}
                   </Link>
                 )}
                 {publicProfileHref && (
                   <button
                     type="button"
                     onClick={() => setShareKitOpen(true)}
-                    className="hidden h-9 items-center gap-1.5 rounded-full px-3 text-sm font-bold text-[#526277] transition hover:bg-[#f3f7fa] hover:text-[#0089bb] sm:inline-flex"
+                    className="inline-flex h-11 items-center justify-center rounded-full border-[1.5px] border-[#009FD9] bg-white px-5 text-[13px] font-bold text-[#009FD9] transition hover:bg-[#EBF5FB]"
                   >
-                    <Share2 className="h-4 w-4" />
                     {locale === "en" ? "Share" : "Compartir"}
                   </button>
                 )}
-                <button
-                  type="button"
-                  onClick={() => requestUnsavedAction(() => openPanelDestination("guides"))}
-                  className="inline-flex h-9 items-center gap-1.5 rounded-full px-3 text-sm font-bold text-[#526277] transition hover:bg-[#f3f7fa] hover:text-[#0089bb]"
-                >
-                  <FileText className="h-4 w-4" />
-                  {locale === "en" ? "Guides" : "Guías"}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => signOutToHome(locale)}
-                  className="inline-flex h-9 items-center gap-1.5 rounded-full px-3 text-sm font-bold text-[#526277] transition hover:bg-[#f3f7fa] hover:text-[#0089bb]"
-                >
-                  <LogOut className="h-4 w-4" />
-                  {locale === "en" ? "Sign out" : "Cerrar sesión"}
-                </button>
               </div>
             </div>
             </div>
