@@ -436,17 +436,17 @@ export function OffersBoard({
           </div>
         </section>
       </MarketplaceNavbarPortal>
-      <div className="mx-auto hidden max-w-7xl items-end justify-between gap-4 px-6 pt-3 lg:flex">
-        <div>
-          <h1 className="text-2xl font-extrabold">{copy.offers}</h1>
-          <p className="text-sm text-[#68778d]">{copy.promotions}</p>
-        </div>
-        <div className="flex shrink-0 gap-2">{renderActions()}</div>
-      </div>
-
-      <div className="relative z-30 mx-auto hidden max-w-7xl px-6 pt-3 lg:block">
-        <div className="flex flex-wrap items-center gap-2 overflow-visible">
-          {renderFilters()}
+      {/* Título, acciones y filtros en UNA tarjeta blanca (ver jobs-board). */}
+      <div className="relative z-30 mx-auto hidden max-w-7xl px-6 pt-5 lg:block">
+        <div className="rounded-lg border border-[#dfe8f0] bg-white px-5 py-4">
+          <div className="flex items-end justify-between gap-4">
+            <div>
+              <h1 className="text-2xl font-extrabold">{copy.offers}</h1>
+              <p className="text-sm text-[#68778d]">{copy.promotions}</p>
+            </div>
+            <div className="flex shrink-0 gap-2">{renderActions()}</div>
+          </div>
+          <div className="mt-4 flex flex-wrap items-center gap-2 overflow-visible border-t border-[#eef2f6] pt-4">{renderFilters()}</div>
         </div>
       </div>
 

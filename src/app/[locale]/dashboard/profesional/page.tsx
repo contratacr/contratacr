@@ -1727,7 +1727,7 @@ export default function DashboardPage() {
 
     return (
       <details data-panel-mode-selector className="group relative z-30 w-full">
-        <summary className="flex min-h-[60px] cursor-pointer list-none items-center gap-3 rounded-2xl border border-[#e5edf4] bg-white px-4 text-left text-[15px] font-semibold text-[#162543] shadow-[0_10px_26px_-24px_rgba(15,23,42,0.6)] transition-colors hover:bg-[#f8fbfd] group-open:rounded-b-none lg:px-5 lg:text-[14px] lg:font-semibold [&::-webkit-details-marker]:hidden">
+        <summary className="flex min-h-[60px] cursor-pointer list-none items-center gap-3 rounded-2xl border border-[#e5edf4] bg-white px-4 text-left text-[15px] font-semibold text-[#162543] shadow-[0_10px_26px_-24px_rgba(15,23,42,0.6)] transition-colors hover:bg-[#EBF5FB] group-open:rounded-b-none lg:px-5 lg:text-[14px] lg:font-semibold [&::-webkit-details-marker]:hidden">
           <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#eef8fc] text-[#009FD9]">
             {mode === "offer" ? <BriefcaseBusiness className="h-4 w-4" /> : <User className="h-4 w-4" />}
           </span>
@@ -1748,7 +1748,7 @@ export default function DashboardPage() {
                 }}
                 className={cn(
                   "flex min-h-11 w-full items-center gap-3 rounded-lg px-3 text-left text-sm font-semibold transition-colors",
-                  active ? "bg-[#eef8fc] text-[#007eae]" : "text-[#162543] hover:bg-[#f4f7f9]",
+                  active ? "bg-[#eef8fc] text-[#007eae]" : "text-[#162543] hover:bg-[#EBF5FB]",
                 )}
               >
                 <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center text-current">
@@ -1807,7 +1807,7 @@ export default function DashboardPage() {
           "relative inline-flex h-10 shrink-0 items-center justify-center gap-1.5 rounded-full px-1.5 text-[12px] font-bold transition min-[1180px]:h-11 min-[1180px]:px-2 min-[1180px]:text-[12.5px] xl:px-2.5 xl:text-[13px]",
           activeTab === tab
             ? "text-[#0089bb]"
-            : "text-[#526277] hover:bg-[#f3f7fa] hover:text-[#162543]",
+            : "text-[#526277] hover:bg-[#EBF5FB] hover:text-[#0089bb]",
         )}
       >
         <span className="relative inline-flex shrink-0">
@@ -2175,7 +2175,7 @@ export default function DashboardPage() {
                 </div>
               )}
               {showProfileCompletion && proForCompletion && (
-                <div className="w-full sm:hidden">
+                <div className="col-span-2 w-full sm:col-span-3">
                   <ProfileCompletion
                     pro={proForCompletion}
                     variant="header"
@@ -2208,16 +2208,6 @@ export default function DashboardPage() {
             </div>
             </div>
           </div>
-          {((activeTab === "home") || (mode === "offer" && activeTab !== "completion" && activeTab !== "chat")) && !mobileProfileSectionTitle && showProfileCompletion && proForCompletion && (
-            <div className="mx-auto mb-6 hidden w-full max-w-[79.5rem] empty:mb-0 lg:block lg:empty:hidden">
-              <ProfileCompletion
-                pro={proForCompletion}
-                variant="summary"
-                onViewSteps={() => setTab("completion", true)}
-                onGo={(tab, field) => requestUnsavedAction(() => openCompletionTarget(tab, field))}
-              />
-            </div>
-          )}
 
           {/* Offer mode, provider row still loading: spinner (avoids gate flash). */}
           {proLoadError ? (
@@ -2353,7 +2343,7 @@ export default function DashboardPage() {
                         )}
                       </CardHeader>}
                       <CardContent className={mobileSectionOpen ? cn(
-                        "dashboard-section-content ccr-editor-surface min-h-[calc(100svh-var(--ccr-native-header-height,124px)-var(--ccr-responsive-footer-reserve,72px)-64px)] bg-[#f4f7fa] px-4 pb-6 pt-4 sm:px-5 lg:min-h-0 lg:px-6 lg:pb-6 lg:pt-5",
+                        "dashboard-section-content ccr-editor-surface min-h-[calc(100svh-var(--ccr-native-header-height,124px)-var(--ccr-responsive-footer-reserve,72px)-64px)] bg-[#f4f7fa] px-4 pb-6 pt-4 sm:px-5 lg:min-h-0 lg:bg-white lg:px-6 lg:pb-6 lg:pt-5",
                         editorSurfaceTab && "px-4 py-5",
                         singleSurfaceTab && "px-4 py-5 lg:!bg-transparent lg:px-0 lg:pb-0 lg:pt-0"
                       ) : cn(

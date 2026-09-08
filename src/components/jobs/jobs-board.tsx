@@ -341,14 +341,22 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
         <div className="flex h-full w-full items-center py-2"><div className="w-full">{renderSearch()}</div></div>
       </section>
     </MarketplaceNavbarPortal>
-    {!detailOnly && <div className="mx-auto hidden max-w-7xl items-end justify-between gap-4 px-6 pt-3 lg:flex">
-      <div>
-        <h1 className="text-2xl font-extrabold">{copy.jobs}</h1>
-        <p className="text-sm text-[#68778d]">{copy.opportunities}</p>
+    {/* Título, acciones y filtros viven en UNA tarjeta blanca: sueltos sobre el
+        fondo, en escritorio se leían como tres bloques sin relación. */}
+    {!detailOnly && (
+      <div className="relative z-30 mx-auto hidden max-w-7xl px-6 pt-5 lg:block">
+        <div className="rounded-lg border border-[#dfe8f0] bg-white px-5 py-4">
+          <div className="flex items-end justify-between gap-4">
+            <div>
+              <h1 className="text-2xl font-extrabold">{copy.jobs}</h1>
+              <p className="text-sm text-[#68778d]">{copy.opportunities}</p>
+            </div>
+            <div className="flex shrink-0 gap-2">{renderActions()}</div>
+          </div>
+          <div className="mt-4 flex flex-wrap items-center gap-2 overflow-visible border-t border-[#eef2f6] pt-4">{renderFilters()}</div>
+        </div>
       </div>
-      <div className="flex shrink-0 gap-2">{renderActions()}</div>
-    </div>}
-    {!detailOnly && <div className="relative z-30 mx-auto hidden max-w-7xl px-6 pt-3 lg:block"><div className="flex flex-wrap items-center gap-2 overflow-visible">{renderFilters()}</div></div>}
+    )}
     {detailOnly && selected && (
       <div className="mx-auto hidden w-full max-w-6xl px-6 pb-8 pt-5 lg:block">
         <Link href={detailBackHref} className="mb-3 inline-flex h-10 items-center gap-2 rounded-lg px-2 text-sm font-extrabold text-[#008fc3] transition hover:bg-[#eaf7fc] hover:text-[#00749f]">

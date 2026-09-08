@@ -903,7 +903,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   // hero y SIEMPRE en el resto de páginas públicas (perfil, oficios, ayuda…).
   // Se oculta donde no hay nada que buscar: panel, admin, cuenta, mensajes,
   // reservar, y los tableros de empleos/ofertas, que traen su propio buscador.
-  const rutaSinBuscador = drawerOnly || /\/(?:dashboard|admin|login|registro|onboarding|mensajes|notificaciones|reset-password|olvide-contrasena|completar-perfil|eliminar-cuenta|publicar-proyecto)(?:\/|$)|\/reservar(?:\/|$)/.test(pathname ?? "");
+  const rutaSinBuscador = drawerOnly || /\/(?:admin|login|registro|onboarding|mensajes|notificaciones|reset-password|olvide-contrasena|completar-perfil|eliminar-cuenta|publicar-proyecto)(?:\/|$)|\/reservar(?:\/|$)/.test(pathname ?? "");
   const showDesktopCompactSearch = effectiveCompact && !effectiveMarketplaceDesktop && !rutaSinBuscador;
   // The global navbar is navigation-only. /buscar explicitly opts into its
   // contextual professional search; every other destination owns its search.
