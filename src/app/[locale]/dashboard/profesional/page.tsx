@@ -36,6 +36,7 @@ import { ClientJobApplications } from "@/components/dashboard/client-job-applica
 import { applyPendingSavedPro } from "@/components/professionals/save-button";
 import { applyPendingFollow } from "@/components/professionals/follow-button";
 import { FollowNetworkTab } from "@/components/professionals/follow-network-tab";
+import { FollowNetworkSummaryLink } from "@/components/professionals/follow-network-summary-link";
 import { BasicProfileSection } from "@/components/dashboard/basic-profile-section";
 import { detectIdType } from "@/lib/cedula";
 import { NotificationsList } from "@/components/notifications/notifications-list";
@@ -2123,21 +2124,22 @@ export default function DashboardPage() {
                   <div className="flex shrink-0 items-center">{identityBadge()}</div>
                 </div>
                 <div data-testid="dashboard-identity-actions" className="mt-1 flex items-start justify-start gap-3 sm:mt-1 sm:min-h-[22px]">
-                  {/* Bajo el nombre va la prueba social que el cliente mira —la
-                      calificación y las reseñas—, no "0 seguidos · 1 seguidores":
-                      un contador en cero solo comunica vacío, y seguidores es una
-                      métrica que en este mercado casi nadie usa (en producción, 5
-                      seguimientos de clientes en un mes). La red sigue en su
-                      sección del menú. */}
-                  <div className="flex min-w-0 items-center">
-                    {(pro?.review_count ?? 0) > 0 ? (
-                      <span className="inline-flex items-baseline gap-1.5 text-[14px] font-semibold leading-none text-[#526277] sm:text-xs">
+                  {/* Seguidos y seguidores, como estaban. Junto a ellos, la
+                      calificación SOLO cuando ya hay reseñas: lleva a leerlas en el
+                      perfil público y, sin ninguna, no ocupa espacio ni muestra un
+                      cero. */}
+                  <div className="flex min-w-0 flex-wrap items-center gap-x-4 gap-y-1">
+                    <FollowNetworkSummaryLink onOpen={setNetworkModal} />
+                    {(pro?.review_count ?? 0) > 0 && publicProfileHref && (
+                      <Link
+                        href={`${publicProfileHref}?tab=resenas&from=${encodeURIComponent("/dashboard/profesional")}`}
+                        onClick={openInNewTabOnDesktop}
+                        className="inline-flex items-baseline gap-1.5 text-[14px] font-semibold leading-none text-[#526277] transition hover:text-[#009FD9] sm:text-xs"
+                      >
                         <Star className="h-4 w-4 shrink-0 translate-y-0.5 fill-[#ff9b32] text-[#ff9b32]" />
                         <strong className="text-[15px] leading-none text-[#162543] sm:text-sm">{Number(pro?.rating_avg ?? 0).toFixed(1)}</strong>
                         <span className="whitespace-nowrap">{t("headerReviews", { count: pro?.review_count ?? 0 })}</span>
-                      </span>
-                    ) : (
-                      <span className="text-[14px] font-medium leading-none text-[#8b98a9] sm:text-xs">{t("headerNoReviews")}</span>
+                      </Link>
                     )}
                   </div>
                   
