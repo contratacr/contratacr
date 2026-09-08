@@ -1131,7 +1131,7 @@ export function AvailabilityEditor({
                   <Calendar className="h-4 w-4 shrink-0 text-[#009FD9]" />
                   <span className="truncate">{t("changeDay")}</span>
                 </span>
-                <ChevronDown className="h-4 w-4 shrink-0 text-[#68778d]" />
+                <ChevronRight className="h-4 w-4 shrink-0 text-[#68778d]" />
               </button>
             </div>
 
@@ -1430,10 +1430,10 @@ function DayModal({ initialDate, existing, markedDates, defaultDuration, dateLoc
   ];
 
   return (
-    <div className="ccr-availability-modal app-modal-screen app-sheet-compact-screen fixed inset-0 z-[200] flex items-end justify-center p-0 sm:items-center sm:p-4">
+    <div className="ccr-availability-modal app-modal-screen fixed inset-0 z-[200] flex items-stretch justify-center p-0 sm:items-center sm:p-4">
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
-      <div className="ccr-availability-modal-panel app-bottom-sheet app-sheet-compact relative z-10 max-h-[92vh] w-full overflow-y-auto overscroll-contain rounded-t-2xl bg-white shadow-2xl sm:max-h-[90vh] sm:max-w-2xl sm:rounded-2xl">
-        <div className="flex items-start justify-between gap-3 border-b border-[#f3f4f6] p-4 sm:p-5">
+      <div className="ccr-availability-modal-panel app-bottom-sheet relative z-10 flex h-full w-full flex-col overflow-hidden rounded-none bg-white shadow-2xl sm:h-auto sm:max-h-[90vh] sm:max-w-2xl sm:rounded-2xl">
+        <div className="flex shrink-0 items-start justify-between gap-3 border-b border-[#f3f4f6] p-4 pt-[max(env(safe-area-inset-top),1rem)] sm:p-5">
           <div>
             <h3 className="text-base font-bold text-[#162543]">{t("modalTitle")}</h3>
             <p className="mt-0.5 text-xs text-[#6b7280]">{t("modalSub")}</p>
@@ -1443,7 +1443,7 @@ function DayModal({ initialDate, existing, markedDates, defaultDuration, dateLoc
           </button>
         </div>
 
-        <div className="grid grid-cols-1 gap-5 p-4 sm:grid-cols-2 sm:p-5">
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain grid grid-cols-1 gap-5 p-4 sm:grid-cols-2 sm:p-5">
           <MonthCalendar value={date} onChange={setDate} marked={markedDates} dateLocale={dateLocale} />
 
           <div className="flex flex-col gap-3">
@@ -1513,7 +1513,7 @@ function DayModal({ initialDate, existing, markedDates, defaultDuration, dateLoc
             acción se llama por lo que hace — Agregar un día nuevo o Aplicar
             los cambios de uno existente. Mitades fijas: el ancho no salta
             cuando el spinner entra. */}
-        <div className="flex gap-3 border-t border-[#f3f4f6] p-4 sm:p-5">
+        <div className="flex shrink-0 gap-3 border-t border-[#f3f4f6] p-4 pb-[max(env(safe-area-inset-bottom),1rem)] sm:p-5">
           <Button type="button" variant="outline" size="md" className="flex-1" onClick={onClose} disabled={saving}>{t("cancel")}</Button>
           <Button type="button" size="md" className="flex-1" disabled={invalid || saving} loading={saving} onClick={async () => { setSaving(true); const ok = await onSave(date, mode, franjas, dur); if (!ok) setSaving(false); }}>
             {existing.some((e) => e.date === date) ? t("dayApply") : t("dayAdd")}
