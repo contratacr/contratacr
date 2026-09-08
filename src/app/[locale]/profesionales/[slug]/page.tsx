@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef, type ReactNode } from "react";
 import { useTranslations, useLocale } from "next-intl";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import {
   MapPin, Shield, ArrowLeft, Star, Briefcase, Banknote, BadgeCheck, Languages,
   Share2, Check, Flag, Award, SearchX, Globe, BadgePercent, Users,
@@ -52,13 +52,6 @@ import { ProgressiveImage } from "@/components/ui/progressive-image";
 // ─── Tab types ────────────────────────────────────────────────────────────────
 type Tab = "disponibilidad" | "servicios" | "ofertas" | "empleos" | "casos" | "certificaciones" | "resenas" | "sobre";
 
-function initialTabFromUrl(): Tab {
-  if (typeof window === "undefined") return "disponibilidad";
-  const tab = new URLSearchParams(window.location.search).get("tab");
-  return (["disponibilidad", "servicios", "ofertas", "empleos", "casos", "certificaciones", "resenas", "sobre"] as const).includes(tab as Tab)
-    ? (tab as Tab)
-    : "disponibilidad";
-}
 function searchParamFromUrl(key: string): string | null {
   if (typeof window === "undefined") return null;
   return new URLSearchParams(window.location.search).get(key);
@@ -144,13 +137,27 @@ export default function ProfilePage() {
   // button on the "Profesional no encontrado" screen so a signed-in visitor is never
   // stranded. `null` = logged out (that screen then shows only "Buscar profesionales").
   const [panelHref, setPanelHref] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<Tab>(() => initialTabFromUrl());
+  // La pestaña sale de la URL, no de un estado inicial: al volver desde un
+  // empleo o una oferta (?tab=empleos) la primera pintura ocurre en el servidor,
+  // donde no hay URL, y el perfil se abría siempre en "Disponibilidad".
+  const searchParams = useSearchParams();
+  const tabFromUrl = ((): Tab | null => {
+    const value = searchParams.get("tab");
+    return (["disponibilidad", "servicios", "ofertas", "empleos", "casos", "certificaciones", "resenas", "sobre"] as const).includes(value as Tab)
+      ? (value as Tab)
+      : null;
+  })();
+  const [chosenTab, setChosenTab] = useState<Tab | null>(null);
+  const activeTab = chosenTab ?? tabFromUrl ?? "disponibilidad";
+  const setActiveTab = setChosenTab;
   const previousActiveTabRef = useRef<Tab | null>(null);
   // Opening another section starts from its top: if the previous section was
   // scrolled past the pinned tab strip, bring the sections card back up.
   useEffect(() => {
     const previous = previousActiveTabRef.current;
     previousActiveTabRef.current = activeTab;
+    // La tira de pestañas se desplaza para mostrar la activa: al volver desde un
+    // empleo, "Empleos" quedaba fuera de la vista y parecía que no había pestaña.
     if (previous === null || previous === activeTab) return;
     const strip = document.querySelector("[data-profile-tabs]");
     const card = document.getElementById("resenas");
@@ -159,6 +166,14 @@ export default function ProfilePage() {
       card.scrollIntoView({ block: "start", behavior: "auto" });
     }
   }, [activeTab]);
+  const cantidadPestanas = publicOffers.length + publicJobs.length;
+  useEffect(() => {
+    const seleccionada = document.querySelector<HTMLElement>('[data-profile-tabs] [aria-selected="true"]');
+    const carril = seleccionada?.parentElement;
+    if (!seleccionada || !carril) return;
+    carril.scrollLeft = Math.max(0, seleccionada.offsetLeft - (carril.clientWidth - seleccionada.clientWidth) / 2);
+  }, [activeTab, cantidadPestanas]);
+
   // El destino de "volver" depende de la URL, y la primera pintura ocurre en el
   // servidor, donde no hay URL: calcularlo ahí dejaba el botón clavado en
   // "Volver a resultados" aunque vinieras del panel. Se resuelve en el cliente,
