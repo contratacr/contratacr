@@ -930,7 +930,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
   // The REQUESTER is always the coordination contact (incl. for a dependent booking,
   // since we no longer collect a beneficiary phone) — so require a phone on file
   // regardless of who the service is for.
-  const needsPhone = isLoggedIn && !hasPhoneNumber(profilePhone);
+  const needsPhone = isLoggedIn && profileLoaded && !hasPhoneNumber(profilePhone);
 
   // Foreign / migratory ID (DIMEX/NITE): a VALID id that is NOT in the TSE padrón, so the
   // identity can't be padrón-verified. The request still goes through, but the pro sees it
@@ -1142,7 +1142,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
             <div className="relative flex shrink-0 items-center justify-center border-b border-[#f3f4f6] bg-white px-14 pb-3.5 pt-[max(env(safe-area-inset-top),0.875rem)] lg:px-6 lg:py-4">
               <div className="min-w-0 text-center lg:text-left">
                 <h2 className="text-lg font-bold text-[#111827]">{t("title")}</h2>
-                {step !== "success" && (
+                {step !== "success" && (!isLoggedIn || profileLoaded) && (
                   <p className="mt-0.5 text-xs text-[#6b7280]">{t("stepOf", { current: pasoActual + 1, total: totalSteps })}</p>
                 )}
               </div>
@@ -1189,7 +1189,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                   </div>
                 </div>
               )}
-              <div className="rounded-2xl border border-[#e5edf4] bg-white px-4 py-4 md:px-5">
+              <div className="flex flex-1 flex-col rounded-2xl border border-[#e5edf4] bg-white px-4 py-4 md:px-5">
 
               {/* STEP: calendar */}
               {step === "calendar" && (
