@@ -348,6 +348,7 @@ export function SaveButton({ pro, className, isOwn = false, withLabel = false }:
         className
       )}
     >
+      <Bookmark className="h-4 w-4 shrink-0" strokeWidth={2} fill={saved ? "currentColor" : "none"} />
       {saved ? t("savedLabel") : t("saveLabel")}
     </button>
       ) : (

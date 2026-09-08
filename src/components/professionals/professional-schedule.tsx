@@ -814,7 +814,7 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
   const contactSource = stacked ? "profile" : "search";
   const secondaryContactClass = "w-full inline-flex h-10 items-center justify-center gap-1.5 rounded-full border border-[#e5e7eb] bg-white py-0 text-[13px] font-semibold text-[#374151] transition-colors hover:bg-[#f9fafb] disabled:opacity-60";
   // Profile page uses the short label "Llamar"; /buscar keeps "Contáctanos por llamada".
-  const renderCall = () => (
+  const renderCall = (className = secondaryContactClass) => (
     <ContactButton
       method="phone"
       professionalId={professional.id}
@@ -824,7 +824,7 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
       source={contactSource}
       isOwn={isOwn}
       onSelfAction={() => setSelfMsg(SELF_MSG.call)}
-      className={secondaryContactClass}
+      className={className}
       label={stacked ? t("callShort") : t("call")}
     />
   );
@@ -853,9 +853,9 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
     </>
   );
 
-  // Perfil: las dos acciones que la gente sí usa van juntas en la primera fila y
-  // en turquesa (agendar y escribir); la llamada queda debajo, en blanco. El correo
-  // salió de aquí: repetía el mensaje y mandaba la conversación fuera del app.
+  // Perfil: agendar manda y ocupa su propia línea; debajo, escribir y llamar
+  // comparten fila. El correo salió de aquí: repetía el mensaje y mandaba la
+  // conversación fuera del app.
   const chatLauncher = (
     <DirectChatLauncher
       professionalId={professional.id}
@@ -870,15 +870,15 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
   );
   const profileContactButtons = (
     <>
-      {hasSchedule ? (
+      {hasSchedule && verHorarioButton}
+      {showCall ? (
         <div className="grid grid-cols-2 gap-2">
-          {verHorarioButton}
           {chatLauncher}
+          {renderCall(`${secondaryContactClass} h-11 text-[13px] font-bold`)}
         </div>
       ) : (
         chatLauncher
       )}
-      {showCall && renderCall()}
     </>
   );
 

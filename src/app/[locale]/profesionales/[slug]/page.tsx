@@ -627,31 +627,6 @@ export default function ProfilePage() {
                       <span>{locationText}</span>
                     </div>
                   )}
-                  {/* Guardar y compartir son gestos de apoyo, no la acción del perfil:
-                      quedan arriba junto al nombre pero en blanco, para que el único
-                      turquesa de la pantalla sea agendar. Antes guardar iba relleno y
-                      pesaba más que "Ver disponibilidad". */}
-                  <div className="mt-3 flex w-[360px] max-w-full items-center gap-2">
-                    <SaveButton
-                      pro={savedPro}
-                      isOwn={isOwn}
-                      withLabel
-                      className="box-border h-9 min-w-0 shrink whitespace-nowrap rounded-xl border border-[#d9e1ea] bg-white px-3 py-0 text-[#102746] hover:border-[#b8c6d6] hover:bg-[#f7f9fb] aria-pressed:border-[#bfe3f5] aria-pressed:bg-[#EBF5FB] aria-pressed:text-[#0089bb]"
-                    />
-                    <button
-                      type="button"
-                      onClick={shareProfile}
-                      aria-label={linkCopiado ? t("linkCopied") : t("shareProfile")}
-                      title={linkCopiado ? t("linkCopied") : t("shareProfile")}
-                      className={cn(
-                        "grid h-9 w-9 shrink-0 place-items-center rounded-xl border bg-white transition-colors",
-                        linkCopiado ? "border-[#b8e7cf] bg-[#f2fbf6] text-[#15803d]" : "border-[#d9e1ea] text-[#102746] hover:border-[#b8c6d6] hover:bg-[#f7f9fb]",
-                      )}
-                    >
-                      {linkCopiado ? <Check className="h-4 w-4" /> : <Share2 className="h-4 w-4" />}
-                      <span className="sr-only" aria-live="polite">{linkCopiado ? t("linkCopied") : ""}</span>
-                    </button>
-                  </div>
                 </div>
               </div>
 
@@ -694,6 +669,32 @@ export default function ProfilePage() {
                 ) : null}
               </div>
             </div>
+              {/* Guardar y compartir son gestos de apoyo, no la acción del perfil:
+                  quedan arriba junto al nombre pero en blanco, para que el único
+                  turquesa de la pantalla sea agendar. Antes guardar iba relleno y
+                  pesaba más que "Ver disponibilidad". */}
+              <div className="mt-3 flex w-full flex-wrap items-center gap-2">
+                <SaveButton
+                  pro={savedPro}
+                  isOwn={isOwn}
+                  withLabel
+                  className="box-border h-9 min-w-0 flex-1 whitespace-nowrap rounded-xl border-[#d9e1ea] sm:w-auto sm:flex-none sm:px-5 bg-white px-3 py-0 text-[13px] text-[#102746] hover:border-[#b8c6d6] hover:bg-[#f7f9fb] hover:text-[#102746] aria-pressed:border-[#d9e1ea] aria-pressed:bg-white aria-pressed:text-[#102746]"
+                />
+                <button
+                  type="button"
+                  onClick={shareProfile}
+                  aria-label={linkCopiado ? t("linkCopied") : t("shareProfile")}
+                  title={linkCopiado ? t("linkCopied") : t("shareProfile")}
+                  className={cn(
+                    "inline-flex h-9 min-w-0 flex-1 items-center justify-center gap-2 rounded-xl border bg-white px-3 text-[13px] font-semibold transition-colors sm:w-auto sm:flex-none sm:px-5",
+                    linkCopiado ? "border-[#b8e7cf] bg-[#f2fbf6] text-[#15803d]" : "border-[#d9e1ea] text-[#102746] hover:border-[#b8c6d6] hover:bg-[#f7f9fb]",
+                  )}
+                >
+                  {linkCopiado ? <Check className="h-4 w-4 shrink-0" /> : <Share2 className="h-4 w-4 shrink-0" />}
+                  <span>{linkCopiado ? t("linkCopied") : locale === "en" ? "Share" : "Compartir"}</span>
+                  <span className="sr-only" aria-live="polite">{linkCopiado ? t("linkCopied") : ""}</span>
+                </button>
+              </div>
           </div>
 
           <div className="flex flex-col lg:flex-row gap-6">
