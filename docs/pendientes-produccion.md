@@ -7,12 +7,15 @@ cotizaciones y precios). Cada punto dice qué falta y quién lo hace.
 
 | Migración | Qué agrega | test | producción |
 |---|---|---|---|
-| 189 · recordatorios de inactividad | tipos de aviso + índices | pendiente de confirmar | pendiente de confirmar |
-| 190 · retiros de propuesta | `proposals.withdrawn_at`, `withdraw_reason` | pendiente de confirmar | pendiente de confirmar |
-| 191 · cotizaciones | tabla `quotes` con RLS, tipos `quote_sent` / `quote_accepted` / `quote_declined` / `pricing_request` | pendiente | pendiente |
+| 189 · recordatorios de inactividad | tipos de aviso + índices | **aplicada 8-sep** | pendiente |
+| 190 · retiros de propuesta | `proposals.withdrawn_at`, `withdraw_reason` | **aplicada 8-sep** | pendiente |
+| 191 · cotizaciones | tabla `quotes` con RLS, tipos `quote_sent` / `quote_accepted` / `quote_declined` / `pricing_request` | **aplicada 8-sep** | pendiente |
 
 Se aplican **solo** con el workflow `Supabase migrations` (dispatch), nunca en local:
 `test` desde la rama `test`, `production` desde `main`; siempre en seco primero.
+El 8-sep se aplicaron 189, 190 y 191 a **test** (producción quedó al día con lo
+suyo: el dispatch en seco desde `main` dijo «Remote database is up to date»).
+Al publicar en producción hay que repetir el par seco → aplicar desde `main`.
 Hasta que la 191 esté aplicada, las cotizaciones responden «no habilitado» y el
 bloque no se muestra: no rompe nada, simplemente no aparece.
 
