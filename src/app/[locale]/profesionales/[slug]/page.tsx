@@ -35,7 +35,6 @@ import { DirectChatLauncher } from "@/components/professionals/direct-chat-launc
 import { ClientRegistrationModal } from "@/components/auth/client-registration-modal";
 import { SelfActionModal, SELF_MSG } from "@/components/professionals/self-action-modal";
 import { SaveButton, type SavedPro } from "@/components/professionals/save-button";
-import { FollowButton } from "@/components/professionals/follow-button";
 import type { ProfessionalDetail } from "@/lib/queries/professionals";
 import { getProfessionalDisplayName } from "@/lib/display-name";
 import { trackMetaEvent } from "@/lib/analytics/meta-pixel";
@@ -339,32 +338,6 @@ export default function ProfilePage() {
     load();
   }, [locale, routeSlug]);
 
-  useEffect(() => {
-    if (!professional?.id) return;
-    const onFollowChange = (event: Event) => {
-      const detail = (event as CustomEvent<{ professionalId?: string; delta?: number; count?: number }>).detail;
-      if (detail?.professionalId !== professional.id) return;
-      if (typeof detail.count === "number" && Number.isFinite(detail.count)) {
-        const exactCount = detail.count;
-        setProfessional((current) => current
-          ? { ...current, followerCount: Math.max(0, exactCount) }
-          : current);
-        return;
-      }
-      if (!detail.delta) return;
-      setProfessional((current) => current
-        ? { ...current, followerCount: Math.max(0, (current.followerCount ?? 0) + detail.delta!) }
-        : current);
-    };
-    window.addEventListener("professionalFollowsChanged", onFollowChange);
-    return () => window.removeEventListener("professionalFollowsChanged", onFollowChange);
-  }, [professional?.id]);
-
-  const updateFollowerCount = useCallback((count: number) => {
-    setProfessional((current) => current
-      ? { ...current, followerCount: Math.max(0, count) }
-      : current);
-  }, []);
 
   // Resolve the viewer's role-aware panel route up front (parallel, non-blocking) so the
   // "Profesional no encontrado" screen can offer "Volver a mi panel" even though load()
@@ -659,15 +632,6 @@ export default function ProfilePage() {
                       casi lo mismo a los ojos de la gente y dos botones llenos hacían
                       que no eligiera ninguno. */}
                   <div className="mt-3 flex w-[360px] max-w-full items-center gap-2">
-                    <FollowButton
-                      professionalId={professional.id}
-                      isOwn={isOwn}
-                      compact
-                      initialFollowers={professional.followerCount ?? 0}
-                      onCountChange={updateFollowerCount}
-                      onSelfAction={() => setSelfMsg(SELF_MSG.follow)}
-                      className="box-border h-9 min-w-0 flex-1 rounded-xl border border-[#d9e1ea] bg-white px-3 text-[#102746] hover:border-[#b8c6d6] hover:bg-[#f7f9fb] aria-pressed:border-[#bfe3f5] aria-pressed:bg-[#EBF5FB] aria-pressed:text-[#0089bb]"
-                    />
                     <SaveButton
                       pro={savedPro}
                       isOwn={isOwn}
@@ -694,9 +658,9 @@ export default function ProfilePage() {
               {/* Stats strip — rating · años de exp · casos de éxito. */}
               <div className={cn(
                 "grid w-full shrink-0 gap-2 self-start sm:w-auto sm:self-center sm:border-l sm:border-[#f3f4f6] sm:pl-5",
-                (expYears > 0 ? 1 : 0) + (casosCount > 0 || (professional.followerCount ?? 0) > 0 ? 1 : 0) === 2
+                (expYears > 0 ? 1 : 0) + (casosCount > 0 ? 1 : 0) === 2
                   ? "grid-cols-3 sm:min-w-[18rem]"
-                  : (expYears > 0 ? 1 : 0) + (casosCount > 0 || (professional.followerCount ?? 0) > 0 ? 1 : 0) === 1
+                  : (expYears > 0 ? 1 : 0) + (casosCount > 0 ? 1 : 0) === 1
                     ? "grid-cols-2 sm:min-w-[13rem]"
                     : "grid-cols-1 sm:min-w-[8rem]",
               )}>
@@ -727,18 +691,6 @@ export default function ProfilePage() {
                     </div>
                     <p className="mt-0.5 whitespace-nowrap text-[10px] font-medium leading-none text-[#8b95a5] sm:text-[11px]">{t("statCases", { count: casosCount })}</p>
                   </button>
-                ) : (professional.followerCount ?? 0) > 0 ? (
-                  <div className="flex min-w-0 flex-col items-center justify-start text-center">
-                    <div className="flex items-center justify-center gap-1">
-                      <Users className="h-4 w-4 text-[#009FD9]" />
-                      <span data-follower-count className="text-[15px] font-bold text-[#111827]">{professional.followerCount ?? 0}</span>
-                    </div>
-                    <p className="mt-0.5 whitespace-nowrap text-[10px] font-medium leading-none text-[#8b95a5] sm:text-[11px]">
-                      {locale === "en"
-                        ? ((professional.followerCount ?? 0) === 1 ? "follower" : "followers")
-                        : ((professional.followerCount ?? 0) === 1 ? "seguidor" : "seguidores")}
-                    </p>
-                  </div>
                 ) : null}
               </div>
             </div>

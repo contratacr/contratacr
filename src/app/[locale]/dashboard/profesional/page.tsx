@@ -34,9 +34,6 @@ import { ClientActivity } from "@/components/dashboard/client-activity";
 import { ClientConnections } from "@/components/dashboard/client-connections";
 import { ClientJobApplications } from "@/components/dashboard/client-job-applications";
 import { applyPendingSavedPro } from "@/components/professionals/save-button";
-import { applyPendingFollow } from "@/components/professionals/follow-button";
-import { FollowNetworkTab } from "@/components/professionals/follow-network-tab";
-import { FollowNetworkSummaryLink } from "@/components/professionals/follow-network-summary-link";
 import { BasicProfileSection } from "@/components/dashboard/basic-profile-section";
 import { detectIdType } from "@/lib/cedula";
 import { NotificationsList } from "@/components/notifications/notifications-list";
@@ -79,7 +76,7 @@ type Tab =
   | "home" | "profile" | "services" | "photos" | "availability" | "bookings" | "proposals" | "verificacion"
   | "jobs" | "offers" | "completion"
   | "suscripcion"
-  | "sent_bookings" | "sent_projects" | "applications" | "saved" | "connections" | "network"
+  | "sent_bookings" | "sent_projects" | "applications" | "saved" | "connections"
   | "chat" | "notifications" | "soporte" | "cuenta" | "guides";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -88,7 +85,7 @@ type ProData = Record<string, any>;
 const ALL_TABS = new Set<Tab>([
   "home", "profile", "services", "photos", "availability", "bookings", "proposals", "verificacion",
   "jobs", "offers", "completion", "suscripcion", "sent_bookings", "sent_projects", "applications", "saved", "connections",
-  "network", "chat", "notifications", "soporte", "cuenta", "guides",
+  "chat", "notifications", "soporte", "cuenta", "guides",
 ]);
 
 const TAB_ICONS: Record<Tab, React.ReactNode> = {
@@ -106,7 +103,6 @@ const TAB_ICONS: Record<Tab, React.ReactNode> = {
   applications: <BriefcaseBusiness className="h-4 w-4" />,
   saved: <Bookmark className="h-4 w-4" />,
   connections: <Users className="h-4 w-4" />,
-  network: <Users className="h-4 w-4" />,
   chat: <MessageSquareMore className="h-4 w-4" />,
   notifications: <Bell className="h-4 w-4" />,
   soporte: <Headset className="h-4 w-4" />,
@@ -118,7 +114,7 @@ const TAB_ICONS: Record<Tab, React.ReactNode> = {
 };
 
 // Tabs that show a one-line context note under the section title.
-const TABS_WITH_SUBTITLE = new Set<Tab>(["proposals", "sent_bookings", "sent_projects", "saved", "connections", "network"]);
+const TABS_WITH_SUBTITLE = new Set<Tab>(["proposals", "sent_bookings", "sent_projects", "saved", "connections"]);
 
 // Mode membership. The first three render only in "offer" mode, the next three
 // only in "use" mode; "profile" + the shared tabs are valid in both, so the mode
@@ -192,7 +188,6 @@ const GUIDE_ITEMS: GuideItem[] = ([
   { id: "searchServices", section: "shared", href: "/buscar", stepCount: 5 },
   { id: "jobsGuide", section: "shared", href: "/empleos", stepCount: 4 },
   { id: "offersGuide", section: "shared", href: "/ofertas", stepCount: 4 },
-  { id: "followingGuide", section: "shared", actionTab: "network", stepCount: 4 },
   { id: "notificationsGuide", section: "shared", actionTab: "notifications", stepCount: 5 },
   { id: "reviewsGuide", section: "shared", href: "/buscar", stepCount: 4 },
   { id: "supportGuide", section: "shared", actionTab: "soporte", stepCount: 3 },
@@ -219,8 +214,6 @@ function guideIcon(id: string) {
       return <Search className="h-4 w-4" />;
     case "reviewsGuide":
       return <Star className="h-4 w-4" />;
-    case "followingGuide":
-      return <Users className="h-4 w-4" />;
     case "notificationsGuide":
       return <Bell className="h-4 w-4" />;
     case "accountSecurityGuide":
@@ -662,7 +655,6 @@ export default function DashboardPage() {
   const [supportThreadRef, setSupportThreadRef] = useState<string | null>(null);
   const [proLoadError, setProLoadError] = useState(false);
   const [mobilePanelOpen, setMobilePanelOpen] = useState(false);
-  const [networkModal, setNetworkModal] = useState<"following" | "followers" | null>(null);
   const [preferMobileMenuDefault, setPreferMobileMenuDefault] = useState(false);
   const [opportunityWelcomeCount, setOpportunityWelcomeCount] = useState<number | null>(null);
   const [opportunityWelcomeKeys, setOpportunityWelcomeKeys] = useState<string[]>([]);
@@ -901,7 +893,6 @@ export default function DashboardPage() {
   useEffect(() => {
     if (authLoading || !user) return;
     applyPendingSavedPro();
-    applyPendingFollow(user.id);
   }, [authLoading, user]);
 
   useEffect(() => {
@@ -1989,9 +1980,6 @@ export default function DashboardPage() {
     <div className="min-h-screen flex flex-col bg-[#fafafa]">
       <Navbar mobileSearch={false} />
       {formularioPublicar}
-      {networkModal && (
-        <FollowNetworkTab initialView={networkModal} title={displayName} onBack={() => setNetworkModal(null)} />
-      )}
       {opportunityWelcomeCount !== null && (
         <div className="app-modal-screen app-centered-modal-screen fixed inset-0 z-[90] flex items-center justify-center bg-[#0f172a]/45 p-4 backdrop-blur-sm">
           <div
@@ -2124,24 +2112,19 @@ export default function DashboardPage() {
                   <div className="flex shrink-0 items-center">{identityBadge()}</div>
                 </div>
                 <div data-testid="dashboard-identity-actions" className="mt-1 flex items-start justify-start gap-3 sm:mt-1 sm:min-h-[22px]">
-                  {/* Como en Instagram: número arriba, palabra abajo, en columnas.
-                      Las reseñas van primero —es lo que mira un cliente— y solo
-                      cuando ya hay alguna; llevan a leerlas en el perfil público.
-                      Las palabras no cambian de singular a plural: la columna
-                      bailaba con cada número. */}
-                  <div className="flex min-w-0 items-start gap-4">
-                    {(pro?.review_count ?? 0) > 0 && publicProfileHref && (
-                      <Link
-                        href={`${publicProfileHref}?tab=resenas&from=${encodeURIComponent("/dashboard/profesional")}`}
-                        onClick={openInNewTabOnDesktop}
-                        className="flex flex-col items-start gap-0.5 text-left transition hover:text-[#009FD9]"
-                      >
-                        <strong className="text-[16px] font-bold leading-none text-[#162543]">{pro?.review_count ?? 0}</strong>
-                        <span className="text-[12px] font-medium leading-none text-[#8b98a9]">{t("headerReviews")}</span>
-                      </Link>
-                    )}
-                    <FollowNetworkSummaryLink stacked onOpen={setNetworkModal} />
-                  </div>
+                  {/* Las reseñas, que es la prueba social que mira un cliente. Los
+                      seguidores se retiraron de la app: guardar ya cubre "lo quiero
+                      a mano" y dos conceptos para lo mismo confundían. */}
+                  {(pro?.review_count ?? 0) > 0 && publicProfileHref && (
+                    <Link
+                      href={`${publicProfileHref}?tab=resenas&from=${encodeURIComponent("/dashboard/profesional")}`}
+                      onClick={openInNewTabOnDesktop}
+                      className="flex flex-col items-start gap-0.5 text-left transition hover:text-[#009FD9]"
+                    >
+                      <strong className="text-[16px] font-bold leading-none text-[#162543]">{pro?.review_count ?? 0}</strong>
+                      <span className="text-[12px] font-medium leading-none text-[#8b98a9]">{t("headerReviews")}</span>
+                    </Link>
+                  )}
                   
                 </div>
               </div>
@@ -2515,7 +2498,6 @@ export default function DashboardPage() {
                         {activeTab === "applications" && <ClientJobApplications />}
                         {activeTab === "saved" && <ClientActivity section="saved" />}
                         {activeTab === "connections" && <ClientConnections />}
-                        {activeTab === "network" && <FollowNetworkTab title={displayName} onBack={() => requestUnsavedAction(() => setTab("home"))} />}
                         {activeTab === "notifications" && <NotificationsList />}
                         {activeTab === "guides" && (
                           <GuidesBody

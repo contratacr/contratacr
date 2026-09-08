@@ -15,7 +15,6 @@ export const SELF_MSG = {
   email: "email",
   proposal: "proposal",
   favorite: "favorite",
-  follow: "follow",
 } as const;
 
 export type SelfMsgKey = (typeof SELF_MSG)[keyof typeof SELF_MSG];

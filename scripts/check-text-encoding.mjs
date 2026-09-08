@@ -29,9 +29,9 @@ const MESSAGE_CATALOGS = {
 // the AST literal-key scan below. Keep their finite runtime contracts here so
 // deleting a key from every locale still fails text:check before the app runs.
 const REQUIRED_DYNAMIC_MESSAGE_PATHS = [
-  ...["request", "whatsapp", "call", "email", "proposal", "favorite", "follow"]
+  ...["request", "whatsapp", "call", "email", "proposal", "favorite"]
     .map((key) => `selfAction.messages.${key}`),
-  ...["proposals", "sent_bookings", "sent_projects", "saved", "connections", "network"]
+  ...["proposals", "sent_bookings", "sent_projects", "saved", "connections"]
     .map((key) => `proPanel.subtitles.${key}`),
 ];
 const GUIDE_SOURCE_FILE = path.normalize("src/app/[locale]/dashboard/profesional/page.tsx");

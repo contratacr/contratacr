@@ -438,8 +438,7 @@
       "call": "You can't call yourself. This is how clients reach you by phone.",
       "email": "You can't email yourself. This is how clients reach you by email.",
       "proposal": "You can't reply to your own project.",
-      "favorite": "You can't add yourself to your own favorites. Favorites is where clients collect profiles to review later.",
-      "follow": "You can't follow your own profile. This is how other people can follow your updates."
+      "favorite": "You can't add yourself to your own favorites. Favorites is where clients collect profiles to review later."
     }
   },
   "categorySearch": {
@@ -1287,7 +1286,6 @@
       "sent_bookings": "My appointments",
       "sent_projects": "My projects",
       "saved": "My favorites",
-      "network": "Following and followers",
       "guides": "Guides",
       "notifications": "Notifications",
       "soporte": "Support",
@@ -1408,7 +1406,6 @@
     },
     "servicesHeading": "Services",
     "subtitles": {
-      "network": "Manage the professionals you follow and the people who follow your profile.",
       "bookings": "Appointments clients booked with you.",
       "proposals": "What clients are asking for in your service. Reply and, if they're interested, they'll message you.",
       "sent_bookings": "Appointments you booked from a professional's profile.",
@@ -1730,18 +1727,6 @@
             "Open the profile or contact by WhatsApp when you find a good option."
           ],
           "cta": "Find professionals"
-        },
-        "followingGuide": {
-          "title": "Follow professionals",
-          "short": "Updates from accounts you care about",
-          "body": "Following professionals helps you receive updates from profiles you want to keep close.",
-          "steps": [
-            "Open a professional profile.",
-            "Press Follow to receive their updates.",
-            "Receive notifications when they post success stories, offers or jobs.",
-            "Return to their profile from the notification or from your network."
-          ],
-          "cta": "View my network"
         },
         "notificationsGuide": {
           "title": "Notifications",
@@ -3975,36 +3960,6 @@
     "help": "Help",
     "myOffers": "My offers",
     "myJobs": "My jobs"
-  },
-  "followNetwork": {
-    "suggestedTitle": "Suggested for you",
-    "reasonFollowsYou": "Follows you",
-    "reasonHired": "You hired them",
-    "reasonVerified": "Verified in your province",
-    "dismiss": "Dismiss",
-    "message": "Message",
-    "back": "Back",
-    "followers": "Followers",
-    "following": "Following",
-    "followersTab": "{count, plural, one {# follower} other {# followers}}",
-    "followingTab": "{count} following",
-    "search": "Search",
-    "loading": "Loading connections",
-    "noResults": "No results found.",
-    "emptyFollowing": "You don't follow any professionals yet.",
-    "emptyFollowers": "Nobody follows your profile yet.",
-    "moreOptions": "More options",
-    "unfollow": "Unfollow",
-    "unfollowError": "We could not unfollow this profile.",
-    "removeFollower": "Remove follower",
-    "removeFollowerTitle": "Remove follower?",
-    "removeFollowerBody": "{name} will stop following your profile. We won't notify them.",
-    "removeFollowerConfirm": "Remove",
-    "cancel": "Cancel",
-    "removeFollowerError": "We could not remove this follower.",
-    "verified": "Verified",
-    "professional": "Professional",
-    "user": "User"
   },
   "directChat": {
     "threadEmpty": "No messages yet",

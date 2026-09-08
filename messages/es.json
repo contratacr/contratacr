@@ -438,8 +438,7 @@
       "call": "No puedes llamarte a ti mismo. Así es como los clientes te contactan por teléfono.",
       "email": "No puedes escribirte a ti mismo. Así es como los clientes te contactan por correo.",
       "proposal": "No puedes responder tu propio proyecto.",
-      "favorite": "No puedes agregarte a tus propios favoritos. Favoritos es donde los clientes reúnen profesionales para revisarlos después.",
-      "follow": "No puedes seguir tu propio perfil. Así es como otras personas pueden seguir tus novedades."
+      "favorite": "No puedes agregarte a tus propios favoritos. Favoritos es donde los clientes reúnen profesionales para revisarlos después."
     }
   },
   "categorySearch": {
@@ -1287,7 +1286,6 @@
       "sent_bookings": "Mis citas",
       "sent_projects": "Mis proyectos",
       "saved": "Mis favoritos",
-      "network": "Seguidos y seguidores",
       "notifications": "Notificaciones",
       "guides": "Guías",
       "soporte": "Soporte",
@@ -1614,18 +1612,6 @@
           ],
           "cta": "Buscar profesionales"
         },
-        "followingGuide": {
-          "title": "Seguir profesionales",
-          "short": "Updates de cuentas que te interesan",
-          "body": "Seguir profesionales te ayuda a recibir novedades de perfiles que quieres tener cerca.",
-          "steps": [
-            "Abre el perfil de un profesional.",
-            "Presiona Seguir para recibir sus novedades.",
-            "Recibe notificaciones cuando publique casos de éxito, ofertas o empleos.",
-            "Vuelve a su perfil desde la notificación o desde tu red."
-          ],
-          "cta": "Ver mi red"
-        },
         "notificationsGuide": {
           "title": "Notificaciones",
           "short": "Avisos importantes y novedades",
@@ -1822,7 +1808,6 @@
       "searchEmpty": "No encontramos una guía con esa palabra."
     },
     "subtitles": {
-      "network": "Administra los profesionales que sigues y las personas que siguen tu perfil.",
       "bookings": "Citas que los clientes reservaron contigo.",
       "proposals": "Lo que los clientes están pidiendo de tu servicio. Responde y, si les interesa, te escriben.",
       "sent_bookings": "Citas que reservaste desde el perfil de un profesional.",
@@ -3975,36 +3960,6 @@
     "help": "Ayuda",
     "myOffers": "Mis ofertas",
     "myJobs": "Mis empleos"
-  },
-  "followNetwork": {
-    "suggestedTitle": "Sugeridos para ti",
-    "reasonFollowsYou": "Te sigue",
-    "reasonHired": "Lo contrataste",
-    "reasonVerified": "Verificado en tu provincia",
-    "dismiss": "Descartar",
-    "message": "Mensaje",
-    "back": "Volver",
-    "followers": "Seguidores",
-    "following": "Seguidos",
-    "followersTab": "{count, plural, one {# seguidor} other {# seguidores}}",
-    "followingTab": "{count, plural, one {# seguido} other {# seguidos}}",
-    "search": "Buscar",
-    "loading": "Cargando conexiones",
-    "noResults": "No encontramos resultados.",
-    "emptyFollowing": "Todavía no sigues a ningún profesional.",
-    "emptyFollowers": "Todavía nadie sigue tu perfil.",
-    "moreOptions": "Más opciones",
-    "unfollow": "Dejar de seguir",
-    "unfollowError": "No pudimos dejar de seguir este perfil.",
-    "removeFollower": "Quitar seguidor",
-    "removeFollowerTitle": "¿Quitar seguidor?",
-    "removeFollowerBody": "{name} dejará de seguir tu perfil. No le avisaremos.",
-    "removeFollowerConfirm": "Quitar",
-    "cancel": "Cancelar",
-    "removeFollowerError": "No pudimos quitar este seguidor.",
-    "verified": "Verificado",
-    "professional": "Profesional",
-    "user": "Usuario"
   },
   "directChat": {
     "threadEmpty": "Todavía no hay mensajes",

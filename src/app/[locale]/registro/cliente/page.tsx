@@ -22,7 +22,6 @@ import { getInitials } from "@/lib/utils";
 import { detectSocialOnly, providerLabel } from "@/lib/auth-method";
 import { useRedirectIfRegistered } from "@/hooks/use-redirect-if-registered";
 import { NAME_MAX_LENGTH, limitText } from "@/lib/text-limits";
-import { applyPendingFollow, hasPendingFollow } from "@/components/professionals/follow-button";
 
 export default function RegisterClientPage() {
   const router = useRouter();
@@ -47,11 +46,10 @@ export default function RegisterClientPage() {
   const [success, setSuccess] = useState(false);
   const [otpEmail, setOtpEmail] = useState<string | null>(null);
   const [oauthPhoto, setOauthPhoto] = useState<string | null>(null);
-  const panelHref = searchParams.get("redirect") || (hasPendingFollow() ? "/dashboard/profesional?tab=network&mode=use" : "/dashboard/profesional?mode=use");
+  const panelHref = searchParams.get("redirect") || "/dashboard/profesional?mode=use";
 
   async function completeSuccess() {
     const { data } = await createClient().auth.getUser();
-    if (data.user?.id) await applyPendingFollow(data.user.id);
     // Same conversion the modal reports, so the "Registro de cliente" custom
     // conversion counts accounts created from this page too.
     trackMetaEvent("CompleteRegistration", { content_name: "client_registration", status: "client" });
@@ -164,7 +162,6 @@ export default function RegisterClientPage() {
       if (!user) {
         setOtpEmail(email);
       } else {
-        await applyPendingFollow(user.id);
         setSuccess(true);
       }
     } catch {
