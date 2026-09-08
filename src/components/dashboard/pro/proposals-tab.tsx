@@ -108,6 +108,9 @@ export function ProposalsTab({ categoryId }: ProposalsTabProps) {
 
   const [stage, setStage] = useState<StageKey>("nuevas");
   const [expandedProject, setExpandedProject] = useState<string | null>(null);
+  // Proyecto cuya respuesta se acaba de retirar para corregir: la pantalla lo
+  // explica en línea en vez de abrir un segundo aviso encima del primero.
+  const [corrigiendo, setCorrigiendo] = useState<string | null>(null);
   const [expandedMine, setExpandedMine] = useState<string | null>(null);
   const [messages, setMessages] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState<string | null>(null);
@@ -206,6 +209,7 @@ export function ProposalsTab({ categoryId }: ProposalsTabProps) {
       if (res.ok || res.status === 409) {
         setJustSent((prev) => new Set(prev).add(projectId));
         setExpandedProject(null);
+        setCorrigiendo((actual) => (actual === projectId ? null : actual));
         setMessages((prev) => { const next = { ...prev }; delete next[projectId]; return next; });
         void refreshAll().then(() => setJustSent(new Set()));
         // La tarjeta se va de "Nuevas" al instante; sin esto el envío parecía no pasar.
@@ -244,7 +248,7 @@ export function ProposalsTab({ categoryId }: ProposalsTabProps) {
       await refreshAll();
       setStage("nuevas");
       setExpandedProject(propuesta.project_id);
-      await showMessage({ title: t("withdrawDoneTitle"), description: t("withdrawDone") });
+      setCorrigiendo(propuesta.project_id);
     } catch {
       await showMessage({ title: t("withdrawErrorTitle"), description: t("withdrawError"), tone: "danger" });
     } finally {
@@ -386,6 +390,11 @@ export function ProposalsTab({ categoryId }: ProposalsTabProps) {
                       </div>
                       <div className="border-t border-[#eef2f6] p-4 sm:p-5">
                         <label className="mb-1.5 block text-[15px] font-semibold text-[#162543]">{t("yourMessage")}</label>
+                        {corrigiendo === project.id && (
+                          <p className="mb-2 rounded-xl bg-[#eaf7fc] px-3 py-2 text-[13px] font-semibold leading-snug text-[#0089bb]">
+                            {t("correctingHint")}
+                          </p>
+                        )}
                         <textarea
                           value={message}
                           onChange={(e) => setMessages((prev) => ({ ...prev, [project.id]: e.target.value.slice(0, MESSAGE_MAX) }))}
@@ -395,7 +404,7 @@ export function ProposalsTab({ categoryId }: ProposalsTabProps) {
                         />
                         {message.length >= MESSAGE_MAX && <p className="mt-1 text-xs text-[#b45309]">{t("charLimit", { max: MESSAGE_MAX })}</p>}
                         <Button onClick={() => sendReply(project.id)} disabled={!message.trim() || submitting === project.id} loading={submitting === project.id} size="sm" variant="chat" className="mt-3 h-11 w-full rounded-full text-[13px] font-bold">
-                          {t("sendProposal")}
+                          {corrigiendo === project.id ? t("sendProposalAgain") : t("sendProposal")}
                         </Button>
                         <p className="mt-2 text-center text-xs text-[#68778d]">{t("proposalFree")}</p>
                         <button type="button" onClick={() => dismissOpportunity(project.id)} className="mx-auto mt-3 flex items-center gap-1.5 text-[12px] font-medium text-[#68778d] transition-colors hover:text-[#6b7280]">

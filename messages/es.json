@@ -2189,12 +2189,10 @@
     "reportError": "No se pudo enviar el reporte. Intenta de nuevo.",
     "sentTitle": "Respuesta enviada",
     "withdraw": "Corregir mi respuesta",
-    "withdrawing": "Retirando…",
+    "withdrawing": "Corrigiendo…",
     "withdrawTitle": "¿Corregir tu respuesta?",
-    "withdrawBody": "El cliente deja de verla y el proyecto vuelve a Nuevos con tu texto listo para corregir y volver a enviarlo.",
-    "withdrawDoneTitle": "Respuesta retirada",
-    "withdrawDone": "Tu texto quedó cargado abajo: corrígelo y vuelve a enviarlo cuando quieras.",
-    "withdrawErrorTitle": "No se pudo retirar",
+    "withdrawBody": "Quitamos la que enviaste y te devolvemos tu texto para editarlo. El cliente deja de verla hasta que la envíes otra vez.",
+    "withdrawErrorTitle": "No se pudo corregir",
     "withdrawError": "Intenta de nuevo en un momento.",
     "moreActions": "Más acciones",
     "chosenNote": "El cliente te eligió para este trabajo. Coordinen los detalles por mensaje.",
@@ -2205,7 +2203,9 @@
     "dropReasonLabel": "Motivo (lo lee el cliente)",
     "dropReasonPlaceholder": "Ej.: se me atrasó otro trabajo y no llego en esa fecha.",
     "dropDoneTitle": "Le avisamos al cliente",
-    "dropDone": "El proyecto volvió a estar abierto para otros profesionales."
+    "dropDone": "El proyecto volvió a estar abierto para otros profesionales.",
+    "correctingHint": "Corrige tu texto y vuelve a enviarlo. El cliente lo verá cuando lo envíes.",
+    "sendProposalAgain": "Enviar respuesta corregida"
   },
   "servicesEditor": {
     "servicesOf": "Servicios de",
