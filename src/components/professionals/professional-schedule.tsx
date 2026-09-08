@@ -865,7 +865,7 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
             onSelfAction={() => setSelfMsg(SELF_MSG.whatsapp)}
             analyticsSource="profile"
             buttonLabel="WhatsApp"
-            tone={hasSchedule ? "outline" : "primary"}
+            tone={hasSchedule ? "contrast" : "primary"}
             className={messageButtonClass}
           />
           {renderCall()}
@@ -878,7 +878,7 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
           isOwn={isOwn}
           onSelfAction={() => setSelfMsg(SELF_MSG.whatsapp)}
           analyticsSource="profile"
-          tone={hasSchedule ? "outline" : "primary"}
+          tone={hasSchedule ? "contrast" : "primary"}
           className={messageButtonClass}
         />
       )}
