@@ -329,7 +329,7 @@ export function AdminCase({ providerId }: { providerId: string }) {
                   <button
                     onClick={() => decide("verify")}
                     disabled={busy}
-                    className="w-full flex items-center justify-center gap-2 h-10 rounded-xl bg-[#16a34a] hover:bg-[#15803d] text-white text-sm font-bold disabled:opacity-60"
+                    className="w-full flex items-center justify-center gap-2 h-10 rounded-full bg-[#16a34a] hover:bg-[#15803d] text-white text-sm font-bold disabled:opacity-60"
                   >
                     <CheckCircle2 className="h-4 w-4" /> Marcar verificado
                   </button>
@@ -342,7 +342,7 @@ export function AdminCase({ providerId }: { providerId: string }) {
                   <button
                     onClick={() => setReasonAction("reject")}
                     disabled={busy}
-                    className="w-full flex items-center justify-center gap-2 h-10 rounded-xl bg-[#dc2626] hover:bg-[#b91c1c] text-white text-sm font-bold disabled:opacity-60"
+                    className="w-full flex items-center justify-center gap-2 h-10 rounded-full bg-[#dc2626] hover:bg-[#b91c1c] text-white text-sm font-bold disabled:opacity-60"
                   >
                     <XCircle className="h-4 w-4" /> Rechazar
                   </button>
@@ -354,7 +354,7 @@ export function AdminCase({ providerId }: { providerId: string }) {
                   <button
                     onClick={() => setReasonAction("revert_pending")}
                     disabled={busy}
-                    className="w-full flex items-center justify-center gap-2 h-10 rounded-xl bg-[#dc2626] hover:bg-[#b91c1c] text-white text-sm font-bold disabled:opacity-60"
+                    className="w-full flex items-center justify-center gap-2 h-10 rounded-full bg-[#dc2626] hover:bg-[#b91c1c] text-white text-sm font-bold disabled:opacity-60"
                   >
                     <XCircle className="h-4 w-4" /> Revocar verificación
                   </button>
@@ -414,7 +414,7 @@ export function AdminCase({ providerId }: { providerId: string }) {
                 href={`https://wa.me/${waTo}?text=${waMsg}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="mt-3 w-full flex items-center justify-center gap-2 h-10 rounded-xl bg-[#25D366] hover:bg-[#1eb456] text-white text-sm font-bold"
+                className="mt-3 w-full flex items-center justify-center gap-2 h-10 rounded-full bg-[#25D366] hover:bg-[#1eb456] text-white text-sm font-bold"
               >
                 <ExternalLink className="h-4 w-4" /> Contacto externo
               </a>

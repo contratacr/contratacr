@@ -567,7 +567,7 @@ export function MarketplaceFilterChip({ label, value, options, onChange }: { lab
           </button>
         ))}
       </div>
-      <button type="button" onClick={() => { onChange(pending); setOpen(false); }} className="h-12 w-full rounded-lg bg-[#009fd9] text-sm font-bold text-white hover:bg-[#008fc3]">{copy.showResults}</button>
+      <button type="button" onClick={() => { onChange(pending); setOpen(false); }} className="h-12 w-full rounded-full bg-[#009fd9] text-sm font-bold text-white hover:bg-[#008fc3]">{copy.showResults}</button>
     </>
   );
 

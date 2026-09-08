@@ -276,7 +276,7 @@ export function VerificationPanel({
             <button
               onClick={addCedula}
               disabled={cedulaSaving || !canAddCedula}
-              className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-[#009FD9] px-5 text-sm font-bold text-white transition-colors hover:bg-[#0089bb] disabled:opacity-50 sm:w-auto sm:min-w-[132px]"
+              className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-full bg-[#009FD9] px-5 text-sm font-bold text-white transition-colors hover:bg-[#0089bb] disabled:opacity-50 sm:w-auto sm:min-w-[132px]"
             >
               <ShieldCheck className="h-4 w-4" />{" "}
               {cedulaSaving ? t("savingCedula") : t("addCedula")}
@@ -532,7 +532,7 @@ function CurrentIdentificationPanel({
         <button
           type="button"
           onClick={onChangeClick}
-          className="inline-flex h-10 w-full items-center justify-center rounded-xl border border-[#dbe4ee] bg-white px-4 text-sm font-bold text-[#162543] transition-colors hover:border-[#009FD9]/50 hover:bg-[#f1fbfe] hover:text-[#0089bb] sm:w-auto"
+          className="inline-flex h-10 w-full items-center justify-center rounded-full border border-[#dbe4ee] bg-white px-4 text-sm font-bold text-[#162543] transition-colors hover:border-[#009FD9]/50 hover:bg-[#f1fbfe] hover:text-[#0089bb] sm:w-auto"
         >
           {changeLabel}
         </button>

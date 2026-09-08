@@ -198,8 +198,8 @@ export function JobApplicationForm({
     };
   }, [submitted, userId]);
 
-  if (isOwner) return <Link href="/dashboard/profesional?mode=offer&tab=jobs" className="inline-flex h-11 w-full items-center justify-center rounded-lg bg-[#009fd9] px-4 text-sm font-bold text-white transition hover:bg-[#008fc3]">{copy.manage}</Link>;
-  if (!userId) return <Link href={`/login?redirect=${encodeURIComponent(loginRedirect ?? `/empleos?apply=${jobId}`)}`} className="inline-flex h-11 w-full items-center justify-center rounded-lg bg-[#009fd9] px-4 text-sm font-bold text-white">{copy.signIn}</Link>;
+  if (isOwner) return <Link href="/dashboard/profesional?mode=offer&tab=jobs" className="inline-flex h-11 w-full items-center justify-center rounded-full bg-[#009fd9] px-4 text-sm font-bold text-white transition hover:bg-[#008fc3]">{copy.manage}</Link>;
+  if (!userId) return <Link href={`/login?redirect=${encodeURIComponent(loginRedirect ?? `/empleos?apply=${jobId}`)}`} className="inline-flex h-11 w-full items-center justify-center rounded-full bg-[#009fd9] px-4 text-sm font-bold text-white">{copy.signIn}</Link>;
   if (submitted) return (
     <div className="flex flex-col items-center px-2 py-3 text-center sm:py-5">
       <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#e9f8fc] text-[#009fd9]">
@@ -213,7 +213,7 @@ export function JobApplicationForm({
         <button
           type="button"
           onClick={onDismiss}
-          className="mt-5 inline-flex h-11 w-full items-center justify-center rounded-lg bg-[#009fd9] px-5 text-sm font-bold text-white transition hover:bg-[#008fc3] sm:max-w-xs"
+          className="mt-5 inline-flex h-11 w-full items-center justify-center rounded-full bg-[#009fd9] px-5 text-sm font-bold text-white transition hover:bg-[#008fc3] sm:max-w-xs"
         >
           {copy.backToJobs}
         </button>
@@ -395,7 +395,7 @@ export function JobApplicationForm({
           <input name="resume" type="file" accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" className="sr-only" onChange={(event) => setResumeName(event.currentTarget.files?.[0]?.name ?? "")} />
         </label>
         {error && <p className="text-sm font-semibold text-red-700">{error}</p>}
-        <button disabled={saving} className="h-11 w-full rounded-lg bg-[#009fd9] text-sm font-bold text-white disabled:opacity-60">{saving ? copy.sending : copy.send}</button>
+        <button disabled={saving} className="h-11 w-full rounded-full bg-[#009fd9] text-sm font-bold text-white disabled:opacity-60">{saving ? copy.sending : copy.send}</button>
       </form>
     </div>
   );

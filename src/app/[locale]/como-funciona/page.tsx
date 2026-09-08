@@ -69,7 +69,7 @@ function Journey({
           <p className="text-xs font-bold uppercase text-[#009fd9]">{label}</p>
           <h2 className="mt-2 text-xl font-extrabold text-[#162543] sm:text-2xl">{title}</h2>
           <p className="mt-3 text-sm leading-6 text-[#6b7280]">{description}</p>
-          <Link href={href} className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-lg bg-[#009fd9] px-5 text-sm font-bold text-white hover:bg-[#0089bb]">
+          <Link href={href} className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-full bg-[#009fd9] px-5 text-sm font-bold text-white hover:bg-[#0089bb]">
             {cta}<ArrowRight className="h-4 w-4" />
           </Link>
         </div>
@@ -177,7 +177,7 @@ export default async function ComoFuncionaPage() {
         <section className="px-4 py-14 text-center">
           <h2 className="text-2xl font-extrabold text-[#162543]">{t("ctaTitle")}</h2>
           <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-[#6b7280]">{t("ctaSubtitle")}</p>
-          <Link href="/ayuda" className="mt-6 inline-flex min-h-11 items-center gap-2 rounded-lg border border-[#cdd8e1] px-5 text-sm font-bold text-[#162543] hover:border-[#009fd9] hover:text-[#0089bb]">
+          <Link href="/ayuda" className="mt-6 inline-flex min-h-11 items-center gap-2 rounded-full border border-[#cdd8e1] px-5 text-sm font-bold text-[#162543] hover:border-[#009fd9] hover:text-[#0089bb]">
             {t("helpCta")}<ArrowRight className="h-4 w-4" />
           </Link>
         </section>

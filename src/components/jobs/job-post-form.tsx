@@ -279,7 +279,7 @@ function EditableList({
           </div>
         ))}
       </div>
-      <button type="button" onClick={() => onChange([...values, ""])} className="mt-2 inline-flex h-10 items-center gap-2 rounded-xl px-2 text-sm font-bold text-[#008fc3] hover:bg-[#f2fbfe]">
+      <button type="button" onClick={() => onChange([...values, ""])} className="mt-2 inline-flex h-10 items-center gap-2 rounded-full px-2 text-sm font-bold text-[#008fc3] hover:bg-[#f2fbfe]">
         <Plus className="h-4 w-4" /> {addLabel}
       </button>
       <FieldError>{error}</FieldError>

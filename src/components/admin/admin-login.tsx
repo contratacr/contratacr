@@ -86,7 +86,7 @@ export function AdminLogin() {
           <button
             type="submit"
             disabled={loading}
-            className="mt-2 w-full h-11 rounded-xl bg-[#009FD9] hover:bg-[#0089bb] text-white font-bold text-sm transition-all active:scale-[0.98] disabled:opacity-60 flex items-center justify-center gap-2"
+            className="mt-2 w-full h-11 rounded-full bg-[#009FD9] hover:bg-[#0089bb] text-white font-bold text-sm transition-all active:scale-[0.98] disabled:opacity-60 flex items-center justify-center gap-2"
           >
             {loading && <span className="h-4 w-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />}
             {loading ? "Ingresando…" : "Ingresar"}

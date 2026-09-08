@@ -167,7 +167,7 @@ function AdminDialog({
             type="button"
             onClick={onConfirm}
             disabled={busy}
-            className={`inline-flex h-10 items-center justify-center gap-2 rounded-lg px-4 text-sm font-semibold text-white transition disabled:opacity-50 ${danger ? "bg-[#dc2626] hover:bg-[#b91c1c]" : "bg-[#009FD9] hover:bg-[#0089bb]"}`}
+            className={`inline-flex h-10 items-center justify-center gap-2 rounded-full px-4 text-sm font-semibold text-white transition disabled:opacity-50 ${danger ? "bg-[#dc2626] hover:bg-[#b91c1c]" : "bg-[#009FD9] hover:bg-[#0089bb]"}`}
           >
             {busy && <Loader2 className="h-4 w-4 animate-spin" />}
             {dialog.confirmLabel}
@@ -902,7 +902,7 @@ export function AdminCategories() {
                   setLoading(true);
                   setView(tab.id as "suggestions" | "services" | "groups");
                 }}
-                className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-xl px-3 text-sm font-semibold ${view === tab.id ? "bg-[#009FD9] text-white" : "text-[#374151] hover:bg-[#f9fafb]"}`}
+                className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-full px-3 text-sm font-semibold ${view === tab.id ? "bg-[#009FD9] text-white" : "text-[#374151] hover:bg-[#f9fafb]"}`}
               >
                 <Icon className="h-4 w-4" />
                 {tab.label}
@@ -1093,7 +1093,7 @@ export function AdminCategories() {
               <div className="flex flex-wrap items-center gap-2">
                 <Toggle checked={newServiceFlags.esSalud} label="Salud" onChange={(v) => setNewServiceFlags((p) => ({ ...p, esSalud: v }))} />
                 <Toggle checked={newServiceFlags.supportsVideoconsulta} label="Video" onChange={(v) => setNewServiceFlags((p) => ({ ...p, supportsVideoconsulta: v }))} />
-                <button type="submit" disabled={(!newServiceName.trim() && !newServiceNameEn.trim()) || busy === "new-service"} className="inline-flex h-10 items-center gap-2 rounded-lg bg-[#009FD9] px-4 text-sm font-semibold text-white hover:bg-[#0089bb] disabled:opacity-50">
+                <button type="submit" disabled={(!newServiceName.trim() && !newServiceNameEn.trim()) || busy === "new-service"} className="inline-flex h-10 items-center gap-2 rounded-full bg-[#009FD9] px-4 text-sm font-semibold text-white hover:bg-[#0089bb] disabled:opacity-50">
                   {busy === "new-service" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
                   Agregar
                 </button>
@@ -1197,7 +1197,7 @@ export function AdminCategories() {
                   </div>
                   <div className="flex flex-wrap justify-end gap-2">
                     {hasDraftChanges(item) && (
-                      <button type="button" onClick={() => saveCatalogItem(item)} disabled={busy === item.id} className="inline-flex h-9 items-center gap-1 rounded-lg bg-[#009FD9] px-3 text-xs font-semibold text-white hover:bg-[#0089bb] disabled:opacity-50">
+                      <button type="button" onClick={() => saveCatalogItem(item)} disabled={busy === item.id} className="inline-flex h-9 items-center gap-1 rounded-full bg-[#009FD9] px-3 text-xs font-semibold text-white hover:bg-[#0089bb] disabled:opacity-50">
                         <Save className="h-3.5 w-3.5" /> Guardar
                       </button>
                     )}
@@ -1249,7 +1249,7 @@ export function AdminCategories() {
                   className="h-10 w-full rounded-lg border border-[#e5e7eb] bg-white px-3 text-sm outline-none focus:border-[#009FD9] focus:ring-2 focus:ring-[#009FD9]/15"
                 />
               </div>
-              <button type="submit" disabled={(!newGroupName.trim() && !newGroupNameEn.trim()) || busy === "new-group"} className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-[#009FD9] px-4 text-sm font-semibold text-white hover:bg-[#0089bb] disabled:opacity-50">
+              <button type="submit" disabled={(!newGroupName.trim() && !newGroupNameEn.trim()) || busy === "new-group"} className="inline-flex h-10 items-center justify-center gap-2 rounded-full bg-[#009FD9] px-4 text-sm font-semibold text-white hover:bg-[#0089bb] disabled:opacity-50">
                 {busy === "new-group" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
                 Agregar categoría
               </button>
@@ -1278,7 +1278,7 @@ export function AdminCategories() {
                     />
                     <div className="flex justify-end gap-2">
                       {hasGroupChanges(group) && (
-                        <button type="button" onClick={() => saveGroup(group)} disabled={busy === `group-${group.id}`} className="inline-flex h-9 items-center gap-1 rounded-lg bg-[#009FD9] px-3 text-xs font-semibold text-white hover:bg-[#0089bb] disabled:opacity-50">
+                        <button type="button" onClick={() => saveGroup(group)} disabled={busy === `group-${group.id}`} className="inline-flex h-9 items-center gap-1 rounded-full bg-[#009FD9] px-3 text-xs font-semibold text-white hover:bg-[#0089bb] disabled:opacity-50">
                           <Save className="h-3.5 w-3.5" /> Guardar
                         </button>
                       )}

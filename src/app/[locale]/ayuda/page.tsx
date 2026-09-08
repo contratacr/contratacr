@@ -74,7 +74,7 @@ export default function AyudaPage() {
                 <h1 className="text-3xl font-black leading-tight text-[#162543] sm:text-5xl">{t("title")}</h1>
                 <p className="mt-3 max-w-xl text-base leading-7 text-[#6b7280]">{t("subtitle")}</p>
               </div>
-              <Link href="/soporte" className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-lg border border-[#cdd8e1] px-5 text-sm font-bold text-[#162543] hover:border-[#009fd9] hover:text-[#0089bb]">
+              <Link href="/soporte" className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-full border border-[#cdd8e1] px-5 text-sm font-bold text-[#162543] hover:border-[#009fd9] hover:text-[#0089bb]">
                 <Headset className="h-4 w-4" />{t("contactCta")}
               </Link>
             </div>
@@ -124,7 +124,7 @@ export default function AyudaPage() {
         <section className="border-t border-[#e5e7eb] px-4 py-12">
           <div className="mx-auto flex max-w-4xl flex-col items-start justify-between gap-5 sm:flex-row sm:items-center">
             <div><h2 className="text-xl font-extrabold text-[#162543]">{t("contactTitle")}</h2><p className="mt-1 text-sm text-[#6b7280]">{t("contactSubtitle")}</p></div>
-            <Link href="/soporte" className="inline-flex min-h-11 items-center gap-2 rounded-lg bg-[#009fd9] px-5 text-sm font-bold text-white hover:bg-[#0089bb]"><Headset className="h-4 w-4" />{t("contactCta")}</Link>
+            <Link href="/soporte" className="inline-flex min-h-11 items-center gap-2 rounded-full bg-[#009fd9] px-5 text-sm font-bold text-white hover:bg-[#0089bb]"><Headset className="h-4 w-4" />{t("contactCta")}</Link>
           </div>
         </section>
       </main>

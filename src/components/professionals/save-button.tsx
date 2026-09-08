@@ -341,7 +341,7 @@ export function SaveButton({ pro, className, isOwn = false, withLabel = false }:
           aria-label={saved ? t("unsave") : t("save")}
           aria-pressed={saved}
       className={cn(
-        "inline-flex w-full items-center justify-center gap-2 rounded-xl border-[1.5px] border-[#009FD9] bg-white px-4 py-2.5 text-sm font-bold text-[#009FD9] transition-colors duration-200 hover:bg-[#EBF5FB]",
+        "inline-flex w-full items-center justify-center gap-2 rounded-full border-[1.5px] border-[#009FD9] bg-white px-4 py-2.5 text-sm font-bold text-[#009FD9] transition-colors duration-200 hover:bg-[#EBF5FB]",
         className
       )}
     >

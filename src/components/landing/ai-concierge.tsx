@@ -661,7 +661,7 @@ export function AiConcierge({ embedded = false, onBack }: { embedded?: boolean; 
                     type="button"
                     disabled={message.suggestionSent || suggestingIndex === index}
                     onClick={() => void suggestService(index, message.suggestedService!)}
-                    className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-[#009FD9] px-3 text-xs font-extrabold text-white transition hover:bg-[#008fca] disabled:bg-[#dce8ed] disabled:text-[#718096]"
+                    className="inline-flex h-9 items-center gap-1.5 rounded-full bg-[#009FD9] px-3 text-xs font-extrabold text-white transition hover:bg-[#008fca] disabled:bg-[#dce8ed] disabled:text-[#718096]"
                   >
                     {suggestingIndex === index ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : message.suggestionSent ? <BadgeCheck className="h-3.5 w-3.5" /> : <Sparkles className="h-3.5 w-3.5" />}
                     {message.suggestionSent ? copy.suggested : suggestingIndex === index ? copy.suggesting : copy.suggest}

@@ -186,7 +186,7 @@ export function WhatsAppReviewFollowUp() {
               type="button"
               disabled={submitting}
               onClick={() => void handle("hired")}
-              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#009FD9] px-4 text-sm font-bold text-white hover:bg-[#0089bb] disabled:opacity-60"
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-[#009FD9] px-4 text-sm font-bold text-white hover:bg-[#0089bb] disabled:opacity-60"
             >
               <Star className="h-4 w-4" />
               {isEn ? "Yes, leave a review" : "Sí, dejar una reseña"}

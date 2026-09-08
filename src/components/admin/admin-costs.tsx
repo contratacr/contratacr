@@ -259,7 +259,7 @@ function ServiceCard({ service, apply }: { service: CostServiceView; apply: (wor
             <input value={form.usageNote} onChange={(e) => setForm({ ...form, usageNote: e.target.value })} placeholder="p. ej. 1 240 de 2 000 minutos" className="mt-1 h-10 w-full rounded-lg border border-[#e5e7eb] px-3 text-sm" />
           </label>
           <div className="flex gap-2 sm:col-span-2">
-            <button type="submit" disabled={busy} className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-[#009FD9] px-3 text-sm font-semibold text-white disabled:opacity-60">{busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />} Guardar</button>
+            <button type="submit" disabled={busy} className="inline-flex h-9 items-center gap-1.5 rounded-full bg-[#009FD9] px-3 text-sm font-semibold text-white disabled:opacity-60">{busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />} Guardar</button>
             <button type="button" onClick={() => setEditing(false)} className="inline-flex h-9 items-center rounded-lg border border-[#e5e7eb] px-3 text-sm font-semibold text-[#374151]">Cancelar</button>
           </div>
         </form>
@@ -378,7 +378,7 @@ function Ledger({ entries, apply }: { entries: CostEntry[]; apply: (work: () => 
             </div>
           </label>
           <div className="flex items-end">
-            <button type="submit" disabled={busy} className="inline-flex h-10 w-full items-center justify-center gap-1.5 rounded-lg bg-[#009FD9] px-4 text-sm font-semibold text-white disabled:opacity-60">{busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />} Guardar gasto</button>
+            <button type="submit" disabled={busy} className="inline-flex h-10 w-full items-center justify-center gap-1.5 rounded-full bg-[#009FD9] px-4 text-sm font-semibold text-white disabled:opacity-60">{busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />} Guardar gasto</button>
           </div>
         </form>
       </section>

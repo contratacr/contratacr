@@ -246,7 +246,7 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
   const renderActions = () => (
     <div className={canPost ? "grid w-full grid-cols-2 gap-2 sm:w-[296px] [&>*]:w-full" : "flex w-full sm:w-auto"}>
       {canPost && (
-        <Link href="/dashboard/profesional?mode=offer&tab=jobs&returnTo=%2Fempleos" className="inline-flex h-9 items-center justify-center rounded-lg border border-[#cddae6] bg-white px-3 text-[13px] font-bold text-[#162543] transition hover:border-[#9fb6ca] hover:bg-[#f4f8fb] lg:h-[42px] lg:px-4 lg:text-sm">
+        <Link href="/dashboard/profesional?mode=offer&tab=jobs&returnTo=%2Fempleos" className="inline-flex h-9 items-center justify-center rounded-full border border-[#cddae6] bg-white px-3 text-[13px] font-bold text-[#162543] transition hover:border-[#9fb6ca] hover:bg-[#f4f8fb] lg:h-[42px] lg:px-4 lg:text-sm">
           {copy.myJobs}
         </Link>
       )}
@@ -255,12 +255,12 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
           <button type="button" onClick={() => setPublishOpen(true)} className="hidden h-[42px] items-center justify-center rounded-lg bg-[#009fd9] px-4 text-sm font-bold text-white transition hover:bg-[#008fc3] lg:inline-flex">
             {copy.publishJob}
           </button>
-          <Link href="/empleos/publicar" className="inline-flex h-9 items-center justify-center rounded-lg bg-[#009fd9] px-3 text-[13px] font-bold text-white transition hover:bg-[#008fc3] lg:hidden">
+          <Link href="/empleos/publicar" className="inline-flex h-9 items-center justify-center rounded-full bg-[#009fd9] px-3 text-[13px] font-bold text-white transition hover:bg-[#008fc3] lg:hidden">
             {copy.publishJob}
           </Link>
         </>
       ) : (
-        <Link href="/login?redirect=/empleos/publicar" className="inline-flex h-9 flex-1 items-center justify-center rounded-lg bg-[#009fd9] px-4 text-[13px] font-bold text-white transition hover:bg-[#008fc3] sm:flex-none lg:h-10 lg:px-5 lg:text-sm">
+        <Link href="/login?redirect=/empleos/publicar" className="inline-flex h-9 flex-1 items-center justify-center rounded-full bg-[#009fd9] px-4 text-[13px] font-bold text-white transition hover:bg-[#008fc3] sm:flex-none lg:h-10 lg:px-5 lg:text-sm">
           {copy.publishJob}
         </Link>
       )}
@@ -365,15 +365,15 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
             <p className="mb-4 mt-4 border-y border-[#e8eef3] py-4 text-sm font-semibold text-[#52627a]">{copy.publishedBy} {selected.employer_name}</p>
             {selected.employer_id === currentProfessionalId ? (
               <div className="space-y-3">
-                <button type="button" onClick={() => setEditingJob(selected)} className="inline-flex h-11 w-full items-center justify-center rounded-lg bg-[#009fd9] px-5 text-sm font-bold text-white transition hover:bg-[#008fc3]">{copy.editJob}</button>
-                <Link href={`/dashboard/profesional?mode=offer&tab=jobs&job=${selected.id}`} className="inline-flex h-11 w-full items-center justify-center rounded-lg border border-[#b9d9e8] px-5 text-sm font-bold text-[#007fae] transition hover:bg-[#f1f9fc]">{copy.manageJob}</Link>
+                <button type="button" onClick={() => setEditingJob(selected)} className="inline-flex h-11 w-full items-center justify-center rounded-full bg-[#009fd9] px-5 text-sm font-bold text-white transition hover:bg-[#008fc3]">{copy.editJob}</button>
+                <Link href={`/dashboard/profesional?mode=offer&tab=jobs&job=${selected.id}`} className="inline-flex h-11 w-full items-center justify-center rounded-full border border-[#b9d9e8] px-5 text-sm font-bold text-[#007fae] transition hover:bg-[#f1f9fc]">{copy.manageJob}</Link>
               </div>
             ) : (
               <div className="space-y-3">
                 {currentUserId ? (
-                  <button type="button" onClick={() => setApplyingJobId(selected.id)} disabled={submittedJobIds.has(selected.id)} className="inline-flex h-11 w-full items-center justify-center rounded-lg bg-[#009fd9] px-5 text-sm font-bold text-white transition hover:bg-[#008fc3] disabled:bg-[#cbd5e1]">{submittedJobIds.has(selected.id) ? copy.applicationSent : copy.apply}</button>
+                  <button type="button" onClick={() => setApplyingJobId(selected.id)} disabled={submittedJobIds.has(selected.id)} className="inline-flex h-11 w-full items-center justify-center rounded-full bg-[#009fd9] px-5 text-sm font-bold text-white transition hover:bg-[#008fc3] disabled:bg-[#cbd5e1]">{submittedJobIds.has(selected.id) ? copy.applicationSent : copy.apply}</button>
                 ) : (
-                  <Link href={`/login?redirect=${encodeURIComponent(`/empleos/${selected.id}?apply=${selected.id}`)}`} className="inline-flex h-11 w-full items-center justify-center rounded-lg bg-[#009fd9] px-5 text-sm font-bold text-white transition hover:bg-[#008fc3]">{copy.apply}</Link>
+                  <Link href={`/login?redirect=${encodeURIComponent(`/empleos/${selected.id}?apply=${selected.id}`)}`} className="inline-flex h-11 w-full items-center justify-center rounded-full bg-[#009fd9] px-5 text-sm font-bold text-white transition hover:bg-[#008fc3]">{copy.apply}</Link>
                 )}
                 <SaveItemButton itemType="job" itemId={selected.id} snapshot={jobSaveSnapshot(selected, locale)} userId={currentUserId} loginRedirect={`/empleos/${selected.id}`} withLabel className="h-11 w-full rounded-lg" />
               </div>
@@ -400,15 +400,15 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
                   {hasActiveFilters ? copy.emptyHelp : copy.futureJobs}
                 </p>
                 {hasActiveFilters ? (
-                  <button type="button" onClick={clearSearchAndFilters} className="mt-5 inline-flex h-10 items-center justify-center rounded-lg border border-[#b9d9e8] bg-white px-5 text-sm font-bold text-[#007fae] transition hover:bg-[#f1f9fc]">
+                  <button type="button" onClick={clearSearchAndFilters} className="mt-5 inline-flex h-10 items-center justify-center rounded-full border border-[#b9d9e8] bg-white px-5 text-sm font-bold text-[#007fae] transition hover:bg-[#f1f9fc]">
                     {copy.viewAll}
                   </button>
                 ) : canPost ? (
                   <>
-                    <button type="button" onClick={() => setPublishOpen(true)} className="mt-5 hidden h-10 items-center justify-center rounded-lg bg-[#009fd9] px-5 text-sm font-bold text-white transition hover:bg-[#008fc3] lg:inline-flex">
+                    <button type="button" onClick={() => setPublishOpen(true)} className="mt-5 hidden h-10 items-center justify-center rounded-full bg-[#009fd9] px-5 text-sm font-bold text-white transition hover:bg-[#008fc3] lg:inline-flex">
                       {copy.publishFirst}
                     </button>
-                    <Link href="/empleos/publicar" className="mt-5 inline-flex h-10 items-center justify-center rounded-lg bg-[#009fd9] px-5 text-sm font-bold text-white transition hover:bg-[#008fc3] lg:hidden">
+                    <Link href="/empleos/publicar" className="mt-5 inline-flex h-10 items-center justify-center rounded-full bg-[#009fd9] px-5 text-sm font-bold text-white transition hover:bg-[#008fc3] lg:hidden">
                       {copy.publishFirst}
                     </Link>
                   </>
@@ -519,13 +519,13 @@ function JobPreview({ job, isOwner, userId, hasApplied, onApply, onEdit, mobile 
     {!hideActions && <div className={mobile ? "mt-5 grid grid-cols-2 gap-3" : "mt-5 flex flex-wrap items-center gap-3"}>
       {isOwner ? (
         <>
-          <button type="button" onClick={onEdit} className="inline-flex h-11 w-full items-center justify-center rounded-lg bg-[#009fd9] px-4 text-sm font-bold text-white transition hover:bg-[#008fc3]">{copy.editJob}</button>
-          <Link href={`/dashboard/profesional?mode=offer&tab=jobs&job=${job.id}`} className="inline-flex h-11 w-full items-center justify-center rounded-lg border border-[#b9d9e8] px-4 text-center text-sm font-bold text-[#007fae] transition hover:bg-[#f1f9fc]">{copy.manageJob}</Link>
+          <button type="button" onClick={onEdit} className="inline-flex h-11 w-full items-center justify-center rounded-full bg-[#009fd9] px-4 text-sm font-bold text-white transition hover:bg-[#008fc3]">{copy.editJob}</button>
+          <Link href={`/dashboard/profesional?mode=offer&tab=jobs&job=${job.id}`} className="inline-flex h-11 w-full items-center justify-center rounded-full border border-[#b9d9e8] px-4 text-center text-sm font-bold text-[#007fae] transition hover:bg-[#f1f9fc]">{copy.manageJob}</Link>
         </>
       ) : userId ? (
-        <button type="button" onClick={onApply} disabled={hasApplied} className="inline-flex h-11 w-full items-center justify-center overflow-visible whitespace-nowrap rounded-lg bg-[#009fd9] px-4 pt-px text-sm font-bold leading-6 text-white transition hover:bg-[#008fc3] disabled:bg-[#cbd5e1] sm:w-[168px]">{hasApplied ? copy.applicationSent : copy.apply}</button>
+        <button type="button" onClick={onApply} disabled={hasApplied} className="inline-flex h-11 w-full items-center justify-center overflow-visible whitespace-nowrap rounded-full bg-[#009fd9] px-4 pt-px text-sm font-bold leading-6 text-white transition hover:bg-[#008fc3] disabled:bg-[#cbd5e1] sm:w-[168px]">{hasApplied ? copy.applicationSent : copy.apply}</button>
       ) : (
-        <Link href={`/login?redirect=${encodeURIComponent(`/empleos?apply=${job.id}`)}`} className="inline-flex h-11 w-full items-center justify-center overflow-visible whitespace-nowrap rounded-lg bg-[#009fd9] px-4 pt-px text-sm font-bold leading-6 text-white transition hover:bg-[#008fc3] sm:w-[168px]">{copy.apply}</Link>
+        <Link href={`/login?redirect=${encodeURIComponent(`/empleos?apply=${job.id}`)}`} className="inline-flex h-11 w-full items-center justify-center overflow-visible whitespace-nowrap rounded-full bg-[#009fd9] px-4 pt-px text-sm font-bold leading-6 text-white transition hover:bg-[#008fc3] sm:w-[168px]">{copy.apply}</Link>
       )}
       {!isOwner && <SaveItemButton itemType="job" itemId={job.id} snapshot={jobSaveSnapshot(job, locale)} userId={userId} loginRedirect={`/empleos/${job.id}`} withLabel className="h-11 w-full whitespace-nowrap rounded-lg px-4 leading-6 sm:w-[168px]" />}
     </div>}

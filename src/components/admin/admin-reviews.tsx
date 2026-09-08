@@ -213,15 +213,15 @@ export function AdminReviews() {
                 </div>
                 <div className="mt-4 flex flex-wrap justify-end gap-2 border-t border-[#edf2f7] pt-3">
                   {review.moderationStatus === "hidden" ? (
-                    <button type="button" disabled={actingId === review.id} onClick={() => void moderate(review, "restore")} className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-[#b9dbea] px-3 text-sm font-bold text-[#007cac] hover:bg-[#eef9ff] disabled:opacity-50">
+                    <button type="button" disabled={actingId === review.id} onClick={() => void moderate(review, "restore")} className="inline-flex min-h-10 items-center gap-2 rounded-full border border-[#b9dbea] px-3 text-sm font-bold text-[#007cac] hover:bg-[#eef9ff] disabled:opacity-50">
                       <RotateCcw className="h-4 w-4" /> Restaurar
                     </button>
                   ) : (
-                    <button type="button" disabled={actingId === review.id} onClick={() => void moderate(review, "hide")} className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-[#d9e2ec] px-3 text-sm font-bold text-[#334155] hover:bg-[#f8fafc] disabled:opacity-50">
+                    <button type="button" disabled={actingId === review.id} onClick={() => void moderate(review, "hide")} className="inline-flex min-h-10 items-center gap-2 rounded-full border border-[#d9e2ec] px-3 text-sm font-bold text-[#334155] hover:bg-[#f8fafc] disabled:opacity-50">
                       <Eye className="h-4 w-4" /> Ocultar
                     </button>
                   )}
-                  <button type="button" disabled={actingId === review.id} onClick={() => void moderate(review, "delete")} className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-[#fecaca] px-3 text-sm font-bold text-[#b91c1c] hover:bg-[#fef2f2] disabled:opacity-50">
+                  <button type="button" disabled={actingId === review.id} onClick={() => void moderate(review, "delete")} className="inline-flex min-h-10 items-center gap-2 rounded-full border border-[#fecaca] px-3 text-sm font-bold text-[#b91c1c] hover:bg-[#fef2f2] disabled:opacity-50">
                     {actingId === review.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />} Eliminar
                   </button>
                 </div>

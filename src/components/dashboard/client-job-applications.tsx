@@ -123,9 +123,9 @@ export function ClientJobApplications() {
                     </div>
                   ) : <span className="inline-flex h-10 items-center justify-center rounded-lg bg-[#f3f6f8] px-3 text-sm font-semibold text-[#718096]">{isEn ? "CV unavailable" : "CV no disponible"}</span>}
                   {job.status === "published" ? (
-                    <Link href={"/empleos/" + job.id + "?job=" + job.id + "&from=" + encodeURIComponent("/dashboard/cliente?tab=applications")} className="inline-flex h-10 w-full shrink-0 items-center justify-center gap-2 rounded-lg bg-[#009fd9] px-5 text-sm font-bold text-white hover:bg-[#008fc3] sm:w-auto">{isEn ? "View job" : "Ver empleo"}<ExternalLink className="h-4 w-4" /></Link>
+                    <Link href={"/empleos/" + job.id + "?job=" + job.id + "&from=" + encodeURIComponent("/dashboard/cliente?tab=applications")} className="inline-flex h-10 w-full shrink-0 items-center justify-center gap-2 rounded-full bg-[#009fd9] px-5 text-sm font-bold text-white hover:bg-[#008fc3] sm:w-auto">{isEn ? "View job" : "Ver empleo"}<ExternalLink className="h-4 w-4" /></Link>
                   ) : (
-                    <span className="inline-flex h-10 w-full shrink-0 items-center justify-center rounded-lg bg-[#e8edf2] px-5 text-sm font-bold text-[#718096] sm:w-auto">{isEn ? "Publication unavailable" : "Publicación no disponible"}</span>
+                    <span className="inline-flex h-10 w-full shrink-0 items-center justify-center rounded-full bg-[#e8edf2] px-5 text-sm font-bold text-[#718096] sm:w-auto">{isEn ? "Publication unavailable" : "Publicación no disponible"}</span>
                   )}
                 </div>
                 {application.portfolioUrl && <a href={application.portfolioUrl} target="_blank" rel="noreferrer" className="mt-3 inline-flex text-xs font-bold text-[#008fc3] hover:underline">{isEn ? "View submitted portfolio" : "Ver portafolio utilizado"}</a>}

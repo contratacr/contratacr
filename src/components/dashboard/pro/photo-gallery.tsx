@@ -284,7 +284,7 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
             type="button"
             onClick={openAdd}
             disabled={addFull || professions.length === 0}
-            className="flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-[#009FD9] px-4 text-sm font-bold text-white transition-colors hover:bg-[#0089bb] disabled:cursor-not-allowed disabled:bg-[#cbd5e1]"
+            className="flex h-11 w-full items-center justify-center gap-2 rounded-full bg-[#009FD9] px-4 text-sm font-bold text-white transition-colors hover:bg-[#0089bb] disabled:cursor-not-allowed disabled:bg-[#cbd5e1]"
           >
             <Plus className="h-4 w-4" /> {t("addCase")}
           </button>
@@ -355,7 +355,7 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
             type="button"
             onClick={openAdd}
             disabled={addFull || professions.length === 0}
-            className="mt-5 inline-flex h-11 w-full max-w-xs items-center justify-center gap-2 rounded-lg bg-[#009FD9] px-4 text-sm font-bold text-white transition-colors hover:bg-[#0089bb] disabled:cursor-not-allowed disabled:bg-[#cbd5e1]"
+            className="mt-5 inline-flex h-11 w-full max-w-xs items-center justify-center gap-2 rounded-full bg-[#009FD9] px-4 text-sm font-bold text-white transition-colors hover:bg-[#0089bb] disabled:cursor-not-allowed disabled:bg-[#cbd5e1]"
           >
             <Plus className="h-4 w-4" /> {t("addCase")}
           </button>
@@ -376,7 +376,7 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
           type="button"
           onClick={() => void persist(cases)}
           disabled={!dirty || saving || uploading}
-          className="h-10 w-full rounded-xl bg-[#009FD9] px-5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#0089bb] disabled:cursor-not-allowed disabled:bg-[#cbd5e1] disabled:text-white sm:w-auto"
+          className="h-10 w-full rounded-full bg-[#009FD9] px-5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#0089bb] disabled:cursor-not-allowed disabled:bg-[#cbd5e1] disabled:text-white sm:w-auto"
         >
           {saving ? (locale === "en" ? "Saving..." : "Guardando...") : locale === "en" ? "Save changes" : "Guardar cambios"}
         </button>

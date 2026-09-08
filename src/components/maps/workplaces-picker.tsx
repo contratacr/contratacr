@@ -493,7 +493,7 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
       <button
         type="button"
         onClick={commitWorkplace}
-        className="self-start inline-flex h-10 items-center gap-1.5 rounded-xl bg-[#e8f7fd] px-3.5 text-sm font-bold text-[#0089bb] transition-colors hover:bg-[#d8f1fb]"
+        className="self-start inline-flex h-10 items-center gap-1.5 rounded-full bg-[#e8f7fd] px-3.5 text-sm font-bold text-[#0089bb] transition-colors hover:bg-[#d8f1fb]"
       >
         <Plus className="h-4 w-4" /> {!province || province === COUNTRY_OPTION ? t("addWholeCountry") : canton ? t("addThisPlace") : t("addWholeProvince")}
       </button>
@@ -506,7 +506,7 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
           <button
             type="button"
             onClick={() => setAdding(true)}
-            className="inline-flex h-10 items-center gap-1.5 rounded-xl px-1 text-sm font-bold text-[#009FD9] transition-colors hover:text-[#0089bb]"
+            className="inline-flex h-10 items-center gap-1.5 rounded-full px-1 text-sm font-bold text-[#009FD9] transition-colors hover:text-[#0089bb]"
           >
             <Plus className="h-4 w-4" /> {t("addAnotherPlace")}
           </button>

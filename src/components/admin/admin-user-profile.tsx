@@ -398,10 +398,10 @@ export function AdminUserProfile({
                 {professionalSignupIncomplete && <div className="rounded-xl border border-[#fed7aa] bg-white px-3 py-2 text-xs font-medium text-[#9a3412]">Pendiente de completar registro.</div>}
                 {!professionalSignupIncomplete && !isIdentityVerified && !isIdentityRejected && (
                   <>
-                    <button type="button" onClick={() => updateIdentity("verify")} disabled={identityBusy != null} className="flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-[#16a34a] text-sm font-bold text-white transition hover:bg-[#15803d] disabled:opacity-60">
+                    <button type="button" onClick={() => updateIdentity("verify")} disabled={identityBusy != null} className="flex h-10 w-full items-center justify-center gap-2 rounded-full bg-[#16a34a] text-sm font-bold text-white transition hover:bg-[#15803d] disabled:opacity-60">
                       {identityBusy === "verify" ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />} Marcar verificado
                     </button>
-                    <button type="button" onClick={() => setIdentityReasonAction("reject")} disabled={identityBusy != null} className="flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-[#dc2626] text-sm font-bold text-white transition hover:bg-[#b91c1c] disabled:opacity-60">
+                    <button type="button" onClick={() => setIdentityReasonAction("reject")} disabled={identityBusy != null} className="flex h-10 w-full items-center justify-center gap-2 rounded-full bg-[#dc2626] text-sm font-bold text-white transition hover:bg-[#b91c1c] disabled:opacity-60">
                       <XCircle className="h-4 w-4" /> Rechazar verificación
                     </button>
                   </>
@@ -412,7 +412,7 @@ export function AdminUserProfile({
                   </button>
                 )}
                 {!professionalSignupIncomplete && isIdentityVerified && (
-                  <button type="button" onClick={() => setIdentityReasonAction("revert_pending")} disabled={identityBusy != null} className="flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-[#dc2626] text-sm font-bold text-white transition hover:bg-[#b91c1c] disabled:opacity-60">
+                  <button type="button" onClick={() => setIdentityReasonAction("revert_pending")} disabled={identityBusy != null} className="flex h-10 w-full items-center justify-center gap-2 rounded-full bg-[#dc2626] text-sm font-bold text-white transition hover:bg-[#b91c1c] disabled:opacity-60">
                     <XCircle className="h-4 w-4" /> Quitar verificación
                   </button>
                 )}

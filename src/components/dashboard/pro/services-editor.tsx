@@ -650,7 +650,7 @@ export function ServicesEditor({
         type="button"
         onClick={() => void persist(professions, services)}
         disabled={!dirty || saving || imageUploading}
-        className="h-10 w-full rounded-xl bg-[#009FD9] px-5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#0089bb] disabled:cursor-not-allowed disabled:bg-[#cbd5e1] disabled:text-white sm:w-auto"
+        className="h-10 w-full rounded-full bg-[#009FD9] px-5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#0089bb] disabled:cursor-not-allowed disabled:bg-[#cbd5e1] disabled:text-white sm:w-auto"
       >
         {saving ? t("saving") : t("saveChanges")}
       </button>
@@ -660,7 +660,7 @@ export function ServicesEditor({
     <button
       type="button"
       onClick={() => { setPickerMode("add"); setPickerQuery(""); setActivePickerGroupId(null); }}
-      className="flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-[#009FD9] px-4 text-sm font-bold text-white transition-colors hover:bg-[#0089bb]"
+      className="flex h-11 w-full items-center justify-center gap-2 rounded-full bg-[#009FD9] px-4 text-sm font-bold text-white transition-colors hover:bg-[#0089bb]"
     >
       <Plus className="h-4 w-4" /> {t("addProfession")}
     </button>

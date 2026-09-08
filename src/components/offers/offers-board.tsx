@@ -354,7 +354,7 @@ export function OffersBoard({
       {canPost && (
         <Link
           href="/dashboard/profesional?mode=offer&tab=offers&returnTo=%2Fofertas"
-          className="inline-flex h-9 items-center justify-center rounded-lg border border-[#cddae6] bg-white px-3 text-[13px] font-bold text-[#162543] transition hover:border-[#9fb6ca] hover:bg-[#f4f8fb] lg:h-[42px] lg:px-4 lg:text-sm"
+          className="inline-flex h-9 items-center justify-center rounded-full border border-[#cddae6] bg-white px-3 text-[13px] font-bold text-[#162543] transition hover:border-[#9fb6ca] hover:bg-[#f4f8fb] lg:h-[42px] lg:px-4 lg:text-sm"
         >
           {copy.myOffers}
         </Link>
@@ -370,7 +370,7 @@ export function OffersBoard({
           </button>
           <Link
             href="/ofertas/publicar"
-            className="inline-flex h-9 items-center justify-center rounded-lg bg-[#009fd9] px-3 text-[13px] font-bold text-white transition hover:bg-[#008fc3] lg:hidden"
+            className="inline-flex h-9 items-center justify-center rounded-full bg-[#009fd9] px-3 text-[13px] font-bold text-white transition hover:bg-[#008fc3] lg:hidden"
           >
             {copy.publishOffer}
           </Link>
@@ -378,7 +378,7 @@ export function OffersBoard({
       ) : (
         <Link
           href="/login?redirect=/ofertas/publicar"
-          className="inline-flex h-9 flex-1 items-center justify-center rounded-lg bg-[#009fd9] px-4 text-[13px] font-bold text-white transition hover:bg-[#008fc3] sm:flex-none lg:h-10 lg:px-5 lg:text-sm"
+          className="inline-flex h-9 flex-1 items-center justify-center rounded-full bg-[#009fd9] px-4 text-[13px] font-bold text-white transition hover:bg-[#008fc3] sm:flex-none lg:h-10 lg:px-5 lg:text-sm"
         >
           {copy.publishOffer}
         </Link>
@@ -487,7 +487,7 @@ export function OffersBoard({
                     <button
                       type="button"
                       onClick={clearSearchAndFilters}
-                      className="mt-5 inline-flex h-10 items-center justify-center rounded-lg border border-[#b9d9e8] bg-white px-5 text-sm font-bold text-[#007fae] transition hover:bg-[#f1f9fc]"
+                      className="mt-5 inline-flex h-10 items-center justify-center rounded-full border border-[#b9d9e8] bg-white px-5 text-sm font-bold text-[#007fae] transition hover:bg-[#f1f9fc]"
                     >
                        {copy.viewAll}
                     </button>
@@ -496,13 +496,13 @@ export function OffersBoard({
                       <button
                         type="button"
                         onClick={() => setPublishOpen(true)}
-                        className="mt-5 hidden h-10 items-center justify-center rounded-lg bg-[#009fd9] px-5 text-sm font-bold text-white transition hover:bg-[#008fc3] lg:inline-flex"
+                        className="mt-5 hidden h-10 items-center justify-center rounded-full bg-[#009fd9] px-5 text-sm font-bold text-white transition hover:bg-[#008fc3] lg:inline-flex"
                       >
                         {copy.publishFirst}
                       </button>
                       <Link
                         href="/ofertas/publicar"
-                        className="mt-5 inline-flex h-10 items-center justify-center rounded-lg bg-[#009fd9] px-5 text-sm font-bold text-white transition hover:bg-[#008fc3] lg:hidden"
+                        className="mt-5 inline-flex h-10 items-center justify-center rounded-full bg-[#009fd9] px-5 text-sm font-bold text-white transition hover:bg-[#008fc3] lg:hidden"
                       >
                         {copy.publishFirst}
                       </Link>
@@ -691,8 +691,8 @@ export function OfferContactActions({
   }
 
   const secondaryClass = compact
-    ? "inline-flex h-9 min-w-0 items-center justify-center gap-1.5 rounded-lg border-[1.5px] border-[#009FD9] bg-white px-2 text-[12px] font-bold text-[#009FD9] transition hover:bg-[#EBF5FB]"
-    : "inline-flex h-11 min-w-0 items-center justify-center gap-2 rounded-lg border-[1.5px] border-[#009FD9] bg-white px-3 text-sm font-bold text-[#009FD9] transition hover:bg-[#EBF5FB]";
+    ? "inline-flex h-9 min-w-0 items-center justify-center gap-1.5 rounded-full border-[1.5px] border-[#009FD9] bg-white px-2 text-[12px] font-bold text-[#009FD9] transition hover:bg-[#EBF5FB]"
+    : "inline-flex h-11 min-w-0 items-center justify-center gap-2 rounded-full border-[1.5px] border-[#009FD9] bg-white px-3 text-sm font-bold text-[#009FD9] transition hover:bg-[#EBF5FB]";
   return (
     <div className="relative z-[2] mt-3 space-y-2">
       {showPrimaryContact && (
@@ -702,7 +702,7 @@ export function OfferContactActions({
           contextTitle={offer.title}
           analyticsSource="unknown"
           buttonLabel="WhatsApp"
-          className={`${compact ? "h-9 text-[12px]" : "h-11 text-sm"} w-full rounded-lg font-bold`}
+          className={`${compact ? "h-9 text-[12px]" : "h-11 text-sm"} w-full rounded-full font-bold`}
         />
       )}
       {(showCall || showEmail) && (
@@ -870,13 +870,13 @@ function OfferPreview({
           <button
             type="button"
             onClick={onEdit}
-            className="inline-flex h-11 min-w-0 items-center justify-center rounded-lg bg-[#009fd9] px-3 text-sm font-bold text-white transition hover:bg-[#008fc3] sm:px-5"
+            className="inline-flex h-11 min-w-0 items-center justify-center rounded-full bg-[#009fd9] px-3 text-sm font-bold text-white transition hover:bg-[#008fc3] sm:px-5"
           >
             <span className="truncate">{copy.editOffer}</span>
           </button>
                         <Link
                           href={`/dashboard/profesional?mode=offer&tab=offers&offer=${offer.id}`}
-                          className="inline-flex h-11 min-w-0 items-center justify-center rounded-lg border border-[#b9d9e8] px-3 text-sm font-bold text-[#007fae] transition hover:bg-[#f1f9fc] sm:px-5"
+                          className="inline-flex h-11 min-w-0 items-center justify-center rounded-full border border-[#b9d9e8] px-3 text-sm font-bold text-[#007fae] transition hover:bg-[#f1f9fc] sm:px-5"
                         >
                           <span className="truncate sm:hidden">{locale === "es" ? "Administrar" : copy.manageOffer}</span>
                           <span className="hidden truncate sm:inline">{copy.manageOffer}</span>

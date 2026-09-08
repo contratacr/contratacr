@@ -106,7 +106,7 @@ export default async function DeleteAccountPage({
 
             <Link
               href={accountSecurityHref}
-              className="mt-7 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-lg bg-[#009FD9] px-5 text-sm font-bold text-white transition-colors hover:bg-[#0089bb]"
+              className="mt-7 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-[#009FD9] px-5 text-sm font-bold text-white transition-colors hover:bg-[#0089bb]"
             >
               {en ? "Go to Account and security" : "Ir a Cuenta y seguridad"}
               <ArrowRight className="h-4 w-4" />
@@ -128,7 +128,7 @@ export default async function DeleteAccountPage({
               </div>
               <Link
                 href={supportHref}
-                className="mt-4 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg border border-[#cfe7f2] bg-[#f5fbfe] px-5 text-sm font-bold text-[#0089bb] transition-colors hover:border-[#009FD9]/50 hover:bg-[#eaf7fd]"
+                className="mt-4 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-full border border-[#cfe7f2] bg-[#f5fbfe] px-5 text-sm font-bold text-[#0089bb] transition-colors hover:border-[#009FD9]/50 hover:bg-[#eaf7fd]"
               >
                 {en ? "Open support case" : "Abrir caso de soporte"}
                 <ArrowRight className="h-4 w-4" />

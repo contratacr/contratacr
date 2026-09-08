@@ -151,7 +151,7 @@ function LanguageMenu() {
       type="button"
       onClick={() => switchLang(nextLocale)}
       aria-label={locale === "en" ? "Cambiar a español" : "Switch to English"}
-      className="relative z-[70] inline-flex h-10 min-w-10 shrink-0 items-center justify-center rounded-xl px-2 text-[12px] font-bold uppercase tracking-[0.04em] text-[#1A2744] transition-colors hover:bg-gray-50 hover:text-[#009FD9]"
+      className="relative z-[70] inline-flex h-10 min-w-10 shrink-0 items-center justify-center rounded-full px-2 text-[12px] font-bold uppercase tracking-[0.04em] text-[#1A2744] transition-colors hover:bg-gray-50 hover:text-[#009FD9]"
     >
       {label}
     </button>

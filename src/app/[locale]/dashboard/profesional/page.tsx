@@ -429,7 +429,7 @@ function GuidesBody({
             onClose?.();
             window.location.assign(`/${locale}/dashboard/profesional?tab=soporte`);
           }}
-          className="flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-[#009FD9] px-4 text-sm font-bold text-white transition-colors hover:bg-[#0089bb]"
+          className="flex h-11 w-full items-center justify-center gap-2 rounded-full bg-[#009FD9] px-4 text-sm font-bold text-white transition-colors hover:bg-[#0089bb]"
         >
           {t("supportCta")}
           <ArrowRight className="h-4 w-4" />
@@ -1799,7 +1799,7 @@ export default function DashboardPage() {
           requestUnsavedAction(() => openPanelDestination(tab));
         }}
         className={cn(
-          "relative inline-flex h-10 shrink-0 items-center justify-center gap-1.5 rounded-xl px-1.5 text-[12px] font-bold transition min-[1180px]:h-11 min-[1180px]:px-2 min-[1180px]:text-[12.5px] xl:px-2.5 xl:text-[13px]",
+          "relative inline-flex h-10 shrink-0 items-center justify-center gap-1.5 rounded-full px-1.5 text-[12px] font-bold transition min-[1180px]:h-11 min-[1180px]:px-2 min-[1180px]:text-[12.5px] xl:px-2.5 xl:text-[13px]",
           activeTab === tab
             ? "text-[#0089bb]"
             : "text-[#526277] hover:bg-[#f3f7fa] hover:text-[#162543]",
@@ -2142,7 +2142,7 @@ export default function DashboardPage() {
                     onClick={openInNewTabOnDesktop}
                     aria-label={locale === "en" ? "View public profile" : "Ver perfil público"}
                     data-testid="dashboard-mobile-view-profile"
-                    className="inline-flex h-10 w-full items-center justify-center gap-1.5 rounded-xl border border-[#d7e1ea] bg-[#f8fbfd] text-sm font-bold text-[#3c4c61] transition active:bg-[#eef6fb]"
+                    className="inline-flex h-10 w-full items-center justify-center gap-1.5 rounded-full border border-[#d7e1ea] bg-[#f8fbfd] text-sm font-bold text-[#3c4c61] transition active:bg-[#eef6fb]"
                   >
                     <ExternalLink className="h-4 w-4" />
                     {locale === "en" ? "View profile" : "Ver perfil"}
@@ -2160,7 +2160,7 @@ export default function DashboardPage() {
                         }).catch(() => {});
                       }
                     }}
-                    className="inline-flex h-10 !min-h-0 w-full items-center justify-center gap-1.5 rounded-xl border border-[#d7e1ea] bg-[#f8fbfd] text-sm font-bold text-[#3c4c61] transition active:bg-[#eef6fb]"
+                    className="inline-flex h-10 !min-h-0 w-full items-center justify-center gap-1.5 rounded-full border border-[#d7e1ea] bg-[#f8fbfd] text-sm font-bold text-[#3c4c61] transition active:bg-[#eef6fb]"
                   >
                     <Users className="h-4 w-4" />
                     {locale === "en" ? "Share" : "Compartir"}

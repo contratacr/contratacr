@@ -114,7 +114,7 @@ export default function AtraerClientesPage() {
         <section className="border-t border-[#e5e7eb] bg-[#f7fbfd] px-4 py-12">
           <div className="mx-auto flex max-w-4xl flex-col items-start justify-between gap-5 sm:flex-row sm:items-center">
             <div><h2 className="text-xl font-extrabold text-[#162543]">{t("ctaTitle")}</h2><p className="mt-2 text-sm text-[#6b7280]">{t("ctaSubtitle")}</p></div>
-            <Link href="/registro/profesional" className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-lg bg-[#009fd9] px-5 text-sm font-bold text-white hover:bg-[#0089bb]">{t("ctaRegister")}<ArrowRight className="h-4 w-4" /></Link>
+            <Link href="/registro/profesional" className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-full bg-[#009fd9] px-5 text-sm font-bold text-white hover:bg-[#0089bb]">{t("ctaRegister")}<ArrowRight className="h-4 w-4" /></Link>
           </div>
         </section>
       </main>

@@ -217,7 +217,7 @@ export function UnsavedChangesGuard({
 
             <div className="mt-5 flex flex-col gap-2">
               {onSave && !presentedValidationError && (
-                <Button onClick={saveAndStay} loading={saving} className="h-11 w-full rounded-xl bg-[#009FD9] text-sm font-bold shadow-sm hover:bg-[#0089bb]">
+                <Button onClick={saveAndStay} loading={saving} className="h-11 w-full rounded-full bg-[#009FD9] text-sm font-bold shadow-sm hover:bg-[#0089bb]">
                   {saving ? t("saving") : <><Save className="h-4 w-4" /> {t("saveChanges")}</>}
                 </Button>
               )}
@@ -225,7 +225,7 @@ export function UnsavedChangesGuard({
                 type="button"
                 onClick={presentedValidationError ? keepEditing : leaveWithoutSaving}
                 disabled={saving}
-                className={`h-11 w-full rounded-xl text-sm font-bold transition-colors disabled:opacity-50 ${presentedValidationError ? "bg-[#009FD9] text-white shadow-sm hover:bg-[#0089bb]" : "border border-[#dbe7ef] bg-white text-[#162543] hover:bg-[#f5f9fc]"}`}
+                className={`h-11 w-full rounded-full text-sm font-bold transition-colors disabled:opacity-50 ${presentedValidationError ? "bg-[#009FD9] text-white shadow-sm hover:bg-[#0089bb]" : "border border-[#dbe7ef] bg-white text-[#162543] hover:bg-[#f5f9fc]"}`}
               >
                 {presentedValidationError ? t("keepEditing") : t("leaveWithout")}
               </button>

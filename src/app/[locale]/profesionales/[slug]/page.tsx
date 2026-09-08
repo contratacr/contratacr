@@ -680,7 +680,7 @@ export default function ProfilePage() {
                   pro={savedPro}
                   isOwn={isOwn}
                   withLabel
-                  className="box-border h-9 min-w-0 flex-1 whitespace-nowrap rounded-xl px-3 py-0 text-[13px] sm:w-auto sm:flex-none sm:px-5"
+                  className="box-border h-9 min-w-0 flex-1 whitespace-nowrap rounded-full px-3 py-0 text-[13px] sm:w-auto sm:flex-none sm:px-5"
                 />
                 <button
                   type="button"
@@ -688,7 +688,7 @@ export default function ProfilePage() {
                   aria-label={linkCopiado ? t("linkCopied") : t("shareProfile")}
                   title={linkCopiado ? t("linkCopied") : t("shareProfile")}
                   className={cn(
-                    "inline-flex h-9 min-w-0 flex-1 items-center justify-center gap-2 rounded-xl border-[1.5px] bg-white px-3 text-[13px] font-bold transition-colors sm:w-auto sm:flex-none sm:px-5",
+                    "inline-flex h-9 min-w-0 flex-1 items-center justify-center gap-2 rounded-full border-[1.5px] bg-white px-3 text-[13px] font-bold transition-colors sm:w-auto sm:flex-none sm:px-5",
                     linkCopiado ? "border-[#b8e7cf] bg-[#f2fbf6] text-[#15803d]" : "border-[#009FD9] text-[#009FD9] hover:bg-[#EBF5FB]",
                   )}
                 >

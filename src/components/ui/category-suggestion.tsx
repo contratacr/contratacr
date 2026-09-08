@@ -190,7 +190,7 @@ export function CategorySuggestionBox({
           }}
           className={cn(
             variante === "boton"
-              ? "flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-[#009FD9] px-4 text-sm font-bold text-white transition-colors hover:bg-[#0089bb]"
+              ? "flex h-12 w-full items-center justify-center gap-2 rounded-full bg-[#009FD9] px-4 text-sm font-bold text-white transition-colors hover:bg-[#0089bb]"
               : prominent
                 ? "inline-flex items-center justify-center rounded-full bg-[#009FD9] px-4 py-2 text-sm font-semibold text-white hover:bg-[#0089bb] transition-colors"
                 : "text-xs font-medium text-[#009FD9] hover:underline",
