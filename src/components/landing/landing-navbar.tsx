@@ -7,7 +7,7 @@ import {
   X, Menu, ChevronDown, ChevronRight, Search, MapPin, List, Map as MapIcon, ArrowLeft, Share2,
   Briefcase, Compass, Wrench,
   UserRound, UserRoundPlus, LogOut, FileText, MessageSquareText, Settings, Bell, MoreHorizontal,
-  HelpCircle, ListChecks, Lightbulb, Headset, Globe2, Shield, Mail, ClipboardList, Clock,
+  HelpCircle, ListChecks, Lightbulb, Headset, Globe2, Shield, Mail, ClipboardList, Clock, Bookmark,
 } from "lucide-react";
 import { Link, useRouter, usePathname } from "@/i18n/navigation";
 import { readRecentVisits, leerBusquedasRecientes, guardarBusquedaReciente, olvidarBusquedaReciente, olvidarBusquedasRecientes, removeRecentVisit, type RecentVisit } from "@/lib/recent-visits";
@@ -607,13 +607,14 @@ interface AccountMenuProps {
   displayName: string;
   professionalPanelHref: string;
   clientPanelHref: string;
+  savedHref: string;
   profileHref: string;
   projectsHref: string;
   onSignOut: () => void;
 }
 
 export function AccountMenu({
-  isPro, displayName, professionalPanelHref, clientPanelHref, profileHref, projectsHref, onSignOut,
+  isPro, displayName, professionalPanelHref, clientPanelHref, profileHref, projectsHref, savedHref, onSignOut,
 }: AccountMenuProps) {
   const t = useTranslations("header");
   const locale = useLocale();
@@ -671,6 +672,10 @@ export function AccountMenu({
                 {t("projects")}
               </Link>
             )}
+            <Link href={savedHref} onClick={() => setOpen(false)} className={menuItemClass}>
+              <Bookmark className="h-4 w-4 text-[#009FD9]" />
+              {t("favorites")}
+            </Link>
             <Link
               href={profileHref}
               onClick={() => setOpen(false)}
@@ -1052,6 +1057,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   const clientPanelHref = `${panelHref}?mode=use`;
   const primaryPanelHref = isPro ? (mode === "offer" ? professionalPanelHref : clientPanelHref) : clientPanelHref;
   const projectsHref = "/dashboard/profesional?tab=sent_projects";
+  const savedHref = "/dashboard/profesional?tab=saved";
   const profilePanelHref = `${panelHref}?mode=${isPro && mode === "offer" ? "offer" : "use"}&tab=profile`;
   const accountDisplayName =
     (hasResolvedAccountCapability ? accountCapability.businessName : "") || String(user?.user_metadata?.full_name || user?.user_metadata?.name || "").trim();
@@ -2100,6 +2106,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                         clientPanelHref={clientPanelHref}
                         profileHref={profilePanelHref}
                         projectsHref={projectsHref}
+                        savedHref={savedHref}
                         onSignOut={() => void handleSignOut()}
                       />
                     </div>
@@ -2439,6 +2446,10 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                         <span className={mobileDrawerTextClass}>{t("projects")}</span>
                       </Link>
                     )}
+                    <Link href={savedHref} onClick={() => setMobileOpen(false)} className={claseCajon(savedHref)}>
+                      <DrawerIcon><Bookmark /></DrawerIcon>
+                      <span className={mobileDrawerTextClass}>{t("favorites")}</span>
+                    </Link>
                   </>
                 ) : null}
                 <Link href="/servicios" onClick={() => setMobileOpen(false)} className={claseCajon("/servicios")}>
