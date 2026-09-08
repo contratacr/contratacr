@@ -633,14 +633,14 @@ export default function ProfilePage() {
                   <div className="min-w-0">
                     <h1 data-testid="professional-profile-name" className="min-w-0 text-[17px] font-bold leading-[1.15] text-[#162543] [overflow-wrap:anywhere] sm:text-2xl sm:leading-tight sm:[overflow-wrap:normal]">
                       {displayName.primaryDesktop}
+                      {professional.verificationStatus === "verified" && (
+                        <VerifiedSeal
+                          label={t("identityVerified")}
+                          className="mb-[0.08em] ml-1 inline-block h-4 w-4 shrink-0 align-middle text-[#009FD9] sm:h-5 sm:w-5"
+                        />
+                      )}
                     </h1>
                   </div>
-                  {professional.verificationStatus === "verified" && (
-                    <span className="mt-1.5 inline-flex items-center gap-1 rounded-full bg-[#eaf7fc] px-2 py-0.5 text-[11px] font-bold text-[#0089bb]">
-                      <BadgeCheck className="h-3.5 w-3.5 shrink-0" />
-                      {t("identityVerified")}
-                    </span>
-                  )}
                   {locationText && (
                     <p className="mt-1 flex items-center gap-1.5 text-[13px] leading-5 text-[#52627a] sm:text-sm">
                       <MapPin className="h-3.5 w-3.5 shrink-0 text-[#68778d]" />
@@ -648,31 +648,48 @@ export default function ProfilePage() {
                     </p>
                   )}
                 </div>
-            </div>
-              {/* La prueba social va en UNA línea bajo la identidad y solo con lo
-                  que existe: la tira de tres columnas dejaba huecos cuando el
-                  profesional no tenía reseñas, años cargados ni casos. */}
+              </div>
+
+              {/* Prueba social en columnas, como estaba: cada dato con su cifra
+                  arriba y su rótulo abajo. Solo se dibujan las columnas que
+                  tienen dato, así un perfil nuevo no muestra casillas vacías. */}
               {(professional.reviewCount > 0 || expYears > 0 || casosCount > 0) && (
-                <p className="mt-3 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-[12px] leading-5 text-[#52627a] sm:gap-x-2 sm:text-[13px]">
+                <div className={cn(
+                  "mt-4 grid divide-x divide-[#eef2f6] border-t border-[#eef2f6] pt-4",
+                  ((professional.reviewCount > 0 ? 1 : 0) + (expYears > 0 ? 1 : 0) + (casosCount > 0 ? 1 : 0)) === 3
+                    ? "grid-cols-3"
+                    : ((professional.reviewCount > 0 ? 1 : 0) + (expYears > 0 ? 1 : 0) + (casosCount > 0 ? 1 : 0)) === 2
+                      ? "grid-cols-2"
+                      : "grid-cols-1",
+                )}>
                   {professional.reviewCount > 0 && (
-                    <button type="button" onClick={() => setActiveTab("resenas")} className="inline-flex items-center gap-1 hover:underline">
-                      <Star className="h-3.5 w-3.5 shrink-0 fill-[#ff9b32] text-[#ff9b32]" />
-                      <span className="font-bold text-[#162543]">{professional.ratingAvg.toFixed(1)}</span>
-                      <span>{t("reviewCountLabel", { count: professional.reviewCount })}</span>
+                    <button type="button" onClick={() => setActiveTab("resenas")} className="flex min-w-0 flex-col items-center px-2 text-center">
+                      <span className="flex items-center justify-center gap-1">
+                        <Star className="h-4 w-4 shrink-0 fill-[#ff9b32] text-[#ff9b32]" />
+                        <span className="text-[15px] font-bold text-[#162543]">{professional.ratingAvg.toFixed(1)}</span>
+                      </span>
+                      <span className="mt-0.5 whitespace-nowrap text-[10px] leading-tight tracking-[-0.01em] text-[#68778d] sm:text-[11px] sm:tracking-normal">{t("reviewCountLabel", { count: professional.reviewCount })}</span>
                     </button>
                   )}
-                  {professional.reviewCount > 0 && expYears > 0 && <span aria-hidden className="text-[#c0cad5]">·</span>}
                   {expYears > 0 && (
-                    <span><span className="font-bold text-[#162543]">{expYears}</span> {t("statYears")}</span>
+                    <div className="flex min-w-0 flex-col items-center px-2 text-center">
+                      <span className="flex items-center justify-center gap-1">
+                        <Briefcase className="h-4 w-4 shrink-0 text-[#009FD9]" />
+                        <span className="text-[15px] font-bold text-[#162543]">{expYears}</span>
+                      </span>
+                      <span className="mt-0.5 whitespace-nowrap text-[10px] leading-tight tracking-[-0.01em] text-[#68778d] sm:text-[11px] sm:tracking-normal">{t("statYears")}</span>
+                    </div>
                   )}
-                  {(professional.reviewCount > 0 || expYears > 0) && casosCount > 0 && <span aria-hidden className="text-[#c0cad5]">·</span>}
                   {casosCount > 0 && (
-                    <button type="button" onClick={() => setActiveTab("casos")} className="inline-flex items-center gap-1 hover:underline">
-                      <span className="font-bold text-[#162543]">{casosCount}</span>
-                      <span>{t("statCasesShort", { count: casosCount })}</span>
+                    <button type="button" onClick={() => setActiveTab("casos")} className="flex min-w-0 flex-col items-center px-2 text-center">
+                      <span className="flex items-center justify-center gap-1">
+                        <Award className="h-4 w-4 shrink-0 text-[#009FD9]" />
+                        <span className="text-[15px] font-bold text-[#162543]">{casosCount}</span>
+                      </span>
+                      <span className="mt-0.5 whitespace-nowrap text-[10px] leading-tight tracking-[-0.01em] text-[#68778d] sm:text-[11px] sm:tracking-normal">{t("statCases", { count: casosCount })}</span>
                     </button>
                   )}
-                </p>
+                </div>
               )}
           </div>
 
