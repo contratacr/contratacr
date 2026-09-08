@@ -21,10 +21,6 @@ bloque no se muestra: no rompe nada, simplemente no aparece.
 
 ## 2. Acciones manuales del dueño (después de publicar)
 
-- [ ] **Avisar a los profesionales sin precio.** Admin → Campañas → «Avisar a N
-      profesionales»: manda un aviso en el app y push que los lleva a poner su
-      precio de entrada. No repite a quien ya se le avisó en 30 días.
-      Requiere la 191 (tipo `pricing_request`).
 - [ ] **Cambiar el destino de los anuncios de Meta** de `/es/buscar?categoria=…`
       a `/es/servicios/<oficio>/<provincia>` (con los mismos utm). Ahí está el
       91% que hoy rebota.
@@ -40,8 +36,6 @@ bloque no se muestra: no rompe nada, simplemente no aparece.
 
 - **Asistente**: 0 preguntas registradas teniendo un lugar en la barra inferior.
   Si sigue en cero, bajarlo al menú y liberar ese espacio.
-- **Precio de entrada**: si la mayoría no lo pone pese al checklist, al orden en
-  /buscar y al aviso, volverlo obligatorio solo para cuentas nuevas.
 - **Embudo**: hoy 11% abre un perfil y 1,3% intenta contactar. Medir si las
   páginas por oficio lo mueven.
 - **Cotizaciones**: cuántas se envían y cuántas se aceptan.
@@ -54,6 +48,8 @@ bloque no se muestra: no rompe nada, simplemente no aparece.
 - **Fuera la «Garantía ContrataCR»**: prometía «mismo día» y «sin costo» en
   público sin un proceso detrás. Se puede volver a poner cuando exista, y sin
   esas dos palabras.
-- **El precio no se pide por servicio** (muchos trabajos varían): se pide un solo
-  dato de entrada — visita, hora o trabajo mínimo — y las tarjetas lo muestran
-  como «Desde ₡X».
+- **No se empuja al profesional a publicar precio** (revertido el 8-sep): el
+  «precio de entrada», el orden que lo premiaba en /buscar y el aviso desde
+  Admin quedaron fuera. Quien quiera pone precio en sus servicios y quien no,
+  no; el filtro de precio de /buscar ya deja al cliente elegir. La 191 dejó
+  permitido el tipo de aviso `pricing_request`, que no usa nadie.

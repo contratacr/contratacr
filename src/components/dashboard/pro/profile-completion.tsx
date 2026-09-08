@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
-import { startingPriceOf, type PricingTier } from "@/lib/pricing";
 import { ChevronRight, ListChecks } from "lucide-react";
 import { serviceSupportsProfessionalCredential } from "@/lib/professional-credentials";
 import { countCases } from "@/lib/services";
@@ -73,8 +72,8 @@ export function computeCompletion(pro: ProRecord): {
   const services = activeServices(pro.services);
   const hasSelectedServices = services.length > 0;
   const hasServiceDescription = services.some((service) => hasText(service.description));
-  const hasStartingPrice = !!startingPriceOf(Array.isArray(pro.pricing) ? (pro.pricing as PricingTier[]) : null);
-  const hasServicePrice = hasStartingPrice || services.some((service) =>
+  const hasServicePrice = services.some((service) =>
+    service.priceType === "a_convenir" ||
     (typeof service.priceAmount === "number" && service.priceAmount > 0) ||
     hasText(service.price)
   );
@@ -142,7 +141,7 @@ const STEP_HINTS: Record<string, string> = {
   photo: "photoBenefit",
   whatsapp: "whatsappBenefit",
   services: "servicesBenefit",
-  servicePrice: "priceBenefit",
+  servicePrice: "serviceInfoBenefit",
   serviceDescription: "serviceInfoBenefit",
   serviceExperience: "serviceInfoBenefit",
   location: "locationBenefit",
