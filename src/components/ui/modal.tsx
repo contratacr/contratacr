@@ -42,6 +42,8 @@ interface ModalProps {
   mobilePresentation?: "sheet" | "center" | "fullscreen" | "sheet-compact";
   /** Extra classes on the pinned footer. */
   footerClassName?: string;
+  /** Oculta la barra de título: para avisos con el título centrado bajo el ícono. */
+  hideHeader?: boolean;
 }
 
 export function Modal({
@@ -57,6 +59,7 @@ export function Modal({
   bodyClassName,
   mobilePresentation = "sheet",
   footerClassName,
+  hideHeader = false,
 }: ModalProps) {
   useEffect(() => {
     if (!open) return;
@@ -104,7 +107,7 @@ export function Modal({
         )}
       >
         {/* Header (pinned) */}
-        <div
+        {!hideHeader && <div
           className={cn(
             "flex shrink-0 gap-3 border-b border-[#f3f4f6] px-5 py-4 sm:px-6",
             fullscreenMobile
@@ -134,7 +137,7 @@ export function Modal({
               <X className="h-5 w-5" />
             )}
           </button>
-        </div>
+        </div>}
 
         {/* Body (scrolls) */}
         <div className={cn("min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-5 sm:px-6", bodyClassName)}>
