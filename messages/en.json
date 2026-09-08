@@ -2136,7 +2136,6 @@
     "clientIdentityPending": "Verification under review",
     "clientIdentityUnverified": "Unverified client",
     "tipLabel": "Tip:",
-    "proposalFree": "It's free and the client decides whether to contact you.",
     "alreadyProposedNote": "You already replied to this project. If the client is interested, they'll write to you.",
     "dismiss": "Not interested",
     "sendProposal": "Send reply",

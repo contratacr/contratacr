@@ -408,7 +408,6 @@ export function ProposalsTab({ categoryId }: ProposalsTabProps) {
                         <Button onClick={() => sendReply(project.id)} disabled={!message.trim() || submitting === project.id} loading={submitting === project.id} size="sm" className="mt-3 h-11 w-full rounded-full text-[13px] font-bold">
                           {corrigiendo === project.id ? t("sendProposalAgain") : t("sendProposal")}
                         </Button>
-                        <p className="mt-2 text-center text-xs text-[#68778d]">{t("proposalFree")}</p>
                         <button type="button" onClick={() => dismissOpportunity(project.id)} className="mx-auto mt-3 flex items-center gap-1.5 text-[12px] font-medium text-[#68778d] transition-colors hover:text-[#6b7280]">
                           <EyeOff className="h-3.5 w-3.5" /> {t("dismiss")}
                         </button>
