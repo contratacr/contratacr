@@ -28,7 +28,7 @@ const handlerRules = [
   [/^\/api\/ai-assistant(?:\/|$)/, "ai-assistant.spec.ts"],
   [/^\/api\/account(?:\/|$)/, "account-lifecycle.spec.ts"],
   [/^\/api\/auth(?:\/|$)/, "auth-support.spec.ts"],
-  [/^\/api\/(?:bookings|projects|proposals|reviews|support)(?:\/|$)/, "seeded-regression.spec.ts"],
+  [/^\/api\/(?:bookings|projects|proposals|reviews|support|quotes)(?:\/|$)/, "seeded-regression.spec.ts"],
   [/^\/api\/(?:jobs|offers)(?:\/|$)/, "marketplace-lifecycle.spec.ts"],
   [/^\/api\/direct-chat(?:\/|$)/, "direct-chat.spec.ts", true],
   [/^\/api\/(?:push|internal\/push)(?:\/|$)/, "push-outbox-contract.spec.ts"],

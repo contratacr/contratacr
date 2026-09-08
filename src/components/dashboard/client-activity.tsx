@@ -1,5 +1,7 @@
 "use client";
 
+import { QuoteBlock } from "@/components/quotes/quote-block";
+
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
@@ -712,6 +714,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                               </div>
                             )}
 
+                            <QuoteBlock bookingId={b.id} role="client" professionalName={b.professionals?.profiles?.full_name ?? null} />
                             {/* Actions: Reprogramar is a direct positive action; Cancelar stays focused
                                 on cancellation only. */}
                             {(() => {
@@ -912,6 +915,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                             </div>
                           )}
 
+                          <QuoteBlock projectId={project.id} role="client" />
                           {/* Respuestas: quién escribió, qué dijo, y WhatsApp directo. */}
                           {proposalList && (() => {
                             const chosenId = project.accepted_professional_id ?? null;

@@ -1,5 +1,7 @@
 "use client";
 
+import { QuoteBlock } from "@/components/quotes/quote-block";
+
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
@@ -441,6 +443,10 @@ export function BookingRequests() {
               </div>
             )}
 
+            {/* Cotización: el profesional detalla qué incluye y cuánto cuesta; el cliente la acepta desde su panel. */}
+            {!panelOpen && (
+              <QuoteBlock bookingId={booking.id} role="pro" canCreate={isActive || booking.status === "awaiting_confirmation"} defaultTitle={serviceDescription} />
+            )}
             {/* Frequent actions stay visible; exceptional actions live in the overflow menu. */}
             {!panelOpen && (() => {
               // La reserva se cierra sola cuando pasa su fecha: el profesional no

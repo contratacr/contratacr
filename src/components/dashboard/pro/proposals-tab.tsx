@@ -1,5 +1,7 @@
 "use client";
 
+import { QuoteBlock } from "@/components/quotes/quote-block";
+
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
@@ -468,6 +470,7 @@ export function ProposalsTab({ categoryId }: ProposalsTabProps) {
                       {p.status === "accepted" && trabajoVivo && (
                         <p className="rounded-xl bg-[#f0fdf4] px-3.5 py-2.5 text-[13px] leading-relaxed text-[#166534]">{t("chosenNote")}</p>
                       )}
+                      <QuoteBlock projectId={p.project_id} role="pro" canCreate={p.status === "pending" || (p.status === "accepted" && trabajoVivo)} defaultTitle={p.projects?.title ?? undefined} />
                       {(p.status === "pending" || (p.status === "accepted" && trabajoVivo)) && (
                         <div className="flex justify-end">
                           <CardActionsMenu
