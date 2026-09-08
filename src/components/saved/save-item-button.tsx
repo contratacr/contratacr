@@ -34,13 +34,10 @@ export function SaveItemButton({
   const locale = useLocale();
   const [saved, setSaved] = useState(false);
   const payload = useMemo(() => ({ ...snapshot, id: itemId, type: itemType }), [itemId, itemType, snapshot]);
+  // El mismo rótulo que en el perfil: nombra la acción y dónde queda.
   const labels = locale === "en"
-    ? itemType === "offer"
-      ? { save: "Save offer", saved: "Saved", remove: "Remove offer from favorites" }
-      : { save: "Save job", saved: "Saved", remove: "Remove job from favorites" }
-    : itemType === "offer"
-      ? { save: "Guardar oferta", saved: "Guardado", remove: "Quitar oferta de favoritos" }
-      : { save: "Guardar empleo", saved: "Guardado", remove: "Quitar empleo de favoritos" };
+    ? { save: "Save to favorites", saved: "Saved", remove: itemType === "offer" ? "Remove offer from favorites" : "Remove job from favorites" }
+    : { save: "Guardar en favoritos", saved: "Guardado", remove: itemType === "offer" ? "Quitar oferta de favoritos" : "Quitar empleo de favoritos" };
 
   useEffect(() => {
     let mounted = true;

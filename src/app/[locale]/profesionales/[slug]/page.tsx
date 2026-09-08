@@ -688,7 +688,7 @@ export default function ProfilePage() {
               {/* Mismo botón secundario del app (píldora blanca de borde turquesa,
                   sin ícono) que "Llamar": guardar y compartir son acciones, no
                   enlaces sueltos. */}
-              <div className="mt-4 grid grid-cols-2 gap-2 sm:col-start-2 sm:row-start-1 sm:row-span-2 sm:mt-0 sm:flex sm:flex-col sm:justify-center">
+              <div className="mt-4 flex flex-col gap-2 sm:col-start-2 sm:row-start-1 sm:row-span-2 sm:mt-0 sm:justify-center">
                 <SaveButton
                   pro={savedPro}
                   isOwn={isOwn}
