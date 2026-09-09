@@ -29,8 +29,13 @@ export function QuoteEditorModal({ open, onClose, bookingId, projectId, defaultT
   const t = useTranslations("quotes");
   const suelta = !bookingId && !projectId;
   const [cedula, setCedula] = useState("");
-  const [buscandoCedula, setBuscandoCedula] = useState(false);
-  const [cedulaSinRegistro, setCedulaSinRegistro] = useState(false);
+  // "buscando" / "sin registro" se deducen de la cédula y del resultado, en vez
+  // de escribirse desde el efecto (que dispara pintadas encadenadas).
+  const [resultadoCedula, setResultadoCedula] = useState<{ id: string; encontrada: boolean } | null>(null);
+  const cedulaLimpia = cleanId(cedula);
+  const cedulaValida = isValidId(cedulaLimpia);
+  const buscandoCedula = cedulaValida && resultadoCedula?.id !== cedulaLimpia;
+  const cedulaSinRegistro = resultadoCedula?.id === cedulaLimpia && !resultadoCedula.encontrada;
   const [clientName, setClientName] = useState("");
   const [clientPhone, setClientPhone] = useState("");
   const [title, setTitle] = useState(defaultTitle ?? "");
@@ -45,9 +50,8 @@ export function QuoteEditorModal({ open, onClose, bookingId, projectId, defaultT
   // quien no la sepa escribe el nombre a mano y listo.
   useEffect(() => {
     const limpia = cleanId(cedula);
-    if (!isValidId(limpia)) { setBuscandoCedula(false); setCedulaSinRegistro(false); return; }
+    if (!isValidId(limpia)) return;
     let vivo = true;
-    setBuscandoCedula(true); setCedulaSinRegistro(false);
     const id = window.setTimeout(async () => {
       try {
         const res = await fetch(`/api/cedula/${limpia}`);
@@ -55,8 +59,9 @@ export function QuoteEditorModal({ open, onClose, bookingId, projectId, defaultT
         if (res.ok) {
           const { fullName } = await res.json();
           if (fullName) setClientName(String(fullName).slice(0, 80));
-        } else setCedulaSinRegistro(true);
-      } catch { if (vivo) setCedulaSinRegistro(true); } finally { if (vivo) setBuscandoCedula(false); }
+          setResultadoCedula({ id: limpia, encontrada: !!fullName });
+        } else setResultadoCedula({ id: limpia, encontrada: false });
+      } catch { if (vivo) setResultadoCedula({ id: limpia, encontrada: false }); }
     }, 500);
     return () => { vivo = false; window.clearTimeout(id); };
   }, [cedula]);
