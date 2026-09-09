@@ -2462,6 +2462,7 @@ export default function DashboardPage() {
                         {activeTab === "quotes" && (
                           <QuotesSection
                             proName={professionalDisplayName}
+                            proSlug={typeof pro?.slug === "string" ? pro.slug : null}
                             puedeCrear={!!pro?.id}
                           />
                         )}

@@ -177,7 +177,7 @@ export function ShareKit({ open, onClose, profileUrl, name, services = [], avata
     const file = new File([cardBlob], "contratacr-perfil.png", { type: "image/png" });
     const nav = navigator as Navigator & { canShare?: (d: ShareData) => boolean };
     if (nav.share && nav.canShare?.({ files: [file] })) {
-      try { await nav.share({ files: [file], title: name }); return; } catch { /* cancelado */ }
+      try { await nav.share({ files: [file] }); return; } catch { /* cancelado */ }
     }
     downloadCard();
   }

@@ -21,7 +21,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ImagePreviewDialog } from "@/components/ui/image-preview-dialog";
 import { getInitials, proDisplayName, cn } from "@/lib/utils";
 import { RecordRecentVisit } from "@/components/mobile/record-recent-visit";
-import { anyVideoConsultCategory, getCategoryLabel, getCategoryGroupId, getCategoryGroupLabel } from "@/lib/data/categories";
+import { anyVideoConsultCategory, getCategoryLabel } from "@/lib/data/categories";
 import { casoProfession, countCases } from "@/lib/services";
 import { addTaxIncludedToPriceLabel, formatServicePrice, primaryPricingLabel, splitPricingLabel } from "@/lib/pricing";
 import { languageLabel } from "@/lib/data/languages";
@@ -461,20 +461,6 @@ export default function ProfilePage() {
   // workplaces) — same data the /buscar card passes to ProfessionalSchedule.
   const placeFallback = professional.cantonName || professional.provinceName || "";
   const placeAddress = locationText;
-  // Bajo el nombre va lo que ES, no uno de sus servicios: la lista completa ya
-  // tiene su sección. Con un solo oficio se dice el oficio; con varios, el rubro
-  // (escoger el primero de la lista era arbitrario: a SG Solutions le salía
-  // "Cámaras de seguridad" teniendo seis servicios). Si los oficios son de
-  // rubros distintos no se dice nada, antes que decir algo a medias.
-  const oficios = professional.professions?.length
-    ? professional.professions
-    : (professional.categoryId ? [professional.categoryId] : []);
-  const gruposDeOficios = new Set(oficios.map((id) => getCategoryGroupId(id)).filter(Boolean) as string[]);
-  const oficioPrincipal = oficios.length === 1
-    ? catLabel(oficios[0])
-    : gruposDeOficios.size === 1
-      ? getCategoryGroupLabel([...gruposDeOficios][0], locale)
-      : "";
 
   const hasCasos = !!professional.portfolioUrls && professional.portfolioUrls.length > 0;
   // Count CASES, not photos: 1 caso de éxito with 3 photos must read "1", not "3"
@@ -741,18 +727,13 @@ export default function ProfilePage() {
                         )}
                       </h1>
                     </div>
-                    {/* Oficio y lugar: sin esta línea la cabecera quedaba con el
-                        nombre solo y mucho blanco alrededor en computadora. */}
-                    {(oficioPrincipal || locationText) && (
-                      <p className="mt-1 flex flex-wrap items-center justify-center gap-x-2 gap-y-0.5 text-[13px] leading-5 text-[#52627a] sm:justify-start sm:text-sm">
-                        {oficioPrincipal && <span className="font-semibold text-[#162543]">{oficioPrincipal}</span>}
-                        {oficioPrincipal && locationText && <span aria-hidden className="text-[#c3cdd9]">·</span>}
-                        {locationText && (
-                          <span className="inline-flex min-w-0 items-center gap-1.5">
-                            <MapPin className="h-3.5 w-3.5 shrink-0 text-[#68778d]" />
-                            <span className="min-w-0 truncate">{locationText}</span>
-                          </span>
-                        )}
+                    {/* Solo la ubicación: qué hace se lee en Servicios, que es su
+                        sección. Con cinco servicios, resumirlos aquí en uno solo
+                        (o en el rubro) decía menos de lo que parecía. */}
+                    {locationText && (
+                      <p className="mt-1 flex items-center justify-center gap-1.5 text-[13px] leading-5 text-[#52627a] sm:justify-start sm:text-sm">
+                        <MapPin className="h-3.5 w-3.5 shrink-0 text-[#68778d]" />
+                        <span className="min-w-0 truncate">{locationText}</span>
                       </p>
                     )}
                   </div>
@@ -763,7 +744,7 @@ export default function ProfilePage() {
                     tienen dato, así un perfil nuevo no muestra casillas vacías. */}
                 {(professional.reviewCount > 0 || expYears > 0 || casosCount > 0) && (
                   <div className={cn(
-                    "mt-4 grid sm:col-start-2 sm:row-start-2 sm:mt-3 sm:flex sm:justify-start sm:gap-8",
+                    "mt-4 grid sm:col-start-2 sm:row-start-2 sm:mt-3 sm:flex sm:justify-start sm:gap-10",
                     ((professional.reviewCount > 0 ? 1 : 0) + (expYears > 0 ? 1 : 0) + (casosCount > 0 ? 1 : 0)) === 3
                       ? "grid-cols-3"
                       : ((professional.reviewCount > 0 ? 1 : 0) + (expYears > 0 ? 1 : 0) + (casosCount > 0 ? 1 : 0)) === 2
@@ -771,7 +752,7 @@ export default function ProfilePage() {
                         : "grid-cols-1",
                   )}>
                     {professional.reviewCount > 0 && (
-                      <button type="button" onClick={() => setActiveTab("resenas")} className="flex min-w-0 flex-col items-center px-2 text-center sm:items-start sm:px-0 sm:text-left">
+                      <button type="button" onClick={() => setActiveTab("resenas")} className="flex min-w-0 flex-col items-center px-2 text-center">
                         <span className="flex items-center justify-center gap-1">
                           <Star className="h-4 w-4 shrink-0 fill-[#ff9b32] text-[#ff9b32]" />
                           <span className="text-[15px] font-bold text-[#162543]">{professional.ratingAvg.toFixed(1)}</span>
@@ -780,7 +761,7 @@ export default function ProfilePage() {
                       </button>
                     )}
                     {expYears > 0 && (
-                      <div className="flex min-w-0 flex-col items-center px-2 text-center sm:items-start sm:px-0 sm:text-left">
+                      <div className="flex min-w-0 flex-col items-center px-2 text-center">
                         <span className="flex items-center justify-center gap-1">
                           <Briefcase className="h-4 w-4 shrink-0 text-[#009FD9]" />
                           <span className="text-[15px] font-bold text-[#162543]">{expYears}</span>
@@ -789,7 +770,7 @@ export default function ProfilePage() {
                       </div>
                     )}
                     {casosCount > 0 && (
-                      <button type="button" onClick={() => setActiveTab("casos")} className="flex min-w-0 flex-col items-center px-2 text-center sm:items-start sm:px-0 sm:text-left">
+                      <button type="button" onClick={() => setActiveTab("casos")} className="flex min-w-0 flex-col items-center px-2 text-center">
                         <span className="flex items-center justify-center gap-1">
                           <Award className="h-4 w-4 shrink-0 text-[#009FD9]" />
                           <span className="text-[15px] font-bold text-[#162543]">{casosCount}</span>

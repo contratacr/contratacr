@@ -2718,7 +2718,7 @@
     "resolveError": "No se pudo cerrar el proyecto. Intenta de nuevo.",
     "helpedBy": "Te ayudó",
     "publishCta": "Pedir un profesional",
-    "bookingHappened": "Ya me atendieron",
+    "bookingHappened": "Marcar como terminada",
     "bookAgain": "Volver a contratar",
     "reviewsCount": "{count, plural, one {# reseña} other {# reseñas}}",
     "noReviewsYet": "Sin reseñas todavía",
@@ -4181,7 +4181,7 @@
     "publicNotFoundBody": "Revisá el enlace o pedile al profesional que te lo mande de nuevo.",
     "imageTitle": "COTIZACIÓN",
     "imageValidUntil": "Vigente hasta el {date}",
-    "imageFooter": "Podés ver esta cotización en línea aquí:",
+    "imageFooter": "Cotización hecha con ContrataCR. Mirá el perfil de quien la envió:",
     "editorSubtitleFree": "Para quién es, qué incluye y cuánto cuesta.",
     "clientCedulaLabel": "Cédula del cliente",
     "clientCedulaHint": "Con la cédula traemos el nombre. Si no la tenés, escribí el nombre abajo.",
@@ -4221,6 +4221,12 @@
     "downloadClient": "Descargar PDF",
     "attachTabBookings": "Citas",
     "attachTabProjects": "Proyectos",
-    "attachSend": "Enviar aquí"
+    "attachSend": "Enviar aquí",
+    "attachSubtitle": "Elegí a cuál de tus trabajos del app va esta cotización.",
+    "attachConfirmTitle": "¿Enviar aquí?",
+    "attachConfirmBody": "El cliente la ve en su panel y puede aceptarla. Si te equivocaste, después podés quitarla.",
+    "detach": "Quitar de aquí",
+    "duplicate": "Hacer otra igual",
+    "back": "Volver"
   }
 }

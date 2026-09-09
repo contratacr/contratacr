@@ -2718,7 +2718,7 @@
     "resolveError": "Couldn't close the project. Try again.",
     "helpedBy": "Helped you",
     "publishCta": "Request a professional",
-    "bookingHappened": "It's done",
+    "bookingHappened": "Mark as done",
     "bookAgain": "Hire again",
     "reviewsCount": "{count, plural, one {# review} other {# reviews}}",
     "noReviewsYet": "No reviews yet",
@@ -4181,7 +4181,7 @@
     "publicNotFoundBody": "Check the link or ask the professional to send it again.",
     "imageTitle": "QUOTE",
     "imageValidUntil": "Valid until {date}",
-    "imageFooter": "You can view this quote online here:",
+    "imageFooter": "Quote made with ContrataCR. See the profile of who sent it:",
     "editorSubtitleFree": "Who it's for, what it includes and how much.",
     "clientCedulaLabel": "Client ID number",
     "clientCedulaHint": "With the ID we pull the name. If you don't have it, type the name below.",
@@ -4221,6 +4221,12 @@
     "downloadClient": "Download PDF",
     "attachTabBookings": "Appointments",
     "attachTabProjects": "Projects",
-    "attachSend": "Send here"
+    "attachSend": "Send here",
+    "attachSubtitle": "Choose which of your app jobs this quote goes to.",
+    "attachConfirmTitle": "Send it here?",
+    "attachConfirmBody": "The client sees it in their panel and can accept it. If you picked the wrong one, you can remove it later.",
+    "detach": "Remove from here",
+    "duplicate": "Make another like this",
+    "back": "Back"
   }
 }

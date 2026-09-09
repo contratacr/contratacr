@@ -2,12 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { CalendarCheck, Check, Download, Handshake, Loader2, Mail, Share2 } from "lucide-react";
+import { ArrowLeft, CalendarCheck, Check, ChevronRight, Download, Handshake, Loader2, Mail, Share2, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { ShareLinkPanel } from "@/components/ui/share-link-panel";
 import { FacebookIcon, InstagramIcon, WhatsAppIcon } from "@/components/ui/share-channels";
 import { useNativeShare } from "@/hooks/use-native-share";
 import { formatColones } from "@/lib/pricing";
 import { enlaceCotizacion, nombreArchivoCotizacion, numeroCotizacion, whatsappDigits, type Quote } from "@/lib/quotes";
+import { enlacePerfil } from "@/lib/profile-url";
 import { renderQuotePdf } from "@/lib/quote-image";
 
 const DATE_LOCALE: Record<string, string> = { es: "es-CR", en: "en-US" };
@@ -18,7 +20,7 @@ const TILE = "flex flex-col items-center gap-2 rounded-2xl border border-[#e5eaf
  * vista, WhatsApp, Instagram, Facebook, correo, el PDF— y además a una cita o
  * un proyecto del app, que es donde el cliente la acepta.
  */
-export function QuoteShare({ quote, proName, onChanged }: { quote: Quote; proName: string; onChanged?: (q: Quote) => void }) {
+export function QuoteShare({ quote, proName, proSlug, onChanged }: { quote: Quote; proName: string; proSlug?: string | null; onChanged?: (q: Quote) => void }) {
   const t = useTranslations("quotes");
   const locale = useLocale();
   const nativo = useNativeShare();
@@ -46,7 +48,7 @@ export function QuoteShare({ quote, proName, onChanged }: { quote: Quote; proNam
       subtotal: t("subtotal"), iva: t("tax"), total: t("total"),
       totalNota: quote.tax_mode === "incluido" ? t("totalWithTax") : quote.tax_mode === "mas_iva" ? t("totalPlusTax") : t("totalNoTax"),
       pie: t("imageFooter"), deQuien: t("publicFrom"), nota: t("noteLabel"),
-    }, fecha).then((b) => { if (vivo) setPdf(b); });
+    }, fecha, proSlug ? enlacePerfil(proSlug) : "").then((b) => { if (vivo) setPdf(b); });
     return () => { vivo = false; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [quote.id, quote.status, quote.booking_id, quote.project_id]);
@@ -55,8 +57,10 @@ export function QuoteShare({ quote, proName, onChanged }: { quote: Quote; proNam
     if (!pdf) return;
     const file = new File([pdf], `${nombreArchivoCotizacion(quote, proName)}.pdf`, { type: "application/pdf" });
     const nav = navigator as Navigator & { canShare?: (d: ShareData) => boolean };
+    // SOLO el archivo: al mandar archivo + texto juntos, iOS a veces suelta el
+    // PDF y comparte el mensaje convertido en un .txt (el "text 6" que salía).
     if (nav.share && nav.canShare?.({ files: [file] })) {
-      try { await nav.share({ files: [file], title: quote.title ?? t("detailTitle"), text: mensaje }); return; } catch { /* cancelado */ }
+      try { await nav.share({ files: [file] }); return; } catch { /* cancelado */ }
     }
     descargarPdf();
   }
@@ -105,7 +109,11 @@ export function QuoteShare({ quote, proName, onChanged }: { quote: Quote; proNam
       {/* Al app: pegada a una cita o a un proyecto, el cliente la ve y la acepta
           desde su panel. Es la forma de contacto del app; lo demás es repartirla. */}
       {enviadaA ? (
-        <p className="inline-flex items-center gap-2 rounded-2xl bg-[#e9f9ef] px-4 py-3 text-[13px] font-bold text-[#166534]"><Check className="h-4 w-4" strokeWidth={3} />{enviadaA}</p>
+        <div className="flex items-start gap-2 rounded-2xl bg-[#e9f9ef] px-4 py-3">
+          <Check className="mt-0.5 h-4 w-4 shrink-0 text-[#166534]" strokeWidth={3} />
+          <p className="min-w-0 flex-1 text-[13px] font-bold leading-snug text-[#166534]">{enviadaA}</p>
+          {quote.status === "sent" && <QuoteDetach quote={quote} onChanged={onChanged} />}
+        </div>
       ) : quote.status === "sent" ? (
         <QuoteAttach quote={quote} onChanged={onChanged} />
       ) : null}
@@ -113,10 +121,16 @@ export function QuoteShare({ quote, proName, onChanged }: { quote: Quote; proNam
   );
 }
 
-type Cita = { id: string; client_name?: string | null; service_description?: string | null; scheduled_date?: string | null; status: string };
-type Propuesta = { id: string; project_id: string; status: string; projects?: { title?: string | null } | null };
+type Cita = { id: string; client_name?: string | null; service_description?: string | null; scheduled_date?: string | null; scheduled_time?: string | null; status: string };
+type Propuesta = { id: string; project_id: string; status: string; projects?: { title?: string | null; description?: string | null } | null };
+type Destino = { clave: string; titulo: string; detalle: string; envio: { bookingId?: string; projectId?: string } };
 
-/** Elegir a qué cita o proyecto del app se manda la cotización. */
+/**
+ * Enviar la cotización a un trabajo del app. Es una ventana propia: primero se
+ * elige entre citas y proyectos, y al tocar uno se ve a cuál va antes de
+ * confirmar. Antes era una lista pegada dentro de la pantalla de compartir y se
+ * mandaba de un toque, sin poder revisar ni volver.
+ */
 function QuoteAttach({ quote, onChanged }: { quote: Quote; onChanged?: (q: Quote) => void }) {
   const t = useTranslations("quotes");
   const locale = useLocale();
@@ -124,7 +138,8 @@ function QuoteAttach({ quote, onChanged }: { quote: Quote; onChanged?: (q: Quote
   const [pestana, setPestana] = useState<"citas" | "proyectos">("citas");
   const [citas, setCitas] = useState<Cita[] | null>(null);
   const [propuestas, setPropuestas] = useState<Propuesta[] | null>(null);
-  const [enviando, setEnviando] = useState<string | null>(null);
+  const [elegido, setElegido] = useState<Destino | null>(null);
+  const [enviando, setEnviando] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -143,25 +158,35 @@ function QuoteAttach({ quote, onChanged }: { quote: Quote; onChanged?: (q: Quote
     return () => { vivo = false; };
   }, [abierto, citas]);
 
-  async function enviar(destino: { bookingId?: string; projectId?: string }, clave: string) {
-    setEnviando(clave); setError(null);
+  function cerrar() { setAbierto(false); setElegido(null); setError(null); }
+
+  async function confirmar() {
+    if (!elegido) return;
+    setEnviando(true); setError(null);
     try {
-      const res = await fetch("/api/quotes", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: quote.id, action: "attach", ...destino }) });
+      const res = await fetch("/api/quotes", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: quote.id, action: "attach", ...elegido.envio }) });
       const d = await res.json().catch(() => ({}));
       if (!res.ok) { setError(d.error ?? t("errorTitle")); return; }
       onChanged?.(d.quote as Quote);
-    } catch { setError(t("errorTitle")); } finally { setEnviando(null); }
+      cerrar();
+    } catch { setError(t("errorTitle")); } finally { setEnviando(false); }
   }
 
-  const fila = (clave: string, icono: React.ReactNode, titulo: string, detalle: string, destino: { bookingId?: string; projectId?: string }) => (
-    <button key={clave} type="button" disabled={!!enviando} onClick={() => void enviar(destino, clave)} className="flex w-full items-center gap-3 rounded-2xl border border-[#e5eaf0] bg-white px-3.5 py-3 text-left transition-colors hover:border-[#bfe3f5] hover:bg-[#f8fcfe] disabled:opacity-60">
-      <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[#eaf7fc] text-[#009FD9]">{enviando === clave ? <Loader2 className="h-5 w-5 animate-spin" /> : icono}</span>
-      <span className="min-w-0 flex-1">
-        <span className="block truncate text-[14px] font-extrabold text-[#162543]">{titulo}</span>
-        <span className="block truncate text-[12px] text-[#68778d]">{detalle}</span>
-      </span>
-    </button>
-  );
+  const fecha = (iso?: string | null) => iso ? new Date(`${iso}T12:00:00`).toLocaleDateString(DATE_LOCALE[locale] ?? "es-CR", { day: "numeric", month: "long" }) : "";
+  const destinosCitas: Destino[] = (citas ?? []).map((c) => ({
+    clave: `b-${c.id}`,
+    titulo: c.client_name || c.service_description || t("noClientName"),
+    detalle: [fecha(c.scheduled_date), c.service_description ?? ""].filter(Boolean).join(" · "),
+    envio: { bookingId: c.id },
+  }));
+  const destinosProyectos: Destino[] = (propuestas ?? []).map((p) => ({
+    clave: `p-${p.id}`,
+    titulo: p.projects?.title || t("attachProjects"),
+    detalle: (p.projects?.description ?? "").slice(0, 90),
+    envio: { projectId: p.project_id },
+  }));
+  const lista = pestana === "citas" ? destinosCitas : destinosProyectos;
+  const cargando = citas === null;
 
   if (!abierto) {
     return (
@@ -171,43 +196,91 @@ function QuoteAttach({ quote, onChanged }: { quote: Quote; onChanged?: (q: Quote
     );
   }
 
-  const cargando = citas === null;
-  const listaCitas = citas ?? [];
-  const listaProyectos = propuestas ?? [];
-  const vacio = !cargando && listaCitas.length === 0 && listaProyectos.length === 0;
-  const activos = pestana === "citas" ? listaCitas.length : listaProyectos.length;
-
   return (
-    <div className="rounded-2xl border border-[#e5eaf0] bg-[#fafcfd] p-3">
-      <p className="mb-2.5 text-[13px] font-bold text-[#162543]">{t("attachTitle")}</p>
-      {/* Dos pestañas: primero se elige si va a una cita o a un proyecto, y
-          debajo salen los que hay. Antes era una lista mezclada. */}
-      <div className="mb-2.5 grid grid-cols-2 gap-1 rounded-full bg-[#eef3f8] p-1">
-        {([["citas", t("attachTabBookings"), listaCitas.length], ["proyectos", t("attachTabProjects"), listaProyectos.length]] as const).map(([id, rotulo, cuantos]) => (
-          <button
-            key={id}
-            type="button"
-            onClick={() => setPestana(id)}
-            className={`h-9 rounded-full text-[13px] font-bold transition-colors ${pestana === id ? "bg-white text-[#0089bb] shadow-sm" : "text-[#52627a]"}`}
-          >
-            {rotulo}{cuantos > 0 ? ` (${cuantos})` : ""}
-          </button>
-        ))}
-      </div>
-      {cargando ? (
-        <div className="flex flex-col gap-2">{[0, 1].map((i) => <div key={i} className="h-[62px] animate-pulse rounded-2xl bg-[#eef2f6]" />)}</div>
-      ) : vacio || activos === 0 ? (
-        <p className="rounded-2xl bg-white px-4 py-5 text-center text-[13px] leading-5 text-[#68778d]">{t("attachEmpty")}</p>
-      ) : (
-        <div className="flex max-h-[300px] flex-col gap-2 overflow-y-auto">
-          {pestana === "citas"
-            ? listaCitas.map((c) => fila(`b-${c.id}`, <CalendarCheck className="h-5 w-5" />, c.client_name || c.service_description || t("noClientName"),
-                [c.scheduled_date ? new Date(`${c.scheduled_date}T12:00:00`).toLocaleDateString(DATE_LOCALE[locale] ?? "es-CR", { day: "numeric", month: "short" }) : "", c.service_description ?? ""].filter(Boolean).join(" · "),
-                { bookingId: c.id }))
-            : listaProyectos.map((p) => fila(`p-${p.id}`, <Handshake className="h-5 w-5" />, p.projects?.title || t("attachProjects"), t("attachProjects"), { projectId: p.project_id }))}
+    <div className="flex flex-col gap-3 rounded-2xl border border-[#e5eaf0] bg-white p-3.5">
+      <div className="flex items-center gap-2">
+        <button type="button" onClick={() => (elegido ? setElegido(null) : cerrar())} aria-label={t("back")} className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-[#162543] transition-colors hover:bg-[#f1f5f9]">
+          <ArrowLeft className="h-5 w-5" />
+        </button>
+        <div className="min-w-0">
+          <p className="truncate text-[15px] font-extrabold text-[#162543]">{elegido ? t("attachConfirmTitle") : t("attachTitle")}</p>
+          {!elegido && <p className="truncate text-[12px] text-[#68778d]">{t("attachSubtitle")}</p>}
         </div>
-      )}
-      {error && <p className="mt-2 text-[13px] font-semibold text-red-600">{error}</p>}
+      </div>
+      {(() => (
+          elegido ? (
+            // Confirmar: se ve a qué trabajo va antes de mandarla.
+            <div className="flex flex-col gap-4">
+              <div className="rounded-2xl border border-[#e5eaf0] bg-white p-4">
+                <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#68778d]">{pestana === "citas" ? t("attachTabBookings") : t("attachTabProjects")}</p>
+                <p className="mt-1 text-[17px] font-extrabold leading-snug text-[#162543]">{elegido.titulo}</p>
+                {elegido.detalle && <p className="mt-1 text-[14px] leading-snug text-[#52627a]">{elegido.detalle}</p>}
+              </div>
+              <div className="rounded-2xl bg-[#f4f7fa] p-4">
+                <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#68778d]">{t("rowQuote")}</p>
+                <p className="mt-1 flex items-baseline justify-between gap-3 text-[15px] font-extrabold text-[#162543]">
+                  <span className="min-w-0 truncate">{quote.title || t("detailTitle")}</span>
+                  <span className="shrink-0">{formatColones(quote.total)}</span>
+                </p>
+              </div>
+              <p className="text-[13px] leading-6 text-[#52627a]">{t("attachConfirmBody")}</p>
+              {error && <p className="text-[13px] font-semibold text-red-600">{error}</p>}
+              <div className="flex gap-2">
+                <Button type="button" variant="secondary" className="flex-1" onClick={() => setElegido(null)} disabled={enviando}>{t("back")}</Button>
+                <Button type="button" className="flex-1" onClick={() => void confirmar()} loading={enviando} disabled={enviando}>{t("attachSend")}</Button>
+              </div>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-3">
+              <div className="grid grid-cols-2 gap-1 rounded-full bg-[#eef3f8] p-1">
+                {([["citas", t("attachTabBookings"), destinosCitas.length], ["proyectos", t("attachTabProjects"), destinosProyectos.length]] as const).map(([id, rotulo, cuantos]) => (
+                  <button key={id} type="button" onClick={() => setPestana(id)} className={`h-10 rounded-full text-[14px] font-bold transition-colors ${pestana === id ? "bg-white text-[#0089bb] shadow-sm" : "text-[#52627a]"}`}>
+                    {rotulo}{cuantos > 0 ? ` (${cuantos})` : ""}
+                  </button>
+                ))}
+              </div>
+              {cargando ? (
+                <div className="flex flex-col gap-2">{[0, 1, 2].map((i) => <div key={i} className="h-[72px] animate-pulse rounded-2xl bg-[#eef2f6]" />)}</div>
+              ) : lista.length === 0 ? (
+                <p className="rounded-2xl bg-[#f8fafc] px-4 py-8 text-center text-[14px] leading-6 text-[#68778d]">{t("attachEmpty")}</p>
+              ) : (
+                <div className="flex flex-col gap-2">
+                  {lista.map((d) => (
+                    <button key={d.clave} type="button" onClick={() => setElegido(d)} className="flex w-full items-center gap-3.5 rounded-2xl border border-[#e5eaf0] bg-white px-4 py-3.5 text-left transition-colors hover:border-[#bfe3f5] hover:bg-[#f8fcfe]">
+                      <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-[#eaf7fc] text-[#009FD9]">
+                        {pestana === "citas" ? <CalendarCheck className="h-5 w-5" /> : <Handshake className="h-5 w-5" />}
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-[15px] font-extrabold text-[#162543]">{d.titulo}</span>
+                        {d.detalle && <span className="block truncate text-[13px] text-[#52627a]">{d.detalle}</span>}
+                      </span>
+                      <ChevronRight className="h-4 w-4 shrink-0 text-[#9aa8ba]" />
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )
+      ))()}
     </div>
+  );
+}
+
+/** Quitar la cotización de la cita o el proyecto: vuelve a ser un documento suelto. */
+function QuoteDetach({ quote, onChanged }: { quote: Quote; onChanged?: (q: Quote) => void }) {
+  const t = useTranslations("quotes");
+  const [quitando, setQuitando] = useState(false);
+  async function quitar() {
+    setQuitando(true);
+    try {
+      const res = await fetch("/api/quotes", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: quote.id, action: "detach" }) });
+      const d = await res.json().catch(() => ({}));
+      if (res.ok) onChanged?.(d.quote as Quote);
+    } finally { setQuitando(false); }
+  }
+  return (
+    <button type="button" onClick={() => void quitar()} disabled={quitando} aria-label={t("detach")} title={t("detach")} className="grid h-7 w-7 shrink-0 place-items-center rounded-full text-[#166534] transition-colors hover:bg-[#d6f2e0] disabled:opacity-50">
+      {quitando ? <Loader2 className="h-4 w-4 animate-spin" /> : <X className="h-4 w-4" />}
+    </button>
   );
 }

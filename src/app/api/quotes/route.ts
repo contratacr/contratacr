@@ -150,10 +150,21 @@ export async function PATCH(req: NextRequest) {
   if (!me) return NextResponse.json({ error: "Inicia sesión." }, { status: 401 });
   const body = await req.json().catch(() => ({})) as { id?: string; action?: string; bookingId?: string; projectId?: string };
   const id = String(body.id ?? ""); const action = String(body.action ?? "");
-  if (!id || !["accept", "decline", "withdraw", "attach"].includes(action)) return NextResponse.json({ error: "Acción no válida." }, { status: 400 });
+  if (!id || !["accept", "decline", "withdraw", "attach", "detach"].includes(action)) return NextResponse.json({ error: "Acción no válida." }, { status: 400 });
   const { data: q, error } = await me.admin.from("quotes").select(SELECT).eq("id", id).maybeSingle();
   if (error || !q) return NextResponse.json({ error: "Cotización no encontrada." }, { status: 404 });
   if (q.status !== "sent") return NextResponse.json({ error: "Esta cotización ya se cerró." }, { status: 409 });
+
+  // Quitarla de la cita o del proyecto: vuelve a ser un documento suelto. Solo
+  // mientras nadie la haya respondido (arriba ya se exige status "sent").
+  if (action === "detach") {
+    if (q.professional_id !== me.proId) return NextResponse.json({ error: "Solo quien la hizo puede quitarla." }, { status: 403 });
+    const patch = { booking_id: null, project_id: null, proposal_id: null, client_id: null, updated_at: new Date().toISOString() };
+    const { data: updated, error: upErr } = await me.admin.from("quotes").update(patch).eq("id", id).select(SELECT).single();
+    if (upErr) return NextResponse.json({ error: upErr.message }, { status: 500 });
+    await auditUserAction(me.admin, req, { actorUserId: me.user.id, actorRole: "professional", action: "quote.detach", entityTable: "quotes", entityId: id, entityOwnerUserId: me.user.id, afterData: patch });
+    return NextResponse.json({ quote: updated });
+  }
 
   // Mandarla a una cita o a un proyecto del app: la cotización queda pegada a
   // ese trabajo y el cliente la ve (y la acepta) desde su panel.

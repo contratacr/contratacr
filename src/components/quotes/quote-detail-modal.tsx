@@ -35,8 +35,8 @@ export function Totales({ quote }: { quote: Pick<Quote, "subtotal" | "tax_amount
   );
 }
 
-export function QuoteDetailModal({ quote, role, open, onClose, onChanged, proName, recienCreada = false }: {
-  quote: Quote; role: "client" | "pro"; open: boolean; onClose: () => void; onChanged: (q: Quote) => void; proName?: string; recienCreada?: boolean;
+export function QuoteDetailModal({ quote, role, open, onClose, onChanged, proName, proSlug, recienCreada = false }: {
+  quote: Quote; role: "client" | "pro"; open: boolean; onClose: () => void; onChanged: (q: Quote) => void; proName?: string; proSlug?: string | null; recienCreada?: boolean;
 }) {
   const t = useTranslations("quotes");
   const locale = useLocale();
@@ -44,7 +44,13 @@ export function QuoteDetailModal({ quote, role, open, onClose, onChanged, proNam
   const [busy, setBusy] = useState(false);
   const [pdfCliente, setPdfCliente] = useState<Blob | null>(null);
   const expirada = isQuoteExpired(quote);
-  const estado = expirada ? t("statusExpired") : quote.status === "sent" ? t("statusSent") : quote.status === "accepted" ? t("statusAccepted") : quote.status === "declined" ? t("statusDeclined") : t("statusWithdrawn");
+  // Sin cita ni proyecto detrás no hay quién responda: no se anuncia una espera.
+  const enElApp = !!(quote.booking_id || quote.project_id);
+  const estado = expirada
+    ? t("statusExpired")
+    : quote.status === "sent"
+      ? (enElApp ? t("statusSent") : null)
+      : quote.status === "accepted" ? t("statusAccepted") : quote.status === "declined" ? t("statusDeclined") : t("statusWithdrawn");
   const fecha = quote.valid_until ? new Date(`${quote.valid_until}T12:00:00`).toLocaleDateString(DATE_LOCALE[locale] ?? "es-CR", { day: "numeric", month: "long" }) : null;
 
   async function actuar(action: "accept" | "decline" | "withdraw") {
@@ -120,7 +126,7 @@ export function QuoteDetailModal({ quote, role, open, onClose, onChanged, proNam
             <span className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-[#e9f9ef] text-[#166534]"><Check className="h-6 w-6" strokeWidth={3} /></span>
           )}
           {/* Para el profesional, primero cómo mandarla: es a lo que viene. */}
-          {role === "pro" && abierta && <QuoteShare quote={quote} proName={proName ?? quote.professional_name ?? ""} onChanged={onChanged} />}
+          {role === "pro" && abierta && <QuoteShare quote={quote} proName={proName ?? quote.professional_name ?? ""} proSlug={proSlug} onChanged={onChanged} />}
           {/* Aceptada: lo único que queda es ponerse de acuerdo. */}
           {role === "pro" && quote.status === "accepted" && (
             <div className="rounded-2xl bg-[#f0fdf4] px-4 py-3.5 text-center">
@@ -135,7 +141,7 @@ export function QuoteDetailModal({ quote, role, open, onClose, onChanged, proNam
           )}
           {!recienCreada && (
             <div className="flex flex-wrap items-center justify-between gap-2 text-[13px]">
-              <span className={`rounded-full px-2.5 py-1 font-bold ${quote.status === "accepted" ? "bg-[#eaf7fc] text-[#0089bb]" : abierta ? "bg-[#f4f7fa] text-[#52627a]" : "bg-[#f3f4f6] text-[#6b7280]"}`}>{estado}</span>
+              {estado && <span className={`rounded-full px-2.5 py-1 font-bold ${quote.status === "accepted" ? "bg-[#eaf7fc] text-[#0089bb]" : abierta ? "bg-[#f4f7fa] text-[#52627a]" : "bg-[#f3f4f6] text-[#6b7280]"}`}>{estado}</span>}
               {fecha && quote.status === "sent" && <span className="text-[#68778d]">{t("validUntil", { date: fecha })}</span>}
             </div>
           )}

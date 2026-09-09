@@ -106,13 +106,18 @@ export function SaveItemButton({
       aria-pressed={saved}
       className={cn(
         withLabel
-          ? "inline-flex h-10 items-center justify-center gap-2 rounded-full border border-[#d7e1ea] bg-white px-4 text-sm font-bold text-[#162543] transition hover:border-[#b9c8d6] hover:bg-[#f6f9fb]"
-          : "grid h-9 w-9 place-items-center rounded-full text-[#8fa1b6] transition hover:bg-[#eef5f9] hover:text-[#162543]",
-        saved && "text-[#009fd9]",
+          ? cn(
+              "inline-flex h-10 items-center justify-center gap-2 rounded-full border bg-white px-4 text-sm font-bold transition",
+              saved ? "border-[#009FD9] text-[#0089bb] hover:bg-[#f2fbfe]" : "border-[#d7e1ea] text-[#162543] hover:border-[#b9c8d6] hover:bg-[#f6f9fb]",
+            )
+          : cn(
+              "grid h-9 w-9 place-items-center rounded-full transition hover:bg-[#eef5f9]",
+              saved ? "text-[#009fd9]" : "text-[#8fa1b6] hover:text-[#162543]",
+            ),
         className,
       )}
     >
-      {(showIcon ?? !withLabel) && <Bookmark className={withLabel ? "h-4 w-4" : "h-[18px] w-[18px]"} fill={saved ? "currentColor" : "none"} />}
+      {(showIcon ?? true) && <Bookmark className={withLabel ? "h-4 w-4 shrink-0" : "h-[18px] w-[18px]"} fill={saved ? "currentColor" : "none"} />}
       {withLabel && <span>{saved ? labels.saved : labels.save}</span>}
     </button>
   );

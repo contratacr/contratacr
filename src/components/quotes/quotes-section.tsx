@@ -15,7 +15,7 @@ const DATE_LOCALE: Record<string, string> = { es: "es-CR", en: "en-US" };
  * La sección "Cotizaciones" del profesional: la lista de lo que ha cotizado y
  * el botón para hacer una nueva. Creada, se abre lista para mandar.
  */
-export function QuotesSection({ proName, puedeCrear = true }: { proName: string; puedeCrear?: boolean }) {
+export function QuotesSection({ proName, proSlug, puedeCrear = true }: { proName: string; proSlug?: string | null; puedeCrear?: boolean }) {
   const t = useTranslations("quotes");
   const locale = useLocale();
   const [quotes, setQuotes] = useState<Quote[] | null>(null);
@@ -33,9 +33,19 @@ export function QuotesSection({ proName, puedeCrear = true }: { proName: string;
     return () => { vivo = false; };
   }, []);
 
-  const estadoDe = (q: Quote) => isQuoteExpired(q) ? "expired" : q.status;
+  // "Esperando respuesta" solo tiene sentido donde alguien PUEDE responder: en
+  // una cita o un proyecto del app. Una cotización suelta es un documento que se
+  // mandó por WhatsApp; ahí no hay respuesta que esperar y el rótulo prometía
+  // algo que nunca iba a pasar.
+  const enElApp = (q: Quote) => !!(q.booking_id || q.project_id);
+  const estadoDe = (q: Quote) => {
+    if (isQuoteExpired(q)) return "expired";
+    if (q.status === "sent" && !enElApp(q)) return "documento";
+    return q.status;
+  };
   const etiqueta = (q: Quote) => {
     const e = estadoDe(q);
+    if (e === "documento") return null;
     return e === "expired" ? t("statusExpired") : e === "sent" ? t("statusOpen") : e === "accepted" ? t("statusAccepted") : e === "declined" ? t("statusDeclined") : t("statusWithdrawn");
   };
   // Cada estado con su color y su ícono: se lee de un vistazo cuál está viva.
@@ -43,6 +53,7 @@ export function QuotesSection({ proName, puedeCrear = true }: { proName: string;
     const e = estadoDe(q);
     if (e === "accepted") return { fondo: "bg-[#e9f9ef] text-[#166534]", icono: <Check className="h-3.5 w-3.5" strokeWidth={3} /> };
     if (e === "sent") return { fondo: "bg-[#fff4e2] text-[#b45309]", icono: <Clock3 className="h-3.5 w-3.5" /> };
+    if (e === "documento") return { fondo: "bg-[#eef3f8] text-[#52627a]", icono: <ReceiptText className="h-4 w-4" /> };
     return { fondo: "bg-[#f3f4f6] text-[#6b7280]", icono: <X className="h-3.5 w-3.5" /> };
   };
   const lista = quotes ?? [];
@@ -76,7 +87,7 @@ export function QuotesSection({ proName, puedeCrear = true }: { proName: string;
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-[15px] font-extrabold text-[#162543]">{q.client_name || q.title || t("noClientName")}</span>
                     {q.client_name && q.title && <span className="block truncate text-[13px] text-[#52627a]">{q.title}</span>}
-                    <span className={`mt-1 inline-block rounded-full px-2 py-0.5 text-[11px] font-bold ${m.fondo}`}>{etiqueta(q)}</span>
+                    {etiqueta(q) && <span className={`mt-1 inline-block rounded-full px-2 py-0.5 text-[11px] font-bold ${m.fondo}`}>{etiqueta(q)}</span>}
                   </span>
                   <span className="shrink-0 text-right">
                     <span className="block whitespace-nowrap text-[17px] font-extrabold text-[#162543]">{formatColones(q.total)}</span>
@@ -95,7 +106,7 @@ export function QuotesSection({ proName, puedeCrear = true }: { proName: string;
         <QuoteEditorModal open onClose={() => setEditor(false)} onSent={(q) => { setQuotes((prev) => [q, ...(prev ?? [])]); setEditor(false); setDetalle({ quote: q, recien: true }); }} />
       )}
       {detalle && (
-        <QuoteDetailModal quote={detalle.quote} role="pro" open proName={proName} recienCreada={detalle.recien} onClose={() => setDetalle(null)}
+        <QuoteDetailModal quote={detalle.quote} role="pro" open proName={proName} proSlug={proSlug} recienCreada={detalle.recien} onClose={() => setDetalle(null)}
           onChanged={(q) => { setQuotes((prev) => (prev ?? []).map((x) => (x.id === q.id ? { ...x, ...q } : x))); setDetalle(null); }} />
       )}
     </div>

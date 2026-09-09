@@ -1,7 +1,7 @@
 "use client";
 
 import { formatColones } from "@/lib/pricing";
-import { desgloseQuote, enlaceCotizacion, type Quote } from "@/lib/quotes";
+import { desgloseQuote, type Quote } from "@/lib/quotes";
 
 /**
  * La cotización como imagen (1080 px de ancho, alto según los renglones): banda
@@ -67,8 +67,8 @@ function partirSeguido(ctx: CanvasRenderingContext2D, texto: string, maxW: numbe
 
 const FUENTE = "Inter, -apple-system, \"Segoe UI\", Roboto, sans-serif";
 
-async function dibujar(quote: Quote, proName: string, textos: Textos, fechaVigencia: string | null): Promise<Dibujo | null> {
-  const url = enlaceCotizacion(quote, proName);
+async function dibujar(quote: Quote, proName: string, textos: Textos, fechaVigencia: string | null, perfilUrl: string): Promise<Dibujo | null> {
+  const url = perfilUrl;
   const ancho = W - M * 2;
   // Todo se mide primero con un canvas de trabajo; el alto sale de ahí.
   const medidor = document.createElement("canvas").getContext("2d");
@@ -183,25 +183,25 @@ async function dibujar(quote: Quote, proName: string, textos: Textos, fechaVigen
     y += altoNotas;
   }
 
-  // Pie: el enlace para verla en línea. El QR se fue con la aceptación: ya no
-  // hay nada que hacer escaneando, y ocupaba un cuarto de la hoja.
+  // Pie: el perfil de quien cotiza. El enlace de la cotización no va: quien
+  // tiene el PDF ya la tiene delante, y una dirección larga solo estorbaba.
   const pieY = H - altoPie + 40;
   ctx.fillStyle = "#e5eaf0"; ctx.fillRect(M, pieY - 30, ancho, 2);
   ctx.font = `600 26px ${FUENTE}`; ctx.fillStyle = "#68778d";
   partirLineas(ctx, textos.pie, ancho).forEach((l, i) => ctx.fillText(l, M, pieY + 34 + i * 34));
-  const visible = url.replace(/^https?:\/\//, "");
+  const visible = url ? url.replace(/^https?:\/\//, "") : "";
   ctx.font = `700 24px ${FUENTE}`; ctx.fillStyle = "#009FD9";
   const enlaceY = pieY + 90;
-  const lineasEnlace = partirSeguido(ctx, visible, ancho);
+  const lineasEnlace = visible ? partirSeguido(ctx, visible, ancho) : [];
   lineasEnlace.forEach((l, i) => ctx.fillText(l, M, enlaceY + i * 32));
-  const anchoEnlace = Math.max(...lineasEnlace.map((l) => ctx.measureText(l).width));
+  const anchoEnlace = lineasEnlace.length ? Math.max(...lineasEnlace.map((l) => ctx.measureText(l).width)) : 0;
 
   return { canvas, enlace: { x: M, y: enlaceY - 26, w: anchoEnlace, h: 32 * lineasEnlace.length + 8, url } };
 }
 
 /** La cotización como PNG (para el estado de WhatsApp o guardarla). */
-export async function renderQuoteImage(quote: Quote, proName: string, textos: Textos, fechaVigencia: string | null): Promise<Blob | null> {
-  const dibujo = await dibujar(quote, proName, textos, fechaVigencia);
+export async function renderQuoteImage(quote: Quote, proName: string, textos: Textos, fechaVigencia: string | null, perfilUrl = ""): Promise<Blob | null> {
+  const dibujo = await dibujar(quote, proName, textos, fechaVigencia, perfilUrl);
   if (!dibujo) return null;
   return new Promise((resolve) => dibujo.canvas.toBlob((b) => resolve(b), "image/png"));
 }
@@ -213,8 +213,8 @@ export async function renderQuoteImage(quote: Quote, proName: string, textos: Te
  * ni queda media hoja en blanco. jsPDF se carga solo aquí (import dinámico),
  * para que no pese en el resto del app.
  */
-export async function renderQuotePdf(quote: Quote, proName: string, textos: Textos, fechaVigencia: string | null): Promise<Blob | null> {
-  const dibujo = await dibujar(quote, proName, textos, fechaVigencia);
+export async function renderQuotePdf(quote: Quote, proName: string, textos: Textos, fechaVigencia: string | null, perfilUrl = ""): Promise<Blob | null> {
+  const dibujo = await dibujar(quote, proName, textos, fechaVigencia, perfilUrl);
   if (!dibujo) return null;
   const { canvas, enlace } = dibujo;
   const { jsPDF } = await import("jspdf");
@@ -225,6 +225,6 @@ export async function renderQuotePdf(quote: Quote, proName: string, textos: Text
   doc.addImage(canvas.toDataURL("image/png"), "PNG", 0, 0, anchoMm, altoMm);
   // El enlace y el QR, clicables: en el PDF el texto es parte de la imagen, así
   // que se pone encima una zona que abre la dirección.
-  doc.link(enlace.x * escala, enlace.y * escala, enlace.w * escala, enlace.h * escala, { url: enlace.url });
+  if (enlace.url && enlace.w > 0) doc.link(enlace.x * escala, enlace.y * escala, enlace.w * escala, enlace.h * escala, { url: enlace.url });
   return doc.output("blob");
 }
