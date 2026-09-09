@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Bookmark } from "lucide-react";
-import { AvisoFlotante } from "@/components/ui/aviso-flotante";
 import { cn } from "@/lib/utils";
 import { trackInteraction } from "@/lib/analytics/interaction-events";
 import { SelfActionModal, SELF_MSG } from "@/components/professionals/self-action-modal";
@@ -282,7 +281,6 @@ export function SaveButton({ pro, className, isOwn = false, withLabel = false, b
   const { user, loading: authLoading } = useAuth();
   const [saved, setSaved] = useState(false);
   const [selfMsg, setSelfMsg] = useState<string | null>(null);
-  const [aviso, setAviso] = useState<string | null>(null);
 
   useEffect(() => {
     // Stay in sync if the SAME pro is toggled elsewhere in this tab (e.g. another
@@ -328,12 +326,11 @@ export function SaveButton({ pro, className, isOwn = false, withLabel = false, b
     if (saved) {
       await unsaveProRemote(pro.id, activeUser.id);
       setSaved(false);
-      setAviso(t("removedToast"));
       trackInteraction({ type: "favorite_remove", professionalId: pro.id, source: "favorites", locale });
     } else {
       await saveProRemote(pro, activeUser.id);
+      // Sin aviso flotante: el propio botón pasa a "Guardado" y eso ya lo dice.
       setSaved(true);
-      setAviso(t("savedToast"));
       trackInteraction({ type: "favorite_add", professionalId: pro.id, source: "favorites", locale });
     }
     /* dispatch custom event so saved-tab + any other SaveButton refresh */
@@ -414,7 +411,6 @@ export function SaveButton({ pro, className, isOwn = false, withLabel = false, b
         </button>
       )}
       <SelfActionModal open={!!selfMsg} onClose={() => setSelfMsg(null)} message={selfMsg ?? ""} />
-      {aviso && <AvisoFlotante texto={aviso} onFin={() => setAviso(null)} />}
     </>
   );
 }

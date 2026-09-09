@@ -379,6 +379,8 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
                 ) : (
                   <Link href={`/login?redirect=${encodeURIComponent(`/empleos/${selected.id}?apply=${selected.id}`)}`} className="inline-flex h-11 w-full items-center justify-center rounded-full bg-[#009fd9] px-5 text-sm font-bold text-white transition hover:bg-[#008fc3]">{copy.apply}</Link>
                 )}
+                <SaveItemButton itemType="job" itemId={selected.id} snapshot={jobSaveSnapshot(selected, locale)} userId={currentUserId} loginRedirect={`/empleos/${selected.id}`} withLabel className="h-11 w-full rounded-full" />
+                <BotonCompartir url={`/${locale}/empleos/${selected.id}`} titulo={selected.title} sutil className="w-full justify-center" />
               </div>
             )}
           </aside>
@@ -524,17 +526,8 @@ function JobPreview({ job, isOwner, userId, hasApplied, onApply, onEdit, mobile 
   ].filter(([, value]) => Boolean(value));
 
   return <article className={`ccr-marketplace-result-list relative min-w-0 bg-white ${mobile ? "block px-5 py-6" : "hidden p-7 lg:block lg:max-h-[calc(100vh-190px)] lg:overflow-y-auto"}`}>
-    {/* Guardar y compartir, juntos y arriba: acciones sobre el aviso. Abajo
-        queda solo "Postularme", que es lo que el tablón quiere que pase. Van en
-        su propia fila y no flotando: encima del título lo partían en tres. */}
-    {!isOwner && (
-      <div className="mb-2 -mr-2 flex items-center justify-end gap-1">
-        <SaveItemButton itemType="job" itemId={job.id} snapshot={jobSaveSnapshot(job, locale)} userId={userId} loginRedirect={`/empleos/${job.id}`} sutil />
-        <BotonCompartir url={`/${locale}/empleos/${job.id}`} titulo={job.title} sutil />
-      </div>
-    )}
     <div className="flex items-start gap-4"><EmployerAvatar job={job} size="large" /><div className="min-w-0"><h2 className="text-2xl font-extrabold leading-tight">{job.title}</h2><p className="mt-1 font-semibold text-[#52627a]">{job.employer_name}</p><JobMetaLine job={job} className="mt-1 text-sm text-[#68778d]" /><p className="mt-2 text-base font-extrabold text-[#007fae]">{formatJobSalary(job, locale)}</p></div></div>
-    {!hideActions && <div className={mobile ? "mt-5 grid grid-cols-2 gap-3" : "mt-5 flex flex-wrap items-center gap-3"}>
+    {!hideActions && <div className={mobile ? "mt-5 space-y-3" : "mt-5 flex flex-wrap items-center gap-3"}>
       {isOwner ? (
         <>
           <button type="button" onClick={onEdit} className="inline-flex h-11 w-full items-center justify-center rounded-full bg-[#009fd9] px-4 text-sm font-bold text-white transition hover:bg-[#008fc3]">{copy.editJob}</button>
@@ -544,6 +537,14 @@ function JobPreview({ job, isOwner, userId, hasApplied, onApply, onEdit, mobile 
         <button type="button" onClick={onApply} disabled={hasApplied} className="inline-flex h-11 w-full items-center justify-center overflow-visible whitespace-nowrap rounded-full bg-[#009fd9] px-4 pt-px text-sm font-bold leading-6 text-white transition hover:bg-[#008fc3] disabled:bg-[#cbd5e1] sm:w-[168px]">{hasApplied ? copy.applicationSent : copy.apply}</button>
       ) : (
         <Link href={`/login?redirect=${encodeURIComponent(`/empleos?apply=${job.id}`)}`} className="inline-flex h-11 w-full items-center justify-center overflow-visible whitespace-nowrap rounded-full bg-[#009fd9] px-4 pt-px text-sm font-bold leading-6 text-white transition hover:bg-[#008fc3] sm:w-[168px]">{copy.apply}</Link>
+      )}
+      {/* La fila dice la jerarquía de un vistazo: postularme pesa, guardar
+          acompaña con su marco y compartir cierra sin marco. */}
+      {!isOwner && (
+        <div className="flex items-center gap-2">
+          <SaveItemButton itemType="job" itemId={job.id} snapshot={jobSaveSnapshot(job, locale)} userId={userId} loginRedirect={`/empleos/${job.id}`} withLabel className="h-11 rounded-full px-4" />
+          <BotonCompartir url={`/${locale}/empleos/${job.id}`} titulo={job.title} sutil />
+        </div>
       )}
     </div>}
     <dl className="mt-6 grid gap-3 border-y border-[#e7edf2] py-5 text-sm sm:grid-cols-2">{detailRows.map(([label, value]) => <div key={label} className="min-w-0"><dt className="text-xs font-bold uppercase tracking-wide text-[#7a899d]">{label}</dt><dd className="mt-0.5 break-words font-bold text-[#162543] [overflow-wrap:anywhere]">{value}</dd></div>)}</dl>

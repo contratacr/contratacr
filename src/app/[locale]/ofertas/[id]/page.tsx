@@ -142,15 +142,7 @@ export default async function OfferDetailPage({ params, searchParams }: { params
           <div className="bg-white p-2 sm:p-3">
             <OfferImageGallery images={offer.image_urls} title={offer.title} />
           </div>
-          <div className="p-5 pt-0 sm:p-8 sm:pt-0">
-            {/* Fuera de la foto y con rótulo: encima de la imagen tapaban la
-                oferta y no decían qué hacían. */}
-            {!isOwner && !unavailable && (
-              <div className="-mr-2 mb-2 flex items-center justify-end gap-1">
-                <OfferSaveButton offer={offer} userId={user?.id ?? null} />
-                <BotonCompartir url={`/${locale}/ofertas/${offer.id}`} titulo={offer.title} sutil />
-              </div>
-            )}
+          <div className="p-5 sm:p-8">
             <div className="flex flex-wrap gap-2"><span className="rounded-md bg-[#eaf7fc] px-2.5 py-1 text-xs font-bold text-[#0089bb]">{offerTypeLabel(offer.offer_type, locale)}</span>{offer.service_label && <span className="rounded-md bg-[#f3f6f9] px-2.5 py-1 text-xs font-bold text-[#52627a]">{offer.service_label}</span>}{discount && <span className="rounded-md bg-[#e8f8f3] px-2.5 py-1 text-xs font-extrabold text-[#08775c]">{copy.savings} {discount}%</span>}</div>
             <h1 className="mt-1 text-2xl font-bold sm:text-3xl">{offer.title}</h1>
             {/* El nombre lleva al perfil: el botón "Ver perfil" decía lo mismo y

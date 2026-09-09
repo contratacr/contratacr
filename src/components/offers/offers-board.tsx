@@ -618,10 +618,13 @@ function offerSaveSnapshot(offer: ProfessionalOffer, locale: MarketplaceLocale) 
 export function OfferSaveButton({
   offer,
   userId,
+  pastilla = false,
   className = "",
 }: {
   offer: ProfessionalOffer;
   userId: string | null;
+  /** Con marco, para acompañar al botón de contacto. */
+  pastilla?: boolean;
   className?: string;
 }) {
   const locale = marketplaceLocale(useLocale());
@@ -632,7 +635,8 @@ export function OfferSaveButton({
       snapshot={offerSaveSnapshot(offer, locale)}
       userId={userId}
       loginRedirect={`/ofertas/${offer.id}`}
-      sutil
+      withLabel={pastilla}
+      sutil={!pastilla}
       className={`shrink-0 ${className}`}
     />
   );
@@ -741,6 +745,12 @@ export function OfferContactActions({
           )}
         </div>
       )}
+      {/* Guardar acompaña con su marco y compartir cierra sin marco: se lee de
+          un vistazo qué pesa y qué no. */}
+      <div className="flex items-center gap-2 pt-1">
+        <OfferSaveButton offer={offer} userId={userId} pastilla className={compact ? "h-9 px-3 text-[12px]" : "h-11 px-4"} />
+        <BotonCompartir url={`/${locale}/ofertas/${offer.id}`} titulo={offer.title} sutil className={compact ? "h-9 text-[12px]" : ""} />
+      </div>
     </div>
   );
 }
@@ -842,14 +852,6 @@ function OfferPreview({
           </span>
         )}
       </div>
-      {/* Fuera de la foto y con rótulo: encima de la imagen tapaban la oferta y
-          no decían qué hacían. */}
-      {!isOwner && (
-        <div className="mt-3 -mr-2 flex items-center justify-end gap-1">
-          <OfferSaveButton offer={offer} userId={userId} />
-          <BotonCompartir url={`/${locale}/ofertas/${offer.id}`} titulo={offer.title} sutil />
-        </div>
-      )}
       <div className="mt-3 flex items-start justify-between gap-4">
         <div className="min-w-0">
           <h2 className="text-2xl font-extrabold leading-tight">
