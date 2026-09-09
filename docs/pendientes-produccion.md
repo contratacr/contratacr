@@ -12,6 +12,7 @@ cotizaciones y precios). Cada punto dice qué falta y quién lo hace.
 | 191 · cotizaciones | tabla `quotes` con RLS, tipos `quote_sent` / `quote_accepted` / `quote_declined` / `pricing_request` | **aplicada 8-sep** | pendiente |
 | 192 · cotizaciones a cualquiera | `quotes.client_id` opcional, `client_name`, `client_phone`, `public_code` (enlace público) | **aplicada 9-sep** | pendiente |
 | 193 · cédula en la cotización | `quotes.client_cedula` | **aplicada 9-sep** | pendiente |
+| 194 · número de cotización | `quotes.quote_number` (consecutivo por profesional, índice único) | **aplicada 9-sep** | pendiente |
 
 Se aplican **solo** con el workflow `Supabase migrations` (dispatch), nunca en local:
 `test` desde la rama `test`, `production` desde `main`; siempre en seco primero.
@@ -94,7 +95,7 @@ cliente conserva el Asistente):
   teléfono lleva código de país, el IVA es una fila de tres pastillas y los
   servicios del profesional se agregan de un toque como renglones.
 - El bloque dentro de citas y proyectos sigue igual (mismo editor).
-- Necesita las **migraciones 192 y 193** en producción; sin ellas, crear una
+- Necesita las **migraciones 192, 193 y 194** en producción; sin ellas, crear una
   cotización falla con error de columna.
 - Cotizaciones también está en el menú de cuenta de la web y en el cajón del
   teléfono, no solo en la barra de la app.
