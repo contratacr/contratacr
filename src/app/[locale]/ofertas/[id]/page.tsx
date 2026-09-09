@@ -5,6 +5,7 @@ import { Link } from "@/i18n/navigation";
 import { OfferImageGallery } from "@/components/offers/offer-image-gallery";
 import { OfferDetailNavbarSearch } from "@/components/offers/offer-detail-navbar-search";
 import { OfferContactActions } from "@/components/offers/offers-board";
+import { MenuOferta } from "@/components/offers/menu-oferta";
 import { OfferOwnerActions } from "@/components/offers/offer-owner-actions";
 import { getAllCategories, getCategoryLabel } from "@/lib/data/categories";
 import {
@@ -128,6 +129,15 @@ export default async function OfferDetailPage({ params, searchParams }: { params
             <ArrowLeft className="h-6 w-6 stroke-[2.4]" />
           </Link>
           <h1 className="truncate text-center text-lg font-extrabold">{copy.title}</h1>
+          <MenuOferta
+            className="absolute right-2 top-1/2 -translate-y-1/2"
+            ofertaId={offer.id}
+            titulo={offer.title}
+            enlace={`/${locale}/ofertas/${offer.id}`}
+            profesionalNombre={offer.professional_name || copy.professionalFallback}
+            profesionalSlug={offer.professional_slug}
+            esPropia={isOwner}
+          />
         </div>
       </StickyHairlineHeader>
       <div className="mx-auto hidden max-w-6xl px-4 pt-6 sm:px-6 lg:block">
@@ -138,12 +148,27 @@ export default async function OfferDetailPage({ params, searchParams }: { params
       </div>
       <div className="mx-auto grid max-w-6xl gap-5 px-4 py-5 sm:px-6 sm:py-8 lg:grid-cols-[minmax(0,760px)_320px] lg:justify-center lg:pt-3">
         <article className="overflow-hidden rounded-lg border border-[#dfe8f0] bg-white">
-          <div className="bg-white p-2 sm:p-3">
+          <div className="relative bg-white p-2 sm:p-3">
             <OfferImageGallery images={offer.image_urls} title={offer.title} />
+            {/* El descuento se lee como en el tablón: una marca sobre la foto,
+                no una pastilla más en una fila de pastillas. */}
+            {discount && (
+              <span className="absolute left-5 top-5 rounded-md bg-[#009fd9] px-3 py-1.5 text-sm font-extrabold text-white shadow-sm">-{discount}%</span>
+            )}
           </div>
           <div className="p-5 sm:p-8">
-            <div className="flex flex-wrap gap-2"><span className="rounded-md bg-[#eaf7fc] px-2.5 py-1 text-xs font-bold text-[#0089bb]">{offerTypeLabel(offer.offer_type, locale)}</span>{offer.service_label && <span className="rounded-md bg-[#f3f6f9] px-2.5 py-1 text-xs font-bold text-[#52627a]">{offer.service_label}</span>}{discount && <span className="rounded-md bg-[#e8f8f3] px-2.5 py-1 text-xs font-extrabold text-[#08775c]">{copy.savings} {discount}%</span>}</div>
-            <h1 className="mt-1 text-2xl font-bold sm:text-3xl">{offer.title}</h1>
+            <div className="flex items-start justify-between gap-3">
+              <h1 className="min-w-0 flex-1 text-2xl font-bold sm:text-3xl">{offer.title}</h1>
+              <MenuOferta
+                className="-mr-2 hidden shrink-0 lg:block"
+                ofertaId={offer.id}
+                titulo={offer.title}
+                enlace={`/${locale}/ofertas/${offer.id}`}
+                profesionalNombre={offer.professional_name || copy.professionalFallback}
+                profesionalSlug={offer.professional_slug}
+                esPropia={isOwner}
+              />
+            </div>
             {/* El nombre lleva al perfil: el botón "Ver perfil" decía lo mismo y
                 competía con el contacto. */}
             <div className="mt-2 flex flex-wrap items-center gap-3">
@@ -156,6 +181,18 @@ export default async function OfferDetailPage({ params, searchParams }: { params
                 <p className="font-semibold text-[#52627a]">{offer.professional_name}</p>
               )}
             </div>
+            {/* Tipo y servicio en una línea con punto, igual que en la tarjeta
+                del tablón: eran tres pastillas de colores distintos para decir
+                lo mismo. */}
+            <p className="mt-1 flex min-w-0 flex-wrap items-center gap-1.5 text-[13px] leading-5 sm:text-sm">
+              <span className="text-[#68778d]">{offerTypeLabel(offer.offer_type, locale)}</span>
+              {offer.service_label && (
+                <>
+                  <span aria-hidden="true" className="text-[#c0cad5]">·</span>
+                  <span className="font-semibold text-[#008fc3]">{offer.service_label}</span>
+                </>
+              )}
+            </p>
             <div className="mt-5 flex flex-wrap items-end gap-3">
               <p className="text-3xl font-extrabold text-[#007fae]">{formatOfferPrice(offer, locale)}</p>
               {before && <p className="pb-1 text-sm font-bold text-[#8794a7] line-through">{before}</p>}

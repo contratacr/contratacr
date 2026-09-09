@@ -1,46 +1,61 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
 import { Share2 } from "lucide-react";
 import { AvisoFlotante } from "@/components/ui/aviso-flotante";
 import { useNativeShare } from "@/hooks/use-native-share";
 import { cn } from "@/lib/utils";
 
+function urlCompleta(url: string) {
+  if (url.startsWith("http")) return url;
+  return `${typeof window === "undefined" ? "" : window.location.origin}${url}`;
+}
+
 /**
- * Compartir una ficha: la hoja del teléfono si existe y, si no, copia el enlace
- * y lo dice. Vive al lado del favorito, arriba en la tarjeta: las dos son
- * acciones sobre la ficha, no formas de contactar a nadie.
- *
- * `sutil` es la forma que usamos en las fichas: ícono con rótulo, sin borde y
- * sin peso de botón. Un ícono solo no dice qué hace —el marcador se confunde
- * con el del navegador—, y con borde competía con "Postularme" o "WhatsApp".
- * `onPress` lo deja delegar en quien ya tiene su propia hoja de compartir.
+ * La lógica de compartir en un solo lugar: la hoja del teléfono si existe y, si
+ * no, copiar el enlace y decirlo. La usan el botón de compartir y el menú "..."
+ * de las fichas, para que las dos puertas hagan exactamente lo mismo.
  */
-export function BotonCompartir({ url, titulo, onPress, sutil = false, className }: { url?: string; titulo?: string; onPress?: () => void; sutil?: boolean; className?: string }) {
+export function useCompartir() {
   const t = useTranslations("profile");
   const nativo = useNativeShare();
   const [aviso, setAviso] = useState<string | null>(null);
-  const rotulo = t("share");
 
-  async function compartir() {
-    if (onPress) { onPress(); return; }
-    if (!url) return;
-    const completa = url.startsWith("http") ? url : `${typeof window === "undefined" ? "" : window.location.origin}${url}`;
+  const copiar = useCallback(async (url: string) => {
+    try {
+      await navigator.clipboard.writeText(urlCompleta(url));
+      setAviso(t("linkCopied"));
+    } catch { /* sin portapapeles */ }
+  }, [t]);
+
+  const compartir = useCallback(async (url: string, titulo?: string) => {
+    const completa = urlCompleta(url);
     if (nativo) {
       try { await navigator.share({ title: titulo, url: completa }); return; } catch { /* cancelado */ }
     }
-    try {
-      await navigator.clipboard.writeText(completa);
-      setAviso(t("linkCopied"));
-    } catch { /* sin portapapeles */ }
-  }
+    await copiar(url);
+  }, [copiar, nativo]);
+
+  const avisoNodo: ReactNode = aviso ? <AvisoFlotante texto={aviso} onFin={() => setAviso(null)} /> : null;
+  return { compartir, copiar, avisoNodo };
+}
+
+/**
+ * Compartir una ficha. `sutil` es la forma que usan las fichas: ícono con
+ * rótulo, sin borde y sin peso de botón. `onPress` lo deja delegar en quien ya
+ * tiene su propia hoja de compartir.
+ */
+export function BotonCompartir({ url, titulo, onPress, sutil = false, className }: { url?: string; titulo?: string; onPress?: () => void; sutil?: boolean; className?: string }) {
+  const t = useTranslations("profile");
+  const { compartir, avisoNodo } = useCompartir();
+  const rotulo = t("share");
 
   return (
     <>
       <button
         type="button"
-        onClick={() => void compartir()}
+        onClick={() => { if (onPress) { onPress(); return; } if (url) void compartir(url, titulo); }}
         aria-label={rotulo}
         title={rotulo}
         className={cn(
@@ -53,7 +68,7 @@ export function BotonCompartir({ url, titulo, onPress, sutil = false, className 
         <Share2 className="h-4 w-4 shrink-0" />
         {rotulo}
       </button>
-      {aviso && <AvisoFlotante texto={aviso} onFin={() => setAviso(null)} />}
+      {avisoNodo}
     </>
   );
 }

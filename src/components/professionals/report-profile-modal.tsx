@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { useTranslations } from "next-intl";
 import { X, Flag, AlertCircle, ShieldAlert } from "lucide-react";
 import { SuccessIcon } from "@/components/ui/success-icon";
@@ -9,6 +10,10 @@ import { createClient } from "@/lib/supabase/client";
 interface ReportProfileModalProps {
   professionalName: string;
   professionalSlug: string;
+  /** Qué se reporta, cuando no es el perfil: «Empleo "Técnico de redes" (id)». */
+  contexto?: string;
+  /** Título propio del modal, para un empleo o una oferta. */
+  titulo?: string;
   onClose: () => void;
 }
 
@@ -27,7 +32,7 @@ const REASON_DEFS: { key: string; es: string }[] = [
   { key: "other", es: "Otro" },
 ];
 
-export function ReportProfileModal({ professionalName, professionalSlug, onClose }: ReportProfileModalProps) {
+export function ReportProfileModal({ professionalName, professionalSlug, contexto, titulo, onClose }: ReportProfileModalProps) {
   const t = useTranslations("report");
   const [reason, setReason] = useState("");
   const [detail, setDetail] = useState("");
@@ -56,7 +61,7 @@ export function ReportProfileModal({ professionalName, professionalSlug, onClose
         body: JSON.stringify({
           professionalName,
           professionalSlug,
-          reason: `${reasonEs}${detail.trim() ? ` — ${detail.trim()}` : ""}`,
+          reason: `${contexto ? `${contexto} — ` : ""}${reasonEs}${detail.trim() ? ` — ${detail.trim()}` : ""}`,
           reporterEmail: user?.email ?? null,
         }),
       });
@@ -73,8 +78,12 @@ export function ReportProfileModal({ professionalName, professionalSlug, onClose
     }
   }
 
-  return (
-    <div className="app-modal-screen app-sheet-compact-screen fixed inset-0 z-[200] flex items-end justify-center bg-black/50 sm:items-center sm:px-4" onClick={onClose}>
+  // Va colgado del body: abierto desde el "..." de una cabecera fija quedaba
+  // atrapado en esa capa y no se veía.
+  if (typeof document === "undefined") return null;
+
+  return createPortal(
+    <div className="app-modal-screen app-sheet-compact-screen fixed inset-0 z-[1500] flex items-end justify-center bg-black/50 sm:items-center sm:px-4" onClick={onClose}>
       <div
         className="app-bottom-sheet app-sheet-compact relative max-h-[92vh] w-full overflow-y-auto overscroll-contain rounded-t-2xl bg-white shadow-2xl sm:max-w-[440px] sm:rounded-2xl"
         onClick={(e) => e.stopPropagation()}
@@ -83,7 +92,7 @@ export function ReportProfileModal({ professionalName, professionalSlug, onClose
           <div className="flex items-center gap-2.5">
             <Flag className="h-5 w-5 shrink-0 text-red-500" />
             <div>
-              <h2 className="text-base font-bold text-[#162543]">{t("title")}</h2>
+              <h2 className="text-base font-bold text-[#162543]">{titulo ?? t("title")}</h2>
               <p className="text-xs text-[#6b7280]">{professionalName}</p>
             </div>
           </div>
@@ -173,6 +182,7 @@ export function ReportProfileModal({ professionalName, professionalSlug, onClose
           </div>
         )}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

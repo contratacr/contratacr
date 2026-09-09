@@ -8,14 +8,14 @@ import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import { cldLarge } from "@/lib/cloudinary";
 import { ScrollRail } from "@/components/ui/scroll-rail";
 import { useRouter, useSearchParams } from "next/navigation";
-import { CalendarDays, ChevronRight, MapPin, Menu, Store } from "lucide-react";
+import { CalendarDays, ChevronRight, Flag, Link2, MapPin, Menu, Share2, Store } from "lucide-react";
 import { ContrataCRMark, HeaderMessagesLink, HeaderNotificationsLink } from "@/components/landing/landing-navbar";
 import { NotificationBell } from "@/components/notifications/notification-bell";
 import { useDirectMessageUnread } from "@/hooks/use-direct-message-unread";
 import { Link } from "@/i18n/navigation";
 import { DirectChatLauncher } from "@/components/professionals/direct-chat-launcher";
 import { trackInteraction } from "@/lib/analytics/interaction-events";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useNativeApp } from "@/hooks/use-native-app";
 import {
   MarketplaceFilterChip,
@@ -26,7 +26,9 @@ import { Modal } from "@/components/ui/modal";
 import { OfferForm } from "@/components/offers/offer-form";
 import { OfferImageGallery } from "@/components/offers/offer-image-gallery";
 import { SaveItemButton } from "@/components/saved/save-item-button";
-import { BotonCompartir } from "@/components/ui/boton-compartir";
+import { useCompartir } from "@/components/ui/boton-compartir";
+import { MenuFicha } from "@/components/ui/menu-ficha";
+import { ReportProfileModal } from "@/components/professionals/report-profile-modal";
 import {
   formatOfferBeforePrice,
   formatOfferPrice,
@@ -745,11 +747,10 @@ export function OfferContactActions({
           )}
         </div>
       )}
-      {/* Debajo de todos los botones: primero las formas de contactar, y al
-          final —sin marco— las dos acciones sobre la oferta. */}
-      <div className="flex items-center justify-center gap-1 pt-1">
+      {/* Debajo de todos los botones: primero las formas de contactar y al
+          final, sin marco, guardar. Compartir y reportar viven en el "...". */}
+      <div className="flex items-center justify-center pt-1">
         <OfferSaveButton offer={offer} userId={userId} />
-        <BotonCompartir url={`/${locale}/ofertas/${offer.id}`} titulo={offer.title} sutil className={compact ? "h-9 text-[12px]" : ""} />
       </div>
     </div>
   );
@@ -842,6 +843,10 @@ function OfferPreview({
   const before = formatOfferBeforePrice(offer, locale);
   const discount = offerDiscountPercent(offer);
   const isOwner = offer.professional_id === currentProfessionalId;
+  const tMenu = useTranslations("menuFicha");
+  const { compartir, copiar, avisoNodo } = useCompartir();
+  const [reportando, setReportando] = useState(false);
+  const enlaceOferta = `/${locale}/ofertas/${offer.id}`;
   return (
     <article className="relative ccr-marketplace-result-list hidden min-w-0 bg-white p-7 lg:block lg:h-full lg:overflow-y-auto">
       <div className="relative">
@@ -852,8 +857,8 @@ function OfferPreview({
           </span>
         )}
       </div>
-      <div className="mt-3 flex items-start justify-between gap-4">
-        <div className="min-w-0">
+      <div className="mt-3 flex items-start justify-between gap-3">
+        <div className="min-w-0 flex-1">
           <h2 className="text-2xl font-extrabold leading-tight">
             {offer.title}
           </h2>
@@ -872,8 +877,39 @@ function OfferPreview({
               {offer.professional_name}
             </p>
           )}
+          {/* Tipo y servicio en una línea con punto, igual que en la tarjeta de
+              la lista. */}
+          <p className="mt-1 flex min-w-0 flex-wrap items-center gap-1.5 text-sm leading-5">
+            <span className="text-[#68778d]">{offerTypeLabel(offer.offer_type, locale)}</span>
+            {offer.service_label && (
+              <>
+                <span aria-hidden="true" className="text-[#c0cad5]">·</span>
+                <span className="font-semibold text-[#008fc3]">{offer.service_label}</span>
+              </>
+            )}
+          </p>
         </div>
+        {/* El "..." guarda lo que no es contactar ni guardar: compartir, copiar
+            el enlace y reportar. */}
+        <MenuFicha
+          className="-mr-2 shrink-0"
+          opciones={[
+            { id: "compartir", icono: <Share2 className="h-4 w-4" />, texto: tMenu("share"), onSelect: () => void compartir(enlaceOferta, offer.title) },
+            { id: "copiar", icono: <Link2 className="h-4 w-4" />, texto: tMenu("copyLink"), onSelect: () => void copiar(enlaceOferta) },
+            ...(isOwner || !offer.professional_slug ? [] : [{ id: "reportar", icono: <Flag className="h-4 w-4" />, texto: tMenu("reportOffer"), peligro: true, onSelect: () => setReportando(true) }]),
+          ]}
+        />
       </div>
+      {reportando && offer.professional_slug && (
+        <ReportProfileModal
+          professionalName={offer.professional_name || copy.professional}
+          professionalSlug={offer.professional_slug}
+          contexto={`Oferta "${offer.title}" (${offer.id})`}
+          titulo={tMenu("reportOffer")}
+          onClose={() => setReportando(false)}
+        />
+      )}
+      {avisoNodo}
       {isOwner && (
         <div className="mt-4 grid grid-cols-2 gap-3 sm:flex sm:flex-wrap">
           <button
@@ -901,16 +937,6 @@ function OfferPreview({
           <p className="pb-1 text-sm font-semibold text-[#8794a7] line-through">
             {before}
           </p>
-        )}
-      </div>
-      <div className="mt-3 flex flex-wrap gap-2 text-sm">
-        <span className="rounded-full border border-[#cbd7e2] px-3 py-1.5 font-bold">
-           {offerTypeLabel(offer.offer_type, locale)}
-        </span>
-        {offer.service_label && (
-          <span className="rounded-full border border-[#cbd7e2] px-3 py-1.5 font-bold">
-            {offer.service_label}
-          </span>
         )}
       </div>
       <p className="mt-6 whitespace-pre-line break-words border-t border-[#e7edf2] pt-6 text-sm leading-7 text-[#43536b] [overflow-wrap:anywhere]">

@@ -4244,5 +4244,13 @@
     "deleteConfirmBody": "It disappears from your list and its link stops opening. The number is not reused.",
     "deleteConfirm": "Yes, delete",
     "sentOn": "Sent on {date}"
+  },
+  "menuFicha": {
+    "more": "More options",
+    "close": "Close",
+    "copyLink": "Copy link",
+    "reportJob": "Report this job",
+    "reportOffer": "Report this offer",
+    "share": "Share"
   }
 }

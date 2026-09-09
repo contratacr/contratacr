@@ -8,7 +8,7 @@ import { useEffect, useMemo, useState } from "react";
 import { cldThumb } from "@/lib/cloudinary";
 import { ScrollRail } from "@/components/ui/scroll-rail";
 import { useSearchParams } from "next/navigation";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { ArrowLeft, BriefcaseBusiness, Building2, Menu } from "lucide-react";
 import { Link, useRouter } from "@/i18n/navigation";
 import { recordRecentVisit } from "@/lib/recent-visits";
@@ -20,7 +20,10 @@ import { Modal } from "@/components/ui/modal";
 import { JobPostForm } from "@/components/jobs/job-post-form";
 import { JobApplicationForm } from "@/components/jobs/job-application-form";
 import { SaveItemButton } from "@/components/saved/save-item-button";
-import { BotonCompartir } from "@/components/ui/boton-compartir";
+import { useCompartir } from "@/components/ui/boton-compartir";
+import { MenuFicha } from "@/components/ui/menu-ficha";
+import { ReportProfileModal } from "@/components/professionals/report-profile-modal";
+import { Share2, Link2, Flag } from "lucide-react";
 import { useNativeApp } from "@/hooks/use-native-app";
 import { COMMON_JOB_TITLES, EMPLOYMENT_TYPES, EXPERIENCE_LEVELS, formatJobSalary, jobMatchesSearch, type JobPost, WORKPLACE_TYPES } from "@/lib/jobs";
 import { employmentTypeLabel, experienceLevelLabel, marketplaceLocale, type MarketplaceLocale, workplaceTypeLabel } from "@/lib/marketplace-copy";
@@ -48,7 +51,7 @@ const JOBS_COPY = {
     remoteCountry: "Costa Rica (Remoto)", country: "Costa Rica", noApplicants: "Sin postulantes", applicant: "postulante", applicants: "postulantes",
     searchPlaceholder: "¿Qué empleo estás buscando?", published: "Publicado", anyDate: "Cualquier fecha", last24Hours: "Últimas 24 horas", lastWeek: "Última semana", lastMonth: "Último mes",
     workplace: "Modalidad", anyWorkplace: "Cualquier modalidad", experience: "Experiencia", anyExperience: "Cualquier experiencia", employmentType: "Tipo de empleo", anyEmploymentType: "Cualquier tipo",
-    shareHint: "¿Le sirve a alguien que conocés?", messages: "Mensajes",
+    messages: "Mensajes",
     notifications: "Notificaciones",
     myJobs: "Mis empleos", publishJob: "Publicar empleo", jobs: "Empleos", opportunities: "Oportunidades en Costa Rica", job: "Empleo", openMenu: "Abrir menú",
     salary: "Salario", publishedBy: "Publicado por", editJob: "Editar empleo", manageJob: "Administrar empleo", applicationSent: "Postulación enviada", apply: "Postularme",
@@ -61,7 +64,7 @@ const JOBS_COPY = {
     remoteCountry: "Costa Rica (Remote)", country: "Costa Rica", noApplicants: "No applicants", applicant: "applicant", applicants: "applicants",
     searchPlaceholder: "What job are you looking for?", published: "Posted", anyDate: "Any date", last24Hours: "Past 24 hours", lastWeek: "Past week", lastMonth: "Past month",
     workplace: "Workplace", anyWorkplace: "Any workplace", experience: "Experience", anyExperience: "Any experience", employmentType: "Job type", anyEmploymentType: "Any type",
-    shareHint: "Know someone for this role?", messages: "Messages",
+    messages: "Messages",
     notifications: "Notifications",
     myJobs: "My jobs", publishJob: "Post a job", jobs: "Jobs", opportunities: "Opportunities in Costa Rica", job: "Job", openMenu: "Open menu",
     salary: "Salary", publishedBy: "Posted by", editJob: "Edit job", manageJob: "Manage job", applicationSent: "Application sent", apply: "Apply",
@@ -105,7 +108,8 @@ function JobMetaLine({ job, className = "", showApplicants = true }: { job: JobP
     <span>{relativeDate(job.created_at, locale)}</span>
     {showApplicants && <>
       <span aria-hidden="true" className="mx-1.5 text-[#9aa8b8]">&middot;</span>
-      <span>{jobApplicantsText(job, locale)}</span>
+      {/* "1 postulante" no se parte en dos renglones: se lee como un dato. */}
+      <span className="whitespace-nowrap">{jobApplicantsText(job, locale)}</span>
     </>}
   </p>;
 }
@@ -380,7 +384,6 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
                   <Link href={`/login?redirect=${encodeURIComponent(`/empleos/${selected.id}?apply=${selected.id}`)}`} className="inline-flex h-11 w-full items-center justify-center rounded-full bg-[#009fd9] px-5 text-sm font-bold text-white transition hover:bg-[#008fc3]">{copy.apply}</Link>
                 )}
                 <SaveItemButton itemType="job" itemId={selected.id} snapshot={jobSaveSnapshot(selected, locale)} userId={currentUserId} loginRedirect={`/empleos/${selected.id}`} withLabel className="h-11 w-full rounded-full" />
-                <BotonCompartir url={`/${locale}/empleos/${selected.id}`} titulo={selected.title} sutil className="w-full justify-center" />
               </div>
             )}
           </aside>
@@ -516,6 +519,10 @@ function JobRow({ job, selected, onSelect }: { job: JobPost; selected: boolean; 
 function JobPreview({ job, isOwner, userId, hasApplied, onApply, onEdit, mobile = false, hideActions = false }: { job: JobPost; isOwner: boolean; userId: string | null; hasApplied: boolean; onApply: () => void; onEdit: () => void; mobile?: boolean; hideActions?: boolean }) {
   const locale = marketplaceLocale(useLocale());
   const copy = JOBS_COPY[locale];
+  const tMenu = useTranslations("menuFicha");
+  const { compartir, copiar, avisoNodo } = useCompartir();
+  const [reportando, setReportando] = useState(false);
+  const enlaceEmpleo = `/${locale}/empleos/${job.id}`;
   const detailRows = [
     [copy.employmentType, employmentTypeLabel(job.employment_type, locale)],
     [copy.workplace, workplaceTypeLabel(job.workplace_type, locale)],
@@ -526,7 +533,18 @@ function JobPreview({ job, isOwner, userId, hasApplied, onApply, onEdit, mobile 
   ].filter(([, value]) => Boolean(value));
 
   return <article className={`ccr-marketplace-result-list relative min-w-0 bg-white ${mobile ? "block px-5 py-6" : "hidden p-7 lg:block lg:max-h-[calc(100vh-190px)] lg:overflow-y-auto"}`}>
-    <div className="flex items-start gap-4"><EmployerAvatar job={job} size="large" /><div className="min-w-0"><h2 className="text-2xl font-extrabold leading-tight">{job.title}</h2><p className="mt-1 font-semibold text-[#52627a]">{job.employer_name}</p><JobMetaLine job={job} className="mt-1 text-sm text-[#68778d]" /><p className="mt-2 text-base font-extrabold text-[#007fae]">{formatJobSalary(job, locale)}</p></div></div>
+    <div className="flex items-start gap-4"><EmployerAvatar job={job} size="large" /><div className="min-w-0 flex-1"><h2 className="text-2xl font-extrabold leading-tight">{job.title}</h2><p className="mt-1 font-semibold text-[#52627a]">{job.employer_name}</p><JobMetaLine job={job} className="mt-1 text-sm text-[#68778d]" /><p className="mt-2 text-base font-extrabold text-[#007fae]">{formatJobSalary(job, locale)}</p></div>
+      {/* El "..." guarda lo que no es postularse ni guardar: compartir, copiar
+          el enlace y reportar. */}
+      <MenuFicha
+        className="-mr-2 shrink-0"
+        opciones={[
+          { id: "compartir", icono: <Share2 className="h-4 w-4" />, texto: tMenu("share"), onSelect: () => void compartir(enlaceEmpleo, job.title) },
+          { id: "copiar", icono: <Link2 className="h-4 w-4" />, texto: tMenu("copyLink"), onSelect: () => void copiar(enlaceEmpleo) },
+          ...(isOwner || !job.employer_slug ? [] : [{ id: "reportar", icono: <Flag className="h-4 w-4" />, texto: tMenu("reportJob"), peligro: true, onSelect: () => setReportando(true) }]),
+        ]}
+      />
+    </div>
     {!hideActions && <div className={mobile ? "mt-5 grid grid-cols-2 gap-3" : "mt-5 flex flex-wrap items-center gap-3"}>
       {isOwner ? (
         <>
@@ -545,14 +563,16 @@ function JobPreview({ job, isOwner, userId, hasApplied, onApply, onEdit, mobile 
     <dl className="mt-6 grid gap-3 border-y border-[#e7edf2] py-5 text-sm sm:grid-cols-2">{detailRows.map(([label, value]) => <div key={label} className="min-w-0"><dt className="text-xs font-bold uppercase tracking-wide text-[#7a899d]">{label}</dt><dd className="mt-0.5 break-words font-bold text-[#162543] [overflow-wrap:anywhere]">{value}</dd></div>)}</dl>
     <section className="mt-7"><h3 className="text-lg font-bold">{copy.about}</h3><p className="mt-3 whitespace-pre-line break-words text-sm leading-7 text-[#43536b] [overflow-wrap:anywhere]">{job.description}</p></section>
     {[ [copy.responsibilities, job.responsibilities], [copy.requirements, job.requirements], [copy.benefits, job.benefits] ].map(([title, items]) => Array.isArray(items) && items.length > 0 ? <section key={String(title)} className="mt-7"><h3 className="text-lg font-bold">{String(title)}</h3><ol className="mt-3 space-y-2.5 text-sm text-[#43536b]">{items.map((item, index) => <li key={`${title}-${item}-${index}`} className="flex min-w-0 gap-3"><span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-[#eef7fb] text-[11px] font-extrabold leading-none text-[#008fc3]">{index + 1}</span><span className="min-w-0 break-words [overflow-wrap:anywhere]">{item}</span></li>)}</ol></section> : null)}
-    {/* Compartir vive al final del aviso: quien comparte un empleo lo hace
-        después de leerlo, cuando ve que le sirve a otra persona. */}
-    {!hideActions && !isOwner && (
-      <div className="mt-8 flex flex-wrap items-center justify-between gap-3 border-t border-[#e7edf2] pt-5">
-        <p className="text-sm text-[#68778d]">{copy.shareHint}</p>
-        <BotonCompartir url={`/${locale}/empleos/${job.id}`} titulo={job.title} sutil className="-ml-2" />
-      </div>
+    {reportando && job.employer_slug && (
+      <ReportProfileModal
+        professionalName={job.employer_name || copy.professionalFallback}
+        professionalSlug={job.employer_slug}
+        contexto={`Empleo "${job.title}" (${job.id})`}
+        titulo={tMenu("reportJob")}
+        onClose={() => setReportando(false)}
+      />
     )}
+    {avisoNodo}
   </article>;
 }
 
