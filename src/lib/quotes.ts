@@ -35,31 +35,23 @@ export type Quote = {
   professional_name?: string | null;
 };
 
-/** El nombre en minúsculas y con guiones: "sg-solutions". */
-function conGuiones(texto: string): string {
-  return (texto || "")
-    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 40);
-}
-
 /**
- * El enlace público. Se lee igual que el nombre del archivo
- * (contratacr.com/cotizacion/sg-solutions-0003-k7m2xq9a) y termina con el
- * código al azar, que es la llave: sin él nadie puede abrir ni aceptar una
- * cotización ajena, y por eso el enlace no se puede adivinar.
+ * El enlace público: contratacr.com/c/k7m2xq9a. El código al azar es la llave —
+ * sin él nadie puede abrir una cotización ajena, y por eso no se adivina—, así
+ * que es lo único que el enlace necesita llevar. La forma larga que se envió
+ * antes (…/cotizacion/sg-solutions-0003-k7m2xq9a) sigue abriendo lo mismo.
  *
  * La base es el sitio donde la cotización EXISTE: en test, test.contratacr.com;
  * en producción, contratacr.com. Solo las vistas previas de Vercel se mandan al
  * dominio de verdad, porque esa dirección no se comparte con nadie.
  */
-export function enlaceCotizacion(quote: Pick<Quote, "public_code" | "quote_number">, proName = "", baseUrl?: string): string {
+export function enlaceCotizacion(quote: Pick<Quote, "public_code" | "quote_number">, _proName = "", baseUrl?: string): string {
   const origen = baseUrl || (typeof window !== "undefined" ? window.location.origin : "") || process.env.NEXT_PUBLIC_APP_URL || "https://contratacr.com";
   let base = origen.replace(/\/$/, "");
   if (/\.vercel\.app$/i.test(base.replace(/^https?:\/\//, "").split("/")[0])) base = "https://contratacr.com";
-  const marca = conGuiones(proName);
-  const numero = quote.quote_number ? String(quote.quote_number).padStart(4, "0") : "";
-  const tramo = [marca, numero, quote.public_code].filter(Boolean).join("-");
-  return `${base}/cotizacion/${tramo}`;
+  // Corto y sin ruido: el código es la llave y lo único que hace falta.
+  // Los enlaces largos que ya se enviaron siguen abriendo la misma cotización.
+  return `${base}/c/${quote.public_code}`;
 }
 
 /** De "sg-solutions-0003-k7m2xq9a" saca "k7m2xq9a": el código es lo último. */

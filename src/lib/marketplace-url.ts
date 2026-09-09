@@ -37,12 +37,19 @@ export function tramoFicha(titulo: string, id: string): string {
   return [nombre, corto].filter(Boolean).join("-");
 }
 
-export function enlaceOferta(offer: { id: string; title?: string | null }, baseUrl?: string): string {
-  return `${base(baseUrl)}/ofertas/${tramoFicha(offer.title ?? "", offer.id)}`;
+/** contratacr.com/o/b1baacf7 */
+export function enlaceOferta(offer: { id: string }, baseUrl?: string): string {
+  return `${base(baseUrl)}/o/${codigoCorto(offer.id)}`;
 }
 
-export function enlaceEmpleo(job: { id: string; title?: string | null }, baseUrl?: string): string {
-  return `${base(baseUrl)}/empleos/${tramoFicha(job.title ?? "", job.id)}`;
+/** contratacr.com/e/d4000000 */
+export function enlaceEmpleo(job: { id: string }, baseUrl?: string): string {
+  return `${base(baseUrl)}/e/${codigoCorto(job.id)}`;
+}
+
+/** Los 8 primeros del id: es lo que hace único al enlace. */
+export function codigoCorto(id: string): string {
+  return String(id ?? "").split("-")[0]?.toLowerCase() ?? "";
 }
 
 /**
@@ -52,6 +59,8 @@ export function enlaceEmpleo(job: { id: string; title?: string | null }, baseUrl
 export function claveDeTramo(tramo: string): { id?: string; prefijo?: string } {
   const valor = String(tramo ?? "").trim().toLowerCase();
   if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(valor)) return { id: valor };
+  // El enlace corto es solo el código; el intermedio traía título y código.
+  if (/^[0-9a-f]{8}$/.test(valor)) return { prefijo: valor };
   const encontrado = valor.match(SUFIJO);
   return encontrado ? { prefijo: encontrado[1] } : {};
 }

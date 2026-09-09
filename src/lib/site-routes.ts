@@ -17,5 +17,7 @@ export const RUTAS_DEL_SITIO = new Set([
   "servicio-no-disponible", "servicios", "soporte", "terminos",
   // enlaces cortos de campañas y archivos servidos desde la raíz
   "ig", "tt", "fb", "wa", "pro",
+  // enlaces cortos de ficha: /o/<oferta>, /e/<empleo>, /c/<cotización>
+  "o", "e", "c",
   "sitemap.xml", "robots.txt", "favicon.ico", "manifest.json",
 ]);

@@ -65,6 +65,19 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL(VANITY[pathname], request.url), 307);
   }
 
+  // Enlaces cortos de una ficha: contratacr.com/o/b1baacf7 (oferta),
+  // /e/… (empleo) y /c/… (cotización). Se REESCRIBEN, no se redirigen: la
+  // dirección se queda corta en la barra, que es de lo que se trata. La forma
+  // larga de siempre sigue abriendo lo mismo.
+  const FICHAS: Record<string, string> = { o: "ofertas", e: "empleos", c: "cotizacion" };
+  const fichaCorta = /^\/([oec])\/([a-z0-9][a-z0-9-]{3,80})$/i.exec(pathname);
+  if (fichaCorta) {
+    const locale = request.cookies.get("NEXT_LOCALE")?.value === "en" ? "en" : "es";
+    const destino = new URL(`/${locale}/${FICHAS[fichaCorta[1].toLowerCase()]}/${fichaCorta[2].toLowerCase()}`, request.url);
+    destino.search = request.nextUrl.search;
+    return NextResponse.rewrite(destino);
+  }
+
   // Enlace público de cada profesional: contratacr.com/nombre-apellido (y la
   // forma con @ que se compartió antes). Solo entra aquí lo que no es una
   // sección del sitio (RUTAS_DEL_SITIO, verificada en CI).
