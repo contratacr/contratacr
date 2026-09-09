@@ -8,7 +8,7 @@ import { useTranslations, useLocale } from "next-intl";
 import { useParams, useSearchParams } from "next/navigation";
 import {
   MapPin, Shield, ArrowLeft, Star, Briefcase, Banknote, BadgeCheck, Languages,
-  Flag, Award, SearchX, Globe, BadgePercent, Users,
+  Flag, Award, SearchX, Globe, BadgePercent, Users, Share2,
 } from "lucide-react";
 import { Modal } from "@/components/ui/modal";
 import { VerifiedSeal } from "@/components/ui/verified-seal";
@@ -780,24 +780,21 @@ export default function ProfilePage() {
                     )}
                   </div>
                 )}
-                {/* Mismo botón secundario del app (píldora blanca de borde turquesa,
-                    sin ícono) que "Llamar": guardar y compartir son acciones, no
-                    enlaces sueltos. */}
-                <div className="mt-4 flex flex-col gap-2 sm:col-start-3 sm:row-start-1 sm:row-span-2 sm:mt-0 sm:flex-row sm:items-start sm:gap-2.5">
-                  <SaveButton
-                    pro={savedPro}
-                    isOwn={isOwn}
-                    withLabel
-                    className="h-11 w-full rounded-full px-4 py-0 text-[13px] sm:h-10 sm:w-auto sm:px-5"
-                  />
+                {/* Guardar y compartir: dos círculos del mismo tamaño. En las
+                    tarjetas de /buscar, ofertas y empleos el favorito ya es este
+                    marcador, así que aquí se lee igual; como píldoras con texto
+                    quedaban de anchos distintos y pesaban más que el nombre.
+                    Guardar avisa al tocarlo. */}
+                <div className="mt-4 flex items-center justify-center gap-2.5 sm:col-start-3 sm:row-start-1 sm:row-span-2 sm:mt-0 sm:justify-end">
+                  <SaveButton pro={savedPro} isOwn={isOwn} bubble />
                   <button
                     type="button"
                     onClick={shareProfile}
                     aria-label={t("shareProfile")}
                     title={t("shareProfile")}
-                    className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-full border border-[#d7e1ea] bg-white px-4 text-[13px] font-bold text-[#162543] transition-colors hover:border-[#b9c8d6] hover:bg-[#f6f9fb] sm:h-10 sm:w-auto sm:px-5"
+                    className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-[#d7e1ea] bg-white text-[#162543] transition-colors hover:border-[#b9c8d6] hover:bg-[#f6f9fb]"
                   >
-                    <span>{t("share")}</span>
+                    <Share2 className="h-5 w-5" />
                   </button>
                 </div>
             </div>
