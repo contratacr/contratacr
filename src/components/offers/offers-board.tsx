@@ -632,7 +632,7 @@ export function OfferSaveButton({
       snapshot={offerSaveSnapshot(offer, locale)}
       userId={userId}
       loginRedirect={`/ofertas/${offer.id}`}
-      bubble
+      sutil
       className={`shrink-0 ${className}`}
     />
   );
@@ -841,16 +841,16 @@ function OfferPreview({
             -{discount}%
           </span>
         )}
-        {/* Guardar y compartir, juntos en la esquina de la foto: las dos son
-            acciones sobre la oferta, no formas de contactar al profesional. */}
-        {!isOwner && (
-          <div className="absolute right-3 top-3 z-10 flex items-center gap-2">
-            <OfferSaveButton offer={offer} userId={userId} className="shadow-[0_2px_10px_rgba(22,37,67,0.14)]" />
-            <BotonCompartir url={`/${locale}/ofertas/${offer.id}`} titulo={offer.title} soloIcono className="shadow-[0_2px_10px_rgba(22,37,67,0.14)]" />
-          </div>
-        )}
       </div>
-      <div className="mt-5 flex items-start justify-between gap-4">
+      {/* Fuera de la foto y con rótulo: encima de la imagen tapaban la oferta y
+          no decían qué hacían. */}
+      {!isOwner && (
+        <div className="mt-3 -mr-2 flex items-center justify-end gap-1">
+          <OfferSaveButton offer={offer} userId={userId} />
+          <BotonCompartir url={`/${locale}/ofertas/${offer.id}`} titulo={offer.title} sutil />
+        </div>
+      )}
+      <div className="mt-3 flex items-start justify-between gap-4">
         <div className="min-w-0">
           <h2 className="text-2xl font-extrabold leading-tight">
             {offer.title}

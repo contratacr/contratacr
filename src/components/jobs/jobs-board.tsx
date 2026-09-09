@@ -528,9 +528,9 @@ function JobPreview({ job, isOwner, userId, hasApplied, onApply, onEdit, mobile 
         queda solo "Postularme", que es lo que el tablón quiere que pase. Van en
         su propia fila y no flotando: encima del título lo partían en tres. */}
     {!isOwner && (
-      <div className="mb-2 flex items-center justify-end gap-2">
-        <SaveItemButton itemType="job" itemId={job.id} snapshot={jobSaveSnapshot(job, locale)} userId={userId} loginRedirect={`/empleos/${job.id}`} bubble />
-        <BotonCompartir url={`/${locale}/empleos/${job.id}`} titulo={job.title} soloIcono />
+      <div className="mb-2 -mr-2 flex items-center justify-end gap-1">
+        <SaveItemButton itemType="job" itemId={job.id} snapshot={jobSaveSnapshot(job, locale)} userId={userId} loginRedirect={`/empleos/${job.id}`} sutil />
+        <BotonCompartir url={`/${locale}/empleos/${job.id}`} titulo={job.title} sutil />
       </div>
     )}
     <div className="flex items-start gap-4"><EmployerAvatar job={job} size="large" /><div className="min-w-0"><h2 className="text-2xl font-extrabold leading-tight">{job.title}</h2><p className="mt-1 font-semibold text-[#52627a]">{job.employer_name}</p><JobMetaLine job={job} className="mt-1 text-sm text-[#68778d]" /><p className="mt-2 text-base font-extrabold text-[#007fae]">{formatJobSalary(job, locale)}</p></div></div>

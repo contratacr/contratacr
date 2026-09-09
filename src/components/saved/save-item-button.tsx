@@ -17,6 +17,8 @@ type SaveItemButtonProps = {
   withLabel?: boolean;
   /** Marcador en círculo, para la esquina de una tarjeta o sobre una foto. */
   bubble?: boolean;
+  /** Ícono con rótulo, sin borde: la forma que usan las fichas. */
+  sutil?: boolean;
   showIcon?: boolean;
   loginRedirect?: string;
 };
@@ -31,6 +33,7 @@ export function SaveItemButton({
   className,
   withLabel = false,
   bubble = false,
+  sutil = false,
   showIcon,
   loginRedirect,
 }: SaveItemButtonProps) {
@@ -39,8 +42,8 @@ export function SaveItemButton({
   const payload = useMemo(() => ({ ...snapshot, id: itemId, type: itemType }), [itemId, itemType, snapshot]);
   // El mismo rótulo que en el perfil: nombra la acción y dónde queda.
   const labels = locale === "en"
-    ? { save: "Save to favorites", saved: "Saved", remove: itemType === "offer" ? "Remove offer from favorites" : "Remove job from favorites" }
-    : { save: "Guardar en favoritos", saved: "Guardado", remove: itemType === "offer" ? "Quitar oferta de favoritos" : "Quitar empleo de favoritos" };
+    ? { save: "Save to favorites", short: "Save", saved: "Saved", remove: itemType === "offer" ? "Remove offer from favorites" : "Remove job from favorites" }
+    : { save: "Guardar en favoritos", short: "Guardar", saved: "Guardado", remove: itemType === "offer" ? "Quitar oferta de favoritos" : "Quitar empleo de favoritos" };
 
   useEffect(() => {
     let mounted = true;
@@ -108,7 +111,12 @@ export function SaveItemButton({
       aria-label={saved ? labels.remove : labels.save}
       aria-pressed={saved}
       className={cn(
-        bubble
+        sutil
+          ? cn(
+              "inline-flex h-9 items-center gap-1.5 rounded-lg px-2.5 text-[13px] font-bold transition-colors duration-200",
+              saved ? "text-[#0089bb] hover:bg-[#eaf7fc]" : "text-[#52627a] hover:bg-[#eef3f8] hover:text-[#162543]",
+            )
+          : bubble
           ? cn(
               "grid h-11 w-11 place-items-center rounded-full border bg-white transition-colors duration-200",
               saved
@@ -127,8 +135,8 @@ export function SaveItemButton({
         className,
       )}
     >
-      {(showIcon ?? true) && <Bookmark className={bubble ? "h-5 w-5" : withLabel ? "h-4 w-4 shrink-0" : "h-[18px] w-[18px]"} fill={saved ? "currentColor" : "none"} />}
-      {withLabel && <span>{saved ? labels.saved : labels.save}</span>}
+      {(showIcon ?? true) && <Bookmark className={bubble ? "h-5 w-5" : withLabel || sutil ? "h-4 w-4 shrink-0" : "h-[18px] w-[18px]"} fill={saved ? "currentColor" : "none"} />}
+      {(withLabel || sutil) && <span>{saved ? labels.saved : sutil ? labels.short : labels.save}</span>}
     </button>
   );
 }

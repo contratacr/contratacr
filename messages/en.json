@@ -346,7 +346,8 @@
     "priceConsult": "Ask price",
     "servicesSuffix": "services",
     "savedToast": "Added to favorites",
-    "removedToast": "Removed from favorites"
+    "removedToast": "Removed from favorites",
+    "saveShort": "Save"
   },
   "locationPicker": {
     "searchPlaceholder": "Search your place's address… example: Escazú Centro",

@@ -272,9 +272,11 @@ interface SaveButtonProps {
   withLabel?: boolean;
   /** Marcador grande dentro de un círculo, para la cabecera de un perfil. */
   bubble?: boolean;
+  /** Ícono con rótulo, sin borde: la forma que usan las fichas. */
+  sutil?: boolean;
 }
 
-export function SaveButton({ pro, className, isOwn = false, withLabel = false, bubble = false }: SaveButtonProps) {
+export function SaveButton({ pro, className, isOwn = false, withLabel = false, bubble = false, sutil = false }: SaveButtonProps) {
   const t = useTranslations("card");
   const locale = useLocale();
   const { user, loading: authLoading } = useAuth();
@@ -340,7 +342,25 @@ export function SaveButton({ pro, className, isOwn = false, withLabel = false, b
 
   return (
     <>
-      {bubble ? (
+      {sutil ? (
+        // Ícono con rótulo y sin borde: dice qué hace sin pesar como un botón
+        // de contacto. Un marcador solo no se entiende (se confunde con el del
+        // navegador) y con borde competía con "Ver disponibilidad".
+        <button
+          data-save-button
+          onClick={toggle}
+          aria-label={saved ? t("unsave") : t("save")}
+          aria-pressed={saved}
+          className={cn(
+            "inline-flex h-9 items-center gap-1.5 rounded-lg px-2.5 text-[13px] font-bold transition-colors duration-200",
+            saved ? "text-[#0089bb] hover:bg-[#eaf7fc]" : "text-[#52627a] hover:bg-[#eef3f8] hover:text-[#162543]",
+            className,
+          )}
+        >
+          <Bookmark className="h-4 w-4 shrink-0" fill={saved ? "currentColor" : "none"} />
+          {saved ? t("savedLabel") : t("saveShort")}
+        </button>
+      ) : bubble ? (
         // Marcador grande: la misma acción que en las tarjetas, con el tamaño de
         // un botón de verdad y el color que dice si ya está guardado.
         <button

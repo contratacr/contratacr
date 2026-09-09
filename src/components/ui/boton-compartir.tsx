@@ -12,10 +12,12 @@ import { cn } from "@/lib/utils";
  * y lo dice. Vive al lado del favorito, arriba en la tarjeta: las dos son
  * acciones sobre la ficha, no formas de contactar a nadie.
  *
- * `soloIcono` lo deja del mismo tamaño y forma que el marcador de favoritos.
+ * `sutil` es la forma que usamos en las fichas: ícono con rótulo, sin borde y
+ * sin peso de botón. Un ícono solo no dice qué hace —el marcador se confunde
+ * con el del navegador—, y con borde competía con "Postularme" o "WhatsApp".
  * `onPress` lo deja delegar en quien ya tiene su propia hoja de compartir.
  */
-export function BotonCompartir({ url, titulo, onPress, soloIcono = false, className }: { url?: string; titulo?: string; onPress?: () => void; soloIcono?: boolean; className?: string }) {
+export function BotonCompartir({ url, titulo, onPress, sutil = false, className }: { url?: string; titulo?: string; onPress?: () => void; sutil?: boolean; className?: string }) {
   const t = useTranslations("profile");
   const nativo = useNativeShare();
   const [aviso, setAviso] = useState<string | null>(null);
@@ -42,14 +44,14 @@ export function BotonCompartir({ url, titulo, onPress, soloIcono = false, classN
         aria-label={rotulo}
         title={rotulo}
         className={cn(
-          soloIcono
-            ? "grid h-11 w-11 place-items-center rounded-full border border-[#d7e1ea] bg-white text-[#162543] transition-colors duration-200 hover:border-[#b9c8d6] hover:bg-[#f6f9fb]"
+          sutil
+            ? "inline-flex h-9 items-center gap-1.5 rounded-lg px-2.5 text-[13px] font-bold text-[#52627a] transition-colors duration-200 hover:bg-[#eef3f8] hover:text-[#162543]"
             : "inline-flex h-11 items-center justify-center gap-2 rounded-full border border-[#d7e1ea] bg-white px-4 text-sm font-bold text-[#162543] transition hover:border-[#b9c8d6] hover:bg-[#f6f9fb]",
           className,
         )}
       >
-        <Share2 className={soloIcono ? "h-5 w-5" : "h-4 w-4"} />
-        {!soloIcono && rotulo}
+        <Share2 className="h-4 w-4 shrink-0" />
+        {rotulo}
       </button>
       {aviso && <AvisoFlotante texto={aviso} onFin={() => setAviso(null)} />}
     </>

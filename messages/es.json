@@ -346,7 +346,8 @@
     "email": "Contactar por correo",
     "servicesSuffix": "servicios",
     "savedToast": "Agregado a favoritos",
-    "removedToast": "Quitado de favoritos"
+    "removedToast": "Quitado de favoritos",
+    "saveShort": "Guardar"
   },
   "locationPicker": {
     "searchPlaceholder": "Busca la dirección de tu local… ejemplo: Escazú Centro",

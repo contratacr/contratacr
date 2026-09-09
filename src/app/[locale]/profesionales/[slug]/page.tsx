@@ -658,7 +658,10 @@ export default function ProfilePage() {
     <div className="min-h-screen flex flex-col bg-[#f4f7fa]">
       <Navbar />
 
-      <main className="flex-1 py-8 [.ccr-native-app_&]:!pt-0 [.ccr-native-app_&]:!pb-[calc(var(--ccr-native-bottom-nav-total,64px)+1.5rem)]">
+      {/* El respiro final es solo eso: el alto de la barra de abajo ya lo
+          descuenta el propio main (`position: fixed; bottom: barra`), y
+          reservarlo otra vez dejaba 91 px de scroll contra el vacío. */}
+      <main className="flex-1 py-8 [.ccr-native-app_&]:!pt-0 [.ccr-native-app_&]:!pb-6">
         <div className="mx-auto max-w-7xl px-4 pt-0 sm:px-6 lg:px-8 [.ccr-native-app_&]:pt-4">
 
           {/* Preview mode → a clear way back to the panel. Otherwise, back to search. */}
@@ -706,9 +709,9 @@ export default function ProfilePage() {
                 {/* Guardar y compartir viven juntos y arriba: los dos son
                     acciones sobre la ficha, no formas de contactar. La pila de
                     abajo queda solo para lo que sí contacta. */}
-                <div className="absolute right-3 top-3 z-10 flex items-center gap-2 sm:right-4 sm:top-4">
-                  <SaveButton pro={savedPro} isOwn={isOwn} bubble />
-                  <BotonCompartir onPress={shareProfile} soloIcono />
+                <div className="absolute right-2 top-2 z-10 flex items-center gap-1 sm:right-3 sm:top-3">
+                  <SaveButton pro={savedPro} isOwn={isOwn} sutil />
+                  <BotonCompartir onPress={shareProfile} sutil />
                 </div>
                 <div className="flex min-w-0 flex-col items-center text-center sm:contents sm:text-left">
                   <ImagePreviewDialog
