@@ -69,21 +69,34 @@ export function ScrollRail({
         break;
       }
     }
-    nextTrim = Math.max(0, Math.min(nextTrim < 0 ? 0 : nextTrim, Math.round(available * 0.4)));
+    // Tope duro: el recorte solo se come el pedazo sobrante del último ítem.
+    // Con el 40 % del ancho podía tapar un chip completo y parecía que faltaban
+    // filtros.
+    nextTrim = Math.max(0, Math.min(nextTrim < 0 ? 0 : nextTrim, Math.round(available * 0.2), 88));
     setTrim((current) => (Math.abs(current - nextTrim) <= 1 ? current : nextTrim));
   }, []);
 
   useEffect(() => {
     const rail = ref.current;
     if (!rail) return;
+    let quieto: number | null = null;
+    // Mientras el dedo arrastra NO se recorta: el recorte se queda quieto en la
+    // pantalla mientras los chips pasan por debajo, así que uno desaparecía de
+    // golpe y volvía a aparecer. Se mide cuando el carril se detiene.
+    const alDesplazar = () => {
+      setTrim((current) => (current === 0 ? current : 0));
+      if (quieto !== null) window.clearTimeout(quieto);
+      quieto = window.setTimeout(() => { quieto = null; measure(); }, 140);
+    };
     const frame = requestAnimationFrame(measure);
-    rail.addEventListener("scroll", measure, { passive: true });
+    rail.addEventListener("scroll", alDesplazar, { passive: true });
     const observer = new ResizeObserver(measure);
     observer.observe(rail);
     for (const child of Array.from(rail.children)) observer.observe(child);
     return () => {
       cancelAnimationFrame(frame);
-      rail.removeEventListener("scroll", measure);
+      if (quieto !== null) window.clearTimeout(quieto);
+      rail.removeEventListener("scroll", alDesplazar);
       observer.disconnect();
     };
   }, [measure, children]);
@@ -95,7 +108,7 @@ export function ScrollRail({
         role={role}
         aria-label={ariaLabel}
         data-rail-trim={trim || undefined}
-        style={trim ? { clipPath: `inset(0 ${trim}px 0 0)` } : undefined}
+        style={{ clipPath: trim ? `inset(0 ${trim}px 0 0)` : undefined, transition: "clip-path 140ms ease-out" }}
         className={cn("scrollbar-none overflow-x-auto", className)}
       >
         {children}
