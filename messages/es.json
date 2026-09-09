@@ -4193,6 +4193,9 @@
     "preparingPdf": "Armando el PDF…",
     "writeClient": "Escribirle por WhatsApp",
     "acceptedOn": "Aceptada el {date}",
-    "emptyFilter": "No hay cotizaciones en este filtro."
+    "emptyFilter": "No hay cotizaciones en este filtro.",
+    "boundaryTitle": "No se pudieron cargar tus cotizaciones",
+    "boundaryBody": "Fue un problema de esta pantalla, no de tus datos. Volvé a intentarlo; si sigue igual, escribinos por soporte.",
+    "boundaryRetry": "Volver a intentar"
   }
 }

@@ -8,6 +8,7 @@ import { formatColones } from "@/lib/pricing";
 import { isQuoteExpired, type Quote } from "@/lib/quotes";
 import { QuoteEditorModal, type ServicioDelPro } from "@/components/quotes/quote-editor-modal";
 import { QuoteDetailModal } from "@/components/quotes/quote-detail-modal";
+import { QuotesBoundary } from "@/components/quotes/quotes-boundary";
 
 const DATE_LOCALE: Record<string, string> = { es: "es-CR", en: "en-US" };
 type Filtro = "all" | "open" | "accepted" | "closed";
@@ -16,7 +17,16 @@ type Filtro = "all" | "open" | "accepted" | "closed";
  * La sección "Cotizaciones" del profesional: la lista de lo que ha cotizado y
  * el botón para hacer una nueva. Creada, se abre lista para mandar.
  */
-export function QuotesSection({ proName, servicios = [] }: { proName: string; servicios?: ServicioDelPro[] }) {
+export function QuotesSection(props: { proName: string; servicios?: ServicioDelPro[]; puedeCrear?: boolean }) {
+  const t = useTranslations("quotes");
+  return (
+    <QuotesBoundary titulo={t("boundaryTitle")} cuerpo={t("boundaryBody")} reintentar={t("boundaryRetry")}>
+      <Cotizaciones {...props} />
+    </QuotesBoundary>
+  );
+}
+
+function Cotizaciones({ proName, servicios = [], puedeCrear = true }: { proName: string; servicios?: ServicioDelPro[]; puedeCrear?: boolean }) {
   const t = useTranslations("quotes");
   const locale = useLocale();
   const [quotes, setQuotes] = useState<Quote[] | null>(null);
@@ -26,7 +36,12 @@ export function QuotesSection({ proName, servicios = [] }: { proName: string; se
 
   useEffect(() => {
     let vivo = true;
-    void fetch("/api/quotes").then((r) => r.json()).then((d) => { if (vivo) setQuotes(Array.isArray(d.quotes) ? d.quotes : []); }).catch(() => { if (vivo) setQuotes([]); });
+    void fetch("/api/quotes").then((r) => r.json()).then((d) => {
+      if (!vivo) return;
+      const filas = Array.isArray(d.quotes) ? d.quotes : [];
+      // Un renglón mal formado (items que no es lista) no puede romper la sección.
+      setQuotes(filas.map((q: Quote) => ({ ...q, items: Array.isArray(q.items) ? q.items : [] })));
+    }).catch(() => { if (vivo) setQuotes([]); });
     return () => { vivo = false; };
   }, []);
 
@@ -55,7 +70,7 @@ export function QuotesSection({ proName, servicios = [] }: { proName: string; se
       {/* Cabecera: qué es esto y el botón, siempre a la vista. */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-[14px] leading-6 text-[#52627a]">{t("sectionIntro")}</p>
-        {(quotes?.length ?? 0) > 0 && (
+        {puedeCrear && (quotes?.length ?? 0) > 0 && (
           <Button type="button" onClick={() => setEditor(true)} className="shrink-0"><Plus className="h-4 w-4" />{t("new")}</Button>
         )}
       </div>
@@ -67,7 +82,7 @@ export function QuotesSection({ proName, servicios = [] }: { proName: string; se
           <span className="mx-auto grid h-16 w-16 place-items-center rounded-2xl bg-gradient-to-br from-[#eaf7fc] to-[#d8eefb] text-[#0b5f80]"><ReceiptText className="h-8 w-8" /></span>
           <h3 className="mt-4 text-[20px] font-extrabold text-[#162543]">{t("emptyTitle")}</h3>
           <p className="mx-auto mt-2 max-w-md text-[14px] leading-6 text-[#52627a]">{t("emptyBody")}</p>
-          <Button type="button" onClick={() => setEditor(true)} className="mt-5"><Plus className="h-4 w-4" />{t("emptyCta")}</Button>
+          {puedeCrear && <Button type="button" onClick={() => setEditor(true)} className="mt-5"><Plus className="h-4 w-4" />{t("emptyCta")}</Button>}
         </div>
       ) : (
         <>
