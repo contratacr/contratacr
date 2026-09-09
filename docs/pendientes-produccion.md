@@ -93,7 +93,13 @@ cliente conserva el Asistente):
   empaqueta; la librería se carga solo al usarla).
 - La **cédula del cliente trae el nombre** del padrón (`/api/cedula/<id>`), el
   teléfono lleva código de país, el IVA es una fila de tres pastillas y los
-  servicios del profesional se agregan de un toque como renglones.
+  servicios del profesional se agregan de un toque como líneas.
+- **En test la cédula NO trae el nombre**: el padrón D1 de ese entorno está
+  vacío o apunta a otra base (la bitácora `provider_verification_log` de test no
+  registra hallazgos desde agosto; la de producción sí, con
+  `cloudflare_d1_padron`). Es configuración del entorno, no código: en
+  producción va a funcionar. Si se quiere probar en test, hay que cargarle el
+  padrón al D1 de test en Cloudflare.
 - El bloque dentro de citas y proyectos sigue igual (mismo editor).
 - Necesita las **migraciones 192, 193 y 194** en producción; sin ellas, crear una
   cotización falla con error de columna.
@@ -101,4 +107,52 @@ cliente conserva el Asistente):
   teléfono, no solo en la barra de la app.
 - Al publicar: avisar a los profesionales activos que ya pueden cotizar desde
   el app (campaña + mensaje del kit).
+
+## 7. Pendiente a futuro: empresa, marca y facturación electrónica
+
+Decidido el 9-sep: **se deja para después**, no se trabaja ahora. El objetivo
+del momento es traer clientes, y esto retiene profesionales. Queda aquí para no
+volver a discutirlo desde cero.
+
+**Por qué tendría sentido algún día.** En Costa Rica no existe el "proveedor
+autorizado": Hacienda no certifica sistemas. Cualquier software puede armar el
+XML, firmarlo con la llave del profesional y mandarlo al API. GTI y los demás
+no tienen licencia especial; tienen producto y soporte. Nuestra ventaja sería
+que la factura sale de donde ya ocurre el trabajo: cotización aceptada → un
+toque → factura con los mismos datos. Sería la primera razón real para cobrar
+una suscripción Pro.
+
+**Lo que exige Hacienda (v4.4).** Llave `.p12` y credenciales del ATV de cada
+profesional; XML con clave de 50 dígitos y consecutivo de 20; **CABYS en cada
+línea** (la fricción más grande); firma XAdES-EPES; envío, consulta de estado y
+reintentos; recepción y aceptación de comprobantes de terceros; guardar XML y
+respuestas 5 años; correo con XML y PDF al receptor.
+
+**Costo real de operarlo**: por documento es casi nada; lo caro es el
+mantenimiento (cada versión de Hacienda, catálogo CABYS, tipo de cambio del
+BCCR) y el **soporte humano** cuando Hacienda rechaza. Nuestro costo marginal
+sería bajo porque la infraestructura ya está.
+
+**Riesgo, que es lo que manda el orden.** Custodiar la llave de otro cambia la
+categoría del riesgo: si se filtra y alguien factura a su nombre, el reclamo va
+contra quien la guardaba. Hoy todo está a nombre personal de Isaac, sin
+separación de patrimonio. Ya existe además el riesgo de datos personales
+(Ley 8968 / PRODHAB) por las cédulas y el padrón.
+
+**Orden cuando se retome** (confirmar con abogado y contador):
+1. *Spike* de 2-3 días: cuenta de pruebas del ATV, firmar y mandar **un** XML.
+   No necesita sociedad, marca ni permisos.
+2. **SRL** (no asociación: una asociación es sin fines de lucro) **antes** de
+   cobrar o de guardar la primera llave ajena. Cuenta bancaria aparte, sin
+   mezclar plata.
+3. Inscribir la SRL en el ATV y sacar su propia llave (para facturar lo que
+   ContrataCR cobre).
+4. **Marca** "ContrataCR" en el Registro Nacional (clases 42 y 35). Es aparte y
+   conviene aunque nunca se haga la facturación.
+5. Términos de servicio a nombre de la empresa, con límite de responsabilidad,
+   y póliza de responsabilidad civil / cyber.
+
+**Alternativa más corta** si algún día urge: conectarse al API de un proveedor
+existente (GTI, Alanube, Facturele…) y que ellos firmen y envíen. 2-4 semanas en
+vez de 3-4 meses, con costo por documento.
 
