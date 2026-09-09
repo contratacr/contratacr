@@ -48,7 +48,7 @@ const JOBS_COPY = {
     remoteCountry: "Costa Rica (Remoto)", country: "Costa Rica", noApplicants: "Sin postulantes", applicant: "postulante", applicants: "postulantes",
     searchPlaceholder: "¿Qué empleo estás buscando?", published: "Publicado", anyDate: "Cualquier fecha", last24Hours: "Últimas 24 horas", lastWeek: "Última semana", lastMonth: "Último mes",
     workplace: "Modalidad", anyWorkplace: "Cualquier modalidad", experience: "Experiencia", anyExperience: "Cualquier experiencia", employmentType: "Tipo de empleo", anyEmploymentType: "Cualquier tipo",
-    messages: "Mensajes",
+    shareHint: "¿Le sirve a alguien que conocés?", messages: "Mensajes",
     notifications: "Notificaciones",
     myJobs: "Mis empleos", publishJob: "Publicar empleo", jobs: "Empleos", opportunities: "Oportunidades en Costa Rica", job: "Empleo", openMenu: "Abrir menú",
     salary: "Salario", publishedBy: "Publicado por", editJob: "Editar empleo", manageJob: "Administrar empleo", applicationSent: "Postulación enviada", apply: "Postularme",
@@ -61,7 +61,7 @@ const JOBS_COPY = {
     remoteCountry: "Costa Rica (Remote)", country: "Costa Rica", noApplicants: "No applicants", applicant: "applicant", applicants: "applicants",
     searchPlaceholder: "What job are you looking for?", published: "Posted", anyDate: "Any date", last24Hours: "Past 24 hours", lastWeek: "Past week", lastMonth: "Past month",
     workplace: "Workplace", anyWorkplace: "Any workplace", experience: "Experience", anyExperience: "Any experience", employmentType: "Job type", anyEmploymentType: "Any type",
-    messages: "Messages",
+    shareHint: "Know someone for this role?", messages: "Messages",
     notifications: "Notifications",
     myJobs: "My jobs", publishJob: "Post a job", jobs: "Jobs", opportunities: "Opportunities in Costa Rica", job: "Job", openMenu: "Open menu",
     salary: "Salary", publishedBy: "Posted by", editJob: "Edit job", manageJob: "Manage job", applicationSent: "Application sent", apply: "Apply",
@@ -527,29 +527,32 @@ function JobPreview({ job, isOwner, userId, hasApplied, onApply, onEdit, mobile 
 
   return <article className={`ccr-marketplace-result-list relative min-w-0 bg-white ${mobile ? "block px-5 py-6" : "hidden p-7 lg:block lg:max-h-[calc(100vh-190px)] lg:overflow-y-auto"}`}>
     <div className="flex items-start gap-4"><EmployerAvatar job={job} size="large" /><div className="min-w-0"><h2 className="text-2xl font-extrabold leading-tight">{job.title}</h2><p className="mt-1 font-semibold text-[#52627a]">{job.employer_name}</p><JobMetaLine job={job} className="mt-1 text-sm text-[#68778d]" /><p className="mt-2 text-base font-extrabold text-[#007fae]">{formatJobSalary(job, locale)}</p></div></div>
-    {!hideActions && <div className={mobile ? "mt-5 space-y-3" : "mt-5 flex flex-wrap items-center gap-3"}>
+    {!hideActions && <div className={mobile ? "mt-5 grid grid-cols-2 gap-3" : "mt-5 flex flex-wrap items-center gap-3"}>
       {isOwner ? (
         <>
-          <button type="button" onClick={onEdit} className="inline-flex h-11 w-full items-center justify-center rounded-full bg-[#009fd9] px-4 text-sm font-bold text-white transition hover:bg-[#008fc3]">{copy.editJob}</button>
-          <Link href={`/dashboard/profesional?mode=offer&tab=jobs&job=${job.id}`} className="inline-flex h-11 w-full items-center justify-center rounded-full border border-[#b9d9e8] px-4 text-center text-sm font-bold text-[#007fae] transition hover:bg-[#f1f9fc]">{copy.manageJob}</Link>
+          <button type="button" onClick={onEdit} className="inline-flex h-11 w-full items-center justify-center rounded-full bg-[#009fd9] px-4 text-sm font-bold text-white transition hover:bg-[#008fc3] sm:w-auto sm:px-6">{copy.editJob}</button>
+          <Link href={`/dashboard/profesional?mode=offer&tab=jobs&job=${job.id}`} className="inline-flex h-11 w-full items-center justify-center rounded-full border border-[#b9d9e8] px-4 text-center text-sm font-bold text-[#007fae] transition hover:bg-[#f1f9fc] sm:w-auto sm:px-6">{copy.manageJob}</Link>
         </>
       ) : userId ? (
         <button type="button" onClick={onApply} disabled={hasApplied} className="inline-flex h-11 w-full items-center justify-center overflow-visible whitespace-nowrap rounded-full bg-[#009fd9] px-4 pt-px text-sm font-bold leading-6 text-white transition hover:bg-[#008fc3] disabled:bg-[#cbd5e1] sm:w-[168px]">{hasApplied ? copy.applicationSent : copy.apply}</button>
       ) : (
         <Link href={`/login?redirect=${encodeURIComponent(`/empleos?apply=${job.id}`)}`} className="inline-flex h-11 w-full items-center justify-center overflow-visible whitespace-nowrap rounded-full bg-[#009fd9] px-4 pt-px text-sm font-bold leading-6 text-white transition hover:bg-[#008fc3] sm:w-[168px]">{copy.apply}</Link>
       )}
-      {/* La fila dice la jerarquía de un vistazo: postularme pesa, guardar
-          acompaña con su marco y compartir cierra sin marco. */}
       {!isOwner && (
-        <div className="flex items-center gap-2">
-          <SaveItemButton itemType="job" itemId={job.id} snapshot={jobSaveSnapshot(job, locale)} userId={userId} loginRedirect={`/empleos/${job.id}`} withLabel className="h-11 rounded-full px-4" />
-          <BotonCompartir url={`/${locale}/empleos/${job.id}`} titulo={job.title} sutil />
-        </div>
+        <SaveItemButton itemType="job" itemId={job.id} snapshot={jobSaveSnapshot(job, locale)} userId={userId} loginRedirect={`/empleos/${job.id}`} withLabel className="h-11 w-full rounded-full px-4 sm:w-auto" />
       )}
     </div>}
     <dl className="mt-6 grid gap-3 border-y border-[#e7edf2] py-5 text-sm sm:grid-cols-2">{detailRows.map(([label, value]) => <div key={label} className="min-w-0"><dt className="text-xs font-bold uppercase tracking-wide text-[#7a899d]">{label}</dt><dd className="mt-0.5 break-words font-bold text-[#162543] [overflow-wrap:anywhere]">{value}</dd></div>)}</dl>
     <section className="mt-7"><h3 className="text-lg font-bold">{copy.about}</h3><p className="mt-3 whitespace-pre-line break-words text-sm leading-7 text-[#43536b] [overflow-wrap:anywhere]">{job.description}</p></section>
     {[ [copy.responsibilities, job.responsibilities], [copy.requirements, job.requirements], [copy.benefits, job.benefits] ].map(([title, items]) => Array.isArray(items) && items.length > 0 ? <section key={String(title)} className="mt-7"><h3 className="text-lg font-bold">{String(title)}</h3><ol className="mt-3 space-y-2.5 text-sm text-[#43536b]">{items.map((item, index) => <li key={`${title}-${item}-${index}`} className="flex min-w-0 gap-3"><span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-[#eef7fb] text-[11px] font-extrabold leading-none text-[#008fc3]">{index + 1}</span><span className="min-w-0 break-words [overflow-wrap:anywhere]">{item}</span></li>)}</ol></section> : null)}
+    {/* Compartir vive al final del aviso: quien comparte un empleo lo hace
+        después de leerlo, cuando ve que le sirve a otra persona. */}
+    {!hideActions && !isOwner && (
+      <div className="mt-8 flex flex-wrap items-center justify-between gap-3 border-t border-[#e7edf2] pt-5">
+        <p className="text-sm text-[#68778d]">{copy.shareHint}</p>
+        <BotonCompartir url={`/${locale}/empleos/${job.id}`} titulo={job.title} sutil className="-ml-2" />
+      </div>
+    )}
   </article>;
 }
 
