@@ -4134,7 +4134,7 @@
     "forWhomLabel": "Who is it for?",
     "clientNameLabel": "Client name",
     "clientNamePlaceholder": "E.g. María Rodríguez",
-    "clientPhoneLabel": "WhatsApp (optional)",
+    "clientPhoneLabel": "WhatsApp",
     "clientPhonePlaceholder": "8888-8888",
     "clientPhoneHint": "With the number, the WhatsApp button goes straight to them.",
     "errorNeedsClient": "Write the client's name.",
@@ -4192,6 +4192,7 @@
     "sharePdf": "Share PDF",
     "preparingPdf": "Building the PDF…",
     "writeClient": "Message on WhatsApp",
-    "acceptedOn": "Accepted on {date}"
+    "acceptedOn": "Accepted on {date}",
+    "emptyFilter": "No quotes in this filter."
   }
 }

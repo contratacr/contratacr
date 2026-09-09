@@ -4134,7 +4134,7 @@
     "forWhomLabel": "¿Para quién es?",
     "clientNameLabel": "Nombre del cliente",
     "clientNamePlaceholder": "Ej.: María Rodríguez",
-    "clientPhoneLabel": "WhatsApp (opcional)",
+    "clientPhoneLabel": "WhatsApp",
     "clientPhonePlaceholder": "8888-8888",
     "clientPhoneHint": "Con el número, el botón de WhatsApp le llega directo.",
     "errorNeedsClient": "Escribe el nombre del cliente.",
@@ -4192,6 +4192,7 @@
     "sharePdf": "Compartir PDF",
     "preparingPdf": "Armando el PDF…",
     "writeClient": "Escribirle por WhatsApp",
-    "acceptedOn": "Aceptada el {date}"
+    "acceptedOn": "Aceptada el {date}",
+    "emptyFilter": "No hay cotizaciones en este filtro."
   }
 }

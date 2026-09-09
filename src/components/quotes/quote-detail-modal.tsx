@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
+import { Check } from "lucide-react";
 import { Modal } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
 import { useAppDialog } from "@/hooks/use-app-dialog";
@@ -64,6 +65,9 @@ export function QuoteDetailModal({ quote, role, open, onClose, onChanged, proNam
         ) : undefined}
         footerClassName="flex-col-reverse gap-2 sm:flex-row sm:justify-end">
         <div className="flex flex-col gap-4">
+          {recienCreada && (
+            <span className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-[#e9f9ef] text-[#166534]"><Check className="h-6 w-6" strokeWidth={3} /></span>
+          )}
           {/* Para el profesional, primero cómo mandarla: es a lo que viene. */}
           {role === "pro" && abierta && <QuoteShare quote={quote} proName={proName ?? quote.professional_name ?? ""} />}
           {/* Aceptada: lo único que queda es ponerse de acuerdo. */}

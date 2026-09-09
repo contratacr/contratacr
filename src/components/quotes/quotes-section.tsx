@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { ChevronRight, Plus, ReceiptText } from "lucide-react";
+import { Check, ChevronRight, Clock3, Plus, ReceiptText, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatColones } from "@/lib/pricing";
 import { isQuoteExpired, type Quote } from "@/lib/quotes";
@@ -35,9 +35,12 @@ export function QuotesSection({ proName, servicios = [] }: { proName: string; se
     const e = estadoDe(q);
     return e === "expired" ? t("statusExpired") : e === "sent" ? t("statusOpen") : e === "accepted" ? t("statusAccepted") : e === "declined" ? t("statusDeclined") : t("statusWithdrawn");
   };
-  const tono = (q: Quote) => {
+  // Cada estado con su color y su ícono: se lee de un vistazo cuál está viva.
+  const marca = (q: Quote) => {
     const e = estadoDe(q);
-    return e === "accepted" ? "bg-[#eaf7fc] text-[#0089bb]" : e === "sent" ? "bg-[#fff4e2] text-[#b45309]" : "bg-[#f3f4f6] text-[#6b7280]";
+    if (e === "accepted") return { fondo: "bg-[#e9f9ef] text-[#166534]", icono: <Check className="h-3.5 w-3.5" strokeWidth={3} /> };
+    if (e === "sent") return { fondo: "bg-[#fff4e2] text-[#b45309]", icono: <Clock3 className="h-3.5 w-3.5" /> };
+    return { fondo: "bg-[#f3f4f6] text-[#6b7280]", icono: <X className="h-3.5 w-3.5" /> };
   };
   const lista = (quotes ?? []).filter((q) => {
     const e = estadoDe(q);
@@ -70,18 +73,25 @@ export function QuotesSection({ proName, servicios = [] }: { proName: string; se
         <>
           <div className="scrollbar-none flex gap-2 overflow-x-auto">{chip("all", t("filterAll"))}{chip("open", t("filterOpen"))}{chip("accepted", t("filterAccepted"))}{chip("closed", t("filterClosed"))}</div>
           <div className="flex flex-col gap-2">
-            {lista.map((q) => (
-              <button key={q.id} type="button" onClick={() => setDetalle({ quote: q, recien: false })} className="flex w-full items-center gap-3.5 rounded-2xl border border-[#e5eaf0] bg-white px-4 py-3.5 text-left transition-colors hover:border-[#bfe3f5] hover:bg-[#f8fcfe]">
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate text-[15px] font-extrabold text-[#162543]">{q.client_name || q.title || t("noClientName")}</span>
-                  <span className="mt-0.5 block truncate text-[13px] text-[#52627a]">{q.client_name && q.title ? q.title : t("createdOn", { date: new Date(q.created_at).toLocaleDateString(DATE_LOCALE[locale] ?? "es-CR", { day: "numeric", month: "short" }) })}</span>
-                  <span className={`mt-1.5 inline-block rounded-full px-2 py-0.5 text-[11px] font-bold ${tono(q)}`}>{etiqueta(q)}</span>
-                </span>
-                <span className="shrink-0 text-right text-[16px] font-extrabold text-[#162543]">{formatColones(q.total)}</span>
-                <ChevronRight className="h-4 w-4 shrink-0 text-[#9aa8ba]" />
-              </button>
-            ))}
-            {lista.length === 0 && <p className="py-6 text-center text-[14px] text-[#68778d]">—</p>}
+            {lista.map((q) => {
+              const m = marca(q);
+              return (
+                <button key={q.id} type="button" onClick={() => setDetalle({ quote: q, recien: false })} className="group flex w-full items-center gap-3.5 rounded-2xl border border-[#e5eaf0] bg-white px-4 py-3.5 text-left transition-colors hover:border-[#bfe3f5] hover:bg-[#f8fcfe]">
+                  <span className={`grid h-11 w-11 shrink-0 place-items-center rounded-xl ${m.fondo}`}>{m.icono}</span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-[15px] font-extrabold text-[#162543]">{q.client_name || q.title || t("noClientName")}</span>
+                    {q.client_name && q.title && <span className="block truncate text-[13px] text-[#52627a]">{q.title}</span>}
+                    <span className={`mt-1 inline-block rounded-full px-2 py-0.5 text-[11px] font-bold ${m.fondo}`}>{etiqueta(q)}</span>
+                  </span>
+                  <span className="shrink-0 text-right">
+                    <span className="block whitespace-nowrap text-[17px] font-extrabold text-[#162543]">{formatColones(q.total)}</span>
+                    <span className="mt-0.5 block whitespace-nowrap text-[12px] text-[#68778d]">{new Date(q.created_at).toLocaleDateString(DATE_LOCALE[locale] ?? "es-CR", { day: "numeric", month: "short" })}</span>
+                  </span>
+                  <ChevronRight className="h-4 w-4 shrink-0 text-[#9aa8ba] transition-transform group-hover:translate-x-0.5" />
+                </button>
+              );
+            })}
+            {lista.length === 0 && <p className="rounded-2xl border border-dashed border-[#dbe4ee] py-8 text-center text-[14px] text-[#68778d]">{t("emptyFilter")}</p>}
           </div>
         </>
       )}

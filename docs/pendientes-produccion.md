@@ -10,7 +10,8 @@ cotizaciones y precios). Cada punto dice qué falta y quién lo hace.
 | 189 · recordatorios de inactividad | tipos de aviso + índices | **aplicada 8-sep** | pendiente |
 | 190 · retiros de propuesta | `proposals.withdrawn_at`, `withdraw_reason` | **aplicada 8-sep** | pendiente |
 | 191 · cotizaciones | tabla `quotes` con RLS, tipos `quote_sent` / `quote_accepted` / `quote_declined` / `pricing_request` | **aplicada 8-sep** | pendiente |
-| 192 · cotizaciones a cualquiera | `quotes.client_id` opcional, `client_name`, `client_phone`, `public_code` (enlace público) | pendiente | pendiente |
+| 192 · cotizaciones a cualquiera | `quotes.client_id` opcional, `client_name`, `client_phone`, `public_code` (enlace público) | **aplicada 9-sep** | pendiente |
+| 193 · cédula en la cotización | `quotes.client_cedula` | **aplicada 9-sep** | pendiente |
 
 Se aplican **solo** con el workflow `Supabase migrations` (dispatch), nunca en local:
 `test` desde la rama `test`, `production` desde `main`; siempre en seco primero.
@@ -87,11 +88,16 @@ cliente conserva el Asistente):
   el cliente la ve con la marca del profesional y la **acepta con un toque**
   (`/api/quotes/public`, sin cuenta; el código de 12 caracteres es la llave).
 - Se manda por WhatsApp (directo al número si lo puso), se copia el enlace o se
-  descarga/comparte como **imagen** (`src/lib/quote-image.ts`). PDF: en la web,
-  "Imprimir → Guardar como PDF" de la página pública.
+  baja/comparte como **PDF** (`src/lib/quote-image.ts` dibuja la hoja y jsPDF la
+  empaqueta; la librería se carga solo al usarla).
+- La **cédula del cliente trae el nombre** del padrón (`/api/cedula/<id>`), el
+  teléfono lleva código de país, el IVA es una fila de tres pastillas y los
+  servicios del profesional se agregan de un toque como renglones.
 - El bloque dentro de citas y proyectos sigue igual (mismo editor).
-- Necesita la **migración 192** en test y producción; sin ella, crear una
+- Necesita las **migraciones 192 y 193** en producción; sin ellas, crear una
   cotización falla con error de columna.
+- Cotizaciones también está en el menú de cuenta de la web y en el cajón del
+  teléfono, no solo en la barra de la app.
 - Al publicar: avisar a los profesionales activos que ya pueden cotizar desde
   el app (campaña + mensaje del kit).
 
