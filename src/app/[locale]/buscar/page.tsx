@@ -4,7 +4,6 @@ import { getTranslations, getLocale } from "next-intl/server";
 import { ChevronLeft, ChevronRight, Search } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { LandingNavbar } from "@/components/landing/landing-navbar";
-import { LandingFooter } from "@/components/landing/landing-footer";
 import { SearchFilters } from "@/components/search/search-filters";
 import { ProfessionalCard } from "@/components/professionals/professional-card";
 import { SaveableCard } from "@/components/professionals/save-button";
@@ -635,10 +634,6 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                     </nav>
                   )}
 
-                  <div className="mt-6 -mx-4 lg:hidden">
-                    <LandingFooter />
-                  </div>
-
                 </>
               )}
             </div>
@@ -647,7 +642,6 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
         </div>
       </main>
 
-      <div className="hidden lg:block"><LandingFooter /></div>
     </div>
   );
 }

@@ -1,7 +1,6 @@
 "use client";
 
 import { usePathname, useSelectedLayoutSegment } from "next/navigation";
-import { LandingFooter } from "@/components/landing/landing-footer";
 import { LandingNavbar } from "@/components/landing/landing-navbar";
 
 export function MarketplaceSectionLayoutShell({ children }: { children: React.ReactNode }) {
@@ -28,8 +27,9 @@ export function MarketplaceSectionLayoutShell({ children }: { children: React.Re
           </div>
         </>
       )}
+      {/* Sin pie: empleos y ofertas se comportan como la app —el listado se
+          desplaza dentro de su contenedor y ahí termina la pantalla. */}
       <div className="flex-1">{children}</div>
-      <LandingFooter />
     </div>
   );
 }
