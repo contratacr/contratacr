@@ -86,7 +86,7 @@ export function QuoteDetailModal({ quote, role, open, onClose, onChanged, proNam
             <span className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-[#e9f9ef] text-[#166534]"><Check className="h-6 w-6" strokeWidth={3} /></span>
           )}
           {/* Para el profesional, primero cómo mandarla: es a lo que viene. */}
-          {role === "pro" && abierta && <QuoteShare quote={quote} proName={proName ?? quote.professional_name ?? ""} />}
+          {role === "pro" && abierta && <QuoteShare quote={quote} proName={proName ?? quote.professional_name ?? ""} onChanged={onChanged} />}
           {/* Aceptada: lo único que queda es ponerse de acuerdo. */}
           {role === "pro" && quote.status === "accepted" && (
             <div className="rounded-2xl bg-[#f0fdf4] px-4 py-3.5 text-center">

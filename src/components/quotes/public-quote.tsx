@@ -1,12 +1,10 @@
 "use client";
 
-import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
-import { Check, Printer } from "lucide-react";
+import { Printer } from "lucide-react";
 import { VerifiedSeal } from "@/components/ui/verified-seal";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
 import { formatColones } from "@/lib/pricing";
 import { getInitials } from "@/lib/utils";
 import { cldThumb } from "@/lib/cloudinary";
@@ -27,11 +25,7 @@ const DATE_LOCALE: Record<string, string> = { es: "es-CR", en: "en-US" };
  */
 export function PublicQuote({ locale, data }: { locale: string; data: PublicQuoteData | null }) {
   const t = useTranslations("quotes");
-  const [estado, setEstado] = useState<Quote["status"] | null>(data?.quote.status ?? null);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  if (!data || !estado) {
+  if (!data) {
     return (
       <Marco>
         <div className="rounded-3xl border border-[#e5eaf0] bg-white px-6 py-12 text-center shadow-sm">
@@ -42,50 +36,17 @@ export function PublicQuote({ locale, data }: { locale: string; data: PublicQuot
     );
   }
   const { quote, pro } = data;
-  const vencida = estado === "sent" && isQuoteExpired({ ...quote, status: estado });
-  const abierta = estado === "sent" && !vencida;
+  const vencida = isQuoteExpired(quote);
   const fecha = quote.valid_until ? new Date(`${quote.valid_until}T12:00:00`).toLocaleDateString(DATE_LOCALE[locale] ?? "es-CR", { day: "numeric", month: "long" }) : null;
   const wa = pro.whatsapp ? `https://wa.me/${pro.whatsapp}` : null;
   const oficio = pro.oficio;
 
-  async function responder(action: "accept" | "decline") {
-    setBusy(true); setError(null);
-    try {
-      const res = await fetch("/api/quotes/public", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ code: quote.public_code, action }) });
-      const d = await res.json().catch(() => ({}));
-      if (!res.ok) { setError(d.error ?? t("errorTitle")); return; }
-      setEstado(d.status);
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    } catch { setError(t("errorTitle")); } finally { setBusy(false); }
-  }
-
   return (
     <Marco>
-      {/* Resultado, arriba de todo, cuando ya respondió. */}
-      {estado === "accepted" && (
-        <div className="print:hidden mb-4 rounded-3xl bg-[#162543] px-6 py-6 text-center text-white">
-          <span className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-[#25d366]"><Check className="h-6 w-6" strokeWidth={3} /></span>
-          <h2 className="mt-3 text-[22px] font-extrabold">{t("publicAcceptedTitle")}</h2>
-          <p className="mt-1 text-[15px] leading-6 text-[#c7dcec]">{t("publicAcceptedBody", { name: pro.name })}</p>
-          {wa && <a href={wa} target="_blank" rel="noopener noreferrer" className="mt-4 inline-flex h-11 items-center justify-center rounded-full bg-[#25d366] px-6 text-[14px] font-bold text-white hover:bg-[#1da851]">{t("publicWhatsApp")}</a>}
-        </div>
-      )}
-      {estado === "declined" && (
-        <div className="print:hidden mb-4 rounded-3xl border border-[#e5eaf0] bg-white px-6 py-5 text-center">
-          <h2 className="text-[18px] font-extrabold text-[#162543]">{t("publicDeclinedTitle")}</h2>
-          <p className="mt-1 text-[14px] leading-6 text-[#52627a]">{t("publicDeclinedBody", { name: pro.name })}</p>
-        </div>
-      )}
-      {(estado === "withdrawn") && (
-        <div className="print:hidden mb-4 rounded-3xl border border-[#e5eaf0] bg-white px-6 py-5 text-center">
-          <h2 className="text-[18px] font-extrabold text-[#162543]">{t("publicClosedTitle")}</h2>
-        </div>
-      )}
       {vencida && (
         <div className="print:hidden mb-4 rounded-3xl border border-[#e5eaf0] bg-white px-6 py-5 text-center">
           <h2 className="text-[18px] font-extrabold text-[#162543]">{t("publicExpiredTitle")}</h2>
           <p className="mt-1 text-[14px] leading-6 text-[#52627a]">{t("publicExpiredBody", { name: pro.name })}</p>
-          {wa && <a href={wa} target="_blank" rel="noopener noreferrer" className="mt-3 inline-flex h-10 items-center justify-center rounded-full bg-[#25d366] px-5 text-[13px] font-bold text-white hover:bg-[#1da851]">{t("publicWhatsApp")}</a>}
         </div>
       )}
 
@@ -123,14 +84,14 @@ export function PublicQuote({ locale, data }: { locale: string; data: PublicQuot
           </div>
           <div className="mt-3"><Totales quote={quote} /></div>
           {quote.notes && <p className="mt-4 whitespace-pre-line text-[14px] leading-6 text-[#52627a]">{quote.notes}</p>}
-          {fecha && abierta && <p className="mt-4 text-[13px] text-[#68778d]">{t("validUntil", { date: fecha })}</p>}
+          {fecha && !vencida && <p className="mt-4 text-[13px] text-[#68778d]">{t("validUntil", { date: fecha })}</p>}
         </div>
 
-        {abierta && (
-          <div className="print:hidden flex flex-col gap-2 border-t border-[#eef2f6] bg-[#fafcfd] px-6 py-5">
-            <Button type="button" size="lg" className="w-full" loading={busy} disabled={busy} onClick={() => void responder("accept")}>{t("publicAccept")}</Button>
-            <button type="button" disabled={busy} onClick={() => void responder("decline")} className="h-11 w-full rounded-full text-[14px] font-bold text-[#52627a] transition-colors hover:bg-[#f0f4f8]">{t("publicDecline")}</button>
-            {error && <p className="text-center text-sm font-semibold text-red-600">{error}</p>}
+        {/* La conversación sigue por WhatsApp: es como el profesional y el
+            cliente ya se hablan. */}
+        {wa && !vencida && (
+          <div className="print:hidden border-t border-[#eef2f6] bg-[#fafcfd] px-6 py-5">
+            <a href={wa} target="_blank" rel="noopener noreferrer" className="inline-flex h-12 w-full items-center justify-center rounded-full bg-[#25d366] px-5 text-[15px] font-bold text-white transition-colors hover:bg-[#1da851]">{t("publicWhatsApp")}</a>
           </div>
         )}
       </article>

@@ -147,12 +147,50 @@ export async function POST(req: NextRequest) {
 export async function PATCH(req: NextRequest) {
   const me = await whoAmI();
   if (!me) return NextResponse.json({ error: "Inicia sesión." }, { status: 401 });
-  const body = await req.json().catch(() => ({})) as { id?: string; action?: string };
+  const body = await req.json().catch(() => ({})) as { id?: string; action?: string; bookingId?: string; projectId?: string };
   const id = String(body.id ?? ""); const action = String(body.action ?? "");
-  if (!id || !["accept", "decline", "withdraw"].includes(action)) return NextResponse.json({ error: "Acción no válida." }, { status: 400 });
+  if (!id || !["accept", "decline", "withdraw", "attach"].includes(action)) return NextResponse.json({ error: "Acción no válida." }, { status: 400 });
   const { data: q, error } = await me.admin.from("quotes").select(SELECT).eq("id", id).maybeSingle();
   if (error || !q) return NextResponse.json({ error: "Cotización no encontrada." }, { status: 404 });
   if (q.status !== "sent") return NextResponse.json({ error: "Esta cotización ya se cerró." }, { status: 409 });
+
+  // Mandarla a una cita o a un proyecto del app: la cotización queda pegada a
+  // ese trabajo y el cliente la ve (y la acepta) desde su panel.
+  if (action === "attach") {
+    if (q.professional_id !== me.proId) return NextResponse.json({ error: "Solo quien la hizo puede enviarla." }, { status: 403 });
+    const bookingId = typeof body.bookingId === "string" ? body.bookingId : null;
+    const projectId = typeof body.projectId === "string" ? body.projectId : null;
+    if (!bookingId && !projectId) return NextResponse.json({ error: "Elige una cita o un proyecto." }, { status: 400 });
+    let clientId: string | null = null; let proposalId: string | null = null; let contextTitle = "";
+    if (bookingId) {
+      const { data: b } = await me.admin.from("bookings").select("id, client_id, professional_id, service_description").eq("id", bookingId).maybeSingle();
+      if (!b || b.professional_id !== me.proId) return NextResponse.json({ error: "Esa cita no es tuya." }, { status: 403 });
+      clientId = b.client_id ?? null; contextTitle = b.service_description ?? "";
+    } else if (projectId) {
+      const { data: p } = await me.admin.from("projects").select("id, client_id, title").eq("id", projectId).maybeSingle();
+      if (!p) return NextResponse.json({ error: "Proyecto no encontrado." }, { status: 404 });
+      const { data: prop } = await me.admin.from("proposals").select("id").eq("project_id", projectId).eq("professional_id", me.proId).maybeSingle();
+      if (!prop) return NextResponse.json({ error: "Primero responde el proyecto." }, { status: 403 });
+      clientId = p.client_id ?? null; proposalId = prop.id; contextTitle = p.title ?? "";
+    }
+    if (!clientId) return NextResponse.json({ error: "Ese trabajo no tiene una cuenta de cliente a la que enviarle la cotización." }, { status: 400 });
+    const patch = { booking_id: bookingId, project_id: projectId, proposal_id: proposalId, client_id: clientId, updated_at: new Date().toISOString() };
+    const { data: updated, error: upErr } = await me.admin.from("quotes").update(patch).eq("id", id).select(SELECT).single();
+    if (upErr) return NextResponse.json({ error: upErr.message }, { status: 500 });
+    await auditUserAction(me.admin, req, { actorUserId: me.user.id, actorRole: "professional", action: "quote.attach", entityTable: "quotes", entityId: id, entityOwnerUserId: me.user.id, afterData: patch });
+    try {
+      const proName = me.proName ?? "El profesional";
+      const link = bookingId ? "/es/dashboard/profesional?tab=sent_bookings" : "/es/dashboard/profesional?tab=sent_projects";
+      const notification = {
+        user_id: clientId, type: "quote_sent", title: "Te enviaron una cotización",
+        message: `${proName} te envió una cotización por ${formatColones(q.total)}${contextTitle ? ` para "${contextTitle}"` : ""}. Revísala y acéptala si te sirve.`,
+        data: { link, quote_id: id, booking_id: bookingId, project_id: projectId, total: q.total },
+      };
+      await me.admin.from("notifications").insert(notification);
+      await sendNotificationPush({ userId: clientId, title: notification.title, message: notification.message, data: notification.data });
+    } catch (err) { console.error("[quotes] aviso al cliente:", err); }
+    return NextResponse.json({ quote: updated });
+  }
 
   const now = new Date().toISOString();
   let patch: Record<string, unknown>; let notifyUserId: string | null = null; let type = ""; let title = ""; let message = "";

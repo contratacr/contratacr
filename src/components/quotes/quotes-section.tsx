@@ -11,7 +11,6 @@ import { QuoteDetailModal } from "@/components/quotes/quote-detail-modal";
 import { QuotesBoundary } from "@/components/quotes/quotes-boundary";
 
 const DATE_LOCALE: Record<string, string> = { es: "es-CR", en: "en-US" };
-type Filtro = "all" | "open" | "accepted" | "closed";
 
 /**
  * La sección "Cotizaciones" del profesional: la lista de lo que ha cotizado y
@@ -30,7 +29,6 @@ function Cotizaciones({ proName, puedeCrear = true }: { proName: string; puedeCr
   const t = useTranslations("quotes");
   const locale = useLocale();
   const [quotes, setQuotes] = useState<Quote[] | null>(null);
-  const [filtro, setFiltro] = useState<Filtro>("all");
   const [editor, setEditor] = useState(false);
   const [detalle, setDetalle] = useState<{ quote: Quote; recien: boolean } | null>(null);
 
@@ -57,13 +55,7 @@ function Cotizaciones({ proName, puedeCrear = true }: { proName: string; puedeCr
     if (e === "sent") return { fondo: "bg-[#fff4e2] text-[#b45309]", icono: <Clock3 className="h-3.5 w-3.5" /> };
     return { fondo: "bg-[#f3f4f6] text-[#6b7280]", icono: <X className="h-3.5 w-3.5" /> };
   };
-  const lista = (quotes ?? []).filter((q) => {
-    const e = estadoDe(q);
-    return filtro === "all" || (filtro === "open" && e === "sent") || (filtro === "accepted" && e === "accepted") || (filtro === "closed" && (e === "declined" || e === "withdrawn" || e === "expired"));
-  });
-  const chip = (valor: Filtro, texto: string) => (
-    <button type="button" onClick={() => setFiltro(valor)} className={`h-9 shrink-0 rounded-full border px-3.5 text-[13px] font-bold transition-colors ${filtro === valor ? "border-[#009FD9] bg-[#eaf7fc] text-[#0089bb]" : "border-[#d7e1ea] bg-white text-[#162543] hover:bg-[#f6f9fb]"}`}>{texto}</button>
-  );
+  const lista = quotes ?? [];
 
   return (
     <div className="flex flex-col gap-4">
@@ -85,7 +77,6 @@ function Cotizaciones({ proName, puedeCrear = true }: { proName: string; puedeCr
         </div>
       ) : (
         <>
-          <div className="scrollbar-none flex gap-2 overflow-x-auto">{chip("all", t("filterAll"))}{chip("open", t("filterOpen"))}{chip("accepted", t("filterAccepted"))}{chip("closed", t("filterClosed"))}</div>
           <div className="flex flex-col gap-2">
             {lista.map((q) => {
               const m = marca(q);

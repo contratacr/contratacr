@@ -85,9 +85,11 @@ estaba el Asistente; el Asistente pasa al menú lateral para profesionales; el
 cliente conserva el Asistente):
 
 - Cotiza a **cualquier cliente** (nombre y WhatsApp), sin que tenga cuenta.
-- Cada cotización tiene enlace público `contratacr.com/cotizacion/<código>`:
-  el cliente la ve con la marca del profesional y la **acepta con un toque**
-  (`/api/quotes/public`, sin cuenta; el código de 12 caracteres es la llave).
+- La cotización se **reparte** como el perfil (enlace, WhatsApp, Instagram,
+  Facebook, correo, PDF) y se **envía a una cita o a un proyecto del app**, que
+  es donde el cliente la acepta desde su panel. El enlace público
+  (`contratacr.com/cotizacion/sg-solutions-0004-k7m2xq9a`) es solo para verla y
+  guardarla: ahí no se acepta, se sigue por WhatsApp.
 - Se manda por WhatsApp (directo al número si lo puso), se copia el enlace o se
   baja/comparte como **PDF** (`src/lib/quote-image.ts` dibuja la hoja y jsPDF la
   empaqueta; la librería se carga solo al usarla).

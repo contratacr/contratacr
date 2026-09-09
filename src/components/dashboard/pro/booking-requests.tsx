@@ -443,10 +443,6 @@ export function BookingRequests() {
               </div>
             )}
 
-            {/* Cotización: el profesional detalla qué incluye y cuánto cuesta; el cliente la acepta desde su panel. */}
-            {!panelOpen && (
-              <QuoteBlock bookingId={booking.id} role="pro" canCreate={isActive || booking.status === "awaiting_confirmation"} defaultTitle={serviceDescription} />
-            )}
             {/* Frequent actions stay visible; exceptional actions live in the overflow menu. */}
             {!panelOpen && (() => {
               // La reserva se cierra sola cuando pasa su fecha: el profesional no
@@ -461,6 +457,8 @@ export function BookingRequests() {
                     {canMessage && (
                       <DirectChatLauncher bookingId={booking.id} professionalName={clientName} contextTitle={serviceDescription} buttonLabel={t("contact")} className="h-11 w-auto shrink-0 grow whitespace-nowrap rounded-full px-4 text-[13px] font-bold lg:grow-0 lg:min-w-[11rem]" />
                     )}
+                    {/* La cotización va junto a los demás botones: es una acción de la cita. */}
+                    <QuoteBlock asButton bookingId={booking.id} role="pro" canCreate={isActive || booking.status === "awaiting_confirmation"} defaultTitle={serviceDescription} />
                   </div>
                   <div className="relative shrink-0" data-booking-actions={booking.id}>
                     <button

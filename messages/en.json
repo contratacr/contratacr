@@ -4200,6 +4200,16 @@
     "totalWithTax": "VAT included",
     "totalPlusTax": "VAT included in the total",
     "totalNoTax": "No VAT",
-    "noteLabel": "Note"
+    "noteLabel": "Note",
+    "attachTitle": "Send to an appointment or project in the app",
+    "attachEmpty": "You have no active appointments or projects. When a client contacts you through the app, you can send them the quote here.",
+    "attachProjects": "Project",
+    "attachedBooking": "Sent to the appointment. The client sees and accepts it from their panel.",
+    "attachedProject": "Sent to the project. The client sees and accepts it from their panel.",
+    "rowSend": "Send quote",
+    "rowQuote": "Quote",
+    "emailSubject": "Quote No. {number} from {name}",
+    "email": "Email",
+    "instagramHint": "Link copied. Paste it in your story, your bio or a message: Instagram can't take links straight from the browser."
   }
 }

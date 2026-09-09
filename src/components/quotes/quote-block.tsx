@@ -12,8 +12,10 @@ import { QuoteDetailModal } from "@/components/quotes/quote-detail-modal";
  * Lo que ve cada parte dentro de una cita o un proyecto: la última cotización
  * con su estado y, para el profesional, el botón de enviar una.
  */
-export function QuoteBlock({ bookingId, projectId, role, canCreate = false, defaultTitle, professionalName }: {
+export function QuoteBlock({ bookingId, projectId, role, canCreate = false, defaultTitle, professionalName, asButton = false }: {
   bookingId?: string | null; projectId?: string | null; role: "client" | "pro"; canCreate?: boolean; defaultTitle?: string; professionalName?: string | null;
+  /** Solo el botón, con la forma de los demás botones de la tarjeta: va en la fila de acciones. */
+  asButton?: boolean;
 }) {
   const t = useTranslations("quotes");
   const [quotes, setQuotes] = useState<Quote[] | null>(null);
@@ -42,6 +44,40 @@ export function QuoteBlock({ bookingId, projectId, role, canCreate = false, defa
   if (!ultima && role === "client") return null;
   if (!ultima && !canCreate) return null;
 
+  const modales = (
+    <>
+      {editor && (
+        <QuoteEditorModal open onClose={() => setEditor(false)} bookingId={bookingId} projectId={projectId} defaultTitle={defaultTitle}
+          onSent={(q) => { setQuotes((prev) => [q, ...(prev ?? [])]); setEditor(false); }} />
+      )}
+      {detail && (
+        <QuoteDetailModal quote={detail} role={role} open onClose={() => setDetail(null)}
+          onChanged={(q) => { setQuotes((prev) => (prev ?? []).map((x) => (x.id === q.id ? { ...x, ...q } : x))); setDetail(null); }} />
+      )}
+    </>
+  );
+
+  // En la fila de acciones: un solo botón. Sin cotización, "Enviar cotización";
+  // con una, su monto y estado, y al tocarlo se abre.
+  if (asButton && role === "pro") {
+    const clase = "inline-flex h-11 shrink-0 grow items-center justify-center gap-1.5 whitespace-nowrap rounded-full border border-[#d7e1ea] bg-white px-4 text-[13px] font-bold text-[#162543] transition-colors hover:border-[#b9c8d6] hover:bg-[#f6f9fb] lg:grow-0 lg:min-w-[11rem]";
+    return (
+      <>
+        {conNombre ? (
+          <button type="button" onClick={() => setDetail(conNombre)} className={clase}>
+            <FileText className="h-4 w-4 shrink-0 text-[#009FD9]" />
+            <span className="truncate">{formatColones(conNombre.total)} · {estado(conNombre)}</span>
+          </button>
+        ) : canCreate ? (
+          <button type="button" onClick={() => setEditor(true)} className={clase}>
+            <FileText className="h-4 w-4 shrink-0 text-[#009FD9]" />{t("rowSend")}
+          </button>
+        ) : null}
+        {modales}
+      </>
+    );
+  }
+
   return (
     <div className="flex flex-col gap-2">
       {conNombre && (
@@ -59,14 +95,7 @@ export function QuoteBlock({ bookingId, projectId, role, canCreate = false, defa
           {ultima ? t("sendAnother") : t("send")}
         </button>
       )}
-      {editor && (
-        <QuoteEditorModal open onClose={() => setEditor(false)} bookingId={bookingId} projectId={projectId} defaultTitle={defaultTitle}
-          onSent={(q) => { setQuotes((prev) => [q, ...(prev ?? [])]); setEditor(false); }} />
-      )}
-      {detail && (
-        <QuoteDetailModal quote={detail} role={role} open onClose={() => setDetail(null)}
-          onChanged={(q) => { setQuotes((prev) => (prev ?? []).map((x) => (x.id === q.id ? { ...x, ...q } : x))); setDetail(null); }} />
-      )}
+      {modales}
     </div>
   );
 }
