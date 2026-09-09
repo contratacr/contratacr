@@ -24,7 +24,7 @@ export type OpcionFicha = {
  * En el teléfono abre una hoja desde abajo; en computadora, un panel junto al
  * botón. La misma marcación en los dos casos: solo cambian las clases.
  */
-export function MenuFicha({ opciones, className }: { opciones: OpcionFicha[]; className?: string }) {
+export function MenuFicha({ opciones, grande = false, className }: { opciones: OpcionFicha[]; /** Del tamaño de la flecha de volver, para una cabecera. */ grande?: boolean; className?: string }) {
   const t = useTranslations("menuFicha");
   const [abierto, setAbierto] = useState(false);
   const caja = useRef<HTMLDivElement>(null);
@@ -84,9 +84,14 @@ export function MenuFicha({ opciones, className }: { opciones: OpcionFicha[]; cl
         aria-haspopup="menu"
         aria-expanded={abierto}
         onClick={() => setAbierto((v) => !v)}
-        className="grid h-10 w-10 place-items-center rounded-full text-[#52627a] transition-colors hover:bg-[#eef3f8] hover:text-[#162543]"
+        className={cn(
+          "grid place-items-center rounded-full text-[#162543] transition-colors hover:bg-[#eef3f8]",
+          grande ? "h-11 w-11" : "h-10 w-10",
+        )}
       >
-        <MoreHorizontal className="h-5 w-5" />
+        {/* El mismo peso de trazo que la flecha de volver: con el grosor normal los
+            tres puntos se veían más chicos que ella. */}
+        <MoreHorizontal className={grande ? "h-6 w-6" : "h-[22px] w-[22px]"} strokeWidth={2.6} />
       </button>
       {abierto && (
         <>

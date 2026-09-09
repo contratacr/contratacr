@@ -8,25 +8,26 @@ import { useCompartir } from "@/components/ui/boton-compartir";
 import { ReportProfileModal } from "@/components/professionals/report-profile-modal";
 
 /**
- * El "..." de la página de una oferta: compartir, copiar el enlace y reportar.
- * Vive aparte porque la página es de servidor y esto necesita ser del cliente.
+ * El "..." de un empleo: compartir, copiar el enlace y reportar. Vive en la
+ * cabecera cuando la pantalla tiene una (el teléfono) y arriba de la ficha
+ * cuando no la hay.
  */
-export function MenuOferta({
-  ofertaId,
+export function MenuEmpleo({
+  empleoId,
   titulo,
   enlace,
-  profesionalNombre,
-  profesionalSlug,
-  esPropia = false,
+  empleadorNombre,
+  empleadorSlug,
+  esPropio = false,
   grande = false,
   className,
 }: {
-  ofertaId: string;
+  empleoId: string;
   titulo: string;
   enlace: string;
-  profesionalNombre: string;
-  profesionalSlug?: string | null;
-  esPropia?: boolean;
+  empleadorNombre: string;
+  empleadorSlug?: string | null;
+  esPropio?: boolean;
   grande?: boolean;
   className?: string;
 }) {
@@ -42,15 +43,15 @@ export function MenuOferta({
         opciones={[
           { id: "compartir", icono: <Share2 className="h-4 w-4" />, texto: t("share"), onSelect: () => void compartir(enlace, titulo) },
           { id: "copiar", icono: <Link2 className="h-4 w-4" />, texto: t("copyLink"), onSelect: () => void copiar(enlace) },
-          ...(esPropia || !profesionalSlug ? [] : [{ id: "reportar", icono: <Flag className="h-4 w-4" />, texto: t("reportOffer"), peligro: true, onSelect: () => setReportando(true) }]),
+          ...(esPropio || !empleadorSlug ? [] : [{ id: "reportar", icono: <Flag className="h-4 w-4" />, texto: t("reportJob"), peligro: true, onSelect: () => setReportando(true) }]),
         ]}
       />
-      {reportando && profesionalSlug && (
+      {reportando && empleadorSlug && (
         <ReportProfileModal
-          professionalName={profesionalNombre}
-          professionalSlug={profesionalSlug}
-          contexto={`Oferta "${titulo}" (${ofertaId})`}
-          titulo={t("reportOffer")}
+          professionalName={empleadorNombre}
+          professionalSlug={empleadorSlug}
+          contexto={`Empleo "${titulo}" (${empleoId})`}
+          titulo={t("reportJob")}
           onClose={() => setReportando(false)}
         />
       )}

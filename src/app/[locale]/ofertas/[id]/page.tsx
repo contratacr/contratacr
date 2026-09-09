@@ -130,6 +130,7 @@ export default async function OfferDetailPage({ params, searchParams }: { params
           </Link>
           <h1 className="truncate text-center text-lg font-extrabold">{copy.title}</h1>
           <MenuOferta
+            grande
             className="absolute right-2 top-1/2 -translate-y-1/2"
             ofertaId={offer.id}
             titulo={offer.title}
