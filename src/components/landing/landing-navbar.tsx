@@ -1184,7 +1184,11 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   // confirma con "ccr:section-header-ack" para que la pantalla oculte la suya.
   const [sectionTitle, setSectionTitle] = useState<string | null>(null);
   const [sectionActive, setSectionActive] = useState(false);
+  // El buscador del home entra en una SEGUNDA LÍNEA bajo la barra, igual que en
+  // /buscar. No toca --ccr-native-header-height a propósito: si el hueco
+  // reservado creciera a mitad del scroll, la página daría un salto de 60 px.
   const buscadorHomeMovil = buscadorHomeMovilBase && !sectionActive;
+  const segundaLineaBuscador = showMobileNavbarSearch || buscadorHomeMovil;
   const [sectionRoot, setSectionRoot] = useState(false);
   const [sectionShare, setSectionShare] = useState(false);
   const [sectionMenu, setSectionMenu] = useState(false);
@@ -1660,7 +1664,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
           <div className="px-4 sm:px-6 lg:px-8">
             <div className={cn(
               "relative h-16 transition-[height] duration-200",
-              showMobileNavbarSearch && "h-[124px] lg:h-16",
+              segundaLineaBuscador && "h-[124px] lg:h-16",
             )}>
               <div className={cn(
                 "absolute left-0 right-0 top-0 flex h-16 items-center lg:hidden",
@@ -1710,22 +1714,9 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                   <Menu className="h-5 w-5 stroke-[2.5]" />
                 </button>
 
-                <Link href="/" aria-label="ContrataCR inicio" onClick={irAlInicio} className={cn("shrink-0", nativeHeaderShell && !buscadorHomeMovil && "mr-auto flex min-w-0 items-center justify-start")}>
-                  {mobileInline || buscadorHomeMovil ? <ContrataCRMark className="h-8 w-8" /> : <ContrataCRLogo size="lg" />}
+                <Link href="/" aria-label="ContrataCR inicio" onClick={irAlInicio} className={cn("shrink-0", nativeHeaderShell && "mr-auto flex min-w-0 items-center justify-start")}>
+                  {mobileInline ? <ContrataCRMark className="h-8 w-8" /> : <ContrataCRLogo size="lg" />}
                 </Link>
-                {buscadorHomeMovil && (
-                  <button
-                    type="button"
-                    onClick={openNativeSearch}
-                    aria-label={locale === "en" ? "What service are you looking for?" : "¿Qué servicio estás buscando?"}
-                    className="ml-1 flex h-10 min-w-0 flex-1 items-center gap-2 rounded-[10px] border border-[#e3ebf2] bg-white px-3 text-left transition-colors active:bg-[#f6f9fc] lg:hidden"
-                  >
-                    <Search className="h-4 w-4 shrink-0 text-[#162543]" />
-                    <span className="min-w-0 flex-1 truncate text-[13px] font-semibold text-[#8f9aaa]">
-                      {locale === "en" ? "Search a service" : "Buscar un servicio"}
-                    </span>
-                  </button>
-                )}
                   </>
                 )}
 
@@ -1787,7 +1778,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
               </div>
 
               {/* -- Default row -- */}
-              {showMobileNavbarSearch && (
+              {segundaLineaBuscador && (
                 <div
                   className="absolute -left-4 -right-4 top-16 z-10 flex h-[56px] items-start px-4 text-left lg:hidden"
                 >
