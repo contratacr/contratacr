@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { Check, ChevronRight, Clock3, Plus, ReceiptText, X } from "lucide-react";
+import { CalendarCheck, ChevronRight, Clock3, Handshake, Plus, ReceiptText, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatColones } from "@/lib/pricing";
 import { isQuoteExpired, type Quote } from "@/lib/quotes";
@@ -53,7 +53,9 @@ export function QuotesSection({ proName, proSlug, puedeCrear = true }: { proName
   // Cada estado con su color y su ícono: se lee de un vistazo cuál está viva.
   const marca = (q: Quote) => {
     const e = estadoDe(q);
-    if (e === "enviada") return { fondo: "bg-[#eaf7fc] text-[#0089bb]", icono: <Check className="h-3.5 w-3.5" strokeWidth={3} /> };
+    // Ni palomita ni nada que suene a "aceptada": el ícono dice dónde vive la
+    // cotización —en una cita o en un proyecto—, que es lo único cierto.
+    if (e === "enviada") return { fondo: "bg-[#eaf7fc] text-[#0089bb]", icono: q.booking_id ? <CalendarCheck className="h-4 w-4" /> : <Handshake className="h-4 w-4" /> };
     if (e === "documento") return { fondo: "bg-[#eef3f8] text-[#52627a]", icono: <ReceiptText className="h-4 w-4" /> };
     return { fondo: "bg-[#f3f4f6] text-[#6b7280]", icono: <X className="h-3.5 w-3.5" /> };
   };

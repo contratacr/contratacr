@@ -194,15 +194,17 @@ export function OfferForm({ professionalId, serviceOptions, backHref = "/ofertas
   const [locationProvince, setLocationProvince] = useState("");
   const [locationCanton, setLocationCanton] = useState("");
   const [existingImageUrls, setExistingImageUrls] = useState<string[]>(Array.isArray(initialOffer?.image_urls) ? initialOffer.image_urls : []);
+  // Todos sus servicios se ven al abrir: antes el panel salía vacío hasta
+  // escribir una letra, y el profesional no sabía qué podía elegir.
+  const serviceLabels = useMemo(() => serviceOptions
+    .map((option) => option.label)
+    .filter((label, index, list) => label && list.findIndex((item) => item.toLocaleLowerCase(localeCode) === label.toLocaleLowerCase(localeCode)) === index),
+  [localeCode, serviceOptions]);
   const visibleServiceSuggestions = useMemo(() => {
     const needle = serviceInput.trim().toLocaleLowerCase(localeCode);
-    if (needle.length < 1) return [];
-    return serviceOptions
-      .map((option) => option.label)
-      .filter((label, index, list) => label && list.findIndex((item) => item.toLocaleLowerCase(localeCode) === label.toLocaleLowerCase(localeCode)) === index)
-      .filter((label) => label.toLocaleLowerCase(localeCode).includes(needle))
-      .slice(0, 6);
-  }, [localeCode, serviceInput, serviceOptions]);
+    if (!needle) return serviceLabels;
+    return serviceLabels.filter((label) => label.toLocaleLowerCase(localeCode).includes(needle));
+  }, [localeCode, serviceInput, serviceLabels]);
   const selectedServiceOption = useMemo(() => {
     return serviceOptions.find((option) => option.value === selectedServiceValue) ?? null;
   }, [selectedServiceValue, serviceOptions]);
@@ -395,7 +397,8 @@ export function OfferForm({ professionalId, serviceOptions, backHref = "/ofertas
                 <input type="hidden" name="service_label" value={selectedServiceOption?.label ?? ""} />
                 {serviceSuggestionsOpen && (
                   <div id="offer-service-suggestions" className="absolute left-0 right-0 top-[calc(100%+6px)] z-30 overflow-hidden rounded-xl border border-[#d7e1ea] bg-white shadow-[0_16px_38px_-24px_rgba(15,23,42,0.8)]">
-                    <div className={`relative p-2 ${serviceInput.trim() ? "border-b border-[#e6edf3]" : ""}`}>
+                    {serviceLabels.length > 6 && (
+                    <div className="relative border-b border-[#e6edf3] p-2">
                       <Search className="pointer-events-none absolute left-5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#7b8ba1]" aria-hidden="true" />
                       <input
                         autoFocus
@@ -427,8 +430,9 @@ export function OfferForm({ professionalId, serviceOptions, backHref = "/ofertas
                         className="h-10 w-full rounded-lg bg-[#f5f8fa] pl-10 pr-3 text-sm font-medium text-[#162543] outline-none placeholder:text-[#68778d] focus:bg-white focus:ring-1 focus:ring-[#009fd9]"
                       />
                     </div>
-                    {serviceInput.trim().length >= 1 && (
-                      <div id="offer-service-options" role="listbox" className="max-h-56 overflow-y-auto py-1">
+                    )}
+                    {(
+                      <div id="offer-service-options" role="listbox" className="max-h-64 overflow-y-auto py-1">
                         {visibleServiceSuggestions.length === 0 && <p className="px-3 py-3 text-xs font-medium text-[#68778d]">{copy.serviceNotFound}</p>}
                         {visibleServiceSuggestions.map((label) => (
                           <button

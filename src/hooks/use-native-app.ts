@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useSyncExternalStore } from "react";
 import { Capacitor } from "@capacitor/core";
 
 export function isNativeAppRuntime(): boolean {
@@ -28,26 +28,33 @@ export function useNativeFullscreenLayer(active: boolean) {
   }, [active]);
 }
 
+// Capacitor puede llegar un instante después que el HTML: se vuelve a mirar
+// unas cuantas veces al montar y se avisa a quien esté escuchando.
+const oyentes = new Set<() => void>();
+
+function suscribir(alCambiar: () => void): () => void {
+  oyentes.add(alCambiar);
+  const avisar = () => oyentes.forEach((oyente) => oyente());
+  const timers = [0, 50, 250, 750].map((retraso) => window.setTimeout(avisar, retraso));
+  return () => {
+    oyentes.delete(alCambiar);
+    timers.forEach((timer) => window.clearTimeout(timer));
+  };
+}
+
 /**
- * ¿Estamos dentro de la app? SIEMPRE arranca en `false`, igual que el servidor,
- * y pasa a `true` después de montar.
+ * ¿Estamos dentro de la app?
  *
- * Esto no es un detalle: el servidor pinta la versión web y el cliente, si
- * empezara en `true`, pintaría otra cosa en la primera pasada. React 19 no
- * repara esa diferencia —tira el árbol entero— y eso es lo que salía como
- * "Algo salió mal" al entrar al panel, a /buscar, a ofertas o a empleos, donde
- * el botón de contacto cambia de forma según sea app o web.
+ * En el servidor y en la primera pasada del navegador vale `false`, igual que
+ * el HTML que llegó: si empezara en `true`, React 19 no repara esa diferencia
+ * —tira el árbol entero— y eso salía como "Algo salió mal".
+ *
+ * Va con `useSyncExternalStore` y no con un efecto a propósito: React aplica el
+ * valor del navegador dentro del mismo commit de la hidratación, ANTES de que
+ * la pantalla se pinte. Con un efecto, el navegador alcanzaba a dibujar la
+ * versión web y el botón cambiaba de texto y de tamaño a la vista: eso era el
+ * parpadeo de "Enviar mensaje" en las citas.
  */
 export function useNativeApp(): boolean {
-  const [nativeApp, setNativeApp] = useState(false);
-
-  useEffect(() => {
-    if (nativeApp) return;
-    const update = () => setNativeApp(isNativeAppRuntime());
-    update();
-    const timers = [0, 50, 250, 750].map((delay) => window.setTimeout(update, delay));
-    return () => timers.forEach((timer) => window.clearTimeout(timer));
-  }, [nativeApp]);
-
-  return nativeApp;
+  return useSyncExternalStore(suscribir, isNativeAppRuntime, () => false);
 }

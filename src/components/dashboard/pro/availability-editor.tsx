@@ -6,7 +6,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
-import { X, Lock, Loader2, MapPin, ChevronDown, ChevronLeft, ChevronRight, Calendar, CalendarClock, Pencil, Trash2, MoreVertical, Video } from "lucide-react";
+import { X, Lock, Loader2, MapPin, ChevronDown, ChevronLeft, ChevronRight, Calendar, CalendarClock, Pencil, Trash2, MoreHorizontal, Video } from "lucide-react";
 import { type ContactPreference } from "@/lib/constants";
 import { crTodayISO, isTooSoonCR } from "@/lib/time-cr";
 import { TimeSelect, to12h } from "@/components/ui/time-select";
@@ -1064,7 +1064,7 @@ export function AvailabilityEditor({
                           {t("addFranja")}
                         </button>
                         <button type="button" onClick={() => canApply && setApplyModal({ weekday: wd })} disabled={!canApply || scheduleControlsDisabled} className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-[#6b7280] hover:bg-[#f3f4f6] hover:text-[#162543] disabled:opacity-35" aria-label={t("applyToOtherDays")}>
-                          <MoreVertical className="h-4 w-4" />
+                          <MoreHorizontal className="h-4 w-4" />
                         </button>
                       </div>
                     </div>
@@ -1072,7 +1072,7 @@ export function AvailabilityEditor({
                     <div className="hidden min-w-0 items-center justify-center gap-2 lg:flex">
                       {dayActions}
                       <button type="button" onClick={() => canApply && setApplyModal({ weekday: wd })} disabled={!canApply || scheduleControlsDisabled} className="flex h-9 w-9 items-center justify-center rounded-lg text-[#6b7280] hover:bg-[#f3f4f6] hover:text-[#162543] disabled:opacity-35" aria-label={t("applyToOtherDays")}>
-                        <MoreVertical className="h-4 w-4" />
+                        <MoreHorizontal className="h-4 w-4" />
                       </button>
                     </div>
                   </div>

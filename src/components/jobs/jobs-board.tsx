@@ -539,20 +539,20 @@ function JobPreview({ job, isOwner, userId, hasApplied, onApply, onEdit, mobile 
   ].filter(([, value]) => Boolean(value));
 
   return <article className={`ccr-marketplace-result-list relative min-w-0 bg-white ${mobile ? "block px-5 py-6" : "hidden p-7 lg:block lg:max-h-[calc(100vh-190px)] lg:overflow-y-auto"}`}>
-    <div className="flex items-start gap-4"><EmployerAvatar job={job} size="large" /><div className="min-w-0 flex-1"><h2 className="text-2xl font-extrabold leading-tight">{job.title}</h2><p className="mt-1 font-semibold text-[#52627a]">{job.employer_name}</p><JobMetaLine job={job} className="mt-1 text-sm text-[#68778d]" /><p className="mt-2 text-base font-extrabold text-[#007fae]">{formatJobSalary(job, locale)}</p></div>
-      {/* En el teléfono el "..." vive en la cabecera de la pantalla; aquí solo
-          hace falta donde no hay cabecera propia. */}
-      {!mobile && (
-        <MenuEmpleo
-          className="-mr-2 shrink-0"
-          empleoId={job.id}
-          titulo={job.title}
-          enlace={enlaceParaCompartir}
-          empleadorNombre={job.employer_name || copy.professionalFallback}
-          empleadorSlug={job.employer_slug}
-          esPropio={isOwner}
-        />
-      )}
+    {/* En el teléfono el "..." vive en la cabecera de la pantalla; aquí, arriba
+        a la derecha del panel, que es donde se busca. */}
+    {!mobile && (
+      <MenuEmpleo
+        className="absolute right-4 top-4 z-10"
+        empleoId={job.id}
+        titulo={job.title}
+        enlace={enlaceParaCompartir}
+        empleadorNombre={job.employer_name || copy.professionalFallback}
+        empleadorSlug={job.employer_slug}
+        esPropio={isOwner}
+      />
+    )}
+    <div className="flex items-start gap-4 pr-12"><EmployerAvatar job={job} size="large" /><div className="min-w-0 flex-1"><h2 className="text-2xl font-extrabold leading-tight">{job.title}</h2><p className="mt-1 font-semibold text-[#52627a]">{job.employer_name}</p><JobMetaLine job={job} className="mt-1 text-sm text-[#68778d]" /><p className="mt-2 text-base font-extrabold text-[#007fae]">{formatJobSalary(job, locale)}</p></div>
     </div>
     {!hideActions && <div className={mobile ? "mt-5 grid grid-cols-2 gap-3" : "mt-5 flex flex-wrap items-center gap-3"}>
       {isOwner ? (

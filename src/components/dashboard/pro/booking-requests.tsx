@@ -5,7 +5,7 @@ import { QuoteBlock } from "@/components/quotes/quote-block";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
-import { CalendarCheck, CalendarClock, Clock, FileText, Phone, IdCard, Wrench, MapPin, UserRound, MoreVertical, Flag } from "lucide-react";
+import { CalendarCheck, CalendarClock, Clock, FileText, Phone, IdCard, Wrench, MapPin, UserRound, MoreHorizontal, Flag } from "lucide-react";
 import { getCategoryLabel } from "@/lib/data/categories";
 import { useAuth } from "@/hooks/use-auth";
 import { useCachedResource } from "@/hooks/use-cached-resource";
@@ -452,13 +452,16 @@ export function BookingRequests() {
               // un detalle, un comprobante. Solo se corta si la reserva se canceló.
               const canMessage = isActive || booking.status === "awaiting_confirmation" || booking.status === "completed";
               return (
-                <div className="flex items-start gap-2 border-t border-[#eef2f6] pt-3">
-                  <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
+                <div className="flex flex-col gap-2 border-t border-[#eef2f6] pt-3">
+                  {/* La cotización cruza la tarjeta de lado a lado: es el documento
+                      de esa cita, no un botón más de la fila. Debajo, escribir y
+                      el menú, que sí comparten renglón. */}
+                  <QuoteBlock asButton bookingId={booking.id} role="pro" canCreate={isActive || booking.status === "awaiting_confirmation"} defaultTitle={serviceDescription} />
+                  <div className="flex items-start gap-2">
+                  <div className="flex min-w-0 flex-1 items-center">
                     {canMessage && (
-                      <DirectChatLauncher bookingId={booking.id} professionalName={clientName} contextTitle={serviceDescription} buttonLabel={t("contact")} className="h-11 w-auto shrink-0 grow whitespace-nowrap rounded-full px-4 text-[13px] font-bold lg:grow-0 lg:min-w-[11rem]" />
+                      <DirectChatLauncher bookingId={booking.id} professionalName={clientName} contextTitle={serviceDescription} buttonLabel={t("contact")} className="h-11 w-full whitespace-nowrap rounded-full px-4 text-[13px] font-bold" />
                     )}
-                    {/* La cotización va junto a los demás botones: es una acción de la cita. */}
-                    <QuoteBlock asButton bookingId={booking.id} role="pro" canCreate={isActive || booking.status === "awaiting_confirmation"} defaultTitle={serviceDescription} />
                   </div>
                   <div className="relative shrink-0" data-booking-actions={booking.id}>
                     <button
@@ -469,7 +472,7 @@ export function BookingRequests() {
                       onClick={() => setActionsMenuFor((current) => current === booking.id ? null : booking.id)}
                       className="grid h-11 w-11 place-items-center rounded-full border border-[#d7e1ea] text-[#718096] transition hover:border-[#b9c8d6] hover:bg-[#f6f9fb] hover:text-[#162543] [.ccr-native-app_&]:h-11 [.ccr-native-app_&]:w-11"
                     >
-                      <MoreVertical className="h-5 w-5" />
+                      <MoreHorizontal className="h-5 w-5" />
                     </button>
                     {actionsMenuFor === booking.id && (
                       <div role="menu" className="absolute bottom-[calc(100%+6px)] right-0 z-50 max-h-[calc(100dvh-2rem)] w-48 overflow-y-auto rounded-xl border border-[#dfe8f0] bg-white p-1.5 shadow-[0_18px_45px_-22px_rgba(15,23,42,0.55)]">
@@ -478,6 +481,7 @@ export function BookingRequests() {
                         <button role="menuitem" type="button" onClick={() => { setActionsMenuFor(null); setReportFor(booking); }} className="block w-full rounded-lg px-3 py-2.5 text-left text-sm font-bold text-red-700 hover:bg-red-50">{t("reportClient")}</button>
                       </div>
                     )}
+                  </div>
                   </div>
                 </div>
               );

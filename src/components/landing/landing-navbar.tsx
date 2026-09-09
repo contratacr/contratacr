@@ -1661,7 +1661,10 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
             // escritorio la sombra proyectada ensuciaba el borde del contenido.
             // En la app la línea aparece solo al desplazar.
             rutaConFiltrosPegados
-              ? "border-transparent shadow-none"
+              // En la app la barra se funde con los filtros; en computadora la
+              // línea va siempre, o el encabezado y los filtros se leían como
+              // una sola mancha blanca.
+              ? (nativeHeaderShell ? "border-transparent shadow-none" : "border-[#e3ebf2] shadow-none")
               : nativeHeaderShell
                 ? cn("transition-[border-color,box-shadow] duration-200", contenidoDebajo || lienzoBlanco
                     ? "border-gray-100/80 shadow-[0_10px_34px_-24px_rgba(15,23,42,0.55)]"

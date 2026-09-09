@@ -44,7 +44,7 @@ export function QuoteBlock({ bookingId, projectId, role, canCreate = false, defa
   if (quotes === null) {
     if (!canCreate && role === "client") return null;
     return asButton
-      ? <span className="inline-flex h-11 shrink-0 grow animate-pulse rounded-full bg-[#eef2f6] lg:grow-0 lg:min-w-[11rem]" aria-hidden />
+      ? <span className="block h-11 w-full animate-pulse rounded-full bg-[#eef2f6]" aria-hidden />
       : <div className="h-[52px] animate-pulse rounded-2xl bg-[#eef2f6]" aria-hidden />;
   }
   const ultima = quotes[0] ?? null;
@@ -75,7 +75,7 @@ export function QuoteBlock({ bookingId, projectId, role, canCreate = false, defa
   // En la fila de acciones: un solo botón. Sin cotización, "Enviar cotización";
   // con una, su monto y estado, y al tocarlo se abre.
   if (asButton && role === "pro") {
-    const clase = "inline-flex h-11 shrink-0 grow items-center justify-center gap-1.5 whitespace-nowrap rounded-full border border-[#d7e1ea] bg-white px-4 text-[13px] font-bold text-[#162543] transition-colors hover:border-[#b9c8d6] hover:bg-[#f6f9fb] lg:grow-0 lg:min-w-[11rem]";
+    const clase = "inline-flex h-11 w-full items-center justify-center gap-1.5 whitespace-nowrap rounded-full border border-[#d7e1ea] bg-white px-4 text-[13px] font-bold text-[#162543] transition-colors hover:border-[#b9c8d6] hover:bg-[#f6f9fb]";
     // Con cotización enviada, esto ya no es un botón más: es el dato de que
     // existe, con su número y su monto, y "Ver" para abrirla.
     return (

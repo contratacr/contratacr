@@ -441,6 +441,14 @@ html.ccr-native-bottom-nav-visible body .ccr-search-bottom-sheet {
     -webkit-overflow-scrolling: touch;
   }
 
+  /* Dentro del main anclado, el pie del formulario NO debe volver a reservar la
+     barra: ese contenedor ya termina encima de ella, y sumar la reserva otra vez
+     dejaba el botón "Guardar cambios" flotando a media pantalla con contenido
+     visible por debajo. */
+  body.ccr-native-app.ccr-native-bottom-nav-visible:not(.ccr-native-search-route) main .ccr-pie-formulario {
+    bottom: 0;
+  }
+
   body.ccr-native-app.ccr-native-bottom-nav-visible:not(.ccr-native-search-route) [data-messages-page-main] {
     max-width: none;
     padding: 0 !important;

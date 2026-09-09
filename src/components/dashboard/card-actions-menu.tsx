@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { MoreHorizontal, MoreVertical } from "lucide-react";
+import { MoreHorizontal } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 /**
@@ -19,7 +19,7 @@ export type CardAction = {
   icon?: ReactNode;
 };
 
-export function CardActionsMenu({ actions, label, placement = "up", horizontal = false, triggerClassName, menuClassName, itemClassName }: { actions: CardAction[]; label: string; placement?: "up" | "down"; horizontal?: boolean; triggerClassName?: string; menuClassName?: string; itemClassName?: string }) {
+export function CardActionsMenu({ actions, label, placement = "up", triggerClassName, menuClassName, itemClassName }: { actions: CardAction[]; label: string; placement?: "up" | "down"; triggerClassName?: string; menuClassName?: string; itemClassName?: string }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -43,7 +43,7 @@ export function CardActionsMenu({ actions, label, placement = "up", horizontal =
 
   return (
     <div ref={ref} className="relative shrink-0">
-      {/* Keep the same vertical-ellipsis trigger at every breakpoint. */}
+      {/* Los tres puntos horizontales, iguales en toda la app. */}
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
@@ -55,7 +55,7 @@ export function CardActionsMenu({ actions, label, placement = "up", horizontal =
           triggerClassName,
         )}
       >
-        {horizontal ? <MoreHorizontal className="h-5 w-5" /> : <MoreVertical className="h-5 w-5" />}
+        <MoreHorizontal className="h-5 w-5" />
       </button>
       {open && (
         <div

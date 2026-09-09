@@ -775,27 +775,33 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                                   {t("bookAgain")}
                                 </Link>
                               ) : null;
-                              const segundaFila = [reviewAction, rebookAction].filter(Boolean);
-                              // El menú ⋮ acompaña a la primera fila; la segunda cruza la
-                              // tarjeta entera para terminar a ras de ese borde.
+                              // En una cita terminada lo que toca es la reseña, no escribirle:
+                              // esa es la acción azul mientras no haya reseña. Escribir y volver
+                              // a contratar bajan a la segunda fila.
+                              const resenaPrimero = terminada && !rev ? (
+                                <Button size="sm" className={actionButtonClass} onClick={() => setReviewModal({ professionalId: b.professional_id, professionalName: b.professionals?.profiles?.full_name ?? t("professional"), bookingId: b.id, initialReview: null })}>{t("leaveReview")}</Button>
+                              ) : null;
+                              const principal = primary ?? resenaPrimero;
+                              const segundaFila = [
+                                messageAction,
+                                terminada && rev ? reviewAction : null,
+                                rebookAction,
+                              ].filter(Boolean);
+                              // Arriba, la acción que manda con el menú ⋮ al lado; abajo, el resto
+                              // cruzando la tarjeta entera. Antes el botón de la segunda fila
+                              // terminaba antes del borde, con el hueco del menú al lado.
                               return (
                                 <div className="flex flex-col gap-2 border-t border-[#eef2f6] pt-3">
-                                  {(primary || messageAction) && (
+                                  {(principal || menu.length > 0) && (
                                     <div className="flex items-start gap-2">
-                                      <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
-                                        {primary}
-                                        {messageAction}
-                                      </div>
-                                      {menu.length > 0 && <div className="shrink-0"><CardActionsMenu actions={menu} label={t("actions")} /></div>}
+                                      {principal && <div className="flex min-w-0 flex-1 items-center">{principal}</div>}
+                                      {menu.length > 0 && <div className={principal ? "shrink-0" : "ml-auto shrink-0"}><CardActionsMenu actions={menu} label={t("actions")} /></div>}
                                     </div>
                                   )}
                                   {segundaFila.length > 0 && (
-                                    <div className={segundaFila.length === 2 ? "grid grid-cols-2 gap-2 lg:flex lg:justify-start" : "flex"}>
+                                    <div className={segundaFila.length === 1 ? "grid" : "grid grid-cols-2 gap-2"}>
                                       {segundaFila}
                                     </div>
-                                  )}
-                                  {!primary && !messageAction && menu.length > 0 && (
-                                    <div className="flex justify-end"><CardActionsMenu actions={menu} label={t("actions")} /></div>
                                   )}
                                 </div>
                               );

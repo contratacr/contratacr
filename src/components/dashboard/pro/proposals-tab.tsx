@@ -470,8 +470,16 @@ export function ProposalsTab({ categoryId }: ProposalsTabProps) {
                         <p className="rounded-xl bg-[#f0fdf4] px-3.5 py-2.5 text-[13px] leading-relaxed text-[#166534]">{t("chosenNote")}</p>
                       )}
                       {(p.status === "pending" || (p.status === "accepted" && trabajoVivo)) && (
-                        <div className="flex items-center justify-between gap-2">
-                          <QuoteBlock asButton projectId={p.project_id} role="pro" canCreate defaultTitle={p.projects?.title ?? undefined} />
+                        <div className="flex flex-col gap-2">
+                          {/* La cotización aparece cuando el cliente ya eligió, no
+                              mientras compara. Es un documento con número
+                              consecutivo: emitirlo en cada propuesta quema números
+                              en trabajos que nunca fueron, y el precio de la
+                              propuesta ya está en el mensaje. */}
+                          {p.status === "accepted" && trabajoVivo && (
+                            <QuoteBlock asButton projectId={p.project_id} role="pro" canCreate defaultTitle={p.projects?.title ?? undefined} />
+                          )}
+                          <div className="flex items-center justify-end">
                           <CardActionsMenu
                             label={t("moreActions")}
                             actions={[p.status === "pending" ? {
@@ -485,6 +493,7 @@ export function ProposalsTab({ categoryId }: ProposalsTabProps) {
                               icon: <Trash2 className="h-4 w-4" />,
                             }]}
                           />
+                          </div>
                         </div>
                       )}
                     </div>

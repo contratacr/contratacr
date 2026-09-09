@@ -8,7 +8,7 @@ import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import { cldLarge } from "@/lib/cloudinary";
 import { ScrollRail } from "@/components/ui/scroll-rail";
 import { useRouter, useSearchParams } from "next/navigation";
-import { CalendarDays, ChevronRight, Flag, Link2, MapPin, Menu, Share2, Store } from "lucide-react";
+import { CalendarDays, ChevronRight, Flag, MapPin, Menu, Share2, Store } from "lucide-react";
 import { ContrataCRMark, HeaderMessagesLink, HeaderNotificationsLink } from "@/components/landing/landing-navbar";
 import { NotificationBell } from "@/components/notifications/notification-bell";
 import { useDirectMessageUnread } from "@/hooks/use-direct-message-unread";
@@ -845,11 +845,20 @@ function OfferPreview({
   const discount = offerDiscountPercent(offer);
   const isOwner = offer.professional_id === currentProfessionalId;
   const tMenu = useTranslations("menuFicha");
-  const { compartir, copiar, avisoNodo } = useCompartir();
+  const { compartir, avisoNodo } = useCompartir();
   const [reportando, setReportando] = useState(false);
   const enlaceParaCompartir = enlaceOferta(offer);
   return (
     <article className="relative ccr-marketplace-result-list hidden min-w-0 bg-white p-7 lg:block lg:h-full lg:overflow-y-auto">
+      {/* El "..." vive arriba a la derecha del panel, como en la cabecera de la
+          app: es el lugar donde la gente lo busca. */}
+      <MenuFicha
+        className="absolute right-4 top-4 z-10 rounded-full bg-white/85 backdrop-blur-sm"
+        opciones={[
+          { id: "compartir", icono: <Share2 className="h-4 w-4" />, texto: tMenu("share"), onSelect: () => void compartir(enlaceParaCompartir, offer.title) },
+          ...(isOwner || !offer.professional_slug ? [] : [{ id: "reportar", icono: <Flag className="h-4 w-4" />, texto: tMenu("reportOffer"), peligro: true, onSelect: () => setReportando(true) }]),
+        ]}
+      />
       <div className="relative">
         <OfferImageGallery images={offer.image_urls} title={offer.title} />
         {discount && (
@@ -890,16 +899,6 @@ function OfferPreview({
             )}
           </p>
         </div>
-        {/* El "..." guarda lo que no es contactar ni guardar: compartir, copiar
-            el enlace y reportar. */}
-        <MenuFicha
-          className="-mr-2 shrink-0"
-          opciones={[
-            { id: "compartir", icono: <Share2 className="h-4 w-4" />, texto: tMenu("share"), onSelect: () => void compartir(enlaceParaCompartir, offer.title) },
-            { id: "copiar", icono: <Link2 className="h-4 w-4" />, texto: tMenu("copyLink"), onSelect: () => void copiar(enlaceParaCompartir) },
-            ...(isOwner || !offer.professional_slug ? [] : [{ id: "reportar", icono: <Flag className="h-4 w-4" />, texto: tMenu("reportOffer"), peligro: true, onSelect: () => setReportando(true) }]),
-          ]}
-        />
       </div>
       {reportando && offer.professional_slug && (
         <ReportProfileModal
