@@ -44,7 +44,7 @@ function ProfileSection({
       <button
         type="button"
         onClick={() => onToggle(id)}
-        className={cn("w-full items-center justify-between gap-3 px-4 py-4 text-left transition-colors sm:flex sm:px-5", open ? "hidden bg-[#fafafa] sm:flex" : "flex hover:bg-[#fafafa]")}
+        className={cn("w-full items-center justify-between gap-3 px-4 py-4 text-left transition-colors sm:flex sm:px-5", open ? "hidden bg-[#f8fafc] sm:flex sm:border-b sm:border-[#eef3f7]" : "flex hover:bg-[#fafafa]")}
         aria-expanded={open}
       >
         {open && (

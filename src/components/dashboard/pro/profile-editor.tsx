@@ -85,7 +85,7 @@ function Section({ id, title, desc, open, mobileFocused, onToggle, onActivate, c
         onClick={() => onToggle(id)}
         className={cn(
           "w-full items-center justify-between gap-3 px-4 py-4 text-left transition-colors sm:flex sm:px-5",
-          open ? "hidden bg-[#fafafa] sm:flex" : "flex hover:bg-[#fafafa]",
+          open ? "hidden bg-[#f8fafc] sm:flex sm:border-b sm:border-[#eef3f7]" : "flex hover:bg-[#fafafa]",
           // En el teléfono cada sección se abre a pantalla completa, o sea que ES
           // navegación: se ve igual que una fila del menú del panel (tarjeta con
           // borde, 60 px, flecha) en vez de una fila de acordeón con lápiz.
