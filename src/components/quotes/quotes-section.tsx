@@ -67,13 +67,12 @@ function Cotizaciones({ proName, servicios = [], puedeCrear = true }: { proName:
 
   return (
     <div className="flex flex-col gap-4">
-      {/* Cabecera: qué es esto y el botón, siempre a la vista. */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-[14px] leading-6 text-[#52627a]">{t("sectionIntro")}</p>
-        {puedeCrear && (quotes?.length ?? 0) > 0 && (
-          <Button type="button" onClick={() => setEditor(true)} className="shrink-0"><Plus className="h-4 w-4" />{t("new")}</Button>
-        )}
-      </div>
+      {/* Solo el botón: la lista se explica sola. */}
+      {puedeCrear && (quotes?.length ?? 0) > 0 && (
+        <div className="flex sm:justify-end">
+          <Button type="button" onClick={() => setEditor(true)} className="w-full sm:w-auto"><Plus className="h-4 w-4" />{t("new")}</Button>
+        </div>
+      )}
 
       {quotes === null ? (
         <div className="flex flex-col gap-2">{[0, 1, 2].map((i) => <div key={i} className="h-[76px] animate-pulse rounded-2xl bg-[#eef2f6]" />)}</div>

@@ -309,6 +309,7 @@ export function MarketplaceSearch({
   return (
     <div ref={rootRef} className="relative min-w-0 flex-1">
       <div className="flex h-11 w-full items-center gap-3 rounded-[10px] border border-[#e3ebf2] bg-white px-4 transition-colors focus-within:border-[#009FD9]">
+        <Search className="h-5 w-5 shrink-0 text-[#162543]" />
         <div className="relative min-w-0 flex-[1.85]">
           <input
             ref={inputRef}
@@ -348,14 +349,13 @@ export function MarketplaceSearch({
             </div>
           )}
         </div>
-        <Search className="h-5 w-5 shrink-0 text-[#162543]" />
         {secondary && (
           <>
             <span aria-hidden="true" className="hidden h-6 w-px shrink-0 bg-[#dfe5eb] lg:block" />
             <div className="relative hidden min-w-[140px] flex-1 lg:block xl:min-w-[180px]">
-              <SecondaryIcon className="pointer-events-none absolute right-0 top-1/2 h-5 w-5 -translate-y-1/2 text-[#162543]" aria-hidden="true" />
-              <input ref={desktopSecondaryInputRef} value={secondary.value} onChange={(event) => { secondary.onChange(event.target.value); setDesktopField("secondary"); }} onFocus={() => setDesktopField("secondary")} placeholder={secondary.placeholder} aria-label={secondary.ariaLabel ?? secondary.placeholder} className="h-10 w-full bg-transparent pr-16 text-base font-normal text-gray-700 outline-none placeholder:text-gray-400" />
-              {secondary.value && <button type="button" onClick={() => secondary.onChange("")} aria-label={secondaryClearLabel} className="absolute right-7 top-1/2 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-full text-[#8b96a5] hover:bg-[#edf3f7]"><X className="h-4 w-4" /></button>}
+              <SecondaryIcon className="pointer-events-none absolute left-0 top-1/2 h-5 w-5 -translate-y-1/2 text-[#162543]" aria-hidden="true" />
+              <input ref={desktopSecondaryInputRef} value={secondary.value} onChange={(event) => { secondary.onChange(event.target.value); setDesktopField("secondary"); }} onFocus={() => setDesktopField("secondary")} placeholder={secondary.placeholder} aria-label={secondary.ariaLabel ?? secondary.placeholder} className="h-10 w-full bg-transparent pl-8 pr-8 text-base font-normal text-gray-700 outline-none placeholder:text-gray-400" />
+              {secondary.value && <button type="button" onClick={() => secondary.onChange("")} aria-label={secondaryClearLabel} className="absolute right-0 top-1/2 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-full text-[#8b96a5] hover:bg-[#edf3f7]"><X className="h-4 w-4" /></button>}
             {desktopField === "secondary" && visibleSecondarySuggestions.length > 0 && (
               <div className="absolute left-0 right-0 top-[calc(100%+8px)] z-50 overflow-hidden rounded-xl border border-[#d7e1ea] bg-white py-1 shadow-[0_16px_38px_-24px_rgba(15,23,42,0.8)]">
                 {visibleSecondarySuggestions.map((suggestion) => (

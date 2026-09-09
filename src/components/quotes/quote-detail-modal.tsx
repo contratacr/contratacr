@@ -56,7 +56,7 @@ export function QuoteDetailModal({ quote, role, open, onClose, onChanged, proNam
 
   return (
     <>
-      <Modal open={open} onClose={onClose} title={titulo} subtitle={subtitulo} size="sm" mobilePresentation="center" closeLabel={t("close")}
+      <Modal open={open} onClose={onClose} title={titulo} subtitle={subtitulo} size="sm" mobilePresentation="fullscreen" closeLabel={t("close")}
         footer={puedeResponder ? (<>
           <Button type="button" variant="secondary" className="w-full sm:w-auto" disabled={busy} onClick={() => void actuar("decline")}>{t("decline")}</Button>
           <Button type="button" className="w-full sm:w-auto" disabled={busy} loading={busy} onClick={() => void actuar("accept")}>{t("accept")}</Button>
