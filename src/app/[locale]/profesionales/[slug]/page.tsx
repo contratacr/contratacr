@@ -21,7 +21,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ImagePreviewDialog } from "@/components/ui/image-preview-dialog";
 import { getInitials, proDisplayName, cn } from "@/lib/utils";
 import { RecordRecentVisit } from "@/components/mobile/record-recent-visit";
-import { anyVideoConsultCategory, getCategoryLabel } from "@/lib/data/categories";
+import { anyVideoConsultCategory, getCategoryLabel, getCategoryGroupId, getCategoryGroupLabel } from "@/lib/data/categories";
 import { casoProfession, countCases } from "@/lib/services";
 import { addTaxIncludedToPriceLabel, formatServicePrice, primaryPricingLabel, splitPricingLabel } from "@/lib/pricing";
 import { languageLabel } from "@/lib/data/languages";
@@ -461,8 +461,20 @@ export default function ProfilePage() {
   // workplaces) — same data the /buscar card passes to ProfessionalSchedule.
   const placeFallback = professional.cantonName || professional.provinceName || "";
   const placeAddress = locationText;
-  // El oficio principal, para que la cabecera diga qué hace y no solo quién es.
-  const oficioPrincipal = catLabel(professional.professions?.[0] ?? professional.categoryId ?? "");
+  // Bajo el nombre va lo que ES, no uno de sus servicios: la lista completa ya
+  // tiene su sección. Con un solo oficio se dice el oficio; con varios, el rubro
+  // (escoger el primero de la lista era arbitrario: a SG Solutions le salía
+  // "Cámaras de seguridad" teniendo seis servicios). Si los oficios son de
+  // rubros distintos no se dice nada, antes que decir algo a medias.
+  const oficios = professional.professions?.length
+    ? professional.professions
+    : (professional.categoryId ? [professional.categoryId] : []);
+  const gruposDeOficios = new Set(oficios.map((id) => getCategoryGroupId(id)).filter(Boolean) as string[]);
+  const oficioPrincipal = oficios.length === 1
+    ? catLabel(oficios[0])
+    : gruposDeOficios.size === 1
+      ? getCategoryGroupLabel([...gruposDeOficios][0], locale)
+      : "";
 
   const hasCasos = !!professional.portfolioUrls && professional.portfolioUrls.length > 0;
   // Count CASES, not photos: 1 caso de éxito with 3 photos must read "1", not "3"
