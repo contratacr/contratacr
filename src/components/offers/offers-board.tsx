@@ -28,6 +28,7 @@ import { OfferImageGallery } from "@/components/offers/offer-image-gallery";
 import { SaveItemButton } from "@/components/saved/save-item-button";
 import { useCompartir } from "@/components/ui/boton-compartir";
 import { MenuFicha } from "@/components/ui/menu-ficha";
+import { enlaceOferta } from "@/lib/marketplace-url";
 import { ReportProfileModal } from "@/components/professionals/report-profile-modal";
 import {
   formatOfferBeforePrice,
@@ -846,7 +847,7 @@ function OfferPreview({
   const tMenu = useTranslations("menuFicha");
   const { compartir, copiar, avisoNodo } = useCompartir();
   const [reportando, setReportando] = useState(false);
-  const enlaceOferta = `/${locale}/ofertas/${offer.id}`;
+  const enlaceParaCompartir = enlaceOferta(offer);
   return (
     <article className="relative ccr-marketplace-result-list hidden min-w-0 bg-white p-7 lg:block lg:h-full lg:overflow-y-auto">
       <div className="relative">
@@ -894,8 +895,8 @@ function OfferPreview({
         <MenuFicha
           className="-mr-2 shrink-0"
           opciones={[
-            { id: "compartir", icono: <Share2 className="h-4 w-4" />, texto: tMenu("share"), onSelect: () => void compartir(enlaceOferta, offer.title) },
-            { id: "copiar", icono: <Link2 className="h-4 w-4" />, texto: tMenu("copyLink"), onSelect: () => void copiar(enlaceOferta) },
+            { id: "compartir", icono: <Share2 className="h-4 w-4" />, texto: tMenu("share"), onSelect: () => void compartir(enlaceParaCompartir, offer.title) },
+            { id: "copiar", icono: <Link2 className="h-4 w-4" />, texto: tMenu("copyLink"), onSelect: () => void copiar(enlaceParaCompartir) },
             ...(isOwner || !offer.professional_slug ? [] : [{ id: "reportar", icono: <Flag className="h-4 w-4" />, texto: tMenu("reportOffer"), peligro: true, onSelect: () => setReportando(true) }]),
           ]}
         />

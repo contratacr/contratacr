@@ -21,6 +21,7 @@ import { JobPostForm } from "@/components/jobs/job-post-form";
 import { JobApplicationForm } from "@/components/jobs/job-application-form";
 import { SaveItemButton } from "@/components/saved/save-item-button";
 import { MenuEmpleo } from "@/components/jobs/menu-empleo";
+import { enlaceEmpleo, idCoincide } from "@/lib/marketplace-url";
 import { useNativeApp } from "@/hooks/use-native-app";
 import { COMMON_JOB_TITLES, EMPLOYMENT_TYPES, EXPERIENCE_LEVELS, formatJobSalary, jobMatchesSearch, type JobPost, WORKPLACE_TYPES } from "@/lib/jobs";
 import { employmentTypeLabel, experienceLevelLabel, marketplaceLocale, type MarketplaceLocale, workplaceTypeLabel } from "@/lib/marketplace-copy";
@@ -184,7 +185,9 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
       && (experience === "all" || (job.experience_level ?? "any") === experience);
   }), [employment, experience, jobs, locationFilter, now, published, query, workplace]);
 
-  const selected = filtered.find((job) => job.id === selectedId) ?? filtered[0] ?? null;
+  // El enlace corto (…/empleos/tecnico-de-redes-d4000000) trae el título y los
+  // 8 primeros del id: se resuelve igual que el enlace largo de siempre.
+  const selected = filtered.find((job) => job.id === selectedId || idCoincide(job.id, selectedId)) ?? filtered[0] ?? null;
 
   const suggestions = [...new Set([...jobs.map((job) => job.title), ...COMMON_JOB_TITLES])];
   const locationSuggestions = useMemo(
@@ -213,7 +216,7 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
   }
 
   useEffect(() => {
-    if (filtered.length > 0 && !filtered.some((job) => job.id === selectedId)) {
+    if (filtered.length > 0 && !filtered.some((job) => job.id === selectedId || idCoincide(job.id, selectedId))) {
       queueMicrotask(() => setSelectedId(filtered[0].id));
     }
   }, [filtered, selectedId]);
@@ -301,7 +304,7 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
             className="absolute right-3"
             empleoId={selected.id}
             titulo={selected.title}
-            enlace={`/${locale}/empleos/${selected.id}`}
+            enlace={enlaceEmpleo(selected)}
             empleadorNombre={selected.employer_name || copy.professionalFallback}
             empleadorSlug={selected.employer_slug}
             esPropio={selected.employer_id === currentProfessionalId}
@@ -525,7 +528,7 @@ function JobRow({ job, selected, onSelect }: { job: JobPost; selected: boolean; 
 function JobPreview({ job, isOwner, userId, hasApplied, onApply, onEdit, mobile = false, hideActions = false }: { job: JobPost; isOwner: boolean; userId: string | null; hasApplied: boolean; onApply: () => void; onEdit: () => void; mobile?: boolean; hideActions?: boolean }) {
   const locale = marketplaceLocale(useLocale());
   const copy = JOBS_COPY[locale];
-  const enlaceEmpleo = `/${locale}/empleos/${job.id}`;
+  const enlaceParaCompartir = enlaceEmpleo(job);
   const detailRows = [
     [copy.employmentType, employmentTypeLabel(job.employment_type, locale)],
     [copy.workplace, workplaceTypeLabel(job.workplace_type, locale)],
@@ -544,7 +547,7 @@ function JobPreview({ job, isOwner, userId, hasApplied, onApply, onEdit, mobile 
           className="-mr-2 shrink-0"
           empleoId={job.id}
           titulo={job.title}
-          enlace={enlaceEmpleo}
+          enlace={enlaceParaCompartir}
           empleadorNombre={job.employer_name || copy.professionalFallback}
           empleadorSlug={job.employer_slug}
           esPropio={isOwner}

@@ -6,6 +6,7 @@ import { OfferImageGallery } from "@/components/offers/offer-image-gallery";
 import { OfferDetailNavbarSearch } from "@/components/offers/offer-detail-navbar-search";
 import { OfferContactActions } from "@/components/offers/offers-board";
 import { MenuOferta } from "@/components/offers/menu-oferta";
+import { claveDeTramo, enlaceOferta, rangoDePrefijo } from "@/lib/marketplace-url";
 import { OfferOwnerActions } from "@/components/offers/offer-owner-actions";
 import { getAllCategories, getCategoryLabel } from "@/lib/data/categories";
 import {
@@ -66,11 +67,19 @@ export default async function OfferDetailPage({ params, searchParams }: { params
   const professionalColumns = user
     ? "slug,business_name,profile_id,whatsapp,allow_phone_call,call_phone,contact_email,profiles(full_name)"
     : "slug,business_name,profiles(full_name)";
-  const { data, error: offerError } = await supabase
+  // El enlace corto trae el título y los 8 primeros del id; el largo, el id
+  // entero. Los dos abren la misma oferta.
+  const clave = claveDeTramo(id);
+  if (!clave.id && !clave.prefijo) notFound();
+  const consulta = supabase
     .from("professional_offers")
-    .select(`*, professionals!professional_offers_professional_id_fkey(${professionalColumns})`)
-    .eq("id", id)
-    .maybeSingle();
+    .select(`*, professionals!professional_offers_professional_id_fkey(${professionalColumns})`);
+  const { data, error: offerError } = clave.id
+    ? await consulta.eq("id", clave.id).maybeSingle()
+    : await (() => {
+        const { desde, hasta } = rangoDePrefijo(clave.prefijo!);
+        return consulta.gte("id", desde).lte("id", hasta).limit(1).maybeSingle();
+      })();
   if (offerError) throw offerError;
   if (!data) notFound();
   const offerOwnerProfileId = (data.professionals as { profile_id?: string | null } | null)?.profile_id ?? null;
@@ -134,7 +143,7 @@ export default async function OfferDetailPage({ params, searchParams }: { params
             className="absolute right-2 top-1/2 -translate-y-1/2"
             ofertaId={offer.id}
             titulo={offer.title}
-            enlace={`/${locale}/ofertas/${offer.id}`}
+            enlace={enlaceOferta(offer)}
             profesionalNombre={offer.professional_name || copy.professionalFallback}
             profesionalSlug={offer.professional_slug}
             esPropia={isOwner}
@@ -164,7 +173,7 @@ export default async function OfferDetailPage({ params, searchParams }: { params
                 className="-mr-2 hidden shrink-0 lg:block"
                 ofertaId={offer.id}
                 titulo={offer.title}
-                enlace={`/${locale}/ofertas/${offer.id}`}
+                enlace={enlaceOferta(offer)}
                 profesionalNombre={offer.professional_name || copy.professionalFallback}
                 profesionalSlug={offer.professional_slug}
                 esPropia={isOwner}
