@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
 import QRCode from "qrcode";
 import { QrCode, Star, ChevronRight, ArrowLeft, Check } from "lucide-react";
@@ -191,15 +191,39 @@ export function ShareKit({ open, onClose, profileUrl, name, services = [], avata
   const reviewsMessage = t("reviewsMessage", { url: reviewsUrl });
   const waHref = `https://wa.me/?text=${encodeURIComponent(reviewsMessage)}`;
 
-  const option = (Icon: typeof QrCode, title: string, body: string, onClick: () => void) => (
-    <button type="button" onClick={onClick} className="flex w-full items-center gap-3.5 rounded-2xl border border-[#e5eaf0] bg-white px-4 py-3.5 text-left transition-colors hover:border-[#bfe3f5] hover:bg-[#f8fcfe]">
-      <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-[#eaf7fc] text-[#009FD9]"><Icon className="h-5 w-5" /></span>
+  // Las dos herramientas del profesional. Cada una se anuncia con una miniatura
+  // de lo que va a recibir —la tarjeta con su banda marino y el QR, o las
+  // estrellas de una reseña— porque como fila con un ícono suelto se leían como
+  // un renglón de ajustes, no como algo que vale la pena abrir.
+  const option = (miniatura: ReactNode, title: string, body: string, onClick: () => void) => (
+    <button type="button" onClick={onClick} className="group flex w-full items-center gap-3.5 rounded-2xl border border-[#e5eaf0] bg-white p-3.5 text-left transition-colors hover:border-[#bfe3f5] hover:bg-[#f8fcfe]">
+      {miniatura}
       <span className="min-w-0 flex-1">
         <span className="block text-[15px] font-extrabold text-[#162543]">{title}</span>
         <span className="mt-0.5 block text-[13px] leading-snug text-[#52627a]">{body}</span>
       </span>
-      <ChevronRight className="h-4 w-4 shrink-0 text-[#9aa8ba]" />
+      <ChevronRight className="h-4 w-4 shrink-0 text-[#9aa8ba] transition-transform group-hover:translate-x-0.5" />
     </button>
+  );
+
+  const miniTarjeta = (
+    <span className="grid h-[68px] w-[54px] shrink-0 grid-rows-[18px_1fr] overflow-hidden rounded-xl border border-[#dbe4ee] bg-white shadow-[0_6px_14px_-8px_rgba(22,37,67,0.55)]">
+      <span className="flex items-center justify-center bg-[#162543]">
+        <span className="text-[7px] font-extrabold tracking-tight text-white">Contrata<span className="text-[#4fc3f7]">CR</span></span>
+      </span>
+      <span className="grid place-items-center"><QrCode className="h-7 w-7 text-[#162543]" strokeWidth={1.6} /></span>
+    </span>
+  );
+
+  const miniResena = (
+    <span className="grid h-[68px] w-[54px] shrink-0 place-items-center rounded-xl bg-gradient-to-br from-[#fff4e2] to-[#ffe3bd]">
+      <span className="flex flex-col items-center gap-1">
+        <Star className="h-6 w-6 fill-[#ff9b32] text-[#ff9b32]" />
+        <span className="flex gap-0.5">
+          {[0, 1, 2].map((i) => <Star key={i} className="h-2.5 w-2.5 fill-[#ffb765] text-[#ffb765]" />)}
+        </span>
+      </span>
+    </span>
   );
 
   // Al cerrar se vuelve al menú, para que la próxima apertura empiece limpia.
@@ -212,8 +236,9 @@ export function ShareKit({ open, onClose, profileUrl, name, services = [], avata
           {/* Lo mismo que ve un cliente al compartir un perfil (enlace a la vista,
               WhatsApp, Instagram y Facebook) más lo que solo tiene el dueño. */}
           <ShareChannels url={profileUrl} name={name} linkLabel={t("linkLabel")} copyLabel={t("copy")} />
-          {option(QrCode, t("cardTitle"), t("cardBody"), () => setView("card"))}
-          {option(Star, t("reviewsTitle"), t("reviewsBody"), () => setView("reviews"))}
+          <div className="mt-1 h-px bg-[#eef2f6]" />
+          {option(miniTarjeta, t("cardTitle"), t("cardBody"), () => setView("card"))}
+          {option(miniResena, t("reviewsTitle"), t("reviewsBody"), () => setView("reviews"))}
         </div>
       )}
       {view === "card" && (
