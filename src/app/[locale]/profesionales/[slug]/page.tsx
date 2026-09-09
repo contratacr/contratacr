@@ -698,23 +698,26 @@ export default function ProfilePage() {
 
             {/* ── COLUMNA IZQUIERDA: identidad y secciones ── */}
             <div className="order-1 flex-1 min-w-0">
-            {/* ── HEADER CARD ── identity on the left, a right-aligned stats strip. Mirrors
-                the new /buscar card (circular avatar, solid-blue "Verificado" pill). No
-                "destacado" ribbon. */}
-            <div className="relative mb-6 rounded-2xl border border-[#e5e7eb] bg-white p-4 shadow-sm sm:grid sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:gap-x-8 sm:p-6">
-                <div className="flex min-w-0 flex-col items-center text-center sm:flex-row sm:items-center sm:gap-4 sm:text-left">
+            {/* ── CABECERA ── En computadora: foto | nombre, oficio y cifras | acciones.
+                Todo lo del centro arranca en la misma línea (antes las cifras
+                colgaban debajo de la foto y el borde izquierdo quedaba en zigzag)
+                y las dos acciones comparten renglón arriba a la derecha, del
+                ancho de su texto. En el teléfono sigue centrado como estaba. */}
+            <div className="relative mb-6 rounded-2xl border border-[#e5e7eb] bg-white p-4 shadow-sm sm:grid sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:items-start sm:gap-x-5 sm:p-6">
+                <div className="flex min-w-0 flex-col items-center text-center sm:contents sm:text-left">
                   <ImagePreviewDialog
                     src={professional.avatarUrl}
                     alt={professional.fullName}
                     openLabel={locale === "en" ? "View profile photo" : "Ver foto de perfil"}
                     closeLabel={locale === "en" ? "Close" : "Cerrar"}
+                    className="sm:col-start-1 sm:row-start-1 sm:row-span-2 sm:self-center"
                   >
                     <Avatar className="h-20 w-20 shrink-0 sm:h-[88px] sm:w-[88px]">
                       <AvatarImage src={professional.avatarUrl ? cldThumb(professional.avatarUrl, 320) : undefined} loading="eager" alt={professional.fullName} className="object-cover" />
                       <AvatarFallback className="bg-[#EBF5FB] text-xl font-bold text-[#009FD9] sm:text-2xl">{getInitials(professional.fullName)}</AvatarFallback>
                     </Avatar>
                   </ImagePreviewDialog>
-                  <div className="mt-3 min-w-0 sm:mt-0">
+                  <div className="mt-3 min-w-0 sm:col-start-2 sm:row-start-1 sm:mt-0">
                     <div className="min-w-0">
                       <h1 data-testid="professional-profile-name" className="min-w-0 text-[17px] font-bold leading-[1.15] text-[#162543] [overflow-wrap:anywhere] sm:text-2xl sm:leading-tight sm:[overflow-wrap:normal]">
                         {displayName.primaryDesktop}
@@ -748,7 +751,7 @@ export default function ProfilePage() {
                     tienen dato, así un perfil nuevo no muestra casillas vacías. */}
                 {(professional.reviewCount > 0 || expYears > 0 || casosCount > 0) && (
                   <div className={cn(
-                    "mt-4 grid sm:col-start-1 sm:flex sm:justify-start sm:gap-10",
+                    "mt-4 grid sm:col-start-2 sm:row-start-2 sm:mt-3 sm:flex sm:justify-start sm:gap-8",
                     ((professional.reviewCount > 0 ? 1 : 0) + (expYears > 0 ? 1 : 0) + (casosCount > 0 ? 1 : 0)) === 3
                       ? "grid-cols-3"
                       : ((professional.reviewCount > 0 ? 1 : 0) + (expYears > 0 ? 1 : 0) + (casosCount > 0 ? 1 : 0)) === 2
@@ -787,19 +790,19 @@ export default function ProfilePage() {
                 {/* Mismo botón secundario del app (píldora blanca de borde turquesa,
                     sin ícono) que "Llamar": guardar y compartir son acciones, no
                     enlaces sueltos. */}
-                <div className="mt-4 flex flex-col gap-2 sm:col-start-2 sm:row-start-1 sm:row-span-2 sm:mt-0 sm:justify-center">
+                <div className="mt-4 flex flex-col gap-2 sm:col-start-3 sm:row-start-1 sm:row-span-2 sm:mt-0 sm:flex-row sm:items-start sm:gap-2.5">
                   <SaveButton
                     pro={savedPro}
                     isOwn={isOwn}
                     withLabel
-                    className="h-11 w-full rounded-full px-4 py-0 text-[13px] sm:w-44"
+                    className="h-11 w-full rounded-full px-4 py-0 text-[13px] sm:h-10 sm:w-auto sm:px-5"
                   />
                   <button
                     type="button"
                     onClick={shareProfile}
                     aria-label={t("shareProfile")}
                     title={t("shareProfile")}
-                    className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-full border border-[#d7e1ea] bg-white px-4 text-[13px] font-bold text-[#162543] transition-colors hover:border-[#b9c8d6] hover:bg-[#f6f9fb] sm:w-44"
+                    className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-full border border-[#d7e1ea] bg-white px-4 text-[13px] font-bold text-[#162543] transition-colors hover:border-[#b9c8d6] hover:bg-[#f6f9fb] sm:h-10 sm:w-auto sm:px-5"
                   >
                     <span>{t("share")}</span>
                   </button>
