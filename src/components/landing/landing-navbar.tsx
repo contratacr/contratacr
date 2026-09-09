@@ -4,7 +4,7 @@ import { EMPLEOS_VISIBLE } from "@/lib/feature-flags";
 import { useState, useEffect, useRef, useMemo, useCallback, useTransition, type ReactNode } from "react";
 import { soltarFoco } from "@/lib/soltar-foco";
 import {
-  X, Menu, ChevronDown, ChevronRight, Search, MapPin, List, Map as MapIcon, ArrowLeft, Share2, Bot,
+  X, Menu, ChevronDown, ChevronRight, Search, MapPin, List, Map as MapIcon, ArrowLeft, Share2, Bot, ReceiptText,
   Briefcase, Compass, Wrench,
   UserRound, UserRoundPlus, LogOut, FileText, MessageSquareText, Settings, Bell, MoreHorizontal,
   HelpCircle, ListChecks, Lightbulb, Headset, Globe2, Shield, Mail, ClipboardList, Clock, Bookmark,
@@ -670,6 +670,14 @@ export function AccountMenu({
               <Link href={projectsHref} onClick={() => setOpen(false)} className={menuItemClass}>
                 <ClipboardList className="h-4 w-4 text-[#009FD9]" />
                 {t("projects")}
+              </Link>
+            )}
+            {/* Cotizar es lo que el profesional hace seguido: en la app está en
+                la barra de abajo y aquí, en la web, en su menú. */}
+            {isPro && (
+              <Link href={`${professionalPanelHref.split("?")[0]}?mode=offer&tab=quotes`} onClick={() => setOpen(false)} className={menuItemClass}>
+                <ReceiptText className="h-4 w-4 text-[#009FD9]" />
+                {t("quotes")}
               </Link>
             )}
             <Link href={savedHref} onClick={() => setOpen(false)} className={menuItemClass}>
@@ -2475,6 +2483,12 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                       <Link href={projectsHref} onClick={() => setMobileOpen(false)} className={claseCajon(projectsHref)}>
                         <DrawerIcon><ClipboardList /></DrawerIcon>
                         <span className={mobileDrawerTextClass}>{t("projects")}</span>
+                      </Link>
+                    )}
+                    {isPro && (
+                      <Link href={`${panelHref}?mode=offer&tab=quotes`} onClick={() => setMobileOpen(false)} className={mobileDrawerItemClass}>
+                        <DrawerIcon><ReceiptText /></DrawerIcon>
+                        <span className={mobileDrawerTextClass}>{t("quotes")}</span>
                       </Link>
                     )}
                     <Link href={savedHref} onClick={() => setMobileOpen(false)} className={claseCajon(savedHref)}>

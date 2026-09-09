@@ -41,7 +41,7 @@ function partirLineas(ctx: CanvasRenderingContext2D, texto: string, maxW: number
 
 const FUENTE = "Inter, -apple-system, \"Segoe UI\", Roboto, sans-serif";
 
-export async function renderQuoteImage(quote: Quote, proName: string, textos: Textos, fechaVigencia: string | null): Promise<Blob | null> {
+async function dibujar(quote: Quote, proName: string, textos: Textos, fechaVigencia: string | null): Promise<HTMLCanvasElement | null> {
   const url = enlaceCotizacion(quote.public_code);
   const ancho = W - M * 2;
   // Todo se mide primero con un canvas de trabajo; el alto sale de ahí.
@@ -157,5 +157,30 @@ export async function renderQuoteImage(quote: Quote, proName: string, textos: Te
   ctx.font = `700 28px ${FUENTE}`; ctx.fillStyle = "#009FD9";
   ctx.fillText(url.replace(/^https?:\/\//, ""), M, pieY + 130);
 
+  return canvas;
+}
+
+/** La cotización como PNG (para el estado de WhatsApp o guardarla). */
+export async function renderQuoteImage(quote: Quote, proName: string, textos: Textos, fechaVigencia: string | null): Promise<Blob | null> {
+  const canvas = await dibujar(quote, proName, textos, fechaVigencia);
+  if (!canvas) return null;
   return new Promise((resolve) => canvas.toBlob((b) => resolve(b), "image/png"));
+}
+
+/**
+ * La cotización como PDF de una página. Es el formato que la gente espera de
+ * una cotización y el que se puede adjuntar en WhatsApp o en un correo. La
+ * hoja tiene el ancho de una carta y el alto del contenido, así nada se corta
+ * ni queda media hoja en blanco. jsPDF se carga solo aquí (import dinámico),
+ * para que no pese en el resto del app.
+ */
+export async function renderQuotePdf(quote: Quote, proName: string, textos: Textos, fechaVigencia: string | null): Promise<Blob | null> {
+  const canvas = await dibujar(quote, proName, textos, fechaVigencia);
+  if (!canvas) return null;
+  const { jsPDF } = await import("jspdf");
+  const anchoMm = 210;
+  const altoMm = Math.round((canvas.height / canvas.width) * anchoMm);
+  const doc = new jsPDF({ orientation: altoMm > anchoMm ? "portrait" : "landscape", unit: "mm", format: [anchoMm, Math.max(altoMm, 150)] });
+  doc.addImage(canvas.toDataURL("image/png"), "PNG", 0, 0, anchoMm, altoMm, undefined, "FAST");
+  return doc.output("blob");
 }

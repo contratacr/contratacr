@@ -10,6 +10,7 @@ export type Quote = {
   client_id: string | null;
   client_name: string | null;
   client_phone: string | null;
+  client_cedula: string | null;
   /** Código del enlace público: contratacr.com/cotizacion/<código>. */
   public_code: string;
   booking_id: string | null;

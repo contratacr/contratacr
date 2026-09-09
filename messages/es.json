@@ -61,6 +61,7 @@
     "publishedProjects": "Mis proyectos",
     "myProjects": "Mis proyectos",
     "favorites": "Mis favoritos",
+    "quotes": "Cotizaciones",
     "notifications": "Notificaciones",
     "supportTickets": "Soporte",
     "accountSecurity": "Cuenta y seguridad",
@@ -4178,6 +4179,19 @@
     "publicNotFoundBody": "Revisá el enlace o pedile al profesional que te lo mande de nuevo.",
     "imageTitle": "COTIZACIÓN",
     "imageValidUntil": "Vigente hasta el {date}",
-    "imageFooter": "Aceptala en el enlace o escaneando el código"
+    "imageFooter": "Aceptala en el enlace o escaneando el código",
+    "editorSubtitleFree": "Para quién es, qué incluye y cuánto cuesta.",
+    "clientCedulaLabel": "Cédula del cliente",
+    "clientCedulaHint": "Con la cédula traemos el nombre. Si no la tenés, escribí el nombre abajo.",
+    "clientCedulaSearching": "Buscando el nombre…",
+    "clientCedulaNotFound": "No aparece en el padrón. Escribí el nombre abajo.",
+    "taxIncludedShort": "IVA incluido",
+    "taxAddShort": "Sumar 13%",
+    "taxExemptShort": "Sin IVA",
+    "downloadPdf": "Descargar PDF",
+    "sharePdf": "Compartir PDF",
+    "preparingPdf": "Armando el PDF…",
+    "writeClient": "Escribirle por WhatsApp",
+    "acceptedOn": "Aceptada el {date}"
   }
 }

@@ -2454,7 +2454,14 @@ export default function DashboardPage() {
                         )}
                         {activeTab === "suscripcion" && PAYMENTS_ENABLED && <SubscriptionPanel />}
                         {activeTab === "bookings" && <BookingRequests />}
-                        {activeTab === "quotes" && <QuotesSection proName={professionalDisplayName} />}
+                        {activeTab === "quotes" && (
+                          <QuotesSection
+                            proName={professionalDisplayName}
+                            servicios={((pro?.services ?? []) as Array<{ name?: string; price?: string | number | null; active?: boolean }>)
+                              .filter((s) => s?.name && s.active !== false)
+                              .map((s) => ({ name: String(s.name), price: s.price }))}
+                          />
+                        )}
                         {activeTab === "proposals" && pro && (
                           <ProposalsTab
                             key={`proposals-${pro.id}`}

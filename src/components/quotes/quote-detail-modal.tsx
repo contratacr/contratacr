@@ -6,7 +6,7 @@ import { Modal } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
 import { useAppDialog } from "@/hooks/use-app-dialog";
 import { formatColones } from "@/lib/pricing";
-import { isQuoteExpired, type Quote } from "@/lib/quotes";
+import { isQuoteExpired, whatsappDigits, type Quote } from "@/lib/quotes";
 import { QuoteShare } from "@/components/quotes/quote-share";
 
 const DATE_LOCALE: Record<string, string> = { es: "es-CR", en: "en-US" };
@@ -66,6 +66,18 @@ export function QuoteDetailModal({ quote, role, open, onClose, onChanged, proNam
         <div className="flex flex-col gap-4">
           {/* Para el profesional, primero cómo mandarla: es a lo que viene. */}
           {role === "pro" && abierta && <QuoteShare quote={quote} proName={proName ?? quote.professional_name ?? ""} />}
+          {/* Aceptada: lo único que queda es ponerse de acuerdo. */}
+          {role === "pro" && quote.status === "accepted" && (
+            <div className="rounded-2xl bg-[#f0fdf4] px-4 py-3.5 text-center">
+              <p className="text-[15px] font-extrabold text-[#166534]">{t("statusAccepted")}</p>
+              {quote.accepted_at && <p className="mt-0.5 text-[13px] text-[#3f7c53]">{t("acceptedOn", { date: new Date(quote.accepted_at).toLocaleDateString(DATE_LOCALE[locale] ?? "es-CR", { day: "numeric", month: "long" }) })}</p>}
+              {whatsappDigits(quote.client_phone) && (
+                <a href={`https://wa.me/${whatsappDigits(quote.client_phone)}`} target="_blank" rel="noopener noreferrer" className="mt-3 inline-flex h-11 w-full items-center justify-center rounded-full bg-[#25d366] px-5 text-[14px] font-bold text-white transition-colors hover:bg-[#1da851]">
+                  {t("writeClient")}
+                </a>
+              )}
+            </div>
+          )}
           {!recienCreada && (
             <div className="flex flex-wrap items-center justify-between gap-2 text-[13px]">
               <span className={`rounded-full px-2.5 py-1 font-bold ${quote.status === "accepted" ? "bg-[#eaf7fc] text-[#0089bb]" : abierta ? "bg-[#f4f7fa] text-[#52627a]" : "bg-[#f3f4f6] text-[#6b7280]"}`}>{estado}</span>

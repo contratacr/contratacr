@@ -61,6 +61,7 @@
     "publishedProjects": "My projects",
     "myProjects": "My projects",
     "favorites": "My favorites",
+    "quotes": "Quotes",
     "notifications": "Notifications",
     "supportTickets": "Support",
     "accountSecurity": "Account & security",
@@ -4178,6 +4179,19 @@
     "publicNotFoundBody": "Check the link or ask the professional to send it again.",
     "imageTitle": "QUOTE",
     "imageValidUntil": "Valid until {date}",
-    "imageFooter": "Accept it at the link or by scanning the code"
+    "imageFooter": "Accept it at the link or by scanning the code",
+    "editorSubtitleFree": "Who it's for, what it includes and how much.",
+    "clientCedulaLabel": "Client ID number",
+    "clientCedulaHint": "With the ID we pull the name. If you don't have it, type the name below.",
+    "clientCedulaSearching": "Looking up the name…",
+    "clientCedulaNotFound": "Not in the registry. Type the name below.",
+    "taxIncludedShort": "VAT included",
+    "taxAddShort": "Add 13%",
+    "taxExemptShort": "No VAT",
+    "downloadPdf": "Download PDF",
+    "sharePdf": "Share PDF",
+    "preparingPdf": "Building the PDF…",
+    "writeClient": "Message on WhatsApp",
+    "acceptedOn": "Accepted on {date}"
   }
 }

@@ -6,7 +6,7 @@ import { ChevronRight, Plus, ReceiptText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatColones } from "@/lib/pricing";
 import { isQuoteExpired, type Quote } from "@/lib/quotes";
-import { QuoteEditorModal } from "@/components/quotes/quote-editor-modal";
+import { QuoteEditorModal, type ServicioDelPro } from "@/components/quotes/quote-editor-modal";
 import { QuoteDetailModal } from "@/components/quotes/quote-detail-modal";
 
 const DATE_LOCALE: Record<string, string> = { es: "es-CR", en: "en-US" };
@@ -16,7 +16,7 @@ type Filtro = "all" | "open" | "accepted" | "closed";
  * La sección "Cotizaciones" del profesional: la lista de lo que ha cotizado y
  * el botón para hacer una nueva. Creada, se abre lista para mandar.
  */
-export function QuotesSection({ proName }: { proName: string }) {
+export function QuotesSection({ proName, servicios = [] }: { proName: string; servicios?: ServicioDelPro[] }) {
   const t = useTranslations("quotes");
   const locale = useLocale();
   const [quotes, setQuotes] = useState<Quote[] | null>(null);
@@ -87,7 +87,7 @@ export function QuotesSection({ proName }: { proName: string }) {
       )}
 
       {editor && (
-        <QuoteEditorModal open onClose={() => setEditor(false)} onSent={(q) => { setQuotes((prev) => [q, ...(prev ?? [])]); setEditor(false); setDetalle({ quote: q, recien: true }); }} />
+        <QuoteEditorModal open onClose={() => setEditor(false)} servicios={servicios} onSent={(q) => { setQuotes((prev) => [q, ...(prev ?? [])]); setEditor(false); setDetalle({ quote: q, recien: true }); }} />
       )}
       {detalle && (
         <QuoteDetailModal quote={detalle.quote} role="pro" open proName={proName} recienCreada={detalle.recien} onClose={() => setDetalle(null)}

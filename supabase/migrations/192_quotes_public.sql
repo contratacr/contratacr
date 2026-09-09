@@ -26,3 +26,4 @@ create unique index if not exists idx_quotes_public_code on public.quotes (publi
 
 -- Toda cotización nueva trae código: la API lo genera, y esto lo garantiza.
 alter table public.quotes alter column public_code set not null;
+

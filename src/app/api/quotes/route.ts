@@ -15,7 +15,7 @@ import { quoteTotals, sanitizeQuoteItems, type QuoteTaxMode } from "@/lib/quotes
  * llave de servicio tras verificar quién es quién.
  */
 const TAX_MODES = new Set<QuoteTaxMode>(["incluido", "mas_iva", "exento"]);
-const SELECT = "id, professional_id, client_id, client_name, client_phone, public_code, booking_id, project_id, proposal_id, title, items, tax_mode, subtotal, tax_amount, total, notes, valid_until, status, accepted_at, declined_at, created_at";
+const SELECT = "id, professional_id, client_id, client_name, client_phone, client_cedula, public_code, booking_id, project_id, proposal_id, title, items, tax_mode, subtotal, tax_amount, total, notes, valid_until, status, accepted_at, declined_at, created_at";
 
 // Código del enlace público: 12 caracteres de un alfabeto sin ambigüedades.
 const ALFABETO = "abcdefghjkmnpqrstuvwxyz23456789";
@@ -82,6 +82,7 @@ export async function POST(req: NextRequest) {
   const projectId = typeof body.projectId === "string" ? body.projectId : null;
   const clientName = String(body.clientName ?? "").replace(/\s+/g, " ").trim().slice(0, 80) || null;
   const clientPhone = String(body.clientPhone ?? "").replace(/[^\d+]/g, "").slice(0, 20) || null;
+  const clientCedula = String(body.clientCedula ?? "").replace(/\D/g, "").slice(0, 20) || null;
   if (!bookingId && !projectId && !clientName) return NextResponse.json({ error: "Escribe para quién es la cotización." }, { status: 400 });
 
   // El contexto tiene que ser del profesional: su cita, o un proyecto que respondió.
@@ -101,7 +102,7 @@ export async function POST(req: NextRequest) {
 
   const totals = quoteTotals(items, taxMode);
   const insert = {
-    professional_id: me.proId, client_id: clientId, client_name: clientName, client_phone: clientPhone, public_code: codigoPublico(),
+    professional_id: me.proId, client_id: clientId, client_name: clientName, client_phone: clientPhone, client_cedula: clientCedula, public_code: codigoPublico(),
     booking_id: bookingId, project_id: projectId, proposal_id: proposalId,
     title: title ?? (contextTitle || null), items, tax_mode: taxMode, ...totals, notes, valid_until: validUntil, status: "sent",
     ...writeSourceColumns(req),
