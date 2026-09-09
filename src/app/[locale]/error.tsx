@@ -70,6 +70,31 @@ export default function LocaleError({
   const retry = unstable_retry ?? reset ?? (() => window.location.reload());
   const errorKind = getRuntimeErrorKind(error, offline);
 
+  // Cuando el problema es de conexión o del servidor, la pantalla se recupera
+  // sola: al volver la red, al volver a la pestaña, y con un reintento a los
+  // pocos segundos. Antes había que darle a "Reintentar" a mano aunque el
+  // servicio ya estuviera de vuelta.
+  useEffect(() => {
+    if (errorKind !== "unavailable" && errorKind !== "offline") return;
+    let intentos = 0;
+    const reintentar = () => {
+      if (intentos >= 3) return;
+      intentos += 1;
+      retry();
+    };
+    const alVolverLaRed = () => { setOffline(false); reintentar(); };
+    const alVolverALaPestana = () => { if (document.visibilityState === "visible") reintentar(); };
+    const espera = window.setTimeout(reintentar, 5000);
+    window.addEventListener("online", alVolverLaRed);
+    document.addEventListener("visibilitychange", alVolverALaPestana);
+    return () => {
+      window.clearTimeout(espera);
+      window.removeEventListener("online", alVolverLaRed);
+      document.removeEventListener("visibilitychange", alVolverALaPestana);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [errorKind]);
+
   if (errorKind === "offline") {
     return (
       <ErrorScreen
