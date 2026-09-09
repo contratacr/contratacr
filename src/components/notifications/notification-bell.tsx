@@ -176,8 +176,6 @@ export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "o
     return () => document.removeEventListener("pointerdown", onPointerDown);
   }, [menuOpen]);
 
-  if (!user) return null;
-
   const openNotifications = () => {
     setMenuOpen(false);
     router.push(`/${locale}/notificaciones`);
@@ -338,6 +336,8 @@ export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "o
           </button>
         </div>
   );
+
+  if (!user) return null;
 
   return (
     <div ref={menuRef} className="relative">
