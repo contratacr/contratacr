@@ -4,7 +4,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { PublicQuote, type PublicQuoteData } from "@/components/quotes/public-quote";
 import { proDisplayName } from "@/lib/utils";
 import { enlacePerfil } from "@/lib/profile-url";
-import { whatsappDigits, type Quote } from "@/lib/quotes";
+import { codigoDeEnlace, whatsappDigits, type Quote } from "@/lib/quotes";
 import { getCategoryGroupId, getCategoryGroupLabel, getCategoryLabel } from "@/lib/data/categories";
 
 /**
@@ -24,7 +24,10 @@ function oficioDe(professions: string[] | null | undefined, categoryId: string |
   return grupos.size === 1 ? getCategoryGroupLabel([...grupos][0], locale) : "";
 }
 
-async function cargar(code: string, locale: string): Promise<PublicQuoteData | null> {
+async function cargar(tramo: string, locale: string): Promise<PublicQuoteData | null> {
+  // El enlace es "sg-solutions-0003-k7m2xq9a"; la llave es lo último. Los
+  // enlaces viejos, que eran solo el código, siguen funcionando.
+  const code = codigoDeEnlace(tramo);
   if (!/^[a-z0-9]{8,20}$/i.test(code)) return null;
   const admin = createAdminClient();
   const { data: q } = await admin.from("quotes")

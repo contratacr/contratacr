@@ -33,11 +33,37 @@ export type Quote = {
   professional_name?: string | null;
 };
 
-/** El enlace público que se manda al cliente. */
-export function enlaceCotizacion(code: string, baseUrl?: string): string {
-  let base = (baseUrl || process.env.NEXT_PUBLIC_APP_URL || "https://contratacr.com").replace(/\/$/, "");
+/** El nombre en minúsculas y con guiones: "sg-solutions". */
+function conGuiones(texto: string): string {
+  return (texto || "")
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 40);
+}
+
+/**
+ * El enlace público. Se lee igual que el nombre del archivo
+ * (contratacr.com/cotizacion/sg-solutions-0003-k7m2xq9a) y termina con el
+ * código al azar, que es la llave: sin él nadie puede abrir ni aceptar una
+ * cotización ajena, y por eso el enlace no se puede adivinar.
+ *
+ * La base es el sitio donde la cotización EXISTE: en test, test.contratacr.com;
+ * en producción, contratacr.com. Solo las vistas previas de Vercel se mandan al
+ * dominio de verdad, porque esa dirección no se comparte con nadie.
+ */
+export function enlaceCotizacion(quote: Pick<Quote, "public_code" | "quote_number">, proName = "", baseUrl?: string): string {
+  const origen = baseUrl || (typeof window !== "undefined" ? window.location.origin : "") || process.env.NEXT_PUBLIC_APP_URL || "https://contratacr.com";
+  let base = origen.replace(/\/$/, "");
   if (/\.vercel\.app$/i.test(base.replace(/^https?:\/\//, "").split("/")[0])) base = "https://contratacr.com";
-  return `${base}/cotizacion/${code}`;
+  const marca = conGuiones(proName);
+  const numero = quote.quote_number ? String(quote.quote_number).padStart(4, "0") : "";
+  const tramo = [marca, numero, quote.public_code].filter(Boolean).join("-");
+  return `${base}/cotizacion/${tramo}`;
+}
+
+/** De "sg-solutions-0003-k7m2xq9a" saca "k7m2xq9a": el código es lo último. */
+export function codigoDeEnlace(tramo: string): string {
+  const partes = String(tramo || "").toLowerCase().split("-").filter(Boolean);
+  return partes[partes.length - 1] ?? "";
 }
 
 /** "0007" — el consecutivo como se lee en el documento. */
@@ -55,6 +81,17 @@ export function nombreArchivoCotizacion(quote: Pick<Quote, "quote_number" | "pub
     .replace(/[^A-Za-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 40);
   const numero = quote.quote_number ? numeroCotizacion(quote) : quote.public_code.slice(0, 6);
   return ["Cotizacion", marca, numero].filter(Boolean).join("-");
+}
+
+/**
+ * Los tres montos como se leen: con el IVA ya dentro del precio, el subtotal es
+ * la base (total menos IVA) para que las tres líneas SUMEN. Antes se mostraba
+ * subtotal = total y parecía un error.
+ */
+export function desgloseQuote(quote: Pick<Quote, "subtotal" | "tax_amount" | "total" | "tax_mode">) {
+  if (quote.tax_mode === "incluido") return { base: quote.total - quote.tax_amount, iva: quote.tax_amount, total: quote.total };
+  if (quote.tax_mode === "mas_iva") return { base: quote.subtotal, iva: quote.tax_amount, total: quote.total };
+  return { base: quote.subtotal, iva: 0, total: quote.total };
 }
 
 /** Solo dígitos, con el 506 de Costa Rica si viene sin código de país. */

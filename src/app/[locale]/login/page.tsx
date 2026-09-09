@@ -139,6 +139,8 @@ export default function LoginPage() {
   // the provider button and show a specific message.
   const [socialHint, setSocialHint] = useState<"google" | "apple" | null>(null);
   const router = useRouter();
+  // La portada siempre abre en "Buscar servicios": es lo que hace la mayoría, y
+  // volver de "Ofrecer" no debe dejar marcado lo de la vez pasada.
   const [rolPortada, setRolPortada] = useState<WelcomeRole>("client");
   const [formularioAbierto, setFormularioAbierto] = useState(false);
   const [hidratado, setHidratado] = useState(false);
@@ -499,15 +501,16 @@ export default function LoginPage() {
           {/* Same card container as the client ("Crear cuenta de cliente") and
               professional registrations — clean white card, hairline border, soft
               shadow, p-8 — so the whole auth flow (login + both signups) is consistent. */}
-          {/* Volver va ARRIBA de la tarjeta, no dentro: metido entre el borde y el
-              título empujaba el encabezado y se leía como parte del formulario. */}
+          {/* Volver a la portada: una flecha en la esquina, como en las demás
+              pantallas de la app. Como botón con texto encima de la tarjeta
+              empujaba el encabezado y parecía parte del formulario. */}
           <button
             type="button"
-            onClick={() => setFormularioAbierto(false)}
-            className="mb-3 -ml-2 inline-flex h-10 items-center gap-1.5 rounded-full px-2 text-sm font-bold text-[#526277] transition-colors hover:bg-[#eef4f9] hover:text-[#162543] lg:hidden"
+            onClick={() => { setFormularioAbierto(false); setRolPortada("client"); }}
+            aria-label={t("back")}
+            className="fixed left-3 top-[max(env(safe-area-inset-top),0.75rem)] z-20 grid h-10 w-10 place-items-center rounded-full bg-white/90 text-[#162543] shadow-[0_6px_18px_-10px_rgba(15,23,42,0.5)] backdrop-blur transition-colors hover:bg-white lg:hidden"
           >
-            <ArrowLeft className="h-4 w-4" />
-            {t("back")}
+            <ArrowLeft className="h-5 w-5" />
           </button>
           <div className="bg-white rounded-3xl shadow-sm border border-[#e5e7eb] p-8">
           <div className="text-center mb-8">

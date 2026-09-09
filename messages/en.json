@@ -4090,7 +4090,7 @@
     "taxIncluded": "Prices already include VAT",
     "taxAdd": "Add 13% VAT",
     "taxExempt": "No VAT",
-    "notesLabel": "Notes (optional)",
+    "notesLabel": "Note (optional)",
     "notesPlaceholder": "E.g.: materials not included. Office hours only.",
     "validLabel": "Valid for",
     "days": "{count, plural, one {# day} other {# days}}",
@@ -4196,6 +4196,10 @@
     "boundaryTitle": "We couldn't load your quotes",
     "boundaryBody": "This was a problem with the screen, not with your data. Try again; if it keeps happening, contact support.",
     "boundaryRetry": "Try again",
-    "imageTitleNumbered": "QUOTE No. {number}"
+    "imageTitleNumbered": "QUOTE No. {number}",
+    "totalWithTax": "VAT included",
+    "totalPlusTax": "VAT included in the total",
+    "totalNoTax": "No VAT",
+    "noteLabel": "Note"
   }
 }

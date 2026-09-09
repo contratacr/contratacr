@@ -1,5 +1,6 @@
 "use client";
 
+import { cn } from "@/lib/utils";
 import { useEffect, useState } from "react";
 import { ArrowLeft } from "lucide-react";
 import { useSwitchLang } from "@/components/landing/landing-navbar";
@@ -147,14 +148,32 @@ export function WelcomeAccessScreen({
             </span>
           </button>
 
-          {/* El idioma es lo único del menú que hace falta aquí. */}
-          <button
-            type="button"
-            onClick={() => switchLang(english ? "es" : "en")}
-            className="mt-1 inline-flex min-h-9 items-center justify-center px-3 text-[13px] font-semibold text-white/60"
+          {/* El idioma: los dos a la vista, con el que está puesto encendido.
+              Suelto abajo se leía como un enlace más y no se entendía que era
+              un cambio de idioma. */}
+          <div
+            role="group"
+            aria-label={english ? "Language" : "Idioma"}
+            className="mx-auto mt-4 inline-grid grid-cols-2 gap-1 rounded-full border border-white/25 bg-white/10 p-1 backdrop-blur-[3px]"
           >
-            {english ? "Español" : "English"}
-          </button>
+            {([["es", "Español"], ["en", "English"]] as const).map(([codigo, nombre]) => {
+              const puesto = english ? codigo === "en" : codigo === "es";
+              return (
+                <button
+                  key={codigo}
+                  type="button"
+                  onClick={() => { if (!puesto) switchLang(codigo); }}
+                  aria-pressed={puesto}
+                  className={cn(
+                    "min-h-9 rounded-full px-4 text-[13px] font-bold transition-colors",
+                    puesto ? "bg-white text-[#0b2440]" : "text-white/75 hover:text-white",
+                  )}
+                >
+                  {nombre}
+                </button>
+              );
+            })}
+          </div>
         </section>
       </div>
     </div>

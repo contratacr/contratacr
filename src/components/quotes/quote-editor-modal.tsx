@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { CedulaInput } from "@/components/ui/cedula-input";
 import { PhoneInput } from "@/components/ui/phone-input";
 import { cleanId, isValidId } from "@/lib/cedula";
-import { formatColones } from "@/lib/pricing";
+import { Totales } from "@/components/quotes/quote-detail-modal";
 import { quoteTotals, QUOTE_MAX_ITEMS, type Quote, type QuoteItem, type QuoteTaxMode } from "@/lib/quotes";
 
 /**
@@ -18,13 +18,12 @@ import { quoteTotals, QUOTE_MAX_ITEMS, type Quote, type QuoteItem, type QuoteTax
  * opciones cortas en vez de tres tarjetas.
  */
 type Row = { id: number; description: string; quantity: string; unit_price: string };
-export type ServicioDelPro = { name: string; price?: string | number | null };
 let seq = 1;
 const nuevaFila = (): Row => ({ id: seq++, description: "", quantity: "1", unit_price: "" });
 
-export function QuoteEditorModal({ open, onClose, bookingId, projectId, defaultTitle, servicios = [], onSent }: {
+export function QuoteEditorModal({ open, onClose, bookingId, projectId, defaultTitle, onSent }: {
   open: boolean; onClose: () => void; bookingId?: string | null; projectId?: string | null; defaultTitle?: string;
-  servicios?: ServicioDelPro[]; onSent: (quote: Quote) => void;
+  onSent: (quote: Quote) => void;
 }) {
   const t = useTranslations("quotes");
   const suelta = !bookingId && !projectId;
@@ -72,16 +71,6 @@ export function QuoteEditorModal({ open, onClose, bookingId, projectId, defaultT
   const totals = quoteTotals(items, taxMode);
   const setRow = (id: number, patch: Partial<Row>) => setRows((prev) => prev.map((r) => (r.id === id ? { ...r, ...patch } : r)));
   const listo = items.length > 0 && (!suelta || clientName.trim().length > 0);
-
-  // Los servicios del profesional, para poner un renglón de un toque.
-  function agregarServicio(s: ServicioDelPro) {
-    const precio = String(s.price ?? "").replace(/[^\d]/g, "");
-    setRows((prev) => {
-      const vacia = prev.find((r) => !r.description.trim());
-      if (vacia) return prev.map((r) => (r.id === vacia.id ? { ...r, description: s.name, unit_price: precio || r.unit_price } : r));
-      return [...prev, { id: seq++, description: s.name, quantity: "1", unit_price: precio }];
-    });
-  }
 
   async function enviar() {
     if (suelta && !clientName.trim()) { setError(t("errorNeedsClient")); return; }
@@ -138,15 +127,6 @@ export function QuoteEditorModal({ open, onClose, bookingId, projectId, defaultT
 
           <div className="mt-4">
             <span className={rotulo}>{t("itemsLabel")}</span>
-            {servicios.length > 0 && (
-              <div className="scrollbar-none -mx-1 mb-2.5 flex gap-1.5 overflow-x-auto px-1 pb-1">
-                {servicios.slice(0, 8).map((s) => (
-                  <button key={s.name} type="button" onClick={() => agregarServicio(s)} className="h-8 shrink-0 rounded-full border border-[#d7e1ea] bg-white px-3 text-[12px] font-bold text-[#162543] transition-colors hover:border-[#bfe3f5] hover:bg-[#f8fcfe]">
-                    + {s.name}
-                  </button>
-                ))}
-              </div>
-            )}
             <div className="flex flex-col gap-2">
               {rows.map((r) => (
                 <div key={r.id} className="rounded-2xl border border-[#e5eaf0] bg-[#fafcfd] p-3">
@@ -188,14 +168,7 @@ export function QuoteEditorModal({ open, onClose, bookingId, projectId, defaultT
           </label>
         </section>
 
-        <div className="rounded-2xl bg-[#f4f7fa] px-4 py-3.5 text-[14px]">
-          <div className="flex justify-between text-[#52627a]"><span>{t("subtotal")}</span><span>{formatColones(totals.subtotal)}</span></div>
-          {taxMode !== "exento" && <div className="mt-1 flex justify-between text-[#52627a]"><span>{t("tax")}</span><span>{formatColones(totals.tax_amount)}</span></div>}
-          <div className="mt-2.5 flex items-baseline justify-between border-t border-[#dbe4ee] pt-2.5 text-[18px] font-extrabold text-[#162543]">
-            <span>{t("total")}</span>
-            <span>{formatColones(totals.total)} {taxMode !== "exento" && <span className="text-[11px] font-semibold text-[#68778d]">{t("ivaIncluded")}</span>}</span>
-          </div>
-        </div>
+        <Totales quote={{ ...totals, tax_mode: taxMode }} />
       </div>
     </Modal>
   );

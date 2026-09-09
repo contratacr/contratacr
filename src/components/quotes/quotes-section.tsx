@@ -6,7 +6,7 @@ import { Check, ChevronRight, Clock3, Plus, ReceiptText, X } from "lucide-react"
 import { Button } from "@/components/ui/button";
 import { formatColones } from "@/lib/pricing";
 import { isQuoteExpired, type Quote } from "@/lib/quotes";
-import { QuoteEditorModal, type ServicioDelPro } from "@/components/quotes/quote-editor-modal";
+import { QuoteEditorModal } from "@/components/quotes/quote-editor-modal";
 import { QuoteDetailModal } from "@/components/quotes/quote-detail-modal";
 import { QuotesBoundary } from "@/components/quotes/quotes-boundary";
 
@@ -17,7 +17,7 @@ type Filtro = "all" | "open" | "accepted" | "closed";
  * La sección "Cotizaciones" del profesional: la lista de lo que ha cotizado y
  * el botón para hacer una nueva. Creada, se abre lista para mandar.
  */
-export function QuotesSection(props: { proName: string; servicios?: ServicioDelPro[]; puedeCrear?: boolean }) {
+export function QuotesSection(props: { proName: string; puedeCrear?: boolean }) {
   const t = useTranslations("quotes");
   return (
     <QuotesBoundary titulo={t("boundaryTitle")} cuerpo={t("boundaryBody")} reintentar={t("boundaryRetry")}>
@@ -26,7 +26,7 @@ export function QuotesSection(props: { proName: string; servicios?: ServicioDelP
   );
 }
 
-function Cotizaciones({ proName, servicios = [], puedeCrear = true }: { proName: string; servicios?: ServicioDelPro[]; puedeCrear?: boolean }) {
+function Cotizaciones({ proName, puedeCrear = true }: { proName: string; puedeCrear?: boolean }) {
   const t = useTranslations("quotes");
   const locale = useLocale();
   const [quotes, setQuotes] = useState<Quote[] | null>(null);
@@ -111,7 +111,7 @@ function Cotizaciones({ proName, servicios = [], puedeCrear = true }: { proName:
       )}
 
       {editor && (
-        <QuoteEditorModal open onClose={() => setEditor(false)} servicios={servicios} onSent={(q) => { setQuotes((prev) => [q, ...(prev ?? [])]); setEditor(false); setDetalle({ quote: q, recien: true }); }} />
+        <QuoteEditorModal open onClose={() => setEditor(false)} onSent={(q) => { setQuotes((prev) => [q, ...(prev ?? [])]); setEditor(false); setDetalle({ quote: q, recien: true }); }} />
       )}
       {detalle && (
         <QuoteDetailModal quote={detalle.quote} role="pro" open proName={proName} recienCreada={detalle.recien} onClose={() => setDetalle(null)}

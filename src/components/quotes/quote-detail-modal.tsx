@@ -7,7 +7,7 @@ import { Modal } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
 import { useAppDialog } from "@/hooks/use-app-dialog";
 import { formatColones } from "@/lib/pricing";
-import { isQuoteExpired, whatsappDigits, type Quote } from "@/lib/quotes";
+import { desgloseQuote, isQuoteExpired, whatsappDigits, type Quote } from "@/lib/quotes";
 import { QuoteShare } from "@/components/quotes/quote-share";
 
 const DATE_LOCALE: Record<string, string> = { es: "es-CR", en: "en-US" };
@@ -17,6 +17,23 @@ const DATE_LOCALE: Record<string, string> = { es: "es-CR", en: "en-US" };
  * (enlace, WhatsApp, imagen) y puede retirarla. `recienCreada` es la pantalla
  * de "lista para enviar" justo después de crearla.
  */
+/** Base + IVA = total. Con el IVA dentro del precio, el subtotal es la base. */
+export function Totales({ quote }: { quote: Pick<Quote, "subtotal" | "tax_amount" | "total" | "tax_mode"> }) {
+  const t = useTranslations("quotes");
+  const m = desgloseQuote(quote);
+  const nota = quote.tax_mode === "incluido" ? t("totalWithTax") : quote.tax_mode === "mas_iva" ? t("totalPlusTax") : t("totalNoTax");
+  return (
+    <div className="rounded-2xl bg-[#f4f7fa] px-4 py-3.5 text-[14px]">
+      <div className="flex justify-between text-[#52627a]"><span>{t("subtotal")}</span><span>{formatColones(m.base)}</span></div>
+      {quote.tax_mode !== "exento" && <div className="mt-1 flex justify-between text-[#52627a]"><span>{t("tax")}</span><span>{formatColones(m.iva)}</span></div>}
+      <div className="mt-2.5 flex items-baseline justify-between border-t border-[#dbe4ee] pt-2.5 text-[17px] font-extrabold text-[#162543]">
+        <span>{t("total")}</span><span>{formatColones(m.total)}</span>
+      </div>
+      <p className="mt-0.5 text-right text-[12px] font-semibold text-[#68778d]">{nota}</p>
+    </div>
+  );
+}
+
 export function QuoteDetailModal({ quote, role, open, onClose, onChanged, proName, recienCreada = false }: {
   quote: Quote; role: "client" | "pro"; open: boolean; onClose: () => void; onChanged: (q: Quote) => void; proName?: string; recienCreada?: boolean;
 }) {
@@ -96,11 +113,7 @@ export function QuoteDetailModal({ quote, role, open, onClose, onChanged, proNam
               </div>
             ))}
           </div>
-          <div className="rounded-2xl bg-[#f4f7fa] px-4 py-3 text-[14px]">
-            <div className="flex justify-between text-[#52627a]"><span>{t("subtotal")}</span><span>{formatColones(quote.subtotal)}</span></div>
-            {quote.tax_mode !== "exento" && <div className="mt-1 flex justify-between text-[#52627a]"><span>{t("tax")}</span><span>{formatColones(quote.tax_amount)}</span></div>}
-            <div className="mt-2 flex justify-between border-t border-[#dbe4ee] pt-2 text-[16px] font-extrabold text-[#162543]"><span>{t("total")}</span><span>{formatColones(quote.total)} <span className="text-[11px] font-semibold text-[#68778d]">{t("ivaIncluded")}</span></span></div>
-          </div>
+          <Totales quote={quote} />
           {quote.notes && <p className="whitespace-pre-line text-[14px] leading-6 text-[#52627a]">{quote.notes}</p>}
         </div>
       </Modal>

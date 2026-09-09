@@ -11,6 +11,7 @@ import { formatColones } from "@/lib/pricing";
 import { getInitials } from "@/lib/utils";
 import { cldThumb } from "@/lib/cloudinary";
 import { isQuoteExpired, type Quote } from "@/lib/quotes";
+import { Totales } from "@/components/quotes/quote-detail-modal";
 
 export type PublicQuoteData = {
   quote: Quote;
@@ -120,11 +121,7 @@ export function PublicQuote({ locale, data }: { locale: string; data: PublicQuot
               </div>
             ))}
           </div>
-          <div className="mt-3 rounded-2xl bg-[#f4f7fa] px-4 py-3 text-[14px]">
-            <div className="flex justify-between text-[#52627a]"><span>{t("subtotal")}</span><span>{formatColones(quote.subtotal)}</span></div>
-            {quote.tax_mode !== "exento" && <div className="mt-1 flex justify-between text-[#52627a]"><span>{t("tax")}</span><span>{formatColones(quote.tax_amount)}</span></div>}
-            <div className="mt-2 flex justify-between border-t border-[#dbe4ee] pt-2 text-[18px] font-extrabold text-[#162543]"><span>{t("total")}</span><span>{formatColones(quote.total)} <span className="text-[11px] font-semibold text-[#68778d]">{t("ivaIncluded")}</span></span></div>
-          </div>
+          <div className="mt-3"><Totales quote={quote} /></div>
           {quote.notes && <p className="mt-4 whitespace-pre-line text-[14px] leading-6 text-[#52627a]">{quote.notes}</p>}
           {fecha && abierta && <p className="mt-4 text-[13px] text-[#68778d]">{t("validUntil", { date: fecha })}</p>}
         </div>

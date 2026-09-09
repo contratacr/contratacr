@@ -2458,9 +2458,6 @@ export default function DashboardPage() {
                           <QuotesSection
                             proName={professionalDisplayName}
                             puedeCrear={!!pro?.id}
-                            servicios={((pro?.services ?? []) as Array<{ name?: string; price?: string | number | null; active?: boolean }>)
-                              .filter((s) => s?.name && s.active !== false)
-                              .map((s) => ({ name: String(s.name), price: s.price }))}
                           />
                         )}
                         {activeTab === "proposals" && pro && (

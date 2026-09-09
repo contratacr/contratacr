@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { Download, FileText, Share2 } from "lucide-react";
+import { Download, Loader2, Share2 } from "lucide-react";
 import { ShareLinkPanel } from "@/components/ui/share-link-panel";
 import { useNativeShare } from "@/hooks/use-native-share";
 import { formatColones } from "@/lib/pricing";
@@ -22,7 +22,7 @@ export function QuoteShare({ quote, proName }: { quote: Quote; proName: string }
   const nativo = useNativeShare();
   const [pdf, setPdf] = useState<Blob | null>(null);
   const preparando = pdf === null;
-  const url = enlaceCotizacion(quote.public_code);
+  const url = enlaceCotizacion(quote, proName);
   const mensaje = t("whatsappMessage", {
     name: quote.client_name ? ` ${quote.client_name.split(" ")[0]}` : "",
     title: quote.title ? ` de ${quote.title}` : "",
@@ -38,7 +38,9 @@ export function QuoteShare({ quote, proName }: { quote: Quote; proName: string }
     let vivo = true;
     void renderQuotePdf(quote, proName, {
       titulo: quote.quote_number ? t("imageTitleNumbered", { number: numeroCotizacion(quote) }) : t("imageTitle"), cliente: t("clientLabel"), vigente: fecha ? t("imageValidUntil", { date: fecha }) : "",
-      subtotal: t("subtotal"), iva: t("tax"), total: t("total"), ivai: t("ivaIncluded"), pie: t("imageFooter"), deQuien: t("publicFrom"),
+      subtotal: t("subtotal"), iva: t("tax"), total: t("total"),
+      totalNota: quote.tax_mode === "incluido" ? t("totalWithTax") : quote.tax_mode === "mas_iva" ? t("totalPlusTax") : t("totalNoTax"),
+      pie: t("imageFooter"), deQuien: t("publicFrom"), nota: t("noteLabel"),
     }, fecha).then((b) => { if (vivo) setPdf(b); });
     return () => { vivo = false; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -65,9 +67,11 @@ export function QuoteShare({ quote, proName }: { quote: Quote; proName: string }
       <a href={wa} target="_blank" rel="noopener noreferrer" className="inline-flex h-11 w-full items-center justify-center rounded-full bg-[#25d366] px-5 text-[14px] font-bold text-white transition-colors hover:bg-[#1da851]">
         {t("sendWhatsApp")}
       </a>
+      {/* Un solo rótulo de principio a fin: cambiarlo al terminar el PDF se
+          veía como un parpadeo. Mientras se arma, el botón espera apagado. */}
       <button type="button" disabled={!pdf} onClick={() => void (nativo ? compartirPdf() : descargarPdf())} className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-full border border-[#d7e1ea] bg-white px-5 text-[14px] font-bold text-[#162543] transition-colors hover:border-[#b9c8d6] hover:bg-[#f6f9fb] disabled:opacity-60">
-        {preparando ? <FileText className="h-4 w-4" /> : nativo ? <Share2 className="h-4 w-4" /> : <Download className="h-4 w-4" />}
-        {preparando ? t("preparingPdf") : nativo ? t("sharePdf") : t("downloadPdf")}
+        {preparando ? <Loader2 className="h-4 w-4 animate-spin" /> : nativo ? <Share2 className="h-4 w-4" /> : <Download className="h-4 w-4" />}
+        {nativo ? t("sharePdf") : t("downloadPdf")}
       </button>
     </div>
   );

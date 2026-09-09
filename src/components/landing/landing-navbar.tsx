@@ -1662,7 +1662,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
             // En la app la línea aparece solo al desplazar.
             rutaConFiltrosPegados
               ? "border-transparent shadow-none"
-              : nativeApp
+              : nativeHeaderShell
                 ? cn("transition-[border-color,box-shadow] duration-200", contenidoDebajo || lienzoBlanco
                     ? "border-gray-100/80 shadow-[0_10px_34px_-24px_rgba(15,23,42,0.55)]"
                     : "border-transparent shadow-none")
@@ -2469,7 +2469,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
               <nav className="flex flex-col gap-1">
                 {user ? (
                   <>
-                    {!nativeApp && (
+                    {!nativeHeaderShell && (
                       <Link href={primaryPanelHref} onClick={() => setMobileOpen(false)} className={cn(mobileDrawerStrongItemClass, enRutaDelCajon(primaryPanelHref) && "text-[#009FD9]")}>
                         <DrawerIcon><UserRound /></DrawerIcon>
                         <span className={mobileDrawerTextClass}>{locale === "en" ? "My dashboard" : "Mi panel"}</span>
@@ -2497,7 +2497,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                     </Link>
                     {/* En la app, el profesional tiene Cotizaciones en la barra de
                         abajo donde antes estaba el Asistente; el Asistente vive aquí. */}
-                    {nativeApp && isPro && (
+                    {nativeHeaderShell && isPro && (
                       <button type="button" onClick={() => { setMobileOpen(false); window.dispatchEvent(new Event("contratacr:open-ai")); }} className={mobileDrawerItemClass}>
                         <DrawerIcon><Bot /></DrawerIcon>
                         <span className={mobileDrawerTextClass}>{tNav("assistant")}</span>
@@ -2509,7 +2509,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                   <DrawerIcon><Wrench /></DrawerIcon>
                   <span className={mobileDrawerTextClass}>{t("categories")}</span>
                 </Link>
-                {!nativeApp && (
+                {!nativeHeaderShell && (
                   <>
                 {EMPLEOS_VISIBLE && (
                   <Link href="/empleos" onClick={(event) => { setMobileOpen(false); navigateNativeMarketplace(event, "/empleos"); }} className={claseCajon("/empleos")}>
@@ -2576,7 +2576,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                         <ResourceIcon name="support" />
                         <span className={mobileDrawerTextClass}>{t("resourceLinks.support")}</span>
                       </SupportLink>
-                      {nativeApp && (
+                      {nativeHeaderShell && (
                         <>
                           <Link href="/terminos" onClick={() => setMobileOpen(false)} className={mobileDrawerSubItemClass}>
                             <ResourceIcon name="terms" />

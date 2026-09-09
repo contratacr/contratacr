@@ -4090,7 +4090,7 @@
     "taxIncluded": "Los precios ya incluyen IVA",
     "taxAdd": "Sumar 13% de IVA",
     "taxExempt": "Sin IVA",
-    "notesLabel": "Notas (opcional)",
+    "notesLabel": "Nota (opcional)",
     "notesPlaceholder": "Ej.: no incluye materiales. Se trabaja en horario de oficina.",
     "validLabel": "Vigente por",
     "days": "{count, plural, one {# día} other {# días}}",
@@ -4196,6 +4196,10 @@
     "boundaryTitle": "No se pudieron cargar tus cotizaciones",
     "boundaryBody": "Fue un problema de esta pantalla, no de tus datos. Volvé a intentarlo; si sigue igual, escribinos por soporte.",
     "boundaryRetry": "Volver a intentar",
-    "imageTitleNumbered": "COTIZACIÓN N.º {number}"
+    "imageTitleNumbered": "COTIZACIÓN N.º {number}",
+    "totalWithTax": "IVA incluido",
+    "totalPlusTax": "IVA incluido en el total",
+    "totalNoTax": "Sin IVA",
+    "noteLabel": "Nota"
   }
 }
