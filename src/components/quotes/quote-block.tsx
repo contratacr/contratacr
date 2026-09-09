@@ -12,6 +12,8 @@ import { QuoteDetailModal } from "@/components/quotes/quote-detail-modal";
  * Lo que ve cada parte dentro de una cita o un proyecto: la última cotización
  * con su estado y, para el profesional, el botón de enviar una.
  */
+const DATE_LOCALE: Record<string, string> = { es: "es-CR", en: "en-US" };
+
 export function QuoteBlock({ bookingId, projectId, role, canCreate = false, defaultTitle, professionalName, asButton = false }: {
   bookingId?: string | null; projectId?: string | null; role: "client" | "pro"; canCreate?: boolean; defaultTitle?: string; professionalName?: string | null;
   /** Solo el botón, con la forma de los demás botones de la tarjeta: va en la fila de acciones. */
@@ -52,7 +54,7 @@ export function QuoteBlock({ bookingId, projectId, role, canCreate = false, defa
     ? t("statusExpired")
     : q.status === "withdrawn"
       ? t("statusWithdrawn")
-      : t("sentOn", { date: new Date(q.created_at).toLocaleDateString(locale === "en" ? "en-US" : "es-CR", { day: "numeric", month: "long" }) });
+      : t("sentOn", { date: new Date(q.created_at).toLocaleDateString(DATE_LOCALE[locale] ?? "es-CR", { day: "numeric", month: "long" }) });
   // Al cliente no se le muestra nada si nunca le cotizaron.
   if (!ultima && role === "client") return null;
   if (!ultima && !canCreate) return null;
