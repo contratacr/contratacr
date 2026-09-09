@@ -37,6 +37,7 @@ export function QuoteEditorModal({ open, onClose, bookingId, projectId, defaultT
   const cedulaSinRegistro = resultadoCedula?.id === cedulaLimpia && !resultadoCedula.encontrada;
   const [clientName, setClientName] = useState("");
   const [clientPhone, setClientPhone] = useState("");
+  const [clientEmail, setClientEmail] = useState("");
   const [title, setTitle] = useState(defaultTitle ?? "");
   const [rows, setRows] = useState<Row[]>([nuevaFila()]);
   const [taxMode, setTaxMode] = useState<QuoteTaxMode>("incluido");
@@ -77,11 +78,11 @@ export function QuoteEditorModal({ open, onClose, bookingId, projectId, defaultT
     if (items.length === 0) { setError(t("errorNeedsItems")); return; }
     setSending(true); setError(null);
     try {
-      const res = await fetch("/api/quotes", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ bookingId, projectId, clientName, clientPhone, clientCedula: cleanId(cedula), title, items, taxMode, notes, validDays }) });
+      const res = await fetch("/api/quotes", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ bookingId, projectId, clientName, clientPhone, clientEmail, clientCedula: cleanId(cedula), title, items, taxMode, notes, validDays }) });
       const d = await res.json().catch(() => ({}));
       if (!res.ok) { setError(res.status === 503 ? t("errorUnavailable") : d.error ?? t("errorTitle")); return; }
       onSent(d.quote as Quote);
-      setRows([nuevaFila()]); setNotes(""); setTitle(defaultTitle ?? ""); setClientName(""); setClientPhone(""); setCedula("");
+      setRows([nuevaFila()]); setNotes(""); setTitle(defaultTitle ?? ""); setClientName(""); setClientPhone(""); setClientEmail(""); setCedula("");
     } catch { setError(t("errorTitle")); } finally { setSending(false); }
   }
 
@@ -114,7 +115,11 @@ export function QuoteEditorModal({ open, onClose, bookingId, projectId, defaultT
                 <input value={clientName} onChange={(e) => setClientName(e.target.value.slice(0, 80))} placeholder={t("clientNamePlaceholder")} className={campo} />
               </label>
               <PhoneInput value={clientPhone} onChange={setClientPhone} label={t("clientPhoneLabel")} optional />
-              <p className="text-[12px] leading-snug text-[#68778d]">{t("clientPhoneHint")}</p>
+              <label className="block">
+                <span className={rotulo}>{t("clientEmailLabel")}</span>
+                <input type="email" inputMode="email" value={clientEmail} onChange={(e) => setClientEmail(e.target.value.slice(0, 120))} placeholder={t("clientEmailPlaceholder")} className={campo} />
+              </label>
+              <p className="text-[12px] leading-snug text-[#68778d]">{t("clientContactHint")}</p>
             </div>
           </section>
         )}

@@ -1,6 +1,5 @@
 "use client";
 
-import QRCode from "qrcode";
 import { formatColones } from "@/lib/pricing";
 import { desgloseQuote, enlaceCotizacion, type Quote } from "@/lib/quotes";
 
@@ -17,6 +16,15 @@ type Textos = {
   titulo: string; cliente: string; vigente: string; subtotal: string; iva: string; total: string;
   totalNota: string; pie: string; deQuien: string; nota: string;
 };
+
+/** Datos del cliente que van bajo su nombre, si el profesional los puso. */
+function datosCliente(quote: Quote): string[] {
+  const filas: string[] = [];
+  if (quote.client_cedula) filas.push(`Cédula ${quote.client_cedula}`);
+  if (quote.client_phone) filas.push(quote.client_phone.replace(/^506/, "").replace(/(\d{4})(\d{4})/, "$1-$2"));
+  if (quote.client_email) filas.push(quote.client_email);
+  return filas;
+}
 
 /** Dónde quedó el enlace dentro del lienzo, para volverlo clicable en el PDF. */
 export type Dibujo = { canvas: HTMLCanvasElement; enlace: { x: number; y: number; w: number; h: number; url: string } };
@@ -78,12 +86,12 @@ async function dibujar(quote: Quote, proName: string, textos: Textos, fechaVigen
 
   // Alturas de cada bloque, de arriba abajo.
   const altoBanda = 200;
-  const altoQuien = 60 + 46 + 24;
+  const altoQuien = 60 + 44 + Math.max(0, datosCliente(quote).length * 32 - 10) + 30;
   const altoTitulo = (lineasTitulo.length ? lineasTitulo.length * 44 + 12 : 0) + (fechaVigencia ? 40 : 0) + (lineasTitulo.length || fechaVigencia ? 30 : 0);
   const altoRenglones = filas.reduce((acc, f) => acc + f.alto, 0) + 20;
   const altoTotales = (quote.tax_mode !== "exento" ? 190 : 130) + 40;
   const altoNotas = lineasNotas.length ? lineasNotas.length * 36 + 70 : 0;
-  const altoPie = 330;
+  const altoPie = 200;
   const H = altoBanda + altoQuien + altoTitulo + altoRenglones + altoTotales + altoNotas + altoPie;
 
   const canvas = document.createElement("canvas"); canvas.width = W; canvas.height = H;
@@ -104,17 +112,20 @@ async function dibujar(quote: Quote, proName: string, textos: Textos, fechaVigen
   ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
 
   // Quién cotiza a la izquierda y el cliente a la derecha, como en cualquier
-  // factura: los dos arrancan a la misma altura y no se pisan.
+  // factura: bajo el nombre del cliente van sus datos, si los hay.
+  const datos = datosCliente(quote);
   let y = altoBanda + 60;
   ctx.font = `700 22px ${FUENTE}`; ctx.fillStyle = "#68778d"; ctx.fillText(textos.deQuien.toUpperCase(), M, y);
-  ctx.font = `800 40px ${FUENTE}`; ctx.fillStyle = "#162543"; ctx.fillText(proName, M, y + 46);
+  ctx.font = `800 38px ${FUENTE}`; ctx.fillStyle = "#162543"; ctx.fillText(proName, M, y + 44);
   if (quote.client_name) {
     ctx.textAlign = "right";
     ctx.font = `700 22px ${FUENTE}`; ctx.fillStyle = "#68778d"; ctx.fillText(textos.cliente.toUpperCase(), W - M, y);
-    ctx.font = `700 32px ${FUENTE}`; ctx.fillStyle = "#162543"; ctx.fillText(quote.client_name, W - M, y + 44);
+    ctx.font = `700 30px ${FUENTE}`; ctx.fillStyle = "#162543"; ctx.fillText(quote.client_name, W - M, y + 42);
+    ctx.font = `500 24px ${FUENTE}`; ctx.fillStyle = "#68778d";
+    datos.forEach((linea, i) => ctx.fillText(linea, W - M, y + 78 + i * 32));
     ctx.textAlign = "left";
   }
-  y += 46 + 24;
+  y += 44 + Math.max(0, datos.length * 32 - 10) + 30;
 
   // Título y vigencia, en su propio bloque.
   if (lineasTitulo.length) {
@@ -172,23 +183,20 @@ async function dibujar(quote: Quote, proName: string, textos: Textos, fechaVigen
     y += altoNotas;
   }
 
-  // Pie: enlace y QR. El QR va grande para que una cámara lo lea de lejos.
-  const qrSize = 240;
-  const qrData = await QRCode.toDataURL(url, { margin: 1, width: qrSize * 2, color: { dark: "#162543", light: "#ffffff" }, errorCorrectionLevel: "M" });
-  const qr = await loadImage(qrData);
+  // Pie: el enlace para verla en línea. El QR se fue con la aceptación: ya no
+  // hay nada que hacer escaneando, y ocupaba un cuarto de la hoja.
   const pieY = H - altoPie + 40;
   ctx.fillStyle = "#e5eaf0"; ctx.fillRect(M, pieY - 30, ancho, 2);
-  if (qr) ctx.drawImage(qr, W - M - qrSize, pieY, qrSize, qrSize);
   ctx.font = `600 26px ${FUENTE}`; ctx.fillStyle = "#68778d";
-  partirLineas(ctx, textos.pie, ancho - qrSize - 40).forEach((l, i) => ctx.fillText(l, M, pieY + 40 + i * 34));
+  partirLineas(ctx, textos.pie, ancho).forEach((l, i) => ctx.fillText(l, M, pieY + 34 + i * 34));
   const visible = url.replace(/^https?:\/\//, "");
   ctx.font = `700 24px ${FUENTE}`; ctx.fillStyle = "#009FD9";
-  const enlaceY = pieY + 140;
-  const lineasEnlace = partirSeguido(ctx, visible, ancho - qrSize - 48);
-  lineasEnlace.forEach((l, i) => ctx.fillText(l, M, enlaceY + i * 34));
+  const enlaceY = pieY + 90;
+  const lineasEnlace = partirSeguido(ctx, visible, ancho);
+  lineasEnlace.forEach((l, i) => ctx.fillText(l, M, enlaceY + i * 32));
   const anchoEnlace = Math.max(...lineasEnlace.map((l) => ctx.measureText(l).width));
 
-  return { canvas, enlace: { x: M, y: enlaceY - 26, w: anchoEnlace, h: 34 * lineasEnlace.length + 8, url } };
+  return { canvas, enlace: { x: M, y: enlaceY - 26, w: anchoEnlace, h: 32 * lineasEnlace.length + 8, url } };
 }
 
 /** La cotización como PNG (para el estado de WhatsApp o guardarla). */
@@ -218,7 +226,5 @@ export async function renderQuotePdf(quote: Quote, proName: string, textos: Text
   // El enlace y el QR, clicables: en el PDF el texto es parte de la imagen, así
   // que se pone encima una zona que abre la dirección.
   doc.link(enlace.x * escala, enlace.y * escala, enlace.w * escala, enlace.h * escala, { url: enlace.url });
-  const qrLado = 240 * escala;
-  doc.link(anchoMm - 72 * escala - qrLado, altoMm - (330 - 40) * escala, qrLado, qrLado, { url: enlace.url });
   return doc.output("blob");
 }

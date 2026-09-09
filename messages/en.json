@@ -4148,7 +4148,7 @@
     "downloadImage": "Download image",
     "shareImage": "Share image",
     "preparingImage": "Preparing the image…",
-    "whatsappMessage": "Hi{name}, here is the quote{title} for {total}. You can see it and accept it here: {url}",
+    "whatsappMessage": "Hi{name}, here is the quote{title} for {total}. You can view and download it here: {url}",
     "clientLabel": "Client",
     "noClientName": "No name",
     "createdOn": "Created on {date}",
@@ -4178,7 +4178,7 @@
     "publicNotFoundBody": "Check the link or ask the professional to send it again.",
     "imageTitle": "QUOTE",
     "imageValidUntil": "Valid until {date}",
-    "imageFooter": "Accept it at the link or by scanning the code",
+    "imageFooter": "You can view this quote online here:",
     "editorSubtitleFree": "Who it's for, what it includes and how much.",
     "clientCedulaLabel": "Client ID number",
     "clientCedulaHint": "With the ID we pull the name. If you don't have it, type the name below.",
@@ -4210,6 +4210,14 @@
     "rowQuote": "Quote",
     "emailSubject": "Quote No. {number} from {name}",
     "email": "Email",
-    "instagramHint": "Link copied. Paste it in your story, your bio or a message: Instagram can't take links straight from the browser."
+    "instagramHint": "Link copied. Paste it in your story, your bio or a message: Instagram can't take links straight from the browser.",
+    "clientEmailLabel": "Email (optional)",
+    "clientEmailPlaceholder": "client@email.com",
+    "clientContactHint": "The phone and email appear on the quote and let you send it in one tap.",
+    "sendByEmail": "Send by email",
+    "downloadClient": "Download PDF",
+    "attachTabBookings": "Appointments",
+    "attachTabProjects": "Projects",
+    "attachSend": "Send here"
   }
 }

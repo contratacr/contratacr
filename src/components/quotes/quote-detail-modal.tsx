@@ -1,13 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { Check } from "lucide-react";
+import { Check, Download, Loader2 } from "lucide-react";
 import { Modal } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
 import { useAppDialog } from "@/hooks/use-app-dialog";
 import { formatColones } from "@/lib/pricing";
-import { desgloseQuote, isQuoteExpired, whatsappDigits, type Quote } from "@/lib/quotes";
+import { desgloseQuote, isQuoteExpired, nombreArchivoCotizacion, numeroCotizacion, whatsappDigits, type Quote } from "@/lib/quotes";
+import { renderQuotePdf } from "@/lib/quote-image";
 import { QuoteShare } from "@/components/quotes/quote-share";
 
 const DATE_LOCALE: Record<string, string> = { es: "es-CR", en: "en-US" };
@@ -41,6 +42,7 @@ export function QuoteDetailModal({ quote, role, open, onClose, onChanged, proNam
   const locale = useLocale();
   const { dialogNode, confirm, showMessage } = useAppDialog();
   const [busy, setBusy] = useState(false);
+  const [pdfCliente, setPdfCliente] = useState<Blob | null>(null);
   const expirada = isQuoteExpired(quote);
   const estado = expirada ? t("statusExpired") : quote.status === "sent" ? t("statusSent") : quote.status === "accepted" ? t("statusAccepted") : quote.status === "declined" ? t("statusDeclined") : t("statusWithdrawn");
   const fecha = quote.valid_until ? new Date(`${quote.valid_until}T12:00:00`).toLocaleDateString(DATE_LOCALE[locale] ?? "es-CR", { day: "numeric", month: "long" }) : null;
@@ -65,11 +67,43 @@ export function QuoteDetailModal({ quote, role, open, onClose, onChanged, proNam
     } finally { setBusy(false); }
   }
 
+  // El cliente también se lleva el documento: ver arriba, descargar aquí.
+  useEffect(() => {
+    if (role !== "client") return;
+    let vivo = true;
+    void renderQuotePdf(quote, quote.professional_name ?? "", {
+      titulo: quote.quote_number ? t("imageTitleNumbered", { number: numeroCotizacion(quote) }) : t("imageTitle"),
+      cliente: t("clientLabel"), vigente: fecha ? t("imageValidUntil", { date: fecha }) : "",
+      subtotal: t("subtotal"), iva: t("tax"), total: t("total"),
+      totalNota: quote.tax_mode === "incluido" ? t("totalWithTax") : quote.tax_mode === "mas_iva" ? t("totalPlusTax") : t("totalNoTax"),
+      pie: t("imageFooter"), deQuien: t("publicFrom"), nota: t("noteLabel"),
+    }, fecha).then((b) => { if (vivo) setPdfCliente(b); });
+    return () => { vivo = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [quote.id, role]);
+
+  function descargarCliente() {
+    if (!pdfCliente) return;
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(pdfCliente);
+    a.download = `${nombreArchivoCotizacion(quote, quote.professional_name ?? "")}.pdf`;
+    a.click();
+    window.setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  }
+
   const puedeResponder = role === "client" && quote.status === "sent" && !expirada;
   const puedeRetirar = role === "pro" && quote.status === "sent";
   const abierta = quote.status === "sent" && !expirada;
-  const titulo = recienCreada ? t("readyTitle") : (quote.title || t("detailTitle"));
-  const subtitulo = recienCreada ? t("readyBody") : quote.professional_name ? t("from", { name: quote.professional_name }) : quote.client_name ? `${t("clientLabel")}: ${quote.client_name}` : undefined;
+  // El título del encabezado en UNA línea: el nombre del trabajo puede ser largo
+  // y partido en tres renglones empujaba todo hacia abajo.
+  const titulo = recienCreada
+    ? t("readyTitle")
+    : <span className="block truncate">{quote.quote_number ? `${t("rowQuote")} N.º ${numeroCotizacion(quote)}` : (quote.title || t("detailTitle"))}</span>;
+  const subtitulo = recienCreada
+    ? t("readyBody")
+    : role === "client"
+      ? (quote.professional_name ? t("from", { name: quote.professional_name }) : quote.title ?? undefined)
+      : [quote.client_name, quote.title].filter(Boolean).join(" · ") || undefined;
 
   return (
     <>
@@ -115,6 +149,11 @@ export function QuoteDetailModal({ quote, role, open, onClose, onChanged, proNam
           </div>
           <Totales quote={quote} />
           {quote.notes && <p className="whitespace-pre-line text-[14px] leading-6 text-[#52627a]">{quote.notes}</p>}
+          {role === "client" && (
+            <button type="button" disabled={!pdfCliente} onClick={descargarCliente} className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-full border border-[#d7e1ea] bg-white px-5 text-[14px] font-bold text-[#162543] transition-colors hover:border-[#b9c8d6] hover:bg-[#f6f9fb] disabled:opacity-60">
+              {pdfCliente ? <Download className="h-4 w-4" /> : <Loader2 className="h-4 w-4 animate-spin" />}{t("downloadClient")}
+            </button>
+          )}
         </div>
       </Modal>
       {dialogNode}

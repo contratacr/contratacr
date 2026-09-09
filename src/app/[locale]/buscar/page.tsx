@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { getTranslations, getLocale } from "next-intl/server";
 import { ChevronLeft, ChevronRight, Search } from "lucide-react";
 import { Link } from "@/i18n/navigation";
+import { FooterSoloWeb } from "@/components/landing/footer-solo-web";
 import { LandingNavbar } from "@/components/landing/landing-navbar";
 import { SearchFilters } from "@/components/search/search-filters";
 import { ProfessionalCard } from "@/components/professionals/professional-card";
@@ -642,6 +643,9 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
         </div>
       </main>
 
+      {/* Pie también en /buscar (web): la página tiene salida como el resto del
+          sitio. En la app no se pinta: ahí manda la barra de abajo. */}
+      <FooterSoloWeb />
     </div>
   );
 }

@@ -35,7 +35,7 @@ export function QuoteShare({ quote, proName, onChanged }: { quote: Quote; proNam
   const digitos = whatsappDigits(quote.client_phone);
   const wa = `https://wa.me/${digitos}?text=${encodeURIComponent(mensaje)}`;
   const fb = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
-  const correo = `mailto:?subject=${encodeURIComponent(t("emailSubject", { number: numeroCotizacion(quote), name: proName }))}&body=${encodeURIComponent(mensaje)}`;
+  const correo = `mailto:${quote.client_email ?? ""}?subject=${encodeURIComponent(t("emailSubject", { number: numeroCotizacion(quote), name: proName }))}&body=${encodeURIComponent(mensaje)}`;
   const fecha = quote.valid_until ? new Date(`${quote.valid_until}T12:00:00`).toLocaleDateString(DATE_LOCALE[locale] ?? "es-CR", { day: "numeric", month: "long" }) : null;
 
   useEffect(() => {
@@ -94,7 +94,7 @@ export function QuoteShare({ quote, proName, onChanged }: { quote: Quote; proNam
       {avisoInstagram && <p className="rounded-2xl bg-[#eaf7fc] px-4 py-2.5 text-[13px] font-semibold leading-snug text-[#0b5f80]">{t("instagramHint")}</p>}
       <div className="grid grid-cols-2 gap-2.5">
         <a href={correo} className="inline-flex h-11 items-center justify-center gap-2 rounded-full border border-[#d7e1ea] bg-white px-4 text-[13px] font-bold text-[#162543] transition-colors hover:border-[#b9c8d6] hover:bg-[#f6f9fb]">
-          <Mail className="h-4 w-4" />{t("email")}
+          <Mail className="h-4 w-4" />{quote.client_email ? t("sendByEmail") : t("email")}
         </a>
         <button type="button" disabled={!pdf} onClick={() => void (nativo ? compartirPdf() : descargarPdf())} className="inline-flex h-11 items-center justify-center gap-2 rounded-full border border-[#d7e1ea] bg-white px-4 text-[13px] font-bold text-[#162543] transition-colors hover:border-[#b9c8d6] hover:bg-[#f6f9fb] disabled:opacity-60">
           {preparando ? <Loader2 className="h-4 w-4 animate-spin" /> : nativo ? <Share2 className="h-4 w-4" /> : <Download className="h-4 w-4" />}
@@ -121,6 +121,7 @@ function QuoteAttach({ quote, onChanged }: { quote: Quote; onChanged?: (q: Quote
   const t = useTranslations("quotes");
   const locale = useLocale();
   const [abierto, setAbierto] = useState(false);
+  const [pestana, setPestana] = useState<"citas" | "proyectos">("citas");
   const [citas, setCitas] = useState<Cita[] | null>(null);
   const [propuestas, setPropuestas] = useState<Propuesta[] | null>(null);
   const [enviando, setEnviando] = useState<string | null>(null);
@@ -169,20 +170,41 @@ function QuoteAttach({ quote, onChanged }: { quote: Quote; onChanged?: (q: Quote
       </button>
     );
   }
-  const vacio = citas !== null && citas.length === 0 && (propuestas?.length ?? 0) === 0;
+
+  const cargando = citas === null;
+  const listaCitas = citas ?? [];
+  const listaProyectos = propuestas ?? [];
+  const vacio = !cargando && listaCitas.length === 0 && listaProyectos.length === 0;
+  const activos = pestana === "citas" ? listaCitas.length : listaProyectos.length;
+
   return (
     <div className="rounded-2xl border border-[#e5eaf0] bg-[#fafcfd] p-3">
-      <p className="mb-2 text-[13px] font-bold text-[#162543]">{t("attachTitle")}</p>
-      {citas === null ? (
+      <p className="mb-2.5 text-[13px] font-bold text-[#162543]">{t("attachTitle")}</p>
+      {/* Dos pestañas: primero se elige si va a una cita o a un proyecto, y
+          debajo salen los que hay. Antes era una lista mezclada. */}
+      <div className="mb-2.5 grid grid-cols-2 gap-1 rounded-full bg-[#eef3f8] p-1">
+        {([["citas", t("attachTabBookings"), listaCitas.length], ["proyectos", t("attachTabProjects"), listaProyectos.length]] as const).map(([id, rotulo, cuantos]) => (
+          <button
+            key={id}
+            type="button"
+            onClick={() => setPestana(id)}
+            className={`h-9 rounded-full text-[13px] font-bold transition-colors ${pestana === id ? "bg-white text-[#0089bb] shadow-sm" : "text-[#52627a]"}`}
+          >
+            {rotulo}{cuantos > 0 ? ` (${cuantos})` : ""}
+          </button>
+        ))}
+      </div>
+      {cargando ? (
         <div className="flex flex-col gap-2">{[0, 1].map((i) => <div key={i} className="h-[62px] animate-pulse rounded-2xl bg-[#eef2f6]" />)}</div>
-      ) : vacio ? (
-        <p className="rounded-2xl bg-white px-4 py-4 text-center text-[13px] leading-5 text-[#68778d]">{t("attachEmpty")}</p>
+      ) : vacio || activos === 0 ? (
+        <p className="rounded-2xl bg-white px-4 py-5 text-center text-[13px] leading-5 text-[#68778d]">{t("attachEmpty")}</p>
       ) : (
-        <div className="flex flex-col gap-2">
-          {citas.map((c) => fila(`b-${c.id}`, <CalendarCheck className="h-5 w-5" />, c.client_name || t("noClientName"),
-            [c.scheduled_date ? new Date(`${c.scheduled_date}T12:00:00`).toLocaleDateString(DATE_LOCALE[locale] ?? "es-CR", { day: "numeric", month: "short" }) : "", c.service_description ?? ""].filter(Boolean).join(" · "),
-            { bookingId: c.id }))}
-          {(propuestas ?? []).map((p) => fila(`p-${p.id}`, <Handshake className="h-5 w-5" />, p.projects?.title || t("attachProjects"), t("attachProjects"), { projectId: p.project_id }))}
+        <div className="flex max-h-[300px] flex-col gap-2 overflow-y-auto">
+          {pestana === "citas"
+            ? listaCitas.map((c) => fila(`b-${c.id}`, <CalendarCheck className="h-5 w-5" />, c.client_name || t("noClientName"),
+                [c.scheduled_date ? new Date(`${c.scheduled_date}T12:00:00`).toLocaleDateString(DATE_LOCALE[locale] ?? "es-CR", { day: "numeric", month: "short" }) : "", c.service_description ?? ""].filter(Boolean).join(" · "),
+                { bookingId: c.id }))
+            : listaProyectos.map((p) => fila(`p-${p.id}`, <Handshake className="h-5 w-5" />, p.projects?.title || t("attachProjects"), t("attachProjects"), { projectId: p.project_id }))}
         </div>
       )}
       {error && <p className="mt-2 text-[13px] font-semibold text-red-600">{error}</p>}

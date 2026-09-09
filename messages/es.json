@@ -4148,7 +4148,7 @@
     "downloadImage": "Descargar imagen",
     "shareImage": "Compartir imagen",
     "preparingImage": "Preparando la imagen…",
-    "whatsappMessage": "Hola{name}, te mando la cotización{title} por {total}. Podés verla y aceptarla aquí: {url}",
+    "whatsappMessage": "Hola{name}, te mando la cotización{title} por {total}. Podés verla y descargarla aquí: {url}",
     "clientLabel": "Cliente",
     "noClientName": "Sin nombre",
     "createdOn": "Creada el {date}",
@@ -4178,7 +4178,7 @@
     "publicNotFoundBody": "Revisá el enlace o pedile al profesional que te lo mande de nuevo.",
     "imageTitle": "COTIZACIÓN",
     "imageValidUntil": "Vigente hasta el {date}",
-    "imageFooter": "Aceptala en el enlace o escaneando el código",
+    "imageFooter": "Podés ver esta cotización en línea aquí:",
     "editorSubtitleFree": "Para quién es, qué incluye y cuánto cuesta.",
     "clientCedulaLabel": "Cédula del cliente",
     "clientCedulaHint": "Con la cédula traemos el nombre. Si no la tenés, escribí el nombre abajo.",
@@ -4210,6 +4210,14 @@
     "rowQuote": "Cotización",
     "emailSubject": "Cotización N.º {number} de {name}",
     "email": "Correo",
-    "instagramHint": "Enlace copiado. Pégalo en tu historia, en tu perfil o en un mensaje: Instagram no deja mandar enlaces desde el navegador."
+    "instagramHint": "Enlace copiado. Pégalo en tu historia, en tu perfil o en un mensaje: Instagram no deja mandar enlaces desde el navegador.",
+    "clientEmailLabel": "Correo (opcional)",
+    "clientEmailPlaceholder": "cliente@correo.com",
+    "clientContactHint": "El teléfono y el correo salen en la cotización y sirven para mandársela de un toque.",
+    "sendByEmail": "Enviar por correo",
+    "downloadClient": "Descargar PDF",
+    "attachTabBookings": "Citas",
+    "attachTabProjects": "Proyectos",
+    "attachSend": "Enviar aquí"
   }
 }

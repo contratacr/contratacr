@@ -1,6 +1,7 @@
 "use client";
 
 import { usePathname, useSelectedLayoutSegment } from "next/navigation";
+import { FooterSoloWeb } from "@/components/landing/footer-solo-web";
 import { LandingNavbar } from "@/components/landing/landing-navbar";
 
 export function MarketplaceSectionLayoutShell({ children }: { children: React.ReactNode }) {
@@ -27,9 +28,10 @@ export function MarketplaceSectionLayoutShell({ children }: { children: React.Re
           </div>
         </>
       )}
-      {/* Sin pie: empleos y ofertas se comportan como la app —el listado se
-          desplaza dentro de su contenedor y ahí termina la pantalla. */}
       <div className="flex-1">{children}</div>
+      {/* El pie va en la web (también aquí, para no dejar la sección sin salida);
+          en la app no, que ahí manda la barra de abajo. */}
+      <FooterSoloWeb />
     </div>
   );
 }

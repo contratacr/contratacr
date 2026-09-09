@@ -11,6 +11,7 @@ export type Quote = {
   client_name: string | null;
   client_phone: string | null;
   client_cedula: string | null;
+  client_email: string | null;
   /** Código del enlace público: contratacr.com/cotizacion/<código>. */
   public_code: string;
   /** Consecutivo del profesional (1, 2, 3…): sale en el documento y en el nombre del archivo. */
