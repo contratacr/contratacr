@@ -33,6 +33,7 @@ const reviewed = new Map([
   ["src/lib/analytics/attribution.ts", { count: 4, reason: "marketing attribution (utm/referrer) held only until sign-up, then persisted with the account in Supabase" }],
   ["src/components/analytics/attribution-capture.tsx", { count: 2, reason: "session marker that the account already claimed its first-touch attribution; the attribution itself persists server-side" }],
   ["src/lib/account-cache.ts", { count: 1, reason: "account-scoped removal of reviewed browser caches during disable/deletion" }],
+  ["src/app/[locale]/error.tsx", { count: 2, reason: "marca de una sola recarga cuando la pantalla pide un archivo de la versión anterior; nada de la cuenta" }],
   ["src/lib/app-data-invalidation.ts", { count: 2, reason: "cross-tab cache invalidation timestamp/domain signal; no account-owned records" }],
   ["src/components/notifications/notification-live-toast.tsx", { count: 3, reason: "notification presentation state; records persist in backend" }],
   ["src/components/notifications/notification-bell.tsx", { count: 2, reason: "backend notification render cache" }],
