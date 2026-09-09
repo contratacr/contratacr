@@ -432,7 +432,8 @@
     "callShort": "Call",
     "call": "Contact us by phone",
     "email": "Email",
-    "countryCoverage": "All of Costa Rica"
+    "countryCoverage": "All of Costa Rica",
+    "share": "Share"
   },
   "selfAction": {
     "title": "This is your profile",

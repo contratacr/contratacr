@@ -20,6 +20,7 @@ import { Modal } from "@/components/ui/modal";
 import { JobPostForm } from "@/components/jobs/job-post-form";
 import { JobApplicationForm } from "@/components/jobs/job-application-form";
 import { SaveItemButton } from "@/components/saved/save-item-button";
+import { BotonCompartir } from "@/components/ui/boton-compartir";
 import { useNativeApp } from "@/hooks/use-native-app";
 import { COMMON_JOB_TITLES, EMPLOYMENT_TYPES, EXPERIENCE_LEVELS, formatJobSalary, jobMatchesSearch, type JobPost, WORKPLACE_TYPES } from "@/lib/jobs";
 import { employmentTypeLabel, experienceLevelLabel, marketplaceLocale, type MarketplaceLocale, workplaceTypeLabel } from "@/lib/marketplace-copy";
@@ -378,7 +379,7 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
                 ) : (
                   <Link href={`/login?redirect=${encodeURIComponent(`/empleos/${selected.id}?apply=${selected.id}`)}`} className="inline-flex h-11 w-full items-center justify-center rounded-full bg-[#009fd9] px-5 text-sm font-bold text-white transition hover:bg-[#008fc3]">{copy.apply}</Link>
                 )}
-                <SaveItemButton itemType="job" itemId={selected.id} snapshot={jobSaveSnapshot(selected, locale)} userId={currentUserId} loginRedirect={`/empleos/${selected.id}`} withLabel className="h-11 w-full rounded-full" />
+                <BotonCompartir url={`/${locale}/empleos/${selected.id}`} titulo={selected.title} className="h-11 w-full" />
               </div>
             )}
           </aside>
@@ -523,8 +524,10 @@ function JobPreview({ job, isOwner, userId, hasApplied, onApply, onEdit, mobile 
     ...(job.duration_label ? [[copy.duration, job.duration_label] as [string, string]] : []),
   ].filter(([, value]) => Boolean(value));
 
-  return <article className={`ccr-marketplace-result-list min-w-0 bg-white ${mobile ? "block px-5 py-6" : "hidden p-7 lg:block lg:max-h-[calc(100vh-190px)] lg:overflow-y-auto"}`}>
-    <div className="flex items-start gap-4"><EmployerAvatar job={job} size="large" /><div className="min-w-0"><h2 className="text-2xl font-extrabold leading-tight">{job.title}</h2><p className="mt-1 font-semibold text-[#52627a]">{job.employer_name}</p><JobMetaLine job={job} className="mt-1 text-sm text-[#68778d]" /><p className="mt-2 text-base font-extrabold text-[#007fae]">{formatJobSalary(job, locale)}</p></div></div>
+  return <article className={`ccr-marketplace-result-list relative min-w-0 bg-white ${mobile ? "block px-5 py-6" : "hidden p-7 lg:block lg:max-h-[calc(100vh-190px)] lg:overflow-y-auto"}`}>
+    {/* El favorito va en la esquina, como en las tarjetas: es una marca. */}
+    {!isOwner && <SaveItemButton itemType="job" itemId={job.id} snapshot={jobSaveSnapshot(job, locale)} userId={userId} loginRedirect={`/empleos/${job.id}`} bubble className="absolute right-4 top-4 z-10 shadow-[0_2px_10px_rgba(22,37,67,0.10)]" />}
+    <div className="flex items-start gap-4 pr-12"><EmployerAvatar job={job} size="large" /><div className="min-w-0"><h2 className="text-2xl font-extrabold leading-tight">{job.title}</h2><p className="mt-1 font-semibold text-[#52627a]">{job.employer_name}</p><JobMetaLine job={job} className="mt-1 text-sm text-[#68778d]" /><p className="mt-2 text-base font-extrabold text-[#007fae]">{formatJobSalary(job, locale)}</p></div></div>
     {!hideActions && <div className={mobile ? "mt-5 grid grid-cols-2 gap-3" : "mt-5 flex flex-wrap items-center gap-3"}>
       {isOwner ? (
         <>
@@ -536,7 +539,7 @@ function JobPreview({ job, isOwner, userId, hasApplied, onApply, onEdit, mobile 
       ) : (
         <Link href={`/login?redirect=${encodeURIComponent(`/empleos?apply=${job.id}`)}`} className="inline-flex h-11 w-full items-center justify-center overflow-visible whitespace-nowrap rounded-full bg-[#009fd9] px-4 pt-px text-sm font-bold leading-6 text-white transition hover:bg-[#008fc3] sm:w-[168px]">{copy.apply}</Link>
       )}
-      {!isOwner && <SaveItemButton itemType="job" itemId={job.id} snapshot={jobSaveSnapshot(job, locale)} userId={userId} loginRedirect={`/empleos/${job.id}`} withLabel className="h-11 w-full whitespace-nowrap rounded-full px-4 leading-6 sm:w-[168px]" />}
+      <BotonCompartir url={`/${locale}/empleos/${job.id}`} titulo={job.title} className="w-full sm:w-[168px]" />
     </div>}
     <dl className="mt-6 grid gap-3 border-y border-[#e7edf2] py-5 text-sm sm:grid-cols-2">{detailRows.map(([label, value]) => <div key={label} className="min-w-0"><dt className="text-xs font-bold uppercase tracking-wide text-[#7a899d]">{label}</dt><dd className="mt-0.5 break-words font-bold text-[#162543] [overflow-wrap:anywhere]">{value}</dd></div>)}</dl>
     <section className="mt-7"><h3 className="text-lg font-bold">{copy.about}</h3><p className="mt-3 whitespace-pre-line break-words text-sm leading-7 text-[#43536b] [overflow-wrap:anywhere]">{job.description}</p></section>

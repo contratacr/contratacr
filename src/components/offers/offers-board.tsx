@@ -26,6 +26,7 @@ import { Modal } from "@/components/ui/modal";
 import { OfferForm } from "@/components/offers/offer-form";
 import { OfferImageGallery } from "@/components/offers/offer-image-gallery";
 import { SaveItemButton } from "@/components/saved/save-item-button";
+import { BotonCompartir } from "@/components/ui/boton-compartir";
 import {
   formatOfferBeforePrice,
   formatOfferPrice,
@@ -631,8 +632,8 @@ export function OfferSaveButton({
       snapshot={offerSaveSnapshot(offer, locale)}
       userId={userId}
       loginRedirect={`/ofertas/${offer.id}`}
-      withLabel
-      className={`h-9 shrink-0 rounded-full px-3 text-[13px] ${className}`}
+      bubble
+      className={`shrink-0 ${className}`}
     />
   );
 }
@@ -740,6 +741,8 @@ export function OfferContactActions({
           )}
         </div>
       )}
+      {/* Compartir vive con los botones: es una acción, no una marca. */}
+      <BotonCompartir url={`/${locale}/ofertas/${offer.id}`} titulo={offer.title} className={compact ? "h-9 w-full text-[12px]" : "w-full"} />
     </div>
   );
 }
@@ -832,13 +835,18 @@ function OfferPreview({
   const discount = offerDiscountPercent(offer);
   const isOwner = offer.professional_id === currentProfessionalId;
   return (
-    <article className="ccr-marketplace-result-list hidden min-w-0 bg-white p-7 lg:block lg:h-full lg:overflow-y-auto">
+    <article className="relative ccr-marketplace-result-list hidden min-w-0 bg-white p-7 lg:block lg:h-full lg:overflow-y-auto">
       <div className="relative">
         <OfferImageGallery images={offer.image_urls} title={offer.title} />
         {discount && (
           <span className="absolute left-3 top-3 rounded-md bg-[#009fd9] px-3 py-1.5 text-sm font-extrabold text-white">
             -{discount}%
           </span>
+        )}
+        {/* El favorito va en la esquina de la foto: es una marca, no una acción
+            que compita con contactar. */}
+        {!isOwner && (
+          <OfferSaveButton offer={offer} userId={userId} className="absolute right-3 top-3 z-10 shadow-[0_2px_10px_rgba(22,37,67,0.14)]" />
         )}
       </div>
       <div className="mt-5 flex items-start justify-between gap-4">
@@ -862,7 +870,6 @@ function OfferPreview({
             </p>
           )}
         </div>
-        {!isOwner && <OfferSaveButton offer={offer} userId={userId} />}
       </div>
       {isOwner && (
         <div className="mt-4 grid grid-cols-2 gap-3 sm:flex sm:flex-wrap">

@@ -590,6 +590,7 @@ export default function ProfilePage() {
       </div>
       <ProfessionalSchedule
         stacked
+        onShare={shareProfile}
         professional={professional}
         activeCategory={activeCategory}
         categoryName={catLabel(professional.categoryId)}
@@ -701,7 +702,8 @@ export default function ProfilePage() {
                 colgaban debajo de la foto y el borde izquierdo quedaba en zigzag)
                 y las dos acciones comparten renglón arriba a la derecha, del
                 ancho de su texto. En el teléfono sigue centrado como estaba. */}
-            <div className="relative mb-6 rounded-2xl border border-[#e5e7eb] bg-white p-4 shadow-sm sm:grid sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:items-start sm:gap-x-5 sm:p-6">
+            <div className="relative mb-6 rounded-2xl border border-[#e5e7eb] bg-white p-4 pt-12 shadow-sm sm:grid sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:items-start sm:gap-x-5 sm:p-6 sm:pt-6">
+                <SaveButton pro={savedPro} isOwn={isOwn} bubble className="absolute right-3 top-3 z-10 sm:right-4 sm:top-4" />
                 <div className="flex min-w-0 flex-col items-center text-center sm:contents sm:text-left">
                   <ImagePreviewDialog
                     src={professional.avatarUrl}
@@ -780,23 +782,10 @@ export default function ProfilePage() {
                     )}
                   </div>
                 )}
-                {/* Guardar y compartir: dos círculos del mismo tamaño. En las
-                    tarjetas de /buscar, ofertas y empleos el favorito ya es este
-                    marcador, así que aquí se lee igual; como píldoras con texto
-                    quedaban de anchos distintos y pesaban más que el nombre.
-                    Guardar avisa al tocarlo. */}
-                <div className="mt-4 flex items-center justify-center gap-2.5 sm:col-start-3 sm:row-start-1 sm:row-span-2 sm:mt-0 sm:justify-end">
-                  <SaveButton pro={savedPro} isOwn={isOwn} bubble />
-                  <button
-                    type="button"
-                    onClick={shareProfile}
-                    aria-label={t("shareProfile")}
-                    title={t("shareProfile")}
-                    className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-[#d7e1ea] bg-white text-[#162543] transition-colors hover:border-[#b9c8d6] hover:bg-[#f6f9fb]"
-                  >
-                    <Share2 className="h-5 w-5" />
-                  </button>
-                </div>
+                {/* El favorito vive en la esquina de la tarjeta, como en las
+                    tarjetas de /buscar, ofertas y empleos: es una marca, no una
+                    acción principal. Compartir se fue con los botones de
+                    contacto, que es donde están las acciones. */}
             </div>
             <div id="resenas" className="scroll-mt-24 [.ccr-native-app_&]:scroll-mt-0">
               <div className="rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">

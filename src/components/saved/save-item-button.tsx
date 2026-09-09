@@ -15,6 +15,8 @@ type SaveItemButtonProps = {
   userId?: string | null;
   className?: string;
   withLabel?: boolean;
+  /** Marcador en círculo, para la esquina de una tarjeta o sobre una foto. */
+  bubble?: boolean;
   showIcon?: boolean;
   loginRedirect?: string;
 };
@@ -28,6 +30,7 @@ export function SaveItemButton({
   userId,
   className,
   withLabel = false,
+  bubble = false,
   showIcon,
   loginRedirect,
 }: SaveItemButtonProps) {
@@ -105,7 +108,14 @@ export function SaveItemButton({
       aria-label={saved ? labels.remove : labels.save}
       aria-pressed={saved}
       className={cn(
-        withLabel
+        bubble
+          ? cn(
+              "grid h-11 w-11 place-items-center rounded-full border bg-white transition-colors duration-200",
+              saved
+                ? "border-[#009FD9] bg-[#eaf7fc] text-[#0089bb]"
+                : "border-[#d7e1ea] text-[#162543] hover:border-[#b9c8d6] hover:bg-[#f6f9fb]",
+            )
+          : withLabel
           ? cn(
               "inline-flex h-10 items-center justify-center gap-2 rounded-full border bg-white px-4 text-sm font-bold transition",
               saved ? "border-[#009FD9] text-[#0089bb] hover:bg-[#f2fbfe]" : "border-[#d7e1ea] text-[#162543] hover:border-[#b9c8d6] hover:bg-[#f6f9fb]",
@@ -117,7 +127,7 @@ export function SaveItemButton({
         className,
       )}
     >
-      {(showIcon ?? true) && <Bookmark className={withLabel ? "h-4 w-4 shrink-0" : "h-[18px] w-[18px]"} fill={saved ? "currentColor" : "none"} />}
+      {(showIcon ?? true) && <Bookmark className={bubble ? "h-5 w-5" : withLabel ? "h-4 w-4 shrink-0" : "h-[18px] w-[18px]"} fill={saved ? "currentColor" : "none"} />}
       {withLabel && <span>{saved ? labels.saved : labels.save}</span>}
     </button>
   );
