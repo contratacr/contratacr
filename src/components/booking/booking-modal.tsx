@@ -20,6 +20,7 @@ import {
   CalendarCheck,
   MessageCircle,
   CalendarDays,
+  Clock,
   BadgeCheck,
   UserRound,
 } from "lucide-react";
@@ -1138,6 +1139,46 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
     );
   }
 
+  // Resumen fijo a la izquierda en computadora, como en las reservas de citas
+  // médicas: con quién es, qué servicio, y el día, la hora y el lugar que ya
+  // eligió. Antes esos datos aparecían y desaparecían según el paso, y la
+  // pantalla era una columna larga con mucho blanco debajo.
+  const servicioResumen = effectiveCategory
+    ? getCategoryLabel(effectiveCategory, locale)
+    : (categoryName || "");
+  const resumenLateral = (
+    <aside className="hidden w-[300px] shrink-0 flex-col border-r border-[#e9eef4] bg-[#f9fbfd] px-7 py-9 lg:flex">
+      <div className="flex flex-col items-center text-center">
+        <Avatar className="h-24 w-24">
+          <AvatarImage src={professional.avatarUrl} alt={professional.fullName} className="object-cover" />
+          <AvatarFallback className="bg-[#EAF7FD] text-xl font-bold text-[#0089bb]">{getInitials(professional.fullName)}</AvatarFallback>
+        </Avatar>
+        <p className="mt-4 flex items-center justify-center gap-1.5 text-[17px] font-bold leading-tight text-[#162543]">
+          <span className="min-w-0">{proDisplayName(professional.fullName)}</span>
+          {professional.isVerified && <VerifiedSeal className="h-4 w-4 shrink-0 text-[#009FD9]" label={t("verified")} />}
+        </p>
+        {servicioResumen
+          ? <p className="mt-1.5 text-[13px] leading-snug text-[#68778d]">{servicioResumen}</p>
+          : professional.reviewCount > 0
+            ? <StarRating rating={professional.ratingAvg} reviewCount={professional.reviewCount} showValue size="sm" className="mt-1.5 justify-center" />
+            : null}
+      </div>
+      {(selectedDate || selectedTime || initialLocationLabel) && (
+        <div className="mt-7 flex flex-col gap-3.5 border-t border-[#e9eef4] pt-6 text-[14px] leading-snug text-[#162543]">
+          {selectedDate && (
+            <p className="flex items-start gap-2.5"><CalendarDays className="mt-0.5 h-4 w-4 shrink-0 text-[#68778d]" />{formatDateDisplay(selectedDate, locale)}</p>
+          )}
+          {selectedTime && (
+            <p className="flex items-start gap-2.5"><Clock className="mt-0.5 h-4 w-4 shrink-0 text-[#68778d]" />{selectedTime}</p>
+          )}
+          {initialLocationLabel && (
+            <p className="flex items-start gap-2.5"><MapPin className="mt-0.5 h-4 w-4 shrink-0 text-[#68778d]" />{initialLocationLabel}</p>
+          )}
+        </div>
+      )}
+    </aside>
+  );
+
   // Mismo contenido, dos armazones: página propia o capa sobre la pantalla.
   const contenido = (
     <>
@@ -1174,10 +1215,10 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
             )}
 
             {/* Step content */}
-            <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto bg-[#f4f7fa] px-4 pb-[max(env(safe-area-inset-bottom),1rem)] pt-4 md:px-6 md:pb-4">
+            <div className={cn("flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto bg-[#f4f7fa] px-4 pb-[max(env(safe-area-inset-bottom),1rem)] pt-4 md:px-6 md:pb-4", asPage && "lg:bg-white lg:px-8 lg:pt-7")}>
               {/* Con quién es la cita: una fila compacta, no medio modal. */}
               {step !== "success" && (
-                <div className="flex shrink-0 items-center gap-3 rounded-2xl border border-[#e5edf4] bg-white px-4 py-3">
+                <div className={cn("flex shrink-0 items-center gap-3 rounded-2xl border border-[#e5edf4] bg-white px-4 py-3", asPage && "lg:hidden")}>
                   <Avatar className="h-10 w-10 shrink-0">
                     <AvatarImage src={professional.avatarUrl} alt={professional.fullName} />
                     <AvatarFallback className="bg-[#EAF7FD] text-sm font-bold text-[#0089bb]">{getInitials(professional.fullName)}</AvatarFallback>
@@ -1200,7 +1241,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                   </div>
                 </div>
               )}
-              <div className="flex flex-1 flex-col rounded-2xl border border-[#e5edf4] bg-white px-4 py-4 md:px-5 lg:flex-none">
+              <div className={cn("flex flex-1 flex-col rounded-2xl border border-[#e5edf4] bg-white px-4 py-4 md:px-5 lg:flex-none", asPage && "lg:rounded-none lg:border-0 lg:px-0 lg:py-0")}>
 
               {/* STEP: calendar */}
               {step === "calendar" && (
@@ -1767,7 +1808,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
             {/* Footer actions — elegir el servicio ES la acción de ese paso: sin
                 nada que confirmar, la barra de abajo se queda vacía y estorba. */}
             {step !== "success" && !(step === "calendar" && needsProfessionPick) && (
-              <div className="ccr-pie-formulario flex shrink-0 flex-col gap-2 border-t border-[#e5e7eb] bg-white px-4 py-4 pb-[max(env(safe-area-inset-bottom),1rem)] sm:px-6">
+              <div className={cn("ccr-pie-formulario flex shrink-0 flex-col gap-2 border-t border-[#e5e7eb] bg-white px-4 py-4 pb-[max(env(safe-area-inset-bottom),1rem)] sm:px-6", asPage && "lg:px-8")}>
                 {step === "calendar" && !needsProfessionPick && (
                   <>
                     {/* Igual que en Publicar empleo: solo el botón. La fecha elegida ya
@@ -1854,7 +1895,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
             )}
 
             {step === "success" && (
-              <div className="ccr-pie-formulario flex shrink-0 flex-col gap-2 border-t border-[#e5e7eb] bg-white px-4 py-4 pb-[max(env(safe-area-inset-bottom),1rem)] sm:px-6">
+              <div className={cn("ccr-pie-formulario flex shrink-0 flex-col gap-2 border-t border-[#e5e7eb] bg-white px-4 py-4 pb-[max(env(safe-area-inset-bottom),1rem)] sm:px-6", asPage && "lg:px-8")}>
                 {/* Lead to the just-made request (it's at the top of Solicitudes), not a
                     dead-end "Listo". Closing still refreshes /buscar so the slot disappears. */}
                 <Button size="md" className="w-full" onClick={goToMyRequest}>
@@ -1871,11 +1912,16 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
 
   if (asPage) {
     return (
-      <div className="ccr-booking-page flex min-h-[100dvh] flex-col bg-[#f4f7fa]">
-        {/* En escritorio la reserva va en una columna centrada: a todo el ancho
-            quedaba un tablero vacío con el botón estirado de lado a lado. */}
-        <div className="flex min-h-[100dvh] w-full flex-col lg:mx-auto lg:max-w-3xl lg:border-x lg:border-[#e5eaf0] lg:bg-white lg:shadow-[0_0_40px_-24px_rgba(15,23,42,0.35)]">
-          {contenido}
+      <div className="ccr-booking-page flex min-h-[100dvh] flex-col bg-[#f4f7fa] lg:justify-center lg:px-6 lg:py-10">
+        {/* En computadora la reserva es una tarjeta centrada de dos paneles:
+            el resumen a la izquierda y el paso a la derecha. Antes era una
+            columna de teléfono estirada de arriba abajo, con el resto de la
+            pantalla en blanco. */}
+        <div className="flex min-h-[100dvh] w-full flex-col lg:mx-auto lg:min-h-0 lg:max-h-[calc(100dvh-5rem)] lg:max-w-[980px] lg:flex-row lg:overflow-hidden lg:rounded-3xl lg:border lg:border-[#e5eaf0] lg:bg-white lg:shadow-[0_30px_80px_-45px_rgba(15,23,42,0.55)]">
+          {resumenLateral}
+          <div className="flex min-h-0 flex-1 flex-col">
+            {contenido}
+          </div>
         </div>
       </div>
     );
