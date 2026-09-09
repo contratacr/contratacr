@@ -5,6 +5,7 @@ import { RefreshCw, WifiOff, AlertTriangle } from "lucide-react";
 import { ErrorScreen, errorPrimaryBtn, errorSecondaryBtn } from "@/components/error/error-screen";
 import { ServiceUnavailableScreen } from "@/components/error/service-unavailable-screen";
 import { getRuntimeErrorKind } from "@/lib/errors/runtime-error-kind";
+import { reportClientError } from "@/lib/report-client-error";
 
 // On-brand boundary for unexpected errors. Detects an offline/connection issue
 // and shows a calmer, specific message; otherwise a friendly generic error with
@@ -47,6 +48,8 @@ export default function LocaleError({
 
   useEffect(() => {
     console.error("[app error boundary]", error);
+    // Sin esto, el error se queda en la consola del teléfono de quien lo sufrió.
+    reportClientError("boundary", error);
     if (typeof navigator !== "undefined" && navigator.onLine === false) setOffline(true);
     if (typeof window !== "undefined" && window.location.pathname.startsWith("/en")) setLang("en");
   }, [error]);

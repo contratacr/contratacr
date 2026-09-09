@@ -8,7 +8,6 @@ import { formatColones } from "@/lib/pricing";
 import { isQuoteExpired, type Quote } from "@/lib/quotes";
 import { QuoteEditorModal } from "@/components/quotes/quote-editor-modal";
 import { QuoteDetailModal } from "@/components/quotes/quote-detail-modal";
-import { QuotesBoundary } from "@/components/quotes/quotes-boundary";
 
 const DATE_LOCALE: Record<string, string> = { es: "es-CR", en: "en-US" };
 
@@ -16,16 +15,7 @@ const DATE_LOCALE: Record<string, string> = { es: "es-CR", en: "en-US" };
  * La sección "Cotizaciones" del profesional: la lista de lo que ha cotizado y
  * el botón para hacer una nueva. Creada, se abre lista para mandar.
  */
-export function QuotesSection(props: { proName: string; puedeCrear?: boolean }) {
-  const t = useTranslations("quotes");
-  return (
-    <QuotesBoundary titulo={t("boundaryTitle")} cuerpo={t("boundaryBody")} reintentar={t("boundaryRetry")}>
-      <Cotizaciones {...props} />
-    </QuotesBoundary>
-  );
-}
-
-function Cotizaciones({ proName, puedeCrear = true }: { proName: string; puedeCrear?: boolean }) {
+export function QuotesSection({ proName, puedeCrear = true }: { proName: string; puedeCrear?: boolean }) {
   const t = useTranslations("quotes");
   const locale = useLocale();
   const [quotes, setQuotes] = useState<Quote[] | null>(null);

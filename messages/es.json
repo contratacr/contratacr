@@ -1929,7 +1929,10 @@
     },
     "goToClientPanel": "Ir a mi panel cliente",
     "goToProfessionalPanel": "Ir a mi panel profesional",
-    "headerReviews": "{count, plural, one {# reseña} other {# reseñas}}"
+    "headerReviews": "{count, plural, one {# reseña} other {# reseñas}}",
+    "sectionErrorTitle": "No se pudo mostrar esta sección",
+    "sectionErrorBody": "Fue un problema al dibujar la pantalla, no de tus datos. Volvé a intentarlo; ya nos llegó el aviso para arreglarlo.",
+    "sectionErrorRetry": "Volver a intentar"
   },
   "bookingRequests": {
     "empty": "No tienes citas todavía",

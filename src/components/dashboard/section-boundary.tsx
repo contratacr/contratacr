@@ -1,16 +1,17 @@
 "use client";
 
 import { Component, type ReactNode } from "react";
+import { reportClientError } from "@/lib/report-client-error";
 
 /**
- * Si algo falla dentro de Cotizaciones, se cae SOLO esta sección con un aviso y
- * un botón de reintentar. Sin esto, cualquier error tumbaba la pantalla entera
- * del panel y salía el "Algo salió mal" de la app.
+ * Si algo falla dentro de una sección del panel, se cae SOLO esa sección con un
+ * aviso y un botón de reintentar, y el error queda registrado. Sin esto,
+ * cualquier fallo tumbaba la pantalla entera con el "Algo salió mal" de la app.
  */
 type Props = { children: ReactNode; titulo: string; cuerpo: string; reintentar: string };
 type State = { falló: boolean };
 
-export class QuotesBoundary extends Component<Props, State> {
+export class SectionBoundary extends Component<Props, State> {
   state: State = { falló: false };
 
   static getDerivedStateFromError(): State {
@@ -18,7 +19,8 @@ export class QuotesBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: unknown) {
-    console.error("[cotizaciones] sección caída:", error);
+    console.error("[panel] sección caída:", error);
+    reportClientError("boundary", error);
   }
 
   render() {

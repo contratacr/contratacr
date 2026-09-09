@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { isNativeAppRuntime } from "@/hooks/use-native-app";
+import { reportClientError } from "@/lib/report-client-error";
 
 function shouldLogRoute(pathname: string | null) {
   const path = pathname ?? "";
@@ -22,6 +23,21 @@ function errorPayload(error: unknown) {
 
 export function NativeDebugLogger() {
   const pathname = usePathname();
+
+  // Los errores se reportan SIEMPRE en la app (antes solo en unas rutas, y el
+  // panel no estaba: por eso un "Algo salió mal" ahí no dejaba rastro). El
+  // detalle de navegación se sigue registrando solo en las rutas de interés.
+  useEffect(() => {
+    if (!isNativeAppRuntime()) return;
+    const onError = (event: ErrorEvent) => reportClientError("window", event.error ?? new Error(event.message), { pathname: window.location.pathname });
+    const onRejection = (event: PromiseRejectionEvent) => reportClientError("rejection", event.reason, { pathname: window.location.pathname });
+    window.addEventListener("error", onError);
+    window.addEventListener("unhandledrejection", onRejection);
+    return () => {
+      window.removeEventListener("error", onError);
+      window.removeEventListener("unhandledrejection", onRejection);
+    };
+  }, []);
 
   useEffect(() => {
     if (!isNativeAppRuntime() || !shouldLogRoute(pathname)) return;

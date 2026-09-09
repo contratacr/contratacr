@@ -1929,7 +1929,10 @@
     },
     "goToClientPanel": "Go to my client panel",
     "goToProfessionalPanel": "Go to my professional panel",
-    "headerReviews": "{count, plural, one {# review} other {# reviews}}"
+    "headerReviews": "{count, plural, one {# review} other {# reviews}}",
+    "sectionErrorTitle": "We couldn't show this section",
+    "sectionErrorBody": "This was a problem drawing the screen, not with your data. Try again; we already got the report to fix it.",
+    "sectionErrorRetry": "Try again"
   },
   "bookingRequests": {
     "empty": "No appointments yet",

@@ -14,6 +14,7 @@ import {
   BriefcaseBusiness, Star, ReceiptText,
   } from "lucide-react";
 import { QuotesSection } from "@/components/quotes/quotes-section";
+import { SectionBoundary } from "@/components/dashboard/section-boundary";
 import { Navbar } from "@/components/layout/navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -2325,6 +2326,10 @@ export default function DashboardPage() {
                         activeTab === "home" && "ccr-dashboard-mobile-home bg-[#f4f7fa] px-0 sm:px-0",
                         singleSurfaceTab && "!bg-transparent px-0 pt-0 pb-0 sm:px-0 sm:pt-0 sm:pb-0",
                       )}>
+                        {/* Cada sección dentro de su propio límite: si una revienta,
+                            cae ella sola con su aviso y su reintento, y el error queda
+                            registrado. Antes se llevaba la pantalla entera. */}
+                        <SectionBoundary titulo={t("sectionErrorTitle")} cuerpo={t("sectionErrorBody")} reintentar={t("sectionErrorRetry")}>
                         {activeTab === "home" && (
                           <>
                             <div className="lg:hidden">
@@ -2519,6 +2524,7 @@ export default function DashboardPage() {
                             <CloseAccountSection />
                           </div>
                         )}
+                      </SectionBoundary>
                       </CardContent>
                     </Card>
                   </SaveStatusProvider>
