@@ -117,9 +117,13 @@ export function NativeBottomNav() {
         // sus propios parámetros. Todo eso está MÁS ADENTRO que la portada de la
         // pestaña, así que el toque devuelve ahí —como en cualquier app— y solo
         // sube al tope cuando ya se está en la portada.
-        const propios = new Set(new URLSearchParams(consulta).keys());
+        const objetivo = new URLSearchParams(consulta);
+        const propios = new Set(objetivo.keys());
         const masAdentro = [...searchParams.keys()].some((clave) => !propios.has(clave));
-        if (masAdentro) {
+        // Dos pestañas pueden compartir ruta (Panel y Cotizar): si la actual no
+        // trae los parámetros de la que se tocó, hay que navegar, no subir.
+        const yaAhi = [...objetivo.entries()].every(([clave, valor]) => searchParams.get(clave) === valor);
+        if (masAdentro || !yaAhi) {
           prepare(href);
           router.push(href);
           return;

@@ -46,7 +46,9 @@ export async function GET(req: NextRequest) {
   const url = new URL(req.url);
   const bookingId = url.searchParams.get("bookingId");
   const projectId = url.searchParams.get("projectId");
-  let q = me.admin.from("quotes").select(SELECT).order("created_at", { ascending: false }).limit(100);
+  // Con el nombre de quien cotiza: el cliente lo ve en "De X" y el profesional
+  // lo necesita para la imagen que manda por WhatsApp.
+  let q = me.admin.from("quotes").select(`${SELECT}, professionals(business_name, profiles(full_name))`).order("created_at", { ascending: false }).limit(100);
   if (bookingId) q = q.eq("booking_id", bookingId);
   else if (projectId) q = q.eq("project_id", projectId);
   // Solo lo propio: lo que envié como profesional o lo que me enviaron como cliente.
@@ -56,7 +58,12 @@ export async function GET(req: NextRequest) {
     if (tableMissing(error.message)) return NextResponse.json({ quotes: [], unavailable: true });
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
-  return NextResponse.json({ quotes: data ?? [] });
+  const quotes = ((data ?? []) as Array<Record<string, unknown>>).map((row) => {
+    const pro = row.professionals as { business_name?: string | null; profiles?: { full_name?: string | null } | null } | null;
+    const { professionals: _p, ...resto } = row; void _p;
+    return { ...resto, professional_name: pro?.business_name?.trim() || pro?.profiles?.full_name || null };
+  });
+  return NextResponse.json({ quotes });
 }
 
 export async function POST(req: NextRequest) {

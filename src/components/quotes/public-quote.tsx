@@ -8,14 +8,13 @@ import { VerifiedSeal } from "@/components/ui/verified-seal";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { formatColones } from "@/lib/pricing";
-import { getCategoryLabel } from "@/lib/data/categories";
 import { getInitials } from "@/lib/utils";
 import { cldThumb } from "@/lib/cloudinary";
 import { isQuoteExpired, type Quote } from "@/lib/quotes";
 
 export type PublicQuoteData = {
   quote: Quote;
-  pro: { name: string; avatarUrl: string | null; verified: boolean; whatsapp: string; profileUrl: string | null; categoryId: string | null };
+  pro: { name: string; avatarUrl: string | null; verified: boolean; whatsapp: string; profileUrl: string | null; oficio: string };
 };
 
 const DATE_LOCALE: Record<string, string> = { es: "es-CR", en: "en-US" };
@@ -46,7 +45,7 @@ export function PublicQuote({ locale, data }: { locale: string; data: PublicQuot
   const abierta = estado === "sent" && !vencida;
   const fecha = quote.valid_until ? new Date(`${quote.valid_until}T12:00:00`).toLocaleDateString(DATE_LOCALE[locale] ?? "es-CR", { day: "numeric", month: "long" }) : null;
   const wa = pro.whatsapp ? `https://wa.me/${pro.whatsapp}` : null;
-  const oficio = pro.categoryId ? getCategoryLabel(pro.categoryId, locale) : "";
+  const oficio = pro.oficio;
 
   async function responder(action: "accept" | "decline") {
     setBusy(true); setError(null);

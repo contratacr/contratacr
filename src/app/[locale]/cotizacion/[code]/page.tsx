@@ -5,6 +5,7 @@ import { PublicQuote, type PublicQuoteData } from "@/components/quotes/public-qu
 import { proDisplayName } from "@/lib/utils";
 import { enlacePerfil } from "@/lib/profile-url";
 import { whatsappDigits, type Quote } from "@/lib/quotes";
+import { getCategoryGroupId, getCategoryGroupLabel, getCategoryLabel } from "@/lib/data/categories";
 
 /**
  * La cotización que recibe el cliente por WhatsApp: contratacr.com/cotizacion/<código>.
@@ -14,7 +15,16 @@ type Props = { params: Promise<{ locale: string; code: string }> };
 
 export const dynamic = "force-dynamic";
 
-async function cargar(code: string): Promise<PublicQuoteData | null> {
+// Bajo el nombre va lo que ES (misma regla que la cabecera del perfil): con un
+// solo oficio, el oficio; con varios del mismo rubro, el rubro; si no, nada.
+function oficioDe(professions: string[] | null | undefined, categoryId: string | null | undefined, locale: string) {
+  const oficios = professions?.length ? professions : (categoryId ? [categoryId] : []);
+  if (oficios.length === 1) return getCategoryLabel(oficios[0], locale);
+  const grupos = new Set(oficios.map((id) => getCategoryGroupId(id)).filter(Boolean) as string[]);
+  return grupos.size === 1 ? getCategoryGroupLabel([...grupos][0], locale) : "";
+}
+
+async function cargar(code: string, locale: string): Promise<PublicQuoteData | null> {
   if (!/^[a-z0-9]{8,20}$/i.test(code)) return null;
   const admin = createAdminClient();
   const { data: q } = await admin.from("quotes")
@@ -34,14 +44,14 @@ async function cargar(code: string): Promise<PublicQuoteData | null> {
       verified: pro?.verification_status === "verified",
       whatsapp: whatsappDigits(pro?.whatsapp ?? null),
       profileUrl: pro?.slug ? enlacePerfil(pro.slug) : null,
-      categoryId: (pro?.professions?.[0] ?? pro?.category_id ?? null) as string | null,
+      oficio: oficioDe(pro?.professions as string[] | null, pro?.category_id as string | null, locale),
     },
   };
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { code } = await params;
-  const datos = await cargar(code);
+  const { locale, code } = await params;
+  const datos = await cargar(code, locale);
   const t = await getTranslations("quotes");
   return {
     title: datos ? t("publicMetaTitle", { name: datos.pro.name }) : t("publicNotFound"),
@@ -51,6 +61,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function PublicQuotePage({ params }: Props) {
   const { locale, code } = await params;
-  const datos = await cargar(code);
+  const datos = await cargar(code, locale);
   return <PublicQuote locale={locale} data={datos} />;
 }
