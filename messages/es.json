@@ -344,7 +344,9 @@
     "verifiedShort": "Verificado",
     "unverifiedShort": "Sin verificar",
     "email": "Contactar por correo",
-    "servicesSuffix": "servicios"
+    "servicesSuffix": "servicios",
+    "savedToast": "Agregado a favoritos",
+    "removedToast": "Quitado de favoritos"
   },
   "locationPicker": {
     "searchPlaceholder": "Busca la dirección de tu local… ejemplo: Escazú Centro",

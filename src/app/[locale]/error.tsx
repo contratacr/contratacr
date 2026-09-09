@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { RefreshCw, WifiOff, AlertTriangle } from "lucide-react";
 import { ErrorScreen, errorPrimaryBtn, errorSecondaryBtn } from "@/components/error/error-screen";
 import { ServiceUnavailableScreen } from "@/components/error/service-unavailable-screen";
-import { getRuntimeErrorKind } from "@/lib/errors/runtime-error-kind";
+import { getRuntimeErrorKind, isStaleChunkError } from "@/lib/errors/runtime-error-kind";
 import { reportClientError } from "@/lib/report-client-error";
 
 // On-brand boundary for unexpected errors. Detects an offline/connection issue
@@ -50,6 +50,18 @@ export default function LocaleError({
     console.error("[app error boundary]", error);
     // Sin esto, el error se queda en la consola del teléfono de quien lo sufrió.
     reportClientError("boundary", error);
+    // Publicamos una versión nueva y la pantalla abierta pide un archivo que ya
+    // no está: recargar la arregla. Se hace UNA vez por pantalla para no entrar
+    // en un ciclo si el problema fuera otro.
+    if (isStaleChunkError(error) && typeof window !== "undefined") {
+      const marca = `ccr:recarga-por-version:${window.location.pathname}`;
+      let yaIntentado = true;
+      try { yaIntentado = window.sessionStorage.getItem(marca) === "1"; } catch { yaIntentado = true; }
+      if (!yaIntentado) {
+        try { window.sessionStorage.setItem(marca, "1"); } catch { /* sin almacenamiento: no se reintenta */ }
+        window.location.reload();
+      }
+    }
     if (typeof navigator !== "undefined" && navigator.onLine === false) setOffline(true);
     if (typeof window !== "undefined" && window.location.pathname.startsWith("/en")) setLang("en");
   }, [error]);

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Bookmark } from "lucide-react";
+import { AvisoFlotante } from "@/components/ui/aviso-flotante";
 import { cn } from "@/lib/utils";
 import { trackInteraction } from "@/lib/analytics/interaction-events";
 import { SelfActionModal, SELF_MSG } from "@/components/professionals/self-action-modal";
@@ -269,14 +270,17 @@ interface SaveButtonProps {
       exact same favorites logic, storage and self-action block, so the saved state
       stays consistent between a /buscar card and the profile. */
   withLabel?: boolean;
+  /** Marcador grande dentro de un círculo, para la cabecera de un perfil. */
+  bubble?: boolean;
 }
 
-export function SaveButton({ pro, className, isOwn = false, withLabel = false }: SaveButtonProps) {
+export function SaveButton({ pro, className, isOwn = false, withLabel = false, bubble = false }: SaveButtonProps) {
   const t = useTranslations("card");
   const locale = useLocale();
   const { user, loading: authLoading } = useAuth();
   const [saved, setSaved] = useState(false);
   const [selfMsg, setSelfMsg] = useState<string | null>(null);
+  const [aviso, setAviso] = useState<string | null>(null);
 
   useEffect(() => {
     // Stay in sync if the SAME pro is toggled elsewhere in this tab (e.g. another
@@ -322,10 +326,12 @@ export function SaveButton({ pro, className, isOwn = false, withLabel = false }:
     if (saved) {
       await unsaveProRemote(pro.id, activeUser.id);
       setSaved(false);
+      setAviso(t("removedToast"));
       trackInteraction({ type: "favorite_remove", professionalId: pro.id, source: "favorites", locale });
     } else {
       await saveProRemote(pro, activeUser.id);
       setSaved(true);
+      setAviso(t("savedToast"));
       trackInteraction({ type: "favorite_add", professionalId: pro.id, source: "favorites", locale });
     }
     /* dispatch custom event so saved-tab + any other SaveButton refresh */
@@ -334,7 +340,26 @@ export function SaveButton({ pro, className, isOwn = false, withLabel = false }:
 
   return (
     <>
-      {withLabel ? (
+      {bubble ? (
+        // Marcador grande: la misma acción que en las tarjetas, con el tamaño de
+        // un botón de verdad y el color que dice si ya está guardado.
+        <button
+          data-save-button
+          onClick={toggle}
+          aria-label={saved ? t("unsave") : t("save")}
+          aria-pressed={saved}
+          title={saved ? t("savedLabel") : t("saveLabel")}
+          className={cn(
+            "grid h-11 w-11 place-items-center rounded-full border transition-colors duration-200",
+            saved
+              ? "border-[#009FD9] bg-[#eaf7fc] text-[#0089bb]"
+              : "border-[#d7e1ea] bg-white text-[#162543] hover:border-[#b9c8d6] hover:bg-[#f6f9fb]",
+            className,
+          )}
+        >
+          <Bookmark className="h-5 w-5" fill={saved ? "currentColor" : "none"} />
+        </button>
+      ) : withLabel ? (
         <button
           data-save-button
           onClick={toggle}
@@ -369,6 +394,7 @@ export function SaveButton({ pro, className, isOwn = false, withLabel = false }:
         </button>
       )}
       <SelfActionModal open={!!selfMsg} onClose={() => setSelfMsg(null)} message={selfMsg ?? ""} />
+      {aviso && <AvisoFlotante texto={aviso} onFin={() => setAviso(null)} />}
     </>
   );
 }

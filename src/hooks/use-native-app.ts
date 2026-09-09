@@ -28,8 +28,18 @@ export function useNativeFullscreenLayer(active: boolean) {
   }, [active]);
 }
 
+/**
+ * ¿Estamos dentro de la app? SIEMPRE arranca en `false`, igual que el servidor,
+ * y pasa a `true` después de montar.
+ *
+ * Esto no es un detalle: el servidor pinta la versión web y el cliente, si
+ * empezara en `true`, pintaría otra cosa en la primera pasada. React 19 no
+ * repara esa diferencia —tira el árbol entero— y eso es lo que salía como
+ * "Algo salió mal" al entrar al panel, a /buscar, a ofertas o a empleos, donde
+ * el botón de contacto cambia de forma según sea app o web.
+ */
 export function useNativeApp(): boolean {
-  const [nativeApp, setNativeApp] = useState(() => isNativeAppRuntime());
+  const [nativeApp, setNativeApp] = useState(false);
 
   useEffect(() => {
     if (nativeApp) return;
