@@ -2,7 +2,7 @@
 import { EMPLEOS_VISIBLE } from "@/lib/feature-flags";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Search, Bot, Briefcase, UserRound } from "lucide-react";
+import { Search, Bot, Briefcase, UserRound, ReceiptText } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { Link, useRouter, usePathname } from "@/i18n/navigation";
 import { useSearchParams } from "next/navigation";
@@ -65,9 +65,15 @@ export function NativeBottomNav() {
       if (asistenteAbierto) return href === "assistant";
       const base = href.split("?")[0] ?? href;
       if (pendingHref) return pendingHref === href;
-      return pathname === base || (base === panelHref && (pathname ?? "").startsWith(panelHref));
+      if (base === panelHref) {
+        const enPanel = (pathname ?? "").startsWith(panelHref);
+        const esCotizaciones = href.includes("tab=quotes");
+        const pestanaCotizaciones = searchParams.get("tab") === "quotes";
+        return enPanel && (esCotizaciones ? pestanaCotizaciones : !pestanaCotizaciones);
+      }
+      return pathname === base;
     },
-    [asistenteAbierto, pathname, pendingHref],
+    [asistenteAbierto, pathname, pendingHref, searchParams],
   );
 
   const prepare = useCallback(
@@ -232,7 +238,12 @@ export function NativeBottomNav() {
     ofertas: tNav("deals"),
     asistente: tNav("assistant"),
     empleos: tNav("jobs"),
+    cotizaciones: tNav("quotes"),
   };
+  // El profesional en su modo cotiza desde la barra; el Asistente (que casi
+  // nadie usa) pasa al menú lateral. El cliente conserva el Asistente.
+  const cotizacionesHref = `${panelHref}?mode=offer&tab=quotes`;
+  const conCotizaciones = isPro && mode === "offer";
 
   return (
     <nav
@@ -268,16 +279,30 @@ export function NativeBottomNav() {
           {rotulo(etiquetas.ofertas)}
         </Link>
 
-        <button
-          type="button"
-          aria-label={etiquetas.asistente}
-          onClick={() => window.dispatchEvent(new Event("contratacr:open-ai"))}
-          className={itemClass("assistant")}
-        >
-          {marca("assistant")}
-          <Bot className="h-5 w-5" strokeWidth={isActive("assistant") ? 2.4 : 2} />
-          {rotulo(etiquetas.asistente)}
-        </button>
+        {conCotizaciones ? (
+          <Link
+            href={cotizacionesHref}
+            prefetch={true}
+            aria-label={etiquetas.cotizaciones}
+            onClick={(event) => irA(event, cotizacionesHref)}
+            className={itemClass(cotizacionesHref)}
+          >
+            {marca(cotizacionesHref)}
+            <ReceiptText className="h-5 w-5" strokeWidth={isActive(cotizacionesHref) ? 2.4 : 2} />
+            {rotulo(etiquetas.cotizaciones)}
+          </Link>
+        ) : (
+          <button
+            type="button"
+            aria-label={etiquetas.asistente}
+            onClick={() => window.dispatchEvent(new Event("contratacr:open-ai"))}
+            className={itemClass("assistant")}
+          >
+            {marca("assistant")}
+            <Bot className="h-5 w-5" strokeWidth={isActive("assistant") ? 2.4 : 2} />
+            {rotulo(etiquetas.asistente)}
+          </button>
+        )}
 
         {EMPLEOS_VISIBLE && (
           <Link

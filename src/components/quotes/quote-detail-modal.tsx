@@ -7,11 +7,18 @@ import { Button } from "@/components/ui/button";
 import { useAppDialog } from "@/hooks/use-app-dialog";
 import { formatColones } from "@/lib/pricing";
 import { isQuoteExpired, type Quote } from "@/lib/quotes";
+import { QuoteShare } from "@/components/quotes/quote-share";
 
 const DATE_LOCALE: Record<string, string> = { es: "es-CR", en: "en-US" };
 
-/** La cotización completa; el cliente la acepta o no, el profesional puede retirarla. */
-export function QuoteDetailModal({ quote, role, open, onClose, onChanged }: { quote: Quote; role: "client" | "pro"; open: boolean; onClose: () => void; onChanged: (q: Quote) => void }) {
+/**
+ * La cotización completa. El cliente la acepta o no; el profesional la manda
+ * (enlace, WhatsApp, imagen) y puede retirarla. `recienCreada` es la pantalla
+ * de "lista para enviar" justo después de crearla.
+ */
+export function QuoteDetailModal({ quote, role, open, onClose, onChanged, proName, recienCreada = false }: {
+  quote: Quote; role: "client" | "pro"; open: boolean; onClose: () => void; onChanged: (q: Quote) => void; proName?: string; recienCreada?: boolean;
+}) {
   const t = useTranslations("quotes");
   const locale = useLocale();
   const { dialogNode, confirm, showMessage } = useAppDialog();
@@ -42,21 +49,29 @@ export function QuoteDetailModal({ quote, role, open, onClose, onChanged }: { qu
 
   const puedeResponder = role === "client" && quote.status === "sent" && !expirada;
   const puedeRetirar = role === "pro" && quote.status === "sent";
+  const abierta = quote.status === "sent" && !expirada;
+  const titulo = recienCreada ? t("readyTitle") : (quote.title || t("detailTitle"));
+  const subtitulo = recienCreada ? t("readyBody") : quote.professional_name ? t("from", { name: quote.professional_name }) : quote.client_name ? `${t("clientLabel")}: ${quote.client_name}` : undefined;
+
   return (
     <>
-      <Modal open={open} onClose={onClose} title={quote.title || t("detailTitle")} subtitle={quote.professional_name ? t("from", { name: quote.professional_name }) : undefined} size="sm" mobilePresentation="center" closeLabel={t("close")}
+      <Modal open={open} onClose={onClose} title={titulo} subtitle={subtitulo} size="sm" mobilePresentation="center" closeLabel={t("close")}
         footer={puedeResponder ? (<>
           <Button type="button" variant="secondary" className="w-full sm:w-auto" disabled={busy} onClick={() => void actuar("decline")}>{t("decline")}</Button>
           <Button type="button" className="w-full sm:w-auto" disabled={busy} loading={busy} onClick={() => void actuar("accept")}>{t("accept")}</Button>
-        </>) : puedeRetirar ? (
+        </>) : puedeRetirar && !recienCreada ? (
           <Button type="button" variant="secondary" className="w-full sm:w-auto" disabled={busy} onClick={() => void actuar("withdraw")}>{t("withdraw")}</Button>
         ) : undefined}
         footerClassName="flex-col-reverse gap-2 sm:flex-row sm:justify-end">
         <div className="flex flex-col gap-4">
-          <div className="flex flex-wrap items-center justify-between gap-2 text-[13px]">
-            <span className={`rounded-full px-2.5 py-1 font-bold ${quote.status === "accepted" ? "bg-[#eaf7fc] text-[#0089bb]" : quote.status === "sent" && !expirada ? "bg-[#f4f7fa] text-[#52627a]" : "bg-[#f3f4f6] text-[#6b7280]"}`}>{estado}</span>
-            {fecha && quote.status === "sent" && <span className="text-[#68778d]">{t("validUntil", { date: fecha })}</span>}
-          </div>
+          {/* Para el profesional, primero cómo mandarla: es a lo que viene. */}
+          {role === "pro" && abierta && <QuoteShare quote={quote} proName={proName ?? quote.professional_name ?? ""} />}
+          {!recienCreada && (
+            <div className="flex flex-wrap items-center justify-between gap-2 text-[13px]">
+              <span className={`rounded-full px-2.5 py-1 font-bold ${quote.status === "accepted" ? "bg-[#eaf7fc] text-[#0089bb]" : abierta ? "bg-[#f4f7fa] text-[#52627a]" : "bg-[#f3f4f6] text-[#6b7280]"}`}>{estado}</span>
+              {fecha && quote.status === "sent" && <span className="text-[#68778d]">{t("validUntil", { date: fecha })}</span>}
+            </div>
+          )}
           <div className="divide-y divide-[#eef2f6] overflow-hidden rounded-2xl border border-[#e5eaf0]">
             {quote.items.map((it, i) => (
               <div key={i} className="flex items-start justify-between gap-3 px-4 py-3 text-[14px]">

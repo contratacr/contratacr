@@ -11,8 +11,9 @@ import {
   User, Award, CalendarCheck, CalendarClock, CalendarDays, Wrench,
   ShieldCheck, Bell, Handshake, ClipboardList, Bookmark, Settings, Headset, CreditCard,
   ArrowLeft, ArrowRight, ChevronDown, ChevronRight, Sparkles, Plus, AlertCircle, X, MessageSquareMore, Home, LogOut, Users, CheckCircle2, FileText, Search, Camera, Eye, Trash2, Loader2,
-  BriefcaseBusiness, Star,
+  BriefcaseBusiness, Star, ReceiptText,
   } from "lucide-react";
+import { QuotesSection } from "@/components/quotes/quotes-section";
 import { Navbar } from "@/components/layout/navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -76,7 +77,7 @@ import { OfferTagPercentIcon } from "@/components/icons/offer-tag-percent-icon";
 // (the offer capability, unlocked by completing the professional profile). There
 // is no separate client panel; everyone lives here.
 type Tab =
-  | "home" | "profile" | "services" | "photos" | "availability" | "bookings" | "proposals" | "verificacion"
+  | "home" | "profile" | "services" | "photos" | "availability" | "bookings" | "proposals" | "quotes" | "verificacion"
   | "jobs" | "offers" | "completion"
   | "suscripcion"
   | "sent_bookings" | "sent_projects" | "applications" | "saved" | "connections"
@@ -86,7 +87,7 @@ type Tab =
 type ProData = Record<string, any>;
 
 const ALL_TABS = new Set<Tab>([
-  "home", "profile", "services", "photos", "availability", "bookings", "proposals", "verificacion",
+  "home", "profile", "services", "photos", "availability", "bookings", "proposals", "quotes", "verificacion",
   "jobs", "offers", "completion", "suscripcion", "sent_bookings", "sent_projects", "applications", "saved", "connections",
   "chat", "notifications", "soporte", "cuenta", "guides",
 ]);
@@ -99,6 +100,7 @@ const TAB_ICONS: Record<Tab, React.ReactNode> = {
   availability: <CalendarDays className="h-4 w-4" />,
   bookings: <CalendarCheck className="h-4 w-4" />,
   proposals: <Handshake className="h-4 w-4" />,
+  quotes: <ReceiptText className="h-4 w-4" />,
   verificacion: <ShieldCheck className="h-4 w-4" />,
   suscripcion: <CreditCard className="h-4 w-4" />,
   sent_bookings: <CalendarClock className="h-4 w-4" />,
@@ -122,12 +124,12 @@ const TABS_WITH_SUBTITLE = new Set<Tab>(["proposals", "sent_bookings", "sent_pro
 // Mode membership. The first three render only in "offer" mode, the next three
 // only in "use" mode; "profile" + the shared tabs are valid in both, so the mode
 // for those is taken from the URL (?mode=) or defaults to the account's capability.
-const OFFER_ONLY = new Set<Tab>(["services", "photos", "availability", "bookings", "proposals", "verificacion", "suscripcion", "jobs", "offers", "completion"]);
+const OFFER_ONLY = new Set<Tab>(["services", "photos", "availability", "bookings", "proposals", "quotes", "verificacion", "suscripcion", "jobs", "offers", "completion"]);
 const USE_ONLY = new Set<Tab>(["sent_bookings", "sent_projects", "applications", "connections"]);
 
 // Sidebar order per mode (+ a shared block appended below).
 const OFFER_TABS: Tab[] = ([
-  "bookings", "proposals", "jobs", "offers", "photos", "availability", "services", "saved", "soporte", "profile", "guides",
+  "bookings", "proposals", "quotes", "jobs", "offers", "photos", "availability", "services", "saved", "soporte", "profile", "guides",
   ...(PAYMENTS_ENABLED ? (["suscripcion"] as Tab[]) : []),
 ] as Tab[]).filter((tab) => EMPLEOS_VISIBLE || tab !== "jobs");
 const USE_TABS: Tab[] = (["sent_bookings", "sent_projects", "applications", "connections", "saved", "soporte", "profile", "guides"] as Tab[])
@@ -138,7 +140,7 @@ const OPPORTUNITY_MODAL_SEEN_STORAGE_PREFIX = "contratacr:seen-opportunity-modal
 // agrupamiento se nota por el orden, sin rótulos ni líneas: lo único que hay
 // que leer ahí son los nombres de las secciones.
 const PANEL_GROUPS: { grupo: "work" | "business" | "saved" | "account"; tabs: Tab[] }[] = [
-  { grupo: "work", tabs: ["bookings", "proposals", "sent_bookings", "sent_projects"] },
+  { grupo: "work", tabs: ["bookings", "proposals", "quotes", "sent_bookings", "sent_projects"] },
   { grupo: "business", tabs: ["offers", "jobs", "photos", "availability", "services", "completion"] },
   { grupo: "saved", tabs: ["connections", "saved"] },
   { grupo: "account", tabs: ["profile", "soporte", "guides"] },
@@ -155,6 +157,7 @@ function agruparPestanas(tabs: Tab[]): Tab[][] {
 const PANEL_TAB_LABELS: Partial<Record<Tab, { es: string; en: string }>> = {
   bookings: { es: "Citas", en: "Appointments" },
   proposals: { es: "Proyectos", en: "Projects" },
+  quotes: { es: "Cotizaciones", en: "Quotes" },
   sent_bookings: { es: "Mis citas", en: "My appointments" },
   sent_projects: { es: "Mis proyectos", en: "My projects" },
   applications: { es: "Mis postulaciones", en: "My applications" },
@@ -2451,6 +2454,7 @@ export default function DashboardPage() {
                         )}
                         {activeTab === "suscripcion" && PAYMENTS_ENABLED && <SubscriptionPanel />}
                         {activeTab === "bookings" && <BookingRequests />}
+                        {activeTab === "quotes" && <QuotesSection proName={professionalDisplayName} />}
                         {activeTab === "proposals" && pro && (
                           <ProposalsTab
                             key={`proposals-${pro.id}`}

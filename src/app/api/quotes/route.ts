@@ -5,15 +5,26 @@ import { auditUserAction } from "@/lib/audit/user-action";
 import { writeSourceColumns } from "@/lib/security/write-guard";
 import { sendNotificationPush } from "@/lib/push/notify";
 import { formatColones } from "@/lib/pricing";
+import { randomBytes } from "node:crypto";
 import { quoteTotals, sanitizeQuoteItems, type QuoteTaxMode } from "@/lib/quotes";
 
 /**
- * Cotizaciones: el profesional las crea sobre una cita o un proyecto; el cliente
- * las acepta o rechaza; cualquiera de los dos las lee. Las escrituras usan la
+ * Cotizaciones: el profesional las crea desde su sección (a cualquier cliente,
+ * con nombre y WhatsApp) o sobre una cita o un proyecto; el cliente las acepta o
+ * rechaza desde su panel o desde el enlace público. Las escrituras usan la
  * llave de servicio tras verificar quién es quién.
  */
 const TAX_MODES = new Set<QuoteTaxMode>(["incluido", "mas_iva", "exento"]);
-const SELECT = "id, professional_id, client_id, booking_id, project_id, proposal_id, title, items, tax_mode, subtotal, tax_amount, total, notes, valid_until, status, accepted_at, declined_at, created_at";
+const SELECT = "id, professional_id, client_id, client_name, client_phone, public_code, booking_id, project_id, proposal_id, title, items, tax_mode, subtotal, tax_amount, total, notes, valid_until, status, accepted_at, declined_at, created_at";
+
+// Código del enlace público: 12 caracteres de un alfabeto sin ambigüedades.
+const ALFABETO = "abcdefghjkmnpqrstuvwxyz23456789";
+function codigoPublico() {
+  const bytes = randomBytes(12);
+  let out = "";
+  for (let i = 0; i < 12; i++) out += ALFABETO[bytes[i] % ALFABETO.length];
+  return out;
+}
 
 function tableMissing(message?: string | null) {
   return /relation .*quotes.* does not exist|Could not find the table|schema cache/i.test(message ?? "");
@@ -35,7 +46,7 @@ export async function GET(req: NextRequest) {
   const url = new URL(req.url);
   const bookingId = url.searchParams.get("bookingId");
   const projectId = url.searchParams.get("projectId");
-  let q = me.admin.from("quotes").select(SELECT).order("created_at", { ascending: false }).limit(50);
+  let q = me.admin.from("quotes").select(SELECT).order("created_at", { ascending: false }).limit(100);
   if (bookingId) q = q.eq("booking_id", bookingId);
   else if (projectId) q = q.eq("project_id", projectId);
   // Solo lo propio: lo que envié como profesional o lo que me enviaron como cliente.
@@ -62,7 +73,9 @@ export async function POST(req: NextRequest) {
   const validUntil = new Date(Date.now() + validDays * 86_400_000).toISOString().slice(0, 10);
   const bookingId = typeof body.bookingId === "string" ? body.bookingId : null;
   const projectId = typeof body.projectId === "string" ? body.projectId : null;
-  if (!bookingId && !projectId) return NextResponse.json({ error: "La cotización va sobre una cita o un proyecto." }, { status: 400 });
+  const clientName = String(body.clientName ?? "").replace(/\s+/g, " ").trim().slice(0, 80) || null;
+  const clientPhone = String(body.clientPhone ?? "").replace(/[^\d+]/g, "").slice(0, 20) || null;
+  if (!bookingId && !projectId && !clientName) return NextResponse.json({ error: "Escribe para quién es la cotización." }, { status: 400 });
 
   // El contexto tiene que ser del profesional: su cita, o un proyecto que respondió.
   let clientId: string | null = null; let proposalId: string | null = null; let contextTitle = "";
@@ -77,11 +90,12 @@ export async function POST(req: NextRequest) {
     if (!prop) return NextResponse.json({ error: "Primero responde el proyecto." }, { status: 403 });
     clientId = p.client_id ?? null; proposalId = prop.id; contextTitle = p.title ?? "";
   }
-  if (!clientId) return NextResponse.json({ error: "Esta cita no tiene una cuenta de cliente a la que enviarle la cotización." }, { status: 400 });
+  if ((bookingId || projectId) && !clientId) return NextResponse.json({ error: "Esta cita no tiene una cuenta de cliente a la que enviarle la cotización." }, { status: 400 });
 
   const totals = quoteTotals(items, taxMode);
   const insert = {
-    professional_id: me.proId, client_id: clientId, booking_id: bookingId, project_id: projectId, proposal_id: proposalId,
+    professional_id: me.proId, client_id: clientId, client_name: clientName, client_phone: clientPhone, public_code: codigoPublico(),
+    booking_id: bookingId, project_id: projectId, proposal_id: proposalId,
     title: title ?? (contextTitle || null), items, tax_mode: taxMode, ...totals, notes, valid_until: validUntil, status: "sent",
     ...writeSourceColumns(req),
   };
@@ -93,7 +107,7 @@ export async function POST(req: NextRequest) {
 
   await auditUserAction(me.admin, req, { actorUserId: me.user.id, actorRole: "professional", action: "quote.create", entityTable: "quotes", entityId: data.id, entityOwnerUserId: me.user.id, afterData: insert });
 
-  try {
+  if (clientId) try {
     const proName = me.proName ?? "El profesional";
     const link = bookingId ? "/es/dashboard/profesional?tab=sent_bookings" : "/es/dashboard/profesional?tab=sent_projects";
     const notification = {

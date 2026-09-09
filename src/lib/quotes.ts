@@ -6,7 +6,12 @@ export type QuoteStatus = "sent" | "accepted" | "declined" | "withdrawn";
 export type Quote = {
   id: string;
   professional_id: string;
-  client_id: string;
+  /** Null cuando la cotización va a alguien sin cuenta (nombre y WhatsApp). */
+  client_id: string | null;
+  client_name: string | null;
+  client_phone: string | null;
+  /** Código del enlace público: contratacr.com/cotizacion/<código>. */
+  public_code: string;
   booking_id: string | null;
   project_id: string | null;
   proposal_id: string | null;
@@ -24,6 +29,20 @@ export type Quote = {
   created_at: string;
   professional_name?: string | null;
 };
+
+/** El enlace público que se manda al cliente. */
+export function enlaceCotizacion(code: string, baseUrl?: string): string {
+  let base = (baseUrl || process.env.NEXT_PUBLIC_APP_URL || "https://contratacr.com").replace(/\/$/, "");
+  if (/\.vercel\.app$/i.test(base.replace(/^https?:\/\//, "").split("/")[0])) base = "https://contratacr.com";
+  return `${base}/cotizacion/${code}`;
+}
+
+/** Solo dígitos, con el 506 de Costa Rica si viene sin código de país. */
+export function whatsappDigits(phone: string | null | undefined): string {
+  const d = String(phone ?? "").replace(/\D/g, "");
+  if (!d) return "";
+  return d.length === 8 ? `506${d}` : d;
+}
 
 export const IVA_RATE = 0.13;
 export const QUOTE_MAX_ITEMS = 20;

@@ -4,7 +4,7 @@ import { EMPLEOS_VISIBLE } from "@/lib/feature-flags";
 import { useState, useEffect, useRef, useMemo, useCallback, useTransition, type ReactNode } from "react";
 import { soltarFoco } from "@/lib/soltar-foco";
 import {
-  X, Menu, ChevronDown, ChevronRight, Search, MapPin, List, Map as MapIcon, ArrowLeft, Share2,
+  X, Menu, ChevronDown, ChevronRight, Search, MapPin, List, Map as MapIcon, ArrowLeft, Share2, Bot,
   Briefcase, Compass, Wrench,
   UserRound, UserRoundPlus, LogOut, FileText, MessageSquareText, Settings, Bell, MoreHorizontal,
   HelpCircle, ListChecks, Lightbulb, Headset, Globe2, Shield, Mail, ClipboardList, Clock, Bookmark,
@@ -807,6 +807,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   const drawerTouchX = useRef<number | null>(null);
   const router = useRouter();
   const t = useTranslations("header");
+  const tNav = useTranslations("bottomNav");
   const locale = useLocale();
   const switchLang = useSwitchLang();
   const alternateLocale = locale === "en" ? "es" : "en";
@@ -2480,6 +2481,14 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                       <DrawerIcon><Bookmark /></DrawerIcon>
                       <span className={mobileDrawerTextClass}>{t("favorites")}</span>
                     </Link>
+                    {/* En la app, el profesional tiene Cotizaciones en la barra de
+                        abajo donde antes estaba el Asistente; el Asistente vive aquí. */}
+                    {nativeApp && isPro && (
+                      <button type="button" onClick={() => { setMobileOpen(false); window.dispatchEvent(new Event("contratacr:open-ai")); }} className={mobileDrawerItemClass}>
+                        <DrawerIcon><Bot /></DrawerIcon>
+                        <span className={mobileDrawerTextClass}>{tNav("assistant")}</span>
+                      </button>
+                    )}
                   </>
                 ) : null}
                 <Link href="/servicios" onClick={() => setMobileOpen(false)} className={claseCajon("/servicios")}>

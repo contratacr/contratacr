@@ -10,6 +10,7 @@ cotizaciones y precios). Cada punto dice qué falta y quién lo hace.
 | 189 · recordatorios de inactividad | tipos de aviso + índices | **aplicada 8-sep** | pendiente |
 | 190 · retiros de propuesta | `proposals.withdrawn_at`, `withdraw_reason` | **aplicada 8-sep** | pendiente |
 | 191 · cotizaciones | tabla `quotes` con RLS, tipos `quote_sent` / `quote_accepted` / `quote_declined` / `pricing_request` | **aplicada 8-sep** | pendiente |
+| 192 · cotizaciones a cualquiera | `quotes.client_id` opcional, `client_name`, `client_phone`, `public_code` (enlace público) | pendiente | pendiente |
 
 Se aplican **solo** con el workflow `Supabase migrations` (dispatch), nunca en local:
 `test` desde la rama `test`, `production` desde `main`; siempre en seco primero.
@@ -72,4 +73,25 @@ nombres distintos: no hay choques hoy.
 - La tarjeta con QR ahora imprime el enlace escrito debajo del código, y en
   vistas previas de Vercel el kit comparte igual `contratacr.com` (antes salía
   el dominio `…vercel.app`, que era la queja).
+
+## 6. Sección "Cotizaciones" (9-sep)
+
+En producción había 0 citas y 1 proyecto, y la cotización solo existía dentro
+de una cita o un proyecto: nadie podía hacer una. Ahora el profesional tiene la
+sección **Cotizaciones** en su panel (y en la app, en la barra de abajo, donde
+estaba el Asistente; el Asistente pasa al menú lateral para profesionales; el
+cliente conserva el Asistente):
+
+- Cotiza a **cualquier cliente** (nombre y WhatsApp), sin que tenga cuenta.
+- Cada cotización tiene enlace público `contratacr.com/cotizacion/<código>`:
+  el cliente la ve con la marca del profesional y la **acepta con un toque**
+  (`/api/quotes/public`, sin cuenta; el código de 12 caracteres es la llave).
+- Se manda por WhatsApp (directo al número si lo puso), se copia el enlace o se
+  descarga/comparte como **imagen** (`src/lib/quote-image.ts`). PDF: en la web,
+  "Imprimir → Guardar como PDF" de la página pública.
+- El bloque dentro de citas y proyectos sigue igual (mismo editor).
+- Necesita la **migración 192** en test y producción; sin ella, crear una
+  cotización falla con error de columna.
+- Al publicar: avisar a los profesionales activos que ya pueden cotizar desde
+  el app (campaña + mensaje del kit).
 

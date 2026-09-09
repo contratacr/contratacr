@@ -10,7 +10,7 @@ export const RUTAS_DEL_SITIO = new Set([
   "es", "en", "api", "auth",
   // secciones de src/app/[locale]
   "admin", "atraer-clientes", "ayuda", "buscar", "categorias", "como-funciona",
-  "completar-perfil", "contacto", "dashboard", "eliminar-cuenta", "empleos",
+  "completar-perfil", "contacto", "cotizacion", "dashboard", "eliminar-cuenta", "empleos",
   "login", "mantenimiento", "mensajes", "notificaciones", "ofertas",
   "olvide-contrasena", "onboarding", "privacidad", "profesionales",
   "proveedores-autorizados", "publicar-proyecto", "registro", "reset-password",
