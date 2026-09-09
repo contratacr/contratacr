@@ -908,6 +908,11 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   // The global navbar is navigation-only. /buscar explicitly opts into its
   // contextual professional search; every other destination owns its search.
   const showMobileNavbarSearch = mobileSearch && effectiveCompact && !mobileInline;
+  // En el teléfono, al pasar el hero del home el buscador se mete en la barra:
+  // antes solo pasaba en escritorio y en el teléfono la barra quedaba vacía al
+  // bajar. Va DENTRO del renglón (el logotipo se reduce a la marca) para que la
+  // barra no crezca a mitad del scroll y empuje la página.
+  const buscadorHomeMovilBase = isHomePage && compact && !mobileInline && !nativeHeaderShell && !rutaSinBuscador && !showMobileNavbarSearch;
   const showSearchViewToggle = showMobileNavbarSearch && pathname === "/buscar";
 
   // The layout below the navbar is sized by --ccr-native-header-height. Setting it
@@ -1176,6 +1181,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   // confirma con "ccr:section-header-ack" para que la pantalla oculte la suya.
   const [sectionTitle, setSectionTitle] = useState<string | null>(null);
   const [sectionActive, setSectionActive] = useState(false);
+  const buscadorHomeMovil = buscadorHomeMovilBase && !sectionActive;
   const [sectionRoot, setSectionRoot] = useState(false);
   const [sectionShare, setSectionShare] = useState(false);
   const [sectionMenu, setSectionMenu] = useState(false);
@@ -1691,8 +1697,21 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                 </button>
 
                 <Link href="/" aria-label="ContrataCR inicio" onClick={irAlInicio} className={cn("shrink-0", nativeHeaderShell && "mr-auto flex min-w-0 items-center justify-start")}>
-                  {mobileInline ? <ContrataCRMark className="h-8 w-8" /> : <ContrataCRLogo size="lg" />}
+                  {mobileInline || buscadorHomeMovil ? <ContrataCRMark className="h-8 w-8" /> : <ContrataCRLogo size="lg" />}
                 </Link>
+                {buscadorHomeMovil && (
+                  <button
+                    type="button"
+                    onClick={openNativeSearch}
+                    aria-label={locale === "en" ? "What service are you looking for?" : "¿Qué servicio estás buscando?"}
+                    className="ml-1 flex h-10 min-w-0 flex-1 items-center gap-2 rounded-full border border-[#e3ebf2] bg-[#f6f8fb] px-3.5 text-left transition-colors active:bg-[#eef3f8] lg:hidden"
+                  >
+                    <span className="min-w-0 flex-1 truncate text-[13px] font-semibold text-[#8f9aaa]">
+                      {locale === "en" ? "What service?" : "¿Qué servicio buscás?"}
+                    </span>
+                    <Search className="h-4 w-4 shrink-0 text-[#162543]" />
+                  </button>
+                )}
                   </>
                 )}
 
