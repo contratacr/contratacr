@@ -4195,6 +4195,7 @@
     "emptyFilter": "No quotes in this filter.",
     "boundaryTitle": "We couldn't load your quotes",
     "boundaryBody": "This was a problem with the screen, not with your data. Try again; if it keeps happening, contact support.",
-    "boundaryRetry": "Try again"
+    "boundaryRetry": "Try again",
+    "imageTitleNumbered": "QUOTE No. {number}"
   }
 }

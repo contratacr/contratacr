@@ -13,6 +13,8 @@ export type Quote = {
   client_cedula: string | null;
   /** Código del enlace público: contratacr.com/cotizacion/<código>. */
   public_code: string;
+  /** Consecutivo del profesional (1, 2, 3…): sale en el documento y en el nombre del archivo. */
+  quote_number: number | null;
   booking_id: string | null;
   project_id: string | null;
   proposal_id: string | null;
@@ -36,6 +38,23 @@ export function enlaceCotizacion(code: string, baseUrl?: string): string {
   let base = (baseUrl || process.env.NEXT_PUBLIC_APP_URL || "https://contratacr.com").replace(/\/$/, "");
   if (/\.vercel\.app$/i.test(base.replace(/^https?:\/\//, "").split("/")[0])) base = "https://contratacr.com";
   return `${base}/cotizacion/${code}`;
+}
+
+/** "0007" — el consecutivo como se lee en el documento. */
+export function numeroCotizacion(quote: Pick<Quote, "quote_number">): string {
+  return String(quote.quote_number ?? 0).padStart(4, "0");
+}
+
+/**
+ * El nombre del archivo que le llega al cliente: "Cotizacion-SG-Solutions-0007.pdf".
+ * Se reconoce en la lista de descargas sin abrirlo, que es de lo que se trata.
+ */
+export function nombreArchivoCotizacion(quote: Pick<Quote, "quote_number" | "public_code">, proName: string): string {
+  const marca = (proName || "")
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^A-Za-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 40);
+  const numero = quote.quote_number ? numeroCotizacion(quote) : quote.public_code.slice(0, 6);
+  return ["Cotizacion", marca, numero].filter(Boolean).join("-");
 }
 
 /** Solo dígitos, con el 506 de Costa Rica si viene sin código de país. */

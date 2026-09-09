@@ -15,7 +15,7 @@ import { quoteTotals, sanitizeQuoteItems, type QuoteTaxMode } from "@/lib/quotes
  * llave de servicio tras verificar quién es quién.
  */
 const TAX_MODES = new Set<QuoteTaxMode>(["incluido", "mas_iva", "exento"]);
-const SELECT = "id, professional_id, client_id, client_name, client_phone, client_cedula, public_code, booking_id, project_id, proposal_id, title, items, tax_mode, subtotal, tax_amount, total, notes, valid_until, status, accepted_at, declined_at, created_at";
+const SELECT = "id, professional_id, client_id, client_name, client_phone, client_cedula, public_code, quote_number, booking_id, project_id, proposal_id, title, items, tax_mode, subtotal, tax_amount, total, notes, valid_until, status, accepted_at, declined_at, created_at";
 
 // Código del enlace público: 12 caracteres de un alfabeto sin ambigüedades.
 const ALFABETO = "abcdefghjkmnpqrstuvwxyz23456789";
@@ -100,6 +100,14 @@ export async function POST(req: NextRequest) {
   }
   if ((bookingId || projectId) && !clientId) return NextResponse.json({ error: "Esta cita no tiene una cuenta de cliente a la que enviarle la cotización." }, { status: 400 });
 
+  // El consecutivo del profesional: 1, 2, 3… Si dos cotizaciones salen al mismo
+  // tiempo, la segunda choca con el índice único y se reintenta con el siguiente.
+  const admin = me.admin; const proId = me.proId;
+  async function siguienteNumero() {
+    const { data } = await admin.from("quotes").select("quote_number").eq("professional_id", proId).order("quote_number", { ascending: false }).limit(1).maybeSingle();
+    return Number(data?.quote_number ?? 0) + 1;
+  }
+
   const totals = quoteTotals(items, taxMode);
   const insert = {
     professional_id: me.proId, client_id: clientId, client_name: clientName, client_phone: clientPhone, client_cedula: clientCedula, public_code: codigoPublico(),
@@ -107,13 +115,19 @@ export async function POST(req: NextRequest) {
     title: title ?? (contextTitle || null), items, tax_mode: taxMode, ...totals, notes, valid_until: validUntil, status: "sent",
     ...writeSourceColumns(req),
   };
-  const { data, error } = await me.admin.from("quotes").insert(insert).select(SELECT).single();
-  if (error) {
-    if (tableMissing(error.message)) return NextResponse.json({ error: "Las cotizaciones todavía no están habilitadas." }, { status: 503 });
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  let data: Record<string, unknown> | null = null; let error: { message: string } | null = null;
+  for (let intento = 0; intento < 3 && !data; intento++) {
+    const numero = await siguienteNumero();
+    const res = await me.admin.from("quotes").insert({ ...insert, quote_number: numero }).select(SELECT).single();
+    if (res.error && /idx_quotes_number_per_pro|duplicate key/i.test(res.error.message)) continue;
+    data = res.data as Record<string, unknown> | null; error = res.error;
+  }
+  if (error || !data) {
+    if (error && tableMissing(error.message)) return NextResponse.json({ error: "Las cotizaciones todavía no están habilitadas." }, { status: 503 });
+    return NextResponse.json({ error: error?.message ?? "No se pudo crear la cotización." }, { status: 500 });
   }
 
-  await auditUserAction(me.admin, req, { actorUserId: me.user.id, actorRole: "professional", action: "quote.create", entityTable: "quotes", entityId: data.id, entityOwnerUserId: me.user.id, afterData: insert });
+  await auditUserAction(me.admin, req, { actorUserId: me.user.id, actorRole: "professional", action: "quote.create", entityTable: "quotes", entityId: String(data.id), entityOwnerUserId: me.user.id, afterData: insert });
 
   if (clientId) try {
     const proName = me.proName ?? "El profesional";
@@ -121,7 +135,7 @@ export async function POST(req: NextRequest) {
     const notification = {
       user_id: clientId, type: "quote_sent", title: "Te enviaron una cotización",
       message: `${proName} te envió una cotización por ${formatColones(totals.total)}${contextTitle ? ` para "${contextTitle}"` : ""}. Revísala y acéptala si te sirve.`,
-      data: { link, quote_id: data.id, booking_id: bookingId, project_id: projectId, total: totals.total },
+      data: { link, quote_id: String(data.id), booking_id: bookingId, project_id: projectId, total: totals.total },
     };
     await me.admin.from("notifications").insert(notification);
     await sendNotificationPush({ userId: clientId, title: notification.title, message: notification.message, data: notification.data });

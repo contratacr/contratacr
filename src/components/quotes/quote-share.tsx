@@ -6,7 +6,7 @@ import { Download, FileText, Share2 } from "lucide-react";
 import { ShareLinkPanel } from "@/components/ui/share-link-panel";
 import { useNativeShare } from "@/hooks/use-native-share";
 import { formatColones } from "@/lib/pricing";
-import { enlaceCotizacion, whatsappDigits, type Quote } from "@/lib/quotes";
+import { enlaceCotizacion, nombreArchivoCotizacion, numeroCotizacion, whatsappDigits, type Quote } from "@/lib/quotes";
 import { renderQuotePdf } from "@/lib/quote-image";
 
 const DATE_LOCALE: Record<string, string> = { es: "es-CR", en: "en-US" };
@@ -37,7 +37,7 @@ export function QuoteShare({ quote, proName }: { quote: Quote; proName: string }
   useEffect(() => {
     let vivo = true;
     void renderQuotePdf(quote, proName, {
-      titulo: t("imageTitle"), cliente: t("clientLabel"), vigente: fecha ? t("imageValidUntil", { date: fecha }) : "",
+      titulo: quote.quote_number ? t("imageTitleNumbered", { number: numeroCotizacion(quote) }) : t("imageTitle"), cliente: t("clientLabel"), vigente: fecha ? t("imageValidUntil", { date: fecha }) : "",
       subtotal: t("subtotal"), iva: t("tax"), total: t("total"), ivai: t("ivaIncluded"), pie: t("imageFooter"), deQuien: t("publicFrom"),
     }, fecha).then((b) => { if (vivo) setPdf(b); });
     return () => { vivo = false; };
@@ -46,7 +46,7 @@ export function QuoteShare({ quote, proName }: { quote: Quote; proName: string }
 
   async function compartirPdf() {
     if (!pdf) return;
-    const file = new File([pdf], `cotizacion-${quote.public_code}.pdf`, { type: "application/pdf" });
+    const file = new File([pdf], `${nombreArchivoCotizacion(quote, proName)}.pdf`, { type: "application/pdf" });
     const nav = navigator as Navigator & { canShare?: (d: ShareData) => boolean };
     if (nav.share && nav.canShare?.({ files: [file] })) {
       try { await nav.share({ files: [file], title: quote.title ?? t("detailTitle"), text: mensaje }); return; } catch { /* cancelado */ }
@@ -55,7 +55,7 @@ export function QuoteShare({ quote, proName }: { quote: Quote; proName: string }
   }
   function descargarPdf() {
     if (!pdf) return;
-    const a = document.createElement("a"); a.href = URL.createObjectURL(pdf); a.download = `cotizacion-${quote.public_code}.pdf`; a.click();
+    const a = document.createElement("a"); a.href = URL.createObjectURL(pdf); a.download = `${nombreArchivoCotizacion(quote, proName)}.pdf`; a.click();
     window.setTimeout(() => URL.revokeObjectURL(a.href), 2000);
   }
 

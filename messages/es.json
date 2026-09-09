@@ -4195,6 +4195,7 @@
     "emptyFilter": "No hay cotizaciones en este filtro.",
     "boundaryTitle": "No se pudieron cargar tus cotizaciones",
     "boundaryBody": "Fue un problema de esta pantalla, no de tus datos. Volvé a intentarlo; si sigue igual, escribinos por soporte.",
-    "boundaryRetry": "Volver a intentar"
+    "boundaryRetry": "Volver a intentar",
+    "imageTitleNumbered": "COTIZACIÓN N.º {number}"
   }
 }
