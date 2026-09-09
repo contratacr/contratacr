@@ -897,6 +897,9 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   const isMarketplaceEditor = /\/(?:empleos|ofertas)\/(?:publicar|[^/]+\/editar)\/?$/.test(pathname);
   const isMarketplaceRoute = /\/(?:empleos|ofertas)(?:\/|$)/.test(pathname);
   const effectiveMarketplaceDesktop = marketplaceDesktop || (isMarketplaceRoute && !isMarketplaceEditor);
+  // Empleos, ofertas y /buscar traen sus propios filtros pegados a la barra: la
+  // línea de la barra caía justo encima de ellos y se leía como una raya suelta.
+  const rutaConFiltrosPegados = (isMarketplaceRoute && !isMarketplaceEditor) || /\/buscar(?:\/|$)/.test(pathname ?? "");
   const compactEnabled = true;
   const effectiveCompact = compactEnabled && (forceCompactSearch || !isHomePage || compact);
   // En escritorio el buscador compacto del navbar aparece en el home al pasar el
@@ -912,7 +915,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   // antes solo pasaba en escritorio y en el teléfono la barra quedaba vacía al
   // bajar. Va DENTRO del renglón (el logotipo se reduce a la marca) para que la
   // barra no crezca a mitad del scroll y empuje la página.
-  const buscadorHomeMovilBase = isHomePage && compact && !mobileInline && !nativeHeaderShell && !rutaSinBuscador && !showMobileNavbarSearch;
+  const buscadorHomeMovilBase = isHomePage && compact && !mobileInline && !rutaSinBuscador && !showMobileNavbarSearch;
   const showSearchViewToggle = showMobileNavbarSearch && pathname === "/buscar";
 
   // The layout below the navbar is sized by --ccr-native-header-height. Setting it
@@ -1336,18 +1339,27 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
       frame = window.requestAnimationFrame(() => {
         frame = null;
         const sentinel = document.getElementById("hero-search-sentinel");
+        // En la app el que se desplaza es <main> (el body queda fijo), así que
+        // mirar solo window.scrollY dejaba el buscador fuera de la barra para
+        // siempre. Se mide el desplazamiento venga de donde venga.
+        const desplazamientoVentana = window.scrollY || document.scrollingElement?.scrollTop || 0;
+        const desplazamientoContenedor = document.querySelector("main")?.scrollTop ?? 0;
+        const desplazado = desplazamientoVentana > 0 || desplazamientoContenedor > 0;
         // The compact search appears only after the primary hero search has
         // crossed above the fixed 64px navbar. A scroll measurement is more
         // reliable than observing the zero-height sentinel across refreshes.
-        setCompact(window.scrollY > 0 && (sentinel ? sentinel.getBoundingClientRect().top <= 64 : window.scrollY > 300));
+        setCompact(desplazado && (sentinel
+          ? sentinel.getBoundingClientRect().top <= 64
+          : Math.max(desplazamientoVentana, desplazamientoContenedor) > 300));
       });
     };
 
     update();
-    window.addEventListener("scroll", update, { passive: true });
+    // Con capture también llegan los scroll de <main>, que no burbujean.
+    document.addEventListener("scroll", update, { passive: true, capture: true });
     window.addEventListener("resize", update);
     return () => {
-      window.removeEventListener("scroll", update);
+      document.removeEventListener("scroll", update, { capture: true });
       window.removeEventListener("resize", update);
       if (frame !== null) window.cancelAnimationFrame(frame);
     };
@@ -1635,11 +1647,13 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
             // La barra se separa del contenido con una línea, no con sombra: en
             // escritorio la sombra proyectada ensuciaba el borde del contenido.
             // En la app la línea aparece solo al desplazar.
-            nativeApp
-              ? cn("transition-[border-color,box-shadow] duration-200", contenidoDebajo || lienzoBlanco
-                  ? "border-gray-100/80 shadow-[0_10px_34px_-24px_rgba(15,23,42,0.55)]"
-                  : "border-transparent shadow-none")
-              : "border-[#e3ebf2] shadow-none",
+            rutaConFiltrosPegados
+              ? "border-transparent shadow-none"
+              : nativeApp
+                ? cn("transition-[border-color,box-shadow] duration-200", contenidoDebajo || lienzoBlanco
+                    ? "border-gray-100/80 shadow-[0_10px_34px_-24px_rgba(15,23,42,0.55)]"
+                    : "border-transparent shadow-none")
+                : "border-[#e3ebf2] shadow-none",
             drawerOnly && "hidden",
           )}
         >
@@ -1696,7 +1710,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                   <Menu className="h-5 w-5 stroke-[2.5]" />
                 </button>
 
-                <Link href="/" aria-label="ContrataCR inicio" onClick={irAlInicio} className={cn("shrink-0", nativeHeaderShell && "mr-auto flex min-w-0 items-center justify-start")}>
+                <Link href="/" aria-label="ContrataCR inicio" onClick={irAlInicio} className={cn("shrink-0", nativeHeaderShell && !buscadorHomeMovil && "mr-auto flex min-w-0 items-center justify-start")}>
                   {mobileInline || buscadorHomeMovil ? <ContrataCRMark className="h-8 w-8" /> : <ContrataCRLogo size="lg" />}
                 </Link>
                 {buscadorHomeMovil && (
@@ -1708,7 +1722,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                   >
                     <Search className="h-4 w-4 shrink-0 text-[#162543]" />
                     <span className="min-w-0 flex-1 truncate text-[13px] font-semibold text-[#8f9aaa]">
-                      {locale === "en" ? "What service?" : "¿Qué servicio buscás?"}
+                      {locale === "en" ? "Search a service" : "Buscar un servicio"}
                     </span>
                   </button>
                 )}
@@ -1777,7 +1791,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                 <div
                   className="absolute -left-4 -right-4 top-16 z-10 flex h-[56px] items-start px-4 text-left lg:hidden"
                 >
-                  <div className="flex h-12 w-full items-center gap-3 rounded-xl bg-white px-3 shadow-[0_6px_18px_rgba(15,23,42,0.10)] ring-1 ring-[#dfe5eb] transition focus-within:ring-2 focus-within:ring-[#009FD9]/25">
+                  <div className="flex h-12 w-full items-center gap-3 rounded-[10px] border border-[#e3ebf2] bg-white px-3 transition-colors focus-within:border-[#009FD9]">
                     <button
                       type="button"
                       onClick={openNativeSearch}
