@@ -5,6 +5,7 @@ import { Link } from "@/i18n/navigation";
 import { OfferImageGallery } from "@/components/offers/offer-image-gallery";
 import { OfferDetailNavbarSearch } from "@/components/offers/offer-detail-navbar-search";
 import { OfferContactActions, OfferSaveButton } from "@/components/offers/offers-board";
+import { BotonCompartir } from "@/components/ui/boton-compartir";
 import { OfferOwnerActions } from "@/components/offers/offer-owner-actions";
 import { getAllCategories, getCategoryLabel } from "@/lib/data/categories";
 import {
@@ -140,9 +141,14 @@ export default async function OfferDetailPage({ params, searchParams }: { params
         <article className="overflow-hidden rounded-lg border border-[#dfe8f0] bg-white">
           <div className="relative bg-white p-2 sm:p-3">
             <OfferImageGallery images={offer.image_urls} title={offer.title} />
-            {/* El favorito va en la esquina de la foto; compartir viaja con los
-                botones de contacto. */}
-            {!isOwner && !unavailable && <OfferSaveButton offer={offer} userId={user?.id ?? null} className="absolute right-5 top-5 z-10 shadow-[0_2px_10px_rgba(22,37,67,0.14)]" />}
+            {/* Guardar y compartir, juntos en la esquina de la foto: son
+                acciones sobre la oferta, no formas de contactar. */}
+            {!isOwner && !unavailable && (
+              <div className="absolute right-5 top-5 z-10 flex items-center gap-2">
+                <OfferSaveButton offer={offer} userId={user?.id ?? null} className="shadow-[0_2px_10px_rgba(22,37,67,0.14)]" />
+                <BotonCompartir url={`/${locale}/ofertas/${offer.id}`} titulo={offer.title} soloIcono className="shadow-[0_2px_10px_rgba(22,37,67,0.14)]" />
+              </div>
+            )}
           </div>
           <div className="p-5 sm:p-8">
             <div className="flex flex-wrap gap-2"><span className="rounded-md bg-[#eaf7fc] px-2.5 py-1 text-xs font-bold text-[#0089bb]">{offerTypeLabel(offer.offer_type, locale)}</span>{offer.service_label && <span className="rounded-md bg-[#f3f6f9] px-2.5 py-1 text-xs font-bold text-[#52627a]">{offer.service_label}</span>}{discount && <span className="rounded-md bg-[#e8f8f3] px-2.5 py-1 text-xs font-extrabold text-[#08775c]">{copy.savings} {discount}%</span>}</div>

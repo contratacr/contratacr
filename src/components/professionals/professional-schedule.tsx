@@ -6,7 +6,7 @@ import { normalizeText } from "@/lib/data/categories";
 import { PROVINCES } from "@/lib/data/cr-geography";
 import { fetchAvailabilityBatched } from "@/lib/availability-batch";
 import { useTranslations, useLocale } from "next-intl";
-import { Share2, CalendarDays, Check, ChevronDown, ChevronLeft, ChevronRight, MapPin, Video } from "lucide-react";
+import { CalendarDays, Check, ChevronDown, ChevronLeft, ChevronRight, MapPin, Video } from "lucide-react";
 import { useRouter } from "@/i18n/navigation";
 import { ClientRegistrationModal } from "@/components/auth/client-registration-modal";
 import { useAuth } from "@/hooks/use-auth";
@@ -60,7 +60,6 @@ interface ProfessionalScheduleProps {
    *  bookable (Llamar renders outlined). Default false = the /buscar card layout (unchanged). */
   stacked?: boolean;
   /** Compartir el perfil: se dibuja con los demás botones de contacto. */
-  onShare?: () => void;
   /** Explicit video-consultation search result: clients coordinate by contact, no schedule strip. */
   forceContactOnly?: boolean;
   /** Preferred tab when search context should open a specific location/modality. */
@@ -113,7 +112,7 @@ function monthShort(locale: string, monthIndex: number) {
  *    "Ver disponibilidad" link to the full profile.
  *  - Private: lock state with "Contáctanos por Whatsapp" + "por llamada".
  */
-export function ProfessionalSchedule({ professional, categoryName, availabilityPublic, contactPreference = "ambas", videoConsultApplies = true, slots: allSlots, slotsInitiallyLoaded = true, activeCategory, isOwn = false, info, placeFallback = "", placeAddress = "", businessName = "", stacked = false, onShare, forceContactOnly = false, preferredLocationId, restrictToPreferredLocation = false, syncWithSearchLoading = false }: ProfessionalScheduleProps) {
+export function ProfessionalSchedule({ professional, categoryName, availabilityPublic, contactPreference = "ambas", videoConsultApplies = true, slots: allSlots, slotsInitiallyLoaded = true, activeCategory, isOwn = false, info, placeFallback = "", placeAddress = "", businessName = "", stacked = false, forceContactOnly = false, preferredLocationId, restrictToPreferredLocation = false, syncWithSearchLoading = false }: ProfessionalScheduleProps) {
   const t = useTranslations("schedule");
   const tLoading = useTranslations("loading");
   const locale = useLocale();
@@ -889,16 +888,6 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
       className={messageButtonClass}
     />
   );
-  const compartirPerfil = onShare ? (
-    <button
-      type="button"
-      onClick={onShare}
-      className={`${secondaryContactClass} text-[13px] font-bold`}
-    >
-      <Share2 className="h-4 w-4" />
-      {t("share")}
-    </button>
-  ) : null;
   const profileContactButtons = (
     <>
       {hasSchedule && verHorarioButton}
@@ -920,7 +909,6 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
       ) : (
         chatLauncher
       )}
-      {compartirPerfil}
     </>
   );
 

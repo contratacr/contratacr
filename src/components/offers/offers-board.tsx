@@ -741,8 +741,6 @@ export function OfferContactActions({
           )}
         </div>
       )}
-      {/* Compartir vive con los botones: es una acción, no una marca. */}
-      <BotonCompartir url={`/${locale}/ofertas/${offer.id}`} titulo={offer.title} className={compact ? "h-9 w-full text-[12px]" : "w-full"} />
     </div>
   );
 }
@@ -843,10 +841,13 @@ function OfferPreview({
             -{discount}%
           </span>
         )}
-        {/* El favorito va en la esquina de la foto: es una marca, no una acción
-            que compita con contactar. */}
+        {/* Guardar y compartir, juntos en la esquina de la foto: las dos son
+            acciones sobre la oferta, no formas de contactar al profesional. */}
         {!isOwner && (
-          <OfferSaveButton offer={offer} userId={userId} className="absolute right-3 top-3 z-10 shadow-[0_2px_10px_rgba(22,37,67,0.14)]" />
+          <div className="absolute right-3 top-3 z-10 flex items-center gap-2">
+            <OfferSaveButton offer={offer} userId={userId} className="shadow-[0_2px_10px_rgba(22,37,67,0.14)]" />
+            <BotonCompartir url={`/${locale}/ofertas/${offer.id}`} titulo={offer.title} soloIcono className="shadow-[0_2px_10px_rgba(22,37,67,0.14)]" />
+          </div>
         )}
       </div>
       <div className="mt-5 flex items-start justify-between gap-4">

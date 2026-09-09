@@ -38,6 +38,7 @@ import { DirectChatLauncher } from "@/components/professionals/direct-chat-launc
 import { ClientRegistrationModal } from "@/components/auth/client-registration-modal";
 import { SelfActionModal, SELF_MSG } from "@/components/professionals/self-action-modal";
 import { SaveButton, type SavedPro } from "@/components/professionals/save-button";
+import { BotonCompartir } from "@/components/ui/boton-compartir";
 import type { ProfessionalDetail } from "@/lib/queries/professionals";
 import { getProfessionalDisplayName } from "@/lib/display-name";
 import { trackMetaEvent } from "@/lib/analytics/meta-pixel";
@@ -590,7 +591,6 @@ export default function ProfilePage() {
       </div>
       <ProfessionalSchedule
         stacked
-        onShare={shareProfile}
         professional={professional}
         activeCategory={activeCategory}
         categoryName={catLabel(professional.categoryId)}
@@ -703,7 +703,13 @@ export default function ProfilePage() {
                 y las dos acciones comparten renglón arriba a la derecha, del
                 ancho de su texto. En el teléfono sigue centrado como estaba. */}
             <div className="relative mb-6 rounded-2xl border border-[#e5e7eb] bg-white p-4 pt-12 shadow-sm sm:grid sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:items-start sm:gap-x-5 sm:p-6 sm:pt-6">
-                <SaveButton pro={savedPro} isOwn={isOwn} bubble className="absolute right-3 top-3 z-10 sm:right-4 sm:top-4" />
+                {/* Guardar y compartir viven juntos y arriba: los dos son
+                    acciones sobre la ficha, no formas de contactar. La pila de
+                    abajo queda solo para lo que sí contacta. */}
+                <div className="absolute right-3 top-3 z-10 flex items-center gap-2 sm:right-4 sm:top-4">
+                  <SaveButton pro={savedPro} isOwn={isOwn} bubble />
+                  <BotonCompartir onPress={shareProfile} soloIcono />
+                </div>
                 <div className="flex min-w-0 flex-col items-center text-center sm:contents sm:text-left">
                   <ImagePreviewDialog
                     src={professional.avatarUrl}
