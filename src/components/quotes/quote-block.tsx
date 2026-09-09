@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { FileText, ChevronRight } from "lucide-react";
 import { formatColones } from "@/lib/pricing";
-import { isQuoteExpired, type Quote } from "@/lib/quotes";
+import { isQuoteExpired, numeroCotizacion, type Quote } from "@/lib/quotes";
 import { QuoteEditorModal } from "@/components/quotes/quote-editor-modal";
 import { QuoteDetailModal } from "@/components/quotes/quote-detail-modal";
 
@@ -18,6 +18,7 @@ export function QuoteBlock({ bookingId, projectId, role, canCreate = false, defa
   asButton?: boolean;
 }) {
   const t = useTranslations("quotes");
+  const locale = useLocale();
   const [quotes, setQuotes] = useState<Quote[] | null>(null);
   const [unavailable, setUnavailable] = useState(false);
   const [editor, setEditor] = useState(false);
@@ -35,11 +36,23 @@ export function QuoteBlock({ bookingId, projectId, role, canCreate = false, defa
     return () => { activo = false; };
   }, [key]);
 
-  if (!key || unavailable || quotes === null) return null;
+  // Mientras se consulta, el espacio queda reservado: aparecer de golpe después
+  // de pintar la tarjeta era el parpadeo que se veía al abrir una cita.
+  if (!key || unavailable) return null;
+  if (quotes === null) {
+    if (!canCreate && role === "client") return null;
+    return asButton
+      ? <span className="inline-flex h-11 shrink-0 grow animate-pulse rounded-full bg-[#eef2f6] lg:grow-0 lg:min-w-[11rem]" aria-hidden />
+      : <div className="h-[52px] animate-pulse rounded-2xl bg-[#eef2f6]" aria-hidden />;
+  }
   const ultima = quotes[0] ?? null;
   const conNombre = ultima ? { ...ultima, professional_name: ultima.professional_name ?? professionalName ?? null } : null;
   const abierta = !!ultima && ultima.status === "sent" && !isQuoteExpired(ultima);
-  const estado = (q: Quote) => isQuoteExpired(q) ? t("statusExpired") : q.status === "sent" ? t("statusSent") : q.status === "accepted" ? t("statusAccepted") : q.status === "declined" ? t("statusDeclined") : t("statusWithdrawn");
+  const estado = (q: Quote) => isQuoteExpired(q)
+    ? t("statusExpired")
+    : q.status === "withdrawn"
+      ? t("statusWithdrawn")
+      : t("sentOn", { date: new Date(q.created_at).toLocaleDateString(locale === "en" ? "en-US" : "es-CR", { day: "numeric", month: "long" }) });
   // Al cliente no se le muestra nada si nunca le cotizaron.
   if (!ultima && role === "client") return null;
   if (!ultima && !canCreate) return null;
@@ -61,12 +74,20 @@ export function QuoteBlock({ bookingId, projectId, role, canCreate = false, defa
   // con una, su monto y estado, y al tocarlo se abre.
   if (asButton && role === "pro") {
     const clase = "inline-flex h-11 shrink-0 grow items-center justify-center gap-1.5 whitespace-nowrap rounded-full border border-[#d7e1ea] bg-white px-4 text-[13px] font-bold text-[#162543] transition-colors hover:border-[#b9c8d6] hover:bg-[#f6f9fb] lg:grow-0 lg:min-w-[11rem]";
+    // Con cotización enviada, esto ya no es un botón más: es el dato de que
+    // existe, con su número y su monto, y "Ver" para abrirla.
     return (
       <>
         {conNombre ? (
-          <button type="button" onClick={() => setDetail(conNombre)} className={clase}>
-            <FileText className="h-4 w-4 shrink-0 text-[#009FD9]" />
-            <span className="truncate">{formatColones(conNombre.total)} · {estado(conNombre)}</span>
+          <button type="button" onClick={() => setDetail(conNombre)} className="flex w-full items-center gap-3 rounded-2xl border border-[#e5eaf0] bg-[#f8fbfd] px-3.5 py-2.5 text-left transition-colors hover:border-[#bfe3f5] hover:bg-[#f2f9fd]">
+            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white text-[#009FD9]"><FileText className="h-4 w-4" /></span>
+            <span className="min-w-0 flex-1">
+              <span className="block truncate text-[13px] font-extrabold text-[#162543]">
+                {conNombre.quote_number ? `${t("rowQuote")} N.º ${numeroCotizacion(conNombre)}` : t("rowQuote")} · {formatColones(conNombre.total)}
+              </span>
+              <span className="block truncate text-[12px] text-[#68778d]">{estado(conNombre)}</span>
+            </span>
+            <span className="shrink-0 text-[13px] font-bold text-[#0089bb]">{t("view")}</span>
           </button>
         ) : canCreate ? (
           <button type="button" onClick={() => setEditor(true)} className={clase}>

@@ -44,21 +44,15 @@ export function QuoteDetailModal({ quote, role, open, onClose, onChanged, proNam
   const [busy, setBusy] = useState(false);
   const [pdfCliente, setPdfCliente] = useState<Blob | null>(null);
   const expirada = isQuoteExpired(quote);
-  // Sin cita ni proyecto detrás no hay quién responda: no se anuncia una espera.
-  const enElApp = !!(quote.booking_id || quote.project_id);
-  const estado = expirada
-    ? t("statusExpired")
-    : quote.status === "sent"
-      ? (enElApp ? t("statusSent") : null)
-      : quote.status === "accepted" ? t("statusAccepted") : quote.status === "declined" ? t("statusDeclined") : t("statusWithdrawn");
+  // La cotización es un documento: no hay nada que "esperar". Solo se avisa
+  // cuando ya no sirve (vencida) o cuando el profesional la retiró.
+  const estado = expirada ? t("statusExpired") : quote.status === "withdrawn" ? t("statusWithdrawn") : null;
   const fecha = quote.valid_until ? new Date(`${quote.valid_until}T12:00:00`).toLocaleDateString(DATE_LOCALE[locale] ?? "es-CR", { day: "numeric", month: "long" }) : null;
 
-  async function actuar(action: "accept" | "decline" | "withdraw") {
-    const textos = action === "accept"
-      ? { title: t("acceptConfirmTitle"), description: t("acceptConfirmBody"), confirmLabel: t("acceptConfirm") }
-      : action === "decline"
-        ? { title: t("declineConfirmTitle"), description: t("declineConfirmBody"), confirmLabel: t("declineConfirm"), tone: "danger" as const }
-        : { title: t("withdrawConfirmTitle"), description: t("withdrawConfirmBody"), confirmLabel: t("withdrawConfirm"), tone: "danger" as const };
+  async function actuar(action: "withdraw" | "delete") {
+    const textos = action === "withdraw"
+      ? { title: t("withdrawConfirmTitle"), description: t("withdrawConfirmBody"), confirmLabel: t("withdrawConfirm"), tone: "danger" as const }
+      : { title: t("deleteConfirmTitle"), description: t("deleteConfirmBody"), confirmLabel: t("deleteConfirm"), tone: "danger" as const };
     const { confirmed } = await confirm(textos);
     if (!confirmed) return;
     setBusy(true);
@@ -66,9 +60,7 @@ export function QuoteDetailModal({ quote, role, open, onClose, onChanged, proNam
       const res = await fetch("/api/quotes", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: quote.id, action }) });
       const d = await res.json().catch(() => ({}));
       if (!res.ok) { await showMessage({ title: t("errorTitle"), description: d.error ?? "", tone: "danger" }); return; }
-      onChanged(d.quote as Quote);
-      if (action === "accept") await showMessage({ title: t("acceptedTitle"), description: t("acceptedBody"), tone: "success" });
-      else if (action === "decline") await showMessage({ title: t("declinedTitle"), description: t("declinedBody") });
+      onChanged(action === "delete" ? { ...quote, deleted_at: new Date().toISOString() } : (d.quote as Quote));
       onClose();
     } finally { setBusy(false); }
   }
@@ -97,8 +89,8 @@ export function QuoteDetailModal({ quote, role, open, onClose, onChanged, proNam
     window.setTimeout(() => URL.revokeObjectURL(a.href), 2000);
   }
 
-  const puedeResponder = role === "client" && quote.status === "sent" && !expirada;
-  const puedeRetirar = role === "pro" && quote.status === "sent";
+  const puedeRetirar = role === "pro" && quote.status === "sent" && !!(quote.booking_id || quote.project_id);
+  const puedeBorrar = role === "pro" && quote.status === "sent" && !quote.booking_id && !quote.project_id;
   const abierta = quote.status === "sent" && !expirada;
   // El título del encabezado en UNA línea: el nombre del trabajo puede ser largo
   // y partido en tres renglones empujaba todo hacia abajo.
@@ -114,11 +106,10 @@ export function QuoteDetailModal({ quote, role, open, onClose, onChanged, proNam
   return (
     <>
       <Modal open={open} onClose={onClose} title={titulo} subtitle={subtitulo} size="sm" mobilePresentation="fullscreen" closeLabel={t("close")}
-        footer={puedeResponder ? (<>
-          <Button type="button" variant="secondary" className="w-full sm:w-auto" disabled={busy} onClick={() => void actuar("decline")}>{t("decline")}</Button>
-          <Button type="button" className="w-full sm:w-auto" disabled={busy} loading={busy} onClick={() => void actuar("accept")}>{t("accept")}</Button>
-        </>) : puedeRetirar && !recienCreada ? (
+        footer={!recienCreada && puedeRetirar ? (
           <Button type="button" variant="secondary" className="w-full sm:w-auto" disabled={busy} onClick={() => void actuar("withdraw")}>{t("withdraw")}</Button>
+        ) : !recienCreada && puedeBorrar ? (
+          <Button type="button" variant="secondary" className="w-full sm:w-auto" disabled={busy} onClick={() => void actuar("delete")}>{t("delete")}</Button>
         ) : undefined}
         footerClassName="flex-col-reverse gap-2 sm:flex-row sm:justify-end">
         <div className="flex flex-col gap-4">
@@ -127,18 +118,6 @@ export function QuoteDetailModal({ quote, role, open, onClose, onChanged, proNam
           )}
           {/* Para el profesional, primero cómo mandarla: es a lo que viene. */}
           {role === "pro" && abierta && <QuoteShare quote={quote} proName={proName ?? quote.professional_name ?? ""} proSlug={proSlug} onChanged={onChanged} />}
-          {/* Aceptada: lo único que queda es ponerse de acuerdo. */}
-          {role === "pro" && quote.status === "accepted" && (
-            <div className="rounded-2xl bg-[#f0fdf4] px-4 py-3.5 text-center">
-              <p className="text-[15px] font-extrabold text-[#166534]">{t("statusAccepted")}</p>
-              {quote.accepted_at && <p className="mt-0.5 text-[13px] text-[#3f7c53]">{t("acceptedOn", { date: new Date(quote.accepted_at).toLocaleDateString(DATE_LOCALE[locale] ?? "es-CR", { day: "numeric", month: "long" }) })}</p>}
-              {whatsappDigits(quote.client_phone) && (
-                <a href={`https://wa.me/${whatsappDigits(quote.client_phone)}`} target="_blank" rel="noopener noreferrer" className="mt-3 inline-flex h-11 w-full items-center justify-center rounded-full bg-[#25d366] px-5 text-[14px] font-bold text-white transition-colors hover:bg-[#1da851]">
-                  {t("writeClient")}
-                </a>
-              )}
-            </div>
-          )}
           {!recienCreada && (
             <div className="flex flex-wrap items-center justify-between gap-2 text-[13px]">
               {estado && <span className={`rounded-full px-2.5 py-1 font-bold ${quote.status === "accepted" ? "bg-[#eaf7fc] text-[#0089bb]" : abierta ? "bg-[#f4f7fa] text-[#52627a]" : "bg-[#f3f4f6] text-[#6b7280]"}`}>{estado}</span>}

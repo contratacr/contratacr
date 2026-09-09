@@ -48,7 +48,7 @@ export async function GET(req: NextRequest) {
   const projectId = url.searchParams.get("projectId");
   // Con el nombre de quien cotiza: el cliente lo ve en "De X" y el profesional
   // lo necesita para la imagen que manda por WhatsApp.
-  let q = me.admin.from("quotes").select(`${SELECT}, professionals(business_name, profiles(full_name))`).order("created_at", { ascending: false }).limit(100);
+  let q = me.admin.from("quotes").select(`${SELECT}, professionals(business_name, profiles(full_name))`).is("deleted_at", null).order("created_at", { ascending: false }).limit(100);
   if (bookingId) q = q.eq("booking_id", bookingId);
   else if (projectId) q = q.eq("project_id", projectId);
   // Solo lo propio: lo que envié como profesional o lo que me enviaron como cliente.
@@ -150,9 +150,22 @@ export async function PATCH(req: NextRequest) {
   if (!me) return NextResponse.json({ error: "Inicia sesión." }, { status: 401 });
   const body = await req.json().catch(() => ({})) as { id?: string; action?: string; bookingId?: string; projectId?: string };
   const id = String(body.id ?? ""); const action = String(body.action ?? "");
-  if (!id || !["accept", "decline", "withdraw", "attach", "detach"].includes(action)) return NextResponse.json({ error: "Acción no válida." }, { status: 400 });
-  const { data: q, error } = await me.admin.from("quotes").select(SELECT).eq("id", id).maybeSingle();
+  if (!id || !["accept", "decline", "withdraw", "attach", "detach", "delete"].includes(action)) return NextResponse.json({ error: "Acción no válida." }, { status: 400 });
+  const { data: q, error } = await me.admin.from("quotes").select(SELECT).eq("id", id).is("deleted_at", null).maybeSingle();
   if (error || !q) return NextResponse.json({ error: "Cotización no encontrada." }, { status: 404 });
+
+  // Borrar: solo las que no están en una cita o proyecto (ahí se retira, que
+  // deja rastro) y solo si nadie respondió. El número NO se reutiliza.
+  if (action === "delete") {
+    if (q.professional_id !== me.proId) return NextResponse.json({ error: "Solo quien la hizo puede borrarla." }, { status: 403 });
+    if (q.booking_id || q.project_id) return NextResponse.json({ error: "Está en una cita o proyecto: quitala de ahí primero." }, { status: 409 });
+    const patch = { deleted_at: new Date().toISOString(), updated_at: new Date().toISOString() };
+    const { error: upErr } = await me.admin.from("quotes").update(patch).eq("id", id);
+    if (upErr) return NextResponse.json({ error: upErr.message }, { status: 500 });
+    await auditUserAction(me.admin, req, { actorUserId: me.user.id, actorRole: "professional", action: "quote.delete", entityTable: "quotes", entityId: id, entityOwnerUserId: me.user.id, afterData: patch });
+    return NextResponse.json({ deleted: true });
+  }
+
   if (q.status !== "sent") return NextResponse.json({ error: "Esta cotización ya se cerró." }, { status: 409 });
 
   // Quitarla de la cita o del proyecto: vuelve a ser un documento suelto. Solo

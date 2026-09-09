@@ -32,7 +32,7 @@ async function cargar(tramo: string, locale: string): Promise<PublicQuoteData | 
   const admin = createAdminClient();
   const { data: q } = await admin.from("quotes")
     .select("id, professional_id, client_id, client_name, client_phone, public_code, booking_id, project_id, proposal_id, title, items, tax_mode, subtotal, tax_amount, total, notes, valid_until, status, accepted_at, declined_at, created_at")
-    .eq("public_code", code.toLowerCase()).maybeSingle();
+    .eq("public_code", code.toLowerCase()).is("deleted_at", null).maybeSingle();
   if (!q) return null;
   const { data: pro } = await admin.from("professionals")
     .select("slug, business_name, whatsapp, verification_status, category_id, professions, profiles(full_name, avatar_url)")

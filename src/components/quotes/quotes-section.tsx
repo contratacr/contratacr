@@ -40,23 +40,24 @@ export function QuotesSection({ proName, proSlug, puedeCrear = true }: { proName
   const enElApp = (q: Quote) => !!(q.booking_id || q.project_id);
   const estadoDe = (q: Quote) => {
     if (isQuoteExpired(q)) return "expired";
-    if (q.status === "sent" && !enElApp(q)) return "documento";
-    return q.status;
+    if (q.status === "withdrawn") return "withdrawn";
+    return enElApp(q) ? "enviada" : "documento";
   };
   const etiqueta = (q: Quote) => {
     const e = estadoDe(q);
-    if (e === "documento") return null;
-    return e === "expired" ? t("statusExpired") : e === "sent" ? t("statusOpen") : e === "accepted" ? t("statusAccepted") : e === "declined" ? t("statusDeclined") : t("statusWithdrawn");
+    if (e === "expired") return t("statusExpired");
+    if (e === "withdrawn") return t("statusWithdrawn");
+    if (e === "enviada") return q.booking_id ? t("inBooking") : t("inProject");
+    return null;
   };
   // Cada estado con su color y su ícono: se lee de un vistazo cuál está viva.
   const marca = (q: Quote) => {
     const e = estadoDe(q);
-    if (e === "accepted") return { fondo: "bg-[#e9f9ef] text-[#166534]", icono: <Check className="h-3.5 w-3.5" strokeWidth={3} /> };
-    if (e === "sent") return { fondo: "bg-[#fff4e2] text-[#b45309]", icono: <Clock3 className="h-3.5 w-3.5" /> };
+    if (e === "enviada") return { fondo: "bg-[#eaf7fc] text-[#0089bb]", icono: <Check className="h-3.5 w-3.5" strokeWidth={3} /> };
     if (e === "documento") return { fondo: "bg-[#eef3f8] text-[#52627a]", icono: <ReceiptText className="h-4 w-4" /> };
     return { fondo: "bg-[#f3f4f6] text-[#6b7280]", icono: <X className="h-3.5 w-3.5" /> };
   };
-  const lista = quotes ?? [];
+  const lista = (quotes ?? []).filter((q) => !q.deleted_at);
 
   return (
     <div className="flex flex-col gap-4">
@@ -107,7 +108,7 @@ export function QuotesSection({ proName, proSlug, puedeCrear = true }: { proName
       )}
       {detalle && (
         <QuoteDetailModal quote={detalle.quote} role="pro" open proName={proName} proSlug={proSlug} recienCreada={detalle.recien} onClose={() => setDetalle(null)}
-          onChanged={(q) => { setQuotes((prev) => (prev ?? []).map((x) => (x.id === q.id ? { ...x, ...q } : x))); setDetalle(null); }} />
+          onChanged={(q) => { setQuotes((prev) => (prev ?? []).filter((x) => !(x.id === q.id && q.deleted_at)).map((x) => (x.id === q.id ? { ...x, ...q } : x))); setDetalle(null); }} />
       )}
     </div>
   );

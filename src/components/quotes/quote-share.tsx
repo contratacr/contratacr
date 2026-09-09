@@ -2,9 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { ArrowLeft, CalendarCheck, Check, ChevronRight, Download, Handshake, Loader2, Mail, Share2, X } from "lucide-react";
+import { ArrowLeft, CalendarCheck, Check, ChevronRight, Copy, Download, Handshake, Loader2, Mail, Share2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { ShareLinkPanel } from "@/components/ui/share-link-panel";
 import { FacebookIcon, InstagramIcon, WhatsAppIcon } from "@/components/ui/share-channels";
 import { useNativeShare } from "@/hooks/use-native-share";
 import { formatColones } from "@/lib/pricing";
@@ -26,6 +25,10 @@ export function QuoteShare({ quote, proName, proSlug, onChanged }: { quote: Quot
   const nativo = useNativeShare();
   const [pdf, setPdf] = useState<Blob | null>(null);
   const [avisoInstagram, setAvisoInstagram] = useState(false);
+  const [copiado, setCopiado] = useState(false);
+  async function copiarEnlace() {
+    try { await navigator.clipboard.writeText(url); setCopiado(true); window.setTimeout(() => setCopiado(false), 1800); } catch { /* sin portapapeles */ }
+  }
   const preparando = pdf === null;
   const url = enlaceCotizacion(quote, proName);
   const mensaje = t("whatsappMessage", {
@@ -80,7 +83,6 @@ export function QuoteShare({ quote, proName, proSlug, onChanged }: { quote: Quot
 
   return (
     <div className="flex flex-col gap-3">
-      <ShareLinkPanel url={url} label={t("linkLabel")} copyLabel={t("copyLink")} copiedLabel={t("copied")} />
       <div className="grid grid-cols-3 gap-2.5">
         <a href={wa} target="_blank" rel="noopener noreferrer" className={TILE}>
           <span className="grid h-11 w-11 place-items-center rounded-full bg-[#25d366] text-white"><WhatsAppIcon className="h-5 w-5" /></span>
@@ -96,13 +98,17 @@ export function QuoteShare({ quote, proName, proSlug, onChanged }: { quote: Quot
         </a>
       </div>
       {avisoInstagram && <p className="rounded-2xl bg-[#eaf7fc] px-4 py-2.5 text-[13px] font-semibold leading-snug text-[#0b5f80]">{t("instagramHint")}</p>}
-      <div className="grid grid-cols-2 gap-2.5">
+      <div className="grid grid-cols-3 gap-2.5">
         <a href={correo} className="inline-flex h-11 items-center justify-center gap-2 rounded-full border border-[#d7e1ea] bg-white px-4 text-[13px] font-bold text-[#162543] transition-colors hover:border-[#b9c8d6] hover:bg-[#f6f9fb]">
           <Mail className="h-4 w-4" />{quote.client_email ? t("sendByEmail") : t("email")}
         </a>
         <button type="button" disabled={!pdf} onClick={() => void (nativo ? compartirPdf() : descargarPdf())} className="inline-flex h-11 items-center justify-center gap-2 rounded-full border border-[#d7e1ea] bg-white px-4 text-[13px] font-bold text-[#162543] transition-colors hover:border-[#b9c8d6] hover:bg-[#f6f9fb] disabled:opacity-60">
           {preparando ? <Loader2 className="h-4 w-4 animate-spin" /> : nativo ? <Share2 className="h-4 w-4" /> : <Download className="h-4 w-4" />}
           PDF
+        </button>
+        <button type="button" onClick={() => void copiarEnlace()} className="inline-flex h-11 items-center justify-center gap-2 rounded-full border border-[#d7e1ea] bg-white px-3 text-[13px] font-bold text-[#162543] transition-colors hover:border-[#b9c8d6] hover:bg-[#f6f9fb]">
+          {copiado ? <Check className="h-4 w-4 text-[#15803d]" /> : <Copy className="h-4 w-4" />}
+          {copiado ? t("copied") : t("copyLink")}
         </button>
       </div>
 

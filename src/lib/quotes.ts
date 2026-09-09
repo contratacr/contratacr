@@ -30,6 +30,7 @@ export type Quote = {
   status: QuoteStatus;
   accepted_at: string | null;
   declined_at: string | null;
+  deleted_at?: string | null;
   created_at: string;
   professional_name?: string | null;
 };
