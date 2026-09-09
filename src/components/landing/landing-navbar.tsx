@@ -1704,12 +1704,12 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                     type="button"
                     onClick={openNativeSearch}
                     aria-label={locale === "en" ? "What service are you looking for?" : "¿Qué servicio estás buscando?"}
-                    className="ml-1 flex h-10 min-w-0 flex-1 items-center gap-2 rounded-full border border-[#e3ebf2] bg-[#f6f8fb] px-3.5 text-left transition-colors active:bg-[#eef3f8] lg:hidden"
+                    className="ml-1 flex h-10 min-w-0 flex-1 items-center gap-2 rounded-[10px] border border-[#e3ebf2] bg-white px-3 text-left transition-colors active:bg-[#f6f9fc] lg:hidden"
                   >
+                    <Search className="h-4 w-4 shrink-0 text-[#162543]" />
                     <span className="min-w-0 flex-1 truncate text-[13px] font-semibold text-[#8f9aaa]">
                       {locale === "en" ? "What service?" : "¿Qué servicio buscás?"}
                     </span>
-                    <Search className="h-4 w-4 shrink-0 text-[#162543]" />
                   </button>
                 )}
                   </>
@@ -1923,8 +1923,16 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                     >
                       <form onSubmit={handleCompactSearch} className="flex min-w-0 flex-1">
                         <div className="relative w-full">
-                          <div className="flex h-11 w-full items-center overflow-hidden rounded-full border border-[#e3ebf2] bg-[#f6f8fb] px-3 transition-colors focus-within:border-[#009FD9] focus-within:bg-white sm:px-4">
+                          <div className="flex h-11 w-full items-center overflow-hidden rounded-[10px] border border-[#e3ebf2] bg-white pl-3 transition-colors focus-within:border-[#009FD9] sm:pl-4">
                             <div ref={compactSvcRef} className="flex h-full min-w-0 flex-[3_1_0%] items-center gap-2 sm:gap-3">
+                              <button
+                                type="submit"
+                                aria-label={t("search")}
+                                title={t("search")}
+                                className="hidden h-8 w-8 shrink-0 place-items-center rounded-full text-[#162543] transition-colors hover:bg-[#EBF5FB] hover:text-[#009FD9] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9]/30 sm:grid"
+                              >
+                                <Search className="h-5 w-5" />
+                              </button>
                               <input
                                 type="text"
                                 value={searchQuery}
@@ -1941,17 +1949,10 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                                 aria-autocomplete="list"
                                 aria-controls="navbar-service-suggestions"
                               />
-                              <button
-                                type="submit"
-                                aria-label={t("search")}
-                                title={t("search")}
-                                className="hidden h-8 w-8 shrink-0 place-items-center rounded-full text-[#162543] transition-colors hover:bg-[#EBF5FB] hover:text-[#009FD9] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9]/30 sm:grid"
-                              >
-                                <Search className="h-5 w-5" />
-                              </button>
                             </div>
                             <div className="mx-2 my-3 hidden w-px shrink-0 self-stretch bg-[#dbe4ee] sm:block" />
                             <div ref={compactLocRef} className="hidden h-full min-w-0 flex-[2_1_0%] items-center gap-2 sm:flex">
+                              <MapPin className="h-5 w-5 shrink-0 text-[#162543]" />
                               <input
                                 type="text"
                                 ref={navLocationInputRef}
@@ -1979,7 +1980,6 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                                 aria-autocomplete="list"
                                 aria-controls="navbar-location-suggestions"
                               />
-                              <MapPin className="h-5 w-5 shrink-0 text-[#162543]" />
                             </div>
                           </div>
 

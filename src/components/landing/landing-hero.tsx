@@ -726,12 +726,14 @@ export function LandingHero() {
         >
           {/* Desktop row: single line h-14 */}
           <div className="hidden sm:block relative">
-            {/* El mismo buscador que el del navbar: al bajar, el de arriba se
-                mete en la barra y tiene que sentirse que es el mismo, no otro. */}
-            <div className="flex h-14 items-center rounded-full border border-[#e3ebf2] bg-[#f6f8fb] pl-6 pr-2 transition-colors focus-within:border-[#009FD9] focus-within:bg-white">
+            {/* Caja blanca de esquinas suaves: la misma forma que usa el
+                buscador del navbar, para que al bajar se sienta que es el
+                mismo buscador que se quedó pegado arriba. */}
+            <div className="flex h-14 items-center overflow-hidden rounded-[10px] border border-[#e3ebf2] bg-white pl-5 shadow-[0_8px_48px_rgba(0,0,0,0.12)] transition-shadow duration-300 focus-within:border-[#009FD9] hover:shadow-[0_12px_60px_rgba(0,159,217,0.20)]">
               {/* Service input — its dropdown PORTALS to <body> (anchored to this wrapper),
                   so the bar's `overflow-hidden` can never clip it. */}
               <div ref={svcDesktopRef} className="flex items-center gap-3 flex-1 min-w-0 h-full">
+                <Search className="h-5 w-5 shrink-0 text-[#162543]" />
                 <input
                   type="text"
                   value={service}
@@ -747,12 +749,12 @@ export function LandingHero() {
                   aria-expanded={openSug}
                   aria-autocomplete="list"
                 />
-                <Search className="h-5 w-5 shrink-0 text-[#162543]" />
                 <SuggestionsDropdown anchorRef={svcDesktopRef} open={openSug} suggestions={suggestions} activeIdx={activeIdx} onPick={(s) => selectSuggestion(s, true)} />
               </div>
               {/* Divider + location autocomplete */}
-              <div className="mx-3 my-3.5 w-px shrink-0 self-stretch bg-[#dbe4ee]" />
-              <div ref={locDesktopRef} className="flex h-full min-w-[170px] shrink-0 items-center gap-2">
+              <div className="mx-2 my-3 w-px shrink-0 self-stretch bg-[#dbe4ee]" />
+              <div ref={locDesktopRef} className="flex h-full min-w-[160px] shrink-0 items-center gap-2">
+                <MapPin className="h-5 w-5 shrink-0 text-[#162543]" />
                 <input
                   type="text"
                   value={location}
@@ -768,13 +770,12 @@ export function LandingHero() {
                   aria-expanded={openLoc}
                   aria-autocomplete="list"
                 />
-                <MapPin className="h-5 w-5 shrink-0 text-[#162543]" />
                 <LocationDropdown anchorRef={locDesktopRef} open={openLoc && location.trim().length >= 2} suggestions={locSug} addresses={addrSug} activeIdx={locActive} onPick={(s) => selectLocation(s, true)} onPickAddress={selectAddress} onNearMe={requestNearMe} nearMeLabel={t("nearMe")} geoLoading={geoLoading} />
               </div>
               {/* Buscar button */}
               <button
                 type="submit"
-                className="ml-3 h-11 shrink-0 whitespace-nowrap rounded-full bg-[#009FD9] px-7 text-base font-bold text-white transition-colors duration-150 hover:bg-[#0089bb] active:bg-[#007da8]"
+                className="ml-2 h-full shrink-0 self-stretch whitespace-nowrap bg-[#009FD9] px-8 text-base font-bold text-white transition-colors duration-150 hover:bg-[#0089bb] active:bg-[#007da8]"
               >
                 {t("search")}
               </button>
@@ -784,7 +785,8 @@ export function LandingHero() {
           {/* Mobile stacked layout — service, then location, then Buscar */}
           <div className="sm:hidden flex flex-col gap-2">
             <div ref={svcMobileRef} className="relative">
-              <div className="flex h-12 items-center rounded-full border border-[#e3ebf2] bg-[#f6f8fb] px-5 transition-colors focus-within:border-[#009FD9] focus-within:bg-white">
+              <div className="flex h-12 items-center overflow-hidden rounded-[10px] border border-[#e3ebf2] bg-white pl-4 pr-3 shadow-[0_4px_24px_rgba(0,0,0,0.10)] transition-colors focus-within:border-[#009FD9]">
+                <Search className="mr-3 h-5 w-5 shrink-0 text-[#162543]" />
                 <input
                   type="text"
                   value={service}
@@ -800,12 +802,12 @@ export function LandingHero() {
                   aria-expanded={openSug}
                   aria-autocomplete="list"
                 />
-                <Search className="ml-3 h-5 w-5 shrink-0 text-[#162543]" />
               </div>
               <SuggestionsDropdown anchorRef={svcMobileRef} open={openSug} suggestions={suggestions} activeIdx={activeIdx} onPick={(s) => selectSuggestion(s, true)} />
             </div>
             <div ref={locMobileRef} className="relative">
-              <div className="flex h-12 items-center rounded-full border border-[#e3ebf2] bg-[#f6f8fb] px-5 transition-colors focus-within:border-[#009FD9] focus-within:bg-white">
+              <div className="flex h-12 items-center overflow-hidden rounded-[10px] border border-[#e3ebf2] bg-white pl-4 pr-3 shadow-[0_4px_24px_rgba(0,0,0,0.10)] transition-colors focus-within:border-[#009FD9]">
+                <MapPin className="mr-3 h-5 w-5 shrink-0 text-[#162543]" />
                 <input
                   type="text"
                   value={location}
@@ -821,13 +823,12 @@ export function LandingHero() {
                   aria-expanded={openLoc}
                   aria-autocomplete="list"
                 />
-                <MapPin className="ml-3 h-5 w-5 shrink-0 text-[#162543]" />
               </div>
               <LocationDropdown anchorRef={locMobileRef} open={openLoc && location.trim().length >= 2} suggestions={locSug} addresses={addrSug} activeIdx={locActive} onPick={(s) => selectLocation(s, true)} onPickAddress={selectAddress} onNearMe={requestNearMe} nearMeLabel={t("nearMe")} geoLoading={geoLoading} />
             </div>
             <button
               type="submit"
-              className="h-12 w-full rounded-full bg-[#009FD9] text-base font-bold text-white transition-all duration-150 hover:bg-[#0089bb] active:scale-[0.97]"
+              className="h-12 w-full rounded-[10px] bg-[#009FD9] text-base font-bold text-white transition-all duration-150 hover:bg-[#0089bb] active:scale-[0.97]"
             >
               {t("search")}
             </button>
