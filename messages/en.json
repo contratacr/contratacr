@@ -4140,7 +4140,7 @@
     "create": "Create quote",
     "creating": "Creating…",
     "readyTitle": "Ready to send",
-    "readyBody": "Send it on WhatsApp or copy the link. We'll let you know when they answer.",
+    "readyBody": "Send it on WhatsApp, by email or as a PDF. You can also send it to an appointment or project in the app.",
     "linkLabel": "Quote link",
     "copyLink": "Copy",
     "copied": "Copied",

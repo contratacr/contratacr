@@ -201,7 +201,7 @@ function QuoteAttach({ quote, onChanged }: { quote: Quote; onChanged?: (q: Quote
       ) : (
         <div className="flex max-h-[300px] flex-col gap-2 overflow-y-auto">
           {pestana === "citas"
-            ? listaCitas.map((c) => fila(`b-${c.id}`, <CalendarCheck className="h-5 w-5" />, c.client_name || t("noClientName"),
+            ? listaCitas.map((c) => fila(`b-${c.id}`, <CalendarCheck className="h-5 w-5" />, c.client_name || c.service_description || t("noClientName"),
                 [c.scheduled_date ? new Date(`${c.scheduled_date}T12:00:00`).toLocaleDateString(DATE_LOCALE[locale] ?? "es-CR", { day: "numeric", month: "short" }) : "", c.service_description ?? ""].filter(Boolean).join(" · "),
                 { bookingId: c.id }))
             : listaProyectos.map((p) => fila(`p-${p.id}`, <Handshake className="h-5 w-5" />, p.projects?.title || t("attachProjects"), t("attachProjects"), { projectId: p.project_id }))}
