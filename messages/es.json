@@ -3280,7 +3280,12 @@
     "newGroup": "Nuevas",
     "yesterdayGroup": "Ayer",
     "week7Group": "Últimos 7 días",
-    "month30Group": "Últimos 30 días"
+    "month30Group": "Últimos 30 días",
+    "groupNew": "Nuevas",
+    "groupEarlier": "Anteriores",
+    "filterAll": "Todas",
+    "filterUnread": "No leídas",
+    "emptyUnread": "No tenés notificaciones sin leer"
   },
   "projects": {
     "title": "Cuéntanos qué necesitas",

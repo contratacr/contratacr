@@ -39,6 +39,7 @@ export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "o
   // recientes y dejaba fuera las viejas sin leer, así el globo nunca bajaba.
   const [unreadTotal, setUnreadTotal] = useState<number | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [soloNoLeidas, setSoloNoLeidas] = useState(false);
   const portalHost = typeof document === "undefined" ? null : document.body;
   const [posicionPanel, setPosicionPanel] = useState<{ top: number; right: number } | null>(null);
   const nativeApp = useNativeApp();
@@ -72,7 +73,7 @@ export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "o
   const unreadCount = scope === "all" && unreadTotal !== null
     ? unreadTotal
     : hasSyncedNotifications ? cachedUnreadCount : Math.max(cachedUnreadCount, serverUnreadCount);
-  const previewItems = visible.slice(0, 5);
+  const previewItems = visible.slice(0, 6);
   const fotoDe = useActorPhotos(previewItems);
 
   const fetchNotifications = useCallback(() => {
@@ -225,71 +226,104 @@ export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "o
     };
   }, [menuOpen, nativeApp]);
 
+  // Filtro y grupos, como en cualquier bandeja moderna: primero lo que no se ha
+  // leído, después el resto. Antes era una lista plana de cinco.
+  const noLeidas = visible.filter((item) => !item.read);
+  const leidas = visible.filter((item) => item.read);
+  const listaFiltrada = soloNoLeidas ? noLeidas : visible;
+  const grupos = soloNoLeidas
+    ? [{ clave: "nuevas", rotulo: t("groupNew"), items: noLeidas.slice(0, 6) }]
+    : [
+        { clave: "nuevas", rotulo: t("groupNew"), items: noLeidas.slice(0, 6) },
+        { clave: "antes", rotulo: t("groupEarlier"), items: leidas.slice(0, Math.max(0, 6 - noLeidas.length)) },
+      ].filter((g) => g.items.length > 0);
+
+  const fila = (item: Notification) => {
+    const copy = localizedNotificationCopy(item, locale);
+    return (
+      <button
+        key={item.id}
+        type="button"
+        onClick={() => void openNotification(item)}
+        className={cn(
+          "flex w-full items-start gap-3 rounded-xl px-3 py-2.5 text-left transition-colors hover:bg-[#f1f7fb]",
+          !item.read && "bg-[#f5fbff]",
+        )}
+      >
+        {fotoDe(item) ? (
+          // eslint-disable-next-line @next/next/no-img-element -- miniatura fija; el optimizador no actúa en Cloudflare
+          <img src={fotoDe(item) as string} alt="" className="h-10 w-10 shrink-0 rounded-full object-cover" />
+        ) : (
+          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[#EBF5FB] text-[#0089bb]">
+            <NotificationSourceIcon type={item.type} className="h-[18px] w-[18px]" />
+          </span>
+        )}
+        <span className="min-w-0 flex-1">
+          <span className={cn("block line-clamp-2 text-[13.5px] leading-snug", item.read ? "font-medium text-[#374151]" : "font-semibold text-[#162543]")}>
+            {copy.message || copy.title}
+          </span>
+          <span className={cn("mt-0.5 block text-[12px] font-semibold", item.read ? "text-[#94a3b8]" : "text-[#0089bb]")}>
+            {formatRelativeOrDate(item.created_at, locale)}
+          </span>
+        </span>
+        {!item.read && <span className="mt-3 h-2.5 w-2.5 shrink-0 rounded-full bg-[#009FD9]" aria-hidden />}
+      </button>
+    );
+  };
+
   const menuPanel = (
-        <div ref={menuPanelRef} style={nativeApp && posicionPanel ? { top: posicionPanel.top, right: posicionPanel.right } : undefined} className={cn(nativeApp ? "ccr-notification-bell-menu fixed right-4 top-16 z-[230]" : "absolute right-0 top-11 z-[90]", "w-[min(22rem,calc(100vw-1rem))] overflow-hidden rounded-2xl border border-[#dbe4ee] bg-white shadow-[0_18px_45px_-18px_rgba(15,23,42,0.45)]")}>
-          <div className="flex items-center justify-between gap-3 border-b border-[#eef2f6] px-4 py-3">
-            <div className="min-w-0">
-              <p className="text-sm font-extrabold text-[#162543]">{t("title")}</p>
-            </div>
-            {false && (
+        <div ref={menuPanelRef} style={nativeApp && posicionPanel ? { top: posicionPanel.top, right: posicionPanel.right } : undefined} className={cn(nativeApp ? "ccr-notification-bell-menu fixed right-4 top-16 z-[230]" : "absolute right-0 top-11 z-[90]", "w-[min(24rem,calc(100vw-1rem))] overflow-hidden rounded-2xl border border-[#dbe4ee] bg-white shadow-[0_18px_45px_-18px_rgba(15,23,42,0.45)]")}>
+          <div className="flex items-center justify-between gap-3 px-4 pb-2 pt-3.5">
+            <p className="text-[17px] font-extrabold text-[#162543]">{t("title")}</p>
+            {noLeidas.length > 0 && (
               <button
                 type="button"
                 onClick={() => void markAllRead()}
-                className="inline-flex h-8 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full bg-[#eef9fd] px-2.5 text-[11px] font-bold text-[#0089bb] transition hover:bg-[#dff4fc] sm:px-3 sm:text-xs"
+                aria-label={t("markAllRead")}
+                title={t("markAllRead")}
+                className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-[#0089bb] transition hover:bg-[#eef9fd]"
               >
-                <CheckCheck className="h-3.5 w-3.5" />
-                {locale === "en" ? "Mark read" : "Marcar leídas"}
+                <CheckCheck className="h-4 w-4" />
               </button>
             )}
           </div>
 
-          {previewItems.length > 0 ? (
-            <div className="max-h-[18rem] overflow-y-auto py-1">
-              {previewItems.map((item) => {
-                const copy = localizedNotificationCopy(item, locale);
-                return (
+          {visible.length > 0 && (
+            <div className="flex gap-1.5 px-4 pb-2">
+              {([[false, t("filterAll")], [true, t("filterUnread")]] as const).map(([valor, rotulo]) => (
                 <button
-                  key={item.id}
+                  key={String(valor)}
                   type="button"
-                  onClick={() => void openNotification(item)}
+                  onClick={() => setSoloNoLeidas(valor)}
                   className={cn(
-                    "flex w-full gap-3 px-4 py-3 text-left transition-colors hover:bg-[#f5fbfe]",
-                    !item.read && "bg-[#f8fcff]",
+                    "h-8 rounded-full px-3.5 text-[13px] font-bold transition-colors",
+                    soloNoLeidas === valor ? "bg-[#eaf7fc] text-[#0089bb]" : "text-[#52627a] hover:bg-[#f1f5f9]",
                   )}
                 >
-                  {fotoDe(item) ? (
-                    // eslint-disable-next-line @next/next/no-img-element -- miniatura fija; el optimizador no actúa en Cloudflare
-                    <img src={fotoDe(item) as string} alt="" className="mt-0.5 h-9 w-9 shrink-0 rounded-full object-cover" />
-                  ) : (
-                    <span className="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#EBF5FB] text-[#0089bb]">
-                      <NotificationSourceIcon type={item.type} className="h-4 w-4" />
-                    </span>
-                  )}
-                  <span className="min-w-0 flex-1">
-                    <span className="flex min-w-0 items-start gap-2">
-                      <span className={cn("min-w-0 flex-1 line-clamp-3 text-sm leading-snug", item.read ? "font-medium text-[#374151]" : "font-semibold text-[#162543]")}>
-                        {copy.message || copy.title}
-                        <span className="ml-1.5 whitespace-nowrap text-[11px] font-medium text-[#94a3b8]">· {formatRelativeOrDate(item.created_at, locale)}</span>
-                      </span>
-                      {!item.read && <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-[#009FD9]" />}
-                    </span>
-                  </span>
+                  {rotulo}{valor && noLeidas.length > 0 ? ` (${noLeidas.length})` : ""}
                 </button>
-                );
-              })}
+              ))}
+            </div>
+          )}
+
+          {listaFiltrada.length > 0 ? (
+            <div className="max-h-[22rem] overflow-y-auto px-1.5 pb-1.5">
+              {grupos.map((grupo) => (
+                <div key={grupo.clave}>
+                  <p className="px-2.5 pb-1 pt-2 text-[12px] font-extrabold uppercase tracking-[0.06em] text-[#8fa1b6]">{grupo.rotulo}</p>
+                  {grupo.items.map(fila)}
+                </div>
+              ))}
             </div>
           ) : (
-            <div className="px-4 py-6 text-center">
-              <div className="mx-auto grid h-11 w-11 place-items-center rounded-full bg-[#eef7fb] text-[#009FD9]">
+            // Sin nada que mostrar el panel es pequeño: un contenedor enorme y
+            // vacío se ve peor que no tener nada.
+            <div className="px-4 pb-5 pt-2 text-center">
+              <div className="mx-auto grid h-10 w-10 place-items-center rounded-full bg-[#eef7fb] text-[#009FD9]">
                 <Bell className="h-5 w-5" />
               </div>
-              <p className="mt-3 text-sm font-bold text-[#162543]">
-                {locale === "en" ? "No notifications yet" : "Aún no tienes notificaciones"}
-              </p>
-              <p className="mx-auto mt-1 max-w-[15rem] text-xs leading-snug text-[#64748b]">
-                {locale === "en"
-                  ? "When something important happens, it will appear here."
-                  : "Cuando pase algo importante, aparecerá aquí."}
+              <p className="mt-2.5 text-[14px] font-bold text-[#162543]">
+                {soloNoLeidas ? t("emptyUnread") : (locale === "en" ? "No notifications yet" : "Aún no tienes notificaciones")}
               </p>
             </div>
           )}
@@ -297,7 +331,7 @@ export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "o
           <button
             type="button"
             onClick={openNotifications}
-            className="flex w-full items-center justify-between border-t border-[#eef2f6] px-4 py-3 text-left text-sm font-bold text-[#1A2744] transition hover:bg-[#f5fbfe] hover:text-[#009FD9]"
+            className="flex w-full items-center justify-center gap-1.5 border-t border-[#eef2f6] px-4 py-3 text-center text-[13.5px] font-bold text-[#0089bb] transition hover:bg-[#f5fbfe]"
           >
             <span>{locale === "en" ? "View all notifications" : "Ver todas las notificaciones"}</span>
             <ArrowRight className="h-4 w-4" />

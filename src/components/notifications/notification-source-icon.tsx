@@ -10,6 +10,7 @@ import {
   Handshake,
   Headset,
   Megaphone,
+  ReceiptText,
   Star,
   UserPlus,
 } from "lucide-react";
@@ -57,6 +58,10 @@ export function NotificationSourceIcon({ type, className }: { type: string; clas
       return <AlarmClock className={className} />;
     case "project_professional_withdrew":
       return <ClipboardList className={className} />;
+    case "quote_sent":
+    case "quote_accepted":
+    case "quote_declined":
+      return <ReceiptText className={className} />;
     case "support_reply":
       return <Headset className={className} />;
     default:

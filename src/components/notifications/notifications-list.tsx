@@ -66,6 +66,7 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
     : [];
   const [busy, setBusy] = useState(true);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [soloNoLeidas, setSoloNoLeidas] = useState(false);
   const [expandedIds, setExpandedIds] = useState<Set<string>>(() => new Set());
   const [globalMenuOpen, setGlobalMenuOpen] = useState(false);
   // Entrar a la pantalla es leerlas: el globo se limpia solo, como en Instagram.
@@ -209,10 +210,13 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
 
   // Only the active mode's notifications are shown / acted on here.
   const visible = scope === "all" ? items : items.filter((n) => notificationInMode(n.type, mode));
+  // Mismo filtro que el panel de la campana: lo primero que uno quiere es ver
+  // lo que no ha leído.
+  const sinLeer = visible.filter((n) => !n.read);
   const unread = visible.filter((n) => !n.read).length;
   // Como Facebook: primero todas las nuevas, luego las leídas por fecha. Si se
   // ordenara solo por fecha, los encabezados de grupo se repetirían.
-  const ordenadas = [...visible].sort((a, b) => Number(a.read) - Number(b.read));
+  const ordenadas = [...(soloNoLeidas ? sinLeer : visible)].sort((a, b) => Number(a.read) - Number(b.read));
   const hasVisibleNotifications = visible.length > 0;
   const notificationTitle = (n: Notification) => localizedNotificationCopy(n, locale).title;
   const notificationMessage = (n: Notification) => localizedNotificationCopy(n, locale).message;
@@ -454,6 +458,23 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
           </div>
         </div>
       )}
+      {visible.length > 0 && (
+        <div className="flex shrink-0 gap-1.5 bg-white px-4 pb-2 pt-1">
+          {([[false, t("filterAll")], [true, t("filterUnread")]] as const).map(([valor, rotulo]) => (
+            <button
+              key={String(valor)}
+              type="button"
+              onClick={() => setSoloNoLeidas(valor)}
+              className={cn(
+                "h-8 rounded-full px-3.5 text-[13px] font-bold transition-colors",
+                soloNoLeidas === valor ? "bg-[#eaf7fc] text-[#0089bb]" : "text-[#52627a] hover:bg-[#f1f5f9]",
+              )}
+            >
+              {rotulo}{valor && sinLeer.length > 0 ? ` (${sinLeer.length})` : ""}
+            </button>
+          ))}
+        </div>
+      )}
       <div className="ccr-notifications-scroll min-h-0 flex-1 bg-white overflow-hidden">
         {busy ? (
           <PanelListSkeleton
@@ -592,7 +613,9 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
                         n.read ? "font-medium text-[#374151]" : "font-semibold text-[#162543]",
                       )}>
                         {message || notificationTitle(n)}
-                        <span className="ml-1.5 whitespace-nowrap text-xs font-medium text-[#68778d]">· {notificationTime(n)}</span>
+                      </p>
+                      <p className={cn("mt-0.5 text-[12px] font-semibold", n.read ? "text-[#94a3b8]" : "text-[#0089bb]")}>
+                        {notificationTime(n)}
                       </p>
                       {canExpand && (
                         <button

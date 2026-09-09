@@ -3280,7 +3280,12 @@
     "newGroup": "New",
     "yesterdayGroup": "Yesterday",
     "week7Group": "Last 7 days",
-    "month30Group": "Last 30 days"
+    "month30Group": "Last 30 days",
+    "groupNew": "New",
+    "groupEarlier": "Earlier",
+    "filterAll": "All",
+    "filterUnread": "Unread",
+    "emptyUnread": "You have no unread notifications"
   },
   "projects": {
     "title": "Tell us what you need",
