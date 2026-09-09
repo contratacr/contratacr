@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { createPortal } from "react-dom";
 import { useTranslations } from "next-intl";
 import { Info } from "lucide-react";
 import { BrandIconBadge } from "@/components/ui/brand-icon-badge";
@@ -49,10 +50,14 @@ export function SelfActionModal({
     };
   }, [open, onClose]);
 
-  if (!open) return null;
+  // Va colgado del body: dentro de la tarjeta quedaba atrapado en su capa y la
+  // tira de pestañas del perfil se le montaba encima. Solo se abre por un toque,
+  // así que en la primera pintura siempre es `null` en el servidor y en el
+  // navegador: el portal no puede desencajar la hidratación.
+  if (!open || typeof document === "undefined") return null;
 
-  return (
-    <div className="app-modal-screen app-centered-modal-screen fixed inset-0 z-[200] flex items-center justify-center p-4">
+  return createPortal(
+    <div className="app-modal-screen app-centered-modal-screen fixed inset-0 z-[1500] flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
       <div
         role="dialog"
@@ -74,6 +79,7 @@ export function SelfActionModal({
           {t("ok")}
         </button>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

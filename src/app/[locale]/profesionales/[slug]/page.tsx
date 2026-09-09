@@ -705,14 +705,7 @@ export default function ProfilePage() {
                 colgaban debajo de la foto y el borde izquierdo quedaba en zigzag)
                 y las dos acciones comparten renglón arriba a la derecha, del
                 ancho de su texto. En el teléfono sigue centrado como estaba. */}
-            <div className="relative mb-6 rounded-2xl border border-[#e5e7eb] bg-white p-4 pt-12 shadow-sm sm:grid sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:items-start sm:gap-x-5 sm:p-6 sm:pt-6">
-                {/* Guardar y compartir viven juntos y arriba: los dos son
-                    acciones sobre la ficha, no formas de contactar. La pila de
-                    abajo queda solo para lo que sí contacta. */}
-                <div className="absolute right-2 top-2 z-10 flex items-center gap-1 sm:right-3 sm:top-3">
-                  <SaveButton pro={savedPro} isOwn={isOwn} sutil />
-                  <BotonCompartir onPress={shareProfile} sutil />
-                </div>
+            <div className="relative mb-6 rounded-2xl border border-[#e5e7eb] bg-white p-4 shadow-sm sm:grid sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:items-start sm:gap-x-5 sm:p-6 sm:pt-6">
                 <div className="flex min-w-0 flex-col items-center text-center sm:contents sm:text-left">
                   <ImagePreviewDialog
                     src={professional.avatarUrl}
@@ -791,10 +784,15 @@ export default function ProfilePage() {
                     )}
                   </div>
                 )}
-                {/* El favorito vive en la esquina de la tarjeta, como en las
-                    tarjetas de /buscar, ofertas y empleos: es una marca, no una
-                    acción principal. Compartir se fue con los botones de
-                    contacto, que es donde están las acciones. */}
+                {/* Guardar y compartir son acciones sobre la ficha, no formas
+                    de contactar. En el teléfono cierran la tarjeta repartidos a
+                    la mitad —arriba a la derecha rompían el centrado de la foto
+                    y el nombre—; en computadora, donde sobra ancho, van en la
+                    misma línea del nombre. */}
+                <div className="mt-4 grid grid-cols-2 gap-1 border-t border-[#eef2f6] pt-2 sm:absolute sm:right-3 sm:top-3 sm:mt-0 sm:flex sm:border-0 sm:pt-0">
+                  <SaveButton pro={savedPro} isOwn={isOwn} sutil className="w-full justify-center sm:w-auto" />
+                  <BotonCompartir onPress={shareProfile} sutil className="w-full justify-center sm:w-auto" />
+                </div>
             </div>
             <div id="resenas" className="scroll-mt-24 [.ccr-native-app_&]:scroll-mt-0">
               <div className="rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">

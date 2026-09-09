@@ -895,17 +895,12 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
           agenda solo hay dos y cada una ocupa su propio renglón, a lo ancho:
           media píldora para la única forma de contactar se leía como algo menor. */}
       {showCall ? (
-        hasSchedule ? (
-          <div className="grid grid-cols-2 gap-2">
-            {chatLauncherCorto}
-            {renderCall(`${secondaryContactClass} text-[13px] font-bold`)}
-          </div>
-        ) : (
-          <>
-            {chatLauncher}
-            {renderCall(`${secondaryContactClass} text-[13px] font-bold`)}
-          </>
-        )
+        // Las dos formas de contactar comparten renglón, haya agenda o no:
+        // apiladas a lo ancho eran tres barras iguales, una debajo de otra.
+        <div className="grid grid-cols-2 gap-2">
+          {chatLauncherCorto}
+          {renderCall(`${secondaryContactClass} text-[13px] font-bold`)}
+        </div>
       ) : (
         chatLauncher
       )}
