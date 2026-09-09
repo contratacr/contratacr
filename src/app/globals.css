@@ -1193,10 +1193,20 @@ html[data-self-action-modal-open="true"] [data-save-button] {
     padding-bottom: 1rem;
   }
 
-  /* En la app el diálogo centrado terminaba pegado a la barra de abajo: hay que
-     reservar su alto, no solo el respiro. */
+  /* En la app el diálogo centrado vive ENTRE la cabecera y la barra de abajo:
+     reservar solo el respiro lo dejaba pegado a la barra, y reservar solo la
+     barra lo empujaba debajo del navbar. Se reservan las dos, y su alto máximo
+     descuenta lo mismo para que un diálogo largo no se salga por arriba. */
   body.ccr-native-app.ccr-native-bottom-nav-visible .app-modal-screen.app-centered-modal-screen {
+    padding-top: calc(var(--ccr-native-header-height, 0px) + 1rem);
     padding-bottom: calc(var(--ccr-native-bottom-nav-total, 0px) + 1rem);
+  }
+
+  body.ccr-native-app.ccr-native-bottom-nav-visible .app-modal-screen.app-centered-modal-screen .app-centered-modal {
+    max-height: calc(
+      var(--app-visual-viewport-height) - var(--ccr-native-header-height, 0px) -
+        var(--ccr-native-bottom-nav-total, 0px) - 2rem
+    );
   }
 
   html[data-keyboard-open] .app-modal-screen.app-modal-screen,
