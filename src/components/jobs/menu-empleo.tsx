@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { Flag, Link2, Share2 } from "lucide-react";
 import { MenuFicha } from "@/components/ui/menu-ficha";
 import { useCompartir } from "@/components/ui/boton-compartir";
+import { ModalCompartir } from "@/components/ui/modal-compartir";
 import { ReportProfileModal } from "@/components/professionals/report-profile-modal";
 
 /**
@@ -32,7 +33,10 @@ export function MenuEmpleo({
   className?: string;
 }) {
   const t = useTranslations("menuFicha");
-  const { compartir, copiar, avisoNodo } = useCompartir();
+  const tCompartir = useTranslations("compartirFicha");
+  const tShare = useTranslations("shareProfile");
+  const { copiar, avisoNodo } = useCompartir();
+  const [compartiendo, setCompartiendo] = useState(false);
   const [reportando, setReportando] = useState(false);
 
   return (
@@ -41,7 +45,7 @@ export function MenuEmpleo({
         className={className}
         grande={grande}
         opciones={[
-          { id: "compartir", icono: <Share2 className="h-4 w-4" />, texto: t("share"), onSelect: () => void compartir(enlace, titulo) },
+          { id: "compartir", icono: <Share2 className="h-4 w-4" />, texto: t("share"), onSelect: () => setCompartiendo(true) },
           { id: "copiar", icono: <Link2 className="h-4 w-4" />, texto: t("copyLink"), onSelect: () => void copiar(enlace) },
           ...(esPropio || !empleadorSlug ? [] : [{ id: "reportar", icono: <Flag className="h-4 w-4" />, texto: t("reportJob"), peligro: true, onSelect: () => setReportando(true) }]),
         ]}
@@ -55,6 +59,18 @@ export function MenuEmpleo({
           onClose={() => setReportando(false)}
         />
       )}
+      <ModalCompartir
+        open={compartiendo}
+        onClose={() => setCompartiendo(false)}
+        url={enlace}
+        nombre={titulo}
+        titulo={tCompartir("jobTitle")}
+        subtitulo={tCompartir("subtitle")}
+        mensaje={tCompartir("jobMessage", { name: titulo })}
+        asunto={tCompartir("jobSubject", { name: titulo })}
+        enlaceLabel={tCompartir("jobLink")}
+        cerrarLabel={tShare("close")}
+      />
       {avisoNodo}
     </>
   );

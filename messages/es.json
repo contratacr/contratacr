@@ -4252,5 +4252,16 @@
     "reportJob": "Reportar este empleo",
     "reportOffer": "Reportar esta oferta",
     "share": "Compartir"
+  },
+  "compartirFicha": {
+    "jobTitle": "Compartir este empleo",
+    "offerTitle": "Compartir esta oferta",
+    "subtitle": "Mandalo por donde ya hablás con la gente.",
+    "jobMessage": "Mirá este empleo en ContrataCR: {name}",
+    "offerMessage": "Mirá esta oferta en ContrataCR: {name}",
+    "jobSubject": "Empleo en ContrataCR: {name}",
+    "offerSubject": "Oferta en ContrataCR: {name}",
+    "jobLink": "Enlace del empleo",
+    "offerLink": "Enlace de la oferta"
   }
 }

@@ -4252,5 +4252,16 @@
     "reportJob": "Report this job",
     "reportOffer": "Report this offer",
     "share": "Share"
+  },
+  "compartirFicha": {
+    "jobTitle": "Share this job",
+    "offerTitle": "Share this offer",
+    "subtitle": "Send it where you already talk to people.",
+    "jobMessage": "Check out this job on ContrataCR: {name}",
+    "offerMessage": "Check out this offer on ContrataCR: {name}",
+    "jobSubject": "Job on ContrataCR: {name}",
+    "offerSubject": "Offer on ContrataCR: {name}",
+    "jobLink": "Job link",
+    "offerLink": "Offer link"
   }
 }

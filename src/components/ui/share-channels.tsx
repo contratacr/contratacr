@@ -9,7 +9,7 @@ import { useNativeShare } from "@/hooks/use-native-share";
 // El enlace y las tres formas en que la gente lo manda de verdad. Lo usan el
 // "Compartir" del perfil y el kit del profesional, para que sea lo mismo en
 // los dos lados.
-type Props = { url: string; name: string; linkLabel?: string; copyLabel?: string };
+type Props = { url: string; name: string; linkLabel?: string; copyLabel?: string; mensaje?: string; asunto?: string };
 
 export function WhatsAppIcon({ className }: { className?: string }) {
   return (
@@ -39,15 +39,15 @@ export function FacebookIcon({ className }: { className?: string }) {
 
 const TILE = "flex flex-col items-center gap-2 rounded-2xl border border-[#e5eaf0] bg-white px-2 py-3.5 text-center transition-colors hover:border-[#bfe3f5] hover:bg-[#f8fcfe]";
 
-export function ShareChannels({ url, name, linkLabel, copyLabel }: Props) {
+export function ShareChannels({ url, name, linkLabel, copyLabel, mensaje, asunto }: Props) {
   const t = useTranslations("shareProfile");
   const nativo = useNativeShare();
   const [avisoInstagram, setAvisoInstagram] = useState(false);
 
-  const texto = t("message", { name });
+  const texto = mensaje ?? t("message", { name });
   const wa = `https://wa.me/?text=${encodeURIComponent(`${texto} ${url}`)}`;
   const fb = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
-  const correo = `mailto:?subject=${encodeURIComponent(t("emailSubject", { name }))}&body=${encodeURIComponent(`${texto}\n${url}`)}`;
+  const correo = `mailto:?subject=${encodeURIComponent(asunto ?? t("emailSubject", { name }))}&body=${encodeURIComponent(`${texto}\n${url}`)}`;
 
   // Instagram no deja compartir un enlace desde el navegador: lo que funciona
   // es copiarlo y pegarlo en la historia, el perfil o un mensaje.

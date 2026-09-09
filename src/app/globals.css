@@ -1193,6 +1193,12 @@ html[data-self-action-modal-open="true"] [data-save-button] {
     padding-bottom: 1rem;
   }
 
+  /* En la app el diálogo centrado terminaba pegado a la barra de abajo: hay que
+     reservar su alto, no solo el respiro. */
+  body.ccr-native-app.ccr-native-bottom-nav-visible .app-modal-screen.app-centered-modal-screen {
+    padding-bottom: calc(var(--ccr-native-bottom-nav-total, 0px) + 1rem);
+  }
+
   html[data-keyboard-open] .app-modal-screen.app-modal-screen,
   html[data-keyboard-open] [data-ai-concierge-dialog] {
     top: var(--app-visual-viewport-top) !important;
