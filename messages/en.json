@@ -4080,7 +4080,7 @@
     "editorSubtitle": "Detail what's included and how much it costs. The client gets it in their panel and can accept it.",
     "titleLabel": "Title",
     "titlePlaceholder": "E.g.: Install 4 outlets and check the panel",
-    "itemsLabel": "Details",
+    "itemsLabel": "Lines",
     "itemDescription": "Description",
     "itemQty": "Qty",
     "itemPrice": "Price (₡)",

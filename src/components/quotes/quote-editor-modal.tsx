@@ -102,14 +102,14 @@ export function QuoteEditorModal({ open, onClose, bookingId, projectId, defaultT
   const bloque = "rounded-2xl border border-[#e5eaf0] bg-white p-4";
 
   return (
-    <Modal open={open} onClose={onClose} title={t("editorTitle")} subtitle={suelta ? t("editorSubtitleFree") : t("editorSubtitle")} size="md" mobilePresentation="fullscreen" closeLabel={t("close")}
+    <Modal open={open} onClose={onClose} title={t("editorTitle")} subtitle={suelta ? undefined : t("editorSubtitle")} size="md" mobilePresentation="fullscreen" closeLabel={t("close")}
       footerNotice={error ? <p className="text-sm font-semibold text-red-600">{error}</p> : undefined}
-      footer={(<>
-        <Button type="button" variant="secondary" onClick={onClose} disabled={sending}>{t("cancel")}</Button>
-        <Button type="button" onClick={() => void enviar()} disabled={sending || !listo} loading={sending}>
+      footerClassName="px-4 sm:px-6"
+      footer={(
+        <Button type="button" size="lg" className="w-full" onClick={() => void enviar()} disabled={sending || !listo} loading={sending}>
           {sending ? (suelta ? t("creating") : t("sending")) : (suelta ? t("create") : t("send"))}
         </Button>
-      </>)}>
+      )}>
       <div className="flex flex-col gap-4">
         {suelta && (
           <section className={bloque}>
