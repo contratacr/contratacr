@@ -125,7 +125,9 @@ export function SaveItemButton({
             )
           : withLabel
           ? cn(
-              "inline-flex h-10 items-center justify-center gap-2 rounded-full border bg-white px-4 text-sm font-bold transition",
+              // Una sola línea y sin ícono: "Guardar en favoritos" partido en dos
+              // renglones dentro de la pastilla se veía roto.
+              "inline-flex h-10 items-center justify-center gap-2 whitespace-nowrap rounded-full border bg-white px-4 text-[13px] font-bold transition",
               saved ? "border-[#009FD9] text-[#0089bb] hover:bg-[#f2fbfe]" : "border-[#d7e1ea] text-[#162543] hover:border-[#b9c8d6] hover:bg-[#f6f9fb]",
             )
           : cn(
@@ -135,7 +137,7 @@ export function SaveItemButton({
         className,
       )}
     >
-      {(showIcon ?? true) && <Bookmark className={bubble ? "h-5 w-5" : withLabel || sutil ? "h-4 w-4 shrink-0" : "h-[18px] w-[18px]"} fill={saved ? "currentColor" : "none"} />}
+      {(showIcon ?? !withLabel) && <Bookmark className={bubble ? "h-5 w-5" : sutil ? "h-4 w-4 shrink-0" : "h-[18px] w-[18px]"} fill={saved ? "currentColor" : "none"} />}
       {(withLabel || sutil) && <span>{saved ? labels.saved : sutil ? labels.short : labels.save}</span>}
     </button>
   );

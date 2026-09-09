@@ -745,6 +745,12 @@ export function OfferContactActions({
           )}
         </div>
       )}
+      {/* Debajo de todos los botones: primero las formas de contactar, y al
+          final —sin marco— las dos acciones sobre la oferta. */}
+      <div className="flex items-center justify-center gap-1 pt-1">
+        <OfferSaveButton offer={offer} userId={userId} />
+        <BotonCompartir url={`/${locale}/ofertas/${offer.id}`} titulo={offer.title} sutil className={compact ? "h-9 text-[12px]" : ""} />
+      </div>
     </div>
   );
 }
@@ -887,24 +893,14 @@ function OfferPreview({
                       </div>
                     )}
       <OfferContactActions offer={offer} userId={userId} isOwner={isOwner} />
-      {/* Guardar y compartir comparten renglón con el precio: esa fila ya
-          existía y tenía todo el ancho libre a la derecha. */}
-      <div className="mt-5 flex flex-wrap items-end gap-x-3 gap-y-2">
-        <div className="flex flex-wrap items-end gap-3">
-          <p className="text-2xl font-extrabold text-[#007fae]">
-             {formatOfferPrice(offer, locale)}
+      <div className="mt-5 flex flex-wrap items-end gap-3">
+        <p className="text-2xl font-extrabold text-[#007fae]">
+           {formatOfferPrice(offer, locale)}
+        </p>
+        {before && (
+          <p className="pb-1 text-sm font-semibold text-[#8794a7] line-through">
+            {before}
           </p>
-          {before && (
-            <p className="pb-1 text-sm font-semibold text-[#8794a7] line-through">
-              {before}
-            </p>
-          )}
-        </div>
-        {!isOwner && (
-          <div className="-mr-2 ml-auto flex items-center gap-1">
-            <OfferSaveButton offer={offer} userId={userId} />
-            <BotonCompartir url={`/${locale}/ofertas/${offer.id}`} titulo={offer.title} sutil />
-          </div>
         )}
       </div>
       <div className="mt-3 flex flex-wrap gap-2 text-sm">

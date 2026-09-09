@@ -4,8 +4,7 @@ import { StickyHairlineHeader } from "@/components/util/sticky-hairline-header";
 import { Link } from "@/i18n/navigation";
 import { OfferImageGallery } from "@/components/offers/offer-image-gallery";
 import { OfferDetailNavbarSearch } from "@/components/offers/offer-detail-navbar-search";
-import { OfferContactActions, OfferSaveButton } from "@/components/offers/offers-board";
-import { BotonCompartir } from "@/components/ui/boton-compartir";
+import { OfferContactActions } from "@/components/offers/offers-board";
 import { OfferOwnerActions } from "@/components/offers/offer-owner-actions";
 import { getAllCategories, getCategoryLabel } from "@/lib/data/categories";
 import {
@@ -157,19 +156,9 @@ export default async function OfferDetailPage({ params, searchParams }: { params
                 <p className="font-semibold text-[#52627a]">{offer.professional_name}</p>
               )}
             </div>
-            {/* Guardar y compartir comparten renglón con el precio: esa fila ya
-                existía y tenía todo el ancho libre a la derecha. */}
-            <div className="mt-5 flex flex-wrap items-end gap-x-3 gap-y-2">
-              <div className="flex flex-wrap items-end gap-3">
-                <p className="text-3xl font-extrabold text-[#007fae]">{formatOfferPrice(offer, locale)}</p>
-                {before && <p className="pb-1 text-sm font-bold text-[#8794a7] line-through">{before}</p>}
-              </div>
-              {!isOwner && !unavailable && (
-                <div className="-mr-2 ml-auto flex items-center gap-1">
-                  <OfferSaveButton offer={offer} userId={user?.id ?? null} />
-                  <BotonCompartir url={`/${locale}/ofertas/${offer.id}`} titulo={offer.title} sutil />
-                </div>
-              )}
+            <div className="mt-5 flex flex-wrap items-end gap-3">
+              <p className="text-3xl font-extrabold text-[#007fae]">{formatOfferPrice(offer, locale)}</p>
+              {before && <p className="pb-1 text-sm font-bold text-[#8794a7] line-through">{before}</p>}
             </div>
             <div className="mt-5 lg:hidden">
               {isOwner ? (
