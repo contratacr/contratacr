@@ -32,11 +32,13 @@ export default function RegisterPage() {
       <Navbar mobileSearch={false} />
       <main className="flex-1 flex flex-col items-center justify-center px-4 py-12 lg:py-20">
         <div className="w-full max-w-2xl">
-          {/* El saludo encabeza y la pregunta guía debajo: las tarjetas ya se
-              explican solas, así que la pregunta no necesita el tamaño grande. */}
+          {/* El saludo va arriba y pequeño: la marca ya está en el navbar y en el
+              pie, así que no necesita el tamaño grande. Lo grande es la pregunta,
+              porque «Ofrezco servicios» y «Busco servicios» son respuestas: con la
+              pregunta a la vista se leen como una decisión y no como un menú. */}
           <div className="ccr-entrada text-center mb-8 lg:mb-12">
-            <h1 className="text-[1.75rem] font-extrabold leading-tight tracking-tight text-[#162543] sm:text-4xl lg:text-[2.75rem]">{t("welcome")}</h1>
-            <p className="mt-2.5 text-[17px] font-medium text-[#6b7280] lg:text-lg">{t("title")}</p>
+            <p className="mb-1.5 text-[15px] font-semibold text-[#009FD9] lg:text-base">{t("welcome")}</p>
+            <h1 className="text-[1.75rem] font-extrabold leading-tight tracking-tight text-[#162543] sm:text-4xl lg:text-[2.75rem]">{t("title")}</h1>
           </div>
 
           {/* Como eligen rol Upwork o Airbnb: dos tarjetas iguales, cada una con
