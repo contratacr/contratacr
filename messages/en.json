@@ -722,7 +722,6 @@
     "linkCopied": "Link copied",
     "statCases": "{count, plural, one {past job} other {past jobs}}",
     "statCasesShort": "{count, plural, one {case} other {cases}}",
-    "linksTitle": "Also find them on",
     "linksWebsite": "Website"
   },
   "auth": {
