@@ -336,7 +336,10 @@ async function restoreProductionActors() {
       id: actor.professionalId,
       profile_id: actor.profileId,
       slug: source.slug,
-      business_name: source.businessName,
+      // Producción dejó de exponer nombre comercial para la cuenta ContrataCR.
+      // La regresión identifica a los actores por ese nombre, así que cuando
+      // producción no lo trae se conserva el canónico en vez de vaciarlo.
+      business_name: source.businessName || actor.businessName,
       public_business_name_only: source.publicBusinessNameOnly === true,
       category_id: source.categoryId,
       professions: source.professions,
