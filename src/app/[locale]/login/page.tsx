@@ -535,9 +535,11 @@ export default function LoginPage() {
               else router.push("/");
             }}
             aria-label={t("back")}
-            className="fixed left-3 top-[max(env(safe-area-inset-top),0.75rem)] z-20 grid h-10 w-10 place-items-center rounded-full bg-white/90 text-[#162543] shadow-[0_6px_18px_-10px_rgba(15,23,42,0.5)] backdrop-blur transition-colors hover:bg-white lg:hidden"
+            className="fixed left-3 top-[max(env(safe-area-inset-top),0.75rem)] z-20 inline-flex h-10 items-center gap-1.5 rounded-full bg-white/90 pl-2.5 pr-4 text-[13px] font-bold text-[#162543] shadow-[0_6px_18px_-10px_rgba(15,23,42,0.5)] backdrop-blur transition-colors hover:bg-white lg:hidden"
           >
+            {/* Con rótulo: una flecha sola no dice a dónde lleva. */}
             <ArrowLeft className="h-5 w-5" />
+            {t("back")}
           </button>
           {/* Sin navbar (teléfono y ventana angosta) la pantalla no decía de
               quién es: la marca va arriba de la tarjeta. En computadora ancha ya

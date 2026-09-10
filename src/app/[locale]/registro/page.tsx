@@ -5,6 +5,8 @@ import { useSearchParams } from "next/navigation";
 import { UserRoundSearch, BriefcaseBusiness, ArrowRight } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { Navbar } from "@/components/layout/navbar";
+import { FocusedHeader } from "@/components/layout/focused-header";
+import { ArrowLeft } from "lucide-react";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { useRedirectIfRegistered } from "@/hooks/use-redirect-if-registered";
 
@@ -27,9 +29,19 @@ export default function RegisterPage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-[#f4f7fa]">
-      <Navbar mobileSearch={false} />
+      {/* Igual que ingresar: en el teléfono esta pantalla tiene una sola tarea,
+          así que va sin menú ni pie, con la marca arriba y una salida clara. */}
+      <div className="hidden lg:block"><Navbar mobileSearch={false} /></div>
+      <div className="lg:hidden"><FocusedHeader /></div>
       <main className="flex-1 flex flex-col items-center justify-center px-4 py-12">
         <div className="w-full max-w-xl">
+          <Link
+            href="/"
+            className="mb-6 inline-flex h-10 items-center gap-1.5 rounded-full pr-3 text-[13px] font-bold text-[#162543] transition-colors hover:bg-[#eef3f8] lg:hidden"
+          >
+            <ArrowLeft className="h-5 w-5" />
+            {t("backHome")}
+          </Link>
           <div className="text-center mb-10">
             <h1 className="text-3xl font-bold text-[#162543] mb-2">{t("title")}</h1>
             <p className="text-[#6b7280] text-base">{t("subtitle")}</p>
@@ -82,7 +94,7 @@ export default function RegisterPage() {
           </p>
         </div>
       </main>
-      <LandingFooter />
+      <div className="hidden lg:block"><LandingFooter /></div>
     </div>
   );
 }

@@ -2998,7 +2998,8 @@
     "haveAccount": "¿Ya tienes cuenta?",
     "signIn": "Inicia sesión",
     "clientRole": "Cliente",
-    "proRole": "Profesional"
+    "proRole": "Profesional",
+    "backHome": "Volver al inicio"
   },
   "onboarding": {
     "greeting": "Hola, {name}",
