@@ -2146,7 +2146,8 @@
       "cancelled": "Cancelled",
       "accepted": "Accepted",
       "open": "Open",
-      "chosen": "Chose you"
+      "chosen": "Chose you",
+      "won": "Work done"
     },
     "projectFallback": "Project",
     "openChat": "WhatsApp",
@@ -2734,7 +2735,10 @@
     "pActiveEmptySub": "Post what you need and get replies from professionals in your area.",
     "pDoneEmpty": "No finished projects yet",
     "pDoneEmptySub": "Projects you resolved or cancelled stay here.",
-    "hiredTitle": "Who did the work"
+    "hiredTitle": "Who did the work",
+    "chooseThisOne": "Choose this professional",
+    "chooseDone": "You chose {name}",
+    "chooseDoneSub": "They can now send you the quote and coordinate. The request closes when you mark it resolved."
   },
   "clientPage": {
     "greeting": "Hi, {name} 👋",

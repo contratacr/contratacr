@@ -508,6 +508,62 @@ export async function PATCH(req: NextRequest) {
   }
 
   // ── Client closes the request: "Ya lo resolví" (+ optionally who helped) ──
+  // ── El cliente elige con quién sigue, SIN cerrar la solicitud ────────────
+  // Antes solo se podía elegir al marcarla resuelta, así que un profesional
+  // elegido siempre tenía el proyecto ya cerrado: nunca llegaba a cotizar ni a
+  // coordinar desde el app.
+  if (action === "choose") {
+    const professionalId = typeof body.professionalId === "string" ? body.professionalId : "";
+    if (!professionalId) return NextResponse.json({ error: "Falta el profesional." }, { status: 400 });
+    const { data: project } = await admin
+      .from("projects")
+      .select("id, client_id, accepted_professional_id, title, status")
+      .eq("id", id)
+      .maybeSingle();
+    if (!project || project.client_id !== uid) return NextResponse.json({ error: "No autorizado." }, { status: 403 });
+    if (project.status === "completed" || project.status === "cancelled") {
+      return NextResponse.json({ error: "La solicitud ya está cerrada." }, { status: 409 });
+    }
+    const { data: reply } = await admin
+      .from("proposals")
+      .select("id, professional_id")
+      .eq("project_id", id)
+      .eq("professional_id", professionalId)
+      .maybeSingle();
+    if (!reply) return NextResponse.json({ error: "Ese profesional no respondió esta solicitud." }, { status: 404 });
+
+    const now = new Date().toISOString();
+    await admin.from("proposals").update({ status: "accepted" }).eq("id", reply.id);
+    const { error } = await admin
+      .from("projects")
+      .update({ accepted_professional_id: reply.professional_id, updated_at: now })
+      .eq("id", id);
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    await auditUserAction(admin, req, {
+      actorUserId: uid,
+      actorRole: "client",
+      action: "project.choose",
+      entityTable: "projects",
+      entityId: id,
+      entityOwnerUserId: project.client_id,
+      beforeData: { accepted_professional_id: project.accepted_professional_id, title: project.title },
+      afterData: { accepted_professional_id: reply.professional_id, title: project.title },
+    });
+    const { data: pro } = await admin.from("professionals").select("profile_id").eq("id", reply.professional_id).maybeSingle();
+    if (pro?.profile_id) {
+      const notification = {
+        user_id: pro.profile_id,
+        type: "proposal_accepted",
+        title: "El cliente te eligió",
+        message: `Te eligieron para "${project.title}". Ya puedes cotizar y coordinar los detalles.`,
+        data: { link: "/es/dashboard/profesional?tab=proposals", project_id: id, project_title: project.title },
+      };
+      await admin.from("notifications").insert(notification);
+      await sendNotificationPush({ userId: notification.user_id, title: notification.title, message: notification.message, data: notification.data });
+    }
+    return NextResponse.json({ success: true, professionalId: reply.professional_id });
+  }
+
   if (action === "resolve") {
     const professionalId = typeof body.professionalId === "string" && body.professionalId ? body.professionalId : null;
     const { data: project } = await admin

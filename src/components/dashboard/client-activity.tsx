@@ -484,6 +484,32 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
   const [resolveChoice, setResolveChoice] = useState<string>("");
   const [resolving, setResolving] = useState(false);
 
+  // Elegir con quién sigue, sin cerrar la solicitud: el profesional queda
+  // habilitado para cotizar y coordinar, y la solicitud se cierra después con
+  // "Marcar como resuelta".
+  const [eligiendo, setEligiendo] = useState<string | null>(null);
+  async function elegirProfesional(projectId: string, professionalId: string, nombre: string) {
+    if (eligiendo) return;
+    setEligiendo(professionalId);
+    try {
+      const res = await fetch("/api/projects", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: projectId, action: "choose", professionalId }),
+      });
+      const d = await res.json().catch(() => ({}));
+      if (!res.ok) { void showMessage({ title: errorTitle, description: d.error ?? t("projectUpdateError"), tone: "danger" }); return; }
+      setProjects((prev) => prev.map((x) => (x.id === projectId ? { ...x, accepted_professional_id: professionalId } : x)));
+      setProjectProposals((prev) => ({
+        ...prev,
+        [projectId]: (prev[projectId] ?? []).map((x) => (x.professionals?.id === professionalId ? { ...x, status: "accepted" } : x)),
+      }));
+      void showMessage({ title: t("chooseDone", { name: nombre }), description: t("chooseDoneSub"), tone: "success" });
+    } finally {
+      setEligiendo(null);
+    }
+  }
+
   async function openResolve(projectId: string) {
     const lista = await loadProposals(projectId);
     // Con una sola respuesta, casi siempre fue esa persona: viene marcada para
@@ -1000,8 +1026,19 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                                             </div>
                                           </div>
                                           {isActive && proposal.professionals?.id && (
-                                            <div className="mt-3">
-                                              <DirectChatLauncher professionalId={proposal.professionals.id} professionalName={proposal.professionals.profiles?.full_name || t("professional")} projectId={project.id} proposalId={proposal.id} contextTitle={project.title} buttonLabel={t("writeWhatsapp")} openDirectly initialMessage={t("proposalChatGreeting", { title: project.title })} className="h-11 w-full rounded-full text-[13px] font-bold" />
+                                            <div className="mt-3 flex flex-col gap-2">
+                                              {!chosenId && (
+                                                <Button
+                                                  size="sm"
+                                                  className="h-11 w-full rounded-full text-[13px] font-bold"
+                                                  loading={eligiendo === proposal.professionals.id}
+                                                  disabled={!!eligiendo}
+                                                  onClick={() => void elegirProfesional(project.id, proposal.professionals!.id!, proposal.professionals?.profiles?.full_name ?? t("professional"))}
+                                                >
+                                                  {t("chooseThisOne")}
+                                                </Button>
+                                              )}
+                                              <DirectChatLauncher professionalId={proposal.professionals.id} professionalName={proposal.professionals.profiles?.full_name || t("professional")} projectId={project.id} proposalId={proposal.id} contextTitle={project.title} buttonLabel={t("writeWhatsapp")} openDirectly initialMessage={t("proposalChatGreeting", { title: project.title })} className="h-11 w-full rounded-full text-[13px] font-bold" tone={chosenId ? "primary" : "outline"} />
                                             </div>
                                           )}
                                         </div>

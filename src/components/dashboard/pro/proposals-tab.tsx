@@ -313,9 +313,11 @@ export function ProposalsTab({ categoryId }: ProposalsTabProps) {
   // Estado de la solicitud que respondí, en una sola palabra.
   function replyOutcome(p: MyProposal): { label: string; variant: "default" | "muted" | "error" | "success" } | null {
     const ps = p.projects?.status;
-    if (p.status === "accepted") return { label: t("projStatus.chosen"), variant: "success" };
-    if (ps === "completed") return { label: t("projStatus.completed"), variant: "muted" };
+    // La solicitud manda: "Te eligió" en una ya cerrada se leía como algo vivo
+    // (y no traía cotización, porque el trabajo terminó).
+    if (ps === "completed") return { label: p.status === "accepted" ? t("projStatus.won") : t("projStatus.completed"), variant: p.status === "accepted" ? "success" : "muted" };
     if (ps === "cancelled") return { label: t("projStatus.cancelled"), variant: "error" };
+    if (p.status === "accepted") return { label: t("projStatus.chosen"), variant: "success" };
     return null;
   }
 
