@@ -10,8 +10,9 @@ type ProfileLayoutProps = {
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://contratacr.com";
 
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+// Los datos que arman los metadatos del perfil vienen de una consulta ya
+// cacheada; forzar dinámico aquí obligaba a repetir el render en cada visita.
+export const revalidate = 300;
 
 function cleanDescription(text?: string | null) {
   const clean = (text ?? "").replace(/\s+/g, " ").trim();

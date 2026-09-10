@@ -10,8 +10,10 @@ export const size = {
 };
 
 export const contentType = "image/png";
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+// La vista previa de un perfil no cambia de un minuto a otro: sin caché, cada
+// vez que alguien comparte o un rastreador la pide, se vuelve a consultar la
+// base y a dibujar la imagen.
+export const revalidate = 86400;
 
 
 function LogoWordmark({

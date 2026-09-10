@@ -31,7 +31,11 @@ const SUPABASE_CONFIGURED =
   !!process.env.NEXT_PUBLIC_SUPABASE_URL && !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
 const NEAR_ME_RADIUS_KM = 25;
-const SEARCH_CACHE_SECONDS = 15;
+// La búsqueda pide hasta 500 profesionales con sus columnas grandes. A 15
+// segundos, cualquier visita (o un rastreador probando filtros) rehacía la
+// consulta entera: era el mayor consumo de tráfico contra la base. Cinco
+// minutos de retraso en ver un profesional nuevo no le cambian la vida a nadie.
+const SEARCH_CACHE_SECONDS = 300;
 
 
 type LocationQueryMatch =
@@ -838,7 +842,17 @@ export async function getZoneCoverage(): Promise<ZoneCoverage> {
 // Single professional by slug
 // ---------------------------------------------------------------------------
 
-export async function getProfessionalBySlug(
+// La ficha pública cuesta siete consultas (la principal con todas sus reseñas,
+// más seis de una sola columna). Sin caché, cada visita —y cada rastreador—
+// las repetía. Los datos de un perfil cambian poco: cinco minutos de retraso
+// son invisibles para quien mira y ahorran casi todo el tráfico.
+const PERFIL_CACHE_SECONDS = 300;
+
+export async function getProfessionalBySlug(slug: string): Promise<ProfessionalDetail | null> {
+  return getProfessionalBySlugCached(slug);
+}
+
+async function getProfessionalBySlugUncached(
   slug: string
 ): Promise<ProfessionalDetail | null> {
   if (SUPABASE_CONFIGURED) {
@@ -1077,3 +1091,10 @@ export async function getProfessionalBySlug(
   // No fake/seed fallback.
   return null;
 }
+
+const getProfessionalBySlugCached = unstable_cache(
+  (slug: string) => getProfessionalBySlugUncached(slug),
+  ["public-professional-detail-v1"],
+  { revalidate: PERFIL_CACHE_SECONDS },
+);
+
