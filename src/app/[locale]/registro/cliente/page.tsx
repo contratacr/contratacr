@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { PhoneInput, isPhoneComplete } from "@/components/ui/phone-input";
 import { OtpVerification } from "@/components/auth/otp-verification";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { CheckCircle2, Eye, EyeOff, User } from "lucide-react";
+import { CheckCircle2, Eye, EyeOff } from "lucide-react";
 import { SuccessIcon } from "@/components/ui/success-icon";
 import { cn } from "@/lib/utils";
 import { getInitials } from "@/lib/utils";
@@ -230,10 +230,10 @@ export default function RegisterClientPage() {
       <main className="flex-1 ccr-centrado-seguro px-4 py-12">
         <div className="w-full max-w-md">
           <div className="bg-white rounded-3xl shadow-sm border border-[#e5e7eb] p-8">
+            {/* Sin icono arriba: el formulario del profesional tampoco lo lleva
+                (ahí manda el indicador de pasos), y el símbolo repetía el de la
+                tarjeta que la persona acaba de tocar. */}
             <div className="text-center mb-6">
-              <div className="ccr-icono-mosaico mx-auto mb-3 h-14 w-14">
-                <User className="h-7 w-7" strokeWidth={1.6} />
-              </div>
               <h1 className="text-2xl font-bold text-[#162543]">{t("title")}</h1>
               <p className="text-sm text-[#6b7280] mt-1">{t("subtitle")}</p>
             </div>
