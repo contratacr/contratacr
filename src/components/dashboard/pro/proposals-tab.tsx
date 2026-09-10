@@ -465,7 +465,10 @@ export function ProposalsTab({ categoryId }: ProposalsTabProps) {
           <div className="ccr-native-safe-list-end flex flex-col gap-3">
             {listaDeEtapa.map((p) => {
               const isOpen = expandedMine === p.id;
-              const outcome = replyOutcome(p);
+              // En Finalizadas y en Canceladas la pestaña YA dice el desenlace:
+              // repetirlo en la tarjeta es decir dos veces lo mismo. Se conserva
+              // en Enviadas, donde separa la elegida de la que sigue en juego.
+              const outcome = stage === "respondidas" ? replyOutcome(p) : null;
               // En "Terminadas" el chip separa el trabajo hecho de la cancelada;
               // en "Enviadas" separa la elegida de la que sigue en juego.
               const trabajoVivo = p.projects?.status !== "completed" && p.projects?.status !== "cancelled";

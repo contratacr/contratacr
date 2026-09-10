@@ -27,6 +27,27 @@ export function ScrollRail({
   const ref = useRef<HTMLDivElement | null>(null);
   const [trim, setTrim] = useState(0);
 
+  // La opción activa nunca puede quedar cortada en el borde: al cambiar, el
+  // rail la trae a la vista. Sin esto, con cuatro etapas la seleccionada se veía
+  // a medias contra el filo de la pantalla.
+  useEffect(() => {
+    const rail = ref.current;
+    if (!rail) return;
+    const traer = () => {
+      const activa = rail.querySelector<HTMLElement>('[aria-selected="true"], [data-active="true"], [aria-pressed="true"]');
+      if (!activa) return;
+      const r = activa.getBoundingClientRect();
+      const c = rail.getBoundingClientRect();
+      if (r.left < c.left + 4 || r.right > c.right - 4) {
+        rail.scrollTo({ left: rail.scrollLeft + (r.left - c.left) - (c.width - r.width) / 2, behavior: "smooth" });
+      }
+    };
+    traer();
+    const observador = new MutationObserver(traer);
+    observador.observe(rail, { attributes: true, subtree: true, attributeFilter: ["aria-selected", "data-active", "aria-pressed"] });
+    return () => observador.disconnect();
+  }, []);
+
   const measure = useCallback(() => {
     const rail = ref.current;
     if (!rail) return;
