@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { FileText, ChevronRight } from "lucide-react";
 import { formatColones } from "@/lib/pricing";
 import { isQuoteExpired, numeroCotizacion, type Quote } from "@/lib/quotes";
+import { actualizarCotizacion, agregarCotizacion, cargarCotizaciones, useCotizaciones } from "@/lib/quotes-store";
 import { QuoteEditorModal } from "@/components/quotes/quote-editor-modal";
 import { QuoteDetailModal } from "@/components/quotes/quote-detail-modal";
 
@@ -21,31 +22,34 @@ export function QuoteBlock({ bookingId, projectId, role, canCreate = false, defa
 }) {
   const t = useTranslations("quotes");
   const locale = useLocale();
-  const [quotes, setQuotes] = useState<Quote[] | null>(null);
-  const [unavailable, setUnavailable] = useState(false);
   const [editor, setEditor] = useState(false);
   const [detail, setDetail] = useState<Quote | null>(null);
-  const key = bookingId ? `bookingId=${bookingId}` : projectId ? `projectId=${projectId}` : "";
+  const key = bookingId ?? projectId ?? "";
 
-  useEffect(() => {
-    if (!key) return;
-    let activo = true;
-    void fetch(`/api/quotes?${key}`).then((r) => r.json()).then((d) => {
-      if (!activo) return;
-      if (d.unavailable) setUnavailable(true);
-      setQuotes(Array.isArray(d.quotes) ? d.quotes : []);
-    }).catch(() => { if (activo) setQuotes([]); });
-    return () => { activo = false; };
-  }, [key]);
+  // Todas las cotizaciones se piden una sola vez para la pantalla entera; cada
+  // bloque saca las suyas de ahí. Antes cada tarjeta hacía su propia consulta y
+  // se veía cargar al abrirla.
+  const { quotes: todas, unavailable } = useCotizaciones();
+  useEffect(() => { cargarCotizaciones(); }, []);
+  const quotes = useMemo(() => {
+    if (todas === null) return null;
+    return todas.filter((q) => (bookingId ? q.booking_id === bookingId : projectId ? q.project_id === projectId : false));
+  }, [todas, bookingId, projectId]);
 
-  // Mientras se consulta, el espacio queda reservado: aparecer de golpe después
-  // de pintar la tarjeta era el parpadeo que se veía al abrir una cita.
   if (!key || unavailable) return null;
   if (quotes === null) {
-    if (!canCreate && role === "client") return null;
-    return asButton
-      ? <span className="block h-11 w-full animate-pulse rounded-full bg-[#eef2f6]" aria-hidden />
-      : <div className="h-[52px] animate-pulse rounded-2xl bg-[#eef2f6]" aria-hidden />;
+    // La primera vez, el profesional que puede cotizar ve su botón de una: es
+    // lo que hay en la enorme mayoría de las citas, y evita el pulso de carga.
+    if (!canCreate || role !== "pro") return null;
+    return asButton ? (
+      <button type="button" onClick={() => setEditor(true)} className="inline-flex h-11 w-full items-center justify-center gap-1.5 whitespace-nowrap rounded-full border border-[#d7e1ea] bg-white px-4 text-[13px] font-bold text-[#162543] transition-colors hover:border-[#b9c8d6] hover:bg-[#f6f9fb]">
+        <FileText className="h-4 w-4 shrink-0 text-[#009FD9]" />{t("rowSend")}
+      </button>
+    ) : (
+      <button type="button" onClick={() => setEditor(true)} className="inline-flex h-11 w-full items-center justify-center rounded-full border border-[#d7e1ea] bg-white px-4 text-[13px] font-bold text-[#162543] transition-colors hover:border-[#b9c8d6] hover:bg-[#f6f9fb]">
+        {t("send")}
+      </button>
+    );
   }
   const ultima = quotes[0] ?? null;
   const conNombre = ultima ? { ...ultima, professional_name: ultima.professional_name ?? professionalName ?? null } : null;
@@ -63,11 +67,11 @@ export function QuoteBlock({ bookingId, projectId, role, canCreate = false, defa
     <>
       {editor && (
         <QuoteEditorModal open onClose={() => setEditor(false)} bookingId={bookingId} projectId={projectId} defaultTitle={defaultTitle}
-          onSent={(q) => { setQuotes((prev) => [q, ...(prev ?? [])]); setEditor(false); }} />
+          onSent={(q) => { agregarCotizacion(q); setEditor(false); }} />
       )}
       {detail && (
         <QuoteDetailModal quote={detail} role={role} open onClose={() => setDetail(null)}
-          onChanged={(q) => { setQuotes((prev) => (prev ?? []).map((x) => (x.id === q.id ? { ...x, ...q } : x))); setDetail(null); }} />
+          onChanged={(q) => { actualizarCotizacion(q); setDetail(null); }} />
       )}
     </>
   );

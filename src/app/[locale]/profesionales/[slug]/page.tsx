@@ -8,7 +8,7 @@ import { useTranslations, useLocale } from "next-intl";
 import { useParams, useSearchParams } from "next/navigation";
 import {
   MapPin, Shield, ArrowLeft, Star, Briefcase, Banknote, BadgeCheck, Languages,
-  Flag, Award, SearchX, Globe, BadgePercent, Users, Share2,
+  Flag, Award, SearchX, Globe, BadgePercent, Users, Share2, ChevronRight,
 } from "lucide-react";
 import { Modal } from "@/components/ui/modal";
 import { VerifiedSeal } from "@/components/ui/verified-seal";
@@ -44,7 +44,7 @@ import { getProfessionalDisplayName } from "@/lib/display-name";
 import { trackMetaEvent } from "@/lib/analytics/meta-pixel";
 import { trackInteraction } from "@/lib/analytics/interaction-events";
 import { cldLarge, cldThumb } from "@/lib/cloudinary";
-import { formatOfferPrice, offerDiscountPercent, type ProfessionalOffer } from "@/lib/offers";
+import { formatOfferBeforePrice, formatOfferPrice, offerDiscountPercent, type ProfessionalOffer } from "@/lib/offers";
 import { formatJobSalary, WORKPLACE_TYPES, type JobPost } from "@/lib/jobs";
 import { EMPLEOS_VISIBLE } from "@/lib/feature-flags";
 import { PerfilSkeleton } from "@/components/ui/section-skeletons";
@@ -979,37 +979,36 @@ export default function ProfilePage() {
                             : "Promociones activas de este profesional."}
                         </p>
                       </div>
-                      {/* Misma fila que en /ofertas —miniatura, título, precio y
-                          la línea de tipo · servicio— pero sin repetir el nombre del
-                          profesional, que aquí ya se sabe. */}
-                      <div className="divide-y divide-[#e5eaf0] overflow-hidden rounded-xl border border-[#dbe4ee] bg-white">
+                      {/* Una oferta se compra con los ojos: la foto manda, el
+                          descuento va sobre ella y el precio se lee grande. La
+                          fila con miniatura de 72 px las hacía todas iguales. */}
+                      <div className="grid gap-4 sm:grid-cols-2">
                         {publicOffers.map((offer) => {
                           const cover = offer.image_urls?.[0];
                           const descuento = offerDiscountPercent(offer);
+                          const antes = formatOfferBeforePrice(offer, locale === "en" ? "en" : "es");
                           return (
                             <Link
                               key={offer.id}
                               href={`/ofertas/${offer.id}?from=${encodeURIComponent(`/profesionales/${routeSlug}?tab=ofertas`)}`}
-                              className="group flex min-w-0 gap-3 px-4 py-3 transition-colors hover:bg-[#f8fafc]"
+                              className="group flex min-w-0 flex-col overflow-hidden rounded-2xl border border-[#dbe4ee] bg-white transition-colors hover:border-[#bfe3f5]"
                             >
-                              <span className="grid h-[72px] w-[72px] shrink-0 place-items-center overflow-hidden rounded-xl border border-[#edf1f5] bg-[#eef2f6]">
+                              <span className="relative block aspect-[16/10] w-full overflow-hidden bg-[#eef2f6]">
                                 {cover
-                                  ? <ProgressiveImage src={cldLarge(cover, 300)} alt={offer.title} fit="cover" wrapperClassName="h-full w-full" />
-                                  : <BadgePercent className="h-6 w-6 text-[#009FD9]" />}
-                              </span>
-                              <span className="min-w-0 flex-1">
-                                <span className="flex min-w-0 items-center gap-2">
-                                  <span className="min-w-0 flex-1 truncate text-[15px] font-extrabold leading-5 text-[#005eaa]">{offer.title}</span>
-                                  {descuento && (
-                                    <span className="shrink-0 rounded-full bg-[#009fd9] px-2 py-0.5 text-[10px] font-extrabold leading-4 text-white">-{descuento}%</span>
-                                  )}
-                                </span>
-                                <span className="mt-0.5 block truncate text-sm font-extrabold leading-5 text-[#007fae]">{formatOfferPrice(offer)}</span>
-                                {offer.service_label && (
-                                  <span className="mt-0.5 block truncate text-xs font-semibold leading-4 text-[#008fc3]">{offer.service_label}</span>
+                                  ? <ProgressiveImage src={cldLarge(cover, 640)} alt={offer.title} fit="cover" wrapperClassName="h-full w-full" />
+                                  : <span className="grid h-full w-full place-items-center"><BadgePercent className="h-8 w-8 text-[#9fc9dd]" /></span>}
+                                {descuento && (
+                                  <span className="absolute left-3 top-3 rounded-md bg-[#009fd9] px-2.5 py-1 text-[12px] font-extrabold leading-4 text-white shadow-sm">-{descuento}%</span>
                                 )}
-                                {offer.location_label && (
-                                  <span className="mt-0.5 block truncate text-xs leading-4 text-[#68778d]">{offer.location_label}</span>
+                              </span>
+                              <span className="flex min-w-0 flex-1 flex-col gap-1 p-4">
+                                <span className="line-clamp-2 text-[15px] font-extrabold leading-5 text-[#162543]">{offer.title}</span>
+                                <span className="flex flex-wrap items-baseline gap-2">
+                                  <span className="text-[17px] font-extrabold leading-6 text-[#007fae]">{formatOfferPrice(offer)}</span>
+                                  {antes && <span className="text-[13px] font-semibold text-[#8794a7] line-through">{antes}</span>}
+                                </span>
+                                {offer.service_label && (
+                                  <span className="mt-auto truncate pt-1 text-[13px] font-semibold leading-5 text-[#008fc3]">{offer.service_label}</span>
                                 )}
                               </span>
                             </Link>
@@ -1031,32 +1030,31 @@ export default function ProfilePage() {
                             : "Oportunidades abiertas publicadas por este profesional."}
                         </p>
                       </div>
-                      <div className="divide-y divide-[#e5eaf0] overflow-hidden rounded-xl border border-[#dbe4ee] bg-white">
+                      {/* Cada vacante en su tarjeta: el salario, que es lo primero
+                          que se mira, en grande, y la modalidad y la zona como
+                          etiquetas. En una lista corrida se leían todas iguales. */}
+                      <div className="grid gap-3">
                         {publicJobs.map((job) => (
                           <Link
                             key={job.id}
                             href={`/empleos/${job.id}?from=${encodeURIComponent(`/profesionales/${routeSlug}?tab=empleos`)}`}
-                            className="group block min-w-0 px-5 py-4 transition-colors hover:bg-[#f4fbfe]"
+                            className="group flex min-w-0 items-center gap-3 rounded-2xl border border-[#dbe4ee] bg-white p-4 transition-colors hover:border-[#bfe3f5] hover:bg-[#f8fcfe]"
                           >
-                            {/* Mismo orden y colores que la lista de /empleos: título,
-                                línea de modalidad y zona, y el salario destacado. */}
-                            <span className="block min-w-0">
-                              <span className="block truncate text-[15px] font-extrabold leading-tight text-[#005eaa]">
+                            <span className="min-w-0 flex-1">
+                              <span className="block text-[15px] font-extrabold leading-5 text-[#162543]">
                                 {job.title}
                               </span>
-                              <span className="mt-1 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-[13px] leading-5 text-[#52627a]">
-                                <span>{WORKPLACE_TYPES[job.workplace_type]}</span>
-                                {job.location_label && (
-                                  <>
-                                    <span aria-hidden="true" className="text-[#c4ccd6]">&middot;</span>
-                                    <span className="min-w-0 truncate">{job.location_label}</span>
-                                  </>
-                                )}
-                              </span>
-                              <span className="mt-1 block truncate text-xs font-bold leading-4 text-[#008fc3]">
+                              <span className="mt-1.5 block text-[15px] font-extrabold leading-5 text-[#007fae]">
                                 {formatJobSalary(job)}
                               </span>
+                              <span className="mt-2 flex min-w-0 flex-wrap items-center gap-1.5">
+                                <span className="rounded-md bg-[#eef3f8] px-2 py-0.5 text-[12px] font-bold leading-5 text-[#52627a]">{WORKPLACE_TYPES[job.workplace_type]}</span>
+                                {job.location_label && (
+                                  <span className="min-w-0 truncate rounded-md bg-[#eef3f8] px-2 py-0.5 text-[12px] font-bold leading-5 text-[#52627a]">{job.location_label}</span>
+                                )}
+                              </span>
                             </span>
+                            <ChevronRight className="h-5 w-5 shrink-0 text-[#9aa8ba]" />
                           </Link>
                         ))}
                       </div>
