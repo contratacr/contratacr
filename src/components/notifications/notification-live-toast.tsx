@@ -180,7 +180,12 @@ export function NotificationLiveToast({ scope = "all" }: { scope?: NotificationS
           console.error("[notification-login-summary] failed to load new notifications:", error);
           return;
         }
-        if ((count ?? 0) > 0) setPostLoginUnreadCount(count ?? 0);
+        // Un respiro para que el panel termine de pintar: apareciendo sobre la
+        // pantalla de carga se lee como un parpadeo raro y no como un aviso.
+        if ((count ?? 0) > 0) {
+          await wait(1200);
+          if (!canceled) setPostLoginUnreadCount(count ?? 0);
+        }
       } finally {
         rememberLastActiveAt(userId, checkedAt);
         if (!canceled) {
@@ -245,6 +250,15 @@ export function NotificationLiveToast({ scope = "all" }: { scope?: NotificationS
     const id = window.setTimeout(() => setToast(null), 8000);
     return () => window.clearTimeout(id);
   }, [toast]);
+
+  // El resumen de "mientras no estabas" se quedaba fijo hasta que alguien lo
+  // tocara, tapando la parte de arriba del panel. Se retira solo, como el aviso
+  // vivo, y con un poco más de tiempo por ser el primero que se ve al entrar.
+  useEffect(() => {
+    if (postLoginUnreadCount === null) return;
+    const id = window.setTimeout(() => setPostLoginUnreadCount(null), 12000);
+    return () => window.clearTimeout(id);
+  }, [postLoginUnreadCount]);
 
   useEffect(() => {
     return () => {
