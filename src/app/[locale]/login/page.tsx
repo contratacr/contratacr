@@ -501,7 +501,9 @@ export default function LoginPage() {
       )}
 
       <div className={cn("flex flex-1 flex-col", !formularioAbierto && !enLaApp && "ccr-login-formulario-oculto")}>
-      <Navbar mobileSearch={false} />
+      {/* Navbar y pie solo en computadora: en el teléfono esta pantalla tiene
+          una sola tarea, y el menú y el pie solo invitan a irse de ella. */}
+      <div className="hidden lg:block"><Navbar mobileSearch={false} /></div>
       <main className="flex-1 flex items-center justify-center py-12 px-4">
         <div className="w-full max-w-md">
           {/* Same card container as the client ("Crear cuenta de cliente") and
@@ -657,7 +659,7 @@ export default function LoginPage() {
           </div>
         </div>
       </main>
-      <LandingFooter />
+      <div className="hidden lg:block"><LandingFooter /></div>
       </div>
     </div>
   );
