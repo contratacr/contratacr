@@ -2,7 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
-import { UserRoundSearch, BriefcaseBusiness, ArrowRight, BadgeCheck, MapPin, FileText, Star } from "lucide-react";
+import { UserRoundSearch, BriefcaseBusiness, ArrowRight, Users, CalendarCheck, Scale, MessageCircle } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { Navbar } from "@/components/layout/navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
@@ -49,14 +49,16 @@ export default function RegisterPage() {
               <span className="ccr-tarjeta-rol-mosaico ccr-mosaico-pro" aria-hidden>
                 <BriefcaseBusiness className="h-16 w-16 text-[#162543] sm:h-24 sm:w-24" strokeWidth={1.4} />
                 {/* Dos pedacitos de la app flotando: dicen qué gana sin un párrafo. */}
-                <span className="ccr-chip-mosaico left-2 top-2 sm:left-4 sm:top-4"><BadgeCheck className="h-3.5 w-3.5 text-[#009FD9]" /> {t("proChipVerified")}</span>
-                <span className="ccr-chip-mosaico bottom-2 right-2 sm:bottom-4 sm:right-4 [animation-delay:1.4s]"><FileText className="h-3.5 w-3.5 text-[#009FD9]" /> {t("proChipQuotes")}</span>
+                <span className="ccr-chip-mosaico left-2 top-2 sm:left-4 sm:top-4"><Users className="h-3.5 w-3.5 text-[#009FD9]" /> {t("proChipVerified")}</span>
+                <span className="ccr-chip-mosaico bottom-2 right-2 sm:bottom-4 sm:right-4 [animation-delay:1.4s]"><CalendarCheck className="h-3.5 w-3.5 text-[#009FD9]" /> {t("proChipQuotes")}</span>
               </span>
               <span className="mt-4 flex items-center justify-center gap-1.5 text-[19px] font-bold text-[#162543] sm:text-2xl">
                 {t("proRole")}
                 <ArrowRight className="ccr-tarjeta-rol-flecha h-5 w-5 sm:h-6 sm:w-6" strokeWidth={2.4} />
               </span>
               <span className="mt-1 block text-center text-[13px] text-[#6b7280] sm:text-base">{t("proTitle")}</span>
+              {/* El rol no encierra: se dice aquí, donde se decide. */}
+              <span className="mt-1.5 block text-center text-[11.5px] leading-snug text-[#9aa3b2] sm:text-[13px]">{t("proAlso")}</span>
             </Link>
 
             <Link
@@ -65,18 +67,19 @@ export default function RegisterPage() {
             >
               <span className="ccr-tarjeta-rol-mosaico ccr-mosaico-cliente" aria-hidden>
                 <UserRoundSearch className="h-16 w-16 text-[#162543] sm:h-24 sm:w-24" strokeWidth={1.4} />
-                <span className="ccr-chip-mosaico left-2 top-2 sm:left-4 sm:top-4 [animation-delay:0.7s]"><Star className="h-3.5 w-3.5 fill-[#f5b301] text-[#f5b301]" /> {t("clientChipReviews")}</span>
-                <span className="ccr-chip-mosaico bottom-2 right-2 sm:bottom-4 sm:right-4 [animation-delay:2.1s]"><MapPin className="h-3.5 w-3.5 text-[#009FD9]" /> {t("clientChipNear")}</span>
+                <span className="ccr-chip-mosaico left-2 top-2 sm:left-4 sm:top-4 [animation-delay:0.7s]"><Scale className="h-3.5 w-3.5 text-[#009FD9]" /> {t("clientChipReviews")}</span>
+                <span className="ccr-chip-mosaico bottom-2 right-2 sm:bottom-4 sm:right-4 [animation-delay:2.1s]"><MessageCircle className="h-3.5 w-3.5 text-[#009FD9]" /> {t("clientChipNear")}</span>
               </span>
               <span className="mt-4 flex items-center justify-center gap-1.5 text-[19px] font-bold text-[#162543] sm:text-2xl">
                 {t("clientRole")}
                 <ArrowRight className="ccr-tarjeta-rol-flecha h-5 w-5 sm:h-6 sm:w-6" strokeWidth={2.4} />
               </span>
               <span className="mt-1 block text-center text-[13px] text-[#6b7280] sm:text-base">{t("clientTitle")}</span>
+              <span className="mt-1.5 block text-center text-[11.5px] leading-snug text-[#9aa3b2] sm:text-[13px]">{t("clientAlso")}</span>
             </Link>
           </div>
 
-          {/* Quita el miedo a elegir mal: es gratis y el rol no encierra. */}
+          {/* Lo único que queda abajo: gratis y rápido. */}
           <p className="ccr-entrada [animation-delay:240ms] mx-auto mt-6 max-w-md text-center text-[13px] leading-relaxed text-[#8a94a6] sm:text-sm">
             {t("reassurance")}
           </p>

@@ -2991,8 +2991,8 @@
     "noResultsSub": "No encontramos profesionales con ese nombre o servicio."
   },
   "registerChoice": {
-    "title": "Te damos la bienvenida a ContrataCR",
-    "subtitle": "¿Qué te describe mejor?",
+    "title": "Te damos la bienvenida",
+    "subtitle": "¿Para qué quieres usar ContrataCR?",
     "clientTitle": "Busco servicios",
     "proTitle": "Ofrezco servicios",
     "haveAccount": "¿Ya tienes cuenta?",
@@ -3000,11 +3000,13 @@
     "clientRole": "Cliente",
     "proRole": "Profesional",
     "continue": "Continuar",
-    "proChipVerified": "Verificado",
-    "proChipQuotes": "Cotizaciones",
-    "clientChipReviews": "Reseñas",
-    "clientChipNear": "Cerca de ti",
-    "reassurance": "Es gratis y toma menos de 2 minutos. Si empiezas como cliente, después también puedes ofrecer tus servicios."
+    "proChipVerified": "Recibe clientes",
+    "proChipQuotes": "Cotiza y agenda",
+    "clientChipReviews": "Compara y elige",
+    "clientChipNear": "Contacta directo",
+    "reassurance": "Es gratis y toma menos de 2 minutos.",
+    "proAlso": "También puedes contratar",
+    "clientAlso": "Puedes ofrecer servicios después"
   },
   "onboarding": {
     "greeting": "Hola, {name}",
