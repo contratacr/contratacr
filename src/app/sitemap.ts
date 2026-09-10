@@ -12,6 +12,10 @@ const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://contratacr.com";
  * oferta real) y los perfiles públicos.
  */
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  // Fuera de producción no hay mapa que ofrecer: armarlo recorre categorías,
+  // oferta por provincia y los 283 perfiles, y solo servía para que los
+  // buscadores entraran a un entorno de pruebas.
+  if (!/^https:\/\/(www\.)?contratacr\.com$/.test(APP_URL.replace(/\/$/, ""))) return [];
   const supply = await getSupplyCounts();
   const now = new Date();
   const out: MetadataRoute.Sitemap = [];
