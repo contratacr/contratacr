@@ -3000,13 +3000,9 @@
     "clientRole": "Cliente",
     "proRole": "Profesional",
     "continue": "Continuar",
-    "proChipVerified": "Recibe clientes",
-    "proChipQuotes": "Cotiza y agenda",
-    "clientChipReviews": "Compara y elige",
-    "clientChipNear": "Contacta directo",
     "reassurance": "Es gratis y toma menos de 2 minutos.",
     "proAlso": "También puedes contratar",
-    "clientAlso": "Puedes ofrecer servicios después"
+    "clientAlso": "También puedes ofrecer"
   },
   "onboarding": {
     "greeting": "Hola, {name}",

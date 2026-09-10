@@ -2112,35 +2112,15 @@ html[data-keyboard-visible] body.ccr-native-app .ccr-native-search-panel { botto
 }
 .ccr-tarjeta-rol-mosaico { position: relative; }
 .ccr-tarjeta-rol-mosaico > svg { transition: transform 0.3s ease; }
-/* Pastillas dentro del mosaico: pedacitos de la app que flotan despacio. */
-.ccr-chip-mosaico {
-  position: absolute;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  padding: 0.25rem 0.5rem;
-  border-radius: 9999px;
-  background: rgba(255, 255, 255, 0.92);
-  box-shadow: 0 6px 16px -8px rgba(15, 23, 42, 0.35);
-  font-size: 11px;
-  font-weight: 600;
-  line-height: 1;
-  color: #162543;
-  white-space: nowrap;
-  animation: ccr-chip-flotar 4s ease-in-out infinite;
-}
-@media (min-width: 640px) { .ccr-chip-mosaico { font-size: 12px; padding: 0.375rem 0.625rem; } }
-@keyframes ccr-chip-flotar {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-4px); }
-}
 .ccr-tarjeta-rol:hover .ccr-tarjeta-rol-mosaico > svg { transform: scale(1.06); }
 /* Azul de marca pleno para quien ofrece; el mismo azul, más tenue, para quien busca. */
 .ccr-mosaico-pro { background: linear-gradient(135deg, #c9ecfa 0%, #7fd0f2 48%, #d9f1fb 100%); }
 .ccr-mosaico-cliente { background: linear-gradient(135deg, #eaf6fc 0%, #cbe8f6 48%, #f0f8fd 100%); }
+/* La línea de «el rol no encierra» cabe en un renglón hasta en 320 px. */
+.ccr-linea-rol { font-size: clamp(9px, 2.75vw, 13px); }
 .ccr-tarjeta-rol-flecha { transition: transform 0.25s ease; }
 .ccr-tarjeta-rol:hover .ccr-tarjeta-rol-flecha { transform: translateX(4px); }
 @media (prefers-reduced-motion: reduce) {
-  .ccr-entrada, .ccr-chip-mosaico { animation: none; }
+  .ccr-entrada { animation: none; }
   .ccr-tarjeta-rol, .ccr-tarjeta-rol-mosaico > svg, .ccr-tarjeta-rol-flecha { transition: none; }
 }
