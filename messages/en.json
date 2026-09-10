@@ -2991,8 +2991,7 @@
     "noResultsSub": "No professionals match that name or service."
   },
   "registerChoice": {
-    "title": "Welcome",
-    "subtitle": "What do you want to use ContrataCR for?",
+    "title": "How do you want to start?",
     "clientTitle": "Looking for services",
     "proTitle": "Offering services",
     "haveAccount": "Already have an account?",
@@ -3006,8 +3005,8 @@
   },
   "onboarding": {
     "greeting": "Hi, {name}",
-    "title": "Welcome",
-    "subtitle": "What do you want to use ContrataCR for?"
+    "title": "How do you want to start?",
+    "subtitle": "You can change this later."
   },
   "completeProfile": {
     "photoError": "Couldn't upload the photo. You can continue without it.",

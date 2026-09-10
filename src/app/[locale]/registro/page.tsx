@@ -32,9 +32,10 @@ export default function RegisterPage() {
       <Navbar mobileSearch={false} />
       <main className="flex-1 flex flex-col items-center justify-center px-4 py-12 lg:py-20">
         <div className="w-full max-w-2xl">
+          {/* La pregunta ES el titular: el saludo de bienvenida se llevaba el
+              tamaño grande sin decir nada. */}
           <div className="ccr-entrada text-center mb-8 lg:mb-12">
-            <h1 className="text-[1.75rem] font-extrabold leading-tight tracking-tight text-[#162543] mb-3 sm:text-4xl lg:text-5xl">{t("title")}</h1>
-            <p className="text-base font-medium text-[#6b7280] lg:text-lg">{t("subtitle")}</p>
+            <h1 className="text-[1.75rem] font-extrabold leading-tight tracking-tight text-[#162543] sm:text-4xl lg:text-[2.75rem]">{t("title")}</h1>
           </div>
 
           {/* Como eligen rol Upwork o Airbnb: dos tarjetas iguales, cada una con
@@ -49,11 +50,15 @@ export default function RegisterPage() {
               <span className="ccr-tarjeta-rol-mosaico ccr-mosaico-pro" aria-hidden>
                 <BriefcaseBusiness className="h-16 w-16 text-[#162543] sm:h-24 sm:w-24" strokeWidth={1.4} />
               </span>
-              <span className="mt-4 flex items-center justify-center gap-1.5 text-[19px] font-bold text-[#162543] sm:text-2xl">
-                {t("proRole")}
-                <ArrowRight className="ccr-tarjeta-rol-flecha h-5 w-5 sm:h-6 sm:w-6" strokeWidth={2.4} />
+              {/* Lo grande responde la pregunta ("¿cómo vas a usar…?"); el rol
+                  queda abajo para que sepa qué cuenta está creando. */}
+              {/* La flecha solo donde cabe en el mismo renglón: en el teléfono se
+                  iba sola a una segunda línea y la tarjeta ya se ve pulsable. */}
+              <span className="mt-4 block text-center text-[17px] font-bold leading-tight text-[#162543] sm:text-[22px]">
+                {t("proTitle")}
+                <ArrowRight className="ccr-tarjeta-rol-flecha ml-1.5 hidden h-6 w-6 align-[-4px] sm:inline-block" strokeWidth={2.4} />
               </span>
-              <span className="mt-1 block text-center text-[13px] text-[#6b7280] sm:text-base">{t("proTitle")}</span>
+              <span className="mt-1 block text-center text-[13px] font-semibold text-[#009FD9] sm:text-[15px]">{t("proRole")}</span>
               {/* El rol no encierra: se dice aquí, donde se decide. */}
               <span className="ccr-linea-rol mt-1.5 block truncate text-center text-[#9aa3b2]">{t("proAlso")}</span>
             </Link>
@@ -65,11 +70,13 @@ export default function RegisterPage() {
               <span className="ccr-tarjeta-rol-mosaico ccr-mosaico-cliente" aria-hidden>
                 <UserRoundSearch className="h-16 w-16 text-[#162543] sm:h-24 sm:w-24" strokeWidth={1.4} />
               </span>
-              <span className="mt-4 flex items-center justify-center gap-1.5 text-[19px] font-bold text-[#162543] sm:text-2xl">
-                {t("clientRole")}
-                <ArrowRight className="ccr-tarjeta-rol-flecha h-5 w-5 sm:h-6 sm:w-6" strokeWidth={2.4} />
+              {/* La flecha solo donde cabe en el mismo renglón: en el teléfono se
+                  iba sola a una segunda línea y la tarjeta ya se ve pulsable. */}
+              <span className="mt-4 block text-center text-[17px] font-bold leading-tight text-[#162543] sm:text-[22px]">
+                {t("clientTitle")}
+                <ArrowRight className="ccr-tarjeta-rol-flecha ml-1.5 hidden h-6 w-6 align-[-4px] sm:inline-block" strokeWidth={2.4} />
               </span>
-              <span className="mt-1 block text-center text-[13px] text-[#6b7280] sm:text-base">{t("clientTitle")}</span>
+              <span className="mt-1 block text-center text-[13px] font-semibold text-[#009FD9] sm:text-[15px]">{t("clientRole")}</span>
               <span className="ccr-linea-rol mt-1.5 block truncate text-center text-[#9aa3b2]">{t("clientAlso")}</span>
             </Link>
           </div>

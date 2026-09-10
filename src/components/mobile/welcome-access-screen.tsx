@@ -121,7 +121,7 @@ export function WelcomeAccessScreen({
             id={titleId}
             className="mx-auto max-w-[22rem] text-[clamp(1.55rem,6.5vw,2rem)] font-extrabold leading-tight tracking-[-0.035em] text-balance"
           >
-            {english ? "What do you want to use ContrataCR for?" : "¿Para qué quieres usar ContrataCR?"}
+            {english ? "How do you want to start?" : "¿Cómo quieres empezar?"}
           </h1>
 
           <div
