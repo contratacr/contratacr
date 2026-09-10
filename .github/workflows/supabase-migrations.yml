@@ -77,7 +77,9 @@ jobs:
           fi
           # Solo una base sin tablas puede recibir el esquema completo: así este
           # atajo nunca puede correr sobre un entorno con datos.
-          tablas="$(npx supabase@2.109.0 db push --db-url "$SUPABASE_DB_URL" --include-all --dry-run | grep -c '001_initial_schema.sql' || true)"
+          # El listado del plan sale por el canal de errores: sin 2>&1 el conteo
+          # daba cero y una base vacía se leía como "ya tiene esquema".
+          tablas="$(npx supabase@2.109.0 db push --db-url "$SUPABASE_DB_URL" --include-all --dry-run 2>&1 | grep -c '001_initial_schema.sql' || true)"
           if [ "$tablas" = "0" ]; then
             echo "::error::La base NO está vacía (la 001 ya está aplicada). Quita el arranque desde cero."
             exit 1
