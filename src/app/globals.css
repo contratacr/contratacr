@@ -83,6 +83,20 @@ body.ccr-native-app [data-messages-page-shell] {
   }
 }
 
+/* La portada de acceso es para un teléfono, no para una ventana angosta: en una
+   computadora con el navegador a medio ancho manda el formulario. Se distingue
+   por el tipo de puntero (dedo o mouse), que es la pregunta real, y no por los
+   píxeles de ancho. */
+@media (pointer: fine) {
+  .ccr-login-portada {
+    display: none;
+  }
+
+  .ccr-login-formulario-oculto {
+    display: flex;
+  }
+}
+
 .ccr-native-app .ccr-login-formulario-oculto {
   display: flex;
 }

@@ -143,7 +143,12 @@ export default function LoginPage() {
   // La portada siempre abre en "Buscar servicios": es lo que hace la mayoría, y
   // volver de "Ofrecer" no debe dejar marcado lo de la vez pasada.
   const [rolPortada, setRolPortada] = useState<WelcomeRole>("client");
-  const [formularioAbierto, setFormularioAbierto] = useState(false);
+  // La portada es para quien llega "en frío": la primera vez, sin saber si viene
+  // a buscar o a ofrecer. Quien cae aquí desde una pantalla que pide sesión
+  // (?redirect=) o desde un enlace directo (?entrar=1) ya sabe a qué viene, y
+  // ponerle una bienvenida delante es un toque de más.
+  const vieneDeUnaPantallaCerrada = Boolean(searchParams.get("redirect")) || searchParams.get("entrar") === "1";
+  const [formularioAbierto, setFormularioAbierto] = useState(vieneDeUnaPantallaCerrada);
   // En la app, la pantalla de bienvenida la pone el armazón nativo: si esta
   // página pintara además la suya, al tocar "Inicia sesión" aparecía otra
   // portada igual y parecía que no había pasado nada. El CSS que la escondía

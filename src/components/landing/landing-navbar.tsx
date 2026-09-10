@@ -1062,7 +1062,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   // would OVERRIDE the role-based panel redirect (the "login lands on the main page"
   // bug). Meaningful deep-links (support tickets, gated pages) carry their OWN
   // ?redirect= via the proxy and are still honored by /login.
-  const loginHref = "/login";
+  const loginHref = "/login?entrar=1";
   // ¿Estamos en una pantalla de acceso? Ahí el enlace "Ingresar" sobra.
   const enAcceso = /^\/(?:es|en)?\/?(?:login|registro)(?:\/|$)/.test(pathname ?? "");
 
