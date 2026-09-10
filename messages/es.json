@@ -720,7 +720,9 @@
     "appBarTitle": "Perfil profesional",
     "linkCopied": "Enlace copiado",
     "statCases": "{count, plural, one {caso de éxito} other {casos de éxito}}",
-    "statCasesShort": "{count, plural, one {caso} other {casos}}"
+    "statCasesShort": "{count, plural, one {caso} other {casos}}",
+    "linksTitle": "Míralo también en",
+    "linksWebsite": "Sitio web"
   },
   "auth": {
     "login": {

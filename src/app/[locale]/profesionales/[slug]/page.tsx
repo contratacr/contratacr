@@ -605,34 +605,41 @@ export default function ProfilePage() {
       {(() => {
         const sl = professional.socialLinks;
         const items = [
-          { k: "website", href: buildWebsiteUrl(sl?.website), Icon: Globe },
-          { k: "instagram", href: buildSocialUrl("instagram", sl?.instagram), Icon: InstagramIcon },
-          { k: "facebook", href: buildSocialUrl("facebook", sl?.facebook), Icon: FacebookIcon },
-          { k: "tiktok", href: buildSocialUrl("tiktok", sl?.tiktok), Icon: TikTokIcon },
-          { k: "linkedin", href: buildSocialUrl("linkedin", sl?.linkedin), Icon: LinkedInIcon },
+          { k: "website", nombre: t("linksWebsite"), href: buildWebsiteUrl(sl?.website), Icon: Globe },
+          { k: "instagram", nombre: "Instagram", href: buildSocialUrl("instagram", sl?.instagram), Icon: InstagramIcon },
+          { k: "facebook", nombre: "Facebook", href: buildSocialUrl("facebook", sl?.facebook), Icon: FacebookIcon },
+          { k: "tiktok", nombre: "TikTok", href: buildSocialUrl("tiktok", sl?.tiktok), Icon: TikTokIcon },
+          { k: "linkedin", nombre: "LinkedIn", href: buildSocialUrl("linkedin", sl?.linkedin), Icon: LinkedInIcon },
         ].filter((x) => x.href);
         if (items.length === 0) return null;
+        // Con rótulo y nombre: tres círculos sueltos al final del bloque no se
+        // leían como "míralo también aquí". Van donde ya estaban, dentro de la
+        // pestaña que abre por defecto: sirven para creerle al profesional,
+        // no para contactarlo, así que no compiten con los botones de arriba.
         return (
-          <div className="flex flex-wrap items-center justify-center gap-2 pt-1">
-            {items.map(({ k, href, Icon }) => (
-              <a
-                key={k}
-                href={href as string}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label={k}
-                onClick={() => trackInteraction({
-                  type: "external_link_click",
-                  professionalId: professional.id,
-                  source: "profile_social",
-                  locale,
-                  metadata: { channel: k },
-                })}
-                className="flex h-9 w-9 items-center justify-center rounded-full border border-[#e5e7eb] text-[#374151] hover:border-[#009FD9] hover:text-[#009FD9] transition-colors"
-              >
-                <Icon className="h-4 w-4" />
-              </a>
-            ))}
+          <div className="border-t border-[#eef2f6] pt-4">
+            <p className="mb-2 text-[13px] font-bold text-[#162543]">{t("linksTitle")}</p>
+            <div className="flex flex-wrap gap-2">
+              {items.map(({ k, nombre, href, Icon }) => (
+                <a
+                  key={k}
+                  href={href as string}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => trackInteraction({
+                    type: "external_link_click",
+                    professionalId: professional.id,
+                    source: "profile_social",
+                    locale,
+                    metadata: { channel: k },
+                  })}
+                  className="inline-flex h-10 items-center gap-2 rounded-full border border-[#d7e1ea] bg-white px-3.5 text-[13px] font-bold text-[#162543] transition-colors hover:border-[#009FD9] hover:text-[#009FD9]"
+                >
+                  <Icon className="h-4 w-4 shrink-0" />
+                  {nombre}
+                </a>
+              ))}
+            </div>
           </div>
         );
       })()}
