@@ -141,8 +141,11 @@ export function ProposalsTab({ categoryId }: ProposalsTabProps) {
   const vivas = useMemo(() => myProposals.filter((p) => proposalBucket(p.status, p.projects?.status) === "respondidas"), [myProposals]);
   const finalizadas = useMemo(() => myProposals.filter((p) => proposalBucket(p.status, p.projects?.status) === "finalizadas"), [myProposals]);
   const canceladas = useMemo(() => myProposals.filter((p) => proposalBucket(p.status, p.projects?.status) === "canceladas"), [myProposals]);
-  const counts = useMemo(() => ({ nuevas: newList.length, respondidas: vivas.length, finalizadas: finalizadas.length, canceladas: canceladas.length }),
-    [newList.length, vivas.length, finalizadas.length, canceladas.length]);
+  // El contador va solo en las etapas donde hay algo que hacer. Con los cuatro
+  // números, los nombres no cabían y se cortaban («Finaliza…»); en lo que ya
+  // terminó, la cifra era adorno.
+  const counts = useMemo(() => ({ nuevas: newList.length, respondidas: vivas.length }),
+    [newList.length, vivas.length]);
   const listaDeEtapa = stage === "finalizadas" ? finalizadas : stage === "canceladas" ? canceladas : vivas;
 
   const refreshAll = useCallback(async () => {
@@ -357,10 +360,7 @@ export function ProposalsTab({ categoryId }: ProposalsTabProps) {
     <div>
       <div className="mb-4">
         <StatusFilterTabs
-          // Cuatro etapas no caben repartidas en partes iguales: los nombres se
-          // cortaban («Finaliza…»). En rail, cada una ocupa lo suyo y la fila se
-          // desliza, como las pestañas del perfil.
-          mobileLayout="scroll"
+          mobileLayout="equal"
           tabs={PROPUESTA_TABS}
           value={stage}
           onChange={(id) => setStage(id as StageKey)}

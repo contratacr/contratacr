@@ -1,6 +1,5 @@
 import { createServerClient } from "@supabase/ssr";
 import { RUTAS_DEL_SITIO } from "@/lib/site-routes";
-import { isAuthRetryableFetchError } from "@supabase/supabase-js";
 import createIntlMiddleware from "next-intl/middleware";
 import { type NextRequest, NextResponse } from "next/server";
 import { routing } from "./i18n/routing";
@@ -177,9 +176,19 @@ export async function middleware(request: NextRequest) {
   // sesión válida (y en Mensajes lo mandaba al login). Solo un rechazo definitivo
   // —token inválido/expirado— limpia la sesión.
   let sesionSinComprobar = false;
+  // Solo un RECHAZO del servidor de sesiones (401/403: token inválido, refresco
+  // vencido, cuenta borrada) autoriza a limpiar las cookies. Antes bastaba con
+  // que la comprobación fallara de una forma que la librería no clasificara como
+  // "reintentable" —un 5xx, un fetch que no salió, el arranque en frío del worker
+  // justo después de publicar— para borrarlas: eso deslogueaba de verdad, y por
+  // eso cada publicación sacaba a la gente de la app.
+  const rechazoDefinitivo = (error: unknown) => {
+    const e = error as { status?: number } | null;
+    return typeof e?.status === "number" && (e.status === 401 || e.status === 403);
+  };
   try {
     const { data, error } = await withPromiseTimeout(supabase.auth.getUser(), 6_000, "proxy-auth-timeout");
-    if (error) sesionSinComprobar = isAuthRetryableFetchError(error);
+    if (error) sesionSinComprobar = !rechazoDefinitivo(error);
     else user = data.user ?? null;
   } catch (error) {
     // A temporary Supabase/network stall must not leave the previous page behind
@@ -187,7 +196,7 @@ export async function middleware(request: NextRequest) {
     // render; its browser auth guard will reconcile the cookie once connectivity
     // returns. Definite invalid-session responses still follow the cleanup below.
     if (error instanceof PromiseTimeoutError) return response;
-    sesionSinComprobar = isAuthRetryableFetchError(error);
+    sesionSinComprobar = !rechazoDefinitivo(error);
     user = null;
   }
 
