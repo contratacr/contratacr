@@ -13,6 +13,10 @@ cotizaciones y precios). Cada punto dice qué falta y quién lo hace.
 | 192 · cotizaciones a cualquiera | `quotes.client_id` opcional, `client_name`, `client_phone`, `public_code` (enlace público) | **aplicada 9-sep** | pendiente |
 | 193 · cédula en la cotización | `quotes.client_cedula` | **aplicada 9-sep** | pendiente |
 | 194 · número de cotización | `quotes.quote_number` (consecutivo por profesional, índice único) | **aplicada 9-sep** | pendiente |
+| 195 · correo en la cotización | `quotes.client_email` | **aplicada 9-sep** | pendiente |
+| 196 · errores del cliente | tabla `client_errors` (diagnóstico de "Algo salió mal") | **aplicada 9-sep** | pendiente |
+| 197 · cotización eliminada | `quotes.deleted_at` (borrado suave; el número no se reusa) | **aplicada 9-sep** | pendiente |
+| 198 · oportunidades descartadas | tabla `dismissed_opportunities` ("No me interesa" por cuenta, no por teléfono) | pendiente | pendiente |
 
 Se aplican **solo** con el workflow `Supabase migrations` (dispatch), nunca en local:
 `test` desde la rama `test`, `production` desde `main`; siempre en seco primero.

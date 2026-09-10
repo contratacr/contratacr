@@ -230,6 +230,23 @@ export function BookingRequests() {
     setSubmitting(false); closeAction();
   }
 
+  const [cerrando, setCerrando] = useState<string | null>(null);
+  async function marcarAtendida(id: string) {
+    if (cerrando) return;
+    setCerrando(id);
+    try {
+      const res = await fetch("/api/bookings", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, status: "completed" }),
+      });
+      if (!res.ok) { void showMessage({ title: errorTitle, description: t("markDoneError"), tone: "danger" }); return; }
+      setBookings((prev) => prev.map((b) => (b.id === id ? { ...b, status: "completed" as BookingStatus } : b)));
+    } finally {
+      setCerrando(null);
+    }
+  }
+
   async function archiveBooking(id: string) {
     const res = await fetch("/api/bookings", {
       method: "PATCH",
@@ -456,8 +473,17 @@ export function BookingRequests() {
               // Escribir sigue teniendo sentido después de cerrada: una garantía,
               // un detalle, un comprobante. Solo se corta si la reserva se canceló.
               const canMessage = isActive || booking.status === "awaiting_confirmation" || booking.status === "completed";
+              // La que tiene fecha se cierra sola al pasar el día. La que está "por
+              // coordinar" no tiene día que pasar: sin esto quedaba activa para
+              // siempre, y solo el cliente podía cerrarla.
+              const porCoordinar = isActive && !booking.scheduled_date;
               return (
                 <div className="flex flex-col gap-2 border-t border-[#eef2f6] pt-3">
+                  {porCoordinar && (
+                    <Button size="sm" className="h-11 w-full rounded-full text-[13px] font-bold" loading={cerrando === booking.id} disabled={!!cerrando} onClick={() => void marcarAtendida(booking.id)}>
+                      {t("markDone")}
+                    </Button>
+                  )}
                   {/* La cotización cruza la tarjeta de lado a lado: es el documento
                       de esa cita, no un botón más de la fila. Debajo, escribir y
                       el menú, que sí comparten renglón. */}
@@ -465,7 +491,7 @@ export function BookingRequests() {
                   <div className="flex items-start gap-2">
                   <div className="flex min-w-0 flex-1 items-center">
                     {canMessage && (
-                      <DirectChatLauncher bookingId={booking.id} professionalName={clientName} contextTitle={serviceDescription} buttonLabel={t("contact")} className="h-11 w-full whitespace-nowrap rounded-full px-4 text-[13px] font-bold" />
+                      <DirectChatLauncher bookingId={booking.id} professionalName={clientName} contextTitle={serviceDescription} buttonLabel={t("contact")} tone={porCoordinar ? "outline" : "primary"} className="h-11 w-full whitespace-nowrap rounded-full px-4 text-[13px] font-bold" />
                     )}
                   </div>
                   <div className="relative shrink-0" data-booking-actions={booking.id}>

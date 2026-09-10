@@ -171,7 +171,21 @@ export function ProposalsTab({ categoryId }: ProposalsTabProps) {
 
   useEffect(() => {
     queueMicrotask(() => {
-      try { const raw = localStorage.getItem(DISMISS_KEY); if (raw) setDismissed(new Set(JSON.parse(raw))); } catch {}
+      // Lo local pinta de inmediato; la base manda. Lo que solo existía en este
+      // teléfono se sube una vez, para que valga en los demás.
+      let locales: string[] = [];
+      try { const raw = localStorage.getItem(DISMISS_KEY); if (raw) locales = JSON.parse(raw); } catch {}
+      if (locales.length) setDismissed(new Set(locales));
+      void fetch("/api/opportunities/dismissed", { cache: "no-store" })
+        .then((r) => r.json())
+        .then((d) => {
+          if (d.unavailable) return;
+          const remotos: string[] = Array.isArray(d.projectIds) ? d.projectIds : [];
+          const faltan = locales.filter((id) => !remotos.includes(id));
+          if (faltan.length) void fetch("/api/opportunities/dismissed", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ projectIds: faltan }) });
+          setDismissed(new Set([...remotos, ...locales]));
+        })
+        .catch(() => {});
     });
   }, []);
 
@@ -301,6 +315,7 @@ export function ProposalsTab({ categoryId }: ProposalsTabProps) {
       try { localStorage.setItem(DISMISS_KEY, JSON.stringify([...next])); } catch {}
       return next;
     });
+    void fetch("/api/opportunities/dismissed", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ projectId: id }) }).catch(() => {});
     setExpandedProject((cur) => (cur === id ? null : cur));
   }
 

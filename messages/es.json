@@ -2035,7 +2035,9 @@
     "emptyActiveTitle": "No tienes citas activas",
     "emptyActiveBody": "Cuando alguien reserve una cita contigo, aparece aquí con su fecha y hora.",
     "emptyDoneTitle": "Todavía no hay citas finalizadas",
-    "emptyDoneBody": "Aquí quedan las citas que ya pasaron, con su reseña si el cliente la deja."
+    "emptyDoneBody": "Aquí quedan las citas que ya pasaron, con su reseña si el cliente la deja.",
+    "markDone": "Marcar como terminada",
+    "markDoneError": "No se pudo cerrar la cita. Intenta de nuevo."
   },
   "photoGallery": {
     "intro": "Máximo {max} fotos en total.",

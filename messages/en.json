@@ -2035,7 +2035,9 @@
     "emptyActiveTitle": "No active appointments",
     "emptyActiveBody": "When someone books an appointment with you, it shows up here with its date and time.",
     "emptyDoneTitle": "No finished appointments yet",
-    "emptyDoneBody": "Past appointments stay here, with the review if the client leaves one."
+    "emptyDoneBody": "Past appointments stay here, with the review if the client leaves one.",
+    "markDone": "Mark as done",
+    "markDoneError": "Couldn't close the appointment. Try again."
   },
   "photoGallery": {
     "intro": "Up to {max} photos total.",
