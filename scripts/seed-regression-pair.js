@@ -2,7 +2,7 @@
 const fs = require("fs");
 const { createClient } = require("@supabase/supabase-js");
 
-const TEST_PROJECT_REF = "sodegkfjjrdkbohycqyq";
+const TEST_PROJECT_REF = "oqheayqqprpciqdvdaqo";
 const SEED = "production-mirror-regression-pair-v1";
 const envFile = process.env.DEMO_ENV_FILE || ".env.test";
 const PRODUCTION_ORIGIN = "https://www.contratacr.com";

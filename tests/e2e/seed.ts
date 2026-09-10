@@ -1,6 +1,6 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
-const TEST_PROJECT_REF = "sodegkfjjrdkbohycqyq";
+const TEST_PROJECT_REF = "oqheayqqprpciqdvdaqo";
 const PROD_PROJECT_REF = "kskueodxaksxvjrysouw";
 const regressionPassword = process.env.E2E_TEST_PASSWORD ?? "";
 

@@ -2,7 +2,7 @@
 const crypto = require("crypto");
 const { createClient } = require("@supabase/supabase-js");
 
-const TEST_PROJECT_REF = "sodegkfjjrdkbohycqyq";
+const TEST_PROJECT_REF = "oqheayqqprpciqdvdaqo";
 const PROD_PROJECT_REF = "kskueodxaksxvjrysouw";
 const EMAIL = "publicidad@contratacr.test";
 const SOURCE_PROFILE_ID = "048f1b3a-23c0-41bc-8728-10f8aed70fdb";

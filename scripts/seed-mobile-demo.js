@@ -1,7 +1,7 @@
 const fs = require("fs");
 const { createClient } = require("@supabase/supabase-js");
 
-const TEST_SUPABASE_REF = "sodegkfjjrdkbohycqyq";
+const TEST_SUPABASE_REF = "oqheayqqprpciqdvdaqo";
 const envFile = process.env.DEMO_ENV_FILE || ".env.test";
 
 if (fs.existsSync(envFile)) {
@@ -572,7 +572,7 @@ async function main() {
     updated_at: iso(days),
     created_app_environment: demo,
     created_source_host: "mobile-test-seed",
-    created_supabase_project_ref: "sodegkfjjrdkbohycqyq",
+    created_supabase_project_ref: "oqheayqqprpciqdvdaqo",
   })).filter((booking) => booking.professional_id);
   const insertedBookings = await must("insert bookings", supabase.from("bookings").insert(bookings).select("*"));
 

@@ -139,7 +139,7 @@ jobs:
       SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
       REGRESSION_TEST_PASSWORD: ${{ secrets.REGRESSION_TEST_PASSWORD }}
       ADVERTISING_TEST_PASSWORD: ${{ secrets.ADVERTISING_TEST_PASSWORD }}
-      EXPECTED_TEST_PROJECT_REF: sodegkfjjrdkbohycqyq
+      EXPECTED_TEST_PROJECT_REF: oqheayqqprpciqdvdaqo
     steps:
       - name: Checkout main
         uses: actions/checkout@v5

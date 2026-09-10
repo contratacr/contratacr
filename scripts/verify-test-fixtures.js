@@ -1,7 +1,7 @@
 const fs = require("fs");
 const { createClient } = require("@supabase/supabase-js");
 
-const TEST_SUPABASE_REF = "sodegkfjjrdkbohycqyq";
+const TEST_SUPABASE_REF = "oqheayqqprpciqdvdaqo";
 const REGRESSION_SEED = "full-app-regression-v1";
 const MOBILE_SEED = "mobile-test-demo";
 const envFile = process.env.DEMO_ENV_FILE || ".env.test";

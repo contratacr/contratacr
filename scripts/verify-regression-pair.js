@@ -2,7 +2,7 @@
 const fs = require("fs");
 const { createClient } = require("@supabase/supabase-js");
 
-const TEST_PROJECT_REF = "sodegkfjjrdkbohycqyq";
+const TEST_PROJECT_REF = "oqheayqqprpciqdvdaqo";
 const envFile = process.env.DEMO_ENV_FILE || ".env.test";
 if (fs.existsSync(envFile)) {
   for (const line of fs.readFileSync(envFile, "utf8").split(/\r?\n/)) {

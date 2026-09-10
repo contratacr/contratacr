@@ -14,7 +14,7 @@ if (fs.existsSync(envFile)) {
 
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
 const serviceRole = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
-const expectedTestRef = "sodegkfjjrdkbohycqyq";
+const expectedTestRef = "oqheayqqprpciqdvdaqo";
 let projectRef = "invalid";
 try { projectRef = new URL(url).hostname.split(".")[0]; } catch {}
 if (projectRef !== expectedTestRef) throw new Error(`Refusing legacy cleanup on ${projectRef}; expected ${expectedTestRef}.`);
