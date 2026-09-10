@@ -34,7 +34,7 @@ export default function SoportePage() {
         <LandingNavbar />
       <SectionHeaderTitle title={tSeccion("support")} fallbackHref="/" />
         <div className="ccr-navbar-spacer h-16" aria-hidden />
-        <main className="flex flex-1 items-center justify-center px-4 pb-20 pt-12">
+        <main className="flex-1 ccr-centrado-seguro px-4 pb-20 pt-12">
           {/* Confirmation — tight visual hierarchy: prominent title + ONE concise
               reply line (email emphasized), then the actions, then the spam note +
               (guest) follow-tickets hint demoted to small muted footnotes. Avoids the

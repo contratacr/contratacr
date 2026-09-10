@@ -186,7 +186,7 @@ export default function RegisterClientPage() {
     return (
       <div className="min-h-screen flex flex-col bg-[#fafafa]">
         {user ? <FocusedHeader /> : <Navbar mobileSearch={false} />}
-        <main className="flex-1 flex items-center justify-center px-4 py-12">
+        <main className="flex-1 ccr-centrado-seguro px-4 py-12">
           <div className="w-full max-w-sm">
             <div className="bg-white rounded-3xl shadow-sm border border-[#e5e7eb] p-8">
               <OtpVerification email={otpEmail} onVerified={() => { void completeSuccess(); }} />
@@ -201,7 +201,7 @@ export default function RegisterClientPage() {
     return (
       <div className="min-h-screen flex flex-col bg-[#fafafa]">
         {user ? <FocusedHeader /> : <Navbar mobileSearch={false} />}
-        <main className="flex-1 flex items-center justify-center px-4 py-12">
+        <main className="flex-1 ccr-centrado-seguro px-4 py-12">
           <div className="w-full max-w-md text-center">
             <SuccessIcon size={80} className="mx-auto mb-5" />
             <h1 className="text-2xl font-bold text-[#162543] mb-2">{t("successTitle")}</h1>
@@ -226,7 +226,7 @@ export default function RegisterClientPage() {
   return (
     <div className="min-h-screen flex flex-col bg-[#fafafa]">
       {user ? <FocusedHeader /> : <Navbar mobileSearch={false} />}
-      <main className="flex-1 flex items-center justify-center px-4 py-12">
+      <main className="flex-1 ccr-centrado-seguro px-4 py-12">
         <div className="w-full max-w-md">
           <div className="bg-white rounded-3xl shadow-sm border border-[#e5e7eb] p-8">
             <div className="text-center mb-6">

@@ -168,7 +168,7 @@ export default function OnboardingPage() {
     <div className="min-h-screen flex flex-col bg-[#f4f7fa]">
       <FocusedHeader />
 
-      <main className="flex-1 flex flex-col items-center justify-center px-4 py-12">
+      <main className="flex-1 ccr-centrado-seguro px-4 py-12">
         <div className="w-full max-w-xl">
 
           {/* OAuth user info card */}

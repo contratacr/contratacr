@@ -30,7 +30,7 @@ export default function RegisterPage() {
       {/* Misma envoltura que ingresar: navbar y pie en todo tamaño. La salida
           es el propio menú, no un botón de volver. */}
       <Navbar mobileSearch={false} />
-      <main className="flex-1 flex flex-col items-center justify-center px-4 py-12 lg:py-20">
+      <main className="flex-1 ccr-centrado-seguro px-4 py-12 lg:py-20">
         <div className="w-full max-w-2xl">
           {/* El saludo va arriba y pequeño: la marca ya está en el navbar y en el
               pie, así que no necesita el tamaño grande. Lo grande es la pregunta,

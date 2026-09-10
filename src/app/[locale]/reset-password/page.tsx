@@ -195,7 +195,7 @@ export default function ResetPasswordPage() {
     return (
       <div className="min-h-screen flex flex-col bg-[#fafafa]">
         <Navbar mobileSearch={false} />
-        <main className="flex-1 flex items-center justify-center py-12 px-4">
+        <main className="flex-1 ccr-centrado-seguro py-12 px-4">
           <div className="w-full max-w-md rounded-3xl border border-[#e5e7eb] bg-white p-8 text-center shadow-sm">
             <SuccessIcon size={80} className="mx-auto mb-5" />
             <h1 className="text-2xl font-bold text-[#162543] mb-2">{t("doneTitle")}</h1>
@@ -212,7 +212,7 @@ export default function ResetPasswordPage() {
   return (
     <div className="min-h-screen flex flex-col bg-[#fafafa]">
       <Navbar mobileSearch={false} />
-      <main className="flex-1 flex items-center justify-center py-12 px-4">
+      <main className="flex-1 ccr-centrado-seguro py-12 px-4">
         <div className="w-full max-w-md rounded-3xl border border-[#e5e7eb] bg-white p-8 shadow-sm">
           <div className="text-center mb-8">
             <BrandIconBadge icon={Lock} size={56} className="mx-auto mb-4" />

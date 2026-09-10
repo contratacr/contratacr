@@ -163,7 +163,7 @@ export default function CompleteProfilePage() {
     <div className="min-h-screen flex flex-col bg-[#f4f7fa]">
       <FocusedHeader />
 
-      <main className="flex-1 flex flex-col items-center justify-center px-4 py-12">
+      <main className="flex-1 ccr-centrado-seguro px-4 py-12">
         <div className="w-full max-w-md bg-white rounded-2xl border border-[#e5e7eb] shadow-sm p-8">
           <h1 className="text-2xl font-bold text-[#162543] mb-1">{t("title")}</h1>
           <p className="text-sm text-[#6b7280] mb-6">

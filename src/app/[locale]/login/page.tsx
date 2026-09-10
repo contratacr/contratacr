@@ -429,7 +429,7 @@ export default function LoginPage() {
     return (
       <div className="min-h-screen flex flex-col bg-[#fafafa]">
         <Navbar mobileSearch={false} />
-        <main className="flex-1 flex items-center justify-center py-12 px-4">
+        <main className="flex-1 ccr-centrado-seguro py-12 px-4">
           <div className="w-full max-w-sm">
             <div className="rounded-3xl border border-[#e5e7eb] bg-white p-8 shadow-[0_18px_44px_-28px_rgba(15,23,42,0.45)]">
                             <OtpVerification
@@ -458,7 +458,7 @@ export default function LoginPage() {
       {leaving && <div className="contents pointer-events-none"><PageRouteLoading /></div>}
 
       <Navbar mobileSearch={false} />
-      <main className="flex-1 flex items-center justify-center py-12 px-4">
+      <main className="flex-1 ccr-centrado-seguro py-12 px-4">
         <div className="w-full max-w-md">
           {/* Same card container as the client ("Crear cuenta de cliente") and
               professional registrations — clean white card, hairline border, soft

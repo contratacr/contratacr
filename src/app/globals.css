@@ -2196,3 +2196,19 @@ html[data-keyboard-visible] body.ccr-native-app .ccr-native-search-panel { botto
 @media (prefers-reduced-motion: reduce) {
   .ccr-aviso-fondo, .ccr-aviso-hoja, .ccr-aviso-brillo, .ccr-aviso-tarjeta { animation: none; }
 }
+
+/* ---- Centrado vertical que nunca recorta ----
+   Con «items-center» o «justify-center», un contenido más alto que la pantalla
+   se desborda por ARRIBA y ese trozo NO se puede alcanzar: el scroll empieza
+   donde termina el recorte. Con margen automático el sobrante queda abajo, que
+   sí se alcanza deslizando, y el inicio del contenido siempre se ve. */
+.ccr-centrado-seguro {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+}
+.ccr-centrado-seguro > * {
+  margin-top: auto;
+  margin-bottom: auto;
+}
