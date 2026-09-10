@@ -264,9 +264,10 @@ export function NativeBottomNav() {
     >
       {/* Huecos iguales, no celdas iguales: con celdas del mismo ancho, un rótulo
           largo («Cotizaciones») deja menos aire a los lados que uno corto, y la
-          fila se ve despareja aunque las celdas midan lo mismo. Repartiendo el
-          sobrante entre los huecos, el blanco entre palabras es idéntico. */}
-      <div className="mx-auto flex w-full max-w-[520px] items-stretch justify-between px-1">
+          fila se ve despareja aunque las celdas midan lo mismo. El sobrante se
+          reparte alrededor de cada opción, así que las de los extremos también
+          tienen aire por fuera y su marca de toque no queda pegada al filo. */}
+      <div className="mx-auto flex w-full max-w-[520px] items-stretch justify-around px-0">
         <Link
           href="/buscar"
           prefetch={true}
