@@ -314,6 +314,17 @@ async function verifyPrivateActorIsolation(owners, ignoredOwners = []) {
     || ignoredTicketIds.has(row.ticket_id)
     || ignoredProfileIds.has(row.sender_id));
 
+  // Las cotizaciones de las cuentas de prueba son fixtures legítimos: sus avisos
+  // ("Te enviaron una cotización") apuntan al id de la cotización, y sin esto
+  // cualquier prueba manual de cotizar dejaba la regresión en rojo.
+  const quotes = await must(
+    "canonical quotes",
+    admin.from("quotes")
+      .select("id,professional_id,client_id")
+      .or(`professional_id.in.(${[...professionalIds].join(",")}),client_id.in.(${[...profileIds].join(",")})`)
+      .limit(5000),
+  ).catch(() => []);
+
   const activities = await must(
     "canonical professional activities",
     admin.from("professional_activity")
@@ -416,6 +427,7 @@ async function verifyPrivateActorIsolation(owners, ignoredOwners = []) {
     ...savedProfessionals.map((row) => row.id),
     ...savedItems.map((row) => row.id),
     ...activities.map((row) => row.id),
+    ...(Array.isArray(quotes) ? quotes.map((row) => row.id) : []),
   ]);
   const uuidPattern = /[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}/gi;
   assertRows("notification references", scopedNotifications, (row) => {
