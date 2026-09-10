@@ -4101,7 +4101,7 @@
     "editorTitle": "Nueva cotización",
     "editorSubtitle": "Detalla qué incluye y cuánto cuesta. El cliente la recibe en su panel y puede aceptarla.",
     "titleLabel": "Título",
-    "titlePlaceholder": "Ej.: Instalación de 4 tomas y revisión del tablero",
+    "titlePlaceholder": "Ej.: Instalación de 4 tomas",
     "itemsLabel": "Líneas",
     "itemDescription": "Descripción",
     "itemQty": "Cant.",
@@ -4113,7 +4113,7 @@
     "taxAdd": "Sumar 13% de IVA",
     "taxExempt": "Sin IVA",
     "notesLabel": "Nota (opcional)",
-    "notesPlaceholder": "Ej.: no incluye materiales. Se trabaja en horario de oficina.",
+    "notesPlaceholder": "Ej.: no incluye materiales.",
     "validLabel": "Vigente por",
     "days": "{count, plural, one {# día} other {# días}}",
     "subtotal": "Subtotal",
@@ -4256,7 +4256,14 @@
     "sentOn": "Enviada el {date}",
     "rowSentTitle": "Cotización enviada",
     "rowReceivedTitle": "Cotización recibida",
-    "moreOptions": "Más opciones"
+    "moreOptions": "Más opciones",
+    "sectionWork": "Qué incluye",
+    "sectionTerms": "Condiciones",
+    "itemNumber": "Línea {n}",
+    "itemLineTotal": "Total de la línea",
+    "termDeposit": "50% de adelanto",
+    "termOnDelivery": "Pago contra entrega",
+    "termDays": "Entrega en 8 días"
   },
   "menuFicha": {
     "more": "Más opciones",

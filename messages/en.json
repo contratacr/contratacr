@@ -4101,7 +4101,7 @@
     "editorTitle": "New quote",
     "editorSubtitle": "Detail what's included and how much it costs. The client gets it in their panel and can accept it.",
     "titleLabel": "Title",
-    "titlePlaceholder": "E.g.: Install 4 outlets and check the panel",
+    "titlePlaceholder": "E.g.: Install 4 outlets",
     "itemsLabel": "Lines",
     "itemDescription": "Description",
     "itemQty": "Qty",
@@ -4113,7 +4113,7 @@
     "taxAdd": "Add 13% VAT",
     "taxExempt": "No VAT",
     "notesLabel": "Note (optional)",
-    "notesPlaceholder": "E.g.: materials not included. Office hours only.",
+    "notesPlaceholder": "E.g.: materials not included.",
     "validLabel": "Valid for",
     "days": "{count, plural, one {# day} other {# days}}",
     "subtotal": "Subtotal",
@@ -4256,7 +4256,14 @@
     "sentOn": "Sent on {date}",
     "rowSentTitle": "Quote sent",
     "rowReceivedTitle": "Quote received",
-    "moreOptions": "More options"
+    "moreOptions": "More options",
+    "sectionWork": "What's included",
+    "sectionTerms": "Terms",
+    "itemNumber": "Line {n}",
+    "itemLineTotal": "Line total",
+    "termDeposit": "50% deposit",
+    "termOnDelivery": "Payment on delivery",
+    "termDays": "Delivery in 8 days"
   },
   "menuFicha": {
     "more": "More options",
