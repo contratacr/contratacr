@@ -226,7 +226,7 @@ export function NativeBottomNav() {
       // La celda ENTERA es el botón (así fallan menos los toques, como en las
       // barras nativas); al presionar se ilumina completa para que su tamaño
       // real se vea, en vez de responder desde un área invisible.
-      "relative flex min-w-0 flex-col items-center justify-center gap-0.5 rounded-xl px-0.5 py-1 text-[10px] font-semibold leading-tight text-[#1A2744] transition-colors active:bg-[#eef5f9] active:text-[#009FD9] min-[360px]:px-1 min-[360px]:text-[11px]",
+      "relative flex min-w-0 shrink-0 flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1 text-[10px] font-semibold leading-tight text-[#1A2744] transition-colors active:bg-[#eef5f9] active:text-[#009FD9] min-[360px]:text-[11px]",
       isActive(href) && "font-bold text-[#009FD9]",
     );
 
@@ -262,7 +262,11 @@ export function NativeBottomNav() {
         escondida && "pointer-events-none translate-y-full",
       )}
     >
-      <div className={cn("mx-auto grid w-full max-w-[520px] gap-0.5 min-[360px]:gap-1", EMPLEOS_VISIBLE ? "grid-cols-[repeat(5,minmax(0,1fr))]" : "grid-cols-[repeat(4,minmax(0,1fr))]")}>
+      {/* Huecos iguales, no celdas iguales: con celdas del mismo ancho, un rótulo
+          largo («Cotizaciones») deja menos aire a los lados que uno corto, y la
+          fila se ve despareja aunque las celdas midan lo mismo. Repartiendo el
+          sobrante entre los huecos, el blanco entre palabras es idéntico. */}
+      <div className="mx-auto flex w-full max-w-[520px] items-stretch justify-between px-1">
         <Link
           href="/buscar"
           prefetch={true}

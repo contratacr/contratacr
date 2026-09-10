@@ -2188,7 +2188,7 @@
     "budgetTBD": "To be agreed",
     "charLimit": "You've reached the {max}-character limit.",
     "allServices": "All",
-    "tabNew": "Open",
+    "tabNew": "New",
     "tabMine": "Sent",
     "moreOptions": "More options",
     "messagePlaceholder": "Say what you can do, when you could come and how you charge. e.g. \"I can stop by tomorrow afternoon to take a look. The visit is ₡10,000 and it comes off the price if I do the job.\"",
@@ -2221,7 +2221,9 @@
     "dropDone": "The project is open again for other professionals.",
     "correctingHint": "Edit your text and send it again. The client sees it once you send it.",
     "sendProposalAgain": "Send edited proposal",
-    "tabClosed": "Closed"
+    "tabClosed": "Closed",
+    "tabDone": "Completed",
+    "tabCancelled": "Cancelled"
   },
   "servicesEditor": {
     "servicesOf": "Services of",

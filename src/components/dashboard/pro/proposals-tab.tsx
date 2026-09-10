@@ -17,6 +17,7 @@ import {
   Users,
   Wrench,
   Pencil,
+  Handshake,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -68,7 +69,7 @@ interface ProposalsTabProps {
   services?: { name?: string }[];
 }
 
-type StageKey = "nuevas" | "respondidas" | "cerradas";
+type StageKey = "nuevas" | "respondidas" | "finalizadas" | "canceladas";
 const NO_OPEN_PROJECTS: OpenProject[] = [];
 const NO_MY_PROPOSALS: MyProposal[] = [];
 const DISMISS_KEY = "cc_opps_dismissed";
@@ -138,8 +139,11 @@ export function ProposalsTab({ categoryId }: ProposalsTabProps) {
   );
   // Vivas (en juego) y cerradas (la solicitud terminó o se cayó) van aparte.
   const vivas = useMemo(() => myProposals.filter((p) => proposalBucket(p.status, p.projects?.status) === "respondidas"), [myProposals]);
-  const cerradas = useMemo(() => myProposals.filter((p) => proposalBucket(p.status, p.projects?.status) === "cerradas"), [myProposals]);
-  const counts = useMemo(() => ({ nuevas: newList.length, respondidas: vivas.length, cerradas: cerradas.length }), [newList.length, vivas.length, cerradas.length]);
+  const finalizadas = useMemo(() => myProposals.filter((p) => proposalBucket(p.status, p.projects?.status) === "finalizadas"), [myProposals]);
+  const canceladas = useMemo(() => myProposals.filter((p) => proposalBucket(p.status, p.projects?.status) === "canceladas"), [myProposals]);
+  const counts = useMemo(() => ({ nuevas: newList.length, respondidas: vivas.length, finalizadas: finalizadas.length, canceladas: canceladas.length }),
+    [newList.length, vivas.length, finalizadas.length, canceladas.length]);
+  const listaDeEtapa = stage === "finalizadas" ? finalizadas : stage === "canceladas" ? canceladas : vivas;
 
   const refreshAll = useCallback(async () => {
     await Promise.all([openResource.refresh(), mineResource.refresh()]);
@@ -353,10 +357,14 @@ export function ProposalsTab({ categoryId }: ProposalsTabProps) {
     <div>
       <div className="mb-4">
         <StatusFilterTabs
+          // Cuatro etapas no caben repartidas en partes iguales: los nombres se
+          // cortaban («Finaliza…»). En rail, cada una ocupa lo suyo y la fila se
+          // desliza, como las pestañas del perfil.
+          mobileLayout="scroll"
           tabs={PROPUESTA_TABS}
           value={stage}
           onChange={(id) => setStage(id as StageKey)}
-          labelFor={(id) => (id === "nuevas" ? t("tabNew") : id === "respondidas" ? t("tabMine") : id === "cerradas" ? t("tabClosed") : tEtapas(id))}
+          labelFor={(id) => (id === "nuevas" ? t("tabNew") : id === "respondidas" ? t("tabMine") : id === "finalizadas" ? t("tabDone") : id === "canceladas" ? t("tabCancelled") : tEtapas(id))}
           counts={counts}
         />
       </div>
@@ -378,7 +386,9 @@ export function ProposalsTab({ categoryId }: ProposalsTabProps) {
                     aria-expanded={isExpanded}
                     className={cn("group flex w-full items-start gap-3.5 p-4 text-left transition-colors hover:bg-[#f9fbfd] sm:p-5", isExpanded ? "rounded-t-2xl bg-[#fbfdff]" : "rounded-2xl")}
                   >
-                    <div className={rowIconClass}><Inbox className="h-[18px] w-[18px]" /></div>
+                    {/* El mismo icono que la sección Proyectos: la tarjeta y el menú deben
+                        hablar del mismo lugar. */}
+                    <div className={rowIconClass}><Handshake className="h-[18px] w-[18px]" /></div>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-start justify-between gap-2.5">
                         <span className="min-w-0 flex-1 text-[15px] font-bold leading-snug text-[#162543] [overflow-wrap:anywhere] sm:text-base">{project.title}</span>
@@ -448,12 +458,12 @@ export function ProposalsTab({ categoryId }: ProposalsTabProps) {
         )
       )}
 
-      {(stage === "respondidas" || stage === "cerradas") && (
-        (stage === "cerradas" ? cerradas : vivas).length === 0 ? (
+      {stage !== "nuevas" && (
+        listaDeEtapa.length === 0 ? (
           <PanelEmptyState icon={Inbox} title={t("emptyMine")} description={t("emptyMineSub")} />
         ) : (
           <div className="ccr-native-safe-list-end flex flex-col gap-3">
-            {(stage === "cerradas" ? cerradas : vivas).map((p) => {
+            {listaDeEtapa.map((p) => {
               const isOpen = expandedMine === p.id;
               const outcome = replyOutcome(p);
               // En "Terminadas" el chip separa el trabajo hecho de la cancelada;
@@ -467,7 +477,9 @@ export function ProposalsTab({ categoryId }: ProposalsTabProps) {
                     aria-expanded={isOpen}
                     className={cn("group flex w-full items-start gap-3.5 p-4 text-left transition-colors hover:bg-[#f9fbfd] sm:p-5", isOpen ? "rounded-t-2xl bg-[#fbfdff]" : "rounded-2xl")}
                   >
-                    <div className={rowIconClass}><Inbox className="h-[18px] w-[18px]" /></div>
+                    {/* El mismo icono que la sección Proyectos: la tarjeta y el menú deben
+                        hablar del mismo lugar. */}
+                    <div className={rowIconClass}><Handshake className="h-[18px] w-[18px]" /></div>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-start justify-between gap-2.5">
                         <span className="min-w-0 flex-1 text-[15px] font-bold leading-snug text-[#162543] [overflow-wrap:anywhere] sm:text-base">{p.projects?.title ?? t("projectFallback")}</span>

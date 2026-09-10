@@ -243,10 +243,15 @@ export const PROYECTO_TABS: readonly FilterTab[] = [
 ];
 // Lo que puede tomar, lo que está en juego y lo que ya se cerró. Sin la tercera,
 // "Mis propuestas" mezclaba las vivas con trabajos terminados de hace meses.
+// Cuatro etapas, con el mismo vocabulario que Citas: lo que terminó bien y lo
+// que se cayó son finales opuestos y merecen pestaña propia. Con una sola
+// («Terminadas») hacía falta un distintivo dentro de cada tarjeta para saber
+// cuál era cuál.
 export const PROPUESTA_TABS: readonly FilterTab[] = [
   { id: "nuevas" },
   { id: "respondidas" },
-  { id: "cerradas" },
+  { id: "finalizadas" },
+  { id: "canceladas" },
 ];
 export const SOLICITUD_TABS: readonly FilterTab[] = [
   { id: "en_curso" },
@@ -310,9 +315,11 @@ export function proyectoMatches(filter: string, status: string): boolean {
 // if the project moved on with someone else), then the project's lifecycle once
 // the proposal was accepted.
 export function proposalBucket(proposalStatus?: string | null, projectStatus?: string | null): string {
-  // Cerrada = la solicitud terminó o se cayó, o la propuesta ya no está en juego.
-  if (projectStatus === "completed" || projectStatus === "cancelled") return "cerradas";
-  if (proposalStatus === "declined" || proposalStatus === "withdrawn") return "cerradas";
+  // El trabajo se hizo → finalizada. El proyecto se cayó, o la propuesta quedó
+  // fuera (el cliente la descartó o el profesional la retiró) → cancelada.
+  if (projectStatus === "completed") return "finalizadas";
+  if (projectStatus === "cancelled") return "canceladas";
+  if (proposalStatus === "declined" || proposalStatus === "withdrawn") return "canceladas";
   return "respondidas";
 }
 export function proposalMatches(filter: string): boolean {
