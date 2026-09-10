@@ -3006,8 +3006,8 @@
   },
   "onboarding": {
     "greeting": "Hola, {name}",
-    "title": "¿Para qué usarás ContrataCR?",
-    "subtitle": "Elige cómo quieres usar la plataforma."
+    "title": "Te damos la bienvenida",
+    "subtitle": "¿Para qué quieres usar ContrataCR?"
   },
   "completeProfile": {
     "photoError": "No se pudo subir la foto. Puedes continuar sin ella.",
