@@ -120,7 +120,6 @@ export function QuoteDetailModal({ quote, role, open, onClose, onChanged, proNam
             <span className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-[#e9f9ef] text-[#166534]"><Check className="h-6 w-6" strokeWidth={3} /></span>
           )}
           {/* Para el profesional, primero cómo mandarla: es a lo que viene. */}
-          {role === "pro" && abierta && <QuoteShare quote={quote} proName={proName ?? quote.professional_name ?? ""} proSlug={proSlug} onChanged={onChanged} />}
           {!recienCreada && (
             <div className="flex flex-wrap items-center justify-between gap-2 text-[13px]">
               {estado && <span className={`rounded-full px-2.5 py-1 font-bold ${quote.status === "accepted" ? "bg-[#eaf7fc] text-[#0089bb]" : abierta ? "bg-[#f4f7fa] text-[#52627a]" : "bg-[#f3f4f6] text-[#6b7280]"}`}>{estado}</span>}
@@ -144,6 +143,10 @@ export function QuoteDetailModal({ quote, role, open, onClose, onChanged, proNam
           </div>
           <Totales quote={quote} />
           {quote.notes && <p className="whitespace-pre-line text-[14px] leading-6 text-[#52627a]">{quote.notes}</p>}
+          {/* Compartir va DESPUÉS del documento: al abrir una cotización lo
+              primero que se espera ver es la cotización, no los botones para
+              mandarla. */}
+          {role === "pro" && abierta && <QuoteShare quote={quote} proName={proName ?? quote.professional_name ?? ""} proSlug={proSlug} onChanged={onChanged} />}
           {role === "client" && (
             <button type="button" disabled={!pdfCliente} onClick={descargarCliente} className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-full border border-[#d7e1ea] bg-white px-5 text-[14px] font-bold text-[#162543] transition-colors hover:border-[#b9c8d6] hover:bg-[#f6f9fb] disabled:opacity-60">
               {pdfCliente ? <Download className="h-4 w-4" /> : <Loader2 className="h-4 w-4 animate-spin" />}{t("downloadClient")}
