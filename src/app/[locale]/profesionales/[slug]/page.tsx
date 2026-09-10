@@ -687,7 +687,7 @@ export default function ProfilePage() {
                 y las dos acciones comparten renglón arriba a la derecha, del
                 ancho de su texto. En el teléfono sigue centrado como estaba. */}
             <div className="relative mb-6 rounded-2xl border border-[#e5e7eb] bg-white p-4 shadow-sm sm:grid sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:items-start sm:gap-x-5 sm:p-6 sm:pt-6">
-                <div className="flex min-w-0 flex-col items-center text-center sm:contents sm:text-left">
+                <div className="flex min-w-0 items-start gap-3.5 text-left sm:contents">
                   <ImagePreviewDialog
                     src={professional.avatarUrl}
                     alt={professional.fullName}
@@ -700,7 +700,7 @@ export default function ProfilePage() {
                       <AvatarFallback className="bg-[#EBF5FB] text-xl font-bold text-[#009FD9] sm:text-2xl">{getInitials(professional.fullName)}</AvatarFallback>
                     </Avatar>
                   </ImagePreviewDialog>
-                  <div className="mt-3 min-w-0 sm:col-start-2 sm:row-start-1 sm:mt-0">
+                  <div className="min-w-0 flex-1 sm:col-start-2 sm:row-start-1">
                     <div className="min-w-0">
                       <h1 data-testid="professional-profile-name" className="min-w-0 text-[17px] font-bold leading-[1.15] text-[#162543] [overflow-wrap:anywhere] sm:text-2xl sm:leading-tight sm:[overflow-wrap:normal]">
                         {displayName.primaryDesktop}
@@ -716,57 +716,82 @@ export default function ProfilePage() {
                         sección. Con cinco servicios, resumirlos aquí en uno solo
                         (o en el rubro) decía menos de lo que parecía. */}
                     {locationText && (
-                      <p className="mt-1 flex items-center justify-center gap-1.5 text-[13px] leading-5 text-[#52627a] sm:justify-start sm:text-sm">
+                      <p className="mt-1 flex items-center gap-1.5 text-[13px] leading-5 text-[#52627a] sm:text-sm">
                         <MapPin className="h-3.5 w-3.5 shrink-0 text-[#68778d]" />
                         <span className="min-w-0 truncate">{locationText}</span>
                       </p>
                     )}
+                  {/* Prueba social: en el teléfono una sola línea con separadores
+                      —tres columnas de dos renglones cada una costaban 40 px de la
+                      primera pantalla—; en computadora, donde sobra ancho, siguen
+                      siendo columnas. Solo se dibuja el dato que existe. */}
+                  {(professional.reviewCount > 0 || expYears > 0 || casosCount > 0) && (
+                    <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-[#68778d]  sm:mt-3 sm:gap-x-10 sm:text-[13px]">
+                      {professional.reviewCount > 0 && (
+                        <button type="button" onClick={() => setActiveTab("resenas")} className="inline-flex min-w-0 items-baseline gap-1.5">
+                          <Star className="h-3.5 w-3.5 shrink-0 translate-y-0.5 fill-[#ff9b32] text-[#ff9b32]" />
+                          <span className="text-[14px] font-bold text-[#162543] sm:text-[15px]">{professional.ratingAvg.toFixed(1)}</span>
+                          <span className="whitespace-nowrap">{t("reviewCountLabel", { count: professional.reviewCount })}</span>
+                        </button>
+                      )}
+                      {expYears > 0 && (
+                        <span className="inline-flex min-w-0 items-baseline gap-1.5">
+                          <Briefcase className="h-3.5 w-3.5 shrink-0 translate-y-0.5 text-[#009FD9]" />
+                          <span className="text-[14px] font-bold text-[#162543] sm:text-[15px]">{expYears}</span>
+                          <span className="whitespace-nowrap"><span className="sm:hidden">{t("statYearsShort")}</span><span className="hidden sm:inline">{t("statYears")}</span></span>
+                        </span>
+                      )}
+                      {casosCount > 0 && (
+                        <button type="button" onClick={() => setActiveTab("casos")} className="inline-flex min-w-0 items-baseline gap-1.5">
+                          <Award className="h-3.5 w-3.5 shrink-0 translate-y-0.5 text-[#009FD9]" />
+                          <span className="text-[14px] font-bold text-[#162543] sm:text-[15px]">{casosCount}</span>
+                          <span className="whitespace-nowrap"><span className="sm:hidden">{t("statCasesShort")}</span><span className="hidden sm:inline">{t("statCases", { count: casosCount })}</span></span>
+                        </button>
+                      )}
+                    </div>
+                  )}
                   </div>
-                </div>
 
-                {/* Prueba social en columnas, como estaba: cada dato con su cifra
-                    arriba y su rótulo abajo. Solo se dibujan las columnas que
-                    tienen dato, así un perfil nuevo no muestra casillas vacías. */}
-                {(professional.reviewCount > 0 || expYears > 0 || casosCount > 0) && (
-                  <div className={cn(
-                    "mt-4 grid sm:col-start-2 sm:row-start-2 sm:mt-3 sm:flex sm:justify-start sm:gap-10",
-                    ((professional.reviewCount > 0 ? 1 : 0) + (expYears > 0 ? 1 : 0) + (casosCount > 0 ? 1 : 0)) === 3
-                      ? "grid-cols-3"
-                      : ((professional.reviewCount > 0 ? 1 : 0) + (expYears > 0 ? 1 : 0) + (casosCount > 0 ? 1 : 0)) === 2
-                        ? "grid-cols-2"
-                        : "grid-cols-1",
-                  )}>
-                    {professional.reviewCount > 0 && (
-                      <button type="button" onClick={() => setActiveTab("resenas")} className="flex min-w-0 flex-col items-center px-2 text-center">
-                        <span className="flex items-center justify-center gap-1">
-                          <Star className="h-4 w-4 shrink-0 fill-[#ff9b32] text-[#ff9b32]" />
-                          <span className="text-[15px] font-bold text-[#162543]">{professional.ratingAvg.toFixed(1)}</span>
-                        </span>
-                        <span className="mt-0.5 whitespace-nowrap text-[10px] leading-tight tracking-[-0.01em] text-[#68778d] sm:text-[11px] sm:tracking-normal">{t("reviewCountLabel", { count: professional.reviewCount })}</span>
-                      </button>
-                    )}
-                    {expYears > 0 && (
-                      <div className="flex min-w-0 flex-col items-center px-2 text-center">
-                        <span className="flex items-center justify-center gap-1">
-                          <Briefcase className="h-4 w-4 shrink-0 text-[#009FD9]" />
-                          <span className="text-[15px] font-bold text-[#162543]">{expYears}</span>
-                        </span>
-                        <span className="mt-0.5 whitespace-nowrap text-[10px] leading-tight tracking-[-0.01em] text-[#68778d] sm:text-[11px] sm:tracking-normal">{t("statYears")}</span>
-                      </div>
-                    )}
-                    {casosCount > 0 && (
-                      <button type="button" onClick={() => setActiveTab("casos")} className="flex min-w-0 flex-col items-center px-2 text-center">
-                        <span className="flex items-center justify-center gap-1">
-                          <Award className="h-4 w-4 shrink-0 text-[#009FD9]" />
-                          <span className="text-[15px] font-bold text-[#162543]">{casosCount}</span>
-                        </span>
-                        <span className="mt-0.5 whitespace-nowrap text-[10px] leading-tight tracking-[-0.01em] text-[#68778d] sm:text-[11px] sm:tracking-normal">{t("statCases", { count: casosCount })}</span>
-                      </button>
-                    )}
                   </div>
-                )}
+                {/* Guardar y compartir son acciones sobre la ficha, no formas
+                    de contactar. En el teléfono cierran la tarjeta repartidos a
+                    la mitad —arriba a la derecha rompían el centrado de la foto
+                    y el nombre—; en computadora, donde sobra ancho, van en la
+                    misma línea del nombre. */}
+                <div className="mt-3 flex items-center gap-1 border-t border-[#eef2f6] pt-2 sm:absolute sm:right-3 sm:top-3 sm:mt-0 sm:border-0 sm:pt-0">
+                  <SaveButton pro={savedPro} isOwn={isOwn} sutil className="justify-center" />
+                  <BotonCompartir onPress={shareProfile} sutil className="justify-center" />
+                  {/* Las redes cierran la fila: al ir aquí no cuestan alto propio y
+                      quedan a la vista sin desplazar. */}
+                  {redesDelProfesional.length > 0 && (
+                    <div className="ml-auto flex items-center gap-1.5 sm:hidden">
+                      {redesDelProfesional.map(({ k, href, Icon }) => (
+                        <a
+                          key={k}
+                          href={href as string}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          aria-label={k === "website" ? t("linksWebsite") : k}
+                          title={k === "website" ? t("linksWebsite") : k}
+                          onClick={() => trackInteraction({
+                            type: "external_link_click",
+                            professionalId: professional.id,
+                            source: "profile_social",
+                            locale,
+                            metadata: { channel: k },
+                          })}
+                          className="grid h-8 w-8 place-items-center rounded-full border border-[#e5e7eb] text-[#52627a] transition-colors hover:border-[#009FD9] hover:text-[#009FD9]"
+                        >
+                          <Icon className="h-[15px] w-[15px]" />
+                        </a>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                {/* En computadora la fila de arriba a la derecha es solo guardar y
+                    compartir, así que las redes van bajo las cifras. */}
                 {redesDelProfesional.length > 0 && (
-                  <div className="mt-3 flex flex-wrap items-center justify-center gap-2 sm:justify-start">
+                  <div className="hidden sm:col-start-2 sm:row-start-3 sm:mt-3 sm:flex sm:items-center sm:gap-2">
                     {redesDelProfesional.map(({ k, href, Icon }) => (
                       <a
                         key={k}
@@ -789,15 +814,6 @@ export default function ProfilePage() {
                     ))}
                   </div>
                 )}
-                {/* Guardar y compartir son acciones sobre la ficha, no formas
-                    de contactar. En el teléfono cierran la tarjeta repartidos a
-                    la mitad —arriba a la derecha rompían el centrado de la foto
-                    y el nombre—; en computadora, donde sobra ancho, van en la
-                    misma línea del nombre. */}
-                <div className="mt-4 grid grid-cols-2 gap-1 border-t border-[#eef2f6] pt-2 sm:absolute sm:right-3 sm:top-3 sm:mt-0 sm:flex sm:border-0 sm:pt-0">
-                  <SaveButton pro={savedPro} isOwn={isOwn} sutil className="w-full justify-center sm:w-auto" />
-                  <BotonCompartir onPress={shareProfile} sutil className="w-full justify-center sm:w-auto" />
-                </div>
             </div>
             <div id="resenas" className="scroll-mt-24 [.ccr-native-app_&]:scroll-mt-0">
               <div className="rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">
