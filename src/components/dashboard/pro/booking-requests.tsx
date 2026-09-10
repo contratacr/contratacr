@@ -21,7 +21,7 @@ import { StatusFilterTabs, SOLICITUD_TABS_PRO, solicitudBucketPro, bucketCounts 
 import { ExpandToggle } from "@/components/dashboard/expand-toggle";
 import { ExpandableText } from "@/components/ui/expandable-text";
 import { ReportModal } from "@/components/dashboard/report-modal";
-import { formatBookingWhen } from "@/lib/booking-when";
+import { formatBookingWhen, ordenarCitas } from "@/lib/booking-when";
 import { useAppDialog } from "@/hooks/use-app-dialog";
 import type { BookingStatus } from "@/types";
 import { PanelEmptyState, PanelFilterEmpty, PanelListSkeleton } from "@/components/ui/content-loading";
@@ -286,7 +286,7 @@ export function BookingRequests() {
   // han pasado. "Activas" es cierto de todas. En Proyectos la etiqueta sí
   // corresponde y se deja.
   const etapaLabel = (id: string) => tEtapas(id === "en_curso" ? "solicitudes_activas" : id === "nuevas" ? "nuevas_solicitudes" : id);
-  const filtered = enEtapa.filter((b) => activeCat === "all" || !b.category_id || b.category_id === activeCat);
+  const filtered = ordenarCitas(enEtapa.filter((b) => activeCat === "all" || !b.category_id || b.category_id === activeCat), effectiveFilter === "finalizadas" ? "finalizadas" : "activas");
 
   if (loading) {
     return <PanelListSkeleton rows={2} withTabs hasData={bookings.length > 0} />;
@@ -305,7 +305,7 @@ export function BookingRequests() {
     const beneficiaryName = cleanVisibleSpanishText(booking.beneficiary_name);
     // Appointment date — "Mar, 23 jun · 1:00 pm" (capitalised weekday, 12-hour time),
     // distinct from the REQUEST date in the status header.
-    const dateStr = formatBookingWhen(booking.scheduled_date, booking.scheduled_time, dateLocale)
+    const dateStr = formatBookingWhen(booking.scheduled_date, booking.scheduled_time, dateLocale, true)
       ?? cleanVisibleSpanishText(booking.preferred_date_text) ?? null;
 
     const category = cleanVisibleSpanishText(booking.category_id ? getCategoryLabel(booking.category_id, locale) : null);

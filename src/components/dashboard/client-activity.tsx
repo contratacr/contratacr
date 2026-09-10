@@ -9,7 +9,7 @@ import { useSearchParams } from "next/navigation";
 import { CalendarDays, FolderOpen, ClipboardList, Plus, CalendarClock, Wrench, Users, FileText, CheckCircle2, MessageCircle, Star } from "lucide-react";
 import { DirectChatLauncher } from "@/components/professionals/direct-chat-launcher";
 import { CardActionsMenu, type CardAction } from "@/components/dashboard/card-actions-menu";
-import { formatBookingWhen } from "@/lib/booking-when";
+import { formatBookingWhen, ordenarCitas } from "@/lib/booking-when";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -129,7 +129,7 @@ const STATUS_VARIANT: Record<BookingStatus, "warning" | "success" | "error" | "d
 
 
 function formatBookingDate(b: Booking, dateLocale: string) {
-  return formatBookingWhen(b.scheduled_date, b.scheduled_time, dateLocale) ?? b.preferred_date_text ?? null;
+  return formatBookingWhen(b.scheduled_date, b.scheduled_time, dateLocale, true) ?? b.preferred_date_text ?? null;
 }
 
 const NO_BOOKINGS: Booking[] = [];
@@ -606,7 +606,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
   const projectTabs = PROYECTO_TABS;
   const effectiveProjectFilter = projectTabs.some((tab) => tab.id === projectFilter)
     ? projectFilter : (projectTabs[0]?.id ?? projectFilter);
-  const filteredBookings = bookings.filter((b) => solicitudMatches(effectiveBookingFilter, b.status, b.scheduled_date));
+  const filteredBookings = ordenarCitas(bookings.filter((b) => solicitudMatches(effectiveBookingFilter, b.status, b.scheduled_date)), effectiveBookingFilter === "finalizadas" ? "finalizadas" : "activas");
   const filteredProjects = projects.filter((p) => proyectoMatches(effectiveProjectFilter, p.status));
   return (
     <>
