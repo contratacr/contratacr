@@ -15,6 +15,11 @@ on:
         required: true
         type: boolean
         default: true
+      bootstrap:
+        description: "Solo para una base VACÍA (proyecto nuevo): permite aplicar el esquema desde la 001."
+        required: false
+        type: boolean
+        default: false
 
 concurrency:
   # Test migrations, mirroring/seeding and regression all mutate the same
@@ -62,7 +67,25 @@ jobs:
             node scripts/ci/validate-supabase-target.mjs db SUPABASE_DB_URL "$PRODUCTION_SUPABASE_PROJECT_REF"
           fi
 
+      - name: Verify empty database for bootstrap
+        if: ${{ inputs.bootstrap == true }}
+        run: |
+          set -euo pipefail
+          if [ "$TARGET_ENV" != "test" ]; then
+            echo "::error::El arranque desde cero solo se permite en test."
+            exit 1
+          fi
+          # Solo una base sin tablas puede recibir el esquema completo: así este
+          # atajo nunca puede correr sobre un entorno con datos.
+          tablas="$(npx supabase@2.109.0 db push --db-url "$SUPABASE_DB_URL" --include-all --dry-run | grep -c '001_initial_schema.sql' || true)"
+          if [ "$tablas" = "0" ]; then
+            echo "::error::La base NO está vacía (la 001 ya está aplicada). Quita el arranque desde cero."
+            exit 1
+          fi
+          echo "Base vacía confirmada: se aplicará el esquema completo."
+
       - name: Plan migrations
+        if: ${{ inputs.bootstrap == false }}
         run: |
           set -euo pipefail
           npx supabase@2.109.0 db push --db-url "$SUPABASE_DB_URL" --include-all --dry-run | tee migration-plan.log
@@ -77,8 +100,14 @@ jobs:
             exit 1
           fi
 
+      - name: Apply migrations (bootstrap)
+        if: ${{ inputs.dry_run == false && inputs.bootstrap == true }}
+        run: |
+          set -euo pipefail
+          npx supabase@2.109.0 db push --db-url "$SUPABASE_DB_URL" --include-all --yes
+
       - name: Apply migrations
-        if: ${{ inputs.dry_run == false }}
+        if: ${{ inputs.dry_run == false && inputs.bootstrap == false }}
         run: |
           set -euo pipefail
           pending="$(npx supabase@2.109.0 db push --db-url "$SUPABASE_DB_URL" --include-all --dry-run)"
