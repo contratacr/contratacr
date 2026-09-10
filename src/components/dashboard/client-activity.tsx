@@ -686,7 +686,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                                   {b.professionals?.profiles?.full_name ?? t("professional")}
                                 </span>
                               )}
-                              {(b.status === "cancelled" || b.status === "rescheduled") && (
+                              {(b.status === "rescheduled" || (b.status === "cancelled" && effectiveBookingFilter !== "canceladas")) && (
                                 <Badge variant={STATUS_VARIANT[b.status]} className="shrink-0 text-[11px] font-semibold">{t(`bStatus.${b.status}`)}</Badge>
                               )}
                             </div>
@@ -914,11 +914,16 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                 const replyCount = project.proposals?.length ?? 0;
                 const zone = [project.cantones?.name, project.provincias?.name].filter(Boolean).join(", ");
                 const isActive = project.status !== "completed" && project.status !== "cancelled";
-                const headline = project.status === "completed" ? t("projResolved")
-                  : project.status === "cancelled" ? t("projCancelled")
+                // La pestaña ya dice en qué etapa está: repetirlo en la tarjeta
+                // gastaba el único renglón que hay para algo útil (cuántas
+                // propuestas llegaron).
+                const etapaLoDice = (project.status === "completed" && effectiveProjectFilter === "finalizadas")
+                  || (project.status === "cancelled" && effectiveProjectFilter === "canceladas");
+                const headline = !etapaLoDice && project.status === "completed" ? t("projResolved")
+                  : !etapaLoDice && project.status === "cancelled" ? t("projCancelled")
                     : t("replyCount", { count: replyCount });
-                const headlineClass = project.status === "cancelled" ? "text-[#b91c1c]"
-                  : project.status === "completed" ? "text-[#6b7280]"
+                const headlineClass = !etapaLoDice && project.status === "cancelled" ? "text-[#b91c1c]"
+                  : !etapaLoDice && project.status === "completed" ? "text-[#6b7280]"
                     : replyCount > 0 ? "text-[#0089bb]" : "text-[#6b7280]";
 
                 return (

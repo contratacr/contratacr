@@ -373,7 +373,7 @@ export function BookingRequests() {
               <span className="min-w-0 flex flex-1 items-center gap-2 flex-wrap text-[15px] font-bold leading-snug text-[#162543] [overflow-wrap:anywhere] sm:text-base">
                 {clientName}
               </span>
-              {(booking.status === "cancelled" || booking.status === "rescheduled") && (
+              {(booking.status === "rescheduled" || (booking.status === "cancelled" && effectiveFilter !== "canceladas")) && (
                 <Badge variant={STATUS_VARIANT[booking.status]} className="shrink-0 text-[11px] font-semibold">{t(`status.${booking.status}`)}</Badge>
               )}
             </div>

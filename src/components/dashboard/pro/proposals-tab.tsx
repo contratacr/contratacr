@@ -454,6 +454,8 @@ export function ProposalsTab({ categoryId }: ProposalsTabProps) {
             {(stage === "cerradas" ? cerradas : vivas).map((p) => {
               const isOpen = expandedMine === p.id;
               const outcome = replyOutcome(p);
+              // En "Terminadas" el chip separa el trabajo hecho de la cancelada;
+              // en "Enviadas" separa la elegida de la que sigue en juego.
               const trabajoVivo = p.projects?.status !== "completed" && p.projects?.status !== "cancelled";
               return (
                 <Card id={`project-${p.project_id}`} key={p.id} className={cn("rounded-2xl border-[#e5e7eb] bg-white shadow-sm transition-all", isOpen && "shadow-md ring-1 ring-[#cfe9f5]")}>
