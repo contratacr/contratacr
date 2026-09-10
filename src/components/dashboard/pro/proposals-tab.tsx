@@ -336,7 +336,7 @@ export function ProposalsTab({ categoryId }: ProposalsTabProps) {
           tabs={PROPUESTA_TABS}
           value={stage}
           onChange={(id) => setStage(id as StageKey)}
-          labelFor={(id) => tEtapas(id)}
+          labelFor={(id) => (id === "nuevas" ? t("tabNew") : id === "respondidas" ? t("tabMine") : tEtapas(id))}
           counts={counts}
         />
       </div>
