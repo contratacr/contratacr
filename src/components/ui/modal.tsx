@@ -110,12 +110,15 @@ export function Modal({
         {!hideHeader && <div
           className={cn(
             "flex shrink-0 gap-3 border-b border-[#f3f4f6] px-5 py-4 sm:px-6",
+            // En el teléfono el título va centrado y la X flota al lado: si la X
+            // ocupara lugar en la fila, el título quedaría corrido su ancho
+            // (22 px medidos) y "centrado" sería mentira.
             fullscreenMobile
               ? "relative items-center justify-center sm:static sm:items-start sm:justify-between"
-              : "items-start justify-between",
+              : "relative items-center justify-center sm:static sm:items-start sm:justify-between",
           )}
         >
-          <div className={cn("min-w-0", fullscreenMobile && "px-10 text-center sm:px-0 sm:text-left")}>
+          <div className={cn("min-w-0 px-10 text-center sm:px-0 sm:text-left")}>
             <h2 className={cn("leading-tight text-[#162543]", fullscreenMobile ? "text-[17px] font-extrabold sm:text-lg sm:font-bold" : "text-lg font-bold")}>{title}</h2>
             {subtitle && <p className="mt-0.5 text-xs text-[#6b7280]">{subtitle}</p>}
           </div>
@@ -125,7 +128,9 @@ export function Modal({
             aria-label={closeLabel}
             className={cn(
               "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[#68778d] transition-colors hover:bg-[#f3f4f6] hover:text-[#374151]",
-              fullscreenMobile && "absolute left-4 top-1/2 -translate-y-1/2 sm:static sm:translate-y-0",
+              fullscreenMobile
+                ? "absolute left-4 top-1/2 -translate-y-1/2 sm:static sm:translate-y-0"
+                : "absolute right-4 top-1/2 -translate-y-1/2 sm:static sm:translate-y-0",
             )}
           >
             {fullscreenMobile ? (

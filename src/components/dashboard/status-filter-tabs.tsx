@@ -239,21 +239,26 @@ export function StatusFilterTabs({
 export const PROYECTO_TABS: readonly FilterTab[] = [
   { id: "activas" },
   { id: "finalizadas" },
+  { id: "canceladas" },
 ];
-// El profesional solo distingue lo que aún no respondió de lo que ya respondió.
+// Lo que puede tomar, lo que está en juego y lo que ya se cerró. Sin la tercera,
+// "Mis propuestas" mezclaba las vivas con trabajos terminados de hace meses.
 export const PROPUESTA_TABS: readonly FilterTab[] = [
   { id: "nuevas" },
   { id: "respondidas" },
+  { id: "cerradas" },
 ];
 export const SOLICITUD_TABS: readonly FilterTab[] = [
   { id: "en_curso" },
   { id: "finalizadas" },
+  { id: "canceladas" },
 ];
 /** Reservas recibidas: una reserva nace confirmada, así que no hay "nuevas"
  *  que esperen respuesta; el profesional ve las mismas dos etapas que el cliente. */
 export const SOLICITUD_TABS_PRO: readonly FilterTab[] = [
   { id: "en_curso" },
   { id: "finalizadas" },
+  { id: "canceladas" },
 ];
 
 // A booking's appointment day has fully passed (compared to now, end-of-day).
@@ -268,7 +273,9 @@ function isPastAppointment(scheduledDate?: string | null): boolean {
 // Status (+ scheduled date) → the four buckets. A CONFIRMED/in-progress
 // appointment whose date already passed is treated as Finalizada.
 export function solicitudBucket(status: string, scheduledDate?: string | null): string {
-  if (status === "cancelled" || status === "rescheduled") return "finalizadas";
+  // Cancelada no es terminada: mezclarlas ensuciaba el historial de trabajos
+  // con las citas que nunca ocurrieron.
+  if (status === "cancelled" || status === "rescheduled") return "canceladas";
   if (status === "completed" || status === "awaiting_confirmation") return "finalizadas";
   if (isPastAppointment(scheduledDate)) return "finalizadas";
   // Del lado del cliente una cita recién enviada y una ya confirmada son lo
@@ -289,7 +296,8 @@ export function solicitudMatches(filter: string, status: string, scheduledDate?:
 // open (receiving proposals) → Pendientes; assigned/in progress → Confirmadas;
 // completed → Finalizadas; cancelled → Canceladas.
 export function proyectoBucket(status: string): string {
-  if (status === "cancelled" || status === "completed") return "finalizadas";
+  if (status === "cancelled") return "canceladas";
+  if (status === "completed") return "finalizadas";
   // open, y los estados heredados in_progress / awaiting_confirmation: sigue viva.
   return "activas";
 }
@@ -301,9 +309,10 @@ export function proyectoMatches(filter: string, status: string): boolean {
 // Bucketed by the PROPOSAL first (so a declined proposal lands in Canceladas even
 // if the project moved on with someone else), then the project's lifecycle once
 // the proposal was accepted.
-export function proposalBucket(): string {
-  // Toda respuesta enviada vive en "Respondidas"; el estado de la solicitud se
-  // lee en la tarjeta, no en una pestaña.
+export function proposalBucket(proposalStatus?: string | null, projectStatus?: string | null): string {
+  // Cerrada = la solicitud terminó o se cayó, o la propuesta ya no está en juego.
+  if (projectStatus === "completed" || projectStatus === "cancelled") return "cerradas";
+  if (proposalStatus === "declined" || proposalStatus === "withdrawn") return "cerradas";
   return "respondidas";
 }
 export function proposalMatches(filter: string): boolean {

@@ -669,7 +669,10 @@ export default function DashboardPage() {
   const headerPhotoInputRef = useRef<HTMLInputElement>(null);
   const headerPhotoMenuRef = useRef<HTMLDivElement>(null);
   const [headerPhotoMenuOpen, setHeaderPhotoMenuOpen] = useState(false);
-  const [shareKitOpen, setShareKitOpen] = useState(false);
+  // Guarda en QUÉ sección se abrió: "Cotizar" y el panel son la misma página con
+  // otro `tab`, así que al volver el componente no se remonta y la ventana
+  // reaparecía. Atado al tab, se cierra sola al cambiar de sección.
+  const [shareKitTab, setShareKitTab] = useState<string | null>(null);
   const [headerPhotoPreviewOpen, setHeaderPhotoPreviewOpen] = useState(false);
   const [headerPhotoUploading, setHeaderPhotoUploading] = useState(false);
   const opportunityWelcomeCheckedRef = useRef(false);
@@ -2074,8 +2077,8 @@ export default function DashboardPage() {
                 />
                 {publicProfileHref && (
                   <ShareKit
-                    open={shareKitOpen}
-                    onClose={() => setShareKitOpen(false)}
+                    open={shareKitTab === activeTab}
+                    onClose={() => setShareKitTab(null)}
                     profileUrl={enlacePerfil(pro?.slug ?? "")}
                     name={displayName}
                     services={((pro?.professions && pro.professions.length > 0) ? pro.professions : (pro?.category_id ? [pro.category_id] : [])).map((id: string) => getCategoryLabel(id, locale)).filter(Boolean)}
@@ -2142,7 +2145,7 @@ export default function DashboardPage() {
                   <button
                     type="button"
                     data-testid="dashboard-mobile-share-profile"
-                    onClick={() => setShareKitOpen(true)}
+                    onClick={() => setShareKitTab(activeTab)}
                     className="inline-flex h-11 !min-h-0 w-full items-center justify-center rounded-full border border-[#d7e1ea] bg-white text-[13px] font-bold text-[#162543] transition active:bg-[#f6f9fb]"
                   >
                     {locale === "en" ? "Share" : "Compartir"}
@@ -2163,7 +2166,7 @@ export default function DashboardPage() {
                 {publicProfileHref && (
                   <button
                     type="button"
-                    onClick={() => setShareKitOpen(true)}
+                    onClick={() => setShareKitTab(activeTab)}
                     className="inline-flex h-11 items-center justify-center rounded-full border border-[#d7e1ea] bg-white px-5 text-[13px] font-bold text-[#162543] transition hover:border-[#b9c8d6] hover:bg-[#f6f9fb]"
                   >
                     {locale === "en" ? "Share" : "Compartir"}

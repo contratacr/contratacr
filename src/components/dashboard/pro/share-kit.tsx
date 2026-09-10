@@ -230,7 +230,7 @@ export function ShareKit({ open, onClose, profileUrl, name, services = [], avata
   const cerrar = () => { setView("menu"); setCopied(null); onClose(); };
 
   return (
-    <Modal open={open} onClose={cerrar} title={t("title")} subtitle={view === "menu" ? t("subtitle") : undefined} size="sm" mobilePresentation="center" closeLabel={t("close")}>
+    <Modal open={open} onClose={cerrar} title={t("title")} size="sm" mobilePresentation="center" closeLabel={t("close")}>
       {view === "menu" && (
         <div className="flex flex-col gap-3">
           {/* Lo mismo que ve un cliente al compartir un perfil (enlace a la vista,

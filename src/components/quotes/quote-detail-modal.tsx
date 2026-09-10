@@ -97,11 +97,14 @@ export function QuoteDetailModal({ quote, role, open, onClose, onChanged, proNam
   const titulo = recienCreada
     ? t("readyTitle")
     : <span className="block truncate">{quote.quote_number ? `${t("rowQuote")} N.º ${numeroCotizacion(quote)}` : (quote.title || t("detailTitle"))}</span>;
+  // La cabecera decía número + cliente + trabajo, y en el teléfono se comía tres
+  // renglones. El profesional ya sabe de quién es (la abrió desde su lista) y el
+  // trabajo se lee en las líneas; al cliente sí le hace falta de quién viene.
   const subtitulo = recienCreada
     ? t("readyBody")
-    : role === "client"
-      ? (quote.professional_name ? t("from", { name: quote.professional_name }) : quote.title ?? undefined)
-      : [quote.client_name, quote.title].filter(Boolean).join(" · ") || undefined;
+    : role === "client" && quote.professional_name
+      ? t("from", { name: quote.professional_name })
+      : undefined;
 
   return (
     <>
@@ -123,6 +126,13 @@ export function QuoteDetailModal({ quote, role, open, onClose, onChanged, proNam
               {estado && <span className={`rounded-full px-2.5 py-1 font-bold ${quote.status === "accepted" ? "bg-[#eaf7fc] text-[#0089bb]" : abierta ? "bg-[#f4f7fa] text-[#52627a]" : "bg-[#f3f4f6] text-[#6b7280]"}`}>{estado}</span>}
               {fecha && quote.status === "sent" && <span className="text-[#68778d]">{t("validUntil", { date: fecha })}</span>}
             </div>
+          )}
+          {!recienCreada && role === "pro" && (quote.client_name || quote.title) && (
+            <p className="text-[14px] leading-6 text-[#52627a]">
+              {quote.client_name && <span className="font-bold text-[#162543]">{quote.client_name}</span>}
+              {quote.client_name && quote.title && " · "}
+              {quote.title}
+            </p>
           )}
           <div className="divide-y divide-[#eef2f6] overflow-hidden rounded-2xl border border-[#e5eaf0]">
             {quote.items.map((it, i) => (

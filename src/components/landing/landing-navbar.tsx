@@ -1154,13 +1154,9 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   }, [nativeApp, primaryPanelHref, router, user]);
 
   const visibleResourceLinks = useMemo(() => RESOURCES_LINKS, []);
-  const enRutaDelCajon = (href: string) => {
-    const base = href.split("?")[0] ?? href;
-    const actual = pathname ?? "/";
-    return base === "/" ? actual === "/" : actual === base || actual.startsWith(`${base}/`);
-  };
-  const claseCajon = (href: string) =>
-    cn(mobileDrawerItemClass, enRutaDelCajon(href) && "font-extrabold text-[#009FD9]");
+  // El cajón no marca dónde estás: ya lo sabes, y en turquesa se leía como
+  // "seleccionado", que es otra cosa. Todos sus enlaces se ven igual.
+  const claseCajon = (_href: string) => mobileDrawerItemClass;
 
   const irAlInicio = useCallback((event: React.MouseEvent<HTMLAnchorElement>) => {
     if (!nativeApp) return;
@@ -2473,7 +2469,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                 {user ? (
                   <>
                     {!nativeHeaderShell && (
-                      <Link href={primaryPanelHref} onClick={() => setMobileOpen(false)} className={cn(mobileDrawerStrongItemClass, enRutaDelCajon(primaryPanelHref) && "text-[#009FD9]")}>
+                      <Link href={primaryPanelHref} onClick={() => setMobileOpen(false)} className={mobileDrawerStrongItemClass}>
                         <DrawerIcon><UserRound /></DrawerIcon>
                         <span className={mobileDrawerTextClass}>{locale === "en" ? "My dashboard" : "Mi panel"}</span>
                       </Link>

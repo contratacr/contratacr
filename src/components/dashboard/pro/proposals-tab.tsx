@@ -25,7 +25,7 @@ import { cn, formatRelativeOrDate } from "@/lib/utils";
 import { getCategoryLabel } from "@/lib/data/categories";
 import { useAuth } from "@/hooks/use-auth";
 import { useCachedResource } from "@/hooks/use-cached-resource";
-import { StatusFilterTabs, PROPUESTA_TABS } from "@/components/dashboard/status-filter-tabs";
+import { StatusFilterTabs, PROPUESTA_TABS, proposalBucket } from "@/components/dashboard/status-filter-tabs";
 import { ExpandableText } from "@/components/ui/expandable-text";
 import { ExpandToggle } from "@/components/dashboard/expand-toggle";
 import { CardActionsMenu } from "@/components/dashboard/card-actions-menu";
@@ -67,7 +67,7 @@ interface ProposalsTabProps {
   services?: { name?: string }[];
 }
 
-type StageKey = "nuevas" | "respondidas";
+type StageKey = "nuevas" | "respondidas" | "cerradas";
 const NO_OPEN_PROJECTS: OpenProject[] = [];
 const NO_MY_PROPOSALS: MyProposal[] = [];
 const DISMISS_KEY = "cc_opps_dismissed";
@@ -135,7 +135,10 @@ export function ProposalsTab({ categoryId }: ProposalsTabProps) {
     () => openProjects.filter((p) => !answered.has(p.id) && !dismissed.has(p.id)),
     [openProjects, answered, dismissed],
   );
-  const counts = useMemo(() => ({ nuevas: newList.length, respondidas: myProposals.length }), [newList.length, myProposals.length]);
+  // Vivas (en juego) y cerradas (la solicitud terminó o se cayó) van aparte.
+  const vivas = useMemo(() => myProposals.filter((p) => proposalBucket(p.status, p.projects?.status) === "respondidas"), [myProposals]);
+  const cerradas = useMemo(() => myProposals.filter((p) => proposalBucket(p.status, p.projects?.status) === "cerradas"), [myProposals]);
+  const counts = useMemo(() => ({ nuevas: newList.length, respondidas: vivas.length, cerradas: cerradas.length }), [newList.length, vivas.length, cerradas.length]);
 
   const refreshAll = useCallback(async () => {
     await Promise.all([openResource.refresh(), mineResource.refresh()]);
@@ -351,7 +354,7 @@ export function ProposalsTab({ categoryId }: ProposalsTabProps) {
           tabs={PROPUESTA_TABS}
           value={stage}
           onChange={(id) => setStage(id as StageKey)}
-          labelFor={(id) => (id === "nuevas" ? t("tabNew") : id === "respondidas" ? t("tabMine") : tEtapas(id))}
+          labelFor={(id) => (id === "nuevas" ? t("tabNew") : id === "respondidas" ? t("tabMine") : id === "cerradas" ? t("tabClosed") : tEtapas(id))}
           counts={counts}
         />
       </div>
@@ -443,12 +446,12 @@ export function ProposalsTab({ categoryId }: ProposalsTabProps) {
         )
       )}
 
-      {stage === "respondidas" && (
-        myProposals.length === 0 ? (
+      {(stage === "respondidas" || stage === "cerradas") && (
+        (stage === "cerradas" ? cerradas : vivas).length === 0 ? (
           <PanelEmptyState icon={Inbox} title={t("emptyMine")} description={t("emptyMineSub")} />
         ) : (
           <div className="ccr-native-safe-list-end flex flex-col gap-3">
-            {myProposals.map((p) => {
+            {(stage === "cerradas" ? cerradas : vivas).map((p) => {
               const isOpen = expandedMine === p.id;
               const outcome = replyOutcome(p);
               const trabajoVivo = p.projects?.status !== "completed" && p.projects?.status !== "cancelled";

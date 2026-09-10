@@ -43,11 +43,13 @@ export function QuotesSection({ proName, proSlug, puedeCrear = true }: { proName
     if (q.status === "withdrawn") return "withdrawn";
     return enElApp(q) ? "enviada" : "documento";
   };
+  // Solo lo que cambia qué se puede hacer con ella: vencida o retirada. Que esté
+  // dentro de una cita o de un proyecto se ve al abrirla, y como etiqueta se
+  // leía como un estado más.
   const etiqueta = (q: Quote) => {
     const e = estadoDe(q);
     if (e === "expired") return t("statusExpired");
     if (e === "withdrawn") return t("statusWithdrawn");
-    if (e === "enviada") return q.booking_id ? t("inBooking") : t("inProject");
     return null;
   };
   // Cada estado con su color y su ícono: se lee de un vistazo cuál está viva.
