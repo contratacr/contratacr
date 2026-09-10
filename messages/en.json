@@ -721,9 +721,7 @@
     "appBarTitle": "Professional profile",
     "linkCopied": "Link copied",
     "statCases": "{count, plural, one {past job} other {past jobs}}",
-    "statCasesShort": "cases",
-    "linksWebsite": "Website",
-    "statYearsShort": "yrs"
+    "linksWebsite": "Website"
   },
   "auth": {
     "login": {

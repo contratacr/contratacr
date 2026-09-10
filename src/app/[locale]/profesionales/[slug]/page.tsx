@@ -726,19 +726,19 @@ export default function ProfilePage() {
                       renglón sin decir nada nuevo. */}
                   {/* En el teléfono una línea; en computadora, columnas. */}
                   {(professional.reviewCount > 0 || expYears > 0) && (
-                    <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-[#68778d]  sm:mt-3 sm:gap-x-10 sm:text-[13px]">
+                    <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-[12px] text-[#68778d] sm:mt-3 sm:gap-x-10 sm:text-[13px]">
                       {professional.reviewCount > 0 && (
-                        <button type="button" onClick={() => setActiveTab("resenas")} className="inline-flex min-w-0 items-baseline gap-1.5">
-                          <Star className="h-3.5 w-3.5 shrink-0 translate-y-0.5 fill-[#ff9b32] text-[#ff9b32]" />
+                        <button type="button" onClick={() => setActiveTab("resenas")} className="inline-flex min-w-0 items-center gap-1.5">
+                          <Star className="h-3.5 w-3.5 shrink-0 fill-[#ff9b32] text-[#ff9b32]" />
                           <span className="text-[14px] font-bold text-[#162543] sm:text-[15px]">{professional.ratingAvg.toFixed(1)}</span>
                           <span className="whitespace-nowrap">{t("reviewCountLabel", { count: professional.reviewCount })}</span>
                         </button>
                       )}
                       {expYears > 0 && (
-                        <span className="inline-flex min-w-0 items-baseline gap-1.5">
-                          <Briefcase className="h-3.5 w-3.5 shrink-0 translate-y-0.5 text-[#009FD9]" />
+                        <span className="inline-flex min-w-0 items-center gap-1.5">
+                          <Briefcase className="h-3.5 w-3.5 shrink-0 text-[#009FD9]" />
                           <span className="text-[14px] font-bold text-[#162543] sm:text-[15px]">{expYears}</span>
-                          <span className="whitespace-nowrap"><span className="sm:hidden">{t("statYearsShort")}</span><span className="hidden sm:inline">{t("statYears")}</span></span>
+                          <span className="whitespace-nowrap">{t("statYears")}</span>
                         </span>
                       )}
                     </div>
