@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Bell, X } from "lucide-react";
 import { useLocale } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
@@ -26,6 +26,25 @@ type ToastState = { latest: Notification; count: number };
 const POST_LOGIN_PROMPT_KEY = "contratacr:post-login-prompt";
 const LAST_ACTIVE_AT_KEY = "contratacr:last-active-at:v2";
 const ACTIVE_HEARTBEAT_MS = 15_000;
+// Cuánto se queda cada aviso en pantalla. El vivo interrumpe algo que la
+// persona está haciendo, así que es corto; el resumen de entrada es lo primero
+// que ve al abrir y trae una acción, así que dura más.
+const TOAST_VIVO_MS = 8_000;
+const RESUMEN_ENTRADA_MS = 12_000;
+// Pantallas donde un aviso flotante sobra: en las de acceso la sesión todavía
+// se está resolviendo y la tarjeta alcanzaba a pintarse un instante antes de
+// que la app saltara al panel; en el centro de notificaciones ya está todo.
+function pantallaSinAvisos(pathname: string | null) {
+  const ruta = (pathname ?? "/").replace(/^\/(?:es|en)(?=\/|$)/, "") || "/";
+  return ruta.startsWith("/login")
+    || ruta.startsWith("/registro")
+    || ruta.startsWith("/onboarding")
+    || ruta.startsWith("/completar-perfil")
+    || ruta.startsWith("/auth")
+    || ruta.startsWith("/reset-password")
+    || ruta.startsWith("/olvide-contrasena")
+    || ruta.startsWith("/notificaciones");
+}
 
 const wait = (ms: number) => new Promise((resolve) => window.setTimeout(resolve, ms));
 
@@ -52,6 +71,7 @@ function rememberLastActiveAt(userId: string, value = new Date().toISOString()) 
 export function NotificationLiveToast({ scope = "all" }: { scope?: NotificationScope }) {
   const { user } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
   const locale = useLocale();
   const [toast, setToast] = useState<ToastState | null>(null);
   const [postLoginUnreadCount, setPostLoginUnreadCount] = useState<number | null>(null);
@@ -104,6 +124,7 @@ export function NotificationLiveToast({ scope = "all" }: { scope?: NotificationS
 
   const maybeShow = useCallback((next: Notification, showInitial = true) => {
     if (scope !== "all" && !notificationInMode(next.type, scope)) return;
+    if (pantallaSinAvisos(window.location.pathname)) return;
     if (lastSeenIdRef.current === next.id) return;
     lastSeenIdRef.current = next.id;
     if (!initializedRef.current && !showInitial) {
@@ -156,6 +177,7 @@ export function NotificationLiveToast({ scope = "all" }: { scope?: NotificationS
       return;
     }
     const userId = user.id;
+    if (pantallaSinAvisos(pathname)) return;
     if (summaryCheckedUserRef.current === userId) return;
     summaryCheckedUserRef.current = userId;
 
@@ -163,11 +185,15 @@ export function NotificationLiveToast({ scope = "all" }: { scope?: NotificationS
     async function checkNotificationsSinceLastSession() {
       const lastActiveAt = readLastActiveAt(userId);
       const checkedAt = new Date().toISOString();
+      // A missing v2 baseline means this is the first visit after the tracking
+      // correction. Establish it without presenting old unread items as new.
+      if (lastActiveAt <= 0) {
+        rememberLastActiveAt(userId, checkedAt);
+        clearPostLoginParam();
+        clearPostLoginPrompt();
+        return;
+      }
       try {
-        // A missing v2 baseline means this is the first visit after the tracking
-        // correction. Establish it without presenting old unread items as new.
-        if (lastActiveAt <= 0) return;
-
         const supabase = createClient();
         const { count, error } = await supabase
           .from("notifications")
@@ -180,14 +206,20 @@ export function NotificationLiveToast({ scope = "all" }: { scope?: NotificationS
           console.error("[notification-login-summary] failed to load new notifications:", error);
           return;
         }
-        // Un respiro para que el panel termine de pintar: apareciendo sobre la
-        // pantalla de carga se lee como un parpadeo raro y no como un aviso.
         if ((count ?? 0) > 0) {
+          // Un respiro para que la pantalla termine de pintar: apareciendo sobre
+          // la carga se lee como un parpadeo y no como un aviso.
           await wait(1200);
-          if (!canceled) setPostLoginUnreadCount(count ?? 0);
+          if (canceled) return;
+          setPostLoginUnreadCount(count ?? 0);
+          // La marca NO se adelanta aquí: si se adelantaba y la tarjeta se
+          // perdía (una navegación dura la borraba a media pantalla), el aviso
+          // quedaba consumido sin que nadie lo viera. Se adelanta cuando la
+          // tarjeta se cierra, sola o a mano.
+          return;
         }
-      } finally {
         rememberLastActiveAt(userId, checkedAt);
+      } finally {
         if (!canceled) {
           clearPostLoginParam();
           clearPostLoginPrompt();
@@ -199,7 +231,7 @@ export function NotificationLiveToast({ scope = "all" }: { scope?: NotificationS
     return () => {
       canceled = true;
     };
-  }, [user, clearPostLoginParam, clearPostLoginPrompt]);
+  }, [user, pathname, clearPostLoginParam, clearPostLoginPrompt]);
 
   useEffect(() => {
     if (!user) return;
@@ -247,18 +279,23 @@ export function NotificationLiveToast({ scope = "all" }: { scope?: NotificationS
 
   useEffect(() => {
     if (!toast) return;
-    const id = window.setTimeout(() => setToast(null), 8000);
+    const id = window.setTimeout(() => setToast(null), TOAST_VIVO_MS);
     return () => window.clearTimeout(id);
   }, [toast]);
 
   // El resumen de "mientras no estabas" se quedaba fijo hasta que alguien lo
   // tocara, tapando la parte de arriba del panel. Se retira solo, como el aviso
   // vivo, y con un poco más de tiempo por ser el primero que se ve al entrar.
+  const cerrarResumen = useCallback(() => {
+    setPostLoginUnreadCount(null);
+    if (user) rememberLastActiveAt(user.id);
+  }, [user]);
+
   useEffect(() => {
     if (postLoginUnreadCount === null) return;
-    const id = window.setTimeout(() => setPostLoginUnreadCount(null), 12000);
+    const id = window.setTimeout(cerrarResumen, RESUMEN_ENTRADA_MS);
     return () => window.clearTimeout(id);
-  }, [postLoginUnreadCount]);
+  }, [postLoginUnreadCount, cerrarResumen]);
 
   useEffect(() => {
     return () => {
@@ -289,7 +326,7 @@ export function NotificationLiveToast({ scope = "all" }: { scope?: NotificationS
       <div className="fixed left-3 right-3 top-[calc(var(--ccr-native-header-height,4rem)+0.75rem)] z-[180] sm:left-auto sm:right-5 sm:top-20 sm:w-[360px]">
         <div className="rounded-2xl border border-[#d8e8f1] bg-white shadow-[0_18px_45px_-20px_rgba(15,23,42,0.35)]">
           <button type="button" onClick={() => {
-            setPostLoginUnreadCount(null);
+            cerrarResumen();
             router.push(targetHref);
           }} className="flex w-full items-center gap-3 px-4 py-3 pr-10 text-left">
             <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#EAF7FD] text-[#009FD9]">
@@ -307,7 +344,7 @@ export function NotificationLiveToast({ scope = "all" }: { scope?: NotificationS
           </button>
           <button
             type="button"
-            onClick={() => setPostLoginUnreadCount(null)}
+            onClick={cerrarResumen}
             className="absolute right-2 top-2 rounded-full p-1 text-[#68778d] transition-colors hover:bg-[#f3f4f6] hover:text-[#374151]"
             aria-label="Cerrar"
           >
