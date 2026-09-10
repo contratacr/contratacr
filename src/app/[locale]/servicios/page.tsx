@@ -447,7 +447,7 @@ export default function ServiciosPage() {
                           <Link
                             key={id}
                             href={`/buscar?categoria=${id}`}
-                            className="group flex min-h-10 items-center justify-between gap-2 rounded-xl px-3 py-2 text-sm font-semibold leading-snug transition-colors hover: hover: ccr-caja-icono"
+                            className="group flex min-h-10 items-center justify-between gap-2 rounded-xl px-3 py-2 text-sm font-semibold leading-snug transition-colors hover: hover: ccr-caja-icono-plana"
                           >
                             <span className="min-w-0 [overflow-wrap:anywhere]">
                               {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}

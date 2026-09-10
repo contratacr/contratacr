@@ -380,7 +380,7 @@ export function ChatScreen() {
   return (
     <div className="flex h-full flex-col bg-[#ece5dd]">
       <div className="flex items-center gap-2.5 bg-white px-4 py-2.5 border-b border-[#eef1f5]">
-        <div className="grid h-9 w-9 place-items-center rounded-full text-[11px] font-bold ccr-caja-icono">CR</div>
+        <div className="grid h-9 w-9 place-items-center rounded-full text-[11px] font-bold ccr-caja-icono-plana">CR</div>
         <div className="min-w-0">
           <div className="flex items-center gap-1"><span className="text-[12px] font-bold text-[#162543]">Carlos Ramírez</span><ShieldCheck className="h-3 w-3 text-[#16a34a]" /></div>
           <span className="text-[10px] text-[#16a34a]">en línea</span>
@@ -415,7 +415,7 @@ export function SupportScreen() {
           <p className="mt-1 text-[10px] text-[#68778d]">Tu reseña ayuda a otros clientes.</p>
         </div>
         <div className="flex items-center gap-3 rounded-xl border border-[#e5e7eb] bg-white p-3">
-          <span className="grid h-9 w-9 place-items-center rounded-lg ccr-caja-icono"><Headset className="h-4 w-4" /></span>
+          <span className="grid h-9 w-9 place-items-center rounded-lg ccr-caja-icono-plana"><Headset className="h-4 w-4" /></span>
           <div><p className="text-[11px] font-bold text-[#162543]">Soporte ContrataCR</p><p className="text-[10px] text-[#6b7280]">¿Algo no salió bien? Estamos para ayudarte.</p></div>
         </div>
       </div>

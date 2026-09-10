@@ -2124,6 +2124,14 @@ html[data-keyboard-visible] body.ccr-native-app .ccr-native-search-panel { botto
    en pequeño. Sustituye a los círculos celestes planos, que sobre blanco casi
    no se veían. El radio lo pone quien la usa (rounded-*), así que sirve igual
    para una caja de 36 px en una lista que para una de 64 en un vacío. */
+/* La misma caja, plana, para lo que se repite: en una lista de diez filas, diez
+   degradados con sombra pesan más que el contenido. El degradado se reserva
+   para donde el icono es protagonista (un vacío, un diálogo, una tarjeta). */
+.ccr-caja-icono-plana {
+  background: #eaf6fc;
+  color: #162543;
+}
+
 .ccr-caja-icono {
   background: linear-gradient(135deg, #eaf6fc 0%, #cbe8f6 55%, #f0f8fd 100%);
   color: #162543;

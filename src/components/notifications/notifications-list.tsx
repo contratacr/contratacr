@@ -598,7 +598,7 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
                           className="h-9 w-9 rounded-full object-cover"
                         />
                       ) : (
-                        <span className="flex h-9 w-9 items-center justify-center rounded-full ccr-caja-icono">
+                        <span className="flex h-9 w-9 items-center justify-center rounded-full ccr-caja-icono-plana">
                           <NotificationSourceIcon type={n.type} className="h-4 w-4" />
                         </span>
                       )}

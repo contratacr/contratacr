@@ -101,7 +101,7 @@ export function AdminUserSearch({
                 onMouseDown={(e) => { e.preventDefault(); go(u.id); }}
                 className="w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-[#f9fafb] transition-colors"
               >
-                <div className="h-9 w-9 rounded-full text-xs font-semibold flex items-center justify-center overflow-hidden shrink-0 ccr-caja-icono">
+                <div className="h-9 w-9 rounded-full text-xs font-semibold flex items-center justify-center overflow-hidden shrink-0 ccr-caja-icono-plana">
                   {u.avatar_url ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={u.avatar_url} alt="" className="h-full w-full object-cover" />

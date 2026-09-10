@@ -111,7 +111,7 @@ export function QuoteBlock({ bookingId, projectId, role, canCreate = false, defa
     <div className="flex flex-col gap-2">
       {conNombre && (
         <button type="button" onClick={() => setDetail(conNombre)} className="flex w-full items-center gap-3 rounded-2xl border border-[#e5eaf0] bg-white px-3.5 py-3 text-left transition-colors hover:border-[#bfe3f5] hover:bg-[#f8fcfe]">
-          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full ccr-caja-icono"><FileText className="h-5 w-5" /></span>
+          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full ccr-caja-icono-plana"><FileText className="h-5 w-5" /></span>
           <span className="min-w-0 flex-1">
             <span className="block text-[14px] font-extrabold text-[#162543]">{isQuoteExpired(conNombre) || conNombre.status === "withdrawn" ? `${t("blockTitle")} · ${estado(conNombre)}` : role === "client" ? t("rowReceivedTitle") : t("rowSentTitle")} · {formatColones(conNombre.total)}</span>
           </span>

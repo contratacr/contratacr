@@ -380,7 +380,7 @@ function GuidesBody({
                     aria-expanded={abierta}
                     className="flex w-full items-center gap-3 px-4 py-3.5 text-left transition-colors hover:bg-[#f9fbfd]"
                   >
-                    <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl ccr-caja-icono">
+                    <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl ccr-caja-icono-plana">
                       {guideIcon(guide.id)}
                     </span>
                     <span className="min-w-0 flex-1">
@@ -422,7 +422,7 @@ function GuidesBody({
           Ahora es una tarjeta como las demás y su botón pesa como los otros. */}
       <div className="mt-6 flex flex-col gap-4 rounded-2xl border border-[#e5e7eb] bg-white p-5 shadow-sm">
         <div className="flex items-start gap-3">
-          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-[#ccecf8] ccr-caja-icono">
+          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-[#ccecf8] ccr-caja-icono-plana">
             <Headset className="h-5 w-5" />
           </span>
           <div className="min-w-0">
@@ -517,7 +517,7 @@ function GuidePreview({ id, t }: { id: string; t: ReturnType<typeof useTranslati
         </div>
         <div className="space-y-3">
           <div className="flex gap-3 rounded-xl border border-[#e5e7eb] p-3">
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ccr-caja-icono">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ccr-caja-icono-plana">
               <BriefcaseBusiness className="h-5 w-5" />
             </div>
             <div className="min-w-0">

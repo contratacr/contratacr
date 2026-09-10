@@ -32,7 +32,7 @@ export function ShareLinkPanel({ url, label, copyLabel, copiedLabel }: {
         <button
           type="button"
           onClick={() => void copiar()}
-          className="inline-flex h-9 items-center gap-1.5 rounded-full bg-white px-4 text-[13px] font-bold transition-colors hover: ccr-caja-icono"
+          className="inline-flex h-9 items-center gap-1.5 rounded-full bg-white px-4 text-[13px] font-bold transition-colors hover: ccr-caja-icono-plana"
         >
           {copiado ? <Check className="h-4 w-4 text-[#15803d]" /> : <Copy className="h-4 w-4" />}
           {copiado ? copiedLabel : copyLabel}

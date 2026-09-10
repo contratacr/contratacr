@@ -20,7 +20,7 @@ export function MockAvatar({ src, initials }: { src?: string; initials: string }
     );
   }
   return (
-    <div className="grid h-11 w-11 place-items-center rounded-full text-[12px] font-extrabold ccr-caja-icono">
+    <div className="grid h-11 w-11 place-items-center rounded-full text-[12px] font-extrabold ccr-caja-icono-plana">
       {initials}
     </div>
   );

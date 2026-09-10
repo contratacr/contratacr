@@ -345,7 +345,7 @@ export function NotificationLiveToast({ scope = "all" }: { scope?: NotificationS
             cerrarResumen();
             router.push(targetHref);
           }} className="flex w-full items-center gap-3 px-4 py-3 pr-10 text-left">
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full ccr-caja-icono">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full ccr-caja-icono-plana">
               <Bell className="h-4 w-4" />
             </span>
             <span className="min-w-0 flex-1">
@@ -401,7 +401,7 @@ export function NotificationLiveToast({ scope = "all" }: { scope?: NotificationS
     <div className="fixed left-3 right-3 top-[calc(var(--ccr-native-header-height,4rem)+0.75rem)] z-[180] sm:left-auto sm:right-5 sm:top-20 sm:w-[360px]">
       <div className="rounded-2xl border border-[#d8e8f1] bg-white shadow-[0_18px_45px_-20px_rgba(15,23,42,0.35)]">
         <button type="button" onClick={openToast} className="flex w-full items-center gap-3 px-4 py-3 pr-10 text-left">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full ccr-caja-icono">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full ccr-caja-icono-plana">
             <NotificationSourceIcon type={latest.type} className="h-4 w-4" />
           </span>
           <span className="min-w-0 flex-1">

@@ -1113,7 +1113,7 @@ export default function ProfilePage() {
                             <div className="flex flex-col gap-2.5">
                               {certs.map((c, i) => (
                                 <div key={c.id ?? i} className="flex items-start gap-3 rounded-xl border border-[#e5e7eb] p-3.5">
-                                  <div className="flex h-9 w-9 items-center justify-center rounded-full shrink-0 ccr-caja-icono">
+                                  <div className="flex h-9 w-9 items-center justify-center rounded-full shrink-0 ccr-caja-icono-plana">
                                     <Award className="h-4 w-4 text-[#009FD9]" />
                                   </div>
                                   <div className="min-w-0">

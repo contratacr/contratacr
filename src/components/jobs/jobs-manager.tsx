@@ -202,7 +202,7 @@ export function JobsManager({ initialJobs, embedded = false, backHref = "/dashbo
                         <section key={application.id} className="px-4 py-4 sm:px-5">
                           <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_160px] sm:items-start">
                             <div className="flex min-w-0 items-center gap-3">
-                              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full text-xs font-extrabold ccr-caja-icono" aria-hidden="true">
+                              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full text-xs font-extrabold ccr-caja-icono-plana" aria-hidden="true">
                                 {applicantInitials(application.applicant_name) || <UserRound className="h-4 w-4" />}
                               </span>
                               <div className="min-w-0">

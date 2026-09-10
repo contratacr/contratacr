@@ -880,7 +880,7 @@ export function ServicesEditor({
                     disabled={imageUploading}
                     className="flex min-h-32 w-full flex-col items-center justify-center gap-2 px-4 py-6 text-center transition-colors hover:bg-[#eef9fd] disabled:cursor-wait"
                   >
-                    <span className="grid h-11 w-11 place-items-center rounded-full ccr-caja-icono">
+                    <span className="grid h-11 w-11 place-items-center rounded-full ccr-caja-icono-plana">
                       {imageUploading ? <Loader2 className="h-5 w-5 animate-spin" /> : <ImagePlus className="h-5 w-5" />}
                     </span>
                     <span className="text-sm font-extrabold text-[#0089bb]">

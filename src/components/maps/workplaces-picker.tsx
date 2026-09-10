@@ -351,7 +351,7 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
           ))}
           {extraPlaces.map((place) => (
             <div key={place.id} className="flex items-center gap-3 rounded-2xl border border-[#dbe7ef] bg-[#f8fcff] px-4 py-3">
-              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full ccr-caja-icono">
+              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full ccr-caja-icono-plana">
                 {place.icon ?? <MapPin className="h-4 w-4" />}
               </span>
               <div className="flex-1 min-w-0">

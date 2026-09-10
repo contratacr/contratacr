@@ -119,7 +119,7 @@ function PersonLink({ id, name }: { id: string | null; name: string | null }) {
 
 function Avatar({ name, src }: { name: string | null; src?: string | null }) {
   return (
-    <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full text-sm font-bold ccr-caja-icono">
+    <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full text-sm font-bold ccr-caja-icono-plana">
       {src ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img src={src} alt="" className="h-full w-full object-cover" />

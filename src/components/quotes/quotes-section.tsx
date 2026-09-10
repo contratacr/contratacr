@@ -60,8 +60,8 @@ export function QuotesSection({ proName, proSlug, puedeCrear = true }: { proName
     // cotización —en una cita o en un proyecto—, que es lo único cierto.
     // La caja es la misma de la marca en todas: lo que cambia es el icono, que
     // dice dónde vive la cotización. Un gris plano hacía ver la lista apagada.
-    const caja = "bg-[linear-gradient(135deg,#eaf6fc_0%,#cbe8f6_55%,#f0f8fd_100%)] text-[#162543]";
-    const apagada = "bg-[linear-gradient(135deg,#f4f6f9_0%,#e3e8ee_55%,#f7f9fb_100%)] text-[#68778d]";
+    const caja = "ccr-caja-icono-plana";
+    const apagada = "bg-[#eef2f6] text-[#68778d]";
     if (e === "enviada") return { fondo: caja, pastilla: "bg-[#eaf7fc] text-[#0089bb]", icono: q.booking_id ? <CalendarCheck className="h-[18px] w-[18px]" strokeWidth={1.6} /> : <Handshake className="h-[18px] w-[18px]" strokeWidth={1.6} /> };
     if (e === "documento") return { fondo: caja, pastilla: "bg-[#eef3f8] text-[#52627a]", icono: <ReceiptText className="h-[18px] w-[18px]" strokeWidth={1.6} /> };
     return { fondo: apagada, pastilla: "bg-[#f3f4f6] text-[#6b7280]", icono: <X className="h-4 w-4" strokeWidth={1.8} /> };
@@ -93,7 +93,7 @@ export function QuotesSection({ proName, proSlug, puedeCrear = true }: { proName
               const m = marca(q);
               return (
                 <button key={q.id} type="button" onClick={() => setDetalle({ quote: q, recien: false })} className="group flex w-full items-center gap-3.5 rounded-2xl border border-[#e5eaf0] bg-white px-4 py-3.5 text-left transition-colors hover:border-[#bfe3f5] hover:bg-[#f8fcfe]">
-                  <span className={`grid h-11 w-11 shrink-0 place-items-center rounded-[14px] shadow-[0_10px_22px_-16px_rgba(15,23,42,0.55)] ${m.fondo}`}>{m.icono}</span>
+                  <span className={`grid h-11 w-11 shrink-0 place-items-center rounded-[14px] ${m.fondo}`}>{m.icono}</span>
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-[15px] font-extrabold text-[#162543]">{q.client_name || q.title || t("noClientName")}</span>
                     {q.client_name && q.title && <span className="block truncate text-[13px] text-[#52627a]">{q.title}</span>}

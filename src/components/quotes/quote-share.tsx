@@ -258,7 +258,7 @@ function QuoteAttach({ quote, onChanged }: { quote: Quote; onChanged?: (q: Quote
                 <div className="flex flex-col gap-2">
                   {lista.map((d) => (
                     <button key={d.clave} type="button" onClick={() => setElegido(d)} className="flex w-full items-center gap-3.5 rounded-2xl border border-[#e5eaf0] bg-white px-4 py-3.5 text-left transition-colors hover:border-[#bfe3f5] hover:bg-[#f8fcfe]">
-                      <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl ccr-caja-icono">
+                      <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl ccr-caja-icono-plana">
                         {pestana === "citas" ? <CalendarCheck className="h-5 w-5" /> : <Handshake className="h-5 w-5" />}
                       </span>
                       <span className="min-w-0 flex-1">
