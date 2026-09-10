@@ -68,6 +68,9 @@ const resumeSecurityFiles = {
   list: "src/app/api/jobs/applications/route.ts",
   download: "src/app/api/jobs/applications/[id]/resume/route.ts",
   manager: "src/components/jobs/jobs-manager.tsx",
+  // El botón de ver el CV se mudó a su propio componente: la ruta protegida vive
+  // ahí, no en la lista del empleador.
+  viewer: "src/components/jobs/visor-cv.tsx",
 };
 
 for (const [label, file] of Object.entries(resumeSecurityFiles)) {
@@ -81,6 +84,7 @@ const resumeUpload = fs.readFileSync(resumeSecurityFiles.upload, "utf8");
 const applicationList = fs.readFileSync(resumeSecurityFiles.list, "utf8");
 const resumeDownload = fs.readFileSync(resumeSecurityFiles.download, "utf8");
 const jobsManager = fs.readFileSync(resumeSecurityFiles.manager, "utf8");
+const resumeViewer = fs.readFileSync(resumeSecurityFiles.viewer, "utf8");
 
 const resumeSecurityRules = [
   {
@@ -99,8 +103,12 @@ const resumeSecurityRules = [
     message: "Resume downloads must authorize applicant/employer ownership and use a short-lived URL.",
   },
   {
+    // Lo que importa es que NADIE enlace el valor guardado y que el CV se pida
+    // siempre por la ruta protegida, la arme la lista o el visor.
     ok: !/href=\{application\.resume_url\}/.test(jobsManager)
-      && /\/api\/jobs\/applications\/\$\{application\.id\}\/resume/.test(jobsManager),
+      && !/href=\{[^}]*resume_url[^}]*\}/.test(resumeViewer)
+      && (/\/api\/jobs\/applications\/\$\{application\.id\}\/resume/.test(jobsManager)
+        || /\/api\/jobs\/applications\/\$\{applicationId\}\/resume/.test(resumeViewer)),
     message: "Employer UI must never link directly to the stored resume value.",
   },
 ];

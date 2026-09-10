@@ -36,6 +36,7 @@ const [
   pushRegisterRoute,
   pushSender,
   navbar,
+  bottomNav,
   directChatLauncher,
   aiConcierge,
   aiAssistantRoute,
@@ -61,6 +62,9 @@ const [
   text("src/app/api/push/register/route.ts"),
   text("src/lib/push/send.ts"),
   text("src/components/landing/landing-navbar.tsx"),
+  // La barra de abajo vive en su propio componente desde que se separó del
+  // navbar; el contrato la seguía buscando en el archivo viejo.
+  text("src/components/mobile/native-bottom-nav.tsx"),
   text("src/components/professionals/direct-chat-launcher.tsx"),
   text("src/components/landing/ai-concierge.tsx"),
   text("src/app/api/ai-assistant/route.ts"),
@@ -115,10 +119,18 @@ requireMatch("iOS APNs upload guard", pushTokenManager, /if \(platform === "ios"
 requireMatch("iOS APNs API rejection", pushRegisterRoute, /platform === "ios" && \/\^\[a-f0-9\]\{64\}\$\/i\.test\(token\)[\s\S]*iOS push no esta configurado/);
 requireMatch("FCM sender transport filter", pushSender, /\.eq\("transport", "fcm"\)/);
 requireMatch("Push text encoding repair", pushSender, /repairVisibleText\(value\)/);
+// El tercer lugar de la barra tiene dueño según quién mira: el profesional en su
+// modo cotiza desde ahí y el Asistente pasa al menú; el cliente conserva el
+// Asistente. El orden de los otros cuatro no cambia.
 requireMatch(
   "Native bottom navigation order",
-  navbar,
-  /href="\/buscar"[\s\S]*href="\/ofertas"[\s\S]*contratacr:open-ai[\s\S]*href="\/empleos"[\s\S]*href=\{nativePanelHref\}/,
+  bottomNav,
+  /href="\/buscar"[\s\S]*href="\/ofertas"[\s\S]*href=\{cotizacionesHref\}[\s\S]*contratacr:open-ai[\s\S]*href="\/empleos"[\s\S]*href=\{nativePanelHref\}/,
+);
+requireMatch(
+  "Native quotes tab is for the professional in offer mode",
+  bottomNav,
+  /const conCotizaciones = isPro && mode === "offer"/,
 );
 requireMatch("Native messages unread badge", navbar, /HeaderMessagesLink unreadCount=\{nativeMessageUnread\}/);
 requireMatch("Native messages badge counter", navbar, /unreadCount > 0[\s\S]*unreadCount > 9 \? "9\+" : unreadCount/);
