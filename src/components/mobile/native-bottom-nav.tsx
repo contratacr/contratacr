@@ -347,16 +347,15 @@ export function NativeBottomNav() {
             {rotulo("Panel")}
           </Link>
         ) : (
-          <button
-            type="button"
+          <Link
+            href="/login"
             aria-label={t("login")}
-            onClick={() => window.dispatchEvent(new Event("ccr:open-access"))}
             className={itemClass("acceso")}
           >
             {marca("acceso")}
             <UserRound className="h-5 w-5" strokeWidth={2} />
             {rotulo(t("login"))}
-          </button>
+          </Link>
         )}
       </div>
     </nav>

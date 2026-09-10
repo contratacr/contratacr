@@ -2539,14 +2539,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                 {!user && (
                   <Link
                     href={loginHref}
-                    onClick={(event) => {
-                      setMobileOpen(false);
-                      // En la app, la pantalla de bienvenida ES la puerta de acceso.
-                      if (nativeApp) {
-                        event.preventDefault();
-                        window.dispatchEvent(new Event("ccr:open-access"));
-                      }
-                    }}
+                    onClick={() => setMobileOpen(false)}
                     className={mobileDrawerItemClass}
                   >
                     <DrawerIcon><UserRound /></DrawerIcon>
