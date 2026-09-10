@@ -508,7 +508,7 @@ export function ProposalsTab({ categoryId }: ProposalsTabProps) {
                         <div className="flex items-center gap-2">
                           {p.status === "accepted" && trabajoVivo && (
                             <div className="min-w-0 flex-1">
-                              <QuoteBlock asButton projectId={p.project_id} role="pro" canCreate defaultTitle={p.projects?.title ?? undefined} />
+                              <QuoteBlock asButton projectId={p.project_id} role="pro" canCreate defaultTitle={p.projects?.title ?? undefined} clientName={p.projects?.profiles?.full_name ?? null} />
                             </div>
                           )}
                           <div className="ml-auto flex shrink-0 items-center">

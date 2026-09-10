@@ -487,7 +487,7 @@ export function BookingRequests() {
                   {/* La cotización cruza la tarjeta de lado a lado: es el documento
                       de esa cita, no un botón más de la fila. Debajo, escribir y
                       el menú, que sí comparten renglón. */}
-                  <QuoteBlock asButton bookingId={booking.id} role="pro" canCreate={isActive || booking.status === "awaiting_confirmation"} defaultTitle={serviceDescription} />
+                  <QuoteBlock asButton bookingId={booking.id} role="pro" canCreate={isActive || booking.status === "awaiting_confirmation"} defaultTitle={serviceDescription} clientName={clientName} />
                   <div className="flex items-start gap-2">
                   <div className="flex min-w-0 flex-1 items-center">
                     {canMessage && (

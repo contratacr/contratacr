@@ -22,8 +22,10 @@ type Row = { id: number; description: string; quantity: string; unit_price: stri
 let seq = 1;
 const nuevaFila = (): Row => ({ id: seq++, description: "", quantity: "1", unit_price: "" });
 
-export function QuoteEditorModal({ open, onClose, bookingId, projectId, defaultTitle, onSent }: {
+export function QuoteEditorModal({ open, onClose, bookingId, projectId, defaultTitle, clientName: clienteConocido, onSent }: {
   open: boolean; onClose: () => void; bookingId?: string | null; projectId?: string | null; defaultTitle?: string;
+  /** Desde una cita o un proyecto el cliente ya se sabe: se muestra, no se pregunta. */
+  clientName?: string | null;
   onSent: (quote: Quote) => void;
 }) {
   const t = useTranslations("quotes");
@@ -94,7 +96,7 @@ export function QuoteEditorModal({ open, onClose, bookingId, projectId, defaultT
   const bloque = "rounded-2xl border border-[#e5eaf0] bg-white p-4";
 
   return (
-    <Modal open={open} onClose={onClose} title={t("editorTitle")} subtitle={suelta ? undefined : t("editorSubtitle")} size="md" mobilePresentation="fullscreen" closeLabel={t("close")}
+    <Modal open={open} onClose={onClose} title={t("editorTitle")} size="md" mobilePresentation="fullscreen" closeLabel={t("close")}
       footerNotice={error ? <p className="text-sm font-semibold text-red-600">{error}</p> : undefined}
       footerClassName="px-4 sm:px-6"
       footer={(
@@ -103,6 +105,14 @@ export function QuoteEditorModal({ open, onClose, bookingId, projectId, defaultT
         </Button>
       )}>
       <div className="flex flex-col gap-4">
+        {/* Misma primera caja en los dos casos. Desde una cita o un proyecto el
+            cliente ya se sabe, así que ahí se muestra en vez de preguntarse. */}
+        {!suelta && clienteConocido && (
+          <section className={bloque}>
+            <span className={rotulo}>{t("forWhomLabel")}</span>
+            <p className="text-[15px] font-bold text-[#162543]">{clienteConocido}</p>
+          </section>
+        )}
         {suelta && (
           <section className={bloque}>
             <span className={rotulo}>{t("forWhomLabel")}</span>

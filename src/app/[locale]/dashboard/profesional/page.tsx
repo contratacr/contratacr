@@ -158,7 +158,7 @@ function agruparPestanas(tabs: Tab[]): Tab[][] {
 const PANEL_TAB_LABELS: Partial<Record<Tab, { es: string; en: string }>> = {
   bookings: { es: "Citas", en: "Appointments" },
   proposals: { es: "Proyectos", en: "Projects" },
-  quotes: { es: "Cotizaciones", en: "Quotes" },
+  quotes: { es: "Cotizar", en: "Quotes" },
   sent_bookings: { es: "Mis citas", en: "My appointments" },
   sent_projects: { es: "Mis proyectos", en: "My projects" },
   applications: { es: "Mis postulaciones", en: "My applications" },
@@ -2015,7 +2015,7 @@ export default function DashboardPage() {
           {/* Header card - identity and status grouped in one surface on desktop. */}
           <div className={cn("mx-auto mb-6 w-full max-w-[79.5rem]", mobileSectionOpen ? "hidden lg:block" : "block")}>
             <div className="rounded-2xl border border-[#dfe8f0] bg-white px-5 py-5 shadow-sm sm:px-6 sm:py-5">
-            <div className="flex min-w-0 flex-row flex-wrap items-center gap-x-4 gap-y-3 text-left sm:grid sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:items-center sm:gap-5">
+            <div className="flex min-w-0 flex-col items-center gap-y-3 text-center sm:grid sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:items-center sm:gap-5 sm:text-left">
               <div ref={headerPhotoMenuRef} className="relative h-[84px] w-[84px] shrink-0 sm:h-20 sm:w-20 sm:self-center">
                 <button
                   type="button"
@@ -2037,7 +2037,7 @@ export default function DashboardPage() {
                   )}
                 </button>
                 {headerPhotoMenuOpen && (
-                  <div className="absolute left-0 top-[calc(100%+0.5rem)] z-40 w-56 overflow-hidden rounded-xl border border-[#dbe7ef] bg-white py-1 shadow-xl">
+                  <div className="absolute left-1/2 top-[calc(100%+0.5rem)] z-40 w-56 -translate-x-1/2 overflow-hidden rounded-xl border border-[#dbe7ef] bg-white py-1 shadow-xl sm:left-0 sm:translate-x-0">
                     {headerAvatar && (
                       <button type="button" onClick={() => { setHeaderPhotoMenuOpen(false); setHeaderPhotoPreviewOpen(true); }} className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm font-semibold text-[#162543] transition-colors hover:bg-[#f8fafc]">
                         <Eye className="h-4 w-4 text-[#009FD9]" />
@@ -2096,8 +2096,8 @@ export default function DashboardPage() {
                   onOpenChange={setHeaderPhotoPreviewOpen}
                 />
               </div>
-              <div className="flex min-w-0 flex-1 flex-col items-start gap-1.5 text-left sm:block sm:w-auto sm:flex-none sm:self-center sm:py-0">
-                <div className="flex min-w-0 max-w-full items-center gap-1.5 sm:hidden">
+              <div className="flex w-full min-w-0 flex-1 flex-col items-center gap-1.5 text-center sm:block sm:w-auto sm:flex-none sm:self-center sm:py-0 sm:text-left">
+                <div className="flex min-w-0 items-center justify-center gap-1.5 sm:hidden">
                   <h1 data-testid="dashboard-identity-name" className="min-w-0 truncate text-[18px] font-bold leading-[1.15] text-[#162543]" title={displayName}>
                     {mobileHeaderName || displayName}
                   </h1>

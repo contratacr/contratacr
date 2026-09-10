@@ -15,10 +15,12 @@ import { QuoteDetailModal } from "@/components/quotes/quote-detail-modal";
  */
 const DATE_LOCALE: Record<string, string> = { es: "es-CR", en: "en-US" };
 
-export function QuoteBlock({ bookingId, projectId, role, canCreate = false, defaultTitle, professionalName, asButton = false }: {
+export function QuoteBlock({ bookingId, projectId, role, canCreate = false, defaultTitle, professionalName, asButton = false, clientName}: {
   bookingId?: string | null; projectId?: string | null; role: "client" | "pro"; canCreate?: boolean; defaultTitle?: string; professionalName?: string | null;
   /** Solo el botón, con la forma de los demás botones de la tarjeta: va en la fila de acciones. */
   asButton?: boolean;
+  /** Nombre del cliente de la cita o del proyecto, para mostrarlo en el editor. */
+  clientName?: string | null;
 }) {
   const t = useTranslations("quotes");
   const locale = useLocale();
@@ -66,7 +68,7 @@ export function QuoteBlock({ bookingId, projectId, role, canCreate = false, defa
   const modales = (
     <>
       {editor && (
-        <QuoteEditorModal open onClose={() => setEditor(false)} bookingId={bookingId} projectId={projectId} defaultTitle={defaultTitle}
+        <QuoteEditorModal open onClose={() => setEditor(false)} bookingId={bookingId} projectId={projectId} defaultTitle={defaultTitle} clientName={clientName}
           onSent={(q) => { agregarCotizacion(q); setEditor(false); }} />
       )}
       {detail && (
