@@ -1063,6 +1063,8 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   // bug). Meaningful deep-links (support tickets, gated pages) carry their OWN
   // ?redirect= via the proxy and are still honored by /login.
   const loginHref = "/login";
+  // ¿Estamos en una pantalla de acceso? Ahí el enlace "Ingresar" sobra.
+  const enAcceso = /^\/(?:es|en)?\/?(?:login|registro)(?:\/|$)/.test(pathname ?? "");
 
   // `isPro` = the account can OFFER services (Airbnb "host" capability). Auth
   // metadata is the fast path; the canonical professional row repairs stale
@@ -2149,6 +2151,9 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                       />
                     </div>
                   ) : (
+                    // Estando en la propia pantalla de acceso, "Ingresar" llevaría
+                    // a donde ya se está.
+                    !enAcceso && (
                     <div className="flex w-auto items-center justify-end gap-1">
                       <Link
                         href={loginHref}
@@ -2157,6 +2162,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                         {t("login")}
                       </Link>
                     </div>
+                    )
                   )}
                   {/* Discreet, quiet globe + code dropdown - visually subordinate to the
                       prominent MODE segmented control (never a competing toggle). */}

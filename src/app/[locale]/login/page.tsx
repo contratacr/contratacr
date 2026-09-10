@@ -449,7 +449,7 @@ export default function LoginPage() {
         <Navbar mobileSearch={false} />
         <main className="flex-1 flex items-center justify-center py-12 px-4">
           <div className="w-full max-w-sm">
-            <div className="bg-white rounded-3xl shadow-sm border border-[#e5e7eb] p-8">
+            <div className="rounded-3xl border border-[#e5e7eb] bg-white p-8 shadow-[0_18px_44px_-28px_rgba(15,23,42,0.45)]">
               <OtpVerification
                 email={otpEmail}
                 autoResendOnMount
@@ -521,9 +521,10 @@ export default function LoginPage() {
             <ArrowLeft className="h-5 w-5" />
           </button>
           <div className="bg-white rounded-3xl shadow-sm border border-[#e5e7eb] p-8">
+          {/* Un solo encabezado: "Ingresa a tu cuenta" decía lo mismo que
+              "Bienvenido de vuelta" justo debajo. */}
           <div className="text-center mb-8">
             <h1 className="text-2xl font-bold text-[#162543]">{t("title")}</h1>
-            <p className="text-[#6b7280] text-sm mt-1">{t("subtitle")}</p>
           </div>
 
           {error && (
