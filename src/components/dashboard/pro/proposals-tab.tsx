@@ -474,17 +474,20 @@ export function ProposalsTab({ categoryId }: ProposalsTabProps) {
                       {p.status === "accepted" && trabajoVivo && (
                         <p className="rounded-xl bg-[#f0fdf4] px-3.5 py-2.5 text-[13px] leading-relaxed text-[#166534]">{t("chosenNote")}</p>
                       )}
+                      {/* Con dos cosas, van a la par: la cotización ocupa lo que sobra
+                          y el menú se queda a su lado. La cotización solo aparece
+                          cuando el cliente ya eligió, no mientras compara: es un
+                          documento con número consecutivo, y emitirlo en cada
+                          propuesta quema números en trabajos que nunca fueron (el
+                          precio ya va en el mensaje). */}
                       {(p.status === "pending" || (p.status === "accepted" && trabajoVivo)) && (
-                        <div className="flex flex-col gap-2">
-                          {/* La cotización aparece cuando el cliente ya eligió, no
-                              mientras compara. Es un documento con número
-                              consecutivo: emitirlo en cada propuesta quema números
-                              en trabajos que nunca fueron, y el precio de la
-                              propuesta ya está en el mensaje. */}
+                        <div className="flex items-center gap-2">
                           {p.status === "accepted" && trabajoVivo && (
-                            <QuoteBlock asButton projectId={p.project_id} role="pro" canCreate defaultTitle={p.projects?.title ?? undefined} />
+                            <div className="min-w-0 flex-1">
+                              <QuoteBlock asButton projectId={p.project_id} role="pro" canCreate defaultTitle={p.projects?.title ?? undefined} />
+                            </div>
                           )}
-                          <div className="flex items-center justify-end">
+                          <div className="ml-auto flex shrink-0 items-center">
                           <CardActionsMenu
                             label={t("moreActions")}
                             actions={[p.status === "pending" ? {

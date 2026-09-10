@@ -4199,7 +4199,7 @@
     "taxIncludedShort": "IVA incluido",
     "taxAddShort": "Sumar 13%",
     "taxExemptShort": "Sin IVA",
-    "downloadPdf": "Descargar PDF",
+    "downloadPdf": "Descargar",
     "sharePdf": "Compartir PDF",
     "preparingPdf": "Armando el PDF…",
     "writeClient": "Escribirle por WhatsApp",
@@ -4245,7 +4245,8 @@
     "deleteConfirm": "Sí, eliminar",
     "sentOn": "Enviada el {date}",
     "rowSentTitle": "Cotización enviada",
-    "rowReceivedTitle": "Cotización recibida"
+    "rowReceivedTitle": "Cotización recibida",
+    "moreOptions": "Más opciones"
   },
   "menuFicha": {
     "more": "Más opciones",
