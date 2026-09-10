@@ -754,11 +754,13 @@ export default function ProfilePage() {
                     la mitad —arriba a la derecha rompían el centrado de la foto
                     y el nombre—; en computadora, donde sobra ancho, van en la
                     misma línea del nombre. */}
-                <div className="mt-3 flex items-center gap-1 border-t border-[#eef2f6] pt-2 sm:absolute sm:right-3 sm:top-3 sm:mt-0 sm:border-0 sm:pt-0">
+                <div className="mt-3 flex flex-wrap items-center gap-x-1 gap-y-2 border-t border-[#eef2f6] pt-2 sm:absolute sm:right-3 sm:top-3 sm:mt-0 sm:flex-nowrap sm:border-0 sm:pt-0">
                   <SaveButton pro={savedPro} isOwn={isOwn} sutil className="justify-center" />
                   <BotonCompartir onPress={shareProfile} sutil className="justify-center" />
-                  {/* Las redes cierran la fila: al ir aquí no cuestan alto propio y
-                      quedan a la vista sin desplazar. */}
+                  {/* Las redes cierran la fila: al ir aquí no cuestan alto propio
+                      y quedan a la vista sin desplazar. Con muchas, el grupo baja
+                      solo a su propia línea; antes se salía de la tarjeta y el
+                      último icono quedaba cortado. */}
                   {redesDelProfesional.length > 0 && (
                     <div className="ml-auto flex items-center gap-1.5 sm:hidden">
                       {redesDelProfesional.map(({ k, href, Icon }) => (

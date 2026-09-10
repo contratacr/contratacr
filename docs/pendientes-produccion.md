@@ -17,6 +17,7 @@ cotizaciones y precios). Cada punto dice qué falta y quién lo hace.
 | 196 · errores del cliente | tabla `client_errors` (diagnóstico de "Algo salió mal") | **aplicada 9-sep** | pendiente |
 | 197 · cotización eliminada | `quotes.deleted_at` (borrado suave; el número no se reusa) | **aplicada 9-sep** | pendiente |
 | 198 · oportunidades descartadas | tabla `dismissed_opportunities` ("No me interesa" por cuenta, no por teléfono) | **aplicada 10-sep** | pendiente |
+| 199 · columnas públicas del profesional | permiso de lectura sobre `social_links` (y `contact_email` para quien tiene sesión): sin esto NINGUNA ficha mostraba las redes | **aplicada 10-sep** | pendiente |
 
 Se aplican **solo** con el workflow `Supabase migrations` (dispatch), nunca en local:
 `test` desde la rama `test`, `production` desde `main`; siempre en seco primero.
