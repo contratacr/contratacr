@@ -1662,9 +1662,11 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
               // una sola mancha blanca.
               ? (nativeHeaderShell ? "border-transparent shadow-none" : "border-[#e3ebf2] shadow-none")
               : nativeHeaderShell
-                ? cn("transition-[border-color,box-shadow] duration-200", contenidoDebajo || lienzoBlanco
-                    ? "border-gray-100/80 shadow-[0_10px_34px_-24px_rgba(15,23,42,0.55)]"
-                    : "border-transparent shadow-none")
+                // En la app también manda la línea: la sombra proyectada bajo el
+                // encabezado se veía como una mancha gris sobre el contenido.
+                ? cn("transition-[border-color] duration-200 shadow-none", contenidoDebajo || lienzoBlanco
+                    ? "border-gray-100/80"
+                    : "border-transparent")
                 : "border-[#e3ebf2] shadow-none",
             drawerOnly && "hidden",
           )}

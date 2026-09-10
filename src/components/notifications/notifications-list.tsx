@@ -484,6 +484,7 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
           />
         ) : visible.length === 0 ? (
           <PanelEmptyState
+            plano
             icon={Bell}
             title={t("noneList")}
             description={t("emptySub")}

@@ -1079,6 +1079,7 @@ export function DirectChatInbox() {
 
   if (sesionSinConfirmar && !user) return (
     <PanelEmptyState
+      plano
       icon={MessageSquareMore}
       title={isEn ? "We could not load your messages" : "No pudimos cargar tus mensajes"}
       description={isEn
@@ -1113,6 +1114,7 @@ export function DirectChatInbox() {
 
   if (!displayedConversations.length) return (
     <PanelEmptyState
+      plano
       icon={MessageSquareMore}
       title={showArchived ? (isEn ? "No archived conversations" : "No hay conversaciones archivadas") : (isEn ? "No conversations yet" : "No hay conversaciones todavía")}
       description={isEn ? "Messages related to profiles, appointments and projects will be organized here." : "Aquí se organizarán los mensajes relacionados con perfiles, citas y proyectos."}

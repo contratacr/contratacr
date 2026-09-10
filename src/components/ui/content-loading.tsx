@@ -106,15 +106,24 @@ export function PanelFilterEmpty({
   description,
   action,
   className,
+  plano = false,
 }: {
   icon: ElementType;
   title: ReactNode;
   description?: ReactNode;
   action?: ReactNode;
   className?: string;
+  /** La pantalla que lo contiene ya es blanca: sin tarjeta, para no anidar dos. */
+  plano?: boolean;
 }) {
   return (
-    <div className={cn("ccr-empty-state flex flex-col items-center justify-center px-5 py-10 text-center", className)}>
+    <div className={cn(
+      "ccr-empty-state flex flex-col items-center justify-center px-5 py-10 text-center",
+      // Vacío con la misma superficie que la lista llena: sobre el gris del
+      // panel, el texto suelto se leía como "esto no cargó".
+      !plano && "rounded-2xl border border-[#e5eaf0] bg-white shadow-sm",
+      className,
+    )}>
       {/* Versión compacta del mismo vacío: mismo mosaico, misma tipografía. La
           caja punteada sobraba —el vacío ya se entiende— y hacía que esta
           pantalla no se pareciera a las demás. */}
@@ -138,15 +147,22 @@ export function PanelEmptyState({
   description,
   action,
   className,
+  plano = false,
 }: {
   icon: ElementType;
   title: ReactNode;
   description?: ReactNode;
   action?: ReactNode;
   className?: string;
+  /** La pantalla que lo contiene ya es blanca: sin tarjeta, para no anidar dos. */
+  plano?: boolean;
 }) {
   return (
-    <div className={cn("ccr-empty-state flex min-h-[20rem] flex-col items-center justify-center px-7 py-12 text-center sm:min-h-[22rem]", className)}>
+    <div className={cn(
+      "ccr-empty-state flex min-h-[20rem] flex-col items-center justify-center px-7 py-12 text-center sm:min-h-[22rem]",
+      !plano && "rounded-2xl border border-[#e5eaf0] bg-white shadow-sm",
+      className,
+    )}>
       {/* El mismo lenguaje que las tarjetas de crear cuenta: el icono a línea
           dentro de un mosaico azul, título marino y una línea de apoyo. */}
       <span className="ccr-icono-mosaico h-16 w-16">
