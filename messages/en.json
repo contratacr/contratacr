@@ -140,7 +140,8 @@
     "recent": "Recent",
     "recentClear": "Clear searches",
     "recentlyViewed": "Recently viewed",
-    "publishRequest": "Post what I need"
+    "publishRequest": "Post what I need",
+    "register": "Sign up"
   },
   "home": {
     "accountDeletion": {
@@ -2990,18 +2991,15 @@
     "noResultsSub": "No professionals match that name or service."
   },
   "registerChoice": {
-    "title": "Create your account",
-    "subtitle": "Where do you want to start?",
+    "title": "Welcome to ContrataCR",
+    "subtitle": "Which describes you best?",
     "clientTitle": "Looking for services",
-    "continue": "Continue",
     "proTitle": "Offering services",
     "haveAccount": "Already have an account?",
     "signIn": "Sign in",
     "clientRole": "Client",
     "proRole": "Professional",
-    "backHome": "Back to home",
-    "proHint": "Publish your profile and get clients near you.",
-    "clientHint": "Find verified professionals and contact them directly."
+    "continue": "Continue"
   },
   "onboarding": {
     "greeting": "Hi, {name}",

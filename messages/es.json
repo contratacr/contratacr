@@ -140,7 +140,8 @@
     "recent": "Recientes",
     "recentClear": "Borrar búsquedas",
     "recentlyViewed": "Vistos recientemente",
-    "publishRequest": "Publicar lo que necesito"
+    "publishRequest": "Publicar lo que necesito",
+    "register": "Registrarse"
   },
   "home": {
     "accountDeletion": {
@@ -2990,18 +2991,15 @@
     "noResultsSub": "No encontramos profesionales con ese nombre o servicio."
   },
   "registerChoice": {
-    "title": "Crear cuenta",
-    "subtitle": "¿Por dónde quieres empezar?",
+    "title": "Te damos la bienvenida a ContrataCR",
+    "subtitle": "¿Qué te describe mejor?",
     "clientTitle": "Busco servicios",
-    "continue": "Continuar",
     "proTitle": "Ofrezco servicios",
     "haveAccount": "¿Ya tienes cuenta?",
     "signIn": "Inicia sesión",
     "clientRole": "Cliente",
     "proRole": "Profesional",
-    "backHome": "Volver al inicio",
-    "proHint": "Publica tu perfil y recibe clientes de tu zona.",
-    "clientHint": "Encuentra profesionales verificados y contáctalos directo."
+    "continue": "Continuar"
   },
   "onboarding": {
     "greeting": "Hola, {name}",

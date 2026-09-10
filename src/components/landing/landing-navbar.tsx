@@ -1062,9 +1062,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   // would OVERRIDE the role-based panel redirect (the "login lands on the main page"
   // bug). Meaningful deep-links (support tickets, gated pages) carry their OWN
   // ?redirect= via the proxy and are still honored by /login.
-  const loginHref = "/login?entrar=1";
-  // ¿Estamos en una pantalla de acceso? Ahí el enlace "Ingresar" sobra.
-  const enAcceso = /^\/(?:es|en)?\/?(?:login|registro)(?:\/|$)/.test(pathname ?? "");
+  const loginHref = "/login";
 
   // `isPro` = the account can OFFER services (Airbnb "host" capability). Auth
   // metadata is the fast path; the canonical professional row repairs stale
@@ -2151,9 +2149,8 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                       />
                     </div>
                   ) : (
-                    // Estando en la propia pantalla de acceso, "Ingresar" llevaría
-                    // a donde ya se está.
-                    !enAcceso && (
+                    // Como Upwork o Airbnb: entrar y crear cuenta siempre a la vista,
+                    // también en las propias pantallas de acceso.
                     <div className="flex w-auto items-center justify-end gap-1">
                       <Link
                         href={loginHref}
@@ -2161,8 +2158,13 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                       >
                         {t("login")}
                       </Link>
+                      <Link
+                        href="/registro"
+                        className="rounded-xl bg-[#009FD9] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#0088bb]"
+                      >
+                        {t("register")}
+                      </Link>
                     </div>
-                    )
                   )}
                   {/* Discreet, quiet globe + code dropdown - visually subordinate to the
                       prominent MODE segmented control (never a competing toggle). */}

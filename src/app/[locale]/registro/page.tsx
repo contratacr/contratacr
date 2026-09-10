@@ -5,8 +5,6 @@ import { useSearchParams } from "next/navigation";
 import { UserRoundSearch, BriefcaseBusiness, ArrowRight } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { Navbar } from "@/components/layout/navbar";
-import { FocusedHeader } from "@/components/layout/focused-header";
-import { ArrowLeft } from "lucide-react";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { useRedirectIfRegistered } from "@/hooks/use-redirect-if-registered";
 
@@ -28,75 +26,52 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="ccr-acceso-fondo relative min-h-screen flex flex-col bg-[#f4f7fa]">
-      {/* Aurora de marca detrás de todo: tres manchas difusas que se mueven muy
-          despacio. Es decoración, no contenido: aria-hidden y quieta si la persona
-          pidió menos movimiento. */}
-      <div aria-hidden className="ccr-aurora pointer-events-none absolute inset-0 overflow-hidden">
-        <span className="ccr-aurora-mancha ccr-aurora-a" />
-        <span className="ccr-aurora-mancha ccr-aurora-b" />
-        <span className="ccr-aurora-mancha ccr-aurora-c" />
-      </div>
-      {/* Igual que ingresar: en el teléfono esta pantalla tiene una sola tarea,
-          así que va sin menú ni pie, con la marca arriba y una salida clara. */}
-      <div className="relative hidden lg:block"><Navbar mobileSearch={false} /></div>
-      <div className="relative lg:hidden"><FocusedHeader /></div>
-      <main className="relative flex-1 flex flex-col items-center justify-start px-4 pb-10 pt-5 lg:justify-center lg:py-16">
-        <div className="w-full max-w-xl">
-          <Link
-            href="/"
-            className="ccr-entrada mb-6 inline-flex h-10 items-center gap-1.5 rounded-full pr-3 text-[13px] font-bold text-[#162543] transition-colors hover:bg-[#eef3f8] lg:hidden"
-          >
-            <ArrowLeft className="h-5 w-5" />
-            {t("backHome")}
-          </Link>
-          <div className="ccr-entrada text-center mb-8">
-            <h1 className="text-[2rem] font-extrabold tracking-tight text-[#162543] mb-2 lg:text-4xl">{t("title")}</h1>
-            <p className="text-[#6b7280] text-base">{t("subtitle")}</p>
+    <div className="min-h-screen flex flex-col bg-[#fafafa]">
+      {/* Misma envoltura que ingresar: navbar y pie en todo tamaño. La salida
+          es el propio menú, no un botón de volver. */}
+      <Navbar mobileSearch={false} />
+      <main className="flex-1 flex flex-col items-center justify-center px-4 py-12 lg:py-20">
+        <div className="w-full max-w-2xl">
+          <div className="ccr-entrada text-center mb-8 lg:mb-12">
+            <h1 className="text-[1.9rem] font-extrabold tracking-tight text-[#162543] mb-3 lg:text-5xl">{t("title")}</h1>
+            <p className="text-base font-medium text-[#6b7280] lg:text-lg">{t("subtitle")}</p>
           </div>
 
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            {/* Profesional → ofrezco servicios. Va primero: es quien más se registra. */}
+          {/* Como eligen rol Upwork o Airbnb: dos tarjetas iguales, cada una con
+              un mosaico de color y el icono dibujado a línea; abajo el rol con
+              la flecha y una frase de qué hace. Profesional primero: es quien
+              más se registra. */}
+          <div className="grid grid-cols-2 gap-3 sm:gap-6">
             <Link
               href={`/registro/profesional${redirectSuffix}`}
-              className="ccr-entrada ccr-tarjeta-rol group [animation-delay:90ms]"
+              className="ccr-entrada ccr-tarjeta-rol group [animation-delay:80ms]"
             >
-              <span aria-hidden className="ccr-tarjeta-rol-halo bg-[#009FD9]" />
-              <span className="ccr-tarjeta-rol-icono bg-gradient-to-br from-[#2fb9ea] to-[#0077b6] shadow-[0_14px_30px_-12px_rgba(0,159,217,0.75)]">
-                <BriefcaseBusiness className="h-7 w-7 text-white" strokeWidth={2.2} />
+              <span className="ccr-tarjeta-rol-mosaico ccr-mosaico-pro" aria-hidden>
+                <BriefcaseBusiness className="h-16 w-16 text-[#162543] sm:h-24 sm:w-24" strokeWidth={1.4} />
               </span>
-              <span className="min-w-0 flex-1">
-                <span className="block text-[22px] font-extrabold leading-tight text-[#162543]">{t("proRole")}</span>
-                <span className="mt-0.5 block text-sm font-semibold text-[#009FD9]">{t("proTitle")}</span>
-                <span className="mt-2 block text-[13px] leading-snug text-[#6b7280]">{t("proHint")}</span>
+              <span className="mt-4 flex items-center justify-center gap-1.5 text-[19px] font-bold text-[#162543] sm:text-2xl">
+                {t("proRole")}
+                <ArrowRight className="ccr-tarjeta-rol-flecha h-5 w-5 sm:h-6 sm:w-6" strokeWidth={2.4} />
               </span>
-              <span className="ccr-tarjeta-rol-flecha bg-[#EBF5FB] text-[#009FD9] group-hover:bg-[#009FD9] group-hover:text-white">
-                <ArrowRight className="h-4 w-4" />
-              </span>
+              <span className="mt-1 block text-center text-[13px] text-[#6b7280] sm:text-base">{t("proTitle")}</span>
             </Link>
 
-            {/* Cliente → busco servicios. Lleva el azul marino de la marca para que
-                las dos opciones se distingan de un vistazo. */}
             <Link
               href={`/registro/cliente${redirectSuffix}`}
-              className="ccr-entrada ccr-tarjeta-rol group [animation-delay:180ms]"
+              className="ccr-entrada ccr-tarjeta-rol group [animation-delay:160ms]"
             >
-              <span aria-hidden className="ccr-tarjeta-rol-halo bg-[#162543]" />
-              <span className="ccr-tarjeta-rol-icono bg-gradient-to-br from-[#33507f] to-[#162543] shadow-[0_14px_30px_-12px_rgba(22,37,67,0.7)]">
-                <UserRoundSearch className="h-7 w-7 text-white" strokeWidth={2.2} />
+              <span className="ccr-tarjeta-rol-mosaico ccr-mosaico-cliente" aria-hidden>
+                <UserRoundSearch className="h-16 w-16 text-[#162543] sm:h-24 sm:w-24" strokeWidth={1.4} />
               </span>
-              <span className="min-w-0 flex-1">
-                <span className="block text-[22px] font-extrabold leading-tight text-[#162543]">{t("clientRole")}</span>
-                <span className="mt-0.5 block text-sm font-semibold text-[#009FD9]">{t("clientTitle")}</span>
-                <span className="mt-2 block text-[13px] leading-snug text-[#6b7280]">{t("clientHint")}</span>
+              <span className="mt-4 flex items-center justify-center gap-1.5 text-[19px] font-bold text-[#162543] sm:text-2xl">
+                {t("clientRole")}
+                <ArrowRight className="ccr-tarjeta-rol-flecha h-5 w-5 sm:h-6 sm:w-6" strokeWidth={2.4} />
               </span>
-              <span className="ccr-tarjeta-rol-flecha bg-[#EBF5FB] text-[#009FD9] group-hover:bg-[#162543] group-hover:text-white">
-                <ArrowRight className="h-4 w-4" />
-              </span>
+              <span className="mt-1 block text-center text-[13px] text-[#6b7280] sm:text-base">{t("clientTitle")}</span>
             </Link>
           </div>
 
-          <p className="ccr-entrada [animation-delay:260ms] text-center text-sm text-[#6b7280] mt-8">
+          <p className="ccr-entrada [animation-delay:240ms] text-center text-sm text-[#6b7280] mt-8 lg:mt-10">
             {t("haveAccount")}{" "}
             <Link href="/login" className="text-[#009FD9] font-semibold hover:underline">
               {t("signIn")}
@@ -104,7 +79,7 @@ export default function RegisterPage() {
           </p>
         </div>
       </main>
-      <div className="relative hidden lg:block"><LandingFooter /></div>
+      <LandingFooter />
     </div>
   );
 }

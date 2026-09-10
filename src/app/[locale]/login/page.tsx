@@ -1,17 +1,14 @@
 "use client";
 
 import { useTranslations, useLocale } from "next-intl";
-import { useNativeApp } from "@/hooks/use-native-app";
 import { Link } from "@/i18n/navigation";
 import { useSearchParams } from "next/navigation";
-import { useRouter } from "@/i18n/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowRight, ArrowLeft, AlertCircle, CheckCircle2 } from "lucide-react";
+import { ArrowRight, AlertCircle, CheckCircle2 } from "lucide-react";
 import { Navbar } from "@/components/layout/navbar";
-import { ContrataCRLogo } from "@/components/landing/landing-navbar";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { createClient, hasSupabaseBrowserConfig } from "@/lib/supabase/client";
@@ -22,8 +19,6 @@ import { nativeSocialSignIn } from "@/lib/auth/native-social-login";
 import { GoogleSignInButton } from "@/components/auth/google-sign-in-button";
 import { OtpVerification } from "@/components/auth/otp-verification";
 import { PageRouteLoading } from "@/components/ui/route-loading";
-import { cn } from "@/lib/utils";
-import { WelcomeAccessScreen, type WelcomeRole } from "@/components/mobile/welcome-access-screen";
 import type { User } from "@supabase/supabase-js";
 import { withPromiseTimeout } from "@/lib/promise-timeout";
 
@@ -140,25 +135,6 @@ export default function LoginPage() {
   // When a manual login fails because the email is a Google-only account, highlight
   // the provider button and show a specific message.
   const [socialHint, setSocialHint] = useState<"google" | "apple" | null>(null);
-  const router = useRouter();
-  // La portada siempre abre en "Buscar servicios": es lo que hace la mayoría, y
-  // volver de "Ofrecer" no debe dejar marcado lo de la vez pasada.
-  const [rolPortada, setRolPortada] = useState<WelcomeRole>("client");
-  // La portada es para quien llega "en frío": la primera vez, sin saber si viene
-  // a buscar o a ofrecer. Quien cae aquí desde una pantalla que pide sesión
-  // (?redirect=) o desde un enlace directo (?entrar=1) ya sabe a qué viene, y
-  // ponerle una bienvenida delante es un toque de más.
-  const vieneDeUnaPantallaCerrada = Boolean(searchParams.get("redirect")) || searchParams.get("entrar") === "1";
-  const [formularioAbierto, setFormularioAbierto] = useState(vieneDeUnaPantallaCerrada);
-  // En la app, la pantalla de bienvenida la pone el armazón nativo: si esta
-  // página pintara además la suya, al tocar "Inicia sesión" aparecía otra
-  // portada igual y parecía que no había pasado nada. El CSS que la escondía
-  // dependía de una clase del body que a veces llegaba tarde.
-  const enLaApp = useNativeApp();
-  const [hidratado, setHidratado] = useState(false);
-  useEffect(() => {
-    setHidratado(true);
-  }, []);
   const registerRedirect = searchParams.get("redirect");
   const registerHref = registerRedirect ? `/registro?redirect=${encodeURIComponent(registerRedirect)}` : "/registro";
 
@@ -456,10 +432,7 @@ export default function LoginPage() {
         <main className="flex-1 flex items-center justify-center py-12 px-4">
           <div className="w-full max-w-sm">
             <div className="rounded-3xl border border-[#e5e7eb] bg-white p-8 shadow-[0_18px_44px_-28px_rgba(15,23,42,0.45)]">
-              <div className="mb-5 flex justify-center lg:hidden">
-                <ContrataCRLogo />
-              </div>
-              <OtpVerification
+                            <OtpVerification
                 email={otpEmail}
                 autoResendOnMount
                 onVerified={async () => {
@@ -484,73 +457,15 @@ export default function LoginPage() {
           iframe underneath, so the cover never intercepts pointer events. */}
       {leaving && <div className="contents pointer-events-none"><PageRouteLoading /></div>}
 
-      {/* Portada de acceso: la misma pantalla que recibe en la app. Solo en la
-          web móvil — en la app la muestra el propio armazón, y en escritorio
-          manda la tarjeta. Se oculta al abrir el formulario. */}
-      {hidratado && !enLaApp && !formularioAbierto && (
-        <div className="ccr-login-portada relative min-h-[100svh] w-full lg:hidden">
-          <WelcomeAccessScreen
-            className="absolute inset-0"
-            titleId="login-portada-title"
-            english={locale === "en"}
-            selectedRole={rolPortada}
-            onSelectRole={setRolPortada}
-            onCreateAccount={() =>
-              router.push(rolPortada === "client" ? "/registro/cliente" : "/registro/profesional")
-            }
-            onLogin={() => setFormularioAbierto(true)}
-            onClose={() => {
-              // Misma regla que en la app: volver a lo anterior, o al inicio si
-              // se entró directo a /login.
-              if (window.history.length > 1) router.back();
-              else router.push("/");
-            }}
-          />
-        </div>
-      )}
-
-      <div className={cn("flex flex-1 flex-col", !formularioAbierto && !enLaApp && "ccr-login-formulario-oculto")}>
-      {/* Navbar y pie solo en computadora: en el teléfono esta pantalla tiene
-          una sola tarea, y el menú y el pie solo invitan a irse de ella. */}
-      <div className="hidden lg:block"><Navbar mobileSearch={false} /></div>
+      <Navbar mobileSearch={false} />
       <main className="flex-1 flex items-center justify-center py-12 px-4">
         <div className="w-full max-w-md">
           {/* Same card container as the client ("Crear cuenta de cliente") and
               professional registrations — clean white card, hairline border, soft
               shadow, p-8 — so the whole auth flow (login + both signups) is consistent. */}
-          {/* Volver a la portada: una flecha en la esquina, como en las demás
-              pantallas de la app. Como botón con texto encima de la tarjeta
-              empujaba el encabezado y parecía parte del formulario. */}
-          <button
-            type="button"
-            onClick={() => {
-              // Solo se vuelve a la portada si de ahí se venía. Entrando directo
-              // al formulario (?entrar=1, ?redirect= o en computadora) la flecha
-              // debe hacer lo que dice: volver a la pantalla anterior.
-              const hayPortadaDetras = !vieneDeUnaPantallaCerrada
-                && typeof window !== "undefined"
-                && window.matchMedia("(pointer: coarse)").matches;
-              if (hayPortadaDetras) { setFormularioAbierto(false); setRolPortada("client"); return; }
-              if (typeof window !== "undefined" && window.history.length > 1) router.back();
-              else router.push("/");
-            }}
-            aria-label={t("back")}
-            className="mb-6 inline-flex h-10 items-center gap-1.5 rounded-full pr-3 text-[13px] font-bold text-[#162543] transition-colors hover:bg-[#eef3f8] lg:hidden"
-          >
-            {/* Con rótulo: una flecha sola no dice a dónde lleva. */}
-            <ArrowLeft className="h-5 w-5" />
-            {t("back")}
-          </button>
-          {/* Sin navbar (teléfono y ventana angosta) la pantalla no decía de
-              quién es: la marca va arriba de la tarjeta. En computadora ancha ya
-              la lleva el navbar. */}
           <div className="rounded-3xl border border-[#e5e7eb] bg-white p-8 shadow-[0_18px_44px_-28px_rgba(15,23,42,0.45)]">
-          {/* La marca encabeza la tarjeta donde no hay navbar; en computadora
-              ancha ya la lleva el navbar. Un solo encabezado: "Ingresa a tu
-              cuenta" decía lo mismo que "Bienvenido de vuelta" justo debajo. */}
-          <div className="mb-5 flex justify-center lg:hidden">
-            <ContrataCRLogo />
-          </div>
+          {/* Un solo encabezado: "Ingresa a tu cuenta" decía lo mismo que
+              "Bienvenido de vuelta" justo debajo. */}
           <div className="text-center mb-8">
             <h1 className="text-2xl font-bold text-[#162543]">{t("title")}</h1>
           </div>
@@ -688,8 +603,7 @@ export default function LoginPage() {
           </div>
         </div>
       </main>
-      <div className="hidden lg:block"><LandingFooter /></div>
-      </div>
+      <LandingFooter />
     </div>
   );
 }
