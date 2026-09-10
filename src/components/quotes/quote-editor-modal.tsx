@@ -195,9 +195,7 @@ export function QuoteEditorModal({ open, onClose, bookingId, projectId, defaultT
           </div>
         </section>
 
-        {/* 3 · Condiciones: impuesto, vigencia y la nota. Los atajos escriben en
-            la nota lo que toda cotización formal lleva —anticipo y plazo— sin
-            obligar a nadie a redactarlo. */}
+        {/* 3 · Condiciones: impuesto, vigencia y la nota. */}
         <section className={bloque}>
           <p className={tituloBloque}><FileText className="h-3.5 w-3.5" />{t("sectionTerms")}</p>
           <div className="grid gap-4 sm:grid-cols-2">
@@ -223,18 +221,6 @@ export function QuoteEditorModal({ open, onClose, bookingId, projectId, defaultT
             <span className={rotulo}>{t("notesLabel")}</span>
             <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} maxLength={1000} placeholder={t("notesPlaceholder")} className={`${campo} resize-none`} />
           </label>
-          <div className="mt-2 flex flex-wrap gap-2">
-            {[t("termDeposit"), t("termOnDelivery"), t("termDays")].map((frase) => (
-              <button
-                key={frase}
-                type="button"
-                onClick={() => setNotes((actual) => (actual.includes(frase) ? actual : `${actual.trim() ? `${actual.trim()} ` : ""}${frase}`).slice(0, 1000))}
-                className="inline-flex h-8 items-center gap-1 rounded-full border border-[#d7e1ea] bg-white px-3 text-[12px] font-bold text-[#52627a] transition-colors hover:border-[#009FD9] hover:text-[#0089bb]"
-              >
-                <Plus className="h-3.5 w-3.5" />{frase}
-              </button>
-            ))}
-          </div>
         </section>
 
         <Totales quote={{ ...totals, tax_mode: taxMode }} />

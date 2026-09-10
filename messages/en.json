@@ -4260,10 +4260,7 @@
     "sectionWork": "What's included",
     "sectionTerms": "Terms",
     "itemNumber": "Line {n}",
-    "itemLineTotal": "Line total",
-    "termDeposit": "50% deposit",
-    "termOnDelivery": "Payment on delivery",
-    "termDays": "Delivery in 8 days"
+    "itemLineTotal": "Line total"
   },
   "menuFicha": {
     "more": "More options",

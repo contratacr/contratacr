@@ -4260,10 +4260,7 @@
     "sectionWork": "Qué incluye",
     "sectionTerms": "Condiciones",
     "itemNumber": "Línea {n}",
-    "itemLineTotal": "Total de la línea",
-    "termDeposit": "50% de adelanto",
-    "termOnDelivery": "Pago contra entrega",
-    "termDays": "Entrega en 8 días"
+    "itemLineTotal": "Total de la línea"
   },
   "menuFicha": {
     "more": "Más opciones",

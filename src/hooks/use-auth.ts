@@ -204,9 +204,27 @@ function useAuthState(
         if (!mounted) return;
         sessionSettled = true;
         window.clearTimeout(sessionTimeout);
-        // Corrupt/stale local session — clear it and treat the user as logged
-        // out instead of letting the error surface as a broken UI.
-        supabase.auth.signOut().catch(() => undefined);
+        // Que la comprobación falle NO significa que la sesión sea inválida:
+        // casi siempre es la red, o el servidor reiniciándose durante una
+        // publicación. Cerrar sesión aquí expulsaba de la app cada vez que se
+        // publicaba un cambio, y como el cierre era local, ya no volvía.
+        // Ahora se conserva lo que se sabía y se reintenta; un cierre real
+        // llega igual por onAuthStateChange.
+        if (usuarioConocidoRef.current) {
+          setAvatarReady(true);
+          window.setTimeout(() => {
+            if (!mounted) return;
+            void supabase.auth.getSession().then(({ data }) => {
+              if (!mounted) return;
+              const u = data.session?.user ?? null;
+              lastAppliedRef.current = u;
+              setUser(u);
+              cacheUser(u);
+              if (u) syncAvatar(u);
+            }).catch(() => undefined);
+          }, 1500);
+          return;
+        }
         setUser(null);
         cacheUser(null);
         setAvatarReady(true);
