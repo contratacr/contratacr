@@ -26,6 +26,11 @@ type ToastState = { latest: Notification; count: number };
 const POST_LOGIN_PROMPT_KEY = "contratacr:post-login-prompt";
 const LAST_ACTIVE_AT_KEY = "contratacr:last-active-at:v2";
 const ACTIVE_HEARTBEAT_MS = 15_000;
+// Una sola vez por apertura de la app: sin esto, cualquier recarga dura —y la
+// app hace varias: después de entrar, al cambiar de panel— volvía a montar el
+// componente y el resumen reaparecía a media sesión, que es lo que se veía
+// como "sale al azar".
+const RESUMEN_SESION_KEY = "ccr:push-summary-session:v1";
 // Cuánto se queda cada aviso en pantalla. El vivo interrumpe algo que la
 // persona está haciendo, así que es corto; el resumen de entrada es lo primero
 // que ve al abrir y trae una acción, así que dura más.
@@ -179,6 +184,17 @@ export function NotificationLiveToast({ scope = "all" }: { scope?: NotificationS
     const userId = user.id;
     if (pantallaSinAvisos(pathname)) return;
     if (summaryCheckedUserRef.current === userId) return;
+    // Ya se comprobó en esta apertura de la app: no se vuelve a mirar aunque la
+    // pantalla se recargue entera.
+    try {
+      if (window.sessionStorage.getItem(`${RESUMEN_SESION_KEY}:${userId}`) === "1") {
+        summaryCheckedUserRef.current = userId;
+        return;
+      }
+      window.sessionStorage.setItem(`${RESUMEN_SESION_KEY}:${userId}`, "1");
+    } catch {
+      /* sin almacenamiento de sesión se comprueba como antes */
+    }
     summaryCheckedUserRef.current = userId;
 
     let canceled = false;

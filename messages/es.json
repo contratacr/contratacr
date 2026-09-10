@@ -61,7 +61,7 @@
     "publishedProjects": "Mis proyectos",
     "myProjects": "Mis proyectos",
     "favorites": "Mis favoritos",
-    "quotes": "Cotizar",
+    "quotes": "Cotizaciones",
     "notifications": "Notificaciones",
     "supportTickets": "Soporte",
     "accountSecurity": "Cuenta y seguridad",
@@ -4011,7 +4011,7 @@
     "assistant": "Asistente",
     "jobs": "Empleos",
     "aria": "Navegación de la app",
-    "quotes": "Cotizar"
+    "quotes": "Cotizaciones"
   },
   "serviceLanding": {
     "title": "{category} en {place}",
@@ -4147,7 +4147,7 @@
     "declinedBody": "Le avisamos al profesional.",
     "close": "Cerrar",
     "ivaIncluded": "I.V.A.I.",
-    "sectionTitle": "Cotizar",
+    "sectionTitle": "Cotizaciones",
     "new": "Nueva cotización",
     "emptyTitle": "Tu primera cotización",
     "emptyBody": "Ponés qué incluye y cuánto cuesta, y te damos un enlace para mandarla por WhatsApp. El cliente la ve con tu nombre y la acepta con un toque, sin descargar nada.",

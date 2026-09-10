@@ -35,7 +35,7 @@ const reviewed = new Map([
   ["src/lib/account-cache.ts", { count: 1, reason: "account-scoped removal of reviewed browser caches during disable/deletion" }],
   ["src/app/[locale]/error.tsx", { count: 2, reason: "marca de una sola recarga cuando la pantalla pide un archivo de la versión anterior; nada de la cuenta" }],
   ["src/lib/app-data-invalidation.ts", { count: 2, reason: "cross-tab cache invalidation timestamp/domain signal; no account-owned records" }],
-  ["src/components/notifications/notification-live-toast.tsx", { count: 3, reason: "notification presentation state; records persist in backend" }],
+  ["src/components/notifications/notification-live-toast.tsx", { count: 5, reason: "notification presentation state; records persist in backend; plus a per-app-open flag so the entry summary is checked once" }],
   ["src/components/notifications/notification-bell.tsx", { count: 2, reason: "backend notification render cache" }],
   ["src/components/analytics/meta-pixel.tsx", { count: 1, reason: "measurement preference; no account-owned data" }],
   ["src/components/push/push-token-manager.tsx", { count: 19, reason: "native push permission presentation (ask count, launch count, denied-explained flag), navigation handoff, and legacy token-cache cleanup; active tokens persist in Supabase" }],

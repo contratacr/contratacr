@@ -235,7 +235,11 @@ export function NativeBottomNav() {
   const marca = (href: string) =>
     isActive(href) ? <span aria-hidden className="absolute inset-x-1 -top-1 h-[3px] rounded-b-full bg-[#009FD9]" /> : null;
 
-  const rotulo = (texto: string) => <span className="max-w-full truncate">{texto}</span>;
+  // El rótulo se encoge lo justo para que quepa el más largo («Cotizaciones»):
+  // truncado se leía «Cotizacion…», que no dice nada.
+  const rotulo = (texto: string) => (
+    <span className="max-w-full truncate" style={{ fontSize: "clamp(9px, 2.55vw, 11px)" }}>{texto}</span>
+  );
 
   const etiquetas = {
     buscar: tNav("search"),
