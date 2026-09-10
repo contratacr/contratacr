@@ -713,8 +713,8 @@ export default function ProfilePage() {
                 colgaban debajo de la foto y el borde izquierdo quedaba en zigzag)
                 y las dos acciones comparten renglón arriba a la derecha, del
                 ancho de su texto. En el teléfono sigue centrado como estaba. */}
-            <div className="relative mb-6 rounded-2xl border border-[#e5e7eb] bg-white p-4 shadow-sm sm:grid sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:items-start sm:gap-x-5 sm:p-6 sm:pt-6">
-                <div className="flex min-w-0 items-center gap-3.5 text-left sm:contents">
+            <div className="relative mb-6 rounded-2xl border border-[#e5e7eb] bg-white px-4 pb-4 pt-3.5 shadow-sm sm:grid sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:items-start sm:gap-x-5 sm:p-6 sm:pt-6">
+                <div className="flex min-w-0 flex-col items-center gap-2.5 text-center sm:contents sm:flex-row sm:gap-0 sm:text-left">
                   <ImagePreviewDialog
                     src={professional.avatarUrl}
                     alt={professional.fullName}
@@ -722,12 +722,12 @@ export default function ProfilePage() {
                     closeLabel={locale === "en" ? "Close" : "Cerrar"}
                     className="sm:col-start-1 sm:row-start-1 sm:row-span-2 sm:self-center"
                   >
-                    <Avatar className="h-20 w-20 shrink-0 sm:h-[88px] sm:w-[88px]">
+                    <Avatar className="h-[72px] w-[72px] shrink-0 sm:h-[88px] sm:w-[88px]">
                       <AvatarImage src={professional.avatarUrl ? cldThumb(professional.avatarUrl, 320) : undefined} loading="eager" alt={professional.fullName} className="object-cover" />
                       <AvatarFallback className="bg-[#EBF5FB] text-xl font-bold text-[#009FD9] sm:text-2xl">{getInitials(professional.fullName)}</AvatarFallback>
                     </Avatar>
                   </ImagePreviewDialog>
-                  <div className="min-w-0 flex-1 sm:col-start-2 sm:row-start-1">
+                  <div className="w-full min-w-0 sm:col-start-2 sm:row-start-1 sm:w-auto">
                     <div className="min-w-0">
                       <h1 data-testid="professional-profile-name" className="min-w-0 text-[17px] font-bold leading-[1.15] text-[#162543] [overflow-wrap:anywhere] sm:text-2xl sm:leading-tight sm:[overflow-wrap:normal]">
                         {displayName.primaryDesktop}
@@ -743,7 +743,7 @@ export default function ProfilePage() {
                         sección. Con cinco servicios, resumirlos aquí en uno solo
                         (o en el rubro) decía menos de lo que parecía. */}
                     {locationText && (
-                      <p className="mt-1 flex items-center gap-1.5 text-[13px] leading-5 text-[#52627a] sm:text-sm">
+                      <p className="mt-1 flex items-center justify-center gap-1.5 text-[13px] leading-5 text-[#52627a] sm:justify-start sm:text-sm">
                         <MapPin className="h-3.5 w-3.5 shrink-0 text-[#68778d]" />
                         <span className="min-w-0 truncate">{locationText}</span>
                       </p>
@@ -753,7 +753,7 @@ export default function ProfilePage() {
                       renglón sin decir nada nuevo. */}
                   {/* En el teléfono una línea; en computadora, columnas. */}
                   {(professional.reviewCount > 0 || expYears > 0) && (
-                    <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-[12px] text-[#68778d] sm:mt-3 sm:gap-x-10 sm:text-[13px]">
+                    <div className="mt-1.5 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-[12.5px] text-[#68778d] sm:mt-3 sm:justify-start sm:gap-x-10 sm:text-[13px]">
                       {professional.reviewCount > 0 && (
                         <button type="button" onClick={() => setActiveTab("resenas")} className="inline-flex min-w-0 items-center gap-1.5">
                           <Star className="h-3.5 w-3.5 shrink-0 fill-[#ff9b32] text-[#ff9b32]" />
@@ -773,14 +773,18 @@ export default function ProfilePage() {
                   </div>
 
                   </div>
-                {/* Guardar y compartir son acciones sobre la ficha, no formas
-                    de contactar. En el teléfono cierran la tarjeta repartidos a
-                    la mitad —arriba a la derecha rompían el centrado de la foto
-                    y el nombre—; en computadora, donde sobra ancho, van en la
-                    misma línea del nombre. */}
-                <div className="mt-3 flex items-center gap-1 border-t border-[#eef2f6] pt-2 sm:absolute sm:right-3 sm:top-3 sm:mt-0 sm:border-0 sm:pt-0">
-                  <SaveButton pro={savedPro} isOwn={isOwn} sutil className="justify-center" />
-                  <BotonCompartir onPress={shareProfile} sutil className="justify-center" />
+                {/* Guardar y compartir son acciones sobre la ficha, no formas de
+                    contactar. En el teléfono cierran la tarjeta como dos pastillas
+                    centradas: con forma de botón se entienden solas y ya no hace
+                    falta la línea divisoria, que partía la tarjeta en dos. En
+                    computadora siguen discretas arriba a la derecha. */}
+                <div className="mt-3.5 flex w-full items-center justify-center gap-2 sm:hidden">
+                  <SaveButton pro={savedPro} isOwn={isOwn} withLabel corto className="!h-10 !w-auto whitespace-nowrap px-5 py-0" />
+                  <BotonCompartir onPress={shareProfile} className="!h-10 whitespace-nowrap px-5" />
+                </div>
+                <div className="hidden sm:absolute sm:right-3 sm:top-3 sm:flex sm:items-center sm:gap-1">
+                  <SaveButton pro={savedPro} isOwn={isOwn} sutil />
+                  <BotonCompartir onPress={shareProfile} sutil />
                 </div>
             </div>
             <div id="resenas" className="scroll-mt-24 [.ccr-native-app_&]:scroll-mt-0">

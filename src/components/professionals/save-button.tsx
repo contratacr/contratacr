@@ -273,9 +273,11 @@ interface SaveButtonProps {
   bubble?: boolean;
   /** Ícono con rótulo, sin borde: la forma que usan las fichas. */
   sutil?: boolean;
+  /** Con `withLabel`, usa el rótulo corto: «Guardar» en vez de «Guardar en favoritos». */
+  corto?: boolean;
 }
 
-export function SaveButton({ pro, className, isOwn = false, withLabel = false, bubble = false, sutil = false }: SaveButtonProps) {
+export function SaveButton({ pro, className, isOwn = false, withLabel = false, bubble = false, sutil = false, corto = false }: SaveButtonProps) {
   const t = useTranslations("card");
   const locale = useLocale();
   const { user, loading: authLoading } = useAuth();
@@ -391,7 +393,7 @@ export function SaveButton({ pro, className, isOwn = false, withLabel = false, b
       )}
     >
       <Bookmark className="h-4 w-4 shrink-0" fill={saved ? "currentColor" : "none"} />
-      {saved ? t("savedLabel") : t("saveLabel")}
+      {saved ? t("savedLabel") : corto ? t("saveShort") : t("saveLabel")}
     </button>
       ) : (
         <button
