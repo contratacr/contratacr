@@ -2999,7 +2999,9 @@
     "signIn": "Inicia sesión",
     "clientRole": "Cliente",
     "proRole": "Profesional",
-    "backHome": "Volver al inicio"
+    "backHome": "Volver al inicio",
+    "proHint": "Publica tu perfil y recibe clientes de tu zona.",
+    "clientHint": "Encuentra profesionales verificados y contáctalos directo."
   },
   "onboarding": {
     "greeting": "Hola, {name}",

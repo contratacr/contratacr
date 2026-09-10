@@ -2999,7 +2999,9 @@
     "signIn": "Sign in",
     "clientRole": "Client",
     "proRole": "Professional",
-    "backHome": "Back to home"
+    "backHome": "Back to home",
+    "proHint": "Publish your profile and get clients near you.",
+    "clientHint": "Find verified professionals and contact them directly."
   },
   "onboarding": {
     "greeting": "Hi, {name}",
