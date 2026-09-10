@@ -589,19 +589,6 @@ export default function ProfilePage() {
           );
         })()}
       </div>
-      <ProfessionalSchedule
-        stacked
-        professional={professional}
-        activeCategory={activeCategory}
-        categoryName={catLabel(professional.categoryId)}
-        availabilityPublic={professional.availabilityPublic ?? true}
-        contactPreference={professional.contactPreference ?? "ambas"}
-        slots={profileSlots}
-        isOwn={isOwn}
-        placeFallback={placeFallback}
-        placeAddress={placeAddress}
-        businessName={professional.businessName ?? ""}
-      />
       {(() => {
         const sl = professional.socialLinks;
         const items = [
@@ -617,7 +604,7 @@ export default function ProfilePage() {
         // pestaña que abre por defecto: sirven para creerle al profesional,
         // no para contactarlo, así que no compiten con los botones de arriba.
         return (
-          <div className="border-t border-[#eef2f6] pt-4">
+          <div>
             <p className="mb-2 text-[13px] font-bold text-[#162543]">{t("linksTitle")}</p>
             <div className="flex flex-wrap gap-2">
               {items.map(({ k, nombre, href, Icon }) => (
@@ -643,6 +630,20 @@ export default function ProfilePage() {
           </div>
         );
       })()}
+      <ProfessionalSchedule
+        stacked
+        professional={professional}
+        activeCategory={activeCategory}
+        categoryName={catLabel(professional.categoryId)}
+        availabilityPublic={professional.availabilityPublic ?? true}
+        contactPreference={professional.contactPreference ?? "ambas"}
+        slots={profileSlots}
+        isOwn={isOwn}
+        placeFallback={placeFallback}
+        placeAddress={placeAddress}
+        businessName={professional.businessName ?? ""}
+      />
+
       {!isOwn && (
         <div className="mt-3 flex items-center justify-center">
           <button
