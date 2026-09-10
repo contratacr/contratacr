@@ -616,6 +616,33 @@ export default function ProfilePage() {
         placeAddress={placeAddress}
         businessName={professional.businessName ?? ""}
       />
+      {/* Las redes van DESPUÉS de los botones de contacto: son para creerle al
+          profesional, no para contactarlo, así que no compiten con «Enviar
+          mensaje» ni con «Llamar». Solo iconos, centrados. */}
+      {redesDelProfesional.length > 0 && (
+        <div className="flex flex-wrap items-center justify-center gap-2">
+          {redesDelProfesional.map(({ k, href, Icon }) => (
+            <a
+              key={k}
+              href={href as string}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={k === "website" ? t("linksWebsite") : k}
+              title={k === "website" ? t("linksWebsite") : k}
+              onClick={() => trackInteraction({
+                type: "external_link_click",
+                professionalId: professional.id,
+                source: "profile_social",
+                locale,
+                metadata: { channel: k },
+              })}
+              className="grid h-9 w-9 place-items-center rounded-full border border-[#e5e7eb] text-[#52627a] transition-colors hover:border-[#009FD9] hover:text-[#009FD9]"
+            >
+              <Icon className="h-4 w-4" />
+            </a>
+          ))}
+        </div>
+      )}
 
       {!isOwn && (
         <div className="mt-3 flex items-center justify-center">
@@ -743,33 +770,6 @@ export default function ProfilePage() {
                       )}
                     </div>
                   )}
-                  {/* Las redes van con la identidad, debajo de las cifras: usan el
-                      hueco que dejaba la foto y dejan de verse como una fila suelta
-                      al final de la tarjeta. */}
-                  {redesDelProfesional.length > 0 && (
-                    <div className="mt-2.5 flex flex-wrap items-center gap-1.5 sm:hidden">
-                      {redesDelProfesional.map(({ k, href, Icon }) => (
-                        <a
-                          key={k}
-                          href={href as string}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          aria-label={k === "website" ? t("linksWebsite") : k}
-                          title={k === "website" ? t("linksWebsite") : k}
-                          onClick={() => trackInteraction({
-                            type: "external_link_click",
-                            professionalId: professional.id,
-                            source: "profile_social",
-                            locale,
-                            metadata: { channel: k },
-                          })}
-                          className="grid h-8 w-8 place-items-center rounded-full border border-[#e5e7eb] text-[#52627a] transition-colors hover:border-[#009FD9] hover:text-[#009FD9]"
-                        >
-                          <Icon className="h-[15px] w-[15px]" />
-                        </a>
-                      ))}
-                    </div>
-                  )}
                   </div>
 
                   </div>
@@ -782,32 +782,6 @@ export default function ProfilePage() {
                   <SaveButton pro={savedPro} isOwn={isOwn} sutil className="justify-center" />
                   <BotonCompartir onPress={shareProfile} sutil className="justify-center" />
                 </div>
-                {/* En computadora la fila de arriba a la derecha es solo guardar y
-                    compartir, así que las redes van bajo las cifras. */}
-                {redesDelProfesional.length > 0 && (
-                  <div className="hidden sm:col-start-2 sm:row-start-3 sm:mt-3 sm:flex sm:items-center sm:gap-2">
-                    {redesDelProfesional.map(({ k, href, Icon }) => (
-                      <a
-                        key={k}
-                        href={href as string}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        aria-label={k === "website" ? t("linksWebsite") : k}
-                        title={k === "website" ? t("linksWebsite") : k}
-                        onClick={() => trackInteraction({
-                          type: "external_link_click",
-                          professionalId: professional.id,
-                          source: "profile_social",
-                          locale,
-                          metadata: { channel: k },
-                        })}
-                        className="grid h-9 w-9 place-items-center rounded-full border border-[#e5e7eb] text-[#52627a] transition-colors hover:border-[#009FD9] hover:text-[#009FD9]"
-                      >
-                        <Icon className="h-4 w-4" />
-                      </a>
-                    ))}
-                  </div>
-                )}
             </div>
             <div id="resenas" className="scroll-mt-24 [.ccr-native-app_&]:scroll-mt-0">
               <div className="rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">
