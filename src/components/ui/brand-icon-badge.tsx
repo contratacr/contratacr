@@ -2,14 +2,16 @@ import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 /**
- * Polished icon badge — the same "colored icon on a light tint of its own color"
- * treatment as `SuccessIcon`: a pale circle with a subtle inset ring + soft glow,
- * holding the strong-colored icon. Use for empty / info / confirm states so they
- * look consistent and on-brand (not a flat grey circle).
+ * La caja de icono de la marca: un cuadrado redondeado con degradado suave y el
+ * icono dibujado a línea encima. Es la misma pieza de las tarjetas de «¿Cómo
+ * quieres empezar?», en pequeño, y por eso la usan por igual los estados
+ * vacíos, los avisos y los diálogos: un solo lenguaje en toda la app.
  *
- * `tone` "brand" = brand blue (default); "success" = green; "warning" = amber;
- * "danger" = red (destructive confirms).
- * `size` is the circle diameter in px (the icon scales with it).
+ * Antes era un círculo celeste plano con el icono en azul claro, que sobre
+ * blanco casi no se veía.
+ *
+ * `tone` "brand" = azul de marca (por defecto); "success" = verde;
+ * "warning" = ámbar; "danger" = rojo. `size` es el lado de la caja en píxeles.
  */
 export function BrandIconBadge({
   icon: Icon,
@@ -23,18 +25,22 @@ export function BrandIconBadge({
   className?: string;
 }) {
   const tones = {
-    brand: "bg-[#EBF5FB] ring-[#009FD9]/20 shadow-[0_10px_30px_-10px_rgba(0,159,217,0.5)] text-[#009FD9]",
-    success: "bg-emerald-50 ring-emerald-500/20 shadow-[0_10px_30px_-10px_rgba(16,185,129,0.45)] text-emerald-600",
-    warning: "bg-amber-50 ring-amber-500/20 shadow-[0_10px_30px_-10px_rgba(245,158,11,0.45)] text-amber-600",
-    danger: "bg-[#fef2f2] ring-[#ef4444]/20 shadow-[0_10px_30px_-10px_rgba(239,68,68,0.45)] text-[#ef4444]",
+    brand: "bg-[linear-gradient(135deg,#eaf6fc_0%,#cbe8f6_55%,#f0f8fd_100%)] text-[#162543]",
+    success: "bg-[linear-gradient(135deg,#e8f7ef_0%,#c3ead6_55%,#f0faf5_100%)] text-[#0f7a52]",
+    warning: "bg-[linear-gradient(135deg,#fdf3e0_0%,#f7e0b5_55%,#fdf8ee_100%)] text-[#9a6400]",
+    danger: "bg-[linear-gradient(135deg,#fdecec_0%,#f7cfcf_55%,#fdf4f4_100%)] text-[#b42318]",
   };
   return (
     <span
       aria-hidden
-      className={cn("relative inline-grid shrink-0 place-items-center rounded-full ring-1 ring-inset", tones[tone], className)}
-      style={{ width: size, height: size }}
+      className={cn(
+        "relative inline-grid shrink-0 place-items-center shadow-[0_12px_26px_-18px_rgba(15,23,42,0.55)]",
+        tones[tone],
+        className,
+      )}
+      style={{ width: size, height: size, borderRadius: Math.round(size * 0.3) }}
     >
-      <Icon style={{ width: size * 0.44, height: size * 0.44 }} strokeWidth={2} />
+      <Icon style={{ width: Math.round(size * 0.46), height: Math.round(size * 0.46) }} strokeWidth={1.6} />
     </span>
   );
 }
