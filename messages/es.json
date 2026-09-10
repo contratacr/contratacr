@@ -106,7 +106,7 @@
       "privacy": "Privacidad"
     },
     "loginModal": {
-      "welcomeBack": "Bienvenido de vuelta",
+      "welcomeBack": "Hola de nuevo",
       "createAccount": "Crear cuenta",
       "loginToContinue": "Inicia sesión para continuar",
       "registerSeconds": "Regístrate en segundos",
@@ -544,7 +544,7 @@
     "toCall": "Para llamar a",
     "toEmail": "Para enviarle un correo a",
     "freeAccountHint": "Crea tu cuenta gratis · menos de un minuto",
-    "loginTitle": "Bienvenido de nuevo",
+    "loginTitle": "Hola de nuevo",
     "loginSubtitle": "Usa tu correo y contraseña de ContrataCR.",
     "dupTitle": "Ya existe una cuenta con este correo",
     "dupBody": "Ingresa tu contraseña para continuar.",
@@ -712,7 +712,7 @@
     "pricesRefCaption": "Precios de referencia.",
     "reviewsHeading": "Reseñas ({count})",
     "reviewOf": "Reseña de “{title}”",
-    "noReviews": "Aún no hay reseñas. Sé el primero en dejar una.",
+    "noReviews": "Aún no hay reseñas. Deja la primera.",
     "whatItMeans": "¿Qué significa?",
     "close": "Cerrar",
     "backToMessages": "Volver a mensajes",
@@ -724,7 +724,7 @@
   },
   "auth": {
     "login": {
-      "title": "Bienvenido de vuelta",
+      "title": "Hola de nuevo",
       "subtitle": "Ingresa a tu cuenta",
       "email": "Correo electrónico",
       "password": "Contraseña",
@@ -918,7 +918,7 @@
       "submit": "Crear cuenta",
       "submitting": "Creando cuenta...",
       "success": {
-        "title": "¡Bienvenido a ContrataCR!",
+        "title": "¡Te damos la bienvenida a ContrataCR!",
         "desc": "Tu cuenta está lista. Ahora puedes buscar y contratar servicios cerca de ti.",
         "button": "Ir a mi panel"
       },
@@ -3073,7 +3073,7 @@
     "errSocialAccount": "Este correo ya está registrado con {provider}. Inicia sesión con {provider}.",
     "errCreate": "Error al crear cuenta.",
     "errUnexpected": "Error inesperado. Intenta de nuevo.",
-    "successTitle": "¡Bienvenido a ContrataCR!",
+    "successTitle": "¡Te damos la bienvenida a ContrataCR!",
     "successBody": "Tu cuenta está lista. Ahora puedes buscar y contratar servicios cerca de ti.",
     "goToPanel": "Ir a mi panel",
     "searchPros": "Buscar profesionales",
@@ -3988,7 +3988,7 @@
   },
   "directChat": {
     "threadEmpty": "Todavía no hay mensajes",
-    "threadEmptySub": "Escribí el primero para empezar la conversación.",
+    "threadEmptySub": "Escribe el primer mensaje para empezar la conversación.",
     "archive": "Archivar",
     "unarchive": "Desarchivar",
     "delete": "Eliminar",

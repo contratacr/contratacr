@@ -3988,7 +3988,7 @@
   },
   "directChat": {
     "threadEmpty": "No messages yet",
-    "threadEmptySub": "Write the first one to start the conversation.",
+    "threadEmptySub": "Write the first message to start the conversation.",
     "archive": "Archive",
     "unarchive": "Unarchive",
     "delete": "Delete",
