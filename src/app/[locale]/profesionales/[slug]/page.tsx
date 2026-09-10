@@ -721,11 +721,14 @@ export default function ProfilePage() {
                         <span className="min-w-0 truncate">{locationText}</span>
                       </p>
                     )}
-                  {/* Prueba social: en el teléfono una sola línea con separadores
+                  {/* Prueba social en una línea. Los casos de éxito NO van aquí:
+                      tienen su propia pestaña y repetir la cifra gastaba un
+                      renglón sin decir nada nuevo. */}
+                  {/* Nota histórica: antes eran tres columnas de dos renglones
                       —tres columnas de dos renglones cada una costaban 40 px de la
                       primera pantalla—; en computadora, donde sobra ancho, siguen
                       siendo columnas. Solo se dibuja el dato que existe. */}
-                  {(professional.reviewCount > 0 || expYears > 0 || casosCount > 0) && (
+                  {(professional.reviewCount > 0 || expYears > 0) && (
                     <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-[#68778d]  sm:mt-3 sm:gap-x-10 sm:text-[13px]">
                       {professional.reviewCount > 0 && (
                         <button type="button" onClick={() => setActiveTab("resenas")} className="inline-flex min-w-0 items-baseline gap-1.5">
@@ -740,13 +743,6 @@ export default function ProfilePage() {
                           <span className="text-[14px] font-bold text-[#162543] sm:text-[15px]">{expYears}</span>
                           <span className="whitespace-nowrap"><span className="sm:hidden">{t("statYearsShort")}</span><span className="hidden sm:inline">{t("statYears")}</span></span>
                         </span>
-                      )}
-                      {casosCount > 0 && (
-                        <button type="button" onClick={() => setActiveTab("casos")} className="inline-flex min-w-0 items-baseline gap-1.5">
-                          <Award className="h-3.5 w-3.5 shrink-0 translate-y-0.5 text-[#009FD9]" />
-                          <span className="text-[14px] font-bold text-[#162543] sm:text-[15px]">{casosCount}</span>
-                          <span className="whitespace-nowrap"><span className="sm:hidden">{t("statCasesShort")}</span><span className="hidden sm:inline">{t("statCases", { count: casosCount })}</span></span>
-                        </button>
                       )}
                     </div>
                   )}
