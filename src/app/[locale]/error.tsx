@@ -105,7 +105,7 @@ export default function LocaleError({
         <button onClick={retry} className={errorPrimaryBtn}>
           <RefreshCw className="h-4 w-4" /> {t.retry}
         </button>
-        <a href="/" className={errorSecondaryBtn}>{t.home}</a>
+        <a href={`/${lang}`} className={errorSecondaryBtn}>{t.home}</a>
       </ErrorScreen>
     );
   }
@@ -116,7 +116,7 @@ export default function LocaleError({
         <button onClick={retry} className={errorPrimaryBtn}>
           <RefreshCw className="h-4 w-4" /> {t.retry}
         </button>
-        <a href="/" className={errorSecondaryBtn}>{t.home}</a>
+        <a href={`/${lang}`} className={errorSecondaryBtn}>{t.home}</a>
       </ServiceUnavailableScreen>
     );
   }
@@ -130,7 +130,7 @@ export default function LocaleError({
       <button onClick={retry} className={errorPrimaryBtn}>
         <RefreshCw className="h-4 w-4" /> {t.retry}
       </button>
-      <a href="/" className={errorSecondaryBtn}>{t.home}</a>
+      <a href={`/${lang}`} className={errorSecondaryBtn}>{t.home}</a>
     </ErrorScreen>
   );
 }

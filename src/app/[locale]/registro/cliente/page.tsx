@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "@/i18n/navigation";
 import { useAuth } from "@/hooks/use-auth";
@@ -26,6 +26,7 @@ import { NAME_MAX_LENGTH, limitText } from "@/lib/text-limits";
 export default function RegisterClientPage() {
   const router = useRouter();
   const t = useTranslations("registerClient");
+  const locale = useLocale();
   const searchParams = useSearchParams();
   const { user, loading: authLoading } = useAuth();
   // An already-registered, logged-in user must never be pushed through account
@@ -368,14 +369,14 @@ export default function RegisterClientPage() {
 
               <p className="text-center text-xs text-[#68778d]">
                 {t.rich("terms", {
-                  terms: (c) => <a href="/terminos" className="underline hover:text-[#374151]">{c}</a>,
-                  privacy: (c) => <a href="/privacidad" className="underline hover:text-[#374151]">{c}</a>,
+                  terms: (c) => <a href={`/${locale}/terminos`} className="underline hover:text-[#374151]">{c}</a>,
+                  privacy: (c) => <a href={`/${locale}/privacidad`} className="underline hover:text-[#374151]">{c}</a>,
                 })}
               </p>
 
               <div className="text-center text-sm text-[#6b7280]">
                 {t("haveAccount")}{" "}
-                <a href="/login" className="text-[#009FD9] font-medium hover:underline">
+                <a href={`/${locale}/login`} className="text-[#009FD9] font-medium hover:underline">
                   {t("signIn")}
                 </a>
               </div>

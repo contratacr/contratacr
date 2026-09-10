@@ -112,6 +112,18 @@ export async function middleware(request: NextRequest) {
   // Base response carries i18n rewrites/headers; we attach any cookie changes.
   const response = handleI18n(request);
   const locale = pathname.split("/")[1] || "es";
+  // La cookie recuerda el idioma que se está LEYENDO, no solo el que se eligió
+  // con el botón. Sin esto, quien llega en inglés por un enlace y luego abre
+  // una dirección sin prefijo (el perfil corto, /o/, /e/, /c/) volvía al
+  // español de golpe. Solo se escribe cuando cambia, para no ponerle
+  // Set-Cookie a cada respuesta y romper la caché de las páginas públicas.
+  if (request.cookies.get("NEXT_LOCALE")?.value !== locale) {
+    response.cookies.set("NEXT_LOCALE", locale, {
+      path: "/",
+      maxAge: 31536000,
+      sameSite: "lax",
+    });
+  }
 
   // Anonymous visitors (incognito or simply logged out) have NO Supabase cookie
   // — skip all auth work (same fast path as before). Protected routes still go

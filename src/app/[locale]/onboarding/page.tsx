@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { UserRoundSearch, BriefcaseBusiness, ArrowRight } from "lucide-react";
 import { Link, useRouter } from "@/i18n/navigation";
 import { useAuth } from "@/hooks/use-auth";
@@ -15,6 +15,8 @@ import { trackMetaEvent } from "@/lib/analytics/meta-pixel";
 export default function OnboardingPage() {
   const { user, avatarUrl, loading: authLoading } = useAuth();
   const t = useTranslations("onboarding");
+  // Sin esto, quien venía en inglés terminaba en español al elegir su rol.
+  const locale = useLocale();
   const tc = useTranslations("registerChoice");
   const router = useRouter();
   const [selecting, setSelecting] = useState<"client" | "professional" | null>(null);
@@ -75,7 +77,7 @@ export default function OnboardingPage() {
       if (cancelled) return;
       if (done) {
         if ((role === "professional" || user.user_metadata?.intended_role === "professional") && !hasProfessionalProfile) {
-          window.location.assign("/es/registro/profesional");
+          window.location.assign(`/${locale}/registro/profesional`);
           return;
         }
         // Heal the metadata flag (best-effort) so the proxy stops sending this account
@@ -85,13 +87,13 @@ export default function OnboardingPage() {
             await supabase.auth.updateUser({ data: { onboarding_completed: true, ...(role ? { role } : {}) } });
           } catch { /* best-effort */ }
         }
-        window.location.assign(`/es/dashboard/${role === "professional" ? "profesional" : "cliente"}`);
+        window.location.assign(`/${locale}/dashboard/${role === "professional" ? "profesional" : "cliente"}`);
         return;
       }
       setCheckingExisting(false); // genuinely new → show the role cards
     })();
     return () => { cancelled = true; };
-  }, [user, authLoading, router]);
+  }, [user, authLoading, locale, router]);
 
   async function selectRole(role: "client" | "professional") {
     if (!user || selecting) return;
@@ -142,7 +144,7 @@ export default function OnboardingPage() {
 
     // "Ofrezco" → complete the professional profile to unlock offering. "Busco" →
     // straight into the unified panel (it opens in "Usar servicios" mode).
-    window.location.assign(role === "professional" ? "/es/registro/profesional" : "/es/dashboard/profesional");
+    window.location.assign(role === "professional" ? `/${locale}/registro/profesional` : `/${locale}/dashboard/profesional`);
   }
 
   // Loader until we KNOW this is a new user (existing users are redirected above) —
