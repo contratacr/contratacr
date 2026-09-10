@@ -35,7 +35,7 @@ const STEP_NUM: Record<RegisterStep, number> = {
 };
 const PENDING_BOOKING_IDENTITY_KEY = "ccr:pending-booking-identity";
 
-export type ContactIntent = "whatsapp" | "phone" | "email" | "booking";
+export type ContactIntent = "whatsapp" | "phone" | "email" | "message" | "booking";
 
 export interface ClientRegistrationModalProps {
   open: boolean;
@@ -448,7 +448,7 @@ export function ClientRegistrationModal({
           {professionalName && (
             <div className="px-6 py-3 bg-[#f9fafb] border-b border-[#f3f4f6] shrink-0">
               <p className="text-xs text-[#68778d]">
-                {intent === "whatsapp" ? t("toContactWhatsapp") : intent === "phone" ? t("toCall") : intent === "email" ? t("toEmail") : t("toContact")}
+                {intent === "whatsapp" ? t("toContactWhatsapp") : intent === "phone" ? t("toCall") : intent === "email" ? t("toEmail") : intent === "message" ? t("toMessage") : t("toContact")}
               </p>
               <p className="text-sm font-semibold text-[#1a2744]">{professionalName}</p>
               {view === "register" && <p className="mt-0.5 text-[11px] text-[#009FD9]">{t("freeAccountHint")}</p>}

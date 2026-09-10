@@ -575,7 +575,8 @@
     "signInLink": "Inicia sesión",
     "noAccount": "¿No tienes cuenta?",
     "signUpFree": "Regístrate",
-    "terms": "Al crear tu cuenta aceptas nuestros <terms>Términos</terms> y nuestra <privacy>Política de Privacidad</privacy>."
+    "terms": "Al crear tu cuenta aceptas nuestros <terms>Términos</terms> y nuestra <privacy>Política de Privacidad</privacy>.",
+    "toMessage": "Para escribirle a"
   },
   "inputs": {
     "remove": "Quitar",
@@ -4334,5 +4335,14 @@
     "settingsStep2": "Busca ContrataCR › Notificaciones",
     "settingsStep3": "Activa «Permitir notificaciones»",
     "understood": "Entendido"
+  },
+  "mensajeInvitado": {
+    "titulo": "Escríbele a {name}",
+    "subtitulo": "Cuéntale qué necesitas. Al enviar te pedimos tu número para que pueda responderte.",
+    "etiqueta": "Tu mensaje",
+    "marcador": "Ej.: Necesito cambiar dos tomas en mi casa en Alajuela. ¿Cuándo podrías?",
+    "nota": "El profesional ve tu mensaje y te responde por aquí.",
+    "enviar": "Enviar mensaje",
+    "cerrar": "Cerrar"
   }
 }

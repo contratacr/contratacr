@@ -575,7 +575,8 @@
     "signInLink": "Sign in",
     "noAccount": "Don't have an account?",
     "signUpFree": "Sign up",
-    "terms": "By creating your account you accept our <terms>Terms</terms> and <privacy>Privacy Policy</privacy>."
+    "terms": "By creating your account you accept our <terms>Terms</terms> and <privacy>Privacy Policy</privacy>.",
+    "toMessage": "To message"
   },
   "inputs": {
     "remove": "Remove",
@@ -4334,5 +4335,14 @@
     "settingsStep2": "Find ContrataCR › Notifications",
     "settingsStep3": "Turn on “Allow notifications”",
     "understood": "Got it"
+  },
+  "mensajeInvitado": {
+    "titulo": "Write to {name}",
+    "subtitulo": "Tell them what you need. When you send it we'll ask for your number so they can reply.",
+    "etiqueta": "Your message",
+    "marcador": "E.g.: I need two outlets replaced at my house in Alajuela. When could you come?",
+    "nota": "The professional sees your message and replies here.",
+    "enviar": "Send message",
+    "cerrar": "Close"
   }
 }

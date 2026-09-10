@@ -2,9 +2,12 @@
 
 import { useState } from "react";
 import { Loader2, MessageSquareText } from "lucide-react";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
-import { buttonVariants } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { Modal } from "@/components/ui/modal";
+import { ClientRegistrationModal } from "@/components/auth/client-registration-modal";
+import { trackInteraction } from "@/lib/analytics/interaction-events";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
 
@@ -50,6 +53,7 @@ function buildDraftHref({
 export function MessageLauncher(props: MessageLauncherProps) {
   const {
     professionalId = "",
+    professionalName,
     bookingId,
     projectId,
     proposalId,
@@ -63,54 +67,118 @@ export function MessageLauncher(props: MessageLauncherProps) {
   } = props;
   const locale = useLocale();
   const isEn = locale === "en";
+  const t = useTranslations("mensajeInvitado");
   const router = useRouter();
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
+  // Sin cuenta, primero se escribe y después se pide identificarse: mandarla a
+  // la pantalla de ingresar antes de escribir la sacaba del perfil y casi nadie
+  // volvía. Aquí no se sale de la página en ningún momento.
+  const [redactando, setRedactando] = useState(false);
+  const [borrador, setBorrador] = useState("");
+  const [registrando, setRegistrando] = useState(false);
   const label = buttonLabel || (isEn ? "Send message" : "Enviar mensaje");
 
-  async function openMessage() {
-    if (isOwn) {
-      onSelfAction?.();
-      return;
-    }
+  const mensajeSugerido = initialMessage || (contextTitle && (bookingId || projectId || proposalId)
+    ? (isEn ? `Hi, I'm writing about "${contextTitle}".` : `Hola, te escribo por "${contextTitle}".`)
+    : "");
 
-    const autoMessage = initialMessage || (contextTitle && (bookingId || projectId || proposalId)
-      ? (isEn ? `Hi, I'm writing about "${contextTitle}".` : `Hola, te escribo por "${contextTitle}".`)
-      : "");
-    const draftHref = buildDraftHref({ ...props, initialMessage: autoMessage });
-    if (!user) {
-      router.push(`/login?redirect=${encodeURIComponent(draftHref)}`);
-      return;
-    }
-
+  async function abrirHilo(texto: string) {
     setLoading(true);
     try {
       const response = await fetch("/api/direct-chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          professionalId,
-          bookingId,
-          projectId,
-          proposalId,
-          contextTitle,
-          initialMessage,
-          openConversation: true,
+          professionalId, bookingId, projectId, proposalId, contextTitle,
+          initialMessage: texto, openConversation: true,
         }),
       });
       const payload = await response.json().catch(() => ({}));
       if (response.ok && payload.conversationId) {
         const origin = (window.location.pathname + window.location.search).replace(/^\/(?:es|en)(?=\/|$)/u, "") || "/";
-        router.push(`/mensajes?conversation=${encodeURIComponent(String(payload.conversationId))}&back=${encodeURIComponent(origin)}${autoMessage ? `&draftMessage=${encodeURIComponent(autoMessage)}` : ""}`);
+        router.push(`/mensajes?conversation=${encodeURIComponent(String(payload.conversationId))}&back=${encodeURIComponent(origin)}${texto ? `&draftMessage=${encodeURIComponent(texto)}` : ""}`);
         return;
       }
-      router.push(draftHref);
+      router.push(buildDraftHref({ ...props, initialMessage: texto }));
     } finally {
       setLoading(false);
     }
   }
 
+  async function openMessage() {
+    if (isOwn) {
+      onSelfAction?.();
+      return;
+    }
+    if (!user) {
+      trackInteraction({
+        type: "contact_gate_shown",
+        professionalId: professionalId ?? null,
+        source: "profile",
+        metadata: { channel: "message" },
+      });
+      setBorrador(mensajeSugerido);
+      setRedactando(true);
+      return;
+    }
+    await abrirHilo(mensajeSugerido);
+  }
+
+  const modales = (
+    <>
+      {redactando && (
+        <Modal
+          open
+          onClose={() => setRedactando(false)}
+          title={t("titulo", { name: (professionalName || "").trim().split(/\s+/)[0] || professionalName })}
+          subtitle={t("subtitulo")}
+          size="sm"
+          closeLabel={t("cerrar")}
+          footer={(
+            <Button
+              type="button"
+              size="lg"
+              className="w-full"
+              disabled={!borrador.trim() || loading}
+              loading={loading}
+              onClick={() => setRegistrando(true)}
+            >
+              {t("enviar")}
+            </Button>
+          )}
+        >
+          <label className="block">
+            <span className="mb-2 block text-[13px] font-bold text-[#162543]">{t("etiqueta")}</span>
+            <textarea
+              value={borrador}
+              onChange={(e) => setBorrador(e.target.value.slice(0, 1000))}
+              rows={5}
+              autoFocus
+              placeholder={t("marcador")}
+              className="w-full resize-none rounded-xl border border-[#e5e7eb] bg-white px-3.5 py-2.5 text-[15px] text-[#162543] placeholder:text-[#8f9aaa] focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[#009FD9]"
+            />
+          </label>
+          <p className="mt-2 text-[12px] leading-snug text-[#68778d]">{t("nota")}</p>
+        </Modal>
+      )}
+      <ClientRegistrationModal
+        open={registrando}
+        onClose={() => setRegistrando(false)}
+        onSuccess={() => {
+          setRegistrando(false);
+          setRedactando(false);
+          void abrirHilo(borrador.trim());
+        }}
+        professionalName={professionalName}
+        intent="message"
+      />
+    </>
+  );
+
   return (
+    <>
+    {modales}
     <button
       type="button"
       onClick={() => void openMessage()}
@@ -125,5 +193,6 @@ export function MessageLauncher(props: MessageLauncherProps) {
       {loading ? <Loader2 className="h-5 w-5 shrink-0 animate-spin" /> : <MessageSquareText className="h-5 w-5 shrink-0" strokeWidth={2.25} />}
       {label}
     </button>
+    </>
   );
 }
