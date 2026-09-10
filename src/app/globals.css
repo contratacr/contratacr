@@ -2112,8 +2112,6 @@ html[data-keyboard-visible] body.ccr-native-app .ccr-native-search-panel { botto
 /* Azul de marca pleno para quien ofrece; el mismo azul, más tenue, para quien busca. */
 .ccr-mosaico-pro { background: linear-gradient(135deg, #c9ecfa 0%, #7fd0f2 48%, #d9f1fb 100%); }
 .ccr-mosaico-cliente { background: linear-gradient(135deg, #eaf6fc 0%, #cbe8f6 48%, #f0f8fd 100%); }
-/* La línea de «el rol no encierra» cabe en un renglón hasta en 320 px. */
-.ccr-linea-rol { font-size: clamp(9px, 2.75vw, 13px); }
 .ccr-tarjeta-rol-flecha { transition: transform 0.25s ease; }
 .ccr-tarjeta-rol:hover .ccr-tarjeta-rol-flecha { transform: translateX(4px); }
 @media (prefers-reduced-motion: reduce) {

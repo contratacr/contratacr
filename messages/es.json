@@ -2999,9 +2999,8 @@
     "clientRole": "Cliente",
     "proRole": "Profesional",
     "continue": "Continuar",
-    "reassurance": "Es gratis y toma menos de 2 minutos.",
-    "proAlso": "También puedes contratar",
-    "clientAlso": "También puedes ofrecer"
+    "reassurance": "Es gratis y toma menos de 2 minutos. Con una sola cuenta puedes contratar y ofrecer servicios.",
+    "welcome": "Bienvenido a ContrataCR"
   },
   "onboarding": {
     "greeting": "Hola, {name}",

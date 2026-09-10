@@ -2999,9 +2999,8 @@
     "clientRole": "Client",
     "proRole": "Professional",
     "continue": "Continue",
-    "reassurance": "It's free and takes under 2 minutes.",
-    "proAlso": "You can hire too",
-    "clientAlso": "You can offer too"
+    "reassurance": "It's free and takes under 2 minutes. One account lets you hire and offer services.",
+    "welcome": "Welcome to ContrataCR"
   },
   "onboarding": {
     "greeting": "Hi, {name}",

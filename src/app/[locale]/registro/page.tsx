@@ -32,9 +32,10 @@ export default function RegisterPage() {
       <Navbar mobileSearch={false} />
       <main className="flex-1 flex flex-col items-center justify-center px-4 py-12 lg:py-20">
         <div className="w-full max-w-2xl">
-          {/* La pregunta ES el titular: el saludo de bienvenida se llevaba el
-              tamaño grande sin decir nada. */}
+          {/* El saludo da la bienvenida y nombra la marca; la pregunta es la que
+              manda, así que es la que lleva el tamaño grande. */}
           <div className="ccr-entrada text-center mb-8 lg:mb-12">
+            <p className="mb-1.5 text-[15px] font-semibold text-[#009FD9] lg:text-base">{t("welcome")}</p>
             <h1 className="text-[1.75rem] font-extrabold leading-tight tracking-tight text-[#162543] sm:text-4xl lg:text-[2.75rem]">{t("title")}</h1>
           </div>
 
@@ -59,8 +60,6 @@ export default function RegisterPage() {
                 <ArrowRight className="ccr-tarjeta-rol-flecha ml-1.5 hidden h-6 w-6 align-[-4px] sm:inline-block" strokeWidth={2.4} />
               </span>
               <span className="mt-1 block text-center text-[13px] font-semibold text-[#009FD9] sm:text-[15px]">{t("proRole")}</span>
-              {/* El rol no encierra: se dice aquí, donde se decide. */}
-              <span className="ccr-linea-rol mt-1.5 block truncate text-center text-[#9aa3b2]">{t("proAlso")}</span>
             </Link>
 
             <Link
@@ -77,11 +76,12 @@ export default function RegisterPage() {
                 <ArrowRight className="ccr-tarjeta-rol-flecha ml-1.5 hidden h-6 w-6 align-[-4px] sm:inline-block" strokeWidth={2.4} />
               </span>
               <span className="mt-1 block text-center text-[13px] font-semibold text-[#009FD9] sm:text-[15px]">{t("clientRole")}</span>
-              <span className="ccr-linea-rol mt-1.5 block truncate text-center text-[#9aa3b2]">{t("clientAlso")}</span>
             </Link>
           </div>
 
-          {/* Lo único que queda abajo: gratis y rápido. */}
+          {/* Una sola cuenta sirve para las dos cosas. Dicho una vez y DEBAJO de
+              las tarjetas: dentro de cada una competía con la elección y hacía
+              dudar de si las dos hacían lo mismo. */}
           <p className="ccr-entrada [animation-delay:240ms] mx-auto mt-6 max-w-md text-center text-[13px] leading-relaxed text-[#8a94a6] sm:text-sm">
             {t("reassurance")}
           </p>

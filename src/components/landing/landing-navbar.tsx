@@ -2537,14 +2537,26 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                   </Link>
                 )}
                 {!user && (
-                  <Link
-                    href={loginHref}
-                    onClick={() => setMobileOpen(false)}
-                    className={mobileDrawerItemClass}
-                  >
-                    <DrawerIcon><UserRound /></DrawerIcon>
-                    <span className={mobileDrawerTextClass}>{t("login")}</span>
-                  </Link>
+                  <>
+                    <Link
+                      href={loginHref}
+                      onClick={() => setMobileOpen(false)}
+                      className={mobileDrawerItemClass}
+                    >
+                      <DrawerIcon><UserRound /></DrawerIcon>
+                      <span className={mobileDrawerTextClass}>{t("login")}</span>
+                    </Link>
+                    {/* Entrar y crear cuenta son dos cosas distintas: quien no
+                        tiene cuenta no debe deducirla desde «Ingresar». */}
+                    <Link
+                      href="/registro"
+                      onClick={() => setMobileOpen(false)}
+                      className={mobileDrawerItemClass}
+                    >
+                      <DrawerIcon><UserRoundPlus /></DrawerIcon>
+                      <span className={mobileDrawerTextClass}>{t("register")}</span>
+                    </Link>
+                  </>
                 )}
 
                 <div className="mt-1">
