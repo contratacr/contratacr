@@ -813,7 +813,8 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
   // OUTLINED/secondary (when it sits BELOW "Ver disponibilidad"). Calls are blocked on
   // the pro's OWN card (shows a self note instead). Rendered only when showCall is true.
   const contactSource = stacked ? "profile" : "search";
-  // Secundario del app: píldora blanca con borde y texto turquesa, sin ícono.
+  // Secundario del app: píldora blanca con borde. Con icono, como el resto de
+  // los botones de contacto: «Llamar» sin él se leía como una etiqueta.
   const secondaryContactClass = "w-full inline-flex h-11 items-center justify-center gap-1.5 rounded-full border border-[#d7e1ea] bg-white py-0 text-[13px] font-bold text-[#162543] transition-colors hover:border-[#b9c8d6] hover:bg-[#f6f9fb] disabled:opacity-60";
   // Profile page uses the short label "Llamar"; /buscar keeps "Contáctanos por llamada".
   const renderCall = (className = secondaryContactClass) => (
@@ -826,7 +827,6 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
       source={contactSource}
       isOwn={isOwn}
       onSelfAction={() => setSelfMsg(SELF_MSG.call)}
-      showIcon={false}
       className={className}
       label={stacked ? t("callShort") : t("call")}
     />

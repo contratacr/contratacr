@@ -687,7 +687,7 @@ export default function ProfilePage() {
                 y las dos acciones comparten renglón arriba a la derecha, del
                 ancho de su texto. En el teléfono sigue centrado como estaba. */}
             <div className="relative mb-6 rounded-2xl border border-[#e5e7eb] bg-white p-4 shadow-sm sm:grid sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:items-start sm:gap-x-5 sm:p-6 sm:pt-6">
-                <div className="flex min-w-0 items-start gap-3.5 text-left sm:contents">
+                <div className="flex min-w-0 items-center gap-3.5 text-left sm:contents">
                   <ImagePreviewDialog
                     src={professional.avatarUrl}
                     alt={professional.fullName}
@@ -724,10 +724,7 @@ export default function ProfilePage() {
                   {/* Prueba social en una línea. Los casos de éxito NO van aquí:
                       tienen su propia pestaña y repetir la cifra gastaba un
                       renglón sin decir nada nuevo. */}
-                  {/* Nota histórica: antes eran tres columnas de dos renglones
-                      —tres columnas de dos renglones cada una costaban 40 px de la
-                      primera pantalla—; en computadora, donde sobra ancho, siguen
-                      siendo columnas. Solo se dibuja el dato que existe. */}
+                  {/* En el teléfono una línea; en computadora, columnas. */}
                   {(professional.reviewCount > 0 || expYears > 0) && (
                     <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-[#68778d]  sm:mt-3 sm:gap-x-10 sm:text-[13px]">
                       {professional.reviewCount > 0 && (
@@ -746,23 +743,11 @@ export default function ProfilePage() {
                       )}
                     </div>
                   )}
-                  </div>
-
-                  </div>
-                {/* Guardar y compartir son acciones sobre la ficha, no formas
-                    de contactar. En el teléfono cierran la tarjeta repartidos a
-                    la mitad —arriba a la derecha rompían el centrado de la foto
-                    y el nombre—; en computadora, donde sobra ancho, van en la
-                    misma línea del nombre. */}
-                <div className="mt-3 flex flex-wrap items-center gap-x-1 gap-y-2 border-t border-[#eef2f6] pt-2 sm:absolute sm:right-3 sm:top-3 sm:mt-0 sm:flex-nowrap sm:border-0 sm:pt-0">
-                  <SaveButton pro={savedPro} isOwn={isOwn} sutil className="justify-center" />
-                  <BotonCompartir onPress={shareProfile} sutil className="justify-center" />
-                  {/* Las redes cierran la fila: al ir aquí no cuestan alto propio
-                      y quedan a la vista sin desplazar. Con muchas, el grupo baja
-                      solo a su propia línea; antes se salía de la tarjeta y el
-                      último icono quedaba cortado. */}
+                  {/* Las redes van con la identidad, debajo de las cifras: usan el
+                      hueco que dejaba la foto y dejan de verse como una fila suelta
+                      al final de la tarjeta. */}
                   {redesDelProfesional.length > 0 && (
-                    <div className="ml-auto flex items-center gap-1.5 sm:hidden">
+                    <div className="mt-2.5 flex flex-wrap items-center gap-1.5 sm:hidden">
                       {redesDelProfesional.map(({ k, href, Icon }) => (
                         <a
                           key={k}
@@ -785,6 +770,17 @@ export default function ProfilePage() {
                       ))}
                     </div>
                   )}
+                  </div>
+
+                  </div>
+                {/* Guardar y compartir son acciones sobre la ficha, no formas
+                    de contactar. En el teléfono cierran la tarjeta repartidos a
+                    la mitad —arriba a la derecha rompían el centrado de la foto
+                    y el nombre—; en computadora, donde sobra ancho, van en la
+                    misma línea del nombre. */}
+                <div className="mt-3 flex items-center gap-1 border-t border-[#eef2f6] pt-2 sm:absolute sm:right-3 sm:top-3 sm:mt-0 sm:border-0 sm:pt-0">
+                  <SaveButton pro={savedPro} isOwn={isOwn} sutil className="justify-center" />
+                  <BotonCompartir onPress={shareProfile} sutil className="justify-center" />
                 </div>
                 {/* En computadora la fila de arriba a la derecha es solo guardar y
                     compartir, así que las redes van bajo las cifras. */}
