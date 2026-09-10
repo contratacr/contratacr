@@ -4277,5 +4277,62 @@
     "offerSubject": "Offer on ContrataCR: {name}",
     "jobLink": "Job link",
     "offerLink": "Offer link"
+  },
+  "pushPrompt": {
+    "now": "now",
+    "title": {
+      "mensaje": "We'll tell you when they reply",
+      "cita": "We'll tell you when your booking is confirmed",
+      "propuesta": "We'll tell you if you're chosen",
+      "postulacion": "We'll tell you when they review your application",
+      "cotizacion": "We'll tell you when they answer your quote",
+      "panel": "Know the moment it happens"
+    },
+    "body": "Only what's yours: messages, bookings, projects and reviews. Nothing else.",
+    "reason": {
+      "messages": "Messages the moment they write",
+      "bookings": "Bookings, proposals and quotes",
+      "reviews": "Reviews and account notices"
+    },
+    "card": {
+      "mensaje": {
+        "title": "New message from Carolina",
+        "body": "Can you come Thursday morning?"
+      },
+      "cita": {
+        "title": "Booking confirmed",
+        "body": "Carlos confirmed Thursday at 9:00"
+      },
+      "propuesta": {
+        "title": "You were chosen!",
+        "body": "María picked your proposal for her project"
+      },
+      "postulacion": {
+        "title": "Your application was reviewed",
+        "body": "The company wants to talk to you"
+      },
+      "cotizacion": {
+        "title": "Quote accepted",
+        "body": "Carlos accepted your quote"
+      },
+      "panel": {
+        "title": "New message from Carolina",
+        "body": "Can you come Thursday morning?"
+      },
+      "resena": {
+        "title": "New review ★★★★★",
+        "body": "“On time and great work”"
+      }
+    },
+    "activate": "Turn on notifications",
+    "activating": "Turning on…",
+    "later": "Not now",
+    "footnote": "Change it anytime in Settings.",
+    "settingsTitle": "Turn them on in Settings",
+    "settingsBody": "Your phone has ContrataCR notifications off. It takes a moment:",
+    "settingsStep1": "Open your phone's Settings",
+    "settingsStep2": "Find ContrataCR › Notifications",
+    "settingsStep3": "Turn on “Allow notifications”",
+    "understood": "Got it"
   }
 }

@@ -31,6 +31,7 @@ import { ExpandToggle } from "@/components/dashboard/expand-toggle";
 import { CardActionsMenu } from "@/components/dashboard/card-actions-menu";
 import { useAppDialog } from "@/hooks/use-app-dialog";
 import { PanelEmptyState, PanelListSkeleton } from "@/components/ui/content-loading";
+import { avisarMomentoDeNotificacion } from "@/lib/push-moment";
 
 type MyProposal = {
   id: string;
@@ -238,6 +239,7 @@ export function ProposalsTab({ categoryId }: ProposalsTabProps) {
         void refreshAll().then(() => setJustSent(new Set()));
         // La tarjeta se va de "Nuevas" al instante; sin esto el envío parecía no pasar.
         void showMessage({ title: t("sentTitle"), description: t("sentNote"), tone: "success" });
+        avisarMomentoDeNotificacion("propuesta");
         return;
       }
       const j = await res.json().catch(() => ({}));

@@ -51,6 +51,7 @@ import type { ProfessionalCardData } from "@/lib/data/mock-professionals";
 import { NAME_MAX_LENGTH, limitText } from "@/lib/text-limits";
 import { trackMetaEvent } from "@/lib/analytics/meta-pixel";
 import { useNativeApp } from "@/hooks/use-native-app";
+import { avisarMomentoDeNotificacion } from "@/lib/push-moment";
 
 type BookingStep = "calendar" | "details" | "contact" | "complete" | "success";
 type BookingProfessional = ProfessionalCardData & {
@@ -823,6 +824,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
       bookedRef.current = true;
       clearPendingBookingIdentity();
       setStep("success");
+      avisarMomentoDeNotificacion("cita");
     } finally {
       setSubmitting(false);
     }

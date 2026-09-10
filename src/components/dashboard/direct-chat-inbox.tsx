@@ -20,6 +20,7 @@ import { IMAGE_DOC_ACCEPT } from "@/lib/upload-validation";
 import { getImageUploadPreparationErrorCode, prepareImageForUpload } from "@/lib/client-image-upload";
 import { readCachedConversations, storeConversations } from "@/lib/direct-chat/conversations-cache";
 import { ProgressiveImage } from "@/components/ui/progressive-image";
+import { avisarMomentoDeNotificacion } from "@/lib/push-moment";
 
 type Person = { id?: string; full_name?: string | null; avatar_url?: string | null };
 type Conversation = {
@@ -989,6 +990,7 @@ export function DirectChatInbox() {
       const res = await fetchWithSessionRetry("/api/direct-chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || "Error");
+      avisarMomentoDeNotificacion("mensaje");
       clearSelectedAttachments();
       if (userId) {
         setStoredDrafts((current) => {

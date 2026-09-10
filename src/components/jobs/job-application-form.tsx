@@ -9,6 +9,7 @@ import { Link } from "@/i18n/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { PhoneInput, hasPhoneNumber, isPhoneComplete } from "@/components/ui/phone-input";
 import { marketplaceLocale } from "@/lib/marketplace-copy";
+import { avisarMomentoDeNotificacion } from "@/lib/push-moment";
 
 type Props = {
   jobId: string;
@@ -311,6 +312,7 @@ export function JobApplicationForm({
     }).select("id").single();
     if (!insertError) {
       trackInteraction({ type: "job_application_sent", source: "jobs", metadata: { jobId } });
+      avisarMomentoDeNotificacion("postulacion");
       if (createdApplication?.id) {
         // The employer hears about the new application (server re-verifies).
         void fetch("/api/jobs/notify", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ kind: "application", applicationId: createdApplication.id }) });

@@ -4277,5 +4277,62 @@
     "offerSubject": "Oferta en ContrataCR: {name}",
     "jobLink": "Enlace del empleo",
     "offerLink": "Enlace de la oferta"
+  },
+  "pushPrompt": {
+    "now": "ahora",
+    "title": {
+      "mensaje": "Te avisamos cuando te respondan",
+      "cita": "Te avisamos cuando confirmen tu cita",
+      "propuesta": "Te avisamos si te eligen",
+      "postulacion": "Te avisamos cuando revisen tu postulación",
+      "cotizacion": "Te avisamos cuando respondan tu cotización",
+      "panel": "Entérate al instante"
+    },
+    "body": "Solo lo tuyo: mensajes, citas, proyectos y reseñas. Nada más.",
+    "reason": {
+      "messages": "Mensajes en cuanto te escriban",
+      "bookings": "Citas, propuestas y cotizaciones",
+      "reviews": "Reseñas y avisos de tu cuenta"
+    },
+    "card": {
+      "mensaje": {
+        "title": "Nuevo mensaje de Carolina",
+        "body": "¿Puede venir el jueves en la mañana?"
+      },
+      "cita": {
+        "title": "Cita confirmada",
+        "body": "Carlos confirmó para el jueves a las 9:00"
+      },
+      "propuesta": {
+        "title": "¡Te eligieron!",
+        "body": "María eligió tu propuesta para su proyecto"
+      },
+      "postulacion": {
+        "title": "Revisaron tu postulación",
+        "body": "La empresa quiere hablar contigo"
+      },
+      "cotizacion": {
+        "title": "Cotización aceptada",
+        "body": "Carlos aceptó tu cotización"
+      },
+      "panel": {
+        "title": "Nuevo mensaje de Carolina",
+        "body": "¿Puede venir el jueves en la mañana?"
+      },
+      "resena": {
+        "title": "Nueva reseña ★★★★★",
+        "body": "«Puntual y muy buen trabajo»"
+      }
+    },
+    "activate": "Activar notificaciones",
+    "activating": "Activando…",
+    "later": "Ahora no",
+    "footnote": "Las cambias cuando quieras en Ajustes.",
+    "settingsTitle": "Actívalas desde Ajustes",
+    "settingsBody": "El teléfono tiene apagadas las notificaciones de ContrataCR. Se encienden en un momento:",
+    "settingsStep1": "Abre Ajustes del teléfono",
+    "settingsStep2": "Busca ContrataCR › Notificaciones",
+    "settingsStep3": "Activa «Permitir notificaciones»",
+    "understood": "Entendido"
   }
 }

@@ -10,6 +10,7 @@ import { PhoneInput } from "@/components/ui/phone-input";
 import { cleanId, isValidId } from "@/lib/cedula";
 import { Totales } from "@/components/quotes/quote-detail-modal";
 import { quoteTotals, QUOTE_MAX_ITEMS, type Quote, type QuoteItem, type QuoteTaxMode } from "@/lib/quotes";
+import { avisarMomentoDeNotificacion } from "@/lib/push-moment";
 
 /**
  * Nueva cotización: para quién, qué incluye y cuánto. Un solo formulario, en
@@ -82,6 +83,7 @@ export function QuoteEditorModal({ open, onClose, bookingId, projectId, defaultT
       const d = await res.json().catch(() => ({}));
       if (!res.ok) { setError(res.status === 503 ? t("errorUnavailable") : d.error ?? t("errorTitle")); return; }
       onSent(d.quote as Quote);
+      avisarMomentoDeNotificacion("cotizacion");
       setRows([nuevaFila()]); setNotes(""); setTitle(defaultTitle ?? ""); setClientName(""); setClientPhone(""); setClientEmail(""); setCedula("");
     } catch { setError(t("errorTitle")); } finally { setSending(false); }
   }

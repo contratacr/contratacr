@@ -324,10 +324,6 @@ body.ccr-native-app.ccr-native-search-route button:not([aria-label]) {
   padding-bottom: env(safe-area-inset-bottom);
 }
 
-.ccr-native-app .ccr-push-permission-dialog[role="dialog"] {
-  padding-bottom: 1.5rem !important;
-}
-
 .ccr-native-app {
   --ccr-native-header-height: 64px;
   --ccr-native-bottom-nav-height: calc(64px + max(env(safe-area-inset-bottom), 0.2rem));
@@ -2123,4 +2119,82 @@ html[data-keyboard-visible] body.ccr-native-app .ccr-native-search-panel { botto
 @media (prefers-reduced-motion: reduce) {
   .ccr-entrada { animation: none; }
   .ccr-tarjeta-rol, .ccr-tarjeta-rol-mosaico > svg, .ccr-tarjeta-rol-flecha { transition: none; }
+}
+
+/* ---- Permiso de notificaciones (app): hoja desde abajo con la pantalla
+   bloqueada del teléfono como ilustración. ---- */
+.ccr-aviso-fondo {
+  background: rgba(10, 18, 34, 0.55);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  animation: ccr-aviso-fondo-entrar 0.25s ease both;
+}
+@keyframes ccr-aviso-fondo-entrar { from { opacity: 0; } to { opacity: 1; } }
+.ccr-aviso-hoja {
+  animation: ccr-aviso-hoja-subir 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes ccr-aviso-hoja-subir {
+  from { transform: translateY(40px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+.ccr-aviso-escena {
+  background: linear-gradient(160deg, #eaf6fc 0%, #dbeffa 55%, #f3f9fd 100%);
+}
+.ccr-aviso-brillo {
+  position: absolute;
+  left: 50%;
+  top: 40%;
+  width: 18rem;
+  height: 18rem;
+  border-radius: 9999px;
+  background: radial-gradient(closest-side, rgba(0, 159, 217, 0.28), transparent);
+  transform: translate(-50%, -50%);
+  animation: ccr-aviso-brillo-latir 4s ease-in-out infinite;
+}
+@keyframes ccr-aviso-brillo-latir {
+  0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.9; }
+  50% { transform: translate(-50%, -50%) scale(1.12); opacity: 1; }
+}
+.ccr-aviso-pila {
+  position: absolute;
+  left: 1.25rem;
+  right: 1.25rem;
+  top: 50%;
+  transform: translateY(-50%);
+  display: grid;
+}
+.ccr-aviso-tarjeta {
+  grid-area: 1 / 1;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 0.875rem;
+  border-radius: 1.125rem;
+  background: #fff;
+  box-shadow: 0 18px 40px -22px rgba(15, 23, 42, 0.45), 0 1px 0 rgba(255, 255, 255, 0.8) inset;
+  /* --i: 0 atrás, 2 adelante. Las de atrás se ven más chicas y más arriba,
+     como la pila de la pantalla bloqueada. */
+  transform: translateY(calc((2 - var(--i)) * -16px)) scale(calc(1 - (2 - var(--i)) * 0.06));
+  opacity: calc(1 - (2 - var(--i)) * 0.28);
+  animation: ccr-aviso-tarjeta-caer 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: calc(0.15s + var(--i) * 0.16s);
+}
+@keyframes ccr-aviso-tarjeta-caer {
+  from { transform: translateY(-48px) scale(0.96); opacity: 0; }
+}
+/* Las de atrás solo asoman el borde, como en la pantalla bloqueada: su texto
+   no se lee ni se transparenta. */
+.ccr-aviso-tarjeta:not(:last-child) > * { visibility: hidden; }
+.ccr-aviso-icono {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 0.75rem;
+  background: #fff;
+  border: 1px solid #e5eaf0;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ccr-aviso-fondo, .ccr-aviso-hoja, .ccr-aviso-brillo, .ccr-aviso-tarjeta { animation: none; }
 }

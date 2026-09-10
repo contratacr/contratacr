@@ -4,8 +4,10 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { PushNotifications, type Token } from "@capacitor/push-notifications";
 import { Capacitor } from "@capacitor/core";
-import { Bell, Handshake, MessagesSquare, Star, X } from "lucide-react";
+import { Bell, BellRing, CalendarCheck, CheckCircle2, MessageCircle, Settings, Star } from "lucide-react";
 import { usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
+import { EVENTO_MOMENTO_AVISO, type MotivoDeAviso } from "@/lib/push-moment";
 import { useRouter } from "@/i18n/navigation";
 import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
@@ -71,12 +73,78 @@ function normalizePushUrl(rawUrl: unknown) {
   return rawUrl.replace(/^\/(es|en)(?=\/|$)/, "") || "/";
 }
 
-function promptSessionKey(userId: string) {
-  return `ccr:push-permission-context-shown:v3:${userId}`;
-}
-
 function permissionGrantedKey(userId: string) {
   return `ccr:push-permission-granted:${userId}`;
+}
+
+// Cuántas veces se preguntó y cuándo fue la última. Se pregunta como máximo
+// tres veces por cuenta, con al menos una semana entre una y otra: pedirlo
+// una sola vez y rendirse dejaba sin avisos a quien tocó "Ahora no" por
+// reflejo, y pedirlo siempre es la forma más rápida de que lo apaguen.
+function askStateKey(userId: string) {
+  return `ccr:push-ask:v4:${userId}`;
+}
+function deniedExplainedKey(userId: string) {
+  return `ccr:push-denied-explained:v1:${userId}`;
+}
+const LAUNCHES_KEY = "ccr:push-launches:v1";
+const LAUNCH_SESSION_KEY = "ccr:push-launch-counted:v1";
+const MAX_ASKS = 3;
+const DAYS_BETWEEN_ASKS = 7;
+
+type AskState = { veces: number; ultima: number };
+
+function readAskState(userId: string): AskState {
+  try {
+    const raw = window.localStorage.getItem(askStateKey(userId));
+    if (!raw) return { veces: 0, ultima: 0 };
+    const parsed = JSON.parse(raw) as Partial<AskState>;
+    return { veces: Number(parsed.veces) || 0, ultima: Number(parsed.ultima) || 0 };
+  } catch {
+    return { veces: 0, ultima: 0 };
+  }
+}
+
+function canAskAgain(userId: string) {
+  const { veces, ultima } = readAskState(userId);
+  if (veces >= MAX_ASKS) return false;
+  if (veces === 0) return true;
+  return Date.now() - ultima > DAYS_BETWEEN_ASKS * 24 * 60 * 60 * 1000;
+}
+
+function markAsked(userId: string) {
+  const { veces } = readAskState(userId);
+  window.localStorage.setItem(askStateKey(userId), JSON.stringify({ veces: veces + 1, ultima: Date.now() }));
+}
+
+// Arranques de la app en esta instalación (uno por sesión del WebView). La
+// pregunta "sin motivo" espera al segundo arranque: en el primero la persona
+// acaba de entrar y todavía no tiene nada que esperar.
+function countLaunch() {
+  try {
+    if (window.sessionStorage.getItem(LAUNCH_SESSION_KEY) === "1") return;
+    window.sessionStorage.setItem(LAUNCH_SESSION_KEY, "1");
+    const n = Number(window.localStorage.getItem(LAUNCHES_KEY)) || 0;
+    window.localStorage.setItem(LAUNCHES_KEY, String(n + 1));
+  } catch {
+    // sin almacenamiento no hay conteo; se trata como primer arranque
+  }
+}
+function launches() {
+  return Number(window.localStorage.getItem(LAUNCHES_KEY)) || 0;
+}
+
+type Motivo = MotivoDeAviso | "panel";
+type Pantalla = { motivo: Motivo; modo: "pedir" | "ajustes" };
+
+async function vibrar(tipo: "abrir" | "logrado") {
+  try {
+    const { Haptics, ImpactStyle, NotificationType } = await import("@capacitor/haptics");
+    if (tipo === "abrir") await Haptics.impact({ style: ImpactStyle.Light });
+    else await Haptics.notification({ type: NotificationType.Success });
+  } catch {
+    // sin háptica no pasa nada
+  }
 }
 
 function normalizePathname(pathname: string | null) {
@@ -99,10 +167,8 @@ function canShowPermissionPrompt(pathname: string | null) {
   return true;
 }
 
-function promptDelayForPath(pathname: string | null) {
-  const path = normalizePathname(pathname);
-  if (path.startsWith("/dashboard")) return 1800;
-  return 1200;
+function isPanelPath(pathname: string | null) {
+  return normalizePathname(pathname).startsWith("/dashboard");
 }
 
 export function PushTokenManager() {
@@ -116,8 +182,9 @@ export function PushTokenManager() {
   const registrationTaskRef = useRef<Promise<boolean> | null>(null);
   const removersRef = useRef<Array<() => Promise<void> | void>>([]);
   const promptTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [promptVisible, setPromptVisible] = useState(false);
+  const [pantalla, setPantalla] = useState<Pantalla | null>(null);
   const [requesting, setRequesting] = useState(false);
+  const t = useTranslations("pushPrompt");
 
   const cleanupListeners = useCallback(() => {
     while (removersRef.current.length) {
@@ -126,11 +193,6 @@ export function PushTokenManager() {
     }
     activeRef.current = false;
   }, []);
-
-  // Version the contextual decision independently from the OS permission.
-  // Older builds asked at a different point in the journey, so their dismissal
-  // must not suppress the improved post-login explanation.
-  const dismissKey = user ? `ccr:push-permission-context-dismissed:v3:${user.id}` : null;
 
   useEffect(() => {
     if (!isNativeMobile()) return;
@@ -218,22 +280,62 @@ export function PushTokenManager() {
     try {
       const result = await PushNotifications.requestPermissions();
       if (result.receive === "granted") {
-        setPromptVisible(false);
         window.localStorage.setItem(permissionGrantedKey(user.id), "1");
-        if (dismissKey) window.localStorage.removeItem(dismissKey);
+        void vibrar("logrado");
+        setPantalla(null);
         await registerCurrentDevice();
+        return;
       }
+      // El sistema ya no vuelve a preguntar: se explica el camino por Ajustes
+      // una sola vez y no se insiste más.
+      window.localStorage.setItem(deniedExplainedKey(user.id), "1");
+      setPantalla((actual) => (actual ? { ...actual, modo: "ajustes" } : null));
     } catch (error) {
       console.error("[push] permission request failed", error);
     } finally {
       setRequesting(false);
     }
-  }, [dismissKey, registerCurrentDevice, user]);
+  }, [registerCurrentDevice, user]);
 
   const dismissPrompt = useCallback(() => {
-    setPromptVisible(false);
-    if (dismissKey) window.localStorage.setItem(dismissKey, "1");
-  }, [dismissKey]);
+    setPantalla(null);
+  }, []);
+
+  const abrirPantalla = useCallback((motivo: Motivo, modo: Pantalla["modo"]) => {
+    if (!user) return;
+    markAsked(user.id);
+    void vibrar("abrir");
+    setPantalla({ motivo, modo });
+  }, [user]);
+
+  // Momentos de alta intención: la pantalla que acaba de mandar el mensaje, la
+  // cita, la propuesta, la postulación o la cotización avisa, y aquí se decide
+  // si toca preguntar. Se espera un poco para que se vea primero el "enviado".
+  useEffect(() => {
+    if (loading || !user || !isNativeMobile()) return;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    const onMomento = (raw: Event) => {
+      const motivo = (raw as CustomEvent<{ motivo: MotivoDeAviso }>).detail?.motivo;
+      if (!motivo) return;
+      if (window.localStorage.getItem(permissionGrantedKey(user.id)) === "1") return;
+      void PushNotifications.checkPermissions().then((permissions) => {
+        if (permissions.receive === "granted") return;
+        if (permissions.receive === "denied") {
+          if (window.localStorage.getItem(deniedExplainedKey(user.id)) === "1") return;
+          window.localStorage.setItem(deniedExplainedKey(user.id), "1");
+          timer = setTimeout(() => abrirPantalla(motivo, "ajustes"), 900);
+          return;
+        }
+        if (!canAskAgain(user.id)) return;
+        timer = setTimeout(() => abrirPantalla(motivo, "pedir"), 900);
+      }).catch(() => {});
+    };
+    window.addEventListener(EVENTO_MOMENTO_AVISO, onMomento);
+    return () => {
+      window.removeEventListener(EVENTO_MOMENTO_AVISO, onMomento);
+      if (timer) clearTimeout(timer);
+    };
+  }, [abrirPantalla, loading, user]);
 
   useEffect(() => {
     if (promptTimerRef.current) {
@@ -246,44 +348,31 @@ export function PushTokenManager() {
       return;
     }
 
-    if (!isNativeMobile() || !canShowPermissionPrompt(pathname)) return;
+    if (!isNativeMobile()) return;
+    countLaunch();
+    if (!canShowPermissionPrompt(pathname)) return;
 
     let cancelled = false;
     const grantedKey = permissionGrantedKey(user.id);
-
-    // Do not flash the prompt while the native bridge verifies a permission that
-    // this user has already granted on this installation.
-    if (window.localStorage.getItem(grantedKey) === "1") {
-      queueMicrotask(() => {
-        if (!cancelled) setPromptVisible(false);
-      });
-    }
 
     const init = async () => {
       try {
         const permissions = await PushNotifications.checkPermissions();
         if (cancelled) return;
         if (permissions.receive === "granted") {
-          setPromptVisible(false);
           window.localStorage.setItem(grantedKey, "1");
-          if (dismissKey) window.localStorage.removeItem(dismissKey);
           await registerCurrentDevice();
           return;
         }
         window.localStorage.removeItem(grantedKey);
-        const dismissed = dismissKey ? window.localStorage.getItem(dismissKey) === "1" : false;
-        const shownThisSession = window.sessionStorage.getItem(promptSessionKey(user.id)) === "1";
-        if (dismissed) {
-          setPromptVisible(false);
-          return;
-        }
-        if (!shownThisSession) {
-          promptTimerRef.current = setTimeout(() => {
-            if (cancelled) return;
-            window.sessionStorage.setItem(promptSessionKey(user.id), "1");
-            setPromptVisible(true);
-          }, promptDelayForPath(pathname));
-        }
+        if (permissions.receive === "denied") return;
+        // Pregunta de respaldo, sin acción de por medio: en el panel, a partir
+        // del segundo arranque, y respetando los mismos límites de frecuencia.
+        if (!isPanelPath(pathname) || launches() < 2 || !canAskAgain(user.id)) return;
+        promptTimerRef.current = setTimeout(() => {
+          if (cancelled) return;
+          abrirPantalla("panel", "pedir");
+        }, 2500);
       } catch (error) {
         console.error("[push] permission check failed", error);
       }
@@ -298,7 +387,7 @@ export function PushTokenManager() {
         promptTimerRef.current = null;
       }
     };
-  }, [cleanupListeners, dismissKey, loading, pathname, registerCurrentDevice, user]);
+  }, [abrirPantalla, cleanupListeners, loading, pathname, registerCurrentDevice, user]);
 
   useEffect(() => {
     if (loading || !user || !isNativeMobile()) return;
@@ -350,83 +439,131 @@ export function PushTokenManager() {
     return () => window.removeEventListener("contratacr:signing-out", deactivate);
   }, [user]);
 
-  if (loading || !promptVisible || !user || !isNativeMobile()) return null;
+  if (loading || !pantalla || !user || !isNativeMobile()) return null;
 
-  // Tres motivos concretos convencen más que una lista corrida: cada fila dice
-  // QUÉ aviso llega y POR QUÉ conviene. El texto sirve igual para quien busca
-  // y para quien ofrece.
-  const motivos = [
-    { Icono: MessagesSquare, titulo: "Mensajes al instante", detalle: "Responde apenas te escriban, sin abrir la app a revisar." },
-    { Icono: Handshake, titulo: "Citas y proyectos", detalle: "Entérate al momento cuando algo tuyo avanza." },
-    { Icono: Star, titulo: "Reseñas y avisos importantes", detalle: "Nuevas reseñas y cambios que afectan tu cuenta." },
-  ];
+  const { motivo, modo } = pantalla;
+  const ajustes = modo === "ajustes";
+  // La tarjeta de adelante muestra el aviso que la persona está esperando
+  // ahora mismo; las de atrás, lo demás que llega por ahí.
+  const frente = { titulo: t(`card.${motivo}.title`), texto: t(`card.${motivo}.body`) };
+  const detras = motivo === "mensaje" || motivo === "panel"
+    ? [{ titulo: t("card.cita.title"), texto: t("card.cita.body") }, { titulo: t("card.resena.title"), texto: t("card.resena.body") }]
+    : [{ titulo: t("card.mensaje.title"), texto: t("card.mensaje.body") }, { titulo: t("card.resena.title"), texto: t("card.resena.body") }];
+  const tarjetas = [detras[1], detras[0], frente];
 
   return createPortal(
     <div
-      className="app-modal-screen app-centered-modal-screen fixed inset-0 flex items-center justify-center p-4"
+      className="ccr-aviso-fondo fixed inset-0 flex items-end justify-center"
       style={{ zIndex: 100000 }}
       role="presentation"
       onClick={dismissPrompt}
     >
-      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
       <div
-        className="app-centered-modal ccr-push-permission-dialog relative z-10 max-h-[calc(var(--app-visual-viewport-height)-2rem)] w-full max-w-sm overflow-y-auto overscroll-contain rounded-2xl bg-white p-6 text-center shadow-2xl"
+        className="ccr-aviso-hoja relative w-full max-w-md overflow-hidden rounded-t-[28px] bg-white px-6 pb-[max(env(safe-area-inset-bottom),1.25rem)] pt-3 shadow-[0_-24px_60px_-30px_rgba(15,23,42,0.5)]"
         role="dialog"
         aria-modal="true"
         aria-labelledby="push-permission-title"
         onClick={(event) => event.stopPropagation()}
       >
-        <button
-          type="button"
-          onClick={dismissPrompt}
-          aria-label="Cerrar"
-          className="absolute right-4 top-4 rounded-full p-1.5 text-[#94a3b8] transition hover:bg-[#f4f7fa] hover:text-[#162543]"
-        >
-          <X className="h-4 w-4" />
-        </button>
-        <div className="relative mx-auto mb-4 grid h-16 w-16 place-items-center rounded-2xl bg-gradient-to-br from-[#00b4f0] to-[#0080b8] text-white shadow-[0_16px_38px_-18px_rgba(0,159,217,0.85)]">
-          <Bell className="h-8 w-8" />
-          {/* La bolita roja del aviso: el dibujo dice "notificación" solo. */}
-          <span className="absolute right-3 top-3 h-3 w-3 rounded-full border-2 border-white bg-[#ef4444]" aria-hidden />
+        <span aria-hidden className="mx-auto mb-3 block h-1.5 w-10 rounded-full bg-[#dde3ea]" />
+
+        {/* La ilustración es la pantalla bloqueada del propio teléfono: tres
+            avisos apilados, el de adelante con lo que la persona espera hoy. */}
+        <div aria-hidden className="ccr-aviso-escena relative mx-auto mb-6 h-[200px] w-full overflow-hidden rounded-3xl">
+          <span className="ccr-aviso-brillo" />
+          <div className="ccr-aviso-pila">
+            {tarjetas.map((tarjeta, i) => (
+              <div key={tarjeta.titulo + i} className="ccr-aviso-tarjeta" style={{ ["--i" as string]: i }}>
+                <span className="ccr-aviso-icono">
+                  {/* eslint-disable-next-line @next/next/no-img-element -- ícono fijo de la app */}
+                  <img src="/logo-mark.png" alt="" className="h-7 w-7" />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="flex items-center justify-between gap-2 text-[11px] font-semibold text-[#8a94a6]">
+                    <span>ContrataCR</span>
+                    <span className="font-medium">{t("now")}</span>
+                  </span>
+                  <span className="block truncate text-[13.5px] font-bold leading-tight text-[#162543]">{tarjeta.titulo}</span>
+                  <span className="block truncate text-[12.5px] leading-snug text-[#52627a]">{tarjeta.texto}</span>
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
-        <h2 id="push-permission-title" className="mb-1 text-xl font-extrabold leading-tight tracking-[-0.03em] text-[#162543]">
-          No te pierdas nada
+
+        <h2 id="push-permission-title" className="text-center text-[22px] font-extrabold leading-tight tracking-tight text-[#162543]">
+          {ajustes ? t("settingsTitle") : t(`title.${motivo}`)}
         </h2>
-        <p className="mx-auto mb-5 max-w-[19rem] text-sm leading-relaxed text-[#64748b]">
-          Activá las notificaciones y ContrataCR te avisa cuando importa:
+        <p className="mx-auto mt-2 max-w-[21rem] text-center text-[14px] leading-relaxed text-[#64748b]">
+          {ajustes ? t("settingsBody") : t("body")}
         </p>
-        <ul className="mb-5 flex flex-col gap-3 text-left">
-          {motivos.map(({ Icono, titulo, detalle }) => (
-            <li key={titulo} className="flex items-start gap-3">
-              <span className="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#e8f8fe] text-[#009FD9]">
-                <Icono className="h-[18px] w-[18px]" />
-              </span>
-              <span className="min-w-0">
-                <span className="block text-[13.5px] font-bold leading-snug text-[#162543]">{titulo}</span>
-                <span className="block text-[12.5px] leading-snug text-[#64748b]">{detalle}</span>
-              </span>
-            </li>
-          ))}
-        </ul>
-        <button
-          type="button"
-          onClick={requestNotifications}
-          disabled={requesting}
-          className={cn(
-            "w-full rounded-xl bg-[#009FD9] px-4 py-3 text-[15px] font-bold text-white shadow-[0_12px_28px_-18px_rgba(0,159,217,0.8)] transition hover:bg-[#0089BB]",
-            requesting && "cursor-wait opacity-70",
+
+        {!ajustes && (
+          <ul className="mx-auto mt-4 flex max-w-[21rem] flex-col gap-2">
+            {[
+              { Icono: MessageCircle, texto: t("reason.messages") },
+              { Icono: CalendarCheck, texto: t("reason.bookings") },
+              { Icono: Star, texto: t("reason.reviews") },
+            ].map(({ Icono, texto }) => (
+              <li key={texto} className="flex items-center gap-2.5 text-[13.5px] font-medium text-[#334155]">
+                <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-[#e8f8fe] text-[#009FD9]">
+                  <Icono className="h-4 w-4" strokeWidth={2.2} />
+                </span>
+                {texto}
+              </li>
+            ))}
+          </ul>
+        )}
+
+        {ajustes ? (
+          <ol className="mx-auto mt-4 flex max-w-[21rem] flex-col gap-2 text-[13.5px] text-[#334155]">
+            {[t("settingsStep1"), t("settingsStep2"), t("settingsStep3")].map((paso, i) => (
+              <li key={paso} className="flex items-center gap-2.5">
+                <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-[#eef3f8] text-[12px] font-bold text-[#162543]">{i + 1}</span>
+                {paso}
+              </li>
+            ))}
+          </ol>
+        ) : null}
+
+        <div className="mt-6 flex flex-col gap-2">
+          {ajustes ? (
+            <button
+              type="button"
+              onClick={dismissPrompt}
+              className="inline-flex h-[52px] w-full items-center justify-center gap-2 rounded-2xl bg-[#162543] text-[16px] font-bold text-white transition active:scale-[0.98]"
+            >
+              <CheckCircle2 className="h-5 w-5" />
+              {t("understood")}
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={requestNotifications}
+              disabled={requesting}
+              className={cn(
+                "inline-flex h-[52px] w-full items-center justify-center gap-2 rounded-2xl bg-[#009FD9] text-[16px] font-bold text-white shadow-[0_14px_30px_-16px_rgba(0,159,217,0.9)] transition active:scale-[0.98]",
+                requesting && "cursor-wait opacity-70",
+              )}
+            >
+              {requesting ? <Bell className="h-5 w-5 animate-pulse" /> : <BellRing className="h-5 w-5" />}
+              {requesting ? t("activating") : t("activate")}
+            </button>
           )}
-        >
-          {requesting ? "Activando..." : "Activar notificaciones"}
-        </button>
-        <button
-          type="button"
-          onClick={dismissPrompt}
-          className="mt-2 w-full rounded-xl px-4 py-2.5 text-sm font-semibold text-[#64748b] transition hover:bg-[#f8fafc] hover:text-[#334155]"
-        >
-          Ahora no
-        </button>
-        <p className="mt-3 text-[11.5px] text-[#94a3b8]">Las puedes apagar cuando quieras desde tu panel.</p>
+          {!ajustes && (
+            <button
+              type="button"
+              onClick={dismissPrompt}
+              className="h-11 w-full rounded-2xl text-[15px] font-semibold text-[#64748b] transition hover:bg-[#f8fafc] active:scale-[0.98]"
+            >
+              {t("later")}
+            </button>
+          )}
+        </div>
+        <p className="mt-3 flex items-center justify-center gap-1.5 text-center text-[12px] text-[#94a3b8]">
+          <Settings className="h-3.5 w-3.5" />
+          {t("footnote")}
+        </p>
       </div>
     </div>,
     document.body,
