@@ -1,6 +1,7 @@
 "use client";
 
 import { useTranslations, useLocale } from "next-intl";
+import { useNativeApp } from "@/hooks/use-native-app";
 import { Link } from "@/i18n/navigation";
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "@/i18n/navigation";
@@ -143,6 +144,11 @@ export default function LoginPage() {
   // volver de "Ofrecer" no debe dejar marcado lo de la vez pasada.
   const [rolPortada, setRolPortada] = useState<WelcomeRole>("client");
   const [formularioAbierto, setFormularioAbierto] = useState(false);
+  // En la app, la pantalla de bienvenida la pone el armazón nativo: si esta
+  // página pintara además la suya, al tocar "Inicia sesión" aparecía otra
+  // portada igual y parecía que no había pasado nada. El CSS que la escondía
+  // dependía de una clase del body que a veces llegaba tarde.
+  const enLaApp = useNativeApp();
   const [hidratado, setHidratado] = useState(false);
   useEffect(() => {
     setHidratado(true);
@@ -472,7 +478,7 @@ export default function LoginPage() {
       {/* Portada de acceso: la misma pantalla que recibe en la app. Solo en la
           web móvil — en la app la muestra el propio armazón, y en escritorio
           manda la tarjeta. Se oculta al abrir el formulario. */}
-      {hidratado && !formularioAbierto && (
+      {hidratado && !enLaApp && !formularioAbierto && (
         <div className="ccr-login-portada relative min-h-[100svh] w-full lg:hidden">
           <WelcomeAccessScreen
             className="absolute inset-0"
@@ -494,7 +500,7 @@ export default function LoginPage() {
         </div>
       )}
 
-      <div className={cn("flex flex-1 flex-col", !formularioAbierto && "ccr-login-formulario-oculto")}>
+      <div className={cn("flex flex-1 flex-col", !formularioAbierto && !enLaApp && "ccr-login-formulario-oculto")}>
       <Navbar mobileSearch={false} />
       <main className="flex-1 flex items-center justify-center py-12 px-4">
         <div className="w-full max-w-md">

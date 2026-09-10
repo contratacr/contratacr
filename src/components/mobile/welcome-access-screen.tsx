@@ -83,6 +83,18 @@ export function WelcomeAccessScreen({
       <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(5,18,31,0.03)_0%,rgba(5,18,31,0.08)_34%,rgba(8,28,52,0.68)_58%,#081c34_75%,#081c34_100%)]" />
       <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(2,13,23,0.12),transparent_48%,rgba(2,13,23,0.06))]" />
 
+      {/* El idioma, arriba a la derecha y en dos letras: es un ajuste, no una
+          decisión de bienvenida. Abajo, con su par de píldoras, competía con
+          "Crear una cuenta". */}
+      <button
+        type="button"
+        onClick={() => switchLang(english ? "es" : "en")}
+        aria-label={english ? "Cambiar a español" : "Switch to English"}
+        className="absolute right-4 top-[max(18px,env(safe-area-inset-top))] z-10 inline-flex h-10 min-w-10 items-center justify-center rounded-full px-3 text-[13px] font-bold text-white/80 transition hover:text-white active:scale-95 motion-reduce:transform-none"
+      >
+        {english ? "ES" : "EN"}
+      </button>
+
       {onClose && (
         <button
           type="button"
@@ -148,32 +160,6 @@ export function WelcomeAccessScreen({
             </span>
           </button>
 
-          {/* El idioma: los dos a la vista, con el que está puesto encendido.
-              Suelto abajo se leía como un enlace más y no se entendía que era
-              un cambio de idioma. */}
-          <div
-            role="group"
-            aria-label={english ? "Language" : "Idioma"}
-            className="mx-auto mt-4 inline-grid grid-cols-2 gap-1 rounded-full border border-white/25 bg-white/10 p-1 backdrop-blur-[3px]"
-          >
-            {([["es", "Español"], ["en", "English"]] as const).map(([codigo, nombre]) => {
-              const puesto = english ? codigo === "en" : codigo === "es";
-              return (
-                <button
-                  key={codigo}
-                  type="button"
-                  onClick={() => { if (!puesto) switchLang(codigo); }}
-                  aria-pressed={puesto}
-                  className={cn(
-                    "min-h-9 rounded-full px-4 text-[13px] font-bold transition-colors",
-                    puesto ? "bg-white text-[#0b2440]" : "text-white/75 hover:text-white",
-                  )}
-                >
-                  {nombre}
-                </button>
-              );
-            })}
-          </div>
         </section>
       </div>
     </div>
