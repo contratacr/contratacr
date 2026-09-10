@@ -668,7 +668,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                           aria-expanded={expandedBooking === b.id}
                           className={cn("group w-full cursor-pointer text-left p-4 sm:p-5 flex items-start gap-3.5 hover:bg-[#f9fbfd] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9]", expandedBooking === b.id ? "rounded-t-2xl bg-[#fbfdff]" : "rounded-2xl")}
                         >
-                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#ccecf8] bg-[#EAF7FD] text-[#0089bb] shadow-[0_8px_20px_-18px_rgba(0,159,217,0.9)]">
+                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#ccecf8] shadow-[0_8px_20px_-18px_rgba(0,159,217,0.9)] ccr-caja-icono">
                             <CalendarClock className="h-[18px] w-[18px]" />
                           </div>
                           <div className="flex-1 min-w-0">
@@ -938,7 +938,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                       className={cn("group w-full p-4 text-left transition-colors hover:bg-[#f9fbfd] sm:p-5", isExpanded ? "rounded-t-2xl bg-[#fbfdff]" : "rounded-2xl")}
                     >
                       <div className="flex items-start gap-3.5">
-                        <div className={cn("flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border", isActive && replyCount > 0 ? "border-[#ccecf8] bg-[#EAF7FD] text-[#0089bb]" : "border-[#e5e7eb] bg-[#f4f7fa] text-[#68778d]")}>
+                        <div className={cn("flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border", isActive && replyCount > 0 ? "border-[#ccecf8] ccr-caja-icono" : "border-[#e5e7eb] bg-[#f4f7fa] text-[#68778d]")}>
                           {isActive && replyCount > 0 ? <MessageCircle className="h-[18px] w-[18px]" /> : <ClipboardList className="h-[18px] w-[18px]" />}
                         </div>
                         <div className="min-w-0 flex-1">

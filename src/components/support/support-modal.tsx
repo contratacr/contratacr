@@ -28,7 +28,7 @@ export function SupportModal({ onClose, onSubmitted }: { onClose: () => void; on
         <SupportForm onSuccess={(email) => (onSubmitted ? onSubmitted(email) : setDoneEmail(email))} />
       ) : (
         <div className="flex flex-col items-center text-center gap-3 py-6">
-          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#EBF5FB]">
+          <div className="flex h-16 w-16 items-center justify-center rounded-full ccr-caja-icono">
             <CheckCircle2 className="h-8 w-8 text-[#009FD9]" />
           </div>
           <h3 className="text-lg font-bold text-[#162543]">{t("successTitle")}</h3>

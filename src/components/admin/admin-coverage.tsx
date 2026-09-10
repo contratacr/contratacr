@@ -251,7 +251,7 @@ export function AdminCoverage() {
                   <ul className="max-h-[520px] divide-y divide-[#f1f5f9] overflow-y-auto">
                     {(matches ?? []).map((pro) => (
                       <li key={pro.id} className="flex items-center gap-3 px-4 py-2.5">
-                        <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#EBF5FB] text-xs font-bold text-[#009FD9]">
+                        <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full text-xs font-bold ccr-caja-icono">
                           {pro.avatarUrl ? (
                             // eslint-disable-next-line @next/next/no-img-element
                             <img src={cldThumb(pro.avatarUrl, 72)} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />

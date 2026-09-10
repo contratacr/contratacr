@@ -637,7 +637,7 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
   if (!apiKey) {
     return (
       <div className="w-full h-full flex flex-col items-center justify-center gap-4 text-center p-6">
-        <div className="w-14 h-14 rounded-full bg-[#EBF5FB] flex items-center justify-center">
+        <div className="w-14 h-14 rounded-full flex items-center justify-center ccr-caja-icono">
           <MapPin className="h-7 w-7 text-[#009FD9]" />
         </div>
         <div>

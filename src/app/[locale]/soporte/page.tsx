@@ -124,7 +124,7 @@ export default function SoportePage() {
 
           {/* Header */}
           <div className="text-center mb-8">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#EBF5FB] mx-auto mb-3">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl mx-auto mb-3 ccr-caja-icono">
               <Headset className="h-6 w-6 text-[#009FD9]" />
             </div>
             <h1 className="text-2xl font-bold text-[#162543] mb-1">{t("headerTitle")}</h1>

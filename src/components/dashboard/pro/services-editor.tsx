@@ -676,7 +676,7 @@ export function ServicesEditor({
       {professions.length === 0 ? (
         /* No services yet → a calm, actionable empty state. */
         <div className="ccr-empty-state flex min-h-[20rem] flex-col items-center justify-center px-4 py-12 text-center sm:min-h-[22rem] sm:px-6">
-          <span className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-[#EBF5FB]">
+          <span className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full ccr-caja-icono">
             <Plus className="h-6 w-6 text-[#009FD9]" />
           </span>
           <p className="text-[15px] font-bold text-[#162543]">{t("emptyTitle")}</p>
@@ -880,7 +880,7 @@ export function ServicesEditor({
                     disabled={imageUploading}
                     className="flex min-h-32 w-full flex-col items-center justify-center gap-2 px-4 py-6 text-center transition-colors hover:bg-[#eef9fd] disabled:cursor-wait"
                   >
-                    <span className="grid h-11 w-11 place-items-center rounded-full bg-[#EBF5FB] text-[#009FD9]">
+                    <span className="grid h-11 w-11 place-items-center rounded-full ccr-caja-icono">
                       {imageUploading ? <Loader2 className="h-5 w-5 animate-spin" /> : <ImagePlus className="h-5 w-5" />}
                     </span>
                     <span className="text-sm font-extrabold text-[#0089bb]">

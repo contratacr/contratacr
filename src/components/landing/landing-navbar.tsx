@@ -566,7 +566,7 @@ function CategoriesMegaPanel({ onNavigate }: { onNavigate: () => void }) {
                         key={item.id}
                         type="button"
                         onClick={() => go(item.id)}
-                        className="group flex min-h-10 items-center justify-between gap-2 rounded-xl px-3 py-2 text-left text-sm font-semibold leading-snug text-[#374151] transition-colors hover:bg-[#EBF5FB] hover:text-[#0089bb] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9]/20"
+                        className="group flex min-h-10 items-center justify-between gap-2 rounded-xl px-3 py-2 text-left text-sm font-semibold leading-snug transition-colors hover: hover: focus:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9]/20 ccr-caja-icono"
                       >
                         <span className="min-w-0 [overflow-wrap:anywhere]">{getCategoryLabel(item.id, locale)}</span>
                         <ChevronRight className="h-4 w-4 shrink-0 text-[#cbd5e1] group-hover:text-[#009FD9]" />
@@ -2373,7 +2373,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                                 // eslint-disable-next-line @next/next/no-img-element -- miniatura fija; el optimizador no actúa en Cloudflare
                                 <img src={visita.imagen} alt="" className="h-9 w-9 shrink-0 rounded-full object-cover" />
                               ) : (
-                                <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#EBF5FB] text-[12px] font-extrabold text-[#0089bb]">
+                                <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-[12px] font-extrabold ccr-caja-icono">
                                   {visita.iniciales ?? visita.titulo.slice(0, 2).toUpperCase()}
                                 </span>
                               )}

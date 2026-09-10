@@ -45,7 +45,7 @@ function SavedProCard({ pro, onUnsave }: { pro: SavedPro; onUnsave: (id: string)
   return (
     <div className="grid grid-cols-[64px_minmax(0,1fr)] gap-x-3 gap-y-4 p-4 transition-colors hover:bg-[#fafafa] sm:flex sm:items-center sm:gap-4">
       <div className="relative shrink-0">
-        <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl bg-[#EBF5FB] text-lg font-bold text-[#009FD9] sm:h-14 sm:w-14">
+        <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl text-lg font-bold sm:h-14 sm:w-14 ccr-caja-icono">
           {pro.avatarUrl ? (
             <ProgressiveImage src={pro.avatarUrl} alt={displayName} fit="cover" wrapperClassName="h-full w-full" />
           ) : (

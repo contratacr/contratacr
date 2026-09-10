@@ -202,7 +202,7 @@ export function JobsManager({ initialJobs, embedded = false, backHref = "/dashbo
                         <section key={application.id} className="px-4 py-4 sm:px-5">
                           <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_160px] sm:items-start">
                             <div className="flex min-w-0 items-center gap-3">
-                              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[#edf8fc] text-xs font-extrabold text-[#008fc3]" aria-hidden="true">
+                              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full text-xs font-extrabold ccr-caja-icono" aria-hidden="true">
                                 {applicantInitials(application.applicant_name) || <UserRound className="h-4 w-4" />}
                               </span>
                               <div className="min-w-0">
@@ -247,7 +247,7 @@ export function JobsManager({ initialJobs, embedded = false, backHref = "/dashbo
                 ? "rounded-xl border border-dashed border-[#d8e4ec] bg-[#f8fbfd]"
                 : "rounded-2xl border border-[#e5e7eb] bg-white shadow-[0_2px_8px_rgba(15,23,42,0.05)]"
             )}>
-              <span className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-[#eaf7fc] text-[#009fd9]">
+              <span className="mx-auto grid h-14 w-14 place-items-center rounded-full ccr-caja-icono">
                 <BriefcaseBusiness className="h-6 w-6" strokeWidth={2} />
               </span>
               <h2 className="mt-4 font-bold text-[#162543]">{copy.emptyTitle}</h2>

@@ -151,7 +151,7 @@ export default async function OfferDetailPage({ params, searchParams }: { params
         </div>
       </StickyHairlineHeader>
       <div className="mx-auto hidden max-w-6xl px-4 pt-6 sm:px-6 lg:block">
-        <Link href={backHref} className="inline-flex h-10 items-center gap-2 rounded-lg px-2 text-sm font-extrabold text-[#008fc3] transition hover:bg-[#eaf7fc]">
+        <Link href={backHref} className="inline-flex h-10 items-center gap-2 rounded-lg px-2 text-sm font-extrabold transition hover: ccr-caja-icono">
           <ArrowLeft className="h-4 w-4 stroke-[2.4]" />
           <span>{backLabel}</span>
         </Link>

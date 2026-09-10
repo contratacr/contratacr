@@ -130,7 +130,7 @@ function CreatorCard({ creator }: { creator: Creator | null }) {
   if (!creator) return <p className="text-sm text-[#6b7280]">Cuenta eliminada</p>;
   return (
     <div className="flex min-w-0 items-center gap-2.5">
-      <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#EBF5FB] text-xs font-bold text-[#009FD9]">
+      <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full text-xs font-bold ccr-caja-icono">
         {creator.avatarUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={cldThumb(creator.avatarUrl, 72)} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />

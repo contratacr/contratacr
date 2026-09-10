@@ -36,7 +36,7 @@ export function CardListSkeleton({ rows = 3, withFilters = true, label, classNam
       {Array.from({ length: rows }).map((_, i) => (
         <div key={i} className="rounded-2xl border border-[#e5e7eb] bg-white p-4 shadow-sm sm:p-5">
           <div className="flex items-start gap-3.5">
-            <div className="h-10 w-10 shrink-0 animate-pulse rounded-xl bg-[#eaf7fd]" />
+            <div className="h-10 w-10 shrink-0 animate-pulse rounded-xl ccr-caja-icono" />
             <div className="min-w-0 flex-1 space-y-3">
               <div className="h-4 w-2/3 animate-pulse rounded-full bg-[#eef2f6]" />
               <div className="h-3 w-1/2 animate-pulse rounded-full bg-[#f1f5f9]" />

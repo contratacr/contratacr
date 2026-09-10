@@ -145,7 +145,7 @@ export function AdminCase({ providerId }: { providerId: string }) {
           {/* Header card */}
           <div className="bg-white rounded-xl border border-[#e5e7eb] p-5">
             <div className="flex items-start gap-4">
-              <div className="h-16 w-16 rounded-full bg-[#EBF5FB] overflow-hidden shrink-0 flex items-center justify-center">
+              <div className="h-16 w-16 rounded-full overflow-hidden shrink-0 flex items-center justify-center ccr-caja-icono">
                 {profile?.avatar_url ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={profile.avatar_url} alt="" className="h-full w-full object-cover" />

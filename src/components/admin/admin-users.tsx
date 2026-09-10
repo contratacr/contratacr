@@ -216,7 +216,7 @@ export function AdminUsers() {
                   className="grid gap-3 px-4 py-3 transition-colors hover:bg-[#f9fafb] sm:grid-cols-[minmax(0,1fr)_auto_auto] sm:items-center"
                 >
                   <div className="flex min-w-0 items-center gap-3">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#EBF5FB] text-sm font-bold text-[#009FD9]">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full text-sm font-bold ccr-caja-icono">
                       {user.avatar_url ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img src={user.avatar_url} alt="" className="h-full w-full object-cover" />

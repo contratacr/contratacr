@@ -39,7 +39,7 @@ export default function AtraerClientesPage() {
       <main className="flex-1">
         <section className="border-b border-[#e5e7eb] px-4 pb-12 pt-12 sm:pb-14 sm:pt-12">
           <div className="mx-auto max-w-3xl text-center">
-            <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-lg bg-[#eaf7fd] text-[#0089bb]"><BriefcaseBusiness className="h-5 w-5" /></div>
+            <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-lg ccr-caja-icono"><BriefcaseBusiness className="h-5 w-5" /></div>
             <p className="mt-4 text-xs font-bold uppercase text-[#009fd9]">{t("eyebrow")}</p>
             <h1 className="mt-3 text-3xl font-black leading-tight text-[#162543] sm:text-5xl">{t("titleA")} {t("titleB")}</h1>
             <p className="mx-auto mt-4 max-w-2xl text-base leading-7 text-[#6b7280] sm:text-lg">{t("subtitle")}</p>
@@ -55,7 +55,7 @@ export default function AtraerClientesPage() {
             <div className="divide-y divide-[#e5e7eb] rounded-lg border border-[#dfe5eb] bg-white px-5 sm:px-7">
               {PROFILE_ACTIONS.map(({ index, icon: Icon }) => (
                 <article key={index} className="grid gap-3 py-6 sm:grid-cols-[2.5rem_minmax(0,1fr)]">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#eaf7fd] text-[#0089bb]"><Icon className="h-5 w-5" /></div>
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg ccr-caja-icono"><Icon className="h-5 w-5" /></div>
                   <div>
                     <h3 className="text-sm font-bold text-[#162543]">{t(`tip${index}Title`)}</h3>
                     <p className="mt-1 text-sm leading-6 text-[#6b7280]">{t(`tip${index}Body`)}</p>
@@ -76,14 +76,14 @@ export default function AtraerClientesPage() {
             <div className="grid overflow-hidden rounded-lg border border-[#dfe5eb] bg-white md:grid-cols-2 md:divide-x md:divide-[#e5e7eb]">
               {EMPLEOS_VISIBLE && (
               <article className="border-b border-[#e5e7eb] p-6 md:border-b-0">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#eaf7fd] text-[#0089bb]"><BriefcaseBusiness className="h-5 w-5" /></div>
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg ccr-caja-icono"><BriefcaseBusiness className="h-5 w-5" /></div>
                 <h3 className="mt-4 text-base font-bold text-[#162543]">{t("jobsTitle")}</h3>
                 <p className="mt-2 text-sm leading-6 text-[#6b7280]">{t("jobsBody")}</p>
                 <Link href="/empleos" className="mt-4 inline-flex items-center gap-2 text-sm font-bold text-[#0089bb] hover:text-[#007aa7]">{t("jobsCta")}<ArrowRight className="h-4 w-4" /></Link>
               </article>
               )}
               <article className="p-6">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#eaf7fd] text-[#0089bb]"><Tags className="h-5 w-5" /></div>
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg ccr-caja-icono"><Tags className="h-5 w-5" /></div>
                 <h3 className="mt-4 text-base font-bold text-[#162543]">{t("offersTitle")}</h3>
                 <p className="mt-2 text-sm leading-6 text-[#6b7280]">{t("offersBody")}</p>
                 <Link href="/ofertas" className="mt-4 inline-flex items-center gap-2 text-sm font-bold text-[#0089bb] hover:text-[#007aa7]">{t("offersCta")}<ArrowRight className="h-4 w-4" /></Link>

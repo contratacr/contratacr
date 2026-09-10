@@ -252,7 +252,7 @@ export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "o
           // eslint-disable-next-line @next/next/no-img-element -- miniatura fija; el optimizador no actúa en Cloudflare
           <img src={fotoDe(item) as string} alt="" className="h-10 w-10 shrink-0 rounded-full object-cover" />
         ) : (
-          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[#EBF5FB] text-[#0089bb]">
+          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full ccr-caja-icono">
             <NotificationSourceIcon type={item.type} className="h-[18px] w-[18px]" />
           </span>
         )}

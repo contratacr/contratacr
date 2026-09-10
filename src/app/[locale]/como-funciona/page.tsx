@@ -63,7 +63,7 @@ function Journey({
     <article className={`border-b border-[#e5e7eb] py-9 last:border-0 sm:py-11 ${emphasized ? "bg-[#f7fbfd] px-5 sm:px-7" : ""}`}>
       <div className="grid gap-6 md:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] md:gap-10">
         <div>
-          <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-lg bg-[#eaf7fd] text-[#0089bb]">
+          <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-lg ccr-caja-icono">
             <Icon className="h-5 w-5" />
           </div>
           <p className="text-xs font-bold uppercase text-[#009fd9]">{label}</p>

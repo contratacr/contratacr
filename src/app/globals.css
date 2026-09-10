@@ -2119,6 +2119,17 @@ html[data-keyboard-visible] body.ccr-native-app .ccr-native-search-panel { botto
 /* El mismo mosaico, en pequeño, para los iconos sueltos del resto de la app
    (estados vacíos, encabezados de tarjeta). Sustituye al círculo celeste con
    icono azul claro, que se perdía contra el fondo blanco. */
+/* La caja de icono de la app: cuadrado redondeado con degradado y el icono a
+   línea encima. Es la misma pieza de las tarjetas de «¿Cómo quieres empezar?»,
+   en pequeño. Sustituye a los círculos celestes planos, que sobre blanco casi
+   no se veían. El radio lo pone quien la usa (rounded-*), así que sirve igual
+   para una caja de 36 px en una lista que para una de 64 en un vacío. */
+.ccr-caja-icono {
+  background: linear-gradient(135deg, #eaf6fc 0%, #cbe8f6 55%, #f0f8fd 100%);
+  color: #162543;
+  box-shadow: 0 10px 22px -16px rgba(15, 23, 42, 0.55);
+}
+
 .ccr-icono-mosaico {
   display: grid;
   place-items: center;

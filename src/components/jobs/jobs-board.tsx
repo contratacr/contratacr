@@ -368,7 +368,7 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
     )}
     {detailOnly && selected && (
       <div className="mx-auto hidden w-full max-w-6xl px-6 pb-8 pt-5 lg:block">
-        <Link href={detailBackHref} className="mb-3 inline-flex h-10 items-center gap-2 rounded-lg px-2 text-sm font-extrabold text-[#008fc3] transition hover:bg-[#eaf7fc] hover:text-[#00749f]">
+        <Link href={detailBackHref} className="mb-3 inline-flex h-10 items-center gap-2 rounded-lg px-2 text-sm font-extrabold transition hover: hover: ccr-caja-icono">
           <ArrowLeft className="h-4 w-4 stroke-[2.4]" />
           {detailBackLabel}
         </Link>
@@ -413,7 +413,7 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
             {filtered.map((job) => <JobRow key={job.id} job={job} selected={selected?.id === job.id} onSelect={() => setSelectedId(job.id)} />)}
             {filtered.length === 0 && (
               <div className="flex min-h-[320px] flex-col items-center justify-center px-7 py-12 text-center lg:min-h-[360px]">
-                <span className="grid h-14 w-14 place-items-center rounded-full bg-[#eaf7fc] text-[#009fd9]">
+                <span className="grid h-14 w-14 place-items-center rounded-full ccr-caja-icono">
                   <BriefcaseBusiness className="h-6 w-6" strokeWidth={2} />
                 </span>
                 <h2 className="mt-4 text-lg font-extrabold text-[#162543]">

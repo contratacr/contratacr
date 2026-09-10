@@ -177,7 +177,7 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
         <form noValidate onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col sm:flex-none">
           {published ? (
             <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-4 px-6 py-10 text-center sm:py-12">
-              <div className="grid h-16 w-16 place-items-center rounded-full bg-[#e8f8fe] text-[#009FD9]">
+              <div className="grid h-16 w-16 place-items-center rounded-full ccr-caja-icono">
                 <CheckCircle2 className="h-9 w-9" />
               </div>
               <h3 className="text-xl font-bold text-[#162543]">{t("successTitle")}</h3>

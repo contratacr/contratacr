@@ -563,7 +563,7 @@ function VerificationSummary({
   return (
     <section className="rounded-2xl border border-[#dbe4ee] bg-white p-4 shadow-sm sm:p-5">
       <div className="flex items-start gap-3">
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#ccecf8] bg-[#EAF7FD] text-[#0089bb] shadow-[0_8px_20px_-18px_rgba(0,159,217,0.9)]">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#ccecf8] shadow-[0_8px_20px_-18px_rgba(0,159,217,0.9)] ccr-caja-icono">
           <Icon className="h-[18px] w-[18px]" />
         </span>
         <div className="min-w-0 flex-1">

@@ -212,7 +212,7 @@ export function AdminQueue() {
                   href={r.detail_href ?? `/admin/proveedores/${r.id}`}
                   className="flex min-w-0 flex-1 items-center gap-4 px-4 py-3"
                 >
-                  <div className="h-10 w-10 rounded-full bg-[#EBF5FB] text-[#009FD9] font-semibold flex items-center justify-center overflow-hidden shrink-0">
+                  <div className="h-10 w-10 rounded-full font-semibold flex items-center justify-center overflow-hidden shrink-0 ccr-caja-icono">
                     {r.profiles?.avatar_url ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={r.profiles.avatar_url} alt="" className="h-full w-full object-cover" />

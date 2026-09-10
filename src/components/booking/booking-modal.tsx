@@ -1280,7 +1280,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                     </div>
                   ) : availabilityPrivate ? (
                     <div className="flex flex-col items-center text-center gap-3 py-8 rounded-2xl bg-[#f9fafb] border border-[#e5e7eb]">
-                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#EBF5FB]">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-full ccr-caja-icono">
                         <Lock className="h-5 w-5 text-[#009FD9]" />
                       </div>
                       <div>
@@ -1297,7 +1297,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                     </div>
                   ) : !hasAnyAvailability ? (
                     <div className="flex flex-col items-center text-center gap-3 py-8 rounded-2xl bg-[#f9fafb] border border-[#e5e7eb]">
-                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#EBF5FB]">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-full ccr-caja-icono">
                         <MessageCircle className="h-5 w-5 text-[#009FD9]" />
                       </div>
                       <div>

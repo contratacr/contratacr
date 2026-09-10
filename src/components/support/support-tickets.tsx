@@ -386,7 +386,7 @@ export function SupportTickets({
                 <ArrowLeft className="h-5 w-5" />
               </button>
               <div className="flex min-w-0 items-center gap-3">
-                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-[#ccecf8] bg-[#EAF7FD] text-[#0089bb] shadow-sm">
+                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-[#ccecf8] shadow-sm ccr-caja-icono">
                   <Headset className="h-5 w-5" />
                 </span>
                 <div className="min-w-0 flex-1">
@@ -522,7 +522,7 @@ export function SupportTickets({
             return (
               <button key={tk.id} onClick={() => openTicket(tk.id)} className={`group text-left bg-white rounded-2xl border p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md sm:p-5 ${hasNew ? "border-[#bfe3f5] ring-1 ring-[#EBF5FB]" : "border-[#e5e7eb] hover:border-[#bfe3f5]"}`}>
                 <div className="flex items-start gap-3">
-                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#ccecf8] bg-[#EAF7FD] text-[#0089bb] shadow-[0_8px_20px_-18px_rgba(0,159,217,0.9)]">
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#ccecf8] shadow-[0_8px_20px_-18px_rgba(0,159,217,0.9)] ccr-caja-icono">
                     <Headset className="h-[18px] w-[18px]" />
                   </span>
                   <div className="min-w-0 flex-1">

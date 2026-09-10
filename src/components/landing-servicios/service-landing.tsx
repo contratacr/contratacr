@@ -101,7 +101,7 @@ export async function ServiceLanding({ locale, categoryId, provinceId }: { local
                     href={`/profesionales/${pro.slug}?from=${encodeURIComponent(`/servicios/${categoryId}${province ? `/${province.id}` : ""}`)}`}
                     className={`flex items-center gap-3 px-4 py-3.5 transition-colors hover:bg-[#f8fafc] ${i > 0 ? "border-t border-[#eef2f6]" : ""}`}
                   >
-                    <span className="grid h-14 w-14 shrink-0 place-items-center overflow-hidden rounded-full bg-[#EBF5FB] text-base font-bold text-[#009FD9]">
+                    <span className="grid h-14 w-14 shrink-0 place-items-center overflow-hidden rounded-full text-base font-bold ccr-caja-icono">
                       {pro.avatarUrl ? (
                         // eslint-disable-next-line @next/next/no-img-element -- miniatura ya redimensionada por Cloudinary
                         <img src={cldThumb(pro.avatarUrl, 160)} alt="" className="h-full w-full object-cover" loading={i < 3 ? "eager" : "lazy"} />

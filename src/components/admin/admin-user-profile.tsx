@@ -309,7 +309,7 @@ export function AdminUserProfile({
       {/* ── 1. Who they are and how to reach them ── */}
       <div className="rounded-xl border border-[#e5e7eb] bg-white p-5">
         <div className="flex flex-wrap items-start gap-4">
-          <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#EBF5FB] text-lg font-bold text-[#009FD9]">
+          <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full text-lg font-bold ccr-caja-icono">
             {profile.avatar_url ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={cldThumb(profile.avatar_url, 128)} alt="" decoding="async" className="h-full w-full object-cover" />

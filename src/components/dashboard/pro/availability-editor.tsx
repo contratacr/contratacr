@@ -939,7 +939,7 @@ export function AvailabilityEditor({
         <div className="m-4 rounded-2xl border border-[#bfe3f5] bg-[#f8fbfe] p-4 sm:m-5 sm:p-5">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div className="flex min-w-0 gap-3">
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#EBF5FB] text-[#009FD9]">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ccr-caja-icono">
                 <MapPin className="h-5 w-5" />
               </span>
               <div className="min-w-0">

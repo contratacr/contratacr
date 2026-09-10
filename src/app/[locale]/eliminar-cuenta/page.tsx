@@ -61,7 +61,7 @@ export default async function DeleteAccountPage({
             </div>
           )}
           <header className="text-center">
-            <span className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-[#eaf7fd] text-[#0089bb]">
+            <span className="mx-auto grid h-14 w-14 place-items-center rounded-full ccr-caja-icono">
               <Trash2 className="h-6 w-6" />
             </span>
             <h1 className="mt-5 text-3xl font-black text-[#162543] sm:text-4xl">
