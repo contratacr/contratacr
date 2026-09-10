@@ -4243,7 +4243,9 @@
     "deleteConfirmTitle": "¿Eliminar esta cotización?",
     "deleteConfirmBody": "Desaparece de tu lista y su enlace deja de abrir. El número no se vuelve a usar.",
     "deleteConfirm": "Sí, eliminar",
-    "sentOn": "Enviada el {date}"
+    "sentOn": "Enviada el {date}",
+    "rowSentTitle": "Cotización enviada",
+    "rowReceivedTitle": "Cotización recibida"
   },
   "menuFicha": {
     "more": "Más opciones",

@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { FileText, ChevronRight } from "lucide-react";
 import { formatColones } from "@/lib/pricing";
-import { isQuoteExpired, numeroCotizacion, type Quote } from "@/lib/quotes";
+import { isQuoteExpired, type Quote } from "@/lib/quotes";
 import { actualizarCotizacion, agregarCotizacion, cargarCotizaciones, useCotizaciones } from "@/lib/quotes-store";
 import { QuoteEditorModal } from "@/components/quotes/quote-editor-modal";
 import { QuoteDetailModal } from "@/components/quotes/quote-detail-modal";
@@ -88,10 +88,10 @@ export function QuoteBlock({ bookingId, projectId, role, canCreate = false, defa
           <button type="button" onClick={() => setDetail(conNombre)} className="flex w-full items-center gap-3 rounded-2xl border border-[#e5eaf0] bg-[#f8fbfd] px-3.5 py-2.5 text-left transition-colors hover:border-[#bfe3f5] hover:bg-[#f2f9fd]">
             <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white text-[#009FD9]"><FileText className="h-4 w-4" /></span>
             <span className="min-w-0 flex-1">
+              {/* Una línea: qué pasó y cuánto. El número y la fecha viven adentro. */}
               <span className="block truncate text-[13px] font-extrabold text-[#162543]">
-                {conNombre.quote_number ? `${t("rowQuote")} N.º ${numeroCotizacion(conNombre)}` : t("rowQuote")} · {formatColones(conNombre.total)}
+                {isQuoteExpired(conNombre) || conNombre.status === "withdrawn" ? `${t("rowQuote")} · ${estado(conNombre)}` : t("rowSentTitle")} · {formatColones(conNombre.total)}
               </span>
-              <span className="block truncate text-[12px] text-[#68778d]">{estado(conNombre)}</span>
             </span>
             <span className="shrink-0 text-[13px] font-bold text-[#0089bb]">{t("view")}</span>
           </button>
@@ -111,8 +111,7 @@ export function QuoteBlock({ bookingId, projectId, role, canCreate = false, defa
         <button type="button" onClick={() => setDetail(conNombre)} className="flex w-full items-center gap-3 rounded-2xl border border-[#e5eaf0] bg-white px-3.5 py-3 text-left transition-colors hover:border-[#bfe3f5] hover:bg-[#f8fcfe]">
           <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[#eaf7fc] text-[#009FD9]"><FileText className="h-5 w-5" /></span>
           <span className="min-w-0 flex-1">
-            <span className="block text-[14px] font-extrabold text-[#162543]">{t("blockTitle")} · {formatColones(conNombre.total)}</span>
-            <span className={`block text-[12px] font-semibold ${conNombre.status === "accepted" ? "text-[#0089bb]" : "text-[#68778d]"}`}>{estado(conNombre)}</span>
+            <span className="block text-[14px] font-extrabold text-[#162543]">{isQuoteExpired(conNombre) || conNombre.status === "withdrawn" ? `${t("blockTitle")} · ${estado(conNombre)}` : role === "client" ? t("rowReceivedTitle") : t("rowSentTitle")} · {formatColones(conNombre.total)}</span>
           </span>
           <ChevronRight className="h-4 w-4 shrink-0 text-[#9aa8ba]" />
         </button>

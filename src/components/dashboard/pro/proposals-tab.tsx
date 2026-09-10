@@ -1,6 +1,7 @@
 "use client";
 
 import { QuoteBlock } from "@/components/quotes/quote-block";
+import { cargarCotizaciones } from "@/lib/quotes-store";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
@@ -150,6 +151,10 @@ export function ProposalsTab({ categoryId }: ProposalsTabProps) {
       void refreshAll().then(() => setJustSent(new Set()));
     }, delay);
   }, [refreshAll]);
+
+  // Las cotizaciones se piden junto con la lista, no al abrir cada tarjeta:
+  // así el bloque de cotización ya está cuando la tarjeta se despliega.
+  useEffect(() => { cargarCotizaciones(); }, []);
 
   useEffect(() => {
     if (loading) return;

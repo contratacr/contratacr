@@ -1,6 +1,7 @@
 "use client";
 
 import { QuoteBlock } from "@/components/quotes/quote-block";
+import { cargarCotizaciones } from "@/lib/quotes-store";
 
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { useLocale, useTranslations } from "next-intl";
@@ -269,6 +270,10 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
       if (section === "projects") void reloadLoadedProjectProposals();
     }, delay);
   }, [fetchSection, reloadLoadedProjectProposals, section]);
+
+  // Las cotizaciones se piden junto con la lista, no al abrir cada tarjeta:
+  // así el bloque de cotización ya está cuando la tarjeta se despliega.
+  useEffect(() => { cargarCotizaciones(); }, []);
 
   useEffect(() => {
     if (!user || section === "saved" || loading) return;
@@ -781,12 +786,16 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                               const resenaPrimero = terminada && !rev ? (
                                 <Button size="sm" className={actionButtonClass} onClick={() => setReviewModal({ professionalId: b.professional_id, professionalName: b.professionals?.profiles?.full_name ?? t("professional"), bookingId: b.id, initialReview: null })}>{t("leaveReview")}</Button>
                               ) : null;
-                              const principal = primary ?? resenaPrimero;
-                              const segundaFila = [
+                              // Si no hay acción que mande, la primera secundaria sube a la
+                              // fila del menú: un renglón con solo el "…" y un hueco al lado
+                              // era lo que se veía en una cita con fecha por venir.
+                              const candidatas = [
                                 messageAction,
                                 terminada && rev ? reviewAction : null,
                                 rebookAction,
                               ].filter(Boolean);
+                              const principal = primary ?? resenaPrimero ?? candidatas.shift() ?? null;
+                              const segundaFila = candidatas;
                               // Arriba, la acción que manda con el menú ⋮ al lado; abajo, el resto
                               // cruzando la tarjeta entera. Antes el botón de la segunda fila
                               // terminaba antes del borde, con el hueco del menú al lado.

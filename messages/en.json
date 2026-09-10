@@ -4243,7 +4243,9 @@
     "deleteConfirmTitle": "Delete this quote?",
     "deleteConfirmBody": "It disappears from your list and its link stops opening. The number is not reused.",
     "deleteConfirm": "Yes, delete",
-    "sentOn": "Sent on {date}"
+    "sentOn": "Sent on {date}",
+    "rowSentTitle": "Quote sent",
+    "rowReceivedTitle": "Quote received"
   },
   "menuFicha": {
     "more": "More options",
