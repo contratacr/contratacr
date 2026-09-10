@@ -2,7 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
-import { UserRoundSearch, BriefcaseBusiness, ArrowRight } from "lucide-react";
+import { UserRoundSearch, BriefcaseBusiness, ArrowRight, BadgeCheck, MapPin, FileText, Star } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { Navbar } from "@/components/layout/navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
@@ -33,7 +33,7 @@ export default function RegisterPage() {
       <main className="flex-1 flex flex-col items-center justify-center px-4 py-12 lg:py-20">
         <div className="w-full max-w-2xl">
           <div className="ccr-entrada text-center mb-8 lg:mb-12">
-            <h1 className="text-[1.9rem] font-extrabold tracking-tight text-[#162543] mb-3 lg:text-5xl">{t("title")}</h1>
+            <h1 className="text-[1.75rem] font-extrabold leading-tight tracking-tight text-[#162543] mb-3 sm:text-4xl lg:text-5xl">{t("title")}</h1>
             <p className="text-base font-medium text-[#6b7280] lg:text-lg">{t("subtitle")}</p>
           </div>
 
@@ -44,10 +44,13 @@ export default function RegisterPage() {
           <div className="grid grid-cols-2 gap-3 sm:gap-6">
             <Link
               href={`/registro/profesional${redirectSuffix}`}
-              className="ccr-entrada ccr-tarjeta-rol group [animation-delay:80ms]"
+              className="ccr-entrada ccr-tarjeta-rol group [animation-delay:80ms] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#009FD9]/35"
             >
               <span className="ccr-tarjeta-rol-mosaico ccr-mosaico-pro" aria-hidden>
                 <BriefcaseBusiness className="h-16 w-16 text-[#162543] sm:h-24 sm:w-24" strokeWidth={1.4} />
+                {/* Dos pedacitos de la app flotando: dicen qué gana sin un párrafo. */}
+                <span className="ccr-chip-mosaico left-2 top-2 sm:left-4 sm:top-4"><BadgeCheck className="h-3.5 w-3.5 text-[#009FD9]" /> {t("proChipVerified")}</span>
+                <span className="ccr-chip-mosaico bottom-2 right-2 sm:bottom-4 sm:right-4 [animation-delay:1.4s]"><FileText className="h-3.5 w-3.5 text-[#009FD9]" /> {t("proChipQuotes")}</span>
               </span>
               <span className="mt-4 flex items-center justify-center gap-1.5 text-[19px] font-bold text-[#162543] sm:text-2xl">
                 {t("proRole")}
@@ -58,10 +61,12 @@ export default function RegisterPage() {
 
             <Link
               href={`/registro/cliente${redirectSuffix}`}
-              className="ccr-entrada ccr-tarjeta-rol group [animation-delay:160ms]"
+              className="ccr-entrada ccr-tarjeta-rol group [animation-delay:160ms] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#009FD9]/35"
             >
               <span className="ccr-tarjeta-rol-mosaico ccr-mosaico-cliente" aria-hidden>
                 <UserRoundSearch className="h-16 w-16 text-[#162543] sm:h-24 sm:w-24" strokeWidth={1.4} />
+                <span className="ccr-chip-mosaico left-2 top-2 sm:left-4 sm:top-4 [animation-delay:0.7s]"><Star className="h-3.5 w-3.5 fill-[#f5b301] text-[#f5b301]" /> {t("clientChipReviews")}</span>
+                <span className="ccr-chip-mosaico bottom-2 right-2 sm:bottom-4 sm:right-4 [animation-delay:2.1s]"><MapPin className="h-3.5 w-3.5 text-[#009FD9]" /> {t("clientChipNear")}</span>
               </span>
               <span className="mt-4 flex items-center justify-center gap-1.5 text-[19px] font-bold text-[#162543] sm:text-2xl">
                 {t("clientRole")}
@@ -71,7 +76,11 @@ export default function RegisterPage() {
             </Link>
           </div>
 
-          <p className="ccr-entrada [animation-delay:240ms] text-center text-sm text-[#6b7280] mt-8 lg:mt-10">
+          {/* Quita el miedo a elegir mal: es gratis y el rol no encierra. */}
+          <p className="ccr-entrada [animation-delay:240ms] mx-auto mt-6 max-w-md text-center text-[13px] leading-relaxed text-[#8a94a6] sm:text-sm">
+            {t("reassurance")}
+          </p>
+          <p className="ccr-entrada [animation-delay:300ms] text-center text-sm text-[#6b7280] mt-6 lg:mt-8">
             {t("haveAccount")}{" "}
             <Link href="/login" className="text-[#009FD9] font-semibold hover:underline">
               {t("signIn")}

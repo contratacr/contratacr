@@ -2999,7 +2999,12 @@
     "signIn": "Inicia sesión",
     "clientRole": "Cliente",
     "proRole": "Profesional",
-    "continue": "Continuar"
+    "continue": "Continuar",
+    "proChipVerified": "Verificado",
+    "proChipQuotes": "Cotizaciones",
+    "clientChipReviews": "Reseñas",
+    "clientChipNear": "Cerca de ti",
+    "reassurance": "Es gratis y toma menos de 2 minutos. Si empiezas como cliente, después también puedes ofrecer tus servicios."
   },
   "onboarding": {
     "greeting": "Hola, {name}",
