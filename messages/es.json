@@ -106,7 +106,7 @@
       "privacy": "Privacidad"
     },
     "loginModal": {
-      "welcomeBack": "Hola de nuevo",
+      "welcomeBack": "Ingresa a tu cuenta",
       "createAccount": "Crear cuenta",
       "loginToContinue": "Inicia sesión para continuar",
       "registerSeconds": "Regístrate en segundos",
@@ -544,7 +544,7 @@
     "toCall": "Para llamar a",
     "toEmail": "Para enviarle un correo a",
     "freeAccountHint": "Crea tu cuenta gratis · menos de un minuto",
-    "loginTitle": "Hola de nuevo",
+    "loginTitle": "Ingresa a tu cuenta",
     "loginSubtitle": "Usa tu correo y contraseña de ContrataCR.",
     "dupTitle": "Ya existe una cuenta con este correo",
     "dupBody": "Ingresa tu contraseña para continuar.",
@@ -724,7 +724,7 @@
   },
   "auth": {
     "login": {
-      "title": "Hola de nuevo",
+      "title": "Ingresa a tu cuenta",
       "subtitle": "Ingresa a tu cuenta",
       "email": "Correo electrónico",
       "password": "Contraseña",

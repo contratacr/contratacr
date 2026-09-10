@@ -465,7 +465,7 @@ export default function LoginPage() {
               shadow, p-8 — so the whole auth flow (login + both signups) is consistent. */}
           <div className="rounded-3xl border border-[#e5e7eb] bg-white p-8 shadow-[0_18px_44px_-28px_rgba(15,23,42,0.45)]">
           {/* Un solo encabezado: "Ingresa a tu cuenta" decía lo mismo que
-              "Hola de nuevo" justo debajo. */}
+              "Ingresa a tu cuenta" justo debajo. */}
           <div className="text-center mb-8">
             <h1 className="text-2xl font-bold text-[#162543]">{t("title")}</h1>
           </div>

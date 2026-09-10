@@ -106,7 +106,7 @@
       "privacy": "Privacy"
     },
     "loginModal": {
-      "welcomeBack": "Welcome back",
+      "welcomeBack": "Log in to your account",
       "createAccount": "Create your account",
       "loginToContinue": "Log in to continue",
       "registerSeconds": "Sign up in seconds",
@@ -544,7 +544,7 @@
     "toCall": "To call",
     "toEmail": "To email",
     "freeAccountHint": "Create your free account · under a minute",
-    "loginTitle": "Welcome back",
+    "loginTitle": "Log in to your account",
     "loginSubtitle": "Use your ContrataCR email and password.",
     "dupTitle": "An account with this email already exists",
     "dupBody": "Enter your password to continue.",
@@ -724,7 +724,7 @@
   },
   "auth": {
     "login": {
-      "title": "Welcome back",
+      "title": "Log in to your account",
       "subtitle": "Sign in to your account",
       "email": "Email",
       "password": "Password",
