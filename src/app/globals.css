@@ -416,7 +416,10 @@ html.ccr-native-bottom-nav-visible body .ccr-search-bottom-sheet {
     overscroll-behavior: contain;
     background: #fff;
     box-sizing: border-box;
-    padding-bottom: 0 !important;
+    /* Un respiro al final: sin él, la última tarjeta terminaba pegada a la barra
+       de abajo y parecía cortada. No es la reserva de la barra (este contenedor
+       ya termina encima de ella), solo el aire del final del contenido. */
+    padding-bottom: 1rem !important;
     scroll-padding-bottom: var(--ccr-native-content-end-gap);
     -webkit-overflow-scrolling: touch;
   }
