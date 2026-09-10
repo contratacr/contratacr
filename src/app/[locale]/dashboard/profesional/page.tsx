@@ -678,6 +678,9 @@ export default function DashboardPage() {
   const opportunityWelcomeCheckedRef = useRef(false);
   const opportunityWelcomeDismissedRef = useRef(false);
   const proFetchSequenceRef = useRef(0);
+  // Lo último que se logró cargar: si ya hay panel en pantalla, un fallo de red
+  // se reintenta en silencio en vez de sustituirlo por una pantalla de error.
+  const proRef = useRef<ProData | null>(null);
   const [noProTries, setNoProTries] = useState(0);
   const focusKeyRef = useRef(0);
   const bootstrapHydratedForRef = useRef<string | null>(null);
@@ -967,56 +970,82 @@ export default function DashboardPage() {
     const requestSequence = ++proFetchSequenceRef.current;
     const supabase = createClient();
     setProLoadError(false);
-    let result;
-    try {
-      result = await withPromiseTimeout(
-        supabase.from("professionals").select("*").eq("profile_id", user.id).maybeSingle(),
-        8_000,
-        "dashboard-professional-timeout",
-      );
-    } catch (error) {
+
+    // Tres intentos con espera creciente en vez de dos seguidos: la mayoría de
+    // los fallos son un bache de red de un segundo. Y si el servidor responde
+    // que el permiso venció —lo típico al volver a abrir la app horas después—
+    // se renueva la sesión antes de reintentar, que si no el reintento falla
+    // igual y la persona veía "No pudimos cargar tu panel" con la red buena.
+    const esperas = [0, 600, 1800];
+    let result: { data: ProData | null } | null = null;
+    let ultimoFallo: unknown = null;
+    for (let intento = 0; intento < esperas.length; intento += 1) {
+      if (esperas[intento] > 0) await new Promise((r) => window.setTimeout(r, esperas[intento]));
       if (requestSequence !== proFetchSequenceRef.current) return null;
-      console.error("[dashboard] professional load timed out or failed", error);
       try {
-        result = await withPromiseTimeout(
+        const respuesta = await withPromiseTimeout(
           supabase.from("professionals").select("*").eq("profile_id", user.id).maybeSingle(),
           8_000,
-          "dashboard-professional-timeout-retry",
+          "dashboard-professional-timeout",
         );
-      } catch (segundoError) {
-        if (requestSequence !== proFetchSequenceRef.current) return null;
-        console.error("[dashboard] professional load failed twice", segundoError);
-        if (!silent) {
-          setProLoadError(true);
-          setLoading(false);
+        if (!respuesta.error) { result = { data: (respuesta.data ?? null) as ProData | null }; break; }
+        ultimoFallo = respuesta.error;
+        const mensaje = `${respuesta.error.code ?? ""} ${respuesta.error.message ?? ""}`.toLowerCase();
+        if (mensaje.includes("jwt") || mensaje.includes("401") || mensaje.includes("expired")) {
+          await supabase.auth.refreshSession().catch(() => undefined);
         }
-        return null;
+      } catch (error) {
+        ultimoFallo = error;
       }
     }
-    const { data, error } = result;
+
+    if (requestSequence !== proFetchSequenceRef.current) return null;
+    if (!result) {
+      console.error("[dashboard] professional load failed after retries", ultimoFallo);
+      // Con un panel ya pintado (de la caché o de una carga anterior) el error
+      // no se muestra: se queda lo que hay y se vuelve a intentar solo.
+      if (!silent) {
+        if (!proRef.current) setProLoadError(true);
+        setLoading(false);
+      }
+      return null;
+    }
+
+    const { data } = result;
 
     // A slower request started before a save must never overwrite the freshly
     // saved professional data when it finishes later.
-    if (requestSequence !== proFetchSequenceRef.current) return data;
     setPro((current) => JSON.stringify(current) === JSON.stringify(data) ? current : data);
     cacheDashboardBootstrap({ pro: data });
     if (data) {
       setNoProTries(0);
-    }
-    if (error) {
-      console.error("[dashboard] professional load failed:", {
-        code: error.code,
-        message: error.message,
-        details: error.details,
-        hint: error.hint,
-      });
-      if (!silent) setProLoadError(true);
-    } else if (!data && !silent) {
+    } else if (!silent) {
       setNoProTries((n) => n + 1);
     }
     if (!silent) setLoading(false);
     return data;
   }, [cacheDashboardBootstrap, setLoading, setNoProTries, setPro, setProLoadError, user]);
+
+  useEffect(() => {
+    proRef.current = pro;
+  }, [pro]);
+
+  // Con la pantalla de error puesta, volver a la app o recuperar la conexión
+  // reintenta solo: nadie debería tener que buscar el botón.
+  useEffect(() => {
+    if (!proLoadError) return;
+    const reintentar = () => {
+      if (document.visibilityState !== "visible") return;
+      if (typeof navigator !== "undefined" && navigator.onLine === false) return;
+      void fetchPro();
+    };
+    window.addEventListener("online", reintentar);
+    document.addEventListener("visibilitychange", reintentar);
+    return () => {
+      window.removeEventListener("online", reintentar);
+      document.removeEventListener("visibilitychange", reintentar);
+    };
+  }, [proLoadError, fetchPro]);
 
   const fetchProfile = useCallback(async () => {
     if (!user) return null;
