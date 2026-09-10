@@ -346,8 +346,8 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
       {/* Estado vacío: como el de Servicios o Soporte, con el botón centrado. */}
       {shownCases.length === 0 && (
         <div className="ccr-empty-state flex min-h-[18rem] flex-col items-center justify-center px-4 py-12 text-center sm:min-h-[20rem]">
-          <span className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-[#EBF5FB]">
-            <Plus className="h-6 w-6 text-[#009FD9]" />
+          <span className="ccr-icono-mosaico mx-auto mb-3 h-14 w-14">
+            <Plus className="h-6 w-6" strokeWidth={1.6} />
           </span>
           <p className="text-[15px] font-bold text-[#162543]">{t("addCase")}</p>
           <p className="mx-auto mt-1 max-w-sm text-sm leading-relaxed text-[#6b7280]">{t("addCaseHint")}</p>

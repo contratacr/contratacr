@@ -231,8 +231,8 @@ export default function RegisterClientPage() {
         <div className="w-full max-w-md">
           <div className="bg-white rounded-3xl shadow-sm border border-[#e5e7eb] p-8">
             <div className="text-center mb-6">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#EBF5FB] mx-auto mb-3">
-                <User className="h-6 w-6 text-[#009FD9]" />
+              <div className="ccr-icono-mosaico mx-auto mb-3 h-14 w-14">
+                <User className="h-7 w-7" strokeWidth={1.6} />
               </div>
               <h1 className="text-2xl font-bold text-[#162543]">{t("title")}</h1>
               <p className="text-sm text-[#6b7280] mt-1">{t("subtitle")}</p>

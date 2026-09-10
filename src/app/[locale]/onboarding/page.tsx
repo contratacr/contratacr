@@ -202,50 +202,46 @@ export default function OnboardingPage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-3 sm:gap-6">
 
             {/* Client card */}
             <button
               onClick={() => selectRole("client")}
               disabled={!!selecting}
-              className="group flex flex-col items-center gap-5 p-8 bg-white border-2 border-[#e5e7eb] rounded-2xl hover:border-[#009FD9] hover:shadow-lg transition-all duration-200 disabled:opacity-60 text-center"
+              className="ccr-tarjeta-rol group disabled:opacity-60"
             >
-              <div className="h-16 w-16 rounded-full bg-[#EBF5FB] ring-1 ring-inset ring-[#009FD9]/20 shadow-[0_10px_30px_-10px_rgba(0,159,217,0.5)] flex items-center justify-center group-hover:bg-[#009FD9] group-hover:shadow-[0_12px_34px_-10px_rgba(0,159,217,0.7)] transition-all duration-200 shrink-0">
+              <span className={`ccr-tarjeta-rol-mosaico ccr-mosaico-cliente`} aria-hidden>
                 {selecting === "client" ? (
-                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#009FD9] border-t-transparent" />
+                  <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#162543] border-t-transparent" />
                 ) : (
-                  <UserRoundSearch className="h-8 w-8 text-[#009FD9] group-hover:text-white transition-colors duration-200" />
+                  <UserRoundSearch className="h-16 w-16 text-[#162543] sm:h-24 sm:w-24" strokeWidth={1.4} />
                 )}
-              </div>
-              <div>
-                <h2 className="text-2xl font-bold text-[#162543]">{tc("clientRole")}</h2>
-                <p className="text-sm font-semibold text-[#009FD9]">{tc("clientTitle")}</p>
-              </div>
-              <span className="flex items-center gap-1.5 text-sm font-semibold text-[#009FD9] opacity-0 group-hover:opacity-100 transition-opacity">
-                {tc("continue")} <ArrowRight className="h-4 w-4" />
               </span>
+              <span className="mt-4 block text-center text-[17px] font-bold leading-tight text-[#162543] sm:text-[22px]">
+                {tc("clientTitle")}
+                <ArrowRight className="ccr-tarjeta-rol-flecha ml-1.5 hidden h-6 w-6 align-[-4px] sm:inline-block" strokeWidth={2.4} />
+              </span>
+              <span className="mt-1 block text-center text-[13px] font-semibold text-[#009FD9] sm:text-[15px]">{tc("clientRole")}</span>
             </button>
 
             {/* Professional card */}
             <button
               onClick={() => selectRole("professional")}
               disabled={!!selecting}
-              className="group flex flex-col items-center gap-5 p-8 bg-white border-2 border-[#e5e7eb] rounded-2xl hover:border-[#009FD9] hover:shadow-lg transition-all duration-200 disabled:opacity-60 text-center"
+              className="ccr-tarjeta-rol group disabled:opacity-60"
             >
-              <div className="h-16 w-16 rounded-full bg-[#EBF5FB] ring-1 ring-inset ring-[#009FD9]/20 shadow-[0_10px_30px_-10px_rgba(0,159,217,0.5)] flex items-center justify-center group-hover:bg-[#009FD9] group-hover:shadow-[0_12px_34px_-10px_rgba(0,159,217,0.7)] transition-all duration-200 shrink-0">
+              <span className={`ccr-tarjeta-rol-mosaico ccr-mosaico-pro`} aria-hidden>
                 {selecting === "professional" ? (
-                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#009FD9] border-t-transparent" />
+                  <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#162543] border-t-transparent" />
                 ) : (
-                  <BriefcaseBusiness className="h-8 w-8 text-[#009FD9] group-hover:text-white transition-colors duration-200" />
+                  <BriefcaseBusiness className="h-16 w-16 text-[#162543] sm:h-24 sm:w-24" strokeWidth={1.4} />
                 )}
-              </div>
-              <div>
-                <h2 className="text-2xl font-bold text-[#162543]">{tc("proRole")}</h2>
-                <p className="text-sm font-semibold text-[#009FD9]">{tc("proTitle")}</p>
-              </div>
-              <span className="flex items-center gap-1.5 text-sm font-semibold text-[#009FD9] opacity-0 group-hover:opacity-100 transition-opacity">
-                {tc("continue")} <ArrowRight className="h-4 w-4" />
               </span>
+              <span className="mt-4 block text-center text-[17px] font-bold leading-tight text-[#162543] sm:text-[22px]">
+                {tc("proTitle")}
+                <ArrowRight className="ccr-tarjeta-rol-flecha ml-1.5 hidden h-6 w-6 align-[-4px] sm:inline-block" strokeWidth={2.4} />
+              </span>
+              <span className="mt-1 block text-center text-[13px] font-semibold text-[#009FD9] sm:text-[15px]">{tc("proRole")}</span>
             </button>
 
           </div>

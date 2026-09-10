@@ -273,8 +273,8 @@ export function SavedProfessionalsTab() {
         {showJobs && jobs.map((item) => <SavedGenericCard key={item.id} item={item} onRemove={handleRemoveItem} />)}
         {selectedCount === 0 && (
           <div className="flex flex-col items-center px-4 py-10 text-center">
-            <span className="grid h-12 w-12 place-items-center rounded-full bg-[#eaf7fc] text-[#009fd9]">
-              <Bookmark className="h-5 w-5" strokeWidth={2} aria-hidden="true" />
+            <span className="ccr-icono-mosaico h-14 w-14">
+              <Bookmark className="h-6 w-6" strokeWidth={1.6} aria-hidden="true" />
             </span>
             <p className="mt-3.5 text-base font-extrabold text-[#162543]">{selectedEmptyLabel}</p>
             {filter === "professionals" && (

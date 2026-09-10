@@ -473,8 +473,8 @@ export function OffersBoard({
               ))}
               {filtered.length === 0 && (
                 <div className="flex min-h-[320px] flex-col items-center justify-center px-7 py-12 text-center lg:min-h-[360px]">
-                  <span className="grid h-14 w-14 place-items-center rounded-full bg-[#eaf7fc] text-[#009fd9]">
-                    <Store className="h-6 w-6" strokeWidth={2} />
+                  <span className="ccr-icono-mosaico h-16 w-16">
+                    <Store className="h-7 w-7" strokeWidth={1.6} />
                   </span>
                   <h2 className="mt-4 text-lg font-extrabold text-[#162543]">
                     {hasActiveFilters

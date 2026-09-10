@@ -2115,6 +2115,18 @@ html[data-keyboard-visible] body.ccr-native-app .ccr-native-search-panel { botto
 /* Azul de marca pleno para quien ofrece; el mismo azul, más tenue, para quien busca. */
 .ccr-mosaico-pro { background: linear-gradient(135deg, #c9ecfa 0%, #7fd0f2 48%, #d9f1fb 100%); }
 .ccr-mosaico-cliente { background: linear-gradient(135deg, #eaf6fc 0%, #cbe8f6 48%, #f0f8fd 100%); }
+
+/* El mismo mosaico, en pequeño, para los iconos sueltos del resto de la app
+   (estados vacíos, encabezados de tarjeta). Sustituye al círculo celeste con
+   icono azul claro, que se perdía contra el fondo blanco. */
+.ccr-icono-mosaico {
+  display: grid;
+  place-items: center;
+  border-radius: 1.125rem;
+  background: linear-gradient(135deg, #eaf6fc 0%, #cbe8f6 55%, #f0f8fd 100%);
+  color: #162543;
+  box-shadow: 0 12px 26px -18px rgba(15, 23, 42, 0.55);
+}
 .ccr-tarjeta-rol-flecha { transition: transform 0.25s ease; }
 .ccr-tarjeta-rol:hover .ccr-tarjeta-rol-flecha { transform: translateX(4px); }
 @media (prefers-reduced-motion: reduce) {

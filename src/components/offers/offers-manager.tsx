@@ -207,8 +207,8 @@ export function OffersManager({ initialOffers, embedded = false, backHref = "/da
                 ? "rounded-xl border border-dashed border-[#d8e4ec] bg-[#f8fbfd]"
                 : "rounded-2xl border border-[#e5e7eb] bg-white shadow-[0_2px_8px_rgba(15,23,42,0.05)]"
             )}>
-              <span className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-[#eaf7fc] text-[#009fd9]">
-                <BadgePercent className="h-6 w-6" strokeWidth={2} />
+              <span className="ccr-icono-mosaico mx-auto h-16 w-16">
+                <BadgePercent className="h-7 w-7" strokeWidth={1.6} />
               </span>
               <h2 className="mt-4 font-bold text-[#162543]">{copy.emptyTitle}</h2>
               <p className="mt-1 text-sm text-[#68778d]">{copy.emptyBody}</p>
