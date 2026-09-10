@@ -1896,7 +1896,7 @@ export default function DashboardPage() {
         onClick={() => requestUnsavedAction(() => changePanelFromHeader(destino))}
         className="flex min-h-[60px] w-full items-center gap-3 rounded-2xl border border-[#e5edf4] bg-white px-4 py-3.5 text-left text-[15px] font-semibold text-[#162543] shadow-[0_10px_26px_-24px_rgba(15,23,42,0.6)] transition-colors hover:bg-[#f8fbfd]"
       >
-        <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[#64748b] [&>svg]:h-5 [&>svg]:w-5">
+        <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[#52627a] [&>svg]:h-5 [&>svg]:w-5">
           {destino === "use" ? <User /> : <BriefcaseBusiness />}
         </span>
         <span className="min-w-0 flex-1 truncate">{etiqueta}</span>
@@ -1922,7 +1922,7 @@ export default function DashboardPage() {
         }}
         className="flex min-h-[60px] w-full items-center gap-3 rounded-2xl border border-[#e5edf4] bg-white px-4 py-3.5 text-left text-[15px] font-semibold text-[#162543] shadow-[0_10px_26px_-24px_rgba(15,23,42,0.6)] transition-colors hover:bg-[#f8fbfd]"
       >
-        <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[#64748b] [&>svg]:h-5 [&>svg]:w-5">
+        <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[#52627a] [&>svg]:h-5 [&>svg]:w-5">
           {TAB_ICONS[tab]}
         </span>
         <span className="min-w-0 flex-1 truncate">{label}</span>
