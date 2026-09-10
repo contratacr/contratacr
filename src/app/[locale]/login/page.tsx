@@ -11,6 +11,7 @@ import { z } from "zod";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowRight, ArrowLeft, AlertCircle, CheckCircle2 } from "lucide-react";
 import { Navbar } from "@/components/layout/navbar";
+import { ContrataCRLogo } from "@/components/landing/landing-navbar";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { createClient, hasSupabaseBrowserConfig } from "@/lib/supabase/client";
@@ -454,6 +455,9 @@ export default function LoginPage() {
         <Navbar mobileSearch={false} />
         <main className="flex-1 flex items-center justify-center py-12 px-4">
           <div className="w-full max-w-sm">
+            <div className="mb-6 flex justify-center lg:hidden">
+              <ContrataCRLogo />
+            </div>
             <div className="rounded-3xl border border-[#e5e7eb] bg-white p-8 shadow-[0_18px_44px_-28px_rgba(15,23,42,0.45)]">
               <OtpVerification
                 email={otpEmail}
@@ -519,13 +523,29 @@ export default function LoginPage() {
               empujaba el encabezado y parecía parte del formulario. */}
           <button
             type="button"
-            onClick={() => { setFormularioAbierto(false); setRolPortada("client"); }}
+            onClick={() => {
+              // Solo se vuelve a la portada si de ahí se venía. Entrando directo
+              // al formulario (?entrar=1, ?redirect= o en computadora) la flecha
+              // debe hacer lo que dice: volver a la pantalla anterior.
+              const hayPortadaDetras = !vieneDeUnaPantallaCerrada
+                && typeof window !== "undefined"
+                && window.matchMedia("(pointer: coarse)").matches;
+              if (hayPortadaDetras) { setFormularioAbierto(false); setRolPortada("client"); return; }
+              if (typeof window !== "undefined" && window.history.length > 1) router.back();
+              else router.push("/");
+            }}
             aria-label={t("back")}
             className="fixed left-3 top-[max(env(safe-area-inset-top),0.75rem)] z-20 grid h-10 w-10 place-items-center rounded-full bg-white/90 text-[#162543] shadow-[0_6px_18px_-10px_rgba(15,23,42,0.5)] backdrop-blur transition-colors hover:bg-white lg:hidden"
           >
             <ArrowLeft className="h-5 w-5" />
           </button>
-          <div className="bg-white rounded-3xl shadow-sm border border-[#e5e7eb] p-8">
+          {/* Sin navbar (teléfono y ventana angosta) la pantalla no decía de
+              quién es: la marca va arriba de la tarjeta. En computadora ancha ya
+              la lleva el navbar. */}
+          <div className="mb-6 flex justify-center lg:hidden">
+            <ContrataCRLogo />
+          </div>
+          <div className="rounded-3xl border border-[#e5e7eb] bg-white p-8 shadow-[0_18px_44px_-28px_rgba(15,23,42,0.45)]">
           {/* Un solo encabezado: "Ingresa a tu cuenta" decía lo mismo que
               "Bienvenido de vuelta" justo debajo. */}
           <div className="text-center mb-8">
