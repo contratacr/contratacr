@@ -803,6 +803,8 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   const compactSvcRef = useRef<HTMLDivElement>(null);
   const compactLocRef = useRef<HTMLDivElement>(null);
   const nativeSearchInputRef = useRef<HTMLInputElement>(null);
+  // Campo puente para el teclado: ver openNativeSearch.
+  const puenteTecladoRef = useRef<HTMLInputElement>(null);
   const nativeLocationInputRef = useRef<HTMLInputElement>(null);
   const navLocationInputRef = useRef<HTMLInputElement>(null);
   const nativePendingTimer = useRef<number | null>(null);
@@ -1450,9 +1452,19 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   }
 
   function openNativeSearch() {
+    // iOS solo levanta el teclado si el foco ocurre DENTRO del mismo toque. El
+    // campo real todavía no existe al pulsar (el panel se monta después), así
+    // que el foco salta primero a este campo puente —invisible y de un píxel— y
+    // de ahí al buscador en cuanto aparece: el teclado ya viene subiendo y
+    // cambiar de campo no lo baja. Con el foco diferido a 80 ms, el sistema lo
+    // descartaba por venir fuera del gesto y había que tocar otra vez.
+    try {
+      puenteTecladoRef.current?.focus({ preventScroll: true });
+    } catch {
+      /* navegador sin preventScroll: el puente es un extra, no un requisito */
+    }
     setNativeSearchOpen(true);
     setSearchFocused(true);
-    window.setTimeout(() => nativeSearchInputRef.current?.focus(), 80);
   }
 
   function closeNativeSearch() {
@@ -1522,6 +1534,22 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
     if (!nativeSearchOpen) return;
     setBusquedasRecientes(leerBusquedasRecientes());
     setVisitasRecientes(readRecentVisits("profesionales"));
+  }, [nativeSearchOpen]);
+
+  // Al abrir el buscador, el cursor entra en el primer campo (Servicio). Se
+  // intenta tres veces —al montar, en el siguiente cuadro y un pelo después—
+  // porque el panel entra animado y el primer intento puede caer antes de que
+  // el campo esté en pantalla.
+  useEffect(() => {
+    if (!nativeSearchOpen) return;
+    const enfocar = () => nativeSearchInputRef.current?.focus({ preventScroll: true });
+    enfocar();
+    const cuadro = window.requestAnimationFrame(enfocar);
+    const tarde = window.setTimeout(enfocar, 140);
+    return () => {
+      window.cancelAnimationFrame(cuadro);
+      window.clearTimeout(tarde);
+    };
   }, [nativeSearchOpen]);
 
   useEffect(() => {
@@ -2190,6 +2218,16 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
           </div>
         </header>
 
+        {/* Campo puente del teclado (ver openNativeSearch). Invisible, de un
+            píxel y sin recibir toques: solo existe para que el foco ocurra
+            dentro del gesto. */}
+        <input
+          ref={puenteTecladoRef}
+          type="text"
+          tabIndex={-1}
+          aria-hidden="true"
+          className="pointer-events-none fixed left-0 top-0 h-px w-px border-0 bg-transparent p-0 opacity-0"
+        />
         {nativeSearchOpen && (
           <div
             className="ccr-native-search-panel fixed left-0 right-0 top-0 z-[220] overflow-hidden bg-white px-4 pb-0 pt-[calc(env(safe-area-inset-top)+1rem)] lg:hidden"

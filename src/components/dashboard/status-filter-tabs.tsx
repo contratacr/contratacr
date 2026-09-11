@@ -197,7 +197,15 @@ export function StatusFilterTabs({
                   )
                 : "gap-1"
                 ,
-              !useSegmentedLayout && "min-w-[8.25rem] flex-none whitespace-normal px-3 text-[13px] [overflow-wrap:anywhere]",
+              // En el riel, la celda es fija para que se note que hay más a la
+              // derecha. Con rótulos cortos se angosta a 7rem: así entran TRES
+              // en un teléfono y la cuarta asoma, en vez de entrar solo dos.
+              !useSegmentedLayout && "flex-none whitespace-normal text-[13px] [overflow-wrap:anywhere]",
+              // El riel corta el último ítem a la vista para que se note que hay
+              // más. Con rótulos cortos la celda se mide en porcentaje del ancho
+              // para que entren TRES enteras y la cuarta asome lo suficiente
+              // (más del 30 % de su ancho) para que no haya que recortar la tercera.
+              !useSegmentedLayout && (shortLabels ? "min-w-[max(28%,6.25rem)] px-2.5" : "min-w-[8.25rem] px-3"),
               active
                 ? "bg-white text-[#009FD9] shadow-sm"
                 : "text-[#6b7280] hover:text-[#374151]"

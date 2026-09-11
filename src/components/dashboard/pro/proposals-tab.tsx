@@ -360,7 +360,10 @@ export function ProposalsTab({ categoryId }: ProposalsTabProps) {
     <div>
       <div className="mb-4">
         <StatusFilterTabs
-          mobileLayout="equal"
+          // Cuatro etapas no caben a un tamaño legible en un teléfono: repartirlas
+          // en partes iguales las dejaba en 11 px. Se muestran tres a tamaño normal
+          // y la cuarta entra deslizando; la activa siempre se trae a la vista.
+          mobileLayout="scroll"
           tabs={PROPUESTA_TABS}
           value={stage}
           onChange={(id) => setStage(id as StageKey)}
