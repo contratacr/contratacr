@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/client";
+import { clearStoredMode } from "@/hooks/use-mode";
 
 // Module-level flag, shared across the whole client bundle — the navbar AND every
 // protected page import this same instance. It's set the INSTANT a sign-out begins
@@ -47,6 +48,7 @@ export async function prepareForAccountSignOut() {
  *  history) and `scope: "local"` (clears the client session immediately — snappy). */
 export async function signOutToHome(locale: string) {
   _signingOut = true;
+  clearStoredMode();
   await prepareForAccountSignOut();
   try {
     await createClient().auth.signOut({ scope: "local" });

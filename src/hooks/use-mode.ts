@@ -24,6 +24,18 @@ export function readStoredMode(): Mode | null {
   }
 }
 
+/** El panel elegido pertenece a la sesión, no a la pestaña: al cerrar sesión se
+ *  borra para que la próxima entrada de una cuenta profesional aterrice en su
+ *  panel profesional. Sin esto, quien salía desde el panel cliente volvía a
+ *  entrar ahí, aunque fuera profesional. */
+export function clearStoredMode() {
+  try {
+    window.sessionStorage.removeItem(KEY);
+  } catch {
+    /* sin sessionStorage no hay nada que limpiar */
+  }
+}
+
 export function writeStoredMode(mode: Mode) {
   try {
     window.sessionStorage.setItem(KEY, mode);

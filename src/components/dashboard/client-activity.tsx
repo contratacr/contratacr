@@ -829,9 +829,12 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                               return (
                                 <div className="flex flex-col gap-2 border-t border-[#eef2f6] pt-3">
                                   {(principal || menu.length > 0) && (
-                                    <div className="flex items-start gap-2">
-                                      {principal && <div className="flex min-w-0 flex-1 items-center">{principal}</div>}
-                                      {menu.length > 0 && <div className={principal ? "shrink-0" : "ml-auto shrink-0"}><CardActionsMenu actions={menu} label={t("actions")} /></div>}
+                                    // En pantalla grande, la acción y el menú van juntos a la
+                                    // derecha: estirando el botón hasta el otro extremo quedaba
+                                    // un hueco de media tarjeta entre él y los tres puntos.
+                                    <div className="flex items-start gap-2 sm:justify-end">
+                                      {principal && <div className="flex min-w-0 flex-1 items-center sm:flex-none">{principal}</div>}
+                                      {menu.length > 0 && <div className={principal ? "shrink-0" : "ml-auto shrink-0 sm:ml-0"}><CardActionsMenu actions={menu} label={t("actions")} /></div>}
                                     </div>
                                   )}
                                   {segundaFila.length > 0 && (
