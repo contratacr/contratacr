@@ -490,11 +490,14 @@ export function ProposalsTab({ categoryId }: ProposalsTabProps) {
                       <div className="flex items-start justify-between gap-2.5">
                         <span className="min-w-0 flex-1 text-[15px] font-bold leading-snug text-[#162543] [overflow-wrap:anywhere] sm:text-base">{p.projects?.title ?? t("projectFallback")}</span>
                         <div className="flex shrink-0 items-center gap-2">
-                          {outcome && <Badge variant={outcome.variant} className="text-[11px] font-semibold">{outcome.label}</Badge>}
                           <ExpandToggle open={isOpen} className="mt-0" />
                         </div>
                       </div>
+                      {/* El estado va en la línea de datos, no al lado del título:
+                          ahí le robaba el ancho y partía en dos renglones el
+                          nombre del trabajo, que es lo que se busca con la vista. */}
                       <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px] text-[#6b7280]">
+                        {outcome && <Badge variant={outcome.variant} className="text-[11px] font-semibold">{outcome.label}</Badge>}
                         {p.projects?.category_id && (
                           <span className="inline-flex items-center gap-1.5"><Wrench className="h-3.5 w-3.5 text-[#68778d]" />{getCategoryLabel(p.projects.category_id, locale)}</span>
                         )}
