@@ -38,6 +38,9 @@ interface ModalProps {
    *  etiqueta la esquina muestra una flecha en vez de la equis, en cualquier
    *  tamaño de pantalla. */
   backLabel?: string;
+  /** Qué hace esa flecha. Sin esto vuelve a cerrar; con esto retrocede un paso
+   *  dentro del mismo diálogo (de un oficio al listado de categorías). */
+  onBack?: () => void;
   /** Extra classes on the body wrapper (e.g. remove default padding). */
   bodyClassName?: string;
   /** Small alerts can stay centered on mobile; long forms keep the bottom sheet.
@@ -61,6 +64,7 @@ export function Modal({
   footerNotice,
   closeLabel = "Cerrar",
   backLabel,
+  onBack,
   bodyClassName,
   mobilePresentation = "sheet",
   footerClassName,
@@ -123,7 +127,7 @@ export function Modal({
               : "relative items-center justify-center sm:static sm:items-start sm:justify-between",
             // Con flecha, la salida va DELANTE del título también en pantalla
             // grande: una flecha a la derecha se lee como "siguiente".
-            backLabel && "sm:items-center sm:justify-start sm:gap-2",
+            (backLabel || onBack) && "sm:items-center sm:justify-start sm:gap-2",
           )}
         >
           <div className={cn("min-w-0 px-10 text-center sm:px-0 sm:text-left")}>
@@ -132,17 +136,17 @@ export function Modal({
           </div>
           <button
             type="button"
-            onClick={onClose}
+            onClick={onBack ?? onClose}
             aria-label={backLabel ?? closeLabel}
             className={cn(
               "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[#68778d] transition-colors hover:bg-[#f3f4f6] hover:text-[#374151]",
-              backLabel || fullscreenMobile
+              backLabel || onBack || fullscreenMobile
                 ? "absolute left-4 top-1/2 -translate-y-1/2 sm:static sm:translate-y-0"
                 : "absolute right-4 top-1/2 -translate-y-1/2 sm:static sm:translate-y-0",
-              backLabel && "sm:order-first",
+              (backLabel || onBack) && "sm:order-first",
             )}
           >
-            {backLabel ? (
+            {backLabel || onBack ? (
               <ArrowLeft className="h-5 w-5" />
             ) : fullscreenMobile ? (
               <>

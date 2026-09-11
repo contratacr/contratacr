@@ -33,6 +33,7 @@ type AuthState = {
 const AuthContext = createContext<AuthState | null>(null);
 
 const LAST_AUTH_USER_KEY = "ccr:last-auth-user";
+const AVISO_CIERRE_KEY = "ccr:aviso-cierre-sesion:v1";
 const RESUME_AUTH_TIMEOUT_MS = 5_000;
 
 function withTimeout<T>(promise: PromiseLike<T>, timeoutMs: number): Promise<T> {
@@ -75,6 +76,12 @@ function cacheUser(u: User | null) {
 // arreglar la causa en vez de adivinarla. No guarda nada que la persona haya escrito.
 function anotarCierreNoPedido(evento: string, teniaSesion: boolean) {
   if (typeof window === "undefined" || !teniaSesion || isSigningOut()) return;
+  // Marca la sesión del navegador para no repetir el mismo aviso en cada
+  // pantalla: lo que interesa es que pasó una vez, no cuántas veces se re-pintó.
+  try {
+    if (window.sessionStorage.getItem(AVISO_CIERRE_KEY) === evento) return;
+    window.sessionStorage.setItem(AVISO_CIERRE_KEY, evento);
+  } catch { /* sin sessionStorage se anota igual */ }
   try {
     const cookieDeSesion = /(?:^|;\s*)sb-[a-z0-9]+-auth-token=/.test(document.cookie || "");
     void fetch("/api/client-error", {
@@ -219,6 +226,11 @@ function useAuthState(
         sessionSettled = true;
         window.clearTimeout(sessionTimeout);
         const u = data.session?.user ?? null;
+        // El caso que NO deja evento: la app abre y ya no hay sesión. Sin esto no
+        // queda rastro de nada, porque nunca hubo un "cierre" que anotar. Se mira
+        // si el navegador todavía guarda a quién tenía y si la cookie sobrevivió:
+        // con cookie es problema del token, sin cookie se perdió el almacenamiento.
+        if (!u && readCachedUser()) anotarCierreNoPedido("arranque-sin-sesion", true);
         lastAppliedRef.current = u;
         // Sin esto, el ref se quedaba con lo que había al montar: quien entraba
         // en esta misma visita no contaba como "sesión conocida" y ni los

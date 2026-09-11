@@ -20,6 +20,7 @@ export function CategoryGroupPicker({
   onSelect,
   selectedId,
   backLabel = "Volver",
+  hideBack = false,
   countLabel,
   optionAction,
   className,
@@ -32,6 +33,9 @@ export function CategoryGroupPicker({
   onSelect: (id: string) => void;
   selectedId?: string;
   backLabel?: string;
+  /** La pantalla que lo contiene ya muestra la vuelta atrás (y el nombre de la
+   *  categoría) en su propia barra de título: aquí sobraría repetirla. */
+  hideBack?: boolean;
   countLabel?: (count: number) => string;
   optionAction?: ReactNode;
   className?: string;
@@ -58,7 +62,7 @@ export function CategoryGroupPicker({
             preguntas de golpe (en qué categoría entré y cómo salgo). Antes decía
             «Volver a servicios», que se confundía con la sección Servicios y no
             daba ninguna pista del lugar. */}
-        <button
+        {!hideBack && <button
           type="button"
           onClick={() => onActiveGroupChange(null)}
           aria-label={backLabel}
@@ -68,7 +72,7 @@ export function CategoryGroupPicker({
           <span className="min-w-0 truncate text-[15px] font-bold text-[#162543]">
             {activeGroup.label ?? getCategoryGroupLabel(activeGroup.id, locale)}
           </span>
-        </button>
+        </button>}
         <div className="grid grid-cols-1">
           {activeGroup.items.map((item) => (
             <button

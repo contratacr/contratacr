@@ -8,7 +8,7 @@ import fs from "node:fs";
 // source of truth. The exact occurrence count makes additions fail CI even inside
 // a previously reviewed file.
 const reviewed = new Map([
-  ["src/hooks/use-auth.ts", { count: 9, reason: "authenticated user/avatar render cache" }],
+  ["src/hooks/use-auth.ts", { count: 12, reason: "authenticated user/avatar render cache, plus a session-scoped flag so an unasked sign-out is reported once" }],
   ["src/hooks/use-mode.ts", { count: 3, reason: "tab-scoped panel-mode preference and its storage-event subscription" }],
   ["src/components/auth/otp-verification.tsx", { count: 2, reason: "short-lived OTP auto-resend cooldown; auth state stays in Supabase" }],
   ["src/components/auth/client-registration-modal.tsx", { count: 2, reason: "short-lived booking registration handoff" }],

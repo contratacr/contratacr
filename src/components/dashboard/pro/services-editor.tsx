@@ -13,7 +13,7 @@ import { CategoryGroupPicker, type CategoryPickerGroup } from "@/components/ui/c
 import { SelectMenu } from "@/components/ui/select-menu";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
-import { anyVideoConsultCategory, getCategoryLabel, getAllCategories, normalizeText } from "@/lib/data/categories";
+import { anyVideoConsultCategory, getAllCategories, getCategoryGroupLabel, getCategoryLabel, normalizeText } from "@/lib/data/categories";
 import { useCustomCategories } from "@/lib/data/use-custom-categories";
 import { PRICING_TYPES, TAX_INCLUDED_SUFFIX, formatServicePrice, splitPricingLabel, type PricingType } from "@/lib/pricing";
 import { useReportSaveStatus } from "@/components/dashboard/save-status-context";
@@ -1017,12 +1017,18 @@ export function ServicesEditor({
       {pickerMode && (
         <Modal
           onClose={closePicker}
-          title={pickerMode === "change" ? t("changeServiceTitle") : t("pickerTitle")}
+          // La barra de arriba dice en qué nivel estás, como en la app: dentro de
+          // una categoría el título es la categoría y la flecha sube al listado;
+          // en el listado, la flecha vuelve al formulario del servicio (al agregar
+          // uno nuevo no hay nada detrás, así que ahí la equis es fiel).
+          title={activePickerGroupId
+            ? getCategoryGroupLabel(activePickerGroupId, locale)
+            : pickerMode === "change" ? t("changeServiceTitle") : t("pickerTitle")}
           closeLabel={t("cancel")}
-          // Al cambiar el oficio de un servicio que ya existe, salir es VOLVER al
-          // formulario que quedó abierto detrás, no cerrar nada: por eso flecha y
-          // no equis. Al agregar uno nuevo sí se cierra, y ahí la equis es fiel.
-          backLabel={pickerMode === "change" ? t("pickerBack") : undefined}
+          backLabel={activePickerGroupId || pickerMode === "change" ? t("pickerBack") : undefined}
+          onBack={activePickerGroupId
+            ? () => setActivePickerGroupId(null)
+            : pickerMode === "change" ? closePicker : undefined}
           mobilePresentation="fullscreen"
           bodyClassName="flex flex-col overflow-hidden bg-[#f4f7fa] px-0 py-0"
         >
@@ -1081,6 +1087,7 @@ export function ServicesEditor({
                   onActiveGroupChange={setActivePickerGroupId}
                   onSelect={(id) => pickerMode === "change" ? changeEditingService(id) : addService(id)}
                   backLabel={t("pickerBack")}
+                  hideBack
                   countLabel={(count) => t("pickerOptionsCount", { count })}
                   optionAction={<Plus className="h-4 w-4 shrink-0 text-[#009FD9]" />}
                   className="gap-0"
