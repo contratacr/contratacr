@@ -34,6 +34,10 @@ interface ModalProps {
   footerNotice?: ReactNode;
   /** aria-label for the X button. */
   closeLabel?: string;
+  /** Cuando el diálogo se abre ENCIMA de otro paso, salir es volver: con esta
+   *  etiqueta la esquina muestra una flecha en vez de la equis, en cualquier
+   *  tamaño de pantalla. */
+  backLabel?: string;
   /** Extra classes on the body wrapper (e.g. remove default padding). */
   bodyClassName?: string;
   /** Small alerts can stay centered on mobile; long forms keep the bottom sheet.
@@ -56,6 +60,7 @@ export function Modal({
   footer,
   footerNotice,
   closeLabel = "Cerrar",
+  backLabel,
   bodyClassName,
   mobilePresentation = "sheet",
   footerClassName,
@@ -116,6 +121,9 @@ export function Modal({
             fullscreenMobile
               ? "relative items-center justify-center sm:static sm:items-start sm:justify-between"
               : "relative items-center justify-center sm:static sm:items-start sm:justify-between",
+            // Con flecha, la salida va DELANTE del título también en pantalla
+            // grande: una flecha a la derecha se lee como "siguiente".
+            backLabel && "sm:items-center sm:justify-start sm:gap-2",
           )}
         >
           <div className={cn("min-w-0 px-10 text-center sm:px-0 sm:text-left")}>
@@ -125,15 +133,18 @@ export function Modal({
           <button
             type="button"
             onClick={onClose}
-            aria-label={closeLabel}
+            aria-label={backLabel ?? closeLabel}
             className={cn(
               "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[#68778d] transition-colors hover:bg-[#f3f4f6] hover:text-[#374151]",
-              fullscreenMobile
+              backLabel || fullscreenMobile
                 ? "absolute left-4 top-1/2 -translate-y-1/2 sm:static sm:translate-y-0"
                 : "absolute right-4 top-1/2 -translate-y-1/2 sm:static sm:translate-y-0",
+              backLabel && "sm:order-first",
             )}
           >
-            {fullscreenMobile ? (
+            {backLabel ? (
+              <ArrowLeft className="h-5 w-5" />
+            ) : fullscreenMobile ? (
               <>
                 <ArrowLeft className="h-5 w-5 sm:hidden" />
                 <X className="hidden h-5 w-5 sm:block" />

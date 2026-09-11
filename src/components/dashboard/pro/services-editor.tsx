@@ -660,7 +660,7 @@ export function ServicesEditor({
     <button
       type="button"
       onClick={() => { setPickerMode("add"); setPickerQuery(""); setActivePickerGroupId(null); }}
-      className="flex h-11 w-full items-center justify-center gap-2 rounded-full bg-[#009FD9] px-4 text-sm font-bold text-white transition-colors hover:bg-[#0089bb]"
+      className="flex h-11 w-full items-center justify-center gap-2 rounded-full bg-[#009FD9] px-4 text-sm font-bold text-white transition-colors hover:bg-[#0089bb] sm:w-auto sm:px-6"
     >
       <Plus className="h-4 w-4" /> {t("addProfession")}
     </button>
@@ -685,8 +685,10 @@ export function ServicesEditor({
         </div>
       ) : (
         <>
-          {/* El botón de crear arriba a la derecha, como en todas las secciones. */}
-          {addServiceButton}
+          {/* El botón de crear arriba a la derecha, como en todas las secciones.
+              A ancho completo solo tiene sentido en el teléfono: en una pantalla
+              de computadora era una barra azul de lado a lado para dos palabras. */}
+          <div className="flex sm:justify-end">{addServiceButton}</div>
           {/* ONE service per card: name + price (focal), description, then clearly grouped
               actions. No catalog image in the panel (it's for the public profile only). */}
           <div className="grid min-w-0 grid-cols-1 gap-3.5">
@@ -1017,6 +1019,10 @@ export function ServicesEditor({
           onClose={closePicker}
           title={pickerMode === "change" ? t("changeServiceTitle") : t("pickerTitle")}
           closeLabel={t("cancel")}
+          // Al cambiar el oficio de un servicio que ya existe, salir es VOLVER al
+          // formulario que quedó abierto detrás, no cerrar nada: por eso flecha y
+          // no equis. Al agregar uno nuevo sí se cierra, y ahí la equis es fiel.
+          backLabel={pickerMode === "change" ? t("pickerBack") : undefined}
           mobilePresentation="fullscreen"
           bodyClassName="flex flex-col overflow-hidden bg-[#f4f7fa] px-0 py-0"
         >
