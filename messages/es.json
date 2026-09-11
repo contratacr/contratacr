@@ -2089,7 +2089,6 @@
   },
   "unsavedGuard": {
     "title": "Tienes cambios sin guardar",
-    "body": "Si sales ahora, se van a perder los cambios que hiciste. ¿Qué quieres hacer?",
     "incompleteTitle": "Falta información obligatoria",
     "incompleteBody": "{error} Puedes seguir editando o salir sin guardar estos cambios.",
     "saving": "Guardando...",
@@ -2978,7 +2977,6 @@
     "source": {
       "booking": "Cita",
       "project": "Proyecto",
-      "both": "Cita y proyecto",
       "contact": "Contacto"
     },
     "status": {
@@ -2989,7 +2987,8 @@
       "connected": "Conectado",
       "contact": "Contactado"
     },
-    "noResultsSub": "No encontramos profesionales con ese nombre o servicio."
+    "noResultsSub": "No encontramos profesionales con ese nombre o servicio.",
+    "timesTogether": "{count, plural, one {# trabajo juntos} other {# trabajos juntos}}"
   },
   "registerChoice": {
     "title": "¿Cómo quieres empezar?",

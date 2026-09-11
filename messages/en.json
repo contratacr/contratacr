@@ -2089,7 +2089,6 @@
   },
   "unsavedGuard": {
     "title": "You have unsaved changes",
-    "body": "If you leave now, the changes you made will be lost. What would you like to do?",
     "incompleteTitle": "Required information is missing",
     "incompleteBody": "{error} You can keep editing or leave without saving these changes.",
     "saving": "Saving...",
@@ -2978,7 +2977,6 @@
     "source": {
       "booking": "Appointment",
       "project": "Project",
-      "both": "Appointment and project",
       "contact": "Contact"
     },
     "status": {
@@ -2989,7 +2987,8 @@
       "connected": "Connected",
       "contact": "Contacted"
     },
-    "noResultsSub": "No professionals match that name or service."
+    "noResultsSub": "No professionals match that name or service.",
+    "timesTogether": "{count, plural, one {# job together} other {# jobs together}}"
   },
   "registerChoice": {
     "title": "How do you want to start?",

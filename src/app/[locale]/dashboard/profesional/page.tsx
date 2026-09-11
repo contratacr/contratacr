@@ -141,7 +141,9 @@ const OPPORTUNITY_MODAL_SEEN_STORAGE_PREFIX = "contratacr:seen-opportunity-modal
 // agrupamiento se nota por el orden, sin rótulos ni líneas: lo único que hay
 // que leer ahí son los nombres de las secciones.
 const PANEL_GROUPS: { grupo: "work" | "business" | "saved" | "account"; tabs: Tab[] }[] = [
-  { grupo: "work", tabs: ["bookings", "proposals", "quotes", "sent_bookings", "sent_projects"] },
+  // «Mis postulaciones» va con lo que uno mandó (citas y proyectos propios) y
+  // por encima de «Volver a contratar»: sin bloque quedaba suelta al final.
+  { grupo: "work", tabs: ["bookings", "proposals", "quotes", "sent_bookings", "sent_projects", "applications"] },
   { grupo: "business", tabs: ["offers", "jobs", "photos", "availability", "services", "completion"] },
   { grupo: "saved", tabs: ["connections", "saved"] },
   { grupo: "account", tabs: ["profile", "soporte", "guides"] },

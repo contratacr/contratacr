@@ -195,6 +195,9 @@ export function UnsavedChangesGuard({
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-50 bg-[#162543]/55 backdrop-blur-[2px] data-[state=open]:animate-in data-[state=open]:fade-in-0" />
         <Dialog.Content
+          // Sin cuerpo de texto no hay descripción que anunciar; sin esto Radix
+          // deja un aviso en consola en cada apertura.
+          aria-describedby={presentedValidationError ? undefined : ""}
           onEscapeKeyDown={(event) => event.preventDefault()}
           onInteractOutside={(event) => event.preventDefault()}
           onPointerDownOutside={(event) => event.preventDefault()}
@@ -209,9 +212,15 @@ export function UnsavedChangesGuard({
                 <Dialog.Title className="text-base font-bold text-[#162543]">
                   {presentedValidationError ? t("incompleteTitle") : t("title")}
                 </Dialog.Title>
-                <Dialog.Description className="mx-auto mt-1.5 max-w-[18rem] text-sm leading-5 text-[#64748b]">
-                  {presentedValidationError ? t("incompleteBody", { error: presentedValidationError }) : t("body")}
-                </Dialog.Description>
+                {/* Con el título («Tienes cambios sin guardar») y los tres botones
+                    a la vista, explicar que al salir se pierden los cambios era
+                    decir lo mismo tres veces. Solo queda el texto cuando hay algo
+                    que de verdad no se puede guardar todavía. */}
+                {presentedValidationError && (
+                  <Dialog.Description className="mx-auto mt-1.5 max-w-[18rem] text-sm leading-5 text-[#64748b]">
+                    {t("incompleteBody", { error: presentedValidationError })}
+                  </Dialog.Description>
+                )}
               </div>
             </div>
 

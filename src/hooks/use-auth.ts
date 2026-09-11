@@ -4,6 +4,7 @@ import { createContext, createElement, useContext, useEffect, useRef, useState, 
 import type { User } from "@supabase/supabase-js";
 import { createClient, hasSupabaseBrowserConfig } from "@/lib/supabase/client";
 import { APP_RESUME_EVENT } from "@/lib/app-events";
+import { isSigningOut } from "@/lib/auth/sign-out";
 import { clearDashboardCache } from "@/lib/dashboard-prefetch-cache";
 
 // Resolve once the image is decoded (or fails / times out — never hangs). Used to keep
@@ -66,6 +67,30 @@ function cacheUser(u: User | null) {
     if (u) localStorage.setItem(LAST_AUTH_USER_KEY, JSON.stringify(u));
     else localStorage.removeItem(LAST_AUTH_USER_KEY);
   } catch { /* ignore */ }
+}
+
+// Un cierre de sesión que NADIE pidió (la app se abre y ya no hay sesión) no deja
+// rastro: pasa en el teléfono de otra persona y lo único que llega es "otra vez me
+// sacó". Esto lo anota con el motivo que dio el servidor de sesiones, para poder
+// arreglar la causa en vez de adivinarla. No guarda nada que la persona haya escrito.
+function anotarCierreNoPedido(evento: string, teniaSesion: boolean) {
+  if (typeof window === "undefined" || !teniaSesion || isSigningOut()) return;
+  try {
+    const cookieDeSesion = /(?:^|;\s*)sb-[a-z0-9]+-auth-token=/.test(document.cookie || "");
+    void fetch("/api/client-error", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      keepalive: true,
+      body: JSON.stringify({
+        message: `sesion-cerrada-sola: ${evento} (cookie ${cookieDeSesion ? "presente" : "ausente"})`,
+        pathname: window.location.pathname,
+        origen: "window",
+        native: document.documentElement.classList.contains("ccr-native-app"),
+      }),
+    }).catch(() => undefined);
+  } catch {
+    /* dejar constancia nunca puede romper la sesión */
+  }
 }
 
 function useAuthState(
@@ -195,6 +220,10 @@ function useAuthState(
         window.clearTimeout(sessionTimeout);
         const u = data.session?.user ?? null;
         lastAppliedRef.current = u;
+        // Sin esto, el ref se quedaba con lo que había al montar: quien entraba
+        // en esta misma visita no contaba como "sesión conocida" y ni los
+        // reintentos ni el registro de cierres lo tomaban en cuenta.
+        usuarioConocidoRef.current = u;
         setUser(u);
         cacheUser(u);
         if (u) syncAvatar(u);
@@ -235,8 +264,10 @@ function useAuthState(
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_, session) => {
+    } = supabase.auth.onAuthStateChange((evento, session) => {
       const u = session?.user ?? null;
+      if (!u && usuarioConocidoRef.current) anotarCierreNoPedido(evento, true);
+      usuarioConocidoRef.current = u;
       // La renovación del token al volver de segundo plano trae un objeto
       // nuevo con el mismo usuario: aplicarlo re-renderizaba media app justo
       // cuando la persona está navegando. Mismo contenido → mismo estado.

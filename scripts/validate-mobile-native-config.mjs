@@ -128,9 +128,11 @@ requireMatch(
   /href="\/buscar"[\s\S]*href="\/ofertas"[\s\S]*href=\{cotizacionesHref\}[\s\S]*contratacr:open-ai[\s\S]*href="\/empleos"[\s\S]*href=\{nativePanelHref\}/,
 );
 requireMatch(
-  "Native quotes tab is for the professional in offer mode",
+  // La barra es de la CUENTA, no del panel abierto: quien puede ofrecer lleva
+  // Cotizaciones fija, también con el panel puesto en cliente.
+  "Native quotes tab belongs to every professional account",
   bottomNav,
-  /const conCotizaciones = isPro && mode === "offer"/,
+  /const conCotizaciones = isPro;/,
 );
 requireMatch("Native messages unread badge", navbar, /HeaderMessagesLink unreadCount=\{nativeMessageUnread\}/);
 requireMatch("Native messages badge counter", navbar, /unreadCount > 0[\s\S]*unreadCount > 9 \? "9\+" : unreadCount/);

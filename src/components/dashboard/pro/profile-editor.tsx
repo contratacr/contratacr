@@ -388,6 +388,34 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
   const [activeDirtySection, setActiveDirtySection] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  // Huella de lo editable. `dirty` se enciende con el primer toque y ya no se
+  // apaga, así que apagar un interruptor y volver a encenderlo dejaba el aviso
+  // de "cambios sin guardar" con el formulario idéntico al que se abrió.
+  // Comparando la huella, lo que manda es el estado final, no el trajín.
+  function calcularHuella() {
+    return JSON.stringify({
+      bio,
+      whatsapp,
+      callPhone: allowPhoneCall ? callPhone.trim() : "",
+      allowPhoneCall,
+      contactEmail: showContactEmail ? contactEmail.trim() : "",
+      showContactEmail,
+      social,
+      website,
+      fullName: fullName.trim(),
+      businessName: businessName.trim(),
+      workplaces,
+      languages,
+      insurers,
+      certifications,
+      videoConsult,
+      videoCoverageCountry,
+    });
+  }
+  const huellaActual = calcularHuella();
+  const [huellaGuardada, setHuellaGuardada] = useState(huellaActual);
+  const hayCambiosReales = huellaActual !== huellaGuardada || !!pendingAvatarFile;
+
   const emailIsValid = !showContactEmail || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactEmail.trim());
   const callPhoneIsValid = !allowPhoneCall || !callPhone.trim() || isPhoneComplete(callPhone);
   const hasWorkplace = workplaces.length > 0 || (canOfferVideoConsult && videoConsult && videoCoverageCountry);
@@ -458,6 +486,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
   function showSavedConfirmation() {
     const flash = ++savedFlashSeq.current;
     if (savedTimer.current) clearTimeout(savedTimer.current);
+    setHuellaGuardada(calcularHuella());
     setDirty(false);
     dirtyRef.current = false;
     setSaved(true);
@@ -1292,7 +1321,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
 
       {/* Designed unsaved-changes dialog (replaces the browser default) */}
       <UnsavedChangesGuard
-        dirty={dirty}
+        dirty={dirty && hayCambiosReales}
         onSave={() => handleSave()}
         onDiscard={cancelChanges}
         validationError={sectionValidationError(activeDirtySection)}

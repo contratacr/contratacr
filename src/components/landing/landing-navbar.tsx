@@ -2542,8 +2542,9 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                       <DrawerIcon><Bookmark /></DrawerIcon>
                       <span className={mobileDrawerTextClass}>{t("favorites")}</span>
                     </Link>
-                    {/* En la app, el profesional tiene Cotizaciones en la barra de
-                        abajo donde antes estaba el Asistente; el Asistente vive aquí. */}
+                    {/* En la app, quien tiene cuenta profesional lleva Cotizaciones
+                        fija en la barra de abajo, así que el Asistente vive aquí.
+                        Las cuentas de solo cliente lo tienen en la barra. */}
                     {nativeHeaderShell && isPro && (
                       <button type="button" onClick={() => { setMobileOpen(false); window.dispatchEvent(new Event("contratacr:open-ai")); }} className={mobileDrawerItemClass}>
                         <DrawerIcon><Bot /></DrawerIcon>

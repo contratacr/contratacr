@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { CalendarCheck, ClipboardList, ExternalLink, MessageSquareText, Search, Users, Wrench } from "lucide-react";
+import { CalendarCheck, ClipboardList, ExternalLink, MessageSquareText, Repeat2, Search, Users, Wrench } from "lucide-react";
 import { ResponsiveVerifiedName } from "@/components/professionals/responsive-verified-name";
 import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
@@ -127,18 +127,25 @@ export function ClientConnections() {
                     {item.categoryLabel}
                   </span>
                 )}
-                {!(item.source === "contact" && item.status === "contact") && (
+                {/* Con más de un trabajo en común, lo que importa es cuántos han
+                    sido, no de qué tipo: «Cita y proyecto» era jerga del sistema y
+                    además se quedaba corta cuando había cinco trabajos. Con uno
+                    solo se sigue diciendo de dónde viene la relación. */}
+                {item.count > 1 ? (
+                  <span className="inline-flex items-center gap-1">
+                    <Repeat2 className="h-3.5 w-3.5 shrink-0 text-[#009FD9]" />
+                    {t("timesTogether", { count: item.count })}
+                  </span>
+                ) : !(item.source === "contact" && item.status === "contact") ? (
                   <span className="inline-flex items-center gap-1">
                     <SourceIcon source={item.source} />
                     {item.source === "booking"
                       ? t("source.booking")
                       : item.source === "project"
                         ? t("source.project")
-                        : item.source === "contact"
-                          ? t("source.contact")
-                          : t("source.both")}
+                        : t("source.contact")}
                   </span>
-                )}
+                ) : null}
               </div>
               {item.title && <p className="mt-1 truncate text-xs text-[#6b7280]">{item.title}</p>}
               {item.lastInteractionAt && <p className="mt-1 text-[11px] font-medium text-[#68778d]">{formatRelativeOrDate(item.lastInteractionAt, locale)}</p>}

@@ -248,10 +248,13 @@ export function NativeBottomNav() {
     empleos: tNav("jobs"),
     cotizaciones: tNav("quotes"),
   };
-  // El profesional en su modo cotiza desde la barra; el Asistente (que casi
-  // nadie usa) pasa al menú lateral. El cliente conserva el Asistente.
+  // Quien tiene cuenta profesional cotiza desde la barra SIEMPRE, también con el
+  // panel puesto en cliente: la barra de abajo es de la cuenta, no del panel que
+  // esté abierto, y ver la opción aparecer y desaparecer al cambiar de panel
+  // hacía dudar de dónde estaban las cotizaciones. El Asistente queda para las
+  // cuentas que solo son de cliente (al profesional le vive en el menú lateral).
   const cotizacionesHref = `${panelHref}?mode=offer&tab=quotes`;
-  const conCotizaciones = isPro && mode === "offer";
+  const conCotizaciones = isPro;
 
   return (
     <nav
