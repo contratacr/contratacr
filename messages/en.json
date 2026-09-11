@@ -4164,8 +4164,6 @@
     "readyTitle": "Ready to send",
     "readyBody": "Send it on WhatsApp, by email or as a PDF. You can also send it to an appointment or project in the app.",
     "linkLabel": "Quote link",
-    "copyLink": "Copy link",
-    "copied": "Copied",
     "sendWhatsApp": "Send on WhatsApp",
     "downloadImage": "Download image",
     "shareImage": "Share image",
@@ -4241,7 +4239,6 @@
     "attachTabBookings": "Appointments",
     "attachTabProjects": "Projects",
     "attachSend": "Send here",
-    "attachSubtitle": "Choose which of your app jobs this quote goes to.",
     "attachConfirmTitle": "Send it here?",
     "attachConfirmBody": "The client sees it in their panel and can accept it. If you picked the wrong one, you can remove it later.",
     "detach": "Remove from here",
@@ -4260,7 +4257,8 @@
     "sectionWork": "What's included",
     "sectionTerms": "Terms",
     "itemNumber": "Line {n}",
-    "itemLineTotal": "Line total"
+    "itemLineTotal": "Line total",
+    "notesHeading": "Note"
   },
   "menuFicha": {
     "more": "More options",

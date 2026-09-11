@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { ArrowLeft, CalendarCheck, Check, ChevronRight, Copy, Download, Handshake, Loader2, Mail, Share2, X } from "lucide-react";
+import { ArrowLeft, CalendarCheck, Check, ChevronRight, Download, Handshake, Loader2, Mail, Share2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FacebookIcon, InstagramIcon, WhatsAppIcon } from "@/components/ui/share-channels";
 import { useNativeShare } from "@/hooks/use-native-share";
@@ -25,10 +25,6 @@ export function QuoteShare({ quote, proName, proSlug, onChanged }: { quote: Quot
   const nativo = useNativeShare();
   const [pdf, setPdf] = useState<Blob | null>(null);
   const [avisoInstagram, setAvisoInstagram] = useState(false);
-  const [copiado, setCopiado] = useState(false);
-  async function copiarEnlace() {
-    try { await navigator.clipboard.writeText(url); setCopiado(true); window.setTimeout(() => setCopiado(false), 1800); } catch { /* sin portapapeles */ }
-  }
   const preparando = pdf === null;
   const url = enlaceCotizacion(quote, proName);
   const mensaje = t("whatsappMessage", {
@@ -98,7 +94,9 @@ export function QuoteShare({ quote, proName, proSlug, onChanged }: { quote: Quot
         </a>
       </div>
       {avisoInstagram && <p className="rounded-2xl bg-[#eaf7fc] px-4 py-2.5 text-[13px] font-semibold leading-snug text-[#0b5f80]">{t("instagramHint")}</p>}
-      <div className="grid grid-cols-3 gap-2.5">
+      {/* Sin "Copiar enlace": lo que se reparte es el documento, y un enlace
+          suelto en el portapapeles no dice a quién ni cómo se manda. */}
+      <div className="grid grid-cols-2 gap-2.5">
         <a href={correo} className="inline-flex h-11 items-center justify-center gap-2 rounded-full border border-[#d7e1ea] bg-white px-4 text-[13px] font-bold text-[#162543] transition-colors hover:border-[#b9c8d6] hover:bg-[#f6f9fb]">
           {/* "Correo" a secas: "Enviar por correo" se partía en tres renglones
               dentro de la píldora, y el ícono ya dice qué es. */}
@@ -110,10 +108,6 @@ export function QuoteShare({ quote, proName, proSlug, onChanged }: { quote: Quot
               app abre la hoja del sistema con el PDF adjunto (ahí "guardar" es
               una de sus opciones), igual que "Más opciones" en el perfil. */}
           {nativo ? t("moreOptions") : t("downloadPdf")}
-        </button>
-        <button type="button" onClick={() => void copiarEnlace()} className="inline-flex h-11 items-center justify-center gap-2 rounded-full border border-[#d7e1ea] bg-white px-3 text-[13px] font-bold text-[#162543] transition-colors hover:border-[#b9c8d6] hover:bg-[#f6f9fb]">
-          {copiado ? <Check className="h-4 w-4 text-[#15803d]" /> : <Copy className="h-4 w-4" />}
-          {copiado ? t("copied") : t("copyLink")}
         </button>
       </div>
 
@@ -215,7 +209,8 @@ function QuoteAttach({ quote, onChanged }: { quote: Quote; onChanged?: (q: Quote
         </button>
         <div className="min-w-0">
           <p className="truncate text-[15px] font-extrabold text-[#162543]">{elegido ? t("attachConfirmTitle") : t("attachTitle")}</p>
-          {!elegido && <p className="truncate text-[12px] text-[#68778d]">{t("attachSubtitle")}</p>}
+          {/* El título ya dice qué se elige; el subtítulo salía recortado a
+              media frase y no agregaba nada. */}
         </div>
       </div>
       {(() => (

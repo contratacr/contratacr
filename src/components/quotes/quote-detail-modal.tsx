@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { Check, Download, Loader2 } from "lucide-react";
+import { Download, Loader2 } from "lucide-react";
 import { Modal } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
 import { useAppDialog } from "@/hooks/use-app-dialog";
@@ -116,9 +116,6 @@ export function QuoteDetailModal({ quote, role, open, onClose, onChanged, proNam
         ) : undefined}
         footerClassName="flex-col-reverse gap-2 sm:flex-row sm:justify-end">
         <div className="flex flex-col gap-4">
-          {recienCreada && (
-            <span className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-[#e9f9ef] text-[#166534]"><Check className="h-6 w-6" strokeWidth={3} /></span>
-          )}
           {/* Para el profesional, primero cómo mandarla: es a lo que viene. */}
           {!recienCreada && (
             <div className="flex flex-wrap items-center justify-between gap-2 text-[13px]">
@@ -142,7 +139,14 @@ export function QuoteDetailModal({ quote, role, open, onClose, onChanged, proNam
             ))}
           </div>
           <Totales quote={quote} />
-          {quote.notes && <p className="whitespace-pre-line text-[14px] leading-6 text-[#52627a]">{quote.notes}</p>}
+          {/* Sin rótulo, la nota quedaba como una frase suelta entre el total y
+              los botones y no se sabía qué era. */}
+          {quote.notes && (
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-[0.06em] text-[#8fa1b6]">{t("notesHeading")}</p>
+              <p className="mt-0.5 whitespace-pre-line text-[14px] leading-6 text-[#52627a]">{quote.notes}</p>
+            </div>
+          )}
           {/* Compartir va DESPUÉS del documento: al abrir una cotización lo
               primero que se espera ver es la cotización, no los botones para
               mandarla. */}

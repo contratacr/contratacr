@@ -4164,8 +4164,6 @@
     "readyTitle": "Lista para enviar",
     "readyBody": "Mándasela por WhatsApp, por correo o como PDF. También puedes enviarla a una cita o a un proyecto del app.",
     "linkLabel": "Enlace de la cotización",
-    "copyLink": "Copiar enlace",
-    "copied": "Copiado",
     "sendWhatsApp": "Enviar por WhatsApp",
     "downloadImage": "Descargar imagen",
     "shareImage": "Compartir imagen",
@@ -4241,7 +4239,6 @@
     "attachTabBookings": "Citas",
     "attachTabProjects": "Proyectos",
     "attachSend": "Enviar aquí",
-    "attachSubtitle": "Elige a cuál de tus trabajos del app va esta cotización.",
     "attachConfirmTitle": "¿Enviar aquí?",
     "attachConfirmBody": "El cliente la ve en su panel y puede aceptarla. Si te equivocaste, después puedes quitarla.",
     "detach": "Quitar de aquí",
@@ -4260,7 +4257,8 @@
     "sectionWork": "Qué incluye",
     "sectionTerms": "Condiciones",
     "itemNumber": "Línea {n}",
-    "itemLineTotal": "Total de la línea"
+    "itemLineTotal": "Total de la línea",
+    "notesHeading": "Nota"
   },
   "menuFicha": {
     "more": "Más opciones",

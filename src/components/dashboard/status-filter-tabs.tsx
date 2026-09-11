@@ -205,7 +205,11 @@ export function StatusFilterTabs({
               // más. Con rótulos cortos la celda se mide en porcentaje del ancho
               // para que entren TRES enteras y la cuarta asome lo suficiente
               // (más del 30 % de su ancho) para que no haya que recortar la tercera.
-              !useSegmentedLayout && (shortLabels ? "min-w-[max(28%,6.25rem)] px-2.5" : "min-w-[8.25rem] px-3"),
+              // Eso es cosa del teléfono: de 640 px en adelante caben todas, así
+              // que las celdas se reparten la fila y no queda nada cortado.
+              !useSegmentedLayout && (shortLabels
+                ? "min-w-[max(28%,6.25rem)] px-2.5 sm:min-w-0 sm:flex-1 sm:px-3"
+                : "min-w-[8.25rem] px-3 sm:min-w-0 sm:flex-1"),
               active
                 ? "bg-white text-[#009FD9] shadow-sm"
                 : "text-[#6b7280] hover:text-[#374151]"
