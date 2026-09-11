@@ -284,7 +284,7 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
             type="button"
             onClick={openAdd}
             disabled={addFull || professions.length === 0}
-            className="flex h-11 w-full items-center justify-center gap-2 rounded-full bg-[#009FD9] px-4 text-sm font-bold text-white transition-colors hover:bg-[#0089bb] disabled:cursor-not-allowed disabled:bg-[#cbd5e1]"
+            className="flex h-11 w-full items-center justify-center gap-2 rounded-full bg-[#009FD9] px-4 text-sm font-bold text-white transition-colors hover:bg-[#0089bb] sm:w-auto sm:px-6 disabled:cursor-not-allowed disabled:bg-[#cbd5e1]"
           >
             <Plus className="h-4 w-4" /> {t("addCase")}
           </button>
