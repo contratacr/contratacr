@@ -147,7 +147,7 @@ export default function ServiciosPage() {
         <LandingNavbar mobileSearch={false} drawerOnly />
       </div>
 
-      <main className="flex-1 bg-white lg:bg-[#f7fafc]">
+      <main className="flex-1 bg-white lg:bg-[#fafafa]">
         <section data-services-mobile="" className="mx-auto w-full bg-white pb-[calc(2rem+env(safe-area-inset-bottom))] [.ccr-native-app_&]:pb-3 lg:hidden">
           <div ref={sentinelaRef} aria-hidden className="h-px" />
           <header ref={cabeceraRef} className={cn("sticky top-0 z-20 border-b bg-white transition-colors duration-200", conLinea ? "border-[#e5e7eb]" : "border-transparent")}>

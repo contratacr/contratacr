@@ -426,13 +426,13 @@ export function SearchResultsLayout({ children, filters, quickFilters, drawerFil
   }, []);
 
   return (
-    <div className="ccr-search-results-layout flex h-[calc(100dvh-var(--ccr-native-header-height,64px))] flex-col overflow-hidden bg-[#f4f7fa] lg:block lg:h-auto lg:overflow-visible lg:bg-transparent">
+    <div className="ccr-search-results-layout flex h-[calc(100dvh-var(--ccr-native-header-height,64px))] flex-col overflow-hidden bg-[#fafafa] lg:block lg:h-auto lg:overflow-visible lg:bg-transparent">
       {/* Controls bar — "Filtros" drawer button ONLY at lg–xl (xl+ uses the sidebar). */}
       <div className="hidden lg:flex xl:hidden sticky top-16 z-30 mb-4 items-center gap-2">
         <button
           type="button"
           onClick={() => setShowFilters(true)}
-          className="inline-flex items-center gap-1.5 rounded-full border border-[#e5e7eb] bg-white px-4 py-1.5 text-sm font-medium text-[#374151] shadow-sm"
+          className="inline-flex items-center gap-1.5 rounded-full border border-[#dfe8f0] bg-white px-4 py-1.5 text-sm font-medium text-[#374151] shadow-sm"
         >
           <SlidersHorizontal className="h-4 w-4" /> {t("filters.title")}
         </button>
@@ -456,7 +456,7 @@ export function SearchResultsLayout({ children, filters, quickFilters, drawerFil
 
       {/* ONE flex container: mobile = the map fills the remaining height (the sheet floats
           over it); desktop = the 3-column shell (filters · cards · map) via `lg:order-*`. */}
-      <div className="relative flex min-h-0 flex-1 flex-col gap-0 bg-[#f4f7fa] lg:flex-row lg:gap-5 lg:bg-transparent">
+      <div className="relative flex min-h-0 flex-1 flex-col gap-0 bg-[#fafafa] lg:flex-row lg:gap-5 lg:bg-transparent">
         {/* Filters sidebar — desktop xl+ only (order-1). Hidden on mobile + lg–xl (drawer). */}
         <aside className="hidden xl:block lg:order-1 w-64 shrink-0">
           <div className="sticky top-20">{filters}</div>
@@ -475,7 +475,7 @@ export function SearchResultsLayout({ children, filters, quickFilters, drawerFil
             (order-2) and the desktop map sit in the flex shell. */}
         <div
           ref={sheetRef}
-          className="ccr-search-bottom-sheet fixed inset-x-0 bottom-0 z-30 flex flex-col overflow-visible rounded-t-[20px] border-x border-t border-[#e5e7eb] bg-white shadow-[0_-12px_36px_-14px_rgba(15,23,42,0.32)] lg:static lg:z-auto lg:rounded-none lg:border-0 lg:bg-transparent lg:shadow-none lg:contents"
+          className="ccr-search-bottom-sheet fixed inset-x-0 bottom-0 z-30 flex flex-col overflow-visible rounded-t-[20px] border-x border-t border-[#dfe8f0] bg-white shadow-[0_-12px_36px_-14px_rgba(15,23,42,0.32)] lg:static lg:z-auto lg:rounded-none lg:border-0 lg:bg-transparent lg:shadow-none lg:contents"
           // maxHeight keeps the navbar AND the map controls visible even when the sheet is
           // expanded. The list scrolls inside the sheet; the sheet itself should never cover
           // the filter/map affordances at the top of the mobile map.

@@ -490,7 +490,7 @@ export function SupportTickets({
       {loading ? (
         <PanelListSkeleton rows={3} withTabs hasData={items.length > 0} />
       ) : loadError ? (
-        <div className="rounded-2xl border border-[#e5e7eb] bg-white px-5 py-10 text-center">
+        <div className="rounded-2xl border border-[#dfe8f0] bg-white px-5 py-10 text-center">
           <Headset className="mx-auto mb-3 h-10 w-10 text-[#cbd5e1]" />
           <p className="font-semibold text-[#374151]">{t("loadError")}</p>
           <button onClick={load} className="mt-4 inline-flex items-center justify-center rounded-full bg-[#009FD9] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#0089bb]">
@@ -502,7 +502,7 @@ export function SupportTickets({
           icon={Headset}
           title={t("empty")}
           description={t("emptySub")}
-          className="rounded-2xl border border-dashed border-[#e5e7eb] bg-white"
+          className="rounded-2xl border border-dashed border-[#dfe8f0] bg-white"
           action={(
             <button onClick={openNewTicket} className="inline-flex items-center gap-1.5 rounded-lg bg-[#009FD9] px-4 py-2 text-sm font-semibold text-white hover:bg-[#0089bb]">
               <Plus className="h-4 w-4" /> {t("openTicket")}

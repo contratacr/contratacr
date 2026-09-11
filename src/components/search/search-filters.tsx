@@ -1158,7 +1158,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
   // chrome (title bar / padding) - so drop the card border/rounding/padding here.
   const inDrawer = hideHeader;
   return (
-    <div className={inDrawer ? "" : "rounded-2xl border border-[#e5e7eb] bg-white p-4"}>
+    <div className={inDrawer ? "" : "rounded-2xl border border-[#dfe8f0] bg-white p-4"}>
       {/* Header - "Filtros" + a live active-count (inline clear when any are on) + an
           optional close X. `closable` is set ONLY for the mobile drawer instance, so the
           X lives INSIDE this white container's header; the desktop sidebar has no X. */}
@@ -1247,7 +1247,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
                 // EXACT same box as the Select triggers: h-10 w-full rounded-xl border, px-4
                 // left, and pr-9 ALWAYS so the right glyph sits exactly where the dropdowns'
                 // chevron does - so this field is indistinguishable in size + layout.
-                className="h-10 w-full rounded-xl border border-[#e5e7eb] bg-white pl-4 pr-9 text-base sm:text-sm text-[#162543] placeholder-[#9ca3af] transition hover:border-[#009FD9]/50 focus:border-[#009FD9] focus:outline-none focus:ring-2 focus:ring-[#009FD9]/20"
+                className="h-10 w-full rounded-xl border border-[#dfe8f0] bg-white pl-4 pr-9 text-base sm:text-sm text-[#162543] placeholder-[#9ca3af] transition hover:border-[#009FD9]/50 focus:border-[#009FD9] focus:outline-none focus:ring-2 focus:ring-[#009FD9]/20"
               />
               {/* Right-side glyph: a Search icon at rest (matches the Select chevron spot/
                   size/color), and while typing a SMALL, SUBTLE clear-X INSIDE the field - a
@@ -1318,7 +1318,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
               aria-label={t("filters.location")}
               aria-expanded={locationOpen}
               aria-autocomplete="list"
-              className="h-10 w-full rounded-xl border border-[#e5e7eb] bg-white pl-4 pr-9 text-base sm:text-sm text-[#162543] placeholder-[#9ca3af] transition hover:border-[#009FD9]/50 focus:border-[#009FD9] focus:outline-none focus:ring-2 focus:ring-[#009FD9]/20"
+              className="h-10 w-full rounded-xl border border-[#dfe8f0] bg-white pl-4 pr-9 text-base sm:text-sm text-[#162543] placeholder-[#9ca3af] transition hover:border-[#009FD9]/50 focus:border-[#009FD9] focus:outline-none focus:ring-2 focus:ring-[#009FD9]/20"
             />
             {locationQuery ? (
               <button
@@ -1589,7 +1589,7 @@ export function MobileServiceSearch() {
         role="combobox"
         aria-expanded={open}
         aria-autocomplete="list"
-        className="h-10 min-w-0 w-full rounded-full border border-[#e5e7eb] bg-white pl-4 pr-9 text-base sm:text-sm text-[#162543] placeholder-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition"
+        className="h-10 min-w-0 w-full rounded-full border border-[#dfe8f0] bg-white pl-4 pr-9 text-base sm:text-sm text-[#162543] placeholder-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition"
       />
       {q && (
         <button onClick={() => { setQ(""); setOpen(false); if (debounceRef.current) clearTimeout(debounceRef.current); pushQuery(""); }} className="absolute right-3 text-[#68778d] hover:text-[#374151] transition-colors" aria-label={t("filters.clearSearch")}>

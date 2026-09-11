@@ -455,7 +455,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   })();
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#f4f7fa]">
+    <div className="min-h-screen flex flex-col bg-[#fafafa]">
       {/* Mobile keeps the header to logo + search + menu; filters float over the map. */}
       <LandingNavbar forceCompactSearch mobileSearch />
       <div className="ccr-navbar-spacer h-16" aria-hidden />
@@ -465,7 +465,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
           part of one continuous page. A brand accent bar sits to the left of the title.
           HIDDEN on mobile (Yelp layout) so the map gets full prominence - the in-sheet
           count carries the result total there. */}
-      <div className="hidden lg:block bg-[#f4f7fa]">
+      <div className="hidden lg:block bg-[#fafafa]">
         <div className="mx-auto max-w-[1920px] px-4 pb-2.5 pt-3 sm:px-6 lg:px-8">
           <div className="flex items-center gap-2.5">
             <span className="h-5 w-1.5 shrink-0 rounded-full bg-[#009FD9]" aria-hidden />
@@ -485,7 +485,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
 
       {/* Main content - 3-column shell (filters / results / map). On mobile the padding is
           zeroed so the Yelp map + bottom sheet go edge-to-edge; desktop keeps its gutters. */}
-      <main className="flex-1 bg-[#f4f7fa]">
+      <main className="flex-1 bg-[#fafafa]">
         <div className="mx-auto max-w-[1920px] px-0 py-0 lg:px-8 lg:pb-0 lg:pt-0">
           <SearchResultsLayout
             mapData={mapData}
@@ -580,7 +580,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                             <span>{t("pagination.prev")}</span>
                           </Link>
                         ) : (
-                          <span aria-hidden className="inline-flex h-11 min-w-24 shrink-0 items-center justify-center gap-1.5 rounded-full border border-[#e5e7eb] bg-white px-4 text-sm font-bold text-[#cbd5e1]">
+                          <span aria-hidden className="inline-flex h-11 min-w-24 shrink-0 items-center justify-center gap-1.5 rounded-full border border-[#dfe8f0] bg-white px-4 text-sm font-bold text-[#cbd5e1]">
                             <ChevronLeft className="h-4 w-4" />
                             <span>{t("pagination.prev")}</span>
                           </span>
@@ -594,7 +594,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                             <ChevronRight className="h-4 w-4" />
                           </Link>
                         ) : (
-                          <span aria-hidden className="inline-flex h-11 min-w-24 shrink-0 items-center justify-center gap-1.5 rounded-full border border-[#e5e7eb] bg-white px-4 text-sm font-bold text-[#cbd5e1]">
+                          <span aria-hidden className="inline-flex h-11 min-w-24 shrink-0 items-center justify-center gap-1.5 rounded-full border border-[#dfe8f0] bg-white px-4 text-sm font-bold text-[#cbd5e1]">
                             <span>{t("pagination.next")}</span>
                             <ChevronRight className="h-4 w-4" />
                           </span>

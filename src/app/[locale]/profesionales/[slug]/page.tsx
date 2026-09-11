@@ -689,7 +689,7 @@ export default function ProfilePage() {
             </div>
           ) : (
             <div className={cn(
-              "-mx-4 mb-6 flex items-center justify-between gap-3 border-b border-[#e5e7eb] bg-white px-4 py-2.5 sm:-mx-6 sm:px-6",
+              "-mx-4 mb-6 flex items-center justify-between gap-3 border-b border-[#dfe8f0] bg-white px-4 py-2.5 sm:-mx-6 sm:px-6",
               // En computadora, un enlace discreto encima del contenido, igual que
               // en una oferta o un empleo: la franja blanca de lado a lado solo
               // para dos palabras empujaba la ficha hacia abajo y competía con la
@@ -729,7 +729,7 @@ export default function ProfilePage() {
                 colgaban debajo de la foto y el borde izquierdo quedaba en zigzag)
                 y las dos acciones comparten renglón arriba a la derecha, del
                 ancho de su texto. En el teléfono sigue centrado como estaba. */}
-            <div className="relative mb-6 rounded-2xl border border-[#e5e7eb] bg-white px-4 pb-4 pt-3.5 shadow-sm sm:grid sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:items-start sm:gap-x-5 sm:p-6 sm:pt-6">
+            <div className="relative mb-6 rounded-2xl border border-[#dfe8f0] bg-white px-4 pb-4 pt-3.5 shadow-sm sm:grid sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:items-start sm:gap-x-5 sm:p-6 sm:pt-6">
                 <div className="flex min-w-0 flex-col items-center gap-2.5 text-center sm:contents sm:flex-row sm:gap-0 sm:text-left">
                   <ImagePreviewDialog
                     src={professional.avatarUrl}
@@ -816,10 +816,10 @@ export default function ProfilePage() {
                 </div>
             </div>
             <div id="resenas" className="scroll-mt-24 [.ccr-native-app_&]:scroll-mt-0">
-              <div className="rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">
+              <div className="rounded-2xl border border-[#dfe8f0] bg-white shadow-sm">
 
                 {/* Tab bar — sticks under the header on the phone so any section is one tap away. */}
-                <div data-profile-tabs="" className="sticky top-16 z-20 rounded-t-2xl border-b border-[#e5e7eb] bg-white [.ccr-native-app_&]:top-0 lg:static lg:rounded-t-2xl">
+                <div data-profile-tabs="" className="sticky top-16 z-20 rounded-t-2xl border-b border-[#dfe8f0] bg-white [.ccr-native-app_&]:top-0 lg:static lg:rounded-t-2xl">
                   <div
                     role="tablist"
                     aria-label={locale === "en" ? "Profile sections" : "Secciones del perfil"}
@@ -1269,7 +1269,7 @@ export default function ProfilePage() {
 
             {/* ── COLUMNA DERECHA (solo computadora): contacto siempre a la vista ── */}
             <aside className="order-2 hidden w-[352px] shrink-0 lg:block">
-              <div className="sticky top-20 rounded-2xl border border-[#e5e7eb] bg-white p-5 shadow-sm">
+              <div className="sticky top-20 rounded-2xl border border-[#dfe8f0] bg-white p-5 shadow-sm">
                 {bloqueContacto(false)}
               </div>
             </aside>

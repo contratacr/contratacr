@@ -399,7 +399,7 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
           </button>
           {globalMenuOpen && (
             <div role="menu" className={cn(
-              "min-w-[220px] overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white py-1.5 shadow-xl",
+              "min-w-[220px] overflow-hidden rounded-2xl border border-[#dfe8f0] bg-white py-1.5 shadow-xl",
               nativeApp && scope === "all"
                 ? "fixed right-3 top-[calc(var(--ccr-native-header-height,64px)+6px)] z-[240] shadow-xl"
                 : "absolute right-0 top-full z-30 mt-1",
@@ -665,7 +665,7 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
                       ref={itemMenuPortalRef}
                       role="menu"
                       data-notification-item-menu
-                      className="fixed z-[240] min-w-[190px] overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white py-1.5 shadow-xl"
+                      className="fixed z-[240] min-w-[190px] overflow-hidden rounded-2xl border border-[#dfe8f0] bg-white py-1.5 shadow-xl"
                       style={{ top: itemMenuPosition.top, right: itemMenuPosition.right }}
                     >
                       {!n.read && (
