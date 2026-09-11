@@ -445,7 +445,7 @@ export function ProposalsTab({ categoryId }: ProposalsTabProps) {
                           className="min-h-[120px] w-full resize-none break-words rounded-xl border border-[#e5e7eb] bg-white px-4 py-3 text-[15px] text-[#162543] placeholder:text-[#68778d] focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[#009FD9]"
                         />
                         {message.length >= MESSAGE_MAX && <p className="mt-1 text-xs text-[#b45309]">{t("charLimit", { max: MESSAGE_MAX })}</p>}
-                        <Button onClick={() => sendReply(project.id)} disabled={!message.trim() || submitting === project.id} loading={submitting === project.id} size="sm" className="mt-3 h-11 w-full sm:w-auto sm:px-6 rounded-full text-[13px] font-bold">
+                        <Button onClick={() => sendReply(project.id)} disabled={!message.trim() || submitting === project.id} loading={submitting === project.id} size="sm" className="mt-3 h-11 w-full sm:ml-auto sm:flex sm:w-auto sm:px-6 rounded-full text-[13px] font-bold">
                           {corrigiendo === project.id ? t("sendProposalAgain") : t("sendProposal")}
                         </Button>
                         <button type="button" onClick={() => dismissOpportunity(project.id)} className="mx-auto mt-3 flex items-center gap-1.5 text-[12px] font-medium text-[#68778d] transition-colors hover:text-[#6b7280]">
@@ -528,14 +528,18 @@ export function ProposalsTab({ categoryId }: ProposalsTabProps) {
                           documento con número consecutivo, y emitirlo en cada
                           propuesta quema números en trabajos que nunca fueron (el
                           precio ya va en el mensaje). */}
+                      {/* Las acciones de una tarjeta van juntas y pegadas a la derecha,
+                          como en cualquier tarjeta de escritorio: a la izquierda
+                          quedaban flotando con medio renglón vacío al lado. En el
+                          teléfono siguen ocupando el ancho entero. */}
                       {(p.status === "pending" || (p.status === "accepted" && trabajoVivo)) && (
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 sm:justify-end">
                           {p.status === "accepted" && trabajoVivo && (
                             <div className="min-w-0 flex-1 sm:flex-none">
                               <QuoteBlock asButton projectId={p.project_id} role="pro" canCreate defaultTitle={p.projects?.title ?? undefined} clientName={p.projects?.profiles?.full_name ?? null} />
                             </div>
                           )}
-                          <div className="ml-auto flex shrink-0 items-center">
+                          <div className="ml-auto flex shrink-0 items-center sm:ml-0">
                           <CardActionsMenu
                             label={t("moreActions")}
                             actions={[p.status === "pending" ? {

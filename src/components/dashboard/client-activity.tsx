@@ -1039,7 +1039,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                                             </div>
                                           </div>
                                           {isActive && proposal.professionals?.id && (
-                                            <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
+                                            <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">
                                               {/* Ancho entero en el teléfono; en pantalla grande, una
                                                   fila con cada botón del ancho de su texto. */}
                                               {!chosenId && (

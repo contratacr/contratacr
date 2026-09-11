@@ -482,7 +482,7 @@ export function BookingRequests() {
                 // pide el pulgar. En pantalla grande eso deja botones de un palmo
                 // de largo para dos palabras: de 640 px en adelante van en una
                 // fila, cada uno del ancho de su texto.
-                <div className="flex flex-col gap-2 border-t border-[#eef2f6] pt-3 sm:flex-row sm:flex-wrap sm:items-center">
+                <div className="flex flex-col gap-2 border-t border-[#eef2f6] pt-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">
                   {porCoordinar && (
                     <Button size="sm" className="h-11 w-full rounded-full text-[13px] font-bold sm:w-auto sm:px-5" loading={cerrando === booking.id} disabled={!!cerrando} onClick={() => void marcarAtendida(booking.id)}>
                       {t("markDone")}
@@ -492,7 +492,7 @@ export function BookingRequests() {
                       de esa cita, no un botón más de la fila. Debajo, escribir y
                       el menú, que sí comparten renglón. */}
                   <div className="w-full sm:w-auto"><QuoteBlock asButton bookingId={booking.id} role="pro" canCreate={isActive || booking.status === "awaiting_confirmation"} defaultTitle={serviceDescription} clientName={clientName} /></div>
-                  <div className="flex items-start gap-2 sm:ml-auto">
+                  <div className="flex items-start gap-2">
                   <div className="flex min-w-0 flex-1 items-center sm:flex-none">
                     {canMessage && (
                       <DirectChatLauncher bookingId={booking.id} professionalName={clientName} contextTitle={serviceDescription} buttonLabel={t("contact")} tone={porCoordinar ? "outline" : "primary"} className="h-11 w-full whitespace-nowrap rounded-full px-4 text-[13px] font-bold sm:w-auto sm:px-5" />
