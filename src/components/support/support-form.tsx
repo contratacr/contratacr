@@ -314,8 +314,8 @@ export function SupportForm({ onSuccess }: { onSuccess?: (email: string) => void
 
       </div>
       {/* El botón vive en su propia barra al pie, fuera de la tarjeta. */}
-      <div className="ccr-pie-formulario sticky bottom-0 z-10 -mx-4 mt-5 border-t border-[#e5e7eb] bg-white px-4 py-4 pb-[max(env(safe-area-inset-bottom),1rem)] sm:mx-0 sm:rounded-b-2xl sm:border-x sm:px-5">
-        <Button type="submit" size="lg" loading={submitting} className="w-full">{t("submit")}</Button>
+      <div className="ccr-pie-formulario sticky bottom-0 z-10 -mx-4 mt-5 border-t border-[#e5e7eb] bg-white px-4 py-4 pb-[max(env(safe-area-inset-bottom),1rem)] sm:mx-0 sm:flex sm:justify-end sm:rounded-b-2xl sm:border-x sm:px-5">
+        <Button type="submit" size="lg" loading={submitting} className="w-full sm:w-auto sm:px-8">{t("submit")}</Button>
       </div>
       <UnsavedChangesGuard dirty={conCambios && !submitting} />
     </form>

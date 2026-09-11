@@ -279,7 +279,7 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
           con el título. Sólido: es la acción principal de la sección y así se lee de
           una. */}
       {shownCases.length > 0 && (
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col gap-1 sm:items-end">
           <button
             type="button"
             onClick={openAdd}

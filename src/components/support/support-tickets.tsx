@@ -482,7 +482,7 @@ export function SupportTickets({
           Ofertas y Empleos. No se dibuja mientras carga ni en el estado vacío,
           que ya trae su propio botón. */}
       {!loading && items.length > 0 && (
-        <button onClick={openNewTicket} className="flex h-11 w-full items-center justify-center gap-2 rounded-full bg-[#009FD9] px-4 text-sm font-bold text-white transition-colors hover:bg-[#0089bb]">
+        <button onClick={openNewTicket} className="flex h-11 w-full items-center justify-center gap-2 rounded-full bg-[#009FD9] px-4 text-sm font-bold text-white sm:w-auto sm:self-end sm:px-6 transition-colors hover:bg-[#0089bb]">
           <Plus className="h-4 w-4" /> {t("newTicket")}
         </button>
       )}
