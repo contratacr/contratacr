@@ -52,7 +52,7 @@ type Props = {
 };
 
 const MARKETPLACE_LIST_CLASS =
-  "ccr-marketplace-card-list min-w-0 bg-white lg:h-full lg:overflow-y-scroll lg:rounded-lg lg:border lg:border-[#e3ebf2] sm:max-lg:mx-auto sm:max-lg:max-w-[640px] sm:max-lg:rounded-lg sm:max-lg:border sm:max-lg:border-[#e3ebf2]";
+  "ccr-marketplace-card-list min-w-0 bg-white lg:h-full lg:overflow-y-scroll lg:border-r lg:border-[#dfe6ec]";
 
 const OFFERS_COPY = {
   es: {
@@ -391,7 +391,7 @@ export function OffersBoard({
   );
 
   return (
-    <main className="min-h-[calc(100vh-72px)] overflow-x-clip bg-white pb-16 text-[#162543] lg:flex lg:h-[calc(100dvh-64px)] lg:min-h-0 lg:flex-col lg:overflow-hidden sm:bg-[#f4f7fa] lg:pb-0">
+    <main className="min-h-[calc(100vh-72px)] overflow-x-clip bg-white pb-16 text-[#162543] lg:flex lg:h-[calc(100dvh-64px)] lg:min-h-0 lg:flex-col lg:overflow-hidden lg:bg-[#f4f7fa] lg:pb-0">
       <div ref={sentinelaRef} aria-hidden className="h-px lg:hidden" />
       <section ref={cabeceraRef} className={cn("ccr-marketplace-sticky sticky top-0 z-20 border-b bg-white transition-colors duration-200 lg:hidden", conLinea ? "border-[#e5e7eb]" : "border-transparent")}>
         <div className="px-0">
@@ -453,8 +453,8 @@ export function OffersBoard({
         <span className="font-extrabold text-[#162543]">{filtered.length} {filtered.length === 1 ? copy.offer : copy.offerPlural}</span>
         {" · "}{copy.country}
       </p>
-      <div className="mx-auto w-full max-w-7xl px-0 sm:px-6 sm:py-5 lg:h-[calc(100dvh-172px)] lg:min-h-0 lg:shrink-0 lg:px-6 lg:pb-4 lg:pt-0">
-        <div className={`${filtered.length > 0 ? "lg:grid lg:grid-cols-[minmax(340px,440px)_minmax(0,1fr)]" : ""} lg:h-full lg:gap-4 lg:overflow-hidden`}>
+      <div className="mx-auto w-full max-w-7xl px-0 sm:px-6 sm:py-5 lg:h-[calc(100dvh-172px)] lg:min-h-0 lg:shrink-0 lg:px-6 lg:pb-0 lg:pt-0">
+        <div className={`${filtered.length > 0 ? "lg:grid lg:grid-cols-[minmax(340px,440px)_minmax(0,1fr)]" : ""} lg:h-full lg:overflow-hidden lg:rounded-lg lg:rounded-b-none lg:border lg:border-b-0 lg:border-[#dfe8f0] lg:bg-white`}>
           <section className={filtered.length > 0 ? MARKETPLACE_LIST_CLASS : "min-w-0 bg-white"}>
             <div className="border-b border-[#e7edf2] px-4 py-3 lg:hidden">
               <p className="font-bold">
@@ -770,7 +770,7 @@ function OfferRow({
   const discount = offerDiscountPercent(offer);
   return (
     <article
-      className={`relative overflow-hidden border-b border-[#e3ebf2] bg-white px-3 py-2 transition hover:bg-[#f8fafc] sm:px-4 sm:py-2.5 ${selected ? "lg:bg-[#f3f9fd] lg:shadow-[inset_2px_0_0_#009FD9]" : ""}`}
+      className={`relative overflow-hidden border-b border-[#dfe6ec] bg-white px-3 py-2 transition hover:bg-[#f8fafc] sm:px-4 sm:py-2.5 ${selected ? "lg:bg-[#eef9fd] lg:shadow-[inset_4px_0_0_#162543]" : ""}`}
     >
       <button
         type="button"
@@ -849,7 +849,7 @@ function OfferPreview({
   const [reportando, setReportando] = useState(false);
   const enlaceParaCompartir = enlaceOferta(offer);
   return (
-    <article className="relative ccr-marketplace-result-list hidden min-w-0 bg-white p-7 lg:block lg:h-full lg:overflow-y-auto lg:rounded-lg lg:border lg:border-[#e3ebf2]">
+    <article className="relative ccr-marketplace-result-list hidden min-w-0 bg-white p-7 lg:block lg:h-full lg:overflow-y-auto">
       {/* El "..." vive arriba a la derecha del panel, como en la cabecera de la
           app: es el lugar donde la gente lo busca. */}
       <MenuFicha

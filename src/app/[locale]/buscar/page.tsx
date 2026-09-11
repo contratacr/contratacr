@@ -466,14 +466,18 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
           HIDDEN on mobile (Yelp layout) so the map gets full prominence - the in-sheet
           count carries the result total there. */}
       <div className="hidden lg:block bg-[#f4f7fa]">
-        <div className="mx-auto max-w-[1920px] px-4 pb-3 pt-4 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-[1920px] px-4 pb-2.5 pt-3 sm:px-6 lg:px-8">
           <div className="flex items-center gap-2.5">
             <span className="h-5 w-1.5 shrink-0 rounded-full bg-[#009FD9]" aria-hidden />
-            <div className="flex min-w-0 flex-wrap items-baseline gap-x-2">
-              <h1 className="text-lg font-bold leading-tight text-[#162543]">{pageTitle}</h1>
+            {/* Una sola línea siempre: con el envoltorio que permitía saltar, un
+                oficio de nombre largo (o el navegador con zoom) mandaba el conteo
+                a un segundo renglón y la franja crecía al doble. El que cede es
+                el título, que se recorta; el conteo es corto y se queda entero. */}
+            <div className="flex min-w-0 items-baseline gap-x-2">
+              <h1 className="truncate text-lg font-bold leading-tight text-[#162543]">{pageTitle}</h1>
               {/* On mobile the count is shown in the results panel (above the list); avoid
                   duplicating it here. Desktop keeps it in the header. */}
-              <p className="hidden text-[13px] leading-tight text-[#6b7280] lg:block">· {subtitle}</p>
+              <p className="hidden shrink-0 whitespace-nowrap text-[13px] leading-tight text-[#6b7280] lg:block">· {subtitle}</p>
             </div>
           </div>
         </div>

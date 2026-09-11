@@ -41,7 +41,7 @@ type Props = {
   detailOnly?: boolean;
 };
 
-const MARKETPLACE_LIST_CLASS = "ccr-marketplace-card-list min-w-0 bg-white lg:h-full lg:overflow-y-scroll lg:rounded-lg lg:border lg:border-[#e3ebf2] sm:max-lg:mx-auto sm:max-lg:max-w-[640px] sm:max-lg:rounded-lg sm:max-lg:border sm:max-lg:border-[#e3ebf2]";
+const MARKETPLACE_LIST_CLASS = "ccr-marketplace-card-list min-w-0 bg-white lg:h-full lg:overflow-y-scroll lg:border-r lg:border-[#dfe6ec]";
 
 const JOBS_COPY = {
   es: {
@@ -287,7 +287,7 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
   const detailBackHref = safeMarketplaceReturnHref(returnTo, "/empleos");
   const detailBackLabel = marketplaceReturnLabel(detailBackHref, "/empleos", locale);
 
-  return <main className="min-h-[calc(100vh-72px)] overflow-x-clip bg-white pb-16 text-[#162543] lg:flex lg:h-[calc(100dvh-64px)] lg:min-h-0 lg:flex-col lg:overflow-hidden sm:bg-[#f4f7fa] lg:pb-0">
+  return <main className="min-h-[calc(100vh-72px)] overflow-x-clip bg-white pb-16 text-[#162543] lg:flex lg:h-[calc(100dvh-64px)] lg:min-h-0 lg:flex-col lg:overflow-hidden lg:bg-[#f4f7fa] lg:pb-0">
     <div ref={sentinelaRef} aria-hidden className="h-px lg:hidden" />
     {showingMobileDetail && selected && (
       <section className="lg:hidden">
@@ -405,8 +405,8 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
         {" · "}{copy.country}
       </p>
     )}
-    {!detailOnly && <div className={`${showingMobileDetail ? "hidden lg:block " : ""}mx-auto w-full max-w-7xl px-0 py-0 sm:px-6 sm:py-5 lg:h-[calc(100dvh-172px)] lg:min-h-0 lg:shrink-0 lg:px-6 lg:pb-4 lg:pt-0`}>
-      <div className={`${filtered.length > 0 ? "lg:grid lg:grid-cols-[minmax(340px,440px)_minmax(0,1fr)]" : ""} lg:h-full lg:gap-4 lg:overflow-hidden`}>
+    {!detailOnly && <div className={`${showingMobileDetail ? "hidden lg:block " : ""}mx-auto w-full max-w-7xl px-0 py-0 sm:px-6 sm:py-5 lg:h-[calc(100dvh-172px)] lg:min-h-0 lg:shrink-0 lg:px-6 lg:pb-0 lg:pt-0`}>
+      <div className={`${filtered.length > 0 ? "lg:grid lg:grid-cols-[minmax(340px,440px)_minmax(0,1fr)]" : ""} lg:h-full lg:overflow-hidden lg:rounded-lg lg:rounded-b-none lg:border lg:border-b-0 lg:border-[#dfe8f0] lg:bg-white`}>
         <section className={filtered.length > 0 ? MARKETPLACE_LIST_CLASS : "min-w-0 bg-white"}>
           <div className="border-b border-[#e7edf2] px-4 py-3 lg:hidden"><p className="font-bold">{filtered.length} {filtered.length === 1 ? copy.job.toLocaleLowerCase(locale) : copy.jobs.toLocaleLowerCase(locale)}</p><p className="text-xs text-[#68778d]">{copy.country}</p></div>
           <div>
@@ -508,7 +508,7 @@ function jobSaveSnapshot(job: JobPost, locale: MarketplaceLocale) {
 function JobRow({ job, selected, onSelect }: { job: JobPost; selected: boolean; onSelect: () => void }) {
   const locale = marketplaceLocale(useLocale());
   const copy = JOBS_COPY[locale];
-  return <article className={`relative min-h-[7.25rem] overflow-hidden border-b border-[#e3ebf2] bg-white px-3 py-3 transition last:border-b-0 hover:bg-[#f8fafc] sm:px-4 ${selected ? "lg:bg-[#f3f9fd] lg:shadow-[inset_2px_0_0_#009FD9]" : ""}`}>
+  return <article className={`relative min-h-[7.25rem] overflow-hidden border-b border-[#dfe6ec] bg-white px-3 py-3 transition last:border-b-0 hover:bg-[#f8fafc] sm:px-4 ${selected ? "lg:bg-[#eef9fd] shadow-[inset_4px_0_0_#162543]" : ""}`}>
     <button type="button" onClick={onSelect} aria-label={`Ver ${job.title}`} className="absolute inset-0 hidden lg:block" />
     <Link href={`/empleos/${job.id}`} className="relative z-[1] block w-full text-left lg:pointer-events-none">
       <div className="flex min-w-0 items-start gap-2.5 sm:gap-3">
@@ -538,7 +538,7 @@ function JobPreview({ job, isOwner, userId, hasApplied, onApply, onEdit, mobile 
     ...(job.duration_label ? [[copy.duration, job.duration_label] as [string, string]] : []),
   ].filter(([, value]) => Boolean(value));
 
-  return <article className={`ccr-marketplace-result-list relative min-w-0 bg-white ${mobile ? "block px-5 py-6" : "hidden p-7 lg:block lg:h-full lg:overflow-y-auto lg:rounded-lg lg:border lg:border-[#e3ebf2]"}`}>
+  return <article className={`ccr-marketplace-result-list relative min-w-0 bg-white ${mobile ? "block px-5 py-6" : "hidden p-7 lg:block lg:max-h-[calc(100vh-190px)] lg:overflow-y-auto"}`}>
     {/* En el teléfono el "..." vive en la cabecera de la pantalla; aquí, arriba
         a la derecha del panel, que es donde se busca. */}
     {!mobile && (
@@ -577,11 +577,7 @@ function JobPreview({ job, isOwner, userId, hasApplied, onApply, onEdit, mobile 
 
 function EmployerAvatar({ job, size = "default" }: { job: JobPost; size?: "default" | "large" }) {
   const locale = marketplaceLocale(useLocale());
-  // El logo de quien contrata va CUADRADO con las esquinas suaves, no en círculo:
-  // un círculo recorta el logotipo por los lados y lo deja irreconocible. Es lo
-  // que hace cualquier tablero de empleos, y aquí además lo iguala con las
-  // ofertas, que ya se pintaban así.
-  const dimensions = size === "large" ? "h-14 w-14" : "h-12 w-12";
-  if (job.employer_avatar_url) return <ProgressiveImage src={cldThumb(job.employer_avatar_url, 128)} alt={`${JOBS_COPY[locale].professionalPhoto}: ${job.employer_name || JOBS_COPY[locale].professionalFallback}`} fit="cover" wrapperClassName={`${dimensions} shrink-0 overflow-hidden rounded-lg border border-[#e3ebf2] bg-white`} className="rounded-lg" />;
-  return <span className={`grid ${dimensions} shrink-0 place-items-center rounded-lg border border-[#e3ebf2] bg-[#eaf7fc] text-[#009fd9]`}><Building2 className={size === "large" ? "h-6 w-6" : "h-5 w-5"} /></span>;
+  const dimensions = size === "large" ? "h-14 w-14" : "h-11 w-11 sm:h-12 sm:w-12";
+  if (job.employer_avatar_url) return <ProgressiveImage src={cldThumb(job.employer_avatar_url, 96)} alt={`${JOBS_COPY[locale].professionalPhoto}: ${job.employer_name || JOBS_COPY[locale].professionalFallback}`} fit="cover" wrapperClassName={`${dimensions} shrink-0 rounded-full`} className="rounded-full" />;
+  return <span className={`grid ${dimensions} shrink-0 place-items-center rounded-full bg-[#eaf7fc] text-[#009fd9]`}><Building2 className={size === "large" ? "h-6 w-6" : "h-5 w-5"} /></span>;
 }
