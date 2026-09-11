@@ -18,6 +18,7 @@ cotizaciones y precios). Cada punto dice qué falta y quién lo hace.
 | 197 · cotización eliminada | `quotes.deleted_at` (borrado suave; el número no se reusa) | **aplicada 9-sep** | pendiente |
 | 198 · oportunidades descartadas | tabla `dismissed_opportunities` ("No me interesa" por cuenta, no por teléfono) | **aplicada 10-sep** | pendiente |
 | 199 · columnas públicas del profesional | permiso de lectura sobre `social_links` (y `contact_email` para quien tiene sesión): sin esto NINGUNA ficha mostraba las redes | **aplicada 10-sep** | pendiente |
+| 200 · permisos de columnas al día | vuelve a calcular qué columnas de `professionals` puede leer un visitante: la 048 solo cubrió las que existían entonces | **aplicada 10-sep** | pendiente |
 
 Se aplican **solo** con el workflow `Supabase migrations` (dispatch), nunca en local:
 `test` desde la rama `test`, `production` desde `main`; siempre en seco primero.
@@ -163,3 +164,34 @@ separación de patrimonio. Ya existe además el riesgo de datos personales
 existente (GTI, Alanube, Facturele…) y que ellos firmen y envíen. 2-4 semanas en
 vez de 3-4 meses, con costo por documento.
 
+## 8. Proyecto de Supabase nuevo para test (10-sep)
+
+El proyecto viejo de test quedó restringido por consumo de tráfico. Test corre
+desde el 10-sep en **`oqheayqqprpciqdvdaqo`**, construido desde cero:
+
+- Las 200 migraciones aplicadas con el workflow (entrada `bootstrap` nueva, que
+  solo corre si la base está vacía).
+- Las dos cuentas de regresión y la cuenta de publicidad sembradas de nuevo. Sus
+  identificadores son fijos, así que hubo que crear los usuarios de acceso con
+  ese mismo identificador antes de sembrar.
+- Los secretos del entorno `test` de GitHub apuntan al proyecto nuevo. **Ahí se
+  configura test, no en el panel de Cloudflare**: cada envío a las ramas `test` o
+  `mobile` construye y despliega el Worker `contratacr-preview` con esos valores.
+- Test quedó con **3 profesionales**, no con los 283 de producción. Para copiar
+  los datos reales está `sync-production-to-test.yml`, pero se despacha desde
+  `main` y ahí el identificador del proyecto todavía es el viejo: hay que
+  actualizarlo en esa rama antes de usarlo.
+- El token de Cloudflare **no tiene permiso sobre las rutas de Workers**: los
+  modos `test-cutover` y `test-rollback` fallan con «Authentication error». Hoy
+  no hace falta porque la ruta ya apunta bien, pero conviene ampliarlo.
+
+Dos fallos encontrados al migrar, ya corregidos, que valen para cualquier
+despliegue futuro:
+
+1. **La caché de la ficha pública no puede leer cookies.** Al guardar la consulta
+   del profesional en caché quedó adentro un cliente que lee la sesión, y Next 16
+   lo prohíbe: TODAS las fichas respondían «no encontrado». La parte pública ahora
+   entra como visitante anónimo y el correo de contacto se pide aparte.
+2. **Una variable mal guardada se ve igual que una base caída.** `/api/health`
+   ahora dice si llegaron la URL y las llaves de Supabase, y a qué proyecto
+   apuntan.
