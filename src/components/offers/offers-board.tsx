@@ -391,7 +391,7 @@ export function OffersBoard({
   );
 
   return (
-    <main className="min-h-[calc(100vh-72px)] overflow-x-clip bg-white pb-16 text-[#162543] lg:flex lg:h-[calc(100dvh-64px)] lg:min-h-0 lg:flex-col lg:overflow-hidden lg:bg-[#fafafa] lg:pb-0">
+    <main className="min-h-[calc(100vh-72px)] overflow-x-clip bg-white pb-16 text-[#162543] sm:bg-[#fafafa] lg:flex lg:h-[calc(100dvh-64px)] lg:min-h-0 lg:flex-col lg:overflow-hidden lg:bg-[#fafafa] lg:pb-0">
       <div ref={sentinelaRef} aria-hidden className="h-px lg:hidden" />
       <section ref={cabeceraRef} className={cn("ccr-marketplace-sticky sticky top-0 z-20 border-b bg-white transition-colors duration-200 lg:hidden", conLinea ? "border-[#e5e7eb]" : "border-transparent")}>
         <div className="px-0">
@@ -453,8 +453,8 @@ export function OffersBoard({
         <span className="font-extrabold text-[#162543]">{filtered.length} {filtered.length === 1 ? copy.offer : copy.offerPlural}</span>
         {" · "}{copy.country}
       </p>
-      <div className="mx-auto w-full max-w-7xl px-0 sm:px-6 sm:py-5 lg:flex-1 lg:min-h-0 lg:px-6 lg:pb-0 lg:pt-0">
-        <div className={`${filtered.length > 0 ? "lg:grid lg:grid-cols-[minmax(340px,440px)_minmax(0,1fr)]" : ""} lg:h-full lg:overflow-hidden lg:rounded-[22px] lg:border lg:border-[#dfe8f0] lg:bg-white lg:shadow-[0_12px_34px_-28px_rgba(15,23,42,0.55)] lg:rounded-b-none lg:border-b-0`}>
+      <div className="mx-auto w-full max-w-7xl px-0 sm:max-w-[46rem] sm:px-6 sm:py-5 lg:max-w-7xl lg:flex-1 lg:min-h-0 lg:px-6 lg:pb-0 lg:pt-0">
+        <div className={`${filtered.length > 0 ? "lg:grid lg:grid-cols-[minmax(340px,440px)_minmax(0,1fr)]" : ""} sm:overflow-hidden sm:rounded-[22px] sm:border sm:border-[#dfe8f0] sm:bg-white sm:shadow-[0_12px_34px_-28px_rgba(15,23,42,0.55)] lg:h-full lg:rounded-b-none lg:border-b-0`}>
           <section className={filtered.length > 0 ? MARKETPLACE_LIST_CLASS : "min-w-0 bg-white"}>
             <div className="border-b border-[#e7edf2] px-4 py-3 lg:hidden">
               <p className="font-bold">
