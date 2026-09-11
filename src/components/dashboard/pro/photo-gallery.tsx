@@ -7,6 +7,7 @@ import { AlertCircle, CalendarDays, Check, ImageUp, Images, Loader2, Pencil, Plu
 import { useReportSaveStatus } from "@/components/dashboard/save-status-context";
 import { UnsavedChangesGuard } from "@/components/dashboard/unsaved-changes-guard";
 import { StatusFilterTabs } from "@/components/dashboard/status-filter-tabs";
+import { SectionHeadline } from "@/components/dashboard/section-headline";
 import { Modal } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
@@ -84,6 +85,7 @@ export function seedCases(items: (SuccessCase | LegacyItem)[] | undefined, urls:
 export function PhotoGallery({ professionalId, initialUrls = [], initialItems, professions = [], services = [], onSaved }: PhotoGalleryProps) {
   const locale = useLocale();
   const t = useTranslations("photoGallery");
+  const tSub = useTranslations("proPanel.subtitles");
   const { dialogNode, showMessage, confirm } = useAppDialog();
   const errorTitle = locale === "en" ? "Something went wrong" : "No se pudo completar la acción";
   const rich = { strong: (c: React.ReactNode) => <strong>{c}</strong> };
@@ -259,6 +261,25 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
         <div className="rounded-xl bg-[#fffbeb] border border-[#fde68a] p-4 text-sm text-[#92400e]">{t.rich("noServices", rich)}</div>
       )}
 
+      {/* Cabecera de la sección: el contexto a la izquierda y la acción a la
+          derecha, ARRIBA de los filtros, igual que en Mis proyectos. El filtro
+          tiene que quedar pegado a la lista que filtra. */}
+      {shownCases.length > 0 && (
+        <SectionHeadline subtitulo={tSub("photos")}>
+          <div className="flex flex-col gap-1 sm:items-end">
+            <button
+              type="button"
+              onClick={openAdd}
+              disabled={addFull || professions.length === 0}
+              className="flex h-11 w-full items-center justify-center gap-2 rounded-full bg-[#009FD9] px-4 text-sm font-bold text-white transition-colors hover:bg-[#0089bb] sm:w-auto sm:px-6 disabled:cursor-not-allowed disabled:bg-[#cbd5e1]"
+            >
+              <Plus className="h-4 w-4" /> {t("addCase")}
+            </button>
+            {addFull && <p className="text-center text-xs text-[#68778d]">{t("maxCasesHint", { max: MAX_CASES_PER_PROFESSION })}</p>}
+          </div>
+        </SectionHeadline>
+      )}
+
       {/* Filter by profession — underline tabs + count badges (shared StatusFilterTabs);
           only when the pro has 2+ professions. */}
       {professions.length > 1 && (
@@ -272,24 +293,6 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
           counts={Object.fromEntries(professions.map((p) => [p, countFor(p)]))}
           variant="chips"
         />
-      )}
-
-      {/* El botón de crear ocupa su propia fila, de lado a lado, debajo de los
-          filtros: al lado de ellos se mezclaba, y arriba a la derecha competía
-          con el título. Sólido: es la acción principal de la sección y así se lee de
-          una. */}
-      {shownCases.length > 0 && (
-        <div className="flex flex-col gap-1 sm:items-end">
-          <button
-            type="button"
-            onClick={openAdd}
-            disabled={addFull || professions.length === 0}
-            className="flex h-11 w-full items-center justify-center gap-2 rounded-full bg-[#009FD9] px-4 text-sm font-bold text-white transition-colors hover:bg-[#0089bb] sm:w-auto sm:px-6 disabled:cursor-not-allowed disabled:bg-[#cbd5e1]"
-          >
-            <Plus className="h-4 w-4" /> {t("addCase")}
-          </button>
-          {addFull && <p className="text-center text-xs text-[#68778d]">{t("maxCasesHint", { max: MAX_CASES_PER_PROFESSION })}</p>}
-        </div>
       )}
 
       {/* One-per-row case cards: outcome summary + small proof photo stack. */}

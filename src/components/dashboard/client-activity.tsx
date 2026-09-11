@@ -23,6 +23,7 @@ import { formatColonesTaxIncluded, splitPricingLabel } from "@/lib/pricing";
 import { getInitials, cn, formatRelativeOrDate } from "@/lib/utils";
 import { StatusFilterTabs, SOLICITUD_TABS, PROYECTO_TABS, solicitudMatches, solicitudBucket, proyectoMatches, proyectoBucket, bucketCounts } from "@/components/dashboard/status-filter-tabs";
 import { ExpandToggle } from "@/components/dashboard/expand-toggle";
+import { SectionHeadline } from "@/components/dashboard/section-headline";
 import { ExpandableText } from "@/components/ui/expandable-text";
 import { ReportModal } from "@/components/dashboard/report-modal";
 import { LeaveReviewModal } from "@/components/professionals/leave-review-modal";
@@ -157,6 +158,7 @@ const actionButtonClass = "h-11 w-auto shrink-0 grow whitespace-nowrap rounded-f
 export function ClientActivity({ section }: { section: ClientActivitySection }) {
   const { user } = useAuth();
   const t = useTranslations("clientActivity");
+  const tSub = useTranslations("proPanel.subtitles");
   const tEtapas = useTranslations("statusTabs");
   // Ver la nota en booking-requests: el grupo de solicitudes incluye citas que
   // todavía no han pasado, así que "en curso" no las describe.
@@ -888,16 +890,19 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
             />
           ) : (
             <div className="ccr-native-safe-list-end flex flex-col gap-3.5">
-              {/* Publicar va ARRIBA: el filtro tiene que quedar pegado a la lista que
-                  filtra. En medio, el botón cortaba esa relación. */}
-              <button
-                type="button"
-                onClick={() => setShowPublish(true)}
-                className="inline-flex h-11 w-full items-center justify-center gap-1.5 rounded-full bg-[#009FD9] px-4 text-[13px] font-bold text-white transition-colors hover:bg-[#0089bb] sm:w-auto sm:self-start lg:hidden"
-              >
-                <Plus className="h-4 w-4" />
-                {t("publishProject")}
-              </button>
+              {/* Crear va ARRIBA, con el subtítulo a la izquierda: el filtro tiene
+                  que quedar pegado a la lista que filtra. En medio, el botón
+                  cortaba esa relación. */}
+              <SectionHeadline subtitulo={tSub("sent_projects")}>
+                <button
+                  type="button"
+                  onClick={() => setShowPublish(true)}
+                  className="inline-flex h-11 w-full items-center justify-center gap-1.5 rounded-full bg-[#009FD9] px-4 text-[13px] font-bold text-white transition-colors hover:bg-[#0089bb] sm:w-auto sm:px-6"
+                >
+                  <Plus className="h-4 w-4" />
+                  {t("publishProject")}
+                </button>
+              </SectionHeadline>
               <StatusFilterTabs
                 tabs={PROYECTO_TABS}
                 value={effectiveProjectFilter}

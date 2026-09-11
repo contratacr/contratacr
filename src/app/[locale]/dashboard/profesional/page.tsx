@@ -15,6 +15,7 @@ import {
   } from "lucide-react";
 import { QuotesSection } from "@/components/quotes/quotes-section";
 import { SectionBoundary } from "@/components/dashboard/section-boundary";
+import { SectionHeadline } from "@/components/dashboard/section-headline";
 import { Navbar } from "@/components/layout/navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -119,8 +120,14 @@ const TAB_ICONS: Record<Tab, React.ReactNode> = {
   completion: <CheckCircle2 className="h-4 w-4" />,
 };
 
-// Tabs that show a one-line context note under the section title.
-const TABS_WITH_SUBTITLE = new Set<Tab>(["proposals", "sent_bookings", "sent_projects", "saved", "connections"]);
+// Secciones que abren con una línea de contexto. Va en el cuerpo, arriba de los
+// filtros, no en la cabecera de la tarjeta: la cabecera solo existe de 1024px
+// para arriba y a media pantalla el subtítulo desaparecía.
+const TABS_WITH_SUBTITLE = new Set<Tab>(["bookings", "proposals", "sent_bookings", "saved", "connections"]);
+
+// No están aquí sent_projects, soporte, photos, offers ni jobs: esas dibujan su
+// propia cabecera (subtítulo + botón de crear) desde adentro del componente,
+// porque el botón depende de datos que solo ellas tienen.
 
 // Mode membership. The first three render only in "offer" mode, the next three
 // only in "use" mode; "profile" + the shared tabs are valid in both, so the mode
@@ -617,7 +624,6 @@ export default function DashboardPage() {
     />
   ) : null;
   const t = useTranslations("proPanel");
-  const tc = useTranslations("clientActivity");
   const locale = useLocale();
   const rawRequestedTab = searchParams.get("tab");
   const legacyVerificationTab = rawRequestedTab === "verificacion";
@@ -2044,7 +2050,11 @@ export default function DashboardPage() {
       )}
       <main className={cn(
         "ccr-dashboard-main flex-1 min-h-[calc(100svh-88px)]",
-        mobileSectionOpen && "bg-white lg:bg-[#fafafa]",
+        // El blanco es para el teléfono, donde la sección llena la pantalla. En
+        // una ventana ancha y corta (media pantalla en la Mac) la sección se
+        // acaba antes y ese blanco quedaba como una franja suelta encima del
+        // pie: de 640px para arriba se pinta del mismo color que la sección.
+        mobileSectionOpen && "bg-white sm:bg-[#f4f7fa] lg:bg-[#fafafa]",
         mobileFullScreenTab && "bg-white lg:bg-[#fafafa]",
       )}>
         <div className={cn(
@@ -2347,21 +2357,6 @@ export default function DashboardPage() {
                             <h2 className="min-w-0 truncate text-[17px] font-bold text-[#162543]">{activeTab === "services" ? t("servicesHeading") : panelTabLabel(activeTab)}</h2>
                           </div>
                         </div>
-                        {TABS_WITH_SUBTITLE.has(activeTab) && (
-                          <div className="mt-1 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-                            <p className="text-sm text-[#6b7280]">{t(`subtitles.${activeTab}`)}</p>
-                            {activeTab === "sent_projects" && (
-                              <Button
-                                size="sm"
-                                className="hidden rounded-full px-4 lg:inline-flex"
-                                onClick={() => window.dispatchEvent(new Event("contratacr:open-publish-project"))}
-                              >
-                                <Plus className="h-4 w-4" />
-                                {tc("publishProject")}
-                              </Button>
-                            )}
-                          </div>
-                        )}
                       </CardHeader>}
                       <CardContent className={mobileSectionOpen ? cn(
                         "dashboard-section-content ccr-editor-surface min-h-[calc(100svh-var(--ccr-native-header-height,124px)-var(--ccr-responsive-footer-reserve,72px)-64px)] bg-[#f4f7fa] px-4 pb-6 pt-4 sm:px-5 lg:min-h-0 lg:bg-white lg:px-6 lg:pb-6 lg:pt-5",
@@ -2376,6 +2371,9 @@ export default function DashboardPage() {
                             cae ella sola con su aviso y su reintento, y el error queda
                             registrado. Antes se llevaba la pantalla entera. */}
                         <SectionBoundary titulo={t("sectionErrorTitle")} cuerpo={t("sectionErrorBody")} reintentar={t("sectionErrorRetry")}>
+                        {TABS_WITH_SUBTITLE.has(activeTab) && (
+                          <SectionHeadline subtitulo={t(`subtitles.${activeTab}`)} className="mb-4" />
+                        )}
                         {activeTab === "home" && (
                           <>
                             <div className="lg:hidden">

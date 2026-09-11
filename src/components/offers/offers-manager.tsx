@@ -8,6 +8,7 @@ import { useLocale } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
 import { effectiveOfferStatus, formatOfferPrice, type ProfessionalOffer } from "@/lib/offers";
 import { Modal } from "@/components/ui/modal";
+import { SectionHeadline } from "@/components/dashboard/section-headline";
 import { OfferForm } from "@/components/offers/offer-form";
 import type { SelectMenuOption } from "@/components/ui/select-menu";
 import { cn } from "@/lib/utils";
@@ -142,10 +143,12 @@ export function OffersManager({ initialOffers, embedded = false, backHref = "/da
               </div>
             )}
           </div>
-          <>
-            <button type="button" onClick={() => setPublishOpen(true)} className="hidden h-11 w-full items-center justify-center gap-2 rounded-full bg-[#009FD9] px-4 text-sm font-bold text-white transition-colors hover:bg-[#0089bb] sm:w-auto sm:self-end sm:px-6 lg:flex"><Plus className="h-4 w-4" />{copy.publish}</button>
-            <Link href="/ofertas/publicar?from=panel" className="flex h-11 w-full items-center justify-center gap-2 rounded-full bg-[#009FD9] px-4 text-sm font-bold text-white transition-colors hover:bg-[#0089bb] sm:w-auto sm:self-end sm:px-6 lg:hidden"><Plus className="h-4 w-4" />{copy.publish}</Link>
-          </>
+          {/* Cabecera de la sección: el contexto a la izquierda y la acción a la
+              derecha, la misma fila que en Mis proyectos y en Soporte. */}
+          <SectionHeadline subtitulo={copy.subtitle}>
+              <button type="button" onClick={() => setPublishOpen(true)} className="hidden h-11 w-full items-center justify-center gap-2 rounded-full bg-[#009FD9] px-4 text-sm font-bold text-white transition-colors hover:bg-[#0089bb] sm:w-auto sm:px-6 lg:flex"><Plus className="h-4 w-4" />{copy.publish}</button>
+              <Link href="/ofertas/publicar?from=panel" className="flex h-11 w-full items-center justify-center gap-2 rounded-full bg-[#009FD9] px-4 text-sm font-bold text-white transition-colors hover:bg-[#0089bb] sm:w-auto sm:px-6 lg:hidden"><Plus className="h-4 w-4" />{copy.publish}</Link>
+          </SectionHeadline>
         </div>
         <div className="space-y-3.5">
           {offers.map((offer) => {

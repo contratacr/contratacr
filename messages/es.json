@@ -1822,7 +1822,9 @@
       "sent_bookings": "Citas que reservaste desde el perfil de un profesional.",
       "sent_projects": "Lo que pediste. Los profesionales te responden aquí y tú le escribes al que quieras.",
       "saved": "Perfiles que guardaste para contratar más adelante.",
-      "connections": "Profesionales con quienes confirmaste o completaste un servicio."
+      "connections": "Profesionales con quienes confirmaste o completaste un servicio.",
+      "soporte": "Tus conversaciones con soporte. Abre un tiquete y te respondemos aquí.",
+      "photos": "Trabajos que ya hiciste, con fotos. Es lo que más convence a un cliente."
     },
     "profileSections": {
       "photosDesc": "Fotos y trabajos realizados que ven los clientes.",
@@ -2661,7 +2663,7 @@
     "report": "Reportar",
     "pEmpty": "Todavía no has pedido ningún profesional",
     "pEmptySub": "Cuenta qué necesitas y los profesionales te responden.",
-    "publishProject": "Publicar lo que necesito",
+    "publishProject": "Crear proyecto",
     "publishShort": "Publicar",
     "projAssigned": "Asignada",
     "projAwaiting": "Por confirmar",

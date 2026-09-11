@@ -12,6 +12,7 @@ import { createClient } from "@/lib/supabase/client";
 import { SupportModal } from "@/components/support/support-modal";
 import { SupportForm } from "@/components/support/support-form";
 import { StatusFilterTabs } from "@/components/dashboard/status-filter-tabs";
+import { SectionHeadline } from "@/components/dashboard/section-headline";
 import { supportTicketRef } from "@/lib/support-ticket";
 import { LONG_TEXT_MAX_LENGTH, limitText } from "@/lib/text-limits";
 import { useAppDialog } from "@/hooks/use-app-dialog";
@@ -99,6 +100,7 @@ export function SupportTickets({
 }) {
   const { user } = useAuth();
   const t = useTranslations("supportTickets");
+  const tSub = useTranslations("proPanel.subtitles");
   const locale = useLocale();
   const { dialogNode, showMessage } = useAppDialog();
   const errorTitle = locale === "en" ? "Something went wrong" : "No se pudo completar la acción";
@@ -461,6 +463,18 @@ export function SupportTickets({
   // ── List view ──
   return (
     <div className="mx-auto w-full max-w-[34rem] space-y-4 px-4 sm:max-w-none sm:px-0">
+      {/* Cabecera de la sección: el contexto a la izquierda y la acción a la
+          derecha, ARRIBA de los filtros, igual que en Mis proyectos. El filtro
+          tiene que quedar pegado a la lista que filtra. No se dibuja mientras
+          carga ni en el estado vacío, que ya trae su propio botón. */}
+      {!loading && items.length > 0 && (
+        <SectionHeadline subtitulo={tSub("soporte")}>
+          <button onClick={openNewTicket} className="flex h-11 w-full items-center justify-center gap-2 rounded-full bg-[#009FD9] px-4 text-sm font-bold text-white sm:w-auto sm:px-6 transition-colors hover:bg-[#0089bb]">
+            <Plus className="h-4 w-4" /> {t("newTicket")}
+          </button>
+        </SectionHeadline>
+      )}
+
       {/* Status filter — the SHARED tab style (consistent with solicitudes/proyectos):
           per-status COUNT badge only. Hidden until loading resolves so it never
           flashes before the tickets arrive. */}
@@ -475,18 +489,6 @@ export function SupportTickets({
             mobileLayout="equal"
           />
         </div>
-      )}
-
-      {/* El botón va DEBAJO de los filtros, en su propia fila de lado a lado:
-          el mismo orden y el mismo traje que en Casos de éxito, Servicios,
-          Ofertas y Empleos. No se dibuja mientras carga ni en el estado vacío,
-          que ya trae su propio botón. */}
-      {!loading && items.length > 0 && (
-        // En pantalla grande, a la derecha: el padre no es una fila, así que el
-        // botón se alinea con su propio margen izquierdo automático.
-        <button onClick={openNewTicket} className="flex h-11 w-full items-center justify-center gap-2 rounded-full bg-[#009FD9] px-4 text-sm font-bold text-white sm:ml-auto sm:w-auto sm:px-6 transition-colors hover:bg-[#0089bb]">
-          <Plus className="h-4 w-4" /> {t("newTicket")}
-        </button>
       )}
 
       {loading ? (

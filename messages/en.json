@@ -1420,7 +1420,9 @@
       "sent_bookings": "Appointments you booked from a professional's profile.",
       "sent_projects": "What you asked for. Professionals reply here and you write to whoever you like.",
       "saved": "Profiles you saved to hire later.",
-      "connections": "Professionals with whom you confirmed or completed a service."
+      "connections": "Professionals with whom you confirmed or completed a service.",
+      "soporte": "Your support conversations. Open a ticket and we answer you here.",
+      "photos": "Work you already did, with photos. It is what convinces a client the most."
     },
     "profileSections": {
       "photosDesc": "Photos and completed work clients can see.",
@@ -2661,7 +2663,7 @@
     "report": "Report",
     "pEmpty": "You haven't posted any requests yet",
     "pEmptySub": "Tell us what you need and professionals will write to you.",
-    "publishProject": "Post what I need",
+    "publishProject": "Create project",
     "publishShort": "Post",
     "projAssigned": "Assigned",
     "projAwaiting": "To confirm",
