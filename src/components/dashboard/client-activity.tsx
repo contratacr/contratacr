@@ -1039,11 +1039,13 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                                             </div>
                                           </div>
                                           {isActive && proposal.professionals?.id && (
-                                            <div className="mt-3 flex flex-col gap-2">
+                                            <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
+                                              {/* Ancho entero en el teléfono; en pantalla grande, una
+                                                  fila con cada botón del ancho de su texto. */}
                                               {!chosenId && (
                                                 <Button
                                                   size="sm"
-                                                  className="h-11 w-full rounded-full text-[13px] font-bold"
+                                                  className="h-11 w-full rounded-full text-[13px] font-bold sm:w-auto sm:px-5"
                                                   loading={eligiendo === proposal.professionals.id}
                                                   disabled={!!eligiendo}
                                                   onClick={() => void elegirProfesional(project.id, proposal.professionals!.id!, proposal.professionals?.profiles?.full_name ?? t("professional"))}
@@ -1051,7 +1053,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                                                   {t("chooseThisOne")}
                                                 </Button>
                                               )}
-                                              <DirectChatLauncher professionalId={proposal.professionals.id} professionalName={proposal.professionals.profiles?.full_name || t("professional")} projectId={project.id} proposalId={proposal.id} contextTitle={project.title} buttonLabel={t("writeWhatsapp")} openDirectly initialMessage={t("proposalChatGreeting", { title: project.title })} className="h-11 w-full rounded-full text-[13px] font-bold" tone={chosenId ? "primary" : "outline"} />
+                                              <DirectChatLauncher professionalId={proposal.professionals.id} professionalName={proposal.professionals.profiles?.full_name || t("professional")} projectId={project.id} proposalId={proposal.id} contextTitle={project.title} buttonLabel={t("writeWhatsapp")} openDirectly initialMessage={t("proposalChatGreeting", { title: project.title })} className="h-11 w-full sm:w-auto sm:px-5 rounded-full text-[13px] font-bold" tone={chosenId ? "primary" : "outline"} />
                                             </div>
                                           )}
                                         </div>

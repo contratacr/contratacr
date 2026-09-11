@@ -2323,7 +2323,10 @@ export default function DashboardPage() {
                     <Card className={cn(
                       activeTab === "home" && "rounded-none border-0 bg-transparent shadow-none lg:hidden",
                       activeTab === "chat" && "overflow-hidden",
-                      activeTab !== "chat" && activeTab !== "home" && "lg:max-w-[62rem]",
+                      // En pantalla grande la columna se queda en 54rem: a 62rem las
+                      // tarjetas de una cita o un proyecto quedaban como cintas de
+                      // un metro con tres renglones de texto y un botón en cada punta.
+                      activeTab !== "chat" && activeTab !== "home" && "lg:max-w-[54rem]",
                       singleSurfaceTab && "!border-0 !bg-transparent !shadow-none",
                       mobileSectionOpen && !singleSurfaceTab && "dashboard-section-card rounded-none border-0 bg-white shadow-none lg:overflow-hidden lg:rounded-[22px] lg:border lg:border-[#dfe8f0] lg:shadow-[0_12px_34px_-28px_rgba(15,23,42,0.55)]",
                     )}>

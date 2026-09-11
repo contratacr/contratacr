@@ -445,7 +445,7 @@ export function ProposalsTab({ categoryId }: ProposalsTabProps) {
                           className="min-h-[120px] w-full resize-none break-words rounded-xl border border-[#e5e7eb] bg-white px-4 py-3 text-[15px] text-[#162543] placeholder:text-[#68778d] focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[#009FD9]"
                         />
                         {message.length >= MESSAGE_MAX && <p className="mt-1 text-xs text-[#b45309]">{t("charLimit", { max: MESSAGE_MAX })}</p>}
-                        <Button onClick={() => sendReply(project.id)} disabled={!message.trim() || submitting === project.id} loading={submitting === project.id} size="sm" className="mt-3 h-11 w-full rounded-full text-[13px] font-bold">
+                        <Button onClick={() => sendReply(project.id)} disabled={!message.trim() || submitting === project.id} loading={submitting === project.id} size="sm" className="mt-3 h-11 w-full sm:w-auto sm:px-6 rounded-full text-[13px] font-bold">
                           {corrigiendo === project.id ? t("sendProposalAgain") : t("sendProposal")}
                         </Button>
                         <button type="button" onClick={() => dismissOpportunity(project.id)} className="mx-auto mt-3 flex items-center gap-1.5 text-[12px] font-medium text-[#68778d] transition-colors hover:text-[#6b7280]">
@@ -531,7 +531,7 @@ export function ProposalsTab({ categoryId }: ProposalsTabProps) {
                       {(p.status === "pending" || (p.status === "accepted" && trabajoVivo)) && (
                         <div className="flex items-center gap-2">
                           {p.status === "accepted" && trabajoVivo && (
-                            <div className="min-w-0 flex-1">
+                            <div className="min-w-0 flex-1 sm:flex-none">
                               <QuoteBlock asButton projectId={p.project_id} role="pro" canCreate defaultTitle={p.projects?.title ?? undefined} clientName={p.projects?.profiles?.full_name ?? null} />
                             </div>
                           )}
