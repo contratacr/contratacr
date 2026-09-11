@@ -1323,6 +1323,15 @@ export default function DashboardPage() {
     setMobilePanelOpen(false);
     if (!preserveCompletionFlow) {
       clearCompletionFlow();
+      // El foco que dejó el atajo de «te faltan pasos» tiene que morir con él.
+      // Si sobrevive, la próxima vez que se entra a Servicios o a Perfil por el
+      // menú la sección se monta otra vez con ese foco puesto y vuelve a abrir
+      // sola la ventana de editar (o el buscador de oficios), sin que nadie se
+      // lo haya pedido.
+      setServiceFocus(null);
+      setProfileFocus(null);
+      setPendingServiceFocusField(null);
+      setPendingProfileFocusField(null);
       if (tab !== activeTab) rememberSectionReturnTarget();
     }
     if (tab === "verificacion") {
