@@ -566,7 +566,7 @@ function CategoriesMegaPanel({ onNavigate }: { onNavigate: () => void }) {
                         key={item.id}
                         type="button"
                         onClick={() => go(item.id)}
-                        className="group flex min-h-10 items-center justify-between gap-2 rounded-xl px-3 py-2 text-left text-sm font-semibold leading-snug text-[#162543] transition-colors hover:bg-[#eaf6fc] hover:text-[#007fae] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9]/20"
+                        className="group flex min-h-10 items-center justify-between gap-2 rounded-xl px-3 py-2 text-left text-sm font-semibold leading-snug text-[#374151] transition-colors hover:bg-[#EBF5FB] hover:text-[#0089bb] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9]/20"
                       >
                         <span className="min-w-0 [overflow-wrap:anywhere]">{getCategoryLabel(item.id, locale)}</span>
                         <ChevronRight className="h-4 w-4 shrink-0 text-[#cbd5e1] group-hover:text-[#009FD9]" />
