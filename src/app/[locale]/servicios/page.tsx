@@ -319,7 +319,7 @@ export default function ServiciosPage() {
 
         <section className="px-4 pb-16 pt-0">
           <div className="mx-auto max-w-6xl">
-          <div className="overflow-hidden rounded-[28px] border border-[#e1e9f0] bg-white shadow-[0_18px_44px_rgba(15,23,42,0.06)]">
+          <div className="overflow-hidden rounded-[28px] border border-[#dfe8f0] bg-white shadow-[0_18px_44px_rgba(15,23,42,0.06)]">
             <div className="border-b border-[#eef2f6] bg-white p-3 sm:p-4">
               <form
                 onSubmit={submitSearch}

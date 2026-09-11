@@ -207,7 +207,7 @@ export function SupportForm({ onSuccess }: { onSuccess?: (email: string) => void
 
   return (
     <form onSubmit={handleSubmit} onInput={() => setConCambios(true)} className="flex flex-col">
-      <div className="mx-4 flex flex-col gap-5 rounded-2xl sm:mx-0 border border-[#e5e7eb] bg-white p-5 shadow-sm">
+      <div className="mx-4 flex flex-col gap-5 rounded-2xl sm:mx-0 border border-[#dfe8f0] bg-white p-5 shadow-sm">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
           <label className="text-sm font-medium text-[#374151] block mb-1.5">

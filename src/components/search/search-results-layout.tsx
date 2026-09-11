@@ -465,7 +465,7 @@ export function SearchResultsLayout({ children, filters, quickFilters, drawerFil
         {/* Map — mobile: full-bleed BACKGROUND, flex-fills the area under the header (the sheet
             overlays its lower part). Desktop: the sticky right column (order-3). ONE instance. */}
         <aside className="min-h-0 min-w-0 flex-1 lg:order-3">
-          <div className="relative isolate h-full w-full overflow-hidden bg-[#eef2f6] lg:sticky lg:top-20 lg:h-[calc(100vh-104px)] lg:rounded-2xl lg:border lg:border-[#e5e7eb] lg:bg-transparent">
+          <div className="relative isolate h-full w-full overflow-hidden bg-[#eef2f6] lg:sticky lg:top-20 lg:h-[calc(100vh-104px)] lg:rounded-2xl lg:border lg:border-[#dfe8f0] lg:bg-transparent">
             <GoogleMapPanel apiKey={apiKey} professionals={mapData} locale={locale} numbering={numbering} focusTarget={mapFocusTarget} />
           </div>
         </aside>

@@ -508,7 +508,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                 // El borde iba sin color y salía más oscuro que el de cualquier
                 // tarjeta del sitio; el alto sobraba (24rem de mínimo con 5rem de
                 // relleno) y la cuarta línea repetía lo que ya dice el botón.
-                <div data-search-empty-state className="-mx-4 flex min-h-[18rem] w-[calc(100%+2rem)] flex-col items-center justify-center bg-white px-6 py-14 text-center lg:mx-0 lg:min-h-[20rem] lg:w-full lg:rounded-2xl lg:border lg:border-[#e5e7eb] lg:px-8 lg:py-16 lg:shadow-sm">
+                <div data-search-empty-state className="-mx-4 flex min-h-[18rem] w-[calc(100%+2rem)] flex-col items-center justify-center bg-white px-6 py-14 text-center lg:mx-0 lg:min-h-[20rem] lg:w-full lg:rounded-2xl lg:border lg:border-[#dfe8f0] lg:px-8 lg:py-16 lg:shadow-sm">
                   {/* El mismo mosaico de las tarjetas de registro: es el icono
                       protagonista de la pantalla, no un adorno de fila. */}
                   <div className="ccr-icono-mosaico mb-5 h-20 w-20">
