@@ -192,7 +192,13 @@ export default function ProfilePage() {
   // servidor, donde no hay URL: calcularlo ahí dejaba el botón clavado en
   // "Volver a resultados" aunque vinieras del panel. Se resuelve en el cliente,
   // apenas monta, y de ahí no vuelve a cambiar.
-  const [profileReturnHref, setProfileReturnHref] = useState("/buscar");
+  // `?from=` viene en la dirección y el servidor SÍ la conoce: con eso el primer
+  // pintado ya trae el destino correcto (las tarjetas de /buscar y del panel lo
+  // mandan). El referrer, que solo existe en el navegador, apenas afina después.
+  const [profileReturnHref, setProfileReturnHref] = useState(() => {
+    const explicit = searchParams.get("from");
+    return explicit ? safeProfileReturnHref(explicit) : "/buscar";
+  });
   useEffect(() => {
     setProfileReturnHref(initialProfileReturnHref());
   }, []);
@@ -684,7 +690,12 @@ export default function ProfilePage() {
           ) : (
             <div className={cn(
               "-mx-4 mb-6 flex items-center justify-between gap-3 border-b border-[#e5e7eb] bg-white px-4 py-2.5 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8",
-              navbarOwnsHeader && "hidden",
+              // La barra superior toma el título y el «volver» SOLO en el teléfono
+              // (ahí es donde dibuja «← Título»). En computadora la barra no lo
+              // dibuja, así que ocultar el de la página dejaba la ficha sin ningún
+              // «Volver a resultados»: se pintaba en el servidor y desaparecía al
+              // montar, que era el parpadeo, y encima se perdía el enlace.
+              navbarOwnsHeader && "max-lg:hidden",
             )}>
               <Link
                 href={profileReturnHref}
