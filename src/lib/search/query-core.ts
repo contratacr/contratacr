@@ -139,6 +139,56 @@ export function sortResults(results: SearchResult[], sortBy: string) {
   return results;
 }
 
+/**
+ * Qué tan puntual es la cobertura de un profesional para la zona que se pidió.
+ * 3 = marcó ese cantón (o vive ahí, o tiene un local ahí), 2 = cubre toda la
+ * provincia, 1 = cubre todo el país, 0 = llega por otra vía (videoconsulta).
+ *
+ * Sin esto, quien marcó "todo Costa Rica" se mezclaba con el de Atenas y podía
+ * salir de primero solo por tener mejor nota: el que sí trabaja en el cantón
+ * que buscaste es más útil aunque tenga una estrella menos.
+ */
+export function localityTier(pro: SearchResult, filters: SearchFiltersResolved) {
+  const provincia = filters.selectedProvinceId ? PROVINCES.find((p) => p.id === filters.selectedProvinceId) : undefined;
+  const canton = provincia && filters.selectedCantonId
+    ? provincia.cantons.find((c) => c.id === filters.selectedCantonId)
+    : undefined;
+  if (!provincia && !canton) return 0;
+  const workplaces = (pro.workplaces ?? []) as SearchWorkplace[];
+  if (canton) {
+    const enElCanton = pro.cantonName === canton.name
+      || pro.coverage?.cantones?.includes(canton.name)
+      || workplaces.some((w) => w.cantonId === canton.id || w.name?.includes(canton.name) || w.address?.includes(canton.name));
+    if (enElCanton) return 3;
+  }
+  if (provincia) {
+    const enLaProvincia = pro.provinceName === provincia.name
+      || pro.coverage?.provincias?.includes(provincia.name)
+      // Marcar cantones sueltos de esa provincia también es estar en la
+      // provincia: si no, en una búsqueda por provincia caía por debajo de
+      // quien solo marcó "todo el país".
+      || provincia.cantons.some((c) => pro.coverage?.cantones?.includes(c.name))
+      || workplaces.some((w) => w.provinciaId === provincia.id || w.provinceId === provincia.id || w.name?.includes(provincia.name) || w.address?.includes(provincia.name));
+    // Sin cantón elegido, cubrir la provincia es lo más puntual que hay.
+    if (enLaProvincia) return canton ? 2 : 3;
+  }
+  return pro.coverage?.country ? 1 : 0;
+}
+
+/**
+ * Ordena por cercanía administrativa sin tocar el orden elegido: el reordenado
+ * es estable, así que dentro de cada grupo se conserva la nota, la verificación
+ * y todo lo demás. No se aplica con coordenadas exactas: ahí la distancia real
+ * ya es una señal mejor que el nombre del cantón.
+ */
+function porZonaPedida(results: SearchResult[], filters: SearchFiltersResolved) {
+  if (typeof filters.nearLat === "number" && typeof filters.nearLng === "number") return results;
+  if (!filters.selectedCantonId && !filters.selectedProvinceId) return results;
+  const tier = new Map<SearchResult, number>();
+  for (const pro of results) tier.set(pro, localityTier(pro, filters));
+  return [...results].sort((a, b) => (tier.get(b) ?? 0) - (tier.get(a) ?? 0));
+}
+
 /** Which location a card should show, and whether it drops to contact-only. */
 export function locationDecisions(params: SearchPageParams, filters: SearchFiltersResolved) {
   const activeCategoryId = params.categoria && params.categoria !== "todas" ? params.categoria : undefined;
@@ -251,5 +301,5 @@ async function resolveSearchResultsUncached(params: SearchPageParams) {
   }, {
     fresh: process.env.E2E_FIXTURES_READY === "1" && Boolean(params.regression),
   });
-  return { filters, ordered: sortResults(results, filters.sortBy) };
+  return { filters, ordered: porZonaPedida(sortResults(results, filters.sortBy), filters) };
 }
