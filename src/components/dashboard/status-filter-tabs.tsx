@@ -339,11 +339,6 @@ export function proposalBucket(proposalStatus?: string | null, projectStatus?: s
   if (proposalStatus === "declined" || proposalStatus === "withdrawn") return "canceladas";
   return "respondidas";
 }
-export function proposalMatches(filter: string): boolean {
-  if (!filter) return true; // toggle cleared → all proposals
-  return proposalBucket() === filter;
-}
-
 // Build a {bucket: count} map for the count badges. Pass the items' resolved buckets.
 export function bucketCounts(buckets: string[]): Record<string, number> {
   const counts: Record<string, number> = { activas: 0, en_curso: 0, finalizadas: 0 };

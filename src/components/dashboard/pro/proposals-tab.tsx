@@ -144,8 +144,11 @@ export function ProposalsTab({ categoryId }: ProposalsTabProps) {
   // El contador va solo en las etapas donde hay algo que hacer. Con los cuatro
   // números, los nombres no cabían y se cortaban («Finaliza…»); en lo que ya
   // terminó, la cifra era adorno.
-  const counts = useMemo(() => ({ nuevas: newList.length, respondidas: vivas.length }),
-    [newList.length, vivas.length]);
+  // Las cuatro etapas, no solo las dos primeras: Finalizadas y Canceladas
+  // tenían tarjetas pero salían sin conteo, al revés que el resto del panel.
+  const counts = useMemo(
+    () => ({ nuevas: newList.length, respondidas: vivas.length, finalizadas: finalizadas.length, canceladas: canceladas.length }),
+    [newList.length, vivas.length, finalizadas.length, canceladas.length]);
   const listaDeEtapa = stage === "finalizadas" ? finalizadas : stage === "canceladas" ? canceladas : vivas;
 
   const refreshAll = useCallback(async () => {
