@@ -41,7 +41,7 @@ type Props = {
   detailOnly?: boolean;
 };
 
-const MARKETPLACE_LIST_CLASS = "ccr-marketplace-card-list min-w-0 bg-white lg:h-full lg:overflow-y-scroll lg:border-r lg:border-[#dfe6ec]";
+const MARKETPLACE_LIST_CLASS = "ccr-marketplace-card-list min-w-0 bg-white lg:h-full lg:overflow-y-scroll lg:rounded-xl lg:border lg:border-[#d7e1ea] sm:max-lg:mx-auto sm:max-lg:max-w-[640px] sm:max-lg:rounded-xl sm:max-lg:border sm:max-lg:border-[#d7e1ea]";
 
 const JOBS_COPY = {
   es: {
@@ -287,7 +287,7 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
   const detailBackHref = safeMarketplaceReturnHref(returnTo, "/empleos");
   const detailBackLabel = marketplaceReturnLabel(detailBackHref, "/empleos", locale);
 
-  return <main className="min-h-[calc(100vh-72px)] overflow-x-clip bg-white pb-16 text-[#162543] lg:flex lg:h-[calc(100dvh-64px)] lg:min-h-0 lg:flex-col lg:overflow-hidden lg:bg-[#f4f7fa] lg:pb-0">
+  return <main className="min-h-[calc(100vh-72px)] overflow-x-clip bg-white pb-16 text-[#162543] lg:flex lg:h-[calc(100dvh-64px)] lg:min-h-0 lg:flex-col lg:overflow-hidden sm:bg-[#f4f7fa] lg:pb-0">
     <div ref={sentinelaRef} aria-hidden className="h-px lg:hidden" />
     {showingMobileDetail && selected && (
       <section className="lg:hidden">
@@ -405,8 +405,8 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
         {" · "}{copy.country}
       </p>
     )}
-    {!detailOnly && <div className={`${showingMobileDetail ? "hidden lg:block " : ""}mx-auto w-full max-w-7xl px-0 py-0 sm:px-6 sm:py-5 lg:h-[calc(100dvh-172px)] lg:min-h-0 lg:shrink-0 lg:px-6 lg:pb-0 lg:pt-0`}>
-      <div className={`${filtered.length > 0 ? "lg:grid lg:grid-cols-[minmax(340px,440px)_minmax(0,1fr)]" : ""} lg:h-full lg:overflow-hidden lg:rounded-lg lg:rounded-b-none lg:border lg:border-b-0 lg:border-[#dfe8f0] lg:bg-white`}>
+    {!detailOnly && <div className={`${showingMobileDetail ? "hidden lg:block " : ""}mx-auto w-full max-w-7xl px-0 py-0 sm:px-6 sm:py-5 lg:h-[calc(100dvh-172px)] lg:min-h-0 lg:shrink-0 lg:px-6 lg:pb-4 lg:pt-0`}>
+      <div className={`${filtered.length > 0 ? "lg:grid lg:grid-cols-[minmax(340px,440px)_minmax(0,1fr)]" : ""} lg:h-full lg:gap-4 lg:overflow-hidden`}>
         <section className={filtered.length > 0 ? MARKETPLACE_LIST_CLASS : "min-w-0 bg-white"}>
           <div className="border-b border-[#e7edf2] px-4 py-3 lg:hidden"><p className="font-bold">{filtered.length} {filtered.length === 1 ? copy.job.toLocaleLowerCase(locale) : copy.jobs.toLocaleLowerCase(locale)}</p><p className="text-xs text-[#68778d]">{copy.country}</p></div>
           <div>
@@ -538,7 +538,7 @@ function JobPreview({ job, isOwner, userId, hasApplied, onApply, onEdit, mobile 
     ...(job.duration_label ? [[copy.duration, job.duration_label] as [string, string]] : []),
   ].filter(([, value]) => Boolean(value));
 
-  return <article className={`ccr-marketplace-result-list relative min-w-0 bg-white ${mobile ? "block px-5 py-6" : "hidden p-7 lg:block lg:max-h-[calc(100vh-190px)] lg:overflow-y-auto"}`}>
+  return <article className={`ccr-marketplace-result-list relative min-w-0 bg-white ${mobile ? "block px-5 py-6" : "hidden p-7 lg:block lg:h-full lg:overflow-y-auto lg:rounded-xl lg:border lg:border-[#d7e1ea]"}`}>
     {/* En el teléfono el "..." vive en la cabecera de la pantalla; aquí, arriba
         a la derecha del panel, que es donde se busca. */}
     {!mobile && (
