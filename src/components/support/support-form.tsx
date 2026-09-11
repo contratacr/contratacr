@@ -26,8 +26,9 @@ const SUBJECT_IDS = [0, 1, 2, 3, 4, 5] as const;
 
 type AttachedFile = { file: File; preview?: string };
 
-export function SupportForm({ onSuccess }: { onSuccess?: (email: string) => void }) {
+export function SupportForm({ onSuccess, onCancel }: { onSuccess?: (email: string) => void; onCancel?: () => void }) {
   const t = useTranslations("soporte");
+  const tComunes = useTranslations("inputs");
   const locale = useLocale();
   const searchParams = useSearchParams();
   const { user, loading: authLoading } = useAuth();
@@ -314,7 +315,15 @@ export function SupportForm({ onSuccess }: { onSuccess?: (email: string) => void
 
       </div>
       {/* El botón vive en su propia barra al pie, fuera de la tarjeta. */}
-      <div className="ccr-pie-formulario sticky bottom-0 z-10 -mx-4 mt-5 border-t border-[#e5e7eb] bg-white px-4 py-4 pb-[max(env(safe-area-inset-bottom),1rem)] sm:mx-0 sm:flex sm:justify-end sm:rounded-b-2xl sm:border-x sm:px-5">
+      <div className="ccr-pie-formulario sticky bottom-0 z-10 -mx-4 mt-5 border-t border-[#e5e7eb] bg-white px-4 py-4 pb-[max(env(safe-area-inset-bottom),1rem)] sm:mx-0 sm:flex sm:justify-end sm:gap-3 sm:rounded-b-2xl sm:border-x sm:px-5">
+        {/* En computadora, la salida acompaña a la acción: un solo botón a la
+            derecha dejaba dos tercios del pie vacíos. En el teléfono basta la
+            equis de arriba y el botón se queda con todo el ancho. */}
+        {onCancel && (
+          <Button type="button" variant="outline" size="lg" onClick={onCancel} className="hidden sm:inline-flex sm:px-6">
+            {tComunes("cancel")}
+          </Button>
+        )}
         <Button type="submit" size="lg" loading={submitting} className="w-full sm:w-auto sm:px-8">{t("submit")}</Button>
       </div>
       <UnsavedChangesGuard dirty={conCambios && !submitting} />

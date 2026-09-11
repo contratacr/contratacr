@@ -25,7 +25,7 @@ export function SupportModal({ onClose, onSubmitted }: { onClose: () => void; on
   return (
     <Modal onClose={onClose} title={t("headerTitle")} subtitle={t("headerSubtitle")} size="lg" closeLabel={t("close")} mobilePresentation="fullscreen" bodyClassName="bg-[#f4f7fa] py-5">
       {doneEmail === null ? (
-        <SupportForm onSuccess={(email) => (onSubmitted ? onSubmitted(email) : setDoneEmail(email))} />
+        <SupportForm onCancel={onClose} onSuccess={(email) => (onSubmitted ? onSubmitted(email) : setDoneEmail(email))} />
       ) : (
         <div className="flex flex-col items-center text-center gap-3 py-6">
           <div className="flex h-16 w-16 items-center justify-center rounded-full ccr-caja-icono">

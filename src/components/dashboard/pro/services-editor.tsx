@@ -804,6 +804,10 @@ export function ServicesEditor({
             </div>
           ) : undefined}
           footer={
+            <>
+            <Button type="button" variant="outline" size="lg" onClick={cancelForm} className="hidden sm:inline-flex sm:px-6">
+              {t("cancel")}
+            </Button>
             <Button
               type="button"
               size="lg"
@@ -819,8 +823,9 @@ export function ServicesEditor({
                   ? (locale === "en" ? "Uploading image…" : "Subiendo imagen…")
                   : t("saveChanges")}
             </Button>
+            </>
           }
-          footerClassName="block sm:flex sm:justify-end"
+          footerClassName="block sm:flex sm:justify-end sm:gap-3"
           bodyClassName="bg-[#f4f7fa] px-4 py-5"
         >
           <div className="flex flex-col gap-4 rounded-2xl border border-[#e5e7eb] bg-white p-5 shadow-sm">

@@ -100,11 +100,18 @@ export function QuoteEditorModal({ open, onClose, bookingId, projectId, defaultT
   return (
     <Modal open={open} onClose={onClose} title={t("editorTitle")} size="md" mobilePresentation="fullscreen" closeLabel={t("close")}
       footerNotice={error ? <p className="text-sm font-semibold text-red-600">{error}</p> : undefined}
-      footerClassName="px-4 sm:px-6"
+      footerClassName="px-4 sm:flex sm:justify-end sm:gap-3 sm:px-6"
       footer={(
-        <Button type="button" size="lg" className="w-full sm:w-auto sm:px-8" onClick={() => void enviar()} disabled={sending || !listo} loading={sending}>
-          {sending ? (suelta ? t("creating") : t("sending")) : (suelta ? t("create") : t("send"))}
-        </Button>
+        <>
+          {/* La salida acompaña a la acción en computadora; en el teléfono basta
+              la equis de arriba y el botón se queda con todo el ancho. */}
+          <Button type="button" variant="outline" size="lg" onClick={onClose} className="hidden sm:inline-flex sm:px-6">
+            {t("cancel")}
+          </Button>
+          <Button type="button" size="lg" className="w-full sm:w-auto sm:px-8" onClick={() => void enviar()} disabled={sending || !listo} loading={sending}>
+            {sending ? (suelta ? t("creating") : t("sending")) : (suelta ? t("create") : t("send"))}
+          </Button>
+        </>
       )}>
       <div className="flex flex-col gap-3.5 sm:gap-4">
         {/* 1 · Para quién. Desde una cita o un proyecto el cliente ya se sabe:
