@@ -41,7 +41,7 @@ type Props = {
   detailOnly?: boolean;
 };
 
-const MARKETPLACE_LIST_CLASS = "ccr-marketplace-card-list min-w-0 bg-white lg:h-full lg:overflow-y-scroll lg:rounded-lg lg:border lg:border-[#e4e8ed] sm:max-lg:mx-auto sm:max-lg:max-w-[640px] sm:max-lg:rounded-lg sm:max-lg:border sm:max-lg:border-[#e4e8ed]";
+const MARKETPLACE_LIST_CLASS = "ccr-marketplace-card-list min-w-0 bg-white lg:h-full lg:overflow-y-scroll lg:rounded-lg lg:border lg:border-[#e3ebf2] sm:max-lg:mx-auto sm:max-lg:max-w-[640px] sm:max-lg:rounded-lg sm:max-lg:border sm:max-lg:border-[#e3ebf2]";
 
 const JOBS_COPY = {
   es: {
@@ -508,7 +508,7 @@ function jobSaveSnapshot(job: JobPost, locale: MarketplaceLocale) {
 function JobRow({ job, selected, onSelect }: { job: JobPost; selected: boolean; onSelect: () => void }) {
   const locale = marketplaceLocale(useLocale());
   const copy = JOBS_COPY[locale];
-  return <article className={`relative min-h-[7.25rem] overflow-hidden border-b border-[#eef1f4] bg-white px-3 py-3 transition last:border-b-0 hover:bg-[#f8fafc] sm:px-4 ${selected ? "lg:bg-[#f3f9fd] lg:shadow-[inset_2px_0_0_#009FD9]" : ""}`}>
+  return <article className={`relative min-h-[7.25rem] overflow-hidden border-b border-[#e3ebf2] bg-white px-3 py-3 transition last:border-b-0 hover:bg-[#f8fafc] sm:px-4 ${selected ? "lg:bg-[#f3f9fd] lg:shadow-[inset_2px_0_0_#009FD9]" : ""}`}>
     <button type="button" onClick={onSelect} aria-label={`Ver ${job.title}`} className="absolute inset-0 hidden lg:block" />
     <Link href={`/empleos/${job.id}`} className="relative z-[1] block w-full text-left lg:pointer-events-none">
       <div className="flex min-w-0 items-start gap-2.5 sm:gap-3">
@@ -538,7 +538,7 @@ function JobPreview({ job, isOwner, userId, hasApplied, onApply, onEdit, mobile 
     ...(job.duration_label ? [[copy.duration, job.duration_label] as [string, string]] : []),
   ].filter(([, value]) => Boolean(value));
 
-  return <article className={`ccr-marketplace-result-list relative min-w-0 bg-white ${mobile ? "block px-5 py-6" : "hidden p-7 lg:block lg:h-full lg:overflow-y-auto lg:rounded-lg lg:border lg:border-[#e4e8ed]"}`}>
+  return <article className={`ccr-marketplace-result-list relative min-w-0 bg-white ${mobile ? "block px-5 py-6" : "hidden p-7 lg:block lg:h-full lg:overflow-y-auto lg:rounded-lg lg:border lg:border-[#e3ebf2]"}`}>
     {/* En el teléfono el "..." vive en la cabecera de la pantalla; aquí, arriba
         a la derecha del panel, que es donde se busca. */}
     {!mobile && (
