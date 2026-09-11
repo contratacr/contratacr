@@ -1002,7 +1002,15 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                                                   <p className="min-w-0 text-sm font-semibold text-[#162543]">{proposal.professionals?.profiles?.full_name}</p>
                                                 )}
                                                 {proVerified && <Badge variant="verified" className="shrink-0">{t("verified")}</Badge>}
-                                                {isChosen && !cerrado && (
+                                                {/* «Te ayudó» es pasado: solo vale cuando el trabajo
+                                                    terminó. Mientras está en curso, lo que pasó es que
+                                                    lo elegiste; y si el proyecto se canceló, no ayudó
+                                                    nadie —antes la etiqueta salía ahí también, porque
+                                                    la condición era «todo lo que no esté completado». */}
+                                                {isChosen && isActive && (
+                                                  <span className="inline-flex shrink-0 items-center rounded-full bg-[#eaf7fc] px-2 py-0.5 text-[11px] font-bold text-[#0089bb]">{t("chosenPro")}</span>
+                                                )}
+                                                {isChosen && cerrado && (
                                                   <span className="inline-flex shrink-0 items-center rounded-full bg-[#eaf7fc] px-2 py-0.5 text-[11px] font-bold text-[#0089bb]">{t("helpedBy")}</span>
                                                 )}
                                               </div>

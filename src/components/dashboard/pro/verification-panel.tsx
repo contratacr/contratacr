@@ -516,12 +516,23 @@ function CurrentIdentificationPanel({
           </span>
           <div className="min-w-0">
             <p className="text-xs font-bold uppercase tracking-[0.06em] text-[#64748b]">{title}</p>
-            <div className="mt-1 flex min-w-0 items-center gap-2">
-              <p className="min-w-0 truncate font-mono text-base font-extrabold tracking-wide text-[#162543]">{value ?? emptyLabel}</p>
-              {statusLabel && (
-                <Badge variant="verified" className="shrink-0">
-                  {statusLabel}
-                </Badge>
+            {/* El número va en monoespaciada y recortado si no cabe; la frase de
+                "no hay ninguna" NO: en monoespaciada y con recorte se leía
+                "No hay una identifi…". Y el distintivo solo acompaña a un
+                número real —"Verificado" junto a "no hay identificación" se
+                contradecía. */}
+            <div className="mt-1 flex min-w-0 flex-wrap items-center gap-2">
+              {value ? (
+                <>
+                  <p className="min-w-0 truncate font-mono text-base font-extrabold tracking-wide text-[#162543]">{value}</p>
+                  {statusLabel && (
+                    <Badge variant="verified" className="shrink-0">
+                      {statusLabel}
+                    </Badge>
+                  )}
+                </>
+              ) : (
+                <p className="min-w-0 text-sm font-semibold leading-snug text-[#64748b]">{emptyLabel}</p>
               )}
             </div>
             {value && typeLabel ? (

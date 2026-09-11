@@ -127,13 +127,10 @@ function SavedGenericCard({ item, onRemove }: { item: SavedItem; onRemove: (item
       <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-[#eef7fb] text-[#009FD9]">
         {image ? <ProgressiveImage src={image} alt={title} fit="cover" wrapperClassName="h-full w-full" /> : <Icon className="h-5 w-5" />}
       </div>
+      {/* Sin la etiqueta EMPLEO / OFERTA: para llegar aquí hay que estar parado
+          en la pestaña que ya lo dice, así que solo gastaba un renglón. */}
       <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-2">
-          <span className="rounded-full bg-[#eef7fb] px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wide text-[#007fae]">
-            {isJob ? t("jobBadge") : t("offerBadge")}
-          </span>
-        </div>
-        <h3 className="mt-1 truncate text-sm font-extrabold text-[#162543]">{title}</h3>
+        <h3 className="truncate text-sm font-extrabold text-[#162543]">{title}</h3>
         <p className="mt-0.5 truncate text-sm font-semibold text-[#53657d]">{owner}</p>
         {meta && <p className="mt-1 truncate text-xs font-semibold text-[#007fae]">{meta}</p>}
       </div>
