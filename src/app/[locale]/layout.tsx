@@ -127,10 +127,15 @@ export default async function LocaleLayout({
   const supabase = hasSupabaseServerConfig() ? await createClient() : null;
   const initialUser = supabase ? await safeGetUser(supabase) : null;
   let initialAvatarUrl: string | null | undefined;
+  // El nombre que va en la barra: si es profesional, el de su negocio. Se pide
+  // aquí, junto a la foto, para que la barra se pinte UNA vez con el nombre
+  // definitivo; pedirlo desde el navegador hacía aparecer el nombre de la
+  // persona y cambiarlo medio segundo después.
+  let initialAccountName: string | null | undefined;
   const initialNotificationUnread = { offer: 0, use: 0, neutral: 0 };
   if (supabase && initialUser) {
     try {
-      const [{ data }, { data: unreadNotifications }] = await withPromiseTimeout(Promise.all([
+      const [{ data }, { data: unreadNotifications }, { data: professionalRow }] = await withPromiseTimeout(Promise.all([
         supabase
           .from("profiles")
           .select("avatar_url")
@@ -141,8 +146,14 @@ export default async function LocaleLayout({
           .select("type")
           .eq("user_id", initialUser.id)
           .eq("read", false),
+        supabase
+          .from("professionals")
+          .select("business_name")
+          .eq("profile_id", initialUser.id)
+          .maybeSingle(),
       ]), 6_000, "layout-account-bootstrap-timeout");
       initialAvatarUrl = (data?.avatar_url as string | null | undefined) ?? null;
+      initialAccountName = String((professionalRow as { business_name?: string } | null)?.business_name ?? "").trim() || null;
       for (const notification of unreadNotifications ?? []) {
         const context = notificationContext(notification.type as string);
         if (context === "professional") initialNotificationUnread.offer++;
@@ -161,7 +172,7 @@ export default async function LocaleLayout({
       <GlobalActionLoading />
       <GlobalDataRefresh />
       <RouteScrollReset />
-      <AuthProvider initialUser={initialUser} initialAvatarUrl={initialAvatarUrl} initialNotificationUnread={initialNotificationUnread}>
+      <AuthProvider initialUser={initialUser} initialAvatarUrl={initialAvatarUrl} initialAccountName={initialAccountName} initialNotificationUnread={initialNotificationUnread}>
         <DocumentLocale locale={locale} />
         <EmojiBlocker />
         <ViewportEnvironment />

@@ -27,6 +27,8 @@ type AuthState = {
   avatarUrl: string | null;
   avatarReady: boolean;
   loading: boolean;
+  /** Nombre del negocio, resuelto en el servidor: la barra lo pinta de una vez. */
+  accountName: string | null;
   notificationUnread: { offer: number; use: number; neutral: number };
 };
 
@@ -104,6 +106,7 @@ function useAuthState(
   initialUser: User | null | undefined = undefined,
   initialAvatarUrl: string | null | undefined = undefined,
   initialNotificationUnread: { offer: number; use: number; neutral: number } = { offer: 0, use: 0, neutral: 0 },
+  initialAccountName: string | null | undefined = undefined,
 ): AuthState {
   // `null` from the server means the request is explicitly anonymous. Only
   // consult the browser cache when no server value was provided at all; using
@@ -133,7 +136,11 @@ function useAuthState(
       return false;
     }
   });
-  const [loading, setLoading] = useState(true);
+  // El servidor ya dijo si hay sesión o no —`null` es "no hay", no "no sé"—, así
+  // que arrancar en "cargando" hacía pintar el esqueleto de la barra y cambiarlo
+  // medio segundo después por Ingresar / Registrarse: eso era el parpadeo al
+  // refrescar. Solo se espera cuando el servidor no entregó nada.
+  const [loading, setLoading] = useState(initialUser === undefined);
   // El efecto de sesión corre una sola vez; este ref le da el último usuario
   // conocido sin volver a suscribirse en cada render.
   const usuarioConocidoRef = useRef(initialResolvedUser);
@@ -360,11 +367,11 @@ function useAuthState(
     };
   }, []);
 
-  return { user, avatarUrl, avatarReady, loading, notificationUnread: initialNotificationUnread };
+  return { user, avatarUrl, avatarReady, loading, accountName: initialAccountName ?? null, notificationUnread: initialNotificationUnread };
 }
 
-export function AuthProvider({ children, initialUser, initialAvatarUrl, initialNotificationUnread }: { children: ReactNode; initialUser?: User | null; initialAvatarUrl?: string | null; initialNotificationUnread?: { offer: number; use: number; neutral: number } }) {
-  const value = useAuthState(initialUser, initialAvatarUrl, initialNotificationUnread);
+export function AuthProvider({ children, initialUser, initialAvatarUrl, initialAccountName, initialNotificationUnread }: { children: ReactNode; initialUser?: User | null; initialAvatarUrl?: string | null; initialAccountName?: string | null; initialNotificationUnread?: { offer: number; use: number; neutral: number } }) {
+  const value = useAuthState(initialUser, initialAvatarUrl, initialNotificationUnread, initialAccountName);
   return createElement(AuthContext.Provider, { value }, children);
 }
 

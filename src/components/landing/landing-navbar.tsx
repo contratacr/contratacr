@@ -881,7 +881,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   const nativeMessageUnread = useDirectMessageUnread(nativeApp);
   const [hydrated, setHydrated] = useState(false);
   const nativeHeaderShell = hydrated && nativeApp;
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, accountName } = useAuth();
   const nativeSearchRoute = /(^|\/)buscar(?:\/|$)/.test(pathname ?? "");
   // Search is a full-viewport map + results sheet. Do not merely hide the nav
   // with CSS: leaving it mounted keeps its layout class and safe-area reserve
@@ -1083,8 +1083,13 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   const projectsHref = "/dashboard/profesional?tab=sent_projects";
   const savedHref = "/dashboard/profesional?tab=saved";
   const profilePanelHref = `${panelHref}?mode=${isPro && mode === "offer" ? "offer" : "use"}&tab=profile`;
+  // El nombre del negocio vive en otra tabla, así que pedirlo desde el navegador
+  // hacía pintar el nombre de la persona y cambiarlo medio segundo después. Ahora
+  // el servidor lo entrega con la página (`accountName`) y la barra se pinta una
+  // sola vez; lo que llega después solo corrige si de verdad cambió.
   const accountDisplayName =
-    (hasResolvedAccountCapability ? accountCapability.businessName : "") || String(user?.user_metadata?.full_name || user?.user_metadata?.name || "").trim();
+    (hasResolvedAccountCapability ? accountCapability.businessName : (accountName ?? "")) ||
+    String(user?.user_metadata?.full_name || user?.user_metadata?.name || "").trim();
   const nativePanelHref = user ? primaryPanelHref : loginHref;
   useEffect(() => {
     let cancelled = false;
@@ -1101,12 +1106,13 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
           supabase.from("professionals").select("id,business_name").eq("profile_id", user.id).maybeSingle(),
         ]);
         if (!cancelled) {
+          const businessName = String(professionalResult.data?.business_name || "").trim();
           setAccountCapability({
             userId: user.id,
             role: (profileResult.data as { role?: string } | null)?.role ?? null,
             hasProfessionalProfile: !!professionalResult.data,
             capabilityKnown: !professionalResult.error,
-            businessName: String(professionalResult.data?.business_name || "").trim(),
+            businessName,
           });
         }
       } catch {
