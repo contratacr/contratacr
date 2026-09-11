@@ -1861,6 +1861,11 @@ body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-native-fab {
 }
 
 .ccr-marketplace-result-list {
+  /* El detalle del empleo (y el de la oferta) se desplaza por dentro. Al llegar
+     a su final, el navegador seguía el gesto desplazando la página entera: uno
+     creía estar leyendo el empleo y de golpe se movía todo. `contain` corta esa
+     cadena: el panel llega a su fin y ahí se queda. */
+  overscroll-behavior: contain;
   scrollbar-gutter: stable;
   scrollbar-width: thin;
   scrollbar-color: #8b949e transparent;
