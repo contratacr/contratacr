@@ -102,7 +102,7 @@ export function QuoteEditorModal({ open, onClose, bookingId, projectId, defaultT
       footerNotice={error ? <p className="text-sm font-semibold text-red-600">{error}</p> : undefined}
       footerClassName="px-4 sm:px-6"
       footer={(
-        <Button type="button" size="lg" className="w-full" onClick={() => void enviar()} disabled={sending || !listo} loading={sending}>
+        <Button type="button" size="lg" className="w-full sm:w-auto sm:px-8" onClick={() => void enviar()} disabled={sending || !listo} loading={sending}>
           {sending ? (suelta ? t("creating") : t("sending")) : (suelta ? t("create") : t("send"))}
         </Button>
       )}>

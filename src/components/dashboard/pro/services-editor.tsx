@@ -811,7 +811,7 @@ export function ServicesEditor({
               loading={saving}
               disabled={saving || imageUploading}
               data-testid="service-edit-save"
-              className="w-full select-none"
+              className="w-full select-none sm:w-auto sm:px-8"
             >
               {saving
                 ? t("saving")
@@ -820,7 +820,7 @@ export function ServicesEditor({
                   : t("saveChanges")}
             </Button>
           }
-          footerClassName="block"
+          footerClassName="block sm:flex sm:justify-end"
           bodyClassName="bg-[#f4f7fa] px-4 py-5"
         >
           <div className="flex flex-col gap-4 rounded-2xl border border-[#e5e7eb] bg-white p-5 shadow-sm">
