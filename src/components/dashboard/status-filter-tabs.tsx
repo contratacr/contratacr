@@ -89,7 +89,12 @@ export function StatusFilterTabs({
                 onClick={() => onChange(active ? "" : tab.id)}
                 aria-pressed={active}
                 className={cn(
-                  "inline-flex h-[26px] shrink-0 items-center gap-1 whitespace-nowrap rounded-full border px-2.5 text-[11.5px] font-semibold transition-colors",
+                  // 26 px de alto y 11,5 px de letra es tamaño de etiqueta, no de
+                  // botón: al lado de los demás filtros del panel (36-40 px) se
+                  // veían de juguete. En el teléfono se quedan chicos a propósito
+                  // —van sobre el mapa de /buscar, donde el alto es caro—, pero de
+                  // 640 px en adelante crecen al mismo tamaño que el resto.
+                  "inline-flex h-[26px] shrink-0 items-center gap-1 whitespace-nowrap rounded-full border px-2.5 text-[11.5px] font-semibold transition-colors sm:h-9 sm:px-3.5 sm:text-[13px]",
                   active
                     ? "border-[#009FD9] bg-[#009FD9] text-white"
                     : "border-[#dfe6ec] bg-white text-[#526277] hover:border-[#c3d2de]",
