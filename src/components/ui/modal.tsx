@@ -88,6 +88,32 @@ export function Modal({
   const fullscreenMobile = mobilePresentation === "fullscreen";
   const compactSheet = mobilePresentation === "sheet-compact";
 
+  const conFlecha = !!(backLabel || onBack);
+  const salida = (
+    <button
+      type="button"
+      onClick={onBack ?? onClose}
+      aria-label={backLabel ?? closeLabel}
+      className={cn(
+        "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[#68778d] transition-colors hover:bg-[#f3f4f6] hover:text-[#374151]",
+        conFlecha || fullscreenMobile
+          ? "absolute left-4 top-1/2 -translate-y-1/2 sm:static sm:translate-y-0"
+          : "absolute right-4 top-1/2 -translate-y-1/2 sm:static sm:translate-y-0",
+      )}
+    >
+      {conFlecha ? (
+        <ArrowLeft className="h-5 w-5" />
+      ) : fullscreenMobile ? (
+        <>
+          <ArrowLeft className="h-5 w-5 sm:hidden" />
+          <X className="hidden h-5 w-5 sm:block" />
+        </>
+      ) : (
+        <X className="h-5 w-5" />
+      )}
+    </button>
+  );
+
   return (
     <div
       className={cn(
@@ -127,36 +153,19 @@ export function Modal({
               : "relative items-center justify-center sm:static sm:items-start sm:justify-between",
             // Con flecha, la salida va DELANTE del título también en pantalla
             // grande: una flecha a la derecha se lee como "siguiente".
-            (backLabel || onBack) && "sm:items-center sm:justify-start sm:gap-2",
+            conFlecha && "sm:items-center sm:justify-start sm:gap-2",
           )}
         >
+          {/* Con flecha, la salida se dibuja ANTES del título en el propio orden
+              del documento: una clase de reordenar no sirve aquí —`sm:order-first`
+              ni siquiera llegó a generarse en el CSS— y una flecha a la derecha
+              del título se lee como "siguiente", no como "atrás". */}
+          {conFlecha && salida}
           <div className={cn("min-w-0 px-10 text-center sm:px-0 sm:text-left")}>
             <h2 className={cn("leading-tight text-[#162543]", fullscreenMobile ? "text-[17px] font-extrabold sm:text-lg sm:font-bold" : "text-lg font-bold")}>{title}</h2>
             {subtitle && <p className="mt-0.5 text-xs text-[#6b7280]">{subtitle}</p>}
           </div>
-          <button
-            type="button"
-            onClick={onBack ?? onClose}
-            aria-label={backLabel ?? closeLabel}
-            className={cn(
-              "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[#68778d] transition-colors hover:bg-[#f3f4f6] hover:text-[#374151]",
-              backLabel || onBack || fullscreenMobile
-                ? "absolute left-4 top-1/2 -translate-y-1/2 sm:static sm:translate-y-0"
-                : "absolute right-4 top-1/2 -translate-y-1/2 sm:static sm:translate-y-0",
-              (backLabel || onBack) && "sm:order-first",
-            )}
-          >
-            {backLabel || onBack ? (
-              <ArrowLeft className="h-5 w-5" />
-            ) : fullscreenMobile ? (
-              <>
-                <ArrowLeft className="h-5 w-5 sm:hidden" />
-                <X className="hidden h-5 w-5 sm:block" />
-              </>
-            ) : (
-              <X className="h-5 w-5" />
-            )}
-          </button>
+          {!conFlecha && salida}
         </div>}
 
         {/* Body (scrolls) */}
