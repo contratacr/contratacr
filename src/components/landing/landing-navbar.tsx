@@ -1881,7 +1881,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                   <div className="lg:hidden flex min-w-0 flex-1 items-center gap-2">{mobileInline}</div>
                 )}
 
-                <nav className={cn("relative z-[70] hidden shrink-0 lg:flex items-center gap-0.5", effectiveMarketplaceDesktop && "gap-0")}>
+                <nav className={cn("relative z-[70] hidden shrink-0 lg:flex items-center gap-1", effectiveMarketplaceDesktop && "gap-0.5")}>
                 {/* Categorias - mega-menu with autocomplete + curated columns */}
                   <div
                     ref={servicesMenuRef}
@@ -2103,7 +2103,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                 )}
 
                 {/* Right actions */}
-                <div className="relative z-[60] ml-auto hidden min-w-0 shrink-0 items-center justify-end gap-1.5 lg:flex xl:gap-2.5">
+                <div className="relative z-[60] ml-auto hidden min-w-0 shrink-0 items-center justify-end gap-2 lg:flex">
                   {/* Sobre ContrataCR: visible con y sin sesión. */}
                   <div
                     ref={resourcesMenuRef}
@@ -2154,14 +2154,13 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                       </div>
                     )}
                   </div>
-                  <div className="w-1" aria-hidden="true" />
                   {authLoading && !user ? (
                     <div className="flex w-[250px] items-center justify-end gap-2" aria-hidden="true">
                       <div className="h-10 w-24 animate-pulse rounded-xl bg-[#eef2f6]" />
                       <div className="h-10 w-10 animate-pulse rounded-full bg-[#eef2f6]" />
                     </div>
                   ) : user ? (
-                    <div className="flex w-auto min-w-0 items-center justify-end gap-1">
+                    <div className="flex w-auto min-w-0 items-center justify-end gap-2">
 
                       {nativeApp && nativeHeaderShell && (
                         <HeaderMessagesLink unreadCount={nativeMessageUnread} label={locale === "en" ? "Messages" : "Mensajes"} />
@@ -2181,7 +2180,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                   ) : (
                     // Como Upwork o Airbnb: entrar y crear cuenta siempre a la vista,
                     // también en las propias pantallas de acceso.
-                    <div className="flex w-auto items-center justify-end gap-1">
+                    <div className="flex w-auto items-center justify-end gap-2">
                       <Link
                         href={loginHref}
                         className="text-sm font-medium px-3 py-2 rounded-xl text-[#1A2744] hover:bg-gray-50 transition-colors"
