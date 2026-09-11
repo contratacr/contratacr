@@ -93,6 +93,7 @@ const JOB_POST_COPY = {
     saving: "Guardando...",
     publishing: "Publicando...",
     saveChanges: "Guardar cambios",
+    cancel: "Cancelar",
   },
   en: {
     optional: "optional",
@@ -152,6 +153,7 @@ const JOB_POST_COPY = {
     saving: "Saving...",
     publishing: "Publishing...",
     saveChanges: "Save changes",
+    cancel: "Cancel",
   },
 } as const;
 
@@ -289,7 +291,7 @@ function EditableList({
 
 type JobPostFormInitial = Partial<Pick<JobPost, "id" | "title" | "description" | "responsibilities" | "requirements" | "benefits" | "duration_label" | "employment_type" | "experience_level" | "workplace_type" | "location_label" | "salary_min" | "salary_max" | "salary_period" | "currency" | "show_salary" | "openings" | "application_deadline" | "status">>;
 
-export function JobPostForm({ professionalId, backHref = "/empleos", initialJob = null, presentation = "page", onSaved }: { professionalId: string; backHref?: string; initialJob?: JobPostFormInitial | null; presentation?: "page" | "modal"; onSaved?: (id: string) => void }) {
+export function JobPostForm({ professionalId, backHref = "/empleos", initialJob = null, presentation = "page", onSaved, onCancel }: { professionalId: string; backHref?: string; initialJob?: JobPostFormInitial | null; presentation?: "page" | "modal"; onSaved?: (id: string) => void; onCancel?: () => void }) {
   const { sentinelaRef, cabeceraRef, conLinea } = useHairlineOnScroll();
   const editing = Boolean(initialJob?.id);
   const router = useRouter();
@@ -490,6 +492,13 @@ export function JobPostForm({ professionalId, backHref = "/empleos", initialJob 
             "ccr-pie-formulario sticky bottom-0 z-10 -mx-4 mt-5 border-t border-[#e5e7eb] bg-white px-4 py-4 pb-[max(env(safe-area-inset-bottom),1rem)] sm:flex sm:justify-end sm:px-6",
             presentation === "modal" ? "sm:-mx-10" : "sm:-mx-6",
           )}>
+            {/* En una ventana, la salida acompaña a la acción; en la página
+                propia la vuelta atrás ya está arriba. */}
+            {presentation === "modal" && onCancel && (
+              <Button type="button" variant="outline" size="lg" onClick={onCancel} className="hidden sm:inline-flex sm:px-6">
+                {copy.cancel}
+              </Button>
+            )}
             <div>
               <Button type="submit" size="lg" loading={saving} className="w-full sm:w-auto sm:px-8">{editing ? copy.saveChanges : copy.publishJob}</Button>
             </div>

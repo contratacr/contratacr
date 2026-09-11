@@ -534,6 +534,7 @@ export function OffersBoard({
           bodyClassName="px-5 py-5 sm:px-6"
         >
           <OfferForm
+            onCancel={() => setPublishOpen(false)}
             professionalId={currentProfessionalId}
             serviceOptions={publishServiceOptions}
             presentation="modal"
@@ -554,6 +555,7 @@ export function OffersBoard({
           bodyClassName="px-5 py-5 sm:px-6"
         >
           <OfferForm
+            onCancel={() => setEditingOffer(null)}
             professionalId={currentProfessionalId}
             serviceOptions={publishServiceOptions}
             initialOffer={editingOffer}

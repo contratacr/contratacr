@@ -446,6 +446,7 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
     {publishOpen && currentProfessionalId && (
       <Modal onClose={() => setPublishOpen(false)} title={copy.publishJob} size="lg" bodyClassName="px-5 py-5 sm:px-6">
         <JobPostForm
+          onCancel={() => setPublishOpen(false)}
           professionalId={currentProfessionalId}
           presentation="modal"
           backHref="/empleos"
@@ -461,6 +462,7 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
     {editingJob && currentProfessionalId && (
       <Modal onClose={() => setEditingJob(null)} title={copy.editJob} size="lg" bodyClassName="px-5 py-5 sm:px-6">
         <JobPostForm
+          onCancel={() => setEditingJob(null)}
           professionalId={currentProfessionalId}
           initialJob={editingJob}
           presentation="modal"

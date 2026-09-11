@@ -30,6 +30,8 @@ type OfferFormProps = {
   initialOffer?: Partial<ProfessionalOffer> | null;
   presentation?: "page" | "modal";
   onSaved?: (id: string) => void;
+  /** Salida explícita cuando el formulario vive en una ventana. */
+  onCancel?: () => void;
 };
 
 type FieldErrors = Partial<Record<"title" | "service" | "description" | "images" | "price" | "priceBefore" | "quantity", string>>;
@@ -77,6 +79,7 @@ const OFFER_FORM_COPY = {
     saving: "Guardando...",
     publishing: "Publicando...",
     save: "Guardar cambios",
+    cancel: "Cancelar",
     publish: "Publicar oferta",
     uploadFailed: "No pudimos subir una imagen.",
     uploadTooLarge: "La imagen es demasiado grande y no pudimos optimizarla. Prueba con otra foto.",
@@ -135,6 +138,7 @@ const OFFER_FORM_COPY = {
     saving: "Saving...",
     publishing: "Publishing...",
     save: "Save changes",
+    cancel: "Cancel",
     publish: "Post offer",
     uploadFailed: "We could not upload an image.",
     uploadTooLarge: "The image is too large and could not be optimized. Try another photo.",
@@ -165,7 +169,7 @@ function FieldError({ children }: { children?: string }) {
   return children ? <p data-campo-con-error="" role="alert" className="mt-1.5 text-xs font-medium text-red-600">{children}</p> : null;
 }
 
-export function OfferForm({ professionalId, serviceOptions, backHref = "/ofertas", initialOffer = null, presentation = "page", onSaved }: OfferFormProps) {
+export function OfferForm({ professionalId, serviceOptions, backHref = "/ofertas", initialOffer = null, presentation = "page", onSaved, onCancel }: OfferFormProps) {
   const { sentinelaRef, cabeceraRef, conLinea } = useHairlineOnScroll();
   const locale = marketplaceLocale(useLocale());
   const copy = OFFER_FORM_COPY[locale];
@@ -539,6 +543,14 @@ export function OfferForm({ professionalId, serviceOptions, backHref = "/ofertas
             "ccr-pie-formulario sticky bottom-0 z-10 -mx-4 mt-5 border-t border-[#e5e7eb] bg-white px-4 py-4 pb-[max(env(safe-area-inset-bottom),1rem)] sm:flex sm:justify-end sm:px-6",
             presentation === "modal" ? "sm:-mx-10" : "sm:-mx-6",
           )}>
+            {/* En una ventana, la salida acompaña a la acción: cerrar un
+                formulario largo sin querer cuesta caro. En la página propia no
+                hace falta —la vuelta atrás ya está arriba. */}
+            {presentation === "modal" && onCancel && (
+              <Button type="button" variant="outline" size="lg" onClick={onCancel} className="hidden sm:inline-flex sm:px-6">
+                {copy.cancel}
+              </Button>
+            )}
             <div>
               <Button type="submit" size="lg" loading={saving} className="w-full sm:w-auto sm:px-8">{editing ? copy.save : copy.publish}</Button>
             </div>

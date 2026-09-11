@@ -265,12 +265,12 @@ export function JobsManager({ initialJobs, embedded = false, backHref = "/dashbo
       </div>
       {publishOpen && professionalId && (
         <Modal onClose={() => setPublishOpen(false)} title={copy.publishTitle} size="lg" bodyClassName="bg-[#f4f7fa] px-0 py-0">
-          <JobPostForm professionalId={professionalId} presentation="modal" backHref={backHref} onSaved={(id) => { setPublishOpen(false); onRefresh?.(); router.push(`/empleos/${id}?from=panel`); }} />
+          <JobPostForm onCancel={() => setPublishOpen(false)} professionalId={professionalId} presentation="modal" backHref={backHref} onSaved={(id) => { setPublishOpen(false); onRefresh?.(); router.push(`/empleos/${id}?from=panel`); }} />
         </Modal>
       )}
       {editingJob && professionalId && (
         <Modal onClose={() => setEditingJob(null)} title={copy.editTitle} size="lg" bodyClassName="bg-[#f4f7fa] px-0 py-0">
-          <JobPostForm key={editingJob.id} professionalId={professionalId} initialJob={editingJob} presentation="modal" backHref={backHref} onSaved={() => { setEditingJob(null); onRefresh?.(); router.refresh(); }} />
+          <JobPostForm onCancel={() => setEditingJob(null)} key={editingJob.id} professionalId={professionalId} initialJob={editingJob} presentation="modal" backHref={backHref} onSaved={() => { setEditingJob(null); onRefresh?.(); router.refresh(); }} />
         </Modal>
       )}
     </div>

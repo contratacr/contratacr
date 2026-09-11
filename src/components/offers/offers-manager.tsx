@@ -225,12 +225,12 @@ export function OffersManager({ initialOffers, embedded = false, backHref = "/da
       </div>
       {publishOpen && professionalId && (
         <Modal onClose={() => setPublishOpen(false)} title={copy.publishTitle} size="lg" bodyClassName="bg-[#f4f7fa] px-0 py-0">
-          <OfferForm professionalId={professionalId} serviceOptions={serviceOptions} presentation="modal" backHref={backHref} onSaved={(id) => { setPublishOpen(false); onRefresh?.(); router.push(`/ofertas/${id}?from=panel`); }} />
+          <OfferForm onCancel={() => setPublishOpen(false)} professionalId={professionalId} serviceOptions={serviceOptions} presentation="modal" backHref={backHref} onSaved={(id) => { setPublishOpen(false); onRefresh?.(); router.push(`/ofertas/${id}?from=panel`); }} />
         </Modal>
       )}
       {editingOffer && professionalId && (
         <Modal onClose={() => setEditingOffer(null)} title={copy.editTitle} size="lg" bodyClassName="bg-[#f4f7fa] px-0 py-0">
-          <OfferForm key={editingOffer.id} professionalId={professionalId} serviceOptions={serviceOptions} initialOffer={editingOffer} presentation="modal" backHref={backHref} onSaved={() => { setEditingOffer(null); onRefresh?.(); router.refresh(); }} />
+          <OfferForm onCancel={() => setEditingOffer(null)} key={editingOffer.id} professionalId={professionalId} serviceOptions={serviceOptions} initialOffer={editingOffer} presentation="modal" backHref={backHref} onSaved={() => { setEditingOffer(null); onRefresh?.(); router.refresh(); }} />
         </Modal>
       )}
     </div>
