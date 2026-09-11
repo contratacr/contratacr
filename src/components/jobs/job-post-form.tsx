@@ -482,7 +482,14 @@ export function JobPostForm({ professionalId, backHref = "/empleos", initialJob 
           </button>
           {error && <p role="alert" className="mt-5 rounded-lg bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">{error}</p>}
           </div>
-          <div className="ccr-pie-formulario sticky bottom-0 z-10 -mx-4 mt-5 border-t border-[#e5e7eb] bg-white px-4 py-4 pb-[max(env(safe-area-inset-bottom),1rem)] sm:-mx-6 sm:flex sm:justify-end sm:px-6">
+          <div className={cn(
+            // El pie es una barra: tiene que llegar a los bordes. Dentro de una
+            // ventana hay que descontar DOS rellenos (el del cuerpo y el de la
+            // columna del formulario); si solo se descuenta uno queda una franja
+            // gris a cada lado.
+            "ccr-pie-formulario sticky bottom-0 z-10 -mx-4 mt-5 border-t border-[#e5e7eb] bg-white px-4 py-4 pb-[max(env(safe-area-inset-bottom),1rem)] sm:flex sm:justify-end sm:px-6",
+            presentation === "modal" ? "sm:-mx-10" : "sm:-mx-6",
+          )}>
             <div>
               <Button type="submit" size="lg" loading={saving} className="w-full sm:w-auto sm:px-8">{editing ? copy.saveChanges : copy.publishJob}</Button>
             </div>

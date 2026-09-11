@@ -12,6 +12,7 @@ import { LONG_TEXT_MAX_LENGTH, NAME_MAX_LENGTH, SHORT_TEXT_MAX_LENGTH, limitText
 import { IMAGE_DOC_ACCEPT } from "@/lib/upload-validation";
 import { getImageUploadPreparationErrorCode, prepareImageForUpload } from "@/lib/client-image-upload";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 // The support ticket form — SINGLE SOURCE OF TRUTH for the fields, validation and
 // submit. Rendered on the public /soporte page (the in-dashboard Soporte section uses
@@ -27,6 +28,7 @@ const SUBJECT_IDS = [0, 1, 2, 3, 4, 5] as const;
 type AttachedFile = { file: File; preview?: string };
 
 export function SupportForm({ onSuccess, onCancel }: { onSuccess?: (email: string) => void; onCancel?: () => void }) {
+  const enVentana = !!onCancel;
   const t = useTranslations("soporte");
   const tComunes = useTranslations("inputs");
   const locale = useLocale();
@@ -315,7 +317,13 @@ export function SupportForm({ onSuccess, onCancel }: { onSuccess?: (email: strin
 
       </div>
       {/* El botón vive en su propia barra al pie, fuera de la tarjeta. */}
-      <div className="ccr-pie-formulario sticky bottom-0 z-10 -mx-4 mt-5 border-t border-[#e5e7eb] bg-white px-4 py-4 pb-[max(env(safe-area-inset-bottom),1rem)] sm:mx-0 sm:flex sm:justify-end sm:gap-3 sm:rounded-b-2xl sm:border-x sm:px-5">
+      <div className={cn(
+          // Dentro de una ventana, el pie llega hasta los bordes: con el margen
+          // en cero quedaba una franja gris de 24 px a cada lado, porque el
+          // cuerpo de la ventana ya trae su propio relleno.
+          "ccr-pie-formulario sticky bottom-0 z-10 -mx-4 mt-5 border-t border-[#e5e7eb] bg-white px-4 py-4 pb-[max(env(safe-area-inset-bottom),1rem)] sm:flex sm:justify-end sm:gap-3 sm:px-6",
+          enVentana ? "sm:-mx-6 sm:rounded-b-2xl" : "sm:mx-0 sm:rounded-b-2xl sm:border-x",
+        )}>
         {/* En computadora, la salida acompaña a la acción: un solo botón a la
             derecha dejaba dos tercios del pie vacíos. En el teléfono basta la
             equis de arriba y el botón se queda con todo el ancho. */}
