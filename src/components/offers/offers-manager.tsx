@@ -21,7 +21,7 @@ const OFFERS_MANAGER_COPY = {
   es: {
     back: "Volver al panel",
     title: "Mis ofertas",
-    subtitle: "Administra promociones, paquetes y productos.",
+    subtitle: "Promociones y descuentos para atraer clientes.",
     publish: "Publicar oferta",
     view: "Ver oferta",
     edit: "Editar",
@@ -40,7 +40,7 @@ const OFFERS_MANAGER_COPY = {
   en: {
     back: "Back to dashboard",
     title: "My offers",
-    subtitle: "Manage promotions, packages and products.",
+    subtitle: "Deals and discounts to attract clients.",
     publish: "Post offer",
     view: "View offer",
     edit: "Edit",

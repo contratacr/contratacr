@@ -26,7 +26,7 @@ const JOBS_MANAGER_COPY = {
   es: {
     applicationStates: { submitted: "Recibida", reviewing: "En revisión", shortlisted: "Finalista", rejected: "Descartada", hired: "Contratada" },
     jobStates: { published: "Publicado", paused: "Pausado", closed: "Cerrado", draft: "Borrador" },
-    back: "Volver al panel", title: "Mis empleos", subtitle: "Administra vacantes y revisa postulaciones.", publish: "Publicar empleo",
+    back: "Volver al panel", title: "Mis empleos", subtitle: "Vacantes para cuando necesitas contratar.", publish: "Publicar empleo",
     application: "postulación", applications: "postulaciones", view: "Ver empleo", edit: "Editar", more: "Más opciones",
     pause: "Pausar", close: "Cerrar vacante", applicationsTitle: "Postulaciones", candidate: "candidato", candidates: "candidatos",
     received: "Postulación recibida", message: "Mensaje", viewCv: "Ver CV", viewPortfolio: "Ver portafolio",
@@ -37,7 +37,7 @@ const JOBS_MANAGER_COPY = {
   en: {
     applicationStates: { submitted: "Received", reviewing: "In review", shortlisted: "Shortlisted", rejected: "Rejected", hired: "Hired" },
     jobStates: { published: "Published", paused: "Paused", closed: "Closed", draft: "Draft" },
-    back: "Back to dashboard", title: "My jobs", subtitle: "Manage openings and review applications.", publish: "Post job",
+    back: "Back to dashboard", title: "My jobs", subtitle: "Openings for when you need to hire.", publish: "Post job",
     application: "application", applications: "applications", view: "View job", edit: "Edit", more: "More options",
     pause: "Pause", close: "Close opening", applicationsTitle: "Applications", candidate: "candidate", candidates: "candidates",
     received: "Application received", message: "Message", viewCv: "View resume", viewPortfolio: "View portfolio",

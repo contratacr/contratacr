@@ -1817,14 +1817,24 @@
       "searchEmpty": "No encontramos una guía con esa palabra."
     },
     "subtitles": {
-      "bookings": "Citas que los clientes reservaron contigo.",
-      "proposals": "Lo que los clientes están pidiendo de tu servicio. Responde y, si les interesa, te escriben.",
-      "sent_bookings": "Citas que reservaste desde el perfil de un profesional.",
-      "sent_projects": "Lo que pediste. Los profesionales te responden aquí y tú le escribes al que quieras.",
-      "saved": "Perfiles que guardaste para contratar más adelante.",
-      "connections": "Profesionales con quienes confirmaste o completaste un servicio.",
-      "soporte": "Tus conversaciones con soporte. Abre un tiquete y te respondemos aquí.",
-      "photos": "Trabajos que ya hiciste, con fotos. Es lo que más convence a un cliente."
+      "bookings": "Las citas que te reservaron.",
+      "proposals": "Lo que los clientes están pidiendo. Responde y te escriben.",
+      "quotes": "Los precios que le pasaste a un cliente.",
+      "photos": "Trabajos que ya hiciste, con fotos. Es lo que más convence.",
+      "services": "Lo que ofreces y a qué precio.",
+      "availability": "Los días y las horas en que te pueden reservar.",
+      "verificacion": "Manda tu cédula y consigue el sello azul.",
+      "suscripcion": "Tu plan y tus cobros.",
+      "completion": "Lo que falta para que tu perfil quede listo.",
+      "sent_bookings": "Citas que reservaste con un profesional.",
+      "sent_projects": "Lo que pediste y quién te respondió.",
+      "applications": "Los empleos a los que te postulaste.",
+      "saved": "Perfiles que guardaste para después.",
+      "connections": "Profesionales con los que ya trabajaste.",
+      "notifications": "Todo lo que pasó en tu cuenta.",
+      "soporte": "Abre un tiquete y te respondemos aquí.",
+      "cuenta": "Tu correo, tu contraseña y tu cuenta.",
+      "guides": "Cómo usar ContrataCR paso a paso."
     },
     "profileSections": {
       "photosDesc": "Fotos y trabajos realizados que ven los clientes.",

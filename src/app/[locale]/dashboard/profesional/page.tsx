@@ -120,14 +120,17 @@ const TAB_ICONS: Record<Tab, React.ReactNode> = {
   completion: <CheckCircle2 className="h-4 w-4" />,
 };
 
-// Secciones que abren con una línea de contexto. Va en el cuerpo, arriba de los
-// filtros, no en la cabecera de la tarjeta: la cabecera solo existe de 1024px
-// para arriba y a media pantalla el subtítulo desaparecía.
-const TABS_WITH_SUBTITLE = new Set<Tab>(["bookings", "proposals", "sent_bookings", "saved", "connections"]);
+// Toda sección abre con una línea que dice qué es. Va en el cuerpo, arriba de
+// los filtros, no en la cabecera de la tarjeta: la cabecera solo existe de
+// 1024px para arriba y a media pantalla el subtítulo desaparecía.
+const TABS_WITH_SUBTITLE = new Set<Tab>([
+  "bookings", "proposals", "availability", "verificacion", "suscripcion", "completion",
+  "sent_bookings", "applications", "saved", "connections", "notifications", "cuenta", "guides",
+]);
 
-// No están aquí sent_projects, soporte, photos, offers ni jobs: esas dibujan su
-// propia cabecera (subtítulo + botón de crear) desde adentro del componente,
-// porque el botón depende de datos que solo ellas tienen.
+// Las que faltan —sent_projects, soporte, photos, offers, jobs, quotes y
+// services— dibujan su propia cabecera desde adentro del componente, porque ahí
+// el subtítulo va en la misma fila que un botón que depende de sus datos.
 
 // Mode membership. The first three render only in "offer" mode, the next three
 // only in "use" mode; "profile" + the shared tabs are valid in both, so the mode

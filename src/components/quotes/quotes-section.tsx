@@ -9,6 +9,7 @@ import { formatColones } from "@/lib/pricing";
 import { isQuoteExpired, type Quote } from "@/lib/quotes";
 import { QuoteEditorModal } from "@/components/quotes/quote-editor-modal";
 import { QuoteDetailModal } from "@/components/quotes/quote-detail-modal";
+import { SectionHeadline } from "@/components/dashboard/section-headline";
 
 const DATE_LOCALE: Record<string, string> = { es: "es-CR", en: "en-US" };
 
@@ -18,6 +19,7 @@ const DATE_LOCALE: Record<string, string> = { es: "es-CR", en: "en-US" };
  */
 export function QuotesSection({ proName, proSlug, puedeCrear = true }: { proName: string; proSlug?: string | null; puedeCrear?: boolean }) {
   const t = useTranslations("quotes");
+  const tSub = useTranslations("proPanel.subtitles");
   const locale = useLocale();
   const [quotes, setQuotes] = useState<Quote[] | null>(null);
   const [editor, setEditor] = useState(false);
@@ -70,12 +72,13 @@ export function QuotesSection({ proName, proSlug, puedeCrear = true }: { proName
 
   return (
     <div className="flex flex-col gap-4">
-      {/* Solo el botón: la lista se explica sola. */}
-      {puedeCrear && (quotes?.length ?? 0) > 0 && (
-        <div className="flex sm:justify-end">
+      {/* Qué es la sección a la izquierda y la acción a la derecha, la misma
+          fila que en el resto del panel. */}
+      <SectionHeadline subtitulo={tSub("quotes")}>
+        {puedeCrear && (quotes?.length ?? 0) > 0 && (
           <Button type="button" onClick={() => setEditor(true)} className="w-full sm:w-auto"><Plus className="h-4 w-4" />{t("new")}</Button>
-        </div>
-      )}
+        )}
+      </SectionHeadline>
 
       {quotes === null ? (
         <div className="flex flex-col gap-2">{[0, 1, 2].map((i) => <div key={i} className="h-[76px] animate-pulse rounded-2xl bg-[#eef2f6]" />)}</div>

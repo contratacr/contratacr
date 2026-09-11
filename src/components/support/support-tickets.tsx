@@ -467,13 +467,13 @@ export function SupportTickets({
           derecha, ARRIBA de los filtros, igual que en Mis proyectos. El filtro
           tiene que quedar pegado a la lista que filtra. No se dibuja mientras
           carga ni en el estado vacío, que ya trae su propio botón. */}
-      {!loading && items.length > 0 && (
-        <SectionHeadline subtitulo={tSub("soporte")}>
+      <SectionHeadline subtitulo={tSub("soporte")}>
+        {!loading && items.length > 0 && (
           <button onClick={openNewTicket} className="flex h-11 w-full items-center justify-center gap-2 rounded-full bg-[#009FD9] px-4 text-sm font-bold text-white sm:w-auto sm:px-6 transition-colors hover:bg-[#0089bb]">
             <Plus className="h-4 w-4" /> {t("newTicket")}
           </button>
-        </SectionHeadline>
-      )}
+        )}
+      </SectionHeadline>
 
       {/* Status filter — the SHARED tab style (consistent with solicitudes/proyectos):
           per-status COUNT badge only. Hidden until loading resolves so it never

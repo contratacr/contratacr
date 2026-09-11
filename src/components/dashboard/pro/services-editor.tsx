@@ -24,6 +24,7 @@ import { AppTooltip } from "@/components/ui/app-tooltip";
 import { IMAGE_ACCEPT } from "@/lib/upload-validation";
 import { getImageUploadPreparationErrorCode, prepareImageForUpload, uploadPhotoFormDataWithRetry } from "@/lib/client-image-upload";
 import { professionalCredentialSuggestion, serviceSupportsProfessionalCredential } from "@/lib/professional-credentials";
+import { SectionHeadline } from "@/components/dashboard/section-headline";
 
 export type ProService = {
   id: string;
@@ -197,6 +198,7 @@ export function ServicesEditor({
 }: ServicesEditorProps) {
   const locale = useLocale();
   const t = useTranslations("servicesEditor");
+  const tSub = useTranslations("proPanel.subtitles");
   const tp = useTranslations("categoriesPage");
   const seedProfessions =
     initialProfessions.length > 0
@@ -685,10 +687,11 @@ export function ServicesEditor({
         </div>
       ) : (
         <>
-          {/* El botón de crear arriba a la derecha, como en todas las secciones.
-              A ancho completo solo tiene sentido en el teléfono: en una pantalla
-              de computadora era una barra azul de lado a lado para dos palabras. */}
-          <div className="flex sm:justify-end">{addServiceButton}</div>
+          {/* Qué es la sección a la izquierda y el botón de crear a la derecha,
+              como en todas las secciones. A ancho completo solo tiene sentido en
+              el teléfono: en una pantalla de computadora era una barra azul de
+              lado a lado para dos palabras. */}
+          <SectionHeadline subtitulo={tSub("services")}>{addServiceButton}</SectionHeadline>
           {/* ONE service per card: name + price (focal), description, then clearly grouped
               actions. No catalog image in the panel (it's for the public profile only). */}
           <div className="grid min-w-0 grid-cols-1 gap-3.5">

@@ -881,6 +881,21 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
       {/* SOLICITUDES PUBLICADAS — lo que el cliente pidió y quién le respondió. */}
       {section === "projects" && (
         <div>
+          {/* Crear va ARRIBA, con el subtítulo a la izquierda: el filtro tiene que
+              quedar pegado a la lista que filtra. En medio, el botón cortaba esa
+              relación. */}
+          <SectionHeadline className="mb-3.5" subtitulo={tSub("sent_projects")}>
+            {projects.length > 0 && (
+              <button
+                type="button"
+                onClick={() => setShowPublish(true)}
+                className="inline-flex h-11 w-full items-center justify-center gap-1.5 rounded-full bg-[#009FD9] px-4 text-[13px] font-bold text-white transition-colors hover:bg-[#0089bb] sm:w-auto sm:px-6"
+              >
+                <Plus className="h-4 w-4" />
+                {t("publishProject")}
+              </button>
+            )}
+          </SectionHeadline>
           {projects.length === 0 ? (
             <PanelEmptyState
               icon={FolderOpen}
@@ -890,19 +905,6 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
             />
           ) : (
             <div className="ccr-native-safe-list-end flex flex-col gap-3.5">
-              {/* Crear va ARRIBA, con el subtítulo a la izquierda: el filtro tiene
-                  que quedar pegado a la lista que filtra. En medio, el botón
-                  cortaba esa relación. */}
-              <SectionHeadline subtitulo={tSub("sent_projects")}>
-                <button
-                  type="button"
-                  onClick={() => setShowPublish(true)}
-                  className="inline-flex h-11 w-full items-center justify-center gap-1.5 rounded-full bg-[#009FD9] px-4 text-[13px] font-bold text-white transition-colors hover:bg-[#0089bb] sm:w-auto sm:px-6"
-                >
-                  <Plus className="h-4 w-4" />
-                  {t("publishProject")}
-                </button>
-              </SectionHeadline>
               <StatusFilterTabs
                 tabs={PROYECTO_TABS}
                 value={effectiveProjectFilter}

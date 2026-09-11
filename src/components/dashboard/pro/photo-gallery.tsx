@@ -264,8 +264,8 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
       {/* Cabecera de la sección: el contexto a la izquierda y la acción a la
           derecha, ARRIBA de los filtros, igual que en Mis proyectos. El filtro
           tiene que quedar pegado a la lista que filtra. */}
-      {shownCases.length > 0 && (
-        <SectionHeadline subtitulo={tSub("photos")}>
+      <SectionHeadline subtitulo={tSub("photos")}>
+        {shownCases.length > 0 && (
           <div className="flex flex-col gap-1 sm:items-end">
             <button
               type="button"
@@ -277,8 +277,8 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
             </button>
             {addFull && <p className="text-center text-xs text-[#68778d]">{t("maxCasesHint", { max: MAX_CASES_PER_PROFESSION })}</p>}
           </div>
-        </SectionHeadline>
-      )}
+        )}
+      </SectionHeadline>
 
       {/* Filter by profession — underline tabs + count badges (shared StatusFilterTabs);
           only when the pro has 2+ professions. */}
