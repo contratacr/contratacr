@@ -448,7 +448,7 @@ export function ProfessionalCard({ professional, className, highlightMetric = "r
     // divider; MOBILE stacks them — all owned by ProfessionalSchedule, which holds the
     // schedule state and receives the info above as a slot. The ranking number now rides on
     // the avatar; the favorite bookmark sits inside the card so responsive sheets never clip it.
-    <article className={`group relative flex h-full min-w-0 flex-col bg-white px-4 py-3 shadow-[0_8px_14px_-14px_rgba(15,23,42,0.55)] transition-shadow duration-200 lg:rounded-2xl lg:border lg:border-[#e5e7eb] lg:p-4 lg:shadow-none lg:hover:border-[#cbd5e1] lg:hover:shadow-md ${className ?? ""}`}>
+    <article className={`group relative flex h-full min-w-0 flex-col bg-white px-4 py-3 shadow-[0_8px_14px_-14px_rgba(15,23,42,0.55)] transition-shadow duration-200 lg:rounded-2xl lg:border lg:border-[#dfe8f0] lg:p-4 lg:shadow-none lg:hover:border-[#cbd5e1] lg:hover:shadow-md ${className ?? ""}`}>
       <ProfessionalSchedule
         info={info}
         professional={professional}
