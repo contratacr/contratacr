@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Link } from "@/i18n/navigation";
+import { openInNewTabOnDesktop } from "@/lib/desktop-new-tab";
 import { getCategoryLabel } from "@/lib/data/categories";
 import { computeAge } from "@/lib/age";
 import { formatColonesTaxIncluded, splitPricingLabel } from "@/lib/pricing";
@@ -676,7 +677,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                               {b.professionals?.slug ? (
                                 <Link
                                   href={`/profesionales/${b.professionals.slug}?from=${encodeURIComponent("/dashboard/cliente")}`}
-                                  onClick={(e) => e.stopPropagation()}
+                                  onClick={(e) => { e.stopPropagation(); openInNewTabOnDesktop(e); }}
                                   className="min-w-0 flex-1 text-[15px] font-bold leading-snug text-[#162543] [overflow-wrap:anywhere] hover:text-[#009FD9] hover:underline sm:text-base"
                                 >
                                   {b.professionals?.profiles?.full_name ?? t("professional")}
@@ -800,7 +801,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                               const puedeRecontratar = (b.status === "completed" || b.status === "cancelled") && b.professionals?.slug;
                               const rebookAction = puedeRecontratar ? (
                                 <Link
-                                  href={`/profesionales/${b.professionals?.slug}?from=${encodeURIComponent("/dashboard/cliente")}`}
+                                  href={`/profesionales/${b.professionals?.slug}?from=${encodeURIComponent("/dashboard/cliente")}`} onClick={openInNewTabOnDesktop}
                                   className={`${actionButtonClass} inline-flex items-center justify-center border border-[#d7e1ea] bg-white text-[#162543] hover:border-[#b9c8d6] hover:bg-[#f6f9fb]`}
                                 >
                                   {t("bookAgain")}
@@ -995,7 +996,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                                             <div className="min-w-0 flex-1">
                                               <div className="flex min-w-0 flex-wrap items-center gap-1.5">
                                                 {proposal.professionals?.slug ? (
-                                                  <Link href={`/profesionales/${proposal.professionals.slug}?from=${encodeURIComponent("/dashboard/profesional?tab=sent_projects")}`} className="min-w-0 text-sm font-semibold text-[#162543] hover:text-[#009FD9] hover:underline">
+                                                  <Link href={`/profesionales/${proposal.professionals.slug}?from=${encodeURIComponent("/dashboard/profesional?tab=sent_projects")}`} onClick={openInNewTabOnDesktop} className="min-w-0 text-sm font-semibold text-[#162543] hover:text-[#009FD9] hover:underline">
                                                     {proposal.professionals?.profiles?.full_name}
                                                   </Link>
                                                 ) : (

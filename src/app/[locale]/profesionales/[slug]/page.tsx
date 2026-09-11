@@ -730,12 +730,24 @@ export default function ProfilePage() {
                   <div className="w-full min-w-0 sm:col-start-2 sm:row-start-1 sm:w-auto">
                     <div className="min-w-0">
                       <h1 data-testid="professional-profile-name" className="min-w-0 text-[17px] font-bold leading-[1.15] text-[#162543] [overflow-wrap:anywhere] sm:text-2xl sm:leading-tight sm:[overflow-wrap:normal]">
-                        {displayName.primaryDesktop}
-                        {professional.verificationStatus === "verified" && (
-                          <VerifiedSeal
-                            label={t("identityVerified")}
-                            className="mb-[0.08em] ml-1 inline-block h-4 w-4 shrink-0 align-middle text-[#009FD9] sm:h-5 sm:w-5"
-                          />
+                        {/* El sello va pegado a la ÚLTIMA palabra del nombre en un
+                            trozo que no se parte: así el nombre puede ocupar dos
+                            renglones si hace falta, pero el sello nunca se queda
+                            solo en un renglón nuevo. */}
+                        {professional.verificationStatus === "verified" ? (
+                          <>
+                            {displayName.primaryDesktop.split(" ").slice(0, -1).join(" ")}
+                            {displayName.primaryDesktop.includes(" ") ? " " : ""}
+                            <span className="whitespace-nowrap">
+                              {displayName.primaryDesktop.split(" ").slice(-1)[0]}
+                              <VerifiedSeal
+                                label={t("identityVerified")}
+                                className="mb-[0.08em] ml-1 inline-block h-4 w-4 shrink-0 align-middle text-[#009FD9] sm:h-5 sm:w-5"
+                              />
+                            </span>
+                          </>
+                        ) : (
+                          displayName.primaryDesktop
                         )}
                       </h1>
                     </div>

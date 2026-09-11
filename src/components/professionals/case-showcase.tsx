@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Images, X, ChevronLeft, ChevronRight } from "lucide-react";
+import { useDeslizar } from "@/hooks/use-deslizar";
 import { getCategoryLabel } from "@/lib/data/categories";
 import { cldThumb, cldLarge } from "@/lib/cloudinary";
 import { StatusFilterTabs } from "@/components/dashboard/status-filter-tabs";
@@ -82,6 +83,7 @@ export function CaseShowcase({
   useNativeFullscreenLayer(Boolean(detail));
   const prev = useCallback(() => { if (detail) setPi((i) => (i - 1 + detail.photos.length) % detail.photos.length); }, [detail]);
   const next = useCallback(() => { if (detail) setPi((i) => (i + 1) % detail.photos.length); }, [detail]);
+  const deslizar = useDeslizar((direccion) => (direccion === "siguiente" ? next() : prev()));
   useEffect(() => {
     if (!detail) return;
     const onKey = (e: KeyboardEvent) => {
@@ -210,7 +212,7 @@ export function CaseShowcase({
 
               {/* PHOTO viewer — larger, browsable (arrows + thumbnails). */}
               {cur && (
-                <div className="relative flex h-[58dvh] min-h-[320px] shrink-0 items-center justify-center overflow-hidden bg-[#0f172a] pt-[env(safe-area-inset-top)] sm:h-auto sm:min-h-[620px] sm:w-[62%] sm:pt-0">
+                <div {...(photos.length > 1 ? deslizar : {})} className="relative flex h-[58dvh] min-h-[320px] shrink-0 touch-pan-y select-none items-center justify-center overflow-hidden bg-[#0f172a] pt-[env(safe-area-inset-top)] sm:h-auto sm:min-h-[620px] sm:w-[62%] sm:pt-0">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={cldLarge(cur, 900)} alt="" aria-hidden className="absolute inset-0 h-full w-full scale-110 object-cover opacity-30 blur-2xl" />
                   <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/15 to-[#0f172a]/80" />

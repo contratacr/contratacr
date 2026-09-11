@@ -136,7 +136,7 @@ function SavedGenericCard({ item, onRemove }: { item: SavedItem; onRemove: (item
       </div>
       <div className="col-span-2 flex min-w-0 items-center gap-2 sm:col-span-1 sm:shrink-0">
         <Button variant="outline" size="sm" className="min-w-0 flex-1 sm:flex-none" asChild>
-          <Link href={href}>
+          <Link href={href} onClick={openInNewTabOnDesktop}>
             <ExternalLink className="h-3.5 w-3.5" />
             {t("view")}
           </Link>

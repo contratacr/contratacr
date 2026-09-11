@@ -5,6 +5,7 @@ import { cldLarge, cldThumb } from "@/lib/cloudinary";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ProgressiveImage } from "@/components/ui/progressive-image";
+import { useDeslizar } from "@/hooks/use-deslizar";
 
 type OfferImageGalleryProps = {
   images: string[];
@@ -21,6 +22,7 @@ export function OfferImageGallery({ images, title, className }: OfferImageGaller
     if (safeImages.length === 0) return;
     setActiveIndex((nextIndex + safeImages.length) % safeImages.length);
   }
+  const deslizar = useDeslizar((direccion) => goTo(direccion === "siguiente" ? activeIndex + 1 : activeIndex - 1));
 
   if (!activeImage) {
     return (
@@ -32,7 +34,11 @@ export function OfferImageGallery({ images, title, className }: OfferImageGaller
 
   return (
     <div className={cn("space-y-3", className)}>
-      <div className="relative grid min-h-[240px] place-items-center overflow-hidden rounded-lg bg-white sm:min-h-[320px] lg:min-h-0">
+      {/* touch-pan-y: el dedo desliza las fotos y la página sigue bajando. */}
+      <div
+        className="relative grid min-h-[240px] touch-pan-y select-none place-items-center overflow-hidden rounded-lg bg-white sm:min-h-[320px] lg:min-h-0"
+        {...(safeImages.length > 1 ? deslizar : {})}
+      >
         <ProgressiveImage
           key={activeImage}
           src={cldLarge(activeImage, 1280)}
