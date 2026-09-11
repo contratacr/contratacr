@@ -445,12 +445,18 @@ export function ProposalsTab({ categoryId }: ProposalsTabProps) {
                           className="min-h-[120px] w-full resize-none break-words rounded-xl border border-[#e5e7eb] bg-white px-4 py-3 text-[15px] text-[#162543] placeholder:text-[#68778d] focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[#009FD9]"
                         />
                         {message.length >= MESSAGE_MAX && <p className="mt-1 text-xs text-[#b45309]">{t("charLimit", { max: MESSAGE_MAX })}</p>}
-                        <Button onClick={() => sendReply(project.id)} disabled={!message.trim() || submitting === project.id} loading={submitting === project.id} size="sm" className="mt-3 h-11 w-full sm:ml-auto sm:flex sm:w-auto sm:px-6 rounded-full text-[13px] font-bold">
+                        {/* Como cualquier formulario de escritorio: lo que envía va
+                            abajo a la derecha, alineado con el borde del campo, y
+                            lo secundario («No me interesa») al otro extremo. En el
+                            teléfono se apilan y el botón ocupa el ancho. */}
+                        <div className="mt-3 flex flex-col gap-3 sm:flex-row-reverse sm:items-center sm:justify-between sm:gap-2">
+                        <Button onClick={() => sendReply(project.id)} disabled={!message.trim() || submitting === project.id} loading={submitting === project.id} size="sm" className="h-11 w-full sm:w-auto sm:px-6 rounded-full text-[13px] font-bold">
                           {corrigiendo === project.id ? t("sendProposalAgain") : t("sendProposal")}
                         </Button>
-                        <button type="button" onClick={() => dismissOpportunity(project.id)} className="mx-auto mt-3 flex items-center gap-1.5 text-[12px] font-medium text-[#68778d] transition-colors hover:text-[#6b7280]">
+                        <button type="button" onClick={() => dismissOpportunity(project.id)} className="mx-auto flex items-center gap-1.5 text-[12px] font-medium text-[#68778d] transition-colors hover:text-[#6b7280] sm:mx-0">
                           <EyeOff className="h-3.5 w-3.5" /> {t("dismiss")}
                         </button>
+                        </div>
                       </div>
                     </div>
                   )}
