@@ -39,3 +39,36 @@ export async function createClient() {
     }
   );
 }
+
+/**
+ * Cliente público SIN cookies, para lecturas que se guardan en caché.
+ *
+ * `unstable_cache` prohíbe tocar cookies dentro de la función guardada: si el
+ * cliente las lee, Next lanza «Accessing Dynamic data sources inside a cache
+ * scope is not supported» y la ficha del profesional desaparece entera. Este
+ * cliente entra como visitante anónimo, que es exactamente lo que se guarda en
+ * la caché pública; lo que depende de quién mira se consulta aparte.
+ */
+export async function createPublicClient() {
+  await ensureServerCategoryCatalog();
+  assertSafeSupabaseRuntime("Supabase público");
+
+  if (!hasSupabaseServerConfig()) {
+    throw new Error("Supabase server env vars are not configured.");
+  }
+
+  return createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return [];
+        },
+        setAll() {
+          // Sin sesión: no hay nada que escribir.
+        },
+      },
+    }
+  );
+}

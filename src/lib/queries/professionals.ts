@@ -849,7 +849,26 @@ export async function getZoneCoverage(): Promise<ZoneCoverage> {
 const PERFIL_CACHE_SECONDS = 300;
 
 export async function getProfessionalBySlug(slug: string): Promise<ProfessionalDetail | null> {
-  return getProfessionalBySlugCached(slug);
+  const pro = await getProfessionalBySlugCached(slug);
+  if (!pro) return null;
+
+  // La ficha guardada en caché es la que ve cualquiera. El correo de contacto
+  // solo está permitido para quien inició sesión, así que se pide aparte: si no
+  // hay sesión la consulta no devuelve nada y la ficha se queda como está.
+  try {
+    const { createClient } = await import("@/lib/supabase/server");
+    const supabase = await createClient();
+    const { data } = await supabase
+      .from("professionals")
+      .select("contact_email")
+      .eq("id", pro.id)
+      .maybeSingle();
+    const correo = (data as { contact_email?: string | null } | null)?.contact_email;
+    if (correo) return { ...pro, contactEmail: correo };
+  } catch {
+    /* sin sesión o sin permiso: la ficha pública ya está completa */
+  }
+  return pro;
 }
 
 async function getProfessionalBySlugUncached(
@@ -857,8 +876,11 @@ async function getProfessionalBySlugUncached(
 ): Promise<ProfessionalDetail | null> {
   if (SUPABASE_CONFIGURED) {
     try {
-      const { createClient } = await import("@/lib/supabase/server");
-      const supabase = await createClient();
+      // Visitante anónimo a propósito: esta función vive dentro de
+      // `unstable_cache` y leer cookies ahí rompe la ficha entera. El correo de
+      // contacto, que solo ve quien tiene sesión, se consulta fuera de la caché.
+      const { createPublicClient } = await import("@/lib/supabase/server");
+      const supabase = await createPublicClient();
       const normalizedSlug = (() => {
         try {
           return decodeURIComponent(slug);
