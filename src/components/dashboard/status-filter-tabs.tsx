@@ -200,16 +200,16 @@ export function StatusFilterTabs({
               // En el riel, la celda es fija para que se note que hay más a la
               // derecha. Con rótulos cortos se angosta a 7rem: así entran TRES
               // en un teléfono y la cuarta asoma, en vez de entrar solo dos.
-              !useSegmentedLayout && "flex-none whitespace-normal text-[13px] [overflow-wrap:anywhere]",
-              // El riel corta el último ítem a la vista para que se note que hay
-              // más. Con rótulos cortos la celda se mide en porcentaje del ancho
-              // para que entren TRES enteras y la cuarta asome lo suficiente
-              // (más del 30 % de su ancho) para que no haya que recortar la tercera.
-              // Eso es cosa del teléfono: de 640 px en adelante caben todas, así
-              // que las celdas se reparten la fila y no queda nada cortado.
+              !useSegmentedLayout && "whitespace-normal text-[13px] [overflow-wrap:anywhere]",
+              // Una sola regla para todos los anchos, sin depender del tamaño de
+              // pantalla: la celda crece con el sobrante y nunca baja de su
+              // mínimo. Donde caben las cuatro (una pantalla de computadora) se
+              // reparten la fila entera; donde no (un teléfono), se pasan del
+              // ancho y el riel deja asomar la última, que es lo que avisa de
+              // que hay más a la derecha.
               !useSegmentedLayout && (shortLabels
-                ? "min-w-[max(28%,6.25rem)] px-2.5 sm:min-w-0 sm:flex-1 sm:px-3"
-                : "min-w-[8.25rem] px-3 sm:min-w-0 sm:flex-1"),
+                ? "flex-1 min-w-[6.25rem] px-2.5 sm:px-3"
+                : "flex-1 min-w-[8.25rem] px-3"),
               active
                 ? "bg-white text-[#009FD9] shadow-sm"
                 : "text-[#6b7280] hover:text-[#374151]"
