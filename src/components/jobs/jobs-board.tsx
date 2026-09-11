@@ -577,7 +577,11 @@ function JobPreview({ job, isOwner, userId, hasApplied, onApply, onEdit, mobile 
 
 function EmployerAvatar({ job, size = "default" }: { job: JobPost; size?: "default" | "large" }) {
   const locale = marketplaceLocale(useLocale());
-  const dimensions = size === "large" ? "h-14 w-14" : "h-11 w-11 sm:h-12 sm:w-12";
-  if (job.employer_avatar_url) return <ProgressiveImage src={cldThumb(job.employer_avatar_url, 96)} alt={`${JOBS_COPY[locale].professionalPhoto}: ${job.employer_name || JOBS_COPY[locale].professionalFallback}`} fit="cover" wrapperClassName={`${dimensions} shrink-0 rounded-full`} className="rounded-full" />;
-  return <span className={`grid ${dimensions} shrink-0 place-items-center rounded-full bg-[#eaf7fc] text-[#009fd9]`}><Building2 className={size === "large" ? "h-6 w-6" : "h-5 w-5"} /></span>;
+  // El logo de quien contrata va CUADRADO con las esquinas suaves, no en círculo:
+  // un círculo recorta el logotipo por los lados y lo deja irreconocible. Es lo
+  // que hace cualquier tablero de empleos, y aquí además lo iguala con las
+  // ofertas, que ya se pintaban así.
+  const dimensions = size === "large" ? "h-14 w-14" : "h-12 w-12";
+  if (job.employer_avatar_url) return <ProgressiveImage src={cldThumb(job.employer_avatar_url, 128)} alt={`${JOBS_COPY[locale].professionalPhoto}: ${job.employer_name || JOBS_COPY[locale].professionalFallback}`} fit="cover" wrapperClassName={`${dimensions} shrink-0 overflow-hidden rounded-lg border border-[#e3ebf2] bg-white`} className="rounded-lg" />;
+  return <span className={`grid ${dimensions} shrink-0 place-items-center rounded-lg border border-[#e3ebf2] bg-[#eaf7fc] text-[#009fd9]`}><Building2 className={size === "large" ? "h-6 w-6" : "h-5 w-5"} /></span>;
 }
