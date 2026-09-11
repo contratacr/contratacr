@@ -689,7 +689,12 @@ export default function ProfilePage() {
             </div>
           ) : (
             <div className={cn(
-              "-mx-4 mb-6 flex items-center justify-between gap-3 border-b border-[#e5e7eb] bg-white px-4 py-2.5 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8",
+              "-mx-4 mb-6 flex items-center justify-between gap-3 border-b border-[#e5e7eb] bg-white px-4 py-2.5 sm:-mx-6 sm:px-6",
+              // En computadora, un enlace discreto encima del contenido, igual que
+              // en una oferta o un empleo: la franja blanca de lado a lado solo
+              // para dos palabras empujaba la ficha hacia abajo y competía con la
+              // barra del sitio, que ahí está siempre a la vista.
+              "lg:mx-0 lg:mb-3 lg:border-0 lg:bg-transparent lg:px-0 lg:py-0",
               // La barra superior toma el título y el «volver» SOLO en el teléfono
               // (ahí es donde dibuja «← Título»). En computadora la barra no lo
               // dibuja, así que ocultar el de la página dejaba la ficha sin ningún
@@ -700,7 +705,7 @@ export default function ProfilePage() {
               <Link
                 href={profileReturnHref}
                 ref={(node) => { volverRef.current = node ? () => node.click() : null; }}
-                className="inline-flex min-w-0 items-center gap-1.5 text-sm font-semibold text-[#374151] transition-colors hover:text-[#009FD9]"
+                className="inline-flex h-10 min-w-0 items-center gap-1.5 text-sm font-semibold text-[#374151] transition-colors hover:text-[#009FD9] lg:rounded-lg lg:px-2 lg:font-extrabold lg:text-[#162543] lg:hover:bg-[#eaf6fc]"
               >
                 <ArrowLeft className="h-4 w-4 shrink-0" />
                 <span className="truncate">{profileReturnLabel(profileReturnHref, locale)}</span>
