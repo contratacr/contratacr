@@ -52,7 +52,7 @@ type Props = {
 };
 
 const MARKETPLACE_LIST_CLASS =
-  "ccr-marketplace-card-list min-w-0 bg-white lg:h-full lg:overflow-y-scroll lg:rounded-xl lg:border lg:border-[#d7e1ea] sm:max-lg:mx-auto sm:max-lg:max-w-[640px] sm:max-lg:rounded-xl sm:max-lg:border sm:max-lg:border-[#d7e1ea]";
+  "ccr-marketplace-card-list min-w-0 bg-white lg:h-full lg:overflow-y-scroll lg:rounded-lg lg:border lg:border-[#e4e8ed] sm:max-lg:mx-auto sm:max-lg:max-w-[640px] sm:max-lg:rounded-lg sm:max-lg:border sm:max-lg:border-[#e4e8ed]";
 
 const OFFERS_COPY = {
   es: {
@@ -770,7 +770,7 @@ function OfferRow({
   const discount = offerDiscountPercent(offer);
   return (
     <article
-      className={`relative overflow-hidden border-b border-[#dfe6ec] bg-white px-3 py-2 transition hover:bg-[#f8fafc] sm:px-4 sm:py-2.5 ${selected ? "lg:bg-[#eef9fd] lg:shadow-[inset_4px_0_0_#162543]" : ""}`}
+      className={`relative overflow-hidden border-b border-[#eef1f4] bg-white px-3 py-2 transition hover:bg-[#f8fafc] sm:px-4 sm:py-2.5 ${selected ? "lg:bg-[#f3f9fd] lg:shadow-[inset_2px_0_0_#009FD9]" : ""}`}
     >
       <button
         type="button"
@@ -849,7 +849,7 @@ function OfferPreview({
   const [reportando, setReportando] = useState(false);
   const enlaceParaCompartir = enlaceOferta(offer);
   return (
-    <article className="relative ccr-marketplace-result-list hidden min-w-0 bg-white p-7 lg:block lg:h-full lg:overflow-y-auto lg:rounded-xl lg:border lg:border-[#d7e1ea]">
+    <article className="relative ccr-marketplace-result-list hidden min-w-0 bg-white p-7 lg:block lg:h-full lg:overflow-y-auto lg:rounded-lg lg:border lg:border-[#e4e8ed]">
       {/* El "..." vive arriba a la derecha del panel, como en la cabecera de la
           app: es el lugar donde la gente lo busca. */}
       <MenuFicha
