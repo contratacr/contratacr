@@ -229,8 +229,7 @@
     "noResults": {
       "title": "No results found",
       "desc": "Try a different category or expand your search area.",
-      "publishCta": "Post what I need",
-      "publishHint": "Tell us what you need and professionals in that category will reply."
+      "publishCta": "Post what I need"
     },
     "pagination": {
       "label": "Results pagination",

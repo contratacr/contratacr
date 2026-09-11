@@ -368,7 +368,7 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
     )}
     {detailOnly && selected && (
       <div className="mx-auto hidden w-full max-w-6xl px-6 pb-8 pt-5 lg:block">
-        <Link href={detailBackHref} className="mb-3 inline-flex h-10 items-center gap-2 rounded-lg px-2 text-sm font-extrabold transition hover: hover: ccr-caja-icono-plana">
+        <Link href={detailBackHref} className="mb-3 inline-flex h-10 items-center gap-2 rounded-lg px-2 text-sm font-extrabold text-[#162543] transition hover:bg-[#eaf6fc]">
           <ArrowLeft className="h-4 w-4 stroke-[2.4]" />
           {detailBackLabel}
         </Link>

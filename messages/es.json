@@ -229,8 +229,7 @@
     "noResults": {
       "title": "No encontramos resultados",
       "desc": "Intenta con otra categoría o amplía la zona de búsqueda.",
-      "publishCta": "Publicar lo que necesito",
-      "publishHint": "Cuenta qué necesitas y los profesionales de esa categoría te responden."
+      "publishCta": "Publicar lo que necesito"
     },
     "pagination": {
       "label": "Paginación de resultados",

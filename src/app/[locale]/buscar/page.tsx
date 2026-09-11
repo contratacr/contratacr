@@ -500,21 +500,24 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
             {/* Results list */}
             <div className="min-w-0">
               {allResults.length === 0 ? (
-                <div data-search-empty-state className="-mx-4 flex min-h-[18rem] w-[calc(100%+2rem)] flex-col items-center justify-center bg-white px-6 py-16 text-center lg:mx-0 lg:min-h-[24rem] lg:w-full lg:rounded-2xl lg:border lg:px-8 lg:py-20">
-                  <div className="mb-4 flex justify-center">
-                    <div className="ccr-icono-mosaico h-16 w-16">
-                      <Search className="h-7 w-7" strokeWidth={1.6} />
-                    </div>
+                // Tres cosas y en este orden: qué pasó, qué hacer, y la salida.
+                // El borde iba sin color y salía más oscuro que el de cualquier
+                // tarjeta del sitio; el alto sobraba (24rem de mínimo con 5rem de
+                // relleno) y la cuarta línea repetía lo que ya dice el botón.
+                <div data-search-empty-state className="-mx-4 flex min-h-[18rem] w-[calc(100%+2rem)] flex-col items-center justify-center bg-white px-6 py-14 text-center lg:mx-0 lg:min-h-[20rem] lg:w-full lg:rounded-2xl lg:border lg:border-[#e5e7eb] lg:px-8 lg:py-16 lg:shadow-sm">
+                  {/* El mismo mosaico de las tarjetas de registro: es el icono
+                      protagonista de la pantalla, no un adorno de fila. */}
+                  <div className="ccr-icono-mosaico mb-5 h-20 w-20">
+                    <Search className="h-9 w-9" strokeWidth={1.4} />
                   </div>
-                  <h2 className="mb-2 text-xl font-semibold text-[#162543]">{t("noResults.title")}</h2>
-                  <p className="mx-auto max-w-sm text-sm text-[#6b7280]">{t("noResults.desc")}</p>
+                  <h2 className="text-xl font-bold text-[#162543]">{t("noResults.title")}</h2>
+                  <p className="mx-auto mt-1.5 max-w-sm text-sm leading-relaxed text-[#6b7280]">{t("noResults.desc")}</p>
                   <Link
                     href={`/dashboard/profesional?tab=sent_projects&openPublish=1${selectedCategory ? `&categoria=${encodeURIComponent(selectedCategory)}` : ""}`}
                     className="mt-6 inline-flex h-11 items-center justify-center rounded-full bg-[#009FD9] px-5 text-[13px] font-bold text-white transition-colors hover:bg-[#0089bb]"
                   >
                     {t("noResults.publishCta")}
                   </Link>
-                  <p className="mx-auto mt-2 max-w-sm text-xs text-[#68778d]">{t("noResults.publishHint")}</p>
                 </div>
               ) : (
                 <>
