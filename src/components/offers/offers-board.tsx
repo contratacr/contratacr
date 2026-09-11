@@ -453,8 +453,8 @@ export function OffersBoard({
         <span className="font-extrabold text-[#162543]">{filtered.length} {filtered.length === 1 ? copy.offer : copy.offerPlural}</span>
         {" · "}{copy.country}
       </p>
-      <div className="mx-auto w-full max-w-7xl px-0 sm:px-6 sm:py-5 lg:h-[calc(100dvh-172px)] lg:min-h-0 lg:shrink-0 lg:px-6 lg:pb-4 lg:pt-0">
-        <div className={`${filtered.length > 0 ? "lg:grid lg:grid-cols-[minmax(340px,440px)_minmax(0,1fr)]" : ""} lg:h-full lg:overflow-hidden lg:rounded-[22px] lg:border lg:border-[#dfe8f0] lg:bg-white lg:shadow-[0_12px_34px_-28px_rgba(15,23,42,0.55)]`}>
+      <div className="mx-auto w-full max-w-7xl px-0 sm:px-6 sm:py-5 lg:flex-1 lg:min-h-0 lg:px-6 lg:pb-0 lg:pt-0">
+        <div className={`${filtered.length > 0 ? "lg:grid lg:grid-cols-[minmax(340px,440px)_minmax(0,1fr)]" : ""} lg:h-full lg:overflow-hidden lg:rounded-[22px] lg:border lg:border-[#dfe8f0] lg:bg-white lg:shadow-[0_12px_34px_-28px_rgba(15,23,42,0.55)] lg:rounded-b-none lg:border-b-0`}>
           <section className={filtered.length > 0 ? MARKETPLACE_LIST_CLASS : "min-w-0 bg-white"}>
             <div className="border-b border-[#e7edf2] px-4 py-3 lg:hidden">
               <p className="font-bold">
