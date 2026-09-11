@@ -1817,8 +1817,8 @@
       "searchEmpty": "No encontramos una guía con esa palabra."
     },
     "subtitles": {
-      "bookings": "Las citas que te reservaron.",
-      "proposals": "Lo que los clientes están pidiendo. Responde y te escriben.",
+      "bookings": "Tu agenda con los clientes.",
+      "proposals": "Clientes buscando quién les haga el trabajo.",
       "quotes": "Los precios que le pasaste a un cliente.",
       "photos": "Trabajos que ya hiciste, con fotos. Es lo que más convence.",
       "services": "Lo que ofreces y a qué precio.",

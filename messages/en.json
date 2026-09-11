@@ -1415,8 +1415,8 @@
     },
     "servicesHeading": "Services",
     "subtitles": {
-      "bookings": "The appointments people booked with you.",
-      "proposals": "What clients are asking for. Reply and they write to you.",
+      "bookings": "Your schedule with clients.",
+      "proposals": "Clients looking for someone to do the work.",
       "quotes": "The prices you sent a client.",
       "photos": "Work you already did, with photos. Nothing convinces more.",
       "services": "What you offer and what it costs.",
