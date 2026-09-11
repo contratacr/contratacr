@@ -512,10 +512,13 @@ export function ProposalsTab({ categoryId }: ProposalsTabProps) {
                           <ExpandableText text={p.message} lines={6} className="mt-0.5 min-w-0 text-[13px] leading-relaxed text-[#4b5563]" />
                         </div>
                       </div>
+                      {/* Mientras espera respuesta sí hace falta decirlo: no hay
+                          distintivo que lo cuente. Cuando ya lo eligieron, el
+                          distintivo verde de arriba lo dice, y repetirlo aquí
+                          sobraba: la frase además pedía coordinar por mensaje,
+                          que ni se hace desde esta tarjeta ni es lo que pasa
+                          —quien escribe es el cliente. */}
                       {p.status === "pending" && <p className="rounded-xl bg-[#f4f7fa] px-3.5 py-2.5 text-[13px] leading-relaxed text-[#4b5563]">{t("sentNote")}</p>}
-                      {p.status === "accepted" && trabajoVivo && (
-                        <p className="rounded-xl bg-[#f0fdf4] px-3.5 py-2.5 text-[13px] leading-relaxed text-[#166534]">{t("chosenNote")}</p>
-                      )}
                       {/* Con dos cosas, van a la par: la cotización ocupa lo que sobra
                           y el menú se queda a su lado. La cotización solo aparece
                           cuando el cliente ya eligió, no mientras compara: es un
