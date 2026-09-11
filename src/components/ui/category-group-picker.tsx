@@ -54,13 +54,20 @@ export function CategoryGroupPicker({
   if (activeGroup) {
     return (
       <div className={cn("flex flex-col", className)}>
+        {/* La vuelta atrás dice ADEMÁS dónde estás: «‹ Hogar» resuelve las dos
+            preguntas de golpe (en qué categoría entré y cómo salgo). Antes decía
+            «Volver a servicios», que se confundía con la sección Servicios y no
+            daba ninguna pista del lugar. */}
         <button
           type="button"
           onClick={() => onActiveGroupChange(null)}
-          className="mb-1 flex w-full items-center gap-2 rounded-lg px-2 py-2 text-left text-sm font-semibold text-[#009FD9] transition-colors hover:bg-[#EBF5FB]"
+          aria-label={backLabel}
+          className="mb-1 flex w-full items-center gap-1.5 rounded-lg px-2 py-2.5 text-left transition-colors hover:bg-[#EBF5FB]"
         >
-          <ChevronLeft className="h-4 w-4 shrink-0" />
-          {backLabel}
+          <ChevronLeft className="h-5 w-5 shrink-0 text-[#009FD9]" />
+          <span className="min-w-0 truncate text-[15px] font-bold text-[#162543]">
+            {activeGroup.label ?? getCategoryGroupLabel(activeGroup.id, locale)}
+          </span>
         </button>
         <div className="grid grid-cols-1">
           {activeGroup.items.map((item) => (
