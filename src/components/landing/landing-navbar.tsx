@@ -776,27 +776,68 @@ function ResourceIcon({ name, className = "h-5 w-5 shrink-0" }: { name: string; 
   return <Headset className={className} />;
 }
 
+// Lo que la dirección de /buscar dice sobre la búsqueda en curso, en un solo
+// lugar, para que el primer pintado de la barra ya lo lleve puesto.
+function contextoDeBusquedaDesdeUrl(params: { get(name: string): string | null }, locale: string) {
+  const categoriaId = params.get("categoria");
+  const grupoId = params.get("grupo");
+  const grupoLabel = grupoId && getAllCategoryGroups().some((group) => group.id === grupoId)
+    ? getCategoryGroupLabel(grupoId, locale)
+    : "";
+  const servicioExplicito =
+    categoriaId && categoriaId !== "todas"
+      ? getCategoryLabel(categoriaId, locale)
+      : grupoLabel || params.get("q")?.trim() || "";
+  const cantonId = params.get("canton");
+  const provinciaId = params.get("provincia");
+  const ubicacionSel = cantonId
+    ? allLocationSuggestions().find((location) => location.type === "canton" && location.id === cantonId) ?? null
+    : provinciaId
+      ? allLocationSuggestions().find((location) => location.type === "province" && location.id === provinciaId) ?? null
+      : null;
+  const ubicacion = params.get("ubicacion")?.trim() ||
+    (ubicacionSel?.type === "canton" ? `${ubicacionSel.label}, ${ubicacionSel.sublabel}` : ubicacionSel?.label ?? "");
+  const lat = Number(params.get("lat"));
+  const lng = Number(params.get("lng"));
+  return {
+    // Una familia entera («Agro») no se escribe en el campo: queda como contexto.
+    servicio: grupoLabel ? "" : servicioExplicito,
+    categoriaId: categoriaId && categoriaId !== "todas" ? categoriaId : null,
+    ubicacion,
+    ubicacionSel,
+    coords: params.get("lat") && params.get("lng") && Number.isFinite(lat) && Number.isFinite(lng) ? { latitude: lat, longitude: lng } : null,
+  };
+}
+
 export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobileSearch = false, marketplaceDesktop = false, drawerOnly = false }: { mobileInline?: React.ReactNode; forceCompactSearch?: boolean; mobileSearch?: boolean; marketplaceDesktop?: boolean; drawerOnly?: boolean } = {}) {
   const [compact, setCompact] = useState(false);
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [mobileHelpOpen, setMobileHelpOpen] = useState(false);
   const [nativePendingHref, setNativePendingHref] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState("");
+  const locale = useLocale();
+  const pathname = usePathname();
+  const currentSearchParams = useSearchParams();
+  // En /buscar el campo de la barra nace YA con lo que dice la dirección. Antes
+  // nacía vacío y un efecto lo llenaba tras el primer pintado: se veía el texto
+  // de ayuda («Servicio») y un instante después el oficio buscado. El efecto de
+  // abajo sigue leyendo la dirección al navegar; aquí solo se adelanta el primer cuadro.
+  const contextoInicial = pathname === "/buscar" ? contextoDeBusquedaDesdeUrl(currentSearchParams, locale) : null;
+  const [searchQuery, setSearchQuery] = useState(contextoInicial?.servicio ?? "");
   const [searchListDominant, setSearchListDominant] = useState(false);
   useCustomCategories();
   // A picked category (so a chosen suggestion filters by id, not free text).
-  const [searchCategoryId, setSearchCategoryId] = useState<string | null>(null);
+  const [searchCategoryId, setSearchCategoryId] = useState<string | null>(contextoInicial?.categoriaId ?? null);
   const [searchActiveIdx, setSearchActiveIdx] = useState(-1);
   const [searchFocused, setSearchFocused] = useState(false);
   const [nativeSearchOpen, setNativeSearchOpen] = useState(false);
   const [busquedasRecientes, setBusquedasRecientes] = useState<string[]>([]);
   const [visitasRecientes, setVisitasRecientes] = useState<RecentVisit[]>([]);
   const [currentLocationSuggestions, setCurrentLocationSuggestions] = useState<LocationSuggestion[] | null>(null);
-  const [navCurrentCoords, setNavCurrentCoords] = useState<{ latitude: number; longitude: number } | null>(null);
+  const [navCurrentCoords, setNavCurrentCoords] = useState<{ latitude: number; longitude: number } | null>(contextoInicial?.coords ?? null);
   // Location is a typeable autocomplete (provinces + cantones), like the hero.
-  const [navLocation, setNavLocation] = useState("");
-  const [navLocationSel, setNavLocationSel] = useState<LocationSuggestion | null>(null);
+  const [navLocation, setNavLocation] = useState(contextoInicial?.ubicacion ?? "");
+  const [navLocationSel, setNavLocationSel] = useState<LocationSuggestion | null>(contextoInicial?.ubicacionSel ?? null);
   const [navLocOpen, setNavLocOpen] = useState(false);
   const [navLocActive, setNavLocActive] = useState(-1);
   const navLocBlurTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -818,12 +859,9 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   const router = useRouter();
   const t = useTranslations("header");
   const tNav = useTranslations("bottomNav");
-  const locale = useLocale();
   const switchLang = useSwitchLang();
   const alternateLocale = locale === "en" ? "es" : "en";
   const alternateLanguageLabel = locale === "en" ? "Español" : "English";
-  const pathname = usePathname();
-  const currentSearchParams = useSearchParams();
   const nativeApp = useNativeApp();
   // En la app, la línea y la sombra de la barra solo se retiran cuando debajo
   // hay un lienzo de OTRO color que ya separa por sí solo (el gris del panel,

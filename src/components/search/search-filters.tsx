@@ -1402,7 +1402,10 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
             }}
           >
             <SelectTrigger className={FILTER_TRIGGER}>
-              <SelectValue />
+              {/* Rótulo explícito: así sale en el primer pintado, no al montar. */}
+              <SelectValue>
+                {(() => { const c = priceChoiceFromFilters(priceFilter, priceUnits); return c === ANY_PRICE ? t("filters.anyPrice") : t(`priceFilter.${c}`); })()}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent className={FILTER_CONTENT}>
               {PRICE_CHOICES.map((choice) => (
@@ -1445,7 +1448,12 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
               applyFilters({ idioma: serializeMultiParam(siguientes) });
             }}
           >
-            <SelectTrigger className={FILTER_TRIGGER} aria-label={t("filters.language")}><SelectValue /></SelectTrigger>
+            {/* Con hijos explícitos el rótulo sale en el primer pintado; vacío,
+                Radix no lo conoce hasta montar las opciones y el control nacía
+                en blanco y se llenaba un instante después. */}
+            <SelectTrigger className={FILTER_TRIGGER} aria-label={t("filters.language")}>
+              <SelectValue>{languages[0] ? languageLabel(languages[0], locale) : t("filters.anyLanguage")}</SelectValue>
+            </SelectTrigger>
             <SelectContent className={FILTER_CONTENT}>
               <SelectItem value={ANY_LANGUAGE}>{t("filters.anyLanguage")}</SelectItem>
               {LANGUAGES.map((item) => (
