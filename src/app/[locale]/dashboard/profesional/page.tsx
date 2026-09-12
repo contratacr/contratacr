@@ -735,6 +735,19 @@ export default function DashboardPage() {
   useEffect(() => {
     if (isProvider && urlForcedMode && urlForcedMode !== globalMode) setMode(urlForcedMode);
   }, [isProvider, urlForcedMode, globalMode, setMode]);
+  // ENTRAR AL PANEL ES ENTRAR AL PANEL PROFESIONAL. Quien ofrece servicios abre
+  // aquí su negocio: el panel de cliente es una visita, no el lugar donde se
+  // queda. La elección se guardaba en la sesión, así que quien lo miraba una
+  // vez volvía a caer ahí cada vez que entraba —"me lleva al panel cliente
+  // aunque yo sea profesional"—. Ahora cada entrada al panel arranca en
+  // profesional; dentro, el cambio a cliente se respeta mientras no se salga, y
+  // un enlace con ?mode=use (por ejemplo desde un aviso de cliente) también.
+  const modoDeEntradaFijado = useRef(false);
+  useEffect(() => {
+    if (modoDeEntradaFijado.current || authLoading || !isProvider) return;
+    modoDeEntradaFijado.current = true;
+    if (!urlModeParam && globalMode !== "offer") setMode("offer");
+  }, [authLoading, isProvider, urlModeParam, globalMode, setMode]);
 
   // Security guard: a client can use this unified dashboard route, but must never
   // enter professional-only sections by editing the URL or reusing stale links.
@@ -1281,6 +1294,9 @@ export default function DashboardPage() {
       window.scrollTo({ top: 0, left: 0, behavior: "auto" });
       document.documentElement.scrollTop = 0;
       document.body.scrollTop = 0;
+      // El panel también desplaza su propio cuerpo en algunos anchos: moviendo
+      // solo la ventana, la sección abría a media altura.
+      document.querySelector("main.ccr-dashboard-main")?.scrollTo({ top: 0, left: 0, behavior: "auto" });
     };
 
     scrollTop();
@@ -1289,6 +1305,19 @@ export default function DashboardPage() {
       requestAnimationFrame(scrollTop);
     });
   }
+
+  // CADA SECCIÓN ABRE ARRIBA DEL TODO. El botón del menú ya lo hacía, pero
+  // llegar por un enlace (un aviso, la barra de abajo, atrás/adelante) no, y la
+  // sección abría a media altura. Va por sección Y por panel: cambiar de
+  // cliente a profesional también estrena pantalla.
+  useEffect(() => {
+    scrollDashboardToPageTop();
+    // El contenido llega después de la primera pintura: si la página crece, el
+    // navegador puede restaurar el desplazamiento anterior.
+    const tardio = window.setTimeout(scrollDashboardToPageTop, 160);
+    return () => window.clearTimeout(tardio);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- solo al cambiar de sección o de panel
+  }, [activeTab, mode]);
 
   const requestUnsavedAction = useCallback((action: () => void) => {
     if (typeof window === "undefined") {
@@ -2030,7 +2059,12 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#fafafa]">
+    // El lienzo de la página lleva el MISMO color que la sección: donde la
+    // sección termina (una lista corta, un vacío, un hilo de soporte) seguía el
+    // fondo de la página y se veía una franja blanca entre el contenido y el
+    // pie —o entre el contenido y la barra de abajo, en la app—. Ahora no hay
+    // costura: el color es uno solo hasta el final de la pantalla.
+    <div className="ccr-dashboard-shell min-h-screen flex flex-col bg-[#fafafa]">
       <Navbar mobileSearch={false} />
       {formularioPublicar}
       {opportunityWelcomeCount !== null && (

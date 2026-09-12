@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { useDesvanecidoDeCarril } from "@/hooks/use-desvanecido-de-carril";
 import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { ScrollRail } from "@/components/ui/scroll-rail";
@@ -56,6 +57,9 @@ export function StatusFilterTabs({
   // volver a la primera se ve que no hay nada antes. El margen es lo que hace
   // que asome: sin él la etapa quedaba pegada al filo y parecía la última.
   const carrilRef = useRef<HTMLDivElement | null>(null);
+  // Mismo degradado que el resto de los carriles del app: la etapa que asoma se
+  // desvanece en el borde en vez de quedar cortada contra el filo.
+  const mascaraCarril = useDesvanecidoDeCarril(carrilRef);
   useEffect(() => {
     const carril = carrilRef.current;
     if (!carril || carril.scrollWidth <= carril.clientWidth + 1) return;
@@ -85,11 +89,15 @@ export function StatusFilterTabs({
   const useScrollableLayout = !useSegmentedLayout;
   // Una celda segmentada es angosta en 320 px: con cuatro o más etapas el
   // conteo se apila bajo el rótulo para que ninguno se corte.
+  // REGLA DEL APP: un filtro ocupa UNA sola línea, nunca dos. Cuando el rótulo
+  // es largo no se parte en dos renglones —«Profesio / nales»—: la fila entera
+  // pasa a deslizarse, con cada rótulo entero, igual que los filtros de
+  // proyectos. De 640px en adelante vuelven a repartirse el ancho.
   const shortLabels = tabs.every((tab) => label(tab.id).length <= 12);
   // Con cuatro o cinco etapas la celda es angosta: el conteo se queda a la
   // derecha del rótulo —como en el resto de la app— y lo que se aprieta es el
   // relleno, la separación y el tamaño del conteo, no la disposición.
-  const compacto = useSegmentedLayout && tabs.length >= 4;
+  const compacto = useSegmentedLayout && (tabs.length >= 4 || !shortLabels);
 
   // PILLS — same segmented language, without count badges. Used for profession
   // filters where labels can be long; 2–4 fit the row, 5+ become a clean rail.
@@ -130,7 +138,7 @@ export function StatusFilterTabs({
   }
 
   if (variant === "pills") {
-    const usePillSegmentedLayout = tabs.length >= 2 && tabs.length <= 4;
+    const usePillSegmentedLayout = tabs.length >= 2 && tabs.length <= 4 && shortLabels;
     return (
       <div
         data-status-filter-tabs=""
@@ -161,8 +169,8 @@ export function StatusFilterTabs({
                 className={cn(
                   "inline-flex min-h-10 max-w-full items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-center text-[13px] font-semibold leading-tight transition-all",
                   usePillSegmentedLayout
-                    ? "min-w-0 whitespace-normal [overflow-wrap:anywhere]"
-                    : "min-w-[8.25rem] flex-none whitespace-normal [overflow-wrap:anywhere]",
+                    ? "min-w-0 truncate whitespace-nowrap"
+                    : "min-w-[8.25rem] flex-none whitespace-nowrap",
                   active ? "bg-white text-[#009FD9] shadow-sm" : "text-[#6b7280] hover:text-[#374151]"
                 )}
               >
@@ -197,6 +205,7 @@ export function StatusFilterTabs({
       // se reparten la fila de 640 px en adelante.
       data-filter-layout={useSegmentedLayout ? (compacto ? "segmented-scroll" : "segmented") : "scroll"}
       ref={useSegmentedLayout && compacto ? carrilRef : undefined}
+      style={useSegmentedLayout && compacto ? { maskImage: mascaraCarril, WebkitMaskImage: mascaraCarril } : undefined}
     >
       <RailOrGrid scroll={!useSegmentedLayout} className={cn(
         useSegmentedLayout
@@ -226,7 +235,7 @@ export function StatusFilterTabs({
                       // pastilla del conteo se apila bajo el rótulo.
                       ? "gap-1 whitespace-nowrap px-3 text-[13px] max-sm:shrink-0 sm:flex-auto sm:px-1 sm:text-[12px] min-[560px]:text-[13px]"
                       : "gap-1 px-1.5 text-[12px] min-[400px]:text-[13px] sm:px-3",
-                    shortLabels ? "whitespace-nowrap" : "whitespace-normal [overflow-wrap:anywhere]",
+                    "whitespace-nowrap",
                   )
                 : "gap-1"
                 ,
@@ -241,7 +250,7 @@ export function StatusFilterTabs({
               // adelante; ahí sí vuelven a estirarse para llenar la fila.
               !useSegmentedLayout && (shortLabels
                 ? "shrink-0 whitespace-nowrap px-3 sm:flex-1 sm:shrink sm:px-3"
-                : "flex-1 min-w-[8.25rem] whitespace-normal px-3 [overflow-wrap:anywhere]"),
+                : "shrink-0 whitespace-nowrap px-3 sm:flex-1 sm:shrink"),
               active
                 ? "bg-white text-[#009FD9] shadow-sm"
                 : "text-[#6b7280] hover:text-[#374151]"
@@ -251,7 +260,7 @@ export function StatusFilterTabs({
             {/* En el riel del teléfono el rótulo va entero: recortarlo ahí era
                 justo lo que producía "Enviad…". El recorte se reserva para el
                 reparto de ancho, de 640 px en adelante. */}
-            <span className={cn("min-w-0 max-w-full", shortLabels ? "sm:truncate" : "whitespace-normal [overflow-wrap:anywhere]")}>
+            <span className={cn("min-w-0 max-w-full truncate")}>
               {label(tab.id)}
             </span>
             {count > 0 && (

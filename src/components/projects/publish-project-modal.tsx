@@ -159,9 +159,10 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
         className="app-fullscreen-modal relative z-10 flex h-[var(--app-visual-viewport-height)] min-h-0 w-full max-h-[var(--app-visual-viewport-height)] flex-col overflow-hidden bg-white shadow-none sm:h-auto sm:max-h-[90vh] sm:max-w-lg sm:rounded-2xl sm:shadow-2xl"
       >
         <div className="relative flex shrink-0 items-center justify-center gap-3 border-b border-[#f3f4f6] px-14 py-4 sm:items-start sm:justify-between sm:px-6">
+          {/* Solo el título: la línea de apoyo repetía lo que el propio
+              formulario ya promete y robaba alto en el teléfono. */}
           <div className="min-w-0 text-center sm:text-left">
             <h2 id="publish-project-title" className="text-lg font-bold text-[#162543]">{t("title")}</h2>
-            <p className="mt-0.5 text-xs text-[#6b7280]">{t("subtitle")}</p>
           </div>
           <button
             type="button"

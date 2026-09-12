@@ -6,7 +6,7 @@ import { Bookmark, BriefcaseBusiness, ExternalLink, MapPin, Star, Tag, Trash2, V
 import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
-import { PanelListSkeleton } from "@/components/ui/content-loading";
+import { PanelFilterEmpty, PanelListSkeleton } from "@/components/ui/content-loading";
 import { StatusFilterTabs } from "@/components/dashboard/status-filter-tabs";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
@@ -300,16 +300,15 @@ export function SavedProfessionalsTab() {
         {showPros && savedPros.map((pro) => <SavedProCard key={`pro-${pro.id}`} pro={pro} onUnsave={handleUnsavePro} />)}
         {showOffers && offers.map((item) => <SavedGenericCard key={item.id} item={item} onRemove={handleRemoveItem} />)}
         {showJobs && jobs.map((item) => <SavedGenericCard key={item.id} item={item} onRemove={handleRemoveItem} />)}
+        {/* El mismo vacío que el resto del app —tarjeta blanca de borde continuo—
+            en lugar de un bloque suelto sobre el gris: aquí se veía distinto de
+            Ofertas, Empleos o Soporte. */}
         {selectedCount === 0 && (
-          <div className="flex flex-col items-center px-4 py-10 text-center">
-            <span className="ccr-icono-mosaico h-14 w-14">
-              <Bookmark className="h-6 w-6" strokeWidth={1.6} aria-hidden="true" />
-            </span>
-            <p className="mt-3.5 text-base font-extrabold text-[#162543]">{selectedEmptyLabel}</p>
-            {filter === "professionals" && (
-              <Button asChild className="mt-5"><Link href="/buscar">{t("searchPros")}</Link></Button>
-            )}
-          </div>
+          <PanelFilterEmpty
+            icon={Bookmark}
+            title={selectedEmptyLabel}
+            action={filter === "professionals" ? <Button asChild><Link href="/buscar">{t("searchPros")}</Link></Button> : undefined}
+          />
         )}
       </div>
     </div>

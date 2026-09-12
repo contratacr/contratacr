@@ -211,9 +211,10 @@ export function OffersManager({ initialOffers, embedded = false, backHref = "/da
           {offers.length === 0 && (
             <div className={cn(
               "px-6 py-12 text-center",
-              embedded
-                ? "rounded-xl border border-dashed border-[#d8e4ec] bg-[#f8fbfd]"
-                : "rounded-2xl border border-[#e5e7eb] bg-white shadow-[0_2px_8px_rgba(15,23,42,0.05)]"
+              // Mismo vacío en todo el app: tarjeta blanca de borde continuo,
+              // como PanelEmptyState. La línea punteada queda solo para lo que
+              // se puede llenar (subir una foto, agregar una fila).
+              "rounded-2xl border border-[#e5eaf0] bg-white shadow-sm"
             )}>
               <span className="ccr-icono-mosaico mx-auto h-16 w-16">
                 <BadgePercent className="h-7 w-7" strokeWidth={1.6} />

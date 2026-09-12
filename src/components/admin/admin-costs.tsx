@@ -386,7 +386,7 @@ function Ledger({ entries, apply }: { entries: CostEntry[]; apply: (work: () => 
       <AdminFilterTabs tabs={[{ id: "todos", label: "Todos" }, ...(Object.keys(KIND_LABELS) as CostEntryKind[]).map((k) => ({ id: k, label: KIND_LABELS[k] }))]} value={filter} onChange={(id) => setFilter(id as typeof filter)} counts={counts} />
 
       {filtered.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-[#e5e7eb] px-4 py-10 text-center text-sm text-[#64748b]">Todavía no hay movimientos registrados{filter !== "todos" ? " de este tipo" : ""}.</div>
+        <div className="rounded-2xl border border-[#e5eaf0] bg-white px-4 py-10 text-center text-sm text-[#64748b] shadow-sm">Todavía no hay movimientos registrados{filter !== "todos" ? " de este tipo" : ""}.</div>
       ) : (
         <section className="overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white">
           <div className="flex items-center justify-between border-b border-[#f1f5f9] px-4 py-2.5 text-sm">

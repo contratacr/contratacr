@@ -518,6 +518,14 @@ html.ccr-native-bottom-nav-visible body .ccr-search-bottom-sheet {
     background: #f4f7fa !important;
   }
 
+  /* …y el contenedor que envuelve el panel lleva ese MISMO color: la sección
+     termina donde termine (una lista de un solo elemento, un vacío, un hilo de
+     soporte) y debajo sigue el lienzo, no una franja blanca entre el contenido
+     y la barra de abajo. */
+  body.ccr-native-app .ccr-dashboard-shell {
+    background: #f4f7fa;
+  }
+
   body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-dashboard-mobile-home {
     padding-bottom: 0 !important;
     margin-bottom: 0 !important;
@@ -576,7 +584,10 @@ html.ccr-native-bottom-nav-visible body .ccr-search-bottom-sheet {
   body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-support-thread {
     /* El tiquete termina encima de la barra de pestañas; con el teclado abierto
        la reserva vale 0 porque el teclado ya la cubre. */
-    height: calc(100dvh - var(--ccr-native-header-height, 124px) - var(--ccr-reserva-barra, 0px));
+    /* Contra la pantalla que de verdad se ve, como hace Mensajes: en el
+       teléfono `100dvh` cuenta franjas que el sistema tapa, y el hilo quedaba
+       corto —el tiquete terminaba a media pantalla y debajo sobraba fondo—. */
+    height: calc(var(--app-visual-viewport-height, 100dvh) - var(--ccr-native-header-height, 64px) - var(--ccr-reserva-barra, 0px));
     min-height: 0;
     background: #fff;
   }

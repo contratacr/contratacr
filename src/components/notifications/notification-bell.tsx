@@ -324,8 +324,21 @@ export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "o
   return (
     <div ref={menuRef} className="relative">
       <button
-        // En la app la campana abre la pantalla completa; el panel flotante es de la web.
-        onClick={() => (nativeApp ? openNotifications() : setMenuOpen((next) => !next))}
+        // La campana ABRE Notificaciones, no una ventanita previa: en la app y en
+        // cualquier pantalla de menos de 1024px va directo a la pantalla
+        // completa. El panel flotante es cosa de escritorio, donde hay sitio al
+        // lado de la campana y no reemplaza a la página. Además se decide con el
+        // ancho en el momento del toque, no con la detección de Capacitor, que
+        // en el primer cuadro todavía puede decir "no soy la app" y dejaba
+        // asomar el panel antes de navegar.
+        onClick={() => {
+          const pantallaChica = typeof window !== "undefined" && window.matchMedia("(max-width: 1023px)").matches;
+          if (nativeApp || pantallaChica) {
+            openNotifications();
+            return;
+          }
+          setMenuOpen((next) => !next);
+        }}
         className="relative grid h-10 w-10 place-items-center rounded-xl text-[#1A2744] transition-colors hover:bg-[#f3f4f6] hover:text-[#009FD9]"
         aria-label={t("title")}
         aria-expanded={menuOpen}

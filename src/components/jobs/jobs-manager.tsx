@@ -250,9 +250,9 @@ export function JobsManager({ initialJobs, embedded = false, backHref = "/dashbo
           {jobs.length === 0 && (
             <div className={cn(
               "px-6 py-12 text-center",
-              embedded
-                ? "rounded-xl border border-dashed border-[#d8e4ec] bg-[#f8fbfd]"
-                : "rounded-2xl border border-[#e5e7eb] bg-white shadow-[0_2px_8px_rgba(15,23,42,0.05)]"
+              // Mismo vacío en todo el app (ver offers-manager): tarjeta
+              // blanca de borde continuo.
+              "rounded-2xl border border-[#e5eaf0] bg-white shadow-sm"
             )}>
               <span className="mx-auto grid h-14 w-14 place-items-center rounded-full ccr-caja-icono">
                 <BriefcaseBusiness className="h-6 w-6" strokeWidth={2} />

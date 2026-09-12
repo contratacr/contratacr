@@ -116,7 +116,7 @@ export function QuotesSection({ proName, proSlug, puedeCrear = true }: { proName
                 </button>
               );
             })}
-            {lista.length === 0 && <p className="rounded-2xl border border-dashed border-[#dbe4ee] py-8 text-center text-[14px] text-[#68778d]">{t("emptyFilter")}</p>}
+            {lista.length === 0 && <p className="rounded-2xl border border-[#e5eaf0] bg-white py-8 text-center text-[14px] text-[#68778d] shadow-sm">{t("emptyFilter")}</p>}
           </div>
         </>
       )}
