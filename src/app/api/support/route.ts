@@ -147,9 +147,9 @@ export async function POST(req: Request) {
 
   // Otherwise: a normal reply message.
   if (!safeBody) return NextResponse.json({ error: "Escribe un mensaje." }, { status: 400 });
-  const { error: msgErr } = await db.from("support_ticket_messages").insert({
+  const { data: savedMessage, error: msgErr } = await db.from("support_ticket_messages").insert({
     ticket_id: ticketId, sender_role: "user", sender_id: user.id, sender_name: senderName, body: safeBody,
-  });
+  }).select("*").single();
   if (msgErr) return NextResponse.json({ error: msgErr.message }, { status: 500 });
 
   // A user reply re-opens a resolved ticket into "En proceso" (same thread).
@@ -172,5 +172,5 @@ export async function POST(req: Request) {
     metadata: { message_length: safeBody.length },
   });
 
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({ ok: true, message: savedMessage, status: nextStatus });
 }

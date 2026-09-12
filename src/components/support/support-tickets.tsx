@@ -243,9 +243,11 @@ export function SupportTickets({
     if (!openId && !showNewTicketPage) queueMicrotask(() => { load(); loadUnread(); });
   }, [openId, showNewTicketPage, load, loadUnread]);
 
-  const openTicket = useCallback(async (id: string) => {
+  const openTicket = useCallback(async (id: string, { silencioso = false }: { silencioso?: boolean } = {}) => {
     setOpenId(id);
-    setThreadLoading(true);
+    // Al refrescar tras enviar o cambiar de estado no se vacía el hilo: el
+    // esqueleto solo tiene sentido la primera vez que se abre la conversación.
+    if (!silencioso) setThreadLoading(true);
     fetchWithSessionRetry(`/api/support?id=${id}`)
       .then(async (r) => {
         const data = await r.json().catch(() => ({}));
@@ -303,9 +305,20 @@ export function SupportTickets({
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ ticketId: openId, body: reply.trim() }),
     });
+    const data = await res.json().catch(() => ({}));
     setSending(false);
-    if (res.ok) { setReply(""); openTicket(openId); }
-    else void showMessage({ title: errorTitle, description: t("sendError"), tone: "danger" });
+    if (res.ok) {
+      setReply("");
+      // El servidor devuelve la fila guardada: se añade tal cual en vez de
+      // volver a pedir el hilo entero, que era lo que dejaba el esqueleto
+      // parpadeando con cada mensaje enviado.
+      if (data?.message) {
+        setMessages((previos) => previos.some((m) => m.id === data.message.id) ? previos : [...previos, data.message]);
+        if (data.status) setTicket((actual) => actual ? { ...actual, status: data.status } : actual);
+      } else {
+        void openTicket(openId, { silencioso: true });
+      }
+    } else void showMessage({ title: errorTitle, description: t("sendError"), tone: "danger" });
   }
 
   async function ticketAction(action: "confirm" | "reopen") {
@@ -317,7 +330,7 @@ export function SupportTickets({
       body: JSON.stringify({ ticketId: openId, action }),
     });
     setSending(false);
-    if (res.ok) openTicket(openId);
+    if (res.ok) void openTicket(openId, { silencioso: true });
     else void showMessage({ title: errorTitle, description: t("actionError"), tone: "danger" });
   }
 
@@ -385,7 +398,11 @@ export function SupportTickets({
   if (openId) {
     return (
       <>
-      <div className="ccr-support-thread flex min-h-0 flex-1 flex-col lg:h-[min(720px,calc(100dvh-260px))]">
+      {/* Acotado en TODOS los anchos, no solo en escritorio: un hilo largo tiene
+          que desplazarse dentro de su panel con el compositor fijo abajo, no
+          estirar la página. Misma forma que usa Mensajes. Las reglas de la app
+          nativa son más específicas y siguen mandando allí. */}
+      <div className="ccr-support-thread flex h-[calc(100dvh-153px)] min-h-[360px] flex-col lg:h-[min(720px,calc(100dvh-260px))] lg:min-h-[480px]">
         {threadLoading || !ticket ? (
           <div className="grid min-h-0 flex-1 place-items-center px-4">
             <PanelListSkeleton rows={2} hasData={!!ticket} />
