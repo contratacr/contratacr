@@ -100,26 +100,14 @@ export function ClientConnections() {
               <AvatarFallback className="rounded-2xl bg-[#EBF5FB] text-sm font-bold text-[#009FD9]">{getInitials(item.name)}</AvatarFallback>
             </Avatar>
             <div className="min-w-0 flex-1">
-              {/* El estado va SIEMPRE en la misma línea que el nombre: el nombre se
-                  recorta según el ancho disponible en vez de empujar la etiqueta abajo. */}
-              <div className="flex min-w-0 items-center gap-2">
-                <h3 className="flex min-w-0 flex-1 items-center text-sm font-extrabold text-[#162543]">
-                  <ResponsiveVerifiedName name={item.name} verified={item.isVerified} verifiedLabel={t("verified")} />
-                </h3>
-                <span className="shrink-0 rounded-full bg-[#eef8fd] px-2 py-0.5 text-[10px] font-bold text-[#0089bb]">
-                  {item.status === "completed"
-                    ? t("status.completed")
-                    : item.status === "awaiting_confirmation"
-                      ? t("status.awaitingConfirmation")
-                      : item.status === "in_progress"
-                        ? t("status.inProgress")
-                        : item.status === "confirmed"
-                          ? t("status.confirmed")
-                          : item.status === "contact"
-                            ? t("status.contact")
-                            : t("status.connected")}
-                </span>
-              </div>
+              {/* Sin etiqueta de estado: esta lista existe para volver a contratar,
+                  y saber que el trabajo anterior quedó "Finalizado" no ayuda a
+                  decidirlo —todos lo están—. La naturaleza de la relación ya la
+                  dice la línea de abajo (cita, proyecto, contacto o cuántos
+                  trabajos juntos). */}
+              <h3 className="flex min-w-0 items-center text-sm font-extrabold text-[#162543]">
+                <ResponsiveVerifiedName name={item.name} verified={item.isVerified} verifiedLabel={t("verified")} />
+              </h3>
               <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs font-semibold text-[#6b7280]">
                 {item.categoryLabel && (
                   <span className="inline-flex items-center gap-1">
@@ -136,7 +124,7 @@ export function ClientConnections() {
                     <Repeat2 className="h-3.5 w-3.5 shrink-0 text-[#009FD9]" />
                     {t("timesTogether", { count: item.count })}
                   </span>
-                ) : !(item.source === "contact" && item.status === "contact") ? (
+                ) : (
                   <span className="inline-flex items-center gap-1">
                     <SourceIcon source={item.source} />
                     {item.source === "booking"
@@ -145,7 +133,7 @@ export function ClientConnections() {
                         ? t("source.project")
                         : t("source.contact")}
                   </span>
-                ) : null}
+                )}
               </div>
               {item.title && <p className="mt-1 truncate text-xs text-[#6b7280]">{item.title}</p>}
               {item.lastInteractionAt && <p className="mt-1 text-[11px] font-medium text-[#68778d]">{formatRelativeOrDate(item.lastInteractionAt, locale)}</p>}
