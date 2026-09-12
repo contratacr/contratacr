@@ -28,7 +28,7 @@ const JOBS_MANAGER_COPY = {
     jobStates: { published: "Publicado", paused: "Pausado", closed: "Cerrado", draft: "Borrador" },
     back: "Volver al panel", title: "Mis empleos", subtitle: "Vacantes para cuando necesitas contratar.", publish: "Publicar empleo",
     application: "postulación", applications: "postulaciones", view: "Ver empleo", edit: "Editar", more: "Más opciones",
-    pause: "Pausar", close: "Cerrar vacante", applicationsTitle: "Postulaciones", candidate: "candidato", candidates: "candidatos",
+    pause: "Pausar", close: "Cerrar vacante", applicationsTitle: "Postulaciones",
     received: "Postulación recibida", message: "Mensaje", viewCv: "Ver CV", viewPortfolio: "Ver portafolio",
     noApplications: "Aún no hay postulaciones.", emptyTitle: "Todavía no has publicado empleos", emptyBody: "Publica tu primera oportunidad laboral.",
     publishTitle: "Publicar empleo", publishSubtitle: "Describe la oportunidad con información clara y verificable.",
@@ -39,7 +39,7 @@ const JOBS_MANAGER_COPY = {
     jobStates: { published: "Published", paused: "Paused", closed: "Closed", draft: "Draft" },
     back: "Back to dashboard", title: "My jobs", subtitle: "Openings for when you need to hire.", publish: "Post job",
     application: "application", applications: "applications", view: "View job", edit: "Edit", more: "More options",
-    pause: "Pause", close: "Close opening", applicationsTitle: "Applications", candidate: "candidate", candidates: "candidates",
+    pause: "Pause", close: "Close opening", applicationsTitle: "Applications",
     received: "Application received", message: "Message", viewCv: "View resume", viewPortfolio: "View portfolio",
     noApplications: "There are no applications yet.", emptyTitle: "You have not posted any jobs yet", emptyBody: "Post your first job opportunity.",
     publishTitle: "Post a job", publishSubtitle: "Describe the opportunity with clear, verifiable information.",
@@ -196,10 +196,9 @@ export function JobsManager({ initialJobs, embedded = false, backHref = "/dashbo
                         )}
                       </div>
                     </div>
-                    <div className="mb-3 flex items-center justify-between gap-3">
-                      <h3 className="text-sm font-bold">{copy.applicationsTitle}</h3>
-                      {job.applications.length > 0 && <span className="text-xs font-semibold text-[#708096]">{job.applications.length} {job.applications.length === 1 ? copy.candidate : copy.candidates}</span>}
-                    </div>
+                    {/* Sin repetir el número: la cabecera de la tarjeta ya dice
+                        "1 postulación" y la lista de abajo son las postulaciones. */}
+                    <h3 className="mb-3 text-sm font-bold">{copy.applicationsTitle}</h3>
                     <div className={cn(job.applications.length > 0 && "overflow-hidden rounded-xl border border-[#e5e7eb] bg-white divide-y divide-[#e6edf3]")}>
                       {job.applications.map((application) => (
                         <section key={application.id} className="px-4 py-4 sm:px-5">
