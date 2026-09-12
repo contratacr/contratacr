@@ -87,6 +87,15 @@ async function fetchWithSessionRetry(input: string, init?: RequestInit) {
   return fetch(input, init);
 }
 
+// El compositor crece con el texto hasta un tope, como el de Mensajes.
+function ajustarAlto(textarea: HTMLTextAreaElement | null) {
+  if (!textarea) return;
+  textarea.style.height = "auto";
+  const alto = Math.min(textarea.scrollHeight, 144);
+  textarea.style.height = `${alto}px`;
+  textarea.style.overflowY = textarea.scrollHeight > 144 ? "auto" : "hidden";
+}
+
 export function SupportTickets({
   onUnreadChange,
   initialTicketId,
@@ -376,7 +385,7 @@ export function SupportTickets({
   if (openId) {
     return (
       <>
-      <div className="ccr-support-thread flex min-h-0 flex-1 flex-col">
+      <div className="ccr-support-thread flex min-h-0 flex-1 flex-col lg:h-[min(720px,calc(100dvh-260px))]">
         {threadLoading || !ticket ? (
           <div className="grid min-h-0 flex-1 place-items-center px-4">
             <PanelListSkeleton rows={2} hasData={!!ticket} />
@@ -440,12 +449,24 @@ export function SupportTickets({
               <div className="flex items-end gap-2.5">
                 <textarea
                   value={reply}
-                  onChange={(e) => setReply(limitText(e.target.value, LONG_TEXT_MAX_LENGTH))}
+                  onChange={(e) => {
+                    setReply(limitText(e.target.value, LONG_TEXT_MAX_LENGTH));
+                    ajustarAlto(e.currentTarget);
+                  }}
+                  onKeyDown={(e) => {
+                    // Mismo trato que en Mensajes: Enter manda, Mayús+Enter salta
+                    // de línea. Antes Enter solo abría un renglón y había que ir
+                    // al botón, que es lo contrario a lo que hace cualquier chat.
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      if (!sending && reply.trim()) void sendReply();
+                    }
+                  }}
                   onFocus={() => window.requestAnimationFrame(() => keepLatestMessageVisible())}
                   maxLength={LONG_TEXT_MAX_LENGTH}
                   rows={1}
                   placeholder={ticket.status === "resolved" ? t("reopenPlaceholder") : t("messagePlaceholder")}
-                  className="min-h-11 min-w-0 flex-1 resize-none rounded-[22px] border border-[#d8e5ee] bg-white px-4 py-2.5 text-[15px] leading-6 outline-none transition focus:border-[#009FD9] focus:ring-2 focus:ring-[#009FD9]/10"
+                  className="max-h-36 min-h-11 min-w-0 flex-1 resize-none overflow-hidden rounded-[22px] border border-[#d8e5ee] bg-white px-4 py-2.5 text-[15px] leading-6 outline-none transition focus:border-[#009FD9] focus:ring-2 focus:ring-[#009FD9]/10"
                 />
                 <button onClick={sendReply} disabled={sending || !reply.trim()} className="grid h-11 w-11 place-items-center rounded-full bg-[#009FD9] text-white shadow-[0_8px_18px_-12px_rgba(0,159,217,0.85)] transition hover:bg-[#008fca] disabled:bg-[#cfdde5] disabled:shadow-none" aria-label={sending ? t("sending") : t("send")}>
                   {sending ? <Clock3 className="h-5 w-5 animate-spin" /> : <SendHorizontal className="h-[22px] w-[22px]" />}
