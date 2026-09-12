@@ -612,6 +612,9 @@ function offerSaveSnapshot(offer: ProfessionalOffer, locale: MarketplaceLocale) 
     professional_name: offer.professional_name,
     professional_slug: offer.professional_slug,
     image_url: offer.image_urls[0] ?? null,
+    // Respaldo cuando la oferta no trae foto: la cara del profesional dice
+    // bastante más que un icono de etiqueta.
+    professional_avatar_url: offer.professional_avatar_url ?? null,
     service_label: offer.service_label,
     offer_type: offerTypeLabel(offer.offer_type, locale),
     location_label: offer.location_label,

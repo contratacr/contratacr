@@ -11,6 +11,7 @@ import { StatusFilterTabs } from "@/components/dashboard/status-filter-tabs";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { formatServicePrice } from "@/lib/pricing";
+import { cldThumb } from "@/lib/cloudinary";
 import { getCategoryLabel } from "@/lib/data/categories";
 import { applyPendingSavedPro, getSavedPros, syncSavedPros, unsaveProRemote, type SavedPro } from "./save-button";
 import { openInNewTabOnDesktop } from "@/lib/desktop-new-tab";
@@ -115,7 +116,7 @@ function SavedGenericCard({ item, onRemove }: { item: SavedItem; onRemove: (item
   const isJob = item.item_type === "job";
   const title = text(snapshot.title, isJob ? t("favoriteJob") : t("favoriteOffer"));
   const owner = text(snapshot.employer_name ?? snapshot.professional_name, "ContrataCR");
-  const image = text(snapshot.image_url ?? snapshot.employer_avatar_url);
+  const image = text(snapshot.image_url ?? snapshot.employer_avatar_url ?? snapshot.professional_avatar_url);
   const meta = isJob
     ? [text(snapshot.location_label, "Costa Rica"), text(snapshot.salary)].filter(Boolean).join(" · ")
     : [text(snapshot.service_label), text(snapshot.price)].filter(Boolean).join(" · ");
@@ -125,7 +126,7 @@ function SavedGenericCard({ item, onRemove }: { item: SavedItem; onRemove: (item
   return (
     <div className="grid grid-cols-[56px_minmax(0,1fr)] gap-3 p-4 transition-colors hover:bg-[#fafafa] sm:flex sm:items-center">
       <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-[#eef7fb] text-[#009FD9]">
-        {image ? <ProgressiveImage src={image} alt={title} fit="cover" wrapperClassName="h-full w-full" /> : <Icon className="h-5 w-5" />}
+        {image ? <ProgressiveImage src={cldThumb(image, 112)} alt={title} fit="cover" wrapperClassName="h-full w-full" /> : <Icon className="h-5 w-5" />}
       </div>
       {/* Sin la etiqueta EMPLEO / OFERTA: para llegar aquí hay que estar parado
           en la pestaña que ya lo dice, así que solo gastaba un renglón. */}
