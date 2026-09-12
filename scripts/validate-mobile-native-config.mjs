@@ -161,12 +161,12 @@ requireMatch("Mobile regression includes native shell smoke", mobilePlaywright, 
 requireMatch(
   "Spanish native bottom navigation smoke",
   mobileShellSpec,
-  /navItems:\s*\["Buscar",\s*"Ofertas",\s*"Asistente",\s*"Empleos",\s*"Panel"\]/,
+  /navItems:\s*\["Buscar",\s*"Ofertas",\s*"Cotizaciones",\s*"Empleos",\s*"Panel"\]/,
 );
 requireMatch(
   "English native bottom navigation smoke",
   mobileShellSpec,
-  /navItems:\s*\["Search",\s*"Deals",\s*"Assistant",\s*"Jobs",\s*"Panel"\]/,
+  /navItems:\s*\["Search",\s*"Deals",\s*"Quotes",\s*"Jobs",\s*"Panel"\]/,
 );
 requireMatch("Native assistant opens direct chat smoke", mobileShellSpec, /\/api\/direct-chat[\s\S]*actionKind:\s*"message"[\s\S]*\/mensajes\\\\\?conversation=/);
 requireMatch("Mobile-only Playwright workflow", mobileWorkflow, /npm run test:e2e:mobile/);
