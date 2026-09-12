@@ -6,7 +6,7 @@ import { cargarCotizaciones } from "@/lib/quotes-store";
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
-import { CalendarDays, FolderOpen, ClipboardList, Plus, CalendarClock, Wrench, Users, FileText, CheckCircle2, Star } from "lucide-react";
+import { CalendarDays, FolderOpen, ClipboardList, Plus, CalendarClock, CalendarCheck, Wrench, Users, FileText, CheckCircle2, Star } from "lucide-react";
 import { DirectChatLauncher } from "@/components/professionals/direct-chat-launcher";
 import { CardActionsMenu, type CardAction } from "@/components/dashboard/card-actions-menu";
 import { formatBookingWhen, ordenarCitas } from "@/lib/booking-when";
@@ -672,7 +672,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                           className={cn("group w-full cursor-pointer text-left p-4 sm:p-5 flex items-start gap-3.5 hover:bg-[#f9fbfd] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9]", expandedBooking === b.id ? "rounded-t-2xl bg-[#fbfdff]" : "rounded-2xl")}
                         >
                           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#ccecf8] ccr-caja-icono-plana">
-                            <CalendarClock className="h-[18px] w-[18px]" />
+                            <CalendarCheck className="h-[18px] w-[18px]" />
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-start justify-between gap-2">
@@ -957,7 +957,9 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                             hacía que dos tarjetas de la misma lista no se
                             reconocieran como lo mismo. El color sí marca el aviso. */}
                         <div className="relative shrink-0">
-                          <div className={cn("flex h-10 w-10 items-center justify-center rounded-xl border", isActive && replyCount > 0 ? "border-[#ccecf8] ccr-caja-icono" : "border-[#e5e7eb] bg-[#f4f7fa] text-[#68778d]")}>
+                          {/* Caja constante, igual que en las otras tres listas: el
+                              aviso lo da el punto, no un icono "mejorado". */}
+                          <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-[#ccecf8] ccr-caja-icono-plana">
                             <ClipboardList className="h-[18px] w-[18px]" />
                           </div>
                           {isActive && replyCount > 0 && (

@@ -105,7 +105,9 @@ const TAB_ICONS: Record<Tab, React.ReactNode> = {
   quotes: <ReceiptText className="h-4 w-4" />,
   verificacion: <ShieldCheck className="h-4 w-4" />,
   suscripcion: <CreditCard className="h-4 w-4" />,
-  sent_bookings: <CalendarClock className="h-4 w-4" />,
+  // Citas lleva el mismo icono en los dos paneles: es la misma sección vista
+  // desde cada lado, y los paneles nunca se muestran a la vez.
+  sent_bookings: <CalendarCheck className="h-4 w-4" />,
   sent_projects: <ClipboardList className="h-4 w-4" />,
   applications: <BriefcaseBusiness className="h-4 w-4" />,
   saved: <Bookmark className="h-4 w-4" />,
@@ -249,7 +251,7 @@ function guideIcon(id: string) {
     case "messages":
       return <MessageSquareMore className="h-4 w-4" />;
     case "clientRequests":
-      return <CalendarClock className="h-4 w-4" />;
+      return <CalendarCheck className="h-4 w-4" />;
     case "clientProjects":
       return <ClipboardList className="h-4 w-4" />;
     case "clientSaved":
