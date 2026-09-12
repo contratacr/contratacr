@@ -21,7 +21,7 @@ test.describe.configure({ mode: "serial" });
 test.describe("@seeded contextual direct chat", () => {
   test.skip(!canRunSeededRegression(), "Requires the isolated test Supabase seed.");
   let seed: RegressionSeedState;
-  const conversationIds: string[] = [];
+  const conversacionesDePrueba: string[] = [];
   const reportIds: string[] = [];
   let bookingId = "";
   let projectId = "";
@@ -37,14 +37,18 @@ test.describe("@seeded contextual direct chat", () => {
   // por pareja, las pruebas los reutilizan o los quitan, y el verificador de
   // la siembra (y otras suites) los esperan ahí.
   const CHATS_SEMBRADOS = ["b6000000-0000-4000-8000-000000000001", "b6000000-0000-4000-8000-000000000002"];
+  const AVISOS_SEMBRADOS = ["bf000000-0000-4000-8000-000000000001", "bf000000-0000-4000-8000-000000000002"];
   const conversacionesSembradas: Record<string, unknown>[] = [];
   const mensajesSembrados: Record<string, unknown>[] = [];
+  const avisosSembrados: Record<string, unknown>[] = [];
   async function fotografiarChatsSembrados() {
     const admin = regressionAdminClient();
     const { data: conversaciones } = await admin.from("direct_conversations").select("*").in("id", CHATS_SEMBRADOS);
     const { data: mensajes } = await admin.from("direct_messages").select("*").in("conversation_id", CHATS_SEMBRADOS);
+    const { data: avisos } = await admin.from("notifications").select("*").in("id", AVISOS_SEMBRADOS);
     conversacionesSembradas.push(...(conversaciones ?? []));
     mensajesSembrados.push(...(mensajes ?? []));
+    avisosSembrados.push(...(avisos ?? []));
   }
   async function parejaSinChat() {
     const admin = regressionAdminClient();
@@ -76,6 +80,9 @@ test.describe("@seeded contextual direct chat", () => {
   });
   test.afterAll(async () => {
     const admin = regressionAdminClient();
+    // Un chat sembrado que la API reutilizó (un chat por pareja) no es de la
+    // prueba: ni él, ni sus mensajes ni sus avisos se borran.
+    const conversationIds = conversacionesDePrueba.filter((id) => !CHATS_SEMBRADOS.includes(id));
     if (conversationIds.length) {
       await admin.from("direct_messages").delete().in("conversation_id", conversationIds);
       const disposableReferences = [
@@ -120,6 +127,17 @@ test.describe("@seeded contextual direct chat", () => {
         await admin.from("direct_messages").delete().in("conversation_id", intrusoIds);
         await admin.from("direct_conversations").delete().in("id", intrusoIds);
       }
+      // Lo que las pruebas escribieron DENTRO de un chat sembrado reutilizado
+      // (mensajes y avisos nuevos) también se retira antes de devolverlo.
+      const mensajeIdsSembrados = mensajesSembrados.map((row) => row.id as string);
+      let sobrantes = admin.from("direct_messages").delete().in("conversation_id", CHATS_SEMBRADOS);
+      if (mensajeIdsSembrados.length) sobrantes = sobrantes.not("id", "in", `(${mensajeIdsSembrados.join(",")})`);
+      await sobrantes;
+      const { data: avisosDelRun } = await admin.from("notifications").select("id,data").limit(5000);
+      const avisosSobrantes = (avisosDelRun ?? [])
+        .filter((row) => !AVISOS_SEMBRADOS.includes(row.id as string) && CHATS_SEMBRADOS.some((id) => JSON.stringify(row.data ?? {}).includes(id)))
+        .map((row) => row.id as string);
+      if (avisosSobrantes.length) await admin.from("notifications").delete().in("id", avisosSobrantes);
       const { error: conversationRestoreError } = await admin.from("direct_conversations").upsert(conversacionesSembradas, { onConflict: "id" });
       if (conversationRestoreError) throw conversationRestoreError;
       if (mensajesSembrados.length) {
@@ -127,13 +145,17 @@ test.describe("@seeded contextual direct chat", () => {
         if (messageRestoreError) throw messageRestoreError;
       }
     }
+    if (avisosSembrados.length) {
+      const { error: noticeRestoreError } = await admin.from("notifications").upsert(avisosSembrados, { onConflict: "id" });
+      if (noticeRestoreError) throw noticeRestoreError;
+    }
   });
 
   test("profile messages deduplicate and both participants can reply", async ({ page }) => {
     await loginAs(page, E2E_USERS.client.email, E2E_USERS.client.password);
     const first = await apiJson<ChatResponse>(page, "/api/direct-chat", { method: "POST", body: { professionalId: seed.professionalId, message: "E2E chat desde perfil" } });
     expect(first.status, JSON.stringify(first.body)).toBe(200); expect(first.body.conversationId).toBeTruthy();
-    conversationIds.push(first.body.conversationId!);
+    conversacionesDePrueba.push(first.body.conversationId!);
     const second = await apiJson<ChatResponse>(page, "/api/direct-chat", { method: "POST", body: { professionalId: seed.professionalId, message: "E2E segundo mensaje" } });
     expect(second.body.conversationId).toBe(first.body.conversationId);
     const admin = regressionAdminClient();
@@ -211,7 +233,7 @@ test.describe("@seeded contextual direct chat", () => {
     if (error) throw error; bookingId = booking.id;
     await loginAs(page, E2E_USERS.client.email, E2E_USERS.client.password);
     const created = await apiJson<ChatResponse>(page, "/api/direct-chat", { method: "POST", body: { bookingId, message: "E2E consulta de solicitud" } });
-    expect(created.status).toBe(200); conversationIds.push(created.body.conversationId!);
+    expect(created.status).toBe(200); conversacionesDePrueba.push(created.body.conversationId!);
     await gotoOK(page, `/es/mensajes?conversation=${created.body.conversationId}`);
     await expect(page.getByText("E2E reparación contextual").last()).toBeVisible();
     // La cabecera del hilo ya no lleva el botón «Ver cita» (a8c05f7a): el
@@ -258,7 +280,7 @@ test.describe("@seeded contextual direct chat", () => {
       body: { proposalId, openConversation: true, initialMessage: "E2E mensaje sobre propuesta" },
     });
     expect(created.status, JSON.stringify(created.body)).toBe(200);
-    conversationIds.push(created.body.conversationId!);
+    conversacionesDePrueba.push(created.body.conversationId!);
     const reopened = await apiJson<ChatResponse>(page, "/api/direct-chat", {
       method: "POST",
       body: { proposalId, openConversation: true, initialMessage: "E2E mensaje que no debe duplicarse" },
@@ -300,7 +322,7 @@ test.describe("@seeded contextual direct chat", () => {
       body: { professionalId: seed.videoProfessionalId, message: "E2E inicia tiempo real" },
     });
     expect(created.status).toBe(200);
-    conversationIds.push(created.body.conversationId!);
+    conversacionesDePrueba.push(created.body.conversationId!);
 
     await resetAuth(page);
     await loginAs(page, E2E_USERS.videoProfessional.email, E2E_USERS.videoProfessional.password);
