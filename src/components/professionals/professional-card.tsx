@@ -375,8 +375,8 @@ export function ProfessionalCard({ professional, className, highlightMetric = "r
               {/* Company/brand name (or personal name when there's no company). Wraps up to
                   never cut off on mobile; desktop keeps one-line cards tighter. Then
                   Verificado, then the personal name = first name + first surname. */}
-              <div className="flex min-w-0 items-start gap-2 pr-8 lg:items-baseline lg:pr-0">
-                <Link href={profileHref} className="relative z-10 min-w-0 flex-1">
+              <div className="flex min-w-0 flex-1 items-start gap-2 pr-8 lg:items-baseline lg:pr-0">
+                <Link href={profileHref} className="relative z-10 inline-block min-w-0 max-w-full">
                   <h3 title={businessName ? businessName : professional.fullName} className="min-w-0 font-bold text-[#111827] text-[15px] leading-[1.1] hover:text-[#009FD9] transition-colors">
                     <ResponsiveVerifiedName
                       name={displayName.primaryDesktop}

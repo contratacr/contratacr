@@ -676,19 +676,22 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-start justify-between gap-2">
-                              {b.professionals?.slug ? (
-                                <Link
-                                  href={`/profesionales/${b.professionals.slug}?from=${encodeURIComponent("/dashboard/cliente")}`}
-                                  onClick={(e) => { e.stopPropagation(); openInNewTabOnDesktop(e); }}
-                                  className="min-w-0 flex-1 text-[15px] font-bold leading-snug text-[#162543] [overflow-wrap:anywhere] hover:text-[#009FD9] hover:underline sm:text-base"
-                                >
-                                  {b.professionals?.profiles?.full_name ?? t("professional")}
-                                </Link>
-                              ) : (
-                                <span className="min-w-0 flex-1 text-[15px] font-bold leading-snug text-[#162543] [overflow-wrap:anywhere] sm:text-base">
-                                  {b.professionals?.profiles?.full_name ?? t("professional")}
-                                </span>
-                              )}
+                              {/* El hijo flexible es el contenedor; el enlace se queda
+                                   del tamaño del nombre para que el subrayado y el área
+                                   de clic no lleguen hasta el borde de la tarjeta. */}
+                              <div className="min-w-0 flex-1 text-[15px] font-bold leading-snug text-[#162543] [overflow-wrap:anywhere] sm:text-base">
+                                {b.professionals?.slug ? (
+                                  <Link
+                                    href={`/profesionales/${b.professionals.slug}?from=${encodeURIComponent("/dashboard/cliente")}`}
+                                    onClick={(e) => { e.stopPropagation(); openInNewTabOnDesktop(e); }}
+                                    className="hover:text-[#009FD9] hover:underline"
+                                  >
+                                    {b.professionals?.profiles?.full_name ?? t("professional")}
+                                  </Link>
+                                ) : (
+                                  b.professionals?.profiles?.full_name ?? t("professional")
+                                )}
+                              </div>
                               {(b.status === "rescheduled" || (b.status === "cancelled" && effectiveBookingFilter !== "canceladas")) && (
                                 <Badge variant={STATUS_VARIANT[b.status]} className="shrink-0 text-[11px] font-semibold">{t(`bStatus.${b.status}`)}</Badge>
                               )}
