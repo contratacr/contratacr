@@ -2065,8 +2065,17 @@ export default function DashboardPage() {
           mobileSectionOpen && "px-0 pt-0 sm:px-0 lg:px-8 lg:pt-8",
           mobileFullScreenTab && "max-w-none px-0 pb-0 pt-0 sm:px-0 lg:max-w-7xl lg:px-8 lg:pb-8 lg:pt-8",
         )}>
-          {/* Header card - identity and status grouped in one surface on desktop. */}
-          <div className={cn("mx-auto mb-6 w-full max-w-[79.5rem]", mobileSectionOpen ? "hidden lg:block" : "block")}>
+          {/* Header card - identity and status grouped in one surface on desktop.
+              Its right edge must land where the row below ends. When the content
+              column is capped at 54rem, that row measures 260px (nav) + 1.25rem
+              (gap-5) + 54rem = 71.5rem; on chat/home nothing caps it, so the card
+              keeps the full width. */}
+          <div className={cn(
+            "mx-auto mb-6 w-full",
+            "max-w-[79.5rem]",
+            activeTab !== "chat" && activeTab !== "home" && "lg:max-w-[71.5rem]",
+            mobileSectionOpen ? "hidden lg:block" : "block",
+          )}>
             <div className="rounded-2xl border border-[#dfe8f0] bg-white px-5 py-5 shadow-sm sm:px-6 sm:py-5">
             <div className="flex min-w-0 flex-row flex-wrap items-center gap-x-4 gap-y-3 text-left sm:grid sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:items-center sm:gap-5">
               <div ref={headerPhotoMenuRef} className="relative h-[84px] w-[84px] shrink-0 sm:h-20 sm:w-20 sm:self-center">
