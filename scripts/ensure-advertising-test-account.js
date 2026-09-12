@@ -350,6 +350,12 @@ async function main() {
     sender_id: row.sender_id === SOURCE_PROFILE_ID ? user.id : COUNTERPART_PROFILE_ID,
   })).filter((row) => row.conversation_id));
 
+  // Los favoritos se clonan con el id derivado del original; si el original se
+  // volvió a guardar (otro id), el clon nuevo chocaba con el viejo por la pareja
+  // (cliente, profesional) o (usuario, ítem). Se vacían los de la cuenta y se
+  // vuelven a sembrar.
+  await must("old advertising saved professionals", admin.from("saved_professionals").delete().eq("client_id", user.id));
+  await must("old advertising saved items", admin.from("saved_items").delete().eq("user_id", user.id));
   await upsertRows("saved_professionals", sourceSavedProfessionals.map((row) => ({
     ...cloneBase("saved_professionals", row),
     client_id: user.id,
