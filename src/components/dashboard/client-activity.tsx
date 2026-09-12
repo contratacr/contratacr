@@ -15,7 +15,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Link } from "@/i18n/navigation";
+import { Link, useRouter } from "@/i18n/navigation";
 import { openInNewTabOnDesktop } from "@/lib/desktop-new-tab";
 import { getCategoryLabel } from "@/lib/data/categories";
 import { computeAge } from "@/lib/age";
@@ -164,6 +164,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
   // todavía no han pasado, así que "en curso" no las describe.
   const etapaSolicitudLabel = (id: string) => tEtapas(id === "en_curso" ? "solicitudes_activas" : id);
   const locale = useLocale();
+  const router = useRouter();
   const searchParams = useSearchParams();
   const dateLocale = locale === "en" ? "en-US" : "es-CR";
   const { dialogNode, showMessage } = useAppDialog();
@@ -804,14 +805,22 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                               // Terminada o caída, lo que el cliente puede querer es repetir con la
                               // misma persona. Antes la tarjeta no ofrecía ninguna salida hacia eso.
                               const puedeRecontratar = (b.status === "completed" || b.status === "cancelled") && b.professionals?.slug;
-                              const rebookAction = puedeRecontratar ? (
-                                <Link
-                                  href={`/profesionales/${b.professionals?.slug}?from=${encodeURIComponent("/dashboard/cliente")}`} onClick={openInNewTabOnDesktop}
-                                  className={`${actionButtonClass} inline-flex items-center justify-center border border-[#d7e1ea] bg-white text-[#162543] hover:border-[#b9c8d6] hover:bg-[#f6f9fb]`}
-                                >
-                                  {t("bookAgain")}
-                                </Link>
-                              ) : null;
+                              // Va al mismo perfil que el nombre de la tarjeta, que ya es
+                              // un enlace: como botón repetía un camino que ya existe y le
+                              // robaba sitio a la reseña. Vive en el menú, con su nombre.
+                              if (puedeRecontratar) {
+                                const perfilHref = `/profesionales/${b.professionals?.slug}?from=${encodeURIComponent("/dashboard/cliente")}`;
+                                menu.push({
+                                  label: t("bookAgain"),
+                                  onClick: () => {
+                                    if (window.matchMedia("(min-width: 1024px)").matches) {
+                                      window.open(`/${locale}${perfilHref}`, "_blank", "noopener,noreferrer");
+                                      return;
+                                    }
+                                    router.push(perfilHref);
+                                  },
+                                });
+                              }
                               // En una cita terminada lo que toca es la reseña, no escribirle:
                               // esa es la acción azul mientras no haya reseña. Escribir y volver
                               // a contratar bajan a la segunda fila.
@@ -824,7 +833,6 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                               const candidatas = [
                                 messageAction,
                                 terminada && rev ? reviewAction : null,
-                                rebookAction,
                               ].filter(Boolean);
                               const principal = primary ?? resenaPrimero ?? candidatas.shift() ?? null;
                               // Una sola fila alineada a la derecha, con la acción que manda
