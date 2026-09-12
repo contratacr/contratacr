@@ -9,7 +9,7 @@ test.describe("@smoke auth and support", () => {
     await gotoOK(page, "/es/login");
     await openLoginForm(page);
 
-    await expect(page.getByRole("heading", { name: /Bienvenido de vuelta/i })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /Ingresa a tu cuenta|Bienvenido de vuelta/i })).toBeVisible();
     await expect(page.getByLabel(/Correo/i).first()).toBeVisible();
     await expect(page.getByLabel(/Contras/i).first()).toBeVisible();
     await expect(page.getByRole("button", { name: /Ingresar/i }).last()).toBeVisible();

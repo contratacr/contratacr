@@ -10,7 +10,7 @@ import {
   HelpCircle, ListChecks, Lightbulb, Headset, Globe2, Shield, Mail, ClipboardList, Clock, Bookmark,
 } from "lucide-react";
 import { Link, useRouter, usePathname } from "@/i18n/navigation";
-import { readRecentVisits, leerBusquedasRecientes, guardarBusquedaReciente, olvidarBusquedaReciente, olvidarBusquedasRecientes, removeRecentVisit, type RecentVisit } from "@/lib/recent-visits";
+import { readRecentVisits, clearRecentVisits, leerBusquedasRecientesConFecha, guardarBusquedaReciente, olvidarBusquedaReciente, olvidarBusquedasRecientes, removeRecentVisit, type BusquedaReciente, type RecentVisit } from "@/lib/recent-visits";
 import { useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
@@ -126,10 +126,11 @@ export function useSwitchLang() {
     const currentState =
       typeof window === "undefined" ? "" : `${window.location.search}${window.location.hash}`;
     if (typeof window !== "undefined") {
-      localStorage.setItem("contratacr_lang", lang);
-      // Persist as the NEXT_LOCALE cookie so the choice survives a fresh visit
-      // to an unprefixed URL (the proxy in src/proxy.ts reads it). 1-year, site-wide.
-      document.cookie = `NEXT_LOCALE=${lang}; path=/; max-age=31536000; samesite=lax`;
+      // Cookie de SESIÓN (sin max-age): el idioma elegido vale para esta visita
+      // —lo lee el middleware para las direcciones sin prefijo— y se borra al
+      // cerrar la app o el navegador, así que la próxima entrada vuelve a
+      // español. Tampoco se guarda en localStorage, que sobrevive al cierre.
+      document.cookie = `NEXT_LOCALE=${lang}; path=/; samesite=lax`;
       document.documentElement.setAttribute("data-locale-switch", "1");
       window.setTimeout(() => document.documentElement.removeAttribute("data-locale-switch"), 2500);
     }
@@ -831,7 +832,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   const [searchActiveIdx, setSearchActiveIdx] = useState(-1);
   const [searchFocused, setSearchFocused] = useState(false);
   const [nativeSearchOpen, setNativeSearchOpen] = useState(false);
-  const [busquedasRecientes, setBusquedasRecientes] = useState<string[]>([]);
+  const [busquedasRecientes, setBusquedasRecientes] = useState<BusquedaReciente[]>([]);
   const [visitasRecientes, setVisitasRecientes] = useState<RecentVisit[]>([]);
   const [currentLocationSuggestions, setCurrentLocationSuggestions] = useState<LocationSuggestion[] | null>(null);
   const [navCurrentCoords, setNavCurrentCoords] = useState<{ latitude: number; longitude: number } | null>(contextoInicial?.coords ?? null);
@@ -1479,7 +1480,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
     setNavLocOpen(false);
     if (svc) {
       guardarBusquedaReciente(svc);
-      setBusquedasRecientes(leerBusquedasRecientes());
+      setBusquedasRecientes(leerBusquedasRecientesConFecha());
     }
     trackMetaEvent("Search", {
       content_type: "professional_service",
@@ -1576,7 +1577,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
 
   useEffect(() => {
     if (!nativeSearchOpen) return;
-    setBusquedasRecientes(leerBusquedasRecientes());
+    setBusquedasRecientes(leerBusquedasRecientesConFecha());
     setVisitasRecientes(readRecentVisits("profesionales"));
   }, [nativeSearchOpen]);
 
@@ -1679,7 +1680,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
       if (searchQuery.trim() && !navLocation.trim()) {
         // El salto a la ubicación no pierde lo buscado: queda en recientes ya.
         guardarBusquedaReciente(searchQuery.trim());
-        setBusquedasRecientes(leerBusquedasRecientes());
+        setBusquedasRecientes(leerBusquedasRecientesConFecha());
         (nativeSearchOpen ? nativeLocationInputRef.current : navLocationInputRef.current)?.focus();
         setNavLocOpen(false);
         return;
@@ -1767,7 +1768,10 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                     <Link href="/" aria-label="ContrataCR inicio" onClick={irAlInicio} className="-ml-1 shrink-0">
                       <ContrataCRMark className="h-7 w-7" />
                     </Link>
-                    <h1 data-ccr-section-title="" className="mr-auto min-w-0 truncate pl-1.5 text-[17px] font-extrabold text-[#162543]">{sectionTitle}</h1>
+                    {/* <p>, no <h1>: la página ya tiene su único h1 (el nombre del
+                        profesional, el título de la sección…). Este rótulo es de la
+                        barra, y como h1 quedaba un h1 oculto por delante del real. */}
+                    <p data-ccr-section-title="" className="mr-auto min-w-0 truncate pl-1.5 text-[17px] font-extrabold text-[#162543]">{sectionTitle}</p>
                   </>
                 ) : sectionActive ? (
                   <>
@@ -1780,7 +1784,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                     >
                       <ArrowLeft className="h-5 w-5" />
                     </button>
-                    <h1 data-ccr-section-title="" className="mr-auto min-w-0 truncate pr-2 text-[17px] font-extrabold text-[#162543]">{sectionTitle}</h1>
+                    <p data-ccr-section-title="" className="mr-auto min-w-0 truncate pr-2 text-[17px] font-extrabold text-[#162543]">{sectionTitle}</p>
                     {!sectionTitle && <span className="mr-auto" aria-hidden />}
                   </>
                 ) : (
@@ -1973,10 +1977,6 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                     </button>
                     {openMenu === "explorar" && (
                       <div className="absolute left-0 top-full z-50 mt-1.5 min-w-[220px] overflow-hidden rounded-2xl border border-gray-100 bg-white p-3 shadow-[0_24px_70px_-22px_rgba(15,23,42,0.45)]">
-                        <Link href="/buscar" onClick={() => setOpenMenu(null)} className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-[#1A2744] transition-colors hover:bg-gray-50 hover:text-[#009FD9]">
-                          <Search className="h-5 w-5 shrink-0" />
-                          {locale === "en" ? "Find professionals" : "Buscar profesionales"}
-                        </Link>
                         {EMPLEOS_VISIBLE && (
                           <Link href="/empleos" onClick={() => setOpenMenu(null)} className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-[#1A2744] transition-colors hover:bg-gray-50 hover:text-[#009FD9]">
                             <Briefcase className="h-5 w-5 shrink-0" />
@@ -2392,96 +2392,97 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                   </div>
                 ) : (
                 <div id="native-location-suggestions" className="space-y-1" role="listbox" aria-label={locale === "en" ? "Suggested locations" : "Ubicaciones sugeridas"}>
+                  {/* UNA sola lista de recientes: las búsquedas y los perfiles
+                      abiertos, intercalados por fecha. Dos apartados («Recientes» y
+                      «Vistos recientemente») partían la pantalla en dos y se veía mal. */}
                   {!searchQuery.trim() && (busquedasRecientes.length > 0 || visitasRecientes.length > 0) && (
                     <div className="mb-2 space-y-1 border-b border-[#eef2f6] pb-3">
-                      {busquedasRecientes.length > 0 && (
-                        <>
-                          <div className="flex items-center justify-between px-2 pb-1 pt-1">
-                            <p className="text-[12px] font-extrabold uppercase tracking-[0.12em] text-[#7a8797]">
-                              {t("recent")}
-                            </p>
+                      <div className="flex items-center justify-between px-2 pb-1 pt-1">
+                        <p className="text-[12px] font-extrabold uppercase tracking-[0.12em] text-[#7a8797]">
+                          {t("recent")}
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            olvidarBusquedasRecientes();
+                            clearRecentVisits("profesionales");
+                            setBusquedasRecientes([]);
+                            setVisitasRecientes([]);
+                          }}
+                          className="text-[12px] font-bold text-[#009FD9]"
+                        >
+                          {t("recentClear")}
+                        </button>
+                      </div>
+                      {[
+                        ...busquedasRecientes.map((busqueda) => ({ clave: `b:${busqueda.termino}`, at: busqueda.at, busqueda, visita: null as RecentVisit | null })),
+                        ...visitasRecientes.map((visita) => ({ clave: `v:${visita.id}`, at: visita.at ?? 0, busqueda: null as BusquedaReciente | null, visita })),
+                      ]
+                        .sort((primero, segundo) => segundo.at - primero.at)
+                        .slice(0, 8)
+                        .map((reciente) => reciente.busqueda ? (
+                          <div key={reciente.clave} className="flex w-full items-center rounded-xl active:bg-[#eef9fd]">
                             <button
                               type="button"
                               onClick={() => {
-                                olvidarBusquedasRecientes();
-                                setBusquedasRecientes([]);
+                                setSearchQuery(reciente.busqueda!.termino);
+                                setSearchCategoryId(null);
+                                window.setTimeout(() => runCompactSearch(), 0);
                               }}
-                              className="text-[12px] font-bold text-[#009FD9]"
+                              className="flex min-w-0 flex-1 items-center gap-4 rounded-xl px-2 py-3 text-left"
                             >
-                              {t("recentClear")}
+                              <Clock className="h-5 w-5 shrink-0 text-[#8b95a5]" />
+                              <span className="min-w-0 flex-1 truncate text-[16px] font-bold text-[#1A2744]">{reciente.busqueda.termino}</span>
+                            </button>
+                            <button
+                              type="button"
+                              aria-label={locale === "en" ? `Remove ${reciente.busqueda.termino}` : `Quitar ${reciente.busqueda.termino}`}
+                              onClick={() => {
+                                const termino = reciente.busqueda!.termino;
+                                olvidarBusquedaReciente(termino);
+                                setBusquedasRecientes((previas) => previas.filter((item) => item.termino !== termino));
+                              }}
+                              className="grid h-11 w-11 shrink-0 place-items-center rounded-xl text-[#8b95a5] active:bg-[#e3f2fa]"
+                            >
+                              <X className="h-4 w-4" />
                             </button>
                           </div>
-                          {busquedasRecientes.map((termino) => (
-                            <div key={termino} className="flex w-full items-center rounded-xl active:bg-[#eef9fd]">
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setSearchQuery(termino);
-                                  setSearchCategoryId(null);
-                                  window.setTimeout(() => runCompactSearch(), 0);
-                                }}
-                                className="flex min-w-0 flex-1 items-center gap-4 rounded-xl px-2 py-3 text-left"
-                              >
-                                <Clock className="h-5 w-5 shrink-0 text-[#8b95a5]" />
-                                <span className="min-w-0 flex-1 truncate text-[16px] font-bold text-[#1A2744]">{termino}</span>
-                              </button>
-                              <button
-                                type="button"
-                                aria-label={locale === "en" ? `Remove ${termino}` : `Quitar ${termino}`}
-                                onClick={() => {
-                                  olvidarBusquedaReciente(termino);
-                                  setBusquedasRecientes((previas) => previas.filter((item) => item !== termino));
-                                }}
-                                className="grid h-11 w-11 shrink-0 place-items-center rounded-xl text-[#8b95a5] active:bg-[#e3f2fa]"
-                              >
-                                <X className="h-4 w-4" />
-                              </button>
-                            </div>
-                          ))}
-                        </>
-                      )}
-                      {visitasRecientes.length > 0 && (
-                        <>
-                          <p className="px-2 pb-1 pt-2 text-[12px] font-extrabold uppercase tracking-[0.12em] text-[#7a8797]">
-                            {t("recentlyViewed")}
-                          </p>
-                          {visitasRecientes.map((visita) => (
-                            <div key={visita.id} className="flex w-full items-center rounded-xl active:bg-[#eef9fd]">
-                              <Link
-                                href={visita.href}
-                                onClick={closeNativeSearch}
-                                className="flex min-w-0 flex-1 items-center gap-3 rounded-xl px-2 py-2.5 text-left"
-                              >
-                              {visita.imagen ? (
+                        ) : (
+                          <div key={reciente.clave} className="flex w-full items-center rounded-xl active:bg-[#eef9fd]">
+                            <Link
+                              href={reciente.visita!.href}
+                              onClick={closeNativeSearch}
+                              className="flex min-w-0 flex-1 items-center gap-3 rounded-xl px-2 py-2.5 text-left"
+                            >
+                              {reciente.visita!.imagen ? (
                                 // eslint-disable-next-line @next/next/no-img-element -- miniatura fija; el optimizador no actúa en Cloudflare
-                                <img src={visita.imagen} alt="" className="h-9 w-9 shrink-0 rounded-full object-cover" />
+                                <img src={reciente.visita!.imagen} alt="" className="h-9 w-9 shrink-0 rounded-full object-cover" />
                               ) : (
                                 <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-[12px] font-extrabold ccr-caja-icono-plana">
-                                  {visita.iniciales ?? visita.titulo.slice(0, 2).toUpperCase()}
+                                  {reciente.visita!.iniciales ?? reciente.visita!.titulo.slice(0, 2).toUpperCase()}
                                 </span>
                               )}
                               <span className="min-w-0 flex-1">
-                                <span className="block truncate text-[15px] font-bold text-[#1A2744]">{visita.titulo}</span>
-                                {visita.subtitulo && (
-                                  <span className="block truncate text-[12px] font-semibold text-[#6b7280]">{visita.subtitulo}</span>
+                                <span className="block truncate text-[15px] font-bold text-[#1A2744]">{reciente.visita!.titulo}</span>
+                                {reciente.visita!.subtitulo && (
+                                  <span className="block truncate text-[12px] font-semibold text-[#6b7280]">{reciente.visita!.subtitulo}</span>
                                 )}
                               </span>
-                              </Link>
-                              <button
-                                type="button"
-                                aria-label={locale === "en" ? `Remove ${visita.titulo}` : `Quitar ${visita.titulo}`}
-                                onClick={() => {
-                                  removeRecentVisit("profesionales", visita.id);
-                                  setVisitasRecientes((previas) => previas.filter((item) => item.id !== visita.id));
-                                }}
-                                className="grid h-11 w-11 shrink-0 place-items-center rounded-xl text-[#8b95a5] active:bg-[#e3f2fa]"
-                              >
-                                <X className="h-4 w-4" />
-                              </button>
-                            </div>
-                          ))}
-                        </>
-                      )}
+                            </Link>
+                            <button
+                              type="button"
+                              aria-label={locale === "en" ? `Remove ${reciente.visita!.titulo}` : `Quitar ${reciente.visita!.titulo}`}
+                              onClick={() => {
+                                const id = reciente.visita!.id;
+                                removeRecentVisit("profesionales", id);
+                                setVisitasRecientes((previas) => previas.filter((item) => item.id !== id));
+                              }}
+                              className="grid h-11 w-11 shrink-0 place-items-center rounded-xl text-[#8b95a5] active:bg-[#e3f2fa]"
+                            >
+                              <X className="h-4 w-4" />
+                            </button>
+                          </div>
+                        ))}
                     </div>
                   )}
                   <button
@@ -2575,16 +2576,9 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                         <span className={mobileDrawerTextClass}>{t("projects")}</span>
                       </Link>
                     )}
-                    {isPro && (
-                      <Link href={`${panelHref}?mode=offer&tab=quotes`} onClick={() => setMobileOpen(false)} className={mobileDrawerItemClass}>
-                        <DrawerIcon><ReceiptText /></DrawerIcon>
-                        <span className={mobileDrawerTextClass}>{t("quotes")}</span>
-                      </Link>
-                    )}
-                    <Link href={savedHref} onClick={() => setMobileOpen(false)} className={claseCajon(savedHref)}>
-                      <DrawerIcon><Bookmark /></DrawerIcon>
-                      <span className={mobileDrawerTextClass}>{t("favorites")}</span>
-                    </Link>
+                    {/* Sin Cotizaciones ni Mis favoritos (viven a un toque dentro de
+                        Mi panel) ni «Buscar profesionales»: a buscar se entra por
+                        Servicios o por la barra de abajo; el cajón no aguanta más. */}
                     {/* En la app, quien tiene cuenta profesional lleva Cotizaciones
                         fija en la barra de abajo, así que el Asistente vive aquí.
                         Las cuentas de solo cliente lo tienen en la barra. */}

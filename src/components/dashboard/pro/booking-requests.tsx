@@ -483,19 +483,23 @@ export function BookingRequests() {
                 // de largo para dos palabras: de 640 px en adelante van en una
                 // fila, cada uno del ancho de su texto.
                 <div className="flex flex-col gap-2 border-t border-[#eef2f6] pt-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">
-                  {porCoordinar && (
-                    <Button size="sm" className="h-11 w-full rounded-full text-[13px] font-bold sm:w-auto sm:px-5" loading={cerrando === booking.id} disabled={!!cerrando} onClick={() => void marcarAtendida(booking.id)}>
-                      {t("markDone")}
-                    </Button>
-                  )}
-                  {/* La cotización cruza la tarjeta de lado a lado: es el documento
-                      de esa cita, no un botón más de la fila. Debajo, escribir y
-                      el menú, que sí comparten renglón. */}
-                  <div className="w-full sm:w-auto"><QuoteBlock asButton bookingId={booking.id} role="pro" canCreate={isActive || booking.status === "awaiting_confirmation"} defaultTitle={serviceDescription} clientName={clientName} /></div>
-                  <div className="flex items-start gap-2">
-                  <div className="flex min-w-0 flex-1 items-center sm:flex-none">
+                  {/* Tope de la app: como mucho DOS botones a la vista más el menú.
+                      Con "Marcar como terminada" en la fila eran tres y el ⋮, o sea
+                      cuatro cosas que tocar. Bajó al menú por ser la única de las
+                      tres que existe solo mientras la cita está por coordinar: las
+                      otras dos están siempre. */}
+                  {/* Los dos botones y el menú comparten SIEMPRE un renglón: la
+                      cotización cruzaba la tarjeta sola y dejaba la fila partida en
+                      dos. `sm:contents` disuelve esta envoltura de 640 px en
+                      adelante, donde todo vuelve a alinearse a la derecha. */}
+                  <div className="flex items-center justify-end gap-2 sm:contents">
+                  {/* empty:hidden — sin cotización que mostrar, QuoteBlock no pinta
+                      nada pero su envoltura seguía ocupando media fila, y el botón
+                      principal quedaba encogido con un hueco a la izquierda. */}
+                  <div className="min-w-0 flex-1 empty:hidden sm:flex-none"><QuoteBlock asButton bookingId={booking.id} role="pro" canCreate={isActive || booking.status === "awaiting_confirmation"} defaultTitle={serviceDescription} clientName={clientName} /></div>
+                  <div className="flex min-w-0 flex-1 items-center empty:hidden sm:flex-none">
                     {canMessage && (
-                      <DirectChatLauncher bookingId={booking.id} professionalName={clientName} contextTitle={serviceDescription} buttonLabel={t("contact")} tone={porCoordinar ? "outline" : "primary"} className="h-11 w-full whitespace-nowrap rounded-full px-4 text-[13px] font-bold sm:w-auto sm:px-5" />
+                      <DirectChatLauncher bookingId={booking.id} professionalName={clientName} contextTitle={serviceDescription} buttonLabel={t("contact")} tone="primary" className="h-11 w-full whitespace-nowrap rounded-full px-4 text-[13px] font-bold max-[389px]:px-3 max-[389px]:[&>svg]:hidden sm:w-auto sm:px-5" />
                     )}
                   </div>
                   <div className="relative shrink-0" data-booking-actions={booking.id}>
@@ -511,6 +515,7 @@ export function BookingRequests() {
                     </button>
                     {actionsMenuFor === booking.id && (
                       <div role="menu" className="absolute bottom-[calc(100%+6px)] right-0 z-50 max-h-[calc(100dvh-2rem)] w-48 overflow-y-auto rounded-xl border border-[#dfe8f0] bg-white p-1.5 shadow-[0_18px_45px_-22px_rgba(15,23,42,0.55)]">
+                        {porCoordinar && <button role="menuitem" type="button" disabled={!!cerrando} onClick={() => { setActionsMenuFor(null); void marcarAtendida(booking.id); }} className="block w-full rounded-lg px-3 py-2.5 text-left text-sm font-bold text-[#162543] hover:bg-[#f4f8fb] disabled:opacity-60">{t("markDone")}</button>}
                         {isActive && <button role="menuitem" type="button" onClick={() => { setActionsMenuFor(null); openAction(booking.id, "cancel"); }} className="block w-full rounded-lg px-3 py-2.5 text-left text-sm font-bold text-red-700 hover:bg-red-50">{t("cancel")}</button>}
                         {booking.status === "cancelled" && <button role="menuitem" type="button" onClick={() => { setActionsMenuFor(null); archiveBooking(booking.id); }} className="block w-full rounded-lg px-3 py-2.5 text-left text-sm font-bold text-[#162543] hover:bg-[#f4f8fb]">{t("archive")}</button>}
                         <button role="menuitem" type="button" onClick={() => { setActionsMenuFor(null); setReportFor(booking); }} className="block w-full rounded-lg px-3 py-2.5 text-left text-sm font-bold text-red-700 hover:bg-red-50">{t("reportClient")}</button>

@@ -27,7 +27,28 @@ test.describe("@seeded contextual direct chat", () => {
   let projectId = "";
   let proposalId = "";
 
-  test.beforeAll(async () => { seed = await ensureRegressionSeed(); });
+  // Desde a8c05f7a hay UNA conversación por pareja: un chat previo entre el
+  // cliente y el profesional sembrados (de otra suite, o de la prueba anterior
+  // de este archivo) se reutilizaría con su contexto y sus contadores, y la
+  // prueba no vería el contexto que acaba de crear. Cada prueba contextual
+  // parte de una pareja sin chat.
+  async function parejaSinChat() {
+    const admin = regressionAdminClient();
+    const { data: leftovers } = await admin.from("direct_conversations")
+      .select("id")
+      .eq("client_id", seed.clientId)
+      .eq("professional_profile_id", seed.professionalUserId);
+    const leftoverIds = (leftovers ?? []).map((row) => row.id as string);
+    if (leftoverIds.length) {
+      await admin.from("direct_messages").delete().in("conversation_id", leftoverIds);
+      await admin.from("direct_conversations").delete().in("id", leftoverIds);
+    }
+  }
+
+  test.beforeAll(async () => {
+    seed = await ensureRegressionSeed();
+    await parejaSinChat();
+  });
   // Direct chat is exercised as the app: the native shell marks every request
   // with this cookie, and the API moderates messages only for the app.
   test.beforeEach(async ({ context, baseURL }) => {
@@ -108,7 +129,9 @@ test.describe("@seeded contextual direct chat", () => {
     expect(reply.status).toBe(200);
     await gotoOK(page, `/es/mensajes?conversation=${first.body.conversationId}`);
     await expect(page.getByText("E2E respuesta profesional").last()).toBeVisible();
-    await expect(page.getByText(/Conversación desde un perfil|Profile conversation/i).last()).toBeVisible();
+    // Desde a8c05f7a (un chat por persona) la cabecera del hilo muestra a la
+    // persona, no el asunto «Conversación desde un perfil»: ese texto ya no
+    // aparece en pantalla y solo vive en la base como asunto de respaldo.
     await expect(page.getByRole("button", { name: /Ver perfil|View profile/i })).toHaveCount(0);
 
     const archived = await apiJson(page, "/api/direct-chat", { method: "PATCH", body: { conversationId: first.body.conversationId, status: "archived" } });
@@ -152,7 +175,8 @@ test.describe("@seeded contextual direct chat", () => {
     expect(created.status).toBe(200); conversationIds.push(created.body.conversationId!);
     await gotoOK(page, `/es/mensajes?conversation=${created.body.conversationId}`);
     await expect(page.getByText("E2E reparación contextual").last()).toBeVisible();
-    await expect(page.getByRole("button", { name: /Ver cita|View appointment/i })).toBeVisible();
+    // La cabecera del hilo ya no lleva el botón «Ver cita» (a8c05f7a): el
+    // contexto se lee en el propio hilo, con la descripción de la cita.
 
     const outsider = await createDisposableAccount({ prefix: "direct-chat-outsider" });
     try {
@@ -188,6 +212,7 @@ test.describe("@seeded contextual direct chat", () => {
     if (proposalError) throw proposalError;
     proposalId = proposal.id;
 
+    await parejaSinChat();
     await loginAs(page, E2E_USERS.client.email, E2E_USERS.client.password);
     const created = await apiJson<ChatResponse>(page, "/api/direct-chat", {
       method: "POST",

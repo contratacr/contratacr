@@ -917,7 +917,13 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
         // Con las filas convertidas en tarjetas, el contenedor sobra en el teléfono.
         !mobileSectionFocused && "max-sm:rounded-none max-sm:border-0 max-sm:bg-transparent max-sm:shadow-none"
       )}>
-      <div className={cn(!mobileSectionFocused && "divide-y divide-[#eef3f7] max-sm:flex max-sm:flex-col max-sm:gap-2.5 max-sm:divide-y-0")}>
+      {/* Las líneas entre secciones son del marco de escritorio: se quitan en el
+          teléfono, no al abrir una sección. */}
+      <div className={cn(
+        "divide-y divide-[#eef3f7]",
+        !mobileSectionFocused && "max-sm:flex max-sm:flex-col max-sm:gap-2.5",
+        "max-sm:divide-y-0",
+      )}>
       <div className="hidden px-4 pb-4 pt-5 sm:block sm:px-5 sm:pt-6">
         <div className="min-w-0">
           <h2 className="text-xl font-bold text-[#162543]">{locale === "en" ? "Profile" : "Perfil"}</h2>

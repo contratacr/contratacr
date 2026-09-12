@@ -3,13 +3,13 @@
 import { useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { CalendarCheck, ChevronRight, Clock3, Handshake, Plus, ReceiptText, X } from "lucide-react";
-import { BrandIconBadge } from "@/components/ui/brand-icon-badge";
 import { Button } from "@/components/ui/button";
 import { formatColones } from "@/lib/pricing";
 import { isQuoteExpired, type Quote } from "@/lib/quotes";
 import { QuoteEditorModal } from "@/components/quotes/quote-editor-modal";
 import { QuoteDetailModal } from "@/components/quotes/quote-detail-modal";
 import { SectionHeadline } from "@/components/dashboard/section-headline";
+import { PanelEmptyState } from "@/components/ui/content-loading";
 
 const DATE_LOCALE: Record<string, string> = { es: "es-CR", en: "en-US" };
 
@@ -83,12 +83,18 @@ export function QuotesSection({ proName, proSlug, puedeCrear = true }: { proName
       {quotes === null ? (
         <div className="flex flex-col gap-2">{[0, 1, 2].map((i) => <div key={i} className="h-[76px] animate-pulse rounded-2xl bg-[#eef2f6]" />)}</div>
       ) : quotes.length === 0 ? (
-        <div className="rounded-3xl border border-[#e5eaf0] bg-white px-6 py-10 text-center shadow-sm">
-          <BrandIconBadge icon={ReceiptText} size={64} className="mx-auto" />
-          <h3 className="mt-4 text-[20px] font-extrabold text-[#162543]">{t("emptyTitle")}</h3>
-          <p className="mx-auto mt-2 max-w-md text-[14px] leading-6 text-[#52627a]">{t("emptyBody")}</p>
-          {puedeCrear && <Button type="button" onClick={() => setEditor(true)} className="mt-5"><Plus className="h-4 w-4" />{t("emptyCta")}</Button>}
-        </div>
+        // El MISMO vacío que el resto del panel, en vez de uno dibujado a mano:
+        // este llevaba esquinas más redondas, un título más grande y su propio
+        // ícono, así que Cotizaciones era la única sección que se veía distinta
+        // al no tener nada.
+        <PanelEmptyState
+          icon={ReceiptText}
+          title={t("emptyTitle")}
+          description={t("emptyBody")}
+          action={puedeCrear ? (
+            <Button type="button" onClick={() => setEditor(true)}><Plus className="h-4 w-4" />{t("emptyCta")}</Button>
+          ) : undefined}
+        />
       ) : (
         <>
           <div className="flex flex-col gap-2">

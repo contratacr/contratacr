@@ -89,12 +89,16 @@ export function ClientConnections() {
           className="h-11 w-full rounded-2xl border border-[#dfe8f0] bg-white pl-11 pr-4 text-sm font-semibold text-[#162543] outline-none focus:border-[#009FD9]"
         />
       </div>
-      <p className="mb-3 text-sm font-semibold text-[#6b7280]">
-        {t("count", { count: filtered.length })}
-      </p>
-      <div className="overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white divide-y divide-[#f3f4f6]">
+      {/* Tarjetas separadas, como el resto de las listas del panel: en el teléfono
+          cada profesional termina con su propia fila de botón, así que unidos esa
+          fila se pegaba al siguiente. El contador encabeza la lista dentro de su
+          propia tarjeta, no suelto sobre el fondo gris. */}
+      <div className="flex flex-col gap-3.5">
+        <p className="rounded-2xl border border-[#e5e7eb] bg-white px-4 py-3 text-sm font-semibold text-[#6b7280]">
+          {t("count", { count: filtered.length })}
+        </p>
         {filtered.map((item) => (
-          <article key={item.professionalId} className="grid grid-cols-[56px_minmax(0,1fr)] gap-x-3 gap-y-3 p-4 sm:flex sm:items-center sm:gap-4">
+          <article key={item.professionalId} className="grid grid-cols-[56px_minmax(0,1fr)] gap-x-3 gap-y-3 rounded-2xl border border-[#e5e7eb] bg-white p-4 sm:flex sm:items-center sm:gap-4">
             <Avatar className="h-14 w-14 rounded-2xl">
               <AvatarImage src={item.avatarUrl ?? undefined} />
               <AvatarFallback className="rounded-2xl bg-[#EBF5FB] text-sm font-bold text-[#009FD9]">{getInitials(item.name)}</AvatarFallback>
@@ -141,7 +145,10 @@ export function ClientConnections() {
             <div className="col-span-2 flex gap-2 sm:col-span-1 sm:shrink-0">
               {item.slug ? (
                 <Button variant="secondary" size="sm" className="h-11 min-w-0 flex-1 text-[13px] sm:w-44 sm:flex-none" asChild>
-                  <Link href={`/profesionales/${item.slug}?from=${encodeURIComponent("/dashboard/cliente?tab=connections")}`} onClick={openInNewTabOnDesktop}>
+                  {/* El destino es el panel unificado, no la ruta vieja
+                      /dashboard/cliente: esa solo redirige y metía un giro de
+                      carga antes de volver a «Volver a contratar». */}
+                  <Link href={`/profesionales/${item.slug}?from=${encodeURIComponent("/dashboard/profesional?tab=connections")}`} onClick={openInNewTabOnDesktop}>
                     {t("viewProfile")}
                   </Link>
                 </Button>

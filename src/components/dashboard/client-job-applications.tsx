@@ -22,14 +22,17 @@ type Application = {
     locationLabel: string | null; status: string; employerName: string; employerAvatarUrl: string | null;
   } | null;
 };
+// `className` es SOLO color de texto: el estado se pinta como antetítulo, no
+// como pastilla. Una pastilla tiene ancho propio y desacomodaba cualquier
+// renglón que la alojara —el del título lo partía en dos—.
 const STATUS_COPY: Record<string, { es: string; en: string; className: string }> = {
-  submitted: { es: "Enviada", en: "Submitted", className: "bg-[#eef8fd] text-[#0089bb]" },
-  reviewing: { es: "En revisión", en: "In review", className: "bg-[#fff7df] text-[#936100]" },
-  shortlisted: { es: "Finalista", en: "Shortlisted", className: "bg-[#eef8fd] text-[#0089bb]" },
-  hired: { es: "Seleccionado", en: "Selected", className: "bg-[#e9f8f1] text-[#087a55]" },
-  rejected: { es: "No seleccionado", en: "Not selected", className: "bg-[#f3f4f6] text-[#6b7280]" },
-  withdrawn: { es: "Retirada", en: "Withdrawn", className: "bg-[#f3f4f6] text-[#6b7280]" },
-  job_closed: { es: "Empleo cerrado", en: "Job closed", className: "bg-[#f3f4f6] text-[#596579]" },
+  submitted: { es: "Enviada", en: "Submitted", className: "text-[#0089bb]" },
+  reviewing: { es: "En revisión", en: "In review", className: "text-[#936100]" },
+  shortlisted: { es: "Finalista", en: "Shortlisted", className: "text-[#0089bb]" },
+  hired: { es: "Seleccionado", en: "Selected", className: "text-[#087a55]" },
+  rejected: { es: "No seleccionado", en: "Not selected", className: "text-[#6b7280]" },
+  withdrawn: { es: "Retirada", en: "Withdrawn", className: "text-[#6b7280]" },
+  job_closed: { es: "Empleo cerrado", en: "Job closed", className: "text-[#596579]" },
 };
 
 function applicationDisplayStatus(application: Application) {
@@ -77,24 +80,32 @@ export function ClientJobApplications() {
     />
   );
   return (
-    <div className="ccr-native-safe-list-end overflow-hidden rounded-2xl border border-[#dfe8f0] bg-white divide-y divide-[#eef3f7]">
+    // Tarjetas separadas, como Citas y Proyectos: cada postulación se abre y
+    // trae sus propias acciones, así que es un elemento, no un renglón de
+    // directorio. Unidas en una sola tarjeta, al desplegar una el cuerpo se
+    // mezclaba con la vecina y no se veía dónde terminaba cada postulación.
+    <div className="ccr-native-safe-list-end flex flex-col gap-3.5">
       {applications.map((application) => {
         const job = application.job;
         const status = applicationDisplayStatus(application);
         const isOpen = openId === application.id;
         if (!job) return null;
         return (
-          <article key={application.id}>
+          <article key={application.id} className="overflow-hidden rounded-2xl border border-[#dfe8f0] bg-white">
+            {/* El estado va ARRIBA del título, como antetítulo en versalitas. Probamos
+                las tres posiciones que compiten por un renglón —junto al título, en
+                columna propia, junto al nombre— y todas le quitaban ancho al título o
+                lo desplazaban. Arriba no compite con nada: ocupa un renglón bajito y
+                constante, sale siempre en el mismo sitio, y es lo primero que se lee,
+                que es justo lo que uno busca al recorrer la lista. */}
             <button type="button" onClick={() => setOpenId(isOpen ? null : application.id)} aria-expanded={isOpen} className="group grid w-full grid-cols-[48px_minmax(0,1fr)_auto] items-center gap-3 px-4 py-4 text-left transition-colors hover:bg-[#f8fbfd] sm:px-5">
               <Avatar className="h-12 w-12 rounded-xl">
                 <AvatarImage src={job.employerAvatarUrl ?? undefined} className="object-cover" />
                 <AvatarFallback className="rounded-xl bg-[#eef8fd] text-xs font-bold text-[#009FD9]">{getInitials(job.employerName)}</AvatarFallback>
               </Avatar>
               <div className="min-w-0">
-                <div className="flex min-w-0 flex-wrap items-center gap-2">
-                  <h3 className="min-w-0 truncate text-sm font-extrabold text-[#162543]">{job.title}</h3>
-                  <span className={"shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold " + status.className}>{isEn ? status.en : status.es}</span>
-                </div>
+                <p className={"truncate text-[10px] font-extrabold uppercase tracking-[0.06em] " + status.className}>{isEn ? status.en : status.es}</p>
+                <h3 className="mt-0.5 min-w-0 truncate text-sm font-extrabold text-[#162543]">{job.title}</h3>
                 <p className="mt-0.5 truncate text-xs font-semibold text-[#53627a]">{job.employerName}</p>
                 <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-1 text-[11px] font-medium text-[#78869a]">
                   <span>{EMPLOYMENT_TYPES[job.employmentType]}</span>
@@ -103,7 +114,7 @@ export function ClientJobApplications() {
                   <span className="inline-flex items-center gap-1"><CalendarDays className="h-3 w-3" />{isEn ? "Applied" : "Aplicaste"} {formatRelativeOrDate(application.createdAt, locale)}</span>
                 </div>
               </div>
-              <ChevronDown className={"h-4 w-4 text-[#9aa8ba] transition-transform group-hover:text-[#009FD9] " + (isOpen ? "rotate-180" : "")} />
+              <ChevronDown className={"h-4 w-4 shrink-0 text-[#9aa8ba] transition-transform group-hover:text-[#009FD9] " + (isOpen ? "rotate-180" : "")} />
             </button>
             {isOpen && (
               <div className="border-t border-[#eef3f7] bg-[#fbfdfe] px-4 py-4 sm:px-5">

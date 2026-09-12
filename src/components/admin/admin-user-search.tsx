@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Search, Loader2, BadgeCheck, Ban, ShieldOff } from "lucide-react";
+import { Search, Loader2, Ban, ShieldOff } from "lucide-react";
 import { useRouter } from "@/i18n/navigation";
 import { AnchoredDropdown } from "@/components/ui/anchored-dropdown";
 import { getInitials } from "@/lib/utils";
+import { VerifiedSeal } from "@/components/ui/verified-seal";
 
 type Result = {
   id: string;
@@ -119,7 +120,7 @@ export function AdminUserSearch({
                   <span className={`text-[10px] uppercase tracking-wide ${u.professionalSignupIncomplete ? "text-[#c2410c]" : "text-gray-400"}`}>
                     {u.isPro ? "Pro" : u.professionalSignupIncomplete ? "Pro incompleto" : "Cliente"}
                   </span>
-                  {u.isPro && u.verification_status === "verified" && <BadgeCheck className="h-4 w-4 text-emerald-500" />}
+                  {u.isPro && u.verification_status === "verified" && <VerifiedSeal label="Verificado" className="h-4 w-4 shrink-0 text-[#009FD9]" />}
                   {u.is_banned && <Ban className="h-4 w-4 text-red-500" />}
                   {u.is_disabled && <ShieldOff className="h-4 w-4 text-amber-500" />}
                 </div>

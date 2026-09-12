@@ -39,7 +39,6 @@ export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "o
   // recientes y dejaba fuera las viejas sin leer, así el globo nunca bajaba.
   const [unreadTotal, setUnreadTotal] = useState<number | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [soloNoLeidas, setSoloNoLeidas] = useState(false);
   const portalHost = typeof document === "undefined" ? null : document.body;
   const [posicionPanel, setPosicionPanel] = useState<{ top: number; right: number } | null>(null);
   const nativeApp = useNativeApp();
@@ -228,13 +227,13 @@ export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "o
   // leído, después el resto. Antes era una lista plana de cinco.
   const noLeidas = visible.filter((item) => !item.read);
   const leidas = visible.filter((item) => item.read);
-  const listaFiltrada = soloNoLeidas ? noLeidas : visible;
-  const grupos = soloNoLeidas
-    ? [{ clave: "nuevas", rotulo: t("groupNew"), items: noLeidas.slice(0, 6) }]
-    : [
-        { clave: "nuevas", rotulo: t("groupNew"), items: noLeidas.slice(0, 6) },
-        { clave: "antes", rotulo: t("groupEarlier"), items: leidas.slice(0, Math.max(0, 6 - noLeidas.length)) },
-      ].filter((g) => g.items.length > 0);
+  // Sin filtro «Todas / No leídas»: los dos grupos —«Nuevas» y «Antes»— ya
+  // separan lo mismo sin pedir que se elija nada.
+  const listaFiltrada = visible;
+  const grupos = [
+    { clave: "nuevas", rotulo: t("groupNew"), items: noLeidas.slice(0, 6) },
+    { clave: "antes", rotulo: t("groupEarlier"), items: leidas.slice(0, Math.max(0, 6 - noLeidas.length)) },
+  ].filter((g) => g.items.length > 0);
 
   const fila = (item: Notification) => {
     const copy = localizedNotificationCopy(item, locale);
@@ -286,23 +285,6 @@ export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "o
             )}
           </div>
 
-          {visible.length > 0 && (
-            <div className="flex gap-1.5 px-4 pb-2">
-              {([[false, t("filterAll")], [true, t("filterUnread")]] as const).map(([valor, rotulo]) => (
-                <button
-                  key={String(valor)}
-                  type="button"
-                  onClick={() => setSoloNoLeidas(valor)}
-                  className={cn(
-                    "h-8 rounded-full px-3.5 text-[13px] font-bold transition-colors",
-                    soloNoLeidas === valor ? "bg-[#eaf7fc] text-[#0089bb]" : "text-[#52627a] hover:bg-[#f1f5f9]",
-                  )}
-                >
-                  {rotulo}{valor && noLeidas.length > 0 ? ` (${noLeidas.length})` : ""}
-                </button>
-              ))}
-            </div>
-          )}
 
           {listaFiltrada.length > 0 ? (
             <div className="max-h-[22rem] overflow-y-auto px-1.5 pb-1.5">
@@ -321,7 +303,7 @@ export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "o
                 <Bell className="h-5 w-5" />
               </div>
               <p className="mt-2.5 text-[14px] font-bold text-[#162543]">
-                {soloNoLeidas ? t("emptyUnread") : (locale === "en" ? "No notifications yet" : "Aún no tienes notificaciones")}
+                {locale === "en" ? "No notifications yet" : "Aún no tienes notificaciones"}
               </p>
             </div>
           )}

@@ -293,12 +293,17 @@ export function ProfileCompletion({
   }
 
   return (
-    <section className="w-full py-1">
+    // Los pasos son filas planas separadas por una línea fina, nunca 13 tarjetas
+    // blancas sueltas. El MARCO alrededor solo existe en el teléfono, donde el
+    // cuerpo del panel es gris y si no quedarían flotando; de 1024px en adelante
+    // ese cuerpo ya es la tarjeta blanca del panel y volver a enmarcarlo dejaba
+    // una caja dentro de otra.
+    <section className="w-full max-lg:overflow-hidden max-lg:rounded-2xl max-lg:border max-lg:border-[#e5e7eb] max-lg:bg-white max-lg:px-4 max-lg:py-4 max-lg:shadow-[0_10px_28px_-24px_rgba(15,23,42,0.65)] max-lg:sm:px-5 max-lg:sm:py-5">
       <div className="w-full">
         <button
           type="button"
           onClick={() => onGo(next.tab, next.key)}
-          className="group block w-full rounded-xl px-1 py-1 text-left transition-colors hover:bg-[#f8fbfd] sm:px-2 sm:py-2"
+          className="group block w-full rounded-xl text-left transition-colors hover:bg-[#f8fbfd]"
         >
           <div className="flex items-center justify-between gap-4">
             <div className="min-w-0">
@@ -318,26 +323,29 @@ export function ProfileCompletion({
           </span>
         </button>
 
-        <div className="mt-5 space-y-2.5">
+        <div className="mt-5 border-t border-[#eef3f7]">
           {visibleSteps.map((item) => (
-            <div key={item.key} className="flex w-full items-center gap-3.5 rounded-2xl border border-[#e3ecf2] bg-white px-4 py-3.5 text-left shadow-[0_8px_20px_-18px_rgba(15,23,42,0.35)] transition hover:border-[#bfe6f4] hover:bg-[#fbfeff]">
-              <button type="button" onClick={() => onGo(item.tab, item.key)} className="flex min-w-0 flex-1 items-center gap-3.5 text-left">
-                <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#eef9fd] text-[#009FD9]">
-                  <ChevronRight className="h-4.5 w-4.5" />
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="flex items-center gap-2 text-sm font-extrabold leading-snug text-[#162543]">
-                    <span className="min-w-0">{t(item.key)}</span>
-                    {item.optional && (
-                      <span className="inline-flex shrink-0 rounded-full bg-[#f1f6f9] px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.02em] text-[#7c8fa1]">{t("optionalShort")}</span>
-                    )}
-                  </span>
-                  {STEP_HINTS[item.key] && (
-                    <span className="mt-1 block text-xs font-semibold leading-snug text-[#7c8fa1]">{t(STEP_HINTS[item.key])}</span>
+            <button
+              key={item.key}
+              type="button"
+              onClick={() => onGo(item.tab, item.key)}
+              className="flex w-full items-center gap-3.5 border-b border-[#eef3f7] px-1 py-3.5 text-left transition-colors last:border-b-0 hover:bg-[#f8fbfd]"
+            >
+              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#eef9fd] text-[#009FD9]">
+                <ChevronRight className="h-4.5 w-4.5" />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="flex items-center gap-2 text-sm font-extrabold leading-snug text-[#162543]">
+                  <span className="min-w-0">{t(item.key)}</span>
+                  {item.optional && (
+                    <span className="inline-flex shrink-0 rounded-full bg-[#f1f6f9] px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.02em] text-[#7c8fa1]">{t("optionalShort")}</span>
                   )}
                 </span>
-              </button>
-            </div>
+                {STEP_HINTS[item.key] && (
+                  <span className="mt-1 block text-xs font-semibold leading-snug text-[#7c8fa1]">{t(STEP_HINTS[item.key])}</span>
+                )}
+              </span>
+            </button>
           ))}
         </div>
         {optionalMissing.length > 0 && (

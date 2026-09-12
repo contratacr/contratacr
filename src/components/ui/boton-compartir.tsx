@@ -6,6 +6,7 @@ import { Share2 } from "lucide-react";
 import { AvisoFlotante } from "@/components/ui/aviso-flotante";
 import { useNativeShare } from "@/hooks/use-native-share";
 import { cn } from "@/lib/utils";
+import { compartirConHojaNativa } from "@/lib/compartir-nativo";
 
 function urlCompleta(url: string) {
   if (url.startsWith("http")) return url;
@@ -31,9 +32,8 @@ export function useCompartir() {
 
   const compartir = useCallback(async (url: string, titulo?: string) => {
     const completa = urlCompleta(url);
-    if (nativo) {
-      try { await navigator.share({ title: titulo, url: completa }); return; } catch { /* cancelado */ }
-    }
+    // Cancelar la hoja ya no copia el enlace "por si acaso".
+    if (nativo && await compartirConHojaNativa({ title: titulo, url: completa }) !== "no-disponible") return;
     await copiar(url);
   }, [copiar, nativo]);
 

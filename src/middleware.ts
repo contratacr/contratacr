@@ -37,7 +37,7 @@ export async function middleware(request: NextRequest) {
 
   if (pathname.startsWith("/api/")) {
     if (isUnsafeLocalProductionWrite(request)) return unsafeLocalProductionWriteResponse();
-    return NextResponse.next();
+    return conCabecerasDeSeguridad(NextResponse.next());
   }
 
   // EVERY unprefixed path redirects to its locale-prefixed canonical URL. This
@@ -109,17 +109,22 @@ export async function middleware(request: NextRequest) {
   const needsAuthGate = isProtected && !isPublic;
 
   // Base response carries i18n rewrites/headers; we attach any cookie changes.
-  const response = handleI18n(request);
+  const response = conCabecerasDeSeguridad(handleI18n(request));
   const locale = pathname.split("/")[1] || "es";
   // La cookie recuerda el idioma que se está LEYENDO, no solo el que se eligió
   // con el botón. Sin esto, quien llega en inglés por un enlace y luego abre
   // una dirección sin prefijo (el perfil corto, /o/, /e/, /c/) volvía al
   // español de golpe. Solo se escribe cuando cambia, para no ponerle
   // Set-Cookie a cada respuesta y romper la caché de las páginas públicas.
+  //
+  // ES COOKIE DE SESIÓN, sin fecha de vencimiento: el inglés dura lo que dura
+  // la visita —dentro de ella todo sigue en inglés— y al cerrar la app o el
+  // navegador se borra, así que la próxima vez vuelve a abrir en español, que
+  // es el idioma del país. Antes duraba un año y quien probaba el inglés una
+  // vez se quedaba en inglés para siempre.
   if (request.cookies.get("NEXT_LOCALE")?.value !== locale) {
     response.cookies.set("NEXT_LOCALE", locale, {
       path: "/",
-      maxAge: 31536000,
       sameSite: "lax",
     });
   }
@@ -266,3 +271,23 @@ export const config = {
   // to /es/auth/callback, losing the PKCE code before it can be exchanged).
   matcher: ["/api/:path*", "/((?!_next|_vercel|auth|.*\\..*).*)"],
 };
+
+// Las cabeceras de seguridad viven aquí, no solo en next.config: el adaptador
+// de Cloudflare (OpenNext) NO aplica `headers()` de next.config, y ni test ni
+// producción las estaban mandando (comprobado con curl -I). El middleware
+// sí corre en cada respuesta de página y de API, así que este es el único
+// lugar donde de verdad llegan al navegador.
+const CABECERAS_DE_SEGURIDAD: Record<string, string> = {
+  "Strict-Transport-Security": "max-age=63072000; includeSubDomains; preload",
+  "X-Content-Type-Options": "nosniff",
+  "X-Frame-Options": "SAMEORIGIN",
+  "Content-Security-Policy": "frame-ancestors 'self'",
+  "Referrer-Policy": "strict-origin-when-cross-origin",
+};
+
+function conCabecerasDeSeguridad<T extends NextResponse>(response: T): T {
+  for (const [nombre, valor] of Object.entries(CABECERAS_DE_SEGURIDAD)) {
+    if (!response.headers.has(nombre)) response.headers.set(nombre, valor);
+  }
+  return response;
+}

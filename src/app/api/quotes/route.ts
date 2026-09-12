@@ -35,9 +35,10 @@ async function whoAmI() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
   const admin = createAdminClient();
-  const { data: pro } = await admin.from("professionals").select("id, profiles(full_name)").eq("profile_id", user.id).maybeSingle();
+  const { data: pro } = await admin.from("professionals").select("id, business_name, profiles(full_name)").eq("profile_id", user.id).maybeSingle();
   const proName = (pro?.profiles as { full_name?: string | null } | null)?.full_name ?? null;
-  return { user, admin, proId: pro?.id ?? null, proName };
+  const proDisplayName = (pro?.business_name as string | null)?.trim() || proName;
+  return { user, admin, proId: pro?.id ?? null, proName, proDisplayName };
 }
 
 export async function GET(req: NextRequest) {
@@ -48,7 +49,11 @@ export async function GET(req: NextRequest) {
   const projectId = url.searchParams.get("projectId");
   // Con el nombre de quien cotiza: el cliente lo ve en "De X" y el profesional
   // lo necesita para la imagen que manda por WhatsApp.
-  let q = me.admin.from("quotes").select(`${SELECT}, professionals(business_name, profiles(full_name))`).is("deleted_at", null).order("created_at", { ascending: false }).limit(100);
+  // Sin el anidado professionals→profiles: ese embed de dos niveles sobre hasta
+  // 100 filas era lo caro de esta consulta, y el nombre casi siempre ya se
+  // conoce (las cotizaciones propias son del profesional que pregunta). Solo
+  // las recibidas como cliente necesitan buscar el nombre, en UNA consulta.
+  let q = me.admin.from("quotes").select(SELECT).is("deleted_at", null).order("created_at", { ascending: false }).limit(100);
   if (bookingId) q = q.eq("booking_id", bookingId);
   else if (projectId) q = q.eq("project_id", projectId);
   // Solo lo propio: lo que envié como profesional o lo que me enviaron como cliente.
@@ -58,11 +63,28 @@ export async function GET(req: NextRequest) {
     if (tableMissing(error.message)) return NextResponse.json({ quotes: [], unavailable: true });
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
-  const quotes = ((data ?? []) as Array<Record<string, unknown>>).map((row) => {
-    const pro = row.professionals as { business_name?: string | null; profiles?: { full_name?: string | null } | null } | null;
-    const { professionals: _p, ...resto } = row; void _p;
-    return { ...resto, professional_name: pro?.business_name?.trim() || pro?.profiles?.full_name || null };
-  });
+  const filas = (data ?? []) as Array<Record<string, unknown>>;
+  const ajenos = [...new Set(
+    filas.map((row) => row.professional_id as string | null)
+      .filter((id): id is string => !!id && id !== me.proId),
+  )];
+  const nombres = new Map<string, string | null>();
+  if (ajenos.length) {
+    const { data: otros } = await me.admin
+      .from("professionals")
+      .select("id, business_name, profiles(full_name)")
+      .in("id", ajenos);
+    for (const pro of (otros ?? []) as Array<Record<string, unknown>>) {
+      const perfil = pro.profiles as { full_name?: string | null } | null;
+      nombres.set(pro.id as string, (pro.business_name as string | null)?.trim() || perfil?.full_name || null);
+    }
+  }
+  const quotes = filas.map((row) => ({
+    ...row,
+    professional_name: row.professional_id === me.proId
+      ? me.proDisplayName
+      : nombres.get(row.professional_id as string) ?? null,
+  }));
   return NextResponse.json({ quotes });
 }
 

@@ -178,7 +178,7 @@ export default function ServiciosPage() {
                 <Link href="/" aria-label="ContrataCR inicio" className="-ml-1 shrink-0">
                   <ContrataCRMark className="h-7 w-7" />
                 </Link>
-                <h1 className="min-w-0 truncate pl-1.5 text-[17px] font-extrabold text-[#162543]">{servicesTitle}</h1>
+                <p className="min-w-0 truncate pl-1.5 text-[17px] font-extrabold text-[#162543]">{servicesTitle}</p>
                 <div className="ml-auto flex shrink-0 items-center gap-0.5">
                   <HeaderMessagesLink
                     unreadCount={0}

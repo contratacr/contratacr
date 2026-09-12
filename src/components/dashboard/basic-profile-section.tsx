@@ -346,13 +346,18 @@ export function BasicProfileSection({
 
   return (
     <div className="mx-auto flex w-full max-w-none flex-col gap-4">
+      {/* El marco NO se quita nunca: una tarjeta blanca sin borde sobre el fondo
+          gris del panel se lee como algo a medio dibujar. Quitarlo solo tendría
+          sentido si la tarjeta ocupara el ancho completo de la pantalla, y no lo
+          hace: el panel la rodea con su propio margen lateral. (El editor del
+          profesional sí puede prescindir del marco en su LISTA del teléfono,
+          porque allí cada fila es una tarjeta con su propio borde; acá las filas
+          son planas, así que el marco es lo único que las contiene.) */}
+      <div className="overflow-hidden rounded-2xl border border-[#dfe8f0] bg-white shadow-[0_10px_28px_-24px_rgba(15,23,42,0.65)]">
       <div className={cn(
-        "bg-white",
-        mobileSectionFocused
-          ? "rounded-none border-0 shadow-none"
-          : "overflow-hidden rounded-2xl border border-[#dfe8f0] shadow-[0_10px_28px_-24px_rgba(15,23,42,0.65)]"
+        "divide-y divide-[#eef3f7]",
+        mobileSectionFocused && "max-sm:divide-y-0",
       )}>
-      <div className={cn(!mobileSectionFocused && "divide-y divide-[#eef3f7]")}>
       <div className="hidden px-4 pb-4 pt-5 sm:block sm:px-5 sm:pt-6">
         <div className="min-w-0">
           <h2 className="text-xl font-bold text-[#162543]">{locale === "en" ? "Profile" : "Perfil"}</h2>
@@ -366,41 +371,51 @@ export function BasicProfileSection({
       <ProfileSection id="basic" title={t("secBasic")} desc={t("secBasicDesc")} open={openSections.has("basic")} mobileFocused={mobileSectionFocused} onToggle={toggleSection} onActivate={setActiveDirtySection} footer={makeProfileFooter("basic")}>
       {/* Datos — foto + nombre + teléfono */}
       <div className="flex flex-col gap-4">
-        <div className="flex items-center gap-4">
-          <button
-            type="button"
-            onClick={() => photoInputRef.current?.click()}
-            className="relative h-20 w-20 shrink-0 rounded-full outline-none transition focus-visible:ring-2 focus-visible:ring-[#009FD9] focus-visible:ring-offset-2"
-            aria-label={profileAvatar ? t("changePhoto") : t("addPhoto")}
+        {/* Mismas opciones de foto que el panel profesional: tocar la foto la
+            muestra en grande, y cambiarla o quitarla son los dos botones de al
+            lado —con su ícono, y el de quitar en rojo porque borra—. Antes acá
+            la foto abría el selector de archivos, había un círculo de cámara
+            encima y una línea con los formatos aceptados: tres formas distintas
+            de decir lo mismo, y ninguna igual al otro panel. */}
+        <div className="flex items-center gap-3 sm:gap-4">
+          <ImagePreviewDialog
+            src={profileAvatar}
+            alt={t("photoAlt")}
+            open={photoMenuOpen}
+            onOpenChange={setPhotoMenuOpen}
+            openLabel={t("viewPhoto")}
+            closeLabel={t("close")}
           >
-            <Avatar className="h-20 w-20 bg-transparent">
+            <Avatar className="h-16 w-16 shrink-0 bg-transparent">
               <AvatarImage src={profileAvatar ?? undefined} alt="" />
               <AvatarFallback className="bg-[#EBF5FB] text-lg font-bold text-[#009FD9]">{getInitials(displayName)}</AvatarFallback>
             </Avatar>
-            <span className="absolute bottom-0 right-0 flex h-7 w-7 items-center justify-center rounded-full border-2 border-white bg-[#009FD9] text-white shadow-sm">
-              {photoUploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Camera className="h-3.5 w-3.5" />}
-            </span>
-          </button>
+          </ImagePreviewDialog>
+
           <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap gap-2">
+            <p className="hidden text-sm font-semibold text-[#162543] sm:block">{t("photoAlt")}</p>
+            <div className="grid grid-cols-2 items-center gap-2 sm:mt-2 sm:flex sm:flex-wrap">
               <button
                 type="button"
                 onClick={() => photoInputRef.current?.click()}
-                className="inline-flex h-9 items-center rounded-full border border-[#d6e4ed] bg-white px-3.5 text-sm font-bold text-[#162543] transition hover:border-[#9fd8ec] hover:text-[#009FD9]"
+                disabled={photoUploading}
+                className="inline-flex h-9 min-w-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg border border-[#d7e1ea] bg-white px-2 text-xs font-semibold text-[#162543] transition-colors hover:border-[#b9c8d6] hover:bg-[#f6f9fb] disabled:cursor-not-allowed disabled:opacity-50 sm:gap-2 sm:px-3 sm:text-sm"
               >
+                {photoUploading ? <Loader2 className="h-4 w-4 animate-spin text-[#008fc3]" /> : <Camera className="h-4 w-4 text-[#008fc3]" />}
                 {profileAvatar ? t("changePhoto") : t("addPhoto")}
               </button>
               {profileAvatar && (
                 <button
                   type="button"
                   onClick={handlePhotoRemove}
-                  className="inline-flex h-9 items-center rounded-full px-3 text-sm font-bold text-[#526277] transition hover:bg-[#f3f7fa] hover:text-[#b91c1c]"
+                  disabled={photoUploading}
+                  className="inline-flex h-9 min-w-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg border border-red-200 bg-white px-2 text-xs font-semibold text-red-600 transition-colors hover:border-red-300 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50 sm:gap-2 sm:px-3 sm:text-sm"
                 >
+                  <X className="h-4 w-4" />
                   {t("removePhoto")}
                 </button>
               )}
             </div>
-            <p className="mt-1.5 text-xs text-[#6b7280]">{t("photoHint")}</p>
           </div>
           <input
             ref={photoInputRef}

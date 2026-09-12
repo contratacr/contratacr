@@ -2,6 +2,7 @@ import { Search, MapPin, ShieldCheck, Star, Send, Headset, CheckCircle2, Calenda
 import { Poppins } from "next/font/google";
 import { MockAvatar } from "@/components/landing/mock-avatar";
 import { cloudinaryAssetUrl } from "@/lib/cloudinary";
+import { VerifiedSeal } from "@/components/ui/verified-seal";
 
 // New brand wordmark font (matches the official ContrataCR logo).
 const poppins = Poppins({ subsets: ["latin"], weight: ["700", "800"], display: "swap" });
@@ -109,8 +110,7 @@ export function SearchScreen() {
 // A FAITHFUL miniature of the CURRENT /buscar professional card. Mirrors the real
 // card 1:1: white rounded-2xl + border; CIRCULAR avatar (EBF5FB / brand-blue initials)
 // carrying the navy ranking badge that mirrors its map pin; company name with the
-// "Verificado" pill on its OWN line (the canonical Badge variant="verified" = solid
-// brand-blue #009FD9 / white); the muted personal name beneath; price right-aligned
+// the verified SEAL after the company name (the one mark used app-wide); the muted personal name beneath; price right-aligned
 // (brand-blue amount + grey unit); grey profession chip; orange-star rating + GREY
 // "(N reseñas)" in parens; a Doctoralia-style LOCATION TAB (brand-blue, underlined) on
 // a hairline divider + the address line. Then EITHER (pro with published hours) the
@@ -143,7 +143,7 @@ function ProCard({
           <div className="flex min-w-0 items-start gap-1.5">
             <div className="min-w-0 flex-1 flex flex-col gap-0">
               <span className="min-w-0 text-[13px] font-bold leading-tight text-[#162543] [overflow-wrap:anywhere]">{company}</span>
-              <span className="inline-flex w-fit items-center rounded-full bg-[#009FD9] px-1.5 py-0.5 text-[8px] font-semibold leading-none text-white">{verified}</span>
+              <VerifiedSeal label={verified} className="h-2.5 w-2.5 shrink-0 text-[#009FD9]" />
               {person ? <p className="mt-0 truncate text-[10px] font-medium leading-tight text-[#6b7280]">{person}</p> : null}
             </div>
             {price ? (

@@ -13,6 +13,7 @@ function isNativeRequest(req: Request) {
 import { sendNotificationPush } from "@/lib/push/notify";
 import { brandedEmailDocument, sendBrevoEmail } from "@/lib/email/send";
 import { notifyRecipientOutsideApp, usersWithActivePush } from "@/lib/direct-chat/outside-app-notify";
+import { despuesDeResponder } from "@/lib/after-response";
 
 type ConversationRow = {
   id: string;
@@ -417,7 +418,10 @@ export async function POST(req: Request) {
   const pushPreview = messageToSend.length > 120
     ? `${messageToSend.slice(0, 117)}...`
     : messageToSend;
-  await sendNotificationPush({
+  // Avisar al destinatario (push, y correo/WhatsApp si no tiene la app) son
+  // llamadas HTTP externas que no cambian lo que ve quien escribe: salen del
+  // camino de la respuesta.
+  despuesDeResponder(sendNotificationPush({
     userId: recipientId,
     title: "Nuevo mensaje",
     message: pushPreview,
@@ -428,7 +432,7 @@ export async function POST(req: Request) {
       project_id: conversation.project_id,
       proposal_id: conversation.proposal_id,
     },
-  });
+  }), "direct-chat:push");
   // Push only lands on installed apps. Someone without one hears about the
   // first unread message by email (professionals also by WhatsApp); later
   // messages in the same unread run stay quiet so a long exchange is one notice.
@@ -437,27 +441,29 @@ export async function POST(req: Request) {
     (recipientIsProfessional ? conversation.professional_unread_count : conversation.client_unread_count) ?? 0,
   );
   if (nativeRequest && priorUnread === 0) {
-    const reachable = await usersWithActivePush(db, [recipientId]);
-    if (!reachable.has(recipientId)) {
-      const [{ data: senderProfile }, { data: senderProfessional }] = await Promise.all([
-        db.from("profiles").select("full_name").eq("id", user.id).maybeSingle(),
-        recipientIsProfessional
-          ? Promise.resolve({ data: null })
-          : db.from("professionals").select("business_name").eq("profile_id", user.id).maybeSingle(),
-      ]);
-      const senderName = (senderProfessional as { business_name?: string | null } | null)?.business_name
-        || senderProfile?.full_name
-        || "Alguien";
-      await notifyRecipientOutsideApp({
-        db,
-        origin: process.env.NEXT_PUBLIC_APP_URL || new URL(req.url).origin,
-        conversationId: conversation.id,
-        recipientId,
-        recipientIsProfessional,
-        senderName,
-        preview: pushPreview,
-      }).catch((error) => console.error("[direct-chat] outside-app notice failed:", error));
-    }
+    despuesDeResponder((async () => {
+      const reachable = await usersWithActivePush(db, [recipientId]);
+      if (!reachable.has(recipientId)) {
+        const [{ data: senderProfile }, { data: senderProfessional }] = await Promise.all([
+          db.from("profiles").select("full_name").eq("id", user.id).maybeSingle(),
+          recipientIsProfessional
+            ? Promise.resolve({ data: null })
+            : db.from("professionals").select("business_name").eq("profile_id", user.id).maybeSingle(),
+        ]);
+        const senderName = (senderProfessional as { business_name?: string | null } | null)?.business_name
+          || senderProfile?.full_name
+          || "Alguien";
+        await notifyRecipientOutsideApp({
+          db,
+          origin: process.env.NEXT_PUBLIC_APP_URL || new URL(req.url).origin,
+          conversationId: conversation.id,
+          recipientId,
+          recipientIsProfessional,
+          senderName,
+          preview: pushPreview,
+        }).catch((error) => console.error("[direct-chat] outside-app notice failed:", error));
+      }
+    })(), "direct-chat:aviso-fuera-de-la-app");
   }
   const [signedMessage] = await signMessageAttachments(db, [msg as DirectMessageRow]);
   return NextResponse.json({ ok: true, conversationId: conversation.id, message: signedMessage, created: conversationCreated });

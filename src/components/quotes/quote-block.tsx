@@ -44,8 +44,12 @@ export function QuoteBlock({ bookingId, projectId, role, canCreate = false, defa
     // lo que hay en la enorme mayoría de las citas, y evita el pulso de carga.
     if (!canCreate || role !== "pro") return null;
     return asButton ? (
-      <button type="button" onClick={() => setEditor(true)} className="inline-flex h-11 w-full items-center justify-center gap-1.5 whitespace-nowrap rounded-full border border-[#d7e1ea] bg-white px-4 text-[13px] font-bold text-[#162543] transition-colors hover:border-[#b9c8d6] hover:bg-[#f6f9fb]">
-        <FileText className="h-4 w-4 shrink-0 text-[#009FD9]" />{t("rowSend")}
+      <button type="button" onClick={() => setEditor(true)} className="inline-flex h-11 w-full items-center justify-center gap-1.5 whitespace-nowrap rounded-full border border-[#d7e1ea] bg-white px-4 text-[13px] font-bold text-[#162543] transition-colors hover:border-[#b9c8d6] hover:bg-[#f6f9fb] max-[389px]:px-3 max-[389px]:[&>svg]:hidden max-[359px]:px-2">
+        <FileText className="h-4 w-4 shrink-0 text-[#009FD9]" />
+        {/* En una pantalla de 320 px este botón comparte renglón con "Enviar
+            mensaje" y el menú: ahí solo cabe la palabra que importa. */}
+        <span className="max-[359px]:hidden">{t("rowSend")}</span>
+        <span className="hidden max-[359px]:inline">{t("rowSendShort")}</span>
       </button>
     ) : (
       <button type="button" onClick={() => setEditor(true)} className="inline-flex h-11 w-full items-center justify-center rounded-full border border-[#d7e1ea] bg-white px-4 text-[13px] font-bold text-[#162543] transition-colors hover:border-[#b9c8d6] hover:bg-[#f6f9fb]">

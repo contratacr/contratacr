@@ -40,7 +40,9 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
           }}
         />
       </head>
-      <body className={`min-h-full flex flex-col bg-white${clasesNativas}`}>
+      {/* El script de abajo agrega clases al body antes de hidratar (por ruta,
+          p. ej. en /buscar); React no las corrige, solo avisaría en consola. */}
+      <body className={`min-h-full flex flex-col bg-white${clasesNativas}`} suppressHydrationWarning>
         {/* Corre apenas el <body> existe, antes del primer cuadro: siembra las
             clases del armazón nativo que hasta ahora ponía la hidratación. Sin
             esto, la portada pintaba una vez con acomodo web y un instante

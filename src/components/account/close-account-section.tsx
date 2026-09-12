@@ -116,14 +116,14 @@ export function CloseAccountSection({ initialDisabled = false }: { initialDisabl
 
   return (
     <div className="space-y-3">
-      <div className="rounded-2xl border border-[#e5e7eb] bg-white p-4">
+      <div className="border-t border-[#eef3f7] pt-4">
         <div className="flex items-start gap-3">
           <EyeOff className="mt-0.5 h-4 w-4 shrink-0 text-[#6b7280]" />
           <div className="flex-1">
             <p className="text-sm font-semibold text-[#162543]">{t("disableTitle")}</p>
             <p className="mt-0.5 text-xs leading-relaxed text-[#6b7280]">{t("disableBody")}</p>
           {!open ? (
-            <button onClick={() => setOpen(true)} className="mt-3 rounded-lg border border-[#d8e2ea] px-4 py-2 text-sm font-semibold text-[#374151] hover:bg-[#f8fafc]">
+            <button onClick={() => setOpen(true)} className="mt-3 rounded-full border border-[#d8e2ea] px-4 py-2 text-sm font-semibold text-[#374151] hover:bg-[#f8fafc]">
               {t("disableCta")}
             </button>
           ) : (
@@ -149,14 +149,14 @@ export function CloseAccountSection({ initialDisabled = false }: { initialDisabl
         </div>
       </div>
 
-      <div className="rounded-2xl border border-[#f3d3d3] bg-white p-4">
+      <div className="border-t border-[#eef3f7] pt-4">
         <div className="flex items-start gap-3">
           <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-[#b91c1c]" />
           <div className="flex-1">
             <p className="text-sm font-semibold text-[#b91c1c]">{t("deleteTitle")}</p>
             <p className="mt-0.5 text-xs leading-relaxed text-[#6b7280]">{t("deleteBody")}</p>
             {!deleteOpen ? (
-              <button onClick={() => setDeleteOpen(true)} className="mt-3 rounded-lg border border-[#b91c1c] text-[#b91c1c] text-sm font-semibold px-4 py-2 hover:bg-red-50">
+              <button onClick={() => setDeleteOpen(true)} className="mt-3 rounded-full border border-[#b91c1c] text-[#b91c1c] text-sm font-semibold px-4 py-2 hover:bg-red-50">
                 {t("deleteCta")}
               </button>
             ) : (

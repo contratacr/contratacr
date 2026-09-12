@@ -372,11 +372,12 @@ export function ProfessionalCard({ professional, className, highlightMetric = "r
           {/* Company-name line + PRICE (right-aligned on THIS line only). */}
           <div className="flex min-w-0 flex-1 items-start gap-3 lg:items-center lg:pr-0">
             <div className="flex min-w-0 flex-1 flex-col gap-0">
-              {/* Company/brand name (or personal name when there's no company). Wraps up to
-                  never cut off on mobile; desktop keeps one-line cards tighter. Then
-                  Verificado, then the personal name = first name + first surname. */}
+              {/* Company/brand name (or personal name when there's no company), on ONE
+                  line that takes the whole row up to the save icon (pr-8 reserves it);
+                  the ellipsis only appears when the name really does not fit, with the
+                  verified seal right after it. */}
               <div className="flex min-w-0 flex-1 items-start gap-2 pr-8 lg:items-baseline lg:pr-0">
-                <Link href={profileHref} className="relative z-10 inline-block min-w-0 max-w-full">
+                <Link href={profileHref} className="relative z-10 block min-w-0 flex-1">
                   <h3 title={businessName ? businessName : professional.fullName} className="min-w-0 font-bold text-[#111827] text-[15px] leading-[1.1] hover:text-[#009FD9] transition-colors">
                     <ResponsiveVerifiedName
                       name={displayName.primaryDesktop}

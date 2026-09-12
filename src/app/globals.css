@@ -357,6 +357,16 @@ html.ccr-native-bottom-nav-visible body .ccr-search-bottom-sheet {
   bottom: 0;
 }
 
+/* Safari en iPhone pone su barra de direcciones flotando sobre el borde
+   inferior de la página: sin este relleno la última tarjeta (con su botón
+   verde de WhatsApp) quedaba debajo de la barra y la teñía de verde. El
+   relleno es blanco, del propio panel, y además deja el botón alcanzable. */
+@media (max-width: 1023px) {
+  .ccr-search-bottom-sheet {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
 @media (max-width: 1023px) {
   :root {
     --ccr-responsive-footer-reserve: 72px;

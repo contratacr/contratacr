@@ -10,6 +10,7 @@ import { getInitials } from "@/lib/utils";
 import { useAdminAutoRefresh } from "@/hooks/use-admin-auto-refresh";
 import { useCachedResource } from "@/hooks/use-cached-resource";
 import { cn } from "@/lib/utils";
+import { VerifiedSeal } from "@/components/ui/verified-seal";
 
 type Service = { id: string; label: string; groupId: string; groupLabel: string; source: "base" | "custom"; professionals: number; verified: number };
 type Group = { id: string; label: string; services: number; withProfessionals: number; professionals: number };
@@ -267,7 +268,7 @@ export function AdminCoverage() {
                           </p>
                         </div>
                         <div className="flex shrink-0 flex-wrap items-center justify-end gap-1.5">
-                          {pro.verified && <span className="rounded-md bg-[#f0fdf4] px-2 py-0.5 text-[11px] font-semibold text-[#15803d]">Verificado</span>}
+                          {pro.verified && <VerifiedSeal label="Verificado" className="h-4 w-4 shrink-0 text-[#009FD9]" />}
                           {(provinceFilter || cantonFilter) && (
                             <span className={cn("rounded-md px-2 py-0.5 text-[11px] font-semibold", pro.basedHere ? "bg-[#e0f2fe] text-[#0369a1]" : "bg-[#f1f5f9] text-[#64748b]")}>{pro.basedHere ? "Con sede aquí" : pro.nationwide ? "Todo el país" : "Atiende aquí"}</span>
                           )}

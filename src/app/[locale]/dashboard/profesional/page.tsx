@@ -589,7 +589,7 @@ function GuidePreview({ id, t }: { id: string; t: ReturnType<typeof useTranslati
         <div className="min-w-0">
           <div className="flex items-center gap-2">
             <p className="truncate text-lg font-bold text-[#162543]">ContrataCR</p>
-            <Badge variant="verified">{t("exampleProfile.verified")}</Badge>
+            <VerifiedSeal label={t("exampleProfile.verified")} className="h-[18px] w-[18px] shrink-0 text-[#009FD9]" />
           </div>
           <p className="text-sm text-[#526277]">Isaac Alberto Sanchez Monge</p>
           <p className="mt-1 inline-flex rounded-full bg-[#f3f4f6] px-2 py-0.5 text-xs font-semibold text-[#6b7280]">{t("exampleProfile.service")}</p>
@@ -1090,9 +1090,28 @@ export default function DashboardPage() {
     bootstrapHydratedForRef.current = user.id;
     const cached = getDashboardCache<DashboardBootstrap>(dashboardBootstrapKey(user.id));
     if (cached) {
+      // Una ficha profesional en la caché sí es respuesta: se pinta el panel de
+      // una vez y la consulta silenciosa lo confirma por detrás.
+      //
+      // Una caché SIN ficha no lo es. "Todavía no cargó" y "no tiene ficha" se
+      // ven igual, y darla por buena apagaba el cargador y pintaba el panel de
+      // cliente a un profesional. Bastaba una lectura vacía —la primera visita
+      // recién registrado, o una consulta que no devolvió la fila— para que la
+      // caché quedara así y CADA entrada siguiente abriera en el panel
+      // equivocado. Por eso pasaba "en veces" y no siempre.
+      // Una caché sin ficha solo es sospechosa si la cuenta DICE ser profesional
+      // (metadatos): ahí la ficha tendría que existir y se espera a confirmar.
+      // Para una cuenta de cliente "sin ficha" es lo normal y se pinta de una
+      // vez; si no, cada entrada al panel del cliente mostraba el esqueleto.
+      const sinFicha = !cached.pro && canOffer(user);
       queueMicrotask(() => {
         setPro(cached.pro as ProData | null);
         setProfile(cached.profile);
+        if (sinFicha) {
+          // El cargador se queda puesto hasta que la consulta confirme.
+          void fetchPro();
+          return;
+        }
         setLoading(false);
         void fetchPro({ silent: true });
       });
@@ -2503,8 +2522,12 @@ export default function DashboardPage() {
                             onSaved={(intent) => handleSaved(intent ?? "section")}
                           />
                         )}
+                        {/* La tarjeta de Disponibilidad es solo para el teléfono, donde
+                            el cuerpo del panel es gris y la sección necesita su propio
+                            marco. De 1024px en adelante ese cuerpo YA es la tarjeta
+                            blanca del panel: repetirla dejaba una caja dentro de otra. */}
                         {activeTab === "availability" && pro && (
-                          <div className="rounded-2xl border border-[#e5e7eb] bg-white p-5 shadow-sm">
+                          <div className="max-lg:rounded-2xl max-lg:border max-lg:border-[#e5e7eb] max-lg:bg-white max-lg:p-5 max-lg:shadow-sm">
                           <AvailabilityEditor
                             professionalId={pro.id}
                             initialPublic={pro.availability_public ?? true}

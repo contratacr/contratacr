@@ -7,6 +7,7 @@ import { notifySupportInbox } from "@/lib/support-notify";
 import { enforceRateLimit } from "@/lib/rate-limit";
 import { LONG_TEXT_MAX_LENGTH, limitTrimmedText } from "@/lib/text-limits";
 import { auditUserAction } from "@/lib/audit/user-action";
+import { despuesDeResponder } from "@/lib/after-response";
 
 // Guest→account linking: when a user with a VERIFIED email views/uses support,
 // attach any prior GUEST tickets (user_id null) with the same email to their
@@ -97,21 +98,28 @@ export async function POST(req: Request) {
   if (!ticketId) return NextResponse.json({ error: "Datos inválidos" }, { status: 400 });
 
   const db = createAdminClient();
-  const { data: ticket } = await db.from("support_tickets").select("*").eq("id", ticketId).eq("user_id", user.id).single();
+  // Las dos consultas son independientes: en serie sumaban dos viajes a la base
+  // antes de siquiera guardar el mensaje.
+  const [{ data: ticket }, contact] = await Promise.all([
+    db.from("support_tickets").select("*").eq("id", ticketId).eq("user_id", user.id).single(),
+    getCanonicalProfileContact(db, user),
+  ]);
   if (!ticket) return NextResponse.json({ error: "Ticket no encontrado" }, { status: 404 });
 
   const now = new Date().toISOString();
-  const contact = await getCanonicalProfileContact(db, user);
   const senderName = contact.name || ticket.name || null;
   if (contact.email && ticket.email !== contact.email) {
-    await db.from("support_tickets").update({ email: contact.email }).eq("id", ticketId);
+    despuesDeResponder(
+      db.from("support_tickets").update({ email: contact.email }).eq("id", ticketId) as unknown as Promise<unknown>,
+      "support.sync-email",
+    );
   }
   const safeBody = limitTrimmedText(body, LONG_TEXT_MAX_LENGTH);
 
   // CONFIRM — the user agrees the ticket is resolved (finalizes it).
   if (action === "confirm") {
     await db.from("support_tickets").update({ user_confirmed: true, status: "resolved" }).eq("id", ticketId);
-    await auditUserAction(db, req, {
+    despuesDeResponder(auditUserAction(db, req, {
       actorUserId: user.id,
       actorRole: "user",
       action: "support.confirm_resolved",
@@ -120,7 +128,7 @@ export async function POST(req: Request) {
       entityOwnerUserId: user.id,
       beforeData: { status: ticket.status },
       afterData: { status: "resolved", user_confirmed: true },
-    });
+    }), "support.confirm:audit");
     return NextResponse.json({ ok: true });
   }
 
@@ -131,8 +139,8 @@ export async function POST(req: Request) {
     await db.from("support_ticket_messages").insert({
       ticket_id: ticketId, sender_role: "user", sender_id: user.id, sender_name: senderName, body: safeBody || "El usuario solicitó reabrir el ticket: el problema continúa.",
     });
-    await notifySupportInbox({ subject: ticket.subject, fromName: senderName, fromEmail: contact.email || ticket.email || user.email || "", body: "Solicitud de reapertura: el problema continúa.", isReply: true });
-    await auditUserAction(db, req, {
+    despuesDeResponder(notifySupportInbox({ subject: ticket.subject, fromName: senderName, fromEmail: contact.email || ticket.email || user.email || "", body: "Solicitud de reapertura: el problema continúa.", isReply: true }), "support.reopen:email");
+    despuesDeResponder(auditUserAction(db, req, {
       actorUserId: user.id,
       actorRole: "user",
       action: "support.reopen",
@@ -141,7 +149,7 @@ export async function POST(req: Request) {
       entityOwnerUserId: user.id,
       beforeData: { status: ticket.status },
       afterData: { status: "in_progress", user_confirmed: false },
-    });
+    }), "support.reopen:audit");
     return NextResponse.json({ ok: true });
   }
 
@@ -156,11 +164,14 @@ export async function POST(req: Request) {
   const nextStatus = ticket.status === "resolved" ? "in_progress" : ticket.status;
   await db.from("support_tickets").update({ status: nextStatus, user_confirmed: false, last_reply_at: now, last_reply_role: "user" }).eq("id", ticketId);
 
-  await notifySupportInbox({
+  // El correo a la bandeja de soporte (una llamada HTTP a Brevo, ~0,5-1,7 s) y
+  // la auditoría no pintan nada en pantalla: salen del camino de la respuesta
+  // para que enviar un mensaje sea inmediato.
+  despuesDeResponder(notifySupportInbox({
     subject: ticket.subject, fromName: senderName, fromEmail: contact.email || ticket.email || user.email || "", body: safeBody, isReply: true,
-  });
+  }), "support.reply:email");
 
-  await auditUserAction(db, req, {
+  despuesDeResponder(auditUserAction(db, req, {
     actorUserId: user.id,
     actorRole: "user",
     action: "support.reply",
@@ -170,7 +181,7 @@ export async function POST(req: Request) {
     beforeData: { status: ticket.status },
     afterData: { status: nextStatus, last_reply_role: "user" },
     metadata: { message_length: safeBody.length },
-  });
+  }), "support.reply:audit");
 
   return NextResponse.json({ ok: true, message: savedMessage, status: nextStatus });
 }

@@ -6,7 +6,7 @@ import { LandingNavbar } from "@/components/landing/landing-navbar";
 import { SectionHeaderTitle } from "@/components/mobile/section-header-title";
 import { useTranslations } from "next-intl";
 import { notFound } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { isNativeAppRuntime } from "@/hooks/use-native-app";
 
 // La app se reconoce por el runtime de Capacitor o por la marca que el propio
@@ -17,13 +17,24 @@ function esLaApp() {
   return /(?:^|;\s*)ccr_platform=native(?:;|$)/.test(document.cookie);
 }
 
+// Capacitor no avisa cuando se anuncia: la lectura se repite en el efecto de
+// abajo, así que aquí no hay nada a lo que suscribirse.
+const sinSuscripcion = () => () => {};
+
 export default function MessagesPage() {
   const tSeccion = useTranslations("sectionTitles");
   // Los mensajes son de la app: en la web esta ruta no existe. Capacitor tarda
   // unos milisegundos en anunciarse, así que solo se descarta cuando ya se sabe.
-  const [entorno, setEntorno] = useState<"pendiente" | "app" | "web">(
-    () => (esLaApp() ? "app" : "pendiente"),
-  );
+  // Arranca SIEMPRE en «pendiente», también en el cliente: el servidor no ve
+  // Capacitor ni el documento y pinta el marco vacío, así que si el cliente
+  // arrancara ya en «app» React descartaría el HTML entero por no coincidir
+  // (error de hidratación en cada apertura de Mensajes y un repintado de más).
+  // La app se reconoce antes del primer pintado, en el efecto de abajo.
+  // El servidor responde «no es la app» (marco vacío) y el cliente lo
+  // reemplaza en el mismo ciclo de hidratación sin descartar el HTML.
+  const esAppAhora = useSyncExternalStore(sinSuscripcion, esLaApp, () => false);
+  const [entornoDetectado, setEntorno] = useState<"pendiente" | "app" | "web">("pendiente");
+  const entorno = esAppAhora ? "app" : entornoDetectado;
   useEffect(() => {
     if (entorno === "app") return;
     const revisar = () => { if (esLaApp()) setEntorno("app"); };

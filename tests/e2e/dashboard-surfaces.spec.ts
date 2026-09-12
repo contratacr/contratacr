@@ -64,12 +64,20 @@ async function exerciseVisibleFilters(page: import("playwright/test").Page) {
         return { clientWidth: button.clientWidth, scrollWidth: button.scrollWidth, left: box.left, right: box.right };
       }),
     }));
-    expect(geometry.scrollWidth, `Filter group should not be clipped (${page.url()})`).toBeLessThanOrEqual(geometry.clientWidth + 2);
     // A rail (5+ filters) scrolls sideways by design: its later chips start past
     // the viewport and the click loop below brings each one into view. Segmented
     // groups must fit the screen outright.
     // "chips" is a rail too: small outlined pills on an overflow-x-auto row.
-    const rail = layout === "scroll" || layout === "scroll-pills" || layout === "chips" || layout === "tabs";
+    // "segmented-scroll" (4-5 steps) is both: it shares the row from 640px up and
+    // scrolls below that, bringing the selected step into view. Forcing four steps
+    // to share a 390px row squeezed the cells until the labels clipped ("Enviad…"),
+    // so the whole label wins over fitting them all at once — which is exactly what
+    // the per-button check below enforces at every width.
+    const rail = layout === "scroll" || layout === "scroll-pills" || layout === "chips" || layout === "tabs"
+      || (layout === "segmented-scroll" && geometry.viewportWidth < 640);
+    if (!rail) {
+      expect(geometry.scrollWidth, `Filter group should not be clipped (${page.url()})`).toBeLessThanOrEqual(geometry.clientWidth + 2);
+    }
     for (const button of geometry.buttons) {
       expect(button.scrollWidth, `Filter label should not be clipped (${page.url()})`).toBeLessThanOrEqual(button.clientWidth + 2);
       if (rail) continue;

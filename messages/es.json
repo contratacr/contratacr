@@ -138,7 +138,7 @@
     "back": "Volver",
     "projects": "Mis proyectos",
     "recent": "Recientes",
-    "recentClear": "Borrar búsquedas",
+    "recentClear": "Borrar",
     "recentlyViewed": "Vistos recientemente",
     "publishRequest": "Publicar lo que necesito",
     "register": "Registrarse"
@@ -2623,7 +2623,6 @@
     "idTypeDimex": "DIMEX",
     "idTypeNite": "NITE",
     "changeId": "Cambiar identificación",
-    "cancelChangeId": "Cancelar",
     "changeIdTitle": "Cambiar identificación",
     "changeIdBody": "Ingresa la nueva identificación y confirma los datos antes de guardar."
   },
@@ -2776,11 +2775,10 @@
     "supportHeading": "Soporte",
     "secBasic": "Datos básicos",
     "secBasicDesc": "Foto, nombre y teléfono",
-    "changePhoto": "Cambiar",
+    "changePhoto": "Cambiar foto",
     "addPhoto": "Agregar foto",
-    "removePhoto": "Eliminar",
+    "removePhoto": "Quitar foto",
     "uploading": "Subiendo...",
-    "photoHint": "JPG, PNG, WEBP, HEIC o HEIF.",
     "fullName": "Nombre completo",
     "verified": "Verificado",
     "nameLockedHelp": "Tu nombre proviene de la identificación que ingresaste en tu última cita. ¿Un error o cambio legal? <link>Solicítalo a soporte</link>.",
@@ -2814,7 +2812,9 @@
     "photoTooLarge": "La foto es muy pesada. Elige una foto más liviana o toma una nueva.",
     "photoUnsupported": "No pudimos preparar esa foto. Usa JPG, PNG, WEBP, AVIF, HEIC, HEIF o GIF.",
     "photoAlt": "Foto de perfil",
-    "clientFallback": "Cliente"
+    "clientFallback": "Cliente",
+    "viewPhoto": "Ver foto de perfil",
+    "close": "Cerrar"
   },
   "accountSecurity": {
     "heading": "Cuenta y seguridad",
@@ -2964,7 +2964,8 @@
     "jobsTab": "Empleos",
     "favoriteOffer": "Oferta favorita",
     "favoriteJob": "Empleo favorito",
-    "view": "Ver",
+    "viewOffer": "Ver oferta",
+    "viewJob": "Ver empleo",
     "emptyProfessionals": "No tienes profesionales favoritos.",
     "emptyOffers": "No tienes ofertas favoritas.",
     "emptyJobs": "No tienes empleos favoritos.",
@@ -3236,6 +3237,7 @@
     "zoneHelp": "Para que te escriban profesionales de tu zona.",
     "successNotified": "{count, plural, =0 {Todavía no hay profesionales de este servicio en tu zona, pero la dejamos publicada para cuando se sumen.} one {Le avisamos a # profesional de {service}.} other {Le avisamos a # profesionales de {service}.}}",
     "successNext": "Te avisamos apenas alguien te responda. Después le escribes al que quieras.",
+    "successGoToProjects": "Ver mis proyectos",
     "successView": "Ver mi proyecto",
     "dirOfferBodyNew": "Crea tu perfil profesional y empieza a recibir citas y proyectos.",
     "avisoAnuncio": "Esto se lee como si estuvieras ofreciendo un servicio. Acá se pide, no se ofrece.",
@@ -3303,10 +3305,7 @@
     "week7Group": "Últimos 7 días",
     "month30Group": "Últimos 30 días",
     "groupNew": "Nuevas",
-    "groupEarlier": "Anteriores",
-    "filterAll": "Todas",
-    "filterUnread": "No leídas",
-    "emptyUnread": "No tienes notificaciones sin leer"
+    "groupEarlier": "Anteriores"
   },
   "projects": {
     "title": "Cuéntanos qué necesitas",
@@ -4067,7 +4066,7 @@
     "shareImage": "Compartir imagen",
     "download": "Descargar imagen",
     "preparing": "Preparando la tarjeta…",
-    "cardFooter": "Escanea para ver mi perfil y mis reseñas",
+    "cardFooter": "Escanea para ver mi perfil",
     "cardTrust": "Identidad verificada",
     "reviewsHint": "Mándaselo a los clientes con los que ya trabajaste. Las reseñas son lo primero que mira alguien antes de contratar.",
     "reviewsMessage": "Hola, ¿cómo estás? Ahora estoy en ContrataCR y me ayudaría mucho que me dejaras una reseña del trabajo que te hice. Es rápido, entras a este enlace y listo: {url} ¡Muchas gracias!",
@@ -4236,6 +4235,7 @@
     "attachedBooking": "Está en una cita: el cliente la ve ahí y puede descargarla.",
     "attachedProject": "Está en un proyecto: el cliente la ve ahí y puede descargarla.",
     "rowSend": "Enviar cotización",
+    "rowSendShort": "Cotización",
     "rowQuote": "Cotización",
     "emailSubject": "Cotización N.º {number} de {name}",
     "email": "Correo",

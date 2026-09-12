@@ -89,7 +89,10 @@ function profileReturnLabel(href: string, locale: string) {
   const params = new URLSearchParams(href.includes("?") ? href.split("?")[1]?.split("#")[0] : "");
   if (path.startsWith("/ofertas")) return locale === "en" ? "Back to offers" : "Volver a ofertas";
   if (path.startsWith("/empleos")) return locale === "en" ? "Back to jobs" : "Volver a empleos";
-  if (path.startsWith("/dashboard/profesional")) return locale === "en" ? "Back to my dashboard" : "Volver a mi panel";
+  if (path.startsWith("/dashboard/profesional")) {
+    if (params.get("tab") === "saved") return locale === "en" ? "Back to favorites" : "Volver a favoritos";
+    return locale === "en" ? "Back to my dashboard" : "Volver a mi panel";
+  }
   if (path.startsWith("/dashboard/cliente")) {
     if (params.get("tab") === "connections") return locale === "en" ? "Back to connections" : "Volver a conexiones";
     if (params.get("tab") === "saved") return locale === "en" ? "Back to favorites" : "Volver a favoritos";

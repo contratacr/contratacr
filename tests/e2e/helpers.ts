@@ -254,7 +254,7 @@ export async function loginAs(page: Page, email: string, password: string) {
     await openLoginForm(page);
 
     const main = page.locator("main");
-    await expectVisibleText(main, /Bienvenido de vuelta|Welcome back/i);
+    await expectVisibleText(main, /Ingresa a tu cuenta|Log in to your account|Bienvenido de vuelta|Welcome back/i);
     await main.locator('input[type="email"]').fill(email);
     await main.locator('input[type="password"]').fill(password);
     const terms = main.getByRole("checkbox");

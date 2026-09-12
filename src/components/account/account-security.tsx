@@ -241,8 +241,12 @@ export function AccountSecuritySection({ showHeading = true }: { showHeading?: b
         </div>
       )}
 
+      {/* Bloques planos separados por una línea fina: esta sección se dibuja
+          DENTRO de la tarjeta blanca del perfil, y una tarjeta blanca con borde
+          dentro de otra igual solo suma marcos. Los recuadros con color sí se
+          quedan: ahí el color es el mensaje. */}
       {/* Email */}
-      <div className="bg-white rounded-2xl border border-[#e5e7eb] p-5">
+      <div className="border-t border-[#eef3f7] pt-4 first:border-t-0 first:pt-0">
         <div className="flex items-center gap-2 mb-2">
           <Mail className="h-4 w-4 text-[#6b7280]" />
           <h3 className="text-sm font-semibold text-[#374151]">{t("email")}</h3>
@@ -335,7 +339,7 @@ export function AccountSecuritySection({ showHeading = true }: { showHeading?: b
       </div>
 
       {/* Password */}
-      <div className="bg-white rounded-2xl border border-[#e5e7eb] p-5">
+      <div className="border-t border-[#eef3f7] pt-4 first:border-t-0 first:pt-0">
         <div className="flex items-center gap-2 mb-2">
           <Lock className="h-4 w-4 text-[#6b7280]" />
           <h3 className="text-sm font-semibold text-[#374151]">{t("password")}</h3>

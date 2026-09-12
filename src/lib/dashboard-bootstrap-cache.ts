@@ -28,6 +28,14 @@ export async function loadDashboardBootstrap(userId: string, force = false) {
       ]);
       if (professionalResult.error) throw professionalResult.error;
       if (profileResult.error) throw profileResult.error;
+      // Este arranque se pide apenas aparece la sesión —la barra lo dispara al
+      // instante en la app nativa—, y en ese momento el permiso puede no estar
+      // aplicado todavía: las consultas con RLS devuelven VACÍO sin error. Una
+      // foto así decía "esta cuenta no tiene ficha profesional" y se guardaba
+      // cinco minutos, que es lo que abría el panel de cliente a un profesional.
+      // Toda cuenta tiene fila de perfil: si no vino, la sesión aún no sirve y
+      // no hay nada que guardar.
+      if (!profileResult.data) throw new Error("dashboard-bootstrap-sin-sesion");
       return {
         pro: professionalResult.data,
         profile: profileResult.data as DashboardProfileData | null,

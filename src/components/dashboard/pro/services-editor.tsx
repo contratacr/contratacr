@@ -25,6 +25,7 @@ import { IMAGE_ACCEPT } from "@/lib/upload-validation";
 import { getImageUploadPreparationErrorCode, prepareImageForUpload, uploadPhotoFormDataWithRetry } from "@/lib/client-image-upload";
 import { professionalCredentialSuggestion, serviceSupportsProfessionalCredential } from "@/lib/professional-credentials";
 import { SectionHeadline } from "@/components/dashboard/section-headline";
+import { AutoSaveHint } from "@/components/dashboard/auto-save-hint";
 
 export type ProService = {
   id: string;
@@ -638,26 +639,6 @@ export function ServicesEditor({
     setFormError(null);
   }
 
-  const listActions = (
-    <div className="hidden">
-      <button
-        type="button"
-        onClick={cancelListChanges}
-        disabled={!dirty || saving || imageUploading}
-        className="hidden h-10 rounded-xl px-4 text-sm font-semibold text-[#374151] transition-colors hover:bg-[#f3f4f6] disabled:cursor-not-allowed disabled:opacity-45 sm:inline-flex sm:items-center sm:justify-center"
-      >
-        {t("cancel")}
-      </button>
-      <button
-        type="button"
-        onClick={() => void persist(professions, services)}
-        disabled={!dirty || saving || imageUploading}
-        className="h-10 w-full rounded-full bg-[#009FD9] px-5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#0089bb] disabled:cursor-not-allowed disabled:bg-[#cbd5e1] disabled:text-white sm:w-auto"
-      >
-        {saving ? t("saving") : t("saveChanges")}
-      </button>
-    </div>
-  );
   const addServiceButton = (
     <button
       type="button"
@@ -784,7 +765,8 @@ export function ServicesEditor({
             })}
           </div>
 
-          {listActions}
+          {/* Sin botón: la lista se guarda sola y esto lo confirma. */}
+          <AutoSaveHint saving={saving} saved={saved} />
         </>
       )}
 

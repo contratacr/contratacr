@@ -264,9 +264,28 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
                 {t("cancel")}
               </Button>
             )}
-            <Button type={published ? "button" : "submit"} size="lg" className="flex-1" loading={submitting} disabled={submitting} onClick={published ? onClose : undefined}>
-              {published ? t("close") : submitting ? t("publishing") : t("publish")}
-            </Button>
+            {/* Publicada la solicitud, el paso útil es ver dónde va a llegar la
+                respuesta: el botón principal lleva a Mis proyectos y "Listo"
+                pasa a ser la salida secundaria. Antes la única salida era
+                cerrar, y el proyecto recién creado quedaba sin rastro. */}
+            {published ? (
+              // En el teléfono no caben lado a lado sin partir el rótulo en dos
+              // renglones: se apilan con el principal arriba.
+              <div className="flex w-full flex-col-reverse gap-3 sm:flex-row">
+                <Button type="button" variant="outline" size="lg" onClick={onClose} className="flex-1">
+                  {t("close")}
+                </Button>
+                <Button asChild size="lg" className="flex-1">
+                  <Link href="/dashboard/profesional?tab=sent_projects" onClick={onClose}>
+                    <span className="truncate">{t("successGoToProjects")}</span>
+                  </Link>
+                </Button>
+              </div>
+            ) : (
+              <Button type="submit" size="lg" className="flex-1" loading={submitting} disabled={submitting}>
+                {submitting ? t("publishing") : t("publish")}
+              </Button>
+            )}
           </div>
         </form>
       </div>

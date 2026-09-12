@@ -119,7 +119,7 @@ export async function HomeMarketplaceSections() {
                 <Link key={job.id} href={`/empleos/${job.id}`} className="group flex w-[84vw] max-w-[420px] shrink-0 gap-3 rounded-lg border border-[#dfe8f0] bg-white p-4 transition hover:border-[#9bdcf2] sm:w-[390px]">
                   <CompactThumb src={job.employer_avatar_url} label={job.employer_name ?? job.title} rounded="full" />
                   <div className="min-w-0 flex-1">
-                    <h3 className="truncate font-bold group-hover:text-[#008fc3]">{job.title}</h3>
+                    <h3 className="line-clamp-2 font-bold group-hover:text-[#008fc3]">{job.title}</h3>
                     <p className="mt-0.5 truncate text-sm font-semibold text-[#52627a]">{job.employer_name}</p>
                     {followedProfessionalIds.has(job.employer_id) && (
                       <p className="mt-1 text-xs font-semibold text-[#008fbd]">De alguien que sigues</p>

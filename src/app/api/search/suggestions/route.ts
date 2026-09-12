@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { unstable_cache } from "next/cache";
 import {
   searchCategories,
   getCategoryLabel,
@@ -49,10 +50,11 @@ export async function GET(req: NextRequest) {
   const dbCategoryLabels = new Map<string, { label: string; labelEn?: string }>();
   if (supabase) {
     try {
-      const { data } = await supabase
-        .from("categories")
-        .select("id, name, name_en, is_hidden")
-        .eq("is_hidden", false);
+      // La lista de categorías no cambia con cada tecla: se lee una vez cada dos
+      // minutos para todo el mundo. Antes cada letra del buscador de la portada
+      // era una consulta a la base. Se lee con la llave de servicio, sin cookies,
+      // porque lo cacheado no puede depender de quién pregunta.
+      const data = await categoriasVisiblesCacheadas();
       for (const row of data ?? []) {
         const id = String(row.id ?? "");
         const label = String(row.name ?? "").trim();
@@ -110,3 +112,16 @@ export async function GET(req: NextRequest) {
     suggestions: categorySuggestions.slice(0, 8),
   });
 }
+
+const categoriasVisiblesCacheadas = unstable_cache(
+  async () => {
+    const { createAdminClient } = await import("@/lib/supabase/admin");
+    const { data } = await createAdminClient()
+      .from("categories")
+      .select("id, name, name_en, is_hidden")
+      .eq("is_hidden", false);
+    return (data ?? []) as Array<{ id: string; name: string | null; name_en: string | null }>;
+  },
+  ["search-suggestions-categorias-visibles"],
+  { revalidate: 120 },
+);

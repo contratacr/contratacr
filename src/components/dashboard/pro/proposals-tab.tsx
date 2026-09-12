@@ -363,10 +363,12 @@ export function ProposalsTab({ categoryId }: ProposalsTabProps) {
     <div>
       <div className="mb-4">
         <StatusFilterTabs
-          // Cuatro etapas no caben a un tamaño legible en un teléfono: repartirlas
-          // en partes iguales las dejaba en 11 px. Se muestran tres a tamaño normal
-          // y la cuarta entra deslizando; la activa siempre se trae a la vista.
-          mobileLayout="scroll"
+          // Sin el riel de "scroll": ese riel corta a propósito el último ítem a
+          // media anchura para avisar de que hay más, y con rótulos de una sola
+          // palabra el corte cae a mitad de la palabra ("Finaliza") y se lee como
+          // un error de dibujo, no como "sigue". La forma segmentada da lo mismo
+          // sin ese corte: cuatro etapas con su rótulo entero, que se deslizan en
+          // el teléfono y se reparten la fila de 640px en adelante.
           tabs={PROPUESTA_TABS}
           value={stage}
           onChange={(id) => setStage(id as StageKey)}

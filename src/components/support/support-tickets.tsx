@@ -17,6 +17,7 @@ import { supportTicketRef } from "@/lib/support-ticket";
 import { LONG_TEXT_MAX_LENGTH, limitText } from "@/lib/text-limits";
 import { useAppDialog } from "@/hooks/use-app-dialog";
 import { PanelEmptyState, PanelFilterEmpty, PanelListSkeleton } from "@/components/ui/content-loading";
+import { getDashboardCache, setDashboardCache } from "@/lib/dashboard-prefetch-cache";
 
 type Ticket = {
   id: string;
@@ -88,6 +89,34 @@ async function fetchWithSessionRetry(input: string, init?: RequestInit) {
 }
 
 // El compositor crece con el texto hasta un tope, como el de Mensajes.
+// En escritorio el hilo no puede estirar la página: su alto tiene que ser el
+// espacio que de verdad queda debajo de donde arranca (la cabecera del panel, la
+// tarjeta de perfil y el navbar varían por sección y por rol, así que una resta
+// fija siempre se queda corta o se pasa).
+function useAltoDisponible(ref: { current: HTMLDivElement | null }, activo: boolean) {
+  const [alto, setAlto] = useState<number | null>(null);
+  useLayoutEffect(() => {
+    const medir = () => {
+      const el = ref.current;
+      if (!activo || !el || window.innerWidth < 1024) {
+        setAlto(null);
+        return;
+      }
+      const arriba = el.getBoundingClientRect().top;
+      const disponible = Math.round(window.innerHeight - arriba - 40);
+      setAlto(Math.max(360, Math.min(720, disponible)));
+    };
+    medir();
+    window.addEventListener("resize", medir);
+    const t = window.setTimeout(medir, 120);
+    return () => {
+      window.removeEventListener("resize", medir);
+      window.clearTimeout(t);
+    };
+  }, [ref, activo]);
+  return alto;
+}
+
 function ajustarAlto(textarea: HTMLTextAreaElement | null) {
   if (!textarea) return;
   textarea.style.height = "auto";
@@ -132,6 +161,15 @@ export function SupportTickets({
   const fmt = (d: string) => new Date(d).toLocaleString(dateLocale, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
   const [items, setItems] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(true);
+  // Caché de sesión de la lista: al volver a Soporte se pinta lo último visto y
+  // la consulta se repite por detrás. El esqueleto solo sale la primera vez.
+  const claveCache = user ? `support:tickets:${user.id}` : null;
+  useEffect(() => {
+    if (!claveCache) return;
+    const cacheados = getDashboardCache<Ticket[]>(claveCache);
+    // queueMicrotask: la regla de lint no permite setState síncrono en un efecto.
+    if (cacheados) queueMicrotask(() => { setItems(cacheados); setLoading(false); });
+  }, [claveCache]);
   const [loadError, setLoadError] = useState(false);
   const [filter, setFilter] = useState<string>("open");
   // Ticket ids with an UNREAD admin reply (from the notifications table) → drives
@@ -151,6 +189,8 @@ export function SupportTickets({
   const [showModal, setShowModal] = useState(false);
   const [showNewTicketPage, setShowNewTicketPage] = useState(false);
   const messagesRef = useRef<HTMLDivElement>(null);
+  const threadRef = useRef<HTMLDivElement | null>(null);
+  const altoHilo = useAltoDisponible(threadRef, !!openId);
 
   const keepLatestMessageVisible = useCallback((behavior: ScrollBehavior = "auto") => {
     const container = messagesRef.current;
@@ -231,13 +271,16 @@ export function SupportTickets({
         if (!r.ok) throw new Error(data?.error ?? "support-load-failed");
         return data;
       })
-      .then(({ tickets }) => setItems(tickets ?? []))
+      .then(({ tickets }) => {
+        setItems(tickets ?? []);
+        if (claveCache) setDashboardCache(claveCache, tickets ?? []);
+      })
       .catch(() => {
         setItems([]);
         setLoadError(true);
       })
       .finally(() => setLoading(false));
-  }, []);
+  }, [claveCache]);
 
   useEffect(() => {
     if (!openId && !showNewTicketPage) queueMicrotask(() => { load(); loadUnread(); });
@@ -298,27 +341,44 @@ export function SupportTickets({
   }, [initialNewSupport]);
 
   async function sendReply() {
-    if (!reply.trim() || !openId) return;
+    const texto = reply.trim();
+    if (!texto || !openId) return;
+    // El mensaje aparece de una vez, como en Mensajes: la burbuja se pinta
+    // antes de la ida y vuelta y luego se reemplaza por la fila guardada. Si
+    // el envío falla, se quita y el texto vuelve al compositor.
+    const idProvisional = `pendiente-${Date.now()}`;
+    const provisional: Message = {
+      id: idProvisional,
+      sender_role: "user",
+      sender_name: null,
+      body: texto,
+      created_at: new Date().toISOString(),
+    };
+    setMessages((previos) => [...previos, provisional]);
+    setReply("");
     setSending(true);
     const res = await fetch("/api/support", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ticketId: openId, body: reply.trim() }),
-    });
-    const data = await res.json().catch(() => ({}));
+      body: JSON.stringify({ ticketId: openId, body: texto }),
+    }).catch(() => null);
+    const data = res ? await res.json().catch(() => ({})) : {};
     setSending(false);
-    if (res.ok) {
-      setReply("");
-      // El servidor devuelve la fila guardada: se añade tal cual en vez de
-      // volver a pedir el hilo entero, que era lo que dejaba el esqueleto
-      // parpadeando con cada mensaje enviado.
+    if (res?.ok) {
       if (data?.message) {
-        setMessages((previos) => previos.some((m) => m.id === data.message.id) ? previos : [...previos, data.message]);
+        setMessages((previos) => {
+          const sinProvisional = previos.filter((m) => m.id !== idProvisional);
+          return sinProvisional.some((m) => m.id === data.message.id) ? sinProvisional : [...sinProvisional, data.message];
+        });
         if (data.status) setTicket((actual) => actual ? { ...actual, status: data.status } : actual);
       } else {
         void openTicket(openId, { silencioso: true });
       }
-    } else void showMessage({ title: errorTitle, description: t("sendError"), tone: "danger" });
+    } else {
+      setMessages((previos) => previos.filter((m) => m.id !== idProvisional));
+      setReply(texto);
+      void showMessage({ title: errorTitle, description: t("sendError"), tone: "danger" });
+    }
   }
 
   async function ticketAction(action: "confirm" | "reopen") {
@@ -402,7 +462,11 @@ export function SupportTickets({
           que desplazarse dentro de su panel con el compositor fijo abajo, no
           estirar la página. Misma forma que usa Mensajes. Las reglas de la app
           nativa son más específicas y siguen mandando allí. */}
-      <div className="ccr-support-thread flex h-[calc(100dvh-153px)] min-h-[360px] flex-col lg:h-[min(720px,calc(100dvh-260px))] lg:min-h-[480px]">
+      <div
+        ref={threadRef}
+        style={altoHilo ? { height: altoHilo } : undefined}
+        className="ccr-support-thread flex h-[calc(100dvh-153px)] min-h-[360px] flex-col lg:h-[min(720px,calc(100dvh-260px))] lg:min-h-[480px]"
+      >
         {threadLoading || !ticket ? (
           <div className="grid min-h-0 flex-1 place-items-center px-4">
             <PanelListSkeleton rows={2} hasData={!!ticket} />
@@ -419,7 +483,7 @@ export function SupportTickets({
                 </span>
                 <div className="min-w-0 flex-1">
                   <div className="flex min-w-0 items-center gap-2">
-                    <h3 className="min-w-0 flex-1 truncate text-base font-extrabold leading-tight text-[#162543]">{ticketSubject(ticket)}</h3>
+                    <h3 className="min-w-0 flex-1 line-clamp-2 text-base font-extrabold leading-tight text-[#162543]">{ticketSubject(ticket)}</h3>
                     <span className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-bold ${STATUS_COLOR[ticket.status] ?? ""}`}>{statusLabel(ticket.status)}</span>
                   </div>
                   <p className="mt-0.5 truncate text-xs font-semibold text-[#6b7280]">{t("caseRef", { ref: supportTicketRef(ticket.id, ticket.created_at, ticket.case_number) })}</p>
@@ -529,7 +593,7 @@ export function SupportTickets({
         </div>
       )}
 
-      {loading ? (
+      {loading && items.length === 0 ? (
         <PanelListSkeleton rows={3} withTabs hasData={items.length > 0} />
       ) : loadError ? (
         <div className="rounded-2xl border border-[#dfe8f0] bg-white px-5 py-10 text-center">

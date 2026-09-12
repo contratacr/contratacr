@@ -72,19 +72,18 @@ test.describe("@smoke public routes", () => {
       await expect(page.getByRole("link", { name: /^Servicios$/i }).first()).toBeVisible();
       await expect(page.getByRole("link", { name: /Soporte|Centro de ayuda/i }).first()).toBeVisible();
       await expect(page.getByRole("link", { name: /Ingresar/i }).first()).toBeVisible();
-      const offerServices = navigation.getByRole("link", { name: /Ofrecer mis servicios/i }).first();
-      await expect(offerServices).toBeVisible();
-      await expect(offerServices.locator("svg")).toHaveCount(1);
-      await expect(offerServices).toHaveCSS("color", "rgb(0, 159, 217)");
+      // El navbar ya no lleva "Ofrecer mis servicios" (a8c05f7a): la entrada
+      // pública es Registrarse, y la elección de rol se hace en /registro.
+      const register = navigation.getByRole("link", { name: /Registrarse|Crear cuenta/i }).first();
+      await expect(register).toBeVisible();
+      await expect(register.locator("svg")).toHaveCount(1);
     } else {
       const navigation = page.getByRole("banner");
       await expect(navigation.getByRole("button", { name: /^Servicios$/i }).first()).toBeVisible();
       await expect(navigation.getByRole("button", { name: /^Explorar$/i }).first()).toBeVisible();
       await expect(navigation.getByRole("link", { name: /Ingresar/i }).first()).toBeVisible();
-      const offerServices = navigation.getByRole("link", { name: /Ofrecer mis servicios/i }).first();
-      await expect(offerServices).toBeVisible();
-      await expect(offerServices.locator("svg")).toHaveCount(0);
-      await expect(offerServices).toHaveCSS("color", "rgb(0, 159, 217)");
+      const register = navigation.getByRole("link", { name: /Registrarse|Crear cuenta/i }).first();
+      await expect(register).toBeVisible();
     }
     await expectHealthyPage(page);
   });

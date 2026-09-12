@@ -18,6 +18,16 @@ import { openInNewTabOnDesktop } from "@/lib/desktop-new-tab";
 import { getProfessionalDisplayName } from "@/lib/display-name";
 import { ResponsiveVerifiedName } from "@/components/professionals/responsive-verified-name";
 import { ProgressiveImage } from "@/components/ui/progressive-image";
+import { getDashboardCache, setDashboardCache } from "@/lib/dashboard-prefetch-cache";
+
+// Al abrir algo desde Favoritos, el destino lleva de dónde salió: así el botón
+// "Volver" de la oferta, el empleo o el perfil regresa a Favoritos y no al
+// listado público, que era donde caía.
+const RUTA_FAVORITOS = "/dashboard/profesional?tab=saved";
+
+function volverAFavoritos(destino: string) {
+  return `${destino}?from=${encodeURIComponent(RUTA_FAVORITOS)}`;
+}
 
 type SavedFilter = "professionals" | "offers" | "jobs";
 type SavedItemKind = "offer" | "job";
@@ -44,7 +54,7 @@ function SavedProCard({ pro, onUnsave }: { pro: SavedPro; onUnsave: (id: string)
   const displayName = getProfessionalDisplayName(pro.fullName, pro.businessName).primaryDesktop;
 
   return (
-    <div className="grid grid-cols-[64px_minmax(0,1fr)] gap-x-3 gap-y-4 p-4 transition-colors hover:bg-[#fafafa] sm:flex sm:items-center sm:gap-4">
+    <div className="grid grid-cols-[64px_minmax(0,1fr)] gap-x-3 gap-y-4 rounded-2xl border border-[#e5e7eb] bg-white p-4 shadow-sm transition-colors hover:bg-[#fafafa] sm:flex sm:items-center sm:gap-4">
       <div className="relative shrink-0">
         <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl text-lg font-bold sm:h-14 sm:w-14 ccr-caja-icono">
           {pro.avatarUrl ? (
@@ -92,18 +102,23 @@ function SavedProCard({ pro, onUnsave }: { pro: SavedPro; onUnsave: (id: string)
 
       <div className="col-span-2 flex min-w-0 items-center gap-2 sm:col-span-1 sm:shrink-0">
         <Button variant="outline" size="sm" className="min-w-0 flex-1 sm:flex-none" asChild>
-          <Link href={`/profesionales/${pro.slug}?from=${encodeURIComponent("/dashboard/cliente?tab=saved")}`} onClick={openInNewTabOnDesktop}>
+          <Link href={volverAFavoritos(`/profesionales/${pro.slug}`)} onClick={openInNewTabOnDesktop}>
             <ExternalLink className="h-3.5 w-3.5" />
             {tSaved("viewProfile")}
           </Link>
         </Button>
+        {/* El mismo basurero que en Ofertas y Empleos: las tres pestañas de
+            Favoritos se ven juntas y la acción de quitar tiene que ser una sola.
+            El marcador azul relleno además no informaba nada aquí —en una lista
+            donde TODO está guardado, sale igual en cada fila— y no se leía como
+            "quitar" hasta descubrir que era un interruptor. */}
         <button
           type="button"
           onClick={() => onUnsave(pro.id)}
           aria-label={tSaved("unsave")}
-          className="rounded-xl p-2 text-[#009FD9] transition-colors hover:bg-red-50 hover:text-red-500"
+          className="rounded-xl p-2 text-[#8fa1b6] transition-colors hover:bg-red-50 hover:text-red-500"
         >
-          <Bookmark className="h-4 w-4 fill-current" />
+          <Trash2 className="h-4 w-4" />
         </button>
       </div>
     </div>
@@ -120,18 +135,18 @@ function SavedGenericCard({ item, onRemove }: { item: SavedItem; onRemove: (item
   const meta = isJob
     ? [text(snapshot.location_label, "Costa Rica"), text(snapshot.salary)].filter(Boolean).join(" · ")
     : [text(snapshot.service_label), text(snapshot.price)].filter(Boolean).join(" · ");
-  const href = isJob ? `/empleos/${item.item_id}` : `/ofertas/${item.item_id}`;
+  const href = volverAFavoritos(isJob ? `/empleos/${item.item_id}` : `/ofertas/${item.item_id}`);
   const Icon = isJob ? BriefcaseBusiness : Tag;
 
   return (
-    <div className="grid grid-cols-[56px_minmax(0,1fr)] gap-3 p-4 transition-colors hover:bg-[#fafafa] sm:flex sm:items-center">
+    <div className="grid grid-cols-[56px_minmax(0,1fr)] gap-3 rounded-2xl border border-[#e5e7eb] bg-white p-4 shadow-sm transition-colors hover:bg-[#fafafa] sm:flex sm:items-center">
       <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-[#eef7fb] text-[#009FD9]">
         {image ? <ProgressiveImage src={cldThumb(image, 112)} alt={title} fit="cover" wrapperClassName="h-full w-full" /> : <Icon className="h-5 w-5" />}
       </div>
       {/* Sin la etiqueta EMPLEO / OFERTA: para llegar aquí hay que estar parado
           en la pestaña que ya lo dice, así que solo gastaba un renglón. */}
       <div className="min-w-0 flex-1">
-        <h3 className="truncate text-sm font-extrabold text-[#162543]">{title}</h3>
+        <h3 className="line-clamp-2 text-sm font-extrabold text-[#162543]">{title}</h3>
         <p className="mt-0.5 truncate text-sm font-semibold text-[#53657d]">{owner}</p>
         {meta && <p className="mt-1 truncate text-xs font-semibold text-[#007fae]">{meta}</p>}
       </div>
@@ -139,7 +154,10 @@ function SavedGenericCard({ item, onRemove }: { item: SavedItem; onRemove: (item
         <Button variant="outline" size="sm" className="min-w-0 flex-1 sm:flex-none" asChild>
           <Link href={href} onClick={openInNewTabOnDesktop}>
             <ExternalLink className="h-3.5 w-3.5" />
-            {t("view")}
+            {/* "Ver oferta" / "Ver empleo", no "Ver" a secas: las tres pestañas de
+                Favoritos se ven juntas y la de profesionales ya decía "Ver perfil".
+                El nombre dice qué se abre y las tres quedan con la misma forma. */}
+            {isJob ? t("viewJob") : t("viewOffer")}
           </Link>
         </Button>
         <button
@@ -178,10 +196,16 @@ export function SavedProfessionalsTab() {
       .select("id,item_type,item_id,snapshot")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false });
-    setSavedItems(((data ?? []) as SavedItem[]).filter((item) => item.item_type === "offer" || item.item_type === "job"));
+    const filas = ((data ?? []) as SavedItem[]).filter((item) => item.item_type === "offer" || item.item_type === "job");
+    setSavedItems(filas);
+    // Caché de sesión: la próxima entrada a Favoritos pinta esto de inmediato.
+    setDashboardCache(`saved:items:${user.id}`, filas);
   }, [user]);
 
   useEffect(() => {
+    // Lo cacheado se pinta antes de esperar a la red.
+    const cacheados = user ? getDashboardCache<SavedItem[]>(`saved:items:${user.id}`) : null;
+    if (cacheados) queueMicrotask(() => setSavedItems(cacheados));
     queueMicrotask(async () => {
       if (user) {
         await applyPendingSavedPro(user.id);
@@ -233,7 +257,10 @@ export function SavedProfessionalsTab() {
   // que casi siempre se viene a buscar.
   const availableFilters: SavedFilter[] = (["professionals", "offers", "jobs"] as SavedFilter[]).filter((f) => EMPLEOS_VISIBLE || f !== "jobs");
 
-  if (!mounted || authLoading) return <PanelListSkeleton rows={3} hasData={total > 0} />;
+  // Esqueleto solo cuando de verdad no hay nada que mostrar: los profesionales
+  // guardados viven en el navegador y las ofertas/empleos vienen de la caché,
+  // así que al volver a la sección se pinta de una vez.
+  if (authLoading || (!mounted && total === 0)) return <PanelListSkeleton rows={3} hasData={total > 0} />;
 
   const tabs = availableFilters.map((id) => ({ id }));
   const tabLabels: Record<string, string> = {
@@ -265,7 +292,11 @@ export function SavedProfessionalsTab() {
         labelFor={(id) => tabLabels[id] ?? id}
       />
 
-      <div className="overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm divide-y divide-[#f3f4f6]">
+      {/* Tarjetas separadas, como Citas, Proyectos y Postulaciones: en el teléfono
+          cada favorito ocupa tres o cuatro renglones y termina con su propia fila
+          de botón, así que es un elemento, no un renglón de directorio. Unidos,
+          esa fila de botón se pegaba al siguiente favorito. */}
+      <div className="flex flex-col gap-3.5">
         {showPros && savedPros.map((pro) => <SavedProCard key={`pro-${pro.id}`} pro={pro} onUnsave={handleUnsavePro} />)}
         {showOffers && offers.map((item) => <SavedGenericCard key={item.id} item={item} onRemove={handleRemoveItem} />)}
         {showJobs && jobs.map((item) => <SavedGenericCard key={item.id} item={item} onRemove={handleRemoveItem} />)}

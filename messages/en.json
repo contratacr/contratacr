@@ -138,7 +138,7 @@
     "back": "Back",
     "projects": "My projects",
     "recent": "Recent",
-    "recentClear": "Clear searches",
+    "recentClear": "Clear",
     "recentlyViewed": "Recently viewed",
     "publishRequest": "Post what I need",
     "register": "Sign up"
@@ -2623,7 +2623,6 @@
     "idTypeDimex": "DIMEX",
     "idTypeNite": "NITE",
     "changeId": "Change ID",
-    "cancelChangeId": "Cancel",
     "changeIdTitle": "Change ID",
     "changeIdBody": "Enter the new ID and confirm the details before saving."
   },
@@ -2776,11 +2775,10 @@
     "supportHeading": "Support",
     "secBasic": "Basic details",
     "secBasicDesc": "Photo, name and phone",
-    "changePhoto": "Change",
+    "changePhoto": "Change photo",
     "addPhoto": "Add photo",
-    "removePhoto": "Remove",
+    "removePhoto": "Remove photo",
     "uploading": "Uploading...",
-    "photoHint": "JPG, PNG, WEBP, HEIC, or HEIF.",
     "fullName": "Full name",
     "verified": "Verified",
     "nameLockedHelp": "Name taken from your ID. <link>Change ID</link>.",
@@ -2814,7 +2812,9 @@
     "photoTooLarge": "The photo is too large. Choose a lighter photo or take a new one.",
     "photoUnsupported": "We couldn't prepare that photo. Use JPG, PNG, WEBP, AVIF, HEIC, HEIF, or GIF.",
     "photoAlt": "Profile photo",
-    "clientFallback": "Client"
+    "clientFallback": "Client",
+    "viewPhoto": "View profile photo",
+    "close": "Close"
   },
   "accountSecurity": {
     "heading": "Account & security",
@@ -2964,7 +2964,8 @@
     "jobsTab": "Jobs",
     "favoriteOffer": "Favorite offer",
     "favoriteJob": "Favorite job",
-    "view": "View",
+    "viewOffer": "View offer",
+    "viewJob": "View job",
     "emptyProfessionals": "You don't have any favorite professionals.",
     "emptyOffers": "You don't have any favorite offers.",
     "emptyJobs": "You don't have any favorite jobs.",
@@ -3236,6 +3237,7 @@
     "zoneHelp": "So professionals in your area can write to you.",
     "successNotified": "{count, plural, =0 {There are no professionals for this service in your area yet, but we kept it posted for when they join.} one {We notified # {service} professional.} other {We notified # {service} professionals.}}",
     "successNext": "We'll let you know as soon as someone replies. Then you write to whoever you like.",
+    "successGoToProjects": "View my projects",
     "successView": "View my project",
     "dirOfferBodyNew": "Create your professional profile and start receiving appointments and projects.",
     "avisoAnuncio": "This reads as if you were offering a service. This section is for requesting, not offering.",
@@ -3303,10 +3305,7 @@
     "week7Group": "Last 7 days",
     "month30Group": "Last 30 days",
     "groupNew": "New",
-    "groupEarlier": "Earlier",
-    "filterAll": "All",
-    "filterUnread": "Unread",
-    "emptyUnread": "You have no unread notifications"
+    "groupEarlier": "Earlier"
   },
   "projects": {
     "title": "Tell us what you need",
@@ -4067,7 +4066,7 @@
     "shareImage": "Share image",
     "download": "Download image",
     "preparing": "Preparing the card…",
-    "cardFooter": "Scan to see my profile and my reviews",
+    "cardFooter": "Scan to see my profile",
     "cardTrust": "Identity verified",
     "reviewsHint": "Send it to clients you've already worked with. Reviews are the first thing people look at before hiring.",
     "reviewsMessage": "Hi! I'm now on ContrataCR and it would help me a lot if you left a review of the work I did for you. It's quick — open this link and that's it: {url} Thank you!",
@@ -4236,6 +4235,7 @@
     "attachedBooking": "It's in an appointment: the client sees it there and can download it.",
     "attachedProject": "It's in a project: the client sees it there and can download it.",
     "rowSend": "Send quote",
+    "rowSendShort": "Quote",
     "rowQuote": "Quote",
     "emailSubject": "Quote No. {number} from {name}",
     "email": "Email",

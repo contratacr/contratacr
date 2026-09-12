@@ -10,6 +10,8 @@ export type RecentVisit = {
   imagen?: string;
   iniciales?: string;
   href: string;
+  /** Momento de la visita, para mezclarla con las búsquedas en una sola lista. */
+  at?: number;
 };
 
 const MAX_VISITAS = 6;
@@ -35,11 +37,21 @@ export function recordRecentVisit(surface: RecentVisitSurface, visita: RecentVis
   if (!visita.id || !visita.titulo.trim() || !visita.href) return;
   try {
     const previas = readRecentVisits(surface).filter((item) => item.id !== visita.id);
-    const siguientes = [visita, ...previas].slice(0, MAX_VISITAS);
+    const siguientes = [{ ...visita, at: visita.at ?? Date.now() }, ...previas].slice(0, MAX_VISITAS);
     window.localStorage.setItem(clave(surface), JSON.stringify(siguientes));
     window.dispatchEvent(new CustomEvent(RECENT_VISITS_EVENT, { detail: { surface } }));
   } catch {
     // Un almacenamiento lleno o bloqueado no puede romper la navegación.
+  }
+}
+
+export function clearRecentVisits(surface: RecentVisitSurface) {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.removeItem(clave(surface));
+    window.dispatchEvent(new CustomEvent(RECENT_VISITS_EVENT, { detail: { surface } }));
+  } catch {
+    // Sin almacenamiento no hay nada que limpiar.
   }
 }
 
@@ -59,14 +71,31 @@ export function removeRecentVisit(surface: RecentVisitSurface, id: string) {
 const CLAVE_BUSQUEDAS = "ccr-search-recents";
 const MAX_BUSQUEDAS = 6;
 
-export function leerBusquedasRecientes(): string[] {
+export type BusquedaReciente = { termino: string; at: number };
+
+/** Búsquedas con su momento, para intercalarlas con los perfiles visitados en
+ *  una sola lista de «Recientes». Las guardadas antes (solo el texto) valen
+ *  con fecha 0 y quedan al final. */
+export function leerBusquedasRecientesConFecha(): BusquedaReciente[] {
   if (typeof window === "undefined") return [];
   try {
     const parsed = JSON.parse(window.localStorage.getItem(CLAVE_BUSQUEDAS) || "[]");
-    return Array.isArray(parsed) ? parsed.filter((item): item is string => typeof item === "string").slice(0, MAX_BUSQUEDAS) : [];
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .map((item): BusquedaReciente | null => {
+        if (typeof item === "string") return { termino: item, at: 0 };
+        if (item && typeof item.termino === "string") return { termino: item.termino, at: Number(item.at) || 0 };
+        return null;
+      })
+      .filter((item): item is BusquedaReciente => !!item)
+      .slice(0, MAX_BUSQUEDAS);
   } catch {
     return [];
   }
+}
+
+export function leerBusquedasRecientes(): string[] {
+  return leerBusquedasRecientesConFecha().map((item) => item.termino);
 }
 
 export function guardarBusquedaReciente(termino: string) {
@@ -74,8 +103,8 @@ export function guardarBusquedaReciente(termino: string) {
   const limpio = termino.trim();
   if (!limpio) return;
   try {
-    const previas = leerBusquedasRecientes().filter((item) => item.toLocaleLowerCase("es-CR") !== limpio.toLocaleLowerCase("es-CR"));
-    window.localStorage.setItem(CLAVE_BUSQUEDAS, JSON.stringify([limpio, ...previas].slice(0, MAX_BUSQUEDAS)));
+    const previas = leerBusquedasRecientesConFecha().filter((item) => item.termino.toLocaleLowerCase("es-CR") !== limpio.toLocaleLowerCase("es-CR"));
+    window.localStorage.setItem(CLAVE_BUSQUEDAS, JSON.stringify([{ termino: limpio, at: Date.now() }, ...previas].slice(0, MAX_BUSQUEDAS)));
   } catch {
     // Sin almacenamiento la búsqueda corre igual; solo no queda guardada.
   }
@@ -86,8 +115,8 @@ export function guardarBusquedaReciente(termino: string) {
 export function olvidarBusquedaReciente(termino: string) {
   if (typeof window === "undefined") return;
   try {
-    const quedan = leerBusquedasRecientes().filter(
-      (item) => item.toLocaleLowerCase("es-CR") !== termino.trim().toLocaleLowerCase("es-CR"),
+    const quedan = leerBusquedasRecientesConFecha().filter(
+      (item) => item.termino.toLocaleLowerCase("es-CR") !== termino.trim().toLocaleLowerCase("es-CR"),
     );
     if (quedan.length === 0) window.localStorage.removeItem(CLAVE_BUSQUEDAS);
     else window.localStorage.setItem(CLAVE_BUSQUEDAS, JSON.stringify(quedan));

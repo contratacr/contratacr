@@ -61,9 +61,9 @@ function applicantInitials(name: string) {
 // ahora; gris = pasó o está en pausa; rojo = SOLO lo que salió mal (cancelado,
 // no seleccionado). Un empleo cerrado suele ser el final feliz — pintarlo de
 // rojo lo hacía leer como error, y con todo de colores el color deja de decir.
-function statusClass(status: JobPost["status"]) {
-  if (status === "published") return "bg-[#EBF5FB] text-[#0089bb]";
-  return "bg-[#eef2f6] text-[#60708a]";
+/** Solo el color del texto: el antetítulo no lleva pastilla. */
+function statusTextClass(status: JobPost["status"]) {
+  return status === "published" ? "text-[#0089bb]" : "text-[#60708a]";
 }
 
 export function JobsManager({ initialJobs, embedded = false, backHref = "/dashboard/profesional?mode=offer&tab=jobs", professionalId, onRefresh }: { initialJobs: ManagedJob[]; embedded?: boolean; backHref?: string; professionalId?: string; onRefresh?: () => void }) {
@@ -166,7 +166,13 @@ export function JobsManager({ initialJobs, embedded = false, backHref = "/dashbo
               <article key={job.id} className={cn("relative overflow-visible rounded-2xl border border-[#e5e7eb] bg-white shadow-[0_2px_8px_rgba(15,23,42,0.06)]", actionsOpen === job.id && "z-40")}>
                 <button type="button" onClick={() => setOpenId(isOpen ? null : job.id)} className="flex h-24 w-full items-center gap-3 px-4 text-left sm:px-5">
                   <div className="min-w-0 flex-1">
-                    <h2 className="truncate text-[15px] font-extrabold leading-tight text-[#162543] sm:text-base">{job.title}</h2>
+                    {/* El estado como ANTETÍTULO, igual que en Postulaciones: en su
+                        pastilla a la derecha obligaba a reservarle ancho fijo a TODAS
+                        las tarjetas, tuviera la palabra corta o larga, y ese ancho se
+                        lo quitaba al título. Arriba no compite con nada y se lee
+                        primero, que es lo que uno busca al recorrer la lista. */}
+                    <p className={cn("truncate text-[10px] font-extrabold uppercase tracking-[0.06em]", statusTextClass(job.status))}>{copy.jobStates[job.status]}</p>
+                    <h2 className="mt-0.5 line-clamp-2 text-[15px] font-extrabold leading-tight text-[#162543] sm:text-base">{job.title}</h2>
                     <div className="mt-1.5 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-xs font-semibold text-[#65758c]">
                       <span className="truncate">{employmentTypeLabel(job.employment_type, locale)}</span>
                       <span className="text-[#cbd5e1]">|</span>
@@ -174,7 +180,6 @@ export function JobsManager({ initialJobs, embedded = false, backHref = "/dashbo
                     </div>
                   </div>
                   <div className="flex shrink-0 items-center gap-2">
-                    <span className={cn("rounded-full px-2.5 py-1 text-xs font-bold", statusClass(job.status))}>{copy.jobStates[job.status]}</span>
                     <ChevronDown className={cn("h-5 w-5 text-[#6b7b90] transition", isOpen && "rotate-180")} />
                   </div>
                 </button>
@@ -186,7 +191,7 @@ export function JobsManager({ initialJobs, embedded = false, backHref = "/dashbo
                       <button type="button" onClick={() => setEditingJob(job)} className="hidden h-10 w-full items-center justify-center rounded-full bg-[#009FD9] px-3 text-xs font-bold text-white transition-colors hover:bg-[#0089bb] lg:inline-flex">{copy.edit}</button>
                       <Link href={`/empleos/${job.id}/editar?from=panel`} className="inline-flex h-10 w-full items-center justify-center rounded-full bg-[#009FD9] px-3 text-xs font-bold text-white transition-colors hover:bg-[#0089bb] lg:hidden">{copy.edit}</Link>
                       <div className="relative">
-                        <button type="button" onClick={() => setActionsOpen((current) => current === job.id ? null : job.id)} aria-label={copy.more} aria-haspopup="menu" aria-expanded={actionsOpen === job.id} className="grid h-10 w-10 place-items-center rounded-lg border border-[#d7e1ea] text-[#718096] transition hover:border-[#b9c8d6] hover:bg-[#f6f9fb] hover:text-[#162543]"><MoreHorizontal className="h-5 w-5" /></button>
+                        <button type="button" onClick={() => setActionsOpen((current) => current === job.id ? null : job.id)} aria-label={copy.more} aria-haspopup="menu" aria-expanded={actionsOpen === job.id} className="grid h-10 w-10 place-items-center rounded-full border border-[#d7e1ea] text-[#718096] transition hover:border-[#b9c8d6] hover:bg-[#f6f9fb] hover:text-[#162543]"><MoreHorizontal className="h-5 w-5" /></button>
                         {actionsOpen === job.id && (
                           <div role="menu" className="absolute bottom-[calc(100%+6px)] right-0 z-50 w-44 overflow-hidden rounded-xl border border-[#e5e7eb] bg-white p-1.5 shadow-[0_18px_45px_-22px_rgba(15,23,42,0.55)]">
                             {job.status !== "published" && <button role="menuitem" onClick={() => { setActionsOpen(null); updateJobStatus(job.id, "published"); }} className="block w-full rounded-lg px-3 py-2.5 text-left text-sm font-bold text-[#008fc3] hover:bg-[#f0f9fc]">{copy.publish}</button>}

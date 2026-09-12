@@ -35,6 +35,7 @@ import { useCachedResource } from "@/hooks/use-cached-resource";
 import { useAppDialog } from "@/hooks/use-app-dialog";
 import type { BookingStatus } from "@/types";
 import { PanelEmptyState, PanelFilterEmpty, PanelListSkeleton } from "@/components/ui/content-loading";
+import { VerifiedSeal } from "@/components/ui/verified-seal";
 
 /**
  * Shared "acting as a client" activity views — the user's SENT solicitudes,
@@ -153,7 +154,11 @@ async function fetchClientProjects(): Promise<Project[]> {
 // píldora de 44px/13px del botón "Enviar mensaje" del perfil profesional.
 // En el teléfono los botones llenan la fila; en escritorio la tarjeta mide 800px y
 // un botón de ese ancho se ve desproporcionado: quedan a su tamaño, alineados a la izquierda.
-const actionButtonClass = "h-11 w-auto shrink-0 grow whitespace-nowrap rounded-full px-4 text-[13px] font-bold lg:grow-0 lg:min-w-[11rem]";
+// En pantallas de 390px para abajo, dos acciones y el menú comparten renglón y
+// cada botón se queda con media tarjeta: ahí el ícono le robaba al rótulo lo
+// justo para cortarlo ("Enviar mensa…"). El rótulo dice lo que hace; el ícono
+// es adorno, así que es el que cede.
+const actionButtonClass = "h-11 w-auto shrink-0 grow whitespace-nowrap rounded-full px-4 text-[13px] font-bold max-[389px]:px-3 max-[389px]:[&>svg]:hidden lg:grow-0 lg:min-w-[11rem]";
 
 export function ClientActivity({ section }: { section: ClientActivitySection }) {
   const { user } = useAuth();
@@ -683,7 +688,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                               <div className="min-w-0 flex-1 text-[15px] font-bold leading-snug text-[#162543] [overflow-wrap:anywhere] sm:text-base">
                                 {b.professionals?.slug ? (
                                   <Link
-                                    href={`/profesionales/${b.professionals.slug}?from=${encodeURIComponent("/dashboard/cliente")}`}
+                                    href={`/profesionales/${b.professionals.slug}?from=${encodeURIComponent("/dashboard/profesional?tab=sent_bookings")}`}
                                     onClick={(e) => { e.stopPropagation(); openInNewTabOnDesktop(e); }}
                                     className="hover:text-[#009FD9] hover:underline"
                                   >
@@ -769,14 +774,20 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                               const terminada = b.status === "completed";
                               let primary: ReactNode = null;
                               if (sinFecha || fechaYaPaso) {
-                                primary = <Button size="sm" className={actionButtonClass} onClick={() => confirmBookingDone(b.id)}>{t("bookingHappened")}</Button>;
+                                primary = <Button size="sm" variant={canMessage && b.professional_id ? "secondary" : "default"} className={actionButtonClass} onClick={() => confirmBookingDone(b.id)}>{t("bookingHappened")}</Button>;
                               }
                               const reviewAction = terminada ? (
                                 <Button size="sm" variant="secondary" className={actionButtonClass} onClick={() => setReviewModal({ professionalId: b.professional_id, professionalName: b.professionals?.profiles?.full_name ?? t("professional"), bookingId: b.id, initialReview: rev ? { rating: rev.rating, comment: rev.comment } : null })}>{rev ? t("editReview") : t("leaveReview")}</Button>
                               ) : null;
+                              // Escribir es SIEMPRE la acción azul, en toda la app: el mismo
+                              // botón tiene que verse igual en cada tarjeta. Y como solo puede
+                              // haber un botón lleno por tarjeta, el resto pasa a blanco
+                              // cuando este está presente.
+                              const resenaPendiente = terminada && !rev;
                               const messageAction = canMessage && b.professional_id ? (
-                                <DirectChatLauncher professionalId={b.professional_id} professionalName={b.professionals?.profiles?.full_name || t("professional")} bookingId={b.id} contextTitle={b.service_description} buttonLabel={t("contact")} analyticsSource="booking" tone={terminada && !primary ? "primary" : "outline"} className={actionButtonClass} />
+                                <DirectChatLauncher professionalId={b.professional_id} professionalName={b.professionals?.profiles?.full_name || t("professional")} bookingId={b.id} contextTitle={b.service_description} buttonLabel={t("contact")} analyticsSource="booking" tone="primary" className={actionButtonClass} />
                               ) : null;
+                              const hayMensaje = !!messageAction;
                               // Lo frecuente se ve; lo excepcional vive en el menú, igual que en
                               // las tarjetas del profesional. Antes esta tarjeta mostraba las cinco
                               // acciones en línea y ocupaba tres renglones.
@@ -809,7 +820,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                               // un enlace: como botón repetía un camino que ya existe y le
                               // robaba sitio a la reseña. Vive en el menú, con su nombre.
                               if (puedeRecontratar) {
-                                const perfilHref = `/profesionales/${b.professionals?.slug}?from=${encodeURIComponent("/dashboard/cliente")}`;
+                                const perfilHref = `/profesionales/${b.professionals?.slug}?from=${encodeURIComponent("/dashboard/profesional?tab=sent_bookings")}`;
                                 menu.push({
                                   label: t("bookAgain"),
                                   onClick: () => {
@@ -824,8 +835,8 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                               // En una cita terminada lo que toca es la reseña, no escribirle:
                               // esa es la acción azul mientras no haya reseña. Escribir y volver
                               // a contratar bajan a la segunda fila.
-                              const resenaPrimero = terminada && !rev ? (
-                                <Button size="sm" className={actionButtonClass} onClick={() => setReviewModal({ professionalId: b.professional_id, professionalName: b.professionals?.profiles?.full_name ?? t("professional"), bookingId: b.id, initialReview: null })}>{t("leaveReview")}</Button>
+                              const resenaPrimero = resenaPendiente ? (
+                                <Button size="sm" variant={hayMensaje ? "secondary" : "default"} className={actionButtonClass} onClick={() => setReviewModal({ professionalId: b.professional_id, professionalName: b.professionals?.profiles?.full_name ?? t("professional"), bookingId: b.id, initialReview: null })}>{t("leaveReview")}</Button>
                               ) : null;
                               // Si no hay acción que mande, la primera secundaria sube a la
                               // fila del menú: un renglón con solo el "…" y un hueco al lado
@@ -835,19 +846,49 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                                 terminada && rev ? reviewAction : null,
                               ].filter(Boolean);
                               const principal = primary ?? resenaPrimero ?? candidatas.shift() ?? null;
+                              // Dos acciones y el menú caben en un renglón hasta 320 px
+                              // (medido): partirlas en dos filas alargaba la tarjeta sin
+                              // necesidad. Con tres o más, las secundarias bajan a la rejilla.
+                              const cabenEnUnaFila = candidatas.length === 1;
                               // Una sola fila alineada a la derecha, con la acción que manda
                               // pegada al menú ⋮. Repartirlas en dos filas —la principal
                               // arriba a la derecha y el resto cruzando la tarjeta entera—
                               // hacía que las secundarias se vieran más importantes que ella.
-                              const acciones = [...candidatas, principal].filter(Boolean);
                               return (
-                                <div className="grid grid-cols-2 gap-2 border-t border-[#eef2f6] pt-3 [&>*]:w-full sm:flex sm:flex-wrap sm:items-center sm:justify-end sm:[&>*]:w-auto">
-                                  {acciones}
-                                  {menu.length > 0 && (
-                                    <div className="!w-auto shrink-0 justify-self-end">
-                                      <CardActionsMenu actions={menu} label={t("actions")} />
+                                // La acción que manda y el menú ⋮ van SIEMPRE juntos en la
+                                // última fila. Con una rejilla suelta de dos columnas, un
+                                // número par de botones empujaba el ⋮ a una fila para él
+                                // solo, flotando a media tarjeta. Las secundarias van en la
+                                // rejilla —y si queda una impar, ocupa el ancho entero para
+                                // no dejar un hueco—. De 640 px en adelante `sm:contents`
+                                // disuelve las envolturas y todo vuelve a ser una sola fila
+                                // alineada a la derecha.
+                                <div className="flex flex-col gap-2 border-t border-[#eef2f6] pt-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">
+                                  {candidatas.length > 0 && !cabenEnUnaFila && (
+                                    <div className="grid grid-cols-2 gap-2 [&>*]:w-full [&>*:last-child:nth-child(odd)]:col-span-2 sm:contents sm:[&>*]:w-auto">
+                                      {candidatas}
                                     </div>
                                   )}
+                                  {/* justify-end: sin ninguna acción —una cita cancelada, por
+                                      ejemplo— el ⋮ era el único hijo de la fila y se quedaba
+                                      pegado a la izquierda. El menú va SIEMPRE a la derecha. */}
+                                  <div className="flex items-center justify-end gap-2 sm:contents">
+                                    {cabenEnUnaFila && candidatas.map((accion, i) => (
+                                      <div key={i} className="min-w-0 flex-1 [&>*]:w-full sm:contents sm:[&>*]:w-auto">
+                                        {accion}
+                                      </div>
+                                    ))}
+                                    {principal && (
+                                      <div className="min-w-0 flex-1 [&>*]:w-full sm:contents sm:[&>*]:w-auto">
+                                        {principal}
+                                      </div>
+                                    )}
+                                    {menu.length > 0 && (
+                                      <div className="shrink-0">
+                                        <CardActionsMenu actions={menu} label={t("actions")} />
+                                      </div>
+                                    )}
+                                  </div>
                                 </div>
                               );
                             })()}
@@ -1027,7 +1068,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                                                 ) : (
                                                   <p className="min-w-0 text-sm font-semibold text-[#162543]">{proposal.professionals?.profiles?.full_name}</p>
                                                 )}
-                                                {proVerified && <Badge variant="verified" className="shrink-0">{t("verified")}</Badge>}
+                                                {proVerified && <VerifiedSeal label={t("verified")} className="h-4 w-4 shrink-0 text-[#009FD9]" />}
                                                 {/* «Elegido» solo hace falta mientras el proyecto sigue
                                                     vivo y hay varias propuestas entre las que distinguir.
                                                     Con el proyecto cerrado la lista ya se filtró a esa
@@ -1076,7 +1117,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                                                   {t("chooseThisOne")}
                                                 </Button>
                                               )}
-                                              <DirectChatLauncher professionalId={proposal.professionals.id} professionalName={proposal.professionals.profiles?.full_name || t("professional")} projectId={project.id} proposalId={proposal.id} contextTitle={project.title} buttonLabel={t("writeWhatsapp")} openDirectly initialMessage={t("proposalChatGreeting", { title: project.title })} className="h-11 w-full sm:w-auto sm:px-5 rounded-full text-[13px] font-bold" tone={chosenId ? "primary" : "outline"} />
+                                              <DirectChatLauncher professionalId={proposal.professionals.id} professionalName={proposal.professionals.profiles?.full_name || t("professional")} projectId={project.id} proposalId={proposal.id} contextTitle={project.title} buttonLabel={t("writeWhatsapp")} openDirectly initialMessage={t("proposalChatGreeting", { title: project.title })} className="h-11 w-full sm:w-auto sm:px-5 rounded-full text-[13px] font-bold" tone="primary" />
                                             </div>
                                           )}
                                         </div>

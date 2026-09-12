@@ -18,10 +18,12 @@ type LocaleContract = {
 const LOCALES: LocaleContract[] = [
   {
     locale: "es",
-    navLabel: "Navegacion de la app",
-    navItems: ["Buscar", "Ofertas", "Asistente", "Empleos", "Panel"],
+    navLabel: "Navegación de la app",
+    // La cuenta e2e también ofrece servicios: desde 7d551539 quien ofrece ve
+    // «Cotizaciones» en el centro de la barra; el Asistente queda para clientes.
+    navItems: ["Buscar", "Ofertas", "Cotizaciones", "Empleos", "Panel"],
     messages: "Mensajes",
-    assistant: "Abrir asistente",
+    assistant: "Asistente",
     assistantDialog: /Asistente ContrataCR/i,
     assistantInput: /Escribe una pregunta/i,
     assistantSend: /^Enviar mensaje$/i,
@@ -31,9 +33,9 @@ const LOCALES: LocaleContract[] = [
   {
     locale: "en",
     navLabel: "App navigation",
-    navItems: ["Search", "Deals", "Assistant", "Jobs", "Panel"],
+    navItems: ["Search", "Deals", "Quotes", "Jobs", "Panel"],
     messages: "Messages",
-    assistant: "Open assistant",
+    assistant: "Assistant",
     assistantDialog: /ContrataCR Assistant/i,
     assistantInput: /Ask anything/i,
     assistantSend: /^Send message$/i,
@@ -152,42 +154,45 @@ test.describe("@mobile native shell contracts", () => {
     await loginAs(page, E2E_USERS.client.email, E2E_USERS.client.password);
   });
 
-  test("signed-out public pages reserve the compact native header and keep the offer-services icon", async ({ page }) => {
+  test("signed-out public pages keep the marketplace header pinned at the top and the register icon in the drawer", async ({ page }) => {
     await resetAuth(page);
     await gotoOK(page, "/es/ofertas");
 
-    const header = page.locator("header.ccr-app-header");
+    // En teléfono y en la app, ofertas/empleos NO llevan el navbar de la web
+    // (el marco lo pinta solo para el cajón y el escritorio, 39bc6c44): la
+    // cabecera es la propia del tablero, pegada arriba, y el contenido empieza
+    // en el borde superior sin reservar un encabezado aparte.
+    const header = page.locator("section.ccr-marketplace-sticky").first();
     const main = page.locator("main");
     await expect(header).toBeVisible();
     await expect(main).toBeVisible();
+    await expect(page.locator("header.ccr-app-header:visible")).toHaveCount(0);
 
     const geometry = await page.evaluate(() => {
-      const headerElement = document.querySelector<HTMLElement>("header.ccr-app-header");
+      const headerElement = document.querySelector<HTMLElement>("section.ccr-marketplace-sticky");
       const mainElement = document.querySelector<HTMLElement>("main");
       if (!headerElement || !mainElement) return null;
       const headerRect = headerElement.getBoundingClientRect();
       const mainRect = mainElement.getBoundingClientRect();
-      return {
-        headerBottom: headerRect.bottom,
-        mainTop: mainRect.top,
-        reservedHeaderHeight: getComputedStyle(document.body).getPropertyValue("--ccr-native-header-height").trim(),
-      };
+      return { headerTop: headerRect.top, headerHeight: headerRect.height, mainTop: mainRect.top };
     });
     expect(geometry).not.toBeNull();
-    expect(geometry!.mainTop).toBeGreaterThanOrEqual(geometry!.headerBottom - 1);
-    expect(geometry!.reservedHeaderHeight).toBe("64px");
+    expect(geometry!.headerTop).toBeLessThanOrEqual(1);
+    expect(geometry!.headerHeight).toBeGreaterThan(40);
+    expect(geometry!.mainTop).toBeLessThanOrEqual(geometry!.headerTop + 1);
 
-    const apple = page.getByRole("button", { name: /continuar con apple/i });
-    const google = page.getByRole("button", { name: /continuar con google/i });
-    await expect(page.getByRole("button", { name: /^ingresar$/i })).toBeEnabled();
     await expect(page.getByRole("checkbox")).toHaveCount(0);
-    await expect(apple).toBeEnabled();
-    await expect(google).toBeEnabled();
 
+    // Sin sesión, entrar y registrarse viven en el cajón (el tablero no pinta
+    // botones de sesión ni los accesos con Apple/Google: esos están en /login).
     await page.getByRole("button", { name: /abrir men[uú]/i }).click();
-    const offerServices = page.getByRole("link", { name: "Ofrecer mis servicios" });
-    await expect(offerServices).toBeVisible();
-    await expect(offerServices.locator("svg")).toHaveCount(1);
+    // Hay dos enlaces «Ingresar» en el DOM (navbar de escritorio oculto + cajón).
+    await expect(page.getByRole("link", { name: /^ingresar$/i }).locator("visible=true").first()).toBeVisible();
+    // Registrarse va con su ícono; "Ofrecer mis servicios" salió del navbar en
+    // a8c05f7a y el rol se elige en /registro.
+    const register = page.getByRole("link", { name: /Registrarse|Crear cuenta/i }).first();
+    await expect(register).toBeVisible();
+    await expect(register.locator("svg")).toHaveCount(1);
   });
 
   test("first installation keeps incomplete login and registration journeys retryable", async ({ page }) => {
@@ -201,7 +206,7 @@ test.describe("@mobile native shell contracts", () => {
 
     const onboarding = page.getByTestId("native-first-run-onboarding");
     await expect(onboarding).toBeVisible();
-    await expect(onboarding.getByText("Elige cómo quieres comenzar")).toBeVisible();
+    await expect(onboarding.getByRole("heading", { name: "¿Cómo quieres empezar?" })).toBeVisible();
     const clientRole = onboarding.getByRole("button", { name: /Buscar servicios/i });
     const professionalRole = onboarding.getByRole("button", { name: /Ofrecer servicios/i });
     await expect(clientRole).toHaveAttribute("aria-pressed", "true");
@@ -220,7 +225,7 @@ test.describe("@mobile native shell contracts", () => {
     await page.goBack({ waitUntil: "domcontentloaded" });
     await expect(page).toHaveURL(/\/es\/?$/);
     await expect(onboarding).toBeVisible();
-    await expect(onboarding.getByText("Elige cómo quieres comenzar")).toBeVisible();
+    await expect(onboarding.getByRole("heading", { name: "¿Cómo quieres empezar?" })).toBeVisible();
 
     await onboarding.getByRole("button", { name: /Ofrecer servicios/i }).click();
     await onboarding.getByRole("button", { name: "Crear una cuenta" }).click();
@@ -232,14 +237,14 @@ test.describe("@mobile native shell contracts", () => {
 
     await onboarding.getByRole("button", { name: /Inicia sesión/i }).click();
     await expect(page).toHaveURL(/\/es\/login/);
-    await expect(page.getByRole("heading", { name: "Bienvenido de vuelta", exact: true })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Ingresa a tu cuenta", exact: true })).toBeVisible();
     await page.goBack({ waitUntil: "domcontentloaded" });
     await expect(page).toHaveURL(/\/es\/?$/);
     await expect(onboarding).toBeVisible();
 
     await onboarding.getByRole("button", { name: /Inicia sesión/i }).click();
     await expect(page).toHaveURL(/\/es\/login/);
-    await expect(page.getByRole("heading", { name: "Bienvenido de vuelta", exact: true })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Ingresa a tu cuenta", exact: true })).toBeVisible();
     await expect.poll(() => page.evaluate(() => window.localStorage.getItem("ccr:native-first-run-onboarding:v12"))).toBeNull();
   });
 
@@ -277,8 +282,12 @@ test.describe("@mobile native shell contracts", () => {
   test("native search owns the full viewport without a hidden footer reserve", async ({ page }) => {
     await gotoOK(page, "/es/buscar?regression=1");
 
-    await expect(page.locator("nav.ccr-native-bottom-nav")).toHaveCount(0);
-    await expect(page.locator("body")).not.toHaveClass(/ccr-native-bottom-nav-visible/);
+    // «Buscar» es una pestaña de la barra de abajo (b8f95d62): la barra vive
+    // también en los resultados y se retira al desplazar; lo que no puede
+    // haber es un pie de web reservando espacio bajo el mapa.
+    await expect(page.locator("nav.ccr-native-bottom-nav")).toHaveCount(1);
+    await expect(page.locator("body")).toHaveClass(/ccr-native-bottom-nav-visible/);
+    await expect(page.locator("footer").filter({ visible: true })).toHaveCount(0);
 
     const sheet = page.locator(".ccr-search-bottom-sheet");
     const handle = sheet.getByRole("button", { name: "Cambiar tamaño del panel de resultados" });
@@ -306,41 +315,36 @@ test.describe("@mobile native shell contracts", () => {
       const overlay = element.closest<HTMLElement>(".fixed.z-\\[220\\]");
       if (!overlay) return null;
       const rect = overlay.getBoundingClientRect();
-      return { top: rect.top, bottom: rect.bottom, viewportHeight: window.innerHeight };
+      // La barra de abajo sigue montada bajo la hoja de servicios: la hoja
+      // llega hasta el borde superior de la barra, no hasta el fondo.
+      const nav = document.querySelector<HTMLElement>("nav.ccr-native-bottom-nav");
+      const navTop = nav ? nav.getBoundingClientRect().top : window.innerHeight;
+      return { top: rect.top, bottom: rect.bottom, viewportHeight: window.innerHeight, navTop };
     });
     expect(overlayGeometry).not.toBeNull();
     expect(overlayGeometry!.top).toBe(0);
     expect(overlayGeometry!.bottom).toBeLessThanOrEqual(overlayGeometry!.viewportHeight + 1);
-    expect(overlayGeometry!.bottom).toBeGreaterThanOrEqual(overlayGeometry!.viewportHeight - 1);
+    expect(overlayGeometry!.bottom).toBeGreaterThanOrEqual(Math.min(overlayGeometry!.navTop, overlayGeometry!.viewportHeight) - 1);
   });
 
-  test("notification item actions escape the scrolling panel", async ({ page }) => {
+  test("notification rows in the app delete by swipe instead of an item menu", async ({ page }) => {
     await gotoOK(page, "/es/notificaciones");
     await expect(page.getByRole("heading", { name: "Notificaciones", exact: true })).toBeVisible();
 
-    const itemOptions = page.getByRole("button", { name: "Opciones", exact: true });
-    await expect(itemOptions.first()).toBeVisible();
-    await itemOptions.last().click();
-
-    const menu = page.locator("[data-notification-item-menu]");
-    await expect(menu).toBeVisible();
-    const geometry = await menu.evaluate((element) => {
+    // En la app la fila no lleva el menú «Opciones» de la web (a8c05f7a): se
+    // desliza y aparece el botón rojo de borrar pegado al borde derecho de la
+    // propia fila, que la fila recorta hasta que se desliza.
+    await expect(page.getByRole("button", { name: "Opciones", exact: true })).toHaveCount(0);
+    const deleteButtons = page.getByRole("button", { name: /^(Eliminar|Borrar|Delete)$/i });
+    await expect.poll(() => deleteButtons.count()).toBeGreaterThan(0);
+    const geometry = await deleteButtons.first().evaluate((element) => {
       const rect = element.getBoundingClientRect();
-      return {
-        parentIsBody: element.parentElement === document.body,
-        top: rect.top,
-        right: rect.right,
-        bottom: rect.bottom,
-        viewportWidth: window.innerWidth,
-        viewportHeight: window.innerHeight,
-        zIndex: Number.parseInt(getComputedStyle(element).zIndex, 10),
-      };
+      const row = element.closest("li")!.getBoundingClientRect();
+      return { width: rect.width, right: rect.right, rowRight: row.right, viewportWidth: window.innerWidth };
     });
-    expect(geometry.parentIsBody).toBe(true);
-    expect(geometry.top).toBeGreaterThanOrEqual(0);
+    expect(geometry.width).toBe(88);
+    expect(geometry.right).toBeLessThanOrEqual(geometry.rowRight + 1);
     expect(geometry.right).toBeLessThanOrEqual(geometry.viewportWidth);
-    expect(geometry.bottom).toBeLessThanOrEqual(geometry.viewportHeight);
-    expect(geometry.zIndex).toBeGreaterThan(200);
   });
 
   for (const contract of LOCALES) {
@@ -409,10 +413,15 @@ test.describe("@mobile native shell contracts", () => {
         });
       });
 
-      await page.getByRole("button", { name: contract.assistant }).click();
+      // Con cuenta profesional el Asistente no va en la barra de abajo (ahí va
+      // Cotizaciones, 7d551539): se abre desde el menú lateral.
+      await page.getByRole("button", { name: /abrir men[uú]|open menu/i }).click();
+      await page.getByRole("button", { name: contract.assistant, exact: true }).locator("visible=true").first().click();
       const dialog = page.getByRole("dialog", { name: contract.assistantDialog });
       await expect(dialog).toBeVisible();
-      await expect(page.locator("nav.ccr-native-bottom-nav")).toBeHidden();
+      // La barra de abajo se queda bajo el asistente: tocar una pestaña lo
+      // aparta primero (native-bottom-nav), no desaparece.
+      await expect(page.locator("nav.ccr-native-bottom-nav")).toBeVisible();
       await dialog.getByRole("textbox", { name: contract.assistantInput }).fill("E2E native assistant contact");
       await assertKeyboardSafeComposer(
         page,
@@ -427,9 +436,12 @@ test.describe("@mobile native shell contracts", () => {
       await messageButton.click();
 
       await expect.poll(() => directChatRequests).toBe(1);
-      await expect(page).toHaveURL(new RegExp(`/${contract.locale}/mensajes\\?conversation=${conversationId}$`));
+      // El enlace lleva además el camino de vuelta (`back=`) al panel desde donde se abrió.
+      await expect(page).toHaveURL(new RegExp(`/${contract.locale}/mensajes\\?conversation=${conversationId}(?:&.*)?$`));
       await expect(page.locator("html")).toHaveClass(/contratacr-chat-thread-open/);
-      await expect(page.locator("nav.ccr-native-bottom-nav")).toBeHidden();
+      // En Mensajes la barra de abajo se queda (solo se retira al desplazar en
+      // portada, Ofertas, Empleos y /buscar).
+      await expect(page.locator("nav.ccr-native-bottom-nav")).toBeVisible();
       await expect(page.locator(".ccr-direct-chat-composer")).toBeVisible();
       await assertKeyboardSafeComposer(
         page,

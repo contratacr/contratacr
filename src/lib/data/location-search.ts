@@ -1,4 +1,5 @@
 import { PROVINCES } from "@/lib/data/cr-geography";
+import { DISTRICTS, PLACE_ALIASES } from "@/lib/data/cr-districts";
 import { normalizeText } from "@/lib/data/categories";
 
 /* A location suggestion for the search bars. A province filters by `provincia`,
@@ -21,6 +22,32 @@ const ALL_LOCATIONS: LocationSuggestion[] = [
   ),
 ];
 
+// Los distritos NO son un nivel más de filtro: los profesionales se ubican por
+// cantón. Cada uno se ofrece como sugerencia con su propio nombre y filtra por
+// el cantón al que pertenece, así que escribir "San Pedro" trae a los de Montes
+// de Oca. Sin esto, el buscador no reconocía el nombre del lugar donde vive la
+// mayoría: San Pedro, Jacó, Tres Ríos, Tamarindo, Pavas, Hatillo…
+const CANTON_POR_ID = new Map(
+  PROVINCES.flatMap((p) => p.cantons.map((c) => [c.id, { canton: c, provincia: p }] as const)),
+);
+
+const DISTRICT_LOCATIONS: LocationSuggestion[] = [...DISTRICTS, ...PLACE_ALIASES].flatMap((d) => {
+  const padre = CANTON_POR_ID.get(d.cantonId);
+  if (!padre) return [];
+  return [{
+    type: "canton" as const,
+    id: padre.canton.id,
+    provinceId: padre.provincia.id,
+    label: d.name,
+    // De dónde es ese distrito, para distinguir los muchos "San Rafael".
+    sublabel: `${padre.canton.name}, ${padre.provincia.name}`,
+  }];
+});
+
+function esDistrito(item: LocationSuggestion): boolean {
+  return item.type === "canton" && item.sublabel.includes(",");
+}
+
 export function allLocationSuggestions(): LocationSuggestion[] {
   return ALL_LOCATIONS;
 }
@@ -32,7 +59,9 @@ export function searchLocations(query: string, limit = ALL_LOCATIONS.length): Lo
   if (!q) return [];
 
   const scored: { item: LocationSuggestion; score: number }[] = [];
-  for (const item of ALL_LOCATIONS) {
+  // Los distritos van después: primero lo que la persona probablemente quiso
+  // decir (una provincia o un cantón) y solo entonces el barrio del mismo nombre.
+  for (const item of [...ALL_LOCATIONS, ...DISTRICT_LOCATIONS]) {
     const name = normalizeText(item.label);
     let score: number;
     if (name === q) score = 0;
@@ -41,6 +70,8 @@ export function searchLocations(query: string, limit = ALL_LOCATIONS.length): Lo
     else continue;
     // Provinces float above cantons within the same match tier.
     if (item.type === "province") score -= 0.5;
+    // Un distrito nunca desplaza a un cantón que empata con lo escrito.
+    if (esDistrito(item)) score += 0.25;
     scored.push({ item, score });
   }
   scored.sort((a, b) => a.score - b.score);

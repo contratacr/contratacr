@@ -10,6 +10,7 @@ import { Link } from "@/i18n/navigation";
 import { SupportLink } from "@/components/support/support-link";
 import { cleanId, detectIdType, isValidId } from "@/lib/cedula";
 import { caseRef, type VerificationStatus } from "@/lib/verification";
+import { VerifiedSeal } from "@/components/ui/verified-seal";
 
 interface Props {
   professionalId: string;
@@ -271,16 +272,23 @@ export function VerificationPanel({
           </Notice>
         )}
 
+        {/* SIN "Cancelar". Acá no hay nada que descartar: mientras no se pulse
+            "Agregar" no se ha guardado nada, así que cancelar solo cerraría el
+            formulario —y eso ya lo hace el botón "Cambiar identificación" de
+            arriba, que es un interruptor—. Además el botón de guardar solo
+            aparece cuando la identificación ya se comprobó, o sea que al abrir
+            el formulario el pie quedaba con "Cancelar" como ÚNICO botón: un
+            formulario cuya única acción es no hacer nada. */}
         {currentCheck && !currentCheck.taken && (
           <div className="mt-4 flex justify-end">
-            <button
-              onClick={addCedula}
-              disabled={cedulaSaving || !canAddCedula}
-              className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-full bg-[#009FD9] px-5 text-sm font-bold text-white transition-colors hover:bg-[#0089bb] disabled:opacity-50 sm:w-auto sm:min-w-[132px]"
-            >
-              <ShieldCheck className="h-4 w-4" />{" "}
-              {cedulaSaving ? t("savingCedula") : t("addCedula")}
-            </button>
+              <button
+                onClick={addCedula}
+                disabled={cedulaSaving || !canAddCedula}
+                className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-full bg-[#009FD9] px-5 text-sm font-bold text-white transition-colors hover:bg-[#0089bb] disabled:opacity-50 sm:w-auto sm:min-w-[132px]"
+              >
+                <ShieldCheck className="h-4 w-4" />{" "}
+                {cedulaSaving ? t("savingCedula") : t("addCedula")}
+              </button>
           </div>
         )}
 
@@ -332,7 +340,7 @@ export function VerificationPanel({
 
         {/* In-app support follow-up to track the case. */}
         <SupportLink
-          className="inline-flex items-center gap-2 rounded-lg border border-[#dbe4ee] bg-white px-5 py-2.5 text-sm font-bold text-[#162543] transition-colors hover:border-[#009FD9]/40 hover:bg-[#f1fbfe] hover:text-[#0089bb]"
+          className="inline-flex items-center gap-2 rounded-full border border-[#dbe4ee] bg-white px-5 py-2.5 text-sm font-bold text-[#162543] transition-colors hover:border-[#009FD9]/40 hover:bg-[#f1fbfe] hover:text-[#0089bb]"
         >
           <Headset className="h-4 w-4 shrink-0" /> {t("supportFollowUp", { ref })}
         </SupportLink>
@@ -353,7 +361,7 @@ export function VerificationPanel({
             <button
               onClick={() => runCheck(true)}
               disabled={busy}
-              className="mt-3 inline-flex items-center gap-2 rounded-lg bg-[#009FD9] hover:bg-[#0089bb] text-white text-sm font-bold px-5 py-2.5 disabled:opacity-60"
+              className="mt-3 inline-flex items-center gap-2 rounded-full bg-[#009FD9] hover:bg-[#0089bb] text-white text-sm font-bold px-5 py-2.5 disabled:opacity-60"
             >
               <Send className="h-4 w-4" />{" "}
               {busy ? t("sending") : t("sendToReview")}
@@ -410,8 +418,14 @@ export function VerificationPanel({
         value={hasCurrentCedula ? cleanCurrentCedula : null}
         typeLabel={currentIdTypeLabel}
         statusLabel={status === "verified" ? t("verifiedChip") : undefined}
-        changeLabel={changeCedulaOpen ? t("cancelChangeId") : t("changeId")}
-        onChangeClick={() => setChangeCedulaOpen((open) => !open)}
+        changeLabel={t("changeId")}
+        changeOpen={changeCedulaOpen}
+        onChangeClick={() => setChangeCedulaOpen((abierto) => {
+          // Cerrar descarta el borrador: si no, al reabrir volvía a salir el
+          // número a medio escribir de la vez anterior.
+          if (abierto) { setNewCedula(""); setCedulaCheck(null); setCedulaError(null); }
+          return !abierto;
+        })}
       />
 
       {note && status === "verified" && <Notice tone="info">{note}</Notice>}
@@ -447,13 +461,13 @@ export function VerificationPanel({
             <button
               onClick={() => runCheck(true)}
               disabled={busy}
-              className="inline-flex items-center gap-2 rounded-lg bg-[#009FD9] hover:bg-[#0089bb] text-white text-sm font-bold px-5 py-2.5 disabled:opacity-60"
+              className="inline-flex items-center gap-2 rounded-full bg-[#009FD9] hover:bg-[#0089bb] text-white text-sm font-bold px-5 py-2.5 disabled:opacity-60"
             >
               <RotateCcw className="h-4 w-4" />{" "}
               {busy ? t("sending") : t("appealReverify")}
             </button>
             <SupportLink
-              className="inline-flex items-center gap-2 rounded-lg border border-[#dbe4ee] bg-white px-5 py-2.5 text-sm font-bold text-[#162543] transition-colors hover:border-[#009FD9]/40 hover:bg-[#f1fbfe] hover:text-[#0089bb]"
+              className="inline-flex items-center gap-2 rounded-full border border-[#dbe4ee] bg-white px-5 py-2.5 text-sm font-bold text-[#162543] transition-colors hover:border-[#009FD9]/40 hover:bg-[#f1fbfe] hover:text-[#0089bb]"
             >
               <Headset className="h-4 w-4 shrink-0" /> {t("supportApp")}
             </SupportLink>
@@ -463,7 +477,7 @@ export function VerificationPanel({
 
       {status === "under_appeal" && (
         <SupportLink
-          className="inline-flex items-center gap-2 rounded-lg border border-[#dbe4ee] bg-white px-5 py-2.5 text-sm font-bold text-[#162543] transition-colors hover:border-[#009FD9]/40 hover:bg-[#f1fbfe] hover:text-[#0089bb]"
+          className="inline-flex items-center gap-2 rounded-full border border-[#dbe4ee] bg-white px-5 py-2.5 text-sm font-bold text-[#162543] transition-colors hover:border-[#009FD9]/40 hover:bg-[#f1fbfe] hover:text-[#0089bb]"
         >
           <Headset className="h-4 w-4 shrink-0" /> {t("supportAppCase", { ref })}
         </SupportLink>
@@ -497,6 +511,7 @@ function CurrentIdentificationPanel({
   typeLabel,
   statusLabel,
   changeLabel,
+  changeOpen = false,
   onChangeClick,
 }: {
   title: string;
@@ -505,13 +520,18 @@ function CurrentIdentificationPanel({
   typeLabel?: string | null;
   statusLabel?: string;
   changeLabel: string;
+  changeOpen?: boolean;
   onChangeClick: () => void;
 }) {
   return (
-    <section className="rounded-2xl border border-[#e5e7eb] bg-white px-4 py-3.5 sm:px-5">
+    // Un bloque, no una tarjeta: esto ya vive DENTRO de la tarjeta blanca del
+    // editor de perfil, y una tarjeta blanca con borde dentro de otra tarjeta
+    // blanca solo agrega ruido. Se separa con una línea fina, igual que las
+    // demás secciones del editor.
+    <section className="border-t border-[#eef3f7] pt-4 first:border-t-0 first:pt-0">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex min-w-0 items-center gap-3">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white text-[#009FD9] shadow-sm ring-1 ring-[#e5eef6]">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#eaf7fd] text-[#0089bb]">
             <ShieldCheck className="h-4.5 w-4.5" />
           </span>
           <div className="min-w-0">
@@ -526,9 +546,7 @@ function CurrentIdentificationPanel({
                 <>
                   <p className="min-w-0 truncate font-mono text-base font-extrabold tracking-wide text-[#162543]">{value}</p>
                   {statusLabel && (
-                    <Badge variant="verified" className="shrink-0">
-                      {statusLabel}
-                    </Badge>
+                    <VerifiedSeal label={statusLabel} className="h-[18px] w-[18px] shrink-0 text-[#009FD9]" />
                   )}
                 </>
               ) : (
@@ -540,10 +558,17 @@ function CurrentIdentificationPanel({
             ) : null}
           </div>
         </div>
+        {/* Mismo rótulo siempre: abrir el formulario no convierte este botón en
+            otra cosa. Que está abierto lo dice su estado, no su texto. */}
         <button
           type="button"
           onClick={onChangeClick}
-          className="inline-flex h-10 w-full items-center justify-center rounded-full border border-[#dbe4ee] bg-white px-4 text-sm font-bold text-[#162543] transition-colors hover:border-[#009FD9]/50 hover:bg-[#f1fbfe] hover:text-[#0089bb] sm:w-auto"
+          aria-expanded={changeOpen}
+          className={`inline-flex h-10 w-full items-center justify-center rounded-full border px-4 text-sm font-bold transition-colors sm:w-auto ${
+            changeOpen
+              ? "border-[#009FD9] bg-[#f1fbfe] text-[#0089bb]"
+              : "border-[#dbe4ee] bg-white text-[#162543] hover:border-[#009FD9]/50 hover:bg-[#f1fbfe] hover:text-[#0089bb]"
+          }`}
         >
           {changeLabel}
         </button>
@@ -571,24 +596,30 @@ function VerificationSummary({
         : tone === "rejected"
           ? XCircle
           : Info;
+  // El estado es lo único que merece un recuadro en esta pantalla, y el color
+  // lo dice antes que el texto. Todo lo demás son bloques planos.
+  const paleta = {
+    verified: { caja: "border-[#bbf7d0] bg-[#f0fdf4]", icono: "bg-[#dcfce7] text-[#166534]", texto: "text-[#14532d]" },
+    review: { caja: "border-[#bfe8f6] bg-[#f1fbfe]", icono: "bg-[#dbf2fb] text-[#0f6380]", texto: "text-[#0f4d64]" },
+    rejected: { caja: "border-[#fecaca] bg-[#fef2f2]", icono: "bg-[#fee2e2] text-[#b91c1c]", texto: "text-[#7f1d1d]" },
+    pending: { caja: "border-[#fde68a] bg-[#fffbeb]", icono: "bg-[#fef3c7] text-[#b45309]", texto: "text-[#78350f]" },
+  }[tone];
   return (
-    <section className="rounded-2xl border border-[#dbe4ee] bg-white p-4 shadow-sm sm:p-5">
+    <section className={`rounded-2xl border p-4 sm:p-5 ${paleta.caja}`}>
       <div className="flex items-start gap-3">
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#ccecf8] ccr-caja-icono-plana">
+        <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${paleta.icono}`}>
           <Icon className="h-[18px] w-[18px]" />
         </span>
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <h3 className="text-[15px] font-bold leading-snug text-[#162543] sm:text-base">
+            <h3 className={`text-[15px] font-bold leading-snug sm:text-base ${paleta.texto}`}>
               {title}
             </h3>
             {badge && (
-              <Badge variant="verified" className="shrink-0">
-                {badge}
-              </Badge>
+              <VerifiedSeal label={badge} className="h-[18px] w-[18px] shrink-0 text-[#009FD9]" />
             )}
           </div>
-          <div className="mt-1.5 text-sm leading-relaxed text-[#4b5563] [overflow-wrap:anywhere]">
+          <div className={`mt-1.5 text-sm leading-relaxed [overflow-wrap:anywhere] ${paleta.texto} opacity-90`}>
             {children}
           </div>
         </div>
@@ -607,7 +638,7 @@ function ActionPanel({
   children: React.ReactNode;
 }) {
   return (
-    <section className="rounded-2xl border border-[#dbe4ee] bg-white p-4 shadow-sm sm:p-5">
+    <section className="border-t border-[#eef3f7] pt-4 first:border-t-0 first:pt-0">
       <h3 className="text-[15px] font-bold text-[#162543]">{title}</h3>
       <p className="mt-1.5 text-[13px] leading-relaxed text-[#6b7280]">
         {body}

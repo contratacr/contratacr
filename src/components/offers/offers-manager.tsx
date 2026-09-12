@@ -62,9 +62,9 @@ const OFFERS_MANAGER_COPY = {
 // ahora; gris = pasó o está en pausa; rojo = SOLO lo que salió mal (cancelado,
 // no seleccionado). Un empleo cerrado suele ser el final feliz — pintarlo de
 // rojo lo hacía leer como error, y con todo de colores el color deja de decir.
-function statusClass(status: ProfessionalOffer["status"]) {
-  if (status === "published") return "bg-[#EBF5FB] text-[#0089bb]";
-  return "bg-[#eef2f6] text-[#60708a]";
+/** Solo el color del texto: el antetítulo no lleva pastilla. */
+function statusTextClass(status: ProfessionalOffer["status"]) {
+  return status === "published" ? "text-[#0089bb]" : "text-[#60708a]";
 }
 
 export function OffersManager({ initialOffers, embedded = false, backHref = "/dashboard/profesional?mode=offer&tab=offers", professionalId, serviceOptions = [], onRefresh }: { initialOffers: ProfessionalOffer[]; embedded?: boolean; backHref?: string; professionalId?: string; serviceOptions?: SelectMenuOption[]; onRefresh?: () => void }) {
@@ -157,7 +157,7 @@ export function OffersManager({ initialOffers, embedded = false, backHref = "/da
             const displayStatus = effectiveOfferStatus(offer, crTodayISO());
             return (
               <article key={offer.id} className={cn("relative overflow-visible rounded-2xl border border-[#e5e7eb] bg-white shadow-[0_2px_8px_rgba(15,23,42,0.06)]", actionsOpen === offer.id && "z-40")}>
-                <button type="button" onClick={() => setOpenId(isOpen ? null : offer.id)} className="relative grid h-28 w-full grid-cols-[52px_minmax(0,1fr)] items-center gap-3 px-4 pr-[116px] text-left sm:h-24 sm:grid-cols-[56px_minmax(0,1fr)] sm:gap-4 sm:px-5 sm:pr-[132px]">
+                <button type="button" onClick={() => setOpenId(isOpen ? null : offer.id)} className="relative grid h-28 w-full grid-cols-[52px_minmax(0,1fr)] items-center gap-3 px-4 pr-11 text-left sm:h-24 sm:grid-cols-[56px_minmax(0,1fr)] sm:gap-4 sm:px-5 sm:pr-12">
                   <div className="grid h-[52px] w-[52px] min-h-0 min-w-0 shrink-0 place-items-center overflow-hidden rounded-lg text-[#009fd9] sm:h-14 sm:w-14">
                     {imageUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element
@@ -165,7 +165,13 @@ export function OffersManager({ initialOffers, embedded = false, backHref = "/da
                     ) : <div className="grid h-full place-items-center"><BadgePercent className="h-5 w-5" /></div>}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <h2 className="truncate text-[15px] font-extrabold leading-tight text-[#162543] sm:text-base">{offer.title}</h2>
+                    {/* El estado como ANTETÍTULO, igual que en Postulaciones: en su
+                        pastilla a la derecha obligaba a reservarle ancho fijo a TODAS
+                        las tarjetas, tuviera la palabra corta o larga, y ese ancho se
+                        lo quitaba al título. Arriba no compite con nada y se lee
+                        primero, que es lo que uno busca al recorrer la lista. */}
+                    <p className={cn("truncate text-[10px] font-extrabold uppercase tracking-[0.06em]", statusTextClass(displayStatus))}>{copy.statuses[displayStatus]}</p>
+                    <h2 className="mt-0.5 line-clamp-2 text-[15px] font-extrabold leading-tight text-[#162543] sm:text-base">{offer.title}</h2>
                     {offer.service_label && (
                       <p className="mt-1 line-clamp-2 text-xs font-bold leading-4 text-[#008fc3]" title={offer.service_label}>{offer.service_label}</p>
                     )}
@@ -175,7 +181,6 @@ export function OffersManager({ initialOffers, embedded = false, backHref = "/da
                     </p>
                   </div>
                   <div className="absolute right-3 top-1/2 flex -translate-y-1/2 items-center gap-1.5 sm:right-4 sm:gap-2">
-                    <span className={cn("rounded-full px-2.5 py-1 text-xs font-bold", statusClass(displayStatus))}>{copy.statuses[displayStatus]}</span>
                     <ChevronDown className={cn("h-5 w-5 text-[#6b7b90] transition", isOpen && "rotate-180")} />
                   </div>
                 </button>
@@ -187,7 +192,7 @@ export function OffersManager({ initialOffers, embedded = false, backHref = "/da
                       <button type="button" onClick={() => setEditingOffer(offer)} className="hidden h-10 w-full items-center justify-center rounded-full bg-[#009FD9] px-3 text-xs font-bold text-white transition-colors hover:bg-[#0089bb] lg:inline-flex">{copy.edit}</button>
                       <Link href={`/ofertas/${offer.id}/editar?from=panel`} className="inline-flex h-10 w-full items-center justify-center rounded-full bg-[#009FD9] px-3 text-xs font-bold text-white transition-colors hover:bg-[#0089bb] lg:hidden">{copy.edit}</Link>
                       <div className="relative">
-                        <button type="button" onClick={() => setActionsOpen((current) => current === offer.id ? null : offer.id)} aria-label={copy.more} aria-haspopup="menu" aria-expanded={actionsOpen === offer.id} className="grid h-10 w-10 place-items-center rounded-lg border border-[#d7e1ea] text-[#718096] transition hover:border-[#b9c8d6] hover:bg-[#f6f9fb] hover:text-[#162543]"><MoreHorizontal className="h-5 w-5" /></button>
+                        <button type="button" onClick={() => setActionsOpen((current) => current === offer.id ? null : offer.id)} aria-label={copy.more} aria-haspopup="menu" aria-expanded={actionsOpen === offer.id} className="grid h-10 w-10 place-items-center rounded-full border border-[#d7e1ea] text-[#718096] transition hover:border-[#b9c8d6] hover:bg-[#f6f9fb] hover:text-[#162543]"><MoreHorizontal className="h-5 w-5" /></button>
                         {actionsOpen === offer.id && (
                           <div role="menu" className="absolute bottom-[calc(100%+6px)] right-0 z-50 w-44 overflow-hidden rounded-xl border border-[#e5e7eb] bg-white p-1.5 shadow-[0_18px_45px_-22px_rgba(15,23,42,0.55)]">
                             {displayStatus !== "published" && displayStatus !== "expired" && <button role="menuitem" onClick={() => { setActionsOpen(null); updateStatus(offer.id, "published"); }} className="block w-full rounded-lg px-3 py-2.5 text-left text-sm font-bold text-[#008fc3] hover:bg-[#f0f9fc]">{copy.publish}</button>}

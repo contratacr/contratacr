@@ -56,7 +56,10 @@ export function MetaPixel({ pixelId }: MetaPixelProps) {
       {measurement === "enabled" && (
         <Script
           id="meta-pixel"
-          strategy="afterInteractive"
+          // lazyOnload: el píxel (242 KB entre el cargador y fbevents) sale del
+          // camino crítico y entra cuando la página ya está ociosa. Las
+          // llamadas a fbq() de mientras quedan en cola y se envían igual.
+          strategy="lazyOnload"
           onReady={() => setReady(true)}
           dangerouslySetInnerHTML={{
             __html: `

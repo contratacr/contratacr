@@ -20,6 +20,7 @@ import { CASE_PHOTOS_PER_CASE, casoProfession, type ServiceLike } from "@/lib/se
 import { useAppDialog } from "@/hooks/use-app-dialog";
 import { AppTooltip } from "@/components/ui/app-tooltip";
 import { deleteOwnedMediaUrls } from "@/lib/client-media-cleanup";
+import { AutoSaveHint } from "@/components/dashboard/auto-save-hint";
 
 // NEW per-profession model (sprint 493): a "caso de éxito" is a CASE (service done · for whom ·
 // when · up to 3 photos), and there can be up to 3 cases PER PROFESSION (the old overall limit of
@@ -365,25 +366,9 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
         </div>
       )}
 
-      {/* ── Add / edit case ─────────────────────────────────────────────── */}
-      <div className="hidden">
-        <button
-          type="button"
-          onClick={cancelChanges}
-          disabled={!dirty || saving || uploading}
-          className="hidden h-10 rounded-xl px-4 text-sm font-semibold text-[#374151] transition-colors hover:bg-[#f3f4f6] disabled:cursor-not-allowed disabled:opacity-45 sm:inline-flex sm:items-center sm:justify-center"
-        >
-          {locale === "en" ? "Cancel" : "Cancelar"}
-        </button>
-        <button
-          type="button"
-          onClick={() => void persist(cases)}
-          disabled={!dirty || saving || uploading}
-          className="h-10 w-full rounded-full bg-[#009FD9] px-5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#0089bb] disabled:cursor-not-allowed disabled:bg-[#cbd5e1] disabled:text-white sm:w-auto"
-        >
-          {saving ? (locale === "en" ? "Saving..." : "Guardando...") : locale === "en" ? "Save changes" : "Guardar cambios"}
-        </button>
-      </div>
+      {/* Sin botón: los casos se guardan solos y esto lo confirma. */}
+      <AutoSaveHint saving={saving} saved={justSaved} />
+
       {draft && (
         <Modal
           onClose={closeDraft}

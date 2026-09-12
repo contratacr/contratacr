@@ -791,7 +791,7 @@ function OfferRow({
           <OfferImage offer={offer} />
           <div className="min-w-0 flex-1">
             <div className="flex min-w-0 items-center gap-2">
-              <h2 className="min-w-0 flex-1 truncate text-[14px] font-extrabold leading-5 text-[#005eaa] sm:text-[15px] lg:text-base">
+              <h2 className="min-w-0 flex-1 line-clamp-2 text-[14px] font-extrabold leading-5 text-[#005eaa] sm:text-[15px] lg:text-base">
                 {offer.title}
               </h2>
               {discount && (

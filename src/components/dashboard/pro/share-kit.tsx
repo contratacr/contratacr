@@ -8,6 +8,7 @@ import { Modal } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
 import { ShareChannels } from "@/components/ui/share-channels";
 import { getInitials } from "@/lib/utils";
+import { compartirConHojaNativa } from "@/lib/compartir-nativo";
 
 /**
  * Kit para que el profesional traiga a sus propios clientes: enlace, tarjeta
@@ -151,6 +152,9 @@ export function ShareKit({ open, onClose, profileUrl, name, services = [], avata
         ctx.strokeStyle = "#dbe4ee"; ctx.lineWidth = 3; ctx.stroke(); ctx.restore();
         ctx.drawImage(qrImg, cx - qrSize / 2, qrY, qrSize, qrSize);
       }
+      // Sin "y mis reseñas": la tarjeta la usa cualquiera, y un perfil sin
+      // reseñas prometía algo que al escanear no está. El perfil sí está
+      // siempre, y las reseñas se ven ahí cuando las hay.
       ctx.font = "700 30px Inter, -apple-system, sans-serif"; ctx.fillStyle = "#162543"; ctx.fillText(t("cardFooter"), cx, pieTextY);
       // El enlace corto escrito, para quien prefiere teclearlo antes que escanear.
       ctx.font = "600 26px Inter, -apple-system, sans-serif"; ctx.fillStyle = "#68778d";
@@ -175,10 +179,8 @@ export function ShareKit({ open, onClose, profileUrl, name, services = [], avata
   async function shareCard() {
     if (!cardBlob) return;
     const file = new File([cardBlob], "contratacr-perfil.png", { type: "image/png" });
-    const nav = navigator as Navigator & { canShare?: (d: ShareData) => boolean };
-    if (nav.share && nav.canShare?.({ files: [file] })) {
-      try { await nav.share({ files: [file] }); return; } catch { /* cancelado */ }
-    }
+    // Cerrar la hoja sin elegir nada no dispara la descarga de repuesto.
+    if (await compartirConHojaNativa({ files: [file] }) !== "no-disponible") return;
     downloadCard();
   }
 

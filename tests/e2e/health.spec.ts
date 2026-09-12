@@ -10,7 +10,12 @@ test.describe("deployment health contract", () => {
 
     const body = (await response.json()) as Record<string, unknown>;
     expect(body.status).toBe("ok");
-    expect(Object.keys(body).sort()).toEqual(["commitSha", "status"]);
+    // `supabase` trae solo banderas (url/anonKey/serviceKey presentes) y el ref del
+    // proyecto, que es público: sirve para confirmar secretos por entorno sin exponerlos.
+    expect(Object.keys(body).sort()).toEqual(["commitSha", "status", "supabase"]);
+    const supabase = body.supabase as Record<string, unknown>;
+    for (const k of ["url", "anonKey", "serviceKey"]) expect(typeof supabase[k]).toBe("boolean");
+    expect(String(supabase.projectRef ?? "")).not.toMatch(/eyJ|sb_secret/);
     expect(body.commitSha === null || typeof body.commitSha === "string").toBe(true);
     if (typeof body.commitSha === "string") {
       expect(body.commitSha).toMatch(/^[a-f0-9]{40}$/i);
@@ -23,10 +28,10 @@ test.describe("deployment health contract", () => {
 
     try {
       const response = GET();
-      expect(await response.json()).toEqual({
+      expect(await response.json()).toEqual(expect.objectContaining({
         status: "ok",
         commitSha: "a".repeat(40),
-      });
+      }));
       expect(response.headers.get("cache-control")).toContain("no-store");
     } finally {
       if (previousSha === undefined) delete process.env.VERCEL_GIT_COMMIT_SHA;
@@ -40,7 +45,7 @@ test.describe("deployment health contract", () => {
 
     try {
       const response = GET();
-      expect(await response.json()).toEqual({ status: "ok", commitSha: null });
+      expect(await response.json()).toEqual(expect.objectContaining({ status: "ok", commitSha: null }));
     } finally {
       if (previousSha === undefined) delete process.env.VERCEL_GIT_COMMIT_SHA;
       else process.env.VERCEL_GIT_COMMIT_SHA = previousSha;

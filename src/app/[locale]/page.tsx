@@ -9,12 +9,55 @@ import { FadeInUp } from "@/components/landing/fade-in-up";
 import { getZoneCoverage } from "@/lib/queries/professionals";
 import { CheckCircle2 } from "lucide-react";
 import { getTranslations } from "next-intl/server";
+import type { Metadata } from "next";
+
+// Señales para buscadores que faltaban en la portada: la dirección canónica,
+// las versiones por idioma (hreflang) y los datos estructurados de la
+// organización y del buscador del sitio. Sin ellas Google no sabía que /es y
+// /en son la misma página en dos idiomas, y no tenía cómo mostrar el cuadro
+// de búsqueda del sitio ni la ficha de la empresa.
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
+  const { locale } = await params;
+  return {
+    alternates: {
+      canonical: `/${locale}`,
+      languages: { es: "/es", en: "/en", "x-default": "/es" },
+    },
+  };
+}
+
+const DATOS_ESTRUCTURADOS = (locale: string) => JSON.stringify([
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: "ContrataCR",
+    url: "https://contratacr.com",
+    logo: "https://contratacr.com/logo-mark.png",
+    areaServed: { "@type": "Country", name: "Costa Rica" },
+    sameAs: ["https://www.instagram.com/contratacr", "https://www.facebook.com/contratacr", "https://www.tiktok.com/@contratacr"],
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: "ContrataCR",
+    url: `https://contratacr.com/${locale}`,
+    inLanguage: locale,
+    potentialAction: {
+      "@type": "SearchAction",
+      target: { "@type": "EntryPoint", urlTemplate: `https://contratacr.com/${locale}/buscar?q={search_term_string}` },
+      "query-input": "required name=search_term_string",
+    },
+  },
+]);
 
 export default async function HomePage({
   searchParams,
+  params,
 }: {
   searchParams: Promise<{ accountDeletion?: string }>;
+  params: Promise<{ locale: string }>;
 }) {
+  const { locale } = await params;
   // Real zone coverage, without fabricated canton counts, for the find-by-zone band.
   const [coverage, query, t] = await Promise.all([
     getZoneCoverage(),
@@ -29,6 +72,7 @@ export default async function HomePage({
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: DATOS_ESTRUCTURADOS(locale) }} />
       <LandingNavbar />
 
       <main className="flex-1">

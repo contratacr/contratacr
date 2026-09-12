@@ -47,7 +47,11 @@ export function marketplaceReturnLabel(
   const isEnglish = locale === "en";
   const pathname = withoutLocale(href.split(/[?#]/u)[0] || "/");
   if (pathname.startsWith("/profesionales/")) return isEnglish ? "Back to profile" : "Volver al perfil";
-  if (pathname.startsWith("/dashboard/")) return isEnglish ? "Back to dashboard" : "Volver al panel";
+  if (pathname.startsWith("/dashboard/")) {
+    const params = new URLSearchParams(href.includes("?") ? href.split("?")[1]?.split("#")[0] : "");
+    if (params.get("tab") === "saved") return isEnglish ? "Back to favorites" : "Volver a favoritos";
+    return isEnglish ? "Back to dashboard" : "Volver al panel";
+  }
   if (fallback === "/ofertas") return isEnglish ? "Back to offers" : "Volver a ofertas";
   return isEnglish ? "Back to jobs" : "Volver a empleos";
 }

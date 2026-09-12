@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { ScrollRail } from "@/components/ui/scroll-rail";
@@ -50,6 +51,24 @@ export function StatusFilterTabs({
 }) {
   const tr = useTranslations("statusTabs");
   const label = (id: string) => (labelFor ? labelFor(id) : tr(id));
+  // Al marcar una etapa, el carril se corre para mostrarla entera y dejar
+  // asomando a su vecina: así al tocar la tercera aparece la cuarta, y al
+  // volver a la primera se ve que no hay nada antes. El margen es lo que hace
+  // que asome: sin él la etapa quedaba pegada al filo y parecía la última.
+  const carrilRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    const carril = carrilRef.current;
+    if (!carril || carril.scrollWidth <= carril.clientWidth + 1) return;
+    const activa = carril.querySelector<HTMLElement>('[aria-pressed="true"]');
+    if (!activa) return;
+    const caja = carril.getBoundingClientRect();
+    const pastilla = activa.getBoundingClientRect();
+    const margen = 40;
+    const sobraDerecha = pastilla.right - (caja.right - margen);
+    const faltaIzquierda = (caja.left + margen) - pastilla.left;
+    if (sobraDerecha > 0) carril.scrollTo({ left: carril.scrollLeft + sobraDerecha, behavior: "smooth" });
+    else if (faltaIzquierda > 0) carril.scrollTo({ left: Math.max(0, carril.scrollLeft - faltaIzquierda), behavior: "smooth" });
+  }, [value]);
   // Con una sola etapa no hay nada que elegir: un control con un botón miente.
   // Se resume en una línea, como hacen las listas que solo tienen un estado.
   if (tabs.length === 1 && variant === "underline") {
@@ -166,9 +185,18 @@ export function StatusFilterTabs({
         "relative w-full max-w-full min-w-0",
         useSegmentedLayout && "rounded-xl bg-[#e6edf4] p-1",
         useScrollableLayout && "overflow-hidden",
+        // Cuatro o cinco etapas no caben repartidas en una fila de teléfono:
+        // apretarlas partía las palabras ("Enviad…", "Finaliz…"). En el teléfono
+        // la fila se desliza con los rótulos enteros —caben tres y la cuarta
+        // asoma al marcar la tercera— y de 640 px en adelante se reparten el
+        // ancho, que ahí sí alcanza.
+        useSegmentedLayout && compacto && "max-sm:overflow-x-auto max-sm:scrollbar-none",
       )}
       data-status-filter-tabs=""
-      data-filter-layout={useSegmentedLayout ? "segmented" : "scroll"}
+      // "segmented-scroll" = cuatro o cinco etapas: se deslizan en el teléfono y
+      // se reparten la fila de 640 px en adelante.
+      data-filter-layout={useSegmentedLayout ? (compacto ? "segmented-scroll" : "segmented") : "scroll"}
+      ref={useSegmentedLayout && compacto ? carrilRef : undefined}
     >
       <RailOrGrid scroll={!useSegmentedLayout} className={cn(
         useSegmentedLayout
@@ -196,32 +224,34 @@ export function StatusFilterTabs({
                       // Cada etapa toma el ancho de su rótulo y crece con el
                       // sobrante. Debajo de 380px (iPhone SE y parecidos) la
                       // pastilla del conteo se apila bajo el rótulo.
-                      ? "flex-auto gap-1 px-1 text-[11px] max-[379px]:flex-col max-[379px]:gap-0.5 min-[460px]:text-[12px] min-[560px]:text-[13px]"
+                      ? "gap-1 whitespace-nowrap px-3 text-[13px] max-sm:shrink-0 sm:flex-auto sm:px-1 sm:text-[12px] min-[560px]:text-[13px]"
                       : "gap-1 px-1.5 text-[12px] min-[400px]:text-[13px] sm:px-3",
                     shortLabels ? "whitespace-nowrap" : "whitespace-normal [overflow-wrap:anywhere]",
                   )
                 : "gap-1"
                 ,
-              // En el riel, la celda es fija para que se note que hay más a la
-              // derecha. Con rótulos cortos se angosta a 7rem: así entran TRES
-              // en un teléfono y la cuarta asoma, en vez de entrar solo dos.
-              !useSegmentedLayout && "whitespace-normal text-[13px] [overflow-wrap:anywhere]",
-              // Una sola regla para todos los anchos, sin depender del tamaño de
-              // pantalla: la celda crece con el sobrante y nunca baja de su
-              // mínimo. Donde caben las cuatro (una pantalla de computadora) se
-              // reparten la fila entera; donde no (un teléfono), se pasan del
-              // ancho y el riel deja asomar la última, que es lo que avisa de
-              // que hay más a la derecha.
+              !useSegmentedLayout && "text-[13px]",
+              // Un rótulo corto manda sobre el ancho de la celda: la celda mide
+              // lo que mide su palabra y el riel se desliza.
+              //
+              // Antes la celda valía 6,25rem fijos y el rótulo se apretaba
+              // dentro: en un teléfono, «Finalizadas» más su conteo no cabían en
+              // ese hueco y salían cortados —«Finaliz…», «Enviad…»—. Repartir el
+              // ancho solo tiene sentido cuando sobra, o sea de 640px en
+              // adelante; ahí sí vuelven a estirarse para llenar la fila.
               !useSegmentedLayout && (shortLabels
-                ? "flex-1 min-w-[6.25rem] px-2.5 sm:px-3"
-                : "flex-1 min-w-[8.25rem] px-3"),
+                ? "shrink-0 whitespace-nowrap px-3 sm:flex-1 sm:shrink sm:px-3"
+                : "flex-1 min-w-[8.25rem] whitespace-normal px-3 [overflow-wrap:anywhere]"),
               active
                 ? "bg-white text-[#009FD9] shadow-sm"
                 : "text-[#6b7280] hover:text-[#374151]"
             )}
             aria-pressed={active}
           >
-            <span className={cn("min-w-0 max-w-full", shortLabels ? "truncate" : "whitespace-normal [overflow-wrap:anywhere]")}>
+            {/* En el riel del teléfono el rótulo va entero: recortarlo ahí era
+                justo lo que producía "Enviad…". El recorte se reserva para el
+                reparto de ancho, de 640 px en adelante. */}
+            <span className={cn("min-w-0 max-w-full", shortLabels ? "sm:truncate" : "whitespace-normal [overflow-wrap:anywhere]")}>
               {label(tab.id)}
             </span>
             {count > 0 && (
@@ -240,6 +270,12 @@ export function StatusFilterTabs({
           </button>
         );
       })}
+      {/* Tope al final del carril. El relleno derecho del contenedor no se
+          respeta cuando se llega al final del desplazamiento: la última pastilla
+          quedaba pegada al filo, sin la holgura que sí tiene la primera. Este
+          elemento vacío la devuelve, y desaparece de 640 px en adelante, donde
+          ya no hay desplazamiento. */}
+      {useSegmentedLayout && compacto && <span aria-hidden className="-ml-1 w-1 shrink-0 sm:hidden" />}
       </RailOrGrid>
     </div>
   );

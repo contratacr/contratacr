@@ -149,6 +149,9 @@ test.describe("@seeded marketplace editors through the real screens", () => {
       await expect(page.locator('img[src^="blob:"]').first()).toBeVisible({ timeout: 15_000 });
       await page.locator('input[name="price_now"]').fill("45000");
       await page.locator('input[name="price_before"]').fill("60000");
+      // Moneda, unidad y cantidad viven plegadas en «Más opciones» (2a32a250):
+      // hay que abrir el pliegue antes de escribir la cantidad.
+      await page.getByText(/^Más opciones/).click();
       await page.locator('input[name="quantity_available"]').fill("3");
       await page.getByRole("button", { name: /^Publicar oferta$/ }).click();
 
@@ -180,7 +183,7 @@ test.describe("@seeded marketplace editors through the real screens", () => {
     await chooseItemAction(card, /^Pausar$/);
     await expectVisibleText(card, /Pausada/);
     await openItemActions(page, card);
-    await chooseItemAction(card, /^Publicar$/);
+    await chooseItemAction(card, /^Publicar oferta$/);
     await expectVisibleText(card, /Publicada/);
     await expectHealthyPage(page);
   });
