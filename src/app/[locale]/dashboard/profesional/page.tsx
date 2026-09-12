@@ -2073,7 +2073,9 @@ export default function DashboardPage() {
           <div className={cn(
             "mx-auto mb-6 w-full",
             "max-w-[79.5rem]",
-            activeTab !== "chat" && activeTab !== "home" && "lg:max-w-[71.5rem]",
+            // Topada al ancho de la fila Y pegada a su izquierda: centrada,
+            // el sobrante del contenedor la corría 36px a la derecha del nav.
+            activeTab !== "chat" && activeTab !== "home" && "lg:ml-0 lg:mr-auto lg:max-w-[71.5rem]",
             mobileSectionOpen ? "hidden lg:block" : "block",
           )}>
             <div className="rounded-2xl border border-[#dfe8f0] bg-white px-5 py-5 shadow-sm sm:px-6 sm:py-5">
