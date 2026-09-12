@@ -42,7 +42,14 @@ export function formatBookingWhen(scheduledDate?: string | null, scheduledTime?:
   const dt = new Date(y, m - 1, d);
   const wdRaw = dt.toLocaleDateString(dateLocale, { weekday: "short" }).replace(".", "");
   const wd = wdRaw.charAt(0).toUpperCase() + wdRaw.slice(1);
-  const dm = dt.toLocaleDateString(dateLocale, { day: "numeric", month: "short" }).replace(".", "");
+  // Mes entero, y el año solo cuando la cita no es de este año: sin él, una
+  // cita del año pasado se leía igual que una de este mes.
+  const mismoAno = y === new Date().getFullYear();
+  const dm = dt.toLocaleDateString(dateLocale, {
+    day: "numeric",
+    month: "long",
+    ...(mismoAno ? {} : { year: "numeric" }),
+  });
   const time = to12h(scheduledTime);
   return `${wd}, ${dm}${time ? ` · ${time}` : ""}`;
 }

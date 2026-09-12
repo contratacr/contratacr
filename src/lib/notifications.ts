@@ -23,6 +23,7 @@ export function formatBookingWhen(
       weekday: "long",
       day: "numeric",
       month: "long",
+      ...(y === new Date().getFullYear() ? {} : { year: "numeric" }),
     });
     const tt = time ? String(time).slice(0, 5) : null;
     return tt ? `${label} a las ${tt}` : label;
