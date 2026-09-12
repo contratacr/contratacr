@@ -32,6 +32,20 @@ test.describe("@seeded contextual direct chat", () => {
   // de este archivo) se reutilizaría con su contexto y sus contadores, y la
   // prueba no vería el contexto que acaba de crear. Cada prueba contextual
   // parte de una pareja sin chat.
+  // Los chats que deja la siembra canónica (con sus citas y mensajes) se
+  // fotografían antes de empezar y se devuelven al final tal cual: con un chat
+  // por pareja, las pruebas los reutilizan o los quitan, y el verificador de
+  // la siembra (y otras suites) los esperan ahí.
+  const CHATS_SEMBRADOS = ["b6000000-0000-4000-8000-000000000001", "b6000000-0000-4000-8000-000000000002"];
+  const conversacionesSembradas: Record<string, unknown>[] = [];
+  const mensajesSembrados: Record<string, unknown>[] = [];
+  async function fotografiarChatsSembrados() {
+    const admin = regressionAdminClient();
+    const { data: conversaciones } = await admin.from("direct_conversations").select("*").in("id", CHATS_SEMBRADOS);
+    const { data: mensajes } = await admin.from("direct_messages").select("*").in("conversation_id", CHATS_SEMBRADOS);
+    conversacionesSembradas.push(...(conversaciones ?? []));
+    mensajesSembrados.push(...(mensajes ?? []));
+  }
   async function parejaSinChat() {
     const admin = regressionAdminClient();
     const { data: leftovers } = await admin.from("direct_conversations")
@@ -39,20 +53,26 @@ test.describe("@seeded contextual direct chat", () => {
       .eq("client_id", seed.clientId)
       .eq("professional_profile_id", seed.professionalUserId);
     const leftoverIds = (leftovers ?? []).map((row) => row.id as string);
-    if (leftoverIds.length) {
-      await admin.from("direct_messages").delete().in("conversation_id", leftoverIds);
-      await admin.from("direct_conversations").delete().in("id", leftoverIds);
-    }
+    if (!leftoverIds.length) return;
+    await admin.from("direct_messages").delete().in("conversation_id", leftoverIds);
+    await admin.from("direct_conversations").delete().in("id", leftoverIds);
   }
 
   test.beforeAll(async () => {
     seed = await ensureRegressionSeed();
+    await fotografiarChatsSembrados();
     await parejaSinChat();
   });
   // Direct chat is exercised as the app: the native shell marks every request
   // with this cookie, and the API moderates messages only for the app.
   test.beforeEach(async ({ context, baseURL }) => {
     await context.addCookies([{ name: "ccr_platform", value: "native", url: baseURL ?? "http://localhost:3000" }]);
+    // Con la marca de app, la portada de bienvenida del primer arranque tapa
+    // /login (y esconde el formulario): esta suite no la prueba, así que entra
+    // como una app ya estrenada.
+    await context.addInitScript(() => {
+      window.localStorage.setItem("ccr:native-first-run-onboarding:v12", "1");
+    });
   });
   test.afterAll(async () => {
     const admin = regressionAdminClient();
@@ -88,6 +108,25 @@ test.describe("@seeded contextual direct chat", () => {
     if (proposalId) await admin.from("proposals").delete().eq("id", proposalId);
     if (projectId) await admin.from("projects").delete().eq("id", projectId);
     if (reportIds.length) await admin.from("reports").delete().in("id", reportIds);
+    // Se devuelve el chat sembrado tal como estaba (una conversación por pareja:
+    // primero se borra lo que quedó de las pruebas, arriba, y luego vuelve él).
+    if (conversacionesSembradas.length) {
+      // Lo que las pruebas dejaron entre las parejas sembradas se quita antes
+      // de devolver los chats originales (un chat por pareja).
+      const parejas = conversacionesSembradas.map((row) => `and(client_id.eq.${row.client_id},professional_profile_id.eq.${row.professional_profile_id})`);
+      const { data: intrusos } = await admin.from("direct_conversations").select("id").or(parejas.join(","));
+      const intrusoIds = (intrusos ?? []).map((row) => row.id as string).filter((id) => !CHATS_SEMBRADOS.includes(id));
+      if (intrusoIds.length) {
+        await admin.from("direct_messages").delete().in("conversation_id", intrusoIds);
+        await admin.from("direct_conversations").delete().in("id", intrusoIds);
+      }
+      const { error: conversationRestoreError } = await admin.from("direct_conversations").upsert(conversacionesSembradas, { onConflict: "id" });
+      if (conversationRestoreError) throw conversationRestoreError;
+      if (mensajesSembrados.length) {
+        const { error: messageRestoreError } = await admin.from("direct_messages").upsert(mensajesSembrados, { onConflict: "id" });
+        if (messageRestoreError) throw messageRestoreError;
+      }
+    }
   });
 
   test("profile messages deduplicate and both participants can reply", async ({ page }) => {
