@@ -6,7 +6,7 @@ import { cargarCotizaciones } from "@/lib/quotes-store";
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
-import { CalendarDays, FolderOpen, ClipboardList, Plus, CalendarClock, Wrench, Users, FileText, CheckCircle2, MessageCircle, Star } from "lucide-react";
+import { CalendarDays, FolderOpen, ClipboardList, Plus, CalendarClock, Wrench, Users, FileText, CheckCircle2, Star } from "lucide-react";
 import { DirectChatLauncher } from "@/components/professionals/direct-chat-launcher";
 import { CardActionsMenu, type CardAction } from "@/components/dashboard/card-actions-menu";
 import { formatBookingWhen, ordenarCitas } from "@/lib/booking-when";
@@ -952,8 +952,12 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                       className={cn("group w-full p-4 text-left transition-colors hover:bg-[#f9fbfd] sm:p-5", isExpanded ? "rounded-t-2xl bg-[#fbfdff]" : "rounded-2xl")}
                     >
                       <div className="flex items-start gap-3.5">
+                        {/* Un icono por tipo de tarjeta, no por estado: que hay
+                            propuestas ya lo dice el texto de al lado, y cambiarlo
+                            hacía que dos tarjetas de la misma lista no se
+                            reconocieran como lo mismo. El color sí marca el aviso. */}
                         <div className={cn("flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border", isActive && replyCount > 0 ? "border-[#ccecf8] ccr-caja-icono" : "border-[#e5e7eb] bg-[#f4f7fa] text-[#68778d]")}>
-                          {isActive && replyCount > 0 ? <MessageCircle className="h-[18px] w-[18px]" /> : <ClipboardList className="h-[18px] w-[18px]" />}
+                          <ClipboardList className="h-[18px] w-[18px]" />
                         </div>
                         <div className="min-w-0 flex-1">
                           <h3 className="text-[15px] font-bold leading-snug text-[#162543] [overflow-wrap:anywhere] sm:text-base">{project.title}</h3>
