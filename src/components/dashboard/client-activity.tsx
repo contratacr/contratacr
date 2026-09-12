@@ -827,24 +827,17 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                                 rebookAction,
                               ].filter(Boolean);
                               const principal = primary ?? resenaPrimero ?? candidatas.shift() ?? null;
-                              const segundaFila = candidatas;
-                              // Arriba, la acción que manda con el menú ⋮ al lado; abajo, el resto
-                              // cruzando la tarjeta entera. Antes el botón de la segunda fila
-                              // terminaba antes del borde, con el hueco del menú al lado.
+                              // Una sola fila alineada a la derecha, con la acción que manda
+                              // pegada al menú ⋮. Repartirlas en dos filas —la principal
+                              // arriba a la derecha y el resto cruzando la tarjeta entera—
+                              // hacía que las secundarias se vieran más importantes que ella.
+                              const acciones = [...candidatas, principal].filter(Boolean);
                               return (
-                                <div className="flex flex-col gap-2 border-t border-[#eef2f6] pt-3">
-                                  {(principal || menu.length > 0) && (
-                                    // En pantalla grande, la acción y el menú van juntos a la
-                                    // derecha: estirando el botón hasta el otro extremo quedaba
-                                    // un hueco de media tarjeta entre él y los tres puntos.
-                                    <div className="flex items-start gap-2 sm:justify-end">
-                                      {principal && <div className="flex min-w-0 flex-1 items-center sm:flex-none">{principal}</div>}
-                                      {menu.length > 0 && <div className={principal ? "shrink-0" : "ml-auto shrink-0 sm:ml-0"}><CardActionsMenu actions={menu} label={t("actions")} /></div>}
-                                    </div>
-                                  )}
-                                  {segundaFila.length > 0 && (
-                                    <div className={segundaFila.length === 1 ? "grid" : "grid grid-cols-2 gap-2"}>
-                                      {segundaFila}
+                                <div className="grid grid-cols-2 gap-2 border-t border-[#eef2f6] pt-3 [&>*]:w-full sm:flex sm:flex-wrap sm:items-center sm:justify-end sm:[&>*]:w-auto">
+                                  {acciones}
+                                  {menu.length > 0 && (
+                                    <div className="!w-auto shrink-0 justify-self-end">
+                                      <CardActionsMenu actions={menu} label={t("actions")} />
                                     </div>
                                   )}
                                 </div>
