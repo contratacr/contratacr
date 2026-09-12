@@ -956,8 +956,13 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                             propuestas ya lo dice el texto de al lado, y cambiarlo
                             hacía que dos tarjetas de la misma lista no se
                             reconocieran como lo mismo. El color sí marca el aviso. */}
-                        <div className={cn("flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border", isActive && replyCount > 0 ? "border-[#ccecf8] ccr-caja-icono" : "border-[#e5e7eb] bg-[#f4f7fa] text-[#68778d]")}>
-                          <ClipboardList className="h-[18px] w-[18px]" />
+                        <div className="relative shrink-0">
+                          <div className={cn("flex h-10 w-10 items-center justify-center rounded-xl border", isActive && replyCount > 0 ? "border-[#ccecf8] ccr-caja-icono" : "border-[#e5e7eb] bg-[#f4f7fa] text-[#68778d]")}>
+                            <ClipboardList className="h-[18px] w-[18px]" />
+                          </div>
+                          {isActive && replyCount > 0 && (
+                            <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-[#009FD9] ring-2 ring-white" aria-hidden />
+                          )}
                         </div>
                         <div className="min-w-0 flex-1">
                           <h3 className="text-[15px] font-bold leading-snug text-[#162543] [overflow-wrap:anywhere] sm:text-base">{project.title}</h3>
@@ -1085,8 +1090,8 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
 
                           {/* Acciones con la misma silueta que Citas: la que avanza en turquesa,
                               lo destructivo en el menú ⋮. */}
-                          <div className="flex items-start gap-2 border-t border-[#f3f4f6] pt-4">
-                            <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
+                          <div className="flex items-start gap-2 border-t border-[#f3f4f6] pt-4 sm:justify-end">
+                            <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2 sm:flex-none sm:justify-end">
                               {isActive && (
                                 <Button size="sm" className={actionButtonClass} onClick={() => openResolve(project.id)}>{t("resolve")}</Button>
                               )}
