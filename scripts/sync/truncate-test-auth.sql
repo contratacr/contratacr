@@ -18,6 +18,9 @@ begin
   if table_list is not null then
     -- CASCADE: auth.users está referenciada desde public (profiles), y un
     -- TRUNCATE sin cascada se niega aunque esas tablas ya estén vacías.
-    execute 'truncate table ' || table_list || ' restart identity cascade';
+    -- Sin RESTART IDENTITY: reiniciar las secuencias exige ser su dueño
+    -- (refresh_tokens_id_seq no lo es) y para un rollback de datos no hace
+    -- falta. CASCADE porque auth.users está referenciada desde public.
+    execute 'truncate table ' || table_list || ' cascade';
   end if;
 end $$;

@@ -261,8 +261,6 @@ jobs:
           "$PG_BIN/pg_restore" --dbname="$TEST_DB_URL" --data-only \
             --no-owner --no-acl --single-transaction --exit-on-error \
             "$mirror/production-public-data.dump"
-          "$PG_BIN/psql" "$TEST_DB_URL" --no-psqlrc --set=ON_ERROR_STOP=1 \
-            --file=scripts/sync/enable-test-restore-trigger.sql
 
           regression_password="$REGRESSION_TEST_PASSWORD"
           "$PG_BIN/psql" "$TEST_DB_URL" --no-psqlrc --set=ON_ERROR_STOP=1 \
@@ -270,8 +268,15 @@ jobs:
             --set=regression_password="$regression_password"
 
           npm ci
+          # El clon de publicidad copia los horarios del profesional de origen
+          # TAL CUAL, y producción tiene horarios ya pasados: el guardia sigue
+          # apagado hasta que termina la reconstrucción entera. Volver a
+          # encenderlo antes del sembrado cortaba el espejo con "No se pueden
+          # crear horarios en el pasado". El rollback también lo reenciende.
           npm run seed:test:full
           VERIFY_ADVERTISING_PARITY=1 npm run seed:test:verify
+          "$PG_BIN/psql" "$TEST_DB_URL" --no-psqlrc --set=ON_ERROR_STOP=1 \
+            --file=scripts/sync/enable-test-restore-trigger.sql
 
           "$PG_BIN/psql" "$TEST_DB_URL" --no-psqlrc --csv -Atc \
             "select p.id, coalesce(pr.avatar_url, '') from public.professionals p join public.profiles pr on pr.id=p.profile_id where p.id in ('ae9caa2b-1fca-4411-9aeb-7736f5bbf42f','988428c7-a0b6-4d9e-a9b8-e0209a1ca296') order by 1" \
