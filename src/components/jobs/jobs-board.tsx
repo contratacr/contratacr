@@ -1,6 +1,7 @@
 "use client";
 
 import { ProgressiveImage } from "@/components/ui/progressive-image";
+import { PanelEmptyState } from "@/components/ui/content-loading";
 import { cn } from "@/lib/utils";
 import { useHairlineOnScroll } from "@/components/util/use-hairline-on-scroll";
 
@@ -412,31 +413,29 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
           <div>
             {filtered.map((job) => <JobRow key={job.id} job={job} selected={selected?.id === job.id} onSelect={() => setSelectedId(job.id)} />)}
             {filtered.length === 0 && (
-              <div className="flex min-h-[320px] flex-col items-center justify-center px-7 py-12 text-center lg:min-h-[360px]">
-                <span className="grid h-14 w-14 place-items-center rounded-full ccr-caja-icono">
-                  <BriefcaseBusiness className="h-6 w-6" strokeWidth={2} />
-                </span>
-                <h2 className="mt-4 text-lg font-extrabold text-[#162543]">
-                  {hasActiveFilters ? copy.noResults : copy.noJobs}
-                </h2>
-                <p className="mt-1.5 max-w-sm text-sm leading-6 text-[#68778d]">
-                  {hasActiveFilters ? copy.emptyHelp : copy.futureJobs}
-                </p>
-                {hasActiveFilters ? (
-                  <button type="button" onClick={clearSearchAndFilters} className="mt-5 inline-flex h-10 items-center justify-center rounded-full border border-[#b9d9e8] bg-white px-5 text-sm font-bold text-[#007fae] transition hover:bg-[#f1f9fc]">
+              // El MISMO vacío del resto del app: mosaico azul con el icono a
+              // línea, título, apoyo y una salida. Estaba dibujado a mano con
+              // un círculo distinto al de todas las demás pantallas.
+              <PanelEmptyState
+                plano
+                icon={BriefcaseBusiness}
+                title={hasActiveFilters ? copy.noResults : copy.noJobs}
+                description={hasActiveFilters ? copy.emptyHelp : copy.futureJobs}
+                action={hasActiveFilters ? (
+                  <button type="button" onClick={clearSearchAndFilters} className="inline-flex items-center justify-center rounded-full border border-[#b9d9e8] bg-white px-5 text-sm font-bold text-[#007fae] transition hover:bg-[#f1f9fc]">
                     {copy.viewAll}
                   </button>
                 ) : canPost ? (
                   <>
-                    <button type="button" onClick={() => setPublishOpen(true)} className="mt-5 hidden h-10 items-center justify-center rounded-full bg-[#009fd9] px-5 text-sm font-bold text-white transition hover:bg-[#008fc3] lg:inline-flex">
+                    <button type="button" onClick={() => setPublishOpen(true)} className="hidden items-center justify-center rounded-full bg-[#009fd9] px-5 text-sm font-bold text-white transition hover:bg-[#008fc3] lg:inline-flex">
                       {copy.publishFirst}
                     </button>
-                    <Link href="/empleos/publicar" className="mt-5 inline-flex h-10 items-center justify-center rounded-full bg-[#009fd9] px-5 text-sm font-bold text-white transition hover:bg-[#008fc3] lg:hidden">
+                    <Link href="/empleos/publicar" className="inline-flex items-center justify-center rounded-full bg-[#009fd9] px-5 text-sm font-bold text-white transition hover:bg-[#008fc3] lg:hidden">
                       {copy.publishFirst}
                     </Link>
                   </>
                 ) : null}
-              </div>
+              />
             )}
           </div>
         </section>

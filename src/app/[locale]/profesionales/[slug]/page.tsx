@@ -2,6 +2,7 @@
 
 import { useEsEscritorio } from "@/hooks/use-es-escritorio";
 import { ShareProfileModal } from "@/components/professionals/share-profile-modal";
+import { FichaVacio } from "@/components/professionals/ficha-vacio";
 import { enlacePerfil } from "@/lib/profile-url";
 import { useState, useEffect, useCallback, useRef, type ReactNode } from "react";
 import { useTranslations, useLocale } from "next-intl";
@@ -877,7 +878,7 @@ export default function ProfilePage() {
                         <h2 className="text-lg font-semibold text-[#162543] mb-1">{t("servicesOffered")}</h2>
                         <p className="text-sm text-[#68778d] mb-5">{t("servicesOfferedSub")}</p>
                         {cats.length === 0 ? (
-                          <p className="text-sm text-[#68778d] py-4 text-center">{t("noServices")}</p>
+                          <FichaVacio icono="servicios" titulo={t("noServices")} />
                         ) : (
                           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                             {cats.map((cat) => {
@@ -1125,7 +1126,7 @@ export default function ProfilePage() {
                           return <CaseShowcase cases={caseList} professions={profsOrder} initialCaseId={searchParamFromUrl("case")} />;
                         })()
                       ) : (
-                        <p className="text-sm text-[#68778d]">{t("noCasos")}</p>
+                        <FichaVacio icono="casos" titulo={t("noCasos")} />
                       )}
                     </div>
                   )}

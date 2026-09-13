@@ -11,6 +11,7 @@ import { notificationActionHref, notificationInMode } from "@/lib/notification-l
 import { localizedNotificationCopy } from "@/lib/localized-notification";
 import { cacheNotifications, readCachedNotifications, uniqueNotifications } from "@/lib/notifications-cache";
 import { NotificationSourceIcon } from "@/components/notifications/notification-source-icon";
+import { PanelEmptyState } from "@/components/ui/content-loading";
 import { useActorPhotos } from "@/lib/notifications/use-actor-photos";
 import { cn, formatRelativeOrDate } from "@/lib/utils";
 import { useNativeApp } from "@/hooks/use-native-app";
@@ -298,14 +299,13 @@ export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "o
           ) : (
             // Sin nada que mostrar el panel es pequeño: un contenedor enorme y
             // vacío se ve peor que no tener nada.
-            <div className="px-4 pb-5 pt-2 text-center">
-              <div className="mx-auto grid h-10 w-10 place-items-center rounded-full bg-[#eef7fb] text-[#009FD9]">
-                <Bell className="h-5 w-5" />
-              </div>
-              <p className="mt-2.5 text-[14px] font-bold text-[#162543]">
-                {locale === "en" ? "No notifications yet" : "Aún no tienes notificaciones"}
-              </p>
-            </div>
+            <PanelEmptyState
+              plano
+              tamano="compacto"
+              icon={Bell}
+              title={locale === "en" ? "No notifications yet" : "Aún no tienes notificaciones"}
+              className="min-h-0 px-4 pb-5 pt-2"
+            />
           )}
 
           <button

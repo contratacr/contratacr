@@ -6,6 +6,7 @@ import { soltarFoco } from "@/lib/soltar-foco";
 import { useLocale, useTranslations } from "next-intl";
 import { AlertCircle, BadgeCheck, Check, ChevronRight, ImagePlus, Loader2, Pencil, Plus, Search, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { PanelEmptyState } from "@/components/ui/content-loading";
 import { PriceInput } from "@/components/ui/price-input";
 import { Modal } from "@/components/ui/modal";
 import { CategorySuggestionBox } from "@/components/ui/category-suggestion";
@@ -658,14 +659,9 @@ export function ServicesEditor({
 
       {professions.length === 0 ? (
         /* No services yet → a calm, actionable empty state. */
-        <div className="ccr-empty-state flex min-h-[20rem] flex-col items-center justify-center px-4 py-12 text-center sm:min-h-[22rem] sm:px-6">
-          <span className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full ccr-caja-icono">
-            <Plus className="h-6 w-6 text-[#009FD9]" />
-          </span>
-          <p className="text-[15px] font-bold text-[#162543]">{t("emptyTitle")}</p>
-          <p className="mx-auto mt-1 max-w-xs text-sm text-[#6b7280]">{t("emptyHelp")}</p>
-          <div className="mx-auto mt-5 flex w-full max-w-xs [&>button]:h-11 [&>button]:w-full [&>button]:justify-center">{addServiceButton}</div>
-        </div>
+        // El MISMO vacío del resto del app: era una réplica a mano con su
+        // propio círculo y sus propios tamaños.
+        <PanelEmptyState plano icon={Plus} title={t("emptyTitle")} description={t("emptyHelp")} action={addServiceButton} />
       ) : (
         <>
           {/* Qué es la sección a la izquierda y el botón de crear a la derecha,

@@ -2,6 +2,7 @@
 
 import { startTransition, useCallback, useMemo, useState } from "react";
 import { useHairlineOnScroll } from "@/components/util/use-hairline-on-scroll";
+import { PanelEmptyState } from "@/components/ui/content-loading";
 import { cn } from "@/lib/utils";
 import { useLocale } from "next-intl";
 import { useTranslations } from "next-intl";
@@ -17,6 +18,7 @@ import {
   ChevronRight,
   Menu,
   Search,
+  Wrench,
   X,
 } from "lucide-react";
 
@@ -217,13 +219,11 @@ export default function ServiciosPage() {
           </header>
 
           {query.trim() && resultCount === 0 ? (
-            <section className="mx-4 mt-4 rounded border border-[#d2d6dc] bg-white px-5 py-12 text-center">
-              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#eef8fd] text-[#009FD9]">
-                <Search className="h-6 w-6" />
-              </div>
-              <h2 className="mt-4 text-xl font-extrabold text-[#162543]">{tp("notListed")}</h2>
-              <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-[#64748b]">{tp("suggestDescription")}</p>
-              <div className="mx-auto mt-5 flex max-w-xl flex-col items-center">
+            <section className="mx-4 mt-4 rounded-2xl border border-[#e5eaf0] bg-white text-center shadow-sm">
+              {/* El MISMO vacío del resto del app; el borde de antes era más
+                  oscuro que el de cualquier tarjeta del sitio. */}
+              <PanelEmptyState plano icon={Search} title={tp("notListed")} description={tp("suggestDescription")} className="min-h-0 pb-0" />
+              <div className="mx-auto flex max-w-xl flex-col items-center px-5 pb-10">
                 <CategorySuggestionBox
                   prominent
                   defaultName={query}
@@ -344,13 +344,9 @@ export default function ServiciosPage() {
             </div>
 
             {query.trim() && resultCount === 0 ? (
-              <section className="px-4 py-12 text-center sm:px-6">
-                <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-[#f1f7fb] text-[#68778d]">
-                  <Search className="h-6 w-6" />
-                </div>
-                <h2 className="mt-4 text-lg font-extrabold text-[#162543]">{tp("notListed")}</h2>
-                <p className="mx-auto mt-1 max-w-sm text-sm leading-relaxed text-[#6b7280]">{tp("suggestDescription")}</p>
-                <div className="mx-auto mt-4 flex max-w-xl flex-col items-center">
+              <section className="text-center">
+                <PanelEmptyState plano icon={Search} title={tp("notListed")} description={tp("suggestDescription")} className="min-h-0 pb-0" />
+                <div className="mx-auto flex max-w-xl flex-col items-center px-4 pb-10 sm:px-6">
                   <CategorySuggestionBox
                     prominent
                     defaultName={query}
@@ -460,9 +456,13 @@ export default function ServiciosPage() {
                         ))}
                       </div>
                     ) : (
-                      <div className="px-2 py-10 text-sm font-medium text-[#8a94a6]">
-                        {locale === "en" ? "This section does not have published services yet." : "Esta sección todavía no tiene servicios publicados."}
-                      </div>
+                      <PanelEmptyState
+                        plano
+                        tamano="compacto"
+                        icon={Wrench}
+                        title={locale === "en" ? "This section does not have published services yet." : "Esta sección todavía no tiene servicios publicados."}
+                        className="min-h-[9rem]"
+                      />
                     )}
                   </div>
                 </section>

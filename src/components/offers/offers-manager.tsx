@@ -8,6 +8,8 @@ import { useLocale } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
 import { effectiveOfferStatus, formatOfferPrice, type ProfessionalOffer } from "@/lib/offers";
 import { Modal } from "@/components/ui/modal";
+import { Button } from "@/components/ui/button";
+import { PanelEmptyState } from "@/components/ui/content-loading";
 import { SectionHeadline } from "@/components/dashboard/section-headline";
 import { OfferForm } from "@/components/offers/offer-form";
 import type { SelectMenuOption } from "@/components/ui/select-menu";
@@ -209,26 +211,17 @@ export function OffersManager({ initialOffers, embedded = false, backHref = "/da
             );
           })}
           {offers.length === 0 && (
-            <div className={cn(
-              "px-6 py-12 text-center",
-              // Mismo vacío en todo el app: tarjeta blanca de borde continuo,
-              // como PanelEmptyState. La línea punteada queda solo para lo que
-              // se puede llenar (subir una foto, agregar una fila).
-              "rounded-2xl border border-[#e5eaf0] bg-white shadow-sm"
-            )}>
-              <span className="ccr-icono-mosaico mx-auto h-16 w-16">
-                <BadgePercent className="h-7 w-7" strokeWidth={1.6} />
-              </span>
-              <h2 className="mt-4 font-bold text-[#162543]">{copy.emptyTitle}</h2>
-              <p className="mt-1 text-sm text-[#68778d]">{copy.emptyBody}</p>
-              <button
-                type="button"
-                onClick={() => setPublishOpen(true)}
-                className="mt-5 inline-flex h-11 items-center justify-center gap-1.5 rounded-full bg-[#009FD9] px-6 text-sm font-bold text-white transition-colors hover:bg-[#0089bb]"
-              >
-                <Plus className="h-4 w-4" /> {copy.publishTitle}
-              </button>
-            </div>
+            // El MISMO vacío del resto del app, ya no una copia a mano.
+            <PanelEmptyState
+              icon={BadgePercent}
+              title={copy.emptyTitle}
+              description={copy.emptyBody}
+              action={(
+                <Button type="button" onClick={() => setPublishOpen(true)}>
+                  <Plus className="h-4 w-4" /> {copy.publishTitle}
+                </Button>
+              )}
+            />
           )}
         </div>
       </div>

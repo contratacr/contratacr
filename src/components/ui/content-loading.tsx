@@ -153,6 +153,7 @@ export function PanelEmptyState({
   action,
   className,
   plano = false,
+  tamano = "normal",
 }: {
   icon: ElementType;
   title: ReactNode;
@@ -161,25 +162,34 @@ export function PanelEmptyState({
   className?: string;
   /** La pantalla que lo contiene ya es blanca: sin tarjeta, para no anidar dos. */
   plano?: boolean;
+  /** "compacto" cuando el alto es caro y la acción tiene que verse sin
+   *  desplazar: el panel de /buscar sobre el mapa, el menú de la campana, un
+   *  hilo de chat vacío. Mismo dibujo, todo más chico. */
+  tamano?: "normal" | "compacto";
 }) {
+  const compacto = tamano === "compacto";
   return (
     <div className={cn(
-      "ccr-empty-state flex min-h-[20rem] flex-col items-center justify-center px-7 py-12 text-center sm:min-h-[22rem]",
+      "ccr-empty-state flex flex-col items-center justify-center text-center",
+      compacto ? "min-h-[13rem] px-5 py-7" : "min-h-[20rem] px-7 py-12 sm:min-h-[22rem]",
       !plano && "rounded-2xl border border-[#e5eaf0] bg-white shadow-sm",
       className,
     )}>
       {/* El mismo lenguaje que las tarjetas de crear cuenta: el icono a línea
           dentro de un mosaico azul, título marino y una línea de apoyo. */}
-      <span className="ccr-icono-mosaico h-16 w-16">
-        <Icon className="h-7 w-7" strokeWidth={1.6} />
+      <span className={cn("ccr-icono-mosaico", compacto ? "h-12 w-12" : "h-16 w-16")}>
+        <Icon className={compacto ? "h-5 w-5" : "h-7 w-7"} strokeWidth={1.6} />
       </span>
-      <h2 className="mt-4 text-lg font-extrabold text-[#162543]">{title}</h2>
-      {description && <p className="mt-1.5 max-w-sm text-sm leading-6 text-[#68778d]">{description}</p>}
+      <h2 className={cn("font-extrabold text-[#162543]", compacto ? "mt-3 text-base" : "mt-4 text-lg")}>{title}</h2>
+      {description && <p className={cn("max-w-sm text-[#68778d]", compacto ? "mt-1 text-[13px] leading-5" : "mt-1.5 text-sm leading-6")}>{description}</p>}
       {/* En un estado vacío la acción ES la pantalla: ancha, centrada y con
           altura cómoda. Con lista, en cambio, el botón de crear va compacto
           arriba para no competir con el contenido. */}
       {action && (
-        <div className="mt-5 flex w-full max-w-xs justify-center [&>a]:h-11 [&>a]:w-full [&>button]:h-11 [&>button]:w-full">
+        <div className={cn(
+          "flex w-full max-w-xs justify-center",
+          compacto ? "mt-4 [&>a]:h-10 [&>a]:w-full [&>button]:h-10 [&>button]:w-full" : "mt-5 [&>a]:h-11 [&>a]:w-full [&>button]:h-11 [&>button]:w-full",
+        )}>
           {action}
         </div>
       )}

@@ -1344,10 +1344,16 @@ export function DirectChatInbox() {
               ))}
             </div>
           ) : messages.length === 0 ? (
-            <div className="flex h-full flex-col items-center justify-center gap-1 px-8 text-center">
-              <p className="text-sm font-semibold text-[#162543]">{tChat("threadEmpty")}</p>
-              <p className="text-[13px] leading-relaxed text-[#6b7a90]">{tChat("threadEmptySub")}</p>
-            </div>
+            // A pantalla completa en la app, dos líneas sueltas en medio de la
+            // nada se veían como un error de carga: el mismo vacío del resto.
+            <PanelEmptyState
+              plano
+              tamano="compacto"
+              icon={MessageSquareMore}
+              title={tChat("threadEmpty")}
+              description={tChat("threadEmptySub")}
+              className="h-full"
+            />
           ) : messages.map((message) => {
             const mine = message.sender_id === user?.id;
             const uploading = message.id.startsWith("pending-");

@@ -5,6 +5,7 @@ import { Star } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
 import { useRouter } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { PanelEmptyState } from "@/components/ui/content-loading";
 import { StarRating } from "@/components/ui/star-rating";
 import { LeaveReviewModal } from "@/components/professionals/leave-review-modal";
 import { getInitials, formatRelativeTime } from "@/lib/utils";
@@ -159,12 +160,9 @@ export function ReviewSection({
         })}
 
         {reviews.length === 0 && (
-          <div className="flex flex-col items-center py-8 text-center">
-            <span className="grid h-12 w-12 place-items-center rounded-full bg-[#fff6ec] text-[#ff9b32]">
-              <Star className="h-5 w-5" />
-            </span>
-            <p className="mt-3.5 text-base font-extrabold text-[#162543]">{t("noReviews")}</p>
-          </div>
+          // El MISMO vacío del resto del app. El círculo naranja de antes era
+          // el único de su color en toda la ficha y se leía como un aviso.
+          <PanelEmptyState plano tamano="compacto" icon={Star} title={t("noReviews")} className="min-h-[10rem]" />
         )}
       </div>
 

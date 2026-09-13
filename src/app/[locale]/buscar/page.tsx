@@ -4,6 +4,7 @@ import { getTranslations, getLocale } from "next-intl/server";
 import { ChevronLeft, ChevronRight, Search } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { FooterSoloWeb } from "@/components/landing/footer-solo-web";
+import { SearchEmptyState } from "@/components/search/search-empty-state";
 import { LandingNavbar } from "@/components/landing/landing-navbar";
 import { SearchFilters } from "@/components/search/search-filters";
 import { ProfessionalCard } from "@/components/professionals/professional-card";
@@ -510,6 +511,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
             hasActiveFilters={hasActiveFilters}
             mapFocusTarget={mapFocusTarget}
             resetKey={`${currentPage}:${paginationParams.toString()}`}
+            sinResultados={allResults.length === 0}
             filters={<Suspense fallback={null}><SearchFilters initialValues={filterInitialValues} /></Suspense>}
             quickFilters={<Suspense fallback={null}><SearchFilters variant="chips" initialValues={filterInitialValues} /></Suspense>}
             drawerFilters={<Suspense fallback={null}><SearchFilters closable initialValues={filterInitialValues} /></Suspense>}
@@ -518,25 +520,17 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
             {/* Results list */}
             <div className="min-w-0">
               {allResults.length === 0 ? (
-                // Tres cosas y en este orden: qué pasó, qué hacer, y la salida.
-                // El borde iba sin color y salía más oscuro que el de cualquier
-                // tarjeta del sitio; el alto sobraba (24rem de mínimo con 5rem de
-                // relleno) y la cuarta línea repetía lo que ya dice el botón.
-                <div data-search-empty-state className="-mx-4 flex min-h-[18rem] w-[calc(100%+2rem)] flex-col items-center justify-center bg-white px-6 py-14 text-center lg:mx-0 lg:min-h-[20rem] lg:w-full lg:rounded-2xl lg:border lg:border-[#dfe8f0] lg:px-8 lg:py-16 lg:shadow-sm">
-                  {/* El mismo mosaico de las tarjetas de registro: es el icono
-                      protagonista de la pantalla, no un adorno de fila. */}
-                  <div className="ccr-icono-mosaico mb-5 h-20 w-20">
-                    <Search className="h-9 w-9" strokeWidth={1.4} />
-                  </div>
-                  <h2 className="text-xl font-bold text-[#162543]">{t("noResults.title")}</h2>
-                  <p className="mx-auto mt-1.5 max-w-sm text-sm leading-relaxed text-[#6b7280]">{t("noResults.desc")}</p>
-                  <Link
-                    href={`/dashboard/profesional?tab=sent_projects&openPublish=1${selectedCategory ? `&categoria=${encodeURIComponent(selectedCategory)}` : ""}`}
-                    className="mt-6 inline-flex h-11 items-center justify-center rounded-full bg-[#009FD9] px-5 text-[13px] font-bold text-white transition-colors hover:bg-[#0089bb]"
-                  >
-                    {t("noResults.publishCta")}
-                  </Link>
-                </div>
+                // Tres cosas y en este orden: qué pasó, qué hacer, y la salida,
+                // con el MISMO dibujo que el resto del app en su tamaño
+                // compacto. Sobre el mapa el alto es caro: con el mosaico de
+                // 80px que tenía copiado a mano, «Publicar lo que necesito»
+                // caía bajo el borde de la pantalla.
+                <SearchEmptyState
+                  title={t("noResults.title")}
+                  description={t("noResults.desc")}
+                  cta={t("noResults.publishCta")}
+                  href={`/dashboard/profesional?tab=sent_projects&openPublish=1${selectedCategory ? `&categoria=${encodeURIComponent(selectedCategory)}` : ""}`}
+                />
               ) : (
                 <>
                   {/* SINGLE vertical column - one card per row. On MOBILE/tablet the card is
