@@ -147,6 +147,11 @@ jobs:
           CLOUDINARY_API_KEY: ${{ secrets.CLOUDINARY_API_KEY }}
           CLOUDINARY_API_SECRET: ${{ secrets.CLOUDINARY_API_SECRET }}
           CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          # Sin esta llave el endpoint de traducción responde 200 pero devuelve
+          # el texto tal cual: en inglés las reseñas de la ficha se quedaban en
+          # español y el panel de administración no sugería el nombre traducido
+          # de un servicio. Se comprobó el 13-sep-2026 contra los dos ambientes.
+          GOOGLE_TRANSLATE_API_KEY: ${{ secrets.GOOGLE_TRANSLATE_API_KEY }}
         run: |
           node - <<'NODE'
           const fs = require("node:fs");
@@ -171,7 +176,8 @@ jobs:
             "CLOUDINARY_CLOUD_NAME",
             "CLOUDINARY_API_KEY",
             "CLOUDINARY_API_SECRET",
-            "CRON_SECRET"
+            "CRON_SECRET",
+            "GOOGLE_TRANSLATE_API_KEY"
           ];
           const secrets = {};
           for (const name of names) {
