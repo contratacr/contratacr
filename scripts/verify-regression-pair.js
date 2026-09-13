@@ -531,17 +531,34 @@ function futureDate(days) {
   return value.toISOString().slice(0, 10);
 }
 
+// Los momentos sembrados llevan id fijo (c2000000-…): se buscan POR ESE ID y no
+// por la fecha. La siembra los coloca a `daysAhead` días de HOY, así que una
+// corrida que empieza antes de la medianoche UTC y verifica después buscaba el
+// día siguiente y no encontraba nada ("missing 11:00") aunque todo estuviera
+// bien. La fecha se comprueba igual, pero contra el día que tocaba cuando se
+// sembró: hoy o ayer.
+const MOMENTOS_SEMBRADOS = Array.from(
+  { length: 6 },
+  (_, index) => `c2000000-0000-4000-8000-${String(index + 1).padStart(12, "0")}`,
+);
+
 async function verifySlotMoments(owner, daysAhead, expectedTimes, label) {
   const rows = await must(
     label,
     admin.from("availability_slots")
-      .select("slot_time")
+      .select("slot_date,slot_time")
       .eq("professional_id", owner.professional.id)
-      .eq("slot_date", futureDate(daysAhead)),
+      .in("id", MOMENTOS_SEMBRADOS),
   );
-  const times = new Set(rows.map((row) => String(row.slot_time).slice(0, 5)));
+  const fechasValidas = new Set([futureDate(daysAhead), futureDate(daysAhead - 1)]);
+  const times = new Set(
+    rows.filter((row) => fechasValidas.has(String(row.slot_date))).map((row) => String(row.slot_time).slice(0, 5)),
+  );
   for (const expectedTime of expectedTimes) {
-    assert(times.has(expectedTime), `${label}: missing ${expectedTime}.`);
+    assert(
+      times.has(expectedTime),
+      `${label}: missing ${expectedTime} (momentos sembrados: ${rows.map((row) => `${row.slot_date} ${String(row.slot_time).slice(0, 5)}`).join(", ") || "ninguno"}).`,
+    );
   }
 }
 
