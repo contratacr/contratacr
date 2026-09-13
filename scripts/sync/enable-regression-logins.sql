@@ -10,11 +10,13 @@ declare
   sg_professional_id constant uuid := '988428c7-a0b6-4d9e-a9b8-e0209a1ca296';
   regression_password text := current_setting('app.regression_password');
 begin
+  -- Los actores se reconocen por sus identificadores, nunca por el nombre
+  -- comercial: producción dejó de exponer el de ContrataCR y el espejo se
+  -- detenía aquí aunque la cuenta estuviera intacta.
   if not exists (
     select 1 from public.professionals p
     where p.id = contratacr_professional_id
       and p.profile_id = contratacr_id
-      and lower(trim(coalesce(p.business_name, ''))) = 'contratacr'
   ) then
     raise exception 'Production mirror must contain canonical ContrataCR';
   end if;
@@ -23,7 +25,6 @@ begin
     select 1 from public.professionals p
     where p.id = sg_professional_id
       and p.profile_id = sg_id
-      and lower(trim(coalesce(p.business_name, ''))) = 'sg solutions'
   ) then
     raise exception 'Production mirror must contain canonical SG Solutions';
   end if;

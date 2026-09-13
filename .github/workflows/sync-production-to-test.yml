@@ -101,8 +101,12 @@ jobs:
 
           "$PG_BIN/psql" "$SOURCE_DB_URL" --no-psqlrc --csv -Atc \
             "select id from public.profiles order by id" > "$mirror/production-profile-ids.csv"
+          # Los dos actores de regresión se identifican por su id, no por su
+          # nombre comercial: producción dejó de exponer el de ContrataCR y la
+          # comprobación de paridad de fotos se caía sin decir por qué. Los
+          # mismos ids están en scripts/sync/enable-regression-logins.sql.
           "$PG_BIN/psql" "$SOURCE_DB_URL" --no-psqlrc --csv -Atc \
-            "select lower(trim(p.business_name)), coalesce(pr.avatar_url, '') from public.professionals p join public.profiles pr on pr.id=p.profile_id where lower(trim(p.business_name)) in ('contratacr','sg solutions') order by 1" \
+            "select p.id, coalesce(pr.avatar_url, '') from public.professionals p join public.profiles pr on pr.id=p.profile_id where p.id in ('ae9caa2b-1fca-4411-9aeb-7736f5bbf42f','988428c7-a0b6-4d9e-a9b8-e0209a1ca296') order by 1" \
             > "$mirror/production-regression-photos.csv"
 
           test -s "$mirror/production-public-data.dump"
@@ -261,7 +265,7 @@ jobs:
           VERIFY_ADVERTISING_PARITY=1 npm run seed:test:verify
 
           "$PG_BIN/psql" "$TEST_DB_URL" --no-psqlrc --csv -Atc \
-            "select lower(trim(p.business_name)), coalesce(pr.avatar_url, '') from public.professionals p join public.profiles pr on pr.id=p.profile_id where lower(trim(p.business_name)) in ('contratacr','sg solutions') order by 1" \
+            "select p.id, coalesce(pr.avatar_url, '') from public.professionals p join public.profiles pr on pr.id=p.profile_id where p.id in ('ae9caa2b-1fca-4411-9aeb-7736f5bbf42f','988428c7-a0b6-4d9e-a9b8-e0209a1ca296') order by 1" \
             > "$mirror/test-regression-photos.csv"
           diff -u "$mirror/production-regression-photos.csv" "$mirror/test-regression-photos.csv"
           trap - ERR
