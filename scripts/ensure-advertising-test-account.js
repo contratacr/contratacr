@@ -60,6 +60,17 @@ async function unionRows(table, expression) {
   return must(`${table} source rows`, admin.from(table).select("*").or(expression).order("created_at", { ascending: true }));
 }
 
+// El espejo de producción trae horarios ya pasados y el guardia de la base los
+// rechaza ("No se pueden crear horarios en el pasado"). Un clon de prueba no
+// necesita el historial: se copian solo los de días posteriores a hoy, que es un
+// corte estable aunque la corrida cruce la medianoche. La verificación de
+// paridad usa el mismo corte.
+const HOY_EN_COSTA_RICA = new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString().slice(0, 10);
+
+function esHorarioFuturo(row) {
+  return String(row?.slot_date ?? "") > HOY_EN_COSTA_RICA;
+}
+
 function clonedId(table, sourceId) {
   return stableUuid(`${table}:${sourceId}`);
 }
@@ -394,7 +405,7 @@ async function main() {
 
   await Promise.all([
     upsertRows("availability_weekly", sourceWeekly.map((row) => ({ ...cloneBase("availability_weekly", row), professional_id: PROFESSIONAL_ID }))),
-    upsertRows("availability_slots", sourceSlots.map((row) => ({ ...cloneBase("availability_slots", row), professional_id: PROFESSIONAL_ID }))),
+    upsertRows("availability_slots", sourceSlots.filter(esHorarioFuturo).map((row) => ({ ...cloneBase("availability_slots", row), professional_id: PROFESSIONAL_ID }))),
     upsertRows("availability_exceptions", sourceExceptions.map((row) => ({ ...cloneBase("availability_exceptions", row), professional_id: PROFESSIONAL_ID }))),
     upsertRows("blocked_dates", sourceBlocked.map((row) => ({ ...cloneBase("blocked_dates", row), professional_id: PROFESSIONAL_ID }))),
   ]);

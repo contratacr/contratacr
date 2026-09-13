@@ -138,6 +138,10 @@ function assertRows(label, rows, predicate) {
   );
 }
 
+function hoyEnCostaRica() {
+  return new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString().slice(0, 10);
+}
+
 async function verifyAdvertisingDataParity(source, advertising) {
   const specifications = [
     ["bookings", `client_id.eq.${source.profile.id},professional_id.eq.${source.professional.id}`, `client_id.eq.${advertising.profile.id},professional_id.eq.${advertising.professional.id}`, "status"],
@@ -154,7 +158,9 @@ async function verifyAdvertisingDataParity(source, advertising) {
     ["reviews", `client_id.eq.${source.profile.id},professional_id.eq.${source.professional.id}`, `client_id.eq.${advertising.profile.id},professional_id.eq.${advertising.professional.id}`, null],
     ["notifications", `user_id.eq.${source.profile.id}`, `user_id.eq.${advertising.profile.id}`, "type"],
     ["availability_weekly", `professional_id.eq.${source.professional.id}`, `professional_id.eq.${advertising.professional.id}`, "weekday"],
-    ["availability_slots", `professional_id.eq.${source.professional.id}`, `professional_id.eq.${advertising.professional.id}`, null],
+    // Mismo corte que el clon: el espejo de producción trae horarios pasados que
+    // el clon no copia porque el guardia de la base los rechaza.
+    ["availability_slots", `and(professional_id.eq.${source.professional.id},slot_date.gt.${hoyEnCostaRica()})`, `and(professional_id.eq.${advertising.professional.id},slot_date.gt.${hoyEnCostaRica()})`, null],
     ["availability_exceptions", `professional_id.eq.${source.professional.id}`, `professional_id.eq.${advertising.professional.id}`, "mode"],
     ["blocked_dates", `professional_id.eq.${source.professional.id}`, `professional_id.eq.${advertising.professional.id}`, null],
   ];
