@@ -128,15 +128,42 @@ export function UnsavedChangesGuard({
       clearPendingDialog();
     }
 
+    // ATRÁS DEL NAVEGADOR (el gesto de Safari, el botón de Android, la flecha
+    // de la barra). Los enlaces y los botones del panel ya preguntan, pero el
+    // historial no pasaba por aquí y la persona salía de Lugares de trabajo con
+    // cambios sin guardar y sin ningún aviso. Mientras hay cambios se deja una
+    // entrada centinela encima de la actual: el primer «atrás» la consume y
+    // dispara el diálogo; si la persona decide salir, se retrocede de verdad
+    // (dos entradas: el centinela repuesto y la pantalla).
+    const centinela = { ...(window.history.state ?? {}), ccrUnsavedGuard: true };
+    if (!window.history.state?.ccrUnsavedGuard) window.history.pushState(centinela, "", window.location.href);
+    function onPopState() {
+      if (bypass.current || navigationBypassActive()) return;
+      window.history.pushState(centinela, "", window.location.href);
+      pendingAnchor.current = null;
+      pendingAction.current = () => window.history.go(-2);
+      claimDialog();
+      setPresentedValidationError(validationErrorRef.current ?? null);
+      setOpen(true);
+    }
     window.addEventListener("beforeunload", onBeforeUnload);
+    window.addEventListener("popstate", onPopState);
     window.addEventListener("ccr:confirm-unsaved-action", onConfirmUnsavedAction);
     window.addEventListener("ccr:unsaved-dialog-claimed", onDialogClaimed);
     document.addEventListener("click", onClickCapture, true);
     return () => {
       window.removeEventListener("beforeunload", onBeforeUnload);
+      window.removeEventListener("popstate", onPopState);
       window.removeEventListener("ccr:confirm-unsaved-action", onConfirmUnsavedAction);
       window.removeEventListener("ccr:unsaved-dialog-claimed", onDialogClaimed);
       document.removeEventListener("click", onClickCapture, true);
+      // Ya no hay cambios (se guardó o se descartó) y seguimos sobre el
+      // centinela: se retira sin preguntar para que el historial quede limpio.
+      if (window.history.state?.ccrUnsavedGuard) {
+        bypass.current = true;
+        window.history.back();
+        setTimeout(() => { bypass.current = false; }, 250);
+      }
     };
   }, [dirty]);
 

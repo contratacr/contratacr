@@ -2595,9 +2595,6 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                         <span className={mobileDrawerTextClass}>{t("projects")}</span>
                       </Link>
                     )}
-                    {/* Sin Cotizaciones ni Mis favoritos (viven a un toque dentro de
-                        Mi panel) ni «Buscar profesionales»: a buscar se entra por
-                        Servicios o por la barra de abajo; el cajón no aguanta más. */}
                     {mostrarOfrecerServicios && (
                       <Link
                         href="/registro/profesional"
@@ -2619,6 +2616,19 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                     )}
                   </>
                 ) : null}
+                {/* Buscar profesionales ABRE EL BUSCADOR, no la página de
+                    resultados: la hoja de servicio y lugar se monta encima de
+                    donde estés y /buscar solo se carga cuando ya hay algo que
+                    buscar. Entrar a /buscar «por si acaso» traía todas las
+                    fichas y el mapa en cada visita, que es lo caro. */}
+                <button
+                  type="button"
+                  onClick={() => { setMobileOpen(false); openNativeSearch(); }}
+                  className={mobileDrawerItemClass}
+                >
+                  <DrawerIcon><Search /></DrawerIcon>
+                  <span className={mobileDrawerTextClass}>{t("searchProfessionals")}</span>
+                </button>
                 <Link href="/servicios" onClick={() => setMobileOpen(false)} className={claseCajon("/servicios")}>
                   <DrawerIcon><Wrench /></DrawerIcon>
                   <span className={mobileDrawerTextClass}>{t("categories")}</span>

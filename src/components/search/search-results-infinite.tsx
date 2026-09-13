@@ -1,5 +1,7 @@
 "use client";
 
+import type { SearchedPlace } from "@/components/professionals/professional-schedule";
+
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ProfessionalCard, type ProfessionalCardData } from "@/components/professionals/professional-card";
 import { SaveableCard } from "@/components/professionals/save-button";
@@ -31,6 +33,7 @@ function CardSkeleton() {
 }
 
 export function SearchResultsInfinite({
+  searchedPlace,
   query,
   initialCount,
   total,
@@ -50,6 +53,7 @@ export function SearchResultsInfinite({
   viewerProfileId?: string;
   highlightMetric: "rating" | "experience";
   searchReturnHref: string;
+  searchedPlace?: SearchedPlace;
   loadingLabel: string;
   failedLabel: string;
   retryLabel: string;
@@ -225,6 +229,7 @@ export function SearchResultsInfinite({
               forceContactOnly={item.forceContactOnly}
               preferredLocationId={item.preferVideo ? "videoconsulta" : undefined}
               restrictToPreferredLocation={item.preferVideo}
+              searchedPlace={searchedPlace}
               syncScheduleWithSearchLoading
               searchReturnHref={searchReturnHref}
             />

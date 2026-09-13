@@ -295,6 +295,10 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   const videoCompatibleSearch = !!activeCategoryId && supportsVideoConsultCategory(activeCategoryId);
   const selectedProvinceName = activeProvince?.name ?? "";
   const selectedCantonName = activeCanton?.name ?? "";
+  // Lo buscado, para que la tarjeta rotule la cobertura amplia con ese lugar.
+  const searchedPlace = activeProvince
+    ? { provinceId: activeProvince.id, provinceName: activeProvince.name, cantonId: activeCanton?.id, cantonName: activeCanton?.name }
+    : undefined;
   const exactLocationActive = typeof nearLat === "number" && typeof nearLng === "number";
 
   function matchesSelectedPhysicalLocation(pro: (typeof results)[number]) {
@@ -310,9 +314,15 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     if (!activeProvince && !activeCanton) return true;
     const workplaces = (pro.workplaces ?? []) as SearchWorkplace[];
     if (activeCanton) {
+      // Misma regla que query-core (la API de «cargar más» la usa): cubrir la
+      // provincia entera, o el país con un lugar de trabajo real, ES atender
+      // en ese cantón. Esta copia y la de query-core tienen que ir a la par.
+      const cubreProvinciaEntera = !!selectedProvinceName && !!pro.coverage?.provincias?.includes(selectedProvinceName);
+      const cubreElPaisConSede = workplaces.some((w) => (w as { level?: string }).level === "country" || w.id === "wp_todo_costa_rica" || /^Todo Costa Rica$/i.test(w.name ?? ""));
       return pro.cantonName === selectedCantonName ||
         pro.coverage?.cantones?.includes(selectedCantonName) ||
-        workplaces.some((w) => w.cantonId === activeCanton.id || w.name?.includes(selectedCantonName) || w.address?.includes(selectedCantonName));
+        workplaces.some((w) => w.cantonId === activeCanton.id || w.name?.includes(selectedCantonName) || w.address?.includes(selectedCantonName)) ||
+        cubreProvinciaEntera || cubreElPaisConSede;
     }
     return pro.provinceName === selectedProvinceName ||
       pro.coverage?.provincias?.includes(selectedProvinceName) ||
@@ -548,6 +558,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                             forceContactOnly={shouldShowContactOnly(pro)}
                             preferredLocationId={shouldPreferVideoLocation(pro) ? "videoconsulta" : undefined}
                             restrictToPreferredLocation={shouldPreferVideoLocation(pro)}
+                            searchedPlace={searchedPlace}
                             syncScheduleWithSearchLoading
                             searchReturnHref={searchReturnHref}
                           />
@@ -563,6 +574,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                       viewerProfileId={viewerProfileId}
                       highlightMetric={sortBy === "experience" ? "experience" : "rating"}
                       searchReturnHref={searchReturnHref}
+                      searchedPlace={searchedPlace}
                       loadingLabel={t("pagination.loadingMore")}
                       failedLabel={t("pagination.loadMoreFailed")}
                       retryLabel={t("pagination.retry")}

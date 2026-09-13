@@ -5,6 +5,7 @@ import { Check, ChevronDown, ChevronRight, Clock3, MapPin, Search, Wrench, X } f
 import { useLocale } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { readRecentVisits, type RecentVisit, type RecentVisitSurface } from "@/lib/recent-visits";
+import { useToquePropio } from "@/hooks/use-toque-propio";
 
 const MARKETPLACE_CONTROL_COPY = {
   es: {
@@ -533,6 +534,7 @@ export function MarketplaceFilterChip({ label, value, options, onChange }: { lab
   const locale = useLocale() === "en" ? "en" : "es";
   const copy = MARKETPLACE_CONTROL_COPY[locale];
   const [open, setOpen] = useState(false);
+  const { onPointerDown, alTocar } = useToquePropio();
   const [pending, setPending] = useState(value);
   const rootRef = useRef<HTMLDivElement>(null);
   const [mounted, setMounted] = useState(false);
@@ -575,7 +577,11 @@ export function MarketplaceFilterChip({ label, value, options, onChange }: { lab
     <div ref={rootRef} className={`relative shrink-0 ${open ? "z-[140]" : "z-[1]"}`}>
       <button
         type="button"
-        onClick={() => setOpen(true)}
+        // Solo si el dedo empezó aquí (ver useToquePropio): al tocar el campo de
+        // búsqueda, el teclado movía la página y el filtro que quedaba bajo el
+        // dedo se abría solo.
+        onPointerDown={onPointerDown}
+        onClick={alTocar(() => setOpen(true))}
         title={active ? selectedLabel : label}
         className={`inline-flex h-9 max-w-[calc(100vw-2rem)] items-center gap-1.5 rounded-full border px-3.5 text-[13px] font-bold lg:max-w-[18rem] ${active ? "border-[#009fd9] bg-[#eaf7fc] text-[#007fae]" : "border-[#cbd7e2] bg-white text-[#24344d]"}`}
       >

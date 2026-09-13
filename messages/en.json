@@ -376,9 +376,9 @@
     "cantonPlaceholder": "Canton (optional)",
     "cantonUnselected": "Whole province",
     "addPlace": "Add place",
-    "addThisPlace": "Save location",
-    "addWholeProvince": "Save whole province",
-    "addWholeCountry": "Add all Costa Rica",
+    "addThisPlace": "Add location",
+    "addWholeProvince": "Add the whole province",
+    "addWholeCountry": "Add all of Costa Rica",
     "addAnotherPlace": "Add another location",
     "hintCanton": "Choose the canton to save this place.",
     "wholeProvinceName": "All of {province} province",
@@ -434,7 +434,8 @@
     "call": "Contact us by phone",
     "email": "Email",
     "countryCoverage": "All of Costa Rica",
-    "share": "Share"
+    "share": "Share",
+    "servesIn": "Serves {place}"
   },
   "selfAction": {
     "title": "This is your profile",

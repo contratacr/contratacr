@@ -15,8 +15,8 @@ const BORDE = 28;
  * Un degradado dice lo mismo sin romper nada, es lo que usan las apps que
  * tenemos de referencia, y solo aparece del lado que de verdad puede seguir.
  *
- * Devuelve el valor listo para `mask-image` (y `-webkit-mask-image`), o
- * `undefined` cuando todo cabe y no hay nada que insinuar.
+ * Devuelve la máscara lista para `mask-image` (o `undefined` cuando todo cabe),
+ * de qué lado queda contenido y una función para correr el carril.
  */
 export function useDesvanecidoDeCarril(ref: RefObject<HTMLElement | null>) {
   const [bordes, setBordes] = useState({ izquierda: false, derecha: false });
@@ -45,8 +45,15 @@ export function useDesvanecidoDeCarril(ref: RefObject<HTMLElement | null>) {
     };
   }, [medir, ref]);
 
-  if (!bordes.izquierda && !bordes.derecha) return undefined;
-  const inicio = bordes.izquierda ? `transparent 0, #000 ${BORDE}px` : "#000 0";
-  const final = bordes.derecha ? `#000 calc(100% - ${BORDE}px), transparent 100%` : "#000 100%";
-  return `linear-gradient(to right, ${inicio}, ${final})`;
+  const desplazar = useCallback((direccion: 1 | -1) => {
+    const carril = ref.current;
+    if (!carril) return;
+    carril.scrollBy({ left: direccion * Math.round(carril.clientWidth * 0.7), behavior: "smooth" });
+  }, [ref]);
+
+  const mascara = (!bordes.izquierda && !bordes.derecha)
+    ? undefined
+    : `linear-gradient(to right, ${bordes.izquierda ? `transparent 0, #000 ${BORDE}px` : "#000 0"}, ${bordes.derecha ? `#000 calc(100% - ${BORDE}px), transparent 100%` : "#000 100%"})`;
+
+  return { mascara, hayMasDerecha: bordes.derecha, hayMasIzquierda: bordes.izquierda, desplazar };
 }

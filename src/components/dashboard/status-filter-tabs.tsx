@@ -59,7 +59,7 @@ export function StatusFilterTabs({
   const carrilRef = useRef<HTMLDivElement | null>(null);
   // Mismo degradado que el resto de los carriles del app: la etapa que asoma se
   // desvanece en el borde en vez de quedar cortada contra el filo.
-  const mascaraCarril = useDesvanecidoDeCarril(carrilRef);
+  const { mascara: mascaraCarril } = useDesvanecidoDeCarril(carrilRef);
   useEffect(() => {
     const carril = carrilRef.current;
     if (!carril || carril.scrollWidth <= carril.clientWidth + 1) return;

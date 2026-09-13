@@ -214,9 +214,17 @@ export function locationDecisions(params: SearchPageParams, filters: SearchFilte
     if (!activeProvince && !activeCanton) return true;
     const workplaces = (pro.workplaces ?? []) as SearchWorkplace[];
     if (activeCanton) {
+      // Cubrir la provincia entera (o el país entero con un lugar de trabajo
+      // real) ES atender en ese cantón: la consulta ya trae a esos perfiles y
+      // el orden ya los pone después de quien está en el cantón. Sin esto se
+      // les escondía la cobertura presencial y salían como «Videoconsulta» o
+      // solo con contacto, cuando sí van a Atenas.
+      const cubreProvinciaEntera = !!selectedProvinceName && !!pro.coverage?.provincias?.includes(selectedProvinceName);
+      const cubreElPaisConSede = workplaces.some((w) => (w as { level?: string }).level === "country" || w.id === "wp_todo_costa_rica" || /^Todo Costa Rica$/i.test(w.name ?? ""));
       return pro.cantonName === selectedCantonName ||
         pro.coverage?.cantones?.includes(selectedCantonName) ||
-        workplaces.some((w) => w.cantonId === activeCanton.id || w.name?.includes(selectedCantonName) || w.address?.includes(selectedCantonName));
+        workplaces.some((w) => w.cantonId === activeCanton.id || w.name?.includes(selectedCantonName) || w.address?.includes(selectedCantonName)) ||
+        cubreProvinciaEntera || cubreElPaisConSede;
     }
     return pro.provinceName === selectedProvinceName ||
       pro.coverage?.provincias?.includes(selectedProvinceName) ||

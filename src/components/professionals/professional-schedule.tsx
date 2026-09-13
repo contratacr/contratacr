@@ -64,6 +64,10 @@ interface ProfessionalScheduleProps {
   forceContactOnly?: boolean;
   /** Preferred tab when search context should open a specific location/modality. */
   preferredLocationId?: string;
+  /** Lo que la persona buscó (cantón o provincia): un lugar de trabajo de toda la
+   *  provincia o de todo el país se muestra como «Atiende en Atenas», no como
+   *  «Provincia de Alajuela», y va primero. */
+  searchedPlace?: SearchedPlace;
   /** Restrict the selector to the preferred location when the current search matched only that modality. */
   restrictToPreferredLocation?: boolean;
   /** Search page: keep the schedule skeleton visible until the first map/filter shell is ready. */
@@ -112,7 +116,18 @@ function monthShort(locale: string, monthIndex: number) {
  *    "Ver disponibilidad" link to the full profile.
  *  - Private: lock state with "Contáctanos por Whatsapp" + "por llamada".
  */
-export function ProfessionalSchedule({ professional, categoryName, availabilityPublic, contactPreference = "ambas", videoConsultApplies = true, slots: allSlots, slotsInitiallyLoaded = true, activeCategory, isOwn = false, info, placeFallback = "", placeAddress = "", businessName = "", stacked = false, forceContactOnly = false, preferredLocationId, restrictToPreferredLocation = false, syncWithSearchLoading = false }: ProfessionalScheduleProps) {
+export type SearchedPlace = { cantonId?: string; cantonName?: string; provinceId?: string; provinceName?: string };
+
+// Un lugar de trabajo que cubre una provincia entera o el país entero. Los viejos
+// no traen `level`: se reconocen por el nombre con el que se guardaron.
+function cubreProvinciaEntera(w: { level?: string; cantonId?: string; provinciaId?: string; name?: string }, nombre: string) {
+  return w.level === "provincia" || (!w.cantonId && !!w.provinciaId) || /^Toda la provincia de\s/i.test(nombre) || /^All of .+ province$/i.test(nombre);
+}
+function cubrePaisEntero(w: { level?: string; id?: string }, nombre: string) {
+  return w.level === "country" || w.id === "wp_todo_costa_rica" || /^Todo Costa Rica$/i.test(nombre) || /^All of Costa Rica$/i.test(nombre);
+}
+
+export function ProfessionalSchedule({ professional, categoryName, searchedPlace, availabilityPublic, contactPreference = "ambas", videoConsultApplies = true, slots: allSlots, slotsInitiallyLoaded = true, activeCategory, isOwn = false, info, placeFallback = "", placeAddress = "", businessName = "", stacked = false, forceContactOnly = false, preferredLocationId, restrictToPreferredLocation = false, syncWithSearchLoading = false }: ProfessionalScheduleProps) {
   const t = useTranslations("schedule");
   const tLoading = useTranslations("loading");
   const locale = useLocale();
@@ -346,14 +361,32 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
     const map = new Map<string, string>(); // id -> label, insertion-ordered
     const videoLabel = t("videoconsulta");
     const normalizedVideoLabel = videoLabel.trim().toLocaleLowerCase();
+    // Quien buscó «Atenas» y encuentra a alguien que cubre toda Alajuela debe
+    // leer que ese profesional ATIENDE EN ATENAS, no «Provincia de Alajuela»:
+    // la cobertura es real, y el rótulo del lugar buscado es lo que confirma
+    // que sí le sirve. Ese lugar va primero en la fila.
+    const lugarBuscado = searchedPlace?.cantonName ?? searchedPlace?.provinceName ?? "";
+    const primero = new Map<string, string>();
     for (const w of professional.workplaces ?? []) {
       const rawLabel = (w as { label?: unknown }).label;
       const label = w.name?.trim() || (typeof rawLabel === "string" ? rawLabel.trim() : "");
       const isVideoWorkplace = label.trim().toLocaleLowerCase() === normalizedVideoLabel || (w as { type?: unknown }).type === "video";
       if (isVideoWorkplace && !videoConsultApplies) continue;
       const id = isVideoWorkplace ? "videoconsulta" : (w.id || (professional.workplaces?.length === 1 ? "general" : ""));
-      if (id && label) map.set(id, label);
+      if (!id || !label) continue;
+      const lugar = w as { level?: string; cantonId?: string; provinciaId?: string; name?: string; id?: string };
+      const cubreLaProvinciaBuscada = !!searchedPlace?.cantonName && cubreProvinciaEntera(lugar, label)
+        && (lugar.provinciaId === searchedPlace.provinceId || (!!searchedPlace.provinceName && label.includes(searchedPlace.provinceName)));
+      const cubreElPaisYBuscaronLugar = !!lugarBuscado && cubrePaisEntero(lugar, label);
+      if (!isVideoWorkplace && (cubreLaProvinciaBuscada || cubreElPaisYBuscaronLugar)) {
+        if (!primero.size) primero.set(id, t("servesIn", { place: lugarBuscado }));
+        continue;
+      }
+      map.set(id, label);
     }
+    for (const [id, label] of Array.from(map)) { if (!primero.has(id)) primero.set(id, label); }
+    map.clear();
+    for (const [id, label] of primero) map.set(id, label);
     for (const s of slots) {
       const id = s.locationId;
       if (id?.startsWith("cov_")) continue;
@@ -366,7 +399,7 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
     }
     return Array.from(map, ([id, label]) => ({ id, label }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [professional.coverage?.country, professional.workplaces, professional.videoconsulta, slots, t, videoConsultApplies]);
+  }, [professional.coverage?.country, professional.workplaces, professional.videoconsulta, searchedPlace, slots, t, videoConsultApplies]);
 
   const visibleLocationOptions = useMemo(() => {
     if ((forceContactOnly || restrictToPreferredLocation) && preferredLocationId) {
@@ -384,11 +417,14 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
       return locationOptions.length === 1 && loc === "general";
     });
 
+    // El lugar buscado («Atiende en Atenas») se queda primero aunque otra sede
+    // tenga horarios publicados: es la razón por la que este perfil apareció.
+    const rotuloBuscado = searchedPlace ? t("servesIn", { place: searchedPlace.cantonName ?? searchedPlace.provinceName ?? "" }) : null;
     return locationOptions
-      .map((option, index) => ({ option, index, hasAvailability: hasSpecificAvailability(option.id) }))
-      .sort((a, b) => Number(b.hasAvailability) - Number(a.hasAvailability) || a.index - b.index)
+      .map((option, index) => ({ option, index, hasAvailability: hasSpecificAvailability(option.id), buscado: !!rotuloBuscado && option.label === rotuloBuscado }))
+      .sort((a, b) => Number(b.buscado) - Number(a.buscado) || Number(b.hasAvailability) - Number(a.hasAvailability) || a.index - b.index)
       .map(({ option }) => option);
-  }, [forceContactOnly, locationOptions, preferredLocationId, restrictToPreferredLocation, slots]);
+  }, [forceContactOnly, locationOptions, preferredLocationId, restrictToPreferredLocation, searchedPlace, slots, t]);
 
   const [selectedLoc, setSelectedLoc] = useState<string | null>(null);
   // Default to the first location that ACTUALLY has slots (so the card doesn't open on an

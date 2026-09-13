@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter, usePathname } from "@/i18n/navigation";
+import { useToquePropio } from "@/hooks/use-toque-propio";
 import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
@@ -594,6 +595,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
   const [priceFilter, setPriceFilter] = useState(normalizePriceFilter(initialPrice));
   const [priceUnits, setPriceUnits] = useState(initialPriceUnits);
   const [openChip, setOpenChip] = useState<"sort" | "price" | "language" | "modality" | "insurer" | null>(null);
+  const { onPointerDown: onPointerDownChip, alTocar: alTocarChip } = useToquePropio();
   // Geolocation ("cerca de mí") - opt-in, requested only when the user taps the
   // control, never auto-popped. Denied/unavailable -> text search still works.
   const [geoLoading, setGeoLoading] = useState(false);
@@ -1089,24 +1091,27 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
       : languages.length > 1
         ? `${t("filters.language")} · ${languages.length}`
         : locale === "en" ? "Language" : "Idioma";
+    // Los filtros solo se abren si el dedo empezó en ellos: al tocar el campo
+    // de búsqueda, el teclado mueve la página y el «click» caía sobre el chip
+    // que quedaba debajo (ver useToquePropio).
     const pill = "ccr-search-filter-chip inline-flex h-9 w-max shrink-0 items-center justify-center gap-1 whitespace-nowrap rounded-full border border-[#d8e2ea] bg-white px-2.5 text-[10px] font-bold text-[#162543] shadow-sm min-[350px]:px-3 min-[350px]:text-[11px] min-[390px]:text-[12px]";
     return (
       <div className="scrollbar-none flex w-full min-w-0 items-center gap-1 overflow-x-auto overflow-y-visible pb-0.5">
         <div className="flex w-max min-w-full items-center justify-start gap-1">
-          <button type="button" onClick={() => setOpenChip("sort")} className={pill}>
+          <button type="button" onPointerDown={onPointerDownChip} onClick={alTocarChip(() => setOpenChip("sort"))} className={pill}>
             <span className="min-w-0 whitespace-nowrap">{sortLabel}</span><ChevronDown className="h-3 w-3 shrink-0 min-[390px]:h-3.5 min-[390px]:w-3.5" />
           </button>
-          <button type="button" onClick={() => setOpenChip("price")} className={pill}>
+          <button type="button" onPointerDown={onPointerDownChip} onClick={alTocarChip(() => setOpenChip("price"))} className={pill}>
             <span className="min-w-0 whitespace-nowrap">{priceText}</span><ChevronDown className="h-3 w-3 shrink-0 min-[390px]:h-3.5 min-[390px]:w-3.5" />
           </button>
-          {showVideoFilter && <button type="button" onClick={() => setOpenChip("modality")} className={pill}>
+          {showVideoFilter && <button type="button" onPointerDown={onPointerDownChip} onClick={alTocarChip(() => setOpenChip("modality"))} className={pill}>
             <span className="min-w-0 whitespace-nowrap">{modalities.length ? `${t("filters.attention")} (${modalities.length})` : t("filters.attention")}</span><ChevronDown className="h-3.5 w-3.5 shrink-0" />
           </button>}
-          {showInsurerFilter && <button type="button" onClick={() => setOpenChip("insurer")} className={pill}>
+          {showInsurerFilter && <button type="button" onPointerDown={onPointerDownChip} onClick={alTocarChip(() => setOpenChip("insurer"))} className={pill}>
             <span className="min-w-0 whitespace-nowrap">{insurers.length ? `${t("filters.insurer")} (${insurers.length})` : t("filters.insurer")}</span><ChevronDown className="h-3.5 w-3.5 shrink-0" />
           </button>}
           {/* El idioma se usa poco: va de último para no empujar lo que sí depende de la categoría. */}
-          <button data-testid="mobile-language-filter" type="button" onClick={() => setOpenChip("language")} className={pill}>
+          <button data-testid="mobile-language-filter" type="button" onPointerDown={onPointerDownChip} onClick={alTocarChip(() => setOpenChip("language"))} className={pill}>
             <span className="min-w-0 whitespace-nowrap">{languageText}</span><ChevronDown className="h-3 w-3 shrink-0 min-[390px]:h-3.5 min-[390px]:w-3.5" />
           </button>
         </div>

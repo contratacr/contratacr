@@ -2,7 +2,7 @@
 
 import { useLocale, useTranslations } from "next-intl";
 import { Star } from "lucide-react";
-import { ProfessionalSchedule, type ScheduleSlot } from "@/components/professionals/professional-schedule";
+import { ProfessionalSchedule, type SearchedPlace, type ScheduleSlot } from "@/components/professionals/professional-schedule";
 import { Link } from "@/i18n/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getInitials } from "@/lib/utils";
@@ -114,9 +114,11 @@ interface ProfessionalCardProps {
   syncScheduleWithSearchLoading?: boolean;
   /** Search page return path, including filters/page, so profile "Volver" restores results. */
   searchReturnHref?: string;
+  /** Cantón/provincia buscados: la cobertura de provincia o país se rotula con ese lugar. */
+  searchedPlace?: SearchedPlace;
 }
 
-export function ProfessionalCard({ professional, className, highlightMetric = "rating", slots = [], slotsInitiallyLoaded = true, activeCategory, viewerProfileId, rank, forceContactOnly = false, preferredLocationId, restrictToPreferredLocation = false, syncScheduleWithSearchLoading = false, searchReturnHref }: ProfessionalCardProps) {
+export function ProfessionalCard({ professional, className, searchedPlace, highlightMetric = "rating", slots = [], slotsInitiallyLoaded = true, activeCategory, viewerProfileId, rank, forceContactOnly = false, preferredLocationId, restrictToPreferredLocation = false, syncScheduleWithSearchLoading = false, searchReturnHref }: ProfessionalCardProps) {
   const tCard = useTranslations("card");
   const tSchedule = useTranslations("schedule");
   const locale = useLocale();
@@ -467,6 +469,7 @@ export function ProfessionalCard({ professional, className, highlightMetric = "r
         forceContactOnly={forceContactOnly}
         preferredLocationId={preferredLocationId ?? (forceContactOnly ? "videoconsulta" : undefined)}
         restrictToPreferredLocation={restrictToPreferredLocation}
+        searchedPlace={searchedPlace}
         syncWithSearchLoading={syncScheduleWithSearchLoading}
       />
 
