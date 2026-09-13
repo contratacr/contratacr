@@ -1,4 +1,5 @@
 import { EMPLEOS_VISIBLE } from "@/lib/feature-flags";
+import { alternativasDeIdioma } from "@/lib/seo/alternates";
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { getTranslations } from "next-intl/server";
@@ -28,7 +29,9 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   return {
     title: t("metaTitle"),
     description: t("metaDesc"),
-    alternates: { canonical: path },
+    // La misma pantalla en los dos idiomas: sin `hreflang`, Google trata /es y
+    // /en como dos páginas que compiten entre sí.
+    alternates: alternativasDeIdioma(locale, "/como-funciona"),
     openGraph: {
       title: t("metaTitle"),
       description: t("metaDesc"),

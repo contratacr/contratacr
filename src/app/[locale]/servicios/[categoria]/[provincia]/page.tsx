@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { alternativasDeIdioma } from "@/lib/seo/alternates";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { ServiceLanding } from "@/components/landing-servicios/service-landing";
@@ -31,7 +32,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title,
     description,
-    alternates: { canonical: path },
+    // La misma pantalla en los dos idiomas: sin `hreflang`, Google trata /es y
+    // /en como dos páginas que compiten entre sí.
+    alternates: alternativasDeIdioma(locale, `/servicios/${categoria}/${provincia}`),
     robots: count >= MIN_SUPPLY_FOR_LANDING ? undefined : { index: false },
     openGraph: { title, description, url: `${APP_URL}${path}`, siteName: "ContrataCR", locale: OG_LOCALE[locale] ?? "es_CR", type: "website" },
   };

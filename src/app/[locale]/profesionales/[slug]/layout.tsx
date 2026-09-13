@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { alternativasDeIdioma } from "@/lib/seo/alternates";
 import { getProfessionalBySlug } from "@/lib/queries/professionals";
 import { getCategoryLabel } from "@/lib/data/categories";
 import { proDisplayName } from "@/lib/utils";
@@ -49,7 +50,9 @@ export async function generateMetadata({ params }: ProfileLayoutProps): Promise<
   return {
     title,
     description,
-    alternates: { canonical: path },
+    // La misma pantalla en los dos idiomas: sin `hreflang`, Google trata /es y
+    // /en como dos páginas que compiten entre sí.
+    alternates: alternativasDeIdioma(locale, `/profesionales/${slug}`),
     openGraph: {
       type: "profile",
       siteName: "ContrataCR",

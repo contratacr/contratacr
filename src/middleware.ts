@@ -109,6 +109,12 @@ export async function middleware(request: NextRequest) {
   const needsAuthGate = isProtected && !isPublic;
 
   // Base response carries i18n rewrites/headers; we attach any cookie changes.
+  // El idioma que se está leyendo viaja como cabecera de la PETICIÓN para que
+  // el armazón raíz —que está por encima de `[locale]` y no recibe params—
+  // pueda escribir `<html lang>` bien desde el servidor. Antes el HTML siempre
+  // decía español y un efecto lo corregía después de hidratar: un buscador que
+  // lee /en recibía la página marcada como española.
+  request.headers.set("x-ccr-locale", pathname.split("/")[1] === "en" ? "en" : "es");
   const response = conCabecerasDeSeguridad(handleI18n(request));
   const locale = pathname.split("/")[1] || "es";
   // La cookie recuerda el idioma que se está LEYENDO, no solo el que se eligió

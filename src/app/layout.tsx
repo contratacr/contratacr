@@ -1,5 +1,5 @@
 import { Suspense, type ReactNode } from "react";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { Inter } from "next/font/google";
 import { NativeDebugLogger } from "@/components/mobile/native-debug-logger";
 import { NATIVE_ONBOARDING_COMPLETED_KEY } from "@/lib/mobile-onboarding";
@@ -18,10 +18,14 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
   // las sembraba un script antes del primer cuadro, la hidratación las borraba
   // y el acomodo nativo se caía y volvía — el salto del arranque (main 0→64).
   const esApp = (await cookies()).get("ccr_platform")?.value === "native";
+  // El idioma lo pone el middleware en la petición (`x-ccr-locale`). Con la
+  // cookie no bastaba: un buscador llega sin cookies y habría leído toda la
+  // versión en inglés marcada como española.
+  const idioma = (await headers()).get("x-ccr-locale") === "en" ? "en" : "es";
   const clasesNativas = esApp ? " ccr-native-app ccr-native-bottom-nav-visible" : "";
   return (
     <html
-      lang="es"
+      lang={idioma}
       className={`${inter.variable} h-full antialiased${clasesNativas}`}
       data-scroll-behavior="smooth"
       suppressHydrationWarning

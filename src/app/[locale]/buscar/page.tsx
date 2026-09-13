@@ -93,7 +93,16 @@ export async function generateMetadata({ searchParams }: { searchParams: Promise
   const params = await searchParams;
   const locale = await getLocale();
   const categoria = params.categoria && params.categoria !== "todas" ? params.categoria : undefined;
-  if (!categoria || !getAllCategories().some((c) => c.id === categoria)) return {};
+  // Una búsqueda con filtros (precio, idioma, aseguradora, coordenadas, el área
+  // del mapa) es una combinación entre miles: si se deja indexar, el rastreo de
+  // Google se gasta ahí en vez de en los perfiles, y ninguna de esas
+  // direcciones aporta nada nuevo. Solo oficio y provincia tienen página propia
+  // —/servicios/[oficio]/[provincia]— y ahí apunta la canónica de abajo.
+  const filtrosQueNoSeIndexan = ["aseguradora", "idioma", "precio", "unidadPrecio", "modalidad", "lat", "lng", "n", "s", "e", "w", "q", "canton", "sortBy"];
+  const tieneFiltrosFinos = filtrosQueNoSeIndexan.some((clave) => (params[clave] ?? "").toString().trim().length > 0);
+  if (!categoria || !getAllCategories().some((c) => c.id === categoria) || tieneFiltrosFinos) {
+    return { robots: { index: false, follow: true } };
+  }
   const category = getCategoryLabel(categoria, locale);
   const provincia = params.provincia && params.provincia !== "todas" ? PROVINCES.find((p) => p.id === params.provincia) : undefined;
   const place = provincia?.name ?? "Costa Rica";
