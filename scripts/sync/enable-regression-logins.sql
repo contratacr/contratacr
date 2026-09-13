@@ -36,6 +36,10 @@ begin
 
   -- Preserve public names, business content and production images, but prevent
   -- test from emailing/calling real users or exposing identity fields.
+  -- El espejo conserva a propósito el único acceso manual de publicidad; si
+  -- este barrido también le cambia el correo, su identidad queda apuntando al
+  -- correo viejo y el sembrado ya no puede ni encontrarlo ni volver a crearlo
+  -- ("A user with this email address has already been registered").
   update auth.users
   set email = 'prod+' || replace(id::text, '-', '') || '@mirror.contratacr.test',
       encrypted_password = crypt(gen_random_uuid()::text, gen_salt('bf')),
@@ -46,13 +50,15 @@ begin
       email_change = '',
       raw_app_meta_data = '{"provider":"email","providers":["email"]}'::jsonb,
       raw_user_meta_data = '{}'::jsonb,
-      updated_at = now();
+      updated_at = now()
+  where lower(email) <> 'publicidad@contratacr.test';
 
   update public.profiles
   set email = 'prod+' || replace(id::text, '-', '') || '@mirror.contratacr.test',
       phone = null,
       cedula = null,
-      date_of_birth = null;
+      date_of_birth = null
+  where lower(coalesce(email, '')) <> 'publicidad@contratacr.test';
 
   update public.professionals
   set contact_email = null,

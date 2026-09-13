@@ -16,6 +16,8 @@ begin
     and pg_catalog.has_table_privilege(format('%I.%I', schemaname, tablename), 'TRUNCATE');
 
   if table_list is not null then
-    execute 'truncate table ' || table_list || ' restart identity';
+    -- CASCADE: auth.users está referenciada desde public (profiles), y un
+    -- TRUNCATE sin cascada se niega aunque esas tablas ya estén vacías.
+    execute 'truncate table ' || table_list || ' restart identity cascade';
   end if;
 end $$;
