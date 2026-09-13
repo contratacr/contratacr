@@ -314,7 +314,7 @@ export function CategorySearch({
         document.body
       )}
 
-      {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
+      {error && <p role="alert" data-testid="category-field-error" className="text-xs text-red-500 mt-1">{error}</p>}
     </div>
   );
 }

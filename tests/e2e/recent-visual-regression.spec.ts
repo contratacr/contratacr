@@ -167,7 +167,10 @@ test.describe("@visual recent bug contracts", () => {
     const booking = page.locator('[id^="booking-"]').first();
     await expect(booking).toBeVisible();
     await booking.locator(":scope > button[aria-expanded='false']").click();
-    const actions = booking.locator("button, a").filter({ hasText: /Enviar mensaje|Mensaje|WhatsApp|Finalizar/i });
+    // La fila de una cita es «acción principal + contacto + ⋮»: con una cita
+    // activa la principal es cotizar (antes decía «Enviar mensaje»). Lo que se
+    // mide es la pareja, no qué dice cada una.
+    const actions = booking.locator("button, a").filter({ hasText: /Enviar cotizaci[oó]n|Enviar mensaje|Mensaje|WhatsApp|Finalizar/i });
     await expect(actions).toHaveCount(2);
     const boxes = await actions.evaluateAll((nodes) => nodes.map((node) => {
       const box = node.getBoundingClientRect();
@@ -185,9 +188,12 @@ test.describe("@visual recent bug contracts", () => {
     // Use the professional's own public profile: the blocked self-action is the
     // compact informational dialog from the recent responsive bug report.
     await gotoOK(page, `/es/profesionales/${seed.professionalSlug}`);
-    const serviceRequest = page.locator("article").filter({
-      has: page.getByRole("button", { name: /Ver disponibilidad|View availability/i }),
-    }).first().getByRole("button", { name: /Ver disponibilidad|View availability/i });
+    // El bloque del servicio dejó de ser un <article>: se busca el botón, que es
+    // lo que la prueba necesita abrir.
+    const serviceRequest = page
+      .getByRole("button", { name: /Ver disponibilidad|View availability/i })
+      .filter({ visible: true })
+      .first();
     await expect(serviceRequest).toBeVisible();
     await serviceRequest.click();
     const dialog = page.getByRole("dialog").filter({ visible: true }).first();

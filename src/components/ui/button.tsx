@@ -57,15 +57,26 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         className={cn(buttonVariants({ variant, size, className }))}
         ref={ref}
         disabled={disabled || loading}
+        aria-busy={loading || undefined}
         {...props}
       >
-        {loading ? (
+        {/* Con `asChild` el botón NO pinta nada propio: presta sus estilos a un
+            enlace y solo admite un hijo. Meterle el giro rompía todas esas
+            pantallas ("Ver perfil" en Favoritos, por ejemplo). */}
+        {asChild ? children : (
           <>
-            <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+            {/* El giro ocupa su sitio SIEMPRE: reservado e invisible mientras no
+                se guarda. Si aparecía solo al guardar, el botón crecía 20 px
+                justo cuando la persona acaba de tocarlo y la fila se movía. */}
+            <span
+              aria-hidden={!loading}
+              className={cn(
+                "h-4 w-4 shrink-0 rounded-full border-2 border-current border-t-transparent",
+                loading ? "animate-spin" : "invisible",
+              )}
+            />
             {children}
           </>
-        ) : (
-          children
         )}
       </Comp>
     );

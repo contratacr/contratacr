@@ -303,7 +303,9 @@ test.describe("@seeded extended lifecycle", () => {
         await route.continue();
       });
       await save.click();
-      await expect(save).toContainText(/Guardando|Saving/i);
+      // El botón no cambia de rótulo al guardar (cambiarlo movía la fila justo
+      // al tocarlo): lo dice el giro y `aria-busy`.
+      await expect(save).toHaveAttribute("aria-busy", "true");
       const loadingBox = await save.boundingBox();
       expect(loadingBox, "The loading save action needs visible geometry").not.toBeNull();
       expect(Math.abs(loadingBox!.width - idleBox!.width)).toBeLessThanOrEqual(1);
@@ -363,9 +365,10 @@ test.describe("@seeded extended lifecycle", () => {
       await dialog.getByRole("button", { name: /^Guardar$/i }).click();
       await expect(dialog).toBeHidden();
       await expect(page.getByText(marker, { exact: true })).toBeVisible();
-      const saveSection = page.getByRole("button", { name: /^Guardar cambios$/i }).filter({ visible: true });
-      await expect(saveSection).toHaveCount(1);
-      await saveSection.click();
+      // Casos de éxito guarda solo (el botón «Guardar cambios» se retiró de esta
+      // sección; queda el aviso de guardado automático). Lo que se comprueba es
+      // que el caso llegue a la base sin tocar nada más.
+      await expect(page.getByRole("button", { name: /^Guardar cambios$/i })).toHaveCount(0);
 
       await expect.poll(async () => {
         const { data } = await admin.from("professionals").select("portfolio_items").eq("id", account!.professionalId!).single();

@@ -1111,6 +1111,10 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   const hasResolvedAccountCapability = !!user && accountCapability?.userId === user.id;
   const isPro = canOffer(user) || (hasResolvedAccountCapability && accountCapability.hasProfessionalProfile);
   const isAdminUser = user?.user_metadata?.role === "admin" || (hasResolvedAccountCapability && accountCapability.role === "admin");
+  // Solo a una cuenta de cliente confirmada: mientras no se sepa si ofrece
+  // servicios no se ofrece nada, para no parpadear con el enlace puesto y
+  // quitado en cada carga.
+  const mostrarOfrecerServicios = !!user && hasResolvedAccountCapability && !isPro;
   const { mode } = useMode(isPro);
 
   // ONE unified panel ("Mi panel") for every account; it opens in the right mode
@@ -2205,6 +2209,21 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                     </div>
                   ) : user ? (
                     <div className="flex w-auto min-w-0 items-center justify-end gap-2">
+                      {/* Quien ya tiene cuenta de cliente y quiere ofrecer servicios
+                          necesita una puerta: sin sesión el rol se elige en /registro
+                          (por eso el enlace salió del navbar en a8c05f7a), pero con
+                          sesión ese camino no sirve y la persona se quedaba sin
+                          manera de pasarse a profesional desde su cuenta. Texto
+                          turquesa, no botón: es una invitación, no la acción
+                          principal de la barra. */}
+                      {mostrarOfrecerServicios && !effectiveMarketplaceDesktop && (
+                        <Link
+                          href="/registro/profesional"
+                          className="inline-flex items-center rounded-xl px-3 py-2 text-sm font-medium whitespace-nowrap text-[#009FD9] transition-colors hover:bg-[#EBF5FB]"
+                        >
+                          {t("offerServices")}
+                        </Link>
+                      )}
 
                       {nativeApp && nativeHeaderShell && (
                         <HeaderMessagesLink unreadCount={nativeMessageUnread} label={locale === "en" ? "Messages" : "Mensajes"} />
@@ -2579,6 +2598,16 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                     {/* Sin Cotizaciones ni Mis favoritos (viven a un toque dentro de
                         Mi panel) ni «Buscar profesionales»: a buscar se entra por
                         Servicios o por la barra de abajo; el cajón no aguanta más. */}
+                    {mostrarOfrecerServicios && (
+                      <Link
+                        href="/registro/profesional"
+                        onClick={() => setMobileOpen(false)}
+                        className={cn(mobileDrawerItemClass, "text-[#009FD9] hover:bg-[#EBF5FB]")}
+                      >
+                        <DrawerIcon><UserRoundPlus /></DrawerIcon>
+                        <span className={mobileDrawerTextClass}>{t("offerServices")}</span>
+                      </Link>
+                    )}
                     {/* En la app, quien tiene cuenta profesional lleva Cotizaciones
                         fija en la barra de abajo, así que el Asistente vive aquí.
                         Las cuentas de solo cliente lo tienen en la barra. */}

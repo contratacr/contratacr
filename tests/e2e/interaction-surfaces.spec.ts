@@ -22,11 +22,13 @@ test.describe("@seeded interaction surfaces", () => {
     await expect(action).toBeVisible();
     await action.click();
 
-    const dialog = page.getByRole("dialog").first();
-    await expect(dialog).toBeVisible();
+    // Reservar es una PANTALLA con su propia dirección (…/reservar?fecha&hora),
+    // no un modal: así la persona puede volver, compartir el enlace y no pierde
+    // el paso si la app se recarga.
+    await page.waitForURL(/\/profesionales\/[^/]+\/reservar\?/, { timeout: 30_000, waitUntil: "domcontentloaded" });
     await expectVisibleText(
-      dialog,
-      /Que servicio necesitas|Qu. servicio necesitas|Elige fecha y hora|Describe lo que necesitas|Request service|Tu identificaci.n|Your identification/i,
+      page.locator("body"),
+      /Que servicio necesitas|Qu. servicio necesitas|Elige fecha y hora|Describe lo que necesitas|Reservar cita|Request service|Tu identificaci.n|Your identification/i,
     );
     await expectHealthyPage(page);
   });
@@ -39,18 +41,24 @@ test.describe("@seeded interaction surfaces", () => {
     await expect(publish).toBeVisible();
     await publish.click();
 
-    const dialog = page.getByRole("dialog", { name: /Crear (?:un )?proyecto|Create a project/i });
+    // La ventana se llama por su título, que hoy es «Cuéntanos qué necesitas».
+    const dialog = page.getByRole("dialog", { name: /Cu.ntanos qu. necesitas|Tell us what you need|Crear (?:un )?proyecto|Create a project/i });
     await expect(dialog).toBeVisible();
     await expectVisibleText(
       dialog,
-      /Titulo|T.tulo|Servicio|Descripcion|Descripci.n|Provincia|Canton|Cant.n|Cuando lo necesitas|Cu.ndo lo necesitas/i,
+      // El formulario se simplificó: ahora pregunta qué necesitas, qué hay que
+      // hacer y dónde, en lenguaje llano.
+      /.Qu. necesitas\?|What do you need\?|Contanos qu. hay que hacer|Tell us what needs doing|.D.nde\?|Where\?|T.tulo|Descripci.n|Provincia|Cant.n/i,
     );
     const submit = dialog.getByRole("button", { name: /Publicar|Publish/i });
     await expect(submit).toBeEnabled();
     await submit.click();
-    const validationNotice = dialog.getByTestId("project-form-error");
+    // Lo que falta se avisa JUNTO AL CAMPO (el servicio es lo primero que el
+    // formulario pide); la franja roja de abajo queda para los errores que no
+    // pertenecen a un campo concreto.
+    const validationNotice = dialog.getByTestId("category-field-error").or(dialog.getByTestId("project-form-error")).first();
     await expect(validationNotice).toBeVisible();
-    await expect(validationNotice).toContainText(/categor.a|category|servicio/i);
+    await expect(validationNotice).toContainText(/categor.a|category|servicio|service/i);
     const [noticeBox, submitBox] = await Promise.all([validationNotice.boundingBox(), submit.boundingBox()]);
     expect(noticeBox, "The project validation notice needs visible geometry").not.toBeNull();
     expect(submitBox, "The project submit action needs visible geometry").not.toBeNull();
@@ -58,11 +66,13 @@ test.describe("@seeded interaction surfaces", () => {
     await expectHealthyPage(page);
   });
 
-  test("favorite and follow actions persist, render and remove for a disposable client", async ({ page }) => {
+  test("favorite actions persist, render and remove for a disposable client", async ({ page }) => {
+    // Seguir se retiró del producto en 553536d1: guardar quedó como el único
+    // gesto de «lo quiero a mano», y esta prueba lo cubre de punta a punta.
     const admin = regressionAdminClient();
     let account: DisposableAccount | undefined;
     try {
-      account = await createDisposableAccount({ prefix: "save-follow" });
+      account = await createDisposableAccount({ prefix: "save-only" });
       await loginAs(page, account.email, account.password);
       await gotoOK(page, `/en/profesionales/${seed.professionalSlug}`);
 
@@ -75,60 +85,30 @@ test.describe("@seeded interaction surfaces", () => {
           .eq("client_id", account!.id).eq("professional_id", seed.professionalId);
         return count ?? 0;
       }).toBe(1);
-
-      // Keep the locator stable while the accessible action changes from
-      // "Follow. 8 followers" to "Following. 9 followers".
-      const follow = page.locator("[data-follow-button]:visible").first();
-      await expect(follow).toBeEnabled();
-      await expect(follow).toHaveAttribute("aria-pressed", "false");
-      const { count: followerCountBefore } = await admin
-        .from("professional_follows")
-        .select("id", { count: "exact", head: true })
-        .eq("professional_id", seed.professionalId);
-      const initialFollowerCount = followerCountBefore ?? 0;
-      await follow.click();
-      await expect(follow).toHaveAttribute("aria-pressed", "true");
-      await expect.poll(async () => {
-        const { count } = await admin.from("professional_follows").select("id", { count: "exact", head: true })
-          .eq("follower_id", account!.id).eq("professional_id", seed.professionalId);
-        return count ?? 0;
-      }).toBe(1);
-      await expect(page.locator("[data-follower-count]:visible").first()).toHaveText(String(initialFollowerCount + 1));
+      // Y no revive el gesto retirado.
+      await expect(page.locator("[data-follow-button]")).toHaveCount(0);
 
       await gotoOK(page, "/en/dashboard/profesional?tab=saved&mode=use");
-      await expect(page.getByText(/SG Solutions/i).first()).toBeVisible();
-      await gotoOK(page, "/en/dashboard/profesional?tab=network&mode=use");
       await expect(page.getByText(/SG Solutions/i).first()).toBeVisible();
 
       await gotoOK(page, `/en/profesionales/${seed.professionalSlug}`);
       await page.locator("[data-save-button]:visible").first().click();
-      const followedAgain = page.locator("[data-follow-button]:visible").first();
-      await expect(followedAgain).toBeEnabled();
-      await followedAgain.click();
       await expect.poll(async () => {
-        const [{ count: favorites }, { count: follows }] = await Promise.all([
-          admin.from("saved_professionals").select("id", { count: "exact", head: true }).eq("client_id", account!.id),
-          admin.from("professional_follows").select("id", { count: "exact", head: true }).eq("follower_id", account!.id),
-        ]);
-        return { favorites: favorites ?? 0, follows: follows ?? 0 };
-      }).toEqual({ favorites: 0, follows: 0 });
-      await expect(page.locator("[data-follower-count]:visible").first()).toHaveText(String(initialFollowerCount));
+        const { count } = await admin.from("saved_professionals").select("id", { count: "exact", head: true })
+          .eq("client_id", account!.id);
+        return count ?? 0;
+      }).toBe(0);
       await expectHealthyPage(page);
     } finally {
-      if (account) {
-        // Following creates a cross-account notification for SG Solutions.
-        // It has no FK to the disposable follower, so remove that exact JSON
-        // reference before deleting the temporary account.
-        await regressionAdminClient()
-          .from("notifications")
-          .delete()
-          .contains("data", { follower_id: account.id });
-      }
       await cleanupDisposableAccount(account);
     }
   });
 
-  test("a professional removes a follower without creating a reverse follow", async ({ page }) => {
+  test("the followers endpoint only lets a professional remove their own follower", async ({ page }) => {
+    // La pantalla de seguidores salió del panel con el gesto de Seguir
+    // (553536d1), pero el endpoint sigue vivo para las cuentas que ya tenían
+    // relaciones: lo que hay que sostener es que NADIE pueda borrar una
+    // relación ajena.
     const admin = regressionAdminClient();
     let owner: DisposableAccount | undefined;
     let follower: DisposableAccount | undefined;
@@ -151,6 +131,8 @@ test.describe("@seeded interaction surfaces", () => {
       }
 
       await loginAs(page, owner.email, owner.password);
+
+      // Una relación de la que no se es dueño se rechaza sin tocar nada.
       const foreignDelete = await apiJson<{ success?: boolean; removed?: boolean }>(page, "/api/professional-followers", {
         method: "DELETE",
         body: { followId: foreignRelation.id },
@@ -160,58 +142,24 @@ test.describe("@seeded interaction surfaces", () => {
       const { count: foreignRelationCount } = await admin
         .from("professional_follows")
         .select("id", { count: "exact", head: true })
-        .eq("id", foreignRelation.id)
-        .eq("professional_id", follower.professionalId!);
-      expect(foreignRelationCount).toBe(1);
-      const { error: foreignCleanupError } = await admin
-        .from("professional_follows")
-        .delete()
         .eq("id", foreignRelation.id);
-      if (foreignCleanupError) throw foreignCleanupError;
+      expect(foreignRelationCount).toBe(1);
 
-      await gotoOK(page, "/en/dashboard/profesional?tab=network&mode=offer&network=followers");
-
-      await page.evaluate(() => {
-        window.addEventListener("professionalFollowsChanged", (event) => {
-          window.sessionStorage.setItem(
-            "e2e:last-professional-follow-change",
-            JSON.stringify((event as CustomEvent).detail),
-          );
-        }, { once: true });
+      // La propia sí se retira.
+      const ownDelete = await apiJson<{ success?: boolean; removed?: boolean }>(page, "/api/professional-followers", {
+        method: "DELETE",
+        body: { followId: relation.id },
       });
-      const followerRow = page.locator(`[data-follow-relation-id="${relation.id}"]`);
-      await expect(followerRow).toBeVisible();
-      const remove = page.getByRole("button", { name: /^Remove$/i }).filter({ visible: true }).first();
-      await expect(remove).toBeVisible();
-      await expect(remove).toBeEnabled();
-      await remove.click();
-
+      expect(ownDelete.status).toBe(200);
+      expect(ownDelete.body).toMatchObject({ success: true, removed: true });
       await expect.poll(async () => {
         const { count } = await admin
           .from("professional_follows")
           .select("id", { count: "exact", head: true })
-          .eq("id", relation.id)
-          .eq("professional_id", owner!.professionalId!);
+          .eq("id", relation.id);
         return count ?? 0;
       }).toBe(0);
-      await expect.poll(async () => {
-        const { count } = await admin
-          .from("professional_follows")
-          .select("id", { count: "exact", head: true })
-          .eq("follower_id", owner!.id)
-          .eq("professional_id", follower!.professionalId!);
-        return count ?? 0;
-      }).toBe(0);
-      await expect(followerRow).toHaveCount(0);
-      await expect.poll(async () => page.evaluate(() => {
-        const raw = window.sessionStorage.getItem("e2e:last-professional-follow-change");
-        return raw ? JSON.parse(raw) : null;
-      })).toMatchObject({
-        professionalId: owner.professionalId,
-        delta: -1,
-        count: 0,
-      });
-      await expectHealthyPage(page);
+      await admin.from("professional_follows").delete().eq("id", foreignRelation.id);
     } finally {
       if (owner) {
         await admin.from("notifications").delete().contains("data", { follower_id: owner.id });

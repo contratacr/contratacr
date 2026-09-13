@@ -802,11 +802,12 @@ export function ServicesEditor({
               data-testid="service-edit-save"
               className="w-full select-none sm:w-auto sm:px-8"
             >
-              {saving
-                ? t("saving")
-                : imageUploading
-                  ? (locale === "en" ? "Uploading image…" : "Subiendo imagen…")
-                  : t("saveChanges")}
+              {/* El rótulo no cambia al guardar: el giro ya lo dice y el botón
+                  conserva su ancho. Sí cambia mientras sube una imagen, que es
+                  otra espera y conviene nombrarla. */}
+              {imageUploading
+                ? (locale === "en" ? "Uploading image…" : "Subiendo imagen…")
+                : t("saveChanges")}
             </Button>
             </>
           }

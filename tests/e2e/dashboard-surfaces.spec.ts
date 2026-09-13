@@ -3,7 +3,9 @@ import { expectHealthyPage, expectNoHorizontalOverflow, expectPageShell, expectV
 import { canRunSeededRegression, E2E_USERS, ensureRegressionSeed, type RegressionSeedState } from "./seed";
 
 const professionalTabs = [
-  { tab: "home", marker: /Panel profesional|Professional panel/i },
+  // En escritorio «home» cae en la sección de arranque del panel profesional
+  // (Citas); en teléfono muestra el menú de secciones con el cambio de panel.
+  { tab: "home", marker: /Citas|Appointments|Ir a mi panel cliente|Go to my client panel/i },
   { tab: "profile", marker: /Perfil|Profile/i },
   { tab: "services", marker: /Servicios|Services/i },
   { tab: "photos", marker: /Casos de exito|Casos de .xito|Success cases|Success stories/i },
@@ -12,7 +14,11 @@ const professionalTabs = [
   { tab: "proposals", marker: /Proyectos|Projects/i },
   { tab: "jobs", marker: /Empleos|Jobs/i },
   { tab: "offers", marker: /Ofertas|Offers/i },
-  { tab: "network", marker: /Seguidos|Following|Seguidores|Followers/i },
+  // Seguir se retiró en 553536d1 («guardar es el único gesto para lo quiero a
+  // mano»): ya no hay pestaña de seguidores. En su lugar se cubren las dos
+  // secciones que sí existen y no estaban en la lista.
+  { tab: "quotes", marker: /Cotizaciones|Quotes/i },
+  { tab: "guides", marker: /Gu[ií]as|Guides/i },
   { tab: "verificacion", marker: /Verificacion|Verificaci.n|Verification/i },
   { tab: "notifications", marker: /Notificaciones|Notifications/i },
   { tab: "soporte", marker: /Soporte|Support/i },
@@ -27,7 +33,6 @@ const clientTabs = [
   { tab: "applications", marker: /Mis postulaciones|My applications/i },
   { tab: "connections", marker: /Volver a contratar|Hire again/i },
   { tab: "saved", marker: /Favoritos|Favorites/i },
-  { tab: "network&mode=use", marker: /Seguidos|Following|Seguidores|Followers/i },
   { tab: "notifications&mode=use", marker: /Notificaciones|Notifications/i },
   { tab: "soporte&mode=use", marker: /Soporte|Support/i },
   { tab: "cuenta&mode=use", marker: /Cuenta y seguridad|Account (?:and|&) security/i },
@@ -103,8 +108,16 @@ async function exerciseVisibleFilters(page: import("playwright/test").Page) {
       // Every deterministic regression filter is intentionally populated. This
       // catches a valid-looking tab whose query/mapping silently returns zero.
       if (layout !== "pills" && layout !== "chips") {
-        const count = Number((await button.innerText()).match(/\b(\d+)\b/)?.[1] ?? 0);
-        expect(count, `Filter "${await button.innerText()}" must have data on ${page.url()}`).toBeGreaterThan(0);
+        // El conteo llega cuando termina de cargar la sección (favoritos, por
+        // ejemplo, sincroniza con el servidor antes de pintar): se espera a que
+        // aparezca en vez de leerlo una sola vez y acusar a la sección de estar
+        // vacía por ir un instante por delante.
+        await expect
+          .poll(async () => Number((await button.innerText()).match(/\b(\d+)\b/)?.[1] ?? 0), {
+            message: `Filter "${await button.innerText()}" must have data on ${page.url()}`,
+            timeout: 15_000,
+          })
+          .toBeGreaterThan(0);
       }
       await expect(page.locator(".ccr-empty-state:visible")).toHaveCount(0);
       await expect(
@@ -266,7 +279,22 @@ test.describe("@seeded dashboard surfaces", () => {
     await loginAs(page, E2E_USERS.professional.email, E2E_USERS.professional.password);
     await gotoOK(page, "/es/dashboard/profesional");
 
-    await expectVisibleText(page.locator("main"), /Panel profesional/i);
+    // Entrar al panel es entrar al PROFESIONAL: lo que confirma el contexto es
+    // que el cambio de panel ofrezca ir al de cliente. (Antes se buscaba el
+    // texto "Panel profesional", que en realidad venía del propio botón cuando
+    // el panel abría en cliente: la prueba pasaba por el motivo contrario.)
+    const cambioDePanel = page.locator("[data-panel-mode-selector], [data-testid='panel-mode-switch']").filter({ visible: true }).first();
+    await expect(cambioDePanel).toBeVisible();
+    // En escritorio el cambio es un selector con la opción profesional marcada;
+    // en teléfono es una tarjeta que ofrece ir al panel de cliente. Las dos
+    // dicen lo mismo: estás en el panel profesional.
+    const enProfesional = page
+      .locator("[data-panel-mode-selector] button[aria-pressed='true']")
+      .filter({ hasText: /Profesional|Professional/i })
+      .or(page.getByTestId("panel-mode-switch").filter({ hasText: /Ir a mi panel cliente|Go to my client panel/i }))
+      .filter({ visible: true })
+      .first();
+    await expect(enProfesional).toBeVisible();
     await expect(page.getByTestId("panel-tab-bookings").filter({ visible: true })).toHaveCount(1);
     await expect(page.getByTestId("panel-tab-proposals").filter({ visible: true })).toHaveCount(1);
     await expect(page.getByTestId("panel-tab-chat").filter({ visible: true })).toHaveCount(0);
@@ -511,15 +539,11 @@ test.describe("@seeded dashboard surfaces", () => {
     await expect(page.getByRole("link", { name: /View profile/i }).first()).toBeVisible();
     await expect(page.getByRole("link", { name: /Ver perfil/i })).toHaveCount(0);
 
+    // Seguir salió del producto (553536d1): en su lugar se comprueba que
+    // Favoritos —el gesto que lo reemplazó— también está en inglés, y que una
+    // pestaña retirada no revive con un enlace viejo.
     await gotoOK(page, "/en/dashboard/profesional?tab=network&mode=use");
-    await expect(page.getByRole("heading", { name: /^Following$/i })).toBeVisible();
-    await expect(page.getByPlaceholder(/^Search$/i)).toBeVisible();
-    await expect(page.locator("[role=dialog] li, section li").filter({ visible: true }).first()).toBeVisible();
-
-    await gotoOK(page, "/en/dashboard/profesional?tab=network&mode=use&network=followers");
-    await expect(page.getByRole("heading", { name: /^Followers$/i })).toBeVisible();
-    await expect(page.getByPlaceholder(/^Search$/i)).toBeVisible();
-    await expect(page.locator("[role=dialog] li, section li").filter({ visible: true }).first()).toBeVisible();
+    await expect(page.getByRole("heading", { name: /^(?:Following|Followers)$/i })).toHaveCount(0);
     await expectHealthyPage(page);
   });
 });

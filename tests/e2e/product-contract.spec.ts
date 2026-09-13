@@ -62,12 +62,19 @@ test.describe("@contract product safety contracts", () => {
   });
 
   test("every notification type is translated and stays inside the localized app", async () => {
-    const esTypes = esMessages.notifications.types as Record<string, string>;
-    const enTypes = enMessages.notifications.types as Record<string, string>;
-
     for (const type of notificationTypes) {
-      expect(esTypes[type], `Missing Spanish notification label for ${type}`).toBeTruthy();
-      expect(enTypes[type], `Missing English notification label for ${type}`).toBeTruthy();
+      // Lo que la persona ve de un aviso lo arma `localizedNotificationCopy`, no
+      // un mapa de rótulos: el contrato revisa ESO. El mapa
+      // `notifications.types` no lo leía nadie más que esta prueba, así que
+      // avisaba de traducciones que faltaban donde nadie mira y callaba las que
+      // faltaran donde sí se ven.
+      for (const [locale, idioma] of [["es", "Spanish"], ["en", "English"]] as const) {
+        // Algunos avisos (un mensaje directo, por ejemplo) llevan como cuerpo el
+        // texto guardado: se les pasa uno para comprobar que no lo borran.
+        const copy = localizedNotificationCopy({ type, title: "", message: "Texto guardado del aviso" }, locale);
+        expect(copy.title?.trim(), `Missing ${idioma} notification title for ${type}`).toBeTruthy();
+        expect(copy.message?.trim(), `Missing ${idioma} notification message for ${type}`).toBeTruthy();
+      }
 
       const esHref = notificationHref({ type, data: { booking_id: "booking-e2e", project_id: "project-e2e" } }, undefined, "es");
       const enHref = notificationHref({ type }, undefined, "en");

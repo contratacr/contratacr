@@ -9,8 +9,9 @@ import { canRunSeededRegression, ensureRegressionSeed } from "./seed";
 type PublicProfile = { whatsapp?: string; callPhone?: string; contactEmail?: string; hasWhatsapp?: boolean; hasCallPhone?: boolean };
 
 test.describe("@seeded contact gate", () => {
+  let seed!: NonNullable<Awaited<ReturnType<typeof ensureRegressionSeed>>>;
   test.beforeAll(async () => {
-    if (canRunSeededRegression()) await ensureRegressionSeed();
+    if (canRunSeededRegression()) seed = await ensureRegressionSeed();
   });
 
   test("guests get flags, never numbers, and the contact endpoints refuse them", async ({ page }) => {
@@ -43,9 +44,12 @@ test.describe("@seeded contact gate", () => {
 
   test("a guest tapping WhatsApp gets the registration modal in place", async ({ page }) => {
     await resetAuth(page);
-    await gotoOK(page, "/es/buscar");
+    // En la ficha del profesional sembrado siempre hay WhatsApp; en /buscar solo
+    // lo llevan las tarjetas sin agenda, que en esta base no existen. El rótulo
+    // es corto cuando el botón comparte fila con otro.
+    await gotoOK(page, `/es/profesionales/${seed.professionalSlug}`);
     await waitForInteractivePage(page);
-    const whatsapp = page.getByRole("button", { name: /Contactar por WhatsApp|Contact on WhatsApp/i }).filter({ visible: true }).first();
+    const whatsapp = page.getByRole("button", { name: /^WhatsApp$|Contactar por WhatsApp|Contact on WhatsApp/i }).filter({ visible: true }).first();
     await expect(whatsapp).toBeVisible({ timeout: 15_000 });
     const urlBefore = page.url();
     await whatsapp.click();

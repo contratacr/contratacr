@@ -1772,7 +1772,11 @@ export default function DashboardPage() {
   // instead of competing with the core panel tasks.
   const modeTabs = mode === "offer" ? OFFER_TABS : USE_TABS;
   const sidebarTabs = modeTabs;
-  const desktopSidebarTabs = sidebarTabs.filter((tab) => tab !== "guides");
+  // Guías también en escritorio. Estaba fuera de la columna y no había ningún
+  // otro sitio donde entrar: en computadora la sección solo se alcanzaba
+  // escribiendo ?tab=guides a mano. Va en el bloque de cuenta, junto a Perfil y
+  // Soporte, igual que en el teléfono.
+  const desktopSidebarTabs = sidebarTabs;
   const mobileSectionTabs = sidebarTabs;
   const mobileFullScreenTab = activeTab !== "home";
   const mobileSectionOpen = activeTab !== "home" || mobilePanelOpen;
@@ -2064,7 +2068,14 @@ export default function DashboardPage() {
     // fondo de la página y se veía una franja blanca entre el contenido y el
     // pie —o entre el contenido y la barra de abajo, en la app—. Ahora no hay
     // costura: el color es uno solo hasta el final de la pantalla.
-    <div className="ccr-dashboard-shell min-h-screen flex flex-col bg-[#fafafa]">
+    <div className={cn(
+      "ccr-dashboard-shell min-h-screen flex flex-col bg-[#fafafa]",
+      // El mismo color que la sección en CADA ancho: si la sección es blanca en
+      // el teléfono y el fondo gris, donde la sección termina aparecía la
+      // costura. (En la app manda el CSS, que pinta los dos de #f4f7fa.)
+      mobileSectionOpen && "bg-white sm:bg-[#f4f7fa] lg:bg-[#fafafa]",
+      mobileFullScreenTab && "bg-white lg:bg-[#fafafa]",
+    )}>
       <Navbar mobileSearch={false} />
       {formularioPublicar}
       {opportunityWelcomeCount !== null && (
@@ -2563,6 +2574,13 @@ export default function DashboardPage() {
                         {activeTab === "availability" && pro && (
                           <div className="max-lg:rounded-2xl max-lg:border max-lg:border-[#e5e7eb] max-lg:bg-white max-lg:p-5 max-lg:shadow-sm">
                           <AvailabilityEditor
+                            // El editor toma estos valores al montarse. El panel
+                            // pinta primero lo que tiene en caché y confirma con
+                            // el servidor un instante después: sin esta clave, un
+                            // valor ya corregido (la agenda que se acababa de
+                            // ocultar, por ejemplo) se quedaba mostrando el
+                            // anterior hasta recargar.
+                            key={`agenda:${pro.availability_public}:${pro.contact_preference}:${pro.videoconsulta}`}
                             professionalId={pro.id}
                             initialPublic={pro.availability_public ?? true}
                             initialContactPreference={pro.contact_preference ?? "ambas"}

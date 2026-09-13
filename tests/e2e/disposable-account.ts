@@ -197,5 +197,14 @@ export async function cleanupDisposableAccount(account: DisposableAccount | unde
     const { error: authError } = await admin.auth.admin.deleteUser(account.id);
     if (authError && !/not found/i.test(authError.message)) failures.push(authError);
   }
-  if (failures.length) throw new AggregateError(failures, `Disposable cleanup failed for ${account.id}`);
+  if (failures.length) {
+    // Con solo el id no se sabía QUÉ falló al limpiar: el motivo va en el
+    // mensaje, que es lo que queda en el registro del CI.
+    const motivos = failures
+      .map((failure) => (failure as { message?: string; details?: string }).message
+        ?? (failure as { details?: string }).details
+        ?? String(failure))
+      .join(" | ");
+    throw new AggregateError(failures, `Disposable cleanup failed for ${account.id}: ${motivos}`);
+  }
 }

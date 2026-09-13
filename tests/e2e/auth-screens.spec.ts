@@ -67,14 +67,17 @@ test.describe("@account screens through the real pages", () => {
       await gotoOK(page, "/es/completar-perfil");
       await expectVisibleText(page.locator("body"), /Completa tu perfil/);
 
-      // Empty submit: the first missing field is named, nothing navigates.
+      // Sin nombre no se guarda. El teléfono y la identificación se llenan
+      // primero porque son campos `required`: si quedan vacíos, el navegador
+      // detiene el envío en ELLOS y la pantalla nunca llega a revisar el
+      // nombre, que es lo que esta prueba comprueba.
+      await page.locator('input[type="tel"]').first().fill("88887777");
+      await page.getByPlaceholder("1-0000-0000").fill(randomCedula());
       await page.getByPlaceholder(/Tu nombre como aparece en tu identificación/).fill("");
       await page.getByRole("button", { name: /Guardar y continuar/ }).click();
       await expectVisibleText(page.locator("body"), /Ingresa tu nombre completo/);
 
       await page.getByPlaceholder(/Tu nombre como aparece en tu identificación/).fill("Cliente Regresión Pantallas");
-      await page.locator('input[type="tel"]').first().fill("88887777");
-      await page.getByPlaceholder("1-0000-0000").fill(randomCedula());
       await page.getByRole("button", { name: /Guardar y continuar/ }).click();
       await page.waitForURL(/\/dashboard\//, { timeout: 30_000, waitUntil: "domcontentloaded" });
       await expectHealthyPage(page);

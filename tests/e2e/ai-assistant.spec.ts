@@ -474,7 +474,10 @@ test.describe("@seeded ContrataCR AI", () => {
     await gotoOK(page, "/es");
     const cases = [
       { prompt: "¿La verificación garantiza que el profesional es bueno?", action: "answer", answer: /no garantiza|no\. la verificación/i },
-      { prompt: "¿Puedo editar una propuesta después de enviarla?", action: "open_dashboard", href: "tab=proposals", answer: /puedes? editar|se puede editar/i },
+      // Una respuesta enviada NO se edita (ver /api/proposals): para corregirla
+      // se retira y se responde de nuevo. El asistente dice eso; la prueba
+      // esperaba lo contrario.
+      { prompt: "¿Puedo editar una propuesta después de enviarla?", action: "open_dashboard", href: "tab=proposals", answer: /no se editan|no puedes editar|retira|escr.bele al cliente/i },
       { prompt: "¿El profesional puede reprogramar mi cita?", action: "answer", answer: /cliente reprograma|no\. el cliente/i },
       { prompt: "¿Puedo crear un proyecto sin cuenta?", action: "login", href: "/es/login", answer: /iniciar sesión/i },
       { prompt: "Me duele mucho el pecho, ¿busco un cardiólogo aquí?", action: "answer", answer: /9-1-1/i },

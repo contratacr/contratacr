@@ -656,6 +656,9 @@ test.describe("@seeded core regression", () => {
     });
     expect(proCannotAcceptOwnProposal.status).toBe(403);
 
+    // Una respuesta ENVIADA no se edita: el cliente ya pudo haberla leído y una
+    // versión distinta abre la puerta a "me dijo otro precio". El contrato es
+    // que el intento se rechace.
     const edited = await apiJson<IdResponse>(page, "/api/proposals", {
       method: "PATCH",
       body: {
@@ -664,8 +667,7 @@ test.describe("@seeded core regression", () => {
         message: "E2E Regression propuesta editada con mejor detalle.",
       },
     });
-    expect(edited.status).toBe(200);
-    await expectNotification(seed.clientId, "proposal_updated", { project_id: project.body.id });
+    expect(edited.status).toBe(400);
 
     await loginAs(page, E2E_USERS.client.email, E2E_USERS.client.password);
     const proposalList = await apiJson<ListResponse<ProposalRow>>(page, `/api/proposals?project=${project.body.id}`);
@@ -923,7 +925,11 @@ test.describe("@seeded core regression", () => {
     await gotoOK(page, "/en/ofertas");
 
     await expect(page.getByRole("heading", { name: "Offers" })).toBeVisible();
-    await expect(page.getByText("Promotions from professionals").first()).toBeAttached();
+    // El tablero ya no lleva la frase de apoyo bajo el título (los subtítulos
+    // sueltos salieron de las pantallas): lo que prueba que está en inglés son
+    // sus propios filtros.
+    await expect(page.getByRole("button", { name: /Date posted/i }).first()).toBeVisible();
+    await expect(page.getByRole("button", { name: /Offer type/i }).first()).toBeVisible();
     const publishedOfferTitle = `${E2E_USERS.professional.fullName}: oferta published`;
     await expect(page.getByText(publishedOfferTitle).first()).toBeVisible();
     await expectNoHorizontalOverflow(page);

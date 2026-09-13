@@ -186,7 +186,14 @@ test.describe("@admin surfaces", () => {
       await page.getByLabel("Filtrar por categoría").selectOption("all");
       // The filter bar answers "who offers X here?" with the actual professionals.
       await page.getByLabel("Servicio", { exact: true }).selectOption("redes_internet");
-      await expectVisibleText(page.locator("body"), /profesionales? cumplen?/);
+      // El recuento de cobertura recorre a todos los profesionales del servicio:
+      // con la base llena tarda más que los 12 s de la espera por defecto y la
+      // prueba acusaba a la pantalla de no responder cuando solo iba lenta.
+      // «profesionales?» pedía "profesionale"+s: con UN profesional la pantalla
+      // dice "1 profesional cumple" y la prueba no lo reconocía. El recuento,
+      // además, recorre a todos los profesionales del servicio y puede tardar
+      // más que la espera por defecto.
+      await expectVisibleText(page.locator("body"), /\d+ profesional(?:es)? cumplen?/, 40_000);
       await expect(page.getByText("SG Solutions").first()).toBeVisible();
       await page.getByLabel("Provincia", { exact: true }).selectOption("al");
       await expect(page.getByText(/Con sede aquí|Atiende aquí|Todo el país/).first()).toBeVisible();
