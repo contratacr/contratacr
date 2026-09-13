@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { unstable_cache } from "next/cache";
 import { EMPLEOS_VISIBLE } from "@/lib/feature-flags";
 import { recordServerInteraction } from "@/lib/analytics/server-events";
 import {
@@ -235,15 +236,27 @@ function externalHistory(history: HistoryMessage[]) {
   }));
 }
 
-async function liveCatalog(locale: Locale) {
-  const labels = new Map(getAllCategories().map((item) => [item.id, getCategoryLabel(item.id, locale)]));
-  try {
+// El catálogo de servicios cambia cuando el panel de administración aprueba uno
+// nuevo, o sea casi nunca; se leía entero (hasta 500 filas) en CADA pregunta al
+// asistente. Cinco minutos, el mismo acuerdo que ya tiene la búsqueda.
+const catalogoCacheado = unstable_cache(
+  async () => {
     const { data, error } = await createAdminClient()
       .from("categories")
       .select("id, name, name_en, is_hidden")
       .eq("is_hidden", false)
       .limit(500);
     if (error) throw error;
+    return data ?? [];
+  },
+  ["ai-assistant-catalogo-v1"],
+  { revalidate: 300 },
+);
+
+async function liveCatalog(locale: Locale) {
+  const labels = new Map(getAllCategories().map((item) => [item.id, getCategoryLabel(item.id, locale)]));
+  try {
+    const data = await catalogoCacheado();
     for (const item of data ?? []) {
       const id = String(item.id || "").trim();
       const label = String(locale === "en" && item.name_en ? item.name_en : item.name || "").trim();
@@ -1997,7 +2010,11 @@ async function realProfessionalMatches(payload: AssistantPayload, originalMessag
     cantonId: place?.type === "canton" ? place.id : undefined,
     modality: videoIntent ? "video" : place ? "in_person" : "any",
     query: category ? undefined : seed,
-  }, { fresh: true });
+    // Sin `fresh`: el asistente se sirve del mismo caché de cinco minutos que
+    // /buscar. Antes cada pregunta hacía dos consultas nuevas aunque se acabara
+    // de hacer la misma búsqueda en pantalla. El reintento de abajo, que es el
+    // que rescata una ficha recién publicada, sí las pide frescas.
+  });
 
   // Keep the assistant useful if a legacy/test row has valid workplaces but its
   // denormalized search arrays have not been refreshed yet.

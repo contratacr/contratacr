@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { enforceRateLimit } from "@/lib/rate-limit";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { crTodayISO } from "@/lib/time-cr";
 
@@ -53,6 +54,9 @@ async function batchedAvailability(ids: string[]) {
 }
 
 export async function GET(req: NextRequest) {
+  // Lee con la llave de servicio y en lotes de 25 profesionales.
+  const limitado = enforceRateLimit(req, "public-availability", 60, 60_000);
+  if (limitado) return limitado;
   const url = new URL(req.url);
   const batched = url.searchParams.get("professionalIds");
   if (batched) {

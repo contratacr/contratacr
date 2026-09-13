@@ -11,7 +11,7 @@ import { writeSourceColumns } from "@/lib/security/write-guard";
 const FLAG_THRESHOLD = 3;
 
 export async function POST(req: Request) {
-  const rl = enforceRateLimit(req, "report", 10, 60_000);
+  const rl = enforceRateLimit(req, "report-client", 10, 60_000);
   if (rl) return rl;
   const session = await createServerClient();
   const { data: { user } } = await session.auth.getUser();
@@ -48,6 +48,35 @@ export async function POST(req: Request) {
     clientName = booking.client_name ?? null;
   }
 
+  // NADIE puede marcar a un cliente con el que no ha tratado. Sin esta
+  // comprobación bastaba mandar un `clientId` suelto: un profesional podía
+  // dejar marcada a cualquier persona del país en tres peticiones, porque a las
+  // tres el perfil queda señalado. La relación vale si hay una reserva, un
+  // proyecto con propuesta, o una conversación entre los dos.
+  if (!bookingId && targetClientId) {
+    const [reservas, conversaciones, propuestas] = await Promise.all([
+      admin.from("bookings").select("id").eq("professional_id", pro.id).eq("client_id", targetClientId).limit(1),
+      admin.from("direct_conversations").select("id").eq("professional_id", pro.id).eq("client_id", targetClientId).limit(1),
+      admin.from("proposals").select("id, projects!inner(client_id)").eq("professional_id", pro.id).eq("projects.client_id", targetClientId).limit(1),
+    ]);
+    const hayRelacion = (reservas.data?.length ?? 0) > 0
+      || (conversaciones.data?.length ?? 0) > 0
+      || (propuestas.data?.length ?? 0) > 0;
+    if (!hayRelacion) {
+      return NextResponse.json({ error: "Solo puedes reportar a un cliente con el que hayas tenido una solicitud, un proyecto o una conversación." }, { status: 403 });
+    }
+  }
+
+  // Un mismo profesional no puede sumar marcas al mismo cliente una y otra vez:
+  // el reporte se registra igual, pero el contador solo sube la primera vez.
+  const { data: reportePrevio } = await admin
+    .from("reports")
+    .select("id")
+    .eq("reporter_professional_id", pro.id)
+    .eq("reported_client_id", targetClientId ?? "")
+    .limit(1);
+  const yaLoHabiaReportado = (reportePrevio?.length ?? 0) > 0;
+
   let { data: reportRow, error: reportError } = await admin.from("reports").insert({
     reported_client_id: targetClientId,
     reporter_professional_id: pro.id,
@@ -81,7 +110,7 @@ export async function POST(req: Request) {
   });
 
   // Bump the flag count and flag the client past the threshold.
-  if (targetClientId) {
+  if (targetClientId && !yaLoHabiaReportado) {
     const { data: prof } = await admin
       .from("profiles")
       .select("flag_count")

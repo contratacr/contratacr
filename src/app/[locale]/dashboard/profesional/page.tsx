@@ -58,6 +58,7 @@ import { notificationContext } from "@/lib/notification-link";
 import { Link, useRouter } from "@/i18n/navigation";
 import { openInNewTabOnDesktop } from "@/lib/desktop-new-tab";
 import { useAuth } from "@/hooks/use-auth";
+import { useDirectMessageUnread } from "@/hooks/use-direct-message-unread";
 import { cn } from "@/lib/utils";
 import { PanelSkeleton } from "@/components/ui/section-skeletons";
 import { PublishProjectModal } from "@/components/projects/publish-project-modal";
@@ -687,7 +688,7 @@ export default function DashboardPage() {
   const [refreshKey] = useState(0);
   const [unreadCount, setUnreadCount] = useState(0);
   const [supportUnread, setSupportUnread] = useState(0);
-  const [chatUnread, setChatUnread] = useState(0);
+  const chatUnread = useDirectMessageUnread(!!user);
   const [profileFocus, setProfileFocus] = useState<{ field: string; key: number } | null>(null);
   const [serviceFocus, setServiceFocus] = useState<{ field: string; key: number } | null>(null);
   const [pendingProfileFocusField, setPendingProfileFocusField] = useState<string | null>(null);
@@ -987,36 +988,11 @@ export default function DashboardPage() {
     setDashboardCache(key, { ...current, ...next });
   }, [user]);
 
-  useEffect(() => {
-    if (!user) return;
-    let stopped = false;
-    const supabase = createClient();
-    const loadChatUnread = async () => {
-      const response = await fetch("/api/direct-chat", { cache: "no-store" }).catch(() => null);
-      if (!response?.ok || stopped) return;
-      const payload = await response.json().catch(() => ({ conversations: [] }));
-      const total = (payload.conversations ?? []).reduce((sum: number, conversation: {
-        client_id?: string;
-        client_unread_count?: number;
-        professional_unread_count?: number;
-      }) => sum + (conversation.client_id === user.id
-        ? Number(conversation.client_unread_count ?? 0)
-        : Number(conversation.professional_unread_count ?? 0)), 0);
-      setChatUnread(total);
-    };
-    void loadChatUnread();
-    const onChanged = () => void loadChatUnread();
-    window.addEventListener("notificationsChanged", onChanged);
-    const channel = supabase.channel(`dashboard-chat-unread-${user.id}`)
-      .on("postgres_changes", { event: "*", schema: "public", table: "direct_conversations" }, onChanged)
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "direct_messages" }, onChanged)
-      .subscribe();
-    return () => {
-      stopped = true;
-      window.removeEventListener("notificationsChanged", onChanged);
-      void supabase.removeChannel(channel);
-    };
-  }, [user]);
+  // El conteo de mensajes sin leer lo lleva `useDirectMessageUnread`, que hace
+  // exactamente esta misma cuenta. Aquí había una copia con su PROPIO canal en
+  // tiempo real y su propia llamada a /api/direct-chat: con el panel abierto,
+  // cada mensaje de la plataforma disparaba las dos y el servidor resolvía el
+  // doble de consultas para pintar el mismo número.
 
   const fetchPro = useCallback(async ({ silent = false }: { silent?: boolean } = {}) => {
     if (!user) return null;

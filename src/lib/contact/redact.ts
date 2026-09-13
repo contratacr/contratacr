@@ -31,3 +31,18 @@ export function redactContact<T extends ContactFields>(pro: T, viewerCanSee: boo
   if (viewerCanSee) return { ...pro, ...flags };
   return { ...pro, ...flags, whatsapp: "", callPhone: undefined, contactEmail: undefined };
 }
+
+/**
+ * Un LISTADO nunca lleva los datos de contacto, ni siquiera con sesión abierta.
+ *
+ * Con sesión, `redactContact` los dejaba pasar, y `/api/buscar/results` entrega
+ * los resultados de página en página: una sola cuenta gratis podía recorrer el
+ * catálogo y llevarse el teléfono y el correo de todos los profesionales. Los
+ * botones no los necesitan —el de llamar y el de correo piden el dato a
+ * `/api/contact/reveal`, y el de WhatsApp a `/api/contact/whatsapp-link`, que
+ * sí llevan la cuenta de cuántas veces se piden—, así que en una lista basta
+ * con saber QUÉ vías de contacto tiene cada quien.
+ */
+export function redactContactEnListado<T extends ContactFields>(pro: T): T & ContactFlags {
+  return { ...pro, ...contactFlags(pro), whatsapp: "", callPhone: undefined, contactEmail: undefined };
+}

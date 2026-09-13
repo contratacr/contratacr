@@ -1,6 +1,7 @@
 export const runtime = "nodejs";
 
 import { NextRequest, NextResponse } from "next/server";
+import { correoValido, escaparHtml } from "@/lib/email/escape";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { enforceRateLimit } from "@/lib/rate-limit";
 import { createClient } from "@/lib/supabase/server";
@@ -85,16 +86,16 @@ function buildHtml(name: string, email: string, subject: string, message: string
         <table style="width:100%;border-collapse:collapse;margin-bottom:20px;">
           <tr>
             <td style="padding:8px 0;color:#6b7280;font-size:13px;width:80px;">De:</td>
-            <td style="padding:8px 0;font-weight:600;color:#111827;">${name || "Sin nombre"} &lt;${email}&gt;</td>
+            <td style="padding:8px 0;font-weight:600;color:#111827;">${escaparHtml(name || "Sin nombre")} &lt;${escaparHtml(email)}&gt;</td>
           </tr>
           <tr>
             <td style="padding:8px 0;color:#6b7280;font-size:13px;">Asunto:</td>
-            <td style="padding:8px 0;color:#111827;">${subject}</td>
+            <td style="padding:8px 0;color:#111827;">${escaparHtml(subject)}</td>
           </tr>
           ${filenames.length > 0 ? `
           <tr>
             <td style="padding:8px 0;color:#6b7280;font-size:13px;">Archivos:</td>
-            <td style="padding:8px 0;color:#009FD9;">${filenames.join(", ")}</td>
+            <td style="padding:8px 0;color:#009FD9;">${filenames.map(escaparHtml).join(", ")}</td>
           </tr>` : ""}
         </table>
         <hr style="border:none;border-top:1px solid #f3f4f6;margin:16px 0;"/>
@@ -111,7 +112,7 @@ async function sendInboxEmail(
 ): Promise<boolean> {
   const r = await sendBrevoEmail({
     to: SUPPORT_TO,
-    replyTo: email, // so a human reply from the inbox goes to the requester
+    replyTo: correoValido(email) || undefined, // so a human reply from the inbox goes to the requester
     subject: `[Soporte] ${subject}`,
     html: buildHtml(name, email, subject, message, fileAttachments.map((f) => f.filename)),
     attachments: fileAttachments.map((f) => ({ name: f.filename, content: f.content.toString("base64") })),

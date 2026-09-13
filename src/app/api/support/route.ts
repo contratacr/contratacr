@@ -167,9 +167,17 @@ export async function POST(req: Request) {
   // El correo a la bandeja de soporte (una llamada HTTP a Brevo, ~0,5-1,7 s) y
   // la auditoría no pintan nada en pantalla: salen del camino de la respuesta
   // para que enviar un mensaje sea inmediato.
-  despuesDeResponder(notifySupportInbox({
-    subject: ticket.subject, fromName: senderName, fromEmail: contact.email || ticket.email || user.email || "", body: safeBody, isReply: true,
-  }), "support.reply:email");
+  //
+  // Y va UNO POR RÁFAGA, no uno por mensaje: si quien habló de último ya era la
+  // persona, el equipo ya tiene el aviso de este hilo y tres mensajes seguidos
+  // aclarando lo mismo mandaban tres correos. En cuanto el equipo responde, el
+  // siguiente mensaje vuelve a avisar. Es el mismo criterio que el chat directo
+  // ya usa con los mensajes sin leer.
+  if (ticket.last_reply_role !== "user") {
+    despuesDeResponder(notifySupportInbox({
+      subject: ticket.subject, fromName: senderName, fromEmail: contact.email || ticket.email || user.email || "", body: safeBody, isReply: true,
+    }), "support.reply:email");
+  }
 
   despuesDeResponder(auditUserAction(db, req, {
     actorUserId: user.id,

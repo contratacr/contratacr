@@ -12,7 +12,7 @@ import { writeSourceColumns } from "@/lib/security/write-guard";
 const FLAG_THRESHOLD = 3;
 
 export async function POST(req: Request) {
-  const rl = enforceRateLimit(req, "report", 10, 60_000);
+  const rl = enforceRateLimit(req, "report-professional", 10, 60_000);
   if (rl) return rl;
   const session = await createServerClient();
   const { data: { user } } = await session.auth.getUser();

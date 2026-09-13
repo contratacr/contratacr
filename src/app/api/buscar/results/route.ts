@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
+import { enforceRateLimit } from "@/lib/rate-limit";
 import { cardData, locationDecisions, resolveSearchResults, RESULTS_PER_PAGE, type SearchPageParams } from "@/lib/search/query-core";
-import { createClient } from "@/lib/supabase/server";
-import { safeGetUser } from "@/lib/supabase/get-user";
-import { redactContact } from "@/lib/contact/redact";
+import { redactContactEnListado } from "@/lib/contact/redact";
 
 // The next slice of a /buscar search, so the list can keep growing as the
 // person scrolls instead of paging. It resolves the URL exactly like the page
@@ -16,6 +15,9 @@ const ALLOWED = new Set<keyof SearchPageParams>([
 ]);
 
 export async function GET(request: Request) {
+  // Entrega los resultados paginados; sin tope se puede recorrer el catálogo entero.
+  const limitado = enforceRateLimit(request, "buscar-results", 60, 60_000);
+  if (limitado) return limitado;
   const url = new URL(request.url);
   const offset = Math.max(0, Number.parseInt(url.searchParams.get("offset") ?? "0", 10) || 0);
   const limit = Math.min(RESULTS_PER_PAGE, Math.max(1, Number.parseInt(url.searchParams.get("limit") ?? String(RESULTS_PER_PAGE), 10) || RESULTS_PER_PAGE));
@@ -26,17 +28,17 @@ export async function GET(request: Request) {
   }
 
   try {
-    const [{ filters, ordered }, viewer] = await Promise.all([
-      resolveSearchResults(params),
-      createClient().then((supabase) => safeGetUser(supabase)).catch(() => null),
-    ]);
+    // Ya no hace falta saber quién mira: un listado nunca lleva datos de
+    // contacto. Con eso se ahorra además una consulta de sesión por cada
+    // «cargar más».
+    const { filters, ordered } = await resolveSearchResults(params);
     const decisions = locationDecisions(params, filters);
     const slice = ordered.slice(offset, offset + limit);
     return NextResponse.json({
       total: ordered.length,
       offset,
       professionals: slice.map((professional) => ({
-        professional: redactContact(cardData(professional), !!viewer),
+        professional: redactContactEnListado(cardData(professional)),
         forceContactOnly: decisions.shouldShowContactOnly(professional),
         preferVideo: decisions.shouldPreferVideoLocation(professional),
       })),

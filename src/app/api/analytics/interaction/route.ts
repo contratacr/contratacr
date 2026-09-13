@@ -1,4 +1,5 @@
 import { createHash, randomUUID } from "node:crypto";
+import { enforceRateLimit } from "@/lib/rate-limit";
 import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -39,6 +40,9 @@ function cleanMetadata(value: unknown): Record<string, string | number | boolean
 }
 
 export async function POST(req: NextRequest) {
+  // Cualquiera podía inflar las vistas y los contactos de un profesional en bucle.
+  const limitado = enforceRateLimit(req, "analytics", 60, 60_000);
+  if (limitado) return limitado;
   const body = await req.json().catch(() => null);
   if (!body || !VALID_EVENTS.has(String(body.type ?? ""))) {
     return NextResponse.json({ error: "Invalid analytics event." }, { status: 400 });

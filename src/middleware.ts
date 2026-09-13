@@ -283,6 +283,32 @@ const CABECERAS_DE_SEGURIDAD: Record<string, string> = {
   "X-Frame-Options": "SAMEORIGIN",
   "Content-Security-Policy": "frame-ancestors 'self'",
   "Referrer-Policy": "strict-origin-when-cross-origin",
+  // `Permissions-Policy` estaba solo en next.config, que en Cloudflare no se
+  // aplica: nunca llegaba al navegador. Se apagan las capacidades que el app no
+  // usa; la cámara y el micrófono los pide la propia página cuando toca.
+  "Permissions-Policy": "geolocation=(self), camera=(self), microphone=(), payment=(), usb=(), magnetometer=(), gyroscope=(), interest-cohort=()",
+  // Aísla la ventana de cualquier pestaña que la abra: sin esto, una página que
+  // nos abra por `window.open` conserva una referencia a nuestra ventana.
+  "Cross-Origin-Opener-Policy": "same-origin-allow-popups",
+  // La política de contenido de verdad va primero en modo AVISO: recoge lo que
+  // rompería sin bloquear nada. Cuando los informes estén limpios se convierte
+  // en `Content-Security-Policy`. Las fuentes son las que el app usa hoy:
+  // Supabase (datos y realtime), Cloudinary y R2 (imágenes), Google Maps e
+  // Identity, y el píxel de Meta.
+  "Content-Security-Policy-Report-Only": [
+    "default-src 'self'",
+    "base-uri 'self'",
+    "object-src 'none'",
+    "form-action 'self'",
+    "frame-ancestors 'self'",
+    "img-src 'self' data: blob: https://res.cloudinary.com https://assets.contratacr.com https://*.supabase.co https://maps.googleapis.com https://maps.gstatic.com https://*.googleusercontent.com https://www.facebook.com",
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://maps.googleapis.com https://accounts.google.com https://connect.facebook.net",
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+    "font-src 'self' data: https://fonts.gstatic.com",
+    "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://maps.googleapis.com https://translation.googleapis.com https://api.cloudinary.com https://www.facebook.com",
+    "frame-src 'self' https://accounts.google.com https://www.facebook.com",
+    "worker-src 'self' blob:",
+  ].join("; "),
 };
 
 function conCabecerasDeSeguridad<T extends NextResponse>(response: T): T {

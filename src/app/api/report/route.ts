@@ -1,6 +1,7 @@
 export const runtime = "nodejs";
 
 import { NextRequest, NextResponse } from "next/server";
+import { correoValido, escaparHtml } from "@/lib/email/escape";
 import { enforceRateLimit } from "@/lib/rate-limit";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { brandedEmailDocument, sendBrevoEmail } from "@/lib/email/send";
@@ -11,7 +12,7 @@ const SUPPORT_TO = "soporte@contratacr.com";
 
 export async function POST(req: NextRequest) {
   // Public endpoint: bound abuse and enumeration per client IP.
-  const limited = enforceRateLimit(req, "report", 10, 600000);
+  const limited = enforceRateLimit(req, "report-public", 10, 600000);
   if (limited) return limited;
   try {
     const { professionalName, professionalSlug, reason, reporterEmail } = await req.json();
@@ -74,18 +75,18 @@ export async function POST(req: NextRequest) {
           <h1 style="font-size:20px;line-height:1.3;margin:0 0 16px">Reporte de perfil</h1>
           <table style="width:100%;border-collapse:collapse;margin-bottom:16px;font-size:14px;">
             <tr><td style="padding:6px 0;color:#6b7280;width:120px;">Profesional:</td><td style="padding:6px 0;font-weight:600;color:#111827;">${professionalName ?? "—"}</td></tr>
-            <tr><td style="padding:6px 0;color:#6b7280;">Perfil:</td><td style="padding:6px 0;"><a href="${profileUrl}" style="color:#009FD9;">${profileUrl}</a></td></tr>
-            <tr><td style="padding:6px 0;color:#6b7280;">Reportado por:</td><td style="padding:6px 0;color:#111827;">${reporterEmail || "Anónimo"}</td></tr>
+            <tr><td style="padding:6px 0;color:#6b7280;">Perfil:</td><td style="padding:6px 0;"><a href="${escaparHtml(profileUrl)}" style="color:#009FD9;">${escaparHtml(profileUrl)}</a></td></tr>
+            <tr><td style="padding:6px 0;color:#6b7280;">Reportado por:</td><td style="padding:6px 0;color:#111827;">${escaparHtml(reporterEmail || "Anónimo")}</td></tr>
           </table>
           <hr style="border:none;border-top:1px solid #f3f4f6;margin:12px 0;"/>
           <p style="font-size:13px;color:#6b7280;margin:0 0 6px;">Motivo:</p>
-          <div style="font-size:14px;color:#374151;line-height:1.6;white-space:pre-wrap;">${String(reason ?? "Sin detalle").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</div>`,
+          <div style="font-size:14px;color:#374151;line-height:1.6;white-space:pre-wrap;">${escaparHtml(reason ?? "Sin detalle")}</div>`,
     });
 
     const r = await sendBrevoEmail({
       to: SUPPORT_TO,
-      replyTo: reporterEmail || undefined,
-      subject: `${isImpersonation ? "[PRIORIDAD ALTA] " : ""}[Reporte] Perfil de ${professionalName ?? professionalSlug}`,
+      replyTo: correoValido(reporterEmail) || undefined,
+      subject: `${isImpersonation ? "[PRIORIDAD ALTA] " : ""}[Reporte] Perfil de ${escaparHtml(professionalName ?? professionalSlug)}`,
       html,
     });
 

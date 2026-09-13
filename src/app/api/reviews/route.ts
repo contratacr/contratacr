@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { enforceRateLimit } from "@/lib/rate-limit";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { auditUserAction } from "@/lib/audit/user-action";
@@ -11,6 +12,9 @@ import { sendNotificationPush } from "@/lib/push/notify";
 // If the review comes from a real booking/project/WhatsApp follow-up, we keep
 // that context, but a completed item is no longer required.
 export async function POST(req: NextRequest) {
+  // Una reseña por minuto de sobra; sin esto no había ningún tope.
+  const limitado = enforceRateLimit(req, "reviews", 10, 60_000);
+  if (limitado) return limitado;
   const { professionalId, rating, comment, bookingId, projectId, contactId } = await req.json();
 
   if (!professionalId || !rating) {

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Clock3, Star, X } from "lucide-react";
 import { useLocale } from "next-intl";
 import { useAuth } from "@/hooks/use-auth";
+import { WHATSAPP_CONTACT_COOKIE } from "@/lib/contact-followup";
 import { LeaveReviewModal } from "@/components/professionals/leave-review-modal";
 
 type FollowUp = {
@@ -84,8 +85,14 @@ export function WhatsAppReviewFollowUp() {
   useEffect(() => {
     if (authLoading) return;
     let active = true;
+    // La consulta de seguimiento solo tiene sentido para quien ya contactó a
+    // alguien: existe una marca en la cookie, o hay sesión. Sin este filtro
+    // salía una petición (y dos consultas) en CADA carga de CADA pantalla del
+    // app, también para un visitante que acaba de llegar.
+    const yaContactoAAlguien = userId !== null
+      || (typeof document !== "undefined" && document.cookie.includes(WHATSAPP_CONTACT_COOKIE));
     const initialTimer = window.setTimeout(() => {
-      if (active) void checkFollowUp(active);
+      if (active && yaContactoAAlguien) void checkFollowUp(active);
     }, 0);
 
     const onWhatsAppContacted = () => {
