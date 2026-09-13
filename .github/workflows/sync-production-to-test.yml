@@ -198,8 +198,11 @@ jobs:
           # auth.users is referenced by identities, sessions, refresh tokens and
           # additional GoTrue tables. Snapshot the complete auth schema so a
           # rollback cannot leave those dependent records partially deleted.
+          # `auth.schema_migrations` es de GoTrue: el rol no puede escribirla y su
+          # sola presencia en el volcado abortaba la restauración del rollback.
           "$PG_BIN/pg_dump" "$TEST_DB_URL" \
             --format=custom --compress=6 --data-only --schema=auth --no-owner --no-acl \
+            --exclude-table-data=auth.schema_migrations \
             --file="$RUNNER_TEMP/contratacr-mirror/test-auth-rollback.dump"
           test -s "$RUNNER_TEMP/contratacr-mirror/test-public-rollback.dump"
           test -s "$RUNNER_TEMP/contratacr-mirror/test-auth-rollback.dump"
@@ -281,7 +284,16 @@ jobs:
           "$PG_BIN/psql" "$TEST_DB_URL" --no-psqlrc --csv -Atc \
             "select p.id, coalesce(pr.avatar_url, '') from public.professionals p join public.profiles pr on pr.id=p.profile_id where p.id in ('ae9caa2b-1fca-4411-9aeb-7736f5bbf42f','988428c7-a0b6-4d9e-a9b8-e0209a1ca296') order by 1" \
             > "$mirror/test-regression-photos.csv"
-          diff -u "$mirror/production-regression-photos.csv" "$mirror/test-regression-photos.csv"
+          # El sembrado toma las fotos de la API pública de producción, que
+          # entrega la URL de Cloudinary ya redimensionada; la columna de
+          # producción guarda la original. Es la MISMA imagen, así que se
+          # comparan sin el tramo de transformación.
+          normalizar_fotos() {
+            sed -E 's#(/image/upload/)[^/]*/(v[0-9]+/)#\1\2#' "$1"
+          }
+          normalizar_fotos "$mirror/production-regression-photos.csv" > "$mirror/production-regression-photos.normalizado.csv"
+          normalizar_fotos "$mirror/test-regression-photos.csv" > "$mirror/test-regression-photos.normalizado.csv"
+          diff -u "$mirror/production-regression-photos.normalizado.csv" "$mirror/test-regression-photos.normalizado.csv"
           trap - ERR
 
       - name: Remove all mirror files from the runner
