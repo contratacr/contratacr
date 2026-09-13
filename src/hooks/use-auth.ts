@@ -6,6 +6,7 @@ import { createClient, hasSupabaseBrowserConfig } from "@/lib/supabase/client";
 import { APP_RESUME_EVENT } from "@/lib/app-events";
 import { isSigningOut } from "@/lib/auth/sign-out";
 import { clearDashboardCache } from "@/lib/dashboard-prefetch-cache";
+import { clearConversationsCache } from "@/lib/direct-chat/conversations-cache";
 
 // Resolve once the image is decoded (or fails / times out — never hangs). Used to keep
 // the avatar skeleton up until the photo can paint INSTANTLY, so the navbar never shows
@@ -305,6 +306,8 @@ function useAuthState(
         setAvatarUrl(null);
         setAvatarReady(true);
         clearDashboardCache();
+        // La lista de conversaciones tampoco puede sobrevivir a la sesión.
+        clearConversationsCache();
       }
     });
 

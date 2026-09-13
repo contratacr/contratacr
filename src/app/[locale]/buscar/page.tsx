@@ -468,7 +468,11 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     <div className="min-h-screen flex flex-col bg-[#fafafa]">
       {/* Mobile keeps the header to logo + search + menu; filters float over the map. */}
       <LandingNavbar forceCompactSearch mobileSearch />
-      <div className="ccr-navbar-spacer h-16" aria-hidden />
+      {/* En teléfono no hay espaciador: el mapa va debajo de la barra desde el
+          servidor. Antes se pintaba de 124px y, al fijar la página a la altura
+          de la pantalla tras hidratar, la columna lo aplastaba a 0 y el mapa
+          subía 124px de golpe (salto medido de 0,19 en cada apertura). */}
+      <div className="ccr-navbar-spacer hidden h-16 lg:block" aria-hidden />
 
       {/* Top bar - title + subtitle. Background MATCHES the page/results area (#f4f7fa)
           and is FLUSH with it: no shadow, divider or raised band, so the title reads as

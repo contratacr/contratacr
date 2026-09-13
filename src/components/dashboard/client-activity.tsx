@@ -601,7 +601,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
 
   if (loading) {
     const currentItems = section === "bookings" ? bookings : projects;
-    return <PanelListSkeleton rows={3} withTabs hasData={currentItems.length > 0} />;
+    return <PanelListSkeleton rows={3} withTabs />;
   }
 
   const bookingCounts = bucketCounts(bookings.map((b) => solicitudBucket(b.status, b.scheduled_date)));

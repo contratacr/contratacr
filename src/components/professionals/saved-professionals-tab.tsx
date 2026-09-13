@@ -260,7 +260,7 @@ export function SavedProfessionalsTab() {
   // Esqueleto solo cuando de verdad no hay nada que mostrar: los profesionales
   // guardados viven en el navegador y las ofertas/empleos vienen de la caché,
   // así que al volver a la sección se pinta de una vez.
-  if (authLoading || (!mounted && total === 0)) return <PanelListSkeleton rows={3} hasData={total > 0} />;
+  if (authLoading || (!mounted && total === 0)) return <PanelListSkeleton rows={3} />;
 
   const tabs = availableFilters.map((id) => ({ id }));
   const tabLabels: Record<string, string> = {

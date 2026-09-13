@@ -27,38 +27,38 @@ export function PanelSectionLoading({ title, description, className }: { rows?: 
     <div data-panel-loading="" className={cn("ccr-delayed-loading ccr-panel-section-loading min-h-[14rem] px-4 py-6 sm:min-h-[16rem]", className)} aria-busy="true" role="status">
       <span className="sr-only">{title ?? t("generic")}</span>
       {description && <span className="sr-only">{description}</span>}
-      <div className="mx-auto w-full max-w-xl space-y-3">
-        <Skeleton className="h-4 w-2/5 rounded-full" />
-        <Skeleton className="h-3 w-4/5 rounded-full" />
-        <Skeleton className="h-3 w-3/5 rounded-full" />
+      <div className="mx-auto w-full max-w-xl space-y-3 lg:max-w-none">
+        <Skeleton className="h-4 w-2/5 rounded-full lg:w-1/4" />
+        <Skeleton className="h-3 w-4/5 rounded-full lg:w-1/2" />
+        <Skeleton className="h-3 w-3/5 rounded-full lg:w-2/5" />
         <Skeleton className="h-24 w-full rounded-2xl" />
       </div>
     </div>
   );
 }
 
+// El esqueleto de una sección de lista tiene la forma de la sección: sus
+// pestañas, su buscador y sus tarjetas, en teléfono y en escritorio.
+//
+// Antes solo dibujaba las tarjetas cuando la sección "ya tenía registros"
+// (`hasData`), y caía al bloque genérico en caso contrario. Pero mientras se
+// carga el dato todavía no existe, así que `hasData` era falso SIEMPRE y todas
+// las secciones enseñaban el mismo bloque angosto pensado para el teléfono;
+// en la computadora aparecía una columna estrecha que luego saltaba a la lista
+// ancha. La sección sabe qué forma tiene aunque aún no sepa cuántas filas: eso
+// es lo que se dibuja.
 export function PanelListSkeleton({
   rows = 3,
   withTabs = false,
   withSearch = false,
-  hasData = false,
   className,
 }: {
   rows?: number;
   withTabs?: boolean;
   withSearch?: boolean;
-  /** Only draw record-shaped placeholders when this section already has records. */
-  hasData?: boolean;
   className?: string;
 }) {
   const t = useTranslations("loading");
-  if (!hasData) {
-    // The first request cannot know whether this collection is empty yet. Keep
-    // a visible, stable loading surface in the panel instead of returning null:
-    // returning null leaves the section header above a blank card until the
-    // network request resolves (and can last several seconds on a cold load).
-    return <PanelSectionLoading className={className} />;
-  }
 
   return (
     <div data-panel-loading="" className={cn("ccr-delayed-loading space-y-4", className)} aria-busy="true" role="status">
@@ -69,23 +69,28 @@ export function PanelListSkeleton({
         </div>
       )}
       {withTabs && (
-        <div className="flex w-full max-w-md gap-1 rounded-2xl bg-[#eef3f7] p-1">
-          <Skeleton className="h-10 flex-1 rounded-xl" />
-          <Skeleton className="h-10 flex-1 rounded-xl" />
-          <Skeleton className="h-10 flex-1 rounded-xl" />
+        // Misma geometría que `StatusFilterTabs`: pastilla segmentada de 36px, a lo ancho.
+        <div className="flex w-full gap-1 rounded-xl bg-[#e6edf4] p-1">
+          <Skeleton className="h-9 flex-1 rounded-lg" />
+          <Skeleton className="h-9 flex-1 rounded-lg" />
+          <Skeleton className="h-9 flex-1 rounded-lg" />
         </div>
       )}
       <div className="space-y-3">
         {Array.from({ length: rows }).map((_, index) => (
-          <div key={index} className="rounded-2xl border border-[#dfe8f0] bg-white p-4 shadow-[0_10px_30px_-24px_rgba(15,23,42,0.7)] sm:p-5">
-            <div className="flex items-start gap-3">
+          // La misma tarjeta que Citas, Proyectos y Empleos ya cargadas: ícono a
+          // la izquierda, título y dos líneas de detalle, y la flecha de abrir a
+          // la derecha. En escritorio las líneas son más cortas porque la fila
+          // es ancha; la forma es la misma.
+          <div key={index} className="rounded-2xl border border-[#dfe8f0] bg-white p-4 sm:p-5">
+            <div className="flex items-start gap-3 lg:gap-4">
               <Skeleton className="h-11 w-11 shrink-0 rounded-xl" />
               <div className="min-w-0 flex-1 space-y-2.5">
-                <Skeleton className="h-4 w-2/3 rounded-full" />
-                <Skeleton className="h-3 w-1/2 rounded-full" />
-                <Skeleton className="h-3 w-5/6 rounded-full" />
+                <Skeleton className="h-4 w-2/3 rounded-full lg:w-1/4" />
+                <Skeleton className="h-3 w-1/2 rounded-full lg:w-1/3" />
+                <Skeleton className="h-3 w-5/6 rounded-full lg:w-1/4" />
               </div>
-              <Skeleton className="h-9 w-9 shrink-0 rounded-full" />
+              <Skeleton className="h-6 w-6 shrink-0 rounded-full" />
             </div>
           </div>
         ))}

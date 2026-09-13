@@ -123,9 +123,11 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
     const cached = readCachedNotifications(user?.id) as Notification[] | null;
     queueMicrotask(() => {
       setNotificationState({ userId: user?.id, items: cached ?? [] });
-      // Un caché vacío no distingue "no hay nada" de "aún no se sabe": solo
-      // una lista cacheada CON contenido permite pintar sin esperar.
-      setBusy(sesionCargando || (!!user && (cached === null || cached.length === 0)));
+      // El caché guarda también la lista vacía, así que "no hay nada" (lista
+      // vacía guardada) y "aún no se sabe" (sin entrada) sí se distinguen: solo
+      // la segunda espera. Antes una cuenta sin notificaciones veía el esqueleto
+      // en CADA entrada aunque acabara de salir.
+      setBusy(sesionCargando || (!!user && cached === null));
     });
   }, [sesionCargando, user]);
 
@@ -462,8 +464,7 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
         {busy ? (
           <PanelListSkeleton
             rows={4}
-            hasData={visible.length > 0}
-            className={scope === "all" ? "min-h-[calc(100dvh-13rem)] p-4 sm:min-h-[18rem]" : "min-h-[16rem] p-4 sm:min-h-[18rem]"}
+            className={cn("p-4", scope === "all" ? "min-h-[calc(100dvh-8.75rem)] sm:min-h-[calc(100dvh-16rem)]" : "min-h-[16rem] sm:min-h-[18rem]")}
           />
         ) : visible.length === 0 ? (
           <PanelEmptyState
@@ -474,12 +475,16 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
             className={cn(
               "px-5 py-12",
               scope === "all"
-                ? "min-h-[calc(100dvh-13rem)] sm:min-h-[18rem]"
+                ? "min-h-[calc(100dvh-8.75rem)] sm:min-h-[calc(100dvh-16rem)]"
                 : "min-h-[16rem] sm:min-h-[18rem]",
             )}
           />
         ) : (
-          <ul className="ccr-notifications-items">
+          // Misma altura mínima que el esqueleto y el vacío, y de una pantalla
+          // entera: así el pie queda debajo del borde en los tres estados y
+          // cuando la lista crece lo empuja fuera de la vista, no a la vista
+          // (medido: saltos de 0,78 en teléfono y 0,49 en escritorio).
+          <ul className={cn("ccr-notifications-items", scope === "all" ? "min-h-[calc(100dvh-8.75rem)] sm:min-h-[calc(100dvh-16rem)]" : "min-h-[16rem] sm:min-h-[18rem]")}>
             {ordenadas.map((n, indice) => {
               const grupo = grupoDe(n);
               const abreGrupo = indice === 0 || grupoDe(ordenadas[indice - 1]) !== grupo;

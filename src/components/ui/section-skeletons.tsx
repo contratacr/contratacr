@@ -30,7 +30,9 @@ export function PanelSkeleton() {
           a lo ancho, columna de navegación de 260px y la tarjeta de contenido—.
           Antes el esqueleto era siempre el del teléfono, y en la computadora
           aparecía una columna angosta que luego saltaba al acomodo ancho. */}
-      <div className="mx-auto w-full max-w-xl space-y-4 px-4 pt-4 lg:max-w-7xl lg:px-8 lg:pt-8">
+      {/* Mismo relleno superior que la página real (pt-6 / lg:pt-8): con pt-4
+          todo el contenido bajaba 8px al llegar y el pie saltaba con él. */}
+      <div className="mx-auto w-full max-w-xl space-y-4 px-4 pt-6 lg:max-w-7xl lg:px-8 lg:pt-8">
         <div className="rounded-[22px] border border-[#e5edf4] bg-white p-5 shadow-[0_12px_34px_-28px_rgba(15,23,42,0.55)] lg:max-w-[71.5rem]">
           <div className="flex items-center gap-4">
             <Hueso className="h-16 w-16 shrink-0 rounded-full" />

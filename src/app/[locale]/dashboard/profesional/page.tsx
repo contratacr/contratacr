@@ -2,7 +2,7 @@
 import { enlacePerfil } from "@/lib/profile-url";
 import { EMPLEOS_VISIBLE } from "@/lib/feature-flags";
 
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback, useRef, useLayoutEffect } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { useHairlineOnScroll } from "@/components/util/use-hairline-on-scroll";
 import { isSigningOut, signOutToHome } from "@/lib/auth/sign-out";
@@ -657,6 +657,33 @@ export default function DashboardPage() {
   const [pro, setPro] = useState<ProData | null>(null);
   const [profile, setProfile] = useState<DashboardProfileData | null>(null);
   const [loading, setLoading] = useState(true);
+  // Con caché caliente el panel se pinta ANTES del primer cuadro, sin pasar
+  // por el esqueleto. Antes la caché se leía en un efecto normal y se aplicaba
+  // en una microtarea: cada entrada a la ruta enseñaba el esqueleto al menos un
+  // cuadro aunque el dato ya estuviera aquí, y con el retardo de revelado ese
+  // cuadro se veía como un parpadeo.
+  //
+  // Va en un efecto de DISEÑO y no en el render: el servidor siempre pinta el
+  // esqueleto (no conoce la sesión), y si el cliente pintara el panel en su
+  // primer render, React descartaría el árbol entero por no coincidir con el
+  // HTML del servidor y lo volvería a armar desde cero, con el esqueleto puesto
+  // casi medio segundo (medido en escritorio). El efecto de diseño corre tras
+  // la hidratación y antes de pintar: el cambio de estado se aplica en el mismo
+  // cuadro y el esqueleto nunca llega a verse.
+  const sembradoDeCachePara = useRef<string | null>(null);
+  useLayoutEffect(() => {
+    if (!user) { sembradoDeCachePara.current = null; return; }
+    if (sembradoDeCachePara.current === user.id) return;
+    sembradoDeCachePara.current = user.id;
+    const cached = getDashboardCache<DashboardBootstrap>(dashboardBootstrapKey(user.id));
+    // Una caché sin ficha en una cuenta que dice ser profesional NO es respuesta
+    // (ver el efecto de arranque): ahí sí se espera a la red.
+    if (cached && !(!cached.pro && canOffer(user))) {
+      setPro(cached.pro as ProData | null);
+      setProfile(cached.profile);
+      setLoading(false);
+    }
+  }, [user]);
   const [refreshKey] = useState(0);
   const [unreadCount, setUnreadCount] = useState(0);
   const [supportUnread, setSupportUnread] = useState(0);
@@ -1104,7 +1131,8 @@ export default function DashboardPage() {
     const cached = getDashboardCache<DashboardBootstrap>(dashboardBootstrapKey(user.id));
     if (cached) {
       // Una ficha profesional en la caché sí es respuesta: se pinta el panel de
-      // una vez y la consulta silenciosa lo confirma por detrás.
+      // una vez (ya ocurrió en el render, ver `sembradoDeCachePara`) y la
+      // consulta silenciosa lo confirma por detrás.
       //
       // Una caché SIN ficha no lo es. "Todavía no cargó" y "no tiene ficha" se
       // ven igual, y darla por buena apagaba el cargador y pintaba el panel de

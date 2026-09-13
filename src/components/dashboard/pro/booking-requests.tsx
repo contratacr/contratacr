@@ -306,7 +306,7 @@ export function BookingRequests() {
   const filtered = ordenarCitas(enEtapa.filter((b) => activeCat === "all" || !b.category_id || b.category_id === activeCat), effectiveFilter === "finalizadas" ? "finalizadas" : "activas");
 
   if (loading) {
-    return <PanelListSkeleton rows={2} withTabs hasData={bookings.length > 0} />;
+    return <PanelListSkeleton rows={2} withTabs />;
   }
 
   if (bookings.length === 0) {

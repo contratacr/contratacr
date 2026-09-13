@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useCachedResource } from "@/hooks/use-cached-resource";
 import { useLocale, useTranslations } from "next-intl";
 import { CalendarCheck, ChevronRight, Clock3, Handshake, Plus, ReceiptText, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -21,20 +22,24 @@ export function QuotesSection({ proName, proSlug, puedeCrear = true }: { proName
   const t = useTranslations("quotes");
   const tSub = useTranslations("proPanel.subtitles");
   const locale = useLocale();
-  const [quotes, setQuotes] = useState<Quote[] | null>(null);
-  const [editor, setEditor] = useState(false);
-  const [detalle, setDetalle] = useState<{ quote: Quote; recien: boolean } | null>(null);
-
-  useEffect(() => {
-    let vivo = true;
-    void fetch("/api/quotes").then((r) => r.json()).then((d) => {
-      if (!vivo) return;
+  // Igual que las demás secciones del panel: lo que este navegador ya tiene se
+  // pinta de una vez y la red lo confirma por detrás. Antes cada entrada a
+  // Cotizaciones arrancaba en cero y enseñaba el esqueleto aunque se hubiera
+  // salido un segundo antes.
+  const { data: quotesCargadas, loading, setData: setQuotes } = useCachedResource<Quote[]>(
+    `quotes:${proSlug ?? proName}`,
+    async () => {
+      const r = await fetch("/api/quotes");
+      const d = await r.json();
       const filas = Array.isArray(d.quotes) ? d.quotes : [];
       // Un renglón mal formado (items que no es lista) no puede romper la sección.
-      setQuotes(filas.map((q: Quote) => ({ ...q, items: Array.isArray(q.items) ? q.items : [] })));
-    }).catch(() => { if (vivo) setQuotes([]); });
-    return () => { vivo = false; };
-  }, []);
+      return filas.map((q: Quote) => ({ ...q, items: Array.isArray(q.items) ? q.items : [] }));
+    },
+    [],
+  );
+  const quotes: Quote[] | null = loading ? null : quotesCargadas;
+  const [editor, setEditor] = useState(false);
+  const [detalle, setDetalle] = useState<{ quote: Quote; recien: boolean } | null>(null);
 
   // "Esperando respuesta" solo tiene sentido donde alguien PUEDE responder: en
   // una cita o un proyecto del app. Una cotización suelta es un documento que se

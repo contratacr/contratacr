@@ -469,7 +469,7 @@ export function SupportTickets({
       >
         {threadLoading || !ticket ? (
           <div className="grid min-h-0 flex-1 place-items-center px-4">
-            <PanelListSkeleton rows={2} hasData={!!ticket} />
+            <PanelListSkeleton rows={2} />
           </div>
         ) : (
           <div className="ccr-support-thread-card flex min-h-0 flex-1 flex-col overflow-hidden bg-white">
@@ -594,7 +594,7 @@ export function SupportTickets({
       )}
 
       {loading && items.length === 0 ? (
-        <PanelListSkeleton rows={3} withTabs hasData={items.length > 0} />
+        <PanelListSkeleton rows={3} withTabs />
       ) : loadError ? (
         <div className="rounded-2xl border border-[#dfe8f0] bg-white px-5 py-10 text-center">
           <Headset className="mx-auto mb-3 h-10 w-10 text-[#cbd5e1]" />

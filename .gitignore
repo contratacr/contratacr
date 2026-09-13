@@ -52,3 +52,6 @@ supabase/.temp/
 *.tsbuildinfo
 next-env.d.ts
 .gitmsg.tmp
+
+# Caché local de wrangler (Cloudflare) en el worktree móvil
+.wrangler/

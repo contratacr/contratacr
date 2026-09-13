@@ -70,7 +70,7 @@ export function ClientJobApplications() {
   );
   const [openId, setOpenId] = useState<string | null>(null);
 
-  if (loading) return <PanelListSkeleton rows={3} hasData={applications.length > 0} />;
+  if (loading) return <PanelListSkeleton rows={3} />;
   if (!applications.length) return (
     <PanelEmptyState
       icon={BriefcaseBusiness}

@@ -356,7 +356,7 @@ export function ProposalsTab({ categoryId }: ProposalsTabProps) {
   const metaValue = "mt-0.5 text-[13px] font-medium text-[#374151] [overflow-wrap:anywhere]";
 
   if (loading) {
-    return <PanelListSkeleton rows={3} withTabs hasData={openProjects.length > 0 || myProposals.length > 0} />;
+    return <PanelListSkeleton rows={3} withTabs />;
   }
 
   return (
