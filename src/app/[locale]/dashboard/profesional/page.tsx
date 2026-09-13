@@ -2073,8 +2073,8 @@ export default function DashboardPage() {
       // El mismo color que la sección en CADA ancho: si la sección es blanca en
       // el teléfono y el fondo gris, donde la sección termina aparecía la
       // costura. (En la app manda el CSS, que pinta los dos de #f4f7fa.)
-      mobileSectionOpen && "bg-white sm:bg-[#f4f7fa] lg:bg-[#fafafa]",
-      mobileFullScreenTab && "bg-white lg:bg-[#fafafa]",
+      mobileSectionOpen && "bg-[#f4f7fa] lg:bg-[#fafafa]",
+      mobileFullScreenTab && "bg-[#f4f7fa] lg:bg-[#fafafa]",
     )}>
       <Navbar mobileSearch={false} />
       {formularioPublicar}
@@ -2119,12 +2119,13 @@ export default function DashboardPage() {
       )}
       <main className={cn(
         "ccr-dashboard-main flex-1 min-h-[calc(100svh-88px)]",
-        // El blanco es para el teléfono, donde la sección llena la pantalla. En
-        // una ventana ancha y corta (media pantalla en la Mac) la sección se
-        // acaba antes y ese blanco quedaba como una franja suelta encima del
-        // pie: de 640px para arriba se pinta del mismo color que la sección.
-        mobileSectionOpen && "bg-white sm:bg-[#f4f7fa] lg:bg-[#fafafa]",
-        mobileFullScreenTab && "bg-white lg:bg-[#fafafa]",
+        // Con una sección abierta, el lienzo es el GRIS de la sección en todo
+        // ancho menor de 1024px. Antes en teléfono era blanco (de cuando las
+        // secciones llenaban la pantalla en blanco): ahora las secciones van en
+        // tarjetas sobre gris, la sección termina antes que la pantalla y ese
+        // blanco quedaba como un bloque suelto entre el gris y el pie.
+        mobileSectionOpen && "bg-[#f4f7fa] lg:bg-[#fafafa]",
+        mobileFullScreenTab && "bg-[#f4f7fa] lg:bg-[#fafafa]",
       )}>
         <div className={cn(
           "dashboard-panel-content mx-auto max-w-7xl px-4 pb-6 pt-6 sm:px-6 lg:px-8 lg:pb-8 lg:pt-8",
