@@ -434,8 +434,7 @@
     "call": "Contactar por llamada",
     "email": "Correo",
     "countryCoverage": "Todo Costa Rica",
-    "share": "Compartir",
-    "servesIn": "Atiende en {place}"
+    "share": "Compartir"
   },
   "selfAction": {
     "title": "Este es tu perfil",

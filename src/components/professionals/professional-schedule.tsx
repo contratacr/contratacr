@@ -362,10 +362,23 @@ export function ProfessionalSchedule({ professional, categoryName, searchedPlace
     const videoLabel = t("videoconsulta");
     const normalizedVideoLabel = videoLabel.trim().toLocaleLowerCase();
     // Quien buscó «Atenas» y encuentra a alguien que cubre toda Alajuela debe
-    // leer que ese profesional ATIENDE EN ATENAS, no «Provincia de Alajuela»:
-    // la cobertura es real, y el rótulo del lugar buscado es lo que confirma
-    // que sí le sirve. Ese lugar va primero en la fila.
-    const lugarBuscado = searchedPlace?.cantonName ?? searchedPlace?.provinceName ?? "";
+    // leer el lugar EXACTAMENTE como lo lee en quien tiene Atenas fijo —«Atenas,
+    // Alajuela»—, no «Provincia de Alajuela» ni un rótulo aparte: la cobertura
+    // es real y el lugar buscado es el que confirma que sí le sirve. Va primero
+    // en la fila. Sin cantón buscado no se re-rotula nada: quien cubre el país
+    // sigue diciendo «Todo Costa Rica».
+    const lugarBuscado = searchedPlace?.cantonName
+      ? [searchedPlace.cantonName, searchedPlace.provinceName].filter(Boolean).join(", ")
+      : "";
+    // Si el profesional YA tiene ese cantón entre sus lugares, la cobertura
+    // amplia se queda con su propio nombre: si no, la fila mostraba dos veces
+    // «Atenas, Alajuela» —el lugar de verdad y la provincia re-rotulada— y
+    // parecía un error.
+    const yaAtiendeElCanton = !!lugarBuscado && (professional.workplaces ?? []).some((w) => {
+      const lugar = w as { cantonId?: string; name?: string };
+      return (!!searchedPlace?.cantonId && lugar.cantonId === searchedPlace.cantonId)
+        || (lugar.name?.trim() ?? "") === lugarBuscado;
+    });
     const primero = new Map<string, string>();
     for (const w of professional.workplaces ?? []) {
       const rawLabel = (w as { label?: unknown }).label;
@@ -378,8 +391,8 @@ export function ProfessionalSchedule({ professional, categoryName, searchedPlace
       const cubreLaProvinciaBuscada = !!searchedPlace?.cantonName && cubreProvinciaEntera(lugar, label)
         && (lugar.provinciaId === searchedPlace.provinceId || (!!searchedPlace.provinceName && label.includes(searchedPlace.provinceName)));
       const cubreElPaisYBuscaronLugar = !!lugarBuscado && cubrePaisEntero(lugar, label);
-      if (!isVideoWorkplace && (cubreLaProvinciaBuscada || cubreElPaisYBuscaronLugar)) {
-        if (!primero.size) primero.set(id, t("servesIn", { place: lugarBuscado }));
+      if (!isVideoWorkplace && !yaAtiendeElCanton && (cubreLaProvinciaBuscada || cubreElPaisYBuscaronLugar)) {
+        if (!primero.size) primero.set(id, lugarBuscado);
         continue;
       }
       map.set(id, label);
@@ -417,14 +430,16 @@ export function ProfessionalSchedule({ professional, categoryName, searchedPlace
       return locationOptions.length === 1 && loc === "general";
     });
 
-    // El lugar buscado («Atiende en Atenas») se queda primero aunque otra sede
-    // tenga horarios publicados: es la razón por la que este perfil apareció.
-    const rotuloBuscado = searchedPlace ? t("servesIn", { place: searchedPlace.cantonName ?? searchedPlace.provinceName ?? "" }) : null;
+    // El lugar buscado se queda primero aunque otra sede tenga horarios
+    // publicados: es la razón por la que este perfil apareció.
+    const rotuloBuscado = searchedPlace?.cantonName
+      ? [searchedPlace.cantonName, searchedPlace.provinceName].filter(Boolean).join(", ")
+      : null;
     return locationOptions
       .map((option, index) => ({ option, index, hasAvailability: hasSpecificAvailability(option.id), buscado: !!rotuloBuscado && option.label === rotuloBuscado }))
       .sort((a, b) => Number(b.buscado) - Number(a.buscado) || Number(b.hasAvailability) - Number(a.hasAvailability) || a.index - b.index)
       .map(({ option }) => option);
-  }, [forceContactOnly, locationOptions, preferredLocationId, restrictToPreferredLocation, searchedPlace, slots, t]);
+  }, [forceContactOnly, locationOptions, preferredLocationId, restrictToPreferredLocation, searchedPlace, slots]);
 
   const [selectedLoc, setSelectedLoc] = useState<string | null>(null);
   // Default to the first location that ACTUALLY has slots (so the card doesn't open on an

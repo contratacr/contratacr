@@ -1968,7 +1968,7 @@ export default function DashboardPage() {
         type="button"
         data-testid="panel-mode-switch"
         onClick={() => requestUnsavedAction(() => changePanelFromHeader(destino))}
-        className="flex min-h-[60px] w-full items-center gap-3 rounded-2xl border border-[#e5edf4] bg-white px-4 py-3.5 text-left text-[15px] font-semibold text-[#162543] shadow-[0_10px_26px_-24px_rgba(15,23,42,0.6)] transition-colors hover:bg-[#f8fbfd]"
+        className="flex min-h-[60px] w-full items-center gap-3 rounded-2xl border border-[#e5edf4] bg-white px-4 py-3.5 text-left text-[15px] font-semibold text-[#162543] transition-colors hover:bg-[#f8fbfd]"
       >
         <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[#52627a] [&>svg]:h-5 [&>svg]:w-5">
           {destino === "use" ? <User /> : <BriefcaseBusiness />}
@@ -1994,7 +1994,7 @@ export default function DashboardPage() {
           }
           requestUnsavedAction(() => openPanelDestination(tab));
         }}
-        className="flex min-h-[60px] w-full items-center gap-3 rounded-2xl border border-[#e5edf4] bg-white px-4 py-3.5 text-left text-[15px] font-semibold text-[#162543] shadow-[0_10px_26px_-24px_rgba(15,23,42,0.6)] transition-colors hover:bg-[#f8fbfd]"
+        className="flex min-h-[60px] w-full items-center gap-3 rounded-2xl border border-[#e5edf4] bg-white px-4 py-3.5 text-left text-[15px] font-semibold text-[#162543] transition-colors hover:bg-[#f8fbfd]"
       >
         <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[#52627a] [&>svg]:h-5 [&>svg]:w-5">
           {TAB_ICONS[tab]}
@@ -2069,7 +2069,7 @@ export default function DashboardPage() {
     // pie —o entre el contenido y la barra de abajo, en la app—. Ahora no hay
     // costura: el color es uno solo hasta el final de la pantalla.
     <div className={cn(
-      "ccr-dashboard-shell min-h-screen flex flex-col bg-[#fafafa]",
+      "ccr-dashboard-shell min-h-screen flex flex-col bg-[#f4f7fa] lg:bg-[#fafafa]",
       // El mismo color que la sección en CADA ancho: si la sección es blanca en
       // el teléfono y el fondo gris, donde la sección termina aparecía la
       // costura. (En la app manda el CSS, que pinta los dos de #f4f7fa.)
@@ -2118,7 +2118,7 @@ export default function DashboardPage() {
         </div>
       )}
       <main className={cn(
-        "ccr-dashboard-main flex-1 min-h-[calc(100svh-88px)]",
+        "ccr-dashboard-main flex-1 min-h-[calc(100svh-88px)] bg-[#f4f7fa] lg:bg-[#fafafa]",
         // Con una sección abierta, el lienzo es el GRIS de la sección en todo
         // ancho menor de 1024px. Antes en teléfono era blanco (de cuando las
         // secciones llenaban la pantalla en blanco): ahora las secciones van en
@@ -2472,7 +2472,7 @@ export default function DashboardPage() {
                                     <button
                                       type="button"
                                       onClick={() => signOutToHome(locale)}
-                                      className="flex min-h-[60px] w-full items-center gap-3 rounded-2xl border border-[#e5edf4] bg-white px-4 py-3.5 text-left text-[15px] font-semibold text-[#162543] shadow-[0_10px_26px_-24px_rgba(15,23,42,0.6)] transition-colors hover:bg-[#f8fbfd]"
+                                      className="flex min-h-[60px] w-full items-center gap-3 rounded-2xl border border-[#e5edf4] bg-white px-4 py-3.5 text-left text-[15px] font-semibold text-[#162543] transition-colors hover:bg-[#f8fbfd]"
                                     >
                                       <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[#64748b]">
                                         <LogOut className="h-5 w-5" />

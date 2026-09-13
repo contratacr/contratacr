@@ -48,7 +48,7 @@ export function PanelSkeleton() {
         <div className="lg:flex lg:items-start lg:gap-5">
           <div className="space-y-2.5 lg:w-[260px] lg:shrink-0 lg:rounded-[22px] lg:border lg:border-[#e5edf4] lg:bg-white lg:p-3 lg:space-y-1">
             {[0, 1, 2, 3, 4, 5].map((fila) => (
-              <div key={fila} className="flex min-h-[60px] items-center gap-3 rounded-2xl border border-[#e5edf4] bg-white px-4 shadow-[0_10px_26px_-24px_rgba(15,23,42,0.55)] lg:min-h-[44px] lg:border-0 lg:px-3 lg:shadow-none">
+              <div key={fila} className="flex min-h-[60px] items-center gap-3 rounded-2xl border border-[#e5edf4] bg-white px-4 lg:min-h-[44px] lg:border-0 lg:px-3 lg:shadow-none">
                 <Hueso className="h-8 w-8 shrink-0 rounded-full lg:h-5 lg:w-5" />
                 <Hueso className={cn("h-4 rounded-full", ["w-40", "w-32", "w-44", "w-36", "w-40", "w-32"][fila])} />
               </div>

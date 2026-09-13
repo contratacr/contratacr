@@ -346,7 +346,7 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
           </div>
         </div>
         <div className="px-4 pb-3">{renderSearch()}</div>
-        <ScrollRail className="ccr-chip-row flex gap-1.5 px-4 pb-4">{renderFilters()}</ScrollRail>
+        <ScrollRail className="ccr-chip-row flex gap-1 px-4 pb-4 sm:gap-1.5">{renderFilters()}</ScrollRail>
         <div className="px-4 pb-3" data-testid="jobs-mobile-sticky-actions">{renderActions()}</div>
       </div>
     </section>

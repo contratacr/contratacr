@@ -133,7 +133,7 @@ export function JobMarketplaceHeader({ initialQuery = "", initialLocation = "", 
           <h1 className="truncate text-center text-[21px] font-extrabold text-[#162543]">{copy.title}</h1>
         </div>
         <div className="px-4 pb-3">{search}</div>
-        <ScrollRail className="flex gap-1.5 px-4 pb-4">{filters}</ScrollRail>
+        <ScrollRail className="flex gap-1 px-4 pb-4 sm:gap-1.5">{filters}</ScrollRail>
       </section>
       <MarketplaceNavbarPortal>
         <section className="hidden h-full bg-transparent lg:block">

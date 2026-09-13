@@ -367,6 +367,21 @@ html.ccr-native-bottom-nav-visible body .ccr-search-bottom-sheet {
   }
 }
 
+/* El panel de resultados ASOMA desplazándose hacia abajo, así que su parte final
+   —y con ella el último profesional— queda FUERA de la pantalla: el panel mide
+   cuántos píxeles son y los publica en `--ccr-cola-fuera`. Esa compensación solo
+   estaba escrita para la app; en el navegador del teléfono la última tarjeta
+   salía cortada abajo y no había forma de seguir desplazando. El relleno es
+   exacto —ni un píxel de más— para que al llegar al final el último profesional
+   termine justo en el borde y no aparezca una franja blanca bajo la lista.
+   Dentro de la app mandan las reglas de `.ccr-native-app`, que ya lo hacían. */
+@media (max-width: 1023px) {
+  .ccr-search-sheet-scroll {
+    padding-bottom: var(--ccr-cola-fuera, 0px) !important;
+    scroll-padding-bottom: var(--ccr-cola-fuera, 0px);
+  }
+}
+
 @media (max-width: 1023px) {
   :root {
     --ccr-responsive-footer-reserve: 72px;

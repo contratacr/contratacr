@@ -583,7 +583,7 @@ export function MarketplaceFilterChip({ label, value, options, onChange }: { lab
         onPointerDown={onPointerDown}
         onClick={alTocar(() => setOpen(true))}
         title={active ? selectedLabel : label}
-        className={`inline-flex h-9 max-w-[calc(100vw-2rem)] items-center gap-1.5 rounded-full border px-3.5 text-[13px] font-bold lg:max-w-[18rem] ${active ? "border-[#009fd9] bg-[#eaf7fc] text-[#007fae]" : "border-[#cbd7e2] bg-white text-[#24344d]"}`}
+        className={`inline-flex h-9 max-w-[calc(100vw-2rem)] items-center gap-1 rounded-full border px-2.5 text-[13px] font-bold sm:gap-1.5 sm:px-3.5 lg:max-w-[18rem] ${active ? "border-[#009fd9] bg-[#eaf7fc] text-[#007fae]" : "border-[#cbd7e2] bg-white text-[#24344d]"}`}
       >
         <span className="truncate">{active ? selectedLabel : label}</span>
         <ChevronDown className="h-3.5 w-3.5 shrink-0" />

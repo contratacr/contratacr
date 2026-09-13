@@ -19,6 +19,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { canOffer } from "@/lib/auth/capabilities";
 import { useMode } from "@/hooks/use-mode";
 import { AnchoredDropdown } from "@/components/ui/anchored-dropdown";
+import { SearchContextSummary } from "@/components/search/search-context-summary";
 import { CategorySuggestionBox } from "@/components/ui/category-suggestion";
 import { SupportLink } from "@/components/support/support-link";
 import { NotificationBell } from "@/components/notifications/notification-bell";
@@ -1881,12 +1882,10 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                     >
                       <Search className="h-5 w-5 shrink-0 text-[#162543]" />
                       {searchRouteHasContext ? (
-                        <span data-testid="search-context-summary" className="flex min-w-0 flex-1 items-baseline gap-2 overflow-hidden whitespace-nowrap text-[15px]">
-                          <span className="truncate font-extrabold text-[#162543]">
-                            {explicitHeaderService || (locale === "en" ? "Professionals" : "Profesionales")}
-                          </span>
-                          <span className="truncate font-medium text-[#8f9aaa]">{headerLocationLabel}</span>
-                        </span>
+                        <SearchContextSummary
+                          service={explicitHeaderService || (locale === "en" ? "Professionals" : "Profesionales")}
+                          place={headerLocationLabel}
+                        />
                       ) : (
                         <span className="min-w-0 flex-1 truncate text-[15px] font-semibold text-[#8f9aaa]">
                           {locale === "en" ? "What service are you looking for?" : "¿Qué servicio estás buscando?"}
