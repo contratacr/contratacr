@@ -1,0 +1,71 @@
+name: Migrations drift
+
+# Vigila que la base de cada ambiente vaya a la par del código publicado.
+#
+# El 13-sep-2026 producción llevaba 12 migraciones de atraso (189 a 200) con el
+# código ya publicado: Cotizaciones salía vacía, no se podían retirar propuestas
+# ni descartar oportunidades, y nadie se enteró porque en test sí existían las
+# tablas. Este workflow solo LEE (un `db push --dry-run`), no aplica nada, y se
+# pone en rojo cuando queda alguna migración pendiente para que se dispare
+# `Supabase migrations` sobre ese ambiente.
+#
+# Corre al empujar a main una migración nueva, una vez al día, y a mano.
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "supabase/migrations/**"
+  schedule:
+    - cron: "30 12 * * *" # 6:30 AM Costa Rica, antes de que Isaac empiece el día.
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: Pending migrations on ${{ matrix.target }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [production, test]
+    environment: ${{ matrix.target }}
+    # Nunca se cruza con una aplicación en curso: compartiría el mismo grupo y
+    # leería una base a medio migrar.
+    concurrency:
+      group: ${{ matrix.target == 'test' && 'contratacr-test-environment' || 'supabase-migrations-production' }}
+      cancel-in-progress: false
+    env:
+      SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+      TARGET_ENV: ${{ matrix.target }}
+      EXPECTED_PROJECT_REF: ${{ matrix.target == 'test' && 'oqheayqqprpciqdvdaqo' || 'kskueodxaksxvjrysouw' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Validate target
+        run: |
+          set -euo pipefail
+          if [ -z "$SUPABASE_DB_URL" ]; then
+            echo "::error::Missing SUPABASE_DB_URL in the $TARGET_ENV GitHub Environment."
+            exit 1
+          fi
+          node scripts/ci/validate-supabase-target.mjs db SUPABASE_DB_URL "$EXPECTED_PROJECT_REF"
+
+      - name: Compare the database with the published migrations
+        run: |
+          set -euo pipefail
+          # El listado de pendientes sale por el canal de errores.
+          npx supabase@2.109.0 db push --db-url "$SUPABASE_DB_URL" --include-all --dry-run 2>&1 | tee drift.log
+          pending="$(grep -Eo '[0-9]{3}_[A-Za-z0-9._-]+\.sql' drift.log | sort -u || true)"
+          if [ -n "$pending" ]; then
+            echo "::error::La base de $TARGET_ENV va atrás del código. Migraciones pendientes:"
+            printf '  %s\n' $pending
+            echo "::error::Disparar el workflow 'Supabase migrations' con target=$TARGET_ENV y dry_run=false."
+            exit 1
+          fi
+          echo "$TARGET_ENV está al día con las migraciones publicadas."
