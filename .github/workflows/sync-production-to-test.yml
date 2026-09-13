@@ -222,12 +222,18 @@ jobs:
               --file=scripts/sync/truncate-test-data.sql || rollback_status=$?
             "$PG_BIN/psql" "$TEST_DB_URL" --no-psqlrc --set=ON_ERROR_STOP=1 \
               --file=scripts/sync/truncate-test-auth.sql || rollback_status=$?
+            # `--disable-triggers` exige ser dueño de cada tabla y el rol del
+            # proyecto no lo es: el rollback moría con "must be owner of table"
+            # y test se quedaba vacío. `session_replication_role=replica` apaga
+            # los disparadores para ESTA conexión sin pedir propiedad.
             # Restore auth first because public profiles reference auth.users.
-            "$PG_BIN/pg_restore" --dbname="$TEST_DB_URL" --data-only \
-              --no-owner --no-acl --disable-triggers --single-transaction --exit-on-error \
+            PGOPTIONS='-c session_replication_role=replica' \
+              "$PG_BIN/pg_restore" --dbname="$TEST_DB_URL" --data-only \
+              --no-owner --no-acl --single-transaction --exit-on-error \
               "$mirror/test-auth-rollback.dump" || rollback_status=$?
-            "$PG_BIN/pg_restore" --dbname="$TEST_DB_URL" --data-only \
-              --no-owner --no-acl --disable-triggers --single-transaction --exit-on-error \
+            PGOPTIONS='-c session_replication_role=replica' \
+              "$PG_BIN/pg_restore" --dbname="$TEST_DB_URL" --data-only \
+              --no-owner --no-acl --single-transaction --exit-on-error \
               "$mirror/test-public-rollback.dump" || rollback_status=$?
             "$PG_BIN/psql" "$TEST_DB_URL" --no-psqlrc --set=ON_ERROR_STOP=1 \
               --file=scripts/sync/enable-test-restore-trigger.sql || rollback_status=$?
@@ -249,8 +255,11 @@ jobs:
             --file="$mirror/prepare-test-mirror.generated.sql"
           "$PG_BIN/psql" "$TEST_DB_URL" --no-psqlrc --set=ON_ERROR_STOP=1 \
             --file=scripts/sync/disable-test-restore-trigger.sql
+          # En una sola transacción: si una tabla falla a mitad, test no se queda
+          # con medio espejo puesto (fue justo lo que pasó cuando la copia de
+          # professional_activity chocó con la llave única).
           "$PG_BIN/pg_restore" --dbname="$TEST_DB_URL" --data-only \
-            --no-owner --no-acl --exit-on-error \
+            --no-owner --no-acl --single-transaction --exit-on-error \
             "$mirror/production-public-data.dump"
           "$PG_BIN/psql" "$TEST_DB_URL" --no-psqlrc --set=ON_ERROR_STOP=1 \
             --file=scripts/sync/enable-test-restore-trigger.sql

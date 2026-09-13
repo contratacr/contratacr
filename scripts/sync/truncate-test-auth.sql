@@ -9,7 +9,11 @@ begin
   select string_agg(format('%I.%I', schemaname, tablename), ', ' order by tablename)
     into table_list
   from pg_tables
-  where schemaname = 'auth';
+  where schemaname = 'auth'
+    -- Solo las tablas que este rol puede vaciar. `auth.schema_migrations` es de
+    -- GoTrue y no le pertenece: incluirla abortaba el rollback entero con
+    -- "permission denied" y test se quedaba sin datos.
+    and pg_catalog.has_table_privilege(format('%I.%I', schemaname, tablename), 'TRUNCATE');
 
   if table_list is not null then
     execute 'truncate table ' || table_list || ' restart identity';
