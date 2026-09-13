@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { useDesvanecidoDeCarril } from "@/hooks/use-desvanecido-de-carril";
+import { usePantallaAngosta } from "@/hooks/use-pantalla-angosta";
 import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { ScrollRail } from "@/components/ui/scroll-rail";
@@ -51,6 +52,7 @@ export function StatusFilterTabs({
   mobileLayout?: "scroll" | "wrap" | "equal";
 }) {
   const tr = useTranslations("statusTabs");
+  const pantallaAngosta = usePantallaAngosta();
   const label = (id: string) => (labelFor ? labelFor(id) : tr(id));
   // Al marcar una etapa, el carril se corre para mostrarla entera y dejar
   // asomando a su vecina: así al tocar la tercera aparece la cuarta, y al
@@ -93,7 +95,15 @@ export function StatusFilterTabs({
   // es largo no se parte en dos renglones —«Profesio / nales»—: la fila entera
   // pasa a deslizarse, con cada rótulo entero, igual que los filtros de
   // proyectos. De 640px en adelante vuelven a repartirse el ancho.
-  const shortLabels = tabs.every((tab) => label(tab.id).length <= 12);
+  // Cuántas letras caben sin apretar depende de cuántas celdas haya y de lo
+  // ancha que sea la pantalla: con dos o tres celdas, un teléfono normal (360px
+  // en adelante) da de sobra para un rótulo de catorce. En Favoritos,
+  // «Profesionales» mide trece y caía al carril, así que las tres pestañas
+  // salían de distinto ancho y el conjunto se veía torcido. Con cuatro o cinco
+  // celdas, o en una pantalla de menos de 360px, el límite vuelve a doce y la
+  // fila se desliza con los rótulos enteros.
+  const cabenRotulosLargos = tabs.length <= 3 && !pantallaAngosta;
+  const shortLabels = tabs.every((tab) => label(tab.id).length <= (cabenRotulosLargos ? 14 : 12));
   // Con cuatro o cinco etapas la celda es angosta: el conteo se queda a la
   // derecha del rótulo —como en el resto de la app— y lo que se aprieta es el
   // relleno, la separación y el tamaño del conteo, no la disposición.
@@ -234,7 +244,10 @@ export function StatusFilterTabs({
                       // sobrante. Debajo de 380px (iPhone SE y parecidos) la
                       // pastilla del conteo se apila bajo el rótulo.
                       ? "gap-1 whitespace-nowrap px-3 text-[13px] max-sm:shrink-0 sm:flex-auto sm:px-1 sm:text-[12px] min-[560px]:text-[13px]"
-                      : "gap-1 px-1.5 text-[12px] min-[400px]:text-[13px] sm:px-3",
+                      // En 320px («Profesionales» + su conteo en una celda de
+                      // 93px) la letra baja medio punto antes que recortar el
+                      // rótulo: un filtro se lee entero o no sirve.
+                      : "gap-1 px-1 text-[11.5px] min-[360px]:text-[12px] min-[400px]:px-1.5 min-[400px]:text-[13px] sm:px-3",
                     "whitespace-nowrap",
                   )
                 : "gap-1"

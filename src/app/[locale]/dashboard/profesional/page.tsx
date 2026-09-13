@@ -1706,6 +1706,37 @@ export default function DashboardPage() {
     ? null
     : (supportThreadTitle ?? mobileProfileSectionTitle ?? (activeTab === "services" ? t("servicesHeading") : panelTabLabel(activeTab)));
   const sectionBackRef = useRef<(() => void) | null>(null);
+  // EL GESTO DE VOLVER (deslizar en iOS, el botón físico de Android, el atrás
+  // del navegador) usa el HISTORIAL, que no sabe nada de los pasos que se abren
+  // DENTRO de una pestaña. Desde «Datos básicos» el gesto saltaba dos pantallas
+  // —hasta el menú del panel— en vez de volver al menú de Mi perfil, que es lo
+  // que hace la flecha de la barra. Mientras hay un paso interno abierto se deja
+  // una entrada centinela en el historial: el gesto la consume y aquí se cierra
+  // ese paso, igual que la flecha. Solo en teléfono: de 640px en adelante las
+  // secciones son un acordeón y no son un paso de navegación.
+  const pasoInternoAbierto =
+    (activeTab === "profile" && !!mobileProfileSectionTitle)
+    || (activeTab === "soporte" && !!supportThreadTitle);
+  useEffect(() => {
+    if (!pasoInternoAbierto) return;
+    if (!window.matchMedia("(max-width: 639px)").matches) return;
+    const centinela = { ...(window.history.state ?? {}), ccrPasoInterno: true };
+    if (!window.history.state?.ccrPasoInterno) window.history.pushState(centinela, "", window.location.href);
+    const enSoporte = activeTab === "soporte";
+    function alVolver() {
+      // El aviso de cambios sin guardar atiende este mismo gesto con su propio
+      // centinela: cuando está puesto, manda él y aquí no se cierra nada.
+      if (window.history.state?.ccrUnsavedGuard) return;
+      window.dispatchEvent(new Event(enSoporte ? "ccr:support-close-thread" : "ccr:profile-mobile-close-section"));
+    }
+    window.addEventListener("popstate", alVolver);
+    return () => {
+      window.removeEventListener("popstate", alVolver);
+      // El paso se cerró por la flecha y seguimos sobre el centinela: se retira
+      // para que el historial no quede con una entrada de más.
+      if (window.history.state?.ccrPasoInterno) window.history.back();
+    };
+  }, [pasoInternoAbierto, activeTab]);
   const [navbarOwnsHeader, setNavbarOwnsHeader] = useState(false);
   useEffect(() => {
     const onBack = () => sectionBackRef.current?.();

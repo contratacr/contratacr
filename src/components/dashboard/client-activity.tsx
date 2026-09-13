@@ -946,7 +946,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
               icon={FolderOpen}
               title={t("pEmpty")}
               description={t("pEmptySub")}
-              action={<Button size="lg" className="rounded-xl" onClick={() => setShowPublish(true)}><Plus className="h-4 w-4" />{t("publishProject")}</Button>}
+              action={<Button onClick={() => setShowPublish(true)}><Plus className="h-4 w-4" />{t("publishProject")}</Button>}
             />
           ) : (
             <div className="ccr-native-safe-list-end flex flex-col gap-3.5">

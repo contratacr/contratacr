@@ -9,6 +9,7 @@ import { UnsavedChangesGuard } from "@/components/dashboard/unsaved-changes-guar
 import { StatusFilterTabs } from "@/components/dashboard/status-filter-tabs";
 import { SectionHeadline } from "@/components/dashboard/section-headline";
 import { Modal } from "@/components/ui/modal";
+import { PanelEmptyState } from "@/components/ui/content-loading";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
@@ -347,23 +348,21 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
         </div>
       )}
 
-      {/* Estado vacío: como el de Servicios o Soporte, con el botón centrado. */}
+      {/* El MISMO vacío que el resto del panel: tarjeta blanca de borde continuo,
+          mosaico azul, título y una acción ancha. Estaba dibujado a mano y por
+          eso era el único que salía suelto sobre el lienzo, sin contenedor,
+          mientras Mis proyectos o Favoritos sí van en tarjeta. */}
       {shownCases.length === 0 && (
-        <div className="ccr-empty-state flex min-h-[18rem] flex-col items-center justify-center px-4 py-12 text-center sm:min-h-[20rem]">
-          <span className="ccr-icono-mosaico mx-auto mb-3 h-14 w-14">
-            <Plus className="h-6 w-6" strokeWidth={1.6} />
-          </span>
-          <p className="text-[15px] font-bold text-[#162543]">{t("addCase")}</p>
-          <p className="mx-auto mt-1 max-w-sm text-sm leading-relaxed text-[#6b7280]">{t("addCaseHint")}</p>
-          <button
-            type="button"
-            onClick={openAdd}
-            disabled={addFull || professions.length === 0}
-            className="mt-5 inline-flex h-11 w-full max-w-xs items-center justify-center gap-2 rounded-full bg-[#009FD9] px-4 text-sm font-bold text-white transition-colors hover:bg-[#0089bb] disabled:cursor-not-allowed disabled:bg-[#cbd5e1]"
-          >
-            <Plus className="h-4 w-4" /> {t("addCase")}
-          </button>
-        </div>
+        <PanelEmptyState
+          icon={Plus}
+          title={t("addCase")}
+          description={t("addCaseHint")}
+          action={(
+            <Button type="button" onClick={openAdd} disabled={addFull || professions.length === 0}>
+              <Plus className="h-4 w-4" /> {t("addCase")}
+            </Button>
+          )}
+        />
       )}
 
       {/* Sin botón: los casos se guardan solos y esto lo confirma. */}
