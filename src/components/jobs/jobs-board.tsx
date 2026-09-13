@@ -41,7 +41,7 @@ type Props = {
   detailOnly?: boolean;
 };
 
-const MARKETPLACE_LIST_CLASS = "ccr-marketplace-card-list min-w-0 bg-white lg:h-full lg:overflow-y-scroll lg:border-r lg:border-[#dfe6ec]";
+const MARKETPLACE_LIST_CLASS = "ccr-marketplace-card-list min-w-0 border-b border-[#e7edf2] bg-white lg:h-full lg:overflow-y-scroll lg:border-b-0 lg:border-r lg:border-[#dfe6ec]";
 
 const JOBS_COPY = {
   es: {
@@ -287,7 +287,7 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
   const detailBackHref = safeMarketplaceReturnHref(returnTo, "/empleos");
   const detailBackLabel = marketplaceReturnLabel(detailBackHref, "/empleos", locale);
 
-  return <main className="min-h-[calc(100vh-72px)] overflow-x-clip bg-white pb-16 text-[#162543] sm:bg-[#fafafa] lg:flex lg:h-[calc(100dvh-64px)] lg:min-h-0 lg:flex-col lg:overflow-hidden lg:bg-[#fafafa] lg:pb-0">
+  return <main className="min-h-[calc(100vh-72px)] overflow-x-clip bg-[#f4f7fa] pb-16 text-[#162543] sm:bg-[#fafafa] lg:flex lg:h-[calc(100dvh-64px)] lg:min-h-0 lg:flex-col lg:overflow-hidden lg:bg-[#fafafa] lg:pb-0">
     <div ref={sentinelaRef} aria-hidden className="h-px lg:hidden" />
     {showingMobileDetail && selected && (
       <section className="lg:hidden">

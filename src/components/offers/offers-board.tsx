@@ -52,7 +52,7 @@ type Props = {
 };
 
 const MARKETPLACE_LIST_CLASS =
-  "ccr-marketplace-card-list min-w-0 bg-white lg:h-full lg:overflow-y-scroll lg:border-r lg:border-[#dfe6ec]";
+  "ccr-marketplace-card-list min-w-0 border-b border-[#e7edf2] bg-white lg:h-full lg:overflow-y-scroll lg:border-b-0 lg:border-r lg:border-[#dfe6ec]";
 
 const OFFERS_COPY = {
   es: {
@@ -391,7 +391,7 @@ export function OffersBoard({
   );
 
   return (
-    <main className="min-h-[calc(100vh-72px)] overflow-x-clip bg-white pb-16 text-[#162543] sm:bg-[#fafafa] lg:flex lg:h-[calc(100dvh-64px)] lg:min-h-0 lg:flex-col lg:overflow-hidden lg:bg-[#fafafa] lg:pb-0">
+    <main className="min-h-[calc(100vh-72px)] overflow-x-clip bg-[#f4f7fa] pb-16 text-[#162543] sm:bg-[#fafafa] lg:flex lg:h-[calc(100dvh-64px)] lg:min-h-0 lg:flex-col lg:overflow-hidden lg:bg-[#fafafa] lg:pb-0">
       <div ref={sentinelaRef} aria-hidden className="h-px lg:hidden" />
       <section ref={cabeceraRef} className={cn("ccr-marketplace-sticky sticky top-0 z-20 border-b bg-white transition-colors duration-200 lg:hidden", conLinea ? "border-[#e5e7eb]" : "border-transparent")}>
         <div className="px-0">
