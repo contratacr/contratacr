@@ -11,7 +11,7 @@
   "src/app/[locale]/privacidad/page.tsx": 1,
   "src/app/[locale]/profesionales/[slug]/layout.tsx": 4,
   "src/app/[locale]/profesionales/[slug]/opengraph-image.tsx": 3,
-  "src/app/[locale]/profesionales/[slug]/page.tsx": 24,
+  "src/app/[locale]/profesionales/[slug]/profile-client.tsx": 24,
   "src/app/[locale]/registro/profesional/page.tsx": 1,
   "src/app/[locale]/servicio-no-disponible/page.tsx": 2,
   "src/app/[locale]/servicios/page.tsx": 8,

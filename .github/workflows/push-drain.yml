@@ -1,0 +1,95 @@
+name: Push outbox drain
+
+# Cada notificación que se crea en el app deja un aviso encolado en
+# `notification_push_outbox` para mandarlo al teléfono. Solo hay un consumidor
+# de esa cola —`/api/internal/push/drain`— y NADIE lo estaba llamando: el
+# 13-sep-2026 producción tenía 156 avisos encolados, diez teléfonos con la app
+# instalada y CERO entregas. O sea, la app nunca ha mandado un push.
+#
+# Esta tarea vacía la cola cada diez minutos. El endpoint marca cada aviso como
+# entregado o fallido, así que dos corridas seguidas nunca mandan lo mismo dos
+# veces, y una corrida a mano es segura.
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+    inputs:
+      target:
+        description: "Ambiente donde vaciar la cola."
+        required: true
+        type: choice
+        options:
+          - production
+          - test
+
+concurrency:
+  group: push-drain-${{ github.event_name == 'schedule' && 'production' || inputs.target }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  drain:
+    name: Drain push outbox on ${{ github.event_name == 'schedule' && 'production' || inputs.target }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: ${{ github.event_name == 'schedule' && 'production' || inputs.target }}
+    env:
+      TARGET: ${{ github.event_name == 'schedule' && 'production' || inputs.target }}
+      APP_URL: ${{ secrets.NEXT_PUBLIC_APP_URL }}
+      CRON_SECRET: ${{ secrets.CRON_SECRET }}
+    steps:
+      - name: Validate target and secrets
+        run: |
+          set -euo pipefail
+          if [ -z "$CRON_SECRET" ]; then
+            echo "::error::Missing CRON_SECRET in the $TARGET GitHub Environment. It must match the CRON_SECRET the site runs with."
+            exit 1
+          fi
+          if [ -z "$APP_URL" ]; then
+            echo "::error::Missing NEXT_PUBLIC_APP_URL in the $TARGET GitHub Environment."
+            exit 1
+          fi
+          case "$APP_URL" in
+            https://*) ;;
+            *) echo "::error::NEXT_PUBLIC_APP_URL must be an https URL."; exit 1 ;;
+          esac
+
+      - name: Drain the queue
+        run: |
+          set -euo pipefail
+          base="${APP_URL%/}"
+          body="$(mktemp)"
+          # Se vacía en tandas: el endpoint acepta hasta 100 por llamada y
+          # marca cada aviso, así que repetir no duplica entregas. Tres tandas
+          # cubren de sobra el ritmo normal y dejan margen tras una caída.
+          for tanda in 1 2 3; do
+            # El secreto solo viaja en una cabecera escrita desde el entorno:
+            # no puede llegar a la línea de comandos ni al registro.
+            status="$(curl -sS -o "$body" -w '%{http_code}' \
+              --retry 3 --retry-delay 10 --retry-all-errors --max-time 120 \
+              -X POST "$base/api/internal/push/drain" \
+              -H "Authorization: Bearer $CRON_SECRET" \
+              -H "Content-Type: application/json" \
+              -d '{"limit":100}')"
+
+            echo "tanda $tanda: HTTP $status"
+            # La respuesta solo trae contadores, nunca el contenido de un aviso.
+            cat "$body"; echo
+
+            if [ "$status" != "200" ]; then
+              echo "::error::El drenaje respondió HTTP $status."
+              exit 1
+            fi
+            if ! grep -q '"ok":true' "$body"; then
+              echo "::error::El drenaje reportó una falla."
+              exit 1
+            fi
+            # Si la tanda no procesó nada, la cola quedó vacía.
+            if grep -qE '"processed":0|"processed": 0' "$body"; then
+              echo "Cola vacía."
+              break
+            fi
+          done
