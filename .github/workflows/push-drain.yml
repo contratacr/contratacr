@@ -79,9 +79,24 @@ jobs:
             # La respuesta solo trae contadores, nunca el contenido de un aviso.
             cat "$body"; echo
 
+            # Mientras el ambiente no tenga configurado el envío (CRON_SECRET,
+            # PUSH_DELIVERY_ENABLED y las credenciales de Firebase), el endpoint
+            # contesta que no está habilitado. Eso NO es una falla de la tarea:
+            # se avisa y se sale en verde, para no mandar un correo de error
+            # cada diez minutos hasta que se configure.
+            if [ "$status" = "503" ] && grep -q "push_worker_not_configured" "$body"; then
+              echo "::warning::$TARGET todavía no tiene configurado el envío de push; no hay nada que drenar."
+              exit 0
+            fi
             if [ "$status" != "200" ]; then
               echo "::error::El drenaje respondió HTTP $status."
               exit 1
+            fi
+            # Con el envío apagado por bandera, el endpoint responde ok y
+            # `disabled:true`: tampoco es una falla.
+            if grep -qE '"disabled":\s*true' "$body"; then
+              echo "::warning::El envío de push está apagado en $TARGET (PUSH_DELIVERY_ENABLED)."
+              exit 0
             fi
             if ! grep -q '"ok":true' "$body"; then
               echo "::error::El drenaje reportó una falla."
