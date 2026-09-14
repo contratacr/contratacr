@@ -42,22 +42,30 @@ jobs:
       CRON_SECRET: ${{ secrets.CRON_SECRET }}
     steps:
       - name: Validate target and secrets
+        id: revisar
         run: |
           set -euo pipefail
+          # Mientras el ambiente no tenga puesto el secreto, no hay nada que
+          # drenar y tampoco hay una falla que reportar: la tarea corre cada
+          # diez minutos y un error aquí sería un correo cada diez minutos.
           if [ -z "$CRON_SECRET" ]; then
-            echo "::error::Missing CRON_SECRET in the $TARGET GitHub Environment. It must match the CRON_SECRET the site runs with."
-            exit 1
+            echo "::warning::$TARGET todavía no tiene CRON_SECRET; el envío de push no está configurado."
+            echo "configurado=no" >> "$GITHUB_OUTPUT"
+            exit 0
           fi
           if [ -z "$APP_URL" ]; then
-            echo "::error::Missing NEXT_PUBLIC_APP_URL in the $TARGET GitHub Environment."
-            exit 1
+            echo "::warning::$TARGET todavía no tiene NEXT_PUBLIC_APP_URL."
+            echo "configurado=no" >> "$GITHUB_OUTPUT"
+            exit 0
           fi
+          echo "configurado=si" >> "$GITHUB_OUTPUT"
           case "$APP_URL" in
             https://*) ;;
             *) echo "::error::NEXT_PUBLIC_APP_URL must be an https URL."; exit 1 ;;
           esac
 
       - name: Drain the queue
+        if: ${{ steps.revisar.outputs.configurado == 'si' }}
         run: |
           set -euo pipefail
           base="${APP_URL%/}"

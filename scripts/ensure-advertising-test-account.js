@@ -418,6 +418,13 @@ async function main() {
     };
   }));
 
+  // Los horarios del clon se REEMPLAZAN, no se mezclan. Llevan una llave única
+  // por (profesional, fecha, hora, lugar) y el clon se guarda por id: un
+  // horario copiado en una corrida anterior, con otro id pero la misma
+  // combinación, bloqueaba la copia nueva. Borrar primero deja la sección igual
+  // al origen en cada corrida, que es de lo que se trata un clon.
+  await must("availability_slots advertising reset", admin.from("availability_slots").delete().eq("professional_id", PROFESSIONAL_ID));
+
   await Promise.all([
     upsertRows("availability_weekly", sourceWeekly.map((row) => ({ ...cloneBase("availability_weekly", row), professional_id: PROFESSIONAL_ID }))),
     upsertRows("availability_slots", sinHorariosRepetidos(sourceSlots.filter(esHorarioFuturo)).map((row) => ({ ...cloneBase("availability_slots", row), professional_id: PROFESSIONAL_ID }))),
