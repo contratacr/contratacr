@@ -4,30 +4,37 @@ const TEST_PROJECT_REF = "oqheayqqprpciqdvdaqo";
 const PROD_PROJECT_REF = "kskueodxaksxvjrysouw";
 const regressionPassword = process.env.E2E_TEST_PASSWORD ?? "";
 
+// La identidad de las dos cuentas de prueba vive en un solo archivo y es
+// inventada: antes eran copia de dos personas reales de producción.
+import ACTORES from "../../scripts/actores-de-regresion.json";
+
+export const ACTOR_CLIENTE = ACTORES.cliente;
+export const ACTOR_PROFESIONAL = ACTORES.profesional;
+
 export const E2E_USERS = {
   client: {
-    email: "e2e.client@contratacr.test",
+    email: ACTORES.cliente.correo,
     password: regressionPassword,
-    fullName: "ContrataCR",
+    fullName: ACTORES.cliente.negocio,
     phone: "+50670000001",
     cedula: "",
   },
   professional: {
-    email: "e2e.pro@contratacr.test",
+    email: ACTORES.profesional.correo,
     password: regressionPassword,
-    fullName: "SG Solutions",
+    fullName: ACTORES.profesional.negocio,
     phone: "+50670000002",
     cedula: "",
-    slug: "luis-angel-sanchez-sibaja-977u5iku",
+    slug: ACTORES.profesional.slug,
   },
   videoProfessional: {
-    email: "e2e.client@contratacr.test",
+    email: ACTORES.cliente.correo,
     password: regressionPassword,
-    fullName: "ContrataCR",
+    fullName: ACTORES.cliente.negocio,
     phone: "+50670000001",
     cedula: "",
-    slug: "isaac-alberto-sanchez-monge-9gjc65t8",
-    businessName: "ContrataCR",
+    slug: ACTORES.cliente.slug,
+    businessName: ACTORES.cliente.negocio,
   },
 } as const;
 
@@ -269,7 +276,7 @@ export async function ensureRegressionSeed(): Promise<RegressionSeedState> {
   });
   const state = await regressionSeedPromise;
   if (!state) {
-    throw new Error("ContrataCR/SG Solutions regression fixtures are missing. Run seed:test:full first.");
+    throw new Error("Faltan las cuentas de prueba (Estudio Delta y Redes Bahía). Corré seed:test:full.");
   }
   return state;
 }

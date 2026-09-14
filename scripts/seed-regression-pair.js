@@ -5,24 +5,17 @@ const { createClient } = require("@supabase/supabase-js");
 const TEST_PROJECT_REF = "oqheayqqprpciqdvdaqo";
 const SEED = "production-mirror-regression-pair-v1";
 const envFile = process.env.DEMO_ENV_FILE || ".env.test";
-const PRODUCTION_ORIGIN = "https://www.contratacr.com";
 const REGRESSION_CV_PATH = process.env.REGRESSION_CV_PATH || "";
-const PRODUCTION_ACTORS = [
-  {
-    businessName: "ContrataCR",
-    email: "e2e.client@contratacr.test",
-    slug: "isaac-alberto-sanchez-monge-9gjc65t8",
-    profileId: "048f1b3a-23c0-41bc-8728-10f8aed70fdb",
-    professionalId: "ae9caa2b-1fca-4411-9aeb-7736f5bbf42f",
-  },
-  {
-    businessName: "SG Solutions",
-    email: "e2e.pro@contratacr.test",
-    slug: "luis-angel-sanchez-sibaja-977u5iku",
-    profileId: "347f5202-8b3e-4c11-8db8-1060ea5e487d",
-    professionalId: "988428c7-a0b6-4d9e-a9b8-e0209a1ca296",
-  },
-];
+// Las dos cuentas de prueba tienen identidad INVENTADA y viven en un solo
+// archivo. Antes se copiaban de dos personas reales de producción: el guion
+// pedía sus fichas a www.contratacr.com en cada corrida y escribía en test su
+// nombre, su foto, su teléfono y su dirección. Ya no sale a la red.
+const ACTORES = require("./actores-de-regresion.json");
+const PRODUCTION_ACTORS = [ACTORES.cliente, ACTORES.profesional].map((actor) => ({
+  ...actor,
+  businessName: actor.negocio,
+  email: actor.correo,
+}));
 
 if (fs.existsSync(envFile)) {
   for (const line of fs.readFileSync(envFile, "utf8").split(/\r?\n/)) {
@@ -302,20 +295,12 @@ async function removeOrphanedEntityNotifications(profileIds) {
   );
 }
 
-async function restoreProductionActors() {
+async function sembrarActoresDePrueba() {
   for (const actor of PRODUCTION_ACTORS) {
-    const response = await fetch(`${PRODUCTION_ORIGIN}/api/professionals/${actor.slug}`, {
-      headers: { accept: "application/json" },
-    });
-    if (!response.ok) throw new Error(`Could not read production profile ${actor.slug}: HTTP ${response.status}.`);
-    const source = await response.json();
-    if (source.id !== actor.professionalId || source.profileId !== actor.profileId) {
-      throw new Error(`Production identity mismatch for ${actor.businessName}.`);
-    }
-
-    await must(`restore ${actor.businessName} profile`, supabase.from("profiles").update({
-      full_name: source.fullName,
-      avatar_url: source.avatarUrl,
+    await must(`perfil de ${actor.negocio}`, supabase.from("profiles").update({
+      full_name: actor.nombre,
+      avatar_url: actor.foto,
+      email: actor.correo,
       role: "professional",
       is_provider: true,
       onboarding_completed: true,
@@ -323,53 +308,46 @@ async function restoreProductionActors() {
       updated_at: iso(),
     }).eq("id", actor.profileId));
 
-    await must(`restore ${actor.businessName} auth metadata`, supabase.auth.admin.updateUserById(actor.profileId, {
+    await must(`sesión de ${actor.negocio}`, supabase.auth.admin.updateUserById(actor.profileId, {
       user_metadata: {
-        full_name: source.fullName,
+        full_name: actor.nombre,
         onboarding_completed: true,
         role: "professional",
         is_provider: true,
       },
     }));
 
-    await must(`restore ${actor.businessName} professional`, supabase.from("professionals").upsert({
+    await must(`ficha de ${actor.negocio}`, supabase.from("professionals").upsert({
       id: actor.professionalId,
       profile_id: actor.profileId,
-      slug: source.slug,
-      // Producción dejó de exponer nombre comercial para la cuenta ContrataCR.
-      // La regresión identifica a los actores por ese nombre, así que cuando
-      // producción no lo trae se conserva el canónico en vez de vaciarlo.
-      business_name: source.businessName || actor.businessName,
-      public_business_name_only: source.publicBusinessNameOnly === true,
-      category_id: source.categoryId,
-      professions: source.professions,
-      pricing: source.pricing,
-      bio: source.bio,
-      whatsapp: source.whatsapp,
-      call_phone: source.callPhone || null,
-      allow_phone_call: source.allowPhoneCall === true,
-      hourly_rate: source.hourlyRate,
-      years_experience: source.yearsExperience,
-      is_verified: source.isVerified === true,
-      verification_status: source.verificationStatus,
-      is_featured: source.isFeatured === true,
-      is_available: source.isAvailable !== false,
-      lat: source.lat,
-      lng: source.lng,
-      service_type: source.serviceType,
-      videoconsulta: source.videoconsulta === true,
-      portfolio_urls: source.portfolioUrls,
-      portfolio_items: source.portfolioItems,
-      coverage_country: source.coverage?.country === true,
-      // The public profile API answers with province NAMES; the column holds ids.
-      coverage_provincias: (source.coverage?.provincias || []).map(provinceIdFromLabel).filter(Boolean),
-      workplaces: source.workplaces,
-      services: source.services,
-      availability_public: source.availabilityPublic !== false,
-      contact_preference: source.contactPreference,
-      languages: source.languages,
-      insurance_networks: source.insuranceNetworks,
-      certifications: source.certifications,
+      slug: actor.slug,
+      business_name: actor.negocio,
+      public_business_name_only: false,
+      category_id: actor.categoria,
+      professions: actor.profesiones,
+      bio: `${actor.negocio} es una cuenta de prueba: sirve para revisar el app de punta a punta sin tocar datos de nadie.`,
+      whatsapp: actor.telefono,
+      call_phone: actor.telefono,
+      allow_phone_call: true,
+      contact_email: actor.correo,
+      hourly_rate: null,
+      years_experience: 8,
+      is_verified: true,
+      verification_status: "verified",
+      is_featured: false,
+      is_available: true,
+      lat: actor.lugares[0]?.lat ?? null,
+      lng: actor.lugares[0]?.lng ?? null,
+      service_type: actor.tipoDeServicio,
+      videoconsulta: actor.videoconsulta === true,
+      portfolio_urls: [actor.foto],
+      coverage_country: actor.cubreElPais === true,
+      coverage_provincias: actor.provincias,
+      workplaces: actor.lugares,
+      availability_public: true,
+      contact_preference: "ambas",
+      languages: ["es", "en"],
+      insurance_networks: [],
       updated_at: iso(),
     }, { onConflict: "id" }));
   }
@@ -377,7 +355,7 @@ async function restoreProductionActors() {
 
 async function findActor(expected) {
   const actor = await must(
-    `find canonical ${expected.businessName}`,
+    `buscar la cuenta de prueba ${expected.businessName}`,
     supabase
       .from("professionals")
       .select("*,profiles(*)")
@@ -386,10 +364,10 @@ async function findActor(expected) {
       .single(),
   );
   if (!actor?.profiles || actor.profiles.id !== expected.profileId) {
-    throw new Error(`Production mirror does not contain canonical ${expected.businessName}.`);
+    throw new Error(`Las cuentas de prueba no incluyen a ${expected.businessName}.`);
   }
   if ((actor.business_name || "").trim().toLowerCase() !== expected.businessName.toLowerCase()) {
-    throw new Error(`Canonical ${expected.businessName} identity has an unexpected business name.`);
+    throw new Error(`La cuenta de prueba ${expected.businessName} quedó con otro nombre comercial.`);
   }
   return { professional: actor, profile: actor.profiles };
 }
@@ -401,7 +379,8 @@ function missingList(value, fallback) {
 async function enrichActor(actor, kind) {
   const { professional, profile } = actor;
   const isContrata = kind === "contratacr";
-  const serviceName = isContrata ? "Desarrollo web" : "Redes e internet";
+  const datos = isContrata ? ACTORES.cliente : ACTORES.profesional;
+  const serviceName = datos.servicioPrincipal;
   const safeEmail = isContrata ? "e2e.client@contratacr.test" : "e2e.pro@contratacr.test";
   const safePhone = isContrata ? "+506 7000 0001" : "+506 7000 0002";
   const fallbackImage = profile.avatar_url || professional.portfolio_urls?.[0] || null;
@@ -448,7 +427,7 @@ async function enrichActor(actor, kind) {
       portfolioItems.push({
         id: `${kind}-regression-case-${profession}`,
         profession,
-        title: `${isContrata ? "ContrataCR" : "SG Solutions"}: caso ${profession}`,
+        title: `${datos.negocio}: caso ${profession}`,
         description: "Caso completo para validar cada filtro profesional del perfil en test.",
         recipient: "Regression ContrataCR",
         date: "2026",
@@ -515,7 +494,7 @@ async function enrichActor(actor, kind) {
     }]),
     social_links: professional.social_links && Object.keys(professional.social_links).length
       ? professional.social_links
-      : { website: "https://contratacr.com" },
+      : { website: "https://test.contratacr.com" },
     contact_email: safeEmail,
     whatsapp: safePhone,
     call_phone: safePhone,
@@ -528,7 +507,7 @@ async function enrichActor(actor, kind) {
 }
 
 async function main() {
-  if (!localRegression) await restoreProductionActors();
+  await sembrarActoresDePrueba();
   const contratacr = await findActor(PRODUCTION_ACTORS[0]);
   const sg = await findActor(PRODUCTION_ACTORS[1]);
   if (contratacr.profile.id === sg.profile.id) throw new Error("Regression actors must be distinct.");
@@ -573,10 +552,10 @@ async function main() {
   // Previous test runs may have restored these deterministic moments with an
   // auto-generated id. Clear only the pair's future regression moments so this
   // seed remains idempotent without touching the rest of either calendar.
-  await must("reset ContrataCR regression slots", supabase.from("availability_slots")
+  await must("reset de horarios de la cuenta cliente", supabase.from("availability_slots")
     .delete().eq("professional_id", c.professional.id).eq("slot_date", date(2))
     .in("slot_time", ["10:00", "11:00"]));
-  await must("reset SG Solutions regression slots", supabase.from("availability_slots")
+  await must("reset de horarios de la cuenta profesional", supabase.from("availability_slots")
     .delete().eq("professional_id", s.professional.id).eq("slot_date", date(3))
     .in("slot_time", ["11:00", "14:00"]));
 
@@ -616,19 +595,19 @@ async function main() {
   await must("bookings", supabase.from("bookings").upsert([
     {
       id: ids.bookings[0], professional_id: s.professional.id, client_id: c.profile.id,
-      category_id: s.professional.category_id, service_description: "Instalación y diagnóstico de red para la oficina de ContrataCR.",
+      category_id: s.professional.category_id, service_description: "Instalación y diagnóstico de red para la oficina de Estudio Delta.",
       preferred_date: date(-8), preferred_date_text: "La semana anterior", scheduled_date: date(-7), scheduled_time: "10:00",
       status: "completed", client_name: cName, client_email: "e2e.client@contratacr.test", client_phone: "+506 7000 0001",
-      notes: "Flujo completo ContrataCR hacia SG Solutions.", work_done_at: iso(-7), completed_at: iso(-6),
+      notes: "Flujo completo Estudio Delta hacia Redes Bahía.", work_done_at: iso(-7), completed_at: iso(-6),
       created_at: iso(-10), updated_at: iso(-6), created_app_environment: SEED, created_source_host: "test.contratacr.com",
       created_supabase_project_ref: TEST_PROJECT_REF,
     },
     {
       id: ids.bookings[1], professional_id: c.professional.id, client_id: s.profile.id,
-      category_id: c.professional.category_id, service_description: "Mejora del sitio web y formulario de contacto de SG Solutions.",
+      category_id: c.professional.category_id, service_description: "Mejora del sitio web y formulario de contacto de Redes Bahía.",
       preferred_date: date(4), preferred_date_text: "La próxima semana", scheduled_date: date(4), scheduled_time: "14:00",
       status: "confirmed", client_name: sName, client_email: "e2e.pro@contratacr.test", client_phone: "+506 7000 0002",
-      notes: "Flujo completo SG Solutions hacia ContrataCR.", created_at: iso(-2), updated_at: iso(-1),
+      notes: "Flujo completo Redes Bahía hacia Estudio Delta.", created_at: iso(-2), updated_at: iso(-1),
       created_app_environment: SEED, created_source_host: "test.contratacr.com", created_supabase_project_ref: TEST_PROJECT_REF,
     },
   ], { onConflict: "id" }));
@@ -636,7 +615,7 @@ async function main() {
   await must("projects", supabase.from("projects").upsert([
     {
       id: ids.projects[0], client_id: c.profile.id, category_id: s.professional.category_id,
-      title: "Actualizar red de oficina", description: "ContrataCR necesita revisar cobertura, cableado y estabilidad de la red de su oficina.",
+      title: "Actualizar red de oficina", description: "Estudio Delta necesita revisar cobertura, cableado y estabilidad de la red de su oficina.",
       provincia_id: c.professional.provincia_id, canton_id: c.professional.canton_id, budget_min: 100000, budget_max: 250000,
       timeline: "Este mes", status: "in_progress", accepted_professional_id: s.professional.id,
       client_name_snapshot: cName, client_email_snapshot: "e2e.client@contratacr.test", client_phone_snapshot: "+506 7000 0001",
@@ -645,7 +624,7 @@ async function main() {
     },
     {
       id: ids.projects[1], client_id: s.profile.id, category_id: c.professional.category_id,
-      title: "Nueva página de servicios", description: "SG Solutions necesita una página rápida para presentar servicios y recibir solicitudes comerciales.",
+      title: "Nueva página de servicios", description: "Redes Bahía necesita una página rápida para presentar servicios y recibir solicitudes comerciales.",
       provincia_id: s.professional.provincia_id, canton_id: s.professional.canton_id, budget_min: 180000, budget_max: 450000,
       timeline: "Próximo mes", status: "open", client_name_snapshot: sName,
       client_email_snapshot: "e2e.pro@contratacr.test", client_phone_snapshot: "+506 7000 0002",
@@ -657,14 +636,14 @@ async function main() {
   await must("proposals", supabase.from("proposals").upsert([
     {
       id: ids.proposals[0], project_id: ids.projects[0], professional_id: s.professional.id, price: 175000,
-      message: "Propuesta de SG Solutions para diagnóstico, instalación y documentación de la red.", status: "accepted",
+      message: "Propuesta de Redes Bahía para diagnóstico, instalación y documentación de la red.", status: "accepted",
       professional_user_id_snapshot: s.profile.id, professional_name_snapshot: sName,
       professional_email_snapshot: "e2e.pro@contratacr.test", created_at: iso(-4), created_app_environment: SEED,
       created_source_host: "test.contratacr.com", created_supabase_project_ref: TEST_PROJECT_REF,
     },
     {
       id: ids.proposals[1], project_id: ids.projects[1], professional_id: c.professional.id, price: 295000,
-      message: "Propuesta de ContrataCR para diseño, desarrollo, publicación y acompañamiento inicial.", status: "pending",
+      message: "Propuesta de Estudio Delta para diseño, desarrollo, publicación y acompañamiento inicial.", status: "pending",
       professional_user_id_snapshot: c.profile.id, professional_name_snapshot: cName,
       professional_email_snapshot: "e2e.client@contratacr.test", created_at: iso(-2), created_app_environment: SEED,
       created_source_host: "test.contratacr.com", created_supabase_project_ref: TEST_PROJECT_REF,
@@ -696,7 +675,7 @@ async function main() {
   const jobs = [
     {
       id: ids.jobs[0], employer_id: c.professional.id, title: "Especialista de soporte digital",
-      description: "ContrataCR busca apoyo para revisar contenido, incidencias y calidad de la experiencia web.",
+      description: "Estudio Delta busca apoyo para revisar contenido, incidencias y calidad de la experiencia web.",
       responsibilities: ["Revisar flujos", "Documentar incidencias"], requirements: ["Atención al detalle"], benefits: ["Trabajo remoto"],
       employment_type: "contract", workplace_type: "remote", location_label: "Todo Costa Rica", salary_min: 450000, salary_max: 650000,
       salary_period: "monthly", currency: "CRC", show_salary: true, openings: 1, application_deadline: date(30), status: "published",
@@ -704,7 +683,7 @@ async function main() {
     },
     {
       id: ids.jobs[1], employer_id: s.professional.id, title: "Técnico de redes",
-      description: "SG Solutions busca apoyo para instalar, diagnosticar y documentar redes empresariales.",
+      description: "Redes Bahía busca apoyo para instalar, diagnosticar y documentar redes empresariales.",
       responsibilities: ["Instalar cableado", "Documentar diagnósticos"], requirements: ["Disponibilidad para desplazarse"], benefits: ["Viáticos"],
       employment_type: "full_time", workplace_type: "onsite", provincia_id: s.professional.provincia_id,
       canton_id: s.professional.canton_id, location_label: "Atenas, Alajuela", salary_min: 500000, salary_max: 750000,
@@ -726,7 +705,7 @@ async function main() {
     ? fs.readFileSync(REGRESSION_CV_PATH)
     : fallbackCv;
   const regressionCvStoragePath = `job-applications/${ids.jobs[1]}/${c.profile.id}/Senior-CV.pdf`;
-  await must("ContrataCR application CV", supabase.storage
+  await must("CV de la postulación de la cuenta cliente", supabase.storage
     .from("direct-message-attachments")
     .upload(regressionCvStoragePath, regressionCv, {
       contentType: "application/pdf",
@@ -734,8 +713,8 @@ async function main() {
     }));
 
   await must("applications", supabase.from("job_applications").upsert([
-    { id: ids.applications[0], job_id: ids.jobs[0], applicant_id: s.profile.id, cover_letter: "SG Solutions desea participar para validar el flujo completo de empleos en test.", phone: "+506 7000 0002", applicant_email: "e2e.pro@contratacr.test", status: "reviewing", created_at: iso(-2), updated_at: iso(-1) },
-    { id: ids.applications[1], job_id: ids.jobs[1], applicant_id: c.profile.id, cover_letter: "ContrataCR envía esta postulación para validar el flujo completo entre ambos perfiles.", phone: "+506 7000 0001", applicant_email: "e2e.client@contratacr.test", resume_url: regressionCvStoragePath, status: "shortlisted", created_at: iso(-1), updated_at: iso() },
+    { id: ids.applications[0], job_id: ids.jobs[0], applicant_id: s.profile.id, cover_letter: "Redes Bahía desea participar para validar el flujo completo de empleos en test.", phone: "+506 7000 0002", applicant_email: "e2e.pro@contratacr.test", status: "reviewing", created_at: iso(-2), updated_at: iso(-1) },
+    { id: ids.applications[1], job_id: ids.jobs[1], applicant_id: c.profile.id, cover_letter: "Estudio Delta envía esta postulación para validar el flujo completo entre ambos perfiles.", phone: "+506 7000 0001", applicant_email: "e2e.client@contratacr.test", resume_url: regressionCvStoragePath, status: "shortlisted", created_at: iso(-1), updated_at: iso() },
   ], { onConflict: "id" }));
 
   const offers = [
@@ -766,8 +745,8 @@ async function main() {
   ], { onConflict: "id" }));
 
   await must("support tickets", supabase.from("support_tickets").upsert([
-    { id: ids.tickets[0], professional_id: c.professional.id, user_id: c.profile.id, name: cName, email: "e2e.client@contratacr.test", type: "support", topic: "technical", subject: "Validación de soporte ContrataCR", detail: "Ticket completo de regresión.", message: "Necesito validar el flujo de soporte.", status: "in_progress", user_confirmed: false, created_at: iso(-2), last_reply_at: iso(-1), last_reply_role: "admin", created_app_environment: SEED, created_source_host: "test.contratacr.com", created_supabase_project_ref: TEST_PROJECT_REF },
-    { id: ids.tickets[1], professional_id: s.professional.id, user_id: s.profile.id, name: sName, email: "e2e.pro@contratacr.test", type: "support", topic: "account", subject: "Validación de soporte SG Solutions", detail: "Ticket resuelto de regresión.", message: "Necesito validar el estado resuelto.", status: "resolved", user_confirmed: false, created_at: iso(-3), last_reply_at: iso(-1), last_reply_role: "admin", created_app_environment: SEED, created_source_host: "test.contratacr.com", created_supabase_project_ref: TEST_PROJECT_REF },
+    { id: ids.tickets[0], professional_id: c.professional.id, user_id: c.profile.id, name: cName, email: "e2e.client@contratacr.test", type: "support", topic: "technical", subject: "Validación de soporte Estudio Delta", detail: "Ticket completo de regresión.", message: "Necesito validar el flujo de soporte.", status: "in_progress", user_confirmed: false, created_at: iso(-2), last_reply_at: iso(-1), last_reply_role: "admin", created_app_environment: SEED, created_source_host: "test.contratacr.com", created_supabase_project_ref: TEST_PROJECT_REF },
+    { id: ids.tickets[1], professional_id: s.professional.id, user_id: s.profile.id, name: sName, email: "e2e.pro@contratacr.test", type: "support", topic: "account", subject: "Validación de soporte Redes Bahía", detail: "Ticket resuelto de regresión.", message: "Necesito validar el estado resuelto.", status: "resolved", user_confirmed: false, created_at: iso(-3), last_reply_at: iso(-1), last_reply_role: "admin", created_app_environment: SEED, created_source_host: "test.contratacr.com", created_supabase_project_ref: TEST_PROJECT_REF },
   ], { onConflict: "id" }));
 
   await must("support messages", supabase.from("support_ticket_messages").upsert([
@@ -781,7 +760,7 @@ async function main() {
   ], { onConflict: "id" }));
 
   await must("notifications", supabase.from("notifications").upsert([
-    { id: ids.notifications[0], user_id: c.profile.id, type: "direct_message", title: "Mensaje de SG Solutions", message: "Tienes una respuesta sobre la red de oficina.", data: { regressionSeed: SEED, push_suppressed: true, link: `/mensajes/${ids.conversations[0]}` }, read: false, created_at: iso(-1) },
+    { id: ids.notifications[0], user_id: c.profile.id, type: "direct_message", title: "Mensaje de Redes Bahía", message: "Tienes una respuesta sobre la red de oficina.", data: { regressionSeed: SEED, push_suppressed: true, link: `/mensajes/${ids.conversations[0]}` }, read: false, created_at: iso(-1) },
     { id: ids.notifications[1], user_id: s.profile.id, type: "direct_message", title: "Mensaje de ContrataCR", message: "Tienes una propuesta sobre tu página de servicios.", data: { regressionSeed: SEED, push_suppressed: true, link: `/mensajes/${ids.conversations[1]}` }, read: false, created_at: iso(-1) },
   ], { onConflict: "id" }));
   await must("suppress deterministic notification outbox", supabase

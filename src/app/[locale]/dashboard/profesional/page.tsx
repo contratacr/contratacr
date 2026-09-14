@@ -2,7 +2,7 @@
 import { enlacePerfil } from "@/lib/profile-url";
 import { EMPLEOS_VISIBLE } from "@/lib/feature-flags";
 
-import { useEffect, useState, useCallback, useRef, useLayoutEffect } from "react";
+import { useEffect, useState, useCallback, useMemo, useRef, useLayoutEffect } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { useHairlineOnScroll } from "@/components/util/use-hairline-on-scroll";
 import { isSigningOut, signOutToHome } from "@/lib/auth/sign-out";
@@ -58,6 +58,7 @@ import { notificationContext } from "@/lib/notification-link";
 import { Link, useRouter } from "@/i18n/navigation";
 import { openInNewTabOnDesktop } from "@/lib/desktop-new-tab";
 import { useAuth } from "@/hooks/use-auth";
+import { useAvisosSinLeer } from "@/hooks/use-avisos-sin-leer";
 import { useDirectMessageUnread } from "@/hooks/use-direct-message-unread";
 import { cn } from "@/lib/utils";
 import { PanelSkeleton } from "@/components/ui/section-skeletons";
@@ -686,8 +687,6 @@ export default function DashboardPage() {
     }
   }, [user]);
   const [refreshKey] = useState(0);
-  const [unreadCount, setUnreadCount] = useState(0);
-  const [supportUnread, setSupportUnread] = useState(0);
   const chatUnread = useDirectMessageUnread(!!user);
   const [profileFocus, setProfileFocus] = useState<{ field: string; key: number } | null>(null);
   const [serviceFocus, setServiceFocus] = useState<{ field: string; key: number } | null>(null);
@@ -1173,36 +1172,22 @@ export default function DashboardPage() {
   // Unread notifications, bucketed by mode (per-mode model): the sidebar Notificaciones
   // badge shows the ACTIVE mode's unread (its own + account-level), and the switch shows
   // the OTHER mode's pending count so the user is aware without switching.
-  useEffect(() => {
-    if (!user) return;
-    const supabase = createClient();
-    const loadUnread = () => supabase
-      .from("notifications")
-      .select("type")
-      .eq("user_id", user.id)
-      .eq("read", false)
-      .then(({ data }) => {
-        let pro = 0, cli = 0, neu = 0, soporte = 0;
-        for (const n of data ?? []) {
-          const tipo = n.type as string;
-          if (tipo === "support_reply") soporte++;
-          const ctx = notificationContext(tipo);
-          if (ctx === "professional") pro++;
-          else if (ctx === "client") cli++;
-          else neu++;
-        }
-        setUnreadCount((mode === "offer" ? pro : cli) + neu);
-        // El globo de Soporte sale de esta misma lista: los avisos sin leer ya
-        // vienen con su tipo, así que contarlos aparte era una consulta de más
-        // en cada carga del panel y en cada aviso nuevo.
-        setSupportUnread(soporte);
-      });
-    loadUnread();
-    window.addEventListener("notificationsChanged", loadUnread);
-    return () => {
-      window.removeEventListener("notificationsChanged", loadUnread);
-    };
-  }, [user, mode]);
+  // La lista sin leer es UNA sola para todo el app: de ella salen el globo del
+  // panel y el de Soporte, y también la usa la pantalla de Soporte.
+  const avisosSinLeer = useAvisosSinLeer(user?.id ?? null);
+  const conteoDeAvisos = useMemo(() => {
+    let pro = 0, cli = 0, neu = 0, soporte = 0;
+    for (const aviso of avisosSinLeer) {
+      if (aviso.type === "support_reply") soporte++;
+      const ctx = notificationContext(aviso.type);
+      if (ctx === "professional") pro++;
+      else if (ctx === "client") cli++;
+      else neu++;
+    }
+    return { pro, cli, neu, soporte };
+  }, [avisosSinLeer]);
+  const unreadCount = (mode === "offer" ? conteoDeAvisos.pro : conteoDeAvisos.cli) + conteoDeAvisos.neu;
+  const supportUnread = conteoDeAvisos.soporte;
 
   // Unread opportunities deserve a front-door modal even when the user did not
   // arrive through the explicit post-login redirect.
@@ -2653,7 +2638,6 @@ export default function DashboardPage() {
                         )}
                         {activeTab === "soporte" && (
                           <SupportTickets
-                            onUnreadChange={setSupportUnread}
                             initialTicketId={searchParams.get("ticket")}
                             initialNewSupport={searchParams.get("newSupport") === "1"}
                             onThreadChange={({ open, title, reference }) => {

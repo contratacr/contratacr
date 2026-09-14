@@ -230,6 +230,19 @@ export default function ProfilePage({ fichaInicial }: { fichaInicial?: Professio
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [viewerId, setViewerId] = useState<string | null>(null);
   const [viewerResuelto, setViewerResuelto] = useState(false);
+  // Quién visita se pregunta de una vez, sin esperar a la ficha ni a los
+  // horarios: de eso depende que las acciones de la ficha propia queden
+  // bloqueadas, y antes llegaba al final de una cadena de tres peticiones.
+  useEffect(() => {
+    let vivo = true;
+    void createClient().auth.getUser().then(({ data }) => {
+      if (!vivo) return;
+      setViewerId(data.user?.id ?? null);
+      setIsAuthenticated(!!data.user);
+      setViewerResuelto(true);
+    });
+    return () => { vivo = false; };
+  }, []);
   const [slug, setSlug] = useState("");
   const [reportOpen, setReportOpen] = useState(false);
   // Aviso de "enlace copiado" del botón Compartir. Vive aquí, con el resto de
@@ -283,6 +296,10 @@ export default function ProfilePage({ fichaInicial }: { fichaInicial?: Professio
     const onBack = () => volverRef.current?.();
     const onShare = () => compartirRef.current?.();
     const onAck = () => setNavbarOwnsHeader(true);
+    // La barra pudo confirmar antes de que esto escuchara: el aviso viaja
+    // también como bandera, si no la ficha dibujaba su propio «volver» además
+    // del de la barra.
+    if ((window as unknown as { __ccrSectionAck?: boolean }).__ccrSectionAck) onAck();
     window.addEventListener("ccr:section-back", onBack);
     window.addEventListener("ccr:section-share", onShare);
     window.addEventListener("ccr:section-header-ack", onAck);

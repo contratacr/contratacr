@@ -292,7 +292,7 @@ async function main() {
       id: ids.offers[3], professional_id: sg.id, title: "Instalaci\u00f3n de red empresarial",
       description: "Incluye diagn\u00f3stico, instalaci\u00f3n y configuraci\u00f3n inicial para una oficina peque\u00f1a.",
       offer_type: "service_offer", service_label: "Redes e internet",
-      image_urls: ["/test-professionals/sg-solutions.png", "/showcase/sg-solutions.jpg"], price_now: 120000,
+      image_urls: ["/test-professionals/redes-bahia.png", "/showcase/redes-bahia.jpg"], price_now: 120000,
       price_before: 150000, currency: "CRC", price_unit: "project", location_label: "Atenas, Alajuela",
       valid_until: futureDate(20), quantity_available: 5, status: "published", service_category_id: sgCategory,
       created_at: iso(2), updated_at: iso(2),
@@ -300,7 +300,7 @@ async function main() {
     {
       id: ids.offers[4], professional_id: sg.id, title: "Kit de conectividad",
       description: "Producto agotado de prueba para validar el estado, los filtros y la administraci\u00f3n de inventario.",
-      offer_type: "product", service_label: "Redes e internet", image_urls: ["/images/demo/sg-solutions.png"],
+      offer_type: "product", service_label: "Redes e internet", image_urls: ["/images/demo/redes-bahia.png"],
       price_now: 45000, price_before: 52000, currency: "CRC", price_unit: "total", location_label: "Todo Costa Rica",
       valid_until: pastDate(1), quantity_available: 0, status: "sold_out", service_category_id: sgCategory,
       created_at: iso(15), updated_at: iso(1),
@@ -337,7 +337,7 @@ async function main() {
         user_id: isaac.id, item_type: "job", item_id: ids.jobs[4], created_at: iso(1),
         snapshot: {
           title: jobs[4].title, employer_name: "SG Solutions", location_label: jobs[4].location_label,
-          salary: "\u20a1500 000 - \u20a1750 000 por mes", employer_avatar_url: "/test-professionals/sg-solutions.png",
+          salary: "\u20a1500 000 - \u20a1750 000 por mes", employer_avatar_url: "/test-professionals/redes-bahia.png",
         },
       },
       {

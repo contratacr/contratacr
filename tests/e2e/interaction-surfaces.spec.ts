@@ -89,7 +89,7 @@ test.describe("@seeded interaction surfaces", () => {
       await expect(page.locator("[data-follow-button]")).toHaveCount(0);
 
       await gotoOK(page, "/en/dashboard/profesional?tab=saved&mode=use");
-      await expect(page.getByText(/SG Solutions/i).first()).toBeVisible();
+      await expect(page.getByText(/Redes Bahía/i).first()).toBeVisible();
 
       await gotoOK(page, `/en/profesionales/${seed.professionalSlug}`);
       await page.locator("[data-save-button]:visible").first().click();

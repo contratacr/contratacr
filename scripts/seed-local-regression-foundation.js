@@ -26,13 +26,17 @@ const db = createClient(url, serviceRole, {
   auth: { autoRefreshToken: false, persistSession: false },
 });
 
+// La identidad sale del archivo compartido: es inventada, y así el arranque
+// local y el de test nombran a la misma pareja.
+const ACTORES = require("./actores-de-regresion.json");
+
 const actors = [
   {
-    profileId: "048f1b3a-23c0-41bc-8728-10f8aed70fdb",
-    professionalId: "ae9caa2b-1fca-4411-9aeb-7736f5bbf42f",
-    email: "e2e.client@contratacr.test",
-    fullName: "ContrataCR",
-    slug: "isaac-alberto-sanchez-monge-9gjc65t8",
+    profileId: ACTORES.cliente.profileId,
+    professionalId: ACTORES.cliente.professionalId,
+    email: ACTORES.cliente.correo,
+    fullName: ACTORES.cliente.negocio,
+    slug: ACTORES.cliente.slug,
     categoryId: "desarrollo_web",
     professionIds: ["desarrollo_web", "diseno_apps"],
     provinceId: "sj",
@@ -41,11 +45,11 @@ const actors = [
     hourlyRate: 185000,
   },
   {
-    profileId: "347f5202-8b3e-4c11-8db8-1060ea5e487d",
-    professionalId: "988428c7-a0b6-4d9e-a9b8-e0209a1ca296",
-    email: "e2e.pro@contratacr.test",
-    fullName: "SG Solutions",
-    slug: "luis-angel-sanchez-sibaja-977u5iku",
+    profileId: ACTORES.profesional.profileId,
+    professionalId: ACTORES.profesional.professionalId,
+    email: ACTORES.profesional.correo,
+    fullName: ACTORES.profesional.negocio,
+    slug: ACTORES.profesional.slug,
     categoryId: "redes_internet",
     professionIds: ["redes_internet", "soporte_tecnico", "aire_acondicionado"],
     provinceId: "al",

@@ -830,6 +830,11 @@ test.describe("@seeded core regression", () => {
     await expect(
       page.locator("h1").filter({ hasText: E2E_USERS.professional.fullName, visible: true }).first(),
     ).toBeVisible();
+    // En el teléfono la ficha abre en Disponibilidad —contactar es a lo que se
+    // viene— y el oficio se lee en Servicios. En computadora esa pestaña no
+    // existe: el bloque de servicios ya está a la vista.
+    const pestanaServicios = page.getByRole("tab", { name: /Servicios|Services/i }).filter({ visible: true }).first();
+    if (await pestanaServicios.count()) await pestanaServicios.click();
     await expect(page.getByText(categoryLabel, { exact: true }).filter({ visible: true }).first()).toBeVisible();
     await expectNoHorizontalOverflow(page);
 

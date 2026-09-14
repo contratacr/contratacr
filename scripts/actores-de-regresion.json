@@ -1,0 +1,47 @@
+{
+  "_lee_esto": "Las dos cuentas con las que se prueba el app. La identidad es INVENTADA a propósito: antes copiaban a dos personas reales de producción (nombre, foto, dirección y teléfono), así que cualquier corrida tocaba datos de alguien. Los UUID se conservan porque son las cuentas que ya existen en Supabase de test; un UUID no dice quién es nadie. Si cambiás un nombre o un slug aquí, cambia en todo el repositorio: las pruebas leen este archivo.",
+  "cliente": {
+    "clave": "contratacr",
+    "correo": "e2e.client@contratacr.test",
+    "nombre": "Camila Rojas Vega",
+    "negocio": "Estudio Delta",
+    "slug": "estudio-delta-pruebas",
+    "profileId": "048f1b3a-23c0-41bc-8728-10f8aed70fdb",
+    "professionalId": "ae9caa2b-1fca-4411-9aeb-7736f5bbf42f",
+    "telefono": "+506 7000 0001",
+    "categoria": "diseno_apps",
+    "profesiones": ["diseno_apps", "desarrollo_web"],
+    "foto": "https://test.contratacr.com/test-professionals/estudio-delta.png",
+    "servicioPrincipal": "Desarrollo web",
+    "tipoDeServicio": "mobile",
+    "videoconsulta": true,
+    "cubreElPais": true,
+    "provincias": [],
+    "lugares": []
+  },
+  "profesional": {
+    "clave": "sg",
+    "correo": "e2e.pro@contratacr.test",
+    "nombre": "Mateo Herrera Solís",
+    "negocio": "Redes Bahía",
+    "slug": "redes-bahia-pruebas",
+    "profileId": "347f5202-8b3e-4c11-8db8-1060ea5e487d",
+    "professionalId": "988428c7-a0b6-4d9e-a9b8-e0209a1ca296",
+    "telefono": "+506 7000 0002",
+    "categoria": "redes_internet",
+    "profesiones": ["redes_internet", "camaras_seguridad", "soporte_tecnico", "reparacion_computadoras", "tecnologia", "consultoria_ti"],
+    "foto": "https://test.contratacr.com/test-professionals/redes-bahia.png",
+    "servicioPrincipal": "Redes e internet",
+    "tipoDeServicio": "mobile",
+    "videoconsulta": true,
+    "cubreElPais": false,
+    "provincias": ["al"],
+    "lugares": [
+      { "id": "wp_pruebas_al", "name": "Toda la provincia de Alajuela", "level": "provincia", "address": "", "provinciaId": "al" },
+      { "id": "wp_pruebas_sj_es", "name": "Escazú, San José", "level": "canton", "address": "", "cantonId": "sj-es", "provinciaId": "sj" },
+      { "id": "wp_pruebas_sj_sa", "name": "Santa Ana, San José", "level": "canton", "address": "", "cantonId": "sj-sa", "provinciaId": "sj" },
+      { "id": "wp_pruebas_sj_sj", "name": "San José, San José", "level": "canton", "address": "", "cantonId": "sj-sj", "provinciaId": "sj" },
+      { "id": "wp_pruebas_al_at", "name": "Atenas, Alajuela", "level": "canton", "address": "Atenas centro, Alajuela", "cantonId": "al-at", "provinciaId": "al", "lat": 9.9875, "lng": -84.4017 }
+    ]
+  }
+}

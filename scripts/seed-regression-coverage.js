@@ -29,22 +29,16 @@ if ((projectRef !== TEST_PROJECT_REF && !localRegression) || !serviceRole) {
 }
 
 const db = createClient(url, serviceRole, { auth: { persistSession: false } });
-const actors = {
-  contratacr: {
-    profileId: "048f1b3a-23c0-41bc-8728-10f8aed70fdb",
-    professionalId: "ae9caa2b-1fca-4411-9aeb-7736f5bbf42f",
-    email: "e2e.client@contratacr.test",
-    phone: "+506 7000 0001",
-    name: "ContrataCR",
-  },
-  sg: {
-    profileId: "347f5202-8b3e-4c11-8db8-1060ea5e487d",
-    professionalId: "988428c7-a0b6-4d9e-a9b8-e0209a1ca296",
-    email: "e2e.pro@contratacr.test",
-    phone: "+506 7000 0002",
-    name: "SG Solutions",
-  },
-};
+// La misma pareja inventada del resto de la siembra.
+const ACTORES = require("./actores-de-regresion.json");
+const comoActor = (a) => ({
+  profileId: a.profileId,
+  professionalId: a.professionalId,
+  email: a.correo,
+  phone: a.telefono,
+  name: a.negocio,
+});
+const actors = { contratacr: comoActor(ACTORES.cliente), sg: comoActor(ACTORES.profesional) };
 
 const ids = {
   bookings: Array.from({ length: 6 }, (_, index) => `d1000000-0000-4000-8000-${String(index + 1).padStart(12, "0")}`),
@@ -115,7 +109,7 @@ function project(id, client, targetPro, status, index) {
     client_id: client.profileId,
     category_id: targetPro.category_id,
     title: `${client.name}: proyecto ${status}`,
-    description: `Proyecto determinista para validar el filtro ${status} entre SG Solutions y ContrataCR.`,
+    description: `Proyecto determinista para validar el filtro ${status} entre Redes Bahía y Estudio Delta.`,
     provincia_id: targetPro.provincia_id,
     canton_id: targetPro.canton_id,
     budget_min: 100000 + index * 25000,
@@ -193,7 +187,7 @@ function offer(id, owner, categoryId, status, index, image) {
     title: `${owner.name}: oferta ${status}`,
     description: `Oferta determinista para validar el estado ${status}.`,
     offer_type: index % 2 ? "product" : "service_offer",
-    service_label: owner.name === "ContrataCR" ? "Desarrollo web" : "Redes e internet",
+    service_label: owner.name === actors.contratacr.name ? "Desarrollo web" : "Redes e internet",
     image_urls: image ? [image] : [],
     price_now: 75000 + index * 10000,
     price_before: 100000 + index * 10000,
@@ -211,17 +205,17 @@ function offer(id, owner, categoryId, status, index, image) {
 
 async function main() {
   const [contrataPro, sgPro] = await Promise.all([
-    professional(actors.contratacr.professionalId, "ContrataCR professional"),
-    professional(actors.sg.professionalId, "SG Solutions professional"),
+    professional(actors.contratacr.professionalId, "ficha de la cuenta cliente"),
+    professional(actors.sg.professionalId, "Redes Bahía professional"),
   ]);
 
   const bookings = [
-    booking(ids.bookings[0], actors.contratacr, sgPro, "confirmed", 2, "Solicitud activa a SG Solutions"),
-    booking(ids.bookings[1], actors.contratacr, sgPro, "completed", 3, "Solicitud finalizada a SG Solutions"),
-    booking(ids.bookings[2], actors.contratacr, sgPro, "cancelled", 4, "Solicitud cancelada a SG Solutions"),
-    booking(ids.bookings[3], actors.sg, contrataPro, "in_progress", 5, "Solicitud activa a ContrataCR"),
-    booking(ids.bookings[4], actors.sg, contrataPro, "completed", 6, "Solicitud finalizada a ContrataCR"),
-    booking(ids.bookings[5], actors.sg, contrataPro, "cancelled", 7, "Solicitud cancelada a ContrataCR"),
+    booking(ids.bookings[0], actors.contratacr, sgPro, "confirmed", 2, "Solicitud activa a Redes Bahía"),
+    booking(ids.bookings[1], actors.contratacr, sgPro, "completed", 3, "Solicitud finalizada a Redes Bahía"),
+    booking(ids.bookings[2], actors.contratacr, sgPro, "cancelled", 4, "Solicitud cancelada a Redes Bahía"),
+    booking(ids.bookings[3], actors.sg, contrataPro, "in_progress", 5, "Solicitud activa a Estudio Delta"),
+    booking(ids.bookings[4], actors.sg, contrataPro, "completed", 6, "Solicitud finalizada a Estudio Delta"),
+    booking(ids.bookings[5], actors.sg, contrataPro, "cancelled", 7, "Solicitud cancelada a Estudio Delta"),
   ];
   await must("coverage bookings", db.from("bookings").upsert(bookings, { onConflict: "id" }));
 
@@ -293,7 +287,7 @@ async function main() {
       id: ids.applications[index],
       job_id: targetJob.id,
       applicant_id: applicant.profileId,
-      cover_letter: `Postulación ${status} entre SG Solutions y ContrataCR.`,
+      cover_letter: `Postulación ${status} entre Redes Bahía y Estudio Delta.`,
       phone: applicant.phone,
       applicant_email: applicant.email,
       portfolio_url: "https://contratacr.com",

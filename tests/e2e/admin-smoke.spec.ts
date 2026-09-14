@@ -99,7 +99,7 @@ test.describe("@admin surfaces", () => {
       if (seed) {
         for (const detail of [
           { path: `/es/admin/usuarios/${seed.clientId}`, marker: /ContrataCR|B.squeda de usuarios/i },
-          { path: `/es/admin/proveedores/${seed.professionalId}`, marker: /SG Solutions|Proveedor/i },
+          { path: `/es/admin/proveedores/${seed.professionalId}`, marker: /Redes Bahía|Proveedor/i },
         ]) {
           await gotoOK(page, detail.path);
           await expectVisibleText(page.locator("body"), detail.marker);
@@ -150,7 +150,7 @@ test.describe("@admin surfaces", () => {
       await page.getByPlaceholder(/Título, servicio, ubicación, creador o correo/).filter({ visible: true }).first().fill(offerTitle);
       const row = page.locator("li").filter({ hasText: offerTitle }).first();
       await expect(row).toBeVisible();
-      await expect(row.getByText("SG Solutions")).toBeVisible();
+      await expect(row.getByText("Redes Bahía")).toBeVisible();
       await expect(row.getByText("Publicada", { exact: true })).toBeVisible();
       await row.getByRole("button", { name: /^Pausar$/ }).click();
       await expect(row.getByText("Pausada", { exact: true })).toBeVisible();
@@ -170,8 +170,8 @@ test.describe("@admin surfaces", () => {
       // Empleos: the seeded SG job lists its creator and the application count.
       await gotoOK(page, "/es/admin/empleos");
       await expectVisibleText(page.locator("body"), /en esta vista/);
-      await page.getByPlaceholder(/Título, servicio, ubicación, creador o correo/).filter({ visible: true }).first().fill("SG Solutions");
-      await expect(page.locator("li").filter({ hasText: "SG Solutions" }).first()).toBeVisible();
+      await page.getByPlaceholder(/Título, servicio, ubicación, creador o correo/).filter({ visible: true }).first().fill("Redes Bahía");
+      await expect(page.locator("li").filter({ hasText: "Redes Bahía" }).first()).toBeVisible();
       await expect(page.getByText(/postulaci(?:ón|ones)/).first()).toBeVisible();
       await expectHealthyPage(page);
 
@@ -194,7 +194,7 @@ test.describe("@admin surfaces", () => {
       // además, recorre a todos los profesionales del servicio y puede tardar
       // más que la espera por defecto.
       await expectVisibleText(page.locator("body"), /\d+ profesional(?:es)? cumplen?/, 40_000);
-      await expect(page.getByText("SG Solutions").first()).toBeVisible();
+      await expect(page.getByText("Redes Bahía").first()).toBeVisible();
       await page.getByLabel("Provincia", { exact: true }).selectOption("al");
       await expect(page.getByText(/Con sede aquí|Atiende aquí|Todo el país/).first()).toBeVisible();
       await page.getByRole("button", { name: /Limpiar filtros/ }).click();
@@ -217,7 +217,7 @@ test.describe("@admin surfaces", () => {
 
       // Reseñas: the professional behind a seeded review is named, never the generic label.
       await gotoOK(page, "/es/admin/resenas");
-      await expect(page.getByText("SG Solutions").first()).toBeVisible();
+      await expect(page.getByText("Redes Bahía").first()).toBeVisible();
       await expectHealthyPage(page);
 
       // Verificación names the identification type of everyone waiting.
@@ -273,10 +273,10 @@ test.describe("@admin surfaces", () => {
     const renamedId = "redes_internet";
     const originalName = (await admin.from("categories").select("name").eq("id", renamedId).maybeSingle()).data?.name ?? null;
     try {
-      const ticket = await admin.from("support_tickets").insert({ user_id: state.clientId, name: "ContrataCR", email: "e2e.client@contratacr.test", subject: `Caso admin regression ${stamp}`, message: "Caso sembrado por la regresión para eliminarlo desde el panel.", status: "open", topic: "cuenta" }).select("id").single();
+      const ticket = await admin.from("support_tickets").insert({ user_id: state.clientId, name: "Estudio Delta", email: "e2e.client@contratacr.test", subject: `Caso admin regression ${stamp}`, message: "Caso sembrado por la regresión para eliminarlo desde el panel.", status: "open", topic: "cuenta" }).select("id").single();
       if (ticket.error || !ticket.data) throw ticket.error ?? new Error("ticket");
       ticketId = ticket.data.id;
-      const report = await admin.from("reports").insert({ professional_id: state.professionalId, professional_name: "SG Solutions", reason: `Reporte admin regression ${stamp}`, reporter_email: "e2e.client@contratacr.test", status: "open" }).select("id").single();
+      const report = await admin.from("reports").insert({ professional_id: state.professionalId, professional_name: "Redes Bahía", reason: `Reporte admin regression ${stamp}`, reporter_email: "e2e.client@contratacr.test", status: "open" }).select("id").single();
       if (report.error || !report.data) throw report.error ?? new Error("report");
       reportId = report.data.id;
       victim = await createDisposableAccount({ prefix: "admin-delete" });

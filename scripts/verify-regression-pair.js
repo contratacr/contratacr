@@ -35,19 +35,22 @@ if (!anonKey || (!password && !dataOnly)) {
 const admin = createClient(url, serviceRole, { auth: { persistSession: false } });
 const publicClient = createClient(url, anonKey, { auth: { persistSession: false } });
 const ADVERTISING_EMAIL = "publicidad@contratacr.test";
+// La pareja inventada con la que se prueba el app, tal y como la siembra el
+// resto de los guiones.
+const ACTORES = require("./actores-de-regresion.json");
 const CANONICAL_ACTORS = {
   contratacr: {
-    businessName: "ContrataCR",
-    email: "e2e.client@contratacr.test",
-    profileId: "048f1b3a-23c0-41bc-8728-10f8aed70fdb",
-    professionalId: "ae9caa2b-1fca-4411-9aeb-7736f5bbf42f",
+    businessName: ACTORES.cliente.negocio,
+    email: ACTORES.cliente.correo,
+    profileId: ACTORES.cliente.profileId,
+    professionalId: ACTORES.cliente.professionalId,
     requiresNationwideVideo: true,
   },
   sg: {
-    businessName: "SG Solutions",
-    email: "e2e.pro@contratacr.test",
-    profileId: "347f5202-8b3e-4c11-8db8-1060ea5e487d",
-    professionalId: "988428c7-a0b6-4d9e-a9b8-e0209a1ca296",
+    businessName: ACTORES.profesional.negocio,
+    email: ACTORES.profesional.correo,
+    profileId: ACTORES.profesional.profileId,
+    professionalId: ACTORES.profesional.professionalId,
   },
 };
 
@@ -173,7 +176,7 @@ async function verifyAdvertisingDataParity(source, advertising) {
     const claveUnica = table === "availability_slots" ? "slot_date,slot_time,location_id" : null;
     const select = claveUnica ? `id,${claveUnica}` : discriminator ? `id,${discriminator}` : "id";
     const [sourceRows, advertisingRows] = await Promise.all([
-      must(`${table} ContrataCR parity`, admin.from(table).select(select).or(sourceFilter).limit(5000)),
+      must(`${table} paridad con la cuenta cliente`, admin.from(table).select(select).or(sourceFilter).limit(5000)),
       must(`${table} advertising parity`, admin.from(table).select(select).or(advertisingFilter).limit(5000)),
     ]);
     const combinaciones = (filas) => new Set(filas.map((row) => `${row.slot_date}|${row.slot_time}|${row.location_id ?? ""}`)).size;
@@ -181,14 +184,14 @@ async function verifyAdvertisingDataParity(source, advertising) {
     const totalClon = claveUnica ? combinaciones(advertisingRows) : advertisingRows.length;
     assert(
       totalClon === totalOrigen,
-      `Advertising ${table}: expected ${totalOrigen} rows like ContrataCR, found ${totalClon}.`,
+      `Advertising ${table}: expected ${totalOrigen} filas como la cuenta cliente, found ${totalClon}.`,
     );
     if (discriminator) {
       const expected = [...new Set(sourceRows.map((row) => String(row[discriminator])))].sort();
       const actual = [...new Set(advertisingRows.map((row) => String(row[discriminator])))].sort();
       assert(
         JSON.stringify(actual) === JSON.stringify(expected),
-        `Advertising ${table}: ${discriminator} coverage differs from ContrataCR.`,
+        `Advertising ${table}: ${discriminator} difiere de la cobertura de la cuenta cliente.`,
       );
     }
   }
@@ -198,7 +201,7 @@ async function verifyAdvertisingDataParity(source, advertising) {
     admin.from("direct_conversations").select("id").or(`client_id.eq.${advertising.profile.id},professional_id.eq.${advertising.professional.id}`),
   );
   const sourceConversations = await must(
-    "ContrataCR conversations",
+    "conversaciones de la cuenta cliente",
     admin.from("direct_conversations").select("id").or(`client_id.eq.${source.profile.id},professional_id.eq.${source.professional.id}`),
   );
   const [advertisingMessages, sourceMessages] = await Promise.all([
@@ -206,10 +209,10 @@ async function verifyAdvertisingDataParity(source, advertising) {
       ? must("advertising messages", admin.from("direct_messages").select("id").in("conversation_id", advertisingConversations.map((row) => row.id)))
       : [],
     sourceConversations.length
-      ? must("ContrataCR messages", admin.from("direct_messages").select("id").in("conversation_id", sourceConversations.map((row) => row.id)))
+      ? must("mensajes de la cuenta cliente", admin.from("direct_messages").select("id").in("conversation_id", sourceConversations.map((row) => row.id)))
       : [],
   ]);
-  assert(advertisingMessages.length === sourceMessages.length, "Advertising messages must match ContrataCR coverage.");
+  assert(advertisingMessages.length === sourceMessages.length, "Advertising messages deben igualar la cobertura de la cuenta cliente.");
 }
 
 async function verifyPrivateActorIsolation(owners, ignoredOwners = []) {
@@ -681,7 +684,7 @@ async function main() {
     );
     assert(advertisingProfiles.length === 1, "The isolated advertising test account must exist exactly once.");
     advertisingProfile = advertisingProfiles[0];
-    assert(advertisingProfile.role === "professional", "The advertising test account must match the ContrataCR professional panel.");
+    assert(advertisingProfile.role === "professional", "The advertising test account debe verse como el panel profesional de la cuenta cliente.");
     assert(advertisingProfile.onboarding_completed === true, "The advertising test account must be ready for login.");
     assert(advertisingProfile.is_provider === true, "The advertising test account must include professional data.");
     assert(advertisingProfile.is_disabled === false, "The advertising test account cannot be disabled.");
@@ -695,7 +698,7 @@ async function main() {
       "The advertising professional must stay hidden from public discovery.",
     );
     advertising = { professional: advertisingProfessionals[0], profile: advertisingProfile };
-    assert(Array.isArray(advertising.professional.services) && advertising.professional.services.length, "Advertising needs ContrataCR services.");
+    assert(Array.isArray(advertising.professional.services) && advertising.professional.services.length, "La cuenta de publicidad necesita los servicios de la cuenta cliente.");
     assert(Array.isArray(advertising.professional.portfolio_items) && advertising.professional.portfolio_items.length, "Advertising needs ContrataCR success cases.");
     assert(Array.isArray(advertising.professional.certifications) && advertising.professional.certifications.length, "Advertising needs ContrataCR certifications.");
     assert(Array.isArray(advertising.professional.languages) && advertising.professional.languages.length, "Advertising needs ContrataCR languages.");
@@ -729,42 +732,42 @@ async function main() {
 
   await Promise.all([
     verifyCount("professional_follows", { follower_id: contratacr.profile.id }, 1, "ContrataCR follows"),
-    verifyCount("professional_follows", { follower_id: sg.profile.id }, 1, "SG Solutions follows"),
+    verifyCount("professional_follows", { follower_id: sg.profile.id }, 1, "Redes Bahía follows"),
     verifyCount("saved_professionals", { client_id: contratacr.profile.id }, 1, "ContrataCR saved professionals"),
-    verifyCount("saved_professionals", { client_id: sg.profile.id }, 1, "SG Solutions saved professionals"),
-    verifyCount("direct_conversations", { client_id: contratacr.profile.id }, 1, "ContrataCR conversations"),
-    verifyCount("direct_conversations", { client_id: sg.profile.id }, 1, "SG Solutions conversations"),
+    verifyCount("saved_professionals", { client_id: sg.profile.id }, 1, "Redes Bahía saved professionals"),
+    verifyCount("direct_conversations", { client_id: contratacr.profile.id }, 1, "conversaciones de la cuenta cliente"),
+    verifyCount("direct_conversations", { client_id: sg.profile.id }, 1, "Redes Bahía conversations"),
     verifyCount("direct_messages", { sender_id: contratacr.profile.id }, 2, "ContrataCR direct messages"),
-    verifyCount("direct_messages", { sender_id: sg.profile.id }, 2, "SG Solutions direct messages"),
+    verifyCount("direct_messages", { sender_id: sg.profile.id }, 2, "Redes Bahía direct messages"),
     verifyCount("reviews", { client_id: contratacr.profile.id }, 1, "ContrataCR authored reviews"),
     verifyCount("reviews", { professional_id: contratacr.professional.id }, 1, "ContrataCR received reviews"),
-    verifyCount("reviews", { client_id: sg.profile.id }, 1, "SG Solutions authored reviews"),
-    verifyCount("reviews", { professional_id: sg.professional.id }, 1, "SG Solutions received reviews"),
+    verifyCount("reviews", { client_id: sg.profile.id }, 1, "Redes Bahía authored reviews"),
+    verifyCount("reviews", { professional_id: sg.professional.id }, 1, "Redes Bahía received reviews"),
     verifyCount("notifications", { user_id: contratacr.profile.id }, 4, "ContrataCR notifications"),
-    verifyCount("notifications", { user_id: sg.profile.id }, 4, "SG Solutions notifications"),
+    verifyCount("notifications", { user_id: sg.profile.id }, 4, "Redes Bahía notifications"),
     verifyCount("availability_weekly", { professional_id: contratacr.professional.id }, 1, "ContrataCR weekly availability"),
-    verifyCount("availability_weekly", { professional_id: sg.professional.id }, 1, "SG Solutions weekly availability"),
+    verifyCount("availability_weekly", { professional_id: sg.professional.id }, 1, "Redes Bahía weekly availability"),
     verifyCount("availability_slots", { professional_id: contratacr.professional.id }, 4, "ContrataCR availability slots"),
-    verifyCount("availability_slots", { professional_id: sg.professional.id }, 2, "SG Solutions availability slots"),
-    verifySlotMoments(sg, 3, ["11:00", "14:00"], "SG Solutions booking moments"),
+    verifyCount("availability_slots", { professional_id: sg.professional.id }, 2, "Redes Bahía availability slots"),
+    verifySlotMoments(sg, 3, ["11:00", "14:00"], "Redes Bahía booking moments"),
     verifyCount("blocked_dates", { professional_id: contratacr.professional.id }, 1, "ContrataCR blocked dates"),
-    verifyCount("blocked_dates", { professional_id: sg.professional.id }, 1, "SG Solutions blocked dates"),
+    verifyCount("blocked_dates", { professional_id: sg.professional.id }, 1, "Redes Bahía blocked dates"),
     verifyStatuses("job_posts", "employer_id", contratacr.professional.id, ["published", "paused", "closed", "draft"], "ContrataCR jobs"),
-    verifyStatuses("job_posts", "employer_id", sg.professional.id, ["published", "paused", "closed", "draft"], "SG Solutions jobs"),
+    verifyStatuses("job_posts", "employer_id", sg.professional.id, ["published", "paused", "closed", "draft"], "Redes Bahía jobs"),
     verifyStatuses("professional_offers", "professional_id", contratacr.professional.id, ["published", "paused", "expired", "sold_out", "draft"], "ContrataCR offers"),
-    verifyStatuses("professional_offers", "professional_id", sg.professional.id, ["published", "paused", "expired", "sold_out", "draft"], "SG Solutions offers"),
+    verifyStatuses("professional_offers", "professional_id", sg.professional.id, ["published", "paused", "expired", "sold_out", "draft"], "Redes Bahía offers"),
     verifyStatuses("bookings", "client_id", contratacr.profile.id, ["confirmed", "completed", "cancelled"], "ContrataCR client bookings"),
-    verifyStatuses("bookings", "client_id", sg.profile.id, ["in_progress", "completed", "cancelled"], "SG Solutions client bookings"),
+    verifyStatuses("bookings", "client_id", sg.profile.id, ["in_progress", "completed", "cancelled"], "Redes Bahía client bookings"),
     verifyStatuses("projects", "client_id", contratacr.profile.id, ["open", "completed", "cancelled"], "ContrataCR projects"),
-    verifyStatuses("projects", "client_id", sg.profile.id, ["in_progress", "completed", "cancelled"], "SG Solutions projects"),
+    verifyStatuses("projects", "client_id", sg.profile.id, ["in_progress", "completed", "cancelled"], "Redes Bahía projects"),
     verifyStatuses("proposals", "professional_id", contratacr.professional.id, ["accepted", "declined"], "ContrataCR proposals"),
-    verifyStatuses("proposals", "professional_id", sg.professional.id, ["pending", "accepted", "declined"], "SG Solutions proposals"),
+    verifyStatuses("proposals", "professional_id", sg.professional.id, ["pending", "accepted", "declined"], "Redes Bahía proposals"),
     verifyStatuses("support_tickets", "user_id", contratacr.profile.id, ["open", "in_progress", "resolved"], "ContrataCR support"),
-    verifyStatuses("support_tickets", "user_id", sg.profile.id, ["open", "in_progress", "resolved"], "SG Solutions support"),
+    verifyStatuses("support_tickets", "user_id", sg.profile.id, ["open", "in_progress", "resolved"], "Redes Bahía support"),
     verifyStatuses("job_applications", "applicant_id", contratacr.profile.id, ["submitted", "reviewing", "shortlisted", "rejected", "hired", "withdrawn"], "ContrataCR applications"),
-    verifyStatuses("job_applications", "applicant_id", sg.profile.id, ["submitted", "reviewing", "shortlisted", "rejected", "hired", "withdrawn"], "SG Solutions applications"),
+    verifyStatuses("job_applications", "applicant_id", sg.profile.id, ["submitted", "reviewing", "shortlisted", "rejected", "hired", "withdrawn"], "Redes Bahía applications"),
     verifyStatuses("availability_exceptions", "professional_id", contratacr.professional.id, ["extra", "custom", "closed"], "ContrataCR availability exceptions", "mode"),
-    verifyStatuses("availability_exceptions", "professional_id", sg.professional.id, ["extra", "custom", "closed"], "SG Solutions availability exceptions", "mode"),
+    verifyStatuses("availability_exceptions", "professional_id", sg.professional.id, ["extra", "custom", "closed"], "Redes Bahía availability exceptions", "mode"),
   ]);
 
   for (const owner of [contratacr, sg]) {

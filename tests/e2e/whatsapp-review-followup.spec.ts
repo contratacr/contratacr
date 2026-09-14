@@ -3,7 +3,7 @@ import { expect, test } from "playwright/test";
 const followUp = {
   id: "00000000-0000-4000-8000-000000000134",
   professional_id: "00000000-0000-4000-8000-000000000001",
-  professional_name: "SG Solutions",
+  professional_name: "Redes Bahía",
   service_name: "Reparación de computadoras",
   contact_method: "whatsapp",
   status: "contacted",
@@ -24,7 +24,7 @@ test("contact follow-up is readable and dismissible without blocking the page", 
   await page.goto("/es/como-funciona");
   const dialog = page.getByRole("dialog", { name: "Seguimiento del servicio" });
   await expect(dialog).toBeVisible();
-  await expect(dialog).toContainText("Contactaste a SG Solutions por WhatsApp");
+  await expect(dialog).toContainText("Contactaste a Redes Bahía por WhatsApp");
   await expect(dialog).toContainText("¿Llegaste a contratarlo?");
   await expect(dialog).toContainText("Reparación de computadoras");
   await expect(dialog.getByRole("button", { name: "Sí, dejar una reseña" })).toBeVisible();
@@ -46,7 +46,7 @@ test("contact follow-up is readable and dismissible without blocking the page", 
 
 test("contact follow-up shows pending confirmations one at a time", async ({ page }) => {
   const queue = [
-    { ...followUp, id: "00000000-0000-4000-8000-000000000201", professional_name: "SG Solutions" },
+    { ...followUp, id: "00000000-0000-4000-8000-000000000201", professional_name: "Redes Bahía" },
     { ...followUp, id: "00000000-0000-4000-8000-000000000202", professional_name: "Juan Electricidad", service_name: "Electricidad" },
   ];
   let queueIndex = 0;
@@ -66,7 +66,7 @@ test("contact follow-up shows pending confirmations one at a time", async ({ pag
   await page.goto("/es/como-funciona");
   const dialog = page.getByRole("dialog", { name: "Seguimiento del servicio" });
   await expect(dialog).toContainText("1 de 2 confirmaciones pendientes");
-  await expect(dialog).toContainText("SG Solutions");
+  await expect(dialog).toContainText("Redes Bahía");
 
   await dialog.getByRole("button", { name: "Aún no" }).click();
   await expect(dialog).toContainText("Juan Electricidad", { timeout: 2000 });

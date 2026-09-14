@@ -28,13 +28,13 @@ test.describe("@seeded offers, jobs and application lifecycle", () => {
       .select("portfolio_urls,portfolio_items,services,category_id")
       .eq("id", seed.professionalId)
       .single();
-    if (professionalError || !professional) throw professionalError ?? new Error("SG Solutions fixture not found");
+    if (professionalError || !professional) throw professionalError ?? new Error("Redes Bahía fixture not found");
     const portfolioItems = Array.isArray(professional.portfolio_items)
       ? professional.portfolio_items as Array<{ url?: string; image_url?: string; photos?: string[] }>
       : [];
     const imageUrl = (Array.isArray(professional.portfolio_urls) ? professional.portfolio_urls[0] : null)
       || portfolioItems.flatMap((item) => [item.url, item.image_url, ...(item.photos ?? [])]).find(Boolean);
-    expect(imageUrl, "SG Solutions needs one existing image for the non-leaking offer lifecycle").toBeTruthy();
+    expect(imageUrl, "Redes Bahía needs one existing image for the non-leaking offer lifecycle").toBeTruthy();
     const services = Array.isArray(professional.services) ? professional.services as Array<{ id?: string; serviceId?: string; name?: string; label?: string }> : [];
     const service = services[0] ?? {};
 

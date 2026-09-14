@@ -47,6 +47,37 @@ motor del iPhone y de la app nativa. La primera corrida ya encontró un error qu
 Chrome no podía ver (los precios se escribían distinto en Safari y React
 rearmaba la tarjeta entera al hidratar).
 
+## Las dos cuentas con las que se prueba
+
+`e2e.client@contratacr.test` (**Estudio Delta**) y `e2e.pro@contratacr.test`
+(**Redes Bahía**) son cuentas **inventadas**. Antes eran copia de dos personas
+reales de producción —nombre, foto, teléfono y dirección— y el sembrado salía a
+`www.contratacr.com` a leerlas en cada corrida. Ya no: la identidad completa vive
+en `scripts/actores-de-regresion.json` y de ahí la leen la siembra, la
+verificación y las pruebas. Si cambiás un nombre o un slug ahí, cambia en todo el
+repositorio.
+
+Entre las dos tienen de todo para revisar el app a mano: solicitudes en los seis
+estados, proyectos, propuestas, conversaciones, empleos con postulaciones,
+ofertas, tiquetes de soporte, reseñas, favoritos y notificaciones. Para
+rearmarlas:
+
+```
+npm run seed:test:full     # limpia y siembra la pareja completa
+npm run seed:test:verify   # confirma que no falte nada
+```
+
+## Cuánto cuesta al mes, en números redondos
+
+- Push a `test`: ~25 min de Linux (seguridad + compatibilidad + regresión).
+- Push a `main`: ~10 min (no corre la regresión; ya pasó en `test`).
+- Diario: ~6 min entre respaldo, recordatorios y control de migraciones.
+- La cola de push: 144 corridas de segundos al día; se salta sola si no hay nada.
+
+Con el ritmo de un bloque de trabajo por día, eso son unas 20 horas de Linux al
+mes, dentro de lo gratuito de GitHub para un repositorio público. Lo que sí se
+paga por minuto es macOS, y por eso el trabajo de iOS **nunca** corre solo.
+
 ## Lo mínimo que conviene correr antes de publicar
 
 1. `npx tsc --noEmit` — no cuesta nada y atrapa la mayoría.

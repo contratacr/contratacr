@@ -1258,6 +1258,11 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
       __ccrSectionRoot?: boolean;
       __ccrSectionShare?: boolean;
       __ccrSectionMenu?: boolean;
+      // La pantalla puede publicar su título ANTES de estar escuchando la
+      // confirmación (con la ficha pintada desde el servidor, todo monta en el
+      // mismo cuadro). La confirmación queda también aquí para que la pantalla
+      // la lea al montar; si no, se veían dos «Volver a resultados».
+      __ccrSectionAck?: boolean;
     };
     const inicial = global.__ccrSectionHeader ?? null;
     if (inicial || global.__ccrSectionActive) {
@@ -1266,6 +1271,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
       setSectionRoot(!!global.__ccrSectionRoot);
       setSectionShare(!!global.__ccrSectionShare);
       setSectionMenu(!!global.__ccrSectionMenu);
+      global.__ccrSectionAck = true;
       window.dispatchEvent(new Event("ccr:section-header-ack"));
     }
     const onHeader = (event: Event) => {
@@ -1276,6 +1282,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
       setSectionRoot(!!detail?.root);
       setSectionShare(!!detail?.share);
       setSectionMenu(!!detail?.menu);
+      global.__ccrSectionAck = detail !== null;
       if (detail !== null) window.dispatchEvent(new Event("ccr:section-header-ack"));
     };
     const onMenuVisible = (event: Event) => {

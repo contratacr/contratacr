@@ -58,13 +58,13 @@ async function createOfferThroughApi(page: Page, title: string) {
     .select("portfolio_urls,portfolio_items,services,category_id")
     .eq("id", professionalId)
     .single();
-  if (error || !professional) throw error ?? new Error("SG Solutions fixture not found");
+  if (error || !professional) throw error ?? new Error("Redes Bahía fixture not found");
   const items = Array.isArray(professional.portfolio_items)
     ? (professional.portfolio_items as Array<{ url?: string; image_url?: string; photos?: string[] }>)
     : [];
   const imageUrl = (Array.isArray(professional.portfolio_urls) ? professional.portfolio_urls[0] : null)
     || items.flatMap((item) => [item.url, item.image_url, ...(item.photos ?? [])]).find(Boolean);
-  expect(imageUrl, "SG Solutions needs one existing image to seed an offer").toBeTruthy();
+  expect(imageUrl, "Redes Bahía needs one existing image to seed an offer").toBeTruthy();
   const services = Array.isArray(professional.services)
     ? (professional.services as Array<{ id?: string; serviceId?: string; name?: string; label?: string }>)
     : [];
@@ -109,7 +109,7 @@ test.describe("@seeded marketplace editors through the real screens", () => {
   });
 
   test.afterAll(async () => {
-    // The advertising-parity check counts SG Solutions' rows, so anything this
+    // The advertising-parity check counts Redes Bahía' rows, so anything this
     // file created must be gone before verify-regression-pair runs.
     const admin = regressionAdminClient();
     const contentIds = [created.offerId, created.jobId].filter(Boolean);
@@ -130,7 +130,7 @@ test.describe("@seeded marketplace editors through the real screens", () => {
     if (LOCAL_STACK) {
       // The runner's local stack has no image host (/api/upload/photo answers
       // 503), and an offer requires an image, so the offer starts through the
-      // API with one of SG Solutions' existing images. The form with a real
+      // API with one of Redes Bahía' existing images. The form with a real
       // upload is exercised by the mobile workflow against the test project.
       created.offerId = await createOfferThroughApi(page, offerTitle);
       await gotoOK(page, `/es/ofertas/${created.offerId}`);

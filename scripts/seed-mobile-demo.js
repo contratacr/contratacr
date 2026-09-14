@@ -124,7 +124,7 @@ const avatars = {
   "test-plomeros-del-valle": "https://randomuser.me/api/portraits/men/36.jpg",
   "test-redes-central": "https://randomuser.me/api/portraits/men/28.jpg",
   "test-securetek": "https://randomuser.me/api/portraits/women/39.jpg",
-  "test-sg-solutions": `${appUrl}/test-professionals/sg-solutions.png`,
+  "test-redes-bahia": `${appUrl}/test-professionals/redes-bahia.png`,
   "test-soporte-empresarial": "https://randomuser.me/api/portraits/men/46.jpg",
   "test-vet-en-casa": "https://randomuser.me/api/portraits/women/71.jpg",
   "test-web-norte": "https://randomuser.me/api/portraits/women/34.jpg",
@@ -152,7 +152,7 @@ const profileNames = {
   "test-plomeros-del-valle": "José Retana",
   "test-redes-central": "Andrés Mora",
   "test-securetek": "Mariana Rojas",
-  "test-sg-solutions": "SG Solutions",
+  "test-redes-bahia": "SG Solutions",
   "test-soporte-empresarial": "Miguel Herrera",
   "test-vet-en-casa": "Dra. Karla León",
   "test-web-norte": "Natalia Brenes",
@@ -179,7 +179,7 @@ const proFix = {
   "test-plomeros-del-valle": ["Plomeros del Valle", "Plomería", "Plomería residencial con atención rápida en Atenas y alrededores."],
   "test-redes-central": ["Redes Central CR", "Redes e internet", "Instalación de redes, WiFi empresarial y cableado estructurado."],
   "test-securetek": ["SecureTek Costa Rica", "Ciberseguridad", "Evaluación de seguridad, configuración de accesos y protección de datos."],
-  "test-sg-solutions": ["SG Solutions", "Redes e internet", "Soporte técnico, redes, internet y mantenimiento para hogares y empresas."],
+  "test-redes-bahia": ["SG Solutions", "Redes e internet", "Soporte técnico, redes, internet y mantenimiento para hogares y empresas."],
   "test-soporte-empresarial": ["Soporte Empresarial CR", "Redes e internet", "Soporte técnico y redes para oficinas, comercios y equipos de trabajo."],
   "test-vet-en-casa": ["Vet en Casa", "Veterinaria", "Atención veterinaria a domicilio, vacunación y orientación preventiva."],
   "test-web-norte": ["Web Norte", "Desarrollo web", "Sitios web, landing pages y soporte digital para pequeñas empresas."],
@@ -206,7 +206,7 @@ const demoLocations = {
   "test-plomeros-del-valle": ["Atenas, Alajuela", 9.9803, -84.3798, "al", "al-at"],
   "test-redes-central": ["San Jose, San Jose", 9.9342, -84.0837],
   "test-securetek": ["San Jose, San Jose", 9.9356, -84.1010],
-  "test-sg-solutions": ["Atenas, Alajuela", 9.9798, -84.3812, "al", "al-at"],
+  "test-redes-bahia": ["Atenas, Alajuela", 9.9798, -84.3812, "al", "al-at"],
   "test-soporte-empresarial": ["San Jose, San Jose", 9.9270, -84.0890],
   "test-vet-en-casa": ["Heredia, Heredia", 10.0030, -84.1160],
   "test-web-norte": ["San Carlos, Alajuela", 10.3270, -84.4300],
@@ -292,7 +292,7 @@ const sgService = {
   priceType: "a_convenir",
   modalities: ["presencial", "video"],
   startedAt: "2018-01",
-  imageUrl: `${appUrl}/test-professionals/sg-solutions.png`,
+  imageUrl: `${appUrl}/test-professionals/redes-bahia.png`,
   description: "Instalaci\u00f3n, diagn\u00f3stico y mantenimiento de redes, WiFi, cableado estructurado y conectividad para hogares, comercios y oficinas.",
 };
 const sgPortfolioItems = [
@@ -304,7 +304,7 @@ const sgPortfolioItems = [
     description: "Diagn\u00f3stico, cableado y configuraci\u00f3n de una red estable para una oficina en Atenas.",
     recipient: "Cliente empresarial de prueba",
     date: "2026",
-    photos: [`${appUrl}/test-professionals/sg-solutions.png`],
+    photos: [`${appUrl}/test-professionals/redes-bahia.png`],
     likes: 8,
   },
 ];
@@ -390,7 +390,7 @@ async function main() {
   const pros = await must("demo professionals", supabase.from("professionals").select("id,slug,profile_id,category_id,provincia_id,canton_id,lat,lng").in("slug", Object.keys(proFix)));
   const bySlug = new Map(pros.map((p) => [p.slug, p]));
   const sgSolutions = await findMirroredProfessionalByBusinessName("SG Solutions");
-  if (sgSolutions) bySlug.set("test-sg-solutions", sgSolutions);
+  if (sgSolutions) bySlug.set("test-redes-bahia", sgSolutions);
 
   for (const [slug, [business, service, bio]] of Object.entries(proFix)) {
     const professional = bySlug.get(slug);
@@ -399,7 +399,7 @@ async function main() {
     const repairedBusiness = fixAccentArtifacts(business);
     const repairedService = fixAccentArtifacts(service);
     const repairedBio = fixAccentArtifacts(bio);
-    const isSgSolutions = slug === "test-sg-solutions";
+    const isSgSolutions = slug === "test-redes-bahia";
     const profileUpdate = {
       avatar_url: avatars[slug],
       onboarding_completed: true,
@@ -432,9 +432,9 @@ async function main() {
       portfolio_items: isSgSolutions ? sgPortfolioItems : [],
       portfolio_urls: isSgSolutions ? sgPortfolioItems[0].photos : [],
       languages: isSgSolutions ? ["es", "en"] : ["es"],
-      contact_email: isSgSolutions ? "sg-solutions-regression@example.com" : null,
+      contact_email: isSgSolutions ? "redes-bahia-regression@example.com" : null,
       social_links: isSgSolutions
-        ? { website: "https://example.com/sg-solutions", instagram: "https://www.instagram.com/sg.solutions.test" }
+        ? { website: "https://example.com/redes-bahia", instagram: "https://www.instagram.com/redes.bahia.test" }
         : {},
       certifications: isSgSolutions
         ? [{ id: "sg-redes", name: "Redes y cableado estructurado", institution: "Fixture de regresi\u00f3n", year: 2025, profession: "redes_e_internet" }]
@@ -533,7 +533,7 @@ async function main() {
   const saveIds = saves.filter((s) => s.snapshot?.demoSeed === demo).map((s) => s.id);
   if (saveIds.length) await must("delete saved professionals", supabase.from("saved_professionals").delete().in("id", saveIds));
 
-  const demoProfessionalSlugs = ["test-sg-solutions", "test-plomeros-del-valle", "test-conta-clara", "test-limpieza-total", "test-web-norte", "test-redes-central", "test-muebles-barrantes", "test-vet-en-casa"];
+  const demoProfessionalSlugs = ["test-redes-bahia", "test-plomeros-del-valle", "test-conta-clara", "test-limpieza-total", "test-web-norte", "test-redes-central", "test-muebles-barrantes", "test-vet-en-casa"];
   const demoPros = demoProfessionalSlugs
     .map((slug) => bySlug.get(slug))
     .filter(Boolean);
@@ -550,7 +550,7 @@ async function main() {
   }))));
 
   const bookings = [
-    ["test-sg-solutions", "Instalacion de red WiFi y mejora de cobertura en oficina", "confirmed", 1, "10:00", "SG Solutions"],
+    ["test-redes-bahia", "Instalacion de red WiFi y mejora de cobertura en oficina", "confirmed", 1, "10:00", "SG Solutions"],
     ["test-plomeros-del-valle", "Revision de fuga en cocina y cambio de llave", "pending", 2, "14:00", "Plomeros del Valle"],
     ["test-limpieza-total", "Limpieza profunda de apartamento antes de entrega", "completed", 5, "08:00", "Limpieza Total CR"],
     ["test-conta-clara", "Asesoria para orden contable mensual", "pending", 4, "11:00", "Conta Clara"],
@@ -725,7 +725,7 @@ async function main() {
         );
 
     const messageIds = {
-      "test-sg-solutions": [
+      "test-redes-bahia": [
         "b5100000-0000-4000-8000-000000000001",
         "b5100000-0000-4000-8000-000000000002",
         "b5100000-0000-4000-8000-000000000003",
@@ -753,7 +753,7 @@ async function main() {
   }
 
   const conv1 = await conversation({
-    proSlug: "test-sg-solutions",
+    proSlug: "test-redes-bahia",
     subject: "Redes e internet",
     last: "Claro, podemos revisar cobertura y dejarle una propuesta.",
     unread: 2,
@@ -794,7 +794,7 @@ async function main() {
 
   await must("insert reviews", supabase.from("reviews").insert([
     { professional_id: isaacPro.id, client_id: clientA.id, rating: 5, comment: "Excelente trabajo. La página quedó clara, rápida y lista para recibir clientes.", job_title: "Sitio web para negocio local", client_name_snapshot: "Cliente Demo", client_email_snapshot: "cliente.demo@contratacr.com", created_at: iso(7), created_app_environment: demo, created_source_host: "mobile-test-seed" },
-    { professional_id: bySlug.get("test-sg-solutions")?.id, client_id: isaac.id, rating: 5, comment: "Muy buen soporte técnico. Mejoraron la señal WiFi y explicaron todo con claridad.", job_title: "Mejora de red WiFi", client_name_snapshot: isaac.full_name, client_email_snapshot: isaac.email, created_at: iso(6), created_app_environment: demo, created_source_host: "mobile-test-seed" },
+    { professional_id: bySlug.get("test-redes-bahia")?.id, client_id: isaac.id, rating: 5, comment: "Muy buen soporte técnico. Mejoraron la señal WiFi y explicaron todo con claridad.", job_title: "Mejora de red WiFi", client_name_snapshot: isaac.full_name, client_email_snapshot: isaac.email, created_at: iso(6), created_app_environment: demo, created_source_host: "mobile-test-seed" },
     { professional_id: bySlug.get("test-limpieza-total")?.id, client_id: isaac.id, rating: 5, comment: "La limpieza fue puntual y muy detallada. Excelente para apartamentos y oficinas.", job_title: "Limpieza profunda", client_name_snapshot: isaac.full_name, client_email_snapshot: isaac.email, created_at: iso(4), created_app_environment: demo, created_source_host: "mobile-test-seed" },
   ].filter((review) => review.professional_id)));
 

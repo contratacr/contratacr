@@ -5,6 +5,7 @@ import { confirmarSalidaSinGuardar } from "@/lib/confirmar-salida";
 import { lockBodyScroll } from "@/lib/body-scroll-lock";
 
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useAvisosSinLeer } from "@/hooks/use-avisos-sin-leer";
 import { useLocale, useTranslations } from "next-intl";
 import { Headset, ArrowLeft, SendHorizontal, User, Shield, Plus, Clock3, CheckCircle2 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
@@ -127,12 +128,10 @@ function ajustarAlto(textarea: HTMLTextAreaElement | null) {
 }
 
 export function SupportTickets({
-  onUnreadChange,
   initialTicketId,
   initialNewSupport,
   onThreadChange,
 }: {
-  onUnreadChange?: (n: number) => void;
   initialTicketId?: string | null;
   initialNewSupport?: boolean;
   onThreadChange?: (state: SupportThreadState) => void;
@@ -176,7 +175,6 @@ export function SupportTickets({
   // Ticket ids with an UNREAD admin reply (from the notifications table) → drives
   // the per-ticket "Nueva respuesta" marker and the dashboard Soporte badge
   // (via onUnreadChange). Filter tabs keep only their normal item count.
-  const [unread, setUnread] = useState<Set<string>>(new Set());
 
   const [openId, setOpenId] = useState<string | null>(null);
   const [ticket, setTicket] = useState<Ticket | null>(null);
@@ -235,9 +233,21 @@ export function SupportTickets({
     };
   }, [openId, keepLatestMessageVisible]);
 
-  useEffect(() => {
-    onUnreadChange?.(unread.size);
-  }, [onUnreadChange, unread]);
+  // Qué tiquetes traen respuesta sin leer sale de la lista compartida de avisos
+  // sin leer, la misma que alimenta los globos del panel: antes esta pantalla
+  // repetía la consulta filtrada por `support_reply`.
+  const avisosSinLeer = useAvisosSinLeer(user?.id ?? null);
+  const unread = useMemo(() => {
+    const ids = new Set<string>();
+    for (const aviso of avisosSinLeer) {
+      if (aviso.type !== "support_reply") continue;
+      const ticketId = (aviso.data as { ticketId?: string } | null)?.ticketId;
+      if (ticketId) ids.add(ticketId);
+    }
+    return ids;
+  }, [avisosSinLeer]);
+
+
 
   const closeThread = useCallback(() => {
     setOpenId(null);
@@ -245,23 +255,6 @@ export function SupportTickets({
     setMessages([]);
   }, []);
 
-  const loadUnread = useCallback(async () => {
-    if (!user) return;
-    const supabase = createClient();
-    const { data } = await supabase
-      .from("notifications")
-      .select("data")
-      .eq("user_id", user.id)
-      .eq("type", "support_reply")
-      .eq("read", false);
-    const ids = new Set<string>();
-    for (const r of data ?? []) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const tid = (r as any).data?.ticketId as string | undefined;
-      if (tid) ids.add(tid);
-    }
-    setUnread(ids);
-  }, [user]);
 
   const load = useCallback(() => {
     setLoading(true);
@@ -284,8 +277,8 @@ export function SupportTickets({
   }, [claveCache]);
 
   useEffect(() => {
-    if (!openId && !showNewTicketPage) queueMicrotask(() => { load(); loadUnread(); });
-  }, [openId, showNewTicketPage, load, loadUnread]);
+    if (!openId && !showNewTicketPage) queueMicrotask(() => { load(); });
+  }, [openId, showNewTicketPage, load]);
 
   const openTicket = useCallback(async (id: string, { silencioso = false }: { silencioso?: boolean } = {}) => {
     setOpenId(id);
@@ -315,9 +308,8 @@ export function SupportTickets({
       await supabase.from("notifications").update({ read: true })
         .eq("user_id", user.id).eq("type", "support_reply").eq("read", false)
         .contains("data", { ticketId: id });
-      setUnread((prev) => {
-        const next = new Set(prev); next.delete(id); return next;
-      });
+      // La lista compartida se entera por este aviso y el globo baja solo.
+      window.dispatchEvent(new Event("notificationsChanged"));
     }
   }, [user]);
 
@@ -440,7 +432,6 @@ export function SupportTickets({
     setShowNewTicketPage(false);
     setFilter("open");
     load();
-    loadUnread();
   }
 
   if (showNewTicketPage) {
