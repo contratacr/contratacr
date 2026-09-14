@@ -48,7 +48,10 @@ function pantallaSinAvisos(pathname: string | null) {
     || ruta.startsWith("/auth")
     || ruta.startsWith("/reset-password")
     || ruta.startsWith("/olvide-contrasena")
-    || ruta.startsWith("/notificaciones");
+    || ruta.startsWith("/notificaciones")
+    // Estando DENTRO de Mensajes, un aviso flotante de "nuevo mensaje" tapa el
+    // mensaje que acaba de llegar en la pantalla: la conversación ya lo muestra.
+    || ruta.startsWith("/mensajes");
 }
 
 const wait = (ms: number) => new Promise((resolve) => window.setTimeout(resolve, ms));

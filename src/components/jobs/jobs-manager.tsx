@@ -134,7 +134,10 @@ export function JobsManager({ initialJobs, embedded = false, backHref = "/dashbo
     const { error } = await createClient().from("job_applications").update({ status }).eq("id", applicationId);
     if (!error) {
       // The applicant hears about the decision (server re-verifies ownership).
-      void fetch("/api/jobs/notify", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ kind: "application_status", applicationId }) });
+      // El aviso lo crea un disparador de la base al guardar la fila; esta
+      // llamada era una segunda vía que terminaba chocando contra la
+      // comprobación de duplicados del propio endpoint, así que solo gastaba
+      // una petición por acción.
       setJobs((current) => current.map((job) => job.id === jobId ? { ...job, applications: job.applications.map((item) => item.id === applicationId ? { ...item, status } : item) } : job));
       invalidateAppData("jobs");
     }

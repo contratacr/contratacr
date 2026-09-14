@@ -315,7 +315,10 @@ export function JobApplicationForm({
       avisarMomentoDeNotificacion("postulacion");
       if (createdApplication?.id) {
         // The employer hears about the new application (server re-verifies).
-        void fetch("/api/jobs/notify", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ kind: "application", applicationId: createdApplication.id }) });
+        // El aviso lo crea un disparador de la base al guardar la fila; esta
+        // llamada era una segunda vía que terminaba chocando contra la
+        // comprobación de duplicados del propio endpoint, así que solo gastaba
+        // una petición por acción.
       }
     }
     if (insertError) {
