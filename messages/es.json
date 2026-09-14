@@ -1306,7 +1306,8 @@
       "notifications": "Notificaciones",
       "guides": "Guías",
       "soporte": "Soporte",
-      "cuenta": "Cuenta y seguridad"
+      "cuenta": "Cuenta y seguridad",
+      "contactos": "Te buscaron"
     },
     "home": {
       "useEyebrow": "Panel cliente",
@@ -1842,7 +1843,8 @@
       "notifications": "Todo lo que pasó en tu cuenta.",
       "soporte": "Abre un tiquete y te respondemos aquí.",
       "cuenta": "Tu correo, tu contraseña y tu cuenta.",
-      "guides": "Cómo usar ContrataCR paso a paso."
+      "guides": "Cómo usar ContrataCR paso a paso.",
+      "contactos": "Personas que pidieron tu contacto desde tu ficha."
     },
     "profileSections": {
       "photosDesc": "Fotos y trabajos realizados que ven los clientes.",
@@ -4329,5 +4331,10 @@
     "nota": "El profesional ve tu mensaje y te responde por aquí.",
     "enviar": "Enviar mensaje",
     "cerrar": "Cerrar"
+  },
+  "contactos": {
+    "emptyTitle": "Todavía nadie te ha buscado por aquí",
+    "emptyBody": "Cuando alguien pida tu contacto desde tu ficha, su nombre y su teléfono aparecen acá para que le devuelvas la llamada.",
+    "call": "Llamar"
   }
 }

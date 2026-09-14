@@ -1,6 +1,6 @@
 import { expect, test } from "playwright/test";
-import { apiJson, firstProfessionalHref, gotoOK, resetAuth, waitForInteractivePage } from "./helpers";
-import { canRunSeededRegression, ensureRegressionSeed, regressionAdminClient } from "./seed";
+import { apiJson, firstProfessionalHref, gotoOK, loginAs, resetAuth, waitForInteractivePage } from "./helpers";
+import { canRunSeededRegression, ensureRegressionSeed, regressionAdminClient, E2E_USERS } from "./seed";
 
 // Contactar NO exige cuenta: pide nombre y teléfono, y con eso el profesional
 // puede devolver la llamada. Lo que sigue protegido es el listado —ahí los
@@ -73,5 +73,23 @@ test.describe("@seeded contact gate", () => {
       .eq("professional_id", seed.professionalId);
     expect(leads?.length).toBe(1);
     expect(leads?.[0].phone).toBe("+50670000009");
+  });
+
+  test("el profesional ve en su panel a quien lo buscó", async ({ page }) => {
+    const admin = regressionAdminClient();
+    await admin.from("contact_leads").delete().eq("professional_id", seed.professionalId);
+    await admin.from("contact_leads").insert({
+      professional_id: seed.professionalId,
+      name: "Ana Prueba Invitada",
+      phone: "+50670000009",
+      channel: "whatsapp",
+    });
+
+    await loginAs(page, E2E_USERS.professional.email, E2E_USERS.professional.password);
+    await gotoOK(page, "/es/dashboard/profesional?tab=contactos");
+    await expect(page.getByText("Ana Prueba Invitada")).toBeVisible();
+    await expect(page.getByText("+50670000009")).toBeVisible();
+    // Lo que hace falta es devolverle la llamada: los dos botones son eso.
+    await expect(page.getByRole("link", { name: /WhatsApp/i }).first()).toBeVisible();
   });
 });

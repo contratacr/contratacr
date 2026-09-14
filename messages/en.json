@@ -1306,7 +1306,8 @@
       "guides": "Guides",
       "notifications": "Notifications",
       "soporte": "Support",
-      "cuenta": "Account & security"
+      "cuenta": "Account & security",
+      "contactos": "They asked for you"
     },
     "home": {
       "useEyebrow": "Client panel",
@@ -1440,7 +1441,8 @@
       "notifications": "Everything that happened in your account.",
       "soporte": "Open a ticket and we answer you here.",
       "cuenta": "Your email, your password and your account.",
-      "guides": "How to use ContrataCR step by step."
+      "guides": "How to use ContrataCR step by step.",
+      "contactos": "People who asked for your contact from your profile."
     },
     "profileSections": {
       "photosDesc": "Photos and completed work clients can see.",
@@ -4329,5 +4331,10 @@
     "nota": "The professional sees your message and replies here.",
     "enviar": "Send message",
     "cerrar": "Close"
+  },
+  "contactos": {
+    "emptyTitle": "Nobody has asked for you yet",
+    "emptyBody": "When someone asks for your contact from your profile, their name and phone show up here so you can call them back.",
+    "call": "Call"
   }
 }
