@@ -286,9 +286,7 @@ export function AccountSecuritySection({ showHeading = true }: { showHeading?: b
         <div className="border-t border-[#eef3f7] pt-4 first:border-t-0 first:pt-0">
           <div className="mb-2 flex items-center gap-2">
             <MessageCircle className="h-4 w-4 text-[#6b7280]" />
-            <h3 className="text-sm font-semibold text-[#374151]">
-              {locale === "en" ? "WhatsApp alerts" : "Avisos por WhatsApp"}
-            </h3>
+            <h3 className="text-sm font-semibold text-[#374151]">{t("whatsappHeading")}</h3>
           </div>
           <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-[#e3ebf2] bg-white px-4 py-3 transition-colors hover:border-[#c9dceb]">
             <input
@@ -299,16 +297,9 @@ export function AccountSecuritySection({ showHeading = true }: { showHeading?: b
               className="mt-0.5 h-4 w-4 shrink-0 accent-[#009FD9]"
             />
             <span className="min-w-0 text-sm leading-relaxed text-[#374151]">
-              <span className="block font-semibold text-[#162543]">
-                {locale === "en"
-                  ? "Send me reminders on WhatsApp"
-                  : "Quiero recibir avisos por WhatsApp"}
-              </span>
+              <span className="block font-semibold text-[#162543]">{t("whatsappOptIn")}</span>
               <span className="mt-0.5 block text-[13px] text-[#68778d]">
-                {locale === "en"
-                  ? "Only about your own activity — a request waiting, an application nobody opened. Never promotions. You can turn it off whenever you want."
-                  : "Solo sobre lo tuyo: una solicitud esperando, una postulación que nadie abrió. Nunca promociones. Podés apagarlo cuando querás."}
-                {telefonoDelPerfil ? ` (${telefonoDelPerfil})` : ""}
+                {t("whatsappOptInHelp")}{telefonoDelPerfil ? ` (${telefonoDelPerfil})` : ""}
               </span>
             </span>
           </label>

@@ -503,8 +503,8 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
           <PanelEmptyState
             plano
             icon={AlertTriangle}
-            title={locale === "en" ? "We could not load your notifications" : "No pudimos cargar tus notificaciones"}
-            description={locale === "en" ? "Check your connection and try again." : "Revisá tu conexión e intentá de nuevo."}
+            title={t("loadErrorTitle")}
+            description={t("loadErrorBody")}
             className={cn("px-5 py-12", scope === "all" ? altoDeLaTarjeta : "min-h-[16rem] sm:min-h-[18rem]")}
             action={(
               <button
@@ -512,7 +512,7 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
                 onClick={() => { setBusy(true); void loadNotifications(); }}
                 className="inline-flex items-center justify-center rounded-full bg-[#009FD9] px-5 text-sm font-bold text-white transition-colors hover:bg-[#0089bb]"
               >
-                {locale === "en" ? "Try again" : "Reintentar"}
+                {t("loadErrorRetry")}
               </button>
             )}
           />

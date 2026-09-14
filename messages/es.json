@@ -2857,7 +2857,10 @@
     "errNewLength": "La nueva contraseña debe tener al menos 8 caracteres.",
     "errMismatch": "Las contraseñas nuevas no coinciden.",
     "errValidate": "No pudimos validar tu cuenta. Vuelve a iniciar sesión.",
-    "errWrongPassword": "Tu contraseña actual no es correcta."
+    "errWrongPassword": "Tu contraseña actual no es correcta.",
+    "whatsappHeading": "Avisos por WhatsApp",
+    "whatsappOptIn": "Quiero recibir avisos por WhatsApp",
+    "whatsappOptInHelp": "Solo sobre lo tuyo: una solicitud esperando, una postulación que nadie abrió. Nunca promociones. Podés apagarlo cuando querás."
   },
   "closeAccount": {
     "reasonRequired": "Cuéntanos el motivo.",
@@ -3267,7 +3270,10 @@
     "week7Group": "Últimos 7 días",
     "month30Group": "Últimos 30 días",
     "groupNew": "Nuevas",
-    "groupEarlier": "Anteriores"
+    "groupEarlier": "Anteriores",
+    "loadErrorTitle": "No pudimos cargar tus notificaciones",
+    "loadErrorBody": "Revisá tu conexión e intentá de nuevo.",
+    "loadErrorRetry": "Reintentar"
   },
   "projects": {
     "title": "Cuéntanos qué necesitas",
