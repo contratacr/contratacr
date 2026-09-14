@@ -1,0 +1,70 @@
+name: Vigilancia de producción
+
+# Un vistazo a www.contratacr.com cada tres horas: que la portada, /buscar, los
+# servicios, el mapa del sitio y /api/health estén en pie Y que la base siga
+# contestando (una página que responde 200 pero sin datos cuenta como caída).
+#
+# No escribe nada en ningún lado, no toca Supabase y son cinco peticiones por
+# corrida. Si algo falla avisa por Telegram —y GitHub manda su correo de siempre
+# cuando una tarea programada falla—.
+
+on:
+  schedule:
+    - cron: "0 */3 * * *"
+  workflow_dispatch:
+    inputs:
+      url:
+        description: "Dirección a revisar (por omisión, producción)."
+        required: false
+        type: string
+
+concurrency:
+  group: vigilancia-produccion
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  vistazo:
+    name: Vistazo a producción
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+
+      - name: Mirar producción
+        id: mirar
+        run: node scripts/ci/vigilar-produccion.mjs "${{ inputs.url || 'https://www.contratacr.com' }}"
+
+      - name: Avisar por Telegram
+        # Solo cuando algo falló. Un aviso de "todo bien" cada tres horas se
+        # vuelve ruido y en dos días deja de leerse.
+        if: failure()
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          RESUMEN: ${{ steps.mirar.outputs.resumen }}
+          CORRIDA: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          # Mientras el bot no esté configurado no hay aviso que mandar, y una
+          # falla aquí taparía la falla de verdad, que ya está en el registro.
+          if [ -z "${TELEGRAM_BOT_TOKEN:-}" ] || [ -z "${TELEGRAM_CHAT_ID:-}" ]; then
+            echo "::warning::Telegram no está configurado; el aviso queda solo en el correo de GitHub."
+            exit 0
+          fi
+          texto="${RESUMEN:-🔴 ContrataCR: la vigilancia falló}
+$CORRIDA"
+          curl -sS --max-time 30 -X POST \
+            "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+            --data-urlencode "chat_id=${TELEGRAM_CHAT_ID}" \
+            --data-urlencode "text=${texto}" \
+            --data-urlencode "disable_web_page_preview=true" \
+            -o /dev/null -w 'Telegram respondió %{http_code}\n'
