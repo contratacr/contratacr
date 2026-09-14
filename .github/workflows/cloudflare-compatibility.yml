@@ -199,7 +199,15 @@ jobs:
           fs.writeFileSync("worker-secrets.json", JSON.stringify(secrets));
           console.log(`Prepared ${Object.keys(secrets).length} Worker runtime secrets.`);
           NODE
-          npx wrangler secret bulk worker-secrets.json --name "$EFFECTIVE_WORKER_NAME"
+          # Cloudflare rechaza el cambio de secretos cuando el Worker tiene una
+          # versión subida que todavía no está desplegada (queda así si una
+          # corrida anterior se cayó entre el subir y el desplegar). Volver a
+          # desplegar deja la última versión en línea y el segundo intento pasa.
+          if ! npx wrangler secret bulk worker-secrets.json --name "$EFFECTIVE_WORKER_NAME"; then
+            echo "Los secretos no entraron; se vuelve a desplegar la última versión y se reintenta."
+            npx wrangler deploy --name "$EFFECTIVE_WORKER_NAME"
+            npx wrangler secret bulk worker-secrets.json --name "$EFFECTIVE_WORKER_NAME"
+          fi
 
       - name: Route test traffic to Worker
         if: ${{ env.EFFECTIVE_MODE == 'test-cutover' && env.EFFECTIVE_TARGET_ENVIRONMENT == 'test' && env.EFFECTIVE_WORKER_NAME == 'contratacr-preview' }}
