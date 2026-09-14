@@ -77,14 +77,6 @@ const ids = {
 };
 
 
-const PROVINCE_IDS = { "san jose": "sj", alajuela: "al", cartago: "ca", heredia: "he", guanacaste: "gu", puntarenas: "pu", limon: "li" };
-function provinceIdFromLabel(value) {
-  if (typeof value !== "string") return null;
-  const normalized = value.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-  if (/^[a-z]{2}$/.test(normalized)) return normalized;
-  return PROVINCE_IDS[normalized] || null;
-}
-
 async function must(label, promise) {
   const { data, error } = await promise;
   if (error) throw new Error(`${label}: ${error.message}`);
@@ -761,7 +753,7 @@ async function main() {
 
   await must("notifications", supabase.from("notifications").upsert([
     { id: ids.notifications[0], user_id: c.profile.id, type: "direct_message", title: "Mensaje de Redes Bahía", message: "Tienes una respuesta sobre la red de oficina.", data: { regressionSeed: SEED, push_suppressed: true, link: `/mensajes/${ids.conversations[0]}` }, read: false, created_at: iso(-1) },
-    { id: ids.notifications[1], user_id: s.profile.id, type: "direct_message", title: "Mensaje de ContrataCR", message: "Tienes una propuesta sobre tu página de servicios.", data: { regressionSeed: SEED, push_suppressed: true, link: `/mensajes/${ids.conversations[1]}` }, read: false, created_at: iso(-1) },
+    { id: ids.notifications[1], user_id: s.profile.id, type: "direct_message", title: "Mensaje de Estudio Delta", message: "Tienes una propuesta sobre tu página de servicios.", data: { regressionSeed: SEED, push_suppressed: true, link: `/mensajes/${ids.conversations[1]}` }, read: false, created_at: iso(-1) },
   ], { onConflict: "id" }));
   await must("suppress deterministic notification outbox", supabase
     .from("notification_push_outbox")

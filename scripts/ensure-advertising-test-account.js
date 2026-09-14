@@ -5,9 +5,11 @@ const { createClient } = require("@supabase/supabase-js");
 const TEST_PROJECT_REF = "oqheayqqprpciqdvdaqo";
 const PROD_PROJECT_REF = "kskueodxaksxvjrysouw";
 const EMAIL = "publicidad@contratacr.test";
-const SOURCE_PROFILE_ID = "048f1b3a-23c0-41bc-8728-10f8aed70fdb";
+// Las cuentas de prueba, desde el archivo compartido.
+const ACTORES = require("./actores-de-regresion.json");
+const SOURCE_PROFILE_ID = ACTORES.cliente.profileId;
 const SOURCE_PROFESSIONAL_ID = "ae9caa2b-1fca-4411-9aeb-7736f5bbf42f";
-const COUNTERPART_PROFILE_ID = "347f5202-8b3e-4c11-8db8-1060ea5e487d";
+const COUNTERPART_PROFILE_ID = ACTORES.profesional.profileId;
 const COUNTERPART_PROFESSIONAL_ID = "988428c7-a0b6-4d9e-a9b8-e0209a1ca296";
 const SEED = "manual-advertising-account-v2";
 const PROFESSIONAL_ID = stableUuid("advertising-professional");
@@ -160,7 +162,7 @@ async function main() {
   }, { onConflict: "id" }));
 
   // Remove only this manual fixture's old connection/activity side effects
-  // before refreshing it. This prevents reruns from notifying SG Solutions or
+  // before refreshing it. This prevents reruns from notifying Redes Bahía or
   // accumulating trigger-created rows while keeping all canonical pair data.
   await must("old advertising follows", admin.from("professional_follows")
     .delete().or(`follower_id.eq.${user.id},professional_id.eq.${PROFESSIONAL_ID}`));
@@ -413,7 +415,7 @@ async function main() {
       client_id: advertisingIsClient ? user.id : COUNTERPART_PROFILE_ID,
       booking_id: bookings[index % Math.max(bookings.length, 1)]?.id || null,
       project_id: projects[index % Math.max(projects.length, 1)]?.id || null,
-      client_name_snapshot: advertisingIsClient ? "Publicidad ContrataCR" : "SG Solutions",
+      client_name_snapshot: advertisingIsClient ? "Publicidad ContrataCR" : ACTORES.profesional.negocio,
       client_email_snapshot: advertisingIsClient ? EMAIL : "e2e.pro@contratacr.test",
     };
   }));

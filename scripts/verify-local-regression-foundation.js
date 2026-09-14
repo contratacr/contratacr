@@ -22,20 +22,14 @@ if (
 
 const admin = createClient(url, serviceRole, { auth: { autoRefreshToken: false, persistSession: false } });
 const anonymous = createClient(url, anonKey, { auth: { autoRefreshToken: false, persistSession: false } });
-const expected = [
-  {
-    profileId: "048f1b3a-23c0-41bc-8728-10f8aed70fdb",
-    professionalId: "ae9caa2b-1fca-4411-9aeb-7736f5bbf42f",
-    email: "e2e.client@contratacr.test",
-    businessName: "ContrataCR",
-  },
-  {
-    profileId: "347f5202-8b3e-4c11-8db8-1060ea5e487d",
-    professionalId: "988428c7-a0b6-4d9e-a9b8-e0209a1ca296",
-    email: "e2e.pro@contratacr.test",
-    businessName: "SG Solutions",
-  },
-];
+// La misma pareja inventada que siembra el arranque local.
+const ACTORES = require("./actores-de-regresion.json");
+const expected = [ACTORES.cliente, ACTORES.profesional].map((actor) => ({
+  profileId: actor.profileId,
+  professionalId: actor.professionalId,
+  email: actor.correo,
+  businessName: actor.negocio,
+}));
 
 function assert(condition, message) {
   if (!condition) throw new Error(message);

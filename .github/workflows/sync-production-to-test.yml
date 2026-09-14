@@ -122,7 +122,7 @@ jobs:
           rm -rf "$mirror" "$RUNNER_TEMP/production-test-mirror.tar.gz"
 
       - name: Upload short-lived encrypted mirror
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: production-test-mirror-${{ github.run_id }}
           path: ${{ runner.temp }}/production-test-mirror.tar.gz.gpg
@@ -168,7 +168,7 @@ jobs:
         run: bash scripts/ci/install-postgres-client.sh
 
       - name: Download encrypted mirror
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: production-test-mirror-${{ github.run_id }}
           path: ${{ runner.temp }}
