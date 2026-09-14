@@ -5,7 +5,6 @@ import { useTranslations } from "next-intl";
 import { CalendarDays } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { BookingModal } from "./booking-modal";
-import { ClientRegistrationModal } from "@/components/auth/client-registration-modal";
 import { SelfActionModal, SELF_MSG } from "@/components/professionals/self-action-modal";
 import { useAuth } from "@/hooks/use-auth";
 import type { ProfessionalCardData } from "@/lib/data/mock-professionals";
@@ -29,7 +28,6 @@ export function BookingButton({
   label,
 }: BookingButtonProps) {
   const { user } = useAuth();
-  const [showRegistration, setShowRegistration] = useState(false);
   const [showBooking, setShowBooking] = useState(false);
   const [showSelf, setShowSelf] = useState(false);
   const t = useTranslations("booking");
@@ -40,13 +38,11 @@ export function BookingButton({
   const isOwn = !!user && !!professional.profileId && user.id === professional.profileId;
 
   function handleClick() {
-    if (isOwn) {
-      setShowSelf(true);
-    } else if (user) {
-      setShowBooking(true);
-    } else {
-      setShowRegistration(true);
-    }
+    // Sin cuenta también se solicita: el servidor acepta la reserva de un
+    // invitado y le manda después un enlace para crear la cuenta. Exigir el
+    // registro ANTES es lo que dejaba el embudo en cero.
+    if (isOwn) setShowSelf(true);
+    else setShowBooking(true);
   }
 
   return (
@@ -56,18 +52,7 @@ export function BookingButton({
         {label ?? t("requestService")}
       </Button>
 
-      {/* Step 1: inline registration for non-logged-in users */}
-      <ClientRegistrationModal
-        open={showRegistration}
-        onClose={() => setShowRegistration(false)}
-        onSuccess={() => {
-          setShowRegistration(false);
-          setShowBooking(true);
-        }}
-        professionalName={professional.fullName}
-      />
-
-      {/* Step 2: actual booking (for logged-in or post-registration) */}
+      {/* La reserva, con o sin cuenta */}
       <BookingModal
         professional={professional}
         categoryName={categoryName}

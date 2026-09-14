@@ -8,8 +8,6 @@ import { fetchAvailabilityBatched } from "@/lib/availability-batch";
 import { useTranslations, useLocale } from "next-intl";
 import { CalendarDays, Check, ChevronDown, ChevronLeft, ChevronRight, MapPin, Video } from "lucide-react";
 import { useRouter } from "@/i18n/navigation";
-import { ClientRegistrationModal } from "@/components/auth/client-registration-modal";
-import { useAuth } from "@/hooks/use-auth";
 import { isTooSoonCR } from "@/lib/time-cr";
 import { SelfActionModal, SELF_MSG } from "./self-action-modal";
 import type { ProfessionalCardData } from "@/lib/data/mock-professionals";
@@ -159,10 +157,7 @@ export function ProfessionalSchedule({ professional, categoryName, searchedPlace
   // booking context (which service the request is about), not to hide hours.
   const slots = liveSlots.filter((s) => !s.locationId?.startsWith("cov_"));
   const hasInitialDisplayableSlots = allSlots.some((s) => !s.locationId?.startsWith("cov_"));
-  const { user } = useAuth();
-  const [showRegistration, setShowRegistration] = useState(false);
   const router = useRouter();
-  const [preset, setPreset] = useState<ScheduleSlot | null>(null);
   const [offset, setOffset] = useState(0);
   const locationMenuRef = useRef<HTMLDivElement>(null);
   const [locationMenuOpen, setLocationMenuOpen] = useState(false);
@@ -743,9 +738,14 @@ export function ProfessionalSchedule({ professional, categoryName, searchedPlace
       locale,
       categoryId: slot.categoryId ?? activeCategory ?? null,
     });
-    setPreset(slot);
-    if (user) irAReservar(slot);
-    else setShowRegistration(true);
+    // Sin cuenta TAMBIÉN se reserva. Pedir registro antes de dejar hacer lo
+    // único a lo que se vino es lo que tenía el embudo en cero: entre el
+    // 1 de agosto y hoy, 50 personas se fueron por WhatsApp y ninguna terminó
+    // una reserva; diez de las doce que la empezaron no tenían sesión. El
+    // servidor siempre aceptó la reserva de un invitado —guarda nombre,
+    // teléfono y correo, y manda un enlace para crear la cuenta después—: el
+    // muro estaba solo aquí.
+    irAReservar(slot);
   }
 
   // La reserva es una PÁGINA, no una capa sobre esta pantalla: se navega con el
@@ -786,22 +786,8 @@ export function ProfessionalSchedule({ professional, categoryName, searchedPlace
       locale,
       categoryId: activeCategory ?? null,
     });
-    setPreset(null);
-    if (user) irAReservar(null);
-    else setShowRegistration(true);
+    irAReservar(null);
   }
-
-  // Shared booking modals — rendered in every branch that can book.
-  const bookingModals = (
-    <>
-      <ClientRegistrationModal
-        open={showRegistration}
-        onClose={() => setShowRegistration(false)}
-        onSuccess={() => { setShowRegistration(false); irAReservar(preset); }}
-        professionalName={professional.fullName}
-      />
-    </>
-  );
 
   // Self-action notice — rendered in every branch so the pro's own card shows the
   // same buttons as a client's but blocks the action with a friendly explanation.
@@ -1134,8 +1120,7 @@ export function ProfessionalSchedule({ professional, categoryName, searchedPlace
             </div>
           )}
         </div>
-        {bookingModals}
-        {selfModal}
+                {selfModal}
       </>
     );
   }
@@ -1171,8 +1156,7 @@ export function ProfessionalSchedule({ professional, categoryName, searchedPlace
         </div>
       </div>
 
-      {bookingModals}
-      {selfModal}
+            {selfModal}
     </>
   );
 }
