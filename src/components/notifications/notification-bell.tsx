@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { Bell, ArrowRight, CheckCheck } from "lucide-react";
@@ -13,6 +13,7 @@ import { cacheNotifications, readCachedNotifications, uniqueNotifications } from
 import { NotificationSourceIcon } from "@/components/notifications/notification-source-icon";
 import { PanelEmptyState } from "@/components/ui/content-loading";
 import { useActorPhotos } from "@/lib/notifications/use-actor-photos";
+import { pedirAvisos, pedirTotalSinLeer, suscribirseAAvisos } from "@/lib/notifications-live";
 import { cn, formatRelativeOrDate } from "@/lib/utils";
 import { useNativeApp } from "@/hooks/use-native-app";
 
@@ -45,7 +46,6 @@ export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "o
   const nativeApp = useNativeApp();
   const menuRef = useRef<HTMLDivElement | null>(null);
   const menuPanelRef = useRef<HTMLDivElement | null>(null);
-  const instanceId = useId().replace(/[^a-zA-Z0-9_-]/g, "");
 
   const notifications = useMemo(
     () => notificationState.userId === user?.id ? notificationState.items : readCachedNotifications(user?.id) ?? [],
@@ -78,34 +78,25 @@ export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "o
 
   const fetchNotifications = useCallback(() => {
     if (!user) return;
-    const supabase = createClient();
-    supabase
-      .from("notifications")
-      .select("*")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false })
-      .limit(20)
-      .then(({ data }) => {
-        const next = uniqueNotifications(data ?? []);
-        setNotificationState({ userId: user.id, items: next });
-        cacheNotifications(user.id, next);
-        setHasSyncedNotifications(true);
-        // Si la página de 20 no vino llena, ya tenemos TODOS los avisos de esta
-        // persona: contarlos aquí evita una segunda consulta por cada carga.
-        // Solo cuando viene llena puede haber más sin leer de los que se ven.
-        if (next.length < 20) {
-          setUnreadTotal(next.filter((item) => !item.read).length);
-          return;
-        }
-        void supabase
-          .from("notifications")
-          .select("id", { count: "exact", head: true })
-          .eq("user_id", user.id)
-          .eq("read", false)
-          .then(({ count, error }) => {
-            if (!error && typeof count === "number") setUnreadTotal(count);
-          });
+    // La consulta es compartida: la campana se dibuja dos veces —escritorio y
+    // teléfono— y antes cada copia pedía su propia página de veinte.
+    const userId = user.id;
+    void pedirAvisos(userId).then((filas) => {
+      const next = uniqueNotifications(filas);
+      setNotificationState({ userId, items: next });
+      cacheNotifications(userId, next);
+      setHasSyncedNotifications(true);
+      // Si la página de 20 no vino llena, ya tenemos TODOS los avisos de esta
+      // persona: contarlos aquí evita una segunda consulta por cada carga.
+      // Solo cuando viene llena puede haber más sin leer de los que se ven.
+      if (next.length < 20) {
+        setUnreadTotal(next.filter((item) => !item.read).length);
+        return;
+      }
+      void pedirTotalSinLeer(userId).then((total) => {
+        if (total !== null) setUnreadTotal(total);
       });
+    });
   }, [user]);
 
   useEffect(() => {
@@ -130,41 +121,16 @@ export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "o
     cacheNotifications(user.id, notifications);
   }, [hasSyncedNotifications, notificationState.userId, notifications, user?.id]);
 
+  // Un solo canal de tiempo real para todas las campanas de la pantalla.
   useEffect(() => {
     if (!user) return;
-    const supabase = createClient();
-    const channel = supabase
-      .channel(`notifications-${user.id}-${instanceId}`)
-      .on(
-        "postgres_changes",
-        { event: "INSERT", schema: "public", table: "notifications", filter: `user_id=eq.${user.id}` },
-        (payload) => {
-          updateNotifications((prev) => uniqueNotifications([payload.new as Notification, ...prev]));
-          window.dispatchEvent(new CustomEvent("notificationsChanged"));
-        },
-      )
-      .on(
-        "postgres_changes",
-        { event: "UPDATE", schema: "public", table: "notifications", filter: `user_id=eq.${user.id}` },
-        (payload) => {
-          const updated = payload.new as Notification;
-          updateNotifications((prev) => prev.map((n) => (n.id === updated.id ? updated : n)));
-          window.dispatchEvent(new CustomEvent("notificationsChanged"));
-        },
-      )
-      .on(
-        "postgres_changes",
-        { event: "DELETE", schema: "public", table: "notifications", filter: `user_id=eq.${user.id}` },
-        (payload) => {
-          const deleted = payload.old as Pick<Notification, "id">;
-          updateNotifications((prev) => prev.filter((n) => n.id !== deleted.id));
-          window.dispatchEvent(new CustomEvent("notificationsChanged"));
-        },
-      )
-      .subscribe();
-
-    return () => { supabase.removeChannel(channel); };
-  }, [user, fetchNotifications, instanceId, updateNotifications]);
+    return suscribirseAAvisos(user.id, (cambio) => {
+      if (cambio.tipo === "insert") updateNotifications((prev) => uniqueNotifications([cambio.aviso, ...prev]));
+      else if (cambio.tipo === "update") updateNotifications((prev) => prev.map((n) => (n.id === cambio.aviso.id ? cambio.aviso : n)));
+      else updateNotifications((prev) => prev.filter((n) => n.id !== cambio.id));
+      window.dispatchEvent(new CustomEvent("notificationsChanged"));
+    });
+  }, [user, updateNotifications]);
 
   useEffect(() => {
     function onChanged() { fetchNotifications(); }
