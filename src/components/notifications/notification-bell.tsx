@@ -90,14 +90,21 @@ export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "o
         setNotificationState({ userId: user.id, items: next });
         cacheNotifications(user.id, next);
         setHasSyncedNotifications(true);
-      });
-    void supabase
-      .from("notifications")
-      .select("id", { count: "exact", head: true })
-      .eq("user_id", user.id)
-      .eq("read", false)
-      .then(({ count, error }) => {
-        if (!error && typeof count === "number") setUnreadTotal(count);
+        // Si la página de 20 no vino llena, ya tenemos TODOS los avisos de esta
+        // persona: contarlos aquí evita una segunda consulta por cada carga.
+        // Solo cuando viene llena puede haber más sin leer de los que se ven.
+        if (next.length < 20) {
+          setUnreadTotal(next.filter((item) => !item.read).length);
+          return;
+        }
+        void supabase
+          .from("notifications")
+          .select("id", { count: "exact", head: true })
+          .eq("user_id", user.id)
+          .eq("read", false)
+          .then(({ count, error }) => {
+            if (!error && typeof count === "number") setUnreadTotal(count);
+          });
       });
   }, [user]);
 

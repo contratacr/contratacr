@@ -1182,14 +1182,20 @@ export default function DashboardPage() {
       .eq("user_id", user.id)
       .eq("read", false)
       .then(({ data }) => {
-        let pro = 0, cli = 0, neu = 0;
+        let pro = 0, cli = 0, neu = 0, soporte = 0;
         for (const n of data ?? []) {
-          const ctx = notificationContext(n.type as string);
+          const tipo = n.type as string;
+          if (tipo === "support_reply") soporte++;
+          const ctx = notificationContext(tipo);
           if (ctx === "professional") pro++;
           else if (ctx === "client") cli++;
           else neu++;
         }
         setUnreadCount((mode === "offer" ? pro : cli) + neu);
+        // El globo de Soporte sale de esta misma lista: los avisos sin leer ya
+        // vienen con su tipo, así que contarlos aparte era una consulta de más
+        // en cada carga del panel y en cada aviso nuevo.
+        setSupportUnread(soporte);
       });
     loadUnread();
     window.addEventListener("notificationsChanged", loadUnread);
@@ -1200,24 +1206,6 @@ export default function DashboardPage() {
 
   // Unread opportunities deserve a front-door modal even when the user did not
   // arrive through the explicit post-login redirect.
-  // Unread support replies: badge on the Soporte sidebar item.
-  useEffect(() => {
-    if (!user) return;
-    const supabase = createClient();
-    const loadSupportUnread = () => supabase
-      .from("notifications")
-      .select("id", { count: "exact", head: true })
-      .eq("user_id", user.id)
-      .eq("type", "support_reply")
-      .eq("read", false)
-      .then(({ count }) => setSupportUnread(count ?? 0));
-    loadSupportUnread();
-    window.addEventListener("notificationsChanged", loadSupportUnread);
-    return () => {
-      window.removeEventListener("notificationsChanged", loadSupportUnread);
-    };
-  }, [user]);
-
   // Inconsistent state ONLY: metadata says this account can offer, but no pro row
   // exists yet. A freshly-created pro account can lag (replication/RLS), retry a
   // few times, then send them to finish the professional profile. A genuine seeker

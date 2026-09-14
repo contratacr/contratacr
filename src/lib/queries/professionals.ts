@@ -333,33 +333,36 @@ export async function searchProfessionals(
   // pueden guardar: dos personas mirando la misma zona comparten el resultado
   // durante cinco minutos. Solo `fresh` —el asistente rescatando una ficha
   // recién publicada— se salta el guardado.
-  if (options.fresh) {
-    const results = await searchProfessionalsUncached(normalized);
-    const shouldRecoverNationwideVideoRead =
-      results.length === 0
-      && normalized.modalities?.[0] !== "in_person"
-      && !!normalized.categoryId
-      && normalized.categoryId !== "todas"
-      && supportsVideoConsultCategory(normalized.categoryId)
-      && (normalized.bounds != null || (typeof normalized.nearLat === "number" && typeof normalized.nearLng === "number"));
-    if (!shouldRecoverNationwideVideoRead) return results;
+  const results = options.fresh
+    ? await searchProfessionalsUncached(normalized)
+    : await searchProfessionalsCached(normalized);
 
-    // Recover with the logically equivalent nationwide branch instead of
+  const shouldRecoverNationwideVideoRead =
+    results.length === 0
+    && normalized.modalities?.[0] !== "in_person"
+    && !!normalized.categoryId
+    && normalized.categoryId !== "todas"
+    && supportsVideoConsultCategory(normalized.categoryId)
+    && (normalized.bounds != null || (typeof normalized.nearLat === "number" && typeof normalized.nearLng === "number"));
+  if (!shouldRecoverNationwideVideoRead) return results;
+
+  // Recover with the logically equivalent nationwide branch instead of
     // repeating the same compound PostgREST location query. A country-wide
     // video provider is location-independent; fetch the requested category
     // without physical filters and retain only providers that explicitly offer
     // video or national coverage. This remains bounded to a single fresh read.
-    const nationwide = await searchProfessionalsUncached({
-      ...normalized,
-      provinceId: undefined,
-      cantonId: undefined,
-      nearLat: undefined,
-      nearLng: undefined,
-      bounds: undefined,
-    });
-    return nationwide.filter((professional) => professional.videoconsulta || professional.coverage?.country);
-  }
-  return searchProfessionalsCached(normalized);
+  const sinUbicacion = {
+    ...normalized,
+    provinceId: undefined,
+    cantonId: undefined,
+    nearLat: undefined,
+    nearLng: undefined,
+    bounds: undefined,
+  };
+  const nationwide = options.fresh
+    ? await searchProfessionalsUncached(sinUbicacion)
+    : await searchProfessionalsCached(sinUbicacion);
+  return nationwide.filter((professional) => professional.videoconsulta || professional.coverage?.country);
 }
 
 const searchProfessionalsCached = unstable_cache(
