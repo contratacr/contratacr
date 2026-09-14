@@ -306,9 +306,21 @@ function normalizeSearchFilters(filters: SearchFilters): SearchFilters {
     priceUnits: priceUnits.length > 0 ? priceUnits : undefined,
     modalities: modalities.length > 0 ? modalities : undefined,
   };
-  if (typeof filters.nearLat === "number" && Number.isFinite(filters.nearLat)) normalized.nearLat = filters.nearLat;
-  if (typeof filters.nearLng === "number" && Number.isFinite(filters.nearLng)) normalized.nearLng = filters.nearLng;
-  if (filters.bounds && Object.values(filters.bounds).every(Number.isFinite)) normalized.bounds = { ...filters.bounds };
+  // Las coordenadas se redondean a tres decimales, que son unos 110 metros.
+  // Sin esto, mover el mapa un píxel cambiaba la llave de la búsqueda y ninguna
+  // se podía guardar: «Buscar en esta área» y «Cerca de mí» pedían dos consultas
+  // frescas SIEMPRE, y el mapa es justo lo que más se repite.
+  const aCuadricula = (valor: number) => Math.round(valor * 1000) / 1000;
+  if (typeof filters.nearLat === "number" && Number.isFinite(filters.nearLat)) normalized.nearLat = aCuadricula(filters.nearLat);
+  if (typeof filters.nearLng === "number" && Number.isFinite(filters.nearLng)) normalized.nearLng = aCuadricula(filters.nearLng);
+  if (filters.bounds && Object.values(filters.bounds).every(Number.isFinite)) {
+    normalized.bounds = {
+      north: aCuadricula(filters.bounds.north),
+      south: aCuadricula(filters.bounds.south),
+      east: aCuadricula(filters.bounds.east),
+      west: aCuadricula(filters.bounds.west),
+    };
+  }
   return normalized;
 }
 
@@ -317,7 +329,11 @@ export async function searchProfessionals(
   options: { fresh?: boolean } = {},
 ): Promise<ProfessionalCardData[]> {
   const normalized = normalizeSearchFilters(filters);
-  if (options.fresh || normalized.bounds || (typeof normalized.nearLat === "number" && typeof normalized.nearLng === "number")) {
+  // Ya redondeadas a la cuadrícula, las búsquedas por área y por cercanía sí se
+  // pueden guardar: dos personas mirando la misma zona comparten el resultado
+  // durante cinco minutos. Solo `fresh` —el asistente rescatando una ficha
+  // recién publicada— se salta el guardado.
+  if (options.fresh) {
     const results = await searchProfessionalsUncached(normalized);
     const shouldRecoverNationwideVideoRead =
       results.length === 0
