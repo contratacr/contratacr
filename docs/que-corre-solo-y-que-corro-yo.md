@@ -16,6 +16,7 @@ despacha a mano desde **Actions → el flujo → Run workflow**.
 | **Migrations drift** | al empujar migraciones a `main`, y todos los días 6:30 a.m. CR | simula las migraciones en test y en producción y avisa si un ambiente quedó atrás | ~2 min |
 | **Supabase backup** | todos los días 2:10 a.m. CR | respaldo completo de producción | ~3 min |
 | **Inactivity reminders** | todos los días 9:00 a.m. CR | manda los avisos de 3 y 7 días | ~1 min + correos |
+| **Regression tests (Safari)** | lunes 5:00 a.m. CR | las pantallas públicas en WebKit, el motor del iPhone | ~8 min de Linux |
 | **Push drain** | cada 10 minutos | vacía la cola de avisos push. Si el ambiente no está configurado se salta solo, sin fallar | segundos |
 
 Eso es todo lo recurrente: unos 25 minutos de Linux por push a `test` y un
@@ -35,8 +36,10 @@ puñado de minutos diarios. Nada de esto escribe en producción salvo el respald
 
 ## Safari (WebKit), a pedido
 
-Las pruebas corren en Chrome de escritorio y en Chrome móvil. Safari se agregó
-como proyecto aparte y **solo corre si lo pedís**:
+Las pruebas corren en Chrome de escritorio y en Chrome móvil en cada push.
+Safari corre **solo los lunes a las 5:00 a.m.**, sobre las pantallas públicas
+(portada, /buscar, ficha, servicios y la regresión visual): unos minutos de
+Linux por semana. Y a mano, cuando querés:
 
 ```
 PLAYWRIGHT_WEBKIT=1 npx playwright test --project=webkit-mobile

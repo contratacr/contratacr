@@ -5,6 +5,11 @@ on:
   push:
     branches:
       - test
+  schedule:
+    # Safari, los lunes a las 5:00 a.m. de Costa Rica. Es el motor del iPhone y
+    # de la app nativa, el único que no corre en cada push; una vez por semana
+    # cuesta unos minutos de Linux y atrapa lo que Chrome no puede ver.
+    - cron: "0 11 * * 1"
 
 concurrency:
   # This workflow only touches the local Supabase stack it starts itself, so it
@@ -121,6 +126,18 @@ jobs:
 
       - name: Build the production application locally
         run: npm run build
+
+      - name: Install Safari for the weekly WebKit pass
+        if: github.event_name == 'schedule'
+        run: npx playwright install --with-deps webkit
+
+      - name: Run the public surfaces in Safari
+        if: github.event_name == 'schedule'
+        env:
+          PLAYWRIGHT_WEBKIT: "1"
+        run: >-
+          npx playwright test --project=webkit-mobile
+          public-smoke search-results professional-profile services recent-visual-regression
 
       - name: Install Playwright browser for a manual release regression
         if: github.event_name == 'workflow_dispatch'
