@@ -2665,28 +2665,11 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                     <span className={mobileDrawerTextClass}>{locale === "en" ? "Admin panel" : "Panel admin"}</span>
                   </Link>
                 )}
-                {!user && (
-                  <>
-                    <Link
-                      href={loginHref}
-                      onClick={() => setMobileOpen(false)}
-                      className={mobileDrawerItemClass}
-                    >
-                      <DrawerIcon><UserRound /></DrawerIcon>
-                      <span className={mobileDrawerTextClass}>{t("login")}</span>
-                    </Link>
-                    {/* Entrar y crear cuenta son dos cosas distintas: quien no
-                        tiene cuenta no debe deducirla desde «Ingresar». */}
-                    <Link
-                      href="/registro"
-                      onClick={() => setMobileOpen(false)}
-                      className={mobileDrawerItemClass}
-                    >
-                      <DrawerIcon><UserRoundPlus /></DrawerIcon>
-                      <span className={mobileDrawerTextClass}>{t("register")}</span>
-                    </Link>
-                  </>
-                )}
+                {/* Entrar a la cuenta NO es un destino más de la lista: es la
+                    acción de la pantalla. Como dos renglones iguales a los demás
+                    —«Ingresar» y «Registrarse»— el menú se leía el doble de
+                    largo de lo que es. Va como un solo botón, separado, y la
+                    pantalla de ingreso ya ofrece crear cuenta ahí mismo. */}
 
                 <div className="mt-1">
                   <button
@@ -2738,20 +2721,41 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                   cuenta. Iban con el mismo peso que «Mis citas» y hacían ver el
                   cajón más largo y más cargado de lo que es. Van al pie, tras
                   una línea, en letra menor y sin el mosaico del icono. */}
-              <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-[#eef2f6] px-2 pt-3">
-                <button
-                  type="button"
-                  onPointerDown={(e) => e.stopPropagation()}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    switchLang(alternateLocale);
-                    setMobileOpen(false);
-                  }}
-                  className="inline-flex items-center gap-2 py-1.5 text-[13px] font-semibold text-[#68778d] transition-colors hover:text-[#162543]"
+              {!user && (
+                <Link
+                  href={loginHref}
+                  onClick={() => setMobileOpen(false)}
+                  className="mt-3 flex h-12 w-full items-center justify-center rounded-full bg-[#009FD9] text-[15px] font-bold text-white transition-colors hover:bg-[#0089bb]"
                 >
-                  <Globe2 className="h-4 w-4" />
-                  {alternateLanguageLabel}
-                </button>
+                  {t("loginOrRegister")}
+                </Link>
+              )}
+
+              {/* El pie no son opciones: son ajustes. El idioma es un conmutador
+                  de dos estados —se ve cuál está puesto—, no un renglón más que
+                  parece llevar a otra pantalla. */}
+              <div className="mt-3 flex items-center justify-between gap-3 border-t border-[#eef2f6] px-1 pt-3">
+                <div className="inline-flex items-center rounded-full bg-[#f1f5f9] p-0.5" role="group" aria-label={locale === "en" ? "Language" : "Idioma"}>
+                  {(["es", "en"] as const).map((idioma) => (
+                    <button
+                      key={idioma}
+                      type="button"
+                      onPointerDown={(e) => e.stopPropagation()}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (idioma !== locale) switchLang(idioma);
+                        setMobileOpen(false);
+                      }}
+                      aria-pressed={idioma === locale}
+                      className={cn(
+                        "min-w-[42px] rounded-full px-3 py-1.5 text-[12px] font-extrabold uppercase tracking-wide transition-colors",
+                        idioma === locale ? "bg-white text-[#162543] shadow-sm" : "text-[#8b98a9] hover:text-[#162543]",
+                      )}
+                    >
+                      {idioma}
+                    </button>
+                  ))}
+                </div>
                 {user && (
                   <button
                     type="button"

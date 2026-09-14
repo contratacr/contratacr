@@ -141,7 +141,8 @@
     "recentClear": "Clear",
     "recentlyViewed": "Recently viewed",
     "publishRequest": "Post what I need",
-    "register": "Sign up"
+    "register": "Sign up",
+    "loginOrRegister": "Log in or sign up"
   },
   "home": {
     "accountDeletion": {

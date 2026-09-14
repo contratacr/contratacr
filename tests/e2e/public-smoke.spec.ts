@@ -71,12 +71,13 @@ test.describe("@smoke public routes", () => {
       const navigation = page.getByRole("dialog", { name: /Men[uú]|Menu/i });
       await expect(page.getByRole("link", { name: /^Servicios$/i }).first()).toBeVisible();
       await expect(page.getByRole("link", { name: /Soporte|Centro de ayuda/i }).first()).toBeVisible();
-      await expect(page.getByRole("link", { name: /Ingresar/i }).first()).toBeVisible();
-      // El navbar ya no lleva "Ofrecer mis servicios" (a8c05f7a): la entrada
-      // pública es Registrarse, y la elección de rol se hace en /registro.
-      const register = navigation.getByRole("link", { name: /Registrarse|Crear cuenta/i }).first();
-      await expect(register).toBeVisible();
-      await expect(register.locator("svg")).toHaveCount(1);
+      // Entrar a la cuenta es UNA acción, no dos renglones más de la lista: el
+      // cajón lleva un solo botón «Ingresar o crear cuenta» y la elección de
+      // rol se hace ya dentro, en /registro.
+      const entrar = navigation.getByRole("link", { name: /Ingresar o crear cuenta|Log in or sign up/i }).first();
+      await expect(entrar).toBeVisible();
+      // Y el idioma es un conmutador, no otra opción de navegación.
+      await expect(navigation.getByRole("group", { name: /Idioma|Language/i })).toBeVisible();
     } else {
       const navigation = page.getByRole("banner");
       await expect(navigation.getByRole("button", { name: /^Servicios$/i }).first()).toBeVisible();

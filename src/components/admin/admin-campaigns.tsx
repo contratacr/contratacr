@@ -11,8 +11,8 @@ const PLANTILLAS = [
     nombre: "Antes de las lluvias",
     subject: "Antes de que llueva fuerte: revisa canoas, techo y electricidad",
     body: "Hola,\n\nSe viene la época de lluvias y es el mejor momento para adelantarse: limpiar canoas, revisar goteras en el techo y asegurarse de que la instalación eléctrica esté en orden.\n\nEn ContrataCR encuentras profesionales verificados con cédula, con reseñas y contacto directo por WhatsApp. Elige el tuyo o publica lo que necesitas y recibe hasta 3 cotizaciones sin compromiso.",
-    ctaLabel: "Ver profesionales",
-    ctaPath: "/es/servicios/electricidad",
+    ctaLabel: "Publicar lo que necesito",
+    ctaPath: "/es/publicar-proyecto",
   },
   {
     id: "fin-de-ano",
@@ -20,15 +20,15 @@ const PLANTILLAS = [
     subject: "Deja la casa lista para diciembre",
     body: "Hola,\n\nDiciembre llega con visitas, reuniones y poco tiempo. Pintura, limpieza profunda, jardinería o esa reparación pendiente: en ContrataCR lo resuelves con profesionales verificados de tu zona.\n\nPublica lo que necesitas y recibe hasta 3 cotizaciones sin compromiso.",
     ctaLabel: "Publicar lo que necesito",
-    ctaPath: "/es/dashboard/profesional?tab=sent_projects&openPublish=1",
+    ctaPath: "/es/publicar-proyecto",
   },
   {
     id: "verano",
     nombre: "Verano",
     subject: "Verano: aire acondicionado, piscina y pintura exterior",
     body: "Hola,\n\nCon el calor llegan los mantenimientos de verano: aire acondicionado, limpieza de piscina y pintura exterior. En ContrataCR encuentras profesionales verificados con cédula y reseñas reales.\n\nElige el tuyo o cuéntanos qué necesitas y recibe hasta 3 cotizaciones.",
-    ctaLabel: "Ver profesionales",
-    ctaPath: "/es/servicios/aire_acondicionado",
+    ctaLabel: "Publicar lo que necesito",
+    ctaPath: "/es/publicar-proyecto",
   },
 ];
 
@@ -55,7 +55,7 @@ export function AdminCampaigns() {
   async function enviar(mode: "test" | "all") {
     if (mode === "all") {
       const { confirmed, value } = await confirm({
-        title: `¿Enviar a ${clientes ?? 0} clientes?`,
+        title: `¿Enviar a ${clientes ?? 0} cuentas?`,
         description: "Se envía de inmediato a todas las cuentas de cliente activas con correo. No se puede deshacer.",
         confirmLabel: "Enviar ahora",
         tone: "danger",
@@ -81,7 +81,7 @@ export function AdminCampaigns() {
     <div className="space-y-6">
       <div>
         <h1 className="flex items-center gap-2 text-2xl font-extrabold text-[#162543]"><Megaphone className="h-6 w-6 text-[#009FD9]" />Campañas por correo</h1>
-        <p className="mt-1 text-sm text-[#68778d]">Avisos de temporada a los clientes registrados. {clientes === null ? "Contando…" : `${clientes} clientes con correo.`}</p>
+        <p className="mt-1 text-sm text-[#68778d]">Avisos de temporada a todas las cuentas registradas, clientes y profesionales: un profesional también contrata. {clientes === null ? "Contando…" : `${clientes} cuentas con correo.`}</p>
       </div>
 
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_380px]">
@@ -102,7 +102,7 @@ export function AdminCampaigns() {
               {enviando === "test" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}Enviarme una prueba{adminEmail ? ` (${adminEmail})` : ""}
             </button>
             <button type="button" disabled={!!enviando || !clientes} onClick={() => void enviar("all")} className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[#009FD9] px-5 text-sm font-bold text-white transition hover:bg-[#0089bb] disabled:opacity-60">
-              {enviando === "all" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Megaphone className="h-4 w-4" />}Enviar a {clientes ?? 0} clientes
+              {enviando === "all" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Megaphone className="h-4 w-4" />}Enviar a {clientes ?? 0} cuentas
             </button>
           </div>
         </div>

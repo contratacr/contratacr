@@ -13,10 +13,13 @@ const MAX_BODY = 4000;
 
 async function listClients() {
   const db = createAdminClient();
+  // TODAS las cuentas, no solo las de rol «cliente»: un profesional también
+  // contrata —necesita un electricista, una niñera, un contador— y dejarlo
+  // fuera era perder a la mitad de la gente registrada justo en el correo que
+  // sirve para que vuelvan.
   const { data } = await db
     .from("profiles")
     .select("id, email, full_name")
-    .eq("role", "client")
     .eq("is_disabled", false)
     .not("email", "is", null)
     .limit(5000);
@@ -32,8 +35,22 @@ function bodyToHtml(body: string, ctaLabel: string, ctaHref: string) {
   const cta = ctaLabel && ctaHref
     ? `<p style="margin:22px 0 8px"><a href="${escapeHtml(ctaHref)}" style="display:inline-block;background:#009FD9;color:#fff;text-decoration:none;font-weight:700;padding:12px 22px;border-radius:999px;font-size:15px">${escapeHtml(ctaLabel)}</a></p>`
     : "";
-  const pie = `<p style="margin:26px 0 0;font-size:12px;line-height:1.5;color:#68778d">Recibes este correo porque tienes una cuenta en ContrataCR. Si no quieres recibir avisos de temporada, responde a este correo con la palabra BAJA.</p>`;
-  return parrafos + cta + pie;
+  // La firma: un correo sin nombre detrás se lee como un envío masivo, que es
+  // justo lo que hace que lo borren sin abrirlo.
+  const firma = `
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:26px 0 0;border-top:1px solid #eef1f5;width:100%">
+      <tr><td style="padding-top:18px;font-family:Arial,Helvetica,sans-serif">
+        <p style="margin:0;font-size:14px;font-weight:bold;color:#162543">Equipo ContrataCR</p>
+        <p style="margin:2px 0 0;font-size:13px;color:#68778d">El mercado de servicios hecho para Costa Rica</p>
+        <p style="margin:8px 0 0;font-size:13px;color:#68778d">
+          <a href="${escapeHtml(APP_URL)}" style="color:#009FD9;text-decoration:none">contratacr.com</a>
+          &nbsp;·&nbsp;
+          <a href="mailto:soporte@contratacr.com" style="color:#009FD9;text-decoration:none">soporte@contratacr.com</a>
+        </p>
+      </td></tr>
+    </table>`;
+  const pie = `<p style="margin:18px 0 0;font-size:12px;line-height:1.5;color:#68778d">Recibes este correo porque tienes una cuenta en ContrataCR. Si no quieres recibir avisos de temporada, responde a este correo con la palabra BAJA.</p>`;
+  return parrafos + cta + firma + pie;
 }
 
 export async function GET() {
@@ -52,7 +69,15 @@ export async function POST(request: Request) {
   if (!subject || !body) return NextResponse.json({ error: "Falta el asunto o el texto." }, { status: 400 });
   const ctaLabel = String(payload.ctaLabel ?? "").trim().slice(0, 60);
   const ctaPath = String(payload.ctaPath ?? "").trim();
-  const ctaHref = ctaPath && ctaPath.startsWith("/") ? `${APP_URL}${ctaPath}` : "";
+  // El enlace viaja MARCADO: sin utm no hay forma de saber si el correo produjo
+  // algo, y una campaña que no se puede medir se repite a ciegas. La marca es la
+  // misma que ya entiende la atribución del app.
+  const campana = subject.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40) || "campana";
+  const conMarca = (ruta: string) => {
+    const separador = ruta.includes("?") ? "&" : "?";
+    return `${APP_URL}${ruta}${separador}utm_source=correo&utm_medium=campana&utm_campaign=${encodeURIComponent(campana)}`;
+  };
+  const ctaHref = ctaPath && ctaPath.startsWith("/") ? conMarca(ctaPath) : "";
   const html = brandedEmailDocument({ title: subject, bodyHtml: bodyToHtml(body, ctaLabel, ctaHref), origin: APP_URL });
   const replyTo = { email: "soporte@contratacr.com", name: "ContrataCR" };
 

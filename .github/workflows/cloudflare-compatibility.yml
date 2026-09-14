@@ -160,6 +160,16 @@ jobs:
           FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
           FIREBASE_CLIENT_EMAIL: ${{ secrets.FIREBASE_CLIENT_EMAIL }}
           FIREBASE_PRIVATE_KEY: ${{ secrets.FIREBASE_PRIVATE_KEY }}
+          # Sin BREVO_API_KEY el Worker no manda UN SOLO correo: el ayudante
+          # devuelve «omitido» y el app sigue como si nada. Lo mismo con las
+          # demás: el paso solo sube las que existen, así que una llave que
+          # todavía no se creó no rompe nada.
+          BREVO_API_KEY: ${{ secrets.BREVO_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          OPENAI_MODEL: ${{ secrets.OPENAI_MODEL }}
+          WHATSAPP_CLOUD_TOKEN: ${{ secrets.WHATSAPP_CLOUD_TOKEN }}
+          WHATSAPP_PHONE_NUMBER_ID: ${{ secrets.WHATSAPP_PHONE_NUMBER_ID }}
+          PUSH_WORKER_SECRET: ${{ secrets.PUSH_WORKER_SECRET }}
         run: |
           node - <<'NODE'
           const fs = require("node:fs");
@@ -189,7 +199,13 @@ jobs:
             "PUSH_DELIVERY_ENABLED",
             "FIREBASE_PROJECT_ID",
             "FIREBASE_CLIENT_EMAIL",
-            "FIREBASE_PRIVATE_KEY"
+            "FIREBASE_PRIVATE_KEY",
+            "BREVO_API_KEY",
+            "OPENAI_API_KEY",
+            "OPENAI_MODEL",
+            "WHATSAPP_CLOUD_TOKEN",
+            "WHATSAPP_PHONE_NUMBER_ID",
+            "PUSH_WORKER_SECRET"
           ];
           const secrets = {};
           for (const name of names) {

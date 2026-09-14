@@ -141,7 +141,8 @@
     "recentClear": "Borrar",
     "recentlyViewed": "Vistos recientemente",
     "publishRequest": "Publicar lo que necesito",
-    "register": "Registrarse"
+    "register": "Registrarse",
+    "loginOrRegister": "Ingresar o crear cuenta"
   },
   "home": {
     "accountDeletion": {
