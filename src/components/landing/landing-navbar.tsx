@@ -2727,7 +2727,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                   onClick={() => setMobileOpen(false)}
                   className="mt-3 flex h-12 w-full items-center justify-center rounded-full bg-[#009FD9] text-[15px] font-bold text-white transition-colors hover:bg-[#0089bb]"
                 >
-                  {t("loginOrRegister")}
+                  {t("login")}
                 </Link>
               )}
 
@@ -2735,27 +2735,23 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                   de dos estados —se ve cuál está puesto—, no un renglón más que
                   parece llevar a otra pantalla. */}
               <div className="mt-3 flex items-center justify-between gap-3 border-t border-[#eef2f6] px-1 pt-3">
-                <div className="inline-flex items-center rounded-full bg-[#f1f5f9] p-0.5" role="group" aria-label={locale === "en" ? "Language" : "Idioma"}>
-                  {(["es", "en"] as const).map((idioma) => (
-                    <button
-                      key={idioma}
-                      type="button"
-                      onPointerDown={(e) => e.stopPropagation()}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        if (idioma !== locale) switchLang(idioma);
-                        setMobileOpen(false);
-                      }}
-                      aria-pressed={idioma === locale}
-                      className={cn(
-                        "min-w-[42px] rounded-full px-3 py-1.5 text-[12px] font-extrabold uppercase tracking-wide transition-colors",
-                        idioma === locale ? "bg-white text-[#162543] shadow-sm" : "text-[#8b98a9] hover:text-[#162543]",
-                      )}
-                    >
-                      {idioma}
-                    </button>
-                  ))}
-                </div>
+                {/* El idioma se nombra COMPLETO —«English», «Español»—: «ES | EN»
+                    es jerga de programador y mucha gente no sabe qué significa.
+                    Dice el idioma al que se cambia, que es lo que pasa al
+                    tocarlo. La forma de pastilla lo separa de los destinos. */}
+                <button
+                  type="button"
+                  onPointerDown={(e) => e.stopPropagation()}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    switchLang(alternateLocale);
+                    setMobileOpen(false);
+                  }}
+                  className="inline-flex items-center gap-2 rounded-full bg-[#f1f5f9] px-3.5 py-2 text-[13px] font-bold text-[#52627a] transition-colors hover:bg-[#e6edf4] hover:text-[#162543]"
+                >
+                  <Globe2 className="h-4 w-4" />
+                  {alternateLanguageLabel}
+                </button>
                 {user && (
                   <button
                     type="button"

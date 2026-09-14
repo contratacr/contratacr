@@ -74,10 +74,10 @@ test.describe("@smoke public routes", () => {
       // Entrar a la cuenta es UNA acción, no dos renglones más de la lista: el
       // cajón lleva un solo botón «Ingresar o crear cuenta» y la elección de
       // rol se hace ya dentro, en /registro.
-      const entrar = navigation.getByRole("link", { name: /Ingresar o crear cuenta|Log in or sign up/i }).first();
+      const entrar = navigation.getByRole("link", { name: /^Ingresar$|^Log in$/i }).first();
       await expect(entrar).toBeVisible();
-      // Y el idioma es un conmutador, no otra opción de navegación.
-      await expect(navigation.getByRole("group", { name: /Idioma|Language/i })).toBeVisible();
+      // El idioma se nombra completo, no con las siglas: es lo que la gente lee.
+      await expect(navigation.getByRole("button", { name: /^English$|^Español$/ })).toBeVisible();
     } else {
       const navigation = page.getByRole("banner");
       await expect(navigation.getByRole("button", { name: /^Servicios$/i }).first()).toBeVisible();
