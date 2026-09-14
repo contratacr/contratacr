@@ -367,9 +367,14 @@ export function ProfessionalSchedule({ professional, categoryName, searchedPlace
     // es real y el lugar buscado es el que confirma que sí le sirve. Va primero
     // en la fila. Sin cantón buscado no se re-rotula nada: quien cubre el país
     // sigue diciendo «Todo Costa Rica».
+    // Buscar UNA PROVINCIA entera es igual de concreto que buscar un cantón: quien
+    // cubre Alajuela debe leerse «Alajuela», no «Toda la provincia de Alajuela».
+    // El rótulo largo suena a promesa vaga al lado de quien dice «Atenas», y la
+    // cobertura es exactamente la que se pidió: decirla con el nombre del lugar
+    // buscado la pone en igualdad, sin exagerar nada.
     const lugarBuscado = searchedPlace?.cantonName
       ? [searchedPlace.cantonName, searchedPlace.provinceName].filter(Boolean).join(", ")
-      : "";
+      : searchedPlace?.provinceName?.trim() || "";
     // Si el profesional YA tiene ese cantón entre sus lugares, la cobertura
     // amplia se queda con su propio nombre: si no, la fila mostraba dos veces
     // «Atenas, Alajuela» —el lugar de verdad y la provincia re-rotulada— y
@@ -388,11 +393,13 @@ export function ProfessionalSchedule({ professional, categoryName, searchedPlace
       const id = isVideoWorkplace ? "videoconsulta" : (w.id || (professional.workplaces?.length === 1 ? "general" : ""));
       if (!id || !label) continue;
       const lugar = w as { level?: string; cantonId?: string; provinciaId?: string; name?: string; id?: string };
-      const cubreLaProvinciaBuscada = !!searchedPlace?.cantonName && cubreProvinciaEntera(lugar, label)
-        && (lugar.provinciaId === searchedPlace.provinceId || (!!searchedPlace.provinceName && label.includes(searchedPlace.provinceName)));
+      const cubreLaProvinciaBuscada = !!lugarBuscado && cubreProvinciaEntera(lugar, label)
+        && ((!!searchedPlace?.provinceId && lugar.provinciaId === searchedPlace.provinceId) || (!!searchedPlace?.provinceName && label.includes(searchedPlace.provinceName)));
       const cubreElPaisYBuscaronLugar = !!lugarBuscado && cubrePaisEntero(lugar, label);
       if (!isVideoWorkplace && !yaAtiendeElCanton && (cubreLaProvinciaBuscada || cubreElPaisYBuscaronLugar)) {
-        if (!primero.size) primero.set(id, lugarBuscado);
+        const repetido = Array.from(primero.values()).includes(lugarBuscado)
+          || Array.from(map.values()).includes(lugarBuscado);
+        if (!primero.size && !repetido) primero.set(id, lugarBuscado);
         continue;
       }
       map.set(id, label);
