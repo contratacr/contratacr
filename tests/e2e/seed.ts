@@ -261,6 +261,46 @@ export async function getRegressionSeedState(): Promise<RegressionSeedState | nu
   throw lastError instanceof Error ? lastError : new Error("Timed out while reading regression fixtures.");
 }
 
+/**
+ * Los horarios que las pruebas reservan se consumen al reservarlos: después de
+ * una corrida larga la ficha se quedaba sin «Ver disponibilidad» y la siguiente
+ * corrida fallaba por falta de datos, no por un error del app. Antes de cada
+ * sesión se reponen los cupos fijos que las pruebas esperan.
+ */
+async function reponerHorarios(state: RegressionSeedState) {
+  const admin = adminClient();
+  // Varias horas el mismo día: una sola reserva por corrida no puede dejar la
+  // ficha sin disponibilidad para la corrida siguiente.
+  const horasDeRepuesto = ["15:00:00", "16:00:00", "17:00:00"].map((hora, indice) => ({
+    id: `c2000000-0000-4000-8000-0000000000e${indice + 1}`,
+    professional_id: state.professionalId,
+    slot_date: state.slotDate,
+    slot_time: hora,
+    location_id: state.slotLocationId,
+    category_id: state.categoryId,
+  }));
+  const cupos = [
+    { id: "c2000000-0000-4000-8000-0000000000f1", professional_id: state.professionalId, slot_date: state.slotDate, slot_time: `${state.slotTime}:00`, location_id: state.slotLocationId, category_id: state.categoryId },
+    ...horasDeRepuesto,
+    { id: "c2000000-0000-4000-8000-0000000000f2", professional_id: state.videoProfessionalId, slot_date: state.videoSlotDate, slot_time: `${state.videoSharedSlotTime}:00`, location_id: "videoconsulta", category_id: state.videoCategoryId },
+    { id: "c2000000-0000-4000-8000-0000000000f3", professional_id: state.videoProfessionalId, slot_date: state.videoSlotDate, slot_time: `${state.videoSecondSlotTime}:00`, location_id: "videoconsulta", category_id: state.videoCategoryId },
+  ];
+  // La tabla tiene su propia llave única (profesional + fecha + hora + lugar),
+  // así que el cupo que ya está se salta y solo se repone el que falta.
+  for (const cupo of cupos) {
+    const { count } = await admin
+      .from("availability_slots")
+      .select("id", { count: "exact", head: true })
+      .eq("professional_id", cupo.professional_id)
+      .eq("slot_date", cupo.slot_date)
+      .eq("slot_time", cupo.slot_time);
+    if ((count ?? 0) > 0) continue;
+    await admin.from("availability_slots").insert(cupo);
+  }
+}
+
+let reponerHorariosPromise: Promise<void> | null = null;
+
 export async function ensureRegressionSeed(): Promise<RegressionSeedState> {
   if (process.env.E2E_FIXTURES_READY !== "1") {
     throw new Error("Run seed:test:full and set E2E_FIXTURES_READY=1 before seeded regression.");
@@ -278,5 +318,7 @@ export async function ensureRegressionSeed(): Promise<RegressionSeedState> {
   if (!state) {
     throw new Error("Faltan las cuentas de prueba (Estudio Delta y Redes Bahía). Corré seed:test:full.");
   }
+  reponerHorariosPromise ??= reponerHorarios(state).catch(() => undefined);
+  await reponerHorariosPromise;
   return state;
 }
