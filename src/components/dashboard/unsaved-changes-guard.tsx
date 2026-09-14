@@ -63,7 +63,10 @@ export function UnsavedChangesGuard({
   const bypass = useRef(false);
   const guardOwner = useRef({});
   const validationErrorRef = useRef(validationError);
-  validationErrorRef.current = validationError;
+  // La referencia se pone al día después de pintar: escribirla durante el
+  // render es lo que React pide no hacer, y quien la lee son los manejadores,
+  // que corren después.
+  useEffect(() => { validationErrorRef.current = validationError; }, [validationError]);
 
   function clearPendingDialog() {
     pendingAnchor.current = null;

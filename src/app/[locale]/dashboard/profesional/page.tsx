@@ -648,11 +648,16 @@ export default function DashboardPage() {
       : null;
   // El panel reescribe su URL, así que el origen se guarda al llegar.
   const returnToRef = useRef<string | null>(null);
-  if (externalReturnTo) returnToRef.current = externalReturnTo;
   // Captured at arrival: the dashboard's own URL rewrites drop the param long
-  // before the back arrow is pressed.
+  // before the back arrow is pressed. Se guarda DESPUÉS de pintar, no durante:
+  // escribir una referencia en medio del render es justo lo que React pide no
+  // hacer, y aquí no cambia nada porque la flecha se pulsa mucho más tarde.
   const chatReturnRef = useRef<string | null>(null);
-  if (externalReturnTo?.startsWith("/mensajes")) chatReturnRef.current = externalReturnTo;
+  useEffect(() => {
+    if (!externalReturnTo) return;
+    returnToRef.current = externalReturnTo;
+    if (externalReturnTo.startsWith("/mensajes")) chatReturnRef.current = externalReturnTo;
+  }, [externalReturnTo]);
   const shouldCheckOpportunityWelcome = searchParams.get("welcomeOpportunities") === "1";
   const opportunityWelcomeParamCount = Math.max(0, Number.parseInt(searchParams.get("welcomeOpportunityCount") ?? "0", 10) || 0);
 
@@ -1293,7 +1298,6 @@ export default function DashboardPage() {
     // navegador puede restaurar el desplazamiento anterior.
     const tardio = window.setTimeout(scrollDashboardToPageTop, 160);
     return () => window.clearTimeout(tardio);
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- solo al cambiar de sección o de panel
   }, [activeTab, mode]);
 
   const requestUnsavedAction = useCallback((action: () => void) => {
