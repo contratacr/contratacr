@@ -131,6 +131,9 @@ test.describe("@seeded search results", () => {
     if (!isMobileProject(testInfo)) return;
     await firstProfessionalHref(page);
 
+    // Las etiquetas se vuelven a medir cuando entra la tipografía definitiva;
+    // leer las cajas antes de eso mide una fila que todavía va a moverse.
+    await page.evaluate(() => document.fonts?.ready);
     const rows = page.locator('[data-testid="professional-card-service-summary"]');
     const count = await rows.count();
     expect(count).toBeGreaterThan(0);
@@ -140,10 +143,15 @@ test.describe("@seeded search results", () => {
       const visibleServices = await row.locator('[data-testid="professional-card-mobile-service"]').count();
       expect(visibleServices).toBeGreaterThanOrEqual(1);
       expect(visibleServices).toBeLessThanOrEqual(3);
-      const hiddenCount = Number(await row.getAttribute("data-hidden-count"));
+      // El contador y el "+N" se leen en la misma pasada: la fila se vuelve a
+      // medir sola y leerlos por separado comparaba dos estados distintos.
+      const { hiddenCount, moreText } = await row.evaluate((el) => ({
+        hiddenCount: Number(el.getAttribute("data-hidden-count")),
+        moreText: el.querySelector('[data-testid="professional-card-more-services"]')?.textContent ?? "",
+      }));
       if (hiddenCount > 0) {
         const more = row.getByTestId("professional-card-more-services");
-        await expect(more).toHaveText(new RegExp(`^\\+${hiddenCount}\\b`));
+        expect(moreText).toMatch(new RegExp(`^\\+${hiddenCount}\\b`));
         const lastService = row.locator('[data-testid="professional-card-mobile-service"]').last();
         const [chipBox, moreBox] = await Promise.all([lastService.boundingBox(), more.boundingBox()]);
         expect(chipBox).not.toBeNull();

@@ -1,3 +1,4 @@
+import { agruparMiles } from "@/lib/pricing";
 export { MAX_MONEY_AMOUNT } from "@/lib/money-limits";
 export const MAX_OFFER_QUANTITY = 1_000_000;
 
@@ -19,5 +20,5 @@ export function isNumericDatabaseRangeError(message: string) {
 }
 
 export function formatNumberForMessage(value: number) {
-  return new Intl.NumberFormat("es-CR").format(value);
+  return agruparMiles(value);
 }

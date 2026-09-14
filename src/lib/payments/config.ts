@@ -1,3 +1,4 @@
+import { agruparMiles } from "@/lib/pricing";
 // ─── Professional subscriptions — central config + GLOBAL feature flag ────────
 //
 // EVERYTHING about paid subscriptions is gated behind PAYMENTS_ENABLED. While it
@@ -45,7 +46,7 @@ export const CURRENCY = "CRC";
 
 /** Display helper (₡3.000). Kept here so UI + admin format prices identically. */
 export function formatColones(amount: number): string {
-  return `₡${amount.toLocaleString("es-CR")}`;
+  return `₡${agruparMiles(amount)}`;
 }
 
 // ─── Subscription status / payment vocab (mirrors the DB CHECK constraints) ────

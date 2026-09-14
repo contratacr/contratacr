@@ -25,8 +25,20 @@ export const PRICING_TYPES: { value: PricingType; label: string; suffix: string 
   { value: "a_convenir", label: "Consultar precio", suffix: "" },
 ];
 
+/**
+ * Agrupa los miles a mano en vez de pedírselo al navegador. `toLocaleString("es-CR")`
+ * no da lo mismo en todos los motores: Node y Chrome escriben ₡120.000 y Safari
+ * escribe ₡120 000 (espacio fino). Como el precio se pinta en el servidor, esa
+ * diferencia rompía la hidratación en iPhone y React rearmaba la tarjeta entera.
+ */
+export function agruparMiles(amount: number, separador = "."): string {
+  const entero = Math.round(Math.abs(amount)).toString();
+  const agrupado = entero.replace(/\B(?=(\d{3})+(?!\d))/g, separador);
+  return amount < 0 ? `-${agrupado}` : agrupado;
+}
+
 export function formatColones(amount: number): string {
-  return `₡${amount.toLocaleString("es-CR")}`;
+  return `₡${agruparMiles(amount)}`;
 }
 
 export function formatColonesTaxIncluded(amount: number): string {

@@ -105,6 +105,18 @@ export default defineConfig({
       }
     : undefined,
   projects: [
+    // Safari (WebKit) solo corre cuando se pide con PLAYWRIGHT_WEBKIT=1. Era el
+    // único motor sin cobertura y es justo el de la app de iPhone, pero sumarlo
+    // a cada corrida encarecería CI al triple sin necesidad: se despacha a mano
+    // antes de publicar algo que toque diseño o gestos.
+    ...(process.env.PLAYWRIGHT_WEBKIT === "1"
+      ? [
+          {
+            name: "webkit-mobile",
+            use: { ...devices["iPhone 14"], viewport: { width: 390, height: 844 } },
+          },
+        ]
+      : []),
     {
       name: "chromium-desktop",
       use: { ...devices["Desktop Chrome"], viewport: { width: 1366, height: 900 } },

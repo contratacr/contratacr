@@ -1,3 +1,5 @@
+import { agruparMiles } from "@/lib/pricing";
+
 export const OFFER_TYPES = {
   service_offer: "Servicio en oferta",
   product: "Producto",
@@ -59,7 +61,7 @@ export function formatOfferPrice(
 ) {
   if (offer.price_now == null) return locale === "en" ? "Price negotiable" : "A convenir";
   const symbol = offer.currency === "USD" ? "$" : "₡";
-  const amount = `${symbol}${new Intl.NumberFormat(locale === "en" ? "en-US" : "es-CR").format(offer.price_now)}`;
+  const amount = `${symbol}${agruparMiles(offer.price_now, locale === "en" ? "," : ".")}`;
   const unit = locale === "en"
     ? { total: "total", hour: "per hour", session: "per session", project: "per project", month: "per month" }[offer.price_unit]
     : OFFER_PRICE_UNITS[offer.price_unit];
@@ -72,7 +74,7 @@ export function formatOfferBeforePrice(
 ) {
   if (offer.price_before == null) return null;
   const symbol = offer.currency === "USD" ? "$" : "₡";
-  return `${symbol}${new Intl.NumberFormat(locale === "en" ? "en-US" : "es-CR").format(offer.price_before)}`;
+  return `${symbol}${agruparMiles(offer.price_before, locale === "en" ? "," : ".")}`;
 }
 
 export function sanitizeOfferImages(urls: string[]) {
