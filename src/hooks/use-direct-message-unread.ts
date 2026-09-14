@@ -69,10 +69,16 @@ export function useDirectMessageUnread(enabled = true) {
     const channelTopic = `navbar-direct-message-unread-${user.id}-${Date.now()}-${Math.random().toString(36).slice(2)}`;
     let channel: ReturnType<typeof supabase.channel> | null = null;
     try {
+      // CON FILTRO: sin él, el servidor de tiempo real evaluaba CADA mensaje de
+      // toda la plataforma contra cada persona conectada. Una conversación se
+      // mira por sus dos lados, y el filtro no admite un "o", así que son dos
+      // suscripciones a la misma tabla. Los mensajes sueltos no se pueden
+      // filtrar por persona (la fila no la trae), pero el conteo que importa lo
+      // dan las conversaciones.
       channel = supabase
         .channel(channelTopic)
-        .on("postgres_changes", { event: "*", schema: "public", table: "direct_conversations" }, reload)
-        .on("postgres_changes", { event: "INSERT", schema: "public", table: "direct_messages" }, reload)
+        .on("postgres_changes", { event: "*", schema: "public", table: "direct_conversations", filter: `client_id=eq.${user.id}` }, reload)
+        .on("postgres_changes", { event: "*", schema: "public", table: "direct_conversations", filter: `professional_profile_id=eq.${user.id}` }, reload)
         .subscribe();
     } catch (error) {
       console.warn("[direct-message-unread] realtime subscription unavailable", error);

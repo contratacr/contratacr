@@ -808,8 +808,14 @@ export function DirectChatInbox() {
       if (pendiente) window.clearTimeout(pendiente);
       pendiente = window.setTimeout(() => { pendiente = null; void loadConversations(true); }, 750);
     };
+    // El canal de conversaciones va FILTRADO por las dos caras de una
+    // conversación: sin filtro, el servidor evaluaba cada cambio de la
+    // plataforma entera contra cada persona conectada. Los mensajes sueltos no
+    // se pueden filtrar (la fila no dice de quién es la conversación), pero el
+    // hilo abierto se reconoce aquí mismo.
     const channel = supabase.channel(`direct-chat-${user.id}`)
-      .on("postgres_changes", { event: "*", schema: "public", table: "direct_conversations" }, recargarPronto)
+      .on("postgres_changes", { event: "*", schema: "public", table: "direct_conversations", filter: `client_id=eq.${user.id}` }, recargarPronto)
+      .on("postgres_changes", { event: "*", schema: "public", table: "direct_conversations", filter: `professional_profile_id=eq.${user.id}` }, recargarPronto)
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "direct_messages" }, (payload) => {
         const row = payload.new as DirectMessage & { conversation_id?: string };
         // Lo que uno mismo acaba de mandar ya está en pantalla y ya actualizó
