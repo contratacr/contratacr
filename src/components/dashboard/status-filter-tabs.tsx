@@ -247,7 +247,10 @@ export function StatusFilterTabs({
                       // En 320px («Profesionales» + su conteo en una celda de
                       // 93px) la letra baja medio punto antes que recortar el
                       // rótulo: un filtro se lee entero o no sirve.
-                      : "gap-1 px-1 text-[11.5px] min-[360px]:text-[12px] min-[400px]:px-1.5 min-[400px]:text-[13px] sm:px-3",
+                      // El relleno de la celda cede antes que el rótulo: con
+                      // tres cifras de conteo («123 favoritos») no quedaban ni
+                      // los 79px que mide «Profesionales».
+                      : "gap-0.5 px-0.5 text-[11.5px] min-[360px]:text-[12px] min-[400px]:gap-1 min-[400px]:px-1.5 min-[400px]:text-[13px] sm:gap-1 sm:px-3",
                     "whitespace-nowrap",
                   )
                 : "gap-1"
@@ -280,7 +283,14 @@ export function StatusFilterTabs({
               // El conteo es parte del rótulo, no adorno: azul de marca en la
               // activa, pizarra en el resto, siempre legible de un vistazo.
               <span className={cn(
-                "inline-flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full px-1.5 text-[11px] font-extrabold leading-none tabular-nums transition-colors",
+                "inline-flex shrink-0 items-center justify-center rounded-full font-extrabold leading-none tabular-nums transition-colors",
+                // En la fila repartida el conteo se achica: con dos cifras
+                // ocupaba 25px y el rótulo más largo se quedaba sin 3px, así
+                // que «Profesionales» salía recortado en cuanto una cuenta
+                // pasaba de nueve favoritos. Es lo que se ve en producción.
+                useSegmentedLayout && !compacto
+                  ? "h-[18px] min-w-[18px] px-1 text-[10px]"
+                  : "h-5 min-w-5 px-1.5 text-[11px]",
                 active
                   ? "bg-[#009FD9] text-white"
                   : "bg-[#d5dfe8] text-[#3f4f63] group-hover:bg-[#c8d5e0]"
