@@ -3,7 +3,7 @@
 import { QuoteBlock } from "@/components/quotes/quote-block";
 import { cargarCotizaciones } from "@/lib/quotes-store";
 
-import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import { Fragment, useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
 import { CalendarDays, FolderOpen, ClipboardList, Plus, CalendarClock, CalendarCheck, Wrench, Users, FileText, CheckCircle2, Star } from "lucide-react";
@@ -703,17 +703,29 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                               )}
                             </div>
                             {/* Appointment date with a grey calendar icon (no "Fecha:" label). */}
+                            {/* Sin las palabras «Fecha:» y «Servicio:»: el
+                                calendario y la llave ya lo dicen, y esos 60 px
+                                eran los que le faltaban a la fecha para caber
+                                entera. Si aun así no alcanza, el corte cae entre
+                                la fecha y la hora, nunca dentro de una palabra. */}
                             {formatBookingDate(b, dateLocale) && (
-                              <span className="mt-2 inline-flex w-full max-w-full items-center gap-2 text-[13px] text-[#374151] sm:w-auto">
-                                <CalendarClock className="h-3.5 w-3.5 shrink-0 text-[#68778d]" />
-                                <span className="min-w-0 truncate"><span className="font-medium text-[#68778d]">{t("fieldDate")}</span> <span className="text-[#374151]">{formatBookingDate(b, dateLocale)}</span></span>
+                              <span className="mt-2 inline-flex w-full max-w-full items-start gap-2 text-[13px] text-[#374151]">
+                                <CalendarClock className="mt-[3px] h-3.5 w-3.5 shrink-0 text-[#68778d]" />
+                                <span className="min-w-0 flex-1 text-[#374151]">
+                                  {formatBookingDate(b, dateLocale)!.split(" · ").map((parte, indice, partes) => (
+                                    <Fragment key={parte}>
+                                      <span className="whitespace-nowrap">{parte}{indice < partes.length - 1 ? " ·" : ""}</span>
+                                      {indice < partes.length - 1 ? <wbr /> : null}{" "}
+                                    </Fragment>
+                                  ))}
+                                </span>
                               </span>
                             )}
                             {/* The service the request was for (grey wrench). */}
                             {bookingServiceLabel(b) && (
-                              <p className="mt-2 flex items-center gap-2 text-[13px] text-[#374151] min-w-0">
-                                <Wrench className="h-3.5 w-3.5 shrink-0 text-[#68778d]" />
-                                <span className="min-w-0 truncate"><span className="font-medium text-[#68778d]">{t("fieldService")}</span> <span className="text-[#374151]">{bookingServiceLabel(b)}</span></span>
+                              <p className="mt-2 flex min-w-0 items-start gap-2 text-[13px] text-[#374151]">
+                                <Wrench className="mt-[3px] h-3.5 w-3.5 shrink-0 text-[#68778d]" />
+                                <span className="min-w-0 flex-1 line-clamp-2 text-[#374151]">{bookingServiceLabel(b)}</span>
                               </p>
                             )}
                             {/* For someone else — a quiet at-a-glance hint. */}
@@ -934,7 +946,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
               <button
                 type="button"
                 onClick={() => setShowPublish(true)}
-                className="inline-flex h-11 w-full items-center justify-center gap-1.5 rounded-full bg-[#009FD9] px-4 text-[13px] font-bold text-white transition-colors hover:bg-[#0089bb] sm:w-auto sm:px-6"
+                className="inline-flex h-11 w-full items-center justify-center gap-1.5 rounded-full bg-[#009FD9] px-4 text-[13px] font-bold text-white transition-colors hover:bg-[#0089bb] sm:w-auto sm:px-6 max-sm:[&>svg]:hidden"
               >
                 <Plus className="h-4 w-4" />
                 {t("publishProject")}

@@ -231,8 +231,8 @@ export function MobileAppBridge() {
   useEffect(() => {
     if (!isNativeAppRuntime()) return;
     const frame = window.requestAnimationFrame(() => {
-      document.querySelector<HTMLElement>("main:not(.ccr-page-route-loading)")?.scrollTo({ top: 0, left: 0, behavior: "auto" });
-      window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+      document.querySelector<HTMLElement>("main:not(.ccr-page-route-loading)")?.scrollTo({ top: 0, left: 0, behavior: "instant" });
+      window.scrollTo({ top: 0, left: 0, behavior: "instant" });
     });
     return () => window.cancelAnimationFrame(frame);
   }, [pathname]);

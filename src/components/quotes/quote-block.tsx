@@ -15,6 +15,22 @@ import { QuoteDetailModal } from "@/components/quotes/quote-detail-modal";
  */
 const DATE_LOCALE: Record<string, string> = { es: "es-CR", en: "en-US" };
 
+// El botón de la fila de una cita comparte renglón con «Enviar mensaje» y con
+// el menú: a cada uno le tocan unos 145 px, y «Enviar cotización» con su icono
+// pide 160. Por eso debajo de 640 px el relleno se aprieta y el icono sale, y
+// debajo de 420 px se deja solo la palabra que importa: con la frase entera la
+// letra terminaba tocando los bordes de la pastilla.
+const CLASE_BOTON_FILA = "inline-flex h-11 w-full items-center justify-center gap-1.5 whitespace-nowrap rounded-full border border-[#d7e1ea] bg-white px-5 text-[13px] font-bold text-[#162543] transition-colors hover:border-[#b9c8d6] hover:bg-[#f6f9fb] max-sm:px-3.5 max-sm:[&>svg]:hidden";
+
+function RotuloEnviarCotizacion({ t }: { t: (clave: string) => string }) {
+  return (
+    <>
+      <span className="max-[419px]:hidden">{t("rowSend")}</span>
+      <span className="hidden max-[419px]:inline">{t("rowSendShort")}</span>
+    </>
+  );
+}
+
 export function QuoteBlock({ bookingId, projectId, role, canCreate = false, defaultTitle, professionalName, asButton = false, clientName}: {
   bookingId?: string | null; projectId?: string | null; role: "client" | "pro"; canCreate?: boolean; defaultTitle?: string; professionalName?: string | null;
   /** Solo el botón, con la forma de los demás botones de la tarjeta: va en la fila de acciones. */
@@ -44,15 +60,9 @@ export function QuoteBlock({ bookingId, projectId, role, canCreate = false, defa
     // lo que hay en la enorme mayoría de las citas, y evita el pulso de carga.
     if (!canCreate || role !== "pro") return null;
     return asButton ? (
-      <button type="button" onClick={() => setEditor(true)} className="inline-flex h-11 w-full items-center justify-center gap-1.5 whitespace-nowrap rounded-full border border-[#d7e1ea] bg-white px-4 text-[13px] font-bold text-[#162543] transition-colors hover:border-[#b9c8d6] hover:bg-[#f6f9fb] max-sm:px-3 max-sm:[&>svg]:hidden">
+      <button type="button" onClick={() => setEditor(true)} className={CLASE_BOTON_FILA}>
         <FileText className="h-4 w-4 shrink-0 text-[#009FD9]" />
-        {/* En teléfono este botón comparte renglón con «Enviar mensaje» y el
-            menú: cada uno se queda con ~145px y «Enviar cotización» necesita
-            160 con su icono y su relleno, así que la letra terminaba pegada a
-            los bordes. Debajo de 640px el icono sale y el relleno se aprieta;
-            de 360px para abajo, además, solo cabe la palabra que importa. */}
-        <span className="max-[359px]:hidden">{t("rowSend")}</span>
-        <span className="hidden max-[359px]:inline">{t("rowSendShort")}</span>
+        <RotuloEnviarCotizacion t={t} />
       </button>
     ) : (
       <button type="button" onClick={() => setEditor(true)} className="inline-flex h-11 w-full items-center justify-center rounded-full border border-[#d7e1ea] bg-white px-4 text-[13px] font-bold text-[#162543] transition-colors hover:border-[#b9c8d6] hover:bg-[#f6f9fb]">
@@ -88,7 +98,7 @@ export function QuoteBlock({ bookingId, projectId, role, canCreate = false, defa
   // En la fila de acciones: un solo botón. Sin cotización, "Enviar cotización";
   // con una, su monto y estado, y al tocarlo se abre.
   if (asButton && role === "pro") {
-    const clase = "inline-flex h-11 w-full items-center justify-center gap-1.5 whitespace-nowrap rounded-full border border-[#d7e1ea] bg-white px-4 text-[13px] font-bold text-[#162543] transition-colors hover:border-[#b9c8d6] hover:bg-[#f6f9fb]";
+    const clase = CLASE_BOTON_FILA;
     // Con cotización enviada, esto ya no es un botón más: es el dato de que
     // existe, con su número y su monto, y "Ver" para abrirla.
     return (
@@ -106,7 +116,8 @@ export function QuoteBlock({ bookingId, projectId, role, canCreate = false, defa
           </button>
         ) : canCreate ? (
           <button type="button" onClick={() => setEditor(true)} className={clase}>
-            <FileText className="h-4 w-4 shrink-0 text-[#009FD9]" />{t("rowSend")}
+            <FileText className="h-4 w-4 shrink-0 text-[#009FD9]" />
+            <RotuloEnviarCotizacion t={t} />
           </button>
         ) : null}
         {modales}

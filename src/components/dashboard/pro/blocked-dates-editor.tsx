@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import { PanelSectionLoading } from "@/components/ui/content-loading";
+import { getDashboardCache, setDashboardCache } from "@/lib/dashboard-prefetch-cache";
 
 interface BlockedDatesEditorProps {
   professionalId: string;
@@ -15,9 +16,13 @@ interface BlockedDatesEditorProps {
 export function BlockedDatesEditor({ professionalId }: BlockedDatesEditorProps) {
   const t = useTranslations("availabilityEditor");
   const locale = useLocale();
-  const [blockedDates, setBlockedDates] = useState<string[]>([]);
+  // Las fechas bloqueadas se recuerdan entre visitas: volver a esta pantalla
+  // pintaba el esqueleto otra vez aunque la lista ya se supiera, y en la enorme
+  // mayoría de las cuentas está vacía.
+  const clave = `bloqueos:${professionalId}`;
+  const [blockedDates, setBlockedDates] = useState<string[]>(() => getDashboardCache<string[]>(clave) ?? []);
   const [newDate, setNewDate] = useState("");
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => getDashboardCache<string[]>(clave) === null);
   const [saving, setSaving] = useState(false);
 
   const today = new Date().toISOString().split("T")[0];
@@ -30,7 +35,9 @@ export function BlockedDatesEditor({ professionalId }: BlockedDatesEditorProps) 
       .eq("professional_id", professionalId)
       .order("blocked_date", { ascending: true })
       .then(({ data }) => {
-        setBlockedDates((data ?? []).map((r) => r.blocked_date));
+        const fechas = (data ?? []).map((r) => r.blocked_date);
+        setBlockedDates(fechas);
+        setDashboardCache(`bloqueos:${professionalId}`, fechas);
         setLoading(false);
       });
   }, [professionalId]);

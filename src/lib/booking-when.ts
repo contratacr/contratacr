@@ -40,7 +40,9 @@ export function formatBookingWhen(scheduledDate?: string | null, scheduledTime?:
     }
   }
   const dt = new Date(y, m - 1, d);
-  const wdRaw = dt.toLocaleDateString(dateLocale, { weekday: "short" }).replace(".", "");
+  // El día entero, no «Vie»: una cita se lee de un vistazo y «Viernes» es lo
+  // que uno busca. Cabe porque la fila ya no gasta espacio en decir «Fecha:».
+  const wdRaw = dt.toLocaleDateString(dateLocale, { weekday: "long" });
   const wd = wdRaw.charAt(0).toUpperCase() + wdRaw.slice(1);
   // Mes entero, y el año solo cuando la cita no es de este año: sin él, una
   // cita del año pasado se leía igual que una de este mes.
@@ -51,7 +53,7 @@ export function formatBookingWhen(scheduledDate?: string | null, scheduledTime?:
     ...(mismoAno ? {} : { year: "numeric" }),
   });
   const time = to12h(scheduledTime);
-  return `${wd}, ${dm}${time ? ` · ${time}` : ""}`;
+  return `${wd} ${dm}${time ? ` · ${time}` : ""}`;
 }
 
 /**

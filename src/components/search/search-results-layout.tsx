@@ -169,8 +169,8 @@ export function SearchResultsLayout({ children, filters, quickFilters, drawerFil
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
-    listRef.current?.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+    listRef.current?.scrollTo({ top: 0, left: 0, behavior: "instant" });
     const frame = window.requestAnimationFrame(() => setAreaSearching(false));
     return () => window.cancelAnimationFrame(frame);
   }, [resetKey]);

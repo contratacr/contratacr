@@ -55,7 +55,7 @@ export default function ResetPasswordPage() {
 
   useEffect(() => {
     if (!done) return;
-    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
   }, [done]);
 
   // Built inside the component so validation messages localize (and reuse the

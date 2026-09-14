@@ -3,7 +3,7 @@
 import { QuoteBlock } from "@/components/quotes/quote-block";
 import { cargarCotizaciones } from "@/lib/quotes-store";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { CalendarCheck, CalendarClock, Clock, FileText, Phone, IdCard, Wrench, MapPin, UserRound, MoreHorizontal, Flag } from "lucide-react";
@@ -378,15 +378,35 @@ export function BookingRequests() {
               )}
             </div>
             <div className="mt-2 flex flex-col items-start gap-1.5 text-[13px]">
-              <span className={cn("inline-flex w-full max-w-full items-center gap-2", dateStr ? "text-[#374151]" : "text-[#68778d]")}>
-                <CalendarClock className="h-3.5 w-3.5 shrink-0 text-[#68778d]" />
-                <span className="min-w-0 truncate"><span className="font-medium text-[#68778d]">{t("fieldDate")}</span> <span className={dateStr ? "text-[#374151]" : "text-[#68778d]"}>{dateStr || t("noScheduledDate")}</span></span>
+              <span className={cn("inline-flex w-full max-w-full items-start gap-2", dateStr ? "text-[#374151]" : "text-[#68778d]")}>
+                <CalendarClock className="mt-[3px] h-3.5 w-3.5 shrink-0 text-[#68778d]" />
+                {/* Sin la palabra «Fecha:»: el icono del calendario ya lo dice.
+                    Y sin recorte: en un teléfono angosto caben 168 px y
+                    «Miércoles 16 de septiembre · 10:00 am» pide 236, así que
+                    antes se perdía justo la hora. Ahora pasa a la segunda línea
+                    entera en vez de terminar en puntos suspensivos. */}
+                <span className={cn("min-w-0 flex-1", dateStr ? "text-[#374151]" : "text-[#68778d]")}>
+                  {/* Cada parte entera o nada: el único punto por donde puede
+                      cortarse es entre la fecha y la hora, nunca en medio de
+                      «sep/tiembre». El separador va fuera para que ahí sí quepa
+                      el salto. */}
+                  {dateStr
+                    ? dateStr.split(" · ").map((parte, indice, partes) => (
+                        <Fragment key={parte}>
+                          <span className="whitespace-nowrap">{parte}{indice < partes.length - 1 ? " ·" : ""}</span>
+                          {indice < partes.length - 1 ? <wbr /> : null}{" "}
+                        </Fragment>
+                      ))
+                    : t("noScheduledDate")}
+                </span>
               </span>
               <span className="flex w-full max-w-full flex-col items-start gap-1.5">
                 {category && (
-                  <span className="inline-flex w-full max-w-full items-center gap-2 text-[#374151]">
-                    <Wrench className="h-3.5 w-3.5 shrink-0 text-[#68778d]" />
-                    <span className="min-w-0 truncate"><span className="font-medium text-[#68778d]">{t("fieldService")}</span> <span className="text-[#374151]">{category}</span></span>
+                  <span className="inline-flex w-full max-w-full items-start gap-2 text-[#374151]">
+                    <Wrench className="mt-[3px] h-3.5 w-3.5 shrink-0 text-[#68778d]" />
+                    {/* Dos líneas como mucho: un oficio largo se lee entero,
+                        pero no empuja el resto de la tarjeta hacia abajo. */}
+                    <span className="min-w-0 flex-1 line-clamp-2 text-[#374151]">{category}</span>
                   </span>
                 )}
                 {flaggedPill && (

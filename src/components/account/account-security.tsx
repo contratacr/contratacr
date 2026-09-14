@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { CheckCircle2, Clock, Mail, Lock, ShieldCheck, Eye, EyeOff, Info, ExternalLink } from "lucide-react";
+import { CheckCircle2, MessageCircle, Clock, Mail, Lock, ShieldCheck, Eye, EyeOff, Info, ExternalLink } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
@@ -79,6 +79,42 @@ export function AccountSecuritySection({ showHeading = true }: { showHeading?: b
   const locale = useLocale();
   const t = useTranslations("accountSecurity");
   const tc = useTranslations("common");
+
+  // Avisos por WhatsApp: el permiso vive en el perfil y solo lo enciende la
+  // persona. Sin él no se le escribe por ese canal, que es lo que exige la
+  // política de Meta y lo que evita que un bloqueo cuente como mensaje no
+  // solicitado.
+  const [permisoWhatsapp, setPermisoWhatsapp] = useState<boolean | null>(null);
+  const [guardandoPermiso, setGuardandoPermiso] = useState(false);
+  const [telefonoDelPerfil, setTelefonoDelPerfil] = useState<string | null>(null);
+  useEffect(() => {
+    if (!user) return;
+    let vivo = true;
+    void createClient()
+      .from("profiles")
+      .select("whatsapp_opt_in, phone")
+      .eq("id", user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (!vivo || !data) return;
+        setPermisoWhatsapp(Boolean((data as { whatsapp_opt_in?: boolean }).whatsapp_opt_in));
+        setTelefonoDelPerfil(((data as { phone?: string | null }).phone ?? null));
+      });
+    return () => { vivo = false; };
+  }, [user]);
+
+  async function cambiarPermisoWhatsapp(siguiente: boolean) {
+    if (!user) return;
+    setGuardandoPermiso(true);
+    const anterior = permisoWhatsapp;
+    setPermisoWhatsapp(siguiente);
+    const { error } = await createClient()
+      .from("profiles")
+      .update({ whatsapp_opt_in: siguiente })
+      .eq("id", user.id);
+    if (error) setPermisoWhatsapp(anterior ?? false);
+    setGuardandoPermiso(false);
+  }
 
   // Email change
   const [emailMode, setEmailMode] = useState(false);
@@ -245,6 +281,40 @@ export function AccountSecuritySection({ showHeading = true }: { showHeading?: b
           DENTRO de la tarjeta blanca del perfil, y una tarjeta blanca con borde
           dentro de otra igual solo suma marcos. Los recuadros con color sí se
           quedan: ahí el color es el mensaje. */}
+      {/* Avisos por WhatsApp */}
+      {permisoWhatsapp !== null && (
+        <div className="border-t border-[#eef3f7] pt-4 first:border-t-0 first:pt-0">
+          <div className="mb-2 flex items-center gap-2">
+            <MessageCircle className="h-4 w-4 text-[#6b7280]" />
+            <h3 className="text-sm font-semibold text-[#374151]">
+              {locale === "en" ? "WhatsApp alerts" : "Avisos por WhatsApp"}
+            </h3>
+          </div>
+          <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-[#e3ebf2] bg-white px-4 py-3 transition-colors hover:border-[#c9dceb]">
+            <input
+              type="checkbox"
+              checked={permisoWhatsapp}
+              disabled={guardandoPermiso}
+              onChange={(event) => { void cambiarPermisoWhatsapp(event.target.checked); }}
+              className="mt-0.5 h-4 w-4 shrink-0 accent-[#009FD9]"
+            />
+            <span className="min-w-0 text-sm leading-relaxed text-[#374151]">
+              <span className="block font-semibold text-[#162543]">
+                {locale === "en"
+                  ? "Send me reminders on WhatsApp"
+                  : "Quiero recibir avisos por WhatsApp"}
+              </span>
+              <span className="mt-0.5 block text-[13px] text-[#68778d]">
+                {locale === "en"
+                  ? "Only about your own activity — a request waiting, an application nobody opened. Never promotions. You can turn it off whenever you want."
+                  : "Solo sobre lo tuyo: una solicitud esperando, una postulación que nadie abrió. Nunca promociones. Podés apagarlo cuando querás."}
+                {telefonoDelPerfil ? ` (${telefonoDelPerfil})` : ""}
+              </span>
+            </span>
+          </label>
+        </div>
+      )}
+
       {/* Email */}
       <div className="border-t border-[#eef3f7] pt-4 first:border-t-0 first:pt-0">
         <div className="flex items-center gap-2 mb-2">

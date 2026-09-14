@@ -271,7 +271,7 @@ async function reponerHorarios(state: RegressionSeedState) {
   const admin = adminClient();
   // Varias horas el mismo día: una sola reserva por corrida no puede dejar la
   // ficha sin disponibilidad para la corrida siguiente.
-  const horasDeRepuesto = ["15:00:00", "16:00:00", "17:00:00"].map((hora, indice) => ({
+  const horasDeRepuesto = ["13:00:00", "15:00:00", "16:00:00", "17:00:00", "18:00:00", "19:00:00"].map((hora, indice) => ({
     id: `c2000000-0000-4000-8000-0000000000e${indice + 1}`,
     professional_id: state.professionalId,
     slot_date: state.slotDate,

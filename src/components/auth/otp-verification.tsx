@@ -36,7 +36,7 @@ export function OtpVerification({ email, onVerified, autoResendOnMount = false }
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   useEffect(() => {
-    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
     containerRef.current?.scrollIntoView({ block: "start", inline: "nearest" });
     window.requestAnimationFrame(() => {
       inputRefs.current[0]?.focus({ preventScroll: true });

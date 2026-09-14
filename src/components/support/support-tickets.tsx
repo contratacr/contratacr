@@ -257,7 +257,10 @@ export function SupportTickets({
 
 
   const load = useCallback(() => {
-    setLoading(true);
+    // El esqueleto solo cuando no hay NADA que mostrar. Volver a Soporte con la
+    // lista ya cargada lo hacía aparecer otra vez —y encima tapaba los filtros—
+    // aunque no hubiera nada nuevo que traer.
+    if (!claveCache || !getDashboardCache<Ticket[]>(claveCache)) setLoading(true);
     setLoadError(false);
     fetchWithSessionRetry("/api/support")
       .then(async (r) => {
@@ -282,8 +285,12 @@ export function SupportTickets({
 
   const openTicket = useCallback(async (id: string, { silencioso = false }: { silencioso?: boolean } = {}) => {
     setOpenId(id);
-    // Al refrescar tras enviar o cambiar de estado no se vacía el hilo: el
-    // esqueleto solo tiene sentido la primera vez que se abre la conversación.
+    // La conversación se abre YA: el asunto, el estado y la referencia ya están
+    // en la fila que se acaba de tocar, así que el encabezado y el compositor se
+    // pintan de inmediato y lo único que espera son los mensajes. Antes toda la
+    // pantalla se iba a un esqueleto antes de llegar al chat.
+    const deLaLista = items.find((fila) => fila.id === id);
+    if (deLaLista) setTicket(deLaLista);
     if (!silencioso) setThreadLoading(true);
     fetchWithSessionRetry(`/api/support?id=${id}`)
       .then(async (r) => {
@@ -311,7 +318,7 @@ export function SupportTickets({
       // La lista compartida se entera por este aviso y el globo baja solo.
       window.dispatchEvent(new Event("notificationsChanged"));
     }
-  }, [user]);
+  }, [user, items]);
 
   // Deep-link: open a specific ticket on mount (e.g. ?ticket=<id> from a support
   // email's "Ver conversación", carried through login → callback). Runs once.
@@ -459,7 +466,7 @@ export function SupportTickets({
         style={altoHilo ? { height: altoHilo } : undefined}
         className="ccr-support-thread flex h-[calc(100dvh-153px)] min-h-[360px] flex-col lg:h-[min(720px,calc(100dvh-260px))] lg:min-h-[480px]"
       >
-        {threadLoading || !ticket ? (
+        {!ticket ? (
           <div className="grid min-h-0 flex-1 place-items-center px-4">
             <PanelListSkeleton rows={2} />
           </div>
@@ -484,6 +491,14 @@ export function SupportTickets({
             </header>
 
             <div ref={messagesRef} className="ccr-support-thread-messages flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto overscroll-contain bg-[#f3f7fa] p-4 sm:p-5">
+              {/* Lo único que espera son los mensajes, y esperan con forma de
+                  mensaje: dos globos grises, uno de cada lado. */}
+              {threadLoading && messages.length === 0 && (
+                <>
+                  <div className="flex justify-start"><div className="h-14 w-[70%] animate-pulse rounded-[18px] rounded-bl-md bg-white/80" /></div>
+                  <div className="flex justify-end"><div className="h-12 w-[55%] animate-pulse rounded-[18px] rounded-br-md bg-[#dbeaf3]" /></div>
+                </>
+              )}
               {messages.map((m) => (
                 <div key={m.id} className={`flex ${m.sender_role === "user" ? "justify-end" : "justify-start"}`}>
                   <div className={`max-w-[86%] rounded-[18px] px-3.5 py-2.5 text-[14px] leading-relaxed shadow-[0_4px_12px_-8px_rgba(15,23,42,0.55)] sm:max-w-[78%] ${m.sender_role === "user" ? "rounded-br-md bg-[#009FD9] font-medium text-white" : "rounded-bl-md border border-[#e5edf3] bg-white text-[#25364d]"}`}>
@@ -563,7 +578,7 @@ export function SupportTickets({
           carga ni en el estado vacío, que ya trae su propio botón. */}
       <SectionHeadline subtitulo={tSub("soporte")}>
         {!loading && items.length > 0 && (
-          <button onClick={openNewTicket} className="flex h-11 w-full items-center justify-center gap-2 rounded-full bg-[#009FD9] px-4 text-sm font-bold text-white sm:w-auto sm:px-6 transition-colors hover:bg-[#0089bb]">
+          <button onClick={openNewTicket} className="flex h-11 w-full items-center justify-center gap-2 rounded-full bg-[#009FD9] px-4 text-sm font-bold text-white sm:w-auto sm:px-6 transition-colors hover:bg-[#0089bb] max-sm:[&>svg]:hidden">
             <Plus className="h-4 w-4" /> {t("newTicket")}
           </button>
         )}

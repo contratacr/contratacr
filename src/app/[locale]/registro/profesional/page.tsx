@@ -520,8 +520,8 @@ export default function RegisterProfessionalPage() {
   useEffect(() => {
     if (step < 0 || otpEmail || redirecting) return;
     window.requestAnimationFrame(() => {
-      document.scrollingElement?.scrollTo({ top: 0, left: 0, behavior: "auto" });
-      window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+      document.scrollingElement?.scrollTo({ top: 0, left: 0, behavior: "instant" });
+      window.scrollTo({ top: 0, left: 0, behavior: "instant" });
     });
   }, [otpEmail, redirecting, step]);
 

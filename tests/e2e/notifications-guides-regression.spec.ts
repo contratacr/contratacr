@@ -198,7 +198,15 @@ test.describe("@notifications-guides disposable bilingual UI regression", () => 
         await loginAs(page, account.email, account.password);
         await gotoOK(page, `/${locale}/notificaciones`);
         const list = page.locator(".ccr-notifications-list");
-        await expect(list.getByRole("heading", { name: copy.heading, exact: true })).toBeVisible();
+        // En el teléfono el nombre de la pantalla lo pone la barra de arriba
+        // —menú, marca y «Notificaciones», como en Ofertas—; en computadora
+        // sigue siendo el título de la propia lista.
+        await expect(
+          list.getByRole("heading", { name: copy.heading, exact: true })
+            .or(page.getByRole("banner").getByText(copy.heading, { exact: true }))
+            .filter({ visible: true })
+            .first(),
+        ).toBeVisible();
         await expect(list.getByText(copy.bookingMessage, { exact: false }).first()).toBeVisible();
         await expect(list.getByText(seeded.followerName, { exact: false })).toBeVisible();
 
@@ -218,8 +226,10 @@ test.describe("@notifications-guides disposable bilingual UI regression", () => 
           const rows = await notificationRows(seeded.ids);
           return rows.length === seeded.ids.length && rows.every((row) => row.read);
         }, { message: "Mark all read should persist for every seeded notification" }).toBe(true);
-        // With nothing left unread the header reads "Todo al día" / "All caught up".
-        await expect(list.getByText(locale === "en" ? "All caught up" : "Todo al día", { exact: true })).toBeVisible();
+        // Ya no hay pastilla de «Todo al día»: una etiqueta que solo aparece
+        // cuando no pasa nada no informaba, y el propio vacío ya lo dice. Lo que
+        // se comprueba es que ninguna fila quede marcada como sin leer.
+        await expect(list.locator(".ccr-notifications-items > li [data-unread='true']")).toHaveCount(0);
 
         const applicationRow = list.locator(".ccr-notifications-items > li").filter({ hasText: seeded.applicantName });
         // The row menu lives inside the row on the web and in a portal inside

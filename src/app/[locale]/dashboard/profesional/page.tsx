@@ -847,8 +847,8 @@ export default function DashboardPage() {
     const previous = previousDashboardTabRef.current;
     previousDashboardTabRef.current = activeTab;
     if (previous === null || previous === activeTab) return;
-    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
-    document.querySelector("main")?.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+    document.querySelector("main")?.scrollTo({ top: 0, left: 0, behavior: "instant" });
   }, [activeTab]);
 
   useEffect(() => {
@@ -1273,12 +1273,14 @@ export default function DashboardPage() {
 
   function scrollDashboardToPageTop() {
     const scrollTop = () => {
-      window.scrollTo({ top: 0, left: 0, behavior: "auto" });
-      document.documentElement.scrollTop = 0;
-      document.body.scrollTop = 0;
+      // «instant», no «auto»: `auto` significa «lo que diga el CSS», y el CSS
+      // dice `scroll-behavior: smooth` para los enlaces internos. Por eso abrir
+      // una sección se veía subir en lugar de abrir arriba. Las asignaciones a
+      // `scrollTop` también obedecían al CSS, así que se van.
+      window.scrollTo({ top: 0, left: 0, behavior: "instant" });
       // El panel también desplaza su propio cuerpo en algunos anchos: moviendo
       // solo la ventana, la sección abría a media altura.
-      document.querySelector("main.ccr-dashboard-main")?.scrollTo({ top: 0, left: 0, behavior: "auto" });
+      document.querySelector("main.ccr-dashboard-main")?.scrollTo({ top: 0, left: 0, behavior: "instant" });
     };
 
     scrollTop();
@@ -1292,8 +1294,14 @@ export default function DashboardPage() {
   // llegar por un enlace (un aviso, la barra de abajo, atrás/adelante) no, y la
   // sección abría a media altura. Va por sección Y por panel: cambiar de
   // cliente a profesional también estrena pantalla.
-  useEffect(() => {
+  // ANTES de pintar, no después: con `useEffect` el navegador alcanzaba a
+  // dibujar la sección nueva en la altura de la anterior y el salto se veía.
+  // Con `useLayoutEffect` la sección ya nace arriba.
+  useLayoutEffect(() => {
     scrollDashboardToPageTop();
+  }, [activeTab, mode]);
+
+  useEffect(() => {
     // El contenido llega después de la primera pintura: si la página crece, el
     // navegador puede restaurar el desplazamiento anterior.
     const tardio = window.setTimeout(scrollDashboardToPageTop, 160);

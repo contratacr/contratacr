@@ -4,7 +4,7 @@ import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { useNativeApp } from "@/hooks/use-native-app";
 import { createPortal } from "react-dom";
 import { useTranslations, useLocale } from "next-intl";
-import { ArrowLeft, Bell, CheckCheck, Check, Trash2, AlertTriangle, MoreHorizontal } from "lucide-react";
+import { Bell, CheckCheck, Check, Trash2, AlertTriangle, MoreHorizontal } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { BrandIconBadge } from "@/components/ui/brand-icon-badge";
 import { createClient } from "@/lib/supabase/client";
@@ -98,25 +98,39 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
   const itemMenuRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const itemMenuPortalRef = useRef<HTMLDivElement | null>(null);
   const projectTimes = useNotificationProjectTimes(items);
+  // Distinguir «no hay nada» de «no se pudo preguntar»: sin esto, un fallo de
+  // red o una sesión vencida se leían como una bandeja vacía.
+  const [errorDeCarga, setErrorDeCarga] = useState(false);
 
-  const loadNotifications = useCallback(() => {
+  const loadNotifications = useCallback(async () => {
     if (!user) return;
     const supabase = createClient();
-    supabase
+    const pedir = () => supabase
       .from("notifications")
       .select("*")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false })
-      .limit(100)
-      .then(({ data }) => {
-        const next = uniqueNotifications(data ?? []);
-        setNotificationState({ userId: user.id, items: next });
-        cacheNotifications(user.id, next);
-        setBusy(false);
-      }, () => {
-        // Keep any cached result visible if the refresh fails.
-        setBusy(false);
-      });
+      .limit(100);
+
+    let { data, error } = await pedir();
+    // Una sesión vencida contesta sin datos y sin ruido: la pantalla decía «no
+    // tienes notificaciones» cuando en realidad no había podido preguntar, y es
+    // justo lo que se ve al abrir el app desde un aviso del teléfono. Se
+    // renueva la sesión y se pregunta otra vez antes de dar nada por vacío.
+    if (error) {
+      const { data: sesion } = await supabase.auth.refreshSession();
+      if (sesion?.session) ({ data, error } = await pedir());
+    }
+    if (error) {
+      setErrorDeCarga(true);
+      setBusy(false);
+      return;
+    }
+    const next = uniqueNotifications(data ?? []);
+    setErrorDeCarga(false);
+    setNotificationState({ userId: user.id, items: next });
+    cacheNotifications(user.id, next);
+    setBusy(false);
   }, [user]);
 
   useEffect(() => {
@@ -133,7 +147,9 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
 
   useEffect(() => {
     if (!user) return;
-    loadNotifications();
+    // queueMicrotask: la carga escribe estado y hacerlo dentro del propio efecto
+    // encadena renders (lo mismo que ya hace la siembra del caché de arriba).
+    queueMicrotask(() => { void loadNotifications(); });
   }, [user, loadNotifications]);
 
   useEffect(() => {
@@ -377,34 +393,23 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
           de volver y, debajo, la tarjeta con la lista o el vacío. Es la misma
           forma de Mis ofertas o Soporte; antes esto era una pastilla blanca
           suelta encima de otra sábana blanca. */}
-      <div className={cn("ccr-notifications-list-header mb-3 flex shrink-0 items-center justify-between gap-3", nativeApp && scope === "all" && "!m-0 !p-0 h-0 overflow-visible")}>
-        <div className="flex min-w-0 items-start gap-1.5">
-          {scope === "all" && !nativeApp && (
-            <button
-              type="button"
-              onClick={() => { if (window.history.length > 1) router.back(); else router.push("/"); }}
-              aria-label={locale === "en" ? "Back" : "Volver"}
-              className="-ml-1.5 grid h-8 w-8 shrink-0 place-items-center rounded-lg text-[#162543] transition-colors hover:bg-white"
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </button>
-          )}
+      {/* En el teléfono el nombre de la pantalla lo pone la barra de arriba
+          —menú, marca y «Notificaciones», igual que en Ofertas—, así que esta
+          cabecera es solo de computadora. En la app desaparece del todo. */}
+      <div className={cn(
+        "ccr-notifications-list-header mb-3 flex shrink-0 items-center justify-between gap-3",
+        nativeApp && scope === "all" && "!m-0 !p-0 h-0 overflow-visible",
+      )}>
+        {/* Sin «Todo al día»: el propio vacío ya dice que no hay nada, y una
+            pastilla que solo aparece cuando no pasa nada no informa. */}
         <div className="min-w-0">
           {scope === "all" ? (
-            // En la app el nombre lo da la barra: repetirlo aquí sobra.
-            <h1 className={cn("text-xl font-extrabold leading-tight text-[#162543] sm:text-2xl", nativeApp && "sr-only")}>{headingTitle}</h1>
+            // El nombre lo da la barra de arriba en el teléfono y en la app;
+            // en computadora, donde la barra no lo dibuja, va aquí.
+            <h1 className={cn("text-xl font-extrabold leading-tight text-[#162543] sm:text-2xl", nativeApp ? "sr-only" : "max-lg:sr-only")}>{headingTitle}</h1>
           ) : (
             <h3 className="text-lg font-extrabold leading-tight text-[#162543] sm:text-[1.15rem]">{headingTitle}</h3>
           )}
-          {unread === 0 && (
-            <p className={cn(
-              "mt-1 inline-flex w-fit items-center rounded-full bg-[#eef6fb] px-2.5 py-1 text-xs font-extrabold text-[#526277]",
-              nativeApp && scope === "all" && "sr-only",
-            )}>
-              {locale === "en" ? "All caught up" : "Todo al día"}
-            </p>
-          )}
-        </div>
         </div>
         {hasVisibleNotifications && (
         <div ref={globalMenuRef} className={cn("relative shrink-0", nativeApp && scope === "all" && "[&>button]:sr-only")}>
@@ -493,6 +498,24 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
             rows={4}
             className={cn("p-4", scope === "all" ? altoDeLaTarjeta : "min-h-[16rem] sm:min-h-[18rem]")}
           />
+        ) : errorDeCarga && visible.length === 0 ? (
+          // No se pudo preguntar: decirlo, en vez de asegurar que no hay nada.
+          <PanelEmptyState
+            plano
+            icon={AlertTriangle}
+            title={locale === "en" ? "We could not load your notifications" : "No pudimos cargar tus notificaciones"}
+            description={locale === "en" ? "Check your connection and try again." : "Revisá tu conexión e intentá de nuevo."}
+            className={cn("px-5 py-12", scope === "all" ? altoDeLaTarjeta : "min-h-[16rem] sm:min-h-[18rem]")}
+            action={(
+              <button
+                type="button"
+                onClick={() => { setBusy(true); void loadNotifications(); }}
+                className="inline-flex items-center justify-center rounded-full bg-[#009FD9] px-5 text-sm font-bold text-white transition-colors hover:bg-[#0089bb]"
+              >
+                {locale === "en" ? "Try again" : "Reintentar"}
+              </button>
+            )}
+          />
         ) : visible.length === 0 ? (
           <PanelEmptyState
             plano
@@ -516,6 +539,7 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
               return (
               <li
                 key={n.id}
+                data-unread={!n.read ? "true" : undefined}
                 className={cn("relative group border-b border-[#f3f4f6] last:border-0", !n.read && "bg-[#f3f9fd]")}
                 onTouchStart={(event) => {
                   if (!nativeApp) return;

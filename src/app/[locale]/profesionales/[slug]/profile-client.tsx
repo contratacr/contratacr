@@ -183,7 +183,7 @@ export default function ProfilePage({ fichaInicial }: { fichaInicial?: Professio
     const card = document.getElementById("resenas");
     if (!strip || !card) return;
     if (card.getBoundingClientRect().top < strip.getBoundingClientRect().top - 2) {
-      card.scrollIntoView({ block: "start", behavior: "auto" });
+      card.scrollIntoView({ block: "start", behavior: "instant" });
     }
   }, [activeTab]);
   const cantidadPestanas = publicOffers.length + publicJobs.length;
@@ -578,6 +578,7 @@ export default function ProfilePage({ fichaInicial }: { fichaInicial?: Professio
   // is blocked via the shared SelfActionModal (isOwn) — see SaveButton.
   const savedPro: SavedPro = {
     id: professional.id,
+    profileId: professional.profileId,
     slug: professional.slug,
     fullName: professional.fullName,
     businessName: professional.businessName,

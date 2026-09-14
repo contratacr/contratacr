@@ -132,7 +132,7 @@ export default function ServiciosPage() {
   }
 
   const selectGroup = useCallback((groupKey: string, mobile: boolean) => {
-    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
     startTransition(() => {
       if (mobile) setMobileGroupKey(groupKey);
       else setActiveGroupKey(groupKey);

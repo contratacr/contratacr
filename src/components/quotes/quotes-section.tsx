@@ -81,7 +81,7 @@ export function QuotesSection({ proName, proSlug, puedeCrear = true }: { proName
           fila que en el resto del panel. */}
       <SectionHeadline subtitulo={tSub("quotes")}>
         {puedeCrear && (quotes?.length ?? 0) > 0 && (
-          <Button type="button" onClick={() => setEditor(true)} className="w-full sm:w-auto"><Plus className="h-4 w-4" />{t("new")}</Button>
+          <Button type="button" onClick={() => setEditor(true)} className="w-full sm:w-auto max-sm:[&>svg]:hidden"><Plus className="h-4 w-4" />{t("new")}</Button>
         )}
       </SectionHeadline>
 

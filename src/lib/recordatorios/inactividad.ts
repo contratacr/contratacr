@@ -1,5 +1,8 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendNotificationPush } from "@/lib/push/notify";
+import { usersWithActivePush } from "@/lib/direct-chat/outside-app-notify";
+import { brandedEmailDocument, sendBrevoEmail } from "@/lib/email/send";
+import { escaparHtml } from "@/lib/email/escape";
 
 // Recordatorios por inactividad.
 //
@@ -26,11 +29,13 @@ export const TIPOS_RECORDATORIO = [
   "project_in_progress_idle",
   "project_confirmation_pending",
   "booking_past_date_idle",
+  "job_applications_waiting",
+  "quote_awaiting_client",
 ] as const;
 
 type TipoRecordatorio = (typeof TIPOS_RECORDATORIO)[number];
 
-type Aviso = {
+export type Aviso = {
   user_id: string;
   type: TipoRecordatorio;
   title: string;
@@ -41,13 +46,41 @@ type Aviso = {
   hito: Hito;
 };
 
+/**
+ * El aviso por correo para quien NO tiene la app instalada.
+ *
+ * Un push solo llega al teléfono que instaló la app, y la mayoría de los
+ * clientes entran por la web: sin esto, el recordatorio se escribía en una
+ * campana que esa persona no iba a abrir. Solo al hito de 7 días, que es cuando
+ * la cosa lleva de verdad detenida, y nunca con el detalle del trabajo: el
+ * correo dice qué hay que hacer y el enlace lleva al app.
+ */
+async function avisarPorCorreo(destino: string, aviso: { title: string; message: string; data: Record<string, unknown> }) {
+  const origen = (process.env.NEXT_PUBLIC_APP_URL || "https://www.contratacr.com").replace(/\/$/, "");
+  const enlace = typeof aviso.data.link === "string" ? `${origen}${aviso.data.link}` : origen;
+  const html = brandedEmailDocument({
+    title: aviso.title,
+    origin: origen,
+    bodyHtml: `
+      <h1 style="font-size:19px;font-weight:bold;margin:14px 0 10px 0;color:#162543;">${escaparHtml(aviso.title)}</h1>
+      <p style="font-size:14px;line-height:1.6;color:#374151;margin:0 0 18px;">${escaparHtml(aviso.message)}</p>
+      <p style="margin:0 0 6px;"><a href="${escaparHtml(enlace)}" style="display:inline-block;background:#009FD9;color:#ffffff;text-decoration:none;font-weight:bold;font-size:14px;padding:12px 22px;border-radius:999px;">Ver en ContrataCR</a></p>
+    `,
+  });
+  await sendBrevoEmail({ to: destino, subject: aviso.title, html });
+}
+
 export type ResumenRecordatorios = {
   propuestasSinResponder: number;
+  postulacionesSinRevisar: number;
+  cotizacionesSinRespuesta: number;
   solicitudesSinResponder: number;
   proyectosDetenidos: number;
   confirmacionesPendientes: number;
   citasSinCerrar: number;
   enviados: number;
+  /** De los enviados, cuántos además salieron por correo. */
+  porCorreo: number;
   repetidos: number;
   /** Avisos que la base rechazó. Cualquier número distinto de 0 es un problema. */
   fallidos: number;
@@ -92,20 +125,23 @@ async function perfilesDeProfesionales(
   return mapa;
 }
 
-export async function enviarRecordatoriosDeInactividad(
-  { ensayo = false }: OpcionesRecordatorios = {},
-): Promise<ResumenRecordatorios> {
+/** Lo que está detenido ahora mismo, con el aviso que le corresponde a cada
+ *  cosa. Lo usan el envío de recordatorios y la pantalla de admin: así las dos
+ *  miran exactamente lo mismo y no hay dos definiciones de «pendiente». */
+export async function recolectarPendientes(): Promise<{ avisos: Aviso[]; resumen: ResumenRecordatorios }> {
   const admin = createAdminClient();
   const resumen: ResumenRecordatorios = {
     propuestasSinResponder: 0,
+    postulacionesSinRevisar: 0,
+    cotizacionesSinRespuesta: 0,
     solicitudesSinResponder: 0,
     proyectosDetenidos: 0,
     confirmacionesPendientes: 0,
     citasSinCerrar: 0,
     enviados: 0,
+    porCorreo: 0,
     repetidos: 0,
     fallidos: 0,
-    ...(ensayo ? { ensayo: true } : {}),
   };
   const avisos: Aviso[] = [];
   const corteISO = haceDias(HITOS_DIAS[0]).toISOString();
@@ -264,6 +300,83 @@ export async function enviarRecordatoriosDeInactividad(
     });
   }
 
+  // ── 6. Postulaciones que el empleador no ha revisado ─────────────────────
+  // Le toca a QUIEN PUBLICÓ EL EMPLEO: hay gente esperando respuesta y el aviso
+  // de cada postulación ya se perdió entre lo demás.
+  const { data: postulaciones } = await admin
+    .from("job_applications")
+    .select("id, created_at, job_id, status, job_posts:job_id(title, status, employer_id)")
+    .in("status", ["pending", "new", "submitted"])
+    .lt("created_at", corteISO);
+
+  type FilaPostulacion = {
+    created_at: string;
+    job_id: string;
+    job_posts: { title?: string; status?: string; employer_id?: string } | Array<{ title?: string; status?: string; employer_id?: string }> | null;
+  };
+  const porEmpleo = new Map<string, { titulo: string; employerId: string; desde: string; cuantas: number }>();
+  for (const fila of (postulaciones ?? []) as FilaPostulacion[]) {
+    const empleo = Array.isArray(fila.job_posts) ? fila.job_posts[0] : fila.job_posts;
+    if (!empleo?.employer_id || empleo.status !== "published") continue;
+    const previo = porEmpleo.get(fila.job_id);
+    porEmpleo.set(fila.job_id, {
+      titulo: empleo.title ?? "tu empleo",
+      employerId: empleo.employer_id,
+      desde: previo && previo.desde < fila.created_at ? previo.desde : fila.created_at,
+      cuantas: (previo?.cuantas ?? 0) + 1,
+    });
+  }
+  const perfilEmpleos = await perfilesDeProfesionales(admin, [...porEmpleo.values()].map((e) => e.employerId));
+  for (const [jobId, empleo] of porEmpleo) {
+    const hito = hitoDe(empleo.desde);
+    const perfil = perfilEmpleos.get(empleo.employerId);
+    if (!hito || !perfil) continue;
+    resumen.postulacionesSinRevisar += 1;
+    avisos.push({
+      user_id: perfil,
+      type: "job_applications_waiting",
+      title: empleo.cuantas === 1 ? "Tienes una postulación sin revisar" : `Tienes ${empleo.cuantas} postulaciones sin revisar`,
+      message: `"${empleo.titulo}" recibió ${empleo.cuantas === 1 ? "una postulación" : `${empleo.cuantas} postulaciones`} hace ${hito} días y nadie las ha abierto.`,
+      data: { link: "/es/dashboard/profesional?tab=jobs", job_id: jobId, job_title: empleo.titulo, cuantas: empleo.cuantas, hito },
+      referencia: jobId,
+      hito,
+    });
+  }
+
+  // ── 7. Cotizaciones enviadas sin respuesta del cliente ───────────────────
+  // Le toca al CLIENTE: alguien le puso precio a su trabajo y quedó esperando.
+  const { data: cotizaciones } = await admin
+    .from("quotes")
+    .select("id, created_at, client_id, title, total")
+    .eq("status", "sent")
+    .lt("created_at", corteISO);
+
+  for (const cotizacion of (cotizaciones ?? []) as Array<{ id: string; created_at: string; client_id: string; title?: string }>) {
+    const hito = hitoDe(cotizacion.created_at);
+    if (!hito || !cotizacion.client_id) continue;
+    resumen.cotizacionesSinRespuesta += 1;
+    const que = (cotizacion.title ?? "").trim() || "un trabajo";
+    avisos.push({
+      user_id: cotizacion.client_id,
+      type: "quote_awaiting_client",
+      title: "Tienes una cotización sin responder",
+      message: `Recibiste una cotización por "${que}" hace ${hito} días. Aceptala o rechazala para que el profesional sepa a qué atenerse.`,
+      data: { link: "/es/dashboard/profesional?tab=quotes&mode=use", quote_id: cotizacion.id, hito },
+      referencia: cotizacion.id,
+      hito,
+    });
+  }
+
+  return { avisos, resumen };
+}
+
+export async function enviarRecordatoriosDeInactividad(
+  { ensayo = false }: OpcionesRecordatorios = {},
+): Promise<ResumenRecordatorios> {
+  const admin = createAdminClient();
+  const { avisos, resumen } = await recolectarPendientes();
+  if (ensayo) resumen.ensayo = true;
+
   if (avisos.length === 0) return resumen;
 
   // ── Enviar, sin repetir ──────────────────────────────────────────────────
@@ -277,11 +390,23 @@ export async function enviarRecordatoriosDeInactividad(
     .in("type", [...TIPOS_RECORDATORIO])
     .gte("created_at", haceDias(120).toISOString());
 
+  // Quién tiene la app y a qué dirección escribirle: una consulta para todos,
+  // no una por aviso.
+  const destinatarios = [...new Set(avisos.map((a) => a.user_id))];
+  const conPush = ensayo ? new Set<string>() : await usersWithActivePush(admin, destinatarios);
+  const correos = new Map<string, string>();
+  if (!ensayo) {
+    const { data: perfiles } = await admin.from("profiles").select("id, email").in("id", destinatarios);
+    for (const fila of (perfiles ?? []) as Array<{ id: string; email: string | null }>) {
+      if (fila.email) correos.set(fila.id, fila.email);
+    }
+  }
+
   const marca = (userId: string, type: string, referencia: string, hito: number) => `${userId}|${type}|${referencia}|${hito}`;
   const yaAvisado = new Set<string>();
   for (const fila of (previas ?? []) as Array<{ user_id: string; type: string; data: Record<string, unknown> | null }>) {
     const d = fila.data ?? {};
-    const referencia = (d.project_id ?? d.booking_id) as string | undefined;
+    const referencia = (d.project_id ?? d.booking_id ?? d.job_id ?? d.quote_id) as string | undefined;
     const hito = Number(d.hito);
     if (!referencia || !Number.isFinite(hito)) continue;
     yaAvisado.add(marca(fila.user_id, fila.type, referencia, hito));
@@ -320,6 +445,15 @@ export async function enviarRecordatoriosDeInactividad(
       message: aviso.message,
       data: aviso.data,
     });
+    // A los 7 días, quien no tiene la app recibe además un correo: la campana
+    // de una web que no se abre no avisa a nadie.
+    if (aviso.hito === 7 && !conPush.has(aviso.user_id)) {
+      const correo = correos.get(aviso.user_id);
+      if (correo) {
+        await avisarPorCorreo(correo, aviso);
+        resumen.porCorreo += 1;
+      }
+    }
     resumen.enviados += 1;
   }
 

@@ -535,4 +535,33 @@ test.describe("@seeded dashboard surfaces", () => {
     await expect(page.getByRole("heading", { name: /^(?:Following|Followers)$/i })).toHaveCount(0);
     await expectHealthyPage(page);
   });
+
+  test("cambiar de sección desde el menú abre arriba sin salto visible", async ({ page }) => {
+    await ensureRegressionSeed();
+    await page.setViewportSize({ width: 390, height: 844 });
+    await loginAs(page, E2E_USERS.professional.email, E2E_USERS.professional.password);
+    await gotoOK(page, "/es/dashboard/profesional?tab=bookings");
+    await page.waitForTimeout(1500);
+    await page.evaluate(() => window.scrollTo(0, 500));
+    await page.waitForTimeout(400);
+  
+    await page.evaluate(() => {
+      (window as unknown as { __muestras: number[] }).__muestras = [];
+      const muestras = (window as unknown as { __muestras: number[] }).__muestras;
+      let n = 0;
+      const mirar = () => { muestras.push(Math.round(window.scrollY)); if (++n < 30) requestAnimationFrame(mirar); };
+      requestAnimationFrame(mirar);
+    });
+    // Volver al menú del panel y entrar a otra sección, que es el gesto real.
+    const atras = page.locator("[data-ccr-section-back]");
+    if (await atras.count()) await atras.first().click();
+    await page.waitForTimeout(500);
+    const muestras: number[] = await page.evaluate(() => (window as unknown as { __muestras: number[] }).__muestras);
+    // Lo que se mide es el CAMINO, no el destino: con `scroll-behavior: smooth`
+    // en el CSS, un reseteo con `behavior: "auto"` se animaba y la sección se
+    // veía subir. Entre 500 y 0 no puede haber pasos intermedios.
+    const intermedios = muestras.filter((alto) => alto > 4 && alto < 496);
+    expect(intermedios, `el salto se vio: ${muestras.join(",")}`).toHaveLength(0);
+    expect(await page.evaluate(() => window.scrollY)).toBeLessThanOrEqual(4);
+  });
 });

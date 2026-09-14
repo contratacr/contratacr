@@ -81,6 +81,9 @@ export type SavedPro = {
   videoconsulta?: boolean;
   coverage?: { country?: boolean } | null;
   followerCount?: number;
+  /** La cuenta dueña de la ficha: con esto el botón sabe por sí mismo que quien
+   *  mira es el dueño, sin depender de que la pantalla ya lo haya averiguado. */
+  profileId?: string;
 };
 
 export function getSavedPros(userId?: string): SavedPro[] {
@@ -318,6 +321,21 @@ export function SaveButton({ pro, className, isOwn = false, withLabel = false, b
     const activeUser = authLoading
       ? (await createClient().auth.getUser()).data.user ?? null
       : user;
+    // La pantalla tarda un instante en saber quién visita, y en ese instante
+    // `isOwn` todavía es falso: quien pulsaba «Guardar» apenas abría su propia
+    // ficha terminaba guardándose a sí mismo. Con el dueño de la ficha a mano,
+    // la comprobación se rehace aquí, ya con la sesión resuelta, y si quedó
+    // guardado de antes se deshace solo.
+    if (pro.profileId && activeUser?.id === pro.profileId) {
+      if (saved) {
+        await unsaveProRemote(pro.id, activeUser.id);
+        unsavePro(pro.id, activeUser.id);
+        setSaved(false);
+        window.dispatchEvent(new CustomEvent("savedProsChanged"));
+      }
+      setSelfMsg(SELF_MSG.favorite);
+      return;
+    }
     if (!saved && !activeUser) {
       writePendingSave(pro);
       const redirect = encodeURIComponent("/dashboard/profesional?tab=saved&mode=use");

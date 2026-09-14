@@ -2611,6 +2611,12 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                         <span className={mobileDrawerTextClass}>{t("offerServices")}</span>
                       </Link>
                     )}
+                    {isPro && (
+                      <Link href="/dashboard/profesional?tab=quotes" onClick={() => setMobileOpen(false)} className={claseCajon("/dashboard/profesional?tab=quotes")}>
+                        <DrawerIcon><FileText /></DrawerIcon>
+                        <span className={mobileDrawerTextClass}>{tNav("quotes")}</span>
+                      </Link>
+                    )}
                     {/* En la app, quien tiene cuenta profesional lleva Cotizaciones
                         fija en la barra de abajo, así que el Asistente vive aquí.
                         Las cuentas de solo cliente lo tienen en la barra. */}
@@ -2727,6 +2733,12 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                   )}
                 </div>
 
+              </nav>
+              {/* El idioma y cerrar sesión no son destinos: son ajustes de la
+                  cuenta. Iban con el mismo peso que «Mis citas» y hacían ver el
+                  cajón más largo y más cargado de lo que es. Van al pie, tras
+                  una línea, en letra menor y sin el mosaico del icono. */}
+              <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-[#eef2f6] px-2 pt-3">
                 <button
                   type="button"
                   onPointerDown={(e) => e.stopPropagation()}
@@ -2735,17 +2747,12 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                     switchLang(alternateLocale);
                     setMobileOpen(false);
                   }}
-                  className={mobileDrawerItemClass}
+                  className="inline-flex items-center gap-2 py-1.5 text-[13px] font-semibold text-[#68778d] transition-colors hover:text-[#162543]"
                 >
-                  <DrawerIcon><Globe2 /></DrawerIcon>
-                  <span className={mobileDrawerTextClass}>{alternateLanguageLabel}</span>
+                  <Globe2 className="h-4 w-4" />
+                  {alternateLanguageLabel}
                 </button>
-              </nav>
-              {user && (
-                <>
-                  {/* Misma fila que los demás destinos del menú: una pastilla
-                      rellena lo hacía ver como la acción principal del cajón,
-                      que no lo es. */}
+                {user && (
                   <button
                     type="button"
                     onClick={() => {
@@ -2753,13 +2760,13 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                       setMobileOpen(false);
                       void handleSignOut();
                     }}
-                    className={mobileDrawerItemClass}
+                    className="inline-flex items-center gap-2 py-1.5 text-[13px] font-semibold text-[#68778d] transition-colors hover:text-[#b4232a]"
                   >
-                    <DrawerIcon><LogOut /></DrawerIcon>
-                    <span className={mobileDrawerTextClass}>{locale === "en" ? "Sign out" : "Cerrar sesión"}</span>
+                    <LogOut className="h-4 w-4" />
+                    {locale === "en" ? "Sign out" : "Cerrar sesión"}
                   </button>
-                </>
-              )}
+                )}
+              </div>
             </div>
           </div>
       </>

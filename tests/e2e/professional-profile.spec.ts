@@ -1,6 +1,6 @@
 import { expect, test } from "playwright/test";
 import { expectNoHorizontalOverflow, firstProfessionalHref, gotoOK, loginAs } from "./helpers";
-import { canRunSeededRegression, ensureRegressionSeed, type RegressionSeedState } from "./seed";
+import { canRunSeededRegression, ensureRegressionSeed, regressionAdminClient, E2E_USERS, type RegressionSeedState } from "./seed";
 import { cleanupDisposableAccount, createDisposableAccount, type DisposableAccount } from "./disposable-account";
 
 test.describe("@seeded professional profile", () => {
@@ -134,5 +134,22 @@ test.describe("@seeded professional profile", () => {
 
     await resenas.click();
     await expect(page.getByText(/Contratación verificada|Contacto confirmado|Experiencia no verificada|Verified booking|Confirmed contact|Unverified experience/i)).toHaveCount(0);
+  });
+
+  test("no puedo guardarme a mí mismo aunque pulse apenas abre", async ({ page }) => {
+    const seed = await ensureRegressionSeed();
+    const admin = regressionAdminClient();
+    await admin.from("saved_professionals").delete().eq("client_id", seed.professionalUserId).eq("professional_id", seed.professionalId);
+    await loginAs(page, E2E_USERS.professional.email, E2E_USERS.professional.password);
+    await gotoOK(page, `/es/profesionales/${seed.professionalSlug}`);
+    // Sin esperar: se pulsa apenas la ficha aparece, que es cuando se rompía.
+    await page.locator("[data-save-button]:visible").first().click({ timeout: 10_000 });
+    await page.waitForTimeout(1500);
+    const { count } = await admin.from("saved_professionals")
+      .select("id", { count: "exact", head: true })
+      .eq("client_id", seed.professionalUserId)
+      .eq("professional_id", seed.professionalId);
+    expect(count ?? 0).toBe(0);
+    await expect(page.getByText(/tus propios favoritos|your own favorites/i).first()).toBeVisible();
   });
 });

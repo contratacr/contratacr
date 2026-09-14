@@ -11,7 +11,7 @@ export default function NotificationsPage() {
   return (
     <div className="flex min-h-screen flex-col bg-[#f5f8fb]">
       <LandingNavbar />
-      <SectionHeaderTitle title={tSeccion("notifications")} fallbackHref="/" raiz />
+      <SectionHeaderTitle title={tSeccion("notifications")} fallbackHref="/" raiz tambienEnLaWeb />
       <main className="ccr-notifications-page-main flex w-full flex-1 flex-col px-0 pb-0 pt-16 sm:px-6 sm:pb-16 sm:pt-24 lg:px-8">
         {/* El lienzo gris de siempre: la lista y el vacío traen su propia
             tarjeta, igual que Mis proyectos. Antes esta sección era una sábana

@@ -218,13 +218,13 @@ export function StatusFilterTabs({
       style={useSegmentedLayout && compacto ? { maskImage: mascaraCarril, WebkitMaskImage: mascaraCarril } : undefined}
     >
       <RailOrGrid scroll={!useSegmentedLayout} className={cn(
+        // Celdas repartidas, pero ninguna por debajo de su propio rótulo: con
+        // tres columnas iguales, «Profesionales» y su conteo no cabían en el
+        // tercio que les tocaba y salía «Profesional…». Ahora el sobrante se
+        // reparte y la palabra manda sobre el reparto.
         useSegmentedLayout
-          ? compacto
-            ? "flex items-stretch gap-1"
-            : "grid items-stretch gap-1"
+          ? "flex items-stretch gap-1"
           : "flex gap-1 rounded-xl bg-[#e6edf4] p-1",
-        useSegmentedLayout && !compacto && tabs.length === 2 && "grid-cols-2",
-        useSegmentedLayout && !compacto && tabs.length === 3 && "grid-cols-3",
       )}>
       {tabs.map((tab) => {
         const active = value === tab.id;
@@ -250,7 +250,7 @@ export function StatusFilterTabs({
                       // El relleno de la celda cede antes que el rótulo: con
                       // tres cifras de conteo («123 favoritos») no quedaban ni
                       // los 79px que mide «Profesionales».
-                      : "gap-0.5 px-0.5 text-[11.5px] min-[360px]:text-[12px] min-[400px]:gap-1 min-[400px]:px-1.5 min-[400px]:text-[13px] sm:gap-1 sm:px-3",
+                      : "flex-1 basis-0 min-w-fit gap-0.5 px-0.5 text-[11.5px] min-[360px]:text-[12px] min-[400px]:gap-1 min-[400px]:px-1.5 min-[400px]:text-[13px] sm:gap-1 sm:px-3",
                     "whitespace-nowrap",
                   )
                 : "gap-1"

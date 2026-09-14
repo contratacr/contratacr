@@ -17,8 +17,8 @@ export function RouteScrollReset() {
     if (window.location.hash) return;
     const frame = window.requestAnimationFrame(() => {
       recoverBodyScrollLock();
-      document.scrollingElement?.scrollTo({ top: 0, left: 0, behavior: "auto" });
-      window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+      document.scrollingElement?.scrollTo({ top: 0, left: 0, behavior: "instant" });
+      window.scrollTo({ top: 0, left: 0, behavior: "instant" });
     });
     return () => window.cancelAnimationFrame(frame);
   }, [pathname]);

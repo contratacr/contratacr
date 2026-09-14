@@ -150,7 +150,7 @@ export function OffersManager({ initialOffers, embedded = false, backHref = "/da
           <SectionHeadline subtitulo={copy.subtitle}>
               {offers.length > 0 && (<>
               <button type="button" onClick={() => setPublishOpen(true)} className="hidden h-11 w-full items-center justify-center gap-2 rounded-full bg-[#009FD9] px-4 text-sm font-bold text-white transition-colors hover:bg-[#0089bb] sm:w-auto sm:px-6 lg:flex"><Plus className="h-4 w-4" />{copy.publish}</button>
-              <Link href="/ofertas/publicar?from=panel" className="flex h-11 w-full items-center justify-center gap-2 rounded-full bg-[#009FD9] px-4 text-sm font-bold text-white transition-colors hover:bg-[#0089bb] sm:w-auto sm:px-6 lg:hidden"><Plus className="h-4 w-4" />{copy.publish}</Link>
+              <Link href="/ofertas/publicar?from=panel" className="flex h-11 w-full items-center justify-center gap-2 rounded-full bg-[#009FD9] px-4 text-sm font-bold text-white transition-colors hover:bg-[#0089bb] sm:w-auto sm:px-6 lg:hidden max-sm:[&>svg]:hidden"><Plus className="h-4 w-4" />{copy.publish}</Link>
               </>)}
           </SectionHeadline>
         </div>

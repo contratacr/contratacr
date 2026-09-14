@@ -5,13 +5,18 @@ import { useRouter } from "@/i18n/navigation";
 import { useNativeApp } from "@/hooks/use-native-app";
 
 // Destinos personales de la app (Mensajes, Notificaciones, Soporte, Ayuda…):
-// la barra dice dónde estás y ofrece volver, en vez de repetir la marca. En la
-// web esas mismas páginas conservan el navbar del sitio.
+// la barra dice dónde estás y ofrece volver, en vez de repetir la marca.
+//
+// En la web esas páginas conservan el navbar del sitio, salvo que se pida
+// `tambienEnLaWeb`: entonces la barra del teléfono también toma el título, que
+// es como se ven Ofertas y Empleos —menú, marca y el nombre de la pantalla— y
+// así la pantalla no dibuja un segundo encabezado debajo del primero.
 export function SectionHeaderTitle({
   title,
   fallbackHref = "/",
   raiz = false,
   menu = false,
+  tambienEnLaWeb = false,
 }: {
   title: string;
   fallbackHref?: string;
@@ -19,12 +24,15 @@ export function SectionHeaderTitle({
   menu?: boolean;
   // Índice propio (Mensajes): ☰ + marca + nombre, como Ofertas y Empleos.
   raiz?: boolean;
+  // La barra del teléfono también toma el título en la web.
+  tambienEnLaWeb?: boolean;
 }) {
   const nativeApp = useNativeApp();
+  const publica = nativeApp || tambienEnLaWeb;
   const router = useRouter();
 
   useEffect(() => {
-    if (!nativeApp) return;
+    if (!publica) return;
     const global = window as unknown as {
       __ccrSectionHeader?: string | null;
       __ccrSectionActive?: boolean;
@@ -45,17 +53,17 @@ export function SectionHeaderTitle({
       global.__ccrSectionMenu = false;
       window.dispatchEvent(new CustomEvent("ccr:section-header", { detail: null }));
     };
-  }, [menu, nativeApp, raiz, title]);
+  }, [menu, publica, raiz, title]);
 
   useEffect(() => {
-    if (!nativeApp) return;
+    if (!publica) return;
     const volver = () => {
       if (window.history.length > 1) router.back();
       else router.push(fallbackHref);
     };
     window.addEventListener("ccr:section-back", volver);
     return () => window.removeEventListener("ccr:section-back", volver);
-  }, [fallbackHref, nativeApp, router]);
+  }, [fallbackHref, publica, router]);
 
   return null;
 }
