@@ -4,7 +4,7 @@ import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { useNativeApp } from "@/hooks/use-native-app";
 import { createPortal } from "react-dom";
 import { useTranslations, useLocale } from "next-intl";
-import { Bell, CheckCheck, Check, Trash2, AlertTriangle, MoreHorizontal } from "lucide-react";
+import { ArrowLeft, Bell, CheckCheck, Check, Trash2, AlertTriangle, MoreHorizontal } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { BrandIconBadge } from "@/components/ui/brand-icon-badge";
 import { createClient } from "@/lib/supabase/client";
@@ -364,10 +364,31 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
   }
 
   const headingTitle = locale === "en" ? "Notifications" : "Notificaciones";
+  // Los tres estados —esqueleto, vacío y lista— miden lo mismo, que es lo que
+  // mantiene el pie quieto. En la app la pantalla entera; en la web, la misma
+  // tarjeta que cualquier otra sección.
+  const altoDeLaTarjeta = nativeApp
+    ? "min-h-[calc(100dvh-8.75rem)] sm:min-h-[calc(100dvh-16rem)]"
+    : "min-h-[24rem] sm:min-h-[26rem]";
 
   return (
     <div className="ccr-notifications-list flex h-full min-h-0 flex-col">
-      <div className={cn("ccr-notifications-list-header mb-3 flex shrink-0 items-center justify-between gap-3 rounded-2xl bg-white px-1 py-1 sm:px-0 sm:py-0", nativeApp && scope === "all" && "!m-0 !p-0 h-0 overflow-visible")}>
+      {/* La cabecera va sobre el lienzo, sin caja propia: el título con su flecha
+          de volver y, debajo, la tarjeta con la lista o el vacío. Es la misma
+          forma de Mis ofertas o Soporte; antes esto era una pastilla blanca
+          suelta encima de otra sábana blanca. */}
+      <div className={cn("ccr-notifications-list-header mb-3 flex shrink-0 items-center justify-between gap-3", nativeApp && scope === "all" && "!m-0 !p-0 h-0 overflow-visible")}>
+        <div className="flex min-w-0 items-start gap-1.5">
+          {scope === "all" && !nativeApp && (
+            <button
+              type="button"
+              onClick={() => { if (window.history.length > 1) router.back(); else router.push("/"); }}
+              aria-label={locale === "en" ? "Back" : "Volver"}
+              className="-ml-1.5 grid h-8 w-8 shrink-0 place-items-center rounded-lg text-[#162543] transition-colors hover:bg-white"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </button>
+          )}
         <div className="min-w-0">
           {scope === "all" ? (
             // En la app el nombre lo da la barra: repetirlo aquí sobra.
@@ -383,6 +404,7 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
               {locale === "en" ? "All caught up" : "Todo al día"}
             </p>
           )}
+        </div>
         </div>
         {hasVisibleNotifications && (
         <div ref={globalMenuRef} className={cn("relative shrink-0", nativeApp && scope === "all" && "[&>button]:sr-only")}>
@@ -460,11 +482,16 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
           </div>
         </div>
       )}
-      <div className="ccr-notifications-scroll min-h-0 flex-1 bg-white overflow-hidden">
+      <div className={cn(
+        "ccr-notifications-scroll min-h-0 flex-1 overflow-hidden bg-white",
+        // En la app la lista va de borde a borde contra la barra de abajo; en la
+        // web es una tarjeta como la de cualquier otra sección.
+        scope === "all" && !nativeApp && "rounded-2xl border border-[#dfe8f0] shadow-sm",
+      )}>
         {busy ? (
           <PanelListSkeleton
             rows={4}
-            className={cn("p-4", scope === "all" ? "min-h-[calc(100dvh-8.75rem)] sm:min-h-[calc(100dvh-16rem)]" : "min-h-[16rem] sm:min-h-[18rem]")}
+            className={cn("p-4", scope === "all" ? altoDeLaTarjeta : "min-h-[16rem] sm:min-h-[18rem]")}
           />
         ) : visible.length === 0 ? (
           <PanelEmptyState
@@ -472,19 +499,14 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
             icon={Bell}
             title={t("noneList")}
             description={t("emptySub")}
-            className={cn(
-              "px-5 py-12",
-              scope === "all"
-                ? "min-h-[calc(100dvh-8.75rem)] sm:min-h-[calc(100dvh-16rem)]"
-                : "min-h-[16rem] sm:min-h-[18rem]",
-            )}
+            className={cn("px-5 py-12", scope === "all" ? altoDeLaTarjeta : "min-h-[16rem] sm:min-h-[18rem]")}
           />
         ) : (
           // Misma altura mínima que el esqueleto y el vacío, y de una pantalla
           // entera: así el pie queda debajo del borde en los tres estados y
           // cuando la lista crece lo empuja fuera de la vista, no a la vista
           // (medido: saltos de 0,78 en teléfono y 0,49 en escritorio).
-          <ul className={cn("ccr-notifications-items", scope === "all" ? "min-h-[calc(100dvh-8.75rem)] sm:min-h-[calc(100dvh-16rem)]" : "min-h-[16rem] sm:min-h-[18rem]")}>
+          <ul className={cn("ccr-notifications-items", scope === "all" ? altoDeLaTarjeta : "min-h-[16rem] sm:min-h-[18rem]")}>
             {ordenadas.map((n, indice) => {
               const grupo = grupoDe(n);
               const abreGrupo = indice === 0 || grupoDe(ordenadas[indice - 1]) !== grupo;

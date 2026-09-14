@@ -160,8 +160,10 @@ export function JobsManager({ initialJobs, embedded = false, backHref = "/dashbo
           {/* Cabecera de la sección: el contexto a la izquierda y la acción a la
               derecha, la misma fila que en Mis proyectos y en Soporte. */}
           <SectionHeadline subtitulo={copy.subtitle}>
+              {jobs.length > 0 && (<>
               <button type="button" onClick={() => setPublishOpen(true)} className="hidden h-11 w-full items-center justify-center gap-2 rounded-full bg-[#009FD9] px-4 text-sm font-bold text-white transition-colors hover:bg-[#0089bb] sm:w-auto sm:px-6 lg:flex"><Plus className="h-4 w-4" />{copy.publish}</button>
               <Link href="/empleos/publicar?from=panel" className="flex h-11 w-full items-center justify-center gap-2 rounded-full bg-[#009FD9] px-4 text-sm font-bold text-white transition-colors hover:bg-[#0089bb] sm:w-auto sm:px-6 lg:hidden"><Plus className="h-4 w-4" />{copy.publish}</Link>
+              </>)}
           </SectionHeadline>
         </div>
         <div className="space-y-3.5">
@@ -258,11 +260,10 @@ export function JobsManager({ initialJobs, embedded = false, backHref = "/dashbo
               icon={BriefcaseBusiness}
               title={copy.emptyTitle}
               description={copy.emptyBody}
-              action={(
-                <Button type="button" onClick={() => setPublishOpen(true)}>
-                  <Plus className="h-4 w-4" /> {copy.publishTitle}
-                </Button>
-              )}
+              action={(<>
+                <Button type="button" size="crear" onClick={() => setPublishOpen(true)} className="hidden lg:inline-flex">{copy.publishTitle}</Button>
+                <Button asChild size="crear" className="lg:hidden"><Link href="/empleos/publicar?from=panel">{copy.publishTitle}</Link></Button>
+              </>)}
             />
           )}
         </div>

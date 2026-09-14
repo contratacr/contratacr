@@ -12,6 +12,7 @@ import { createClient } from "@/lib/supabase/client";
 import { SupportModal } from "@/components/support/support-modal";
 import { SupportForm } from "@/components/support/support-form";
 import { StatusFilterTabs } from "@/components/dashboard/status-filter-tabs";
+import { Button } from "@/components/ui/button";
 import { SectionHeadline } from "@/components/dashboard/section-headline";
 import { supportTicketRef } from "@/lib/support-ticket";
 import { LONG_TEXT_MAX_LENGTH, limitText } from "@/lib/text-limits";
@@ -609,9 +610,7 @@ export function SupportTickets({
           title={t("empty")}
           description={t("emptySub")}
           action={(
-            <button onClick={openNewTicket} className="inline-flex items-center gap-1.5 rounded-lg bg-[#009FD9] px-4 py-2 text-sm font-semibold text-white hover:bg-[#0089bb]">
-              <Plus className="h-4 w-4" /> {t("openTicket")}
-            </button>
+            <Button type="button" size="crear" onClick={openNewTicket}>{t("openTicket")}</Button>
           )}
         />
       ) : filtered.length === 0 ? (

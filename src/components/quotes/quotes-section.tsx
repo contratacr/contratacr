@@ -97,7 +97,7 @@ export function QuotesSection({ proName, proSlug, puedeCrear = true }: { proName
           title={t("emptyTitle")}
           description={t("emptyBody")}
           action={puedeCrear ? (
-            <Button type="button" onClick={() => setEditor(true)}><Plus className="h-4 w-4" />{t("emptyCta")}</Button>
+            <Button type="button" size="crear" onClick={() => setEditor(true)}>{t("emptyCta")}</Button>
           ) : undefined}
         />
       ) : (

@@ -33,6 +33,10 @@ const buttonVariants = cva(
         lg: "h-12 px-7 text-base",
         xl: "h-14 px-8 text-lg",
         icon: "h-10 w-10",
+        // La medida de los botones de crear del panel: la cabecera de cada
+        // sección los dibujaba a mano (h-11, px-6, negrita) y el mismo botón
+        // dentro de un estado vacío salía más bajo y más liviano.
+        crear: "h-11 px-6 font-bold",
       },
     },
     defaultVariants: {

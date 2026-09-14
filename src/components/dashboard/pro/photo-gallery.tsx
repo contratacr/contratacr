@@ -358,8 +358,8 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
           title={t("addCase")}
           description={t("addCaseHint")}
           action={(
-            <Button type="button" onClick={openAdd} disabled={addFull || professions.length === 0}>
-              <Plus className="h-4 w-4" /> {t("addCase")}
+            <Button type="button" size="crear" onClick={openAdd} disabled={addFull || professions.length === 0}>
+              {t("addCase")}
             </Button>
           )}
         />
