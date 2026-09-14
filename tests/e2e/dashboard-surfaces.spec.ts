@@ -173,10 +173,10 @@ test.describe("@seeded dashboard surfaces", () => {
     expect(geometry[0]!.height).toBeGreaterThan(14);
     expect(geometry[0]!.height).toBeLessThanOrEqual(24);
     await expect(name.locator("xpath=following-sibling::*[1]").locator("svg").first()).toBeVisible();
-    // "Ver perfil" sits vertically centred on the counts row.
-    const linkCentre = geometry[2]!.y + geometry[2]!.height / 2;
-    const actionsCentre = geometry[1]!.y + geometry[1]!.height / 2;
-    expect(Math.abs(linkCentre - actionsCentre)).toBeLessThanOrEqual(8);
+    // «Ver perfil» ya no va a la par de las cifras: en el teléfono es una fila
+    // propia de dos botones debajo de ellas, a todo el ancho de la tarjeta.
+    expect(geometry[2]!.y).toBeGreaterThanOrEqual(geometry[1]!.y + geometry[1]!.height - 2);
+    expect(geometry[2]!.width).toBeGreaterThan(120);
     await expectNoHorizontalOverflow(page);
   });
 

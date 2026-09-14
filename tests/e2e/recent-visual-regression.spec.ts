@@ -1,5 +1,5 @@
 import { expect, test, type Locator, type Page } from "playwright/test";
-import { expectHealthyPage, gotoOK, loginAs } from "./helpers";
+import { expectHealthyPage, gotoOK, loginAs, waitForInteractivePage } from "./helpers";
 import { cleanupDisposableAccount, createDisposableAccount, type DisposableAccount } from "./disposable-account";
 import { canRunSeededRegression, E2E_USERS, ensureRegressionSeed, type RegressionSeedState } from "./seed";
 
@@ -78,6 +78,9 @@ test.describe("@visual recent bug contracts", () => {
       await expectHealthyPage(page);
 
       await gotoOK(page, `/es/profesionales/${seed.professionalSlug}`);
+    // La ficha termina de armarse con los horarios: pulsando antes, el clic caía
+    // sobre el hueco de carga y se iba a otra pantalla.
+    await waitForInteractivePage(page);
       await expect(page.getByRole("button", { name: /WhatsApp/i }).filter({ visible: true }).first()).toBeVisible();
       await expect(page.getByRole("button", { name: /Enviar mensaje|Send message/i }).filter({ visible: true })).toHaveCount(0);
     }
@@ -195,9 +198,14 @@ test.describe("@visual recent bug contracts", () => {
       .filter({ visible: true })
       .first();
     await expect(serviceRequest).toBeVisible();
-    await serviceRequest.click();
+    // El botón existe desde el servidor pero solo abre el diálogo cuando la
+    // ficha ya está viva; pulsado antes, no pasa nada. Se reintenta en vez de
+    // esperar un tiempo fijo.
     const dialog = page.getByRole("dialog").filter({ visible: true }).first();
-    await expect(dialog).toBeVisible();
+    await expect(async () => {
+      if (!(await dialog.count())) await serviceRequest.click({ timeout: 5_000 });
+      await expect(dialog).toBeVisible({ timeout: 4_000 });
+    }).toPass({ timeout: 30_000 });
     const centered = await dialog.evaluate((node) => {
       const box = node.getBoundingClientRect();
       const screen = node.parentElement?.getBoundingClientRect();

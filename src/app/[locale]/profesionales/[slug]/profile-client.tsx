@@ -229,6 +229,7 @@ export default function ProfilePage({ fichaInicial }: { fichaInicial?: Professio
   const [activeCategory] = useState<string | undefined>(() => searchParamFromUrl("categoria") ?? undefined);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [viewerId, setViewerId] = useState<string | null>(null);
+  const [viewerResuelto, setViewerResuelto] = useState(false);
   const [slug, setSlug] = useState("");
   const [reportOpen, setReportOpen] = useState(false);
   // Aviso de "enlace copiado" del botón Compartir. Vive aquí, con el resto de
@@ -380,6 +381,7 @@ export default function ProfilePage({ fichaInicial }: { fichaInicial?: Professio
       const { data: { user } } = authResult;
       setIsAuthenticated(!!user);
       setViewerId(user?.id ?? null);
+      setViewerResuelto(true);
       if (user?.id !== pro.profileId) {
         trackInteraction({ type: "profile_view", professionalId: pro.id, source: "profile", locale });
       }
@@ -504,6 +506,9 @@ export default function ProfilePage({ fichaInicial }: { fichaInicial?: Professio
   })();
   // A pro viewing their OWN public profile cannot request a service from themselves.
   const isOwn = !!viewerId && viewerId === professional.profileId;
+  // La ficha llega pintada del servidor: hasta que la sesión responde no se sabe
+  // si quien mira es el dueño.
+  const viewerPendiente = !viewerResuelto;
 
   // "Ver disponibilidad" routing — keep service cards aligned with the contact card
   // from the first paint. The live schedule panel confirms the exact slots, but if a
@@ -634,6 +639,7 @@ export default function ProfilePage({ fichaInicial }: { fichaInicial?: Professio
         contactPreference={professional.contactPreference ?? "ambas"}
         slots={profileSlots}
         isOwn={isOwn}
+        viewerPendiente={viewerPendiente}
         placeFallback={placeFallback}
         placeAddress={placeAddress}
         businessName={professional.businessName ?? ""}

@@ -43,6 +43,11 @@ interface ProfessionalScheduleProps {
   videoConsultApplies?: boolean;
   /** True when the viewer owns this profile — no self-service actions. */
   isOwn?: boolean;
+  /** El visitante todavía no se sabe quién es (la ficha se pinta desde el
+   *  servidor y la sesión llega un instante después). Mientras tanto, pulsar
+   *  «Ver disponibilidad» en la ficha de uno mismo abría la reserva contra uno
+   *  mismo: la acción se guarda y se ejecuta cuando ya se sabe. */
+  viewerPendiente?: boolean;
   /** The LEFT-column professional info (photo, name, price, tags, rating),
    *  server-rendered by the card and slotted in so the schedule can own the desktop
    *  two-column layout while keeping ALL schedule state in this one component. */
@@ -127,7 +132,7 @@ function cubrePaisEntero(w: { level?: string; id?: string }, nombre: string) {
   return w.level === "country" || w.id === "wp_todo_costa_rica" || /^Todo Costa Rica$/i.test(nombre) || /^All of Costa Rica$/i.test(nombre);
 }
 
-export function ProfessionalSchedule({ professional, categoryName, searchedPlace, availabilityPublic, contactPreference = "ambas", videoConsultApplies = true, slots: allSlots, slotsInitiallyLoaded = true, activeCategory, isOwn = false, info, placeFallback = "", placeAddress = "", businessName = "", stacked = false, forceContactOnly = false, preferredLocationId, restrictToPreferredLocation = false, syncWithSearchLoading = false }: ProfessionalScheduleProps) {
+export function ProfessionalSchedule({ professional, categoryName, searchedPlace, availabilityPublic, contactPreference = "ambas", videoConsultApplies = true, slots: allSlots, slotsInitiallyLoaded = true, activeCategory, isOwn = false, viewerPendiente = false, info, placeFallback = "", placeAddress = "", businessName = "", stacked = false, forceContactOnly = false, preferredLocationId, restrictToPreferredLocation = false, syncWithSearchLoading = false }: ProfessionalScheduleProps) {
   const t = useTranslations("schedule");
   const tLoading = useTranslations("loading");
   const locale = useLocale();
@@ -712,7 +717,19 @@ export function ProfessionalSchedule({ professional, categoryName, searchedPlace
     return false;
   }, [slots]);
 
+  // La acción que se pulsó antes de saber quién visita, para repetirla apenas
+  // se sepa.
+  const accionPendienteRef = useRef<(() => void) | null>(null);
+  useEffect(() => {
+    if (viewerPendiente) return;
+    const accion = accionPendienteRef.current;
+    if (!accion) return;
+    accionPendienteRef.current = null;
+    accion();
+  }, [viewerPendiente]);
+
   function pick(slot: ScheduleSlot) {
+    if (viewerPendiente) { accionPendienteRef.current = () => pick(slot); return; }
     if (isOwn) { setSelfMsg(SELF_MSG.request); return; }
     trackMetaEvent("InitiateCheckout", {
       content_type: "professional_service",
@@ -755,6 +772,7 @@ export function ProfessionalSchedule({ professional, categoryName, searchedPlace
   }
 
   function openBooking() {
+    if (viewerPendiente) { accionPendienteRef.current = openBooking; return; }
     if (isOwn) { setSelfMsg(SELF_MSG.request); return; }
     trackMetaEvent("InitiateCheckout", {
       content_type: "professional_service",
