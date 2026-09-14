@@ -164,12 +164,17 @@ test.describe("@seeded contextual direct chat", () => {
       .eq("id", first.body.conversationId).single();
     expect(beforeRead?.client_unread_count).toBe(0);
     expect(beforeRead?.professional_unread_count).toBe(2);
+    // Dos mensajes seguidos sin leer dejan UN aviso, no dos: el segundo pone al
+    // día el que ya estaba. Antes se apilaba uno por mensaje y diez mensajes
+    // seguidos eran diez avisos y diez pushes.
     const { data: recipientNotifications } = await admin.from("notifications")
-      .select("user_id")
+      .select("user_id, message")
       .eq("type", "direct_message")
       .contains("data", { conversation_id: first.body.conversationId });
-    expect(recipientNotifications).toHaveLength(2);
+    expect(recipientNotifications).toHaveLength(1);
     expect(recipientNotifications?.every((item) => item.user_id === seed.professionalUserId)).toBe(true);
+    // Y el que queda muestra el ÚLTIMO mensaje, no el primero.
+    expect(recipientNotifications?.[0]?.message).toContain("E2E segundo");
 
     await resetAuth(page);
     await loginAs(page, E2E_USERS.professional.email, E2E_USERS.professional.password);
