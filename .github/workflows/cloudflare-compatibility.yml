@@ -152,6 +152,14 @@ jobs:
           # español y el panel de administración no sugería el nombre traducido
           # de un servicio. Se comprobó el 13-sep-2026 contra los dos ambientes.
           GOOGLE_TRANSLATE_API_KEY: ${{ secrets.GOOGLE_TRANSLATE_API_KEY }}
+          # Sin estas cuatro, la cola de avisos al teléfono se llena y nadie la
+          # vacía: el 13-sep-2026 producción llevaba 156 encolados, diez
+          # teléfonos con la app y cero entregas. `PUSH_DELIVERY_ENABLED` es la
+          # llave de paso; las de Firebase son con las que se manda.
+          PUSH_DELIVERY_ENABLED: ${{ secrets.PUSH_DELIVERY_ENABLED }}
+          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+          FIREBASE_CLIENT_EMAIL: ${{ secrets.FIREBASE_CLIENT_EMAIL }}
+          FIREBASE_PRIVATE_KEY: ${{ secrets.FIREBASE_PRIVATE_KEY }}
         run: |
           node - <<'NODE'
           const fs = require("node:fs");
@@ -177,7 +185,11 @@ jobs:
             "CLOUDINARY_API_KEY",
             "CLOUDINARY_API_SECRET",
             "CRON_SECRET",
-            "GOOGLE_TRANSLATE_API_KEY"
+            "GOOGLE_TRANSLATE_API_KEY",
+            "PUSH_DELIVERY_ENABLED",
+            "FIREBASE_PROJECT_ID",
+            "FIREBASE_CLIENT_EMAIL",
+            "FIREBASE_PRIVATE_KEY"
           ];
           const secrets = {};
           for (const name of names) {
