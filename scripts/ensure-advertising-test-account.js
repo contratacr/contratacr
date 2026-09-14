@@ -71,6 +71,21 @@ function esHorarioFuturo(row) {
   return String(row?.slot_date ?? "") > HOY_EN_COSTA_RICA;
 }
 
+// La base tiene una llave única por (profesional, fecha, hora, lugar). El
+// profesional de origen quedó con horarios del espejo de producción Y con los
+// que siembra la regresión, así que dos filas distintas pueden caer en la misma
+// fecha, hora y lugar: al clonarlas cambia el id pero no esa llave, y la
+// segunda rebotaba. Se copia una por combinación.
+function sinHorariosRepetidos(filas) {
+  const vistos = new Set();
+  return filas.filter((row) => {
+    const clave = `${row?.slot_date ?? ""}|${row?.slot_time ?? ""}|${row?.location_id ?? ""}`;
+    if (vistos.has(clave)) return false;
+    vistos.add(clave);
+    return true;
+  });
+}
+
 function clonedId(table, sourceId) {
   return stableUuid(`${table}:${sourceId}`);
 }
@@ -405,7 +420,7 @@ async function main() {
 
   await Promise.all([
     upsertRows("availability_weekly", sourceWeekly.map((row) => ({ ...cloneBase("availability_weekly", row), professional_id: PROFESSIONAL_ID }))),
-    upsertRows("availability_slots", sourceSlots.filter(esHorarioFuturo).map((row) => ({ ...cloneBase("availability_slots", row), professional_id: PROFESSIONAL_ID }))),
+    upsertRows("availability_slots", sinHorariosRepetidos(sourceSlots.filter(esHorarioFuturo)).map((row) => ({ ...cloneBase("availability_slots", row), professional_id: PROFESSIONAL_ID }))),
     upsertRows("availability_exceptions", sourceExceptions.map((row) => ({ ...cloneBase("availability_exceptions", row), professional_id: PROFESSIONAL_ID }))),
     upsertRows("blocked_dates", sourceBlocked.map((row) => ({ ...cloneBase("blocked_dates", row), professional_id: PROFESSIONAL_ID }))),
   ]);

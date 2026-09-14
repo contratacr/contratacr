@@ -166,14 +166,22 @@ async function verifyAdvertisingDataParity(source, advertising) {
   ];
 
   for (const [table, sourceFilter, advertisingFilter, discriminator] of specifications) {
-    const select = discriminator ? `id,${discriminator}` : "id";
+    // Los horarios llevan una llave única por (fecha, hora, lugar): el
+    // profesional de origen puede tener dos filas que caen en la misma
+    // combinación —una del espejo de producción y otra sembrada— y el clon solo
+    // puede copiar una. Se comparan combinaciones, no filas.
+    const claveUnica = table === "availability_slots" ? "slot_date,slot_time,location_id" : null;
+    const select = claveUnica ? `id,${claveUnica}` : discriminator ? `id,${discriminator}` : "id";
     const [sourceRows, advertisingRows] = await Promise.all([
       must(`${table} ContrataCR parity`, admin.from(table).select(select).or(sourceFilter).limit(5000)),
       must(`${table} advertising parity`, admin.from(table).select(select).or(advertisingFilter).limit(5000)),
     ]);
+    const combinaciones = (filas) => new Set(filas.map((row) => `${row.slot_date}|${row.slot_time}|${row.location_id ?? ""}`)).size;
+    const totalOrigen = claveUnica ? combinaciones(sourceRows) : sourceRows.length;
+    const totalClon = claveUnica ? combinaciones(advertisingRows) : advertisingRows.length;
     assert(
-      advertisingRows.length === sourceRows.length,
-      `Advertising ${table}: expected ${sourceRows.length} rows like ContrataCR, found ${advertisingRows.length}.`,
+      totalClon === totalOrigen,
+      `Advertising ${table}: expected ${totalOrigen} rows like ContrataCR, found ${totalClon}.`,
     );
     if (discriminator) {
       const expected = [...new Set(sourceRows.map((row) => String(row[discriminator])))].sort();
