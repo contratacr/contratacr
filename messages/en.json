@@ -524,7 +524,14 @@
     "call": "Call",
     "sendEmail": "Send email",
     "later": "Not now",
-    "noContact": "This professional does not offer that contact method."
+    "noContact": "This professional does not offer that contact method.",
+    "askTitle": "Who should they call back?",
+    "askBody": "Leave your name and phone so {name} can reply.",
+    "askName": "Your name",
+    "askNamePlaceholder": "First and last name",
+    "askPhone": "Your phone",
+    "askNote": "We only send it to this professional. No account needed.",
+    "genericError": "We could not send it. Try again."
   },
   "clientRegModal": {
     "otpError": "Incorrect or expired code. Request a new one.",

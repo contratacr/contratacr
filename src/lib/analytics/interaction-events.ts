@@ -21,6 +21,9 @@ export const INTERACTION_EVENT_TYPES = [
   "assistant_question",
   "page_freeze",
   "contact_gate_shown",
+  // Quien dejó nombre y teléfono para contactar sin cuenta: es el contacto que
+  // antes se perdía en el muro de registro.
+  "contact_lead_created",
 ] as const;
 
 export type InteractionEventType = (typeof INTERACTION_EVENT_TYPES)[number];

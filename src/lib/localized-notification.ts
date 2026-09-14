@@ -23,6 +23,7 @@ export const TRANSLATED_NOTIFICATION_TYPES = new Set([
   "project_cancelled",
   "project_deleted",
   "support_reply",
+  "contact_lead",
   "verification",
   "verification_approved",
   "verification_pending",
@@ -76,6 +77,7 @@ const TITLES: Record<string, Record<NotificationLocale, string>> = {
   project_cancelled: { es: "Proyecto cancelado", en: "Project cancelled" },
   project_deleted: { es: "Proyecto eliminado", en: "Project deleted" },
   support_reply: { es: "Respuesta de soporte", en: "Support reply" },
+  contact_lead: { es: "Alguien quiere contactarte", en: "Someone wants to contact you" },
   verification: { es: "Actualización de verificación", en: "Verification update" },
   verification_approved: { es: "¡Tu identidad fue verificada!", en: "Your identity was verified!" },
   verification_pending: { es: "Tu verificación está en revisión", en: "Your verification is under review" },
@@ -221,6 +223,20 @@ export function localizedNotificationCopy(notification: NotificationCopyInput, l
       ? ({ success_case: "published a new success story", service: "added a new service", offer: "published a new offer", job: "published a new job opportunity" } as Record<string, string>)[activity] || "published an update"
       : ({ success_case: "publicó un nuevo caso de éxito", service: "agregó un nuevo servicio", offer: "publicó una nueva oferta", job: "publicó una nueva oportunidad de empleo" } as Record<string, string>)[activity] || "publicó una novedad";
     return { title: en ? `New post from ${name}` : `Nueva publicación de ${name}`, message: `${name} ${action}${content ? `: ${content}` : ""}.` };
+  }
+
+  if (notification.type === "contact_lead") {
+    // Alguien sin cuenta pidió el contacto: lo que importa es su nombre y su
+    // teléfono, para poder devolverle la llamada.
+    const quien = stringData(data, "lead_name") || (en ? "Someone" : "Alguien");
+    const tel = stringData(data, "lead_phone");
+    const servicio = stringData(data, "category_label");
+    return {
+      title,
+      message: en
+        ? `${quien} asked for your contact${servicio ? ` about ${servicio}` : ""}.${tel ? ` Phone: ${tel}` : ""}`
+        : `${quien} pidió tu contacto${servicio ? ` por ${servicio}` : ""}.${tel ? ` Teléfono: ${tel}` : ""}`,
+    };
   }
 
   if (notification.type === "job_application") {

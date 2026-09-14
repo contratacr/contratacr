@@ -40,7 +40,7 @@ export function ContactButton({
   const locale = useLocale();
   const t = useTranslations("contactGate");
   const [loading, setLoading] = useState(false);
-  const { requireAccount, modals } = useContactGate({ professionalName, intent: method, professionalId, source });
+  const { requireAccount, modals } = useContactGate({ professionalName, intent: method, professionalId, source, categoryId });
 
   async function go() {
     setLoading(true);

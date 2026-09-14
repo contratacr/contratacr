@@ -524,7 +524,14 @@
     "call": "Llamar",
     "sendEmail": "Enviar correo",
     "later": "Ahora no",
-    "noContact": "Este profesional no tiene ese medio de contacto disponible."
+    "noContact": "Este profesional no tiene ese medio de contacto disponible.",
+    "askTitle": "¿A quién le devuelve la llamada?",
+    "askBody": "Dejá tu nombre y tu teléfono para que {name} pueda responderte.",
+    "askName": "Tu nombre",
+    "askNamePlaceholder": "Nombre y apellido",
+    "askPhone": "Tu teléfono",
+    "askNote": "Solo se lo mandamos a este profesional. No hace falta crear cuenta.",
+    "genericError": "No pudimos enviarlo. Intentá de nuevo."
   },
   "clientRegModal": {
     "otpError": "Código incorrecto o expirado. Solicita uno nuevo.",

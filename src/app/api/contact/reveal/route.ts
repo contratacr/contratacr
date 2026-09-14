@@ -1,21 +1,21 @@
 import { NextResponse } from "next/server";
 import { enforceRateLimit } from "@/lib/rate-limit";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { createClient } from "@/lib/supabase/server";
-import { safeGetUser } from "@/lib/supabase/get-user";
 
-// The call number and contact email of a professional, for signed-in viewers
-// only. Public payloads (/api/professionals/[slug], /buscar) carry just flags.
+// El teléfono y el correo de un profesional, para quien lo pide desde una ficha.
+//
+// Ya NO exige cuenta: el muro costaba tres de cada cuatro contactos (9,0% →
+// 2,3% medido en producción) y no traía registros. Lo que protege contra el
+// raspado es que estos datos no viajan en el listado ni en la API de resultados
+// —ahí van solo banderas— más el tope de abajo: un humano pide uno o dos
+// contactos, un raspador pide cincuenta.
 export async function GET(req: Request) {
-  const limited = enforceRateLimit(req, "contact-reveal", 60, 600000);
+  const limited = enforceRateLimit(req, "contact-reveal", 15, 3_600_000);
   if (limited) return limited;
   const professionalId = new URL(req.url).searchParams.get("professionalId") ?? "";
   if (!/^[0-9a-f-]{36}$/i.test(professionalId)) {
     return NextResponse.json({ error: "Profesional inválido." }, { status: 400 });
   }
-  const viewer = await createClient().then((supabase) => safeGetUser(supabase)).catch(() => null);
-  if (!viewer) return NextResponse.json({ error: "auth_required" }, { status: 401 });
-
   const db = createAdminClient();
   const { data, error } = await db
     .from("professionals")

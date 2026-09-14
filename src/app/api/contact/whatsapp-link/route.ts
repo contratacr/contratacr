@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { enforceRateLimit } from "@/lib/rate-limit";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getWhatsAppLink } from "@/lib/utils";
 import { limitTrimmedText } from "@/lib/text-limits";
@@ -71,6 +72,10 @@ async function currentUserId() {
 }
 
 export async function POST(req: NextRequest) {
+  // Mismo tope que la revelación de contacto: suficiente para una casa o una
+  // oficina, insuficiente para llevarse la lista.
+  const limitado = enforceRateLimit(req, "contacto-whatsapp", 15, 3_600_000);
+  if (limitado) return limitado;
   const body = await req.json().catch(() => ({}));
   const professionalId = String(body.professionalId ?? "");
   const bookingId = String(body.bookingId ?? "");
@@ -79,10 +84,10 @@ export async function POST(req: NextRequest) {
   const contextTitle = limitTrimmedText(body.contextTitle, 160);
   const initialMessage = limitTrimmedText(body.initialMessage, 700);
   const userId = await currentUserId();
-  // Contact is account-gated: the number never leaves the server for guests.
-  if (!userId) {
-    return NextResponse.json({ error: locale === "en" ? "Sign in to contact." : "Crea tu cuenta para contactar.", code: "auth_required" }, { status: 401 });
-  }
+  // Sin cuenta TAMBIÉN se contacta: el muro costaba tres de cada cuatro
+  // contactos y no traía registros. Quien no tiene sesión ya dejó su nombre y
+  // su teléfono en /api/contact/invitado, así que el profesional sabe quién lo
+  // busca; y el número de nadie viaja en el listado, que es por donde se raspa.
   const db = createAdminClient();
 
   let phone: string | null = null;
