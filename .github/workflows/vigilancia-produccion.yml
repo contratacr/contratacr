@@ -60,8 +60,7 @@ jobs:
             echo "::warning::Telegram no está configurado; el aviso queda solo en el correo de GitHub."
             exit 0
           fi
-          texto="${RESUMEN:-🔴 ContrataCR: la vigilancia falló}
-$CORRIDA"
+          texto="$(printf '%s\n%s' "${RESUMEN:-🔴 ContrataCR: la vigilancia falló}" "$CORRIDA")"
           curl -sS --max-time 30 -X POST \
             "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
             --data-urlencode "chat_id=${TELEGRAM_CHAT_ID}" \
