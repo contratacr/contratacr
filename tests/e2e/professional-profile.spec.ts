@@ -71,13 +71,25 @@ test.describe("@seeded professional profile", () => {
 
     await gotoOK(page, reviewsHref);
     await expect(page.getByRole("heading", { name: /Reseñas|Reviews/i }).first()).toBeVisible();
-    await page.getByRole("link", { name: /Volver a resultados|Back to results/i }).click();
+    // En el teléfono el «volver» vive en la barra superior (un botón con flecha
+    // junto al título); en computadora es el enlace de la página. Los dos llevan
+    // al mismo sitio, así que la prueba toma el que exista.
+    const enTelefono = (page.viewportSize()?.width ?? 1280) < 1024;
+    const volver = enTelefono
+      ? page.locator("[data-ccr-section-back]")
+      : page.getByRole("link", { name: /Volver a resultados|Back to results/i });
+    await volver.first().click();
     await expect(page).toHaveURL(/\/es\/buscar\?categoria=enfermeria$/);
 
     await gotoOK(page, reviewsHref);
     await expect(page.getByRole("heading", { name: /Reseñas|Reviews/i }).first()).toBeVisible();
-    await page.getByRole("banner").getByRole("link", { name: /ContrataCR inicio/i }).click();
-    await expect(page).toHaveURL(/\/es\/?$/);
+    // El logo que lleva al inicio solo está en la barra de computadora: en el
+    // teléfono esa barra la ocupa el «volver» con el título de la ficha, que ya
+    // se comprobó arriba.
+    if (!enTelefono) {
+      await page.getByRole("banner").getByRole("link", { name: /ContrataCR inicio/i }).click();
+      await expect(page).toHaveURL(/\/es\/?$/);
+    }
   });
 
   test("profile reviews use a compact inline form instead of an isolated modal", async ({ page }) => {
@@ -106,11 +118,21 @@ test.describe("@seeded professional profile", () => {
     expect(href).toBeTruthy();
     await gotoOK(page, href!);
 
+    // En el teléfono la primera pestaña es Disponibilidad —contactar es a lo que
+    // se viene— y en computadora esa pestaña no existe porque es la columna de la
+    // derecha. Lo que se comprueba aquí es el orden del contenido: Servicios y,
+    // pegadas, las Reseñas.
     const tabs = page.getByRole("tablist", { name: /Secciones del perfil|Profile sections/i }).getByRole("tab");
-    await expect(tabs.nth(0)).toHaveText(/Servicios|Services/i);
-    await expect(tabs.nth(1)).toHaveText(/Reseñas|Reviews/i);
+    const servicios = tabs.filter({ hasText: /Servicios|Services/i }).first();
+    const resenas = tabs.filter({ hasText: /Reseñas|Reviews/i }).first();
+    await expect(servicios).toBeVisible();
+    await expect(resenas).toBeVisible();
+    const posiciones = await tabs.evaluateAll((nodos) => nodos.map((n) => n.textContent?.trim() ?? ""));
+    const iServicios = posiciones.findIndex((texto) => /Servicios|Services/i.test(texto));
+    const iResenas = posiciones.findIndex((texto) => /Reseñas|Reviews/i.test(texto));
+    expect(iResenas).toBe(iServicios + 1);
 
-    await tabs.nth(1).click();
+    await resenas.click();
     await expect(page.getByText(/Contratación verificada|Contacto confirmado|Experiencia no verificada|Verified booking|Confirmed contact|Unverified experience/i)).toHaveCount(0);
   });
 });
