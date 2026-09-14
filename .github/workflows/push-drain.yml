@@ -110,8 +110,9 @@ jobs:
               echo "::error::El drenaje reportó una falla."
               exit 1
             fi
-            # Si la tanda no procesó nada, la cola quedó vacía.
-            if grep -qE '"processed":0|"processed": 0' "$body"; then
+            # Si la tanda no tomó nada, la cola quedó vacía. El resumen lo
+            # dice en `claimed`, que es lo que el worker apartó para enviar.
+            if grep -qE '"claimed":\s*0' "$body"; then
               echo "Cola vacía."
               break
             fi

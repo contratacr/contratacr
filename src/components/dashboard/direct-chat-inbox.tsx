@@ -555,6 +555,24 @@ export function DirectChatInbox() {
     return () => { observador.disconnect(); window.removeEventListener("resize", medir); };
   }, [filtered.length, showArchived]);
 
+  // La vista previa de una conversación es una línea y una fecha: cuando el
+  // mensaje acaba de salir de aquí, se sabe sin preguntarle al servidor. La fila
+  // sube al tope, igual que haría la recarga.
+  const ponerAlDiaVistaPrevia = useCallback((conversationId: string | null, mensaje: DirectMessage) => {
+    if (!conversationId) return;
+    setConversations((previas) => {
+      const indice = previas.findIndex((item) => item.id === conversationId);
+      if (indice < 0) return previas;
+      const actualizada = {
+        ...previas[indice],
+        last_message: mensaje.body ?? previas[indice].last_message,
+        last_message_at: mensaje.created_at ?? new Date().toISOString(),
+      };
+      const resto = previas.filter((_, i) => i !== indice);
+      return [actualizada, ...resto];
+    });
+  }, []);
+
   const loadConversations = useCallback(async (quiet = false) => {
     // Paint the warmed list at once; the network refresh below replaces it.
     const warm = !showArchived && !quiet ? (readCachedConversations() as Conversation[] | null) : null;
@@ -584,7 +602,11 @@ export function DirectChatInbox() {
       }
       if (showArchived) {
         setArchivedCount(json.conversations?.length ?? 0);
-      } else {
+      } else if (!quiet) {
+        // El conteo de archivadas es una segunda petición completa (seis
+        // consultas en el servidor). En una recarga silenciosa —la que dispara
+        // cada mensaje que llega— no cambia nada que se vea, así que solo se
+        // pide cuando la persona abre o recarga Mensajes de verdad.
         fetch("/api/direct-chat?status=archived", { cache: "no-store" })
           .then((archivedRes) => archivedRes.ok ? archivedRes.json() : { conversations: [] })
           .then((archivedJson) => setArchivedCount(Array.isArray(archivedJson.conversations) ? archivedJson.conversations.length : 0))
@@ -777,14 +799,29 @@ export function DirectChatInbox() {
   useEffect(() => {
     if (!user) return;
     const supabase = createClient();
+    // Los avisos en vivo llegan de a ráfagas: al enviar un mensaje caen un
+    // INSERT y un UPDATE casi juntos, y cada uno recargaba la lista entera
+    // (seis consultas del servidor cada vez). Se junta lo que llegue en tres
+    // cuartos de segundo y se pide UNA sola vez.
+    let pendiente: number | null = null;
+    const recargarPronto = () => {
+      if (pendiente) window.clearTimeout(pendiente);
+      pendiente = window.setTimeout(() => { pendiente = null; void loadConversations(true); }, 750);
+    };
     const channel = supabase.channel(`direct-chat-${user.id}`)
-      .on("postgres_changes", { event: "*", schema: "public", table: "direct_conversations" }, () => void loadConversations(true))
+      .on("postgres_changes", { event: "*", schema: "public", table: "direct_conversations" }, recargarPronto)
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "direct_messages" }, (payload) => {
         const row = payload.new as DirectMessage & { conversation_id?: string };
-        if (row.conversation_id === activeId && row.sender_id !== user.id) void loadThread(activeId, true);
-        void loadConversations(true);
+        // Lo que uno mismo acaba de mandar ya está en pantalla y ya actualizó
+        // su vista previa: no hay nada que volver a pedir.
+        if (row.sender_id === user.id) return;
+        if (row.conversation_id === activeId) void loadThread(activeId, true);
+        recargarPronto();
       }).subscribe();
-    return () => { void supabase.removeChannel(channel); };
+    return () => {
+      if (pendiente) window.clearTimeout(pendiente);
+      void supabase.removeChannel(channel);
+    };
   }, [activeId, loadConversations, loadThread, user]);
 
   function updateArchiveView(nextArchived: boolean, nextConversationId?: string | null) {
@@ -1010,7 +1047,11 @@ export function DirectChatInbox() {
         await Promise.all([loadThread(json.conversationId, true), loadConversations(true)]);
       } else if (json.message) {
         setMessages((current) => current.map((mensaje) => (mensaje.id === optimisticId ? (json.message as DirectMessage) : mensaje)));
-        void loadConversations(true);
+        // La lista de conversaciones se pone al día AQUÍ, con lo que ya se
+        // sabe: el mensaje que se acaba de mandar. Volver a pedirla entera
+        // costaba seis consultas en el servidor por cada mensaje enviado, para
+        // cambiar una línea de vista previa y una fecha.
+        ponerAlDiaVistaPrevia(activeId, json.message as DirectMessage);
       } else {
         await Promise.all([loadThread(activeId, true), loadConversations(true)]);
       }
