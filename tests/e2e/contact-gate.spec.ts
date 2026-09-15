@@ -92,4 +92,24 @@ test.describe("@seeded contact gate", () => {
     // Lo que hace falta es devolverle la llamada: los dos botones son eso.
     await expect(page.getByRole("link", { name: /WhatsApp/i }).first()).toBeVisible();
   });
+
+  test("la ventana de contacto sale encima de la pantalla, no dentro del panel", async ({ page }) => {
+    await resetAuth(page);
+    await page.setViewportSize({ width: 390, height: 844 });
+    await gotoOK(page, `/es/profesionales/${seed.professionalSlug}`);
+    await waitForInteractivePage(page);
+    await page.getByRole("button", { name: /^WhatsApp$|Contactar por WhatsApp/i }).filter({ visible: true }).first().click();
+
+    const dialogo = page.getByRole("dialog").filter({ visible: true }).first();
+    await expect(dialogo).toBeVisible();
+    // Cuelga de <body> y cabe entera: en /buscar el panel se arrastra con
+    // `transform`, y eso rompe el `position: fixed` de todo lo que viva
+    // adentro —la ventana salía recortada entre las tarjetas—.
+    const caja = await dialogo.evaluate((nodo) => {
+      const r = nodo.getBoundingClientRect();
+      return { cuelgaDelCuerpo: nodo.parentElement?.parentElement === document.body, recortada: r.top < 0 || r.bottom > window.innerHeight };
+    });
+    expect(caja.cuelgaDelCuerpo).toBe(true);
+    expect(caja.recortada).toBe(false);
+  });
 });

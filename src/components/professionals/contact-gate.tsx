@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { useLocale, useTranslations } from "next-intl";
 import { Check } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
@@ -43,6 +44,12 @@ export function useContactGate({ professionalName, intent, professionalId, sourc
   const [enviando, setEnviando] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const pending = useRef<(() => void) | null>(null);
+  // La ventana se dibuja colgada de <body>, no donde está el botón. En /buscar
+  // el panel de resultados se arrastra con `transform`, y eso rompe el
+  // `position: fixed` de todo lo que viva adentro: el diálogo salía recortado
+  // entre las tarjetas en vez de encima de la pantalla.
+  const [destino, setDestino] = useState<HTMLElement | null>(null);
+  useEffect(() => { queueMicrotask(() => setDestino(document.body)); }, []);
 
   // Devuelve true cuando quien llama puede seguir de una.
   const requireAccount = useCallback((run: () => void) => {
@@ -89,7 +96,7 @@ export function useContactGate({ professionalName, intent, professionalId, sourc
     }
   }
 
-  const modals: ReactNode = (
+  const ventanas: ReactNode = (
     <>
       {pidiendoDatos && (
         <div className="app-modal-screen app-centered-modal-screen fixed inset-0 z-[200] flex items-center justify-center p-4">
@@ -160,6 +167,8 @@ export function useContactGate({ professionalName, intent, professionalId, sourc
       )}
     </>
   );
+
+  const modals: ReactNode = destino ? createPortal(ventanas, destino) : null;
 
   return { requireAccount, modals, signedIn: !!user };
 }
