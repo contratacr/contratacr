@@ -608,7 +608,7 @@ export default function ProfilePage({ fichaInicial }: { fichaInicial?: Professio
     { id: "servicios",      label: t("tabs.servicios") },
     { id: "resenas",        label: t("tabs.resenas") },
     ...(hasCasos ? [{ id: "casos" as Tab, label: t("tabs.casos") }] : []),
-    ...(publicOffers.length > 0 ? [{ id: "ofertas" as Tab, label: locale === "en" ? "Offers" : "Ofertas" }] : []),
+    ...(publicOffers.length > 0 ? [{ id: "ofertas" as Tab, label: locale === "en" ? "Promotions" : "Promociones" }] : []),
     ...(EMPLEOS_VISIBLE && publicJobs.length > 0 ? [{ id: "empleos" as Tab, label: locale === "en" ? "Jobs" : "Empleos" }] : []),
     // La formación vuelve a tener pestaña propia: solo aparece si hay algo que mostrar.
     ...(hasCerts ? [{ id: "certificaciones" as Tab, label: t("tabs.certificaciones") }] : []),
@@ -1032,7 +1032,7 @@ export default function ProfilePage({ fichaInicial }: { fichaInicial?: Professio
                     <section className="space-y-5">
                       <div>
                         <h2 className="text-lg font-semibold text-[#162543]">
-                          {locale === "en" ? "Offers" : "Ofertas"}
+                          {locale === "en" ? "Promotions" : "Promociones"}
                         </h2>
                         <p className="mt-1 text-sm text-[#68778d]">
                           {locale === "en"

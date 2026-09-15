@@ -332,15 +332,19 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
             <ContrataCRMark className="h-7 w-7" />
           </Link>
           <h1 className="min-w-0 truncate pl-1.5 text-[17px] font-extrabold text-[#162543]">{copy.jobs}</h1>
+          {/* El icono de Mensajes es de la barra de la APP: en la web, Mensajes
+              se llega desde el menú y desde el panel, y ninguna otra pantalla
+              del sitio lo lleva arriba. Aquí se colaba y era la única pantalla
+              de la web con ese icono. */}
           <div className="ml-auto flex shrink-0 items-center gap-0.5">
             {currentUserId ? (
               <>
-                <HeaderMessagesLink unreadCount={mensajesSinLeer} label={copy.messages} />
+                {nativeApp && <HeaderMessagesLink unreadCount={mensajesSinLeer} label={copy.messages} />}
                 <NotificationBell scope="all" />
               </>
             ) : (
               <>
-                <HeaderMessagesLink unreadCount={0} label={copy.messages} href={accesoHref("/mensajes")} />
+                {nativeApp && <HeaderMessagesLink unreadCount={0} label={copy.messages} href={accesoHref("/mensajes")} />}
                 <HeaderNotificationsLink href={accesoHref("/notificaciones")} label={copy.notifications} />
               </>
             )}

@@ -273,7 +273,7 @@ export function AdminMarketplace({ kind }: { kind: "jobs" | "offers" }) {
         <div className="flex items-center gap-2">
           <Icon className="h-5 w-5 text-[#009FD9]" />
           <div>
-            <h1 className="text-xl font-bold text-[#162543]">{isJobs ? "Empleos" : "Ofertas"}</h1>
+            <h1 className="text-xl font-bold text-[#162543]">{isJobs ? "Empleos" : "Promociones"}</h1>
             <p className="mt-0.5 text-sm text-[#6b7280]">
               {isJobs ? "Vacantes publicadas por profesionales y empresas, con quién las creó y cuántas postulaciones reciben." : "Promociones, paquetes y productos publicados por profesionales, con quién los creó."}
             </p>

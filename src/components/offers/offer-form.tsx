@@ -56,6 +56,8 @@ const OFFER_FORM_COPY = {
     serviceNotFound: "No encontramos ese servicio.",
     description: "Descripción",
     descriptionPlaceholder: "Qué incluye, condiciones y cómo se entrega.",
+    pareceEmpleo: "Esto parece una vacante, no una oferta. Las ofertas son promociones de lo que vos hacés; si estás buscando a alguien para contratar, va en Empleos, donde la gente se postula y te llega el currículum.",
+    pareceEmpleoCta: "Publicarlo como empleo",
     images: "Imágenes",
     imageHelp: "Agrega de 1 a 5 fotos. La primera será la portada.",
     addPhoto: "Agregar foto",
@@ -115,6 +117,8 @@ const OFFER_FORM_COPY = {
     serviceNotFound: "We could not find that service.",
     description: "Description",
     descriptionPlaceholder: "What it includes, conditions, and how it is delivered.",
+    pareceEmpleo: "This looks like a job opening, not an offer. Offers are promotions of what you do; if you are looking to hire someone, it belongs in Jobs, where people apply and you get their résumé.",
+    pareceEmpleoCta: "Post it as a job",
     images: "Images",
     imageHelp: "Add 1 to 5 photos. The first one will be the cover.",
     addPhoto: "Add photo",
@@ -169,6 +173,26 @@ function FieldError({ children }: { children?: string }) {
   return children ? <p data-campo-con-error="" role="alert" className="mt-1.5 text-xs font-medium text-red-600">{children}</p> : null;
 }
 
+// En producción aparecieron dos vacantes publicadas como ofertas —«Operario en
+// techos» y «Ocupo un excelente barbero para mi salón»—. Una oferta es una
+// promoción de lo que uno hace; un empleo es una plaza que uno busca llenar.
+// Estas señales, de a dos, delatan una vacante: se avisa y se manda a la puerta
+// correcta, sin bloquear. Mismo criterio que ya usa Publicar proyecto.
+const SENALES_DE_VACANTE: RegExp[] = [
+  /\b(?:ocupo|necesito|necesitamos|busco|buscamos|se\s+necesita|se\s+busca|requiero|requerimos|solicito|solicitamos)\b/i,
+  /\b(?:operari[oa]|ayudante|pe[óo]n|asistente|colaborador|emplead[oa]|personal|vacante|plaza|puesto|contratar|contrataci[óo]n)\b/i,
+  /\b(?:salario|sueldo|pago\s+(?:quincenal|semanal|mensual)|por\s+hora|jornada|medio\s+tiempo|tiempo\s+completo|horario\s+de)\b/i,
+  /\b(?:requisitos|experiencia\s+comprobable|con\s+experiencia|enviar\s+curr[íi]culum|curr[íi]culum|hoja\s+de\s+vida|cv\b)\b/i,
+];
+
+/** Dos señales, no una: «necesito» o «con experiencia» también aparecen en una
+ *  promoción legítima. */
+export function pareceVacante(texto: string): boolean {
+  const limpio = (texto ?? "").trim();
+  if (limpio.length < 12) return false;
+  return SENALES_DE_VACANTE.filter((senal) => senal.test(limpio)).length >= 2;
+}
+
 export function OfferForm({ professionalId, serviceOptions, backHref = "/ofertas", initialOffer = null, presentation = "page", onSaved, onCancel }: OfferFormProps) {
   const { sentinelaRef, cabeceraRef, conLinea } = useHairlineOnScroll();
   const locale = marketplaceLocale(useLocale());
@@ -181,6 +205,7 @@ export function OfferForm({ professionalId, serviceOptions, backHref = "/ofertas
   // y recuerda si hay algo escrito para avisar antes de salir sin publicar.
   const formRef = useRef<HTMLFormElement>(null);
   const [conCambios, setConCambios] = useState(false);
+  const [textoEscrito, setTextoEscrito] = useState(`${initialOffer?.title ?? ""} ${initialOffer?.description ?? ""}`);
   const [error, setError] = useState("");
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [files, setFiles] = useState<File[]>([]);
@@ -372,7 +397,17 @@ export function OfferForm({ professionalId, serviceOptions, backHref = "/ofertas
           <div className="min-w-0 flex-1 text-center"><h1 className="truncate text-xl font-extrabold">{editing ? copy.editTitle : copy.publishTitle}</h1><p className="truncate text-sm text-[#65758c]">{copy.subtitle}</p></div>
           <div className="h-10 w-[128px]" aria-hidden="true" />
         </div>
-        <form ref={formRef} onSubmit={submit} onInput={() => setConCambios(true)} onChange={() => setConCambios(true)} noValidate>
+        <form
+          ref={formRef}
+          onSubmit={submit}
+          onInput={() => {
+            setConCambios(true);
+            const datos = formRef.current ? new FormData(formRef.current) : null;
+            setTextoEscrito(`${datos?.get("title") ?? ""} ${datos?.get("description") ?? ""}`);
+          }}
+          onChange={() => setConCambios(true)}
+          noValidate
+        >
           <div className="rounded-2xl border border-[#e5e7eb] bg-white p-5 shadow-sm">
           <div className="grid gap-5 sm:grid-cols-2">
             <label className="text-sm font-medium text-[#374151] sm:col-span-2">
@@ -470,6 +505,17 @@ export function OfferForm({ professionalId, serviceOptions, backHref = "/ofertas
               <RequiredLabel>{copy.description}</RequiredLabel>
               <textarea name="description" maxLength={3000} defaultValue={initialOffer?.description ?? ""} placeholder={copy.descriptionPlaceholder} className={TEXTAREA_CLASS} />
               <FieldError>{fieldErrors.description}</FieldError>
+              {pareceVacante(textoEscrito) && (
+                <div role="status" className="mt-2.5 flex flex-col gap-2 rounded-xl border border-[#fde68a] bg-[#fffbeb] px-3.5 py-3 text-[13px] font-normal leading-relaxed text-[#92400e]">
+                  <p className="font-medium">{copy.pareceEmpleo}</p>
+                  <Link
+                    href="/empleos/publicar"
+                    className="inline-flex h-9 w-fit items-center rounded-full bg-[#b45309] px-3.5 text-[13px] font-bold text-white transition-colors hover:bg-[#92400e]"
+                  >
+                    {copy.pareceEmpleoCta}
+                  </Link>
+                </div>
+              )}
             </label>
           </div>
 

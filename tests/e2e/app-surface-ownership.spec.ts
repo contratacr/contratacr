@@ -57,9 +57,6 @@ const handlerRules: OwnershipRule[] = [
   { match: /^\/api\/payments(?:\/|$)/, owner: "product-contract.spec.ts" },
   { match: /^\/api\/(?:search|categories|insurers)(?:\/|$)/, owner: "api-smoke.spec.ts" },
   { match: /^\/api\/contact(?:\/|$)/, owner: "whatsapp-review-followup.spec.ts" },
-  // Quién pidió el contacto de un profesional sin tener cuenta: la misma
-  // prueba que cuida el formulario de dos campos.
-  { match: /^\/api\/contactos$/, owner: "contact-gate.spec.ts" },
   { match: /^\/api\/(?:upload|media)(?:\/|$)/, owner: "extended-lifecycle.spec.ts" },
   { match: /^\/api\/(?:register|cedula|cedula-available|add-cedula|verify-identity)(?:\/|$)/, owner: "product-contract.spec.ts" },
   { match: /^\/api\/(?:appeals|report|report-client|report-professional|portfolio-like|professional-followers|client\/connections)(?:\/|$)/, owner: "interaction-surfaces.spec.ts" },

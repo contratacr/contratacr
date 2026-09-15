@@ -36,9 +36,6 @@ const handlerRules = [
   [/^\/api\/payments(?:\/|$)/, "product-contract.spec.ts"],
   [/^\/api\/(?:search|categories|insurers)(?:\/|$)/, "api-smoke.spec.ts"],
   [/^\/api\/contact(?:\/|$)/, "whatsapp-review-followup.spec.ts"],
-  // Quién pidió el contacto de un profesional sin tener cuenta: la misma
-  // prueba que cuida el formulario de dos campos.
-  [/^\/api\/contactos$/, "contact-gate.spec.ts"],
   [/^\/api\/(?:upload|media)(?:\/|$)/, "extended-lifecycle.spec.ts"],
   [/^\/api\/(?:register|cedula|cedula-available|add-cedula|verify-identity)(?:\/|$)/, "product-contract.spec.ts"],
   [/^\/api\/(?:appeals|report|report-client|report-professional|portfolio-like|professional-followers|client\/connections)(?:\/|$)/, "interaction-surfaces.spec.ts"],

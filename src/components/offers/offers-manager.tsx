@@ -22,7 +22,7 @@ import { invalidateAppData } from "@/lib/app-data-invalidation";
 const OFFERS_MANAGER_COPY = {
   es: {
     back: "Volver al panel",
-    title: "Mis ofertas",
+    title: "Mis promociones",
     subtitle: "Promociones y descuentos para atraer clientes.",
     publish: "Publicar oferta",
     view: "Ver oferta",
@@ -41,7 +41,7 @@ const OFFERS_MANAGER_COPY = {
   },
   en: {
     back: "Back to dashboard",
-    title: "My offers",
+    title: "My promotions",
     subtitle: "Deals and discounts to attract clients.",
     publish: "Post offer",
     view: "View offer",

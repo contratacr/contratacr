@@ -11,6 +11,7 @@ import { LandingFooter } from "@/components/landing/landing-footer";
 import { CategorySuggestionBox } from "@/components/ui/category-suggestion";
 import { Link, useRouter } from "@/i18n/navigation";
 import { useCustomCategories } from "@/lib/data/use-custom-categories";
+import { useNativeApp } from "@/hooks/use-native-app";
 import { categorySearchScore, getAllCategories, getAllCategoryGroups, getCategoryGroupLabel, getCategoryLabel, isOtherCategoryGroup, normalizeText, searchCategories, getCategoryGroupId } from "@/lib/data/categories";
 import { getCategoryGroupIcon } from "@/lib/data/category-group-visuals";
 import {
@@ -26,6 +27,7 @@ export default function ServiciosPage() {
   const t = useTranslations("categories");
   const tp = useTranslations("categoriesPage");
   const locale = useLocale();
+  const nativeApp = useNativeApp();
   const router = useRouter();
   const customCategories = useCustomCategories();
   const [query, setQuery] = useState("");
@@ -181,12 +183,16 @@ export default function ServiciosPage() {
                   <ContrataCRMark className="h-7 w-7" />
                 </Link>
                 <p className="min-w-0 truncate pl-1.5 text-[17px] font-extrabold text-[#162543]">{servicesTitle}</p>
+                {/* El icono de Mensajes es de la barra de la APP: en la web se
+                    llega desde el menú y desde el panel. */}
                 <div className="ml-auto flex shrink-0 items-center gap-0.5">
-                  <HeaderMessagesLink
-                    unreadCount={0}
-                    label={tp("messages")}
-                    href={`/login?redirect=${encodeURIComponent(`/${locale}/mensajes`)}`}
-                  />
+                  {nativeApp && (
+                    <HeaderMessagesLink
+                      unreadCount={0}
+                      label={tp("messages")}
+                      href={`/login?redirect=${encodeURIComponent(`/${locale}/mensajes`)}`}
+                    />
+                  )}
                   <HeaderNotificationsLink
                     href={`/login?redirect=${encodeURIComponent(`/${locale}/notificaciones`)}`}
                     label={tp("notifications")}

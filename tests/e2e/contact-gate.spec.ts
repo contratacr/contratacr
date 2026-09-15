@@ -42,78 +42,21 @@ test.describe("@seeded contact gate", () => {
     expect(html).not.toMatch(/tel:\+\d{8,}/);
   });
 
-  test("un invitado que toca WhatsApp solo pone su nombre y su teléfono", async ({ page }) => {
+  test("un invitado contacta de un solo toque, sin ventana de por medio", async ({ page }) => {
     await resetAuth(page);
-    const admin = regressionAdminClient();
-    await admin.from("contact_leads").delete().eq("professional_id", seed.professionalId);
-
     await gotoOK(page, `/es/profesionales/${seed.professionalSlug}`);
     await waitForInteractivePage(page);
+
+    // El botón abre WhatsApp en otra pestaña; lo que se comprueba aquí es que
+    // NADA se interponga: ni registro, ni formulario, ni pedirle la cédula.
     const whatsapp = page.getByRole("button", { name: /^WhatsApp$|Contactar por WhatsApp|Contact on WhatsApp/i }).filter({ visible: true }).first();
     await expect(whatsapp).toBeVisible({ timeout: 15_000 });
-    const urlBefore = page.url();
+    const urlAntes = page.url();
     await whatsapp.click();
+    await page.waitForTimeout(1500);
 
-    const dialog = page.getByRole("dialog").filter({ visible: true }).first();
-    await expect(dialog).toBeVisible();
-    // Dos campos, ni uno más: ni contraseña, ni cédula, ni código al correo.
-    await expect(dialog.locator("input")).toHaveCount(2);
-    // Ni contraseña ni identificación: los únicos dos campos son texto y
-    // teléfono. (La nota SÍ nombra la contraseña, para decir que no hace falta.)
-    await expect(dialog.locator("input[type=password]")).toHaveCount(0);
-    const tipos = await dialog.locator("input").evaluateAll((campos) => campos.map((c) => (c as HTMLInputElement).type));
-    expect(tipos.every((tipo) => tipo === "text" || tipo === "tel" || tipo === "")).toBe(true);
-    expect(page.url()).toBe(urlBefore);
-
-    await dialog.getByLabel(/Nombre completo/i).fill("Ana Prueba Invitada");
-    await dialog.getByLabel(/^Tel[eé]fono$/i).fill("70000009");
-    await dialog.getByRole("button", { name: /WhatsApp/i }).click();
-    await page.waitForTimeout(2000);
-
-    // El profesional se queda con quién lo buscó y a qué número devolverle.
-    const { data: leads } = await admin
-      .from("contact_leads")
-      .select("name, phone")
-      .eq("professional_id", seed.professionalId);
-    expect(leads?.length).toBe(1);
-    expect(leads?.[0].phone).toBe("+50670000009");
-  });
-
-  test("el profesional ve en su panel a quien lo buscó", async ({ page }) => {
-    const admin = regressionAdminClient();
-    await admin.from("contact_leads").delete().eq("professional_id", seed.professionalId);
-    await admin.from("contact_leads").insert({
-      professional_id: seed.professionalId,
-      name: "Ana Prueba Invitada",
-      phone: "+50670000009",
-      channel: "whatsapp",
-    });
-
-    await loginAs(page, E2E_USERS.professional.email, E2E_USERS.professional.password);
-    await gotoOK(page, "/es/dashboard/profesional?tab=contactos");
-    await expect(page.getByText("Ana Prueba Invitada")).toBeVisible();
-    await expect(page.getByText("+50670000009")).toBeVisible();
-    // Lo que hace falta es devolverle la llamada: los dos botones son eso.
-    await expect(page.getByRole("link", { name: /WhatsApp/i }).first()).toBeVisible();
-  });
-
-  test("la ventana de contacto sale encima de la pantalla, no dentro del panel", async ({ page }) => {
-    await resetAuth(page);
-    await page.setViewportSize({ width: 390, height: 844 });
-    await gotoOK(page, `/es/profesionales/${seed.professionalSlug}`);
-    await waitForInteractivePage(page);
-    await page.getByRole("button", { name: /^WhatsApp$|Contactar por WhatsApp/i }).filter({ visible: true }).first().click();
-
-    const dialogo = page.getByRole("dialog").filter({ visible: true }).first();
-    await expect(dialogo).toBeVisible();
-    // Cuelga de <body> y cabe entera: en /buscar el panel se arrastra con
-    // `transform`, y eso rompe el `position: fixed` de todo lo que viva
-    // adentro —la ventana salía recortada entre las tarjetas—.
-    const caja = await dialogo.evaluate((nodo) => {
-      const r = nodo.getBoundingClientRect();
-      return { cuelgaDelCuerpo: nodo.parentElement?.parentElement === document.body, recortada: r.top < 0 || r.bottom > window.innerHeight };
-    });
-    expect(caja.cuelgaDelCuerpo).toBe(true);
-    expect(caja.recortada).toBe(false);
+    await expect(page.getByRole("dialog").filter({ visible: true })).toHaveCount(0);
+    await expect(page.getByText(/Crea tu cuenta|Create your free account|Nombre completo/i)).toHaveCount(0);
+    expect(page.url()).toBe(urlAntes);
   });
 });

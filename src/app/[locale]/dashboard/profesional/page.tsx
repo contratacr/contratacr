@@ -8,7 +8,7 @@ import { useHairlineOnScroll } from "@/components/util/use-hairline-on-scroll";
 import { isSigningOut, signOutToHome } from "@/lib/auth/sign-out";
 import { useSearchParams } from "next/navigation";
 import {
-  User, Award, CalendarCheck, PhoneCall, CalendarClock, CalendarDays, Wrench,
+  User, Award, CalendarCheck, CalendarClock, CalendarDays, Wrench,
   ShieldCheck, Bell, Handshake, ClipboardList, Bookmark, Settings, Headset, CreditCard,
   ArrowLeft, ArrowRight, ChevronDown, ChevronRight, Sparkles, Plus, AlertCircle, X, MessageSquareMore, Home, LogOut, Users, CheckCircle2, FileText, Search, Camera, Eye, Trash2, Loader2,
   BriefcaseBusiness, Star, ReceiptText,
@@ -22,7 +22,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { VerifiedSeal } from "@/components/ui/verified-seal";
 import { ShareKit } from "@/components/dashboard/pro/share-kit";
-import { ContactosTab } from "@/components/dashboard/pro/contactos-tab";
 import { getCategoryLabel } from "@/lib/data/categories";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -82,7 +81,7 @@ import { OfferTagPercentIcon } from "@/components/icons/offer-tag-percent-icon";
 // (the offer capability, unlocked by completing the professional profile). There
 // is no separate client panel; everyone lives here.
 type Tab =
-  | "home" | "profile" | "services" | "photos" | "availability" | "bookings" | "contactos" | "proposals" | "quotes" | "verificacion"
+  | "home" | "profile" | "services" | "photos" | "availability" | "bookings" | "proposals" | "quotes" | "verificacion"
   | "jobs" | "offers" | "completion"
   | "suscripcion"
   | "sent_bookings" | "sent_projects" | "applications" | "saved" | "connections"
@@ -92,7 +91,7 @@ type Tab =
 type ProData = Record<string, any>;
 
 const ALL_TABS = new Set<Tab>([
-  "home", "profile", "services", "photos", "availability", "bookings", "contactos", "proposals", "quotes", "verificacion",
+  "home", "profile", "services", "photos", "availability", "bookings", "proposals", "quotes", "verificacion",
   "jobs", "offers", "completion", "suscripcion", "sent_bookings", "sent_projects", "applications", "saved", "connections",
   "chat", "notifications", "soporte", "cuenta", "guides",
 ]);
@@ -104,7 +103,6 @@ const TAB_ICONS: Record<Tab, React.ReactNode> = {
   photos: <Award className="h-4 w-4" />,
   availability: <CalendarDays className="h-4 w-4" />,
   bookings: <CalendarCheck className="h-4 w-4" />,
-  contactos: <PhoneCall className="h-4 w-4" />,
   proposals: <Handshake className="h-4 w-4" />,
   quotes: <ReceiptText className="h-4 w-4" />,
   verificacion: <ShieldCheck className="h-4 w-4" />,
@@ -130,7 +128,7 @@ const TAB_ICONS: Record<Tab, React.ReactNode> = {
 // los filtros, no en la cabecera de la tarjeta: la cabecera solo existe de
 // 1024px para arriba y a media pantalla el subtítulo desaparecía.
 const TABS_WITH_SUBTITLE = new Set<Tab>([
-  "bookings", "contactos", "proposals", "availability", "verificacion", "suscripcion", "completion",
+  "bookings", "proposals", "availability", "verificacion", "suscripcion", "completion",
   "sent_bookings", "applications", "saved", "connections", "notifications", "cuenta", "guides",
 ]);
 
@@ -141,12 +139,12 @@ const TABS_WITH_SUBTITLE = new Set<Tab>([
 // Mode membership. The first three render only in "offer" mode, the next three
 // only in "use" mode; "profile" + the shared tabs are valid in both, so the mode
 // for those is taken from the URL (?mode=) or defaults to the account's capability.
-const OFFER_ONLY = new Set<Tab>(["services", "photos", "availability", "bookings", "contactos", "proposals", "quotes", "verificacion", "suscripcion", "jobs", "offers", "completion"]);
+const OFFER_ONLY = new Set<Tab>(["services", "photos", "availability", "bookings", "proposals", "quotes", "verificacion", "suscripcion", "jobs", "offers", "completion"]);
 const USE_ONLY = new Set<Tab>(["sent_bookings", "sent_projects", "applications", "connections"]);
 
 // Sidebar order per mode (+ a shared block appended below).
 const OFFER_TABS: Tab[] = ([
-  "bookings", "contactos", "proposals", "quotes", "jobs", "offers", "photos", "availability", "services", "saved", "soporte", "profile", "guides",
+  "bookings", "proposals", "quotes", "jobs", "offers", "photos", "availability", "services", "saved", "soporte", "profile", "guides",
   ...(PAYMENTS_ENABLED ? (["suscripcion"] as Tab[]) : []),
 ] as Tab[]).filter((tab) => EMPLEOS_VISIBLE || tab !== "jobs");
 const USE_TABS: Tab[] = (["sent_bookings", "sent_projects", "applications", "connections", "saved", "soporte", "profile", "guides"] as Tab[])
@@ -159,7 +157,7 @@ const OPPORTUNITY_MODAL_SEEN_STORAGE_PREFIX = "contratacr:seen-opportunity-modal
 const PANEL_GROUPS: { grupo: "work" | "business" | "saved" | "account"; tabs: Tab[] }[] = [
   // «Mis postulaciones» va con lo que uno mandó (citas y proyectos propios) y
   // por encima de «Volver a contratar»: sin bloque quedaba suelta al final.
-  { grupo: "work", tabs: ["bookings", "contactos", "proposals", "quotes", "sent_bookings", "sent_projects", "applications"] },
+  { grupo: "work", tabs: ["bookings", "proposals", "quotes", "sent_bookings", "sent_projects", "applications"] },
   { grupo: "business", tabs: ["offers", "jobs", "photos", "availability", "services", "completion"] },
   { grupo: "saved", tabs: ["connections", "saved"] },
   { grupo: "account", tabs: ["profile", "soporte", "guides"] },
@@ -175,21 +173,20 @@ function agruparPestanas(tabs: Tab[]): Tab[][] {
 
 const PANEL_TAB_LABELS: Partial<Record<Tab, { es: string; en: string }>> = {
   bookings: { es: "Citas", en: "Appointments" },
-  contactos: { es: "Te buscaron", en: "They asked for you" },
-  proposals: { es: "Proyectos", en: "Projects" },
+  proposals: { es: "Oportunidades", en: "Opportunities" },
   quotes: { es: "Cotizaciones", en: "Quotes" },
   sent_bookings: { es: "Mis citas", en: "My appointments" },
   sent_projects: { es: "Mis proyectos", en: "My projects" },
   applications: { es: "Mis postulaciones", en: "My applications" },
   connections: { es: "Volver a contratar", en: "Hire again" },
-  photos: { es: "Casos de éxito", en: "Success cases" },
-  availability: { es: "Disponibilidad", en: "Availability" },
-  services: { es: "Servicios", en: "Services" },
+  photos: { es: "Mis trabajos", en: "My work" },
+  availability: { es: "Mi agenda", en: "My calendar" },
+  services: { es: "Lo que ofrezco", en: "What I offer" },
   saved: { es: "Favoritos", en: "Favorites" },
   soporte: { es: "Soporte", en: "Support" },
   profile: { es: "Perfil", en: "Profile" },
   jobs: { es: "Empleos", en: "Jobs" },
-  offers: { es: "Ofertas", en: "Offers" },
+  offers: { es: "Promociones", en: "Promotions" },
   completion: { es: "Completa tu perfil", en: "Complete your profile" },
   guides: { es: "Guías", en: "Guides" },
 };
@@ -2478,7 +2475,6 @@ export default function DashboardPage() {
                         {TABS_WITH_SUBTITLE.has(activeTab) && (
                           <SectionHeadline subtitulo={t(`subtitles.${activeTab}`)} className="mb-4" />
                         )}
-                        {activeTab === "contactos" && <ContactosTab />}
                         {activeTab === "home" && (
                           <>
                             <div className="lg:hidden">

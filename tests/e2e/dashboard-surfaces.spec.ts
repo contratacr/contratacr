@@ -7,13 +7,16 @@ const professionalTabs = [
   // (Citas); en teléfono muestra el menú de secciones con el cambio de panel.
   { tab: "home", marker: /Citas|Appointments|Ir a mi panel cliente|Go to my client panel/i },
   { tab: "profile", marker: /Perfil|Profile/i },
-  { tab: "services", marker: /Servicios|Services/i },
-  { tab: "photos", marker: /Casos de exito|Casos de .xito|Success cases|Success stories/i },
-  { tab: "availability", marker: /Disponibilidad|Availability/i },
+  // Los nombres de las secciones cambiaron para que digan lo que son: «Ofertas»
+  // significaba también «oferta laboral» y por eso llegaron dos vacantes ahí;
+  // «Proyectos», en el panel del profesional, eran trabajos de OTROS.
+  { tab: "services", marker: /Lo que ofrezco|What I offer/i },
+  { tab: "photos", marker: /Mis trabajos|My work/i },
+  { tab: "availability", marker: /Mi agenda|My calendar/i },
   { tab: "bookings", marker: /Citas|Appointments/i },
-  { tab: "proposals", marker: /Proyectos|Projects/i },
+  { tab: "proposals", marker: /Oportunidades|Opportunities/i },
   { tab: "jobs", marker: /Empleos|Jobs/i },
-  { tab: "offers", marker: /Ofertas|Offers/i },
+  { tab: "offers", marker: /Promociones|Promotions/i },
   // Seguir se retiró en 553536d1 («guardar es el único gesto para lo quiero a
   // mano»): ya no hay pestaña de seguidores. En su lugar se cubren las dos
   // secciones que sí existen y no estaban en la lista.
@@ -260,7 +263,9 @@ test.describe("@seeded dashboard surfaces", () => {
     await expect(availabilityTab).toHaveCount(1);
     await availabilityTab.click();
     await expect(page).toHaveURL(/tab=availability/);
-    await expectVisibleText(page.locator("main"), /Disponibilidad|Availability/i);
+    // En el teléfono el nombre de la sección lo pone la barra de arriba, no el
+    // cuerpo: se mira la página entera.
+    await expectVisibleText(page.locator("body"), /Mi agenda|My calendar/i);
     expect(await page.evaluate(() => (window as Window & { __contratacrSoftNavigation?: string }).__contratacrSoftNavigation)).toBe("active");
   });
 
@@ -326,7 +331,7 @@ test.describe("@seeded dashboard surfaces", () => {
   test("favorites keep every saveable filter and connections show verification", async ({ page }) => {
     await loginAs(page, E2E_USERS.client.email, E2E_USERS.client.password);
     await gotoOK(page, "/es/dashboard/profesional?tab=saved&mode=use");
-    for (const label of [/^Profesionales(?: \d+)?$/i, /^Ofertas(?: \d+)?$/i, /^Empleos(?: \d+)?$/i]) {
+    for (const label of [/^Profesionales(?: \d+)?$/i, /^Promociones(?: \d+)?$/i, /^Empleos(?: \d+)?$/i]) {
       await expect(page.getByRole("button", { name: label }).filter({ visible: true }).first()).toBeVisible();
     }
 
@@ -376,7 +381,7 @@ test.describe("@seeded dashboard surfaces", () => {
       {
         locale: "es",
         guideButton: /^Guías$/i,
-        expected: [/Mis postulaciones/i, /Favoritos/i, /^Empleos$/i, /^Ofertas$/i, /Publicar empleos/i, /Publicar ofertas/i],
+        expected: [/Mis postulaciones/i, /Favoritos/i, /^Empleos$/i, /^Promociones$/i, /Publicar empleos/i, /Publicar una promoción/i],
         expandable: /Mis postulaciones/i,
         profileGuide: /^Perfil profesional$/i,
         profileLastStep: /Usa Ver mi perfil para ver la versi.n p.blica/i,
@@ -384,7 +389,7 @@ test.describe("@seeded dashboard surfaces", () => {
       {
         locale: "en",
         guideButton: /^Guides$/i,
-        expected: [/My applications/i, /Favorites/i, /^Jobs$/i, /^Offers$/i, /Post jobs/i, /Publish offers/i],
+        expected: [/My applications/i, /Favorites/i, /^Jobs$/i, /^Promotions$/i, /Post jobs/i, /Publish promotions/i],
         expandable: /My applications/i,
         profileGuide: /^Professional profile$/i,
         profileLastStep: /Use View my profile to see the public version/i,
@@ -459,7 +464,7 @@ test.describe("@seeded dashboard surfaces", () => {
     for (const section of professionalTabs) {
       await gotoOK(page, `/en/dashboard/profesional?tab=${section.tab}`);
       await expectVisibleText(page.locator("body"), section.marker);
-      await expect(page.locator("main").last()).not.toContainText(/Notificaciones|Disponibilidad|Cuenta y seguridad/i);
+      await expect(page.locator("main").last()).not.toContainText(/Notificaciones|Mi agenda|Cuenta y seguridad/i);
       await expectHealthyPage(page);
     }
 
@@ -517,10 +522,10 @@ test.describe("@seeded dashboard surfaces", () => {
     await loginAs(page, E2E_USERS.client.email, E2E_USERS.client.password);
 
     await gotoOK(page, "/en/dashboard/profesional?tab=saved&mode=use");
-    for (const label of [/^Professionals(?: \d+)?$/i, /^Offers(?: \d+)?$/i, /^Jobs(?: \d+)?$/i]) {
+    for (const label of [/^Professionals(?: \d+)?$/i, /^Promotions(?: \d+)?$/i, /^Jobs(?: \d+)?$/i]) {
       await expect(page.getByRole("button", { name: label }).filter({ visible: true }).first()).toBeVisible();
     }
-    await expect(page.getByRole("button", { name: /^(?:Profesionales|Ofertas|Empleos)/i })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: /^(?:Profesionales|Promociones|Empleos)/i })).toHaveCount(0);
 
     await gotoOK(page, "/en/dashboard/profesional?tab=connections&mode=use");
     await expect(page.getByPlaceholder(/Search by professional or service/i)).toBeVisible();

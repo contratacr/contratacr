@@ -10,7 +10,7 @@
     "notifications": "Loading notifications…",
     "support": "Loading support…",
     "jobs": "Loading jobs…",
-    "offers": "Loading offers…",
+    "offers": "Loading promotions…",
     "signingOut": "Signing out…",
     "saving": "Saving changes…",
     "uploading": "Uploading file…"
@@ -45,10 +45,10 @@
     "searchServiceAria": "Search for a service",
     "noServiceFound": "We couldn't find that service.",
     "viewAllProfessionals": "See all services",
-    "offerServices": "Offer my services",
+    "offerServices": "Promotion my services",
     "myPanel": "My dashboard",
     "manageProfessionalProfile": "Manage professional profile",
-    "registerPro": "Offer my services",
+    "registerPro": "Promotion my services",
     "login": "Log in",
     "openMenu": "Open menu",
     "closeMenu": "Close menu",
@@ -204,7 +204,7 @@
       }
     },
     "cta": {
-      "title": "Do you offer services?",
+      "title": "Do you promotion services?",
       "subtitle": "Create your profile and start receiving clients today. No commissions. No payments until you decide.",
       "button": "Create my profile",
       "learnMore": "Learn more",
@@ -289,7 +289,7 @@
       "reviews": "Most reviews",
       "priceAsc": "Price: low to high",
       "priceDesc": "Price: high to low",
-      "successCases": "Most success cases",
+      "successCases": "Most work shown",
       "experience": "Most experience",
       "followers": "Most followers",
       "newest": "Newest",
@@ -339,7 +339,7 @@
     "rate": "Rate",
     "noReviews": "No reviews yet",
     "reviewsCount": "{count, plural, one {# review} other {# reviews}}",
-    "viewCases": "Success stories",
+    "viewCases": "See work",
     "viewCertifications": "Education",
     "verifiedShort": "Verified",
     "unverifiedShort": "Unverified",
@@ -359,7 +359,7 @@
     "clear": "Clear"
   },
   "workplacesPicker": {
-    "lead": "Choose the province and canton where you offer your services.",
+    "lead": "Choose the province and canton where you promotion your services.",
     "searchPlaceholder": "Search the address… example: Escazú Centro",
     "geoUnsupported": "Your browser doesn't allow geolocation.",
     "geoFailed": "We couldn't get your location. Check your permissions.",
@@ -524,7 +524,7 @@
     "call": "Call",
     "sendEmail": "Send email",
     "later": "Not now",
-    "noContact": "This professional does not offer that contact method.",
+    "noContact": "This professional does not promotion that contact method.",
     "askTitle": "Who's writing?",
     "askBody": "With your name and phone, {name} can reply even if the chat gets lost.",
     "askName": "Full name",
@@ -657,7 +657,7 @@
     "tabs": {
       "servicios": "Services",
       "disponibilidad": "Availability",
-      "casos": "Past work",
+      "casos": "Work",
       "certificaciones": "Education",
       "resenas": "Reviews",
       "sobre": "Information"
@@ -714,7 +714,7 @@
     "contactEmail": "Email",
     "trust": "Trust",
     "verificationCaption": "Identity verified for greater trust.",
-    "languagesCaption": "Languages they offer service in.",
+    "languagesCaption": "Languages they promotion service in.",
     "baseRateCaption": "Base hourly rate.",
     "pricesRefCaption": "Reference prices.",
     "reviewsHeading": "Reviews ({count})",
@@ -760,8 +760,8 @@
       "subtitle": "How do you want to use ContrataCR?",
       "client": "I'm a client",
       "clientDesc": "I want to hire services",
-      "professional": "I offer services",
-      "professionalDesc": "I want to offer my services",
+      "professional": "I promotion services",
+      "professionalDesc": "I want to promotion my services",
       "register": "Sign up",
       "alreadyHaveAccount": "Already have an account?",
       "signIn": "Sign in"
@@ -841,14 +841,14 @@
       "errNameRequired": "Enter your full name.",
       "errPhoneIncomplete": "Enter a complete phone number for the selected country.",
       "errServiceType": "Select at least one service type",
-      "errWorkplace": "Add at least one area where you offer your services, or All Costa Rica if you attend by video consultation.",
-      "errWorkplaceInPerson": "Add at least one area where you offer your services.",
+      "errWorkplace": "Add at least one area where you promotion your services, or All Costa Rica if you attend by video consultation.",
+      "errWorkplaceInPerson": "Add at least one area where you promotion your services.",
       "errCoverage": "Add at least one area you travel to.",
       "errIdRequired": "ID required. CR: 9 digits · DIMEX: 11-12 · NITE: 10.",
       "errCreateAccount": "We couldn't create the account.",
       "errAccountExists": "An account with this email already exists. Sign in with your password, or with Google or Facebook if that's how you registered.",
       "errSocialAccount": "This email is already registered with {provider}. Sign in with {provider}.",
-      "errCreateProfile": "Error creating your profile to offer services.",
+      "errCreateProfile": "Error creating your profile to promotion services.",
       "errTitle": "Registration error",
       "errAlreadyTitle": "Account already exists",
       "creatingAccount": "Creating your account…",
@@ -874,11 +874,11 @@
       "searchAnotherProfession": "Search another service…",
       "cancel": "Cancel",
       "addAnotherProfession": "Add another service",
-      "addProfessionPrompt": "Offer more than one service? Add it",
+      "addProfessionPrompt": "Promotion more than one service? Add it",
       "workplacesSectionTitle": "Work areas",
-      "howOffer": "How do you offer your services?",
+      "howOffer": "How do you promotion your services?",
       "chooseBoth": "(you can pick both)",
-      "workplacesLabel": "Where do you offer your services?",
+      "workplacesLabel": "Where do you promotion your services?",
       "coverageLabel": "Areas you travel to",
       "coverageHelp": "Choose the provinces and cantones you serve. You appear in each one's search results.",
       "contactSectionTitle": "Contact",
@@ -893,7 +893,7 @@
       "noCrIdNotice": "Without a Costa Rican ID your account stays <b>pending review</b>. An agent will review your document (passport, DIMEX in process) and approve your identity. You can use the platform in the meantime.",
       "yourDocument": "Your document",
       "optionalParen": "(optional)",
-      "offerServices": "Offer my services",
+      "offerServices": "Promotion my services",
       "goToLogin": "Go to sign in →",
       "videoConsultOption": "Video consultations",
       "videoSectionTitle": "Video consultations",
@@ -935,7 +935,7 @@
     }
   },
   "footer": {
-    "tagline": "The services marketplace made for Costa Rica. Offer your services, find the right professional, and coordinate the details in ContrataCR.",
+    "tagline": "The services marketplace made for Costa Rica. Promotion your services, find the right professional, and coordinate the details in ContrataCR.",
     "clients": {
       "title": "For clients",
       "search": "Find services",
@@ -945,7 +945,7 @@
     },
     "pros": {
       "title": "For professionals",
-      "register": "Offer my services",
+      "register": "Promotion my services",
       "attract": "Improve my profile",
       "verification": "Identity verification"
     },
@@ -1094,13 +1094,13 @@
   "dashboard": {
     "pro": {
       "title": "My panel",
-      "notPro": "Your account doesn't offer services yet.",
+      "notPro": "Your account doesn't promotion services yet.",
       "nav": {
         "profile": "My profile",
         "photos": "Photos",
-        "availability": "Availability",
+        "availability": "My calendar",
         "bookings": "Appointments",
-        "proposals": "Projects"
+        "proposals": "Opportunities"
       },
       "profile": {
         "title": "Profile information",
@@ -1144,9 +1144,9 @@
       },
       "services": {
         "title": "Services offered",
-        "hint": "Add the specific services you offer with a name, description, and price.",
+        "hint": "Add the specific services you promotion with a name, description, and price.",
         "empty": "You haven't added any services yet.",
-        "emptyHint": "Add services so clients know exactly what you offer.",
+        "emptyHint": "Add services so clients know exactly what you promotion.",
         "add": "Add service",
         "edit": "Edit",
         "delete": "Delete",
@@ -1184,11 +1184,11 @@
         "cancel": "Cancel"
       },
       "proposals": {
-        "title": "Projects",
+        "title": "Opportunities",
         "empty": "No projects in your area",
         "emptyHint": "Projects in your category will appear here.",
         "myProposals": "My proposals",
-        "browse": "Projects",
+        "browse": "Opportunities",
         "send": "Send proposal",
         "price": "Your price (₡)",
         "pricePlaceholder": "example: 50000",
@@ -1208,7 +1208,7 @@
       "title": "Client dashboard",
       "nav": {
         "bookings": "Appointments",
-        "projects": "Projects",
+        "projects": "Opportunities",
         "saved": "Favorites",
         "notifications": "Notifications",
         "profile": "My profile"
@@ -1249,7 +1249,7 @@
       "saved": {
         "title": "Favorites",
         "empty": "No favorites yet",
-        "emptyHint": "Add professionals, offers and jobs to favorites to find them easily."
+        "emptyHint": "Add professionals, promotions and jobs to favorites to find them easily."
       },
       "notifications": {
         "title": "Notifications",
@@ -1291,13 +1291,13 @@
     "tabs": {
       "home": "Panel",
       "profile": "My profile",
-      "services": "Services",
-      "photos": "Success stories",
-      "availability": "Availability",
+      "services": "What I offer",
+      "photos": "My work",
+      "availability": "My calendar",
       "chat": "Messages",
       "assistant": "Assistant",
       "bookings": "Appointments",
-      "proposals": "Projects",
+      "proposals": "Opportunities",
       "verificacion": "Verification",
       "suscripcion": "Subscription",
       "sent_bookings": "My appointments",
@@ -1306,24 +1306,23 @@
       "guides": "Guides",
       "notifications": "Notifications",
       "soporte": "Support",
-      "cuenta": "Account & security",
-      "contactos": "They asked for you"
+      "cuenta": "Account & security"
     },
     "home": {
       "useEyebrow": "Client panel",
       "useTitle": "You are using ContrataCR as a client",
-      "useBody": "If you offer services, you can switch to the professional panel to receive appointments, reply to client projects and manage your profile.",
+      "useBody": "If you promotion services, you can switch to the professional panel to receive appointments, reply to client projects and manage your profile.",
       "offerEyebrow": "Professional panel",
       "offerTitle": "You are using ContrataCR as a professional",
       "offerBody": "You can also switch to the client panel to search for services, book appointments, post what you need or save professionals.",
       "switchToUse": "Switch to client panel",
       "switchToOffer": "Switch to professional panel",
       "quickActions": "Quick actions",
-      "clientOnlyHint": "To offer services, complete professional registration from the Offer my services option.",
+      "clientOnlyHint": "To promotion services, complete professional registration from the Promotion my services option.",
       "summaryTitle": "Account summary",
       "summary": {
         "profile": "Profile",
-        "services": "Services",
+        "services": "What I offer",
         "locations": "Locations",
         "workplaces": "Work locations",
         "identity": "Identity",
@@ -1389,19 +1388,19 @@
           "body": "See the appointments clients booked from your profile."
         },
         "opportunities": {
-          "title": "Projects",
+          "title": "Opportunities",
           "body": "Reply to open projects that match your services."
         },
         "services": {
-          "title": "Services",
-          "body": "Update what you offer, prices and details."
+          "title": "What I offer",
+          "body": "Update what you promotion, prices and details."
         },
         "photos": {
           "title": "Success stories",
           "body": "Add photos of your work to build more trust."
         },
         "availability": {
-          "title": "Availability",
+          "title": "My calendar",
           "body": "Set your hours and how clients can contact you."
         },
         "verification": {
@@ -1422,13 +1421,13 @@
         }
       }
     },
-    "servicesHeading": "Services",
+    "servicesHeading": "What I offer",
     "subtitles": {
       "bookings": "Your schedule with clients.",
-      "proposals": "Clients looking for someone to do the work.",
+      "proposals": "Jobs clients posted that you can apply to.",
       "quotes": "The prices you sent a client.",
-      "photos": "Work you already did, with photos. Nothing convinces more.",
-      "services": "What you offer and what it costs.",
+      "photos": "Work you already did, with photos. It is what convinces most.",
+      "services": "What you offer and at what price.",
       "availability": "The days and times people can book you.",
       "verificacion": "Send your ID and get the blue seal.",
       "suscripcion": "Your plan and your charges.",
@@ -1441,8 +1440,7 @@
       "notifications": "Everything that happened in your account.",
       "soporte": "Open a ticket and we answer you here.",
       "cuenta": "Your email, your password and your account.",
-      "guides": "How to use ContrataCR step by step.",
-      "contactos": "People who asked for your contact from your profile."
+      "guides": "How to use ContrataCR step by step."
     },
     "profileSections": {
       "photosDesc": "Photos and completed work clients can see.",
@@ -1469,10 +1467,10 @@
       "photoBenefit": "Profiles with a photo build more trust and get more clients.",
       "bio": "Write a description",
       "bioBenefit": "Tell clients who you are and why to choose you.",
-      "services": "Add the services you offer",
+      "services": "Add the services you promotion",
       "servicesBenefit": "Clients search by service: without services you barely show up.",
       "serviceInfo": "Complete your service details",
-      "serviceInfoBenefit": "Add price and description so clients understand what you offer.",
+      "serviceInfoBenefit": "Add price and description so clients understand what you promotion.",
       "location": "Set your location or coverage",
       "locationBenefit": "So clients in your area can find you.",
       "whatsapp": "Confirm your contact number",
@@ -1487,7 +1485,7 @@
       "education": "Add education",
       "serviceImage": "Add a service image",
       "serviceCredential": "Add professional credential",
-      "portfolio": "Add success cases",
+      "portfolio": "Add your work",
       "optionalShort": "optional",
       "ignoreStep": "Ignore step",
       "ignoreOptional": "Ignore optional steps",
@@ -1501,10 +1499,10 @@
     "modeUse": "Client mode",
     "modeOffer": "Professional mode",
     "offerGateTitle": "Start offering your services as a professional",
-    "offerGateBody": "On ContrataCR, anyone who offers a service is a professional: a trade, caregiving, a class or a profession. Complete your profile once and start receiving clients.",
+    "offerGateBody": "On ContrataCR, anyone who promotions a service is a professional: a trade, caregiving, a class or a profession. Complete your profile once and start receiving clients.",
     "offerGateCta": "Complete my profile",
-    "offerInviteTitle": "Do you offer services?",
-    "offerInviteCta": "Offer my services",
+    "offerInviteTitle": "Do you promotion services?",
+    "offerInviteCta": "Promotion my services",
     "opportunityWelcome": {
       "title": "We found {count, plural, one {# client project for your services} other {# client projects for your services}}",
       "body": "These are client projects that match the services you just added.",
@@ -1534,16 +1532,16 @@
     "bottomNav": {
       "home": "Panel",
       "profile": "Profile",
-      "services": "Services",
+      "services": "What I offer",
       "photos": "Wins",
       "availability": "Schedule",
       "chat": "Messages",
       "assistant": "Assistant",
       "bookings": "Appointments",
-      "proposals": "Projects",
+      "proposals": "Opportunities",
       "verificacion": "Verification",
       "sent_bookings": "Appointments",
-      "sent_projects": "Projects",
+      "sent_projects": "Opportunities",
       "notifications": "Notifications",
       "soporte": "Support",
       "cuenta": "Account",
@@ -1563,7 +1561,7 @@
       "supportCta": "Contact support",
       "heroEyebrow": "Quick guide",
       "heroTitle": "Use ContrataCR with clarity",
-      "heroBody": "These guides explain how to find professionals, manage your panel, post jobs or offers and complete your profile without getting lost.",
+      "heroBody": "These guides explain how to find professionals, manage your panel, post jobs or promotions and complete your profile without getting lost.",
       "exampleProfile": {
         "verified": "Verified",
         "service": "Web development",
@@ -1610,7 +1608,7 @@
       "providerNoteTitle": "If you are a professional:",
       "providerNoteBody": "As a professional, you can also use the client panel with the same account.",
       "clientNoteTitle": "If you only use ContrataCR as a client:",
-      "clientNoteBody": "The professional guides stay available if you later want to offer services or post jobs or offers.",
+      "clientNoteBody": "The professional guides stay available if you later want to promotion services or post jobs or promotions.",
       "activateProfessionalCta": "Create professional profile",
       "sections": {
         "client": "For clients",
@@ -1658,7 +1656,7 @@
           "cta": "View job"
         },
         "offers": {
-          "title": "Offers",
+          "title": "Promotions",
           "badge": "Promotion",
           "offer": "Professional package",
           "meta": "Available in Costa Rica"
@@ -1715,7 +1713,7 @@
         "clientSaved": {
           "title": "Favorites",
           "short": "Your favorites",
-          "body": "Favorites gathers professionals, offers and jobs you want to review later.",
+          "body": "Favorites gathers professionals, promotions and jobs you want to review later.",
           "steps": [
             "Add professionals to favorites from Search or from their profile.",
             "Save jobs and offers from their details.",
@@ -1797,16 +1795,16 @@
           "cta": "View jobs"
         },
         "offersGuide": {
-          "title": "Offers",
+          "title": "Promotions",
           "short": "Promotions from professionals",
-          "body": "Offers shows promotions, packages, products or special services posted by professionals.",
+          "body": "Promotions shows promotions, packages, products or special services posted by professionals.",
           "steps": [
             "Search for an offer by service, product or need.",
             "Filter by date, type, service and price when available.",
             "Review images, conditions, expiry date and the professional who posted it.",
             "Contact the professional from the offer or open the profile for more context."
           ],
-          "cta": "View offers"
+          "cta": "View promotions"
         },
         "supportGuide": {
           "title": "Support",
@@ -1834,7 +1832,7 @@
         "professionalPanel": {
           "title": "Professional panel",
           "short": "Manage your professional presence",
-          "body": "The professional panel gathers appointments, client projects, past work, availability, services, jobs, offers, support, profile and guides.",
+          "body": "The professional panel gathers appointments, client projects, past work, availability, services, jobs, promotions, support, profile and guides.",
           "steps": [
             "Start with Complete your profile if you have pending steps.",
             "Keep services, coverage, contact and availability updated.",
@@ -1867,7 +1865,7 @@
           "cta": "Go to appointments"
         },
         "opportunities": {
-          "title": "Projects",
+          "title": "Opportunities",
           "short": "Posts where you can propose",
           "body": "Projects shows what clients post for your services; reply and, if they're interested, they write to you.",
           "steps": [
@@ -1890,7 +1888,7 @@
           "cta": "Go to success stories"
         },
         "availability": {
-          "title": "Availability",
+          "title": "My calendar",
           "short": "Public hours and video consultation",
           "body": "Availability controls whether you show public hours, video consultation and schedules by workplace.",
           "steps": [
@@ -1902,8 +1900,8 @@
           "cta": "Go to availability"
         },
         "services": {
-          "title": "Services",
-          "short": "What you offer and how clients find you",
+          "title": "What I offer",
+          "short": "What you promotion and how clients find you",
           "body": "Each service should include a clear name, description, fixed or negotiable price, experience and coverage.",
           "steps": [
             "Add each service separately.",
@@ -1926,16 +1924,16 @@
           "cta": "Go to jobs"
         },
         "offersPanel": {
-          "title": "Publish offers",
+          "title": "Publish promotions",
           "short": "Promote services or products",
-          "body": "From Offers you can publish promotions with images and clear conditions.",
+          "body": "From Promotions you publish your discounts and packages, with photos and clear conditions.",
           "steps": [
             "Write a direct title and select a service from the ContrataCR catalog.",
             "Add price, offer type and real images.",
             "Define coverage, quantity and an available-until date when relevant.",
             "Publish and edit the offer from your panel."
           ],
-          "cta": "Go to offers"
+          "cta": "Go to promotions"
         },
         "professionalProfile": {
           "title": "Professional profile",
@@ -2070,7 +2068,7 @@
     "dropHint": "JPG, PNG, WEBP, AVIF or HEIC · up to {max} photos",
     "dropActive": "Drop to upload",
     "addMore": "Add more",
-    "noServices": "First add your <strong>services</strong> in the <strong>Services</strong> tab. Then you can upload success stories under each.",
+    "noServices": "First add your <strong>services</strong> in the <strong>What I offer</strong> tab. Then you can upload success stories under each.",
     "otherWorks": "Other work",
     "addPhoto": "Add photo",
     "remove": "Remove",
@@ -2119,7 +2117,7 @@
     "keepEditing": "Keep editing"
   },
   "proposalsTab": {
-    "browse": "Projects",
+    "browse": "Opportunities",
     "mine": "My proposals",
     "emptyBrowse": "No new projects right now",
     "emptyBrowseSub": "When a client posts something in your service, we'll notify you and it shows up here.",
@@ -2130,7 +2128,7 @@
     "pricePlaceholder": "example: 50000",
     "yourMessage": "Your proposal",
     "allProfessions": "All services",
-    "availableTitle": "Projects",
+    "availableTitle": "Opportunities",
     "liveUpdated": "Updated with recent changes.",
     "postedAgo": "Created {time}",
     "agoHours": "{count}h ago",
@@ -2251,7 +2249,7 @@
     "reorderHint": "Drag to reorder",
     "servicesCount": "{count, plural, =0 {No services yet} one {# service} other {# services}}",
     "addFirstInProfession": "Add your first price in {profession}",
-    "addFirstHelp": "List what you offer with its price so clients know what to expect.",
+    "addFirstHelp": "List what you promotion with its price so clients know what to expect.",
     "noProfession": "First choose your main service in the <strong>My profile</strong> tab.",
     "step1Title": "Your services",
     "addProfession": "Add service",
@@ -2326,9 +2324,9 @@
     "changeService": "Change service",
     "changeServiceTitle": "Change service",
     "priceConsult": "Ask price",
-    "noDescriptionYet": "Add a description of what you offer in this service.",
-    "offerDescPlaceholder": "What does this service include? Describe what you offer.",
-    "emptyTitle": "You don't offer any services yet",
+    "noDescriptionYet": "Add a description of what you promotion in this service.",
+    "offerDescPlaceholder": "What does this service include? Describe what you promotion.",
+    "emptyTitle": "You don't promotion any services yet",
     "emptyHelp": "Add at least one service to appear in search.",
     "pickerBack": "Back to services",
     "pickerOptionsCount": "{count, plural, one {# option} other {# options}}",
@@ -2362,7 +2360,7 @@
     "allowCallLabel": "Allow contact by phone call",
     "allowCallDesc": "If you enable it, clients will see the “Call us” option to your number.",
     "allowCallAria": "Allow calls",
-    "videoLabel": "You offer video consultations",
+    "videoLabel": "You promotion video consultations",
     "videoDesc": "Available across Costa Rica.",
     "privateSubNeedsWorkplace": "Add a workplace or enable video consultation to publish your schedule.",
     "addHeading": "Add your hours",
@@ -2521,7 +2519,7 @@
     "businessHelp": "Your company, brand or business name, if you work under one. It appears next to your name on your profile.",
     "description": "Description",
     "descPlaceholder": "Describe your experience, specialties and what sets you apart…",
-    "professionsHelp": "Your main service appears first. The prices for each service are managed in the <strong>Services</strong> tab.",
+    "professionsHelp": "Your main service appears first. The prices for each service are managed in the <strong>What I offer</strong> tab.",
     "principal": "Main",
     "addAnotherProfession": "Add another service",
     "cancel": "Cancel",
@@ -2534,7 +2532,7 @@
     "addCert": "Add education",
     "addCertTo": "Add education to {profession}",
     "workplaces": "Workplaces",
-    "videoConsultLabel": "I offer video consultation",
+    "videoConsultLabel": "I promotion video consultation",
     "videoConsultOption": "Video consultations",
     "videoCoverageTitle": "Online coverage",
     "videoCoverageDesc": "Available only for services that can be handled by video consultation.",
@@ -2553,7 +2551,7 @@
     "emailPlaceholder": "youremail@example.com",
     "emailInvalid": "Enter a valid email.",
     "emailHelp": "If you add it, clients will see the option to email you. Leave it empty to hide it.",
-    "priceNote": "Prices are set per service in the <strong>Services</strong> tab. That way each of your services can have its own rate, and clients see the right price for each one.",
+    "priceNote": "Prices are set per service in the <strong>What I offer</strong> tab. That way each of your services can have its own rate, and clients see the right price for each one.",
     "languagesSpoken": "Languages you speak",
     "insurers": "Insurers",
     "insurersHelp": "Select the insurance networks you work with, or indicate you don't work with insurers. Clients can filter by insurer.",
@@ -2771,7 +2769,7 @@
     "searchPros": "Find services",
     "signOut": "Sign out",
     "tabBookings": "Appointments",
-    "tabProjects": "Projects",
+    "tabProjects": "Opportunities",
     "tabSaved": "Favorites",
     "tabNotifications": "Notifications",
     "tabSupport": "Support",
@@ -2815,9 +2813,9 @@
     "pendingReview": "Pending review",
     "identityVerifiedHelp": "Your identity was confirmed against the padrón from your ID. We only show the last digits.",
     "identityPendingHelp": "We registered your ID. IDs not in the padrón (DIMEX/NITE) are reviewed manually.",
-    "offerTitle": "Do you offer services?",
+    "offerTitle": "Do you promotion services?",
     "offerBody": "Use your same account — no need to start over.",
-    "offerCta": "Offer my services",
+    "offerCta": "Promotion my services",
     "photoError": "Couldn't upload the photo. Try again.",
     "photoTooLarge": "The photo is too large. Choose a lighter photo or take a new one.",
     "photoUnsupported": "We couldn't prepare that photo. Use JPG, PNG, WEBP, AVIF, HEIC, HEIF, or GIF.",
@@ -2970,17 +2968,17 @@
     "viewProfile": "View profile",
     "unsave": "Remove from favorites",
     "empty": "You don't have any favorites",
-    "emptySub": "Add professionals, offers, and jobs to favorites to find them here.",
+    "emptySub": "Add professionals, promotions, and jobs to favorites to find them here.",
     "searchPros": "Find professionals",
     "professionalsTab": "Professionals",
-    "offersTab": "Offers",
+    "offersTab": "Promotions",
     "jobsTab": "Jobs",
-    "favoriteOffer": "Favorite offer",
+    "favoriteOffer": "Favorite promotion",
     "favoriteJob": "Favorite job",
-    "viewOffer": "View offer",
+    "viewOffer": "View promotion",
     "viewJob": "View job",
     "emptyProfessionals": "You don't have any favorite professionals.",
-    "emptyOffers": "You don't have any favorite offers.",
+    "emptyOffers": "You don't have any favorite promotions.",
     "emptyJobs": "You don't have any favorite jobs.",
     "count": "{count, plural, one {# favorite professional} other {# favorite professionals}}",
     "noReviews": "No reviews",
@@ -3160,7 +3158,7 @@
     "subject": "Subject",
     "selectOption": "Select an option",
     "subjProblem": "I have a problem",
-    "subjPro": "I offer services and need help",
+    "subjPro": "I promotion services and need help",
     "subjReport": "I want to report a user",
     "subjOther": "Other",
     "errSubject": "Select a subject.",
@@ -3253,7 +3251,7 @@
     "successView": "View my project",
     "dirOfferBodyNew": "Create your professional profile and start receiving appointments and projects.",
     "avisoAnuncio": "This reads as if you were offering a service. This section is for requesting, not offering.",
-    "avisoAnuncioCta": "Publish it as an offer",
+    "avisoAnuncioCta": "Publish it as an promotion",
     "avisoAnuncioCtaNew": "Create your professional profile",
     "dismiss": "Close"
   },
@@ -3269,7 +3267,7 @@
     "deleteAllBody": "This action can't be undone.",
     "cancel": "Cancel",
     "noneList": "You have no notifications.",
-    "emptySub": "When there's news about appointments, projects, jobs, offers, professionals you follow or your account, it will show up here.",
+    "emptySub": "When there's news about appointments, projects, jobs, promotions, professionals you follow or your account, it will show up here.",
     "noUnread": "You have no unread notifications.",
     "publishedAt": "Published {time}",
     "viewAll": "View all",
@@ -3536,10 +3534,10 @@
   },
   "comoFunciona": {
     "metaTitle": "How to use ContrataCR | Guide for clients and professionals",
-    "metaDesc": "Learn how to use ContrataCR to find professionals, post projects, find jobs, discover offers and offer your services in Costa Rica.",
+    "metaDesc": "Learn how to use ContrataCR to find professionals, post projects, find jobs, discover promotions and promotion your services in Costa Rica.",
     "eyebrow": "Quick guide",
     "title": "How to use ContrataCR",
-    "subtitle": "Find professionals, post what you need, find jobs, discover offers or offer your services from a single account.",
+    "subtitle": "Find professionals, post what you need, find jobs, discover promotions or promotion your services from a single account.",
     "metric0Value": "2 ways",
     "metric0Label": "Find professionals or post what you need.",
     "metric1Value": "0 commissions",
@@ -3580,19 +3578,19 @@
     "clientBenefit2Title": "Clear schedules",
     "clientBenefit2Body": "When a professional posts their availability, you can choose a date and time without messages back and forth. If they coordinate directly, you do it by WhatsApp.",
     "clientBenefit3Title": "Favorites and tracking",
-    "clientBenefit3Body": "Save professionals, offers and jobs; review your appointments, projects and applications, and leave reviews from your panel.",
+    "clientBenefit3Body": "Save professionals, promotions and jobs; review your appointments, projects and applications, and leave reviews from your panel.",
     "prosEyebrow": "Benefits for professionals",
     "prosBadge": "Professionals",
     "prosTitle": "A profile that works for you",
     "prosSubtitle": "ContrataCR helps you get found, compared with confidence, and contacted without taking away control of your schedule or your prices.",
     "proFlowTitle": "How do you start getting clients?",
-    "proFlowDesc": "Create your profile, describe your services, keep your availability current and post jobs or offers when you need to.",
+    "proFlowDesc": "Create your profile, describe your services, keep your availability current and post jobs or promotions when you need to.",
     "proStep0Title": "Create your professional profile",
     "proStep0Body": "Add a photo, description, services, years of experience, reference prices, languages, and areas where you work.",
     "proStep1Title": "Showcase your work",
     "proStep1Body": "Publish success stories with photos, complete your workplaces, and verify your identity to build more trust.",
     "proStep2Title": "Manage appointments and projects",
-    "proStep2Body": "Receive appointments, reply to client projects, post jobs, create offers and manage applications from your professional panel.",
+    "proStep2Body": "Receive appointments, reply to client projects, post jobs, create promotions and manage applications from your professional panel.",
     "proBenefit0Title": "Verified identity",
     "proBenefit0Body": "The verification badge helps clients know they are talking to a real, verifiable person.",
     "proBenefit1Title": "Success stories",
@@ -3604,17 +3602,17 @@
     "proBenefit4Title": "No service commissions",
     "proBenefit4Body": "The client pays you directly. The platform does not hold money or charge a percentage on each job.",
     "proBenefit5Title": "More ways to grow",
-    "proBenefit5Body": "Besides replying to projects, you can post jobs and offers related to your services.",
+    "proBenefit5Body": "Besides replying to projects, you can post jobs and promotions related to your services.",
     "prosCta": "Create a professional profile",
     "marketplaceEyebrow": "More opportunities",
-    "marketplaceTitle": "Jobs and offers in the same ecosystem",
+    "marketplaceTitle": "Jobs and promotions in the same ecosystem",
     "marketplaceSubtitle": "Explore job opportunities and promotions without leaving ContrataCR.",
     "marketplaceJobsTitle": "Find jobs",
     "marketplaceJobsBody": "Search by role, work mode, experience, and date. Apply with your details and CV, then track the status from your dashboard.",
     "marketplaceJobsCta": "View jobs",
-    "marketplaceOffersTitle": "Discover offers",
+    "marketplaceOffersTitle": "Discover promotions",
     "marketplaceOffersBody": "Compare promotions by service, price, location, and availability period; save them to Favorites or contact the professional.",
-    "marketplaceOffersCta": "View offers",
+    "marketplaceOffersCta": "View promotions",
     "trustEyebrow": "Trust and coordination",
     "trustTitle": "See what matters before contacting",
     "trustSubtitle": "The idea is not to complicate the process: it is to show just enough for the client and professional to decide quickly.",
@@ -3625,9 +3623,9 @@
     "trust2Title": "WhatsApp for coordination",
     "trust2Body": "ContrataCR organizes search, appointments and projects; final coordination happens by message, WhatsApp or phone.",
     "trust3Title": "Optional phone and email",
-    "trust3Body": "The professional decides whether to offer contact by phone or email within their service options.",
+    "trust3Body": "The professional decides whether to promotion contact by phone or email within their service options.",
     "trust4Title": "Video consultation when applicable",
-    "trust4Body": "Some services can indicate that they offer video appointments. It appears where it adds value without overcrowding cards.",
+    "trust4Body": "Some services can indicate that they promotion video appointments. It appears where it adds value without overcrowding cards.",
     "trust5Title": "Languages and coverage",
     "trust5Body": "Profiles can show languages, work locations, coverage, and details that help you choose better.",
     "compareEyebrow": "Why use it",
@@ -3645,7 +3643,7 @@
     "faq0Q": "Does ContrataCR charge commission on services?",
     "faq0A": "We do not charge a commission on each job. Price, payment, and service details are agreed directly between client and professional.",
     "faq1Q": "What does it mean for a profile to be verified?",
-    "faq1A": "It means we confirmed the person's identity when the ID can be validated. It is not a guarantee of quality or outcome, so reviews and success cases also matter.",
+    "faq1A": "It means we confirmed the person's identity when the ID can be validated. It is not a guarantee of quality or outcome, so reviews and jobs done also matter.",
     "faq2Q": "Can I use the app if I don't know exactly what service I need?",
     "faq2A": "Yes. You can type a normal phrase in search or post a project explaining the problem. The app tries to connect you with related services.",
     "faq3Q": "What happens after booking an appointment?",
@@ -3659,10 +3657,10 @@
     "faq7Q": "Is it suitable for both large and small services?",
     "faq7A": "Yes. You can search for everything from quick repairs to professional services, health, education, technology, home, events, and more.",
     "ctaTitle": "Try it and share it",
-    "ctaSubtitle": "If you need help, find professionals. You can also explore jobs and offers or create your profile to offer services.",
+    "ctaSubtitle": "If you need help, find professionals. You can also explore jobs and promotions or create your profile to promotion services.",
     "ctaSearch": "Find professionals",
     "ctaPublish": "Post what I need",
-    "ctaOffer": "Offer my services",
+    "ctaOffer": "Promotion my services",
     "helpCta": "Go to the help center"
   },
   "ayuda": {
@@ -3685,14 +3683,14 @@
     "cat5Desc": "Add ContrataCR to your iPhone or Android home screen.",
     "cat6Title": "Jobs and applications",
     "cat6Desc": "How to find jobs, apply, and track the hiring process.",
-    "cat7Title": "Offers",
+    "cat7Title": "Promotions",
     "cat7Desc": "How to find promotions, review terms, and contact the professional.",
     "faqTitle": "Frequently asked questions",
     "faqSubtitle": "The most common questions from our community.",
     "faq0Q": "Does ContrataCR charge any commission or fee?",
     "faq0A": "We don't charge commissions on the services you hire: you arrange payment directly with the professional, off the platform.",
     "faq1Q": "How do I start offering services?",
-    "faq1A": "Click 'Offer my services' in the navigation bar. You can sign up with your email or with Google. First you choose your services and work areas; then you complete your photo, description, and profile details.",
+    "faq1A": "Click 'Promotion my services' in the navigation bar. You can sign up with your email or with Google. First you choose your services and work areas; then you complete your photo, description, and profile details.",
     "faq2Q": "How is an ID verified?",
     "faq2A": "We validate identification against official records when applicable. National and legal-entity IDs follow the flow for their type; DIMEX, NITE, and special cases may require review. The badge confirms identity, not the quality of the work.",
     "faq3Q": "How do I find professionals?",
@@ -3710,10 +3708,10 @@
     "faq8Link": "View the visual guide",
     "faq9Q": "How do I apply for a job?",
     "faq9A": "Open the job, sign in, and complete the application. Email and phone are prefilled when available; attach your CV and track the status under My applications.",
-    "faq10Q": "How do offers work?",
-    "faq10A": "Search by name or service and review images, price, availability period, location, and terms. You can save the offer to Favorites or contact the professional from the listing.",
+    "faq10Q": "How do promotions work?",
+    "faq10A": "Search by name or service and review images, price, availability period, location, and terms. You can save the promotion to Favorites or contact the professional from the listing.",
     "faq11Q": "What can I add to Favorites?",
-    "faq11A": "You can save professionals, offers and jobs. In the client panel, use the Favorites filters to see each type separately.",
+    "faq11A": "You can save professionals, promotions and jobs. In the client panel, use the Favorites filters to see each type separately.",
     "contactTitle": "Didn't find what you were looking for?",
     "contactSubtitle": "Our team replies fast.",
     "contactCta": "Contact support",
@@ -3756,8 +3754,8 @@
     "jobsBody": "Create openings with location, workplace type, experience and salary. Review applications, download the submitted CV and update each candidate's status from Jobs.",
     "jobsCta": "Explore jobs",
     "offersTitle": "Promote services, packages or products",
-    "offersBody": "Publish offers with images, price, availability and coverage. People can discover them, add them to Favorites and contact you through the methods you enabled.",
-    "offersCta": "Explore offers",
+    "offersBody": "Publish promotions with images, price, availability and coverage. People can discover them, add them to Favorites and contact you through the methods you enabled.",
+    "offersCta": "Explore promotions",
     "dosDontsTitle": "What trustworthy profiles do",
     "dosDontsSubtitle": "Small habits that help clients feel safer when contacting you:",
     "dosTitle": "Good practices",
@@ -3786,10 +3784,10 @@
     "market2Title": "The canton matters",
     "market2Body": "Clients usually search 'plumber in Desamparados' or 'nanny in Heredia', not simply 'plumber' or 'nanny'. Being specific about the cantons where you work positions you better in those local searches.",
     "market3Title": "A clear price matters more than the lowest price",
-    "market3Body": "Clients do not always choose the cheapest option. They often choose the profile that explains the offer clearly, shows real work, replies quickly, and has complete information.",
+    "market3Body": "Clients do not always choose the cheapest option. They often choose the profile that explains the promotion clearly, shows real work, replies quickly, and has complete information.",
     "ctaTitle": "Ready to get more clients?",
     "ctaSubtitle": "Complete your profile, verify your identity, and keep your services up to date.",
-    "ctaRegister": "Offer my services",
+    "ctaRegister": "Promotion my services",
     "ctaPanel": "Go to my dashboard"
   },
   "statusTabs": {
@@ -3864,7 +3862,7 @@
       "search": "Search",
       "popular": "Popular:",
       "installLink": "Add app to phone",
-      "proCta": "Offer my services",
+      "proCta": "Promotion my services",
       "publishCardTitle": "Post what you need",
       "publishCardBody": "Professionals in your area reply and you choose.",
       "publishOr": "or"
@@ -3909,9 +3907,9 @@
       "point2Desc": "If availability is published, check open times. If not, coordinate directly on WhatsApp.",
       "point3Title": "Choose with more confidence",
       "point3Desc": "Each profile shows verification, reviews, coverage, experience, and the professional's work.",
-      "pitchTitle": "Do you offer services?",
+      "pitchTitle": "Do you promotion services?",
       "pitchDesc": "Your profile appears in searches; you can receive appointments, manage availability, reply to projects and build reviews.",
-      "pitchCta": "Offer my services",
+      "pitchCta": "Promotion my services",
       "pitchHow": "How it works",
       "guideCta": "See how it works",
       "installLink": "Add app to phone",
@@ -3970,7 +3968,7 @@
     "notifications": "Notifications",
     "support": "Support",
     "help": "Help",
-    "myOffers": "My offers",
+    "myOffers": "My promotions",
     "myJobs": "My jobs"
   },
   "directChat": {
@@ -3993,7 +3991,7 @@
   },
   "bottomNav": {
     "search": "Search",
-    "deals": "Deals",
+    "deals": "Promotions",
     "assistant": "Assistant",
     "jobs": "Jobs",
     "aria": "App navigation",
@@ -4224,7 +4222,7 @@
     "sendByEmail": "Send by email",
     "downloadClient": "Download PDF",
     "attachTabBookings": "Appointments",
-    "attachTabProjects": "Projects",
+    "attachTabProjects": "Opportunities",
     "attachSend": "Send here",
     "attachConfirmTitle": "Send it here?",
     "attachConfirmBody": "The client sees it in their panel and can accept it. If you picked the wrong one, you can remove it later.",
@@ -4252,19 +4250,19 @@
     "close": "Close",
     "copyLink": "Copy link",
     "reportJob": "Report this job",
-    "reportOffer": "Report this offer",
+    "reportOffer": "Report this promotion",
     "share": "Share"
   },
   "compartirFicha": {
     "jobTitle": "Share this job",
-    "offerTitle": "Share this offer",
+    "offerTitle": "Share this promotion",
     "subtitle": "Send it where you already talk to people.",
     "jobMessage": "Check out this job on ContrataCR: {name}",
-    "offerMessage": "Check out this offer on ContrataCR: {name}",
+    "offerMessage": "Check out this promotion on ContrataCR: {name}",
     "jobSubject": "Job on ContrataCR: {name}",
-    "offerSubject": "Offer on ContrataCR: {name}",
+    "offerSubject": "Promotion on ContrataCR: {name}",
     "jobLink": "Job link",
-    "offerLink": "Offer link"
+    "offerLink": "Promotion link"
   },
   "pushPrompt": {
     "now": "now",
@@ -4331,10 +4329,5 @@
     "nota": "The professional sees your message and replies here.",
     "enviar": "Send message",
     "cerrar": "Close"
-  },
-  "contactos": {
-    "emptyTitle": "Nobody has asked for you yet",
-    "emptyBody": "When someone asks for your contact from your profile, their name and phone show up here so you can call them back.",
-    "call": "Call"
   }
 }

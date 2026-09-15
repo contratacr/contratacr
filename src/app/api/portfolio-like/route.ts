@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
   const { data: pro } = await admin.from("professionals").select("profile_id, portfolio_items").eq("id", professionalId).maybeSingle();
   if (!pro) return NextResponse.json({ error: "No encontrado" }, { status: 404 });
   if (user?.id && pro.profile_id === user.id) {
-    return NextResponse.json({ error: "No puedes indicar me gusta en tus propios casos de éxito." }, { status: 403 });
+    return NextResponse.json({ error: "No puedes indicar me gusta en tus propios trabajos." }, { status: 403 });
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -205,7 +205,7 @@ export function ProfessionalCard({ professional, className, searchedPlace, highl
   const yearsExperience = Math.max(0, Math.floor(serviceExperience?.years ?? professional.yearsExperience ?? 0));
   const casesLabel = locale === "en"
     ? `${portfolioCount} success ${portfolioCount === 1 ? "case" : "cases"}`
-    : `${portfolioCount} ${portfolioCount === 1 ? "caso de éxito" : "casos de éxito"}`;
+    : `${portfolioCount} ${portfolioCount === 1 ? "trabajo" : "trabajos"}`;
   const ratingLabel = professional.reviewCount > 0
     ? tCard("reviewsCount", { count: professional.reviewCount })
     : tCard("noReviews");
@@ -216,7 +216,7 @@ export function ProfessionalCard({ professional, className, searchedPlace, highl
       return (
         <Link href={casesHref} className={desktopMetricClass} aria-label={casesLabel}>
           <span className="font-semibold tabular-nums text-[#5f6f86]">{portfolioCount}</span>
-          <span>{portfolioCount === 1 ? (locale === "en" ? "success case" : "caso de éxito") : (locale === "en" ? "success cases" : "casos de éxito")}</span>
+          <span>{portfolioCount === 1 ? (locale === "en" ? "job" : "trabajo") : (locale === "en" ? "jobs done" : "trabajos")}</span>
         </Link>
       );
     }
@@ -268,7 +268,7 @@ export function ProfessionalCard({ professional, className, searchedPlace, highl
       return (
         <Link href={casesHref} className={mobileMetricClass} aria-label={casesLabel}>
           <span className="font-bold tabular-nums text-[#162543]">{portfolioCount}</span>
-          <span className="whitespace-nowrap">{portfolioCount === 1 ? (locale === "en" ? "success case" : "caso de éxito") : (locale === "en" ? "success cases" : "casos de éxito")}</span>
+          <span className="whitespace-nowrap">{portfolioCount === 1 ? (locale === "en" ? "job" : "trabajo") : (locale === "en" ? "jobs done" : "trabajos")}</span>
         </Link>
       );
     }

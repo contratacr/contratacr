@@ -1,10 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
-import { createPortal } from "react-dom";
-import { useLocale } from "next-intl";
+import { useCallback, type ReactNode } from "react";
 import { useAuth } from "@/hooks/use-auth";
-import { trackInteraction } from "@/lib/analytics/interaction-events";
 import { type ContactIntent } from "@/components/auth/client-registration-modal";
 
 /**
@@ -12,13 +9,14 @@ import { type ContactIntent } from "@/components/auth/client-registration-modal"
  *
  * Aquí hubo dos cosas y las dos costaron clientes. Primero un registro completo
  * —cédula, correo, contraseña y código—: de nueve personas que tocaron
- * «WhatsApp», ocho se fueron. Después un formulario de dos campos, que era
- * mejor pero seguía cobrando fricción por un dato que el profesional recibe
- * igual: cuando alguien le escribe por WhatsApp, WhatsApp le muestra su número.
+ * «WhatsApp», ocho se fueron. Después un formulario de dos campos, que seguía
+ * cobrando fricción por un dato que el profesional recibe igual, porque
+ * WhatsApp le muestra el número de quien le escribe.
  *
- * Lo único que queda es un aviso al profesional —«alguien te buscó por Redes e
- * internet»—, que sale solo y no le pide nada a nadie. Si quien toca tiene
- * sesión, el aviso lleva su nombre.
+ * Tampoco se le avisa al profesional: decirle «casi te contactan» no le sirve
+ * de nada, y si de verdad lo contactan se entera solo. Quién buscó a quién se
+ * sigue registrando como siempre, en `interaction_events`, y eso es lo que mira
+ * el panel de administración.
  */
 
 type GateOptions = {
@@ -29,31 +27,14 @@ type GateOptions = {
   categoryId?: string | null;
 };
 
-export function useContactGate({ intent, professionalId, source = "profile", categoryId = null }: GateOptions) {
+export function useContactGate(opciones: GateOptions) {
+  // La forma se conserva para que quien llama no tenga que cambiar, aunque ya
+  // no haya nada que decidir.
+  void opciones;
   const { user } = useAuth();
-  const locale = useLocale();
-  const avisado = useRef(false);
-  const [destino, setDestino] = useState<HTMLElement | null>(null);
-  useEffect(() => { queueMicrotask(() => setDestino(document.body)); }, []);
-
-  // Siempre `true`: nadie se queda afuera. Recibe la acción y la ignora, para
-  // que quien llama no tenga que cambiar su forma de pedir permiso.
-  const requireAccount = useCallback(() => {
-    if (!professionalId || avisado.current) return true;
-    avisado.current = true;
-    trackInteraction({ type: "contact_lead_created", professionalId, source, metadata: { channel: intent } });
-    // Por detrás, sin hacer esperar a nadie: si falla, el contacto ocurre igual.
-    void fetch("/api/contact/invitado", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ professionalId, canal: intent, categoriaId: categoryId, locale }),
-      keepalive: true,
-    }).catch(() => undefined);
-    return true;
-  }, [professionalId, intent, source, categoryId, locale]);
-
-  // Sin ventanas que dibujar. El portal se conserva por si vuelve a hacer falta.
-  const modals: ReactNode = destino ? createPortal(null, destino) : null;
-
+  // Siempre `true`: nadie se queda afuera. Se conserva la forma para que quien
+  // llama no tenga que cambiar.
+  const requireAccount = useCallback(() => true, []);
+  const modals: ReactNode = null;
   return { requireAccount, modals, signedIn: !!user };
 }

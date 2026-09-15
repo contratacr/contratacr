@@ -70,7 +70,7 @@ const OFFERS_COPY = {
     anyType: "Cualquier tipo",
     myOffers: "Mis ofertas",
     publishOffer: "Publicar oferta",
-    offers: "Ofertas",
+    offers: "Promociones",
     promotions: "Promociones de profesionales",
     openMenu: "Abrir menú",
     messages: "Mensajes",
@@ -112,7 +112,7 @@ const OFFERS_COPY = {
     anyType: "Any type",
     myOffers: "My offers",
     publishOffer: "Post an offer",
-    offers: "Offers",
+    offers: "Promotions",
     promotions: "Promotions from professionals",
     openMenu: "Open menu",
     messages: "Messages",
@@ -411,15 +411,17 @@ export function OffersBoard({
               <ContrataCRMark className="h-7 w-7" />
             </Link>
             <h1 className="min-w-0 truncate pl-1.5 text-[17px] font-extrabold text-[#162543]">{copy.offers}</h1>
+            {/* El icono de Mensajes es de la barra de la APP: en la web se llega
+                desde el menú y desde el panel. */}
             <div className="ml-auto flex shrink-0 items-center gap-0.5">
               {currentUserId ? (
                 <>
-                  <HeaderMessagesLink unreadCount={mensajesSinLeer} label={copy.messages} />
+                  {nativeApp && <HeaderMessagesLink unreadCount={mensajesSinLeer} label={copy.messages} />}
                   <NotificationBell scope="all" />
                 </>
               ) : (
                 <>
-                  <HeaderMessagesLink unreadCount={0} label={copy.messages} href={accesoHref("/mensajes")} />
+                  {nativeApp && <HeaderMessagesLink unreadCount={0} label={copy.messages} href={accesoHref("/mensajes")} />}
                   <HeaderNotificationsLink href={accesoHref("/notificaciones")} label={copy.notifications} />
                 </>
               )}
@@ -671,18 +673,6 @@ export function OfferContactActions({
   const showPrimaryContact = nativeApp || !!whatsapp;
   if (isOwner) return null;
 
-  function requireAuth() {
-    if (userId) return true;
-    const redirect =
-      typeof window !== "undefined"
-        ? `${window.location.pathname}${window.location.search}${window.location.hash}`
-        : "/ofertas";
-    window.location.assign(
-      `/${locale}/login?redirect=${encodeURIComponent(redirect)}`,
-    );
-    return false;
-  }
-
   function track(method: "phone" | "email") {
     trackInteraction({
       type: method === "phone" ? "phone_click" : "external_link_click",
@@ -699,6 +689,9 @@ export function OfferContactActions({
   const secondaryClass = compact
     ? "inline-flex h-9 min-w-0 items-center justify-center gap-1.5 rounded-full border border-[#d7e1ea] bg-white px-2 text-[12px] font-bold text-[#162543] transition hover:border-[#b9c8d6] hover:bg-[#f6f9fb]"
     : "inline-flex h-11 min-w-0 items-center justify-center gap-2 rounded-full border border-[#d7e1ea] bg-white px-3 text-sm font-bold text-[#162543] transition hover:border-[#b9c8d6] hover:bg-[#f6f9fb]";
+  // Llamar y escribir no piden cuenta, igual que el WhatsApp de al lado: exigir
+  // registro para contactar costaba tres de cada cuatro contactos, y aquí
+  // además quedaba raro que un botón dejara pasar y el de al lado no.
   return (
     <div className="relative z-[2] mt-3 space-y-2">
       {showPrimaryContact && (
@@ -718,13 +711,7 @@ export function OfferContactActions({
           {showCall && (
             <a
               href={`tel:+${callPhone.startsWith("506") ? callPhone : `506${callPhone}`}`}
-              onClick={(event) => {
-                if (!requireAuth()) {
-                  event.preventDefault();
-                  return;
-                }
-                track("phone");
-              }}
+              onClick={() => track("phone")}
               className={secondaryClass}
             >
                <span className="truncate">{copy.call}</span>
@@ -733,13 +720,7 @@ export function OfferContactActions({
           {showEmail && (
             <a
                href={`mailto:${email}?subject=${encodeURIComponent(copy.emailSubject)}&body=${encodeURIComponent(copy.emailBody(offer.title))}`}
-              onClick={(event) => {
-                if (!requireAuth()) {
-                  event.preventDefault();
-                  return;
-                }
-                track("email");
-              }}
+              onClick={() => track("email")}
               className={secondaryClass}
             >
                <span className="truncate">{copy.email}</span>

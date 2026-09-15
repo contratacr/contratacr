@@ -233,4 +233,22 @@ test.describe("@seeded marketplace editors through the real screens", () => {
     await gotoOK(page, "/es/empleos");
     await expect(page.getByText(`${jobTitle} editado`)).toHaveCount(0);
   });
+
+  test("publicar oferta avisa cuando en realidad es una vacante", async ({ page }) => {
+    await ensureRegressionSeed();
+    await loginAs(page, E2E_USERS.professional.email, E2E_USERS.professional.password);
+    await gotoOK(page, "/es/ofertas/publicar");
+    await page.waitForTimeout(1500);
+    await page.locator('input[name="title"]').fill("Operario en techos");
+    await page.locator('textarea[name="description"]').fill("Ocupo un operario con experiencia comprobable, tiempo completo, salario quincenal.");
+    await page.waitForTimeout(600);
+    const aviso = page.getByText(/parece una vacante/i);
+    await expect(aviso).toBeVisible();
+    await expect(page.getByRole("link", { name: /Publicarlo como empleo/i })).toBeVisible();
+    // Y una oferta de verdad NO lo dispara.
+    await page.locator('input[name="title"]').fill("2x1 en mantenimiento de aire acondicionado");
+    await page.locator('textarea[name="description"]').fill("Promoción de setiembre: limpieza y recarga de gas con 20% de descuento.");
+    await page.waitForTimeout(600);
+    await expect(page.getByText(/parece una vacante/i)).toHaveCount(0);
+  });
 });

@@ -1995,7 +1995,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                         )}
                         <Link href="/ofertas" onClick={() => setOpenMenu(null)} className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-[#1A2744] transition-colors hover:bg-gray-50 hover:text-[#009FD9]">
                           <OfferTagPercentIcon className="h-5 w-5" />
-                          {locale === "en" ? "Deals" : "Ofertas"}
+                          {locale === "en" ? "Promotions" : "Promociones"}
                         </Link>
                       </div>
                     )}
@@ -2655,7 +2655,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                 )}
                 <Link href="/ofertas" onClick={(event) => { setMobileOpen(false); navigateNativeMarketplace(event, "/ofertas"); }} className={claseCajon("/ofertas")}>
                   <DrawerIcon><OfferTagPercentIcon className="h-5 w-5" /></DrawerIcon>
-                  <span className={mobileDrawerTextClass}>{locale === "en" ? "Deals" : "Ofertas"}</span>
+                  <span className={mobileDrawerTextClass}>{locale === "en" ? "Promotions" : "Promociones"}</span>
                 </Link>
                   </>
                 )}
