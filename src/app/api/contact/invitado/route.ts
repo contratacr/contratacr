@@ -8,17 +8,17 @@ import { limitTrimmedText } from "@/lib/text-limits";
 import { getCategoryLabel } from "@/lib/data/categories";
 
 /**
- * Contactar sin cuenta: nombre y teléfono, y el contacto se entrega.
+ * Avisarle al profesional que alguien lo buscó.
  *
- * Antes esto exigía crear una cuenta —cédula, correo, contraseña y código—, y
- * de nueve personas que lo intentaron, ocho se fueron. Aquí se pide lo mínimo
- * que de verdad hace falta: cómo se llama y a qué número devolverle. Con eso el
- * profesional puede responder aunque esa persona nunca vuelva a abrir el app.
+ * No pide NADA: el toque abre WhatsApp y este aviso sale solo. El formulario de
+ * nombre y teléfono que hubo aquí un rato se quitó porque cobraba fricción por
+ * un dato que el profesional recibe igual —WhatsApp le muestra el número de
+ * quien le escribe—. Quien tiene sesión entra con su nombre, y ahí sí se
+ * guarda.
  *
- * Lo que protege contra el raspado no es este formulario —un raspador escribe
- * cualquier nombre— sino que los números NO viajan en el listado ni en la API
- * de resultados, más el tope por IP de aquí abajo. Un humano pide uno o dos
- * contactos; un raspador pide cincuenta.
+ * Lo que protege contra el raspado no es este endpoint sino que los números NO
+ * viajan en el listado ni en la API de resultados, más el tope por IP. Un
+ * humano pide uno o dos contactos; un raspador pide cincuenta.
  */
 export const dynamic = "force-dynamic";
 
@@ -48,14 +48,6 @@ export async function POST(req: Request) {
   if (!/^[0-9a-f-]{36}$/i.test(professionalId)) {
     return NextResponse.json({ error: "Profesional inválido." }, { status: 400 });
   }
-  const nombre = limitTrimmedText(String(cuerpo.nombre ?? ""), NOMBRE_MAX);
-  if (!nombre || nombre.length < 2) {
-    return NextResponse.json({ error: "Escribí tu nombre." }, { status: 400 });
-  }
-  const telefono = telefonoLimpio(cuerpo.telefono);
-  if (!telefono) {
-    return NextResponse.json({ error: "Escribí un número de teléfono válido." }, { status: 400 });
-  }
   const canal = ["whatsapp", "phone", "email"].includes(String(cuerpo.canal)) ? String(cuerpo.canal) : "whatsapp";
   const locale = String(cuerpo.locale) === "en" ? "en" : "es";
   const categoriaId = limitTrimmedText(String(cuerpo.categoriaId ?? ""), 60) || null;
@@ -71,9 +63,16 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Profesional no encontrado." }, { status: 404 });
   }
 
-  // Quien ya tiene sesión no deja un contacto suelto: su cita y sus mensajes ya
-  // lo identifican. Se guarda igual, enlazado a su cuenta.
+  // Con sesión sabemos quién es sin preguntarle nada; sin sesión, el aviso sale
+  // igual y el número se lo entrega WhatsApp.
   const visitante = await createClient().then((sb) => safeGetUser(sb)).catch(() => null);
+  let nombre: string | null = null;
+  let telefono: string | null = null;
+  if (visitante) {
+    const { data: perfil } = await db.from("profiles").select("full_name, phone").eq("id", visitante.id).maybeSingle();
+    nombre = limitTrimmedText(String((perfil as { full_name?: string } | null)?.full_name ?? ""), NOMBRE_MAX) || null;
+    telefono = telefonoLimpio((perfil as { phone?: string } | null)?.phone);
+  }
 
   await db.from("contact_leads").insert({
     professional_id: professionalId,
@@ -95,9 +94,9 @@ export async function POST(req: Request) {
     user_id: fila.profile_id,
     type: "contact_lead",
     title: "Alguien quiere contactarte",
-    message: `${nombre} · ${telefono}`,
+    message: [nombre, telefono].filter(Boolean).join(" · ") || servicio || "",
     data: {
-      link: "/es/dashboard/profesional?tab=home",
+      link: "/es/dashboard/profesional?tab=contactos",
       lead_name: nombre,
       lead_phone: telefono,
       category_label: servicio || null,

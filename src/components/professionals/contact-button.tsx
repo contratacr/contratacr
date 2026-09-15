@@ -76,7 +76,8 @@ export function ContactButton({
   function onClick(e: React.MouseEvent) {
     e.stopPropagation();
     if (isOwn) { onSelfAction?.(); return; }
-    if (!requireAccount(() => void go())) return;
+    // Nadie se queda afuera: el aviso al profesional sale por detrás.
+    requireAccount();
     void go();
   }
 

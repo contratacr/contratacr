@@ -110,9 +110,8 @@ export function DirectChatLauncher({
       onSelfAction?.();
       return;
     }
-    // Guests register in place; the link is requested again from the "Abrir
-    // WhatsApp" tap so the new tab is never popup-blocked.
-    if (!requireAccount(() => void openChat())) return;
+    // Nadie se queda afuera: el aviso al profesional sale por detrás.
+    requireAccount();
     void openChat();
   }
 
