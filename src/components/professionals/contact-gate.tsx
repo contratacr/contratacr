@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { useLocale, useTranslations } from "next-intl";
-import { Check } from "lucide-react";
+import { Check, MessageCircle } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { trackInteraction } from "@/lib/analytics/interaction-events";
 import { type ContactIntent } from "@/components/auth/client-registration-modal";
@@ -101,10 +101,15 @@ export function useContactGate({ professionalName, intent, professionalId, sourc
       {pidiendoDatos && (
         <div className="app-modal-screen app-centered-modal-screen fixed inset-0 z-[200] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => { setPidiendoDatos(false); pending.current = null; }} />
-          <div role="dialog" aria-modal="true" aria-labelledby="contact-ask-title" className="app-centered-modal relative z-10 w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl">
+          <div role="dialog" aria-modal="true" aria-labelledby="contact-ask-title" className="app-centered-modal relative z-10 w-full max-w-sm rounded-2xl bg-white p-6 text-center shadow-2xl">
+            {/* El mismo mosaico azul de los estados vacíos: la ventana se lee
+                como parte del app y no como un formulario pegado. */}
+            <span className="ccr-icono-mosaico mx-auto mb-4 h-14 w-14">
+              <MessageCircle className="h-6 w-6" strokeWidth={1.6} />
+            </span>
             <h3 id="contact-ask-title" className="text-lg font-bold text-[#162543]">{t("askTitle")}</h3>
-            <p className="mt-1 text-sm leading-relaxed text-[#6b7280]">{t("askBody", { name: professionalName })}</p>
-            <form onSubmit={enviarDatos} className="mt-4 space-y-3">
+            <p className="mt-1.5 text-sm leading-relaxed text-[#6b7280]">{t("askBody", { name: professionalName })}</p>
+            <form onSubmit={enviarDatos} className="mt-5 space-y-3 text-left">
               <div>
                 <label htmlFor="ccr-contacto-nombre" className="mb-1.5 block text-sm font-medium text-[#374151]">{t("askName")}</label>
                 <input
@@ -141,7 +146,7 @@ export function useContactGate({ professionalName, intent, professionalId, sourc
                 {intent === "whatsapp" ? t("openWhatsapp") : intent === "phone" ? t("call") : t("sendEmail")}
               </button>
             </form>
-            <p className="mt-3 text-center text-xs leading-relaxed text-[#8b98a9]">{t("askNote")}</p>
+            <p className="mt-3 text-xs leading-relaxed text-[#8b98a9]">{t("askNote")}</p>
           </div>
         </div>
       )}

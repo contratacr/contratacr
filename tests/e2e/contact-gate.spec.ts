@@ -58,11 +58,15 @@ test.describe("@seeded contact gate", () => {
     await expect(dialog).toBeVisible();
     // Dos campos, ni uno más: ni contraseña, ni cédula, ni código al correo.
     await expect(dialog.locator("input")).toHaveCount(2);
-    await expect(dialog.getByText(/contrase|password|c[eé]dula|identificaci/i)).toHaveCount(0);
+    // Ni contraseña ni identificación: los únicos dos campos son texto y
+    // teléfono. (La nota SÍ nombra la contraseña, para decir que no hace falta.)
+    await expect(dialog.locator("input[type=password]")).toHaveCount(0);
+    const tipos = await dialog.locator("input").evaluateAll((campos) => campos.map((c) => (c as HTMLInputElement).type));
+    expect(tipos.every((tipo) => tipo === "text" || tipo === "tel" || tipo === "")).toBe(true);
     expect(page.url()).toBe(urlBefore);
 
-    await dialog.getByLabel(/Tu nombre/i).fill("Ana Prueba Invitada");
-    await dialog.getByLabel(/Tu tel[eé]fono/i).fill("70000009");
+    await dialog.getByLabel(/Nombre completo/i).fill("Ana Prueba Invitada");
+    await dialog.getByLabel(/^Tel[eé]fono$/i).fill("70000009");
     await dialog.getByRole("button", { name: /WhatsApp/i }).click();
     await page.waitForTimeout(2000);
 

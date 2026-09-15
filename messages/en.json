@@ -525,12 +525,12 @@
     "sendEmail": "Send email",
     "later": "Not now",
     "noContact": "This professional does not offer that contact method.",
-    "askTitle": "Who should they call back?",
-    "askBody": "Leave your name and phone so {name} can reply.",
-    "askName": "Your name",
-    "askNamePlaceholder": "First and last name",
-    "askPhone": "Your phone",
-    "askNote": "We only send it to this professional. No account needed.",
+    "askTitle": "Who's writing?",
+    "askBody": "With your name and phone, {name} can reply even if the chat gets lost.",
+    "askName": "Full name",
+    "askNamePlaceholder": "As it appears on your ID",
+    "askPhone": "Phone",
+    "askNote": "No account, no password. Only this professional sees your details.",
     "genericError": "We could not send it. Try again."
   },
   "clientRegModal": {

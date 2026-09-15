@@ -525,12 +525,12 @@
     "sendEmail": "Enviar correo",
     "later": "Ahora no",
     "noContact": "Este profesional no tiene ese medio de contacto disponible.",
-    "askTitle": "¿A quién le devuelve la llamada?",
-    "askBody": "Dejá tu nombre y tu teléfono para que {name} pueda responderte.",
-    "askName": "Tu nombre",
-    "askNamePlaceholder": "Nombre y apellido",
-    "askPhone": "Tu teléfono",
-    "askNote": "Solo se lo mandamos a este profesional. No hace falta crear cuenta.",
+    "askTitle": "¿Quién le escribe?",
+    "askBody": "Con tu nombre y tu teléfono, {name} puede responderte aunque se pierda el chat.",
+    "askName": "Nombre completo",
+    "askNamePlaceholder": "Como aparece en tu cédula",
+    "askPhone": "Teléfono",
+    "askNote": "Sin cuenta ni contraseña. Tus datos solo los ve este profesional.",
     "genericError": "No pudimos enviarlo. Intentá de nuevo."
   },
   "clientRegModal": {
