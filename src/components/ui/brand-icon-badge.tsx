@@ -10,6 +10,20 @@ import { cn } from "@/lib/utils";
  * Antes era un círculo celeste plano con el icono en azul claro, que sobre
  * blanco casi no se veía.
  *
+ * CUÁNDO LLEVA CAJA Y CUÁNDO NO (regla del app, para no decidirlo por pantalla):
+ *
+ *  · CON caja —esta pieza, o la clase `.ccr-icono-mosaico` que la repite en CSS
+ *    para los estados vacíos—: cuando el icono es el PROTAGONISTA de un bloque y
+ *    está solo. Estados vacíos, diálogos, avisos, tarjetas de elección.
+ *
+ *  · SIN caja, a línea, de 16 a 18 px: cuando el icono ACOMPAÑA a un texto
+ *    dentro de un botón, una fila o una etiqueta —«WhatsApp», «Llamar»,
+ *    «Guardar», «Compartir»—. Ahí el protagonista es el texto, y una caja
+ *    dentro de una píldora es una caja dentro de otra.
+ *
+ *  · Las marcas ajenas (WhatsApp, Instagram, Facebook, TikTok) NUNCA llevan caja
+ *    ni cambian de color: son marcas de otro, se usan como son.
+ *
  * `tone` "brand" = azul de marca (por defecto); "success" = verde;
  * "warning" = ámbar; "danger" = rojo. `size` es el lado de la caja en píxeles.
  */

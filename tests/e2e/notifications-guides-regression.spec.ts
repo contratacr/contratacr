@@ -15,12 +15,12 @@ type GuideExpectation = {
 };
 
 const GUIDE_EXPECTATIONS: GuideExpectation[] = [
-  { id: "clientPanel", stepCount: 5, target: { kind: "tab", value: "sent_bookings" } },
-  { id: "clientRequests", stepCount: 3, target: { kind: "tab", value: "sent_bookings" } },
+  // Espejo de GUIDE_ITEMS en el panel. Las guías de citas, postulaciones,
+  // conexiones y disponibilidad salieron con sus pantallas; dejarlas aquí hacía
+  // fallar la prueba por un texto que ya nadie escribe.
+  { id: "clientPanel", stepCount: 5, target: { kind: "tab", value: "sent_projects" } },
   { id: "clientProjects", stepCount: 3, target: { kind: "tab", value: "sent_projects" } },
-  { id: "clientApplications", stepCount: 4, target: { kind: "tab", value: "applications" } },
   { id: "clientSaved", stepCount: 4, target: { kind: "tab", value: "saved" } },
-  { id: "clientConnections", stepCount: 3, target: { kind: "tab", value: "connections" } },
   { id: "clientProfile", stepCount: 3, target: { kind: "tab", value: "profile" } },
   { id: "searchServices", stepCount: 5, target: { kind: "path", value: "/buscar" } },
   { id: "jobsGuide", stepCount: 4, target: { kind: "path", value: "/empleos" } },
@@ -29,15 +29,13 @@ const GUIDE_EXPECTATIONS: GuideExpectation[] = [
   { id: "reviewsGuide", stepCount: 4, target: { kind: "path", value: "/buscar" } },
   { id: "supportGuide", stepCount: 3, target: { kind: "tab", value: "soporte" } },
   { id: "accountSecurityGuide", stepCount: 4, target: { kind: "tab", value: "cuenta" } },
-  { id: "professionalPanel", stepCount: 4, target: { kind: "tab", value: "bookings" } },
+  { id: "professionalPanel", stepCount: 4, target: { kind: "tab", value: "publicaciones" } },
   { id: "completionGuide", stepCount: 4, target: { kind: "tab", value: "completion" } },
-  { id: "requests", stepCount: 3, target: { kind: "tab", value: "bookings" } },
-  { id: "opportunities", stepCount: 3, target: { kind: "tab", value: "proposals" } },
-  { id: "successCases", stepCount: 4, target: { kind: "tab", value: "photos" } },
-  { id: "availability", stepCount: 4, target: { kind: "tab", value: "availability" } },
-  { id: "services", stepCount: 4, target: { kind: "tab", value: "services" } },
-  { id: "jobsPanel", stepCount: 4, target: { kind: "tab", value: "jobs" } },
-  { id: "offersPanel", stepCount: 4, target: { kind: "tab", value: "offers" } },
+  { id: "opportunities", stepCount: 3, target: { kind: "path", value: "/proyectos" } },
+  { id: "successCases", stepCount: 4, target: { kind: "tab", value: "profile" } },
+  { id: "services", stepCount: 4, target: { kind: "tab", value: "profile" } },
+  { id: "jobsPanel", stepCount: 4, target: { kind: "tab", value: "publicaciones" } },
+  { id: "offersPanel", stepCount: 4, target: { kind: "tab", value: "publicaciones" } },
   { id: "professionalProfile", stepCount: 5, target: { kind: "tab", value: "profile" } },
 ];
 
@@ -62,10 +60,10 @@ async function openGuides(page: Page, locale: Locale) {
   const openButton = page.getByRole("button", { name: buttonName, exact: true }).filter({ visible: true }).first();
   await expect(openButton).toBeVisible({ timeout: 30_000 });
   await openButton.click();
-  await expect(page).toHaveURL(/tab=guides/);
-  const seccion = page.locator("[data-guides-section]").filter({ visible: true }).first();
-  await expect(seccion).toBeVisible();
-  return seccion;
+  // Guías es una ventana sobre el panel, no una sección con dirección propia.
+  const ventana = page.getByRole("dialog").filter({ visible: true }).first();
+  await expect(ventana).toBeVisible();
+  return ventana;
 }
 
 async function seedNotifications(userId: string, locale: Locale) {
@@ -219,8 +217,10 @@ test.describe("@notifications-guides disposable bilingual UI regression", () => 
         }, { message: "Opening a notification should persist its read state" }).toBe(true);
 
         await gotoOK(page, `/${locale}/notificaciones`);
-        const header = list.locator(".ccr-notifications-list-header");
-        await header.getByRole("button", { name: copy.globalOptions, exact: true }).click();
+        // El «...» general ya no vive en la cabecera de la lista: se movió a la
+        // misma fila que «Nuevas», el primer rótulo, para que no quedara suelto
+        // a otra altura. Se busca dentro de la lista, no en una fila concreta.
+        await list.getByRole("button", { name: copy.globalOptions, exact: true }).first().click();
         await page.getByRole("menuitem", { name: copy.markAll, exact: true }).click();
         await expect.poll(async () => {
           const rows = await notificationRows(seeded.ids);
@@ -243,7 +243,7 @@ test.describe("@notifications-guides disposable bilingual UI regression", () => 
         }).toBe(0);
         await expect(applicationRow).toHaveCount(0);
 
-        await header.getByRole("button", { name: copy.globalOptions, exact: true }).click();
+        await list.getByRole("button", { name: copy.globalOptions, exact: true }).first().click();
         await page.getByRole("menuitem", { name: copy.deleteAll, exact: true }).click();
         const confirm = page.getByRole("alertdialog");
         await expect(confirm).toBeVisible();
@@ -309,7 +309,7 @@ test.describe("@notifications-guides disposable bilingual UI regression", () => 
       const guides = locale === "es"
         ? GUIDE_EXPECTATIONS
         : GUIDE_EXPECTATIONS.filter((guide) => [
-            "clientRequests",
+            "clientProjects",
             "searchServices",
             "notificationsGuide",
             "offersGuide",

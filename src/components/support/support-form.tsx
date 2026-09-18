@@ -13,6 +13,7 @@ import { IMAGE_DOC_ACCEPT } from "@/lib/upload-validation";
 import { getImageUploadPreparationErrorCode, prepareImageForUpload } from "@/lib/client-image-upload";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { BARRA_ACCION_FIJA, useBarraAccionFija } from "@/components/ui/acciones-al-pie";
 
 // The support ticket form — SINGLE SOURCE OF TRUTH for the fields, validation and
 // submit. Rendered on the public /soporte page (the in-dashboard Soporte section uses
@@ -30,6 +31,7 @@ type AttachedFile = { file: File; preview?: string };
 export function SupportForm({ onSuccess, onCancel }: { onSuccess?: (email: string) => void; onCancel?: () => void }) {
   const enVentana = !!onCancel;
   const t = useTranslations("soporte");
+  useBarraAccionFija();
   const tComunes = useTranslations("inputs");
   const locale = useLocale();
   const searchParams = useSearchParams();
@@ -124,9 +126,17 @@ export function SupportForm({ onSuccess, onCancel }: { onSuccess?: (email: strin
     const selected = Array.from(e.target.files ?? []);
     const remaining = MAX_FILES - attachments.length;
     const candidates = selected.slice(0, Math.max(0, remaining));
+    // Pasarse del tope se AVISA. Antes los archivos de más se descartaban en
+    // silencio: la persona los escogía, veía tres y creía que iban todos.
+    if (selected.length > candidates.length) {
+      setError(t("errTooMany", { max: MAX_FILES }));
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      if (!candidates.length) return;
+    } else {
+      setError(null);
+    }
     if (!candidates.length) return;
     setPreparingAttachments(true);
-    setError(null);
     const prepared: AttachedFile[] = [];
     try {
       let availableBytes = MAX_REQUEST_FILE_BYTES - attachments.reduce((sum, item) => sum + item.file.size, 0);
@@ -209,7 +219,7 @@ export function SupportForm({ onSuccess, onCancel }: { onSuccess?: (email: strin
     "w-full h-11 rounded-xl border border-[#e5e7eb] bg-white px-4 text-sm text-[#162543] placeholder:text-[#68778d] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all";
 
   return (
-    <form onSubmit={handleSubmit} onInput={() => setConCambios(true)} className="flex flex-col">
+    <form onSubmit={handleSubmit} onInput={() => setConCambios(true)} className="flex flex-col max-sm:pb-24">
       <div className="mx-4 flex flex-col gap-5 rounded-2xl sm:mx-0 border border-[#dfe8f0] bg-white p-5 shadow-sm">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
@@ -260,7 +270,7 @@ export function SupportForm({ onSuccess, onCancel }: { onSuccess?: (email: strin
       {/* Attachments */}
       <div>
         <label className="text-sm font-medium text-[#374151] block mb-2">
-          {t("attachmentsLabel")} <span className="text-[#68778d] font-normal">{t("attachmentsHint", { max: MAX_FILES, mb: MAX_FILE_MB })}</span>
+          {t("attachmentsLabel")} <span className="text-[#68778d] font-normal">{t("attachmentsHint")}</span>
         </label>
 
         {attachments.length > 0 && (
@@ -303,8 +313,12 @@ export function SupportForm({ onSuccess, onCancel }: { onSuccess?: (email: strin
           multiple
           onChange={(event) => { void handleFileChange(event); }}
         />
+        {/* La lista de formatos se fue: el selector de archivos ya solo deja
+            escoger los que aceptamos, así que enumerarlos era ruido. Lo único
+            que la persona no puede adivinar es cuántos caben. El peso tampoco
+            se anuncia: se avisa solo si alguien se pasa. */}
         <p className="text-xs text-[#68778d] mt-1.5">
-          {t("formats")}
+          {t("attachmentsMax", { max: MAX_FILES })}
         </p>
       </div>
 
@@ -321,7 +335,8 @@ export function SupportForm({ onSuccess, onCancel }: { onSuccess?: (email: strin
           // Dentro de una ventana, el pie llega hasta los bordes: con el margen
           // en cero quedaba una franja gris de 24 px a cada lado, porque el
           // cuerpo de la ventana ya trae su propio relleno.
-          "ccr-pie-formulario sticky bottom-0 z-10 -mx-4 mt-5 border-t border-[#e5e7eb] bg-white px-4 py-4 pb-[max(env(safe-area-inset-bottom),1rem)] sm:flex sm:justify-end sm:gap-3 sm:px-6",
+          BARRA_ACCION_FIJA,
+            "z-20 max-sm:fixed max-sm:inset-x-0 max-sm:bottom-0 sm:sticky sm:bottom-0 sm:-mx-4 sm:mt-5 sm:flex sm:justify-end sm:gap-3 sm:px-6",
           enVentana ? "sm:-mx-6 sm:rounded-b-2xl" : "sm:mx-0 sm:rounded-b-2xl sm:border-x",
         )}>
         {/* En computadora, la salida acompaña a la acción: un solo botón a la

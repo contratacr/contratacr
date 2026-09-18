@@ -36,8 +36,19 @@ import { createClient } from "@/lib/supabase/client";
 import { repairVisibleText } from "@/lib/text/repair-visible-text";
 import { OfferTagPercentIcon } from "@/components/icons/offer-tag-percent-icon";
 import { useDirectMessageUnread } from "@/hooks/use-direct-message-unread";
+import { CABECERA_TITULO } from "@/components/layout/cabecera";
 
-/* --- Brand mark (the square "CR" icon) --- */
+/* --- La marca (el cuadrito «CR») ---
+ *
+ * UN solo tamaño, 32 px, en todas partes: la barra de arriba, el pie, las
+ * cabeceras de sección y el panel de administración. Antes había tres —36 en la
+ * barra de computadora, 32 en la del teléfono, 28 en el pie y al lado del
+ * título de una sección—, así que el mismo dibujo, en el mismo rincón de
+ * arriba a la izquierda, cambiaba de tamaño al pasar de la portada a Empleos.
+ * 32 es el que cabe en las tres alturas de barra que existen (56, 60 y 64 px)
+ * dejando el mismo aire arriba y abajo, y el que ya usaba la barra del teléfono,
+ * que es donde se ve casi siempre.
+ */
 export function ContrataCRMark({ className, tone = "light" }: { className?: string; tone?: "light" | "dark" }) {
   const src = tone === "dark" ? "/logo-mark-dark.png" : "/logo-mark-transparent.png";
   return (
@@ -45,30 +56,19 @@ export function ContrataCRMark({ className, tone = "light" }: { className?: stri
     <img
       src={src}
       alt="ContrataCR"
-      width={28}
-      height={28}
-      className={cn("h-7 w-7 select-none", className)}
+      width={32}
+      height={32}
+      className={cn("h-8 w-8 select-none", className)}
     />
   );
 }
-/* --- Logo (mark + wordmark). `size="lg"` gives the header more brand presence. --- */
-export function ContrataCRLogo({ className, chip = false, size = "md", tone = "light" }: { className?: string; chip?: boolean; size?: "md" | "lg"; tone?: "light" | "dark" }) {
-  const lg = size === "lg";
-  const markCls = lg ? "h-8 w-8 sm:h-9 sm:w-9" : "h-7 w-7";
-  const textCls = lg ? "text-[19px] sm:text-[22px]" : "text-[17px]";
-  const chipCls = lg ? "h-9 w-9 sm:h-10 sm:w-10" : "h-8 w-8";
-  const chipMarkCls = lg ? "h-6 w-6 sm:h-7 sm:w-7" : "h-[1.35rem] w-[1.35rem]";
+/* --- El logotipo (marca + palabra). Sin tamaños: uno solo, 32 + 19. --- */
+export function ContrataCRLogo({ className, tone = "light" }: { className?: string; tone?: "light" | "dark" }) {
   const dark = tone === "dark";
   return (
-    <div className={cn("flex items-center select-none", lg ? "gap-0.5" : "gap-0.5", className)}>
-      {chip ? (
-        <span className={cn("grid place-items-center rounded-lg bg-white shadow-sm", chipCls)}>
-          <ContrataCRMark className={chipMarkCls} />
-        </span>
-      ) : (
-        <ContrataCRMark className={markCls} tone={tone} />
-      )}
-      <span className={cn("font-extrabold tracking-tight leading-none", textCls)}>
+    <div className={cn("flex items-center gap-0.5 select-none", className)}>
+      <ContrataCRMark tone={tone} />
+      <span className="text-[19px] font-extrabold tracking-tight leading-none">
         <span className={dark ? "text-white" : "text-[#1a2744]"}>Contrata</span>
         <span className={dark ? "text-[#38bdf8]" : "text-[#009FD9]"}>CR</span>
       </span>
@@ -611,12 +611,11 @@ interface AccountMenuProps {
   clientPanelHref: string;
   savedHref: string;
   profileHref: string;
-  projectsHref: string;
   onSignOut: () => void;
 }
 
 export function AccountMenu({
-  isPro, displayName, professionalPanelHref, clientPanelHref, profileHref, projectsHref, savedHref, onSignOut,
+  isPro, displayName, professionalPanelHref, clientPanelHref, profileHref, savedHref, onSignOut,
 }: AccountMenuProps) {
   const t = useTranslations("header");
   const locale = useLocale();
@@ -664,16 +663,10 @@ export function AccountMenu({
               <UserRound className="h-4 w-4 text-[#009FD9]" />
               {t("myPanel")}
             </Link>
-            <Link href={`${projectsHref}&openPublish=1`} onClick={() => setOpen(false)} className={menuItemClass}>
-              <ClipboardList className="h-4 w-4 text-[#009FD9]" />
-              {t("publishRequest")}
-            </Link>
-            {!isPro && (
-              <Link href={projectsHref} onClick={() => setOpen(false)} className={menuItemClass}>
-                <ClipboardList className="h-4 w-4 text-[#009FD9]" />
-                {t("projects")}
-              </Link>
-            )}
+            {/* Ni «Mis proyectos» ni «Publicar lo que necesito» viven aquí: las
+                dos cosas se hacen en el tablero de /proyectos, que ya está en el
+                menú. Repetirlas alargaba la lista sin llevar a ningún lado
+                nuevo. */}
             {/* Cotizar es lo que el profesional hace seguido: en la app está en
                 la barra de abajo y aquí, en la web, en su menú. */}
             {isPro && (
@@ -701,7 +694,7 @@ export function AccountMenu({
             className="mt-1 flex w-full items-center gap-2.5 border-t border-gray-100 px-3 py-2.5 text-sm font-semibold text-red-600 transition-colors hover:bg-red-50"
           >
             <LogOut className="h-4 w-4" />
-            {locale === "en" ? "Sign out" : "Cerrar sesión"}
+            {locale === "en" ? "Sign out" : "Salir"}
           </button>
         </div>
       )}
@@ -809,6 +802,24 @@ function contextoDeBusquedaDesdeUrl(params: { get(name: string): string | null }
     ubicacionSel,
     coords: params.get("lat") && params.get("lng") && Number.isFinite(lat) && Number.isFinite(lng) ? { latitude: lat, longitude: lng } : null,
   };
+}
+
+type CapacidadGuardada = { userId: string; role: string | null; hasProfessionalProfile: boolean; capabilityKnown: boolean; businessName: string };
+const CLAVE_CAPACIDAD = "ccr:capacidad-cuenta:";
+
+function leerCapacidadGuardada(userId: string): CapacidadGuardada | null {
+  try {
+    const crudo = window.localStorage.getItem(CLAVE_CAPACIDAD + userId);
+    if (!crudo) return null;
+    const dato = JSON.parse(crudo) as CapacidadGuardada;
+    return dato?.userId === userId ? dato : null;
+  } catch {
+    return null;
+  }
+}
+
+function guardarCapacidad(capacidad: CapacidadGuardada) {
+  try { window.localStorage.setItem(CLAVE_CAPACIDAD + capacidad.userId, JSON.stringify(capacidad)); } catch { /* sin almacenamiento */ }
 }
 
 export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobileSearch = false, marketplaceDesktop = false, drawerOnly = false }: { mobileInline?: React.ReactNode; forceCompactSearch?: boolean; mobileSearch?: boolean; marketplaceDesktop?: boolean; drawerOnly?: boolean } = {}) {
@@ -946,7 +957,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   // behavior so the compact search never flashes during hydration/refresh.
   const isHomePage = !pathname || pathname === "/" || /^\/(?:es|en)\/?$/.test(pathname);
   const isMarketplaceEditor = /\/(?:empleos|ofertas)\/(?:publicar|[^/]+\/editar)\/?$/.test(pathname);
-  const isMarketplaceRoute = /\/(?:empleos|ofertas)(?:\/|$)/.test(pathname);
+  const isMarketplaceRoute = /\/(?:empleos|ofertas|proyectos)(?:\/|$)/.test(pathname);
   const effectiveMarketplaceDesktop = marketplaceDesktop || (isMarketplaceRoute && !isMarketplaceEditor);
   // Empleos, ofertas y /buscar traen sus propios filtros pegados a la barra: la
   // línea de la barra caía justo encima de ellos y se leía como una raya suelta.
@@ -957,7 +968,16 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   // hero y SIEMPRE en el resto de páginas públicas (perfil, oficios, ayuda…).
   // Se oculta donde no hay nada que buscar: panel, admin, cuenta, mensajes,
   // reservar, y los tableros de empleos/ofertas, que traen su propio buscador.
-  const rutaSinBuscador = drawerOnly || /\/(?:admin|login|registro|onboarding|mensajes|notificaciones|reset-password|olvide-contrasena|completar-perfil|eliminar-cuenta|publicar-proyecto)(?:\/|$)|\/reservar(?:\/|$)/.test(pathname ?? "");
+  // Pantallas SIN buscador en la barra: el panel de administración y los
+  // TRÁMITES —lo que se está llenando o completando—. Entrar, crear cuenta y
+  // recuperar la contraseña salieron de esta lista: son páginas normales, con
+  // la barra entera arriba, y a quien llega ahí y cambia de idea hay que
+  // dejarlo buscar sin obligarlo a volver al inicio. Las que sí son trámite
+  // —onboarding, completar perfil, borrar cuenta, publicar un proyecto,
+  // reservar— y las pantallas de la app —mensajes, avisos— se quedan sin él.
+  // Notificaciones sí lleva buscador: es una pantalla de la web como las demás,
+  // y desde un aviso lo siguiente suele ser ir a buscar algo.
+  const rutaSinBuscador = drawerOnly || /\/(?:admin|onboarding|mensajes|completar-perfil|eliminar-cuenta|publicar-proyecto)(?:\/|$)|\/reservar(?:\/|$)/.test(pathname ?? "");
   const showDesktopCompactSearch = effectiveCompact && !effectiveMarketplaceDesktop && !rutaSinBuscador;
   // The global navbar is navigation-only. /buscar explicitly opts into its
   // contextual professional search; every other destination owns its search.
@@ -1109,13 +1129,22 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   // `isPro` = the account can OFFER services (Airbnb "host" capability). Auth
   // metadata is the fast path; the canonical professional row repairs stale
   // metadata so an existing provider never sees the registration CTA again.
-  const hasResolvedAccountCapability = !!user && accountCapability?.userId === user.id;
-  const isPro = canOffer(user) || (hasResolvedAccountCapability && accountCapability.hasProfessionalProfile);
-  const isAdminUser = user?.user_metadata?.role === "admin" || (hasResolvedAccountCapability && accountCapability.role === "admin");
+  const capacidadVigente = accountCapability?.userId === user?.id ? accountCapability : null;
+  const hasResolvedAccountCapability = !!user && capacidadVigente?.userId === user.id;
+  const isPro = canOffer(user) || (hasResolvedAccountCapability && !!capacidadVigente?.hasProfessionalProfile);
+  const isAdminUser = user?.user_metadata?.role === "admin" || (hasResolvedAccountCapability && capacidadVigente?.role === "admin");
   // Solo a una cuenta de cliente confirmada: mientras no se sepa si ofrece
   // servicios no se ofrece nada, para no parpadear con el enlace puesto y
   // quitado en cada carga.
-  const mostrarOfrecerServicios = !!user && hasResolvedAccountCapability && !isPro;
+  // No se ofrece en la pantalla donde ya se está ofreciendo.
+  const enSuPropiaPagina = /\/registro\/profesional(?:\/|$)/.test(pathname ?? "");
+  const mostrarOfrecerServicios = !!user && hasResolvedAccountCapability && !isPro && !enSuPropiaPagina;
+  // Mientras no se sabe si la cuenta ofrece servicios, el enlace ocupa su
+  // lugar sin verse. Antes no ocupaba nada: al saberse, entraba de golpe, el
+  // buscador se encogía 175 px y toda la barra saltaba a la izquierda, en CADA
+  // página. Así el texto aparece en su sitio y nada se mueve. A un profesional
+  // lo delata su metadata al instante (canOffer), así que a él no se le reserva.
+  const reservarOfrecerServicios = !!user && !hasResolvedAccountCapability && !canOffer(user) && !enSuPropiaPagina;
   const { mode } = useMode(isPro);
 
   // ONE unified panel ("Mi panel") for every account; it opens in the right mode
@@ -1124,7 +1153,6 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   const professionalPanelHref = `${panelHref}?mode=offer`;
   const clientPanelHref = `${panelHref}?mode=use`;
   const primaryPanelHref = isPro ? (mode === "offer" ? professionalPanelHref : clientPanelHref) : clientPanelHref;
-  const projectsHref = "/dashboard/profesional?tab=sent_projects";
   const savedHref = "/dashboard/profesional?tab=saved";
   const profilePanelHref = `${panelHref}?mode=${isPro && mode === "offer" ? "offer" : "use"}&tab=profile`;
   // El nombre del negocio vive en otra tabla, así que pedirlo desde el navegador
@@ -1132,7 +1160,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   // el servidor lo entrega con la página (`accountName`) y la barra se pinta una
   // sola vez; lo que llega después solo corrige si de verdad cambió.
   const accountDisplayName =
-    (hasResolvedAccountCapability ? accountCapability.businessName : (accountName ?? "")) ||
+    (hasResolvedAccountCapability ? capacidadVigente?.businessName ?? "" : (accountName ?? "")) ||
     String(user?.user_metadata?.full_name || user?.user_metadata?.name || "").trim();
   const nativePanelHref = user ? primaryPanelHref : loginHref;
   useEffect(() => {
@@ -1141,6 +1169,12 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
       queueMicrotask(() => setAccountCapability(null));
       return;
     }
+
+    // Lo último que se supo de ESTA cuenta, guardado en el dispositivo: se usa
+    // ya, y la consulta de abajo solo corrige si algo cambió. Se lee aquí y no
+    // al pintar porque el primer cuadro lo pinta el servidor, que no lo ve.
+    const guardada = leerCapacidadGuardada(user.id);
+    if (guardada) queueMicrotask(() => { if (!cancelled) setAccountCapability(guardada); });
 
     const loadAccountCapability = async () => {
       try {
@@ -1151,13 +1185,17 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
         ]);
         if (!cancelled) {
           const businessName = String(professionalResult.data?.business_name || "").trim();
-          setAccountCapability({
+          const capacidad = {
             userId: user.id,
             role: (profileResult.data as { role?: string } | null)?.role ?? null,
             hasProfessionalProfile: !!professionalResult.data,
             capabilityKnown: !professionalResult.error,
             businessName,
-          });
+          };
+          setAccountCapability(capacidad);
+          // Solo se guarda lo que se supo de verdad: un error no debe quedar
+          // recordado como «no ofrece servicios».
+          if (capacidad.capabilityKnown) guardarCapacidad(capacidad);
         }
       } catch {
         if (!cancelled) {
@@ -1328,7 +1366,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   );
 
   const navigateNativeMarketplace = useCallback(
-    (event: React.MouseEvent<HTMLAnchorElement>, href: "/ofertas" | "/empleos") => {
+    (event: React.MouseEvent<HTMLAnchorElement>, href: "/ofertas" | "/empleos" | "/proyectos") => {
       if (!nativeApp) return;
       // Same-document navigation, like every other tab. The old full reload
       // cost a blank frame plus re-running all scripts on each tap; if the RSC
@@ -1531,6 +1569,28 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
     setNavLocOpen(false);
   }
 
+  // Al NAVEGAR, la hoja NO se cierra a mano. Cerrarla primero dejaba ver la
+  // pantalla de abajo —en /buscar, el mapa y la lista entera— durante un cuadro
+  // o dos antes de que entrara la ficha: eso es el parpadeo. La hoja se queda
+  // puesta, tapando lo viejo, y se cierra sola cuando la dirección cambia. Lo
+  // único que sí pasa de inmediato es soltar el teclado.
+  function irSinParpadeo() {
+    soltarFoco();
+    setNavLocOpen(false);
+  }
+
+  const ultimaRuta = useRef("");
+  useEffect(() => {
+    const ahora = `${pathname}?${currentSearchParams.toString()}`;
+    if (ultimaRuta.current && ultimaRuta.current !== ahora && nativeSearchOpen) {
+      soltarFoco();
+      setNativeSearchOpen(false);
+      setSearchFocused(false);
+      setNavLocOpen(false);
+    }
+    ultimaRuta.current = ahora;
+  }, [pathname, currentSearchParams, nativeSearchOpen]);
+
   function searchCurrentLocation() {
       const label = locale === "en" ? "Current location" : "Ubicación actual";
     if (!navigator.geolocation) {
@@ -1697,7 +1757,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
         setNavLocOpen(false);
         return;
       }
-      if (nativeSearchOpen) closeNativeSearch();
+      if (nativeSearchOpen) irSinParpadeo();
       runCompactSearch();
     }
   }
@@ -1723,7 +1783,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
     }
     if (e.key === "Enter") {
       e.preventDefault();
-      if (nativeSearchOpen) closeNativeSearch();
+      if (nativeSearchOpen) irSinParpadeo();
       runCompactSearch();
     }
   }
@@ -1777,13 +1837,13 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                     >
                       <Menu className="h-5 w-5 stroke-[2.5]" />
                     </button>
-                    <Link href="/" aria-label="ContrataCR inicio" onClick={irAlInicio} className="-ml-1 shrink-0">
-                      <ContrataCRMark className="h-7 w-7" />
+                    <Link href="/" aria-label="ContrataCR inicio" onClick={irAlInicio} className="shrink-0">
+                      <ContrataCRMark />
                     </Link>
                     {/* <p>, no <h1>: la página ya tiene su único h1 (el nombre del
                         profesional, el título de la sección…). Este rótulo es de la
                         barra, y como h1 quedaba un h1 oculto por delante del real. */}
-                    <p data-ccr-section-title="" className="mr-auto min-w-0 truncate pl-1.5 text-[17px] font-extrabold text-[#162543]">{sectionTitle}</p>
+                    <p data-ccr-section-title="" className={cn(CABECERA_TITULO, "mr-auto")}>{sectionTitle}</p>
                   </>
                 ) : sectionActive ? (
                   <>
@@ -1796,8 +1856,11 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                     >
                       <ArrowLeft className="h-5 w-5" />
                     </button>
-                    <p data-ccr-section-title="" className="mr-auto min-w-0 truncate pr-2 text-[17px] font-extrabold text-[#162543]">{sectionTitle}</p>
-                    {!sectionTitle && <span className="mr-auto" aria-hidden />}
+                    {/* Al centro, como en el panel, en las fichas y en los
+                        formularios de publicar: la misma barra de «flecha +
+                        título» estaba alineada a la izquierda solo aquí. */}
+                    <p data-ccr-section-title="" className={cn(CABECERA_TITULO, "flex-1 text-center")}>{sectionTitle}</p>
+                    {!sectionTitle && <span className="flex-1" aria-hidden />}
                   </>
                 ) : (
                   <>
@@ -1813,7 +1876,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                 </button>
 
                 <Link href="/" aria-label="ContrataCR inicio" onClick={irAlInicio} className={cn("shrink-0", nativeHeaderShell && "mr-auto flex min-w-0 items-center justify-start")}>
-                  {mobileInline ? <ContrataCRMark className="h-8 w-8" /> : <ContrataCRLogo size="lg" />}
+                  {mobileInline ? <ContrataCRMark /> : <ContrataCRLogo />}
                 </Link>
                   </>
                 )}
@@ -1847,8 +1910,8 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                   )
                 ) : (
                 <div className="ml-auto flex shrink-0 items-center gap-0.5">
-                  {user && <NotificationBell scope="all" />}
-                  {!user && !sectionShare && <span className="h-10 w-10" aria-hidden />}
+                  {user && !sectionMenu && <NotificationBell scope="all" />}
+                  {!user && !sectionShare && !sectionMenu && <span className="h-10 w-10" aria-hidden />}
                 </div>
                 )}
                 {sectionMenu && (
@@ -1857,9 +1920,12 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                     onClick={() => window.dispatchEvent(new Event("ccr:section-menu"))}
                     aria-label={locale === "en" ? "Options" : "Opciones"}
                     data-ccr-section-menu=""
-                    className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[#f8fafc] text-[#162543] ring-1 ring-[#dbe5ee] transition-colors hover:bg-[#eef5f9]"
+                    className="grid h-10 w-10 shrink-0 place-items-center rounded-full text-[#162543] transition-colors hover:bg-[#eef3f8]"
                   >
-                    <MoreHorizontal className="h-[18px] w-[18px]" />
+                    {/* El mismo dibujo que el «...» de Empleos, Promociones y
+                        Proyectos: antes este era más chico y con un anillo, así
+                        que el mismo control se veía distinto según la ficha. */}
+                    <MoreHorizontal className="h-[22px] w-[22px]" strokeWidth={2.6} />
                   </button>
                 )}
                 {sectionShare && (
@@ -1924,13 +1990,13 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                     <>
                       {/* Compact mark on mobile ONLY when the inline search is present (it needs the
                           row); the full logo + wordmark on desktop. */}
-                      <ContrataCRMark className="h-8 w-8 lg:hidden" />
-                      <span className="hidden lg:inline-flex"><ContrataCRLogo size="lg" /></span>
+                      <ContrataCRMark className="lg:hidden" />
+                      <span className="hidden lg:inline-flex"><ContrataCRLogo /></span>
                     </>
                   ) : (
                     /* Mode switch left the navbar (sprint 518) -> there's room for the FULL logo +
                        "ContrataCR" wordmark on mobile again. */
-                    <ContrataCRLogo size="lg" />
+                    <ContrataCRLogo />
                   )}
                 </Link>
 
@@ -1986,7 +2052,15 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                       <ChevronDown className={cn("h-3.5 w-3.5 transition-transform duration-200", openMenu === "explorar" && "rotate-180")} />
                     </button>
                     {openMenu === "explorar" && (
-                      <div className="absolute left-0 top-full z-50 mt-1.5 min-w-[220px] overflow-hidden rounded-2xl border border-gray-100 bg-white p-3 shadow-[0_24px_70px_-22px_rgba(15,23,42,0.45)]">
+                      <div className="absolute left-0 top-full z-50 mt-1.5 w-max min-w-[220px] overflow-hidden rounded-2xl border border-gray-100 bg-white p-3 shadow-[0_24px_70px_-22px_rgba(15,23,42,0.45)]">
+                                                {/* Buscar profesionales, de primero: es a lo que se
+                            entra a este menú. Antes solo se llegaba escribiendo
+                            en el buscador de la barra, así que quien no sabía
+                            que ese campo llevaba a algún lado no llegaba nunca. */}
+                        <Link href="/buscar" onClick={() => setOpenMenu(null)} className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-[#1A2744] transition-colors hover:bg-gray-50 hover:text-[#009FD9]">
+                          <Search className="h-5 w-5 shrink-0" />
+                          {locale === "en" ? "Find professionals" : "Buscar profesionales"}
+                        </Link>
                         {EMPLEOS_VISIBLE && (
                           <Link href="/empleos" onClick={() => setOpenMenu(null)} className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-[#1A2744] transition-colors hover:bg-gray-50 hover:text-[#009FD9]">
                             <Briefcase className="h-5 w-5 shrink-0" />
@@ -1997,6 +2071,12 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                           <OfferTagPercentIcon className="h-5 w-5" />
                           {locale === "en" ? "Promotions" : "Promociones"}
                         </Link>
+                        {/* Proyectos ya no vive solo adentro del panel: es un
+                            tablero público más, como empleos y promociones. */}
+                        <Link href="/proyectos" onClick={() => setOpenMenu(null)} className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-[#1A2744] transition-colors hover:bg-gray-50 hover:text-[#009FD9]">
+                          <ClipboardList className="h-5 w-5 shrink-0" />
+                          {locale === "en" ? "Projects" : "Proyectos"}
+                        </Link>
                       </div>
                     )}
                   </div>
@@ -2004,19 +2084,28 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                 </nav>
 
                 {effectiveMarketplaceDesktop ? (
-                  <div className="pointer-events-auto relative z-[75] mr-2 hidden h-11 min-w-[360px] flex-1 lg:block xl:mr-3 xl:min-w-[430px]">
+                  // El buscador CEDE ancho pero nunca desaparece: 260 px es lo
+                  // mínimo en que todavía se lee «¿Qué empleo…» y «Ubicación».
+                  // Antes medía 360/430 fijos y, sin sesión, entre 1024 y 1300 px
+                  // empujaba «Ofrecer mis servicios» y el idioma FUERA de la
+                  // pantalla. El ancho mínimo va en `style` a propósito.
+                  <div style={{ minWidth: 260 }} className="pointer-events-auto relative z-[75] mr-2 hidden h-11 flex-1 lg:block xl:mr-3">
                     <div id="ccr-marketplace-navbar-slot" className="h-full w-full" />
                   </div>
                 ) : (
                   <>
                     {/* Desktop compact search lives in the navbar flow, so it never covers links/actions. */}
+                    {/* El mismo mínimo que el buscador de los tableros. Con
+                        `min-w-0` era el buscador el que lo cedía TODO: a 1024 px
+                        quedaba en dos íconos sueltos dentro de una cajita de
+                        70 px, y a 1100 en «des | Ub». */}
                     <div
                       className={cn(
-                        "mr-3 hidden min-w-0 flex-1 items-center transition-opacity duration-200 lg:flex xl:mr-4",
+                        "mr-3 hidden flex-1 items-center transition-opacity duration-200 lg:flex xl:mr-4",
                         !showDesktopCompactSearch && "invisible",
                       )}
                       aria-hidden={!showDesktopCompactSearch}
-                      style={{ opacity: showDesktopCompactSearch ? 1 : 0, pointerEvents: showDesktopCompactSearch ? "auto" : "none" }}
+                      style={{ minWidth: 260, opacity: showDesktopCompactSearch ? 1 : 0, pointerEvents: showDesktopCompactSearch ? "auto" : "none" }}
                     >
                       <form onSubmit={handleCompactSearch} className="flex min-w-0 flex-1">
                         <div className="relative w-full">
@@ -2158,10 +2247,14 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
 
                 {/* Right actions */}
                 <div className="relative z-[60] ml-auto hidden min-w-0 shrink-0 items-center justify-end gap-2 lg:flex">
-                  {/* Sobre ContrataCR: visible con y sin sesión. */}
+                  {/* Sobre ContrataCR: con y sin sesión, pero solo desde 1280 px.
+                      Es lo primero que cede cuando la ventana se angosta: es
+                      material de consulta —también está en el pie—, mientras
+                      que el buscador, Ingresar y «Ofrecer mis servicios» son a
+                      lo que la gente viene. Con todo adentro no caben 1024 px. */}
                   <div
                     ref={resourcesMenuRef}
-                    className="relative"
+                    className="relative hidden xl:block"
                   >
                     <button
                       type="button"
@@ -2222,10 +2315,19 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                           manera de pasarse a profesional desde su cuenta. Texto
                           turquesa, no botón: es una invitación, no la acción
                           principal de la barra. */}
-                      {mostrarOfrecerServicios && !effectiveMarketplaceDesktop && (
+                      {/* También en los tableros: ahí se escondía (la barra de
+                          búsqueda de dos campos no le dejaba sitio) y justo en
+                          Empleos, Promociones y Proyectos es donde un cliente ve
+                          a otros ofreciendo y le dan ganas de hacerlo. */}
+                      {(mostrarOfrecerServicios || reservarOfrecerServicios) && (
                         <Link
                           href="/registro/profesional"
-                          className="inline-flex items-center rounded-xl px-3 py-2 text-sm font-medium whitespace-nowrap text-[#009FD9] transition-colors hover:bg-[#EBF5FB]"
+                          aria-hidden={reservarOfrecerServicios || undefined}
+                          tabIndex={reservarOfrecerServicios ? -1 : undefined}
+                          className={cn(
+                            "inline-flex items-center rounded-xl px-3 py-2 text-sm font-medium whitespace-nowrap text-[#009FD9] transition-colors hover:bg-[#EBF5FB]",
+                            reservarOfrecerServicios && "invisible",
+                          )}
                         >
                           {t("offerServices")}
                         </Link>
@@ -2241,7 +2343,6 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                         professionalPanelHref={professionalPanelHref}
                         clientPanelHref={clientPanelHref}
                         profileHref={profilePanelHref}
-                        projectsHref={projectsHref}
                         savedHref={savedHref}
                         onSignOut={() => void handleSignOut()}
                       />
@@ -2256,11 +2357,18 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                       >
                         {t("login")}
                       </Link>
+                      {/* Contactar ya no pide cuenta, así que «Registrarse» a
+                          secas no le sirve a nadie que llegó a buscar a alguien:
+                          de 108 cuentas de cliente, SIETE hicieron algo alguna
+                          vez. Quien sí necesita una cuenta desde el minuto uno
+                          es el profesional. La cuenta normal se crea sola en el
+                          momento en que hace falta (publicar, guardar, reseñar)
+                          y sigue estando en /registro. */}
                       <Link
-                        href="/registro"
+                        href="/registro/profesional"
                         className="rounded-xl bg-[#009FD9] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#0088bb]"
                       >
-                        {t("register")}
+                        {t("offerServices")}
                       </Link>
                     </div>
                   )}
@@ -2303,7 +2411,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
             <form
               onSubmit={(event) => {
                 event.preventDefault();
-                closeNativeSearch();
+                irSinParpadeo();
                 runCompactSearch();
               }}
               className="mx-auto flex h-full max-w-[560px] flex-col"
@@ -2417,11 +2525,22 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                   </div>
                 ) : (
                 <div id="native-location-suggestions" className="space-y-1" role="listbox" aria-label={locale === "en" ? "Suggested locations" : "Ubicaciones sugeridas"}>
+                  {/* Lo de abajo pertenece al campo que tiene el cursor, UNA cosa
+                      a la vez. Antes salían los recientes y, pegada debajo, la
+                      lista de provincias —que es del otro campo—: con el cursor
+                      en «Servicio» la pantalla ofrecía lugares, y había que
+                      bajar mucho para ver que eran dos listas distintas.
+                      Con el cursor en Servicio: los recientes.
+                      Con el cursor en Ubicación: cerca de mí y los lugares. */}
                   {/* UNA sola lista de recientes: las búsquedas y los perfiles
                       abiertos, intercalados por fecha. Dos apartados («Recientes» y
                       «Vistos recientemente») partían la pantalla en dos y se veía mal. */}
-                  {!searchQuery.trim() && (busquedasRecientes.length > 0 || visitasRecientes.length > 0) && (
-                    <div className="mb-2 space-y-1 border-b border-[#eef2f6] pb-3">
+                  {searchFocused && !searchQuery.trim() && (busquedasRecientes.length > 0 || visitasRecientes.length > 0) && (
+                    // Sin línea al final: separaba los recientes de la lista de
+                    // provincias que iba debajo, y esa lista ya no está aquí
+                    // —ahora sale con el cursor en Ubicación—, así que la línea
+                    // quedaba partiendo la pantalla contra nada.
+                    <div className="mb-2 space-y-1">
                       <div className="flex items-center justify-between px-2 pb-1 pt-1">
                         <p className="text-[12px] font-extrabold uppercase tracking-[0.12em] text-[#7a8797]">
                           {t("recent")}
@@ -2476,7 +2595,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                           <div key={reciente.clave} className="flex w-full items-center rounded-xl active:bg-[#eef9fd]">
                             <Link
                               href={reciente.visita!.href}
-                              onClick={closeNativeSearch}
+                              onClick={irSinParpadeo}
                               className="flex min-w-0 flex-1 items-center gap-3 rounded-xl px-2 py-2.5 text-left"
                             >
                               {reciente.visita!.imagen ? (
@@ -2510,6 +2629,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                         ))}
                     </div>
                   )}
+                  {!searchFocused && (
                   <button
                     type="button"
                     onClick={searchCurrentLocation}
@@ -2518,7 +2638,8 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                     <MapPin className="h-5 w-5 shrink-0" />
                         <span>{locale === "en" ? "Search near me" : "Buscar cerca de mí"}</span>
                   </button>
-                  {nativeLocationSuggestions.slice(0, 7).map((suggestion) => (
+                  )}
+                  {!searchFocused && nativeLocationSuggestions.slice(0, 7).map((suggestion) => (
                     <button
                       key={`${suggestion.type}-${suggestion.id}-${suggestion.label}`}
                       type="button"
@@ -2531,7 +2652,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                         setNavLocOpen(false);
                         setNavLocActive(-1);
                         if (hasSearchService) {
-                          closeNativeSearch();
+                          irSinParpadeo();
                           window.setTimeout(() => runCompactSearch({ location: suggestion }), 0);
                           return;
                         }
@@ -2591,16 +2712,6 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                         <span className={mobileDrawerTextClass}>{locale === "en" ? "My dashboard" : "Mi panel"}</span>
                       </Link>
                     )}
-                    <Link href={`${projectsHref}&openPublish=1`} onClick={() => setMobileOpen(false)} className={mobileDrawerItemClass}>
-                      <DrawerIcon><ClipboardList /></DrawerIcon>
-                      <span className={mobileDrawerTextClass}>{t("publishRequest")}</span>
-                    </Link>
-                    {!isPro && (
-                      <Link href={projectsHref} onClick={() => setMobileOpen(false)} className={claseCajon(projectsHref)}>
-                        <DrawerIcon><ClipboardList /></DrawerIcon>
-                        <span className={mobileDrawerTextClass}>{t("projects")}</span>
-                      </Link>
-                    )}
                     {mostrarOfrecerServicios && (
                       <Link
                         href="/registro/profesional"
@@ -2609,12 +2720,6 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                       >
                         <DrawerIcon><UserRoundPlus /></DrawerIcon>
                         <span className={mobileDrawerTextClass}>{t("offerServices")}</span>
-                      </Link>
-                    )}
-                    {isPro && (
-                      <Link href="/dashboard/profesional?tab=quotes" onClick={() => setMobileOpen(false)} className={claseCajon("/dashboard/profesional?tab=quotes")}>
-                        <DrawerIcon><FileText /></DrawerIcon>
-                        <span className={mobileDrawerTextClass}>{tNav("quotes")}</span>
                       </Link>
                     )}
                     {/* En la app, quien tiene cuenta profesional lleva Cotizaciones
@@ -2628,6 +2733,14 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                     )}
                   </>
                 ) : null}
+                {!nativeHeaderShell && (
+                  <>
+                  </>
+                )}
+                {/* El orden lo dice el recorrido, no la jerarquía del código:
+                   mi panel, buscar, los tres tableros, y al final las
+                   herramientas. Cotizaciones va de último porque es un extra
+                   del profesional, no una puerta del mercado. */}
                 {/* Buscar profesionales ABRE EL BUSCADOR, no la página de
                     resultados: la hoja de servicio y lugar se monta encima de
                     donde estés y /buscar solo se carga cuando ya hay algo que
@@ -2641,24 +2754,34 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                   <DrawerIcon><Search /></DrawerIcon>
                   <span className={mobileDrawerTextClass}>{t("searchProfessionals")}</span>
                 </button>
-                <Link href="/servicios" onClick={() => setMobileOpen(false)} className={claseCajon("/servicios")}>
-                  <DrawerIcon><Wrench /></DrawerIcon>
-                  <span className={mobileDrawerTextClass}>{t("categories")}</span>
+                <Link href="/proyectos" onClick={(event) => { setMobileOpen(false); navigateNativeMarketplace(event, "/proyectos"); }} className={claseCajon("/proyectos")}>
+                  <DrawerIcon><ClipboardList /></DrawerIcon>
+                  <span className={mobileDrawerTextClass}>{locale === "en" ? "Projects" : "Proyectos"}</span>
                 </Link>
-                {!nativeHeaderShell && (
-                  <>
+                    {/* «Publicar lo que necesito» y «Mis proyectos» salieron del
+                        cajón: las dos viven en el tablero de Proyectos, que es
+                        donde se entiende para qué sirven. Dos puertas a lo mismo
+                        alargaban la lista. */}
+                <Link href="/ofertas" onClick={(event) => { setMobileOpen(false); navigateNativeMarketplace(event, "/ofertas"); }} className={claseCajon("/ofertas")}>
+                  <DrawerIcon><OfferTagPercentIcon className="h-5 w-5" /></DrawerIcon>
+                  <span className={mobileDrawerTextClass}>{locale === "en" ? "Promotions" : "Promociones"}</span>
+                </Link>
                 {EMPLEOS_VISIBLE && (
                   <Link href="/empleos" onClick={(event) => { setMobileOpen(false); navigateNativeMarketplace(event, "/empleos"); }} className={claseCajon("/empleos")}>
                     <DrawerIcon><Briefcase /></DrawerIcon>
                     <span className={mobileDrawerTextClass}>{locale === "en" ? "Jobs" : "Empleos"}</span>
                   </Link>
                 )}
-                <Link href="/ofertas" onClick={(event) => { setMobileOpen(false); navigateNativeMarketplace(event, "/ofertas"); }} className={claseCajon("/ofertas")}>
-                  <DrawerIcon><OfferTagPercentIcon className="h-5 w-5" /></DrawerIcon>
-                  <span className={mobileDrawerTextClass}>{locale === "en" ? "Promotions" : "Promociones"}</span>
+                <Link href="/servicios" onClick={() => setMobileOpen(false)} className={claseCajon("/servicios")}>
+                  <DrawerIcon><Wrench /></DrawerIcon>
+                  <span className={mobileDrawerTextClass}>{t("categories")}</span>
                 </Link>
-                  </>
-                )}
+                    {isPro && (
+                      <Link href="/dashboard/profesional?tab=quotes" onClick={() => setMobileOpen(false)} className={claseCajon("/dashboard/profesional?tab=quotes")}>
+                        <DrawerIcon><FileText /></DrawerIcon>
+                        <span className={mobileDrawerTextClass}>{tNav("quotes")}</span>
+                      </Link>
+                    )}
                 {user && isAdminUser && (
                   <Link href="/admin" onClick={() => setMobileOpen(false)} className={mobileDrawerItemClass}>
                     <DrawerIcon><Shield /></DrawerIcon>
@@ -2734,7 +2857,15 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
               {/* El pie no son opciones: son ajustes. El idioma es un conmutador
                   de dos estados —se ve cuál está puesto—, no un renglón más que
                   parece llevar a otra pantalla. */}
-              <div className="mt-3 flex items-center justify-between gap-3 border-t border-[#eef2f6] px-1 pt-3">
+              <div className={cn(
+                "mt-3 grid gap-2 border-t border-[#eef2f6] px-1 pt-3",
+                // Los dos ajustes son del mismo tipo y se ven iguales: dos
+                // pastillas del mismo alto, repartidas a la mitad. Solo el
+                // idioma —sin sesión— se queda a la izquierda, en la misma
+                // línea de arranque que todo lo de arriba; centrado, una
+                // pastilla sola parecía puesta por accidente.
+                user ? "grid-cols-2" : "grid-cols-1 justify-items-start",
+              )}>
                 {/* El idioma se nombra COMPLETO —«English», «Español»—: «ES | EN»
                     es jerga de programador y mucha gente no sabe qué significa.
                     Dice el idioma al que se cambia, que es lo que pasa al
@@ -2747,10 +2878,10 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                     switchLang(alternateLocale);
                     setMobileOpen(false);
                   }}
-                  className="inline-flex items-center gap-2 rounded-full bg-[#f1f5f9] px-3.5 py-2 text-[13px] font-bold text-[#52627a] transition-colors hover:bg-[#e6edf4] hover:text-[#162543]"
+                  className="inline-flex h-10 items-center justify-center gap-2 rounded-full bg-[#f1f5f9] px-3.5 text-[13px] font-bold text-[#52627a] transition-colors hover:bg-[#e6edf4] hover:text-[#162543]"
                 >
-                  <Globe2 className="h-4 w-4" />
-                  {alternateLanguageLabel}
+                  <Globe2 className="h-4 w-4 shrink-0" />
+                  <span className="min-w-0 truncate">{alternateLanguageLabel}</span>
                 </button>
                 {user && (
                   <button
@@ -2760,10 +2891,10 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                       setMobileOpen(false);
                       void handleSignOut();
                     }}
-                    className="inline-flex items-center gap-2 py-1.5 text-[13px] font-semibold text-[#68778d] transition-colors hover:text-[#b4232a]"
+                    className="inline-flex h-10 items-center justify-center gap-2 rounded-full bg-[#f1f5f9] px-3.5 text-[13px] font-bold text-[#52627a] transition-colors hover:bg-[#fdeaea] hover:text-[#b4232a]"
                   >
-                    <LogOut className="h-4 w-4" />
-                    {locale === "en" ? "Sign out" : "Cerrar sesión"}
+                    <LogOut className="h-4 w-4 shrink-0" />
+                    <span className="min-w-0 truncate">{locale === "en" ? "Sign out" : "Salir"}</span>
                   </button>
                 )}
               </div>

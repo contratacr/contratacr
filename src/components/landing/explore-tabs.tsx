@@ -135,7 +135,7 @@ export function ExploreTabs() {
         </div>
 
         {/* Underline tabs */}
-        <div className="flex justify-center mb-8 border-b border-gray-200 overflow-x-auto hide-scrollbar">
+        <div className="ccr-carril flex justify-center mb-8 border-b border-gray-200 overflow-x-auto hide-scrollbar">
           {TABS.map((tab, i) => {
             const active = tab.id === activeTab;
             return (

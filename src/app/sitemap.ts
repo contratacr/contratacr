@@ -19,7 +19,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const supply = await getSupplyCounts();
   const now = new Date();
   const out: MetadataRoute.Sitemap = [];
-  const fijos = ["", "/buscar", "/servicios", "/ofertas", "/empleos", "/como-funciona", "/ayuda", "/atraer-clientes"];
+  const fijos = ["", "/buscar", "/servicios", "/ofertas", "/empleos", "/proyectos", "/como-funciona", "/ayuda", "/atraer-clientes"];
   for (const p of fijos) out.push({ url: `${APP_URL}/es${p}`, lastModified: now, changeFrequency: "daily", priority: p === "" ? 1 : 0.8 });
 
   for (const cat of getAllCategories()) {

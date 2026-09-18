@@ -17,9 +17,9 @@ test.describe("@account screens through the real pages", () => {
   test("registration chooser offers the two roles and leads to their forms", async ({ page }) => {
     await resetAuth(page);
     await gotoOK(page, "/es/registro");
+    // Dos tarjetas con el mismo peso: las dos puertas hacen falta.
     await expectVisibleText(page.locator("body"), /Busco servicios/);
     await expectVisibleText(page.locator("body"), /Ofrezco servicios/);
-    // Each role card is a link; the "Continuar" caption is part of the card.
     await page.getByRole("link", { name: /Busco servicios/ }).first().click();
     await page.waitForURL(/\/es\/registro\/cliente/, { waitUntil: "domcontentloaded" });
     await expectVisibleText(page.locator("body"), /Crear cuenta de cliente/);

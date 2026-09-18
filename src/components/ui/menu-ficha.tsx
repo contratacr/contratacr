@@ -24,9 +24,32 @@ export type OpcionFicha = {
  * En el teléfono abre una hoja desde abajo; en computadora, un panel junto al
  * botón. La misma marcación en los dos casos: solo cambian las clases.
  */
-export function MenuFicha({ opciones, grande = false, className }: { opciones: OpcionFicha[]; /** Del tamaño de la flecha de volver, para una cabecera. */ grande?: boolean; className?: string }) {
+export function MenuFicha({
+  opciones,
+  grande = false,
+  className,
+  controlado,
+}: {
+  opciones: OpcionFicha[];
+  /** Del tamaño de la flecha de volver, para una cabecera. */
+  grande?: boolean;
+  className?: string;
+  /**
+   * Cuando el «...» lo dibuja otro —la barra de arriba en la ficha del
+   * profesional—, la hoja se abre desde afuera. Así el menú es EL MISMO en
+   * todas las fichas: mismas opciones, mismo orden y misma hoja, aunque el
+   * botón que lo abre viva en otro sitio.
+   */
+  controlado?: { abierto: boolean; onCambio: (abierto: boolean) => void };
+}) {
   const t = useTranslations("menuFicha");
-  const [abierto, setAbierto] = useState(false);
+  const [abiertoPropio, setAbiertoPropio] = useState(false);
+  const abierto = controlado ? controlado.abierto : abiertoPropio;
+  const setAbierto = (valor: boolean | ((v: boolean) => boolean)) => {
+    const siguiente = typeof valor === "function" ? valor(abierto) : valor;
+    if (controlado) controlado.onCambio(siguiente);
+    else setAbiertoPropio(siguiente);
+  };
   const caja = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -80,6 +103,7 @@ export function MenuFicha({ opciones, grande = false, className }: { opciones: O
     <div ref={caja} className={cn("relative", className)}>
       <button
         type="button"
+        hidden={!!controlado}
         aria-label={t("more")}
         aria-haspopup="menu"
         aria-expanded={abierto}

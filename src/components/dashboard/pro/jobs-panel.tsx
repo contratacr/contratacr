@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { useCachedResource } from "@/hooks/use-cached-resource";
 import { JobsManager, type ManagedJob } from "@/components/jobs/jobs-manager";
 import { createClient } from "@/lib/supabase/client";
@@ -11,12 +12,15 @@ const SIN_EMPLEOS: ManagedJob[] = [];
 // Caché de sesión: al volver a la sección se pinta lo último que se vio y la
 // consulta se repite por detrás. Antes cada entrada arrancaba de cero y
 // mostraba el esqueleto aunque no hubiera nada nuevo que cargar.
-export function JobsPanel({ professionalId }: { professionalId: string }) {
+export function JobsPanel({ professionalId, onCount }: { professionalId: string; onCount?: (total: number) => void }) {
   const { data: jobs, loading, refresh } = useCachedResource<ManagedJob[]>(
     `dashboard:jobs:${professionalId}`,
     () => cargarEmpleos(professionalId),
     SIN_EMPLEOS,
   );
+  // El conteo sube al cambiador de «Mis publicaciones»: ahí dice cuántos hay
+  // sin tener que entrar a cada vista.
+  useEffect(() => { if (!loading) onCount?.(jobs.length); }, [jobs.length, loading, onCount]);
   if (loading) {
     return <PanelListSkeleton rows={2} />;
   }

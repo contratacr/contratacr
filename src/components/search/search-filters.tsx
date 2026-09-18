@@ -858,7 +858,11 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
         setLocationQuery(t("filters.nearMeActive"));
         setGeoLoading(false);
         setSortBy("rating");
-        applyFilters({ sortBy: "rating", provincia: "", canton: "", ubicacion: "", lat: String(latitude.toFixed(5)), lng: String(longitude.toFixed(5)) });
+        // Dos decimales (~1 km), no cinco (~1 m): la dirección viaja en el
+        // enlace, y compartir «electricistas cerca de mí» mandaba la ubicación
+        // exacta de la casa. Para ordenar por cercanía en un radio de 25 km,
+        // un kilómetro de margen no cambia nada.
+        applyFilters({ sortBy: "rating", provincia: "", canton: "", ubicacion: "", lat: String(latitude.toFixed(2)), lng: String(longitude.toFixed(2)) });
       },
       () => {
         setGeoLoading(false);
@@ -1158,7 +1162,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
     );
   }
 
-  const fieldLabel = "mb-1 block text-[11px] font-semibold text-[#6b7280]";
+  const fieldLabel = "mb-1.5 block text-[12px] font-bold text-[#52627a]";
   // `hideHeader` = rendered inside the mobile filter sheet, which supplies its own
   // chrome (title bar / padding) - so drop the card border/rounding/padding here.
   const inDrawer = hideHeader;
@@ -1202,6 +1206,26 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
           Select triggers EXACTLY (it used to be a label-less, icon-indented `pl-9` input,
           which read as a different size next to the px-4 dropdowns). */}
       <div className="flex flex-col gap-3">
+        {/* Ordenar no es filtrar: no quita ni un resultado, solo los acomoda.
+            Mezclado entre Precio e Idioma parecía uno más —y el contador de
+            «Limpiar filtros» nunca lo contó, que es la prueba—. Va arriba, con
+            una línea que lo separa de lo que sí reduce la lista. */}
+        <div className="border-b border-[#eef3f7] pb-4">
+          <label className={fieldLabel}>{t("filters.sortBy")}</label>
+          <Select value={sortBy} onValueChange={(v) => {
+            setSortBy(v);
+            if (v === "cercania" && !geoActive) requestMyLocation();
+            else applyFilters({ sortBy: v });
+          }}>
+            <SelectTrigger className={FILTER_TRIGGER}><SelectValue>{sortLabel}</SelectValue></SelectTrigger>
+            <SelectContent className={FILTER_CONTENT}>
+              {selectableSortOptions.map((option) => (
+                <SelectItem key={option} value={option}>{t(`sort.${option}`)}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
         {/* Service/category - free text OR a picked category. Same box as the Selects:
             label + h-10 w-full px-4 (NO left search icon, so its text starts at the same
             x as Provincia/Canton/Ordenar/Aseguradora). */}
@@ -1379,21 +1403,6 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
           {geoError && <span className="mt-1 block px-1 text-[11px] text-[#b45309]">{geoError}</span>}
         </div>
 
-        <div>
-          <label className={fieldLabel}>{t("filters.sortBy")}</label>
-          <Select value={sortBy} onValueChange={(v) => {
-            setSortBy(v);
-            if (v === "cercania" && !geoActive) requestMyLocation();
-            else applyFilters({ sortBy: v });
-          }}>
-            <SelectTrigger className={FILTER_TRIGGER}><SelectValue>{sortLabel}</SelectValue></SelectTrigger>
-            <SelectContent className={FILTER_CONTENT}>
-              {selectableSortOptions.map((option) => (
-                <SelectItem key={option} value={option}>{t(`sort.${option}`)}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
 
         <div>
           <label className={fieldLabel}>{t("filters.price")}</label>

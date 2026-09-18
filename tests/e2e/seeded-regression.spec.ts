@@ -886,7 +886,7 @@ test.describe("@seeded core regression", () => {
       {
         path: "/es/ofertas",
         testId: "offers-mobile-sticky-actions",
-        actions: [/^Mis ofertas$/i, /^Publicar oferta$/i],
+        actions: [/^Mis ofertas$/i, /^Publicar promoción$/i],
       },
       {
         path: "/es/empleos",

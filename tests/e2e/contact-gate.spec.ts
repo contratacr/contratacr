@@ -49,7 +49,8 @@ test.describe("@seeded contact gate", () => {
 
     // El botón abre WhatsApp en otra pestaña; lo que se comprueba aquí es que
     // NADA se interponga: ni registro, ni formulario, ni pedirle la cédula.
-    const whatsapp = page.getByRole("button", { name: /^WhatsApp$|Contactar por WhatsApp|Contact on WhatsApp/i }).filter({ visible: true }).first();
+    // Un solo rótulo en todo el app.
+    const whatsapp = page.getByRole("button", { name: /^WhatsApp$/i }).filter({ visible: true }).first();
     await expect(whatsapp).toBeVisible({ timeout: 15_000 });
     const urlAntes = page.url();
     await whatsapp.click();

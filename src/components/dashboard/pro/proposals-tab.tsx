@@ -544,7 +544,7 @@ export function ProposalsTab({ categoryId }: ProposalsTabProps) {
                           quedaban flotando con medio renglón vacío al lado. En el
                           teléfono siguen ocupando el ancho entero. */}
                       {(p.status === "pending" || (p.status === "accepted" && trabajoVivo)) && (
-                        <div className="flex items-center gap-2 sm:justify-end">
+                        <div className="ccr-acciones-tarjeta flex items-center gap-2 sm:justify-end">
                           {p.status === "accepted" && trabajoVivo && (
                             <div className="min-w-0 flex-1 sm:flex-none">
                               <QuoteBlock asButton projectId={p.project_id} role="pro" canCreate defaultTitle={p.projects?.title ?? undefined} clientName={p.projects?.profiles?.full_name ?? null} />

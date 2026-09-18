@@ -41,10 +41,15 @@ export default function RegisterPage() {
             <h1 className="text-[1.75rem] font-extrabold leading-tight tracking-tight text-[#162543] sm:text-4xl lg:text-[2.75rem]">{t("title")}</h1>
           </div>
 
-          {/* Como eligen rol Upwork o Airbnb: dos tarjetas iguales, cada una con
-              un mosaico de color y el icono dibujado a línea; abajo el rol con
-              la flecha y una frase de qué hace. Profesional primero: es quien
-              más se registra. */}
+          {/* Dos tarjetas iguales, como eligen rol Upwork o Airbnb: un mosaico con
+              el icono a línea, la acción en grande y el rol debajo. Profesional
+              primero porque es quien más se registra —288 cuentas contra 108—,
+              pero las dos pesan lo mismo y por eso se ven igual: la del cliente
+              es la puerta de quien llega decidido a publicar, guardar o reseñar.
+
+              (Estuvo un rato como una sola tarjeta con el cliente en una línea
+              debajo. Se leía torcido: si las dos puertas hacen falta, no se
+              pueden dibujar con distinto peso.) */}
           <div className="grid grid-cols-2 gap-3 sm:gap-6">
             <Link
               href={`/registro/profesional${redirectSuffix}`}
@@ -53,8 +58,6 @@ export default function RegisterPage() {
               <span className="ccr-tarjeta-rol-mosaico ccr-mosaico-pro" aria-hidden>
                 <BriefcaseBusiness className="h-16 w-16 text-[#162543] sm:h-24 sm:w-24" strokeWidth={1.4} />
               </span>
-              {/* Lo grande responde la pregunta ("¿cómo vas a usar…?"); el rol
-                  queda abajo para que sepa qué cuenta está creando. */}
               {/* La flecha solo donde cabe en el mismo renglón: en el teléfono se
                   iba sola a una segunda línea y la tarjeta ya se ve pulsable. */}
               <span className="mt-4 block text-center text-[17px] font-bold leading-tight text-[#162543] sm:text-[22px]">
@@ -71,8 +74,6 @@ export default function RegisterPage() {
               <span className="ccr-tarjeta-rol-mosaico ccr-mosaico-cliente" aria-hidden>
                 <UserRoundSearch className="h-16 w-16 text-[#162543] sm:h-24 sm:w-24" strokeWidth={1.4} />
               </span>
-              {/* La flecha solo donde cabe en el mismo renglón: en el teléfono se
-                  iba sola a una segunda línea y la tarjeta ya se ve pulsable. */}
               <span className="mt-4 block text-center text-[17px] font-bold leading-tight text-[#162543] sm:text-[22px]">
                 {t("clientTitle")}
                 <ArrowRight className="ccr-tarjeta-rol-flecha ml-1.5 hidden h-6 w-6 align-[-4px] sm:inline-block" strokeWidth={2.4} />

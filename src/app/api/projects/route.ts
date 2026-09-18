@@ -79,7 +79,7 @@ async function enrichProjects(
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { title, description, categoryId, provinciaId, cantonId, budgetMin, budgetMax, timeline } = body;
+    const { title, description, categoryId, provinciaId, cantonId, budgetMin, budgetMax, timeline, phone } = body;
     const cedula = cleanId(typeof body.cedula === "string" ? body.cedula : "");
     const requestedFullName = typeof body.fullName === "string" ? body.fullName.trim() : "";
     const cleanTitle = typeof title === "string" ? title.trim().slice(0, PROJECT_TITLE_MAX_LENGTH) : "";
@@ -138,6 +138,18 @@ export async function POST(req: NextRequest) {
       .select("full_name, email, phone, role, cedula, client_identity_status, client_identity_verified_at, client_identity_provider")
       .eq("id", uid)
       .maybeSingle();
+
+    // Sin WhatsApp el proyecto nace muerto: nadie tiene por dónde responder. Si
+    // la cuenta no tiene número, el formulario lo pide y aquí se guarda.
+    const telefonoGuardado = String(existingProfile?.phone ?? "").trim();
+    const telefonoNuevo = String(phone ?? "").replace(/[^\d+]/gu, "").trim();
+    const telefonoFinal = telefonoGuardado || telefonoNuevo;
+    if (telefonoFinal.replace(/\D/gu, "").length < 8) {
+      return NextResponse.json({ error: "Necesitamos tu WhatsApp para que te puedan responder." }, { status: 400 });
+    }
+    if (!telefonoGuardado && telefonoNuevo) {
+      await admin.from("profiles").update({ phone: telefonoNuevo }).eq("id", uid);
+    }
 
     let clientIdentityStatus: ClientIdentityStatus =
       (existingProfile?.client_identity_status as ClientIdentityStatus | null) ?? "unverified";
@@ -215,6 +227,9 @@ export async function POST(req: NextRequest) {
       budget_max: parseMoneyAmount(budgetMax),
       timeline: timeline ?? null,
       client_identity_status: clientIdentityStatus,
+      // Publicar un proyecto ES pedir que lo contacten: no hay permiso que
+      // preguntar. Lo que sí se exige es un número al que responder.
+      allow_direct_contact: true,
       status: "open",
     };
     const projectSnapshots = {
@@ -227,7 +242,7 @@ export async function POST(req: NextRequest) {
         user.email?.split("@")[0] ||
         "Cliente",
       client_email_snapshot: existingProfile?.email || user.email || null,
-      client_phone_snapshot: existingProfile?.phone ?? null,
+      client_phone_snapshot: telefonoFinal,
       ...writeSourceColumns(req),
     };
     const patientFields = categoryIsHealth

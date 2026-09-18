@@ -2287,3 +2287,13 @@ html[data-keyboard-visible] body.ccr-native-app .ccr-native-search-panel { botto
   margin-top: auto;
   margin-bottom: auto;
 }
+
+/* Donde hay una franja de acciones fija abajo, el pie del sitio sobra en el
+   teléfono: quedaba detrás del botón, y es una lista de salidas justo debajo de
+   lo único que la pantalla pide hacer. En computadora no hay franja fija, así
+   que el pie se queda como siempre. */
+@media (max-width: 639px) {
+  body.ccr-con-barra-accion .ccr-app-footer {
+    display: none;
+  }
+}

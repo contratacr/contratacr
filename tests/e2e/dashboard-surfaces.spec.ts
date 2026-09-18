@@ -4,16 +4,15 @@ import { canRunSeededRegression, E2E_USERS, ensureRegressionSeed, type Regressio
 
 const professionalTabs = [
   // En escritorio «home» cae en la sección de arranque del panel profesional
-  // (Citas); en teléfono muestra el menú de secciones con el cambio de panel.
-  { tab: "home", marker: /Citas|Appointments|Ir a mi panel cliente|Go to my client panel/i },
-  { tab: "profile", marker: /Perfil|Profile/i },
+  // (Oportunidades); en teléfono muestra el menú de secciones con el cambio de panel.
+  { tab: "home", marker: /Mis proyectos|My projects|Mi perfil|My profile/i },
+  { tab: "profile", marker: /Mi perfil|My profile|Perfil|Profile/i },
   // Los nombres de las secciones cambiaron para que digan lo que son: «Ofertas»
   // significaba también «oferta laboral» y por eso llegaron dos vacantes ahí;
   // «Proyectos», en el panel del profesional, eran trabajos de OTROS.
-  { tab: "services", marker: /Lo que ofrezco|What I offer/i },
-  { tab: "photos", marker: /Mis trabajos|My work/i },
-  { tab: "availability", marker: /Mi agenda|My calendar/i },
-  { tab: "bookings", marker: /Citas|Appointments/i },
+  // Un solo nombre por cosa, el mismo que lee el cliente en la ficha pública.
+  { tab: "services", marker: /Servicios|Services/i },
+  { tab: "photos", marker: /Casos de .xito|Success stories/i },
   { tab: "proposals", marker: /Oportunidades|Opportunities/i },
   { tab: "jobs", marker: /Empleos|Jobs/i },
   { tab: "offers", marker: /Promociones|Promotions/i },
@@ -29,9 +28,8 @@ const professionalTabs = [
 ] as const;
 
 const clientTabs = [
-  { tab: "home&mode=use", marker: /Mis citas|My appointments/i },
+  { tab: "home&mode=use", marker: /Mis proyectos|My projects/i },
   { tab: "profile&mode=use", marker: /Perfil|Profile/i },
-  { tab: "sent_bookings", marker: /Citas|Appointments/i },
   { tab: "sent_projects", marker: /Mis proyectos|My projects/i },
   { tab: "applications", marker: /Mis postulaciones|My applications/i },
   { tab: "connections", marker: /Volver a contratar|Hire again/i },
@@ -110,7 +108,8 @@ async function exerciseVisibleFilters(page: import("playwright/test").Page) {
       await expect(button).toHaveAttribute("aria-pressed", "true");
       // Every deterministic regression filter is intentionally populated. This
       // catches a valid-looking tab whose query/mapping silently returns zero.
-      if (layout !== "pills" && layout !== "chips") {
+      const filtraPorTipo = page.url().includes("tab=saved");
+      if (layout !== "pills" && !filtraPorTipo) {
         // El conteo llega cuando termina de cargar la sección (favoritos, por
         // ejemplo, sincroniza con el servidor antes de pintar): se espera a que
         // aparezca en vez de leerlo una sola vez y acusar a la sección de estar
@@ -122,11 +121,18 @@ async function exerciseVisibleFilters(page: import("playwright/test").Page) {
           })
           .toBeGreaterThan(0);
       }
-      await expect(page.locator(".ccr-empty-state:visible")).toHaveCount(0);
-      await expect(
-        visibleFilterEmptyState,
-        `Filter "${await button.innerText()}" rendered an empty result despite its populated fixture (${page.url()})`,
-      ).toHaveCount(0);
+      // Un filtro por TIPO («Proyectos 0» en Favoritos) puede estar vacío con
+      // toda razón: lo que no puede estar vacío es una ETAPA de una lista que sí
+      // tiene datos.
+      if (!filtraPorTipo) await expect(page.locator(".ccr-empty-state:visible")).toHaveCount(0);
+      // Igual que arriba: un filtro por TIPO puede estar legítimamente vacío
+      // («Empleos 0» en Favoritos). Una ETAPA de una lista con datos, no.
+      if (!filtraPorTipo) {
+        await expect(
+          visibleFilterEmptyState,
+          `Filter "${await button.innerText()}" rendered an empty result despite its populated fixture (${page.url()})`,
+        ).toHaveCount(0);
+      }
     }
   }
 }
@@ -189,29 +195,33 @@ test.describe("@seeded dashboard surfaces", () => {
   test("dashboard sections never expose a blank body while their first request is pending", async ({ page }) => {
     await loginAs(page, E2E_USERS.professional.email, E2E_USERS.professional.password);
 
+    // «Mis proyectos» es la sección que espera una consulta antes de pintar:
+    // Oportunidades, que era la otra, salió del producto.
+    // La sección pinta de memoria lo que este navegador ya tenía (caché de
+    // sesión, cinco minutos), así que entrar recién logueado NO sería una
+    // primera carga. Se sale a una pantalla que no pide proyectos —así muere
+    // cualquier consulta en vuelo del panel, que si no escribiría la caché
+    // después de borrarla— y recién ahí se limpia.
+    await gotoOK(page, "/es");
+    await page.evaluate(() => {
+      for (const key of Object.keys(sessionStorage)) {
+        if (key.startsWith("ccr:dashboard-cache:")) sessionStorage.removeItem(key);
+      }
+    });
     let releaseProjects!: () => void;
-    let releaseProposals!: () => void;
     const projectsGate = new Promise<void>((resolve) => { releaseProjects = resolve; });
-    const proposalsGate = new Promise<void>((resolve) => { releaseProposals = resolve; });
     let projectsStarted!: () => void;
-    let proposalsStarted!: () => void;
     const projectsRequest = new Promise<void>((resolve) => { projectsStarted = resolve; });
-    const proposalsRequest = new Promise<void>((resolve) => { proposalsStarted = resolve; });
 
     await page.route("**/api/projects?**", async (route) => {
       projectsStarted();
       await projectsGate;
       await route.continue();
     });
-    await page.route("**/api/proposals?mine=true", async (route) => {
-      proposalsStarted();
-      await proposalsGate;
-      await route.continue();
-    });
 
     try {
-      await gotoOK(page, "/es/dashboard/profesional?tab=proposals");
-      await Promise.all([projectsRequest, proposalsRequest]);
+      await gotoOK(page, "/es/dashboard/profesional?tab=sent_projects");
+      await projectsRequest;
 
       const sectionCard = page.locator(".dashboard-section-card:visible").first();
       await expect(sectionCard).toBeVisible();
@@ -229,16 +239,15 @@ test.describe("@seeded dashboard surfaces", () => {
       expect(geometry.cardHeight, "The section card must not collapse to its header").toBeGreaterThan(geometry.loadingHeight);
     } finally {
       releaseProjects();
-      releaseProposals();
     }
 
     await expect(page.locator("[data-panel-loading]")).toHaveCount(0);
-    await expect(page.getByRole("button", { name: /Nuevas|New/i }).filter({ visible: true })).toBeVisible();
+    await expect(page.getByRole("button", { name: /Publicar proyecto|Post a project/i }).filter({ visible: true }).first()).toBeVisible();
   });
 
   test("panel tabs navigate without reloading the document", async ({ page }) => {
     await loginAs(page, E2E_USERS.professional.email, E2E_USERS.professional.password);
-    await gotoOK(page, "/es/dashboard/profesional?tab=bookings");
+    await gotoOK(page, "/es/dashboard/profesional?tab=offers");
 
     await page.evaluate(() => {
       (window as Window & { __contratacrSoftNavigation?: string }).__contratacrSoftNavigation = "active";
@@ -248,24 +257,26 @@ test.describe("@seeded dashboard surfaces", () => {
       await page.getByRole("button", { name: /^Volver(?: al panel)?$|^Back(?: to panel)?$/i }).filter({ visible: true }).first().click();
     }
 
-    const servicesTab = page.getByTestId("panel-tab-services").filter({ visible: true });
-    await expect(servicesTab).toHaveCount(1);
-    await servicesTab.click();
-    await expect(page).toHaveURL(/tab=services/);
-    await expectVisibleText(page.locator("main"), /Servicios|Services/i);
+    const proyectosTab = page.getByTestId("panel-tab-sent_projects").filter({ visible: true });
+    await expect(proyectosTab).toHaveCount(1);
+    await proyectosTab.click();
+    await expect(page).toHaveURL(/tab=sent_projects/);
+    // En el teléfono el nombre de la sección lo pone la barra de arriba, no el
+    // cuerpo: se mira la página entera.
+    await expectVisibleText(page.locator("body"), /Mis proyectos|My projects/i);
     expect(await page.evaluate(() => (window as Window & { __contratacrSoftNavigation?: string }).__contratacrSoftNavigation)).toBe("active");
 
     if (isMobileProject(test.info())) {
       await page.getByRole("button", { name: /^Volver(?: al panel)?$|^Back(?: to panel)?$/i }).filter({ visible: true }).first().click();
     }
 
-    const availabilityTab = page.getByTestId("panel-tab-availability").filter({ visible: true });
-    await expect(availabilityTab).toHaveCount(1);
-    await availabilityTab.click();
-    await expect(page).toHaveURL(/tab=availability/);
+    const quotesTab = page.getByTestId("panel-tab-quotes").filter({ visible: true });
+    await expect(quotesTab).toHaveCount(1);
+    await quotesTab.click();
+    await expect(page).toHaveURL(/tab=quotes/);
     // En el teléfono el nombre de la sección lo pone la barra de arriba, no el
     // cuerpo: se mira la página entera.
-    await expectVisibleText(page.locator("body"), /Mi agenda|My calendar/i);
+    await expectVisibleText(page.locator("body"), /Cotizaciones|Quotes/i);
     expect(await page.evaluate(() => (window as Window & { __contratacrSoftNavigation?: string }).__contratacrSoftNavigation)).toBe("active");
   });
 
@@ -273,29 +284,18 @@ test.describe("@seeded dashboard surfaces", () => {
     await loginAs(page, E2E_USERS.professional.email, E2E_USERS.professional.password);
     await gotoOK(page, "/es/dashboard/profesional");
 
-    // Entrar al panel es entrar al PROFESIONAL: lo que confirma el contexto es
-    // que el cambio de panel ofrezca ir al de cliente. (Antes se buscaba el
-    // texto "Panel profesional", que en realidad venía del propio botón cuando
-    // el panel abría en cliente: la prueba pasaba por el motivo contrario.)
-    const cambioDePanel = page.locator("[data-panel-mode-selector], [data-testid='panel-mode-switch']").filter({ visible: true }).first();
-    await expect(cambioDePanel).toBeVisible();
-    // En escritorio el cambio es un selector con la opción profesional marcada;
-    // en teléfono es una tarjeta que ofrece ir al panel de cliente. Las dos
-    // dicen lo mismo: estás en el panel profesional.
-    const enProfesional = page
-      .locator("[data-panel-mode-selector] button[aria-pressed='true']")
-      .filter({ hasText: /Profesional|Professional/i })
-      .or(page.getByTestId("panel-mode-switch").filter({ hasText: /Ir a mi panel cliente|Go to my client panel/i }))
-      .filter({ visible: true })
-      .first();
-    await expect(enProfesional).toBeVisible();
-    await expect(page.getByTestId("panel-tab-bookings").filter({ visible: true })).toHaveCount(1);
-    await expect(page.getByTestId("panel-tab-proposals").filter({ visible: true })).toHaveCount(1);
+    // El panel dejó de tener dos caras: «Mis publicaciones» reúne proyectos,
+    // empleos y promociones, y lo demás siempre fue compartido. Lo que se
+    // comprueba ahora es que NO quede rastro del cambio de panel.
+    await expect(page.locator("[data-panel-mode-selector], [data-testid='panel-mode-switch']").filter({ visible: true })).toHaveCount(0);
+    await expect(page.getByTestId("panel-tab-bookings").filter({ visible: true })).toHaveCount(0);
+    await expect(page.getByTestId("panel-tab-proposals").filter({ visible: true })).toHaveCount(0);
+    await expect(page.getByTestId("panel-tab-sent_projects").filter({ visible: true })).toHaveCount(1);
     await expect(page.getByTestId("panel-tab-chat").filter({ visible: true })).toHaveCount(0);
     await expect(page.getByTestId("panel-tab-notifications").filter({ visible: true })).toHaveCount(0);
     if (isMobileProject(testInfo)) {
-      await expect(page).not.toHaveURL(/tab=bookings/);
-      await expect(page.getByTestId("panel-tab-services").filter({ visible: true })).toHaveCount(1);
+      await expect(page).not.toHaveURL(/tab=sent_projects/);
+      await expect(page.getByTestId("panel-tab-quotes").filter({ visible: true })).toHaveCount(1);
       await page.getByRole("button", { name: /Abrir men|Open menu/i }).click();
       await expect(page.getByText(/^Asistente$|^Assistant$/i).filter({ visible: true })).toHaveCount(0);
     } else {
@@ -318,20 +318,41 @@ test.describe("@seeded dashboard surfaces", () => {
     }
   });
 
-  test("guides open as a panel section with its own content", async ({ page }) => {
+  // Guías dejó de ser una sección del panel: es una ventana que se abre desde la
+  // cabecera y deja la sección de atrás intacta. Es material de consulta —se
+  // lee, se toca «Ir a…» y se sigue trabajando—, no un destino del menú.
+  test("guides open in a window over the panel, without losing the section behind", async ({ page }, testInfo) => {
     await loginAs(page, E2E_USERS.professional.email, E2E_USERS.professional.password);
-    await gotoOK(page, "/es/dashboard/profesional");
+    // En el teléfono la cabecera del panel —y con ella el botón de Guías— vive
+    // en el inicio: con una sección abierta la pantalla es de la sección.
+    const seccion = isMobileProject(testInfo) ? "home" : "offers";
+    await gotoOK(page, `/es/dashboard/profesional?tab=${seccion}`);
 
     await page.getByRole("button", { name: /^Gu[ií]as$/i }).filter({ visible: true }).first().click();
-    await expect(page).toHaveURL(/tab=guides/);
-    await expectVisibleText(page.locator("body"), /Panel profesional|Professional panel/i);
-    await expect(page.getByPlaceholder(/Buscar en las gu[ií]as|Search the guides/i)).toBeVisible();
+    const ventana = page.getByRole("dialog").filter({ visible: true }).first();
+    await expect(ventana).toBeVisible();
+    await expect(ventana.getByPlaceholder(/Buscar en las gu[ií]as|Search the guides/i)).toBeVisible();
+    // La sección sigue ahí atrás, y al cerrar se vuelve a ella sin recargar.
+    await expect(page).toHaveURL(new RegExp(`tab=${seccion}`));
+    await page.keyboard.press("Escape");
+    await expect(page.getByRole("dialog").filter({ visible: true })).toHaveCount(0);
+    await expect(page).toHaveURL(new RegExp(`tab=${seccion}`));
   });
 
+  // La dirección vieja sigue viva: abre la ventana encima del inicio del panel.
+  test("the old guides address still opens them", async ({ page }) => {
+    await loginAs(page, E2E_USERS.professional.email, E2E_USERS.professional.password);
+    await gotoOK(page, "/es/dashboard/profesional?tab=guides");
+    const ventana = page.getByRole("dialog").filter({ visible: true }).first();
+    await expect(ventana).toBeVisible();
+    await expect(ventana.getByPlaceholder(/Buscar en las gu[ií]as|Search the guides/i)).toBeVisible();
+  });
+
+  // Los filtros de Favoritos son por TIPO y se dibujan siempre, con su conteo.
   test("favorites keep every saveable filter and connections show verification", async ({ page }) => {
     await loginAs(page, E2E_USERS.client.email, E2E_USERS.client.password);
     await gotoOK(page, "/es/dashboard/profesional?tab=saved&mode=use");
-    for (const label of [/^Profesionales(?: \d+)?$/i, /^Promociones(?: \d+)?$/i, /^Empleos(?: \d+)?$/i]) {
+    for (const label of [/^Profesionales ?\d*$/i, /^Promociones ?\d*$/i, /^Empleos ?\d*$/i]) {
       await expect(page.getByRole("button", { name: label }).filter({ visible: true }).first()).toBeVisible();
     }
 
@@ -341,8 +362,11 @@ test.describe("@seeded dashboard surfaces", () => {
 
   test("every populated dashboard filter works without clipping at 320, 390 and desktop widths", async ({ page }) => {
     test.slow();
-    const professionalSections = ["photos", "bookings", "soporte"];
-    const clientSections = ["sent_bookings&mode=use", "sent_projects&mode=use", "saved&mode=use", "soporte&mode=use"];
+    // «Mis publicaciones» no lleva filtros de estado (su control de arriba es un
+    // cambiador de vista, no un filtro), y Citas/Oportunidades salieron del
+    // producto: lo que queda con filtros de verdad es esto.
+    const professionalSections = ["photos", "soporte"];
+    const clientSections = ["sent_projects&mode=use", "saved&mode=use", "soporte&mode=use"];
 
     // Keep one stable authenticated document per actor. Repeatedly clearing
     // cookies and logging in while also changing the viewport made the same
@@ -356,10 +380,6 @@ test.describe("@seeded dashboard surfaces", () => {
         await exerciseVisibleFilters(page);
       }
 
-      await gotoOK(page, "/es/dashboard/profesional?tab=proposals");
-      await exerciseVisibleFilters(page);
-      await page.getByRole("button", { name: /Enviadas|Sent/i }).filter({ visible: true }).first().click();
-      await exerciseVisibleFilters(page);
     }
 
     await loginAs(page, E2E_USERS.client.email, E2E_USERS.client.password);
@@ -381,16 +401,16 @@ test.describe("@seeded dashboard surfaces", () => {
       {
         locale: "es",
         guideButton: /^Guías$/i,
-        expected: [/Mis postulaciones/i, /Favoritos/i, /^Empleos$/i, /^Promociones$/i, /Publicar empleos/i, /Publicar una promoción/i],
-        expandable: /Mis postulaciones/i,
+        expected: [/^Proyectos$/i, /Favoritos/i, /^Empleos$/i, /^Promociones$/i, /Publicar empleos/i, /Publicar una promoción/i],
+        expandable: /tablero p.blico de lo que publican/i,
         profileGuide: /^Perfil profesional$/i,
         profileLastStep: /Usa Ver mi perfil para ver la versi.n p.blica/i,
       },
       {
         locale: "en",
         guideButton: /^Guides$/i,
-        expected: [/My applications/i, /Favorites/i, /^Jobs$/i, /^Promotions$/i, /Post jobs/i, /Publish promotions/i],
-        expandable: /My applications/i,
+        expected: [/^Projects$/i, /Favorites/i, /^Jobs$/i, /^Promotions$/i, /Post jobs/i, /Publish promotions/i],
+        expandable: /board of what clients post/i,
         profileGuide: /^Professional profile$/i,
         profileLastStep: /Use View my profile to see the public version/i,
       },
@@ -401,7 +421,8 @@ test.describe("@seeded dashboard surfaces", () => {
       const openGuides = page.getByRole("button", { name: copy.guideButton }).filter({ visible: true }).first();
       await expect(openGuides).toBeVisible();
       await openGuides.click();
-      await expect(page).toHaveURL(/tab=guides/);
+      // Guías es una ventana sobre el panel, no una sección con dirección propia.
+      await expect(page.getByRole("dialog").filter({ visible: true }).first()).toBeVisible();
 
       for (const title of copy.expected) {
         await expect(page.getByText(title).filter({ visible: true }).first()).toBeVisible();
@@ -522,7 +543,7 @@ test.describe("@seeded dashboard surfaces", () => {
     await loginAs(page, E2E_USERS.client.email, E2E_USERS.client.password);
 
     await gotoOK(page, "/en/dashboard/profesional?tab=saved&mode=use");
-    for (const label of [/^Professionals(?: \d+)?$/i, /^Promotions(?: \d+)?$/i, /^Jobs(?: \d+)?$/i]) {
+    for (const label of [/^Professionals ?\d*$/i, /^Promotions ?\d*$/i, /^Jobs ?\d*$/i]) {
       await expect(page.getByRole("button", { name: label }).filter({ visible: true }).first()).toBeVisible();
     }
     await expect(page.getByRole("button", { name: /^(?:Profesionales|Promociones|Empleos)/i })).toHaveCount(0);
@@ -545,7 +566,7 @@ test.describe("@seeded dashboard surfaces", () => {
     await ensureRegressionSeed();
     await page.setViewportSize({ width: 390, height: 844 });
     await loginAs(page, E2E_USERS.professional.email, E2E_USERS.professional.password);
-    await gotoOK(page, "/es/dashboard/profesional?tab=bookings");
+    await gotoOK(page, "/es/dashboard/profesional?tab=offers");
     await page.waitForTimeout(1500);
     await page.evaluate(() => window.scrollTo(0, 500));
     await page.waitForTimeout(400);

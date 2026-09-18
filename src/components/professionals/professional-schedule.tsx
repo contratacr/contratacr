@@ -1,12 +1,27 @@
 "use client";
 
+/**
+ * Reservar por el calendario está APAGADO.
+ *
+ * Las citas salieron del producto: no están en el menú del panel, «Mi agenda»
+ * tampoco, y por lo tanto un profesional ya no puede agregar ni quitar horas.
+ * Lo que quedaba era medio camino: 44 fichas seguían mostrando un calendario
+ * —9.473 horas, casi todas puestas en julio y agosto y nunca revisadas— y un
+ * cliente podía reservar una hora que el profesional ya ni recordaba. En toda
+ * la historia de producción hubo CERO citas.
+ *
+ * No se borró nada: ni las horas, ni el código de reservar, ni la pantalla
+ * /reservar. Con poner esto en `true` vuelve entero.
+ */
+const RESERVAR_POR_CALENDARIO = false;
+
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useSearchParams } from "next/navigation";
 import { normalizeText } from "@/lib/data/categories";
 import { PROVINCES } from "@/lib/data/cr-geography";
 import { fetchAvailabilityBatched } from "@/lib/availability-batch";
 import { useTranslations, useLocale } from "next-intl";
-import { CalendarDays, Check, ChevronDown, ChevronLeft, ChevronRight, MapPin, Video } from "lucide-react";
+import { CalendarDays, Check, ChevronLeft, ChevronRight, MapPin, Video } from "lucide-react";
 import { useRouter } from "@/i18n/navigation";
 import { isTooSoonCR } from "@/lib/time-cr";
 import { SelfActionModal, SELF_MSG } from "./self-action-modal";
@@ -19,7 +34,8 @@ const availabilityCache = new Map<string, { availabilityPublic: boolean; slots: 
 import { trackMetaEvent } from "@/lib/analytics/meta-pixel";
 import { trackInteraction } from "@/lib/analytics/interaction-events";
 import { DirectChatLauncher } from "@/components/professionals/direct-chat-launcher";
-import { cn } from "@/lib/utils";
+import { ScrollRail } from "@/components/ui/scroll-rail";
+import { AccionesAlPie } from "@/components/ui/acciones-al-pie";
 import { ContactButton } from "@/components/professionals/contact-button";
 import { useNativeApp } from "@/hooks/use-native-app";
 
@@ -57,6 +73,8 @@ interface ProfessionalScheduleProps {
   placeAddress?: string;
   /** Business/brand name — bolded as the venue prefix on a real workplace address. */
   businessName?: string;
+  /** Abre la lista completa de zonas (la pestaña Información de la ficha). */
+  onVerZonas?: () => void;
   /** STACKED single-column layout for the professional-profile contact card (no two-column
    *  grid, no `info` slot): location tabs → 3-day strip → buttons. In stacked mode the
    *  contact buttons (WhatsApp + Llamar) ALWAYS show, plus "Ver disponibilidad" when
@@ -130,7 +148,7 @@ function cubrePaisEntero(w: { level?: string; id?: string }, nombre: string) {
   return w.level === "country" || w.id === "wp_todo_costa_rica" || /^Todo Costa Rica$/i.test(nombre) || /^All of Costa Rica$/i.test(nombre);
 }
 
-export function ProfessionalSchedule({ professional, categoryName, searchedPlace, availabilityPublic, contactPreference = "ambas", videoConsultApplies = true, slots: allSlots, slotsInitiallyLoaded = true, activeCategory, isOwn = false, viewerPendiente = false, info, placeFallback = "", placeAddress = "", businessName = "", stacked = false, forceContactOnly = false, preferredLocationId, restrictToPreferredLocation = false, syncWithSearchLoading = false }: ProfessionalScheduleProps) {
+export function ProfessionalSchedule({ professional, categoryName, searchedPlace, availabilityPublic, contactPreference = "ambas", videoConsultApplies = true, slots: allSlots, slotsInitiallyLoaded = true, activeCategory, isOwn = false, viewerPendiente = false, info, placeFallback = "", placeAddress = "", businessName = "", onVerZonas, stacked = false, forceContactOnly = false, preferredLocationId, restrictToPreferredLocation = false, syncWithSearchLoading = false }: ProfessionalScheduleProps) {
   const t = useTranslations("schedule");
   const tLoading = useTranslations("loading");
   const locale = useLocale();
@@ -190,8 +208,9 @@ export function ProfessionalSchedule({ professional, categoryName, searchedPlace
 
   // What the professional accepts. Booking needs public availability AND a
   // preference that isn't WhatsApp-only; WhatsApp shows unless they chose
-  // appointments-only.
-  const canBook = !forceContactOnly && liveAvailabilityPublic && contactPreference !== "solo_whatsapp";
+  // appointments-only. Hoy, además, el calendario está apagado de raíz: ver
+  // RESERVAR_POR_CALENDARIO arriba del archivo.
+  const canBook = RESERVAR_POR_CALENDARIO && !forceContactOnly && liveAvailabilityPublic && contactPreference !== "solo_whatsapp";
   const awaitingProfileAvailability =
     stacked &&
     !slotsInitiallyLoaded &&
@@ -521,19 +540,19 @@ export function ProfessionalSchedule({ professional, categoryName, searchedPlace
     return [...cerca, ...locTabs.filter((option) => !cerca.some((c) => c.id === option.id))];
   }, [locTabs, zonasBuscadas, coincideConLaBusqueda]);
 
-  const primaryLocationTabs = useMemo(() => {
-    if (locTabsOrdenados.length <= 2) return locTabsOrdenados;
-    const selected = locTabsOrdenados.find((option) => option.id === effectiveId);
-    if (!selected || locTabsOrdenados.slice(0, 2).some((option) => option.id === selected.id)) {
-      return locTabsOrdenados.slice(0, 2);
-    }
-    return [locTabsOrdenados[0], selected];
-  }, [effectiveId, locTabsOrdenados]);
-  const hiddenLocationTabs = useMemo(
-    () => locTabsOrdenados.filter((option) => !primaryLocationTabs.some((visible) => visible.id === option.id)),
-    [locTabsOrdenados, primaryLocationTabs],
-  );
-  const extraLocationCount = hiddenLocationTabs.length;
+  // Todos los lugares en el carril. Antes solo cabían dos y el resto vivía
+  // detrás de un «+4» que había que abrir; con el calendario apagado la fila
+  // dejó de ser un selector y pasó a ser información —dónde atiende—, y un dato
+  // informativo no se esconde tras un menú: se desliza.
+  const primaryLocationTabs = locTabsOrdenados;
+  const hiddenLocationTabs: typeof locTabsOrdenados = [];
+  const extraLocationCount = 0;
+  // Con el calendario apagado la fila dejó de ser un selector: es una sola
+  // línea informativa —la zona principal y cuántas más hay—, y la lista
+  // completa vive en Información.
+  const zonasRestantes = Math.max(0, primaryLocationTabs.length - 1);
+  const zonaPrincipalEsVideo = primaryLocationTabs[0]?.id === "videoconsulta"
+    || (!hasRealLoc && videoConsultApplies && !!(professional.videoconsulta || professional.coverage?.country));
   // Address under the tabs: follow the selected tab. If a workplace has no exact
   // address, show that tab label instead of falling back to another location from
   // the search result.
@@ -574,22 +593,27 @@ export function ProfessionalSchedule({ professional, categoryName, searchedPlace
       className="relative z-30 w-full min-w-0"
       onClick={(e) => e.stopPropagation()}
     >
-      {/* TABS (Doctoralia-style): pin + name; the selected tab is brand-blue with an
-          underline, the rest muted. The row SCROLLS sideways and NEVER wraps
-          (`shrink-0` + `whitespace-nowrap`). A thin scrollbar appears only when
-          there is horizontal overflow, matching modern secondary tab rows. */}
+      {/* Dónde atiende. Sin calendario esto ya no es un selector, así que no se
+          comporta como uno: ni carril que hay que arrastrar, ni flechas, ni un
+          «+4» que abre un menú. Es texto que FLUYE y se acomoda en una o dos
+          líneas, con los lugares separados por un punto — lo mismo que hace
+          cualquier ficha con una lista corta de datos.
+          Se probó con carril y con flechas: el carril esconde lugares detrás de
+          un gesto que en computadora casi nadie hace, y las flechas metían dos
+          botones dentro de una tarjeta que ya tiene los suyos. La lista completa
+          vive en la ficha, a un toque.
+          Con el calendario encendido vuelve a ser pestañas: ahí sí hay que
+          elegir, y para eso se conserva el camino de abajo. */}
       <div className="relative" ref={locationMenuRef}>
-        {/* `overflow-y-hidden` is REQUIRED: `overflow-x-auto` alone leaves overflow-y as
-            `visible`, which CSS then COMPUTES to `auto` — so the row became vertically
-            scrollable (it could be dragged up/down even with ONE location). Pinning overflow-y
-            to hidden makes it strictly a HORIZONTAL tab scroll; vertical touch-drags then bubble
-            to the page/sheet scroll (default touch-action). */}
-        <div
-          className="flex min-w-0 items-center gap-2 pb-[2px]"
+        {/* Cuántas zonas quedan fuera de la línea, y si la primera es la
+            videoconsulta (que no es un lugar pero se lee igual). */}
+        {RESERVAR_POR_CALENDARIO ? (
+        <ScrollRail
+          className="flex min-w-0 items-center gap-3 pb-[2px]"
           role="tablist"
           aria-label={t("location")}
         >
-          {primaryLocationTabs.map((o, locationIndex) => {
+          {primaryLocationTabs.map((o) => {
             const active = hasRealLoc ? o.id === effectiveId : true;
             const isVideoTab = o.id === "videoconsulta" || (!hasRealLoc && videoConsultApplies && (professional.videoconsulta || professional.coverage?.country));
             return (
@@ -606,35 +630,41 @@ export function ProfessionalSchedule({ professional, categoryName, searchedPlace
                       setOffset(0);
                     }
                   : (e) => e.stopPropagation()}
-                className={`inline-flex items-center gap-1 whitespace-nowrap py-0 pl-0 pr-0.5 text-[12px] font-semibold transition-colors ${locationIndex === 0 ? "shrink-0" : "min-w-0 flex-1"} ${
-                  active
-                    ? "text-[#009FD9]"
-                    : "text-[#6b7280] hover:text-[#009FD9]"
+                className={`inline-flex shrink-0 items-center gap-1 whitespace-nowrap py-0 text-[12px] font-semibold transition-colors ${
+                  active ? "text-[#009FD9]" : "text-[#6b7280] hover:text-[#009FD9]"
                 }`}
                 title={locTabLabel(o.label)}
               >
                 {isVideoTab ? <Video className="h-3 w-3 shrink-0" /> : <MapPin className="h-3 w-3 shrink-0" />}
-                <span className={locationIndex === 0 ? "whitespace-nowrap" : "min-w-0 truncate"}>{locTabLabel(o.label)}</span>
+                <span className="whitespace-nowrap">{locTabLabel(o.label)}</span>
               </button>
             );
           })}
-          {extraLocationCount > 0 && (
-            <button
-              type="button"
-              aria-haspopup="menu"
-              aria-expanded={locationMenuOpen}
-              onClick={(event) => {
-                event.stopPropagation();
-                setLocationMenuOpen((open) => !open);
-              }}
-              className="ml-auto inline-flex shrink-0 items-center gap-0.5 whitespace-nowrap text-[11px] font-bold text-[#5f6f86] transition-colors hover:text-[#009FD9]"
-            >
-              <span aria-hidden="true">+{extraLocationCount}</span>
-              <span className="sr-only">{locale === "en" ? `${extraLocationCount} more locations` : `${extraLocationCount} lugares más`}</span>
-              <ChevronDown className={`h-3.5 w-3.5 transition-transform ${locationMenuOpen ? "rotate-180" : ""}`} />
-            </button>
-          )}
-        </div>
+        </ScrollRail>
+        ) : (
+          // UNA zona, no la lista entera. La lista completa —con sus direcciones
+          // y la videoconsulta— ya vive en Información, así que aquí estaba
+          // repetida: seis zonas gastaban tres renglones del sitio más caro de
+          // la ficha y empujaban los botones de contactar hacia abajo. Arriba
+          // queda lo justo para saber si sirve, y «+N zonas» lleva a la lista.
+          <p className="flex flex-wrap items-center gap-x-1.5 gap-y-1 text-[12px] font-semibold leading-5 text-[#6b7280]" aria-label={t("location")}>
+            <span className="inline-flex min-w-0 items-center gap-1">
+              {zonaPrincipalEsVideo ? <Video className="h-3 w-3 shrink-0" /> : <MapPin className="h-3 w-3 shrink-0" />}
+              <span className="min-w-0">{locTabLabel(primaryLocationTabs[0].label)}</span>
+            </span>
+            {zonasRestantes > 0 && (onVerZonas ? (
+              <button
+                type="button"
+                onClick={onVerZonas}
+                className="shrink-0 rounded-sm font-bold text-[#007fae] underline-offset-2 hover:underline"
+              >
+                {t("moreZones", { count: zonasRestantes })}
+              </button>
+            ) : (
+              <span className="shrink-0 font-bold text-[#52627a]">{t("moreZones", { count: zonasRestantes })}</span>
+            ))}
+          </p>
+        )}
         {locationMenuOpen && extraLocationCount > 0 && (
           <div className="absolute right-0 top-[calc(100%+0.35rem)] z-[120] min-w-[13rem] max-w-[min(18rem,calc(100vw-3rem))] overflow-hidden rounded-lg border border-[#dbe4ec] bg-white py-1 shadow-[0_12px_30px_rgba(15,39,71,0.18)]" role="menu">
             {hiddenLocationTabs.map((option) => {
@@ -665,7 +695,7 @@ export function ProfessionalSchedule({ professional, categoryName, searchedPlace
       </div>
       <div className="mt-1 h-px w-full bg-[#e5e7eb]" aria-hidden />
       {addressLine && (
-        <p className="mt-1.5 line-clamp-2 text-[11px] leading-snug text-[#6b7280]">
+        <p className="mt-1.5 text-[11px] leading-snug text-[#6b7280]">
           {venueName && <span className="font-semibold text-[#374151]">{venueName} · </span>}
           {addressLine}
         </p>
@@ -771,6 +801,9 @@ export function ProfessionalSchedule({ professional, categoryName, searchedPlace
     router.push(`/profesionales/${professional.slug}/reservar${cola ? `?${cola}` : ""}`);
   }
 
+  // Se conserva para cuando vuelvan las citas: las horas del calendario entran por
+  // irAReservar, y este atajo era el botón "Ver disponibilidad".
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   function openBooking() {
     if (viewerPendiente) { accionPendienteRef.current = openBooking; return; }
     if (isOwn) { setSelfMsg(SELF_MSG.request); return; }
@@ -802,7 +835,6 @@ export function ProfessionalSchedule({ professional, categoryName, searchedPlace
   // "Llamar" above "Solicitar servicio" never adds a line.
   // Numbers are redacted for guests; the flags say whether the action exists.
   const showCall = professional.hasCallPhone ?? (!!professional.allowPhoneCall && !!(professional.callPhone || professional.whatsapp));
-  const showEmail = stacked && (professional.hasContactEmail ?? !!professional.contactEmail);
 
   // ── Schedule body (the RIGHT column on desktop) ───────────────────────────
   // ALWAYS 3 day-columns, PRIORITIZING the next days that actually HAVE availability (soonest
@@ -851,35 +883,26 @@ export function ProfessionalSchedule({ professional, categoryName, searchedPlace
   //  • NO schedules (contact-to-coordinate state): FILLED WhatsApp (green), plus FILLED
   //    "Llamar" (blue) ONLY when phone calls are enabled (showCall). No "Solicitar servicio".
   // All actions are blocked on the pro's OWN card.
-  const hasSchedule = canBook && hasUpcoming;
-
-  // Mismo botón (píldora, calendario, rótulo) en todos lados; el relleno dice la
-  // jerarquía según dónde está: en la tarjeta de /buscar es la ÚNICA acción, así
-  // que lleva el turquesa de marca y la lista queda uniforme con las tarjetas que
-  // solo tienen "Enviar mensaje"; en el perfil convive con "Enviar mensaje" y
-  // va en marino para que las dos acciones se distingan.
-  const verHorarioButton = (
-    <button
-      type="button"
-      onClick={(e) => { e.stopPropagation(); openBooking(); }}
-      className={cn(
-        "inline-flex h-11 w-full items-center justify-center gap-1.5 rounded-full text-[13px] font-bold text-white transition-colors",
-        "bg-[#009FD9] hover:bg-[#0089bb]",
-      )}
-    >
-      <CalendarDays className="h-4 w-4" />
-      {t("viewFullSchedule")}
-    </button>
-  );
+  // Citas fuera del menú: ya no se ofrece "Ver disponibilidad" en la ficha ni en
+  // /buscar. El código de reservas sigue intacto para cuando vuelva.
   // "Llamar" link — FILLED (a primary contact action, e.g. in the no-schedule state) or
   // OUTLINED/secondary (when it sits BELOW "Ver disponibilidad"). Calls are blocked on
   // the pro's OWN card (shows a self note instead). Rendered only when showCall is true.
   const contactSource = stacked ? "profile" : "search";
   // Secundario del app: píldora blanca con borde. Con icono, como el resto de
   // los botones de contacto: «Llamar» sin él se leía como una etiqueta.
-  const secondaryContactClass = "w-full inline-flex h-11 items-center justify-center gap-1.5 rounded-full border border-[#d7e1ea] bg-white py-0 text-[13px] font-bold text-[#162543] transition-colors hover:border-[#b9c8d6] hover:bg-[#f6f9fb] disabled:opacity-60";
+  // Dos altos, uno por sitio: en la tarjeta de /buscar el botón mide 44 px,
+  // como el resto de la tarjeta; en la franja pegada al fondo del perfil mide
+  // 48, exactamente lo que mide «Publicar» en Crear proyecto. La franja es la
+  // misma pantalla en todas las secciones y tiene que medir lo mismo en todas.
+  const secondaryContactBase = "w-full inline-flex items-center justify-center gap-1.5 rounded-full border border-[#d7e1ea] bg-white py-0 text-[#162543] transition-colors hover:border-[#b9c8d6] hover:bg-[#f6f9fb] disabled:opacity-60";
+  const secondaryContactClass = `h-11 text-[13px] font-bold ${secondaryContactBase}`;
+  // En la franja el botón es el mismo que «Publicar» en Crear proyecto: 48 px
+  // de alto y el rótulo a 16 px semibold. A 13 px la acción que trajo a la
+  // persona se leía como una nota al pie.
+  const secondaryContactBarClass = `h-12 text-base font-semibold ${secondaryContactBase}`;
   // Profile page uses the short label "Llamar"; /buscar keeps "Contáctanos por llamada".
-  const renderCall = (className = secondaryContactClass) => (
+  const renderCall = (className = secondaryContactClass, label = t("callShort")) => (
     <ContactButton
       method="phone"
       professionalId={professional.id}
@@ -890,33 +913,31 @@ export function ProfessionalSchedule({ professional, categoryName, searchedPlace
       isOwn={isOwn}
       onSelfAction={() => setSelfMsg(SELF_MSG.call)}
       className={className}
-      label={stacked ? t("callShort") : t("call")}
+      label={label}
     />
   );
-  const renderEmail = (className = secondaryContactClass) => (
-    <ContactButton
-      method="email"
-      professionalId={professional.id}
-      professionalName={professional.fullName}
-      contextTitle={categoryName}
-      categoryId={activeCategory ?? null}
-      source={contactSource}
-      isOwn={isOwn}
-      onSelfAction={() => setSelfMsg(SELF_MSG.email)}
-      showIcon={false}
-      className={className}
-      label={t("email")}
-    />
+  const messageButtonBase = "w-full rounded-full py-0";
+  const messageButtonClass = `h-11 text-[13px] font-bold ${messageButtonBase}`;
+  const messageButtonBarClass = `h-12 text-base font-semibold ${messageButtonBase}`;
+  // El verde lo pone la variante «whatsapp» del botón, igual que en el resto
+  // del app: aquí solo va la medida de la tarjeta.
+  const searchMessageButtonClass = messageButtonClass;
+  // El rótulo «WhatsApp» lo pone el propio lanzador y es el mismo en todo el
+  // app; aquí solo se le da la medida de la tarjeta.
+  const whatsappDeLaTarjeta = (
+    <DirectChatLauncher professionalId={professional.id} professionalName={professional.fullName} contextTitle={categoryName} isOwn={isOwn} onSelfAction={() => setSelfMsg(SELF_MSG.whatsapp)} analyticsSource={stacked ? "profile" : "search"} className={searchMessageButtonClass} buttonLabel={t("whatsappLong")} />
   );
-  const messageButtonClass = "w-full h-11 rounded-full py-0 text-[13px] font-bold";
-  const searchMessageButtonClass = `${messageButtonClass} bg-[#009FD9] hover:bg-[#0089bb] focus-visible:ring-[#009FD9]`;
-  const contactButtons = (
-    <>
-      <DirectChatLauncher professionalId={professional.id} professionalName={professional.fullName} contextTitle={categoryName} isOwn={isOwn} onSelfAction={() => setSelfMsg(SELF_MSG.whatsapp)} analyticsSource={stacked ? "profile" : "search"} className={searchMessageButtonClass} />
-      {/* No-schedule state: filled on /buscar, outlined on the profile contact card. */}
-      {showCall && renderCall()}
-      {showEmail && renderEmail()}
-    </>
+  const contactButtons = showCall ? (
+    // Uno arriba del otro, en todos los tamaños, con el rótulo que dice qué
+    // pasa: «Contactar por WhatsApp» / «Contactar por llamada». Lado a lado
+    // cabían solo «WhatsApp» y «Llamar», y en /buscar es la primera vez que la
+    // persona ve al profesional: conviene que el botón lo diga entero.
+    <div className="grid grid-cols-1 gap-2">
+      {whatsappDeLaTarjeta}
+      {renderCall(undefined, t("call"))}
+    </div>
+  ) : (
+    whatsappDeLaTarjeta
   );
 
   // Perfil: agendar manda y ocupa su propia línea; debajo, escribir y llamar
@@ -931,37 +952,27 @@ export function ProfessionalSchedule({ professional, categoryName, searchedPlace
       onSelfAction={() => setSelfMsg(SELF_MSG.whatsapp)}
       analyticsSource="profile"
       tone="primary"
-      className={messageButtonClass}
-    />
-  );
-  // En la fila compartida el rótulo largo ("Contactar por WhatsApp") no cabe en
-  // media píldora y se salía del botón; ahí basta con la marca y su logo. En la
-  // app nativa este botón es "Enviar mensaje" y el rótulo corto se ignora.
-  const chatLauncherCorto = (
-    <DirectChatLauncher
-      professionalId={professional.id}
-      professionalName={professional.fullName}
-      contextTitle={categoryName}
-      isOwn={isOwn}
-      onSelfAction={() => setSelfMsg(SELF_MSG.whatsapp)}
-      analyticsSource="profile"
-      tone="primary"
-      buttonLabel="WhatsApp"
-      className={messageButtonClass}
+      className={messageButtonBarClass}
     />
   );
   const profileContactButtons = (
     <>
-      {hasSchedule && verHorarioButton}
+      {/* «Ver disponibilidad» dejó de ser la acción principal: en toda la
+          historia hubo CERO reservas y solo 2 profesionales de 289 publicaron
+          horarios, mientras que por WhatsApp salieron 95 contactos en dos meses.
+          Lo que la ficha ofrece ahora es contactar, por donde el profesional
+          dijo que lo contacten. */}
       {/* Con agenda son tres acciones y las dos de contacto comparten fila; sin
           agenda solo hay dos y cada una ocupa su propio renglón, a lo ancho:
           media píldora para la única forma de contactar se leía como algo menor. */}
+      {/* Las dos formas de contactar comparten renglón: escribir a la izquierda,
+          llamar a la derecha. El botón mide lo mismo que «Publicar» en Crear
+          proyecto —48 px de alto y el rótulo a 16— y lo único que cambia es que
+          aquí hay dos acciones y cada una se lleva media franja. */}
       {showCall ? (
-        // Las dos formas de contactar comparten renglón, haya agenda o no:
-        // apiladas a lo ancho eran tres barras iguales, una debajo de otra.
         <div className="grid grid-cols-2 gap-2">
-          {chatLauncherCorto}
-          {renderCall(`${secondaryContactClass} text-[13px] font-bold`)}
+          {chatLauncher}
+          {renderCall(secondaryContactBarClass)}
         </div>
       ) : (
         chatLauncher
@@ -1017,7 +1028,13 @@ export function ProfessionalSchedule({ professional, categoryName, searchedPlace
   );
 
   let scheduleBody: ReactNode;
-  if (visualScheduleLoading) {
+  if (!RESERVAR_POR_CALENDARIO) {
+    // Con el calendario apagado, la nota «los horarios se coordinan por
+    // WhatsApp» dejó de ser una excepción y pasó a salir en las 289 fichas con
+    // el mismo texto: ya no informaba, ocupaba. El botón de WhatsApp dice solo
+    // lo que hay que hacer.
+    scheduleBody = null;
+  } else if (visualScheduleLoading) {
     scheduleBody = scheduleLoadingBody;
   } else if (!canBook) {
     // No public booking at all (private availability OR WhatsApp-only preference).
@@ -1114,10 +1131,16 @@ export function ProfessionalSchedule({ professional, categoryName, searchedPlace
         <div ref={scheduleRootRef} className="flex flex-col gap-3">
           {locationControl}
           {scheduleBody}
+          {/* En el teléfono, contactar vive en su propia franja pegada al
+              fondo, igual que en Crear proyecto: la ficha es larga —servicios,
+              reseñas, casos— y el botón que trajo a la persona quedaba a mitad
+              de camino, arriba, y desaparecía apenas bajaba a leer. En
+              computadora se queda donde estaba: ahí la columna de contacto ya
+              está siempre a la vista. */}
           {!visualScheduleLoading && (
-            <div className="flex flex-col gap-2">
+            <AccionesAlPie className="flex flex-col gap-2">
               {profileContactButtons}
-            </div>
+            </AccionesAlPie>
           )}
         </div>
                 {selfModal}
@@ -1133,7 +1156,7 @@ export function ProfessionalSchedule({ professional, categoryName, searchedPlace
           (schedule + buttons, 300px) separated by a VERTICAL divider, so more fit per screen.
           The grid (no `items-start`) lets the columns stretch to equal height so the divider
           runs full-height and the schedule centers against the taller left column. */}
-      <div ref={scheduleRootRef} className="flex flex-col gap-3 lg:grid lg:grid-cols-[minmax(0,1fr)_292px] lg:gap-5 lg:min-h-[184px]">
+      <div ref={scheduleRootRef} className="flex flex-col gap-3 lg:grid lg:grid-cols-[minmax(0,1fr)_292px] lg:gap-5">
         {/* LEFT — professional info + location tabs/address (under the rating). */}
         <div className="flex min-w-0 flex-col gap-2.5">
           {info}
@@ -1150,9 +1173,7 @@ export function ProfessionalSchedule({ professional, categoryName, searchedPlace
               "Llamar" option on their /buscar card — even when a bookable schedule funnels
               into "Ver disponibilidad" (which otherwise replaced the contact buttons).
               The call sits as an outlined secondary action below the primary schedule CTA. */}
-          {!visualScheduleLoading && (hasSchedule ? (
-            verHorarioButton
-          ) : contactButtons)}
+          {!visualScheduleLoading && contactButtons}
         </div>
       </div>
 

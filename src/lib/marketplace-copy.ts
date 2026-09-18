@@ -28,8 +28,8 @@ const SALARY_PERIOD_LABELS: Record<MarketplaceLocale, Record<SalaryPeriod, strin
 };
 
 const OFFER_TYPE_LABELS: Record<MarketplaceLocale, Record<OfferType, string>> = {
-  es: { service_offer: "Servicio en oferta", product: "Producto", package: "Paquete" },
-  en: { service_offer: "Service offer", product: "Product", package: "Package" },
+  es: { service_offer: "Servicio en promoción", product: "Producto", package: "Paquete" },
+  en: { service_offer: "Service promotion", product: "Product", package: "Package" },
 };
 
 const OFFER_PRICE_UNIT_LABELS: Record<MarketplaceLocale, Record<OfferPriceUnit, string>> = {

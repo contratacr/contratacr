@@ -15,6 +15,7 @@ import { FormLoadingState } from "@/components/ui/loading-state";
 import { useReportSaveStatus } from "@/components/dashboard/save-status-context";
 import { Link } from "@/i18n/navigation";
 import { stableWorkplaceId } from "@/lib/workplaces";
+import { PIE_VENTANA_BASE } from "@/components/ui/acciones-al-pie";
 
 // How far ahead the weekly template + exceptions are MATERIALIZED into concrete
 // `availability_slots` (the booking-critical table everything downstream reads). The
@@ -1178,7 +1179,7 @@ export function AvailabilityEditor({
           sin pulsarlo pide confirmación. Los dos interruptores de arriba son
           la excepción deliberada: un interruptor que no hace efecto hasta
           pulsar otro botón miente, y pasar a privada ya tiene su confirmación. */}
-      <div className="flex flex-col gap-2 border-t border-[#edf2f7] px-4 py-4 sm:flex-row sm:justify-end sm:px-5">
+      <div className="ccr-grupo-botones flex flex-col gap-2 border-t border-[#edf2f7] px-4 py-4 sm:flex-row sm:justify-end sm:px-5">
         <Button
           type="button"
           variant="ghost"
@@ -1513,7 +1514,7 @@ function DayModal({ initialDate, existing, markedDates, defaultDuration, dateLoc
             acción se llama por lo que hace — Agregar un día nuevo o Aplicar
             los cambios de uno existente. Mitades fijas: el ancho no salta
             cuando el spinner entra. */}
-        <div className="flex shrink-0 gap-3 border-t border-[#f3f4f6] p-4 pb-[max(env(safe-area-inset-bottom),1rem)] sm:p-5">
+        <div className={cn(PIE_VENTANA_BASE, "flex gap-3")}>
           <Button type="button" variant="outline" size="md" className="flex-1" onClick={onClose} disabled={saving}>{t("cancel")}</Button>
           <Button type="button" size="md" className="flex-1" disabled={invalid || saving} loading={saving} onClick={async () => { setSaving(true); const ok = await onSave(date, mode, franjas, dur); if (!ok) setSaving(false); }}>
             {existing.some((e) => e.date === date) ? t("dayApply") : t("dayAdd")}

@@ -9,7 +9,7 @@ import { useAppDialog } from "@/hooks/use-app-dialog";
 import { formatColones } from "@/lib/pricing";
 import { desgloseQuote, isQuoteExpired, nombreArchivoCotizacion, numeroCotizacion, whatsappDigits, type Quote } from "@/lib/quotes";
 import { renderQuotePdf } from "@/lib/quote-image";
-import { QuoteShare } from "@/components/quotes/quote-share";
+import { BotonCompartirCotizacion, QuoteShare } from "@/components/quotes/quote-share";
 
 const DATE_LOCALE: Record<string, string> = { es: "es-CR", en: "en-US" };
 
@@ -109,10 +109,20 @@ export function QuoteDetailModal({ quote, role, open, onClose, onChanged, proNam
   return (
     <>
       <Modal open={open} onClose={onClose} title={titulo} subtitle={subtitulo} size="sm" mobilePresentation="fullscreen" closeLabel={t("close")}
-        footer={!recienCreada && puedeRetirar ? (
-          <Button type="button" variant="secondary" className="w-full sm:w-auto" disabled={busy} onClick={() => void actuar("withdraw")}>{t("withdraw")}</Button>
-        ) : !recienCreada && puedeBorrar ? (
-          <Button type="button" variant="secondary" className="w-full sm:w-auto" disabled={busy} onClick={() => void actuar("delete")}>{t("delete")}</Button>
+        // El pie lleva las dos únicas cosas que se hacen con una cotización
+        // abierta: mandarla y quitarla. Compartir, la principal, a la derecha
+        // en computadora y arriba en el teléfono.
+        footer={(role === "pro" && abierta) || (!recienCreada && (puedeRetirar || puedeBorrar)) ? (
+          <>
+            {!recienCreada && puedeRetirar ? (
+              <Button type="button" variant="secondary" className="w-full sm:w-auto" disabled={busy} onClick={() => void actuar("withdraw")}>{t("withdraw")}</Button>
+            ) : !recienCreada && puedeBorrar ? (
+              <Button type="button" variant="secondary" className="w-full sm:w-auto" disabled={busy} onClick={() => void actuar("delete")}>{t("delete")}</Button>
+            ) : null}
+            {role === "pro" && abierta && (
+              <BotonCompartirCotizacion quote={quote} proName={proName ?? quote.professional_name ?? ""} proSlug={proSlug} className="w-full sm:w-auto" />
+            )}
+          </>
         ) : undefined}
         footerClassName="flex-col-reverse gap-2 sm:flex-row sm:justify-end">
         <div className="flex flex-col gap-4">
@@ -147,10 +157,9 @@ export function QuoteDetailModal({ quote, role, open, onClose, onChanged, proNam
               <p className="mt-0.5 whitespace-pre-line text-[14px] leading-6 text-[#52627a]">{quote.notes}</p>
             </div>
           )}
-          {/* Compartir va DESPUÉS del documento: al abrir una cotización lo
-              primero que se espera ver es la cotización, no los botones para
-              mandarla. */}
-          {role === "pro" && abierta && <QuoteShare quote={quote} proName={proName ?? quote.professional_name ?? ""} proSlug={proSlug} onChanged={onChanged} />}
+          {/* Mandarla vive en el pie. Aquí solo queda el aviso de a qué cita o
+              proyecto está pegada, si lo está. */}
+          {role === "pro" && abierta && <QuoteShare quote={quote} onChanged={onChanged} />}
           {role === "client" && (
             <button type="button" disabled={!pdfCliente} onClick={descargarCliente} className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-full border border-[#d7e1ea] bg-white px-5 text-[14px] font-bold text-[#162543] transition-colors hover:border-[#b9c8d6] hover:bg-[#f6f9fb] disabled:opacity-60">
               {pdfCliente ? <Download className="h-4 w-4" /> : <Loader2 className="h-4 w-4 animate-spin" />}{t("downloadClient")}

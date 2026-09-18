@@ -109,10 +109,6 @@ async function finishSignedIn(
     } catch { /* best-effort */ }
   }
 
-  const professionalSignupIncomplete =
-    user.user_metadata?.professional_signup_started === true &&
-    user.user_metadata?.is_provider !== true;
-
   // Explicit next PATH (e.g. password reset → /es/reset-password, or a support
   // email's ticket deep-link /es/dashboard/…?tab=soporte&ticket=…). `next` was
   // URL-encoded by the login page, so `searchParams.get` returns it decoded and
@@ -120,9 +116,6 @@ async function finishSignedIn(
   // open-redirect. The "projects" alias is NOT a path — it falls through to the
   // role-aware resolution below.
   if (ctx.safeNext) {
-    if (professionalSignupIncomplete && /^\/(?:es|en)\/dashboard\/profesional(?:[/?]|$)/.test(ctx.safeNext)) {
-      return NextResponse.redirect(`${ctx.origin}/${ctx.callbackLocale}/registro/profesional`);
-    }
     return NextResponse.redirect(`${ctx.origin}${withPostLoginActivity(ctx.safeNext)}`);
   }
 
@@ -151,10 +144,10 @@ async function finishSignedIn(
     return toOnboarding;
   }
 
-  if (professionalSignupIncomplete) {
-    return NextResponse.redirect(`${ctx.origin}/${ctx.callbackLocale}/registro/profesional`);
-  }
-
+  // Haber empezado el registro profesional NO desvía a nadie al entrar. El
+  // registro por Google vuelve a su formulario por `next` (lo pone el propio
+  // botón), que es el camino legítimo; fuera de eso, quien lo empezó y se
+  // arrepintió entra a su panel como cualquiera y ahí decide si lo retoma.
   // The "Publicar proyecto" CTA carries ?next=projects → land on "Solicitudes
   // publicadas" after authenticating. Everyone lands on the ONE unified panel; it
   // opens in the right mode itself.

@@ -38,7 +38,17 @@ const GUIDE_SOURCE_FILE = path.normalize("src/app/[locale]/dashboard/profesional
 const GUIDE_ROUTE_ROOT = path.normalize("src/app/[locale]");
 
 function checkGuideContracts(failures) {
-  const source = fs.readFileSync(GUIDE_SOURCE_FILE, "utf8");
+  const archivo = fs.readFileSync(GUIDE_SOURCE_FILE, "utf8");
+  // Solo el bloque GUIDE_ITEMS. Buscando en el archivo entero, cualquier otra
+  // lista de `{ id: "..." }` enganchaba con el `stepCount` de la primera guía y
+  // se inventaba una guía que no existe.
+  const inicio = archivo.indexOf("const GUIDE_ITEMS");
+  const fin = inicio === -1 ? -1 : archivo.indexOf("] as GuideItem[])", inicio);
+  if (inicio === -1 || fin === -1) {
+    failures.push(`${GUIDE_SOURCE_FILE}:1: No se pudo validar GUIDE_ITEMS.`);
+    return;
+  }
+  const source = archivo.slice(inicio, fin);
   const guidePattern = /\{\s*id:\s*"([^"]+)"[\s\S]*?stepCount:\s*(\d+)\s*\}/gu;
   const guides = [...source.matchAll(guidePattern)];
 

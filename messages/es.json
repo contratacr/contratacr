@@ -139,7 +139,6 @@
     "projects": "Mis proyectos",
     "recent": "Recientes",
     "recentClear": "Borrar",
-    "recentlyViewed": "Vistos recientemente",
     "publishRequest": "Publicar lo que necesito",
     "register": "Registrarse",
     "loginOrRegister": "Ingresar o crear cuenta"
@@ -286,7 +285,7 @@
     "sort": {
       "rating": "Mejor calificados",
       "cercania": "Más cercanos",
-      "successCases": "Ver más trabajos",
+      "successCases": "Ver más casos",
       "experience": "Más experiencia",
       "followers": "Más seguidores",
       "reviews": "Más reseñas",
@@ -331,7 +330,7 @@
     "videoConsultCountry": "Videoconsulta en todo Costa Rica",
     "save": "Guardar profesional",
     "unsave": "Quitar de favoritos",
-    "saveLabel": "Guardar en favoritos",
+    "saveLabel": "Guardar",
     "savedLabel": "Guardado",
     "verified": "Verificado",
     "verifiedTitle": "Verificado por ContrataCR",
@@ -340,7 +339,7 @@
     "rate": "Tarifa",
     "noReviews": "Sin reseñas",
     "reviewsCount": "{count, plural, one {# reseña} other {# reseñas}}",
-    "viewCases": "Ver trabajos",
+    "viewCases": "Ver casos de éxito",
     "viewCertifications": "Formación",
     "verifiedShort": "Verificado",
     "unverifiedShort": "Sin verificar",
@@ -407,6 +406,10 @@
     "skip": "Omitir por ahora",
     "errRating": "Por favor selecciona una calificación.",
     "errComment": "Por favor escribe un comentario.",
+    "errName": "Escribe tu nombre para publicar la reseña.",
+    "nameLabel": "Tu nombre",
+    "namePlaceholder": "¿Cómo te llamas?",
+    "nameHelp": "Aparece junto a tu reseña. No hace falta crear una cuenta.",
     "errSubmit": "Error al enviar la reseña.",
     "errConnection": "Error de conexión. Intenta de nuevo."
   },
@@ -433,9 +436,11 @@
     "whatsappShort": "WhatsApp",
     "callShort": "Llamar",
     "call": "Contactar por llamada",
+    "whatsappLong": "Contactar por WhatsApp",
     "email": "Correo",
     "countryCoverage": "Todo Costa Rica",
-    "share": "Compartir"
+    "share": "Compartir",
+    "moreZones": "+{count, plural, one {# zona más} other {# zonas más}}"
   },
   "selfAction": {
     "title": "Este es tu perfil",
@@ -657,8 +662,8 @@
     "reportProfile": "Reportar perfil",
     "tabs": {
       "servicios": "Servicios",
-      "disponibilidad": "Disponibilidad",
-      "casos": "Trabajos",
+      "disponibilidad": "Contactar",
+      "casos": "Casos de éxito",
       "certificaciones": "Formación",
       "resenas": "Reseñas",
       "sobre": "Información"
@@ -678,9 +683,9 @@
     "availPublicNote": "Hay horarios disponibles. Usa <b>Ver disponibilidad</b> para elegir una fecha y hora y reservar tu cita.",
     "availPrivateTitle": "La disponibilidad de este perfil no es pública.",
     "availPrivateDesc": "Contáctalo directamente y conoce sus horarios.",
-    "casosSubtitle": "Trabajos y proyectos de {name}.",
-    "otherWorks": "Otros trabajos",
-    "noCasos": "Todavía no hay trabajos publicados.",
+    "casosSubtitle": "Casos de éxito de {name}.",
+    "otherWorks": "Otros casos",
+    "noCasos": "Todavía no hay casos de éxito publicados.",
     "likeLabel": "Me gusta",
     "casosAll": "Todos",
     "casosPhotos": "{count, plural, one {# foto} other {# fotos}}",
@@ -724,7 +729,7 @@
     "whatItMeans": "¿Qué significa?",
     "close": "Cerrar",
     "backToMessages": "Volver a mensajes",
-    "availabilityTab": "Disponibilidad",
+    "availabilityTab": "Contactar",
     "appBarTitle": "Perfil profesional",
     "linkCopied": "Enlace copiado",
     "statCases": "{count, plural, one {trabajo} other {trabajos}}",
@@ -811,7 +816,7 @@
       "hourlyRatePlaceholder": "Ejemplo: 10000",
       "optional": "Opcional",
       "addLater": "Puedes agregar después:",
-      "photos": "Fotos de trabajos",
+      "photos": "Fotos de casos de éxito",
       "coverage": "Zona de cobertura",
       "availability": "Disponibilidad",
       "continue": "Continuar",
@@ -854,6 +859,7 @@
       "creatingAccount": "Creando tu cuenta…",
       "completeProfileTitle": "Completa tu perfil profesional",
       "photoStepTitle": "Tu foto de perfil",
+      "headerTitle": "Ofrecer mis servicios",
       "oauthConfirmed": "Cuenta conectada",
       "oauthConfirmedWithProvider": "Cuenta conectada con {provider}",
       "confirmPassword": "Confirmar contraseña",
@@ -902,7 +908,8 @@
       "videoCountryAdd": "Agregar todo Costa Rica",
       "videoCountryRemove": "Quitar Todo Costa Rica",
       "inPersonSectionTitle": "Atención presencial",
-      "skipCedulaNote": "Aparecerás sin la insignia Verificado. Podrás verificar tu identidad luego desde tu panel."
+      "skipCedulaNote": "Aparecerás sin la insignia Verificado. Podrás verificar tu identidad luego desde tu panel.",
+      "allowCallsLabel": "Permitir contacto por llamada"
     },
     "client": {
       "title": "Crear cuenta de cliente",
@@ -941,13 +948,16 @@
       "search": "Buscar servicios",
       "categories": "Categorías",
       "howItWorks": "Cómo usar",
-      "publish": "Publicar lo que necesito"
+      "publish": "Publicar lo que necesito",
+      "offers": "Promociones"
     },
     "pros": {
       "title": "Para profesionales",
       "register": "Ofrecer mis servicios",
       "attract": "Mejorar mi perfil",
-      "verification": "Verificación de identidad"
+      "verification": "Verificación de identidad",
+      "projects": "Proyectos",
+      "jobs": "Empleos"
     },
     "support": {
       "title": "Ayuda y soporte",
@@ -1280,7 +1290,7 @@
     "switchToProfessionalPanel": "Ver mi panel profesional",
     "panelClientShort": "Cliente",
     "panelProfessionalShort": "Profesional",
-    "signOut": "Cerrar sesión",
+    "signOut": "Salir",
     "identityVerified": "Verificado",
     "notVerifiedBadge": "Sin verificar",
     "identityUnverified": "Identidad sin verificar",
@@ -1291,8 +1301,8 @@
     "tabs": {
       "home": "Panel",
       "profile": "Mi perfil",
-      "services": "Lo que ofrezco",
-      "photos": "Mis trabajos",
+      "services": "Servicios",
+      "photos": "Casos de éxito",
       "availability": "Mi agenda",
       "chat": "Mensajes",
       "assistant": "Asistente",
@@ -1396,7 +1406,7 @@
           "body": "Actualice lo que ofrece, precios y detalles."
         },
         "photos": {
-          "title": "Mis trabajos",
+          "title": "Casos de éxito",
           "body": "Agregue fotos de trabajos para generar más confianza."
         },
         "availability": {
@@ -1421,6 +1431,7 @@
         }
       }
     },
+    "panelHeading": "Mi panel",
     "servicesHeading": "Lo que ofrezco",
     "guides": {
       "headerButton": "Guías rápidas",
@@ -1458,7 +1469,7 @@
         }
       },
       "clientPanel": {
-        "title": "Panel cliente",
+        "title": "Tu panel",
         "body": "Para buscar, contratar y dar seguimiento.",
         "points": [
           "Busca profesionales por servicio, zona o nombre.",
@@ -1505,7 +1516,7 @@
           "cta": "Ver disponibilidad"
         },
         "cases": {
-          "title": "Mis trabajos",
+          "title": "Casos de éxito",
           "caseTitle": "Buscador y perfiles de ContrataCR",
           "body": "Cada caso debe mostrar qué hiciste, para quién y el resultado logrado."
         },
@@ -1536,9 +1547,9 @@
       },
       "items": {
         "clientPanel": {
-          "title": "Panel cliente",
-          "short": "Citas, proyectos, postulaciones y favoritos",
-          "body": "El panel cliente reúne lo que necesitas para contratar, dar seguimiento a postulaciones y guardar contenido en favoritos.",
+          "title": "Tu panel",
+          "short": "Proyectos, favoritos y tu perfil",
+          "body": "Tu panel reúne lo que necesitas para contratar: tus proyectos, tus favoritos y tu perfil.",
           "steps": [
             "Revisa tus solicitudes y proyectos desde sus secciones.",
             "Consulta el estado de los empleos a los que te postulaste.",
@@ -1546,18 +1557,7 @@
             "Usa Conexiones para ver profesionales con los que ya tuviste un servicio confirmado.",
             "Abre soporte si necesitas ayuda con una solicitud, cuenta o acceso."
           ],
-          "cta": "Ir al panel cliente"
-        },
-        "clientRequests": {
-          "title": "Mis citas",
-          "short": "Servicios que pediste",
-          "body": "Mis citas guarda las citas que reservaste con un profesional, con su fecha y su estado.",
-          "steps": [
-            "Revisa estado, profesional, fecha y detalle del servicio.",
-            "Coordina por WhatsApp cuando necesites aclarar algo.",
-            "Actualiza o cancela la solicitud cuando aplique."
-          ],
-          "cta": "Ir a mis citas"
+          "cta": "Ir a mi panel"
         },
         "clientProjects": {
           "title": "Mis proyectos",
@@ -1565,22 +1565,10 @@
           "body": "Mis proyectos sirve para contar qué necesitas y que los profesionales te respondan.",
           "steps": [
             "Publica una necesidad clara con servicio, ubicación y descripción.",
-            "Compara propuestas recibidas.",
+            "Los profesionales que puedan hacerlo te escriben por WhatsApp.",
             "Elige el profesional que mejor calce con el trabajo."
           ],
           "cta": "Ir a mis proyectos"
-        },
-        "clientApplications": {
-          "title": "Mis postulaciones",
-          "short": "Seguimiento de empleos",
-          "body": "Consulta los empleos a los que te postulaste, el CV enviado y el estado de cada proceso.",
-          "steps": [
-            "Revisa si la postulación está recibida, en revisión, seleccionada, no seleccionada o si el empleo cerró.",
-            "Abre el empleo para consultar de nuevo todos sus detalles.",
-            "Consulta y descarga el CV que enviaste.",
-            "Las actualizaciones importantes también llegan a Notificaciones."
-          ],
-          "cta": "Ver mis postulaciones"
         },
         "clientSaved": {
           "title": "Favoritos",
@@ -1594,25 +1582,14 @@
           ],
           "cta": "Ir a favoritos"
         },
-        "clientConnections": {
-          "title": "Volver a contratar",
-          "short": "Profesionales con historial",
-          "body": "Volver a contratar reúne a los profesionales que ya te atendieron, para escribirles sin buscarlos de nuevo.",
-          "steps": [
-            "Revisa profesionales con historial contigo.",
-            "Abre su perfil si quieres contratarlos otra vez.",
-            "Usa el historial para dar seguimiento con más confianza."
-          ],
-          "cta": "Ir a volver a contratar"
-        },
         "clientProfile": {
           "title": "Perfil cliente",
           "short": "Datos para contratar",
-          "body": "Tu perfil cliente ayuda a identificarte cuando reservas citas o publicas un proyecto.",
+          "body": "Tu perfil ayuda a identificarte cuando publicas un proyecto o contactas a un profesional.",
           "steps": [
             "Mantén tu nombre y contacto actualizados.",
             "Revisa cuenta y seguridad cuando cambies datos sensibles.",
-            "Cambia al panel profesional si también ofreces servicios."
+            "Si también ofreces servicios, actívalo desde «Ofrecer mis servicios»."
           ],
           "cta": "Ir a perfil"
         },
@@ -1632,10 +1609,10 @@
         "notificationsGuide": {
           "title": "Notificaciones",
           "short": "Avisos importantes y novedades",
-          "body": "Notificaciones reúne cambios de citas, proyectos, postulaciones, seguidores, reseñas, soporte y novedades relevantes.",
+          "body": "Notificaciones reúne novedades de tus proyectos, publicaciones, seguidores, reseñas, soporte y avisos de tu cuenta.",
           "steps": [
             "Revisa el contador en el navbar cuando tengas avisos pendientes.",
-            "Recibe cambios de estado de postulaciones, solicitudes y proyectos.",
+            "Recibe cambios de estado de tus proyectos y publicaciones.",
             "Si sigues a un profesional, recibe sus nuevos casos de éxito, ofertas y empleos.",
             "Usa Ver todas para entrar a la página de notificaciones.",
             "Pulsa cada notificación para abrir directamente el perfil, tiquete, empleo, oferta o contenido relacionado."
@@ -1704,7 +1681,7 @@
         "professionalPanel": {
           "title": "Panel profesional",
           "short": "Gestiona tu presencia profesional",
-          "body": "El panel profesional reúne citas, proyectos de clientes, trabajos, disponibilidad, servicios, empleos, promociones, soporte, perfil y guías.",
+          "body": "El panel reúne tus publicaciones, cotizaciones, casos de éxito, servicios, soporte, perfil y guías.",
           "steps": [
             "Empieza por Completa tu perfil si tienes pasos pendientes.",
             "Mantén servicios, cobertura, contacto y disponibilidad actualizados.",
@@ -1725,30 +1702,19 @@
           ],
           "cta": "Ver pasos pendientes"
         },
-        "requests": {
-          "title": "Citas",
-          "short": "Clientes que te contactan",
-          "body": "Citas muestra las citas que los clientes reservaron desde tu perfil o tu disponibilidad.",
-          "steps": [
-            "Revisa cliente, servicio, fecha y detalle.",
-            "Contacta por WhatsApp cuando necesites coordinar.",
-            "Actualiza el estado para mantener el seguimiento claro."
-          ],
-          "cta": "Ir a citas"
-        },
         "opportunities": {
-          "title": "Oportunidades",
-          "short": "Publicaciones donde puedes proponer",
-          "body": "Proyectos muestra lo que publican los clientes de tus servicios; responde y, si les interesa, te escriben.",
+          "title": "Proyectos",
+          "short": "Lo que la gente necesita hoy",
+          "body": "Proyectos es el tablero público de lo que publican los clientes. Si algo calza con lo que hacés, le escribís directo por WhatsApp.",
           "steps": [
-            "Revisa si el proyecto calza con lo que ofreces.",
-            "Envía una propuesta clara con alcance y precio.",
-            "Da seguimiento si el cliente responde o acepta."
+            "Buscá un proyecto que calce con lo que ofrecés.",
+            "Leé lo que necesita y en qué zona.",
+            "Tocá «WhatsApp» y respondele vos mismo."
           ],
           "cta": "Ir a proyectos"
         },
         "successCases": {
-          "title": "Mis trabajos",
+          "title": "Casos de éxito",
           "short": "Trabajos reales con fotos",
           "body": "Mis trabajos muestra lo que ya hiciste y ayuda a que los clientes confíen antes de contactarte.",
           "steps": [
@@ -1757,19 +1723,7 @@
             "Escribe un título corto y una descripción concreta.",
             "Mantén los casos más fuertes y recientes visibles."
           ],
-          "cta": "Ir a Mis trabajos"
-        },
-        "availability": {
-          "title": "Mi agenda",
-          "short": "Horarios públicos y videoconsulta",
-          "body": "Disponibilidad controla si muestras agenda pública, videoconsulta y horarios por lugar de trabajo.",
-          "steps": [
-            "Activa disponibilidad pública solo si quieres mostrar horarios.",
-            "Activa videoconsulta únicamente si ese servicio se puede atender de forma remota.",
-            "Agrega lugares presenciales y horarios reales.",
-            "Guarda cambios antes de salir."
-          ],
-          "cta": "Ir a disponibilidad"
+          "cta": "Ir a Casos de éxito"
         },
         "services": {
           "title": "Lo que ofrezco",
@@ -1791,7 +1745,7 @@
             "Escribe un puesto o profesión claro.",
             "Define modalidad, tipo de empleo, experiencia requerida y ubicación.",
             "Agrega salario si quieres mostrarlo.",
-            "Publica y administra postulaciones desde el panel."
+            "Publica y administra tus empleos desde el panel; la gente se postula por WhatsApp."
           ],
           "cta": "Ir a empleos"
         },
@@ -1845,6 +1799,7 @@
       "guides": "Cómo usar ContrataCR paso a paso."
     },
     "profileSections": {
+      "servicesDesc": "Los servicios y las profesiones que aparecen en tu perfil.",
       "photosDesc": "Fotos y trabajos realizados que ven los clientes.",
       "availabilityDesc": "Horarios, contacto y disponibilidad visible para clientes.",
       "verificationDesc": "Identidad y estado de verificación.",
@@ -1891,6 +1846,7 @@
       "optionalShort": "opcional",
       "ignoreStep": "Ignorar paso",
       "ignoreOptional": "Ignorar pasos opcionales",
+      "skipStep": "Omitir",
       "ignoredCount": "{count, plural, one {# ignorado} other {# ignorados}}",
       "compactProgress": "{percent}% completado",
       "nextStep": "Siguiente paso",
@@ -1999,7 +1955,7 @@
     "confirm": "Confirmar",
     "cancel": "Cancelar",
     "inProgress": "En curso",
-    "markWorkDone": "Marcar trabajo finalizado",
+    "markWorkDone": "Marcar como finalizado",
     "whatsapp": "WhatsApp",
     "contact": "WhatsApp",
     "archive": "Eliminar",
@@ -2068,28 +2024,29 @@
     "dropHint": "JPG, PNG, WEBP, AVIF o HEIC · hasta {max} fotos",
     "dropActive": "Suelta para subir",
     "addMore": "Agregar más",
-    "noServices": "Primero agrega tus <strong>servicios</strong> en la pestaña <strong>Lo que ofrezco</strong>. Luego podrás subir trabajos en cada uno.",
-    "otherWorks": "Otros trabajos",
+    "noServices": "Primero agrega tus <strong>servicios</strong> en la pestaña <strong>Servicios</strong>. Luego podrás subir casos de éxito en cada uno.",
+    "otherWorks": "Otros casos de éxito",
     "addPhoto": "Agregar foto",
     "remove": "Eliminar",
     "maxAlert": "Puedes subir un máximo de {max} fotos en total.",
     "uploadError": "No se pudo subir la foto.",
     "uploadTooLarge": "La foto es muy pesada. Elige una foto más liviana o toma una nueva.",
     "uploadUnsupported": "No pudimos preparar esa foto. Usa JPG, PNG, WEBP, AVIF, HEIC, HEIF o GIF.",
-    "introCases": "Podés agregar todos los trabajos que quieras. Cada uno lleva hasta {perCase} fotos.",
+    "introCases": "Podés agregar todos los casos de éxito que quieras. Cada uno lleva hasta {perCase} fotos.",
     "filterAll": "Todos",
     "photosCount": "{count, plural, one {# foto} other {# fotos}}",
-    "addCase": "Agregar un trabajo",
-    "addCaseHint": "Comparte tu trabajo y atrae más clientes.",
+    "addCase": "Agregar un caso de éxito",
+    "addCaseHint": "Muestra lo que ya hiciste y atrae más clientes.",
+    "notOnProfileYet": "Este servicio no aparece en Casos de éxito de tu perfil hasta que tenga el primero.",
     "maxCasesHint": "Llegaste al máximo de {max} casos en este servicio.",
-    "newCase": "Nuevo trabajo",
-    "editCase": "Editar trabajo",
+    "newCase": "Nuevo caso de éxito",
+    "editCase": "Editar caso de éxito",
     "caseProfession": "Servicio",
     "casePhotos": "Fotos (hasta {max})",
     "caseTitle": "Servicio realizado",
     "caseTitlePlaceholder": "Ejemplo: Sitio web corporativo",
     "caseDescription": "Descripción",
-    "caseDescriptionPlaceholder": "Cuéntales a tus clientes qué hiciste en este trabajo.",
+    "caseDescriptionPlaceholder": "Cuéntales a tus clientes qué hiciste en este caso.",
     "caseRecipient": "Para quién",
     "caseRecipientPlaceholder": "Ejemplo: Empresa XYZ",
     "caseDate": "Fecha",
@@ -2098,13 +2055,13 @@
     "edit": "Editar",
     "cancel": "Cancelar",
     "save": "Guardar",
-    "deleteTitle": "Eliminar trabajo",
-    "deleteBody": "Este trabajo y sus fotos se quitarán de tu perfil.",
+    "deleteTitle": "Eliminar caso de éxito",
+    "deleteBody": "Este caso de éxito y sus fotos se quitarán de tu perfil.",
     "deleteConfirm": "Eliminar",
     "deleteCancel": "Cancelar",
-    "casePhotosRequired": "Agrega al menos una foto del trabajo.",
+    "casePhotosRequired": "Agrega al menos una foto del caso de éxito.",
     "optional": "opcional",
-    "caseTitleRequired": "Escribe qué trabajo hiciste."
+    "caseTitleRequired": "Escribe qué hiciste en este caso de éxito."
   },
   "unsavedGuard": {
     "title": "Tienes cambios sin guardar",
@@ -2680,7 +2637,7 @@
     "report": "Reportar",
     "pEmpty": "Todavía no has pedido ningún profesional",
     "pEmptySub": "Cuenta qué necesitas y los profesionales te responden.",
-    "publishProject": "Crear proyecto",
+    "publishProject": "Publicar proyecto",
     "publishShort": "Publicar",
     "projAssigned": "Asignada",
     "projAwaiting": "Por confirmar",
@@ -2738,7 +2695,8 @@
     "repliesTitle": "Propuestas",
     "noRepliesYet": "Todavía nadie responde. Te avisamos apenas alguien lo haga.",
     "writeWhatsapp": "WhatsApp",
-    "resolve": "Finalizar",
+    "callProfessional": "Llamar",
+    "resolve": "Marcar como finalizado",
     "resolveTitle": "¿Quién te ayudó?",
     "resolveBody": "Así queda finalizado y, si quieres, dejas una reseña.",
     "resolveNobody": "Lo resolví por otro lado",
@@ -2761,7 +2719,8 @@
     "chooseThisOne": "Elegir a este profesional",
     "chooseDone": "Elegiste a {name}",
     "chooseDoneSub": "Ya puede enviarte la cotización y coordinar. La solicitud se cierra cuando marques que quedó resuelta.",
-    "chosenPro": "Elegido"
+    "chosenPro": "Elegido",
+    "chooseShort": "Elegir"
   },
   "clientPage": {
     "greeting": "Hola, {name} 👋",
@@ -2985,7 +2944,11 @@
     "videoConsult": "Videoconsulta",
     "locationUnavailable": "Ubicación sin especificar",
     "allFilter": "Todos",
-    "emptyNothingSaved": "Todavía no has guardado nada."
+    "emptyNothingSaved": "Todavía no has guardado nada.",
+    "projectsTab": "Proyectos",
+    "emptyProjects": "No tienes proyectos guardados.",
+    "favoriteProject": "Proyecto guardado",
+    "viewProject": "Ver proyecto"
   },
   "clientConnections": {
     "emptyTitle": "Todavía no hay nadie a quien volver a contratar",
@@ -3018,11 +2981,11 @@
     "proTitle": "Ofrezco servicios",
     "haveAccount": "¿Ya tienes cuenta?",
     "signIn": "Inicia sesión",
-    "clientRole": "Cliente",
     "proRole": "Profesional",
     "continue": "Continuar",
     "reassurance": "Es gratis y toma menos de 2 minutos.",
-    "welcome": "Te damos la bienvenida a ContrataCR"
+    "welcome": "Te damos la bienvenida a ContrataCR",
+    "clientRole": "Cliente"
   },
   "onboarding": {
     "greeting": "Hola, {name}",
@@ -3194,12 +3157,12 @@
     "errTitle": "El título es requerido.",
     "errDescription": "Contanos brevemente qué hay que hacer.",
     "errCedula": "Ingresa un número de identificación válido.",
-    "errPhone": "Ingresa un número de teléfono válido.",
+    "errPhone": "Escribe un número de WhatsApp válido.",
     "errPhoneSave": "No pudimos guardar tu teléfono de contacto. Intenta de nuevo.",
     "errBeneficiaryName": "Ingresa el nombre de la persona.",
     "errBeneficiaryDob": "Ingresa la fecha de nacimiento de la persona.",
-    "phoneLabel": "Teléfono de contacto",
-    "phoneHelp": "Puedes dejar este número o cambiarlo. Si lo cambias, se actualizará como tu número de contacto.",
+    "phoneLabel": "WhatsApp",
+    "phoneHelp": "Es por donde te van a responder. Tu número no se publica: se lo damos solo al profesional que te escriba.",
     "loadingProfile": "Cargando tus datos...",
     "errPublish": "No se pudo publicar. Intentá de nuevo.",
     "errUnexpected": "Error inesperado. Intentá de nuevo.",
@@ -3267,7 +3230,8 @@
     "deleteAllBody": "Esta acción no se puede deshacer.",
     "cancel": "Cancelar",
     "noneList": "No tienes notificaciones.",
-    "emptySub": "Cuando haya novedades sobre citas, proyectos, empleos, promociones, profesionales que sigues o tu cuenta, aparecerán aquí.",
+    "emptySub": "Cuando haya novedades sobre tus publicaciones, tus reseñas, soporte o tu cuenta, aparecerán aquí.",
+    "emptySubClient": "Cuando tengas una respuesta de soporte o una novedad de tu cuenta, aparecerá aquí.",
     "noUnread": "No tienes notificaciones sin leer.",
     "publishedAt": "Publicado {time}",
     "viewAll": "Ver todas",
@@ -3613,6 +3577,9 @@
     "marketplaceOffersTitle": "Descubre promociones",
     "marketplaceOffersBody": "Compara promociones por servicio, precio, ubicación y vigencia; guárdalas en Favoritos o contacta al profesional.",
     "marketplaceOffersCta": "Ver promociones",
+    "marketplaceProjectsTitle": "Mirá qué necesita la gente",
+    "marketplaceProjectsBody": "Proyectos es el tablero de lo que publican los clientes. Leé lo que necesitan, en qué zona, y escribiles por WhatsApp.",
+    "marketplaceProjectsCta": "Ver proyectos",
     "trustEyebrow": "Confianza y coordinación",
     "trustTitle": "Lo importante se ve antes de contactar",
     "trustSubtitle": "La idea no es complicar el proceso: es mostrar lo justo para que cliente y profesional puedan decidir rápido.",
@@ -3804,7 +3771,11 @@
     "respondidas": "Respondidas",
     "nuevas": "Nuevas",
     "solicitudes_activas": "Activas",
-    "nuevas_solicitudes": "Nuevas"
+    "nuevas_solicitudes": "Nuevas",
+    "cerradas": "Cerradas",
+    "cerrados": "Cerrados",
+    "masServicios": "más",
+    "menosServicios": "Ver menos"
   },
   "soporte": {
     "headerTitle": "Centro de soporte",
@@ -3835,7 +3806,9 @@
     "messageLabel": "Mensaje",
     "messagePlaceholder": "Describe tu consulta con el mayor detalle posible. Si es un problema técnico, describe qué pasó y en qué pantalla estás.",
     "attachmentsLabel": "Adjuntos",
-    "attachmentsHint": "(opcional, máx. {max} archivos · {mb}MB c/u)",
+    "attachmentsHint": "(opcional)",
+    "attachmentsMax": "Máximo {max} archivos",
+    "errTooMany": "Puedes adjuntar hasta {max} archivos. Los demás no se agregaron.",
     "attachBtn": "Adjuntar imagen o documento",
     "addAnother": "Agregar otro archivo",
     "formats": "Formatos aceptados: JPG, PNG, WebP, AVIF, HEIC, HEIF, GIF y PDF",
@@ -4173,7 +4146,7 @@
     "publicClosedTitle": "Esta cotización ya se cerró",
     "publicExpiredTitle": "Esta cotización ya venció",
     "publicExpiredBody": "Escribile a {name} para que te mande una nueva.",
-    "publicWhatsApp": "Escribir por WhatsApp",
+    "publicWhatsApp": "WhatsApp",
     "publicViewProfile": "Ver perfil en ContrataCR",
     "publicPrint": "Imprimir o guardar en PDF",
     "publicFooter": "Cotización hecha con ContrataCR.",
@@ -4191,10 +4164,11 @@
     "taxIncludedShort": "IVA incluido",
     "taxAddShort": "Sumar 13%",
     "taxExemptShort": "Sin IVA",
-    "downloadPdf": "Descargar",
+    "downloadPdf": "Descargar PDF",
+    "share": "Compartir",
     "sharePdf": "Compartir PDF",
     "preparingPdf": "Armando el PDF…",
-    "writeClient": "Escribirle por WhatsApp",
+    "writeClient": "WhatsApp",
     "acceptedOn": "Aceptada el {date}",
     "emptyFilter": "No hay cotizaciones en este filtro.",
     "boundaryTitle": "No se pudieron cargar tus cotizaciones",
@@ -4249,8 +4223,10 @@
     "more": "Más opciones",
     "close": "Cerrar",
     "copyLink": "Copiar enlace",
+    "reportProject": "Reportar este proyecto",
     "reportJob": "Reportar este empleo",
     "reportOffer": "Reportar esta promoción",
+    "reportProfile": "Reportar este perfil",
     "share": "Compartir"
   },
   "compartirFicha": {
@@ -4262,7 +4238,11 @@
     "jobSubject": "Empleo en ContrataCR: {name}",
     "offerSubject": "Promoción en ContrataCR: {name}",
     "jobLink": "Enlace del empleo",
-    "offerLink": "Enlace de la promoción"
+    "offerLink": "Enlace de la promoción",
+    "projectTitle": "Compartir este proyecto",
+    "projectMessage": "Mirá este proyecto en ContrataCR: {name}",
+    "projectSubject": "Proyecto en ContrataCR: {name}",
+    "projectLink": "Enlace del proyecto"
   },
   "pushPrompt": {
     "now": "ahora",
@@ -4329,5 +4309,13 @@
     "nota": "El profesional ve tu mensaje y te responde por aquí.",
     "enviar": "Enviar mensaje",
     "cerrar": "Cerrar"
+  },
+  "perfilProfesionalGate": {
+    "jobTitle": "Disponible para cuentas profesionales",
+    "offerTitle": "Disponible para cuentas profesionales",
+    "jobDescription": "Publicar empleos es una función de las cuentas profesionales. Puedes convertir la tuya ahora, sin crear otra: toma unos minutos.",
+    "offerDescription": "Publicar promociones es una función de las cuentas profesionales. Puedes convertir la tuya ahora, sin crear otra: toma unos minutos.",
+    "cta": "Ofrecer mis servicios",
+    "notNow": "Ahora no"
   }
 }

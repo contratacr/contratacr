@@ -1,5 +1,13 @@
 import { expect, test } from "playwright/test";
 
+// El aviso de seguimiento solo se consulta si la visita YA contactó a alguien:
+// o hay sesión, o quedó la marca en la cookie. Sin esa marca no se pedía nada y
+// estas pruebas fallaban sin que hubiera nada roto en el producto.
+async function marcarContactoPrevio(page: import("playwright/test").Page, info: import("playwright/test").TestInfo) {
+  const base = String((info.project.use as { baseURL?: string }).baseURL ?? "http://localhost:3000");
+  await page.context().addCookies([{ name: "ccr_whatsapp_contact", value: "e2e", url: base }]);
+}
+
 const followUp = {
   id: "00000000-0000-4000-8000-000000000134",
   professional_id: "00000000-0000-4000-8000-000000000001",
@@ -21,6 +29,7 @@ test("contact follow-up is readable and dismissible without blocking the page", 
     await route.fulfill({ json: { ok: true } });
   });
 
+  await marcarContactoPrevio(page, test.info());
   await page.goto("/es/como-funciona");
   const dialog = page.getByRole("dialog", { name: "Seguimiento del servicio" });
   await expect(dialog).toBeVisible();
@@ -63,6 +72,7 @@ test("contact follow-up shows pending confirmations one at a time", async ({ pag
     await route.fulfill({ json: { ok: true } });
   });
 
+  await marcarContactoPrevio(page, test.info());
   await page.goto("/es/como-funciona");
   const dialog = page.getByRole("dialog", { name: "Seguimiento del servicio" });
   await expect(dialog).toContainText("1 de 2 confirmaciones pendientes");
@@ -89,7 +99,8 @@ test("contact follow-up names phone and email contact methods", async ({ page })
       await route.fulfill({ json: { ok: true } });
     });
 
-    await page.goto("/es/como-funciona");
+    await marcarContactoPrevio(page, test.info());
+  await page.goto("/es/como-funciona");
     await expect(page.getByRole("dialog", { name: "Seguimiento del servicio" })).toContainText(method.text);
     await page.unroute("**/api/contact/follow-up");
   }
@@ -104,7 +115,50 @@ test("an anonymous review intent continues through login", async ({ page }) => {
     await route.fulfill({ status: 401, json: { authRequired: true } });
   });
 
+  await marcarContactoPrevio(page, test.info());
   await page.goto("/es/como-funciona");
   await page.getByRole("button", { name: "Sí, dejar una reseña" }).click();
   await expect(page).toHaveURL(/\/es\/login$/);
+});
+
+// Reseñar sin cuenta: quien contactó desde ESTE dispositivo puede publicar su
+// reseña dando solo el nombre. Lo que se protege es la cadena: sin la cookie del
+// contacto, la ruta no acepta nada.
+test("la reseña sin cuenta exige la cookie del contacto", async ({ page }) => {
+  await page.goto("/es/como-funciona");
+  const sinCookie = await page.evaluate(async () => {
+    const res = await fetch("/api/reviews", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        professionalId: "00000000-0000-4000-8000-000000000001",
+        rating: 5,
+        comment: "Intento sin haber contactado a nadie desde este dispositivo.",
+        contactId: "00000000-0000-4000-8000-000000000134",
+        clientName: "Alguien",
+      }),
+    });
+    return res.status;
+  });
+  expect(sinCookie).toBe(401);
+
+  // Con cookie, pero apuntando a un seguimiento que no existe: tampoco pasa.
+  await page.context().addCookies([
+    { name: "ccr_whatsapp_contact", value: "11111111-1111-4111-8111-111111111111", url: String((test.info().project.use as { baseURL?: string }).baseURL ?? "http://localhost:3000") },
+  ]);
+  const conCookieAjena = await page.evaluate(async () => {
+    const res = await fetch("/api/reviews", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        professionalId: "00000000-0000-4000-8000-000000000001",
+        rating: 5,
+        comment: "Intento con una cookie que no abrió ese seguimiento.",
+        contactId: "00000000-0000-4000-8000-000000000134",
+        clientName: "Alguien",
+      }),
+    });
+    return res.status;
+  });
+  expect(conCookieAjena).toBe(401);
 });

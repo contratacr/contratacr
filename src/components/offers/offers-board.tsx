@@ -6,17 +6,15 @@ import { cn } from "@/lib/utils";
 import { useHairlineOnScroll } from "@/components/util/use-hairline-on-scroll";
 
 import { useDeferredValue, useEffect, useMemo, useState } from "react";
-import { cldLarge } from "@/lib/cloudinary";
-import { ScrollRail } from "@/components/ui/scroll-rail";
+import { cldLarge, cldThumb } from "@/lib/cloudinary";
 import { useRouter, useSearchParams } from "next/navigation";
-import { CalendarDays, ChevronRight, Flag, MapPin, Menu, Share2, Store } from "lucide-react";
+import { CalendarDays, ChevronRight, MapPin, Menu, Store } from "lucide-react";
 import { ContrataCRMark, HeaderMessagesLink, HeaderNotificationsLink } from "@/components/landing/landing-navbar";
 import { NotificationBell } from "@/components/notifications/notification-bell";
 import { useDirectMessageUnread } from "@/hooks/use-direct-message-unread";
 import { Link } from "@/i18n/navigation";
 import { DirectChatLauncher } from "@/components/professionals/direct-chat-launcher";
-import { trackInteraction } from "@/lib/analytics/interaction-events";
-import { useLocale, useTranslations } from "next-intl";
+import { useLocale } from "next-intl";
 import { useNativeApp } from "@/hooks/use-native-app";
 import {
   MarketplaceFilterChip,
@@ -27,22 +25,24 @@ import { Modal } from "@/components/ui/modal";
 import { OfferForm } from "@/components/offers/offer-form";
 import { OfferImageGallery } from "@/components/offers/offer-image-gallery";
 import { SaveItemButton } from "@/components/saved/save-item-button";
-import { useCompartir } from "@/components/ui/boton-compartir";
-import { MenuFicha } from "@/components/ui/menu-ficha";
+import { offerSaveSnapshot } from "@/lib/offer-snapshot";
 import { enlaceOferta } from "@/lib/marketplace-url";
-import { ReportProfileModal } from "@/components/professionals/report-profile-modal";
 import {
   formatOfferBeforePrice,
   formatOfferPrice,
-  OFFER_TYPES,
   offerDiscountPercent,
+  OFFER_TYPES,
   type ProfessionalOffer,
 } from "@/lib/offers";
+import { ScrollRail } from "@/components/ui/scroll-rail";
+import { MenuOferta } from "@/components/offers/menu-oferta";
 import {
   marketplaceLocale,
   offerTypeLabel,
   type MarketplaceLocale,
 } from "@/lib/marketplace-copy";
+import { CABECERA_BOTON, CABECERA_FILA, CABECERA_GLIFO, CABECERA_TITULO } from "@/components/layout/cabecera";
+import { useAvisoPerfilProfesional } from "@/components/marketplace/use-aviso-perfil-profesional";
 
 type Props = {
   offers: ProfessionalOffer[];
@@ -52,13 +52,16 @@ type Props = {
   serviceOptions: Array<{ value: string; label: string }>;
 };
 
+// Sin línea de cierre abajo: separaba la lista blanca del lienzo gris, y el
+// lienzo del teléfono ya es blanco, así que quedaba una raya suelta después de
+// la última fila.
 const MARKETPLACE_LIST_CLASS =
-  "ccr-marketplace-card-list min-w-0 border-b border-[#e7edf2] bg-white lg:h-full lg:overflow-y-scroll lg:border-b-0 lg:border-r lg:border-[#dfe6ec]";
+  "ccr-marketplace-card-list ccr-lista-tablero min-w-0 bg-white lg:h-full lg:overflow-y-scroll";
 
 const OFFERS_COPY = {
   es: {
-    allServices: "Todos los servicios",
-    searchPlaceholder: "¿Qué oferta estás buscando?",
+    location: "Ubicación",
+    searchPlaceholder: "¿Qué promoción buscas?",
     service: "Servicio",
     servicePlaceholder: "Servicio",
     date: "Fecha",
@@ -66,41 +69,37 @@ const OFFERS_COPY = {
     last24Hours: "Últimas 24 horas",
     lastWeek: "Última semana",
     lastMonth: "Último mes",
-    offerType: "Tipo de oferta",
+    offerType: "Tipo de promoción",
     anyType: "Cualquier tipo",
-    myOffers: "Mis ofertas",
-    publishOffer: "Publicar oferta",
+    myOffers: "Mis promociones",
+    publishOffer: "Publicar promoción",
     offers: "Promociones",
     promotions: "Promociones de profesionales",
     openMenu: "Abrir menú",
     messages: "Mensajes",
     notifications: "Notificaciones",
-    offer: "oferta",
-    offerPlural: "ofertas",
+    offer: "promoción",
+    offerPlural: "promociones",
     country: "Costa Rica",
-    noResults: "No encontramos resultados",
-    noOffers: "Todavía no hay ofertas",
-    tryAgain: "Prueba con otra búsqueda o restablece los filtros.",
+    noResults: "No encontramos promociones",
+    noOffers: "Todavía no hay promociones",
+    tryAgain: "Prueba otra búsqueda o cambia los filtros.",
     futureOffers: "Las nuevas promociones de profesionales aparecerán aquí.",
-    viewAll: "Ver todas las ofertas",
-    publishFirst: "Publicar la primera oferta",
+    viewAll: "Ver todas las promociones",
+    publishFirst: "Publicar la primera promoción",
     publishSubtitle: "Publica una promoción clara y fácil de comparar.",
-    editOffer: "Editar oferta",
+    editOffer: "Editar promoción",
     editSubtitle: "Actualiza la información de esta publicación.",
-    manageOffer: "Administrar oferta",
+    manageOffer: "Administrar promoción",
     professional: "Profesional",
     profile: "Ver perfil",
     call: "Llamar",
-    email: "Correo",
-    emailSubject: "Consulta desde ContrataCR",
-    emailBody: (title: string) =>
-      `Hola, vi tu oferta \"${title}\" en ContrataCR y me gustaría recibir más información.`,
     view: (title: string) => `Ver ${title}`,
     availableUntil: "Disponible hasta",
   },
   en: {
-    allServices: "All services",
-    searchPlaceholder: "What offer are you looking for?",
+    location: "Location",
+    searchPlaceholder: "Search promotions",
     service: "Service",
     servicePlaceholder: "Service",
     date: "Date posted",
@@ -108,35 +107,31 @@ const OFFERS_COPY = {
     last24Hours: "Past 24 hours",
     lastWeek: "Past week",
     lastMonth: "Past month",
-    offerType: "Offer type",
+    offerType: "Promotion type",
     anyType: "Any type",
-    myOffers: "My offers",
-    publishOffer: "Post an offer",
+    myOffers: "My promotions",
+    publishOffer: "Post a promotion",
     offers: "Promotions",
     promotions: "Promotions from professionals",
     openMenu: "Open menu",
     messages: "Messages",
     notifications: "Notifications",
-    offer: "offer",
-    offerPlural: "offers",
+    offer: "promotion",
+    offerPlural: "promotions",
     country: "Costa Rica",
-    noResults: "No results found",
-    noOffers: "There are no offers yet",
-    tryAgain: "Try another search or reset the filters.",
+    noResults: "No promotions found",
+    noOffers: "There are no promotions yet",
+    tryAgain: "Try another search or change the filters.",
     futureOffers: "New promotions from professionals will appear here.",
-    viewAll: "View all offers",
-    publishFirst: "Post the first offer",
+    viewAll: "View all promotions",
+    publishFirst: "Post the first promotion",
     publishSubtitle: "Post a clear promotion that is easy to compare.",
-    editOffer: "Edit offer",
+    editOffer: "Edit promotion",
     editSubtitle: "Update this offer's information.",
-    manageOffer: "Manage offer",
+    manageOffer: "Manage promotion",
     professional: "Professional",
     profile: "View profile",
     call: "Call",
-    email: "Email",
-    emailSubject: "ContrataCR inquiry",
-    emailBody: (title: string) =>
-      `Hi, I saw your offer \"${title}\" on ContrataCR and would like more information.`,
     view: (title: string) => `View ${title}`,
     availableUntil: "Available until",
   },
@@ -149,6 +144,7 @@ export function OffersBoard({
   currentUserId = null,
   serviceOptions: publishServiceOptions,
 }: Props) {
+  const { avisoNode, avisar } = useAvisoPerfilProfesional();
   const { sentinelaRef, cabeceraRef, conLinea } = useHairlineOnScroll();
   const locale = marketplaceLocale(useLocale());
   const copy = OFFERS_COPY[locale];
@@ -164,17 +160,16 @@ export function OffersBoard({
   const initialLocation =
     searchParams.get("location")?.trim().toLocaleLowerCase("es-CR") ?? "";
   const [locationFilter, setLocationFilter] = useState(initialLocation);
-  const [type, setType] = useState("all");
-  const [serviceQuery, setServiceQuery] = useState(
-    () => searchParams.get("service")?.trim() ?? "",
-  );
+  // Los dos filtros de producción: tipo de promoción y fecha. Ver la nota en
+  // Empleos: se fueron junto con los chips de servicio y no debían.
+  const [tipo, setTipo] = useState("all");
   const [published, setPublished] = useState("all");
+  const [ahora, setAhora] = useState(0);
+  useEffect(() => { queueMicrotask(() => setAhora(Date.now())); }, []);
   const [selectedId, setSelectedId] = useState(
     () => searchParams.get("offer") ?? offers[0]?.id ?? "",
   );
   const deferredQuery = useDeferredValue(query);
-  const deferredServiceQuery = useDeferredValue(serviceQuery);
-  const [now, setNow] = useState(0);
 
   // Sin sesión, los avisos llevan a la pantalla de acceso y de ahí a su destino.
   const accesoHref = (destino: string) => `/login?redirect=${encodeURIComponent(`/${locale}${destino}`)}`;
@@ -190,9 +185,6 @@ export function OffersBoard({
     });
   }, [canPost, currentUserId, nativeApp, offers.length, selectedId]);
 
-  useEffect(() => {
-    queueMicrotask(() => setNow(Date.now()));
-  }, []);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -200,32 +192,19 @@ export function OffersBoard({
       const cleanQuery = query.trim();
       if (cleanQuery) params.set("q", cleanQuery);
       else params.delete("q");
-      const cleanService = serviceQuery.trim();
-      if (cleanService) params.set("service", cleanService);
-      else params.delete("service");
+      // La ubicación también viaja en la dirección: así un enlace compartido
+      // abre con el mismo lugar puesto.
+      const cleanLocation = locationFilter.trim();
+      if (cleanLocation) params.set("location", cleanLocation);
+      else params.delete("location");
       const nextUrl = `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ""}`;
       window.history.replaceState(null, "", nextUrl);
     }, 300);
 
     return () => window.clearTimeout(timer);
-  }, [query, serviceQuery]);
-  const serviceOptions = useMemo(() => {
-    const unique = new Map<string, string>();
-    publishServiceOptions.forEach((option) =>
-      unique.set(option.label, option.label),
-    );
-    offers.forEach((offer) => {
-      if (offer.service_label) unique.set(offer.service_label, offer.service_label);
-    });
-    return [["all", copy.allServices], ...unique.entries()] as Array<
-      [string, string]
-    >;
-  }, [copy.allServices, offers, publishServiceOptions]);
+  }, [locationFilter, query]);
   const filtered = useMemo(() => {
     const needle = deferredQuery.trim().toLocaleLowerCase("es-CR");
-    const serviceNeedle = deferredServiceQuery
-      .trim()
-      .toLocaleLowerCase("es-CR");
     return offers.filter((offer) => {
       const matchesQuery =
         !needle ||
@@ -236,52 +215,32 @@ export function OffersBoard({
           offer.location_label,
           offer.professional_name,
         ].some((value) => value?.toLocaleLowerCase("es-CR").includes(needle));
-      const matchesService =
-        !serviceNeedle ||
-        offer.service_label
-          ?.toLocaleLowerCase("es-CR")
-          .includes(serviceNeedle) ||
-        offer.service_category_id
-          ?.toLocaleLowerCase("es-CR")
-          .includes(serviceNeedle);
-      const matchesDate =
-        published === "all" ||
-        (now > 0 && now - new Date(offer.created_at).getTime() <=
-          Number(published) * 86_400_000);
       const matchesLocation =
         !locationFilter ||
         offer.location_label
           ?.toLocaleLowerCase("es-CR")
           .includes(locationFilter);
-      return (
-        matchesQuery &&
-        matchesService &&
-        matchesLocation &&
-        matchesDate &&
-        (type === "all" || offer.offer_type === type)
-      );
+      const edad = ahora - new Date(offer.created_at).getTime();
+      const matchesDate = published === "all" || (ahora > 0 && edad <= Number(published) * 86_400_000);
+      const matchesType = tipo === "all" || offer.offer_type === tipo;
+      return matchesQuery && matchesLocation && matchesDate && matchesType;
     });
   }, [
+    ahora,
     deferredQuery,
-    deferredServiceQuery,
     locationFilter,
     offers,
-    now,
     published,
-    type,
+    tipo,
   ]);
+
   const selected =
     filtered.find((offer) => offer.id === selectedId) ?? filtered[0] ?? null;
   const suggestions = useMemo(
     () => [...new Set(offers.map((offer) => offer.title).filter(Boolean))],
     [offers],
   );
-  const hasActiveFilters =
-    Boolean(query.trim()) ||
-    Boolean(serviceQuery.trim()) ||
-    Boolean(locationFilter) ||
-    type !== "all" ||
-    published !== "all";
+  const hasActiveFilters = Boolean(query.trim()) || Boolean(locationFilter) || tipo !== "all" || published !== "all";
 
   useEffect(() => {
     const offerId = searchParams.get("offer");
@@ -289,10 +248,9 @@ export function OffersBoard({
   }, [searchParams]);
   function clearSearchAndFilters() {
     setQuery("");
-    setType("all");
-    setServiceQuery("");
-    setPublished("all");
     setLocationFilter("");
+    setTipo("all");
+    setPublished("all");
     const params = new URLSearchParams(window.location.search);
     params.delete("location");
     const nextUrl = `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ""}`;
@@ -307,6 +265,11 @@ export function OffersBoard({
       queueMicrotask(() => setSelectedId(filtered[0].id));
   }, [filtered, selectedId]);
 
+  const locationSuggestions = useMemo(
+    () => [...new Set(offers.map((offer) => offer.location_label?.trim()).filter((v): v is string => Boolean(v)))],
+    [offers],
+  );
+
   const renderSearch = () => (
     <MarketplaceSearch
       value={query}
@@ -315,14 +278,17 @@ export function OffersBoard({
       suggestions={suggestions}
       recentStorageKey="ccr-offer-search-recents"
       visitSurface="ofertas"
+      // Misma pareja que en /buscar y en Empleos: texto + ubicación. Nada de
+      // chips de servicio debajo: el buscador ya encuentra la promoción por su
+      // nombre y la ubicación es lo que de verdad falta para decidir.
       secondary={{
-        value: serviceQuery,
-        onChange: setServiceQuery,
-        placeholder: copy.servicePlaceholder,
-        ariaLabel: copy.service,
-        suggestions: serviceOptions.slice(1).map(([, label]) => label),
-        icon: "service",
-        clearLabel: locale === "en" ? "Clear service" : "Limpiar servicio",
+        value: locationFilter,
+        onChange: setLocationFilter,
+        placeholder: copy.location,
+        ariaLabel: copy.location,
+        suggestions: locationSuggestions,
+        icon: "location",
+        clearLabel: locale === "en" ? "Clear location" : "Limpiar ubicación",
       }}
     />
   );
@@ -330,27 +296,16 @@ export function OffersBoard({
   const renderFilters = () => (
     <>
       <MarketplaceFilterChip
+        label={copy.offerType}
+        value={tipo}
+        onChange={setTipo}
+        options={[["all", copy.anyType], ...Object.keys(OFFER_TYPES).map((value) => [value, offerTypeLabel(value as ProfessionalOffer["offer_type"], locale)] as [string, string])]}
+      />
+      <MarketplaceFilterChip
         label={copy.date}
         value={published}
         onChange={setPublished}
-        options={[
-          ["all", copy.anyDate],
-          ["1", copy.last24Hours],
-          ["7", copy.lastWeek],
-          ["30", copy.lastMonth],
-        ]}
-      />
-      <MarketplaceFilterChip
-        label={copy.offerType}
-        value={type}
-        onChange={setType}
-        options={[
-          ["all", copy.anyType],
-          ...Object.keys(OFFER_TYPES).map((value) => [
-            value,
-            offerTypeLabel(value as ProfessionalOffer["offer_type"], locale),
-          ] as [string, string]),
-        ]}
+        options={[["all", copy.anyDate], ["1", copy.last24Hours], ["7", copy.lastWeek], ["30", copy.lastMonth]]}
       />
     </>
   );
@@ -380,6 +335,12 @@ export function OffersBoard({
             {copy.publishOffer}
           </Link>
         </>
+      ) : currentUserId ? (
+        // Ver la nota de Empleos: con sesión y sin perfil profesional se
+        // explica qué falta, no se manda al login.
+        <button type="button" onClick={() => void avisar("promocion", "/ofertas/publicar")} className="inline-flex h-9 flex-1 items-center justify-center rounded-full bg-[#009fd9] px-4 text-[13px] font-bold text-white transition hover:bg-[#008fc3] sm:flex-none lg:h-10 lg:px-5 lg:text-sm">
+          {copy.publishOffer}
+        </button>
       ) : (
         <Link
           href="/login?redirect=/ofertas/publicar"
@@ -392,25 +353,26 @@ export function OffersBoard({
   );
 
   return (
-    <main className="min-h-[calc(100vh-72px)] overflow-x-clip bg-[#f4f7fa] pb-16 text-[#162543] sm:bg-[#fafafa] lg:flex lg:h-[calc(100dvh-64px)] lg:min-h-0 lg:flex-col lg:overflow-hidden lg:bg-[#fafafa] lg:pb-0">
+    <main className="min-h-[calc(100vh-72px)] overflow-x-clip bg-white pb-0 text-[#162543] sm:bg-[#fafafa] sm:pb-16 lg:flex lg:h-[calc(100dvh-64px)] lg:min-h-0 lg:flex-col lg:overflow-hidden lg:bg-white lg:pb-0">
+      {avisoNode}
       <div ref={sentinelaRef} aria-hidden className="h-px lg:hidden" />
       <section ref={cabeceraRef} className={cn("ccr-marketplace-sticky sticky top-0 z-20 border-b bg-white transition-colors duration-200 lg:hidden", conLinea ? "border-[#e5e7eb]" : "border-transparent")}>
         <div className="px-0">
-          <div className="flex min-h-[56px] items-center gap-1 px-2">
+          <div className={CABECERA_FILA}>
             <button
               type="button"
               onClick={() =>
                 window.dispatchEvent(new Event("ccr:open-mobile-menu"))
               }
               aria-label={copy.openMenu}
-              className="grid h-11 w-11 shrink-0 place-items-center rounded-xl text-[#162543] transition hover:bg-[#eef5f9]"
+              className={CABECERA_BOTON}
             >
-              <Menu className="h-5 w-5" strokeWidth={2.5} />
+              <Menu className={CABECERA_GLIFO} strokeWidth={2.5} />
             </button>
-            <Link href="/" aria-label="ContrataCR inicio" className="-ml-1 shrink-0">
-              <ContrataCRMark className="h-7 w-7" />
+            <Link href="/" aria-label="ContrataCR inicio" className="shrink-0">
+              <ContrataCRMark />
             </Link>
-            <h1 className="min-w-0 truncate pl-1.5 text-[17px] font-extrabold text-[#162543]">{copy.offers}</h1>
+            <h1 className={CABECERA_TITULO}>{copy.offers}</h1>
             {/* El icono de Mensajes es de la barra de la APP: en la web se llega
                 desde el menú y desde el panel. */}
             <div className="ml-auto flex shrink-0 items-center gap-0.5">
@@ -428,9 +390,7 @@ export function OffersBoard({
             </div>
           </div>
           <div className="px-4 pb-3">{renderSearch()}</div>
-          <ScrollRail className="ccr-chip-row flex gap-1 px-4 pb-4 sm:gap-1.5">
-            {renderFilters()}
-          </ScrollRail>
+          <ScrollRail className="ccr-chip-row flex gap-1 px-4 pb-3 sm:gap-1.5">{renderFilters()}</ScrollRail>
           <div className="px-4 pb-3" data-testid="offers-mobile-sticky-actions">
             {renderActions()}
           </div>
@@ -446,25 +406,31 @@ export function OffersBoard({
       {/* Título, acciones y filtros en UNA tarjeta blanca (ver jobs-board). */}
       <div className="relative z-30 hidden shrink-0 border-b border-[#e3ebf2] bg-white lg:block">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-6 py-2.5">
-          <h1 className="sr-only">{copy.offers}</h1>
-          <div className="flex min-w-0 flex-wrap items-center gap-2 overflow-visible">{renderFilters()}</div>
+          <div className="flex shrink-0 items-baseline gap-2 border-r border-[#e3ebf2] pr-4">
+            {/* El nombre de la pantalla, a la vista: antes era solo para lectores
+                de pantalla y la barra arrancaba en frío con los filtros —quien
+                llegaba de Google no sabía en qué sección estaba—. Al lado, cuántos
+                hay; con búsqueda o filtros, cuántos quedaron. */}
+            <h1 className="text-[17px] font-extrabold text-[#162543]">{copy.offers}</h1>
+            <span className="text-[13px] font-semibold tabular-nums text-[#68778d]">{filtered.length}{locationFilter.trim() ? ` · ${locationFilter.trim()}` : ""}</span>
+          </div>
+          <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2 overflow-visible">{renderFilters()}</div>
           <div className="flex shrink-0 gap-2">{renderActions()}</div>
         </div>
       </div>
 
-      <p className="mx-auto hidden w-full max-w-7xl shrink-0 px-6 pb-2 pt-3 text-[13px] font-semibold text-[#52627a] lg:block">
-        <span className="font-extrabold text-[#162543]">{filtered.length} {filtered.length === 1 ? copy.offer : copy.offerPlural}</span>
-        {" · "}{copy.country}
-      </p>
-      <div className="mx-auto w-full max-w-7xl px-0 sm:max-w-[46rem] sm:px-6 sm:py-5 lg:max-w-7xl lg:flex-1 lg:min-h-0 lg:px-6 lg:pb-0 lg:pt-0">
-        <div className={`${filtered.length > 0 ? "lg:grid lg:grid-cols-[minmax(340px,440px)_minmax(0,1fr)]" : ""} sm:overflow-hidden sm:rounded-[22px] sm:border sm:border-[#dfe8f0] sm:bg-white sm:shadow-[0_12px_34px_-28px_rgba(15,23,42,0.55)] lg:h-full lg:rounded-b-none lg:border-b-0`}>
+      <div className="mx-auto w-full max-w-7xl px-0 sm:max-w-[46rem] sm:px-6 sm:py-5 lg:max-w-7xl lg:flex-1 lg:min-h-0 lg:px-6 lg:py-0">
+        <div className={`${filtered.length > 0 ? "lg:grid lg:grid-cols-[minmax(340px,440px)_minmax(0,1fr)] xl:grid-cols-[380px_minmax(0,1fr)]" : ""} sm:overflow-hidden sm:rounded-[22px] sm:border sm:border-[#dfe8f0] sm:bg-white sm:shadow-[0_12px_34px_-28px_rgba(15,23,42,0.55)] lg:h-full ccr-panel-tablero`}>
           <section className={filtered.length > 0 ? MARKETPLACE_LIST_CLASS : "min-w-0 bg-white"}>
-            <div className="border-b border-[#e7edf2] px-4 py-3 lg:hidden">
-              <p className="font-bold">
-                 {filtered.length} {filtered.length === 1 ? copy.offer : copy.offerPlural}
-              </p>
-               <p className="text-xs text-[#68778d]">{copy.country}</p>
-            </div>
+            {/* Con cero, el vacío ya lo dice: «0 promociones» encima era lo mismo dos veces. */}
+            {hasActiveFilters && filtered.length > 0 && (
+              <div className="border-b border-[#e7edf2] px-4 py-3 lg:hidden">
+                <p className="font-bold">
+                  {filtered.length} {filtered.length === 1 ? copy.offer : copy.offerPlural}
+                </p>
+                {locationFilter.trim() && <p className="text-xs text-[#68778d]">{locationFilter.trim()}</p>}
+              </div>
+            )}
             <div>
               {filtered.map((offer) => (
                 <OfferRow
@@ -513,6 +479,7 @@ export function OffersBoard({
           </section>
           {selected && (
             <OfferPreview
+              onFiltrarServicio={setQuery}
               offer={selected}
               userId={currentUserId}
               currentProfessionalId={currentProfessionalId}
@@ -588,6 +555,18 @@ function OfferImage({
           wrapperClassName="block h-full max-h-full w-full max-w-full rounded-lg"
           className="rounded-lg"
         />
+      ) : offer.professional_avatar_url ? (
+        // Sin arte propio, la cara de quien la ofrece: 250 de 290 profesionales
+        // tienen foto, y dice mucho más que dos letras del título. La foto del
+        // profesional NO se agrega cuando la promoción sí trae su imagen: ahí
+        // manda el arte, que es lo que se compra con los ojos.
+        <ProgressiveImage
+          src={cldThumb(offer.professional_avatar_url, 160)}
+          alt={offer.professional_name ?? ""}
+          fit="cover"
+          wrapperClassName="block h-full max-h-full w-full max-w-full rounded-lg"
+          className="rounded-lg"
+        />
       ) : (
         <span className="grid h-full place-items-center rounded-lg bg-[#f3f7fa] text-xs font-extrabold text-[#009fd9]">
           {offer.title.slice(0, 2).toUpperCase()}
@@ -602,22 +581,6 @@ function OfferImage({
   );
 }
 
-function offerSaveSnapshot(offer: ProfessionalOffer, locale: MarketplaceLocale) {
-  return {
-    title: offer.title,
-    professional_name: offer.professional_name,
-    professional_slug: offer.professional_slug,
-    image_url: offer.image_urls[0] ?? null,
-    // Respaldo cuando la oferta no trae foto: la cara del profesional dice
-    // bastante más que un icono de etiqueta.
-    professional_avatar_url: offer.professional_avatar_url ?? null,
-    service_label: offer.service_label,
-    offer_type: offerTypeLabel(offer.offer_type, locale),
-    location_label: offer.location_label,
-    price: formatOfferPrice(offer, locale),
-    created_at: offer.created_at,
-  };
-}
 
 export function OfferSaveButton({
   offer,
@@ -651,91 +614,91 @@ export function OfferContactActions({
   userId,
   isOwner,
   compact = false,
+  soloContacto = false,
+  escritorio = false,
 }: {
   offer: ProfessionalOffer;
   userId: string | null;
   isOwner: boolean;
   compact?: boolean;
+  /** En la ficha la franja de abajo lleva solo lo que contacta; guardar sube al «...». */
+  soloContacto?: boolean;
+  /** El panel de computadora: WhatsApp a la izquierda y Guardar a la derecha. */
+  escritorio?: boolean;
 }) {
   const locale = marketplaceLocale(useLocale());
   const nativeApp = useNativeApp();
   const copy = OFFERS_COPY[locale];
-  const whatsapp = offer.professional_whatsapp?.trim();
-  const callPhone = (
-    offer.professional_call_phone ||
-    offer.professional_whatsapp ||
-    ""
-  ).replace(/\D/g, "");
-  const email = offer.professional_contact_email?.trim();
-  const showCall =
-    !!offer.professional_allow_phone_call && callPhone.length >= 8;
-  const showEmail = !!email;
-  const showPrimaryContact = nativeApp || !!whatsapp;
+  const hasWhatsapp = !!offer.professional_has_whatsapp;
+  const showPrimaryContact = nativeApp || hasWhatsapp;
   if (isOwner) return null;
 
-  function track(method: "phone" | "email") {
-    trackInteraction({
-      type: method === "phone" ? "phone_click" : "external_link_click",
-      professionalId: offer.professional_id,
-      source: "unknown",
-      locale,
-      metadata:
-        method === "email"
-          ? { channel: "email", offerId: offer.id }
-          : { offerId: offer.id },
-    });
-  }
-
-  const secondaryClass = compact
-    ? "inline-flex h-9 min-w-0 items-center justify-center gap-1.5 rounded-full border border-[#d7e1ea] bg-white px-2 text-[12px] font-bold text-[#162543] transition hover:border-[#b9c8d6] hover:bg-[#f6f9fb]"
-    : "inline-flex h-11 min-w-0 items-center justify-center gap-2 rounded-full border border-[#d7e1ea] bg-white px-3 text-sm font-bold text-[#162543] transition hover:border-[#b9c8d6] hover:bg-[#f6f9fb]";
+  // En la franja pegada al fondo los botones miden 48 px, lo mismo que
+  // «Publicar» en Crear proyecto; en la lista siguen midiendo 44 (o 36 en la
+  // fila apretada). Es la misma franja en todas las secciones.
+  const alto = compact ? "h-9" : soloContacto || escritorio ? "h-12" : "h-11";
+  // Ver la nota de Empleos: en la franja, el botón de «Publicar».
+  const letra = compact ? "text-[12px] font-bold" : soloContacto || escritorio ? "text-base font-semibold" : "text-sm font-bold";
+  const secondaryClass = `w-full ${alto} ${letra} rounded-full border border-[#d7e1ea] bg-white ${compact ? "px-2" : "px-3"} text-[#162543] transition hover:border-[#b9c8d6] hover:bg-[#f6f9fb]`;
   // Llamar y escribir no piden cuenta, igual que el WhatsApp de al lado: exigir
   // registro para contactar costaba tres de cada cuatro contactos, y aquí
-  // además quedaba raro que un botón dejara pasar y el de al lado no.
+  // además quedaba raro que un botón dejara pasar y el de al lado no. Lo que sí
+  // se protege es el dato: el número NO baja con la página, se pide al tocar por
+  // /api/contact/reveal, que lleva tope por hora.
+  //
+  // El correo se retiró: en dos meses hubo 86 toques a WhatsApp, 4 a «Llamar» y
+  // CERO al correo, con 92 profesionales que tienen uno puesto.
+  const escribir = showPrimaryContact && (
+    <DirectChatLauncher
+      professionalId={offer.professional_id}
+      professionalName={offer.professional_name || copy.professional}
+      contextTitle={offer.title}
+      analyticsSource="unknown"
+      offerId={offer.id}
+      className={`${alto} ${letra} w-full rounded-full`}
+    />
+  );
+  // En la ficha: escribir y llamar, uno a cada lado, y nada más. Guardar no
+  // contacta a nadie y vive arriba, junto al «...».
+  if (escritorio) {
+    // Ver la nota de Empleos: en computadora no se llama, se guarda. Los dos a
+    // su ancho, en un solo renglón: desde que el «···» subió a la línea del
+    // nombre, la fila de acciones solo lleva esto y ya no hace falta apilar.
+    return (
+      <>
+        {showPrimaryContact && (
+          <DirectChatLauncher
+            professionalId={offer.professional_id}
+            professionalName={offer.professional_name || copy.professional}
+            contextTitle={offer.title}
+            analyticsSource="unknown"
+            offerId={offer.id}
+            className="h-12 w-auto min-w-[9.5rem] rounded-full px-6 text-base font-semibold"
+          />
+        )}
+        <SaveItemButton grande className="w-auto px-6" itemType="offer" itemId={offer.id} snapshot={offerSaveSnapshot(offer, locale)} userId={userId} />
+      </>
+    );
+  }
+  if (soloContacto) {
+    // Escribir a la izquierda, llamar a la derecha: dos acciones, un renglón.
+    return (
+      <div className="relative z-[2] grid w-full grid-cols-1 gap-2">{escribir}</div>
+    );
+  }
   return (
     <div className="relative z-[2] mt-3 space-y-2">
-      {showPrimaryContact && (
-        <DirectChatLauncher
-          professionalId={offer.professional_id}
-          professionalName={offer.professional_name || copy.professional}
-          contextTitle={offer.title}
-          analyticsSource="unknown"
-          buttonLabel="WhatsApp"
-          className={`${compact ? "h-9 text-[12px]" : "h-11 text-sm"} w-full rounded-full font-bold`}
-        />
-      )}
-      {(showCall || showEmail) && (
-        <div
-          className={`grid gap-2 ${showCall && showEmail ? "grid-cols-2" : "grid-cols-1"}`}
-        >
-          {showCall && (
-            <a
-              href={`tel:+${callPhone.startsWith("506") ? callPhone : `506${callPhone}`}`}
-              onClick={() => track("phone")}
-              className={secondaryClass}
-            >
-               <span className="truncate">{copy.call}</span>
-            </a>
-          )}
-          {showEmail && (
-            <a
-               href={`mailto:${email}?subject=${encodeURIComponent(copy.emailSubject)}&body=${encodeURIComponent(copy.emailBody(offer.title))}`}
-              onClick={() => track("email")}
-              className={secondaryClass}
-            >
-               <span className="truncate">{copy.email}</span>
-            </a>
-          )}
-        </div>
-      )}
-      {/* Debajo de todos los botones: primero las formas de contactar y al
-          final, sin marco, guardar. Compartir y reportar viven en el "...". */}
-      <div className="flex items-center justify-center pt-1">
-        <OfferSaveButton offer={offer} userId={userId} />
+      {escribir}
+      {/* Fuera de la ficha, WhatsApp manda y se lleva la línea entera: 86 toques
+          contra 4 de «Llamar» en dos meses. Debajo, en una sola fila, lo
+          secundario —llamar y guardar—, para no apilar tres píldoras iguales. */}
+      <div className="grid grid-cols-1 gap-2">
+        <OfferSaveButton offer={offer} userId={userId} pastilla className={secondaryClass} />
       </div>
     </div>
   );
 }
+
 function OfferRow({
   offer,
   selected,
@@ -750,7 +713,7 @@ function OfferRow({
   const discount = offerDiscountPercent(offer);
   return (
     <article
-      className={`relative overflow-hidden border-b border-[#dfe6ec] bg-white px-3 py-2 transition hover:bg-[#f8fafc] sm:px-4 sm:py-2.5 ${selected ? "lg:bg-[#eef9fd] lg:shadow-[inset_4px_0_0_#162543]" : ""}`}
+      className={`relative overflow-hidden border-b border-[#dfe6ec] bg-white px-3 py-2 transition sm:max-lg:last:border-b-0 hover:bg-[#f8fafc] sm:px-4 sm:py-2.5 ${selected ? "lg:bg-[#eef9fd] lg:shadow-[inset_4px_0_0_#162543]" : ""}`}
     >
       <button
         type="button"
@@ -778,10 +741,18 @@ function OfferRow({
             <p className="truncate text-[13px] font-semibold leading-5 text-[#101d35] sm:text-sm">
               {offer.professional_name}
             </p>
-            <p className="truncate text-[13px] font-extrabold leading-5 text-[#007fae] sm:text-sm">
+            {/* En computadora, un solo azul por fila: el del título, que es lo
+                que se abre. El precio va en azul marino y fuerte —es dinero—, y
+                tipo, servicio y lugar comparten un renglón gris. */}
+            <p className="truncate text-[13px] font-extrabold leading-5 text-[#007fae] sm:text-sm lg:text-[#162543]">
                {formatOfferPrice(offer, locale)}
             </p>
-            <div className="flex min-w-0 items-center gap-1.5 overflow-hidden text-[11px] leading-4 sm:text-xs">
+            <p className="hidden truncate text-xs leading-4 text-[#68778d] lg:block">
+              {offerTypeLabel(offer.offer_type, locale)}
+              {offer.service_label && <><span aria-hidden="true" className="mx-1.5 text-[#c0cad5]">·</span>{offer.service_label}</>}
+              {offer.location_label && <><span aria-hidden="true" className="mx-1.5 text-[#c0cad5]">·</span>{offer.location_label}</>}
+            </p>
+            <div className="flex min-w-0 items-center gap-1.5 overflow-hidden text-[11px] leading-4 sm:text-xs lg:hidden">
               <span className="shrink-0 text-[#68778d]">
                  {offerTypeLabel(offer.offer_type, locale)}
               </span>
@@ -797,7 +768,7 @@ function OfferRow({
               )}
             </div>
             {offer.location_label && (
-              <p className="truncate text-[11px] leading-4 text-[#68778d] sm:text-xs">
+              <p className="truncate text-[11px] leading-4 text-[#68778d] sm:text-xs lg:hidden">
                 {offer.location_label}
               </p>
             )}
@@ -813,132 +784,140 @@ function OfferPreview({
   userId,
   currentProfessionalId,
   onEdit,
+  onFiltrarServicio,
 }: {
   offer: ProfessionalOffer;
   userId: string | null;
   currentProfessionalId: string | null;
   onEdit: () => void;
+  /** Tocar el servicio en azul deja en el tablero solo ese servicio. */
+  onFiltrarServicio?: (servicio: string) => void;
 }) {
   const locale = marketplaceLocale(useLocale());
   const copy = OFFERS_COPY[locale];
   const before = formatOfferBeforePrice(offer, locale);
   const discount = offerDiscountPercent(offer);
   const isOwner = offer.professional_id === currentProfessionalId;
-  const tMenu = useTranslations("menuFicha");
-  const { compartir, avisoNodo } = useCompartir();
-  const [reportando, setReportando] = useState(false);
-  const enlaceParaCompartir = enlaceOferta(offer);
+  // El orden del panel, el de las tiendas en computadora (Facebook Marketplace,
+  // Mercado Libre, Amazon): la FOTO a la izquierda y, a su lado, qué es,
+  // cuánto cuesta y qué se puede hacer. Así la foto manda —en una promoción es
+  // lo que vende— sin empujar WhatsApp y Guardar debajo del pliegue, que es lo
+  // que pasaba con la foto arriba a lo ancho: medía media pantalla.
+  // Con el panel angosto (menos de 1280 px) no caben lado a lado: la foto va
+  // arriba, más baja, y el resumen debajo.
   return (
     <article className="relative ccr-marketplace-result-list hidden min-w-0 bg-white p-7 lg:block lg:h-full lg:overflow-y-auto">
-      {/* El "..." vive arriba a la derecha del panel, como en la cabecera de la
-          app: es el lugar donde la gente lo busca. */}
-      <MenuFicha
-        className="absolute right-4 top-4 z-10 rounded-full bg-white/85 backdrop-blur-sm"
-        opciones={[
-          { id: "compartir", icono: <Share2 className="h-4 w-4" />, texto: tMenu("share"), onSelect: () => void compartir(enlaceParaCompartir, offer.title) },
-          ...(isOwner || !offer.professional_slug ? [] : [{ id: "reportar", icono: <Flag className="h-4 w-4" />, texto: tMenu("reportOffer"), peligro: true, onSelect: () => setReportando(true) }]),
-        ]}
-      />
-      <div className="relative">
-        <OfferImageGallery images={offer.image_urls} title={offer.title} />
-        {discount && (
-          <span className="absolute left-3 top-3 rounded-md bg-[#009fd9] px-3 py-1.5 text-sm font-extrabold text-white">
-            -{discount}%
-          </span>
-        )}
-      </div>
-      <div className="mt-3 flex items-start justify-between gap-3">
-        <div className="min-w-0 flex-1">
-          <h2 className="text-2xl font-extrabold leading-tight">
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.45fr)_minmax(0,1fr)] xl:items-start">
+        <div className="relative">
+          <OfferImageGallery images={offer.image_urls} title={offer.title} className="[&_img]:max-h-[320px] xl:[&_img]:aspect-square xl:[&_img]:max-h-[560px]" />
+          {discount && (
+            <span className="absolute left-3 top-3 rounded-md bg-[#009fd9] px-3 py-1.5 text-sm font-extrabold text-white">
+              -{discount}%
+            </span>
+          )}
+        </div>
+        <div className="min-w-0">
+          {/* Quién publica va PRIMERO y, al final de esa misma línea, el «···»
+              con compartir adentro —el orden de LinkedIn—. El nombre es la
+              entrada al perfil: un botón "Ver perfil" aparte competía con el
+              contacto y decía lo mismo. */}
+          <div className="flex min-w-0 items-center gap-2">
+            <div className="min-w-0 flex-1">
+              {offer.professional_slug ? (
+                <Link
+                  href={`/profesionales/${offer.professional_slug}?from=${encodeURIComponent(`/ofertas/${offer.id}`)}`}
+                  className="inline-flex max-w-full items-center gap-1 font-semibold text-[#005eaa] hover:underline"
+                >
+                  <span className="min-w-0 truncate">{offer.professional_name}</span>
+                  <ChevronRight className="h-4 w-4 shrink-0" />
+                </Link>
+              ) : (
+                <p className="truncate font-semibold text-[#52627a]">
+                  {offer.professional_name}
+                </p>
+              )}
+            </div>
+            <MenuOferta
+              grande
+              className="-my-2.5 -mr-2 shrink-0"
+              ofertaId={offer.id}
+              titulo={offer.title}
+              enlace={enlaceOferta(offer)}
+              profesionalNombre={offer.professional_name || copy.professional}
+              profesionalSlug={offer.professional_slug}
+              esPropia={isOwner}
+            />
+          </div>
+          <h2 className="mt-0.5 text-2xl font-extrabold leading-tight">
             {offer.title}
           </h2>
-          {/* El nombre es la entrada al perfil: un botón "Ver perfil" aparte
-              competía con el contacto y decía lo mismo. */}
-          {offer.professional_slug ? (
-            <Link
-              href={`/profesionales/${offer.professional_slug}?from=${encodeURIComponent(`/ofertas/${offer.id}`)}`}
-              className="mt-1 inline-flex items-center gap-1 font-semibold text-[#005eaa] hover:underline"
-            >
-              {offer.professional_name}
-              <ChevronRight className="h-4 w-4 shrink-0" />
-            </Link>
-          ) : (
-            <p className="mt-1 font-semibold text-[#52627a]">
-              {offer.professional_name}
-            </p>
-          )}
-          {/* Tipo y servicio en una línea con punto, igual que en la tarjeta de
-              la lista. */}
           <p className="mt-1 flex min-w-0 flex-wrap items-center gap-1.5 text-sm leading-5">
             <span className="text-[#68778d]">{offerTypeLabel(offer.offer_type, locale)}</span>
             {offer.service_label && (
               <>
                 <span aria-hidden="true" className="text-[#c0cad5]">·</span>
-                <span className="font-semibold text-[#008fc3]">{offer.service_label}</span>
+                {/* Salía en azul de enlace y no hacía nada. Ahora filtra. */}
+                <button type="button" onClick={() => onFiltrarServicio?.(offer.service_label ?? "")} className="font-semibold text-[#008fc3] hover:underline">{offer.service_label}</button>
               </>
             )}
           </p>
+          <div className="mt-3 flex flex-wrap items-end gap-3">
+            <p className="text-2xl font-extrabold text-[#007fae]">
+              {formatOfferPrice(offer, locale)}
+            </p>
+            {before && (
+              <p className="pb-1 text-sm font-semibold text-[#8794a7] line-through">
+                {before}
+              </p>
+            )}
+          </div>
+
+          {/* Las acciones, junto al precio. Con la foto arriba (panel angosto)
+              la fila se queda pegada arriba del panel al bajar. */}
+          <div style={{ top: -28 }} className="sticky z-10 -mx-7 mt-4 flex flex-wrap items-center gap-2 border-b border-[#eef2f6] bg-white px-7 py-3 xl:static xl:mx-0 xl:border-0 xl:px-0">
+            {isOwner ? (
+              <>
+                <button
+                  type="button"
+                  onClick={onEdit}
+                  className="inline-flex h-12 items-center justify-center rounded-full bg-[#009fd9] px-6 text-base font-semibold text-white transition hover:bg-[#008fc3]"
+                >
+                  {copy.editOffer}
+                </button>
+                <Link
+                  href={`/dashboard/profesional?mode=offer&tab=offers&offer=${offer.id}`}
+                  className="inline-flex h-12 items-center justify-center rounded-full border border-[#b9d9e8] px-6 text-base font-semibold text-[#007fae] transition hover:bg-[#f1f9fc]"
+                >
+                  {copy.manageOffer}
+                </Link>
+              </>
+            ) : (
+              <OfferContactActions offer={offer} userId={userId} isOwner={false} escritorio />
+            )}
+          </div>
+
+          <div className="mt-4 flex flex-col gap-2 text-sm text-[#60708a]">
+            {offer.location_label && (
+              <span className="inline-flex items-center gap-1.5">
+                <MapPin className="h-4 w-4 text-[#009fd9]" />
+                {offer.location_label}
+              </span>
+            )}
+            {offer.valid_until && (
+              <span className="inline-flex items-center gap-1.5">
+                <CalendarDays className="h-4 w-4 text-[#009fd9]" />
+                {copy.availableUntil}{" "}
+                {new Intl.DateTimeFormat(locale === "en" ? "en-US" : "es-CR", { dateStyle: "medium" }).format(
+                  new Date(`${offer.valid_until}T12:00:00`),
+                )}
+              </span>
+            )}
+          </div>
         </div>
       </div>
-      {reportando && offer.professional_slug && (
-        <ReportProfileModal
-          professionalName={offer.professional_name || copy.professional}
-          professionalSlug={offer.professional_slug}
-          contexto={`Oferta "${offer.title}" (${offer.id})`}
-          titulo={tMenu("reportOffer")}
-          onClose={() => setReportando(false)}
-        />
-      )}
-      {avisoNodo}
-      {isOwner && (
-        <div className="mt-4 grid grid-cols-2 gap-3 sm:flex sm:flex-wrap">
-          <button
-            type="button"
-            onClick={onEdit}
-            className="inline-flex h-11 min-w-0 items-center justify-center rounded-full bg-[#009fd9] px-3 text-sm font-bold text-white transition hover:bg-[#008fc3] sm:px-5"
-          >
-            <span className="truncate">{copy.editOffer}</span>
-          </button>
-                        <Link
-                          href={`/dashboard/profesional?mode=offer&tab=offers&offer=${offer.id}`}
-                          className="inline-flex h-11 min-w-0 items-center justify-center rounded-full border border-[#b9d9e8] px-3 text-sm font-bold text-[#007fae] transition hover:bg-[#f1f9fc] sm:px-5"
-                        >
-                          <span className="truncate sm:hidden">{locale === "es" ? "Administrar" : copy.manageOffer}</span>
-                          <span className="hidden truncate sm:inline">{copy.manageOffer}</span>
-                        </Link>
-                      </div>
-                    )}
-      <OfferContactActions offer={offer} userId={userId} isOwner={isOwner} />
-      <div className="mt-5 flex flex-wrap items-end gap-3">
-        <p className="text-2xl font-extrabold text-[#007fae]">
-           {formatOfferPrice(offer, locale)}
-        </p>
-        {before && (
-          <p className="pb-1 text-sm font-semibold text-[#8794a7] line-through">
-            {before}
-          </p>
-        )}
-      </div>
-      <p className="mt-6 whitespace-pre-line break-words border-t border-[#e7edf2] pt-6 text-sm leading-7 text-[#43536b] [overflow-wrap:anywhere]">
+      <p className="mt-6 whitespace-pre-line break-words border-t border-[#eef2f6] pt-6 text-sm leading-7 text-[#43536b] [overflow-wrap:anywhere]">
         {offer.description}
       </p>
-      <div className="mt-5 flex flex-wrap gap-4 text-sm text-[#60708a]">
-        {offer.location_label && (
-          <span className="inline-flex items-center gap-1.5">
-            <MapPin className="h-4 w-4 text-[#009fd9]" />
-            {offer.location_label}
-          </span>
-        )}
-        {offer.valid_until && (
-          <span className="inline-flex items-center gap-1.5">
-            <CalendarDays className="h-4 w-4 text-[#009fd9]" />
-             {copy.availableUntil}{" "}
-             {new Intl.DateTimeFormat(locale === "en" ? "en-US" : "es-CR", { dateStyle: "medium" }).format(
-              new Date(`${offer.valid_until}T12:00:00`),
-            )}
-          </span>
-        )}
-      </div>
     </article>
   );
 }

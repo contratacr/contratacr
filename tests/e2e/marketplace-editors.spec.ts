@@ -136,7 +136,7 @@ test.describe("@seeded marketplace editors through the real screens", () => {
       await gotoOK(page, `/es/ofertas/${created.offerId}`);
     } else {
       await gotoOK(page, "/es/ofertas/publicar");
-      await expectVisibleText(page.locator("body"), /Publicar oferta/);
+      await expectVisibleText(page.locator("body"), /Publicar promoción/);
       await page.locator('input[name="title"]').fill(offerTitle);
       // The service picker is a trigger button that reveals a search box.
       await page.getByText("Selecciona un servicio", { exact: true }).first().click();
@@ -153,7 +153,7 @@ test.describe("@seeded marketplace editors through the real screens", () => {
       // hay que abrir el pliegue antes de escribir la cantidad.
       await page.getByText(/^Más opciones/).click();
       await page.locator('input[name="quantity_available"]').fill("3");
-      await page.getByRole("button", { name: /^Publicar oferta$/ }).click();
+      await page.getByRole("button", { name: /^Publicar promoción$/ }).click();
 
       await page.waitForURL(/\/es\/ofertas\/[0-9a-f-]{36}/, { timeout: 45_000, waitUntil: "domcontentloaded" });
       created.offerId = page.url().match(/\/ofertas\/([0-9a-f-]{36})/)![1];
@@ -163,7 +163,7 @@ test.describe("@seeded marketplace editors through the real screens", () => {
     await expectHealthyPage(page);
 
     // Owner actions on the detail lead to the edit form with the saved values.
-    const offerEditor = await openOwnerEditor(page, "Editar oferta", /\/ofertas\/[0-9a-f-]{36}\/editar/);
+    const offerEditor = await openOwnerEditor(page, "Editar promoción", /\/ofertas\/[0-9a-f-]{36}\/editar/);
     await expect(offerEditor.locator('input[name="title"]')).toHaveValue(offerTitle);
     await offerEditor.locator('input[name="title"]').fill(`${offerTitle} editada`);
     await offerEditor.locator('input[name="price_now"]').fill("40000");
@@ -181,10 +181,24 @@ test.describe("@seeded marketplace editors through the real screens", () => {
     await card.getByRole("button", { name: new RegExp(`${offerTitle} editada`) }).first().click();
     await openItemActions(page, card);
     await chooseItemAction(card, /^Pausar$/);
+    // Con pocas publicaciones no se dibujan etapas y la lista sale entera; en
+    // cuanto hay suficientes, una pausada se va a «Cerradas». La cuenta de
+    // pruebas acumula publicaciones entre corridas, así que la prueba cambia de
+    // pestaña cuando esa pestaña existe.
+    const cerradas = page.getByRole("tab", { name: /Cerradas/ }).or(page.getByRole("button", { name: /^Cerradas/ })).filter({ visible: true }).first();
+    if (await cerradas.count()) await cerradas.click();
     await expectVisibleText(card, /Pausada/);
     await openItemActions(page, card);
-    await chooseItemAction(card, /^Publicar oferta$/);
-    await expectVisibleText(card, /Publicada/);
+    // El menú es consciente del estado: una publicación cerrada ya no ofrece
+    // «Publicar oferta» sino «Volver a publicar».
+    await chooseItemAction(card, /^Volver a publicar$/);
+    const activas = page.getByRole("tab", { name: /Activas/ }).or(page.getByRole("button", { name: /^Activas/ })).filter({ visible: true }).first();
+    if (await activas.count()) await activas.click();
+    // En «Activas» el estado NO se escribe en la tarjeta: todas están
+    // publicadas y repetiría la pestaña. Lo que se comprueba es que la
+    // publicación volvió a la lista viva y ya no dice «Pausada».
+    await expect(card).toBeVisible();
+    await expect(card).not.toContainText(/Pausada/);
     await expectHealthyPage(page);
   });
 
@@ -226,6 +240,11 @@ test.describe("@seeded marketplace editors through the real screens", () => {
     await card.getByRole("button", { name: new RegExp(`${jobTitle} editado`) }).first().click();
     await openItemActions(page, card);
     await chooseItemAction(card, /^Cerrar vacante$/);
+    // Misma regla que en Promociones: cuando hay etapas, lo cerrado se va a su
+    // pestaña, y el estado solo se escribe en la tarjeta cuando está ahí.
+    // Empleos es masculino: la pestaña dice «Cerrados» (Promociones, «Cerradas»).
+    const cerradasEmpleos = page.getByRole("tab", { name: /Cerrados/ }).or(page.getByRole("button", { name: /^Cerrados/ })).filter({ visible: true }).first();
+    if (await cerradasEmpleos.count()) await cerradasEmpleos.click();
     await expectVisibleText(card, /Cerrado/);
     await expectHealthyPage(page);
 

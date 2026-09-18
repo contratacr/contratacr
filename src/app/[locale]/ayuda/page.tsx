@@ -66,7 +66,7 @@ export default function AyudaPage() {
       <SectionHeaderTitle title={tSeccion("help")} fallbackHref="/" />
       <div className="ccr-navbar-spacer h-16" aria-hidden />
       <main className="flex-1">
-        <section className="border-b border-[#e5e7eb] px-4 pb-10 pt-12 sm:pb-12 sm:pt-12">
+        <section className="border-b border-[#e5e7eb] px-4 pb-10 pt-4 sm:pb-12 lg:pt-8">
           <div className="mx-auto max-w-4xl">
             <p className="text-xs font-bold uppercase text-[#009fd9]">{t("eyebrow")}</p>
             <div className="mt-3 flex flex-col justify-between gap-5 sm:flex-row sm:items-end">

@@ -3,6 +3,7 @@
 import { useEffect, type ReactNode } from "react";
 import { ArrowLeft, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { PIE_VENTANA_BASE } from "@/components/ui/acciones-al-pie";
 import { lockBodyScroll } from "@/lib/body-scroll-lock";
 import { useNativeFullscreenLayer } from "@/hooks/use-native-app";
 
@@ -181,7 +182,7 @@ export function Modal({
 
         {/* Footer (pinned) */}
         {footer && (
-          <div className={cn("flex shrink-0 justify-end gap-3 px-5 py-4 pb-[max(env(safe-area-inset-bottom),1rem)] sm:px-6 sm:pb-4", !footerNotice && "border-t border-[#f3f4f6]", footerClassName)}>
+          <div className={cn(PIE_VENTANA_BASE, "flex justify-end gap-3", footerNotice && "border-t-0", footerClassName)}>
             {footer}
           </div>
         )}

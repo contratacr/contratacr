@@ -5,6 +5,8 @@ import { Link } from "@/i18n/navigation";
 import { OfferImageGallery } from "@/components/offers/offer-image-gallery";
 import { OfferDetailNavbarSearch } from "@/components/offers/offer-detail-navbar-search";
 import { OfferContactActions } from "@/components/offers/offers-board";
+import { offerSaveSnapshot } from "@/lib/offer-snapshot";
+import { AccionesAlPie } from "@/components/ui/acciones-al-pie";
 import { MenuOferta } from "@/components/offers/menu-oferta";
 import { claveDeTramo, enlaceOferta, rangoDePrefijo } from "@/lib/marketplace-url";
 import { OfferOwnerActions } from "@/components/offers/offer-owner-actions";
@@ -18,22 +20,25 @@ import {
 } from "@/lib/offers";
 import { marketplaceLocale, offerTypeLabel } from "@/lib/marketplace-copy";
 import { safeGetUser } from "@/lib/supabase/get-user";
+import { contactFlagsFor, profesionalesBloqueados } from "@/lib/contact-flags";
 import { createClient } from "@/lib/supabase/server";
 import { recordServerInteraction } from "@/lib/analytics/server-events";
 import { repairVisibleText } from "@/lib/text/repair-visible-text";
 import { crTodayISO } from "@/lib/time-cr";
 import { RecordRecentVisit } from "@/components/mobile/record-recent-visit";
 import { marketplaceReturnLabel, safeMarketplaceReturnHref } from "@/lib/navigation/marketplace-return";
+import { CABECERA_BOTON, CABECERA_FILA_CENTRADA, CABECERA_GLIFO, CABECERA_TITULO } from "@/components/layout/cabecera";
+import { cn } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
 const COPY = {
   es: {
     back: "Volver",
-    title: "Oferta",
+    title: "Promoción",
     professionalFallback: "Profesional en ContrataCR",
     savings: "Ahorras",
-    unavailable: "Esta oferta ya no está disponible.",
+    unavailable: "Esta promoción ya no está disponible.",
     validUntil: "Válida hasta",
     available: "disponibles",
     details: "Detalles",
@@ -42,10 +47,10 @@ const COPY = {
   },
   en: {
     back: "Back",
-    title: "Offer",
+    title: "Promotion",
     professionalFallback: "Professional on ContrataCR",
     savings: "Save",
-    unavailable: "This offer is no longer available.",
+    unavailable: "This promotion is no longer available.",
     validUntil: "Available until",
     available: "available",
     details: "Details",
@@ -58,14 +63,18 @@ export default async function OfferDetailPage({ params, searchParams }: { params
   const { id, locale: rawLocale } = await params;
   const locale = marketplaceLocale(rawLocale);
   const copy = COPY[locale];
-  const dateLocale = locale === "en" ? "en-US" : "es-CR";
+  const idioma: "en" | "es" = locale === "en" ? "en" : "es";
+  const dateLocale = idioma === "en" ? "en-US" : "es-CR";
   const from = (await searchParams)?.from;
   const backHref = safeMarketplaceReturnHref(from, "/ofertas");
   const backLabel = marketplaceReturnLabel(backHref, "/ofertas", locale);
   const supabase = await createClient();
   const user = await safeGetUser(supabase);
+  // Las columnas de contacto no se leen aquí: `contact_email` está negado por
+  // columna para el invitado y tumbaría la consulta entera. Las banderas salen
+  // de contactFlagsFor y el dato, de /api/contact/reveal al tocar el botón.
   const professionalColumns = user
-    ? "slug,business_name,profile_id,whatsapp,allow_phone_call,call_phone,contact_email,profiles(full_name)"
+    ? "slug,business_name,profile_id,profiles(full_name)"
     : "slug,business_name,profiles(full_name)";
   // El enlace corto trae el título y los 8 primeros del id; el largo, el id
   // entero. Los dos abren la misma oferta.
@@ -90,12 +99,13 @@ export default async function OfferDetailPage({ params, searchParams }: { params
     slug?: string;
     business_name?: string;
     profile_id?: string;
-    whatsapp?: string | null;
-    allow_phone_call?: boolean | null;
-    call_phone?: string | null;
-    contact_email?: string | null;
     profiles?: { full_name?: string } | null;
   } | null;
+  const idProfesional = String((data as { professional_id?: string }).professional_id ?? "");
+  // La ficha de una cuenta bloqueada no se abre: su dueño tampoco sale en la
+  // búsqueda y no hay a quién escribirle.
+  if ((await profesionalesBloqueados([idProfesional])).has(idProfesional)) notFound();
+  const banderas = (await contactFlagsFor([idProfesional]))[String((data as { professional_id?: string }).professional_id ?? "")] ?? { hasWhatsapp: false, allowPhoneCall: false, hasEmail: false };
   const offer = {
     ...data,
     title: repairVisibleText(data.title),
@@ -105,10 +115,9 @@ export default async function OfferDetailPage({ params, searchParams }: { params
     image_urls: Array.isArray(data.image_urls) ? data.image_urls : [],
     professional_name: repairVisibleText(professional?.business_name || professional?.profiles?.full_name || copy.professionalFallback),
     professional_slug: professional?.slug ?? null,
-    professional_whatsapp: professional?.whatsapp ?? null,
-    professional_allow_phone_call: professional?.allow_phone_call ?? false,
-    professional_call_phone: professional?.call_phone ?? null,
-    professional_contact_email: professional?.contact_email ?? null,
+    // Solo banderas: el número y el correo se piden al tocar el botón.
+    professional_has_whatsapp: !!banderas.hasWhatsapp,
+    professional_allow_phone_call: !!banderas.allowPhoneCall,
   } as ProfessionalOffer;
   const isOwner = !!user && professional?.profile_id === user.id;
   const before = formatOfferBeforePrice(offer, locale);
@@ -120,7 +129,7 @@ export default async function OfferDetailPage({ params, searchParams }: { params
   }
 
   return (
-    <main className="min-h-[calc(100vh-72px)] bg-[#f4f7fa] text-[#162543]">
+    <main className="min-h-[calc(100vh-72px)] bg-[#f4f7fa] text-[#162543] max-sm:pb-32">
       <OfferDetailNavbarSearch title={offer.title} />
       <RecordRecentVisit
         surface="ofertas"
@@ -133,24 +142,27 @@ export default async function OfferDetailPage({ params, searchParams }: { params
         }}
       />
       <StickyHairlineHeader shadow className="z-30 lg:hidden">
-        <div className="relative flex min-h-[58px] items-center justify-center px-14">
-          <Link href={backHref} aria-label={copy.back} className="absolute left-3 top-1/2 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-full text-[#162543] transition hover:bg-[#eef5f9]">
-            <ArrowLeft className="h-6 w-6 stroke-[2.4]" />
+        <div className={CABECERA_FILA_CENTRADA}>
+          <Link href={backHref} aria-label={copy.back} className={cn("absolute left-4 top-1/2 -translate-y-1/2", CABECERA_BOTON)}>
+            <ArrowLeft className={cn(CABECERA_GLIFO, "stroke-[2.4]")} />
           </Link>
-          <h1 className="truncate text-center text-lg font-extrabold">{copy.title}</h1>
+          <h1 className={cn(CABECERA_TITULO, "text-center")}>{copy.title}</h1>
+          {/* Guardar y compartir viven juntos DENTRO del «...»: son acciones
+              sobre la ficha, no formas de contactar. Abajo solo lo que contacta. */}
           <MenuOferta
             grande
-            className="absolute right-2 top-1/2 -translate-y-1/2"
+            className="absolute right-3 top-1/2 -translate-y-1/2"
             ofertaId={offer.id}
             titulo={offer.title}
             enlace={enlaceOferta(offer)}
             profesionalNombre={offer.professional_name || copy.professionalFallback}
             profesionalSlug={offer.professional_slug}
             esPropia={isOwner}
+            guardar={isOwner ? undefined : { itemId: offer.id, snapshot: offerSaveSnapshot(offer, idioma), userId: user?.id ?? null, loginRedirect: `/ofertas/${offer.id}` }}
           />
         </div>
       </StickyHairlineHeader>
-      <div className="mx-auto hidden max-w-6xl px-4 pt-6 sm:px-6 lg:block">
+      <div className="mx-auto hidden max-w-6xl px-4 pt-8 sm:px-6 lg:block">
         <Link href={backHref} className="inline-flex h-10 items-center gap-2 rounded-lg px-2 text-sm font-extrabold text-[#162543] transition hover:bg-[#eaf6fc]">
           <ArrowLeft className="h-4 w-4 stroke-[2.4]" />
           <span>{backLabel}</span>
@@ -203,17 +215,23 @@ export default async function OfferDetailPage({ params, searchParams }: { params
                 </>
               )}
             </p>
-            <div className="mt-5 flex flex-wrap items-end gap-3">
+            {/* En computadora el precio vive en la tarjeta de al lado; aquí
+                salía por segunda vez, a 3xl, diez líneas más abajo. */}
+            <div className="mt-5 flex flex-wrap items-end gap-3 lg:hidden">
               <p className="text-3xl font-extrabold text-[#007fae]">{formatOfferPrice(offer, locale)}</p>
               {before && <p className="pb-1 text-sm font-bold text-[#8794a7] line-through">{before}</p>}
             </div>
-            <div className="mt-5 lg:hidden">
-              {isOwner ? (
+            {isOwner ? (
+              <div className="mt-5 lg:hidden">
                 <OfferOwnerActions offer={offer} professionalId={offer.professional_id} serviceOptions={serviceOptions} fromPanel={from === "panel"} />
-              ) : (
-                unavailable ? <p className="rounded-lg bg-[#f4f7fa] p-4 text-sm font-bold">{copy.unavailable}</p> : <OfferContactActions offer={offer} userId={user?.id ?? null} isOwner={false} />
-              )}
-            </div>
+              </div>
+            ) : unavailable ? (
+              <p className="mt-5 rounded-lg bg-[#f4f7fa] p-4 text-sm font-bold lg:hidden">{copy.unavailable}</p>
+            ) : (
+              <AccionesAlPie className="mt-5 lg:hidden">
+                <OfferContactActions offer={offer} userId={user?.id ?? null} isOwner={false} soloContacto />
+              </AccionesAlPie>
+            )}
             <div className="mt-5 grid gap-3 border-y border-[#e8eef3] py-5 text-sm text-[#60708a] sm:grid-cols-2">
               {offer.location_label && <span className="inline-flex items-center gap-2"><MapPin className="h-4 w-4 text-[#009fd9]" />{offer.location_label}</span>}
               {offer.valid_until && <span className="inline-flex items-center gap-2"><CalendarDays className="h-4 w-4 text-[#009fd9]" />{copy.validUntil} {new Intl.DateTimeFormat(dateLocale, { dateStyle: "medium" }).format(new Date(`${offer.valid_until}T12:00:00`))}</span>}

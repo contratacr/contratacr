@@ -2,7 +2,7 @@
 import { EMPLEOS_VISIBLE } from "@/lib/feature-flags";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Bookmark, BriefcaseBusiness, ExternalLink, MapPin, Star, Tag, Trash2, Video, Wrench } from "lucide-react";
+import { Bookmark, BriefcaseBusiness, ClipboardList, ExternalLink, MapPin, Star, Tag, Trash2, Video, Wrench } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
@@ -29,8 +29,8 @@ function volverAFavoritos(destino: string) {
   return `${destino}?from=${encodeURIComponent(RUTA_FAVORITOS)}`;
 }
 
-type SavedFilter = "professionals" | "offers" | "jobs";
-type SavedItemKind = "offer" | "job";
+type SavedFilter = "professionals" | "offers" | "jobs" | "projects";
+type SavedItemKind = "offer" | "job" | "project";
 
 type SavedItem = {
   id: string;
@@ -54,7 +54,7 @@ function SavedProCard({ pro, onUnsave }: { pro: SavedPro; onUnsave: (id: string)
   const displayName = getProfessionalDisplayName(pro.fullName, pro.businessName).primaryDesktop;
 
   return (
-    <div className="grid grid-cols-[64px_minmax(0,1fr)] gap-x-3 gap-y-4 rounded-2xl border border-[#e5e7eb] bg-white p-4 shadow-sm transition-colors hover:bg-[#fafafa] sm:flex sm:items-center sm:gap-4">
+    <div data-saved-item="" className="grid grid-cols-[64px_minmax(0,1fr)] gap-x-3 gap-y-4 rounded-2xl border border-[#e5e7eb] bg-white p-4 shadow-sm transition-colors hover:bg-[#fafafa] sm:flex sm:items-center sm:gap-4">
       <div className="relative shrink-0">
         <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl text-lg font-bold sm:h-14 sm:w-14 ccr-caja-icono">
           {pro.avatarUrl ? (
@@ -129,22 +129,26 @@ function SavedGenericCard({ item, onRemove }: { item: SavedItem; onRemove: (item
   const t = useTranslations("savedPros");
   const snapshot = item.snapshot ?? {};
   const isJob = item.item_type === "job";
-  const title = text(snapshot.title, isJob ? t("favoriteJob") : t("favoriteOffer"));
+  const isProject = item.item_type === "project";
+  const title = text(snapshot.title, isJob ? t("favoriteJob") : isProject ? t("favoriteProject") : t("favoriteOffer"));
   const owner = text(snapshot.employer_name ?? snapshot.professional_name, "ContrataCR");
   const image = text(snapshot.image_url ?? snapshot.employer_avatar_url ?? snapshot.professional_avatar_url);
-  const meta = isJob
+  const meta = isJob || isProject
     ? [text(snapshot.location_label, "Costa Rica"), text(snapshot.salary)].filter(Boolean).join(" · ")
     : [text(snapshot.service_label), text(snapshot.price)].filter(Boolean).join(" · ");
-  const href = volverAFavoritos(isJob ? `/empleos/${item.item_id}` : `/ofertas/${item.item_id}`);
-  const Icon = isJob ? BriefcaseBusiness : Tag;
+  const href = volverAFavoritos(isJob ? `/empleos/${item.item_id}` : isProject ? `/proyectos/${item.item_id}` : `/ofertas/${item.item_id}`);
+  const Icon = isJob ? BriefcaseBusiness : isProject ? ClipboardList : Tag;
 
   return (
-    <div className="grid grid-cols-[56px_minmax(0,1fr)] gap-3 rounded-2xl border border-[#e5e7eb] bg-white p-4 shadow-sm transition-colors hover:bg-[#fafafa] sm:flex sm:items-center">
-      <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-[#eef7fb] text-[#009FD9]">
+    <div data-saved-item="" className="grid grid-cols-[56px_minmax(0,1fr)] gap-3 rounded-2xl border border-[#e5e7eb] bg-white p-4 shadow-sm transition-colors hover:bg-[#fafafa] sm:flex sm:items-center">
+      {/* La misma caja que la tarjeta del profesional de al lado: en Favoritos
+          las cuatro pestañas se ven seguidas y esta traía su propio azul, así
+          que la misma lista cambiaba de aspecto al cambiar de pestaña. */}
+      <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl ccr-caja-icono">
         {image ? <ProgressiveImage src={cldThumb(image, 112)} alt={title} fit="cover" wrapperClassName="h-full w-full" /> : <Icon className="h-5 w-5" />}
       </div>
-      {/* Sin la etiqueta EMPLEO / OFERTA: para llegar aquí hay que estar parado
-          en la pestaña que ya lo dice, así que solo gastaba un renglón. */}
+      {/* Sin etiqueta EMPLEO / OFERTA: lo dice el botón («Ver empleo» / «Ver
+          oferta»), que se lee igual con pestañas y sin ellas. */}
       <div className="min-w-0 flex-1">
         <h3 className="line-clamp-2 text-sm font-extrabold text-[#162543]">{title}</h3>
         <p className="mt-0.5 truncate text-sm font-semibold text-[#53657d]">{owner}</p>
@@ -157,7 +161,7 @@ function SavedGenericCard({ item, onRemove }: { item: SavedItem; onRemove: (item
             {/* "Ver oferta" / "Ver empleo", no "Ver" a secas: las tres pestañas de
                 Favoritos se ven juntas y la de profesionales ya decía "Ver perfil".
                 El nombre dice qué se abre y las tres quedan con la misma forma. */}
-            {isJob ? t("viewJob") : t("viewOffer")}
+            {isJob ? t("viewJob") : isProject ? t("viewProject") : t("viewOffer")}
           </Link>
         </Button>
         <button
@@ -196,7 +200,7 @@ export function SavedProfessionalsTab() {
       .select("id,item_type,item_id,snapshot")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false });
-    const filas = ((data ?? []) as SavedItem[]).filter((item) => item.item_type === "offer" || item.item_type === "job");
+    const filas = ((data ?? []) as SavedItem[]).filter((item) => item.item_type === "offer" || item.item_type === "job" || item.item_type === "project");
     setSavedItems(filas);
     // Caché de sesión: la próxima entrada a Favoritos pinta esto de inmediato.
     setDashboardCache(`saved:items:${user.id}`, filas);
@@ -206,6 +210,11 @@ export function SavedProfessionalsTab() {
     // Lo cacheado se pinta antes de esperar a la red.
     const cacheados = user ? getDashboardCache<SavedItem[]>(`saved:items:${user.id}`) : null;
     if (cacheados) queueMicrotask(() => setSavedItems(cacheados));
+    // Los profesionales guardados viven en el navegador: se leen de una vez, sin
+    // esperar la sincronización con el servidor. Antes se leían DESPUÉS de ella,
+    // así que la pestaña —que abre en Profesionales— alcanzaba a pintar «no
+    // tenés profesionales guardados» con el favorito ya en el disco.
+    refreshPros();
     queueMicrotask(async () => {
       if (user) {
         await applyPendingSavedPro(user.id);
@@ -248,38 +257,54 @@ export function SavedProfessionalsTab() {
 
   const offers = useMemo(() => savedItems.filter((item) => item.item_type === "offer"), [savedItems]);
   const jobs = useMemo(() => savedItems.filter((item) => item.item_type === "job"), [savedItems]);
-  const total = savedPros.length + offers.length + jobs.length;
-  const showPros = filter === "professionals";
-  const showOffers = filter === "offers";
-  const showJobs = filter === "jobs";
+  const projects = useMemo(() => savedItems.filter((item) => item.item_type === "project"), [savedItems]);
+  const total = savedPros.length + offers.length + jobs.length + projects.length;
+  // Los filtros de Favoritos son por TIPO, no por etapa: un profesional, una
+  // promoción y un empleo son cosas distintas y se revuelven si se juntan. Se
+  // dibujan siempre, con su conteo.
+  const todoJunto = false as boolean;
+  const showPros = todoJunto || filter === "professionals";
+  const showOffers = todoJunto || filter === "offers";
+  const showJobs = todoJunto || filter === "jobs";
+  const showProjects = todoJunto || filter === "projects";
 
   // Los tres tipos que se pueden guardar. Se abre en Profesionales, que es lo
   // que casi siempre se viene a buscar.
-  const availableFilters: SavedFilter[] = (["professionals", "offers", "jobs"] as SavedFilter[]).filter((f) => EMPLEOS_VISIBLE || f !== "jobs");
+  const availableFilters: SavedFilter[] = (["professionals", "offers", "jobs", "projects"] as SavedFilter[]).filter((f) => EMPLEOS_VISIBLE || f !== "jobs");
 
-  // Esqueleto solo cuando de verdad no hay nada que mostrar: los profesionales
-  // guardados viven en el navegador y las ofertas/empleos vienen de la caché,
-  // así que al volver a la sección se pinta de una vez.
-  if (authLoading || (!mounted && total === 0)) return <PanelListSkeleton rows={3} />;
+  const selectedCount = todoJunto ? total : filter === "professionals" ? savedPros.length : filter === "offers" ? offers.length : filter === "projects" ? projects.length : jobs.length;
+
+  // Esqueleto mientras la pestaña que se está viendo no tenga nada que pintar.
+  // Antes bastaba con que CUALQUIER tipo tuviera algo (`total`): con las
+  // promociones en caché y los profesionales todavía en camino, la sección se
+  // daba por cargada y enseñaba el vacío de Profesionales durante medio
+  // segundo. Un vacío es una respuesta —«no hay nada»—, y mientras se carga
+  // todavía no se sabe.
+  if (authLoading || (!mounted && selectedCount === 0)) return <PanelListSkeleton rows={3} withTabs />;
 
   const tabs = availableFilters.map((id) => ({ id }));
   const tabLabels: Record<string, string> = {
     professionals: t("professionalsTab"),
     offers: t("offersTab"),
     jobs: t("jobsTab"),
+    projects: t("projectsTab"),
   };
   const tabCounts = {
     professionals: savedPros.length,
     offers: offers.length,
     jobs: jobs.length,
+    projects: projects.length,
   };
-  const selectedCount = filter === "professionals" ? savedPros.length : filter === "offers" ? offers.length : jobs.length;
-  const selectedEmptyLabel = filter === "professionals"
+  const selectedEmptyLabel = todoJunto
+    ? t("emptyNothingSaved")
+    : filter === "professionals"
     ? t("emptyProfessionals")
     : filter === "offers"
       ? t("emptyOffers")
       : filter === "jobs"
         ? t("emptyJobs")
+      : filter === "projects"
+        ? t("emptyProjects")
         : t("emptyNothingSaved");
 
   return (
@@ -290,6 +315,11 @@ export function SavedProfessionalsTab() {
         onChange={(id) => setFilter(id as SavedFilter)}
         counts={tabCounts}
         labelFor={(id) => tabLabels[id] ?? id}
+        // El MISMO control que las etapas de Mis proyectos: un filtro se ve
+        // igual en todo el panel. Eran dos dibujos para la misma interacción
+        // —elegir una vista de la lista, con su conteo— solo porque aquí se
+        // filtra por tipo y allá por etapa; quien lo usa no ve esa diferencia.
+        limpiable={false}
       />
 
       {/* Tarjetas separadas, como Citas, Proyectos y Postulaciones: en el teléfono
@@ -300,6 +330,7 @@ export function SavedProfessionalsTab() {
         {showPros && savedPros.map((pro) => <SavedProCard key={`pro-${pro.id}`} pro={pro} onUnsave={handleUnsavePro} />)}
         {showOffers && offers.map((item) => <SavedGenericCard key={item.id} item={item} onRemove={handleRemoveItem} />)}
         {showJobs && jobs.map((item) => <SavedGenericCard key={item.id} item={item} onRemove={handleRemoveItem} />)}
+        {showProjects && projects.map((item) => <SavedGenericCard key={item.id} item={item} onRemove={handleRemoveItem} />)}
         {/* El mismo vacío que el resto del app —tarjeta blanca de borde continuo—
             en lugar de un bloque suelto sobre el gris: aquí se veía distinto de
             Ofertas, Empleos o Soporte. */}

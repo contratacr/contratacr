@@ -6,7 +6,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full text-sm font-semibold transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 active:scale-[0.98] cursor-pointer",
+  "relative inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full text-sm font-semibold transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 active:scale-[0.98] cursor-pointer",
   {
     variants: {
       variant: {
@@ -24,8 +24,14 @@ const buttonVariants = cva(
           "bg-red-500 text-white hover:bg-red-600 focus-visible:ring-red-500",
         outline:
           "border border-[#e5e7eb] bg-white hover:bg-[#f3f4f6] text-[#162543] focus-visible:ring-[#009FD9]",
+        // El botón que contacta lleva el azul de ContrataCR, no el verde de
+        // WhatsApp, en verde: es el color que la gente ya asocia con «esto
+        // abre WhatsApp», y al lado de «Llamar» deja claro cuál es cuál sin
+        // leer. No el verde oficial (#25D366): con letra blanca da 1,98:1 y se
+        // lee mal; #1DA851 es el de los botones web de WhatsApp y da 3,10:1,
+        // algo mejor que el azul que había (3,02:1).
         whatsapp:
-          "bg-[#25d366] text-white hover:bg-[#1da851] focus-visible:ring-[#25d366]",
+          "bg-[#1DA851] text-white hover:bg-[#178F45] focus-visible:ring-[#1DA851]",
       },
       size: {
         sm: "h-9 px-3.5 text-[13px]",
@@ -69,14 +75,16 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
             pantallas ("Ver perfil" en Favoritos, por ejemplo). */}
         {asChild ? children : (
           <>
-            {/* El giro ocupa su sitio SIEMPRE: reservado e invisible mientras no
-                se guarda. Si aparecía solo al guardar, el botón crecía 20 px
-                justo cuando la persona acaba de tocarlo y la fila se movía. */}
+            {/* El giro va FLOTANDO a la izquierda, no en la fila: reservarle un
+                hueco dentro del renglón empujaba el rótulo hacia la derecha y en
+                un botón de ancho completo se veía descentrado —«Elegir»,
+                «Crear proyecto»—. Flotando, el rótulo queda centrado de verdad,
+                el botón no crece al tocarlo y la fila no se mueve. */}
             <span
               aria-hidden={!loading}
               className={cn(
-                "h-4 w-4 shrink-0 rounded-full border-2 border-current border-t-transparent",
-                loading ? "animate-spin" : "invisible",
+                "absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 rounded-full border-2 border-current border-t-transparent",
+                loading ? "animate-spin" : "hidden",
               )}
             />
             {children}

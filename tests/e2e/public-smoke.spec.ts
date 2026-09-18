@@ -8,6 +8,7 @@ const routes = [
   "/es/buscar",
   "/es/empleos",
   "/es/ofertas",
+  "/es/proyectos",
   "/es/login",
   "/es/registro",
   "/es/registro/cliente",
@@ -32,6 +33,7 @@ const routes = [
   "/en/buscar",
   "/en/empleos",
   "/en/ofertas",
+  "/en/proyectos",
   "/en/login",
   "/en/registro",
   "/en/registro/cliente",
@@ -83,8 +85,12 @@ test.describe("@smoke public routes", () => {
       await expect(navigation.getByRole("button", { name: /^Servicios$/i }).first()).toBeVisible();
       await expect(navigation.getByRole("button", { name: /^Explorar$/i }).first()).toBeVisible();
       await expect(navigation.getByRole("link", { name: /Ingresar/i }).first()).toBeVisible();
-      const register = navigation.getByRole("link", { name: /Registrarse|Crear cuenta/i }).first();
-      await expect(register).toBeVisible();
+      // La acción de la barra ya no es «Registrarse» a secas: contactar no pide
+      // cuenta, así que el botón invita a lo único que sí la necesita desde el
+      // primer minuto —ofrecer servicios—.
+      const registro = navigation.getByRole("link", { name: /Ofrecer mis servicios/i }).first();
+      await expect(registro).toBeVisible();
+      await expect(registro).toHaveAttribute("href", /\/registro\/profesional/);
     }
     await expectHealthyPage(page);
   });

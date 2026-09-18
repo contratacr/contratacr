@@ -1,7 +1,7 @@
 // Lo último que la persona abrió, para que el buscador ofrezca volver ahí de un
 // toque: un profesional con su foto, una oferta o un empleo. Vive en el
 // navegador porque es una comodidad del dispositivo, no un dato de la cuenta.
-export type RecentVisitSurface = "profesionales" | "ofertas" | "empleos";
+export type RecentVisitSurface = "profesionales" | "ofertas" | "empleos" | "proyectos";
 
 export type RecentVisit = {
   id: string;

@@ -10,10 +10,11 @@ import { Link, useRouter } from "@/i18n/navigation";
 import { MarketplaceFilterChip, MarketplaceNavbarPortal, MarketplaceSearch } from "@/components/marketplace/marketplace-controls";
 import { COMMON_JOB_TITLES, type EmploymentType, type ExperienceLevel, type WorkplaceType } from "@/lib/jobs";
 import { employmentTypeLabel, experienceLevelLabel, marketplaceLocale, workplaceTypeLabel } from "@/lib/marketplace-copy";
+import { CABECERA_BOTON, CABECERA_FILA_CENTRADA, CABECERA_GLIFO, CABECERA_TITULO } from "@/components/layout/cabecera";
 
 const JOB_HEADER_COPY = {
   es: {
-    placeholder: "¿Qué empleo estás buscando?",
+    placeholder: "¿Qué empleo buscas?",
     published: "Publicado",
     anyDate: "Cualquier fecha",
     lastDay: "Últimas 24 horas",
@@ -31,7 +32,7 @@ const JOB_HEADER_COPY = {
     title: "Empleos",
   },
   en: {
-    placeholder: "What job are you looking for?",
+    placeholder: "Search jobs",
     published: "Date posted",
     anyDate: "Any date",
     lastDay: "Past 24 hours",
@@ -126,11 +127,11 @@ export function JobMarketplaceHeader({ initialQuery = "", initialLocation = "", 
     <>
       <div ref={sentinelaRef} aria-hidden className="h-px lg:hidden" />
       <section ref={cabeceraRef} className={cn("sticky top-0 z-20 border-b bg-white transition-colors duration-200 lg:hidden", conLinea ? "border-[#e5e7eb]" : "border-transparent")}>
-        <div className="relative flex min-h-[56px] items-center justify-center px-14">
-          <Link href="/empleos" aria-label={copy.close} className="absolute left-3 top-1/2 grid h-11 w-11 -translate-y-1/2 place-items-center text-[#162543] transition hover:bg-[#eef5f9]">
-            <X className="h-7 w-7" strokeWidth={2.2} />
+        <div className={CABECERA_FILA_CENTRADA}>
+          <Link href="/empleos" aria-label={copy.close} className={cn("absolute left-4 top-1/2 -translate-y-1/2", CABECERA_BOTON)}>
+            <X className={CABECERA_GLIFO} strokeWidth={2.4} />
           </Link>
-          <h1 className="truncate text-center text-[21px] font-extrabold text-[#162543]">{copy.title}</h1>
+          <h1 className={cn(CABECERA_TITULO, "text-center")}>{copy.title}</h1>
         </div>
         <div className="px-4 pb-3">{search}</div>
         <ScrollRail className="flex gap-1 px-4 pb-4 sm:gap-1.5">{filters}</ScrollRail>

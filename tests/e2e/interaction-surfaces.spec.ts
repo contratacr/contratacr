@@ -14,18 +14,13 @@ test.describe("@seeded interaction surfaces", () => {
     seed = await ensureRegressionSeed();
   });
 
-  test("booking flow opens from a professional profile without submitting", async ({ page }) => {
+  // Las citas salieron del menú y de la ficha: ya no hay botón «Ver
+  // disponibilidad». La pantalla de reservar sigue viva y con su propia
+  // dirección, y eso es lo que se comprueba aquí.
+  test("booking screen still opens by its own address without submitting", async ({ page }) => {
     await loginAs(page, E2E_USERS.client.email, E2E_USERS.client.password);
-    await gotoOK(page, `/es/profesionales/${seed.professionalSlug}`);
+    await gotoOK(page, `/es/profesionales/${seed.professionalSlug}/reservar`);
 
-    const action = page.getByRole("button", { name: /Ver disponibilidad|View availability/i }).first();
-    await expect(action).toBeVisible();
-    await action.click();
-
-    // Reservar es una PANTALLA con su propia dirección (…/reservar?fecha&hora),
-    // no un modal: así la persona puede volver, compartir el enlace y no pierde
-    // el paso si la app se recarga.
-    await page.waitForURL(/\/profesionales\/[^/]+\/reservar\?/, { timeout: 30_000, waitUntil: "domcontentloaded" });
     await expectVisibleText(
       page.locator("body"),
       /Que servicio necesitas|Qu. servicio necesitas|Elige fecha y hora|Describe lo que necesitas|Reservar cita|Request service|Tu identificaci.n|Your identification/i,
@@ -37,7 +32,7 @@ test.describe("@seeded interaction surfaces", () => {
     await loginAs(page, E2E_USERS.client.email, E2E_USERS.client.password);
     await gotoOK(page, "/es/dashboard/profesional?tab=sent_projects");
 
-    const publish = page.getByRole("button", { name: /Crear un proyecto|Crear|Create a project|Create/i }).first();
+    const publish = page.getByRole("button", { name: /Publicar proyecto|Post a project|Crear/i }).first();
     await expect(publish).toBeVisible();
     await publish.click();
 
@@ -66,6 +61,25 @@ test.describe("@seeded interaction surfaces", () => {
     await expectHealthyPage(page);
   });
 
+  // Guardar en la ficha profesional: botón propio donde hay sitio, opción del
+  // «...» donde no. Devuelve cuando el gesto ya se disparó.
+  async function alternarGuardado(page: import("playwright/test").Page) {
+    const boton = page.locator("[data-save-button]").filter({ visible: true }).first();
+    const opciones = page.getByRole("button", { name: /^(Options|Opciones|More|Más)$/i }).filter({ visible: true }).first();
+    // Esperar a que aparezca UNO de los dos antes de decidir: `count()` no
+    // espera, y con la ficha todavía cargando daba 0 y la prueba se iba a
+    // buscar el «···» del teléfono en computadora (15 s colgada, a veces).
+    await expect(boton.or(opciones)).toBeVisible({ timeout: 15_000 });
+    if (await boton.count()) {
+      const antes = await boton.getAttribute("aria-pressed");
+      await boton.click();
+      await expect(boton).not.toHaveAttribute("aria-pressed", antes ?? "false");
+      return;
+    }
+    await page.getByRole("button", { name: /^(Options|Opciones|More|Más)$/i }).filter({ visible: true }).first().click();
+    await page.getByRole("menuitem", { name: /Save|Saved|Guardar|Guardado/i }).first().click();
+  }
+
   test("favorite actions persist, render and remove for a disposable client", async ({ page }) => {
     // Seguir se retiró del producto en 553536d1: guardar quedó como el único
     // gesto de «lo quiero a mano», y esta prueba lo cubre de punta a punta.
@@ -76,10 +90,10 @@ test.describe("@seeded interaction surfaces", () => {
       await loginAs(page, account.email, account.password);
       await gotoOK(page, `/en/profesionales/${seed.professionalSlug}`);
 
-      const favorite = page.locator("[data-save-button]:visible").first();
-      await expect(favorite).toHaveAttribute("aria-pressed", "false");
-      await favorite.click();
-      await expect(favorite).toHaveAttribute("aria-pressed", "true");
+      // Guardar vive en dos sitios según el ancho: botón propio en la ficha de
+      // computadora, y opción del «...» en el teléfono, donde comparte hoja con
+      // Compartir y Reportar. La prueba usa el que esté a la vista.
+      await alternarGuardado(page);
       await expect.poll(async () => {
         const { count } = await admin.from("saved_professionals").select("id", { count: "exact", head: true })
           .eq("client_id", account!.id).eq("professional_id", seed.professionalId);
@@ -92,7 +106,7 @@ test.describe("@seeded interaction surfaces", () => {
       await expect(page.getByText(/Redes Bahía/i).first()).toBeVisible();
 
       await gotoOK(page, `/en/profesionales/${seed.professionalSlug}`);
-      await page.locator("[data-save-button]:visible").first().click();
+      await alternarGuardado(page);
       await expect.poll(async () => {
         const { count } = await admin.from("saved_professionals").select("id", { count: "exact", head: true })
           .eq("client_id", account!.id);
@@ -172,14 +186,16 @@ test.describe("@seeded interaction surfaces", () => {
     }
   });
 
-  test("empty favorites keep Professionals, Offers and Jobs filters in English", async ({ page }) => {
+  // Los filtros de Favoritos son por TIPO, no por etapa: se dibujan siempre,
+  // también con la lista vacía, porque dicen qué se puede guardar.
+  test("empty favorites keep the type filters in English", async ({ page }) => {
     let account: DisposableAccount | undefined;
     try {
       account = await createDisposableAccount({ prefix: "empty-saved" });
       await loginAs(page, account.email, account.password);
       await gotoOK(page, "/en/dashboard/profesional?tab=saved&mode=use");
 
-      for (const label of [/^Professionals(?: 0)?$/i, /^Offers(?: 0)?$/i, /^Jobs(?: 0)?$/i]) {
+      for (const label of [/^Professionals ?0?$/i, /^Promotions ?0?$/i, /^Jobs ?0?$/i]) {
         await expect(page.getByRole("button", { name: label }).filter({ visible: true }).first()).toBeVisible();
       }
       await expect(page.getByRole("button", { name: /^All(?: 0)?$/i })).toHaveCount(0);

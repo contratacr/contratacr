@@ -45,6 +45,7 @@ const COLUMNS = [
     links: [
       { key: "clients.search",     href: "/buscar" },
       { key: "clients.categories", href: "/servicios" },
+      { key: "clients.offers",     href: "/ofertas" },
       { key: "clients.howItWorks", href: "/como-funciona" },
       { key: "clients.publish",    href: "/publicar-proyecto" },
     ],
@@ -53,6 +54,10 @@ const COLUMNS = [
     headingKey: "pros.title",
     links: [
       { key: "pros.register",     href: "/registro/profesional" },
+      // Los tres tableros son la puerta de entrada al trabajo: de aquí sale el
+      // enlace interno que los buscadores siguen hasta ellos.
+      { key: "pros.projects",     href: "/proyectos" },
+      { key: "pros.jobs",         href: "/empleos" },
       { key: "pros.attract",      href: "/atraer-clientes" },
       { key: "pros.verification", href: "/proveedores-autorizados" },
     ],
@@ -75,7 +80,12 @@ export function LandingFooter() {
   const { user } = useAuth();
   const panelHref = canOffer(user) ? "/dashboard/profesional" : "/dashboard/profesional?mode=use";
   return (
-    <footer className="ccr-app-footer bg-[#111827] text-white">
+    // Un píxel hacia arriba y por encima de lo anterior: si la última fila de
+    // una lista llega justo hasta el pie, su línea de abajo queda tapada —el pie
+    // ya marca el final—; si entre la lista y el pie hay espacio en blanco, la
+    // línea se ve y cierra la lista. Así la regla es una sola para todas las
+    // listas y no depende de medir nada.
+    <footer className="ccr-app-footer relative -mt-px bg-[#111827] text-white">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-14 pb-8">
 
         {/* Main grid */}

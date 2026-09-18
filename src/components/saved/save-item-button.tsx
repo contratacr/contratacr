@@ -6,7 +6,14 @@ import { useLocale } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 
-export type SaveItemKind = "offer" | "job";
+/** Los rótulos de guardar, en un solo lugar (los usan el botón y el hook). */
+function etiquetasGuardado(locale: string, itemType: "offer" | "job" | "project") {
+  return locale === "en"
+    ? { save: "Save", short: "Save", saved: "Saved", remove: `Remove ${{ offer: "promotion", job: "job", project: "project" }[itemType]} from favorites` }
+    : { save: "Guardar", short: "Guardar", saved: "Guardado", remove: `Quitar ${{ offer: "la promoción", job: "el empleo", project: "el proyecto" }[itemType]} de favoritos` };
+}
+
+export type SaveItemKind = "offer" | "job" | "project";
 
 type SaveItemButtonProps = {
   itemType: SaveItemKind;
@@ -19,11 +26,88 @@ type SaveItemButtonProps = {
   bubble?: boolean;
   /** Ícono con rótulo, sin borde: la forma que usan las fichas. */
   sutil?: boolean;
+  /**
+   * El botón de la ficha en computadora, al lado de WhatsApp: 48 px de alto, a
+   * todo su ancho y el rótulo a 16 px, exactamente como el de contactar.
+   */
+  grande?: boolean;
   showIcon?: boolean;
   loginRedirect?: string;
 };
 
 const EVENT_NAME = "savedItemsChanged";
+
+
+/**
+ * Guardar, sin botón: el estado y la acción sueltos, para poder ponerlos donde
+ * haga falta —por ejemplo, como una opción más del «...» de una ficha—.
+ * El botón de abajo usa exactamente esto.
+ */
+export function useGuardado({
+  itemType,
+  itemId,
+  snapshot,
+  userId,
+  loginRedirect,
+}: {
+  itemType: SaveItemKind;
+  itemId: string;
+  snapshot: Record<string, unknown>;
+  userId?: string | null;
+  loginRedirect?: string;
+}) {
+  const locale = useLocale();
+  const [saved, setSaved] = useState(false);
+  const payload = useMemo(() => ({ ...snapshot, id: itemId, type: itemType }), [itemId, itemType, snapshot]);
+  const labels = etiquetasGuardado(locale, itemType);
+
+  useEffect(() => {
+    let mounted = true;
+    async function load() {
+      if (!userId) {
+        setSaved(false);
+        return;
+      }
+      const { data } = await createClient()
+        .from("saved_items")
+        .select("id")
+        .eq("user_id", userId)
+        .eq("item_type", itemType)
+        .eq("item_id", itemId)
+        .maybeSingle();
+      if (mounted) setSaved(Boolean(data));
+    }
+    void load();
+    const onChange = () => void load();
+    window.addEventListener(EVENT_NAME, onChange);
+    return () => {
+      mounted = false;
+      window.removeEventListener(EVENT_NAME, onChange);
+    };
+  }, [itemId, itemType, userId]);
+
+  async function alternar() {
+    if (!userId) {
+      const redirect = encodeURIComponent(loginRedirect || window.location.pathname + window.location.search);
+      window.location.assign(`/${locale}/login?redirect=${redirect}`);
+      return;
+    }
+    const supabase = createClient();
+    if (saved) {
+      await supabase.from("saved_items").delete().eq("user_id", userId).eq("item_type", itemType).eq("item_id", itemId);
+      setSaved(false);
+    } else {
+      await supabase.from("saved_items").upsert(
+        { user_id: userId, item_type: itemType, item_id: itemId, snapshot: payload },
+        { onConflict: "user_id,item_type,item_id" },
+      );
+      setSaved(true);
+    }
+    window.dispatchEvent(new CustomEvent(EVENT_NAME));
+  }
+
+  return { guardado: saved, alternar, etiqueta: saved ? labels.saved : labels.save, etiquetaLarga: saved ? labels.remove : labels.save };
+}
 
 export function SaveItemButton({
   itemType,
@@ -34,6 +118,7 @@ export function SaveItemButton({
   withLabel = false,
   bubble = false,
   sutil = false,
+  grande = false,
   showIcon,
   loginRedirect,
 }: SaveItemButtonProps) {
@@ -41,9 +126,11 @@ export function SaveItemButton({
   const [saved, setSaved] = useState(false);
   const payload = useMemo(() => ({ ...snapshot, id: itemId, type: itemType }), [itemId, itemType, snapshot]);
   // El mismo rótulo que en el perfil: nombra la acción y dónde queda.
-  const labels = locale === "en"
-    ? { save: "Save to favorites", short: "Save", saved: "Saved", remove: itemType === "offer" ? "Remove offer from favorites" : "Remove job from favorites" }
-    : { save: "Guardar en favoritos", short: "Guardar", saved: "Guardado", remove: itemType === "offer" ? "Quitar oferta de favoritos" : "Quitar empleo de favoritos" };
+  // Un solo rótulo en todo el app: «Guardar» / «Guardado». Antes decía
+  // «Guardar en favoritos» en unas pantallas y «Guardar» en otras, y la misma
+  // acción parecía dos cosas distintas. El texto largo se queda solo en la
+  // etiqueta para lectores de pantalla, donde sí ayuda.
+  const labels = etiquetasGuardado(locale, itemType);
 
   useEffect(() => {
     let mounted = true;
@@ -111,7 +198,12 @@ export function SaveItemButton({
       aria-label={saved ? labels.remove : labels.save}
       aria-pressed={saved}
       className={cn(
-        sutil
+        grande
+          ? cn(
+              "inline-flex h-12 w-full items-center justify-center gap-2 whitespace-nowrap rounded-full border bg-white px-4 text-base font-semibold transition",
+              saved ? "border-[#009FD9] text-[#0089bb] hover:bg-[#f2fbfe]" : "border-[#d7e1ea] text-[#162543] hover:border-[#b9c8d6] hover:bg-[#f6f9fb]",
+            )
+          : sutil
           ? cn(
               "inline-flex h-9 items-center gap-1.5 rounded-lg px-2.5 text-[13px] font-bold transition-colors duration-200",
               saved ? "text-[#0089bb] hover:bg-[#eaf7fc]" : "text-[#52627a] hover:bg-[#eef3f8] hover:text-[#162543]",
@@ -125,8 +217,10 @@ export function SaveItemButton({
             )
           : withLabel
           ? cn(
-              // Una sola línea y sin ícono: "Guardar en favoritos" partido en dos
-              // renglones dentro de la pastilla se veía roto.
+              // Una sola línea, con el marcador delante. El ícono se había
+              // quitado cuando el rótulo era «Guardar en favoritos» y se partía
+              // en dos renglones; con «Guardar» cabe, y así se ve igual que el
+              // de la ficha del profesional y que el «Llamar» de al lado.
               "inline-flex h-10 items-center justify-center gap-2 whitespace-nowrap rounded-full border bg-white px-4 text-[13px] font-bold transition",
               saved ? "border-[#009FD9] text-[#0089bb] hover:bg-[#f2fbfe]" : "border-[#d7e1ea] text-[#162543] hover:border-[#b9c8d6] hover:bg-[#f6f9fb]",
             )
@@ -137,8 +231,8 @@ export function SaveItemButton({
         className,
       )}
     >
-      {(showIcon ?? !withLabel) && <Bookmark className={bubble ? "h-5 w-5" : sutil ? "h-4 w-4 shrink-0" : "h-[18px] w-[18px]"} fill={saved ? "currentColor" : "none"} />}
-      {(withLabel || sutil) && <span>{saved ? labels.saved : sutil ? labels.short : labels.save}</span>}
+      {(showIcon ?? true) && <Bookmark className={bubble || grande ? "h-5 w-5 shrink-0" : sutil || withLabel ? "h-4 w-4 shrink-0" : "h-[18px] w-[18px]"} fill={saved ? "currentColor" : "none"} />}
+      {(withLabel || sutil || grande) && <span>{saved ? labels.saved : sutil ? labels.short : labels.save}</span>}
     </button>
   );
 }

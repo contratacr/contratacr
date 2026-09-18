@@ -226,15 +226,13 @@ export async function middleware(request: NextRequest) {
     const onboardingDone = user.user_metadata?.onboarding_completed === true;
     if (!onboardingDone) return redirectKeepingCookies(`/${locale}/onboarding`, request, response);
 
-    // A professional registration that was started but not completed must never
-    // render the unified dashboard first. Redirect at the request boundary so
-    // there is no panel flash while client-side professional data is loading.
-    const professionalSignupIncomplete =
-      user.user_metadata?.professional_signup_started === true &&
-      user.user_metadata?.is_provider !== true;
-    if (professionalSignupIncomplete && withoutLocale.startsWith("/dashboard/profesional")) {
-      return redirectKeepingCookies(`/${locale}/registro/profesional`, request, response);
-    }
+    // Antes, una cuenta que había EMPEZADO el registro profesional sin
+    // terminarlo no podía entrar al panel: cada visita la devolvía al
+    // formulario. La bandera se pone al enviar el primer paso, así que alguien
+    // que lo intentó y se arrepintió quedaba obligado a completarlo para volver
+    // a su propia cuenta. El panel sabe atender a quien no es profesional
+    // —es el panel de cliente— y ofrece continuar el registro desde un botón,
+    // así que el desvío sobra y encerraba.
   }
 
   return response;

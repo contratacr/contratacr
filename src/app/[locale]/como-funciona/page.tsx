@@ -14,6 +14,7 @@ import {
   Search,
   Star,
   Tags,
+  ClipboardList,
 } from "lucide-react";
 
 type IconComponent = (props: { className?: string }) => ReactNode;
@@ -106,7 +107,7 @@ export default async function ComoFuncionaPage() {
       <LandingNavbar />
       <div className="ccr-navbar-spacer h-16" aria-hidden />
       <main className="flex-1">
-        <section className="border-b border-[#e5e7eb] px-4 pb-12 pt-12 sm:pb-14 sm:pt-12">
+        <section className="border-b border-[#e5e7eb] px-4 pb-12 pt-4 sm:pb-14 lg:pt-8">
           <div className="mx-auto max-w-3xl text-center">
             <p className="text-xs font-bold uppercase text-[#009fd9]">{t("eyebrow")}</p>
             <h1 className="mt-3 text-3xl font-black leading-tight text-[#162543] sm:text-5xl">{t("title")}</h1>
@@ -142,6 +143,16 @@ export default async function ComoFuncionaPage() {
                 </span>
               </Link>
               )}
+              <Link href="/proyectos" className="group flex min-h-40 flex-col justify-between rounded-lg border border-[#dfe5eb] bg-white p-5 transition-colors hover:border-[#9bd8ef]">
+                <div>
+                  <ClipboardList className="h-5 w-5 text-[#009fd9]" />
+                  <h3 className="mt-4 text-lg font-bold text-[#162543]">{t("marketplaceProjectsTitle")}</h3>
+                  <p className="mt-2 text-sm leading-6 text-[#6b7280]">{t("marketplaceProjectsBody")}</p>
+                </div>
+                <span className="mt-4 inline-flex items-center gap-2 text-sm font-bold text-[#0089bb]">
+                  {t("marketplaceProjectsCta")}<ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+                </span>
+              </Link>
               <Link href="/ofertas" className="group flex min-h-40 flex-col justify-between rounded-lg border border-[#dfe5eb] bg-white p-5 transition-colors hover:border-[#9bd8ef]">
                 <div>
                   <Tags className="h-5 w-5 text-[#009fd9]" />

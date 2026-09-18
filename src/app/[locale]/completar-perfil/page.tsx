@@ -10,8 +10,7 @@ import { CedulaInput } from "@/components/ui/cedula-input";
 import { useAuth } from "@/hooks/use-auth";
 import { createClient } from "@/lib/supabase/client";
 import { isSigningOut } from "@/lib/auth/sign-out";
-import { FocusedHeader } from "@/components/layout/focused-header";
-import { LandingFooter } from "@/components/landing/landing-footer";
+import { CabeceraDeTramite } from "@/components/layout/focused-header";
 import { NAME_MAX_LENGTH, limitText } from "@/lib/text-limits";
 import { IMAGE_ACCEPT } from "@/lib/upload-validation";
 import { getImageUploadPreparationErrorCode, prepareImageForUpload, uploadPhotoFormDataWithRetry } from "@/lib/client-image-upload";
@@ -161,11 +160,13 @@ export default function CompleteProfilePage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-[#f4f7fa]">
-      <FocusedHeader />
+      <CabeceraDeTramite title={t("title")} />
 
       <main className="flex-1 ccr-centrado-seguro px-4 py-12">
         <div className="w-full max-w-md bg-white rounded-2xl border border-[#e5e7eb] shadow-sm p-8">
-          <h1 className="text-2xl font-bold text-[#162543] mb-1">{t("title")}</h1>
+          {/* En el teléfono el título lo dice la cabecera; en computadora va
+              aquí, dentro de la tarjeta, porque arriba está la barra principal. */}
+          <h1 className="mb-2 hidden text-2xl font-bold text-[#162543] lg:block">{t("title")}</h1>
           <p className="text-sm text-[#6b7280] mb-6">
             {t("subtitle")}
           </p>
@@ -249,7 +250,6 @@ export default function CompleteProfilePage() {
         </div>
       </main>
 
-      <LandingFooter />
     </div>
   );
 }

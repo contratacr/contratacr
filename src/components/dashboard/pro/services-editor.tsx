@@ -27,6 +27,7 @@ import { getImageUploadPreparationErrorCode, prepareImageForUpload, uploadPhotoF
 import { professionalCredentialSuggestion, serviceSupportsProfessionalCredential } from "@/lib/professional-credentials";
 import { SectionHeadline } from "@/components/dashboard/section-headline";
 import { AutoSaveHint } from "@/components/dashboard/auto-save-hint";
+import { PIE_VENTANA_BASE } from "@/components/ui/acciones-al-pie";
 
 export type ProService = {
   id: string;
@@ -1090,7 +1091,7 @@ export function ServicesEditor({
                 pantallas. Al final de una lista de catorce grupos había que
                 recorrerla entera para encontrarla, y al abrirse el campo el
                 teclado la perseguía. Aquí ya está donde el teclado la deja. */}
-            <div className="shrink-0 border-t border-[#e5e7eb] bg-white px-4 py-4 pb-[max(env(safe-area-inset-bottom),1rem)]">
+            <div className={PIE_VENTANA_BASE}>
               <CategorySuggestionBox
                 variante="boton"
                 prominent

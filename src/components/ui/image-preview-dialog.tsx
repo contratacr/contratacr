@@ -2,7 +2,7 @@
 
 import type { ReactNode } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
-import { X, ZoomIn } from "lucide-react";
+import { ChevronLeft, ChevronRight, X, ZoomIn } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type ImagePreviewDialogProps = {
@@ -15,6 +15,16 @@ type ImagePreviewDialogProps = {
   closeLabel?: string;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
+  /**
+   * Para una galería: moverse entre fotos SIN cerrar. Sin estas dos, el visor
+   * se queda como estaba —una sola foto— y no pinta flechas.
+   */
+  onPrev?: () => void;
+  onNext?: () => void;
+  /** «2/3», al pie, como en la galería de la que viene. */
+  counter?: string;
+  prevLabel?: string;
+  nextLabel?: string;
 };
 
 export function ImagePreviewDialog({
@@ -27,7 +37,13 @@ export function ImagePreviewDialog({
   closeLabel = "Cerrar",
   open,
   onOpenChange,
+  onPrev,
+  onNext,
+  counter,
+  prevLabel = "Ver imagen anterior",
+  nextLabel = "Ver siguiente imagen",
 }: ImagePreviewDialogProps) {
+  const galeria = Boolean(onPrev && onNext);
   if (!src) return <>{children}</>;
 
   return (
@@ -51,7 +67,16 @@ export function ImagePreviewDialog({
       </Dialog.Trigger> : null}
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-[220] bg-[#111827]/85 backdrop-blur-sm data-[state=open]:animate-in data-[state=open]:fade-in-0" />
-        <Dialog.Content className="fixed left-1/2 top-1/2 z-[221] max-h-[90vh] max-w-[94vw] -translate-x-1/2 -translate-y-1/2 outline-none">
+        <Dialog.Content
+          className="fixed left-1/2 top-1/2 z-[221] max-h-[90vh] max-w-[94vw] -translate-x-1/2 -translate-y-1/2 outline-none"
+          // Con la foto en grande, las flechas del teclado son lo primero que
+          // uno intenta. Radix ya se queda con Escape.
+          onKeyDown={(event) => {
+            if (!galeria) return;
+            if (event.key === "ArrowLeft") { event.preventDefault(); onPrev?.(); }
+            if (event.key === "ArrowRight") { event.preventDefault(); onNext?.(); }
+          }}
+        >
           <Dialog.Title className="sr-only">{alt}</Dialog.Title>
           <Dialog.Close
             aria-label={closeLabel}
@@ -68,6 +93,31 @@ export function ImagePreviewDialog({
               imageClassName
             )}
           />
+          {galeria && (
+            <>
+              <button
+                type="button"
+                aria-label={prevLabel}
+                onClick={onPrev}
+                className="absolute left-2 top-1/2 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-full border border-white/15 bg-[#111827]/70 text-white transition hover:bg-[#111827] sm:-left-14"
+              >
+                <ChevronLeft className="h-6 w-6" />
+              </button>
+              <button
+                type="button"
+                aria-label={nextLabel}
+                onClick={onNext}
+                className="absolute right-2 top-1/2 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-full border border-white/15 bg-[#111827]/70 text-white transition hover:bg-[#111827] sm:-right-14"
+              >
+                <ChevronRight className="h-6 w-6" />
+              </button>
+              {counter && (
+                <span className="absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full bg-[#111827]/80 px-3 py-1 text-xs font-extrabold text-white">
+                  {counter}
+                </span>
+              )}
+            </>
+          )}
         </Dialog.Content>
       </Dialog.Portal>
     </Dialog.Root>

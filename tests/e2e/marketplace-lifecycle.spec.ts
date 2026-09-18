@@ -108,32 +108,15 @@ test.describe("@seeded offers, jobs and application lifecycle", () => {
       expect(foreignOffer.status).toBe(403);
       expect(foreignJob.status).toBe(403);
 
-      // ContrataCR has a seeded recent CV. Submit it through the real English UI
-      // and ensure the application appears with that resume in My applications.
+      // Postularse dentro del app se retiró: la única puerta es WhatsApp. Lo que
+      // se comprueba es que el empleo ofrezca contacto directo, que no quede
+      // rastro del formulario —ni por el botón ni por el enlace viejo ?apply=—
+      // y que la sección de postulaciones ya no exista.
       await gotoOK(page, `/en/empleos/${jobId}`);
-      const apply = page.getByRole("button", { name: /^Apply$/i }).filter({ visible: true });
-      await expect(apply.first()).toBeVisible();
-      await apply.first().click();
-      await expect(page.getByRole("dialog")).toBeVisible();
-      await page.keyboard.press("Escape");
-      await expect(page.getByRole("dialog")).toBeHidden();
-
-      // The signed-out Apply action targets this URL after login. Cover the
-      // destination contract independently from the normal visible CTA.
+      await expect(page.getByRole("button", { name: /WhatsApp/i }).filter({ visible: true }).first()).toBeVisible();
+      await expect(page.getByRole("button", { name: /^Apply$/i }).filter({ visible: true })).toHaveCount(0);
       await gotoOK(page, `/en/empleos/${jobId}?apply=${jobId}`);
-      const application = page.getByRole("dialog").locator("form").filter({ has: page.getByRole("button", { name: /Submit application/i }) }).first();
-      await expect(application).toBeVisible();
-      await expect(application.getByText("Recently used resume", { exact: true })).toBeVisible({ timeout: 15_000 });
-      await application.getByPlaceholder(/Briefly explain/i).fill("I am interested in this regression job and meet all stated requirements.");
-      await application.getByRole("textbox", { name: /^Phone \*$/i }).fill("88887777");
-      await application.getByRole("button", { name: /Submit application/i }).click();
-      await expect(page.getByRole("dialog").getByRole("heading", { name: "Application sent", exact: true })).toBeVisible({ timeout: 20_000 });
-
-      await gotoOK(page, "/en/dashboard/profesional?tab=applications&mode=use");
-      const applicationCard = page.locator("article").filter({ hasText: jobTitle }).first();
-      await expect(applicationCard).toBeVisible();
-      await applicationCard.getByRole("button").first().click();
-      await expect(applicationCard.getByRole("link", { name: /Download CV/i })).toBeVisible();
+      await expect(page.getByRole("button", { name: /Submit application/i })).toHaveCount(0);
 
       await loginAs(page, E2E_USERS.professional.email, E2E_USERS.professional.password);
       for (const status of ["paused", "sold_out", "expired", "published"] as const) {

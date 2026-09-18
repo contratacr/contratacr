@@ -11,7 +11,6 @@ const MARKETPLACE_CONTROL_COPY = {
   es: {
     clearSearch: "Limpiar búsqueda",
     recents: "Recientes",
-    visited: "Vistos recientemente",
     clearAll: "Borrar búsquedas",
     removeRecent: (value: string) => `Eliminar ${value} de búsquedas recientes`,
     clearService: "Limpiar servicio",
@@ -29,7 +28,6 @@ const MARKETPLACE_CONTROL_COPY = {
   en: {
     clearSearch: "Clear search",
     recents: "Recent",
-    visited: "Recently viewed",
     clearAll: "Clear searches",
     removeRecent: (value: string) => `Remove ${value} from recent searches`,
     clearService: "Clear service",
@@ -167,9 +165,15 @@ export function MarketplaceSearch({
       return true;
     });
   }, [secondary?.suggestions]);
+  // Los lugares se ofrecen APENAS se toca el campo, sin tener que escribir
+  // nada. Y son los lugares que DE VERDAD hay en el tablero, no las siete
+  // provincias del país: en una lista de quince empleos, ofrecer una provincia
+  // sin ninguno es mandar a la persona a un vacío. Como salen los que existen,
+  // la lista mide lo que mida el tablero —hoy dos o tres— y no se estira hacia
+  // abajo; el tope de seis es por si algún día crece.
   const visibleSecondarySuggestions = useMemo(
     () => uniqueSecondarySuggestions
-      .filter((suggestion) => secondaryNeedle.length >= 1 && suggestion.toLocaleLowerCase("es-CR").includes(secondaryNeedle))
+      .filter((suggestion) => !secondaryNeedle || suggestion.toLocaleLowerCase("es-CR").includes(secondaryNeedle))
       .slice(0, 6),
     [secondaryNeedle, uniqueSecondarySuggestions],
   );
@@ -353,9 +357,14 @@ export function MarketplaceSearch({
         {secondary && (
           <>
             <span aria-hidden="true" className="hidden h-6 w-px shrink-0 bg-[#dfe5eb] lg:block" />
-            <div className="relative hidden min-w-[140px] flex-1 lg:block xl:min-w-[180px]">
+            {/* 120 px es lo justo para «Ubicación» con su ícono. Con 140/180
+                fijos, cuando el navbar se angostaba el que cedía TODO era el
+                campo del servicio, que quedaba en «¿C» —y justo a 1280 px, al
+                volver «Sobre ContrataCR», el mínimo saltaba a 180 y lo
+                apretaba otra vez—. */}
+            <div style={{ minWidth: 120 }} className="relative hidden flex-1 lg:block">
               <SecondaryIcon className="pointer-events-none absolute left-0 top-1/2 h-5 w-5 -translate-y-1/2 text-[#162543]" aria-hidden="true" />
-              <input ref={desktopSecondaryInputRef} value={secondary.value} onChange={(event) => { secondary.onChange(event.target.value); setDesktopField("secondary"); }} onFocus={() => setDesktopField("secondary")} placeholder={secondary.placeholder} aria-label={secondary.ariaLabel ?? secondary.placeholder} className="h-10 w-full bg-transparent pl-8 pr-8 text-base font-normal text-gray-700 outline-none placeholder:text-gray-400" />
+              <input ref={desktopSecondaryInputRef} value={secondary.value} onChange={(event) => { secondary.onChange(event.target.value); setDesktopField("secondary"); }} onFocus={() => setDesktopField("secondary")} placeholder={secondary.placeholder} aria-label={secondary.ariaLabel ?? secondary.placeholder} className={`h-10 w-full bg-transparent pl-8 text-base font-normal text-gray-700 outline-none placeholder:text-gray-400 ${secondary.value ? "pr-8" : "pr-1"}`} />
               {secondary.value && <button type="button" onClick={() => secondary.onChange("")} aria-label={secondaryClearLabel} className="absolute right-0 top-1/2 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-full text-[#8b96a5] hover:bg-[#edf3f7]"><X className="h-4 w-4" /></button>}
             {desktopField === "secondary" && visibleSecondarySuggestions.length > 0 && (
               <div className="absolute left-0 right-0 top-[calc(100%+8px)] z-50 overflow-hidden rounded-xl border border-[#d7e1ea] bg-white py-1 shadow-[0_16px_38px_-24px_rgba(15,23,42,0.8)]">
@@ -432,8 +441,10 @@ export function MarketplaceSearch({
             <div className="space-y-1">
               {mobileField === "secondary" ? (
                 visibleSecondarySuggestions.map((suggestion) => (
+                  // Un lugar se marca con un pin, no con una lupa: es el mismo
+                  // icono que usa /buscar para lo mismo.
                   <button key={suggestion} type="button" onClick={() => chooseSecondarySuggestion(suggestion)} className="flex min-h-14 w-full items-center gap-4 rounded-xl px-1 text-left transition hover:bg-[#f4f8fb]">
-                    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[#f4f8fb] text-[#162543]"><Search className="h-5 w-5" /></span>
+                    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[#f4f8fb] text-[#162543]"><SecondaryIcon className="h-5 w-5" /></span>
                     <span className="truncate text-base font-bold">{suggestion}</span>
                   </button>
                 ))
@@ -469,11 +480,14 @@ export function MarketplaceSearch({
                 </>
               ) : (
                 <>
+                  {/* Un solo apartado: «Recientes». Debajo iba un segundo
+                      rótulo, «Vistos recientemente», que decía lo mismo con
+                      otras palabras y partía la lista en dos. Lo que se abrió y
+                      lo que se buscó ya se distinguen solos —uno trae foto y
+                      nombre, el otro un reloj—, así que no hacía falta
+                      anunciarlo. */}
                   {visitas.length > 0 && (
                     <div className="mb-1">
-                      <span className="block px-1 pb-1 text-xs font-extrabold uppercase tracking-wide text-[#68778d]">
-                        {copy.visited}
-                      </span>
                       {visitas.map((visita) => (
                         <Link
                           key={visita.id}
@@ -515,7 +529,10 @@ export function MarketplaceSearch({
                       </button>
                     </div>
                   ))}
-                  {recents.length === 0 && (
+                  {/* El aviso de vacío solo cuando NO hay nada: con una ficha
+                      recién vista arriba, decir «tus búsquedas recientes
+                      aparecerán aquí» contradecía lo que se estaba viendo. */}
+                  {recents.length === 0 && visitas.length === 0 && (
                     <div className="rounded-2xl bg-[#f7fafc] px-4 py-5 text-sm font-semibold text-[#6b778a]">
                       {copy.emptyRecents}
                     </div>

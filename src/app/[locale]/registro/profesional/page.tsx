@@ -4,14 +4,14 @@ import { useState, useEffect, useRef, useMemo } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
 import {
-  CheckCircle2, ArrowRight, ArrowLeft, Loader2, AlertCircle, Video,
+  CheckCircle2, ArrowLeft, Loader2, AlertCircle, Video,
   Circle, Camera, X, Plus, Search, ChevronDown,
 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Navbar } from "@/components/layout/navbar";
-import { FocusedHeader } from "@/components/layout/focused-header";
+import { CabeceraDeTramite } from "@/components/layout/focused-header";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { PhoneInput, isPhoneComplete } from "@/components/ui/phone-input";
@@ -38,6 +38,8 @@ import { getImageUploadPreparationErrorCode, prepareImageForUpload, uploadPhotoF
 import { trackMetaEvent } from "@/lib/analytics/meta-pixel";
 import { readAttribution } from "@/lib/analytics/attribution";
 import { PanelSwitch } from "@/components/dashboard/panel-toggle-row";
+import { ToggleSwitch } from "@/components/ui/toggle-switch";
+import { BARRA_ACCION_FIJA, useBarraAccionFija } from "@/components/ui/acciones-al-pie";
 
 // Category data lives in src/lib/data/categories.ts (single source of truth).
 // The service catalog picker shares the same taxonomy and grouped UI used in
@@ -399,6 +401,23 @@ function NoCrIdFields({
 
 // ─── Main page ────────────────────────────────────────────────────────────────
 
+// Las acciones del trámite viven en su propia franja pegada al fondo, como en
+// Crear proyecto: blanca, con línea arriba y el respiro del borde del teléfono.
+// Antes quedaban al final del formulario, así que en una forma larga había que
+// bajar hasta el fondo para encontrar «Continuar», y debajo seguía el pie
+// completo del sitio —Servicios, Soporte, redes— en medio de un trámite. Solo
+// aplica con sesión: sin ella arriba va el navbar entero y la página es una
+// página normal, con su pie.
+function BarraDeAcciones({ activa, children }: { activa: boolean; children: React.ReactNode }) {
+  useBarraAccionFija(activa);
+  if (!activa) return <div className="mt-2 flex gap-3">{children}</div>;
+  return (
+    <div className={cn(BARRA_ACCION_FIJA, "z-20 mt-auto flex gap-3 max-sm:fixed max-sm:inset-x-0 max-sm:bottom-0 sm:-mx-8 sm:-mb-8 sm:sticky sm:bottom-0 sm:rounded-b-3xl sm:px-6")}>
+      {children}
+    </div>
+  );
+}
+
 export default function RegisterProfessionalPage() {
   const t = useTranslations("registration.pro");
   const tRp = useTranslations("resetPassword");
@@ -442,6 +461,7 @@ export default function RegisterProfessionalPage() {
   // step: -1=loading, 0=identity/account, 1=service+location, 2=profile+photo
   const [step, setStep] = useState(-1);
   const [whatsappValue, setWhatsappValue] = useState("");
+  const [aceptaLlamadas, setAceptaLlamadas] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   // After a successful create we navigate to the panel. Render a full-screen
   // loader meanwhile so the form/step never flashes back (item 6).
@@ -513,10 +533,6 @@ export default function RegisterProfessionalPage() {
     [selectedServiceIds],
   );
   const effectiveVideoCoverageCountry = canOfferVideoConsult && videoCoverageCountry;
-  const pendingProfessionalSignup =
-    currentUser?.user_metadata?.professional_signup_started === true &&
-    currentUser.user_metadata?.is_provider !== true;
-
   useEffect(() => {
     if (step < 0 || otpEmail || redirecting) return;
     window.requestAnimationFrame(() => {
@@ -582,12 +598,12 @@ export default function RegisterProfessionalPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authLoading, currentUser]);
 
-  useEffect(() => {
-    if (!currentUser || !pendingProfessionalSignup || accountCedula === null || step !== 0) return;
-    if (accountCedula || oauthFullName.trim().length >= 3) {
-      setStep(1);
-    }
-  }, [accountCedula, currentUser, oauthFullName, pendingProfessionalSignup, step]);
+  // Entrar a «Ofrecer mis servicios» empieza SIEMPRE en el primer paso. Antes,
+  // si la identidad ya estaba confirmada, el trámite se abría a media forma —en
+  // «Servicios»— sin decir por qué, y de paso ese salto peleaba con la flecha
+  // del encabezado: al retroceder al primer paso volvía a empujar adelante, y
+  // nadie podía revisar su cédula ni su nombre. Lo ya llenado sigue ahí; lo que
+  // no se hereda es el punto de entrada.
 
   // Registro guard — a user who is ALREADY a professional must never land on the
   // registration/convert flow; bounce them to their professional panel. A client
@@ -882,6 +898,7 @@ export default function RegisterProfessionalPage() {
           lat: workplaces[0]?.lat ?? null,
           lng: workplaces[0]?.lng ?? null,
           whatsapp: step2Data.whatsapp,
+          allowPhoneCall: aceptaLlamadas,
           yearsExperience: data.yearsExperience,
           hourlyRate: data.hourlyRate,
         }),
@@ -892,7 +909,6 @@ export default function RegisterProfessionalPage() {
         throw new Error(proErr ?? t("errCreateProfile"));
       }
       const proResult = await proRes.json().catch(() => ({}));
-      const opportunityCount = Number(proResult?.opportunityCount ?? 0);
 
       // Persist the professional role in auth metadata too, so navigating away
       // and back never reverts to the role-selection screen (and a converted
@@ -918,7 +934,12 @@ export default function RegisterProfessionalPage() {
         content_name: "professional_registration",
         status: "professional",
       });
-      const welcomeParams = opportunityCount > 0 ? `&welcomeOpportunities=1&welcomeOpportunityCount=${opportunityCount}` : "";
+      // Recién creado el perfil es cuando la persona está más dispuesta: se cae
+      // directo en los pasos que faltan, en vez de dejarlos para un aviso que
+      // nadie vuelve a abrir. Medido en producción sobre 289 profesionales: con
+      // foto 249, con descripción del servicio 102, con trabajos publicados 29.
+      // Cada paso se puede omitir de a uno.
+      const welcomeParams = "&tab=completion";
       // The pixel sends its beacon asynchronously; a hard navigation on the very
       // next tick could cancel it, and the registration would never reach Meta.
       // The loader is already on screen, so the pause is invisible.
@@ -951,7 +972,7 @@ export default function RegisterProfessionalPage() {
   if (otpEmail) {
     return (
       <div className="min-h-screen flex flex-col bg-[#fafafa]">
-        {currentUser ? <FocusedHeader /> : <Navbar mobileSearch={false} />}
+        {currentUser ? <CabeceraDeTramite title={t("headerTitle")} backHref="/dashboard/profesional" onBack={step > 0 ? () => setStep(step - 1) : undefined} backLabel={step > 0 ? t("back") : undefined} /> : <Navbar mobileSearch={false} />}
         <main className="flex-1 ccr-centrado-seguro py-12 px-4">
           <div className="w-full max-w-sm">
             <div className="bg-white rounded-3xl shadow-sm border border-[#e5e7eb] p-8">
@@ -1022,17 +1043,27 @@ export default function RegisterProfessionalPage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-[#fafafa]">
-      {currentUser ? <FocusedHeader /> : <Navbar mobileSearch={false} />}
-      <main className="flex-1 ccr-centrado-seguro px-4 py-12">
-        <div ref={formTopRef} className="w-full max-w-md scroll-mt-24">
+      {currentUser ? <CabeceraDeTramite title={t("headerTitle")} backHref="/dashboard/profesional" onBack={step > 0 ? () => setStep(step - 1) : undefined} backLabel={step > 0 ? t("back") : undefined} /> : <Navbar mobileSearch={false} />}
+      {/* Con sesión la tarjeta se pega arriba, debajo del título: `ccr-centrado-seguro`
+          la centra a lo alto de la pantalla y en un paso corto eso dejaba un
+          hueco enorme entre la cabecera y el formulario. Sin sesión sigue
+          centrada, que es como se ve una página de registro suelta. */}
+      <main className={currentUser ? "flex flex-1 flex-col items-center px-4 pt-4 max-sm:pb-24 sm:pb-8" : "flex-1 ccr-centrado-seguro px-4 py-12"}>
+        <div ref={formTopRef} className={cn("w-full max-w-md scroll-mt-24", currentUser && "sm:my-auto sm:max-w-lg sm:py-8")}>
           {/* Same container treatment as the client registration ("Crear cuenta de
               cliente"): a clean white card (rounded-3xl, hairline border, soft shadow,
-              p-8) on a #fafafa page, centered. The multi-step form lives inside it. */}
+              p-8) on a #fafafa page, centered. The multi-step form lives inside it.
+              La tarjeta mide lo que mida su contenido: quien fija abajo la
+              franja de acciones es la propia franja, no el alto de la tarjeta.
+              Estirarla dejaba una caja blanca enorme y vacía en el paso de la
+              foto, que es el más corto de los tres. */}
           <div className="bg-white rounded-3xl shadow-sm border border-[#e5e7eb] p-8">
-          <div className="text-center mb-2">
-            {/* Heading only — the per-step subtitles were filler (minimal-text principle). */}
+          {/* El título del trámite va en la tarjeta, encima de los pasos. En
+              el teléfono con sesión ya lo dice la cabecera («Ofrecer mis
+              servicios»), así que ahí no se repite. */}
+          <div className={cn("text-center mb-5", currentUser && "hidden lg:block")}>
             <h1 className="text-2xl font-bold text-[#162543]">
-              {step === 2 ? t("photoStepTitle") : currentUser ? t("completeProfileTitle") : t("title")}
+              {step === 2 ? t("photoStepTitle") : currentUser ? t("headerTitle") : t("title")}
             </h1>
           </div>
           <StepIndicator current={indicatorStep} labels={stepLabels} />
@@ -1125,9 +1156,11 @@ export default function RegisterProfessionalPage() {
                 <PasswordChecklist password={watchedPassword} />
               </div>
 
-              <Button type="submit" size="lg" className="mt-2" loading={submitting} disabled={submitting}>
-                {t("continue")} <ArrowRight className="h-4 w-4" />
-              </Button>
+              <BarraDeAcciones activa={!!currentUser}>
+                <Button type="submit" size="lg" className="flex-1" loading={submitting} disabled={submitting}>
+                  {t("continue")}
+                </Button>
+              </BarraDeAcciones>
               <p className="text-center text-xs text-[#68778d]">
                 {t.rich("termsAgree", {
                   terms: (c) => <Link href="/terminos" className="text-[#009FD9] hover:underline">{c}</Link>,
@@ -1177,15 +1210,17 @@ export default function RegisterProfessionalPage() {
 
               {accountCedula !== null && businessNameField}
 
-              <Button
-                type="button"
-                size="lg"
-                className="mt-2"
-                disabled={accountCedula === null}
-                onClick={onCurrentUserIdentityContinue}
-              >
-                {t("continue")} <ArrowRight className="h-4 w-4" />
-              </Button>
+              <BarraDeAcciones activa>
+                <Button
+                  type="button"
+                  size="lg"
+                  className="flex-1"
+                  disabled={accountCedula === null}
+                  onClick={onCurrentUserIdentityContinue}
+                >
+                  {t("continue")}
+                </Button>
+              </BarraDeAcciones>
             </div>
           )}
 
@@ -1194,9 +1229,15 @@ export default function RegisterProfessionalPage() {
 
               {/* Profession: searchable service combobox. */}
               <section className="flex flex-col gap-3">
+                {/* Sin encabezado de sección: cada bloque tiene UN campo y su
+                    rótulo ya dice de qué es. «Servicios» encima de «Tu servicio
+                    principal», «Zonas de trabajo» encima de «¿En qué zonas
+                    ofreces tus servicios?» y «Contacto» encima de «Número de
+                    contacto» era la misma frase dos veces, una corta y otra
+                    larga. El rótulo se queda porque es el que va pegado al
+                    campo; la línea de arriba sigue separando los bloques. */}
                 <div>
-                  <h3 className="text-sm font-extrabold text-[#162543]">{t("servicesSectionTitle")}</h3>
-                  <div className="mt-3">
+                  <div>
                 <label className="text-sm font-medium text-[#374151] block mb-1.5">
                   {t("professionPrincipal")} <span className="text-red-500">*</span>
                 </label>
@@ -1283,7 +1324,6 @@ export default function RegisterProfessionalPage() {
                 </div>
               </section>
               <section className="flex flex-col gap-3 border-t border-[#f3f4f6] pt-4">
-                  <h3 className="text-sm font-extrabold text-[#162543]">{t("workplacesSectionTitle")}</h3>
                   {canOfferVideoConsult && (
                     <div className="flex flex-col gap-2">
                       <div>
@@ -1344,7 +1384,6 @@ export default function RegisterProfessionalPage() {
 
               {/* WhatsApp */}
               <section className="border-t border-[#f3f4f6] pt-4">
-                  <h3 className="mb-3 text-sm font-extrabold text-[#162543]">{t("contactSectionTitle")}</h3>
                   <PhoneInput
                     label={t("whatsapp")}
                     required
@@ -1352,26 +1391,50 @@ export default function RegisterProfessionalPage() {
                     onChange={(digits) => { setWhatsappValue(digits); form2.setValue("whatsapp", digits, { shouldValidate: true }); }}
                     error={form2.formState.errors.whatsapp?.message}
                   />
+                  {/* Se pregunta AQUÍ y no en el panel: medido en producción,
+                      solo 3 de 288 profesionales volvieron a tocar su perfil
+                      después del primer día. Lo que no se pide al registrarse,
+                      no se pide nunca. Viene puesto porque es el mismo número
+                      que ya está dando; un toque lo apaga. */}
+                  {/* Un renglón y un interruptor, idéntico a «Contacto» en Mi
+                      perfil: el mismo control tiene que verse igual en los dos
+                      lados, si no parecen dos ajustes distintos. */}
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={aceptaLlamadas}
+                    aria-label={t("allowCallsLabel")}
+                    onClick={() => setAceptaLlamadas((v) => !v)}
+                    className="mt-3 flex w-full items-center justify-between gap-4 py-1 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9]/35"
+                  >
+                    <span className="min-w-0 text-sm font-semibold text-[#162543]">{t("allowCallsLabel")}</span>
+                    <ToggleSwitch checked={aceptaLlamadas} />
+                  </button>
               </section>
 
-              <div className="flex gap-3 mt-2">
-                <Button
-                  variant="outline"
-                  size="lg"
-                  type="button"
-                  onClick={() => {
-                    if (!currentUser) {
-                      form1.setValue("password", "");
-                    }
-                    setStep(0);
-                  }}
-                >
-                  <ArrowLeft className="h-4 w-4" /> {t("back")}
-                </Button>
+              <BarraDeAcciones activa={!!currentUser}>
+                {/* Sin sesión arriba va el navbar, que no lleva flecha: ahí el
+                    botón «Atrás» sigue siendo la única forma de retroceder. */}
+                {/* Con sesión, en el teléfono retrocede la flecha de la cabecera;
+                    en computadora no hay esa cabecera y el «Atrás» vuelve aquí. */}
+                {(
+                  <Button
+                    variant="outline"
+                    size="lg"
+                    type="button"
+                    className={currentUser ? "hidden lg:inline-flex" : undefined}
+                    onClick={() => {
+                      if (!currentUser) form1.setValue("password", "");
+                      setStep(0);
+                    }}
+                  >
+                    <ArrowLeft className="h-4 w-4" /> {t("back")}
+                  </Button>
+                )}
                 <Button type="submit" size="lg" className="flex-1">
-                  {t("continue")} <ArrowRight className="h-4 w-4" />
+                  {t("continue")}
                 </Button>
-              </div>
+              </BarraDeAcciones>
             </form>
           )}
 
@@ -1382,14 +1445,16 @@ export default function RegisterProfessionalPage() {
                   casos de éxito now lives in the panel's profile-completion flow. */}
               <PhotoPicker preview={photoPreview} onFile={handlePhotoSelect} onRemove={handlePhotoRemove} />
 
-              <div className="mt-2 grid grid-cols-[auto_minmax(0,1fr)] gap-3">
-                <Button variant="outline" size="lg" type="button" onClick={() => setStep(1)} className="px-4 sm:px-7">
-                  <ArrowLeft className="h-4 w-4" /> {t("back")}
-                </Button>
+              <BarraDeAcciones activa={!!currentUser}>
+                {(
+                  <Button variant="outline" size="lg" type="button" onClick={() => setStep(1)} className={cn("shrink-0 px-4 sm:px-7", currentUser && "hidden lg:inline-flex")}>
+                    <ArrowLeft className="h-4 w-4" /> {t("back")}
+                  </Button>
+                )}
                 <Button
                   type="submit"
                   size="lg"
-                  className="min-w-0 px-4 sm:px-7"
+                  className="min-w-0 flex-1 px-4 sm:px-7"
                   loading={submitting || uploadingPhoto}
                 >
                   <span className="min-w-0 truncate">
@@ -1400,7 +1465,7 @@ export default function RegisterProfessionalPage() {
                       : t("create")}
                   </span>
                 </Button>
-              </div>
+              </BarraDeAcciones>
             </form>
           )}
 
@@ -1415,7 +1480,7 @@ export default function RegisterProfessionalPage() {
           </div>
         </div>
       </main>
-      <LandingFooter />
+      {!currentUser && <LandingFooter />}
     </div>
   );
 }

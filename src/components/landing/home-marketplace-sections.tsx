@@ -164,7 +164,7 @@ function prioritizeFollowed<T extends { created_at: string }>(
 }
 
 function HorizontalRail({ children }: { children: ReactNode }) {
-  return <div className="-mx-4 mt-5 flex gap-4 overflow-x-auto px-4 pb-3 [scrollbar-width:none] sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 [&::-webkit-scrollbar]:hidden">{children}</div>;
+  return <div className="ccr-carril -mx-4 mt-5 flex gap-4 overflow-x-auto px-4 pb-3 [scrollbar-width:none] sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 [&::-webkit-scrollbar]:hidden">{children}</div>;
 }
 
 function initials(value?: string | null) {

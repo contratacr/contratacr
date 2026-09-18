@@ -143,13 +143,25 @@ test.describe("@seeded professional profile", () => {
     await loginAs(page, E2E_USERS.professional.email, E2E_USERS.professional.password);
     await gotoOK(page, `/es/profesionales/${seed.professionalSlug}`);
     // Sin esperar: se pulsa apenas la ficha aparece, que es cuando se rompía.
-    await page.locator("[data-save-button]:visible").first().click({ timeout: 10_000 });
+    // En computadora Guardar es un botón; en el teléfono vive en el «···».
+    const boton = page.locator("[data-save-button]").filter({ visible: true }).first();
+    const conBoton = (await boton.count()) > 0;
+    if (conBoton) {
+      await boton.click({ timeout: 10_000 });
+    } else {
+      // En el teléfono Guardar vive en el «···» y en la ficha propia no se
+      // ofrece: lo que se prueba es que no esté.
+      await page.getByRole("button", { name: /^(Options|Opciones|More|Más)$/i }).filter({ visible: true }).first().click({ timeout: 10_000 });
+      // «Compartir» donde hay hoja del sistema, «Copiar enlace» donde no.
+      await expect(page.getByRole("menuitem", { name: /Compartir|Share|Copiar enlace|Copy link/i }).first()).toBeVisible();
+      await expect(page.getByRole("menuitem", { name: /^(Save|Saved|Guardar|Guardado)$/i })).toHaveCount(0);
+    }
     await page.waitForTimeout(1500);
     const { count } = await admin.from("saved_professionals")
       .select("id", { count: "exact", head: true })
       .eq("client_id", seed.professionalUserId)
       .eq("professional_id", seed.professionalId);
     expect(count ?? 0).toBe(0);
-    await expect(page.getByText(/tus propios favoritos|your own favorites/i).first()).toBeVisible();
+    if (conBoton) await expect(page.getByText(/tus propios favoritos|your own favorites/i).first()).toBeVisible();
   });
 });

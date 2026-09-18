@@ -36,6 +36,101 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
             usa el viewport por defecto (568pt) — la página pintaba a escala
             1.68x y se reacomodaba después: el parpadeo del arranque en la app. */}
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+        {/* LA FRANJA DE ACCIONES, escrita aquí y no en la hoja de estilos.
+            Se rompió una y otra vez por lo mismo: su relleno dependía de clases
+            de Tailwind recién agregadas, y en desarrollo esas clases NO llegan
+            al CSS servido hasta reiniciar el servidor —el componente nuevo
+            aparecía en pantalla con su CSS todavía sin existir: botones contra
+            el filo, sin aire arriba y sin línea—. Dentro del documento la
+            regla llega siempre junto con la página, no pasa por esa hoja, y al
+            ir fuera de las capas de Tailwind ninguna clase suelta puede
+            pisarla. Medidas: las de «Publicar» en Crear proyecto. */}
+        {/* LOS BORDES DE LOS TABLEROS EN COMPUTADORA (Empleos, Promociones,
+            Proyectos), por la misma razón que la franja: si la clase de color
+            de un borde todavía no llegó a la hoja servida, Tailwind pinta ese
+            borde con el color del TEXTO —azul marino— y la tarjeta conserva su
+            línea de arriba, que se suma a la de la barra de filtros. Aquí: un
+            solo gris para todas las uniones y ninguna línea doble arriba. */}
+        <style
+          data-ccr-tableros=""
+          dangerouslySetInnerHTML={{
+            __html: `@media (min-width:1024px){.ccr-panel-tablero{border-style:solid;border-color:#e3ebf2;border-width:0 1px;border-radius:0;box-shadow:none}.ccr-panel-tablero.ccr-con-conteo{border-top-width:1px}.ccr-panel-tablero .ccr-lista-tablero{border-right:1px solid #e3ebf2}}`,
+          }}
+        />
+        {/* LOS CARRILES EN COMPUTADORA. En pantalla grande con mouse nadie
+            desliza con el dedo, así que:
+            · los filtros en pastillas (`ccr-carril-chips`) NO se desplazan:
+              bajan a otro renglón y quedan todos a la vista;
+            · lo que sí tiene que ir en una línea —pestañas, miniaturas—
+              (`ccr-carril`) enseña una barrita fina al pasar el cursor y se
+              puede arrastrar con el mouse (use-arrastre-horizontal).
+            El espacio de la barrita se reserva siempre, para que nada salte al
+            aparecer. Solo aplica con mouse: en táctil manda el dedo. */}
+        {/* UN VACÍO NO LLEVA TARJETA DENTRO DE OTRA. En computadora la sección
+            del panel YA es una tarjeta blanca con su borde; el estado vacío
+            dibujaba la suya adentro y quedaba un recuadro dentro de otro con
+            aire muerto entre los dos (se veía en Soporte y en Cotizaciones sin
+            registros). Sobre el gris del teléfono la tarjeta sí hace falta, así
+            que la regla es solo de computadora, donde el fondo de la sección ya
+            es blanco. */}
+        <style
+          data-ccr-vacios=""
+          dangerouslySetInnerHTML={{
+            __html: `@media (min-width:1024px){.dashboard-section-content .ccr-empty-state{border-width:0!important;box-shadow:none!important;background:transparent!important}}`,
+          }}
+        />
+        <style
+          data-ccr-carriles=""
+          dangerouslySetInnerHTML={{
+            __html: `.ccr-carril-chips .ccr-ver-mas{display:none!important}@media (min-width:1024px) and (hover:hover) and (pointer:fine){.ccr-carril-chips [data-plegado]{display:none!important}.ccr-carril-chips .ccr-ver-mas{display:inline-flex!important}.ccr-carril-chips{flex-wrap:wrap!important;overflow:visible!important;-webkit-mask-image:none!important;mask-image:none!important}.ccr-carril{scrollbar-width:thin!important;scrollbar-color:transparent transparent}.ccr-carril:hover{scrollbar-color:#c5d2de transparent}.ccr-carril::-webkit-scrollbar{display:block!important;height:6px}.ccr-carril::-webkit-scrollbar-track{background:transparent}.ccr-carril::-webkit-scrollbar-thumb{background:transparent;border-radius:999px}.ccr-carril:hover::-webkit-scrollbar-thumb{background:#c5d2de}.ccr-carril:hover::-webkit-scrollbar-thumb:hover{background:#9fb1c2}}`,
+          }}
+        />
+        {/* La fila de acciones de TODA tarjeta del panel —Mis proyectos, Mis
+            citas, Mis empleos, Mis promociones, Solicitudes, Propuestas—, con
+            una sola medida: línea fina encima, botones de 44 px con letra de
+            13 px en negrita, «···» de 44 px con el mismo borde, y el aire de
+            abajo lo pone la tarjeta, no la fila. En computadora, a su tamaño y a
+            la derecha. Antes eran tres familias: 44/13 en Proyectos, 40/12 en
+            Empleos y Promociones, y Empleos con 20 px más de aire abajo.
+            Va aquí y no en clases de Tailwind para que un CSS viejo no la
+            deshaga (lo que ya rompió el encabezado del panel una vez). */}
+        <style
+          data-ccr-acciones=""
+          dangerouslySetInnerHTML={{
+            __html: `.ccr-acciones-tarjeta{border-top:1px solid #eef2f6!important;padding-top:16px!important;margin-bottom:0!important}.ccr-acciones-tarjeta :is(a,button):not([aria-haspopup]):not([role=menuitem]){height:44px!important;min-height:44px!important;font-size:13px!important;font-weight:700!important}.ccr-acciones-tarjeta button[aria-haspopup=menu]{width:44px!important;height:44px!important;border-color:#e5e7eb!important}.ccr-acciones-tarjeta.grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr) 44px!important}@media (min-width:1024px){.ccr-acciones-tarjeta{display:flex!important;flex-direction:row!important;justify-content:flex-end!important;align-items:center!important}.ccr-acciones-tarjeta :is(a,button):not([aria-haspopup]):not([role=menuitem]){width:auto!important;min-width:176px;flex:none!important;padding-left:24px!important;padding-right:24px!important}}`,
+          }}
+        />
+        {/* UNA separación entre botones en toda la app: 12 px, la que ya traía
+            el pie de las ventanas. Cada franja la ponía por su cuenta —o no la
+            ponía: en «Publicar empleo», Cancelar y Publicar se tocaban—. Vale
+            para la franja de abajo, el pie de toda ventana y la fila de
+            acciones de las tarjetas del panel, y va en el documento para que
+            un CSS viejo no la quite. */}
+        <style
+          data-ccr-separacion=""
+          dangerouslySetInnerHTML={{
+            __html: `:is(.ccr-barra-accion,.ccr-pie-ventana,.ccr-acciones-tarjeta,.ccr-grupo-botones),:is(.ccr-barra-accion,.ccr-pie-ventana,.ccr-acciones-tarjeta,.ccr-grupo-botones) div:not([role=menu]):not([role=menu] *){column-gap:12px!important;row-gap:12px!important}`,
+          }}
+        />
+        {/* Lista de notificaciones, como Facebook: el punto azul de lo no leído
+            en la MISMA columna que el «···» general de arriba (su centro queda
+            a 30 px del borde de la tarjeta: 16 de margen + 14 de medio botón),
+            y el «···» de cada fila a su izquierda. Con ratón, ese «···» solo
+            aparece al pasar por la fila o al enfocarla con el teclado —quince
+            en columna competían con los puntos—; en pantallas táctiles, donde
+            no hay cursor, se queda siempre a la vista. */}
+        <style
+          data-ccr-notificaciones=""
+          dangerouslySetInnerHTML={{
+            __html: `.ccr-notifications-items [data-punto-no-leida]{right:25px!important}.ccr-notifications-items [data-menu-fila]{top:50%!important;right:42px!important;transform:translateY(-50%)}@media (hover:hover) and (pointer:fine){.ccr-notifications-items li [data-menu-fila]:not([data-abierto]){opacity:0;transition:opacity .15s}.ccr-notifications-items li:hover [data-menu-fila],.ccr-notifications-items li:focus-within [data-menu-fila]{opacity:1}}`,
+          }}
+        />
+        <style
+          data-ccr-franja=""
+          dangerouslySetInnerHTML={{
+            __html: `@media (max-width:639px){.ccr-barra-accion{box-sizing:border-box;background:#fff;border-top:1px solid #e5e7eb;padding:16px max(20px,env(safe-area-inset-right)) calc(env(safe-area-inset-bottom) + 28px) max(20px,env(safe-area-inset-left))}.ccr-barra-accion.ccr-sin-linea{border-top-color:transparent}.ccr-barra-fija{position:fixed;left:0;right:0;bottom:var(--ccr-reserva-barra,0px);z-index:20}}`,
+          }}
+        />
         <script
           type="text/javascript"
           suppressHydrationWarning

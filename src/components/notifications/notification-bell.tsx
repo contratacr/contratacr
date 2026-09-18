@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
-import { Bell, ArrowRight, CheckCheck } from "lucide-react";
+import { Bell, ArrowRight } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
@@ -218,7 +218,8 @@ export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "o
         onClick={() => void openNotification(item)}
         className={cn(
           "flex w-full items-start gap-3 rounded-xl px-3 py-2.5 text-left transition-colors hover:bg-[#f1f7fb]",
-          !item.read && "bg-[#f5fbff]",
+          // Sin fondo tintado: lo no leído lo marca el punto azul, igual que
+          // en la página de Notificaciones.
         )}
       >
         {fotoDe(item) ? (
@@ -247,14 +248,14 @@ export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "o
           <div className="flex items-center justify-between gap-3 px-4 pb-2 pt-3.5">
             <p className="text-[17px] font-extrabold text-[#162543]">{t("title")}</p>
             {noLeidas.length > 0 && (
+              // Texto y no un «✓✓»: el ícono solo no decía qué hacía, y en un
+              // panel que se abre de paso nadie se detiene a descifrarlo.
               <button
                 type="button"
                 onClick={() => void markAllRead()}
-                aria-label={t("markAllRead")}
-                title={t("markAllRead")}
-                className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-[#0089bb] transition hover:bg-[#eef9fd]"
+                className="shrink-0 rounded-lg px-2 py-1 text-[13px] font-semibold text-[#0089bb] transition hover:bg-[#eef9fd]"
               >
-                <CheckCheck className="h-4 w-4" />
+                {t("markAllRead")}
               </button>
             )}
           </div>

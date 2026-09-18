@@ -52,6 +52,6 @@ export function marketplaceReturnLabel(
     if (params.get("tab") === "saved") return isEnglish ? "Back to favorites" : "Volver a favoritos";
     return isEnglish ? "Back to dashboard" : "Volver al panel";
   }
-  if (fallback === "/ofertas") return isEnglish ? "Back to offers" : "Volver a ofertas";
+  if (fallback === "/ofertas") return isEnglish ? "Back to promotions" : "Volver a promociones";
   return isEnglish ? "Back to jobs" : "Volver a empleos";
 }

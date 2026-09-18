@@ -8,16 +8,20 @@ import { CategorySearch } from "@/components/ui/category-search";
 import { SelectMenu } from "@/components/ui/select-menu";
 import { AlertCircle, ArrowLeft, CheckCircle2, X } from "lucide-react";
 import { PROVINCES } from "@/lib/data/cr-geography";
+import { PhoneInput, isPhoneComplete } from "@/components/ui/phone-input";
+import { createClient } from "@/lib/supabase/client";
 import { getCategoryLabel } from "@/lib/data/categories";
 import { useLocale } from "next-intl";
 import { lockBodyScroll } from "@/lib/body-scroll-lock";
 import { useAuth } from "@/hooks/use-auth";
 import { Link } from "@/i18n/navigation";
+import { BARRA_ACCION_BASE } from "@/components/ui/acciones-al-pie";
+import { cn } from "@/lib/utils";
 
 const PROJECT_DESCRIPTION_MAX_LENGTH = 300;
 const LAST_ZONE_KEY = "ccr:last-request-zone";
 
-type ProjectErrorField = "category" | "description";
+type ProjectErrorField = "category" | "description" | "phone";
 
 // En producción, los primeros "proyectos" fueron profesionales ofreciendo sus
 // servicios. Estas señales, de a dos, delatan un anuncio: se avisa y se manda
@@ -56,12 +60,32 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
     provinciaId: searchParams.get("provincia") || "",
     cantonId: searchParams.get("canton") || "",
   });
+  const [telefono, setTelefono] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [errorField, setErrorField] = useState<ProjectErrorField | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [published, setPublished] = useState<{ notifiedCount: number; service: string } | null>(null);
   const categoryFieldRef = useRef<HTMLDivElement>(null);
   const descriptionFieldRef = useRef<HTMLDivElement>(null);
+
+  // El teléfono solo se pregunta cuando la cuenta no tiene ninguno. Con
+  // WhatsApp como única vía de respuesta, un proyecto sin número es un proyecto
+  // que nadie puede contestar.
+  useEffect(() => {
+    if (!user) return;
+    let vivo = true;
+    void createClient()
+      .rpc("get_my_profile")
+      .then(({ data }) => {
+        if (!vivo) return;
+        const guardado = String((data as { phone?: string | null } | null)?.phone ?? "").trim();
+        queueMicrotask(() => {
+          if (!vivo) return;
+          if (guardado) setTelefono(guardado);
+        });
+      });
+    return () => { vivo = false; };
+  }, [user]);
 
   // La zona se recuerda entre solicitudes: casi siempre es la misma casa.
   useEffect(() => {
@@ -114,6 +138,11 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
     if (!form.categoryId) { reportError(t("errCategory"), "category", categoryFieldRef); return; }
     if (!form.description.trim()) { reportError(t("errDescription"), "description", descriptionFieldRef); return; }
 
+    if (!isPhoneComplete(telefono)) {
+      setErrorField("phone");
+      setError(t("errPhone"));
+      return;
+    }
     setSubmitting(true);
     try {
       const res = await fetch("/api/projects", {
@@ -124,6 +153,7 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
           categoryId: form.categoryId,
           provinciaId: form.provinciaId || null,
           cantonId: form.cantonId || null,
+          phone: telefono.trim() || null,
         }),
       });
       const data = await res.json().catch(() => ({}));
@@ -147,6 +177,10 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
   }
 
   const fieldLabel = "mb-1.5 block text-[15px] font-semibold text-[#162543]";
+  // La misma marca que en Empleos y Promociones: asterisco rojo en lo
+  // obligatorio, «(opcional)» en lo que no lo es. Aquí no había ninguna de las
+  // dos y había que adivinar.
+  const obligatorio = <span className="text-red-500"> *</span>;
 
   return (
     <div className="app-modal-screen fixed inset-0 z-[100] flex items-stretch justify-center sm:items-center sm:p-4">
@@ -168,7 +202,7 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
             type="button"
             onClick={onClose}
             aria-label={t("dismiss")}
-            className="absolute left-4 top-1/2 flex h-9 w-9 -translate-y-1/2 shrink-0 items-center justify-center rounded-lg text-[#162543] transition-colors hover:bg-[#f3f4f6] sm:static sm:h-8 sm:w-8 sm:translate-y-0"
+            className="absolute left-4 top-1/2 flex h-10 w-10 -translate-y-1/2 shrink-0 items-center justify-center rounded-xl text-[#162543] transition-colors hover:bg-[#eef5f9] sm:static sm:h-8 sm:w-8 sm:translate-y-0 sm:rounded-lg"
           >
             <ArrowLeft className="h-5 w-5 sm:hidden" />
             <X className="hidden h-5 w-5 sm:block" />
@@ -191,7 +225,7 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
             <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain bg-[#f4f7fa] px-4 py-5 sm:max-h-[calc(90vh-145px)] sm:flex-none">
               <div className="flex flex-col gap-6 rounded-2xl border border-[#e5e7eb] bg-white p-5 shadow-sm">
                 <div ref={categoryFieldRef}>
-                  <label className={fieldLabel}>{t("category")}</label>
+                  <label className={fieldLabel}>{t("category")}{obligatorio}</label>
                   <CategorySearch
                     value={form.categoryId}
                     onChange={(id) => update("categoryId", id)}
@@ -201,7 +235,7 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
                 </div>
 
                 <div ref={descriptionFieldRef}>
-                  <label className={fieldLabel}>{t("description")}</label>
+                  <label className={fieldLabel}>{t("description")}{obligatorio}</label>
                   <textarea
                     className="min-h-[132px] w-full resize-none break-words rounded-xl border border-[#e5e7eb] bg-white px-4 py-3 text-[15px] text-[#162543] placeholder:text-[#68778d] focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[#009FD9] aria-[invalid=true]:border-red-400"
                     placeholder={t("descriptionPlaceholder")}
@@ -246,6 +280,25 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
                   </div>
                   <p className="mt-1.5 text-xs text-[#68778d]">{t("zoneHelp")}</p>
                 </div>
+
+                {/* Publicar un proyecto ES pedir que lo contacten: preguntarlo
+                    con una casilla era hacer elegir algo que ya se eligió. Se
+                    dice llano, y si la cuenta no tiene teléfono se pide aquí,
+                    porque sin número no hay por dónde responder. */}
+                {/* El WhatsApp SIEMPRE a la vista, con el de la cuenta puesto y
+                    editable: escondido, la persona no sabía a cuál número le
+                    iban a escribir, y cambiarlo para un proyecto puntual era
+                    imposible sin ir al perfil. */}
+                <div>
+                  <PhoneInput
+                    label={t("phoneLabel")}
+                    value={telefono}
+                    onChange={setTelefono}
+                    error={errorField === "phone" ? (error ?? undefined) : undefined}
+                    required
+                  />
+                  <p className="mt-1.5 text-xs text-[#68778d]">{t("phoneHelp")}</p>
+                </div>
               </div>
             </div>
           )}
@@ -259,7 +312,10 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
             </div>
           )}
 
-          <div className={`flex shrink-0 gap-3 px-5 py-4 pb-[max(env(safe-area-inset-bottom),1rem)] sm:px-6 sm:pb-4 ${error && !published ? "" : "border-t border-[#f3f4f6]"}`}>
+          {/* La MISMA franja que el resto del app: la medida vive en
+              BARRA_ACCION_BASE, no escrita otra vez aquí. Esta pantalla es la
+              referencia, así que si cambia, cambian todas juntas. */}
+          <div className={cn(BARRA_ACCION_BASE, "flex shrink-0 gap-3 sm:px-6 sm:pb-4", error && !published && "ccr-sin-linea border-t-0")}>
             {!published && (
               <Button type="button" variant="outline" size="lg" onClick={onClose} className="hidden sm:inline-flex">
                 {t("cancel")}

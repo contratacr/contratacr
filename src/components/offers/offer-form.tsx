@@ -1,8 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
+import { PhoneInput } from "@/components/ui/phone-input";
 import { UnsavedChangesGuard } from "@/components/dashboard/unsaved-changes-guard";
 import { cn } from "@/lib/utils";
+import { BARRA_ACCION_FIJA, useBarraAccionFija } from "@/components/ui/acciones-al-pie";
 import { useHairlineOnScroll } from "@/components/util/use-hairline-on-scroll";
 import { ArrowLeft, Check, ChevronDown, ImagePlus, Search, X } from "lucide-react";
 import { useLocale } from "next-intl";
@@ -22,6 +25,7 @@ import {
 import { IMAGE_ACCEPT } from "@/lib/upload-validation";
 import { invalidateAppData } from "@/lib/app-data-invalidation";
 import { Button } from "@/components/ui/button";
+import { CABECERA_BOTON, CABECERA_FILA_CENTRADA, CABECERA_GLIFO, CABECERA_TITULO } from "@/components/layout/cabecera";
 
 type OfferFormProps = {
   professionalId: string;
@@ -34,7 +38,7 @@ type OfferFormProps = {
   onCancel?: () => void;
 };
 
-type FieldErrors = Partial<Record<"title" | "service" | "description" | "images" | "price" | "priceBefore" | "quantity", string>>;
+type FieldErrors = Partial<Record<"title" | "service" | "description" | "images" | "price" | "priceBefore" | "quantity" | "whatsapp", string>>;
 
 const TODAY = crTodayISO();
 const FIELD_CLASS = "mt-1.5 h-11 w-full rounded-xl border border-[#d7e1ea] bg-white px-3 text-sm outline-none transition-colors focus:border-[#009fd9]";
@@ -43,9 +47,9 @@ const TEXTAREA_CLASS = "mt-1.5 min-h-28 w-full resize-y rounded-xl border border
 const OFFER_FORM_COPY = {
   es: {
     back: "Volver",
-    backToOffers: "Volver a ofertas",
-    editTitle: "Editar oferta",
-    publishTitle: "Publicar oferta",
+    backToOffers: "Volver a promociones",
+    editTitle: "Editar promoción",
+    publishTitle: "Publicar promoción",
     subtitle: "Publica una promoción clara y fácil de comparar.",
     title: "Título",
     titlePlaceholder: "Ej. Paquete de fotografía para eventos",
@@ -56,7 +60,7 @@ const OFFER_FORM_COPY = {
     serviceNotFound: "No encontramos ese servicio.",
     description: "Descripción",
     descriptionPlaceholder: "Qué incluye, condiciones y cómo se entrega.",
-    pareceEmpleo: "Esto parece una vacante, no una oferta. Las ofertas son promociones de lo que vos hacés; si estás buscando a alguien para contratar, va en Empleos, donde la gente se postula y te llega el currículum.",
+    pareceEmpleo: "Esto parece una vacante, no una promoción. Las promociones son de lo que vos hacés; si estás buscando a alguien para contratar, va en Empleos, donde la gente se postula y te llega el currículum.",
     pareceEmpleoCta: "Publicarlo como empleo",
     images: "Imágenes",
     imageHelp: "Agrega de 1 a 5 fotos. La primera será la portada.",
@@ -64,6 +68,8 @@ const OFFER_FORM_COPY = {
     priceAndValidity: "Precio y vigencia",
     currentPrice: "Precio actual",
     previousPrice: "Precio anterior",
+    negotiable: "Precio a consultar",
+    negotiableHelp: "La promoción sale sin precio y la gente te escribe para preguntarlo.",
     optional: "opcional",
     currency: "Moneda",
     colones: "Colones (CRC)",
@@ -72,7 +78,7 @@ const OFFER_FORM_COPY = {
     quantity: "Cantidad disponible",
     moreOptions: "Más opciones (moneda, unidad, cantidad)",
     availableUntil: "Disponible hasta",
-    availabilityHelp: "La oferta se ocultará automáticamente después de esta fecha.",
+    availabilityHelp: "La promoción se ocultará automáticamente después de esta fecha.",
     location: "Ubicación",
     province: "Provincia",
     allCostaRica: "Todo Costa Rica",
@@ -82,25 +88,26 @@ const OFFER_FORM_COPY = {
     publishing: "Publicando...",
     save: "Guardar cambios",
     cancel: "Cancelar",
-    publish: "Publicar oferta",
+    publish: "Publicar promoción",
     uploadFailed: "No pudimos subir una imagen.",
     uploadTooLarge: "La imagen es demasiado grande y no pudimos optimizarla. Prueba con otra foto.",
     uploadUnsupported: "Ese formato de imagen no es compatible. Usa JPG, PNG, WEBP, HEIC, HEIF o GIF.",
     titleError: "Escribe un título de al menos 3 caracteres.",
     serviceError: "Selecciona un servicio de ContrataCR de las sugerencias.",
-    descriptionError: "Describe la oferta con al menos 20 caracteres.",
-    imagesError: "Agrega al menos una imagen de la oferta.",
-    priceError: "Ingresa el precio actual de la oferta.",
+    descriptionError: "Describe la promoción con al menos 20 caracteres.",
+    imagesError: "Agrega al menos una imagen de la promoción.",
+    priceError: "Ingresa el precio o marca «Precio a consultar».",
     previousPriceError: "El precio anterior debe ser mayor o igual al actual.",
     priceRangeError: (maximum: string) => `Ingresa un precio entre 1 y ${maximum}.`,
     previousPriceRangeError: (maximum: string) => `Ingresa un precio anterior de hasta ${maximum}.`,
     quantityRangeError: (maximum: string) => `Ingresa una cantidad entre 1 y ${maximum}.`,
     dateError: "La fecha de vigencia no puede estar en el pasado.",
     reviewError: "Revisa los campos marcados antes de publicar.",
-    databaseUnavailable: "La base de datos de ofertas todavía no está habilitada.",
+    databaseUnavailable: "La base de datos de promociones todavía no está habilitada.",
     numericError: "Uno de los precios o cantidades es demasiado alto. Revisa los valores ingresados.",
-    saveError: "No pudimos guardar la oferta. Revisa la información e inténtalo nuevamente.",
-    publishError: "No pudimos publicar la oferta.",
+    saveError: "No pudimos guardar la promoción. Revisa la información e inténtalo nuevamente.",
+    publishError: "No pudimos publicar la promoción.",
+    whatsapp: "WhatsApp", whatsappHelp: "Es por donde te van a escribir. Viene el de tu cuenta; podés cambiarlo para esta promoción.",
   },
   en: {
     back: "Back",
@@ -125,6 +132,8 @@ const OFFER_FORM_COPY = {
     priceAndValidity: "Price and availability",
     currentPrice: "Current price",
     previousPrice: "Previous price",
+    negotiable: "Price on request",
+    negotiableHelp: "The promotion shows no price and people message you to ask.",
     optional: "optional",
     currency: "Currency",
     colones: "Costa Rican colones (CRC)",
@@ -162,6 +171,7 @@ const OFFER_FORM_COPY = {
     numericError: "One of the prices or quantities is too high. Review the values entered.",
     saveError: "We could not save the offer. Review the information and try again.",
     publishError: "We could not publish the offer.",
+    whatsapp: "WhatsApp", whatsappHelp: "This is where people will write to you. Your account number is filled in; you can change it for this promotion.",
   },
 } as const;
 
@@ -200,7 +210,19 @@ export function OfferForm({ professionalId, serviceOptions, backHref = "/ofertas
   const localeCode = locale === "en" ? "en-US" : "es-CR";
   const editing = Boolean(initialOffer?.id);
   const router = useRouter();
+  useBarraAccionFija();
   const [saving, setSaving] = useState(false);
+  // El WhatsApp de ESTA promoción: viene el de la cuenta y se puede cambiar.
+  const [whatsapp, setWhatsapp] = useState<string>(initialOffer?.contact_whatsapp ?? "");
+  useEffect(() => {
+    if (initialOffer?.contact_whatsapp) return;
+    let vivo = true;
+    void createClient().from("professionals").select("whatsapp").eq("id", professionalId).maybeSingle().then(({ data }) => {
+      const guardado = String((data as { whatsapp?: string | null } | null)?.whatsapp ?? "").trim();
+      if (vivo && guardado) queueMicrotask(() => setWhatsapp(guardado));
+    });
+    return () => { vivo = false; };
+  }, [initialOffer?.contact_whatsapp, professionalId]);
   // El formulario se referencia para llevar la vista al primer campo señalado,
   // y recuerda si hay algo escrito para avisar antes de salir sin publicar.
   const formRef = useRef<HTMLFormElement>(null);
@@ -218,6 +240,9 @@ export function OfferForm({ professionalId, serviceOptions, backHref = "/ofertas
   const [serviceInput, setServiceInput] = useState("");
   const [serviceSuggestionsOpen, setServiceSuggestionsOpen] = useState(false);
   const [currency, setCurrency] = useState<string>(initialOffer?.currency ?? "CRC");
+  // «Precio a consultar»: sin número. Antes el precio era obligatorio con
+  // mínimo 1 y la mitad de las promociones de producción decían «₡1».
+  const [sinPrecio, setSinPrecio] = useState<boolean>(Boolean(initialOffer && initialOffer.price_now == null));
   const [priceUnit, setPriceUnit] = useState<string>(initialOffer?.price_unit ?? "total");
   const [validUntil, setValidUntil] = useState(initialOffer?.valid_until ?? "");
   const [locationProvince, setLocationProvince] = useState("");
@@ -318,10 +343,12 @@ export function OfferForm({ professionalId, serviceOptions, backHref = "/ofertas
     if (!selectedService) nextErrors.service = copy.serviceError;
     if (description.length < 20) nextErrors.description = copy.descriptionError;
     if (files.length === 0 && existingImageUrls.length === 0) nextErrors.images = copy.imagesError;
-    if (currentPrice <= 0) nextErrors.price = copy.priceError;
-    if (beforePrice > 0 && beforePrice < currentPrice) nextErrors.priceBefore = copy.previousPriceError;
-    if (!isWholeNumberInRange(currentPrice, 1, MAX_MONEY_AMOUNT)) nextErrors.price = copy.priceRangeError(formatNumberForMessage(MAX_MONEY_AMOUNT));
-    if (!isWholeNumberInRange(beforePrice || null, 1, MAX_MONEY_AMOUNT)) nextErrors.priceBefore = copy.previousPriceRangeError(formatNumberForMessage(MAX_MONEY_AMOUNT));
+    if (!sinPrecio) {
+      if (currentPrice <= 0) nextErrors.price = copy.priceError;
+      if (beforePrice > 0 && beforePrice < currentPrice) nextErrors.priceBefore = copy.previousPriceError;
+      if (!isWholeNumberInRange(currentPrice, 1, MAX_MONEY_AMOUNT)) nextErrors.price = copy.priceRangeError(formatNumberForMessage(MAX_MONEY_AMOUNT));
+      if (!isWholeNumberInRange(beforePrice || null, 1, MAX_MONEY_AMOUNT)) nextErrors.priceBefore = copy.previousPriceRangeError(formatNumberForMessage(MAX_MONEY_AMOUNT));
+    }
     if (!isWholeNumberInRange(quantityAvailable, 1, MAX_OFFER_QUANTITY)) nextErrors.quantity = copy.quantityRangeError(formatNumberForMessage(MAX_OFFER_QUANTITY));
     if (validUntil && /^\d{4}-\d{2}-\d{2}$/.test(validUntil) && validUntil < TODAY) {
       setError(copy.dateError);
@@ -352,13 +379,14 @@ export function OfferForm({ professionalId, serviceOptions, backHref = "/ofertas
         offer_type: offerType,
         service_label: selectedService!.label,
         image_urls: imageUrls,
-        price_now: currentPrice,
-        price_before: beforePrice || null,
+        price_now: sinPrecio ? null : currentPrice,
+        price_before: sinPrecio ? null : beforePrice || null,
         currency,
         price_unit: priceUnit,
         location_label: locationLabel || null,
         valid_until: /^\d{4}-\d{2}-\d{2}$/.test(validUntil) ? validUntil : null,
         quantity_available: quantityAvailable,
+        contact_whatsapp: whatsapp.trim() || null,
         status: editing ? (initialOffer?.status ?? "published") : "published",
       };
       const response = await fetch("/api/offers", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(payload) });
@@ -383,12 +411,12 @@ export function OfferForm({ professionalId, serviceOptions, backHref = "/ofertas
   }
 
   return (
-    <main className={presentation === "modal" ? "bg-[#f4f7fa] text-[#162543]" : "min-h-[calc(100vh-72px)] bg-[#f4f7fa] text-[#162543] lg:px-6 lg:py-10"}>
+    <main className={presentation === "modal" ? "bg-[#f4f7fa] text-[#162543]" : "min-h-[calc(100vh-72px)] bg-[#f4f7fa] text-[#162543] lg:px-6 lg:py-8"}>
       {presentation !== "modal" && <div ref={sentinelaRef} aria-hidden className="h-px lg:hidden" />}
       <header ref={cabeceraRef} className={presentation === "modal" ? "hidden" : cn("sticky top-0 z-20 border-b bg-white transition-colors duration-200 lg:hidden", conLinea ? "border-[#e5e7eb]" : "border-transparent")}>
-        <div className="relative flex min-h-[56px] items-center justify-center px-14">
-          <Link href={backHref} aria-label={copy.back} className="absolute left-3 top-1/2 grid h-11 w-11 -translate-y-1/2 place-items-center text-[#162543]"><ArrowLeft className="h-6 w-6 stroke-[2.4]" /></Link>
-          <h1 className="truncate text-center text-[17px] font-extrabold">{editing ? copy.editTitle : copy.publishTitle}</h1>
+        <div className={CABECERA_FILA_CENTRADA}>
+          <Link href={backHref} aria-label={copy.back} className={cn("absolute left-4 top-1/2 -translate-y-1/2", CABECERA_BOTON)}><ArrowLeft className={cn(CABECERA_GLIFO, "stroke-[2.4]")} /></Link>
+          <h1 className={cn(CABECERA_TITULO, "text-center")}>{editing ? copy.editTitle : copy.publishTitle}</h1>
         </div>
       </header>
       <div className={presentation === "modal" ? "mx-auto max-w-3xl px-4 py-5" : "mx-auto max-w-3xl px-4 py-5 sm:px-6 lg:px-0 lg:py-0"}>
@@ -407,6 +435,7 @@ export function OfferForm({ professionalId, serviceOptions, backHref = "/ofertas
           }}
           onChange={() => setConCambios(true)}
           noValidate
+          className="max-sm:pb-24"
         >
           <div className="rounded-2xl border border-[#e5e7eb] bg-white p-5 shadow-sm">
           <div className="grid gap-5 sm:grid-cols-2">
@@ -501,6 +530,10 @@ export function OfferForm({ professionalId, serviceOptions, backHref = "/ofertas
               </div>
               <FieldError>{fieldErrors.service}</FieldError>
             </div>
+            <div className="sm:col-span-2">
+              <PhoneInput label={<RequiredLabel>{copy.whatsapp}</RequiredLabel>} value={whatsapp} onChange={setWhatsapp} error={fieldErrors.whatsapp} />
+              <p className="mt-1.5 text-xs text-[#68778d]">{copy.whatsappHelp}</p>
+            </div>
             <label className="text-sm font-medium text-[#374151] sm:col-span-2">
               <RequiredLabel>{copy.description}</RequiredLabel>
               <textarea name="description" maxLength={3000} defaultValue={initialOffer?.description ?? ""} placeholder={copy.descriptionPlaceholder} className={TEXTAREA_CLASS} />
@@ -542,8 +575,14 @@ export function OfferForm({ professionalId, serviceOptions, backHref = "/ofertas
 
           <div className="my-6 border-t border-[#e6edf3] pt-6"><h2 className="font-bold">{copy.priceAndValidity}</h2></div>
           <div className="grid gap-4 sm:grid-cols-2">
+            <label className="flex items-start gap-3 rounded-lg border border-[#e6edf3] px-4 py-3 sm:col-span-2">
+              <input type="checkbox" name="sin_precio" checked={sinPrecio} onChange={(event) => { setSinPrecio(event.target.checked); setFieldErrors((current) => ({ ...current, price: undefined, priceBefore: undefined })); }} className="mt-0.5 h-4 w-4 shrink-0 accent-[#009fd9]" />
+              <span className="text-sm"><span className="font-semibold text-[#162543]">{copy.negotiable}</span><span className="block text-[13px] text-[#68778d]">{copy.negotiableHelp}</span></span>
+            </label>
+            {!sinPrecio && (<>
             <label className="text-sm font-medium text-[#374151]"><RequiredLabel>{copy.currentPrice}</RequiredLabel><input name="price_now" inputMode="numeric" maxLength={String(MAX_MONEY_AMOUNT).length} defaultValue={initialOffer?.price_now ?? ""} placeholder="25000" className={FIELD_CLASS} /><FieldError>{fieldErrors.price}</FieldError></label>
             <label className="text-sm font-medium text-[#374151]">{copy.previousPrice} <span className="font-normal text-[#68778d]">({copy.optional})</span><input name="price_before" inputMode="numeric" maxLength={String(MAX_MONEY_AMOUNT).length} defaultValue={initialOffer?.price_before ?? ""} placeholder="35000" className={FIELD_CLASS} /><FieldError>{fieldErrors.priceBefore}</FieldError></label>
+            </>)}
             {/* Casi toda oferta es en colones, sin unidad especial ni cupo: esos tres
                 campos se pliegan para que el formulario se lea en una pasada. */}
             <details className="rounded-lg border border-[#e6edf3] px-4 py-3 sm:col-span-2" open={Boolean(initialOffer && (initialOffer.currency === "USD" || initialOffer.quantity_available))}>
@@ -586,7 +625,8 @@ export function OfferForm({ professionalId, serviceOptions, backHref = "/ofertas
             // ventana hay que descontar DOS rellenos (el del cuerpo y el de la
             // columna del formulario); si solo se descuenta uno queda una franja
             // gris a cada lado.
-            "ccr-pie-formulario sticky bottom-0 z-10 -mx-4 mt-5 border-t border-[#e5e7eb] bg-white px-4 py-4 pb-[max(env(safe-area-inset-bottom),1rem)] sm:flex sm:justify-end sm:px-6",
+            BARRA_ACCION_FIJA,
+            "z-20 max-sm:fixed max-sm:inset-x-0 max-sm:bottom-0 sm:sticky sm:bottom-0 sm:-mx-4 sm:mt-5 sm:flex sm:justify-end sm:px-6",
             presentation === "modal" ? "sm:-mx-10" : "sm:-mx-6",
           )}>
             {/* En una ventana, la salida acompaña a la acción: cerrar un

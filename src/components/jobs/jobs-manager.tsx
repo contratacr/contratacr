@@ -3,23 +3,20 @@
 import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useNativeApp } from "@/hooks/use-native-app";
-import { ArrowLeft, BriefcaseBusiness, CalendarDays, ChevronDown, ExternalLink, Mail, MoreHorizontal, Phone, Plus, UserRound, Users } from "lucide-react";
-import { buildWebsiteUrl } from "@/lib/social";
+import { ArrowLeft, BriefcaseBusiness, ChevronDown, MoreHorizontal, Plus } from "lucide-react";
 import { Link, useRouter } from "@/i18n/navigation";
-import { createClient } from "@/lib/supabase/client";
 import { invalidateAppData } from "@/lib/app-data-invalidation";
 import type { JobPost } from "@/lib/jobs";
-import { SelectMenu } from "@/components/ui/select-menu";
 import { Button } from "@/components/ui/button";
 import { PanelEmptyState } from "@/components/ui/content-loading";
 import { Modal } from "@/components/ui/modal";
 import { SectionHeadline } from "@/components/dashboard/section-headline";
 import { JobPostForm } from "@/components/jobs/job-post-form";
 import { cn } from "@/lib/utils";
+import { StatusFilterTabs, PUBLICACION_ESTADO_TABS, publicacionBucket, sinFiltros } from "@/components/dashboard/status-filter-tabs";
 import { openInNewTabOnDesktop } from "@/lib/desktop-new-tab";
 import { useLocale } from "next-intl";
 import { employmentTypeLabel, marketplaceLocale, type MarketplaceLocale } from "@/lib/marketplace-copy";
-import { VisorDeCv } from "@/components/jobs/visor-cv";
 
 type Application = { id: string; status: string; created_at: string; cover_letter: string; applicant_email: string | null; phone: string | null; resume_url: string | null; portfolio_url: string | null; applicant_name: string };
 export type ManagedJob = JobPost & { applications: Application[] };
@@ -30,7 +27,7 @@ const JOBS_MANAGER_COPY = {
     jobStates: { published: "Publicado", paused: "Pausado", closed: "Cerrado", draft: "Borrador" },
     back: "Volver al panel", title: "Mis empleos", subtitle: "Vacantes para cuando necesitas contratar.", publish: "Publicar empleo",
     application: "postulación", applications: "postulaciones", view: "Ver empleo", edit: "Editar", more: "Más opciones",
-    pause: "Pausar", close: "Cerrar vacante", applicationsTitle: "Postulaciones",
+    pause: "Pausar", close: "Cerrar vacante", republish: "Volver a publicar", applicationsTitle: "Postulaciones",
     received: "Postulación recibida", message: "Mensaje", viewCv: "Ver CV", viewPortfolio: "Ver portafolio",
     noApplications: "Aún no hay postulaciones.", emptyTitle: "Todavía no has publicado empleos", emptyBody: "Publica tu primera oportunidad laboral.",
     publishTitle: "Publicar empleo", publishSubtitle: "Describe la oportunidad con información clara y verificable.",
@@ -41,23 +38,13 @@ const JOBS_MANAGER_COPY = {
     jobStates: { published: "Published", paused: "Paused", closed: "Closed", draft: "Draft" },
     back: "Back to dashboard", title: "My jobs", subtitle: "Openings for when you need to hire.", publish: "Post job",
     application: "application", applications: "applications", view: "View job", edit: "Edit", more: "More options",
-    pause: "Pause", close: "Close opening", applicationsTitle: "Applications",
+    pause: "Pause", close: "Close opening", republish: "Publish again", applicationsTitle: "Applications",
     received: "Application received", message: "Message", viewCv: "View resume", viewPortfolio: "View portfolio",
     noApplications: "There are no applications yet.", emptyTitle: "You have not posted any jobs yet", emptyBody: "Post your first job opportunity.",
     publishTitle: "Post a job", publishSubtitle: "Describe the opportunity with clear, verifiable information.",
     editTitle: "Edit job", editSubtitle: "Update this job's information.",
   },
 } satisfies Record<MarketplaceLocale, Record<string, unknown>>;
-
-function applicationDate(value: string, locale: MarketplaceLocale) {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "";
-  return new Intl.DateTimeFormat(locale === "en" ? "en-US" : "es-CR", { day: "numeric", month: "short", year: "numeric" }).format(date);
-}
-
-function applicantInitials(name: string) {
-  return name.split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]).join("").toUpperCase();
-}
 
 // UN color por significado, no un color por estado: azul de marca = está vivo
 // ahora; gris = pasó o está en pausa; rojo = SOLO lo que salió mal (cancelado,
@@ -87,6 +74,9 @@ export function JobsManager({ initialJobs, embedded = false, backHref = "/dashbo
     return () => cancelAnimationFrame(frame);
   }, [searchParams]);
 
+  const [etapa, setEtapa] = useState("activas");
+  // Con pocos elementos no hay etapas dibujadas: la lista sale entera.
+  const visibles = sinFiltros(jobs.length) ? jobs : jobs.filter((item) => publicacionBucket(item.status) === etapa);
   // A status changed here must survive a server re-render that was started
   // before the change committed (quick pause → publish on a slow network);
   // the local status wins until the server snapshot agrees with it.
@@ -130,18 +120,6 @@ export function JobsManager({ initialJobs, embedded = false, backHref = "/dashbo
     }
   }
 
-  async function updateApplication(jobId: string, applicationId: string, status: string) {
-    const { error } = await createClient().from("job_applications").update({ status }).eq("id", applicationId);
-    if (!error) {
-      // The applicant hears about the decision (server re-verifies ownership).
-      // El aviso lo crea un disparador de la base al guardar la fila; esta
-      // llamada era una segunda vía que terminaba chocando contra la
-      // comprobación de duplicados del propio endpoint, así que solo gastaba
-      // una petición por acción.
-      setJobs((current) => current.map((job) => job.id === jobId ? { ...job, applications: job.applications.map((item) => item.id === applicationId ? { ...item, status } : item) } : job));
-      invalidateAppData("jobs");
-    }
-  }
 
   return (
     <div className={embedded ? "text-[#162543]" : "min-h-[calc(100vh-72px)] bg-[#f4f7fa] px-4 py-6 text-[#162543] sm:px-6 sm:py-10"}>
@@ -166,24 +144,53 @@ export function JobsManager({ initialJobs, embedded = false, backHref = "/dashbo
               </>)}
           </SectionHeadline>
         </div>
-        <div className="space-y-3.5">
-          {jobs.map((job) => {
+        {/* Filtro y lista en el mismo bloque y con la misma separación que en
+            Mis proyectos: pegado a las tarjetas parecía parte de la primera.
+            Las etapas siguen la misma regla: con pocos elementos no se dibujan
+            y la lista sale entera. */}
+        <div className="flex flex-col gap-3.5">
+        <StatusFilterTabs
+          tabs={PUBLICACION_ESTADO_TABS}
+          masculino
+          value={etapa}
+          onChange={setEtapa}
+          counts={{
+            activas: jobs.filter((item) => publicacionBucket(item.status) === "activas").length,
+            cerradas: jobs.filter((item) => publicacionBucket(item.status) === "cerradas").length,
+          }}
+          totalElementos={jobs.length}
+        />
+        <div className="flex flex-col gap-3.5">
+          {visibles.map((job) => {
             const isOpen = openId === job.id;
             return (
               <article key={job.id} className={cn("relative overflow-visible rounded-2xl border border-[#e5e7eb] bg-white shadow-[0_2px_8px_rgba(15,23,42,0.06)]", actionsOpen === job.id && "z-40")}>
-                <button type="button" onClick={() => setOpenId(isOpen ? null : job.id)} className="flex h-24 w-full items-center gap-3 px-4 text-left sm:px-5">
+                <button type="button" onClick={() => setOpenId(isOpen ? null : job.id)} className="flex h-24 w-full items-center gap-3 px-4 text-left sm:gap-4 sm:px-5">
+                  {/* Empleos era la única de las tres listas del panel sin caja al
+                      inicio: la fila arrancaba en el título y no se alineaba con
+                      Mis proyectos ni con Mis promociones. */}
+                  <div className="grid h-[52px] w-[52px] shrink-0 place-items-center rounded-xl ccr-caja-icono sm:h-14 sm:w-14">
+                    <BriefcaseBusiness className="h-5 w-5" />
+                  </div>
                   <div className="min-w-0 flex-1">
                     {/* El estado como ANTETÍTULO, igual que en Postulaciones: en su
                         pastilla a la derecha obligaba a reservarle ancho fijo a TODAS
                         las tarjetas, tuviera la palabra corta o larga, y ese ancho se
                         lo quitaba al título. Arriba no compite con nada y se lee
                         primero, que es lo que uno busca al recorrer la lista. */}
-                    <p className={cn("truncate text-[10px] font-extrabold uppercase tracking-[0.06em]", statusTextClass(job.status))}>{copy.jobStates[job.status]}</p>
+                    {/* El estado SOLO donde distingue algo: en «Activas» todas
+                        están publicadas y el antetítulo repetía la pestaña; en
+                        «Cerradas» conviven pausada, cerrada y borrador, y ahí sí
+                        dice cuál es cuál. */}
+                    {publicacionBucket(job.status) === "cerradas" && (
+                      <p className={cn("truncate text-[10px] font-extrabold uppercase tracking-[0.06em]", statusTextClass(job.status))}>{copy.jobStates[job.status]}</p>
+                    )}
                     <h2 className="mt-0.5 line-clamp-2 text-[15px] font-extrabold leading-tight text-[#162543] sm:text-base">{job.title}</h2>
+                    {/* Sin la barrita: separaba el tipo de empleo del conteo de
+                        postulaciones, y al irse el conteo quedó colgando sola. */}
                     <div className="mt-1.5 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-xs font-semibold text-[#65758c]">
                       <span className="truncate">{employmentTypeLabel(job.employment_type, locale)}</span>
-                      <span className="text-[#cbd5e1]">|</span>
-                      <span className="inline-flex items-center gap-1"><Users className="h-3.5 w-3.5 text-[#8ca0b8]" />{job.applications.length} {job.applications.length === 1 ? copy.application : copy.applications}</span>
+                      {job.location_label && <><span className="text-[#cbd5e1]">·</span><span className="truncate">{job.location_label}</span></>}
                     </div>
                   </div>
                   <div className="flex shrink-0 items-center gap-2">
@@ -191,9 +198,9 @@ export function JobsManager({ initialJobs, embedded = false, backHref = "/dashbo
                   </div>
                 </button>
                 {isOpen && (
-                  <div className="border-t border-[#e6edf3] px-4 pb-4 pt-3 sm:px-5 sm:pb-5">
+                  <div className="border-t border-[#e6edf3] px-4 pb-5 pt-3 sm:px-5">
                     {job.description && <p className="mb-4 whitespace-pre-line break-words text-sm leading-6 text-[#52627a] [overflow-wrap:anywhere]">{job.description}</p>}
-                    <div data-job-actions={job.id} className="relative mb-5 grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_40px] gap-2">
+                    <div data-job-actions={job.id} className="ccr-acciones-tarjeta relative grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_40px] gap-2">
                       <Link href={`/empleos/${job.id}?from=panel`} onClick={openInNewTabOnDesktop} className="inline-flex h-10 w-full items-center justify-center rounded-full border border-[#d7e1ea] px-3 text-xs font-bold text-[#162543]">{copy.view}</Link>
                       <button type="button" onClick={() => setEditingJob(job)} className="hidden h-10 w-full items-center justify-center rounded-full bg-[#009FD9] px-3 text-xs font-bold text-white transition-colors hover:bg-[#0089bb] lg:inline-flex">{copy.edit}</button>
                       <Link href={`/empleos/${job.id}/editar?from=panel`} className="inline-flex h-10 w-full items-center justify-center rounded-full bg-[#009FD9] px-3 text-xs font-bold text-white transition-colors hover:bg-[#0089bb] lg:hidden">{copy.edit}</Link>
@@ -201,54 +208,24 @@ export function JobsManager({ initialJobs, embedded = false, backHref = "/dashbo
                         <button type="button" onClick={() => setActionsOpen((current) => current === job.id ? null : job.id)} aria-label={copy.more} aria-haspopup="menu" aria-expanded={actionsOpen === job.id} className="grid h-10 w-10 place-items-center rounded-full border border-[#d7e1ea] text-[#718096] transition hover:border-[#b9c8d6] hover:bg-[#f6f9fb] hover:text-[#162543]"><MoreHorizontal className="h-5 w-5" /></button>
                         {actionsOpen === job.id && (
                           <div role="menu" className="absolute bottom-[calc(100%+6px)] right-0 z-50 w-44 overflow-hidden rounded-xl border border-[#e5e7eb] bg-white p-1.5 shadow-[0_18px_45px_-22px_rgba(15,23,42,0.55)]">
-                            {job.status !== "published" && <button role="menuitem" onClick={() => { setActionsOpen(null); updateJobStatus(job.id, "published"); }} className="block w-full rounded-lg px-3 py-2.5 text-left text-sm font-bold text-[#008fc3] hover:bg-[#f0f9fc]">{copy.publish}</button>}
-                            {job.status === "published" && <button role="menuitem" onClick={() => { setActionsOpen(null); updateJobStatus(job.id, "paused"); }} className="block w-full rounded-lg px-3 py-2.5 text-left text-sm font-bold text-[#162543] hover:bg-[#f4f8fb]">{copy.pause}</button>}
-                            {job.status !== "closed" && <button role="menuitem" onClick={() => { setActionsOpen(null); updateJobStatus(job.id, "closed"); }} className="block w-full rounded-lg px-3 py-2.5 text-left text-sm font-bold text-red-700 hover:bg-red-50">{copy.close}</button>}
+                            {/* Lo que se puede hacer DESDE donde está, igual que
+                                en Promociones: publicada se pausa o se cierra;
+                                cerrada solo vuelve a publicarse. */}
+                            {job.status === "published" ? (<>
+                              <button role="menuitem" onClick={() => { setActionsOpen(null); updateJobStatus(job.id, "paused"); }} className="block w-full rounded-lg px-3 py-2.5 text-left text-sm font-bold text-[#162543] hover:bg-[#f4f8fb]">{copy.pause}</button>
+                              <button role="menuitem" onClick={() => { setActionsOpen(null); updateJobStatus(job.id, "closed"); }} className="block w-full rounded-lg px-3 py-2.5 text-left text-sm font-bold text-red-700 hover:bg-red-50">{copy.close}</button>
+                            </>) : (
+                              <button role="menuitem" onClick={() => { setActionsOpen(null); updateJobStatus(job.id, "published"); }} className="block w-full rounded-lg px-3 py-2.5 text-left text-sm font-bold text-[#008fc3] hover:bg-[#f0f9fc]">{copy.republish}</button>
+                            )}
                           </div>
                         )}
                       </div>
                     </div>
-                    {/* Sin repetir el número: la cabecera de la tarjeta ya dice
-                        "1 postulación" y la lista de abajo son las postulaciones. */}
-                    <h3 className="mb-3 text-sm font-bold">{copy.applicationsTitle}</h3>
-                    <div className={cn(job.applications.length > 0 && "overflow-hidden rounded-xl border border-[#e5e7eb] bg-white divide-y divide-[#e6edf3]")}>
-                      {job.applications.map((application) => (
-                        <section key={application.id} className="px-4 py-4 sm:px-5">
-                          <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_160px] sm:items-start">
-                            <div className="flex min-w-0 items-center gap-3">
-                              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full text-xs font-extrabold ccr-caja-icono-plana" aria-hidden="true">
-                                {applicantInitials(application.applicant_name) || <UserRound className="h-4 w-4" />}
-                              </span>
-                              <div className="min-w-0">
-                                <p className="break-words font-bold leading-5 text-[#162543]">{application.applicant_name}</p>
-                                <p className="mt-1 inline-flex items-center gap-1.5 text-xs text-[#718096]"><CalendarDays className="h-3.5 w-3.5" />{copy.received} {applicationDate(application.created_at, locale)}</p>
-                              </div>
-                            </div>
-                            <SelectMenu value={application.status} onChange={(status) => updateApplication(job.id, application.id, status)} options={Object.entries(copy.applicationStates).map(([value, label]) => ({ value, label }))} className="w-full" />
-                          </div>
-                          {application.cover_letter && (
-                            <div className="mt-4 border-l-2 border-[#d7edf6] pl-3">
-                              <p className="text-[11px] font-bold uppercase text-[#8290a4]">{copy.message}</p>
-                              <p className="mt-1 whitespace-pre-line break-words text-sm leading-6 text-[#52627a] [overflow-wrap:anywhere]">{application.cover_letter}</p>
-                            </div>
-                          )}
-                          <div className="mt-4 grid gap-2 sm:grid-cols-2">
-                            {application.applicant_email && <a href={`mailto:${application.applicant_email}`} className="inline-flex min-w-0 items-center gap-2 rounded-lg bg-[#f6f9fb] px-3 py-2.5 text-xs font-semibold text-[#31415a] hover:bg-[#edf4f8]"><Mail className="h-4 w-4 shrink-0 text-[#008fc3]" /><span className="truncate">{application.applicant_email}</span></a>}
-                            {application.phone && <a href={`tel:${application.phone}`} className="inline-flex min-w-0 items-center gap-2 rounded-lg bg-[#f6f9fb] px-3 py-2.5 text-xs font-semibold text-[#31415a] hover:bg-[#edf4f8]"><Phone className="h-4 w-4 shrink-0 text-[#008fc3]" /><span className="truncate">{application.phone}</span></a>}
-                          </div>
-                          {(application.resume_url || application.portfolio_url) && (
-                            <div className="mt-3 flex flex-wrap gap-2">
-                              {application.resume_url && <VisorDeCv applicationId={application.id} className="inline-flex h-9 items-center gap-2 rounded-full border border-[#cbdbe7] px-3 text-xs font-bold text-[#162543] hover:bg-[#f6f9fb]" />}
-                              {(() => {
-                                const portfolioHref = buildWebsiteUrl(application.portfolio_url);
-                                return portfolioHref ? <a href={portfolioHref} target="_blank" rel="noreferrer" className="inline-flex h-9 items-center gap-2 rounded-full border border-[#cbdbe7] px-3 text-xs font-bold text-[#162543] hover:bg-[#f6f9fb]"><ExternalLink className="h-4 w-4 text-[#008fc3]" />{copy.viewPortfolio}</a> : null;
-                              })()}
-                            </div>
-                          )}
-                        </section>
-                      ))}
-                      {job.applications.length === 0 && <p className="rounded-xl bg-[#f6f9fb] p-5 text-center text-sm text-[#68778d]">{copy.noApplications}</p>}
-                    </div>
+                    {/* Sin bandeja de postulaciones: se responde por WhatsApp.
+                        En dos meses no llegó NI UNA, y una bandeja que nadie
+                        atiende es peor que no tenerla —quien postula se queda
+                        esperando—. La tabla y su historial quedan intactos; lo
+                        que se retira es la pantalla. */}
                   </div>
                 )}
               </article>
@@ -266,6 +243,7 @@ export function JobsManager({ initialJobs, embedded = false, backHref = "/dashbo
               </>)}
             />
           )}
+        </div>
         </div>
       </div>
       {publishOpen && professionalId && (

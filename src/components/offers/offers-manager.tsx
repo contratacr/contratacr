@@ -14,6 +14,7 @@ import { SectionHeadline } from "@/components/dashboard/section-headline";
 import { OfferForm } from "@/components/offers/offer-form";
 import type { SelectMenuOption } from "@/components/ui/select-menu";
 import { cn } from "@/lib/utils";
+import { StatusFilterTabs, PUBLICACION_ESTADO_TABS, publicacionBucket, sinFiltros } from "@/components/dashboard/status-filter-tabs";
 import { crTodayISO } from "@/lib/time-cr";
 import { openInNewTabOnDesktop } from "@/lib/desktop-new-tab";
 import { marketplaceLocale, offerTypeLabel } from "@/lib/marketplace-copy";
@@ -24,18 +25,18 @@ const OFFERS_MANAGER_COPY = {
     back: "Volver al panel",
     title: "Mis promociones",
     subtitle: "Promociones y descuentos para atraer clientes.",
-    publish: "Publicar oferta",
-    view: "Ver oferta",
+    publish: "Publicar promoción",
+    view: "Ver promoción",
     edit: "Editar",
     more: "Más opciones",
     pause: "Pausar",
-    soldOut: "Marcar agotada",
-    expire: "Marcar vencida",
+    soldOut: "Marcar como agotada",
+    expire: "Marcar como vencida", republish: "Volver a publicar",
     emptyTitle: "Todavía no has publicado ofertas",
     emptyBody: "Crea una oferta para impulsar tus ventas.",
-    publishTitle: "Publicar oferta",
+    publishTitle: "Publicar promoción",
     publishSubtitle: "Publica una promoción clara y fácil de comparar.",
-    editTitle: "Editar oferta",
+    editTitle: "Editar promoción",
     editSubtitle: "Actualiza la información de esta publicación.",
     statuses: { published: "Publicada", paused: "Pausada", expired: "Vencida", sold_out: "Agotada", draft: "Borrador" },
   },
@@ -49,7 +50,7 @@ const OFFERS_MANAGER_COPY = {
     more: "More options",
     pause: "Pause",
     soldOut: "Mark as sold out",
-    expire: "Mark as expired",
+    expire: "Mark as expired", republish: "Publish again",
     emptyTitle: "You have not published any offers yet",
     emptyBody: "Create an offer to help grow your sales.",
     publishTitle: "Publish offer",
@@ -98,6 +99,9 @@ export function OffersManager({ initialOffers, embedded = false, backHref = "/da
     };
   }, [actionsOpen]);
 
+  const [etapa, setEtapa] = useState("activas");
+  // Con pocos elementos no hay etapas dibujadas: la lista sale entera.
+  const visibles = sinFiltros(offers.length) ? offers : offers.filter((item) => publicacionBucket(item.status) === etapa);
   // A status changed here must survive a server re-render that was started
   // before the change committed (quick pause → publish on a slow network);
   // the local status wins until the server snapshot agrees with it.
@@ -154,19 +158,37 @@ export function OffersManager({ initialOffers, embedded = false, backHref = "/da
               </>)}
           </SectionHeadline>
         </div>
-        <div className="space-y-3.5">
-          {offers.map((offer) => {
+        {/* Filtro y lista en el mismo bloque y con la misma separación que en
+            Mis proyectos: pegado a las tarjetas parecía parte de la primera.
+            Las etapas siguen la misma regla: con pocos elementos no se dibujan
+            y la lista sale entera. */}
+        <div className="flex flex-col gap-3.5">
+        <StatusFilterTabs
+          tabs={PUBLICACION_ESTADO_TABS}
+          value={etapa}
+          onChange={setEtapa}
+          counts={{
+            activas: offers.filter((item) => publicacionBucket(item.status) === "activas").length,
+            cerradas: offers.filter((item) => publicacionBucket(item.status) === "cerradas").length,
+          }}
+          totalElementos={offers.length}
+        />
+        <div className="flex flex-col gap-3.5">
+          {visibles.map((offer) => {
             const isOpen = openId === offer.id;
             const imageUrl = offer.image_urls[0];
             const displayStatus = effectiveOfferStatus(offer, crTodayISO());
             return (
               <article key={offer.id} className={cn("relative overflow-visible rounded-2xl border border-[#e5e7eb] bg-white shadow-[0_2px_8px_rgba(15,23,42,0.06)]", actionsOpen === offer.id && "z-40")}>
                 <button type="button" onClick={() => setOpenId(isOpen ? null : offer.id)} className="relative grid h-28 w-full grid-cols-[52px_minmax(0,1fr)] items-center gap-3 px-4 pr-11 text-left sm:h-24 sm:grid-cols-[56px_minmax(0,1fr)] sm:gap-4 sm:px-5 sm:pr-12">
-                  <div className="grid h-[52px] w-[52px] min-h-0 min-w-0 shrink-0 place-items-center overflow-hidden rounded-lg text-[#009fd9] sm:h-14 sm:w-14">
+                  {/* La misma caja que Mis proyectos y Favoritos: antes el icono
+                      iba suelto, sin fondo, y la fila no se parecía a las de al
+                      lado. */}
+                  <div className="grid h-[52px] w-[52px] min-h-0 min-w-0 shrink-0 place-items-center overflow-hidden rounded-xl ccr-caja-icono sm:h-14 sm:w-14">
                     {imageUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={imageUrl} alt="" className="block h-full max-h-full w-full max-w-full object-contain object-center" />
-                    ) : <div className="grid h-full place-items-center"><BadgePercent className="h-5 w-5" /></div>}
+                    ) : <BadgePercent className="h-5 w-5" />}
                   </div>
                   <div className="min-w-0 flex-1">
                     {/* El estado como ANTETÍTULO, igual que en Postulaciones: en su
@@ -174,7 +196,12 @@ export function OffersManager({ initialOffers, embedded = false, backHref = "/da
                         las tarjetas, tuviera la palabra corta o larga, y ese ancho se
                         lo quitaba al título. Arriba no compite con nada y se lee
                         primero, que es lo que uno busca al recorrer la lista. */}
-                    <p className={cn("truncate text-[10px] font-extrabold uppercase tracking-[0.06em]", statusTextClass(displayStatus))}>{copy.statuses[displayStatus]}</p>
+                    {/* El estado SOLO donde distingue: en «Activas» todas están
+                        publicadas y repetía la pestaña; en «Cerradas» conviven
+                        pausada, vencida, agotada y borrador. */}
+                    {publicacionBucket(displayStatus) === "cerradas" && (
+                      <p className={cn("truncate text-[10px] font-extrabold uppercase tracking-[0.06em]", statusTextClass(displayStatus))}>{copy.statuses[displayStatus]}</p>
+                    )}
                     <h2 className="mt-0.5 line-clamp-2 text-[15px] font-extrabold leading-tight text-[#162543] sm:text-base">{offer.title}</h2>
                     {offer.service_label && (
                       <p className="mt-1 line-clamp-2 text-xs font-bold leading-4 text-[#008fc3]" title={offer.service_label}>{offer.service_label}</p>
@@ -189,9 +216,9 @@ export function OffersManager({ initialOffers, embedded = false, backHref = "/da
                   </div>
                 </button>
                 {isOpen && (
-                  <div className="border-t border-[#e6edf3] px-4 pb-4 pt-3 sm:px-5 sm:pb-5">
+                  <div className="border-t border-[#e6edf3] px-4 pb-5 pt-3 sm:px-5">
                     {offer.description && <p className="mb-4 whitespace-pre-line break-words text-sm leading-6 text-[#52627a] [overflow-wrap:anywhere]">{offer.description}</p>}
-                    <div data-offer-actions={offer.id} className="relative grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_40px] gap-2">
+                    <div data-offer-actions={offer.id} className="ccr-acciones-tarjeta relative grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_40px] gap-2">
                       <Link href={`/ofertas/${offer.id}?from=panel`} onClick={openInNewTabOnDesktop} className="inline-flex h-10 w-full items-center justify-center rounded-full border border-[#d7e1ea] px-3 text-xs font-bold text-[#162543]">{copy.view}</Link>
                       <button type="button" onClick={() => setEditingOffer(offer)} className="hidden h-10 w-full items-center justify-center rounded-full bg-[#009FD9] px-3 text-xs font-bold text-white transition-colors hover:bg-[#0089bb] lg:inline-flex">{copy.edit}</button>
                       <Link href={`/ofertas/${offer.id}/editar?from=panel`} className="inline-flex h-10 w-full items-center justify-center rounded-full bg-[#009FD9] px-3 text-xs font-bold text-white transition-colors hover:bg-[#0089bb] lg:hidden">{copy.edit}</Link>
@@ -199,10 +226,19 @@ export function OffersManager({ initialOffers, embedded = false, backHref = "/da
                         <button type="button" onClick={() => setActionsOpen((current) => current === offer.id ? null : offer.id)} aria-label={copy.more} aria-haspopup="menu" aria-expanded={actionsOpen === offer.id} className="grid h-10 w-10 place-items-center rounded-full border border-[#d7e1ea] text-[#718096] transition hover:border-[#b9c8d6] hover:bg-[#f6f9fb] hover:text-[#162543]"><MoreHorizontal className="h-5 w-5" /></button>
                         {actionsOpen === offer.id && (
                           <div role="menu" className="absolute bottom-[calc(100%+6px)] right-0 z-50 w-44 overflow-hidden rounded-xl border border-[#e5e7eb] bg-white p-1.5 shadow-[0_18px_45px_-22px_rgba(15,23,42,0.55)]">
-                            {displayStatus !== "published" && displayStatus !== "expired" && <button role="menuitem" onClick={() => { setActionsOpen(null); updateStatus(offer.id, "published"); }} className="block w-full rounded-lg px-3 py-2.5 text-left text-sm font-bold text-[#008fc3] hover:bg-[#f0f9fc]">{copy.publish}</button>}
-                            {displayStatus === "published" && <button role="menuitem" onClick={() => { setActionsOpen(null); updateStatus(offer.id, "paused"); }} className="block w-full rounded-lg px-3 py-2.5 text-left text-sm font-bold text-[#162543] hover:bg-[#f4f8fb]">{copy.pause}</button>}
-                            {offer.status !== "sold_out" && <button role="menuitem" onClick={() => { setActionsOpen(null); updateStatus(offer.id, "sold_out"); }} className="block w-full rounded-lg px-3 py-2.5 text-left text-sm font-bold text-[#162543] hover:bg-[#f4f8fb]">{copy.soldOut}</button>}
-                            {displayStatus !== "expired" && <button role="menuitem" onClick={() => { setActionsOpen(null); updateStatus(offer.id, "expired"); }} className="block w-full rounded-lg px-3 py-2.5 text-left text-sm font-bold text-red-700 hover:bg-red-50">{copy.expire}</button>}
+                            {/* El menú ofrece lo que se puede hacer DESDE donde
+                                está, no la lista entera. Una promoción cerrada
+                                solo tiene un camino: volver a publicarse. Antes
+                                una vencida ni siquiera tenía ese —y encima le
+                                ofrecía «marcar agotada» y «marcar vencida»,
+                                que ya era—. */}
+                            {displayStatus === "published" ? (<>
+                              <button role="menuitem" onClick={() => { setActionsOpen(null); updateStatus(offer.id, "paused"); }} className="block w-full rounded-lg px-3 py-2.5 text-left text-sm font-bold text-[#162543] hover:bg-[#f4f8fb]">{copy.pause}</button>
+                              <button role="menuitem" onClick={() => { setActionsOpen(null); updateStatus(offer.id, "sold_out"); }} className="block w-full rounded-lg px-3 py-2.5 text-left text-sm font-bold text-[#162543] hover:bg-[#f4f8fb]">{copy.soldOut}</button>
+                              <button role="menuitem" onClick={() => { setActionsOpen(null); updateStatus(offer.id, "expired"); }} className="block w-full rounded-lg px-3 py-2.5 text-left text-sm font-bold text-red-700 hover:bg-red-50">{copy.expire}</button>
+                            </>) : (
+                              <button role="menuitem" onClick={() => { setActionsOpen(null); updateStatus(offer.id, "published"); }} className="block w-full rounded-lg px-3 py-2.5 text-left text-sm font-bold text-[#008fc3] hover:bg-[#f0f9fc]">{copy.republish}</button>
+                            )}
                           </div>
                         )}
                       </div>
@@ -224,6 +260,7 @@ export function OffersManager({ initialOffers, embedded = false, backHref = "/da
               </>)}
             />
           )}
+        </div>
         </div>
       </div>
       {publishOpen && professionalId && (

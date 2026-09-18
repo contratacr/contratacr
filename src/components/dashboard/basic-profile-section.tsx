@@ -2,15 +2,13 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { Lock, Camera, X, Info, Briefcase, ChevronDown, ChevronLeft, Pencil, Eye, Trash2, Loader2 } from "lucide-react";
+import { Lock, Camera, X, ChevronDown, ChevronLeft, Pencil, Loader2 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Link, useRouter } from "@/i18n/navigation";
 import { detectIdType } from "@/lib/cedula";
-import { Button } from "@/components/ui/button";
 import { ImagePreviewDialog } from "@/components/ui/image-preview-dialog";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
-import { canOffer } from "@/lib/auth/capabilities";
 import { cn, getInitials } from "@/lib/utils";
 import { PhoneInput, hasPhoneNumber, isPhoneComplete } from "@/components/ui/phone-input";
 import { UnsavedChangesGuard } from "@/components/dashboard/unsaved-changes-guard";
@@ -84,14 +82,12 @@ export function BasicProfileSection({
   extraSections?: ExtraProfileSection[];
 }) {
   const { user } = useAuth();
-  const router = useRouter();
   const locale = useLocale();
   const t = useTranslations("clientPage");
   const { dialogNode, showMessage } = useAppDialog();
   const errorTitle = locale === "en" ? "Something went wrong" : "No se pudo completar la acción";
   // A client-only account (offering not unlocked) gets the "Ofrecer mis servicios"
   // invitation at the END of this section — that's how they start offering.
-  const userCanOffer = canOffer(user);
 
   const [profileData, setProfileData] = useState<{ full_name: string; phone?: string; avatar_url?: string; cedula?: string | null; client_identity_status?: "verified" | "pending" | "unverified" | null } | null>(null);
   const [profileForm, setProfileForm] = useState({ full_name: "", phone: "" });
@@ -303,7 +299,7 @@ export function BasicProfileSection({
   const makeProfileFooter = (sectionId: string) => {
     const sectionActive = profileDirty && activeDirtySection === sectionId;
     return (
-      <div className="mt-5 flex flex-col gap-2 border-t border-[#f3f4f6] pt-4 sm:flex-row sm:justify-end">
+      <div className="ccr-grupo-botones mt-5 flex flex-col gap-2 border-t border-[#f3f4f6] pt-4 sm:flex-row sm:justify-end">
         <button
           type="button"
           onClick={cancelProfileChanges}
@@ -460,18 +456,11 @@ export function BasicProfileSection({
             name stays locked once verified (above). */}
       </div>
 
-      {/* Ofrecer mis servicios — at the END of "Mi perfil". A client-only account
-          discovers offering here (same account, no mode switch yet — this is how they
-          start). Hidden once the account can offer. Minimal: a short prompt + button. */}
-      {!userCanOffer && (
-        <div className="border-t border-[#f3f4f6] pt-5">
-          <h3 className="text-sm font-semibold text-[#162543]">{t("offerTitle")}</h3>
-          <p className="text-xs text-[#6b7280] mt-0.5 mb-3">{t("offerBody")}</p>
-          <Button size="sm" onClick={() => router.push("/registro/profesional")}>
-            <Briefcase className="h-4 w-4" /> {t("offerCta")}
-          </Button>
-        </div>
-      )}
+      {/* «Ofrecer mis servicios» salió de aquí. Datos básicos es nombre, foto y
+          teléfono; empezar a ofrecer servicios no es un dato básico. Y desde
+          que la puerta está arriba del todo en el menú del panel —tarjeta azul,
+          imposible de no ver—, repetirla al final de un formulario era la misma
+          puerta dos veces, con la copia escondida en el peor lugar. */}
       </ProfileSection>
 
       {extraSections.map((section) => (

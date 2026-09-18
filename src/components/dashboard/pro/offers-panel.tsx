@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { useCachedResource } from "@/hooks/use-cached-resource";
 import { OffersManager } from "@/components/offers/offers-manager";
 import { createClient } from "@/lib/supabase/client";
@@ -15,7 +15,7 @@ const SIN_OFERTAS: ProfessionalOffer[] = [];
 // Caché de sesión: al volver a la sección se pinta lo último que se vio y la
 // consulta se repite por detrás, igual que en Empleos. Antes cada entrada
 // arrancaba de cero y mostraba el esqueleto aunque no hubiera nada nuevo.
-export function OffersPanel({ professionalId }: { professionalId: string }) {
+export function OffersPanel({ professionalId, onCount }: { professionalId: string; onCount?: (total: number) => void }) {
   const locale = useLocale();
   const { data: offers, loading, refresh } = useCachedResource<ProfessionalOffer[]>(
     `dashboard:offers:${professionalId}`,
@@ -23,6 +23,8 @@ export function OffersPanel({ professionalId }: { professionalId: string }) {
     SIN_OFERTAS,
   );
   const serviceOptions = useMemo(() => getAllCategories().map((category) => ({ value: category.id, label: getCategoryLabel(category.id, locale) })), [locale]);
+  // El conteo sube al cambiador de «Mis publicaciones».
+  useEffect(() => { if (!loading) onCount?.(offers.length); }, [offers.length, loading, onCount]);
   if (loading) {
     return <PanelListSkeleton rows={2} />;
   }

@@ -12,12 +12,12 @@ export default function NotificationsPage() {
     <div className="flex min-h-screen flex-col bg-[#f5f8fb]">
       <LandingNavbar />
       <SectionHeaderTitle title={tSeccion("notifications")} fallbackHref="/" raiz tambienEnLaWeb />
-      <main className="ccr-notifications-page-main flex w-full flex-1 flex-col px-0 pb-0 pt-16 sm:px-6 sm:pb-16 sm:pt-24 lg:px-8">
+      <main className="ccr-notifications-page-main flex w-full flex-1 flex-col px-0 pb-0 pt-16 sm:px-6 sm:pb-16 sm:pt-20 lg:px-8">
         {/* El lienzo gris de siempre: la lista y el vacío traen su propia
             tarjeta, igual que Mis proyectos. Antes esta sección era una sábana
             blanca de borde a borde y Notificaciones se sentía de otro app. */}
-        <section className="ccr-notifications-page-panel mx-auto w-full max-w-5xl flex-1 px-4 pb-5 pt-4 sm:flex-none sm:p-6">
-          <NotificationsList scope="all" />
+        <section className="ccr-notifications-page-panel mx-auto w-full max-w-5xl flex-1 px-4 pb-5 pt-4 sm:flex-none sm:px-6 sm:pb-6 sm:pt-4">
+          <NotificationsList scope="all" titulo={tSeccion("notifications")} />
         </section>
       </main>
       <LandingFooter />

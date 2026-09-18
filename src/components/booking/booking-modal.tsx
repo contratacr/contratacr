@@ -52,6 +52,7 @@ import { NAME_MAX_LENGTH, limitText } from "@/lib/text-limits";
 import { trackMetaEvent } from "@/lib/analytics/meta-pixel";
 import { useNativeApp } from "@/hooks/use-native-app";
 import { avisarMomentoDeNotificacion } from "@/lib/push-moment";
+import { PIE_VENTANA_BASE } from "@/components/ui/acciones-al-pie";
 
 type BookingStep = "calendar" | "details" | "contact" | "complete" | "success";
 type BookingProfessional = ProfessionalCardData & {
@@ -1293,7 +1294,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                             : t("calendar.privateBody")}
                         </p>
                       </div>
-                      <DirectChatLauncher professionalId={professional.id} professionalName={professional.fullName} contextTitle={categoryName} buttonLabel="WhatsApp" analyticsSource="booking" className="rounded-xl px-5 py-2.5 text-sm font-semibold" />
+                      <DirectChatLauncher professionalId={professional.id} professionalName={professional.fullName} contextTitle={categoryName} analyticsSource="booking" className="rounded-xl px-5 py-2.5 text-sm font-semibold" />
                     </div>
                   ) : !hasAnyAvailability ? (
                     <div className="flex flex-col items-center text-center gap-3 py-8 rounded-2xl bg-[#f9fafb] border border-[#e5e7eb]">
@@ -1314,7 +1315,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                             : t("calendar.whatsappOnlyBody")}
                         </p>
                       </div>
-                      <DirectChatLauncher professionalId={professional.id} professionalName={professional.fullName} contextTitle={categoryName} buttonLabel="WhatsApp" analyticsSource="booking" className="rounded-xl px-5 py-2.5 text-sm font-semibold" />
+                      <DirectChatLauncher professionalId={professional.id} professionalName={professional.fullName} contextTitle={categoryName} analyticsSource="booking" className="rounded-xl px-5 py-2.5 text-sm font-semibold" />
                     </div>
                   ) : (
                     // Two sub-columns on desktop: CALENDAR (left) and that day's SLOTS (right).
@@ -1781,7 +1782,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                       <p className="mt-0.5 inline-flex items-center gap-1.5"><MapPin className="h-4 w-4 text-[#0089bb]" />{initialLocationLabel}</p>
                     )}
                   </div>
-                  {createdBookingId && <DirectChatLauncher professionalId={professional.id} professionalName={professional.fullName} bookingId={createdBookingId} contextTitle={description || categoryName} buttonLabel="WhatsApp" analyticsSource="booking" className="w-full max-w-xs rounded-xl px-5 py-3 text-sm font-semibold" />}
+                  {createdBookingId && <DirectChatLauncher professionalId={professional.id} professionalName={professional.fullName} bookingId={createdBookingId} contextTitle={description || categoryName} analyticsSource="booking" className="w-full max-w-xs rounded-xl px-5 py-3 text-sm font-semibold" />}
                   {selectedDate && selectedTime && !nativeApp && (
                     <button
                       onClick={downloadCalendar}
@@ -1810,7 +1811,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
             {/* Footer actions — elegir el servicio ES la acción de ese paso: sin
                 nada que confirmar, la barra de abajo se queda vacía y estorba. */}
             {step !== "success" && !(step === "calendar" && needsProfessionPick) && (
-              <div className={cn("ccr-pie-formulario flex shrink-0 flex-col gap-2 border-t border-[#e5e7eb] bg-white px-4 py-4 pb-[max(env(safe-area-inset-bottom),1rem)] sm:px-6", asPage && "lg:px-8")}>
+              <div className={cn("ccr-pie-formulario flex flex-col gap-2", PIE_VENTANA_BASE, asPage && "lg:px-8")}>
                 {step === "calendar" && !needsProfessionPick && (
                   <>
                     {/* Igual que en Publicar empleo: solo el botón. La fecha elegida ya
@@ -1897,7 +1898,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
             )}
 
             {step === "success" && (
-              <div className={cn("ccr-pie-formulario flex shrink-0 flex-col gap-2 border-t border-[#e5e7eb] bg-white px-4 py-4 pb-[max(env(safe-area-inset-bottom),1rem)] sm:px-6", asPage && "lg:px-8")}>
+              <div className={cn("ccr-pie-formulario flex flex-col gap-2", PIE_VENTANA_BASE, asPage && "lg:px-8")}>
                 {/* Lead to the just-made request (it's at the top of Solicitudes), not a
                     dead-end "Listo". Closing still refreshes /buscar so the slot disappears. */}
                 <Button size="md" className="w-full" onClick={goToMyRequest}>

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { enforceRateLimit } from "@/lib/rate-limit";
+import { nombreDeSaludo } from "@/lib/nombres";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getWhatsAppLink } from "@/lib/utils";
 import { limitTrimmedText } from "@/lib/text-limits";
@@ -45,22 +46,36 @@ function firstRelated<T>(value: T | T[] | null | undefined): T | null {
   return value ?? null;
 }
 
-function profileName(row: ProfessionalContact | null | undefined) {
+/** El nombre para saludar y si es el de un negocio (ahí no se recorta). */
+function profileName(row: ProfessionalContact | null | undefined): { nombre: string | null; esNegocio: boolean } {
   const profile = firstRelated(row?.profiles);
-  return row?.business_name || profile?.full_name || null;
+  const negocio = (row?.business_name ?? "").trim();
+  if (negocio) return { nombre: negocio, esNegocio: true };
+  return { nombre: profile?.full_name || null, esNegocio: false };
 }
 
-function defaultMessage(locale: string, recipientName?: string | null, contextTitle?: string | null) {
-  const name = recipientName?.trim();
+function defaultMessage(locale: string, recipientName?: string | null, contextTitle?: string | null, esNegocio = false, intent?: string | null) {
+  const name = nombreDeSaludo(recipientName, esNegocio);
   const context = contextTitle?.trim();
+  // Postularse no es «coordinar un servicio»: se dice a qué vacante y se
+  // pregunta algo que obliga a contestar. No se promete un archivo adjunto —
+  // mucha gente de oficio no tiene un currículum en el teléfono— pero se ofrece.
+  if (intent === "job" && context) {
+    return locale === "en"
+      ? `Hi${name ? ` ${name}` : ""}, I am interested in the "${context}" opening you posted on ContrataCR. Is it still available? I can send you my résumé.`
+      : `Hola${name ? ` ${name}` : ""}, me interesa la vacante de "${context}" que publicaste en ContrataCR. ¿Sigue disponible? Le puedo enviar mi currículum.`;
+  }
+  // Un mensaje que la persona podría haber escrito: saluda, dice de dónde
+  // viene y pide algo concreto. El anterior decía «vi tu información», que no
+  // significa nada, y no pedía nada.
   if (locale === "en") {
     return context
-      ? `Hello${name ? ` ${name}` : ""}, I saw your information on ContrataCR and would like to coordinate about "${context}".`
-      : `Hello${name ? ` ${name}` : ""}, I saw your profile on ContrataCR and would like to coordinate a service.`;
+      ? `Hi${name ? ` ${name}` : ""}, I saw "${context}" on ContrataCR. Could you tell me more?`
+      : `Hi${name ? ` ${name}` : ""}, I saw your service on ContrataCR. Could you tell me more?`;
   }
   return context
-    ? `Hola${name ? ` ${name}` : ""}, vi tu informacion en ContrataCR y quisiera coordinar sobre "${context}".`
-    : `Hola${name ? ` ${name}` : ""}, vi tu perfil en ContrataCR y quisiera coordinar un servicio.`;
+    ? `Hola${name ? ` ${name}` : ""}, vi "${context}" en ContrataCR y me gustaría coordinar. ¿Me puedes dar más información?`
+    : `Hola${name ? ` ${name}` : ""}, vi tu servicio en ContrataCR y me gustaría coordinar. ¿Me puedes dar más información?`;
 }
 
 async function currentUserId() {
@@ -83,6 +98,7 @@ export async function POST(req: NextRequest) {
   const locale = String(body.locale ?? "es") === "en" ? "en" : "es";
   const contextTitle = limitTrimmedText(body.contextTitle, 160);
   const initialMessage = limitTrimmedText(body.initialMessage, 700);
+  const intent = String(body.intent ?? "") || null;
   const userId = await currentUserId();
   // Sin cuenta TAMBIÉN se contacta: el muro costaba tres de cada cuatro
   // contactos y no traía registros. Quien no tiene sesión ya dejó su nombre y
@@ -92,6 +108,7 @@ export async function POST(req: NextRequest) {
 
   let phone: string | null = null;
   let recipientName: string | null = null;
+  let esNegocio = false;
   let targetProfessionalId: string | null = null;
   let isProfessionalContactingClient = false;
 
@@ -114,7 +131,7 @@ export async function POST(req: NextRequest) {
     } else {
       targetProfessionalId = professional.id;
       phone = professional.whatsapp ?? null;
-      recipientName = profileName(professional);
+      ({ nombre: recipientName, esNegocio } = profileName(professional));
     }
   } else if (proposalId) {
     const { data: proposal, error } = await db
@@ -137,7 +154,7 @@ export async function POST(req: NextRequest) {
     } else {
       targetProfessionalId = professional.id;
       phone = professional.whatsapp ?? null;
-      recipientName = profileName(professional);
+      ({ nombre: recipientName, esNegocio } = profileName(professional));
     }
   } else if (professionalId) {
     const { data: professional, error } = await db
@@ -151,14 +168,31 @@ export async function POST(req: NextRequest) {
     const professionalRow = professional as ProfessionalContact;
     targetProfessionalId = professionalRow.id;
     phone = professionalRow.whatsapp ?? null;
-    recipientName = profileName(professionalRow);
+    ({ nombre: recipientName, esNegocio } = profileName(professionalRow));
+  }
+
+  // Una vacante o una promoción pueden tener su propio WhatsApp: ese manda
+  // sobre el de la cuenta (migración 209). Si la columna aún no existe, se
+  // sigue con el del perfil.
+  const publicacionId = String(body.jobId ?? body.offerId ?? "");
+  if (publicacionId && /^[0-9a-f-]{36}$/i.test(publicacionId)) {
+    const tabla = body.jobId ? "job_posts" : "professional_offers";
+    const { data: publicacion, error: errorPublicacion } = await db
+      .from(tabla)
+      .select("contact_whatsapp")
+      .eq("id", publicacionId)
+      .maybeSingle();
+    if (!errorPublicacion) {
+      const propio = String((publicacion as { contact_whatsapp?: string | null } | null)?.contact_whatsapp ?? "").trim();
+      if (propio) phone = propio;
+    }
   }
 
   if (!phone) {
     return NextResponse.json({ error: locale === "en" ? "No WhatsApp number is available." : "No hay un numero de WhatsApp disponible." }, { status: 404 });
   }
 
-  const message = initialMessage || defaultMessage(locale, recipientName, contextTitle);
+  const message = initialMessage || defaultMessage(locale, recipientName, contextTitle, esNegocio, intent);
   const token = contactCookieValue(req);
   let contactId: string | null = null;
 

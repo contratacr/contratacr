@@ -14,7 +14,9 @@ const adminRoutes = [
   { path: "/es/admin/solicitudes", marker: /Citas/i },
   { path: "/es/admin/publicaciones", marker: /Proyectos/i },
   { path: "/es/admin/empleos", marker: /Empleos/i },
-  { path: "/es/admin/ofertas", marker: /Ofertas/i },
+  // La sección se llama «Promociones» desde el cambio de nombres; la dirección
+  // se conserva para no romper enlaces guardados.
+  { path: "/es/admin/ofertas", marker: /Promociones/i },
   { path: "/es/admin/cuentas", marker: /Cuentas/i },
   { path: "/es/admin/soporte", marker: /Soporte/i },
   { path: "/es/admin/analitica", marker: /Analitica|Anal.tica/i },
@@ -245,7 +247,7 @@ test.describe("@admin surfaces", () => {
 
       // The account page reads top to bottom: identity, verification, client, professional, reach, support, network, danger zone.
       await gotoOK(page, `/es/admin/usuarios/${state.professionalUserId}`);
-      for (const heading of [/Verificación de identidad/, /Como cliente/, /Como profesional/, /Citas recibidas/, /Reseñas recibidas/, /Empleos publicados/, /Ofertas publicadas/, /Alcance del perfil/, /Casos de soporte/, /Reportes recibidos/, /Seguidos y seguidores/, /Eliminar esta cuenta al 100%/]) {
+      for (const heading of [/Verificación de identidad/, /Como cliente/, /Como profesional/, /Citas recibidas/, /Reseñas recibidas/, /Empleos publicados/, /(?:Ofertas|Promociones) publicadas/, /Alcance del perfil/, /Casos de soporte/, /Reportes recibidos/, /Seguidos y seguidores/, /Eliminar esta cuenta al 100%/]) {
         await expectVisibleText(page.locator("body"), heading);
       }
       await expectHealthyPage(page);

@@ -6,6 +6,7 @@ import { repairVisibleText } from "@/lib/text/repair-visible-text";
 import { getLocale } from "next-intl/server";
 import { getAllCategories, getCategoryLabel } from "@/lib/data/categories";
 import { crTodayISO } from "@/lib/time-cr";
+import { contactFlagsFor, profesionalesBloqueados } from "@/lib/contact-flags";
 
 export const dynamic = "force-dynamic";
 
@@ -29,9 +30,10 @@ async function OffersPageContent(serviceOptions: Array<{ value: string; label: s
   const supabase = await createClient();
   const user = await safeGetUser(supabase);
   const today = crTodayISO();
-  const professionalColumns = user
-    ? "slug,business_name,whatsapp,allow_phone_call,call_phone,contact_email,profiles(full_name)"
-    : "slug,business_name,profiles(full_name)";
+  // A la página NO baja ningún número ni correo, solo banderas (ver
+  // contactFlagsFor). Antes las columnas de contacto se ocultaban al invitado,
+  // y con eso el invitado se quedaba sin NINGÚN botón de contacto.
+  const professionalColumns = "slug,business_name,profiles(full_name)";
   const [{ data, error: offersError }, { data: professional }] = await Promise.all([
     supabase
       .from("professional_offers")
@@ -47,8 +49,13 @@ async function OffersPageContent(serviceOptions: Array<{ value: string; label: s
     console.error("Could not load published offers", offersError.message);
   }
 
-  const offers = ((data ?? []) as Array<Record<string, unknown>>).map((row) => {
-    const professional = row.professionals as { slug?: string; business_name?: string; whatsapp?: string | null; allow_phone_call?: boolean | null; call_phone?: string | null; contact_email?: string | null; profiles?: { full_name?: string } | null } | null;
+  const idsProfesionales = ((data ?? []) as Array<Record<string, unknown>>).map((row) => String(row.professional_id ?? ""));
+  const [banderas, bloqueados] = await Promise.all([contactFlagsFor(idsProfesionales), profesionalesBloqueados(idsProfesionales)]);
+
+  const offers = ((data ?? []) as Array<Record<string, unknown>>)
+    .filter((row) => !bloqueados.has(String(row.professional_id ?? "")))
+    .map((row) => {
+    const professional = row.professionals as { slug?: string; business_name?: string; profiles?: { full_name?: string } | null } | null;
     return {
       ...row,
       title: repairVisibleText(String(row.title ?? "")),
@@ -58,10 +65,9 @@ async function OffersPageContent(serviceOptions: Array<{ value: string; label: s
       image_urls: Array.isArray(row.image_urls) ? row.image_urls : [],
       professional_name: repairVisibleText(professional?.business_name || professional?.profiles?.full_name || "Profesional en ContrataCR"),
       professional_slug: professional?.slug ?? null,
-      professional_whatsapp: professional?.whatsapp ?? null,
-      professional_allow_phone_call: professional?.allow_phone_call ?? false,
-      professional_call_phone: professional?.call_phone ?? null,
-      professional_contact_email: professional?.contact_email ?? null,
+      // El WhatsApp propio de la promoción manda sobre el de la cuenta.
+      professional_has_whatsapp: !!String(row.contact_whatsapp ?? "").trim() || !!banderas[String(row.professional_id ?? "")]?.hasWhatsapp,
+      professional_allow_phone_call: !!banderas[String(row.professional_id ?? "")]?.allowPhoneCall,
     } as ProfessionalOffer;
   });
 

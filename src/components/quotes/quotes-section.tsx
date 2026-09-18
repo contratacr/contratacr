@@ -10,7 +10,7 @@ import { isQuoteExpired, type Quote } from "@/lib/quotes";
 import { QuoteEditorModal } from "@/components/quotes/quote-editor-modal";
 import { QuoteDetailModal } from "@/components/quotes/quote-detail-modal";
 import { SectionHeadline } from "@/components/dashboard/section-headline";
-import { PanelEmptyState } from "@/components/ui/content-loading";
+import { PanelEmptyState, PanelListSkeleton } from "@/components/ui/content-loading";
 
 const DATE_LOCALE: Record<string, string> = { es: "es-CR", en: "en-US" };
 
@@ -86,7 +86,9 @@ export function QuotesSection({ proName, proSlug, puedeCrear = true }: { proName
       </SectionHeadline>
 
       {quotes === null ? (
-        <div className="flex flex-col gap-2">{[0, 1, 2].map((i) => <div key={i} className="h-[76px] animate-pulse rounded-2xl bg-[#eef2f6]" />)}</div>
+        // El MISMO esqueleto que el resto del panel: este se dibujaba a mano,
+        // así que Cotizaciones cargaba distinto de todas las demás secciones.
+        <PanelListSkeleton rows={3} />
       ) : quotes.length === 0 ? (
         // El MISMO vacío que el resto del panel, en vez de uno dibujado a mano:
         // este llevaba esquinas más redondas, un título más grande y su propio

@@ -213,7 +213,7 @@ export async function GET(req: NextRequest) {
     .select(`
       *,
       professionals:professional_id(
-        id, slug, whatsapp, verification_status, category_id, rating_avg, review_count,
+        id, slug, whatsapp, allow_phone_call, verification_status, category_id, rating_avg, review_count,
         profiles(full_name, avatar_url)
       )
     `)

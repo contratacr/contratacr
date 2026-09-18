@@ -1,11 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { cldLarge, cldThumb } from "@/lib/cloudinary";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Expand } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ProgressiveImage } from "@/components/ui/progressive-image";
 import { useDeslizar } from "@/hooks/use-deslizar";
+import { useArrastreHorizontal } from "@/hooks/use-arrastre-horizontal";
+import { ImagePreviewDialog } from "@/components/ui/image-preview-dialog";
 
 type OfferImageGalleryProps = {
   images: string[];
@@ -13,9 +15,14 @@ type OfferImageGalleryProps = {
   className?: string;
 };
 
+const verEnGrande = "Ver la foto en grande";
+
 export function OfferImageGallery({ images, title, className }: OfferImageGalleryProps) {
   const safeImages = images.filter(Boolean).slice(0, 8);
   const [activeIndex, setActiveIndex] = useState(0);
+  const [enGrande, setEnGrande] = useState(false);
+  const miniaturasRef = useRef<HTMLDivElement | null>(null);
+  useArrastreHorizontal(miniaturasRef);
   const activeImage = safeImages[activeIndex];
 
   function goTo(nextIndex: number) {
@@ -39,15 +46,27 @@ export function OfferImageGallery({ images, title, className }: OfferImageGaller
         className="relative grid min-h-[240px] touch-pan-y select-none place-items-center overflow-hidden rounded-lg bg-white sm:min-h-[320px] lg:min-h-0"
         {...(safeImages.length > 1 ? deslizar : {})}
       >
-        <ProgressiveImage
-          key={activeImage}
-          src={cldLarge(activeImage, 1280)}
-          alt={title}
-          fit="contain"
-          priority
-          wrapperClassName="block w-full"
-          className="max-h-[62vh] min-h-0 w-full sm:max-h-[520px] lg:aspect-[16/9] lg:max-h-[460px]"
-        />
+        <button
+          type="button"
+          onClick={() => setEnGrande(true)}
+          aria-label={verEnGrande}
+          className="group block w-full cursor-zoom-in"
+        >
+          <ProgressiveImage
+            key={activeImage}
+            src={cldLarge(activeImage, 1280)}
+            alt={title}
+            fit="contain"
+            priority
+            wrapperClassName="block w-full"
+            className="max-h-[62vh] min-h-0 w-full sm:max-h-[520px] lg:aspect-[4/3] lg:max-h-[560px]"
+          />
+          {/* La señal de que se puede agrandar, discreta y solo con ratón: en
+              el teléfono el :hover se queda pegado después del toque. */}
+          <span className="pointer-events-none absolute right-3 top-3 hidden h-9 w-9 place-items-center rounded-full bg-[#111827]/55 text-white opacity-0 transition [@media(hover:hover)]:grid group-hover:opacity-100">
+            <Expand className="h-4 w-4" />
+          </span>
+        </button>
         {safeImages.length > 1 && (
           <>
             <button
@@ -73,7 +92,8 @@ export function OfferImageGallery({ images, title, className }: OfferImageGaller
         )}
       </div>
       {safeImages.length > 1 && (
-        <div className="scrollbar-none flex gap-2 overflow-x-auto">
+        <div ref={miniaturasRef} className="ccr-carril scrollbar-none overflow-x-auto">
+          <div className="mx-auto flex w-fit gap-2">
           {safeImages.map((url, index) => (
             <button
               key={`${url}-${index}`}
@@ -88,8 +108,23 @@ export function OfferImageGallery({ images, title, className }: OfferImageGaller
               <ProgressiveImage src={cldThumb(url, 160)} alt="" fit="contain" wrapperClassName="h-full w-full" className="p-1" />
             </button>
           ))}
+          </div>
         </div>
       )}
+      <ImagePreviewDialog
+        open={enGrande}
+        onOpenChange={setEnGrande}
+        src={cldLarge(activeImage, 1600)}
+        alt={title}
+        imageClassName="sm:max-h-[88vh] sm:max-w-[92vw]"
+        {...(safeImages.length > 1
+          ? {
+              onPrev: () => goTo(activeIndex - 1),
+              onNext: () => goTo(activeIndex + 1),
+              counter: `${activeIndex + 1}/${safeImages.length}`,
+            }
+          : {})}
+      />
     </div>
   );
 }

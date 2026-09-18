@@ -7,8 +7,7 @@ import { Link, useRouter } from "@/i18n/navigation";
 import { useAuth } from "@/hooks/use-auth";
 import { createClient } from "@/lib/supabase/client";
 import { isSigningOut } from "@/lib/auth/sign-out";
-import { FocusedHeader } from "@/components/layout/focused-header";
-import { LandingFooter } from "@/components/landing/landing-footer";
+import { CabeceraDeTramite } from "@/components/layout/focused-header";
 import { LienzoNeutro } from "@/components/ui/section-skeletons";
 import { trackMetaEvent } from "@/lib/analytics/meta-pixel";
 
@@ -168,7 +167,7 @@ export default function OnboardingPage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-[#f4f7fa]">
-      <FocusedHeader />
+      <CabeceraDeTramite />
 
       <main className="flex-1 ccr-centrado-seguro px-4 py-12">
         <div className="w-full max-w-xl">
@@ -248,7 +247,6 @@ export default function OnboardingPage() {
         </div>
       </main>
 
-      <LandingFooter />
     </div>
   );
 }

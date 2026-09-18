@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useDesvanecidoDeCarril } from "@/hooks/use-desvanecido-de-carril";
 import { usePantallaAngosta } from "@/hooks/use-pantalla-angosta";
 import { useTranslations } from "next-intl";
@@ -22,6 +22,38 @@ function RailOrGrid({ scroll, className, children }: { scroll: boolean; classNam
 // `id` doubles as the statusTabs i18n key, so labels translate per locale.
 export type FilterTab = { id: string };
 
+/**
+ * Con pocos elementos las ETAPAS estorban más de lo que ayudan: la lista cabe
+ * entera en pantalla y se lee de un vistazo. Medido en producción: había tres
+ * pestañas («Activas / Finalizadas / Canceladas») encima de UN solo proyecto.
+ *
+ * Ojo: esto vale para etapas —momentos de una misma cosa—, NO para tipos.
+ * «Profesionales / Promociones / Empleos» en Favoritos no son etapas: son cosas
+ * distintas, y esconderlas revuelve tres listas en una. Los tipos se dibujan
+ * siempre, con su conteo, que además dice qué hay sin tener que bajar.
+ */
+export const UMBRAL_SIN_FILTROS = 5;
+export function sinFiltros(total: number) {
+  return total <= UMBRAL_SIN_FILTROS;
+}
+
+/**
+ * Las etapas se nombran de acuerdo con lo que se filtra: «Activas / Cerradas»
+ * para promociones, citas o propuestas, pero «Activos / Cerrados» para
+ * proyectos y empleos. Las claves son las mismas —los grupos son los mismos—;
+ * lo que cambia es el rótulo. Antes Mis proyectos decía «Finalizadas» y
+ * «Canceladas», y Mis empleos «Cerradas».
+ */
+const EN_MASCULINO: Record<string, string> = {
+  activas: "activos",
+  finalizadas: "finalizados",
+  canceladas: "cancelados",
+  cerradas: "cerrados",
+};
+export function etapaEnMasculino(id: string) {
+  return EN_MASCULINO[id] ?? id;
+}
+
 export function StatusFilterTabs({
   tabs,
   value,
@@ -31,6 +63,9 @@ export function StatusFilterTabs({
   dotFor,
   variant = "underline",
   mobileLayout = "equal",
+  totalElementos,
+  limpiable = true,
+  masculino = false,
 }: {
   tabs: readonly FilterTab[];
   value: string;
@@ -50,15 +85,26 @@ export function StatusFilterTabs({
   /** Short status labels can share the available mobile width evenly. Long,
    * dynamic labels (such as professions) wrap into complete, visible rows. */
   mobileLayout?: "scroll" | "wrap" | "equal";
+  /** Total de elementos de la lista. Con pocos, las ETAPAS no se dibujan y la
+   *  lista se muestra entera (ver `sinFiltros`). */
+  totalElementos?: number;
+  /** En un filtro, volver a tocar la opción activa la quita. En un cambiador de
+   *  vista eso no significa nada: se pasa `false` y siempre queda una elegida. */
+  limpiable?: boolean;
+  /** Lo que se filtra es masculino (proyectos, empleos): «Activos», «Cerrados». */
+  masculino?: boolean;
 }) {
   const tr = useTranslations("statusTabs");
+  const pocos = totalElementos != null && sinFiltros(totalElementos);
   const pantallaAngosta = usePantallaAngosta();
-  const label = (id: string) => (labelFor ? labelFor(id) : tr(id));
+  const label = (id: string) => (labelFor ? labelFor(id) : tr(masculino ? etapaEnMasculino(id) : id));
   // Al marcar una etapa, el carril se corre para mostrarla entera y dejar
   // asomando a su vecina: así al tocar la tercera aparece la cuarta, y al
   // volver a la primera se ve que no hay nada antes. El margen es lo que hace
   // que asome: sin él la etapa quedaba pegada al filo y parecía la última.
   const carrilRef = useRef<HTMLDivElement | null>(null);
+  // Chips: en computadora, con muchos servicios se pliegan tras «+N más».
+  const [todosLosChips, setTodosLosChips] = useState(false);
   // Mismo degradado que el resto de los carriles del app: la etapa que asoma se
   // desvanece en el borde en vez de quedar cortada contra el filo.
   const { mascara: mascaraCarril } = useDesvanecidoDeCarril(carrilRef);
@@ -75,6 +121,9 @@ export function StatusFilterTabs({
     if (sobraDerecha > 0) carril.scrollTo({ left: carril.scrollLeft + sobraDerecha, behavior: "smooth" });
     else if (faltaIzquierda > 0) carril.scrollTo({ left: Math.max(0, carril.scrollLeft - faltaIzquierda), behavior: "smooth" });
   }, [value]);
+  // Con pocos elementos no hay nada que filtrar: la lista entera es más corta
+  // que las pestañas que la ordenan.
+  if (pocos && variant === "underline") return null;
   // Con una sola etapa no hay nada que elegir: un control con un botón miente.
   // Se resume en una línea, como hacen las listas que solo tienen un estado.
   if (tabs.length === 1 && variant === "underline") {
@@ -114,34 +163,66 @@ export function StatusFilterTabs({
   // CHIPS — visually distinct from segmented sub-navs: small outlined pills,
   // active in light blue, with count badges, on a scrollable rail.
   if (variant === "chips") {
+    // Con muchos servicios (un profesional puede tener 15), en computadora se
+    // muestran los primeros y «+N más» despliega el resto: envueltos, 15 chips
+    // eran tres filas antes de llegar a lo que filtran. El elegido se ve
+    // siempre, aunque esté entre los plegados. En el teléfono no se pliega
+    // nada: es un carril y el dedo lo recorre. Qué se esconde y cuándo lo
+    // decide la regla del documento (data-ccr-carriles), con la misma
+    // condición que envuelve los chips —pantalla ancha Y ratón—: en una
+    // pantalla táctil ancha sigue siendo carril y ahí esconder no tendría
+    // cómo volver.
+    const LIMITE = 8;
+    const hayDeMas = tabs.length > LIMITE;
+    const plegar = hayDeMas && !todosLosChips;
+    const siempreVisibles = new Set(tabs.slice(0, LIMITE - 1).map((tab) => tab.id));
+    if (value) siempreVisibles.add(value);
+    const plegados = tabs.filter((tab) => !siempreVisibles.has(tab.id)).length;
+    const CHIP = "inline-flex h-9 shrink-0 items-center gap-1 whitespace-nowrap rounded-full border px-3.5 text-[13px] font-semibold transition-colors";
     return (
-      <div data-status-filter-tabs="" data-filter-layout="chips" className="relative w-full max-w-full min-w-0 overflow-hidden">
-        <div className="scrollbar-none flex gap-1.5 overflow-x-auto py-0">
+      <div data-status-filter-tabs="" data-filter-layout="chips" className="relative w-full max-w-full min-w-0 overflow-hidden lg:overflow-visible">
+        <div ref={carrilRef} className="ccr-carril-chips scrollbar-none flex gap-1.5 overflow-x-auto py-0">
           {tabs.map((tab) => {
             const active = value === tab.id;
             return (
               <button
                 key={tab.id}
                 type="button"
-                onClick={() => onChange(active ? "" : tab.id)}
+                onClick={() => onChange(active && limpiable ? "" : tab.id)}
                 aria-pressed={active}
+                data-plegado={plegar && !siempreVisibles.has(tab.id) ? "" : undefined}
                 className={cn(
-                  // 26 px de alto y 11,5 px de letra es tamaño de etiqueta, no de
-                  // botón: al lado de los demás filtros del panel (36-40 px) se
-                  // veían de juguete. En el teléfono se quedan chicos a propósito
-                  // —van sobre el mapa de /buscar, donde el alto es caro—, pero de
-                  // 640 px en adelante crecen al mismo tamaño que el resto.
-                  "inline-flex h-[26px] shrink-0 items-center gap-1 whitespace-nowrap rounded-full border px-2.5 text-[11.5px] font-semibold transition-colors sm:h-9 sm:px-3.5 sm:text-[13px]",
+                  // 36 px en todos lados, como el resto de los filtros. Eran 26 en
+                  // el teléfono —pensados para ir sobre el mapa de /buscar, que ya
+                  // no usa este control—: tamaño de etiqueta, chico para el dedo.
+                  CHIP,
                   active
                     ? "border-[#009FD9] bg-[#009FD9] text-white"
                     : "border-[#dfe6ec] bg-white text-[#526277] hover:border-[#c3d2de]",
                 )}
               >
                 <span className="max-w-[14rem] truncate">{label(tab.id)}</span>
+                {/* El conteo va en el chip: dice qué hay en cada tipo sin tener
+                    que entrar a mirarlo. */}
+                {typeof counts?.[tab.id] === "number" && (
+                  <span className={cn("shrink-0 tabular-nums font-extrabold", active ? "text-white/90" : "text-[#8a98aa]")}>
+                    {counts[tab.id]}
+                  </span>
+                )}
                 {dotFor?.(tab.id) && <span className={cn("h-1.5 w-1.5 shrink-0 rounded-full", active ? "bg-white" : "bg-[#009FD9]")} aria-hidden />}
               </button>
             );
           })}
+          {hayDeMas && (
+            <button
+              type="button"
+              className={cn("ccr-ver-mas", CHIP, "border-dashed border-[#c3d2de] bg-white text-[#0089bb] hover:border-[#009FD9]")}
+              onClick={() => setTodosLosChips((abiertos) => !abiertos)}
+              aria-expanded={!plegar}
+            >
+              {plegar ? `+${plegados} ${tr("masServicios")}` : tr("menosServicios")}
+            </button>
+          )}
         </div>
       </div>
     );
@@ -393,6 +474,18 @@ export function proyectoBucket(status: string): string {
 }
 export function proyectoMatches(filter: string, status: string): boolean {
   return proyectoBucket(status) === filter;
+}
+
+// Lo que uno PUBLICA —empleos y promociones— vive en dos estados que importan:
+// está a la vista o no lo está. Pausada, vencida, agotada, cerrada y borrador
+// son la misma cosa para quien mira su lista: hoy no la ve nadie. Mismas reglas
+// que los proyectos, incluida la de no dibujar etapas con pocos elementos.
+export const PUBLICACION_ESTADO_TABS: readonly FilterTab[] = [
+  { id: "activas" },
+  { id: "cerradas" },
+];
+export function publicacionBucket(status?: string | null): string {
+  return status === "published" ? "activas" : "cerradas";
 }
 
 // ── PROYECTOS (a PRO's own proposal) ────────────────────────────────────────

@@ -12,13 +12,17 @@ export const dynamic = "force-dynamic";
 //     section after authenticating);
 //   • logged IN  → their panel's projects section, role-aware (professional →
 //     "Mis proyectos publicados" in the unified panel; client → the client panel).
-export default async function PublicarProyectoPage() {
+export default async function PublicarProyectoPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const locale = await getLocale();
+  const { desde } = await searchParams;
+  // De dónde vino, para que la flecha de atrás devuelva ahí. Solo pantallas
+  // conocidas: un destino libre en la dirección es una puerta abierta.
+  const volverA = desde === "proyectos" ? "/proyectos" : null;
   const supabase = await createClient();
   const user = await safeGetUser(supabase);
 
   if (!user) {
-    redirect(`/${locale}/login?redirect=projects`);
+    redirect(`/${locale}/login?redirect=projects${volverA ? `&desde=proyectos` : ""}`);
   }
 
   // Resolve the role authoritatively (metadata is often missing/stale):
@@ -33,9 +37,9 @@ export default async function PublicarProyectoPage() {
     }
   }
 
-  redirect(
-    role === "professional"
-      ? `/${locale}/dashboard/profesional?tab=sent_projects`
-      : `/${locale}/dashboard/profesional?tab=sent_projects`
-  );
+  // `openPublish=1` abre el formulario apenas carga la sección. Sin él esta
+  // dirección dejaba a la persona en la lista de sus proyectos, con un botón
+  // más que buscar: quien entra por «Crear proyecto» ya dijo lo que quiere.
+  void role;
+  redirect(`/${locale}/dashboard/profesional?tab=sent_projects&openPublish=1${volverA ? `&returnTo=${volverA}` : ""}`);
 }

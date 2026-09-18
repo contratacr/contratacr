@@ -191,10 +191,10 @@ test.describe("@visual recent bug contracts", () => {
     // Use the professional's own public profile: the blocked self-action is the
     // compact informational dialog from the recent responsive bug report.
     await gotoOK(page, `/es/profesionales/${seed.professionalSlug}`);
-    // El bloque del servicio dejó de ser un <article>: se busca el botón, que es
-    // lo que la prueba necesita abrir.
+    // «Ver disponibilidad» salió de la ficha junto con las citas: el aviso de
+    // «esta es tu propia ficha» lo abre ahora cualquier botón de contacto.
     const serviceRequest = page
-      .getByRole("button", { name: /Ver disponibilidad|View availability/i })
+      .getByRole("button", { name: /WhatsApp|Llamar|Call|Correo|Email/i })
       .filter({ visible: true })
       .first();
     await expect(serviceRequest).toBeVisible();

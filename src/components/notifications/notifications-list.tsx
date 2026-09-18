@@ -43,7 +43,7 @@ type Notification = {
 
 // Shared notifications list. The standalone /notificaciones page shows the full
 // account history; the legacy panel tab can still scope by the active mode.
-export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" } = {}) {
+export function NotificationsList({ scope = "mode", titulo }: { scope?: "mode" | "all"; /** Título DENTRO de la tarjeta (la página de Notificaciones). */ titulo?: string } = {}) {
   const nativeApp = useNativeApp();
   // El contador solo informaba; como filtro sirve para algo.
   const { user, loading: sesionCargando } = useAuth();
@@ -68,6 +68,10 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [expandedIds, setExpandedIds] = useState<Set<string>>(() => new Set());
   const [globalMenuOpen, setGlobalMenuOpen] = useState(false);
+  // De a 15, con «Ver notificaciones anteriores» al pie, como Facebook: con
+  // las cien que se cargan de una vez la lista era una sábana sin final.
+  const DE_A = 15;
+  const [mostrando, setMostrando] = useState(DE_A);
   // Entrar a la pantalla es leerlas: el globo se limpia solo, como en Instagram.
   // El punto azul dura lo que dura la visita, que es cuando sirve. Se marca
   // una vez por visita, aunque lo no leído sea más viejo que lo que se cargó.
@@ -188,7 +192,7 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
     if (!globalMenuOpen && !itemMenuOpenId) return;
     function onPointerDown(event: MouseEvent) {
       const target = event.target as Node;
-      if (globalMenuOpen && globalMenuRef.current?.contains(target)) return;
+      if (globalMenuOpen && (globalMenuRef.current?.contains(target) || (target instanceof Element && target.closest("[data-menu-general-notificaciones]")))) return;
       // El disparador vive en la barra de la app, fuera de este contenedor: sin
       // esto el toque cerraba el menú y el propio botón lo reabría.
       if (target instanceof Element && target.closest("[data-ccr-section-menu]")) return;
@@ -387,32 +391,10 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
     ? "min-h-[calc(100dvh-8.75rem)] sm:min-h-[calc(100dvh-16rem)]"
     : "min-h-[24rem] sm:min-h-[26rem]";
 
-  return (
-    <div className="ccr-notifications-list flex h-full min-h-0 flex-col">
-      {/* La cabecera va sobre el lienzo, sin caja propia: el título con su flecha
-          de volver y, debajo, la tarjeta con la lista o el vacío. Es la misma
-          forma de Mis ofertas o Soporte; antes esto era una pastilla blanca
-          suelta encima de otra sábana blanca. */}
-      {/* En el teléfono el nombre de la pantalla lo pone la barra de arriba
-          —menú, marca y «Notificaciones», igual que en Ofertas—, así que esta
-          cabecera es solo de computadora. En la app desaparece del todo. */}
-      <div className={cn(
-        "ccr-notifications-list-header mb-3 flex shrink-0 items-center justify-between gap-3",
-        nativeApp && scope === "all" && "!m-0 !p-0 h-0 overflow-visible",
-      )}>
-        {/* Sin «Todo al día»: el propio vacío ya dice que no hay nada, y una
-            pastilla que solo aparece cuando no pasa nada no informa. */}
-        <div className="min-w-0">
-          {scope === "all" ? (
-            // El nombre lo da la barra de arriba en el teléfono y en la app;
-            // en computadora, donde la barra no lo dibuja, va aquí.
-            <h1 className={cn("text-xl font-extrabold leading-tight text-[#162543] sm:text-2xl", nativeApp ? "sr-only" : "max-lg:sr-only")}>{headingTitle}</h1>
-          ) : (
-            <h3 className="text-lg font-extrabold leading-tight text-[#162543] sm:text-[1.15rem]">{headingTitle}</h3>
-          )}
-        </div>
-        {hasVisibleNotifications && (
-        <div ref={globalMenuRef} className={cn("relative shrink-0", nativeApp && scope === "all" && "[&>button]:sr-only")}>
+  // El «...» general vive en la misma fila que «Nuevas», el primer rótulo de
+  // la lista: suelto arriba quedaba a otra altura y parecía de otra cosa.
+  const menuGeneral = hasVisibleNotifications ? (
+        <div ref={globalMenuRef} data-menu-general-notificaciones="" className={cn("relative shrink-0", nativeApp && scope === "all" && "[&>button]:sr-only")}>
           <button
             type="button"
             aria-label={locale === "en" ? "Notification options" : "Opciones de notificaciones"}
@@ -422,9 +404,9 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
               setItemMenuOpenId(null);
               setGlobalMenuOpen((open) => !open);
             }}
-            className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-[#f8fafc] text-[#162543] ring-1 ring-[#c9d8e4] transition-colors hover:bg-[#eef6fb]"
+            className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-[#f8fafc] text-[#162543] ring-1 ring-[#c9d8e4] transition-colors hover:bg-[#eef6fb]"
           >
-            <MoreHorizontal className="h-5 w-5" strokeWidth={3} />
+            <MoreHorizontal className="h-4 w-4" strokeWidth={3} />
           </button>
           {globalMenuOpen && (
             <div role="menu" className={cn(
@@ -464,7 +446,35 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
             </div>
           )}
         </div>
-        )}
+  ) : null;
+
+  return (
+    <div className="ccr-notifications-list flex h-full min-h-0 flex-col">
+      {/* La cabecera va sobre el lienzo, sin caja propia: el título con su flecha
+          de volver y, debajo, la tarjeta con la lista o el vacío. Es la misma
+          forma de Mis ofertas o Soporte; antes esto era una pastilla blanca
+          suelta encima de otra sábana blanca. */}
+      {/* En el teléfono el nombre de la pantalla lo pone la barra de arriba
+          —menú, marca y «Notificaciones», igual que en Ofertas—, así que esta
+          cabecera es solo de computadora. En la app desaparece del todo. */}
+      <div className={cn(
+        "ccr-notifications-list-header mb-3 flex shrink-0 items-center justify-between gap-3",
+        nativeApp && scope === "all" && "!m-0 !p-0 h-0 overflow-visible",
+        // Con título dentro de la tarjeta, esta cabecera de afuera queda solo
+        // para el lector de pantalla: dibujada eran dos «Notificaciones».
+        titulo && !nativeApp && "sr-only",
+      )}>
+        {/* Sin «Todo al día»: el propio vacío ya dice que no hay nada, y una
+            pastilla que solo aparece cuando no pasa nada no informa. */}
+        <div className="min-w-0">
+          {scope === "all" ? (
+            // El nombre lo da la barra de arriba en el teléfono y en la app;
+            // en computadora, donde la barra no lo dibuja, va aquí.
+            <h1 className={cn("text-xl font-extrabold leading-tight text-[#162543] sm:text-2xl", nativeApp ? "sr-only" : "max-lg:sr-only")}>{headingTitle}</h1>
+          ) : (
+            <h3 className="text-lg font-extrabold leading-tight text-[#162543] sm:text-[1.15rem]">{headingTitle}</h3>
+          )}
+        </div>
       </div>
 
       {confirmDelete && (
@@ -493,6 +503,15 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
         // web es una tarjeta como la de cualquier otra sección.
         scope === "all" && !nativeApp && "rounded-2xl border border-[#dfe8f0] shadow-sm",
       )}>
+        {/* El título va DENTRO de la tarjeta, con el «···» en su renglón, como
+            Facebook. Por debajo de 1024 px el título ya lo dice la barra de
+            arriba, así que aquí solo aparece en computadora. */}
+        {titulo && (
+          <div className="hidden items-center justify-between gap-3 px-4 pb-1 pt-5 lg:flex">
+            <p aria-hidden="true" className="text-[22px] font-extrabold leading-tight text-[#162543]">{titulo}</p>
+            {menuGeneral}
+          </div>
+        )}
         {busy ? (
           <PanelListSkeleton
             rows={4}
@@ -521,7 +540,9 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
             plano
             icon={Bell}
             title={t("noneList")}
-            description={t("emptySub")}
+            // Una cuenta que solo contrata no publica empleos ni promociones:
+            // prometerle avisos de eso era listarle cosas que nunca le llegan.
+            description={canOffer(user) ? t("emptySub") : t("emptySubClient")}
             className={cn("px-5 py-12", scope === "all" ? altoDeLaTarjeta : "min-h-[16rem] sm:min-h-[18rem]")}
           />
         ) : (
@@ -529,8 +550,9 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
           // entera: así el pie queda debajo del borde en los tres estados y
           // cuando la lista crece lo empuja fuera de la vista, no a la vista
           // (medido: saltos de 0,78 en teléfono y 0,49 en escritorio).
+          <>
           <ul className={cn("ccr-notifications-items", scope === "all" ? altoDeLaTarjeta : "min-h-[16rem] sm:min-h-[18rem]")}>
-            {ordenadas.map((n, indice) => {
+            {ordenadas.slice(0, mostrando).map((n, indice) => {
               const grupo = grupoDe(n);
               const abreGrupo = indice === 0 || grupoDe(ordenadas[indice - 1]) !== grupo;
               const message = notificationMessage(n);
@@ -540,7 +562,7 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
               <li
                 key={n.id}
                 data-unread={!n.read ? "true" : undefined}
-                className={cn("relative group border-b border-[#f3f4f6] last:border-0", !n.read && "bg-[#f3f9fd]")}
+                className="relative group border-b border-[#f3f4f6] last:border-0"
                 onTouchStart={(event) => {
                   if (!nativeApp) return;
                   arrastreRef.current = {
@@ -576,9 +598,12 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
                 }}
               >
                 {abreGrupo && (
-                  <p className="bg-white px-4 pb-1 pt-3 text-[11px] font-extrabold uppercase tracking-wide text-[#8b95a5]">
-                    {t(grupo)}
-                  </p>
+                  <div className="flex items-center justify-between gap-2 bg-white px-4 pb-1 pt-3">
+                    <p className="min-w-0 truncate text-[11px] font-extrabold uppercase tracking-wide text-[#8b95a5]">
+                      {t(grupo)}
+                    </p>
+                    {indice === 0 && (titulo ? <div className="lg:hidden">{menuGeneral}</div> : menuGeneral)}
+                  </div>
                 )}
                 {/* El botón vive con la fila, no con el encabezado del grupo. */}
                 <div className="relative overflow-hidden">
@@ -614,14 +639,16 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
                   className={cn(
                     // Fondo propio: si fuera transparente, el botón rojo de
                     // borrar se vería por debajo sin haber deslizado.
-                    "relative w-full px-4 py-3 pr-16 text-left transition-colors",
-                    n.read ? "bg-white" : "bg-[#f3f9fd]",
+                    "relative w-full px-4 py-3 pr-20 text-left transition-colors",
+                    // Blanca siempre: lo no leído lo marca el punto azul de la
+                    // derecha, como en Facebook. El fondo tintado se leía gris.
+                    "bg-white",
                     notificationActionHref(n, role, locale) ? "cursor-pointer hover:bg-[#f9fafb]" : "cursor-default",
                     arrastre?.id === n.id ? "transition-none" : "transition-transform duration-200",
                   )}
                   style={{ transform: `translateX(${desplazamientoDe(n.id)}px)` }}
                 >
-                  {/* Per-type leading icon (grey circle) + a brand-blue unread dot at its corner. */}
+                  {/* Icono del tipo; lo no leído va con un punto azul a la derecha. */}
                   <div className="flex items-start gap-3">
                     <div className="relative shrink-0">
                       {fotoDe(n) ? (
@@ -636,7 +663,6 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
                           <NotificationSourceIcon type={n.type} className="h-4 w-4" />
                         </span>
                       )}
-                      {!n.read && <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-[#009FD9] ring-2 ring-white" />}
                     </div>
                     <div className="min-w-0 flex-1">
                       {/* Una fila = un hecho: el mensaje manda y la hora va al
@@ -673,6 +699,16 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
                       )}
                     </div>
                   </div>
+                  {!n.read && (
+                    <span
+                      data-punto-no-leida=""
+                      aria-label={locale === "en" ? "Unread" : "Sin leer"}
+                      // La posición la pone la regla del documento
+                      // (data-ccr-notificaciones): en la misma columna que el
+                      // «···» general de arriba.
+                      className="absolute top-1/2 h-2.5 w-2.5 -translate-y-1/2 rounded-full bg-[#009FD9]"
+                    />
+                  )}
                 </div>
                 {/* Two distinct actions, intentionally different icons so they're
                     never read as accept/reject: ✓ = mark as read, 🗑 = delete. */}
@@ -680,7 +716,9 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
                   ref={(node) => {
                     itemMenuRefs.current[n.id] = node;
                   }}
-                  className={cn("absolute top-2.5 right-2.5", nativeApp && "hidden")}
+                  data-menu-fila=""
+                  data-abierto={itemMenuOpenId === n.id ? "" : undefined}
+                  className={cn("absolute", nativeApp && "hidden")}
                 >
                   <AppTooltip label={locale === "en" ? "Notification options" : "Opciones"}>
                     <button
@@ -731,6 +769,19 @@ export function NotificationsList({ scope = "mode" }: { scope?: "mode" | "all" }
               );
             })}
           </ul>
+          {ordenadas.length > mostrando && (
+            <div className="px-4 pb-4 pt-2 sm:px-5">
+              <button
+                type="button"
+                data-ver-anteriores=""
+                onClick={() => setMostrando((n) => n + DE_A)}
+                className="h-11 w-full rounded-xl bg-[#eef2f6] text-sm font-bold text-[#162543] transition-colors hover:bg-[#e3e9ef]"
+              >
+                {locale === "en" ? "See earlier notifications" : "Ver notificaciones anteriores"}
+              </button>
+            </div>
+          )}
+          </>
         )}
       </div>
     </div>

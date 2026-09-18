@@ -7,6 +7,121 @@ import { writeSourceColumns } from "@/lib/security/write-guard";
 import { recordServerInteraction } from "@/lib/analytics/server-interactions";
 import { validateReviewText } from "@/lib/moderation/reviews";
 import { sendNotificationPush } from "@/lib/push/notify";
+import { WHATSAPP_CONTACT_COOKIE, hashContactToken } from "@/lib/contact-followup";
+import { NAME_MAX_LENGTH } from "@/lib/text-limits";
+
+/**
+ * Una reseña sin cuenta, para quien ya contactó por WhatsApp.
+ *
+ * Medido sobre los 68 avisos de seguimiento de producción: los 44 que tenían
+ * cuenta dejaron 7 reseñas (16%); los 24 que no tenían dejaron CERO. El muro no
+ * filtra a nadie —un correo desechable toma treinta segundos— y sí frena a quien
+ * iba de buena fe.
+ *
+ * Esto NO es anónimo: para llegar aquí hay que traer la cookie de contacto que
+ * abrió ese seguimiento, o sea haber escrito a ESE profesional desde ESE
+ * dispositivo. Queda amarrada al seguimiento, que guarda la huella de la visita,
+ * y el índice único deja una sola reseña por contacto.
+ */
+async function reseñaSinCuenta(
+  req: NextRequest,
+  datos: { professionalId: string; rating: number; comment?: string; contactId?: string | null; clientName?: string | null },
+) {
+  const { professionalId, rating, contactId } = datos;
+  const comment = datos.comment ?? "";
+  if (!contactId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const token = req.cookies.get(WHATSAPP_CONTACT_COOKIE)?.value ?? "";
+  if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const admin = createAdminClient();
+  const { data: seguimiento } = await admin
+    .from("whatsapp_contact_followups")
+    .select("id, professional_id, client_id, anonymous_token_hash, service_name, status")
+    .eq("id", contactId)
+    .maybeSingle();
+  const fila = seguimiento as {
+    professional_id?: string; client_id?: string | null;
+    anonymous_token_hash?: string | null; service_name?: string | null;
+  } | null;
+  // El seguimiento tiene que ser de ESTE dispositivo y de ESTE profesional. Si
+  // ya tenía cuenta, que entre con ella: ahí la reseña lleva nombre y correo.
+  if (!fila || fila.client_id || fila.professional_id !== professionalId) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  if (fila.anonymous_token_hash !== hashContactToken(token)) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const nombre = (datos.clientName ?? "").trim().replace(/\s+/gu, " ").slice(0, NAME_MAX_LENGTH);
+  if (nombre.length < 2) {
+    return NextResponse.json({ error: "Escribe tu nombre para publicar la reseña." }, { status: 400 });
+  }
+
+  const { data: pro } = await admin
+    .from("professionals")
+    .select("profile_id, slug")
+    .eq("id", professionalId)
+    .maybeSingle();
+  if (!pro) return NextResponse.json({ error: "Profesional no encontrado." }, { status: 404 });
+
+  const { data: creada, error } = await admin
+    .from("reviews")
+    .insert({
+      professional_id: professionalId,
+      client_id: null,
+      client_name_snapshot: nombre,
+      whatsapp_contact_id: contactId,
+      job_title: fila.service_name ? String(fila.service_name).slice(0, 80) : null,
+      rating,
+      comment,
+      ...writeSourceColumns(req),
+    })
+    .select("id")
+    .single();
+  // El índice único por contacto convierte un segundo envío en «ya reseñaste».
+  if (error) {
+    const yaEstaba = /duplicate key|reviews_whatsapp_contact_uidx/i.test(error.message);
+    return NextResponse.json(
+      { error: yaEstaba ? "Ya dejaste tu reseña para este contacto." : error.message },
+      { status: yaEstaba ? 409 : 500 },
+    );
+  }
+
+  await admin
+    .from("whatsapp_contact_followups")
+    .update({ status: "reviewed", updated_at: new Date().toISOString() })
+    .eq("id", contactId);
+
+  if ((pro as { profile_id?: string; slug?: string }).profile_id && creada?.id) {
+    const estrellas = Number(rating).toLocaleString("es-CR", { maximumFractionDigits: 1 });
+    const notificacion = {
+      user_id: (pro as { profile_id: string }).profile_id,
+      type: "review_received",
+      title: "Nueva reseña recibida",
+      message: `${nombre.split(" ")[0]} te dejó una reseña de ${estrellas} estrellas.`,
+      data: {
+        link: `/es/profesionales/${(pro as { slug?: string }).slug ?? ""}?tab=resenas#resenas`,
+        professional_id: professionalId,
+        review_id: creada.id,
+        client_name: nombre.split(" ")[0],
+        rating: Number(rating),
+      },
+    };
+    const { error: errorAviso } = await admin.from("notifications").insert(notificacion);
+    if (!errorAviso) await sendNotificationPush({ userId: notificacion.user_id, ...notificacion });
+  }
+
+  await recordServerInteraction(admin, req, {
+    type: "review_created",
+    professionalId,
+    viewerUserId: null,
+    source: "whatsapp_followup",
+    metadata: { whatsapp_contact_id: contactId, rating, sin_cuenta: true },
+  });
+
+  return NextResponse.json({ ok: true, edited: false });
+}
 
 // Authenticated users can review a professional directly from the profile.
 // If the review comes from a real booking/project/WhatsApp follow-up, we keep
@@ -15,7 +130,7 @@ export async function POST(req: NextRequest) {
   // Una reseña por minuto de sobra; sin esto no había ningún tope.
   const limitado = enforceRateLimit(req, "reviews", 10, 60_000);
   if (limitado) return limitado;
-  const { professionalId, rating, comment, bookingId, projectId, contactId } = await req.json();
+  const { professionalId, rating, comment, bookingId, projectId, contactId, clientName } = await req.json();
 
   if (!professionalId || !rating) {
     return NextResponse.json({ error: "Faltan campos requeridos." }, { status: 400 });
@@ -34,7 +149,9 @@ export async function POST(req: NextRequest) {
 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!user) {
+    return reseñaSinCuenta(req, { professionalId: String(professionalId), rating: r, comment: cleanComment, contactId, clientName });
+  }
 
   const { data: profile } = await supabase
     .from("profiles")

@@ -20,6 +20,8 @@ type ReviewTarget = {
   contactId: string;
   professionalId: string;
   professionalName: string;
+  /** Sin cuenta: la reseña se publica pidiendo solo el nombre. */
+  needsName?: boolean;
 };
 
 export function WhatsAppReviewFollowUp() {
@@ -224,6 +226,7 @@ export function WhatsAppReviewFollowUp() {
           contactId={reviewTarget.contactId}
           professionalId={reviewTarget.professionalId}
           professionalName={reviewTarget.professionalName}
+          pedirNombre={!!reviewTarget.needsName}
           onClose={() => setReviewTarget(null)}
         />
       )}

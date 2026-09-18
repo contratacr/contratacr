@@ -18,6 +18,13 @@ interface LeaveReviewModalProps {
   embedded?: boolean;
   /** Reseña ya conocida por quien abre (evita esperar la consulta al abrir). */
   initialReview?: { rating?: number | null; comment?: string | null } | null;
+  /**
+   * Reseña sin cuenta: se pide el nombre y se manda directo, sin pasar por el
+   * login. Solo lo usa el aviso de seguimiento, donde ya está probado que esta
+   * visita contactó a ESTE profesional. Medido: con muro, 24 avisos a gente sin
+   * cuenta dejaron CERO reseñas.
+   */
+  pedirNombre?: boolean;
 }
 
 const PENDING_REVIEW_KEY_PREFIX = "contratacr:pending-profile-review:";
@@ -40,6 +47,7 @@ export function LeaveReviewModal({
   onSuccess,
   embedded = false,
   initialReview = null,
+  pedirNombre = false,
 }: LeaveReviewModalProps) {
   const t = useTranslations("reviewModal");
   const [rating, setRating] = useState(initialReview?.rating ?? 0);
@@ -49,6 +57,7 @@ export function LeaveReviewModal({
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [isEditing, setIsEditing] = useState(Boolean(initialReview));
+  const [nombre, setNombre] = useState("");
   // La reseña propia se consulta al montar. Sin esta espera el cuadro se pintaba
   // vacío ("Dejar tu reseña", 0 estrellas) y saltaba a la reseña existente
   // cuando llegaba la respuesta: eso era el parpadeo.
@@ -64,6 +73,7 @@ export function LeaveReviewModal({
   // Sin esta espera el cuadro se pintaba vacío ("Dejar tu reseña", 0 estrellas)
   // y saltaba a la reseña existente cuando llegaba la respuesta: el parpadeo.
   const prefillReady = !isAuthenticated || Boolean(initialReview) || prefilledKey === query;
+  // Con el nombre por delante, nada que precargar: la reseña es nueva siempre.
 
   useEffect(() => {
     if (!isAuthenticated || initialReview) return;
@@ -174,6 +184,36 @@ export function LeaveReviewModal({
     }
     if (!comment.trim()) {
       setError(t("errComment"));
+      return;
+    }
+    if (pedirNombre) {
+      if (nombre.trim().length < 2) {
+        setError(t("errName"));
+        return;
+      }
+      setError(null);
+      setLoading(true);
+      try {
+        const response = await fetch("/api/reviews", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ professionalId, rating, comment: comment.trim(), contactId, clientName: nombre.trim() }),
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          setError(data.error ?? t("errSubmit"));
+          return;
+        }
+        setSuccess(true);
+        window.setTimeout(() => {
+          onSuccess?.();
+          if (!embedded) onClose();
+        }, 1200);
+      } catch {
+        setError(t("errConnection"));
+      } finally {
+        setLoading(false);
+      }
       return;
     }
     if (!isAuthenticated) {
@@ -292,6 +332,23 @@ export function LeaveReviewModal({
           className={`w-full resize-none border border-[#dbe5ed] bg-white text-sm text-[#162543] placeholder:text-[#68778d] transition focus:border-[#009FD9] focus:outline-none focus:ring-2 focus:ring-[#009FD9]/20 ${embedded ? "rounded-xl px-3.5 py-3" : "rounded-xl px-3.5 py-3"}`}
         />
       </div>}
+      {/* Sin cuenta se pide el nombre y nada más: es lo único que hace falta
+          para que la reseña se pueda leer. */}
+      {pedirNombre && (!embedded || rating > 0) && (
+        <div>
+          <p className="mb-1.5 text-sm font-medium text-[#374151]">{t("nameLabel")}</p>
+          <input
+            type="text"
+            value={nombre}
+            onChange={(event) => setNombre(event.target.value)}
+            maxLength={80}
+            autoComplete="name"
+            placeholder={t("namePlaceholder")}
+            className="w-full rounded-xl border border-[#dbe5ed] bg-white px-3.5 py-3 text-sm text-[#162543] placeholder:text-[#68778d] transition focus:border-[#009FD9] focus:outline-none focus:ring-2 focus:ring-[#009FD9]/20"
+          />
+          <p className="mt-1.5 text-xs text-[#68778d]">{t("nameHelp")}</p>
+        </div>
+      )}
       {(!embedded || rating > 0 || isEditing) && error && (
         <div className="flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-600">
           <AlertCircle className="h-4 w-4 shrink-0" />

@@ -2,7 +2,7 @@
 
 import { useCallback, useState, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
-import { Share2 } from "lucide-react";
+import { Link2, Share2 } from "lucide-react";
 import { AvisoFlotante } from "@/components/ui/aviso-flotante";
 import { useNativeShare } from "@/hooks/use-native-share";
 import { cn } from "@/lib/utils";
@@ -48,8 +48,11 @@ export function useCompartir() {
  */
 export function BotonCompartir({ url, titulo, onPress, sutil = false, className }: { url?: string; titulo?: string; onPress?: () => void; sutil?: boolean; className?: string }) {
   const t = useTranslations("profile");
+  const tMenu = useTranslations("menuFicha");
+  const nativo = useNativeShare();
   const { compartir, avisoNodo } = useCompartir();
-  const rotulo = t("share");
+  // En la computadora el botón copia el enlace, así que lo dice.
+  const rotulo = nativo ? t("share") : tMenu("copyLink");
 
   return (
     <>
@@ -65,7 +68,7 @@ export function BotonCompartir({ url, titulo, onPress, sutil = false, className 
           className,
         )}
       >
-        <Share2 className="h-4 w-4 shrink-0" />
+        {nativo ? <Share2 className="h-4 w-4 shrink-0" /> : <Link2 className="h-4 w-4 shrink-0" />}
         {rotulo}
       </button>
       {avisoNodo}

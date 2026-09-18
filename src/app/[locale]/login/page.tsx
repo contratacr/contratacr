@@ -196,21 +196,21 @@ export default function LoginPage() {
       }
     }
     setPostLoginPrompt(resolvedUser?.id);
-    const metadata = resolvedUser?.user_metadata ?? {};
-    if (metadata.professional_signup_started === true && metadata.is_provider !== true) {
-      window.location.assign(`/${locale}/registro/profesional`);
-      return;
-    }
-
+    // Entrar lleva al panel, siempre. Antes, una cuenta con el registro
+    // profesional a medias caía en el formulario en cada inicio de sesión y no
+    // había forma de llegar a su propio panel sin terminarlo.
     if (redirect && redirect !== "projects") {
       const dest = /^\/(es|en)(\/|$)/.test(redirect) ? redirect : `/${locale}${redirect}`;
       window.location.assign(withPostLoginActivity(dest));
       return;
     }
 
+    const desde = searchParams.get("desde");
     const dest =
       redirect === "projects"
-        ? "/dashboard/profesional?tab=sent_projects"
+        // Viene de «Publicar proyecto»: entra directo al formulario, no a la
+        // lista, y conserva de dónde venía para la flecha de atrás.
+        ? `/dashboard/profesional?tab=sent_projects&openPublish=1${desde === "proyectos" ? "&returnTo=/proyectos" : ""}`
         : "/dashboard/profesional";
     window.location.assign(withPostLoginActivity(`/${locale}${dest}`));
   }

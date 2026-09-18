@@ -8,7 +8,7 @@ import { marketplaceLocale } from "@/lib/marketplace-copy";
 
 const COPY = {
   es: {
-    placeholder: "¿Qué oferta estás buscando?",
+    placeholder: "¿Qué promoción buscas?",
   },
   en: {
     placeholder: "What offer are you looking for?",

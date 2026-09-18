@@ -91,7 +91,7 @@ export function PublicQuote({ locale, data }: { locale: string; data: PublicQuot
             cliente ya se hablan. */}
         {wa && !vencida && (
           <div className="print:hidden border-t border-[#eef2f6] bg-[#fafcfd] px-6 py-5">
-            <a href={wa} target="_blank" rel="noopener noreferrer" className="inline-flex h-12 w-full items-center justify-center rounded-full bg-[#25d366] px-5 text-[15px] font-bold text-white transition-colors hover:bg-[#1da851]">{t("publicWhatsApp")}</a>
+            <a href={wa} target="_blank" rel="noopener noreferrer" className="inline-flex h-12 w-full items-center justify-center rounded-full bg-[#009FD9] px-5 text-[15px] font-bold text-white transition-colors hover:bg-[#0089bb]">{t("publicWhatsApp")}</a>
           </div>
         )}
       </article>

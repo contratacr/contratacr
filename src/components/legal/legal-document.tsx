@@ -80,7 +80,7 @@ export async function LegalDocument({ title, updated, intro, summary, sections, 
   return (
     <div className="min-h-screen flex flex-col bg-white">
       <LandingNavbar />
-      <main id="top" className="flex-1 pt-28 pb-20 px-4">
+      <main id="top" className="flex-1 pt-20 lg:pt-24 pb-20 px-4">
         <div className="mx-auto max-w-3xl">
           {en && (
             <div className="rounded-xl border border-[#e5e7eb] bg-[#f9fafb] px-4 py-3 text-sm text-[#6b7280]">

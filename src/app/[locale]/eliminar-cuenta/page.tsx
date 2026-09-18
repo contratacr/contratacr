@@ -1,5 +1,4 @@
 import { ArrowRight, CheckCircle2, Headset, ShieldCheck, Trash2 } from "lucide-react";
-import { LandingFooter } from "@/components/landing/landing-footer";
 import { LandingNavbar } from "@/components/landing/landing-navbar";
 import { Link } from "@/i18n/navigation";
 import { safeGetUser } from "@/lib/supabase/get-user";
@@ -137,7 +136,6 @@ export default async function DeleteAccountPage({
           </section>
         </div>
       </main>
-      <LandingFooter />
     </div>
   );
 }

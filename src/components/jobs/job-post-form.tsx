@@ -1,10 +1,13 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
+import { PhoneInput, isPhoneComplete } from "@/components/ui/phone-input";
 import { UnsavedChangesGuard } from "@/components/dashboard/unsaved-changes-guard";
 import { cn } from "@/lib/utils";
+import { BARRA_ACCION_FIJA, useBarraAccionFija } from "@/components/ui/acciones-al-pie";
 import { useHairlineOnScroll } from "@/components/util/use-hairline-on-scroll";
-import { ArrowLeft, BriefcaseBusiness, Plus, Trash2 } from "lucide-react";
+import { ArrowLeft, Plus, Trash2 } from "lucide-react";
 import { useLocale } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
 import {
@@ -27,8 +30,9 @@ import { MAX_MONEY_AMOUNT, formatNumberForMessage, isWholeNumberInRange, parseOp
 import { employmentTypeLabel, experienceLevelLabel, marketplaceLocale, salaryPeriodLabel, workplaceTypeLabel } from "@/lib/marketplace-copy";
 import { invalidateAppData } from "@/lib/app-data-invalidation";
 import { Button } from "@/components/ui/button";
+import { CABECERA_BOTON, CABECERA_FILA_CENTRADA, CABECERA_GLIFO, CABECERA_TITULO } from "@/components/layout/cabecera";
 
-type FieldErrors = Partial<Record<"title" | "location" | "description" | "responsibilities" | "requirements" | "salary" | "openings" | "deadline", string>>;
+type FieldErrors = Partial<Record<"title" | "location" | "description" | "responsibilities" | "requirements" | "salary" | "openings" | "deadline" | "whatsapp", string>>;
 
 const TODAY = new Date().toISOString().slice(0, 10);
 const FIELD_CLASS = "mt-1.5 h-11 w-full rounded-xl border border-[#d7e1ea] bg-white px-3 text-sm outline-none transition-colors focus:border-[#009fd9]";
@@ -94,6 +98,7 @@ const JOB_POST_COPY = {
     publishing: "Publicando...",
     saveChanges: "Guardar cambios",
     cancel: "Cancelar",
+    whatsapp: "WhatsApp", whatsappHelp: "Es por donde te van a escribir los postulantes. Viene el de tu cuenta; podés cambiarlo para esta vacante.", whatsappRequired: "Escribe un número de WhatsApp válido.",
   },
   en: {
     optional: "optional",
@@ -154,6 +159,7 @@ const JOB_POST_COPY = {
     publishing: "Publishing...",
     saveChanges: "Save changes",
     cancel: "Cancel",
+    whatsapp: "WhatsApp", whatsappHelp: "This is where applicants will write to you. Your account number is filled in; you can change it for this opening.", whatsappRequired: "Write a valid WhatsApp number.",
   },
 } as const;
 
@@ -289,12 +295,13 @@ function EditableList({
   );
 }
 
-type JobPostFormInitial = Partial<Pick<JobPost, "id" | "title" | "description" | "responsibilities" | "requirements" | "benefits" | "duration_label" | "employment_type" | "experience_level" | "workplace_type" | "location_label" | "salary_min" | "salary_max" | "salary_period" | "currency" | "show_salary" | "openings" | "application_deadline" | "status">>;
+type JobPostFormInitial = Partial<Pick<JobPost, "id" | "title" | "description" | "responsibilities" | "requirements" | "benefits" | "duration_label" | "employment_type" | "experience_level" | "workplace_type" | "location_label" | "salary_min" | "salary_max" | "salary_period" | "currency" | "show_salary" | "openings" | "application_deadline" | "contact_whatsapp" | "status">>;
 
 export function JobPostForm({ professionalId, backHref = "/empleos", initialJob = null, presentation = "page", onSaved, onCancel }: { professionalId: string; backHref?: string; initialJob?: JobPostFormInitial | null; presentation?: "page" | "modal"; onSaved?: (id: string) => void; onCancel?: () => void }) {
   const { sentinelaRef, cabeceraRef, conLinea } = useHairlineOnScroll();
   const editing = Boolean(initialJob?.id);
   const router = useRouter();
+  useBarraAccionFija();
   const locale = marketplaceLocale(useLocale());
   const copy = JOB_POST_COPY[locale];
   const savedLocation = initialLocation(initialJob?.location_label);
@@ -310,6 +317,18 @@ export function JobPostForm({ professionalId, backHref = "/empleos", initialJob 
   const [locationCanton, setLocationCanton] = useState(savedLocation.canton);
   const [employmentType, setEmploymentType] = useState<string>(initialJob?.employment_type ?? "full_time");
   const [experienceLevel, setExperienceLevel] = useState<string>(initialJob?.experience_level ?? "any");
+  // El WhatsApp al que se responde esta vacante. Se llena con el de la cuenta y
+  // se puede cambiar: un empleo suele contestarlo otra persona.
+  const [whatsapp, setWhatsapp] = useState<string>(initialJob?.contact_whatsapp ?? "");
+  useEffect(() => {
+    if (initialJob?.contact_whatsapp) return;
+    let vivo = true;
+    void createClient().from("professionals").select("whatsapp").eq("id", professionalId).maybeSingle().then(({ data }) => {
+      const guardado = String((data as { whatsapp?: string | null } | null)?.whatsapp ?? "").trim();
+      if (vivo && guardado) queueMicrotask(() => setWhatsapp(guardado));
+    });
+    return () => { vivo = false; };
+  }, [initialJob?.contact_whatsapp, professionalId]);
   const [currency, setCurrency] = useState<string>(initialJob?.currency ?? "CRC");
   const [salaryPeriod, setSalaryPeriod] = useState<string>(initialJob?.salary_period ?? "monthly");
   const [deadline, setDeadline] = useState(initialJob?.application_deadline ?? "");
@@ -338,10 +357,18 @@ export function JobPostForm({ professionalId, backHref = "/empleos", initialJob 
     const openings = Number(form.get("openings") || 1);
     const nextErrors: FieldErrors = {};
     if (title.length < 3) nextErrors.title = copy.titleShort;
+    // Vacío NO es un error: quiere decir «el de mi cuenta», que es lo que dice
+    // la ayuda del campo y lo que hace el servidor al guardar nulo. Exigirlo
+    // lleno peleaba con el relleno automático, que llega de la base un instante
+    // después de abrir: quien editaba rápido y guardaba se topaba con un error
+    // por un campo que estaba por llenarse solo. Solo se reclama lo escrito a
+    // medias.
+    if (whatsapp.trim() && !isPhoneComplete(whatsapp)) nextErrors.whatsapp = copy.whatsappRequired;
     if (workplaceType !== "remote" && !location) nextErrors.location = copy.locationRequired;
     if (description.length < 30) nextErrors.description = copy.descriptionShort;
-    if (!cleanResponsibilities.length) nextErrors.responsibilities = copy.responsibilityRequired;
-    if (!cleanRequirements.length) nextErrors.requirements = copy.requirementRequired;
+    // Responsabilidades y requisitos dejan de ser obligatorios: viven dentro de
+    // «más detalles» y la descripción ya dice de qué se trata. Exigirlos era
+    // pedirle a un taller que redactara un anuncio de recursos humanos.
     if (salaryMin != null && salaryMax != null && salaryMax < salaryMin) nextErrors.salary = copy.salaryOrder;
     if (deadline && /^\d{4}-\d{2}-\d{2}$/.test(deadline) && deadline < TODAY) nextErrors.deadline = copy.deadlinePast;
     if (!isWholeNumberInRange(salaryMin, 0, MAX_MONEY_AMOUNT) || !isWholeNumberInRange(salaryMax, 0, MAX_MONEY_AMOUNT)) nextErrors.salary = copy.salaryRange(formatNumberForMessage(MAX_MONEY_AMOUNT));
@@ -381,6 +408,7 @@ export function JobPostForm({ professionalId, backHref = "/empleos", initialJob 
       show_salary: Boolean(showSalary && (salaryMin != null || salaryMax != null)),
       openings,
       application_deadline: /^\d{4}-\d{2}-\d{2}$/.test(deadline) ? deadline : null,
+      contact_whatsapp: whatsapp.trim() || null,
       status: editing ? (initialJob?.status ?? "published") : "published",
     };
     try {
@@ -405,12 +433,12 @@ export function JobPostForm({ professionalId, backHref = "/empleos", initialJob 
   }
 
   return (
-    <main className={presentation === "modal" ? "bg-[#f4f7fa] text-[#162543]" : "min-h-[calc(100vh-72px)] bg-[#f4f7fa] text-[#162543] lg:px-6 lg:py-10"}>
+    <main className={presentation === "modal" ? "bg-[#f4f7fa] text-[#162543]" : "min-h-[calc(100vh-72px)] bg-[#f4f7fa] text-[#162543] lg:px-6 lg:py-8"}>
       {presentation !== "modal" && <div ref={sentinelaRef} aria-hidden className="h-px lg:hidden" />}
       <header ref={cabeceraRef} className={presentation === "modal" ? "hidden" : cn("sticky top-0 z-20 border-b bg-white transition-colors duration-200 lg:hidden", conLinea ? "border-[#e5e7eb]" : "border-transparent")}>
-        <div className="relative flex min-h-[56px] items-center justify-center px-14">
-          <Link href={backHref} aria-label={copy.back} className="absolute left-3 top-1/2 grid h-11 w-11 -translate-y-1/2 place-items-center text-[#162543]"><ArrowLeft className="h-6 w-6 stroke-[2.4]" /></Link>
-          <h1 className="truncate text-center text-[17px] font-extrabold">{editing ? copy.editJob : copy.publishJob}</h1>
+        <div className={CABECERA_FILA_CENTRADA}>
+          <Link href={backHref} aria-label={copy.back} className={cn("absolute left-4 top-1/2 -translate-y-1/2", CABECERA_BOTON)}><ArrowLeft className={cn(CABECERA_GLIFO, "stroke-[2.4]")} /></Link>
+          <h1 className={cn(CABECERA_TITULO, "text-center")}>{editing ? copy.editJob : copy.publishJob}</h1>
         </div>
       </header>
       <div className={presentation === "modal" ? "mx-auto max-w-3xl px-4 py-5" : "mx-auto max-w-3xl px-4 py-5 sm:px-6 lg:px-0 lg:py-0"}>
@@ -418,19 +446,12 @@ export function JobPostForm({ professionalId, backHref = "/empleos", initialJob 
           <Link href={backHref} aria-label={copy.backToJobs} className="grid h-10 w-10 place-items-center rounded-lg text-[#162543] hover:bg-white"><ArrowLeft className="h-5 w-5" /></Link>
           <div><h1 className="text-2xl font-bold">{editing ? copy.editJob : copy.publishJob}</h1><p className="text-sm text-[#65758c]">{copy.subtitle}</p></div>
         </div>
-        <form ref={formRef} onSubmit={submit} onInput={() => setConCambios(true)} onChange={() => setConCambios(true)} noValidate>
+        <form ref={formRef} onSubmit={submit} onInput={() => setConCambios(true)} onChange={() => setConCambios(true)} noValidate className="max-sm:pb-24">
           <div className="rounded-2xl border border-[#e5e7eb] bg-white p-5 shadow-sm">
           <div className="grid gap-5 sm:grid-cols-2">
             <JobTitleInput defaultValue={initialJob?.title ?? ""} error={fieldErrors.title} locale={locale} copy={copy} />
             <SelectMenu label={<RequiredLabel>{copy.employmentType}</RequiredLabel>} value={employmentType} onChange={setEmploymentType} options={(Object.keys(EMPLOYMENT_TYPES) as EmploymentType[]).map((value) => ({ value, label: employmentTypeLabel(value, locale) }))} />
             <SelectMenu label={<RequiredLabel>{copy.workplaceType}</RequiredLabel>} value={workplaceType} onChange={setWorkplaceType} options={(Object.keys(WORKPLACE_TYPES) as WorkplaceType[]).map((value) => ({ value, label: workplaceTypeLabel(value, locale) }))} />
-            <SelectMenu label={<RequiredLabel>{copy.experience}</RequiredLabel>} value={experienceLevel} onChange={setExperienceLevel} options={(Object.keys(EXPERIENCE_LEVELS) as ExperienceLevel[]).map((value) => ({ value, label: experienceLevelLabel(value, locale) }))} />
-            {showsDurationField && (
-              <label className="text-sm font-medium text-[#374151] sm:col-span-2">
-                {copy.duration} <span className="font-normal text-[#68778d]">({copy.optional})</span>
-                <input name="duration_label" maxLength={80} defaultValue={initialJob?.duration_label ?? ""} placeholder={copy.durationPlaceholder} className={FIELD_CLASS} />
-              </label>
-            )}
             {workplaceType !== "remote" && (
               <div className="sm:col-span-2">
                 <span className="text-sm font-semibold"><RequiredLabel>{copy.location}</RequiredLabel></span>
@@ -452,12 +473,28 @@ export function JobPostForm({ professionalId, backHref = "/empleos", initialJob 
                 <FieldError>{fieldErrors.location}</FieldError>
               </div>
             )}
+            <div className="sm:col-span-2">
+              <PhoneInput
+                label={<RequiredLabel>{copy.whatsapp}</RequiredLabel>}
+                value={whatsapp}
+                onChange={setWhatsapp}
+                error={fieldErrors.whatsapp}
+              />
+              <p className="mt-1.5 text-xs text-[#68778d]">{copy.whatsappHelp}</p>
+            </div>
             <label className="text-sm font-medium text-[#374151] sm:col-span-2"><RequiredLabel>{copy.description}</RequiredLabel><textarea name="description" maxLength={5000} defaultValue={initialJob?.description ?? ""} placeholder={copy.descriptionPlaceholder} className={TEXTAREA_CLASS} /><FieldError>{fieldErrors.description}</FieldError></label>
-            <EditableList title={copy.responsibilities} values={responsibilities} onChange={setResponsibilities} placeholder={copy.responsibilityPlaceholder} addLabel={copy.addResponsibility} optionalLabel={copy.optional} removeLabel={copy.remove} error={fieldErrors.responsibilities} />
-            <EditableList title={copy.requirements} values={requirements} onChange={setRequirements} placeholder={copy.requirementPlaceholder} addLabel={copy.addRequirement} optionalLabel={copy.optional} removeLabel={copy.remove} error={fieldErrors.requirements} />
-            <EditableList title={copy.benefits} optional values={benefits} onChange={setBenefits} placeholder={copy.benefitPlaceholder} addLabel={copy.addBenefit} optionalLabel={copy.optional} removeLabel={copy.remove} />
           </div>
 
+            <SelectMenu label={<RequiredLabel>{copy.experience}</RequiredLabel>} value={experienceLevel} onChange={setExperienceLevel} options={(Object.keys(EXPERIENCE_LEVELS) as ExperienceLevel[]).map((value) => ({ value, label: experienceLevelLabel(value, locale) }))} />
+            {showsDurationField && (
+              <label className="text-sm font-medium text-[#374151] sm:col-span-2">
+                {copy.duration} <span className="font-normal text-[#68778d]">({copy.optional})</span>
+                <input name="duration_label" maxLength={80} defaultValue={initialJob?.duration_label ?? ""} placeholder={copy.durationPlaceholder} className={FIELD_CLASS} />
+              </label>
+            )}
+            <EditableList title={copy.responsibilities} optional values={responsibilities} onChange={setResponsibilities} placeholder={copy.responsibilityPlaceholder} addLabel={copy.addResponsibility} optionalLabel={copy.optional} removeLabel={copy.remove} error={fieldErrors.responsibilities} />
+            <EditableList title={copy.requirements} optional values={requirements} onChange={setRequirements} placeholder={copy.requirementPlaceholder} addLabel={copy.addRequirement} optionalLabel={copy.optional} removeLabel={copy.remove} error={fieldErrors.requirements} />
+            <EditableList title={copy.benefits} optional values={benefits} onChange={setBenefits} placeholder={copy.benefitPlaceholder} addLabel={copy.addBenefit} optionalLabel={copy.optional} removeLabel={copy.remove} />
           <div className="my-6 border-t border-[#e6edf3] pt-6"><h2 className="font-bold">{copy.salaryAndValidity}</h2><p className="mt-1 text-xs text-[#68778d]">{copy.optionalInformation}</p></div>
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="text-sm font-medium text-[#374151]">{copy.salaryFrom} <span className="font-normal text-[#68778d]">({copy.optional})</span><input name="salary_min" inputMode="numeric" maxLength={String(MAX_MONEY_AMOUNT).length} defaultValue={initialJob?.salary_min ?? ""} placeholder="450000" className={FIELD_CLASS} /></label>
@@ -489,7 +526,8 @@ export function JobPostForm({ professionalId, backHref = "/empleos", initialJob 
             // ventana hay que descontar DOS rellenos (el del cuerpo y el de la
             // columna del formulario); si solo se descuenta uno queda una franja
             // gris a cada lado.
-            "ccr-pie-formulario sticky bottom-0 z-10 -mx-4 mt-5 border-t border-[#e5e7eb] bg-white px-4 py-4 pb-[max(env(safe-area-inset-bottom),1rem)] sm:flex sm:justify-end sm:px-6",
+            BARRA_ACCION_FIJA,
+            "z-20 max-sm:fixed max-sm:inset-x-0 max-sm:bottom-0 sm:sticky sm:bottom-0 sm:-mx-4 sm:mt-5 sm:flex sm:justify-end sm:px-6",
             presentation === "modal" ? "sm:-mx-10" : "sm:-mx-6",
           )}>
             {/* En una ventana, la salida acompaña a la acción; en la página

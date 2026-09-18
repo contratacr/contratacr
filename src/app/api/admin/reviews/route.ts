@@ -76,8 +76,10 @@ export async function GET(req: Request) {
     const professional = row.professional_id ? professionalMap.get(row.professional_id) : null;
     const client = row.client_id ? clientMap.get(row.client_id) : null;
     const moderation = validateReviewText(row.comment ?? "");
+    // Una reseña sin cuenta se reconoce en la lista: es la prueba del cambio,
+    // y si algún día hay abuso, se ve aquí primero.
     const source = row.whatsapp_contact_id
-      ? "WhatsApp"
+      ? row.client_id ? "WhatsApp" : "WhatsApp sin cuenta"
       : row.booking_id
         ? "Cita"
         : row.project_id
@@ -127,6 +129,8 @@ export async function GET(req: Request) {
       total,
       needsReview: filtered.filter((row) => row.needsReview).length,
       profile: filtered.filter((row) => row.source === "Perfil").length,
+      // Cuántas llegaron sin cuenta: el número que dice si la prueba sirvió.
+      sinCuenta: filtered.filter((row) => row.source === "WhatsApp sin cuenta").length,
       hidden: filtered.filter((row) => row.moderationStatus === "hidden").length,
     },
     pagination: {

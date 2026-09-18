@@ -502,7 +502,7 @@ export function BookingRequests() {
                 // pide el pulgar. En pantalla grande eso deja botones de un palmo
                 // de largo para dos palabras: de 640 px en adelante van en una
                 // fila, cada uno del ancho de su texto.
-                <div className="flex flex-col gap-2 border-t border-[#eef2f6] pt-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">
+                <div className="ccr-acciones-tarjeta flex flex-col gap-2 border-t border-[#eef2f6] pt-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">
                   {/* Tope de la app: como mucho DOS botones a la vista más el menú.
                       Con "Marcar como terminada" en la fila eran tres y el ⋮, o sea
                       cuatro cosas que tocar. Bajó al menú por ser la única de las

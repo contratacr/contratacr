@@ -5,6 +5,7 @@ import { AlertTriangle, CheckCircle2, Info } from "lucide-react";
 import { Modal } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
 import { SuccessIcon } from "@/components/ui/success-icon";
+import { BrandIconBadge } from "@/components/ui/brand-icon-badge";
 
 type DialogTone = "default" | "danger" | "success";
 
@@ -36,7 +37,6 @@ type DialogResult = {
 function toneClasses(tone: DialogTone = "default") {
   if (tone === "danger") {
     return {
-      iconWrap: "bg-[#fef2f2] text-[#dc2626]",
       detail: "border-[#fecaca] bg-[#fef2f2] text-[#991b1b]",
       button: "destructive" as const,
       icon: AlertTriangle,
@@ -44,14 +44,12 @@ function toneClasses(tone: DialogTone = "default") {
   }
   if (tone === "success") {
     return {
-      iconWrap: "bg-[#ecfdf5] text-[#16a34a]",
       detail: "border-[#bbf7d0] bg-[#f0fdf4] text-[#166534]",
       button: "default" as const,
       icon: CheckCircle2,
     };
   }
   return {
-    iconWrap: "bg-[#EBF5FB] text-[#009FD9]",
     detail: "border-[#bfdbfe] bg-[#eff6ff] text-[#1e3a8a]",
     button: "default" as const,
     icon: Info,
@@ -124,9 +122,11 @@ export function useAppDialog() {
           {dialog.tone === "success" ? (
             <SuccessIcon size={68} />
           ) : (
-            <span className={`grid h-[68px] w-[68px] place-items-center rounded-full ${classes.iconWrap}`}>
-              <Icon className="h-8 w-8" />
-            </span>
+            // La caja de icono de la marca, como los estados vacíos y el resto
+            // de los avisos. Aquí seguía el círculo celeste plano de antes, y
+            // como este diálogo es el de TODAS las confirmaciones del app, el
+            // icono «sin mejorar» salía en todas.
+            <BrandIconBadge icon={Icon} size={68} tone={dialog.tone === "danger" ? "danger" : "brand"} />
           )}
           <h2 className="mt-4 text-[19px] font-extrabold leading-tight text-[#162543]">{dialog.title}</h2>
           {dialog.description && (

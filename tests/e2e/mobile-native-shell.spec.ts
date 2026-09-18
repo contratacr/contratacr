@@ -405,7 +405,7 @@ test.describe("@mobile native shell contracts", () => {
                 profileHref: `/${contract.locale}/profesionales/${seed.professionalSlug}`,
                 requestHref: `/${contract.locale}/profesionales/${seed.professionalSlug}`,
                 actionHref: `/${contract.locale}/profesionales/${seed.professionalSlug}`,
-                actionLabel: contract.locale === "en" ? "Contact on WhatsApp" : "Contactar por WhatsApp",
+                actionLabel: "WhatsApp",
                 actionKind: "message",
               },
             ],

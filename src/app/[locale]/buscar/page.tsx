@@ -100,16 +100,29 @@ export async function generateMetadata({ searchParams }: { searchParams: Promise
   // —/servicios/[oficio]/[provincia]— y ahí apunta la canónica de abajo.
   const filtrosQueNoSeIndexan = ["aseguradora", "idioma", "precio", "unidadPrecio", "modalidad", "lat", "lng", "n", "s", "e", "w", "q", "canton", "sortBy"];
   const tieneFiltrosFinos = filtrosQueNoSeIndexan.some((clave) => (params[clave] ?? "").toString().trim().length > 0);
-  if (!categoria || !getAllCategories().some((c) => c.id === categoria) || tieneFiltrosFinos) {
-    return { robots: { index: false, follow: true } };
-  }
-  const category = getCategoryLabel(categoria, locale);
+  const indexable = !!categoria && getAllCategories().some((c) => c.id === categoria) && !tieneFiltrosFinos;
+
+  // Lo que se ve al pegar el enlace en WhatsApp. Antes toda búsqueda con cantón,
+  // texto libre o «cerca de mí» —casi todas las que se comparten— salía como
+  // «ContrataCR · Ofrece y encuentra servicios en Costa Rica»: quien lo recibía
+  // no sabía qué le habían mandado. No indexar (para Google) y tener un buen
+  // título (para quien recibe el enlace) son cosas distintas.
+  const categoriaValida = categoria && getAllCategories().some((c) => c.id === categoria) ? categoria : undefined;
+  const texto = (params.q ?? "").trim();
+  const que = categoriaValida ? getCategoryLabel(categoriaValida, locale) : texto ? texto.charAt(0).toLocaleUpperCase("es-CR") + texto.slice(1) : undefined;
   const provincia = params.provincia && params.provincia !== "todas" ? PROVINCES.find((p) => p.id === params.provincia) : undefined;
-  const place = provincia?.name ?? "Costa Rica";
+  const canton = provincia && params.canton && params.canton !== "todos" ? provincia.cantons.find((c) => c.id === params.canton) : undefined;
+  const lugarEscrito = (params.ubicacion ?? "").trim();
+  const place = canton && provincia ? `${canton.name}, ${provincia.name}` : provincia?.name ?? (lugarEscrito || "Costa Rica");
+  if (!que) {
+    return indexable ? {} : { robots: { index: false, follow: true } };
+  }
   const t = await getTranslations("search");
-  const title = t("metaTitle", { category, place });
-  const description = t("metaDesc", { category, place });
-  return { title, description, alternates: { canonical: `/${locale}/servicios/${categoria}${provincia ? `/${provincia.id}` : ""}` } };
+  const title = t("metaTitle", { category: que, place });
+  const description = t("metaDesc", { category: que, place });
+  const compartir = { title, description, openGraph: { title, description }, twitter: { title, description } };
+  if (!indexable) return { ...compartir, robots: { index: false, follow: true } };
+  return { ...compartir, alternates: { canonical: `/${locale}/servicios/${categoria}${provincia ? `/${provincia.id}` : ""}` } };
 }
 
 export default async function SearchPage({ searchParams }: SearchPageProps) {

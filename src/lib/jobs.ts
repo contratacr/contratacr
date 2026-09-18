@@ -114,6 +114,10 @@ export type JobPost = {
   employer_name?: string;
   employer_slug?: string | null;
   employer_avatar_url?: string | null;
+  /** WhatsApp de ESTA vacante. Nulo = el de la cuenta profesional. */
+  contact_whatsapp?: string | null;
+  employer_has_whatsapp?: boolean;
+  employer_allow_phone_call?: boolean;
   application_count?: number;
 };
 

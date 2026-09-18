@@ -280,7 +280,13 @@ interface SaveButtonProps {
   corto?: boolean;
 }
 
-export function SaveButton({ pro, className, isOwn = false, withLabel = false, bubble = false, sutil = false, corto = false }: SaveButtonProps) {
+/**
+ * Guardar un profesional, sin botón: el estado, la acción y el aviso de
+ * «no te podés guardar a vos mismo», sueltos. Sirve para ponerlo donde haga
+ * falta —por ejemplo, como una opción más del «...» de la ficha—. El botón de
+ * abajo usa exactamente esto, así que no hay dos comportamientos.
+ */
+export function useGuardarProfesional({ pro, isOwn = false }: { pro: SavedPro; isOwn?: boolean }) {
   const t = useTranslations("card");
   const locale = useLocale();
   const { user, loading: authLoading } = useAuth();
@@ -309,9 +315,9 @@ export function SaveButton({ pro, className, isOwn = false, withLabel = false, b
     };
   }, [pro.id, user]);
 
-  async function toggle(e: React.MouseEvent) {
-    e.preventDefault();
-    e.stopPropagation();
+  async function toggle(e?: React.MouseEvent) {
+    e?.preventDefault();
+    e?.stopPropagation();
     if (isOwn) {
       setSelfMsg(SELF_MSG.favorite);
       return;
@@ -356,6 +362,13 @@ export function SaveButton({ pro, className, isOwn = false, withLabel = false, b
     /* dispatch custom event so saved-tab + any other SaveButton refresh */
     window.dispatchEvent(new CustomEvent("savedProsChanged"));
   }
+
+  return { guardado: saved, alternar: toggle, selfMsg, limpiarSelfMsg: () => setSelfMsg(null), etiqueta: saved ? t("savedLabel") : t("saveShort") };
+}
+
+export function SaveButton({ pro, className, isOwn = false, withLabel = false, bubble = false, sutil = false, corto = false }: SaveButtonProps) {
+  const t = useTranslations("card");
+  const { guardado: saved, alternar: toggle, selfMsg, limpiarSelfMsg } = useGuardarProfesional({ pro, isOwn });
 
   return (
     <>
@@ -430,7 +443,7 @@ export function SaveButton({ pro, className, isOwn = false, withLabel = false, b
           <Bookmark className="h-[18px] w-[18px] text-[#00a7d8]" strokeWidth={2} fill={saved ? "currentColor" : "none"} />
         </button>
       )}
-      <SelfActionModal open={!!selfMsg} onClose={() => setSelfMsg(null)} message={selfMsg ?? ""} />
+      <SelfActionModal open={!!selfMsg} onClose={limpiarSelfMsg} message={selfMsg ?? ""} />
     </>
   );
 }

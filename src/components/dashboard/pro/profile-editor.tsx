@@ -195,7 +195,6 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
   const t = useTranslations("profileEditor");
   const initialProfile = Array.isArray(initial.profiles) ? initial.profiles[0] : initial.profiles;
   const initialFullName = typeof initialProfile?.full_name === "string" ? initialProfile.full_name.trim() : "";
-  const initialEmail = typeof initialProfile?.email === "string" ? initialProfile.email : "";
   const initialAvatarUrl = typeof initialProfile?.avatar_url === "string" ? initialProfile.avatar_url : null;
   // Which collapsible sections are open. Empty = all collapsed (default), so a
   // pro lands on a tidy, scannable list and opens what they want.
@@ -288,10 +287,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
   // "Permitir contacto por llamada" — moved here from Disponibilidad (it's a
   // contact setting). Saved with the rest of the profile.
   const [allowPhoneCall, setAllowPhoneCall] = useState<boolean>(!!initial.allow_phone_call);
-  const accountEmail = initialEmail;
-  const [contactEmail, setContactEmail] = useState<string>(initial.contact_email ?? accountEmail);
   // Optional public email is opt-in (toggle): on only if one is already saved.
-  const [showContactEmail, setShowContactEmail] = useState<boolean>(!!initial.contact_email);
   // Optional social links — the pro types ONLY their username; we build the URL on
   // display. Stored as clean usernames. Seeded (and any legacy URL value cleaned)
   // from whatever is stored.
@@ -398,8 +394,6 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
       whatsapp,
       callPhone: allowPhoneCall ? callPhone.trim() : "",
       allowPhoneCall,
-      contactEmail: showContactEmail ? contactEmail.trim() : "",
-      showContactEmail,
       social,
       website,
       fullName: fullName.trim(),
@@ -416,7 +410,6 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
   const [huellaGuardada, setHuellaGuardada] = useState(huellaActual);
   const hayCambiosReales = huellaActual !== huellaGuardada || !!pendingAvatarFile;
 
-  const emailIsValid = !showContactEmail || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactEmail.trim());
   const callPhoneIsValid = !allowPhoneCall || !callPhone.trim() || isPhoneComplete(callPhone);
   const hasWorkplace = workplaces.length > 0 || (canOfferVideoConsult && videoConsult && videoCoverageCountry);
   const socialIsValid =
@@ -447,9 +440,6 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
       }
       if (!callPhoneIsValid) {
         return locale === "en" ? "Enter a complete call number." : "Ingresa un número para llamadas completo.";
-      }
-      if (!emailIsValid) {
-        return locale === "en" ? "Enter a valid contact email." : "Ingresa un correo de contacto válido.";
       }
     }
     if (sectionId === "social" && !socialIsValid) {
@@ -550,8 +540,6 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
     setWhatsapp(initial.whatsapp ?? "");
     setCallPhone(initial.call_phone ?? "");
     setAllowPhoneCall(!!initial.allow_phone_call);
-    setContactEmail(initial.contact_email ?? accountEmail);
-    setShowContactEmail(!!initial.contact_email);
     setSocial({
       instagram: cleanUsername(initial.social_links?.instagram),
       facebook: cleanUsername(initial.social_links?.facebook),
@@ -697,7 +685,9 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
         insurance_networks: insurers,
         call_phone: allowPhoneCall ? callPhone.trim() || whatsapp.trim() || null : null,
         allow_phone_call: allowPhoneCall,
-        contact_email: showContactEmail ? contactEmail.trim() || null : null,
+        // Sin campo en el formulario, el correo guardado pasa tal cual: ni se
+        // pide ni se borra.
+        contact_email: initial.contact_email ?? null,
       };
 
       // 1) Core fields — guaranteed columns; a failure here is a real error.
@@ -856,7 +846,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
     const sectionActive = dirty && activeDirtySection === sectionId;
     const sectionInvalid = sectionValidationError(sectionId) !== null;
     return (
-      <div className="mt-5 flex flex-col gap-2 pt-1 sm:flex-row sm:justify-end">
+      <div className="ccr-grupo-botones mt-5 flex flex-col gap-2 pt-1 sm:flex-row sm:justify-end">
         <button
           type="button"
           onClick={cancelChanges}
@@ -1191,38 +1181,15 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
           </div>
         )}
 
-        {/* Optional public contact email — opt-in via a toggle (consistent with the
-            call-number pattern). Off → no email is shown; turning it off clears it. */}
-        <ProfileCheckRow
-          title={t("allowEmailLabel")}
-          checked={showContactEmail}
-          onToggle={() => {
-            setShowContactEmail((v) => {
-              const nv = !v;
-              if (nv && !contactEmail.trim() && accountEmail) setContactEmail(accountEmail);
-              return nv;
-            });
-            touch("contact");
-          }}
-          ariaLabel={t("allowEmailLabel")}
-        />
+        {/* El correo de contacto salió del perfil. Medido en producción entre el
+            19 de julio y el 15 de septiembre: 92 de 288 profesionales lo tenían
+            puesto y, con 1.070 visitas a fichas, hubo CERO clics —contra 86 de
+            WhatsApp y 4 de llamada—. Pedir un dato que nadie usa solo alarga el
+            formulario, y el botón que sobraba le restaba peso al que convierte.
 
-        {showContactEmail && (
-          <div className="w-full sm:max-w-[40rem]">
-            <input
-              type="email"
-              inputMode="email"
-              placeholder={t("emailPlaceholder")}
-              value={contactEmail}
-              aria-invalid={dirty && activeDirtySection === "contact" && !emailIsValid}
-              onChange={(e) => { setContactEmail(e.target.value); touch("contact"); }}
-              className="h-11 w-full rounded-xl border border-[#e5e7eb] bg-white px-4 text-sm text-[#162543] placeholder:text-[#68778d] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
-            />
-            {contactEmail.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactEmail.trim()) && (
-              <p className="text-xs text-red-500 mt-1">{t("emailInvalid")}</p>
-            )}
-          </div>
-        )}
+            El dato guardado NO se borra: la columna `contact_email` sigue en la
+            base y el correo de la cuenta (avisos, contraseña, administración) es
+            otro campo y no se toca. */}
       </Section>
 
       {/* ── Redes sociales — USERNAME only; we build the link (additive to casos). ── */}

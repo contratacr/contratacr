@@ -10,7 +10,7 @@ import type { SelectMenuOption } from "@/components/ui/select-menu";
 import { marketplaceLocale } from "@/lib/marketplace-copy";
 
 const OWNER_ACTION_COPY = {
-  es: { edit: "Editar oferta", manage: "Administrar oferta", subtitle: "Actualiza la información de esta publicación." },
+  es: { edit: "Editar promoción", manage: "Administrar promoción", subtitle: "Actualiza la información de esta publicación." },
   en: { edit: "Edit offer", manage: "Manage offer", subtitle: "Update this offer's information." },
 } as const;
 

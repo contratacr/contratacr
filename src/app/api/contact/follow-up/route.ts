@@ -90,13 +90,25 @@ export async function PATCH(request: NextRequest) {
   }
 
   if (!userId) {
+    // Sin cuenta también se puede reseñar: para llegar aquí hubo que contactar a
+    // ESE profesional desde ESTE dispositivo, y la reseña queda amarrada al
+    // seguimiento. Medido: de 24 avisos a gente sin cuenta, el muro dejó CERO
+    // reseñas. El nombre se pide en el formulario.
     const { error } = await db.from("whatsapp_contact_followups").update({
-      status: "hire_intent",
+      status: "hired",
       responded_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     }).eq("id", id);
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-    const response = NextResponse.json({ authRequired: true }, { status: 401 });
+    const response = NextResponse.json({
+      ok: true,
+      review: {
+        contactId: followUp.id,
+        professionalId: followUp.professional_id,
+        professionalName: followUp.professional_name,
+        needsName: true,
+      },
+    });
     setContactCookie(response, token);
     return response;
   }

@@ -22,7 +22,7 @@ type AdminReview = {
 
 type ReviewResponse = {
   reviews?: AdminReview[];
-  counts?: { total: number; needsReview: number; profile: number; hidden: number };
+  counts?: { total: number; needsReview: number; profile: number; hidden: number; sinCuenta?: number };
   pagination?: { page: number; pageSize: number; total: number; pages: number };
 };
 
@@ -65,7 +65,7 @@ export function AdminReviews() {
     if (status === "published") return review.moderationStatus === "published";
     return true;
   });
-  const counts = data.counts ?? { total: 0, needsReview: 0, profile: 0, hidden: 0 };
+  const counts = data.counts ?? { total: 0, needsReview: 0, profile: 0, hidden: 0, sinCuenta: 0 };
 
   async function moderate(review: AdminReview, action: "hide" | "restore" | "delete") {
     const label = action === "hide" ? "ocultar" : action === "restore" ? "restaurar" : "eliminar permanentemente";
@@ -101,7 +101,7 @@ export function AdminReviews() {
               Revisa reseñas nuevas, reseñas directas del perfil y contenido que puede requerir atención.
             </p>
           </div>
-          <div className="grid grid-cols-4 gap-2 text-center">
+          <div className="grid grid-cols-2 gap-2 text-center sm:grid-cols-5">
             <div className="rounded-xl bg-[#f1f5f9] px-4 py-3">
               <p className="text-xl font-bold text-[#0f172a]">{counts.total}</p>
               <p className="text-xs font-semibold text-[#64748b]">Total</p>
@@ -109,6 +109,10 @@ export function AdminReviews() {
             <div className="rounded-xl bg-[#eef9ff] px-4 py-3">
               <p className="text-xl font-bold text-[#009FD9]">{counts.profile}</p>
               <p className="text-xs font-semibold text-[#64748b]">Perfil</p>
+            </div>
+            <div className="rounded-xl bg-[#f0fdf4] px-4 py-3">
+              <p className="text-xl font-bold text-[#15803d]">{counts.sinCuenta ?? 0}</p>
+              <p className="text-xs font-semibold text-[#64748b]">Sin cuenta</p>
             </div>
             <div className="rounded-xl bg-[#fff7ed] px-4 py-3">
               <p className="text-xl font-bold text-[#c2410c]">{counts.needsReview}</p>

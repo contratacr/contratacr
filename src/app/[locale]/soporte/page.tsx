@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { LandingNavbar } from "@/components/landing/landing-navbar";
 import { SectionHeaderTitle } from "@/components/mobile/section-header-title";
-import { LandingFooter } from "@/components/landing/landing-footer";
 import { useAuth } from "@/hooks/use-auth";
 import { ArrowLeft, Headset, Home } from "lucide-react";
 import { SuccessIcon } from "@/components/ui/success-icon";
@@ -34,7 +33,7 @@ export default function SoportePage() {
         <LandingNavbar />
       <SectionHeaderTitle title={tSeccion("support")} fallbackHref="/" />
         <div className="ccr-navbar-spacer h-16" aria-hidden />
-        <main className="flex-1 ccr-centrado-seguro px-4 pb-20 pt-12">
+        <main className="flex-1 ccr-centrado-seguro px-4 pb-20 pt-4 lg:pt-8">
           {/* Confirmation — tight visual hierarchy: prominent title + ONE concise
               reply line (email emphasized), then the actions, then the spam note +
               (guest) follow-tickets hint demoted to small muted footnotes. Avoids the
@@ -98,8 +97,7 @@ export default function SoportePage() {
             </div>
           </div>
         </main>
-        <LandingFooter />
-      </div>
+        </div>
     );
   }
 
@@ -108,7 +106,7 @@ export default function SoportePage() {
       <LandingNavbar />
       <SectionHeaderTitle title={tSeccion("support")} fallbackHref="/" />
       <div className="ccr-navbar-spacer h-16" aria-hidden />
-      <main className="ccr-native-compact-page flex-1 px-4 pb-16 pt-12">
+      <main className="ccr-native-compact-page flex-1 px-4 pb-0 pt-4 lg:pt-8">
         <div className="mx-auto max-w-xl">
           {user && (
             <div className="mb-5">
@@ -136,7 +134,11 @@ export default function SoportePage() {
 
         </div>
       </main>
-      <LandingFooter />
+      {/* Sin pie de sitio: esta pantalla es un trámite, no una página que se
+          lee. El pie ponía una lista de salidas —Servicios, Soporte, redes—
+          justo debajo del botón que hay que tocar, y además rompía la barra
+          pegajosa de abajo: al llegar el pie la barra dejaba de pegarse y el
+          botón se veía cortado. */}
     </div>
   );
 }

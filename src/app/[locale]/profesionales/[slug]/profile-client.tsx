@@ -1,7 +1,5 @@
 "use client";
 
-import { useEsEscritorio } from "@/hooks/use-es-escritorio";
-import { ShareProfileModal } from "@/components/professionals/share-profile-modal";
 import { FichaVacio } from "@/components/professionals/ficha-vacio";
 import { enlacePerfil } from "@/lib/profile-url";
 import { useState, useEffect, useCallback, useRef, type ReactNode } from "react";
@@ -9,7 +7,7 @@ import { useTranslations, useLocale } from "next-intl";
 import { useParams, useSearchParams } from "next/navigation";
 import {
   MapPin, Shield, ArrowLeft, Star, Briefcase, Banknote, BadgeCheck, Languages,
-  Flag, Award, SearchX, Globe, BadgePercent, Users, Share2, ChevronRight,
+  Flag, Award, SearchX, Globe, BadgePercent, Users, Share2, Link2, ChevronRight, Bookmark,
 } from "lucide-react";
 import { Modal } from "@/components/ui/modal";
 import { VerifiedSeal } from "@/components/ui/verified-seal";
@@ -38,8 +36,10 @@ import { ProfessionalSchedule, type ScheduleSlot } from "@/components/profession
 import { DirectChatLauncher } from "@/components/professionals/direct-chat-launcher";
 import { ClientRegistrationModal } from "@/components/auth/client-registration-modal";
 import { SelfActionModal, SELF_MSG } from "@/components/professionals/self-action-modal";
-import { SaveButton, type SavedPro } from "@/components/professionals/save-button";
-import { BotonCompartir } from "@/components/ui/boton-compartir";
+import { SaveButton, useGuardarProfesional, type SavedPro } from "@/components/professionals/save-button";
+import { MenuFicha } from "@/components/ui/menu-ficha";
+import { BotonCompartir, useCompartir } from "@/components/ui/boton-compartir";
+import { useNativeShare } from "@/hooks/use-native-share";
 import type { ProfessionalDetail } from "@/lib/queries/professionals";
 import { getProfessionalDisplayName } from "@/lib/display-name";
 import { trackMetaEvent } from "@/lib/analytics/meta-pixel";
@@ -49,8 +49,8 @@ import { formatOfferBeforePrice, formatOfferPrice, offerDiscountPercent, type Pr
 import { formatJobSalary, WORKPLACE_TYPES, type JobPost } from "@/lib/jobs";
 import { EMPLEOS_VISIBLE } from "@/lib/feature-flags";
 import { PerfilSkeleton } from "@/components/ui/section-skeletons";
-import { ProfileStickyActions } from "@/components/professionals/profile-sticky-actions";
 import { ProgressiveImage } from "@/components/ui/progressive-image";
+import { useArrastreHorizontal } from "@/hooks/use-arrastre-horizontal";
 
 // ─── WhatsApp icon ────────────────────────────────────────────────────────────
 // ─── Sub-rating row ───────────────────────────────────────────────────────────
@@ -88,7 +88,7 @@ function safeProfileReturnHref(value: string | null): string {
 function profileReturnLabel(href: string, locale: string) {
   const path = href.split(/[?#]/u)[0]?.replace(/^\/(?:es|en)(?=\/|$)/u, "") || "/";
   const params = new URLSearchParams(href.includes("?") ? href.split("?")[1]?.split("#")[0] : "");
-  if (path.startsWith("/ofertas")) return locale === "en" ? "Back to offers" : "Volver a ofertas";
+  if (path.startsWith("/ofertas")) return locale === "en" ? "Back to promotions" : "Volver a promociones";
   if (path.startsWith("/empleos")) return locale === "en" ? "Back to jobs" : "Volver a empleos";
   if (path.startsWith("/dashboard/profesional")) {
     if (params.get("tab") === "saved") return locale === "en" ? "Back to favorites" : "Volver a favoritos";
@@ -140,6 +140,8 @@ type ProfilePageData = {
  */
 export default function ProfilePage({ fichaInicial }: { fichaInicial?: ProfessionalDetail | null }) {
   const t = useTranslations("profile");
+  const tMenu = useTranslations("menuFicha");
+  const nativoCompartir = useNativeShare();
   const locale = useLocale();
   const catLabel = (id?: string | null) => id ? getCategoryLabel(id, locale) : "";
   const routeParams = useParams();
@@ -168,9 +170,17 @@ export default function ProfilePage({ fichaInicial }: { fichaInicial?: Professio
       : null;
   })();
   const [chosenTab, setChosenTab] = useState<Tab | null>(null);
-  const activeTab = chosenTab ?? tabFromUrl ?? "disponibilidad";
+  const activeTab = chosenTab ?? tabFromUrl ?? "servicios";
+  // Pestañas ya abiertas: se quedan montadas (ocultas) en vez de desmontarse.
+  // Al desmontarse, volver a una armaba todo de cero y cada foto arrancaba en
+  // blanco para aparecer 100 ms después: eso era el parpadeo al cambiar de
+  // pestaña.
+  const [pestanasVisitadas, setPestanasVisitadas] = useState<Set<string>>(() => new Set());
   const setActiveTab = setChosenTab;
   const previousActiveTabRef = useRef<Tab | null>(null);
+  // En computadora las pestañas se arrastran con el mouse (ver el hook).
+  const carrilPestanasRef = useRef<HTMLDivElement | null>(null);
+  useArrastreHorizontal(carrilPestanasRef);
   // Opening another section starts from its top: if the previous section was
   // scrolled past the pinned tab strip, bring the sections card back up.
   useEffect(() => {
@@ -189,7 +199,6 @@ export default function ProfilePage({ fichaInicial }: { fichaInicial?: Professio
   const cantidadPestanas = publicOffers.length + publicJobs.length;
   // En computadora la disponibilidad no es una pestaña sino la columna de la
   // derecha, así que ahí esa pestaña no existe y se cae a la siguiente.
-  const esEscritorio = useEsEscritorio();
   useEffect(() => {
     const seleccionada = document.querySelector<HTMLElement>('[data-profile-tabs] [aria-selected="true"]');
     const carril = seleccionada?.parentElement;
@@ -245,9 +254,10 @@ export default function ProfilePage({ fichaInicial }: { fichaInicial?: Professio
   }, []);
   const [slug, setSlug] = useState("");
   const [reportOpen, setReportOpen] = useState(false);
+  const [menuFichaAbierto, setMenuFichaAbierto] = useState(false);
   // Aviso de "enlace copiado" del botón Compartir. Vive aquí, con el resto de
   // los hooks: debajo de los `return` de carga React contaba un hook de más.
-  const [compartirAbierto, setCompartirAbierto] = useState(false);
+  const { compartir: compartirEnlace, avisoNodo: avisoCompartir } = useCompartir();
   const nombreEnBarra = professional
     ? getProfessionalDisplayName(professional.fullName, professional.businessName).primaryMobile
     : "";
@@ -263,15 +273,20 @@ export default function ProfilePage({ fichaInicial }: { fichaInicial?: Professio
       __ccrSectionHeader?: string | null;
       __ccrSectionActive?: boolean;
       __ccrSectionShare?: boolean;
+      __ccrSectionMenu?: boolean;
     };
     global.__ccrSectionHeader = tituloBarra;
     global.__ccrSectionActive = true;
     global.__ccrSectionShare = false;
-    window.dispatchEvent(new CustomEvent("ccr:section-header", { detail: { title: tituloBarra } }));
+    // El «...» de la barra, igual que en Empleos, Promociones y Proyectos:
+    // guardar, compartir y reportar en el mismo orden y en la misma hoja.
+    global.__ccrSectionMenu = true;
+    window.dispatchEvent(new CustomEvent("ccr:section-header", { detail: { title: tituloBarra, menu: true } }));
     return () => {
       global.__ccrSectionHeader = null;
       global.__ccrSectionActive = false;
       global.__ccrSectionShare = false;
+      global.__ccrSectionMenu = false;
       setNavbarOwnsHeader(false);
       window.dispatchEvent(new CustomEvent("ccr:section-header", { detail: null }));
     };
@@ -296,16 +311,19 @@ export default function ProfilePage({ fichaInicial }: { fichaInicial?: Professio
     const onBack = () => volverRef.current?.();
     const onShare = () => compartirRef.current?.();
     const onAck = () => setNavbarOwnsHeader(true);
+    const onMenu = () => setMenuFichaAbierto(true);
     // La barra pudo confirmar antes de que esto escuchara: el aviso viaja
     // también como bandera, si no la ficha dibujaba su propio «volver» además
     // del de la barra.
     if ((window as unknown as { __ccrSectionAck?: boolean }).__ccrSectionAck) onAck();
     window.addEventListener("ccr:section-back", onBack);
     window.addEventListener("ccr:section-share", onShare);
+    window.addEventListener("ccr:section-menu", onMenu);
     window.addEventListener("ccr:section-header-ack", onAck);
     return () => {
       window.removeEventListener("ccr:section-back", onBack);
       window.removeEventListener("ccr:section-share", onShare);
+      window.removeEventListener("ccr:section-menu", onMenu);
       window.removeEventListener("ccr:section-header-ack", onAck);
     };
   }, []);
@@ -447,6 +465,34 @@ export default function ProfilePage({ fichaInicial }: { fichaInicial?: Professio
     };
   }, [professional]);
 
+  // Guardar, con su estado y su aviso de «no te podés guardar a vos mismo».
+  // Va ARRIBA de los returns tempranos: un gancho no se puede llamar a veces.
+  // Mientras la ficha carga, el profesional todavía no existe y se le pasa un
+  // identificador vacío; la hoja del «...» no se abre hasta que hay ficha.
+  const guardarPro = useGuardarProfesional({
+    pro: (professional
+      ? {
+          id: professional.id,
+          profileId: professional.profileId,
+          slug: professional.slug,
+          fullName: professional.fullName,
+          businessName: professional.businessName,
+          avatarUrl: professional.avatarUrl ?? undefined,
+          categoryIcon: professional.categoryIcon,
+          categoryId: professional.categoryId,
+          provinceName: professional.provinceName,
+          cantonName: professional.cantonName,
+          ratingAvg: professional.ratingAvg,
+          reviewCount: professional.reviewCount,
+          hourlyRate: professional.hourlyRate,
+          isVerified: professional.verificationStatus === "verified",
+          videoconsulta: professional.videoconsulta,
+          coverage: professional.coverage,
+        }
+      : { id: "", slug: "", fullName: "" }) as SavedPro,
+    isOwn: !!viewerId && viewerId === professional?.profileId,
+  });
+
   if (loading) {
     return <PerfilSkeleton />;
   }
@@ -566,10 +612,14 @@ export default function ProfilePage({ fichaInicial }: { fichaInicial?: Professio
 
   // Compartir abre siempre la misma hoja: el enlace a la vista y WhatsApp,
   // Facebook y correo. Antes en computadora solo copiaba, sin decir a dónde iba.
+  // Compartir la ficha: la hoja del sistema en el teléfono, copiar el enlace
+  // en la computadora —igual que empleos, promociones y proyectos—. Antes abría
+  // una ventana con WhatsApp, Instagram, Facebook y correo.
   function shareProfile() {
     if (!professional) return;
     trackInteraction({ type: "profile_share", professionalId: professional.id, source: "profile", locale });
-    setCompartirAbierto(true);
+    const url = enlacePerfil(professional.slug, process.env.NEXT_PUBLIC_APP_URL || window.location.origin);
+    void compartirEnlace(url, professional.businessName?.trim() || proDisplayName(professional.fullName));
   }
 
   // Favorites: the SAME system as the /buscar cards. Keyed on `professional.id`
@@ -603,8 +653,10 @@ export default function ProfilePage({ fichaInicial }: { fichaInicial?: Professio
     iniciales: getInitials(professional.fullName),
     href: `/profesionales/${professional.slug ?? slug}`,
   };
+  // Sin pestaña de contacto: WhatsApp y Llamar subieron a la tarjeta de arriba,
+  // donde se ven sin tocar nada. Esconder la única acción que convierte detrás
+  // de una pestaña era el mismo error que el muro de registro.
   const TABS: Array<{ id: Tab; label: string }> = [
-    { id: "disponibilidad", label: t("availabilityTab") },
     { id: "servicios",      label: t("tabs.servicios") },
     { id: "resenas",        label: t("tabs.resenas") },
     ...(hasCasos ? [{ id: "casos" as Tab, label: t("tabs.casos") }] : []),
@@ -661,6 +713,12 @@ export default function ProfilePage({ fichaInicial }: { fichaInicial?: Professio
         placeFallback={placeFallback}
         placeAddress={placeAddress}
         businessName={professional.businessName ?? ""}
+        // «+N zonas» abre Información, que es donde vive la lista completa con
+        // sus direcciones. Antes la ficha la tenía dos veces.
+        onVerZonas={() => {
+          setActiveTab("sobre");
+          requestAnimationFrame(() => document.getElementById("resenas")?.scrollIntoView({ behavior: "smooth", block: "start" }));
+        }}
       />
       {/* Las redes van DESPUÉS de los botones de contacto: son para creerle al
           profesional, no para contactarlo, así que no compiten con «Enviar
@@ -690,23 +748,33 @@ export default function ProfilePage({ fichaInicial }: { fichaInicial?: Professio
         </div>
       )}
 
-      {!isOwn && (
-        <div className="mt-3 flex items-center justify-center">
-          <button
-            type="button"
-            onClick={() => setReportOpen(true)}
-            className="inline-flex !min-h-0 items-center gap-1.5 rounded-lg px-2 py-1 text-[12px] font-medium text-[#9aa3ad] transition-colors hover:text-[#6b7280]"
-          >
-            <Flag className="h-3.5 w-3.5" />
-            {t("reportProfile")}
-          </button>
-        </div>
-      )}
     </div>
   );
 
-  const primeraPestanaEscritorio = TABS.find((tab) => tab.id !== "disponibilidad")?.id ?? "sobre";
-  const tabEfectiva: Tab = esEscritorio && activeTab === "disponibilidad" ? primeraPestanaEscritorio : activeTab;
+  // Reportar no es una forma de contactar: iba pegado a WhatsApp y Llamar en la
+  // tarjeta de arriba, donde parecía una tercera opción. Va al pie de
+  // «Información», que es la letra chica de la ficha.
+  const botonReportar = !isOwn ? (
+    <div className="mt-6 flex items-center justify-center border-t border-[#eef3f7] pt-4">
+      <button
+        type="button"
+        onClick={() => setReportOpen(true)}
+        className="inline-flex !min-h-0 items-center gap-1.5 rounded-lg px-2 py-1 text-[12px] font-medium text-[#9aa3ad] transition-colors hover:text-[#6b7280]"
+      >
+        <Flag className="h-3.5 w-3.5" />
+        {t("reportProfile")}
+      </button>
+    </div>
+  ) : null;
+
+  // «disponibilidad» ya no es una pestaña: si llega por un enlace viejo, se cae
+  // en la primera que sí existe.
+  const primeraPestana = TABS[0]?.id ?? "sobre";
+  const tabEfectiva: Tab = activeTab === "disponibilidad" ? primeraPestana : activeTab;
+  // Derivado durante el render (no en un efecto): así la pestaña nueva ya está
+  // montada en el mismo cuadro en que se elige, sin un cuadro vacío.
+  if (!pestanasVisitadas.has(tabEfectiva)) setPestanasVisitadas((previas) => new Set(previas).add(tabEfectiva));
+  const montada = (id: string) => id === tabEfectiva || pestanasVisitadas.has(id);
 
   return (
     <div className="min-h-screen flex flex-col bg-[#f4f7fa]">
@@ -715,7 +783,7 @@ export default function ProfilePage({ fichaInicial }: { fichaInicial?: Professio
       {/* El respiro final es solo eso: el alto de la barra de abajo ya lo
           descuenta el propio main (`position: fixed; bottom: barra`), y
           reservarlo otra vez dejaba 91 px de scroll contra el vacío. */}
-      <main className="flex-1 py-8 [.ccr-native-app_&]:!pt-0 [.ccr-native-app_&]:!pb-6">
+      <main className="flex-1 pb-8 pt-4 lg:pt-8 [.ccr-native-app_&]:!pt-0 [.ccr-native-app_&]:!pb-6">
         <div className="mx-auto max-w-7xl px-4 pt-0 sm:px-6 lg:px-8 [.ccr-native-app_&]:pt-4">
 
           {/* Preview mode → a clear way back to the panel. Otherwise, back to search. */}
@@ -770,7 +838,12 @@ export default function ProfilePage({ fichaInicial }: { fichaInicial?: Professio
                 y las dos acciones comparten renglón arriba a la derecha, del
                 ancho de su texto. En el teléfono sigue centrado como estaba. */}
             <div className="relative mb-6 rounded-2xl border border-[#dfe8f0] bg-white px-4 pb-4 pt-3.5 shadow-sm sm:grid sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:items-start sm:gap-x-5 sm:p-6 sm:pt-6">
-                <div className="flex min-w-0 flex-col items-center gap-2.5 text-center sm:contents sm:flex-row sm:gap-0 sm:text-left">
+                {/* En el teléfono: foto a la izquierda, y a su lado el nombre y
+                    las cifras. Centrado ocupaba tres renglones para decir lo
+                    mismo y empujaba los botones de contacto fuera de la
+                    pantalla. En computadora sigue siendo la rejilla de
+                    foto | nombre y cifras | acciones. */}
+                <div className="flex min-w-0 items-center gap-3 text-left sm:contents sm:gap-0">
                   <ImagePreviewDialog
                     src={professional.avatarUrl}
                     alt={professional.fullName}
@@ -807,21 +880,17 @@ export default function ProfilePage({ fichaInicial }: { fichaInicial?: Professio
                         )}
                       </h1>
                     </div>
-                    {/* Solo la ubicación: qué hace se lee en Servicios, que es su
-                        sección. Con cinco servicios, resumirlos aquí en uno solo
-                        (o en el rubro) decía menos de lo que parecía. */}
-                    {locationText && (
-                      <p className="mt-1 flex items-center justify-center gap-1.5 text-[13px] leading-5 text-[#52627a] sm:justify-start sm:text-sm">
-                        <MapPin className="h-3.5 w-3.5 shrink-0 text-[#68778d]" />
-                        <span className="min-w-0 truncate">{locationText}</span>
-                      </p>
-                    )}
+                    {/* La ubicación NO va aquí: las zonas de trabajo están en la
+                        tarjeta de contacto, completas, y el cantón del perfil
+                        repetía una de ellas a medias. */}
                   {/* Prueba social en una línea. Los casos de éxito NO van aquí:
                       tienen su propia pestaña y repetir la cifra gastaba un
                       renglón sin decir nada nuevo. */}
-                  {/* En el teléfono una línea; en computadora, columnas. */}
+                  {/* Una línea, con las dos cifras juntas: a 40 px en computadora
+                      se leían como dos datos sueltos. El ícono de cada una ya
+                      marca dónde empieza la siguiente. */}
                   {(professional.reviewCount > 0 || expYears > 0) && (
-                    <div className="mt-1.5 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-[12.5px] text-[#68778d] sm:mt-3 sm:justify-start sm:gap-x-10 sm:text-[13px]">
+                    <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12.5px] text-[#68778d] sm:mt-3 sm:gap-x-5 sm:text-[13px]">
                       {professional.reviewCount > 0 && (
                         <button type="button" onClick={() => setActiveTab("resenas")} className="inline-flex min-w-0 items-center gap-1.5">
                           <Star className="h-3.5 w-3.5 shrink-0 fill-[#ff9b32] text-[#ff9b32]" />
@@ -841,15 +910,16 @@ export default function ProfilePage({ fichaInicial }: { fichaInicial?: Professio
                   </div>
 
                   </div>
-                {/* Guardar y compartir son acciones sobre la ficha, no formas de
-                    contactar. En el teléfono cierran la tarjeta como dos pastillas
-                    centradas: con forma de botón se entienden solas y ya no hace
-                    falta la línea divisoria, que partía la tarjeta en dos. En
-                    computadora siguen discretas arriba a la derecha. */}
-                <div className="mt-3.5 flex w-full items-center justify-center gap-2 sm:hidden">
-                  <SaveButton pro={savedPro} isOwn={isOwn} withLabel corto className="!h-10 !w-auto whitespace-nowrap px-5 py-0" />
-                  <BotonCompartir onPress={shareProfile} className="!h-10 whitespace-nowrap px-5" />
-                </div>
+                {/* En el teléfono, guardar y compartir viven en el «...» de la
+                    barra de arriba, igual que en Empleos, Promociones y
+                    Proyectos: son acciones sobre la ficha, no formas de
+                    contactar, y dentro de la tarjeta le quitaban sitio a lo que
+                    sí contacta. En computadora no hay barra de ficha, así que
+                    siguen discretas arriba a la derecha. */}
+                {/* En el teléfono, contactar vive AQUÍ: arriba, a la vista, sin
+                    pestaña de por medio. En computadora sigue siendo la columna
+                    de la derecha, que ya está siempre visible. */}
+                <div className="mt-4 border-t border-[#eef3f7] pt-4 lg:hidden">{bloqueContacto(true)}</div>
                 <div className="hidden sm:absolute sm:right-3 sm:top-3 sm:flex sm:items-center sm:gap-1">
                   <SaveButton pro={savedPro} isOwn={isOwn} sutil />
                   <BotonCompartir onPress={shareProfile} sutil />
@@ -863,7 +933,8 @@ export default function ProfilePage({ fichaInicial }: { fichaInicial?: Professio
                   <div
                     role="tablist"
                     aria-label={locale === "en" ? "Profile sections" : "Secciones del perfil"}
-                    className="scrollbar-none flex overflow-x-auto scroll-smooth"
+                    ref={carrilPestanasRef}
+                    className="ccr-carril scrollbar-none flex overflow-x-auto scroll-smooth"
                   >
                     {TABS.map(tab => (
                       <button
@@ -873,7 +944,6 @@ export default function ProfilePage({ fichaInicial }: { fichaInicial?: Professio
                         onClick={() => setActiveTab(tab.id)}
                         className={cn(
                           "relative shrink-0 px-4 py-4 text-sm font-semibold transition-colors",
-                          tab.id === "disponibilidad" && "lg:hidden",
                         )}
                         style={{ color: tabEfectiva === tab.id ? "#009FD9" : "#6b7280" }}
                       >
@@ -889,12 +959,8 @@ export default function ProfilePage({ fichaInicial }: { fichaInicial?: Professio
                 {/* Tab content */}
                 <div className="p-6">
 
-                  {/* La disponibilidad y el contacto son la columna de la derecha en
-                      computadora; en el teléfono siguen siendo esta pestaña. */}
-                  {activeTab === "disponibilidad" && <div className="lg:hidden">{bloqueContacto(true)}</div>}
-
                   {/* ── TAB: Servicios ── */}
-                  {tabEfectiva === "servicios" && (() => {
+                  {montada("servicios") && <div hidden={tabEfectiva !== "servicios"}>{(() => {
                     // Text-only service cards: ONE card per service CATEGORY (the pro's professions),
                     // with its description, price and request action. Images belong to casos/photos.
                     const rawProfs = (professional.professions && professional.professions.length > 0)
@@ -962,14 +1028,17 @@ export default function ProfilePage({ fichaInicial }: { fichaInicial?: Professio
                                     </ImagePreviewDialog>
                                   )}
                                   <div className="flex flex-1 flex-col p-4 sm:p-5">
-                                    <div className="flex min-w-0 items-start justify-between gap-3">
-                                      <h3 className="min-w-0 text-base font-bold leading-snug text-[#162543] [overflow-wrap:anywhere]">{title}</h3>
-                                      <p className="shrink-0 text-right leading-tight">
-                                        <span className="block text-sm font-bold text-[#009FD9]">{priceParts.amount}</span>
-                                        {priceParts.unit && <span className="block text-[11px] font-semibold text-[#6b7280]">{priceParts.unit}</span>}
-                                        {priceParts.taxSuffix && <span className="block text-[10px] font-semibold tracking-wide text-[#68778d]">{priceParts.taxSuffix}</span>}
-                                      </p>
-                                    </div>
+                                    {/* El nombre del servicio se lleva el renglón entero y
+                                        el precio va debajo, en una sola línea. Compartiendo
+                                        fila, «Desarrollo de apps móviles» se partía en dos
+                                        mientras el precio se apilaba en tres a la derecha:
+                                        dos columnas peleando por el mismo ancho. */}
+                                    <h3 className="min-w-0 text-base font-bold leading-snug text-[#162543] [overflow-wrap:anywhere]">{title}</h3>
+                                    <p className="mt-1 flex flex-wrap items-baseline gap-x-1.5 leading-tight">
+                                      <span className="text-sm font-bold text-[#009FD9]">{priceParts.amount}</span>
+                                      {priceParts.unit && <span className="text-[11px] font-semibold text-[#6b7280]">{priceParts.unit}</span>}
+                                      {priceParts.taxSuffix && <span className="text-[10px] font-semibold tracking-wide text-[#68778d]">{priceParts.taxSuffix}</span>}
+                                    </p>
                                     <div className="mt-2.5">
                                       {description ? (
                                         <>
@@ -1021,14 +1090,14 @@ export default function ProfilePage({ fichaInicial }: { fichaInicial?: Professio
                         )}
                       </div>
                     );
-                  })()}
+                  })()}</div>}
 
                   {/* "Disponibilidad" is NOT a content tab — the contact card already
                       shows the schedule (3-day strip + booking/contact), so a separate
                       section here would only duplicate it. */}
 
                   {/* ── TAB: Casos de éxito (grouped per profession/service) ── */}
-                  {tabEfectiva === "ofertas" && (
+                  {montada("ofertas") && <div hidden={tabEfectiva !== "ofertas"}>{(
                     <section className="space-y-5">
                       <div>
                         <h2 className="text-lg font-semibold text-[#162543]">
@@ -1077,9 +1146,9 @@ export default function ProfilePage({ fichaInicial }: { fichaInicial?: Professio
                         })}
                       </div>
                     </section>
-                  )}
+                  )}</div>}
 
-                  {tabEfectiva === "empleos" && (
+                  {montada("empleos") && <div hidden={tabEfectiva !== "empleos"}>{(
                     <section className="space-y-5">
                       <div>
                         <h2 className="text-lg font-semibold text-[#162543]">
@@ -1120,9 +1189,9 @@ export default function ProfilePage({ fichaInicial }: { fichaInicial?: Professio
                         ))}
                       </div>
                     </section>
-                  )}
+                  )}</div>}
 
-                  {tabEfectiva === "casos" && (
+                  {montada("casos") && <div hidden={tabEfectiva !== "casos"}>{(
                     <div className="flex flex-col gap-6">
                       <div>
                         <h2 className="text-lg font-semibold text-[#162543] mb-1">{t("tabs.casos")}</h2>
@@ -1159,16 +1228,16 @@ export default function ProfilePage({ fichaInicial }: { fichaInicial?: Professio
                             for (let i = 0; i < photos.length; i += 3) caseList.push({ id: `${prof}_${i}`, profession: prof, photos: photos.slice(i, i + 3) });
                           }
                           // Client-facing showcase: profession filter + a polished case-card grid.
-                          return <CaseShowcase cases={caseList} professions={profsOrder} initialCaseId={searchParamFromUrl("case")} />;
+                          return <CaseShowcase cases={caseList} professions={profsOrder} initialCaseId={searchParamFromUrl("case")} serviceBuscado={activeCategory ?? null} />;
                         })()
                       ) : (
                         <FichaVacio icono="casos" titulo={t("noCasos")} />
                       )}
                     </div>
-                  )}
+                  )}</div>}
 
                   {/* ── TAB: Formación (texto, sin imágenes) ── */}
-                  {tabEfectiva === "certificaciones" && hasCerts && (
+                  {montada("certificaciones") && <div hidden={tabEfectiva !== "certificaciones"}>{hasCerts && (
                     <div>
                       <h2 className="text-lg font-semibold text-[#162543] mb-1">{t("tabs.certificaciones")}</h2>
                       <p className="text-sm text-[#68778d] mb-4">{t("certsSubtitle")}</p>
@@ -1199,10 +1268,10 @@ export default function ProfilePage({ fichaInicial }: { fichaInicial?: Professio
                         ))}
                       </div>
                     </div>
-                  )}
+                  )}</div>}
 
                   {/* ── TAB: Reseñas ── */}
-                  {tabEfectiva === "resenas" && (
+                  {montada("resenas") && <div hidden={tabEfectiva !== "resenas"}>{(
                     <div>
                       <ReviewSection
                         professionalId={professional.id}
@@ -1214,10 +1283,10 @@ export default function ProfilePage({ fichaInicial }: { fichaInicial?: Professio
                         onReviewSubmitted={reloadProfessional}
                       />
                     </div>
-                  )}
+                  )}</div>}
 
                   {/* ── TAB: Sobre mí ── */}
-                  {tabEfectiva === "sobre" && (() => {
+                  {montada("sobre") && <div hidden={tabEfectiva !== "sobre"}>{(() => {
                     // Facts in display order — each = brand-tint icon + uppercase label + value
                     // + an optional caption, laid out in a hairline-divided grid (owner mockup).
                     type Fact = { key: string; icon: ReactNode; label: string; value: ReactNode; caption?: ReactNode };
@@ -1298,9 +1367,10 @@ export default function ProfilePage({ fichaInicial }: { fichaInicial?: Professio
                             </div>
                           </section>
                         )}
+                        {botonReportar}
                       </div>
                     );
-                  })()}
+                  })()}</div>}
 
                 </div>
               </div>
@@ -1342,6 +1412,27 @@ export default function ProfilePage({ fichaInicial }: { fichaInicial?: Professio
         </Modal>
       )}
 
+      {/* La hoja del «...» de la barra: el MISMO componente, las mismas
+          opciones y el mismo orden que en Empleos, Promociones y Proyectos.
+          El botón que la abre lo dibuja la barra de arriba. */}
+      <MenuFicha
+        controlado={{ abierto: menuFichaAbierto, onCambio: setMenuFichaAbierto }}
+        opciones={[
+          // En la ficha propia no se ofrece guardar, igual que en la ficha
+          // propia de un empleo, una promoción o un proyecto. Antes salía y,
+          // al tocarlo, no pasaba nada: el aviso que lo explica solo lo dibuja
+          // el botón de computadora, no este menú.
+          ...(isOwn ? [] : [{
+            id: "guardar",
+            icono: <Bookmark className={`h-4 w-4 ${guardarPro.guardado ? "fill-current text-[#0089bb]" : ""}`} />,
+            texto: guardarPro.etiqueta,
+            onSelect: () => void guardarPro.alternar(),
+          }]),
+          { id: "compartir", icono: nativoCompartir ? <Share2 className="h-4 w-4" /> : <Link2 className="h-4 w-4" />, texto: nativoCompartir ? tMenu("share") : tMenu("copyLink"), onSelect: shareProfile },
+          ...(isOwn ? [] : [{ id: "reportar", icono: <Flag className="h-4 w-4" />, texto: tMenu("reportProfile"), peligro: true, onSelect: () => setReportOpen(true) }]),
+        ]}
+      />
+
       {reportOpen && (
         <ReportProfileModal
           professionalName={professional.fullName}
@@ -1351,23 +1442,13 @@ export default function ProfilePage({ fichaInicial }: { fichaInicial?: Professio
       )}
 
       {/* Room for the pinned action bar on phones, so the footer stays reachable. */}
-      {activeTab === "disponibilidad" && <div aria-hidden className="h-20 lg:hidden" />}
       <SelfActionModal open={!!selfMsg} onClose={() => setSelfMsg(null)} message={selfMsg ?? ""} />
-      <ShareProfileModal
-        open={compartirAbierto}
-        onClose={() => setCompartirAbierto(false)}
-        url={enlacePerfil(professional.slug, process.env.NEXT_PUBLIC_APP_URL || (typeof window === "undefined" ? "" : window.location.origin))}
-        name={professional.businessName?.trim() || proDisplayName(professional.fullName)}
-      />
-      {activeTab === "disponibilidad" && <ProfileStickyActions
-        professionalId={professional.id}
-        professionalName={professional.fullName}
-        contextTitle={catLabel(professional.categoryId)}
-        isOwn={isOwn}
-        canCall={professional.hasCallPhone ?? (professional.allowPhoneCall !== false && !!(professional.callPhone || professional.whatsapp))}
-        onAvailability={() => { setActiveTab("disponibilidad"); requestAnimationFrame(() => { document.getElementById("resenas")?.scrollIntoView({ block: "start" }); }); }}
-        availabilityActive
-      />}
+      {avisoCompartir}
+      {/* Aquí vivía una SEGUNDA franja de contacto —«Disponibilidad · WhatsApp
+          · Llamar»— con su propio alto y su propio relleno, que solo salía si
+          alguien llegaba por un enlace viejo a ?tab=disponibilidad: una pestaña
+          que ya no existe, y una agenda que el app ya no reserva. La ficha
+          contacta por la misma franja que el resto de las secciones. */}
       <LandingFooter />
     </div>
   );

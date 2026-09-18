@@ -13,6 +13,7 @@ import { PanelEmptyState } from "@/components/ui/content-loading";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
+import { ScrollRail } from "@/components/ui/scroll-rail";
 import { cldThumb } from "@/lib/cloudinary";
 import { IMAGE_ACCEPT } from "@/lib/upload-validation";
 import { getImageUploadPreparationErrorCode, prepareImageForUpload, uploadPhotoFormDataWithRetry } from "@/lib/client-image-upload";
@@ -356,7 +357,10 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
         <PanelEmptyState
           icon={Plus}
           title={t("addCase")}
-          description={t("addCaseHint")}
+          // Con varios servicios, este vacío explica por qué el servicio no
+          // sale en la ficha pública: ahí solo aparecen los que tienen al menos
+          // un caso, para que un cliente no toque uno y encuentre la lista vacía.
+          description={professions.length > 1 ? `${t("addCaseHint")} ${t("notOnProfileYet")}` : t("addCaseHint")}
           action={(
             <Button type="button" size="crear" onClick={openAdd} disabled={addFull || professions.length === 0}>
               {t("addCase")}
@@ -395,8 +399,12 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
             {professions.length > 1 && (
               <div>
                 <label className="mb-1.5 block text-sm font-medium text-[#374151]">{t("caseProfession")} <span className="text-red-500">*</span></label>
+                {/* Un carril, no una parrilla que se envuelve: con tres o más
+                    servicios la fila crecía hacia abajo y empujaba el resto del
+                    formulario. En carril, el siguiente asoma con el degradado y
+                    dice que hay más a la derecha. */}
                 {(
-                  <div className="flex flex-wrap gap-2">
+                  <ScrollRail className="flex gap-2 pb-0.5">
                     {professions.map((p) => {
                       const elegido = draft.profession === p;
                       return (
@@ -406,7 +414,7 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
                           aria-pressed={elegido}
                           onClick={() => setDraft((d) => (d ? { ...d, profession: p } : d))}
                           className={cn(
-                            "inline-flex min-h-10 items-center gap-1.5 rounded-full border px-3.5 text-[13px] font-semibold transition-colors",
+                            "inline-flex min-h-10 shrink-0 items-center gap-1.5 rounded-full border px-3.5 text-[13px] font-semibold transition-colors",
                             elegido
                               ? "border-[#009FD9] bg-[#009FD9] text-white"
                               : "border-[#dfe6ec] bg-white text-[#526277] hover:border-[#c3d2de]",
@@ -417,7 +425,7 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
                         </button>
                       );
                     })}
-                  </div>
+                  </ScrollRail>
                 )}
               </div>
             )}

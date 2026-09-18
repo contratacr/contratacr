@@ -70,11 +70,22 @@ export async function POST(req: NextRequest) {
       openings,
       application_deadline: deadline,
       status: body.status,
+      // El WhatsApp de ESTA vacante; nulo = el de la cuenta.
+      contact_whatsapp: typeof body.contact_whatsapp === "string" ? body.contact_whatsapp.replace(/[^\d+]/gu, "").slice(0, 20) || null : null,
     };
-    const request = editingId
-      ? supabase.from("job_posts").update(payload).eq("id", editingId).eq("employer_id", employerId).select("id").maybeSingle()
-      : supabase.from("job_posts").insert(payload).select("id").single();
-    const { data, error } = await request;
+    const guardar = (fila: Record<string, unknown>) => (editingId
+      ? supabase.from("job_posts").update(fila).eq("id", editingId).eq("employer_id", employerId).select("id").maybeSingle()
+      : supabase.from("job_posts").insert(fila).select("id").single());
+    // La columna llega con la migración 209: si todavía no está, se guarda sin
+    // ella en vez de tumbar la publicación entera.
+    let { data, error } = await guardar(payload);
+    // PostgREST responde PGRST204 cuando la columna no está en su caché de
+    // esquema y 42703 cuando no existe en la base: las dos valen.
+    if (error && (error.code === "42703" || error.code === "PGRST204" || /contact_whatsapp|schema cache/i.test(error.message ?? ""))) {
+      const { contact_whatsapp: _sinColumna, ...resto } = payload;
+      void _sinColumna;
+      ({ data, error } = await guardar(resto));
+    }
     if (error || !data?.id) {
       console.error("[POST /api/jobs/posts] save failed", error);
       return NextResponse.json({ error: "No pudimos guardar el empleo. Inténtalo nuevamente." }, { status: 500 });

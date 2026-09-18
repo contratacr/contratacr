@@ -22,6 +22,7 @@ import {
   Wrench,
   X,
 } from "lucide-react";
+import { CABECERA_BOTON, CABECERA_FILA, CABECERA_FILA_CENTRADA, CABECERA_GLIFO, CABECERA_TITULO } from "@/components/layout/cabecera";
 
 export default function ServiciosPage() {
   const t = useTranslations("categories");
@@ -156,33 +157,31 @@ export default function ServiciosPage() {
           <div ref={sentinelaRef} aria-hidden className="h-px" />
           <header ref={cabeceraRef} className={cn("sticky top-0 z-20 border-b bg-white transition-colors duration-200", conLinea ? "border-[#e5e7eb]" : "border-transparent")}>
             {mobileGroup ? (
-              <div className="relative flex min-h-[56px] items-center justify-center px-14">
+              <div className={CABECERA_FILA_CENTRADA}>
                 <button
                   type="button"
                   onClick={() => setMobileGroupKey(null)}
-                  className="absolute left-3 top-1/2 grid h-11 w-11 -translate-y-1/2 place-items-center text-[#162543]"
+                  className={cn("absolute left-4 top-1/2 -translate-y-1/2", CABECERA_BOTON)}
                   aria-label={locale === "en" ? "Back to categories" : "Volver a categorías"}
                 >
-                  <ArrowLeft className="h-7 w-7 stroke-[2.2]" />
+                  <ArrowLeft className={cn(CABECERA_GLIFO, "stroke-[2.4]")} />
                 </button>
-                <h1 className="truncate text-center text-[21px] font-extrabold text-[#162543]">
-                  {mobileGroup.label}
-                </h1>
+                <h1 className={cn(CABECERA_TITULO, "text-center")}>{mobileGroup.label}</h1>
               </div>
             ) : (
-              <div className="flex min-h-[56px] items-center gap-1 px-2">
+              <div className={CABECERA_FILA}>
                 <button
                   type="button"
                   onClick={() => window.dispatchEvent(new Event("ccr:open-mobile-menu"))}
-                  className="grid h-11 w-11 shrink-0 place-items-center rounded-xl text-[#162543] transition hover:bg-[#eef5f9]"
+                  className={CABECERA_BOTON}
                   aria-label={locale === "en" ? "Open menu" : "Abrir menú"}
                 >
                   <Menu className="h-5 w-5" strokeWidth={2.5} />
                 </button>
-                <Link href="/" aria-label="ContrataCR inicio" className="-ml-1 shrink-0">
-                  <ContrataCRMark className="h-7 w-7" />
+                <Link href="/" aria-label="ContrataCR inicio" className="shrink-0">
+                  <ContrataCRMark />
                 </Link>
-                <p className="min-w-0 truncate pl-1.5 text-[17px] font-extrabold text-[#162543]">{servicesTitle}</p>
+                <p className={CABECERA_TITULO}>{servicesTitle}</p>
                 {/* El icono de Mensajes es de la barra de la APP: en la web se
                     llega desde el menú y desde el panel. */}
                 <div className="ml-auto flex shrink-0 items-center gap-0.5">
@@ -310,7 +309,7 @@ export default function ServiciosPage() {
         </section>
 
         <div className="hidden lg:block">
-        <section className="relative z-30 px-4 pb-5 pt-12">
+        <section className="relative z-30 px-4 pb-5 pt-8">
           <div className="mx-auto max-w-6xl">
             <div className="max-w-3xl">
               <span className="mb-2.5 inline-flex rounded-full bg-[#EBF5FB] px-3 py-1 text-xs font-bold uppercase text-[#0089bb]">

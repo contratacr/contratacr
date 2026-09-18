@@ -1,7 +1,7 @@
 import { agruparMiles } from "@/lib/pricing";
 
 export const OFFER_TYPES = {
-  service_offer: "Servicio en oferta",
+  service_offer: "Servicio en promoción",
   product: "Producto",
   package: "Paquete",
 } as const;
@@ -38,10 +38,10 @@ export type ProfessionalOffer = {
   professional_name?: string;
   professional_slug?: string | null;
   professional_avatar_url?: string | null;
-  professional_whatsapp?: string | null;
+  /** WhatsApp de ESTA promoción. Nulo = el de la cuenta profesional. */
+  contact_whatsapp?: string | null;
+  professional_has_whatsapp?: boolean;
   professional_allow_phone_call?: boolean | null;
-  professional_call_phone?: string | null;
-  professional_contact_email?: string | null;
 };
 
 export function isOfferExpired(offer: Pick<ProfessionalOffer, "valid_until">, today: string) {
@@ -55,11 +55,23 @@ export function effectiveOfferStatus(
   return offer.status === "published" && isOfferExpired(offer, today) ? "expired" : offer.status;
 }
 
+/**
+ * Un precio «a convenir» es uno que no se puso… o uno que se puso para
+ * saltarse el campo. El precio era obligatorio con mínimo 1, y 6 de las 13
+ * promociones de producción decían «₡1»: nadie vende nada a un colón, lo que
+ * quería decir era «pregúntame». Se lee así, y se deja de calcular descuento
+ * sobre ese 1 (salía «-100 %»).
+ */
+export function precioAConvenir(offer: Pick<ProfessionalOffer, "price_now" | "currency">) {
+  if (offer.price_now == null) return true;
+  return offer.currency === "USD" ? offer.price_now < 1 : offer.price_now < 100;
+}
+
 export function formatOfferPrice(
   offer: Pick<ProfessionalOffer, "price_now" | "currency" | "price_unit">,
   locale = "es",
 ) {
-  if (offer.price_now == null) return locale === "en" ? "Price negotiable" : "A convenir";
+  if (offer.price_now == null || precioAConvenir(offer)) return locale === "en" ? "Price negotiable" : "A convenir";
   const symbol = offer.currency === "USD" ? "$" : "₡";
   const amount = `${symbol}${agruparMiles(offer.price_now, locale === "en" ? "," : ".")}`;
   const unit = locale === "en"
@@ -69,10 +81,10 @@ export function formatOfferPrice(
 }
 
 export function formatOfferBeforePrice(
-  offer: Pick<ProfessionalOffer, "price_before" | "currency">,
+  offer: Pick<ProfessionalOffer, "price_before" | "price_now" | "currency">,
   locale = "es",
 ) {
-  if (offer.price_before == null) return null;
+  if (offer.price_before == null || precioAConvenir(offer)) return null;
   const symbol = offer.currency === "USD" ? "$" : "₡";
   return `${symbol}${agruparMiles(offer.price_before, locale === "en" ? "," : ".")}`;
 }
@@ -84,7 +96,7 @@ export function sanitizeOfferImages(urls: string[]) {
     .slice(0, 5);
 }
 
-export function offerDiscountPercent(offer: Pick<ProfessionalOffer, "price_now" | "price_before">) {
-  if (!offer.price_now || !offer.price_before || offer.price_before <= offer.price_now) return null;
+export function offerDiscountPercent(offer: Pick<ProfessionalOffer, "price_now" | "price_before" | "currency">) {
+  if (!offer.price_now || !offer.price_before || offer.price_before <= offer.price_now || precioAConvenir(offer)) return null;
   return Math.round((1 - offer.price_now / offer.price_before) * 100);
 }

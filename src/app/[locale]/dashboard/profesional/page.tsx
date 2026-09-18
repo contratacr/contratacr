@@ -31,6 +31,7 @@ import { PhotoGallery } from "@/components/dashboard/pro/photo-gallery";
 import { AvailabilityEditor } from "@/components/dashboard/pro/availability-editor";
 import { ServicesEditor } from "@/components/dashboard/pro/services-editor";
 import { JobsPanel } from "@/components/dashboard/pro/jobs-panel";
+import { StatusFilterTabs } from "@/components/dashboard/status-filter-tabs";
 import { OffersPanel } from "@/components/dashboard/pro/offers-panel";
 import { SaveStatusProvider } from "@/components/dashboard/save-status-context";
 import { BookingRequests } from "@/components/dashboard/pro/booking-requests";
@@ -38,7 +39,6 @@ import { ProposalsTab } from "@/components/dashboard/pro/proposals-tab";
 import { VerificationPanel } from "@/components/dashboard/pro/verification-panel";
 import { ClientActivity } from "@/components/dashboard/client-activity";
 import { ClientConnections } from "@/components/dashboard/client-connections";
-import { ClientJobApplications } from "@/components/dashboard/client-job-applications";
 import { applyPendingSavedPro } from "@/components/professionals/save-button";
 import { BasicProfileSection } from "@/components/dashboard/basic-profile-section";
 import { detectIdType } from "@/lib/cedula";
@@ -75,6 +75,9 @@ import { deleteOwnedMediaUrl } from "@/lib/client-media-cleanup";
 import { IMAGE_ACCEPT } from "@/lib/upload-validation";
 import { formatPersonDisplayName, getProfessionalDisplayName } from "@/lib/display-name";
 import { OfferTagPercentIcon } from "@/components/icons/offer-tag-percent-icon";
+import { CABECERA_BOTON, CABECERA_GLIFO, COLUMNAS_CABECERA } from "@/components/layout/cabecera";
+import { BrandIconBadge } from "@/components/ui/brand-icon-badge";
+import { Modal } from "@/components/ui/modal";
 
 // ONE unified panel for every account (Airbnb model). A MODE SWITCH flips between
 // "Usar servicios" (the seek capability, always available) and "Ofrecer servicios"
@@ -82,7 +85,7 @@ import { OfferTagPercentIcon } from "@/components/icons/offer-tag-percent-icon";
 // is no separate client panel; everyone lives here.
 type Tab =
   | "home" | "profile" | "services" | "photos" | "availability" | "bookings" | "proposals" | "quotes" | "verificacion"
-  | "jobs" | "offers" | "completion"
+  | "jobs" | "offers" | "publicaciones" | "completion"
   | "suscripcion"
   | "sent_bookings" | "sent_projects" | "applications" | "saved" | "connections"
   | "chat" | "notifications" | "soporte" | "cuenta" | "guides";
@@ -92,7 +95,7 @@ type ProData = Record<string, any>;
 
 const ALL_TABS = new Set<Tab>([
   "home", "profile", "services", "photos", "availability", "bookings", "proposals", "quotes", "verificacion",
-  "jobs", "offers", "completion", "suscripcion", "sent_bookings", "sent_projects", "applications", "saved", "connections",
+  "jobs", "offers", "publicaciones", "completion", "suscripcion", "sent_bookings", "sent_projects", "applications", "saved", "connections",
   "chat", "notifications", "soporte", "cuenta", "guides",
 ]);
 
@@ -121,6 +124,7 @@ const TAB_ICONS: Record<Tab, React.ReactNode> = {
   guides: <FileText className="h-4 w-4" />,
   jobs: <BriefcaseBusiness className="h-4 w-4" />,
   offers: <OfferTagPercentIcon className="h-4 w-4" />,
+  publicaciones: <OfferTagPercentIcon className="h-4 w-4" />,
   completion: <CheckCircle2 className="h-4 w-4" />,
 };
 
@@ -140,27 +144,59 @@ const TABS_WITH_SUBTITLE = new Set<Tab>([
 // only in "use" mode; "profile" + the shared tabs are valid in both, so the mode
 // for those is taken from the URL (?mode=) or defaults to the account's capability.
 const OFFER_ONLY = new Set<Tab>(["services", "photos", "availability", "bookings", "proposals", "quotes", "verificacion", "suscripcion", "jobs", "offers", "completion"]);
-const USE_ONLY = new Set<Tab>(["sent_bookings", "sent_projects", "applications", "connections"]);
+// Ya no hay dos paneles: «Mis proyectos» es del profesional tanto como del
+// cliente —publicar un proyecto es publicar, tenga o no ficha—, así que ninguna
+// sección fuerza el panel de cliente. Se conserva el conjunto vacío porque el
+// parámetro ?mode= sigue llegando en enlaces viejos.
+const USE_ONLY = new Set<Tab>([]);
 
 // Sidebar order per mode (+ a shared block appended below).
+// Citas y Mi agenda salieron del menú. Medido en producción: 45 profesionales
+// publicaron agenda —9.820 horas futuras— y NUNCA hubo una sola cita. Peor: el
+// perfil con agenda convierte 2,6% de vista a contacto y el que no la tiene,
+// 9,5%. La agenda competía con el botón de contactar y se lo comía. El código
+// de reservas se queda intacto por si el tráfico algún día lo justifica; lo que
+// se retira es el espacio que ocupaba.
+//
+// Oportunidades también sale: los proyectos pasan a un tablero público
+// (/proyectos), como empleos y promociones, y el profesional contacta directo
+// en vez de mandar una propuesta que nadie contesta (1 en toda la historia).
+// Mis postulaciones (0) y Volver a contratar (0) se retiran por lo mismo.
+// Seis secciones para el profesional y cuatro para el cliente. «Mis trabajos» y
+// «Lo que ofrezco» viven dentro de «Mi perfil», que es donde se ven; empleos y
+// promociones comparten «Mis publicaciones», que es lo mismo: algo que publico.
 const OFFER_TABS: Tab[] = ([
-  "bookings", "proposals", "quotes", "jobs", "offers", "photos", "availability", "services", "saved", "soporte", "profile", "guides",
+  "sent_projects", "jobs", "offers", "quotes", "photos", "services", "profile", "saved", "soporte", "guides",
   ...(PAYMENTS_ENABLED ? (["suscripcion"] as Tab[]) : []),
 ] as Tab[]).filter((tab) => EMPLEOS_VISIBLE || tab !== "jobs");
-const USE_TABS: Tab[] = (["sent_bookings", "sent_projects", "applications", "connections", "saved", "soporte", "profile", "guides"] as Tab[])
-  .filter((tab) => EMPLEOS_VISIBLE || tab !== "applications");
+const USE_TABS: Tab[] = ["sent_projects", "saved", "profile", "soporte", "guides"] as Tab[];
 const OPPORTUNITY_MODAL_SEEN_STORAGE_PREFIX = "contratacr:seen-opportunity-modal";
+// «Mis publicaciones» reúne TODO lo que uno saca a un tablero público: el
+// proyecto que pide un trabajo, el empleo que ofrece uno y la promoción. Son el
+// mismo acto —publicar— y antes vivían en dos paneles distintos, con un
+// interruptor «cliente / profesional» de por medio. Medido en producción: de
+// 289 profesionales, DOS usaron alguna vez el panel de cliente.
+type Publicacion = "proyectos" | "empleos" | "promociones";
+const PUBLICACION_TABS = [{ id: "proyectos" }, { id: "empleos" }, { id: "promociones" }] as const satisfies ReadonlyArray<{ id: Publicacion }>;
 
 // Once filas planas se leían una por una; los bloques ordenan el recorrido. El
 // agrupamiento se nota por el orden, sin rótulos ni líneas: lo único que hay
 // que leer ahí son los nombres de las secciones.
+// Primero lo que uno mueve todos los días —lo publicado y las cotizaciones—,
+// después lo que arma la ficha —trabajos, servicios, perfil—, y al final lo
+// guardado y la ayuda.
+// «Servicios» y «Trabajos» estuvieron un rato dentro de «Mi perfil»: son parte
+// del perfil, sí, pero también son las dos cosas que un profesional vuelve a
+// tocar, y «Trabajos» es la más floja de todas (29 de 289 tienen alguno) y la
+// que más vende. Enterrada dos niveles no la iba a encontrar nadie.
 const PANEL_GROUPS: { grupo: "work" | "business" | "saved" | "account"; tabs: Tab[] }[] = [
-  // «Mis postulaciones» va con lo que uno mandó (citas y proyectos propios) y
-  // por encima de «Volver a contratar»: sin bloque quedaba suelta al final.
-  { grupo: "work", tabs: ["bookings", "proposals", "quotes", "sent_bookings", "sent_projects", "applications"] },
-  { grupo: "business", tabs: ["offers", "jobs", "photos", "availability", "services", "completion"] },
-  { grupo: "saved", tabs: ["connections", "saved"] },
-  { grupo: "account", tabs: ["profile", "soporte", "guides"] },
+  // Tres entradas, no un interruptor: «Mis publicaciones» juntaba proyectos,
+  // empleos y promociones en una sola puerta, y una puerta con un interruptor
+  // adentro hay que descubrirla. En el menú se leen de una.
+  { grupo: "business", tabs: ["sent_projects", "jobs", "offers", "quotes"] },
+  { grupo: "work", tabs: ["photos", "services", "profile", "completion"] },
+  { grupo: "saved", tabs: ["saved"] },
+  { grupo: "account", tabs: ["soporte"] },
 ];
 function agruparPestanas(tabs: Tab[]): Tab[][] {
   const grupos = PANEL_GROUPS
@@ -179,12 +215,13 @@ const PANEL_TAB_LABELS: Partial<Record<Tab, { es: string; en: string }>> = {
   sent_projects: { es: "Mis proyectos", en: "My projects" },
   applications: { es: "Mis postulaciones", en: "My applications" },
   connections: { es: "Volver a contratar", en: "Hire again" },
-  photos: { es: "Mis trabajos", en: "My work" },
+  photos: { es: "Casos de éxito", en: "Success stories" },
   availability: { es: "Mi agenda", en: "My calendar" },
-  services: { es: "Lo que ofrezco", en: "What I offer" },
+  services: { es: "Servicios", en: "Services" },
   saved: { es: "Favoritos", en: "Favorites" },
   soporte: { es: "Soporte", en: "Support" },
-  profile: { es: "Perfil", en: "Profile" },
+  profile: { es: "Mi perfil", en: "My profile" },
+  publicaciones: { es: "Mis publicaciones", en: "My posts" },
   jobs: { es: "Empleos", en: "Jobs" },
   offers: { es: "Promociones", en: "Promotions" },
   completion: { es: "Completa tu perfil", en: "Complete your profile" },
@@ -201,12 +238,11 @@ type GuideItem = {
 };
 
 const GUIDE_ITEMS: GuideItem[] = ([
-  { id: "clientPanel", section: "client", actionTab: "sent_bookings", targetMode: "use", stepCount: 5 },
-  { id: "clientRequests", section: "client", actionTab: "sent_bookings", targetMode: "use", stepCount: 3 },
+  // Las guías de citas salieron junto con las citas: quedaba explicando una
+  // pantalla que ya no está en el menú.
+  { id: "clientPanel", section: "client", actionTab: "sent_projects", targetMode: "use", stepCount: 5 },
   { id: "clientProjects", section: "client", actionTab: "sent_projects", targetMode: "use", stepCount: 3 },
-  { id: "clientApplications", section: "client", actionTab: "applications", targetMode: "use", stepCount: 4 },
   { id: "clientSaved", section: "client", actionTab: "saved", targetMode: "use", stepCount: 4 },
-  { id: "clientConnections", section: "client", actionTab: "connections", targetMode: "use", stepCount: 3 },
   { id: "clientProfile", section: "client", actionTab: "profile", targetMode: "use", stepCount: 3 },
   { id: "searchServices", section: "shared", href: "/buscar", stepCount: 5 },
   { id: "jobsGuide", section: "shared", href: "/empleos", stepCount: 4 },
@@ -215,17 +251,15 @@ const GUIDE_ITEMS: GuideItem[] = ([
   { id: "reviewsGuide", section: "shared", href: "/buscar", stepCount: 4 },
   { id: "supportGuide", section: "shared", actionTab: "soporte", stepCount: 3 },
   { id: "accountSecurityGuide", section: "shared", actionTab: "cuenta", stepCount: 4 },
-  { id: "professionalPanel", section: "professional", actionTab: "bookings", targetMode: "offer", stepCount: 4 },
+  { id: "professionalPanel", section: "professional", actionTab: "publicaciones", targetMode: "offer", stepCount: 4 },
   { id: "completionGuide", section: "professional", actionTab: "completion", targetMode: "offer", stepCount: 4 },
-  { id: "requests", section: "professional", actionTab: "bookings", targetMode: "offer", stepCount: 3 },
-  { id: "opportunities", section: "professional", actionTab: "proposals", targetMode: "offer", stepCount: 3 },
-  { id: "successCases", section: "professional", actionTab: "photos", targetMode: "offer", stepCount: 4 },
-  { id: "availability", section: "professional", actionTab: "availability", targetMode: "offer", stepCount: 4 },
-  { id: "services", section: "professional", actionTab: "services", targetMode: "offer", stepCount: 4 },
-  { id: "jobsPanel", section: "professional", actionTab: "jobs", targetMode: "offer", stepCount: 4 },
-  { id: "offersPanel", section: "professional", actionTab: "offers", targetMode: "offer", stepCount: 4 },
+  { id: "opportunities", section: "shared", href: "/proyectos", stepCount: 3 },
+  { id: "successCases", section: "professional", actionTab: "profile", targetMode: "offer", stepCount: 4 },
+  { id: "services", section: "professional", actionTab: "profile", targetMode: "offer", stepCount: 4 },
+  { id: "jobsPanel", section: "professional", actionTab: "publicaciones", targetMode: "offer", stepCount: 4 },
+  { id: "offersPanel", section: "professional", actionTab: "publicaciones", targetMode: "offer", stepCount: 4 },
   { id: "professionalProfile", section: "professional", actionTab: "profile", targetMode: "offer", stepCount: 5 },
-] as GuideItem[]).filter((guide) => EMPLEOS_VISIBLE || !["jobsGuide", "jobsPanel", "clientApplications"].includes(guide.id));
+] as GuideItem[]).filter((guide) => EMPLEOS_VISIBLE || !["jobsGuide", "jobsPanel"].includes(guide.id));
 
 function guideIcon(id: string) {
   switch (id) {
@@ -607,6 +641,10 @@ function GuidePreview({ id, t }: { id: string; t: ReturnType<typeof useTranslati
   );
 }
 
+// Las acciones de texto del encabezado del panel (Ver perfil, Compartir,
+// Guías): una sola clase para que no vuelvan a separarse.
+const ENLACE_DE_CABECERA = "inline-flex shrink-0 items-center whitespace-nowrap text-[13px] font-semibold leading-none text-[#526277] transition hover:text-[#009FD9] focus-visible:outline-none focus-visible:underline";
+
 export default function DashboardPage() {
   const { user, loading: authLoading } = useAuth();
   const { sentinelaRef, cabeceraRef, conLinea } = useHairlineOnScroll();
@@ -615,6 +653,22 @@ export default function DashboardPage() {
   // Publicar una solicitud desde el inicio abre el formulario DE UNA VEZ, encima
   // de lo que esté cargando: antes se veía medio segundo del panel antes del modal.
   const [publicarDirecto, setPublicarDirecto] = useState(() => searchParams.get("openPublish") === "1");
+  // Guías es una ventana, no una sección. `?tab=guides` sigue funcionando —hay
+  // enlaces viejos y correos que apuntan ahí— y ahora abre la ventana.
+  const [guiasAbiertas, setGuiasAbiertas] = useState(false);
+  // De dónde llegó quien tocó «Publicar proyecto». Se guarda al llegar porque
+  // el panel reescribe su dirección: al cerrar el formulario SIN publicar se
+  // vuelve ahí, en vez de dejar a la persona en una lista que no fue a buscar.
+  const guiasPorDireccionRef = useRef(false);
+  useEffect(() => {
+    if (guiasPorDireccionRef.current) return;
+    if (searchParams.get("tab") !== "guides") return;
+    guiasPorDireccionRef.current = true;
+    setGuiasAbiertas(true);
+    setTab("home", true);
+  }, [searchParams]);
+  const [publicarVolverA] = useState(() => (searchParams.get("returnTo") === "/proyectos" ? "/proyectos" : null));
+  const publicadoRef = useRef(false);
   const publicarLimpiadoRef = useRef(false);
   useEffect(() => {
     if (!publicarDirecto || publicarLimpiadoRef.current) return;
@@ -626,8 +680,16 @@ export default function DashboardPage() {
   }, [publicarDirecto, router, searchParams]);
   const formularioPublicar = publicarDirecto ? (
     <PublishProjectModal
-      onClose={() => setPublicarDirecto(false)}
-      onSuccess={() => window.dispatchEvent(new Event("contratacr:projects-changed"))}
+      onClose={() => {
+        setPublicarDirecto(false);
+        // Publicado, se queda: el proyecto nuevo está en esta lista. Sin
+        // publicar, vuelve por donde vino.
+        if (publicarVolverA && !publicadoRef.current) router.push(publicarVolverA);
+      }}
+      onSuccess={() => {
+        publicadoRef.current = true;
+        window.dispatchEvent(new Event("contratacr:projects-changed"));
+      }}
     />
   ) : null;
   const t = useTranslations("proPanel");
@@ -641,7 +703,7 @@ export default function DashboardPage() {
   const requestedMode = searchParams.get("mode");
   const urlModeParam: Mode | null = requestedMode === "use" || requestedMode === "offer" ? requestedMode : null;
   const requestedReturnTo = searchParams.get("returnTo");
-  const externalReturnTo = requestedReturnTo === "/ofertas" || requestedReturnTo === "/empleos" || requestedReturnTo === "/notificaciones"
+  const externalReturnTo = requestedReturnTo === "/ofertas" || requestedReturnTo === "/empleos" || requestedReturnTo === "/proyectos" || requestedReturnTo === "/notificaciones"
     ? requestedReturnTo
     : requestedReturnTo?.startsWith("/mensajes") && !requestedReturnTo.startsWith("//") && !requestedReturnTo.includes("\\")
       ? requestedReturnTo
@@ -704,6 +766,12 @@ export default function DashboardPage() {
   const [profileResetKey, setProfileResetKey] = useState(0);
   const [mobileProfileSectionTitle, setMobileProfileSectionTitle] = useState<string | null>(null);
   const [supportThreadTitle, setSupportThreadTitle] = useState<string | null>(null);
+  // Qué mitad de «Mis publicaciones» se está viendo.
+  const [publicacionTipo, setPublicacionTipo] = useState<Publicacion>("proyectos");
+  const [conteoPublicaciones, setConteoPublicaciones] = useState<Record<string, number>>({});
+  const anotarConteo = useCallback((clave: Publicacion, total: number) => {
+    setConteoPublicaciones((previo) => (previo[clave] === total ? previo : { ...previo, [clave]: total }));
+  }, []);
   const [supportThreadRef, setSupportThreadRef] = useState<string | null>(null);
   const [proLoadError, setProLoadError] = useState(false);
   const [mobilePanelOpen, setMobilePanelOpen] = useState(false);
@@ -737,9 +805,11 @@ export default function DashboardPage() {
   // Professional access is unlocked only by the real professionals row. Metadata
   // can lag or be stale, so it must not authorize professional-only sections.
   const isProvider = !!pro;
-  const pendingProfessionalSignup =
-    user?.user_metadata?.professional_signup_started === true &&
-    user.user_metadata?.is_provider !== true;
+  // Haber EMPEZADO el registro profesional ya no cambia nada en el panel. Antes
+  // sacaba de él y devolvía al formulario en cada entrada: quien lo abrió, se
+  // arrepintió y se salió quedaba obligado a terminarlo para volver a su propia
+  // cuenta de cliente. Ahora el panel funciona igual y «Ofrecer mis servicios»
+  // retoma el formulario donde quedó, sin decirlo.
 
   // Airbnb FULL switch: the active mode is the GLOBAL (persisted) mode shared with the
   // navbar + bell. A mode-specific tab in the URL (a deep link from a notification or a
@@ -760,7 +830,9 @@ export default function DashboardPage() {
   const urlForcedMode: Mode | null =
     legacyVerificationTab && esProfesional ? "offer" : requestedOfferOnlyTab && esProfesional ? "offer" : requestedTab && USE_ONLY.has(requestedTab) ? "use" : urlModeParam;
   const mode: Mode = !esProfesional ? "use" : urlForcedMode ?? globalMode;
-  const defaultTab: Tab = mode === "offer" ? "bookings" : "sent_bookings";
+  // Citas salieron del menú: el panel abre en lo que sí se usa —Oportunidades
+  // para el profesional, Mis proyectos para el cliente.
+  const defaultTab: Tab = "sent_projects";
   const activeTab: Tab = allowedRequestedTab ?? (preferMobileMenuDefault ? "home" : defaultTab);
 
   // When a deep link forces a mode, adopt it globally so the navbar switch + bell follow.
@@ -787,7 +859,7 @@ export default function DashboardPage() {
     if (authLoading || loading || !user || isProvider || !requestedOfferOnlyTab) return;
     const params = new URLSearchParams(searchParams.toString());
     params.set("mode", "use");
-    params.set("tab", "sent_bookings");
+    params.set("tab", "sent_projects");
     params.delete("focus");
     params.delete("flow");
     router.replace('/dashboard/profesional?' + params.toString(), { scroll: false });
@@ -915,7 +987,7 @@ export default function DashboardPage() {
     if (!legacyVerificationTab) return;
     const params = new URLSearchParams(searchParams.toString());
     if (!isProvider) {
-      params.set("tab", "sent_bookings");
+      params.set("tab", "sent_projects");
       params.set("mode", "use");
       params.delete("focus");
       router.replace(`/dashboard/profesional?${params.toString()}`, { scroll: false });
@@ -966,11 +1038,6 @@ export default function DashboardPage() {
     if (authLoading || !user) return;
     applyPendingSavedPro();
   }, [authLoading, user]);
-
-  useEffect(() => {
-    if (authLoading || !user || !pendingProfessionalSignup) return;
-    router.replace("/registro/profesional");
-  }, [authLoading, pendingProfessionalSignup, router, user]);
 
   // Deep-link focus: `?tab=profile&focus=location` opens the editor at that field.
   useEffect(() => {
@@ -1364,7 +1431,7 @@ export default function DashboardPage() {
     if (!isProvider && OFFER_ONLY.has(tab)) {
       setMobilePanelOpen(false);
       setMode("use");
-      window.history.replaceState(null, "", `${window.location.pathname}?tab=sent_bookings&mode=use`);
+      window.history.replaceState(null, "", `${window.location.pathname}?tab=sent_projects&mode=use`);
       scrollDashboardToPageTop();
       return;
     }
@@ -1412,7 +1479,7 @@ export default function DashboardPage() {
 
   function openProfileVerification() {
     if (!isProvider) {
-      setTab("sent_bookings");
+      setTab("sent_projects");
       return;
     }
     if (isProvider && mode !== "offer") setMode("offer");
@@ -1475,7 +1542,7 @@ export default function DashboardPage() {
   function handleSwitchMode(next: Mode) {
     if (next === mode) return;
     setMode(next);
-    setTab(next === "offer" ? "bookings" : "sent_bookings");
+    setTab("sent_projects");
   }
 
   function returnAfterSectionSave() {
@@ -1656,15 +1723,19 @@ export default function DashboardPage() {
 
   function viewOpportunityWelcome() {
     dismissOpportunityWelcome();
-    if (mode !== "offer") setMode("offer");
-    setTab("proposals");
+    // Los proyectos viven en el tablero público, no en una pestaña del panel.
+    router.push("/proyectos");
   }
 
   // Una sola barra superior: dentro de una sección, la barra de la app muestra
   // "← Título" en vez del logo. El panel publica el título y atiende el atrás;
   // si la barra no confirma (ack), la cabecera propia sigue apareciendo.
+  // El menú del panel también tiene nombre. Sin él la barra caía al rótulo
+  // suelto «ContrataCR», que dice dónde estás tanto como no decir nada: la
+  // misma barra que en Proyectos, Empleos o Notificaciones lleva el nombre de
+  // la sección al lado de la marca, y aquí se quedaba sin él.
   const mobileSectionHeaderTitle = activeTab === "home"
-    ? null
+    ? t("panelHeading")
     : (supportThreadTitle ?? mobileProfileSectionTitle ?? (activeTab === "services" ? t("servicesHeading") : panelTabLabel(activeTab)));
   const sectionBackRef = useRef<(() => void) | null>(null);
   // EL GESTO DE VOLVER (deslizar en iOS, el botón físico de Android, el atrás
@@ -1711,13 +1782,18 @@ export default function DashboardPage() {
   }, []);
   useEffect(() => {
     if (!mobileSectionHeaderTitle) setNavbarOwnsHeader(false);
-    const publicar = (title: string | null) => {
-      (window as unknown as { __ccrSectionHeader?: string | null }).__ccrSectionHeader = title;
-      window.dispatchEvent(new CustomEvent("ccr:section-header", { detail: title ? { title } : null }));
+    // `root` distingue la RAÍZ del panel de una sección abierta: en la raíz la
+    // barra lleva el menú y la marca (no hay a dónde volver), dentro de una
+    // sección lleva la flecha.
+    const publicar = (title: string | null, root = false) => {
+      const global = window as unknown as { __ccrSectionHeader?: string | null; __ccrSectionRoot?: boolean };
+      global.__ccrSectionHeader = title;
+      global.__ccrSectionRoot = root;
+      window.dispatchEvent(new CustomEvent("ccr:section-header", { detail: title ? { title, root } : null }));
     };
-    publicar(mobileSectionHeaderTitle);
+    publicar(mobileSectionHeaderTitle, activeTab === "home");
     return () => publicar(null);
-  }, [mobileSectionHeaderTitle]);
+  }, [activeTab, mobileSectionHeaderTitle]);
 
   // Never render the client dashboard as a temporary fallback for an account
   // marked as a provider whose professional row is still missing. Keep the
@@ -1725,7 +1801,7 @@ export default function DashboardPage() {
   // below sends the account straight to professional registration.
   const professionalRecordResolving = !!user && canOffer(user) && !pro && !proLoadError;
   if (isSigningOut()) return null;
-  if (authLoading || loading || !user || (pendingProfessionalSignup && !pro) || professionalRecordResolving) {
+  if (authLoading || loading || !user || professionalRecordResolving) {
     return <>{formularioPublicar}<PanelSkeleton /></>;
   }
 
@@ -1796,8 +1872,33 @@ export default function DashboardPage() {
   // otro sitio donde entrar: en computadora la sección solo se alcanzaba
   // escribiendo ?tab=guides a mano. Va en el bloque de cuenta, junto a Perfil y
   // Soporte, igual que en el teléfono.
-  const desktopSidebarTabs = sidebarTabs;
-  const mobileSectionTabs = sidebarTabs;
+  // Guías ya no es una fila del menú: es una ventana que se abre desde la
+  // cabecera del panel —la misma en teléfono y en computadora— y deja la
+  // sección donde estabas atrás, intacta. Es material de consulta: se lee, se
+  // toca «Ir a…» y se sigue trabajando.
+  const ventanaGuias = guiasAbiertas ? (
+    <Modal
+      open
+      onClose={() => setGuiasAbiertas(false)}
+      title={panelTabLabel("guides")}
+      subtitle={t("subtitles.guides")}
+      size="lg"
+      bodyClassName="px-5 py-5 sm:px-6"
+    >
+      <GuidesBody
+        isProvider={isProvider}
+        onClose={() => setGuiasAbiertas(false)}
+        onGo={(guide) => {
+          requestUnsavedAction(() => {
+            if (guide.targetMode) setMode(guide.targetMode);
+            setTab(guide.actionTab ?? "home");
+          });
+        }}
+      />
+    </Modal>
+  ) : null;
+  const desktopSidebarTabs = sidebarTabs.filter((tab) => tab !== "guides");
+  const mobileSectionTabs = sidebarTabs.filter((tab) => tab !== "guides");
   const mobileFullScreenTab = activeTab !== "home";
   const mobileSectionOpen = activeTab !== "home" || mobilePanelOpen;
   const singleSurfaceTab = activeTab === "profile";
@@ -1836,6 +1937,13 @@ export default function DashboardPage() {
   }
 
   function panelModeSelector() {
+    // El panel dejó de tener dos caras. «Mis publicaciones» reúne proyectos,
+    // empleos y promociones, y lo demás —Favoritos, Mi perfil, Soporte, Guías—
+    // siempre fue compartido, así que ya no queda nada que separar. Medido en
+    // producción: DOS de 289 profesionales usaron alguna vez el panel cliente.
+    // El parámetro ?mode= se sigue aceptando para no romper enlaces viejos.
+    return null;
+    // eslint-disable-next-line no-unreachable
     if (!isProvider) return null;
     const options: Array<{ value: Mode; label: string; icon: React.ReactNode }> = [
       { value: "offer", label: locale === "en" ? "Professional" : "Profesional", icon: <BriefcaseBusiness className="h-4 w-4" /> },
@@ -1979,7 +2087,40 @@ export default function DashboardPage() {
     );
   }
 
+  // Una cuenta que solo contrata no tiene por qué buscar dónde se activa el
+  // perfil profesional: la puerta va afuera, arriba del menú, no escondida
+  // dentro de Guías. Es lo único que esta cuenta todavía no puede hacer.
+  /**
+   * La puerta a «Ofrecer mis servicios» desde el panel, SOLO en teléfono y
+   * tableta. En computadora NO va: ahí la barra de arriba la tiene siempre a la
+   * vista, también dentro del panel, así que ponerla otra vez era decir lo
+   * mismo dos veces en la misma pantalla. Debajo de 1024 px la barra la guarda
+   * en el menú hamburguesa, y entonces esta fila es la única puerta visible.
+   */
+  function ofrecerServiciosCard() {
+    if (esProfesional) return null;
+    return (
+      <Link
+        href="/registro/profesional"
+        data-testid="panel-ofrecer-servicios"
+        className="flex min-h-[60px] w-full items-center gap-3 rounded-2xl bg-[#009FD9] px-4 py-3.5 text-left text-[15px] font-bold text-white transition-colors hover:bg-[#008fc3]"
+      >
+        <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/20 [&>svg]:h-5 [&>svg]:w-5">
+          <BriefcaseBusiness />
+        </span>
+        {/* Siempre el mismo rótulo, esté el registro empezado o no: es la misma
+            puerta y cambiarle el nombre la hacía parecer otra cosa. Lo que
+            queda a medias se retoma donde quedó, sin anunciarlo. */}
+        <span className="min-w-0 flex-1 leading-tight">{locale === "en" ? "Offer my services" : "Ofrecer mis servicios"}</span>
+        <ChevronRight className="h-4 w-4 shrink-0 text-white/80" />
+      </Link>
+    );
+  }
+
   function cambiarPanelCard() {
+    // Un solo panel: ver `panelModeSelector`.
+    return null;
+    // eslint-disable-next-line no-unreachable
     if (!isProvider) return null;
     const destino: Mode = mode === "offer" ? "use" : "offer";
     const etiqueta = destino === "use" ? t("goToClientPanel") : t("goToProfessionalPanel");
@@ -2076,12 +2217,6 @@ export default function DashboardPage() {
     return null;
   }
 
-  // The proxy normally handles this before the page is served. Keep this
-  // client-side guard for SPA transitions and stale prefetched dashboard trees.
-  if (!authLoading && user && pendingProfessionalSignup) {
-    return <>{formularioPublicar}<PanelSkeleton /></>;
-  }
-
   return (
     // El lienzo de la página lleva el MISMO color que la sección: donde la
     // sección termina (una lista corta, un vacío, un hilo de soporte) seguía el
@@ -2116,9 +2251,7 @@ export default function DashboardPage() {
               <X className="h-5 w-5" />
             </button>
 
-            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-[#EBF5FB] text-[#009FD9] ring-1 ring-inset ring-[#009FD9]/15">
-              <Handshake className="h-7 w-7" />
-            </div>
+            <BrandIconBadge icon={Handshake} size={56} className="mx-auto mb-4" />
             <h2 id="opportunity-welcome-title" className="mx-auto max-w-[22rem] text-xl font-bold leading-tight text-[#162543] sm:text-[22px]">
               {t("opportunityWelcome.title", { count: opportunityWelcomeCount })}
             </h2>
@@ -2166,7 +2299,12 @@ export default function DashboardPage() {
             mobileSectionOpen ? "hidden lg:block" : "block",
           )}>
             <div className="rounded-2xl border border-[#dfe8f0] bg-white px-5 py-5 shadow-sm sm:px-6 sm:py-5">
-            <div className="flex min-w-0 flex-row flex-wrap items-center gap-x-4 gap-y-3 text-left sm:grid sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:items-center sm:gap-5">
+            {/* Las columnas van en `style` y no en una clase nueva de Tailwind: en
+                desarrollo la clase recién escrita llega a la pantalla antes que
+                su CSS, y una rejilla sin columnas reparte tres iguales —el
+                nombre quedaba en el centro de la tarjeta—. En el teléfono el
+                contenedor es flex y esta plantilla no aplica. */}
+            <div style={{ gridTemplateColumns: "auto minmax(0, 1fr)" }} className="flex min-w-0 flex-row flex-wrap items-center gap-x-4 gap-y-3 text-left sm:grid sm:items-center sm:gap-5">
               <div ref={headerPhotoMenuRef} className="relative h-[84px] w-[84px] shrink-0 sm:h-20 sm:w-20 sm:self-center">
                 <button
                   type="button"
@@ -2259,6 +2397,38 @@ export default function DashboardPage() {
                     {compactHeaderName}
                   </h1>
                   <div className="flex shrink-0 items-center">{identityBadge()}</div>
+                  {/* Ver perfil, Compartir y Guías cierran el renglón del nombre,
+                      los tres iguales: texto gris que se pinta de celeste al
+                      pasar, sin ícono y sin caja. Antes Guías era texto y los
+                      otros dos, píldoras con borde en otra columna: tres cosas
+                      del mismo rango con dos lenguajes distintos, y las píldoras
+                      pesaban más que el nombre de la cuenta. */}
+                  <div className="ml-auto flex shrink-0 items-center gap-5 pl-4">
+                    {publicProfileHref && (
+                      <Link
+                        href={`${publicProfileHref}?from=${encodeURIComponent("/dashboard/profesional")}`}
+                        onClick={openInNewTabOnDesktop}
+                        aria-label={locale === "en" ? "View public profile" : "Ver perfil público"}
+                        data-testid="panel-ver-perfil"
+                        className={ENLACE_DE_CABECERA}
+                      >
+                        {locale === "en" ? "View profile" : "Ver perfil"}
+                      </Link>
+                    )}
+                    {publicProfileHref && (
+                      <button type="button" data-testid="panel-compartir-perfil" onClick={() => setShareKitTab(activeTab)} className={ENLACE_DE_CABECERA}>
+                        {locale === "en" ? "Share" : "Compartir"}
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      data-testid="panel-abrir-guias"
+                      onClick={() => setGuiasAbiertas(true)}
+                      className={ENLACE_DE_CABECERA}
+                    >
+                      {panelTabLabel("guides")}
+                    </button>
+                  </div>
                 </div>
                 <div data-testid="dashboard-identity-actions" className="mt-1 flex items-start justify-start gap-3 sm:mt-1 sm:min-h-[22px]">
                   {/* Las reseñas, que es la prueba social que mira un cliente. Los
@@ -2269,6 +2439,18 @@ export default function DashboardPage() {
                       cliente no hay nada que medir —sus reseñas no existen—, así
                       que bajo el nombre no va nada en vez de un "aún sin reseñas"
                       que suena a reproche por algo que no le toca hacer. */}
+                  {/* Guías no es un botón: es una puerta de consulta, del mismo
+                      peso que la línea de reseñas y alineada con el nombre.
+                      Como botón competía con las acciones de la cuenta, que sí
+                      son cosas que uno hace. */}
+                  <button
+                    type="button"
+                    data-testid="panel-abrir-guias-movil"
+                    onClick={() => setGuiasAbiertas(true)}
+                    className="inline-flex items-center text-[13px] font-semibold leading-none text-[#526277] transition hover:text-[#009FD9] sm:hidden"
+                  >
+                    {panelTabLabel("guides")}
+                  </button>
                   {mode === "offer" && (pro?.review_count ?? 0) > 0 && publicProfileHref && (
                     <Link
                       href={`${publicProfileHref}?tab=resenas&from=${encodeURIComponent("/dashboard/profesional")}`}
@@ -2303,29 +2485,9 @@ export default function DashboardPage() {
                   </button>
                 </div>
               )}
-              <div className="col-span-2 hidden flex-wrap items-center justify-center gap-2 border-t border-[#eef3f7] pt-3 sm:col-span-1 sm:flex sm:justify-end sm:border-t-0 sm:pt-0">
-                {publicProfileHref && (
-                  <Link
-                    href={`${publicProfileHref}?from=${encodeURIComponent("/dashboard/profesional")}`}
-                    onClick={openInNewTabOnDesktop}
-                    aria-label={locale === "en" ? "View public profile" : "Ver perfil público"}
-                    className="inline-flex h-11 items-center justify-center rounded-full border border-[#d7e1ea] bg-white px-5 text-[13px] font-bold text-[#162543] transition hover:border-[#b9c8d6] hover:bg-[#f6f9fb] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9]"
-                  >
-                    {locale === "en" ? "View profile" : "Ver perfil"}
-                  </Link>
-                )}
-                {publicProfileHref && (
-                  <button
-                    type="button"
-                    onClick={() => setShareKitTab(activeTab)}
-                    className="inline-flex h-11 items-center justify-center rounded-full border border-[#d7e1ea] bg-white px-5 text-[13px] font-bold text-[#162543] transition hover:border-[#b9c8d6] hover:bg-[#f6f9fb]"
-                  >
-                    {locale === "en" ? "Share" : "Compartir"}
-                  </button>
-                )}
-              </div>
               {showProfileCompletion && proForCompletion && (
-                <div className="col-span-2 w-full sm:col-span-3">
+                // De borde a borde de la rejilla, tenga las columnas que tenga.
+                <div style={{ gridColumn: "1 / -1" }} className="w-full">
                   <ProfileCompletion
                     pro={proForCompletion}
                     variant="header"
@@ -2338,6 +2500,7 @@ export default function DashboardPage() {
             </div>
           </div>
 
+          {ventanaGuias}
           {/* Offer mode, provider row still loading: spinner (avoids gate flash). */}
           {proLoadError ? (
             <Card>
@@ -2362,9 +2525,7 @@ export default function DashboardPage() {
           showOfferGate ? (
             <Card>
               <CardContent className="px-6 py-12 flex flex-col items-center text-center">
-                <div className="h-16 w-16 rounded-full bg-[#EBF5FB] ring-1 ring-inset ring-[#009FD9]/20 flex items-center justify-center mb-5">
-                  <Sparkles className="h-8 w-8 text-[#009FD9]" />
-                </div>
+                <BrandIconBadge icon={Sparkles} size={64} className="mb-5" />
                 <h2 className="text-xl font-bold text-[#162543] mb-2">{t("offerGateTitle")}</h2>
                 <p className="text-sm text-[#6b7280] max-w-md mb-6 leading-relaxed">{t("offerGateBody")}</p>
                 <Button onClick={() => router.push("/registro/profesional")}>
@@ -2377,8 +2538,8 @@ export default function DashboardPage() {
               {activeTab !== "home" && (
                 <>
                 <div ref={sentinelaRef} aria-hidden className="h-px lg:hidden" />
-                <div ref={cabeceraRef as React.RefObject<HTMLDivElement>} className={cn(
-                  "sticky top-0 z-20 grid min-h-16 grid-cols-[64px_minmax(0,1fr)_64px] items-center border-b bg-white px-2 py-2 text-[#162543] transition-colors duration-200 lg:hidden",
+                <div ref={cabeceraRef as React.RefObject<HTMLDivElement>} style={COLUMNAS_CABECERA} className={cn(
+                  "sticky top-0 z-20 grid min-h-16 items-center border-b bg-white px-4 py-2 text-[#162543] transition-colors duration-200 lg:hidden",
                   conLinea ? "border-[#e5e7eb]" : "border-transparent",
                   navbarOwnsHeader && "hidden",
                 )}>
@@ -2408,7 +2569,7 @@ export default function DashboardPage() {
                           return;
                         }
                         const volverA = externalReturnTo ?? returnToRef.current;
-                        if (volverA && (activeTab === "offers" || activeTab === "jobs" || volverA.startsWith("/mensajes") || volverA === "/notificaciones")) {
+                        if (volverA && (activeTab === "offers" || activeTab === "jobs" || activeTab === "sent_projects" || volverA.startsWith("/mensajes") || volverA === "/notificaciones")) {
                           router.push(volverA);
                           return;
                         }
@@ -2419,9 +2580,9 @@ export default function DashboardPage() {
                       sectionBackRef.current = node ? () => node.click() : null;
                     }}
                     aria-label={t("backToPanel")}
-                    className="inline-flex h-10 shrink-0 items-center gap-1 justify-self-start rounded-lg px-2 text-sm font-semibold text-[#374151] transition-colors hover:bg-[#f3f4f6]"
+                    className={cn(CABECERA_BOTON, "justify-self-start")}
                   >
-                    <ArrowLeft className="h-5 w-5" />
+                    <ArrowLeft className={CABECERA_GLIFO} />
                   </button>
                   {supportThreadTitle ? (
                     <h2 className="flex min-w-0 items-baseline justify-center gap-1.5 px-1 text-center text-[17px] font-extrabold">
@@ -2481,6 +2642,7 @@ export default function DashboardPage() {
                               <div>
                                 <div>
                                   <div className="flex flex-col gap-2.5">
+                                    {ofrecerServiciosCard()}
                                     {cambiarPanelCard()}
                                     {agruparPestanas(mobileSectionTabs).map((grupo, i) => (
                                       <div key={grupo[0] ?? i} className="flex flex-col gap-2.5">
@@ -2497,7 +2659,7 @@ export default function DashboardPage() {
                                       <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[#64748b]">
                                         <LogOut className="h-5 w-5" />
                                       </span>
-                                      <span className="min-w-0 flex-1 truncate">{locale === "en" ? "Sign out" : "Cerrar sesión"}</span>
+                                      <span className="min-w-0 flex-1 truncate">{locale === "en" ? "Sign out" : "Salir"}</span>
                                     </button>
                                   </div>
                                 </div>
@@ -2569,6 +2731,14 @@ export default function DashboardPage() {
 
                         {activeTab === "services" && pro && (
                           <ServicesEditor
+                            // Igual que la agenda: el editor copia estos valores
+                            // al montarse y el panel pinta PRIMERO lo que tiene
+                            // en caché. Sin la clave, una foto vieja sin
+                            // servicios dejaba «no tenés servicios» en pantalla
+                            // —invitando a volver a crear los que ya existen—
+                            // aunque la respuesta del servidor ya los hubiera
+                            // traído.
+                            key={`servicios:${(pro.professions ?? []).length}:${(pro.services ?? []).length}`}
                             professionalId={pro.id}
                             primaryCategory={pro.category_id}
                             initialProfessions={pro.professions ?? []}
@@ -2580,6 +2750,10 @@ export default function DashboardPage() {
                         )}
                         {activeTab === "photos" && pro && (
                           <PhotoGallery
+                            // Ver la nota de Servicios: sin la clave, la caché
+                            // sin casos de éxito dejaba el vacío puesto aunque
+                            // el servidor los devolviera un instante después.
+                            key={`casos:${(pro.portfolio_items ?? []).length}:${(pro.portfolio_urls ?? []).length}`}
                             professionalId={pro.id}
                             initialUrls={pro.portfolio_urls ?? []}
                             initialItems={pro.portfolio_items ?? undefined}
@@ -2633,21 +2807,13 @@ export default function DashboardPage() {
                         {/* "Usar servicios", the seek capability. */}
                         {activeTab === "sent_bookings" && <ClientActivity section="bookings" />}
                         {activeTab === "sent_projects" && <ClientActivity section="projects" />}
-                        {activeTab === "applications" && <ClientJobApplications />}
+                        {/* «Mis postulaciones» se retiró con el formulario: se
+                            aplica por WhatsApp y no hay nada que seguir aquí.
+                            La dirección sigue existiendo y muestra el aviso de
+                            sección vacía, para no romper enlaces viejos. */}
                         {activeTab === "saved" && <ClientActivity section="saved" />}
                         {activeTab === "connections" && <ClientConnections />}
                         {activeTab === "notifications" && <NotificationsList />}
-                        {activeTab === "guides" && (
-                          <GuidesBody
-                            isProvider={isProvider}
-                            onGo={(guide) => {
-                              requestUnsavedAction(() => {
-                                if (guide.targetMode) setMode(guide.targetMode);
-                                setTab(guide.actionTab ?? "home");
-                              });
-                            }}
-                          />
-                        )}
                         {activeTab === "soporte" && (
                           <SupportTickets
                             initialTicketId={searchParams.get("ticket")}
@@ -2660,6 +2826,46 @@ export default function DashboardPage() {
                         )}
                         {activeTab === "jobs" && pro && <JobsPanel professionalId={pro.id} />}
                         {activeTab === "offers" && pro && <OffersPanel professionalId={pro.id} />}
+                        {/* Publicar es publicar: el proyecto que pide un trabajo,
+                            el empleo que ofrece uno y la promoción viven juntos.
+                            Quien no es profesional ve solo sus proyectos, sin
+                            interruptor: no tiene nada más que publicar. */}
+                        {activeTab === "publicaciones" && (
+                          <div className="space-y-4">
+                            {pro && (
+                              // Mismo control que el filtro de Favoritos y el de
+                              // Mis trabajos: un filtro se ve igual en todo el
+                              // app. Con conteo, que dice qué hay en cada uno sin
+                              // entrar. No se «limpia» al volver a tocarlo: es un
+                              // cambiador de vista, siempre queda uno elegido.
+                              <StatusFilterTabs
+                                tabs={PUBLICACION_TABS.filter((opcion) => EMPLEOS_VISIBLE || opcion.id !== "empleos")}
+                                value={publicacionTipo}
+                                onChange={(id) => setPublicacionTipo(id as Publicacion)}
+                                counts={conteoPublicaciones}
+                                labelFor={(id) => (id === "proyectos" ? panelTabLabel("sent_projects") : id === "empleos" ? panelTabLabel("jobs") : panelTabLabel("offers"))}
+                                variant="chips"
+                                limpiable={false}
+                              />
+                            )}
+                            {/* Las tres vistas se montan siempre y se esconden con
+                                CSS: así el conteo de las tres está desde el
+                                primer momento, sin tener que entrar a cada una. */}
+                            <div hidden={!!pro && publicacionTipo !== "proyectos"}>
+                              <ClientActivity section="projects" onCount={(n) => anotarConteo("proyectos", n)} />
+                            </div>
+                            {pro && EMPLEOS_VISIBLE && (
+                              <div hidden={publicacionTipo !== "empleos"}>
+                                <JobsPanel professionalId={pro.id} onCount={(n) => anotarConteo("empleos", n)} />
+                              </div>
+                            )}
+                            {pro && (
+                              <div hidden={publicacionTipo !== "promociones"}>
+                                <OffersPanel professionalId={pro.id} onCount={(n) => anotarConteo("promociones", n)} />
+                              </div>
+                            )}
+                          </div>
+                        )}
                         {activeTab === "completion" && proForCompletion && (
                           <ProfileCompletion
                             pro={proForCompletion}

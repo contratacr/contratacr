@@ -5,46 +5,23 @@ import { LandingFooter } from "@/components/landing/landing-footer";
 import { LandingNavbar } from "@/components/landing/landing-navbar";
 import { SectionHeaderTitle } from "@/components/mobile/section-header-title";
 import { useTranslations } from "next-intl";
-import { notFound } from "next/navigation";
-import { useEffect, useState, useSyncExternalStore } from "react";
-import { isNativeAppRuntime } from "@/hooks/use-native-app";
 
-// La app se reconoce por el runtime de Capacitor o por la marca que el propio
-// armazón nativo deja en la cookie; cualquiera de las dos alcanza.
-function esLaApp() {
-  if (isNativeAppRuntime()) return true;
-  if (typeof document === "undefined") return false;
-  return /(?:^|;\s*)ccr_platform=native(?:;|$)/.test(document.cookie);
-}
-
-// Capacitor no avisa cuando se anuncia: la lectura se repite en el efecto de
-// abajo, así que aquí no hay nada a lo que suscribirse.
-const sinSuscripcion = () => () => {};
-
+/**
+ * Mensajes, en la app Y en la web.
+ *
+ * Esta ruta respondía 404 fuera de la app nativa, y con eso quedaban dos
+ * caminos rotos en la web: la notificación «Nuevo mensaje» —que apunta a
+ * /mensajes?conversation=…— y el panel, que redirige aquí cuando le piden
+ * ?tab=chat. Las dos puertas llevaban a «Página no encontrada», así que en la
+ * web NO había forma de leer un mensaje recibido.
+ *
+ * Lo que sigue siendo de la app es el ICONO de Mensajes en la barra de arriba;
+ * en la web se llega desde el menú, desde el panel y desde el aviso. La
+ * pantalla ya traía su propio marco para la web (navbar y pie), solo estaba
+ * apagada.
+ */
 export default function MessagesPage() {
   const tSeccion = useTranslations("sectionTitles");
-  // Los mensajes son de la app: en la web esta ruta no existe. Capacitor tarda
-  // unos milisegundos en anunciarse, así que solo se descarta cuando ya se sabe.
-  // Arranca SIEMPRE en «pendiente», también en el cliente: el servidor no ve
-  // Capacitor ni el documento y pinta el marco vacío, así que si el cliente
-  // arrancara ya en «app» React descartaría el HTML entero por no coincidir
-  // (error de hidratación en cada apertura de Mensajes y un repintado de más).
-  // La app se reconoce antes del primer pintado, en el efecto de abajo.
-  // El servidor responde «no es la app» (marco vacío) y el cliente lo
-  // reemplaza en el mismo ciclo de hidratación sin descartar el HTML.
-  const esAppAhora = useSyncExternalStore(sinSuscripcion, esLaApp, () => false);
-  const [entornoDetectado, setEntorno] = useState<"pendiente" | "app" | "web">("pendiente");
-  const entorno = esAppAhora ? "app" : entornoDetectado;
-  useEffect(() => {
-    if (entorno === "app") return;
-    const revisar = () => { if (esLaApp()) setEntorno("app"); };
-    const tiempos = [0, 50, 250, 750].map((espera) => window.setTimeout(revisar, espera));
-    const final = window.setTimeout(() => { if (!esLaApp()) setEntorno("web"); }, 900);
-    return () => { tiempos.forEach(window.clearTimeout); window.clearTimeout(final); };
-  }, [entorno]);
-
-  if (entorno === "web") notFound();
-  if (entorno === "pendiente") return <div className="min-h-screen bg-[#f5f8fb]" />;
 
   return (
     <div className="flex min-h-screen flex-col bg-[#f5f8fb]">

@@ -10,7 +10,7 @@ import { SocialSignupButtons } from "@/components/auth/social-signup-buttons";
 import { readAttribution } from "@/lib/analytics/attribution";
 import { trackMetaEvent } from "@/lib/analytics/meta-pixel";
 import { Navbar } from "@/components/layout/navbar";
-import { FocusedHeader } from "@/components/layout/focused-header";
+import { CabeceraDeTramite } from "@/components/layout/focused-header";
 import { Button } from "@/components/ui/button";
 import { PhoneInput, isPhoneComplete } from "@/components/ui/phone-input";
 import { OtpVerification } from "@/components/auth/otp-verification";
@@ -186,7 +186,7 @@ export default function RegisterClientPage() {
   if (otpEmail) {
     return (
       <div className="min-h-screen flex flex-col bg-[#fafafa]">
-        {user ? <FocusedHeader /> : <Navbar mobileSearch={false} />}
+        {user ? <CabeceraDeTramite title={t("title")} /> : <Navbar mobileSearch={false} />}
         <main className="flex-1 ccr-centrado-seguro px-4 py-12">
           <div className="w-full max-w-sm">
             <div className="bg-white rounded-3xl shadow-sm border border-[#e5e7eb] p-8">
@@ -201,7 +201,7 @@ export default function RegisterClientPage() {
   if (success) {
     return (
       <div className="min-h-screen flex flex-col bg-[#fafafa]">
-        {user ? <FocusedHeader /> : <Navbar mobileSearch={false} />}
+        {user ? <CabeceraDeTramite title={t("title")} /> : <Navbar mobileSearch={false} />}
         <main className="flex-1 ccr-centrado-seguro px-4 py-12">
           <div className="w-full max-w-md text-center">
             <SuccessIcon size={80} className="mx-auto mb-5" />
@@ -226,15 +226,16 @@ export default function RegisterClientPage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-[#fafafa]">
-      {user ? <FocusedHeader /> : <Navbar mobileSearch={false} />}
+      {user ? <CabeceraDeTramite title={t("title")} /> : <Navbar mobileSearch={false} />}
       <main className="flex-1 ccr-centrado-seguro px-4 py-12">
         <div className="w-full max-w-md">
           <div className="bg-white rounded-3xl shadow-sm border border-[#e5e7eb] p-8">
             {/* Sin icono arriba: el formulario del profesional tampoco lo lleva
                 (ahí manda el indicador de pasos), y el símbolo repetía el de la
                 tarjeta que la persona acaba de tocar. */}
+            {/* Con sesión el título va en la cabecera; aquí solo el apoyo. */}
             <div className="text-center mb-6">
-              <h1 className="text-2xl font-bold text-[#162543]">{t("title")}</h1>
+              {!user && <h1 className="text-2xl font-bold text-[#162543]">{t("title")}</h1>}
               <p className="text-sm text-[#6b7280] mt-1">{t("subtitle")}</p>
             </div>
 

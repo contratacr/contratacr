@@ -26,6 +26,11 @@ type DirectChatLauncherProps = {
   onSelfAction?: () => void;
   tone?: "primary" | "contrast" | "outline";
   analyticsSource?: "search" | "profile" | "profile_service" | "booking" | "favorites" | "unknown";
+  /** Da forma al mensaje: "job" escribe el saludo de una postulación. */
+  intent?: "job";
+  /** La publicación desde la que se escribe: puede tener su propio WhatsApp. */
+  jobId?: string;
+  offerId?: string;
 };
 
 export function DirectChatLauncher({
@@ -42,12 +47,20 @@ export function DirectChatLauncher({
   onSelfAction,
   tone = "primary",
   analyticsSource = "unknown",
+  intent,
+  jobId,
+  offerId,
 }: DirectChatLauncherProps) {
   const locale = useLocale();
   const isEn = locale === "en";
   const nativeApp = useNativeApp();
   const [loading, setLoading] = useState(false);
-  const whatsappLabel = isEn ? "Contact on WhatsApp" : "Contactar por WhatsApp";
+  // Un solo rótulo en todo el app: «WhatsApp» y el logo verde. El logo ya dice
+  // «escribir», y el verbo largo («Contactar por…», «Escribir por…»,
+  // «Postularme por…») no cabe cuando el botón comparte renglón con «Llamar»:
+  // se salía de la píldora. Era además el único rótulo distinto por pantalla,
+  // así que la misma acción se veía como cuatro acciones diferentes.
+  const whatsappLabel = "WhatsApp";
   const { requireAccount, modals } = useContactGate({ professionalName, intent: "whatsapp", professionalId, source: analyticsSource });
 
   if (nativeApp) {
@@ -84,6 +97,9 @@ export function DirectChatLauncher({
           proposalId,
           contextTitle,
           initialMessage,
+          intent,
+          jobId,
+          offerId,
           locale,
         }),
       });
@@ -126,7 +142,6 @@ export function DirectChatLauncher({
         buttonVariants({ variant: "whatsapp", size: "md" }),
         "gap-1.5 disabled:opacity-60",
         className || "w-full rounded-full py-2.5 text-[13px] font-semibold",
-        "bg-[#25d366] text-white hover:bg-[#1da851] focus-visible:ring-[#25d366]",
       )}
     >
       {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <WhatsAppLogo />}

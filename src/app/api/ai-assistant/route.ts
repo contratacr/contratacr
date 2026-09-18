@@ -1990,7 +1990,7 @@ function assistantProfessionalResult(
       ? locale === "en" ? "View availability" : "Ver disponibilidad"
       : nativeApp
         ? locale === "en" ? "Send message" : "Enviar mensaje"
-        : locale === "en" ? "Contact on WhatsApp" : "Contactar por WhatsApp",
+        : "WhatsApp",
     actionKind,
     categoryId: serviceId ?? professional.categoryId ?? null,
   };

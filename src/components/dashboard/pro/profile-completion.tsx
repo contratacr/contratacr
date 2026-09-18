@@ -281,6 +281,17 @@ export function ProfileCompletion({
   const next = missing[0];
   const visibleSteps = missing;
 
+  /** Bajar un paso de la lista. Se guarda en el navegador, como «ignoreAll». */
+  function omitir(key: string) {
+    const siguiente = Array.from(new Set([...ignored, key]));
+    setIgnored(siguiente);
+    try {
+      localStorage.setItem(ignoredStorageKey, JSON.stringify(siguiente));
+    } catch {
+      // Si el navegador no guarda, el paso vuelve a salir la próxima vez.
+    }
+  }
+
   function ignoreAll() {
     const missingKeys = items.filter((item) => !item.done && item.optional).map((item) => item.key);
     const nextIgnored = Array.from(new Set([...ignored, ...missingKeys]));
@@ -325,29 +336,49 @@ export function ProfileCompletion({
 
         <div className="mt-5 border-t border-[#eef3f7]">
           {visibleSteps.map((item) => (
-            <button
+            // La fila es una caja, no un botón: adentro van DOS acciones —hacer
+            // el paso y omitirlo—, y un botón dentro de otro no es HTML válido.
+            <div
               key={item.key}
-              type="button"
-              onClick={() => onGo(item.tab, item.key)}
-              className="flex w-full items-center gap-3.5 border-b border-[#eef3f7] px-1 py-3.5 text-left transition-colors last:border-b-0 hover:bg-[#f8fbfd]"
+              className="flex w-full items-center gap-2 border-b border-[#eef3f7] px-1 py-1.5 last:border-b-0"
             >
-              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#eef9fd] text-[#009FD9]">
-                <ChevronRight className="h-4.5 w-4.5" />
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className="flex items-center gap-2 text-sm font-extrabold leading-snug text-[#162543]">
-                  <span className="min-w-0">{t(item.key)}</span>
-                  {item.optional && (
-                    <span className="inline-flex shrink-0 rounded-full bg-[#f1f6f9] px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.02em] text-[#7c8fa1]">{t("optionalShort")}</span>
+              <button
+                type="button"
+                onClick={() => onGo(item.tab, item.key)}
+                className="flex min-w-0 flex-1 items-center gap-3.5 rounded-xl px-0 py-2 text-left transition-colors hover:bg-[#f8fbfd]"
+              >
+                <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#eef9fd] text-[#009FD9]">
+                  <ChevronRight className="h-4.5 w-4.5" />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="flex items-center gap-2 text-sm font-extrabold leading-snug text-[#162543]">
+                    <span className="min-w-0">{t(item.key)}</span>
+                    {item.optional && (
+                      <span className="inline-flex shrink-0 rounded-full bg-[#f1f6f9] px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.02em] text-[#7c8fa1]">{t("optionalShort")}</span>
+                    )}
+                  </span>
+                  {STEP_HINTS[item.key] && (
+                    <span className="mt-1 block text-xs font-semibold leading-snug text-[#7c8fa1]">{t(STEP_HINTS[item.key])}</span>
                   )}
                 </span>
-                {STEP_HINTS[item.key] && (
-                  <span className="mt-1 block text-xs font-semibold leading-snug text-[#7c8fa1]">{t(STEP_HINTS[item.key])}</span>
-                )}
-              </span>
-            </button>
+              </button>
+              {/* Cualquier paso se puede omitir, también los importantes: el que
+                  no quiere poner algo no lo va a poner porque no lo dejemos
+                  seguir, y una lista que no se puede bajar deja de leerse. */}
+              <button
+                type="button"
+                onClick={() => omitir(item.key)}
+                className="shrink-0 rounded-full px-2.5 py-2 text-xs font-bold text-[#8fa1b6] transition-colors hover:bg-[#f1f6f9] hover:text-[#526277]"
+              >
+                {t("skipStep")}
+              </button>
+            </div>
           ))}
         </div>
+        {/* Sin «Terminar por ahora»: la sección ya se deja con la flecha de la
+            cabecera (teléfono) o el menú del panel (computadora), y cada paso
+            trae su «Omitir». Era un botón a todo el ancho que competía con los
+            pasos para hacer lo mismo que la flecha. */}
         {optionalMissing.length > 0 && (
           <button
             type="button"

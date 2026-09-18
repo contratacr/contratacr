@@ -8,6 +8,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
 import { CalendarDays, FolderOpen, ClipboardList, Plus, CalendarClock, CalendarCheck, Wrench, Users, FileText, CheckCircle2, Star } from "lucide-react";
 import { DirectChatLauncher } from "@/components/professionals/direct-chat-launcher";
+import { ContactButton } from "@/components/professionals/contact-button";
 import { CardActionsMenu, type CardAction } from "@/components/dashboard/card-actions-menu";
 import { formatBookingWhen, ordenarCitas } from "@/lib/booking-when";
 import { Badge } from "@/components/ui/badge";
@@ -21,7 +22,7 @@ import { getCategoryLabel } from "@/lib/data/categories";
 import { computeAge } from "@/lib/age";
 import { formatColonesTaxIncluded, splitPricingLabel } from "@/lib/pricing";
 import { getInitials, cn, formatRelativeOrDate } from "@/lib/utils";
-import { StatusFilterTabs, SOLICITUD_TABS, PROYECTO_TABS, solicitudMatches, solicitudBucket, proyectoMatches, proyectoBucket, bucketCounts } from "@/components/dashboard/status-filter-tabs";
+import { etapaEnMasculino, StatusFilterTabs, SOLICITUD_TABS, PROYECTO_TABS, solicitudMatches, solicitudBucket, proyectoMatches, proyectoBucket, bucketCounts, sinFiltros } from "@/components/dashboard/status-filter-tabs";
 import { ExpandToggle } from "@/components/dashboard/expand-toggle";
 import { SectionHeadline } from "@/components/dashboard/section-headline";
 import { ExpandableText } from "@/components/ui/expandable-text";
@@ -106,6 +107,7 @@ type Proposal = {
     id: string;
     slug: string;
     whatsapp?: string;
+    allow_phone_call?: boolean | null;
     verification_status?: string | null;
     category_id?: string | null;
     rating_avg?: number | null;
@@ -160,7 +162,7 @@ async function fetchClientProjects(): Promise<Project[]> {
 // es adorno, así que es el que cede.
 const actionButtonClass = "h-11 w-auto shrink-0 grow whitespace-nowrap rounded-full px-4 text-[13px] font-bold max-[389px]:px-3 max-[389px]:[&>svg]:hidden lg:grow-0 lg:min-w-[11rem]";
 
-export function ClientActivity({ section }: { section: ClientActivitySection }) {
+export function ClientActivity({ section, onCount }: { section: ClientActivitySection; onCount?: (total: number) => void }) {
   const { user } = useAuth();
   const t = useTranslations("clientActivity");
   const tSub = useTranslations("proPanel.subtitles");
@@ -203,6 +205,9 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
   );
   const { data: bookings, setData: setBookings } = bookingsResource;
   const { data: projects, setData: setProjects } = projectsResource;
+  // El conteo sube al cambiador de «Mis publicaciones»: tiene que estar arriba
+  // de cualquier retorno temprano, o el orden de los hooks cambia entre pintados.
+  useEffect(() => { onCount?.(projects.length); }, [projects.length, onCount]);
   const loading = section === "bookings" ? bookingsResource.loading : section === "projects" ? projectsResource.loading : false;
   const [reviewModal, setReviewModal] = useState<{ professionalId: string; professionalName: string; bookingId?: string; projectId?: string; initialReview?: { rating?: number | null; comment?: string | null } | null } | null>(null);
   const [myReviews, setMyReviews] = useState<{ professional_id: string; booking_id?: string | null; project_id?: string | null; rating: number; comment?: string | null }[]>([]);
@@ -244,7 +249,6 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
   const targetProjectRetryRef = useRef(0);
   const targetProjectRef = useRef<string | null>(null);
   const targetProjectHandledRef = useRef(false);
-  const openPublishHandledRef = useRef(false);
   const refreshTimerRef = useRef<number | null>(null);
   const lastSilentRefreshRef = useRef(0);
   const refreshBookings = bookingsResource.refresh;
@@ -368,12 +372,10 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
     };
   }, [section]);
 
-  useEffect(() => {
-    if (section !== "projects" || openPublishHandledRef.current) return;
-    if (searchParams.get("openPublish") !== "1") return;
-    openPublishHandledRef.current = true;
-    queueMicrotask(() => setShowPublish(true));
-  }, [searchParams, section]);
+  // `?openPublish=1` lo atiende el PANEL, no esta sección. Las dos lo leían y
+  // cada una abría su formulario: quedaban dos ventanas idénticas una encima de
+  // la otra, y la flecha que se tocaba era la de arriba —la del panel—, que no
+  // sabía de dónde venía la persona.
 
   const loadMyReviews = useCallback(async () => {
     try {
@@ -521,6 +523,17 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
 
   async function openResolve(projectId: string) {
     const lista = await loadProposals(projectId);
+    // Sin propuestas no hay a quién señalar: preguntar «¿quién te ayudó?» para
+    // que la única respuesta posible sea «lo resolví por otro lado» es una
+    // pregunta con una sola salida. Desde que se responde por WhatsApp ya no
+    // entran propuestas nuevas, así que este es el caso normal; la ventana
+    // queda para los proyectos viejos que sí las tienen, que son los únicos
+    // donde se puede dejar una reseña.
+    if (lista.length === 0) {
+      setResolveChoice("");
+      await resolverProyecto(projectId, null);
+      return;
+    }
     // Con una sola respuesta, casi siempre fue esa persona: viene marcada para
     // que un cierre rápido no le quite el crédito (ni la reseña).
     const unico = lista.length === 1 ? lista[0]?.professionals?.id ?? "" : "";
@@ -528,21 +541,21 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
     setResolveTarget(projectId);
   }
 
-  async function confirmResolve() {
-    if (!resolveTarget) return;
-    const projectId = resolveTarget;
+  // El cierre en sí, sin ventana de por medio: lo usan tanto el atajo sin
+  // propuestas como la confirmación de la ventana.
+  async function resolverProyecto(projectId: string, professionalId: string | null) {
     setResolving(true);
     const res = await fetch("/api/projects", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: projectId, action: "resolve", professionalId: resolveChoice || null }),
+      body: JSON.stringify({ id: projectId, action: "resolve", professionalId: professionalId || null }),
     });
     setResolving(false);
     if (!res.ok) {
       void showMessage({ title: errorTitle, description: t("resolveError"), tone: "danger" });
       return;
     }
-    const chosen = (projectProposals[projectId] ?? []).find((p) => p.professionals?.id === resolveChoice);
+    const chosen = (projectProposals[projectId] ?? []).find((p) => p.professionals?.id === professionalId);
     setProjects((prev) => prev.map((p) => (p.id === projectId ? { ...p, status: "completed", accepted_professional_id: chosen?.professionals?.id ?? null } : p)));
     setResolveTarget(null);
     setProjectFilter("finalizadas");
@@ -550,6 +563,11 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
     if (chosen?.professionals?.id) {
       setReviewModal({ professionalId: chosen.professionals.id, professionalName: chosen.professionals.profiles?.full_name ?? t("professional"), projectId });
     }
+  }
+
+  async function confirmResolve() {
+    if (!resolveTarget) return;
+    await resolverProyecto(resolveTarget, resolveChoice || null);
   }
 
   async function confirmDeleteProject() {
@@ -615,7 +633,18 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
   const projectTabs = PROYECTO_TABS;
   const effectiveProjectFilter = projectTabs.some((tab) => tab.id === projectFilter)
     ? projectFilter : (projectTabs[0]?.id ?? projectFilter);
-  const filteredBookings = ordenarCitas(bookings.filter((b) => solicitudMatches(effectiveBookingFilter, b.status, b.scheduled_date)), effectiveBookingFilter === "finalizadas" ? "finalizadas" : "activas");
+  // Con pocos elementos no se dibujan etapas (ver `sinFiltros`), así que la
+  // lista se muestra ENTERA: si no, el filtro escondido dejaría afuera lo
+  // terminado sin que nada lo explique.
+  const filteredBookings = sinFiltros(bookings.length)
+    ? ordenarCitas(bookings, "activas")
+    : ordenarCitas(bookings.filter((b) => solicitudMatches(effectiveBookingFilter, b.status, b.scheduled_date)), effectiveBookingFilter === "finalizadas" ? "finalizadas" : "activas");
+  // Mis proyectos SIEMPRE se filtra por etapa, tenga 2 o 200. La regla de
+  // «pocos elementos, sin filtros» sirve donde las etapas son un detalle, pero
+  // aquí separan lo que sigue esperando respuesta de lo que ya se resolvió, y
+  // esconderlas tenía una consecuencia fea: al tocar «Marcar como finalizado»
+  // el proyecto se quedaba en la misma lista, igualito, y parecía que el botón
+  // no hacía nada.
   const filteredProjects = projects.filter((p) => proyectoMatches(effectiveProjectFilter, p.status));
   return (
     <>
@@ -632,7 +661,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
           ) : (
             <>
               {bookingTabs.length > 0 && (
-                <StatusFilterTabs tabs={bookingTabs} value={effectiveBookingFilter} onChange={setBookingFilter} labelFor={etapaSolicitudLabel} counts={bookingCounts} />
+                <StatusFilterTabs tabs={bookingTabs} value={effectiveBookingFilter} onChange={setBookingFilter} labelFor={etapaSolicitudLabel} counts={bookingCounts} totalElementos={bookings.length} />
               )}
               {filteredBookings.length === 0 ? (
                 <PanelFilterEmpty
@@ -875,7 +904,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                                 // no dejar un hueco—. De 640 px en adelante `sm:contents`
                                 // disuelve las envolturas y todo vuelve a ser una sola fila
                                 // alineada a la derecha.
-                                <div className="flex flex-col gap-2 border-t border-[#eef2f6] pt-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">
+                                <div className="ccr-acciones-tarjeta flex flex-col gap-2 border-t border-[#eef2f6] pt-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">
                                   {candidatas.length > 0 && !cabenEnUnaFila && (
                                     <div className="grid grid-cols-2 gap-2 [&>*]:w-full [&>*:last-child:nth-child(odd)]:col-span-2 sm:contents sm:[&>*]:w-auto">
                                       {candidatas}
@@ -967,7 +996,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                 value={effectiveProjectFilter}
                 onChange={setProjectFilter}
                 counts={projectCounts}
-                labelFor={(id) => tEtapas(id)}
+                labelFor={(id) => tEtapas(etapaEnMasculino(id))}
               />
               {filteredProjects.length === 0 && (
                 <PanelFilterEmpty
@@ -983,13 +1012,22 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                 const zone = [project.cantones?.name, project.provincias?.name].filter(Boolean).join(", ");
                 const isActive = project.status !== "completed" && project.status !== "cancelled";
                 // La pestaña ya dice en qué etapa está: repetirlo en la tarjeta
-                // gastaba el único renglón que hay para algo útil (cuántas
-                // propuestas llegaron).
+                // gastaba el único renglón que hay para algo útil.
                 const etapaLoDice = (project.status === "completed" && effectiveProjectFilter === "finalizadas")
                   || (project.status === "cancelled" && effectiveProjectFilter === "canceladas");
+                // «Sin propuestas todavía» se fue. Desde que se responde por
+                // WhatsApp no entra ninguna propuesta nueva, así que ese renglón
+                // decía —para siempre, en todos los proyectos— que nadie había
+                // contestado: un reclamo permanente por algo que ya no puede
+                // pasar. En su lugar va el servicio, que es lo que identifica el
+                // proyecto, igual que en el tablero público. El conteo se
+                // conserva para los proyectos viejos que sí recibieron
+                // propuestas, porque ahí sí hay algo que abrir.
+                const servicio = project.categories?.name ?? null;
                 const headline = !etapaLoDice && project.status === "completed" ? t("projResolved")
                   : !etapaLoDice && project.status === "cancelled" ? t("projCancelled")
-                    : t("replyCount", { count: replyCount });
+                    : replyCount > 0 ? t("replyCount", { count: replyCount })
+                      : servicio;
                 const headlineClass = !etapaLoDice && project.status === "cancelled" ? "text-[#b91c1c]"
                   : !etapaLoDice && project.status === "completed" ? "text-[#6b7280]"
                     : replyCount > 0 ? "text-[#0089bb]" : "text-[#6b7280]";
@@ -1011,10 +1049,14 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                             hacía que dos tarjetas de la misma lista no se
                             reconocieran como lo mismo. El color sí marca el aviso. */}
                         <div className="relative shrink-0">
-                          {/* Caja constante, igual que en las otras tres listas: el
-                              aviso lo da el punto, no un icono "mejorado". */}
-                          <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-[#ccecf8] ccr-caja-icono-plana">
-                            <ClipboardList className="h-[18px] w-[18px]" />
+                          {/* La MISMA caja que Mis publicaciones y Favoritos: las
+                              tres listas del panel se ven seguidas y cada una
+                              traía su propio recuadro —una plana con borde, otra
+                              un icono suelto sin fondo y Empleos ninguna—, así que
+                              la misma lista cambiaba de cara al cambiar de
+                              sección. El aviso de novedad lo sigue dando el punto. */}
+                          <div className="grid h-[52px] w-[52px] place-items-center rounded-xl ccr-caja-icono">
+                            <ClipboardList className="h-5 w-5" />
                           </div>
                           {isActive && replyCount > 0 && (
                             <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-[#009FD9] ring-2 ring-white" aria-hidden />
@@ -1022,7 +1064,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                         </div>
                         <div className="min-w-0 flex-1">
                           <h3 className="text-[15px] font-bold leading-snug text-[#162543] [overflow-wrap:anywhere] sm:text-base">{project.title}</h3>
-                          <p className={cn("mt-1 text-[13px] font-semibold", headlineClass)}>{headline}</p>
+                          {headline && <p className={cn("mt-1 text-[13px] font-semibold", headlineClass)}>{headline}</p>}
                           <p className="mt-0.5 text-[12px] text-[#68778d]">{formatRelativeOrDate(project.created_at, locale)}{zone ? ` · ${zone}` : ""}</p>
                         </div>
                         <ExpandToggle open={isExpanded} />
@@ -1044,7 +1086,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
 
                           <QuoteBlock projectId={project.id} role="client" />
                           {/* Respuestas: quién escribió, qué dijo, y WhatsApp directo. */}
-                          {proposalList && (() => {
+                          {proposalList && proposalList.length > 0 && (() => {
                             const chosenId = project.accepted_professional_id ?? null;
                             // Proyecto cerrado: la lista de quienes no fueron elegidos ya no
                             // decide nada. Queda solo con quien hizo el trabajo.
@@ -1053,13 +1095,13 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                               ? proposalList.filter((x) => x.professionals?.id === chosenId)
                               : proposalList;
                             const ordered = [...base].sort((a, b) => Number(b.professionals?.id === chosenId) - Number(a.professionals?.id === chosenId));
+                            // Un proyecto cerrado sin elegido deja la lista
+                            // vacía: entonces no hay sección que dibujar.
+                            if (ordered.length === 0) return null;
                             return (
                               <div className="border-t border-[#f3f4f6] pt-4">
                                 <p className="mb-2.5 text-[10px] font-semibold uppercase tracking-[0.06em] text-[#68778d]">{cerrado && chosenId ? t("hiredTitle") : t("repliesTitle")}</p>
-                                {ordered.length === 0 ? (
-                                  <p className="rounded-xl bg-[#f4f7fa] px-3.5 py-3 text-center text-[13px] leading-relaxed text-[#6b7280]">{t("noRepliesYet")}</p>
-                                ) : (
-                                  <div className="flex flex-col gap-3">
+                                <div className="flex flex-col gap-3">
                                     {ordered.map((proposal) => {
                                       const isChosen = !!chosenId && proposal.professionals?.id === chosenId;
                                       const proVerified = proposal.professionals?.verification_status === "verified";
@@ -1115,35 +1157,50 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                                             </div>
                                           </div>
                                           {isActive && proposal.professionals?.id && (
-                                            <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">
-                                              {/* Ancho entero en el teléfono; en pantalla grande, una
-                                                  fila con cada botón del ancho de su texto. */}
-                                              {!chosenId && (
-                                                <Button
-                                                  size="sm"
-                                                  className="h-11 w-full rounded-full text-[13px] font-bold sm:w-auto sm:px-5"
-                                                  loading={eligiendo === proposal.professionals.id}
-                                                  disabled={!!eligiendo}
-                                                  onClick={() => void elegirProfesional(project.id, proposal.professionals!.id!, proposal.professionals?.profiles?.full_name ?? t("professional"))}
-                                                >
-                                                  {t("chooseThisOne")}
-                                                </Button>
-                                              )}
-                                              <DirectChatLauncher professionalId={proposal.professionals.id} professionalName={proposal.professionals.profiles?.full_name || t("professional")} projectId={project.id} proposalId={proposal.id} contextTitle={project.title} buttonLabel={t("writeWhatsapp")} openDirectly initialMessage={t("proposalChatGreeting", { title: project.title })} className="h-11 w-full sm:w-auto sm:px-5 rounded-full text-[13px] font-bold" tone="primary" />
+                                            <div className="mt-3 space-y-2">
+                                              {/* WhatsApp se lleva la línea entera: es por donde de
+                                                  verdad contestan. Debajo, en una sola fila, llamar y
+                                                  la decisión. Tres píldoras apiladas se leían como
+                                                  tres cosas del mismo peso, y no lo son. */}
+                                              <DirectChatLauncher professionalId={proposal.professionals.id} professionalName={proposal.professionals.profiles?.full_name || t("professional")} projectId={project.id} proposalId={proposal.id} contextTitle={project.title} buttonLabel={t("writeWhatsapp")} openDirectly initialMessage={t("proposalChatGreeting", { title: project.title })} className="h-11 w-full rounded-full text-[13px] font-bold" tone="primary" />
+                                              <div className="grid grid-cols-2 gap-2 empty:hidden [&:has(>*:only-child)]:grid-cols-1">
+                                                <ProposalContactLinks proposal={proposal} projectTitle={project.title} />
+                                                {!chosenId && (
+                                                  <Button
+                                                    size="sm"
+                                                    className="h-11 w-full rounded-full text-[13px] font-bold"
+                                                    loading={eligiendo === proposal.professionals.id}
+                                                    disabled={!!eligiendo}
+                                                    onClick={() => void elegirProfesional(project.id, proposal.professionals!.id!, proposal.professionals?.profiles?.full_name ?? t("professional"))}
+                                                  >
+                                                    {t("chooseShort")}
+                                                  </Button>
+                                                )}
+                                              </div>
                                             </div>
                                           )}
                                         </div>
                                       );
                                     })}
-                                  </div>
-                                )}
+                                </div>
                               </div>
                             );
                           })()}
 
                           {/* Acciones con la misma silueta que Citas: la que avanza en turquesa,
-                              lo destructivo en el menú ⋮. */}
-                          <div className="flex items-start gap-2 border-t border-[#f3f4f6] pt-4 sm:justify-end">
+                              lo destructivo en el menú ⋮.
+                              La fila entera se calla si no hay ninguna acción: un
+                              proyecto finalizado sin profesional elegido no ofrece
+                              nada, y la línea de arriba quedaba separando la
+                              descripción de un espacio vacío. */}
+                          {(() => {
+                            const hayResolver = isActive;
+                            const hayResena = project.status === "completed" && !!project.accepted_professional_id;
+                            const hayReabrir = project.status === "cancelled";
+                            const hayMenu = isActive || project.status === "cancelled";
+                            if (!hayResolver && !hayResena && !hayReabrir && !hayMenu) return null;
+                            return (
+                          <div className="ccr-acciones-tarjeta flex items-start gap-2 border-t border-[#f3f4f6] pt-4 sm:justify-end">
                             <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2 sm:flex-none sm:justify-end">
                               {isActive && (
                                 <Button size="sm" className={actionButtonClass} onClick={() => openResolve(project.id)}>{t("resolve")}</Button>
@@ -1166,12 +1223,14 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                               />
                             )}
                           </div>
+                            );
+                          })()}
 
                           {cancelProjectTarget === project.id && (
                             <div className="rounded-xl border border-red-100 bg-red-50/60 p-3.5">
                               <p className="text-sm font-semibold text-[#162543]">{t("cancelProjectTitle")}</p>
                               <p className="mt-0.5 text-xs leading-relaxed text-[#6b7280]">{t("cancelProjectBody")}</p>
-                              <div className="mt-3 flex flex-wrap justify-end gap-2">
+                              <div className="ccr-grupo-botones mt-3 flex flex-wrap justify-end gap-2">
                                 <Button variant="outline" size="sm" className="rounded-lg" onClick={() => setCancelProjectTarget(null)} disabled={cancellingProject}>{t("cancelBack")}</Button>
                                 <Button size="sm" className="rounded-lg bg-red-600 hover:bg-red-700" onClick={() => confirmCancelProject(project.id)} disabled={cancellingProject} loading={cancellingProject}>{t("cancelProjectConfirm")}</Button>
                               </div>
@@ -1291,6 +1350,26 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
         />
       )}
       {dialogNode}
+    </>
+  );
+}
+
+
+// Llamar al profesional que propuso, al lado del WhatsApp. Solo aparece si lo
+// habilitó en su perfil, y el número NO viaja en la página: sale de
+// /api/contact/reveal al tocar el botón. El correo no está: cero usos en dos
+// meses en todo el app.
+function ProposalContactLinks({ proposal, projectTitle }: { proposal: Proposal; projectTitle: string }) {
+  const t = useTranslations("clientActivity");
+  const pro = proposal.professionals;
+  if (!pro) return null;
+  const nombre = pro.profiles?.full_name || t("professional");
+  const clase = "h-11 w-full rounded-full border border-[#d7e1ea] bg-white px-4 text-[13px] font-bold text-[#162543] transition hover:border-[#b9c8d6] hover:bg-[#f6f9fb]";
+  return (
+    <>
+      {!!pro.allow_phone_call && (
+        <ContactButton method="phone" professionalId={pro.id} professionalName={nombre} contextTitle={projectTitle} source="profile" className={clase} label={t("callProfessional")} />
+      )}
     </>
   );
 }
