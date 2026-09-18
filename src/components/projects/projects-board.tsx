@@ -137,7 +137,7 @@ function BotonEscribir({ proyecto, className = "" }: { proyecto: ProyectoPublico
       disabled={cargando}
       // 48 px de alto: el botón vive en la franja del fondo y ahí mide lo
       // mismo que «Publicar» en Crear proyecto.
-      className={cn("inline-flex h-12 w-full items-center justify-center gap-1.5 rounded-full bg-[#1DA851] px-4 text-base font-semibold text-white transition hover:bg-[#178F45] disabled:opacity-60", className)}
+      className={cn("inline-flex h-12 w-full items-center justify-center gap-1.5 ccr-boton-whatsapp rounded-full px-4 text-base font-semibold text-white transition disabled:opacity-60", className)}
     >
       {cargando ? <Loader2 className="h-4 w-4 animate-spin" /> : <WhatsAppLogo />}
       {copy.escribir}
@@ -532,7 +532,7 @@ export function ProjectsBoard({
                   // Sin resultados en la lista, la ficha abierta ocupa todo.
                   filtrados.length === 0 && "lg:col-span-2",
                 )}>
-                  <div className="mx-auto w-full max-w-3xl px-4 pt-4 max-sm:pb-32 sm:px-6 sm:pb-10 lg:max-w-none lg:p-0">
+                  <div className="mx-auto w-full max-w-3xl px-4 pt-4 max-sm:pb-6 sm:px-6 sm:pb-10 lg:max-w-none lg:p-0">
                     <article className="relative rounded-lg border border-[#dfe8f0] bg-white p-5 sm:p-7 lg:rounded-none lg:border-0">
                       {/* En computadora no hay barra de ficha: guardar y compartir
                           van en la esquina, a la altura del título, como en Empleos. */}

@@ -22,8 +22,9 @@ let montadas = 0;
  * el pie se queda: ahí no hay franja fija, la ficha cabe y el pie sirve para
  * navegar.
  *
- * Quien la use tiene que dejar aire abajo (`max-sm:pb-32`) para que la franja
- * no tape el final de la ficha.
+ * El aire de abajo lo reserva sola: publica su alto en --ccr-alto-barra y la
+ * regla data-ccr-reserva (layout.tsx) se lo da al body en el teléfono. Quien la
+ * use NO tiene que agregar su propio max-sm:pb-32.
  *
  * El relleno de abajo es generoso a propósito: Safari en iPhone tiñe su propia
  * barra con el color del borde inferior de la página, y con el botón verde
@@ -104,7 +105,13 @@ function useBarraAccionVisible(ref: React.RefObject<HTMLDivElement | null>) {
   useEffect(() => {
     const medir = () => {
       const nodo = ref.current;
-      setVisible(!!nodo && nodo.getBoundingClientRect().height > 0);
+      const alto = nodo ? nodo.getBoundingClientRect().height : 0;
+      setVisible(alto > 0);
+      // El alto real de la franja, para que la página reserve exactamente ese
+      // espacio abajo (regla data-ccr-reserva en layout.tsx). Antes cada
+      // pantalla lo reservaba a mano con max-sm:pb-32, y la que se olvidaba
+      // —la ficha del profesional— dejaba lo último tapado por la franja.
+      if (alto > 0) document.documentElement.style.setProperty("--ccr-alto-barra", `${Math.ceil(alto)}px`);
     };
     medir();
     const id = requestAnimationFrame(medir);

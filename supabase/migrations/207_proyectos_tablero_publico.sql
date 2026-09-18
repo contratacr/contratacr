@@ -27,9 +27,13 @@ alter table public.projects
 -- es la fecha (TABLERO_PUBLICO_DESDE en src/lib/queries/proyectos-publicos.ts),
 -- así el tablero se comporta igual antes y después de esta migración. Esto los
 -- marca también en la base, para que el dato diga lo mismo que el código.
+-- La fecha de corte es la del tablero (TABLERO_PUBLICO_DESDE en
+-- src/lib/queries/proyectos-publicos.ts), NO now(): con now() se apagaba el
+-- contacto de todos los proyectos que existieran al correr la migración,
+-- incluidos los publicados en el tablero nuevo entre el 15-sep y ese día.
 update public.projects
    set allow_direct_contact = false
- where created_at < now();
+ where created_at < timestamptz '2026-09-15T00:00:00Z';
 
 comment on column public.projects.allow_direct_contact is
   'El proyecto sale al tablero público y un profesional registrado puede pedir el WhatsApp del cliente. Falso solo en los proyectos anteriores al tablero, que se publicaron bajo otra regla.';

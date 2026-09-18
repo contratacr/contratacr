@@ -379,7 +379,7 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
           closeLabel={t("cancel")}
           mobilePresentation="fullscreen"
           footer={
-            <Button type="button" size="lg" onClick={saveCase} loading={saving} className="w-full select-none">
+            <Button type="button" size="lg" onClick={saveCase} loading={saving} className="w-full select-none sm:w-auto sm:px-8">
               {t("save")}
             </Button>
           }

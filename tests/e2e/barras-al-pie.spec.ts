@@ -242,3 +242,31 @@ test.describe("@seeded separación entre botones", () => {
     expect(hueco).toBe(12);
   });
 });
+
+// Con la franja fija abajo, se tiene que poder desplazar hasta el final sin que
+// tape lo último. La ficha del profesional no reservaba espacio y «Reportar
+// perfil» quedaba 43 px por debajo del borde de la franja. Ahora la franja
+// publica su alto (--ccr-alto-barra) y el body lo reserva (data-ccr-reserva).
+test.describe("@seeded la franja no tapa el final", () => {
+  test("en la ficha, lo último queda por encima de la franja", async ({ page }, testInfo) => {
+    test.skip(!isMobileProject(testInfo), "La franja fija solo existe en el teléfono.");
+    const { ensureRegressionSeed } = await import("./seed");
+    const seed = await ensureRegressionSeed();
+    await gotoOK(page, `/es/profesionales/${seed.professionalSlug}`);
+    for (const pestaña of [/Información|Information/, /Servicios|Services/]) {
+      await page.getByRole("tab", { name: pestaña }).first().click();
+      await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+      await page.waitForTimeout(500);
+      const aire = await page.evaluate(() => {
+        const barra = [...document.querySelectorAll(".ccr-barra-fija")].find((b) => (b as HTMLElement).getBoundingClientRect().height > 0) as HTMLElement | undefined;
+        if (!barra) return null;
+        const ultimo = [...document.querySelectorAll("main button, main a, main p, main h2")]
+          .filter((e) => (e as HTMLElement).getBoundingClientRect().height > 0 && !barra.contains(e))
+          .map((e) => (e as HTMLElement).getBoundingClientRect().bottom).sort((a, b) => b - a)[0];
+        return Math.round(barra.getBoundingClientRect().top - ultimo);
+      });
+      expect(aire, "la ficha tiene que traer su franja").not.toBeNull();
+      expect(aire!, "lo último de la pestaña queda tapado por la franja").toBeGreaterThanOrEqual(0);
+    }
+  });
+});

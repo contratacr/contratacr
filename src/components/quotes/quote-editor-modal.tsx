@@ -98,7 +98,7 @@ export function QuoteEditorModal({ open, onClose, bookingId, projectId, defaultT
   const tituloBloque = "mb-3 flex items-center gap-2 text-[11px] font-extrabold uppercase tracking-[0.08em] text-[#8a94a6]";
 
   return (
-    <Modal open={open} onClose={onClose} title={t("editorTitle")} size="md" mobilePresentation="fullscreen" closeLabel={t("close")}
+    <Modal open={open} onClose={onClose} title={t("editorTitle")} size="lg" mobilePresentation="fullscreen" closeLabel={t("close")}
       footerNotice={error ? <p className="text-sm font-semibold text-red-600">{error}</p> : undefined}
       footerClassName="px-4 sm:flex sm:justify-end sm:gap-3 sm:px-6"
       footer={(

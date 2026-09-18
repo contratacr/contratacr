@@ -25,13 +25,13 @@ const buttonVariants = cva(
         outline:
           "border border-[#e5e7eb] bg-white hover:bg-[#f3f4f6] text-[#162543] focus-visible:ring-[#009FD9]",
         // El botón que contacta lleva el azul de ContrataCR, no el verde de
-        // WhatsApp, en verde: es el color que la gente ya asocia con «esto
-        // abre WhatsApp», y al lado de «Llamar» deja claro cuál es cuál sin
-        // leer. No el verde oficial (#25D366): con letra blanca da 1,98:1 y se
-        // lee mal; #1DA851 es el de los botones web de WhatsApp y da 3,10:1,
-        // algo mejor que el azul que había (3,02:1).
+        // WhatsApp, en el verde de la marca (#25D366): es el color que la gente
+        // ya asocia con «esto abre WhatsApp». El color lo pone la regla del
+        // documento (.ccr-boton-whatsapp, en layout.tsx) y no una clase nueva:
+        // con el CSS viejo en caché el botón quedaba blanco sobre blanco —
+        // invisible— y en la franja de la ficha solo se veía «Llamar».
         whatsapp:
-          "bg-[#1DA851] text-white hover:bg-[#178F45] focus-visible:ring-[#1DA851]",
+          "ccr-boton-whatsapp text-white",
       },
       size: {
         sm: "h-9 px-3.5 text-[13px]",

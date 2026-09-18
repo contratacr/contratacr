@@ -494,7 +494,7 @@ export function OffersBoard({
           title={copy.publishOffer}
          
           size="lg"
-          bodyClassName="px-5 py-5 sm:px-6"
+          bodyClassName="bg-[#f4f7fa] px-0 py-0"
         >
           <OfferForm
             onCancel={() => setPublishOpen(false)}
@@ -515,7 +515,7 @@ export function OffersBoard({
           title={copy.editOffer}
          
           size="lg"
-          bodyClassName="px-5 py-5 sm:px-6"
+          bodyClassName="bg-[#f4f7fa] px-0 py-0"
         >
           <OfferForm
             onCancel={() => setEditingOffer(null)}

@@ -190,7 +190,7 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
         role="dialog"
         aria-modal="true"
         aria-labelledby="publish-project-title"
-        className="app-fullscreen-modal relative z-10 flex h-[var(--app-visual-viewport-height)] min-h-0 w-full max-h-[var(--app-visual-viewport-height)] flex-col overflow-hidden bg-white shadow-none sm:h-auto sm:max-h-[90vh] sm:max-w-lg sm:rounded-2xl sm:shadow-2xl"
+        className="app-fullscreen-modal relative z-10 flex h-[var(--app-visual-viewport-height)] min-h-0 w-full max-h-[var(--app-visual-viewport-height)] flex-col overflow-hidden bg-white shadow-none sm:h-auto sm:max-h-[90vh] sm:max-w-2xl sm:rounded-2xl sm:shadow-2xl"
       >
         <div className="relative flex shrink-0 items-center justify-center gap-3 border-b border-[#f3f4f6] px-14 py-4 sm:items-start sm:justify-between sm:px-6">
           {/* Solo el título: la línea de apoyo repetía lo que el propio
@@ -315,9 +315,9 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
           {/* La MISMA franja que el resto del app: la medida vive en
               BARRA_ACCION_BASE, no escrita otra vez aquí. Esta pantalla es la
               referencia, así que si cambia, cambian todas juntas. */}
-          <div className={cn(BARRA_ACCION_BASE, "flex shrink-0 gap-3 sm:px-6 sm:pb-4", error && !published && "ccr-sin-linea border-t-0")}>
+          <div className={cn(BARRA_ACCION_BASE, "flex shrink-0 gap-3 sm:justify-end sm:px-6 sm:pb-4", error && !published && "ccr-sin-linea border-t-0")}>
             {!published && (
-              <Button type="button" variant="outline" size="lg" onClick={onClose} className="hidden sm:inline-flex">
+              <Button type="button" variant="outline" size="lg" onClick={onClose} className="hidden sm:inline-flex sm:px-6">
                 {t("cancel")}
               </Button>
             )}
@@ -339,7 +339,9 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
                 </Button>
               </div>
             ) : (
-              <Button type="submit" size="lg" className="flex-1" loading={submitting} disabled={submitting}>
+              // En computadora, a su tamaño y a la derecha, como Publicar empleo
+              // y Publicar promoción; en el teléfono, a todo el ancho.
+              <Button type="submit" size="lg" className="flex-1 sm:flex-none sm:px-8" loading={submitting} disabled={submitting}>
                 {submitting ? t("publishing") : t("publish")}
               </Button>
             )}

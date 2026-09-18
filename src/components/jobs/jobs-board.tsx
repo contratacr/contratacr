@@ -468,7 +468,7 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
       </div>
     </div>}
     {publishOpen && currentProfessionalId && (
-      <Modal onClose={() => setPublishOpen(false)} title={copy.publishJob} size="lg" bodyClassName="px-5 py-5 sm:px-6">
+      <Modal onClose={() => setPublishOpen(false)} title={copy.publishJob} size="lg" bodyClassName="bg-[#f4f7fa] px-0 py-0">
         <JobPostForm
           onCancel={() => setPublishOpen(false)}
           professionalId={currentProfessionalId}
@@ -484,7 +484,7 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
       </Modal>
     )}
     {editingJob && currentProfessionalId && (
-      <Modal onClose={() => setEditingJob(null)} title={copy.editJob} size="lg" bodyClassName="px-5 py-5 sm:px-6">
+      <Modal onClose={() => setEditingJob(null)} title={copy.editJob} size="lg" bodyClassName="bg-[#f4f7fa] px-0 py-0">
         <JobPostForm
           onCancel={() => setEditingJob(null)}
           professionalId={currentProfessionalId}
@@ -565,7 +565,7 @@ function JobPreview({ job, isOwner, userId, onEdit, mobile = false, hideActions 
     ...(job.duration_label ? [[copy.duration, job.duration_label] as [string, string]] : []),
   ].filter(([, value]) => Boolean(value));
 
-  return <article className={`ccr-marketplace-result-list relative min-w-0 bg-white ${mobile ? "block px-5 pt-6 max-sm:pb-32 sm:pb-6" : "hidden p-7 lg:block lg:max-h-[calc(100vh-190px)] lg:overflow-y-auto"}`}>
+  return <article className={`ccr-marketplace-result-list relative min-w-0 bg-white ${mobile ? "block px-5 pt-6 max-sm:pb-6 sm:pb-6" : "hidden p-7 lg:block lg:max-h-[calc(100vh-190px)] lg:overflow-y-auto"}`}>
     {/* Quién publica va PRIMERO —foto y nombre— y al final de esa misma línea
         el «···», con compartir adentro. Es el orden de LinkedIn y de Indeed:
         la empresa encabeza la ficha, el puesto va debajo a todo el ancho. El

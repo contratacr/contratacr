@@ -48,7 +48,7 @@ export function OfferOwnerActions({ offer, professionalId, serviceOptions, fromP
       </div>
 
       {editing && (
-        <Modal onClose={() => setEditing(false)} title={copy.edit} subtitle={copy.subtitle} size="lg" bodyClassName="px-5 py-5 sm:px-6">
+        <Modal onClose={() => setEditing(false)} title={copy.edit} subtitle={copy.subtitle} size="lg" bodyClassName="bg-[#f4f7fa] px-0 py-0">
           <OfferForm
             onCancel={() => setEditing(false)}
             professionalId={professionalId}

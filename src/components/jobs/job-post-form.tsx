@@ -527,7 +527,7 @@ export function JobPostForm({ professionalId, backHref = "/empleos", initialJob 
             // columna del formulario); si solo se descuenta uno queda una franja
             // gris a cada lado.
             BARRA_ACCION_FIJA,
-            "z-20 max-sm:fixed max-sm:inset-x-0 max-sm:bottom-0 sm:sticky sm:bottom-0 sm:-mx-4 sm:mt-5 sm:flex sm:justify-end sm:px-6",
+            "z-20 max-sm:fixed max-sm:inset-x-0 max-sm:bottom-0 sm:sticky sm:bottom-0 sm:-mx-4 sm:mt-5 sm:flex sm:justify-end sm:px-6 sm:pb-4",
             presentation === "modal" ? "sm:-mx-10" : "sm:-mx-6",
           )}>
             {/* En una ventana, la salida acompaña a la acción; en la página

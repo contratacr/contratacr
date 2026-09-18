@@ -129,7 +129,7 @@ export default async function OfferDetailPage({ params, searchParams }: { params
   }
 
   return (
-    <main className="min-h-[calc(100vh-72px)] bg-[#f4f7fa] text-[#162543] max-sm:pb-32">
+    <main className="min-h-[calc(100vh-72px)] bg-[#f4f7fa] text-[#162543]">
       <OfferDetailNavbarSearch title={offer.title} />
       <RecordRecentVisit
         surface="ofertas"

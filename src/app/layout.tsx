@@ -125,6 +125,24 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
             __html: `.ccr-notifications-items [data-punto-no-leida]{right:25px!important}.ccr-notifications-items [data-menu-fila]{top:50%!important;right:42px!important;transform:translateY(-50%)}@media (hover:hover) and (pointer:fine){.ccr-notifications-items li [data-menu-fila]:not([data-abierto]){opacity:0;transition:opacity .15s}.ccr-notifications-items li:hover [data-menu-fila],.ccr-notifications-items li:focus-within [data-menu-fila]{opacity:1}}`,
           }}
         />
+        {/* El verde de WhatsApp de la marca, en el documento: un botón con
+            letra blanca que pierde su fondo (CSS viejo en caché) se vuelve
+            invisible. Pasó en la franja de la ficha: solo quedaba «Llamar». */}
+        <style
+          data-ccr-whatsapp=""
+          dangerouslySetInnerHTML={{
+            __html: `.ccr-boton-whatsapp{background-color:#25D366!important;color:#fff!important}.ccr-boton-whatsapp:hover{background-color:#1EBE5B!important}.ccr-boton-whatsapp:focus-visible{--tw-ring-color:#25D366}`,
+          }}
+        />
+        {/* Con la franja de acciones fija abajo (teléfono), la página reserva
+            debajo exactamente su alto: así se puede desplazar hasta el final
+            sin que la franja tape lo último («Reportar perfil» en la ficha). */}
+        <style
+          data-ccr-reserva=""
+          dangerouslySetInnerHTML={{
+            __html: `@media (max-width:639px){body.ccr-con-barra-accion{padding-bottom:var(--ccr-alto-barra,0px)}}`,
+          }}
+        />
         <style
           data-ccr-franja=""
           dangerouslySetInnerHTML={{
