@@ -253,6 +253,25 @@ test.describe("@seeded marketplace editors through the real screens", () => {
     await expect(page.getByText(`${jobTitle} editado`)).toHaveCount(0);
   });
 
+  // El formulario marca responsabilidades y requisitos como opcionales. La API
+  // los exigía igual y devolvía 400: en producción nadie pudo publicar un empleo
+  // sin llenarlos (18-sep-2026), y ninguna prueba lo vio porque todas los
+  // llenaban. Esta publica SOLO con lo obligatorio.
+  test("publica un empleo solo con los campos obligatorios", async ({ page }) => {
+    test.slow();
+    await loginAs(page, E2E_USERS.professional.email, E2E_USERS.professional.password);
+    await gotoOK(page, "/es/empleos/publicar");
+    const titulo = `Empleo mínimo ${Date.now()}`;
+    await page.locator('input[name="title"]').fill(titulo);
+    await pickSelectMenu(page, /^Presencial$/, /^Remoto$/);
+    await page.locator('textarea[name="description"]').fill("Empleo publicado solo con los campos obligatorios para validar el camino mínimo.");
+    await page.getByRole("button", { name: /^Publicar empleo$/ }).click();
+    await page.waitForURL(/\/es\/empleos\/[0-9a-f-]{36}/, { timeout: 45_000, waitUntil: "domcontentloaded" });
+    const id = page.url().match(/\/empleos\/([0-9a-f-]{36})/)![1];
+    await expectVisibleText(page.locator("body"), titulo);
+    await regressionAdminClient().from("job_posts").delete().eq("id", id);
+  });
+
   test("publicar oferta avisa cuando en realidad es una vacante", async ({ page }) => {
     await ensureRegressionSeed();
     await loginAs(page, E2E_USERS.professional.email, E2E_USERS.professional.password);

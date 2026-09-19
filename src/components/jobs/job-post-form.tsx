@@ -414,7 +414,14 @@ export function JobPostForm({ professionalId, backHref = "/empleos", initialJob 
     try {
       const response = await fetch("/api/jobs/posts", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(payload) });
       const data = await response.json().catch(() => ({}));
-      if (!response.ok || !data?.id) throw new Error(typeof data?.error === "string" ? data.error : copy.saveFailed);
+      if (!response.ok || !data?.id) {
+        // Lo que dice el servidor es lo que hay que corregir («Indica la
+        // ubicación…»): se muestra tal cual. Antes se tapaba con un mensaje
+        // genérico si no empezaba con «No pudimos».
+        const delServidor = new Error(typeof data?.error === "string" ? data.error : copy.saveFailed);
+        (delServidor as Error & { delServidor?: boolean }).delServidor = typeof data?.error === "string";
+        throw delServidor;
+      }
       invalidateAppData("jobs");
       if (presentation === "modal") {
         onSaved?.(data.id);
@@ -427,7 +434,7 @@ export function JobPostForm({ professionalId, backHref = "/empleos", initialJob 
       router.refresh();
     } catch (submitError) {
       const message = submitError instanceof Error ? submitError.message : "";
-      setError(message.startsWith("No pudimos") || message.startsWith("We couldn't") ? message : copy.saveFailed);
+      setError((submitError as { delServidor?: boolean } | null)?.delServidor || message.startsWith("No pudimos") || message.startsWith("We couldn't") ? message : copy.saveFailed);
       setSaving(false);
     }
   }

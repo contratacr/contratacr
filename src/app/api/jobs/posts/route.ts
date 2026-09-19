@@ -39,7 +39,10 @@ export async function POST(req: NextRequest) {
     const deadline = body.application_deadline == null ? null : typeof body.application_deadline === "string" && ISO_DATE.test(body.application_deadline) ? body.application_deadline : undefined;
     const editingId = typeof body.id === "string" ? body.id : null;
 
-    if (title.length < 3 || title.length > 120 || description.length < 30 || description.length > 5000 || !responsibilities.length || !requirements.length || salaryMin === undefined || salaryMax === undefined || !Number.isInteger(openings) || openings < 1 || openings > 100 || deadline === undefined || (deadline && deadline < crTodayISO())) {
+    // Responsabilidades y requisitos son OPCIONALES, como dice el formulario y
+    // permite la base. Exigirlos aquí devolvía 400 a todo empleo publicado sin
+    // ellos («No pudimos guardar el empleo»): pasó en producción el 18-sep.
+    if (title.length < 3 || title.length > 120 || description.length < 30 || description.length > 5000 || salaryMin === undefined || salaryMax === undefined || !Number.isInteger(openings) || openings < 1 || openings > 100 || deadline === undefined || (deadline && deadline < crTodayISO())) {
       return NextResponse.json({ error: "Revisa la información del empleo e inténtalo nuevamente." }, { status: 400 });
     }
     if (salaryMin !== null && salaryMax !== null && salaryMax < salaryMin) return NextResponse.json({ error: "El salario máximo debe ser mayor o igual al mínimo." }, { status: 400 });

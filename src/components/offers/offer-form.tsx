@@ -391,7 +391,14 @@ export function OfferForm({ professionalId, serviceOptions, backHref = "/ofertas
       };
       const response = await fetch("/api/offers", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(payload) });
       const data = await response.json().catch(() => ({}));
-      if (!response.ok || !data?.id) throw new Error(typeof data?.error === "string" ? data.error : copy.saveError);
+      if (!response.ok || !data?.id) {
+        // Lo que dice el servidor es lo que hay que corregir («Indica la
+        // ubicación…»): se muestra tal cual. Antes se tapaba con un mensaje
+        // genérico si no empezaba con «No pudimos».
+        const delServidor = new Error(typeof data?.error === "string" ? data.error : copy.saveError);
+        (delServidor as Error & { delServidor?: boolean }).delServidor = typeof data?.error === "string";
+        throw delServidor;
+      }
       invalidateAppData("offers");
       if (presentation === "modal") {
         onSaved?.(data.id);
@@ -405,7 +412,7 @@ export function OfferForm({ professionalId, serviceOptions, backHref = "/ofertas
     } catch (err) {
       const message = err instanceof Error ? err.message : "";
       const knownUploadError = [copy.uploadFailed, copy.uploadTooLarge, copy.uploadUnsupported].some((known) => known === message);
-      setError(knownUploadError || message.startsWith("No pudimos") || message.startsWith("We could not") ? message : copy.publishError);
+      setError(knownUploadError || (err as { delServidor?: boolean } | null)?.delServidor || message.startsWith("No pudimos") || message.startsWith("We could not") ? message : copy.publishError);
       setSaving(false);
     }
   }
