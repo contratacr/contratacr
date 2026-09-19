@@ -65,7 +65,10 @@ alter table public.interaction_events
     'offer_view',
     'assistant_question',
     'page_freeze',
-    'contact_gate_shown'
+    'contact_gate_shown',
+    -- Histórico: ya nadie lo escribe, pero las filas que existen se conservan
+    -- (es el registro de métricas). Sin él la regla chocaba con ellas (23514).
+    'contact_lead_created'
   ));
 
 notify pgrst, 'reload schema';
