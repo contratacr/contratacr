@@ -789,7 +789,31 @@ export type ZoneCoverage = {
   countryWide: boolean;
 };
 
+// La cobertura por zona recorre a TODOS los profesionales, y la portada la pedía
+// entera en cada visita: era lo que más alargaba la espera (y la pantalla de
+// carga) antes de ver la portada. Cambia cuando alguien se registra o mueve su
+// zona, así que diez minutos de retraso no se notan. Un resultado vacío NO se
+// guarda: si la base falló, la próxima visita vuelve a intentar.
+const COBERTURA_CACHE_SECONDS = 600;
+const getZoneCoverageCached = unstable_cache(
+  async () => {
+    const cobertura = await getZoneCoverageUncached();
+    if (!cobertura.countryWide && Object.keys(cobertura.byProvince).length === 0) throw new Error("cobertura vacía");
+    return cobertura;
+  },
+  ["home-zone-coverage-v1"],
+  { revalidate: COBERTURA_CACHE_SECONDS },
+);
+
 export async function getZoneCoverage(): Promise<ZoneCoverage> {
+  try {
+    return await getZoneCoverageCached();
+  } catch {
+    return { byProvince: {}, countryWide: false };
+  }
+}
+
+async function getZoneCoverageUncached(): Promise<ZoneCoverage> {
   const empty: ZoneCoverage = { byProvince: {}, countryWide: false };
   if (!SUPABASE_CONFIGURED) return empty;
   try {

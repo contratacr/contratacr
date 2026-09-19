@@ -1,5 +1,6 @@
 "use client";
 
+import { BOTON_DE_EXITO, PantallaDeExito } from "@/components/ui/pantalla-de-exito";
 import { VerifiedSeal } from "@/components/ui/verified-seal";
 import { useState, useEffect, useMemo, useRef } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
@@ -24,7 +25,6 @@ import {
   BadgeCheck,
   UserRound,
 } from "lucide-react";
-import { SuccessIcon } from "@/components/ui/success-icon";
 import { useTranslations, useLocale } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -1765,12 +1765,10 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
 
               {/* SUCCESS */}
               {step === "success" && (
-                <div className="flex flex-col items-center text-center gap-5 py-4">
-                  <SuccessIcon size={80} />
-                  <div>
-                    <h3 className="text-xl font-bold text-[#162543] mb-2">{t("success.title")}</h3>
-                    <p className="text-sm text-[#6b7280] max-w-xs mx-auto">{t("success.desc")}</p>
-                  </div>
+                // La MISMA pantalla de «listo» que al publicar un proyecto o abrir un
+                // tiquete: mismo círculo, mismo título, mismos botones.
+                <PantallaDeExito titulo={t("success.title")} className="px-0 py-4 sm:py-6">
+                  <p className="max-w-[22rem] text-sm leading-relaxed text-[#6b7280]">{t("success.desc")}</p>
                   {/* Lo que acaba de reservar, en una línea por dato: la pantalla de
                       éxito decía "quedó agendada" sin decir cuándo ni de qué. */}
                   <div className="w-full max-w-xs rounded-2xl border border-[#e3edf5] bg-[#f8fbfd] px-4 py-3 text-left text-[13px] leading-relaxed text-[#374151]">
@@ -1792,7 +1790,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                       {t("success.addToCalendar")}
                     </button>
                   )}
-                </div>
+                </PantallaDeExito>
               )}
 
               </div>
@@ -1898,14 +1896,16 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
             )}
 
             {step === "success" && (
-              <div className={cn("ccr-pie-formulario flex flex-col gap-2", PIE_VENTANA_BASE, asPage && "lg:px-8")}>
+              <div className={cn("ccr-pie-formulario flex flex-col-reverse gap-3 sm:flex-row sm:justify-end", PIE_VENTANA_BASE, asPage && "lg:px-8")}>
                 {/* Lead to the just-made request (it's at the top of Solicitudes), not a
-                    dead-end "Listo". Closing still refreshes /buscar so the slot disappears. */}
-                <Button size="md" className="w-full" onClick={goToMyRequest}>
-                  {t("success.viewRequest")}
-                </Button>
-                <Button variant="outline" size="md" className="w-full" onClick={resetAndClose}>
+                    dead-end "Listo". Closing still refreshes /buscar so the slot disappears.
+                    Mismo acomodo que «Ya está publicado»: la salida secundaria a la
+                    izquierda (abajo en el teléfono) y las dos del mismo alto. */}
+                <Button variant="outline" size="lg" className={BOTON_DE_EXITO} onClick={resetAndClose}>
                   {t("success.close")}
+                </Button>
+                <Button size="lg" className={BOTON_DE_EXITO} onClick={goToMyRequest}>
+                  {t("success.viewRequest")}
                 </Button>
               </div>
             )}

@@ -618,6 +618,9 @@ test.describe("@seeded core regression", () => {
         budgetMin: 15000,
         budgetMax: 45000,
         timeline: "esta_semana",
+        // Publicar exige un WhatsApp (sin él nadie puede responder) y la cuenta
+        // sembrada no tiene: se manda, igual que lo pide el formulario.
+        phone: "88887777",
       },
     });
     expect(project.status).toBe(200);

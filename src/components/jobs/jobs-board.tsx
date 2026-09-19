@@ -137,10 +137,17 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
   // junto con los chips de servicio, que sí sobraban —el buscador ya encuentra
   // por oficio—; estos no: «remoto», «medio tiempo» o «de esta semana» no se
   // pueden escribir en un buscador.
-  const [published, setPublished] = useState("all");
-  const [workplace, setWorkplace] = useState("all");
-  const [experience, setExperience] = useState("all");
-  const [employment, setEmployment] = useState("all");
+  // Arrancan con lo que traiga la dirección: los filtros de la FICHA de un
+  // empleo navegan a /empleos?workplace=remote…, y el tablero abría sin filtrar
+  // porque solo leía «q» y «location». Un valor desconocido cuenta como «todos».
+  const deLaUrl = (clave: string, validos: readonly string[]) => {
+    const valor = searchParams.get(clave) ?? "all";
+    return validos.includes(valor) ? valor : "all";
+  };
+  const [published, setPublished] = useState(() => deLaUrl("published", ["1", "7", "30"]));
+  const [workplace, setWorkplace] = useState(() => deLaUrl("workplace", Object.keys(WORKPLACE_TYPES)));
+  const [experience, setExperience] = useState(() => deLaUrl("experience", Object.keys(EXPERIENCE_LEVELS)));
+  const [employment, setEmployment] = useState(() => deLaUrl("employment", Object.keys(EMPLOYMENT_TYPES)));
   const [ahora, setAhora] = useState(0);
   useEffect(() => { queueMicrotask(() => setAhora(Date.now())); }, []);
   const [selectedId, setSelectedId] = useState(() => searchParams.get("job") ?? searchParams.get("apply") ?? initialSelectedJobId ?? jobs[0]?.id ?? "");

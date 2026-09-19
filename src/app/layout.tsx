@@ -147,6 +147,15 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
             botones, que volvía al cerrar el teclado. La marca la pone
             ViewportEnvironment. La reserva no aplica al chat ni a la reserva de
             citas, que tienen su propio acomodo. */}
+        {/* La portada es blanca: mientras llega, la espera también. Con el lienzo
+            gris del panel, la primera visita veía un pantallazo gris —y la foto
+            del arco «en gris»— antes de la portada. */}
+        <style
+          data-ccr-portada=""
+          dangerouslySetInnerHTML={{
+            __html: `html.ccr-ruta-portada .ccr-page-route-loading{background:#fff!important}`,
+          }}
+        />
         <style
           data-ccr-teclado=""
           dangerouslySetInnerHTML={{
@@ -181,7 +190,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
           type="text/javascript"
           suppressHydrationWarning
           dangerouslySetInnerHTML={{
-            __html: `try{if(document.documentElement.classList.contains("ccr-native-app")){document.body.classList.add("ccr-native-app");var r=window.location.pathname;if(!/(^|\\/)(publicar-proyecto|(empleos|ofertas)\\/publicar)(\\/|$)/.test(r)){document.documentElement.classList.add("ccr-native-bottom-nav-visible");document.body.classList.add("ccr-native-bottom-nav-visible")}if(/(^|\\/)buscar(\\/|$)/.test(r)){document.documentElement.classList.add("ccr-native-search-route");document.body.classList.add("ccr-native-search-route")}}}catch(e){}`,
+            __html: `try{if(/^\\/(es|en)?\\/?$/.test(window.location.pathname)){document.documentElement.classList.add("ccr-ruta-portada")}}catch(e){}try{if(document.documentElement.classList.contains("ccr-native-app")){document.body.classList.add("ccr-native-app");var r=window.location.pathname;if(!/(^|\\/)(publicar-proyecto|(empleos|ofertas)\\/publicar)(\\/|$)/.test(r)){document.documentElement.classList.add("ccr-native-bottom-nav-visible");document.body.classList.add("ccr-native-bottom-nav-visible")}if(/(^|\\/)buscar(\\/|$)/.test(r)){document.documentElement.classList.add("ccr-native-search-route");document.body.classList.add("ccr-native-search-route")}}}catch(e){}`,
           }}
         />
         <StaticNativeFirstRunPrepaint />
