@@ -254,11 +254,26 @@ export async function POST(req: NextRequest) {
         }
       : {};
 
-    let { data, error } = await supabase.from("projects").insert({ ...baseProject, ...projectSnapshots, ...patientFields }).select("id, created_at").single();
-    if (error && /client_.*snapshot|created_source|created_app|created_supabase|for_someone_else|beneficiary_|column|schema cache|PGRST204|could not find/i.test(error.message)) {
-      // Keep project publishing working if production schema has not received the
-      // latest migration yet. Once migrations are applied, snapshots persist.
-      ({ data, error } = await supabase.from("projects").insert(baseProject).select("id, created_at").single());
+    // Del intento más completo al mínimo; gana el primero que entra. La columna
+    // allow_direct_contact llega con la migración 207 y los retratos del cliente
+    // con otras anteriores: publicar no puede depender de que la base ya las
+    // tenga. El 18-sep el código salió antes que la 207 y NADIE pudo publicar
+    // un proyecto: el único reintento volvía a mandar la misma columna. Sin
+    // ella el tablero funciona igual (filtra por fecha y su ausencia vale «sí»).
+    const { allow_direct_contact: _sinColumna, ...sinPermiso } = baseProject;
+    void _sinColumna;
+    const intentos: Array<Record<string, unknown>> = [
+      { ...baseProject, ...projectSnapshots, ...patientFields },
+      { ...sinPermiso, ...projectSnapshots, ...patientFields },
+      baseProject,
+      sinPermiso,
+    ];
+    const insertar = (fila: Record<string, unknown>) => supabase.from("projects").insert(fila).select("id, created_at").single();
+    let { data, error } = await insertar(intentos[0]);
+    for (const fila of intentos.slice(1)) {
+      if (!error) break;
+      console.error("[POST /api/projects] intento fallido", error.message);
+      ({ data, error } = await insertar(fila));
     }
 
     if (error) {

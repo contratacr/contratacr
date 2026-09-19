@@ -79,7 +79,13 @@ export async function POST(req: NextRequest) {
     let { data, error } = await guardar(payload);
     // PostgREST responde PGRST204 cuando la columna no está en su caché de
     // esquema y 42703 cuando no existe en la base: las dos valen.
-    if (error && (error.code === "42703" || error.code === "PGRST204" || /contact_whatsapp|schema cache/i.test(error.message ?? ""))) {
+    // Ante CUALQUIER error se reintenta sin la columna nueva, no solo ante los
+    // códigos conocidos (42703, PGRST204): si producción responde otra cosa
+    // —un permiso por columna, por ejemplo—, publicar no puede depender de
+    // adivinar el mensaje. Si el error era otro, el reintento falla igual y se
+    // informa abajo.
+    if (error) {
+      console.error("[publicar] primer intento falló; se reintenta sin contact_whatsapp", error.code, error.message);
       const { contact_whatsapp: _sinColumna, ...resto } = payload;
       void _sinColumna;
       ({ data, error } = await guardar(resto));
