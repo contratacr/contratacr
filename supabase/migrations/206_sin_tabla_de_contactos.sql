@@ -11,6 +11,12 @@
 
 drop table if exists public.contact_leads;
 
+-- Los avisos de ese tipo se van con la tabla: apuntaban a filas que dejan de
+-- existir y el app ya no sabe pintarlos. Sin este borrado la regla de abajo
+-- choca con ellos (23514) y la migración entera se revierte: pasó en test el
+-- 18-sep-2026, con 9 avisos.
+delete from public.notifications where type = 'contact_lead';
+
 alter table public.notifications drop constraint if exists notifications_type_check;
 alter table public.notifications add constraint notifications_type_check
   check (type in (
