@@ -143,6 +143,16 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
             __html: `@media (max-width:639px){body.ccr-con-barra-accion{padding-bottom:var(--ccr-alto-barra,0px)}}`,
           }}
         />
+        {/* Teclado abierto en un formulario largo (teléfono): fuera la franja de
+            botones, que volvía al cerrar el teclado. La marca la pone
+            ViewportEnvironment. La reserva no aplica al chat ni a la reserva de
+            citas, que tienen su propio acomodo. */}
+        <style
+          data-ccr-teclado=""
+          dangerouslySetInnerHTML={{
+            __html: `@media (max-width:767px){html[data-teclado-formulario-largo] :is(.ccr-pie-ventana,.ccr-barra-accion):not(.ccr-booking-modal-panel *){display:none!important}}`,
+          }}
+        />
         <style
           data-ccr-franja=""
           dangerouslySetInnerHTML={{

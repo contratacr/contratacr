@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import * as Dialog from "@radix-ui/react-dialog";
-import { AlertTriangle, Loader2, Save } from "lucide-react";
+import { AlertTriangle, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 declare global {
@@ -164,8 +164,17 @@ export function UnsavedChangesGuard({
       // centinela: se retira sin preguntar para que el historial quede limpio.
       if (window.history.state?.ccrUnsavedGuard) {
         bypass.current = true;
+        // Este «atrás» es limpieza, no un gesto de la persona. El panel
+        // escucha el mismo evento para cerrar la sección abierta en el
+        // teléfono: sin esta marca, encender y apagar un interruptor (cero
+        // cambios reales) retiraba el centinela y el panel lo leía como
+        // «volver» y sacaba a la persona de la sección.
+        (window as unknown as { __ccrRetirandoCentinela?: boolean }).__ccrRetirandoCentinela = true;
         window.history.back();
-        setTimeout(() => { bypass.current = false; }, 250);
+        setTimeout(() => {
+          bypass.current = false;
+          (window as unknown as { __ccrRetirandoCentinela?: boolean }).__ccrRetirandoCentinela = false;
+        }, 250);
       }
     };
   }, [dirty]);
@@ -278,11 +287,10 @@ export function UnsavedChangesGuard({
               </button>
             </div>
           </div>
-          {saving && (
-            <div className="absolute inset-0 flex items-center justify-center rounded-2xl bg-white/50">
-              <Loader2 className="h-5 w-5 animate-spin text-[#009FD9]" />
-            </div>
-          )}
+          {/* Mientras guarda, un velo que solo bloquea los toques. Tenía su
+              propio círculo girando encima del que ya muestra el botón
+              («Guardando…»): dos indicadores para una sola espera. */}
+          {saving && <div aria-hidden="true" className="absolute inset-0 rounded-2xl" />}
         </Dialog.Content>
       </Dialog.Portal>
     </Dialog.Root>

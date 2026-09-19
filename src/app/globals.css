@@ -1537,9 +1537,12 @@ body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-native-fab {
     left: var(--app-visual-viewport-left);
     z-index: 110;
     width: var(--app-visual-viewport-width);
-    height: var(--app-visual-viewport-height);
+    /* !important: el componente pone su alto calculado como estilo en línea
+       (para la vista acotada del panel) y le ganaba a esta regla: el hilo a
+       pantalla completa quedaba 136 px corto, con una franja gris abajo. */
+    height: var(--app-visual-viewport-height) !important;
     min-height: 0;
-    max-height: var(--app-visual-viewport-height);
+    max-height: var(--app-visual-viewport-height) !important;
     overflow: hidden;
     overscroll-behavior: none;
     background: #fff;

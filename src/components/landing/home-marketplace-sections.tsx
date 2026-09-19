@@ -82,7 +82,7 @@ export async function HomeMarketplaceSections() {
             <HomeSectionHeading
               id="home-offers-title"
               title="Ofertas recientes"
-              subtitle="Aprovechá promociones de profesionales en Costa Rica."
+              subtitle="Aprovecha promociones de profesionales en Costa Rica."
               href="/ofertas"
             />
             <HorizontalRail>

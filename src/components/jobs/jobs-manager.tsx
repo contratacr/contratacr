@@ -1,5 +1,6 @@
 "use client";
 
+import { useAppDialog } from "@/hooks/use-app-dialog";
 import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useNativeApp } from "@/hooks/use-native-app";
@@ -27,7 +28,7 @@ const JOBS_MANAGER_COPY = {
     jobStates: { published: "Publicado", paused: "Pausado", closed: "Cerrado", draft: "Borrador" },
     back: "Volver al panel", title: "Mis empleos", subtitle: "Vacantes para cuando necesitas contratar.", publish: "Publicar empleo",
     application: "postulación", applications: "postulaciones", view: "Ver empleo", edit: "Editar", more: "Más opciones",
-    pause: "Pausar", close: "Cerrar vacante", republish: "Volver a publicar", applicationsTitle: "Postulaciones",
+    pause: "Pausar", close: "Cerrar vacante", republish: "Volver a publicar", remove: "Eliminar", removeTitle: "¿Eliminar este empleo?", removeBody: "Se borra del todo y no se puede recuperar.", removeCancel: "Cancelar", applicationsTitle: "Postulaciones",
     received: "Postulación recibida", message: "Mensaje", viewCv: "Ver CV", viewPortfolio: "Ver portafolio",
     noApplications: "Aún no hay postulaciones.", emptyTitle: "Todavía no has publicado empleos", emptyBody: "Publica tu primera oportunidad laboral.",
     publishTitle: "Publicar empleo", publishSubtitle: "Describe la oportunidad con información clara y verificable.",
@@ -38,7 +39,7 @@ const JOBS_MANAGER_COPY = {
     jobStates: { published: "Published", paused: "Paused", closed: "Closed", draft: "Draft" },
     back: "Back to dashboard", title: "My jobs", subtitle: "Openings for when you need to hire.", publish: "Post job",
     application: "application", applications: "applications", view: "View job", edit: "Edit", more: "More options",
-    pause: "Pause", close: "Close opening", republish: "Publish again", applicationsTitle: "Applications",
+    pause: "Pause", close: "Close opening", republish: "Publish again", remove: "Delete", removeTitle: "Delete this job?", removeBody: "It is removed for good and cannot be recovered.", removeCancel: "Cancel", applicationsTitle: "Applications",
     received: "Application received", message: "Message", viewCv: "View resume", viewPortfolio: "View portfolio",
     noApplications: "There are no applications yet.", emptyTitle: "You have not posted any jobs yet", emptyBody: "Post your first job opportunity.",
     publishTitle: "Post a job", publishSubtitle: "Describe the opportunity with clear, verifiable information.",
@@ -110,6 +111,23 @@ export function JobsManager({ initialJobs, embedded = false, backHref = "/dashbo
       document.removeEventListener("keydown", closeOnEscape);
     };
   }, [actionsOpen]);
+
+  const { dialogNode, confirm, showMessage } = useAppDialog();
+
+  // Solo lo que ya no está publicado se puede eliminar, y se pregunta antes:
+  // no hay forma de recuperarlo.
+  async function eliminar(id: string) {
+    const result = await confirm({ title: copy.removeTitle, description: copy.removeBody, confirmLabel: copy.remove, cancelLabel: copy.removeCancel, tone: "danger" });
+    if (!result.confirmed) return;
+    const response = await fetch(`/api/jobs/posts?id=${encodeURIComponent(id)}`, { method: "DELETE" });
+    if (!response.ok) {
+      const data = await response.json().catch(() => null) as { error?: string } | null;
+      await showMessage({ title: copy.remove, description: data?.error ?? "" });
+      return;
+    }
+    setJobs((current) => current.filter((fila) => fila.id !== id));
+    invalidateAppData("jobs");
+  }
 
   async function updateJobStatus(id: string, status: JobPost["status"]) {
     const response = await fetch("/api/jobs/posts", { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ id, status }) });
@@ -214,9 +232,10 @@ export function JobsManager({ initialJobs, embedded = false, backHref = "/dashbo
                             {job.status === "published" ? (<>
                               <button role="menuitem" onClick={() => { setActionsOpen(null); updateJobStatus(job.id, "paused"); }} className="block w-full rounded-lg px-3 py-2.5 text-left text-sm font-bold text-[#162543] hover:bg-[#f4f8fb]">{copy.pause}</button>
                               <button role="menuitem" onClick={() => { setActionsOpen(null); updateJobStatus(job.id, "closed"); }} className="block w-full rounded-lg px-3 py-2.5 text-left text-sm font-bold text-red-700 hover:bg-red-50">{copy.close}</button>
-                            </>) : (
+                            </>) : (<>
                               <button role="menuitem" onClick={() => { setActionsOpen(null); updateJobStatus(job.id, "published"); }} className="block w-full rounded-lg px-3 py-2.5 text-left text-sm font-bold text-[#008fc3] hover:bg-[#f0f9fc]">{copy.republish}</button>
-                            )}
+                              <button role="menuitem" data-eliminar-publicacion onClick={() => { setActionsOpen(null); void eliminar(job.id); }} className="block w-full rounded-lg px-3 py-2.5 text-left text-sm font-bold text-red-700 hover:bg-red-50">{copy.remove}</button>
+                            </>)}
                           </div>
                         )}
                       </div>
@@ -256,6 +275,7 @@ export function JobsManager({ initialJobs, embedded = false, backHref = "/dashbo
           <JobPostForm onCancel={() => setEditingJob(null)} key={editingJob.id} professionalId={professionalId} initialJob={editingJob} presentation="modal" backHref={backHref} onSaved={() => { setEditingJob(null); onRefresh?.(); router.refresh(); }} />
         </Modal>
       )}
+      {dialogNode}
     </div>
   );
 }

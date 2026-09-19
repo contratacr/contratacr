@@ -24,8 +24,11 @@ export function ViewportEnvironment() {
       const active = document.activeElement;
       if (!isEditable(active) || window.innerWidth > 768) return;
       const vv = window.visualViewport;
-      const visibleTop = (vv?.offsetTop ?? 0) + 12;
-      const visibleBottom = (vv?.offsetTop ?? 0) + (vv?.height ?? window.innerHeight) - 16;
+      // Arriba hay una cabecera fija de 64 px en casi todas las pantallas y en
+      // las ventanas a pantalla completa: un campo «visible» debajo de ella no
+      // se ve. Se deja además sitio para el rótulo del campo, que va encima.
+      const visibleTop = (vv?.offsetTop ?? 0) + 64 + 36;
+      const visibleBottom = (vv?.offsetTop ?? 0) + (vv?.height ?? window.innerHeight) - 24;
       const rect = active.getBoundingClientRect();
       if (rect.top >= visibleTop && rect.bottom <= visibleBottom) return;
       active.scrollIntoView({ block: "center", inline: "nearest", behavior: "smooth" });
@@ -69,6 +72,20 @@ export function ViewportEnvironment() {
       root.style.setProperty("--app-visual-viewport-scale", `${scale}`);
       root.style.setProperty("--app-keyboard-inset-bottom", `${keyboardInset}px`);
       root.toggleAttribute("data-keyboard-open", keyboardInset > 80);
+      // Formulario LARGO con el teclado abierto: la franja de botones flotaba
+      // encima del teclado y, con la cabecera, dejaba ~350 px para los campos.
+      // Se retira mientras se escribe y vuelve al cerrar el teclado, como en
+      // los formularios de iOS. En uno corto (un solo campo) se queda: ahí el
+      // botón a mano es lo que sirve. «Largo» = lo que se desplaza no cabe en
+      // lo que queda visible.
+      let largo = false;
+      if (keyboardInset > 80 && isEditable(document.activeElement)) {
+        let caja: HTMLElement | null = document.activeElement.parentElement;
+        while (caja && !(/(auto|scroll)/.test(getComputedStyle(caja).overflowY) && caja.scrollHeight > caja.clientHeight + 1)) caja = caja.parentElement;
+        const alto = caja ? caja.scrollHeight : document.documentElement.scrollHeight;
+        largo = alto > height + 120;
+      }
+      root.toggleAttribute("data-teclado-formulario-largo", largo);
       // Cualquier cosa que el sistema abra desde abajo (barra de accesorios o
       // teclado completo) tiene que retirar la barra de pestañas.
       root.toggleAttribute("data-keyboard-visible", keyboardInset > 24);

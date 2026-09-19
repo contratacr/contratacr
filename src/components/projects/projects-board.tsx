@@ -56,7 +56,7 @@ const COPY = {
     sinResultadosSub: "Prueba otra búsqueda o cambia los filtros.",
     verTodos: "Ver todos los proyectos",
     sinContacto: "Este cliente no dejó un WhatsApp.",
-    necesitaCuenta: "Entrá con tu cuenta profesional para escribirle.",
+    necesitaCuenta: "Entra con tu cuenta profesional para escribirle.",
     esTuyo: "Este proyecto es tuyo.",
     todoElPais: "Todo Costa Rica",
     cuenta: (n: number) => `${n} ${n === 1 ? "proyecto" : "proyectos"}`,

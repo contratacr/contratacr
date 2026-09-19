@@ -9,7 +9,7 @@ import { ScrollRail } from "@/components/ui/scroll-rail";
 
 // Segmented groups are a grid; rails scroll and hint the overflow with a chevron.
 function RailOrGrid({ scroll, className, children }: { scroll: boolean; className: string; children: React.ReactNode }) {
-  return scroll ? <ScrollRail className={className}>{children}</ScrollRail> : <div className={className}>{children}</div>;
+  return scroll ? <ScrollRail className={className} asomoMinimo={44}>{children}</ScrollRail> : <div className={className}>{children}</div>;
 }
 
 // Shared pill status-filter tabs — used identically in the client and professional
@@ -66,6 +66,7 @@ export function StatusFilterTabs({
   totalElementos,
   limpiable = true,
   masculino = false,
+  siempreCarril = false,
 }: {
   tabs: readonly FilterTab[];
   value: string;
@@ -93,6 +94,13 @@ export function StatusFilterTabs({
   limpiable?: boolean;
   /** Lo que se filtra es masculino (proyectos, empleos): «Activos», «Cerrados». */
   masculino?: boolean;
+  /**
+   * La misma pastilla de Favoritos, pero SIEMPRE en carril: cada opción a su
+   * ancho, y se desliza a la derecha cuando no caben. Para listas abiertas como
+   * los servicios de un profesional (pueden ser 15), donde repartir el ancho
+   * dejaría «Reparación de comput…».
+   */
+  siempreCarril?: boolean;
 }) {
   const tr = useTranslations("statusTabs");
   const pocos = totalElementos != null && sinFiltros(totalElementos);
@@ -136,7 +144,7 @@ export function StatusFilterTabs({
       </p>
     );
   }
-  const useSegmentedLayout = tabs.length >= 2 && tabs.length <= 5 && mobileLayout !== "scroll";
+  const useSegmentedLayout = !siempreCarril && tabs.length >= 2 && tabs.length <= 5 && mobileLayout !== "scroll";
   const useScrollableLayout = !useSegmentedLayout;
   // Una celda segmentada es angosta en 320 px: con cuatro o más etapas el
   // conteo se apila bajo el rótulo para que ninguno se corte.
@@ -345,14 +353,20 @@ export function StatusFilterTabs({
               // ese hueco y salían cortados —«Finaliz…», «Enviad…»—. Repartir el
               // ancho solo tiene sentido cuando sobra, o sea de 640px en
               // adelante; ahí sí vuelven a estirarse para llenar la fila.
-              !useSegmentedLayout && (shortLabels
-                ? "shrink-0 whitespace-nowrap px-3 sm:flex-1 sm:shrink sm:px-3"
-                : "shrink-0 whitespace-nowrap px-3 sm:flex-1 sm:shrink"),
+              !useSegmentedLayout && (siempreCarril
+                // Nunca se encoge: crece si sobra sitio, y si no, se desliza.
+                ? "shrink-0 grow whitespace-nowrap"
+                : shortLabels
+                  ? "shrink-0 whitespace-nowrap px-3 sm:flex-1 sm:shrink sm:px-3"
+                  : "shrink-0 whitespace-nowrap px-3 sm:flex-1 sm:shrink"),
               active
                 ? "bg-white text-[#009FD9] shadow-sm"
                 : "text-[#6b7280] hover:text-[#374151]"
             )}
             aria-pressed={active}
+            // El relleno cede hasta 5 px por lado cuando hace falta para que la
+            // opción cortada del borde asome lo suficiente (ver ScrollRail).
+            style={siempreCarril ? { paddingInline: "calc(14px - var(--ccr-ajuste-carril, 0px))" } : undefined}
           >
             {/* En el riel del teléfono el rótulo va entero: recortarlo ahí era
                 justo lo que producía "Enviad…". El recorte se reserva para el

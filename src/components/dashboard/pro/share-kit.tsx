@@ -67,6 +67,7 @@ function fitText(ctx: CanvasRenderingContext2D, text: string, maxWidth: number, 
 
 export function ShareKit({ open, onClose, profileUrl, name, services = [], avatarUrl, isVerified, ratingAvg = 0, reviewCount = 0 }: Props) {
   const t = useTranslations("shareKit");
+  const tShare = useTranslations("shareProfile");
   const [view, setView] = useState<View>("menu");
   const [copied, setCopied] = useState<"message" | null>(null);
   const [cardBlob, setCardBlob] = useState<Blob | null>(null);
@@ -237,7 +238,9 @@ export function ShareKit({ open, onClose, profileUrl, name, services = [], avata
         <div className="flex flex-col gap-3">
           {/* Lo mismo que ve un cliente al compartir un perfil (enlace a la vista,
               WhatsApp, Instagram y Facebook) más lo que solo tiene el dueño. */}
-          <ShareChannels url={profileUrl} name={name} linkLabel={t("linkLabel")} copyLabel={t("copy")} />
+          {/* Es MI perfil el que comparto: «Mira el perfil de Isaac…» lo escribiría
+              otra persona. */}
+          <ShareChannels url={profileUrl} name={name} mensaje={tShare("messageOwn")} linkLabel={t("linkLabel")} copyLabel={t("copy")} />
           <div className="mt-1 h-px bg-[#eef2f6]" />
           {option(miniTarjeta, t("cardTitle"), t("cardBody"), () => setView("card"))}
           {option(miniResena, t("reviewsTitle"), t("reviewsBody"), () => setView("reviews"))}

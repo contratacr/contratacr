@@ -91,7 +91,7 @@ const TITLES: Record<string, Record<NotificationLocale, string>> = {
   job_application_status: { es: "Actualización de postulación", en: "Application update" },
   project_professional_withdrew: { es: "El profesional se retiró", en: "The professional stepped away" },
   project_in_progress_idle: { es: "¿Ya terminaste este trabajo?", en: "Did you finish this job?" },
-  project_confirmation_pending: { es: "Confirmá si el trabajo quedó listo", en: "Confirm the job is done" },
+  project_confirmation_pending: { es: "Confirma si el trabajo quedó listo", en: "Confirm the job is done" },
   booking_pending_reminder: { es: "Tienes una cita pendiente", en: "You have a pending appointment" },
   booking_past_date_idle: { es: "¿Se realizó esta cita?", en: "Did this appointment happen?" },
 };

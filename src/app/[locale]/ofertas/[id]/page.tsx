@@ -222,9 +222,10 @@ export default async function OfferDetailPage({ params, searchParams }: { params
               {before && <p className="pb-1 text-sm font-bold text-[#8794a7] line-through">{before}</p>}
             </div>
             {isOwner ? (
-              <div className="mt-5 lg:hidden">
+              // En la franja fija de abajo, igual que el contacto para los demás.
+              <AccionesAlPie className="mt-5 lg:hidden">
                 <OfferOwnerActions offer={offer} professionalId={offer.professional_id} serviceOptions={serviceOptions} fromPanel={from === "panel"} />
-              </div>
+              </AccionesAlPie>
             ) : unavailable ? (
               <p className="mt-5 rounded-lg bg-[#f4f7fa] p-4 text-sm font-bold lg:hidden">{copy.unavailable}</p>
             ) : (

@@ -15,6 +15,6 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
     titulo: en ? "Projects clients need | ContrataCR" : "Proyectos que la gente necesita | ContrataCR",
     descripcion: en
       ? "Work posted by clients across Costa Rica. Read the brief and message them on WhatsApp."
-      : "Trabajos publicados por clientes de todo Costa Rica. Leé lo que necesitan y escribiles por WhatsApp.",
+      : "Trabajos publicados por clientes de todo Costa Rica. Lee lo que necesitan y escríbeles por WhatsApp.",
   });
 }

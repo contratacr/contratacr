@@ -42,7 +42,7 @@ export const SUPPORT_CLOSE_REASONS = [
     id: "out_of_scope",
     label: { es: "Fuera del alcance de soporte", en: "Outside support's scope" },
     message: {
-      es: "Este caso queda fuera de lo que soporte puede resolver, así que lo cerramos. Si tienes otra consulta sobre la plataforma, escribinos un caso nuevo y con gusto la vemos.",
+      es: "Este caso queda fuera de lo que soporte puede resolver, así que lo cerramos. Si tienes otra consulta sobre la plataforma, escríbenos un caso nuevo y con gusto la vemos.",
       en: "This case is outside what support can resolve, so we're closing it. If you have another question about the platform, open a new case and we'll gladly look at it.",
     },
   },

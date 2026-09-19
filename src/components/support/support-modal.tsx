@@ -1,8 +1,8 @@
 "use client";
 
+import { BOTON_DE_EXITO, PantallaDeExito } from "@/components/ui/pantalla-de-exito";
 import { useState } from "react";
 import { useTranslations } from "next-intl";
-import { CheckCircle2 } from "lucide-react";
 import { Modal } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
@@ -27,12 +27,11 @@ export function SupportModal({ onClose, onSubmitted }: { onClose: () => void; on
       {doneEmail === null ? (
         <SupportForm onCancel={onClose} onSuccess={(email) => (onSubmitted ? onSubmitted(email) : setDoneEmail(email))} />
       ) : (
-        <div className="flex flex-col items-center text-center gap-3 py-6">
-          <div className="flex h-16 w-16 items-center justify-center rounded-full ccr-caja-icono">
-            <CheckCircle2 className="h-8 w-8 text-[#009FD9]" />
-          </div>
-          <h3 className="text-lg font-bold text-[#162543]">{t("successTitle")}</h3>
-          <p className="max-w-sm text-sm text-[#6b7280]">
+        <PantallaDeExito
+          titulo={t("successTitle")}
+          acciones={<Button type="button" size="lg" onClick={onClose} className={BOTON_DE_EXITO}>{t("close")}</Button>}
+        >
+          <p className="max-w-[22rem] text-sm leading-relaxed text-[#6b7280]">
             {user
               ? t("successUserDesc")
               : t.rich("successGuestDesc", {
@@ -40,8 +39,7 @@ export function SupportModal({ onClose, onSubmitted }: { onClose: () => void; on
                   b: (c) => <span className="font-semibold text-[#162543]">{c}</span>,
                 })}
           </p>
-          <Button type="button" onClick={onClose} className="mt-1">{t("close")}</Button>
-        </div>
+        </PantallaDeExito>
       )}
     </Modal>
   );

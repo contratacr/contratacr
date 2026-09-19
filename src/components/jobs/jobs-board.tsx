@@ -604,10 +604,12 @@ function JobPreview({ job, isOwner, userId, onEdit, mobile = false, hideActions 
       </div>
     )}
     {!hideActions && mobile && (isOwner ? (
-      <div className={mobile ? "mt-5 grid grid-cols-2 gap-3" : "mt-5 flex flex-wrap items-center gap-3"}>
+      // Lo del dueño va en la MISMA franja fija de abajo que el contacto: era lo
+      // único que en el teléfono quedaba suelto dentro de la ficha.
+      <AccionesAlPie className="mt-5 grid grid-cols-2 gap-3 sm:max-w-sm">
         <button type="button" onClick={onEdit} className="inline-flex h-11 w-full items-center justify-center rounded-full bg-[#009fd9] px-4 text-sm font-bold text-white transition hover:bg-[#008fc3] sm:w-auto sm:px-6">{copy.editJob}</button>
         <Link href={`/dashboard/profesional?mode=offer&tab=jobs&job=${job.id}`} className="inline-flex h-11 w-full items-center justify-center rounded-full border border-[#b9d9e8] px-4 text-center text-sm font-bold text-[#007fae] transition hover:bg-[#f1f9fc] sm:w-auto sm:px-6">{copy.manageJob}</Link>
-      </div>
+      </AccionesAlPie>
     ) : (
       // Una acción por línea, del mismo ancho, en el orden en que se usan.
       // Antes iban en una fila que envolvía, y «Postularme» quedaba del mismo

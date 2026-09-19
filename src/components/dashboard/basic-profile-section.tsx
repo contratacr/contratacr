@@ -93,7 +93,7 @@ export function BasicProfileSection({
   const [profileForm, setProfileForm] = useState({ full_name: "", phone: "" });
   const [profileSaving, setProfileSaving] = useState(false);
   const [profileSaved, setProfileSaved] = useState(false);
-  const [profileDirty, setProfileDirty] = useState(false);
+  const [tocado, setProfileDirty] = useState(false);
   const [activeDirtySection, setActiveDirtySection] = useState<string | null>(null);
   const profileDirtyRef = useRef(false);
   const profileFormRef = useRef(profileForm);
@@ -102,6 +102,15 @@ export function BasicProfileSection({
   const [photoUploading, setPhotoUploading] = useState(false);
   const [profileAvatar, setProfileAvatar] = useState<string | null>(null);
   const [pendingAvatarFile, setPendingAvatarFile] = useState<File | null>(null);
+  // Lo que manda es el estado final, no el trajín: escribir algo y volver a
+  // dejarlo como estaba no deja nada por guardar, así que ni se enciende el
+  // botón ni salta el aviso de cambios sin guardar.
+  const profileDirty = tocado && (
+    !!pendingAvatarFile
+    || profileForm.full_name.trim() !== (profileData?.full_name ?? "").trim()
+    || profileForm.phone !== (profileData?.phone ?? "")
+    || (profileAvatar ?? null) !== (profileData?.avatar_url ?? null)
+  );
   const [photoMenuOpen, setPhotoMenuOpen] = useState(false);
   const photoInputRef = useRef<HTMLInputElement>(null);
   const profileAvatarObjectUrlRef = useRef<string | null>(null);

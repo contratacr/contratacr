@@ -294,7 +294,7 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
           onChange={(id) => { if (id) setActiveProf(id); }}
           labelFor={label}
           counts={Object.fromEntries(professions.map((p) => [p, countFor(p)]))}
-          variant="chips"
+          siempreCarril
         />
       )}
 
@@ -357,10 +357,7 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
         <PanelEmptyState
           icon={Plus}
           title={t("addCase")}
-          // Con varios servicios, este vacío explica por qué el servicio no
-          // sale en la ficha pública: ahí solo aparecen los que tienen al menos
-          // un caso, para que un cliente no toque uno y encuentre la lista vacía.
-          description={professions.length > 1 ? `${t("addCaseHint")} ${t("notOnProfileYet")}` : t("addCaseHint")}
+          description={t("addCaseHint")}
           action={(
             <Button type="button" size="crear" onClick={openAdd} disabled={addFull || professions.length === 0}>
               {t("addCase")}

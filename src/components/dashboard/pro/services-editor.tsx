@@ -28,6 +28,7 @@ import { professionalCredentialSuggestion, serviceSupportsProfessionalCredential
 import { SectionHeadline } from "@/components/dashboard/section-headline";
 import { AutoSaveHint } from "@/components/dashboard/auto-save-hint";
 import { PIE_VENTANA_BASE } from "@/components/ui/acciones-al-pie";
+import { FilaInterruptor } from "@/components/ui/fila-interruptor";
 
 export type ProService = {
   id: string;
@@ -374,12 +375,21 @@ export function ServicesEditor({
   }
 
   // Make a service the PRINCIPAL one (index 0 = principal everywhere — drives card price).
+  const [recienPrincipal, setRecienPrincipal] = useState<string | null>(null);
   function makePrincipal(id: string) {
     if (professions[0] === id) return;
     const next = [id, ...professions.filter((p) => p !== id)];
     setProfessions(next);
     setSaved(false);
     void persist(next, services, { intent: "internal" });
+    // El servicio SUBE al primer lugar, y eso pasaba sin que se notara: la
+    // tarjeta desaparecía de donde estaba. Ahora la pantalla la sigue hasta
+    // arriba, se resalta unos segundos y dice qué cambió.
+    setRecienPrincipal(id);
+    window.setTimeout(() => {
+      document.querySelector(`[data-servicio="${CSS.escape(id)}"]`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 60);
+    window.setTimeout(() => setRecienPrincipal((actual) => (actual === id ? null : actual)), 4000);
   }
 
   // Remove a service entirely (the category + its info), while keeping at least one active service.
@@ -684,6 +694,9 @@ export function ServicesEditor({
               return (
                 <section
                   key={prof}
+                  data-servicio={prof}
+                  data-recien-principal={recienPrincipal === prof ? "" : undefined}
+                  style={recienPrincipal === prof ? { boxShadow: "0 0 0 2px #009FD9", transition: "box-shadow 300ms" } : undefined}
                   className={cn(
                     "flex min-w-0 max-w-full flex-col overflow-hidden rounded-2xl border bg-white p-4 shadow-sm transition-shadow sm:p-5",
                     isActive ? "border-[#e5e7eb] hover:shadow-md" : "border-[#e5e7eb] bg-[#fafbfc]"
@@ -721,7 +734,9 @@ export function ServicesEditor({
                   )}
                   <div className="mt-3 min-h-[18px]">
                     {isPrincipal ? (
-                      <span className="text-xs font-bold text-[#0089bb]">{t("principal")}</span>
+                      <span className="text-xs font-bold text-[#0089bb]" role={recienPrincipal === prof ? "status" : undefined}>
+                        {recienPrincipal === prof ? t("principalNow") : t("principal")}
+                      </span>
                     ) : (
                       <button
                         type="button"
@@ -877,7 +892,7 @@ export function ServicesEditor({
                       {locale === "en" ? "Add service image" : "Agregar imagen"}
                     </span>
                     <span className="max-w-xs text-xs leading-relaxed text-[#64748b]">
-                      {locale === "en" ? "Show this service with a real photo." : "Mostrá este servicio con una foto real."}
+                      {locale === "en" ? "Show this service with a real photo." : "Muestra este servicio con una foto real."}
                     </span>
                   </button>
                 )}
@@ -929,18 +944,13 @@ export function ServicesEditor({
                   options={PRICE_UNITS.map((priceType) => ({ value: priceType.value, label: priceType.suffix || priceType.label }))}
                 />
               </div>
-              <label className="mt-2.5 flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={form.aConsultar}
-                  onChange={(e) => {
-                    setForm((f) => ({ ...f, aConsultar: e.target.checked }));
-                    setFormError(null);
-                  }}
-                  className="h-5 w-5 rounded-[4px] border-[#b8c5d3] bg-white text-[#009FD9] focus:ring-[#009FD9]"
-                />
-                <span className="text-sm text-[#374151]">{t("aConsultarLabel")}</span>
-              </label>
+              <FilaInterruptor
+                className="mt-3"
+                testId="servicio-consultar-precio"
+                titulo={t("aConsultarLabel")}
+                checked={form.aConsultar}
+                onChange={(valor) => { setForm((f) => ({ ...f, aConsultar: valor })); setFormError(null); }}
+              />
             </div>
 
             <div ref={experienceFieldRef}>

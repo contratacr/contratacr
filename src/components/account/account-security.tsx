@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { FilaInterruptor } from "@/components/ui/fila-interruptor";
 import { CheckCircle2, MessageCircle, Clock, Mail, Lock, ShieldCheck, Eye, EyeOff, Info, ExternalLink } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
@@ -288,21 +289,14 @@ export function AccountSecuritySection({ showHeading = true }: { showHeading?: b
             <MessageCircle className="h-4 w-4 text-[#6b7280]" />
             <h3 className="text-sm font-semibold text-[#374151]">{t("whatsappHeading")}</h3>
           </div>
-          <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-[#e3ebf2] bg-white px-4 py-3 transition-colors hover:border-[#c9dceb]">
-            <input
-              type="checkbox"
-              checked={permisoWhatsapp}
-              disabled={guardandoPermiso}
-              onChange={(event) => { void cambiarPermisoWhatsapp(event.target.checked); }}
-              className="mt-0.5 h-4 w-4 shrink-0 accent-[#009FD9]"
-            />
-            <span className="min-w-0 text-sm leading-relaxed text-[#374151]">
-              <span className="block font-semibold text-[#162543]">{t("whatsappOptIn")}</span>
-              <span className="mt-0.5 block text-[13px] text-[#68778d]">
-                {t("whatsappOptInHelp")}{telefonoDelPerfil ? ` (${telefonoDelPerfil})` : ""}
-              </span>
-            </span>
-          </label>
+          <FilaInterruptor
+            conBorde
+            titulo={t("whatsappOptIn")}
+            ayuda={<>{t("whatsappOptInHelp")}{telefonoDelPerfil ? ` (${telefonoDelPerfil})` : ""}</>}
+            checked={permisoWhatsapp}
+            disabled={guardandoPermiso}
+            onChange={(valor) => { void cambiarPermisoWhatsapp(valor); }}
+          />
         </div>
       )}
 

@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { PhoneInput } from "@/components/ui/phone-input";
 import { UnsavedChangesGuard } from "@/components/dashboard/unsaved-changes-guard";
 import { cn } from "@/lib/utils";
+import { FilaInterruptor } from "@/components/ui/fila-interruptor";
 import { BARRA_ACCION_FIJA, useBarraAccionFija } from "@/components/ui/acciones-al-pie";
 import { useHairlineOnScroll } from "@/components/util/use-hairline-on-scroll";
 import { ArrowLeft, Check, ChevronDown, ImagePlus, Search, X } from "lucide-react";
@@ -60,7 +61,7 @@ const OFFER_FORM_COPY = {
     serviceNotFound: "No encontramos ese servicio.",
     description: "Descripción",
     descriptionPlaceholder: "Qué incluye, condiciones y cómo se entrega.",
-    pareceEmpleo: "Esto parece una vacante, no una promoción. Las promociones son de lo que vos hacés; si estás buscando a alguien para contratar, va en Empleos, donde la gente se postula y te llega el currículum.",
+    pareceEmpleo: "Esto parece una vacante, no una promoción. Las promociones son de lo que tú haces; si estás buscando a alguien para contratar, va en Empleos, donde la gente se postula y te llega el currículum.",
     pareceEmpleoCta: "Publicarlo como empleo",
     images: "Imágenes",
     imageHelp: "Agrega de 1 a 5 fotos. La primera será la portada.",
@@ -107,7 +108,7 @@ const OFFER_FORM_COPY = {
     numericError: "Uno de los precios o cantidades es demasiado alto. Revisa los valores ingresados.",
     saveError: "No pudimos guardar la promoción. Revisa la información e inténtalo nuevamente.",
     publishError: "No pudimos publicar la promoción.",
-    whatsapp: "WhatsApp", whatsappHelp: "Es por donde te van a escribir. Viene el de tu cuenta; podés cambiarlo para esta promoción.",
+    whatsapp: "WhatsApp", whatsappHelp: "Es por donde te van a escribir. Viene el de tu cuenta; puedes cambiarlo para esta promoción.",
   },
   en: {
     back: "Back",
@@ -442,7 +443,7 @@ export function OfferForm({ professionalId, serviceOptions, backHref = "/ofertas
           }}
           onChange={() => setConCambios(true)}
           noValidate
-          className="max-sm:pb-24"
+          className="max-sm:pb-2"
         >
           <div className="rounded-2xl border border-[#e5e7eb] bg-white p-5 shadow-sm">
           <div className="grid gap-5 sm:grid-cols-2">
@@ -582,10 +583,15 @@ export function OfferForm({ professionalId, serviceOptions, backHref = "/ofertas
 
           <div className="my-6 border-t border-[#e6edf3] pt-6"><h2 className="font-bold">{copy.priceAndValidity}</h2></div>
           <div className="grid gap-4 sm:grid-cols-2">
-            <label className="flex items-start gap-3 rounded-lg border border-[#e6edf3] px-4 py-3 sm:col-span-2">
-              <input type="checkbox" name="sin_precio" checked={sinPrecio} onChange={(event) => { setSinPrecio(event.target.checked); setFieldErrors((current) => ({ ...current, price: undefined, priceBefore: undefined })); }} className="mt-0.5 h-4 w-4 shrink-0 accent-[#009fd9]" />
-              <span className="text-sm"><span className="font-semibold text-[#162543]">{copy.negotiable}</span><span className="block text-[13px] text-[#68778d]">{copy.negotiableHelp}</span></span>
-            </label>
+            <FilaInterruptor
+              conBorde
+              className="sm:col-span-2"
+              testId="promo-sin-precio"
+              titulo={copy.negotiable}
+              ayuda={copy.negotiableHelp}
+              checked={sinPrecio}
+              onChange={(valor) => { setSinPrecio(valor); setFieldErrors((current) => ({ ...current, price: undefined, priceBefore: undefined })); }}
+            />
             {!sinPrecio && (<>
             <label className="text-sm font-medium text-[#374151]"><RequiredLabel>{copy.currentPrice}</RequiredLabel><input name="price_now" inputMode="numeric" maxLength={String(MAX_MONEY_AMOUNT).length} defaultValue={initialOffer?.price_now ?? ""} placeholder="25000" className={FIELD_CLASS} /><FieldError>{fieldErrors.price}</FieldError></label>
             <label className="text-sm font-medium text-[#374151]">{copy.previousPrice} <span className="font-normal text-[#68778d]">({copy.optional})</span><input name="price_before" inputMode="numeric" maxLength={String(MAX_MONEY_AMOUNT).length} defaultValue={initialOffer?.price_before ?? ""} placeholder="35000" className={FIELD_CLASS} /><FieldError>{fieldErrors.priceBefore}</FieldError></label>

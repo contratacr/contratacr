@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { auditUserAction } from "@/lib/audit/user-action";
 import { EMPLOYMENT_TYPES, EXPERIENCE_LEVELS, SALARY_PERIODS, WORKPLACE_TYPES } from "@/lib/jobs";
 import { MAX_MONEY_AMOUNT } from "@/lib/forms/numeric-validation";
 import { crTodayISO } from "@/lib/time-cr";
@@ -126,5 +128,44 @@ export async function PATCH(req: NextRequest) {
   } catch (error) {
     console.error("[PATCH /api/jobs/posts] status update failed", error);
     return NextResponse.json({ error: "No pudimos actualizar el empleo." }, { status: 500 });
+  }
+}
+
+/**
+ * Eliminar del todo. Solo lo que YA no está publicado: lo publicado primero se
+ * detiene, para que nadie borre por accidente algo que la gente está viendo.
+ * Se autoriza contra la fila y se borra con el cliente de servicio: el borrado
+ * atado a RLS puede afectar cero filas sin avisar.
+ */
+export async function DELETE(req: NextRequest) {
+  try {
+    const id = new URL(req.url).searchParams.get("id") ?? "";
+    if (!id) return NextResponse.json({ error: "Falta el id." }, { status: 400 });
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+    const admin = createAdminClient();
+    const { data: fila } = await admin.from("job_posts").select("id, status, title, professionals!inner(profile_id)").eq("id", id).maybeSingle();
+    if (!fila) return NextResponse.json({ ok: true });
+    const owner = fila.professionals as unknown as { profile_id?: string } | null;
+    if (owner?.profile_id !== user.id) return NextResponse.json({ error: "No tienes permiso para eliminar este empleo." }, { status: 403 });
+    if (fila.status === "published") return NextResponse.json({ error: "Primero detén la publicación; después la puedes eliminar." }, { status: 409 });
+    const { error } = await admin.from("job_posts").delete().eq("id", id);
+    if (error) throw error;
+    await auditUserAction(admin, req, {
+      actorUserId: user.id,
+      actorRole: "professional",
+      action: "job.delete",
+      entityTable: "job_posts",
+      entityId: id,
+      entityOwnerUserId: user.id,
+      beforeData: { status: fila.status, title: fila.title },
+      afterData: { deleted: true },
+    });
+    revalidateJobViews(id);
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    console.error("[DELETE job_posts] failed", error);
+    return NextResponse.json({ error: "No pudimos eliminar este empleo. Inténtalo nuevamente." }, { status: 500 });
   }
 }

@@ -89,7 +89,7 @@ export async function POST(req: NextRequest) {
     const requestedBeneficiaryDob = typeof body.beneficiaryDob === "string" ? body.beneficiaryDob : "";
 
     if (!cleanDescription) {
-      return NextResponse.json({ error: "Contanos brevemente qué hay que hacer." }, { status: 400 });
+      return NextResponse.json({ error: "Cuéntanos brevemente qué hay que hacer." }, { status: 400 });
     }
     // Category is required: it routes the project to matching professionals.
     if (!categoryId) {
@@ -339,7 +339,7 @@ export async function POST(req: NextRequest) {
             user_id: profileId,
             type: "new_project",
             title: "Nuevo proyecto de un cliente",
-            message: `Un cliente publico "${finalTitle}" en ${label}. Respondele y, si le interesa, te escribe.`,
+            message: `Un cliente publico "${finalTitle}" en ${label}. Respóndele y, si le interesa, te escribe.`,
             data: {
               link: "/es/dashboard/profesional?tab=proposals",
               project_id: projectId,

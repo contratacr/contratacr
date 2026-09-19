@@ -17,6 +17,8 @@ interface Props {
   status: VerificationStatus;
   reason?: string | null;
   currentCedula?: string | null;
+  /** Nombre completo de la cuenta, para mostrarlo junto a la identificación guardada. */
+  currentFullName?: string | null;
   /** No-CR-identification case (manual review; no padrón to check against). */
   noCrId?: boolean;
   onSaved?: () => void;
@@ -31,6 +33,7 @@ export function VerificationPanel({
   status,
   reason,
   currentCedula = null,
+  currentFullName = null,
   noCrId = false,
   onSaved,
 }: Props) {
@@ -126,6 +129,18 @@ export function VerificationPanel({
       return undefined;
     }
 
+    // La misma que ya está guardada y verificada: no hay nada que cambiar. Se
+    // dice de una vez y no se consulta nada.
+    if (status === "verified" && cedula === cleanId(currentCedula ?? "")) {
+      queueMicrotask(() => {
+        if (reqId !== cedulaReqId.current) return;
+        setCedulaBusy(false);
+        setCedulaCheck(null);
+        setCedulaError(t("cedulaSame"));
+      });
+      return undefined;
+    }
+
     queueMicrotask(() => {
       if (reqId !== cedulaReqId.current) return;
       setCedulaBusy(true);
@@ -173,7 +188,7 @@ export function VerificationPanel({
     }, 500);
 
     return () => window.clearTimeout(timer);
-  }, [newCedula, t]);
+  }, [newCedula, t, status, currentCedula]);
 
   async function addCedula() {
     setError(null);
@@ -417,6 +432,7 @@ export function VerificationPanel({
         emptyLabel={t("currentIdEmpty")}
         value={hasCurrentCedula ? cleanCurrentCedula : null}
         typeLabel={currentIdTypeLabel}
+        fullName={hasCurrentCedula ? currentFullName : null}
         statusLabel={status === "verified" ? t("verifiedChip") : undefined}
         changeLabel={t("changeId")}
         changeOpen={changeCedulaOpen}
@@ -509,6 +525,7 @@ function CurrentIdentificationPanel({
   emptyLabel,
   value,
   typeLabel,
+  fullName,
   statusLabel,
   changeLabel,
   changeOpen = false,
@@ -518,6 +535,7 @@ function CurrentIdentificationPanel({
   emptyLabel: string;
   value: string | null;
   typeLabel?: string | null;
+  fullName?: string | null;
   statusLabel?: string;
   changeLabel: string;
   changeOpen?: boolean;
@@ -553,6 +571,10 @@ function CurrentIdentificationPanel({
                 <p className="min-w-0 text-sm font-semibold leading-snug text-[#64748b]">{emptyLabel}</p>
               )}
             </div>
+            {/* De quién es: el número solo no le dice a nadie si es el suyo. */}
+            {value && fullName ? (
+              <p data-nombre-identificacion className="mt-0.5 text-sm font-bold leading-snug text-[#162543] [overflow-wrap:anywhere]">{fullName}</p>
+            ) : null}
             {value && typeLabel ? (
               <p className="mt-0.5 text-xs font-semibold text-[#64748b]">{typeLabel}</p>
             ) : null}

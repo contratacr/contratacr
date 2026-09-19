@@ -226,7 +226,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
     }
     const isClosingDirtySection = openSections.has(id) && activeDirtySection === id;
     const isLeavingDirtySection = isMobileProfileLayout() && activeDirtySection && activeDirtySection !== id;
-    if (dirty && (isClosingDirtySection || isLeavingDirtySection)) {
+    if (dirty && hayCambiosReales && (isClosingDirtySection || isLeavingDirtySection)) {
       const event = new CustomEvent("ccr:confirm-unsaved-action", {
         cancelable: true,
         detail: { proceed: () => applySectionToggle(id) },
@@ -840,10 +840,12 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
   }
 
 
-  useReportSaveStatus(saving || photoUploading, saved, dirty);
+  useReportSaveStatus(saving || photoUploading, saved, dirty && hayCambiosReales);
 
   const makeSectionFooter = (sectionId: string) => {
-    const sectionActive = dirty && activeDirtySection === sectionId;
+    // Con la huella: encender y volver a apagar no deja nada por guardar, así
+    // que el botón se apaga otra vez.
+    const sectionActive = dirty && hayCambiosReales && activeDirtySection === sectionId;
     const sectionInvalid = sectionValidationError(sectionId) !== null;
     return (
       <div className="ccr-grupo-botones mt-5 flex flex-col gap-2 pt-1 sm:flex-row sm:justify-end">

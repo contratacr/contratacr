@@ -98,7 +98,7 @@ const JOB_POST_COPY = {
     publishing: "Publicando...",
     saveChanges: "Guardar cambios",
     cancel: "Cancelar",
-    whatsapp: "WhatsApp", whatsappHelp: "Es por donde te van a escribir los postulantes. Viene el de tu cuenta; podés cambiarlo para esta vacante.", whatsappRequired: "Escribe un número de WhatsApp válido.",
+    whatsapp: "WhatsApp", whatsappHelp: "Es por donde te van a escribir los postulantes. Viene el de tu cuenta; puedes cambiarlo para esta vacante.", whatsappRequired: "Escribe un número de WhatsApp válido.",
   },
   en: {
     optional: "optional",
@@ -337,6 +337,9 @@ export function JobPostForm({ professionalId, backHref = "/empleos", initialJob 
 
   const [benefits, setBenefits] = useState<string[]>(Array.isArray(initialJob?.benefits) ? initialJob.benefits : []);
   const [showSalary, setShowSalary] = useState(initialJob?.show_salary ?? true);
+  // Sin salario escrito no hay nada que mostrar ni que esconder: el interruptor
+  // se queda encendido pero apagado al tacto, y despierta al escribir un monto.
+  const [haySalario, setHaySalario] = useState(Boolean(initialJob?.salary_min != null || initialJob?.salary_max != null));
   const locationCantons = getCantonsByProvince(locationProvince);
   const showsDurationField = employmentType === "contract" || employmentType === "temporary" || employmentType === "internship";
 
@@ -453,7 +456,11 @@ export function JobPostForm({ professionalId, backHref = "/empleos", initialJob 
           <Link href={backHref} aria-label={copy.backToJobs} className="grid h-10 w-10 place-items-center rounded-lg text-[#162543] hover:bg-white"><ArrowLeft className="h-5 w-5" /></Link>
           <div><h1 className="text-2xl font-bold">{editing ? copy.editJob : copy.publishJob}</h1><p className="text-sm text-[#65758c]">{copy.subtitle}</p></div>
         </div>
-        <form ref={formRef} onSubmit={submit} onInput={() => setConCambios(true)} onChange={() => setConCambios(true)} noValidate className="max-sm:pb-24">
+        <form ref={formRef} onSubmit={submit} onInput={(event) => {
+          setConCambios(true);
+          const campos = new FormData(event.currentTarget);
+          setHaySalario(Boolean(String(campos.get("salary_min") ?? "").trim() || String(campos.get("salary_max") ?? "").trim()));
+        }} onChange={() => setConCambios(true)} noValidate className="max-sm:pb-2">
           <div className="rounded-2xl border border-[#e5e7eb] bg-white p-5 shadow-sm">
           <div className="grid gap-5 sm:grid-cols-2">
             <JobTitleInput defaultValue={initialJob?.title ?? ""} error={fieldErrors.title} locale={locale} copy={copy} />
@@ -520,11 +527,13 @@ export function JobPostForm({ professionalId, backHref = "/empleos", initialJob 
             type="button"
             role="switch"
             aria-checked={showSalary}
+            aria-disabled={!haySalario}
+            disabled={!haySalario}
             onClick={() => setShowSalary((current) => !current)}
-            className="mt-5 flex w-full items-center justify-between gap-4 py-1 text-left text-sm font-semibold text-[#162543] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9]/35"
+            className="mt-5 flex w-full items-center justify-between gap-4 py-1 text-left text-sm font-semibold text-[#162543] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9]/35 disabled:cursor-not-allowed disabled:text-[#8a98aa]"
           >
             <span>{copy.showSalary}</span>
-            <ToggleSwitch checked={showSalary} />
+            <ToggleSwitch checked={showSalary} disabled={!haySalario} />
           </button>
           {error && <p role="alert" className="mt-5 rounded-lg bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">{error}</p>}
           </div>

@@ -15,6 +15,7 @@ export function ScrollRail({
   "aria-label": ariaLabel,
   role,
   conFlechas = false,
+  asomoMinimo = 0,
 }: {
   className?: string;
   children: ReactNode;
@@ -27,6 +28,13 @@ export function ScrollRail({
    * fila de texto pesan más de lo que ayudan.
    */
   conFlechas?: boolean;
+  /**
+   * Cuánto tiene que verse, como mínimo, de la opción que queda cortada a la
+   * derecha. Si asoma menos, las anteriores ceden relleno (hasta 5 px por lado)
+   * mediante --ccr-ajuste-carril, que las celdas restan de su padding. Con un
+   * asomo de 6 px nadie notaba que había más opciones.
+   */
+  asomoMinimo?: number;
 }) {
   const ref = useRef<HTMLDivElement | null>(null);
   const { mascara } = useDesvanecidoDeCarril(ref);
@@ -53,6 +61,27 @@ export function ScrollRail({
       observador.disconnect();
     };
   }, [conFlechas, medir]);
+
+  useEffect(() => {
+    const rail = ref.current;
+    if (!rail || asomoMinimo <= 0) return;
+    const ajustar = () => {
+      if (rail.scrollLeft > 2) return;
+      rail.style.setProperty("--ccr-ajuste-carril", "0px");
+      const caja = rail.getBoundingClientRect();
+      const hijos = Array.from(rail.children) as HTMLElement[];
+      const cortado = hijos.findIndex((h) => { const r = h.getBoundingClientRect(); return r.left < caja.right - 1 && r.right > caja.right + 1; });
+      if (cortado <= 0) return;
+      const asomo = caja.right - hijos[cortado].getBoundingClientRect().left;
+      if (asomo >= asomoMinimo) return;
+      const ajuste = Math.min(5, Math.ceil((asomoMinimo - asomo) / (2 * cortado)));
+      rail.style.setProperty("--ccr-ajuste-carril", `${ajuste}px`);
+    };
+    ajustar();
+    const observador = new ResizeObserver(ajustar);
+    observador.observe(rail);
+    return () => observador.disconnect();
+  }, [asomoMinimo, children]);
 
   const desplazar = (lado: "izquierda" | "derecha") => {
     const rail = ref.current;

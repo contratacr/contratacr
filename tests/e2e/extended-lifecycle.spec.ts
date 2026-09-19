@@ -195,7 +195,7 @@ test.describe("@seeded extended lifecycle", () => {
       });
       await loginAs(page, account.email, account.password);
       await gotoOK(page, "/es/dashboard/profesional?tab=profile&mode=offer");
-      await page.getByRole("button", { name: /Datos b.sicos.*Foto, nombre y descripci/i }).click();
+      await page.getByRole("button", { name: /Datos b.sicos/i }).click();
       const bio = page.locator('[data-field="bio"] textarea');
       await expect(bio).toBeVisible();
       await bio.fill(marker);
@@ -241,8 +241,9 @@ test.describe("@seeded extended lifecycle", () => {
       await dialog.locator("textarea").fill(`${marker} service`);
 
       const save = dialog.getByTestId("service-edit-save");
-      const consultPrice = dialog.getByRole("checkbox", { name: /Consultar precio|Ask for price/i });
-      await consultPrice.uncheck();
+      // «Consultar precio» es un interruptor, como el resto de las opciones de sí/no.
+      const consultPrice = dialog.getByRole("switch", { name: /Consultar precio|Ask for price/i });
+      if ((await consultPrice.getAttribute("aria-checked")) === "true") await consultPrice.click();
       await save.click();
       const validationNotice = dialog.getByTestId("service-form-error");
       await expect(validationNotice).toBeVisible();
@@ -252,7 +253,7 @@ test.describe("@seeded extended lifecycle", () => {
       expect(validationSaveBox, "The service save action needs visible geometry").not.toBeNull();
       expect(noticeBox!.y + noticeBox!.height).toBeLessThanOrEqual(validationSaveBox!.y + 1);
       await expect(dialog.locator('input[inputmode="numeric"]').first()).toBeFocused();
-      await consultPrice.check();
+      if ((await consultPrice.getAttribute("aria-checked")) !== "true") await consultPrice.click();
       await expect(validationNotice).toBeHidden();
 
       const month = dialog.getByRole("button", { name: /Enero|January/i }).filter({ visible: true });

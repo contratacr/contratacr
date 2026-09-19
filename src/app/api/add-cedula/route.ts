@@ -40,9 +40,16 @@ export async function POST(req: Request) {
 
   const { data: pro } = await db
     .from("professionals")
-    .select("id")
+    .select("id, verification_status")
     .eq("profile_id", user.id)
     .maybeSingle();
+
+  // La misma que ya tiene verificada: no es un cambio. (Si todavía no está
+  // verificada sí se deja pasar: reintentar con el mismo número es legítimo.)
+  const { data: propio } = await db.from("profiles").select("cedula").eq("id", user.id).maybeSingle();
+  if ((propio?.cedula ?? "").replace(/\D/g, "") === cedula && (pro as { verification_status?: string } | null)?.verification_status === "verified") {
+    return NextResponse.json({ error: "Esta ya es tu identificación verificada." }, { status: 409 });
+  }
   if (!pro) return NextResponse.json({ error: "No se encontró tu perfil." }, { status: 404 });
 
   await db.from("profiles").update({ cedula }).eq("id", user.id);

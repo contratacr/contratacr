@@ -81,7 +81,23 @@ export function useBarraAccionFija(activa = true) {
     if (!activa) return;
     montadas += 1;
     document.body.classList.add("ccr-con-barra-accion");
+    // El alto de la franja que se esté viendo, para que la página reserve ese
+    // espacio abajo (data-ccr-reserva). Se mide aquí y no solo en AccionesAlPie
+    // porque los formularios de publicar dibujan su propia franja: sin esto el
+    // final de «Publicar empleo» quedaba tapado por el botón.
+    const medir = () => {
+      const altos = [...document.querySelectorAll<HTMLElement>(".ccr-barra-fija")]
+        .filter((barra) => getComputedStyle(barra).position === "fixed")
+        .map((barra) => barra.getBoundingClientRect().height);
+      const alto = Math.max(0, ...altos);
+      if (alto > 0) document.documentElement.style.setProperty("--ccr-alto-barra", `${Math.ceil(alto)}px`);
+    };
+    medir();
+    const id = window.setInterval(medir, 600);
+    window.addEventListener("resize", medir);
     return () => {
+      window.clearInterval(id);
+      window.removeEventListener("resize", medir);
       montadas -= 1;
       if (montadas <= 0) {
         montadas = 0;

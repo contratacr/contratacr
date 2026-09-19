@@ -265,7 +265,7 @@ export async function recolectarPendientes(): Promise<{ avisos: Aviso[]; resumen
     avisos.push({
       user_id: proyecto.client_id,
       type: "project_confirmation_pending",
-      title: "Confirmá si el trabajo quedó listo",
+      title: "Confirma si el trabajo quedó listo",
       message: `El profesional marcó "${titulo}" como terminado hace ${hito} días. Confirmalo para cerrar el proyecto y dejar tu reseña.`,
       data: { link: "/es/dashboard/cliente?tab=projects", project_id: proyecto.id, project_title: titulo, hito },
       referencia: proyecto.id,

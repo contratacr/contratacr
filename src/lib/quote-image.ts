@@ -2,6 +2,7 @@
 
 import { formatColones } from "@/lib/pricing";
 import { desgloseQuote, type Quote } from "@/lib/quotes";
+import { nombreQueCabe } from "@/lib/nombres";
 
 /**
  * La cotización como imagen (1080 px de ancho, alto según los renglones): banda
@@ -67,7 +68,7 @@ function partirSeguido(ctx: CanvasRenderingContext2D, texto: string, maxW: numbe
 
 const FUENTE = "Inter, -apple-system, \"Segoe UI\", Roboto, sans-serif";
 
-async function dibujar(quote: Quote, proName: string, textos: Textos, fechaVigencia: string | null, perfilUrl: string): Promise<Dibujo | null> {
+async function dibujar(quote: Quote, proName: string, textos: Textos, fechaVigencia: string | null, perfilUrl: string, altoMinimo = 0): Promise<Dibujo | null> {
   const url = perfilUrl;
   const ancho = W - M * 2;
   // Todo se mide primero con un canvas de trabajo; el alto sale de ahí.
@@ -92,7 +93,9 @@ async function dibujar(quote: Quote, proName: string, textos: Textos, fechaVigen
   const altoTotales = (quote.tax_mode !== "exento" ? 190 : 130) + 40;
   const altoNotas = lineasNotas.length ? lineasNotas.length * 36 + 70 : 0;
   const altoPie = 200;
-  const H = altoBanda + altoQuien + altoTitulo + altoRenglones + altoTotales + altoNotas + altoPie;
+  // El pie se ancla al fondo, así que un alto mínimo (la hoja carta del PDF)
+  // deja el blanco entre las notas y el pie, no debajo de todo.
+  const H = Math.max(altoMinimo, altoBanda + altoQuien + altoTitulo + altoRenglones + altoTotales + altoNotas + altoPie);
 
   const canvas = document.createElement("canvas"); canvas.width = W; canvas.height = H;
   const ctx = canvas.getContext("2d"); if (!ctx) return null;
@@ -116,11 +119,23 @@ async function dibujar(quote: Quote, proName: string, textos: Textos, fechaVigen
   const datos = datosCliente(quote);
   let y = altoBanda + 60;
   ctx.font = `700 22px ${FUENTE}`; ctx.fillStyle = "#68778d"; ctx.fillText(textos.deQuien.toUpperCase(), M, y);
-  ctx.font = `800 38px ${FUENTE}`; ctx.fillStyle = "#162543"; ctx.fillText(proName, M, y + 44);
+  // Los dos nombres comparten renglón: cada uno tiene su mitad, menos un
+  // respiro en el centro. El que no cabe pierde primero el segundo nombre,
+  // luego el segundo apellido y, si ni así, se corta con puntos. Antes se
+  // dibujaban sin límite y dos nombres largos se montaban uno sobre el otro.
+  const anchoNombre = quote.client_name ? (W - 2 * M) / 2 - 24 : W - 2 * M;
+  const ajustar = (nombre: string) => {
+    const corto = nombreQueCabe(nombre, (t) => ctx.measureText(t).width <= anchoNombre);
+    if (ctx.measureText(corto).width <= anchoNombre) return corto;
+    let recorte = corto;
+    while (recorte.length > 1 && ctx.measureText(`${recorte}…`).width > anchoNombre) recorte = recorte.slice(0, -1);
+    return `${recorte.trimEnd()}…`;
+  };
+  ctx.font = `800 38px ${FUENTE}`; ctx.fillStyle = "#162543"; ctx.fillText(ajustar(proName), M, y + 44);
   if (quote.client_name) {
     ctx.textAlign = "right";
     ctx.font = `700 22px ${FUENTE}`; ctx.fillStyle = "#68778d"; ctx.fillText(textos.cliente.toUpperCase(), W - M, y);
-    ctx.font = `700 30px ${FUENTE}`; ctx.fillStyle = "#162543"; ctx.fillText(quote.client_name, W - M, y + 42);
+    ctx.font = `700 30px ${FUENTE}`; ctx.fillStyle = "#162543"; ctx.fillText(ajustar(quote.client_name), W - M, y + 42);
     ctx.font = `500 24px ${FUENTE}`; ctx.fillStyle = "#68778d";
     datos.forEach((linea, i) => ctx.fillText(linea, W - M, y + 78 + i * 32));
     ctx.textAlign = "left";
@@ -209,19 +224,22 @@ export async function renderQuoteImage(quote: Quote, proName: string, textos: Te
 /**
  * La cotización como PDF de una página. Es el formato que la gente espera de
  * una cotización y el que se puede adjuntar en WhatsApp o en un correo. La
- * hoja tiene el ancho de una carta y el alto del contenido, así nada se corta
- * ni queda media hoja en blanco. jsPDF se carga solo aquí (import dinámico),
+ * hoja es tamaño carta, con el pie anclado al fondo. jsPDF se carga solo aquí (import dinámico),
  * para que no pese en el resto del app.
  */
 export async function renderQuotePdf(quote: Quote, proName: string, textos: Textos, fechaVigencia: string | null, perfilUrl = ""): Promise<Blob | null> {
-  const dibujo = await dibujar(quote, proName, textos, fechaVigencia, perfilUrl);
+  // Hoja carta (215,9 × 279,4 mm), que es la que se usa e imprime en Costa
+  // Rica. Antes la hoja medía lo que el contenido: una cotización de un renglón
+  // salía como una tira apaisada que se veía diminuta al abrirla o imprimirla.
+  // Si el contenido pide más que una carta, la hoja crece hacia abajo.
+  const anchoMm = 215.9;
+  const dibujo = await dibujar(quote, proName, textos, fechaVigencia, perfilUrl, Math.ceil(W * (279.4 / anchoMm)));
   if (!dibujo) return null;
   const { canvas, enlace } = dibujo;
   const { jsPDF } = await import("jspdf");
-  const anchoMm = 210;
   const escala = anchoMm / canvas.width;
-  const altoMm = Math.round(canvas.height * escala);
-  const doc = new jsPDF({ orientation: altoMm > anchoMm ? "portrait" : "landscape", unit: "mm", format: [anchoMm, Math.max(altoMm, 150)] });
+  const altoMm = Math.max(279.4, canvas.height * escala);
+  const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: [anchoMm, altoMm] });
   doc.addImage(canvas.toDataURL("image/png"), "PNG", 0, 0, anchoMm, altoMm);
   // El enlace y el QR, clicables: en el PDF el texto es parte de la imagen, así
   // que se pone encima una zona que abre la dirección.

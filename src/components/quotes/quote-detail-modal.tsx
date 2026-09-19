@@ -94,15 +94,14 @@ export function QuoteDetailModal({ quote, role, open, onClose, onChanged, proNam
   const abierta = quote.status === "sent" && !expirada;
   // El título del encabezado en UNA línea: el nombre del trabajo puede ser largo
   // y partido en tres renglones empujaba todo hacia abajo.
-  const titulo = recienCreada
-    ? t("readyTitle")
-    : <span className="block truncate">{quote.quote_number ? `${t("rowQuote")} N.º ${numeroCotizacion(quote)}` : (quote.title || t("detailTitle"))}</span>;
+  // Recién creada o reabierta, la cabecera dice lo mismo: el número, que es lo
+  // que identifica el documento. «Lista para enviar» + dos renglones de
+  // explicación eran tres líneas de cabecera, y hablaban de citas que ya no hay.
+  const titulo = <span className="block truncate">{quote.quote_number ? `${t("rowQuote")} N.º ${numeroCotizacion(quote)}` : (quote.title || t("detailTitle"))}</span>;
   // La cabecera decía número + cliente + trabajo, y en el teléfono se comía tres
   // renglones. El profesional ya sabe de quién es (la abrió desde su lista) y el
   // trabajo se lee en las líneas; al cliente sí le hace falta de quién viene.
-  const subtitulo = recienCreada
-    ? t("readyBody")
-    : role === "client" && quote.professional_name
+  const subtitulo = role === "client" && quote.professional_name
       ? t("from", { name: quote.professional_name })
       : undefined;
 

@@ -1048,7 +1048,7 @@ export default function RegisterProfessionalPage() {
           la centra a lo alto de la pantalla y en un paso corto eso dejaba un
           hueco enorme entre la cabecera y el formulario. Sin sesión sigue
           centrada, que es como se ve una página de registro suelta. */}
-      <main className={currentUser ? "flex flex-1 flex-col items-center px-4 pt-4 max-sm:pb-24 sm:pb-8" : "flex-1 ccr-centrado-seguro px-4 py-12"}>
+      <main className={currentUser ? "flex flex-1 flex-col items-center px-4 pt-4 max-sm:pb-6 sm:pb-8" : "flex-1 ccr-centrado-seguro px-4 py-12"}>
         <div ref={formTopRef} className={cn("w-full max-w-md scroll-mt-24", currentUser && "sm:my-auto sm:max-w-lg sm:py-8")}>
           {/* Same container treatment as the client registration ("Crear cuenta de
               cliente"): a clean white card (rounded-3xl, hairline border, soft shadow,

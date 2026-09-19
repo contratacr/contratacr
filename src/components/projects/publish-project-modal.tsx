@@ -1,12 +1,13 @@
 "use client";
 
+import { PantallaDeExito } from "@/components/ui/pantalla-de-exito";
 import { useEffect, useRef, useState, type RefObject } from "react";
 import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { CategorySearch } from "@/components/ui/category-search";
 import { SelectMenu } from "@/components/ui/select-menu";
-import { AlertCircle, ArrowLeft, CheckCircle2, X } from "lucide-react";
+import { AlertCircle, ArrowLeft, X } from "lucide-react";
 import { PROVINCES } from "@/lib/data/cr-geography";
 import { PhoneInput, isPhoneComplete } from "@/components/ui/phone-input";
 import { createClient } from "@/lib/supabase/client";
@@ -211,16 +212,12 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
 
         <form noValidate onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col sm:flex-none">
           {published ? (
-            <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-4 px-6 py-10 text-center sm:py-12">
-              <div className="grid h-16 w-16 place-items-center rounded-full ccr-caja-icono">
-                <CheckCircle2 className="h-9 w-9" />
-              </div>
-              <h3 className="text-xl font-bold text-[#162543]">{t("successTitle")}</h3>
+            <PantallaDeExito titulo={t("successTitle")} className="min-h-0 flex-1">
               <p className="max-w-[22rem] text-[15px] font-medium leading-relaxed text-[#162543]">
                 {t("successNotified", { count: published.notifiedCount, service: published.service })}
               </p>
               <p className="max-w-[22rem] text-sm leading-relaxed text-[#6b7280]">{t("successNext")}</p>
-            </div>
+            </PantallaDeExito>
           ) : (
             <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain bg-[#f4f7fa] px-4 py-5 sm:max-h-[calc(90vh-145px)] sm:flex-none">
               <div className="flex flex-col gap-6 rounded-2xl border border-[#e5e7eb] bg-white p-5 shadow-sm">
@@ -328,11 +325,14 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
             {published ? (
               // En el teléfono no caben lado a lado sin partir el rótulo en dos
               // renglones: se apilan con el principal arriba.
-              <div className="flex w-full flex-col-reverse gap-3 sm:flex-row">
-                <Button type="button" variant="outline" size="lg" onClick={onClose} className="flex-1">
+              <div className="flex w-full flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+                {/* Alto y ancho explícitos: con `flex-1` dentro de una columna el
+                    alto se colapsaba al del texto, y como uno es botón y el otro
+                    enlace, salían de tamaños distintos. */}
+                <Button type="button" variant="outline" size="lg" onClick={onClose} className="h-12 w-full sm:w-auto sm:px-6">
                   {t("close")}
                 </Button>
-                <Button asChild size="lg" className="flex-1">
+                <Button asChild size="lg" className="h-12 w-full sm:w-auto sm:px-8">
                   <Link href="/dashboard/profesional?tab=sent_projects" onClick={onClose}>
                     <span className="truncate">{t("successGoToProjects")}</span>
                   </Link>

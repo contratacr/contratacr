@@ -1,5 +1,6 @@
 "use client";
 
+import { NombreQueCabe } from "@/components/ui/nombre-que-cabe";
 import { useState } from "react";
 import { useCachedResource } from "@/hooks/use-cached-resource";
 import { useLocale, useTranslations } from "next-intl";
@@ -111,7 +112,9 @@ export function QuotesSection({ proName, proSlug, puedeCrear = true }: { proName
                 <button key={q.id} type="button" onClick={() => setDetalle({ quote: q, recien: false })} className="group flex w-full items-center gap-3.5 rounded-2xl border border-[#e5eaf0] bg-white px-4 py-3.5 text-left transition-colors hover:border-[#bfe3f5] hover:bg-[#f8fcfe]">
                   <span className={`grid h-11 w-11 shrink-0 place-items-center rounded-[14px] ${m.fondo}`}>{m.icono}</span>
                   <span className="min-w-0 flex-1">
-                    <span className="block truncate text-[15px] font-extrabold text-[#162543]">{q.client_name || q.title || t("noClientName")}</span>
+                    {q.client_name
+                      ? <NombreQueCabe nombre={q.client_name} className="text-[15px] font-extrabold text-[#162543]" />
+                      : <span className="block truncate text-[15px] font-extrabold text-[#162543]">{q.title || t("noClientName")}</span>}
                     {q.client_name && q.title && <span className="block truncate text-[13px] text-[#52627a]">{q.title}</span>}
                     {etiqueta(q) && <span className={`mt-1 inline-block rounded-full px-2 py-0.5 text-[11px] font-bold ${m.pastilla}`}>{etiqueta(q)}</span>}
                   </span>

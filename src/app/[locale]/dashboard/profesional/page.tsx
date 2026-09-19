@@ -163,7 +163,7 @@ const USE_ONLY = new Set<Tab>([]);
 // en vez de mandar una propuesta que nadie contesta (1 en toda la historia).
 // Mis postulaciones (0) y Volver a contratar (0) se retiran por lo mismo.
 // Seis secciones para el profesional y cuatro para el cliente. «Mis trabajos» y
-// «Lo que ofrezco» viven dentro de «Mi perfil», que es donde se ven; empleos y
+// «Servicios» vive dentro de «Mi perfil», que es donde se ven; empleos y
 // promociones comparten «Mis publicaciones», que es lo mismo: algo que publico.
 const OFFER_TABS: Tab[] = ([
   "sent_projects", "jobs", "offers", "quotes", "photos", "services", "profile", "saved", "soporte", "guides",
@@ -196,7 +196,7 @@ const PANEL_GROUPS: { grupo: "work" | "business" | "saved" | "account"; tabs: Ta
   { grupo: "business", tabs: ["sent_projects", "jobs", "offers", "quotes"] },
   { grupo: "work", tabs: ["photos", "services", "profile", "completion"] },
   { grupo: "saved", tabs: ["saved"] },
-  { grupo: "account", tabs: ["soporte"] },
+  { grupo: "account", tabs: ["soporte", "guides"] },
 ];
 function agruparPestanas(tabs: Tab[]): Tab[][] {
   const grupos = PANEL_GROUPS
@@ -1759,6 +1759,9 @@ export default function DashboardPage() {
       // El aviso de cambios sin guardar atiende este mismo gesto con su propio
       // centinela: cuando está puesto, manda él y aquí no se cierra nada.
       if (window.history.state?.ccrUnsavedGuard) return;
+      // Ni cuando ese aviso está RETIRANDO su centinela porque ya no hay
+      // cambios: es limpieza del historial, no alguien queriendo volver.
+      if ((window as unknown as { __ccrRetirandoCentinela?: boolean }).__ccrRetirandoCentinela) return;
       window.dispatchEvent(new Event(enSoporte ? "ccr:support-close-thread" : "ccr:profile-mobile-close-section"));
     }
     window.addEventListener("popstate", alVolver);
@@ -1898,7 +1901,10 @@ export default function DashboardPage() {
     </Modal>
   ) : null;
   const desktopSidebarTabs = sidebarTabs.filter((tab) => tab !== "guides");
-  const mobileSectionTabs = sidebarTabs.filter((tab) => tab !== "guides");
+  // En el teléfono Guías vuelve a la lista de opciones, al final, junto a
+  // Soporte: arriba, como texto bajo el nombre, no se encontraba. En computadora
+  // sigue en el renglón del nombre.
+  const mobileSectionTabs: Tab[] = [...sidebarTabs.filter((tab) => tab !== "guides"), "guides"];
   const mobileFullScreenTab = activeTab !== "home";
   const mobileSectionOpen = activeTab !== "home" || mobilePanelOpen;
   const singleSurfaceTab = activeTab === "profile";
@@ -2153,6 +2159,7 @@ export default function DashboardPage() {
             scrollDashboardToPageTop();
             return;
           }
+          if (tab === "guides") { setGuiasAbiertas(true); return; }
           requestUnsavedAction(() => openPanelDestination(tab));
         }}
         className="flex min-h-[60px] w-full items-center gap-3 rounded-2xl border border-[#e5edf4] bg-white px-4 py-3.5 text-left text-[15px] font-semibold text-[#162543] transition-colors hover:bg-[#f8fbfd]"
@@ -2439,18 +2446,6 @@ export default function DashboardPage() {
                       cliente no hay nada que medir —sus reseñas no existen—, así
                       que bajo el nombre no va nada en vez de un "aún sin reseñas"
                       que suena a reproche por algo que no le toca hacer. */}
-                  {/* Guías no es un botón: es una puerta de consulta, del mismo
-                      peso que la línea de reseñas y alineada con el nombre.
-                      Como botón competía con las acciones de la cuenta, que sí
-                      son cosas que uno hace. */}
-                  <button
-                    type="button"
-                    data-testid="panel-abrir-guias-movil"
-                    onClick={() => setGuiasAbiertas(true)}
-                    className="inline-flex items-center text-[13px] font-semibold leading-none text-[#526277] transition hover:text-[#009FD9] sm:hidden"
-                  >
-                    {panelTabLabel("guides")}
-                  </button>
                   {mode === "offer" && (pro?.review_count ?? 0) > 0 && publicProfileHref && (
                     <Link
                       href={`${publicProfileHref}?tab=resenas&from=${encodeURIComponent("/dashboard/profesional")}`}
@@ -2690,6 +2685,7 @@ export default function DashboardPage() {
                                     status={pro.verification_status ?? "pending"}
                                     reason={pro.verification_reason}
                                     currentCedula={currentCedula}
+                                    currentFullName={profile?.full_name || proProfile?.full_name || null}
                                     noCrId={pro.no_cr_id ?? false}
                                     onSaved={() => handleSaved("section")}
                                   />

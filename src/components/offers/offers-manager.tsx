@@ -1,5 +1,6 @@
 "use client";
 
+import { useAppDialog } from "@/hooks/use-app-dialog";
 import { useEffect, useRef, useState } from "react";
 import { useNativeApp } from "@/hooks/use-native-app";
 import { ArrowLeft, BadgePercent, ChevronDown, MoreHorizontal, Plus } from "lucide-react";
@@ -31,7 +32,7 @@ const OFFERS_MANAGER_COPY = {
     more: "Más opciones",
     pause: "Pausar",
     soldOut: "Marcar como agotada",
-    expire: "Marcar como vencida", republish: "Volver a publicar",
+    expire: "Marcar como vencida", republish: "Volver a publicar", remove: "Eliminar", removeTitle: "¿Eliminar esta promoción?", removeBody: "Se borra del todo y no se puede recuperar.", removeCancel: "Cancelar",
     emptyTitle: "Todavía no has publicado ofertas",
     emptyBody: "Crea una oferta para impulsar tus ventas.",
     publishTitle: "Publicar promoción",
@@ -50,7 +51,7 @@ const OFFERS_MANAGER_COPY = {
     more: "More options",
     pause: "Pause",
     soldOut: "Mark as sold out",
-    expire: "Mark as expired", republish: "Publish again",
+    expire: "Mark as expired", republish: "Publish again", remove: "Delete", removeTitle: "Delete this promotion?", removeBody: "It is removed for good and cannot be recovered.", removeCancel: "Cancel",
     emptyTitle: "You have not published any offers yet",
     emptyBody: "Create an offer to help grow your sales.",
     publishTitle: "Publish offer",
@@ -125,6 +126,23 @@ export function OffersManager({ initialOffers, embedded = false, backHref = "/da
     const frame = requestAnimationFrame(() => setOpenId(offerId));
     return () => cancelAnimationFrame(frame);
   }, [searchParams]);
+
+  const { dialogNode, confirm, showMessage } = useAppDialog();
+
+  // Solo lo que ya no está publicado se puede eliminar, y se pregunta antes:
+  // no hay forma de recuperarlo.
+  async function eliminar(id: string) {
+    const result = await confirm({ title: copy.removeTitle, description: copy.removeBody, confirmLabel: copy.remove, cancelLabel: copy.removeCancel, tone: "danger" });
+    if (!result.confirmed) return;
+    const response = await fetch(`/api/offers?id=${encodeURIComponent(id)}`, { method: "DELETE" });
+    if (!response.ok) {
+      const data = await response.json().catch(() => null) as { error?: string } | null;
+      await showMessage({ title: copy.remove, description: data?.error ?? "" });
+      return;
+    }
+    setOffers((current) => current.filter((fila) => fila.id !== id));
+    invalidateAppData("offers");
+  }
 
   async function updateStatus(id: string, status: ProfessionalOffer["status"]) {
     const response = await fetch("/api/offers", { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ id, status }) });
@@ -236,9 +254,10 @@ export function OffersManager({ initialOffers, embedded = false, backHref = "/da
                               <button role="menuitem" onClick={() => { setActionsOpen(null); updateStatus(offer.id, "paused"); }} className="block w-full rounded-lg px-3 py-2.5 text-left text-sm font-bold text-[#162543] hover:bg-[#f4f8fb]">{copy.pause}</button>
                               <button role="menuitem" onClick={() => { setActionsOpen(null); updateStatus(offer.id, "sold_out"); }} className="block w-full rounded-lg px-3 py-2.5 text-left text-sm font-bold text-[#162543] hover:bg-[#f4f8fb]">{copy.soldOut}</button>
                               <button role="menuitem" onClick={() => { setActionsOpen(null); updateStatus(offer.id, "expired"); }} className="block w-full rounded-lg px-3 py-2.5 text-left text-sm font-bold text-red-700 hover:bg-red-50">{copy.expire}</button>
-                            </>) : (
+                            </>) : (<>
                               <button role="menuitem" onClick={() => { setActionsOpen(null); updateStatus(offer.id, "published"); }} className="block w-full rounded-lg px-3 py-2.5 text-left text-sm font-bold text-[#008fc3] hover:bg-[#f0f9fc]">{copy.republish}</button>
-                            )}
+                              <button role="menuitem" data-eliminar-publicacion onClick={() => { setActionsOpen(null); void eliminar(offer.id); }} className="block w-full rounded-lg px-3 py-2.5 text-left text-sm font-bold text-red-700 hover:bg-red-50">{copy.remove}</button>
+                            </>)}
                           </div>
                         )}
                       </div>
@@ -273,6 +292,7 @@ export function OffersManager({ initialOffers, embedded = false, backHref = "/da
           <OfferForm onCancel={() => setEditingOffer(null)} key={editingOffer.id} professionalId={professionalId} serviceOptions={serviceOptions} initialOffer={editingOffer} presentation="modal" backHref={backHref} onSaved={() => { setEditingOffer(null); onRefresh?.(); router.refresh(); }} />
         </Modal>
       )}
+      {dialogNode}
     </div>
   );
 }

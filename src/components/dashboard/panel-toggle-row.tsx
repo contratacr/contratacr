@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { Check } from "lucide-react";
+import { ToggleSwitch } from "@/components/ui/toggle-switch";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -19,19 +19,11 @@ type PanelToggleRowProps = {
   className?: string;
 };
 
+// Era una casilla pintada a mano; ahora es el mismo interruptor del resto del
+// app (el de «Permitir llamadas»). Se conserva el nombre para no tocar a quien
+// lo usa.
 export function PanelSwitch({ checked, disabled = false }: { checked: boolean; disabled?: boolean }) {
-  return (
-    <span
-      className={cn(
-        "grid h-5 w-5 shrink-0 place-items-center rounded-[4px] border bg-white transition-colors",
-        checked ? "border-[#009FD9] bg-[#009FD9] text-white" : "border-[#b8c5d3] text-transparent",
-        disabled && "opacity-55",
-      )}
-      aria-hidden="true"
-    >
-      <Check className="h-3.5 w-3.5 stroke-[3]" />
-    </span>
-  );
+  return <ToggleSwitch checked={checked} disabled={disabled} />;
 }
 
 export function PanelToggleRow({
@@ -46,7 +38,7 @@ export function PanelToggleRow({
   return (
     <button
       type="button"
-      role="checkbox"
+      role="switch"
       aria-checked={checked}
       aria-label={ariaLabel}
       onClick={onToggle}
