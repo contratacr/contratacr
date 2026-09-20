@@ -460,7 +460,7 @@ export function SupportTickets({
             «a sangre» quedaba con dos huecos grises a los lados. El marco sale
             primero hasta los bordes y el formulario ya no tiene que salirse. */}
         <div className="ccr-support-new-ticket ccr-a-sangre-marco flex min-h-0 flex-1 flex-col bg-white">
-          <div className="min-h-0 flex-1 overflow-y-auto bg-[#f4f7fa] py-5 max-sm:pt-0">
+          <div className="ccr-a-sangre-arriba min-h-0 flex-1 overflow-y-auto bg-[#f4f7fa] py-5">
             <SupportForm onSuccess={handleNewTicketSubmitted} />
           </div>
         </div>

@@ -219,9 +219,9 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
               <p className="max-w-[22rem] text-sm leading-relaxed text-[#6b7280]">{t("successNext")}</p>
             </PantallaDeExito>
           ) : (
-            <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain bg-[#f4f7fa] px-4 py-5 max-sm:pt-0 sm:max-h-[calc(90vh-145px)] sm:flex-none">
+            <div className="ccr-a-sangre-arriba flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain bg-[#f4f7fa] px-4 py-5 sm:max-h-[calc(90vh-145px)] sm:flex-none">
               {/* A sangre en el teléfono, como Publicar empleo y promoción. */}
-              <div className="ccr-a-sangre flex flex-col gap-6 rounded-2xl border border-[#e5e7eb] bg-white p-5 shadow-sm max-sm:border-t-0">
+              <div className="ccr-a-sangre flex flex-col gap-6 rounded-2xl border border-[#e5e7eb] bg-white p-5 shadow-sm">
                 <div ref={categoryFieldRef}>
                   <label className={fieldLabel}>{t("category")}{obligatorio}</label>
                   <CategorySearch
