@@ -29,6 +29,14 @@ export function ViewportEnvironment() {
       // se ve. Se deja además sitio para el rótulo del campo, que va encima.
       const visibleTop = (vv?.offsetTop ?? 0) + 64 + 36;
       const visibleBottom = (vv?.offsetTop ?? 0) + (vv?.height ?? window.innerHeight) - 24;
+      // UN HILO NO SE CENTRA. El chat y el caso de soporte se ajustan solos al
+      // área visible (su panel mide lo que el teclado deja), así que el campo
+      // de escribir ya queda encima del teclado. Centrarlo además lo arrastraba
+      // y lo devolvía: ese es el «desplazamiento» que se veía al abrir el
+      // teclado en un caso de soporte. El chequeo corre tres veces —a 0, 90 y
+      // 260 ms— y en la primera el teclado todavía no encogió nada, así que la
+      // segunda encontraba el campo «fuera» y lo movía.
+      if (active.closest(".ccr-support-thread, .direct-chat-shell--thread")) return;
       const rect = active.getBoundingClientRect();
       if (rect.top >= visibleTop && rect.bottom <= visibleBottom) return;
       active.scrollIntoView({ block: "center", inline: "nearest", behavior: "smooth" });
@@ -106,8 +114,8 @@ export function ViewportEnvironment() {
       const habiaTeclado = tecladoAbierto;
       tecladoAbierto = keyboardInset > 80;
       if (habiaTeclado && !tecladoAbierto && root.classList.contains("contratacr-chat-thread-open")) {
-        window.scrollTo({ top: 0, left: 0 });
-        window.setTimeout(() => window.scrollTo({ top: 0, left: 0 }), 120);
+        window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+        window.setTimeout(() => window.scrollTo({ top: 0, left: 0, behavior: "instant" }), 120);
       }
     };
 
