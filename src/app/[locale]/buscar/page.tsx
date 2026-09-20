@@ -1,3 +1,4 @@
+import { imagenSocial } from "@/lib/seo/imagen-social";
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { getTranslations, getLocale } from "next-intl/server";
@@ -120,7 +121,8 @@ export async function generateMetadata({ searchParams }: { searchParams: Promise
   const t = await getTranslations("search");
   const title = t("metaTitle", { category: que, place });
   const description = t("metaDesc", { category: que, place });
-  const compartir = { title, description, openGraph: { title, description }, twitter: { title, description } };
+  const social = imagenSocial(locale);
+  const compartir = { title, description, openGraph: { title, description, ...social.openGraph }, twitter: { title, description, ...social.twitter } };
   if (!indexable) return { ...compartir, robots: { index: false, follow: true } };
   return { ...compartir, alternates: { canonical: `/${locale}/servicios/${categoria}${provincia ? `/${provincia.id}` : ""}` } };
 }

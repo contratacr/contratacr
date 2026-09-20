@@ -6,7 +6,7 @@ import { PanelEmptyState } from "@/components/ui/content-loading";
 import { cn } from "@/lib/utils";
 import { useLocale } from "next-intl";
 import { useTranslations } from "next-intl";
-import { ContrataCRMark, HeaderMessagesLink, HeaderNotificationsLink, LandingNavbar } from "@/components/landing/landing-navbar";
+import { ContrataCRMark, HeaderAccountLink, HeaderMessagesLink, HeaderNotificationsLink, LandingNavbar } from "@/components/landing/landing-navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { CategorySuggestionBox } from "@/components/ui/category-suggestion";
 import { Link, useRouter } from "@/i18n/navigation";
@@ -192,10 +192,14 @@ export default function ServiciosPage() {
                       href={`/login?redirect=${encodeURIComponent(`/${locale}/mensajes`)}`}
                     />
                   )}
-                  <HeaderNotificationsLink
-                    href={`/login?redirect=${encodeURIComponent(`/${locale}/notificaciones`)}`}
-                    label={tp("notifications")}
-                  />
+                  {nativeApp ? (
+                    <HeaderNotificationsLink
+                      href={`/login?redirect=${encodeURIComponent(`/${locale}/notificaciones`)}`}
+                      label={tp("notifications")}
+                    />
+                  ) : (
+                    <HeaderAccountLink />
+                  )}
                 </div>
               </div>
             )}

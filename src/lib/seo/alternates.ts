@@ -1,3 +1,4 @@
+import { imagenSocial } from "@/lib/seo/imagen-social";
 import type { Metadata } from "next";
 
 /**
@@ -36,11 +37,13 @@ export function metadatosDePantalla({
 }): Metadata {
   const alternates = alternativasDeIdioma(locale, ruta);
   const url = `/${locale}${ruta === "/" ? "" : ruta}`;
+  // Con su imagen: estos dos objetos REEMPLAZAN a los del layout, no se mezclan.
+  const social = imagenSocial(locale);
   return {
     title: titulo,
     description: descripcion,
     alternates,
-    openGraph: { title: titulo, description: descripcion, url, type: "website", siteName: "ContrataCR" },
-    twitter: { card: "summary_large_image", title: titulo, description: descripcion },
+    openGraph: { title: titulo, description: descripcion, url, type: "website", siteName: "ContrataCR", ...social.openGraph },
+    twitter: { title: titulo, description: descripcion, ...social.twitter },
   };
 }

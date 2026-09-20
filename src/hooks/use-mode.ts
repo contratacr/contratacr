@@ -68,9 +68,17 @@ export function useMode(canOffer: boolean): { mode: Mode; setMode: (m: Mode) => 
     () => null,
   );
 
-  // A non-provider is always "use" (no offer world to switch into); a provider uses
-  // the tab choice, defaulting to "offer".
-  const mode: Mode = !canOffer ? "use" : stored ?? "offer";
+  // UN SOLO PANEL. Quien ofrece servicios está siempre en su panel profesional,
+  // que ya contiene todo lo del cliente (Mis proyectos, Favoritos, Mi perfil,
+  // Soporte). El botón para cambiar de panel se retiró, pero el modo seguía
+  // vivo por dentro: cualquier enlace con ?mode=use —«Mis proyectos» desde el
+  // tablero de Proyectos, por ejemplo— metía al profesional en el panel de
+  // cliente (su nombre personal, cuatro opciones de menú), se GUARDABA en la
+  // pestaña y, sin botón para volver, ahí se quedaba. Lo guardado ya no manda
+  // para una cuenta profesional; se sigue leyendo solo para no romper a quien
+  // lo escribe.
+  void stored;
+  const mode: Mode = canOffer ? "offer" : "use";
 
   const setMode = useCallback((m: Mode) => {
     writeStoredMode(m);

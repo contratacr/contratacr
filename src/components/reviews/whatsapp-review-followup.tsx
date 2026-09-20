@@ -33,6 +33,8 @@ export function WhatsAppReviewFollowUp() {
   const [reviewTarget, setReviewTarget] = useState<ReviewTarget | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const handledFollowUpId = useRef<string | null>(null);
+  // La persona dijo «Aún no» en esta visita: no se le pregunta nada más hasta la próxima.
+  const enPausa = useRef(false);
   const followUpRequestInFlight = useRef(false);
   const lastFollowUpCheckAt = useRef(0);
   const userId = user?.id ?? null;
@@ -53,7 +55,7 @@ export function WhatsAppReviewFollowUp() {
   }, [locale]);
 
   const checkFollowUp = useCallback(async (active = true) => {
-    if (followUpRequestInFlight.current) return;
+    if (followUpRequestInFlight.current || enPausa.current) return;
     followUpRequestInFlight.current = true;
     try {
       const response = await fetch("/api/contact/follow-up", { cache: "no-store" });
@@ -128,7 +130,11 @@ export function WhatsAppReviewFollowUp() {
         setReviewTarget(result.review);
       } else {
         handledFollowUpId.current = followUp.id;
-        window.setTimeout(() => void checkFollowUp(true), 500);
+        // «Aún no» (o la X) también quiere decir «ahora no me pregunten»: no se
+        // pasa a la siguiente pendiente en esta visita. Con un «No» sí: ahí la
+        // persona está contestando y terminar la lista le toma un toque más.
+        if (action === "not_now") enPausa.current = true;
+        else window.setTimeout(() => void checkFollowUp(true), 500);
       }
       setFollowUp(null);
     } catch {

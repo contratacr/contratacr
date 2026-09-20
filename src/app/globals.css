@@ -193,10 +193,11 @@ html.ccr-native-app.ccr-native-first-run-pending #ccr-native-first-run-prepaint 
   filter: drop-shadow(0 8px 18px rgba(0, 0, 0, 0.28));
 }
 
-.ccr-native-first-run-prepaint-logo img {
+.ccr-native-first-run-prepaint-marca {
+  display: block;
   width: 2.25rem;
   height: 2.25rem;
-  object-fit: contain;
+  background: url("/logo-mark-dark.png") center / contain no-repeat;
 }
 
 .ccr-native-first-run-prepaint-logo > span {

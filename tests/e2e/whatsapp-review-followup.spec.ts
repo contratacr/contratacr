@@ -78,10 +78,39 @@ test("contact follow-up shows pending confirmations one at a time", async ({ pag
   await expect(dialog).toContainText("1 de 2 confirmaciones pendientes");
   await expect(dialog).toContainText("Redes Bahía");
 
-  await dialog.getByRole("button", { name: "Aún no" }).click();
+  // Con una respuesta de verdad («No») se pasa a la siguiente: la persona está
+  // contestando y terminar la lista le toma un toque más.
+  await dialog.getByRole("button", { name: "No", exact: true }).click();
   await expect(dialog).toContainText("Juan Electricidad", { timeout: 2000 });
   await expect(dialog).toContainText("Electricidad");
-  expect(actions).toEqual(["not_now"]);
+  expect(actions).toEqual(["not_hired"]);
+});
+
+test("«Aún no» deja de preguntar en esa visita aunque queden pendientes", async ({ page }) => {
+  const queue = [
+    { ...followUp, id: "00000000-0000-4000-8000-000000000301", professional_name: "Redes Bahía" },
+    { ...followUp, id: "00000000-0000-4000-8000-000000000302", professional_name: "Juan Electricidad" },
+  ];
+  let queueIndex = 0;
+  await page.route("**/api/contact/follow-up", async (route) => {
+    if (route.request().method() === "GET") {
+      const item = queue[queueIndex] ?? null;
+      await route.fulfill({ json: { followUp: item, pendingCount: item ? queue.length - queueIndex : 0, authenticated: false } });
+      return;
+    }
+    queueIndex += 1;
+    await route.fulfill({ json: { ok: true } });
+  });
+
+  await marcarContactoPrevio(page, test.info());
+  await page.goto("/es/como-funciona");
+  const dialog = page.getByRole("dialog", { name: "Seguimiento del servicio" });
+  await expect(dialog).toContainText("Redes Bahía");
+  await dialog.getByRole("button", { name: "Aún no" }).click();
+  await expect(dialog).toBeHidden();
+  // «Aún no» también es «ahora no me pregunten»: la segunda no salta.
+  await page.waitForTimeout(1500);
+  await expect(dialog).toBeHidden();
 });
 
 test("contact follow-up names phone and email contact methods", async ({ page }) => {

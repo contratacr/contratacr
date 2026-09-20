@@ -12,7 +12,7 @@ import { useLocale } from "next-intl";
 import { ArrowLeft, BriefcaseBusiness, Building2, Menu } from "lucide-react";
 import { Link, useRouter } from "@/i18n/navigation";
 import { recordRecentVisit } from "@/lib/recent-visits";
-import { ContrataCRMark, HeaderMessagesLink, HeaderNotificationsLink } from "@/components/landing/landing-navbar";
+import { ContrataCRMark, HeaderAccountLink, HeaderMessagesLink, HeaderNotificationsLink } from "@/components/landing/landing-navbar";
 import { NotificationBell } from "@/components/notifications/notification-bell";
 import { useDirectMessageUnread } from "@/hooks/use-direct-message-unread";
 import { MarketplaceFilterChip, MarketplaceNavbarPortal, MarketplaceSearch } from "@/components/marketplace/marketplace-controls";
@@ -361,7 +361,8 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
             ) : (
               <>
                 {nativeApp && <HeaderMessagesLink unreadCount={0} label={copy.messages} href={accesoHref("/mensajes")} />}
-                <HeaderNotificationsLink href={accesoHref("/notificaciones")} label={copy.notifications} />
+                {/* En la web, sin sesión va la cuenta; la campana queda para quien ya entró. */}
+                {nativeApp ? <HeaderNotificationsLink href={accesoHref("/notificaciones")} label={copy.notifications} /> : <HeaderAccountLink />}
               </>
             )}
           </div>

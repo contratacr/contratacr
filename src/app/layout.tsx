@@ -210,7 +210,13 @@ function StaticNativeFirstRunPrepaint() {
       <div className="ccr-native-first-run-prepaint-shade" />
       <div className="ccr-native-first-run-prepaint-content">
         <div className="ccr-native-first-run-prepaint-logo">
-          <img src="/logo-mark-dark.png" alt="" />
+          {/* Como fondo y no como <img>: este bloque solo se ve en la app al
+              primer arranque, pero su HTML viaja en TODAS las páginas web, y era
+              la primera imagen del documento. Una red social que no encuentra
+              imagen de enlace agarra esa: el símbolo de R blanca, que sobre el
+              blanco de la tarjeta no se ve. Como fondo, además, la web ni lo
+              descarga (el bloque está en display:none). */}
+          <span className="ccr-native-first-run-prepaint-marca" aria-hidden="true" />
           <span>
             Contrata<span>CR</span>
           </span>

@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { useLocale } from "next-intl";
 import { ArrowLeft, ClipboardList, Loader2, MapPin, Menu } from "lucide-react";
 import { Link } from "@/i18n/navigation";
-import { ContrataCRMark, HeaderNotificationsLink } from "@/components/landing/landing-navbar";
+import { ContrataCRMark, HeaderAccountLink } from "@/components/landing/landing-navbar";
 import { NotificationBell } from "@/components/notifications/notification-bell";
 import { MarketplaceFilterChip, MarketplaceNavbarPortal, MarketplaceSearch } from "@/components/marketplace/marketplace-controls";
 import { ScrollRail } from "@/components/ui/scroll-rail";
@@ -359,7 +359,7 @@ export function ProjectsBoard({
     <div className={currentUserId ? "grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:items-center [&>*]:w-full sm:[&>*]:w-auto" : "flex w-full sm:w-auto [&>*]:w-full sm:[&>*]:w-auto"}>
       {currentUserId && (
         <Link
-          href="/dashboard/profesional?tab=sent_projects&mode=use"
+          href="/dashboard/profesional?tab=sent_projects"
           className="inline-flex h-9 items-center justify-center rounded-full border border-[#d7e1ea] bg-white px-3 text-[13px] font-bold text-[#162543] transition hover:border-[#b9c8d6] hover:bg-[#f6f9fb] lg:h-11 lg:whitespace-nowrap lg:px-5 lg:text-sm"
         >
           {copy.misProyectos}
@@ -434,7 +434,8 @@ export function ProjectsBoard({
           </Link>
           <h1 className={CABECERA_TITULO}>{copy.titulo}</h1>
           <div className="ml-auto flex shrink-0 items-center gap-0.5">
-            {currentUserId ? <NotificationBell scope="all" /> : <HeaderNotificationsLink href="/notificaciones" label={copy.notificaciones} />}
+            {/* Sin sesión va la cuenta; la campana queda para quien ya entró. */}
+            {currentUserId ? <NotificationBell scope="all" /> : <HeaderAccountLink />}
           </div>
         </div>
         )}
@@ -591,7 +592,7 @@ export function ProjectsBoard({
                       <div className="sticky top-0 z-10 -mx-7 mt-4 hidden items-center gap-2 border-b border-[#eef2f6] bg-white px-7 py-3 lg:flex">
                         {misProyectos.includes(ficha.id) ? (
                           <Link
-                            href={`/dashboard/profesional?tab=sent_projects&mode=use&project=${ficha.id}`}
+                            href={`/dashboard/profesional?tab=sent_projects&project=${ficha.id}`}
                             className="inline-flex h-12 items-center justify-center rounded-full border border-[#b9d9e8] px-6 text-base font-semibold text-[#007fae] transition hover:bg-[#f1f9fc]"
                           >
                             {copy.administrar}
@@ -613,7 +614,7 @@ export function ProjectsBoard({
                       <AccionesAlPie className="mt-4 sm:max-w-xs lg:hidden">
                         {misProyectos.includes(ficha.id) ? (
                           <Link
-                            href={`/dashboard/profesional?tab=sent_projects&mode=use&project=${ficha.id}`}
+                            href={`/dashboard/profesional?tab=sent_projects&project=${ficha.id}`}
                             className="inline-flex h-12 w-full items-center justify-center rounded-full border border-[#b9d9e8] px-5 text-base font-semibold text-[#007fae] transition hover:bg-[#f1f9fc]"
                           >
                             {copy.administrar}

@@ -1,3 +1,4 @@
+import { imagenSocial } from "@/lib/seo/imagen-social";
 import type { Metadata } from "next";
 import { alternativasDeIdioma } from "@/lib/seo/alternates";
 import { notFound } from "next/navigation";
@@ -35,7 +36,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     // /en como dos páginas que compiten entre sí.
     alternates: alternativasDeIdioma(locale, `/servicios/${categoria}`),
     robots: count >= MIN_SUPPLY_FOR_LANDING ? undefined : { index: false },
-    openGraph: { title, description, url: `${APP_URL}${path}`, siteName: "ContrataCR", locale: OG_LOCALE[locale] ?? "es_CR", type: "website" },
+    openGraph: { title, description, url: `${APP_URL}${path}`, siteName: "ContrataCR", locale: OG_LOCALE[locale] ?? "es_CR", type: "website", ...imagenSocial(locale).openGraph },
   };
 }
 

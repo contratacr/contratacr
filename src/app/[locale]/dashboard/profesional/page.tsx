@@ -829,7 +829,9 @@ export default function DashboardPage() {
   const allowedRequestedTab = requestedTab && (!requestedOfferOnlyTab || esProfesional) ? requestedTab : null;
   const urlForcedMode: Mode | null =
     legacyVerificationTab && esProfesional ? "offer" : requestedOfferOnlyTab && esProfesional ? "offer" : requestedTab && USE_ONLY.has(requestedTab) ? "use" : urlModeParam;
-  const mode: Mode = !esProfesional ? "use" : urlForcedMode ?? globalMode;
+  // Un solo panel: la cuenta profesional SIEMPRE ve el suyo. ?mode=use sigue
+  // llegando en enlaces viejos y avisos ya enviados; se acepta y se ignora.
+  const mode: Mode = esProfesional ? "offer" : "use";
   // Citas salieron del menú: el panel abre en lo que sí se usa —Oportunidades
   // para el profesional, Mis proyectos para el cliente.
   const defaultTab: Tab = "sent_projects";
@@ -1258,7 +1260,10 @@ export default function DashboardPage() {
     }
     return { pro, cli, neu, soporte };
   }, [avisosSinLeer]);
-  const unreadCount = (mode === "offer" ? conteoDeAvisos.pro : conteoDeAvisos.cli) + conteoDeAvisos.neu;
+  // Todos los avisos de la cuenta, no solo los «de profesional»: con un solo
+  // panel, el profesional que publica un proyecto también tiene que enterarse
+  // de que le respondieron. Antes ese aviso ni contaba ni salía en la lista.
+  const unreadCount = conteoDeAvisos.pro + conteoDeAvisos.cli + conteoDeAvisos.neu;
   const supportUnread = conteoDeAvisos.soporte;
 
   // Unread opportunities deserve a front-door modal even when the user did not
@@ -2809,7 +2814,7 @@ export default function DashboardPage() {
                             sección vacía, para no romper enlaces viejos. */}
                         {activeTab === "saved" && <ClientActivity section="saved" />}
                         {activeTab === "connections" && <ClientConnections />}
-                        {activeTab === "notifications" && <NotificationsList />}
+                        {activeTab === "notifications" && <NotificationsList scope="all" />}
                         {activeTab === "soporte" && (
                           <SupportTickets
                             initialTicketId={searchParams.get("ticket")}

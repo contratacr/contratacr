@@ -7,8 +7,7 @@ import {
   X, Menu, ChevronDown, ChevronRight, Search, MapPin, List, Map as MapIcon, ArrowLeft, Share2, Bot, ReceiptText,
   Briefcase, Compass, Wrench,
   UserRound, UserRoundPlus, LogOut, FileText, MessageSquareText, Settings, Bell, MoreHorizontal,
-  HelpCircle, ListChecks, Lightbulb, Headset, Globe2, Shield, Mail, ClipboardList, Clock, Bookmark,
-} from "lucide-react";
+  HelpCircle, ListChecks, Lightbulb, Headset, Globe2, Shield, Mail, ClipboardList, Clock, Bookmark, CircleUserRound } from "lucide-react";
 import { Link, useRouter, usePathname } from "@/i18n/navigation";
 import { readRecentVisits, clearRecentVisits, leerBusquedasRecientesConFecha, guardarBusquedaReciente, olvidarBusquedaReciente, olvidarBusquedasRecientes, removeRecentVisit, type BusquedaReciente, type RecentVisit } from "@/lib/recent-visits";
 import { useSearchParams } from "next/navigation";
@@ -716,6 +715,38 @@ function PanelIconLink({ href, label }: { href: string; label: string }) {
       className="grid h-10 w-10 place-items-center rounded-xl text-[#1A2744]"
     >
       <UserRound className="h-5 w-5" />
+    </Link>
+  );
+}
+
+// Sin sesión, a la derecha de la barra va la CUENTA, no la campana ni un hueco.
+// La campana prometía avisos que un visitante no tiene y chocaba con la
+// pantalla de acceso; el hueco dejaba la barra coja y «Iniciar sesión» a dos
+// toques, escondido en el menú. La silueta es lo que todo el mundo ya lee como
+// «entrar a mi cuenta», y al entrar se vuelve a la página donde se estaba.
+// En las pantallas de acceso no se dibuja: apuntaría a sí misma.
+export function HeaderAccountLink() {
+  const t = useTranslations("nav");
+  const label = t("login");
+  const pathname = usePathname();
+  const locale = useLocale();
+  const [busqueda, setBusqueda] = useState("");
+  // Los filtros de la dirección (los de /buscar, por ejemplo) se leen ya en el
+  // navegador: leerlos con useSearchParams obligaría a envolver cada barra en
+  // un Suspense.
+  useEffect(() => { queueMicrotask(() => setBusqueda(window.location.search)); }, [pathname]);
+  if (/(^|\/)(login|registro|olvide-contrasena|reset-password|onboarding)(\/|$)/.test(pathname ?? "")) {
+    return <span className="h-10 w-10 shrink-0" aria-hidden />;
+  }
+  const aqui = pathname && pathname !== "/" ? `/${locale}${pathname}${busqueda}` : "";
+  return (
+    <Link
+      href={aqui ? `/login?redirect=${encodeURIComponent(aqui)}` : "/login"}
+      aria-label={label}
+      data-acceso-cabecera
+      className="relative grid h-10 w-10 shrink-0 place-items-center rounded-xl text-[#1A2744] transition-colors hover:bg-[#f3f4f6] hover:text-[#009FD9]"
+    >
+      <CircleUserRound className="h-6 w-6" strokeWidth={1.75} />
     </Link>
   );
 }
@@ -1911,7 +1942,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                 ) : (
                 <div className="ml-auto flex shrink-0 items-center gap-0.5">
                   {user && !sectionMenu && <NotificationBell scope="all" />}
-                  {!user && !sectionShare && !sectionMenu && <span className="h-10 w-10" aria-hidden />}
+                  {!user && !sectionShare && !sectionMenu && <HeaderAccountLink />}
                 </div>
                 )}
                 {sectionMenu && (

@@ -3,7 +3,18 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { contactCookieValue, hashContactToken, setContactCookie } from "@/lib/contact-followup";
 
-const FOLLOW_UP_DELAY_MS = 5 * 24 * 60 * 60 * 1000;
+const DIA_MS = 24 * 60 * 60 * 1000;
+const FOLLOW_UP_DELAY_MS = 5 * DIA_MS;
+// Los frenos para que la pregunta no canse. Se pregunta a los 5 días y, si la
+// respuesta es «Aún no», UNA vez más a los 5 días; un segundo «Aún no» la
+// cierra. Antes se reprogramaba sin límite: quien nunca contestaba «Sí» o «No»
+// la veía cada 5 días para siempre.
+const ULTIMA_PREGUNTA_MS = 10 * DIA_MS;
+// Pasado un mes del contacto ya nadie se acuerda: la pregunta solo estorba.
+const CADUCA_MS = 30 * DIA_MS;
+// «Aún no» también quiere decir «ahora no me pregunten»: las demás pendientes
+// esperan al menos un día, así nunca sale más de una tarjeta por día.
+const RESPIRO_MS = DIA_MS;
 
 async function currentUserId() {
   const supabase = await createClient();
@@ -30,6 +41,7 @@ export async function GET(request: NextRequest) {
     .select("id, professional_id, professional_name, service_name, contact_method, status, contacted_at", { count: "exact" })
     .in("status", userId ? ["contacted", "hire_intent"] : ["contacted"])
     .lte("follow_up_at", new Date().toISOString())
+    .gte("contacted_at", new Date(Date.now() - CADUCA_MS).toISOString())
     .order("contacted_at", { ascending: false })
     .limit(1);
 
@@ -60,7 +72,7 @@ export async function PATCH(request: NextRequest) {
   const db = createAdminClient();
   const { data: followUp } = await db
     .from("whatsapp_contact_followups")
-    .select("id, client_id, anonymous_token_hash, professional_id, professional_name, service_name, contact_method, status")
+    .select("id, client_id, anonymous_token_hash, professional_id, professional_name, service_name, contact_method, status, contacted_at")
     .eq("id", id)
     .maybeSingle();
 
@@ -71,12 +83,27 @@ export async function PATCH(request: NextRequest) {
   if (!ownsFollowUp) return NextResponse.json({ error: "Seguimiento no encontrado." }, { status: 404 });
 
   if (action === "not_now") {
-    const { error } = await db.from("whatsapp_contact_followups").update({
-      follow_up_at: new Date(Date.now() + FOLLOW_UP_DELAY_MS).toISOString(),
-      updated_at: new Date().toISOString(),
-    }).eq("id", id);
+    const ahora = Date.now();
+    const edad = ahora - new Date(String(followUp.contacted_at)).getTime();
+    // Segunda vez que dice «Aún no»: se cierra, no se vuelve a preguntar.
+    const cambios = edad >= ULTIMA_PREGUNTA_MS
+      ? { status: "dismissed", responded_at: new Date(ahora).toISOString(), updated_at: new Date(ahora).toISOString() }
+      : { follow_up_at: new Date(ahora + FOLLOW_UP_DELAY_MS).toISOString(), updated_at: new Date(ahora).toISOString() };
+    const { error } = await db.from("whatsapp_contact_followups").update(cambios).eq("id", id);
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-    return NextResponse.json({ ok: true });
+
+    // Las demás pendientes de esta misma persona esperan al menos un día.
+    let otras = db
+      .from("whatsapp_contact_followups")
+      .update({ follow_up_at: new Date(ahora + RESPIRO_MS).toISOString(), updated_at: new Date(ahora).toISOString() })
+      .neq("id", id)
+      .in("status", ["contacted", "hire_intent"])
+      .lte("follow_up_at", new Date(ahora + RESPIRO_MS).toISOString());
+    otras = followUp.client_id
+      ? otras.eq("client_id", followUp.client_id)
+      : otras.eq("anonymous_token_hash", tokenHash).is("client_id", null);
+    await otras;
+    return NextResponse.json({ ok: true, closed: edad >= ULTIMA_PREGUNTA_MS });
   }
 
   if (action === "not_hired") {
