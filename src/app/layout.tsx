@@ -190,6 +190,20 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
             __html: `@media (max-width:1023px){body.ccr-search-sheet-page:not(.ccr-native-app) .ccr-search-results-layout{height:100dvh!important;box-sizing:border-box;padding-top:var(--ccr-native-header-height,124px)}body.ccr-search-sheet-page .ccr-app-footer{display:none!important}}`,
           }}
         />
+        {/* EL PANEL NO LLEVA PIE EN EL TELÉFONO. El pie del sitio es una lista
+            de salidas —Servicios, Ayuda, redes— y el panel es la herramienta de
+            trabajo. Dentro de una sección ya se comportaba como pantalla
+            completa (la sección mide la pantalla entera aunque su contenido sea
+            corto), así que el pie solo aparecía tras recorrerla entera; en la
+            raíz salía enseguida: dos comportamientos para lo mismo. La app
+            nativa ya lo esconde. De 1024 px en adelante se queda, que ahí el
+            panel vive dentro de la página y el pie cierra el documento. */}
+        <style
+          data-ccr-pie-panel=""
+          dangerouslySetInnerHTML={{
+            __html: `@media (max-width:1023px){.ccr-dashboard-footer{display:none!important}}`,
+          }}
+        />
         <style
           data-ccr-aviso-guardado=""
           dangerouslySetInnerHTML={{
