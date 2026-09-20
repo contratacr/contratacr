@@ -1,6 +1,5 @@
 import { notFound } from "next/navigation";
 import { ArrowLeft, ChevronRight } from "lucide-react";
-import { StickyHairlineHeader } from "@/components/util/sticky-hairline-header";
 import { Link } from "@/i18n/navigation";
 import { OfferImageGallery } from "@/components/offers/offer-image-gallery";
 import { OfferDetailNavbarSearch } from "@/components/offers/offer-detail-navbar-search";
@@ -168,7 +167,11 @@ export default async function OfferDetailPage({ params, searchParams }: { params
           href: `/ofertas/${offer.id}`,
         }}
       />
-      <StickyHairlineHeader shadow className="z-30 lg:hidden">
+      {/* La línea bajo la cabecera SE VE SIEMPRE, como en Empleos, la ficha del
+          profesional, Ayuda y Soporte. Aquí aparecía solo al desplazar: en
+          reposo la barra y el contenido se fundían y la promoción era la única
+          pantalla del app sin esa separación. */}
+      <header className="sticky top-0 z-30 border-b border-[#e5e7eb] bg-white lg:hidden">
         <div className={CABECERA_FILA_CENTRADA}>
           <Link href={backHref} aria-label={copy.back} className={cn("absolute left-4 top-1/2 -translate-y-1/2", CABECERA_BOTON)}>
             <ArrowLeft className={cn(CABECERA_GLIFO, "stroke-[2.4]")} />
@@ -188,7 +191,7 @@ export default async function OfferDetailPage({ params, searchParams }: { params
             guardar={isOwner ? undefined : { itemId: offer.id, snapshot: offerSaveSnapshot(offer, idioma), userId: user?.id ?? null, loginRedirect: `/ofertas/${offer.id}` }}
           />
         </div>
-      </StickyHairlineHeader>
+      </header>
       <div className="mx-auto hidden max-w-6xl px-4 pt-8 sm:px-6 lg:block">
         <Link href={backHref} className="inline-flex h-10 items-center gap-2 rounded-lg px-2 text-sm font-extrabold text-[#162543] transition hover:bg-[#eaf6fc]">
           <ArrowLeft className="h-4 w-4 stroke-[2.4]" />

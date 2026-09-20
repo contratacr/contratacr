@@ -221,9 +221,9 @@
       "withCategory": "{category}",
       "withQuery": "Results for “{q}”"
     },
-    "resultsIn": "{count} professionals in {location}",
+    "resultsIn": "{count, plural, one {# professional} other {# professionals}} in {location}",
     "thisArea": "this area",
-    "resultsInCR": "{count} professionals in Costa Rica",
+    "resultsInCR": "{count, plural, one {# professional} other {# professionals}} in Costa Rica",
     "list": "List",
     "map": "Map",
     "viewResults": "View results",
@@ -1280,6 +1280,9 @@
     }
   },
   "proPanel": {
+    "fotoTitulo": "Profile photo",
+    "fotoErrorGuardar": "We could not update the photo. Please try again.",
+    "fotoErrorEliminar": "We could not remove the photo. Please try again.",
     "title": "My panel",
     "back": "Back",
     "backToPanel": "Back to panel",

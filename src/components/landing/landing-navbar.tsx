@@ -1517,18 +1517,37 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
 
 
   // Build params from current state and navigate. Runs ONLY on Buscar/Enter.
+  // Una ubicación elegida se MUESTRA con la provincia detrás («Atenas,
+  // Alajuela») pero se guarda con su rótulo corto («Atenas»). Comparando a
+  // secas no coincidían, la ubicación se daba por perdida y la búsqueda salía
+  // a todo el país: ponías el servicio y Atenas se te caía.
+  function mismaUbicacion(sel: LocationSuggestion, escrito: string) {
+    const texto = normalizeText(escrito.trim());
+    if (!texto) return false;
+    const provincia = sel.type === "canton" ? sel.sublabel : "";
+    return texto === normalizeText(sel.label)
+      || (!!provincia && texto === normalizeText(`${sel.label}, ${provincia}`));
+  }
+
   function runCompactSearch(
     overrides: {
       location?: LocationSuggestion | null;
       coords?: { latitude: number; longitude: number };
       locationLabel?: string;
+      /** El servicio recién elegido. Va a mano porque esta función es la de
+       *  ESTE render: el `setSearchCategoryId` de hace un instante todavía no
+       *  se ve desde aquí, y sin él la búsqueda salía a ADIVINAR el servicio a
+       *  partir del texto escrito —y podía adivinar otro—. */
+      categoria?: string | null;
+      servicio?: string;
     } = {},
   ) {
     const params = new URLSearchParams();
-    const svc = repairVisibleText(searchQuery).trim();
-    const picked = compactSuggestions.find((c) => c.id === searchCategoryId);
-    if (searchCategoryId && picked && normalizeText(repairVisibleText(picked.label)) === normalizeText(svc)) {
-      params.set("categoria", searchCategoryId);
+    const svc = repairVisibleText(overrides.servicio ?? searchQuery).trim();
+    const categoriaElegida = "categoria" in overrides ? overrides.categoria : searchCategoryId;
+    const picked = compactSuggestions.find((c) => c.id === categoriaElegida);
+    if (categoriaElegida && (!picked || normalizeText(repairVisibleText(picked.label)) === normalizeText(svc))) {
+      params.set("categoria", categoriaElegida);
     } else if (svc) {
       const inferred = resolveCategoryIntent(svc, locale);
       if (inferred) params.set("categoria", inferred.id);
@@ -1542,7 +1561,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
       ? null
       : "location" in overrides
         ? overrides.location
-        : navLocationSel && navLocationSel.label === navLocation
+        : navLocationSel && mismaUbicacion(navLocationSel, navLocation)
           ? navLocationSel
           : resolveLocation(navLocation);
     if (loc) {
@@ -1735,7 +1754,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
     const ubicacionEscrita = navLocation.trim().length > 0 || !!navLocationSel;
     if (ubicacionEscrita) {
       closeNativeSearch();
-      window.setTimeout(() => runCompactSearch(), 0);
+      window.setTimeout(() => runCompactSearch({ categoria: id, servicio: picked ? repairVisibleText(picked.label) : undefined }), 0);
       return;
     }
     window.setTimeout(() => {

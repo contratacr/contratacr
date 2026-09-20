@@ -1695,7 +1695,7 @@ export default function DashboardPage() {
       handleSaved("internal");
     } catch (error) {
       console.error("[dashboard] avatar upload failed", error);
-      await avisoDelPanel.showMessage({ title: locale === "en" ? "Profile photo" : "Foto de perfil", description: locale === "en" ? "We could not update the photo. Please try again." : "No pudimos actualizar la foto. Inténtalo de nuevo." });
+      await avisoDelPanel.showMessage({ title: t("fotoTitulo"), description: t("fotoErrorGuardar") });
     } finally {
       setHeaderPhotoUploading(false);
     }
@@ -1711,7 +1711,7 @@ export default function DashboardPage() {
       handleSaved("internal");
     } catch (error) {
       console.error("[dashboard] avatar remove failed", error);
-      await avisoDelPanel.showMessage({ title: locale === "en" ? "Profile photo" : "Foto de perfil", description: locale === "en" ? "We could not remove the photo. Please try again." : "No pudimos eliminar la foto. Inténtalo de nuevo." });
+      await avisoDelPanel.showMessage({ title: t("fotoTitulo"), description: t("fotoErrorEliminar") });
     } finally {
       setHeaderPhotoUploading(false);
     }

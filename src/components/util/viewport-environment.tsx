@@ -63,7 +63,14 @@ export function ViewportEnvironment() {
       // o encogiéndolo y desplazándolo (se mide contra el alto sin teclado).
       const insetPorAltura = Math.max(0, altoSinTeclado - height);
       const insetPorDesplazamiento = Math.max(0, window.innerHeight - height - top);
-      const keyboardInset = Math.max(insetPorAltura, insetPorDesplazamiento);
+      // SIN UN CAMPO ENFOCADO NO HAY TECLADO, midan lo que midan las alturas.
+      // En Safari la barra de direcciones crece y encoge el viewport casi 100 px
+      // por su cuenta: comparado contra «el alto más grande que se ha visto»,
+      // eso pasaba por teclado abierto y la pantalla se quedaba acomodada para
+      // un teclado que ya no estaba —el hilo de soporte a media pantalla, con
+      // una franja gris arriba—.
+      const hayCampoEnfocado = isEditable(document.activeElement);
+      const keyboardInset = hayCampoEnfocado ? Math.max(insetPorAltura, insetPorDesplazamiento) : 0;
 
       root.style.setProperty("--app-visual-viewport-height", `${height}px`);
       root.style.setProperty("--app-visual-viewport-width", `${width}px`);
@@ -111,6 +118,19 @@ export function ViewportEnvironment() {
     vv?.addEventListener("resize", update);
     vv?.addEventListener("scroll", update);
     document.addEventListener("focusin", scheduleFocusedFieldCheck);
+    // AL SOLTAR EL CAMPO SE VUELVE A MEDIR, varias veces. Safari en iPhone no
+    // siempre avisa del tamaño FINAL del viewport al cerrar el teclado —los
+    // avisos llegan durante la animación y el último a veces no llega—, así que
+    // las variables se quedaban con las medidas de «teclado abierto» hasta el
+    // siguiente giro o toque. Se mide al instante y cuando la animación ya
+    // terminó.
+    const remedirAlSoltar = () => {
+      for (const espera of [0, 120, 320, 650, 1000]) {
+        const id = window.setTimeout(() => { timers.delete(id); update(); }, espera);
+        timers.add(id);
+      }
+    };
+    document.addEventListener("focusout", remedirAlSoltar);
 
     return () => {
       window.removeEventListener("resize", update);
@@ -118,6 +138,7 @@ export function ViewportEnvironment() {
       vv?.removeEventListener("resize", update);
       vv?.removeEventListener("scroll", update);
       document.removeEventListener("focusin", scheduleFocusedFieldCheck);
+      document.removeEventListener("focusout", remedirAlSoltar);
       timers.forEach((id) => window.clearTimeout(id));
     };
   }, []);

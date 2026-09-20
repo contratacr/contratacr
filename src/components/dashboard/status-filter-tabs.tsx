@@ -1,5 +1,6 @@
 "use client";
 
+import { FlechasDeCarril } from "@/components/ui/flechas-de-carril";
 import { useEffect, useRef, useState } from "react";
 import { useDesvanecidoDeCarril } from "@/hooks/use-desvanecido-de-carril";
 import { usePantallaAngosta } from "@/hooks/use-pantalla-angosta";
@@ -111,6 +112,7 @@ export function StatusFilterTabs({
   // volver a la primera se ve que no hay nada antes. El margen es lo que hace
   // que asome: sin él la etapa quedaba pegada al filo y parecía la última.
   const carrilRef = useRef<HTMLDivElement | null>(null);
+  const carrilSegmentadoContenedor = useRef<HTMLDivElement | null>(null);
   // Chips: en computadora, con muchos servicios se pliegan tras «+N más».
   const [todosLosChips, setTodosLosChips] = useState(false);
   // Mismo degradado que el resto de los carriles del app: la etapa que asoma se
@@ -189,6 +191,7 @@ export function StatusFilterTabs({
     const CHIP = "inline-flex h-9 shrink-0 items-center gap-1 whitespace-nowrap rounded-full border px-3.5 text-[13px] font-semibold transition-colors";
     return (
       <div data-status-filter-tabs="" data-filter-layout="chips" className="relative w-full max-w-full min-w-0 overflow-hidden lg:overflow-visible">
+        <FlechasDeCarril carril={carrilRef} />
         <div ref={carrilRef} className="ccr-carril-chips scrollbar-none flex gap-1.5 overflow-x-auto py-0">
           {tabs.map((tab) => {
             const active = value === tab.id;
@@ -303,9 +306,14 @@ export function StatusFilterTabs({
       // "segmented-scroll" = cuatro o cinco etapas: se deslizan en el teléfono y
       // se reparten la fila de 640 px en adelante.
       data-filter-layout={useSegmentedLayout ? (compacto ? "segmented-scroll" : "segmented") : "scroll"}
-      ref={useSegmentedLayout && compacto ? carrilRef : undefined}
-      style={useSegmentedLayout && compacto ? { maskImage: mascaraCarril, WebkitMaskImage: mascaraCarril } : undefined}
+      ref={useSegmentedLayout && compacto ? carrilSegmentadoContenedor : undefined}
     >
+      {useSegmentedLayout && compacto && <FlechasDeCarril carril={carrilRef} />}
+      <div
+        ref={useSegmentedLayout && compacto ? carrilRef : undefined}
+        className={cn(useSegmentedLayout && compacto && "max-sm:overflow-x-auto max-sm:scrollbar-none")}
+        style={useSegmentedLayout && compacto ? { maskImage: mascaraCarril, WebkitMaskImage: mascaraCarril } : undefined}
+      >
       <RailOrGrid scroll={!useSegmentedLayout} className={cn(
         // Celdas repartidas, pero ninguna por debajo de su propio rótulo: con
         // tres columnas iguales, «Profesionales» y su conteo no cabían en el
@@ -404,6 +412,7 @@ export function StatusFilterTabs({
           ya no hay desplazamiento. */}
       {useSegmentedLayout && compacto && <span aria-hidden className="-ml-1 w-1 shrink-0 sm:hidden" />}
       </RailOrGrid>
+      </div>
     </div>
   );
 }

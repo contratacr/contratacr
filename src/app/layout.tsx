@@ -163,6 +163,23 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
             __html: `@media (max-width:1023px){html:not([data-keyboard-open]).contratacr-chat-thread-open :is(.ccr-support-thread,.direct-chat-shell--thread){top:0!important;left:0!important}html:not([data-keyboard-open]).contratacr-chat-thread-open body:not(.ccr-native-app) :is(.ccr-support-thread,.direct-chat-shell--thread){height:100dvh!important;max-height:100dvh!important}}`,
           }}
         />
+        {/* /BUSCAR EN EL TELÉFONO LLENA LA PANTALLA HASTA ABAJO.
+            El área del mapa medía «pantalla − cabecera», pero arranca en y=0,
+            DEBAJO de la cabecera fija (el espaciador se quitó en el teléfono
+            para evitar un salto). Resultado: terminaba 124 px antes del fondo y
+            ahí asomaba el pie del sitio, azul oscuro. El panel de resultados lo
+            tapaba casi siempre; al bajarlo, quedaba una franja oscura entre el
+            mapa y el panel. Ahora el área mide la pantalla entera y el relleno
+            de arriba deja el mapa justo bajo la cabecera. El pie, que ahí nunca
+            se puede alcanzar —la página no se desplaza—, no se dibuja: así no
+            hay nada que pueda asomar debajo de otro contenedor. Solo en la web:
+            la app tiene su propia barra abajo y su propia regla. */}
+        <style
+          data-ccr-buscar=""
+          dangerouslySetInnerHTML={{
+            __html: `@media (max-width:1023px){body.ccr-search-sheet-page:not(.ccr-native-app) .ccr-search-results-layout{height:100dvh!important;box-sizing:border-box;padding-top:var(--ccr-native-header-height,124px)}body.ccr-search-sheet-page .ccr-app-footer{display:none!important}}`,
+          }}
+        />
         <style
           data-ccr-aviso-guardado=""
           dangerouslySetInnerHTML={{
