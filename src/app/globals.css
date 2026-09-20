@@ -1083,7 +1083,11 @@ html {
 }
 
 body {
-  background: var(--color-background);
+  /* BLANCO, como la barra de arriba. Safari en iPhone tiñe la zona del reloj (y
+     la de su barra de abajo) con el color del body: con el gris #fafafa que
+     había aquí, la franja del reloj salía gris encima de una barra blanca. Las
+     pantallas con lienzo gris lo ponen en su propio <main>. */
+  background: #ffffff;
   color: var(--color-foreground);
   font-family: var(--font-sans), system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
