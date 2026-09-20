@@ -136,11 +136,21 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
         />
         {/* Con la franja de acciones fija abajo (teléfono), la página reserva
             debajo exactamente su alto: así se puede desplazar hasta el final
-            sin que la franja tape lo último («Reportar perfil» en la ficha). */}
+            sin que la franja tape lo último («Reportar perfil» en la ficha).
+
+            Y NADIE SE DESPLAZA HACIA LA NADA. Las pantallas ya se fuerzan a
+            medir el teléfono entero (min-h-screen, min-h-[calc(100vh-72px)]…):
+            sumada a eso, la reserva dejaba a una pantalla CORTA 93 px más alta
+            que el teléfono, y se podía arrastrar hacia un vacío. Con la franja
+            puesta, cada alto mínimo DESCUENTA la reserva: la pantalla corta
+            mide justo el teléfono y la larga termina sobre la franja. Se
+            descuenta —no se anula— porque ese mínimo es lo que hace que el
+            blanco de una ficha corta llene la pantalla. Si se agrega una
+            variante nueva de min-h-[calc(100…)], hay que sumarla aquí. */}
         <style
           data-ccr-reserva=""
           dangerouslySetInnerHTML={{
-            __html: `@media (max-width:639px){body.ccr-con-barra-accion{padding-bottom:var(--ccr-alto-barra,0px)}}`,
+            __html: `@media (max-width:639px){body.ccr-con-barra-accion{padding-bottom:var(--ccr-alto-barra,0px)}body.ccr-con-barra-accion .min-h-screen{min-height:calc(100vh - var(--ccr-alto-barra,0px))!important}body.ccr-con-barra-accion .ccr-cascaron-contenido{display:flex;flex-direction:column;min-width:0}body.ccr-con-barra-accion .ccr-cascaron-contenido>main{flex:1 1 auto;min-width:0}body.ccr-con-barra-accion [class*="min-h-[calc(100vh-72px)]"]{min-height:calc(100vh - 72px - var(--ccr-alto-barra,0px))!important}body.ccr-con-barra-accion [class*="min-h-[calc(100svh-88px)]"]{min-height:calc(100svh - 88px - var(--ccr-alto-barra,0px))!important}body.ccr-con-barra-accion [class*="min-h-[calc(100dvh-8.75rem)]"]{min-height:calc(100dvh - 8.75rem - var(--ccr-alto-barra,0px))!important}body.ccr-con-barra-accion [class*="min-h-[calc(100dvh-64px)]"]{min-height:calc(100dvh - 64px - var(--ccr-alto-barra,0px))!important}body.ccr-con-barra-accion [class*="min-h-[calc(100dvh-4rem)]"]{min-height:calc(100dvh - 4rem - var(--ccr-alto-barra,0px))!important}body.ccr-con-barra-accion [class*="min-h-[calc(100dvh-16rem)]"]{min-height:calc(100dvh - 16rem - var(--ccr-alto-barra,0px))!important}body.ccr-con-barra-accion [class*="min-h-[calc(100dvh-153px)]"]{min-height:calc(100dvh - 153px - var(--ccr-alto-barra,0px))!important}}`,
           }}
         />
         {/* Teclado abierto en un formulario largo (teléfono): fuera la franja de

@@ -266,7 +266,7 @@ export default async function OfferDetailPage({ params, searchParams }: { params
                 </div>
               ))}
             </dl>
-            <section className="mt-7 pb-2">
+            <section className="mt-7 pb-6">
               <h3 className="text-lg font-bold">{copy.details}</h3>
               <p className="mt-3 max-w-full whitespace-pre-line break-words pr-1 text-sm leading-7 text-[#43536b] [overflow-wrap:anywhere]">
                 {offer.description}

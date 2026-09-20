@@ -35,7 +35,7 @@ import { trackMetaEvent } from "@/lib/analytics/meta-pixel";
 import { trackInteraction } from "@/lib/analytics/interaction-events";
 import { DirectChatLauncher } from "@/components/professionals/direct-chat-launcher";
 import { ScrollRail } from "@/components/ui/scroll-rail";
-import { AccionesAlPie } from "@/components/ui/acciones-al-pie";
+import { AccionesAlPie, BARRA_EN_LIENZO } from "@/components/ui/acciones-al-pie";
 import { ContactButton } from "@/components/professionals/contact-button";
 import { useNativeApp } from "@/hooks/use-native-app";
 
@@ -1138,7 +1138,8 @@ export function ProfessionalSchedule({ professional, categoryName, searchedPlace
               computadora se queda donde estaba: ahí la columna de contacto ya
               está siempre a la vista. */}
           {!visualScheduleLoading && (
-            <AccionesAlPie className="flex flex-col gap-2">
+            // El lienzo de la ficha es gris: la franja va del color del lienzo.
+            <AccionesAlPie className={`flex flex-col gap-2 ${BARRA_EN_LIENZO}`}>
               {profileContactButtons}
             </AccionesAlPie>
           )}

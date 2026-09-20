@@ -427,7 +427,7 @@ export function OfferForm({ professionalId, serviceOptions, backHref = "/ofertas
           <h1 className={cn(CABECERA_TITULO, "text-center")}>{editing ? copy.editTitle : copy.publishTitle}</h1>
         </div>
       </header>
-      <div className={presentation === "modal" ? "mx-auto max-w-3xl px-4 py-5" : "mx-auto max-w-3xl px-4 py-5 max-sm:pt-0 sm:px-6 lg:px-0 lg:py-0"}>
+      <div className={presentation === "modal" ? "mx-auto max-w-3xl px-4 py-5" : "mx-auto max-w-3xl px-4 py-5 max-sm:pb-1 max-sm:pt-0 sm:px-6 lg:px-0 lg:py-0"}>
         <div className={presentation === "modal" ? "hidden" : "mb-4 hidden items-center justify-between gap-4 rounded-lg border border-[#dfe8f0] bg-white px-4 py-3 shadow-sm lg:flex"}>
           <Link href={backHref} aria-label={copy.backToOffers} className="inline-flex h-10 items-center gap-2 rounded-lg px-2 text-sm font-extrabold text-[#162543] transition hover:bg-[#f1f9fc] hover:text-[#008fc3]"><ArrowLeft className="h-5 w-5 stroke-[2.4]" />{copy.backToOffers}</Link>
           <div className="min-w-0 flex-1 text-center"><h1 className="truncate text-xl font-extrabold">{editing ? copy.editTitle : copy.publishTitle}</h1><p className="truncate text-sm text-[#65758c]">{copy.subtitle}</p></div>

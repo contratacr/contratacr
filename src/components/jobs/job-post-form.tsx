@@ -451,7 +451,7 @@ export function JobPostForm({ professionalId, backHref = "/empleos", initialJob 
           <h1 className={cn(CABECERA_TITULO, "text-center")}>{editing ? copy.editJob : copy.publishJob}</h1>
         </div>
       </header>
-      <div className={presentation === "modal" ? "mx-auto max-w-3xl px-4 py-5" : "mx-auto max-w-3xl px-4 py-5 max-sm:pt-0 sm:px-6 lg:px-0 lg:py-0"}>
+      <div className={presentation === "modal" ? "mx-auto max-w-3xl px-4 py-5" : "mx-auto max-w-3xl px-4 py-5 max-sm:pb-1 max-sm:pt-0 sm:px-6 lg:px-0 lg:py-0"}>
         <div className={presentation === "modal" ? "hidden" : "mb-4 hidden items-center gap-3 lg:flex"}>
           <Link href={backHref} aria-label={copy.backToJobs} className="grid h-10 w-10 place-items-center rounded-lg text-[#162543] hover:bg-white"><ArrowLeft className="h-5 w-5" /></Link>
           <div><h1 className="text-2xl font-bold">{editing ? copy.editJob : copy.publishJob}</h1><p className="text-sm text-[#65758c]">{copy.subtitle}</p></div>

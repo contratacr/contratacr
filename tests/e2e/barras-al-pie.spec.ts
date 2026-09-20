@@ -24,7 +24,8 @@ const CAJA_EN_LIENZO = {
   borde: "1px rgba(0, 0, 0, 0)",
   fondo: "rgb(244, 247, 250)",
 };
-const EN_LIENZO = new Set(["publicar empleo", "publicar promoción", "soporte", "/es/soporte"]);
+// La ficha del profesional también: su lienzo es gris, con tarjetas.
+const EN_LIENZO = new Set(["publicar empleo", "publicar promoción", "soporte", "/es/soporte", "ficha profesional", "/es/profesionales/redes-bahia-pruebas"]);
 
 type Franja = {
   caja: { padding: string; borde: string; fondo: string } | null;

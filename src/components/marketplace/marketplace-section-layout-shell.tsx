@@ -28,7 +28,9 @@ export function MarketplaceSectionLayoutShell({ children }: { children: React.Re
           </div>
         </>
       )}
-      <div className="flex-1">{children}</div>
+      {/* `ccr-cascaron-contenido`: con la franja fija puesta, el <main> de adentro
+          llena este hueco (regla data-ccr-reserva en layout.tsx). */}
+      <div className="ccr-cascaron-contenido flex-1">{children}</div>
       {/* El pie va en la web (también aquí, para no dejar la sección sin salida);
           en la app no, que ahí manda la barra de abajo. */}
       <FooterSoloWeb />
