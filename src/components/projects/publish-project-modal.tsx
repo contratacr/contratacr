@@ -193,7 +193,7 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
         aria-labelledby="publish-project-title"
         className="app-fullscreen-modal relative z-10 flex h-[var(--app-visual-viewport-height)] min-h-0 w-full max-h-[var(--app-visual-viewport-height)] flex-col overflow-hidden bg-white shadow-none sm:h-auto sm:max-h-[90vh] sm:max-w-2xl sm:rounded-2xl sm:shadow-2xl"
       >
-        <div className="relative flex shrink-0 items-center justify-center gap-3 border-b border-[#f3f4f6] px-14 py-4 sm:items-start sm:justify-between sm:px-6">
+        <div className="relative flex shrink-0 items-center justify-center gap-3 border-b border-[#e5e7eb] px-14 py-4 sm:items-start sm:justify-between sm:px-6">
           {/* Solo el título: la línea de apoyo repetía lo que el propio
               formulario ya promete y robaba alto en el teléfono. */}
           <div className="min-w-0 text-center sm:text-left">

@@ -145,7 +145,7 @@ export function Modal({
         {/* Header (pinned) */}
         {!hideHeader && <div
           className={cn(
-            "flex shrink-0 gap-3 border-b border-[#f3f4f6] px-5 py-4 sm:px-6",
+            "flex shrink-0 gap-3 border-b border-[#e5e7eb] px-5 py-4 sm:px-6",
             // En el teléfono el título va centrado y la X flota al lado: si la X
             // ocupara lugar en la fila, el título quedaría corrido su ancho
             // (22 px medidos) y "centrado" sería mentira.

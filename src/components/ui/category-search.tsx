@@ -205,7 +205,7 @@ export function CategorySearch({
           )}
         >
           {pantallaChica && (
-            <div className="grid h-14 shrink-0 grid-cols-[52px_minmax(0,1fr)_52px] items-center border-b border-[#f3f4f6] px-1">
+            <div className="grid h-14 shrink-0 grid-cols-[52px_minmax(0,1fr)_52px] items-center border-b border-[#e5e7eb] px-1">
               <button
                 type="button"
                 onClick={() => { setOpen(false); setQuery(""); setActiveGroupId(null); }}

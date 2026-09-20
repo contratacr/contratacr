@@ -88,7 +88,7 @@ export function ReportProfileModal({ professionalName, professionalSlug, context
         className="app-bottom-sheet app-sheet-compact relative max-h-[92vh] w-full overflow-y-auto overscroll-contain rounded-t-2xl bg-white shadow-2xl sm:max-w-[440px] sm:rounded-2xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-[#f3f4f6]">
+        <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-[#e5e7eb]">
           <div className="flex items-center gap-2.5">
             <Flag className="h-5 w-5 shrink-0 text-red-500" />
             <div>

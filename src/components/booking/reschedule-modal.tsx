@@ -222,7 +222,7 @@ export function RescheduleModal({ professionalId, bookingId, currentWhen, slotLo
         aria-label={t("title")}
         className="app-bottom-sheet relative w-full overflow-y-auto overscroll-contain rounded-t-2xl bg-white pb-[max(env(safe-area-inset-bottom),1rem)] shadow-2xl sm:max-w-md sm:rounded-2xl"
       >
-        <div className="sticky top-0 z-10 flex items-center justify-between border-b border-[#f3f4f6] bg-white px-4 py-3">
+        <div className="sticky top-0 z-10 flex items-center justify-between border-b border-[#e5e7eb] bg-white px-4 py-3">
           <div className="min-w-0">
             <h2 className="text-base font-bold text-[#162543]">{t("title")}</h2>
             {currentWhen && <p className="text-xs text-[#68778d] truncate">{t("current", { when: currentWhen })}</p>}

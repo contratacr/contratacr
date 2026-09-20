@@ -1434,7 +1434,7 @@ function DayModal({ initialDate, existing, markedDates, defaultDuration, dateLoc
     <div className="ccr-availability-modal app-modal-screen fixed inset-0 z-[200] flex items-stretch justify-center p-0 sm:items-center sm:p-4">
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
       <div className="ccr-availability-modal-panel app-bottom-sheet relative z-10 flex h-full w-full flex-col overflow-hidden rounded-none bg-white shadow-2xl sm:h-auto sm:max-h-[90vh] sm:max-w-2xl sm:rounded-2xl">
-        <div className="flex shrink-0 items-start justify-between gap-3 border-b border-[#f3f4f6] p-4 pt-[max(env(safe-area-inset-top),1rem)] sm:p-5">
+        <div className="flex shrink-0 items-start justify-between gap-3 border-b border-[#e5e7eb] p-4 pt-[max(env(safe-area-inset-top),1rem)] sm:p-5">
           <div>
             <h3 className="text-base font-bold text-[#162543]">{t("modalTitle")}</h3>
             <p className="mt-0.5 text-xs text-[#6b7280]">{t("modalSub")}</p>

@@ -417,7 +417,7 @@ export function ClientRegistrationModal({
           )}
         >
           {/* Header */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-[#f3f4f6] shrink-0">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-[#e5e7eb] shrink-0">
             <div className="flex items-center gap-3">
               <ContrataCRLogo />
               {view === "register" && step !== "otp" && (

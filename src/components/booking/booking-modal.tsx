@@ -1193,7 +1193,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                 desalineaba de la flecha, y el avance ya lo dice la barra de abajo.
                 El relleno del área segura va en el envoltorio, así la flecha y el
                 título quedan centrados entre sí en el teléfono y en escritorio. */}
-            <div className="shrink-0 border-b border-[#f3f4f6] bg-white pt-[max(env(safe-area-inset-top),0.875rem)] lg:pt-0">
+            <div className="shrink-0 border-b border-[#e5e7eb] bg-white pt-[max(env(safe-area-inset-top),0.875rem)] lg:pt-0">
               <div className="relative flex items-center justify-center px-14 pb-3.5 lg:px-6 lg:py-4">
                 <h2 className="text-lg font-bold text-[#162543]">{t("title")}</h2>
                 <button

@@ -370,7 +370,7 @@ export function LeaveReviewModal({
   const panel = (
     <div className={embedded ? "w-full" : "app-bottom-sheet relative max-h-[92vh] w-full overflow-y-auto overscroll-contain rounded-t-2xl bg-white shadow-2xl sm:max-w-[420px] sm:rounded-2xl"}>
       {!embedded && (
-        <div className="flex items-center justify-between border-b border-[#f3f4f6] px-6 pb-4 pt-6">
+        <div className="flex items-center justify-between border-b border-[#e5e7eb] px-6 pb-4 pt-6">
           <div>
             <h2 className="text-lg font-bold text-[#162543]">{isEditing ? t("titleEdit") : t("titleNew")}</h2>
             <p className="mt-0.5 text-sm text-[#6b7280]">{professionalName}</p>
