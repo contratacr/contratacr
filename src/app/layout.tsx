@@ -215,7 +215,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
         <style
           data-ccr-franja=""
           dangerouslySetInnerHTML={{
-            __html: `@media (max-width:639px){.ccr-barra-accion{box-sizing:border-box;background:#fff;border-top:1px solid #e5e7eb;padding:16px max(20px,env(safe-area-inset-right)) calc(env(safe-area-inset-bottom) + 28px) max(20px,env(safe-area-inset-left))}.ccr-barra-accion.ccr-sin-linea{border-top-color:transparent}.ccr-barra-accion.ccr-barra-en-lienzo{background:#f4f7fa;border-top-color:transparent;box-shadow:0 -10px 18px -14px rgba(15,23,42,.22)}.ccr-barra-accion :is(button,a):not(:disabled){box-shadow:0 10px 20px -10px rgba(15,23,42,.5)}.ccr-barra-fija{position:fixed;left:0;right:0;bottom:var(--ccr-reserva-barra,0px);z-index:20}}`,
+            __html: `@media (max-width:639px){.ccr-barra-accion{box-sizing:border-box;background:#fff;border-top:1px solid #e5e7eb;padding:16px max(20px,env(safe-area-inset-right)) calc(env(safe-area-inset-bottom) + 28px) max(20px,env(safe-area-inset-left))}.ccr-barra-accion.ccr-sin-linea{border-top-color:transparent}.ccr-barra-accion.ccr-barra-en-lienzo{background:#f4f7fa;border-top-color:transparent}.ccr-barra-accion :is(button,a):not(:disabled){box-shadow:0 10px 20px -10px rgba(15,23,42,.5)}.ccr-barra-fija{position:fixed;left:0;right:0;bottom:var(--ccr-reserva-barra,0px);z-index:20}}`,
           }}
         />
         <script

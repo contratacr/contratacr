@@ -74,6 +74,11 @@ export const BARRA_ACCION_FIJA = `${BARRA_ACCION_BASE} ccr-barra-fija`;
  * que pone la regla `data-ccr-franja`— flota encima. En las fichas (empleo,
  * promoción, proyecto) el lienzo ES blanco, así que ahí la franja blanca ya es
  * «del color del fondo» y no lleva esta marca.
+ *
+ * SIN sombra ni línea en el borde de arriba, a propósito: una sombra ahí
+ * oscurece la franja de encima y, por contraste, la de abajo se lee MÁS BLANCA
+ * que el lienzo aunque sea del mismo color exacto (medido en el teléfono:
+ * 245,247,250 arriba y abajo, y aun así «se veía blanca»).
  */
 export const BARRA_EN_LIENZO = "ccr-barra-en-lienzo";
 
