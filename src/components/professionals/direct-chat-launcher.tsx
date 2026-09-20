@@ -1,5 +1,6 @@
 "use client";
 
+import { useAppDialog } from "@/hooks/use-app-dialog";
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
 import { WhatsAppLogo } from "@/components/ui/whatsapp-logo";
@@ -62,6 +63,8 @@ export function DirectChatLauncher({
   // así que la misma acción se veía como cuatro acciones diferentes.
   const whatsappLabel = "WhatsApp";
   const { requireAccount, modals } = useContactGate({ professionalName, intent: "whatsapp", professionalId, source: analyticsSource });
+  // El aviso del app, no el del navegador (ver BotonEscribir en Proyectos).
+  const { dialogNode, showMessage } = useAppDialog();
 
   if (nativeApp) {
     const safeLabel = buttonLabel && !/whatsapp/i.test(buttonLabel) ? buttonLabel : undefined;
@@ -115,7 +118,7 @@ export function DirectChatLauncher({
       }
       window.open(String(payload.href), "_blank", "noopener,noreferrer");
     } catch {
-      window.alert(isEn ? "No WhatsApp number is available for this contact." : "No hay un numero de WhatsApp disponible para este contacto.");
+      await showMessage({ title: professionalName, description: isEn ? "This contact has no WhatsApp number available." : "Esta persona no tiene un número de WhatsApp disponible." });
     } finally {
       setLoading(false);
     }
@@ -148,6 +151,7 @@ export function DirectChatLauncher({
       {buttonLabel || whatsappLabel}
     </button>
     {modals}
+    {dialogNode}
     </>
   );
 }

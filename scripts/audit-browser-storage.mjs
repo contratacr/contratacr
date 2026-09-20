@@ -26,7 +26,7 @@ const reviewed = new Map([
   ["src/components/professionals/leave-review-modal.tsx", { count: 6, reason: "short-lived profile review draft handoff before login; submitted reviews persist in Supabase" }],
   ["src/lib/data/use-custom-categories.ts", { count: 2, reason: "session snapshot of the public service catalog so a newly approved service paints on the first frame; the API stays authoritative and revalidates on every start" }],
   ["src/components/projects/publish-project-modal.tsx", { count: 2, reason: "remembers the last request zone (province/canton) so the next request starts with it; the request itself is stored in Supabase" }],
-  ["src/lib/dashboard-prefetch-cache.ts", { count: 9, reason: "five-minute backend response cache, session-scoped and cleared on sign-out; Supabase remains authoritative" }],
+  ["src/lib/dashboard-prefetch-cache.ts", { count: 10, reason: "five-minute backend response cache, session-scoped and cleared on sign-out (entera o de una sola clave, al crear algo); Supabase remains authoritative" }],
   ["src/app/layout.tsx", { count: 8, reason: "pre-hydration read of the native first-run flag to pre-paint the onboarding screen; presentation only" }],
   ["src/components/mobile/mobile-app-bridge.tsx", { count: 3, reason: "native first-run flag and hardware-back root marker; presentation only" }],
   ["src/components/mobile/native-first-run-onboarding.tsx", { count: 11, reason: "native first-run completed flag, pending-route and post-auth handoff markers, plus the access-screen open flag that survives a locale switch; no account-owned records" }],

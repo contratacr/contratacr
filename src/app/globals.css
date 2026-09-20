@@ -1560,6 +1560,31 @@ body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-native-fab {
     padding-bottom: 0.5rem !important;
   }
 
+  /* EL HILO A PANTALLA COMPLETA, ANCLADO ARRIBA CUANDO NO HAY TECLADO.
+     Se posiciona con `top: var(--app-visual-viewport-top)` porque Safari en
+     iPhone desplaza la página para dejar ver el campo, y sin ese desfase el
+     hilo quedaba por detrás del teclado. El problema es al CERRAR: Safari
+     devuelve el desfase a cero en su propio tiempo (y a veces deja la página
+     desplazada), así que el hilo se quedaba pintado a media pantalla, con una
+     franja gris arriba y el pie descuadrado abajo. Sin teclado no hay nada que
+     compensar: el hilo va pegado arriba, pase lo que pase. */
+  html:not([data-keyboard-open]).contratacr-chat-thread-open .ccr-support-thread,
+  html:not([data-keyboard-open]).contratacr-chat-thread-open .direct-chat-shell--thread {
+    top: 0 !important;
+    left: 0 !important;
+  }
+
+  /* Y a pantalla completa. El alto sale de una variable que escribe el
+     navegador al cambiar el viewport; si ese aviso llega tarde —o no llega— el
+     hilo se quedaba corto y dejaba una franja gris abajo. Sin teclado, el alto
+     es la pantalla: no hace falta ninguna variable. (En la app no: ahí manda la
+     barra de pestañas, que tiene su propia regla.) */
+  html:not([data-keyboard-open]).contratacr-chat-thread-open body:not(.ccr-native-app) .ccr-support-thread,
+  html:not([data-keyboard-open]).contratacr-chat-thread-open body:not(.ccr-native-app) .direct-chat-shell--thread {
+    height: 100dvh !important;
+    max-height: 100dvh !important;
+  }
+
   html.ccr-native-app.contratacr-chat-thread-open .ccr-direct-chat-thread-scroll,
   html.ccr-native-app body.ccr-native-app.ccr-native-bottom-nav-visible.contratacr-chat-thread-open:not(.ccr-native-search-route) .ccr-direct-chat-thread-scroll,
   body.ccr-native-app.ccr-native-bottom-nav-visible.contratacr-chat-thread-open:not(.ccr-native-search-route) .ccr-direct-chat-thread-scroll {

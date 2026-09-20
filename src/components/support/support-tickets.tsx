@@ -1,5 +1,6 @@
 "use client";
 
+import { irAlInicio } from "@/lib/ir-al-inicio";
 import { isNativeAppRuntime } from "@/hooks/use-native-app";
 import { confirmarSalidaSinGuardar } from "@/lib/confirmar-salida";
 import { lockBodyScroll } from "@/lib/body-scroll-lock";
@@ -256,11 +257,21 @@ export function SupportTickets({
   }, []);
 
 
-  const load = useCallback(() => {
+  // Cada paso de Soporte abre desde su comienzo: la lista, el formulario de un
+  // caso nuevo y la conversación. Entrar, salir y volver a entrar dejaba la
+  // pantalla donde estaba y el paso abría por la mitad.
+  useEffect(() => { irAlInicio(); }, [showNewTicketPage, openId]);
+
+  const load = useCallback((esperandoNuevo = false) => {
     // El esqueleto solo cuando no hay NADA que mostrar. Volver a Soporte con la
     // lista ya cargada lo hacía aparecer otra vez —y encima tapaba los filtros—
     // aunque no hubiera nada nuevo que traer.
-    if (!claveCache || !getDashboardCache<Ticket[]>(claveCache)) setLoading(true);
+    //
+    // Al ACABAR DE CREAR un tiquete sí se pide: la caché guardada es la lista
+    // SIN él —para el primero, una lista vacía—, así que mientras llegaba la
+    // nueva se pintaba «Todavía no tienes tiquetes» y un instante después el
+    // tiquete recién creado. Eso es el parpadeo.
+    if (esperandoNuevo || !claveCache || !getDashboardCache<Ticket[]>(claveCache)) setLoading(true);
     setLoadError(false);
     fetchWithSessionRetry("/api/support")
       .then(async (r) => {
@@ -438,7 +449,7 @@ export function SupportTickets({
     setShowModal(false);
     setShowNewTicketPage(false);
     setFilter("open");
-    load();
+    load(true);
   }
 
   if (showNewTicketPage) {
@@ -606,7 +617,7 @@ export function SupportTickets({
         <div className="rounded-2xl border border-[#dfe8f0] bg-white px-5 py-10 text-center">
           <Headset className="mx-auto mb-3 h-10 w-10 text-[#cbd5e1]" />
           <p className="font-semibold text-[#374151]">{t("loadError")}</p>
-          <button onClick={load} className="mt-4 inline-flex items-center justify-center rounded-full bg-[#009FD9] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#0089bb]">
+          <button onClick={() => load()} className="mt-4 inline-flex items-center justify-center rounded-full bg-[#009FD9] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#0089bb]">
             {t("retry")}
           </button>
         </div>
@@ -630,7 +641,7 @@ export function SupportTickets({
           {filtered.map((tk) => {
             const hasNew = unread.has(tk.id);
             return (
-              <button key={tk.id} onClick={() => openTicket(tk.id)} className={`group text-left bg-white rounded-2xl border p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md sm:p-5 ${hasNew ? "border-[#bfe3f5] ring-1 ring-[#EBF5FB]" : "border-[#dfe8f0] hover:border-[#bfe3f5]"}`}>
+              <button key={tk.id} data-tiquete={tk.id} onClick={() => openTicket(tk.id)} className={`group text-left bg-white rounded-2xl border p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md sm:p-5 ${hasNew ? "border-[#bfe3f5] ring-1 ring-[#EBF5FB]" : "border-[#dfe8f0] hover:border-[#bfe3f5]"}`}>
                 <div className="flex items-start gap-3">
                   <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#ccecf8] ccr-caja-icono-plana">
                     <Headset className="h-[18px] w-[18px]" />

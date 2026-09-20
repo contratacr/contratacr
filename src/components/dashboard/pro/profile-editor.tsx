@@ -1,5 +1,6 @@
 "use client";
 
+import { irAlInicio } from "@/lib/ir-al-inicio";
 import { useState, useRef, useEffect } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
@@ -869,6 +870,12 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
       </div>
     );
   };
+  // En el teléfono cada sección es un paso a pantalla completa: se abre desde
+  // arriba. Entrar, salir y volver dejaba la pantalla donde estaba.
+  useEffect(() => {
+    if (typeof window !== "undefined" && window.matchMedia("(max-width: 639px)").matches) irAlInicio();
+  }, [openSections]);
+
   const mobileSectionFocused = openSections.size > 0;
   const activeMobileSectionId = Array.from(openSections)[0] ?? null;
   const activeMobileSectionTitle =

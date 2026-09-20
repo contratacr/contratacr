@@ -1300,7 +1300,7 @@ export function ClientActivity({ section, onCount }: { section: ClientActivitySe
       {/* Publicar proyecto — the project form opens in a modal here (no longer a
           separate page), and refreshes this list on a successful publish. */}
       {showPublish && (
-        <PublishProjectModal onClose={() => setShowPublish(false)} onSuccess={refreshProjects} />
+        <PublishProjectModal onClose={() => setShowPublish(false)} onSuccess={() => refreshProjectRows({ esperandoNuevo: true })} />
       )}
 
       {/* CLIENT reschedule — pick a new available slot for the same pro (atomic swap). */}

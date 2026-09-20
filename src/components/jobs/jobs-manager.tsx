@@ -1,5 +1,6 @@
 "use client";
 
+import { AutoSaveHint, useAvisoDeGuardado } from "@/components/dashboard/auto-save-hint";
 import { useAppDialog } from "@/hooks/use-app-dialog";
 import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
@@ -113,13 +114,15 @@ export function JobsManager({ initialJobs, embedded = false, backHref = "/dashbo
   }, [actionsOpen]);
 
   const { dialogNode, confirm, showMessage } = useAppDialog();
+  const aviso = useAvisoDeGuardado();
 
   // Solo lo que ya no está publicado se puede eliminar, y se pregunta antes:
   // no hay forma de recuperarlo.
   async function eliminar(id: string) {
     const result = await confirm({ title: copy.removeTitle, description: copy.removeBody, confirmLabel: copy.remove, cancelLabel: copy.removeCancel, tone: "danger" });
     if (!result.confirmed) return;
-    const response = await fetch(`/api/jobs/posts?id=${encodeURIComponent(id)}`, { method: "DELETE" });
+    let response!: Response;
+    await aviso.correr(async () => { response = await fetch(`/api/jobs/posts?id=${encodeURIComponent(id)}`, { method: "DELETE" }); return response.ok; });
     if (!response.ok) {
       const data = await response.json().catch(() => null) as { error?: string } | null;
       await showMessage({ title: copy.remove, description: data?.error ?? "" });
@@ -130,12 +133,16 @@ export function JobsManager({ initialJobs, embedded = false, backHref = "/dashbo
   }
 
   async function updateJobStatus(id: string, status: JobPost["status"]) {
-    const response = await fetch("/api/jobs/posts", { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ id, status }) });
-    if (response.ok) {
-      pendingStatus.current[id] = status;
-      setJobs((current) => current.map((job) => job.id === id ? { ...job, status } : job));
-      invalidateAppData("jobs");
-    }
+    // Se guarda en el momento, así que se confirma a la vista (ver AutoSaveHint).
+    await aviso.correr(async () => {
+      const response = await fetch("/api/jobs/posts", { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ id, status }) });
+      if (response.ok) {
+        pendingStatus.current[id] = status;
+        setJobs((current) => current.map((job) => job.id === id ? { ...job, status } : job));
+        invalidateAppData("jobs");
+      }
+      return response.ok;
+    });
   }
 
 
@@ -276,6 +283,7 @@ export function JobsManager({ initialJobs, embedded = false, backHref = "/dashbo
         </Modal>
       )}
       {dialogNode}
+      <AutoSaveHint {...aviso.estado} />
     </div>
   );
 }

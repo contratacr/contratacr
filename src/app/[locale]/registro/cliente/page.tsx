@@ -263,7 +263,7 @@ export default function RegisterClientPage() {
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+            <form noValidate onSubmit={handleSubmit} className="flex flex-col gap-4">
               {/* Full name — clients sign up with just their name (no cédula; that's
                   collected later when they request a service). Pre-filled for OAuth. */}
               <div>

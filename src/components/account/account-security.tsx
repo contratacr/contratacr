@@ -1,5 +1,6 @@
 "use client";
 
+import { AutoSaveHint, useAvisoDeGuardado } from "@/components/dashboard/auto-save-hint";
 import { useEffect, useState } from "react";
 import { FilaInterruptor } from "@/components/ui/fila-interruptor";
 import { CheckCircle2, MessageCircle, Clock, Mail, Lock, ShieldCheck, Eye, EyeOff, Info, ExternalLink } from "lucide-react";
@@ -79,6 +80,8 @@ export function AccountSecuritySection({ showHeading = true }: { showHeading?: b
   const { user } = useAuth();
   const locale = useLocale();
   const t = useTranslations("accountSecurity");
+  const avisoPermiso = useAvisoDeGuardado();
+  const [errorPermiso, setErrorPermiso] = useState(false);
   const tc = useTranslations("common");
 
   // Avisos por WhatsApp: el permiso vive en el perfil y solo lo enciende la
@@ -107,13 +110,20 @@ export function AccountSecuritySection({ showHeading = true }: { showHeading?: b
   async function cambiarPermisoWhatsapp(siguiente: boolean) {
     if (!user) return;
     setGuardandoPermiso(true);
+    setErrorPermiso(false);
     const anterior = permisoWhatsapp;
     setPermisoWhatsapp(siguiente);
-    const { error } = await createClient()
-      .from("profiles")
-      .update({ whatsapp_opt_in: siguiente })
-      .eq("id", user.id);
-    if (error) setPermisoWhatsapp(anterior ?? false);
+    // Se guarda en el momento: se confirma a la vista y, si falla, SE DICE. Antes
+    // el interruptor se devolvía solo, sin una palabra, y parecía un fallo de la
+    // pantalla.
+    const ok = await avisoPermiso.correr(async () => {
+      const { error } = await createClient()
+        .from("profiles")
+        .update({ whatsapp_opt_in: siguiente })
+        .eq("id", user.id);
+      return !error;
+    });
+    if (!ok) { setPermisoWhatsapp(anterior ?? false); setErrorPermiso(true); }
     setGuardandoPermiso(false);
   }
 
@@ -297,6 +307,8 @@ export function AccountSecuritySection({ showHeading = true }: { showHeading?: b
             disabled={guardandoPermiso}
             onChange={(valor) => { void cambiarPermisoWhatsapp(valor); }}
           />
+          {errorPermiso && <p role="alert" className="mt-2 text-sm font-semibold text-[#b91c1c]">{t("whatsappOptInError")}</p>}
+          <AutoSaveHint {...avisoPermiso.estado} />
         </div>
       )}
 

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useSyncExternalStore } from "react";
 import {
   getDashboardCache,
   loadDashboardCache,
+  olvidarDashboardCache,
   setDashboardCache,
   subscribeDashboardCache,
 } from "@/lib/dashboard-prefetch-cache";
@@ -48,8 +49,20 @@ export function useCachedResource<T>(key: string | null, loader: () => Promise<T
   const data = current ?? fallback;
   const loading = Boolean(key) && current === null;
 
-  const refresh = useCallback(async (): Promise<T | undefined> => {
+  /**
+   * Vuelve a pedir los datos. Lo que ya está en pantalla se queda mientras
+   * tanto, que es lo correcto al entrar a una sección.
+   *
+   * `esperandoNuevo` es para DESPUÉS DE CREAR algo: ahí lo guardado es la lista
+   * SIN lo recién creado —y si era lo primero, una lista vacía—, así que
+   * mantenerla en pantalla significa enseñar «todavía no tienes nada» y, un
+   * instante después, la cosa que la persona acaba de crear. Con esta marca se
+   * limpia lo guardado y la sección muestra su esqueleto hasta que llega la
+   * lista de verdad.
+   */
+  const refresh = useCallback(async ({ esperandoNuevo = false } = {}): Promise<T | undefined> => {
     if (!key) return undefined;
+    if (esperandoNuevo) olvidarDashboardCache(key);
     try {
       return await loadDashboardCache<T>(key, () => loaderRef.current(), { force: true });
     } catch (error) {

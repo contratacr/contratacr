@@ -86,6 +86,18 @@ export function subscribeDashboardCache<T>(key: string, listener: (data: T) => v
   };
 }
 
+/**
+ * Olvida UNA entrada y avisa a quien la mira, para que vuelva a su esqueleto.
+ * Se usa después de crear algo: lo guardado es la lista sin lo recién creado.
+ */
+export function olvidarDashboardCache(key: string) {
+  cache.delete(key);
+  if (canUseSessionStorage()) {
+    try { window.sessionStorage.removeItem(`${STORAGE_PREFIX}${key}`); } catch { /* sin storage no hay nada que borrar */ }
+  }
+  listeners.get(key)?.forEach((listener) => listener(null));
+}
+
 /** Forget every cached entry (memory and session storage). Run on sign-out so
  *  the next account in this tab never paints the previous one's data. */
 export function clearDashboardCache() {

@@ -1,5 +1,6 @@
 "use client";
 
+import { useAppDialog } from "@/hooks/use-app-dialog";
 import { useState } from "react";
 import { Loader2, Mail, Phone } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
@@ -57,6 +58,8 @@ export function ContactButton({
   const t = useTranslations("contactGate");
   const [loading, setLoading] = useState(false);
   const [numero, setNumero] = useState<string | null>(null);
+  // El aviso del app, no el del navegador (ver BotonEscribir en Proyectos).
+  const { dialogNode, showMessage } = useAppDialog();
   const { requireAccount, modals } = useContactGate({ professionalName, intent: method, professionalId, source, categoryId });
 
   async function go() {
@@ -69,7 +72,7 @@ export function ContactButton({
         : data.email
           ? `mailto:${data.email}?subject=${encodeURIComponent("Consulta desde ContrataCR")}&body=${encodeURIComponent(`Hola ${professionalName.split(" ")[0]}, vi tu perfil en ContrataCR y me gustaria coordinar un servicio.`)}`
           : null;
-      if (!res.ok || !href) { window.alert(t("noContact")); return; }
+      if (!res.ok || !href) { await showMessage({ title: professionalName, description: t("noContact") }); return; }
       trackMetaEvent("Contact", { content_type: "professional_service", method, source });
       trackInteraction({
         type: method === "phone" ? "phone_click" : "external_link_click",
@@ -125,6 +128,7 @@ export function ContactButton({
           <span className="min-w-0 truncate">{numeroLegible}</span>
         </a>
         {modals}
+      {dialogNode}
       </>
     );
   }

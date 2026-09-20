@@ -57,7 +57,7 @@ export async function notifySupportInbox(opts: {
 export function supportTicketCreatedAutoMessage(locale: SupportLocale = "es"): string {
   return locale === "en"
     ? "Thank you, we received your support ticket. Our team will review it and reply as soon as possible."
-    : "Gracias, recibimos su tiquete de soporte. Nuestro equipo lo revisará y le responderá lo antes posible.";
+    : "Gracias, recibimos su caso de soporte. Nuestro equipo lo revisará y le responderá lo antes posible.";
 }
 
 export async function notifyUserTicketCreated(opts: {
@@ -67,12 +67,12 @@ export async function notifyUserTicketCreated(opts: {
 }): Promise<void> {
   const locale = opts.locale === "en" ? "en" : "es";
   const message = supportTicketCreatedAutoMessage(locale);
-  const headline = locale === "en" ? "Support ticket received" : "Tiquete de soporte recibido";
+  const headline = locale === "en" ? "Support ticket received" : "Caso de soporte recibido";
   const subject = locale === "en"
     ? "We received your support ticket | ContrataCR"
-    : "Recibimos su tiquete de soporte | ContrataCR";
+    : "Recibimos su caso de soporte | ContrataCR";
   const refHtml = opts.ticketRef
-    ? `<p style="margin:12px 0 0 0;color:#6b7280;font-size:13px;"><strong>${locale === "en" ? "Ticket" : "Tiquete"}:</strong> ${escapeHtml(opts.ticketRef)}</p>`
+    ? `<p style="margin:12px 0 0 0;color:#6b7280;font-size:13px;"><strong>${locale === "en" ? "Ticket" : "Caso"}:</strong> ${escapeHtml(opts.ticketRef)}</p>`
     : "";
 
   const html = shell(
@@ -109,7 +109,7 @@ export async function notifyUserOfReply(opts: {
   const ticketPath = `/es/dashboard/${panel}?tab=soporte${opts.ticketId ? `&ticket=${opts.ticketId}` : ""}`;
   const followHtml = opts.hasAccount
     ? `<p style="margin:14px 0 0 0;color:#6b7280;font-size:13px;">Puedes responder desde tu panel para continuar la conversación.</p>`
-    : `<p style="margin:14px 0 0 0;color:#6b7280;font-size:13px;">Para ver la conversación completa y seguir respondiendo, crea una cuenta o inicia sesión con este correo (${escapeHtml(opts.toEmail)}). Encontrarás este tiquete en tu panel.</p>`;
+    : `<p style="margin:14px 0 0 0;color:#6b7280;font-size:13px;">Para ver la conversación completa y seguir respondiendo, crea una cuenta o inicia sesión con este correo (${escapeHtml(opts.toEmail)}). Encontrarás este caso en tu panel.</p>`;
   const cta = opts.hasAccount
     ? { href: `${SITE}${ticketPath}`, label: "Ver conversación" }
     : { href: `${SITE}/es/login`, label: "Crear cuenta o iniciar sesión" };

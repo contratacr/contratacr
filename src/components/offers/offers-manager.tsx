@@ -1,5 +1,6 @@
 "use client";
 
+import { AutoSaveHint, useAvisoDeGuardado } from "@/components/dashboard/auto-save-hint";
 import { useAppDialog } from "@/hooks/use-app-dialog";
 import { useEffect, useRef, useState } from "react";
 import { useNativeApp } from "@/hooks/use-native-app";
@@ -128,13 +129,15 @@ export function OffersManager({ initialOffers, embedded = false, backHref = "/da
   }, [searchParams]);
 
   const { dialogNode, confirm, showMessage } = useAppDialog();
+  const aviso = useAvisoDeGuardado();
 
   // Solo lo que ya no está publicado se puede eliminar, y se pregunta antes:
   // no hay forma de recuperarlo.
   async function eliminar(id: string) {
     const result = await confirm({ title: copy.removeTitle, description: copy.removeBody, confirmLabel: copy.remove, cancelLabel: copy.removeCancel, tone: "danger" });
     if (!result.confirmed) return;
-    const response = await fetch(`/api/offers?id=${encodeURIComponent(id)}`, { method: "DELETE" });
+    let response!: Response;
+    await aviso.correr(async () => { response = await fetch(`/api/offers?id=${encodeURIComponent(id)}`, { method: "DELETE" }); return response.ok; });
     if (!response.ok) {
       const data = await response.json().catch(() => null) as { error?: string } | null;
       await showMessage({ title: copy.remove, description: data?.error ?? "" });
@@ -145,12 +148,16 @@ export function OffersManager({ initialOffers, embedded = false, backHref = "/da
   }
 
   async function updateStatus(id: string, status: ProfessionalOffer["status"]) {
-    const response = await fetch("/api/offers", { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ id, status }) });
-    if (response.ok) {
-      pendingStatus.current[id] = status;
-      setOffers((current) => current.map((offer) => offer.id === id ? { ...offer, status } : offer));
-      invalidateAppData("offers");
-    }
+    // Se guarda en el momento, así que se confirma a la vista (ver AutoSaveHint).
+    await aviso.correr(async () => {
+      const response = await fetch("/api/offers", { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ id, status }) });
+      if (response.ok) {
+        pendingStatus.current[id] = status;
+        setOffers((current) => current.map((offer) => offer.id === id ? { ...offer, status } : offer));
+        invalidateAppData("offers");
+      }
+      return response.ok;
+    });
   }
 
   return (
@@ -293,6 +300,7 @@ export function OffersManager({ initialOffers, embedded = false, backHref = "/da
         </Modal>
       )}
       {dialogNode}
+      <AutoSaveHint {...aviso.estado} />
     </div>
   );
 }

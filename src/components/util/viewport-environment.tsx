@@ -48,6 +48,7 @@ export function ViewportEnvironment() {
     // maquetación, así que innerHeight ya no sirve de referencia. Se recuerda el
     // alto sin teclado (el que hay cuando no se está escribiendo) y se mide contra él.
     let altoSinTeclado = window.visualViewport?.height ?? window.innerHeight;
+    let tecladoAbierto = false;
 
     const update = () => {
       const vv = window.visualViewport;
@@ -90,6 +91,17 @@ export function ViewportEnvironment() {
       // teclado completo) tiene que retirar la barra de pestañas.
       root.toggleAttribute("data-keyboard-visible", keyboardInset > 24);
       if (keyboardInset > 80) scheduleFocusedFieldCheck();
+      // AL CERRAR EL TECLADO, la página vuelve a su sitio. Safari en iPhone
+      // desplaza el documento para dejar ver el campo y a veces lo deja así:
+      // con un hilo a pantalla completa —soporte o chat— eso se veía como una
+      // franja gris arriba y el pie descuadrado. Solo se toca cuando de verdad
+      // acaba de cerrarse y hay un hilo abierto.
+      const habiaTeclado = tecladoAbierto;
+      tecladoAbierto = keyboardInset > 80;
+      if (habiaTeclado && !tecladoAbierto && root.classList.contains("contratacr-chat-thread-open")) {
+        window.scrollTo({ top: 0, left: 0 });
+        window.setTimeout(() => window.scrollTo({ top: 0, left: 0 }), 120);
+      }
     };
 
     update();

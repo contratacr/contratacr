@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { ArrowLeft, CalendarDays, ChevronRight, MapPin, PackageCheck, Tag } from "lucide-react";
+import { ArrowLeft, ChevronRight } from "lucide-react";
 import { StickyHairlineHeader } from "@/components/util/sticky-hairline-header";
 import { Link } from "@/i18n/navigation";
 import { OfferImageGallery } from "@/components/offers/offer-image-gallery";
@@ -41,6 +41,12 @@ const COPY = {
     unavailable: "Esta promoción ya no está disponible.",
     validUntil: "Válida hasta",
     available: "disponibles",
+    rowType: "Tipo",
+    rowService: "Servicio",
+    rowLocation: "Ubicación",
+    rowValid: "Vigencia",
+    rowAvailable: "Disponibles",
+    wholeCountry: "Todo Costa Rica",
     details: "Detalles",
     before: "Antes",
     publishedBy: "Publicada por",
@@ -53,6 +59,12 @@ const COPY = {
     unavailable: "This promotion is no longer available.",
     validUntil: "Available until",
     available: "available",
+    rowType: "Type",
+    rowService: "Service",
+    rowLocation: "Location",
+    rowValid: "Valid until",
+    rowAvailable: "Available",
+    wholeCountry: "All of Costa Rica",
     details: "Details",
     before: "Before",
     publishedBy: "Published by",
@@ -121,6 +133,21 @@ export default async function OfferDetailPage({ params, searchParams }: { params
   } as ProfessionalOffer;
   const isOwner = !!user && professional?.profile_id === user.id;
   const before = formatOfferBeforePrice(offer, locale);
+  const filasDeDatos: Array<[string, string]> = ([
+    [copy.rowType, offerTypeLabel(offer.offer_type, locale)] as [string, string],
+    ...(offer.service_label ? [[copy.rowService, offer.service_label] as [string, string]] : []),
+    [copy.rowLocation, offer.location_label || copy.wholeCountry],
+    ...(offer.valid_until ? [[copy.rowValid, new Intl.DateTimeFormat(dateLocale, { dateStyle: "medium" }).format(new Date(`${offer.valid_until}T12:00:00`))] as [string, string]] : []),
+    ...(offer.quantity_available != null ? [[copy.rowAvailable, `${offer.quantity_available}`] as [string, string]] : []),
+  ] as Array<[string, string]>).filter(([, valor]) => Boolean(valor));
+  const quienPublica = offer.professional_slug ? (
+    <Link href={`/profesionales/${offer.professional_slug}?from=${encodeURIComponent(`/ofertas/${offer.id}`)}`} className="inline-flex min-w-0 max-w-full items-center gap-1 font-semibold text-[#005eaa] hover:underline">
+      <span className="min-w-0 truncate">{offer.professional_name}</span>
+      <ChevronRight className="h-4 w-4 shrink-0" />
+    </Link>
+  ) : (
+    <p className="min-w-0 truncate font-semibold text-[#52627a]">{offer.professional_name}</p>
+  );
   const discount = offerDiscountPercent(offer);
   const unavailable = offer.status !== "published" || isOfferExpired(offer, crTodayISO());
   const serviceOptions = getAllCategories().map((category) => ({ value: category.id, label: getCategoryLabel(category.id, locale) }));
@@ -129,7 +156,7 @@ export default async function OfferDetailPage({ params, searchParams }: { params
   }
 
   return (
-    <main className="min-h-[calc(100vh-72px)] bg-[#f4f7fa] text-[#162543]">
+    <main className="min-h-[calc(100vh-72px)] bg-white text-[#162543] lg:bg-[#f4f7fa]">
       <OfferDetailNavbarSearch title={offer.title} />
       <RecordRecentVisit
         surface="ofertas"
@@ -168,9 +195,9 @@ export default async function OfferDetailPage({ params, searchParams }: { params
           <span>{backLabel}</span>
         </Link>
       </div>
-      <div className="mx-auto grid max-w-6xl gap-5 px-4 py-5 sm:px-6 sm:py-8 lg:grid-cols-[minmax(0,760px)_320px] lg:justify-center lg:pt-3">
-        <article className="overflow-hidden rounded-lg border border-[#dfe8f0] bg-white">
-          <div className="relative bg-white p-2 sm:p-3">
+      <div className="mx-auto grid max-w-6xl gap-5 px-0 py-0 sm:px-6 sm:py-8 lg:grid-cols-[minmax(0,760px)_320px] lg:justify-center lg:pt-3">
+        <article className="overflow-hidden bg-white lg:rounded-lg lg:border lg:border-[#dfe8f0]">
+          <div className="relative bg-white p-0 sm:p-3">
             <OfferImageGallery images={offer.image_urls} title={offer.title} />
             {/* El descuento se lee como en el tablón: una marca sobre la foto,
                 no una pastilla más en una fila de pastillas. */}
@@ -178,9 +205,13 @@ export default async function OfferDetailPage({ params, searchParams }: { params
               <span className="absolute left-5 top-5 rounded-md bg-[#009fd9] px-3 py-1.5 text-sm font-extrabold text-white shadow-sm">-{discount}%</span>
             )}
           </div>
-          <div className="p-5 sm:p-8">
+          <div className="px-5 pt-6 sm:p-8">
+            {/* El MISMO orden que la ficha de un empleo: primero quién publica,
+                debajo el título a todo el ancho, luego la línea de datos y el
+                precio. Aquí el título iba primero y el negocio debajo, así que
+                dos fichas del mismo app se leían al revés. */}
             <div className="flex items-start justify-between gap-3">
-              <h1 className="min-w-0 flex-1 text-2xl font-bold sm:text-3xl">{offer.title}</h1>
+              <div className="min-w-0 flex-1">{quienPublica}</div>
               <MenuOferta
                 className="-mr-2 hidden shrink-0 lg:block"
                 ofertaId={offer.id}
@@ -191,23 +222,12 @@ export default async function OfferDetailPage({ params, searchParams }: { params
                 esPropia={isOwner}
               />
             </div>
-            {/* El nombre lleva al perfil: el botón "Ver perfil" decía lo mismo y
-                competía con el contacto. */}
-            <div className="mt-2 flex flex-wrap items-center gap-3">
-              {offer.professional_slug ? (
-                <Link href={`/profesionales/${offer.professional_slug}?from=${encodeURIComponent(`/ofertas/${offer.id}`)}`} className="inline-flex items-center gap-1 font-semibold text-[#005eaa] hover:underline">
-                  {offer.professional_name}
-                  <ChevronRight className="h-4 w-4 shrink-0" />
-                </Link>
-              ) : (
-                <p className="font-semibold text-[#52627a]">{offer.professional_name}</p>
-              )}
-            </div>
+            <h2 className="mt-0.5 text-2xl font-extrabold leading-tight">{offer.title}</h2>
             {/* Tipo y servicio en una línea con punto, igual que en la tarjeta
                 del tablón: eran tres pastillas de colores distintos para decir
                 lo mismo. */}
-            <p className="mt-1 flex min-w-0 flex-wrap items-center gap-1.5 text-[13px] leading-5 sm:text-sm">
-              <span className="text-[#68778d]">{offerTypeLabel(offer.offer_type, locale)}</span>
+            <p className="mt-1 flex min-w-0 flex-wrap items-center gap-1.5 text-sm leading-5 text-[#68778d]">
+              <span>{offerTypeLabel(offer.offer_type, locale)}</span>
               {offer.service_label && (
                 <>
                   <span aria-hidden="true" className="text-[#c0cad5]">·</span>
@@ -217,9 +237,9 @@ export default async function OfferDetailPage({ params, searchParams }: { params
             </p>
             {/* En computadora el precio vive en la tarjeta de al lado; aquí
                 salía por segunda vez, a 3xl, diez líneas más abajo. */}
-            <div className="mt-5 flex flex-wrap items-end gap-3 lg:hidden">
-              <p className="text-3xl font-extrabold text-[#007fae]">{formatOfferPrice(offer, locale)}</p>
-              {before && <p className="pb-1 text-sm font-bold text-[#8794a7] line-through">{before}</p>}
+            <div className="mt-2 flex flex-wrap items-end gap-3 lg:hidden">
+              <p className="text-base font-extrabold text-[#007fae]">{formatOfferPrice(offer, locale)}</p>
+              {before && <p className="text-sm font-bold text-[#8794a7] line-through">{before}</p>}
             </div>
             {isOwner ? (
               // En la franja fija de abajo, igual que el contacto para los demás.
@@ -233,14 +253,18 @@ export default async function OfferDetailPage({ params, searchParams }: { params
                 <OfferContactActions offer={offer} userId={user?.id ?? null} isOwner={false} soloContacto />
               </AccionesAlPie>
             )}
-            <div className="mt-5 grid gap-3 border-y border-[#e8eef3] py-5 text-sm text-[#60708a] sm:grid-cols-2">
-              {offer.location_label && <span className="inline-flex items-center gap-2"><MapPin className="h-4 w-4 text-[#009fd9]" />{offer.location_label}</span>}
-              {offer.valid_until && <span className="inline-flex items-center gap-2"><CalendarDays className="h-4 w-4 text-[#009fd9]" />{copy.validUntil} {new Intl.DateTimeFormat(dateLocale, { dateStyle: "medium" }).format(new Date(`${offer.valid_until}T12:00:00`))}</span>}
-              {offer.quantity_available != null && <span className="inline-flex items-center gap-2"><PackageCheck className="h-4 w-4 text-[#009fd9]" />{offer.quantity_available} {copy.available}</span>}
-              <span className="inline-flex items-center gap-2"><Tag className="h-4 w-4 text-[#009fd9]" />{offerTypeLabel(offer.offer_type, locale)}</span>
-            </div>
+            {/* Etiqueta arriba y valor debajo, como en la ficha de un empleo.
+                Eran cuatro líneas con ícono azul que se leían como enlaces. */}
+            <dl className="mt-6 grid gap-3 border-y border-[#e7edf2] py-5 text-sm sm:grid-cols-2">
+              {filasDeDatos.map(([etiqueta, valor]) => (
+                <div key={etiqueta} className="min-w-0">
+                  <dt className="text-xs font-bold uppercase tracking-wide text-[#7a899d]">{etiqueta}</dt>
+                  <dd className="mt-0.5 break-words font-bold text-[#162543] [overflow-wrap:anywhere]">{valor}</dd>
+                </div>
+              ))}
+            </dl>
             <section className="mt-7 pb-2">
-              <h2 className="text-lg font-bold">{copy.details}</h2>
+              <h3 className="text-lg font-bold">{copy.details}</h3>
               <p className="mt-3 max-w-full whitespace-pre-line break-words pr-1 text-sm leading-7 text-[#43536b] [overflow-wrap:anywhere]">
                 {offer.description}
               </p>

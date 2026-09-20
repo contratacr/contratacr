@@ -1,5 +1,6 @@
 "use client";
 
+import { useAppDialog } from "@/hooks/use-app-dialog";
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useLocale } from "next-intl";
@@ -37,6 +38,7 @@ const COPY = {
     // «Fecha», igual en los tres tableros. «Publicado» a secas se leía como
     // un estado —¿publicado o no?— y no como «cuándo se publicó».
     loQueNecesita: "Lo que necesita",
+    filaServicio: "Servicio", filaUbicacion: "Ubicación", filaPublicado: "Publicado",
     fecha: "Fecha",
     cualquierFecha: "Cualquier fecha",
     hoy: "Últimas 24 horas",
@@ -68,6 +70,7 @@ const COPY = {
     notificaciones: "Notifications",
     publicar: "Post a project",
     loQueNecesita: "What they need",
+    filaServicio: "Service", filaUbicacion: "Location", filaPublicado: "Posted",
     fecha: "Date posted",
     cualquierFecha: "Any date",
     hoy: "Past 24 hours",
@@ -110,6 +113,10 @@ function BotonEscribir({ proyecto, className = "" }: { proyecto: ProyectoPublico
   const locale = marketplaceLocale(useLocale());
   const copy = COPY[locale];
   const [cargando, setCargando] = useState(false);
+  // El aviso del app, no el del navegador: `window.alert` sale con la letra y
+  // los botones del sistema, en el idioma del sistema, y encima bloquea la
+  // página. Aquí se está contactando a alguien: es el peor momento para eso.
+  const { dialogNode, showMessage } = useAppDialog();
 
   async function abrir() {
     setCargando(true);
@@ -120,9 +127,11 @@ function BotonEscribir({ proyecto, className = "" }: { proyecto: ProyectoPublico
         body: JSON.stringify({ projectId: proyecto.id }),
       });
       const payload = (await res.json().catch(() => ({}))) as { href?: string };
-      if (res.status === 401 || res.status === 403) { window.alert(copy.necesitaCuenta); return; }
-      if (res.status === 409) { window.alert(copy.esTuyo); return; }
-      if (!res.ok || !payload.href) { window.alert(copy.sinContacto); return; }
+      const aviso = res.status === 401 || res.status === 403 ? copy.necesitaCuenta
+        : res.status === 409 ? copy.esTuyo
+        : !res.ok || !payload.href ? copy.sinContacto
+        : null;
+      if (aviso) { await showMessage({ title: copy.escribir, description: aviso }); return; }
       window.open(payload.href, "_blank", "noopener,noreferrer");
     } finally {
       setCargando(false);
@@ -131,6 +140,7 @@ function BotonEscribir({ proyecto, className = "" }: { proyecto: ProyectoPublico
 
   if (!proyecto.allow_direct_contact) return null;
   return (
+    <>
     <button
       type="button"
       onClick={(e) => { e.preventDefault(); e.stopPropagation(); void abrir(); }}
@@ -142,6 +152,8 @@ function BotonEscribir({ proyecto, className = "" }: { proyecto: ProyectoPublico
       {cargando ? <Loader2 className="h-4 w-4 animate-spin" /> : <WhatsAppLogo />}
       {copy.escribir}
     </button>
+    {dialogNode}
+    </>
   );
 }
 
@@ -533,8 +545,8 @@ export function ProjectsBoard({
                   // Sin resultados en la lista, la ficha abierta ocupa todo.
                   filtrados.length === 0 && "lg:col-span-2",
                 )}>
-                  <div className="mx-auto w-full max-w-3xl px-4 pt-4 max-sm:pb-6 sm:px-6 sm:pb-10 lg:max-w-none lg:p-0">
-                    <article className="relative rounded-lg border border-[#dfe8f0] bg-white p-5 sm:p-7 lg:rounded-none lg:border-0">
+                  <div className="mx-auto w-full max-w-3xl px-0 pt-0 sm:px-6 sm:pb-10 lg:max-w-none lg:p-0">
+                    <article className="relative bg-white px-5 pt-6 max-sm:pb-6 sm:p-7">
                       {/* En computadora no hay barra de ficha: guardar y compartir
                           van en la esquina, a la altura del título, como en Empleos. */}
                       {/* El mismo encabezado que la ficha de un empleo: ícono, título,
@@ -575,14 +587,8 @@ export function ProjectsBoard({
                               {ficha.category_name}
                             </button>
                           )}
-                          <p className="mt-1 flex flex-wrap items-center gap-x-1.5 text-sm text-[#68778d]">
-                            <span className="inline-flex items-center gap-1">
-                              <MapPin className="h-3.5 w-3.5" />
-                              {ficha.location_label || copy.todoElPais}
-                            </span>
-                            <span aria-hidden="true" className="text-[#9aa8b8]">·</span>
-                            <span>{cuandoSePublico(ficha.created_at, en)}</span>
-                          </p>
+                          {/* Dónde y cuándo viven en la rejilla de datos de abajo;
+                              aquí salían otra vez, palabra por palabra. */}
                         </div>
                       </div>
                       {/* COMPUTADORA: las acciones van justo debajo del título, en una
@@ -604,8 +610,24 @@ export function ProjectsBoard({
                           </>
                         )}
                       </div>
-                      <h3 className="mt-6 text-lg font-bold text-[#162543]">{copy.loQueNecesita}</h3>
-                      <p className="mt-2 whitespace-pre-line break-words text-sm leading-7 text-[#43536b] [overflow-wrap:anywhere]">{ficha.description}</p>
+                      {/* Los datos en rejilla de etiqueta y valor, la misma de la
+                          ficha de un empleo. Aquí el servicio, la zona y la fecha
+                          iban sueltos bajo el título y la ficha se quedaba sin el
+                          bloque de datos que sí tienen empleos y promociones. */}
+                      <dl className="mt-6 grid gap-3 border-y border-[#e7edf2] py-5 text-sm sm:grid-cols-2">
+                        {([
+                          [copy.filaServicio, ficha.category_name] as [string, string | null],
+                          [copy.filaUbicacion, ficha.location_label || copy.todoElPais] as [string, string | null],
+                          [copy.filaPublicado, cuandoSePublico(ficha.created_at, en)] as [string, string | null],
+                        ].filter(([, valor]) => Boolean(valor)) as Array<[string, string]>).map(([etiqueta, valor]) => (
+                          <div key={etiqueta} className="min-w-0">
+                            <dt className="text-xs font-bold uppercase tracking-wide text-[#7a899d]">{etiqueta}</dt>
+                            <dd className="mt-0.5 break-words font-bold text-[#162543] [overflow-wrap:anywhere]">{valor}</dd>
+                          </div>
+                        ))}
+                      </dl>
+                      <h3 className="mt-7 text-lg font-bold text-[#162543]">{copy.loQueNecesita}</h3>
+                      <p className="mt-3 whitespace-pre-line break-words text-sm leading-7 text-[#43536b] [overflow-wrap:anywhere]">{ficha.description}</p>
                       {/* TELÉFONO: lo que contacta, en la franja de abajo; guardar
                           y compartir viven en el «···» de la barra de arriba. */}
                       {/* En la franja de abajo va lo que se hace con esta

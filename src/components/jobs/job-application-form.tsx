@@ -348,7 +348,7 @@ export function JobApplicationForm({
   const field = "mt-1 h-11 w-full rounded-xl border border-[#d7e1ea] px-3 text-sm outline-none focus:border-[#009fd9]";
   return (
     <div ref={containerRef}>
-      <form onSubmit={submit} className="space-y-4">
+      <form noValidate onSubmit={submit} className="space-y-4">
         <div>
           <h2 className="text-lg font-bold">{copy.apply}</h2>
           <p className="mt-1 text-xs leading-5 text-[#68778d]">{copy.intro}</p>

@@ -1,4 +1,5 @@
 "use client";
+import { useAppDialog } from "@/hooks/use-app-dialog";
 import { enlacePerfil } from "@/lib/profile-url";
 import { EMPLEOS_VISIBLE } from "@/lib/feature-flags";
 
@@ -1248,6 +1249,8 @@ export default function DashboardPage() {
   // the OTHER mode's pending count so the user is aware without switching.
   // La lista sin leer es UNA sola para todo el app: de ella salen el globo del
   // panel y el de Soporte, y también la usa la pantalla de Soporte.
+  // El aviso del app, no el del navegador (ver BotonEscribir en Proyectos).
+  const avisoDelPanel = useAppDialog();
   const avisosSinLeer = useAvisosSinLeer(user?.id ?? null);
   const conteoDeAvisos = useMemo(() => {
     let pro = 0, cli = 0, neu = 0, soporte = 0;
@@ -1692,7 +1695,7 @@ export default function DashboardPage() {
       handleSaved("internal");
     } catch (error) {
       console.error("[dashboard] avatar upload failed", error);
-      window.alert(locale === "en" ? "Could not update the profile photo." : "No se pudo actualizar la foto de perfil.");
+      await avisoDelPanel.showMessage({ title: locale === "en" ? "Profile photo" : "Foto de perfil", description: locale === "en" ? "We could not update the photo. Please try again." : "No pudimos actualizar la foto. Inténtalo de nuevo." });
     } finally {
       setHeaderPhotoUploading(false);
     }
@@ -1708,7 +1711,7 @@ export default function DashboardPage() {
       handleSaved("internal");
     } catch (error) {
       console.error("[dashboard] avatar remove failed", error);
-      window.alert(locale === "en" ? "Could not remove the profile photo." : "No se pudo eliminar la foto de perfil.");
+      await avisoDelPanel.showMessage({ title: locale === "en" ? "Profile photo" : "Foto de perfil", description: locale === "en" ? "We could not remove the photo. Please try again." : "No pudimos eliminar la foto. Inténtalo de nuevo." });
     } finally {
       setHeaderPhotoUploading(false);
     }
@@ -2901,6 +2904,7 @@ export default function DashboardPage() {
       <div className="ccr-dashboard-footer">
         <LandingFooter />
       </div>
+      {avisoDelPanel.dialogNode}
     </div>
   );
 }

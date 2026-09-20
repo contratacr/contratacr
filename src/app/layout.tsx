@@ -150,6 +150,25 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
         {/* La portada es blanca: mientras llega, la espera también. Con el lienzo
             gris del panel, la primera visita veía un pantallazo gris —y la foto
             del arco «en gris»— antes de la portada. */}
+        {/* Cuánto tiene que subir el aviso de «Guardado» para no quedar detrás de
+            algo fijo al pie. Solo vale mientras eso está puesto: la barra de la
+            app (nativa) y la franja de acciones del teléfono. */}
+        {/* El hilo de soporte y el chat, pegados arriba cuando no hay teclado.
+            Viaja dentro del documento porque es geometría crítica que se prueba
+            en el iPhone: una hoja de utilidades que llegue tarde deja la
+            pantalla partida. Misma regla que en globals.css. */}
+        <style
+          data-ccr-hilo=""
+          dangerouslySetInnerHTML={{
+            __html: `@media (max-width:1023px){html:not([data-keyboard-open]).contratacr-chat-thread-open :is(.ccr-support-thread,.direct-chat-shell--thread){top:0!important;left:0!important}html:not([data-keyboard-open]).contratacr-chat-thread-open body:not(.ccr-native-app) :is(.ccr-support-thread,.direct-chat-shell--thread){height:100dvh!important;max-height:100dvh!important}}`,
+          }}
+        />
+        <style
+          data-ccr-aviso-guardado=""
+          dangerouslySetInnerHTML={{
+            __html: `html.ccr-native-bottom-nav-visible{--ccr-aviso-barra-app:var(--ccr-native-live-bottom-nav-height,0px)}@media (max-width:639px){body.ccr-con-barra-accion{--ccr-aviso-franja:var(--ccr-alto-barra,0px)}}`,
+          }}
+        />
         <style
           data-ccr-portada=""
           dangerouslySetInnerHTML={{

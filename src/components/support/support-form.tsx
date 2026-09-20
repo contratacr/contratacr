@@ -47,6 +47,7 @@ export function SupportForm({ onSuccess, onCancel }: { onSuccess?: (email: strin
   const [conCambios, setConCambios] = useState(false);
   const [preparingAttachments, setPreparingAttachments] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const formRef = useRef<HTMLFormElement | null>(null);
 
   useEffect(() => {
     attachmentsRef.current = attachments;
@@ -182,8 +183,19 @@ export function SupportForm({ onSuccess, onCancel }: { onSuccess?: (email: strin
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
-    if (!form.name.trim() || !form.email || !form.subject || !form.message) {
-      setError(t("errRequired"));
+    // Se dice QUÉ falta y se lleva a la persona al campo, en vez de un «faltan
+    // campos» al pie que ni siquiera se ve si el formulario es largo.
+    const faltante = ([
+      ["name", form.name.trim()],
+      ["email", form.email],
+      ["subject", form.subject],
+      ["message", form.message],
+    ] as Array<[string, string]>).find(([, valor]) => !valor);
+    if (faltante) {
+      setError(t(`err.${faltante[0]}` as never));
+      const campo = formRef.current?.querySelector<HTMLElement>(`[data-campo="${faltante[0]}"]`);
+      campo?.focus({ preventScroll: true });
+      campo?.scrollIntoView({ behavior: "smooth", block: "center" });
       return;
     }
     setSubmitting(true);
@@ -218,8 +230,11 @@ export function SupportForm({ onSuccess, onCancel }: { onSuccess?: (email: strin
   const inputClass =
     "w-full h-11 rounded-xl border border-[#e5e7eb] bg-white px-4 text-sm text-[#162543] placeholder:text-[#68778d] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all";
 
+  // noValidate: la validación la hace el formulario, no el navegador. Con la del
+  // navegador salía su propio globo —«Please fill out this field», en el idioma
+  // del navegador y con su tipografía— y el mensaje del app no se veía nunca.
   return (
-    <form onSubmit={handleSubmit} onInput={() => setConCambios(true)} className="flex flex-col max-sm:pb-2">
+    <form ref={formRef} noValidate onSubmit={handleSubmit} onInput={() => setConCambios(true)} className="flex flex-col max-sm:pb-2">
       <div className="mx-4 flex flex-col gap-5 rounded-2xl sm:mx-0 border border-[#dfe8f0] bg-white p-5 shadow-sm">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
@@ -228,7 +243,7 @@ export function SupportForm({ onSuccess, onCancel }: { onSuccess?: (email: strin
           </label>
           <input type="text" className={inputClass} placeholder={t("namePlaceholder")}
             maxLength={NAME_MAX_LENGTH}
-            value={form.name} onChange={(e) => update("name", e.target.value)} required />
+            data-campo="name" value={form.name} onChange={(e) => update("name", e.target.value)} required />
         </div>
         <div>
           <label className="text-sm font-medium text-[#374151] block mb-1.5">
@@ -236,7 +251,7 @@ export function SupportForm({ onSuccess, onCancel }: { onSuccess?: (email: strin
           </label>
           <input type="email" className={inputClass} placeholder={t("emailPlaceholder")}
             maxLength={SHORT_TEXT_MAX_LENGTH}
-            value={form.email} onChange={(e) => update("email", e.target.value)} required />
+            data-campo="email" value={form.email} onChange={(e) => update("email", e.target.value)} required />
         </div>
       </div>
 
@@ -245,6 +260,7 @@ export function SupportForm({ onSuccess, onCancel }: { onSuccess?: (email: strin
           {t("subjectLabel")} <span className="text-red-500">*</span>
         </label>
         <SelectMenu
+          campo="subject"
           value={form.topic}
           onChange={updateTopic}
           placeholder={t("subjectPlaceholder")}
@@ -263,7 +279,7 @@ export function SupportForm({ onSuccess, onCancel }: { onSuccess?: (email: strin
           className="w-full rounded-xl border border-[#e5e7eb] bg-white px-4 py-3 text-sm text-[#162543] placeholder:text-[#68778d] min-h-[130px] resize-none focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
           placeholder={t("messagePlaceholder")}
           maxLength={LONG_TEXT_MAX_LENGTH}
-          value={form.message} onChange={(e) => update("message", e.target.value)} required
+          data-campo="message" value={form.message} onChange={(e) => update("message", e.target.value)} required
         />
       </div>
 

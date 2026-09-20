@@ -178,7 +178,7 @@ export default function CompleteProfilePage() {
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          <form noValidate onSubmit={handleSubmit} className="flex flex-col gap-4">
             {/* Optional profile photo */}
             <div className="flex items-center gap-4">
               <div

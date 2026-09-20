@@ -16,6 +16,8 @@
     "uploading": "Uploading file…"
   },
   "common": {
+    "savingShort": "Saving…",
+    "savedShort": "Saved",
     "spamNotice": "Don't see it? Check your spam or junk folder.",
     "resendPrompt": "Didn't get the email?",
     "resend": "Resend email",
@@ -2828,6 +2830,7 @@
     "errWrongPassword": "Your current password is incorrect.",
     "whatsappHeading": "WhatsApp alerts",
     "whatsappOptIn": "Send me reminders on WhatsApp",
+    "whatsappOptInError": "We couldn't save the change. Please try again.",
     "whatsappOptInHelp": "Only about your own activity — a request waiting, an application nobody opened. Never promotions. You can turn it off whenever you want."
   },
   "closeAccount": {
@@ -3813,13 +3816,14 @@
     "attachBtn": "Attach image or document",
     "addAnother": "Add another file",
     "formats": "Accepted formats: JPG, PNG, WebP, AVIF, HEIC, HEIF, GIF, and PDF",
+    "err": {"name": "Enter your name.", "email": "Enter an email so we can reply.", "subject": "Choose what your question is about.", "message": "Tell us what you need."},
     "errRequired": "Please complete all required fields.",
     "errOversized": "Some files exceed the {mb}MB limit and were skipped.",
     "errFormat": "File type not allowed. Use JPG, PNG, WEBP or PDF.",
     "errSend": "Failed to send. Please try again.",
     "errUnexpected": "Unexpected error. Please try again in a few minutes.",
-    "submit": "Send message",
-    "submitting": "Sending…",
+    "submit": "Create case",
+    "submitting": "Creating…",
     "whatsappPre": "Need help?",
     "whatsappLink": "Open a support case"
   },

@@ -21,6 +21,8 @@ interface SelectMenuProps {
   error?: string;
   id?: string;
   className?: string;
+  /** Nombre del campo, para que un formulario pueda llevar el foco aquí al validar. */
+  campo?: string;
   disabled?: boolean;
 }
 
@@ -35,7 +37,7 @@ interface SelectMenuProps {
 // at ~36px) shows a SHORT list in full (all 7 provinces, no scrollbar) while a LONG list
 // (cantones, DOB years) scrolls. Width grows to the longest option but never narrower than
 // the trigger. Use it wherever a native <select> would otherwise be (provincia, cantón, …).
-export function SelectMenu({ value, onChange, options, placeholder, label, error, id, className, disabled }: SelectMenuProps) {
+export function SelectMenu({ value, onChange, options, placeholder, label, error, id, className, disabled, campo }: SelectMenuProps) {
   const [open, setOpen] = useState(false);
   const instanceId = useId();
   const rootRef = useRef<HTMLDivElement>(null);
@@ -134,6 +136,7 @@ export function SelectMenu({ value, onChange, options, placeholder, label, error
         ref={triggerRef}
         id={id}
         type="button"
+        data-campo={campo}
         disabled={disabled}
         onClick={() => {
           if (open) {

@@ -74,7 +74,7 @@ export function AdminLogin() {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <form noValidate onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div className="relative">
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#68778d] text-sm">@</span>
             <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Correo de administrador" className={inputClass} required />

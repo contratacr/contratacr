@@ -1,5 +1,6 @@
 "use client";
 
+import { irAlInicio } from "@/lib/ir-al-inicio";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Lock, Camera, X, ChevronDown, ChevronLeft, Pencil, Loader2 } from "lucide-react";
@@ -329,6 +330,12 @@ export function BasicProfileSection({
       </div>
     );
   };
+  // En el teléfono cada sección es un paso a pantalla completa: se abre desde
+  // arriba. Entrar, salir y volver dejaba la pantalla donde estaba.
+  useEffect(() => {
+    if (typeof window !== "undefined" && window.matchMedia("(max-width: 639px)").matches) irAlInicio();
+  }, [openSections]);
+
   const mobileSectionFocused = openSections.size > 0;
   const activeMobileSectionId = Array.from(openSections)[0] ?? null;
   const activeMobileSectionTitle =
