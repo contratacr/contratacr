@@ -5,7 +5,7 @@ import { useAppDialog } from "@/hooks/use-app-dialog";
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useLocale } from "next-intl";
-import { ArrowLeft, ClipboardList, Loader2, MapPin, Menu } from "lucide-react";
+import { ArrowLeft, ClipboardList, Loader2, Menu } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { ContrataCRMark, HeaderAccountLink } from "@/components/landing/landing-navbar";
 import { NotificationBell } from "@/components/notifications/notification-bell";
