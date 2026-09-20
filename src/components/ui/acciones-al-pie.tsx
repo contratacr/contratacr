@@ -64,23 +64,6 @@ export const BARRA_ACCION_BASE =
  */
 export const BARRA_ACCION_FIJA = `${BARRA_ACCION_BASE} ccr-barra-fija`;
 
-/**
- * La franja DEL COLOR DEL LIENZO, para las pantallas de formulario con fondo
- * gris (Publicar empleo, promoción, proyecto y Contactar soporte).
- *
- * Con el formulario a sangre, la franja blanca con su línea partía la pantalla
- * en dos: gris, y de pronto un bloque blanco abajo. Del color del lienzo el
- * gris corre continuo hasta el borde y el botón —píldora, con una sombra suave
- * que pone la regla `data-ccr-franja`— flota encima. En las fichas (empleo,
- * promoción, proyecto) el lienzo ES blanco, así que ahí la franja blanca ya es
- * «del color del fondo» y no lleva esta marca.
- *
- * SIN sombra ni línea en el borde de arriba, a propósito: una sombra ahí
- * oscurece la franja de encima y, por contraste, la de abajo se lee MÁS BLANCA
- * que el lienzo aunque sea del mismo color exacto (medido en el teléfono:
- * 245,247,250 arriba y abajo, y aun así «se veía blanca»).
- */
-export const BARRA_EN_LIENZO = "ccr-barra-en-lienzo";
 
 /**
  * El pie de una VENTANA —no el de la pantalla—: el de `Modal`, que es el que

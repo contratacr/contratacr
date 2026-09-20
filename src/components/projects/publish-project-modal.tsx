@@ -16,7 +16,7 @@ import { useLocale } from "next-intl";
 import { lockBodyScroll } from "@/lib/body-scroll-lock";
 import { useAuth } from "@/hooks/use-auth";
 import { Link } from "@/i18n/navigation";
-import { BARRA_ACCION_BASE, BARRA_EN_LIENZO } from "@/components/ui/acciones-al-pie";
+import { BARRA_ACCION_BASE } from "@/components/ui/acciones-al-pie";
 import { cn } from "@/lib/utils";
 
 const PROJECT_DESCRIPTION_MAX_LENGTH = 300;
@@ -219,9 +219,8 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
               <p className="max-w-[22rem] text-sm leading-relaxed text-[#6b7280]">{t("successNext")}</p>
             </PantallaDeExito>
           ) : (
-            <div className="ccr-a-sangre-arriba flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain bg-[#f4f7fa] px-4 py-5 sm:max-h-[calc(90vh-145px)] sm:flex-none">
-              {/* A sangre en el teléfono, como Publicar empleo y promoción. */}
-              <div className="ccr-a-sangre flex flex-col gap-6 rounded-2xl border border-[#e5e7eb] bg-white p-5 shadow-sm">
+            <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain bg-[#f4f7fa] px-4 py-5 sm:max-h-[calc(90vh-145px)] sm:flex-none">
+              <div className="flex flex-col gap-6 rounded-2xl border border-[#e5e7eb] bg-white p-5 shadow-sm">
                 <div ref={categoryFieldRef}>
                   <label className={fieldLabel}>{t("category")}{obligatorio}</label>
                   <CategorySearch
@@ -313,7 +312,7 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
           {/* La MISMA franja que el resto del app: la medida vive en
               BARRA_ACCION_BASE, no escrita otra vez aquí. Esta pantalla es la
               referencia, así que si cambia, cambian todas juntas. */}
-          <div className={cn(BARRA_ACCION_BASE, BARRA_EN_LIENZO, "flex shrink-0 gap-3 sm:justify-end sm:px-6 sm:pb-4", error && !published && "ccr-sin-linea border-t-0")}>
+          <div className={cn(BARRA_ACCION_BASE, "flex shrink-0 gap-3 sm:justify-end sm:px-6 sm:pb-4", error && !published && "ccr-sin-linea border-t-0")}>
             {!published && (
               <Button type="button" variant="outline" size="lg" onClick={onClose} className="hidden sm:inline-flex sm:px-6">
                 {t("cancel")}

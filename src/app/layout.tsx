@@ -190,20 +190,6 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
             __html: `@media (max-width:1023px){body.ccr-search-sheet-page:not(.ccr-native-app) .ccr-search-results-layout{height:100dvh!important;box-sizing:border-box;padding-top:var(--ccr-native-header-height,124px)}body.ccr-search-sheet-page .ccr-app-footer{display:none!important}}`,
           }}
         />
-        {/* SECCIONES A SANGRE EN EL TELÉFONO (piloto: Publicar empleo).
-            En el teléfono la tarjeta con margen, borde y esquinas le quita 32 px
-            de ancho a un formulario y mete un marco dentro de otro marco (la
-            pantalla ya es el marco). A sangre: la sección ocupa todo el ancho,
-            en blanco, y lo que separa una de otra es una franja del color del
-            lienzo. De 640 px en adelante sigue siendo tarjeta: ahí sobra ancho
-            y la tarjeta ordena. `--ccr-sangre` es el relleno lateral de la
-            página que hay que compensar. */}
-        <style
-          data-ccr-a-sangre=""
-          dangerouslySetInnerHTML={{
-            __html: `@media (max-width:639px){.ccr-a-sangre-arriba{padding-top:10px!important;background:#f4f7fa}.ccr-a-sangre{margin-left:calc(-1*var(--ccr-sangre,16px))!important;margin-right:calc(-1*var(--ccr-sangre,16px))!important;border-radius:0!important;border-top:0!important;border-left:0!important;border-right:0!important;box-shadow:none!important}.ccr-a-sangre-marco{margin-left:calc(-1*var(--ccr-marco,16px));margin-right:calc(-1*var(--ccr-marco,16px));margin-top:calc(-1*var(--ccr-marco-arriba,16px));--ccr-sangre:0px}.ccr-a-sangre .ccr-corte{margin-left:-20px;margin-right:-20px;padding-left:20px;padding-right:20px;border-top:10px solid #f4f7fa!important}}`,
-          }}
-        />
         <style
           data-ccr-aviso-guardado=""
           dangerouslySetInnerHTML={{
@@ -225,7 +211,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
         <style
           data-ccr-franja=""
           dangerouslySetInnerHTML={{
-            __html: `@media (max-width:639px){.ccr-barra-accion{box-sizing:border-box;background:#fff;border-top:1px solid #e5e7eb;padding:16px max(20px,env(safe-area-inset-right)) calc(env(safe-area-inset-bottom) + 28px) max(20px,env(safe-area-inset-left))}.ccr-barra-accion.ccr-sin-linea{border-top-color:transparent}.ccr-barra-accion.ccr-barra-en-lienzo{background:#f4f7fa;border-top-color:transparent}.ccr-barra-accion :is(button,a):not(:disabled){box-shadow:0 10px 20px -10px rgba(15,23,42,.5)}.ccr-barra-fija{position:fixed;left:0;right:0;bottom:var(--ccr-reserva-barra,0px);z-index:20}}`,
+            __html: `@media (max-width:639px){.ccr-barra-accion{box-sizing:border-box;background:#fff;border-top:1px solid #e5e7eb;padding:16px max(20px,env(safe-area-inset-right)) calc(env(safe-area-inset-bottom) + 28px) max(20px,env(safe-area-inset-left))}.ccr-barra-accion.ccr-sin-linea{border-top-color:transparent}.ccr-barra-fija{position:fixed;left:0;right:0;bottom:var(--ccr-reserva-barra,0px);z-index:20}}`,
           }}
         />
         <script

@@ -13,7 +13,7 @@ import { IMAGE_DOC_ACCEPT } from "@/lib/upload-validation";
 import { getImageUploadPreparationErrorCode, prepareImageForUpload } from "@/lib/client-image-upload";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { BARRA_ACCION_FIJA, BARRA_EN_LIENZO, useBarraAccionFija } from "@/components/ui/acciones-al-pie";
+import { BARRA_ACCION_FIJA, useBarraAccionFija } from "@/components/ui/acciones-al-pie";
 
 // The support ticket form — SINGLE SOURCE OF TRUTH for the fields, validation and
 // submit. Rendered on the public /soporte page (the in-dashboard Soporte section uses
@@ -235,7 +235,7 @@ export function SupportForm({ onSuccess, onCancel }: { onSuccess?: (email: strin
   // del navegador y con su tipografía— y el mensaje del app no se veía nunca.
   return (
     <form ref={formRef} noValidate onSubmit={handleSubmit} onInput={() => setConCambios(true)} className="flex flex-col max-sm:pb-2">
-      <div className="ccr-a-sangre mx-4 flex flex-col gap-5 rounded-2xl sm:mx-0 border border-[#dfe8f0] bg-white p-5 shadow-sm">
+      <div className="mx-4 flex flex-col gap-5 rounded-2xl sm:mx-0 border border-[#dfe8f0] bg-white p-5 shadow-sm">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
           <label className="text-sm font-medium text-[#374151] block mb-1.5">
@@ -352,7 +352,6 @@ export function SupportForm({ onSuccess, onCancel }: { onSuccess?: (email: strin
           // en cero quedaba una franja gris de 24 px a cada lado, porque el
           // cuerpo de la ventana ya trae su propio relleno.
           BARRA_ACCION_FIJA,
-          BARRA_EN_LIENZO,
             "z-20 max-sm:fixed max-sm:inset-x-0 max-sm:bottom-0 sm:sticky sm:bottom-0 sm:-mx-4 sm:mt-5 sm:flex sm:justify-end sm:gap-3 sm:px-6",
           enVentana ? "sm:-mx-6 sm:rounded-b-2xl" : "sm:mx-0 sm:rounded-b-2xl sm:border-x",
         )}>

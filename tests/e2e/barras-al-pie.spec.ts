@@ -14,18 +14,6 @@ const CAJA_ESPERADA = {
   borde: "1px rgb(229, 231, 235)",
   fondo: "rgb(255, 255, 255)",
 };
-// DOS FAMILIAS, la misma caja. En las FICHAS el lienzo es blanco: franja blanca
-// con su línea. En los FORMULARIOS el lienzo es gris y el formulario va a
-// sangre: la franja es del color del lienzo y sin línea, para que el gris corra
-// continuo hasta el borde y el botón flote encima. Lo que NO cambia entre
-// familias es la medida.
-const CAJA_EN_LIENZO = {
-  padding: "16px 20px 28px 20px",
-  borde: "1px rgba(0, 0, 0, 0)",
-  fondo: "rgb(244, 247, 250)",
-};
-// La ficha del profesional también: su lienzo es gris, con tarjetas.
-const EN_LIENZO = new Set(["publicar empleo", "publicar promoción", "soporte", "/es/soporte", "ficha profesional", "/es/profesionales/redes-bahia-pruebas"]);
 
 type Franja = {
   caja: { padding: string; borde: string; fondo: string } | null;
@@ -117,13 +105,12 @@ test.describe("@seeded franjas de acciones al pie", () => {
     await page.getByRole("button", { name: /Publicar proyecto|Post a project/i }).filter({ visible: true }).first().click();
     const referencia = await medirFranja(page);
     expect(referencia.caja, "Crear proyecto es la referencia: tiene que tener franja").not.toBeNull();
-    // Crear proyecto es un formulario: su franja es la del lienzo.
-    expect(referencia.caja).toEqual(CAJA_EN_LIENZO);
+    expect(referencia.caja).toEqual(CAJA_ESPERADA);
     expect(referencia.botones.length, "Crear proyecto tiene que traer su botón").toBeGreaterThan(0);
 
     for (const { nombre, franja } of medidas) {
       expect(franja.caja, `«${nombre}» perdió su franja de acciones`).not.toBeNull();
-      expect(franja.caja, `«${nombre}» dibuja la franja con otra medida`).toEqual(EN_LIENZO.has(nombre) ? CAJA_EN_LIENZO : CAJA_ESPERADA);
+      expect(franja.caja, `«${nombre}» dibuja la franja con otra medida`).toEqual(CAJA_ESPERADA);
       // El alto de la franja depende de CUÁNTAS acciones tenga (la ficha del
     // profesional lleva dos), así que lo que tiene que ser igual es el BOTÓN:
     // 48 px de alto, a todo el ancho y con el rótulo a 16 px, como «Publicar».
@@ -197,7 +184,7 @@ test.describe("@seeded franjas de acciones al pie", () => {
       });
       expect(caja, `«${ruta}» perdió su franja`).not.toBeNull();
       expect(caja!.posicion, `«${ruta}»: sin Tailwind la franja deja de estar fija`).toBe("fixed");
-      expect({ padding: caja!.padding, borde: caja!.borde, fondo: caja!.fondo }, `«${ruta}»: sin Tailwind la franja pierde su caja`).toEqual(EN_LIENZO.has(ruta) ? CAJA_EN_LIENZO : CAJA_ESPERADA);
+      expect({ padding: caja!.padding, borde: caja!.borde, fondo: caja!.fondo }, `«${ruta}»: sin Tailwind la franja pierde su caja`).toEqual(CAJA_ESPERADA);
       expect(caja!.aireArriba, `«${ruta}»: el botón toca el borde de arriba de la franja`).toBeGreaterThanOrEqual(16);
       expect(caja!.aireIzq, `«${ruta}»: el botón toca el filo de la pantalla`).toBeGreaterThanOrEqual(16);
     }

@@ -455,12 +455,8 @@ export function SupportTickets({
   if (showNewTicketPage) {
     return (
       <>
-        {/* `ccr-a-sangre-marco`: el panel envuelve esto con 16 px de relleno y
-            su zona desplazable recorta lo que sobresale, así que el formulario
-            «a sangre» quedaba con dos huecos grises a los lados. El marco sale
-            primero hasta los bordes y el formulario ya no tiene que salirse. */}
-        <div className="ccr-support-new-ticket ccr-a-sangre-marco flex min-h-0 flex-1 flex-col bg-white">
-          <div className="ccr-a-sangre-arriba min-h-0 flex-1 overflow-y-auto bg-[#f4f7fa] py-5">
+        <div className="ccr-support-new-ticket flex min-h-0 flex-1 flex-col bg-white">
+          <div className="min-h-0 flex-1 overflow-y-auto bg-[#f4f7fa] py-5">
             <SupportForm onSuccess={handleNewTicketSubmitted} />
           </div>
         </div>

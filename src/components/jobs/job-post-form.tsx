@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { PhoneInput, isPhoneComplete } from "@/components/ui/phone-input";
 import { UnsavedChangesGuard } from "@/components/dashboard/unsaved-changes-guard";
 import { cn } from "@/lib/utils";
-import { BARRA_ACCION_FIJA, BARRA_EN_LIENZO, useBarraAccionFija } from "@/components/ui/acciones-al-pie";
+import { BARRA_ACCION_FIJA, useBarraAccionFija } from "@/components/ui/acciones-al-pie";
 import { useHairlineOnScroll } from "@/components/util/use-hairline-on-scroll";
 import { ArrowLeft, Plus, Trash2 } from "lucide-react";
 import { useLocale } from "next-intl";
@@ -451,7 +451,7 @@ export function JobPostForm({ professionalId, backHref = "/empleos", initialJob 
           <h1 className={cn(CABECERA_TITULO, "text-center")}>{editing ? copy.editJob : copy.publishJob}</h1>
         </div>
       </header>
-      <div className={`ccr-a-sangre-arriba ${presentation === "modal" ? "mx-auto max-w-3xl px-4 py-5" : "mx-auto max-w-3xl px-4 py-5 max-sm:pb-1 sm:px-6 lg:px-0 lg:py-0"}`}>
+      <div className={presentation === "modal" ? "mx-auto max-w-3xl px-4 py-5" : "mx-auto max-w-3xl px-4 py-5 sm:px-6 lg:px-0 lg:py-0"}>
         <div className={presentation === "modal" ? "hidden" : "mb-4 hidden items-center gap-3 lg:flex"}>
           <Link href={backHref} aria-label={copy.backToJobs} className="grid h-10 w-10 place-items-center rounded-lg text-[#162543] hover:bg-white"><ArrowLeft className="h-5 w-5" /></Link>
           <div><h1 className="text-2xl font-bold">{editing ? copy.editJob : copy.publishJob}</h1><p className="text-sm text-[#65758c]">{copy.subtitle}</p></div>
@@ -461,7 +461,7 @@ export function JobPostForm({ professionalId, backHref = "/empleos", initialJob 
           const campos = new FormData(event.currentTarget);
           setHaySalario(Boolean(String(campos.get("salary_min") ?? "").trim() || String(campos.get("salary_max") ?? "").trim()));
         }} onChange={() => setConCambios(true)} noValidate className="max-sm:pb-2">
-          <div className="ccr-a-sangre rounded-2xl border border-[#e5e7eb] bg-white p-5 shadow-sm">
+          <div className="rounded-2xl border border-[#e5e7eb] bg-white p-5 shadow-sm">
           <div className="grid gap-5 sm:grid-cols-2">
             <JobTitleInput defaultValue={initialJob?.title ?? ""} error={fieldErrors.title} locale={locale} copy={copy} />
             <SelectMenu label={<RequiredLabel>{copy.employmentType}</RequiredLabel>} value={employmentType} onChange={setEmploymentType} options={(Object.keys(EMPLOYMENT_TYPES) as EmploymentType[]).map((value) => ({ value, label: employmentTypeLabel(value, locale) }))} />
@@ -509,7 +509,7 @@ export function JobPostForm({ professionalId, backHref = "/empleos", initialJob 
             <EditableList title={copy.responsibilities} optional values={responsibilities} onChange={setResponsibilities} placeholder={copy.responsibilityPlaceholder} addLabel={copy.addResponsibility} optionalLabel={copy.optional} removeLabel={copy.remove} error={fieldErrors.responsibilities} />
             <EditableList title={copy.requirements} optional values={requirements} onChange={setRequirements} placeholder={copy.requirementPlaceholder} addLabel={copy.addRequirement} optionalLabel={copy.optional} removeLabel={copy.remove} error={fieldErrors.requirements} />
             <EditableList title={copy.benefits} optional values={benefits} onChange={setBenefits} placeholder={copy.benefitPlaceholder} addLabel={copy.addBenefit} optionalLabel={copy.optional} removeLabel={copy.remove} />
-          <div className="ccr-corte my-6 border-t border-[#e6edf3] pt-6"><h2 className="font-bold">{copy.salaryAndValidity}</h2><p className="mt-1 text-xs text-[#68778d]">{copy.optionalInformation}</p></div>
+          <div className="my-6 border-t border-[#e6edf3] pt-6"><h2 className="font-bold">{copy.salaryAndValidity}</h2><p className="mt-1 text-xs text-[#68778d]">{copy.optionalInformation}</p></div>
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="text-sm font-medium text-[#374151]">{copy.salaryFrom} <span className="font-normal text-[#68778d]">({copy.optional})</span><input name="salary_min" inputMode="numeric" maxLength={String(MAX_MONEY_AMOUNT).length} defaultValue={initialJob?.salary_min ?? ""} placeholder="450000" className={FIELD_CLASS} /></label>
             <label className="text-sm font-medium text-[#374151]">{copy.salaryTo} <span className="font-normal text-[#68778d]">({copy.optional})</span><input name="salary_max" inputMode="numeric" maxLength={String(MAX_MONEY_AMOUNT).length} defaultValue={initialJob?.salary_max ?? ""} placeholder="650000" className={FIELD_CLASS} /><FieldError>{fieldErrors.salary}</FieldError></label>
@@ -543,7 +543,6 @@ export function JobPostForm({ professionalId, backHref = "/empleos", initialJob 
             // columna del formulario); si solo se descuenta uno queda una franja
             // gris a cada lado.
             BARRA_ACCION_FIJA,
-            BARRA_EN_LIENZO,
             "z-20 max-sm:fixed max-sm:inset-x-0 max-sm:bottom-0 sm:sticky sm:bottom-0 sm:-mx-4 sm:mt-5 sm:flex sm:justify-end sm:px-6 sm:pb-4",
             presentation === "modal" ? "sm:-mx-10" : "sm:-mx-6",
           )}>
