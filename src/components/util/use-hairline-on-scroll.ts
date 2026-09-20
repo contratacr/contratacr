@@ -65,5 +65,11 @@ export function useHairlineOnScroll() {
     };
   }, [medirLienzo]);
 
-  return { sentinelaRef, cabeceraRef, desplazado, conLinea: desplazado || mismoLienzo };
+  // LA LÍNEA VA SIEMPRE. La regla de arriba («solo si hace falta») era correcta
+  // pantalla por pantalla, pero el app entero se leía desigual: unas barras con
+  // línea, otras sin nada hasta desplazar. Una sola regla —línea fina, siempre,
+  // el mismo gris, sin sombras— se entiende sin pensarla. La medición se
+  // conserva porque `desplazado` lo usa quien quiera reaccionar al scroll.
+  void mismoLienzo;
+  return { sentinelaRef, cabeceraRef, desplazado, conLinea: true };
 }

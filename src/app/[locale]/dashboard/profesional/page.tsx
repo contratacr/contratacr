@@ -1796,15 +1796,20 @@ export default function DashboardPage() {
     // `root` distingue la RAÍZ del panel de una sección abierta: en la raíz la
     // barra lleva el menú y la marca (no hay a dónde volver), dentro de una
     // sección lleva la flecha.
-    const publicar = (title: string | null, root = false) => {
-      const global = window as unknown as { __ccrSectionHeader?: string | null; __ccrSectionRoot?: boolean };
+    // `paso` = un paso DENTRO de una sección (un formulario, una conversación):
+    // la barra lleva solo la flecha y el título, como Publicar empleo. La
+    // campana ahí sobra —nadie revisa avisos a medio formulario— y dejaba a
+    // «Contactar soporte» distinta de las demás pantallas de formulario.
+    const publicar = (title: string | null, root = false, paso = false) => {
+      const global = window as unknown as { __ccrSectionHeader?: string | null; __ccrSectionRoot?: boolean; __ccrSectionPaso?: boolean };
       global.__ccrSectionHeader = title;
       global.__ccrSectionRoot = root;
-      window.dispatchEvent(new CustomEvent("ccr:section-header", { detail: title ? { title, root } : null }));
+      global.__ccrSectionPaso = paso;
+      window.dispatchEvent(new CustomEvent("ccr:section-header", { detail: title ? { title, root, paso } : null }));
     };
-    publicar(mobileSectionHeaderTitle, activeTab === "home");
+    publicar(mobileSectionHeaderTitle, activeTab === "home", pasoInternoAbierto);
     return () => publicar(null);
-  }, [activeTab, mobileSectionHeaderTitle]);
+  }, [activeTab, mobileSectionHeaderTitle, pasoInternoAbierto]);
 
   // Never render the client dashboard as a temporary fallback for an account
   // marked as a provider whose professional row is still missing. Keep the

@@ -1309,6 +1309,8 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   // ("ccr:section-header"), la barra muestra "← Título" en lugar del logo y
   // confirma con "ccr:section-header-ack" para que la pantalla oculte la suya.
   const [sectionTitle, setSectionTitle] = useState<string | null>(null);
+  // Un paso dentro de una sección (formulario, conversación): sin campana.
+  const [sectionPaso, setSectionPaso] = useState(false);
   const [sectionActive, setSectionActive] = useState(false);
   // El buscador del home entra en una SEGUNDA LÍNEA bajo la barra, igual que en
   // /buscar. No toca --ccr-native-header-height a propósito: si el hueco
@@ -1327,6 +1329,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
       __ccrSectionRoot?: boolean;
       __ccrSectionShare?: boolean;
       __ccrSectionMenu?: boolean;
+      __ccrSectionPaso?: boolean;
       // La pantalla puede publicar su título ANTES de estar escuchando la
       // confirmación (con la ficha pintada desde el servidor, todo monta en el
       // mismo cuadro). La confirmación queda también aquí para que la pantalla
@@ -1340,17 +1343,19 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
       setSectionRoot(!!global.__ccrSectionRoot);
       setSectionShare(!!global.__ccrSectionShare);
       setSectionMenu(!!global.__ccrSectionMenu);
+      setSectionPaso(!!global.__ccrSectionPaso);
       global.__ccrSectionAck = true;
       window.dispatchEvent(new Event("ccr:section-header-ack"));
     }
     const onHeader = (event: Event) => {
-      const detail = (event as CustomEvent<{ title?: string | null; share?: boolean; root?: boolean; menu?: boolean } | null>).detail;
+      const detail = (event as CustomEvent<{ title?: string | null; share?: boolean; root?: boolean; menu?: boolean; paso?: boolean } | null>).detail;
       const title = detail?.title ?? null;
       setSectionTitle(title);
       setSectionActive(detail !== null);
       setSectionRoot(!!detail?.root);
       setSectionShare(!!detail?.share);
       setSectionMenu(!!detail?.menu);
+      setSectionPaso(!!detail?.paso);
       global.__ccrSectionAck = detail !== null;
       if (detail !== null) window.dispatchEvent(new Event("ccr:section-header-ack"));
     };
@@ -1855,14 +1860,14 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
               // En la app la barra se funde con los filtros; en computadora la
               // línea va siempre, o el encabezado y los filtros se leían como
               // una sola mancha blanca.
-              ? (nativeHeaderShell ? "border-transparent shadow-none" : "border-[#e3ebf2] shadow-none")
+              ? (nativeHeaderShell ? "border-transparent shadow-none" : "border-[#e5e7eb] shadow-none")
               : nativeHeaderShell
                 // En la app también manda la línea: la sombra proyectada bajo el
                 // encabezado se veía como una mancha gris sobre el contenido.
                 ? cn("transition-[border-color] duration-200 shadow-none", contenidoDebajo || lienzoBlanco
                     ? "border-gray-100/80"
                     : "border-transparent")
-                : "border-[#e3ebf2] shadow-none",
+                : "border-[#e5e7eb] shadow-none",
             drawerOnly && "hidden",
           )}
         >
@@ -1960,7 +1965,8 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                   )
                 ) : (
                 <div className="ml-auto flex shrink-0 items-center gap-0.5">
-                  {user && !sectionMenu && <NotificationBell scope="all" />}
+                  {user && !sectionMenu && !sectionPaso && <NotificationBell scope="all" />}
+                  {user && sectionPaso && !sectionMenu && <span className="h-10 w-10" aria-hidden />}
                   {!user && !sectionShare && !sectionMenu && <HeaderAccountLink />}
                 </div>
                 )}

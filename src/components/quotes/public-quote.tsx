@@ -111,7 +111,7 @@ export function PublicQuote({ locale, data }: { locale: string; data: PublicQuot
 function Marco({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-[#f4f7fa] print:bg-white">
-      <header className="print:hidden border-b border-[#e3ebf2] bg-white">
+      <header className="print:hidden border-b border-[#e5e7eb] bg-white">
         <div className="mx-auto flex h-16 max-w-2xl items-center px-5">
           {/* eslint-disable-next-line @next/next/no-img-element -- logotipo estático, sin optimizador */}
           <Link href="/" aria-label="ContrataCR"><img src="/logo-wordmark-transparent.png" alt="ContrataCR" className="h-8 w-auto" /></Link>

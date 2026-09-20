@@ -54,16 +54,17 @@ test("al soltar el campo el app deja de creer que hay teclado", async ({ page },
   test.skip(!(await campo.isVisible().catch(() => false)), "Este caso ya no admite respuestas.");
 
   await campo.focus();
-  // El estado en que iOS deja la pantalla con el teclado arriba, y que se quedaba pegado.
-  await page.evaluate(() => {
+  // El estado en que iOS deja la pantalla con el teclado arriba —y que se
+  // quedaba pegado—, y soltar el campo, en el MISMO instante. Por separado la
+  // prueba competía con el app: en el emulador no hay teclado, y el app ahora
+  // lo dice enseguida y deshace el estado antes de poder comprobarlo.
+  await campo.evaluate((n) => {
     const raiz = document.documentElement;
     raiz.style.setProperty("--app-visual-viewport-top", "345px");
     raiz.style.setProperty("--app-visual-viewport-height", "400px");
     raiz.toggleAttribute("data-keyboard-open", true);
+    (n as HTMLElement).blur();
   });
-  await expect.poll(async () => hilo.evaluate((n) => Math.round(n.getBoundingClientRect().top))).toBe(345);
-
-  await campo.evaluate((n) => (n as HTMLElement).blur());
   await expect.poll(async () => page.evaluate(() => document.documentElement.hasAttribute("data-keyboard-open")), { timeout: 4000 }).toBe(false);
   const caja = await hilo.evaluate((n) => { const b = n.getBoundingClientRect(); return { top: Math.round(b.top), alto: Math.round(b.height), pantalla: window.innerHeight }; });
   expect(caja.top).toBe(0);
