@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { PhoneInput, isPhoneComplete } from "@/components/ui/phone-input";
 import { UnsavedChangesGuard } from "@/components/dashboard/unsaved-changes-guard";
 import { cn } from "@/lib/utils";
-import { BARRA_ACCION_FIJA, useBarraAccionFija } from "@/components/ui/acciones-al-pie";
+import { BARRA_ACCION_FIJA, BARRA_EN_LIENZO, useBarraAccionFija } from "@/components/ui/acciones-al-pie";
 import { useHairlineOnScroll } from "@/components/util/use-hairline-on-scroll";
 import { ArrowLeft, Plus, Trash2 } from "lucide-react";
 import { useLocale } from "next-intl";
@@ -543,6 +543,7 @@ export function JobPostForm({ professionalId, backHref = "/empleos", initialJob 
             // columna del formulario); si solo se descuenta uno queda una franja
             // gris a cada lado.
             BARRA_ACCION_FIJA,
+            BARRA_EN_LIENZO,
             "z-20 max-sm:fixed max-sm:inset-x-0 max-sm:bottom-0 sm:sticky sm:bottom-0 sm:-mx-4 sm:mt-5 sm:flex sm:justify-end sm:px-6 sm:pb-4",
             presentation === "modal" ? "sm:-mx-10" : "sm:-mx-6",
           )}>

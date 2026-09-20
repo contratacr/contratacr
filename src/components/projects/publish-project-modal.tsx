@@ -16,7 +16,7 @@ import { useLocale } from "next-intl";
 import { lockBodyScroll } from "@/lib/body-scroll-lock";
 import { useAuth } from "@/hooks/use-auth";
 import { Link } from "@/i18n/navigation";
-import { BARRA_ACCION_BASE } from "@/components/ui/acciones-al-pie";
+import { BARRA_ACCION_BASE, BARRA_EN_LIENZO } from "@/components/ui/acciones-al-pie";
 import { cn } from "@/lib/utils";
 
 const PROJECT_DESCRIPTION_MAX_LENGTH = 300;
@@ -313,7 +313,7 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
           {/* La MISMA franja que el resto del app: la medida vive en
               BARRA_ACCION_BASE, no escrita otra vez aquí. Esta pantalla es la
               referencia, así que si cambia, cambian todas juntas. */}
-          <div className={cn(BARRA_ACCION_BASE, "flex shrink-0 gap-3 sm:justify-end sm:px-6 sm:pb-4", error && !published && "ccr-sin-linea border-t-0")}>
+          <div className={cn(BARRA_ACCION_BASE, BARRA_EN_LIENZO, "flex shrink-0 gap-3 sm:justify-end sm:px-6 sm:pb-4", error && !published && "ccr-sin-linea border-t-0")}>
             {!published && (
               <Button type="button" variant="outline" size="lg" onClick={onClose} className="hidden sm:inline-flex sm:px-6">
                 {t("cancel")}
