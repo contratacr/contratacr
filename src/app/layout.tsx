@@ -201,7 +201,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
         <style
           data-ccr-a-sangre=""
           dangerouslySetInnerHTML={{
-            __html: `@media (max-width:639px){.ccr-a-sangre-arriba{padding-top:0!important}.ccr-a-sangre{margin-left:calc(-1*var(--ccr-sangre,16px))!important;margin-right:calc(-1*var(--ccr-sangre,16px))!important;border-radius:0!important;border-top:0!important;border-left:0!important;border-right:0!important;box-shadow:none!important}.ccr-a-sangre-marco{margin-left:calc(-1*var(--ccr-marco,16px));margin-right:calc(-1*var(--ccr-marco,16px));margin-top:calc(-1*var(--ccr-marco-arriba,16px));--ccr-sangre:0px}.ccr-a-sangre .ccr-corte{margin-left:-20px;margin-right:-20px;padding-left:20px;padding-right:20px;border-top:10px solid #f4f7fa!important}}`,
+            __html: `@media (max-width:639px){.ccr-a-sangre-arriba{padding-top:10px!important;background:#f4f7fa}.ccr-a-sangre{margin-left:calc(-1*var(--ccr-sangre,16px))!important;margin-right:calc(-1*var(--ccr-sangre,16px))!important;border-radius:0!important;border-top:0!important;border-left:0!important;border-right:0!important;box-shadow:none!important}.ccr-a-sangre-marco{margin-left:calc(-1*var(--ccr-marco,16px));margin-right:calc(-1*var(--ccr-marco,16px));margin-top:calc(-1*var(--ccr-marco-arriba,16px));--ccr-sangre:0px}.ccr-a-sangre .ccr-corte{margin-left:-20px;margin-right:-20px;padding-left:20px;padding-right:20px;border-top:10px solid #f4f7fa!important}}`,
           }}
         />
         <style
