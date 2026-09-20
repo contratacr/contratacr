@@ -1,5 +1,6 @@
 "use client";
 
+import { conFiltros, conFiltroDeFecha } from "@/lib/marketplace/filtros-por-volumen";
 import { ProgressiveImage } from "@/components/ui/progressive-image";
 import { PanelEmptyState } from "@/components/ui/content-loading";
 import { cn } from "@/lib/utils";
@@ -250,10 +251,14 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
   );
   const renderFilters = () => (
     <>
-      <MarketplaceFilterChip label={copy.workplace} value={workplace} onChange={setWorkplace} options={[["all", copy.anyWorkplace], ...Object.keys(WORKPLACE_TYPES).map((value) => [value, workplaceTypeLabel(value as keyof typeof WORKPLACE_TYPES, locale)] as [string, string])]} />
-      <MarketplaceFilterChip label={copy.employmentType} value={employment} onChange={setEmployment} options={[["all", copy.anyEmploymentType], ...Object.keys(EMPLOYMENT_TYPES).map((value) => [value, employmentTypeLabel(value as keyof typeof EMPLOYMENT_TYPES, locale)] as [string, string])]} />
-      <MarketplaceFilterChip label={copy.experience} value={experience} onChange={setExperience} options={[["all", copy.anyExperience], ...Object.keys(EXPERIENCE_LEVELS).map((value) => [value, experienceLevelLabel(value as keyof typeof EXPERIENCE_LEVELS, locale)] as [string, string])]} />
+      {conFiltros(jobs.length) && (<>
+        <MarketplaceFilterChip label={copy.workplace} value={workplace} onChange={setWorkplace} options={[["all", copy.anyWorkplace], ...Object.keys(WORKPLACE_TYPES).map((value) => [value, workplaceTypeLabel(value as keyof typeof WORKPLACE_TYPES, locale)] as [string, string])]} />
+        <MarketplaceFilterChip label={copy.employmentType} value={employment} onChange={setEmployment} options={[["all", copy.anyEmploymentType], ...Object.keys(EMPLOYMENT_TYPES).map((value) => [value, employmentTypeLabel(value as keyof typeof EMPLOYMENT_TYPES, locale)] as [string, string])]} />
+        <MarketplaceFilterChip label={copy.experience} value={experience} onChange={setExperience} options={[["all", copy.anyExperience], ...Object.keys(EXPERIENCE_LEVELS).map((value) => [value, experienceLevelLabel(value as keyof typeof EXPERIENCE_LEVELS, locale)] as [string, string])]} />
+      </>)}
+      {conFiltroDeFecha(jobs.length) && (
       <MarketplaceFilterChip label={copy.published} value={published} onChange={setPublished} options={[["all", copy.anyDate], ["1", copy.last24Hours], ["7", copy.lastWeek], ["30", copy.lastMonth]]} />
+      )}
     </>
   );
   const renderActions = () => (

@@ -1,5 +1,6 @@
 "use client";
 
+import { conFiltroDeFecha } from "@/lib/marketplace/filtros-por-volumen";
 import { ProgressiveImage } from "@/components/ui/progressive-image";
 import { PanelEmptyState } from "@/components/ui/content-loading";
 import { cn } from "@/lib/utils";
@@ -293,20 +294,20 @@ export function OffersBoard({
     />
   );
 
+  // «Tipo de promoción» se retira: sus opciones —Servicio en promoción,
+  // Producto, Paquete— son vocabulario de quien publica, no de quien busca, y
+  // nadie que llega nuevo sabe en cuál está lo que necesita. Lo que de verdad
+  // se busca es el servicio, y para eso está el buscador.
   const renderFilters = () => (
     <>
-      <MarketplaceFilterChip
-        label={copy.offerType}
-        value={tipo}
-        onChange={setTipo}
-        options={[["all", copy.anyType], ...Object.keys(OFFER_TYPES).map((value) => [value, offerTypeLabel(value as ProfessionalOffer["offer_type"], locale)] as [string, string])]}
-      />
-      <MarketplaceFilterChip
-        label={copy.date}
-        value={published}
-        onChange={setPublished}
-        options={[["all", copy.anyDate], ["1", copy.last24Hours], ["7", copy.lastWeek], ["30", copy.lastMonth]]}
-      />
+      {conFiltroDeFecha(offers.length) && (
+        <MarketplaceFilterChip
+          label={copy.date}
+          value={published}
+          onChange={setPublished}
+          options={[["all", copy.anyDate], ["1", copy.last24Hours], ["7", copy.lastWeek], ["30", copy.lastMonth]]}
+        />
+      )}
     </>
   );
   const renderActions = () => (

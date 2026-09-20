@@ -1,5 +1,6 @@
 "use client";
 
+import { conFiltroDeFecha } from "@/lib/marketplace/filtros-por-volumen";
 import { useAppDialog } from "@/hooks/use-app-dialog";
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
@@ -323,14 +324,14 @@ export function ProjectsBoard({
       return `${p.title} ${p.description} ${p.category_name ?? ""} ${p.location_label ?? ""}`.toLowerCase().includes(termino);
     });
   }, [ahora, lugar, proyectos, publicado, query]);
-  const filtros = (
+  const filtros = conFiltroDeFecha(proyectos.length) ? (
     <MarketplaceFilterChip
       label={copy.fecha}
       value={publicado}
       onChange={setPublicado}
       options={[["all", copy.cualquierFecha], ["1", copy.hoy], ["7", copy.semana], ["30", copy.mes]]}
     />
-  );
+  ) : null;
 
   const lugaresSugeridos = useMemo(
     () => [...new Set(proyectos.map((p) => p.location_label?.trim()).filter((v): v is string => Boolean(v)))],
