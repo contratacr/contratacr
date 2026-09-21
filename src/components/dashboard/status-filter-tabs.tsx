@@ -9,8 +9,13 @@ import { cn } from "@/lib/utils";
 import { ScrollRail } from "@/components/ui/scroll-rail";
 
 // Segmented groups are a grid; rails scroll and hint the overflow with a chevron.
+//
+// `conFlechas`: en computadora la flecha vive en un MARGEN propio, no encima
+// del carril. Sin eso quedaba medio botón sobre la última opción y le tapaba
+// el final del rótulo («Consultoría T▸»), justo la opción que viene a
+// anunciar. Con margen se ve la flecha Y se lee la opción entera.
 function RailOrGrid({ scroll, className, children }: { scroll: boolean; className: string; children: React.ReactNode }) {
-  return scroll ? <ScrollRail className={className} asomoMinimo={64}>{children}</ScrollRail> : <div className={className}>{children}</div>;
+  return scroll ? <ScrollRail className={className} asomoMinimo={64} conFlechas>{children}</ScrollRail> : <div className={className}>{children}</div>;
 }
 
 // Shared pill status-filter tabs — used identically in the client and professional

@@ -374,12 +374,24 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
           title={draftIsEdit ? t("editCase") : t("newCase")}
           closeLabel={t("cancel")}
           mobilePresentation="fullscreen"
+          // EL MISMO PIE QUE EL RESTO DE LAS VENTANAS: salida a la izquierda,
+          // acción a la derecha. Con `footerClassName="block"` se perdía el
+          // `flex justify-end` del pie y «Guardar» quedaba solo, pegado a la
+          // izquierda —la única ventana del app así—. Y sin «Cancelar»: en
+          // computadora la equis de arriba queda lejos del sitio donde uno
+          // acaba de decidir que no. En el teléfono sí basta la equis, así que
+          // la salida solo aparece de 640 px en adelante, como en Servicios.
           footer={
+            <>
+            <Button type="button" variant="outline" size="lg" onClick={closeDraft} className="hidden sm:inline-flex sm:px-6">
+              {t("cancel")}
+            </Button>
             <Button type="button" size="lg" onClick={saveCase} loading={saving} className="w-full select-none sm:w-auto sm:px-8">
               {t("save")}
             </Button>
+            </>
           }
-          footerClassName="block"
+          footerClassName="block sm:flex sm:justify-end sm:gap-3"
           bodyClassName="bg-[#f4f7fa] px-4 py-5"
         >
           {/* Mismo lienzo que Publicar empleo: fondo gris y los campos dentro
