@@ -94,7 +94,10 @@ export function QuoteEditorModal({ open, onClose, bookingId, projectId, defaultT
   const campo = "w-full rounded-xl border border-[#e5e7eb] bg-white px-3.5 py-2.5 text-[15px] text-[#162543] placeholder:text-[#8f9aaa] focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[#009FD9]";
   const rotulo = "mb-2 block text-[13px] font-bold text-[#162543]";
   const pastilla = (activa: boolean) => `h-10 shrink-0 rounded-full border px-4 text-[13px] font-bold transition-colors ${activa ? "border-[#009FD9] bg-[#eaf7fc] text-[#0089bb]" : "border-[#d7e1ea] bg-white text-[#52627a] hover:bg-[#f6f9fb]"}`;
-  const bloque = "rounded-2xl border border-[#e5e7eb] bg-white p-4 sm:p-5";
+  // `shadow-sm`: la MISMA tarjeta que publicar empleo y publicar promoción. Sin
+  // ella, las tarjetas de esta ventana eran las únicas planas del app y la
+  // ventana parecía de otro producto.
+  const bloque = "rounded-2xl border border-[#e5e7eb] bg-white p-4 shadow-sm sm:p-5";
   const tituloBloque = "mb-3 flex items-center gap-2 text-[11px] font-extrabold uppercase tracking-[0.08em] text-[#8a94a6]";
 
   return (
