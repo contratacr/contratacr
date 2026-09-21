@@ -14,7 +14,7 @@
   "src/app/[locale]/profesionales/[slug]/profile-client.tsx": 24,
   "src/app/[locale]/registro/profesional/page.tsx": 1,
   "src/app/[locale]/servicio-no-disponible/page.tsx": 2,
-  "src/app/[locale]/servicios/page.tsx": 8,
+  "src/app/[locale]/servicios/servicios-client.tsx": 8,
   "src/app/[locale]/terminos/page.tsx": 1,
   "src/app/api/ai-assistant/route.ts": 87,
   "src/app/api/analytics/interaction/route.ts": 1,
