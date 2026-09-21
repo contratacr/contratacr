@@ -54,6 +54,35 @@ export function MenuFicha({
     else setAbiertoPropio(siguiente);
   };
   const caja = useRef<HTMLDivElement>(null);
+  const boton = useRef<HTMLButtonElement>(null);
+  // EL PANEL DE COMPUTADORA CUELGA DEL BODY, como la hoja del teléfono. Dentro
+  // de la ficha estaba a merced de lo que tuviera encima: la ficha de un
+  // proyecto vive en una columna con `overflow-y-auto` y lleva una barra de
+  // acciones `sticky` opaca justo debajo del título, y el menú —abierto desde
+  // el «···» de esa misma línea— terminaba cortado a la altura de la barra.
+  // Colgado del body no hay ancestro que lo recorte ni hermano que lo tape.
+  const [ancla, setAncla] = useState<{ arriba: number; derecha: number } | null>(null);
+
+  useEffect(() => {
+    if (!abierto) { setAncla(null); return; }
+    const medir = () => {
+      // Cuando el «···» lo dibuja otro (`controlado`), el botón propio está
+      // oculto y no mide: el ancla es entonces la caja, que es donde el panel
+      // se colocaba antes con `top-full`.
+      const b = boton.current?.getBoundingClientRect();
+      const r = b && b.height > 0 ? b : caja.current?.getBoundingClientRect();
+      if (r) setAncla({ arriba: r.bottom + 4, derecha: Math.max(8, window.innerWidth - r.right) });
+    };
+    medir();
+    // Al desplazar cualquier cosa —la página o la columna de la ficha— el
+    // botón se mueve y el panel tiene que ir con él.
+    window.addEventListener("scroll", medir, true);
+    window.addEventListener("resize", medir);
+    return () => {
+      window.removeEventListener("scroll", medir, true);
+      window.removeEventListener("resize", medir);
+    };
+  }, [abierto]);
 
   useEffect(() => {
     if (!abierto) return;
@@ -136,6 +165,7 @@ export function MenuFicha({
         aria-label={t("more")}
         aria-haspopup="menu"
         aria-expanded={abierto}
+        ref={boton}
         onClick={() => setAbierto((v) => !v)}
         className={cn(
           "grid place-items-center rounded-full text-[#162543] transition-colors hover:bg-[#eef3f8]",
@@ -151,13 +181,22 @@ export function MenuFicha({
           {/* Teléfono: hoja desde abajo, colgada del body para que ninguna
               tarjeta la recorte. Computadora: panel junto al botón. */}
           {typeof document !== "undefined" && createPortal(
-            <div className="fixed inset-0 z-[1450] lg:hidden">
-              <button type="button" aria-label={t("close")} onClick={() => setAbierto(false)} className="absolute inset-0 bg-[#071426]/45" />
-              <div className="absolute inset-x-0 bottom-0">{lista}</div>
-            </div>,
+            <>
+              <div className="fixed inset-0 z-[1450] lg:hidden">
+                <button type="button" aria-label={t("close")} onClick={() => setAbierto(false)} className="absolute inset-0 bg-[#071426]/45" />
+                <div className="absolute inset-x-0 bottom-0">{lista}</div>
+              </div>
+              {ancla && (
+                <div
+                  className="fixed z-[1450] hidden w-56 lg:block"
+                  style={{ top: ancla.arriba, right: ancla.derecha }}
+                >
+                  {lista}
+                </div>
+              )}
+            </>,
             document.body,
           )}
-          <div className="absolute right-0 top-full z-30 mt-1 hidden w-56 lg:block">{lista}</div>
         </>
       )}
     </div>
