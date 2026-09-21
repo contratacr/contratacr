@@ -734,7 +734,7 @@ export function ProjectsBoard({
                   se hace con ella. En un proyecto el dato que define no es un
                   precio —no lo tiene— sino el servicio que se pide. */}
               {detalle && ficha && (
-                <aside className="sticky top-24 hidden rounded-lg border border-[#e5e7eb] bg-white p-5 lg:block">
+                <aside className="hidden lg:sticky lg:top-[calc(var(--ccr-native-header-height,64px)+0.75rem)] rounded-lg border border-[#e5e7eb] bg-white p-5 lg:block">
                   <p className="text-xs font-bold uppercase tracking-wide text-[#7a899d]">{copy.ficha}</p>
                   <p className="mt-1 text-2xl font-extrabold leading-tight text-[#007fae]">{ficha.category_name || copy.titulo}</p>
                   <p className="mt-4 border-t border-[#eef2f6] pt-4 text-sm text-[#43536b]">

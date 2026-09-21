@@ -425,7 +425,11 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
           <div className="overflow-hidden rounded-lg border border-[#e5e7eb] bg-white">
             <JobPreview job={selected} isOwner={selected.employer_id === currentProfessionalId} userId={currentUserId} onEdit={() => setEditingJob(selected)} hideActions />
           </div>
-          <aside className="h-fit self-start rounded-lg border border-[#e5e7eb] bg-white p-5">
+          {/* Acompaña al desplazar, como en Promociones y Proyectos: era la
+              única de las tres que se quedaba atrás al bajar por la
+              descripción, y el WhatsApp desaparecía justo cuando se había
+              terminado de leer y se quería escribir. */}
+          <aside className="h-fit self-start rounded-lg border border-[#e5e7eb] bg-white p-5 lg:sticky lg:top-[calc(var(--ccr-native-header-height,64px)+0.75rem)]">
             <p className="text-xs font-bold uppercase text-[#7a899d]">{copy.salary}</p>
             <p className="mt-1 text-2xl font-extrabold text-[#007fae]">{formatJobSalary(selected, locale)}</p>
             <div className="my-4 border-t border-[#e5e7eb]" />
