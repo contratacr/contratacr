@@ -43,7 +43,17 @@ function ProfileSection({
       <button
         type="button"
         onClick={() => onToggle(id)}
-        className={cn("w-full items-center justify-between gap-3 px-4 py-4 text-left transition-colors sm:flex sm:px-5", open ? "hidden bg-[#f8fafc] sm:flex sm:border-b sm:border-[#eef2f6]" : "flex hover:bg-[#fafafa]")}
+        // EL COLOR DEL BORDE VA SIEMPRE, ABIERTA O CERRADA.
+        //
+        // Cerrada no se ve, porque el ancho es cero. Pero si el color apareciera
+        // solo al abrir, `transition-colors` lo animaría DESDE el valor por
+        // defecto de Tailwind v4 —`currentColor`, o sea el azul marino del
+        // texto— hasta el gris: medido, el borde nacía en rgb(17,24,39) y
+        // tardaba 136 ms en llegar a rgb(238,242,246). Eso se veía como un
+        // subrayado oscuro que aparece y se borra solo al abrir la sección.
+        // Con el color fijo no hay nada que animar: solo cambia el ancho, y el
+        // ancho no entra en `transition-colors`.
+        className={cn("w-full items-center justify-between gap-3 border-[#eef2f6] px-4 py-4 text-left transition-colors sm:flex sm:px-5", open ? "hidden bg-[#f8fafc] sm:flex sm:border-b" : "flex hover:bg-[#fafafa]")}
         aria-expanded={open}
       >
         {open && (

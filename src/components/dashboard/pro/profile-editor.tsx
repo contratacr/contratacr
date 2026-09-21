@@ -85,8 +85,14 @@ function Section({ id, title, desc, open, mobileFocused, onToggle, onActivate, c
         type="button"
         onClick={() => onToggle(id)}
         className={cn(
-          "w-full items-center justify-between gap-3 px-4 py-4 text-left transition-colors sm:flex sm:px-5",
-          open ? "hidden bg-[#f8fafc] sm:flex sm:border-b sm:border-[#eef2f6]" : "flex hover:bg-[#fafafa]",
+          // El color del borde va SIEMPRE, abierta o cerrada. Cerrada no se ve
+          // porque el ancho es cero; pero si apareciera solo al abrir,
+          // `transition-colors` lo animaría desde el valor por defecto de
+          // Tailwind v4 —`currentColor`, el azul marino del texto— hasta el
+          // gris, y se veía un subrayado oscuro que aparece y se borra solo.
+          // Medido: nacía en rgb(17,24,39) y tardaba 136 ms en apagarse.
+          "w-full items-center justify-between gap-3 border-[#eef2f6] px-4 py-4 text-left transition-colors sm:flex sm:px-5",
+          open ? "hidden bg-[#f8fafc] sm:flex sm:border-b" : "flex hover:bg-[#fafafa]",
           // En el teléfono cada sección se abre a pantalla completa, o sea que ES
           // navegación: se ve igual que una fila del menú del panel (tarjeta con
           // borde, 60 px, flecha) en vez de una fila de acordeón con lápiz.
