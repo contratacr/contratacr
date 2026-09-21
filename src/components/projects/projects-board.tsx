@@ -46,7 +46,6 @@ const COPY = {
     semana: "Última semana",
     mes: "Último mes",
     misProyectos: "Mis proyectos",
-    tuyo: "Tu proyecto",
     administrar: "Administrar proyecto",
     ubicacion: "Ubicación",
     volver: "Volver a proyectos",
@@ -78,7 +77,6 @@ const COPY = {
     semana: "Past week",
     mes: "Past month",
     misProyectos: "My projects",
-    tuyo: "Your project",
     administrar: "Manage project",
     ubicacion: "Location",
     volver: "Back to projects",
@@ -529,7 +527,12 @@ export function ProjectsBoard({
             <div className={cn(
               "ccr-panel-tablero sm:overflow-hidden sm:rounded-[22px] sm:border sm:border-[#e5e7eb] sm:bg-white sm:shadow-[0_12px_34px_-28px_rgba(15,23,42,0.55)]",
               detalle
-                ? "lg:grid lg:grid-cols-[minmax(0,760px)_320px] lg:items-start lg:justify-center lg:gap-5 lg:overflow-visible lg:rounded-none lg:border-0 lg:bg-transparent lg:shadow-none"
+                // `ccr-ficha-pagina`: las rayas verticales del tablero las pone
+                // una regla del documento (layout.tsx), que le gana a
+                // `lg:border-0`. En una PÁGINA de ficha no hay dos columnas que
+                // separar, y esa raya quedaba suelta a la derecha de la tarjeta,
+                // bajando por el gris hasta el final.
+                ? "ccr-ficha-pagina lg:grid lg:grid-cols-[minmax(0,760px)_320px] lg:items-start lg:justify-center lg:gap-5 lg:overflow-visible lg:rounded-none lg:border-0 lg:bg-transparent lg:shadow-none"
                 : "lg:h-full",
               // UNA DIRECCIÓN PROPIA ABRE UNA PÁGINA PROPIA, como en Empleos y
               // Promociones: /proyectos/[id] muestra SOLO el proyecto, también
@@ -629,12 +632,14 @@ export function ProjectsBoard({
                             <p className="min-w-0 flex-1 truncate font-semibold text-[#52627a]">
                               {ficha.client_name}
                             </p>
-                            {/* Sin esto, la ficha propia se veía igual que
-                                cualquier otra pero sin botones, y la pregunta
-                                obvia era si se habían roto. */}
-                            {misProyectos.includes(ficha.id) && (
-                              <span className="shrink-0 rounded-full bg-[#eaf7fc] px-2.5 py-0.5 text-xs font-bold text-[#0089bb]">{copy.tuyo}</span>
-                            )}
+                            {/* SIN MARCA «Tu proyecto» EN LA FICHA. La tarjeta
+                                de acciones ya lo dice más fuerte que una
+                                etiqueta: donde en una ajena dice «WhatsApp» y
+                                «Guardar», en la propia dice «Administrar». Es
+                                exactamente como se sabe en Empleos y en
+                                Promociones, que no llevan marca en ninguna
+                                parte. Era lo único que hacía distinta a esta
+                                sección. */}
                             <MenuProyecto grande className="-my-2.5 -mr-2 hidden shrink-0 lg:block" proyectoId={ficha.id} titulo={ficha.title} guardar={misProyectos.includes(ficha.id) ? undefined : { snapshot: retrato(ficha), userId: currentUserId }} clienteNombre={ficha.client_name} esPropio={misProyectos.includes(ficha.id)} />
                           </div>
                           <h2 className="mt-0.5 text-2xl font-extrabold leading-tight text-[#162543]">{ficha.title}</h2>

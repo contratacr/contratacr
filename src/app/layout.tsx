@@ -65,7 +65,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
         <style
           data-ccr-tableros=""
           dangerouslySetInnerHTML={{
-            __html: `@media (min-width:1024px){.ccr-panel-tablero{border-style:solid;border-color:#e3ebf2;border-width:0 1px;border-radius:0;box-shadow:none}.ccr-panel-tablero.ccr-con-conteo{border-top-width:1px}.ccr-panel-tablero .ccr-lista-tablero{border-right:1px solid #e3ebf2}}`,
+            __html: `@media (min-width:1024px){.ccr-panel-tablero:not(.ccr-ficha-pagina){border-style:solid;border-color:#e3ebf2;border-width:0 1px;border-radius:0;box-shadow:none}.ccr-panel-tablero.ccr-con-conteo:not(.ccr-ficha-pagina){border-top-width:1px}.ccr-panel-tablero .ccr-lista-tablero{border-right:1px solid #e3ebf2}}`,
           }}
         />
         {/* LOS CARRILES EN COMPUTADORA. En pantalla grande con mouse nadie
