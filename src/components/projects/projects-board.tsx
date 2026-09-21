@@ -629,7 +629,15 @@ export function ProjectsBoard({
                           ficha de un empleo. Aquí el servicio, la zona y la fecha
                           iban sueltos bajo el título y la ficha se quedaba sin el
                           bloque de datos que sí tienen empleos y promociones. */}
-                      <dl className="mt-6 grid gap-3 border-y border-[#e5e7eb] py-5 text-sm sm:grid-cols-2">
+                      {/* UNA LÍNEA, NO DOS. La fila de acciones ya cierra con
+                          su línea; si el bloque de datos abría con otra, quedaban
+                          dos rayas separadas por 24 px de nada —y de dos grises
+                          distintos—. De 1024 px en adelante, donde esa fila
+                          existe, los datos arrancan bajo su línea. En el
+                          teléfono no hay fila de acciones, así que ahí el bloque
+                          sí pone la suya. Es la misma regla que ya usaba la
+                          ficha de un empleo. */}
+                      <dl className="grid gap-3 border-b border-[#e5e7eb] pb-5 pt-5 text-sm sm:grid-cols-2 max-lg:mt-6 max-lg:border-t">
                         {([
                           [copy.filaServicio, ficha.category_name] as [string, string | null],
                           [copy.filaUbicacion, ficha.location_label || copy.todoElPais] as [string, string | null],
