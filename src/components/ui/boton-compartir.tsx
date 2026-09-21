@@ -2,7 +2,7 @@
 
 import { useCallback, useState, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
-import { Link2, Share2 } from "lucide-react";
+import { Share2 } from "lucide-react";
 import { AvisoFlotante } from "@/components/ui/aviso-flotante";
 import { useNativeShare } from "@/hooks/use-native-share";
 import { cn } from "@/lib/utils";
@@ -48,11 +48,17 @@ export function useCompartir() {
  */
 export function BotonCompartir({ url, titulo, onPress, sutil = false, className }: { url?: string; titulo?: string; onPress?: () => void; sutil?: boolean; className?: string }) {
   const t = useTranslations("profile");
-  const tMenu = useTranslations("menuFicha");
-  const nativo = useNativeShare();
   const { compartir, avisoNodo } = useCompartir();
-  // En la computadora el botón copia el enlace, así que lo dice.
-  const rotulo = nativo ? t("share") : tMenu("copyLink");
+  // EL BOTÓN ES SIEMPRE EL MISMO: «Compartir», con su icono.
+  //
+  // Antes decía «Copiar enlace» donde no hay hoja nativa y «Compartir» donde
+  // sí. Pero el servidor no puede saber cuál toca, así que pintaba «Copiar
+  // enlace» y, al hidratar en Safari o en cualquier teléfono, el rótulo y el
+  // icono cambiaban delante de la persona: un botón que parpadea en cada carga.
+  // Lo que cambia según el aparato es lo que PASA al tocarlo —la hoja del
+  // sistema, o copiar el enlace y avisarlo—, no lo que se ve. Es lo mismo que
+  // hace cualquier «Compartir» en computadora: copia y lo dice.
+  const rotulo = t("share");
 
   return (
     <>
@@ -68,7 +74,7 @@ export function BotonCompartir({ url, titulo, onPress, sutil = false, className 
           className,
         )}
       >
-        {nativo ? <Share2 className="h-4 w-4 shrink-0" /> : <Link2 className="h-4 w-4 shrink-0" />}
+        <Share2 className="h-4 w-4 shrink-0" />
         {rotulo}
       </button>
       {avisoNodo}
