@@ -2,8 +2,10 @@
 
 import { useCallback, useEffect, useState, type RefObject } from "react";
 
-// Lo más ancho que puede llegar a medir el degradado del borde.
-const BORDE_MAX = 14;
+// El degradado ancho, el que hace de señal cuando no asoma pastilla.
+const BORDE_MAX = 30;
+// Y el velo fino, cuando la pastilla que asoma ya es señal suficiente.
+const BORDE_SUAVE = 10;
 // Píxeles de la pastilla que asoma que NUNCA se desvanecen. Es la señal de
 // «hay más» en el teléfono —lo que se ve cortado invita a arrastrar—, así que
 // el degradado nunca se la come: solo difumina lo que sobra por detrás.
@@ -26,11 +28,19 @@ function asomo(carril: HTMLElement, lado: "izquierda" | "derecha") {
   return visible;
 }
 
-// Un trozo de pastilla que asoma manda sobre el degradado: el borde se estrecha
-// hasta caber en lo que sobra.
+// DOS SEÑALES, Y SIEMPRE HAY UNA.
+//
+// Si asoma media pastilla, esa media pastilla ya dice «hay más» y el degradado
+// se aparta: apenas un velo para que el corte no sea una línea dura.
+//
+// Si asoma un hilito —o nada, porque el corte cayó justo en el hueco entre dos
+// pastillas—, el degradado se ABRE y toma el relevo. Antes era al revés: se
+// apagaba justo cuando no había pastilla que mostrar, y entonces el carril
+// parecía terminar ahí. Es lo que se veía en Casos de éxito, donde asomaban 12
+// de 100 px y no había ninguna señal.
 function anchoDeBorde(asomado: number) {
-  if (asomado <= 0) return BORDE_MAX;
-  return Math.max(0, Math.min(BORDE_MAX, Math.round(asomado - SOLIDO_MIN)));
+  if (asomado >= SOLIDO_MIN) return BORDE_SUAVE;
+  return BORDE_MAX;
 }
 
 /**
