@@ -503,13 +503,17 @@ export function ProjectsBoard({
           <div className="mx-auto w-full max-w-7xl px-0 py-0 sm:max-w-[46rem] sm:px-6 sm:py-5 lg:max-w-7xl lg:min-h-0 lg:flex-1 lg:px-6 lg:py-0">
             <div className={cn(
               "ccr-panel-tablero sm:overflow-hidden sm:rounded-[22px] sm:border sm:border-[#e5e7eb] sm:bg-white sm:shadow-[0_12px_34px_-28px_rgba(15,23,42,0.55)] lg:h-full",
-              filtrados.length > 0 && "lg:grid lg:grid-cols-[minmax(340px,440px)_minmax(0,1fr)] xl:grid-cols-[380px_minmax(0,1fr)]",
+              // UNA DIRECCIÓN PROPIA ABRE UNA PÁGINA PROPIA, como en Empleos y
+              // Promociones: /proyectos/[id] muestra SOLO el proyecto, también
+              // en computadora. Con la lista al lado, «Ver proyecto» desde el
+              // panel devolvía al tablero con algo seleccionado, no a la ficha.
+              !detalle && filtrados.length > 0 && "lg:grid lg:grid-cols-[minmax(340px,440px)_minmax(0,1fr)] xl:grid-cols-[380px_minmax(0,1fr)]",
               fichaEnMovil && "max-sm:overflow-visible max-sm:border-0 max-lg:rounded-none max-lg:border-0 max-lg:bg-transparent max-lg:shadow-none",
             )}>
               <section className={cn(
                 "min-w-0 bg-white lg:h-full lg:overflow-y-auto",
                 filtrados.length > 0 && "ccr-lista-tablero",
-                fichaEnMovil && "max-lg:hidden",
+                detalle && "hidden",
               )}>
                 {/* El conteo va DENTRO de la lista, con su línea, igual que en
                     Empleos: solo cuando se buscó o se filtró. */}
@@ -558,9 +562,12 @@ export function ProjectsBoard({
                   "min-w-0 lg:h-full lg:overflow-y-auto lg:bg-white",
                   !fichaEnMovil && "max-lg:hidden",
                   // Sin resultados en la lista, la ficha abierta ocupa todo.
-                  filtrados.length === 0 && "lg:col-span-2",
+                  (filtrados.length === 0 || detalle) && "lg:col-span-2",
                 )}>
-                  <div className="mx-auto w-full max-w-3xl px-0 pt-0 sm:px-6 sm:pb-10 lg:max-w-none lg:p-0">
+                  {/* Sin la lista al lado, la ficha no se estira a lo ancho de
+                      la pantalla: el ancho de lectura se queda, como en la
+                      página de un empleo. */}
+                  <div className={cn("mx-auto w-full max-w-3xl px-0 pt-0 sm:px-6 sm:pb-10", !detalle && "lg:max-w-none lg:p-0")}>
                     <article className="relative bg-white px-5 pt-6 max-sm:pb-6 sm:p-7">
                       {/* En computadora no hay barra de ficha: guardar y compartir
                           van en la esquina, a la altura del título, como en Empleos. */}
@@ -591,7 +598,7 @@ export function ProjectsBoard({
                               <span className="shrink-0 rounded-full bg-[#eaf7fc] px-2.5 py-0.5 text-xs font-bold text-[#0089bb]">{copy.tuyo}</span>
                             )}
                             <span className="flex-1" />
-                            <MenuProyecto grande className="-my-2.5 -mr-2 hidden shrink-0 lg:block" proyectoId={ficha.id} titulo={ficha.title} clienteNombre={ficha.client_name} esPropio={misProyectos.includes(ficha.id)} />
+                            <MenuProyecto grande className="-my-2.5 -mr-2 hidden shrink-0 lg:block" proyectoId={ficha.id} titulo={ficha.title} guardar={misProyectos.includes(ficha.id) ? undefined : { snapshot: retrato(ficha), userId: currentUserId }} clienteNombre={ficha.client_name} esPropio={misProyectos.includes(ficha.id)} />
                           </div>
                           <h2 className="mt-0.5 text-2xl font-extrabold leading-tight text-[#162543]">{ficha.title}</h2>
                           {/* El rubro se toca y filtra: «ver más de esto» sin
