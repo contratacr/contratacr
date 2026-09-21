@@ -133,6 +133,10 @@ export default async function LocaleLayout({
   // persona y cambiarlo medio segundo después.
   let initialAccountName: string | null | undefined;
   const initialNotificationUnread = { offer: 0, use: 0, neutral: 0 };
+  // `null` = no se pudo saber. La barra necesita distinguirlo de «no es
+  // profesional»: con un `false` inventado pintaría «Ofrecer mis servicios» a
+  // quien sí tiene ficha, y tendría que quitarlo después.
+  let initialHasProfessionalProfile: boolean | null = null;
   if (supabase && initialUser) {
     try {
       const [{ data }, { data: unreadNotifications }, { data: professionalRow }] = await withPromiseTimeout(Promise.all([
@@ -154,6 +158,7 @@ export default async function LocaleLayout({
       ]), 6_000, "layout-account-bootstrap-timeout");
       initialAvatarUrl = (data?.avatar_url as string | null | undefined) ?? null;
       initialAccountName = String((professionalRow as { business_name?: string } | null)?.business_name ?? "").trim() || null;
+      initialHasProfessionalProfile = !!professionalRow;
       for (const notification of unreadNotifications ?? []) {
         const context = notificationContext(notification.type as string);
         if (context === "professional") initialNotificationUnread.offer++;
@@ -172,7 +177,7 @@ export default async function LocaleLayout({
       <GlobalActionLoading />
       <GlobalDataRefresh />
       <RouteScrollReset />
-      <AuthProvider initialUser={initialUser} initialAvatarUrl={initialAvatarUrl} initialAccountName={initialAccountName} initialNotificationUnread={initialNotificationUnread}>
+      <AuthProvider initialUser={initialUser} initialAvatarUrl={initialAvatarUrl} initialAccountName={initialAccountName} initialNotificationUnread={initialNotificationUnread} initialHasProfessionalProfile={initialHasProfessionalProfile}>
         <DocumentLocale locale={locale} />
         <EmojiBlocker />
         <ViewportEnvironment />

@@ -966,7 +966,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   const nativeMessageUnread = useDirectMessageUnread(nativeApp);
   const [hydrated, setHydrated] = useState(false);
   const nativeHeaderShell = hydrated && nativeApp;
-  const { user, loading: authLoading, accountName } = useAuth();
+  const { user, loading: authLoading, accountName, hasProfessionalProfile: fichaProDelServidor } = useAuth();
   const nativeSearchRoute = /(^|\/)buscar(?:\/|$)/.test(pathname ?? "");
   // Search is a full-viewport map + results sheet. Do not merely hide the nav
   // with CSS: leaving it mounted keeps its layout class and safe-area reserve
@@ -975,13 +975,32 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   const enMensajes = /(^|\/)mensajes(?:\/|$)/.test(pathname ?? "");
   const enNotificaciones = /(^|\/)notificaciones(?:\/|$)/.test(pathname ?? "");
   const nativeFullscreenRoute = /(^|\/)(?:publicar-proyecto|(?:empleos|ofertas)\/publicar)(?:\/|$)/.test(pathname ?? "");
+  // LA PRIMERA PINTURA YA SABE SI ESTA CUENTA OFRECE SERVICIOS.
+  //
+  // Esto decidía «Ofrecer mis servicios» y se resolvía con una consulta desde
+  // el navegador: el enlace aparecía de golpe ~300 ms después de pintar. Había
+  // un hueco reservado para que no saltara la fila, pero el texto seguía
+  // apareciendo solo —que es lo que se ve como parpadeo—. El servidor ya
+  // consulta `professionals` en el layout para sacar el nombre del negocio, así
+  // que la respuesta viaja con la página y la barra nace correcta. La consulta
+  // de abajo sigue, para corregir el papel (admin) y si algo cambió.
   const [accountCapability, setAccountCapability] = useState<{
     userId: string;
     role: string | null;
     hasProfessionalProfile: boolean;
     capabilityKnown: boolean;
     businessName: string;
-  } | null>(null);
+  } | null>(() =>
+    user && fichaProDelServidor !== null
+      ? {
+          userId: user.id,
+          role: null,
+          hasProfessionalProfile: fichaProDelServidor,
+          capabilityKnown: true,
+          businessName: accountName ?? "",
+        }
+      : null,
+  );
   // Depending on whether this render comes from an i18n client transition or a
   // hard refresh, usePathname can expose the home route as `/` or with its
   // locale prefix (`/es`, `/en`). Treat all three as home so the compact search

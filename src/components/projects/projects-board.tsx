@@ -468,13 +468,21 @@ export function ProjectsBoard({
 
       <div className="relative z-30 hidden shrink-0 border-b border-[#e5e7eb] bg-white lg:block">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-6 py-2.5">
-          <div className="flex shrink-0 items-baseline gap-2 border-r border-[#e5e7eb] pr-4">
+          <div className={cn("flex shrink-0 items-baseline gap-2", filtros && "border-r border-[#e5e7eb] pr-4")}>
             {/* El nombre de la pantalla, a la vista: antes era solo para lectores
                 de pantalla y la barra arrancaba en frío con los filtros —quien
-                llegaba de Google no sabía en qué sección estaba—. Al lado, cuántos
-                hay; con búsqueda o filtros, cuántos quedaron. */}
+                llegaba de Google no sabía en qué sección estaba—.
+                EL CONTEO SOLO CUANDO DICE ALGO: «cuántos quedaron» tras buscar o
+                filtrar. Sin filtros es el inventario entero, un dato que no le
+                sirve a nadie y que le compite al título; en el teléfono ya se
+                hacía así y en computadora no. Y la raya divisoria solo si hay
+                filtros al otro lado: sin ellos separaba el título de la nada. */}
             <h1 className="text-[17px] font-extrabold text-[#162543]">{copy.titulo}</h1>
-            <span className="text-[13px] font-semibold tabular-nums text-[#68778d]">{filtrados.length}{lugar.trim() ? ` · ${lugar.trim()}` : ""}</span>
+            {(query.trim() || lugar.trim()) && filtrados.length > 0 && (
+              <span className="text-[13px] font-semibold text-[#68778d]">
+                {copy.cuenta(filtrados.length)}{lugar.trim() ? ` · ${lugar.trim()}` : ""}
+              </span>
+            )}
           </div>
           {filtros && <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2 overflow-visible">{filtros}</div>}
           <div className="flex shrink-0 gap-2">{acciones}</div>
@@ -515,7 +523,14 @@ export function ProjectsBoard({
                   // El MISMO vacío que Empleos y Promociones: plano, mismo
                   // texto y una salida. Este decía «Probá otra búsqueda» —el
                   // único en voseo del app— y no ofrecía cómo volver.
+                  // En computadora la lista ocupa el alto entero de la pantalla:
+                  // con el vacío midiendo sus 20rem de siempre, el aviso quedaba
+                  // arriba de una losa blanca enorme y parecía que la página se
+                  // había cortado. Ocupando el alto disponible se centra, que es
+                  // lo que hace que un vacío se lea como una respuesta y no como
+                  // un error de dibujo.
                   <PanelEmptyState
+                    className="lg:min-h-full"
                     plano
                     icon={ClipboardList}
                     title={proyectos.length === 0 ? copy.vacio : copy.sinResultados}
