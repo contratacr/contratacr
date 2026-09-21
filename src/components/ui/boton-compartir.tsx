@@ -2,7 +2,7 @@
 
 import { useCallback, useState, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
-import { Share2 } from "lucide-react";
+import { Link2, Share2 } from "lucide-react";
 import { AvisoFlotante } from "@/components/ui/aviso-flotante";
 import { useNativeShare } from "@/hooks/use-native-share";
 import { cn } from "@/lib/utils";
@@ -48,25 +48,28 @@ export function useCompartir() {
  */
 export function BotonCompartir({ url, titulo, onPress, sutil = false, className }: { url?: string; titulo?: string; onPress?: () => void; sutil?: boolean; className?: string }) {
   const t = useTranslations("profile");
+  const tMenu = useTranslations("menuFicha");
   const { compartir, avisoNodo } = useCompartir();
-  // EL BOTÓN ES SIEMPRE EL MISMO: «Compartir», con su icono.
+  // DICE LO QUE VA A HACER, Y NO PARPADEA. En computadora no hay hoja del
+  // sistema: el botón copia el enlace, así que dice «Copiar enlace», como
+  // LinkedIn. En el teléfono abre la hoja y dice «Compartir».
   //
-  // Antes decía «Copiar enlace» donde no hay hoja nativa y «Compartir» donde
-  // sí. Pero el servidor no puede saber cuál toca, así que pintaba «Copiar
-  // enlace» y, al hidratar en Safari o en cualquier teléfono, el rótulo y el
-  // icono cambiaban delante de la persona: un botón que parpadea en cada carga.
-  // Lo que cambia según el aparato es lo que PASA al tocarlo —la hoja del
-  // sistema, o copiar el enlace y avisarlo—, no lo que se ve. Es lo mismo que
-  // hace cualquier «Compartir» en computadora: copia y lo dice.
-  const rotulo = t("share");
+  // Las dos caras se pintan SIEMPRE y elige el CSS (ver `data-ccr-compartir` en
+  // layout.tsx). Decidirlo con `navigator.share` —que solo existe en el
+  // navegador— hacía que el rótulo y el icono cambiaran al hidratar, en cada
+  // carga. La acción sigue mirando si hay hoja en el momento del toque, que es
+  // cuando importa.
+  const rotuloRaton = tMenu("copyLink");
+  const rotuloDedo = t("share");
 
   return (
     <>
       <button
         type="button"
         onClick={() => { if (onPress) { onPress(); return; } if (url) void compartir(url, titulo); }}
-        aria-label={rotulo}
-        title={rotulo}
+        // Para lectores de pantalla, la acción en una sola palabra: no pueden
+        // «ver» cuál de las dos caras está visible.
+        aria-label={rotuloDedo}
         className={cn(
           sutil
             ? "inline-flex h-9 items-center gap-1.5 rounded-lg px-2.5 text-[13px] font-bold text-[#52627a] transition-colors duration-200 hover:bg-[#eef3f8] hover:text-[#162543]"
@@ -74,8 +77,14 @@ export function BotonCompartir({ url, titulo, onPress, sutil = false, className 
           className,
         )}
       >
-        <Share2 className="h-4 w-4 shrink-0" />
-        {rotulo}
+        <span className="ccr-compartir-dedo inline-flex items-center gap-[inherit]">
+          <Share2 className="h-4 w-4 shrink-0" />
+          {rotuloDedo}
+        </span>
+        <span className="ccr-compartir-raton">
+          <Link2 className="h-4 w-4 shrink-0" />
+          {rotuloRaton}
+        </span>
       </button>
       {avisoNodo}
     </>

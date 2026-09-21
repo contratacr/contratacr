@@ -99,6 +99,22 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
             lo vuelve invisible. Va aquí y no en clases para que no dependa de
             ningún estado ni de ningún efecto: si hubiera un segundo render,
             sería un segundo parpadeo. */}
+        {/* COMPARTIR DICE LO QUE VA A HACER, Y NO PARPADEA.
+            En computadora no existe la hoja del sistema: el botón copia el
+            enlace, así que tiene que decir «Copiar enlace», como LinkedIn. En
+            el teléfono abre la hoja y dice «Compartir». El servidor no puede
+            saber cuál toca —`navigator.share` solo existe en el navegador—, y
+            decidirlo al hidratar hacía que el rótulo y el icono cambiaran
+            delante de la persona en cada carga.
+            Por eso se pintan LAS DOS y elige el CSS, con la misma condición que
+            el resto del app usa para «esto es una computadora»: que haya ratón.
+            Así el servidor manda las dos caras y nunca cambia nada después. */}
+        <style
+          data-ccr-compartir=""
+          dangerouslySetInnerHTML={{
+            __html: `.ccr-compartir-raton{display:none}@media (hover:hover) and (pointer:fine){.ccr-compartir-dedo{display:none}.ccr-compartir-raton{display:inline-flex;align-items:center;gap:inherit}}`,
+          }}
+        />
         <style
           data-ccr-gemelo=""
           dangerouslySetInnerHTML={{
