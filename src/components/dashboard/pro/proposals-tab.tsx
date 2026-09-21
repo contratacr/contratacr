@@ -1,6 +1,7 @@
 "use client";
 
 import { QuoteBlock } from "@/components/quotes/quote-block";
+import { noInsistirArriba } from "@/lib/ir-al-inicio";
 import { cargarCotizaciones } from "@/lib/quotes-store";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -220,7 +221,7 @@ export function ProposalsTab({ categoryId }: ProposalsTabProps) {
       const id = window.setTimeout(() => {
         if (mine) { setStage("respondidas"); setExpandedMine(mine.id); }
         else { setStage("nuevas"); setDismissed((prev) => { if (!prev.has(projectId)) return prev; const n = new Set(prev); n.delete(projectId); return n; }); setExpandedProject(projectId); }
-        window.setTimeout(() => document.getElementById(`project-${projectId}`)?.scrollIntoView({ block: "center", behavior: "smooth" }), 120);
+        window.setTimeout(() => { noInsistirArriba(); return document.getElementById(`project-${projectId}`)?.scrollIntoView({ block: "center", behavior: "smooth" }); }, 120);
       }, 0);
       return () => window.clearTimeout(id);
     }

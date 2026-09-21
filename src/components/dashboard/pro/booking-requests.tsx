@@ -1,6 +1,7 @@
 "use client";
 
 import { QuoteBlock } from "@/components/quotes/quote-block";
+import { noInsistirArriba } from "@/lib/ir-al-inicio";
 import { cargarCotizaciones } from "@/lib/quotes-store";
 
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -211,7 +212,7 @@ export function BookingRequests() {
     const id = window.setTimeout(() => {
       setFilter(solicitudBucketPro(booking.status, booking.scheduled_date));
       setExpandedId(bookingId);
-      window.setTimeout(() => document.getElementById(`booking-${bookingId}`)?.scrollIntoView({ block: "center", behavior: "smooth" }), 80);
+      window.setTimeout(() => { noInsistirArriba(); return document.getElementById(`booking-${bookingId}`)?.scrollIntoView({ block: "center", behavior: "smooth" }); }, 80);
     }, 0);
     return () => window.clearTimeout(id);
   }, [bookings, loadBookings, searchParams]);

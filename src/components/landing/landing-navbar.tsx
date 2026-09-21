@@ -7,7 +7,7 @@ import {
   X, Menu, ChevronDown, ChevronRight, Search, MapPin, List, Map as MapIcon, ArrowLeft, Share2, Bot, ReceiptText,
   Briefcase, Compass, Wrench,
   UserRound, UserRoundPlus, LogOut, FileText, MessageSquareText, Settings, Bell, MoreHorizontal,
-  HelpCircle, ListChecks, Lightbulb, Headset, Globe2, Shield, Mail, ClipboardList, Clock, Bookmark, CircleUserRound } from "lucide-react";
+  HelpCircle, ListChecks, Lightbulb, Headset, Globe2, Shield, Mail, ClipboardList, Clock, Bookmark } from "lucide-react";
 import { Link, useRouter, usePathname } from "@/i18n/navigation";
 import { readRecentVisits, clearRecentVisits, leerBusquedasRecientesConFecha, guardarBusquedaReciente, olvidarBusquedaReciente, olvidarBusquedasRecientes, removeRecentVisit, type BusquedaReciente, type RecentVisit } from "@/lib/recent-visits";
 import { useSearchParams } from "next/navigation";
@@ -746,7 +746,10 @@ export function HeaderAccountLink() {
       data-acceso-cabecera
       className="relative grid h-10 w-10 shrink-0 place-items-center rounded-xl text-[#1A2744] transition-colors hover:bg-[#f3f4f6] hover:text-[#009FD9]"
     >
-      <CircleUserRound className="h-6 w-6" strokeWidth={1.75} />
+      {/* La silueta a secas, sin el aro: es el mismo dibujo que ya usa el menú
+          («Iniciar sesión») y la barra de la app, así que la cuenta se reconoce
+          igual en los tres sitios. Con aro parecía un avatar cargado. */}
+      <UserRound className="h-[22px] w-[22px]" strokeWidth={1.9} />
     </Link>
   );
 }

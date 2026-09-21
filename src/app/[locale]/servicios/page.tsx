@@ -12,6 +12,7 @@ import { CategorySuggestionBox } from "@/components/ui/category-suggestion";
 import { Link, useRouter } from "@/i18n/navigation";
 import { useCustomCategories } from "@/lib/data/use-custom-categories";
 import { useNativeApp } from "@/hooks/use-native-app";
+import { useAuth } from "@/hooks/use-auth";
 import { categorySearchScore, getAllCategories, getAllCategoryGroups, getCategoryGroupLabel, getCategoryLabel, isOtherCategoryGroup, normalizeText, searchCategories, getCategoryGroupId } from "@/lib/data/categories";
 import { getCategoryGroupIcon } from "@/lib/data/category-group-visuals";
 import {
@@ -29,6 +30,7 @@ export default function ServiciosPage() {
   const tp = useTranslations("categoriesPage");
   const locale = useLocale();
   const nativeApp = useNativeApp();
+  const { user: usuario, loading: sesionCargando } = useAuth();
   const router = useRouter();
   const customCategories = useCustomCategories();
   const [query, setQuery] = useState("");
@@ -198,7 +200,12 @@ export default function ServiciosPage() {
                       label={tp("notifications")}
                     />
                   ) : (
-                    <HeaderAccountLink />
+                    /* El acceso SOLO sin sesión. Esta cabecera es propia de la
+                       pantalla —no la barra—, así que no se enteraba de la
+                       sesión y enseñaba la silueta de «Iniciar sesión» a quien
+                       ya estaba dentro. Mientras la sesión se resuelve no se
+                       pinta nada: evita que el icono aparezca y desaparezca. */
+                    !sesionCargando && !usuario && <HeaderAccountLink />
                   )}
                 </div>
               </div>

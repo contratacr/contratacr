@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { recoverBodyScrollLock } from "@/lib/body-scroll-lock";
+import { irAlInicio } from "@/lib/ir-al-inicio";
 
 /**
  * Client-side navigation keeps the browser document alive, so an old page's
@@ -17,8 +18,7 @@ export function RouteScrollReset() {
     if (window.location.hash) return;
     const frame = window.requestAnimationFrame(() => {
       recoverBodyScrollLock();
-      document.scrollingElement?.scrollTo({ top: 0, left: 0, behavior: "instant" });
-      window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+      irAlInicio();
     });
     return () => window.cancelAnimationFrame(frame);
   }, [pathname]);

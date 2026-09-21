@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { noInsistirArriba } from "@/lib/ir-al-inicio";
 
 // Keeps CSS aware of the *visual* viewport. Mobile browsers can leave the layout
 // viewport unchanged while the keyboard covers the screen, so fixed sheets that
@@ -39,6 +40,9 @@ export function ViewportEnvironment() {
       if (active.closest(".ccr-support-thread, .direct-chat-shell--thread")) return;
       const rect = active.getBoundingClientRect();
       if (rect.top >= visibleTop && rect.bottom <= visibleBottom) return;
+      // El campo enfocado manda sobre «estrenar arriba»: si el teclado acaba de
+      // abrirse, lo que importa es ver dónde se escribe.
+      noInsistirArriba();
       active.scrollIntoView({ block: "center", inline: "nearest", behavior: "smooth" });
     };
 

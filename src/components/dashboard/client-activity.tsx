@@ -1,6 +1,7 @@
 "use client";
 
 import { QuoteBlock } from "@/components/quotes/quote-block";
+import { noInsistirArriba } from "@/lib/ir-al-inicio";
 import { cargarCotizaciones } from "@/lib/quotes-store";
 
 import { Fragment, useCallback, useEffect, useRef, useState, type ReactNode } from "react";
@@ -323,7 +324,7 @@ export function ClientActivity({ section, onCount }: { section: ClientActivitySe
     const id = window.setTimeout(() => {
       setBookingFilter(solicitudBucket(booking.status, booking.scheduled_date));
       setExpandedBooking(bookingId);
-      window.setTimeout(() => document.getElementById(`booking-${bookingId}`)?.scrollIntoView({ block: "center", behavior: "smooth" }), 80);
+      window.setTimeout(() => { noInsistirArriba(); return document.getElementById(`booking-${bookingId}`)?.scrollIntoView({ block: "center", behavior: "smooth" }); }, 80);
     }, 0);
     return () => window.clearTimeout(id);
   }, [bookings, fetchSection, searchParams, section]);
@@ -351,7 +352,7 @@ export function ClientActivity({ section, onCount }: { section: ClientActivitySe
       setProjectFilter(proyectoBucket(project.status));
       void loadProposals(projectId);
       setExpandedProject(projectId);
-      window.setTimeout(() => document.getElementById(`project-${projectId}`)?.scrollIntoView({ block: "center", behavior: "smooth" }), 80);
+      window.setTimeout(() => { noInsistirArriba(); return document.getElementById(`project-${projectId}`)?.scrollIntoView({ block: "center", behavior: "smooth" }); }, 80);
     }, 0);
     return () => window.clearTimeout(id);
     // `loadProposals` reads the current proposals map; targetProjectHandledRef prevents repeat opens.

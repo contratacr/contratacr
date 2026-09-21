@@ -1,6 +1,6 @@
 "use client";
 
-import { irAlInicio } from "@/lib/ir-al-inicio";
+import { irAlInicio, noInsistirArriba } from "@/lib/ir-al-inicio";
 import { useState, useRef, useEffect } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
@@ -248,6 +248,8 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
       return new Set(prev).add(sec);
     }), 0) : null;
     const tmr = setTimeout(() => {
+      // Aquí NO se quiere estrenar arriba: se quiere llegar al campo que falta.
+      if (!SECTION_TOP_COMPLETION_FIELDS.has(focusField)) noInsistirArriba();
       const section = sec ? document.getElementById(`sec-${sec}`) : null;
       const shouldOpenAtSectionTop = SECTION_TOP_COMPLETION_FIELDS.has(focusField);
       const el = shouldOpenAtSectionTop ? null : document.querySelector(`[data-field="${focusField}"]`);

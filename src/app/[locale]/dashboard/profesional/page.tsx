@@ -1,5 +1,6 @@
 "use client";
 import { useAppDialog } from "@/hooks/use-app-dialog";
+import { irAlInicio } from "@/lib/ir-al-inicio";
 import { enlacePerfil } from "@/lib/profile-url";
 import { EMPLEOS_VISIBLE } from "@/lib/feature-flags";
 
@@ -922,8 +923,7 @@ export default function DashboardPage() {
     const previous = previousDashboardTabRef.current;
     previousDashboardTabRef.current = activeTab;
     if (previous === null || previous === activeTab) return;
-    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
-    document.querySelector("main")?.scrollTo({ top: 0, left: 0, behavior: "instant" });
+    irAlInicio();
   }, [activeTab]);
 
   useEffect(() => {
@@ -1346,24 +1346,10 @@ export default function DashboardPage() {
     };
   }, [authLoading, clearOpportunityWelcomeParam, loading, opportunityWelcomeParamCount, pro, shouldCheckOpportunityWelcome, user]);
 
-  function scrollDashboardToPageTop() {
-    const scrollTop = () => {
-      // «instant», no «auto»: `auto` significa «lo que diga el CSS», y el CSS
-      // dice `scroll-behavior: smooth` para los enlaces internos. Por eso abrir
-      // una sección se veía subir en lugar de abrir arriba. Las asignaciones a
-      // `scrollTop` también obedecían al CSS, así que se van.
-      window.scrollTo({ top: 0, left: 0, behavior: "instant" });
-      // El panel también desplaza su propio cuerpo en algunos anchos: moviendo
-      // solo la ventana, la sección abría a media altura.
-      document.querySelector("main.ccr-dashboard-main")?.scrollTo({ top: 0, left: 0, behavior: "instant" });
-    };
-
-    scrollTop();
-    requestAnimationFrame(() => {
-      scrollTop();
-      requestAnimationFrame(scrollTop);
-    });
-  }
+  // Una sola forma de estrenar arriba en toda la app: `irAlInicio()`. Aquí
+  // había una copia propia que solo repetía el `scrollTo` en dos cuadros, y eso
+  // no bastaba contra la inercia de WebKit ni contra el candado del cuerpo.
+  const scrollDashboardToPageTop = irAlInicio;
 
   // CADA SECCIÓN ABRE ARRIBA DEL TODO. El botón del menú ya lo hacía, pero
   // llegar por un enlace (un aviso, la barra de abajo, atrás/adelante) no, y la
