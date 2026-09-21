@@ -452,19 +452,6 @@ export function StatusFilterTabs({
   );
 }
 
-// ONE consistent set everywhere (sprint 430): bookings AUTO-CONFIRM and published
-// solicitudes are simply live until they finish, so there is no real "Pendiente"
-// stage anymore. The three lifecycles (bookings, published projects, a pro's
-// proposals) all use **Activas · Finalizadas · Canceladas** — "Activas" replaces the
-// old "Confirmadas"/"Pendientes" (an active/ongoing item), so the names match the
-// auto-confirm reality and read the same across Solicitudes and Proyectos.
-// Solicitudes publicadas (proyectos): la app ya no asigna ni confirma — una
-// solicitud está viva hasta que el cliente la resuelve o la cancela.
-export const PROYECTO_TABS: readonly FilterTab[] = [
-  { id: "activas" },
-  { id: "finalizadas" },
-  { id: "canceladas" },
-];
 // Lo que puede tomar, lo que está en juego y lo que ya se cerró. Sin la tercera,
 // "Mis propuestas" mezclaba las vivas con trabajos terminados de hace meses.
 // Cuatro etapas, con el mismo vocabulario que Citas: lo que terminó bien y lo
@@ -522,17 +509,8 @@ export function solicitudMatches(filter: string, status: string, scheduledDate?:
 }
 
 // ── PROYECTOS (a CLIENT's published project) ────────────────────────────────
-// open (receiving proposals) → Pendientes; assigned/in progress → Confirmadas;
-// completed → Finalizadas; cancelled → Canceladas.
-export function proyectoBucket(status: string): string {
-  if (status === "cancelled") return "canceladas";
-  if (status === "completed") return "finalizadas";
-  // open, y los estados heredados in_progress / awaiting_confirmation: sigue viva.
-  return "activas";
-}
-export function proyectoMatches(filter: string, status: string): boolean {
-  return proyectoBucket(status) === filter;
-}
+// Sin etapas propias: un proyecto publicado se mira como un empleo o una
+// promoción —está a la vista o no—, ver `proyectoPublicacionBucket`.
 
 /**
  * UN PROYECTO SE MIRA COMO UN EMPLEO O UNA PROMOCIÓN: está a la vista o no.
@@ -591,13 +569,6 @@ const SOLICITUD_PRIMARY: Record<string, string[]> = {
 };
 export function solicitudStatusRedundant(status: string, scheduledDate?: string | null): boolean {
   return SOLICITUD_PRIMARY[solicitudBucket(status, scheduledDate)]?.includes(status) ?? false;
-}
-const PROYECTO_PRIMARY: Record<string, string[]> = {
-  activas: ["open", "in_progress", "awaiting_confirmation"],
-  finalizadas: [],
-};
-export function proyectoStatusRedundant(status: string): boolean {
-  return PROYECTO_PRIMARY[proyectoBucket(status)]?.includes(status) ?? false;
 }
 export function proposalStatusRedundant(proposalStatus: string, projectStatus?: string | null): boolean {
   // La única insignia útil es la de la solicitud (resuelta / cancelada / te eligió).
