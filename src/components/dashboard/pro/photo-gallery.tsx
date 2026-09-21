@@ -293,7 +293,16 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
           // "des-selecciona" (eso saltaba al primer servicio sin pedirlo).
           onChange={(id) => { if (id) setActiveProf(id); }}
           labelFor={label}
-          siempreCarril
+          // LA MISMA ELECCIÓN, EL MISMO CONTROL. Elegir a qué servicio pertenece
+          // un caso se hacía con pastillas de contorno dentro del formulario y
+          // con una barra segmentada gris en la sección: dos dibujos para lo
+          // mismo, a dos palmos de distancia. Las pastillas ganan porque esto no
+          // es una etapa de una misma lista —eso sí es una barra segmentada—
+          // sino un servicio entre varios. Y de paso traen la regla buena para
+          // computadora: se envuelven en más líneas en vez de esconderse a la
+          // derecha (ver `.ccr-carril-chips` en layout.tsx).
+          variant="chips"
+          limpiable={false}
         />
       )}
 
@@ -407,12 +416,17 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
             {professions.length > 1 && (
               <div>
                 <label className="mb-1.5 block text-sm font-medium text-[#374151]">{t("caseProfession")} <span className="text-red-500">*</span></label>
-                {/* Un carril, no una parrilla que se envuelve: con tres o más
-                    servicios la fila crecía hacia abajo y empujaba el resto del
-                    formulario. En carril, el siguiente asoma con el degradado y
-                    dice que hay más a la derecha. */}
+                {/* EN EL TELÉFONO, CARRIL; EN COMPUTADORA, SE ENVUELVE.
+                    Con el dedo, la fila se arrastra y el servicio siguiente
+                    asoma cortado: esa es la señal, y no gasta alto. Con el
+                    ratón no hay gesto de arrastre, así que un desbordamiento
+                    horizontal esconde opciones detrás de una interacción que
+                    nadie espera en computadora: ahí la fila pasa a más líneas.
+                    Las dos cosas las decide `.ccr-carril-chips` en el
+                    documento, con la misma condición que el resto de los
+                    carriles del app (pantalla ancha Y ratón). */}
                 {(
-                  <ScrollRail className="flex gap-2 pb-0.5">
+                  <ScrollRail className="ccr-carril-chips flex gap-2 pb-0.5">
                     {professions.map((p) => {
                       const elegido = draft.profession === p;
                       return (
