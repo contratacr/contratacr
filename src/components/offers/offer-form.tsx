@@ -426,7 +426,7 @@ export function OfferForm({ professionalId, serviceOptions, backHref = "/ofertas
           <h1 className={cn(CABECERA_TITULO, "text-center")}>{editing ? copy.editTitle : copy.publishTitle}</h1>
         </div>
       </header>
-      <div className={presentation === "modal" ? "mx-auto max-w-3xl px-4 py-5" : "mx-auto max-w-3xl px-4 py-5 sm:px-6 lg:px-0 lg:py-0"}>
+      <div className={presentation === "modal" ? "mx-auto max-w-3xl px-4 pt-5 pb-5 sm:pb-0" : "mx-auto max-w-3xl px-4 py-5 sm:px-6 lg:px-0 lg:py-0"}>
         <div className={presentation === "modal" ? "hidden" : "mb-4 hidden items-center justify-between gap-4 rounded-lg border border-[#e5e7eb] bg-white px-4 py-3 shadow-sm lg:flex"}>
           <Link href={backHref} aria-label={copy.backToOffers} className="inline-flex h-10 items-center gap-2 rounded-lg px-2 text-sm font-extrabold text-[#162543] transition hover:bg-[#f1f9fc] hover:text-[#008fc3]"><ArrowLeft className="h-5 w-5 stroke-[2.4]" />{copy.backToOffers}</Link>
           <div className="min-w-0 flex-1 text-center"><h1 className="truncate text-xl font-extrabold">{editing ? copy.editTitle : copy.publishTitle}</h1><p className="truncate text-sm text-[#65758c]">{copy.subtitle}</p></div>
@@ -639,7 +639,13 @@ export function OfferForm({ professionalId, serviceOptions, backHref = "/ofertas
             // gris a cada lado.
             BARRA_ACCION_FIJA,
             "z-20 max-sm:fixed max-sm:inset-x-0 max-sm:bottom-0 sm:sticky sm:bottom-0 sm:-mx-4 sm:mt-5 sm:flex sm:justify-end sm:px-6 sm:pb-4",
-            presentation === "modal" ? "sm:-mx-10" : "sm:-mx-6",
+            // El pie llega a los bordes de la VENTANA: el margen negativo tiene
+            // que valer exactamente lo que el envoltorio mete por los lados. Eran
+            // 40 px cuando el cuerpo de la ventana ponía 24 y el envoltorio 16;
+            // desde que el cuerpo respeta el `px-0` que pide esta pantalla, son
+            // los 16 del envoltorio y nada más. Con 40 el pie sobresalía 24 px,
+            // la ventana lo recortaba y los botones se veían corridos.
+            presentation === "modal" ? "sm:-mx-4" : "sm:-mx-6",
           )}>
             {/* En una ventana, la salida acompaña a la acción: cerrar un
                 formulario largo sin querer cuesta caro. En la página propia no
