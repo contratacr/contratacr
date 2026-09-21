@@ -414,7 +414,7 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
       </div>
     )}
     {detailOnly && selected && (
-      <div className="mx-auto hidden w-full max-w-[84rem] px-6 pb-8 pt-8 lg:block">
+      <div className="mx-auto hidden w-full max-w-7xl px-6 pb-8 pt-8 lg:block">
         {/* Ver la nota de la ficha de una promoción: en computadora la flecha
             de atrás la pone el navegador, así que este enlace solo sale cuando
             el navegador NO puede ayudar —se llegó de fuera y su flecha saca del
@@ -692,7 +692,7 @@ function JobPreview({ job, isOwner, userId, onEdit, mobile = false, hideActions 
       </AccionesAlPie>
     ))}
     <dl className={`grid gap-3 border-[#e5e7eb] text-sm sm:grid-cols-2 ${!mobile && !hideActions ? "mt-0 border-b pb-5 pt-5" : "mt-6 border-y py-5"}`}>{detailRows.map(([label, value]) => <div key={label} className="min-w-0"><dt className="text-xs font-bold uppercase tracking-wide text-[#7a899d]">{label}</dt><dd className="mt-0.5 break-words font-bold text-[#162543] [overflow-wrap:anywhere]">{value}</dd></div>)}</dl>
-    <section className="mt-7"><h3 className="text-lg font-bold">{copy.about}</h3><p className="max-w-[68ch] mt-3 whitespace-pre-line break-words text-sm leading-7 text-[#43536b] [overflow-wrap:anywhere]">{job.description}</p></section>
+    <section className="mt-7"><h3 className="text-lg font-bold">{copy.about}</h3><p className="max-w-3xl mt-3 whitespace-pre-line break-words text-sm leading-7 text-[#43536b] [overflow-wrap:anywhere]">{job.description}</p></section>
     {[ [copy.responsibilities, job.responsibilities], [copy.requirements, job.requirements], [copy.benefits, job.benefits] ].map(([title, items]) => Array.isArray(items) && items.length > 0 ? <section key={String(title)} className="mt-7"><h3 className="text-lg font-bold">{String(title)}</h3><ol className="mt-3 space-y-2.5 text-sm text-[#43536b]">{items.map((item, index) => <li key={`${title}-${item}-${index}`} className="flex min-w-0 gap-3"><span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-[#eef7fb] text-[11px] font-extrabold leading-none text-[#008fc3]">{index + 1}</span><span className="min-w-0 break-words [overflow-wrap:anywhere]">{item}</span></li>)}</ol></section> : null)}
   </article>;
 }
