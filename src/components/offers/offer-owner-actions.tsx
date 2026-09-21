@@ -13,8 +13,8 @@ const OWNER_ACTION_COPY = {
   // `editCorto`: el rótulo que va en MEDIA columna. «Editar promoción» no cabe
   // ahí y salía como «Editar promo…», que no es un botón, es un acertijo. La
   // pantalla ya dice de qué es: al lado está «Administrar», también en corto.
-  es: { edit: "Editar promoción", editCorto: "Editar", manage: "Administrar promoción", subtitle: "Actualiza la información de esta publicación." },
-  en: { edit: "Edit offer", editCorto: "Edit", manage: "Manage offer", subtitle: "Update this offer's information." },
+  es: { edit: "Editar promoción", editCorto: "Editar", manage: "Administrar promoción", manageCorto: "Administrar", subtitle: "Actualiza la información de esta publicación." },
+  en: { edit: "Edit offer", editCorto: "Edit", manage: "Manage offer", manageCorto: "Manage", subtitle: "Update this offer's information." },
 } as const;
 
 type Props = {
@@ -51,8 +51,9 @@ export function OfferOwnerActions({ offer, professionalId, serviceOptions, fromP
         </Link>
         <Link href="/dashboard/profesional?mode=offer&tab=offers" className="inline-flex h-11 w-full min-w-0 items-center justify-center rounded-full border border-[#b9d9e8] px-3 text-sm font-bold text-[#007fae] transition hover:bg-[#f1f9fc] sm:px-4">
           {/* Siempre en corto: comparte fila con «Editar», y «Administrar
-              promoción» no cabe en media columna. */}
-          <span className="truncate">{locale === "es" ? "Administrar" : "Manage"}</span>
+              promoción» no cabe en media columna. Sale de la tabla de copy
+              —como en Empleos y Proyectos— y no escrito a mano aquí. */}
+          <span className="truncate">{copy.manageCorto}</span>
         </Link>
       </div>
 

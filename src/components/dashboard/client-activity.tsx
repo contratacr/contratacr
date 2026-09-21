@@ -1109,24 +1109,35 @@ export function ClientActivity({ section, onCount }: { section: ClientActivitySe
                               >
                                 {t("editProject")}
                               </button>
-                              {isActive && (
-                                <Button size="sm" className={actionButtonClass} onClick={() => openResolve(project.id)}>{t("resolve")}</Button>
-                              )}
+                              {/* LO QUE PIDE ALGO AL CLIENTE SE QUEDA SUELTO;
+                                  LO QUE CAMBIA EL ESTADO SE VA AL «···».
+                                  «Marcar como finalizado», «Volver a publicar» y
+                                  «Cancelar» son la misma familia que «Pausar»,
+                                  «Cerrar vacante» y «Marcar como vencida», que en
+                                  Empleos y Promociones ya viven en el menú. Aquí
+                                  estaban sueltas y en turquesa, así que una fila
+                                  de un proyecto tenía hasta cuatro botones y las
+                                  otras dos secciones tres. «Dejar reseña» SÍ se
+                                  queda: no cambia nada, le pide algo a la
+                                  persona, y es lo único que la fila espera. */}
                               {project.status === "completed" && project.accepted_professional_id && (
                                 <Button size="sm" className={actionButtonClass} onClick={() => reviewProjectPro(project.id)}>
                                   {projectReview(project.id) ? t("editReview") : t("leaveReview")}
                                 </Button>
-                              )}
-                              {project.status === "cancelled" && (
-                                <Button size="sm" className={actionButtonClass} onClick={() => updateProjectStatus(project.id, "open")}>{t("reopenProject")}</Button>
                               )}
                             </div>
                             {(isActive || project.status === "cancelled") && (
                               <CardActionsMenu
                                 label={t("actions")}
                                 actions={isActive
-                                  ? [{ label: t("cancelProject"), onClick: () => openCancelProject(project.id), destructive: true }]
-                                  : [{ label: t("delete"), onClick: () => setDeleteTarget(project.id), destructive: true }]}
+                                  ? [
+                                      { label: t("resolve"), onClick: () => openResolve(project.id) },
+                                      { label: t("cancelProject"), onClick: () => openCancelProject(project.id), destructive: true },
+                                    ]
+                                  : [
+                                      { label: t("reopenProject"), onClick: () => void updateProjectStatus(project.id, "open") },
+                                      { label: t("delete"), onClick: () => setDeleteTarget(project.id), destructive: true },
+                                    ]}
                               />
                             )}
                           </div>

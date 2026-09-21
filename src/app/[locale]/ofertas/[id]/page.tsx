@@ -21,6 +21,7 @@ import {
 import { marketplaceLocale, offerTypeLabel } from "@/lib/marketplace-copy";
 import { safeGetUser } from "@/lib/supabase/get-user";
 import { contactFlagsFor, profesionalesBloqueados } from "@/lib/contact-flags";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { recordServerInteraction } from "@/lib/analytics/server-events";
 import { repairVisibleText } from "@/lib/text/repair-visible-text";
@@ -71,6 +72,25 @@ const COPY = {
   },
 } as const;
 
+/**
+ * Solo la promoción viva se indexa. La cerrada se marca para que salga del
+ * buscador: dejarla indexada manda gente a una puerta que ya está cerrada, y
+ * ahora que la página sí abre para cualquiera eso importa.
+ */
+export async function generateMetadata({ params }: { params: Promise<{ id: string; locale: string }> }) {
+  const { id } = await params;
+  const clave = claveDeTramo(id);
+  if (!clave.id) return {};
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("professional_offers")
+    .select("id, status, valid_until")
+    .eq("id", clave.id)
+    .maybeSingle();
+  const viva = data && data.status === "published" && !isOfferExpired({ valid_until: (data as { valid_until?: string | null }).valid_until ?? null }, crTodayISO());
+  return viva ? {} : { robots: { index: false, follow: true } };
+}
+
 export default async function OfferDetailPage({ params, searchParams }: { params: Promise<{ id: string; locale: string }>; searchParams?: Promise<{ from?: string }> }) {
   const { id, locale: rawLocale } = await params;
   const locale = marketplaceLocale(rawLocale);
@@ -97,36 +117,57 @@ export default async function OfferDetailPage({ params, searchParams }: { params
   const consulta = supabase
     .from("professional_offers")
     .select(`*, professionals!professional_offers_professional_id_fkey(${professionalColumns})`);
-  const { data, error: offerError } = clave.id
+  const { data: publicada, error: offerError } = clave.id
     ? await consulta.eq("id", clave.id).maybeSingle()
     : await (() => {
         const { desde, hasta } = rangoDePrefijo(clave.prefijo!);
         return consulta.gte("id", desde).lte("id", hasta).limit(1).maybeSingle();
       })();
   if (offerError) throw offerError;
-  if (!data) notFound();
-  const offerOwnerProfileId = (data.professionals as { profile_id?: string | null } | null)?.profile_id ?? null;
+  // UNA PROMOCIÓN CERRADA NO DESAPARECE: DICE QUE SE CERRÓ.
+  // Los permisos de la base solo dejan leer las publicadas, así que a un
+  // visitante cualquiera una promoción pausada, agotada o vencida le daba
+  // «página no encontrada» —y el aviso «ya no está disponible», que existe
+  // desde hace tiempo, no lo veía nadie salvo el dueño—. Un enlace compartido
+  // por WhatsApp o guardado en Google es de alguien: romperlo no explica nada.
+  // Se relee con la llave de servicio SOLO para pintar la lápida, y la página
+  // sale con `noindex` (ver generateMetadata) para que Google la suelte.
+  const ofertaVisible = publicada ?? await (async () => {
+    const admin = createAdminClient();
+    const consultaAdmin = admin
+      .from("professional_offers")
+      .select(`*, professionals!professional_offers_professional_id_fkey(${professionalColumns})`);
+    const { data: cerrada } = clave.id
+      ? await consultaAdmin.eq("id", clave.id).maybeSingle()
+      : await (() => {
+          const { desde, hasta } = rangoDePrefijo(clave.prefijo!);
+          return consultaAdmin.gte("id", desde).lte("id", hasta).limit(1).maybeSingle();
+        })();
+    return cerrada;
+  })();
+  if (!ofertaVisible) notFound();
+  const offerOwnerProfileId = (ofertaVisible.professionals as { profile_id?: string | null } | null)?.profile_id ?? null;
   if (!user || offerOwnerProfileId !== user.id) {
-    void recordServerInteraction({ type: "offer_view", source: "offers", locale, professionalId: data.professional_id ?? null, categoryId: data.service_category_id ?? null, viewerUserId: user?.id ?? null, metadata: { offerId: id } });
+    void recordServerInteraction({ type: "offer_view", source: "offers", locale, professionalId: ofertaVisible.professional_id ?? null, categoryId: ofertaVisible.service_category_id ?? null, viewerUserId: user?.id ?? null, metadata: { offerId: id } });
   }
-  const professional = data.professionals as {
+  const professional = ofertaVisible.professionals as {
     slug?: string;
     business_name?: string;
     profile_id?: string;
     profiles?: { full_name?: string } | null;
   } | null;
-  const idProfesional = String((data as { professional_id?: string }).professional_id ?? "");
+  const idProfesional = String((ofertaVisible as { professional_id?: string }).professional_id ?? "");
   // La ficha de una cuenta bloqueada no se abre: su dueño tampoco sale en la
   // búsqueda y no hay a quién escribirle.
   if ((await profesionalesBloqueados([idProfesional])).has(idProfesional)) notFound();
-  const banderas = (await contactFlagsFor([idProfesional]))[String((data as { professional_id?: string }).professional_id ?? "")] ?? { hasWhatsapp: false, allowPhoneCall: false, hasEmail: false };
+  const banderas = (await contactFlagsFor([idProfesional]))[String((ofertaVisible as { professional_id?: string }).professional_id ?? "")] ?? { hasWhatsapp: false, allowPhoneCall: false, hasEmail: false };
   const offer = {
-    ...data,
-    title: repairVisibleText(data.title),
-    description: repairVisibleText(data.description),
-    service_label: data.service_label ? repairVisibleText(data.service_label) : null,
-    location_label: data.location_label ? repairVisibleText(data.location_label) : null,
-    image_urls: Array.isArray(data.image_urls) ? data.image_urls : [],
+    ...ofertaVisible,
+    title: repairVisibleText(ofertaVisible.title),
+    description: repairVisibleText(ofertaVisible.description),
+    service_label: ofertaVisible.service_label ? repairVisibleText(ofertaVisible.service_label) : null,
+    location_label: ofertaVisible.location_label ? repairVisibleText(ofertaVisible.location_label) : null,
+    image_urls: Array.isArray(ofertaVisible.image_urls) ? ofertaVisible.image_urls : [],
     professional_name: repairVisibleText(professional?.business_name || professional?.profiles?.full_name || copy.professionalFallback),
     professional_slug: professional?.slug ?? null,
     // Solo banderas: el número y el correo se piden al tocar el botón.

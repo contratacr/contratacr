@@ -4352,5 +4352,10 @@
     "ofertas": "¿Qué promoción buscas?",
     "proyectos": "¿Qué proyecto buscas?",
     "ubicacion": "Ubicación"
+  },
+  "empleoCerrado": {
+    "unavailable": "Este empleo ya no recibe postulaciones.",
+    "backAll": "Ver todos los empleos",
+    "heading": "Empleo"
   }
 }

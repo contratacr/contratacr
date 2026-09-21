@@ -4352,5 +4352,10 @@
     "ofertas": "Search promotions",
     "proyectos": "Search projects",
     "ubicacion": "Location"
+  },
+  "empleoCerrado": {
+    "unavailable": "This job is no longer accepting applications.",
+    "backAll": "See all jobs",
+    "heading": "Job"
   }
 }
