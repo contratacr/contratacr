@@ -10,7 +10,7 @@ import { ScrollRail } from "@/components/ui/scroll-rail";
 
 // Segmented groups are a grid; rails scroll and hint the overflow with a chevron.
 function RailOrGrid({ scroll, className, children }: { scroll: boolean; className: string; children: React.ReactNode }) {
-  return scroll ? <ScrollRail className={className} asomoMinimo={44}>{children}</ScrollRail> : <div className={className}>{children}</div>;
+  return scroll ? <ScrollRail className={className} asomoMinimo={64}>{children}</ScrollRail> : <div className={className}>{children}</div>;
 }
 
 // Shared pill status-filter tabs — used identically in the client and professional
@@ -190,7 +190,7 @@ export function StatusFilterTabs({
     const plegados = tabs.filter((tab) => !siempreVisibles.has(tab.id)).length;
     const CHIP = "inline-flex h-9 shrink-0 items-center gap-1 whitespace-nowrap rounded-full border px-3.5 text-[13px] font-semibold transition-colors";
     return (
-      <div data-status-filter-tabs="" data-filter-layout="chips" className="relative w-full max-w-full min-w-0 overflow-hidden lg:overflow-visible">
+      <div data-status-filter-tabs="" data-filter-layout="chips" className="group/carril relative w-full max-w-full min-w-0 overflow-hidden lg:overflow-visible">
         <FlechasDeCarril carril={carrilRef} />
         <div ref={carrilRef} className="ccr-carril-chips scrollbar-none flex gap-1.5 overflow-x-auto py-0">
           {tabs.map((tab) => {
@@ -292,7 +292,7 @@ export function StatusFilterTabs({
   return (
     <div
       className={cn(
-        "relative w-full max-w-full min-w-0",
+        "group/carril relative w-full max-w-full min-w-0",
         useSegmentedLayout && "rounded-xl bg-[#e6edf4] p-1",
         useScrollableLayout && "overflow-hidden",
         // Cuatro o cinco etapas no caben repartidas en una fila de teléfono:

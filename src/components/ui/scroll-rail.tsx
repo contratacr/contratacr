@@ -87,7 +87,7 @@ export function ScrollRail({
   return (
     // Con flechas, el carril se mete hacia adentro en computadora para que las
     // flechas vivan en su propio margen y no queden encima del contenido.
-    <div className={cn("relative min-w-0", conFlechas && "lg:px-7")}>
+    <div className={cn("group/carril relative min-w-0", conFlechas && "lg:px-7")}>
       <div
         ref={ref}
         role={role}

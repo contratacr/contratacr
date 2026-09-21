@@ -4,9 +4,10 @@ import { useCallback, useEffect, useState, type RefObject } from "react";
 
 // Lo más ancho que puede llegar a medir el degradado del borde.
 const BORDE_MAX = 14;
-// Píxeles de la pastilla que asoma que NUNCA se desvanecen: si el degradado se
-// los come, "hay más filtros" deja de verse y el carril parece terminar ahí.
-const SOLIDO_MIN = 22;
+// Píxeles de la pastilla que asoma que NUNCA se desvanecen. Es la señal de
+// «hay más» en el teléfono —lo que se ve cortado invita a arrastrar—, así que
+// el degradado nunca se la come: solo difumina lo que sobra por detrás.
+const SOLIDO_MIN = 40;
 
 function asomo(carril: HTMLElement, lado: "izquierda" | "derecha") {
   const caja = carril.getBoundingClientRect();

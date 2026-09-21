@@ -7,10 +7,16 @@ import { cn } from "@/lib/utils";
 /**
  * «HAY MÁS HACIA ALLÁ», para cualquier fila que se desplace de lado.
  *
- * El desvanecido del borde solo no alcanza: en el teléfono nadie notaba que la
- * fila de filtros se desplazaba y las opciones de la derecha no se descubrían
- * nunca. La flecha aparece SOLO del lado donde queda contenido, en cualquier
- * tamaño de pantalla, y tocarla desplaza.
+ * SOLO EN COMPUTADORA, Y SOLO AL PASAR EL CURSOR. Es lo que hacen las apps que
+ * viven de esto —YouTube, Google, Airbnb—: con el dedo la fila se arrastra y
+ * una flecha siempre puesta es un botón de más que tapa justo la opción que
+ * anuncia; con el ratón no hay gesto de arrastre, así que ahí sí hace falta un
+ * punto donde hacer clic, pero aparece cuando la mano se acerca.
+ *
+ * En el teléfono la señal es otra, y es la que usan todas: que SE VEA media
+ * pastilla cortada en el borde. Eso invita a arrastrar mejor que cualquier
+ * flecha, y de eso se encargan `asomoMinimo` (ScrollRail) y el degradado
+ * (useDesvanecidoDeCarril).
  *
  * Se pone como HERMANA del carril, dentro de un contenedor `relative` —si fuera
  * hija, se iría con el desplazamiento—. Mide ella sola, así sirve igual para
@@ -86,10 +92,10 @@ export function FlechasDeCarril({ carril, enMargen = false }: {
           // flecha viene a anunciar. Así se ve la flecha Y se lee la opción.
           style={{ position: "absolute", top: centro ?? "50%", transform: "translateY(-50%)", [lado === "derecha" ? "right" : "left"]: -10, zIndex: 10 }}
           className={cn(
-            "grid h-7 w-7 place-items-center rounded-full border border-[#e5e7eb] bg-white text-[#162543] shadow-[0_2px_8px_-2px_rgba(15,23,42,0.35)] transition-colors hover:bg-[#eef5f9]",
+            "hidden h-7 w-7 place-items-center rounded-full border border-[#e5e7eb] bg-white text-[#162543] shadow-[0_2px_8px_-2px_rgba(15,23,42,0.35)] transition-opacity duration-150",
+            // Solo con ratón, y solo cuando la mano se acerca al carril.
+            "lg:grid lg:opacity-0 lg:group-hover/carril:opacity-100 lg:focus-visible:opacity-100 hover:bg-[#eef5f9]",
             enMargen && (lado === "derecha" ? "lg:!right-0" : "lg:!left-0"),
-            // Con el borde completo se lee como un botón, no como un recorte.
-            "border-[1.5px]",
           )}
         >
           {lado === "derecha" ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
