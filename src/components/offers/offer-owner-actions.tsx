@@ -31,20 +31,26 @@ export function OfferOwnerActions({ offer, professionalId, serviceOptions, fromP
 
   return (
     <>
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-1">
+      {/* UNO ARRIBA Y DOS ABAJO. Tres botones del mismo ancho apilados no
+          dicen cuál importa: el color es la única diferencia. Con el principal
+          a lo ancho y los dos secundarios en pareja, la jerarquía se ve sin
+          leer, y es la misma forma que ya tiene la fila de acciones de las
+          tarjetas del panel. */}
+      <div className="grid grid-cols-2 gap-3">
         <button
           type="button"
           onClick={() => setEditing(true)}
-          className="hidden h-11 w-full min-w-0 items-center justify-center rounded-full bg-[#009fd9] px-4 text-sm font-bold text-white transition hover:bg-[#008fc3] lg:inline-flex"
+          className="col-span-2 hidden h-11 w-full min-w-0 items-center justify-center rounded-full bg-[#009fd9] px-4 text-sm font-bold text-white transition hover:bg-[#008fc3] lg:inline-flex"
         >
           <span className="truncate">{copy.edit}</span>
         </button>
-        <Link href={editHref} className="inline-flex h-11 w-full min-w-0 items-center justify-center rounded-full bg-[#009fd9] px-3 text-sm font-bold text-white transition hover:bg-[#008fc3] sm:px-4 lg:hidden">
+        <Link href={editHref} className="col-span-2 inline-flex h-11 w-full min-w-0 items-center justify-center rounded-full bg-[#009fd9] px-3 text-sm font-bold text-white transition hover:bg-[#008fc3] sm:px-4 lg:hidden">
           <span className="truncate">{copy.edit}</span>
         </Link>
         <Link href="/dashboard/profesional?mode=offer&tab=offers" className="inline-flex h-11 w-full min-w-0 items-center justify-center rounded-full border border-[#b9d9e8] px-3 text-sm font-bold text-[#007fae] transition hover:bg-[#f1f9fc] sm:px-4">
-          <span className="truncate sm:hidden">{locale === "es" ? "Administrar" : copy.manage}</span>
-          <span className="hidden truncate sm:inline">{copy.manage}</span>
+          {/* Siempre en corto: comparte fila con «Copiar enlace», y
+              «Administrar promoción» no cabe en media columna. */}
+          <span className="truncate">{locale === "es" ? "Administrar" : "Manage"}</span>
         </Link>
         {/* COMPARTIR, CON LOS DEMÁS. En la ficha de otro, compartir va arriba
             en círculo y la pila de abajo queda para lo que contacta; pero esta
@@ -53,7 +59,7 @@ export function OfferOwnerActions({ offer, professionalId, serviceOptions, fromP
             pertenece. Escondido en el «···» no lo encontraba nadie, y es lo
             primero que uno quiere hacer con algo recién publicado. En el
             teléfono ocupa las dos columnas: los otros dos ya van en pareja. */}
-        <BotonCompartir url={`/ofertas/${offer.id}`} titulo={offer.title} className="col-span-2 h-11 w-full px-4 lg:col-span-1" />
+        <BotonCompartir url={`/ofertas/${offer.id}`} titulo={offer.title} className="h-11 w-full min-w-0 whitespace-nowrap px-3 [&>svg]:hidden" />
       </div>
 
       {editing && (

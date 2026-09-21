@@ -56,7 +56,7 @@ const JOBS_COPY = {
     workplace: "Modalidad", anyWorkplace: "Cualquier modalidad", experience: "Experiencia", anyExperience: "Cualquier experiencia", employmentType: "Tipo de empleo", anyEmploymentType: "Cualquier tipo",
     messages: "Mensajes",
     notifications: "Notificaciones",
-    myJobs: "Mis empleos", publishJob: "Publicar empleo", jobs: "Empleos", opportunities: "Oportunidades en Costa Rica", job: "Empleo", openMenu: "Abrir menú", salary: "Salario", publishedBy: "Publicado por", editJob: "Editar empleo", manageJob: "Administrar empleo", applicationSent: "Postulación enviada", apply: "Postularme",
+    myJobs: "Mis empleos", publishJob: "Publicar empleo", jobs: "Empleos", opportunities: "Oportunidades en Costa Rica", job: "Empleo", openMenu: "Abrir menú", salary: "Salario", publishedBy: "Publicado por", editJob: "Editar empleo", manageJob: "Administrar empleo", manageShort: "Administrar", applicationSent: "Postulación enviada", apply: "Postularme",
     noResults: "No encontramos empleos", noJobs: "Todavía no hay empleos", emptyHelp: "Prueba otra búsqueda o cambia los filtros.", futureJobs: "Las nuevas oportunidades laborales aparecerán aquí.", viewAll: "Ver todos los empleos", publishFirst: "Publicar el primer empleo", publishSubtitle: "Describe la oportunidad con información clara y verificable.", editSubtitle: "Actualiza la información de esta publicación.", sendApplication: "Enviar postulación",
     location: "Ubicación", wholeCountry: "Todo Costa Rica", openings: "Vacantes", opening: "vacante", openingPlural: "vacantes", duration: "Duración", about: "Sobre el empleo", responsibilities: "Responsabilidades", requirements: "Requisitos", benefits: "Beneficios",
     professionalFallback: "Profesional en ContrataCR", professionalPhoto: "Foto de profesional",
@@ -69,7 +69,7 @@ const JOBS_COPY = {
     workplace: "Workplace", anyWorkplace: "Any workplace", experience: "Experience", anyExperience: "Any experience", employmentType: "Job type", anyEmploymentType: "Any type",
     messages: "Messages",
     notifications: "Notifications",
-    myJobs: "My jobs", publishJob: "Post a job", jobs: "Jobs", opportunities: "Opportunities in Costa Rica", job: "Job", openMenu: "Open menu", salary: "Salary", publishedBy: "Posted by", editJob: "Edit job", manageJob: "Manage job", applicationSent: "Application sent", apply: "Apply",
+    myJobs: "My jobs", publishJob: "Post a job", jobs: "Jobs", opportunities: "Opportunities in Costa Rica", job: "Job", openMenu: "Open menu", salary: "Salary", publishedBy: "Posted by", editJob: "Edit job", manageJob: "Manage job", manageShort: "Manage", applicationSent: "Application sent", apply: "Apply",
     noResults: "No jobs found", noJobs: "There are no jobs yet", emptyHelp: "Try another search or change the filters.", futureJobs: "New job opportunities will appear here.", viewAll: "View all jobs", publishFirst: "Post the first job", publishSubtitle: "Describe the opportunity with clear, verifiable information.", editSubtitle: "Update this job post.", sendApplication: "Submit application",
     location: "Location", wholeCountry: "All Costa Rica", openings: "Openings", opening: "opening", openingPlural: "openings", duration: "Duration", about: "About the job", responsibilities: "Responsibilities", requirements: "Requirements", benefits: "Benefits",
     professionalFallback: "Professional on ContrataCR", professionalPhoto: "Professional photo",
@@ -434,15 +434,20 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
             <p className="text-xs font-bold uppercase text-[#7a899d]">{copy.salary}</p>
             <p className="mt-1 text-2xl font-extrabold text-[#007fae]">{formatJobSalary(selected, locale)}</p>
             <div className="my-4 border-t border-[#e5e7eb]" />
+            {/* UNO ARRIBA Y DOS ABAJO. Tres botones del mismo ancho apilados
+                no dicen cuál importa: el color es la única diferencia. Con el
+                principal a lo ancho y los dos secundarios en pareja, la
+                jerarquía se ve sin leer. «Administrar» va en corto porque
+                comparte fila y «Administrar empleo» no cabe en media columna. */}
             {selected.employer_id === currentProfessionalId ? (
-              <div className="space-y-3">
-                <button type="button" onClick={() => setEditingJob(selected)} className="inline-flex h-11 w-full items-center justify-center rounded-full bg-[#009fd9] px-5 text-sm font-bold text-white transition hover:bg-[#008fc3]">{copy.editJob}</button>
-                <Link href={`/dashboard/profesional?mode=offer&tab=jobs&job=${selected.id}`} className="inline-flex h-11 w-full items-center justify-center rounded-full border border-[#b9d9e8] px-5 text-sm font-bold text-[#007fae] transition hover:bg-[#f1f9fc]">{copy.manageJob}</Link>
+              <div className="grid grid-cols-2 gap-3">
+                <button type="button" onClick={() => setEditingJob(selected)} className="col-span-2 inline-flex h-11 w-full items-center justify-center rounded-full bg-[#009fd9] px-5 text-sm font-bold text-white transition hover:bg-[#008fc3]">{copy.editJob}</button>
+                <Link href={`/dashboard/profesional?mode=offer&tab=jobs&job=${selected.id}`} className="inline-flex h-11 w-full min-w-0 items-center justify-center rounded-full border border-[#b9d9e8] px-3 text-sm font-bold text-[#007fae] transition hover:bg-[#f1f9fc]"><span className="truncate">{copy.manageShort}</span></Link>
                 {/* Compartir, con los demás. Escondido en el «···» no lo
                     encontraba nadie, y es lo primero que uno quiere hacer con
                     algo recién publicado. Aquí cabe porque esta columna es de
                     acciones sobre la publicación propia, no de contacto. */}
-                <BotonCompartir url={enlaceEmpleo(selected)} titulo={selected.title} className="h-11 w-full px-5 text-sm" />
+                <BotonCompartir url={enlaceEmpleo(selected)} titulo={selected.title} className="h-11 w-full min-w-0 whitespace-nowrap px-3 [&>svg]:hidden text-sm" />
               </div>
             ) : (
               <div className="space-y-2">

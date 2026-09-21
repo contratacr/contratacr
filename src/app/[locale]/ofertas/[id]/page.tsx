@@ -286,7 +286,13 @@ export default async function OfferDetailPage({ params, searchParams }: { params
             </section>
           </div>
         </article>
-        <aside className="hidden h-fit rounded-lg border border-[#e5e7eb] bg-white p-5 lg:sticky lg:top-24 lg:block">
+        {/* El tope de lo pegajoso es la barra MÁS el mismo aire que usa la
+            rejilla (lg:pt-3). Con 96px fijos, en una ficha sin enlace de volver
+            el contenido arranca a 76px y `sticky` empujaba la tarjeta 20px por
+            debajo de la columna de la izquierda: las dos columnas nacían
+            desalineadas. Con el tope igual a su sitio natural no empuja nunca,
+            y al desplazar se pega igual. */}
+        <aside className="hidden h-fit rounded-lg border border-[#e5e7eb] bg-white p-5 lg:sticky lg:top-[calc(var(--ccr-native-header-height,64px)+0.75rem)] lg:block">
           <p className="text-xs font-bold uppercase text-[#7a899d]">{copy.title}</p><p className="mt-1 text-2xl font-extrabold text-[#007fae]">{formatOfferPrice(offer, locale)}</p>{before && <p className="mt-1 text-sm font-bold text-[#8794a7] line-through">{copy.before} {before}</p>}
           <p className="mb-4 mt-4 border-y border-[#e5e7eb] py-4 text-sm font-semibold text-[#52627a]">{copy.publishedBy}{" "}{offer.professional_slug ? (<Link href={`/profesionales/${offer.professional_slug}?from=${encodeURIComponent(`/ofertas/${offer.id}`)}`} className="text-[#005eaa] hover:underline">{offer.professional_name}</Link>) : offer.professional_name}</p>
           {isOwner ? (
