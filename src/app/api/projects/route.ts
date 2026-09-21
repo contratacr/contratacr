@@ -518,6 +518,54 @@ export async function PATCH(req: NextRequest) {
   const uid = user.id;
   const admin = createAdminClient();
 
+  // ── El cliente corrige lo que pidió ──────────────────────────────────────
+  // Empleos y promociones se editan siempre; un proyecto no se editaba NUNCA:
+  // una descripción con un dato equivocado obligaba a cancelar y volver a
+  // publicar, perdiendo la fecha y a quien ya lo estaba mirando.
+  //
+  // Se toca solo lo que el cliente escribió: servicio, descripción y zona. El
+  // estado, quién está elegido y las fechas no se tocan desde aquí —para eso
+  // están las otras acciones—, y el título se vuelve a derivar del servicio y
+  // la descripción, igual que al publicar, para que no se quede contando otra
+  // cosa.
+  if (action === "edit") {
+    const { data: project } = await admin
+      .from("projects")
+      .select("client_id, status, title, description, category_id, provincia_id, canton_id")
+      .eq("id", id)
+      .maybeSingle();
+    if (!project || project.client_id !== uid) return NextResponse.json({ error: "No autorizado." }, { status: 403 });
+
+    const categoryId = typeof body.categoryId === "string" ? body.categoryId.trim() : "";
+    const description = typeof body.description === "string" ? body.description.trim().slice(0, PROJECT_DESCRIPTION_MAX_LENGTH) : "";
+    if (!categoryId) return NextResponse.json({ error: "Elige el servicio que necesitas." }, { status: 400 });
+    if (!description) return NextResponse.json({ error: "Cuéntanos qué hay que hacer." }, { status: 400 });
+
+    const provinciaId = typeof body.provinciaId === "string" && body.provinciaId ? body.provinciaId : null;
+    const cantonId = typeof body.cantonId === "string" && body.cantonId ? body.cantonId : null;
+    const cambios = {
+      category_id: categoryId,
+      description,
+      title: deriveTitle(getCategoryLabel(categoryId), description),
+      provincia_id: provinciaId,
+      canton_id: cantonId,
+      updated_at: new Date().toISOString(),
+    };
+    const { error } = await admin.from("projects").update(cambios).eq("id", id);
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    await auditUserAction(admin, req, {
+      actorUserId: uid,
+      actorRole: "client",
+      action: "project.edit",
+      entityTable: "projects",
+      entityId: id,
+      entityOwnerUserId: project.client_id,
+      beforeData: { title: project.title, description: project.description, category_id: project.category_id, provincia_id: project.provincia_id, canton_id: project.canton_id },
+      afterData: cambios,
+    });
+    return NextResponse.json({ success: true });
+  }
+
   if (action === "archive") {
     const { data: project } = await admin.from("projects").select("client_id, status, title").eq("id", id).maybeSingle();
     if (!project || project.client_id !== uid) return NextResponse.json({ error: "No autorizado." }, { status: 403 });

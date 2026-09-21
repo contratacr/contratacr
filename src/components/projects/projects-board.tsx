@@ -6,7 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useLocale } from "next-intl";
 import { ArrowLeft, ClipboardList, Loader2, Menu } from "lucide-react";
-import { Link } from "@/i18n/navigation";
+import { Link, useRouter } from "@/i18n/navigation";
 import { ContrataCRMark, HeaderAccountLink } from "@/components/landing/landing-navbar";
 import { NotificationBell } from "@/components/notifications/notification-bell";
 import { MarketplaceFilterChip, MarketplaceNavbarPortal, MarketplaceSearch } from "@/components/marketplace/marketplace-controls";
@@ -18,6 +18,7 @@ import { WhatsAppLogo } from "@/components/ui/whatsapp-logo";
 import { marketplaceLocale } from "@/lib/marketplace-copy";
 import { type ProyectoPublico } from "@/lib/proyectos";
 import { MenuProyecto } from "@/components/projects/menu-proyecto";
+import { PublishProjectModal } from "@/components/projects/publish-project-modal";
 import { ProgressiveImage } from "@/components/ui/progressive-image";
 import { cldThumb } from "@/lib/cloudinary";
 import { AccionesAlPie } from "@/components/ui/acciones-al-pie";
@@ -47,6 +48,8 @@ const COPY = {
     mes: "Último mes",
     misProyectos: "Mis proyectos",
     administrar: "Administrar proyecto",
+    editar: "Editar",
+    administrarCorto: "Administrar",
     ubicacion: "Ubicación",
     volver: "Volver a proyectos",
     ficha: "Proyecto",
@@ -78,6 +81,8 @@ const COPY = {
     mes: "Past month",
     misProyectos: "My projects",
     administrar: "Manage project",
+    editar: "Edit",
+    administrarCorto: "Manage",
     ubicacion: "Location",
     volver: "Back to projects",
     ficha: "Project",
@@ -291,6 +296,10 @@ export function ProjectsBoard({
   // La ficha que se ve a la derecha en computadora. Llegando por
   // /proyectos/[id] es esa; si no, la primera de la lista.
   const [elegidoId, setElegidoId] = useState<string | null>(detalle?.id ?? null);
+  // Editar el proyecto propio, igual que en Empleos y Promociones: el mismo
+  // formulario de publicar, con lo escrito puesto.
+  const [editando, setEditando] = useState<ProyectoPublico | null>(null);
+  const router = useRouter();
   function elegir(id: string) {
     setElegidoId(id);
     // La dirección sigue a la ficha, para que se pueda compartir o recargar.
@@ -738,12 +747,23 @@ export function ProjectsBoard({
                   </p>
                   <div className="mt-4 flex flex-col gap-2 border-t border-[#eef2f6] pt-4">
                     {misProyectos.includes(ficha.id) ? (
-                      <Link
-                        href={`/dashboard/profesional?tab=sent_projects&project=${ficha.id}`}
-                        className="inline-flex h-12 w-full items-center justify-center rounded-full border border-[#b9d9e8] px-6 text-base font-semibold text-[#007fae] transition hover:bg-[#f1f9fc]"
-                      >
-                        {copy.administrar}
-                      </Link>
+                      // Dos acciones, una a cada lado, con los rótulos cortos:
+                      // la misma fila que la ficha de un empleo o una promoción.
+                      <div className="grid grid-cols-2 gap-3">
+                        <button
+                          type="button"
+                          onClick={() => setEditando(ficha)}
+                          className="inline-flex h-11 w-full min-w-0 items-center justify-center rounded-full bg-[#009fd9] px-3 text-sm font-bold text-white transition hover:bg-[#008fc3]"
+                        >
+                          <span className="truncate">{copy.editar}</span>
+                        </button>
+                        <Link
+                          href={`/dashboard/profesional?tab=sent_projects&project=${ficha.id}`}
+                          className="inline-flex h-11 w-full min-w-0 items-center justify-center rounded-full border border-[#b9d9e8] px-3 text-sm font-bold text-[#007fae] transition hover:bg-[#f1f9fc]"
+                        >
+                          <span className="truncate">{copy.administrarCorto}</span>
+                        </Link>
+                      </div>
                     ) : (
                       <>
                         <BotonEscribir proyecto={ficha} />
@@ -757,6 +777,21 @@ export function ProjectsBoard({
           </div>
         );
       })()}
+      {editando && (
+        <PublishProjectModal
+          editar={{
+            id: editando.id,
+            categoryId: editando.category_id ?? "",
+            description: editando.description ?? "",
+            provinciaId: editando.provincia_id ?? "",
+            cantonId: editando.canton_id ?? "",
+          }}
+          onClose={() => setEditando(null)}
+          // Recargar del servidor: el título lo vuelve a derivar el API, así
+          // que lo que se ve tiene que venir de allá, no adivinarse aquí.
+          onSuccess={() => router.refresh()}
+        />
+      )}
     </main>
   );
 }

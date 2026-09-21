@@ -47,7 +47,22 @@ export function pareceAnuncioDeServicio(texto: string): boolean {
 // publica. La zona se recuerda de la última vez. Sin título (lo arma el servidor),
 // sin presupuesto, sin plazo, sin cédula ni teléfono: el cliente es quien escribe
 // después por WhatsApp al profesional que le responda.
-export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => void; onSuccess?: () => void }) {
+/**
+ * El MISMO formulario sirve para publicar y para corregir. Empleos y
+ * promociones se editan siempre y un proyecto no se editaba nunca: un dato mal
+ * escrito obligaba a cancelar y volver a publicar, perdiendo la fecha y a quien
+ * ya lo estaba mirando. Editando no se pregunta el teléfono —ya está en la
+ * cuenta— ni se vuelve a avisar a nadie: solo cambia lo que el cliente escribió.
+ */
+export type ProyectoParaEditar = {
+  id: string;
+  categoryId: string;
+  description: string;
+  provinciaId: string;
+  cantonId: string;
+};
+
+export function PublishProjectModal({ onClose, onSuccess, editar }: { onClose: () => void; onSuccess?: () => void; editar?: ProyectoParaEditar }) {
   const t = useTranslations("publicarProyecto");
   const locale = useLocale();
   const searchParams = useSearchParams();
@@ -56,10 +71,10 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
   const initialCategoryId = searchParams.get("categoria") || "";
 
   const [form, setForm] = useState({
-    categoryId: initialCategoryId,
-    description: "",
-    provinciaId: searchParams.get("provincia") || "",
-    cantonId: searchParams.get("canton") || "",
+    categoryId: editar?.categoryId || initialCategoryId,
+    description: editar?.description || "",
+    provinciaId: editar?.provinciaId || searchParams.get("provincia") || "",
+    cantonId: editar?.cantonId || searchParams.get("canton") || "",
   });
   const [telefono, setTelefono] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -90,7 +105,7 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
 
   // La zona se recuerda entre solicitudes: casi siempre es la misma casa.
   useEffect(() => {
-    if (form.provinciaId) return;
+    if (form.provinciaId || editar) return;
     try {
       const raw = window.localStorage.getItem(LAST_ZONE_KEY);
       if (!raw) return;
@@ -139,13 +154,33 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
     if (!form.categoryId) { reportError(t("errCategory"), "category", categoryFieldRef); return; }
     if (!form.description.trim()) { reportError(t("errDescription"), "description", descriptionFieldRef); return; }
 
-    if (!isPhoneComplete(telefono)) {
+    // Editando no se vuelve a pedir el número: el proyecto ya tiene el suyo.
+    if (!editar && !isPhoneComplete(telefono)) {
       setErrorField("phone");
       setError(t("errPhone"));
       return;
     }
     setSubmitting(true);
     try {
+      if (editar) {
+        const res = await fetch("/api/projects", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            id: editar.id,
+            action: "edit",
+            categoryId: form.categoryId,
+            description: form.description.trim().slice(0, PROJECT_DESCRIPTION_MAX_LENGTH),
+            provinciaId: form.provinciaId || null,
+            cantonId: form.cantonId || null,
+          }),
+        });
+        const datos = await res.json().catch(() => ({}));
+        if (!res.ok) { setError(datos.error ?? t("errPublish")); return; }
+        onSuccess?.();
+        onClose();
+        return;
+      }
       const res = await fetch("/api/projects", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -197,7 +232,7 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
           {/* Solo el título: la línea de apoyo repetía lo que el propio
               formulario ya promete y robaba alto en el teléfono. */}
           <div className="min-w-0 text-center sm:text-left">
-            <h2 id="publish-project-title" className="text-lg font-bold text-[#162543]">{t("title")}</h2>
+            <h2 id="publish-project-title" className="text-lg font-bold text-[#162543]">{editar ? t("editTitle") : t("title")}</h2>
           </div>
           <button
             type="button"
@@ -286,7 +321,10 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
                     editable: escondido, la persona no sabía a cuál número le
                     iban a escribir, y cambiarlo para un proyecto puntual era
                     imposible sin ir al perfil. */}
-                <div>
+                {/* Editando no se pregunta: el proyecto ya salió con su número
+                    y cambiarlo aquí sería cambiar a dónde escriben quienes ya
+                    lo vieron. Para eso está el perfil. */}
+                {!editar && <div>
                   <PhoneInput
                     label={t("phoneLabel")}
                     value={telefono}
@@ -295,7 +333,7 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
                     required
                   />
                   <p className="mt-1.5 text-xs text-[#68778d]">{t("phoneHelp")}</p>
-                </div>
+                </div>}
               </div>
             </div>
           )}
@@ -342,7 +380,9 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
               // En computadora, a su tamaño y a la derecha, como Publicar empleo
               // y Publicar promoción; en el teléfono, a todo el ancho.
               <Button type="submit" size="lg" className="flex-1 sm:flex-none sm:px-8" loading={submitting} disabled={submitting}>
-                {submitting ? t("publishing") : t("publish")}
+                {editar
+                  ? (submitting ? t("editSaving") : t("editSave"))
+                  : (submitting ? t("publishing") : t("publish"))}
               </Button>
             )}
           </div>

@@ -82,6 +82,11 @@ type Project = {
   title: string;
   description: string;
   status: string;
+  // Lo que se puede corregir. El API de `role=client` ya devuelve la fila
+  // entera, así que no hay consulta nueva: solo faltaba nombrarlos.
+  category_id?: string | null;
+  provincia_id?: string | null;
+  canton_id?: string | null;
   created_at: string;
   categories?: { name: string };
   provincias?: { name: string };
@@ -218,6 +223,9 @@ export function ClientActivity({ section, onCount }: { section: ClientActivitySe
   const [expandedBooking, setExpandedBooking] = useState<string | null>(null);
   const [projectProposals, setProjectProposals] = useState<Record<string, Proposal[]>>({});
   const [showPublish, setShowPublish] = useState(false);
+  // Corregir lo que se pidió, desde el panel: es donde el cliente llega a ver
+  // sus proyectos, igual que edita sus empleos y sus promociones desde el suyo.
+  const [editandoProyecto, setEditandoProyecto] = useState<Project | null>(null);
   // CLIENT reschedule: the client (owner of the appointment) picks another available
   // slot for the same pro → old slot freed, new slot taken (atomic). The pro does NOT
   // reschedule (they cancel + coordinate via WhatsApp) — see sprint 433.
@@ -1091,6 +1099,16 @@ export function ClientActivity({ section, onCount }: { section: ClientActivitySe
                               >
                                 {t("viewProject")}
                               </Link>
+                              {/* Editar, aquí mismo: en Empleos y Promociones el
+                                  panel edita sin salir, y un proyecto obligaba a
+                                  cancelar y volver a publicar. */}
+                              <button
+                                type="button"
+                                onClick={() => setEditandoProyecto(project)}
+                                className={cn(actionButtonClass, "inline-flex items-center justify-center border border-[#d7e1ea] bg-white text-[#162543] transition hover:border-[#b9c8d6] hover:bg-[#f6f9fb]")}
+                              >
+                                {t("editProject")}
+                              </button>
                               {isActive && (
                                 <Button size="sm" className={actionButtonClass} onClick={() => openResolve(project.id)}>{t("resolve")}</Button>
                               )}
@@ -1188,6 +1206,19 @@ export function ClientActivity({ section, onCount }: { section: ClientActivitySe
 
       {/* Publicar proyecto — the project form opens in a modal here (no longer a
           separate page), and refreshes this list on a successful publish. */}
+      {editandoProyecto && (
+        <PublishProjectModal
+          editar={{
+            id: editandoProyecto.id,
+            categoryId: editandoProyecto.category_id ?? "",
+            description: editandoProyecto.description ?? "",
+            provinciaId: editandoProyecto.provincia_id ?? "",
+            cantonId: editandoProyecto.canton_id ?? "",
+          }}
+          onClose={() => setEditandoProyecto(null)}
+          onSuccess={() => refreshProjectRows({})}
+        />
+      )}
       {showPublish && (
         <PublishProjectModal onClose={() => setShowPublish(false)} onSuccess={() => refreshProjectRows({ esperandoNuevo: true })} />
       )}

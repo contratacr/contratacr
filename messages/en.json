@@ -2727,7 +2727,8 @@
     "chooseDoneSub": "They can now send you the quote and coordinate. The request closes when you mark it resolved.",
     "chosenPro": "Chosen",
     "chooseShort": "Choose",
-    "viewProject": "View project"
+    "viewProject": "View project",
+    "editProject": "Edit"
   },
   "clientPage": {
     "greeting": "Hi, {name} 👋",
@@ -3224,7 +3225,11 @@
     "avisoAnuncio": "This reads as if you were offering a service. This section is for requesting, not offering.",
     "avisoAnuncioCta": "Publish it as an promotion",
     "avisoAnuncioCtaNew": "Create your professional profile",
-    "dismiss": "Close"
+    "dismiss": "Close",
+    "editTitle": "Edit project",
+    "editSave": "Save changes",
+    "editSaving": "Saving…",
+    "editDone": "Changes saved"
   },
   "notifications": {
     "title": "Notifications",
@@ -3820,7 +3825,12 @@
     "attachBtn": "Attach image or document",
     "addAnother": "Add another file",
     "formats": "Accepted formats: JPG, PNG, WebP, AVIF, HEIC, HEIF, GIF, and PDF",
-    "err": {"name": "Enter your name.", "email": "Enter an email so we can reply.", "subject": "Choose what your question is about.", "message": "Tell us what you need."},
+    "err": {
+      "name": "Enter your name.",
+      "email": "Enter an email so we can reply.",
+      "subject": "Choose what your question is about.",
+      "message": "Tell us what you need."
+    },
     "errRequired": "Please complete all required fields.",
     "errOversized": "Some files exceed the {mb}MB limit and were skipped.",
     "errFormat": "File type not allowed. Use JPG, PNG, WEBP or PDF.",

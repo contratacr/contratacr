@@ -2727,7 +2727,8 @@
     "chooseDoneSub": "Ya puede enviarte la cotización y coordinar. La solicitud se cierra cuando marques que quedó resuelta.",
     "chosenPro": "Elegido",
     "chooseShort": "Elegir",
-    "viewProject": "Ver proyecto"
+    "viewProject": "Ver proyecto",
+    "editProject": "Editar"
   },
   "clientPage": {
     "greeting": "Hola, {name} 👋",
@@ -3224,7 +3225,11 @@
     "avisoAnuncio": "Esto se lee como si estuvieras ofreciendo un servicio. Acá se pide, no se ofrece.",
     "avisoAnuncioCta": "Publicalo como promoción",
     "avisoAnuncioCtaNew": "Crea tu perfil profesional",
-    "dismiss": "Cerrar"
+    "dismiss": "Cerrar",
+    "editTitle": "Editar proyecto",
+    "editSave": "Guardar cambios",
+    "editSaving": "Guardando…",
+    "editDone": "Cambios guardados"
   },
   "notifications": {
     "title": "Notificaciones",
@@ -3820,7 +3825,12 @@
     "attachBtn": "Adjuntar imagen o documento",
     "addAnother": "Agregar otro archivo",
     "formats": "Formatos aceptados: JPG, PNG, WebP, AVIF, HEIC, HEIF, GIF y PDF",
-    "err": {"name": "Escribe tu nombre.", "email": "Escribe un correo para responderte.", "subject": "Elige el tema de tu consulta.", "message": "Cuéntanos qué necesitas."},
+    "err": {
+      "name": "Escribe tu nombre.",
+      "email": "Escribe un correo para responderte.",
+      "subject": "Elige el tema de tu consulta.",
+      "message": "Cuéntanos qué necesitas."
+    },
     "errRequired": "Por favor completa todos los campos requeridos.",
     "errOversized": "Algunos archivos superan el límite de {mb}MB y fueron omitidos.",
     "errFormat": "Formato no permitido. Usa JPG, PNG, WEBP o PDF.",
