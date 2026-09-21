@@ -574,7 +574,12 @@ export function MarketplaceFilterChip({ label, value, options, onChange }: { lab
       <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-[#c7d2dc] lg:hidden" />
       <div className="flex min-h-12 items-center justify-between border-b border-[#e5e7eb] lg:min-h-10">
         <h2 className="text-lg font-bold lg:text-base">{label}</h2>
-        <button type="button" onClick={() => setOpen(false)} aria-label={copy.close} className="grid h-10 w-10 place-items-center"><X className="h-5 w-5" /></button>
+        {/* La equis va sobre el MISMO eje que los círculos de la lista. Su área
+            de toque mide 40 px y la del círculo 24, así que centrada dejaba la
+            equis 8 px a la izquierda de la columna de marcas y la cabecera se
+            veía desalineada. El `-mr-2` corre la caja, no el tamaño: se sigue
+            tocando igual de fácil. */}
+        <button type="button" onClick={() => setOpen(false)} aria-label={copy.close} className="-mr-2 grid h-10 w-10 place-items-center"><X className="h-5 w-5" /></button>
       </div>
       <div className="py-2">
         {options.map(([itemValue, itemLabel]) => (
