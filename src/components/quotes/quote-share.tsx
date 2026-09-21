@@ -64,20 +64,45 @@ export function useCompartirCotizacion({ quote, proName, proSlug, activo = true 
 
   return {
     preparando: activo && pdf === null,
-    accion: () => void compartir(),
-    etiqueta: nativo ? t("share") : t("downloadPdf"),
-    Icono: nativo ? Share2 : Download,
+    /** Hay hoja del sistema (teléfono). En computadora no existe. */
+    nativo,
+    compartir: () => void compartir(),
+    descargar,
   };
 }
 
-/** El botón de mandar la cotización, para el pie de la ventana. */
+/**
+ * Lo que se puede hacer con una cotización terminada, para el pie de la ventana.
+ *
+ * EN COMPUTADORA, SOLO DESCARGAR. No existe la hoja del sistema, así que un
+ * botón «Compartir» ahí solo podría descargar: diría una cosa y haría otra.
+ *
+ * EN EL TELÉFONO, LAS DOS. «Compartir» es a lo que uno viene —mandársela al
+ * cliente por WhatsApp sin salir de la app— y por eso va de principal. Pero
+ * guardarla también hace falta y no lo cubre la hoja: adjuntarla más tarde a un
+ * correo, archivarla con el resto de los papeles del trabajo, o simplemente
+ * tenerla cuando la hoja del sistema no ofrece la app que se busca. Antes solo
+ * estaba «Compartir» y, si uno cerraba la hoja sin elegir nada, se quedaba sin
+ * el archivo y sin manera de pedirlo.
+ */
 export function BotonCompartirCotizacion({ quote, proName, proSlug, className }: { quote: Quote; proName: string; proSlug?: string | null; className?: string }) {
-  const { preparando, accion, etiqueta, Icono } = useCompartirCotizacion({ quote, proName, proSlug });
+  const t = useTranslations("quotes");
+  const { preparando, nativo, compartir, descargar } = useCompartirCotizacion({ quote, proName, proSlug });
   return (
-    <Button type="button" className={className} disabled={preparando} onClick={accion}>
-      {preparando ? <Loader2 className="h-4 w-4 animate-spin" /> : <Icono className="h-4 w-4" />}
-      {etiqueta}
-    </Button>
+    <>
+      {/* En el teléfono el pie se apila al revés, así que «Descargar» escrito
+          antes queda DEBAJO de «Compartir»: primero la acción principal. */}
+      {nativo && (
+        <Button type="button" variant="outline" className={className} disabled={preparando} onClick={descargar}>
+          {preparando ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+          {t("downloadPdf")}
+        </Button>
+      )}
+      <Button type="button" className={className} disabled={preparando} onClick={nativo ? compartir : descargar}>
+        {preparando ? <Loader2 className="h-4 w-4 animate-spin" /> : nativo ? <Share2 className="h-4 w-4" /> : <Download className="h-4 w-4" />}
+        {nativo ? t("share") : t("downloadPdf")}
+      </Button>
+    </>
   );
 }
 
