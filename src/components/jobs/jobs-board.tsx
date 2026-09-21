@@ -312,7 +312,7 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
   const tSalida = useTranslations("marketplaceReturn");
   const detailBackHref = safeMarketplaceReturnHref(returnTo, "/empleos");
   const detailBackLabel = tSalida(marketplaceReturnLabelKey(detailBackHref, "/empleos", !returnTo));
-  const detailVuelveAlPanel = detailBackHref.startsWith("/dashboard");
+  const detailLlegoDeFuera = !returnTo;
 
   return <main className="min-h-[calc(100vh-72px)] overflow-x-clip bg-white pb-0 text-[#162543] sm:bg-[#fafafa] sm:pb-16 lg:flex lg:h-[calc(100dvh-64px)] lg:min-h-0 lg:flex-col lg:overflow-hidden lg:bg-white lg:pb-0">
     {avisoNode}
@@ -417,11 +417,11 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
     )}
     {detailOnly && selected && (
       <div className="mx-auto hidden w-full max-w-6xl px-6 pb-8 pt-8 lg:block">
-        {/* Ver la nota de la ficha de una promoción: desde el panel esta
-            pantalla se abre en su propia pestaña, así que «Volver al panel» no
-            vuelve —deja dos paneles abiertos—. El enlace solo sale cuando de
-            verdad hay de dónde volver. */}
-        {!detailVuelveAlPanel && (
+        {/* Ver la nota de la ficha de una promoción: en computadora la flecha
+            de atrás la pone el navegador, así que este enlace solo sale cuando
+            el navegador NO puede ayudar —se llegó de fuera y su flecha saca del
+            sitio—, y entonces dice «Ver todos los empleos», no «Volver». */}
+        {detailLlegoDeFuera && (
           <Link href={detailBackHref} className="mb-3 inline-flex h-10 items-center gap-2 rounded-lg px-2 text-sm font-extrabold text-[#162543] transition hover:bg-[#eaf6fc]">
             <ArrowLeft className="h-4 w-4 stroke-[2.4]" />
             {detailBackLabel}

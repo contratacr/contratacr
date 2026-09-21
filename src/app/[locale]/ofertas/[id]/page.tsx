@@ -81,7 +81,7 @@ export default async function OfferDetailPage({ params, searchParams }: { params
   const backHref = safeMarketplaceReturnHref(from, "/ofertas");
   const tSalida = await getTranslations("marketplaceReturn");
   const backLabel = tSalida(marketplaceReturnLabelKey(backHref, "/ofertas", !from));
-  const vuelveAlPanel = backHref.startsWith("/dashboard");
+  const llegoDeFuera = !from;
   const supabase = await createClient();
   const user = await safeGetUser(supabase);
   // Las columnas de contacto no se leen aquí: `contact_email` está negado por
@@ -195,23 +195,26 @@ export default async function OfferDetailPage({ params, searchParams }: { params
           />
         </div>
       </header>
-      {/* EN COMPUTADORA, DESDE EL PANEL, ESTA FICHA VIVE EN SU PROPIA PESTAÑA.
-          «Ver promoción» abre una pestaña nueva (openInNewTabOnDesktop), así
-          que ahí «Volver al panel» es una promesa que no se puede cumplir: no
-          vuelve, reemplaza la ficha por un SEGUNDO panel y deja dos pestañas
-          del panel abiertas. Medido: history.length = 1, no hay nada atrás. La
-          salida en computadora es cerrar la pestaña, como en cualquier
-          administrador. El enlace se queda cuando sí hay de dónde volver —se
-          llegó desde el tablero, en la misma pestaña—, que es cuando dice
-          «Volver a promociones». En el teléfono no cambia nada: ahí la
-          navegación es en la misma pantalla y la flecha de la cabecera es la
-          única salida. */}
-      <div className={cn("mx-auto hidden max-w-6xl px-4 pt-8 sm:px-6", !vuelveAlPanel && "lg:block")}>
-        <Link href={backHref} className="inline-flex h-10 items-center gap-2 rounded-lg px-2 text-sm font-extrabold text-[#162543] transition hover:bg-[#eaf6fc]">
-          <ArrowLeft className="h-4 w-4 stroke-[2.4]" />
-          <span>{backLabel}</span>
-        </Link>
-      </div>
+      {/* EN COMPUTADORA LA FLECHA DE ATRÁS YA LA PONE EL NAVEGADOR, a la
+          izquierda de la dirección. Duplicarla confunde: nadie sabe si nuestro
+          «Volver» hace lo mismo que la del navegador o algo distinto. Así que
+          este enlace NO es un «atrás»: solo aparece cuando el navegador NO
+          puede ayudar —cuando se llegó de fuera, por Google o por un enlace de
+          WhatsApp, y su flecha saca del sitio en vez de subir un nivel—. Ahí
+          deja de fingir un regreso y ofrece la puerta hacia adentro: «Ver todas
+          las promociones». Viniendo del tablero o del panel no se dibuja nada,
+          porque la flecha del navegador ya hace exactamente eso.
+          En el teléfono no cambia: ahí la salida es la flecha de la cabecera. */}
+      {/* Sin dibujar, no escondido: un «Volver al panel» oculto por CSS seguía
+          en el documento, para los lectores de pantalla y para Google. */}
+      {llegoDeFuera && (
+        <div className="mx-auto hidden max-w-6xl px-4 pt-8 sm:px-6 lg:block">
+          <Link href={backHref} className="inline-flex h-10 items-center gap-2 rounded-lg px-2 text-sm font-extrabold text-[#162543] transition hover:bg-[#eaf6fc]">
+            <ArrowLeft className="h-4 w-4 stroke-[2.4]" />
+            <span>{backLabel}</span>
+          </Link>
+        </div>
+      )}
       <div className="mx-auto grid max-w-6xl gap-5 px-0 py-0 sm:px-6 sm:py-8 lg:grid-cols-[minmax(0,760px)_320px] lg:justify-center lg:pt-3">
         <article className="overflow-hidden bg-white lg:rounded-lg lg:border lg:border-[#e5e7eb]">
           <div className="relative bg-white p-0 sm:p-3">
