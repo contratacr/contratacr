@@ -78,7 +78,7 @@ export default async function OfferDetailPage({ params, searchParams }: { params
   const dateLocale = idioma === "en" ? "en-US" : "es-CR";
   const from = (await searchParams)?.from;
   const backHref = safeMarketplaceReturnHref(from, "/ofertas");
-  const backLabel = marketplaceReturnLabel(backHref, "/ofertas", locale);
+  const backLabel = marketplaceReturnLabel(backHref, "/ofertas", locale, !from);
   const vuelveAlPanel = backHref.startsWith("/dashboard");
   const supabase = await createClient();
   const user = await safeGetUser(supabase);

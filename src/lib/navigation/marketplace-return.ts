@@ -39,12 +39,28 @@ export function safeMarketplaceReturnHref(
   return allowed ? href : fallback;
 }
 
+/**
+ * El rótulo del enlace de salida de una ficha.
+ *
+ * «Volver» solo se puede decir si de verdad se estuvo antes. Una ficha de
+ * promoción o de empleo se comparte por WhatsApp y sale en Google: quien llega
+ * así no viene del tablero, y decirle «Volver a promociones» le promete
+ * regresar a un sitio donde nunca estuvo —y su botón de atrás se lo lleva
+ * FUERA del sitio, que es justo cuando más falta hace una puerta hacia
+ * adentro—. Sin origen, el enlace deja de fingir un regreso y ofrece lo que
+ * hay: ver la lista entera.
+ */
 export function marketplaceReturnLabel(
   href: string,
   fallback: "/ofertas" | "/empleos",
   locale: string = "es",
+  sinOrigen = false,
 ) {
   const isEnglish = locale === "en";
+  if (sinOrigen) {
+    if (fallback === "/ofertas") return isEnglish ? "See all promotions" : "Ver todas las promociones";
+    return isEnglish ? "See all jobs" : "Ver todos los empleos";
+  }
   const pathname = withoutLocale(href.split(/[?#]/u)[0] || "/");
   if (pathname.startsWith("/profesionales/")) return isEnglish ? "Back to profile" : "Volver al perfil";
   if (pathname.startsWith("/dashboard/")) {

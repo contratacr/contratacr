@@ -310,7 +310,7 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
     });
   }, [selected, showingMobileDetail]);
   const detailBackHref = safeMarketplaceReturnHref(returnTo, "/empleos");
-  const detailBackLabel = marketplaceReturnLabel(detailBackHref, "/empleos", locale);
+  const detailBackLabel = marketplaceReturnLabel(detailBackHref, "/empleos", locale, !returnTo);
   const detailVuelveAlPanel = detailBackHref.startsWith("/dashboard");
 
   return <main className="min-h-[calc(100vh-72px)] overflow-x-clip bg-white pb-0 text-[#162543] sm:bg-[#fafafa] sm:pb-16 lg:flex lg:h-[calc(100dvh-64px)] lg:min-h-0 lg:flex-col lg:overflow-hidden lg:bg-white lg:pb-0">
