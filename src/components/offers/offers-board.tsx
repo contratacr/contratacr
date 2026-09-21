@@ -298,6 +298,7 @@ export function OffersBoard({
   // Producto, Paquete— son vocabulario de quien publica, no de quien busca, y
   // nadie que llega nuevo sabe en cuál está lo que necesita. Lo que de verdad
   // se busca es el servicio, y para eso está el buscador.
+  const hayFiltros = conFiltroDeFecha(offers.length);
   const renderFilters = () => (
     <>
       {conFiltroDeFecha(offers.length) && (
@@ -392,7 +393,7 @@ export function OffersBoard({
             </div>
           </div>
           <div className="px-4 pb-3">{renderSearch()}</div>
-          <ScrollRail className="ccr-chip-row flex gap-1 px-4 pb-3 sm:gap-1.5">{renderFilters()}</ScrollRail>
+          {hayFiltros && <ScrollRail className="ccr-chip-row flex gap-1 px-4 pb-3 sm:gap-1.5">{renderFilters()}</ScrollRail>}
           <div className="px-4 pb-3" data-testid="offers-mobile-sticky-actions">
             {renderActions()}
           </div>
@@ -416,7 +417,7 @@ export function OffersBoard({
             <h1 className="text-[17px] font-extrabold text-[#162543]">{copy.offers}</h1>
             <span className="text-[13px] font-semibold tabular-nums text-[#68778d]">{filtered.length}{locationFilter.trim() ? ` · ${locationFilter.trim()}` : ""}</span>
           </div>
-          <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2 overflow-visible">{renderFilters()}</div>
+          {hayFiltros && <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2 overflow-visible">{renderFilters()}</div>}
           <div className="flex shrink-0 gap-2">{renderActions()}</div>
         </div>
       </div>

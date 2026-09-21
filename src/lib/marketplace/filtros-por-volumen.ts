@@ -1,24 +1,17 @@
 /**
- * CUÁNDO MERECE LA PENA UN FILTRO.
+ * EL FILTRO DE FECHA, SOLO CON VOLUMEN.
  *
- * Un filtro solo sirve si hay de dónde escoger. Con nueve promociones, cinco
- * empleos y cero proyectos —lo que hay hoy en producción— «Última semana» no
- * acota nada: esconde resultados y le da al tablero pinta de tener más de lo
- * que tiene.
+ * Los tableros ya vienen ordenados por lo más reciente, así que filtrar por
+ * fecha no ACOTA: solo QUITA. Con nueve promociones, cinco empleos y cero
+ * proyectos —lo que hay hoy en producción— elegir «última semana» deja el
+ * tablero vacío y parece que no hay nada. Vuelve solo cuando haya de sobra, sin
+ * que nadie tenga que acordarse de encenderlo.
  *
- * Con este umbral los filtros aparecen SOLOS cuando el tablero crece, sin que
- * nadie tenga que acordarse de volver a encenderlos.
- *
- * La fecha va aparte: los tableros ya vienen ordenados por lo más reciente, así
- * que filtrar por fecha solo QUITA. Vuelve con bastante más volumen.
+ * Los demás filtros NO se deciden por volumen sino por si ayudan a escoger:
+ * «Modalidad» o «Tipo de empleo» sirven con cinco vacantes; «Tipo de promoción»
+ * no servía con ninguna cantidad, porque era vocabulario de quien publica.
  */
-export const USAR_FILTROS_DESDE = 12;
 export const USAR_FECHA_DESDE = 30;
-
-/** ¿Vale la pena mostrar los filtros de este tablero? */
-export function conFiltros(total: number) {
-  return total >= USAR_FILTROS_DESDE;
-}
 
 /** ¿Y el de fecha, que solo quita sobre una lista ya ordenada por reciente? */
 export function conFiltroDeFecha(total: number) {

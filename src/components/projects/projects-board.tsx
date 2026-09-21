@@ -455,7 +455,7 @@ export function ProjectsBoard({
         {!detalle && (
           <>
             <div className="px-4 pb-3">{buscador}</div>
-            <ScrollRail className="ccr-chip-row flex gap-1 px-4 pb-3 sm:gap-1.5">{filtros}</ScrollRail>
+            {filtros && <ScrollRail className="ccr-chip-row flex gap-1 px-4 pb-3 sm:gap-1.5">{filtros}</ScrollRail>}
             <div className="px-4 pb-3">{acciones}</div>
           </>
         )}
@@ -477,7 +477,7 @@ export function ProjectsBoard({
             <h1 className="text-[17px] font-extrabold text-[#162543]">{copy.titulo}</h1>
             <span className="text-[13px] font-semibold tabular-nums text-[#68778d]">{filtrados.length}{lugar.trim() ? ` · ${lugar.trim()}` : ""}</span>
           </div>
-          <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2 overflow-visible">{filtros}</div>
+          {filtros && <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2 overflow-visible">{filtros}</div>}
           <div className="flex shrink-0 gap-2">{acciones}</div>
         </div>
       </div>
