@@ -79,6 +79,14 @@ export function StatusFilterTabs({
   labelFor?: (id: string) => string;
   /** Show a small "needs attention" red dot on a tab (e.g. an unread reply). */
   dotFor?: (id: string) => boolean;
+  /**
+   * CUÁNDO PONER UN NÚMERO. Un número dentro de una pastilla se lee como «hay
+   * algo nuevo»: es el lenguaje de los avisos. Por eso va solo donde significa
+   * ALGO QUE ATENDER —casos de soporte abiertos, respuestas sin ver—, no para
+   * decir cuántas cosas hay guardadas. En Favoritos o en el filtro por servicio
+   * el número no le servía a nadie, y de paso ensanchaba las pestañas 72 px, que
+   * es lo que dejaba la última cortada a un hilo del borde.
+   */
   /** "underline" (default) = status tabs with count badges; "pills" = filter chips
    *  (e.g. the profession filter), no counts; "chips" = small outlined pills on a
    *  rail, for a FILTER that sits near a segmented view switcher and must not

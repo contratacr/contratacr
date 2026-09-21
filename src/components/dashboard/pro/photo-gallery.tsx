@@ -293,7 +293,6 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
           // "des-selecciona" (eso saltaba al primer servicio sin pedirlo).
           onChange={(id) => { if (id) setActiveProf(id); }}
           labelFor={label}
-          counts={Object.fromEntries(professions.map((p) => [p, countFor(p)]))}
           siempreCarril
         />
       )}

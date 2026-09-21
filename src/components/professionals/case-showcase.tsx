@@ -138,7 +138,6 @@ export function CaseShowcase({
           value={selectedActive}
           onChange={(id) => setActive(id || selectedActive)}
           labelFor={profLabel}
-          counts={Object.fromEntries(distinctProfs.map((p) => [p, countFor(p)]))}
           siempreCarril
         />
       )}

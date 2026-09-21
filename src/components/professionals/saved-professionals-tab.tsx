@@ -313,7 +313,6 @@ export function SavedProfessionalsTab() {
         tabs={tabs}
         value={filter}
         onChange={(id) => setFilter(id as SavedFilter)}
-        counts={tabCounts}
         labelFor={(id) => tabLabels[id] ?? id}
         // El MISMO control que las etapas de Mis proyectos: un filtro se ve
         // igual en todo el panel. Eran dos dibujos para la misma interacción

@@ -109,18 +109,10 @@ async function exerciseVisibleFilters(page: import("playwright/test").Page) {
       // Every deterministic regression filter is intentionally populated. This
       // catches a valid-looking tab whose query/mapping silently returns zero.
       const filtraPorTipo = page.url().includes("tab=saved");
-      if (layout !== "pills" && !filtraPorTipo) {
-        // El conteo llega cuando termina de cargar la sección (favoritos, por
-        // ejemplo, sincroniza con el servidor antes de pintar): se espera a que
-        // aparezca en vez de leerlo una sola vez y acusar a la sección de estar
-        // vacía por ir un instante por delante.
-        await expect
-          .poll(async () => Number((await button.innerText()).match(/\b(\d+)\b/)?.[1] ?? 0), {
-            message: `Filter "${await button.innerText()}" must have data on ${page.url()}`,
-            timeout: 15_000,
-          })
-          .toBeGreaterThan(0);
-      }
+      // Lo que prueba que el filtro tiene datos es la LISTA, no un número en la
+      // pestaña: el número solo se pone donde significa «algo que atender»
+      // —casos de soporte, respuestas nuevas—, no para contar lo guardado. Las
+      // dos comprobaciones de abajo ya exigen que la lista traiga resultados.
       // Un filtro por TIPO («Proyectos 0» en Favoritos) puede estar vacío con
       // toda razón: lo que no puede estar vacío es una ETAPA de una lista que sí
       // tiene datos.
