@@ -387,9 +387,17 @@ export function NotificationsList({ scope = "mode", titulo }: { scope?: "mode" |
   // Los tres estados —esqueleto, vacío y lista— miden lo mismo, que es lo que
   // mantiene el pie quieto. En la app la pantalla entera; en la web, la misma
   // tarjeta que cualquier otra sección.
+  // EN COMPUTADORA TAMBIÉN LLENA LA PANTALLA. El pie de página solo existe de
+  // 1024 px en adelante; con la tarjeta en 26rem fijos, durante el esqueleto el
+  // pie quedaba a la vista (y=713 en una pantalla de 900) y, al llegar la
+  // lista, salía disparado hacia abajo: CLS 0,118 en cada carga. Si el pie se
+  // ve mientras carga, cualquier crecimiento del contenido es un salto; con la
+  // tarjeta del alto de la pantalla el pie nace bajo el borde en los tres
+  // estados, y la lista al crecer lo empuja fuera de la vista, no a la vista.
+  // En el teléfono web no hay pie, así que ahí se queda la tarjeta normal.
   const altoDeLaTarjeta = nativeApp
     ? "min-h-[calc(100dvh-8.75rem)] sm:min-h-[calc(100dvh-16rem)]"
-    : "min-h-[24rem] sm:min-h-[26rem]";
+    : "min-h-[24rem] sm:min-h-[26rem] lg:min-h-[calc(100dvh-16rem)]";
 
   // El «...» general vive en la misma fila que «Nuevas», el primer rótulo de
   // la lista: suelto arriba quedaba a otra altura y parecía de otra cosa.

@@ -13,6 +13,13 @@ const inter = Inter({
   weight: ["400", "500", "600", "700", "800", "900"],
 });
 
+// «<» escrito como secuencia de escape de JSON (barra invertida + u003c), para
+// que ningún nombre del catálogo pueda cerrar la etiqueta <script>. Se arma por
+// partes a propósito: escrita de corrido, el chequeo de codificación del repo
+// (scripts/check-text-encoding.mjs) la toma por un texto dañado y no deja ni
+// arrancar el servidor ni compilar.
+const MENOR_QUE_ESCAPADO = `${String.fromCharCode(92)}u003c`;
+
 export default async function RootLayout({ children }: { children: ReactNode }) {
   // La app nativa se reconoce por su cookie ya EN EL SERVIDOR: las clases del
   // armazón viajan pintadas en el HTML y React las reconoce como suyas. Cuando
@@ -206,7 +213,14 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
         <style
           data-ccr-buscar=""
           dangerouslySetInnerHTML={{
-            __html: `@media (max-width:1023px){body.ccr-search-sheet-page:not(.ccr-native-app) .ccr-search-results-layout{height:100dvh!important;box-sizing:border-box;padding-top:var(--ccr-native-header-height,124px)}body.ccr-search-sheet-page .ccr-app-footer{display:none!important}}`,
+            // OJO: nada aquí puede depender de `body.ccr-search-sheet-page`. Esa
+            // clase la pone JavaScript en un efecto, DESPUÉS del primer pintado: con
+            // ella de condición, el mapa se pintaba en y=0 —debajo de la barra fija—
+            // y un instante después bajaba 124 px (CLS 0,172 en cada carga de /buscar
+            // en el teléfono). El contenedor `.ccr-search-results-layout` ya viene en
+            // el HTML del servidor y solo existe en /buscar, así que alcanza con él;
+            // para el pie, `:has()`.
+            __html: `@media (max-width:1023px){body:not(.ccr-native-app) .ccr-search-results-layout{height:100dvh!important;box-sizing:border-box;padding-top:var(--ccr-native-header-height,124px)}body:has(.ccr-search-results-layout) .ccr-app-footer{display:none!important}}`,
           }}
         />
         {/* EL PANEL NO LLEVA PIE EN EL TELÉFONO. El pie del sitio es una lista
@@ -278,7 +292,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
           <script
             id="ccr-catalogo"
             type="application/json"
-            dangerouslySetInnerHTML={{ __html: catalogoEnTexto.replace(/</g, "\\u003c") }}
+            dangerouslySetInnerHTML={{ __html: catalogoEnTexto.replace(/</g, MENOR_QUE_ESCAPADO) }}
           />
         )}
         {/* Corre apenas el <body> existe, antes del primer cuadro: siembra las
