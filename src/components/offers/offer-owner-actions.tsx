@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { BotonCompartir } from "@/components/ui/boton-compartir";
 import { useLocale } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
 import { Modal } from "@/components/ui/modal";
@@ -45,6 +46,14 @@ export function OfferOwnerActions({ offer, professionalId, serviceOptions, fromP
           <span className="truncate sm:hidden">{locale === "es" ? "Administrar" : copy.manage}</span>
           <span className="hidden truncate sm:inline">{copy.manage}</span>
         </Link>
+        {/* COMPARTIR, CON LOS DEMÁS. En la ficha de otro, compartir va arriba
+            en círculo y la pila de abajo queda para lo que contacta; pero esta
+            es la ficha PROPIA: no hay a quién contactar y esta columna es toda
+            de acciones sobre la publicación, que es donde compartir
+            pertenece. Escondido en el «···» no lo encontraba nadie, y es lo
+            primero que uno quiere hacer con algo recién publicado. En el
+            teléfono ocupa las dos columnas: los otros dos ya van en pareja. */}
+        <BotonCompartir url={`/ofertas/${offer.id}`} titulo={offer.title} className="col-span-2 h-11 w-full px-4 lg:col-span-1" />
       </div>
 
       {editing && (

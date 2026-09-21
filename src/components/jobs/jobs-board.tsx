@@ -1,6 +1,7 @@
 "use client";
 
 import { conFiltroDeFecha } from "@/lib/marketplace/filtros-por-volumen";
+import { BotonCompartir } from "@/components/ui/boton-compartir";
 import { ProgressiveImage } from "@/components/ui/progressive-image";
 import { PanelEmptyState } from "@/components/ui/content-loading";
 import { cn } from "@/lib/utils";
@@ -430,6 +431,11 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
               <div className="space-y-3">
                 <button type="button" onClick={() => setEditingJob(selected)} className="inline-flex h-11 w-full items-center justify-center rounded-full bg-[#009fd9] px-5 text-sm font-bold text-white transition hover:bg-[#008fc3]">{copy.editJob}</button>
                 <Link href={`/dashboard/profesional?mode=offer&tab=jobs&job=${selected.id}`} className="inline-flex h-11 w-full items-center justify-center rounded-full border border-[#b9d9e8] px-5 text-sm font-bold text-[#007fae] transition hover:bg-[#f1f9fc]">{copy.manageJob}</Link>
+                {/* Compartir, con los demás. Escondido en el «···» no lo
+                    encontraba nadie, y es lo primero que uno quiere hacer con
+                    algo recién publicado. Aquí cabe porque esta columna es de
+                    acciones sobre la publicación propia, no de contacto. */}
+                <BotonCompartir url={enlaceEmpleo(selected)} titulo={selected.title} className="h-11 w-full px-5 text-sm" />
               </div>
             ) : (
               <div className="space-y-2">
@@ -628,6 +634,15 @@ function JobPreview({ job, isOwner, userId, onEdit, mobile = false, hideActions 
           <>
             <button type="button" onClick={onEdit} className="inline-flex h-12 items-center justify-center rounded-full bg-[#009fd9] px-6 text-base font-semibold text-white transition hover:bg-[#008fc3]">{copy.editJob}</button>
             <Link href={`/dashboard/profesional?mode=offer&tab=jobs&job=${job.id}`} className="inline-flex h-12 items-center justify-center rounded-full border border-[#b9d9e8] px-6 text-base font-semibold text-[#007fae] transition hover:bg-[#f1f9fc]">{copy.manageJob}</Link>
+            {/* COMPARTIR, A LA VISTA. En la ficha de otro, compartir va
+                arriba en círculo y la pila de abajo queda para lo que
+                contacta. Pero esta es la ficha PROPIA: aquí no hay a quién
+                contactar y la fila entera es de acciones sobre la
+                publicación, que es justo donde compartir pertenece.
+                Escondido en el «···» no lo encontraba nadie, y es lo
+                primero que uno quiere hacer con algo que acaba de
+                publicar. En los tableros públicos se queda como está. */}
+            <BotonCompartir url={enlaceParaCompartir} titulo={job.title} className="h-12 px-6 text-base" />
           </>
         ) : (
           <JobContactActions job={job} isOwner={false} userId={userId} escritorio />

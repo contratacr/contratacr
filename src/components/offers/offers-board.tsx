@@ -1,6 +1,7 @@
 "use client";
 
 import { conFiltroDeFecha } from "@/lib/marketplace/filtros-por-volumen";
+import { BotonCompartir } from "@/components/ui/boton-compartir";
 import { ProgressiveImage } from "@/components/ui/progressive-image";
 import { PanelEmptyState } from "@/components/ui/content-loading";
 import { cn } from "@/lib/utils";
@@ -907,6 +908,15 @@ function OfferPreview({
                 >
                   {copy.manageOffer}
                 </Link>
+                {/* COMPARTIR, A LA VISTA. En la ficha de otro, compartir va
+                    arriba en círculo y la pila de abajo queda para lo que
+                    contacta. Pero esta es la ficha PROPIA: aquí no hay a quién
+                    contactar y la fila entera es de acciones sobre la
+                    publicación, que es justo donde compartir pertenece.
+                    Escondido en el «···» no lo encontraba nadie, y es lo
+                    primero que uno quiere hacer con algo que acaba de
+                    publicar. En los tableros públicos se queda como está. */}
+                <BotonCompartir url={enlaceOferta(offer)} titulo={offer.title} className="h-12 px-6 text-base" />
               </>
             ) : (
               <OfferContactActions offer={offer} userId={userId} isOwner={false} escritorio />
