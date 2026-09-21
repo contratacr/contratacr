@@ -173,7 +173,25 @@ export function Modal({
         </div>}
 
         {/* Body (scrolls) */}
-        <div className={cn("min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-5 sm:px-6", bodyClassName)}>
+        {/* QUIEN PIDE «SIN RELLENO» LO OBTIENE TAMBIÉN EN COMPUTADORA.
+            El relleno base es `px-5 py-5 sm:px-6`, y once ventanas pasaban
+            `px-0 py-0` para pegar su contenido a los bordes (publicar y editar
+            empleo y promoción, el selector de servicios, el registro
+            profesional…). Pero `px-0` solo le gana a `px-5`: `sm:px-6` es otra
+            variante y sobrevivía. Resultado: en el teléfono quedaban a ras y de
+            640 px en adelante con 24 px por lado, así que la franja blanca del
+            pie —que va dentro del cuerpo— no llegaba a los bordes y se veía
+            como un recuadro cortado dentro de la ventana. Solo en computadora,
+            que es justo como lo reportó Isaac.
+            Se resuelve aquí y no en las once: si el relleno pedido es CERO, el
+            de esta variante tampoco se pone. Un valor distinto de cero se
+            respeta como antes. */}
+        <div className={cn(
+          "min-h-0 flex-1 overflow-y-auto overscroll-contain",
+          / (?:px|p)-0(?:\s|$)/.test(` ${bodyClassName ?? ""} `) ? "px-5" : "px-5 sm:px-6",
+          "py-5",
+          bodyClassName,
+        )}>
           {children}
         </div>
 
