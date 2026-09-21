@@ -649,7 +649,7 @@ const ENLACE_DE_CABECERA = "inline-flex shrink-0 items-center whitespace-nowrap 
 
 export default function DashboardPage() {
   const { user, loading: authLoading } = useAuth();
-  const { sentinelaRef, cabeceraRef, conLinea } = useHairlineOnScroll();
+  const { cabeceraRef, conLinea } = useHairlineOnScroll();
   const router = useRouter();
   const searchParams = useSearchParams();
   // Publicar una solicitud desde el inicio abre el formulario DE UNA VEZ, encima
@@ -2531,7 +2531,6 @@ export default function DashboardPage() {
             <>
               {activeTab !== "home" && (
                 <>
-                <div ref={sentinelaRef} aria-hidden className="h-px lg:hidden" />
                 <div ref={cabeceraRef as React.RefObject<HTMLDivElement>} style={COLUMNAS_CABECERA} className={cn(
                   "sticky top-0 z-20 grid min-h-16 items-center border-b bg-white px-4 py-2 text-[#162543] transition-colors duration-200 lg:hidden",
                   conLinea ? "border-[#e5e7eb]" : "border-transparent",

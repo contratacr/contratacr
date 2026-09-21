@@ -37,6 +37,9 @@ export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "o
     items: [] as Notification[],
   }));
   const [hasSyncedNotifications, setHasSyncedNotifications] = useState(false);
+  // Distinto de lo anterior: esto solo se enciende cuando la campana HABLÓ CON
+  // EL SERVIDOR. Leer el caché del navegador no cuenta.
+  const [sincronizadoConServidor, setSincronizadoConServidor] = useState(false);
   // Conteo real de no leídas en el servidor: la lista local solo trae las 20 más
   // recientes y dejaba fuera las viejas sin leer, así el globo nunca bajaba.
   const [unreadTotal, setUnreadTotal] = useState<number | null>(null);
@@ -54,6 +57,7 @@ export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "o
 
   const updateNotifications = useCallback((updater: (prev: Notification[]) => Notification[]) => {
     setHasSyncedNotifications(true);
+    setSincronizadoConServidor(true);
     setNotificationState((prev) => {
       const base = prev.userId === user?.id ? prev.items : readCachedNotifications(user?.id) ?? [];
       return { userId: user?.id, items: updater(base) };
@@ -67,12 +71,19 @@ export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "o
     : scope === "use"
       ? notificationUnread.use + notificationUnread.neutral
       : notificationUnread.offer + notificationUnread.use + notificationUnread.neutral;
-  // El conteo del servidor viene fijo en el primer render; una vez que la
-  // campana sincronizó su propia lista, manda ella (si no, marcar leídas
-  // dejaba el globo clavado en el número viejo hasta recargar la página).
+  // EL NÚMERO DEL GLOBO NO SALE DEL CACHÉ DEL NAVEGADOR.
+  //
+  // Ese caché guarda las 20 últimas notificaciones de la última visita, así que
+  // al entrar está viejo: el globo pintaba el número del servidor, un instante
+  // después el del caché y al rato el de verdad. Eso era el parpadeo al
+  // loguearse. Manda el conteo que vino con la página hasta que la campana
+  // habla de verdad con el servidor; a partir de ahí manda su propia lista,
+  // porque si no, marcar leídas dejaba el globo clavado en el número viejo.
   const unreadCount = scope === "all" && unreadTotal !== null
     ? unreadTotal
-    : hasSyncedNotifications ? cachedUnreadCount : Math.max(cachedUnreadCount, serverUnreadCount);
+    : sincronizadoConServidor
+      ? cachedUnreadCount
+      : serverUnreadCount;
   const previewItems = visible.slice(0, 6);
   const fotoDe = useActorPhotos(previewItems);
 
@@ -86,6 +97,7 @@ export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "o
       setNotificationState({ userId, items: next });
       cacheNotifications(userId, next);
       setHasSyncedNotifications(true);
+      setSincronizadoConServidor(true);
       // Si la página de 20 no vino llena, ya tenemos TODOS los avisos de esta
       // persona: contarlos aquí evita una segunda consulta por cada carga.
       // Solo cuando viene llena puede haber más sin leer de los que se ven.
@@ -104,6 +116,7 @@ export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "o
       const cached = readCachedNotifications(user?.id);
       setNotificationState({ userId: user?.id, items: cached ?? [] });
       setHasSyncedNotifications(cached !== null);
+      setSincronizadoConServidor(false);
     });
   }, [user?.id]);
 

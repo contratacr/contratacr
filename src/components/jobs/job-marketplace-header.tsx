@@ -71,7 +71,7 @@ function buildJobsUrl({ query, location, published, workplace, experience, emplo
 }
 
 export function JobMarketplaceHeader({ initialQuery = "", initialLocation = "", suggestions = [] }: JobMarketplaceHeaderProps) {
-  const { sentinelaRef, cabeceraRef, conLinea } = useHairlineOnScroll();
+  const { cabeceraRef, conLinea } = useHairlineOnScroll();
   const router = useRouter();
   const locale = marketplaceLocale(useLocale());
   const copy = JOB_HEADER_COPY[locale];
@@ -125,7 +125,6 @@ export function JobMarketplaceHeader({ initialQuery = "", initialLocation = "", 
 
   return (
     <>
-      <div ref={sentinelaRef} aria-hidden className="h-px lg:hidden" />
       <section ref={cabeceraRef} className={cn("sticky top-0 z-20 border-b bg-white transition-colors duration-200 lg:hidden", conLinea ? "border-[#e5e7eb]" : "border-transparent")}>
         <div className={CABECERA_FILA_CENTRADA}>
           <Link href="/empleos" aria-label={copy.close} className={cn("absolute left-4 top-1/2 -translate-y-1/2", CABECERA_BOTON)}>

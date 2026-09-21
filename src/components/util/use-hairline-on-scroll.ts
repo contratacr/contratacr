@@ -26,21 +26,15 @@ function fondoPintado(desde: Element | null): string | null {
 }
 
 export function useHairlineOnScroll() {
-  const sentinelaRef = useRef<HTMLDivElement | null>(null);
   const cabeceraRef = useRef<HTMLElement | null>(null);
-  const [desplazado, setDesplazado] = useState(false);
   const [mismoLienzo, setMismoLienzo] = useState(true);
 
-  // Un centinela de 1px antes del encabezado: cuando el desplazamiento se lo
-  // lleva —sea la ventana o el contenedor interno que scrollee— hay contenido
-  // pasando por debajo.
-  useEffect(() => {
-    const nodo = sentinelaRef.current;
-    if (!nodo) return;
-    const observador = new IntersectionObserver(([entrada]) => setDesplazado(!entrada.isIntersecting));
-    observador.observe(nodo);
-    return () => observador.disconnect();
-  }, []);
+  // SIN CENTINELA. Había un <div class="h-px"> justo antes de cada encabezado
+  // para avisar por IntersectionObserver de que el contenido empezaba a pasar
+  // por debajo. Era transparente, así que dejaba ver 1 px del lienzo de la
+  // pantalla —gris— POR ENCIMA de la barra blanca: en el teléfono se leía como
+  // una raya entre la hora del sistema y el título. Y no servía para nada,
+  // porque la línea va siempre y nadie llegó a usar ese aviso.
 
   const medirLienzo = useCallback(() => {
     const cabecera = cabeceraRef.current;
@@ -68,8 +62,8 @@ export function useHairlineOnScroll() {
   // LA LÍNEA VA SIEMPRE. La regla de arriba («solo si hace falta») era correcta
   // pantalla por pantalla, pero el app entero se leía desigual: unas barras con
   // línea, otras sin nada hasta desplazar. Una sola regla —línea fina, siempre,
-  // el mismo gris, sin sombras— se entiende sin pensarla. La medición se
-  // conserva porque `desplazado` lo usa quien quiera reaccionar al scroll.
+  // el mismo gris, sin sombras— se entiende sin pensarla. La medición de
+  // color se conserva por si algún día se vuelve a la regla por pantalla.
   void mismoLienzo;
-  return { sentinelaRef, cabeceraRef, desplazado, conLinea: true };
+  return { cabeceraRef, conLinea: true };
 }

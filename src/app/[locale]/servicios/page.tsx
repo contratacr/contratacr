@@ -39,7 +39,7 @@ export default function ServiciosPage() {
   // La línea bajo el buscador solo cuando hay contenido pasando por debajo:
   // en reposo el encabezado y la página son un mismo blanco y la raya era un
   // corte sin trabajo que hacer.
-  const { sentinelaRef, cabeceraRef, conLinea } = useHairlineOnScroll();
+  const { cabeceraRef, conLinea } = useHairlineOnScroll();
   const categoryCatalogVersion = JSON.stringify(customCategories);
   const groups = useMemo(() => {
     void categoryCatalogVersion;
@@ -156,7 +156,6 @@ export default function ServiciosPage() {
 
       <main className="flex-1 bg-white lg:bg-[#fafafa]">
         <section data-services-mobile="" className="mx-auto w-full bg-white pb-[calc(2rem+env(safe-area-inset-bottom))] [.ccr-native-app_&]:pb-3 lg:hidden">
-          <div ref={sentinelaRef} aria-hidden className="h-px" />
           <header ref={cabeceraRef} className={cn("sticky top-0 z-20 border-b bg-white transition-colors duration-200", conLinea ? "border-[#e5e7eb]" : "border-transparent")}>
             {mobileGroup ? (
               <div className={CABECERA_FILA_CENTRADA}>

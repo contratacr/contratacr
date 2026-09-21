@@ -205,7 +205,7 @@ export function pareceVacante(texto: string): boolean {
 }
 
 export function OfferForm({ professionalId, serviceOptions, backHref = "/ofertas", initialOffer = null, presentation = "page", onSaved, onCancel }: OfferFormProps) {
-  const { sentinelaRef, cabeceraRef, conLinea } = useHairlineOnScroll();
+  const { cabeceraRef, conLinea } = useHairlineOnScroll();
   const locale = marketplaceLocale(useLocale());
   const copy = OFFER_FORM_COPY[locale];
   const localeCode = locale === "en" ? "en-US" : "es-CR";
@@ -420,7 +420,6 @@ export function OfferForm({ professionalId, serviceOptions, backHref = "/ofertas
 
   return (
     <main className={presentation === "modal" ? "bg-[#f4f7fa] text-[#162543]" : "min-h-[calc(100vh-72px)] bg-[#f4f7fa] text-[#162543] lg:px-6 lg:py-8"}>
-      {presentation !== "modal" && <div ref={sentinelaRef} aria-hidden className="h-px lg:hidden" />}
       <header ref={cabeceraRef} className={presentation === "modal" ? "hidden" : cn("sticky top-0 z-20 border-b bg-white transition-colors duration-200 lg:hidden", conLinea ? "border-[#e5e7eb]" : "border-transparent")}>
         <div className={CABECERA_FILA_CENTRADA}>
           <Link href={backHref} aria-label={copy.back} className={cn("absolute left-4 top-1/2 -translate-y-1/2", CABECERA_BOTON)}><ArrowLeft className={cn(CABECERA_GLIFO, "stroke-[2.4]")} /></Link>

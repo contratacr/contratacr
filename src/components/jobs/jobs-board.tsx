@@ -122,7 +122,7 @@ function JobMetaLine({ job, className = "", showApplicants = false }: { job: Job
 
 export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo = null, currentProfessionalId = null, currentUserId = null, detailOnly = false }: Props) {
   const { avisoNode, avisar } = useAvisoPerfilProfesional();
-  const { sentinelaRef, cabeceraRef, conLinea } = useHairlineOnScroll();
+  const { cabeceraRef, conLinea } = useHairlineOnScroll();
   const locale = marketplaceLocale(useLocale());
   const mensajesSinLeer = useDirectMessageUnread();
   const copy = JOBS_COPY[locale];
@@ -313,7 +313,6 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
 
   return <main className="min-h-[calc(100vh-72px)] overflow-x-clip bg-white pb-0 text-[#162543] sm:bg-[#fafafa] sm:pb-16 lg:flex lg:h-[calc(100dvh-64px)] lg:min-h-0 lg:flex-col lg:overflow-hidden lg:bg-white lg:pb-0">
     {avisoNode}
-    <div ref={sentinelaRef} aria-hidden className="h-px lg:hidden" />
     {showingMobileDetail && selected && (
       <section className="lg:hidden">
         <header className={cn("ccr-marketplace-sticky sticky top-0 z-20 border-b bg-white transition-colors duration-200", CABECERA_FILA_CENTRADA, conLinea ? "border-[#e5e7eb]" : "border-transparent")}>

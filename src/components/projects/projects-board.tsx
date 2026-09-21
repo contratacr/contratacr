@@ -285,7 +285,7 @@ export function ProjectsBoard({
   // La misma línea de arriba que Empleos y Promociones: aparece al bajar, no
   // desde el primer momento. Proyectos la traía siempre puesta y de otro gris,
   // así que la misma barra se veía distinta según la sección.
-  const { sentinelaRef, cabeceraRef, conLinea } = useHairlineOnScroll();
+  const { cabeceraRef, conLinea } = useHairlineOnScroll();
   // La ficha que se ve a la derecha en computadora. Llegando por
   // /proyectos/[id] es esa; si no, la primera de la lista.
   const [elegidoId, setElegidoId] = useState<string | null>(detalle?.id ?? null);
@@ -398,7 +398,6 @@ export function ProjectsBoard({
     // pantalla grande el gris sí hace falta: ahí la lista es una tarjeta que
     // flota y necesita algo detrás.
     <main className="min-h-[calc(100vh-72px)] bg-white text-[#162543] sm:bg-[#fafafa] lg:flex lg:h-[calc(100dvh-64px)] lg:min-h-0 lg:flex-col lg:overflow-hidden lg:bg-white">
-      <div ref={sentinelaRef} aria-hidden className="h-px lg:hidden" />
       <section
         ref={cabeceraRef}
         className={cn(
