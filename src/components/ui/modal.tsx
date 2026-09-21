@@ -85,9 +85,16 @@ function useSombrasDeBorde(ref: React.RefObject<HTMLDivElement | null>) {
   return sombras;
 }
 
-/** Hacia abajo (la lleva la cabecera) y hacia arriba (la lleva el pie). */
-const SOMBRA_ABAJO = "shadow-[0_6px_10px_-8px_rgba(15,23,42,0.35)]";
-const SOMBRA_ARRIBA = "shadow-[0_-6px_10px_-8px_rgba(15,23,42,0.35)]";
+/**
+ * Hacia abajo (la lleva la cabecera) y hacia arriba (la lleva el pie).
+ *
+ * El encogimiento (`spread`) tiene que ser MENOR que el desenfoque, o la sombra
+ * no llega a dibujarse. Con 10 de desenfoque y -8 de encogimiento quedaba en
+ * menos de un píxel: estaba aplicada —se leía en el estilo calculado— y no se
+ * veía. Con 12 y -6 se extiende unos 9 px, que es lo que se nota sin pesar.
+ */
+const SOMBRA_ABAJO = "shadow-[0_8px_12px_-6px_rgba(15,23,42,0.18)]";
+const SOMBRA_ARRIBA = "shadow-[0_-8px_12px_-6px_rgba(15,23,42,0.18)]";
 
 export function Modal({
   open = true,
