@@ -249,8 +249,14 @@ export default async function OfferDetailPage({ params, searchParams }: { params
           segunda flecha dentro de la página duplica el camino y obliga a
           adivinar si hacen lo mismo. En el teléfono la salida sigue siendo la
           flecha de la cabecera, que ahí sí es la única que hay. */}
-      <div className="mx-auto grid max-w-[84rem] gap-5 px-0 py-0 sm:px-6 sm:py-8 lg:grid-cols-[minmax(0,1fr)_320px] lg:justify-center lg:pt-3">
-        <article className="overflow-hidden bg-white lg:rounded-lg lg:border lg:border-[#e5e7eb]">
+      {/* FLEX CON UTILIDADES NORMALES, NO UNA REJILLA CON VALOR ARBITRARIO.
+            `lg:grid-cols-[minmax(0,1fr)_320px]` depende de que Tailwind genere
+            esa clase; donde no la generó, quedaba `lg:grid` con una sola
+            columna y las dos tarjetas salían APILADAS, una debajo de la otra.
+            `lg:flex` + `lg:flex-1` + `lg:w-80` son utilidades de siempre: no
+            hay nada que generar y no hay forma de que degrade. */}
+      <div className="mx-auto flex max-w-[84rem] flex-col gap-5 px-0 py-0 sm:px-6 sm:py-8 lg:flex-row lg:items-start lg:pt-3">
+        <article className="min-w-0 overflow-hidden bg-white lg:flex-1 lg:rounded-lg lg:border lg:border-[#e5e7eb]">
           <div className="relative bg-white p-0 sm:p-3">
             <OfferImageGallery images={offer.image_urls} title={offer.title} />
             {/* El descuento se lee como en el tablón: una marca sobre la foto,
@@ -331,7 +337,7 @@ export default async function OfferDetailPage({ params, searchParams }: { params
             debajo de la columna de la izquierda: las dos columnas nacían
             desalineadas. Con el tope igual a su sitio natural no empuja nunca,
             y al desplazar se pega igual. */}
-        <aside className="hidden h-fit rounded-lg border border-[#e5e7eb] bg-white p-5 lg:sticky lg:top-[calc(var(--ccr-native-header-height,64px)+0.75rem)] lg:block">
+        <aside className="hidden h-fit w-80 shrink-0 rounded-lg border border-[#e5e7eb] bg-white p-5 lg:sticky lg:top-6 lg:block">
           <p className="text-xs font-bold uppercase text-[#7a899d]">{copy.title}</p><p className="mt-1 text-2xl font-extrabold text-[#007fae]">{formatOfferPrice(offer, locale)}</p>{before && <p className="mt-1 text-sm font-bold text-[#8794a7] line-through">{copy.before} {before}</p>}
           <p className="mb-4 mt-4 border-y border-[#e5e7eb] py-4 text-sm font-semibold text-[#52627a]">{copy.publishedBy}{" "}{offer.professional_slug ? (<Link href={`/profesionales/${offer.professional_slug}?from=${encodeURIComponent(`/ofertas/${offer.id}`)}`} className="text-[#005eaa] hover:underline">{offer.professional_name}</Link>) : offer.professional_name}</p>
           {isOwner ? (

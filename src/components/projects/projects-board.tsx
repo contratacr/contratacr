@@ -533,7 +533,11 @@ export function ProjectsBoard({
                 // `lg:border-0`. En una PÁGINA de ficha no hay dos columnas que
                 // separar, y esa raya quedaba suelta a la derecha de la tarjeta,
                 // bajando por el gris hasta el final.
-                ? "ccr-ficha-pagina lg:grid lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start lg:justify-center lg:gap-5 lg:overflow-visible lg:rounded-none lg:border-0 lg:bg-transparent lg:shadow-none"
+                // FLEX CON UTILIDADES NORMALES, no una rejilla con valor
+                // arbitrario: `lg:grid-cols-[minmax(0,1fr)_320px]` depende de
+                // que Tailwind genere esa clase, y donde no la generó quedaba
+                // `lg:grid` con UNA columna y las dos tarjetas salían apiladas.
+                ? "ccr-ficha-pagina lg:flex lg:items-start lg:gap-5 lg:overflow-visible lg:rounded-none lg:border-0 lg:bg-transparent lg:shadow-none"
                 : "lg:h-full",
               // UNA DIRECCIÓN PROPIA ABRE UNA PÁGINA PROPIA, como en Empleos y
               // Promociones: /proyectos/[id] muestra SOLO el proyecto, también
@@ -594,7 +598,7 @@ export function ProjectsBoard({
                   "min-w-0",
                   !fichaEnMovil && "max-lg:hidden",
                   detalle
-                    ? "lg:min-w-0"
+                    ? "lg:min-w-0 lg:flex-1"
                     : cn("lg:h-full lg:overflow-y-auto lg:bg-white", filtrados.length === 0 && "lg:col-span-2"),
                 )}>
                   {/* Sin la lista al lado, la ficha no se estira a lo ancho de
@@ -734,7 +738,7 @@ export function ProjectsBoard({
                   se hace con ella. En un proyecto el dato que define no es un
                   precio —no lo tiene— sino el servicio que se pide. */}
               {detalle && ficha && (
-                <aside className="hidden lg:sticky lg:top-[calc(var(--ccr-native-header-height,64px)+0.75rem)] rounded-lg border border-[#e5e7eb] bg-white p-5 lg:block">
+                <aside className="hidden h-fit w-80 shrink-0 rounded-lg border border-[#e5e7eb] bg-white p-5 lg:sticky lg:top-6 lg:block">
                   <p className="text-xs font-bold uppercase tracking-wide text-[#7a899d]">{copy.ficha}</p>
                   <p className="mt-1 text-2xl font-extrabold leading-tight text-[#007fae]">{ficha.category_name || copy.titulo}</p>
                   <p className="mt-4 border-t border-[#eef2f6] pt-4 text-sm text-[#43536b]">

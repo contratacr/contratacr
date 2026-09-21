@@ -421,15 +421,21 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
             sitio—, y entonces dice «Ver todos los empleos», no «Volver». */}
         {/* En computadora no hay flecha de volver: la del navegador ya
             está y hace lo mismo. Ver la nota de la ficha de una promoción. */}
-        <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_320px] lg:justify-center">
-          <div className="overflow-hidden rounded-lg border border-[#e5e7eb] bg-white">
+        {/* FLEX CON UTILIDADES NORMALES, NO UNA REJILLA CON VALOR ARBITRARIO.
+            `lg:grid-cols-[minmax(0,1fr)_320px]` depende de que Tailwind genere
+            esa clase; donde no la generó, quedaba `lg:grid` con una sola
+            columna y las dos tarjetas salían APILADAS, una debajo de la otra.
+            `lg:flex` + `lg:flex-1` + `lg:w-80` son utilidades de siempre: no
+            hay nada que generar y no hay forma de que degrade. */}
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-start">
+          <div className="min-w-0 overflow-hidden rounded-lg border border-[#e5e7eb] bg-white lg:flex-1">
             <JobPreview job={selected} isOwner={selected.employer_id === currentProfessionalId} userId={currentUserId} onEdit={() => setEditingJob(selected)} hideActions />
           </div>
           {/* Acompaña al desplazar, como en Promociones y Proyectos: era la
               única de las tres que se quedaba atrás al bajar por la
               descripción, y el WhatsApp desaparecía justo cuando se había
               terminado de leer y se quería escribir. */}
-          <aside className="h-fit self-start rounded-lg border border-[#e5e7eb] bg-white p-5 lg:sticky lg:top-[calc(var(--ccr-native-header-height,64px)+0.75rem)]">
+          <aside className="h-fit w-full shrink-0 self-start rounded-lg border border-[#e5e7eb] bg-white p-5 lg:w-80 lg:sticky lg:top-6">
             <p className="text-xs font-bold uppercase text-[#7a899d]">{copy.salary}</p>
             <p className="mt-1 text-2xl font-extrabold text-[#007fae]">{formatJobSalary(selected, locale)}</p>
             <div className="my-4 border-t border-[#e5e7eb]" />

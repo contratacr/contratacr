@@ -77,8 +77,14 @@ export default async function JobDetailRedirect({ params, searchParams }: Props)
           <ArrowLeft className="h-4 w-4 stroke-[2.4]" />
           {t("backAll")}
         </Link>
-        <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_320px] lg:justify-center">
-          <article className="rounded-lg border border-[#e5e7eb] bg-white p-6 sm:p-7">
+        {/* FLEX CON UTILIDADES NORMALES, NO UNA REJILLA CON VALOR ARBITRARIO.
+            `lg:grid-cols-[minmax(0,1fr)_320px]` depende de que Tailwind genere
+            esa clase; donde no la generó, quedaba `lg:grid` con una sola
+            columna y las dos tarjetas salían APILADAS, una debajo de la otra.
+            `lg:flex` + `lg:flex-1` + `lg:w-80` son utilidades de siempre: no
+            hay nada que generar y no hay forma de que degrade. */}
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-start">
+          <article className="min-w-0 rounded-lg border border-[#e5e7eb] bg-white p-6 sm:p-7 lg:flex-1">
             {nombre && <p className="font-semibold text-[#52627a]">{nombre}</p>}
             <h1 className="mt-0.5 text-2xl font-extrabold leading-tight text-[#162543]">{cerrado.title}</h1>
             {cerrado.location_label && <p className="mt-1 text-sm text-[#68778d]">{cerrado.location_label}</p>}
@@ -86,7 +92,7 @@ export default async function JobDetailRedirect({ params, searchParams }: Props)
                 iría el salario: repetido en las dos se leía como un error. */}
             <p className="mt-5 rounded-lg bg-[#f4f7fa] p-4 text-sm font-bold lg:hidden">{t("unavailable")}</p>
           </article>
-          <aside className="hidden h-fit rounded-lg border border-[#e5e7eb] bg-white p-5 lg:block">
+          <aside className="hidden h-fit w-80 shrink-0 rounded-lg border border-[#e5e7eb] bg-white p-5 lg:block">
             <p className="text-xs font-bold uppercase tracking-wide text-[#7a899d]">{t("heading")}</p>
             <p className="mt-3 rounded-lg bg-[#f4f7fa] p-4 text-sm font-bold">{t("unavailable")}</p>
           </aside>
