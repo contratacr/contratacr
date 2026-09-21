@@ -30,25 +30,25 @@ export function OfferOwnerActions({ offer, professionalId, serviceOptions, fromP
 
   return (
     <>
-      {/* UNO ARRIBA Y DOS ABAJO. Tres botones del mismo ancho apilados no
-          dicen cuál importa: el color es la única diferencia. Con el principal
-          a lo ancho y los dos secundarios en pareja, la jerarquía se ve sin
-          leer, y es la misma forma que ya tiene la fila de acciones de las
-          tarjetas del panel. */}
+      {/* DOS ACCIONES, UNA A CADA LADO. Eran tres —editar, administrar y copiar
+          enlace— y por eso editar iba a lo ancho arriba; al mudarse compartir
+          al «···», administrar se quedó huérfano en media columna y la fila
+          parecía cortada. Con dos, cada una toma su mitad y siguen
+          distinguiéndose por el color. */}
       <div className="grid grid-cols-2 gap-3">
         <button
           type="button"
           onClick={() => setEditing(true)}
-          className="col-span-2 hidden h-11 w-full min-w-0 items-center justify-center rounded-full bg-[#009fd9] px-4 text-sm font-bold text-white transition hover:bg-[#008fc3] lg:inline-flex"
+          className="hidden h-11 w-full min-w-0 items-center justify-center rounded-full bg-[#009fd9] px-3 text-sm font-bold text-white transition hover:bg-[#008fc3] lg:inline-flex"
         >
           <span className="truncate">{copy.edit}</span>
         </button>
-        <Link href={editHref} className="col-span-2 inline-flex h-11 w-full min-w-0 items-center justify-center rounded-full bg-[#009fd9] px-3 text-sm font-bold text-white transition hover:bg-[#008fc3] sm:px-4 lg:hidden">
+        <Link href={editHref} className="inline-flex h-11 w-full min-w-0 items-center justify-center rounded-full bg-[#009fd9] px-3 text-sm font-bold text-white transition hover:bg-[#008fc3] sm:px-4 lg:hidden">
           <span className="truncate">{copy.edit}</span>
         </Link>
         <Link href="/dashboard/profesional?mode=offer&tab=offers" className="inline-flex h-11 w-full min-w-0 items-center justify-center rounded-full border border-[#b9d9e8] px-3 text-sm font-bold text-[#007fae] transition hover:bg-[#f1f9fc] sm:px-4">
-          {/* Siempre en corto: comparte fila con «Copiar enlace», y
-              «Administrar promoción» no cabe en media columna. */}
+          {/* Siempre en corto: comparte fila con «Editar», y «Administrar
+              promoción» no cabe en media columna. */}
           <span className="truncate">{locale === "es" ? "Administrar" : "Manage"}</span>
         </Link>
       </div>

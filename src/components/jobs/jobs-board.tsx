@@ -438,10 +438,14 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
                 no dicen cuál importa: el color es la única diferencia. Con el
                 principal a lo ancho y los dos secundarios en pareja, la
                 jerarquía se ve sin leer. «Administrar» va en corto porque
-                comparte fila y «Administrar empleo» no cabe en media columna. */}
+                comparte fila y «Administrar empleo» no cabe en media columna.
+                DOS ACCIONES, UNA A CADA LADO: eran tres —editar, administrar y
+                copiar enlace— y por eso editar iba a lo ancho arriba; al mudarse
+                compartir al «···», administrar se quedó huérfano en media
+                columna y la fila parecía cortada. */}
             {selected.employer_id === currentProfessionalId ? (
               <div className="grid grid-cols-2 gap-3">
-                <button type="button" onClick={() => setEditingJob(selected)} className="col-span-2 inline-flex h-11 w-full items-center justify-center rounded-full bg-[#009fd9] px-5 text-sm font-bold text-white transition hover:bg-[#008fc3]">{copy.editJob}</button>
+                <button type="button" onClick={() => setEditingJob(selected)} className="inline-flex h-11 w-full items-center justify-center rounded-full bg-[#009fd9] px-3 text-sm font-bold text-white transition hover:bg-[#008fc3]"><span className="truncate">{copy.editJob}</span></button>
                 <Link href={`/dashboard/profesional?mode=offer&tab=jobs&job=${selected.id}`} className="inline-flex h-11 w-full min-w-0 items-center justify-center rounded-full border border-[#b9d9e8] px-3 text-sm font-bold text-[#007fae] transition hover:bg-[#f1f9fc]"><span className="truncate">{copy.manageShort}</span></Link>
               </div>
             ) : (
