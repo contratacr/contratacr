@@ -10,8 +10,11 @@ import type { SelectMenuOption } from "@/components/ui/select-menu";
 import { marketplaceLocale } from "@/lib/marketplace-copy";
 
 const OWNER_ACTION_COPY = {
-  es: { edit: "Editar promoción", manage: "Administrar promoción", subtitle: "Actualiza la información de esta publicación." },
-  en: { edit: "Edit offer", manage: "Manage offer", subtitle: "Update this offer's information." },
+  // `editCorto`: el rótulo que va en MEDIA columna. «Editar promoción» no cabe
+  // ahí y salía como «Editar promo…», que no es un botón, es un acertijo. La
+  // pantalla ya dice de qué es: al lado está «Administrar», también en corto.
+  es: { edit: "Editar promoción", editCorto: "Editar", manage: "Administrar promoción", subtitle: "Actualiza la información de esta publicación." },
+  en: { edit: "Edit offer", editCorto: "Edit", manage: "Manage offer", subtitle: "Update this offer's information." },
 } as const;
 
 type Props = {
@@ -41,10 +44,10 @@ export function OfferOwnerActions({ offer, professionalId, serviceOptions, fromP
           onClick={() => setEditing(true)}
           className="hidden h-11 w-full min-w-0 items-center justify-center rounded-full bg-[#009fd9] px-3 text-sm font-bold text-white transition hover:bg-[#008fc3] lg:inline-flex"
         >
-          <span className="truncate">{copy.edit}</span>
+          <span className="truncate">{copy.editCorto}</span>
         </button>
         <Link href={editHref} className="inline-flex h-11 w-full min-w-0 items-center justify-center rounded-full bg-[#009fd9] px-3 text-sm font-bold text-white transition hover:bg-[#008fc3] sm:px-4 lg:hidden">
-          <span className="truncate">{copy.edit}</span>
+          <span className="truncate">{copy.editCorto}</span>
         </Link>
         <Link href="/dashboard/profesional?mode=offer&tab=offers" className="inline-flex h-11 w-full min-w-0 items-center justify-center rounded-full border border-[#b9d9e8] px-3 text-sm font-bold text-[#007fae] transition hover:bg-[#f1f9fc] sm:px-4">
           {/* Siempre en corto: comparte fila con «Editar», y «Administrar

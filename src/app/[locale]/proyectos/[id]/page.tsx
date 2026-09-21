@@ -7,8 +7,13 @@ import { createClient, hasSupabaseServerConfig } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
-export default async function ProyectoDetallePage({ params }: { params: Promise<{ id: string }> }) {
+export default async function ProyectoDetallePage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams?: Promise<{ from?: string }> }) {
   const { id } = await params;
+  // Igual que en Empleos y Promociones: el enlace de volver solo se dibuja
+  // cuando se llegó DE FUERA —por Google o por un enlace de WhatsApp—, porque
+  // ahí la flecha del navegador saca del sitio. Viniendo del tablero o del
+  // panel esa flecha ya hace exactamente eso.
+  const llegoDeFuera = !(await searchParams)?.from;
   if (!hasSupabaseServerConfig()) notFound();
   const supabase = await createClient();
   const user = await safeGetUser(supabase);
@@ -19,5 +24,5 @@ export default async function ProyectoDetallePage({ params }: { params: Promise<
   const detalle = proyectos.find((proyecto) => proyecto.id === id)
     ?? await cargarProyectoDelDueno(id, user?.id);
   if (!detalle) notFound();
-  return <ProjectsBoard proyectos={proyectos} currentUserId={user?.id ?? null} detalle={detalle} misProyectos={mios} />;
+  return <ProjectsBoard proyectos={proyectos} currentUserId={user?.id ?? null} detalle={detalle} misProyectos={mios} llegoDeFuera={llegoDeFuera} />;
 }

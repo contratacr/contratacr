@@ -265,11 +265,15 @@ export function ProjectsBoard({
   proyectos,
   currentUserId,
   detalle = null,
+  llegoDeFuera = true,
   misProyectos = [],
 }: {
   proyectos: ProyectoPublico[];
   currentUserId: string | null;
   detalle?: ProyectoPublico | null;
+  /** Se llegó de fuera (Google, WhatsApp): ahí sí hace falta una puerta hacia
+   *  adentro, porque la flecha del navegador saca del sitio. */
+  llegoDeFuera?: boolean;
   /** Los que publicó quien mira: su ficha no ofrece escribirse ni guardarse. */
   misProyectos?: string[];
 }) {
@@ -516,7 +520,7 @@ export function ProjectsBoard({
           )}>
             {/* La salida, arriba y a la izquierda, con la misma forma que en
                 Empleos y Promociones. */}
-            {detalle && (
+            {detalle && llegoDeFuera && (
               <Link href="/proyectos" className="mb-4 hidden items-center gap-2 text-sm font-bold text-[#162543] hover:text-[#007fae] lg:inline-flex">
                 <ArrowLeft className="h-4 w-4" />
                 {copy.verTodos}
@@ -616,7 +620,13 @@ export function ProjectsBoard({
                                 pila la línea no decía nada; con el nombre
                                 entero y la cara, el profesional sabe a quién le
                                 va a contestar. */}
-                            <p className="min-w-0 truncate font-semibold text-[#52627a]">
+                            {/* `flex-1`: el nombre se queda con el espacio libre
+                                en vez de que se lo lleve un separador vacío. Con
+                                un `<span className="flex-1" />` al lado, el hueco
+                                crecía y el nombre se recortaba primero: «Mateo
+                                Herrera Solís» salía como «Mateo…» teniendo medio
+                                renglón de sobra. */}
+                            <p className="min-w-0 flex-1 truncate font-semibold text-[#52627a]">
                               {ficha.client_name}
                             </p>
                             {/* Sin esto, la ficha propia se veía igual que
@@ -625,7 +635,6 @@ export function ProjectsBoard({
                             {misProyectos.includes(ficha.id) && (
                               <span className="shrink-0 rounded-full bg-[#eaf7fc] px-2.5 py-0.5 text-xs font-bold text-[#0089bb]">{copy.tuyo}</span>
                             )}
-                            <span className="flex-1" />
                             <MenuProyecto grande className="-my-2.5 -mr-2 hidden shrink-0 lg:block" proyectoId={ficha.id} titulo={ficha.title} guardar={misProyectos.includes(ficha.id) ? undefined : { snapshot: retrato(ficha), userId: currentUserId }} clienteNombre={ficha.client_name} esPropio={misProyectos.includes(ficha.id)} />
                           </div>
                           <h2 className="mt-0.5 text-2xl font-extrabold leading-tight text-[#162543]">{ficha.title}</h2>
