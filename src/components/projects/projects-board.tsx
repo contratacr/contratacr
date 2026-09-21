@@ -397,7 +397,15 @@ export function ProjectsBoard({
     // entre la última y el pie —un fondo que solo se ve donde no hay nada—. En
     // pantalla grande el gris sí hace falta: ahí la lista es una tarjeta que
     // flota y necesita algo detrás.
-    <main className="min-h-[calc(100vh-72px)] bg-white text-[#162543] sm:bg-[#fafafa] lg:flex lg:h-[calc(100dvh-64px)] lg:min-h-0 lg:flex-col lg:overflow-hidden lg:bg-white">
+    // Con dirección propia (/proyectos/[id]) la pantalla es una PÁGINA que se
+    // desplaza sobre gris, como la de un empleo o una promoción; sin ella es un
+    // tablero de alto fijo con la lista y la ficha lado a lado.
+    <main className={cn(
+      "min-h-[calc(100vh-72px)] bg-white text-[#162543] sm:bg-[#fafafa]",
+      detalle
+        ? "lg:bg-[#f4f7fa]"
+        : "lg:flex lg:h-[calc(100dvh-64px)] lg:min-h-0 lg:flex-col lg:overflow-hidden lg:bg-white",
+    )}>
       <section
         ref={cabeceraRef}
         className={cn(
@@ -466,7 +474,7 @@ export function ProjectsBoard({
         </section>
       </MarketplaceNavbarPortal>
 
-      <div className="relative z-30 hidden shrink-0 border-b border-[#e5e7eb] bg-white lg:block">
+      <div className={cn("relative z-30 hidden shrink-0 border-b border-[#e5e7eb] bg-white", !detalle && "lg:block")}>
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-6 py-2.5">
           <div className={cn("flex shrink-0 items-baseline gap-2", filtros && "border-r border-[#e5e7eb] pr-4")}>
             {/* El nombre de la pantalla, a la vista: antes era solo para lectores
@@ -500,9 +508,25 @@ export function ProjectsBoard({
           // blanco, la lista y la ficha pegadas a la barra de filtros, y un solo
           // borde donde se juntan. Antes Proyectos era una tarjeta angosta
           // flotando sobre gris, y la ficha se abría en otra pantalla.
-          <div className="mx-auto w-full max-w-7xl px-0 py-0 sm:max-w-[46rem] sm:px-6 sm:py-5 lg:max-w-7xl lg:min-h-0 lg:flex-1 lg:px-6 lg:py-0">
+          <div className={cn(
+            "mx-auto w-full max-w-7xl px-0 py-0 sm:max-w-[46rem] sm:px-6 sm:py-5 lg:px-6",
+            // Las MISMAS medidas que la página de un empleo: 6xl de ancho y la
+            // ficha centrada en 760 px con su tarjeta de 320 al lado.
+            detalle ? "lg:max-w-6xl lg:pb-8 lg:pt-8" : "lg:max-w-7xl lg:min-h-0 lg:flex-1 lg:py-0",
+          )}>
+            {/* La salida, arriba y a la izquierda, con la misma forma que en
+                Empleos y Promociones. */}
+            {detalle && (
+              <Link href="/proyectos" className="mb-4 hidden items-center gap-2 text-sm font-bold text-[#162543] hover:text-[#007fae] lg:inline-flex">
+                <ArrowLeft className="h-4 w-4" />
+                {copy.verTodos}
+              </Link>
+            )}
             <div className={cn(
-              "ccr-panel-tablero sm:overflow-hidden sm:rounded-[22px] sm:border sm:border-[#e5e7eb] sm:bg-white sm:shadow-[0_12px_34px_-28px_rgba(15,23,42,0.55)] lg:h-full",
+              "ccr-panel-tablero sm:overflow-hidden sm:rounded-[22px] sm:border sm:border-[#e5e7eb] sm:bg-white sm:shadow-[0_12px_34px_-28px_rgba(15,23,42,0.55)]",
+              detalle
+                ? "lg:grid lg:grid-cols-[minmax(0,760px)_320px] lg:items-start lg:justify-center lg:gap-5 lg:overflow-visible lg:rounded-none lg:border-0 lg:bg-transparent lg:shadow-none"
+                : "lg:h-full",
               // UNA DIRECCIÓN PROPIA ABRE UNA PÁGINA PROPIA, como en Empleos y
               // Promociones: /proyectos/[id] muestra SOLO el proyecto, también
               // en computadora. Con la lista al lado, «Ver proyecto» desde el
@@ -559,16 +583,20 @@ export function ProjectsBoard({
               </section>
               {ficha && (
                 <section className={cn(
-                  "min-w-0 lg:h-full lg:overflow-y-auto lg:bg-white",
+                  "min-w-0",
                   !fichaEnMovil && "max-lg:hidden",
-                  // Sin resultados en la lista, la ficha abierta ocupa todo.
-                  (filtrados.length === 0 || detalle) && "lg:col-span-2",
+                  detalle
+                    ? "lg:min-w-0"
+                    : cn("lg:h-full lg:overflow-y-auto lg:bg-white", filtrados.length === 0 && "lg:col-span-2"),
                 )}>
                   {/* Sin la lista al lado, la ficha no se estira a lo ancho de
                       la pantalla: el ancho de lectura se queda, como en la
                       página de un empleo. */}
-                  <div className={cn("mx-auto w-full max-w-3xl px-0 pt-0 sm:px-6 sm:pb-10", !detalle && "lg:max-w-none lg:p-0")}>
-                    <article className="relative bg-white px-5 pt-6 max-sm:pb-6 sm:p-7">
+                  <div className={cn("mx-auto w-full max-w-3xl px-0 pt-0 sm:px-6 sm:pb-10", detalle ? "lg:max-w-none lg:px-0 lg:pb-0" : "lg:max-w-none lg:p-0")}>
+                    <article className={cn(
+                      "relative bg-white px-5 pt-6 max-sm:pb-6 sm:p-7",
+                      detalle && "lg:rounded-lg lg:border lg:border-[#e5e7eb]",
+                    )}>
                       {/* En computadora no hay barra de ficha: guardar y compartir
                           van en la esquina, a la altura del título, como en Empleos. */}
                       {/* El mismo encabezado que la ficha de un empleo: ícono, título,
@@ -617,7 +645,7 @@ export function ProjectsBoard({
                           fila que se queda pegada arriba del panel al bajar por la
                           descripción. Antes estaban al final de la ficha y el «···»
                           flotaba solo en la esquina. */}
-                      <div className="sticky top-0 z-10 -mx-7 mt-4 hidden items-center gap-2 border-b border-[#eef2f6] bg-white px-7 py-3 lg:flex">
+                      <div className={cn("sticky top-0 z-10 -mx-7 mt-4 hidden items-center gap-2 border-b border-[#eef2f6] bg-white px-7 py-3", !detalle && "lg:flex")}>
                         {misProyectos.includes(ficha.id) ? (
                           <Link
                             href={`/dashboard/profesional?tab=sent_projects&project=${ficha.id}`}
@@ -644,13 +672,17 @@ export function ProjectsBoard({
                           teléfono no hay fila de acciones, así que ahí el bloque
                           sí pone la suya. Es la misma regla que ya usaba la
                           ficha de un empleo. */}
-                      <dl className="grid gap-3 border-b border-[#e5e7eb] pb-5 pt-5 text-sm sm:grid-cols-2 max-lg:mt-6 max-lg:border-t">
+                      <dl className={cn("grid gap-3 border-b border-[#e5e7eb] pb-5 pt-5 text-sm sm:grid-cols-2 max-lg:mt-6 max-lg:border-t", detalle && "lg:mt-6 lg:border-t")}>
                         {([
                           [copy.filaServicio, ficha.category_name] as [string, string | null],
                           [copy.filaUbicacion, ficha.location_label || copy.todoElPais] as [string, string | null],
                           [copy.filaPublicado, cuandoSePublico(ficha.created_at, en)] as [string, string | null],
                         ].filter(([, valor]) => Boolean(valor)) as Array<[string, string]>).map(([etiqueta, valor]) => (
-                          <div key={etiqueta} className="min-w-0">
+                          // En COMPUTADORA, en la página, el servicio es el
+                          // titular de la tarjeta de la derecha: repetirlo aquí
+                          // lo decía tres veces en la misma pantalla. En el
+                          // teléfono no hay tarjeta al lado, así que se queda.
+                          <div key={etiqueta} className={cn("min-w-0", detalle && etiqueta === copy.filaServicio && "lg:hidden")}>
                             <dt className="text-xs font-bold uppercase tracking-wide text-[#7a899d]">{etiqueta}</dt>
                             <dd className="mt-0.5 break-words font-bold text-[#162543] [overflow-wrap:anywhere]">{valor}</dd>
                           </div>
@@ -678,6 +710,34 @@ export function ProjectsBoard({
                     </article>
                   </div>
                 </section>
+              )}
+              {/* LA MISMA TARJETA QUE EN PROMOCIONES Y EMPLEOS: el dato que
+                  define la publicación arriba, quién la puso, y debajo lo que
+                  se hace con ella. En un proyecto el dato que define no es un
+                  precio —no lo tiene— sino el servicio que se pide. */}
+              {detalle && ficha && (
+                <aside className="sticky top-24 hidden rounded-lg border border-[#e5e7eb] bg-white p-5 lg:block">
+                  <p className="text-xs font-bold uppercase tracking-wide text-[#7a899d]">{copy.ficha}</p>
+                  <p className="mt-1 text-2xl font-extrabold leading-tight text-[#007fae]">{ficha.category_name || copy.titulo}</p>
+                  <p className="mt-4 border-t border-[#eef2f6] pt-4 text-sm text-[#43536b]">
+                    {copy.publicado} <span className="font-bold text-[#162543]">{ficha.client_name}</span>
+                  </p>
+                  <div className="mt-4 flex flex-col gap-2 border-t border-[#eef2f6] pt-4">
+                    {misProyectos.includes(ficha.id) ? (
+                      <Link
+                        href={`/dashboard/profesional?tab=sent_projects&project=${ficha.id}`}
+                        className="inline-flex h-12 w-full items-center justify-center rounded-full border border-[#b9d9e8] px-6 text-base font-semibold text-[#007fae] transition hover:bg-[#f1f9fc]"
+                      >
+                        {copy.administrar}
+                      </Link>
+                    ) : (
+                      <>
+                        <BotonEscribir proyecto={ficha} />
+                        <SaveItemButton grande itemType="project" itemId={ficha.id} snapshot={retrato(ficha)} userId={currentUserId} />
+                      </>
+                    )}
+                  </div>
+                </aside>
               )}
             </div>
           </div>
