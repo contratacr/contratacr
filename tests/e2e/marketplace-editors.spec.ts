@@ -245,7 +245,9 @@ test.describe("@seeded marketplace editors through the real screens", () => {
     // Empleos es masculino: la pestaña dice «Cerrados» (Promociones, «Cerradas»).
     const cerradasEmpleos = page.getByRole("tab", { name: /Cerrados/ }).or(page.getByRole("button", { name: /^Cerrados/ })).filter({ visible: true }).first();
     if (await cerradasEmpleos.count()) await cerradasEmpleos.click();
-    await expectVisibleText(card, /Cerrado/);
+    // La tarjeta dice la idea completa, no la etiqueta suelta: «Cerrado» al
+    // lado del título de un empleo no dice qué está cerrado.
+    await expectVisibleText(card, /Vacante cerrada/i);
     await expectHealthyPage(page);
 
     // A closed vacancy is no longer on the public board.

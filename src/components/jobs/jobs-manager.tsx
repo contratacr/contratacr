@@ -26,7 +26,13 @@ export type ManagedJob = JobPost & { applications: Application[] };
 const JOBS_MANAGER_COPY = {
   es: {
     applicationStates: { submitted: "Recibida", reviewing: "En revisión", shortlisted: "Finalista", rejected: "Descartada", hired: "Contratada" },
-    jobStates: { published: "Publicado", paused: "Pausado", closed: "Cerrado", draft: "Borrador" },
+    // UN ESTADO TIENE QUE DECIRSE ENTERO.
+    // «Cerrado» a secas, junto al título de un empleo, no dice qué está
+    // cerrado ni qué implica; «Vacante cerrada» sí. Y «Borrador» se fue: el
+    // formulario publica SIEMPRE (nunca manda `draft`), así que era una
+    // palabra para un estado que nadie podía crear. Si alguna fila vieja lo
+    // trae, se lee como cerrada, que es lo que es: no se ve en público.
+    jobStates: { published: "Publicado", paused: "Pausado", closed: "Vacante cerrada", draft: "Vacante cerrada" },
     back: "Volver al panel", title: "Mis empleos", subtitle: "Vacantes para cuando necesitas contratar.", publish: "Publicar empleo",
     application: "postulación", applications: "postulaciones", view: "Ver empleo", edit: "Editar", more: "Más opciones",
     pause: "Pausar", close: "Cerrar vacante", republish: "Volver a publicar", remove: "Eliminar", removeTitle: "¿Eliminar este empleo?", removeBody: "Se borra del todo y no se puede recuperar.", removeCancel: "Cancelar", applicationsTitle: "Postulaciones",
@@ -37,7 +43,7 @@ const JOBS_MANAGER_COPY = {
   },
   en: {
     applicationStates: { submitted: "Received", reviewing: "In review", shortlisted: "Shortlisted", rejected: "Rejected", hired: "Hired" },
-    jobStates: { published: "Published", paused: "Paused", closed: "Closed", draft: "Draft" },
+    jobStates: { published: "Published", paused: "Paused", closed: "Position closed", draft: "Position closed" },
     back: "Back to dashboard", title: "My jobs", subtitle: "Openings for when you need to hire.", publish: "Post job",
     application: "application", applications: "applications", view: "View job", edit: "Edit", more: "More options",
     pause: "Pause", close: "Close opening", republish: "Publish again", remove: "Delete", removeTitle: "Delete this job?", removeBody: "It is removed for good and cannot be recovered.", removeCancel: "Cancel", applicationsTitle: "Applications",
