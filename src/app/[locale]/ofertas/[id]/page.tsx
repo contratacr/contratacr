@@ -255,7 +255,7 @@ export default async function OfferDetailPage({ params, searchParams }: { params
             columna y las dos tarjetas salían APILADAS, una debajo de la otra.
             `lg:flex` + `lg:flex-1` + `lg:w-80` son utilidades de siempre: no
             hay nada que generar y no hay forma de que degrade. */}
-      <div className="mx-auto flex max-w-7xl flex-col gap-5 px-0 py-0 sm:px-6 sm:py-8 lg:flex-row lg:items-start lg:pt-3">
+      <div className="mx-auto flex max-w-6xl flex-col gap-5 px-0 py-0 sm:px-6 sm:py-8 lg:flex-row lg:items-start lg:pt-3">
         <article className="min-w-0 overflow-hidden bg-white lg:flex-1 lg:rounded-lg lg:border lg:border-[#e5e7eb]">
           <div className="relative bg-white p-0 sm:p-3">
             <OfferImageGallery images={offer.image_urls} title={offer.title} />
@@ -325,7 +325,7 @@ export default async function OfferDetailPage({ params, searchParams }: { params
             </dl>
             <section className="mt-7 pb-6">
               <h3 className="text-lg font-bold">{copy.details}</h3>
-              <p className="mt-3 max-w-3xl whitespace-pre-line break-words pr-1 text-sm leading-7 text-[#43536b] [overflow-wrap:anywhere]">
+              <p className="mt-3 whitespace-pre-line break-words pr-1 text-sm leading-7 text-[#43536b] [overflow-wrap:anywhere]">
                 {offer.description}
               </p>
             </section>

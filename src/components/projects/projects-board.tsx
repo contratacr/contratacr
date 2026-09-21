@@ -519,7 +519,7 @@ export function ProjectsBoard({
             "mx-auto w-full max-w-7xl px-0 py-0 sm:max-w-[46rem] sm:px-6 sm:py-5 lg:px-6",
             // Las MISMAS medidas que la página de un empleo: 6xl de ancho y la
             // ficha centrada en 760 px con su tarjeta de 320 al lado.
-            detalle ? "lg:max-w-7xl lg:pb-8 lg:pt-8" : "lg:max-w-7xl lg:min-h-0 lg:flex-1 lg:py-0",
+            detalle ? "lg:max-w-6xl lg:pb-8 lg:pt-8" : "lg:max-w-7xl lg:min-h-0 lg:flex-1 lg:py-0",
           )}>
             {/* La salida, arriba y a la izquierda, con la misma forma que en
                 Empleos y Promociones. */}
@@ -604,7 +604,7 @@ export function ProjectsBoard({
                   {/* Sin la lista al lado, la ficha no se estira a lo ancho de
                       la pantalla: el ancho de lectura se queda, como en la
                       página de un empleo. */}
-                  <div className={cn("mx-auto w-full max-w-3xl px-0 pt-0 sm:px-6 sm:pb-10", detalle ? "lg:max-w-none lg:px-0 lg:pb-0" : "lg:max-w-none lg:p-0")}>
+                  <div className={cn("mx-auto w-full px-0 pt-0 sm:px-6 sm:pb-10", detalle ? "lg:max-w-none lg:px-0 lg:pb-0" : "lg:max-w-none lg:p-0")}>
                     <article className={cn(
                       "relative bg-white px-5 pt-6 max-sm:pb-6 sm:p-7",
                       detalle && "lg:rounded-lg lg:border lg:border-[#e5e7eb]",
@@ -712,7 +712,7 @@ export function ProjectsBoard({
                           medía 110 caracteres y el ojo se pierde al saltar de
                           renglón; LinkedIn e Indeed usan entre 90 y 100. La
                           tarjeta se queda grande y el párrafo se lee. */}
-                      <p className="mt-3 max-w-3xl whitespace-pre-line break-words text-sm leading-7 text-[#43536b] [overflow-wrap:anywhere]">{ficha.description}</p>
+                      <p className="mt-3 whitespace-pre-line break-words text-sm leading-7 text-[#43536b] [overflow-wrap:anywhere]">{ficha.description}</p>
                       {/* TELÉFONO: lo que contacta, en la franja de abajo; guardar
                           y compartir viven en el «···» de la barra de arriba. */}
                       {/* En la franja de abajo va lo que se hace con esta
