@@ -64,13 +64,25 @@ export async function cargarProyectosPublicos(limite = 100): Promise<ProyectoPub
     }
   }
 
-  return filas.map((fila) => {
+  return filas.map((fila) => aProyectoPublico(fila, cuentas.get(String(fila.client_id ?? "")), locale));
+}
+
+/**
+ * Una fila de `projects` como la ve el tablero. Estaba dentro del `.map` de la
+ * consulta pública; se saca aquí para que la ficha de UN proyecto —la del
+ * dueño, que puede estar finalizado o cancelado— salga exactamente igual y no
+ * haya dos versiones del mismo recorte.
+ */
+function aProyectoPublico(
+  fila: Record<string, unknown>,
+  cuenta: { nombre: string | null; foto: string | null } | undefined,
+  locale: string,
+): ProyectoPublico {
     const provinciaId = (fila.provincia_id as string | null) ?? null;
     const cantonId = (fila.canton_id as string | null) ?? null;
     const provincia = provinciaId ? getProvinceById(provinciaId)?.name ?? null : null;
     const canton = cantonId ? getCantonById(cantonId)?.name ?? null : null;
     const categoryId = (fila.category_id as string | null) ?? null;
-    const cuenta = cuentas.get(String(fila.client_id ?? ""));
     // El nombre de la cuenta manda sobre el que se guardó al publicar: si
     // alguien lo corrigió después, el tablero muestra el corregido.
     const nombreDeLaCuenta = cuenta?.nombre || repairVisibleText(String(fila.client_name_snapshot ?? ""));
@@ -89,7 +101,36 @@ export async function cargarProyectosPublicos(limite = 100): Promise<ProyectoPub
       client_avatar_url: cuenta?.foto ?? null,
       allow_direct_contact: fila.allow_direct_contact !== false,
     } satisfies ProyectoPublico;
-  });
+}
+
+/**
+ * UN proyecto, el de su dueño, en cualquier estado.
+ *
+ * El tablero público solo sirve los abiertos, así que abrir desde el panel un
+ * proyecto ya finalizado o cancelado daba «página no encontrada». Quien lo
+ * publicó tiene que poder mirarlo siempre: es suyo. Se lee con el cliente de
+ * servicio —la tabla solo deja leer al dueño o a un profesional que calce— y se
+ * comprueba a mano que `client_id` sea quien pregunta; sin eso, no devuelve
+ * nada. Sale con el MISMO recorte que el tablero: ni teléfono, ni correo, ni
+ * cédula.
+ */
+export async function cargarProyectoDelDueno(id: string, userId: string | null | undefined): Promise<ProyectoPublico | null> {
+  if (!id || !userId) return null;
+  const locale = await getLocale();
+  const db = createAdminClient();
+  const columnas = "id, title, description, category_id, provincia_id, canton_id, created_at, client_name_snapshot, client_id, status";
+  const consulta = (extra: string) => db.from("projects").select(`${columnas}${extra}`).eq("id", id).maybeSingle();
+  let { data, error } = await consulta(", allow_direct_contact");
+  if (error?.code === "42703") ({ data, error } = await consulta(""));
+  if (error || !data) return null;
+  const fila = data as unknown as Record<string, unknown>;
+  if (String(fila.client_id ?? "") !== userId) return null;
+  const { data: perfil } = await db.from("profiles").select("full_name, avatar_url").eq("id", userId).maybeSingle();
+  const p = perfil as { full_name?: string | null; avatar_url?: string | null } | null;
+  return aProyectoPublico(fila, {
+    nombre: p?.full_name ? repairVisibleText(String(p.full_name)) : null,
+    foto: p?.avatar_url ? String(p.avatar_url) : null,
+  }, locale);
 }
 
 /**

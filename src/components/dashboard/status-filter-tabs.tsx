@@ -534,6 +534,19 @@ export function proyectoMatches(filter: string, status: string): boolean {
   return proyectoBucket(status) === filter;
 }
 
+/**
+ * UN PROYECTO SE MIRA COMO UN EMPLEO O UNA PROMOCIÓN: está a la vista o no.
+ *
+ * Tenía tres etapas —Activos, Finalizados, Cancelados— de cuando el proyecto
+ * recibía propuestas dentro del app y había un desenlace que seguir. Desde que
+ * se contesta por WhatsApp, no entra ninguna propuesta: lo que queda es una
+ * publicación, igual que las otras dos listas del panel, y la pregunta útil es
+ * la misma que allí. Cuál de los dos finales fue lo sigue diciendo la tarjeta.
+ */
+export function proyectoPublicacionBucket(status: string): string {
+  return status === "completed" || status === "cancelled" ? "cerradas" : "activas";
+}
+
 // Lo que uno PUBLICA —empleos y promociones— vive en dos estados que importan:
 // está a la vista o no lo está. Pausada, vencida, agotada, cerrada y borrador
 // son la misma cosa para quien mira su lista: hoy no la ve nadie. Mismas reglas
