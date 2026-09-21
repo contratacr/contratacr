@@ -79,6 +79,7 @@ export default async function OfferDetailPage({ params, searchParams }: { params
   const from = (await searchParams)?.from;
   const backHref = safeMarketplaceReturnHref(from, "/ofertas");
   const backLabel = marketplaceReturnLabel(backHref, "/ofertas", locale);
+  const vuelveAlPanel = backHref.startsWith("/dashboard");
   const supabase = await createClient();
   const user = await safeGetUser(supabase);
   // Las columnas de contacto no se leen aquí: `contact_email` está negado por
@@ -192,7 +193,18 @@ export default async function OfferDetailPage({ params, searchParams }: { params
           />
         </div>
       </header>
-      <div className="mx-auto hidden max-w-6xl px-4 pt-8 sm:px-6 lg:block">
+      {/* EN COMPUTADORA, DESDE EL PANEL, ESTA FICHA VIVE EN SU PROPIA PESTAÑA.
+          «Ver promoción» abre una pestaña nueva (openInNewTabOnDesktop), así
+          que ahí «Volver al panel» es una promesa que no se puede cumplir: no
+          vuelve, reemplaza la ficha por un SEGUNDO panel y deja dos pestañas
+          del panel abiertas. Medido: history.length = 1, no hay nada atrás. La
+          salida en computadora es cerrar la pestaña, como en cualquier
+          administrador. El enlace se queda cuando sí hay de dónde volver —se
+          llegó desde el tablero, en la misma pestaña—, que es cuando dice
+          «Volver a promociones». En el teléfono no cambia nada: ahí la
+          navegación es en la misma pantalla y la flecha de la cabecera es la
+          única salida. */}
+      <div className={cn("mx-auto hidden max-w-6xl px-4 pt-8 sm:px-6", !vuelveAlPanel && "lg:block")}>
         <Link href={backHref} className="inline-flex h-10 items-center gap-2 rounded-lg px-2 text-sm font-extrabold text-[#162543] transition hover:bg-[#eaf6fc]">
           <ArrowLeft className="h-4 w-4 stroke-[2.4]" />
           <span>{backLabel}</span>

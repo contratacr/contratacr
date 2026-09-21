@@ -311,6 +311,7 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
   }, [selected, showingMobileDetail]);
   const detailBackHref = safeMarketplaceReturnHref(returnTo, "/empleos");
   const detailBackLabel = marketplaceReturnLabel(detailBackHref, "/empleos", locale);
+  const detailVuelveAlPanel = detailBackHref.startsWith("/dashboard");
 
   return <main className="min-h-[calc(100vh-72px)] overflow-x-clip bg-white pb-0 text-[#162543] sm:bg-[#fafafa] sm:pb-16 lg:flex lg:h-[calc(100dvh-64px)] lg:min-h-0 lg:flex-col lg:overflow-hidden lg:bg-white lg:pb-0">
     {avisoNode}
@@ -415,10 +416,16 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
     )}
     {detailOnly && selected && (
       <div className="mx-auto hidden w-full max-w-6xl px-6 pb-8 pt-8 lg:block">
-        <Link href={detailBackHref} className="mb-3 inline-flex h-10 items-center gap-2 rounded-lg px-2 text-sm font-extrabold text-[#162543] transition hover:bg-[#eaf6fc]">
-          <ArrowLeft className="h-4 w-4 stroke-[2.4]" />
-          {detailBackLabel}
-        </Link>
+        {/* Ver la nota de la ficha de una promoción: desde el panel esta
+            pantalla se abre en su propia pestaña, así que «Volver al panel» no
+            vuelve —deja dos paneles abiertos—. El enlace solo sale cuando de
+            verdad hay de dónde volver. */}
+        {!detailVuelveAlPanel && (
+          <Link href={detailBackHref} className="mb-3 inline-flex h-10 items-center gap-2 rounded-lg px-2 text-sm font-extrabold text-[#162543] transition hover:bg-[#eaf6fc]">
+            <ArrowLeft className="h-4 w-4 stroke-[2.4]" />
+            {detailBackLabel}
+          </Link>
+        )}
         <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,760px)_320px] lg:justify-center">
           <div className="overflow-hidden rounded-lg border border-[#e5e7eb] bg-white">
             <JobPreview job={selected} isOwner={selected.employer_id === currentProfessionalId} userId={currentUserId} onEdit={() => setEditingJob(selected)} hideActions />
