@@ -428,7 +428,7 @@ export function OfferForm({ professionalId, serviceOptions, backHref = "/ofertas
         </div>
       </header>
       <div className={presentation === "modal" ? "mx-auto max-w-3xl px-4 py-5" : "mx-auto max-w-3xl px-4 py-5 sm:px-6 lg:px-0 lg:py-0"}>
-        <div className={presentation === "modal" ? "hidden" : "mb-4 hidden items-center justify-between gap-4 rounded-lg border border-[#dfe8f0] bg-white px-4 py-3 shadow-sm lg:flex"}>
+        <div className={presentation === "modal" ? "hidden" : "mb-4 hidden items-center justify-between gap-4 rounded-lg border border-[#e5e7eb] bg-white px-4 py-3 shadow-sm lg:flex"}>
           <Link href={backHref} aria-label={copy.backToOffers} className="inline-flex h-10 items-center gap-2 rounded-lg px-2 text-sm font-extrabold text-[#162543] transition hover:bg-[#f1f9fc] hover:text-[#008fc3]"><ArrowLeft className="h-5 w-5 stroke-[2.4]" />{copy.backToOffers}</Link>
           <div className="min-w-0 flex-1 text-center"><h1 className="truncate text-xl font-extrabold">{editing ? copy.editTitle : copy.publishTitle}</h1><p className="truncate text-sm text-[#65758c]">{copy.subtitle}</p></div>
           <div className="h-10 w-[128px]" aria-hidden="true" />
@@ -474,7 +474,7 @@ export function OfferForm({ professionalId, serviceOptions, backHref = "/ofertas
                 {serviceSuggestionsOpen && (
                   <div id="offer-service-suggestions" className="absolute left-0 right-0 top-[calc(100%+6px)] z-30 overflow-hidden rounded-xl border border-[#d7e1ea] bg-white shadow-[0_16px_38px_-24px_rgba(15,23,42,0.8)]">
                     {serviceLabels.length > 6 && (
-                    <div className="relative border-b border-[#e6edf3] p-2">
+                    <div className="relative border-b border-[#e5e7eb] p-2">
                       <Search className="pointer-events-none absolute left-5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#7b8ba1]" aria-hidden="true" />
                       <input
                         autoFocus
@@ -581,7 +581,7 @@ export function OfferForm({ professionalId, serviceOptions, backHref = "/ofertas
             <FieldError>{fieldErrors.images}</FieldError>
           </section>
 
-          <div className="my-6 border-t border-[#e6edf3] pt-6"><h2 className="font-bold">{copy.priceAndValidity}</h2></div>
+          <div className="my-6 border-t border-[#e5e7eb] pt-6"><h2 className="font-bold">{copy.priceAndValidity}</h2></div>
           <div className="grid gap-4 sm:grid-cols-2">
             <FilaInterruptor
               conBorde
@@ -598,7 +598,7 @@ export function OfferForm({ professionalId, serviceOptions, backHref = "/ofertas
             </>)}
             {/* Casi toda oferta es en colones, sin unidad especial ni cupo: esos tres
                 campos se pliegan para que el formulario se lea en una pasada. */}
-            <details className="rounded-lg border border-[#e6edf3] px-4 py-3 sm:col-span-2" open={Boolean(initialOffer && (initialOffer.currency === "USD" || initialOffer.quantity_available))}>
+            <details className="rounded-lg border border-[#e5e7eb] px-4 py-3 sm:col-span-2" open={Boolean(initialOffer && (initialOffer.currency === "USD" || initialOffer.quantity_available))}>
               <summary className="cursor-pointer text-sm font-semibold text-[#162543]">{copy.moreOptions}</summary>
               <div className="mt-4 grid gap-4 sm:grid-cols-2">
                 <SelectMenu label={copy.currency} value={currency} onChange={setCurrency} options={[{ value: "CRC", label: copy.colones }, { value: "USD", label: copy.dollars }]} />

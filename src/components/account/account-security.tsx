@@ -294,7 +294,7 @@ export function AccountSecuritySection({ showHeading = true }: { showHeading?: b
           quedan: ahí el color es el mensaje. */}
       {/* Avisos por WhatsApp */}
       {permisoWhatsapp !== null && (
-        <div className="border-t border-[#eef3f7] pt-4 first:border-t-0 first:pt-0">
+        <div className="border-t border-[#eef2f6] pt-4 first:border-t-0 first:pt-0">
           <div className="mb-2 flex items-center gap-2">
             <MessageCircle className="h-4 w-4 text-[#6b7280]" />
             <h3 className="text-sm font-semibold text-[#374151]">{t("whatsappHeading")}</h3>
@@ -313,7 +313,7 @@ export function AccountSecuritySection({ showHeading = true }: { showHeading?: b
       )}
 
       {/* Email */}
-      <div className="border-t border-[#eef3f7] pt-4 first:border-t-0 first:pt-0">
+      <div className="border-t border-[#eef2f6] pt-4 first:border-t-0 first:pt-0">
         <div className="flex items-center gap-2 mb-2">
           <Mail className="h-4 w-4 text-[#6b7280]" />
           <h3 className="text-sm font-semibold text-[#374151]">{t("email")}</h3>
@@ -406,7 +406,7 @@ export function AccountSecuritySection({ showHeading = true }: { showHeading?: b
       </div>
 
       {/* Password */}
-      <div className="border-t border-[#eef3f7] pt-4 first:border-t-0 first:pt-0">
+      <div className="border-t border-[#eef2f6] pt-4 first:border-t-0 first:pt-0">
         <div className="flex items-center gap-2 mb-2">
           <Lock className="h-4 w-4 text-[#6b7280]" />
           <h3 className="text-sm font-semibold text-[#374151]">{t("password")}</h3>

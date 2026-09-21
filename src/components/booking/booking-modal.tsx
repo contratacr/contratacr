@@ -1150,7 +1150,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
     ? getCategoryLabel(effectiveCategory, locale)
     : (categoryName || "");
   const resumenLateral = (
-    <aside className="hidden w-[300px] shrink-0 flex-col border-r border-[#e9eef4] bg-[#f9fbfd] px-7 py-9 lg:flex">
+    <aside className="hidden w-[300px] shrink-0 flex-col border-r border-[#e5e7eb] bg-[#f9fbfd] px-7 py-9 lg:flex">
       <div className="flex flex-col items-center text-center">
         <Avatar className="h-24 w-24">
           <AvatarImage src={professional.avatarUrl} alt={professional.fullName} className="object-cover" />
@@ -1167,7 +1167,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
             : null}
       </div>
       {(selectedDate || selectedTime || initialLocationLabel) && (
-        <div className="mt-7 flex flex-col gap-3.5 border-t border-[#e9eef4] pt-6 text-[14px] leading-snug text-[#162543]">
+        <div className="mt-7 flex flex-col gap-3.5 border-t border-[#e5e7eb] pt-6 text-[14px] leading-snug text-[#162543]">
           {selectedDate && (
             <p className="flex items-start gap-2.5"><CalendarDays className="mt-0.5 h-4 w-4 shrink-0 text-[#68778d]" />{formatDateDisplay(selectedDate, locale)}</p>
           )}
@@ -1221,7 +1221,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
             <div className={cn("flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto bg-[#f4f7fa] px-4 pb-[max(env(safe-area-inset-bottom),1rem)] pt-4 md:px-6 md:pb-4", asPage && "lg:bg-white lg:px-8 lg:pt-7")}>
               {/* Con quién es la cita: una fila compacta, no medio modal. */}
               {step !== "success" && (
-                <div className={cn("flex shrink-0 items-center gap-3 rounded-2xl border border-[#e5edf4] bg-white px-4 py-3", asPage && "lg:hidden")}>
+                <div className={cn("flex shrink-0 items-center gap-3 rounded-2xl border border-[#e5e7eb] bg-white px-4 py-3", asPage && "lg:hidden")}>
                   <Avatar className="h-10 w-10 shrink-0">
                     <AvatarImage src={professional.avatarUrl} alt={professional.fullName} />
                     <AvatarFallback className="bg-[#EAF7FD] text-sm font-bold text-[#0089bb]">{getInitials(professional.fullName)}</AvatarFallback>
@@ -1244,7 +1244,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                   </div>
                 </div>
               )}
-              <div className={cn("flex flex-1 flex-col rounded-2xl border border-[#e5edf4] bg-white px-4 py-4 md:px-5 lg:flex-none", asPage && "lg:rounded-none lg:border-0 lg:px-0 lg:py-0")}>
+              <div className={cn("flex flex-1 flex-col rounded-2xl border border-[#e5e7eb] bg-white px-4 py-4 md:px-5 lg:flex-none", asPage && "lg:rounded-none lg:border-0 lg:px-0 lg:py-0")}>
 
               {/* STEP: calendar */}
               {step === "calendar" && (
@@ -1260,7 +1260,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                           key={cat}
                           type="button"
                           onClick={() => setPickedCategory(cat)}
-                          className="flex min-h-[60px] items-center justify-between gap-3 rounded-2xl border border-[#e5edf4] bg-white px-4 py-3.5 text-left text-[15px] font-semibold text-[#162543] transition-colors hover:border-[#b9c8d6] hover:bg-[#f7f9fb]"
+                          className="flex min-h-[60px] items-center justify-between gap-3 rounded-2xl border border-[#e5e7eb] bg-white px-4 py-3.5 text-left text-[15px] font-semibold text-[#162543] transition-colors hover:border-[#b9c8d6] hover:bg-[#f7f9fb]"
                         >
                           <span className="min-w-0 break-words">{getCategoryLabel(cat, locale)}</span>
                           <ChevronRight className="h-5 w-5 shrink-0 text-[#94a3b8]" />
@@ -1437,7 +1437,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                       </div>
 
                       {/* SLOTS for the selected day, grouped by franja (Mañana / Tarde / Noche). */}
-                      <div ref={slotsRef} className="min-w-0 md:border-l md:border-[#f3f4f6] md:pl-5 scroll-mt-4">
+                      <div ref={slotsRef} className="min-w-0 md:border-l md:border-[#eef2f6] md:pl-5 scroll-mt-4">
                         {!selectedDate ? (
                           <div className="flex h-full min-h-[180px] flex-col items-center justify-center rounded-2xl border border-[#e5e7eb] bg-[#f9fafb] px-4 text-center">
                             <CalendarCheck className="h-7 w-7 text-[#cbd5e1]" />
@@ -1534,7 +1534,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                       category the service is for the requester / a place / an object, so the
                       toggle is hidden and we collect requester data only. */}
                   {proIsHealth && (
-                    <div className="border-t border-[#edf1f5] pt-3">
+                    <div className="border-t border-[#eef2f6] pt-3">
                       <label className="text-sm font-medium text-[#374151] block mb-1.5">
                         {isCareCategory(effectiveCategory) ? t("forWho.questionCare") : t("forWho.question")} <span className="text-red-500">*</span>
                       </label>
@@ -1771,7 +1771,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                   <p className="max-w-[22rem] text-sm leading-relaxed text-[#6b7280]">{t("success.desc")}</p>
                   {/* Lo que acaba de reservar, en una línea por dato: la pantalla de
                       éxito decía "quedó agendada" sin decir cuándo ni de qué. */}
-                  <div className="w-full max-w-xs rounded-2xl border border-[#e3edf5] bg-[#f8fbfd] px-4 py-3 text-left text-[13px] leading-relaxed text-[#374151]">
+                  <div className="w-full max-w-xs rounded-2xl border border-[#e5e7eb] bg-[#f8fbfd] px-4 py-3 text-left text-[13px] leading-relaxed text-[#374151]">
                     <p className="font-semibold text-[#162543]">{description.trim() || (effectiveCategory ? getCategoryLabel(effectiveCategory, locale) : categoryName || getCategoryLabel(professional.categoryId ?? "", locale))}</p>
                     {selectedDate && (
                       <p className="mt-1 inline-flex items-center gap-1.5"><CalendarDays className="h-4 w-4 text-[#0089bb]" />{formatDateDisplay(selectedDate, locale)}{selectedTime ? ` · ${selectedTime}` : ""}</p>
@@ -1920,7 +1920,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
             el resumen a la izquierda y el paso a la derecha. Antes era una
             columna de teléfono estirada de arriba abajo, con el resto de la
             pantalla en blanco. */}
-        <div className="flex min-h-[100dvh] w-full flex-col lg:mx-auto lg:min-h-0 lg:max-h-[calc(100dvh-5rem)] lg:max-w-[980px] lg:flex-row lg:overflow-hidden lg:rounded-3xl lg:border lg:border-[#e5eaf0] lg:bg-white lg:shadow-[0_30px_80px_-45px_rgba(15,23,42,0.55)]">
+        <div className="flex min-h-[100dvh] w-full flex-col lg:mx-auto lg:min-h-0 lg:max-h-[calc(100dvh-5rem)] lg:max-w-[980px] lg:flex-row lg:overflow-hidden lg:rounded-3xl lg:border lg:border-[#e5e7eb] lg:bg-white lg:shadow-[0_30px_80px_-45px_rgba(15,23,42,0.55)]">
           {resumenLateral}
           <div className="flex min-h-0 flex-1 flex-col">
             {contenido}

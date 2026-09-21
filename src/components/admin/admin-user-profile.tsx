@@ -147,7 +147,7 @@ function accountVerificationStatus(profile: Profile, pro: Professional | null): 
 function Section({ icon: Icon, title, count, sub, children, action }: { icon: React.ElementType; title: string; count?: number; sub?: string; children: React.ReactNode; action?: React.ReactNode }) {
   return (
     <section className="overflow-hidden rounded-xl border border-[#e5e7eb] bg-white">
-      <div className="flex items-center justify-between gap-3 border-b border-[#f3f4f6] px-4 py-3">
+      <div className="flex items-center justify-between gap-3 border-b border-[#eef2f6] px-4 py-3">
         <div className="flex min-w-0 items-center gap-2">
           <Icon className="h-4 w-4 shrink-0 text-[#009FD9]" />
           <h2 className="truncate text-sm font-semibold text-[#162543]">{title}</h2>
@@ -430,7 +430,7 @@ export function AdminUserProfile({
                     {identityBusy === identityReasonAction && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
                     {identityReasonAction === "reject" ? "Confirmar rechazo" : "Quitar verificación"}
                   </button>
-                  <button type="button" onClick={() => { setIdentityReasonAction(null); setIdentityReason(""); }} disabled={identityBusy != null} className="rounded-lg border border-[#d1d5db] bg-white px-3 py-2 text-xs font-semibold text-[#374151] transition hover:bg-[#f3f4f6]">Cancelar</button>
+                  <button type="button" onClick={() => { setIdentityReasonAction(null); setIdentityReason(""); }} disabled={identityBusy != null} className="rounded-lg border border-[#d7e1ea] bg-white px-3 py-2 text-xs font-semibold text-[#374151] transition hover:bg-[#f3f4f6]">Cancelar</button>
                 </div>
               </div>
             )}
@@ -438,7 +438,7 @@ export function AdminUserProfile({
           {(verificationLog.length > 0 || appeals.length > 0) && (
             <details className="mt-3 rounded-xl border border-[#e5e7eb]">
               <summary className="cursor-pointer px-4 py-2.5 text-sm font-semibold text-[#374151]"><History className="mr-1.5 inline h-4 w-4 text-[#68778d]" /> Historial de verificación ({verificationLog.length + appeals.length})</summary>
-              <ul className="divide-y divide-[#f3f4f6] border-t border-[#f3f4f6]">
+              <ul className="divide-y divide-[#eef2f6] border-t border-[#eef2f6]">
                 {appeals.map((a) => (
                   <li key={a.id} className="px-4 py-2.5 text-sm">
                     <p className="font-medium text-[#162543]">Apelación {a.status ? `· ${STATUS_LABEL[a.status] ?? a.status}` : ""}</p>
@@ -467,18 +467,18 @@ export function AdminUserProfile({
           <Tile label="Postulaciones a empleos" value={applications.length} />
           <Tile label="Activas · completadas" value={`${clientActive} · ${clientCompleted}`} />
         </div>
-        <div className="grid gap-0 border-t border-[#f3f4f6] lg:grid-cols-3 lg:divide-x lg:divide-[#f3f4f6]">
+        <div className="grid gap-0 border-t border-[#eef2f6] lg:grid-cols-3 lg:divide-x lg:divide-[#eef2f6]">
           <div>
             <p className="px-4 pt-3 text-[11px] font-semibold uppercase tracking-wide text-[#68778d]">Citas reservadas</p>
-            {bookings.length === 0 ? <Empty text="Sin citas." /> : <ul className="divide-y divide-[#f3f4f6]">{bookings.slice(0, 8).map((b) => <Row key={b.id} title={b.service_description} meta={`${b.preferred_date ? `Fecha: ${fmtDate(b.preferred_date)} · ` : ""}${fmt(b.created_at)}`} status={b.status} />)}</ul>}
+            {bookings.length === 0 ? <Empty text="Sin citas." /> : <ul className="divide-y divide-[#eef2f6]">{bookings.slice(0, 8).map((b) => <Row key={b.id} title={b.service_description} meta={`${b.preferred_date ? `Fecha: ${fmtDate(b.preferred_date)} · ` : ""}${fmt(b.created_at)}`} status={b.status} />)}</ul>}
           </div>
           <div>
             <p className="px-4 pt-3 text-[11px] font-semibold uppercase tracking-wide text-[#68778d]">Proyectos publicados</p>
-            {projects.length === 0 ? <Empty text="Sin proyectos." /> : <ul className="divide-y divide-[#f3f4f6]">{projects.slice(0, 8).map((p) => <Row key={p.id} title={p.title} meta={`${p.category_id ? `${getCategoryLabel(p.category_id)} · ` : ""}${fmt(p.created_at)}`} status={p.status} />)}</ul>}
+            {projects.length === 0 ? <Empty text="Sin proyectos." /> : <ul className="divide-y divide-[#eef2f6]">{projects.slice(0, 8).map((p) => <Row key={p.id} title={p.title} meta={`${p.category_id ? `${getCategoryLabel(p.category_id)} · ` : ""}${fmt(p.created_at)}`} status={p.status} />)}</ul>}
           </div>
           <div>
             <p className="px-4 pt-3 text-[11px] font-semibold uppercase tracking-wide text-[#68778d]">Postulaciones a empleos</p>
-            {applications.length === 0 ? <Empty text="Sin postulaciones." /> : <ul className="divide-y divide-[#f3f4f6]">{applications.slice(0, 8).map((a) => <Row key={a.id} title={a.job_title ?? "Empleo"} meta={fmt(a.created_at)} status={a.status} href={`/admin/empleos`} />)}</ul>}
+            {applications.length === 0 ? <Empty text="Sin postulaciones." /> : <ul className="divide-y divide-[#eef2f6]">{applications.slice(0, 8).map((a) => <Row key={a.id} title={a.job_title ?? "Empleo"} meta={fmt(a.created_at)} status={a.status} href={`/admin/empleos`} />)}</ul>}
           </div>
         </div>
       </Section>
@@ -495,15 +495,15 @@ export function AdminUserProfile({
               <Tile label="Empleos publicados" value={jobs.length} />
               <Tile label="Ofertas publicadas" value={offers.length} />
             </div>
-            <div className="grid gap-0 border-t border-[#f3f4f6] lg:grid-cols-2 lg:divide-x lg:divide-[#f3f4f6]">
+            <div className="grid gap-0 border-t border-[#eef2f6] lg:grid-cols-2 lg:divide-x lg:divide-[#eef2f6]">
               <div>
                 <p className="px-4 pt-3 text-[11px] font-semibold uppercase tracking-wide text-[#68778d]">Citas recibidas</p>
-                {receivedBookings.length === 0 ? <Empty text="Todavía no recibe citas." /> : <ul className="divide-y divide-[#f3f4f6]">{receivedBookings.slice(0, 8).map((b) => <Row key={b.id} title={b.service_description} meta={`${b.client_name ? `${b.client_name} · ` : ""}${fmt(b.created_at)}`} status={b.status} />)}</ul>}
+                {receivedBookings.length === 0 ? <Empty text="Todavía no recibe citas." /> : <ul className="divide-y divide-[#eef2f6]">{receivedBookings.slice(0, 8).map((b) => <Row key={b.id} title={b.service_description} meta={`${b.client_name ? `${b.client_name} · ` : ""}${fmt(b.created_at)}`} status={b.status} />)}</ul>}
               </div>
               <div>
                 <p className="px-4 pt-3 text-[11px] font-semibold uppercase tracking-wide text-[#68778d]">Reseñas recibidas</p>
                 {receivedReviews.length === 0 ? <Empty text="Todavía no tiene reseñas." /> : (
-                  <ul className="divide-y divide-[#f3f4f6]">
+                  <ul className="divide-y divide-[#eef2f6]">
                     {receivedReviews.slice(0, 8).map((r) => (
                       <li key={r.id} className="px-4 py-2.5">
                         <div className="flex items-center justify-between gap-3">
@@ -517,17 +517,17 @@ export function AdminUserProfile({
                   </ul>
                 )}
               </div>
-              <div className="lg:border-t lg:border-[#f3f4f6]">
+              <div className="lg:border-t lg:border-[#eef2f6]">
                 <p className="px-4 pt-3 text-[11px] font-semibold uppercase tracking-wide text-[#68778d]">Proyectos recibidos</p>
-                {receivedProjects.length === 0 ? <Empty text="Todavía no envió propuestas a proyectos." /> : <ul className="divide-y divide-[#f3f4f6]">{receivedProjects.slice(0, 8).map((p) => <Row key={p.id} title={p.title} meta={`${p.client_name ? `${p.client_name} · ` : ""}propuesta ${money(p.price, "CRC")} · ${fmt(p.created_at)}`} status={p.proposal_status} />)}</ul>}
+                {receivedProjects.length === 0 ? <Empty text="Todavía no envió propuestas a proyectos." /> : <ul className="divide-y divide-[#eef2f6]">{receivedProjects.slice(0, 8).map((p) => <Row key={p.id} title={p.title} meta={`${p.client_name ? `${p.client_name} · ` : ""}propuesta ${money(p.price, "CRC")} · ${fmt(p.created_at)}`} status={p.proposal_status} />)}</ul>}
               </div>
-              <div className="lg:border-t lg:border-[#f3f4f6]">
+              <div className="lg:border-t lg:border-[#eef2f6]">
                 <p className="px-4 pt-3 text-[11px] font-semibold uppercase tracking-wide text-[#68778d]">Empleos publicados</p>
-                {jobs.length === 0 ? <Empty text="Sin empleos publicados." /> : <ul className="divide-y divide-[#f3f4f6]">{jobs.slice(0, 8).map((j) => <Row key={j.id} title={j.title} meta={`${j.applications} ${j.applications === 1 ? "postulación" : "postulaciones"} · ${fmt(j.created_at)}`} status={j.status} external={`/es/empleos/${j.id}`} />)}</ul>}
+                {jobs.length === 0 ? <Empty text="Sin empleos publicados." /> : <ul className="divide-y divide-[#eef2f6]">{jobs.slice(0, 8).map((j) => <Row key={j.id} title={j.title} meta={`${j.applications} ${j.applications === 1 ? "postulación" : "postulaciones"} · ${fmt(j.created_at)}`} status={j.status} external={`/es/empleos/${j.id}`} />)}</ul>}
               </div>
-              <div className="lg:border-t lg:border-[#f3f4f6]">
+              <div className="lg:border-t lg:border-[#eef2f6]">
                 <p className="px-4 pt-3 text-[11px] font-semibold uppercase tracking-wide text-[#68778d]">Ofertas publicadas</p>
-                {offers.length === 0 ? <Empty text="Sin ofertas publicadas." /> : <ul className="divide-y divide-[#f3f4f6]">{offers.slice(0, 8).map((o) => <Row key={o.id} title={o.title} meta={`${money(o.price_now, o.currency)} · ${fmt(o.created_at)}`} status={o.status} external={`/es/ofertas/${o.id}`} />)}</ul>}
+                {offers.length === 0 ? <Empty text="Sin ofertas publicadas." /> : <ul className="divide-y divide-[#eef2f6]">{offers.slice(0, 8).map((o) => <Row key={o.id} title={o.title} meta={`${money(o.price_now, o.currency)} · ${fmt(o.created_at)}`} status={o.status} external={`/es/ofertas/${o.id}`} />)}</ul>}
               </div>
             </div>
           </Section>
@@ -568,7 +568,7 @@ export function AdminUserProfile({
       <div className="grid gap-5 lg:grid-cols-2">
         <Section icon={Headset} title="Casos de soporte" count={tickets.length} action={tickets.length > 0 ? <Link href="/admin/soporte" className="text-xs font-semibold text-[#009FD9] hover:underline">Ir a soporte</Link> : undefined}>
           {tickets.length === 0 ? <Empty text="Sin casos de soporte." /> : (
-            <ul className="divide-y divide-[#f3f4f6]">
+            <ul className="divide-y divide-[#eef2f6]">
               {tickets.slice(0, 8).map((t) => (
                 <Row key={t.id} title={t.subject} meta={`Caso ${supportTicketRef(t.id, t.created_at, t.case_number)} · ${fmt(t.created_at)}`} status={t.status} href={`/admin/soporte?ticket=${t.id}`} />
               ))}
@@ -577,7 +577,7 @@ export function AdminUserProfile({
         </Section>
         <Section icon={Flag} title="Reportes recibidos" count={reports.length} action={reports.length > 0 ? <Link href="/admin/reportes" className="text-xs font-semibold text-[#009FD9] hover:underline">Ver reportes</Link> : undefined}>
           {reports.length === 0 ? <Empty text="Nadie ha reportado esta cuenta." /> : (
-            <ul className="divide-y divide-[#f3f4f6]">
+            <ul className="divide-y divide-[#eef2f6]">
               {reports.slice(0, 8).map((r) => <Row key={r.id} title={r.reason} meta={`${r.reporter_email ?? "Anónimo"} · ${fmt(r.created_at)}`} status={r.status} />)}
             </ul>
           )}
@@ -592,7 +592,7 @@ export function AdminUserProfile({
             { key: "followers" as const, label: "Lo siguen", items: followNetwork?.followers ?? [] },
           ]).map((group) => (
             <div key={group.key} className="overflow-hidden rounded-xl border border-[#e5e7eb]">
-              <div className="flex items-center justify-between border-b border-[#edf1f4] bg-[#f8fafc] px-3 py-2.5">
+              <div className="flex items-center justify-between border-b border-[#eef2f6] bg-[#f8fafc] px-3 py-2.5">
                 <h3 className="text-sm font-bold text-[#334155]">{group.label}</h3>
                 <span className="rounded-full bg-white px-2 py-0.5 text-xs font-bold text-[#526277] ring-1 ring-[#dce5ec]">{group.items.length}</span>
               </div>
@@ -606,7 +606,7 @@ export function AdminUserProfile({
                     const name = group.key === "following" ? item.professional?.business_name || followedProfile?.full_name || "Profesional" : followerProfessional?.business_name || item.profile?.full_name || "Usuario";
                     const accountId = group.key === "following" ? item.professional?.id : item.profile?.id;
                     return (
-                      <div key={item.id} className="flex items-center justify-between gap-3 border-b border-[#edf1f4] px-3 py-2 last:border-b-0">
+                      <div key={item.id} className="flex items-center justify-between gap-3 border-b border-[#eef2f6] px-3 py-2 last:border-b-0">
                         <div className="min-w-0">
                           <p className="truncate text-sm font-semibold text-[#162543]">{name}</p>
                           <p className="text-[11px] text-[#8492a5]">Desde {fmtDate(item.created_at)}</p>

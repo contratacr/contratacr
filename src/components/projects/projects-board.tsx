@@ -234,7 +234,7 @@ function Tarjeta({ proyecto, en, elegida = false, onElegir }: { proyecto: Proyec
       }}
       aria-current={elegida ? "true" : undefined}
       className={cn(
-        "block border-b border-[#dfe6ec] bg-white px-4 py-3.5 transition sm:max-lg:last:border-b-0 hover:bg-[#f8fafc] sm:px-5",
+        "block border-b border-[#e5e7eb] bg-white px-4 py-3.5 transition sm:max-lg:last:border-b-0 hover:bg-[#f8fafc] sm:px-5",
         elegida && "lg:bg-[#eef9fd] lg:shadow-[inset_4px_0_0_#162543]",
       )}
     >
@@ -467,9 +467,9 @@ export function ProjectsBoard({
         </section>
       </MarketplaceNavbarPortal>
 
-      <div className="relative z-30 hidden shrink-0 border-b border-[#e3ebf2] bg-white lg:block">
+      <div className="relative z-30 hidden shrink-0 border-b border-[#e5e7eb] bg-white lg:block">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-6 py-2.5">
-          <div className="flex shrink-0 items-baseline gap-2 border-r border-[#e3ebf2] pr-4">
+          <div className="flex shrink-0 items-baseline gap-2 border-r border-[#e5e7eb] pr-4">
             {/* El nombre de la pantalla, a la vista: antes era solo para lectores
                 de pantalla y la barra arrancaba en frío con los filtros —quien
                 llegaba de Google no sabía en qué sección estaba—. Al lado, cuántos
@@ -495,7 +495,7 @@ export function ProjectsBoard({
           // flotando sobre gris, y la ficha se abría en otra pantalla.
           <div className="mx-auto w-full max-w-7xl px-0 py-0 sm:max-w-[46rem] sm:px-6 sm:py-5 lg:max-w-7xl lg:min-h-0 lg:flex-1 lg:px-6 lg:py-0">
             <div className={cn(
-              "ccr-panel-tablero sm:overflow-hidden sm:rounded-[22px] sm:border sm:border-[#dfe8f0] sm:bg-white sm:shadow-[0_12px_34px_-28px_rgba(15,23,42,0.55)] lg:h-full",
+              "ccr-panel-tablero sm:overflow-hidden sm:rounded-[22px] sm:border sm:border-[#e5e7eb] sm:bg-white sm:shadow-[0_12px_34px_-28px_rgba(15,23,42,0.55)] lg:h-full",
               filtrados.length > 0 && "lg:grid lg:grid-cols-[minmax(340px,440px)_minmax(0,1fr)] xl:grid-cols-[380px_minmax(0,1fr)]",
               fichaEnMovil && "max-sm:overflow-visible max-sm:border-0 max-lg:rounded-none max-lg:border-0 max-lg:bg-transparent max-lg:shadow-none",
             )}>
@@ -507,7 +507,7 @@ export function ProjectsBoard({
                 {/* El conteo va DENTRO de la lista, con su línea, igual que en
                     Empleos: solo cuando se buscó o se filtró. */}
                 {filtrados.length > 0 && (query.trim() || lugar.trim()) && (
-                  <div className="border-b border-[#e7edf2] px-4 py-3 lg:hidden">
+                  <div className="border-b border-[#e5e7eb] px-4 py-3 lg:hidden">
                     <p className="font-bold">{copy.cuenta(filtrados.length)}</p>
                     {lugar.trim() && <p className="text-xs text-[#68778d]">{lugar.trim()}</p>}
                   </div>
@@ -615,7 +615,7 @@ export function ProjectsBoard({
                           ficha de un empleo. Aquí el servicio, la zona y la fecha
                           iban sueltos bajo el título y la ficha se quedaba sin el
                           bloque de datos que sí tienen empleos y promociones. */}
-                      <dl className="mt-6 grid gap-3 border-y border-[#e7edf2] py-5 text-sm sm:grid-cols-2">
+                      <dl className="mt-6 grid gap-3 border-y border-[#e5e7eb] py-5 text-sm sm:grid-cols-2">
                         {([
                           [copy.filaServicio, ficha.category_name] as [string, string | null],
                           [copy.filaUbicacion, ficha.location_label || copy.todoElPais] as [string, string | null],

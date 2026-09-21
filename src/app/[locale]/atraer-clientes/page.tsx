@@ -52,7 +52,7 @@ export default function AtraerClientesPage() {
               <h2 className="text-2xl font-extrabold text-[#162543]">{t("profileChecklistTitle")}</h2>
               <p className="mt-2 text-sm leading-6 text-[#6b7280]">{t("profileChecklistSubtitle")}</p>
             </div>
-            <div className="divide-y divide-[#e5e7eb] rounded-lg border border-[#dfe5eb] bg-white px-5 sm:px-7">
+            <div className="divide-y divide-[#e5e7eb] rounded-lg border border-[#e5e7eb] bg-white px-5 sm:px-7">
               {PROFILE_ACTIONS.map(({ index, icon: Icon }) => (
                 <article key={index} className="grid gap-3 py-6 sm:grid-cols-[2.5rem_minmax(0,1fr)]">
                   <div className="flex h-10 w-10 items-center justify-center rounded-lg ccr-caja-icono-plana"><Icon className="h-5 w-5" /></div>
@@ -73,7 +73,7 @@ export default function AtraerClientesPage() {
               <h2 className="text-2xl font-extrabold text-[#162543]">{t("growthToolsTitle")}</h2>
               <p className="mt-2 text-sm leading-6 text-[#6b7280]">{t("growthToolsSubtitle")}</p>
             </div>
-            <div className="grid overflow-hidden rounded-lg border border-[#dfe5eb] bg-white md:grid-cols-2 md:divide-x md:divide-[#e5e7eb]">
+            <div className="grid overflow-hidden rounded-lg border border-[#e5e7eb] bg-white md:grid-cols-2 md:divide-x md:divide-[#e5e7eb]">
               {EMPLEOS_VISIBLE && (
               <article className="border-b border-[#e5e7eb] p-6 md:border-b-0">
                 <div className="flex h-10 w-10 items-center justify-center rounded-lg ccr-caja-icono-plana"><BriefcaseBusiness className="h-5 w-5" /></div>

@@ -28,7 +28,7 @@ export function PublicQuote({ locale, data }: { locale: string; data: PublicQuot
   if (!data) {
     return (
       <Marco>
-        <div className="rounded-3xl border border-[#e5eaf0] bg-white px-6 py-12 text-center shadow-sm">
+        <div className="rounded-3xl border border-[#e5e7eb] bg-white px-6 py-12 text-center shadow-sm">
           <h1 className="text-[22px] font-extrabold text-[#162543]">{t("publicNotFound")}</h1>
           <p className="mt-2 text-[15px] leading-6 text-[#52627a]">{t("publicNotFoundBody")}</p>
         </div>
@@ -44,13 +44,13 @@ export function PublicQuote({ locale, data }: { locale: string; data: PublicQuot
   return (
     <Marco>
       {vencida && (
-        <div className="print:hidden mb-4 rounded-3xl border border-[#e5eaf0] bg-white px-6 py-5 text-center">
+        <div className="print:hidden mb-4 rounded-3xl border border-[#e5e7eb] bg-white px-6 py-5 text-center">
           <h2 className="text-[18px] font-extrabold text-[#162543]">{t("publicExpiredTitle")}</h2>
           <p className="mt-1 text-[14px] leading-6 text-[#52627a]">{t("publicExpiredBody", { name: pro.name })}</p>
         </div>
       )}
 
-      <article className="overflow-hidden rounded-3xl border border-[#e5eaf0] bg-white shadow-sm print:border-0 print:shadow-none">
+      <article className="overflow-hidden rounded-3xl border border-[#e5e7eb] bg-white shadow-sm print:border-0 print:shadow-none">
         {/* Quién cotiza. */}
         <div className="flex items-center gap-4 border-b border-[#eef2f6] px-6 py-5">
           <Avatar className="h-16 w-16 shrink-0">
@@ -74,7 +74,7 @@ export function PublicQuote({ locale, data }: { locale: string; data: PublicQuot
               {quote.client_name && <p className="mt-1 text-[14px] text-[#52627a]">{t("clientLabel")}: <span className="font-semibold text-[#162543]">{quote.client_name}</span></p>}
             </div>
           )}
-          <div className="divide-y divide-[#eef2f6] overflow-hidden rounded-2xl border border-[#e5eaf0]">
+          <div className="divide-y divide-[#eef2f6] overflow-hidden rounded-2xl border border-[#e5e7eb]">
             {quote.items.map((it, i) => (
               <div key={i} className="flex items-start justify-between gap-3 px-4 py-3 text-[15px]">
                 <span className="min-w-0 flex-1 text-[#162543]">{it.description}<span className="ml-1.5 text-[12px] text-[#68778d]">× {it.quantity}</span></span>

@@ -421,7 +421,7 @@ export function BookingRequests() {
         </button>
 
         {expanded && (
-          <div className="rounded-b-2xl border-t border-[#f3f4f6] bg-gradient-to-b from-[#fcfdff] to-white px-4 pb-5 pt-4 sm:px-5 flex flex-col gap-4">
+          <div className="rounded-b-2xl border-t border-[#eef2f6] bg-gradient-to-b from-[#fcfdff] to-white px-4 pb-5 pt-4 sm:px-5 flex flex-col gap-4">
             {requestedDate && (
               <p className="flex items-center gap-1.5 text-[11px] text-[#68778d]">
                 <Clock className="h-3.5 w-3.5 shrink-0 text-[#374151]" /> {t("requestedOn", { date: requestedDate })}
@@ -534,7 +534,7 @@ export function BookingRequests() {
                       <MoreHorizontal className="h-5 w-5" />
                     </button>
                     {actionsMenuFor === booking.id && (
-                      <div role="menu" className="absolute bottom-[calc(100%+6px)] right-0 z-50 max-h-[calc(100dvh-2rem)] w-48 overflow-y-auto rounded-xl border border-[#dfe8f0] bg-white p-1.5 shadow-[0_18px_45px_-22px_rgba(15,23,42,0.55)]">
+                      <div role="menu" className="absolute bottom-[calc(100%+6px)] right-0 z-50 max-h-[calc(100dvh-2rem)] w-48 overflow-y-auto rounded-xl border border-[#e5e7eb] bg-white p-1.5 shadow-[0_18px_45px_-22px_rgba(15,23,42,0.55)]">
                         {porCoordinar && <button role="menuitem" type="button" disabled={!!cerrando} onClick={() => { setActionsMenuFor(null); void marcarAtendida(booking.id); }} className="block w-full rounded-lg px-3 py-2.5 text-left text-sm font-bold text-[#162543] hover:bg-[#f4f8fb] disabled:opacity-60">{t("markDone")}</button>}
                         {isActive && <button role="menuitem" type="button" onClick={() => { setActionsMenuFor(null); openAction(booking.id, "cancel"); }} className="block w-full rounded-lg px-3 py-2.5 text-left text-sm font-bold text-red-700 hover:bg-red-50">{t("cancel")}</button>}
                         {booking.status === "cancelled" && <button role="menuitem" type="button" onClick={() => { setActionsMenuFor(null); archiveBooking(booking.id); }} className="block w-full rounded-lg px-3 py-2.5 text-left text-sm font-bold text-[#162543] hover:bg-[#f4f8fb]">{t("archive")}</button>}

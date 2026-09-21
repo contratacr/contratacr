@@ -87,7 +87,7 @@ export async function HomeMarketplaceSections() {
             />
             <HorizontalRail>
               {offers.map((offer) => (
-                <Link key={offer.id} href={`/ofertas/${offer.id}`} className="group flex w-[82vw] max-w-[360px] shrink-0 gap-3 rounded-lg border border-[#dfe8f0] bg-white p-4 transition hover:border-[#9bdcf2] hover:shadow-[0_14px_35px_-27px_rgba(15,23,42,0.65)] sm:w-[340px]">
+                <Link key={offer.id} href={`/ofertas/${offer.id}`} className="group flex w-[82vw] max-w-[360px] shrink-0 gap-3 rounded-lg border border-[#e5e7eb] bg-white p-4 transition hover:border-[#9bdcf2] hover:shadow-[0_14px_35px_-27px_rgba(15,23,42,0.65)] sm:w-[340px]">
                   <CompactThumb src={offer.image_urls[0]} label={offer.title} />
                   <div className="min-w-0 flex-1">
                     <h3 className="line-clamp-2 font-bold leading-snug group-hover:text-[#008fc3]">{offer.title}</h3>
@@ -116,7 +116,7 @@ export async function HomeMarketplaceSections() {
             />
             <HorizontalRail>
               {jobs.map((job) => (
-                <Link key={job.id} href={`/empleos/${job.id}`} className="group flex w-[84vw] max-w-[420px] shrink-0 gap-3 rounded-lg border border-[#dfe8f0] bg-white p-4 transition hover:border-[#9bdcf2] sm:w-[390px]">
+                <Link key={job.id} href={`/empleos/${job.id}`} className="group flex w-[84vw] max-w-[420px] shrink-0 gap-3 rounded-lg border border-[#e5e7eb] bg-white p-4 transition hover:border-[#9bdcf2] sm:w-[390px]">
                   <CompactThumb src={job.employer_avatar_url} label={job.employer_name ?? job.title} rounded="full" />
                   <div className="min-w-0 flex-1">
                     <h3 className="line-clamp-2 font-bold group-hover:text-[#008fc3]">{job.title}</h3>

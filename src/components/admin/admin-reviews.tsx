@@ -92,7 +92,7 @@ export function AdminReviews() {
 
   return (
     <div className="space-y-5">
-      <div className="rounded-2xl border border-[#d9e2ec] bg-white p-5 shadow-sm">
+      <div className="rounded-2xl border border-[#d7e1ea] bg-white p-5 shadow-sm">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#64748b]">Moderación</p>
@@ -125,7 +125,7 @@ export function AdminReviews() {
           </div>
         </div>
 
-        <label className="mt-5 flex h-11 items-center gap-2 rounded-xl border border-[#d9e2ec] bg-white px-3 text-sm text-[#64748b]">
+        <label className="mt-5 flex h-11 items-center gap-2 rounded-xl border border-[#d7e1ea] bg-white px-3 text-sm text-[#64748b]">
           <Search className="h-4 w-4" />
           <input
             value={query}
@@ -145,7 +145,7 @@ export function AdminReviews() {
               key={value}
               type="button"
               onClick={() => setStatus(value)}
-              className={`rounded-full border px-3 py-1.5 text-xs font-bold ${status === value ? "border-[#009FD9] bg-[#eef9ff] text-[#007cac]" : "border-[#d9e2ec] text-[#64748b] hover:bg-[#f8fafc]"}`}
+              className={`rounded-full border px-3 py-1.5 text-xs font-bold ${status === value ? "border-[#009FD9] bg-[#eef9ff] text-[#007cac]" : "border-[#d7e1ea] text-[#64748b] hover:bg-[#f8fafc]"}`}
             >
               {label}
             </button>
@@ -153,7 +153,7 @@ export function AdminReviews() {
         </div>
       </div>
 
-      <div className="rounded-2xl border border-[#d9e2ec] bg-white shadow-sm">
+      <div className="rounded-2xl border border-[#d7e1ea] bg-white shadow-sm">
         {loading ? (
           <div className="flex justify-center py-14">
             <Loader2 className="h-7 w-7 animate-spin text-[#009FD9]" />
@@ -215,13 +215,13 @@ export function AdminReviews() {
                     {review.professional.profession && <p className="text-xs text-[#64748b]">{review.professional.profession}</p>}
                   </div>
                 </div>
-                <div className="mt-4 flex flex-wrap justify-end gap-2 border-t border-[#edf2f7] pt-3">
+                <div className="mt-4 flex flex-wrap justify-end gap-2 border-t border-[#eef2f6] pt-3">
                   {review.moderationStatus === "hidden" ? (
                     <button type="button" disabled={actingId === review.id} onClick={() => void moderate(review, "restore")} className="inline-flex min-h-10 items-center gap-2 rounded-full border border-[#b9dbea] px-3 text-sm font-bold text-[#007cac] hover:bg-[#eef9ff] disabled:opacity-50">
                       <RotateCcw className="h-4 w-4" /> Restaurar
                     </button>
                   ) : (
-                    <button type="button" disabled={actingId === review.id} onClick={() => void moderate(review, "hide")} className="inline-flex min-h-10 items-center gap-2 rounded-full border border-[#d9e2ec] px-3 text-sm font-bold text-[#334155] hover:bg-[#f8fafc] disabled:opacity-50">
+                    <button type="button" disabled={actingId === review.id} onClick={() => void moderate(review, "hide")} className="inline-flex min-h-10 items-center gap-2 rounded-full border border-[#d7e1ea] px-3 text-sm font-bold text-[#334155] hover:bg-[#f8fafc] disabled:opacity-50">
                       <Eye className="h-4 w-4" /> Ocultar
                     </button>
                   )}

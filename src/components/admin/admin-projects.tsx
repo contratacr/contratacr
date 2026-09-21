@@ -233,7 +233,7 @@ export function AdminProjects() {
             value={q}
             onChange={(event) => setQ(event.target.value)}
             placeholder="Titulo, cliente, profesional, servicio, identificacion o ubicacion"
-            className="h-11 w-full rounded-xl border border-[#dbe2ea] bg-white pl-10 pr-3 text-sm text-[#162543] outline-none transition focus:border-[#009FD9] focus:ring-2 focus:ring-[#bfefff]"
+            className="h-11 w-full rounded-xl border border-[#d7e1ea] bg-white pl-10 pr-3 text-sm text-[#162543] outline-none transition focus:border-[#009FD9] focus:ring-2 focus:ring-[#bfefff]"
           />
         </div>
         <p className="mt-2 text-xs text-[#68778d]">Incluye proyectos activos, finalizados, cancelados y archivados.</p>
@@ -252,7 +252,7 @@ export function AdminProjects() {
             <p className="text-sm text-[#6b7280]">No hay proyectos en esta vista.</p>
           </div>
         ) : (
-          <ul className="divide-y divide-[#f3f4f6]">
+          <ul className="divide-y divide-[#eef2f6]">
             {items.map((project) => {
               const meta = statusMeta(project.status);
               return (
@@ -288,7 +288,7 @@ export function AdminProjects() {
                       </div>
                     </div>
 
-                    <div className="grid gap-3 rounded-xl border border-[#eef0f2] bg-[#fbfdff] p-3 text-sm sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+                    <div className="grid gap-3 rounded-xl border border-[#eef2f6] bg-[#fbfdff] p-3 text-sm sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
                       <div className="min-w-0">
                         <p className="text-[11px] font-semibold uppercase tracking-wide text-[#68778d]">Cliente</p>
                         <p className="mt-0.5 truncate"><PersonLink id={project.client.id} name={project.client.name} /></p>
@@ -342,7 +342,7 @@ export function AdminProjects() {
               type="button"
               onClick={() => setPage((current) => Math.max(1, current - 1))}
               disabled={pagination.page <= 1}
-              className="inline-flex h-9 items-center gap-1 rounded-lg border border-[#dbe2ea] bg-white px-3 text-sm font-semibold text-[#374151] transition hover:bg-[#f9fafb] disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex h-9 items-center gap-1 rounded-lg border border-[#d7e1ea] bg-white px-3 text-sm font-semibold text-[#374151] transition hover:bg-[#f9fafb] disabled:cursor-not-allowed disabled:opacity-50"
             >
               <ChevronLeft className="h-4 w-4" />
               Anterior
@@ -354,7 +354,7 @@ export function AdminProjects() {
               type="button"
               onClick={() => setPage((current) => Math.min(pagination.pages, current + 1))}
               disabled={pagination.page >= pagination.pages}
-              className="inline-flex h-9 items-center gap-1 rounded-lg border border-[#dbe2ea] bg-white px-3 text-sm font-semibold text-[#374151] transition hover:bg-[#f9fafb] disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex h-9 items-center gap-1 rounded-lg border border-[#d7e1ea] bg-white px-3 text-sm font-semibold text-[#374151] transition hover:bg-[#f9fafb] disabled:cursor-not-allowed disabled:opacity-50"
             >
               Siguiente
               <ChevronRight className="h-4 w-4" />

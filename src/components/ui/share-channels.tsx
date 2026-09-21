@@ -37,7 +37,7 @@ export function FacebookIcon({ className }: { className?: string }) {
   );
 }
 
-const TILE = "flex flex-col items-center gap-2 rounded-2xl border border-[#e5eaf0] bg-white px-2 py-3.5 text-center transition-colors hover:border-[#bfe3f5] hover:bg-[#f8fcfe]";
+const TILE = "flex flex-col items-center gap-2 rounded-2xl border border-[#e5e7eb] bg-white px-2 py-3.5 text-center transition-colors hover:border-[#bfe3f5] hover:bg-[#f8fcfe]";
 
 export function ShareChannels({ url, name, linkLabel, copyLabel, mensaje, asunto }: Props) {
   const t = useTranslations("shareProfile");

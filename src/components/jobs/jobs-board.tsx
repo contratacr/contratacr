@@ -390,9 +390,9 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
     {/* Título, acciones y filtros viven en UNA tarjeta blanca: sueltos sobre el
         fondo, en escritorio se leían como tres bloques sin relación. */}
     {!detailOnly && (
-      <div className="relative z-30 hidden shrink-0 border-b border-[#e3ebf2] bg-white lg:block">
+      <div className="relative z-30 hidden shrink-0 border-b border-[#e5e7eb] bg-white lg:block">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-6 py-2.5">
-          <div className="flex shrink-0 items-baseline gap-2 border-r border-[#e3ebf2] pr-4">
+          <div className="flex shrink-0 items-baseline gap-2 border-r border-[#e5e7eb] pr-4">
             {/* El nombre de la pantalla, a la vista: antes era solo para lectores
                 de pantalla y la barra arrancaba en frío con los filtros —quien
                 llegaba de Google no sabía en qué sección estaba—. Al lado, cuántos
@@ -412,13 +412,13 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
           {detailBackLabel}
         </Link>
         <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,760px)_320px] lg:justify-center">
-          <div className="overflow-hidden rounded-lg border border-[#dfe8f0] bg-white">
+          <div className="overflow-hidden rounded-lg border border-[#e5e7eb] bg-white">
             <JobPreview job={selected} isOwner={selected.employer_id === currentProfessionalId} userId={currentUserId} onEdit={() => setEditingJob(selected)} hideActions />
           </div>
-          <aside className="h-fit self-start rounded-lg border border-[#dfe8f0] bg-white p-5">
+          <aside className="h-fit self-start rounded-lg border border-[#e5e7eb] bg-white p-5">
             <p className="text-xs font-bold uppercase text-[#7a899d]">{copy.salary}</p>
             <p className="mt-1 text-2xl font-extrabold text-[#007fae]">{formatJobSalary(selected, locale)}</p>
-            <div className="my-4 border-t border-[#e8eef3]" />
+            <div className="my-4 border-t border-[#e5e7eb]" />
             {selected.employer_id === currentProfessionalId ? (
               <div className="space-y-3">
                 <button type="button" onClick={() => setEditingJob(selected)} className="inline-flex h-11 w-full items-center justify-center rounded-full bg-[#009fd9] px-5 text-sm font-bold text-white transition hover:bg-[#008fc3]">{copy.editJob}</button>
@@ -440,11 +440,11 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
         lista no dijera. Y «Costa Rica» se fue: el app entero es Costa Rica, así
         que era una palabra fija debajo de un número. */}
     {!detailOnly && <div className={`${showingMobileDetail ? "hidden lg:block " : ""}mx-auto w-full max-w-7xl px-0 py-0 sm:max-w-[46rem] sm:px-6 sm:py-5 lg:max-w-7xl lg:flex-1 lg:min-h-0 lg:px-6 lg:py-0`}>
-      <div className={`${filtered.length > 0 ? "lg:grid lg:grid-cols-[minmax(340px,440px)_minmax(0,1fr)] xl:grid-cols-[380px_minmax(0,1fr)]" : ""} sm:overflow-hidden sm:rounded-[22px] sm:border sm:border-[#dfe8f0] sm:bg-white sm:shadow-[0_12px_34px_-28px_rgba(15,23,42,0.55)] lg:h-full ccr-panel-tablero`}>
+      <div className={`${filtered.length > 0 ? "lg:grid lg:grid-cols-[minmax(340px,440px)_minmax(0,1fr)] xl:grid-cols-[380px_minmax(0,1fr)]" : ""} sm:overflow-hidden sm:rounded-[22px] sm:border sm:border-[#e5e7eb] sm:bg-white sm:shadow-[0_12px_34px_-28px_rgba(15,23,42,0.55)] lg:h-full ccr-panel-tablero`}>
         <section className={filtered.length > 0 ? MARKETPLACE_LIST_CLASS : "min-w-0 bg-white"}>
           {/* Con cero, el vacío ya lo dice: «0 empleos» encima era lo mismo dos veces. */}
           {hasActiveFilters && filtered.length > 0 && (
-            <div className="border-b border-[#e7edf2] px-4 py-3 lg:hidden">
+            <div className="border-b border-[#e5e7eb] px-4 py-3 lg:hidden">
               <p className="font-bold">{filtered.length} {filtered.length === 1 ? copy.job.toLocaleLowerCase(locale) : copy.jobs.toLocaleLowerCase(locale)}</p>
               {/* La zona que se buscó, no un país fijo: «Costa Rica» debajo del
                   número era siempre la misma palabra; si alguien buscó en
@@ -535,7 +535,7 @@ function jobSaveSnapshot(job: JobPost, locale: MarketplaceLocale) {
 function JobRow({ job, selected, onSelect }: { job: JobPost; selected: boolean; onSelect: () => void }) {
   const locale = marketplaceLocale(useLocale());
   const copy = JOBS_COPY[locale];
-  return <article className={`relative min-h-[7.25rem] overflow-hidden border-b lg:min-h-0 border-[#dfe6ec] bg-white px-3 py-3 transition sm:max-lg:last:border-b-0 hover:bg-[#f8fafc] sm:px-4 ${selected ? "lg:bg-[#eef9fd] lg:shadow-[inset_4px_0_0_#162543]" : ""}`}>
+  return <article className={`relative min-h-[7.25rem] overflow-hidden border-b lg:min-h-0 border-[#e5e7eb] bg-white px-3 py-3 transition sm:max-lg:last:border-b-0 hover:bg-[#f8fafc] sm:px-4 ${selected ? "lg:bg-[#eef9fd] lg:shadow-[inset_4px_0_0_#162543]" : ""}`}>
     <button type="button" onClick={onSelect} aria-label={`Ver ${job.title}`} className="absolute inset-0 hidden lg:block" />
     <Link href={`/empleos/${job.id}`} className="relative z-[1] block w-full text-left lg:pointer-events-none">
       <div className="flex min-w-0 items-start gap-2.5 sm:gap-3">
@@ -642,7 +642,7 @@ function JobPreview({ job, isOwner, userId, onEdit, mobile = false, hideActions 
             estaba en camino. */}
       </AccionesAlPie>
     ))}
-    <dl className={`grid gap-3 border-[#e7edf2] text-sm sm:grid-cols-2 ${!mobile && !hideActions ? "mt-0 border-b pb-5 pt-5" : "mt-6 border-y py-5"}`}>{detailRows.map(([label, value]) => <div key={label} className="min-w-0"><dt className="text-xs font-bold uppercase tracking-wide text-[#7a899d]">{label}</dt><dd className="mt-0.5 break-words font-bold text-[#162543] [overflow-wrap:anywhere]">{value}</dd></div>)}</dl>
+    <dl className={`grid gap-3 border-[#e5e7eb] text-sm sm:grid-cols-2 ${!mobile && !hideActions ? "mt-0 border-b pb-5 pt-5" : "mt-6 border-y py-5"}`}>{detailRows.map(([label, value]) => <div key={label} className="min-w-0"><dt className="text-xs font-bold uppercase tracking-wide text-[#7a899d]">{label}</dt><dd className="mt-0.5 break-words font-bold text-[#162543] [overflow-wrap:anywhere]">{value}</dd></div>)}</dl>
     <section className="mt-7"><h3 className="text-lg font-bold">{copy.about}</h3><p className="mt-3 whitespace-pre-line break-words text-sm leading-7 text-[#43536b] [overflow-wrap:anywhere]">{job.description}</p></section>
     {[ [copy.responsibilities, job.responsibilities], [copy.requirements, job.requirements], [copy.benefits, job.benefits] ].map(([title, items]) => Array.isArray(items) && items.length > 0 ? <section key={String(title)} className="mt-7"><h3 className="text-lg font-bold">{String(title)}</h3><ol className="mt-3 space-y-2.5 text-sm text-[#43536b]">{items.map((item, index) => <li key={`${title}-${item}-${index}`} className="flex min-w-0 gap-3"><span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-[#eef7fb] text-[11px] font-extrabold leading-none text-[#008fc3]">{index + 1}</span><span className="min-w-0 break-words [overflow-wrap:anywhere]">{item}</span></li>)}</ol></section> : null)}
   </article>;

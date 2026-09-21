@@ -27,7 +27,7 @@ export function Totales({ quote }: { quote: Pick<Quote, "subtotal" | "tax_amount
     <div className="rounded-2xl bg-[#f4f7fa] px-4 py-3.5 text-[14px]">
       <div className="flex justify-between text-[#52627a]"><span>{t("subtotal")}</span><span>{formatColones(m.base)}</span></div>
       {quote.tax_mode !== "exento" && <div className="mt-1 flex justify-between text-[#52627a]"><span>{t("tax")}</span><span>{formatColones(m.iva)}</span></div>}
-      <div className="mt-2.5 flex items-baseline justify-between border-t border-[#dbe4ee] pt-2.5 text-[17px] font-extrabold text-[#162543]">
+      <div className="mt-2.5 flex items-baseline justify-between border-t border-[#e5e7eb] pt-2.5 text-[17px] font-extrabold text-[#162543]">
         <span>{t("total")}</span><span>{formatColones(m.total)}</span>
       </div>
       <p className="mt-0.5 text-right text-[12px] font-semibold text-[#68778d]">{nota}</p>
@@ -139,7 +139,7 @@ export function QuoteDetailModal({ quote, role, open, onClose, onChanged, proNam
               {quote.title}
             </p>
           )}
-          <div className="divide-y divide-[#eef2f6] overflow-hidden rounded-2xl border border-[#e5eaf0]">
+          <div className="divide-y divide-[#eef2f6] overflow-hidden rounded-2xl border border-[#e5e7eb]">
             {quote.items.map((it, i) => (
               <div key={i} className="flex items-start justify-between gap-3 px-4 py-3 text-[14px]">
                 <span className="min-w-0 flex-1 text-[#162543]">{it.description}<span className="ml-1.5 text-[12px] text-[#68778d]">× {it.quantity}</span></span>

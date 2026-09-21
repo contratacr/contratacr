@@ -88,7 +88,7 @@ export default function AyudaPage() {
               <p className="mt-1 text-sm leading-6 text-[#6b7280]">{t("topicsSubtitle")}</p>
               <nav className="mt-5 space-y-2" aria-label={t("topicsTitle")}>
                 {TOPICS.map(({ icon: Icon, faq, cat }) => (
-                  <button key={cat} type="button" onClick={() => selectTopic(faq)} className={`flex w-full items-center gap-3 rounded-lg border px-4 py-3 text-left transition-colors ${openFaq === faq ? "border-[#9bd8ef] bg-[#eaf7fd] text-[#0089bb]" : "border-[#dfe5eb] bg-white text-[#162543] hover:border-[#b8dcea]"}`}>
+                  <button key={cat} type="button" onClick={() => selectTopic(faq)} className={`flex w-full items-center gap-3 rounded-lg border px-4 py-3 text-left transition-colors ${openFaq === faq ? "border-[#9bd8ef] bg-[#eaf7fd] text-[#0089bb]" : "border-[#e5e7eb] bg-white text-[#162543] hover:border-[#b8dcea]"}`}>
                     <Icon className="h-4 w-4 shrink-0" />
                     <span className="text-sm font-bold">{t(`cat${cat}Title`)}</span>
                   </button>
@@ -96,13 +96,13 @@ export default function AyudaPage() {
               </nav>
             </aside>
 
-            <div className="rounded-lg border border-[#dfe5eb] bg-white px-5 sm:px-7">
+            <div className="rounded-lg border border-[#e5e7eb] bg-white px-5 sm:px-7">
               <div className="border-b border-[#e5e7eb] py-5">
                 <h2 className="text-xl font-extrabold text-[#162543]">{t("faqTitle")}</h2>
                 <p className="mt-1 text-sm text-[#6b7280]">{t("faqSubtitle")}</p>
               </div>
               {FAQS.map((index) => (
-                <div key={index} id={`faq-${index}`} className="scroll-mt-28 border-b border-[#edf0f3] last:border-0">
+                <div key={index} id={`faq-${index}`} className="scroll-mt-28 border-b border-[#eef2f6] last:border-0">
                   <button type="button" onClick={() => setOpenFaq(openFaq === index ? null : index)} aria-expanded={openFaq === index} className="flex w-full items-center justify-between gap-4 py-5 text-left">
                     <span className="text-sm font-bold leading-6 text-[#162543]">{t(`faq${index}Q`)}</span>
                     <ChevronDown className={`h-5 w-5 shrink-0 text-[#68778d] transition-transform ${openFaq === index ? "rotate-180 text-[#009fd9]" : ""}`} />

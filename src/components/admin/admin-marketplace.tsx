@@ -307,7 +307,7 @@ export function AdminMarketplace({ kind }: { kind: "jobs" | "offers" }) {
         ) : items.length === 0 ? (
           <div className="py-16 text-center text-sm text-[#6b7280]">{isJobs ? "No hay empleos en esta vista." : "No hay ofertas en esta vista."}</div>
         ) : (
-          <ul className="divide-y divide-[#f1f5f9]">
+          <ul className="divide-y divide-[#eef2f6]">
             {items.map((item) => (
               <li key={item.id} className="grid gap-3 p-4 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_auto] lg:items-start">
                 <div className="flex min-w-0 gap-3">

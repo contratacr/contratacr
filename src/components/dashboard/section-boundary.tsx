@@ -26,7 +26,7 @@ export class SectionBoundary extends Component<Props, State> {
   render() {
     if (!this.state.falló) return this.props.children;
     return (
-      <div className="rounded-3xl border border-[#e5eaf0] bg-white px-6 py-10 text-center shadow-sm">
+      <div className="rounded-3xl border border-[#e5e7eb] bg-white px-6 py-10 text-center shadow-sm">
         <h3 className="text-[18px] font-extrabold text-[#162543]">{this.props.titulo}</h3>
         <p className="mx-auto mt-2 max-w-md text-[14px] leading-6 text-[#52627a]">{this.props.cuerpo}</p>
         <button

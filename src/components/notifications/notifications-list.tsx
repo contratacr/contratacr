@@ -410,7 +410,7 @@ export function NotificationsList({ scope = "mode", titulo }: { scope?: "mode" |
           </button>
           {globalMenuOpen && (
             <div role="menu" className={cn(
-              "min-w-[220px] overflow-hidden rounded-2xl border border-[#dfe8f0] bg-white py-1.5 shadow-xl",
+              "min-w-[220px] overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white py-1.5 shadow-xl",
               nativeApp && scope === "all"
                 ? "fixed right-3 top-[calc(var(--ccr-native-header-height,64px)+6px)] z-[240] shadow-xl"
                 : "absolute right-0 top-full z-30 mt-1",
@@ -501,7 +501,7 @@ export function NotificationsList({ scope = "mode", titulo }: { scope?: "mode" |
         "ccr-notifications-scroll min-h-0 flex-1 overflow-hidden bg-white",
         // En la app la lista va de borde a borde contra la barra de abajo; en la
         // web es una tarjeta como la de cualquier otra sección.
-        scope === "all" && !nativeApp && "rounded-2xl border border-[#dfe8f0] shadow-sm",
+        scope === "all" && !nativeApp && "rounded-2xl border border-[#e5e7eb] shadow-sm",
       )}>
         {/* El título va DENTRO de la tarjeta, con el «···» en su renglón, como
             Facebook. Por debajo de 1024 px el título ya lo dice la barra de
@@ -562,7 +562,7 @@ export function NotificationsList({ scope = "mode", titulo }: { scope?: "mode" |
               <li
                 key={n.id}
                 data-unread={!n.read ? "true" : undefined}
-                className="relative group border-b border-[#f3f4f6] last:border-0"
+                className="relative group border-b border-[#eef2f6] last:border-0"
                 onTouchStart={(event) => {
                   if (!nativeApp) return;
                   arrastreRef.current = {
@@ -737,7 +737,7 @@ export function NotificationsList({ scope = "mode", titulo }: { scope?: "mode" |
                       ref={itemMenuPortalRef}
                       role="menu"
                       data-notification-item-menu
-                      className="fixed z-[240] min-w-[190px] overflow-hidden rounded-2xl border border-[#dfe8f0] bg-white py-1.5 shadow-xl"
+                      className="fixed z-[240] min-w-[190px] overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white py-1.5 shadow-xl"
                       style={{ top: itemMenuPosition.top, right: itemMenuPosition.right }}
                     >
                       {!n.read && (

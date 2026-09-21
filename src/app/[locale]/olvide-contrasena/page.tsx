@@ -103,7 +103,7 @@ export default function OlvideContrasenaPage() {
               )}
               <SpamNotice className="mx-auto mt-4 max-w-[300px] leading-5 text-[#6b7280]" />
 
-              <div className="mt-6 border-t border-[#edf2f7] pt-5">
+              <div className="mt-6 border-t border-[#eef2f6] pt-5">
                 {resendState.resent && (
                   <p className="mb-2 text-xs font-semibold text-[#0089bb]">{tc("resent")}</p>
                 )}

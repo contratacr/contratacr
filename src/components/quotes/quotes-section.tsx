@@ -109,7 +109,7 @@ export function QuotesSection({ proName, proSlug, puedeCrear = true }: { proName
             {lista.map((q) => {
               const m = marca(q);
               return (
-                <button key={q.id} type="button" onClick={() => setDetalle({ quote: q, recien: false })} className="group flex w-full items-center gap-3.5 rounded-2xl border border-[#e5eaf0] bg-white px-4 py-3.5 text-left transition-colors hover:border-[#bfe3f5] hover:bg-[#f8fcfe]">
+                <button key={q.id} type="button" onClick={() => setDetalle({ quote: q, recien: false })} className="group flex w-full items-center gap-3.5 rounded-2xl border border-[#e5e7eb] bg-white px-4 py-3.5 text-left transition-colors hover:border-[#bfe3f5] hover:bg-[#f8fcfe]">
                   <span className={`grid h-11 w-11 shrink-0 place-items-center rounded-[14px] ${m.fondo}`}>{m.icono}</span>
                   <span className="min-w-0 flex-1">
                     {q.client_name
@@ -126,7 +126,7 @@ export function QuotesSection({ proName, proSlug, puedeCrear = true }: { proName
                 </button>
               );
             })}
-            {lista.length === 0 && <p className="rounded-2xl border border-[#e5eaf0] bg-white py-8 text-center text-[14px] text-[#68778d] shadow-sm">{t("emptyFilter")}</p>}
+            {lista.length === 0 && <p className="rounded-2xl border border-[#e5e7eb] bg-white py-8 text-center text-[14px] text-[#68778d] shadow-sm">{t("emptyFilter")}</p>}
           </div>
         </>
       )}

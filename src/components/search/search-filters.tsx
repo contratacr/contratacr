@@ -127,7 +127,7 @@ function FilterSheet({
         aria-label={title}
         className="relative z-10 w-full max-w-xl overflow-hidden rounded-t-[22px] bg-white shadow-2xl lg:rounded-[18px]"
       >
-        <div className="flex items-center justify-between border-b border-[#edf1f5] px-5 py-4">
+        <div className="flex items-center justify-between border-b border-[#eef2f6] px-5 py-4">
           <h2 className="text-[20px] font-extrabold text-[#162543]">{title}</h2>
           <button
             type="button"
@@ -146,12 +146,12 @@ function FilterSheet({
                 key={option.value}
                 type="button"
                 onClick={() => onSelect(option.value)}
-                className="flex min-h-[58px] w-full items-center justify-between gap-4 border-b border-[#f0f3f6] py-3 text-left last:border-b-0"
+                className="flex min-h-[58px] w-full items-center justify-between gap-4 border-b border-[#eef2f6] py-3 text-left last:border-b-0"
               >
                 <span className={cn("text-[16px] font-semibold", selected ? "text-[#008fbe]" : "text-[#162543]")}>{option.label}</span>
                 <span className={cn(
                   "grid h-6 w-6 shrink-0 place-items-center rounded-full border-2",
-                  selected ? "border-[#009FD9] bg-[#009FD9]" : "border-[#cbd5df] bg-white",
+                  selected ? "border-[#009FD9] bg-[#009FD9]" : "border-[#d7e1ea] bg-white",
                 )}>
                   {selected && <Check className="h-4 w-4 stroke-[3] text-white" />}
                 </span>
@@ -221,7 +221,7 @@ function MultiFilterSheetContent({
     <div className="fixed inset-0 z-[220] flex items-end justify-center lg:items-center lg:p-6" role="presentation">
       <button type="button" aria-label="Cerrar" className="absolute inset-0 bg-[#071426]/55" onClick={onClose} />
       <section role="dialog" aria-modal="true" aria-label={title} className="relative z-10 w-full max-w-xl overflow-hidden rounded-t-[22px] bg-white shadow-2xl lg:rounded-[18px]">
-        <div className="flex items-center justify-between border-b border-[#edf1f5] px-5 py-4">
+        <div className="flex items-center justify-between border-b border-[#eef2f6] px-5 py-4">
           <div>
             <h2 className="text-[20px] font-extrabold text-[#162543]">{title}</h2>
             {draftValues.length > 0 && <p className="mt-0.5 text-xs font-semibold text-[#64748b]">{draftValues.length} seleccionadas</p>}
@@ -243,10 +243,10 @@ function MultiFilterSheetContent({
                 key={option.value}
                 type="button"
                 onClick={() => setDraftValues((current) => toggleMultiValue(current, option.value))}
-                className="flex min-h-[58px] w-full items-center justify-between gap-4 border-b border-[#f0f3f6] py-3 text-left last:border-b-0"
+                className="flex min-h-[58px] w-full items-center justify-between gap-4 border-b border-[#eef2f6] py-3 text-left last:border-b-0"
               >
                 <span className={cn("text-[16px] font-semibold", selected ? "text-[#008fbe]" : "text-[#162543]")}>{option.label}</span>
-                <span className={cn("grid h-6 w-6 shrink-0 place-items-center rounded-[6px] border-2", selected ? "border-[#009FD9] bg-[#009FD9]" : "border-[#cbd5df] bg-white")}>
+                <span className={cn("grid h-6 w-6 shrink-0 place-items-center rounded-[6px] border-2", selected ? "border-[#009FD9] bg-[#009FD9]" : "border-[#d7e1ea] bg-white")}>
                   {selected && <Check className="h-4 w-4 stroke-[3] text-white" />}
                 </span>
               </button>
@@ -318,14 +318,14 @@ function DesktopMultiSelect({
           <ChevronDown className={cn("h-4 w-4 text-[#64748b] transition-transform", open && "rotate-180")} />
         </span>
       </button>
-      <AnchoredDropdown open={open} anchorRef={triggerRef} className="z-[210] max-h-72 w-[var(--anchor-width)] min-w-[220px] overflow-y-auto rounded-[10px] border border-[#dbe4ec] bg-white p-1.5 shadow-xl">
+      <AnchoredDropdown open={open} anchorRef={triggerRef} className="z-[210] max-h-72 w-[var(--anchor-width)] min-w-[220px] overflow-y-auto rounded-[10px] border border-[#e5e7eb] bg-white p-1.5 shadow-xl">
         <div ref={menuRef}>
           {values.length > 0 && <button type="button" onClick={() => onChange([])} className="flex min-h-10 w-full items-center rounded-[7px] px-3 text-left text-sm font-bold text-[#009FD9] hover:bg-[#f4f9fc]">{t("filters.clearAll")}</button>}
           {options.map((option) => {
             const selected = values.includes(option.value);
             return <button key={option.value} type="button" onClick={() => onChange(toggleMultiValue(values, option.value))} className={cn("flex min-h-10 w-full items-center justify-between gap-3 rounded-[7px] px-3 text-left text-sm font-semibold hover:bg-[#f4f9fc]", selected ? "text-[#008fbe]" : "text-[#162543]")}>
               <span>{option.label}</span>
-              <span className={cn("grid h-5 w-5 shrink-0 place-items-center rounded-[5px] border-2", selected ? "border-[#009FD9] bg-[#009FD9]" : "border-[#cbd5df]")}>{selected && <Check className="h-3.5 w-3.5 stroke-[3] text-white" />}</span>
+              <span className={cn("grid h-5 w-5 shrink-0 place-items-center rounded-[5px] border-2", selected ? "border-[#009FD9] bg-[#009FD9]" : "border-[#d7e1ea]")}>{selected && <Check className="h-3.5 w-3.5 stroke-[3] text-white" />}</span>
             </button>;
           })}
         </div>
@@ -386,12 +386,12 @@ function PriceFilterSheetContent({
       key={value}
       type="button"
       onClick={onSelect}
-      className="flex min-h-[52px] w-full items-center justify-between gap-4 border-b border-[#f0f3f6] py-2.5 text-left last:border-b-0"
+      className="flex min-h-[52px] w-full items-center justify-between gap-4 border-b border-[#eef2f6] py-2.5 text-left last:border-b-0"
     >
       <span className={cn("text-[15px] font-semibold", selected ? "text-[#008fbe]" : "text-[#162543]")}>{label}</span>
       <span className={cn(
         "grid h-6 w-6 shrink-0 place-items-center rounded-full border-2",
-        selected ? "border-[#009FD9] bg-[#009FD9]" : "border-[#cbd5df] bg-white",
+        selected ? "border-[#009FD9] bg-[#009FD9]" : "border-[#d7e1ea] bg-white",
       )}>
         {selected && <Check className="h-4 w-4 stroke-[3] text-white" />}
       </span>
@@ -403,7 +403,7 @@ function PriceFilterSheetContent({
     <div className="fixed inset-0 z-[220] flex items-end justify-center lg:items-center lg:p-6" role="presentation">
       <button type="button" aria-label="Cerrar" className="absolute inset-0 bg-[#071426]/55" onClick={onClose} />
       <section role="dialog" aria-modal="true" aria-label={t("filters.price")} className="relative z-10 w-full max-w-xl overflow-hidden rounded-t-[22px] bg-white shadow-2xl lg:rounded-[18px]">
-        <div className="flex items-center justify-between border-b border-[#edf1f5] px-5 py-4">
+        <div className="flex items-center justify-between border-b border-[#eef2f6] px-5 py-4">
           <h2 className="text-[20px] font-extrabold text-[#162543]">{t("filters.price")}</h2>
           <button type="button" onClick={onClose} aria-label="Cerrar" className="inline-flex h-9 w-9 items-center justify-center text-[#162543]">
             <X className="h-6 w-6" />
@@ -1098,7 +1098,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
     // Los filtros solo se abren si el dedo empezó en ellos: al tocar el campo
     // de búsqueda, el teclado mueve la página y el «click» caía sobre el chip
     // que quedaba debajo (ver useToquePropio).
-    const pill = "ccr-search-filter-chip inline-flex h-9 w-max shrink-0 items-center justify-center gap-1 whitespace-nowrap rounded-full border border-[#d8e2ea] bg-white px-2.5 text-[10px] font-bold text-[#162543] shadow-sm min-[350px]:px-3 min-[350px]:text-[11px] min-[390px]:text-[12px]";
+    const pill = "ccr-search-filter-chip inline-flex h-9 w-max shrink-0 items-center justify-center gap-1 whitespace-nowrap rounded-full border border-[#d7e1ea] bg-white px-2.5 text-[10px] font-bold text-[#162543] shadow-sm min-[350px]:px-3 min-[350px]:text-[11px] min-[390px]:text-[12px]";
     return (
       <div className="scrollbar-none flex w-full min-w-0 items-center gap-1 overflow-x-auto overflow-y-visible pb-0.5">
         <div className="flex w-max min-w-full items-center justify-start gap-1">
@@ -1167,7 +1167,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
   // chrome (title bar / padding) - so drop the card border/rounding/padding here.
   const inDrawer = hideHeader;
   return (
-    <div className={inDrawer ? "" : "rounded-2xl border border-[#dfe8f0] bg-white p-4"}>
+    <div className={inDrawer ? "" : "rounded-2xl border border-[#e5e7eb] bg-white p-4"}>
       {/* Header - "Filtros" + a live active-count (inline clear when any are on) + an
           optional close X. `closable` is set ONLY for the mobile drawer instance, so the
           X lives INSIDE this white container's header; the desktop sidebar has no X. */}
@@ -1210,7 +1210,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
             Mezclado entre Precio e Idioma parecía uno más —y el contador de
             «Limpiar filtros» nunca lo contó, que es la prueba—. Va arriba, con
             una línea que lo separa de lo que sí reduce la lista. */}
-        <div className="border-b border-[#eef3f7] pb-4">
+        <div className="border-b border-[#eef2f6] pb-4">
           <label className={fieldLabel}>{t("filters.sortBy")}</label>
           <Select value={sortBy} onValueChange={(v) => {
             setSortBy(v);
@@ -1276,7 +1276,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
                 // EXACT same box as the Select triggers: h-10 w-full rounded-xl border, px-4
                 // left, and pr-9 ALWAYS so the right glyph sits exactly where the dropdowns'
                 // chevron does - so this field is indistinguishable in size + layout.
-                className="h-10 w-full rounded-xl border border-[#dfe8f0] bg-white pl-4 pr-9 text-base sm:text-sm text-[#162543] placeholder-[#9ca3af] transition hover:border-[#009FD9]/50 focus:border-[#009FD9] focus:outline-none focus:ring-2 focus:ring-[#009FD9]/20"
+                className="h-10 w-full rounded-xl border border-[#e5e7eb] bg-white pl-4 pr-9 text-base sm:text-sm text-[#162543] placeholder-[#9ca3af] transition hover:border-[#009FD9]/50 focus:border-[#009FD9] focus:outline-none focus:ring-2 focus:ring-[#009FD9]/20"
               />
               {/* Right-side glyph: a Search icon at rest (matches the Select chevron spot/
                   size/color), and while typing a SMALL, SUBTLE clear-X INSIDE the field - a
@@ -1347,7 +1347,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
               aria-label={t("filters.location")}
               aria-expanded={locationOpen}
               aria-autocomplete="list"
-              className="h-10 w-full rounded-xl border border-[#dfe8f0] bg-white pl-4 pr-9 text-base sm:text-sm text-[#162543] placeholder-[#9ca3af] transition hover:border-[#009FD9]/50 focus:border-[#009FD9] focus:outline-none focus:ring-2 focus:ring-[#009FD9]/20"
+              className="h-10 w-full rounded-xl border border-[#e5e7eb] bg-white pl-4 pr-9 text-base sm:text-sm text-[#162543] placeholder-[#9ca3af] transition hover:border-[#009FD9]/50 focus:border-[#009FD9] focus:outline-none focus:ring-2 focus:ring-[#009FD9]/20"
             />
             {locationQuery ? (
               <button
@@ -1603,7 +1603,7 @@ export function MobileServiceSearch() {
         role="combobox"
         aria-expanded={open}
         aria-autocomplete="list"
-        className="h-10 min-w-0 w-full rounded-full border border-[#dfe8f0] bg-white pl-4 pr-9 text-base sm:text-sm text-[#162543] placeholder-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition"
+        className="h-10 min-w-0 w-full rounded-full border border-[#e5e7eb] bg-white pl-4 pr-9 text-base sm:text-sm text-[#162543] placeholder-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition"
       />
       {q && (
         <button onClick={() => { setQ(""); setOpen(false); if (debounceRef.current) clearTimeout(debounceRef.current); pushQuery(""); }} className="absolute right-3 text-[#68778d] hover:text-[#374151] transition-colors" aria-label={t("filters.clearSearch")}>

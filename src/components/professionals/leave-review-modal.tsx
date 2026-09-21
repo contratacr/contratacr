@@ -329,7 +329,7 @@ export function LeaveReviewModal({
           maxLength={300}
           rows={embedded ? 3 : 4}
           placeholder={t("commentPlaceholder")}
-          className={`w-full resize-none border border-[#dbe5ed] bg-white text-sm text-[#162543] placeholder:text-[#68778d] transition focus:border-[#009FD9] focus:outline-none focus:ring-2 focus:ring-[#009FD9]/20 ${embedded ? "rounded-xl px-3.5 py-3" : "rounded-xl px-3.5 py-3"}`}
+          className={`w-full resize-none border border-[#e5e7eb] bg-white text-sm text-[#162543] placeholder:text-[#68778d] transition focus:border-[#009FD9] focus:outline-none focus:ring-2 focus:ring-[#009FD9]/20 ${embedded ? "rounded-xl px-3.5 py-3" : "rounded-xl px-3.5 py-3"}`}
         />
       </div>}
       {/* Sin cuenta se pide el nombre y nada más: es lo único que hace falta
@@ -344,7 +344,7 @@ export function LeaveReviewModal({
             maxLength={80}
             autoComplete="name"
             placeholder={t("namePlaceholder")}
-            className="w-full rounded-xl border border-[#dbe5ed] bg-white px-3.5 py-3 text-sm text-[#162543] placeholder:text-[#68778d] transition focus:border-[#009FD9] focus:outline-none focus:ring-2 focus:ring-[#009FD9]/20"
+            className="w-full rounded-xl border border-[#e5e7eb] bg-white px-3.5 py-3 text-sm text-[#162543] placeholder:text-[#68778d] transition focus:border-[#009FD9] focus:outline-none focus:ring-2 focus:ring-[#009FD9]/20"
           />
           <p className="mt-1.5 text-xs text-[#68778d]">{t("nameHelp")}</p>
         </div>

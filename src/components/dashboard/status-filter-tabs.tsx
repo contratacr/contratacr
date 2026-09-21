@@ -209,7 +209,7 @@ export function StatusFilterTabs({
                   CHIP,
                   active
                     ? "border-[#009FD9] bg-[#009FD9] text-white"
-                    : "border-[#dfe6ec] bg-white text-[#526277] hover:border-[#c3d2de]",
+                    : "border-[#e5e7eb] bg-white text-[#526277] hover:border-[#c3d2de]",
                 )}
               >
                 <span className="max-w-[14rem] truncate">{label(tab.id)}</span>

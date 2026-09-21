@@ -666,7 +666,7 @@ export function ProfessionalSchedule({ professional, categoryName, searchedPlace
           </p>
         )}
         {locationMenuOpen && extraLocationCount > 0 && (
-          <div className="absolute right-0 top-[calc(100%+0.35rem)] z-[120] min-w-[13rem] max-w-[min(18rem,calc(100vw-3rem))] overflow-hidden rounded-lg border border-[#dbe4ec] bg-white py-1 shadow-[0_12px_30px_rgba(15,39,71,0.18)]" role="menu">
+          <div className="absolute right-0 top-[calc(100%+0.35rem)] z-[120] min-w-[13rem] max-w-[min(18rem,calc(100vw-3rem))] overflow-hidden rounded-lg border border-[#e5e7eb] bg-white py-1 shadow-[0_12px_30px_rgba(15,39,71,0.18)]" role="menu">
             {hiddenLocationTabs.map((option) => {
               const active = option.id === effectiveId;
               const isVideo = option.id === "videoconsulta";

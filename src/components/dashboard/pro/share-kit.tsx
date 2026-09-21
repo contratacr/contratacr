@@ -199,7 +199,7 @@ export function ShareKit({ open, onClose, profileUrl, name, services = [], avata
   // estrellas de una reseña— porque como fila con un ícono suelto se leían como
   // un renglón de ajustes, no como algo que vale la pena abrir.
   const option = (miniatura: ReactNode, title: string, body: string, onClick: () => void) => (
-    <button type="button" onClick={onClick} className="group flex w-full items-center gap-3.5 rounded-2xl border border-[#e5eaf0] bg-white p-3.5 text-left transition-colors hover:border-[#bfe3f5] hover:bg-[#f8fcfe]">
+    <button type="button" onClick={onClick} className="group flex w-full items-center gap-3.5 rounded-2xl border border-[#e5e7eb] bg-white p-3.5 text-left transition-colors hover:border-[#bfe3f5] hover:bg-[#f8fcfe]">
       {miniatura}
       <span className="min-w-0 flex-1">
         <span className="block text-[15px] font-extrabold text-[#162543]">{title}</span>
@@ -210,7 +210,7 @@ export function ShareKit({ open, onClose, profileUrl, name, services = [], avata
   );
 
   const miniTarjeta = (
-    <span className="grid h-[68px] w-[54px] shrink-0 grid-rows-[18px_1fr] overflow-hidden rounded-xl border border-[#dbe4ee] bg-white shadow-[0_6px_14px_-8px_rgba(22,37,67,0.55)]">
+    <span className="grid h-[68px] w-[54px] shrink-0 grid-rows-[18px_1fr] overflow-hidden rounded-xl border border-[#e5e7eb] bg-white shadow-[0_6px_14px_-8px_rgba(22,37,67,0.55)]">
       <span className="flex items-center justify-center bg-[#162543]">
         <span className="text-[7px] font-extrabold tracking-tight text-white">Contrata<span className="text-[#4fc3f7]">CR</span></span>
       </span>
@@ -250,7 +250,7 @@ export function ShareKit({ open, onClose, profileUrl, name, services = [], avata
         <div className="flex flex-col items-center gap-3">
           {cardPreview ? (
             // eslint-disable-next-line @next/next/no-img-element -- imagen generada en el navegador
-            <img src={cardPreview} alt="" className="w-full max-w-[320px] rounded-2xl border border-[#e5eaf0] shadow-[0_10px_30px_-12px_rgba(22,37,67,0.35)]" />
+            <img src={cardPreview} alt="" className="w-full max-w-[320px] rounded-2xl border border-[#e5e7eb] shadow-[0_10px_30px_-12px_rgba(22,37,67,0.35)]" />
           ) : (
             <div className="grid aspect-[4/5] w-full max-w-[320px] animate-pulse place-items-center rounded-2xl bg-[#eef2f6] text-[13px] font-semibold text-[#68778d]">{t("preparing")}</div>
           )}

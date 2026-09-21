@@ -143,7 +143,7 @@ export function JobMarketplaceHeader({ initialQuery = "", initialLocation = "", 
           </div>
         </section>
       </MarketplaceNavbarPortal>
-      <section className="hidden border-b border-[#dfe8f0] bg-[#f4f7fa] lg:block">
+      <section className="hidden border-b border-[#e5e7eb] bg-[#f4f7fa] lg:block">
         <div className="mx-auto flex max-w-7xl items-center gap-2 overflow-x-auto px-6 py-3">
           {filters}
         </div>

@@ -407,9 +407,9 @@ export function OffersBoard({
         </section>
       </MarketplaceNavbarPortal>
       {/* Título, acciones y filtros en UNA tarjeta blanca (ver jobs-board). */}
-      <div className="relative z-30 hidden shrink-0 border-b border-[#e3ebf2] bg-white lg:block">
+      <div className="relative z-30 hidden shrink-0 border-b border-[#e5e7eb] bg-white lg:block">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-6 py-2.5">
-          <div className="flex shrink-0 items-baseline gap-2 border-r border-[#e3ebf2] pr-4">
+          <div className="flex shrink-0 items-baseline gap-2 border-r border-[#e5e7eb] pr-4">
             {/* El nombre de la pantalla, a la vista: antes era solo para lectores
                 de pantalla y la barra arrancaba en frío con los filtros —quien
                 llegaba de Google no sabía en qué sección estaba—. Al lado, cuántos
@@ -423,11 +423,11 @@ export function OffersBoard({
       </div>
 
       <div className="mx-auto w-full max-w-7xl px-0 sm:max-w-[46rem] sm:px-6 sm:py-5 lg:max-w-7xl lg:flex-1 lg:min-h-0 lg:px-6 lg:py-0">
-        <div className={`${filtered.length > 0 ? "lg:grid lg:grid-cols-[minmax(340px,440px)_minmax(0,1fr)] xl:grid-cols-[380px_minmax(0,1fr)]" : ""} sm:overflow-hidden sm:rounded-[22px] sm:border sm:border-[#dfe8f0] sm:bg-white sm:shadow-[0_12px_34px_-28px_rgba(15,23,42,0.55)] lg:h-full ccr-panel-tablero`}>
+        <div className={`${filtered.length > 0 ? "lg:grid lg:grid-cols-[minmax(340px,440px)_minmax(0,1fr)] xl:grid-cols-[380px_minmax(0,1fr)]" : ""} sm:overflow-hidden sm:rounded-[22px] sm:border sm:border-[#e5e7eb] sm:bg-white sm:shadow-[0_12px_34px_-28px_rgba(15,23,42,0.55)] lg:h-full ccr-panel-tablero`}>
           <section className={filtered.length > 0 ? MARKETPLACE_LIST_CLASS : "min-w-0 bg-white"}>
             {/* Con cero, el vacío ya lo dice: «0 promociones» encima era lo mismo dos veces. */}
             {hasActiveFilters && filtered.length > 0 && (
-              <div className="border-b border-[#e7edf2] px-4 py-3 lg:hidden">
+              <div className="border-b border-[#e5e7eb] px-4 py-3 lg:hidden">
                 <p className="font-bold">
                   {filtered.length} {filtered.length === 1 ? copy.offer : copy.offerPlural}
                 </p>
@@ -716,7 +716,7 @@ function OfferRow({
   const discount = offerDiscountPercent(offer);
   return (
     <article
-      className={`relative overflow-hidden border-b border-[#dfe6ec] bg-white px-3 py-2 transition sm:max-lg:last:border-b-0 hover:bg-[#f8fafc] sm:px-4 sm:py-2.5 ${selected ? "lg:bg-[#eef9fd] lg:shadow-[inset_4px_0_0_#162543]" : ""}`}
+      className={`relative overflow-hidden border-b border-[#e5e7eb] bg-white px-3 py-2 transition sm:max-lg:last:border-b-0 hover:bg-[#f8fafc] sm:px-4 sm:py-2.5 ${selected ? "lg:bg-[#eef9fd] lg:shadow-[inset_4px_0_0_#162543]" : ""}`}
     >
       <button
         type="button"

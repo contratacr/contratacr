@@ -439,7 +439,7 @@ export function SearchResultsLayout({ children, filters, quickFilters, drawerFil
         <button
           type="button"
           onClick={() => setShowFilters(true)}
-          className="inline-flex items-center gap-1.5 rounded-full border border-[#dfe8f0] bg-white px-4 py-1.5 text-sm font-medium text-[#374151] shadow-sm"
+          className="inline-flex items-center gap-1.5 rounded-full border border-[#e5e7eb] bg-white px-4 py-1.5 text-sm font-medium text-[#374151] shadow-sm"
         >
           <SlidersHorizontal className="h-4 w-4" /> {t("filters.title")}
         </button>
@@ -472,7 +472,7 @@ export function SearchResultsLayout({ children, filters, quickFilters, drawerFil
         {/* Map — mobile: full-bleed BACKGROUND, flex-fills the area under the header (the sheet
             overlays its lower part). Desktop: the sticky right column (order-3). ONE instance. */}
         <aside className="min-h-0 min-w-0 flex-1 lg:order-3">
-          <div className="relative isolate h-full w-full overflow-hidden bg-[#eef2f6] lg:sticky lg:top-20 lg:h-[calc(100vh-104px)] lg:rounded-2xl lg:border lg:border-[#dfe8f0] lg:bg-transparent">
+          <div className="relative isolate h-full w-full overflow-hidden bg-[#eef2f6] lg:sticky lg:top-20 lg:h-[calc(100vh-104px)] lg:rounded-2xl lg:border lg:border-[#e5e7eb] lg:bg-transparent">
             <GoogleMapPanel apiKey={apiKey} professionals={mapData} locale={locale} numbering={numbering} focusTarget={mapFocusTarget} />
           </div>
         </aside>
@@ -482,7 +482,7 @@ export function SearchResultsLayout({ children, filters, quickFilters, drawerFil
             (order-2) and the desktop map sit in the flex shell. */}
         <div
           ref={sheetRef}
-          className="ccr-search-bottom-sheet fixed inset-x-0 bottom-0 z-30 flex flex-col overflow-visible rounded-t-[20px] border-x border-t border-[#dfe8f0] bg-white shadow-[0_-12px_36px_-14px_rgba(15,23,42,0.32)] lg:static lg:z-auto lg:rounded-none lg:border-0 lg:bg-transparent lg:shadow-none lg:contents"
+          className="ccr-search-bottom-sheet fixed inset-x-0 bottom-0 z-30 flex flex-col overflow-visible rounded-t-[20px] border-x border-t border-[#e5e7eb] bg-white shadow-[0_-12px_36px_-14px_rgba(15,23,42,0.32)] lg:static lg:z-auto lg:rounded-none lg:border-0 lg:bg-transparent lg:shadow-none lg:contents"
           // maxHeight keeps the navbar AND the map controls visible even when the sheet is
           // expanded. The list scrolls inside the sheet; the sheet itself should never cover
           // the filter/map affordances at the top of the mobile map.

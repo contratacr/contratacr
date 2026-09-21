@@ -235,7 +235,7 @@ export function SupportForm({ onSuccess, onCancel }: { onSuccess?: (email: strin
   // del navegador y con su tipografía— y el mensaje del app no se veía nunca.
   return (
     <form ref={formRef} noValidate onSubmit={handleSubmit} onInput={() => setConCambios(true)} className="flex flex-col max-sm:pb-2">
-      <div className="mx-4 flex flex-col gap-5 rounded-2xl sm:mx-0 border border-[#dfe8f0] bg-white p-5 shadow-sm">
+      <div className="mx-4 flex flex-col gap-5 rounded-2xl sm:mx-0 border border-[#e5e7eb] bg-white p-5 shadow-sm">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
           <label className="text-sm font-medium text-[#374151] block mb-1.5">

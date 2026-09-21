@@ -154,7 +154,7 @@ export function SelectMenu({ value, onChange, options, placeholder, label, error
           // Mutually-exclusive states: open → ring + transparent border; error → red;
           // otherwise a neutral border that DARKENS on hover (#cbd5e1, the Input hover spec).
           open ? "ring-2 ring-[#009FD9] border-transparent" : error ? "border-red-400" : "border-[#e5e7eb]",
-          !open && !error && !disabled && "hover:border-[#cbd5e1]",
+          !open && !error && !disabled && "hover:border-[#d7e1ea]",
           disabled && "opacity-50 cursor-not-allowed"
         )}
       >

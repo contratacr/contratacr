@@ -483,7 +483,7 @@ export function SupportTickets({
           </div>
         ) : (
           <div className="ccr-support-thread-card flex min-h-0 flex-1 flex-col overflow-hidden bg-white">
-            <header className="grid min-h-[64px] shrink-0 grid-cols-[40px_minmax(0,1fr)] items-center gap-2 border-b border-[#e3ebf1] bg-white px-3 py-2 shadow-[0_8px_22px_-24px_rgba(15,23,42,0.45)] sm:grid-cols-[44px_minmax(0,1fr)] sm:gap-3 sm:px-5">
+            <header className="grid min-h-[64px] shrink-0 grid-cols-[40px_minmax(0,1fr)] items-center gap-2 border-b border-[#e5e7eb] bg-white px-3 py-2 shadow-[0_8px_22px_-24px_rgba(15,23,42,0.45)] sm:grid-cols-[44px_minmax(0,1fr)] sm:gap-3 sm:px-5">
               <button onClick={closeThread} className="grid h-10 w-10 shrink-0 place-items-center rounded-full text-[#526277] transition active:bg-[#eef6fb]" aria-label={t("backToTickets")}>
                 <ArrowLeft className="h-5 w-5" />
               </button>
@@ -512,7 +512,7 @@ export function SupportTickets({
               )}
               {messages.map((m) => (
                 <div key={m.id} className={`flex ${m.sender_role === "user" ? "justify-end" : "justify-start"}`}>
-                  <div className={`max-w-[86%] rounded-[18px] px-3.5 py-2.5 text-[14px] leading-relaxed shadow-[0_4px_12px_-8px_rgba(15,23,42,0.55)] sm:max-w-[78%] ${m.sender_role === "user" ? "rounded-br-md bg-[#009FD9] font-medium text-white" : "rounded-bl-md border border-[#e5edf3] bg-white text-[#25364d]"}`}>
+                  <div className={`max-w-[86%] rounded-[18px] px-3.5 py-2.5 text-[14px] leading-relaxed shadow-[0_4px_12px_-8px_rgba(15,23,42,0.55)] sm:max-w-[78%] ${m.sender_role === "user" ? "rounded-br-md bg-[#009FD9] font-medium text-white" : "rounded-bl-md border border-[#e5e7eb] bg-white text-[#25364d]"}`}>
                     <div className="flex items-center gap-1.5 mb-1 text-[11px] opacity-70">
                       {m.sender_role === "admin" ? <Shield className="h-3 w-3" /> : <User className="h-3 w-3" />}
                       {m.sender_role === "admin" ? t("supportName") : t("you")} · {fmt(m.created_at)}
@@ -544,7 +544,7 @@ export function SupportTickets({
               </div>
             )}
 
-            <div className="ccr-support-thread-composer shrink-0 border-t border-[#e3ebf1] bg-white px-3 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-2 sm:px-4 sm:pb-4">
+            <div className="ccr-support-thread-composer shrink-0 border-t border-[#e5e7eb] bg-white px-3 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-2 sm:px-4 sm:pb-4">
               <div className="flex items-end gap-2.5">
                 <textarea
                   value={reply}
@@ -614,7 +614,7 @@ export function SupportTickets({
       {loading && items.length === 0 ? (
         <PanelListSkeleton rows={3} withTabs />
       ) : loadError ? (
-        <div className="rounded-2xl border border-[#dfe8f0] bg-white px-5 py-10 text-center">
+        <div className="rounded-2xl border border-[#e5e7eb] bg-white px-5 py-10 text-center">
           <Headset className="mx-auto mb-3 h-10 w-10 text-[#cbd5e1]" />
           <p className="font-semibold text-[#374151]">{t("loadError")}</p>
           <button onClick={() => load()} className="mt-4 inline-flex items-center justify-center rounded-full bg-[#009FD9] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#0089bb]">
@@ -641,7 +641,7 @@ export function SupportTickets({
           {filtered.map((tk) => {
             const hasNew = unread.has(tk.id);
             return (
-              <button key={tk.id} data-tiquete={tk.id} onClick={() => openTicket(tk.id)} className={`group text-left bg-white rounded-2xl border p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md sm:p-5 ${hasNew ? "border-[#bfe3f5] ring-1 ring-[#EBF5FB]" : "border-[#dfe8f0] hover:border-[#bfe3f5]"}`}>
+              <button key={tk.id} data-tiquete={tk.id} onClick={() => openTicket(tk.id)} className={`group text-left bg-white rounded-2xl border p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md sm:p-5 ${hasNew ? "border-[#bfe3f5] ring-1 ring-[#EBF5FB]" : "border-[#e5e7eb] hover:border-[#bfe3f5]"}`}>
                 <div className="flex items-start gap-3">
                   <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#ccecf8] ccr-caja-icono-plana">
                     <Headset className="h-[18px] w-[18px]" />

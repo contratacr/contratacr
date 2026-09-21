@@ -68,7 +68,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
             onChange={handleChange}
             className={cn(
               "w-full rounded-xl border bg-white px-4 py-2.5 text-sm text-[#162543] placeholder:text-[#68778d]",
-              "border-[#e5e7eb] transition-all duration-150 hover:border-[#cbd5e1]",
+              "border-[#e5e7eb] transition-all duration-150 hover:border-[#d7e1ea]",
               "focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent",
               "disabled:bg-[#f3f4f6] disabled:cursor-not-allowed",
               error && "border-red-400 focus:ring-red-400",

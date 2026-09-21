@@ -66,7 +66,7 @@ export function PhoneFrame({ children }: { children: React.ReactNode }) {
 
 function AppBar({ title }: { title: string }) {
   return (
-    <div className="flex items-center justify-between bg-white px-4 pt-1 pb-3 border-b border-[#eef1f5]">
+    <div className="flex items-center justify-between bg-white px-4 pt-1 pb-3 border-b border-[#eef2f6]">
       {/* New ContrataCR logo: CR mark + wordmark (Poppins, brand blue #008ce0) */}
       <span className="flex items-center gap-1.5">
         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -96,7 +96,7 @@ export function SearchScreen() {
         <p className="mt-4 text-[10px] font-bold uppercase tracking-wide text-[#68778d]">Servicios populares</p>
         <div className="mt-2 space-y-1.5">
           {["Limpieza del hogar", "Plomería y tuberías", "Pintura interior", "Jardinería y poda", "Mudanzas"].map((s) => (
-            <div key={s} className="flex items-center gap-2.5 rounded-lg bg-white px-3 py-2.5 border border-[#f1f3f5]">
+            <div key={s} className="flex items-center gap-2.5 rounded-lg bg-white px-3 py-2.5 border border-[#eef2f6]">
               <Search className="h-3.5 w-3.5 text-[#68778d]" />
               <span className="text-[12px] text-[#374151]">{s}</span>
             </div>
@@ -305,7 +305,7 @@ export function buildLandingResultsCopy({
 export function ResultsScreen({ copy = DEFAULT_RESULTS_COPY }: { copy?: ResultsCopy }) {
   return (
     <div className="flex h-full flex-col overflow-hidden bg-[#f4f7fa]">
-      <div className="shrink-0 border-b border-[#eef1f5] bg-white px-3 pb-2.5 pt-1">
+      <div className="shrink-0 border-b border-[#eef2f6] bg-white px-3 pb-2.5 pt-1">
         <div className="flex items-center justify-between pb-2">
           <div className="flex items-center gap-2">
             <Menu className="h-4 w-4 text-[#1a2744]" />
@@ -351,7 +351,7 @@ export function ResultsScreen({ copy = DEFAULT_RESULTS_COPY }: { copy?: ResultsC
         <div className="mx-auto mt-2 h-1 w-9 rounded-full bg-[#cfd8e3]" />
         <div className="flex gap-1.5 px-3 pt-2">
           {["Mejor calificados", "Precio", "Idioma"].map((filter) => (
-            <span key={filter} className="inline-flex items-center rounded-full border border-[#dbe5ed] bg-white px-2.5 py-1.5 text-[9px] font-bold text-[#1a2744] shadow-[0_8px_20px_-18px_rgba(15,35,65,0.7)]">
+            <span key={filter} className="inline-flex items-center rounded-full border border-[#e5e7eb] bg-white px-2.5 py-1.5 text-[9px] font-bold text-[#1a2744] shadow-[0_8px_20px_-18px_rgba(15,35,65,0.7)]">
               {filter}
             </span>
           ))}
@@ -379,7 +379,7 @@ export function ResultsScreen({ copy = DEFAULT_RESULTS_COPY }: { copy?: ResultsC
 export function ChatScreen() {
   return (
     <div className="flex h-full flex-col bg-[#ece5dd]">
-      <div className="flex items-center gap-2.5 bg-white px-4 py-2.5 border-b border-[#eef1f5]">
+      <div className="flex items-center gap-2.5 bg-white px-4 py-2.5 border-b border-[#eef2f6]">
         <div className="grid h-9 w-9 place-items-center rounded-full text-[11px] font-bold ccr-caja-icono-plana">CR</div>
         <div className="min-w-0">
           <div className="flex items-center gap-1"><span className="text-[12px] font-bold text-[#162543]">Carlos Ramírez</span><ShieldCheck className="h-3 w-3 text-[#16a34a]" /></div>
@@ -409,7 +409,7 @@ export function SupportScreen() {
           <p className="mt-2 text-[13px] font-bold text-[#162543]">Servicio completado</p>
           <p className="text-[11px] text-[#6b7280]">Carlos Ramírez · Plomería</p>
         </div>
-        <div className="rounded-xl border border-[#eef1f5] bg-white p-3">
+        <div className="rounded-xl border border-[#eef2f6] bg-white p-3">
           <p className="text-[11px] font-bold text-[#162543]">¿Cómo te fue?</p>
           <div className="mt-1.5 flex gap-1">{[1,2,3,4,5].map((s) => <Star key={s} className="h-5 w-5 fill-[#ff9b32] text-[#ff9b32]" />)}</div>
           <p className="mt-1 text-[10px] text-[#68778d]">Tu reseña ayuda a otros clientes.</p>
@@ -438,7 +438,7 @@ export function ProScreen() {
         </div>
         <p className="text-[10px] font-bold uppercase tracking-wide text-[#68778d]">Nuevas citas</p>
         {reqs.map((r) => (
-          <div key={r.n} className="rounded-xl border border-[#eef1f5] bg-white p-2.5">
+          <div key={r.n} className="rounded-xl border border-[#eef2f6] bg-white p-2.5">
             <div className="flex items-center gap-2">
               <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[#EBF5FB] text-[10px] font-bold text-[#009FD9]">{r.n[0]}</div>
               <div className="min-w-0 flex-1"><span className="text-[12px] font-bold text-[#162543]">{r.n}</span><p className="text-[10px] text-[#6b7280] truncate">{r.s}</p></div>

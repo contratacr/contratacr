@@ -123,7 +123,7 @@ export function SubscriptionPanel() {
               )}
               <div className="flex items-center justify-between">
                 <span className="text-sm font-semibold text-[#162543]">{annual ? "Anual" : "Mensual"}</span>
-                <span className={`flex h-5 w-5 items-center justify-center rounded-full border-2 ${selected ? "border-[#009FD9] bg-[#009FD9]" : "border-[#d1d5db]"}`}>
+                <span className={`flex h-5 w-5 items-center justify-center rounded-full border-2 ${selected ? "border-[#009FD9] bg-[#009FD9]" : "border-[#d7e1ea]"}`}>
                   {selected && <Check className="h-3 w-3 text-white" />}
                 </span>
               </div>
@@ -172,7 +172,7 @@ function PaymentHistory({ payments }: { payments: Payment[] }) {
   return (
     <div>
       <p className="mb-2 text-sm font-semibold text-[#162543]">Historial de pagos</p>
-      <ul className="divide-y divide-[#f3f4f6] rounded-xl border border-[#e5e7eb]">
+      <ul className="divide-y divide-[#eef2f6] rounded-xl border border-[#e5e7eb]">
         {real.map((p) => (
           <li key={p.id} className="flex items-center justify-between gap-3 px-4 py-3 text-sm">
             <span className="min-w-0 text-[#374151]">

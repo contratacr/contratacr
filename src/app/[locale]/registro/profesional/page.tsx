@@ -1135,7 +1135,7 @@ export default function RegisterProfessionalPage() {
 
               {businessNameField}
 
-              <div className="border-t border-[#f3f4f6] pt-4">
+              <div className="border-t border-[#eef2f6] pt-4">
                 <Input
                   label={<>{t("email")} <span className="text-red-500">*</span></>}
                   type="email"
@@ -1323,7 +1323,7 @@ export default function RegisterProfessionalPage() {
                   pin. "Me desplazo" travel is enabled later in the panel. */}
                 </div>
               </section>
-              <section className="flex flex-col gap-3 border-t border-[#f3f4f6] pt-4">
+              <section className="flex flex-col gap-3 border-t border-[#eef2f6] pt-4">
                   {canOfferVideoConsult && (
                     <div className="flex flex-col gap-2">
                       <div>
@@ -1383,7 +1383,7 @@ export default function RegisterProfessionalPage() {
               </section>
 
               {/* WhatsApp */}
-              <section className="border-t border-[#f3f4f6] pt-4">
+              <section className="border-t border-[#eef2f6] pt-4">
                   <PhoneInput
                     label={t("whatsapp")}
                     required

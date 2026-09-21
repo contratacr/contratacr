@@ -22,7 +22,7 @@ export function AdminActivity({ events }: { events: ActivityEvent[] }) {
         {events.length === 0 ? (
           <div className="flex items-center justify-center rounded-xl bg-[#f8fafc] py-12 text-sm text-[#94a3b8]">Sin actividad aún</div>
         ) : (
-          <div className="flex flex-col divide-y divide-[#f1f5f9]">
+          <div className="flex flex-col divide-y divide-[#eef2f6]">
             {events.map((e) => {
               const m = META[e.kind];
               return (

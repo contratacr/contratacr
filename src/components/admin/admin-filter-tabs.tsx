@@ -19,7 +19,7 @@ export function AdminFilterTabs({
   counts?: Record<string, number>;
 }) {
   return (
-    <div className="mb-4 flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-[#eef0f2]">
+    <div className="mb-4 flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-[#eef2f6]">
       {tabs.map((tab) => {
         const active = value === tab.id;
         const count = counts?.[tab.id] ?? 0;

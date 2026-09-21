@@ -178,7 +178,7 @@ export function Modal({
         </div>
 
         {footerNotice && (
-          <div className="shrink-0 border-t border-[#f3f4f6] bg-white px-5 pt-3 sm:px-6">
+          <div className="shrink-0 border-t border-[#eef2f6] bg-white px-5 pt-3 sm:px-6">
             {footerNotice}
           </div>
         )}

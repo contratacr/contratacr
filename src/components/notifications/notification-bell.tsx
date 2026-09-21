@@ -244,7 +244,7 @@ export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "o
   };
 
   const menuPanel = (
-        <div ref={menuPanelRef} style={nativeApp && posicionPanel ? { top: posicionPanel.top, right: posicionPanel.right } : undefined} className={cn(nativeApp ? "ccr-notification-bell-menu fixed right-4 top-16 z-[230]" : "absolute right-0 top-11 z-[90]", "w-[min(24rem,calc(100vw-1rem))] overflow-hidden rounded-2xl border border-[#dbe4ee] bg-white shadow-[0_18px_45px_-18px_rgba(15,23,42,0.45)]")}>
+        <div ref={menuPanelRef} style={nativeApp && posicionPanel ? { top: posicionPanel.top, right: posicionPanel.right } : undefined} className={cn(nativeApp ? "ccr-notification-bell-menu fixed right-4 top-16 z-[230]" : "absolute right-0 top-11 z-[90]", "w-[min(24rem,calc(100vw-1rem))] overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-[0_18px_45px_-18px_rgba(15,23,42,0.45)]")}>
           <div className="flex items-center justify-between gap-3 px-4 pb-2 pt-3.5">
             <p className="text-[17px] font-extrabold text-[#162543]">{t("title")}</p>
             {noLeidas.length > 0 && (

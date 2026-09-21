@@ -174,14 +174,14 @@ export function AdminUsers() {
               value={q}
               onChange={(event) => setQ(event.target.value)}
               placeholder="Nombre, nombre comercial, correo, teléfono o identificación"
-              className="h-11 w-full rounded-xl border border-[#dbe2ea] bg-white pl-10 pr-3 text-sm text-[#162543] outline-none transition focus:border-[#009FD9] focus:ring-2 focus:ring-[#bfefff]"
+              className="h-11 w-full rounded-xl border border-[#d7e1ea] bg-white pl-10 pr-3 text-sm text-[#162543] outline-none transition focus:border-[#009FD9] focus:ring-2 focus:ring-[#bfefff]"
             />
           </div>
           <select
             aria-label="Estado de verificación"
             value={verification}
             onChange={(event) => { setVerification(event.target.value); setFilter("professional"); setPage(1); }}
-            className="h-11 rounded-xl border border-[#dbe2ea] bg-white px-3 text-sm text-[#374151] outline-none transition focus:border-[#009FD9] focus:ring-2 focus:ring-[#bfefff]"
+            className="h-11 rounded-xl border border-[#d7e1ea] bg-white px-3 text-sm text-[#374151] outline-none transition focus:border-[#009FD9] focus:ring-2 focus:ring-[#bfefff]"
           >
             <option value="all">Cualquier verificación</option>
             <option value="verified">Verificados</option>
@@ -208,7 +208,7 @@ export function AdminUsers() {
             <p className="text-sm text-[#6b7280]">No hay usuarios en esta vista.</p>
           </div>
         ) : (
-          <ul className="divide-y divide-[#f3f4f6]">
+          <ul className="divide-y divide-[#eef2f6]">
             {items.map((user) => (
               <li key={user.id}>
                 <Link
@@ -268,7 +268,7 @@ export function AdminUsers() {
               type="button"
               onClick={() => setPage((current) => Math.max(1, current - 1))}
               disabled={pagination.page <= 1}
-              className="inline-flex h-9 items-center gap-1 rounded-lg border border-[#dbe2ea] bg-white px-3 text-sm font-semibold text-[#374151] transition hover:bg-[#f9fafb] disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex h-9 items-center gap-1 rounded-lg border border-[#d7e1ea] bg-white px-3 text-sm font-semibold text-[#374151] transition hover:bg-[#f9fafb] disabled:cursor-not-allowed disabled:opacity-50"
             >
               <ChevronLeft className="h-4 w-4" />
               Anterior
@@ -280,7 +280,7 @@ export function AdminUsers() {
               type="button"
               onClick={() => setPage((current) => Math.min(pagination.pages, current + 1))}
               disabled={pagination.page >= pagination.pages}
-              className="inline-flex h-9 items-center gap-1 rounded-lg border border-[#dbe2ea] bg-white px-3 text-sm font-semibold text-[#374151] transition hover:bg-[#f9fafb] disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex h-9 items-center gap-1 rounded-lg border border-[#d7e1ea] bg-white px-3 text-sm font-semibold text-[#374151] transition hover:bg-[#f9fafb] disabled:cursor-not-allowed disabled:opacity-50"
             >
               Siguiente
               <ChevronRight className="h-4 w-4" />

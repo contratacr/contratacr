@@ -34,6 +34,19 @@
 
   --color-background: #fafafa;
   --color-surface: #ffffff;
+  /* LAS TRES LÍNEAS DEL APP. Había 34 grises distintos haciendo de línea, casi
+     todos a uno o dos tonos entre sí: se veía desprolijo y nadie sabía cuál
+     usar. Ahora hay tres niveles, por lo que la línea SEPARA:
+
+       suave   dentro de una tarjeta (entre filas, entre bloques de un formulario)
+       normal  el borde de una tarjeta, la línea de la barra, el borde de un campo
+       fuerte  algo que se elige o se toca: una fila de categoría, un botón secundario
+
+     Los tintes de estado —azul de selección, verde, rojo, ámbar— NO son líneas
+     y se quedan como están. */
+  --ccr-linea-suave: #eef2f6;
+  --ccr-linea: #e5e7eb;
+  --ccr-linea-fuerte: #d7e1ea;
   --color-border: #e5e7eb;
   --color-muted: #f3f4f6;
   --color-muted-foreground: #6b7280;

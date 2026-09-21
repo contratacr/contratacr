@@ -33,7 +33,7 @@ export function PanelSkeleton() {
       {/* Mismo relleno superior que la página real (pt-6 / lg:pt-8): con pt-4
           todo el contenido bajaba 8px al llegar y el pie saltaba con él. */}
       <div className="mx-auto w-full max-w-xl space-y-4 px-4 pt-6 lg:max-w-7xl lg:px-8 lg:pt-8">
-        <div className="rounded-[22px] border border-[#e5edf4] bg-white p-5 shadow-[0_12px_34px_-28px_rgba(15,23,42,0.55)] lg:max-w-[71.5rem]">
+        <div className="rounded-[22px] border border-[#e5e7eb] bg-white p-5 shadow-[0_12px_34px_-28px_rgba(15,23,42,0.55)] lg:max-w-[71.5rem]">
           <div className="flex items-center gap-4">
             <Hueso className="h-16 w-16 shrink-0 rounded-full" />
             <div className="min-w-0 flex-1 space-y-2.5">
@@ -48,20 +48,20 @@ export function PanelSkeleton() {
           </div>
         </div>
         <div className="lg:flex lg:items-start lg:gap-5">
-          <div className="space-y-2.5 lg:w-[260px] lg:shrink-0 lg:rounded-[22px] lg:border lg:border-[#e5edf4] lg:bg-white lg:p-3 lg:space-y-1">
+          <div className="space-y-2.5 lg:w-[260px] lg:shrink-0 lg:rounded-[22px] lg:border lg:border-[#e5e7eb] lg:bg-white lg:p-3 lg:space-y-1">
             {[0, 1, 2, 3, 4, 5].map((fila) => (
-              <div key={fila} className="flex min-h-[60px] items-center gap-3 rounded-2xl border border-[#e5edf4] bg-white px-4 lg:min-h-[44px] lg:border-0 lg:px-3 lg:shadow-none">
+              <div key={fila} className="flex min-h-[60px] items-center gap-3 rounded-2xl border border-[#e5e7eb] bg-white px-4 lg:min-h-[44px] lg:border-0 lg:px-3 lg:shadow-none">
                 <Hueso className="h-8 w-8 shrink-0 rounded-full lg:h-5 lg:w-5" />
                 <Hueso className={cn("h-4 rounded-full", ["w-40", "w-32", "w-44", "w-36", "w-40", "w-32"][fila])} />
               </div>
             ))}
           </div>
           <div className="hidden min-w-0 flex-1 lg:block lg:max-w-[54rem]">
-            <div className="overflow-hidden rounded-[22px] border border-[#e5edf4] bg-white">
-              <div className="border-b border-[#eef3f7] px-6 py-4"><Hueso className="h-5 w-36 rounded-full" /></div>
+            <div className="overflow-hidden rounded-[22px] border border-[#e5e7eb] bg-white">
+              <div className="border-b border-[#eef2f6] px-6 py-4"><Hueso className="h-5 w-36 rounded-full" /></div>
               <div className="space-y-3 p-6">
                 {[0, 1, 2].map((fila) => (
-                  <div key={fila} className="flex items-start gap-3 rounded-2xl border border-[#dfe8f0] p-5">
+                  <div key={fila} className="flex items-start gap-3 rounded-2xl border border-[#e5e7eb] p-5">
                     <Hueso className="h-11 w-11 shrink-0 rounded-xl" />
                     <div className="min-w-0 flex-1 space-y-2.5">
                       <Hueso className="h-4 w-2/3 rounded-full" />
@@ -116,7 +116,7 @@ export function PerfilSkeleton() {
       </div>
       <div className="mx-auto w-full max-w-3xl space-y-3 px-4 pt-4">
         {[0, 1, 2].map((fila) => (
-          <div key={fila} className="rounded-2xl border border-[#e5edf4] bg-white p-4">
+          <div key={fila} className="rounded-2xl border border-[#e5e7eb] bg-white p-4">
             <Hueso className="h-4 w-40 max-w-full rounded-full" />
             <div className="mt-3 space-y-2">
               <Hueso className="h-3 w-full rounded-full" />

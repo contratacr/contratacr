@@ -14,7 +14,7 @@ export function ComoFuncionaFaq({ items }: { items: FaqItem[] }) {
   return (
     <div className="rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">
       {items.map((item, i) => (
-        <div key={item.question} className={i === 0 ? "" : "border-t border-[#eef2f7]"}>
+        <div key={item.question} className={i === 0 ? "" : "border-t border-[#eef2f6]"}>
           <button
             type="button"
             onClick={() => setOpen(open === i ? null : i)}

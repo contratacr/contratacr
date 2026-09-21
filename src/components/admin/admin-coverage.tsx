@@ -237,7 +237,7 @@ export function AdminCoverage() {
             </div>
             {hasFilter && (
               <div className="mt-4 rounded-xl border border-[#e5e7eb]">
-                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#f1f5f9] px-4 py-2.5">
+                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#eef2f6] px-4 py-2.5">
                   <p className="text-sm font-bold text-[#0f172a]">
                     {matchesLoading ? "Buscando…" : `${matchesTotal.toLocaleString("es-CR")} ${matchesTotal === 1 ? "profesional cumple" : "profesionales cumplen"}`}
                     {!matchesLoading && matchesTotal > 300 && <span className="ml-1 text-xs font-normal text-[#94a3b8]">(se muestran 300)</span>}
@@ -249,7 +249,7 @@ export function AdminCoverage() {
                 ) : (matches ?? []).length === 0 ? (
                   <p className="px-4 py-6 text-sm text-[#94a3b8]">Nadie ofrece esto aquí todavía.</p>
                 ) : (
-                  <ul className="max-h-[520px] divide-y divide-[#f1f5f9] overflow-y-auto">
+                  <ul className="max-h-[520px] divide-y divide-[#eef2f6] overflow-y-auto">
                     {(matches ?? []).map((pro) => (
                       <li key={pro.id} className="flex items-center gap-3 px-4 py-2.5">
                         <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full text-xs font-bold ccr-caja-icono-plana">
@@ -319,7 +319,7 @@ export function AdminCoverage() {
           {view === "services" ? (
             <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_300px]">
               <div className="overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white">
-                <div className="flex items-center justify-between border-b border-[#f1f5f9] px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wide text-[#94a3b8]">
+                <div className="flex items-center justify-between border-b border-[#eef2f6] px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wide text-[#94a3b8]">
                   <span>Servicio</span>
                   <span>Profesionales · verificados</span>
                 </div>
@@ -331,7 +331,7 @@ export function AdminCoverage() {
                     const open = flatServices || (openGroups[section.id] ?? true);
                     const withSupply = section.items.filter((service) => service.professionals > 0).length;
                     return (
-                  <div key={section.id} className="border-b border-[#f1f5f9] last:border-b-0">
+                  <div key={section.id} className="border-b border-[#eef2f6] last:border-b-0">
                     {!flatServices && (
                       <button
                         type="button"
@@ -347,7 +347,7 @@ export function AdminCoverage() {
                       </button>
                     )}
                   {open && (
-                  <ul className="divide-y divide-[#f1f5f9]">
+                  <ul className="divide-y divide-[#eef2f6]">
                     {section.items.map((service) => (
                       <li key={service.id} className="px-4 py-2">
                         <div className="flex items-center justify-between gap-3">
@@ -415,7 +415,7 @@ export function AdminCoverage() {
                       <ChevronDown className={cn("h-4 w-4 shrink-0 text-[#68778d] transition-transform", open && "rotate-180")} />
                     </button>
                     {open && (
-                      <ul className="divide-y divide-[#f1f5f9] border-t border-[#f1f5f9]">
+                      <ul className="divide-y divide-[#eef2f6] border-t border-[#eef2f6]">
                         {province.cantons.length === 0 && <li className="px-4 py-3 text-sm text-[#68778d]">Sin cantones con ese filtro.</li>}
                         {province.cantons.map((canton) => (
                           <li key={canton.id} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-4 py-2 sm:grid-cols-[minmax(0,1fr)_120px_auto]">

@@ -73,7 +73,7 @@ export default async function DeleteAccountPage({
             </p>
           </header>
 
-          <section className="mt-8 rounded-xl border border-[#dfe5eb] bg-white p-5 shadow-sm sm:p-7">
+          <section className="mt-8 rounded-xl border border-[#e5e7eb] bg-white p-5 shadow-sm sm:p-7">
             <div className="rounded-lg border border-[#d8e9f2] bg-[#f4faff] p-4">
               <div className="flex items-start gap-3">
                 <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-[#0089bb]" />

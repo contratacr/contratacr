@@ -90,7 +90,7 @@ export async function ServiceLanding({ locale, categoryId, provinceId }: { local
         <section className="px-4 py-6 sm:px-6">
           <div className="mx-auto max-w-3xl">
             <h2 className="mb-3 text-lg font-extrabold text-[#162543]">{t("topTitle")}</h2>
-            <div className="overflow-hidden rounded-2xl border border-[#e5eaf0] bg-white">
+            <div className="overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white">
               {top.map((pro, i) => {
                 const name = pro.businessName?.trim() || proDisplayName(pro.fullName);
                 const price = primaryPricingLabel(pro.pricing, pro.hourlyRate, locale);
@@ -135,7 +135,7 @@ export async function ServiceLanding({ locale, categoryId, provinceId }: { local
 
         {guiaPrecios.length > 0 && (
           <section className="px-4 pb-6 sm:px-6">
-            <div className="mx-auto max-w-3xl rounded-2xl border border-[#e5eaf0] bg-white p-5">
+            <div className="mx-auto max-w-3xl rounded-2xl border border-[#e5e7eb] bg-white p-5">
               <h2 className="text-lg font-extrabold text-[#162543]">{t("priceTitle")}</h2>
               <p className="mt-1 text-[13px] leading-5 text-[#68778d]">{t("priceBody", { count: prosConPrecio.size, category })}</p>
               <dl className="mt-4 grid gap-3 sm:grid-cols-3">
@@ -152,7 +152,7 @@ export async function ServiceLanding({ locale, categoryId, provinceId }: { local
         )}
 
         <section className="px-4 pb-6 sm:px-6">
-          <div className="mx-auto max-w-3xl rounded-2xl border border-[#e5eaf0] bg-white p-5">
+          <div className="mx-auto max-w-3xl rounded-2xl border border-[#e5e7eb] bg-white p-5">
             <h2 className="text-lg font-extrabold text-[#162543]">{t("publishTitle")}</h2>
             <p className="mt-1 text-[14px] leading-6 text-[#52627a]">{t("publishBody", { category })}</p>
             <Link href="/dashboard/profesional?tab=sent_projects&openPublish=1" className="mt-4 inline-flex h-11 w-full items-center justify-center rounded-full border border-[#d7e1ea] bg-white px-5 text-[14px] font-bold text-[#162543] transition-colors hover:border-[#b9c8d6] hover:bg-[#f6f9fb] sm:w-auto">
@@ -166,7 +166,7 @@ export async function ServiceLanding({ locale, categoryId, provinceId }: { local
             <h2 className="mb-3 text-lg font-extrabold text-[#162543]">{t("howTitle")}</h2>
             <ol className="grid gap-2 sm:grid-cols-3">
               {[t("how1"), t("how2"), t("how3")].map((step, i) => (
-                <li key={i} className="flex items-start gap-3 rounded-2xl border border-[#e5eaf0] bg-white p-4">
+                <li key={i} className="flex items-start gap-3 rounded-2xl border border-[#e5e7eb] bg-white p-4">
                   <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-[#eaf7fc] text-[13px] font-extrabold text-[#0089bb]">{i + 1}</span>
                   <span className="text-[14px] leading-6 text-[#162543]">{step}</span>
                 </li>

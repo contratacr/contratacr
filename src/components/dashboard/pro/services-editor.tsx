@@ -91,7 +91,7 @@ function ServiceActiveToggle({ checked }: { checked: boolean }) {
       aria-hidden="true"
       className={cn(
         "relative inline-flex h-6 w-11 shrink-0 items-center rounded-full border transition-colors",
-        checked ? "border-[#009FD9] bg-[#009FD9]" : "border-[#cbd5e1] bg-[#e2e8f0]",
+        checked ? "border-[#009FD9] bg-[#009FD9]" : "border-[#d7e1ea] bg-[#e2e8f0]",
       )}
     >
       <span
@@ -751,7 +751,7 @@ export function ServicesEditor({
                   {/* Actions group — separated by a hairline. The PRIMARY "Editar información"
                       is isolated on the left so it's identical on every card; secondary actions
                       stay in the right cluster. */}
-                  <div className="mt-4 flex items-center gap-1.5 border-t border-[#f3f4f6] pt-3">
+                  <div className="mt-4 flex items-center gap-1.5 border-t border-[#eef2f6] pt-3">
                     <button
                       type="button"
                       onClick={() => openEditInfo(prof)}
@@ -1038,7 +1038,7 @@ export function ServicesEditor({
                   value={pickerQuery}
                   onChange={(e) => { setPickerQuery(e.target.value); setActivePickerGroupId(null); }}
                   placeholder={t("pickerSearch")}
-                  className="h-12 w-full rounded-2xl border border-[#e5edf4] bg-white pl-10 pr-4 text-[15px] text-[#162543] shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition-all placeholder:text-[#68778d] focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[#009FD9]"
+                  className="h-12 w-full rounded-2xl border border-[#e5e7eb] bg-white pl-10 pr-4 text-[15px] text-[#162543] shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition-all placeholder:text-[#68778d] focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[#009FD9]"
                 />
               </div>
             </div>
@@ -1057,7 +1057,7 @@ export function ServicesEditor({
                 <p className="mt-1 text-sm leading-relaxed text-[#6b7280]">{t("pickerNoResultsHint")}</p>
               </div>
               ) : (
-              <div className="overflow-hidden rounded-2xl border border-[#e5edf4] bg-white shadow-[0_10px_26px_-24px_rgba(15,23,42,0.6)]">
+              <div className="overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-[0_10px_26px_-24px_rgba(15,23,42,0.6)]">
               {pickerQuery.trim() ? (
                 <div className="grid grid-cols-1">
                   {pickerList.map((cat) => (
@@ -1066,7 +1066,7 @@ export function ServicesEditor({
                       type="button"
                       onClick={() => pickerMode === "change" ? changeEditingService(cat.id) : addService(cat.id)}
                       className={cn(
-                        "group flex items-center justify-between gap-2 border-b border-[#eef3f7] bg-white px-4 py-3.5 text-left text-sm font-medium text-[#374151] transition-colors last:border-b-0 hover:bg-[#f8fbfe] hover:text-[#0089bb]",
+                        "group flex items-center justify-between gap-2 border-b border-[#eef2f6] bg-white px-4 py-3.5 text-left text-sm font-medium text-[#374151] transition-colors last:border-b-0 hover:bg-[#f8fbfe] hover:text-[#0089bb]",
                         pickerMode === "change" && cat.id === editCategory && "bg-[#f2fafe] font-semibold text-[#0089bb]",
                       )}
                     >
@@ -1089,8 +1089,8 @@ export function ServicesEditor({
                   countLabel={(count) => t("pickerOptionsCount", { count })}
                   optionAction={<Plus className="h-4 w-4 shrink-0 text-[#009FD9]" />}
                   className="gap-0"
-                  groupClassName="rounded-none border-b border-[#eef3f7] px-4 py-3.5 last:border-b-0 hover:bg-[#f8fbfe]"
-                  optionClassName="rounded-none border-b border-[#eef3f7] px-4 py-4 last:border-b-0 hover:bg-[#f8fbfe]"
+                  groupClassName="rounded-none border-b border-[#eef2f6] px-4 py-3.5 last:border-b-0 hover:bg-[#f8fbfe]"
+                  optionClassName="rounded-none border-b border-[#eef2f6] px-4 py-4 last:border-b-0 hover:bg-[#f8fbfe]"
                 />
               )}
               </div>

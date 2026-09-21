@@ -64,7 +64,7 @@ export function PanelListSkeleton({
     <div data-panel-loading="" className={cn("ccr-delayed-loading space-y-4", className)} aria-busy="true" role="status">
       <span className="sr-only">{t("generic")}</span>
       {withSearch && (
-        <div className="rounded-2xl border border-[#e5edf4] bg-white p-3 shadow-sm">
+        <div className="rounded-2xl border border-[#e5e7eb] bg-white p-3 shadow-sm">
           <Skeleton className="h-11 w-full rounded-xl" />
         </div>
       )}
@@ -82,7 +82,7 @@ export function PanelListSkeleton({
           // la izquierda, título y dos líneas de detalle, y la flecha de abrir a
           // la derecha. En escritorio las líneas son más cortas porque la fila
           // es ancha; la forma es la misma.
-          <div key={index} className="rounded-2xl border border-[#dfe8f0] bg-white p-4 sm:p-5">
+          <div key={index} className="rounded-2xl border border-[#e5e7eb] bg-white p-4 sm:p-5">
             <div className="flex items-start gap-3 lg:gap-4">
               <Skeleton className="h-11 w-11 shrink-0 rounded-xl" />
               <div className="min-w-0 flex-1 space-y-2.5">
@@ -126,7 +126,7 @@ export function PanelFilterEmpty({
       "ccr-empty-state flex flex-col items-center justify-center px-5 py-10 text-center",
       // Vacío con la misma superficie que la lista llena: sobre el gris del
       // panel, el texto suelto se leía como "esto no cargó".
-      !plano && "rounded-2xl border border-[#e5eaf0] bg-white shadow-sm",
+      !plano && "rounded-2xl border border-[#e5e7eb] bg-white shadow-sm",
       className,
     )}>
       {/* Versión compacta del mismo vacío: mismo mosaico, misma tipografía. La
@@ -172,7 +172,7 @@ export function PanelEmptyState({
     <div className={cn(
       "ccr-empty-state flex flex-col items-center justify-center text-center",
       compacto ? "min-h-[13rem] px-5 py-7" : "min-h-[20rem] px-7 py-12 sm:min-h-[22rem]",
-      !plano && "rounded-2xl border border-[#e5eaf0] bg-white shadow-sm",
+      !plano && "rounded-2xl border border-[#e5e7eb] bg-white shadow-sm",
       className,
     )}>
       {/* El mismo lenguaje que las tarjetas de crear cuenta: el icono a línea

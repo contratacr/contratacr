@@ -158,7 +158,7 @@ function Acquisition({ data }: { data: AdminAcquisition }) {
               <th className="pb-1 font-medium">Clientes</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-[#f1f5f9]">
+          <tbody className="divide-y divide-[#eef2f6]">
             {data.rows.map((row) => (
               <tr key={row.key}>
                 <td className="py-2 pr-3 font-semibold text-[#0f172a]">{row.label}</td>
@@ -181,7 +181,7 @@ function Acquisition({ data }: { data: AdminAcquisition }) {
       {data.campaigns.length > 0 && (
         <div className="mt-4">
           <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-[#94a3b8]">Por campaña</p>
-          <ul className="divide-y divide-[#f1f5f9]">
+          <ul className="divide-y divide-[#eef2f6]">
             {data.campaigns.map((c) => (
               <li key={`${c.source}|${c.label}`} className="flex items-center justify-between gap-3 py-1.5 text-sm">
                 <span className="min-w-0 truncate font-semibold text-[#0f172a]">{c.label} <span className="font-normal text-[#94a3b8]">· {c.source}</span></span>
@@ -246,7 +246,7 @@ export function AdminAnalytics({ data }: { data: AdminReports }) {
           {insights.searchQuality.topEmpty.length > 0 && (
             <div className="mt-3">
               <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-[#94a3b8]">Buscaron y no había nadie</p>
-              <ul className="divide-y divide-[#f1f5f9]">
+              <ul className="divide-y divide-[#eef2f6]">
                 {insights.searchQuality.topEmpty.map((row) => (
                   <li key={row.label} className="flex items-center justify-between gap-3 py-1.5 text-sm">
                     <span className="min-w-0 truncate text-[#334155]">{row.label}</span>
@@ -272,7 +272,7 @@ export function AdminAnalytics({ data }: { data: AdminReports }) {
           {insights.demand.length === 0 ? (
             <p className="text-sm text-[#94a3b8]">Sin datos</p>
           ) : (
-            <ul className="divide-y divide-[#f1f5f9]">
+            <ul className="divide-y divide-[#eef2f6]">
               {insights.demand.map((row) => (
                 <li key={row.id} className="flex items-center justify-between gap-3 py-2 text-sm">
                   <div className="min-w-0">

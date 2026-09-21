@@ -86,11 +86,11 @@ function Section({ id, title, desc, open, mobileFocused, onToggle, onActivate, c
         onClick={() => onToggle(id)}
         className={cn(
           "w-full items-center justify-between gap-3 px-4 py-4 text-left transition-colors sm:flex sm:px-5",
-          open ? "hidden bg-[#f8fafc] sm:flex sm:border-b sm:border-[#eef3f7]" : "flex hover:bg-[#fafafa]",
+          open ? "hidden bg-[#f8fafc] sm:flex sm:border-b sm:border-[#eef2f6]" : "flex hover:bg-[#fafafa]",
           // En el teléfono cada sección se abre a pantalla completa, o sea que ES
           // navegación: se ve igual que una fila del menú del panel (tarjeta con
           // borde, 60 px, flecha) en vez de una fila de acordeón con lápiz.
-          !open && "max-sm:min-h-[60px] max-sm:rounded-2xl max-sm:border max-sm:border-[#e5edf4] max-sm:bg-white max-sm:px-4 max-sm:py-3.5",
+          !open && "max-sm:min-h-[60px] max-sm:rounded-2xl max-sm:border max-sm:border-[#e5e7eb] max-sm:bg-white max-sm:px-4 max-sm:py-3.5",
         )}
         aria-expanded={open}
       >
@@ -919,7 +919,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
       {/* Las líneas entre secciones son del marco de escritorio: se quitan en el
           teléfono, no al abrir una sección. */}
       <div className={cn(
-        "divide-y divide-[#eef3f7]",
+        "divide-y divide-[#eef2f6]",
         !mobileSectionFocused && "max-sm:flex max-sm:flex-col max-sm:gap-2.5",
         "max-sm:divide-y-0",
       )}>
@@ -930,7 +930,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
       </div>
       {/* ── Datos básicos ─────────────────────────────────────────────── */}
       <Section footer={makeSectionFooter("basic")} id="basic" title={t("secBasic")} desc={t("secBasicDesc")} open={openSections.has("basic")} mobileFocused={mobileSectionFocused} onToggle={toggleSection} onActivate={setActiveDirtySection}>
-        <div data-field="photo" className="flex items-center gap-3 border-b border-[#eef3f7] pb-5 sm:gap-4">
+        <div data-field="photo" className="flex items-center gap-3 border-b border-[#eef2f6] pb-5 sm:gap-4">
           <ImagePreviewDialog
             src={avatarPreview}
             alt={t("photoAlt")}
@@ -1064,7 +1064,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
           const draftHere = !!certDraft && (certDraft.profession ?? "") === (prof || "");
           const inputCls = "h-10 w-full rounded-xl border border-[#e5e7eb] bg-white px-3 text-sm text-[#162543] placeholder:text-[#68778d] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all";
           return (
-            <div key={prof || "general"} className="flex flex-col gap-2.5 border-t border-[#f3f4f6] pt-3 first:border-t-0 first:pt-0">
+            <div key={prof || "general"} className="flex flex-col gap-2.5 border-t border-[#eef2f6] pt-3 first:border-t-0 first:pt-0">
               {professions.length > 1 && prof && (
                 <p className="text-xs font-bold uppercase tracking-wide text-[#0089bb]">{getCategoryLabel(prof, locale)}</p>
               )}

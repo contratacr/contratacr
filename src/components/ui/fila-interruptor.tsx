@@ -41,7 +41,7 @@ export function FilaInterruptor({
       onClick={() => onChange(!checked)}
       className={cn(
         "flex w-full items-center justify-between gap-4 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9]/35 disabled:cursor-not-allowed disabled:opacity-60",
-        conBorde ? "rounded-2xl border border-[#e3ebf2] bg-white px-4 py-3" : "py-1",
+        conBorde ? "rounded-2xl border border-[#e5e7eb] bg-white px-4 py-3" : "py-1",
         className,
       )}
     >

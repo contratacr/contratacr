@@ -90,7 +90,7 @@ export function TimeSelect({ value, onChange, min, step = 30, label, error, id, 
           "relative flex h-9 w-full items-center rounded-lg border bg-white pl-3 pr-10 text-left text-[13px] font-semibold text-[#162543] shadow-[0_1px_0_rgba(15,23,42,0.02)] transition-all",
           "focus:outline-none focus:ring-2 focus:ring-[#EBF5FB] focus:border-[#009FD9]",
           open && "border-[#009FD9] ring-2 ring-[#EBF5FB]",
-          error ? "border-red-400" : "border-[#dfe7f0] hover:border-[#cbd5e1]",
+          error ? "border-red-400" : "border-[#e5e7eb] hover:border-[#d7e1ea]",
           disabled && "opacity-50 cursor-not-allowed"
         )}
       >
@@ -100,7 +100,7 @@ export function TimeSelect({ value, onChange, min, step = 30, label, error, id, 
 
       {open && (
         <div
-          className="absolute top-full left-0 z-50 mt-1 w-full min-w-[8.75rem] overflow-hidden rounded-lg border border-[#dfe7f0] bg-white shadow-[0_18px_44px_-24px_rgba(15,23,42,0.55)]"
+          className="absolute top-full left-0 z-50 mt-1 w-full min-w-[8.75rem] overflow-hidden rounded-lg border border-[#e5e7eb] bg-white shadow-[0_18px_44px_-24px_rgba(15,23,42,0.55)]"
         >
           <div
             ref={listRef}

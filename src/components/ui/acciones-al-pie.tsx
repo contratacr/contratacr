@@ -75,7 +75,7 @@ export const BARRA_ACCION_FIJA = `${BARRA_ACCION_BASE} ccr-barra-fija`;
  * aquí van la caja y el respiro, que es lo que tiene que ser igual.
  */
 export const PIE_VENTANA_BASE =
-  "ccr-pie-ventana shrink-0 border-t border-[#f3f4f6] bg-white px-5 py-4 pb-[max(env(safe-area-inset-bottom),1rem)] sm:px-6 sm:pb-4";
+  "ccr-pie-ventana shrink-0 border-t border-[#eef2f6] bg-white px-5 py-4 pb-[max(env(safe-area-inset-bottom),1rem)] sm:px-6 sm:pb-4";
 
 export function useBarraAccionFija(activa = true) {
   useEffect(() => {

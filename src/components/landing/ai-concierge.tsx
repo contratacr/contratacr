@@ -241,7 +241,7 @@ function ProfessionalResult({ result, copy, onNavigate, nativeApp, lang }: {
           {result.price && <p className="mt-1.5 text-xs font-extrabold text-[#009FD9]">{result.price}</p>}
         </div>
       </button>
-      <div className="grid grid-cols-2 border-t border-[#edf2f5]">
+      <div className="grid grid-cols-2 border-t border-[#eef2f6]">
         <button type="button" onClick={() => onNavigate(result.profileHref)} className="h-10 text-xs font-bold text-[#526277] hover:bg-[#f7fafc]">{copy.viewProfile}</button>
         {nativeApp && result.actionKind === "message" ? (
           <MessageLauncher
@@ -249,10 +249,10 @@ function ProfessionalResult({ result, copy, onNavigate, nativeApp, lang }: {
             professionalName={result.name}
             contextTitle={result.service}
             buttonLabel={lang === "en" ? "Message" : "Mensaje"}
-            className="h-10 w-full rounded-none border-l border-[#edf2f5] px-2 text-xs font-extrabold"
+            className="h-10 w-full rounded-none border-l border-[#eef2f6] px-2 text-xs font-extrabold"
           />
         ) : (
-          <button type="button" onClick={() => onNavigate(result.actionHref)} className="h-10 border-l border-[#edf2f5] bg-[#009FD9] text-xs font-extrabold text-white hover:bg-[#008fca]">{result.actionLabel}</button>
+          <button type="button" onClick={() => onNavigate(result.actionHref)} className="h-10 border-l border-[#eef2f6] bg-[#009FD9] text-xs font-extrabold text-white hover:bg-[#008fca]">{result.actionLabel}</button>
         )}
       </div>
     </article>
@@ -568,7 +568,7 @@ export function AiConcierge({ embedded = false, onBack }: { embedded?: boolean; 
             : "max-h-full h-[min(820px,calc(var(--app-visual-viewport-height)_-_0.5rem))] rounded-t-[34px] sm:pointer-events-auto sm:fixed sm:bottom-6 sm:right-6 sm:h-[min(780px,calc(100dvh-3rem))] sm:w-[min(520px,calc(100vw-3rem))] sm:rounded-[34px]",
         )}
       >
-        <header className="relative flex shrink-0 items-center gap-1.5 border-b border-[#e3ebf1] bg-white px-2.5 py-3 sm:gap-3 sm:px-5 sm:py-4">
+        <header className="relative flex shrink-0 items-center gap-1.5 border-b border-[#e5e7eb] bg-white px-2.5 py-3 sm:gap-3 sm:px-5 sm:py-4">
           {barraDeIndice && (
             <>
               <button
@@ -695,7 +695,7 @@ export function AiConcierge({ embedded = false, onBack }: { embedded?: boolean; 
                     onClick={() => void ask(topic.prompt)}
                     className={cn(
                       "flex w-full items-center gap-3 px-3.5 py-3 text-left transition active:bg-[#eef9fd] disabled:opacity-60",
-                      index > 0 && "border-t border-[#eef3f7]",
+                      index > 0 && "border-t border-[#eef2f6]",
                     )}
                   >
                     <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#eef8fd] text-[#0089bb]">

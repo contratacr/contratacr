@@ -329,7 +329,7 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
                   )}
                 </div>
 
-                <div className="mt-3 flex items-center justify-between gap-2 border-t border-[#f3f4f6] pt-3">
+                <div className="mt-3 flex items-center justify-between gap-2 border-t border-[#eef2f6] pt-3">
                   <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] text-[#68778d]">
                     {c.photos.length > 0 && <span className="inline-flex items-center gap-1"><Images className="h-3 w-3 text-[#374151]" /> {t("photosCount", { count: c.photos.length })}</span>}
                     {c.date && <span className="inline-flex items-center gap-1"><CalendarDays className="h-3 w-3 text-[#374151]" /> {c.date}</span>}
@@ -414,7 +414,7 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
                             "inline-flex min-h-10 shrink-0 items-center gap-1.5 rounded-full border px-3.5 text-[13px] font-semibold transition-colors",
                             elegido
                               ? "border-[#009FD9] bg-[#009FD9] text-white"
-                              : "border-[#dfe6ec] bg-white text-[#526277] hover:border-[#c3d2de]",
+                              : "border-[#e5e7eb] bg-white text-[#526277] hover:border-[#c3d2de]",
                           )}
                         >
                           {elegido && <Check className="h-3.5 w-3.5 shrink-0" />}
@@ -448,7 +448,7 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
                   </div>
                 ))}
                 {draft.photos.length < MAX_PHOTOS_PER_CASE && (
-                  <button type="button" onClick={() => fileRef.current?.click()} disabled={uploading} className="flex aspect-square flex-col items-center justify-center gap-1 rounded-xl border-2 border-dashed border-[#d1d5db] text-[#68778d] transition-colors hover:border-[#009FD9] hover:bg-[#f9fbfe]">
+                  <button type="button" onClick={() => fileRef.current?.click()} disabled={uploading} className="flex aspect-square flex-col items-center justify-center gap-1 rounded-xl border-2 border-dashed border-[#d7e1ea] text-[#68778d] transition-colors hover:border-[#009FD9] hover:bg-[#f9fbfe]">
                     {uploading ? <Loader2 className="h-5 w-5 animate-spin text-[#009FD9]" /> : <><ImageUp className="h-5 w-5" /><span className="text-[11px]">{t("addPhoto")}</span></>}
                   </button>
                 )}

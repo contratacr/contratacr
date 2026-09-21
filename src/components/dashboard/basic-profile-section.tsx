@@ -43,7 +43,7 @@ function ProfileSection({
       <button
         type="button"
         onClick={() => onToggle(id)}
-        className={cn("w-full items-center justify-between gap-3 px-4 py-4 text-left transition-colors sm:flex sm:px-5", open ? "hidden bg-[#f8fafc] sm:flex sm:border-b sm:border-[#eef3f7]" : "flex hover:bg-[#fafafa]")}
+        className={cn("w-full items-center justify-between gap-3 px-4 py-4 text-left transition-colors sm:flex sm:px-5", open ? "hidden bg-[#f8fafc] sm:flex sm:border-b sm:border-[#eef2f6]" : "flex hover:bg-[#fafafa]")}
         aria-expanded={open}
       >
         {open && (
@@ -309,7 +309,7 @@ export function BasicProfileSection({
   const makeProfileFooter = (sectionId: string) => {
     const sectionActive = profileDirty && activeDirtySection === sectionId;
     return (
-      <div className="ccr-grupo-botones mt-5 flex flex-col gap-2 border-t border-[#f3f4f6] pt-4 sm:flex-row sm:justify-end">
+      <div className="ccr-grupo-botones mt-5 flex flex-col gap-2 border-t border-[#eef2f6] pt-4 sm:flex-row sm:justify-end">
         <button
           type="button"
           onClick={cancelProfileChanges}
@@ -365,9 +365,9 @@ export function BasicProfileSection({
           profesional sí puede prescindir del marco en su LISTA del teléfono,
           porque allí cada fila es una tarjeta con su propio borde; acá las filas
           son planas, así que el marco es lo único que las contiene.) */}
-      <div className="overflow-hidden rounded-2xl border border-[#dfe8f0] bg-white shadow-[0_10px_28px_-24px_rgba(15,23,42,0.65)]">
+      <div className="overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-[0_10px_28px_-24px_rgba(15,23,42,0.65)]">
       <div className={cn(
-        "divide-y divide-[#eef3f7]",
+        "divide-y divide-[#eef2f6]",
         mobileSectionFocused && "max-sm:divide-y-0",
       )}>
       <div className="hidden px-4 pb-4 pt-5 sm:block sm:px-5 sm:pt-6">

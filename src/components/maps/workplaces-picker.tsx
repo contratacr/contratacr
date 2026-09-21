@@ -390,7 +390,7 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
           value={province}
           onChange={(v) => { setProvince(v); setCanton(""); }}
           placeholder={t("provincePlaceholder")}
-          className="[&>button]:h-11 [&>button]:rounded-xl [&>button]:border-[#dfe8f0] [&>button]:bg-white [&>button]:pl-3.5 [&>button]:pr-8 [&>button]:shadow-none [&>button>span]:text-[13px] sm:[&>button>span]:text-sm"
+          className="[&>button]:h-11 [&>button]:rounded-xl [&>button]:border-[#e5e7eb] [&>button]:bg-white [&>button]:pl-3.5 [&>button]:pr-8 [&>button]:shadow-none [&>button>span]:text-[13px] sm:[&>button>span]:text-sm"
           options={[
             { value: COUNTRY_OPTION, label: t("wholeCountryName") },
             ...PROVINCES.map((p) => ({ value: p.id, label: p.name })),
@@ -401,7 +401,7 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
           onChange={setCanton}
           disabled={!province || province === COUNTRY_OPTION}
           placeholder={t("cantonPlaceholder")}
-          className="[&>button]:h-11 [&>button]:rounded-xl [&>button]:border-[#dfe8f0] [&>button]:bg-white [&>button]:pl-3.5 [&>button]:pr-8 [&>button]:shadow-none [&>button>span]:text-[13px] sm:[&>button>span]:text-sm"
+          className="[&>button]:h-11 [&>button]:rounded-xl [&>button]:border-[#e5e7eb] [&>button]:bg-white [&>button]:pl-3.5 [&>button]:pr-8 [&>button]:shadow-none [&>button>span]:text-[13px] sm:[&>button>span]:text-sm"
           options={[
             { value: "", label: t("cantonUnselected") },
             ...cantons.map((c) => ({ value: c.id, label: c.name })),

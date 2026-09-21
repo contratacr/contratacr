@@ -14,7 +14,7 @@ import { PanelEmptyState } from "@/components/ui/content-loading";
  */
 export function SearchEmptyState({ title, description, cta, href }: { title: string; description: string; cta: string; href: string }) {
   return (
-    <div data-search-empty-state className="-mx-4 flex w-[calc(100%+2rem)] flex-col bg-white lg:mx-0 lg:w-full lg:rounded-2xl lg:border lg:border-[#dfe8f0] lg:shadow-sm">
+    <div data-search-empty-state className="-mx-4 flex w-[calc(100%+2rem)] flex-col bg-white lg:mx-0 lg:w-full lg:rounded-2xl lg:border lg:border-[#e5e7eb] lg:shadow-sm">
       <PanelEmptyState
         plano
         icon={Search}

@@ -86,7 +86,7 @@ export function FlechasDeCarril({ carril, enMargen = false }: {
           // flecha viene a anunciar. Así se ve la flecha Y se lee la opción.
           style={{ position: "absolute", top: centro ?? "50%", transform: "translateY(-50%)", [lado === "derecha" ? "right" : "left"]: -10, zIndex: 10 }}
           className={cn(
-            "grid h-7 w-7 place-items-center rounded-full border border-[#dbe4ec] bg-white text-[#162543] shadow-[0_2px_8px_-2px_rgba(15,23,42,0.35)] transition-colors hover:bg-[#eef5f9]",
+            "grid h-7 w-7 place-items-center rounded-full border border-[#e5e7eb] bg-white text-[#162543] shadow-[0_2px_8px_-2px_rgba(15,23,42,0.35)] transition-colors hover:bg-[#eef5f9]",
             enMargen && (lado === "derecha" ? "lg:!right-0" : "lg:!left-0"),
             // Con el borde completo se lee como un botón, no como un recorte.
             "border-[1.5px]",

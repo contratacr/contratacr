@@ -91,7 +91,7 @@ export function ClientJobApplications() {
         const isOpen = openId === application.id;
         if (!job) return null;
         return (
-          <article key={application.id} className="overflow-hidden rounded-2xl border border-[#dfe8f0] bg-white">
+          <article key={application.id} className="overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white">
             {/* El estado va ARRIBA del título, como antetítulo en versalitas. Probamos
                 las tres posiciones que compiten por un renglón —junto al título, en
                 columna propia, junto al nombre— y todas le quitaban ancho al título o
@@ -117,10 +117,10 @@ export function ClientJobApplications() {
               <ChevronDown className={"h-4 w-4 shrink-0 text-[#9aa8ba] transition-transform group-hover:text-[#009FD9] " + (isOpen ? "rotate-180" : "")} />
             </button>
             {isOpen && (
-              <div className="border-t border-[#eef3f7] bg-[#fbfdfe] px-4 py-4 sm:px-5">
+              <div className="border-t border-[#eef2f6] bg-[#fbfdfe] px-4 py-4 sm:px-5">
                 <p className="mb-4 text-sm font-semibold text-[#52627a]">{applicationStatusMessage(application, isEn)}</p>
                 {application.coverLetter && <div className="mb-4"><p className="text-[11px] font-bold uppercase text-[#8290a4]">{isEn ? "Message" : "Mensaje enviado"}</p><p className="mt-1 whitespace-pre-line break-words text-sm leading-6 text-[#52627a]">{application.coverLetter}</p></div>}
-                <div className="flex flex-col gap-3 border-t border-[#e7edf2] pt-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex flex-col gap-3 border-t border-[#e5e7eb] pt-3 sm:flex-row sm:items-center sm:justify-between">
                   {application.resumeUrl ? (
                     <div className="flex min-w-0 flex-1 items-center gap-3 py-1">
                       <span className="grid h-9 w-9 shrink-0 place-items-center text-[#008fc3]"><FileText className="h-5 w-5" /></span>

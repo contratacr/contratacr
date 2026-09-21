@@ -210,7 +210,7 @@ export function WhatsAppReviewFollowUp() {
               type="button"
               disabled={submitting}
               onClick={() => void handle("not_now")}
-              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-[#d9e2ec] px-3 text-sm font-semibold text-[#1A2744] hover:bg-[#f7fafc] disabled:opacity-60"
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-[#d7e1ea] px-3 text-sm font-semibold text-[#1A2744] hover:bg-[#f7fafc] disabled:opacity-60"
             >
               <Clock3 className="h-4 w-4" />
               {isEn ? "Not yet" : "Aún no"}

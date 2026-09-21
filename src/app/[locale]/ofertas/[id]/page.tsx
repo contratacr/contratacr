@@ -199,7 +199,7 @@ export default async function OfferDetailPage({ params, searchParams }: { params
         </Link>
       </div>
       <div className="mx-auto grid max-w-6xl gap-5 px-0 py-0 sm:px-6 sm:py-8 lg:grid-cols-[minmax(0,760px)_320px] lg:justify-center lg:pt-3">
-        <article className="overflow-hidden bg-white lg:rounded-lg lg:border lg:border-[#dfe8f0]">
+        <article className="overflow-hidden bg-white lg:rounded-lg lg:border lg:border-[#e5e7eb]">
           <div className="relative bg-white p-0 sm:p-3">
             <OfferImageGallery images={offer.image_urls} title={offer.title} />
             {/* El descuento se lee como en el tablón: una marca sobre la foto,
@@ -258,7 +258,7 @@ export default async function OfferDetailPage({ params, searchParams }: { params
             )}
             {/* Etiqueta arriba y valor debajo, como en la ficha de un empleo.
                 Eran cuatro líneas con ícono azul que se leían como enlaces. */}
-            <dl className="mt-6 grid gap-3 border-y border-[#e7edf2] py-5 text-sm sm:grid-cols-2">
+            <dl className="mt-6 grid gap-3 border-y border-[#e5e7eb] py-5 text-sm sm:grid-cols-2">
               {filasDeDatos.map(([etiqueta, valor]) => (
                 <div key={etiqueta} className="min-w-0">
                   <dt className="text-xs font-bold uppercase tracking-wide text-[#7a899d]">{etiqueta}</dt>
@@ -274,9 +274,9 @@ export default async function OfferDetailPage({ params, searchParams }: { params
             </section>
           </div>
         </article>
-        <aside className="hidden h-fit rounded-lg border border-[#dfe8f0] bg-white p-5 lg:sticky lg:top-24 lg:block">
+        <aside className="hidden h-fit rounded-lg border border-[#e5e7eb] bg-white p-5 lg:sticky lg:top-24 lg:block">
           <p className="text-xs font-bold uppercase text-[#7a899d]">{copy.title}</p><p className="mt-1 text-2xl font-extrabold text-[#007fae]">{formatOfferPrice(offer, locale)}</p>{before && <p className="mt-1 text-sm font-bold text-[#8794a7] line-through">{copy.before} {before}</p>}
-          <p className="mb-4 mt-4 border-y border-[#e8eef3] py-4 text-sm font-semibold text-[#52627a]">{copy.publishedBy}{" "}{offer.professional_slug ? (<Link href={`/profesionales/${offer.professional_slug}?from=${encodeURIComponent(`/ofertas/${offer.id}`)}`} className="text-[#005eaa] hover:underline">{offer.professional_name}</Link>) : offer.professional_name}</p>
+          <p className="mb-4 mt-4 border-y border-[#e5e7eb] py-4 text-sm font-semibold text-[#52627a]">{copy.publishedBy}{" "}{offer.professional_slug ? (<Link href={`/profesionales/${offer.professional_slug}?from=${encodeURIComponent(`/ofertas/${offer.id}`)}`} className="text-[#005eaa] hover:underline">{offer.professional_name}</Link>) : offer.professional_name}</p>
           {isOwner ? (
             <OfferOwnerActions offer={offer} professionalId={offer.professional_id} serviceOptions={serviceOptions} fromPanel={from === "panel"} />
           ) : (

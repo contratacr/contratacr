@@ -109,7 +109,7 @@ export function AdminCampaigns() {
 
         <div className="rounded-2xl border border-[#e5e7eb] bg-[#f4f7fa] p-5">
           <p className="mb-3 text-xs font-bold uppercase tracking-wide text-[#68778d]">Vista previa</p>
-          <div className="rounded-xl border border-[#e5eaf0] bg-white p-4">
+          <div className="rounded-xl border border-[#e5e7eb] bg-white p-4">
             <p className="text-[15px] font-extrabold text-[#162543]">{subject || "—"}</p>
             <div className="mt-3 space-y-3 text-[14px] leading-6 text-[#162543]">
               {body.split(/\n{2,}/).map((p, i) => <p key={i} className="whitespace-pre-line">{p}</p>)}

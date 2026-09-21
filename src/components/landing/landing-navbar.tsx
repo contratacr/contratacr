@@ -2002,7 +2002,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                 <div
                   className="absolute -left-4 -right-4 top-16 z-10 flex h-[56px] items-start px-4 text-left lg:hidden"
                 >
-                  <div className="flex h-12 w-full items-center gap-3 rounded-[10px] border border-[#e3ebf2] bg-white px-3 transition-colors focus-within:border-[#009FD9]">
+                  <div className="flex h-12 w-full items-center gap-3 rounded-[10px] border border-[#e5e7eb] bg-white px-3 transition-colors focus-within:border-[#009FD9]">
                     <button
                       type="button"
                       onClick={openNativeSearch}
@@ -2165,7 +2165,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                     >
                       <form onSubmit={handleCompactSearch} className="flex min-w-0 flex-1">
                         <div className="relative w-full">
-                          <div className="flex h-11 w-full items-center overflow-hidden rounded-[10px] border border-[#e3ebf2] bg-white pl-3 transition-colors focus-within:border-[#009FD9] sm:pl-4">
+                          <div className="flex h-11 w-full items-center overflow-hidden rounded-[10px] border border-[#e5e7eb] bg-white pl-3 transition-colors focus-within:border-[#009FD9] sm:pl-4">
                             <div ref={compactSvcRef} className="flex h-full min-w-0 flex-[3_1_0%] items-center gap-2 sm:gap-3">
                               <button
                                 type="submit"

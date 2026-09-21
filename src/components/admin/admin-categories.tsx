@@ -157,9 +157,9 @@ function AdminDialog({
             </div>
           )}
         </div>
-        <div className="flex flex-col-reverse gap-2 border-t border-[#eef2f7] bg-[#f8fafc] p-4 sm:flex-row sm:justify-end">
+        <div className="flex flex-col-reverse gap-2 border-t border-[#eef2f6] bg-[#f8fafc] p-4 sm:flex-row sm:justify-end">
           {dialog.cancelLabel && (
-            <button type="button" onClick={onClose} disabled={busy} className="inline-flex h-10 items-center justify-center rounded-lg border border-[#d1d5db] bg-white px-4 text-sm font-semibold text-[#374151] transition hover:bg-[#f9fafb] disabled:opacity-50">
+            <button type="button" onClick={onClose} disabled={busy} className="inline-flex h-10 items-center justify-center rounded-lg border border-[#d7e1ea] bg-white px-4 text-sm font-semibold text-[#374151] transition hover:bg-[#f9fafb] disabled:opacity-50">
               {dialog.cancelLabel}
             </button>
           )}
@@ -960,7 +960,7 @@ export function AdminCategories() {
                 const flags = flagsOf(i);
                 const sender = suggestionSender(i);
                 return (
-                  <div key={i.id} className="grid gap-3 border-b border-[#f1f5f9] p-4 last:border-b-0 xl:grid-cols-[minmax(0,1fr)_220px_210px_auto] xl:items-start">
+                  <div key={i.id} className="grid gap-3 border-b border-[#eef2f6] p-4 last:border-b-0 xl:grid-cols-[minmax(0,1fr)_220px_210px_auto] xl:items-start">
                     <div className="min-w-0">
                       {status === "pending" ? (
                         <div className="grid gap-2 sm:grid-cols-2">
@@ -1139,7 +1139,7 @@ export function AdminCategories() {
                 const sectionPros = section.items.reduce((sum, item) => sum + (proCounts[item.id]?.professionals ?? 0), 0);
                 const withSupply = section.items.filter((item) => (proCounts[item.id]?.professionals ?? 0) > 0).length;
                 return (
-                <div key={section.id} className="border-b border-[#f1f5f9] last:border-b-0">
+                <div key={section.id} className="border-b border-[#eef2f6] last:border-b-0">
                   {!flatCatalog && (
                     <button
                       type="button"
@@ -1155,7 +1155,7 @@ export function AdminCategories() {
                     </button>
                   )}
                   {open && section.items.map((item) => (
-                <div key={item.id} className="grid gap-3 border-b border-[#f1f5f9] p-4 last:border-b-0 xl:grid-cols-[minmax(0,1fr)_220px_210px_auto] xl:items-center">
+                <div key={item.id} className="grid gap-3 border-b border-[#eef2f6] p-4 last:border-b-0 xl:grid-cols-[minmax(0,1fr)_220px_210px_auto] xl:items-center">
                   <div className="grid min-w-0 gap-2 sm:grid-cols-2">
                     <input
                       value={draftOf(item).label}
@@ -1263,7 +1263,7 @@ export function AdminCategories() {
               {groups.map((group) => {
                 const draft = groupDraftOf(group);
                 return (
-                  <div key={group.id} className="grid gap-3 border-b border-[#f1f5f9] p-4 last:border-b-0 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] lg:items-center">
+                  <div key={group.id} className="grid gap-3 border-b border-[#eef2f6] p-4 last:border-b-0 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] lg:items-center">
                     <input
                       value={draft.label}
                       onChange={(e) => setGroupDrafts((prev) => ({ ...prev, [group.id]: { ...draft, label: e.target.value } }))}

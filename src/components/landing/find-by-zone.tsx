@@ -122,7 +122,7 @@ export function FindByZone({ coverage }: { coverage: ZoneCoverage }) {
           </div>
 
           {/* ── Active-province panel ── */}
-          <div className="rounded-3xl bg-white border border-[#eef1f5] p-7 sm:p-8 shadow-[0_18px_50px_rgba(16,39,68,0.10)]">
+          <div className="rounded-3xl bg-white border border-[#eef2f6] p-7 sm:p-8 shadow-[0_18px_50px_rgba(16,39,68,0.10)]">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-5">
               <div className="flex items-center gap-2.5">
                 <span className={`${leadIconClass} h-11 w-11`}>
@@ -176,7 +176,7 @@ export function FindByZone({ coverage }: { coverage: ZoneCoverage }) {
             )}
 
             {/* Geolocation + disclaimer */}
-            <div className="border-t border-[#f1f3f5] pt-5">
+            <div className="border-t border-[#eef2f6] pt-5">
               <button
                 type="button"
                 onClick={useMyLocation}

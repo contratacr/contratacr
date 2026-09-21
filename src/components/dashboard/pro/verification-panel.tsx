@@ -355,7 +355,7 @@ export function VerificationPanel({
 
         {/* In-app support follow-up to track the case. */}
         <SupportLink
-          className="inline-flex items-center gap-2 rounded-full border border-[#dbe4ee] bg-white px-5 py-2.5 text-sm font-bold text-[#162543] transition-colors hover:border-[#009FD9]/40 hover:bg-[#f1fbfe] hover:text-[#0089bb]"
+          className="inline-flex items-center gap-2 rounded-full border border-[#e5e7eb] bg-white px-5 py-2.5 text-sm font-bold text-[#162543] transition-colors hover:border-[#009FD9]/40 hover:bg-[#f1fbfe] hover:text-[#0089bb]"
         >
           <Headset className="h-4 w-4 shrink-0" /> {t("supportFollowUp", { ref })}
         </SupportLink>
@@ -483,7 +483,7 @@ export function VerificationPanel({
               {busy ? t("sending") : t("appealReverify")}
             </button>
             <SupportLink
-              className="inline-flex items-center gap-2 rounded-full border border-[#dbe4ee] bg-white px-5 py-2.5 text-sm font-bold text-[#162543] transition-colors hover:border-[#009FD9]/40 hover:bg-[#f1fbfe] hover:text-[#0089bb]"
+              className="inline-flex items-center gap-2 rounded-full border border-[#e5e7eb] bg-white px-5 py-2.5 text-sm font-bold text-[#162543] transition-colors hover:border-[#009FD9]/40 hover:bg-[#f1fbfe] hover:text-[#0089bb]"
             >
               <Headset className="h-4 w-4 shrink-0" /> {t("supportApp")}
             </SupportLink>
@@ -493,7 +493,7 @@ export function VerificationPanel({
 
       {status === "under_appeal" && (
         <SupportLink
-          className="inline-flex items-center gap-2 rounded-full border border-[#dbe4ee] bg-white px-5 py-2.5 text-sm font-bold text-[#162543] transition-colors hover:border-[#009FD9]/40 hover:bg-[#f1fbfe] hover:text-[#0089bb]"
+          className="inline-flex items-center gap-2 rounded-full border border-[#e5e7eb] bg-white px-5 py-2.5 text-sm font-bold text-[#162543] transition-colors hover:border-[#009FD9]/40 hover:bg-[#f1fbfe] hover:text-[#0089bb]"
         >
           <Headset className="h-4 w-4 shrink-0" /> {t("supportAppCase", { ref })}
         </SupportLink>
@@ -546,7 +546,7 @@ function CurrentIdentificationPanel({
     // editor de perfil, y una tarjeta blanca con borde dentro de otra tarjeta
     // blanca solo agrega ruido. Se separa con una línea fina, igual que las
     // demás secciones del editor.
-    <section className="border-t border-[#eef3f7] pt-4 first:border-t-0 first:pt-0">
+    <section className="border-t border-[#eef2f6] pt-4 first:border-t-0 first:pt-0">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex min-w-0 items-center gap-3">
           <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#eaf7fd] text-[#0089bb]">
@@ -589,7 +589,7 @@ function CurrentIdentificationPanel({
           className={`inline-flex h-10 w-full items-center justify-center rounded-full border px-4 text-sm font-bold transition-colors sm:w-auto ${
             changeOpen
               ? "border-[#009FD9] bg-[#f1fbfe] text-[#0089bb]"
-              : "border-[#dbe4ee] bg-white text-[#162543] hover:border-[#009FD9]/50 hover:bg-[#f1fbfe] hover:text-[#0089bb]"
+              : "border-[#e5e7eb] bg-white text-[#162543] hover:border-[#009FD9]/50 hover:bg-[#f1fbfe] hover:text-[#0089bb]"
           }`}
         >
           {changeLabel}
@@ -660,7 +660,7 @@ function ActionPanel({
   children: React.ReactNode;
 }) {
   return (
-    <section className="border-t border-[#eef3f7] pt-4 first:border-t-0 first:pt-0">
+    <section className="border-t border-[#eef2f6] pt-4 first:border-t-0 first:pt-0">
       <h3 className="text-[15px] font-bold text-[#162543]">{title}</h3>
       <p className="mt-1.5 text-[13px] leading-relaxed text-[#6b7280]">
         {body}

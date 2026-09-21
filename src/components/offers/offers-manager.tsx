@@ -241,7 +241,7 @@ export function OffersManager({ initialOffers, embedded = false, backHref = "/da
                   </div>
                 </button>
                 {isOpen && (
-                  <div className="border-t border-[#e6edf3] px-4 pb-5 pt-3 sm:px-5">
+                  <div className="border-t border-[#e5e7eb] px-4 pb-5 pt-3 sm:px-5">
                     {offer.description && <p className="mb-4 whitespace-pre-line break-words text-sm leading-6 text-[#52627a] [overflow-wrap:anywhere]">{offer.description}</p>}
                     <div data-offer-actions={offer.id} className="ccr-acciones-tarjeta relative grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_40px] gap-2">
                       <Link href={`/ofertas/${offer.id}?from=panel`} onClick={openInNewTabOnDesktop} className="inline-flex h-10 w-full items-center justify-center rounded-full border border-[#d7e1ea] px-3 text-xs font-bold text-[#162543]">{copy.view}</Link>

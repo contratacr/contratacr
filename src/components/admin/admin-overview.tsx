@@ -134,7 +134,7 @@ export function AdminOverview({ adminName, data, activity = [] }: { adminName: s
         {data.recentSignups.length === 0 ? (
           <EmptyMini label="Sin datos aún" className="py-8" />
         ) : (
-          <div className="flex flex-col divide-y divide-[#f1f5f9]">
+          <div className="flex flex-col divide-y divide-[#eef2f6]">
             {data.recentSignups.map((s) => (
               <div key={`${s.role}-${s.id}`} className="flex items-center gap-3 py-2.5">
                 <Initials name={s.name} role={s.role} />
@@ -155,7 +155,7 @@ export function AdminOverview({ adminName, data, activity = [] }: { adminName: s
       {/* What needs attention + the verification queue + recent activity */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <Card title={attention == null ? "Qué necesita tu atención" : attentionTotal === 0 ? "Nada pendiente hoy" : `Qué necesita tu atención · ${attentionTotal}`}>
-          <ul className="flex flex-col divide-y divide-[#f1f5f9]">
+          <ul className="flex flex-col divide-y divide-[#eef2f6]">
             {attentionItems.map((item) => (
               <li key={item.key}>
                 <Link href={item.href} className="flex items-center gap-3 py-2.5 hover:text-[#008ce0]">
@@ -195,7 +195,7 @@ export function AdminOverview({ adminName, data, activity = [] }: { adminName: s
           {activity.length === 0 ? (
             <EmptyMini label="Sin actividad aún" className="py-8" />
           ) : (
-            <div className="flex flex-col divide-y divide-[#f1f5f9]">
+            <div className="flex flex-col divide-y divide-[#eef2f6]">
               {activity.map((event) => {
                 const meta = ACTIVITY_META[event.kind];
                 return (

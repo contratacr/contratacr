@@ -931,7 +931,7 @@ export function AvailabilityEditor({
         </div>
       )}
 
-      <div className="border-t border-[#f3f4f6]">
+      <div className="border-t border-[#eef2f6]">
       {loading ? (
         <div className="p-4 sm:p-5">
           <FormLoadingState minHeight="min-h-[300px]" />
@@ -993,20 +993,20 @@ export function AvailabilityEditor({
               </div>
             </div>
 
-            <div className="border-b border-[#f3f4f6] px-4 py-3 sm:px-5">
+            <div className="border-b border-[#eef2f6] px-4 py-3 sm:px-5">
               <p className="text-xs leading-5 text-[#6b7280]">
                 {t("alwaysSubAll")}
               </p>
             </div>
 
-            <div className="hidden grid-cols-[minmax(7rem,1fr)_minmax(7rem,1fr)_minmax(18rem,2fr)_minmax(7rem,1fr)] border-b border-[#f3f4f6] px-5 py-3 text-xs font-semibold text-[#6b7280] lg:grid">
+            <div className="hidden grid-cols-[minmax(7rem,1fr)_minmax(7rem,1fr)_minmax(18rem,2fr)_minmax(7rem,1fr)] border-b border-[#eef2f6] px-5 py-3 text-xs font-semibold text-[#6b7280] lg:grid">
               <span>{t("date")}</span>
               <span className="text-center">{t("availableColumn")}</span>
               <span className="text-center">{t("scheduleColumn")}</span>
               <span className="text-center">{t("actionsColumn")}</span>
             </div>
 
-            <div className="flex flex-col divide-y divide-[#f3f4f6] lg:divide-y">
+            <div className="flex flex-col divide-y divide-[#eef2f6] lg:divide-y">
               {openWeekdays.map((wd) => {
                 const blocks = blocksFor(wd);
                 const on = blocks.length > 0;
@@ -1089,7 +1089,7 @@ export function AvailabilityEditor({
                     </div>
                   </button>
                   {showClosedDays && (
-                    <div className="mt-3 flex flex-col divide-y divide-[#f3f4f6] border-t border-[#f3f4f6]">
+                    <div className="mt-3 flex flex-col divide-y divide-[#eef2f6] border-t border-[#eef2f6]">
                       {closedWeekdays.map((wd) => (
                         <div key={wd} className="flex items-center justify-between gap-3 py-3">
                           <span className="text-sm font-medium text-[#374151]">{t(`weekday${wd}` as `weekday${number}`)}</span>
@@ -1113,7 +1113,7 @@ export function AvailabilityEditor({
           </div>
 
           {/* -- ¿Un día distinto? - date exceptions ------------------------ */}
-          <div className="border-t border-[#f3f4f6] p-4 sm:p-5">
+          <div className="border-t border-[#eef2f6] p-4 sm:p-5">
             <div className="mb-6">
               <div className="min-w-0">
                 <h3 className="text-sm font-semibold text-[#162543]">{t("diffDayTitle")}</h3>
@@ -1126,7 +1126,7 @@ export function AvailabilityEditor({
               <button
                 type="button"
                 onClick={() => setDayModal({ date: todayISO() })}
-                className="flex h-11 w-full min-w-0 items-center justify-between rounded-xl border border-[#e5e7eb] bg-white px-4 text-sm font-semibold text-[#162543] transition-all hover:border-[#cbd5e1] focus:outline-none focus:ring-2 focus:ring-[#009FD9] sm:w-[18rem]"
+                className="flex h-11 w-full min-w-0 items-center justify-between rounded-xl border border-[#e5e7eb] bg-white px-4 text-sm font-semibold text-[#162543] transition-all hover:border-[#d7e1ea] focus:outline-none focus:ring-2 focus:ring-[#009FD9] sm:w-[18rem]"
               >
                 <span className="flex min-w-0 items-center gap-2">
                   <Calendar className="h-4 w-4 shrink-0 text-[#009FD9]" />
@@ -1179,7 +1179,7 @@ export function AvailabilityEditor({
           sin pulsarlo pide confirmación. Los dos interruptores de arriba son
           la excepción deliberada: un interruptor que no hace efecto hasta
           pulsar otro botón miente, y pasar a privada ya tiene su confirmación. */}
-      <div className="ccr-grupo-botones flex flex-col gap-2 border-t border-[#edf2f7] px-4 py-4 sm:flex-row sm:justify-end sm:px-5">
+      <div className="ccr-grupo-botones flex flex-col gap-2 border-t border-[#eef2f6] px-4 py-4 sm:flex-row sm:justify-end sm:px-5">
         <Button
           type="button"
           variant="ghost"
@@ -1284,7 +1284,7 @@ export function AvailabilityEditor({
               ) : (
                 <span className="relative flex h-6 w-6 items-center justify-center">
                   <Calendar className="h-6 w-6" />
-                  <span className="absolute -bottom-1 -right-1 flex h-3.5 w-3.5 items-center justify-center rounded-full border-2 border-[#fff7ed] bg-red-500 text-white">
+                  <span className="absolute -bottom-1 -right-1 flex h-3.5 w-3.5 items-center justify-center rounded-full border-2 border-[#eef2f6] bg-red-500 text-white">
                     <X className="h-2 w-2 stroke-[3]" />
                   </span>
                 </span>
@@ -1349,7 +1349,7 @@ function ApplyScheduleModal({ sourceWeekday, onClose, onApply }: {
                 onClick={() => toggle(wd)}
                 className={cn(
                   "rounded-xl border px-3 py-2 text-left text-sm font-semibold transition-colors",
-                  active ? "border-[#009FD9] bg-[#EBF5FB] text-[#0089bb]" : "border-[#e5e7eb] bg-white text-[#374151] hover:border-[#cbd5e1]"
+                  active ? "border-[#009FD9] bg-[#EBF5FB] text-[#0089bb]" : "border-[#e5e7eb] bg-white text-[#374151] hover:border-[#d7e1ea]"
                 )}
               >
                 {t(`weekday${wd}` as `weekday${number}`)}
@@ -1456,7 +1456,7 @@ function DayModal({ initialDate, existing, markedDates, defaultDuration, dateLoc
               const occupied = occupiedOnDate(date);
               if (occupied.length === 0) return null;
               return (
-                <div className="flex flex-col gap-0.5 rounded-xl border border-[#f3f4f6] bg-[#f9fafb] p-2.5">
+                <div className="flex flex-col gap-0.5 rounded-xl border border-[#eef2f6] bg-[#f9fafb] p-2.5">
                   {occupied.map((o) => (
                     <p key={o.label} className="flex items-start gap-1.5 text-[11px] leading-relaxed text-[#6b7280]">
                       <Lock className="h-3 w-3 shrink-0 mt-[3px] text-[#68778d]" />
@@ -1477,7 +1477,7 @@ function DayModal({ initialDate, existing, markedDates, defaultDuration, dateLoc
                     onClick={() => setModeWithDefault(o.key)}
                     className={cn("flex items-start gap-2.5 rounded-xl border p-3 text-left transition-colors", active ? "border-[#009FD9] bg-[#EBF5FB]" : "border-[#e5e7eb] hover:bg-[#f9fafb]")}
                   >
-                    <span className={cn("mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-2", active ? "border-[#009FD9]" : "border-[#cbd5e1]")}>
+                    <span className={cn("mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-2", active ? "border-[#009FD9]" : "border-[#d7e1ea]")}>
                       {active && <span className="h-2 w-2 rounded-full bg-[#009FD9]" />}
                     </span>
                     <span className="min-w-0">

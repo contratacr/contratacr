@@ -178,7 +178,7 @@ function FilaDeslizable({ abierta, ancho, onEstado, acciones, children }: {
   };
 
   return (
-    <div className="relative overflow-hidden border-b border-[#eef3f7] bg-[#eef6fb] last:border-b-0">
+    <div className="relative overflow-hidden border-b border-[#eef2f6] bg-[#eef6fb] last:border-b-0">
       <div className="absolute inset-y-0 right-0 flex" style={{ width: ancho }}>{acciones}</div>
       <div
         style={{ transform: `translateX(${dx}px)`, transition: arrastrando ? "none" : "transform 180ms ease-out", touchAction: "pan-y" }}
@@ -1143,9 +1143,9 @@ export function DirectChatInbox() {
   if (loading) return (
     <div className="ccr-delayed-loading min-h-[calc(100dvh-153px)] bg-white sm:min-h-[520px]" aria-busy="true" role="status">
       <span className="sr-only">{tChat("loadingConversations")}</span>
-      <div className="border-b border-[#e7eef3] p-3"><Skeleton className="h-10 w-full rounded-full" /></div>
+      <div className="border-b border-[#e5e7eb] p-3"><Skeleton className="h-10 w-full rounded-full" /></div>
       {Array.from({ length: 6 }).map((_, fila) => (
-        <div key={fila} className="flex gap-3 border-b border-[#eef3f7] p-4 last:border-b-0">
+        <div key={fila} className="flex gap-3 border-b border-[#eef2f6] p-4 last:border-b-0">
           <Skeleton className="h-11 w-11 shrink-0 rounded-full" />
           <div className="min-w-0 flex-1 space-y-2 pt-0.5">
             <div className="flex items-center gap-2">
@@ -1230,8 +1230,8 @@ export function DirectChatInbox() {
       "direct-chat-shell grid h-[calc(100dvh-153px)] min-h-[360px] grid-cols-[minmax(0,1fr)] overflow-hidden bg-white lg:h-[min(760px,calc(100dvh-220px))] lg:min-h-[500px] lg:grid-cols-[320px_minmax(0,1fr)] xl:grid-cols-[340px_minmax(0,1fr)]",
       mobileThread && "direct-chat-shell--thread",
     )}>
-      <aside className={cn("flex min-h-0 flex-col border-r border-[#e3ebf1] bg-white", mobileThread && "hidden lg:block")}>
-        <div className={cn("shrink-0 border-b border-[#e3ebf1] p-4", nativeApp && "px-4 pb-3 pt-2")}>
+      <aside className={cn("flex min-h-0 flex-col border-r border-[#e5e7eb] bg-white", mobileThread && "hidden lg:block")}>
+        <div className={cn("shrink-0 border-b border-[#e5e7eb] p-4", nativeApp && "px-4 pb-3 pt-2")}>
           <div className="flex items-center justify-between gap-3">
             <h2 className={cn("text-lg font-extrabold text-[#162543]", nativeApp && !showArchived && "sr-only")}>{showArchived ? tChat("archived") : tChat("messages")}</h2>
             {showArchived && (
@@ -1245,7 +1245,7 @@ export function DirectChatInbox() {
         </div>
         <div ref={listaRef} data-lista-cabe={listaCabe ? "true" : "false"} className="ccr-direct-chat-list min-h-0 flex-1 overflow-y-auto">
           {!showArchived && (nativeApp || archivedCount > 0) && (
-            <button type="button" onClick={() => updateArchiveView(true)} className="flex w-full items-center gap-3 border-b border-[#e7eef3] bg-white px-4 py-3 text-left transition hover:bg-[#f3f8fb]">
+            <button type="button" onClick={() => updateArchiveView(true)} className="flex w-full items-center gap-3 border-b border-[#e5e7eb] bg-white px-4 py-3 text-left transition hover:bg-[#f3f8fb]">
               <span className="grid h-10 w-10 place-items-center rounded-full bg-[#eef8fd] text-[#009FD9]">
                 <Archive className="h-5 w-5" />
               </span>
@@ -1258,7 +1258,7 @@ export function DirectChatInbox() {
               <Avatar className="h-11 w-11"><AvatarImage src={person.avatar ?? undefined} /><AvatarFallback className="bg-[#e8f8ff] font-bold text-[#009FD9]">{getInitials(person.name)}</AvatarFallback></Avatar>
               <span className="min-w-0 flex-1"><span className="flex items-center gap-2"><strong className="min-w-0 flex-1 truncate text-sm text-[#162543]">{person.name}</strong><time className="shrink-0 text-[11px] text-[#8492a5]">{timeLabel(item.last_message_at, locale)}</time></span><span className="mt-1 flex items-center gap-2"><span className={cn("min-w-0 flex-1 truncate text-xs", storedDrafts[item.id] ? "italic text-[#8a94a6]" : "text-[#6b7a90]")}>{storedDrafts[item.id] ? `${tChat("draft")}: ${storedDrafts[item.id]}` : item.last_message || tChat("started")}</span>{!!unread && <span className="grid h-5 min-w-5 place-items-center rounded-full bg-[#009FD9] px-1 text-[10px] font-bold text-white">{unread}</span>}</span></span>
             </button>);
-            if (item.id === DRAFT_CONVERSATION_ID) return <div key={item.id} className="border-b border-[#eef3f7] last:border-b-0">{fila}</div>;
+            if (item.id === DRAFT_CONVERSATION_ID) return <div key={item.id} className="border-b border-[#eef2f6] last:border-b-0">{fila}</div>;
             return (
               <FilaDeslizable
                 key={item.id}
@@ -1291,7 +1291,7 @@ export function DirectChatInbox() {
       </aside>
 
       <section className={cn("min-h-0 flex-col", mobileThread ? "flex" : "hidden lg:flex")}>
-        <header className="ccr-direct-chat-thread-header flex min-h-[65px] shrink-0 items-center gap-2.5 border-b border-[#e3ebf1] bg-white px-3 py-2.5 shadow-[0_8px_22px_-24px_rgba(15,23,42,0.45)] sm:gap-3 sm:px-5 sm:py-3">
+        <header className="ccr-direct-chat-thread-header flex min-h-[65px] shrink-0 items-center gap-2.5 border-b border-[#e5e7eb] bg-white px-3 py-2.5 shadow-[0_8px_22px_-24px_rgba(15,23,42,0.45)] sm:gap-3 sm:px-5 sm:py-3">
           <button type="button" data-native-back="conversations" onClick={closeThread} className="inline-flex h-10 shrink-0 items-center gap-1 rounded-full pl-1 pr-1.5 text-[#526277] transition active:bg-[#eef6fb] lg:hidden" aria-label={isEn ? "Back to conversations" : "Volver a conversaciones"}>
             <ArrowLeft className="h-5 w-5 shrink-0" />
             {conversacionesSinLeer > 0 && (
@@ -1325,7 +1325,7 @@ export function DirectChatInbox() {
             y, si hay más, se despliegan hasta cuatro como en los fijados de
             WhatsApp. */}
         {!threadLoading && origenesFijados.length > 0 && (
-          <div ref={origenesRef} className="relative z-20 border-b border-[#e6eef4] bg-white">
+          <div ref={origenesRef} className="relative z-20 border-b border-[#e5e7eb] bg-white">
             <div className="flex items-center">
               <button
                 type="button"
@@ -1353,14 +1353,14 @@ export function DirectChatInbox() {
               )}
             </div>
             {origenesAbiertos && (
-              <div className="absolute inset-x-0 top-full max-h-[248px] overflow-y-auto overscroll-contain border-b border-[#e6eef4] bg-white shadow-[0_16px_28px_-20px_rgba(15,23,42,0.55)]">
+              <div className="absolute inset-x-0 top-full max-h-[248px] overflow-y-auto overscroll-contain border-b border-[#e5e7eb] bg-white shadow-[0_16px_28px_-20px_rgba(15,23,42,0.55)]">
             {origenesFijados.slice(1).map((origen, indice) => (
               <button
                 key={`${origen.type}-${origen.bookingId ?? origen.projectId ?? origen.proposalId ?? indice}`}
                 type="button"
                 onClick={() => abrirOrigen(origen)}
                 disabled={!hrefDeOrigen(origen)}
-                className="flex w-full items-center gap-2 border-t border-[#f1f5f9] px-4 py-1.5 text-left transition active:bg-[#f4f9fc] disabled:opacity-70 sm:px-6"
+                className="flex w-full items-center gap-2 border-t border-[#eef2f6] px-4 py-1.5 text-left transition active:bg-[#f4f9fc] disabled:opacity-70 sm:px-6"
               >
                 <IconoDeOrigen tipo={origen.type} />
                 <span className="min-w-0 flex-1 truncate text-[12px] leading-tight">
@@ -1436,7 +1436,7 @@ export function DirectChatInbox() {
                   "min-w-[86px] select-text rounded-[18px] px-3.5 py-2.5 text-[14px] leading-relaxed shadow-[0_4px_12px_-8px_rgba(15,23,42,0.55)]",
                   mine
                     ? "max-w-[86%] rounded-br-md bg-[#009FD9] font-medium text-white sm:max-w-[78%]"
-                    : "max-w-[calc(86%_-_2.25rem)] rounded-bl-md border border-[#e5edf3] bg-white text-[#25364d] sm:max-w-[72%]",
+                    : "max-w-[calc(86%_-_2.25rem)] rounded-bl-md border border-[#e5e7eb] bg-white text-[#25364d] sm:max-w-[72%]",
                   fotos > 0 && (mine ? "w-[86%] sm:w-[78%]" : "w-[calc(86%_-_2.25rem)] sm:w-[72%]"),
                 )}>
                   {message.body && !(message.attachment_urls?.length && (message.body === "Archivo adjunto" || message.body === "Attachment")) && (
@@ -1512,7 +1512,7 @@ export function DirectChatInbox() {
           })}
         </div>
         {nativeApp && whatsappEscape && (
-          <div className="border-t border-[#e3ebf1] bg-[#fffbeb] px-4 py-2.5 text-xs font-semibold text-[#8a6d1f]">
+          <div className="border-t border-[#e5e7eb] bg-[#fffbeb] px-4 py-2.5 text-xs font-semibold text-[#8a6d1f]">
             <p>{isEn ? "No reply in the app for over a day." : "Más de un día sin respuesta en la app."}</p>
             <a href={whatsappEscape} target="_blank" rel="noopener noreferrer" className="mt-1.5 inline-flex min-h-9 items-center gap-2 rounded-lg bg-[#25D366] px-3 text-[13px] font-extrabold text-white">
               {isEn ? "Continue on WhatsApp" : "Continuar por WhatsApp"}
@@ -1520,7 +1520,7 @@ export function DirectChatInbox() {
           </div>
         )}
         {(error || attachmentError) && <p className="border-t border-red-100 bg-red-50 px-4 py-2 text-sm font-semibold text-red-700">{error || attachmentError}</p>}
-        <form onSubmit={submit} className="ccr-direct-chat-composer shrink-0 border-t border-[#e3ebf1] bg-white p-3 pb-[calc(.75rem+env(safe-area-inset-bottom))] sm:p-4">
+        <form onSubmit={submit} className="ccr-direct-chat-composer shrink-0 border-t border-[#e5e7eb] bg-white p-3 pb-[calc(.75rem+env(safe-area-inset-bottom))] sm:p-4">
           {!!selectedAttachments.length && (
             <div className="ccr-carril mb-2 flex gap-2 overflow-x-auto pb-1">
               {selectedAttachments.map((attachment) => (
@@ -1669,7 +1669,7 @@ export function DirectChatInbox() {
           <button
             type="button"
             onClick={() => void copiarMensaje(menuMensaje.texto)}
-            className="flex items-center gap-2 rounded-xl border border-[#e5edf3] bg-white px-4 py-2.5 text-sm font-bold text-[#162543] shadow-[0_16px_36px_-18px_rgba(15,23,42,0.55)]"
+            className="flex items-center gap-2 rounded-xl border border-[#e5e7eb] bg-white px-4 py-2.5 text-sm font-bold text-[#162543] shadow-[0_16px_36px_-18px_rgba(15,23,42,0.55)]"
           >
             <Copy className="h-4 w-4 text-[#526277]" />
             {tChat("copy")}

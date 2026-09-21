@@ -245,7 +245,7 @@ export function AdminSupport() {
                 <p className="mt-1 text-xs text-[#6b7280]">La persona recibe este mensaje en su hilo. Responder ahí reabre el mismo caso.</p>
                 <div className="mt-3 space-y-2">
                   {SUPPORT_CLOSE_REASONS.map((r) => (
-                    <label key={r.id} className={`flex cursor-pointer gap-2.5 rounded-xl border p-3 text-left transition ${motivo === r.id ? "border-[#009FD9] bg-white shadow-sm" : "border-[#e5e7eb] bg-white hover:border-[#cbd5e1]"}`}>
+                    <label key={r.id} className={`flex cursor-pointer gap-2.5 rounded-xl border p-3 text-left transition ${motivo === r.id ? "border-[#009FD9] bg-white shadow-sm" : "border-[#e5e7eb] bg-white hover:border-[#d7e1ea]"}`}>
                       <input type="radio" name="motivo-cierre" value={r.id} checked={motivo === r.id} onChange={() => { setMotivo(r.id); setCierreError(""); }} className="mt-0.5" />
                       <span className="min-w-0">
                         <span className="block text-sm font-semibold text-[#0f172a]">{r.label.es}</span>
@@ -343,7 +343,7 @@ export function AdminSupport() {
       ) : (
         <div className="flex flex-col gap-2">
           {items.map((t) => (
-            <button key={t.id} onClick={() => openTicket(t.id)} className="text-left bg-white rounded-xl border border-[#e5e7eb] p-4 hover:border-[#cbd5e1] hover:shadow-sm transition-all">
+            <button key={t.id} onClick={() => openTicket(t.id)} className="text-left bg-white rounded-xl border border-[#e5e7eb] p-4 hover:border-[#d7e1ea] hover:shadow-sm transition-all">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">

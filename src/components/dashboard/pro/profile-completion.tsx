@@ -334,13 +334,13 @@ export function ProfileCompletion({
           </span>
         </button>
 
-        <div className="mt-5 border-t border-[#eef3f7]">
+        <div className="mt-5 border-t border-[#eef2f6]">
           {visibleSteps.map((item) => (
             // La fila es una caja, no un botón: adentro van DOS acciones —hacer
             // el paso y omitirlo—, y un botón dentro de otro no es HTML válido.
             <div
               key={item.key}
-              className="flex w-full items-center gap-2 border-b border-[#eef3f7] px-1 py-1.5 last:border-b-0"
+              className="flex w-full items-center gap-2 border-b border-[#eef2f6] px-1 py-1.5 last:border-b-0"
             >
               <button
                 type="button"

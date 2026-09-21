@@ -132,7 +132,7 @@ export default async function ComoFuncionaPage() {
             </div>
             <div className="mt-7 grid gap-4 sm:grid-cols-2">
               {EMPLEOS_VISIBLE && (
-              <Link href="/empleos" className="group flex min-h-40 flex-col justify-between rounded-lg border border-[#dfe5eb] bg-white p-5 transition-colors hover:border-[#9bd8ef]">
+              <Link href="/empleos" className="group flex min-h-40 flex-col justify-between rounded-lg border border-[#e5e7eb] bg-white p-5 transition-colors hover:border-[#9bd8ef]">
                 <div>
                   <BriefcaseBusiness className="h-5 w-5 text-[#009fd9]" />
                   <h3 className="mt-4 text-lg font-bold text-[#162543]">{t("marketplaceJobsTitle")}</h3>
@@ -143,7 +143,7 @@ export default async function ComoFuncionaPage() {
                 </span>
               </Link>
               )}
-              <Link href="/proyectos" className="group flex min-h-40 flex-col justify-between rounded-lg border border-[#dfe5eb] bg-white p-5 transition-colors hover:border-[#9bd8ef]">
+              <Link href="/proyectos" className="group flex min-h-40 flex-col justify-between rounded-lg border border-[#e5e7eb] bg-white p-5 transition-colors hover:border-[#9bd8ef]">
                 <div>
                   <ClipboardList className="h-5 w-5 text-[#009fd9]" />
                   <h3 className="mt-4 text-lg font-bold text-[#162543]">{t("marketplaceProjectsTitle")}</h3>
@@ -153,7 +153,7 @@ export default async function ComoFuncionaPage() {
                   {t("marketplaceProjectsCta")}<ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
                 </span>
               </Link>
-              <Link href="/ofertas" className="group flex min-h-40 flex-col justify-between rounded-lg border border-[#dfe5eb] bg-white p-5 transition-colors hover:border-[#9bd8ef]">
+              <Link href="/ofertas" className="group flex min-h-40 flex-col justify-between rounded-lg border border-[#e5e7eb] bg-white p-5 transition-colors hover:border-[#9bd8ef]">
                 <div>
                   <Tags className="h-5 w-5 text-[#009fd9]" />
                   <h3 className="mt-4 text-lg font-bold text-[#162543]">{t("marketplaceOffersTitle")}</h3>
@@ -179,7 +179,7 @@ export default async function ComoFuncionaPage() {
                 { icon: CheckCircle2, title: t("trust0Title"), body: t("trust0Body"), simple: true },
                 { icon: Star, title: t("trust1Title"), body: t("trust1Body"), simple: false },
               ].map(({ icon: Icon, title, body, simple }) => (
-                <div key={title} className="flex gap-3 rounded-lg border border-[#dde4ea] bg-white p-5">
+                <div key={title} className="flex gap-3 rounded-lg border border-[#e5e7eb] bg-white p-5">
                   <Icon className={`${simple ? "mt-[3px] h-4 w-4" : "mt-0.5 h-5 w-5"} shrink-0 text-[#009fd9]`} />
                   <div><h3 className="text-sm font-bold text-[#162543]">{title}</h3><p className="mt-1 text-sm leading-6 text-[#6b7280]">{body}</p></div>
                 </div>

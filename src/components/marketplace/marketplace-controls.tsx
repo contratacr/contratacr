@@ -313,7 +313,7 @@ export function MarketplaceSearch({
 
   return (
     <div ref={rootRef} className="relative min-w-0 flex-1">
-      <div className="flex h-11 w-full items-center gap-3 rounded-[10px] border border-[#e3ebf2] bg-white px-4 transition-colors focus-within:border-[#009FD9]">
+      <div className="flex h-11 w-full items-center gap-3 rounded-[10px] border border-[#e5e7eb] bg-white px-4 transition-colors focus-within:border-[#009FD9]">
         <Search className="h-5 w-5 shrink-0 text-[#162543]" />
         <div className="relative min-w-0 flex-[1.85]">
           <input
@@ -333,7 +333,7 @@ export function MarketplaceSearch({
           {desktopField === "primary" && ((cleanValue && visibleSuggestions.length > 0) || (!cleanValue && recents.length > 0)) && (
             <div className="absolute -left-10 right-0 top-[calc(100%+8px)] z-50 hidden overflow-hidden rounded-xl border border-[#d7e1ea] bg-white py-1 shadow-[0_16px_38px_-24px_rgba(15,23,42,0.8)] lg:block">
               {!cleanValue && (
-                <div className="flex items-center justify-between gap-3 border-b border-[#e6edf3] px-4 py-2">
+                <div className="flex items-center justify-between gap-3 border-b border-[#e5e7eb] px-4 py-2">
                   <span className="text-xs font-extrabold uppercase text-[#68778d]">{copy.recents}</span>
                   <button type="button" onMouseDown={(event) => event.preventDefault()} onClick={clearRecents} className="text-xs font-bold text-[#009fd9] hover:text-[#0082b3]">{copy.clearAll}</button>
                 </div>
@@ -388,7 +388,7 @@ export function MarketplaceSearch({
       {open && (
         <div className="fixed inset-0 z-[1300] bg-white text-[#162543] lg:hidden">
           <div className="space-y-3 px-4 py-4">
-            <div className="flex h-13 min-w-0 items-center rounded-[10px] border border-[#e3ebf2] bg-white px-3">
+            <div className="flex h-13 min-w-0 items-center rounded-[10px] border border-[#e5e7eb] bg-white px-3">
               <button type="button" onClick={closeMobileSearch} aria-label={copy.back} className="grid h-10 w-10 shrink-0 place-items-center text-[#1A2744]">
                 <ChevronRight className="h-6 w-6 rotate-180" />
               </button>
@@ -572,7 +572,7 @@ export function MarketplaceFilterChip({ label, value, options, onChange }: { lab
   const sheetBody = (
     <>
       <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-[#c7d2dc] lg:hidden" />
-      <div className="flex min-h-12 items-center justify-between border-b border-[#e7edf2] lg:min-h-10">
+      <div className="flex min-h-12 items-center justify-between border-b border-[#e5e7eb] lg:min-h-10">
         <h2 className="text-lg font-bold lg:text-base">{label}</h2>
         <button type="button" onClick={() => setOpen(false)} aria-label={copy.close} className="grid h-10 w-10 place-items-center"><X className="h-5 w-5" /></button>
       </div>
@@ -608,7 +608,7 @@ export function MarketplaceFilterChip({ label, value, options, onChange }: { lab
       {open && (
         <>
           {/* Desktop: panel anclado al chip, como siempre. */}
-          <div className="absolute left-0 top-[calc(100%+8px)] z-[120] hidden w-80 rounded-xl border border-[#dfe8f0] bg-white p-4 shadow-2xl lg:block">
+          <div className="absolute left-0 top-[calc(100%+8px)] z-[120] hidden w-80 rounded-xl border border-[#e5e7eb] bg-white p-4 shadow-2xl lg:block">
             {sheetBody}
           </div>
           {/* Móvil: portal a <body> — el sticky (isolation) encerraba el sheet en

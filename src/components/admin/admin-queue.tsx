@@ -205,7 +205,7 @@ export function AdminQueue() {
         ) : filtered.length === 0 ? (
           <div className="py-16 text-center text-sm text-[#6b7280]">No hay cuentas en esta vista.</div>
         ) : (
-          <ul className="divide-y divide-[#f3f4f6]">
+          <ul className="divide-y divide-[#eef2f6]">
             {filtered.map((r) => (
               <li key={r.id} className="flex items-center gap-3 pr-4 transition-colors hover:bg-[#f9fafb]">
                 <Link

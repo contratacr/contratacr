@@ -103,7 +103,7 @@ export function AdminReports() {
         ) : reports.length === 0 ? (
           <div className="py-16 text-center text-sm text-[#6b7280]">No hay reportes en esta vista.</div>
         ) : (
-          <ul className="divide-y divide-[#f3f4f6]">
+          <ul className="divide-y divide-[#eef2f6]">
             {reports.map((r) => (
               <li key={r.id} className="p-4">
                 <div className="flex items-start justify-between gap-4 flex-wrap">

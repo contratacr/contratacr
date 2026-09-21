@@ -205,7 +205,7 @@ export default function ServiciosPage() {
             )}
 
             <form onSubmit={submitSearch} data-testid="services-page-mobile-search" className="px-4 pb-4">
-              <div className="flex h-11 w-full items-center gap-3 rounded-[10px] border border-[#e3ebf2] bg-white px-4 transition-colors focus-within:border-[#009FD9]">
+              <div className="flex h-11 w-full items-center gap-3 rounded-[10px] border border-[#e5e7eb] bg-white px-4 transition-colors focus-within:border-[#009FD9]">
                 <Search className="h-5 w-5 shrink-0 text-[#162543]" />
                 <input
                   type="text"
@@ -228,7 +228,7 @@ export default function ServiciosPage() {
           </header>
 
           {query.trim() && resultCount === 0 ? (
-            <section className="mx-4 mt-4 rounded-2xl border border-[#e5eaf0] bg-white text-center shadow-sm">
+            <section className="mx-4 mt-4 rounded-2xl border border-[#e5e7eb] bg-white text-center shadow-sm">
               {/* El MISMO vacío del resto del app; el borde de antes era más
                   oscuro que el de cualquier tarjeta del sitio. */}
               <PanelEmptyState plano icon={Search} title={tp("notListed")} description={tp("suggestDescription")} className="min-h-0 pb-0" />
@@ -246,14 +246,14 @@ export default function ServiciosPage() {
               </div>
             </section>
           ) : query.trim() && resultCount > 0 ? (
-            <section className="mx-4 mt-3 overflow-hidden rounded border border-[#d2d6dc] bg-white">
-              <p className="border-b border-[#d7dbe0] px-4 py-3 text-[13px] font-bold uppercase tracking-wide text-[#64748b]">
+            <section className="mx-4 mt-3 overflow-hidden rounded border border-[#d7e1ea] bg-white">
+              <p className="border-b border-[#d7e1ea] px-4 py-3 text-[13px] font-bold uppercase tracking-wide text-[#64748b]">
                 {serviceResultsTitle}
               </p>
               {searchResults.map(({ id, groupLabel }) => {
                 const IconoFamilia = getCategoryGroupIcon(getCategoryGroupId(id));
                 return (
-                <Link key={id} href={`/buscar?categoria=${id}`} className="flex min-h-[62px] items-center justify-between gap-3 border-b border-[#d7dbe0] px-4 py-3 last:border-b-0">
+                <Link key={id} href={`/buscar?categoria=${id}`} className="flex min-h-[62px] items-center justify-between gap-3 border-b border-[#d7e1ea] px-4 py-3 last:border-b-0">
                   <IconoFamilia className="h-5 w-5 shrink-0 text-[#64748b]" />
                   <span className="min-w-0 flex-1">
                     <span className="block text-[16px] font-extrabold leading-tight text-[#162543] [overflow-wrap:anywhere]">
@@ -267,10 +267,10 @@ export default function ServiciosPage() {
               })}
             </section>
           ) : mobileGroup ? (
-            <section className="mx-4 mt-3 overflow-hidden rounded border border-[#d2d6dc] bg-white">
+            <section className="mx-4 mt-3 overflow-hidden rounded border border-[#d7e1ea] bg-white">
               <Link
                 href={`/buscar?grupo=${mobileGroup.key}`}
-                className="flex min-h-[62px] items-center gap-3 border-b border-[#d7dbe0] px-4 py-3 text-[16px] font-extrabold leading-tight text-[#009FD9]"
+                className="flex min-h-[62px] items-center gap-3 border-b border-[#d7e1ea] px-4 py-3 text-[16px] font-extrabold leading-tight text-[#009FD9]"
               >
                 <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#eef8fc] text-[#009FD9]">
                   <mobileGroup.Icon className="h-[18px] w-[18px]" />
@@ -278,7 +278,7 @@ export default function ServiciosPage() {
                 {locale === "en" ? `All ${mobileGroup.label} services` : `Todos los servicios de ${mobileGroup.label}`}
               </Link>
               {mobileGroup.visibleIds.map((id) => (
-                <Link key={id} href={`/buscar?categoria=${id}`} className="flex min-h-[62px] items-center border-b border-[#d7dbe0] px-4 py-3 last:border-b-0">
+                <Link key={id} href={`/buscar?categoria=${id}`} className="flex min-h-[62px] items-center border-b border-[#d7e1ea] px-4 py-3 last:border-b-0">
                   <span className="min-w-0 text-[16px] font-extrabold leading-tight text-[#162543] [overflow-wrap:anywhere]">
                     {getCategoryLabel(id, locale)}
                   </span>
@@ -288,7 +288,7 @@ export default function ServiciosPage() {
           ) : (
             <>
               <p className="mx-4 mt-4 text-[15px] font-bold text-[#526277]">{allCategoriesTitle}</p>
-              <section className="mx-4 mt-2 overflow-hidden rounded border border-[#d2d6dc] bg-white">
+              <section className="mx-4 mt-2 overflow-hidden rounded border border-[#d7e1ea] bg-white">
                 {mobileGroups.map((group) => {
                   const IconoGrupo = group.Icon;
                   return (
@@ -297,7 +297,7 @@ export default function ServiciosPage() {
                     type="button"
                     data-testid="services-mobile-group-option"
                     onClick={() => selectGroup(group.key, true)}
-                    className="flex min-h-[62px] w-full items-center justify-between gap-3 border-b border-[#d7dbe0] bg-white px-4 py-3 text-left last:border-b-0"
+                    className="flex min-h-[62px] w-full items-center justify-between gap-3 border-b border-[#d7e1ea] bg-white px-4 py-3 text-left last:border-b-0"
                   >
                     <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#eef8fc] text-[#009FD9]">
                       <IconoGrupo className="h-[18px] w-[18px]" />
@@ -328,12 +328,12 @@ export default function ServiciosPage() {
 
         <section className="px-4 pb-16 pt-0">
           <div className="mx-auto max-w-6xl">
-          <div className="overflow-hidden rounded-[28px] border border-[#dfe8f0] bg-white shadow-[0_18px_44px_rgba(15,23,42,0.06)]">
+          <div className="overflow-hidden rounded-[28px] border border-[#e5e7eb] bg-white shadow-[0_18px_44px_rgba(15,23,42,0.06)]">
             <div className="border-b border-[#eef2f6] bg-white p-3 sm:p-4">
               <form
                 onSubmit={submitSearch}
                 data-testid="services-page-search"
-                className="flex h-11 w-full items-center gap-3 rounded-[10px] border border-[#e3ebf2] bg-white px-4 text-left transition-colors focus-within:border-[#009FD9]"
+                className="flex h-11 w-full items-center gap-3 rounded-[10px] border border-[#e5e7eb] bg-white px-4 text-left transition-colors focus-within:border-[#009FD9]"
               >
                 <Search className="h-5 w-5 shrink-0 text-[#8a94a6]" />
                 <input

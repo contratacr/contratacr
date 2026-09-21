@@ -663,7 +663,7 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
             type="button"
             onClick={searchThisArea}
             disabled={areaSearching}
-            className="absolute left-1/2 top-3 z-20 hidden h-10 -translate-x-1/2 items-center justify-center gap-1.5 overflow-hidden whitespace-nowrap rounded-full border border-[#d8e2ea] bg-white px-4 text-sm font-extrabold text-[#162543] shadow-[0_8px_24px_rgba(15,23,42,0.16)] transition hover:bg-[#f9fafb] active:scale-95 disabled:cursor-wait disabled:opacity-90 lg:inline-flex"
+            className="absolute left-1/2 top-3 z-20 hidden h-10 -translate-x-1/2 items-center justify-center gap-1.5 overflow-hidden whitespace-nowrap rounded-full border border-[#d7e1ea] bg-white px-4 text-sm font-extrabold text-[#162543] shadow-[0_8px_24px_rgba(15,23,42,0.16)] transition hover:bg-[#f9fafb] active:scale-95 disabled:cursor-wait disabled:opacity-90 lg:inline-flex"
           >
             {areaSearching ? <Loader2 className="h-4 w-4 shrink-0 animate-spin text-[#009FD9]" /> : <RefreshCw className="h-4 w-4 shrink-0 text-[#162543]" />}
             <span className="min-w-0 truncate">

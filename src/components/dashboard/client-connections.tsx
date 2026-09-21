@@ -86,7 +86,7 @@ export function ClientConnections() {
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           placeholder={t("searchPlaceholder")}
-          className="h-11 w-full rounded-2xl border border-[#dfe8f0] bg-white pl-11 pr-4 text-sm font-semibold text-[#162543] outline-none focus:border-[#009FD9]"
+          className="h-11 w-full rounded-2xl border border-[#e5e7eb] bg-white pl-11 pr-4 text-sm font-semibold text-[#162543] outline-none focus:border-[#009FD9]"
         />
       </div>
       {/* Tarjetas separadas, como el resto de las listas del panel: en el teléfono

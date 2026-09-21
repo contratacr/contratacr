@@ -402,7 +402,7 @@ function GuidesBody({
         {isProvider ? t("providerNoteBody") : t("clientNoteBody")}
       </p>
 
-      <div className="mt-4 flex h-11 items-center gap-2 rounded-xl border border-[#dfe6ec] bg-white px-3">
+      <div className="mt-4 flex h-11 items-center gap-2 rounded-xl border border-[#e5e7eb] bg-white px-3">
         <Search className="h-4 w-4 shrink-0 text-[#9aa8b9]" />
         <input
           value={busqueda}
@@ -443,7 +443,7 @@ function GuidesBody({
                     <ChevronDown className={cn("h-4 w-4 shrink-0 text-[#9aa8b9] transition-transform", abierta && "rotate-180")} />
                   </button>
                   {abierta && (
-                    <div className="border-t border-[#f1f5f9] px-4 pb-4 pt-3">
+                    <div className="border-t border-[#eef2f6] px-4 pb-4 pt-3">
                       <p className="text-sm leading-relaxed text-[#526277]">{t(`items.${guide.id}.body`)}</p>
                       <ol className="mt-3 space-y-2">
                         {Array.from({ length: guide.stepCount }, (_, stepIndex) => (
@@ -2090,11 +2090,11 @@ export default function DashboardPage() {
       <aside className="hidden lg:block lg:w-[260px] lg:shrink-0">
         <div className="sticky top-[6.5rem]">
           {panelModeSelector()}
-          <div className="overflow-hidden rounded-[22px] border border-[#dfe8f0] bg-white shadow-[0_12px_34px_-28px_rgba(15,23,42,0.55)]">
+          <div className="overflow-hidden rounded-[22px] border border-[#e5e7eb] bg-white shadow-[0_12px_34px_-28px_rgba(15,23,42,0.55)]">
             <div className="flex flex-col">
-              <nav className="flex flex-col divide-y divide-[#eef3f7]">
+              <nav className="flex flex-col divide-y divide-[#eef2f6]">
                 {agruparPestanas(desktopSidebarTabs).map((grupo, i) => (
-                  <div key={grupo[0] ?? i} className="flex flex-col divide-y divide-[#eef3f7]">
+                  <div key={grupo[0] ?? i} className="flex flex-col divide-y divide-[#eef2f6]">
                     {grupo.map(desktopSidebarButton)}
                   </div>
                 ))}
@@ -2148,7 +2148,7 @@ export default function DashboardPage() {
         type="button"
         data-testid="panel-mode-switch"
         onClick={() => requestUnsavedAction(() => changePanelFromHeader(destino))}
-        className="flex min-h-[60px] w-full items-center gap-3 rounded-2xl border border-[#e5edf4] bg-white px-4 py-3.5 text-left text-[15px] font-semibold text-[#162543] transition-colors hover:bg-[#f8fbfd]"
+        className="flex min-h-[60px] w-full items-center gap-3 rounded-2xl border border-[#e5e7eb] bg-white px-4 py-3.5 text-left text-[15px] font-semibold text-[#162543] transition-colors hover:bg-[#f8fbfd]"
       >
         <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[#52627a] [&>svg]:h-5 [&>svg]:w-5">
           {destino === "use" ? <User /> : <BriefcaseBusiness />}
@@ -2175,7 +2175,7 @@ export default function DashboardPage() {
           if (tab === "guides") { setGuiasAbiertas(true); return; }
           requestUnsavedAction(() => openPanelDestination(tab));
         }}
-        className="flex min-h-[60px] w-full items-center gap-3 rounded-2xl border border-[#e5edf4] bg-white px-4 py-3.5 text-left text-[15px] font-semibold text-[#162543] transition-colors hover:bg-[#f8fbfd]"
+        className="flex min-h-[60px] w-full items-center gap-3 rounded-2xl border border-[#e5e7eb] bg-white px-4 py-3.5 text-left text-[15px] font-semibold text-[#162543] transition-colors hover:bg-[#f8fbfd]"
       >
         <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[#52627a] [&>svg]:h-5 [&>svg]:w-5">
           {TAB_ICONS[tab]}
@@ -2318,7 +2318,7 @@ export default function DashboardPage() {
             activeTab !== "chat" && activeTab !== "home" && "lg:ml-0 lg:mr-auto lg:max-w-[71.5rem]",
             mobileSectionOpen ? "hidden lg:block" : "block",
           )}>
-            <div className="rounded-2xl border border-[#dfe8f0] bg-white px-5 py-5 shadow-sm sm:px-6 sm:py-5">
+            <div className="rounded-2xl border border-[#e5e7eb] bg-white px-5 py-5 shadow-sm sm:px-6 sm:py-5">
             {/* Las columnas van en `style` y no en una clase nueva de Tailwind: en
                 desarrollo la clase recién escrita llega a la pantalla antes que
                 su CSS, y una rejilla sin columnas reparte tres iguales —el
@@ -2619,9 +2619,9 @@ export default function DashboardPage() {
                       // un metro con tres renglones de texto y un botón en cada punta.
                       activeTab !== "chat" && activeTab !== "home" && "lg:max-w-[54rem]",
                       singleSurfaceTab && "!border-0 !bg-transparent !shadow-none",
-                      mobileSectionOpen && !singleSurfaceTab && "dashboard-section-card rounded-none border-0 bg-white shadow-none lg:overflow-hidden lg:rounded-[22px] lg:border lg:border-[#dfe8f0] lg:shadow-[0_12px_34px_-28px_rgba(15,23,42,0.55)]",
+                      mobileSectionOpen && !singleSurfaceTab && "dashboard-section-card rounded-none border-0 bg-white shadow-none lg:overflow-hidden lg:rounded-[22px] lg:border lg:border-[#e5e7eb] lg:shadow-[0_12px_34px_-28px_rgba(15,23,42,0.55)]",
                     )}>
-                      {activeTab !== "chat" && activeTab !== "home" && !singleSurfaceTab && <CardHeader className="hidden border-b border-[#eef3f7] bg-white px-5 py-4 sm:px-6 lg:block">
+                      {activeTab !== "chat" && activeTab !== "home" && !singleSurfaceTab && <CardHeader className="hidden border-b border-[#eef2f6] bg-white px-5 py-4 sm:px-6 lg:block">
                         <div className="relative">
                           <div className="flex min-w-0 items-center gap-2 pr-28">
                             <h2 className="min-w-0 truncate text-[17px] font-bold text-[#162543]">{activeTab === "services" ? t("servicesHeading") : panelTabLabel(activeTab)}</h2>
@@ -2662,7 +2662,7 @@ export default function DashboardPage() {
                                     <button
                                       type="button"
                                       onClick={() => signOutToHome(locale)}
-                                      className="flex min-h-[60px] w-full items-center gap-3 rounded-2xl border border-[#e5edf4] bg-white px-4 py-3.5 text-left text-[15px] font-semibold text-[#162543] transition-colors hover:bg-[#f8fbfd]"
+                                      className="flex min-h-[60px] w-full items-center gap-3 rounded-2xl border border-[#e5e7eb] bg-white px-4 py-3.5 text-left text-[15px] font-semibold text-[#162543] transition-colors hover:bg-[#f8fbfd]"
                                     >
                                       <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[#64748b]">
                                         <LogOut className="h-5 w-5" />

@@ -446,7 +446,7 @@ export function ClientRegistrationModal({
 
           {/* Professional context */}
           {professionalName && (
-            <div className="px-6 py-3 bg-[#f9fafb] border-b border-[#f3f4f6] shrink-0">
+            <div className="px-6 py-3 bg-[#f9fafb] border-b border-[#eef2f6] shrink-0">
               <p className="text-xs text-[#68778d]">
                 {intent === "whatsapp" ? t("toContactWhatsapp") : intent === "phone" ? t("toCall") : intent === "email" ? t("toEmail") : intent === "message" ? t("toMessage") : t("toContact")}
               </p>
@@ -627,7 +627,7 @@ export function ClientRegistrationModal({
 
           {/* Footer */}
           {step !== "otp" && (
-            <div className="px-6 py-4 border-t border-[#f3f4f6] shrink-0 flex flex-col gap-3">
+            <div className="px-6 py-4 border-t border-[#eef2f6] shrink-0 flex flex-col gap-3">
               {/* Actions */}
               {view === "register" ? (
                 <div className="flex gap-3">

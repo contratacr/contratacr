@@ -159,7 +159,7 @@ function Summary({ data }: { data: Payload }) {
       <div className="grid gap-4 lg:grid-cols-2">
         <section className="rounded-2xl border border-[#e5e7eb] bg-white p-4">
           <h2 className="mb-3 text-sm font-bold text-[#0f172a]">La factura de cada mes</h2>
-          <ul className="divide-y divide-[#f1f5f9]">
+          <ul className="divide-y divide-[#eef2f6]">
             {recurring.map((s) => (
               <li key={s.id} className="flex items-center justify-between gap-3 py-2 text-sm">
                 <div className="min-w-0">
@@ -175,7 +175,7 @@ function Summary({ data }: { data: Payload }) {
         </section>
         <section className="rounded-2xl border border-[#e5e7eb] bg-white p-4">
           <h2 className="mb-3 text-sm font-bold text-[#0f172a]">Desde el inicio, por rubro</h2>
-          <ul className="divide-y divide-[#f1f5f9]">
+          <ul className="divide-y divide-[#eef2f6]">
             {CATEGORY_ORDER.map((category) => {
               const row = summary.byCategory.find((c) => c.category === category);
               return (
@@ -386,14 +386,14 @@ function Ledger({ entries, apply }: { entries: CostEntry[]; apply: (work: () => 
       <AdminFilterTabs tabs={[{ id: "todos", label: "Todos" }, ...(Object.keys(KIND_LABELS) as CostEntryKind[]).map((k) => ({ id: k, label: KIND_LABELS[k] }))]} value={filter} onChange={(id) => setFilter(id as typeof filter)} counts={counts} />
 
       {filtered.length === 0 ? (
-        <div className="rounded-2xl border border-[#e5eaf0] bg-white px-4 py-10 text-center text-sm text-[#64748b] shadow-sm">Todavía no hay movimientos registrados{filter !== "todos" ? " de este tipo" : ""}.</div>
+        <div className="rounded-2xl border border-[#e5e7eb] bg-white px-4 py-10 text-center text-sm text-[#64748b] shadow-sm">Todavía no hay movimientos registrados{filter !== "todos" ? " de este tipo" : ""}.</div>
       ) : (
         <section className="overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white">
-          <div className="flex items-center justify-between border-b border-[#f1f5f9] px-4 py-2.5 text-sm">
+          <div className="flex items-center justify-between border-b border-[#eef2f6] px-4 py-2.5 text-sm">
             <p className="font-bold text-[#0f172a]">{filtered.length} movimiento{filtered.length === 1 ? "" : "s"}</p>
             <p className="tabular-nums text-[#0f172a]">{both(totals.usd, totals.crc)}</p>
           </div>
-          <ul className="divide-y divide-[#f1f5f9]">
+          <ul className="divide-y divide-[#eef2f6]">
             {filtered.map((entry) => (
               <li key={entry.id} className="flex items-center gap-3 px-4 py-3 text-sm">
                 <div className="min-w-0 flex-1">

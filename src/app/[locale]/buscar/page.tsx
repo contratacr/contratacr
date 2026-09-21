@@ -427,7 +427,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
       }
     : null;
   const filtersFallback = (
-    <div className="rounded-2xl border border-[#e2e8ee] bg-white p-4 shadow-[0_2px_8px_rgba(15,23,42,0.05)]" aria-hidden="true">
+    <div className="rounded-2xl border border-[#e5e7eb] bg-white p-4 shadow-[0_2px_8px_rgba(15,23,42,0.05)]" aria-hidden="true">
       <div className="mb-5 flex items-center justify-between">
         <span className="ccr-delayed-loading ccr-skeleton-shimmer block h-5 w-20 rounded-md" />
         <span className="ccr-delayed-loading ccr-skeleton-shimmer block h-4 w-12 rounded-md" />
@@ -614,7 +614,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                             <span>{t("pagination.prev")}</span>
                           </Link>
                         ) : (
-                          <span aria-hidden className="inline-flex h-11 min-w-24 shrink-0 items-center justify-center gap-1.5 rounded-full border border-[#dfe8f0] bg-white px-4 text-sm font-bold text-[#cbd5e1]">
+                          <span aria-hidden className="inline-flex h-11 min-w-24 shrink-0 items-center justify-center gap-1.5 rounded-full border border-[#e5e7eb] bg-white px-4 text-sm font-bold text-[#cbd5e1]">
                             <ChevronLeft className="h-4 w-4" />
                             <span>{t("pagination.prev")}</span>
                           </span>
@@ -628,7 +628,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                             <ChevronRight className="h-4 w-4" />
                           </Link>
                         ) : (
-                          <span aria-hidden className="inline-flex h-11 min-w-24 shrink-0 items-center justify-center gap-1.5 rounded-full border border-[#dfe8f0] bg-white px-4 text-sm font-bold text-[#cbd5e1]">
+                          <span aria-hidden className="inline-flex h-11 min-w-24 shrink-0 items-center justify-center gap-1.5 rounded-full border border-[#e5e7eb] bg-white px-4 text-sm font-bold text-[#cbd5e1]">
                             <span>{t("pagination.next")}</span>
                             <ChevronRight className="h-4 w-4" />
                           </span>

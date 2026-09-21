@@ -416,7 +416,7 @@ export function ProposalsTab({ categoryId }: ProposalsTabProps) {
                   </button>
 
                   {isExpanded && (
-                    <div className="rounded-b-2xl border-t border-[#f3f4f6] bg-gradient-to-b from-[#fcfdff] to-white">
+                    <div className="rounded-b-2xl border-t border-[#eef2f6] bg-gradient-to-b from-[#fcfdff] to-white">
                       <div className="flex flex-col gap-4 p-4 sm:p-5">
                         {project.description && (
                           <div className="flex items-start gap-2.5">
@@ -518,7 +518,7 @@ export function ProposalsTab({ categoryId }: ProposalsTabProps) {
                     </div>
                   </button>
                   {isOpen && (
-                    <div className="flex flex-col gap-3.5 rounded-b-2xl border-t border-[#f3f4f6] bg-gradient-to-b from-[#fcfdff] to-white px-4 pb-5 pt-4 sm:px-5">
+                    <div className="flex flex-col gap-3.5 rounded-b-2xl border-t border-[#eef2f6] bg-gradient-to-b from-[#fcfdff] to-white px-4 pb-5 pt-4 sm:px-5">
                       <div className="flex items-start gap-2.5">
                         <FileText className="mt-0.5 h-4 w-4 shrink-0 text-[#68778d]" />
                         <div className="min-w-0">

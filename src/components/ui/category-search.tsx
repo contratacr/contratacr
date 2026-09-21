@@ -219,7 +219,7 @@ export function CategorySearch({
             </div>
           )}
           {/* Search input */}
-          <div className="p-2 border-b border-[#f3f4f6]">
+          <div className="p-2 border-b border-[#eef2f6]">
             <div className="relative flex items-center">
               <Search className="absolute left-3 h-4 w-4 text-[#68778d] pointer-events-none" />
               <input

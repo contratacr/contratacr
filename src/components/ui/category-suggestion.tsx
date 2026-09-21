@@ -127,7 +127,7 @@ export function CategorySuggestionBox({
           ? ""
           : prominent
             ? (suggesting ? "w-full sm:w-auto sm:min-w-[360px]" : "")
-            : "border-t border-[#f3f4f6] px-3 py-2.5",
+            : "border-t border-[#eef2f6] px-3 py-2.5",
         className,
       )}
     >

@@ -301,7 +301,7 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
           )}
 
           {error && !published && errorField !== "category" && (
-            <div className="shrink-0 border-t border-[#f3f4f6] bg-white px-5 pt-3 sm:px-6">
+            <div className="shrink-0 border-t border-[#eef2f6] bg-white px-5 pt-3 sm:px-6">
               <div role="alert" aria-live="assertive" data-testid="project-form-error" className="flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 px-3 py-2.5 text-sm font-semibold leading-5 text-red-700">
                 <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
                 <span>{error}</span>

@@ -86,7 +86,7 @@ export function AdminContactos() {
             { rotulo: "Visitas a fichas", valor: datos.totalVistas },
             { rotulo: "Tasa de contacto", valor: `${datos.tasa}%` },
           ].map((dato) => (
-            <div key={dato.rotulo} className="rounded-2xl border border-[#e2e8f0] bg-white p-4">
+            <div key={dato.rotulo} className="rounded-2xl border border-[#e5e7eb] bg-white p-4">
               <p className="text-[11px] font-bold uppercase tracking-wide text-[#94a3b8]">{dato.rotulo}</p>
               <p className="mt-1 text-2xl font-extrabold text-[#0f172a]">{dato.valor}</p>
             </div>
@@ -95,13 +95,13 @@ export function AdminContactos() {
       )}
 
       {datos && datos.profesionales.length === 0 ? (
-        <p className="rounded-2xl border border-[#e2e8f0] bg-white px-4 py-8 text-center text-sm text-[#64748b]">
+        <p className="rounded-2xl border border-[#e5e7eb] bg-white px-4 py-8 text-center text-sm text-[#64748b]">
           Nadie contactó a un profesional en este período.
         </p>
       ) : (
         <ul className="space-y-2">
           {datos?.profesionales.map((pro) => (
-            <li key={pro.id} className="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-2xl border border-[#e2e8f0] bg-white px-4 py-3">
+            <li key={pro.id} className="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-2xl border border-[#e5e7eb] bg-white px-4 py-3">
               <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#eff6ff] text-[13px] font-extrabold text-[#1d4ed8]">
                 {pro.contactos}
               </span>

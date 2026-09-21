@@ -763,7 +763,7 @@ export function ClientActivity({ section, onCount }: { section: ClientActivitySe
                         </div>
 
                         {expandedBooking === b.id && (
-                          <div className="rounded-b-2xl border-t border-[#f3f4f6] bg-gradient-to-b from-[#fcfdff] to-white px-4 pb-5 pt-4 sm:px-5 flex flex-col gap-3.5">
+                          <div className="rounded-b-2xl border-t border-[#eef2f6] bg-gradient-to-b from-[#fcfdff] to-white px-4 pb-5 pt-4 sm:px-5 flex flex-col gap-3.5">
                             {/* The header already identifies the professional; expanded details stay flat. */}
                             {b.for_someone_else && (() => {
                               const beneAge = ageLabel(b.beneficiary_dob);
@@ -1072,7 +1072,7 @@ export function ClientActivity({ section, onCount }: { section: ClientActivitySe
                     </button>
 
                     {isExpanded && (
-                      <div className="rounded-b-2xl border-t border-[#f3f4f6] bg-gradient-to-b from-[#fcfdff] to-white px-4 pb-5 pt-4 sm:px-5">
+                      <div className="rounded-b-2xl border-t border-[#eef2f6] bg-gradient-to-b from-[#fcfdff] to-white px-4 pb-5 pt-4 sm:px-5">
                         <div className="flex flex-col gap-4">
                           {project.description && (
                             <div className="flex items-start gap-2.5">
@@ -1099,7 +1099,7 @@ export function ClientActivity({ section, onCount }: { section: ClientActivitySe
                             // vacía: entonces no hay sección que dibujar.
                             if (ordered.length === 0) return null;
                             return (
-                              <div className="border-t border-[#f3f4f6] pt-4">
+                              <div className="border-t border-[#eef2f6] pt-4">
                                 <p className="mb-2.5 text-[10px] font-semibold uppercase tracking-[0.06em] text-[#68778d]">{cerrado && chosenId ? t("hiredTitle") : t("repliesTitle")}</p>
                                 <div className="flex flex-col gap-3">
                                     {ordered.map((proposal) => {
@@ -1200,7 +1200,7 @@ export function ClientActivity({ section, onCount }: { section: ClientActivitySe
                             const hayMenu = isActive || project.status === "cancelled";
                             if (!hayResolver && !hayResena && !hayReabrir && !hayMenu) return null;
                             return (
-                          <div className="ccr-acciones-tarjeta flex items-start gap-2 border-t border-[#f3f4f6] pt-4 sm:justify-end">
+                          <div className="ccr-acciones-tarjeta flex items-start gap-2 border-t border-[#eef2f6] pt-4 sm:justify-end">
                             <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2 sm:flex-none sm:justify-end">
                               {isActive && (
                                 <Button size="sm" className={actionButtonClass} onClick={() => openResolve(project.id)}>{t("resolve")}</Button>
@@ -1276,13 +1276,13 @@ export function ClientActivity({ section, onCount }: { section: ClientActivitySe
                       <AvatarFallback className="bg-[#EBF5FB] text-xs font-semibold text-[#009FD9]">{getInitials(p.professionals?.profiles?.full_name ?? "?")}</AvatarFallback>
                     </Avatar>
                     <span className="min-w-0 flex-1 truncate text-sm font-semibold text-[#162543]">{p.professionals?.profiles?.full_name}</span>
-                    <span className={cn("h-4 w-4 shrink-0 rounded-full border-2", active ? "border-[#009FD9] bg-[#009FD9]" : "border-[#cbd5e1]")} aria-hidden />
+                    <span className={cn("h-4 w-4 shrink-0 rounded-full border-2", active ? "border-[#009FD9] bg-[#009FD9]" : "border-[#d7e1ea]")} aria-hidden />
                   </button>
                 );
               })}
               <button type="button" onClick={() => setResolveChoice("")} aria-pressed={resolveChoice === ""} className={cn("flex items-center gap-3 rounded-xl border px-3 py-2.5 text-left text-sm font-semibold transition-colors", resolveChoice === "" ? "border-[#009FD9] bg-[#f5fbfe] text-[#0089bb]" : "border-[#e5e7eb] bg-white text-[#374151] hover:border-[#c3d2de]")}>
                 <span className="min-w-0 flex-1">{t("resolveNobody")}</span>
-                <span className={cn("h-4 w-4 shrink-0 rounded-full border-2", resolveChoice === "" ? "border-[#009FD9] bg-[#009FD9]" : "border-[#cbd5e1]")} aria-hidden />
+                <span className={cn("h-4 w-4 shrink-0 rounded-full border-2", resolveChoice === "" ? "border-[#009FD9] bg-[#009FD9]" : "border-[#d7e1ea]")} aria-hidden />
               </button>
             </div>
           </Modal>
