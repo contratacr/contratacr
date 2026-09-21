@@ -388,7 +388,7 @@ export function MarketplaceSearch({
       {open && (
         <div className="fixed inset-0 z-[1300] bg-white text-[#162543] lg:hidden">
           <div className="space-y-3 px-4 py-4">
-            <div className="flex h-13 min-w-0 items-center rounded-xl border border-[#d8e4ec] bg-white px-3 shadow-[0_8px_24px_-20px_rgba(15,23,42,0.7)]">
+            <div className="flex h-13 min-w-0 items-center rounded-[10px] border border-[#e3ebf2] bg-white px-3">
               <button type="button" onClick={closeMobileSearch} aria-label={copy.back} className="grid h-10 w-10 shrink-0 place-items-center text-[#1A2744]">
                 <ChevronRight className="h-6 w-6 rotate-180" />
               </button>

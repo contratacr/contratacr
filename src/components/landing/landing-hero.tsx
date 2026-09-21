@@ -785,7 +785,7 @@ export function LandingHero() {
           {/* Mobile stacked layout — service, then location, then Buscar */}
           <div className="sm:hidden flex flex-col gap-2">
             <div ref={svcMobileRef} className="relative">
-              <div className="flex h-12 items-center overflow-hidden rounded-[10px] border border-[#e3ebf2] bg-white pl-4 pr-3 shadow-[0_4px_24px_rgba(0,0,0,0.10)] transition-colors focus-within:border-[#009FD9]">
+              <div className="flex h-12 items-center overflow-hidden rounded-[10px] border border-[#e3ebf2] bg-white pl-4 pr-3 transition-colors focus-within:border-[#009FD9]">
                 <Search className="mr-3 h-5 w-5 shrink-0 text-[#8f9aaa]" />
                 <input
                   type="text"
@@ -806,7 +806,7 @@ export function LandingHero() {
               <SuggestionsDropdown anchorRef={svcMobileRef} open={openSug} suggestions={suggestions} activeIdx={activeIdx} onPick={(s) => selectSuggestion(s, true)} />
             </div>
             <div ref={locMobileRef} className="relative">
-              <div className="flex h-12 items-center overflow-hidden rounded-[10px] border border-[#e3ebf2] bg-white pl-4 pr-3 shadow-[0_4px_24px_rgba(0,0,0,0.10)] transition-colors focus-within:border-[#009FD9]">
+              <div className="flex h-12 items-center overflow-hidden rounded-[10px] border border-[#e3ebf2] bg-white pl-4 pr-3 transition-colors focus-within:border-[#009FD9]">
                 <MapPin className="mr-3 h-5 w-5 shrink-0 text-[#8f9aaa]" />
                 <input
                   type="text"

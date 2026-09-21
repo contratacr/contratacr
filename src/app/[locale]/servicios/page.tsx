@@ -205,7 +205,7 @@ export default function ServiciosPage() {
             )}
 
             <form onSubmit={submitSearch} data-testid="services-page-mobile-search" className="px-4 pb-4">
-              <div className="flex h-12 w-full items-center gap-3 rounded-xl bg-white px-3 shadow-[0_4px_14px_rgba(15,23,42,0.08)] ring-1 ring-[#dfe5eb] transition focus-within:ring-2 focus-within:ring-[#009FD9]/25">
+              <div className="flex h-11 w-full items-center gap-3 rounded-[10px] border border-[#e3ebf2] bg-white px-4 transition-colors focus-within:border-[#009FD9]">
                 <Search className="h-5 w-5 shrink-0 text-[#162543]" />
                 <input
                   type="text"
@@ -333,7 +333,7 @@ export default function ServiciosPage() {
               <form
                 onSubmit={submitSearch}
                 data-testid="services-page-search"
-                className="flex h-12 w-full items-center gap-3 rounded-xl border border-[#dfe5eb] bg-white px-4 text-left shadow-[0_4px_14px_rgba(15,23,42,0.08)] transition focus-within:border-[#b9d9e8] focus-within:ring-2 focus-within:ring-[#009FD9]/20"
+                className="flex h-11 w-full items-center gap-3 rounded-[10px] border border-[#e3ebf2] bg-white px-4 text-left transition-colors focus-within:border-[#009FD9]"
               >
                 <Search className="h-5 w-5 shrink-0 text-[#8a94a6]" />
                 <input
