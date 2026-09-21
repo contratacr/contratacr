@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import {
+  avisarCambioDeCatalogo,
+  catalogoDeArranque,
   getCustomCategories,
   setCategoryFeatureOverrides,
   setCustomCategories,
@@ -19,7 +21,7 @@ let inFlight: Promise<void> | null = null;
 let lastRefreshAt = 0;
 let lastPayloadKey = "";
 
-function applyCatalog(raw: string): boolean {
+function applyCatalog(raw: string, silencioso = false): boolean {
   let d: { categoryFlags?: unknown; categories?: unknown; groups?: unknown };
   try {
     d = JSON.parse(raw);
@@ -27,12 +29,37 @@ function applyCatalog(raw: string): boolean {
     return false;
   }
   if (!d || typeof d !== "object") return false;
-  if (Array.isArray(d.categoryFlags)) setCategoryFeatureOverrides(d.categoryFlags);
-  if (Array.isArray(d.categories)) setCustomCategories(d.categories, Array.isArray(d.groups) ? d.groups : []);
+  if (Array.isArray(d.categoryFlags)) setCategoryFeatureOverrides(d.categoryFlags, silencioso);
+  if (Array.isArray(d.categories)) setCustomCategories(d.categories, Array.isArray(d.groups) ? d.groups : [], silencioso);
   return true;
 }
 
+/**
+ * Instala, DURANTE EL PRIMER RENDER, el catálogo que mandó el servidor.
+ *
+ * Corre igual en el pre-renderizado del servidor y en la hidratación, así que
+ * los dos pintan el MISMO catálogo —el completo— y después no cambia nada. Va
+ * en silencio porque avisar a los suscriptores a mitad de un render sería
+ * actualizar otros componentes desde dentro de este. Devuelve si de verdad
+ * cambió algo, para que quien llama avise ya fuera del render.
+ *
+ * El texto es idéntico al que devuelve /api/categories/approved, así que la
+ * revalidación que viene después lo reconoce por igualdad y no reinstala.
+ */
+export function instalarCatalogoDelServidor(raw: string | null | undefined): boolean {
+  if (!raw || raw === lastPayloadKey) return false;
+  if (!applyCatalog(raw, true)) return false;
+  lastPayloadKey = raw;
+  if (typeof window !== "undefined") storeSnapshot(raw);
+  return true;
+}
+
+export { avisarCambioDeCatalogo };
+
 function restoreSnapshot() {
+  // Lo que vino con la página manda sobre la copia guardada: es más nuevo, y
+  // ya está instalado desde antes de hidratar.
+  if (!lastPayloadKey) lastPayloadKey = catalogoDeArranque() ?? "";
   if (lastPayloadKey) return;
   try {
     const raw = window.sessionStorage.getItem(SNAPSHOT_KEY);

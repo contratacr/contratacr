@@ -3,6 +3,7 @@ import { cookies, headers } from "next/headers";
 import { Inter } from "next/font/google";
 import { NativeDebugLogger } from "@/components/mobile/native-debug-logger";
 import { NATIVE_ONBOARDING_COMPLETED_KEY } from "@/lib/mobile-onboarding";
+import { catalogoParaElCliente } from "@/lib/data/server-category-catalog";
 import "./globals.css";
 
 const inter = Inter({
@@ -23,6 +24,9 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
   // versión en inglés marcada como española.
   const idioma = (await headers()).get("x-ccr-locale") === "en" ? "en" : "es";
   const clasesNativas = esApp ? " ccr-native-app ccr-native-bottom-nav-visible" : "";
+  // Con tope de 3 s y caché de 20 s por instancia: casi siempre es gratis, y si
+  // la base tarda, la página sale igual (sin catálogo, como antes).
+  const catalogoEnTexto = await catalogoParaElCliente().catch(() => null);
   return (
     <html
       lang={idioma}
@@ -254,6 +258,29 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
       {/* El script de abajo agrega clases al body antes de hidratar (por ruta,
           p. ej. en /buscar); React no las corrige, solo avisaría en consola. */}
       <body className={`min-h-full flex flex-col bg-white${clasesNativas}`} suppressHydrationWarning>
+        {/* EL CATÁLOGO DE SERVICIOS VIAJA CON LA PÁGINA.
+            Los nombres de los servicios viven en la base (se renombran y se
+            agregan desde el panel de administración). El servidor pinta con
+            ese catálogo, pero el navegador hidrataba SIN él y lo pedía después:
+            en el primer render ponía el nombre fijo o uno armado del
+            identificador —«Nutrición y dietética» donde el servidor dijo
+            «Nutrición», «Radios de comunicacion» sin tilde—. Textos distintos =
+            «Hydration failed»: React tira TODA la pantalla del servidor y la
+            repinta. Pasaba en cada carga de la portada y de /buscar, las dos
+            pantallas más visitadas, con sesión y sin ella, en teléfono y en
+            computadora: el parpadeo de pantalla completa.
+            Va al principio del <body> para que exista antes de que corra
+            cualquier script: el registro lo lee al evaluarse el módulo, antes
+            de hidratar (ver el final de lib/data/categories.ts). Son ~10 KB
+            comprimidos. Se escapa «<» para que ningún nombre pueda cerrar la
+            etiqueta. */}
+        {catalogoEnTexto && (
+          <script
+            id="ccr-catalogo"
+            type="application/json"
+            dangerouslySetInnerHTML={{ __html: catalogoEnTexto.replace(/</g, "\\u003c") }}
+          />
+        )}
         {/* Corre apenas el <body> existe, antes del primer cuadro: siembra las
             clases del armazón nativo que hasta ahora ponía la hidratación. Sin
             esto, la portada pintaba una vez con acomodo web y un instante

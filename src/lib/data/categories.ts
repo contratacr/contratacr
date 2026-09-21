@@ -496,19 +496,29 @@ let CUSTOM_CATEGORY_GROUPS: { id: string; label: string; labelEn?: string; iconK
 const customListeners = new Set<() => void>();
 
 export function setCategoryFeatureOverrides(
-  list: { id: string; esSalud?: boolean; supportsVideoconsulta?: boolean; isHidden?: boolean }[]
+  list: { id: string; esSalud?: boolean; supportsVideoconsulta?: boolean; isHidden?: boolean }[],
+  silencioso = false,
 ): void {
   CATEGORY_FEATURE_OVERRIDES = new Map(
     list
       .filter((c) => c && c.id)
       .map((c) => [c.id, { esSalud: c.esSalud, supportsVideoconsulta: c.supportsVideoconsulta, isHidden: c.isHidden }])
   );
+  if (!silencioso) avisarCambioDeCatalogo();
+}
+
+/** Avisa a quien esté suscrito al registro. Se llama sola tras cada cambio, y a
+ *  mano después de una instalación silenciosa, ya fuera del render. */
+export function avisarCambioDeCatalogo(): void {
   customListeners.forEach((fn) => { try { fn(); } catch { /* ignore */ } });
 }
 
 export function setCustomCategories(
   list: { id: string; label: string; labelEn?: string; groupId?: string; keywords?: string[]; esSalud?: boolean; supportsVideoconsulta?: boolean; isHidden?: boolean }[],
-  groups: { id: string; label: string; labelEn?: string; iconKey?: string; sortOrder?: number; isHidden?: boolean }[] = []
+  groups: { id: string; label: string; labelEn?: string; iconKey?: string; sortOrder?: number; isHidden?: boolean }[] = [],
+  /** Sin avisar a los suscriptores: para instalar el catálogo DURANTE un render
+   *  (avisar ahí sería actualizar otros componentes a mitad de un render). */
+  silencioso = false,
 ): void {
   const normalizedGroups = new Map<string, { id: string; label: string; labelEn?: string; iconKey?: string; sortOrder?: number; isHidden?: boolean }>();
   for (const group of groups) {
@@ -562,7 +572,7 @@ export function setCustomCategories(
     });
   }
   CATEGORY_FEATURE_OVERRIDES = mergedFeatureOverrides;
-  customListeners.forEach((fn) => { try { fn(); } catch { /* ignore */ } });
+  if (!silencioso) avisarCambioDeCatalogo();
 }
 
 export function getCustomCategories(): (CategoryItem & { groupId: string; groupLabel: string; labelEn?: string })[] {
@@ -1829,3 +1839,39 @@ export const CATEGORIES = ALL_CATEGORIES.map(({ id, keywords }) => ({
   icon: "",
   keywords,
 }));
+
+/* ── ARRANQUE EN EL NAVEGADOR ────────────────────────────────────────────────
+   El documento trae el catálogo operativo en <script id="ccr-catalogo"> (lo pone
+   src/app/layout.tsx). Se instala AQUÍ, al evaluarse el módulo, y no en un
+   efecto: un efecto corre DESPUÉS del primer render, y ese primer render —la
+   hidratación— tiene que producir exactamente los mismos textos que pintó el
+   servidor. Este módulo se evalúa antes de que ningún componente pueda pedirle
+   un nombre, así que para entonces el registro ya está lleno.
+   En silencio: todavía no hay nadie suscrito, y no hay a quién avisar. */
+let catalogoDeArranqueEnTexto: string | null = null;
+if (typeof document !== "undefined") {
+  try {
+    const crudo = document.getElementById("ccr-catalogo")?.textContent;
+    if (crudo) {
+      const d = JSON.parse(crudo) as { categoryFlags?: unknown; categories?: unknown; groups?: unknown };
+      if (Array.isArray(d.categoryFlags)) setCategoryFeatureOverrides(d.categoryFlags as Parameters<typeof setCategoryFeatureOverrides>[0], true);
+      if (Array.isArray(d.categories)) {
+        setCustomCategories(
+          d.categories as Parameters<typeof setCustomCategories>[0],
+          (Array.isArray(d.groups) ? d.groups : []) as Parameters<typeof setCustomCategories>[1],
+          true,
+        );
+      }
+      // Vuelto a texto, es idéntico al cuerpo de /api/categories/approved: la
+      // revalidación posterior lo reconoce por igualdad y no reinstala nada.
+      catalogoDeArranqueEnTexto = JSON.stringify(d);
+    }
+  } catch {
+    // Sin catálogo de arranque todo sigue como antes: lo completa la red.
+  }
+}
+
+/** El catálogo con el que arrancó esta página, en texto (o null). */
+export function catalogoDeArranque(): string | null {
+  return catalogoDeArranqueEnTexto;
+}
