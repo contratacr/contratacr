@@ -182,10 +182,10 @@ test.describe("@seeded marketplace editors through the real screens", () => {
     await openItemActions(page, card);
     await chooseItemAction(card, /^Pausar$/);
     // Con pocas publicaciones no se dibujan etapas y la lista sale entera; en
-    // cuanto hay suficientes, una pausada se va a «Cerradas». La cuenta de
+    // cuanto hay suficientes, una pausada se va a «Inactivas». La cuenta de
     // pruebas acumula publicaciones entre corridas, así que la prueba cambia de
     // pestaña cuando esa pestaña existe.
-    const cerradas = page.getByRole("tab", { name: /Cerradas/ }).or(page.getByRole("button", { name: /^Cerradas/ })).filter({ visible: true }).first();
+    const cerradas = page.getByRole("tab", { name: /Inactivas/ }).or(page.getByRole("button", { name: /^Inactivas/ })).filter({ visible: true }).first();
     if (await cerradas.count()) await cerradas.click();
     await expectVisibleText(card, /Pausada/);
     await openItemActions(page, card);
@@ -242,8 +242,8 @@ test.describe("@seeded marketplace editors through the real screens", () => {
     await chooseItemAction(card, /^Cerrar vacante$/);
     // Misma regla que en Promociones: cuando hay etapas, lo cerrado se va a su
     // pestaña, y el estado solo se escribe en la tarjeta cuando está ahí.
-    // Empleos es masculino: la pestaña dice «Cerrados» (Promociones, «Cerradas»).
-    const cerradasEmpleos = page.getByRole("tab", { name: /Cerrados/ }).or(page.getByRole("button", { name: /^Cerrados/ })).filter({ visible: true }).first();
+    // Empleos es masculino: la pestaña dice «Inactivos» (Promociones, «Inactivas»).
+    const cerradasEmpleos = page.getByRole("tab", { name: /Inactivos/ }).or(page.getByRole("button", { name: /^Inactivos/ })).filter({ visible: true }).first();
     if (await cerradasEmpleos.count()) await cerradasEmpleos.click();
     // La tarjeta dice la idea completa, no la etiqueta suelta: «Cerrado» al
     // lado del título de un empleo no dice qué está cerrado.

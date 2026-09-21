@@ -2726,7 +2726,8 @@
     "chooseDone": "You chose {name}",
     "chooseDoneSub": "They can now send you the quote and coordinate. The request closes when you mark it resolved.",
     "chosenPro": "Chosen",
-    "chooseShort": "Choose"
+    "chooseShort": "Choose",
+    "viewProject": "View project"
   },
   "clientPage": {
     "greeting": "Hi, {name} 👋",
@@ -3779,8 +3780,8 @@
     "nuevas": "New",
     "solicitudes_activas": "Active",
     "nuevas_solicitudes": "New",
-    "cerradas": "Closed",
-    "cerrados": "Closed",
+    "cerradas": "Inactive",
+    "cerrados": "Inactive",
     "masServicios": "more",
     "menosServicios": "Show less"
   },

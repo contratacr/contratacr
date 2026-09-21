@@ -2726,7 +2726,8 @@
     "chooseDone": "Elegiste a {name}",
     "chooseDoneSub": "Ya puede enviarte la cotización y coordinar. La solicitud se cierra cuando marques que quedó resuelta.",
     "chosenPro": "Elegido",
-    "chooseShort": "Elegir"
+    "chooseShort": "Elegir",
+    "viewProject": "Ver proyecto"
   },
   "clientPage": {
     "greeting": "Hola, {name} 👋",
@@ -3779,8 +3780,8 @@
     "nuevas": "Nuevas",
     "solicitudes_activas": "Activas",
     "nuevas_solicitudes": "Nuevas",
-    "cerradas": "Cerradas",
-    "cerrados": "Cerrados",
+    "cerradas": "Inactivas",
+    "cerrados": "Inactivos",
     "masServicios": "más",
     "menosServicios": "Ver menos"
   },

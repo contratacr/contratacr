@@ -1203,6 +1203,18 @@ export function ClientActivity({ section, onCount }: { section: ClientActivitySe
                             return (
                           <div className="ccr-acciones-tarjeta flex items-start gap-2 border-t border-[#eef2f6] pt-4 sm:justify-end">
                             <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2 sm:flex-none sm:justify-end">
+                              {/* VER EL PROYECTO, COMO EN EMPLEOS Y PROMOCIONES.
+                                  Las tres listas del panel son lo mismo —algo
+                                  que publiqué— y las otras dos abren su ficha
+                                  desde la tarjeta; esta no tenía por dónde. Va
+                                  primero, que es el orden de las otras dos:
+                                  primero mirar, después actuar. */}
+                              <Link
+                                href={`/proyectos/${project.id}?from=panel`}
+                                className={cn(actionButtonClass, "inline-flex items-center justify-center border border-[#d7e1ea] bg-white text-[#162543] transition hover:border-[#b9c8d6] hover:bg-[#f6f9fb]")}
+                              >
+                                {t("viewProject")}
+                              </Link>
                               {isActive && (
                                 <Button size="sm" className={actionButtonClass} onClick={() => openResolve(project.id)}>{t("resolve")}</Button>
                               )}
