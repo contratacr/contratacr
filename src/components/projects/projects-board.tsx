@@ -268,15 +268,11 @@ export function ProjectsBoard({
   proyectos,
   currentUserId,
   detalle = null,
-  llegoDeFuera = true,
   misProyectos = [],
 }: {
   proyectos: ProyectoPublico[];
   currentUserId: string | null;
   detalle?: ProyectoPublico | null;
-  /** Se llegó de fuera (Google, WhatsApp): ahí sí hace falta una puerta hacia
-   *  adentro, porque la flecha del navegador saca del sitio. */
-  llegoDeFuera?: boolean;
   /** Los que publicó quien mira: su ficha no ofrece escribirse ni guardarse. */
   misProyectos?: string[];
 }) {
@@ -527,12 +523,8 @@ export function ProjectsBoard({
           )}>
             {/* La salida, arriba y a la izquierda, con la misma forma que en
                 Empleos y Promociones. */}
-            {detalle && llegoDeFuera && (
-              <Link href="/proyectos" className="mb-4 hidden items-center gap-2 text-sm font-bold text-[#162543] hover:text-[#007fae] lg:inline-flex">
-                <ArrowLeft className="h-4 w-4" />
-                {copy.verTodos}
-              </Link>
-            )}
+            {/* En computadora no hay flecha de volver: la del navegador ya
+                está y hace lo mismo. Ver la nota de la ficha de una promoción. */}
             <div className={cn(
               "ccr-panel-tablero sm:overflow-hidden sm:rounded-[22px] sm:border sm:border-[#e5e7eb] sm:bg-white sm:shadow-[0_12px_34px_-28px_rgba(15,23,42,0.55)]",
               detalle

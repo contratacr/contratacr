@@ -70,7 +70,10 @@ export default async function JobDetailRedirect({ params, searchParams }: Props)
       {/* Las mismas medidas que la ficha de un empleo vivo: 6xl, la columna de
           760 centrada. La lápida no es otra pantalla, es la misma sin acciones. */}
       <div className="mx-auto w-full max-w-6xl px-4 pb-10 pt-6 sm:px-6 sm:pt-8">
-        <Link href="/empleos" className="mb-3 inline-flex h-10 items-center gap-2 rounded-lg px-2 text-sm font-extrabold text-[#162543] transition hover:bg-[#eaf6fc]">
+        {/* EN COMPUTADORA NO HAY FLECHA DE VOLVER, NUNCA: la del navegador ya
+            está a la izquierda de la dirección y hace exactamente eso. En el
+            teléfono sí, que ahí no hay otra. */}
+        <Link href="/empleos" className="mb-3 inline-flex h-10 items-center gap-2 rounded-lg px-2 text-sm font-extrabold text-[#162543] transition hover:bg-[#eaf6fc] lg:hidden">
           <ArrowLeft className="h-4 w-4 stroke-[2.4]" />
           {t("backAll")}
         </Link>

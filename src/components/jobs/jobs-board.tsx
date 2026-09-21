@@ -311,7 +311,6 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
   const tSalida = useTranslations("marketplaceReturn");
   const detailBackHref = safeMarketplaceReturnHref(returnTo, "/empleos");
   const detailBackLabel = tSalida(marketplaceReturnLabelKey(detailBackHref, "/empleos", !returnTo));
-  const detailLlegoDeFuera = !returnTo;
 
   return <main className="min-h-[calc(100vh-72px)] overflow-x-clip bg-white pb-0 text-[#162543] sm:bg-[#fafafa] sm:pb-16 lg:flex lg:h-[calc(100dvh-64px)] lg:min-h-0 lg:flex-col lg:overflow-hidden lg:bg-white lg:pb-0">
     {avisoNode}
@@ -420,12 +419,8 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
             de atrás la pone el navegador, así que este enlace solo sale cuando
             el navegador NO puede ayudar —se llegó de fuera y su flecha saca del
             sitio—, y entonces dice «Ver todos los empleos», no «Volver». */}
-        {detailLlegoDeFuera && (
-          <Link href={detailBackHref} className="mb-3 inline-flex h-10 items-center gap-2 rounded-lg px-2 text-sm font-extrabold text-[#162543] transition hover:bg-[#eaf6fc]">
-            <ArrowLeft className="h-4 w-4 stroke-[2.4]" />
-            {detailBackLabel}
-          </Link>
-        )}
+        {/* En computadora no hay flecha de volver: la del navegador ya
+            está y hace lo mismo. Ver la nota de la ficha de una promoción. */}
         <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,760px)_320px] lg:justify-center">
           <div className="overflow-hidden rounded-lg border border-[#e5e7eb] bg-white">
             <JobPreview job={selected} isOwner={selected.employer_id === currentProfessionalId} userId={currentUserId} onEdit={() => setEditingJob(selected)} hideActions />

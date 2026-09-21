@@ -1101,11 +1101,14 @@ export function ClientActivity({ section, onCount }: { section: ClientActivitySe
                               </Link>
                               {/* Editar, aquí mismo: en Empleos y Promociones el
                                   panel edita sin salir, y un proyecto obligaba a
-                                  cancelar y volver a publicar. */}
+                                  cancelar y volver a publicar. En AZUL LLENO,
+                                  como en las otras dos: «Ver» solo mira, el
+                                  «···» guarda lo de cambiar de estado, y editar
+                                  es a lo que se viene al abrir algo propio. */}
                               <button
                                 type="button"
                                 onClick={() => setEditandoProyecto(project)}
-                                className={cn(actionButtonClass, "inline-flex items-center justify-center border border-[#d7e1ea] bg-white text-[#162543] transition hover:border-[#b9c8d6] hover:bg-[#f6f9fb]")}
+                                className={cn(actionButtonClass, "inline-flex items-center justify-center bg-[#009FD9] text-white transition-colors hover:bg-[#0089bb]")}
                               >
                                 {t("editProject")}
                               </button>

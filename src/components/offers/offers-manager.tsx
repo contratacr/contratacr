@@ -250,15 +250,14 @@ export function OffersManager({ initialOffers, embedded = false, backHref = "/da
                 {isOpen && (
                   <div className="border-t border-[#e5e7eb] px-4 pb-5 pt-3 sm:px-5">
                     {offer.description && <p className="mb-4 whitespace-pre-line break-words text-sm leading-6 text-[#52627a] [overflow-wrap:anywhere]">{offer.description}</p>}
-                                        {/* EDITAR NO ES LA ACCIÓN PRINCIPAL DE UNA FILA DE GESTIÓN:
-                        en turquesa lleno gritaba en cada renglón y competía con
-                        «Publicar», que sí lo es. Va en contorno, igual que
-                        «Ver», y así la fila es la misma en Empleos, Promociones
-                        y Proyectos. El color queda para lo que de verdad manda. */}
+                                        {/* EDITAR ES LA ACCIÓN DE ESTA FILA, y va en azul lleno:
+                        «Ver» solo mira, el «···» guarda lo de cambiar de estado,
+                        y editar es a lo que se viene cuando se abre una
+                        publicación propia. La misma fila en las tres secciones. */}
                     <div data-offer-actions={offer.id} className="ccr-acciones-tarjeta relative grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_40px] gap-2">
                       <Link href={`/ofertas/${offer.id}?from=panel`} onClick={openInNewTabOnDesktop} className="inline-flex h-10 w-full items-center justify-center rounded-full border border-[#d7e1ea] px-3 text-xs font-bold text-[#162543]">{copy.view}</Link>
-                      <button type="button" onClick={() => setEditingOffer(offer)} className="hidden h-10 w-full items-center justify-center rounded-full border border-[#d7e1ea] px-3 text-xs font-bold text-[#162543] transition hover:border-[#b9c8d6] hover:bg-[#f6f9fb] lg:inline-flex">{copy.edit}</button>
-                      <Link href={`/ofertas/${offer.id}/editar?from=panel`} className="inline-flex h-10 w-full items-center justify-center rounded-full border border-[#d7e1ea] px-3 text-xs font-bold text-[#162543] transition hover:border-[#b9c8d6] hover:bg-[#f6f9fb] lg:hidden">{copy.edit}</Link>
+                      <button type="button" onClick={() => setEditingOffer(offer)} className="hidden h-10 w-full items-center justify-center rounded-full bg-[#009FD9] px-3 text-xs font-bold text-white transition-colors hover:bg-[#0089bb] lg:inline-flex">{copy.edit}</button>
+                      <Link href={`/ofertas/${offer.id}/editar?from=panel`} className="inline-flex h-10 w-full items-center justify-center rounded-full bg-[#009FD9] px-3 text-xs font-bold text-white transition-colors hover:bg-[#0089bb] lg:hidden">{copy.edit}</Link>
                       <div className="relative">
                         <button type="button" onClick={() => setActionsOpen((current) => current === offer.id ? null : offer.id)} aria-label={copy.more} aria-haspopup="menu" aria-expanded={actionsOpen === offer.id} className="grid h-10 w-10 place-items-center rounded-full border border-[#d7e1ea] text-[#718096] transition hover:border-[#b9c8d6] hover:bg-[#f6f9fb] hover:text-[#162543]"><MoreHorizontal className="h-5 w-5" /></button>
                         {actionsOpen === offer.id && (

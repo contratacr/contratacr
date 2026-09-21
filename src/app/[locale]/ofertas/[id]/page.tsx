@@ -1,5 +1,4 @@
 import { notFound } from "next/navigation";
-import { getTranslations } from "next-intl/server";
 import { ArrowLeft, ChevronRight } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { OfferImageGallery } from "@/components/offers/offer-image-gallery";
@@ -27,7 +26,7 @@ import { recordServerInteraction } from "@/lib/analytics/server-events";
 import { repairVisibleText } from "@/lib/text/repair-visible-text";
 import { crTodayISO } from "@/lib/time-cr";
 import { RecordRecentVisit } from "@/components/mobile/record-recent-visit";
-import { marketplaceReturnLabelKey, safeMarketplaceReturnHref } from "@/lib/navigation/marketplace-return";
+import { safeMarketplaceReturnHref } from "@/lib/navigation/marketplace-return";
 import { CABECERA_BOTON, CABECERA_FILA_CENTRADA, CABECERA_GLIFO, CABECERA_TITULO } from "@/components/layout/cabecera";
 import { cn } from "@/lib/utils";
 
@@ -99,9 +98,6 @@ export default async function OfferDetailPage({ params, searchParams }: { params
   const dateLocale = idioma === "en" ? "en-US" : "es-CR";
   const from = (await searchParams)?.from;
   const backHref = safeMarketplaceReturnHref(from, "/ofertas");
-  const tSalida = await getTranslations("marketplaceReturn");
-  const backLabel = tSalida(marketplaceReturnLabelKey(backHref, "/ofertas", !from));
-  const llegoDeFuera = !from;
   const supabase = await createClient();
   const user = await safeGetUser(supabase);
   // Las columnas de contacto no se leen aquí: `contact_email` está negado por
@@ -248,14 +244,11 @@ export default async function OfferDetailPage({ params, searchParams }: { params
           En el teléfono no cambia: ahí la salida es la flecha de la cabecera. */}
       {/* Sin dibujar, no escondido: un «Volver al panel» oculto por CSS seguía
           en el documento, para los lectores de pantalla y para Google. */}
-      {llegoDeFuera && (
-        <div className="mx-auto hidden max-w-6xl px-4 pt-8 sm:px-6 lg:block">
-          <Link href={backHref} className="inline-flex h-10 items-center gap-2 rounded-lg px-2 text-sm font-extrabold text-[#162543] transition hover:bg-[#eaf6fc]">
-            <ArrowLeft className="h-4 w-4 stroke-[2.4]" />
-            <span>{backLabel}</span>
-          </Link>
-        </div>
-      )}
+      {/* EN COMPUTADORA NO HAY FLECHA DE VOLVER, NUNCA. La del navegador ya
+          está, a la izquierda de la dirección, y hace exactamente eso; una
+          segunda flecha dentro de la página duplica el camino y obliga a
+          adivinar si hacen lo mismo. En el teléfono la salida sigue siendo la
+          flecha de la cabecera, que ahí sí es la única que hay. */}
       <div className="mx-auto grid max-w-6xl gap-5 px-0 py-0 sm:px-6 sm:py-8 lg:grid-cols-[minmax(0,760px)_320px] lg:justify-center lg:pt-3">
         <article className="overflow-hidden bg-white lg:rounded-lg lg:border lg:border-[#e5e7eb]">
           <div className="relative bg-white p-0 sm:p-3">
