@@ -1,7 +1,6 @@
 "use client";
 
 import { conFiltroDeFecha } from "@/lib/marketplace/filtros-por-volumen";
-import { BotonCompartir } from "@/components/ui/boton-compartir";
 import { ProgressiveImage } from "@/components/ui/progressive-image";
 import { PanelEmptyState } from "@/components/ui/content-loading";
 import { cn } from "@/lib/utils";
@@ -860,10 +859,7 @@ function OfferPreview({
                 </p>
               )}
             </div>
-            {/* COMPARTIR JUNTO AL «···», discreto: a la vista sin abrir el
-                menú, y sin competir con las acciones de gestión. Ver la nota
-                de la ficha de un empleo. */}
-            <BotonCompartir url={enlaceOferta(offer)} titulo={offer.title} sutil className="shrink-0" />
+            {/* Compartir vive dentro del «···»: ver la nota de la ficha de un empleo. */}
             <MenuOferta
               grande
               className="-my-2.5 -mr-2 shrink-0"

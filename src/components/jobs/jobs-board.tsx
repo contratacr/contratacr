@@ -1,7 +1,6 @@
 "use client";
 
 import { conFiltroDeFecha } from "@/lib/marketplace/filtros-por-volumen";
-import { BotonCompartir } from "@/components/ui/boton-compartir";
 import { ProgressiveImage } from "@/components/ui/progressive-image";
 import { PanelEmptyState } from "@/components/ui/content-loading";
 import { cn } from "@/lib/utils";
@@ -620,23 +619,17 @@ function JobPreview({ job, isOwner, userId, onEdit, mobile = false, hideActions 
     <div className="flex items-start gap-4"><EmployerAvatar job={job} size="large" /><div className="min-w-0 flex-1">
       <div className="flex min-w-0 items-center gap-2">
         <p className="min-w-0 flex-1 truncate font-semibold text-[#52627a]">{job.employer_name}</p>
-        {/* COMPARTIR JUNTO AL «···», discreto. Antes lo puse como un tercer
-            botón grande en la fila de acciones, y eso contradecía la regla de
-            esta misma ficha —la fila de abajo es solo para lo que contacta— y
-            la del app —guardar y compartir van juntos, arriba a la derecha—:
-            al lado de «Editar» y «Administrar» parecía una tercera acción de
-            gestión, y encima repetía lo que el «···» ya ofrecía. Aquí está a
-            la vista sin abrir el menú, que era lo que faltaba, y sin competir
-            con nada. Mismo sitio y mismo peso que en el perfil. */}
-        {/* `hideActions` apaga la FILA de acciones, no la cabecera: en la ficha
-            por enlace directo esa fila vive en la columna de la derecha, y con
-            la condición de antes esta pantalla se quedaba sin compartir Y sin
-            «···» en computadora —no había forma de compartir un empleo abierto
-            desde Google—. La cabecera del teléfono trae los suyos aparte
-            (`lg:hidden` más arriba), así que aquí basta con excluir el móvil. */}
-        {!mobile && (
-          <BotonCompartir url={enlaceParaCompartir} titulo={job.title} sutil className="shrink-0" />
-        )}
+        {/* COMPARTIR VIVE DENTRO DEL «···», no al lado. Probé sacarlo como
+            botón visible y quedaba la MISMA acción dos veces a dos centímetros:
+            el botón y la opción del menú. Un «Compartir» que abriera un segundo
+            nivel para ofrecer «Copiar enlace» es la estructura de LinkedIn, que
+            la necesita porque tiene tres destinos —mensaje, publicación,
+            enlace—; aquí en computadora hay UNO, así que el menú lo dice
+            directo y se acabó.
+            La condición mira solo el móvil a propósito: `hideActions` apaga la
+            FILA de acciones, no la cabecera, y con ella puesta la ficha abierta
+            desde Google se quedaba sin «···» —sin forma de compartir— en
+            computadora. La cabecera del teléfono trae el suyo aparte. */}
         {!mobile && (
           <MenuEmpleo
             grande
