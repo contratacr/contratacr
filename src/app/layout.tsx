@@ -79,6 +79,21 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
             __html: `@media (min-width:1024px){.dashboard-section-content .ccr-empty-state{border-width:0!important;box-shadow:none!important;background:transparent!important}}`,
           }}
         />
+        {/* EL GEMELO DEL BUSCADOR DE LOS TABLEROS se esconde solo. En Empleos,
+            Promociones y Proyectos el buscador de la barra llega por un portal
+            —lo dibuja la página, la barra vive en el layout—, y un portal no
+            existe en el servidor: la barra se pintaba con un hueco y el
+            buscador aparecía ~200 ms después. Ahora el servidor pinta un gemelo
+            exacto y, cuando el hueco del portal deja de estar vacío, esta regla
+            lo vuelve invisible. Va aquí y no en clases para que no dependa de
+            ningún estado ni de ningún efecto: si hubiera un segundo render,
+            sería un segundo parpadeo. */}
+        <style
+          data-ccr-gemelo=""
+          dangerouslySetInnerHTML={{
+            __html: `#ccr-marketplace-navbar-slot:not(:empty)~[data-gemelo-buscador]{visibility:hidden!important}`,
+          }}
+        />
         <style
           data-ccr-carriles=""
           dangerouslySetInnerHTML={{

@@ -4336,5 +4336,11 @@
     "backToJobs": "Back to jobs",
     "allPromotions": "See all promotions",
     "allJobs": "See all jobs"
+  },
+  "tableroBuscador": {
+    "empleos": "Search jobs",
+    "ofertas": "Search promotions",
+    "proyectos": "Search projects",
+    "ubicacion": "Location"
   }
 }

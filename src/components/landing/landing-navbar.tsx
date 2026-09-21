@@ -754,6 +754,47 @@ export function HeaderAccountLink() {
   );
 }
 
+/**
+ * EL GEMELO DEL BUSCADOR DE LOS TABLEROS.
+ *
+ * En Empleos, Promociones y Proyectos el buscador de la barra lo dibuja la
+ * PÁGINA —es ella la que tiene el texto, los filtros y las sugerencias— y llega
+ * a la barra, que vive en el layout, por un portal. Un portal no existe en el
+ * servidor: la barra se pintaba con un hueco y el buscador aparecía ~200 ms
+ * después, en cada carga y en cada recarga de los tres tableros.
+ *
+ * Esto es la misma caja, el mismo icono y el mismo texto de ayuda, pintados
+ * desde el servidor. No es un esqueleto gris: es exactamente lo que se va a
+ * ver, así que cuando el buscador de verdad se monta encima no cambia ni un
+ * píxel. La regla que lo esconde va en el documento (data-ccr-gemelo): cuando
+ * el hueco del portal deja de estar vacío, el gemelo se vuelve invisible. Sin
+ * estado y sin efecto, para que no haya un segundo render que pueda parpadear.
+ */
+function GemeloDelBuscador({ pathname }: { pathname: string | null }) {
+  const t = useTranslations("tableroBuscador");
+  const tablero = /(^|\/)empleos(\/|$)/.test(pathname ?? "") ? "empleos"
+    : /(^|\/)proyectos(\/|$)/.test(pathname ?? "") ? "proyectos"
+      : "ofertas";
+  return (
+    <div aria-hidden data-gemelo-buscador="" className="pointer-events-none absolute inset-0 flex items-center">
+      <div className="flex h-11 w-full items-center gap-3 rounded-[10px] border border-[#e5e7eb] bg-white px-4">
+        <Search className="h-5 w-5 shrink-0 text-[#162543]" />
+        <div className="relative min-w-0 flex-[1.85]">
+          {/* Recorta, sin puntos suspensivos: así recorta un <input> su texto de
+              ayuda. Con `truncate` el gemelo decía «busca…» y el campo de
+              verdad «buscas?», 67 píxeles de diferencia al montarse. */}
+          <span className="block h-11 w-full min-w-0 overflow-hidden whitespace-nowrap pr-9 text-base font-normal leading-[2.75rem] text-gray-400">{t(tablero)}</span>
+        </div>
+        <span className="block h-6 w-px shrink-0 bg-[#dfe5eb]" />
+        <div style={{ minWidth: 120 }} className="relative flex-1">
+          <MapPin className="pointer-events-none absolute left-0 top-1/2 h-5 w-5 -translate-y-1/2 text-[#162543]" />
+          <span className="block h-10 w-full overflow-hidden whitespace-nowrap pl-8 pr-1 text-base font-normal leading-10 text-gray-400">{t("ubicacion")}</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // Sin sesión los avisos siguen visibles: llevan a la pantalla de acceso y de
 // ahí a lo que se quiso abrir, en vez de desaparecer del encabezado.
 export function HeaderNotificationsLink({ href, label }: { href: string; label: string }) {
@@ -2168,7 +2209,10 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                   // empujaba «Ofrecer mis servicios» y el idioma FUERA de la
                   // pantalla. El ancho mínimo va en `style` a propósito.
                   <div style={{ minWidth: 260 }} className="pointer-events-auto relative z-[75] mr-2 hidden h-11 flex-1 lg:block xl:mr-3">
-                    <div id="ccr-marketplace-navbar-slot" className="h-full w-full" />
+                    {/* El hueco va PRIMERO: la regla del documento esconde al
+                        hermano que le sigue cuando deja de estar vacío. */}
+                    <div id="ccr-marketplace-navbar-slot" className="relative z-[1] h-full w-full" />
+                    <GemeloDelBuscador pathname={pathname} />
                   </div>
                 ) : (
                   <>
