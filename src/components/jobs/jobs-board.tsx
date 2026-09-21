@@ -444,11 +444,6 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
               <div className="grid grid-cols-2 gap-3">
                 <button type="button" onClick={() => setEditingJob(selected)} className="col-span-2 inline-flex h-11 w-full items-center justify-center rounded-full bg-[#009fd9] px-5 text-sm font-bold text-white transition hover:bg-[#008fc3]">{copy.editJob}</button>
                 <Link href={`/dashboard/profesional?mode=offer&tab=jobs&job=${selected.id}`} className="inline-flex h-11 w-full min-w-0 items-center justify-center rounded-full border border-[#b9d9e8] px-3 text-sm font-bold text-[#007fae] transition hover:bg-[#f1f9fc]"><span className="truncate">{copy.manageShort}</span></Link>
-                {/* Compartir, con los demás. Escondido en el «···» no lo
-                    encontraba nadie, y es lo primero que uno quiere hacer con
-                    algo recién publicado. Aquí cabe porque esta columna es de
-                    acciones sobre la publicación propia, no de contacto. */}
-                <BotonCompartir url={enlaceEmpleo(selected)} titulo={selected.title} className="h-11 w-full min-w-0 whitespace-nowrap px-3 [&>svg]:hidden text-sm" />
               </div>
             ) : (
               <div className="space-y-2">
@@ -625,7 +620,24 @@ function JobPreview({ job, isOwner, userId, onEdit, mobile = false, hideActions 
     <div className="flex items-start gap-4"><EmployerAvatar job={job} size="large" /><div className="min-w-0 flex-1">
       <div className="flex min-w-0 items-center gap-2">
         <p className="min-w-0 flex-1 truncate font-semibold text-[#52627a]">{job.employer_name}</p>
-        {!hideActions && !mobile && (
+        {/* COMPARTIR JUNTO AL «···», discreto. Antes lo puse como un tercer
+            botón grande en la fila de acciones, y eso contradecía la regla de
+            esta misma ficha —la fila de abajo es solo para lo que contacta— y
+            la del app —guardar y compartir van juntos, arriba a la derecha—:
+            al lado de «Editar» y «Administrar» parecía una tercera acción de
+            gestión, y encima repetía lo que el «···» ya ofrecía. Aquí está a
+            la vista sin abrir el menú, que era lo que faltaba, y sin competir
+            con nada. Mismo sitio y mismo peso que en el perfil. */}
+        {/* `hideActions` apaga la FILA de acciones, no la cabecera: en la ficha
+            por enlace directo esa fila vive en la columna de la derecha, y con
+            la condición de antes esta pantalla se quedaba sin compartir Y sin
+            «···» en computadora —no había forma de compartir un empleo abierto
+            desde Google—. La cabecera del teléfono trae los suyos aparte
+            (`lg:hidden` más arriba), así que aquí basta con excluir el móvil. */}
+        {!mobile && (
+          <BotonCompartir url={enlaceParaCompartir} titulo={job.title} sutil className="shrink-0" />
+        )}
+        {!mobile && (
           <MenuEmpleo
             grande
             className="-my-2.5 -mr-2 shrink-0"
@@ -649,15 +661,6 @@ function JobPreview({ job, isOwner, userId, onEdit, mobile = false, hideActions 
           <>
             <button type="button" onClick={onEdit} className="inline-flex h-12 items-center justify-center rounded-full bg-[#009fd9] px-6 text-base font-semibold text-white transition hover:bg-[#008fc3]">{copy.editJob}</button>
             <Link href={`/dashboard/profesional?mode=offer&tab=jobs&job=${job.id}`} className="inline-flex h-12 items-center justify-center rounded-full border border-[#b9d9e8] px-6 text-base font-semibold text-[#007fae] transition hover:bg-[#f1f9fc]">{copy.manageJob}</Link>
-            {/* COMPARTIR, A LA VISTA. En la ficha de otro, compartir va
-                arriba en círculo y la pila de abajo queda para lo que
-                contacta. Pero esta es la ficha PROPIA: aquí no hay a quién
-                contactar y la fila entera es de acciones sobre la
-                publicación, que es justo donde compartir pertenece.
-                Escondido en el «···» no lo encontraba nadie, y es lo
-                primero que uno quiere hacer con algo que acaba de
-                publicar. En los tableros públicos se queda como está. */}
-            <BotonCompartir url={enlaceParaCompartir} titulo={job.title} className="h-12 px-6 text-base" />
           </>
         ) : (
           <JobContactActions job={job} isOwner={false} userId={userId} escritorio />

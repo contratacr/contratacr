@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { BotonCompartir } from "@/components/ui/boton-compartir";
 import { getTranslations } from "next-intl/server";
 import { ArrowLeft, ChevronRight } from "lucide-react";
 import { Link } from "@/i18n/navigation";
@@ -232,6 +233,9 @@ export default async function OfferDetailPage({ params, searchParams }: { params
                 dos fichas del mismo app se leían al revés. */}
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0 flex-1">{quienPublica}</div>
+              {/* Compartir a la vista, junto al «···». Ver la nota de la
+                  ficha de un empleo. */}
+              <BotonCompartir url={`/ofertas/${offer.id}`} titulo={offer.title} sutil className="hidden shrink-0 lg:inline-flex" />
               <MenuOferta
                 className="-mr-2 hidden shrink-0 lg:block"
                 ofertaId={offer.id}
