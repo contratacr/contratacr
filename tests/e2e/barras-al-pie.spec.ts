@@ -255,8 +255,22 @@ test.describe("@seeded la franja no tapa el final", () => {
     await gotoOK(page, `/es/profesionales/${seed.professionalSlug}`);
     for (const pestaña of [/Información|Information/, /Servicios|Services/]) {
       await page.getByRole("tab", { name: pestaña }).first().click();
-      await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
-      await page.waitForTimeout(500);
+      // Hasta abajo DE VERDAD. Bajar una sola vez justo tras el clic medía la
+      // pestaña a medio dibujar: `scrollHeight` todavía era el de antes, el
+      // navegador no tenía a dónde bajar y la prueba juzgaba la pantalla desde
+      // arriba —«Reportar perfil» caía 209 px bajo la franja sin que nada
+      // estuviera mal—. Se insiste hasta que la posición deja de moverse.
+      await page.evaluate(() => { (window as unknown as { __ultimo?: number }).__ultimo = -1; });
+      await page.waitForFunction(() => {
+        const w = window as unknown as { __ultimo?: number };
+        window.scrollTo(0, document.documentElement.scrollHeight);
+        const maximo = document.documentElement.scrollHeight - window.innerHeight;
+        const quieto = w.__ultimo === window.scrollY;
+        w.__ultimo = window.scrollY;
+        // Abajo del todo y sin moverse: la pestaña terminó de dibujarse.
+        return quieto && Math.abs(window.scrollY - Math.max(0, maximo)) < 2;
+      }, undefined, { timeout: 10_000 });
+      await page.waitForTimeout(300);
       const aire = await page.evaluate(() => {
         const barra = [...document.querySelectorAll(".ccr-barra-fija")].find((b) => (b as HTMLElement).getBoundingClientRect().height > 0) as HTMLElement | undefined;
         if (!barra) return null;
