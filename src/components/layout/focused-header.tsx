@@ -46,7 +46,9 @@ export function FocusedHeader({ title, backHref, onBack, backLabel = "Volver", s
   }
   return (
     <header
-      className={cn("sticky top-0 z-20 grid min-h-16 items-center border-b border-[#e5e7eb] bg-white px-4 py-2 text-[#162543]", soloTelefono && "lg:hidden")}
+      // `ccr-cabecera-pegada`: levanta sombra solo cuando de verdad hay algo
+      // pasando por debajo (regla en layout.tsx, igual que la franja del pie).
+      className={cn("ccr-cabecera-pegada sticky top-0 z-20 grid min-h-16 items-center border-b border-[#e5e7eb] bg-white px-4 py-2 text-[#162543]", soloTelefono && "lg:hidden")}
       // Las columnas van en `style`, no en una clase arbitraria de Tailwind: en
       // desarrollo una clase recién escrita llega a la pantalla antes que su
       // CSS, y sin columnas la flecha y el título se apilaban uno sobre otro.

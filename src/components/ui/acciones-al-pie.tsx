@@ -93,12 +93,32 @@ export function useBarraAccionFija(activa = true) {
       const alto = Math.max(0, ...altos);
       if (alto > 0) document.documentElement.style.setProperty("--ccr-alto-barra", `${Math.ceil(alto)}px`);
     };
+    // LA SOMBRA APARECE SOLO SI HAY ALGO DEBAJO. Una franja pegada al fondo
+    // tapa el final del formulario —en «Publicar empleo» cortaba una frase a la
+    // mitad— y nada avisaba que seguía. Al llegar al final del todo la sombra
+    // se va: ya no está tapando nada. La regla vive en layout.tsx
+    // (body:not([data-ccr-al-final]) .ccr-barra-fija).
+    const mirarFinal = () => {
+      const doc = document.scrollingElement ?? document.documentElement;
+      const alFinal = doc.scrollTop + doc.clientHeight >= doc.scrollHeight - 2;
+      if (alFinal) document.body.setAttribute("data-ccr-al-final", "");
+      else document.body.removeAttribute("data-ccr-al-final");
+      // Y lo mismo arriba: la cabecera pegada levanta sombra en cuanto algo
+      // empieza a pasarle por debajo.
+      if (doc.scrollTop > 1) document.body.setAttribute("data-ccr-desplazado", "");
+      else document.body.removeAttribute("data-ccr-desplazado");
+    };
     medir();
-    const id = window.setInterval(medir, 600);
+    mirarFinal();
+    const id = window.setInterval(() => { medir(); mirarFinal(); }, 600);
     window.addEventListener("resize", medir);
+    window.addEventListener("scroll", mirarFinal, { passive: true });
     return () => {
       window.clearInterval(id);
       window.removeEventListener("resize", medir);
+      window.removeEventListener("scroll", mirarFinal);
+      document.body.removeAttribute("data-ccr-al-final");
+      document.body.removeAttribute("data-ccr-desplazado");
       montadas -= 1;
       if (montadas <= 0) {
         montadas = 0;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { ArrowLeft, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { PIE_VENTANA_BASE } from "@/components/ui/acciones-al-pie";
@@ -54,6 +54,41 @@ interface ModalProps {
   hideHeader?: boolean;
 }
 
+/**
+ * Las sombras de los bordes de una ventana que se desplaza: la cabecera y el
+ * pie SOLO levantan sombra cuando de verdad hay contenido escondido debajo.
+ *
+ * Isaac preguntó si esas dos franjas deberían llevar sombra como la tarjeta del
+ * cuerpo. Una sombra fija no dice nada —nada se está tapando—; una sombra que
+ * aparece al desplazar SÍ: es la señal de «sigue». Es lo que hacen Gmail, los
+ * títulos grandes de iOS y Material. La línea de siempre se queda: separa
+ * aunque no haya nada que levantar.
+ */
+function useSombrasDeBorde(ref: React.RefObject<HTMLDivElement | null>) {
+  const [sombras, setSombras] = useState({ arriba: false, abajo: false });
+  useEffect(() => {
+    const nodo = ref.current;
+    if (!nodo) return;
+    const medir = () => setSombras({
+      arriba: nodo.scrollTop > 1,
+      abajo: nodo.scrollTop + nodo.clientHeight < nodo.scrollHeight - 1,
+    });
+    medir();
+    nodo.addEventListener("scroll", medir, { passive: true });
+    // El cuerpo crece y encoge solo: un desplegable que se abre, un error que
+    // aparece, un adjunto que se agrega.
+    const observador = new ResizeObserver(medir);
+    observador.observe(nodo);
+    for (const hijo of Array.from(nodo.children)) observador.observe(hijo);
+    return () => { nodo.removeEventListener("scroll", medir); observador.disconnect(); };
+  }, [ref]);
+  return sombras;
+}
+
+/** Hacia abajo (la lleva la cabecera) y hacia arriba (la lleva el pie). */
+const SOMBRA_ABAJO = "shadow-[0_6px_10px_-8px_rgba(15,23,42,0.35)]";
+const SOMBRA_ARRIBA = "shadow-[0_-6px_10px_-8px_rgba(15,23,42,0.35)]";
+
 export function Modal({
   open = true,
   onClose,
@@ -82,6 +117,9 @@ export function Modal({
   // In the app every non-centered modal stretches to the full viewport (see the
   // shell CSS), so the app chrome must not float above it.
   useNativeFullscreenLayer(Boolean(open) && (mobilePresentation === "sheet" || mobilePresentation === "fullscreen"));
+
+  const cuerpo = useRef<HTMLDivElement>(null);
+  const sombras = useSombrasDeBorde(cuerpo);
 
   if (!open) return null;
 
@@ -131,6 +169,11 @@ export function Modal({
       <div
         role="dialog"
         aria-modal="true"
+        // Hay contenido escondido debajo. Muchos formularios dibujan su propio
+        // pie DENTRO del cuerpo (soporte, publicar empleo): la regla
+        // `[data-ccr-hay-mas] .ccr-pie-ventana` de layout.tsx se lo da a todos
+        // sin que cada uno tenga que enterarse.
+        data-ccr-hay-mas={sombras.abajo ? "" : undefined}
         className={cn(
           "relative z-10 flex w-full flex-col overflow-hidden bg-white shadow-2xl sm:max-h-[90vh] sm:rounded-2xl",
           fullscreenMobile
@@ -145,7 +188,11 @@ export function Modal({
         {/* Header (pinned) */}
         {!hideHeader && <div
           className={cn(
-            "flex shrink-0 gap-3 border-b border-[#e5e7eb] px-5 py-4 sm:px-6",
+            // `relative z-10`: la sombra cae SOBRE el cuerpo, y el cuerpo se
+            // pinta después. Sin esto, un cuerpo con fondo propio —el gris de
+            // soporte— la borraba.
+            "relative z-10 flex shrink-0 gap-3 border-b border-[#e5e7eb] bg-white px-5 py-4 transition-shadow sm:px-6",
+            sombras.arriba && SOMBRA_ABAJO,
             // En el teléfono el título va centrado y la X flota al lado: si la X
             // ocupara lugar en la fila, el título quedaría corrido su ancho
             // (22 px medidos) y "centrado" sería mentira.
@@ -186,7 +233,7 @@ export function Modal({
             Se resuelve aquí y no en las once: si el relleno pedido es CERO, el
             de esta variante tampoco se pone. Un valor distinto de cero se
             respeta como antes. */}
-        <div className={cn(
+        <div ref={cuerpo} className={cn(
           "min-h-0 flex-1 overflow-y-auto overscroll-contain",
           / (?:px|p)-0(?:\s|$)/.test(` ${bodyClassName ?? ""} `) ? "px-5" : "px-5 sm:px-6",
           "py-5",
@@ -196,14 +243,14 @@ export function Modal({
         </div>
 
         {footerNotice && (
-          <div className="shrink-0 border-t border-[#eef2f6] bg-white px-5 pt-3 sm:px-6">
+          <div className={cn("relative z-10 shrink-0 border-t border-[#eef2f6] bg-white px-5 pt-3 transition-shadow sm:px-6", sombras.abajo && SOMBRA_ARRIBA)}>
             {footerNotice}
           </div>
         )}
 
         {/* Footer (pinned) */}
         {footer && (
-          <div className={cn(PIE_VENTANA_BASE, "flex justify-end gap-3", footerNotice && "border-t-0", footerClassName)}>
+          <div className={cn(PIE_VENTANA_BASE, "relative z-10 flex justify-end gap-3 transition-shadow", sombras.abajo && SOMBRA_ARRIBA, footerNotice && "border-t-0", footerClassName)}>
             {footer}
           </div>
         )}
