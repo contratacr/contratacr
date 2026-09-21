@@ -8,6 +8,27 @@ import { useNativeShare } from "@/hooks/use-native-share";
 import { cn } from "@/lib/utils";
 import { compartirConHojaNativa } from "@/lib/compartir-nativo";
 
+/**
+ * ¿Lo mueve un ratón? Es la MISMA pregunta que hace el CSS de
+ * `data-ccr-compartir` para elegir la cara del botón. Chrome en macOS SÍ trae
+ * `navigator.share`: mirando solo eso, el botón decía «Copiar enlace» y abría
+ * la hoja del sistema. La cara y la acción tienen que responder a lo mismo.
+ */
+export function esRaton() {
+  return typeof window !== "undefined" && window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+}
+
+/** Las dos caras de compartir —dedo y ratón— para ponerlas donde haga falta:
+ *  el botón de la ficha y las opciones del «···» usan exactamente esta. */
+export function CaraCompartir({ dedo, raton }: { dedo: ReactNode; raton: ReactNode }) {
+  return (
+    <>
+      <span className="ccr-compartir-dedo inline-flex items-center gap-[inherit]">{dedo}</span>
+      <span className="ccr-compartir-raton">{raton}</span>
+    </>
+  );
+}
+
 function urlCompleta(url: string) {
   if (url.startsWith("http")) return url;
   return `${typeof window === "undefined" ? "" : window.location.origin}${url}`;
@@ -32,6 +53,8 @@ export function useCompartir() {
 
   const compartir = useCallback(async (url: string, titulo?: string) => {
     const completa = urlCompleta(url);
+    // Con ratón se copia el enlace, como LinkedIn: es lo que dice el botón.
+    if (esRaton()) { await copiar(url); return; }
     // Cancelar la hoja ya no copia el enlace "por si acaso".
     if (nativo && await compartirConHojaNativa({ title: titulo, url: completa }) !== "no-disponible") return;
     await copiar(url);
@@ -77,14 +100,10 @@ export function BotonCompartir({ url, titulo, onPress, sutil = false, className 
           className,
         )}
       >
-        <span className="ccr-compartir-dedo inline-flex items-center gap-[inherit]">
-          <Share2 className="h-4 w-4 shrink-0" />
-          {rotuloDedo}
-        </span>
-        <span className="ccr-compartir-raton">
-          <Link2 className="h-4 w-4 shrink-0" />
-          {rotuloRaton}
-        </span>
+        <CaraCompartir
+          dedo={<><Share2 className="h-4 w-4 shrink-0" />{rotuloDedo}</>}
+          raton={<><Link2 className="h-4 w-4 shrink-0" />{rotuloRaton}</>}
+        />
       </button>
       {avisoNodo}
     </>

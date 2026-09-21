@@ -38,8 +38,7 @@ import { ClientRegistrationModal } from "@/components/auth/client-registration-m
 import { SelfActionModal, SELF_MSG } from "@/components/professionals/self-action-modal";
 import { SaveButton, useGuardarProfesional, type SavedPro } from "@/components/professionals/save-button";
 import { MenuFicha } from "@/components/ui/menu-ficha";
-import { BotonCompartir, useCompartir } from "@/components/ui/boton-compartir";
-import { useNativeShare } from "@/hooks/use-native-share";
+import { BotonCompartir, CaraCompartir, useCompartir } from "@/components/ui/boton-compartir";
 import type { ProfessionalDetail } from "@/lib/queries/professionals";
 import { getProfessionalDisplayName } from "@/lib/display-name";
 import { trackMetaEvent } from "@/lib/analytics/meta-pixel";
@@ -141,7 +140,6 @@ type ProfilePageData = {
 export default function ProfilePage({ fichaInicial }: { fichaInicial?: ProfessionalDetail | null }) {
   const t = useTranslations("profile");
   const tMenu = useTranslations("menuFicha");
-  const nativoCompartir = useNativeShare();
   const locale = useLocale();
   const catLabel = (id?: string | null) => id ? getCategoryLabel(id, locale) : "";
   const routeParams = useParams();
@@ -1428,7 +1426,15 @@ export default function ProfilePage({ fichaInicial }: { fichaInicial?: Professio
             texto: guardarPro.etiqueta,
             onSelect: () => void guardarPro.alternar(),
           }]),
-          { id: "compartir", icono: nativoCompartir ? <Share2 className="h-4 w-4" /> : <Link2 className="h-4 w-4" />, texto: nativoCompartir ? tMenu("share") : tMenu("copyLink"), onSelect: shareProfile },
+          // Las dos caras pintadas y el CSS elige, como en `BotonCompartir`:
+          // Chrome en macOS trae `navigator.share` y el menú decía «Compartir».
+          {
+            id: "compartir",
+            icono: <CaraCompartir dedo={<Share2 className="h-4 w-4" />} raton={<Link2 className="h-4 w-4" />} />,
+            texto: <CaraCompartir dedo={tMenu("share")} raton={tMenu("copyLink")} />,
+            etiqueta: tMenu("share"),
+            onSelect: shareProfile,
+          },
           ...(isOwn ? [] : [{ id: "reportar", icono: <Flag className="h-4 w-4" />, texto: tMenu("reportProfile"), peligro: true, onSelect: () => setReportOpen(true) }]),
         ]}
       />

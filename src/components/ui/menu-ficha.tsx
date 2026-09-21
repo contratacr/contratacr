@@ -9,7 +9,10 @@ import { cn } from "@/lib/utils";
 export type OpcionFicha = {
   id: string;
   icono: ReactNode;
-  texto: string;
+  texto: ReactNode;
+  /** El texto en una sola palabra, para lectores de pantalla y para cuando la
+   *  opción se dibuja sola —sin menú— y solo se ve su ícono. */
+  etiqueta?: string;
   onSelect: () => void;
   /** Rojo, para lo que denuncia o borra. */
   peligro?: boolean;
@@ -72,6 +75,32 @@ export function MenuFicha({
   }, [abierto]);
 
   if (opciones.length === 0) return null;
+
+  // UNA SOLA OPCIÓN NO ES UN MENÚ. En la ficha de un proyecto propio, en
+  // computadora, no hay «guardar» (es suyo) ni «reportar» (es suyo): quedaba un
+  // «···» que abría una tarjeta blanca con un renglón, y esa tarjeta —alta,
+  // con sombra y espacio abajo— se leía como una lista recortada. Si solo hay
+  // una acción, el botón LA HACE de una vez.
+  if (opciones.length === 1 && !controlado) {
+    const sola = opciones[0];
+    return (
+      <div className={cn("relative", className)}>
+        <button
+          type="button"
+          // Sin `title`: el tooltip no puede saber cuál de las dos caras de
+          // compartir está visible, y prometería lo que no hace.
+          aria-label={sola.etiqueta ?? t("more")}
+          onClick={sola.onSelect}
+          className={cn(
+            "grid place-items-center rounded-full text-[#162543] transition-colors hover:bg-[#eef3f8]",
+            grande ? "h-11 w-11" : "h-10 w-10",
+          )}
+        >
+          <span className="grid h-5 w-5 place-items-center [&_svg]:h-[18px] [&_svg]:w-[18px]">{sola.icono}</span>
+        </button>
+      </div>
+    );
+  }
 
   const lista = (
     <div

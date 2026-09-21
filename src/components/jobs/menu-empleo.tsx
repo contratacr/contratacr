@@ -4,10 +4,9 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { Bookmark, Flag, Link2, Share2 } from "lucide-react";
 import { MenuFicha } from "@/components/ui/menu-ficha";
-import { useCompartir } from "@/components/ui/boton-compartir";
+import { CaraCompartir, useCompartir } from "@/components/ui/boton-compartir";
 import { ReportProfileModal } from "@/components/professionals/report-profile-modal";
 import { useGuardado } from "@/components/saved/save-item-button";
-import { useNativeShare } from "@/hooks/use-native-share";
 
 /**
  * El "..." de un empleo: compartir y reportar (copiar el enlace ya vive dentro
@@ -38,8 +37,7 @@ export function MenuEmpleo({
   guardar?: { snapshot: Record<string, unknown>; userId: string | null };
 }) {
   const t = useTranslations("menuFicha");
-  const { avisoNodo, compartir, copiar } = useCompartir();
-  const nativo = useNativeShare();
+  const { avisoNodo, compartir } = useCompartir();
   const [reportando, setReportando] = useState(false);
   // Guardar vive DENTRO del «...», junto a compartir: las dos son acciones
   // sobre la publicación. Abajo queda solo lo que contacta.
@@ -51,15 +49,10 @@ export function MenuEmpleo({
     loginRedirect: `/empleos/${empleoId}`,
   });
 
-  // Como LinkedIn: en el TELÉFONO, la hoja del sistema —con los contactos de
-  // WhatsApp, Mensajes, AirDrop—; en la COMPUTADORA, donde esa hoja no existe,
-  // copiar el enlace y avisarlo. Antes la computadora abría una ventana con
-  // WhatsApp, Instagram, Facebook y correo para terminar haciendo lo mismo:
-  // pegar un enlace en otro lado.
-  const abrirCompartir = () => {
-    if (nativo) { void compartir(enlace, titulo); return; }
-    void copiar(enlace);
-  };
+  // Como LinkedIn: con el DEDO, la hoja del sistema —WhatsApp, Mensajes,
+  // AirDrop—; con el RATÓN, copiar el enlace y avisarlo. Lo decide `compartir`,
+  // con la misma pregunta que el CSS usa para elegir el rótulo.
+  const abrirCompartir = () => void compartir(enlace, titulo);
 
   const OPCIONES_MENU = [
           ...(guardar ? [{
@@ -68,7 +61,16 @@ export function MenuEmpleo({
             texto: guardado.etiqueta,
             onSelect: () => void guardado.alternar(),
           }] : []),
-          { id: "compartir", icono: nativo ? <Share2 className="h-4 w-4" /> : <Link2 className="h-4 w-4" />, texto: nativo ? t("share") : t("copyLink"), onSelect: abrirCompartir },
+          // Las dos caras se pintan SIEMPRE y elige el CSS, igual que en
+          // `BotonCompartir`: Chrome en macOS trae `navigator.share`, así que
+          // mirándolo el menú decía «Compartir» en la computadora.
+          {
+            id: "compartir",
+            icono: <CaraCompartir dedo={<Share2 className="h-4 w-4" />} raton={<Link2 className="h-4 w-4" />} />,
+            texto: <CaraCompartir dedo={t("share")} raton={t("copyLink")} />,
+            etiqueta: t("share"),
+            onSelect: abrirCompartir,
+          },
           ...(esPropio || !empleadorSlug ? [] : [{ id: "reportar", icono: <Flag className="h-4 w-4" />, texto: t("reportJob"), peligro: true, onSelect: () => setReportando(true) }]),
         ];
 
