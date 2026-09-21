@@ -684,6 +684,11 @@ export function OfferContactActions({
     // nombre, la fila de acciones solo lleva esto y ya no hace falta apilar.
     return (
       <>
+        {/* LOS DOS COMPARTEN EL RENGLÓN, a su mitad cada uno. A su ancho
+            natural sumaban 317 px en una fila de 314 —medido—, así que se
+            pasaban por tres píxeles y el segundo caía debajo del primero. Con
+            `flex-1 basis-0` no depende de cuánto mida el rótulo ni de lo ancha
+            que sea la fila: siempre uno a la izquierda y otro a la derecha. */}
         {showPrimaryContact && (
           <DirectChatLauncher
             professionalId={offer.professional_id}
@@ -691,10 +696,10 @@ export function OfferContactActions({
             contextTitle={offer.title}
             analyticsSource="unknown"
             offerId={offer.id}
-            className="h-12 w-auto min-w-[9.5rem] rounded-full px-6 text-base font-semibold"
+            className="h-12 min-w-fit flex-1 basis-0 rounded-full px-3 text-base font-semibold"
           />
         )}
-        <SaveItemButton grande className="w-auto px-6" itemType="offer" itemId={offer.id} snapshot={offerSaveSnapshot(offer, locale)} userId={userId} />
+        <SaveItemButton grande className="min-w-fit flex-1 basis-0 px-3" itemType="offer" itemId={offer.id} snapshot={offerSaveSnapshot(offer, locale)} userId={userId} />
       </>
     );
   }
@@ -704,15 +709,15 @@ export function OfferContactActions({
       <div className="relative z-[2] grid w-full grid-cols-1 gap-2">{escribir}</div>
     );
   }
+  // UNO A LA IZQUIERDA Y OTRO A LA DERECHA. Antes WhatsApp se llevaba la línea
+  // entera y debajo iba «lo secundario»: eso se escribió cuando eran TRES
+  // —WhatsApp, Llamar y Guardar— y apilarlos habría dado tres píldoras iguales.
+  // Al retirarse «Llamar» quedaron dos, que es justo lo que el reparto en una
+  // línea resuelve mejor: la ficha gana alto y las dos acciones se ven juntas.
   return (
-    <div className="relative z-[2] mt-3 space-y-2">
-      {escribir}
-      {/* Fuera de la ficha, WhatsApp manda y se lleva la línea entera: 86 toques
-          contra 4 de «Llamar» en dos meses. Debajo, en una sola fila, lo
-          secundario —llamar y guardar—, para no apilar tres píldoras iguales. */}
-      <div className="grid grid-cols-1 gap-2">
-        <OfferSaveButton offer={offer} userId={userId} pastilla className={secondaryClass} />
-      </div>
+    <div className="relative z-[2] mt-3 flex items-stretch gap-2">
+      {escribir && <div className="min-w-fit flex-1 basis-0">{escribir}</div>}
+      <OfferSaveButton offer={offer} userId={userId} pastilla className={`${secondaryClass} min-w-fit flex-1 basis-0`} />
     </div>
   );
 }
