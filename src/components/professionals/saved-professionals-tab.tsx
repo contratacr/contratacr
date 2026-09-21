@@ -1,5 +1,6 @@
 "use client";
 import { EMPLEOS_VISIBLE } from "@/lib/feature-flags";
+import { cn } from "@/lib/utils";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Bookmark, BriefcaseBusiness, ClipboardList, ExternalLink, MapPin, Star, Tag, Trash2, Video, Wrench } from "lucide-react";
@@ -56,7 +57,7 @@ function SavedProCard({ pro, onUnsave }: { pro: SavedPro; onUnsave: (id: string)
   return (
     <div data-saved-item="" className="grid grid-cols-[64px_minmax(0,1fr)] gap-x-3 gap-y-4 rounded-2xl border border-[#e5e7eb] bg-white p-4 shadow-sm transition-colors hover:bg-[#fafafa] sm:flex sm:items-center sm:gap-4">
       <div className="relative shrink-0">
-        <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl text-lg font-bold sm:h-14 sm:w-14 ccr-caja-icono">
+        <div className={cn("flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl text-lg font-bold sm:h-14 sm:w-14", pro.avatarUrl ? "ccr-caja-imagen" : "ccr-caja-icono-plana")}>
           {pro.avatarUrl ? (
             <ProgressiveImage src={pro.avatarUrl} alt={displayName} fit="cover" wrapperClassName="h-full w-full" />
           ) : (
@@ -144,7 +145,7 @@ function SavedGenericCard({ item, onRemove }: { item: SavedItem; onRemove: (item
       {/* La misma caja que la tarjeta del profesional de al lado: en Favoritos
           las cuatro pestañas se ven seguidas y esta traía su propio azul, así
           que la misma lista cambiaba de aspecto al cambiar de pestaña. */}
-      <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl ccr-caja-icono">
+      <div className={cn("flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl", image ? "ccr-caja-imagen" : "ccr-caja-icono-plana")}>
         {image ? <ProgressiveImage src={cldThumb(image, 112)} alt={title} fit="cover" wrapperClassName="h-full w-full" /> : <Icon className="h-5 w-5" />}
       </div>
       {/* Sin etiqueta EMPLEO / OFERTA: lo dice el botón («Ver empleo» / «Ver

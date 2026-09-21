@@ -194,7 +194,7 @@ export function JobsManager({ initialJobs, embedded = false, backHref = "/dashbo
                   {/* Empleos era la única de las tres listas del panel sin caja al
                       inicio: la fila arrancaba en el título y no se alineaba con
                       Mis proyectos ni con Mis promociones. */}
-                  <div className="grid h-[52px] w-[52px] shrink-0 place-items-center rounded-xl ccr-caja-icono sm:h-14 sm:w-14">
+                  <div className="grid h-[52px] w-[52px] shrink-0 place-items-center rounded-xl ccr-caja-icono-plana sm:h-14 sm:w-14">
                     <BriefcaseBusiness className="h-5 w-5" />
                   </div>
                   <div className="min-w-0 flex-1">

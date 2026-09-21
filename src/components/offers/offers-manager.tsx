@@ -208,8 +208,15 @@ export function OffersManager({ initialOffers, embedded = false, backHref = "/da
                 <button type="button" onClick={() => setOpenId(isOpen ? null : offer.id)} className="relative grid h-28 w-full grid-cols-[52px_minmax(0,1fr)] items-center gap-3 px-4 pr-11 text-left sm:h-24 sm:grid-cols-[56px_minmax(0,1fr)] sm:gap-4 sm:px-5 sm:pr-12">
                   {/* La misma caja que Mis proyectos y Favoritos: antes el icono
                       iba suelto, sin fondo, y la fila no se parecía a las de al
-                      lado. */}
-                  <div className="grid h-[52px] w-[52px] min-h-0 min-w-0 shrink-0 place-items-center overflow-hidden rounded-xl ccr-caja-icono sm:h-14 sm:w-14">
+                      lado. SIN RELIEVE: en una lista, diez degradados con
+                      sombra pesan más que el contenido, y la tarjeta ya tiene
+                      su propia elevación —dos relieves anidados se ven sucios.
+                      Es la misma regla que ya seguía Notificaciones. El
+                      degradado se reserva para donde el icono es protagonista:
+                      un vacío, un diálogo, una tarjeta de portada.
+                      Y con LOGO dentro la caja va blanca con filo fino: la
+                      imagen es contenido, no una pastilla del app. */}
+                  <div className={cn("grid h-[52px] w-[52px] min-h-0 min-w-0 shrink-0 place-items-center overflow-hidden rounded-xl sm:h-14 sm:w-14", imageUrl ? "ccr-caja-imagen" : "ccr-caja-icono-plana")}>
                     {imageUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={imageUrl} alt="" className="block h-full max-h-full w-full max-w-full object-contain object-center" />

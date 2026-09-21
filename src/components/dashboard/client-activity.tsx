@@ -1056,7 +1056,7 @@ export function ClientActivity({ section, onCount }: { section: ClientActivitySe
                               un icono suelto sin fondo y Empleos ninguna—, así que
                               la misma lista cambiaba de cara al cambiar de
                               sección. El aviso de novedad lo sigue dando el punto. */}
-                          <div className="grid h-[52px] w-[52px] place-items-center rounded-xl ccr-caja-icono">
+                          <div className="grid h-[52px] w-[52px] place-items-center rounded-xl ccr-caja-icono-plana">
                             <ClipboardList className="h-5 w-5" />
                           </div>
                           {isActive && replyCount > 0 && (

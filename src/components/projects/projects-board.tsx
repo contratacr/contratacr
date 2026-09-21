@@ -193,7 +193,7 @@ function FotoDeQuienPublica({ proyecto, grande = false }: { proyecto: ProyectoPu
   }
   const Icono = getCategoryGroupIcon(proyecto.category_id ? getCategoryGroupId(proyecto.category_id) : null);
   return (
-    <span aria-hidden className={cn("ccr-caja-icono grid shrink-0 place-items-center rounded-full", medida)}>
+    <span aria-hidden className={cn("ccr-caja-icono-plana grid shrink-0 place-items-center rounded-full", medida)}>
       <Icono className={grande ? "h-6 w-6" : "h-5 w-5"} strokeWidth={1.8} />
     </span>
   );

@@ -171,10 +171,22 @@ export function StatusFilterTabs({
   // fila se desliza con los rótulos enteros.
   const cabenRotulosLargos = tabs.length <= 3 && !pantallaAngosta;
   const shortLabels = tabs.every((tab) => label(tab.id).length <= (cabenRotulosLargos ? 14 : 12));
+  // CON DOS OPCIONES NO SE DESLIZA NUNCA.
+  //
+  // El carril existe para decir «hay más a la derecha». Con dos opciones esa
+  // promesa es mentira: no hay una tercera, y lo único que se consigue es
+  // cortar la segunda contra el filo. Así se veía el filtro de servicios
+  // («Desarrollo web» / «Desarrollo de apps móviles»): dos opciones, una
+  // partida. Con dos se reparte la fila a medias y el rótulo largo baja a un
+  // segundo renglón —entero, sin cortar— porque la fila mide lo que midan sus
+  // dos celdas y nada queda fuera de la pantalla. De tres en adelante sí vuelve
+  // el carril: ahí sí hay algo que ir a buscar a la derecha.
+  const dosOpciones = tabs.length === 2;
+  const enDosRenglones = dosOpciones && !shortLabels;
   // Con cuatro o cinco etapas la celda es angosta: el conteo se queda a la
   // derecha del rótulo —como en el resto de la app— y lo que se aprieta es el
   // relleno, la separación y el tamaño del conteo, no la disposición.
-  const compacto = useSegmentedLayout && (tabs.length >= 4 || !shortLabels);
+  const compacto = useSegmentedLayout && !dosOpciones && (tabs.length >= 4 || !shortLabels);
 
   // PILLS — same segmented language, without count badges. Used for profession
   // filters where labels can be long; 2–4 fit the row, 5+ become a clean rail.
@@ -248,7 +260,7 @@ export function StatusFilterTabs({
   }
 
   if (variant === "pills") {
-    const usePillSegmentedLayout = tabs.length >= 2 && tabs.length <= 4 && shortLabels;
+    const usePillSegmentedLayout = dosOpciones || (tabs.length <= 4 && shortLabels);
     return (
       <div
         data-status-filter-tabs=""
@@ -279,7 +291,7 @@ export function StatusFilterTabs({
                 className={cn(
                   "inline-flex min-h-10 max-w-full items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-center text-[13px] font-semibold leading-tight transition-all",
                   usePillSegmentedLayout
-                    ? "min-w-0 truncate whitespace-nowrap"
+                    ? cn("min-w-0", enDosRenglones ? "whitespace-normal [text-wrap:balance]" : "truncate whitespace-nowrap")
                     : "min-w-[8.25rem] flex-none whitespace-nowrap",
                   active ? "bg-white text-[#009FD9] shadow-sm" : "text-[#6b7280] hover:text-[#374151]"
                 )}
@@ -355,8 +367,18 @@ export function StatusFilterTabs({
                       // El relleno de la celda cede antes que el rótulo: con
                       // tres cifras de conteo («123 favoritos») no quedaban ni
                       // los 79px que mide «Profesionales».
-                      : "flex-1 basis-0 min-w-fit gap-0.5 px-0.5 text-[11.5px] min-[360px]:text-[12px] min-[400px]:gap-1 min-[400px]:px-1.5 min-[400px]:text-[13px] sm:gap-1 sm:px-3",
-                    "whitespace-nowrap",
+                      : cn(
+                          "flex-1 basis-0 gap-0.5 px-0.5 text-[11.5px] min-[360px]:text-[12px] min-[400px]:gap-1 min-[400px]:px-1.5 min-[400px]:text-[13px] sm:gap-1 sm:px-3",
+                          // `min-w-fit` es lo que impide que una celda se
+                          // encoja por debajo de su rótulo: es justo lo que
+                          // evita «Profesional…». Pero cuando el rótulo puede
+                          // bajar de renglón, `fit` vale lo que el rótulo
+                          // ENTERO en una línea y la fila se sale igual. Con
+                          // dos opciones la celda sí puede encoger: el rótulo
+                          // no se corta, se parte.
+                          enDosRenglones ? "min-w-0" : "min-w-fit",
+                        ),
+                    enDosRenglones ? "whitespace-normal [text-wrap:balance]" : "whitespace-nowrap",
                   )
                 : "gap-1"
                 ,
@@ -387,7 +409,7 @@ export function StatusFilterTabs({
             {/* En el riel del teléfono el rótulo va entero: recortarlo ahí era
                 justo lo que producía "Enviad…". El recorte se reserva para el
                 reparto de ancho, de 640 px en adelante. */}
-            <span className={cn("min-w-0 max-w-full truncate")}>
+            <span className={cn("min-w-0 max-w-full", enDosRenglones ? "text-balance" : "truncate")}>
               {label(tab.id)}
             </span>
             {count > 0 && (

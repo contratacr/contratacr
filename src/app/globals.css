@@ -2227,6 +2227,20 @@ html[data-keyboard-visible] body.ccr-native-app .ccr-native-search-panel { botto
   box-shadow: 0 10px 22px -16px rgba(15, 23, 42, 0.55);
 }
 
+/* LA MISMA CAJA, PERO CON UNA FOTO DENTRO.
+   El relieve de `.ccr-caja-icono` tiene sentido cuando la caja es lo que se
+   ve: es una superficie que el app dibuja alrededor de un glifo, y levantarla
+   la convierte en pastilla. Con una foto o un logotipo encima, el degradado
+   queda tapado y lo único que queda de la caja es la sombra: entonces la
+   imagen parece una calcomanía pegada sobre una tarjeta que YA tiene su
+   propia elevación, dos relieves anidados. Plana y con un filo fino, la
+   imagen se lee como lo que es —contenido— y la fila queda limpia. */
+.ccr-caja-imagen {
+  background: #fff;
+  color: #162543;
+  box-shadow: inset 0 0 0 1px var(--ccr-linea-suave, #eef2f6);
+}
+
 .ccr-icono-mosaico {
   display: grid;
   place-items: center;
