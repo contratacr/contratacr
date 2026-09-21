@@ -1,5 +1,6 @@
 "use client";
 
+import { FooterSoloWeb } from "@/components/landing/footer-solo-web";
 import { useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
@@ -385,6 +386,9 @@ export default function RegisterClientPage() {
           </div>
         </div>
       </main>
+      {/* El pie cierra el documento en computadora; en el teléfono esta
+          pantalla es un trámite y el pie estorba bajo el botón. */}
+      <FooterSoloWeb soloEscritorio />
     </div>
   );
 }

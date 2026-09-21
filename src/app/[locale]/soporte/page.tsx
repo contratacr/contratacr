@@ -1,5 +1,6 @@
 "use client";
 
+import { FooterSoloWeb } from "@/components/landing/footer-solo-web";
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { LandingNavbar } from "@/components/landing/landing-navbar";
@@ -134,11 +135,12 @@ export default function SoportePage() {
 
         </div>
       </main>
-      {/* Sin pie de sitio: esta pantalla es un trámite, no una página que se
-          lee. El pie ponía una lista de salidas —Servicios, Soporte, redes—
-          justo debajo del botón que hay que tocar, y además rompía la barra
-          pegajosa de abajo: al llegar el pie la barra dejaba de pegarse y el
-          botón se veía cortado. */}
+      {/* El pie, solo en computadora. En el teléfono esta pantalla es un
+          trámite: el pie ponía una lista de salidas —Servicios, Soporte,
+          redes— justo debajo del botón que hay que tocar, y rompía la barra
+          pegajosa de abajo, que dejaba de pegarse y cortaba el botón. En
+          computadora no hay barra pegajosa y el pie cierra el documento. */}
+      <FooterSoloWeb soloEscritorio />
     </div>
   );
 }
