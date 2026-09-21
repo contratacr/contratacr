@@ -1,7 +1,7 @@
 "use client";
 
 import { DirectChatInbox } from "@/components/dashboard/direct-chat-inbox";
-import { LandingFooter } from "@/components/landing/landing-footer";
+import { FooterSoloWeb } from "@/components/landing/footer-solo-web";
 import { LandingNavbar } from "@/components/landing/landing-navbar";
 import { SectionHeaderTitle } from "@/components/mobile/section-header-title";
 import { useTranslations } from "next-intl";
@@ -33,7 +33,7 @@ export default function MessagesPage() {
         </section>
       </main>
       <div className="hidden sm:block">
-        <LandingFooter />
+        <FooterSoloWeb soloEscritorio />
       </div>
     </div>
   );

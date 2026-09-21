@@ -33,7 +33,8 @@ export function MarketplaceSectionLayoutShell({ children }: { children: React.Re
       <div className="ccr-cascaron-contenido flex-1">{children}</div>
       {/* El pie va en la web (también aquí, para no dejar la sección sin salida);
           en la app no, que ahí manda la barra de abajo. */}
-      <FooterSoloWeb />
+      {/* Un tablero es una herramienta: el pie solo en computadora. */}
+      <FooterSoloWeb soloEscritorio />
     </div>
   );
 }

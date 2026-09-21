@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { UserRoundSearch, BriefcaseBusiness, ArrowRight } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { Navbar } from "@/components/layout/navbar";
-import { LandingFooter } from "@/components/landing/landing-footer";
+import { FooterSoloWeb } from "@/components/landing/footer-solo-web";
 import { useRedirectIfRegistered } from "@/hooks/use-redirect-if-registered";
 
 export default function RegisterPage() {
@@ -96,7 +96,7 @@ export default function RegisterPage() {
           </p>
         </div>
       </main>
-      <LandingFooter />
+      <FooterSoloWeb soloEscritorio />
     </div>
   );
 }

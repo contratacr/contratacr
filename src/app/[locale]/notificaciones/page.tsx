@@ -1,6 +1,6 @@
 "use client";
 
-import { LandingFooter } from "@/components/landing/landing-footer";
+import { FooterSoloWeb } from "@/components/landing/footer-solo-web";
 import { LandingNavbar } from "@/components/landing/landing-navbar";
 import { SectionHeaderTitle } from "@/components/mobile/section-header-title";
 import { useTranslations } from "next-intl";
@@ -20,7 +20,7 @@ export default function NotificationsPage() {
           <NotificationsList scope="all" titulo={tSeccion("notifications")} />
         </section>
       </main>
-      <LandingFooter />
+      <FooterSoloWeb soloEscritorio />
     </div>
   );
 }

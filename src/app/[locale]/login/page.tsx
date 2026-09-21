@@ -12,7 +12,7 @@ import { Navbar } from "@/components/layout/navbar";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { createClient, hasSupabaseBrowserConfig } from "@/lib/supabase/client";
-import { LandingFooter } from "@/components/landing/landing-footer";
+import { FooterSoloWeb } from "@/components/landing/footer-solo-web";
 import { detectSocialOnly, providerLabel } from "@/lib/auth-method";
 import { isNativeAppRuntime } from "@/hooks/use-native-app";
 import { nativeSocialSignIn } from "@/lib/auth/native-social-login";
@@ -446,7 +446,7 @@ export default function LoginPage() {
             </div>
           </div>
         </main>
-        <LandingFooter />
+        <FooterSoloWeb soloEscritorio />
       </div>
     );
   }
@@ -603,7 +603,7 @@ export default function LoginPage() {
           </div>
         </div>
       </main>
-      <LandingFooter />
+      <FooterSoloWeb soloEscritorio />
     </div>
   );
 }
