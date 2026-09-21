@@ -28,7 +28,7 @@ import { MenuEmpleo } from "@/components/jobs/menu-empleo";
 import { enlaceEmpleo, idCoincide } from "@/lib/marketplace-url";
 import { useNativeApp } from "@/hooks/use-native-app";
 import { COMMON_JOB_TITLES, EMPLOYMENT_TYPES, EXPERIENCE_LEVELS, formatJobSalary, jobMatchesSearch, type JobPost, WORKPLACE_TYPES } from "@/lib/jobs";
-import { employmentTypeLabel, experienceLevelLabel, marketplaceLocale, type MarketplaceLocale, workplaceTypeLabel } from "@/lib/marketplace-copy";
+import { employmentTypeLabel, experienceLevelLabel, experienceLevelShort, marketplaceLocale, type MarketplaceLocale, workplaceTypeLabel } from "@/lib/marketplace-copy";
 import { marketplaceReturnLabel, safeMarketplaceReturnHref } from "@/lib/navigation/marketplace-return";
 import { CABECERA_BOTON, CABECERA_FILA, CABECERA_FILA_CENTRADA, CABECERA_GLIFO, CABECERA_TITULO } from "@/components/layout/cabecera";
 import { useAvisoPerfilProfesional } from "@/components/marketplace/use-aviso-perfil-profesional";
@@ -565,7 +565,7 @@ function JobRow({ job, selected, onSelect }: { job: JobPost; selected: boolean; 
           <p className="mt-0.5 truncate text-sm font-semibold text-[#101d35]">{job.employer_name || copy.professionalFallback}</p>
           {/* TELÉFONO: dónde y cuándo; modalidad y experiencia; salario. */}
           <JobMetaLine job={job} showApplicants={false} className="mt-0.5 truncate text-sm text-[#52627a] lg:hidden" />
-          <div className="mt-1 flex min-w-0 items-center gap-1.5 text-xs font-medium text-[#60708a] lg:hidden"><span className="truncate">{workplaceTypeLabel(job.workplace_type, locale)}</span><span aria-hidden="true" className="shrink-0 text-[#9aa8b8]">&middot;</span><span className="truncate">{experienceLevelLabel(job.experience_level ?? "any", locale)}</span></div>
+          <div className="mt-1 flex min-w-0 items-center gap-1.5 text-xs font-medium text-[#60708a] lg:hidden"><span className="truncate">{workplaceTypeLabel(job.workplace_type, locale)}</span><span aria-hidden="true" className="shrink-0 text-[#9aa8b8]">&middot;</span><span className="truncate">{experienceLevelShort(job.experience_level ?? "any", locale)}</span></div>
           <div className="mt-0.5 truncate text-xs font-bold text-[#008fc3] lg:hidden">{formatJobSalary(job, locale)}</div>
           {/* COMPUTADORA: cuatro renglones en vez de cinco, y un solo azul por
               fila. Dónde, modalidad y experiencia comparten línea; el salario
@@ -577,7 +577,9 @@ function JobRow({ job, selected, onSelect }: { job: JobPost; selected: boolean; 
             <span aria-hidden="true" className="mx-1.5 text-[#9aa8b8]">&middot;</span>
             {workplaceTypeLabel(job.workplace_type, locale)}
             <span aria-hidden="true" className="mx-1.5 text-[#9aa8b8]">&middot;</span>
-            {experienceLevelLabel(job.experience_level ?? "any", locale)}
+            {/* En corto: el rótulo entero no cabía en esta columna y salía
+                siempre cortado. La ficha lo dice completo. */}
+            {experienceLevelShort(job.experience_level ?? "any", locale)}
           </p>
           <div className="mt-1 hidden items-baseline justify-between gap-3 lg:flex">
             <span className="min-w-0 truncate text-[13px] font-extrabold text-[#162543]">{formatJobSalary(job, locale)}</span>

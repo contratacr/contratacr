@@ -22,6 +22,11 @@ const EXPERIENCE_LEVEL_LABELS: Record<MarketplaceLocale, Record<ExperienceLevel,
   en: { any: "No experience required", one_plus: "1+ year of experience", two_plus: "2+ years of experience", three_plus: "3+ years of experience", five_plus: "5+ years of experience" },
 };
 
+const EXPERIENCE_LEVEL_SHORT: Record<MarketplaceLocale, Record<ExperienceLevel, string>> = {
+  es: { any: "Sin experiencia", one_plus: "1+ año", two_plus: "2+ años", three_plus: "3+ años", five_plus: "5+ años" },
+  en: { any: "No experience", one_plus: "1+ year", two_plus: "2+ years", three_plus: "3+ years", five_plus: "5+ years" },
+};
+
 const SALARY_PERIOD_LABELS: Record<MarketplaceLocale, Record<SalaryPeriod, string>> = {
   es: { hourly: "por hora", biweekly: "por quincena", monthly: "por mes", annual: "por año", project: "por proyecto" },
   en: { hourly: "per hour", biweekly: "every two weeks", monthly: "per month", annual: "per year", project: "per project" },
@@ -40,6 +45,17 @@ const OFFER_PRICE_UNIT_LABELS: Record<MarketplaceLocale, Record<OfferPriceUnit, 
 export const employmentTypeLabel = (value: EmploymentType, locale?: string) => EMPLOYMENT_TYPE_LABELS[marketplaceLocale(locale)][value];
 export const workplaceTypeLabel = (value: WorkplaceType, locale?: string) => WORKPLACE_TYPE_LABELS[marketplaceLocale(locale)][value];
 export const experienceLevelLabel = (value: ExperienceLevel, locale?: string) => EXPERIENCE_LEVEL_LABELS[marketplaceLocale(locale)][value];
+/**
+ * El mismo dato, en corto, para las LISTAS.
+ *
+ * «1+ año de experiencia» mide 21 caracteres y en la columna del tablero
+ * siempre salía «1+ año de expe…»: un valor cortado no informa y de todos modos
+ * gasta el sitio. En corto cabe entero, y la palabra «experiencia» no hace
+ * falta cuando al lado están la zona y la modalidad —nadie confunde «2+ años»
+ * con otra cosa—. La ficha sigue diciéndolo completo, que es donde se lee con
+ * calma, y los filtros también.
+ */
+export const experienceLevelShort = (value: ExperienceLevel, locale?: string) => EXPERIENCE_LEVEL_SHORT[marketplaceLocale(locale)][value];
 export const salaryPeriodLabel = (value: SalaryPeriod, locale?: string) => SALARY_PERIOD_LABELS[marketplaceLocale(locale)][value];
 export const offerTypeLabel = (value: OfferType, locale?: string) => OFFER_TYPE_LABELS[marketplaceLocale(locale)][value];
 export const offerPriceUnitLabel = (value: OfferPriceUnit, locale?: string) => OFFER_PRICE_UNIT_LABELS[marketplaceLocale(locale)][value];
