@@ -4327,5 +4327,14 @@
     "offerDescription": "Publicar promociones es una función de las cuentas profesionales. Puedes convertir la tuya ahora, sin crear otra: toma unos minutos.",
     "cta": "Ofrecer mis servicios",
     "notNow": "Ahora no"
+  },
+  "marketplaceReturn": {
+    "backToProfile": "Volver al perfil",
+    "backToFavorites": "Volver a favoritos",
+    "backToDashboard": "Volver al panel",
+    "backToPromotions": "Volver a promociones",
+    "backToJobs": "Volver a empleos",
+    "allPromotions": "Ver todas las promociones",
+    "allJobs": "Ver todos los empleos"
   }
 }

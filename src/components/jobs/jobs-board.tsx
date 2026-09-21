@@ -10,7 +10,7 @@ import { useHairlineOnScroll } from "@/components/util/use-hairline-on-scroll";
 import { useEffect, useMemo, useState } from "react";
 import { cldThumb } from "@/lib/cloudinary";
 import { useSearchParams } from "next/navigation";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { ArrowLeft, BriefcaseBusiness, Building2, Menu } from "lucide-react";
 import { Link, useRouter } from "@/i18n/navigation";
 import { recordRecentVisit } from "@/lib/recent-visits";
@@ -29,7 +29,7 @@ import { enlaceEmpleo, idCoincide } from "@/lib/marketplace-url";
 import { useNativeApp } from "@/hooks/use-native-app";
 import { COMMON_JOB_TITLES, EMPLOYMENT_TYPES, EXPERIENCE_LEVELS, formatJobSalary, jobMatchesSearch, type JobPost, WORKPLACE_TYPES } from "@/lib/jobs";
 import { employmentTypeLabel, experienceLevelLabel, marketplaceLocale, type MarketplaceLocale, workplaceTypeLabel } from "@/lib/marketplace-copy";
-import { marketplaceReturnLabel, safeMarketplaceReturnHref } from "@/lib/navigation/marketplace-return";
+import { marketplaceReturnLabelKey, safeMarketplaceReturnHref } from "@/lib/navigation/marketplace-return";
 import { CABECERA_BOTON, CABECERA_FILA, CABECERA_FILA_CENTRADA, CABECERA_GLIFO, CABECERA_TITULO } from "@/components/layout/cabecera";
 import { useAvisoPerfilProfesional } from "@/components/marketplace/use-aviso-perfil-profesional";
 
@@ -309,8 +309,9 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
       href: `/empleos/${selected.id}`,
     });
   }, [selected, showingMobileDetail]);
+  const tSalida = useTranslations("marketplaceReturn");
   const detailBackHref = safeMarketplaceReturnHref(returnTo, "/empleos");
-  const detailBackLabel = marketplaceReturnLabel(detailBackHref, "/empleos", locale, !returnTo);
+  const detailBackLabel = tSalida(marketplaceReturnLabelKey(detailBackHref, "/empleos", !returnTo));
   const detailVuelveAlPanel = detailBackHref.startsWith("/dashboard");
 
   return <main className="min-h-[calc(100vh-72px)] overflow-x-clip bg-white pb-0 text-[#162543] sm:bg-[#fafafa] sm:pb-16 lg:flex lg:h-[calc(100dvh-64px)] lg:min-h-0 lg:flex-col lg:overflow-hidden lg:bg-white lg:pb-0">

@@ -4327,5 +4327,14 @@
     "offerDescription": "Posting promotions is a feature of professional accounts. You can convert yours now, without creating a new one: it takes a few minutes.",
     "cta": "Offer my services",
     "notNow": "Not now"
+  },
+  "marketplaceReturn": {
+    "backToProfile": "Back to profile",
+    "backToFavorites": "Back to favorites",
+    "backToDashboard": "Back to dashboard",
+    "backToPromotions": "Back to promotions",
+    "backToJobs": "Back to jobs",
+    "allPromotions": "See all promotions",
+    "allJobs": "See all jobs"
   }
 }

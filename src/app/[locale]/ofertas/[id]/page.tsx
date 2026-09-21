@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { ArrowLeft, ChevronRight } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { OfferImageGallery } from "@/components/offers/offer-image-gallery";
@@ -25,7 +26,7 @@ import { recordServerInteraction } from "@/lib/analytics/server-events";
 import { repairVisibleText } from "@/lib/text/repair-visible-text";
 import { crTodayISO } from "@/lib/time-cr";
 import { RecordRecentVisit } from "@/components/mobile/record-recent-visit";
-import { marketplaceReturnLabel, safeMarketplaceReturnHref } from "@/lib/navigation/marketplace-return";
+import { marketplaceReturnLabelKey, safeMarketplaceReturnHref } from "@/lib/navigation/marketplace-return";
 import { CABECERA_BOTON, CABECERA_FILA_CENTRADA, CABECERA_GLIFO, CABECERA_TITULO } from "@/components/layout/cabecera";
 import { cn } from "@/lib/utils";
 
@@ -78,7 +79,8 @@ export default async function OfferDetailPage({ params, searchParams }: { params
   const dateLocale = idioma === "en" ? "en-US" : "es-CR";
   const from = (await searchParams)?.from;
   const backHref = safeMarketplaceReturnHref(from, "/ofertas");
-  const backLabel = marketplaceReturnLabel(backHref, "/ofertas", locale, !from);
+  const tSalida = await getTranslations("marketplaceReturn");
+  const backLabel = tSalida(marketplaceReturnLabelKey(backHref, "/ofertas", !from));
   const vuelveAlPanel = backHref.startsWith("/dashboard");
   const supabase = await createClient();
   const user = await safeGetUser(supabase);

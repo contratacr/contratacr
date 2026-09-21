@@ -40,7 +40,10 @@ export function safeMarketplaceReturnHref(
 }
 
 /**
- * El rótulo del enlace de salida de una ficha.
+ * La CLAVE del rótulo del enlace de salida de una ficha (namespace
+ * `marketplaceReturn`). Devuelve la clave y no el texto para que la copia viva
+ * en `messages/*.json` como el resto del app; quien la usa la traduce con
+ * `useTranslations` o `getTranslations`.
  *
  * «Volver» solo se puede decir si de verdad se estuvo antes. Una ficha de
  * promoción o de empleo se comparte por WhatsApp y sale en Google: quien llega
@@ -50,24 +53,17 @@ export function safeMarketplaceReturnHref(
  * adentro—. Sin origen, el enlace deja de fingir un regreso y ofrece lo que
  * hay: ver la lista entera.
  */
-export function marketplaceReturnLabel(
+export function marketplaceReturnLabelKey(
   href: string,
   fallback: "/ofertas" | "/empleos",
-  locale: string = "es",
   sinOrigen = false,
 ) {
-  const isEnglish = locale === "en";
-  if (sinOrigen) {
-    if (fallback === "/ofertas") return isEnglish ? "See all promotions" : "Ver todas las promociones";
-    return isEnglish ? "See all jobs" : "Ver todos los empleos";
-  }
+  if (sinOrigen) return fallback === "/ofertas" ? "allPromotions" : "allJobs";
   const pathname = withoutLocale(href.split(/[?#]/u)[0] || "/");
-  if (pathname.startsWith("/profesionales/")) return isEnglish ? "Back to profile" : "Volver al perfil";
+  if (pathname.startsWith("/profesionales/")) return "backToProfile";
   if (pathname.startsWith("/dashboard/")) {
     const params = new URLSearchParams(href.includes("?") ? href.split("?")[1]?.split("#")[0] : "");
-    if (params.get("tab") === "saved") return isEnglish ? "Back to favorites" : "Volver a favoritos";
-    return isEnglish ? "Back to dashboard" : "Volver al panel";
+    return params.get("tab") === "saved" ? "backToFavorites" : "backToDashboard";
   }
-  if (fallback === "/ofertas") return isEnglish ? "Back to promotions" : "Volver a promociones";
-  return isEnglish ? "Back to jobs" : "Volver a empleos";
+  return fallback === "/ofertas" ? "backToPromotions" : "backToJobs";
 }
