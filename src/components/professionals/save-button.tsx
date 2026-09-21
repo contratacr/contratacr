@@ -289,8 +289,11 @@ interface SaveButtonProps {
 export function useGuardarProfesional({ pro, isOwn = false }: { pro: SavedPro; isOwn?: boolean }) {
   const t = useTranslations("card");
   const locale = useLocale();
-  const { user, loading: authLoading } = useAuth();
-  const [saved, setSaved] = useState(false);
+  const { user, loading: authLoading, savedKeys } = useAuth();
+  // Nace en su estado de verdad: el layout ya trae lo guardado de la cuenta.
+  // Antes arrancaba siempre en falso y, a quien ya tenía guardado a este
+  // profesional, el marcador se le rellenaba delante de los ojos tras cargar.
+  const [saved, setSaved] = useState(() => Boolean(user) && savedKeys.has(`pro:${pro.id}`));
   const [selfMsg, setSelfMsg] = useState<string | null>(null);
 
   useEffect(() => {

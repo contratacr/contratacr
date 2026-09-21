@@ -137,9 +137,10 @@ export default async function LocaleLayout({
   // profesional»: con un `false` inventado pintaría «Ofrecer mis servicios» a
   // quien sí tiene ficha, y tendría que quitarlo después.
   let initialHasProfessionalProfile: boolean | null = null;
+  const initialSavedKeys: string[] = [];
   if (supabase && initialUser) {
     try {
-      const [{ data }, { data: unreadNotifications }, { data: professionalRow }] = await withPromiseTimeout(Promise.all([
+      const [{ data }, { data: unreadNotifications }, { data: professionalRow }, { data: guardados }, { data: prosGuardados }] = await withPromiseTimeout(Promise.all([
         supabase
           .from("profiles")
           .select("avatar_url")
@@ -155,10 +156,20 @@ export default async function LocaleLayout({
           .select("business_name")
           .eq("profile_id", initialUser.id)
           .maybeSingle(),
+        // Lo que esta cuenta tiene guardado, para que los botones de guardar
+        // nazcan en su estado de verdad (ver `savedKeys` en use-auth).
+        supabase.from("saved_items").select("item_type, item_id").eq("user_id", initialUser.id).limit(500),
+        supabase.from("saved_professionals").select("professional_id").eq("client_id", initialUser.id).limit(500),
       ]), 6_000, "layout-account-bootstrap-timeout");
       initialAvatarUrl = (data?.avatar_url as string | null | undefined) ?? null;
       initialAccountName = String((professionalRow as { business_name?: string } | null)?.business_name ?? "").trim() || null;
       initialHasProfessionalProfile = !!professionalRow;
+      for (const fila of (guardados ?? []) as Array<{ item_type?: string; item_id?: string }>) {
+        if (fila.item_type && fila.item_id) initialSavedKeys.push(`${fila.item_type}:${fila.item_id}`);
+      }
+      for (const fila of (prosGuardados ?? []) as Array<{ professional_id?: string }>) {
+        if (fila.professional_id) initialSavedKeys.push(`pro:${fila.professional_id}`);
+      }
       for (const notification of unreadNotifications ?? []) {
         const context = notificationContext(notification.type as string);
         if (context === "professional") initialNotificationUnread.offer++;
@@ -177,7 +188,7 @@ export default async function LocaleLayout({
       <GlobalActionLoading />
       <GlobalDataRefresh />
       <RouteScrollReset />
-      <AuthProvider initialUser={initialUser} initialAvatarUrl={initialAvatarUrl} initialAccountName={initialAccountName} initialNotificationUnread={initialNotificationUnread} initialHasProfessionalProfile={initialHasProfessionalProfile}>
+      <AuthProvider initialUser={initialUser} initialAvatarUrl={initialAvatarUrl} initialAccountName={initialAccountName} initialNotificationUnread={initialNotificationUnread} initialHasProfessionalProfile={initialHasProfessionalProfile} initialSavedKeys={initialSavedKeys}>
         <DocumentLocale locale={locale} />
         <EmojiBlocker />
         <ViewportEnvironment />

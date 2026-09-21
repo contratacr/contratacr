@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, createElement, useContext, useEffect, useRef, useState, type ReactNode } from "react";
+import { createContext, createElement, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import type { User } from "@supabase/supabase-js";
 import { createClient, hasSupabaseBrowserConfig } from "@/lib/supabase/client";
 import { APP_RESUME_EVENT } from "@/lib/app-events";
@@ -39,9 +39,18 @@ type AuthState = {
    * servidor no pudo saberlo (sin sesión, o la consulta falló).
    */
   hasProfessionalProfile: boolean | null;
+  /**
+   * Lo que esta cuenta tenía guardado al cargar la página, como `tipo:id`
+   * («job:…», «offer:…», «project:…», «pro:…»). Un botón de guardar nacía
+   * SIEMPRE en «Guardar» y preguntaba después: a quien ya lo tenía guardado le
+   * cambiaba a «Guardado» delante de los ojos, ~350 ms tarde, en cada tarjeta.
+   * Con esto nace en su estado de verdad, igual en el servidor y al hidratar.
+   */
+  savedKeys: ReadonlySet<string>;
 };
 
 const AuthContext = createContext<AuthState | null>(null);
+const SIN_GUARDADOS: readonly string[] = [];
 
 const LAST_AUTH_USER_KEY = "ccr:last-auth-user";
 const AVISO_CIERRE_KEY = "ccr:aviso-cierre-sesion:v1";
@@ -117,6 +126,7 @@ function useAuthState(
   initialNotificationUnread: { offer: number; use: number; neutral: number } = { offer: 0, use: 0, neutral: 0 },
   initialAccountName: string | null | undefined = undefined,
   initialHasProfessionalProfile: boolean | null | undefined = undefined,
+  initialSavedKeys: readonly string[] = SIN_GUARDADOS,
 ): AuthState {
   // `null` from the server means the request is explicitly anonymous. Only
   // consult the browser cache when no server value was provided at all; using
@@ -124,6 +134,7 @@ function useAuthState(
   // during hydration.
   const initialResolvedUser = initialUser === undefined ? readCachedUser() : initialUser;
   const [user, setUser] = useState<User | null>(() => initialResolvedUser);
+  const savedKeys = useMemo(() => new Set(initialSavedKeys), [initialSavedKeys]);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(() => {
     if (!initialResolvedUser) return null;
     if (typeof window === "undefined") return initialAvatarUrl ?? null;
@@ -387,11 +398,12 @@ function useAuthState(
     accountName: initialAccountName ?? null,
     notificationUnread: initialNotificationUnread,
     hasProfessionalProfile: initialHasProfessionalProfile ?? null,
+    savedKeys,
   };
 }
 
-export function AuthProvider({ children, initialUser, initialAvatarUrl, initialAccountName, initialNotificationUnread, initialHasProfessionalProfile }: { children: ReactNode; initialUser?: User | null; initialAvatarUrl?: string | null; initialAccountName?: string | null; initialNotificationUnread?: { offer: number; use: number; neutral: number }; initialHasProfessionalProfile?: boolean | null }) {
-  const value = useAuthState(initialUser, initialAvatarUrl, initialNotificationUnread, initialAccountName, initialHasProfessionalProfile);
+export function AuthProvider({ children, initialUser, initialAvatarUrl, initialAccountName, initialNotificationUnread, initialHasProfessionalProfile, initialSavedKeys }: { children: ReactNode; initialUser?: User | null; initialAvatarUrl?: string | null; initialAccountName?: string | null; initialNotificationUnread?: { offer: number; use: number; neutral: number }; initialHasProfessionalProfile?: boolean | null; initialSavedKeys?: readonly string[] }) {
+  const value = useAuthState(initialUser, initialAvatarUrl, initialNotificationUnread, initialAccountName, initialHasProfessionalProfile, initialSavedKeys);
   return createElement(AuthContext.Provider, { value }, children);
 }
 
