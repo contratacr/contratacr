@@ -249,7 +249,7 @@ export default async function OfferDetailPage({ params, searchParams }: { params
           segunda flecha dentro de la página duplica el camino y obliga a
           adivinar si hacen lo mismo. En el teléfono la salida sigue siendo la
           flecha de la cabecera, que ahí sí es la única que hay. */}
-      <div className="mx-auto grid max-w-6xl gap-5 px-0 py-0 sm:px-6 sm:py-8 lg:grid-cols-[minmax(0,760px)_320px] lg:justify-center lg:pt-3">
+      <div className="mx-auto grid max-w-[84rem] gap-5 px-0 py-0 sm:px-6 sm:py-8 lg:grid-cols-[minmax(0,1fr)_320px] lg:justify-center lg:pt-3">
         <article className="overflow-hidden bg-white lg:rounded-lg lg:border lg:border-[#e5e7eb]">
           <div className="relative bg-white p-0 sm:p-3">
             <OfferImageGallery images={offer.image_urls} title={offer.title} />
@@ -319,7 +319,7 @@ export default async function OfferDetailPage({ params, searchParams }: { params
             </dl>
             <section className="mt-7 pb-6">
               <h3 className="text-lg font-bold">{copy.details}</h3>
-              <p className="mt-3 max-w-full whitespace-pre-line break-words pr-1 text-sm leading-7 text-[#43536b] [overflow-wrap:anywhere]">
+              <p className="mt-3 max-w-[68ch] whitespace-pre-line break-words pr-1 text-sm leading-7 text-[#43536b] [overflow-wrap:anywhere]">
                 {offer.description}
               </p>
             </section>

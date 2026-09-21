@@ -69,7 +69,7 @@ export default async function JobDetailRedirect({ params, searchParams }: Props)
     <main className="min-h-[calc(100vh-72px)] bg-white text-[#162543] sm:bg-[#f4f7fa]">
       {/* Las mismas medidas que la ficha de un empleo vivo: 6xl, la columna de
           760 centrada. La lápida no es otra pantalla, es la misma sin acciones. */}
-      <div className="mx-auto w-full max-w-6xl px-4 pb-10 pt-6 sm:px-6 sm:pt-8">
+      <div className="mx-auto w-full max-w-[84rem] px-4 pb-10 pt-6 sm:px-6 sm:pt-8">
         {/* EN COMPUTADORA NO HAY FLECHA DE VOLVER, NUNCA: la del navegador ya
             está a la izquierda de la dirección y hace exactamente eso. En el
             teléfono sí, que ahí no hay otra. */}
@@ -77,7 +77,7 @@ export default async function JobDetailRedirect({ params, searchParams }: Props)
           <ArrowLeft className="h-4 w-4 stroke-[2.4]" />
           {t("backAll")}
         </Link>
-        <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,760px)_320px] lg:justify-center">
+        <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_320px] lg:justify-center">
           <article className="rounded-lg border border-[#e5e7eb] bg-white p-6 sm:p-7">
             {nombre && <p className="font-semibold text-[#52627a]">{nombre}</p>}
             <h1 className="mt-0.5 text-2xl font-extrabold leading-tight text-[#162543]">{cerrado.title}</h1>

@@ -519,7 +519,7 @@ export function ProjectsBoard({
             "mx-auto w-full max-w-7xl px-0 py-0 sm:max-w-[46rem] sm:px-6 sm:py-5 lg:px-6",
             // Las MISMAS medidas que la página de un empleo: 6xl de ancho y la
             // ficha centrada en 760 px con su tarjeta de 320 al lado.
-            detalle ? "lg:max-w-6xl lg:pb-8 lg:pt-8" : "lg:max-w-7xl lg:min-h-0 lg:flex-1 lg:py-0",
+            detalle ? "lg:max-w-[84rem] lg:pb-8 lg:pt-8" : "lg:max-w-7xl lg:min-h-0 lg:flex-1 lg:py-0",
           )}>
             {/* La salida, arriba y a la izquierda, con la misma forma que en
                 Empleos y Promociones. */}
@@ -533,7 +533,7 @@ export function ProjectsBoard({
                 // `lg:border-0`. En una PÁGINA de ficha no hay dos columnas que
                 // separar, y esa raya quedaba suelta a la derecha de la tarjeta,
                 // bajando por el gris hasta el final.
-                ? "ccr-ficha-pagina lg:grid lg:grid-cols-[minmax(0,760px)_320px] lg:items-start lg:justify-center lg:gap-5 lg:overflow-visible lg:rounded-none lg:border-0 lg:bg-transparent lg:shadow-none"
+                ? "ccr-ficha-pagina lg:grid lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start lg:justify-center lg:gap-5 lg:overflow-visible lg:rounded-none lg:border-0 lg:bg-transparent lg:shadow-none"
                 : "lg:h-full",
               // UNA DIRECCIÓN PROPIA ABRE UNA PÁGINA PROPIA, como en Empleos y
               // Promociones: /proyectos/[id] muestra SOLO el proyecto, también
@@ -704,7 +704,10 @@ export function ProjectsBoard({
                         ))}
                       </dl>
                       <h3 className="mt-7 text-lg font-bold text-[#162543]">{copy.loQueNecesita}</h3>
-                      <p className="mt-3 whitespace-pre-line break-words text-sm leading-7 text-[#43536b] [overflow-wrap:anywhere]">{ficha.description}</p>
+                      {/* La TARJETA llena el ancho; el TEXTO no. Una línea de 950 px son
+                          unos 120 caracteres y el ojo se pierde al saltar de renglón.
+                          La ficha se ve grande y el párrafo se sigue leyendo. */}
+                      <p className="mt-3 max-w-[68ch] whitespace-pre-line break-words text-sm leading-7 text-[#43536b] [overflow-wrap:anywhere]">{ficha.description}</p>
                       {/* TELÉFONO: lo que contacta, en la franja de abajo; guardar
                           y compartir viven en el «···» de la barra de arriba. */}
                       {/* En la franja de abajo va lo que se hace con esta
