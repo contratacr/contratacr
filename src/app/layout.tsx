@@ -284,6 +284,11 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
 @media (min-width:640px){body:not([data-ccr-al-final]) .ccr-pie-pegado{box-shadow:0 -8px 12px -6px rgba(15,23,42,.18)}}
 .ccr-pie-ventana,.ccr-pie-formulario,.ccr-cabecera-pegada{transition:box-shadow .18s ease-out}
 body[data-ccr-desplazado] .ccr-cabecera-pegada{box-shadow:0 8px 12px -6px rgba(15,23,42,.18)}
+/* La pantalla de error se centra en la VENTANA, no debajo de la barra. Pide
+   100vh de alto y, si además queda el hueco que reserva la barra, el bloque
+   entero baja justo esa altura y deja un claro arriba. En una pantalla de error
+   no hay barra que reservar: lo único que hay es el aviso. */
+body:has(.ccr-error-screen) .ccr-navbar-spacer{display:none}
 [data-ccr-hay-mas] .ccr-pie-ventana,[data-ccr-hay-mas] .ccr-pie-formulario{box-shadow:0 -8px 12px -6px rgba(15,23,42,.18)}`,
           }}
         />
