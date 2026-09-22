@@ -12,7 +12,7 @@ import { useSearchParams } from "next/navigation";
 import {
   User, Award, CalendarCheck, CalendarClock, CalendarDays, Wrench,
   ShieldCheck, Bell, Handshake, ClipboardList, Bookmark, Settings, Headset, CreditCard,
-  ArrowLeft, ArrowRight, ChevronDown, ChevronRight, Sparkles, Plus, AlertCircle, X, MessageSquareMore, Home, LogOut, Users, CheckCircle2, FileText, Search, Camera, Eye, Trash2, Loader2,
+  ArrowLeft, ArrowRight, ChevronDown, ChevronRight, Sparkles, AlertCircle, X, MessageSquareMore, Home, LogOut, Users, CheckCircle2, FileText, Search, Camera, Eye, Trash2, Loader2,
   BriefcaseBusiness, Star, ReceiptText, ExternalLink, Share2, BookOpen,
   } from "lucide-react";
 import { QuotesSection } from "@/components/quotes/quotes-section";
@@ -2187,7 +2187,7 @@ export default function DashboardPage() {
                   </Avatar>
                   {mode === "offer" && (
                     <span className="absolute bottom-0 right-0 flex h-7 w-7 items-center justify-center rounded-full border-2 border-white bg-[#009FD9] text-white shadow-sm">
-                      {headerPhotoUploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Plus className="h-4 w-4" strokeWidth={3} />}
+                      {headerPhotoUploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Camera className="h-3.5 w-3.5" strokeWidth={2.4} />}
                     </span>
                   )}
                 </button>

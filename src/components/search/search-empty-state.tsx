@@ -12,7 +12,10 @@ import { PanelEmptyState } from "@/components/ui/content-loading";
  * por eso el vacío estaba copiado a mano y se había quedado con un mosaico de
  * 80px que empujaba el botón fuera de la pantalla.
  */
-export function SearchEmptyState({ title, description, cta, href, limpiar }: { title: string; description: string; cta: string; href: string; limpiar?: { etiqueta: string; href: string } }) {
+// SIN «LIMPIAR FILTROS» AQUÍ. La fila de pastillas de arriba ya lo tiene
+// siempre a la vista, y repetido abajo eran dos botones para lo mismo en la
+// misma pantalla: el vacío ofrece UNA salida, publicar lo que se necesita.
+export function SearchEmptyState({ title, description, cta, href }: { title: string; description: string; cta: string; href: string }) {
   return (
     // EN COMPUTADORA LLENA LA COLUMNA. El mapa de al lado mide
     // `calc(100vh-104px)`; la tarjeta del vacío medía 20rem y debajo quedaba
@@ -38,14 +41,6 @@ export function SearchEmptyState({ title, description, cta, href, limpiar }: { t
             >
               {cta}
             </Link>
-            {limpiar && (
-              <Link
-                href={limpiar.href}
-                className="inline-flex items-center justify-center rounded-full border border-[#b9d9e8] px-6 py-2.5 text-sm font-bold text-[#007fae] whitespace-nowrap transition-colors hover:bg-[#f1f9fc]"
-              >
-                {limpiar.etiqueta}
-              </Link>
-            )}
           </div>
         )}
       />

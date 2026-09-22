@@ -1141,7 +1141,13 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
     // que quedaba debajo (ver useToquePropio).
     const pill = "ccr-search-filter-chip inline-flex h-9 w-max shrink-0 items-center justify-center gap-1 whitespace-nowrap rounded-full border border-[#d7e1ea] bg-white px-2.5 text-[10px] font-bold text-[#162543] shadow-sm min-[350px]:px-3 min-[350px]:text-[11px] min-[390px]:text-[12px]";
     return (
-      <Carril className="scrollbar-none flex w-full min-w-0 items-center gap-1 overflow-x-auto overflow-y-visible pb-0.5">
+      // «LIMPIAR» NO VIAJA CON EL CARRIL. Iba de último dentro de la fila que
+      // se desliza, así que en el teléfono aparecía cortado contra el filo
+      // —«× Lim…»— justo cuando más falta hace: es la salida de una búsqueda
+      // que no dio nada. Fuera del carril se queda siempre a la vista, y como
+      // ocupa su sitio a la derecha no empuja a los demás al aparecer.
+      <div className="flex w-full min-w-0 items-center gap-1">
+      <Carril className="scrollbar-none flex min-w-0 flex-1 items-center gap-1 overflow-x-auto overflow-y-visible pb-0.5">
         <div className="flex w-max min-w-full items-center justify-start gap-1">
           <button type="button" onPointerDown={anclarEn} onClick={alTocarChip(() => setOpenChip("sort"))} className={pill}>
             <span className="min-w-0 whitespace-nowrap">{sortLabel}</span><ChevronDown className="h-3 w-3 shrink-0 min-[390px]:h-3.5 min-[390px]:w-3.5" />
@@ -1165,18 +1171,19 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
               algo puesto, para no ocupar lugar en la fila limpia, y NO toca la
               búsqueda: el servicio y la ubicación son lo que la persona vino a
               buscar, no un filtro que se le quita por debajo. */}
-          {filtrosDeChipActivos > 0 && (
-            <button
-              type="button"
-              onPointerDown={onPointerDownChip}
-              onClick={alTocarChip(limpiarChips)}
-              className="inline-flex h-9 w-max shrink-0 items-center gap-1 whitespace-nowrap rounded-full px-2 text-[11px] font-bold text-[#007fae] underline-offset-2 hover:underline min-[390px]:text-[12px]"
-            >
-              <X className="h-3 w-3 shrink-0 min-[390px]:h-3.5 min-[390px]:w-3.5" />
-              {t("filters.clearAll")} ({filtrosDeChipActivos})
-            </button>
-          )}
         </div>
+        </Carril>
+        {filtrosDeChipActivos > 0 && (
+          <button
+            type="button"
+            onPointerDown={onPointerDownChip}
+            onClick={alTocarChip(limpiarChips)}
+            className="inline-flex h-9 shrink-0 items-center gap-1 whitespace-nowrap rounded-full border border-[#b9d9e8] bg-[#f1f9fc] px-2.5 text-[11px] font-bold text-[#007fae] min-[390px]:text-[12px]"
+          >
+            <X className="h-3 w-3 shrink-0 min-[390px]:h-3.5 min-[390px]:w-3.5" />
+            {t("filters.clearAll")} ({filtrosDeChipActivos})
+          </button>
+        )}
         <FilterSheet ancla={anclaChip}
           open={openChip === "sort"}
           title={locale === "en" ? "Sort" : "Ordenar"}
@@ -1216,7 +1223,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
         />
         {showVideoFilter && <MultiFilterSheet ancla={anclaChip} open={openChip === "modality"} title={t("filters.attention")} values={modalities} options={modalityOptions} onClose={() => setOpenChip(null)} onApply={(next) => { const nextModalities = next.filter(isSearchModality); setModalities(nextModalities); applyFilters({ modalidad: serializeMultiParam(nextModalities) }); setOpenChip(null); }} />}
         {showInsurerFilter && <MultiFilterSheet ancla={anclaChip} open={openChip === "insurer"} title={t("filters.insurer")} values={insurers} options={insurerOptions.map((item) => ({ value: item.id, label: item.label }))} onClose={() => setOpenChip(null)} onApply={(next) => { setInsurers(next); applyFilters({ aseguradora: serializeMultiParam(next) }); setOpenChip(null); }} />}
-      </Carril>
+      </div>
     );
   }
 

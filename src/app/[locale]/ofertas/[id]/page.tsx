@@ -176,7 +176,7 @@ export default async function OfferDetailPage({ params, searchParams }: { params
     [copy.rowType, offerTypeLabel(offer.offer_type, locale)] as [string, string],
     ...(offer.service_label ? [[copy.rowService, offer.service_label] as [string, string]] : []),
     [copy.rowLocation, offer.location_label || copy.wholeCountry],
-    ...(offer.valid_until ? [[copy.rowValid, new Intl.DateTimeFormat(dateLocale, { dateStyle: "medium" }).format(new Date(`${offer.valid_until}T12:00:00`))] as [string, string]] : []),
+    ...(offer.valid_until ? [[copy.rowValid, new Intl.DateTimeFormat(dateLocale, { day: "numeric", month: "long", year: "numeric" }).format(new Date(`${offer.valid_until}T12:00:00`))] as [string, string]] : []),
     ...(offer.quantity_available != null ? [[copy.rowAvailable, `${offer.quantity_available}`] as [string, string]] : []),
   ] as Array<[string, string]>).filter(([, valor]) => Boolean(valor));
   const quienPublica = offer.professional_slug ? (

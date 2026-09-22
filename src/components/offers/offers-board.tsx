@@ -935,7 +935,7 @@ function OfferPreview({
               <span className="inline-flex items-center gap-1.5">
                 <CalendarDays className="h-4 w-4 text-[#009fd9]" />
                 {copy.availableUntil}{" "}
-                {new Intl.DateTimeFormat(locale === "en" ? "en-US" : "es-CR", { dateStyle: "medium" }).format(
+                {new Intl.DateTimeFormat(locale === "en" ? "en-US" : "es-CR", { day: "numeric", month: "long", year: "numeric" }).format(
                   new Date(`${offer.valid_until}T12:00:00`),
                 )}
               </span>

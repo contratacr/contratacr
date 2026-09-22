@@ -573,7 +573,6 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                   description={t("noResults.desc")}
                   cta={t("noResults.publishCta")}
                   href={`/dashboard/profesional?tab=sent_projects&openPublish=1${selectedCategory ? `&categoria=${encodeURIComponent(selectedCategory)}` : ""}`}
-                  limpiar={hasActiveFilters ? { etiqueta: t("filters.clearAll"), href: sinFiltrosHref } : undefined}
                 />
               ) : (
                 <>
