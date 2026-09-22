@@ -602,8 +602,14 @@ export function SupportTickets({
             <div className={`ccr-support-thread-composer shrink-0 bg-white px-3 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-3 transition-shadow sm:px-6 sm:pb-5 ${sombrasDelHilo.abajo ? "shadow-[0_-8px_12px_-6px_rgba(15,23,42,0.14)]" : ""}`}>
               {/* Pildora RELLENA, sin linea alrededor, como el «Aa» de
                   Messenger: sobre un lienzo blanco, un campo con borde era una
-                  caja mas. El foco lo dice un anillo suave, no un borde. */}
-              <div className="flex items-end gap-2 rounded-[24px] bg-[#f0f2f5] p-1 pl-2 transition focus-within:ring-2 focus-within:ring-[#009FD9]/25">
+                  caja mas. El foco lo dice un anillo suave, no un borde.
+                  EL GRIS ES #f3f4f6, uno que el proyecto YA USA en 70 sitios.
+                  Estuvo en #f0f2f5 —el de Messenger— y en la maquina de Isaac
+                  el campo salia BLANCO: una clase arbitraria con un valor que
+                  no aparece en ningun otro lado puede no llegar a generarse, y
+                  ya nos habia pasado. La diferencia entre los dos grises no se
+                  ve; que el relleno exista, si. */}
+              <div className="flex items-end gap-2 rounded-[24px] bg-[#f3f4f6] p-1 pl-2 transition focus-within:ring-2 focus-within:ring-[#009FD9]/30">
                 <textarea
                   value={reply}
                   onChange={(e) => {
