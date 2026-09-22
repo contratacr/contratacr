@@ -155,6 +155,8 @@ function cubrePaisEntero(w: { level?: string; id?: string }, nombre: string) {
 }
 
 export function ProfessionalSchedule({ professional, categoryName, searchedPlace, availabilityPublic, contactPreference = "ambas", videoConsultApplies = true, slots: allSlots, slotsInitiallyLoaded = true, activeCategory, isOwn = false, viewerPendiente = false, info, placeFallback = "", placeAddress = "", businessName = "", onVerZonas, stacked = false, forceContactOnly = false, preferredLocationId, restrictToPreferredLocation = false, syncWithSearchLoading = false, hayContenidoDespues = false}: ProfessionalScheduleProps) {
+  // ¿Se buscó una zona? Con una zona en la búsqueda, todo lo que sale la cubre.
+  const zonaBuscada = Boolean(searchedPlace?.cantonName?.trim() || searchedPlace?.provinceName?.trim());
   const t = useTranslations("schedule");
   const tLoading = useTranslations("loading");
   const locale = useLocale();
@@ -658,22 +660,27 @@ export function ProfessionalSchedule({ professional, categoryName, searchedPlace
               {zonaPrincipalEsVideo ? <Video className="h-3 w-3 shrink-0" /> : <MapPin className="h-3 w-3 shrink-0" />}
               <span className="min-w-0">{locTabLabel(primaryLocationTabs[0].label)}</span>
             </span>
-            {/* «+N zonas más» SOLO donde lleva a algún lado.
-                En la ficha es un botón que abre Información con la lista
-                entera. En una tarjeta de resultados no hay lista que abrir, así
-                que quedaba como texto muerto: decía que hay cinco zonas más y
-                no daba manera de verlas. Y sobre todo, no respondía la pregunta
-                de quien busca —«¿me cubre a mí?»—, que ya está respondida por
-                el hecho de que la tarjeta aparezca: si se buscó con ubicación,
-                todos los resultados la cubren. */}
-            {zonasRestantes > 0 && onVerZonas && (
-              <button
-                type="button"
-                onClick={onVerZonas}
-                className="shrink-0 rounded-sm font-bold text-[#007fae] underline-offset-2 hover:underline"
-              >
-                {t("moreZones", { count: zonasRestantes })}
-              </button>
+            {/* «+N zonas más» cuando dice algo.
+                En la FICHA es un botón que abre Información con la lista entera.
+                En una TARJETA de resultados depende de si se buscó una zona:
+                  · con zona buscada, sobra — que la tarjeta aparezca ya
+                    significa que la cubre, y el contador contesta algo que
+                    nadie preguntó;
+                  · sin zona buscada, hace falta — es lo único que avisa de que
+                    este profesional trabaja en más sitios que el que se lee, y
+                    tocar la tarjeta lleva a la lista completa. */}
+            {zonasRestantes > 0 && (onVerZonas || !zonaBuscada) && (
+              onVerZonas ? (
+                <button
+                  type="button"
+                  onClick={onVerZonas}
+                  className="shrink-0 rounded-sm font-bold text-[#007fae] underline-offset-2 hover:underline"
+                >
+                  {t("moreZones", { count: zonasRestantes })}
+                </button>
+              ) : (
+                <span className="shrink-0 font-bold text-[#52627a]">{t("moreZones", { count: zonasRestantes })}</span>
+              )
             )}
           </p>
         )}
