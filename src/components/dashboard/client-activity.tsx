@@ -1078,7 +1078,6 @@ export function ClientActivity({ section, onCount }: { section: ClientActivitySe
             description: editandoProyecto.description ?? "",
             provinciaId: editandoProyecto.provincia_id ?? "",
             cantonId: editandoProyecto.canton_id ?? "",
-            status: editandoProyecto.status,
           }}
           onClose={() => setEditandoProyecto(null)}
           onSuccess={() => refreshProjectRows({})}

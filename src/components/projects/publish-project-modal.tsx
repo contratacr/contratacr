@@ -61,8 +61,6 @@ export type ProyectoParaEditar = {
   description: string;
   provinciaId: string;
   cantonId: string;
-  /** Para avisar que guardar no lo vuelve a publicar si esta cerrado. */
-  status?: string;
 };
 
 export function PublishProjectModal({ onClose, onSuccess, editar }: {
@@ -272,12 +270,6 @@ export function PublishProjectModal({ onClose, onSuccess, editar }: {
           ) : (
             <div ref={cuerpo} className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain bg-[#f4f7fa] px-4 py-5 sm:max-h-[calc(90vh-145px)] sm:flex-none">
               <div className="flex flex-col gap-6 rounded-2xl border border-[#e5e7eb] bg-white p-5 shadow-sm">
-                {/* GUARDAR NO PUBLICA: la accion «edit» del API no toca el
-                    estado, pero nada en la pantalla lo decia. Igual que en
-                    Empleos y Promociones. */}
-                {editar?.status && editar.status !== "open" && (
-                  <p className="rounded-xl bg-[#f4f7fa] px-4 py-3 text-[13px] font-semibold leading-snug text-[#52627a]">{t("cerradoAviso")}</p>
-                )}
                 <div ref={categoryFieldRef}>
                   <label className={fieldLabel}>{t("category")}{obligatorio}</label>
                   <CategorySearch
