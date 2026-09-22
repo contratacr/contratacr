@@ -242,11 +242,11 @@ function MultiFilterSheetContent({
           </button>
         </div>
         <div className="max-h-[70vh] overflow-y-auto px-5 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-1">
-          {draftValues.length > 0 && (
-            <button type="button" onClick={() => setDraftValues([])} className="flex min-h-[50px] w-full items-center text-left text-sm font-bold text-[#009FD9]">
-              {t("filters.clearAll")}
-            </button>
-          )}
+          {/* SIN «LIMPIAR FILTROS» DENTRO DE LA HOJA DE UN FILTRO. Decía
+              «filtros», en plural, desde un sitio que solo controla uno —y ni
+              siquiera limpiaba los demás: solo desmarcaba estos—. La salida
+              global vive junto al conteo; desmarcar estos son casillas a un
+              toque, con el encabezado diciendo cuántas hay. */}
           {options.map((option) => {
             const selected = draftValues.includes(option.value);
             return (
