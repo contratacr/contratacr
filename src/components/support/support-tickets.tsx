@@ -5,7 +5,7 @@ import { isNativeAppRuntime } from "@/hooks/use-native-app";
 import { confirmarSalidaSinGuardar } from "@/lib/confirmar-salida";
 import { lockBodyScroll } from "@/lib/body-scroll-lock";
 
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useAvisosSinLeer } from "@/hooks/use-avisos-sin-leer";
 import { useLocale, useTranslations } from "next-intl";
 import { Headset, ArrowLeft, SendHorizontal, Shield, Plus, Clock3, CheckCircle2 } from "lucide-react";
@@ -159,6 +159,8 @@ export function SupportTickets({
     return topicKey ? t(`subjects.${topicKey}`) : tk.subject;
   };
   const filterLabel = (id: string) => statusLabel(id);
+  const dia = (d: string) => new Date(d).toLocaleDateString(dateLocale, { day: "numeric", month: "long" });
+  const hora = (d: string) => new Date(d).toLocaleTimeString(dateLocale, { hour: "2-digit", minute: "2-digit" });
   const fmt = (d: string) => new Date(d).toLocaleString(dateLocale, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
   const [items, setItems] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(true);
@@ -483,7 +485,10 @@ export function SupportTickets({
           </div>
         ) : (
           <div className="ccr-support-thread-card flex min-h-0 flex-1 flex-col overflow-hidden bg-white">
-            <header className="grid min-h-[64px] shrink-0 grid-cols-[40px_minmax(0,1fr)] items-center gap-2 border-b border-[#e5e7eb] bg-white px-3 py-2 shadow-[0_8px_22px_-24px_rgba(15,23,42,0.45)] sm:grid-cols-[44px_minmax(0,1fr)] sm:gap-3 sm:px-5">
+            {/* La cabecera respira como la de una ficha: 68 px de alto, linea
+                fina y nada de sombra propia —la ponia siempre, hubiera o no
+                algo mas arriba, y competia con el borde—. */}
+            <header className="grid min-h-[68px] shrink-0 grid-cols-[40px_minmax(0,1fr)] items-center gap-2 border-b border-[#e7edf3] bg-white px-3 py-2.5 sm:grid-cols-[44px_minmax(0,1fr)] sm:gap-3 sm:px-5">
               <button onClick={closeThread} className="grid h-10 w-10 shrink-0 place-items-center rounded-full text-[#526277] transition active:bg-[#eef6fb]" aria-label={t("backToTickets")}>
                 <ArrowLeft className="h-5 w-5" />
               </button>
@@ -494,21 +499,17 @@ export function SupportTickets({
                 <div className="min-w-0 flex-1">
                   <div className="flex min-w-0 items-center gap-2">
                     <h3 className="min-w-0 flex-1 truncate text-base font-extrabold leading-tight text-[#162543]">{ticketSubject(ticket)}</h3>
-                    <span className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-bold ${STATUS_COLOR[ticket.status] ?? ""}`}>{statusLabel(ticket.status)}</span>
+                    <span className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-bold ${STATUS_COLOR[ticket.status] ?? ""}`}>{statusLabel(ticket.status)}</span>
                   </div>
                   <p className="mt-0.5 truncate text-xs font-semibold text-[#6b7280]">{t("caseRef", { ref: supportTicketRef(ticket.id, ticket.created_at, ticket.case_number) })}</p>
                 </div>
               </div>
             </header>
 
-            {/* LA CONVERSACION SE APOYA ABAJO, sobre el campo de escribir. Con
-                `flex-col` a secas, un caso de un solo mensaje dejaba el globo
-                pegado al techo y media pantalla de gris vacio debajo, como si
-                se hubieran borrado las respuestas. `justify-end` es lo que
-                hacen WhatsApp, Intercom y Slack: mientras la charla es corta
-                crece hacia arriba desde el campo, y cuando pasa del alto se
-                desplaza normal. */}
-            <div ref={messagesRef} className="ccr-support-thread-messages flex min-h-0 flex-1 flex-col justify-end gap-3 overflow-y-auto overscroll-contain bg-[#f3f7fa] p-4 sm:p-5">
+            {/* Una conversacion se lee de arriba hacia abajo: el primero
+                arriba. El vacio de abajo es el lienzo de la charla, no un
+                error, y ahi es donde van a caer las respuestas. */}
+            <div ref={messagesRef} className="ccr-support-thread-messages flex min-h-0 flex-1 flex-col gap-1.5 overflow-y-auto overscroll-contain bg-[#f6f9fb] px-4 py-5 sm:px-6">
               {/* Lo único que espera son los mensajes, y esperan con forma de
                   mensaje: dos globos grises, uno de cada lado. */}
               {threadLoading && messages.length === 0 && (
@@ -517,9 +518,23 @@ export function SupportTickets({
                   <div className="flex justify-end"><div className="h-12 w-[55%] animate-pulse rounded-[18px] rounded-br-md bg-[#dbeaf3]" /></div>
                 </>
               )}
-              {messages.map((m) => (
-                <div key={m.id} className={`flex ${m.sender_role === "user" ? "justify-end" : "justify-start"}`}>
-                  <div className={`max-w-[86%] rounded-[18px] px-3.5 py-2.5 text-[14px] leading-relaxed shadow-[0_4px_12px_-8px_rgba(15,23,42,0.55)] sm:max-w-[78%] ${m.sender_role === "user" ? "rounded-br-md bg-[#009FD9] font-medium text-white" : "rounded-bl-md border border-[#e5e7eb] bg-white text-[#25364d]"}`}>
+              {messages.map((m, i) => (
+                <Fragment key={m.id}>
+                  {/* La fecha se dice UNA vez por dia, en el centro, como en
+                      cualquier chat: repetida en cada globo era ruido, y sin
+                      ella una conversacion de varios dias parecia seguida. */}
+                  {(i === 0 || dia(messages[i - 1].created_at) !== dia(m.created_at)) && (
+                    <div className="my-2 flex justify-center first:mt-0">
+                      <span className="rounded-full bg-[#e8eef4] px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-[#68778d]">{dia(m.created_at)}</span>
+                    </div>
+                  )}
+                <div className={`flex ${m.sender_role === "user" ? "justify-end" : "justify-start"} ${i > 0 && messages[i - 1].sender_role !== m.sender_role ? "mt-2" : ""}`}>
+                  {/* El globo se ajusta al texto y no pasa de 34rem: a lo
+                      ancho de una pantalla de computadora, un renglon de 900 px
+                      deja de leerse como un mensaje y parece un parrafo de una
+                      pagina. La esquina del lado de quien habla va recta, que
+                      es lo que hace de pico. */}
+                  <div className={`max-w-[min(34rem,86%)] rounded-2xl px-4 py-2.5 text-[14px] leading-relaxed shadow-[0_1px_2px_rgba(15,23,42,0.06)] ${m.sender_role === "user" ? "rounded-br-sm bg-[#009FD9] text-white" : "rounded-bl-sm border border-[#e7edf3] bg-white text-[#25364d]"}`}>
                     {/* EN EL PROPIO GLOBO NO SE FIRMA. Un globo azul a la
                         derecha ya dice «yo» —es el idioma de cualquier chat— y
                         «Tu» con su monigote encima ocupaba mas alto que el
@@ -531,9 +546,10 @@ export function SupportTickets({
                       </div>
                     )}
                     <p className="text-sm leading-relaxed whitespace-pre-wrap">{m.body}</p>
-                    <div className={`mt-1 text-[11px] leading-none ${m.sender_role === "user" ? "text-right text-white/70" : "text-[#8fa1b6]"}`}>{fmt(m.created_at)}</div>
+                    <div className={`mt-1 text-[11px] leading-none ${m.sender_role === "user" ? "text-right text-white/70" : "text-[#8fa1b6]"}`}>{hora(m.created_at)}</div>
                   </div>
                 </div>
+                </Fragment>
               ))}
             </div>
 
@@ -558,8 +574,12 @@ export function SupportTickets({
               </div>
             )}
 
-            <div className="ccr-support-thread-composer shrink-0 border-t border-[#e5e7eb] bg-white px-3 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-2 sm:px-4 sm:pb-4">
-              <div className="flex items-end gap-2.5">
+            {/* El campo y el boton comparten caja: una sola pieza redonda con
+                el boton adentro, como Intercom o Messenger. Sueltos, la
+                cascara blanca de abajo se leia como una franja vacia con dos
+                cosas encima. */}
+            <div className="ccr-support-thread-composer shrink-0 border-t border-[#e7edf3] bg-white px-3 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-3 sm:px-6 sm:pb-5">
+              <div className="flex items-end gap-2 rounded-[24px] border border-[#d8e5ee] bg-white p-1 transition focus-within:border-[#009FD9] focus-within:ring-2 focus-within:ring-[#009FD9]/10">
                 <textarea
                   value={reply}
                   onChange={(e) => {
@@ -579,10 +599,10 @@ export function SupportTickets({
                   maxLength={LONG_TEXT_MAX_LENGTH}
                   rows={1}
                   placeholder={ticket.status === "resolved" ? t("reopenPlaceholder") : t("messagePlaceholder")}
-                  className="max-h-36 min-h-11 min-w-0 flex-1 resize-none overflow-hidden rounded-[22px] border border-[#d8e5ee] bg-white px-4 py-2.5 text-[15px] leading-6 outline-none transition focus:border-[#009FD9] focus:ring-2 focus:ring-[#009FD9]/10"
+                  className="max-h-36 min-h-10 min-w-0 flex-1 resize-none overflow-hidden bg-transparent px-3.5 py-2 text-[15px] leading-6 outline-none"
                 />
-                <button onClick={sendReply} disabled={sending || !reply.trim()} className="grid h-11 w-11 place-items-center rounded-full bg-[#009FD9] text-white shadow-[0_8px_18px_-12px_rgba(0,159,217,0.85)] transition hover:bg-[#008fca] disabled:bg-[#cfdde5] disabled:shadow-none" aria-label={sending ? t("sending") : t("send")}>
-                  {sending ? <Clock3 className="h-5 w-5 animate-spin" /> : <SendHorizontal className="h-[22px] w-[22px]" />}
+                <button onClick={sendReply} disabled={sending || !reply.trim()} className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[#009FD9] text-white transition hover:bg-[#008fca] disabled:bg-[#e3eaf0] disabled:text-[#a9b7c4]" aria-label={sending ? t("sending") : t("send")}>
+                  {sending ? <Clock3 className="h-5 w-5 animate-spin" /> : <SendHorizontal className="h-[18px] w-[18px]" />}
                 </button>
               </div>
             </div>
