@@ -2,13 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { Download, Loader2 } from "lucide-react";
+import { Download, Loader2, Trash2, Undo2 } from "lucide-react";
 import { Modal } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
 import { useAppDialog } from "@/hooks/use-app-dialog";
 import { formatColones } from "@/lib/pricing";
 import { desgloseQuote, isQuoteExpired, nombreArchivoCotizacion, numeroCotizacion, whatsappDigits, type Quote } from "@/lib/quotes";
 import { renderQuotePdf } from "@/lib/quote-image";
+import { MenuFicha } from "@/components/ui/menu-ficha";
 import { BotonCompartirCotizacion, QuoteShare } from "@/components/quotes/quote-share";
 
 const DATE_LOCALE: Record<string, string> = { es: "es-CR", en: "en-US" };
@@ -113,17 +114,25 @@ export function QuoteDetailModal({ quote, role, open, onClose, onChanged, proNam
         // en computadora y arriba en el teléfono.
         footer={(role === "pro" && abierta) || (!recienCreada && (puedeRetirar || puedeBorrar)) ? (
           <>
-            {!recienCreada && puedeRetirar ? (
-              <Button type="button" variant="secondary" className="w-full sm:w-auto" disabled={busy} onClick={() => void actuar("withdraw")}>{t("withdraw")}</Button>
-            ) : !recienCreada && puedeBorrar ? (
-              <Button type="button" variant="secondary" className="w-full sm:w-auto" disabled={busy} onClick={() => void actuar("delete")}>{t("delete")}</Button>
-            ) : null}
+            {/* DOS BOTONES Y EL «···», nunca tres apilados. En el teléfono tres
+                botones a todo el ancho son tres renglones y ninguno manda; los
+                dos que se usan —mandarla y guardarla— se quedan a la vista y lo
+                que destruye se va al menú, igual que «Cerrar vacante» en Empleos
+                o «Cancelar proyecto» en Proyectos. */}
             {role === "pro" && abierta && (
-              <BotonCompartirCotizacion quote={quote} proName={proName ?? quote.professional_name ?? ""} proSlug={proSlug} className="w-full sm:w-auto" />
+              <BotonCompartirCotizacion quote={quote} proName={proName ?? quote.professional_name ?? ""} proSlug={proSlug} className="min-w-0 flex-1 sm:w-auto sm:flex-none" />
+            )}
+            {!recienCreada && (puedeRetirar || puedeBorrar) && (
+              <MenuFicha
+                className="shrink-0"
+                opciones={[puedeRetirar
+                  ? { id: "retirar", icono: <Undo2 className="h-4 w-4" />, texto: t("withdraw"), etiqueta: t("withdraw"), onSelect: () => void actuar("withdraw") }
+                  : { id: "borrar", icono: <Trash2 className="h-4 w-4" />, texto: t("delete"), etiqueta: t("delete"), peligro: true, onSelect: () => void actuar("delete") }]}
+              />
             )}
           </>
         ) : undefined}
-        footerClassName="flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+        footerClassName="flex-row items-center gap-2 sm:justify-end">
         <div className="flex flex-col gap-4">
           {/* Para el profesional, primero cómo mandarla: es a lo que viene. */}
           {!recienCreada && (
