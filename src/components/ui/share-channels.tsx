@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { Mail, Share2 } from "lucide-react";
 import { ShareLinkPanel } from "@/components/ui/share-link-panel";
@@ -19,64 +18,39 @@ export function WhatsAppIcon({ className }: { className?: string }) {
   );
 }
 
-export function InstagramIcon({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <rect x="2.5" y="2.5" width="19" height="19" rx="5.5" />
-      <circle cx="12" cy="12" r="4.2" />
-      <circle cx="17.4" cy="6.6" r="1.2" fill="currentColor" stroke="none" />
-    </svg>
-  );
-}
 
-export function FacebookIcon({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden="true">
-      <path d="M22 12.06C22 6.5 17.52 2 12 2S2 6.5 2 12.06c0 5.02 3.66 9.18 8.44 9.94v-7.03H7.9v-2.91h2.54V9.85c0-2.52 1.49-3.91 3.77-3.91 1.09 0 2.24.2 2.24.2v2.47h-1.26c-1.24 0-1.63.78-1.63 1.57v1.88h2.78l-.44 2.91h-2.34V22c4.78-.76 8.44-4.92 8.44-9.94Z" />
-    </svg>
-  );
-}
-
-const TILE = "flex flex-col items-center gap-2 rounded-2xl border border-[#e5e7eb] bg-white px-2 py-3.5 text-center transition-colors hover:border-[#bfe3f5] hover:bg-[#f8fcfe]";
 
 export function ShareChannels({ url, name, linkLabel, copyLabel, mensaje, asunto }: Props) {
   const t = useTranslations("shareProfile");
   const nativo = useNativeShare();
-  const [avisoInstagram, setAvisoInstagram] = useState(false);
 
   const texto = mensaje ?? t("message", { name });
   const wa = `https://wa.me/?text=${encodeURIComponent(`${texto} ${url}`)}`;
-  const fb = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
   const correo = `mailto:?subject=${encodeURIComponent(asunto ?? t("emailSubject", { name }))}&body=${encodeURIComponent(`${texto}\n${url}`)}`;
 
-  // Instagram no deja compartir un enlace desde el navegador: lo que funciona
-  // es copiarlo y pegarlo en la historia, el perfil o un mensaje.
-  async function instagram() {
-    try { await navigator.clipboard.writeText(url); } catch { /* sin portapapeles */ }
-    setAvisoInstagram(true);
-    window.open("https://www.instagram.com/", "_blank", "noopener,noreferrer");
-  }
+  // INSTAGRAM Y FACEBOOK SE RETIRAN.
+  //
+  // Instagram no recibe enlaces: no existe forma de mandarle uno desde el
+  // navegador. Lo que habia era un apano —copiar el enlace, abrir
+  // instagram.com y avisar que lo pegaras—, y encima el `window.open` venia
+  // despues de un `await` al portapapeles, asi que el navegador lo tomaba como
+  // ventana emergente sin permiso y la bloqueaba: de cara a quien lo tocaba, no
+  // pasaba nada.
+  //
+  // Facebook si funciona, pero solo con una direccion publica —en pruebas no
+  // hace nada— y detras de un dialogo que pide iniciar sesion. En el telefono,
+  // «Mas opciones» abre la hoja del sistema, que lleva a Instagram, Facebook y
+  // a lo que la persona tenga instalado, y lo hace bien.
+  //
+  // Queda lo que de verdad se usa: WhatsApp, copiar el enlace, correo y la hoja
+  // del sistema.
 
   return (
     <div className="flex flex-col gap-3">
       <ShareLinkPanel url={url} label={linkLabel ?? t("linkLabel")} copyLabel={copyLabel ?? t("copy")} copiedLabel={t("copied")} />
-      <div className="grid grid-cols-3 gap-2.5">
-        <a href={wa} target="_blank" rel="noopener noreferrer" className={TILE}>
-          <span className="grid h-11 w-11 place-items-center rounded-full bg-[#25d366] text-white"><WhatsAppIcon className="h-5 w-5" /></span>
-          <span className="text-[13px] font-bold text-[#162543]">{t("whatsapp")}</span>
-        </a>
-        <button type="button" onClick={() => void instagram()} className={TILE}>
-          <span className="grid h-11 w-11 place-items-center rounded-full bg-gradient-to-br from-[#f9ce34] via-[#ee2a7b] to-[#6228d7] text-white"><InstagramIcon className="h-5 w-5" /></span>
-          <span className="text-[13px] font-bold text-[#162543]">{t("instagram")}</span>
-        </button>
-        <a href={fb} target="_blank" rel="noopener noreferrer" className={TILE}>
-          <span className="grid h-11 w-11 place-items-center rounded-full bg-[#1877f2] text-white"><FacebookIcon className="h-5 w-5" /></span>
-          <span className="text-[13px] font-bold text-[#162543]">{t("facebook")}</span>
-        </a>
-      </div>
-      {avisoInstagram && (
-        <p className="rounded-2xl bg-[#eaf7fc] px-4 py-2.5 text-[13px] font-semibold leading-snug text-[#0b5f80]">{t("instagramHint")}</p>
-      )}
+      <a href={wa} target="_blank" rel="noopener noreferrer" className="inline-flex h-12 w-full items-center justify-center gap-2.5 rounded-full bg-[#25d366] px-5 text-[15px] font-bold text-white transition-colors hover:bg-[#1eb457]">
+        <WhatsAppIcon className="h-5 w-5" />{t("whatsapp")}
+      </a>
       <div className="flex flex-wrap gap-2.5">
         <a href={correo} className="inline-flex h-10 flex-1 items-center justify-center gap-2 rounded-full border border-[#d7e1ea] px-4 text-[13px] font-bold text-[#162543] transition-colors hover:border-[#b9c8d6] hover:bg-[#f6f9fb]">
           <Mail className="h-4 w-4" />{t("email")}
