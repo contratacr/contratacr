@@ -331,19 +331,12 @@ export function ServiciosClient({ catalogoInicial }: { catalogoInicial: string |
         </section>
 
         <div className="hidden lg:block">
-        <section className="relative z-30 px-4 pb-5 pt-8">
-          <div className="mx-auto max-w-6xl">
-            <div className="max-w-3xl">
-              <span className="mb-2.5 inline-flex rounded-full bg-[#EBF5FB] px-3 py-1 text-xs font-bold uppercase text-[#0089bb]">
-                {tp("eyebrow")}
-              </span>
-              <h1 className="text-[2rem] font-extrabold leading-tight text-[#1a2744] sm:text-4xl">
-                {tp("title")}
-              </h1>
-            </div>
-          </div>
-        </section>
-
+        {/* SIN PORTADA. «SERVICIOS · Encuentra el servicio que necesitas» decía
+            en dos renglones grandes lo que la pantalla ya demuestra: el buscador
+            y la lista de servicios están justo debajo. Empujaba lo que sirve
+            media pantalla hacia abajo, y ninguna otra sección del app se
+            presenta a sí misma. El título sigue en la pestaña del navegador y
+            en los metadatos, que es donde hace falta para Google. */}
         <section className="px-4 pb-16 pt-0">
           <div className="mx-auto max-w-6xl">
           <div className="overflow-hidden rounded-[28px] border border-[#e5e7eb] bg-white shadow-[0_18px_44px_rgba(15,23,42,0.06)]">
