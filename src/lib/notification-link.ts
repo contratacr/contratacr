@@ -139,7 +139,7 @@ export function notificationHref(n: NotificationLinkInput, _role?: string, local
     case "project_cancelled":
     case "project_deleted":
     case "project_completed":
-      href = "/dashboard/profesional?tab=proposals";
+      href = "/proyectos";
       break;
 
     case "professional_follow":

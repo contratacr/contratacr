@@ -242,7 +242,7 @@ export async function recolectarPendientes(): Promise<{ avisos: Aviso[]; resumen
       type: "project_in_progress_idle",
       title: "¿Ya terminaste este trabajo?",
       message: `"${titulo}" lleva ${hito} días sin movimiento. Escríbele al cliente para coordinar o retira tu respuesta si no vas a poder.`,
-      data: { link: "/es/dashboard/profesional?tab=proposals", project_id: proyecto.id, project_title: titulo, hito },
+      data: { link: "/es/proyectos", project_id: proyecto.id, project_title: titulo, hito },
       referencia: proyecto.id,
       hito,
     });

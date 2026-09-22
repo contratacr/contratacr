@@ -107,7 +107,7 @@ async function notifyMatchingOpenProjectsForProfessional(
       type: "new_project",
       title: "Nueva oportunidad en tus servicios",
       message: `Un cliente publicó "${project.title || "un proyecto"}" en ${getCategoryLabel(project.category_id)}.`,
-      data: { link: "/es/dashboard/profesional?tab=proposals", project_id: project.id },
+      data: { link: "/es/proyectos", project_id: project.id },
   }));
 
   if (rows.length > 0) {

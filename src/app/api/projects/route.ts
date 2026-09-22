@@ -6,7 +6,6 @@ import { getProvinceById, getCantonById } from "@/lib/data/cr-geography";
 import { cleanId, detectIdType, isValidId } from "@/lib/cedula";
 import { getIdentityVerifier } from "@/lib/verification/identity-verifier";
 import { syncProfessionalVerificationFromAccount } from "@/lib/verification/account-identity";
-import { AUTO_CONFIRM_DAYS } from "@/lib/completion";
 import { parseMoneyAmount } from "@/lib/money-limits";
 import { isMinorFromDob } from "@/lib/age";
 import { NAME_MAX_LENGTH, limitTrimmedText } from "@/lib/text-limits";
@@ -341,7 +340,7 @@ export async function POST(req: NextRequest) {
             title: "Nuevo proyecto de un cliente",
             message: `Un cliente publico "${finalTitle}" en ${label}. Respóndele y, si le interesa, te escribe.`,
             data: {
-              link: "/es/dashboard/profesional?tab=proposals",
+              link: "/es/proyectos",
               project_id: projectId,
               project_created_at: projectCreatedAt,
               project_title: finalTitle,
@@ -383,7 +382,7 @@ export async function GET(req: NextRequest) {
     const admin = createAdminClient();
     const { data, error } = await admin
       .from("projects")
-      .select(`*, proposals(id, status)`)
+      .select("*")
       .eq("client_id", user.id)
       .order("created_at", { ascending: false });
 
@@ -391,7 +390,7 @@ export async function GET(req: NextRequest) {
       console.error("[GET /api/projects] client error:", error.message);
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
-    const confirmed = await autoCloseStale(admin, await autoConfirmStale(admin, data ?? []));
+    const confirmed = await autoCloseStale(admin, data ?? []);
     return NextResponse.json({ projects: await enrichProjects(confirmed.filter((project) => !project.archived_by_client)) });
   }
 
@@ -418,7 +417,7 @@ export async function GET(req: NextRequest) {
 
   let query = admin
     .from("projects")
-    .select(`*, profiles:client_id(full_name, avatar_url), proposals(id)`)
+    .select("*, profiles:client_id(full_name, avatar_url)")
     .eq("status", "open")
     // No self-service: never list the pro's OWN projects in the "propose" feed.
     .neq("client_id", user.id)
@@ -459,22 +458,6 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({ projects: await enrichProjects(briefs) });
 }
 
-// Lazy auto-confirm: if the pro marked work done > AUTO_CONFIRM_DAYS and the client
-// never confirmed, the project auto-completes (anti-stall, both sides protected).
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function autoConfirmStale(admin: any, rows: any[]): Promise<any[]> {
-  const cutoff = Date.now() - AUTO_CONFIRM_DAYS * 24 * 60 * 60 * 1000;
-  const stale = rows.filter(
-    (r) => r.status === "awaiting_confirmation" && r.work_done_at && new Date(r.work_done_at).getTime() < cutoff
-  );
-  if (stale.length > 0) {
-    const now = new Date().toISOString();
-    await admin.from("projects").update({ status: "completed", completed_at: now }).in("id", stale.map((s) => s.id));
-    for (const r of stale) { r.status = "completed"; r.completed_at = now; }
-  }
-  return rows;
-}
-
 // Abiertas sin actividad por AUTO_CLOSE_DAYS → canceladas (el cliente puede volver
 // a publicar). Solo las filas que cambian aquí reciben el aviso, así no se repite.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -503,7 +486,6 @@ async function autoCloseStale(admin: any, rows: any[]): Promise<any[]> {
 
 // Project status transitions:
 //  - client: cancel/reopen their listing, confirm completion (action="confirm")
-//  - accepted professional: mark work done (action="work_done")
 // Decisions on a project are the client's own listing actions, reversible where
 // it makes sense; completion is two-sided (pro marks → client confirms).
 export async function PATCH(req: NextRequest) {
@@ -590,212 +572,11 @@ export async function PATCH(req: NextRequest) {
   // Antes solo se podía elegir al marcarla resuelta, así que un profesional
   // elegido siempre tenía el proyecto ya cerrado: nunca llegaba a cotizar ni a
   // coordinar desde el app.
-  if (action === "choose") {
-    const professionalId = typeof body.professionalId === "string" ? body.professionalId : "";
-    if (!professionalId) return NextResponse.json({ error: "Falta el profesional." }, { status: 400 });
-    const { data: project } = await admin
-      .from("projects")
-      .select("id, client_id, accepted_professional_id, title, status")
-      .eq("id", id)
-      .maybeSingle();
-    if (!project || project.client_id !== uid) return NextResponse.json({ error: "No autorizado." }, { status: 403 });
-    if (project.status === "completed" || project.status === "cancelled") {
-      return NextResponse.json({ error: "La solicitud ya está cerrada." }, { status: 409 });
-    }
-    const { data: reply } = await admin
-      .from("proposals")
-      .select("id, professional_id")
-      .eq("project_id", id)
-      .eq("professional_id", professionalId)
-      .maybeSingle();
-    if (!reply) return NextResponse.json({ error: "Ese profesional no respondió esta solicitud." }, { status: 404 });
-
-    const now = new Date().toISOString();
-    await admin.from("proposals").update({ status: "accepted" }).eq("id", reply.id);
-    const { error } = await admin
-      .from("projects")
-      .update({ accepted_professional_id: reply.professional_id, updated_at: now })
-      .eq("id", id);
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-    await auditUserAction(admin, req, {
-      actorUserId: uid,
-      actorRole: "client",
-      action: "project.choose",
-      entityTable: "projects",
-      entityId: id,
-      entityOwnerUserId: project.client_id,
-      beforeData: { accepted_professional_id: project.accepted_professional_id, title: project.title },
-      afterData: { accepted_professional_id: reply.professional_id, title: project.title },
-    });
-    const { data: pro } = await admin.from("professionals").select("profile_id").eq("id", reply.professional_id).maybeSingle();
-    if (pro?.profile_id) {
-      const notification = {
-        user_id: pro.profile_id,
-        type: "proposal_accepted",
-        title: "El cliente te eligió",
-        message: `Te eligieron para "${project.title}". Ya puedes cotizar y coordinar los detalles.`,
-        data: { link: "/es/dashboard/profesional?tab=proposals", project_id: id, project_title: project.title },
-      };
-      await admin.from("notifications").insert(notification);
-      await sendNotificationPush({ userId: notification.user_id, title: notification.title, message: notification.message, data: notification.data });
-    }
-    return NextResponse.json({ success: true, professionalId: reply.professional_id });
-  }
-
-  if (action === "resolve") {
-    const professionalId = typeof body.professionalId === "string" && body.professionalId ? body.professionalId : null;
-    const { data: project } = await admin
-      .from("projects")
-      .select("id, client_id, accepted_professional_id, title, status")
-      .eq("id", id)
-      .maybeSingle();
-    if (!project || project.client_id !== uid) return NextResponse.json({ error: "No autorizado." }, { status: 403 });
-    if (project.status === "completed") return NextResponse.json({ success: true });
-    if (project.status === "cancelled") return NextResponse.json({ error: "El proyecto está cancelado." }, { status: 409 });
-
-    let chosenProfessionalId: string | null = null;
-    if (professionalId) {
-      // Only someone who actually replied can be credited (that is what a review hangs on).
-      const { data: reply } = await admin
-        .from("proposals")
-        .select("id, professional_id")
-        .eq("project_id", id)
-        .eq("professional_id", professionalId)
-        .maybeSingle();
-      if (reply) {
-        chosenProfessionalId = reply.professional_id;
-        await admin.from("proposals").update({ status: "accepted" }).eq("id", reply.id);
-      }
-    }
-    const now = new Date().toISOString();
-    const { error } = await admin
-      .from("projects")
-      .update({ status: "completed", completed_at: now, updated_at: now, accepted_professional_id: chosenProfessionalId })
-      .eq("id", id);
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-    await auditUserAction(admin, req, {
-      actorUserId: uid,
-      actorRole: "client",
-      action: "project.resolve",
-      entityTable: "projects",
-      entityId: id,
-      entityOwnerUserId: project.client_id,
-      beforeData: { status: project.status, accepted_professional_id: project.accepted_professional_id, title: project.title },
-      afterData: { status: "completed", accepted_professional_id: chosenProfessionalId, title: project.title },
-    });
-    if (chosenProfessionalId) {
-      const { data: pro } = await admin.from("professionals").select("profile_id").eq("id", chosenProfessionalId).maybeSingle();
-      if (pro?.profile_id) {
-        const notification = {
-          user_id: pro.profile_id,
-          type: "project_completed",
-          title: "El cliente te eligió",
-          message: `El cliente cerró "${project.title}" y marcó que lo resolviste tú. ¡Buen trabajo!`,
-          data: { link: "/es/dashboard/profesional?tab=proposals", project_id: id, project_title: project.title },
-        };
-        await admin.from("notifications").insert(notification);
-        await sendNotificationPush({ userId: notification.user_id, title: notification.title, message: notification.message, data: notification.data });
-      }
-    }
-    return NextResponse.json({ success: true, professionalId: chosenProfessionalId });
-  }
-
-  // ── Pro marks "trabajo realizado" → awaiting_confirmation ───────────────
-  if (action === "work_done") {
-    const { data: pro } = await admin.from("professionals").select("id").eq("profile_id", uid).maybeSingle();
-    if (!pro) return NextResponse.json({ error: "Solo el profesional puede marcar el trabajo." }, { status: 403 });
-    const { data: project } = await admin
-      .from("projects")
-      .select("id, client_id, accepted_professional_id, title, status")
-      .eq("id", id)
-      .maybeSingle();
-    if (!project || project.accepted_professional_id !== pro.id) {
-      return NextResponse.json({ error: "No autorizado para este proyecto." }, { status: 403 });
-    }
-    if (project.status !== "in_progress") {
-      return NextResponse.json({ error: "El proyecto no está en progreso." }, { status: 409 });
-    }
-    await admin.from("projects").update({ status: "awaiting_confirmation", work_done_at: new Date().toISOString() }).eq("id", id);
-    await auditUserAction(admin, req, {
-      actorUserId: uid,
-      actorRole: "professional",
-      action: "project.mark_work_done",
-      entityTable: "projects",
-      entityId: id,
-      entityOwnerUserId: project.client_id,
-      beforeData: { status: project.status, accepted_professional_id: project.accepted_professional_id, title: project.title },
-      afterData: { status: "awaiting_confirmation", accepted_professional_id: project.accepted_professional_id, title: project.title },
-    });
-    // Notify the client to confirm.
-    const notification = {
-      user_id: project.client_id,
-      type: "project_work_done",
-      title: "Confirma la finalización del trabajo",
-      message: `El profesional marcó "${project.title}" como realizado. Confirma para finalizarlo. Si no respondes en ${AUTO_CONFIRM_DAYS} días se confirma automáticamente.`,
-      data: {
-        link: "/es/dashboard/profesional?tab=sent_projects",
-        project_id: id,
-        project_title: project.title,
-        auto_confirm_days: AUTO_CONFIRM_DAYS,
-      },
-    };
-    await admin.from("notifications").insert(notification);
-    await sendNotificationPush({
-      userId: notification.user_id,
-      title: notification.title,
-      message: notification.message,
-      data: notification.data,
-    });
-    return NextResponse.json({ success: true });
-  }
-
-  // ── Client confirms completion → completed ──────────────────────────────
-  if (action === "confirm") {
-    const { data: project } = await admin
-      .from("projects")
-      .select("id, client_id, accepted_professional_id, title, status")
-      .eq("id", id)
-      .maybeSingle();
-    if (!project || project.client_id !== uid) {
-      return NextResponse.json({ error: "No autorizado." }, { status: 403 });
-    }
-    await admin.from("projects").update({ status: "completed", completed_at: new Date().toISOString() }).eq("id", id);
-    await auditUserAction(admin, req, {
-      actorUserId: uid,
-      actorRole: "client",
-      action: "project.confirm_completion",
-      entityTable: "projects",
-      entityId: id,
-      entityOwnerUserId: project.client_id,
-      beforeData: { status: project.status, accepted_professional_id: project.accepted_professional_id, title: project.title },
-      afterData: { status: "completed", accepted_professional_id: project.accepted_professional_id, title: project.title },
-    });
-    // Notify the professional.
-    if (project.accepted_professional_id) {
-      const { data: pro } = await admin.from("professionals").select("profile_id").eq("id", project.accepted_professional_id).maybeSingle();
-      if (pro?.profile_id) {
-        const notification = {
-          user_id: pro.profile_id,
-          type: "project_completed",
-          title: "Oportunidad finalizada",
-          message: `El cliente confirmó la finalización de "${project.title}". Buen trabajo.`,
-          data: {
-            link: "/es/dashboard/profesional?tab=proposals",
-            project_id: id,
-            project_title: project.title,
-          },
-        };
-        await admin.from("notifications").insert(notification);
-        await sendNotificationPush({
-          userId: notification.user_id,
-          title: notification.title,
-          message: notification.message,
-          data: notification.data,
-        });
-      }
-    }
-    return NextResponse.json({ success: true });
-  }
+  // CHOOSE / RESOLVE / WORK_DONE / CONFIRM: se retiraron con las propuestas.
+  // Un proyecto ya no tiene profesional aceptado —se contesta por WhatsApp,
+  // como un empleo o una promocion—, asi que no hay a quien elegir, nada que
+  // marcar como realizado y nada que confirmar. Las columnas siguen en la base
+  // con lo que ya se escribio; simplemente nadie vuelve a escribirlas.
 
   // ── Client status changes (cancel / reopen) ─────────────────────────────
   const allowed = ["open", "cancelled"];
@@ -806,10 +587,17 @@ export async function PATCH(req: NextRequest) {
   // RLS-bound update could silently affect 0 rows, like the bookings bug).
   const { data: ownRow } = await admin.from("projects").select("client_id, status, title").eq("id", id).maybeSingle();
   if (!ownRow || ownRow.client_id !== uid) return NextResponse.json({ error: "No autorizado." }, { status: 403 });
-  if (status === "open" && ownRow.status !== "cancelled") {
-    return NextResponse.json({ error: "Solo puedes volver a publicar proyectos cancelados." }, { status: 409 });
+  // CERRADO ES CERRADO, venga de donde venga. Antes solo se podia volver a
+  // publicar un proyecto «cancelado»: los «completed» de la epoca de las
+  // propuestas se quedaban sin salida y su fila del panel sin menu, mientras
+  // un empleo cerrado siempre se puede republicar. Ahora las tres secciones se
+  // comportan igual.
+  if (status === "open" && ownRow.status !== "cancelled" && ownRow.status !== "completed") {
+    return NextResponse.json({ error: "Este proyecto ya esta publicado." }, { status: 409 });
   }
   if (status === "open") {
+    // Las propuestas viejas no vuelven con el proyecto: se respondieron en otra
+    // epoca y quien las mando ya no tiene donde verlas.
     await admin.from("proposals").delete().eq("project_id", id);
   }
   const patch: Record<string, unknown> = { status, updated_at: new Date().toISOString() };
@@ -835,67 +623,11 @@ export async function PATCH(req: NextRequest) {
     afterData: { status, title: ownRow.title },
   });
   if (status === "cancelled") {
-    await notifyAssignedPro(admin, id, "cancelled");
   }
   return NextResponse.json({ success: true });
 }
 
-// Notify only professionals still affected by the cancellation/deletion. Declined
-// proposals already received their outcome, so notifying them again is just noise.
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function notifyAssignedPro(admin: any, projectId: string, kind: "cancelled" | "deleted") {
-  try {
-    const { data: project } = await admin
-      .from("projects")
-      .select("title")
-      .eq("id", projectId)
-      .maybeSingle();
-    if (!project) return;
-
-    const { data: proposals } = await admin
-      .from("proposals")
-      .select("professional_id, status")
-      .eq("project_id", projectId)
-      .in("status", ["pending", "accepted"]);
-    if (!proposals || proposals.length === 0) return;
-
-    const professionalIds = new Set<string>();
-    for (const proposal of proposals ?? []) {
-      if (proposal.professional_id) professionalIds.add(proposal.professional_id);
-    }
-    if (professionalIds.size === 0) return;
-
-    const { data: pros } = await admin
-      .from("professionals")
-      .select("profile_id")
-      .in("id", [...professionalIds]);
-    const profileIds: Array<string | null | undefined> = (pros ?? [])
-      .map((pro: { profile_id?: string | null }) => pro.profile_id);
-    const recipients: string[] = [...new Set(
-      profileIds.filter((profileId): profileId is string => typeof profileId === "string" && profileId.length > 0),
-    )];
-    if (recipients.length === 0) return;
-
-    const notifications = recipients.map((userId) => ({
-      user_id: userId,
-      type: kind === "deleted" ? "project_deleted" : "project_cancelled",
-      title: kind === "deleted" ? "Proyecto eliminado" : "Proyecto cancelado",
-      message: `El cliente ${kind === "deleted" ? "eliminó" : "canceló"} el proyecto "${project.title}". Ya no está activo.`,
-      data: {
-        link: "/es/dashboard/profesional?tab=proposals",
-        project_id: projectId,
-        project_title: project.title,
-        project_action: kind,
-      },
-    }));
-    await admin.from("notifications").insert(notifications);
-    await sendNotificationPushRows(notifications);
-  } catch (e) {
-    console.error("[notifyAssignedPro] failed:", e);
-  }
-}
-
-// Client deletes their own project (and its proposals via FK cascade).
+// Client deletes their own project.
 export async function DELETE(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const id = searchParams.get("id");
@@ -911,14 +643,15 @@ export async function DELETE(req: NextRequest) {
   const { data: ownRow } = await admin.from("projects").select("client_id, status, title").eq("id", id).maybeSingle();
   if (!ownRow) return NextResponse.json({ success: true }); // already gone
   if (ownRow.client_id !== user.id) return NextResponse.json({ error: "No autorizado." }, { status: 403 });
-  if (ownRow.status !== "cancelled") {
-    return NextResponse.json({ error: "Solo puedes eliminar proyectos cancelados." }, { status: 409 });
+  // Igual que en Empleos y Promociones: se borra lo que ya esta cerrado, sea
+  // porque se cerro o porque se dio por terminado en su dia. Lo publicado no,
+  // que para eso esta «Cerrar proyecto».
+  if (ownRow.status !== "cancelled" && ownRow.status !== "completed") {
+    return NextResponse.json({ error: "Primero cierra el proyecto." }, { status: 409 });
   }
 
-  // Notify the affected professionals before the row (and its proposals) cascade away.
-  await notifyAssignedPro(admin, id, "deleted");
-
-  // Remove dependent proposals first (in case the FK isn't ON DELETE CASCADE).
+  // Las propuestas historicas se van con el proyecto (por si la FK no fuera
+  // ON DELETE CASCADE).
   await admin.from("proposals").delete().eq("project_id", id);
   const { error } = await admin.from("projects").delete().eq("id", id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });

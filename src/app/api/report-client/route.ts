@@ -54,16 +54,17 @@ export async function POST(req: Request) {
   // tres el perfil queda señalado. La relación vale si hay una reserva, un
   // proyecto con propuesta, o una conversación entre los dos.
   if (!bookingId && targetClientId) {
-    const [reservas, conversaciones, propuestas] = await Promise.all([
+    // La propuesta ya no cuenta como relacion: no existen. Quedan la cita y la
+    // conversacion, que es lo mismo que puede tener cualquier profesional con
+    // un cliente desde que todo se responde por WhatsApp.
+    const [reservas, conversaciones] = await Promise.all([
       admin.from("bookings").select("id").eq("professional_id", pro.id).eq("client_id", targetClientId).limit(1),
       admin.from("direct_conversations").select("id").eq("professional_id", pro.id).eq("client_id", targetClientId).limit(1),
-      admin.from("proposals").select("id, projects!inner(client_id)").eq("professional_id", pro.id).eq("projects.client_id", targetClientId).limit(1),
     ]);
     const hayRelacion = (reservas.data?.length ?? 0) > 0
-      || (conversaciones.data?.length ?? 0) > 0
-      || (propuestas.data?.length ?? 0) > 0;
+      || (conversaciones.data?.length ?? 0) > 0;
     if (!hayRelacion) {
-      return NextResponse.json({ error: "Solo puedes reportar a un cliente con el que hayas tenido una solicitud, un proyecto o una conversación." }, { status: 403 });
+      return NextResponse.json({ error: "Solo puedes reportar a un cliente con el que hayas tenido una solicitud o una conversación." }, { status: 403 });
     }
   }
 

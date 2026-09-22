@@ -889,7 +889,7 @@ const PRODUCT_INTENTS: ProductIntent[] = [
       en: "Replies can't be edited: if you want to change something, write to the client directly. In your panel → Projects → \"Respondidas\" you can see what you sent. While nobody has chosen you, you can withdraw the reply and answer again; once chosen, use \"I can no longer do it\" so the client is told.",
     },
     cta: { es: "Ver mis respuestas", en: "See my replies" },
-    href: (locale) => `/${locale}/dashboard/profesional?tab=proposals`,
+    href: (locale) => `/${locale}/proyectos`,
   },
   {
     test: (n) => /(instal|descarg|baj[oa]|install|download).{0,15}(la app|app|aplicacion|contratacr)/.test(n) || /(app|aplicacion).{0,15}(instal|descarg|install|download)/.test(n),
@@ -1296,7 +1296,7 @@ function actionHref(payload: AssistantPayload, originalMessage: string, locale: 
       return `/${locale}/dashboard/profesional?tab=availability`;
     }
     if (includesAny(normalized, ["oportunidad", "oportunidades", "propuesta", "propuestas", "opportunity", "opportunities", "proposal", "proposals"])) {
-      return `/${locale}/dashboard/profesional?tab=proposals`;
+      return `/${locale}/proyectos`;
     }
     if (includesAny(normalized, ["mensaje", "mensajes", "chat", "message", "messages"])) {
       return `/${locale}/mensajes`;

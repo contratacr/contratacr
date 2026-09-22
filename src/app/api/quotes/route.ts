@@ -109,7 +109,7 @@ export async function POST(req: NextRequest) {
   if (!bookingId && !projectId && !clientName) return NextResponse.json({ error: "Escribe para quién es la cotización." }, { status: 400 });
 
   // El contexto tiene que ser del profesional: su cita, o un proyecto que respondió.
-  let clientId: string | null = null; let proposalId: string | null = null; let contextTitle = "";
+  let clientId: string | null = null; let contextTitle = "";
   if (bookingId) {
     const { data: b } = await me.admin.from("bookings").select("id, client_id, professional_id, service_description").eq("id", bookingId).maybeSingle();
     if (!b || b.professional_id !== me.proId) return NextResponse.json({ error: "Esa cita no es tuya." }, { status: 403 });
@@ -117,9 +117,11 @@ export async function POST(req: NextRequest) {
   } else if (projectId) {
     const { data: p } = await me.admin.from("projects").select("id, client_id, title").eq("id", projectId).maybeSingle();
     if (!p) return NextResponse.json({ error: "Proyecto no encontrado." }, { status: 404 });
-    const { data: prop } = await me.admin.from("proposals").select("id").eq("project_id", projectId).eq("professional_id", me.proId).maybeSingle();
-    if (!prop) return NextResponse.json({ error: "Primero responde el proyecto." }, { status: 403 });
-    clientId = p.client_id ?? null; proposalId = prop.id; contextTitle = p.title ?? "";
+    // El permiso era «tener una propuesta en este proyecto». Ya no hay
+    // propuestas: quien cotiza un proyecto es quien lo esta atendiendo por
+    // WhatsApp, y la cotizacion se manda a la cuenta del cliente igual que la
+    // de una cita.
+    clientId = p.client_id ?? null; contextTitle = p.title ?? "";
   }
   if ((bookingId || projectId) && !clientId) return NextResponse.json({ error: "Esta cita no tiene una cuenta de cliente a la que enviarle la cotización." }, { status: 400 });
 
@@ -134,7 +136,7 @@ export async function POST(req: NextRequest) {
   const totals = quoteTotals(items, taxMode);
   const insert = {
     professional_id: me.proId, client_id: clientId, client_name: clientName, client_phone: clientPhone, client_cedula: clientCedula, client_email: clientEmail, public_code: codigoPublico(),
-    booking_id: bookingId, project_id: projectId, proposal_id: proposalId,
+    booking_id: bookingId, project_id: projectId,
     title: title ?? (contextTitle || null), items, tax_mode: taxMode, ...totals, notes, valid_until: validUntil, status: "sent",
     ...writeSourceColumns(req),
   };
@@ -208,7 +210,7 @@ export async function PATCH(req: NextRequest) {
     const bookingId = typeof body.bookingId === "string" ? body.bookingId : null;
     const projectId = typeof body.projectId === "string" ? body.projectId : null;
     if (!bookingId && !projectId) return NextResponse.json({ error: "Elige una cita o un proyecto." }, { status: 400 });
-    let clientId: string | null = null; let proposalId: string | null = null; let contextTitle = "";
+    let clientId: string | null = null; let contextTitle = "";
     if (bookingId) {
       const { data: b } = await me.admin.from("bookings").select("id, client_id, professional_id, service_description").eq("id", bookingId).maybeSingle();
       if (!b || b.professional_id !== me.proId) return NextResponse.json({ error: "Esa cita no es tuya." }, { status: 403 });
@@ -216,12 +218,10 @@ export async function PATCH(req: NextRequest) {
     } else if (projectId) {
       const { data: p } = await me.admin.from("projects").select("id, client_id, title").eq("id", projectId).maybeSingle();
       if (!p) return NextResponse.json({ error: "Proyecto no encontrado." }, { status: 404 });
-      const { data: prop } = await me.admin.from("proposals").select("id").eq("project_id", projectId).eq("professional_id", me.proId).maybeSingle();
-      if (!prop) return NextResponse.json({ error: "Primero responde el proyecto." }, { status: 403 });
-      clientId = p.client_id ?? null; proposalId = prop.id; contextTitle = p.title ?? "";
+      clientId = p.client_id ?? null; contextTitle = p.title ?? "";
     }
     if (!clientId) return NextResponse.json({ error: "Ese trabajo no tiene una cuenta de cliente a la que enviarle la cotización." }, { status: 400 });
-    const patch = { booking_id: bookingId, project_id: projectId, proposal_id: proposalId, client_id: clientId, updated_at: new Date().toISOString() };
+    const patch = { booking_id: bookingId, project_id: projectId, client_id: clientId, updated_at: new Date().toISOString() };
     const { data: updated, error: upErr } = await me.admin.from("quotes").update(patch).eq("id", id).select(SELECT).single();
     if (upErr) return NextResponse.json({ error: upErr.message }, { status: 500 });
     await auditUserAction(me.admin, req, { actorUserId: me.user.id, actorRole: "professional", action: "quote.attach", entityTable: "quotes", entityId: id, entityOwnerUserId: me.user.id, afterData: patch });
@@ -262,7 +262,7 @@ export async function PATCH(req: NextRequest) {
   await auditUserAction(me.admin, req, { actorUserId: me.user.id, actorRole: action === "withdraw" ? "professional" : "client", action: `quote.${action}`, entityTable: "quotes", entityId: id, entityOwnerUserId: q.client_id, afterData: patch });
   if (notifyUserId) {
     try {
-      const link = q.booking_id ? "/es/dashboard/profesional?mode=offer&tab=bookings" : "/es/dashboard/profesional?mode=offer&tab=proposals";
+      const link = q.booking_id ? "/es/dashboard/profesional?mode=offer&tab=bookings" : "/es/dashboard/profesional?mode=offer&tab=quotes";
       const notification = { user_id: notifyUserId, type, title, message, data: { link, quote_id: id, booking_id: q.booking_id, project_id: q.project_id, total: q.total } };
       await me.admin.from("notifications").insert(notification);
       await sendNotificationPush({ userId: notifyUserId, title, message, data: notification.data });
