@@ -35,6 +35,7 @@ export function Carril({
       role={role}
       aria-label={ariaLabel}
       style={{ maskImage: mascara, WebkitMaskImage: mascara }}
+      data-ccr-degradado={mascara ? "" : undefined}
       className={className}
     >
       {children}

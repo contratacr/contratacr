@@ -93,6 +93,7 @@ export function ScrollRail({
         role={role}
         aria-label={ariaLabel}
         style={{ maskImage: mascara, WebkitMaskImage: mascara }}
+        data-ccr-degradado={mascara ? "" : undefined}
         className={cn("ccr-carril scrollbar-none overflow-x-auto", className)}
       >
         {children}

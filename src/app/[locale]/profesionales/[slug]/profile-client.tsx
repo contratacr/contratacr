@@ -1002,6 +1002,7 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
                     aria-label={locale === "en" ? "Profile sections" : "Secciones del perfil"}
                     ref={carrilPestanasRef}
                     style={{ maskImage: mascaraPestanas, WebkitMaskImage: mascaraPestanas }}
+                    data-ccr-degradado={mascaraPestanas ? "" : undefined}
                     className="ccr-carril scrollbar-none flex overflow-x-auto scroll-smooth"
                   >
                     {TABS.map(tab => (

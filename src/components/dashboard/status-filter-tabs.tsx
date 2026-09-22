@@ -225,6 +225,7 @@ export function StatusFilterTabs({
         <div
           ref={carrilRef}
           style={{ maskImage: mascaraCarril, WebkitMaskImage: mascaraCarril }}
+          data-ccr-degradado={mascaraCarril ? "" : undefined}
           className="ccr-carril-chips scrollbar-none flex gap-1.5 overflow-x-auto py-0"
         >
           {tabs.map((tab) => {
@@ -347,6 +348,7 @@ export function StatusFilterTabs({
         ref={useSegmentedLayout && compacto ? carrilRef : undefined}
         className={cn(useSegmentedLayout && compacto && "max-sm:overflow-x-auto max-sm:scrollbar-none")}
         style={useSegmentedLayout && compacto ? { maskImage: mascaraCarril, WebkitMaskImage: mascaraCarril } : undefined}
+        data-ccr-degradado={useSegmentedLayout && compacto && mascaraCarril ? "" : undefined}
       >
       <RailOrGrid scroll={!useSegmentedLayout} className={cn(
         // Celdas repartidas, pero ninguna por debajo de su propio rótulo: con

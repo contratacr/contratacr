@@ -76,8 +76,14 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
               hacia abajo. Es el carril de YouTube, LinkedIn y Airbnb: una
               línea, degradado a la derecha y flechas con el cursor encima;
             · lo que sí tiene que ir en una línea —pestañas, miniaturas—
-              (`ccr-carril`) enseña una barrita fina al pasar el cursor y se
-              puede arrastrar con el mouse (use-arrastre-horizontal).
+              (`ccr-carril`) se puede arrastrar con el mouse
+              (use-arrastre-horizontal). La barrita fina al pasar el cursor
+              queda SOLO donde no hay degradado: donde el carril ya se
+              desvanece (`data-ccr-degradado`, que el propio carril pone
+              cuando midió que hay más), la barra sobraba —aparecía y se iba
+              sola, y eran dos señales para lo mismo, una de ellas
+              parpadeando—. Degradado y flechas, que es lo que recomiendan
+              hoy: la barra solo se esconde cuando hay OTRA señal.
             El espacio de la barrita se reserva siempre, para que nada salte al
             aparecer. Solo aplica con mouse: en táctil manda el dedo. */}
         {/* UN VACÍO NO LLEVA TARJETA DENTRO DE OTRA. En computadora la sección
@@ -127,7 +133,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
         <style
           data-ccr-carriles=""
           dangerouslySetInnerHTML={{
-            __html: `.ccr-carril-chips .ccr-ver-mas{display:none!important}@media (min-width:1024px) and (hover:hover) and (pointer:fine){.ccr-carril{scrollbar-width:thin!important;scrollbar-color:transparent transparent}.ccr-carril:hover{scrollbar-color:#c5d2de transparent}.ccr-carril::-webkit-scrollbar{display:block!important;height:6px}.ccr-carril::-webkit-scrollbar-track{background:transparent}.ccr-carril::-webkit-scrollbar-thumb{background:transparent;border-radius:999px}.ccr-carril:hover::-webkit-scrollbar-thumb{background:#c5d2de}.ccr-carril:hover::-webkit-scrollbar-thumb:hover{background:#9fb1c2}}`,
+            __html: `.ccr-carril-chips .ccr-ver-mas{display:none!important}@media (min-width:1024px) and (hover:hover) and (pointer:fine){[data-ccr-degradado]{scrollbar-width:none!important}[data-ccr-degradado]::-webkit-scrollbar{display:none!important}.ccr-carril{scrollbar-width:thin!important;scrollbar-color:transparent transparent}.ccr-carril:hover{scrollbar-color:#c5d2de transparent}.ccr-carril::-webkit-scrollbar{display:block!important;height:6px}.ccr-carril::-webkit-scrollbar-track{background:transparent}.ccr-carril::-webkit-scrollbar-thumb{background:transparent;border-radius:999px}.ccr-carril:hover::-webkit-scrollbar-thumb{background:#c5d2de}.ccr-carril:hover::-webkit-scrollbar-thumb:hover{background:#9fb1c2}}`,
           }}
         />
         {/* La fila de acciones de TODA tarjeta del panel —Mis proyectos, Mis
