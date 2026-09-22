@@ -521,10 +521,14 @@ export function SupportTickets({
               </div>
             </header>
 
-            {/* Una conversacion se lee de arriba hacia abajo: el primero
-                arriba. El vacio de abajo es el lienzo de la charla, no un
-                error, y ahi es donde van a caer las respuestas. */}
-            <div ref={messagesRef} className="ccr-support-thread-messages flex min-h-0 flex-1 flex-col gap-1.5 overflow-y-auto overscroll-contain bg-[#f7f9fb] px-4 py-5 sm:px-6">
+            {/* EL ORDEN NO CAMBIA —el primer mensaje sigue arriba— pero el
+                bloque se APOYA sobre el campo de escribir. `justify-end` no
+                invierte nada: solo empuja la conversacion hacia abajo, asi que
+                el hueco queda ARRIBA, esperando lo que aun no se ha dicho, en
+                vez de debajo del ultimo mensaje, donde se leia como si la
+                tarjeta se hubiera quedado a medias. Es como se ven WhatsApp,
+                Messenger e Intercom con una charla corta. */}
+            <div ref={messagesRef} className="ccr-support-thread-messages flex min-h-0 flex-1 flex-col justify-end gap-1.5 overflow-y-auto overscroll-contain bg-[#f7f9fb] px-4 py-5 sm:px-6">
               {/* Lo único que espera son los mensajes, y esperan con forma de
                   mensaje: dos globos grises, uno de cada lado. */}
               {threadLoading && messages.length === 0 && (
