@@ -73,8 +73,10 @@ function snapIndex(value: number, points = mobileSheetSnapPoints()) {
  *    DRAGGABLE BOTTOM SHEET floating over the map. Swipe the handle up → the sheet expands
  *    (covers more map); swipe down → it collapses to a peek (more map). Tapping a pin springs
  *    the sheet open and scrolls to that card; the pin mini-card still works.
- *  - Laptop (lg–xl): two columns — results · map; filters behind a "Filtros" drawer.
- *  - Desktop (xl+): three columns — sticky filters sidebar · results · sticky map.
+ *  - Computadora (lg+): dos columnas —resultados · mapa— y los filtros en una
+ *    fila de pastillas encima de la lista, la misma de Empleos, Promociones y
+ *    Proyectos. Antes, de 1280 px en adelante, había una tercera columna con un
+ *    panel de filtros que repetía el buscador de la barra de arriba.
  *  DESKTOP is unchanged (same `lg:` classes). The bottom-sheet wrapper is `lg:contents`, so on
  *  desktop it dissolves and the card column (`lg:order-2`) drops into the 3-column flex shell.
  */
@@ -464,14 +466,21 @@ export function SearchResultsLayout({ children, filters, quickFilters, drawerFil
       {/* ONE flex container: mobile = the map fills the remaining height (the sheet floats
           over it); desktop = the 3-column shell (filters · cards · map) via `lg:order-*`. */}
       <div className="relative flex min-h-0 flex-1 flex-col gap-0 bg-[#fafafa] lg:flex-row lg:gap-5 lg:bg-transparent">
-        {/* Filters sidebar — desktop xl+ only (order-1). Hidden on mobile + lg–xl (drawer). */}
-        <aside className="hidden xl:block lg:order-1 w-64 shrink-0">
-          <div className="sticky top-20">{filters}</div>
-        </aside>
+        {/* SIN PANEL LATERAL DE FILTROS. Se llevaba 256 px fijos de 1280 en
+            adelante y, encima, repetía el buscador que ya está en la barra de
+            arriba: dos campos que hacen lo mismo a 250 px de distancia. Son
+            CINCO filtros y caben en la fila de pastillas que ya se usaba entre
+            1024 y 1280 px, la misma de Empleos, Promociones y Proyectos. */}
 
         {/* Map — mobile: full-bleed BACKGROUND, flex-fills the area under the header (the sheet
             overlays its lower part). Desktop: the sticky right column (order-3). ONE instance. */}
-        <aside className="min-h-0 min-w-0 flex-1 lg:order-3">
+        {/* EL REPARTO: tres partes para los resultados y dos para el mapa.
+            Al quitar el panel de filtros, sus 256 px se los llevaba ENTEROS el
+            mapa —de 400 a 656 px a 1440— y el mapa es el acompañante, no lo que
+            se vino a ver. Con 3:2 la lista crece con la pantalla y se detiene en
+            max-w-4xl: más ancha que eso, una tarjeta de profesional deja el
+            nombre a un lado y los botones al otro con un desierto en medio. */}
+        <aside className="min-h-0 min-w-0 flex-1 lg:order-3 lg:flex-[2]">
           <div className="relative isolate h-full w-full overflow-hidden bg-[#eef2f6] lg:sticky lg:top-20 lg:h-[calc(100vh-104px)] lg:rounded-2xl lg:border lg:border-[#e5e7eb] lg:bg-transparent">
             <GoogleMapPanel apiKey={apiKey} professionals={mapData} locale={locale} numbering={numbering} focusTarget={mapFocusTarget} />
           </div>
@@ -539,8 +548,11 @@ export function SearchResultsLayout({ children, filters, quickFilters, drawerFil
           </div>
 
           {/* Cards — mobile: the sheet's scrolling body. Desktop: the middle column (order-2). */}
-          <div ref={listRef} className={`ccr-search-sheet-scroll min-w-0 flex-1 touch-pan-y overflow-x-hidden overflow-y-auto overscroll-contain bg-white px-4 pb-0 pt-0 lg:order-2 lg:w-[640px] lg:flex-none lg:shrink-0 lg:overflow-visible lg:overscroll-auto lg:bg-transparent lg:px-0 lg:pb-0 lg:pt-0 xl:w-[700px] 2xl:w-[820px]`}>
-            {quickFilters && <div className="mb-3 hidden lg:block xl:hidden">{quickFilters}</div>}
+          <div ref={listRef} className={`ccr-search-sheet-scroll min-w-0 flex-1 touch-pan-y overflow-x-hidden overflow-y-auto overscroll-contain bg-white px-4 pb-0 pt-0 lg:order-2 lg:flex-[3] lg:max-w-4xl lg:overflow-visible lg:overscroll-auto lg:bg-transparent lg:px-0 lg:pb-0 lg:pt-0`}>
+            {/* `lg:pl-4`: la fila de pastillas arrancaba 16 px a la izquierda
+                del título y de las tarjetas. Medido: título 48, tarjetas 49,
+                pastillas 32. */}
+            {quickFilters && <div className="mb-3 hidden lg:block lg:pl-4">{quickFilters}</div>}
             {children}
           </div>
         </div>

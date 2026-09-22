@@ -237,19 +237,19 @@ test.describe("@seeded search results", () => {
     await openFiltersIfNeeded(page, testInfo);
 
     const body = page.locator("body");
-    if (isMobileProject(testInfo)) {
-      const languageChip = page.getByTestId("mobile-language-filter").filter({ visible: true }).first();
-      await expect(languageChip).toHaveText(/Idioma|Language/i);
-      await expect(languageChip).not.toHaveText(/Espa[nñ]ol|Spanish/i);
-      await languageChip.click();
-      const languageDialog = page.getByRole("dialog", { name: /Idioma de atenci[oó]n|Service language/i });
-      await expect(languageDialog).toBeVisible();
-      await expect(languageDialog.getByRole("button", { name: /^Espa[nñ]ol$|^Spanish$/i })).toBeVisible();
-      await expect(languageDialog.getByRole("button", { name: /Ver resultados|Show results/i })).toBeVisible();
-    } else {
-      await expect(page.getByText(/Idioma de atenci[oó]n|Service language/i).filter({ visible: true }).first()).toBeVisible();
-      await expect(page.getByRole("combobox", { name: /Idioma de atenci[oó]n|Service language/i }).filter({ visible: true }).first()).toContainText(/Cualquier idioma|Any language/i);
-    }
+    // El MISMO control en el teléfono y en computadora: una pastilla que abre su
+    // hoja. Antes, de 1280 px en adelante, computadora tenía un panel lateral
+    // con etiquetas y desplegables; se retiró porque repetía el buscador de la
+    // barra y dejaba a los resultados con un tercio de la pantalla.
+    const languageChip = page.getByTestId("mobile-language-filter").filter({ visible: true }).first();
+    await expect(languageChip).toHaveText(/Idioma|Language/i);
+    await expect(languageChip).not.toHaveText(/Espa[nñ]ol|Spanish/i);
+    await languageChip.click();
+    const languageDialog = page.getByRole("dialog", { name: /Idioma de atenci[oó]n|Service language/i });
+    await expect(languageDialog).toBeVisible();
+    await expect(languageDialog.getByRole("button", { name: /^Espa[nñ]ol$|^Spanish$/i })).toBeVisible();
+    await expect(languageDialog.getByRole("button", { name: /Ver resultados|Show results/i })).toBeVisible();
+    await page.keyboard.press("Escape");
     await expect(body).not.toContainText(/Solo verificados|Only verified/i);
     await expect(body).not.toContainText(/Buscar profesionales cerca de m[ií]|Find professionals near me/i);
     await expect(body).not.toContainText(/Cercan[ií]a|Nearest/i);
