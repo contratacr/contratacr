@@ -47,6 +47,7 @@ const TEXTAREA_CLASS = "mt-1.5 min-h-28 w-full resize-y rounded-xl border border
 
 const OFFER_FORM_COPY = {
   es: {
+    cerradoAviso: "Esta promoción no está publicada. Guardar los cambios no la vuelve a publicar; para eso está «Volver a publicar» en el «···».",
     back: "Volver",
     backToOffers: "Volver a promociones",
     editTitle: "Editar promoción",
@@ -111,6 +112,7 @@ const OFFER_FORM_COPY = {
     whatsapp: "WhatsApp", whatsappHelp: "Es por donde te van a escribir. Viene el de tu cuenta; puedes cambiarlo para esta promoción.",
   },
   en: {
+    cerradoAviso: "This offer is not published. Saving does not publish it again — use “Publish again” in the “···” menu for that.",
     back: "Back",
     backToOffers: "Back to offers",
     editTitle: "Edit offer",
@@ -445,6 +447,11 @@ export function OfferForm({ professionalId, serviceOptions, backHref = "/ofertas
           className="max-sm:pb-2"
         >
           <div className="rounded-2xl border border-[#e5e7eb] bg-white p-5 shadow-sm">
+          {/* GUARDAR NO PUBLICA: el formulario conserva el estado y nada lo
+              decia. Igual que en Empleos y Proyectos. */}
+          {editing && initialOffer?.status && initialOffer.status !== "published" && (
+            <p className="mb-5 rounded-xl bg-[#f4f7fa] px-4 py-3 text-[13px] font-semibold leading-snug text-[#52627a]">{copy.cerradoAviso}</p>
+          )}
           <div className="grid gap-5 sm:grid-cols-2">
             <label className="text-sm font-medium text-[#374151] sm:col-span-2">
               <RequiredLabel>{copy.title}</RequiredLabel>

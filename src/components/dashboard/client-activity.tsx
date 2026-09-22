@@ -204,7 +204,6 @@ export function ClientActivity({ section, onCount }: { section: ClientActivitySe
   // Corregir lo que se pidió, desde el panel: es donde el cliente llega a ver
   // sus proyectos, igual que edita sus empleos y sus promociones desde el suyo.
   const [editandoProyecto, setEditandoProyecto] = useState<Project | null>(null);
-  const [duplicandoProyecto, setDuplicandoProyecto] = useState<Project | null>(null);
   // CLIENT reschedule: the client (owner of the appointment) picks another available
   // slot for the same pro → old slot freed, new slot taken (atomic). The pro does NOT
   // reschedule (they cancel + coordinate via WhatsApp) — see sprint 433.
@@ -982,20 +981,19 @@ export function ClientActivity({ section, onCount }: { section: ClientActivitySe
                                   como en las otras dos: «Ver» solo mira, el
                                   «···» guarda lo de cambiar de estado, y editar
                                   es a lo que se viene al abrir algo propio. */}
-                              {/* UN PROYECTO CERRADO NO SE EDITA. Lo que ya se
-                                  hizo —o se cancelo— no cambia de enunciado; y
-                                  dejarlo ahi era el tercer boton de la fila
-                                  junto a «Ver» y «Dejar resena», justo lo que
-                                  se quito en las otras secciones. */}
-                              {isActive && (
-                                <button
-                                  type="button"
-                                  onClick={() => setEditandoProyecto(project)}
-                                  className={cn(actionButtonClass, "inline-flex items-center justify-center bg-[#009FD9] text-white transition-colors hover:bg-[#0089bb]")}
-                                >
-                                  {t("editProject")}
-                                </button>
-                              )}
+                              {/* «Editar» tambien en las cerradas, como en
+                                  Empleos: se corrige el enunciado y despues se
+                                  vuelve a publicar, que es el orden natural.
+                                  Estuvo oculto mientras la fila cerrada
+                                  cargaba ademas «Dejar resena» y quedaban tres
+                                  botones; esa ya no esta. */}
+                              <button
+                                type="button"
+                                onClick={() => setEditandoProyecto(project)}
+                                className={cn(actionButtonClass, "inline-flex items-center justify-center bg-[#009FD9] text-white transition-colors hover:bg-[#0089bb]")}
+                              >
+                                {t("editProject")}
+                              </button>
                               {/* LO QUE PIDE ALGO AL CLIENTE SE QUEDA SUELTO;
                                   LO QUE CAMBIA EL ESTADO SE VA AL «···».
                                   «Marcar como finalizado», «Volver a publicar» y
@@ -1014,30 +1012,26 @@ export function ClientActivity({ section, onCount }: { section: ClientActivitySe
                                   proyecto como finalizado— para escribir
                                   exactamente lo mismo. */}
                             </div>
-                            {/* TODA FILA TIENE SU «···», tambien las inactivas:
-                                era la unica de las tres secciones donde una
-                                fila cerrada se quedaba sin ninguna salida
-                                —Empleos y Promociones siempre lo pintan—. Lo
-                                que lleva adentro NO es igual en los tres
-                                estados: el cancelado se vuelve a publicar tal
-                                cual y se puede borrar, porque no tiene
-                                historia; el terminado no, que reabrirlo
-                                borraria quien lo hizo y dejaria la resena
-                                colgando, asi que se copia en uno nuevo. */}
+                            {/* EXACTAMENTE LO MISMO QUE UN EMPLEO: publicado se
+                                cierra; cerrado se vuelve a publicar o se
+                                elimina. Hubo un momento en que el terminado
+                                llevaba «Publicar uno igual» porque reabrirlo
+                                borraba al profesional aceptado y dejaba la
+                                resena colgando —pero un proyecto ya no tiene
+                                profesional aceptado, se responde por WhatsApp
+                                como un empleo—, asi que esa distincion se fue
+                                con las propuestas. Cerrado es cerrado, venga
+                                de donde venga. */}
                             <CardActionsMenu
                               label={t("actions")}
                               actions={isActive
                                 ? [
                                     { label: t("cancelProject"), onClick: () => openCancelProject(project.id), destructive: true },
                                   ]
-                                : project.status === "cancelled"
-                                  ? [
-                                      { label: t("reopenProject"), onClick: () => void updateProjectStatus(project.id, "open") },
-                                      { label: t("delete"), onClick: () => setDeleteTarget(project.id), destructive: true },
-                                    ]
-                                  : [
-                                      { label: t("publishLikeThis"), onClick: () => setDuplicandoProyecto(project) },
-                                    ]}
+                                : [
+                                    { label: t("reopenProject"), onClick: () => void updateProjectStatus(project.id, "open") },
+                                    { label: t("delete"), onClick: () => setDeleteTarget(project.id), destructive: true },
+                                  ]}
                             />
                           </div>
                             );
@@ -1082,22 +1076,10 @@ export function ClientActivity({ section, onCount }: { section: ClientActivitySe
             description: editandoProyecto.description ?? "",
             provinciaId: editandoProyecto.provincia_id ?? "",
             cantonId: editandoProyecto.canton_id ?? "",
+            status: editandoProyecto.status,
           }}
           onClose={() => setEditandoProyecto(null)}
           onSuccess={() => refreshProjectRows({})}
-        />
-      )}
-      {duplicandoProyecto && (
-        <PublishProjectModal
-          duplicar={{
-            id: duplicandoProyecto.id,
-            categoryId: duplicandoProyecto.category_id ?? "",
-            description: duplicandoProyecto.description ?? "",
-            provinciaId: duplicandoProyecto.provincia_id ?? "",
-            cantonId: duplicandoProyecto.canton_id ?? "",
-          }}
-          onClose={() => setDuplicandoProyecto(null)}
-          onSuccess={() => { setDuplicandoProyecto(null); refreshProjectRows({ esperandoNuevo: true }); }}
         />
       )}
       {showPublish && (

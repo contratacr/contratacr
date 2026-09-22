@@ -61,23 +61,16 @@ export type ProyectoParaEditar = {
   description: string;
   provinciaId: string;
   cantonId: string;
+  /** Para avisar que guardar no lo vuelve a publicar si esta cerrado. */
+  status?: string;
 };
 
-export function PublishProjectModal({ onClose, onSuccess, editar, duplicar }: {
+export function PublishProjectModal({ onClose, onSuccess, editar }: {
   onClose: () => void;
   onSuccess?: () => void;
   editar?: ProyectoParaEditar;
-  /**
-   * UN PROYECTO TERMINADO NO SE REABRE: SE PUBLICA OTRO IGUAL. Reabrirlo
-   * borraria quien lo hizo y la fecha en que se cerro —y con eso la resena
-   * queda colgando de un trabajo que dice que nunca paso—. Por eso «volver a
-   * publicar» solo existe para los cancelados, que no tienen historia que
-   * perder, y el terminado se copia en uno nuevo, como «Publicar similar» de
-   * LinkedIn. Los campos vienen llenos; el proyecto viejo no se toca.
-   */
-  duplicar?: ProyectoParaEditar;
 }) {
-  const base = editar ?? duplicar;
+  const base = editar;
   const t = useTranslations("publicarProyecto");
   const locale = useLocale();
   const searchParams = useSearchParams();
@@ -279,6 +272,12 @@ export function PublishProjectModal({ onClose, onSuccess, editar, duplicar }: {
           ) : (
             <div ref={cuerpo} className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain bg-[#f4f7fa] px-4 py-5 sm:max-h-[calc(90vh-145px)] sm:flex-none">
               <div className="flex flex-col gap-6 rounded-2xl border border-[#e5e7eb] bg-white p-5 shadow-sm">
+                {/* GUARDAR NO PUBLICA: la accion «edit» del API no toca el
+                    estado, pero nada en la pantalla lo decia. Igual que en
+                    Empleos y Promociones. */}
+                {editar?.status && editar.status !== "open" && (
+                  <p className="rounded-xl bg-[#f4f7fa] px-4 py-3 text-[13px] font-semibold leading-snug text-[#52627a]">{t("cerradoAviso")}</p>
+                )}
                 <div ref={categoryFieldRef}>
                   <label className={fieldLabel}>{t("category")}{obligatorio}</label>
                   <CategorySearch

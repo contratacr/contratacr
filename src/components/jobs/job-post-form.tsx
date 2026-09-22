@@ -40,6 +40,7 @@ const TEXTAREA_CLASS = "mt-1.5 min-h-28 w-full resize-y rounded-xl border border
 
 const JOB_POST_COPY = {
   es: {
+    cerradoAviso: "Este empleo está cerrado. Guardar los cambios no lo vuelve a publicar; para eso está «Volver a publicar» en el «···».",
     optional: "opcional",
     position: "Puesto",
     positionPlaceholder: "Ej. Asistente contable",
@@ -101,6 +102,7 @@ const JOB_POST_COPY = {
     whatsapp: "WhatsApp", whatsappHelp: "Es por donde te van a escribir los postulantes. Viene el de tu cuenta; puedes cambiarlo para esta vacante.", whatsappRequired: "Escribe un número de WhatsApp válido.",
   },
   en: {
+    cerradoAviso: "This job is closed. Saving does not publish it again — use “Publish again” in the “···” menu for that.",
     optional: "optional",
     position: "Job title",
     positionPlaceholder: "E.g. Accounting assistant",
@@ -461,6 +463,13 @@ export function JobPostForm({ professionalId, backHref = "/empleos", initialJob 
           setHaySalario(Boolean(String(campos.get("salary_min") ?? "").trim() || String(campos.get("salary_max") ?? "").trim()));
         }} onChange={() => setConCambios(true)} noValidate className="max-sm:pb-2">
           <div className="rounded-2xl border border-[#e5e7eb] bg-white p-5 shadow-sm">
+          {/* GUARDAR NO PUBLICA. Editar una publicacion cerrada conserva su
+              estado —lo hace el formulario, y siempre lo hizo—, pero nada en la
+              pantalla lo decia: quien corregia un empleo cerrado se quedaba sin
+              saber si con eso volvia a estar a la vista. */}
+          {editing && initialJob?.status && initialJob.status !== "published" && (
+            <p className="mb-5 rounded-xl bg-[#f4f7fa] px-4 py-3 text-[13px] font-semibold leading-snug text-[#52627a]">{copy.cerradoAviso}</p>
+          )}
           <div className="grid gap-5 sm:grid-cols-2">
             <JobTitleInput defaultValue={initialJob?.title ?? ""} error={fieldErrors.title} locale={locale} copy={copy} />
             <SelectMenu label={<RequiredLabel>{copy.employmentType}</RequiredLabel>} value={employmentType} onChange={setEmploymentType} options={(Object.keys(EMPLOYMENT_TYPES) as EmploymentType[]).map((value) => ({ value, label: employmentTypeLabel(value, locale) }))} />
