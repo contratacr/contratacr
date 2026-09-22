@@ -109,28 +109,20 @@ export function QuoteDetailModal({ quote, role, open, onClose, onChanged, proNam
   return (
     <>
       <Modal open={open} onClose={onClose} title={titulo} subtitle={subtitulo} size="sm" mobilePresentation="fullscreen" closeLabel={t("close")}
-        // El pie lleva las dos únicas cosas que se hacen con una cotización
-        // abierta: mandarla y quitarla. Compartir, la principal, a la derecha
-        // en computadora y arriba en el teléfono.
-        footer={(role === "pro" && abierta) || (!recienCreada && (puedeRetirar || puedeBorrar)) ? (
-          <>
-            {/* DOS BOTONES Y EL «···», nunca tres apilados. En el teléfono tres
-                botones a todo el ancho son tres renglones y ninguno manda; los
-                dos que se usan —mandarla y guardarla— se quedan a la vista y lo
-                que destruye se va al menú, igual que «Cerrar vacante» en Empleos
-                o «Cancelar proyecto» en Proyectos. */}
-            {role === "pro" && abierta && (
-              <BotonCompartirCotizacion quote={quote} proName={proName ?? quote.professional_name ?? ""} proSlug={proSlug} className="min-w-0 flex-1 sm:w-auto sm:flex-none" />
-            )}
-            {!recienCreada && (puedeRetirar || puedeBorrar) && (
-              <MenuFicha
-                className="shrink-0"
-                opciones={[puedeRetirar
-                  ? { id: "retirar", icono: <Undo2 className="h-4 w-4" />, texto: t("withdraw"), etiqueta: t("withdraw"), onSelect: () => void actuar("withdraw") }
-                  : { id: "borrar", icono: <Trash2 className="h-4 w-4" />, texto: t("delete"), etiqueta: t("delete"), peligro: true, onSelect: () => void actuar("delete") }]}
-              />
-            )}
-          </>
+        // EL «···» ARRIBA Y LAS ACCIONES ABAJO. El pie lleva lo que la pantalla
+        // viene a hacer —mandar la cotización y guardarla—; retirarla o borrarla
+        // son cosas DEL REGISTRO y viven en el «···» de la cabecera, que es
+        // donde están en la ficha de un empleo, de una promoción y de un
+        // proyecto. Antes eran tres botones apilados a todo el ancho.
+        accionCabecera={!recienCreada && (puedeRetirar || puedeBorrar) ? (
+          <MenuFicha
+            opciones={[puedeRetirar
+              ? { id: "retirar", icono: <Undo2 className="h-4 w-4" />, texto: t("withdraw"), etiqueta: t("withdraw"), onSelect: () => void actuar("withdraw") }
+              : { id: "borrar", icono: <Trash2 className="h-4 w-4" />, texto: t("delete"), etiqueta: t("delete"), peligro: true, onSelect: () => void actuar("delete") }]}
+          />
+        ) : undefined}
+        footer={role === "pro" && abierta ? (
+          <BotonCompartirCotizacion quote={quote} proName={proName ?? quote.professional_name ?? ""} proSlug={proSlug} className="min-w-0 flex-1 sm:w-auto sm:flex-none" />
         ) : undefined}
         footerClassName="flex-row items-center gap-2 sm:justify-end">
         <div className="flex flex-col gap-4">

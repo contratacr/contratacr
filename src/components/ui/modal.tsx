@@ -52,6 +52,15 @@ interface ModalProps {
   footerClassName?: string;
   /** Oculta la barra de título: para avisos con el título centrado bajo el ícono. */
   hideHeader?: boolean;
+  /**
+   * El «···» de la ventana, arriba a la derecha. Ahí va lo que es DEL REGISTRO
+   * —retirar, borrar, reportar—, no lo que la pantalla viene a hacer: eso se
+   * queda abajo, en el pie. Es el mismo sitio que en la ficha de un empleo, de
+   * una promoción o de un proyecto, así que el «···» se busca siempre en la
+   * misma esquina. Y de paso, lo que destruye deja de estar pegado al botón
+   * principal, donde un pulgar se equivoca.
+   */
+  accionCabecera?: ReactNode;
 }
 
 /**
@@ -112,6 +121,7 @@ export function Modal({
   mobilePresentation = "sheet",
   footerClassName,
   hideHeader = false,
+  accionCabecera,
 }: ModalProps) {
   useEffect(() => {
     if (!open) return;
@@ -223,6 +233,20 @@ export function Modal({
             <h2 className={cn("truncate leading-tight text-[#162543] sm:whitespace-normal", fullscreenMobile ? "text-[17px] font-extrabold sm:text-lg sm:font-bold" : "text-lg font-bold")}>{title}</h2>
             {subtitle && <p className="mt-0.5 hidden text-xs text-[#6b7280] sm:block">{subtitle}</p>}
           </div>
+          {/* El «···» se ancla SOLO él a la derecha: envolviéndolo junto a la
+              salida se llevaba consigo la flecha de volver, que en el teléfono
+              va pegada a la izquierda. En pantalla grande vuelve a la fila y
+              queda a la izquierda de la equis. */}
+          {accionCabecera && (
+            <div className={cn(
+              "absolute top-1/2 flex -translate-y-1/2 items-center sm:static sm:translate-y-0 sm:order-none sm:self-start",
+              // A pantalla completa la salida es la flecha de la izquierda, así
+              // que el «···» llega al filo; con equis a la derecha, le deja sitio.
+              fullscreenMobile ? "right-3" : "right-12",
+            )}>
+              {accionCabecera}
+            </div>
+          )}
           {!conFlecha && salida}
         </div>}
 
