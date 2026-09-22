@@ -36,7 +36,7 @@ const JOBS_MANAGER_COPY = {
     jobStates: { published: "Publicado", paused: "Pausado", closed: "Vacante cerrada", draft: "Vacante cerrada" },
     back: "Volver al panel", title: "Mis empleos", subtitle: "Vacantes para cuando necesitas contratar.", publish: "Publicar empleo",
     application: "postulación", applications: "postulaciones", view: "Ver empleo", edit: "Editar", more: "Más opciones",
-    pause: "Pausar", close: "Cerrar vacante", republish: "Volver a publicar", remove: "Eliminar", removeTitle: "¿Eliminar este empleo?", removeBody: "Se borra del todo y no se puede recuperar.", removeCancel: "Cancelar", applicationsTitle: "Postulaciones",
+    close: "Cerrar vacante", republish: "Volver a publicar", remove: "Eliminar", removeTitle: "¿Eliminar este empleo?", removeBody: "Se borra del todo y no se puede recuperar.", removeCancel: "Cancelar", applicationsTitle: "Postulaciones",
     received: "Postulación recibida", message: "Mensaje", viewCv: "Ver CV", viewPortfolio: "Ver portafolio",
     noApplications: "Aún no hay postulaciones.", emptyTitle: "Todavía no has publicado empleos", emptyBody: "Publica tu primera oportunidad laboral.",
     publishTitle: "Publicar empleo", publishSubtitle: "Describe la oportunidad con información clara y verificable.",
@@ -47,7 +47,7 @@ const JOBS_MANAGER_COPY = {
     jobStates: { published: "Published", paused: "Paused", closed: "Position closed", draft: "Position closed" },
     back: "Back to dashboard", title: "My jobs", subtitle: "Openings for when you need to hire.", publish: "Post job",
     application: "application", applications: "applications", view: "View job", edit: "Edit", more: "More options",
-    pause: "Pause", close: "Close opening", republish: "Publish again", remove: "Delete", removeTitle: "Delete this job?", removeBody: "It is removed for good and cannot be recovered.", removeCancel: "Cancel", applicationsTitle: "Applications",
+    close: "Close opening", republish: "Publish again", remove: "Delete", removeTitle: "Delete this job?", removeBody: "It is removed for good and cannot be recovered.", removeCancel: "Cancel", applicationsTitle: "Applications",
     received: "Application received", message: "Message", viewCv: "View resume", viewPortfolio: "View portfolio",
     noApplications: "There are no applications yet.", emptyTitle: "You have not posted any jobs yet", emptyBody: "Post your first job opportunity.",
     publishTitle: "Post a job", publishSubtitle: "Describe the opportunity with clear, verifiable information.",
@@ -223,16 +223,19 @@ export function JobsManager({ initialJobs, embedded = false, backHref = "/dashbo
                       <Link href={`/empleos/${job.id}?from=panel`} onClick={openInNewTabOnDesktop} className="inline-flex h-10 w-full items-center justify-center rounded-full border border-[#d7e1ea] px-3 text-xs font-bold text-[#162543]">{copy.view}</Link>
                       <button type="button" onClick={() => setEditingJob(job)} className="hidden h-10 w-full items-center justify-center rounded-full bg-[#009FD9] px-3 text-xs font-bold text-white transition-colors hover:bg-[#0089bb] lg:inline-flex">{copy.edit}</button>
                       <Link href={`/empleos/${job.id}/editar?from=panel`} className="inline-flex h-10 w-full items-center justify-center rounded-full bg-[#009FD9] px-3 text-xs font-bold text-white transition-colors hover:bg-[#0089bb] lg:hidden">{copy.edit}</Link>
-                      {/* EL MISMO «···» DE TODO EL PANEL. Estaba dibujado a
-                          mano aqui y en Promociones, con su propio relleno y su
-                          propia sombra, mientras Proyectos y Cotizaciones
-                          usaban el compartido: cuatro secciones, dos menus. */}
+                      {/* EL MISMO «···» Y LAS MISMAS DOS OPCIONES QUE EN
+                          PROMOCIONES Y PROYECTOS. «Pausar» se retira: hacia
+                          exactamente lo mismo que «Cerrar vacante» —la saca del
+                          tablero publico y la manda a «Inactivos», y las dos se
+                          deshacen con «Volver a publicar»—, asi que eran dos
+                          palabras para un solo resultado y habia que pensar
+                          cual elegir. Lo unico que cambiaba era el rotulo que
+                          veia el dueno en su propia tarjeta. */}
                       <CardActionsMenu
                         label={copy.more}
                         triggerClassName="h-10 w-10 border-[#d7e1ea]"
                         actions={job.status === "published"
                           ? [
-                              { label: copy.pause, onClick: () => updateJobStatus(job.id, "paused") },
                               { label: copy.close, destructive: true, onClick: () => updateJobStatus(job.id, "closed") },
                             ]
                           : [

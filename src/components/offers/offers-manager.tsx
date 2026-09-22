@@ -32,9 +32,7 @@ const OFFERS_MANAGER_COPY = {
     view: "Ver promoción",
     edit: "Editar",
     more: "Más opciones",
-    pause: "Pausar",
-    soldOut: "Marcar como agotada",
-    expire: "Marcar como vencida", republish: "Volver a publicar", remove: "Eliminar", removeTitle: "¿Eliminar esta promoción?", removeBody: "Se borra del todo y no se puede recuperar.", removeCancel: "Cancelar",
+    close: "Cerrar promoción", republish: "Volver a publicar", remove: "Eliminar", removeTitle: "¿Eliminar esta promoción?", removeBody: "Se borra del todo y no se puede recuperar.", removeCancel: "Cancelar",
     emptyTitle: "Todavía no has publicado ofertas",
     emptyBody: "Crea una oferta para impulsar tus ventas.",
     publishTitle: "Publicar promoción",
@@ -51,9 +49,7 @@ const OFFERS_MANAGER_COPY = {
     view: "View offer",
     edit: "Edit",
     more: "More options",
-    pause: "Pause",
-    soldOut: "Mark as sold out",
-    expire: "Mark as expired", republish: "Publish again", remove: "Delete", removeTitle: "Delete this promotion?", removeBody: "It is removed for good and cannot be recovered.", removeCancel: "Cancel",
+    close: "Close promotion", republish: "Publish again", remove: "Delete", removeTitle: "Delete this promotion?", removeBody: "It is removed for good and cannot be recovered.", removeCancel: "Cancel",
     emptyTitle: "You have not published any offers yet",
     emptyBody: "Create an offer to help grow your sales.",
     publishTitle: "Publish offer",
@@ -242,17 +238,22 @@ export function OffersManager({ initialOffers, embedded = false, backHref = "/da
                       <Link href={`/ofertas/${offer.id}?from=panel`} onClick={openInNewTabOnDesktop} className="inline-flex h-10 w-full items-center justify-center rounded-full border border-[#d7e1ea] px-3 text-xs font-bold text-[#162543]">{copy.view}</Link>
                       <button type="button" onClick={() => setEditingOffer(offer)} className="hidden h-10 w-full items-center justify-center rounded-full bg-[#009FD9] px-3 text-xs font-bold text-white transition-colors hover:bg-[#0089bb] lg:inline-flex">{copy.edit}</button>
                       <Link href={`/ofertas/${offer.id}/editar?from=panel`} className="inline-flex h-10 w-full items-center justify-center rounded-full bg-[#009FD9] px-3 text-xs font-bold text-white transition-colors hover:bg-[#0089bb] lg:hidden">{copy.edit}</Link>
-                      {/* El mismo «···» compartido: el menu ofrece lo que se
-                          puede hacer DESDE donde esta. Una promocion cerrada
-                          solo tiene un camino, volver a publicarse. */}
+                      {/* LAS MISMAS DOS OPCIONES QUE EN EMPLEOS Y PROYECTOS.
+                          Eran TRES para cerrar —pausar, marcar agotada, marcar
+                          vencida— y las tres hacian lo mismo: sacarla del
+                          tablero y mandarla a «Inactivas», de donde vuelve con
+                          «Volver a publicar». La unica diferencia era la
+                          palabra que el dueno leia en su tarjeta, y obligaba a
+                          elegir entre tres sinonimos. «Vencida» ademas se
+                          calcula SOLA por la fecha de validez, asi que
+                          marcarla a mano era repetir lo que el sistema ya
+                          hace. */}
                       <CardActionsMenu
                         label={copy.more}
                         triggerClassName="h-10 w-10 border-[#d7e1ea]"
                         actions={displayStatus === "published"
                           ? [
-                              { label: copy.pause, onClick: () => updateStatus(offer.id, "paused") },
-                              { label: copy.soldOut, onClick: () => updateStatus(offer.id, "sold_out") },
-                              { label: copy.expire, destructive: true, onClick: () => updateStatus(offer.id, "expired") },
+                              { label: copy.close, destructive: true, onClick: () => updateStatus(offer.id, "expired") },
                             ]
                           : [
                               { label: copy.republish, primary: true, onClick: () => updateStatus(offer.id, "published") },
