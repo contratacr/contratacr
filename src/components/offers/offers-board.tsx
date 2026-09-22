@@ -408,7 +408,12 @@ export function OffersBoard({
       {/* Título, acciones y filtros en UNA tarjeta blanca (ver jobs-board). */}
       <div className="relative z-30 hidden shrink-0 border-b border-[#e5e7eb] bg-white lg:block">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-6 py-2.5">
-          <div className={cn("flex shrink-0 items-baseline gap-2", hayFiltros && "border-r border-[#e5e7eb] pr-4")}>
+                      {/* SIN RAYA ENTRE EL TÍTULO Y LOS FILTROS. Separaba dos cosas que
+                no compiten: el nombre de la sección es texto y los filtros son
+                pastillas con contorno, así que ya se distinguen solos. Era
+                además la única raya vertical del app —todo lo demás separa en
+                horizontal o con aire— y el aire que ya hay basta. */}
+<div className="flex shrink-0 items-baseline gap-2 pr-4">
             {/* El nombre de la pantalla, a la vista: antes era solo para lectores
                 de pantalla y la barra arrancaba en frío con los filtros —quien
                 llegaba de Google no sabía en qué sección estaba—.
