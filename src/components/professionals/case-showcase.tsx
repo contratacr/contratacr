@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { Carril } from "@/components/ui/carril";
 import { useLocale, useTranslations } from "next-intl";
 import { X, ChevronLeft, ChevronRight, Maximize2 } from "lucide-react";
 import { useDeslizar } from "@/hooks/use-deslizar";
@@ -295,7 +296,7 @@ export function CaseShowcase({
                   )}
                   {c.description && <p className="whitespace-pre-line text-[14px] leading-relaxed text-[#4b5563] [overflow-wrap:anywhere]">{c.description}</p>}
                   {photos.length > 1 && (
-                    <div className="ccr-carril -mx-5 mt-1 flex gap-2 overflow-x-auto px-5 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:grid sm:grid-cols-3 sm:gap-2 sm:overflow-visible sm:px-0 sm:pb-0">
+                    <Carril className="ccr-carril -mx-5 mt-1 flex gap-2 overflow-x-auto px-5 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:grid sm:grid-cols-3 sm:gap-2 sm:overflow-visible sm:px-0 sm:pb-0">
                       {photos.map((p, idx) => (
                         <button
                           key={idx}
@@ -318,7 +319,7 @@ export function CaseShowcase({
                           />
                         </button>
                       ))}
-                    </div>
+                    </Carril>
                   )}
                 </div>
               </div>

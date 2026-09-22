@@ -1,6 +1,7 @@
 "use client";
 
 import { BOTON_DE_EXITO, PantallaDeExito } from "@/components/ui/pantalla-de-exito";
+import { Carril } from "@/components/ui/carril";
 import { VerifiedSeal } from "@/components/ui/verified-seal";
 import { useState, useEffect, useMemo, useRef } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
@@ -1324,7 +1325,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                       <div className="min-w-0">
                         {!verMesCompleto && proximosDias.length > 0 ? (
                           <>
-                            <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                            <Carril className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                               {proximosDias.map((dia) => {
                                 const iso = formatDateISO(dia);
                                 const elegido = selectedDate === iso;
@@ -1349,7 +1350,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                                   </button>
                                 );
                               })}
-                            </div>
+                            </Carril>
                             <button
                               type="button"
                               onClick={() => setVerMesCompleto(true)}

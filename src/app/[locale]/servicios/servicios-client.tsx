@@ -1,6 +1,7 @@
 "use client";
 
 import { startTransition, useCallback, useEffect, useMemo, useState } from "react";
+import { Carril } from "@/components/ui/carril";
 import { useHairlineOnScroll } from "@/components/util/use-hairline-on-scroll";
 import { PanelEmptyState } from "@/components/ui/content-loading";
 import { cn } from "@/lib/utils";
@@ -421,7 +422,7 @@ export function ServiciosClient({ catalogoInicial }: { catalogoInicial: string |
             ) : (
                 <section className="grid scroll-mt-32 lg:min-h-[560px] lg:grid-cols-[300px_minmax(0,1fr)]">
                   <aside className="min-w-0 overflow-hidden border-b border-[#eef2f6] bg-[#f8fafc] p-2 lg:border-b-0 lg:border-r">
-                    <div className="flex w-full min-w-0 gap-2 overflow-x-auto pb-1 lg:block lg:space-y-1 lg:overflow-visible lg:pb-0">
+                    <Carril className="flex w-full min-w-0 gap-2 overflow-x-auto pb-1 lg:block lg:space-y-1 lg:overflow-visible lg:pb-0">
                       {groups.map((group) => {
                         const Icon = group.Icon;
                         const active = group.key === activeGroup.key;
@@ -448,7 +449,7 @@ export function ServiciosClient({ catalogoInicial }: { catalogoInicial: string |
                           </button>
                         );
                       })}
-                    </div>
+                    </Carril>
                   </aside>
 
                   <div className="min-w-0 p-4">

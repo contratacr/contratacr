@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Carril } from "@/components/ui/carril";
 import { RevealImage } from "@/components/ui/progressive-image";
 import { Link } from "@/i18n/navigation";
 import { ArrowRight } from "lucide-react";
@@ -135,7 +136,7 @@ export function ExploreTabs() {
         </div>
 
         {/* Underline tabs */}
-        <div className="ccr-carril flex justify-center mb-8 border-b border-gray-200 overflow-x-auto hide-scrollbar">
+        <Carril className="ccr-carril flex justify-center mb-8 border-b border-gray-200 overflow-x-auto hide-scrollbar">
           {TABS.map((tab, i) => {
             const active = tab.id === activeTab;
             return (
@@ -153,7 +154,7 @@ export function ExploreTabs() {
               </button>
             );
           })}
-        </div>
+        </Carril>
 
         {/* Grid — featured full width on top, 3 equal below */}
         <div key={activeTab} className="grid grid-cols-3 gap-3 animate-tab-cards">

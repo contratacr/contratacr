@@ -1,4 +1,5 @@
 import { getTranslations } from "next-intl/server";
+import { Carril } from "@/components/ui/carril";
 import { Link } from "@/i18n/navigation";
 import { LandingNavbar } from "@/components/landing/landing-navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
@@ -76,12 +77,12 @@ export async function ServiceLanding({ locale, categoryId, provinceId }: { local
             {provincesWithSupply.length > 0 && (
               <div className="mt-5">
                 <p className="mb-2 text-[12px] font-bold uppercase tracking-wide text-[#68778d]">{t("whereLabel")}</p>
-                <div className="scrollbar-none -mx-4 flex gap-2 overflow-x-auto px-4 sm:mx-0 sm:flex-wrap sm:px-0">
+                <Carril className="scrollbar-none -mx-4 flex gap-2 overflow-x-auto px-4 sm:mx-0 sm:flex-wrap sm:px-0">
                   <Link href={`/servicios/${categoryId}`} className={chip(!province)}>{t("allCountry")}</Link>
                   {provincesWithSupply.map((p) => (
                     <Link key={p.id} href={`/servicios/${categoryId}/${p.id}`} className={chip(province?.id === p.id)}>{p.name}</Link>
                   ))}
-                </div>
+                </Carril>
               </div>
             )}
           </div>

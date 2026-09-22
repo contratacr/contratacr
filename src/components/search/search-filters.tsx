@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter, usePathname } from "@/i18n/navigation";
+import { Carril } from "@/components/ui/carril";
 import { useToquePropio } from "@/hooks/use-toque-propio";
 import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
@@ -1100,7 +1101,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
     // que quedaba debajo (ver useToquePropio).
     const pill = "ccr-search-filter-chip inline-flex h-9 w-max shrink-0 items-center justify-center gap-1 whitespace-nowrap rounded-full border border-[#d7e1ea] bg-white px-2.5 text-[10px] font-bold text-[#162543] shadow-sm min-[350px]:px-3 min-[350px]:text-[11px] min-[390px]:text-[12px]";
     return (
-      <div className="scrollbar-none flex w-full min-w-0 items-center gap-1 overflow-x-auto overflow-y-visible pb-0.5">
+      <Carril className="scrollbar-none flex w-full min-w-0 items-center gap-1 overflow-x-auto overflow-y-visible pb-0.5">
         <div className="flex w-max min-w-full items-center justify-start gap-1">
           <button type="button" onPointerDown={onPointerDownChip} onClick={alTocarChip(() => setOpenChip("sort"))} className={pill}>
             <span className="min-w-0 whitespace-nowrap">{sortLabel}</span><ChevronDown className="h-3 w-3 shrink-0 min-[390px]:h-3.5 min-[390px]:w-3.5" />
@@ -1158,7 +1159,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
         />
         {showVideoFilter && <MultiFilterSheet open={openChip === "modality"} title={t("filters.attention")} values={modalities} options={modalityOptions} onClose={() => setOpenChip(null)} onApply={(next) => { const nextModalities = next.filter(isSearchModality); setModalities(nextModalities); applyFilters({ modalidad: serializeMultiParam(nextModalities) }); setOpenChip(null); }} />}
         {showInsurerFilter && <MultiFilterSheet open={openChip === "insurer"} title={t("filters.insurer")} values={insurers} options={insurerOptions.map((item) => ({ value: item.id, label: item.label }))} onClose={() => setOpenChip(null)} onApply={(next) => { setInsurers(next); applyFilters({ aseguradora: serializeMultiParam(next) }); setOpenChip(null); }} />}
-      </div>
+      </Carril>
     );
   }
 
