@@ -983,8 +983,13 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
                     500 px de lo último que hay escrito. Alineado con el nombre
                     se lee como lo que es —lo que se puede hacer con esta
                     ficha— y sigue cerrando la fila por la derecha, que es donde
-                    está en Empleos, Promociones y Proyectos. */}
-                <MenuFicha className="hidden sm:col-start-3 sm:row-start-1 sm:row-span-2 sm:block sm:self-center" opciones={opcionesDeLaFicha} />
+                    está en Empleos, Promociones y Proyectos.
+                    A LA ALTURA DEL NOMBRE, no del centro del bloque ni de la
+                    esquina de la tarjeta: el menú es de ESTA ficha, y la ficha
+                    es el nombre. Es la misma línea en la que va en Proyectos,
+                    al final del renglón de quien publica. El `-mt-1.5` compensa
+                    el respiro del botón para que el círculo case con el texto. */}
+                <MenuFicha className="hidden sm:col-start-3 sm:row-start-1 sm:-mt-1.5 sm:block sm:self-start" opciones={opcionesDeLaFicha} />
             </div>
             <div id="resenas" className="scroll-mt-24 [.ccr-native-app_&]:scroll-mt-0">
               <div className="rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">
