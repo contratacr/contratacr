@@ -735,10 +735,10 @@ export function NotificationsList({ scope = "mode", titulo }: { scope?: "mode" |
                   data-abierto={itemMenuOpenId === n.id ? "" : undefined}
                   className={cn("absolute", nativeApp && "hidden")}
                 >
-                  <AppTooltip label={locale === "en" ? "Notification options" : "Opciones"}>
+                  <AppTooltip label={locale === "en" ? "Options" : "Opciones"}>
                     <button
                       type="button"
-                      aria-label={locale === "en" ? "Notification options" : "Opciones"}
+                      aria-label={locale === "en" ? "Options" : "Opciones"}
                       aria-haspopup="menu"
                       aria-expanded={itemMenuOpenId === n.id}
                       onClick={(event) => toggleItemMenu(event, n)}

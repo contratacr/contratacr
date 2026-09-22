@@ -1,66 +1,26 @@
 "use client";
 
-import {
-  AlarmClock,
-  Bell,
-  BriefcaseBusiness,
-  CalendarCheck,
-  CalendarClock,
-  ClipboardList,
-  Handshake,
-  Headset,
-  Megaphone,
-  ReceiptText,
-  Star,
-  UserPlus,
-} from "lucide-react";
+import { Bell, Handshake, Headset, ReceiptText, ShieldCheck, Star } from "lucide-react";
 
+// Un icono por familia de aviso VIVA. Las de citas, propuestas, postulaciones,
+// seguir y recordatorios se retiraron con sus flujos; lo historico cae en la
+// campana generica.
 export function NotificationSourceIcon({ type, className }: { type: string; className?: string }) {
   switch (type) {
-    case "booking_received":
-    case "booking_cancelled_by_client":
-    case "booking_completed_by_client":
-    case "booking_rescheduled":
-      return <CalendarCheck className={className} />;
     case "new_project":
-    case "proposal_accepted":
-    case "project_proposal_accepted":
-    case "project_proposal_declined":
     case "project_cancelled":
-    case "project_deleted":
-    case "project_completed":
       return <Handshake className={className} />;
-    case "booking_confirmed":
-    case "booking_cancelled":
-    case "booking_completed":
-    case "booking_update":
-    case "review_request":
-      return <CalendarClock className={className} />;
     case "review_received":
       return <Star className={className} />;
-    case "professional_follow":
-      return <UserPlus className={className} />;
-    case "followed_professional_activity":
-      return <Megaphone className={className} />;
-    case "job_application":
-    case "job_application_status":
-      return <BriefcaseBusiness className={className} />;
-    case "proposal_received":
-    case "proposal_updated":
-    case "proposal_withdrawn":
-    case "project_work_done":
-      return <ClipboardList className={className} />;
-    case "project_proposals_waiting":
-    case "booking_pending_reminder":
-    case "project_in_progress_idle":
-    case "project_confirmation_pending":
-    case "booking_past_date_idle":
-      return <AlarmClock className={className} />;
-    case "project_professional_withdrew":
-      return <ClipboardList className={className} />;
-    case "quote_sent":
-    case "quote_accepted":
-    case "quote_declined":
+    case "verification_approved":
+    case "verification_pending":
+    case "verification_rejected":
+    case "verification_reverted":
+    case "verification_appeal_received":
+    case "verification_outreach":
+      return <ShieldCheck className={className} />;
+    case "suggestion_approved":
+    case "suggestion_rejected":
       return <ReceiptText className={className} />;
     case "support_reply":
       return <Headset className={className} />;

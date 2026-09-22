@@ -13,9 +13,7 @@ export function notificationPushUrl(data: unknown): string {
 
   const payload = data as {
     link?: unknown;
-    booking_id?: unknown;
     project_id?: unknown;
-    proposal_id?: unknown;
     conversation_id?: unknown;
   };
   const raw = typeof payload.link === "string"
@@ -25,14 +23,8 @@ export function notificationPushUrl(data: unknown): string {
     : DEFAULT_NOTIFICATION_URL;
   const target = new URL(raw, "https://contratacr.com");
 
-  if (typeof payload.booking_id === "string" && payload.booking_id) {
-    target.searchParams.set("booking", payload.booking_id);
-  }
   if (typeof payload.project_id === "string" && payload.project_id) {
     target.searchParams.set("project", payload.project_id);
-  }
-  if (typeof payload.proposal_id === "string" && payload.proposal_id) {
-    target.searchParams.set("proposal", payload.proposal_id);
   }
   if (typeof payload.conversation_id === "string" && payload.conversation_id) {
     target.searchParams.set("conversation", payload.conversation_id);

@@ -66,43 +66,38 @@ async function openGuides(page: Page, locale: Locale) {
   return ventana;
 }
 
+// Se siembran SOLO tipos que el app genera hoy —proyecto nuevo, resena recibida
+// y respuesta de soporte—. Seguir, postularse y las citas salieron del producto
+// y sus avisos ya no se traducen: sembrarlos probaba una pantalla que no existe.
 async function seedNotifications(userId: string, locale: Locale) {
   const admin = regressionAdminClient();
   const runId = `notification-ui-${locale}-${randomUUID()}`;
-  const followerName = `Follower ${runId}`;
-  const applicantName = `Applicant ${runId}`;
-  const jobTitle = `Job ${runId}`;
-  const professionalName = `Professional ${runId}`;
-  const serviceName = `Service ${runId}`;
+  const projectTitle = `Project ${runId}`;
+  const reviewerName = `Reviewer ${runId}`;
+  const ticketSubject = `Ticket ${runId}`;
   const rows = [
     {
       user_id: userId,
-      type: "professional_follow",
-      title: `Follow ${runId}`,
-      message: `Follow message ${runId}`,
-      data: { regression_run: runId, push_suppressed: true, follower_name: followerName },
+      type: "new_project",
+      title: "Nuevo proyecto",
+      message: `Un cliente publicó "${projectTitle}" en Desarrollo web.`,
+      data: { regression_run: runId, push_suppressed: true, link: "/es/proyectos", project_title: projectTitle, category_id: "desarrollo_web" },
       read: false,
     },
     {
       user_id: userId,
-      type: "job_application",
-      title: `Application ${runId}`,
-      message: `Application message ${runId}`,
-      data: { regression_run: runId, push_suppressed: true, applicant_name: applicantName, job_title: jobTitle },
+      type: "review_received",
+      title: "Nueva reseña recibida",
+      message: `${reviewerName} te dejó una reseña de 5 estrellas.`,
+      data: { regression_run: runId, push_suppressed: true, client_name: reviewerName, rating: 5 },
       read: false,
     },
     {
       user_id: userId,
-      type: "booking_confirmed",
-      title: "Cita confirmada",
-      message: `${professionalName} confirmó tu cita de '${serviceName}'.`,
-      data: {
-        regression_run: runId,
-        push_suppressed: true,
-        professional_name: professionalName,
-        service_description: serviceName,
-        booking_status: "confirmed",
-      },
+      type: "support_reply",
+      title: "Respuesta de soporte",
+      message: `Soporte respondió a tu ticket "${ticketSubject}".`,
+      data: { regression_run: runId, push_suppressed: true, ticket_subject: ticketSubject },
       read: false,
     },
   ];
@@ -110,13 +105,12 @@ async function seedNotifications(userId: string, locale: Locale) {
   if (error || !data || data.length !== rows.length) throw error ?? new Error("Could not seed notification UI rows");
   return {
     runId,
-    followerName,
-    applicantName,
-    professionalName,
-    serviceName,
+    projectTitle,
+    reviewerName,
+    ticketSubject,
     ids: data.map((row) => String(row.id)),
-    followerId: String(data.find((row) => row.type === "professional_follow")?.id ?? ""),
-    applicationId: String(data.find((row) => row.type === "job_application")?.id ?? ""),
+    projectId: String(data.find((row) => row.type === "new_project")?.id ?? ""),
+    reviewId: String(data.find((row) => row.type === "review_received")?.id ?? ""),
   };
 }
 
@@ -173,17 +167,17 @@ test.describe("@notifications-guides disposable bilingual UI regression", () => 
       const copy = locale === "en"
         ? {
             heading: "Notifications",
-            bookingMessage: `${seeded.professionalName} confirmed your appointment for '${seeded.serviceName}'.`,
+            supportMessage: `Support replied to your ticket "${seeded.ticketSubject}".`,
             globalOptions: "Notification options",
             markAll: "Mark all read",
-            rowOptions: "Notification options",
+            rowOptions: "Options",
             deleteOne: "Delete",
             deleteAll: "Delete all",
             empty: "You have no notifications.",
           }
         : {
             heading: "Notificaciones",
-            bookingMessage: `${seeded.professionalName} confirmó tu cita de '${seeded.serviceName}'.`,
+            supportMessage: `Soporte respondió a tu ticket "${seeded.ticketSubject}".`,
             globalOptions: "Opciones de notificaciones",
             markAll: "Marcar todas como leídas",
             rowOptions: "Opciones",
@@ -205,14 +199,15 @@ test.describe("@notifications-guides disposable bilingual UI regression", () => 
             .filter({ visible: true })
             .first(),
         ).toBeVisible();
-        await expect(list.getByText(copy.bookingMessage, { exact: false }).first()).toBeVisible();
-        await expect(list.getByText(seeded.followerName, { exact: false })).toBeVisible();
+        await expect(list.getByText(copy.supportMessage, { exact: false }).first()).toBeVisible();
+        await expect(list.getByText(seeded.projectTitle, { exact: false })).toBeVisible();
 
-        const followerRow = list.locator(".ccr-notifications-items > li").filter({ hasText: seeded.followerName });
-        await followerRow.locator("div[role='button']").first().click();
-        await page.waitForURL(new RegExp(`/${locale}/dashboard/profesional\\?.*tab=network`), { waitUntil: "domcontentloaded" });
+        // Abrir «nuevo proyecto» lleva al tablero de proyectos y deja el aviso leido.
+        const projectRow = list.locator(".ccr-notifications-items > li").filter({ hasText: seeded.projectTitle });
+        await projectRow.locator("div[role='button']").first().click();
+        await page.waitForURL(new RegExp(`/${locale}/proyectos`), { waitUntil: "domcontentloaded" });
         await expect.poll(async () => {
-          const rows = await notificationRows([seeded.followerId]);
+          const rows = await notificationRows([seeded.projectId]);
           return rows[0]?.read;
         }, { message: "Opening a notification should persist its read state" }).toBe(true);
 
@@ -231,14 +226,14 @@ test.describe("@notifications-guides disposable bilingual UI regression", () => 
         // se comprueba es que ninguna fila quede marcada como sin leer.
         await expect(list.locator(".ccr-notifications-items > li [data-unread='true']")).toHaveCount(0);
 
-        const applicationRow = list.locator(".ccr-notifications-items > li").filter({ hasText: seeded.applicantName });
+        const applicationRow = list.locator(".ccr-notifications-items > li").filter({ hasText: seeded.reviewerName });
         // The row menu lives inside the row on the web and in a portal inside
         // the native shell, so locate its item by role wherever it renders.
         await applicationRow.getByRole("button", { name: copy.rowOptions, exact: true }).click();
         const deleteOne = page.getByRole("menuitem", { name: copy.deleteOne, exact: true }).filter({ visible: true }).first();
         await expect(deleteOne).toBeVisible();
         await deleteOne.click();
-        await expect.poll(async () => (await notificationRows([seeded.applicationId])).length, {
+        await expect.poll(async () => (await notificationRows([seeded.reviewId])).length, {
           message: "Deleting one notification should remove only that row",
         }).toBe(0);
         await expect(applicationRow).toHaveCount(0);

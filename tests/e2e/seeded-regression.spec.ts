@@ -5,10 +5,8 @@ import { canRunSeededRegression, E2E_USERS, ensureRegressionSeed, regressionAdmi
 import { getCategoryLabel } from "../../src/lib/data/categories";
 
 type IdResponse = { id?: string; success?: boolean; error?: string };
-type ListResponse<T> = { bookings?: T[]; projects?: T[]; proposals?: T[]; error?: string };
+type ListResponse<T> = { bookings?: T[]; projects?: T[]; error?: string };
 type BookingRow = { id: string; status: string; service_description?: string };
-type ProjectRow = { id: string; title: string; status: string };
-type ProposalRow = { id: string; status: string; project_id?: string; message?: string };
 type NotificationData = { booking_id?: string | null; project_id?: string | null };
 type PublicAvailabilityResponse = {
   slots?: Array<{ date: string; time: string; locationId?: string | null }>;
@@ -242,26 +240,6 @@ test.describe("@seeded core regression", () => {
         if (error) throw error;
         const { error: interactionError } = await admin.from("interaction_events").delete().contains("metadata", { project_id: projectId });
         if (interactionError) throw interactionError;
-      }
-      const { data: proposals, error: proposalsLookupError } = await admin
-        .from("proposals")
-        .select("id")
-        .in("project_id", projectIds);
-      if (proposalsLookupError) throw proposalsLookupError;
-      if (proposals?.length) {
-        const proposalIds = proposals.map((proposal) => proposal.id);
-        for (const proposalId of proposalIds) {
-          const { error: interactionError } = await admin.from("interaction_events").delete().contains("metadata", { proposal_id: proposalId });
-          if (interactionError) throw interactionError;
-        }
-        const { error: proposalDeleteError } = await admin.from("proposals").delete().in("id", proposalIds);
-        if (proposalDeleteError) throw proposalDeleteError;
-        const { error: proposalAuditError } = await admin
-          .from("user_action_audit")
-          .delete()
-          .eq("entity_table", "proposals")
-          .in("entity_id", proposalIds);
-        if (proposalAuditError) throw proposalAuditError;
       }
       const { error: projectDeleteError } = await admin.from("projects").delete().in("id", projectIds);
       if (projectDeleteError) throw projectDeleteError;
@@ -601,168 +579,6 @@ test.describe("@seeded core regression", () => {
       },
     });
     expect(physicalDuplicate.status).toBe(409);
-  });
-
-  test("project and proposal flow enforces ownership, decision, notifications state, and completion", async ({ page }) => {
-    const marker = regressionMarker("project");
-
-    await loginAs(page, E2E_USERS.client.email, E2E_USERS.client.password);
-    const project = await apiJson<IdResponse>(page, "/api/projects", {
-      method: "POST",
-      body: {
-        title: marker,
-        description: "Necesito reparar una fuga de agua en la cocina para prueba automatizada.",
-        categoryId: seed.categoryId,
-        provinciaId: "al",
-        cantonId: "al-al",
-        budgetMin: 15000,
-        budgetMax: 45000,
-        timeline: "esta_semana",
-        // Publicar exige un WhatsApp (sin él nadie puede responder) y la cuenta
-        // sembrada no tiene: se manda, igual que lo pide el formulario.
-        phone: "88887777",
-      },
-    });
-    expect(project.status).toBe(200);
-    expect(project.body.id).toBeTruthy();
-    const { data: clientProfessional, error: clientProfessionalError } = await regressionAdminClient()
-      .from("professionals")
-      .select("verification_status")
-      .eq("id", seed.videoProfessionalId)
-      .single();
-    if (clientProfessionalError) throw clientProfessionalError;
-    expect(
-      clientProfessional.verification_status,
-      "Using a dual-role account as a client must not demote its professional verification",
-    ).toBe("verified");
-    await expectNotification(seed.professionalUserId, "new_project", { project_id: project.body.id });
-
-    await loginAs(page, E2E_USERS.professional.email, E2E_USERS.professional.password);
-    const opportunities = await apiJson<ListResponse<ProjectRow>>(page, "/api/projects?role=professional");
-    expect(opportunities.status).toBe(200);
-    expect(opportunities.body.projects?.some((item) => item.id === project.body.id)).toBe(true);
-
-    const proposal = await apiJson<IdResponse>(page, "/api/proposals", {
-      method: "POST",
-      body: {
-        projectId: project.body.id,
-        price: 35000,
-        message: "E2E Regression propuesta inicial para reparar la fuga.",
-      },
-    });
-    expect(proposal.status).toBe(200);
-    expect(proposal.body.id).toBeTruthy();
-
-    const proCannotAcceptOwnProposal = await apiJson<IdResponse>(page, "/api/proposals", {
-      method: "PATCH",
-      body: { id: proposal.body.id, status: "accepted" },
-    });
-    expect(proCannotAcceptOwnProposal.status).toBe(403);
-
-    // Una respuesta ENVIADA no se edita: el cliente ya pudo haberla leído y una
-    // versión distinta abre la puerta a "me dijo otro precio". El contrato es
-    // que el intento se rechace.
-    const edited = await apiJson<IdResponse>(page, "/api/proposals", {
-      method: "PATCH",
-      body: {
-        id: proposal.body.id,
-        price: 36000,
-        message: "E2E Regression propuesta editada con mejor detalle.",
-      },
-    });
-    expect(edited.status).toBe(400);
-
-    await loginAs(page, E2E_USERS.client.email, E2E_USERS.client.password);
-    const proposalList = await apiJson<ListResponse<ProposalRow>>(page, `/api/proposals?project=${project.body.id}`);
-    expect(proposalList.status).toBe(200);
-    expect(proposalList.body.proposals?.some((item) => item.id === proposal.body.id)).toBe(true);
-
-    const accepted = await apiJson<IdResponse>(page, "/api/proposals", {
-      method: "PATCH",
-      body: { id: proposal.body.id, status: "accepted" },
-    });
-    expect(accepted.status).toBe(200);
-    await expectNotification(seed.professionalUserId, "project_proposal_accepted", { project_id: project.body.id });
-
-    await loginAs(page, E2E_USERS.professional.email, E2E_USERS.professional.password);
-    const workDone = await apiJson<IdResponse>(page, "/api/projects", {
-      method: "PATCH",
-      body: { id: project.body.id, action: "work_done" },
-    });
-    expect(workDone.status).toBe(200);
-    await expectNotification(seed.clientId, "project_work_done", { project_id: project.body.id });
-
-    await loginAs(page, E2E_USERS.client.email, E2E_USERS.client.password);
-    const confirmed = await apiJson<IdResponse>(page, "/api/projects", {
-      method: "PATCH",
-      body: { id: project.body.id, action: "confirm" },
-    });
-    expect(confirmed.status).toBe(200);
-    await expectNotification(seed.professionalUserId, "project_completed", { project_id: project.body.id });
-  });
-
-  test("withdrawn and declined proposals are handled without reopening duplicate actions", async ({ page }) => {
-    const marker = regressionMarker("withdraw");
-
-    await loginAs(page, E2E_USERS.client.email, E2E_USERS.client.password);
-    const project = await apiJson<IdResponse>(page, "/api/projects", {
-      method: "POST",
-      body: {
-        title: marker,
-        description: "Proyecto para probar retiro y rechazo de propuestas.",
-        categoryId: seed.categoryId,
-        provinciaId: "al",
-        cantonId: "al-al",
-        budgetMin: 20000,
-        budgetMax: 50000,
-        timeline: "flexible",
-      },
-    });
-    expect(project.status).toBe(200);
-    expect(project.body.id).toBeTruthy();
-
-    await loginAs(page, E2E_USERS.professional.email, E2E_USERS.professional.password);
-    const proposal = await apiJson<IdResponse>(page, "/api/proposals", {
-      method: "POST",
-      body: {
-        projectId: project.body.id,
-        price: 30000,
-        message: "E2E Regression propuesta para retirar.",
-      },
-    });
-    expect(proposal.status).toBe(200);
-
-    const withdrawn = await apiJson<IdResponse>(page, `/api/proposals?id=${proposal.body.id}`, { method: "DELETE" });
-    expect(withdrawn.status).toBe(200);
-    await expectNotification(seed.clientId, "proposal_withdrawn", { project_id: project.body.id });
-
-    const myProposals = await apiJson<ListResponse<ProposalRow>>(page, "/api/proposals?mine=true");
-    expect(myProposals.status).toBe(200);
-    expect(myProposals.body.proposals?.some((item) => item.id === proposal.body.id)).toBe(false);
-
-    const secondProposal = await apiJson<IdResponse>(page, "/api/proposals", {
-      method: "POST",
-      body: {
-        projectId: project.body.id,
-        price: 28000,
-        message: "E2E Regression propuesta para rechazar.",
-      },
-    });
-    expect(secondProposal.status).toBe(200);
-
-    await loginAs(page, E2E_USERS.client.email, E2E_USERS.client.password);
-    const declined = await apiJson<IdResponse>(page, "/api/proposals", {
-      method: "PATCH",
-      body: { id: secondProposal.body.id, status: "declined" },
-    });
-    expect(declined.status).toBe(200);
-    await expectNotification(seed.professionalUserId, "project_proposal_declined", { project_id: project.body.id });
-
-    await loginAs(page, E2E_USERS.professional.email, E2E_USERS.professional.password);
-    const afterDecline = await apiJson<ListResponse<ProposalRow>>(page, "/api/proposals?mine=true");
-    expect(afterDecline.status).toBe(200);
-    const declinedRow = afterDecline.body.proposals?.find((item) => item.id === secondProposal.body.id);
-    expect(declinedRow?.status).toBe("declined");
   });
 
   test("cancellations notify only the affected opposite side", async ({ page }) => {

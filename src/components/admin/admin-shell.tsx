@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { AlarmClock, MessageCircle, ShieldCheck, Flag, Shield, Tag, Headset, Users, LayoutGrid, BarChart3, CalendarCheck, ClipboardList, ArrowLeft, Star, Briefcase, BadgePercent, MapPinned, Wallet, Megaphone } from "lucide-react";
+import { MessageCircle, ShieldCheck, Flag, Shield, Tag, Headset, Users, LayoutGrid, BarChart3, CalendarCheck, ClipboardList, ArrowLeft, Star, Briefcase, BadgePercent, MapPinned, Wallet, Megaphone } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
 import { ContrataCRLogo } from "@/components/landing/landing-navbar";
@@ -9,7 +9,7 @@ import { ADMIN_REFRESH_EVENT } from "@/hooks/use-admin-auto-refresh";
 
 export type AdminTab =
   | "resumen" | "verificacion" | "usuarios" | "solicitudes" | "publicaciones" | "reportes" | "aseguradoras"
-  | "categorias" | "cuentas" | "soporte" | "analitica" | "actividad" | "resenas" | "empleos" | "ofertas" | "cobertura" | "costos" | "campanas" | "pendientes" | "contactos";
+  | "categorias" | "cuentas" | "soporte" | "analitica" | "actividad" | "resenas" | "empleos" | "ofertas" | "cobertura" | "costos" | "campanas" | "contactos";
 
 // Admin chrome — a navy (#0f172a) LEFT SIDEBAR with a #38bdf8 accent (horizontal
 // scroll strip on small screens). "Resumen" is the home/overview; the other
@@ -81,7 +81,6 @@ export function AdminShell({
     { id: "cobertura", label: "Cobertura", icon: MapPinned, href: "/admin/cobertura", badge: 0 },
     { id: "costos", label: "Costos", icon: Wallet, href: "/admin/costos", badge: 0 },
     { id: "contactos", label: "Contactos", icon: MessageCircle, href: "/admin/contactos", badge: 0 },
-    { id: "pendientes", label: "Pendientes", icon: AlarmClock, href: "/admin/pendientes", badge: 0 },
     { id: "reportes", label: "Reportes", icon: Flag, href: "/admin/reportes", badge: counts.reportes ?? 0 },
     { id: "aseguradoras", label: "Aseguradoras", icon: Shield, href: "/admin/aseguradoras", badge: 0 },
     { id: "categorias", label: "Servicios", icon: Tag, href: "/admin/servicios", badge: counts.categorias ?? 0 },

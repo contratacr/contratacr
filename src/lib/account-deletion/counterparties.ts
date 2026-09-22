@@ -9,8 +9,6 @@ import { sendNotificationPush } from "@/lib/push/notify";
 
 export type Counterparty = { userId: string; what: string };
 
-const OPEN_BOOKING = ["pending", "confirmed", "in_progress", "awaiting_confirmation"];
-const OPEN_PROJECT = ["open", "in_progress", "awaiting_confirmation"];
 
 export async function collectCounterparties(db: SupabaseClient, userId: string): Promise<{ name: string; parties: Counterparty[] }> {
   const parties = new Map<string, Set<string>>();
@@ -23,47 +21,14 @@ export async function collectCounterparties(db: SupabaseClient, userId: string):
 
   const { data: profile } = await db.from("profiles").select("full_name").eq("id", userId).maybeSingle();
   const { data: ownPros } = await db.from("professionals").select("id, business_name").eq("profile_id", userId);
-  const ownProIds = (ownPros ?? []).map((row) => row.id);
   const name = (ownPros?.[0]?.business_name || profile?.full_name || "Una persona").trim();
 
-  const proOwner = async (professionalIds: string[]) => {
-    if (!professionalIds.length) return new Map<string, string | null>();
-    const { data } = await db.from("professionals").select("id, profile_id").in("id", professionalIds);
-    return new Map((data ?? []).map((row) => [row.id, row.profile_id as string | null]));
-  };
 
-  // Direct requests (bookings) still open, from either side.
-  const { data: asClient } = await db.from("bookings").select("professional_id, status").eq("client_id", userId).in("status", OPEN_BOOKING);
-  const owners = await proOwner([...new Set((asClient ?? []).map((row) => row.professional_id as string).filter(Boolean))]);
-  for (const row of asClient ?? []) add(owners.get(row.professional_id as string), "una cita abierta");
-  if (ownProIds.length) {
-    const { data: asPro } = await db.from("bookings").select("client_id, status").in("professional_id", ownProIds).in("status", OPEN_BOOKING);
-    for (const row of asPro ?? []) add(row.client_id as string, "una cita abierta");
-  }
-
-  // Projects: the accepted professional of an open project, professionals with
-  // pending proposals on it, and clients whose projects had this account's proposal.
-  const { data: ownProjects } = await db.from("projects").select("id, accepted_professional_id, status").eq("client_id", userId).in("status", OPEN_PROJECT);
-  const ownProjectIds = (ownProjects ?? []).map((row) => row.id);
-  if (ownProjectIds.length) {
-    const { data: proposals } = await db.from("proposals").select("professional_id, status").in("project_id", ownProjectIds).in("status", ["pending", "accepted"]);
-    const proposalOwners = await proOwner([...new Set([...(proposals ?? []).map((row) => row.professional_id as string), ...(ownProjects ?? []).map((row) => row.accepted_professional_id as string)].filter(Boolean))]);
-    for (const row of proposals ?? []) add(proposalOwners.get(row.professional_id as string), row.status === "accepted" ? "un proyecto en curso" : "una propuesta enviada a un proyecto");
-    for (const row of ownProjects ?? []) if (row.accepted_professional_id) add(proposalOwners.get(row.accepted_professional_id as string), "un proyecto en curso");
-  }
-  if (ownProIds.length) {
-    const { data: myProposals } = await db.from("proposals").select("project_id, status").in("professional_id", ownProIds).in("status", ["pending", "accepted"]);
-    const projectIds = [...new Set((myProposals ?? []).map((row) => row.project_id as string))];
-    if (projectIds.length) {
-      const { data: projects } = await db.from("projects").select("id, client_id, status").in("id", projectIds).in("status", OPEN_PROJECT);
-      for (const project of projects ?? []) add(project.client_id as string, "un proyecto con una propuesta pendiente o aceptada");
-    }
-  }
-
-  // Las POSTULACIONES a empleos se retiraron del producto —se responde por
-  // WhatsApp—, asi que ya no hay una contraparte «que se postulo a tu vacante»
-  // ni «que recibio tu postulacion». Las filas viejas se quedan en la base;
-  // simplemente no se avisa por algo que la persona ya no reconoceria.
+  // Solo cuenta la CONVERSACION abierta. Las citas, las propuestas y las
+  // postulaciones salieron del producto: ya no hay «una cita abierta» ni «un
+  // proyecto en curso» que alguien reconozca como algo pendiente con esta
+  // cuenta. Quien contacto por WhatsApp no deja rastro aqui, y esta bien: ese
+  // hilo vive en su telefono, no en el app.
 
   // Direct conversations that were still active.
   const { data: conversations } = await db

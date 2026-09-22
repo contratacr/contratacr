@@ -3,8 +3,6 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { auditUserAction } from "@/lib/audit/user-action";
 import { writeSourceColumns } from "@/lib/security/write-guard";
-import { sendNotificationPush } from "@/lib/push/notify";
-import { formatColones } from "@/lib/pricing";
 import { randomBytes } from "node:crypto";
 import { quoteTotals, sanitizeQuoteItems, type QuoteTaxMode } from "@/lib/quotes";
 
@@ -154,20 +152,10 @@ export async function POST(req: NextRequest) {
 
   await auditUserAction(me.admin, req, { actorUserId: me.user.id, actorRole: "professional", action: "quote.create", entityTable: "quotes", entityId: String(data.id), entityOwnerUserId: me.user.id, afterData: insert });
 
-  if (clientId) try {
-    const proName = me.proName ?? "El profesional";
-    const link = bookingId ? "/es/dashboard/profesional?tab=sent_bookings" : "/es/dashboard/profesional?tab=sent_projects";
-    const notification = {
-      user_id: clientId, type: "quote_sent", title: "Te enviaron una cotización",
-      message: `${proName} te envió una cotización por ${formatColones(totals.total)}${contextTitle ? ` para "${contextTitle}"` : ""}. Revísala y acéptala si te sirve.`,
-      // El nombre y el contexto viajan en `data` para poder rehacer el texto
-      // en ingles: si solo se guarda la frase en espanol, en ingles se lee en
-      // espanol.
-      data: { link, quote_id: String(data.id), booking_id: bookingId, project_id: projectId, total: totals.total, pro_name: proName, context_title: contextTitle || null },
-    };
-    await me.admin.from("notifications").insert(notification);
-    await sendNotificationPush({ userId: clientId, title: notification.title, message: notification.message, data: notification.data });
-  } catch (err) { console.error("[quotes] aviso al cliente:", err); }
+  // Sin aviso al cliente: una cotizacion atada a una cita o a un proyecto ya no
+  // se puede crear —las citas salieron del producto y las de proyecto vivian
+  // en Oportunidades—, asi que `clientId` es siempre nulo aqui. La cotizacion
+  // suelta se comparte como PDF o enlace, por fuera del app.
 
   return NextResponse.json({ quote: data });
 }
@@ -213,64 +201,38 @@ export async function PATCH(req: NextRequest) {
     const bookingId = typeof body.bookingId === "string" ? body.bookingId : null;
     const projectId = typeof body.projectId === "string" ? body.projectId : null;
     if (!bookingId && !projectId) return NextResponse.json({ error: "Elige una cita o un proyecto." }, { status: 400 });
-    let clientId: string | null = null; let contextTitle = "";
+    let clientId: string | null = null;
     if (bookingId) {
       const { data: b } = await me.admin.from("bookings").select("id, client_id, professional_id, service_description").eq("id", bookingId).maybeSingle();
       if (!b || b.professional_id !== me.proId) return NextResponse.json({ error: "Esa cita no es tuya." }, { status: 403 });
-      clientId = b.client_id ?? null; contextTitle = b.service_description ?? "";
+      clientId = b.client_id ?? null;
     } else if (projectId) {
       const { data: p } = await me.admin.from("projects").select("id, client_id, title").eq("id", projectId).maybeSingle();
       if (!p) return NextResponse.json({ error: "Proyecto no encontrado." }, { status: 404 });
-      clientId = p.client_id ?? null; contextTitle = p.title ?? "";
+      clientId = p.client_id ?? null;
     }
     if (!clientId) return NextResponse.json({ error: "Ese trabajo no tiene una cuenta de cliente a la que enviarle la cotización." }, { status: 400 });
     const patch = { booking_id: bookingId, project_id: projectId, client_id: clientId, updated_at: new Date().toISOString() };
     const { data: updated, error: upErr } = await me.admin.from("quotes").update(patch).eq("id", id).select(SELECT).single();
     if (upErr) return NextResponse.json({ error: upErr.message }, { status: 500 });
     await auditUserAction(me.admin, req, { actorUserId: me.user.id, actorRole: "professional", action: "quote.attach", entityTable: "quotes", entityId: id, entityOwnerUserId: me.user.id, afterData: patch });
-    try {
-      const proName = me.proName ?? "El profesional";
-      const link = bookingId ? "/es/dashboard/profesional?tab=sent_bookings" : "/es/dashboard/profesional?tab=sent_projects";
-      const notification = {
-        user_id: clientId, type: "quote_sent", title: "Te enviaron una cotización",
-        message: `${proName} te envió una cotización por ${formatColones(q.total)}${contextTitle ? ` para "${contextTitle}"` : ""}. Revísala y acéptala si te sirve.`,
-        data: { link, quote_id: id, booking_id: bookingId, project_id: projectId, total: q.total },
-      };
-      await me.admin.from("notifications").insert(notification);
-      await sendNotificationPush({ userId: clientId, title: notification.title, message: notification.message, data: notification.data });
-    } catch (err) { console.error("[quotes] aviso al cliente:", err); }
     return NextResponse.json({ quote: updated });
   }
 
   const now = new Date().toISOString();
-  let patch: Record<string, unknown>; let notifyUserId: string | null = null; let type = ""; let title = ""; let message = ""; let nombreCliente = "";
+  let patch: Record<string, unknown>;
   if (action === "withdraw") {
     if (q.professional_id !== me.proId) return NextResponse.json({ error: "Solo quien la envió puede retirarla." }, { status: 403 });
     patch = { status: "withdrawn", updated_at: now };
   } else {
     if (q.client_id !== me.user.id) return NextResponse.json({ error: "Solo el cliente puede responder la cotización." }, { status: 403 });
     patch = action === "accept" ? { status: "accepted", accepted_at: now, updated_at: now } : { status: "declined", declined_at: now, updated_at: now };
-    const { data: pro } = await me.admin.from("professionals").select("profile_id").eq("id", q.professional_id).maybeSingle();
-    notifyUserId = pro?.profile_id ?? null;
-    const { data: cliente } = await me.admin.from("profiles").select("full_name").eq("id", me.user.id).maybeSingle();
-    const nombre = cliente?.full_name ?? "El cliente";
-    nombreCliente = nombre;
-    type = action === "accept" ? "quote_accepted" : "quote_declined";
-    title = action === "accept" ? "Cotización aceptada" : "Cotización no aceptada";
-    message = action === "accept"
-      ? `${nombre} aceptó tu cotización por ${formatColones(q.total)}${q.title ? ` para "${q.title}"` : ""}. Coordinen los detalles.`
-      : `${nombre} no aceptó tu cotización por ${formatColones(q.total)}${q.title ? ` para "${q.title}"` : ""}. Puedes enviarle otra.`;
   }
   const { data: updated, error: upErr } = await me.admin.from("quotes").update(patch).eq("id", id).select(SELECT).single();
   if (upErr) return NextResponse.json({ error: upErr.message }, { status: 500 });
   await auditUserAction(me.admin, req, { actorUserId: me.user.id, actorRole: action === "withdraw" ? "professional" : "client", action: `quote.${action}`, entityTable: "quotes", entityId: id, entityOwnerUserId: q.client_id, afterData: patch });
-  if (notifyUserId) {
-    try {
-      const link = q.booking_id ? "/es/dashboard/profesional?mode=offer&tab=bookings" : "/es/dashboard/profesional?mode=offer&tab=quotes";
-      const notification = { user_id: notifyUserId, type, title, message, data: { link, quote_id: id, booking_id: q.booking_id, project_id: q.project_id, total: q.total, client_name: nombreCliente || null, context_title: q.title || null } };
-      await me.admin.from("notifications").insert(notification);
-      await sendNotificationPush({ userId: notifyUserId, title, message, data: notification.data });
-    } catch (err) { console.error("[quotes] aviso al profesional:", err); }
-  }
+  // Sin aviso al profesional: aceptar o rechazar dentro del app solo existia
+  // para las cotizaciones atadas a una cita o a un proyecto, que ya no se
+  // pueden crear. Lo que se cotiza hoy se manda por WhatsApp y se responde alli.
   return NextResponse.json({ quote: updated });
 }

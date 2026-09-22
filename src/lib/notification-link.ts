@@ -18,43 +18,16 @@ export type NotificationLinkInput = {
 
 export type NotificationContext = "professional" | "client" | "support" | null;
 
+// Solo tipos que el app genera hoy. `new_project` le llega al PROFESIONAL de
+// la categoria; `project_cancelled` (autocierre) y las respuestas de soporte, a
+// quien publico. Lo de citas, propuestas, postulaciones y seguir se retiro.
 const PRO_TYPES = new Set([
-  "booking_received",
-  "booking_cancelled_by_client",
-  "booking_completed_by_client",
-  "booking_rescheduled",
   "review_received",
-  "professional_follow",
-  "job_application",
-  "proposal_accepted",
-  "project_proposal_accepted",
-  "project_proposal_declined",
   "new_project",
-  "project_cancelled",
-  "project_deleted",
-  "project_completed",
-  // Recordatorios de inactividad dirigidos al profesional.
-  "booking_pending_reminder",
-  "project_in_progress_idle",
-  "booking_past_date_idle",
 ]);
 
 const CLIENT_TYPES = new Set([
-  "booking_confirmed",
-  "booking_cancelled",
-  "booking_completed",
-  "booking_update",
-  "review_request",
-  "proposal_received",
-  "proposal_updated",
-  "proposal_withdrawn",
-  "project_work_done",
-  "job_application_status",
-  "followed_professional_activity",
-  "project_professional_withdrew",
-  // Recordatorios de inactividad dirigidos al cliente.
-  "project_proposals_waiting",
-  "project_confirmation_pending",
+  "project_cancelled",
 ]);
 
 export function notificationContext(type: string): NotificationContext {
@@ -125,54 +98,9 @@ export function notificationHref(n: NotificationLinkInput, _role?: string, local
 
   let href: string;
   switch (n.type) {
-    case "booking_received":
-    case "booking_cancelled_by_client":
-    case "booking_completed_by_client":
-    case "booking_rescheduled":
-      href = "/dashboard/profesional?tab=bookings";
-      break;
-
-    case "proposal_accepted":
-    case "project_proposal_accepted":
-    case "project_proposal_declined":
     case "new_project":
     case "project_cancelled":
-    case "project_deleted":
-    case "project_completed":
       href = "/proyectos";
-      break;
-
-    case "professional_follow":
-      href = "/dashboard/profesional?tab=network&network=followers";
-      break;
-
-    case "job_application":
-      href = "/dashboard/profesional?mode=offer&tab=jobs";
-      break;
-
-    case "booking_confirmed":
-    case "booking_cancelled":
-    case "booking_completed":
-    case "booking_update":
-    case "review_request":
-      href = "/dashboard/profesional?tab=sent_bookings";
-      break;
-
-    case "proposal_received":
-    case "proposal_updated":
-    case "proposal_withdrawn":
-    case "project_work_done":
-      href = "/dashboard/profesional?tab=sent_projects";
-      break;
-
-    case "job_application_status":
-      href = n.data?.job_id ? `/empleos/${n.data.job_id}` : "/empleos";
-      break;
-
-    case "followed_professional_activity":
-      if (n.data?.activity_type === "offer" && n.data.content_id) href = `/ofertas/${n.data.content_id}`;
-      else if (n.data?.activity_type === "job" && n.data.content_id) href = `/empleos/${n.data.content_id}`;
-      else href = "/dashboard/profesional?tab=network&mode=use";
       break;
 
     case "support_reply":

@@ -96,21 +96,9 @@ test.describe("@contract product safety contracts", () => {
     expect(repairVisibleText("Dise?o, jardiner?a y rese?as")).toBe("Diseño, jardinería y reseñas");
   });
 
-  test("structured notification metadata localizes dates, categories, ratings, and legacy verification", () => {
-    const booking = {
-      type: "booking_received",
-      title: "Nueva cita",
-      message: "Ana solicitó 'Desarrollo web'.",
-      data: {
-        client_name: "Ana",
-        service_description: "Desarrollo web",
-        scheduled_date: "2026-08-13",
-        scheduled_time: "10:30:00",
-      },
-    };
-    expect(localizedNotificationCopy(booking, "es").message).toContain("jueves, 13 de agosto a las 10:30");
-    expect(localizedNotificationCopy(booking, "en").message).toContain("Thursday, August 13 at 10:30");
-
+  // Las citas salieron del producto: su aviso ya no se traduce, asi que el
+  // contrato cubre lo que si se genera hoy —proyecto, resena y verificacion—.
+  test("structured notification metadata localizes categories, ratings, and legacy verification", () => {
     const project = {
       type: "new_project",
       title: "Nuevo proyecto",
@@ -152,7 +140,6 @@ test.describe("@contract product safety contracts", () => {
     await resetAuth(page);
     const checks = [
       { name: "projects", response: apiJson(page, "/api/projects", { method: "POST", body: { title: "E2E", description: "E2E", categoryId: "plomeria" } }) },
-      { name: "proposals", response: apiJson(page, "/api/proposals", { method: "POST", body: { projectId: "missing", price: 1000, message: "E2E" } }) },
       { name: "reviews", response: apiJson(page, "/api/reviews", { method: "POST", body: { professionalId: "missing", rating: 5, comment: "E2E" } }) },
       { name: "account disable", response: apiJson(page, "/api/account/disable", { method: "POST", body: { reason: "E2E" } }) },
       { name: "direct chat", response: apiJson(page, "/api/direct-chat") },
