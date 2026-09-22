@@ -68,6 +68,19 @@ export const BARRA_ACCION_BASE =
 // de estar pegada y una sombra ahí sería una promesa falsa.
 export const BARRA_ACCION_FIJA = `${BARRA_ACCION_BASE} ccr-barra-fija ccr-pie-pegado`;
 
+/**
+ * La misma franja cuando el formulario vive DENTRO DE UNA VENTANA.
+ *
+ * Se coloca igual que `BARRA_ACCION_FIJA` —pegada abajo en el teléfono— pero no
+ * lleva las marcas cuya sombra depende del desplazamiento de la PÁGINA: dentro
+ * de una ventana esa página no dice nada. Quien decide aquí es el propio Modal,
+ * que mide su cuerpo y pone `data-ccr-hay-mas`. Con las marcas de página,
+ * «Contactar soporte» abierto sobre una página larga salía con sombra aunque el
+ * formulario cupiera entero, mientras «Publicar proyecto» —que sí mide lo
+ * suyo— salía sin ella: la misma ventana, dos respuestas.
+ */
+export const BARRA_ACCION_VENTANA = `${BARRA_ACCION_BASE} ccr-barra-ventana`;
+
 
 /**
  * El pie de una VENTANA —no el de la pantalla—: el de `Modal`, que es el que

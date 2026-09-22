@@ -283,7 +283,14 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
         <style
           data-ccr-franja=""
           dangerouslySetInnerHTML={{
-            __html: `@media (max-width:639px){.ccr-barra-accion{box-sizing:border-box;background:#fff;border-top:1px solid #e5e7eb;padding:16px max(20px,env(safe-area-inset-right)) calc(env(safe-area-inset-bottom) + 28px) max(20px,env(safe-area-inset-left))}.ccr-barra-accion.ccr-sin-linea{border-top-color:transparent}.ccr-barra-fija{position:fixed;left:0;right:0;bottom:var(--ccr-reserva-barra,0px);z-index:20;transition:box-shadow .18s ease-out}body:not([data-ccr-al-final]) .ccr-barra-fija{box-shadow:0 -8px 12px -6px rgba(15,23,42,.18)}}
+            __html: `@media (max-width:639px){.ccr-barra-accion{box-sizing:border-box;background:#fff;border-top:1px solid #e5e7eb;padding:16px max(20px,env(safe-area-inset-right)) calc(env(safe-area-inset-bottom) + 28px) max(20px,env(safe-area-inset-left))}.ccr-barra-accion.ccr-sin-linea{border-top-color:transparent}:is(.ccr-barra-fija,.ccr-barra-ventana){position:fixed;left:0;right:0;bottom:var(--ccr-reserva-barra,0px);z-index:20;transition:box-shadow .18s ease-out}body:not([data-ccr-al-final]) .ccr-barra-fija{box-shadow:0 -8px 12px -6px rgba(15,23,42,.18)}}
+/* ccr-barra-ventana es la MISMA franja, pero dentro de una ventana: se coloca
+   igual y NO lleva la sombra de estas reglas, porque estas miran el
+   desplazamiento de la PÁGINA. Dentro de una ventana la página de atrás no
+   dice nada: lo que importa es si queda contenido bajo la franja de la ventana,
+   y eso lo decide data-ccr-hay-mas, que el propio Modal pone al medir su
+   cuerpo. Sin esta separación, abrir «Contactar soporte» sobre una página larga
+   pintaba la sombra aunque el formulario cupiera entero. */
 /* La sombra del pie estaba encerrada en el @media del teléfono: de 640 px en
    adelante las franjas de los formularios siguen pegadas (sticky bottom-0),
    siguen tapando el final y se habían quedado sin ella. La marca

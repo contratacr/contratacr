@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { PhoneInput, isPhoneComplete } from "@/components/ui/phone-input";
 import { UnsavedChangesGuard } from "@/components/dashboard/unsaved-changes-guard";
 import { cn } from "@/lib/utils";
-import { BARRA_ACCION_FIJA, useBarraAccionFija } from "@/components/ui/acciones-al-pie";
+import { BARRA_ACCION_FIJA, BARRA_ACCION_VENTANA, useBarraAccionFija } from "@/components/ui/acciones-al-pie";
 import { useHairlineOnScroll } from "@/components/util/use-hairline-on-scroll";
 import { ArrowLeft, Plus, Trash2 } from "lucide-react";
 import { useLocale } from "next-intl";
@@ -536,7 +536,7 @@ export function JobPostForm({ professionalId, backHref = "/empleos", initialJob 
             // ventana hay que descontar DOS rellenos (el del cuerpo y el de la
             // columna del formulario); si solo se descuenta uno queda una franja
             // gris a cada lado.
-            BARRA_ACCION_FIJA,
+            presentation === "modal" ? BARRA_ACCION_VENTANA : BARRA_ACCION_FIJA,
             "z-20 max-sm:fixed max-sm:inset-x-0 max-sm:bottom-0 sm:sticky sm:bottom-0 sm:-mx-4 sm:mt-5 sm:flex sm:justify-end sm:px-6 sm:pb-4",
             // El pie llega a los bordes de la VENTANA: el margen negativo tiene
             // que valer exactamente lo que el envoltorio mete por los lados. Eran

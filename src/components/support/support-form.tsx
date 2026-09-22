@@ -13,7 +13,7 @@ import { IMAGE_DOC_ACCEPT } from "@/lib/upload-validation";
 import { getImageUploadPreparationErrorCode, prepareImageForUpload } from "@/lib/client-image-upload";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { BARRA_ACCION_FIJA, useBarraAccionFija } from "@/components/ui/acciones-al-pie";
+import { BARRA_ACCION_FIJA, BARRA_ACCION_VENTANA, useBarraAccionFija } from "@/components/ui/acciones-al-pie";
 
 // The support ticket form — SINGLE SOURCE OF TRUTH for the fields, validation and
 // submit. Rendered on the public /soporte page (the in-dashboard Soporte section uses
@@ -351,7 +351,7 @@ export function SupportForm({ onSuccess, onCancel }: { onSuccess?: (email: strin
           // Dentro de una ventana, el pie llega hasta los bordes: con el margen
           // en cero quedaba una franja gris de 24 px a cada lado, porque el
           // cuerpo de la ventana ya trae su propio relleno.
-          BARRA_ACCION_FIJA,
+          enVentana ? BARRA_ACCION_VENTANA : BARRA_ACCION_FIJA,
             "z-20 max-sm:fixed max-sm:inset-x-0 max-sm:bottom-0 sm:sticky sm:bottom-0 sm:-mx-4 sm:mt-5 sm:flex sm:justify-end sm:gap-3 sm:px-6",
           enVentana ? "sm:-mx-6 sm:rounded-b-2xl" : "sm:mx-0 sm:rounded-b-2xl sm:border-x",
         )}>
