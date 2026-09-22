@@ -50,6 +50,8 @@ import { EMPLEOS_VISIBLE } from "@/lib/feature-flags";
 import { PerfilSkeleton } from "@/components/ui/section-skeletons";
 import { ProgressiveImage } from "@/components/ui/progressive-image";
 import { useArrastreHorizontal } from "@/hooks/use-arrastre-horizontal";
+import { useDesvanecidoDeCarril } from "@/hooks/use-desvanecido-de-carril";
+import { FlechasDeCarril } from "@/components/ui/flechas-de-carril";
 
 // ─── WhatsApp icon ────────────────────────────────────────────────────────────
 // ─── Sub-rating row ───────────────────────────────────────────────────────────
@@ -182,6 +184,11 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
   // En computadora las pestañas se arrastran con el mouse (ver el hook).
   const carrilPestanasRef = useRef<HTMLDivElement | null>(null);
   useArrastreHorizontal(carrilPestanasRef);
+  // LAS PESTAÑAS QUE NO CABEN TIENEN QUE DECIRLO. Con siete secciones, en el
+  // teléfono «Formación» e «Información» quedaban fuera y la fila se cortaba
+  // contra el filo: parecía que esas secciones no existían. El mismo degradado
+  // que el resto de los carriles del app, y flechas en computadora.
+  const { mascara: mascaraPestanas } = useDesvanecidoDeCarril(carrilPestanasRef);
   // Opening another section starts from its top: if the previous section was
   // scrolled past the pinned tab strip, bring the sections card back up.
   useEffect(() => {
@@ -745,21 +752,13 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
     </div>
   );
 
-  // Reportar no es una forma de contactar: iba pegado a WhatsApp y Llamar en la
-  // tarjeta de arriba, donde parecía una tercera opción. Va al pie de
-  // «Información», que es la letra chica de la ficha.
-  const botonReportar = !isOwn ? (
-    <div className="mt-6 flex items-center justify-center border-t border-[#eef2f6] pt-4">
-      <button
-        type="button"
-        onClick={() => setReportOpen(true)}
-        className="inline-flex !min-h-0 items-center gap-1.5 rounded-lg px-2 py-1 text-[12px] font-medium text-[#9aa3ad] transition-colors hover:text-[#6b7280]"
-      >
-        <Flag className="h-3.5 w-3.5" />
-        {t("reportProfile")}
-      </button>
-    </div>
-  ) : null;
+  // REPORTAR VIVE EN EL «···», Y EN UN SOLO SITIO.
+  // Estuvo pegado a WhatsApp y Llamar —donde parecía una tercera forma de
+  // contactar—, y de ahí se mudó al pie de «Información». Cuando la ficha ganó
+  // su «···» con guardar, compartir y reportar, quedaron los dos: la misma
+  // acción dos veces en la misma pantalla, y la de abajo escondida al final de
+  // una pestaña que casi nadie abre. Se queda la del menú, que es donde está en
+  // las fichas de empleo, promoción y proyecto.
 
   // «disponibilidad» ya no es una pestaña: si llega por un enlace viejo, se cae
   // en la primera que sí existe.
@@ -923,11 +922,13 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
               <div className="rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">
 
                 {/* Tab bar — sticks under the header on the phone so any section is one tap away. */}
-                <div data-profile-tabs="" className="sticky top-16 z-20 rounded-t-2xl border-b border-[#e5e7eb] bg-white [.ccr-native-app_&]:top-0 lg:static lg:rounded-t-2xl">
+                <div data-profile-tabs="" className="group/carril relative sticky top-16 z-20 rounded-t-2xl border-b border-[#e5e7eb] bg-white [.ccr-native-app_&]:top-0 lg:static lg:rounded-t-2xl">
+                  <FlechasDeCarril carril={carrilPestanasRef} />
                   <div
                     role="tablist"
                     aria-label={locale === "en" ? "Profile sections" : "Secciones del perfil"}
                     ref={carrilPestanasRef}
+                    style={{ maskImage: mascaraPestanas, WebkitMaskImage: mascaraPestanas }}
                     className="ccr-carril scrollbar-none flex overflow-x-auto scroll-smooth"
                   >
                     {TABS.map(tab => (
@@ -1361,7 +1362,6 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
                             </div>
                           </section>
                         )}
-                        {botonReportar}
                       </div>
                     );
                   })()}</div>}

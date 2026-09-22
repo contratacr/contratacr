@@ -217,7 +217,16 @@ export function StatusFilterTabs({
     return (
       <div data-status-filter-tabs="" data-filter-layout="chips" className="group/carril relative w-full max-w-full min-w-0 overflow-hidden lg:overflow-visible">
         <FlechasDeCarril carril={carrilRef} />
-        <div ref={carrilRef} className="ccr-carril-chips scrollbar-none flex gap-1.5 overflow-x-auto py-0">
+        {/* EL DEGRADADO TAMBIÉN AQUÍ. Se calculaba (`mascaraCarril`) pero solo
+            se aplicaba en la variante segmentada: estas pastillas se quedaban
+            sin ninguna señal de que hay más a la derecha, porque las flechas
+            son de computadora Y con el cursor encima. Con el dedo, el degradado
+            es la única pista. Se mide antes de pintarse: si todo cabe, no sale. */}
+        <div
+          ref={carrilRef}
+          style={{ maskImage: mascaraCarril, WebkitMaskImage: mascaraCarril }}
+          className="ccr-carril-chips scrollbar-none flex gap-1.5 overflow-x-auto py-0"
+        >
           {tabs.map((tab) => {
             const active = value === tab.id;
             return (
