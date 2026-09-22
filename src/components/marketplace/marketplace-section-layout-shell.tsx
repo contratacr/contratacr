@@ -3,6 +3,7 @@
 import { usePathname, useSelectedLayoutSegment } from "next/navigation";
 import { FooterSoloWeb } from "@/components/landing/footer-solo-web";
 import { LandingNavbar } from "@/components/landing/landing-navbar";
+import { PantallaFija } from "@/components/util/pantalla-fija";
 
 export function MarketplaceSectionLayoutShell({ children }: { children: React.ReactNode }) {
   const segment = useSelectedLayoutSegment();
@@ -17,6 +18,7 @@ export function MarketplaceSectionLayoutShell({ children }: { children: React.Re
 
   return (
     <div className={esTablero ? "ccr-cascaron ccr-cascaron-tablero flex min-h-screen flex-col bg-[#f4f7fa]" : "ccr-cascaron flex min-h-screen flex-col bg-[#f4f7fa]"}>
+      {esTablero && <PantallaFija />}
       <div className="hidden lg:block">
         <LandingNavbar
           mobileSearch={false}

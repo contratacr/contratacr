@@ -1,5 +1,6 @@
 "use client";
 
+import { PantallaFija } from "@/components/util/pantalla-fija";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Loader2, RefreshCw, SlidersHorizontal } from "lucide-react";
@@ -435,6 +436,8 @@ export function SearchResultsLayout({ children, filters, quickFilters, drawerFil
   }, []);
 
   return (
+    <>
+    <PantallaFija />
     <div className="ccr-search-results-layout flex h-[calc(100dvh-var(--ccr-native-header-height,64px))] flex-col overflow-hidden bg-[#fafafa] lg:block lg:h-auto lg:overflow-visible lg:bg-transparent">
       {/* Controls bar — "Filtros" drawer button ONLY at lg–xl (xl+ uses the sidebar). */}
       <div className="hidden lg:flex xl:hidden sticky top-16 z-30 mb-4 items-center gap-2">
@@ -575,5 +578,6 @@ export function SearchResultsLayout({ children, filters, quickFilters, drawerFil
         )}
       </div>
     </div>
+    </>
   );
 }

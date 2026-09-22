@@ -38,7 +38,7 @@ export function LanguagesInput({ value, onChange }: Props) {
   }
 
   return (
-    <div className="flex flex-col gap-1">
+    <div className="inline-flex w-fit max-w-full flex-col gap-1">
       {LANGUAGES.map((language) => {
         const checked = selected.has(language.id);
         return (
@@ -47,6 +47,7 @@ export function LanguagesInput({ value, onChange }: Props) {
             titulo={languageLabel(language.id, locale)}
             checked={checked}
             onChange={() => toggle(language.id)}
+            estirar
           />
         );
       })}
