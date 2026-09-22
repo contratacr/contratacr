@@ -493,7 +493,7 @@ export function SupportTickets({
         // leia como una franja, y una charla encajonada no parece un chat.
         // Los margenes negativos anulan ese relleno en computadora; el borde
         // inferior redondeado es el de la propia tarjeta.
-        className="ccr-support-thread flex h-[calc(100dvh-153px)] min-h-[360px] flex-col lg:-mx-5 lg:-mb-5 lg:h-auto lg:min-h-[380px] lg:max-h-[min(720px,calc(100dvh-260px))] lg:overflow-hidden lg:rounded-b-2xl"
+        className="ccr-support-thread flex h-[calc(100dvh-153px)] min-h-[360px] flex-col lg:-mx-5 lg:-mb-5 lg:h-auto lg:min-h-96 lg:max-h-[45rem] lg:overflow-hidden lg:rounded-b-2xl"
       >
         {!ticket ? (
           <div className="grid min-h-0 flex-1 place-items-center px-4">
@@ -560,7 +560,7 @@ export function SupportTickets({
                       deja de leerse como un mensaje y parece un parrafo de una
                       pagina. La esquina del lado de quien habla va recta, que
                       es lo que hace de pico. */}
-                  <div className={`max-w-[min(34rem,86%)] rounded-[18px] px-4 py-2.5 text-[15px] leading-relaxed ${m.sender_role === "user" ? "rounded-br-md bg-[#009FD9] text-white" : "rounded-bl-md bg-[#eef1f5] text-[#162543]"}`}>
+                  <div className={`max-w-[86%] rounded-[18px] sm:max-w-lg px-4 py-2.5 text-[15px] leading-relaxed ${m.sender_role === "user" ? "rounded-br-md bg-[#009FD9] text-white" : "rounded-bl-md bg-[#eef1f5] text-[#162543]"}`}>
                     {/* EN EL PROPIO GLOBO NO SE FIRMA. Un globo azul a la
                         derecha ya dice «yo» —es el idioma de cualquier chat— y
                         «Tu» con su monigote encima ocupaba mas alto que el
@@ -603,13 +603,15 @@ export function SupportTickets({
               {/* Pildora RELLENA, sin linea alrededor, como el «Aa» de
                   Messenger: sobre un lienzo blanco, un campo con borde era una
                   caja mas. El foco lo dice un anillo suave, no un borde.
-                  EL GRIS ES #f3f4f6, uno que el proyecto YA USA en 70 sitios.
-                  Estuvo en #f0f2f5 —el de Messenger— y en la maquina de Isaac
-                  el campo salia BLANCO: una clase arbitraria con un valor que
-                  no aparece en ningun otro lado puede no llegar a generarse, y
-                  ya nos habia pasado. La diferencia entre los dos grises no se
-                  ve; que el relleno exista, si. */}
-              <div className="flex items-end gap-2 rounded-[24px] bg-[#f3f4f6] p-1 pl-2 transition focus-within:ring-2 focus-within:ring-[#009FD9]/30">
+                  NADA DE CLASES ARBITRARIAS ESTRENADAS AQUI. `rounded-3xl` es
+                  24 px y es del nucleo de Tailwind; el gris #f3f4f6 ya se usa
+                  en 70 sitios. Con `rounded-[24px]` y #f0f2f5 —valores que no
+                  aparecian en ningun otro archivo— el campo salia cuadrado o
+                  blanco segun lo que tuviera la hoja en cache del navegador:
+                  al editar se veia bien, porque la recarga en caliente inyecta
+                  lo nuevo, y al REFRESCAR volvia el CSS viejo sin esas reglas.
+                  Con utilidades que el proyecto ya usa, eso no puede pasar. */}
+              <div className="flex items-end gap-2 rounded-3xl bg-[#f3f4f6] p-1 pl-2 transition focus-within:ring-2 focus-within:ring-[#009FD9]/30">
                 <textarea
                   value={reply}
                   onChange={(e) => {
