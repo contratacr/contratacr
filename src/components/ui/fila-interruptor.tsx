@@ -40,15 +40,13 @@ export function FilaInterruptor({
       data-testid={testId}
       onClick={() => onChange(!checked)}
       className={cn(
-        // EL INTERRUPTOR NUNCA SE ALEJA DE SU ROTULO. El rotulo a la izquierda
-        // y el interruptor a la derecha es lo que hacen iOS, Android, Slack,
-        // Notion y GitHub —y por eso se queda—, pero ellos lo hacen en una
-        // LISTA de ajustes angosta. Aqui la fila heredaba el ancho del
-        // formulario (768 px) y «Permitir contacto por llamada» quedaba con el
-        // interruptor a 700 px del texto, sin nada en medio: a esa distancia ya
-        // no se lee como una pareja. Con el tope, el par se lee junto en
-        // computadora y en el telefono no cambia nada, que ahi nunca se alcanza.
-        "flex w-full max-w-xl items-center justify-between gap-4 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9]/35 disabled:cursor-not-allowed disabled:opacity-60",
+        // EL INTERRUPTOR VA PEGADO A SU ROTULO. Estaba al otro extremo de una
+        // fila que heredaba el ancho del formulario, asi que en «Mi perfil» y
+        // en «Publicar empleo» quedaba a cientos de pixeles de su texto, con
+        // nada en medio: a esa distancia no se lee como una pareja y hay que
+        // recorrer la linea con la vista para saber que apaga. Ahora la fila
+        // mide lo que mide el par, no lo que mide el formulario.
+        "inline-flex w-fit max-w-full items-center gap-3 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9]/35 disabled:cursor-not-allowed disabled:opacity-60",
         conBorde ? "rounded-2xl border border-[#e5e7eb] bg-white px-4 py-3" : "py-1",
         className,
       )}

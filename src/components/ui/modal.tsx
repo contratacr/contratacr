@@ -61,6 +61,13 @@ interface ModalProps {
    * principal, donde un pulgar se equivoca.
    */
   accionCabecera?: ReactNode;
+  /**
+   * Cabecera a tres piezas TAMBIEN en computadora: el «···» a un extremo, el
+   * titulo en el centro y la equis al otro. Es el reparto de una ficha —lo que
+   * ya hace esta ventana en el telefono—, y se pide cuando el «···» pegado al
+   * titulo se leia como parte de el.
+   */
+  cabeceraCentrada?: boolean;
 }
 
 /**
@@ -122,6 +129,7 @@ export function Modal({
   footerClassName,
   hideHeader = false,
   accionCabecera,
+  cabeceraCentrada = false,
 }: ModalProps) {
   useEffect(() => {
     if (!open) return;
@@ -213,9 +221,8 @@ export function Modal({
             // En el teléfono el título va centrado y la X flota al lado: si la X
             // ocupara lugar en la fila, el título quedaría corrido su ancho
             // (22 px medidos) y "centrado" sería mentira.
-            fullscreenMobile
-              ? "relative items-center justify-center sm:static sm:items-start sm:justify-between"
-              : "relative items-center justify-center sm:static sm:items-start sm:justify-between",
+            "relative items-center justify-center",
+            !cabeceraCentrada && "sm:static sm:items-start sm:justify-between",
             // Con flecha, la salida va DELANTE del título también en pantalla
             // grande: una flecha a la derecha se lee como "siguiente".
             conFlecha && "sm:items-center sm:justify-start sm:gap-2",
@@ -226,7 +233,7 @@ export function Modal({
               ni siquiera llegó a generarse en el CSS— y una flecha a la derecha
               del título se lee como "siguiente", no como "atrás". */}
           {conFlecha && salida}
-          <div className={cn("min-w-0 px-10 text-center sm:px-0 sm:text-left")}>
+          <div className={cn("min-w-0 px-10 text-center", !cabeceraCentrada && "sm:px-0 sm:text-left")}>
             {/* REGLA: en el teléfono la cabecera es UNA línea —flecha, título y
                 nada más—, para que mida lo mismo en todas las ventanas. El título
                 se recorta con «…» y el subtítulo aparece de 640 px en adelante. */}
@@ -239,10 +246,15 @@ export function Modal({
               queda a la izquierda de la equis. */}
           {accionCabecera && (
             <div className={cn(
-              "absolute top-1/2 flex -translate-y-1/2 items-center sm:static sm:translate-y-0 sm:order-none sm:self-start",
-              // A pantalla completa la salida es la flecha de la izquierda, así
-              // que el «···» llega al filo; con equis a la derecha, le deja sitio.
+              "absolute top-1/2 flex -translate-y-1/2 items-center",
+              // Centrada, el «···» se va al extremo CONTRARIO de la equis: uno
+              // a cada lado del título, que es como se reparte la cabecera de
+              // una ficha. Si no, vuelve a la fila junto a la salida.
+              // En el teléfono NO se toca: ahí la salida es la flecha de la
+              // izquierda y el «···» ya vive pegado al filo derecho. El reparto
+              // a tres piezas es de computadora, que es donde se pidió.
               fullscreenMobile ? "right-3" : "right-12",
+              cabeceraCentrada ? "sm:left-4 sm:right-auto" : "sm:static sm:translate-y-0 sm:order-none sm:self-start",
             )}>
               {accionCabecera}
             </div>

@@ -108,7 +108,7 @@ export function QuoteDetailModal({ quote, role, open, onClose, onChanged, proNam
 
   return (
     <>
-      <Modal open={open} onClose={onClose} title={titulo} subtitle={subtitulo} size="sm" mobilePresentation="fullscreen" closeLabel={t("close")}
+      <Modal open={open} onClose={onClose} title={titulo} subtitle={subtitulo} size="sm" mobilePresentation="fullscreen" closeLabel={t("close")} cabeceraCentrada
         // EL «···» ARRIBA Y LAS ACCIONES ABAJO. El pie lleva lo que la pantalla
         // viene a hacer —mandar la cotización y guardarla—; retirarla o borrarla
         // son cosas DEL REGISTRO y viven en el «···» de la cabecera, que es
@@ -121,8 +121,16 @@ export function QuoteDetailModal({ quote, role, open, onClose, onChanged, proNam
               : { id: "borrar", icono: <Trash2 className="h-4 w-4" />, texto: t("delete"), etiqueta: t("delete"), peligro: true, onSelect: () => void actuar("delete") }]}
           />
         ) : undefined}
+        // DESCARGAR VIVE EN EL PIE, no suelto al final del cuerpo. Era el unico
+        // boton de la ventana que se desplazaba con el contenido: en una
+        // cotizacion larga habia que bajar hasta el fondo para encontrarlo,
+        // mientras la franja blanca de abajo se quedaba vacia.
         footer={role === "pro" && abierta ? (
           <BotonCompartirCotizacion quote={quote} proName={proName ?? quote.professional_name ?? ""} proSlug={proSlug} className="min-w-0 flex-1 sm:w-auto sm:flex-none" />
+        ) : role === "client" ? (
+          <button type="button" disabled={!pdfCliente} onClick={descargarCliente} className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-full bg-[#009fd9] px-5 text-[14px] font-bold text-white transition-colors hover:bg-[#008fc3] disabled:opacity-60 sm:w-auto">
+            {pdfCliente ? <Download className="h-4 w-4" /> : <Loader2 className="h-4 w-4 animate-spin" />}{t("downloadClient")}
+          </button>
         ) : undefined}
         footerClassName="flex-row items-center gap-2 sm:justify-end">
         <div className="flex flex-col gap-4">
@@ -160,11 +168,7 @@ export function QuoteDetailModal({ quote, role, open, onClose, onChanged, proNam
           {/* Mandarla vive en el pie. Aquí solo queda el aviso de a qué cita o
               proyecto está pegada, si lo está. */}
           {role === "pro" && abierta && <QuoteShare quote={quote} onChanged={onChanged} />}
-          {role === "client" && (
-            <button type="button" disabled={!pdfCliente} onClick={descargarCliente} className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-full border border-[#d7e1ea] bg-white px-5 text-[14px] font-bold text-[#162543] transition-colors hover:border-[#b9c8d6] hover:bg-[#f6f9fb] disabled:opacity-60">
-              {pdfCliente ? <Download className="h-4 w-4" /> : <Loader2 className="h-4 w-4 animate-spin" />}{t("downloadClient")}
-            </button>
-          )}
+
         </div>
       </Modal>
       {dialogNode}
