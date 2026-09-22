@@ -742,7 +742,11 @@ export function ProjectsBoard({
                 <aside className="hidden h-fit w-80 shrink-0 rounded-lg border border-[#e5e7eb] bg-white p-5 lg:sticky lg:top-6 lg:block">
                   <p className="text-xs font-bold uppercase tracking-wide text-[#7a899d]">{copy.ficha}</p>
                   <p className="mt-1 text-2xl font-extrabold leading-tight text-[#007fae]">{ficha.category_name || copy.titulo}</p>
-                  <p className="mt-4 border-t border-[#eef2f6] pt-4 text-sm text-[#43536b]">
+                  {/* UNA SOLA LÍNEA EN LA TARJETA, la que separa los DATOS de
+                      la ACCIÓN. Quién publicó es un dato más, igual que el
+                      servicio de arriba: la raya entre los dos partía el bloque
+                      de datos en dos por nada. Empleos ya tenía una sola. */}
+                  <p className="mt-3 text-sm text-[#43536b]">
                     {copy.publicado} <span className="font-bold text-[#162543]">{ficha.client_name}</span>
                   </p>
                   <div className="mt-4 flex flex-col gap-2 border-t border-[#eef2f6] pt-4">
