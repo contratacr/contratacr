@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { ArrowLeft } from "lucide-react";
 import { Link } from "@/i18n/navigation";
+import { marketplaceReturnLabelKey, safeMarketplaceReturnHref } from "@/lib/navigation/marketplace-return";
 import { JobsPageContent } from "../page";
 import { createClient, hasSupabaseServerConfig } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -62,6 +63,11 @@ export default async function JobDetailRedirect({ params, searchParams }: Props)
   if (!cerrado) notFound();
 
   const t = await getTranslations("empleoCerrado");
+  // La lápida también vuelve a donde se vino: desde el panel, a la lista
+  // exacta (pestaña y etapa); sin origen, a todos los empleos.
+  const tSalida = await getTranslations("marketplaceReturn");
+  const volverHref = safeMarketplaceReturnHref(from, "/empleos");
+  const volverTexto = from ? tSalida(marketplaceReturnLabelKey(volverHref, "/empleos")) : t("backAll");
   const empleador = (cerrado.professionals as { business_name?: string | null; profiles?: { full_name?: string | null } | null } | null);
   const nombre = empleador?.business_name || empleador?.profiles?.full_name || null;
 
@@ -73,9 +79,9 @@ export default async function JobDetailRedirect({ params, searchParams }: Props)
         {/* EN COMPUTADORA NO HAY FLECHA DE VOLVER, NUNCA: la del navegador ya
             está a la izquierda de la dirección y hace exactamente eso. En el
             teléfono sí, que ahí no hay otra. */}
-        <Link href="/empleos" className="mb-3 inline-flex h-10 items-center gap-2 rounded-lg px-2 text-sm font-extrabold text-[#162543] transition hover:bg-[#eaf6fc] lg:hidden">
+        <Link href={volverHref} aria-label={volverTexto} className="mb-3 inline-flex h-10 items-center gap-2 rounded-lg px-2 text-sm font-extrabold text-[#162543] transition hover:bg-[#eaf6fc] lg:hidden">
           <ArrowLeft className="h-4 w-4 stroke-[2.4]" />
-          {t("backAll")}
+          {volverTexto}
         </Link>
         {/* FLEX CON UTILIDADES NORMALES, NO UNA REJILLA CON VALOR ARBITRARIO.
             `lg:grid-cols-[minmax(0,1fr)_320px]` depende de que Tailwind genere

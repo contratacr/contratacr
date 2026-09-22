@@ -321,11 +321,11 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
   const detailBackHref = safeMarketplaceReturnHref(returnTo, "/empleos");
   const detailBackLabel = tSalida(marketplaceReturnLabelKey(detailBackHref, "/empleos", !returnTo));
 
-  return <main className="min-h-[calc(100vh-72px)] overflow-x-clip bg-white pb-0 text-[#162543] sm:bg-[#fafafa] sm:pb-16 lg:flex lg:h-[calc(100dvh-64px)] lg:min-h-0 lg:flex-col lg:overflow-hidden lg:bg-white lg:pb-0">
+  return <main className="ccr-tablero-fijo min-h-[calc(100vh-72px)] overflow-x-clip bg-white pb-0 text-[#162543] sm:bg-[#fafafa] sm:pb-16 lg:flex lg:h-[calc(100dvh-64px)] lg:min-h-0 lg:flex-col lg:overflow-hidden lg:bg-white lg:pb-0">
     {avisoNode}
     {showingMobileDetail && selected && (
-      <section className="lg:hidden">
-        <header className={cn("ccr-cabecera-pegada ccr-marketplace-sticky sticky top-0 z-20 border-b bg-white transition-colors duration-200", CABECERA_FILA_CENTRADA, conLinea ? "border-[#e5e7eb]" : "border-transparent")}>
+      <section className="ccr-tablero-ficha lg:hidden">
+        <header className={cn(CABECERA_FILA_CENTRADA, "ccr-cabecera-pegada ccr-marketplace-sticky sticky top-0 z-20 border-b bg-white transition-colors duration-200", conLinea ? "border-[#e5e7eb]" : "border-transparent")}>
           <Link
             href={detailBackHref}
             aria-label={detailBackLabel}
@@ -428,7 +428,7 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
       </div>
     )}
     {detailOnly && selected && (
-      <div className="mx-auto hidden w-full max-w-6xl px-6 pb-8 pt-8 lg:block">
+      <div className="ccr-tablero-ficha-pc mx-auto hidden w-full max-w-6xl px-6 pb-8 pt-8 lg:block">
         {/* Ver la nota de la ficha de una promoción: en computadora la flecha
             de atrás la pone el navegador, así que este enlace solo sale cuando
             el navegador NO puede ayudar —se llegó de fuera y su flecha saca del
@@ -482,8 +482,8 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
         quedaron?». Sin filtros, encima de la lista entera, no decía nada que la
         lista no dijera. Y «Costa Rica» se fue: el app entero es Costa Rica, así
         que era una palabra fija debajo de un número. */}
-    {!detailOnly && <div className={`${showingMobileDetail ? "hidden lg:block " : ""}mx-auto w-full max-w-7xl px-0 py-0 sm:max-w-[46rem] sm:px-6 sm:py-5 lg:max-w-7xl lg:flex-1 lg:min-h-0 lg:px-6 lg:py-0`}>
-      <div className={`${filtered.length > 0 ? "lg:grid lg:grid-cols-[minmax(340px,440px)_minmax(0,1fr)] xl:grid-cols-[380px_minmax(0,1fr)]" : ""} sm:overflow-hidden sm:rounded-[22px] sm:border sm:border-[#e5e7eb] sm:bg-white sm:shadow-[0_12px_34px_-28px_rgba(15,23,42,0.55)] lg:h-full ccr-panel-tablero`}>
+    {!detailOnly && <div className={`${showingMobileDetail ? "hidden lg:block " : ""}ccr-tablero-cuerpo mx-auto w-full max-w-7xl px-0 py-0 sm:max-w-[46rem] sm:px-6 sm:py-5 lg:max-w-7xl lg:flex-1 lg:min-h-0 lg:px-6 lg:py-0`}>
+      <div className={`ccr-tablero-marco ${filtered.length > 0 ? "lg:grid lg:grid-cols-[minmax(340px,440px)_minmax(0,1fr)] xl:grid-cols-[380px_minmax(0,1fr)]" : ""} sm:overflow-hidden sm:rounded-[22px] sm:border sm:border-[#e5e7eb] sm:bg-white sm:shadow-[0_12px_34px_-28px_rgba(15,23,42,0.55)] lg:h-full ccr-panel-tablero`}>
         <section className={filtered.length > 0 ? MARKETPLACE_LIST_CLASS : "min-w-0 bg-white"}>
           {/* Con cero, el vacío ya lo dice: «0 empleos» encima era lo mismo dos veces. */}
           {hasActiveFilters && filtered.length > 0 && (

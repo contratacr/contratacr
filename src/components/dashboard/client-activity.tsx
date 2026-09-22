@@ -15,7 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
-import { Link, useRouter } from "@/i18n/navigation";
+import { Link, useRouter, usePathname } from "@/i18n/navigation";
 import { openInNewTabOnDesktop } from "@/lib/desktop-new-tab";
 import { getCategoryLabel } from "@/lib/data/categories";
 import { computeAge } from "@/lib/age";
@@ -195,7 +195,16 @@ export function ClientActivity({ section, onCount }: { section: ClientActivitySe
   const [myReviews, setMyReviews] = useState<{ professional_id: string; booking_id?: string | null; project_id?: string | null; rating: number; comment?: string | null }[]>([]);
   // One unified filter set (sprint 430): Activas · Finalizadas · Canceladas.
   const [bookingFilter, setBookingFilter] = useState("en_curso");
-  const [projectFilter, setProjectFilter] = useState("activas");
+  const [projectFilter, setProjectFilter] = useState(() => (searchParams.get("etapa") === "cerradas" ? "cerradas" : "activas"));
+  const pathname = usePathname();
+  // «Ver proyecto» lleva la dirección exacta de esta lista (pestaña y etapa)
+  // para que la flecha de atrás de la ficha devuelva aquí mismo.
+  const volverAqui = (() => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("project");
+    params.set("etapa", projectFilter);
+    return encodeURIComponent(`${pathname}?${params.toString()}`);
+  })();
   const [expandedProject, setExpandedProject] = useState<string | null>(null);
   // Solicitudes is now a collapsible accordion too (sprint 440) — same card language
   // as the professional Solicitudes / Proyectos sections and Mis proyectos.
@@ -972,7 +981,7 @@ export function ClientActivity({ section, onCount }: { section: ClientActivitySe
                                   primero, que es el orden de las otras dos:
                                   primero mirar, después actuar. */}
                               <Link
-                                href={`/proyectos/${project.id}?from=panel`}
+                                href={`/proyectos/${project.id}?from=${volverAqui}`}
                                 className={cn(actionButtonClass, "inline-flex items-center justify-center border border-[#d7e1ea] bg-white text-[#162543] transition hover:border-[#b9c8d6] hover:bg-[#f6f9fb]")}
                               >
                                 {t("viewProject")}

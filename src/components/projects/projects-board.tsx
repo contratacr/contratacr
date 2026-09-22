@@ -13,6 +13,7 @@ import { MarketplaceFilterChip, MarketplaceNavbarPortal, MarketplaceSearch } fro
 import { ScrollRail } from "@/components/ui/scroll-rail";
 import { useHairlineOnScroll } from "@/components/util/use-hairline-on-scroll";
 import { cn } from "@/lib/utils";
+import { safeMarketplaceReturnHref } from "@/lib/navigation/marketplace-return";
 import { PanelEmptyState } from "@/components/ui/content-loading";
 import { WhatsAppLogo } from "@/components/ui/whatsapp-logo";
 import { marketplaceLocale } from "@/lib/marketplace-copy";
@@ -268,11 +269,14 @@ export function ProjectsBoard({
   proyectos,
   currentUserId,
   detalle = null,
+  volverA = null,
   misProyectos = [],
 }: {
   proyectos: ProyectoPublico[];
   currentUserId: string | null;
   detalle?: ProyectoPublico | null;
+  /** Dirección de regreso que trajo la ficha (`?from=`), validada antes de usarse. */
+  volverA?: string | null;
   /** Los que publicó quien mira: su ficha no ofrece escribirse ni guardarse. */
   misProyectos?: string[];
 }) {
@@ -427,7 +431,9 @@ export function ProjectsBoard({
         {detalle ? (
           <div className={CABECERA_FILA_CENTRADA}>
             <Link
-              href="/proyectos"
+              // Desde el panel, la flecha devuelve a la lista exacta de donde
+              // se vino (pestaña y etapa); sin origen, al tablero.
+              href={safeMarketplaceReturnHref(volverA, "/proyectos")}
               aria-label={copy.volver}
               className={cn("absolute left-4", CABECERA_BOTON)}
             >

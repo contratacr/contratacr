@@ -502,7 +502,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   })();
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#fafafa]">
+    <div className="ccr-buscar-pagina min-h-screen flex flex-col bg-[#fafafa]">
       {/* Mobile keeps the header to logo + search + menu; filters float over the map. */}
       <LandingNavbar forceCompactSearch mobileSearch />
       {/* En teléfono no hay espaciador: el mapa va debajo de la barra desde el

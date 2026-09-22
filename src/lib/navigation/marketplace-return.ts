@@ -4,7 +4,16 @@ const ALLOWED_RETURN_PATHS = [
   "/profesionales/",
   "/dashboard/cliente",
   "/dashboard/profesional",
+  "/proyectos",
 ] as const;
+
+type Tablero = "/ofertas" | "/empleos" | "/proyectos";
+
+const PANEL_POR_TABLERO: Record<Tablero, string> = {
+  "/ofertas": "/dashboard/profesional?mode=offer&tab=offers",
+  "/empleos": "/dashboard/profesional?mode=offer&tab=jobs",
+  "/proyectos": "/dashboard/profesional?tab=sent_projects",
+};
 
 function withoutLocale(pathname: string) {
   return pathname.replace(/^\/(?:es|en)(?=\/|$)/u, "") || "/";
@@ -12,14 +21,13 @@ function withoutLocale(pathname: string) {
 
 export function safeMarketplaceReturnHref(
   value: string | null | undefined,
-  fallback: "/ofertas" | "/empleos",
+  fallback: Tablero,
 ) {
   if (!value) return fallback;
-  if (value === "panel") {
-    return fallback === "/ofertas"
-      ? "/dashboard/profesional?mode=offer&tab=offers"
-      : "/dashboard/profesional?mode=offer&tab=jobs";
-  }
+  // «panel» a secas es la forma vieja: devuelve a la pestaña, sin más. Hoy el
+  // panel manda su dirección completa (pestaña y etapa Activos/Inactivos) para
+  // que la flecha de atrás deje a la persona EXACTAMENTE donde estaba.
+  if (value === "panel") return PANEL_POR_TABLERO[fallback];
 
   let href = value;
   try {
@@ -55,15 +63,22 @@ export function safeMarketplaceReturnHref(
  */
 export function marketplaceReturnLabelKey(
   href: string,
-  fallback: "/ofertas" | "/empleos",
+  fallback: Tablero,
   sinOrigen = false,
 ) {
-  if (sinOrigen) return fallback === "/ofertas" ? "allPromotions" : "allJobs";
+  if (sinOrigen) return fallback === "/ofertas" ? "allPromotions" : fallback === "/empleos" ? "allJobs" : "allProjects";
   const pathname = withoutLocale(href.split(/[?#]/u)[0] || "/");
   if (pathname.startsWith("/profesionales/")) return "backToProfile";
   if (pathname.startsWith("/dashboard/")) {
     const params = new URLSearchParams(href.includes("?") ? href.split("?")[1]?.split("#")[0] : "");
     return params.get("tab") === "saved" ? "backToFavorites" : "backToDashboard";
   }
-  return fallback === "/ofertas" ? "backToPromotions" : "backToJobs";
+  return fallback === "/ofertas" ? "backToPromotions" : fallback === "/empleos" ? "backToJobs" : "backToProjects";
+}
+
+/** Si la ficha se abrió desde el panel (forma vieja «panel» o dirección completa del panel). */
+export function vieneDelPanel(value: string | null | undefined) {
+  if (!value) return false;
+  if (value === "panel") return true;
+  return safeMarketplaceReturnHref(value, "/empleos").startsWith("/dashboard/");
 }

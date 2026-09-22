@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from "react";
 import { useNativeApp } from "@/hooks/use-native-app";
 import { ArrowLeft, BadgePercent, ChevronDown, Plus } from "lucide-react";
 import { useSearchParams } from "next/navigation";
+import { usePathname } from "@/i18n/navigation";
 import { useLocale } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
 import { effectiveOfferStatus, formatOfferPrice, type ProfessionalOffer } from "@/lib/offers";
@@ -75,7 +76,16 @@ export function OffersManager({ initialOffers, embedded = false, backHref = "/da
   const [editingOffer, setEditingOffer] = useState<ProfessionalOffer | null>(null);
 
 
-  const [etapa, setEtapa] = useState("activas");
+  // La etapa (Activos/Inactivos) viaja en la dirección para que «Ver» abra la
+  // ficha y la flecha de atrás devuelva a ESTA lista, no a la de siempre.
+  const [etapa, setEtapa] = useState(() => (searchParams.get("etapa") === "cerradas" ? "cerradas" : "activas"));
+  const pathname = usePathname();
+  const volverAqui = (() => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("offer");
+    params.set("etapa", etapa);
+    return encodeURIComponent(`${pathname}?${params.toString()}`);
+  })();
   // Con pocos elementos no hay etapas dibujadas: la lista sale entera.
   const visibles = sinFiltros(offers.length) ? offers : offers.filter((item) => publicacionBucket(item.status) === etapa);
   // A status changed here must survive a server re-render that was started
@@ -225,7 +235,7 @@ export function OffersManager({ initialOffers, embedded = false, backHref = "/da
                         y editar es a lo que se viene cuando se abre una
                         publicación propia. La misma fila en las tres secciones. */}
                     <div data-offer-actions={offer.id} className="ccr-acciones-tarjeta relative grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_40px] gap-2">
-                      <Link href={`/ofertas/${offer.id}?from=panel`} onClick={openInNewTabOnDesktop} className="inline-flex h-10 w-full items-center justify-center rounded-full border border-[#d7e1ea] px-3 text-xs font-bold text-[#162543]">{copy.view}</Link>
+                      <Link href={`/ofertas/${offer.id}?from=${volverAqui}`} onClick={openInNewTabOnDesktop} className="inline-flex h-10 w-full items-center justify-center rounded-full border border-[#d7e1ea] px-3 text-xs font-bold text-[#162543]">{copy.view}</Link>
                       <button type="button" onClick={() => setEditingOffer(offer)} className="hidden h-10 w-full items-center justify-center rounded-full bg-[#009FD9] px-3 text-xs font-bold text-white transition-colors hover:bg-[#0089bb] lg:inline-flex">{copy.edit}</button>
                       <Link href={`/ofertas/${offer.id}/editar?from=panel`} className="inline-flex h-10 w-full items-center justify-center rounded-full bg-[#009FD9] px-3 text-xs font-bold text-white transition-colors hover:bg-[#0089bb] lg:hidden">{copy.edit}</Link>
                       {/* LAS MISMAS DOS OPCIONES QUE EN EMPLEOS Y PROYECTOS.

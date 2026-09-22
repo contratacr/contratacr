@@ -265,6 +265,27 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
             __html: `@media (max-width:1023px){body:not(.ccr-native-app) .ccr-search-results-layout{height:100dvh!important;box-sizing:border-box;padding-top:var(--ccr-native-header-height,124px)}body:has(.ccr-search-results-layout) .ccr-app-footer{display:none!important}}`,
           }}
         />
+        {/* EL DESPLAZAMIENTO VIVE DENTRO DE LOS CONTENEDORES, no en la página,
+            en /buscar, /empleos y /ofertas, en teléfono y en computadora (al
+            estilo LinkedIn). El cascarón mide la pantalla y no se mueve; lo que
+            se desplaza es la lista (o la ficha, en el teléfono) y en /buscar la
+            columna de resultados, con el mapa quieto al lado. Sin página que
+            desplazar no hay pie que alcanzar: en esas tres pantallas el pie no
+            se pinta, la barra de arriba ya tiene todas las salidas. En la app
+            el <main> conserva su relleno de abajo, que es lo que reserva la
+            barra de pestañas. Va aquí, en el documento, y no en clases de
+            Tailwind: es geometría que tiene que llegar al teléfono aunque el
+            CSS de utilidades venga viejo. SIN :has(): con una regla
+            .ccr-cascaron:has(main…) Chrome revisaba estilos en cada cambio
+            del DOM y la lista de sugerencias de /buscar se volvía a montar a
+            mitad del toque (la prueba de Liberia fallaba); el cascarón se
+            marca desde la ruta (ccr-cascaron-tablero) y el selector es plano. */}
+        <style
+          data-ccr-tablero-fijo=""
+          dangerouslySetInnerHTML={{
+            __html: `@media (max-width:1023px){.ccr-cascaron-tablero{height:100dvh;min-height:0!important;overflow:hidden}body.ccr-con-barra-accion .ccr-cascaron-tablero{height:calc(100dvh - var(--ccr-alto-barra,0px))}.ccr-cascaron-tablero .ccr-cascaron-contenido{display:flex;flex-direction:column;min-height:0;min-width:0;overflow:hidden}.ccr-cascaron-tablero main.ccr-tablero-fijo{display:flex;flex-direction:column;flex:1 1 0px;min-height:0!important;overflow:hidden}.ccr-cascaron-tablero>:not(.ccr-cascaron-contenido){flex-shrink:0}.ccr-cascaron-tablero main.ccr-tablero-fijo>:not(.ccr-tablero-cuerpo):not(.ccr-tablero-ficha):not(.ccr-tablero-ficha-pc){flex-shrink:0}body:not(.ccr-native-app) .ccr-cascaron-tablero main.ccr-tablero-fijo{padding-bottom:0}.ccr-cascaron-tablero main.ccr-tablero-fijo>.ccr-tablero-ficha{flex:1 1 0px;min-height:0;overflow-y:auto;overscroll-behavior:contain}.ccr-cascaron-tablero main.ccr-tablero-fijo .ccr-tablero-cuerpo:not(.hidden),.ccr-cascaron-tablero main.ccr-tablero-fijo .ccr-tablero-marco{display:flex;flex-direction:column;flex:1 1 0px;min-height:0}.ccr-cascaron-tablero main.ccr-tablero-fijo .ccr-tablero-marco>section{flex:1 1 0px;min-height:0;overflow-y:auto;overscroll-behavior:contain}}@media (min-width:1024px){.ccr-cascaron-tablero .ccr-app-footer,.ccr-buscar-pagina .ccr-app-footer{display:none!important}.ccr-cascaron-tablero{height:100dvh;min-height:0!important;overflow:hidden}.ccr-cascaron-tablero .ccr-cascaron-contenido{min-height:0}.ccr-cascaron-tablero main.ccr-tablero-fijo>.ccr-tablero-ficha-pc{flex:1 1 0px;min-height:0;overflow-y:auto;overscroll-behavior:contain}.ccr-buscar-pagina{height:100dvh;min-height:0!important;overflow:hidden}.ccr-buscar-pagina>:not(main){flex-shrink:0}.ccr-buscar-pagina>main{display:flex;flex-direction:column;flex:1 1 0px;min-height:0}.ccr-buscar-pagina>main>div{display:flex;flex-direction:column;flex:1 1 0px;min-height:0;width:100%}.ccr-buscar-pagina .ccr-search-results-layout{display:flex;flex-direction:column;flex:1 1 0px;min-height:0;height:auto;overflow:hidden}.ccr-buscar-pagina .ccr-search-results-layout>*{flex-shrink:0}.ccr-buscar-pagina .ccr-search-results-layout>.flex-1{flex:1 1 0px;min-height:0}.ccr-buscar-pagina .ccr-search-sheet-scroll{min-height:0;overflow-y:auto;overscroll-behavior:contain}.ccr-buscar-pagina .ccr-search-results-layout aside>div{position:static;height:100%}}`,
+          }}
+        />
         {/* EL PANEL NO LLEVA PIE EN EL TELÉFONO. El pie del sitio es una lista
             de salidas —Servicios, Ayuda, redes— y el panel es la herramienta de
             trabajo. Dentro de una sección ya se comportaba como pantalla

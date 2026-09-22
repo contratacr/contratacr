@@ -5,6 +5,7 @@ import { AutoSaveHint, useAvisoDeGuardado } from "@/components/dashboard/auto-sa
 import { useAppDialog } from "@/hooks/use-app-dialog";
 import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { usePathname } from "@/i18n/navigation";
 import { useNativeApp } from "@/hooks/use-native-app";
 import { ArrowLeft, BriefcaseBusiness, ChevronDown, Plus } from "lucide-react";
 import { Link, useRouter } from "@/i18n/navigation";
@@ -76,7 +77,16 @@ export function JobsManager({ initialJobs, embedded = false, backHref = "/dashbo
     return () => cancelAnimationFrame(frame);
   }, [searchParams]);
 
-  const [etapa, setEtapa] = useState("activas");
+  // La etapa (Activos/Inactivos) viaja en la dirección para que «Ver» abra la
+  // ficha y la flecha de atrás devuelva a ESTA lista, no a la de siempre.
+  const [etapa, setEtapa] = useState(() => (searchParams.get("etapa") === "cerradas" ? "cerradas" : "activas"));
+  const pathname = usePathname();
+  const volverAqui = (() => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("job");
+    params.set("etapa", etapa);
+    return encodeURIComponent(`${pathname}?${params.toString()}`);
+  })();
   // Con pocos elementos no hay etapas dibujadas: la lista sale entera.
   const visibles = sinFiltros(jobs.length) ? jobs : jobs.filter((item) => publicacionBucket(item.status) === etapa);
   // A status changed here must survive a server re-render that was started
@@ -212,7 +222,7 @@ export function JobsManager({ initialJobs, embedded = false, backHref = "/dashbo
                         y editar es a lo que se viene cuando se abre una
                         publicación propia. La misma fila en las tres secciones. */}
                     <div data-job-actions={job.id} className="ccr-acciones-tarjeta relative grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_40px] gap-2">
-                      <Link href={`/empleos/${job.id}?from=panel`} onClick={openInNewTabOnDesktop} className="inline-flex h-10 w-full items-center justify-center rounded-full border border-[#d7e1ea] px-3 text-xs font-bold text-[#162543]">{copy.view}</Link>
+                      <Link href={`/empleos/${job.id}?from=${volverAqui}`} onClick={openInNewTabOnDesktop} className="inline-flex h-10 w-full items-center justify-center rounded-full border border-[#d7e1ea] px-3 text-xs font-bold text-[#162543]">{copy.view}</Link>
                       <button type="button" onClick={() => setEditingJob(job)} className="hidden h-10 w-full items-center justify-center rounded-full bg-[#009FD9] px-3 text-xs font-bold text-white transition-colors hover:bg-[#0089bb] lg:inline-flex">{copy.edit}</button>
                       <Link href={`/empleos/${job.id}/editar?from=panel`} className="inline-flex h-10 w-full items-center justify-center rounded-full bg-[#009FD9] px-3 text-xs font-bold text-white transition-colors hover:bg-[#0089bb] lg:hidden">{copy.edit}</Link>
                       {/* EL MISMO «···» Y LAS MISMAS DOS OPCIONES QUE EN

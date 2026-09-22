@@ -4330,7 +4330,9 @@
     "backToPromotions": "Volver a promociones",
     "backToJobs": "Volver a empleos",
     "allPromotions": "Ver todas las promociones",
-    "allJobs": "Ver todos los empleos"
+    "allJobs": "Ver todos los empleos",
+    "backToProjects": "Volver a proyectos",
+    "allProjects": "Ver todos los proyectos"
   },
   "tableroBuscador": {
     "empleos": "¿Qué empleo buscas?",

@@ -4330,7 +4330,9 @@
     "backToPromotions": "Back to promotions",
     "backToJobs": "Back to jobs",
     "allPromotions": "See all promotions",
-    "allJobs": "See all jobs"
+    "allJobs": "See all jobs",
+    "backToProjects": "Back to projects",
+    "allProjects": "See all projects"
   },
   "tableroBuscador": {
     "empleos": "Search jobs",

@@ -26,7 +26,7 @@ import { recordServerInteraction } from "@/lib/analytics/server-events";
 import { repairVisibleText } from "@/lib/text/repair-visible-text";
 import { crTodayISO } from "@/lib/time-cr";
 import { RecordRecentVisit } from "@/components/mobile/record-recent-visit";
-import { safeMarketplaceReturnHref } from "@/lib/navigation/marketplace-return";
+import { safeMarketplaceReturnHref, vieneDelPanel } from "@/lib/navigation/marketplace-return";
 import { CABECERA_BOTON, CABECERA_FILA_CENTRADA, CABECERA_GLIFO, CABECERA_TITULO } from "@/components/layout/cabecera";
 import { cn } from "@/lib/utils";
 
@@ -304,7 +304,7 @@ export default async function OfferDetailPage({ params, searchParams }: { params
             {isOwner ? (
               // En la franja fija de abajo, igual que el contacto para los demás.
               <AccionesAlPie className="mt-5 lg:hidden">
-                <OfferOwnerActions offer={offer} professionalId={offer.professional_id} serviceOptions={serviceOptions} fromPanel={from === "panel"} />
+                <OfferOwnerActions offer={offer} professionalId={offer.professional_id} serviceOptions={serviceOptions} fromPanel={vieneDelPanel(from)} />
               </AccionesAlPie>
             ) : unavailable ? (
               <p className="mt-5 rounded-lg bg-[#f4f7fa] p-4 text-sm font-bold lg:hidden">{copy.unavailable}</p>
@@ -343,7 +343,7 @@ export default async function OfferDetailPage({ params, searchParams }: { params
               publicó es un dato más, como el precio de arriba. */}
           <p className="mb-4 mt-3 border-b border-[#e5e7eb] pb-4 text-sm font-semibold text-[#52627a]">{copy.publishedBy}{" "}{offer.professional_slug ? (<Link href={`/profesionales/${offer.professional_slug}?from=${encodeURIComponent(`/ofertas/${offer.id}`)}`} className="text-[#005eaa] hover:underline">{offer.professional_name}</Link>) : offer.professional_name}</p>
           {isOwner ? (
-            <OfferOwnerActions offer={offer} professionalId={offer.professional_id} serviceOptions={serviceOptions} fromPanel={from === "panel"} />
+            <OfferOwnerActions offer={offer} professionalId={offer.professional_id} serviceOptions={serviceOptions} fromPanel={vieneDelPanel(from)} />
           ) : (
             unavailable ? <p className="rounded-lg bg-[#f4f7fa] p-4 text-sm font-bold">{copy.unavailable}</p> : <div className="space-y-3">
               <OfferContactActions offer={offer} userId={user?.id ?? null} isOwner={false} />
