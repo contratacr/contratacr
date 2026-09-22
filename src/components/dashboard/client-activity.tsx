@@ -885,10 +885,12 @@ export function ClientActivity({ section, onCount }: { section: ClientActivitySe
                 // conserva para los proyectos viejos que sí recibieron
                 // propuestas, porque ahí sí hay algo que abrir.
                 const servicio = project.categories?.name ?? null;
-                const headline = project.status === "completed" ? t("projResolved")
-                  : project.status === "cancelled" ? t("projCancelled")
-                    : servicio;
-                const headlineClass = project.status === "cancelled" ? "text-[#b91c1c]" : "text-[#6b7280]";
+                // Debajo del titulo va el SERVICIO, este abierto o cerrado. El
+                // «Proyecto cerrado» / «Proyecto cancelado» que iba ahi repetia
+                // la pestana «Inactivos» —y en rojo, como si cerrar fuera un
+                // error—, igual que pasaba en Empleos y Promociones.
+                const headline = servicio;
+                const headlineClass = "text-[#6b7280]";
 
                 return (
                   <Card id={`project-${project.id}`} key={project.id} className={cn("rounded-2xl border-[#e5e7eb] bg-white shadow-sm transition-all", isExpanded && "shadow-md ring-1 ring-[#cfe9f5]")}>

@@ -33,7 +33,6 @@ const JOBS_MANAGER_COPY = {
     // formulario publica SIEMPRE (nunca manda `draft`), así que era una
     // palabra para un estado que nadie podía crear. Si alguna fila vieja lo
     // trae, se lee como cerrada, que es lo que es: no se ve en público.
-    jobStates: { published: "Publicado", paused: "Pausado", closed: "Vacante cerrada", draft: "Vacante cerrada" },
     back: "Volver al panel", title: "Mis empleos", subtitle: "Vacantes para cuando necesitas contratar.", publish: "Publicar empleo",
     application: "postulación", applications: "postulaciones", view: "Ver empleo", edit: "Editar", more: "Más opciones",
     close: "Cerrar vacante", republish: "Volver a publicar", remove: "Eliminar", removeTitle: "¿Eliminar este empleo?", removeBody: "Se borra del todo y no se puede recuperar.", removeCancel: "Cancelar", applicationsTitle: "Postulaciones",
@@ -44,7 +43,6 @@ const JOBS_MANAGER_COPY = {
   },
   en: {
     applicationStates: { submitted: "Received", reviewing: "In review", shortlisted: "Shortlisted", rejected: "Rejected", hired: "Hired" },
-    jobStates: { published: "Published", paused: "Paused", closed: "Position closed", draft: "Position closed" },
     back: "Back to dashboard", title: "My jobs", subtitle: "Openings for when you need to hire.", publish: "Post job",
     application: "application", applications: "applications", view: "View job", edit: "Edit", more: "More options",
     close: "Close opening", republish: "Publish again", remove: "Delete", removeTitle: "Delete this job?", removeBody: "It is removed for good and cannot be recovered.", removeCancel: "Cancel", applicationsTitle: "Applications",
@@ -59,10 +57,6 @@ const JOBS_MANAGER_COPY = {
 // ahora; gris = pasó o está en pausa; rojo = SOLO lo que salió mal (cancelado,
 // no seleccionado). Un empleo cerrado suele ser el final feliz — pintarlo de
 // rojo lo hacía leer como error, y con todo de colores el color deja de decir.
-/** Solo el color del texto: el antetítulo no lleva pastilla. */
-function statusTextClass(status: JobPost["status"]) {
-  return status === "published" ? "text-[#0089bb]" : "text-[#60708a]";
-}
 
 export function JobsManager({ initialJobs, embedded = false, backHref = "/dashboard/profesional?mode=offer&tab=jobs", professionalId, onRefresh }: { initialJobs: ManagedJob[]; embedded?: boolean; backHref?: string; professionalId?: string; onRefresh?: () => void }) {
   const nativeApp = useNativeApp();
@@ -193,13 +187,11 @@ export function JobsManager({ initialJobs, embedded = false, backHref = "/dashbo
                         las tarjetas, tuviera la palabra corta o larga, y ese ancho se
                         lo quitaba al título. Arriba no compite con nada y se lee
                         primero, que es lo que uno busca al recorrer la lista. */}
-                    {/* El estado SOLO donde distingue algo: en «Activas» todas
-                        están publicadas y el antetítulo repetía la pestaña; en
-                        «Cerradas» conviven pausada, cerrada y borrador, y ahí sí
-                        dice cuál es cuál. */}
-                    {publicacionBucket(job.status) === "cerradas" && (
-                      <p className={cn("truncate text-[10px] font-extrabold uppercase tracking-[0.06em]", statusTextClass(job.status))}>{copy.jobStates[job.status]}</p>
-                    )}
+                    {/* SIN ROTULO DE ESTADO. Decia «Vacante cerrada» o «Pausada»
+                        encima del titulo, pero la tarjeta ya esta bajo la pestana
+                        «Inactivos» y la unica accion de cierre es «Cerrar»: dos
+                        palabras que repetian la pestana y distinguian estados que
+                        ya no se eligen. */}
                     <h2 className="mt-0.5 line-clamp-2 text-[15px] font-extrabold leading-tight text-[#162543] sm:text-base">{job.title}</h2>
                     {/* Sin la barrita: separaba el tipo de empleo del conteo de
                         postulaciones, y al irse el conteo quedó colgando sola. */}

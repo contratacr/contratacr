@@ -39,7 +39,6 @@ const OFFERS_MANAGER_COPY = {
     publishSubtitle: "Publica una promoción clara y fácil de comparar.",
     editTitle: "Editar promoción",
     editSubtitle: "Actualiza la información de esta publicación.",
-    statuses: { published: "Publicada", paused: "Pausada", expired: "Vencida", sold_out: "Agotada", draft: "Borrador" },
   },
   en: {
     back: "Back to dashboard",
@@ -56,7 +55,6 @@ const OFFERS_MANAGER_COPY = {
     publishSubtitle: "Publish a clear promotion that is easy to compare.",
     editTitle: "Edit offer",
     editSubtitle: "Update this offer's information.",
-    statuses: { published: "Published", paused: "Paused", expired: "Expired", sold_out: "Sold out", draft: "Draft" },
   },
 } as const;
 
@@ -64,10 +62,6 @@ const OFFERS_MANAGER_COPY = {
 // ahora; gris = pasó o está en pausa; rojo = SOLO lo que salió mal (cancelado,
 // no seleccionado). Un empleo cerrado suele ser el final feliz — pintarlo de
 // rojo lo hacía leer como error, y con todo de colores el color deja de decir.
-/** Solo el color del texto: el antetítulo no lleva pastilla. */
-function statusTextClass(status: ProfessionalOffer["status"]) {
-  return status === "published" ? "text-[#0089bb]" : "text-[#60708a]";
-}
 
 export function OffersManager({ initialOffers, embedded = false, backHref = "/dashboard/profesional?mode=offer&tab=offers", professionalId, serviceOptions = [], onRefresh }: { initialOffers: ProfessionalOffer[]; embedded?: boolean; backHref?: string; professionalId?: string; serviceOptions?: SelectMenuOption[]; onRefresh?: () => void }) {
   const nativeApp = useNativeApp();
@@ -208,12 +202,8 @@ export function OffersManager({ initialOffers, embedded = false, backHref = "/da
                         las tarjetas, tuviera la palabra corta o larga, y ese ancho se
                         lo quitaba al título. Arriba no compite con nada y se lee
                         primero, que es lo que uno busca al recorrer la lista. */}
-                    {/* El estado SOLO donde distingue: en «Activas» todas están
-                        publicadas y repetía la pestaña; en «Cerradas» conviven
-                        pausada, vencida, agotada y borrador. */}
-                    {publicacionBucket(displayStatus) === "cerradas" && (
-                      <p className={cn("truncate text-[10px] font-extrabold uppercase tracking-[0.06em]", statusTextClass(displayStatus))}>{copy.statuses[displayStatus]}</p>
-                    )}
+                    {/* Sin rotulo de estado, como en Empleos y Proyectos: la
+                        pestana «Inactivas» ya lo dice y solo hay «Cerrar». */}
                     <h2 className="mt-0.5 line-clamp-2 text-[15px] font-extrabold leading-tight text-[#162543] sm:text-base">{offer.title}</h2>
                     {offer.service_label && (
                       <p className="mt-1 line-clamp-2 text-xs font-bold leading-4 text-[#008fc3]" title={offer.service_label}>{offer.service_label}</p>
