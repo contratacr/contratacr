@@ -19,7 +19,6 @@ const reviewed = new Map([
   ["src/components/marketplace/marketplace-controls.tsx", { count: 2, reason: "device-local marketplace recent-search history" }],
   ["src/lib/recent-visits.ts", { count: 9, reason: "device-local list of recently opened records and recent searches, offered back by the search screen, each removable one by one; nothing account-owned" }],
   ["src/components/landing/ai-concierge.tsx", { count: 8, reason: "tab-scoped anonymous conversation and post-auth intent handoff; authenticated history persists in Supabase" }],
-  ["src/components/dashboard/pro/proposals-tab.tsx", { count: 2, reason: "dismissed opportunity UI state" }],
   ["src/components/status/operational-status-banner.tsx", { count: 2, reason: "dismissed operational notice" }],
   ["src/app/api/portfolio-like/route.ts", { count: 1, reason: "documentation for anonymous browser guard" }],
   ["src/components/professionals/save-button.tsx", { count: 16, reason: "Supabase-backed favorites cache and login handoff" }],
@@ -43,7 +42,7 @@ const reviewed = new Map([
   ["src/lib/notifications-cache.ts", { count: 2, reason: "backend notification render cache; Supabase remains the source of truth" }],
   ["src/lib/notifications/use-actor-photos.ts", { count: 2, reason: "avatar render cache for notification rows; profiles remain the source of truth" }],
   ["src/app/[locale]/login/page.tsx", { count: 1, reason: "short-lived post-login presentation handoff" }],
-  ["src/app/[locale]/dashboard/profesional/page.tsx", { count: 12, reason: "seen opportunity presentation state, section-return handoff, and profile-completion navigation cache; backend remains authoritative" }],
+  ["src/app/[locale]/dashboard/profesional/page.tsx", { count: 10, reason: "section-return handoff and profile-completion navigation cache; backend remains authoritative" }],
 ]);
 
 const trackedSource = execFileSync("git", ["ls-files", "src"], { encoding: "utf8" })
