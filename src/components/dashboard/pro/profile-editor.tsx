@@ -150,7 +150,6 @@ function ProfileCheckRow({
       // La misma medida que los campos de esta pantalla (32rem): la caja del
       // interruptor no puede ser mas larga que el telefono de arriba y el de
       // abajo, o se lee como si perteneciera a otra cosa.
-      className="sm:max-w-[32rem]"
       titulo={<span aria-label={ariaLabel}>{title}</span>}
       ayuda={description}
       checked={checked}
@@ -1120,7 +1119,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
           </label>
           {canOfferVideoConsult ? (
             <FilaInterruptor
-              className="mb-4 sm:max-w-[32rem]"
+              className="mb-4"
               titulo={t("videoConsultOption")}
               ayuda={t("videoCountryHelp")}
               checked={videoConsult && videoCoverageCountry}
@@ -1156,7 +1155,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
               ? (locale === "en" ? "Enter a complete contact number." : "Ingresa un número de contacto completo.")
               : undefined}
             onChange={(digits) => { setWhatsapp(digits); touch("contact"); }}
-            className="w-full sm:max-w-[32rem]"
+            
           />
         </div>
 
@@ -1182,7 +1181,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
                 ? (locale === "en" ? "Enter a complete call number." : "Ingresa un número para llamadas completo.")
                 : undefined}
               onChange={(digits) => { setCallPhone(digits); touch("contact"); }}
-              className="w-full sm:max-w-[32rem]"
+              
             />
             <p className="mt-1.5 text-xs text-[#6b7280]">{t("callNumberHelp")}</p>
           </div>

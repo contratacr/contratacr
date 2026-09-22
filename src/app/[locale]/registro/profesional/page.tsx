@@ -37,7 +37,6 @@ import { IMAGE_ACCEPT } from "@/lib/upload-validation";
 import { getImageUploadPreparationErrorCode, prepareImageForUpload, uploadPhotoFormDataWithRetry } from "@/lib/client-image-upload";
 import { trackMetaEvent } from "@/lib/analytics/meta-pixel";
 import { readAttribution } from "@/lib/analytics/attribution";
-import { PanelSwitch } from "@/components/dashboard/panel-toggle-row";
 import { FilaInterruptor } from "@/components/ui/fila-interruptor";
 import { BARRA_ACCION_FIJA, useBarraAccionFija } from "@/components/ui/acciones-al-pie";
 
@@ -1022,21 +1021,11 @@ export default function RegisterProfessionalPage() {
         }}
       />
       {hasBusinessName && (
-        <div className="flex items-center justify-between gap-4 rounded-xl bg-[#f9fafb] p-3.5">
-          <div className="min-w-0">
-            <p className="text-sm font-medium text-[#162543]">{businessNameOnlyLabel}</p>
-          </div>
-          <button
-            type="button"
-            onClick={() => setPublicBusinessNameOnly((value) => !value)}
-            className="shrink-0"
-            aria-label={businessNameOnlyLabel}
-            role="checkbox"
-            aria-checked={publicBusinessNameOnly}
-          >
-            <PanelSwitch checked={publicBusinessNameOnly} />
-          </button>
-        </div>
+        <FilaInterruptor
+          titulo={businessNameOnlyLabel}
+          checked={publicBusinessNameOnly}
+          onChange={setPublicBusinessNameOnly}
+        />
       )}
     </div>
   );

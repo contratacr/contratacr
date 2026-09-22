@@ -5,6 +5,7 @@ import { UnsavedChangesGuard } from "@/components/dashboard/unsaved-changes-guar
 import { useLocale, useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { ToggleSwitch } from "@/components/ui/toggle-switch";
+import { FilaInterruptor } from "@/components/ui/fila-interruptor";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import { X, Lock, Loader2, MapPin, ChevronDown, ChevronLeft, ChevronRight, Calendar, CalendarClock, Pencil, Trash2, MoreHorizontal, Video } from "lucide-react";
@@ -855,32 +856,22 @@ export function AvailabilityEditor({
     checked: boolean;
     onToggle: () => void;
     icon: typeof Lock;
+    // `description` e `icon` los reciben las llamadas y no se pintan: la fila
+    // es de UNA línea. Se dejan en el tipo porque las llamadas los calculan.
     loading?: boolean;
     disabled?: boolean;
     ariaLabel: string;
   }) => (
-    <button
-      type="button"
-      onClick={(event) => {
-        event.preventDefault();
-        event.stopPropagation();
-        onToggle();
-      }}
+    // LA MISMA FILA QUE TODO EL APP. Aquí había un clon de sus clases solo
+    // para poder cambiar el interruptor por la rueda mientras guarda; eso
+    // ahora lo sabe hacer el componente (`cargando`).
+    <FilaInterruptor
+      titulo={<span aria-label={ariaLabel}>{title}</span>}
+      checked={checked}
+      onChange={onToggle}
       disabled={disabled}
-      role="switch"
-      aria-checked={checked}
-      aria-label={ariaLabel}
-      // LA MISMA CAJA QUE `FilaInterruptor`. Aqui el orden estaba al reves
-      // —interruptor y despues texto— y sin recuadro, asi que en la misma
-      // pantalla convivian dos dibujos. No usa el componente porque mientras
-      // guarda cambia el interruptor por la rueda. No usa `FilaInterruptor` porque mientras
-      // guarda cambia el interruptor por la rueda, y eso ese componente no lo
-      // sabe hacer; el dibujo, eso si, es exactamente el mismo.
-      className="flex min-h-11 w-full max-w-xl items-center justify-between gap-4 py-1 text-left text-sm font-semibold text-[#162543] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9]/35 disabled:cursor-not-allowed disabled:opacity-60"
-    >
-      <span className="min-w-0">{title}</span>
-      {loading ? <Loader2 className="h-5 w-5 shrink-0 animate-spin text-[#009FD9]" /> : <ToggleSwitch checked={checked} disabled={disabled} />}
-    </button>
+      cargando={loading}
+    />
   );
 
   return (

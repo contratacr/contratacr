@@ -415,7 +415,9 @@ export function ProjectsBoard({
       "min-h-[calc(100vh-72px)] bg-white text-[#162543] sm:bg-[#fafafa]",
       detalle
         ? "lg:bg-[#f4f7fa]"
-        : "lg:flex lg:h-[calc(100dvh-64px)] lg:min-h-0 lg:flex-col lg:overflow-hidden lg:bg-white",
+        // El tablero no desplaza la página: se desplaza la lista, como en
+        // Empleos y Promociones (regla data-ccr-tablero-fijo en layout.tsx).
+        : "ccr-tablero-fijo lg:flex lg:h-[calc(100dvh-64px)] lg:min-h-0 lg:flex-col lg:overflow-hidden lg:bg-white",
     )}>
       <section
         ref={cabeceraRef}
@@ -530,7 +532,7 @@ export function ProjectsBoard({
             "mx-auto w-full max-w-7xl px-0 py-0 sm:max-w-[46rem] sm:px-6 sm:py-5 lg:px-6",
             // Las MISMAS medidas que la página de un empleo: 6xl de ancho y la
             // ficha centrada en 760 px con su tarjeta de 320 al lado.
-            detalle ? "lg:max-w-6xl lg:pb-8 lg:pt-8" : "lg:max-w-7xl lg:min-h-0 lg:flex-1 lg:py-0",
+            detalle ? "lg:max-w-6xl lg:pb-8 lg:pt-8" : "ccr-tablero-cuerpo lg:max-w-7xl lg:min-h-0 lg:flex-1 lg:py-0",
           )}>
             {/* La salida, arriba y a la izquierda, con la misma forma que en
                 Empleos y Promociones. */}
@@ -554,6 +556,7 @@ export function ProjectsBoard({
               // Promociones: /proyectos/[id] muestra SOLO el proyecto, también
               // en computadora. Con la lista al lado, «Ver proyecto» desde el
               // panel devolvía al tablero con algo seleccionado, no a la ficha.
+              !detalle && "ccr-tablero-marco",
               !detalle && filtrados.length > 0 && "lg:grid lg:grid-cols-[minmax(340px,440px)_minmax(0,1fr)] xl:grid-cols-[380px_minmax(0,1fr)]",
               fichaEnMovil && "max-sm:overflow-visible max-sm:border-0 max-lg:rounded-none max-lg:border-0 max-lg:bg-transparent max-lg:shadow-none",
             )}>
