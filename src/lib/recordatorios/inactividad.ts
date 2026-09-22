@@ -26,7 +26,6 @@ type Hito = (typeof HITOS_DIAS)[number];
 export const TIPOS_RECORDATORIO = [
   "booking_pending_reminder",
   "booking_past_date_idle",
-  "job_applications_waiting",
   "quote_awaiting_client",
 ] as const;
 
@@ -68,7 +67,6 @@ async function avisarPorCorreo(destino: string, aviso: { title: string; message:
 }
 
 export type ResumenRecordatorios = {
-  postulacionesSinRevisar: number;
   cotizacionesSinRespuesta: number;
   solicitudesSinResponder: number;
   citasSinCerrar: number;
@@ -125,7 +123,6 @@ async function perfilesDeProfesionales(
 export async function recolectarPendientes(): Promise<{ avisos: Aviso[]; resumen: ResumenRecordatorios }> {
   const admin = createAdminClient();
   const resumen: ResumenRecordatorios = {
-    postulacionesSinRevisar: 0,
     cotizacionesSinRespuesta: 0,
     solicitudesSinResponder: 0,
     citasSinCerrar: 0,
@@ -197,58 +194,21 @@ export async function recolectarPendientes(): Promise<{ avisos: Aviso[]; resumen
     });
   }
 
-  // ── 6. Postulaciones que el empleador no ha revisado ─────────────────────
-  // Le toca a QUIEN PUBLICÓ EL EMPLEO: hay gente esperando respuesta y el aviso
-  // de cada postulación ya se perdió entre lo demás.
-  const { data: postulaciones } = await admin
-    .from("job_applications")
-    .select("id, created_at, job_id, status, job_posts:job_id(title, status, employer_id)")
-    .in("status", ["pending", "new", "submitted"])
-    .lt("created_at", corteISO);
-
-  type FilaPostulacion = {
-    created_at: string;
-    job_id: string;
-    job_posts: { title?: string; status?: string; employer_id?: string } | Array<{ title?: string; status?: string; employer_id?: string }> | null;
-  };
-  const porEmpleo = new Map<string, { titulo: string; employerId: string; desde: string; cuantas: number }>();
-  for (const fila of (postulaciones ?? []) as FilaPostulacion[]) {
-    const empleo = Array.isArray(fila.job_posts) ? fila.job_posts[0] : fila.job_posts;
-    if (!empleo?.employer_id || empleo.status !== "published") continue;
-    const previo = porEmpleo.get(fila.job_id);
-    porEmpleo.set(fila.job_id, {
-      titulo: empleo.title ?? "tu empleo",
-      employerId: empleo.employer_id,
-      desde: previo && previo.desde < fila.created_at ? previo.desde : fila.created_at,
-      cuantas: (previo?.cuantas ?? 0) + 1,
-    });
-  }
-  const perfilEmpleos = await perfilesDeProfesionales(admin, [...porEmpleo.values()].map((e) => e.employerId));
-  for (const [jobId, empleo] of porEmpleo) {
-    const hito = hitoDe(empleo.desde);
-    const perfil = perfilEmpleos.get(empleo.employerId);
-    if (!hito || !perfil) continue;
-    resumen.postulacionesSinRevisar += 1;
-    avisos.push({
-      user_id: perfil,
-      type: "job_applications_waiting",
-      title: empleo.cuantas === 1 ? "Tienes una postulación sin revisar" : `Tienes ${empleo.cuantas} postulaciones sin revisar`,
-      message: `"${empleo.titulo}" recibió ${empleo.cuantas === 1 ? "una postulación" : `${empleo.cuantas} postulaciones`} hace ${hito} días y nadie las ha abierto.`,
-      data: { link: "/es/dashboard/profesional?tab=jobs", job_id: jobId, job_title: empleo.titulo, cuantas: empleo.cuantas, hito },
-      referencia: jobId,
-      hito,
-    });
-  }
+  // El recordatorio de POSTULACIONES sin revisar se retira con el flujo: a un
+  // empleo se responde por WhatsApp desde hace tiempo y nadie escribe ya en
+  // `job_applications`. Seguia consultando esa tabla, asi que lo unico que
+  // podia encontrar eran postulaciones historicas todavia en «pendiente»: un
+  // aviso de hace meses sobre una bandeja que ya no existe.
 
   // ── 7. Cotizaciones enviadas sin respuesta del cliente ───────────────────
   // Le toca al CLIENTE: alguien le puso precio a su trabajo y quedó esperando.
   const { data: cotizaciones } = await admin
     .from("quotes")
-    .select("id, created_at, client_id, title, total")
+    .select("id, created_at, client_id, title, total, booking_id, project_id")
     .eq("status", "sent")
     .lt("created_at", corteISO);
 
-  for (const cotizacion of (cotizaciones ?? []) as Array<{ id: string; created_at: string; client_id: string; title?: string }>) {
+  for (const cotizacion of (cotizaciones ?? []) as Array<{ id: string; created_at: string; client_id: string; title?: string; booking_id?: string | null; project_id?: string | null }>) {
     const hito = hitoDe(cotizacion.created_at);
     if (!hito || !cotizacion.client_id) continue;
     resumen.cotizacionesSinRespuesta += 1;
@@ -258,7 +218,20 @@ export async function recolectarPendientes(): Promise<{ avisos: Aviso[]; resumen
       type: "quote_awaiting_client",
       title: "Tienes una cotización sin responder",
       message: `Recibiste una cotización por "${que}" hace ${hito} días. Aceptala o rechazala para que el profesional sepa a qué atenerse.`,
-      data: { link: "/es/dashboard/profesional?tab=quotes&mode=use", quote_id: cotizacion.id, hito },
+      // «quotes» es una seccion SOLO del profesional: a un cliente el panel lo
+      // saca de ahi, asi que este recordatorio lo dejaba sin poder llegar a la
+      // cotizacion que se le pedia responder. La cotizacion se le muestra
+      // dentro de su cita o de su proyecto, igual que en el aviso de «te
+      // enviaron una cotizacion».
+      data: {
+        link: cotizacion.booking_id
+          ? "/es/dashboard/profesional?tab=sent_bookings"
+          : "/es/dashboard/profesional?tab=sent_projects",
+        quote_id: cotizacion.id,
+        booking_id: cotizacion.booking_id ?? null,
+        project_id: cotizacion.project_id ?? null,
+        hito,
+      },
       referencia: cotizacion.id,
       hito,
     });

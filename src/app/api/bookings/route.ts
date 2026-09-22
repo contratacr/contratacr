@@ -6,7 +6,6 @@ import { notifyNewBooking, notifyBookingStatusChange, notifyBookingRescheduled }
 import { cleanId, detectIdType, isValidId } from "@/lib/cedula";
 import { getIdentityVerifier } from "@/lib/verification/identity-verifier";
 import { syncProfessionalVerificationFromAccount } from "@/lib/verification/account-identity";
-import { AUTO_CONFIRM_DAYS } from "@/lib/completion";
 import { LONG_TEXT_MAX_LENGTH, NAME_MAX_LENGTH, SHORT_TEXT_MAX_LENGTH, limitTrimmedText } from "@/lib/text-limits";
 import { auditUserAction } from "@/lib/audit/user-action";
 import { writeSourceColumns } from "@/lib/security/write-guard";
@@ -514,7 +513,12 @@ export async function PATCH(req: NextRequest) {
   try {
     const otherUserId = isOwnerPro ? bookingRow.client_id : null;
     const labelMap: Record<string, { title: string; message: string }> = {
-      awaiting_confirmation: { title: "El profesional marcó el trabajo como realizado", message: `Confirma la finalización para cerrar la cita. Se confirma automáticamente en ${AUTO_CONFIRM_DAYS} días.` },
+      // HEREDADO. Ninguna pantalla pone ya una cita en «awaiting_confirmation»
+      // —el profesional la cierra de una con «Marcar como terminada»— y
+      // `autoCloseStale` finaliza de inmediato las filas que quedaron en ese
+      // estado. El aviso pedia confirmar y prometia 7 dias de espera: las dos
+      // cosas dejaron de ser ciertas.
+      awaiting_confirmation: { title: "Tu cita se dio por terminada", message: "El profesional marcó el trabajo como realizado y la cita quedó cerrada." },
       in_progress: { title: "Tu cita está en progreso", message: "El profesional marcó tu cita en progreso." },
     };
     if (isOwnerPro && otherUserId && labelMap[status]) {
@@ -527,7 +531,6 @@ export async function PATCH(req: NextRequest) {
           link: "/es/dashboard/profesional?tab=sent_bookings",
           booking_id: id,
           booking_status: status,
-          auto_confirm_days: AUTO_CONFIRM_DAYS,
         },
       };
       await admin.from("notifications").insert(notification);

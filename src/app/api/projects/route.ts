@@ -337,8 +337,12 @@ export async function POST(req: NextRequest) {
           const rows = recipients.map((profileId) => ({
             user_id: profileId,
             type: "new_project",
-            title: "Nuevo proyecto de un cliente",
-            message: `Un cliente publico "${finalTitle}" en ${label}. Respóndele y, si le interesa, te escribe.`,
+            title: "Nuevo proyecto",
+            // «Respóndele y, si le interesa, te escribe» contaba el flujo de las
+            // PROPUESTAS: el profesional respondia y esperaba que el cliente lo
+            // eligiera. Hoy le escribe directo por WhatsApp desde el tablero.
+            // (Y «publico» iba sin tilde: el push muestra este texto tal cual.)
+            message: `Un cliente publicó "${finalTitle}" en ${label}. Escríbele por WhatsApp si te interesa.`,
             data: {
               link: "/es/proyectos",
               project_id: projectId,

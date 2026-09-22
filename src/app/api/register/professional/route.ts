@@ -105,7 +105,9 @@ async function notifyMatchingOpenProjectsForProfessional(
     .map((project) => ({
       user_id: userId,
       type: "new_project",
-      title: "Nueva oportunidad en tus servicios",
+      // «Oportunidad» era el nombre de la seccion que se retiro, y ademas dos
+      // avisos del MISMO tipo llevaban titulos distintos en el push.
+      title: "Nuevo proyecto",
       message: `Un cliente publicó "${project.title || "un proyecto"}" en ${getCategoryLabel(project.category_id)}.`,
       data: { link: "/es/proyectos", project_id: project.id },
   }));

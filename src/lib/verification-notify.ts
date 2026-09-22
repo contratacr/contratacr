@@ -262,9 +262,13 @@ export async function notifyVerificationOutreach(professionalId: string): Promis
       "una foto o documento que respalde tu oficio (título, carné, patente o certificado)",
       "una foto de un trabajo reciente",
     ];
-    const title = "Para activar tu insignia de verificado";
+    // El mismo titulo que pinta la campana, para que el push y la campana no
+    // digan cosas distintas del mismo aviso.
+    const title = "Terminemos tu verificación";
     const message = `Hola ${firstName}, tu perfil quedó en revisión manual. Para marcarte como verificado necesitamos: 1) ${steps[0]}, 2) ${steps[1]} y 3) ${steps[2]}. Envíalas por WhatsApp al +506 8962 4340 o responde a nuestro correo y activamos tu insignia.`;
-    const notification = { user_id: pro.profile_id, type: "verification_outreach", title, message, data: { href: PRO_LINK } };
+    // `link`, no `href`: `notificationHref` solo mira `link`, asi que este
+    // aviso no llevaba a la pantalla de verificacion sino a la lista de avisos.
+    const notification = { user_id: pro.profile_id, type: "verification_outreach", title, message, data: { link: PRO_LINK } };
     await admin.from("notifications").insert(notification);
     await sendNotificationPush({ userId: pro.profile_id, title, message, data: notification.data });
 

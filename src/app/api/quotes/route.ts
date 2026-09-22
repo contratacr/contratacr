@@ -160,7 +160,10 @@ export async function POST(req: NextRequest) {
     const notification = {
       user_id: clientId, type: "quote_sent", title: "Te enviaron una cotización",
       message: `${proName} te envió una cotización por ${formatColones(totals.total)}${contextTitle ? ` para "${contextTitle}"` : ""}. Revísala y acéptala si te sirve.`,
-      data: { link, quote_id: String(data.id), booking_id: bookingId, project_id: projectId, total: totals.total },
+      // El nombre y el contexto viajan en `data` para poder rehacer el texto
+      // en ingles: si solo se guarda la frase en espanol, en ingles se lee en
+      // espanol.
+      data: { link, quote_id: String(data.id), booking_id: bookingId, project_id: projectId, total: totals.total, pro_name: proName, context_title: contextTitle || null },
     };
     await me.admin.from("notifications").insert(notification);
     await sendNotificationPush({ userId: clientId, title: notification.title, message: notification.message, data: notification.data });
@@ -240,7 +243,7 @@ export async function PATCH(req: NextRequest) {
   }
 
   const now = new Date().toISOString();
-  let patch: Record<string, unknown>; let notifyUserId: string | null = null; let type = ""; let title = ""; let message = "";
+  let patch: Record<string, unknown>; let notifyUserId: string | null = null; let type = ""; let title = ""; let message = ""; let nombreCliente = "";
   if (action === "withdraw") {
     if (q.professional_id !== me.proId) return NextResponse.json({ error: "Solo quien la envió puede retirarla." }, { status: 403 });
     patch = { status: "withdrawn", updated_at: now };
@@ -251,6 +254,7 @@ export async function PATCH(req: NextRequest) {
     notifyUserId = pro?.profile_id ?? null;
     const { data: cliente } = await me.admin.from("profiles").select("full_name").eq("id", me.user.id).maybeSingle();
     const nombre = cliente?.full_name ?? "El cliente";
+    nombreCliente = nombre;
     type = action === "accept" ? "quote_accepted" : "quote_declined";
     title = action === "accept" ? "Cotización aceptada" : "Cotización no aceptada";
     message = action === "accept"
@@ -263,7 +267,7 @@ export async function PATCH(req: NextRequest) {
   if (notifyUserId) {
     try {
       const link = q.booking_id ? "/es/dashboard/profesional?mode=offer&tab=bookings" : "/es/dashboard/profesional?mode=offer&tab=quotes";
-      const notification = { user_id: notifyUserId, type, title, message, data: { link, quote_id: id, booking_id: q.booking_id, project_id: q.project_id, total: q.total } };
+      const notification = { user_id: notifyUserId, type, title, message, data: { link, quote_id: id, booking_id: q.booking_id, project_id: q.project_id, total: q.total, client_name: nombreCliente || null, context_title: q.title || null } };
       await me.admin.from("notifications").insert(notification);
       await sendNotificationPush({ userId: notifyUserId, title, message, data: notification.data });
     } catch (err) { console.error("[quotes] aviso al profesional:", err); }

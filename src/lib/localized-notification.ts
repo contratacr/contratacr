@@ -42,6 +42,15 @@ export const TRANSLATED_NOTIFICATION_TYPES = new Set([
   "project_in_progress_idle",
   "project_confirmation_pending",
   "booking_past_date_idle",
+  // VIVOS QUE NO ESTABAN. Se generan todos los dias —una cotizacion es de lo
+  // mas frecuente que hay— y al no estar aqui se pintaban con el texto crudo
+  // guardado en la fila: en ingles salian en espanol.
+  "quote_sent",
+  "quote_accepted",
+  "quote_declined",
+  "quote_awaiting_client",
+  "verification_outreach",
+  "counterparty_account_deleted",
 ]);
 
 type NotificationCopyInput = {
@@ -94,6 +103,12 @@ const TITLES: Record<string, Record<NotificationLocale, string>> = {
   project_confirmation_pending: { es: "Confirma si el trabajo quedó listo", en: "Confirm the job is done" },
   booking_pending_reminder: { es: "Tienes una cita pendiente", en: "You have a pending appointment" },
   booking_past_date_idle: { es: "¿Se realizó esta cita?", en: "Did this appointment happen?" },
+  quote_sent: { es: "Te enviaron una cotización", en: "You received a quote" },
+  quote_accepted: { es: "Aceptaron tu cotización", en: "Your quote was accepted" },
+  quote_declined: { es: "No aceptaron tu cotización", en: "Your quote was not accepted" },
+  quote_awaiting_client: { es: "Tienes una cotización sin responder", en: "You have a quote waiting" },
+  verification_outreach: { es: "Terminemos tu verificación", en: "Let's finish your verification" },
+  counterparty_account_deleted: { es: "Una cuenta con la que coordinabas se cerró", en: "An account you were coordinating with was closed" },
 };
 
 function normalizeLegacyNotificationText(value: string): string {
@@ -117,6 +132,12 @@ function normalizeLegacyNotificationText(value: string): string {
   } catch {
     return value;
   }
+}
+
+/** ₡1.234, con el punto de miles de Costa Rica. */
+function montoCRC(valor: string): string {
+  const numero = Number(valor);
+  return Number.isFinite(numero) ? `₡${numero.toLocaleString("es-CR", { maximumFractionDigits: 0 })}` : valor;
 }
 
 function stringData(data: Record<string, unknown> | null | undefined, ...keys: string[]): string {
@@ -283,12 +304,14 @@ export function localizedNotificationCopy(notification: NotificationCopyInput, l
 
   if (notification.type === "booking_update") {
     const status = stringData(data, "booking_status", "status");
-    const days = stringData(data, "auto_confirm_days") || normalizedMessage.match(/(\d+) d[ií]as/i)?.[1] || "7";
     const awaiting = status === "awaiting_confirmation" || /realizado|completion/i.test(normalizedMessage);
     return {
       title,
+      // Ya no hay nada que confirmar ni 7 dias que esperar: una cita con fecha
+      // se cierra sola al pasar el dia y las que quedaron en «por confirmar»
+      // se finalizan en cuanto alguien abre la lista.
       message: awaiting
-        ? (en ? `Confirm completion to close the appointment. It will be confirmed automatically in ${days} days.` : `Confirma la finalización para cerrar la cita. Se confirma automáticamente en ${days} días.`)
+        ? (en ? "The professional marked the work as done and the appointment is closed." : "El profesional marcó el trabajo como realizado y la cita quedó cerrada.")
         : (en ? "The professional marked your appointment as in progress." : "El profesional marcó tu cita en progreso."),
     };
   }
@@ -525,10 +548,14 @@ export function localizedNotificationCopy(notification: NotificationCopyInput, l
       message: en
         ? (esperando
           ? `"${servicio}" has been waiting for an answer for ${dias} days. Confirm it or cancel it so the client knows where they stand.`
-          : `The date for "${servicio}" passed ${dias} days ago. Mark it as completed or cancel it so it doesn't stay pending.`)
+          : `The date for "${servicio}" passed ${dias} days ago. If it happened you do not have to do anything: it closes by itself. If it did not, cancel it with a reason.`)
         : (esperando
           ? `"${servicio}" lleva ${dias} días esperando respuesta. Confirmala o cancelala para que el cliente sepa a qué atenerse.`
-          : `La fecha de "${servicio}" pasó hace ${dias} días. Marcala como completada o cancelala para que no quede pendiente.`),
+          // UNA CITA SE CIERRA SOLA cuando pasa su dia (`autoCloseStale` en
+          // /api/bookings): «marcala como completada» pedia una accion que ya
+          // no existe, y ademas decia lo contrario que el mismo aviso en el
+          // push, que si estaba al dia.
+          : `La fecha de "${servicio}" pasó hace ${dias} días. Si se realizó no tienes que hacer nada: se cierra sola. Si no, cancélala con un motivo.`),
     };
   }
 
@@ -541,6 +568,27 @@ export function localizedNotificationCopy(notification: NotificationCopyInput, l
         ? `${quien} can no longer do "${proyecto}". Your project is still open and can receive other replies.`
         : `${quien} ya no puede realizar "${proyecto}". Tu proyecto sigue abierto para recibir otras respuestas.`,
     };
+  }
+
+  // COTIZACIONES. Se rehace el texto con lo que viaja en `data` —nombre,
+  // contexto y total— en vez de repetir la frase guardada, que esta siempre en
+  // espanol: quien usa el app en ingles leia el aviso en espanol.
+  if (notification.type === "quote_sent" || notification.type === "quote_accepted" || notification.type === "quote_declined" || notification.type === "quote_awaiting_client") {
+    const monto = stringData(data, "total");
+    const contexto = stringData(data, "context_title");
+    const porElMonto = monto ? (en ? ` for ${montoCRC(monto)}` : ` por ${montoCRC(monto)}`) : "";
+    const para = contexto ? (en ? ` for “${contexto}”` : ` para «${contexto}»`) : "";
+    if (notification.type === "quote_sent") {
+      const quien = stringData(data, "pro_name") || (en ? "A professional" : "Un profesional");
+      return { title, message: en ? `${quien} sent you a quote${porElMonto}${para}. Review it and accept it if it works for you.` : `${quien} te envió una cotización${porElMonto}${para}. Revísala y acéptala si te sirve.` };
+    }
+    if (notification.type === "quote_awaiting_client") {
+      return { title, message: en ? `You have not replied to the quote${porElMonto}${para} yet.` : `Todavía no respondes la cotización${porElMonto}${para}.` };
+    }
+    const quien = stringData(data, "client_name") || (en ? "The client" : "El cliente");
+    return notification.type === "quote_accepted"
+      ? { title, message: en ? `${quien} accepted your quote${porElMonto}${para}. Agree on the details.` : `${quien} aceptó tu cotización${porElMonto}${para}. Coordinen los detalles.` }
+      : { title, message: en ? `${quien} did not accept your quote${porElMonto}${para}. You can send another one.` : `${quien} no aceptó tu cotización${porElMonto}${para}. Puedes enviarle otra.` };
   }
 
   if (notification.type === "direct_message") return { title, message: normalizedMessage };

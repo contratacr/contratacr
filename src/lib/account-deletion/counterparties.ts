@@ -60,22 +60,10 @@ export async function collectCounterparties(db: SupabaseClient, userId: string):
     }
   }
 
-  // Jobs: applicants of this account's open vacancies, employers of its pending applications.
-  if (ownProIds.length) {
-    const { data: jobs } = await db.from("job_posts").select("id").in("employer_id", ownProIds).in("status", ["published", "paused"]);
-    const jobIds = (jobs ?? []).map((row) => row.id);
-    if (jobIds.length) {
-      const { data: applications } = await db.from("job_applications").select("applicant_id").in("job_id", jobIds);
-      for (const row of applications ?? []) add(row.applicant_id as string, "una postulación a un empleo");
-    }
-  }
-  const { data: myApplications } = await db.from("job_applications").select("job_id").eq("applicant_id", userId);
-  const appliedJobIds = [...new Set((myApplications ?? []).map((row) => row.job_id as string))];
-  if (appliedJobIds.length) {
-    const { data: jobs } = await db.from("job_posts").select("employer_id").in("id", appliedJobIds).in("status", ["published", "paused"]);
-    const employerOwners = await proOwner([...new Set((jobs ?? []).map((row) => row.employer_id as string).filter(Boolean))]);
-    for (const row of jobs ?? []) add(employerOwners.get(row.employer_id as string), "una postulación recibida en un empleo");
-  }
+  // Las POSTULACIONES a empleos se retiraron del producto —se responde por
+  // WhatsApp—, asi que ya no hay una contraparte «que se postulo a tu vacante»
+  // ni «que recibio tu postulacion». Las filas viejas se quedan en la base;
+  // simplemente no se avisa por algo que la persona ya no reconoceria.
 
   // Direct conversations that were still active.
   const { data: conversations } = await db
@@ -93,9 +81,13 @@ export async function collectCounterparties(db: SupabaseClient, userId: string):
 export async function notifyCounterparties(db: SupabaseClient, name: string, parties: Counterparty[]): Promise<void> {
   for (const party of parties) {
     try {
-      const title = "Una cuenta con la que tenías algo abierto se eliminó";
+      // El MISMO titulo que pinta la campana. Decia uno en el push y otro en
+      // la campana, asi que el mismo aviso se leia distinto en cada lado.
+      const title = "Una cuenta con la que coordinabas se cerró";
       const message = `${name} eliminó su cuenta de ContrataCR. Tenían ${party.what}; ya no aparece en tu panel y no hace falta que hagas nada. Si necesitas ayuda, escríbenos a soporte.`;
-      const notification = { user_id: party.userId, type: "counterparty_account_deleted", title, message, data: { href: "/dashboard/profesional?tab=soporte" } };
+      const notification = { user_id: party.userId, type: "counterparty_account_deleted", title, message, // `link`, no `href`: `notificationHref` solo mira `link`, asi que el
+        // aviso se enlazaba a si mismo —abria la propia lista de avisos—.
+        data: { link: "/es/dashboard/profesional?tab=soporte" } };
       const { error } = await db.from("notifications").insert(notification);
       if (error) throw error;
       await sendNotificationPush({ userId: party.userId, title, message, data: notification.data });
