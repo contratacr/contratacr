@@ -6,7 +6,17 @@ import { NextResponse } from "next/server";
  * cabeceras CORS, y una imagen ajena "contamina" el canvas y bloquea la
  * exportación. Solo acepta nuestros hosts.
  */
-const HOSTS = new Set(["assets.contratacr.com", "res.cloudinary.com"]);
+// NUESTROS HOSTS, no solo el CDN. Las fotos no viven todas en
+// assets.contratacr.com: las hay servidas desde el propio sitio
+// (contratacr.com, test.contratacr.com), y con esas el proxy respondia 400 y la
+// tarjeta con QR salia con las INICIALES en vez de la foto de la cuenta.
+const HOSTS = new Set([
+  "assets.contratacr.com",
+  "res.cloudinary.com",
+  "contratacr.com",
+  "www.contratacr.com",
+  "test.contratacr.com",
+]);
 
 export async function GET(request: Request) {
   const raw = new URL(request.url).searchParams.get("url") ?? "";
