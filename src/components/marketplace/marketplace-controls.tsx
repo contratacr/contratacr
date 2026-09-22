@@ -610,21 +610,24 @@ export function MarketplaceFilterChip({ label, value, options, onChange }: { lab
         <span className="truncate">{active ? selectedLabel : label}</span>
         <ChevronDown className="h-3.5 w-3.5 shrink-0" />
       </button>
-      {/* LA MISMA VENTANA QUE EN /buscar: hoja desde abajo en el teléfono y
-          tarjeta centrada con velo en computadora. Aquí era un panel de 320 px
-          colgado del chip: cabía justo, apretaba las opciones y se metía encima
-          de la lista. La de /buscar es más ancha, se lee de corrido y deja claro
-          que hay que elegir algo antes de volver.
-          Un solo portal para las dos: el anclado vivía fuera del portal y el
-          `sticky` de la barra lo encerraba en su propio contexto de apilado. */}
-      {open && mounted && createPortal(
-        <div className="fixed inset-0 z-[1200] flex items-end justify-center lg:items-center lg:p-6" role="presentation">
-          <button type="button" aria-label={copy.closeFilter} onClick={() => setOpen(false)} className="absolute inset-0 bg-[#071426]/55" />
-          <div className="relative z-10 w-full max-w-xl overflow-hidden rounded-t-2xl bg-white px-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] pt-3 shadow-2xl lg:rounded-[18px] lg:px-6 lg:pb-5 lg:pt-4">
+      {open && (
+        <>
+          {/* Desktop: panel anclado al chip, como siempre. */}
+          <div className="absolute left-0 top-[calc(100%+8px)] z-[120] hidden w-80 rounded-xl border border-[#e5e7eb] bg-white p-4 shadow-2xl lg:block">
             {sheetBody}
           </div>
-        </div>,
-        document.body,
+          {/* Móvil: portal a <body> — el sticky (isolation) encerraba el sheet en
+              su stacking context y las cards pintaban encima. */}
+          {mounted && createPortal(
+            <div className="lg:hidden">
+              <button type="button" aria-label={copy.closeFilter} onClick={() => setOpen(false)} className="fixed inset-0 z-[1190] bg-[#0f172a]/35" />
+              <div className="fixed inset-x-0 bottom-0 z-[1200] rounded-t-2xl bg-white px-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] pt-3 shadow-2xl">
+                {sheetBody}
+              </div>
+            </div>,
+            document.body,
+          )}
+        </>
       )}
     </div>
   );

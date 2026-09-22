@@ -94,6 +94,7 @@ function FilterSheet({
   options,
   onClose,
   onSelect,
+  ancla,
 }: {
   open: boolean;
   title: string;
@@ -101,6 +102,8 @@ function FilterSheet({
   options: FilterSheetOption[];
   onClose: () => void;
   onSelect: (value: string) => void;
+  /** Caja del filtro que abrió: en computadora el panel cuelga de él. */
+  ancla?: DOMRect | null;
 }) {
   useEffect(() => {
     if (!open) return;
@@ -120,13 +123,14 @@ function FilterSheet({
 
   return (
     <ViewportPortal>
-    <div className="fixed inset-0 z-[220] flex items-end justify-center lg:items-center lg:p-6" role="presentation">
-      <button type="button" aria-label="Cerrar" className="absolute inset-0 bg-[#071426]/55" onClick={onClose} />
+    <div className={cn("fixed inset-0 z-[220] flex items-end justify-center", ancla ? "lg:block" : "lg:items-center lg:p-6")} role="presentation">
+      <button type="button" aria-label="Cerrar" className={cn("absolute inset-0 bg-[#071426]/55", ancla && "ccr-filtro-anclado-velo")} onClick={onClose} />
       <section
         role="dialog"
         aria-modal="true"
         aria-label={title}
-        className="relative z-10 w-full max-w-xl overflow-hidden rounded-t-[22px] bg-white shadow-2xl lg:rounded-[18px]"
+        style={ancla ? ({ "--ccr-anc-x": `${Math.round(Math.min(ancla.left, (typeof window === "undefined" ? 1440 : window.innerWidth) - 368))}px`, "--ccr-anc-y": `${Math.round(ancla.bottom + 8)}px` } as React.CSSProperties) : undefined}
+        className={cn("relative z-10 w-full max-w-xl overflow-hidden rounded-t-[22px] bg-white shadow-2xl lg:rounded-[18px]", ancla && "ccr-filtro-anclado")}
       >
         <div className="flex items-center justify-between border-b border-[#eef2f6] px-5 py-4">
           <h2 className="text-[20px] font-extrabold text-[#162543]">{title}</h2>
@@ -173,6 +177,7 @@ function MultiFilterSheet({
   options,
   onClose,
   onApply,
+  ancla,
 }: {
   open: boolean;
   title: string;
@@ -180,6 +185,8 @@ function MultiFilterSheet({
   options: FilterSheetOption[];
   onClose: () => void;
   onApply: (values: string[]) => void;
+  /** Caja del filtro que abrió: en computadora el panel cuelga de él. */
+  ancla?: DOMRect | null;
 }) {
   if (!open) return null;
 
@@ -190,6 +197,7 @@ function MultiFilterSheet({
       options={options}
       onClose={onClose}
       onApply={onApply}
+      ancla={ancla}
     />
   );
 }
@@ -200,6 +208,7 @@ function MultiFilterSheetContent({
   options,
   onClose,
   onApply,
+  ancla,
 }: Omit<React.ComponentProps<typeof MultiFilterSheet>, "open">) {
   const t = useTranslations("search");
   const [draftValues, setDraftValues] = useState(values);
@@ -219,9 +228,10 @@ function MultiFilterSheetContent({
 
   return (
     <ViewportPortal>
-    <div className="fixed inset-0 z-[220] flex items-end justify-center lg:items-center lg:p-6" role="presentation">
-      <button type="button" aria-label="Cerrar" className="absolute inset-0 bg-[#071426]/55" onClick={onClose} />
-      <section role="dialog" aria-modal="true" aria-label={title} className="relative z-10 w-full max-w-xl overflow-hidden rounded-t-[22px] bg-white shadow-2xl lg:rounded-[18px]">
+    <div className={cn("fixed inset-0 z-[220] flex items-end justify-center", ancla ? "lg:block" : "lg:items-center lg:p-6")} role="presentation">
+      <button type="button" aria-label="Cerrar" className={cn("absolute inset-0 bg-[#071426]/55", ancla && "ccr-filtro-anclado-velo")} onClick={onClose} />
+      <section role="dialog" aria-modal="true" aria-label={title} style={ancla ? ({ "--ccr-anc-x": `${Math.round(Math.min(ancla.left, (typeof window === "undefined" ? 1440 : window.innerWidth) - 368))}px`, "--ccr-anc-y": `${Math.round(ancla.bottom + 8)}px` } as React.CSSProperties) : undefined}
+        className={cn("relative z-10 w-full max-w-xl overflow-hidden rounded-t-[22px] bg-white shadow-2xl lg:rounded-[18px]", ancla && "ccr-filtro-anclado")}>
         <div className="flex items-center justify-between border-b border-[#eef2f6] px-5 py-4">
           <div>
             <h2 className="text-[20px] font-extrabold text-[#162543]">{title}</h2>
@@ -341,12 +351,15 @@ function PriceFilterSheet({
   units,
   onClose,
   onApply,
+  ancla,
 }: {
   open: boolean;
   availability: string;
   units: string[];
   onClose: () => void;
   onApply: (availability: string, units: string[]) => void;
+  /** Caja del filtro que abrió: en computadora el panel cuelga de él. */
+  ancla?: DOMRect | null;
 }) {
   if (!open) return null;
 
@@ -356,6 +369,7 @@ function PriceFilterSheet({
       units={units}
       onClose={onClose}
       onApply={onApply}
+      ancla={ancla}
     />
   );
 }
@@ -365,6 +379,7 @@ function PriceFilterSheetContent({
   units,
   onClose,
   onApply,
+  ancla,
 }: Omit<React.ComponentProps<typeof PriceFilterSheet>, "open">) {
   const t = useTranslations("search");
   const currentChoice = priceChoiceFromFilters(availability, units);
@@ -401,9 +416,10 @@ function PriceFilterSheetContent({
 
   return (
     <ViewportPortal>
-    <div className="fixed inset-0 z-[220] flex items-end justify-center lg:items-center lg:p-6" role="presentation">
-      <button type="button" aria-label="Cerrar" className="absolute inset-0 bg-[#071426]/55" onClick={onClose} />
-      <section role="dialog" aria-modal="true" aria-label={t("filters.price")} className="relative z-10 w-full max-w-xl overflow-hidden rounded-t-[22px] bg-white shadow-2xl lg:rounded-[18px]">
+    <div className={cn("fixed inset-0 z-[220] flex items-end justify-center", ancla ? "lg:block" : "lg:items-center lg:p-6")} role="presentation">
+      <button type="button" aria-label="Cerrar" className={cn("absolute inset-0 bg-[#071426]/55", ancla && "ccr-filtro-anclado-velo")} onClick={onClose} />
+      <section role="dialog" aria-modal="true" aria-label={t("filters.price")} style={ancla ? ({ "--ccr-anc-x": `${Math.round(Math.min(ancla.left, (typeof window === "undefined" ? 1440 : window.innerWidth) - 368))}px`, "--ccr-anc-y": `${Math.round(ancla.bottom + 8)}px` } as React.CSSProperties) : undefined}
+        className={cn("relative z-10 w-full max-w-xl overflow-hidden rounded-t-[22px] bg-white shadow-2xl lg:rounded-[18px]", ancla && "ccr-filtro-anclado")}>
         <div className="flex items-center justify-between border-b border-[#eef2f6] px-5 py-4">
           <h2 className="text-[20px] font-extrabold text-[#162543]">{t("filters.price")}</h2>
           <button type="button" onClick={onClose} aria-label="Cerrar" className="inline-flex h-9 w-9 items-center justify-center text-[#162543]">
@@ -596,7 +612,18 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
   const [priceFilter, setPriceFilter] = useState(normalizePriceFilter(initialPrice));
   const [priceUnits, setPriceUnits] = useState(initialPriceUnits);
   const [openChip, setOpenChip] = useState<"sort" | "price" | "language" | "modality" | "insurer" | null>(null);
+  // EL PANEL CUELGA DEL FILTRO QUE LO ABRIÓ, como en Empleos, Promociones y
+  // Proyectos. Era una ventana centrada con velo oscuro que tapaba los
+  // resultados: para cambiar un filtro y ver el efecto había que cerrarla.
+  // Se guarda la caja del chip; la coloca la regla `ccr-filtro-anclado`.
+  const [anclaChip, setAnclaChip] = useState<DOMRect | null>(null);
   const { onPointerDown: onPointerDownChip, alTocar: alTocarChip } = useToquePropio();
+  // La caja se toma en el pointerdown, que sí trae el evento: `alTocar` recibe
+  // una función sin argumentos.
+  const anclarEn = (evento: React.PointerEvent<HTMLButtonElement>) => {
+    setAnclaChip(evento.currentTarget.getBoundingClientRect());
+    onPointerDownChip();
+  };
   // Geolocation ("cerca de mí") - opt-in, requested only when the user taps the
   // control, never auto-popped. Denied/unavailable -> text search still works.
   const [geoLoading, setGeoLoading] = useState(false);
@@ -1103,24 +1130,24 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
     return (
       <Carril className="scrollbar-none flex w-full min-w-0 items-center gap-1 overflow-x-auto overflow-y-visible pb-0.5">
         <div className="flex w-max min-w-full items-center justify-start gap-1">
-          <button type="button" onPointerDown={onPointerDownChip} onClick={alTocarChip(() => setOpenChip("sort"))} className={pill}>
+          <button type="button" onPointerDown={anclarEn} onClick={alTocarChip(() => setOpenChip("sort"))} className={pill}>
             <span className="min-w-0 whitespace-nowrap">{sortLabel}</span><ChevronDown className="h-3 w-3 shrink-0 min-[390px]:h-3.5 min-[390px]:w-3.5" />
           </button>
-          <button type="button" onPointerDown={onPointerDownChip} onClick={alTocarChip(() => setOpenChip("price"))} className={pill}>
+          <button type="button" onPointerDown={anclarEn} onClick={alTocarChip(() => setOpenChip("price"))} className={pill}>
             <span className="min-w-0 whitespace-nowrap">{priceText}</span><ChevronDown className="h-3 w-3 shrink-0 min-[390px]:h-3.5 min-[390px]:w-3.5" />
           </button>
-          {showVideoFilter && <button type="button" onPointerDown={onPointerDownChip} onClick={alTocarChip(() => setOpenChip("modality"))} className={pill}>
+          {showVideoFilter && <button type="button" onPointerDown={anclarEn} onClick={alTocarChip(() => setOpenChip("modality"))} className={pill}>
             <span className="min-w-0 whitespace-nowrap">{modalities.length ? `${t("filters.attention")} (${modalities.length})` : t("filters.attention")}</span><ChevronDown className="h-3.5 w-3.5 shrink-0" />
           </button>}
-          {showInsurerFilter && <button type="button" onPointerDown={onPointerDownChip} onClick={alTocarChip(() => setOpenChip("insurer"))} className={pill}>
+          {showInsurerFilter && <button type="button" onPointerDown={anclarEn} onClick={alTocarChip(() => setOpenChip("insurer"))} className={pill}>
             <span className="min-w-0 whitespace-nowrap">{insurers.length ? `${t("filters.insurer")} (${insurers.length})` : t("filters.insurer")}</span><ChevronDown className="h-3.5 w-3.5 shrink-0" />
           </button>}
           {/* El idioma se usa poco: va de último para no empujar lo que sí depende de la categoría. */}
-          <button data-testid="mobile-language-filter" type="button" onPointerDown={onPointerDownChip} onClick={alTocarChip(() => setOpenChip("language"))} className={pill}>
+          <button data-testid="mobile-language-filter" type="button" onPointerDown={anclarEn} onClick={alTocarChip(() => setOpenChip("language"))} className={pill}>
             <span className="min-w-0 whitespace-nowrap">{languageText}</span><ChevronDown className="h-3 w-3 shrink-0 min-[390px]:h-3.5 min-[390px]:w-3.5" />
           </button>
         </div>
-        <FilterSheet
+        <FilterSheet ancla={anclaChip}
           open={openChip === "sort"}
           title={locale === "en" ? "Sort" : "Ordenar"}
           value={sortBy}
@@ -1133,7 +1160,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
             setOpenChip(null);
           }}
         />
-        <PriceFilterSheet
+        <PriceFilterSheet ancla={anclaChip}
           open={openChip === "price"}
           availability={priceFilter}
           units={priceUnits}
@@ -1145,7 +1172,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
             setOpenChip(null);
           }}
         />
-        <MultiFilterSheet
+        <MultiFilterSheet ancla={anclaChip}
           open={openChip === "language"}
           title={t("filters.language")}
           values={languages}
@@ -1157,8 +1184,8 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
             setOpenChip(null);
           }}
         />
-        {showVideoFilter && <MultiFilterSheet open={openChip === "modality"} title={t("filters.attention")} values={modalities} options={modalityOptions} onClose={() => setOpenChip(null)} onApply={(next) => { const nextModalities = next.filter(isSearchModality); setModalities(nextModalities); applyFilters({ modalidad: serializeMultiParam(nextModalities) }); setOpenChip(null); }} />}
-        {showInsurerFilter && <MultiFilterSheet open={openChip === "insurer"} title={t("filters.insurer")} values={insurers} options={insurerOptions.map((item) => ({ value: item.id, label: item.label }))} onClose={() => setOpenChip(null)} onApply={(next) => { setInsurers(next); applyFilters({ aseguradora: serializeMultiParam(next) }); setOpenChip(null); }} />}
+        {showVideoFilter && <MultiFilterSheet ancla={anclaChip} open={openChip === "modality"} title={t("filters.attention")} values={modalities} options={modalityOptions} onClose={() => setOpenChip(null)} onApply={(next) => { const nextModalities = next.filter(isSearchModality); setModalities(nextModalities); applyFilters({ modalidad: serializeMultiParam(nextModalities) }); setOpenChip(null); }} />}
+        {showInsurerFilter && <MultiFilterSheet ancla={anclaChip} open={openChip === "insurer"} title={t("filters.insurer")} values={insurers} options={insurerOptions.map((item) => ({ value: item.id, label: item.label }))} onClose={() => setOpenChip(null)} onApply={(next) => { setInsurers(next); applyFilters({ aseguradora: serializeMultiParam(next) }); setOpenChip(null); }} />}
       </Carril>
     );
   }

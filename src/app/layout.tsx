@@ -289,6 +289,15 @@ body[data-ccr-desplazado] .ccr-cabecera-pegada{box-shadow:0 8px 12px -6px rgba(1
    entero baja justo esa altura y deja un claro arriba. En una pantalla de error
    no hay barra que reservar: lo único que hay es el aviso. */
 body:has(.ccr-error-screen) .ccr-navbar-spacer{display:none}
+/* Los filtros de /buscar cuelgan del filtro que los abrió, como en Empleos:
+   en computadora el panel se coloca bajo el chip y el velo se vuelve
+   transparente, así la lista se sigue viendo mientras se elige. En el teléfono
+   no se toca: hoja desde abajo con su velo. La posición viaja en dos variables
+   que pone el componente, no en clases generadas. */
+@media (min-width:1024px){
+ .ccr-filtro-anclado{position:absolute;left:var(--ccr-anc-x,0px);top:var(--ccr-anc-y,0px);width:22rem;max-width:22rem;border-radius:14px}
+ .ccr-filtro-anclado-velo{background:transparent}
+}
 [data-ccr-hay-mas] .ccr-pie-ventana,[data-ccr-hay-mas] .ccr-pie-formulario{box-shadow:0 -8px 12px -6px rgba(15,23,42,.18)}`,
           }}
         />
