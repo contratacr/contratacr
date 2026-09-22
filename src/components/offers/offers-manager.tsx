@@ -1,10 +1,11 @@
 "use client";
+import { CardActionsMenu } from "@/components/dashboard/card-actions-menu";
 
 import { AutoSaveHint, useAvisoDeGuardado } from "@/components/dashboard/auto-save-hint";
 import { useAppDialog } from "@/hooks/use-app-dialog";
 import { useEffect, useRef, useState } from "react";
 import { useNativeApp } from "@/hooks/use-native-app";
-import { ArrowLeft, BadgePercent, ChevronDown, MoreHorizontal, Plus } from "lucide-react";
+import { ArrowLeft, BadgePercent, ChevronDown, Plus } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { useLocale } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
@@ -82,24 +83,7 @@ export function OffersManager({ initialOffers, embedded = false, backHref = "/da
   const [openId, setOpenId] = useState<string | null>(() => searchParams.get("offer"));
   const [publishOpen, setPublishOpen] = useState(false);
   const [editingOffer, setEditingOffer] = useState<ProfessionalOffer | null>(null);
-  const [actionsOpen, setActionsOpen] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!actionsOpen) return;
-    const close = (event: PointerEvent) => {
-      const target = event.target instanceof Element ? event.target : null;
-      if (!target?.closest(`[data-offer-actions="${actionsOpen}"]`)) setActionsOpen(null);
-    };
-    const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setActionsOpen(null);
-    };
-    document.addEventListener("pointerdown", close);
-    document.addEventListener("keydown", closeOnEscape);
-    return () => {
-      document.removeEventListener("pointerdown", close);
-      document.removeEventListener("keydown", closeOnEscape);
-    };
-  }, [actionsOpen]);
 
   const [etapa, setEtapa] = useState("activas");
   // Con pocos elementos no hay etapas dibujadas: la lista sale entera.
@@ -204,7 +188,7 @@ export function OffersManager({ initialOffers, embedded = false, backHref = "/da
             const imageUrl = offer.image_urls[0];
             const displayStatus = effectiveOfferStatus(offer, crTodayISO());
             return (
-              <article key={offer.id} className={cn("relative overflow-visible rounded-2xl border border-[#e5e7eb] bg-white shadow-[0_2px_8px_rgba(15,23,42,0.06)]", actionsOpen === offer.id && "z-40")}>
+              <article key={offer.id} className="relative overflow-visible rounded-2xl border border-[#e5e7eb] bg-white shadow-[0_2px_8px_rgba(15,23,42,0.06)]">
                 <button type="button" onClick={() => setOpenId(isOpen ? null : offer.id)} className="relative grid h-28 w-full grid-cols-[52px_minmax(0,1fr)] items-center gap-3 px-4 pr-11 text-left sm:h-24 sm:grid-cols-[56px_minmax(0,1fr)] sm:gap-4 sm:px-5 sm:pr-12">
                   {/* La misma caja que Mis proyectos y Favoritos: antes el icono
                       iba suelto, sin fondo, y la fila no se parecía a las de al
@@ -258,27 +242,23 @@ export function OffersManager({ initialOffers, embedded = false, backHref = "/da
                       <Link href={`/ofertas/${offer.id}?from=panel`} onClick={openInNewTabOnDesktop} className="inline-flex h-10 w-full items-center justify-center rounded-full border border-[#d7e1ea] px-3 text-xs font-bold text-[#162543]">{copy.view}</Link>
                       <button type="button" onClick={() => setEditingOffer(offer)} className="hidden h-10 w-full items-center justify-center rounded-full bg-[#009FD9] px-3 text-xs font-bold text-white transition-colors hover:bg-[#0089bb] lg:inline-flex">{copy.edit}</button>
                       <Link href={`/ofertas/${offer.id}/editar?from=panel`} className="inline-flex h-10 w-full items-center justify-center rounded-full bg-[#009FD9] px-3 text-xs font-bold text-white transition-colors hover:bg-[#0089bb] lg:hidden">{copy.edit}</Link>
-                      <div className="relative">
-                        <button type="button" onClick={() => setActionsOpen((current) => current === offer.id ? null : offer.id)} aria-label={copy.more} aria-haspopup="menu" aria-expanded={actionsOpen === offer.id} className="grid h-10 w-10 place-items-center rounded-full border border-[#d7e1ea] text-[#718096] transition hover:border-[#b9c8d6] hover:bg-[#f6f9fb] hover:text-[#162543]"><MoreHorizontal className="h-5 w-5" /></button>
-                        {actionsOpen === offer.id && (
-                          <div role="menu" className="absolute bottom-[calc(100%+6px)] right-0 z-50 w-44 overflow-hidden rounded-xl border border-[#e5e7eb] bg-white p-1.5 shadow-[0_18px_45px_-22px_rgba(15,23,42,0.55)]">
-                            {/* El menú ofrece lo que se puede hacer DESDE donde
-                                está, no la lista entera. Una promoción cerrada
-                                solo tiene un camino: volver a publicarse. Antes
-                                una vencida ni siquiera tenía ese —y encima le
-                                ofrecía «marcar agotada» y «marcar vencida»,
-                                que ya era—. */}
-                            {displayStatus === "published" ? (<>
-                              <button role="menuitem" onClick={() => { setActionsOpen(null); updateStatus(offer.id, "paused"); }} className="block w-full rounded-lg px-3 py-2.5 text-left text-sm font-bold text-[#162543] hover:bg-[#f4f8fb]">{copy.pause}</button>
-                              <button role="menuitem" onClick={() => { setActionsOpen(null); updateStatus(offer.id, "sold_out"); }} className="block w-full rounded-lg px-3 py-2.5 text-left text-sm font-bold text-[#162543] hover:bg-[#f4f8fb]">{copy.soldOut}</button>
-                              <button role="menuitem" onClick={() => { setActionsOpen(null); updateStatus(offer.id, "expired"); }} className="block w-full rounded-lg px-3 py-2.5 text-left text-sm font-bold text-red-700 hover:bg-red-50">{copy.expire}</button>
-                            </>) : (<>
-                              <button role="menuitem" onClick={() => { setActionsOpen(null); updateStatus(offer.id, "published"); }} className="block w-full rounded-lg px-3 py-2.5 text-left text-sm font-bold text-[#008fc3] hover:bg-[#f0f9fc]">{copy.republish}</button>
-                              <button role="menuitem" data-eliminar-publicacion onClick={() => { setActionsOpen(null); void eliminar(offer.id); }} className="block w-full rounded-lg px-3 py-2.5 text-left text-sm font-bold text-red-700 hover:bg-red-50">{copy.remove}</button>
-                            </>)}
-                          </div>
-                        )}
-                      </div>
+                      {/* El mismo «···» compartido: el menu ofrece lo que se
+                          puede hacer DESDE donde esta. Una promocion cerrada
+                          solo tiene un camino, volver a publicarse. */}
+                      <CardActionsMenu
+                        label={copy.more}
+                        triggerClassName="h-10 w-10 border-[#d7e1ea]"
+                        actions={displayStatus === "published"
+                          ? [
+                              { label: copy.pause, onClick: () => updateStatus(offer.id, "paused") },
+                              { label: copy.soldOut, onClick: () => updateStatus(offer.id, "sold_out") },
+                              { label: copy.expire, destructive: true, onClick: () => updateStatus(offer.id, "expired") },
+                            ]
+                          : [
+                              { label: copy.republish, primary: true, onClick: () => updateStatus(offer.id, "published") },
+                              { label: copy.remove, destructive: true, onClick: () => void eliminar(offer.id) },
+                            ]}
+                      />
                     </div>
                   </div>
                 )}

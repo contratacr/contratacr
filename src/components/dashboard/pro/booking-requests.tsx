@@ -1,4 +1,5 @@
 "use client";
+import { CardActionsMenu } from "@/components/dashboard/card-actions-menu";
 
 import { QuoteBlock } from "@/components/quotes/quote-block";
 import { noInsistirArriba } from "@/lib/ir-al-inicio";
@@ -7,7 +8,7 @@ import { cargarCotizaciones } from "@/lib/quotes-store";
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
-import { CalendarCheck, CalendarClock, Clock, FileText, Phone, IdCard, Wrench, MapPin, UserRound, MoreHorizontal, Flag } from "lucide-react";
+import { CalendarCheck, CalendarClock, Clock, FileText, Phone, IdCard, Wrench, MapPin, UserRound, Flag } from "lucide-react";
 import { getCategoryLabel } from "@/lib/data/categories";
 import { useAuth } from "@/hooks/use-auth";
 import { useCachedResource } from "@/hooks/use-cached-resource";
@@ -131,7 +132,6 @@ export function BookingRequests() {
   // Inline cancel-with-reason panel — the pro's only exception tool (the pro does NOT
   // reschedule; sprint 433). One open at a time, keyed by booking id.
   const [actionFor, setActionFor] = useState<{ id: string; mode: "cancel" } | null>(null);
-  const [actionsMenuFor, setActionsMenuFor] = useState<string | null>(null);
   const [reason, setReason] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
@@ -145,22 +145,6 @@ export function BookingRequests() {
   // así el bloque de cotización ya está cuando la tarjeta se despliega.
   useEffect(() => { cargarCotizaciones(); }, []);
 
-  useEffect(() => {
-    if (!actionsMenuFor) return;
-    const close = (event: PointerEvent) => {
-      const target = event.target as Element | null;
-      if (!target?.closest(`[data-booking-actions="${actionsMenuFor}"]`)) setActionsMenuFor(null);
-    };
-    const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setActionsMenuFor(null);
-    };
-    document.addEventListener("pointerdown", close);
-    document.addEventListener("keydown", closeOnEscape);
-    return () => {
-      document.removeEventListener("pointerdown", close);
-      document.removeEventListener("keydown", closeOnEscape);
-    };
-  }, [actionsMenuFor]);
 
   const refreshBookings = bookingsResource.refresh;
   const loadBookings = useCallback(async () => {
@@ -523,26 +507,98 @@ export function BookingRequests() {
                       <DirectChatLauncher bookingId={booking.id} professionalName={clientName} contextTitle={serviceDescription} buttonLabel={t("contact")} tone="primary" className="h-11 w-full whitespace-nowrap rounded-full px-4 text-[13px] font-bold max-[389px]:px-3 max-[389px]:[&>svg]:hidden sm:w-auto sm:px-5" />
                     )}
                   </div>
-                  <div className="relative shrink-0" data-booking-actions={booking.id}>
-                    <button
-                      type="button"
-                      aria-label={locale === "en" ? "More options" : "Más opciones"}
-                      aria-haspopup="menu"
-                      aria-expanded={actionsMenuFor === booking.id}
-                      onClick={() => setActionsMenuFor((current) => current === booking.id ? null : booking.id)}
-                      className="grid h-11 w-11 place-items-center rounded-full border border-[#d7e1ea] text-[#718096] transition hover:border-[#b9c8d6] hover:bg-[#f6f9fb] hover:text-[#162543] [.ccr-native-app_&]:h-11 [.ccr-native-app_&]:w-11"
-                    >
-                      <MoreHorizontal className="h-5 w-5" />
-                    </button>
-                    {actionsMenuFor === booking.id && (
-                      <div role="menu" className="absolute bottom-[calc(100%+6px)] right-0 z-50 max-h-[calc(100dvh-2rem)] w-48 overflow-y-auto rounded-xl border border-[#e5e7eb] bg-white p-1.5 shadow-[0_18px_45px_-22px_rgba(15,23,42,0.55)]">
-                        {porCoordinar && <button role="menuitem" type="button" disabled={!!cerrando} onClick={() => { setActionsMenuFor(null); void marcarAtendida(booking.id); }} className="block w-full rounded-lg px-3 py-2.5 text-left text-sm font-bold text-[#162543] hover:bg-[#f4f8fb] disabled:opacity-60">{t("markDone")}</button>}
-                        {isActive && <button role="menuitem" type="button" onClick={() => { setActionsMenuFor(null); openAction(booking.id, "cancel"); }} className="block w-full rounded-lg px-3 py-2.5 text-left text-sm font-bold text-red-700 hover:bg-red-50">{t("cancel")}</button>}
-                        {booking.status === "cancelled" && <button role="menuitem" type="button" onClick={() => { setActionsMenuFor(null); archiveBooking(booking.id); }} className="block w-full rounded-lg px-3 py-2.5 text-left text-sm font-bold text-[#162543] hover:bg-[#f4f8fb]">{t("archive")}</button>}
-                        <button role="menuitem" type="button" onClick={() => { setActionsMenuFor(null); setReportFor(booking); }} className="block w-full rounded-lg px-3 py-2.5 text-left text-sm font-bold text-red-700 hover:bg-red-50">{t("reportClient")}</button>
-                      </div>
+                  {/* El mismo «···» compartido de todo el panel. */}
+                  <CardActionsMenu
+                    label={locale === "en" ? "More options" : "Más opciones"}
+                    menuClassName="w-48"
+                    triggerClassName="border-[#d7e1ea]"
+                    actions={[
+                      ...(porCoordinar ? [{ label: t("markDone"), onClick: () => { if (!cerrando) void marcarAtendida(booking.id); } }] : []),
+                      ...(isActive ? [{ label: t("cancel"), destructive: true, onClick: () => openAction(booking.id, "cancel") }] : []),
+                      ...(booking.status === "cancelled" ? [{ label: t("archive"), onClick: () => archiveBooking(booking.id) }] : []),
+                      { label: t("reportClient"), destructive: true, onClick: () => setReportFor(booking) },
+                    ]}
+                  />
+                  </div>
+                </div>
+              );
+            })()}
+            {phoneFmt && (
+              <div className="flex items-start gap-2.5">
+                <Phone className="mt-0.5 h-4 w-4 shrink-0 text-[#68778d]" />
+                <div className="min-w-0">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#68778d]">{t("contactPhone")}</p>
+                  <p className="mt-0.5 text-[13px] font-medium text-[#374151] truncate">{phoneFmt}</p>
+                </div>
+              </div>
+            )}
+            <div className="flex items-start gap-2.5">
+              <IdCard className="mt-0.5 h-4 w-4 shrink-0 text-[#68778d]" />
+              <div className="min-w-0">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#68778d]">{t("contactCedula")}</p>
+                <p className={cn("mt-0.5 text-[13px] font-medium truncate", cedulaFmt ? "text-[#374151]" : "text-[#6b7280]")}>
+                  {cedulaFmt || t("unverified")}
+                </p>
+              </div>
+            </div>
+            {serviceDescription && (
+              <div className="flex items-start gap-2.5">
+                <FileText className="mt-0.5 h-4 w-4 shrink-0 text-[#68778d]" />
+                <div className="min-w-0">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#68778d]">{t("noteEyebrow")}</p>
+                  <ExpandableText text={serviceDescription} lines={3} className="mt-0.5 text-[13px] leading-relaxed text-[#4b5563]" />
+                </div>
+              </div>
+            )}
+
+            {/* Frequent actions stay visible; exceptional actions live in the overflow menu. */}
+            {!panelOpen && (() => {
+              // La reserva se cierra sola cuando pasa su fecha: el profesional no
+              // "marca completado". Lo suyo es escribirle al cliente; cancelar y
+              // reportar viven en el menú.
+              // Escribir sigue teniendo sentido después de cerrada: una garantía,
+              // un detalle, un comprobante. Solo se corta si la reserva se canceló.
+              const canMessage = isActive || booking.status === "awaiting_confirmation" || booking.status === "completed";
+              // La que tiene fecha se cierra sola al pasar el día. La que está "por
+              // coordinar" no tiene día que pasar: sin esto quedaba activa para
+              // siempre, y solo el cliente podía cerrarla.
+              const porCoordinar = isActive && !booking.scheduled_date;
+              return (
+                // En el teléfono cada acción ocupa el ancho entero, que es lo que
+                // pide el pulgar. En pantalla grande eso deja botones de un palmo
+                // de largo para dos palabras: de 640 px en adelante van en una
+                // fila, cada uno del ancho de su texto.
+                <div className="ccr-acciones-tarjeta flex flex-col gap-2 border-t border-[#eef2f6] pt-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">
+                  {/* Tope de la app: como mucho DOS botones a la vista más el menú.
+                      Con "Marcar como terminada" en la fila eran tres y el ⋮, o sea
+                      cuatro cosas que tocar. Bajó al menú por ser la única de las
+                      tres que existe solo mientras la cita está por coordinar: las
+                      otras dos están siempre. */}
+                  {/* Los dos botones y el menú comparten SIEMPRE un renglón: la
+                      cotización cruzaba la tarjeta sola y dejaba la fila partida en
+                      dos. `sm:contents` disuelve esta envoltura de 640 px en
+                      adelante, donde todo vuelve a alinearse a la derecha. */}
+                  <div className="flex items-center justify-end gap-2 sm:contents">
+                  {/* empty:hidden — sin cotización que mostrar, QuoteBlock no pinta
+                      nada pero su envoltura seguía ocupando media fila, y el botón
+                      principal quedaba encogido con un hueco a la izquierda. */}
+                  <div className="min-w-0 flex-1 empty:hidden sm:flex-none"><QuoteBlock asButton bookingId={booking.id} role="pro" canCreate={isActive || booking.status === "awaiting_confirmation"} defaultTitle={serviceDescription} clientName={clientName} /></div>
+                  <div className="flex min-w-0 flex-1 items-center empty:hidden sm:flex-none">
+                    {canMessage && (
+                      <DirectChatLauncher bookingId={booking.id} professionalName={clientName} contextTitle={serviceDescription} buttonLabel={t("contact")} tone="primary" className="h-11 w-full whitespace-nowrap rounded-full px-4 text-[13px] font-bold max-[389px]:px-3 max-[389px]:[&>svg]:hidden sm:w-auto sm:px-5" />
                     )}
                   </div>
+                  <CardActionsMenu
+                    label={locale === "en" ? "More options" : "Más opciones"}
+                    menuClassName="w-48"
+                    triggerClassName="border-[#d7e1ea]"
+                    actions={[
+                      ...(porCoordinar ? [{ label: t("markDone"), onClick: () => { if (!cerrando) void marcarAtendida(booking.id); } }] : []),
+                      ...(isActive ? [{ label: t("cancel"), destructive: true, onClick: () => openAction(booking.id, "cancel") }] : []),
+                      ...(booking.status === "cancelled" ? [{ label: t("archive"), onClick: () => archiveBooking(booking.id) }] : []),
+                      { label: t("reportClient"), destructive: true, onClick: () => setReportFor(booking) },
+                    ]}
+                  />
                   </div>
                 </div>
               );

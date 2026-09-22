@@ -1,11 +1,12 @@
 "use client";
 
+import { CardActionsMenu } from "@/components/dashboard/card-actions-menu";
 import { AutoSaveHint, useAvisoDeGuardado } from "@/components/dashboard/auto-save-hint";
 import { useAppDialog } from "@/hooks/use-app-dialog";
 import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useNativeApp } from "@/hooks/use-native-app";
-import { ArrowLeft, BriefcaseBusiness, ChevronDown, MoreHorizontal, Plus } from "lucide-react";
+import { ArrowLeft, BriefcaseBusiness, ChevronDown, Plus } from "lucide-react";
 import { Link, useRouter } from "@/i18n/navigation";
 import { invalidateAppData } from "@/lib/app-data-invalidation";
 import type { JobPost } from "@/lib/jobs";
@@ -73,7 +74,6 @@ export function JobsManager({ initialJobs, embedded = false, backHref = "/dashbo
   const [openId, setOpenId] = useState<string | null>(() => searchParams.get("job"));
   const [publishOpen, setPublishOpen] = useState(false);
   const [editingJob, setEditingJob] = useState<ManagedJob | null>(null);
-  const [actionsOpen, setActionsOpen] = useState<string | null>(null);
 
   useEffect(() => {
     const jobId = searchParams.get("job");
@@ -102,22 +102,6 @@ export function JobsManager({ initialJobs, embedded = false, backHref = "/dashbo
     return () => cancelAnimationFrame(frame);
   }, [initialJobs]);
 
-  useEffect(() => {
-    if (!actionsOpen) return;
-    const close = (event: PointerEvent) => {
-      const target = event.target instanceof Element ? event.target : null;
-      if (!target?.closest(`[data-job-actions="${actionsOpen}"]`)) setActionsOpen(null);
-    };
-    const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setActionsOpen(null);
-    };
-    document.addEventListener("pointerdown", close);
-    document.addEventListener("keydown", closeOnEscape);
-    return () => {
-      document.removeEventListener("pointerdown", close);
-      document.removeEventListener("keydown", closeOnEscape);
-    };
-  }, [actionsOpen]);
 
   const { dialogNode, confirm, showMessage } = useAppDialog();
   const aviso = useAvisoDeGuardado();
@@ -195,7 +179,7 @@ export function JobsManager({ initialJobs, embedded = false, backHref = "/dashbo
           {visibles.map((job) => {
             const isOpen = openId === job.id;
             return (
-              <article key={job.id} className={cn("relative overflow-visible rounded-2xl border border-[#e5e7eb] bg-white shadow-[0_2px_8px_rgba(15,23,42,0.06)]", actionsOpen === job.id && "z-40")}>
+              <article key={job.id} className="relative overflow-visible rounded-2xl border border-[#e5e7eb] bg-white shadow-[0_2px_8px_rgba(15,23,42,0.06)]">
                 <button type="button" onClick={() => setOpenId(isOpen ? null : job.id)} className="flex h-24 w-full items-center gap-3 px-4 text-left sm:gap-4 sm:px-5">
                   {/* Empleos era la única de las tres listas del panel sin caja al
                       inicio: la fila arrancaba en el título y no se alineaba con
@@ -239,23 +223,23 @@ export function JobsManager({ initialJobs, embedded = false, backHref = "/dashbo
                       <Link href={`/empleos/${job.id}?from=panel`} onClick={openInNewTabOnDesktop} className="inline-flex h-10 w-full items-center justify-center rounded-full border border-[#d7e1ea] px-3 text-xs font-bold text-[#162543]">{copy.view}</Link>
                       <button type="button" onClick={() => setEditingJob(job)} className="hidden h-10 w-full items-center justify-center rounded-full bg-[#009FD9] px-3 text-xs font-bold text-white transition-colors hover:bg-[#0089bb] lg:inline-flex">{copy.edit}</button>
                       <Link href={`/empleos/${job.id}/editar?from=panel`} className="inline-flex h-10 w-full items-center justify-center rounded-full bg-[#009FD9] px-3 text-xs font-bold text-white transition-colors hover:bg-[#0089bb] lg:hidden">{copy.edit}</Link>
-                      <div className="relative">
-                        <button type="button" onClick={() => setActionsOpen((current) => current === job.id ? null : job.id)} aria-label={copy.more} aria-haspopup="menu" aria-expanded={actionsOpen === job.id} className="grid h-10 w-10 place-items-center rounded-full border border-[#d7e1ea] text-[#718096] transition hover:border-[#b9c8d6] hover:bg-[#f6f9fb] hover:text-[#162543]"><MoreHorizontal className="h-5 w-5" /></button>
-                        {actionsOpen === job.id && (
-                          <div role="menu" className="absolute bottom-[calc(100%+6px)] right-0 z-50 w-44 overflow-hidden rounded-xl border border-[#e5e7eb] bg-white p-1.5 shadow-[0_18px_45px_-22px_rgba(15,23,42,0.55)]">
-                            {/* Lo que se puede hacer DESDE donde está, igual que
-                                en Promociones: publicada se pausa o se cierra;
-                                cerrada solo vuelve a publicarse. */}
-                            {job.status === "published" ? (<>
-                              <button role="menuitem" onClick={() => { setActionsOpen(null); updateJobStatus(job.id, "paused"); }} className="block w-full rounded-lg px-3 py-2.5 text-left text-sm font-bold text-[#162543] hover:bg-[#f4f8fb]">{copy.pause}</button>
-                              <button role="menuitem" onClick={() => { setActionsOpen(null); updateJobStatus(job.id, "closed"); }} className="block w-full rounded-lg px-3 py-2.5 text-left text-sm font-bold text-red-700 hover:bg-red-50">{copy.close}</button>
-                            </>) : (<>
-                              <button role="menuitem" onClick={() => { setActionsOpen(null); updateJobStatus(job.id, "published"); }} className="block w-full rounded-lg px-3 py-2.5 text-left text-sm font-bold text-[#008fc3] hover:bg-[#f0f9fc]">{copy.republish}</button>
-                              <button role="menuitem" data-eliminar-publicacion onClick={() => { setActionsOpen(null); void eliminar(job.id); }} className="block w-full rounded-lg px-3 py-2.5 text-left text-sm font-bold text-red-700 hover:bg-red-50">{copy.remove}</button>
-                            </>)}
-                          </div>
-                        )}
-                      </div>
+                      {/* EL MISMO «···» DE TODO EL PANEL. Estaba dibujado a
+                          mano aqui y en Promociones, con su propio relleno y su
+                          propia sombra, mientras Proyectos y Cotizaciones
+                          usaban el compartido: cuatro secciones, dos menus. */}
+                      <CardActionsMenu
+                        label={copy.more}
+                        triggerClassName="h-10 w-10 border-[#d7e1ea]"
+                        actions={job.status === "published"
+                          ? [
+                              { label: copy.pause, onClick: () => updateJobStatus(job.id, "paused") },
+                              { label: copy.close, destructive: true, onClick: () => updateJobStatus(job.id, "closed") },
+                            ]
+                          : [
+                              { label: copy.republish, primary: true, onClick: () => updateJobStatus(job.id, "published") },
+                              { label: copy.remove, destructive: true, onClick: () => void eliminar(job.id) },
+                            ]}
+                      />
                     </div>
                     {/* Sin bandeja de postulaciones: se responde por WhatsApp.
                         En dos meses no llegó NI UNA, y una bandeja que nadie

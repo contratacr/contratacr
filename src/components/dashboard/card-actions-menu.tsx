@@ -15,7 +15,13 @@ import { cn } from "@/lib/utils";
 export type CardAction = {
   label: string;
   onClick: () => void;
+  /** Rojo: borra o cierra algo sin vuelta atras. */
   destructive?: boolean;
+  /**
+   * Azul: la accion que uno viene a hacer desde aqui —«Volver a publicar» en
+   * una publicacion cerrada—. Una por menu, o ninguna.
+   */
+  primary?: boolean;
   icon?: ReactNode;
 };
 
@@ -61,7 +67,13 @@ export function CardActionsMenu({ actions, label, placement = "up", triggerClass
         <div
           role="menu"
           className={cn(
-            "absolute right-0 z-50 max-h-[calc(100dvh-2rem)] min-w-[190px] overflow-y-auto rounded-xl border border-gray-100 bg-white py-1 shadow-xl",
+            // UNA SOLA MEDIDA PARA TODOS LOS «···» DEL PANEL. Empleos y
+            // Promociones pintaban el suyo a mano, con otro relleno, otra
+            // sombra y la letra en negrita; Proyectos y Cotizaciones usaban
+            // este, mas palido. El dibujo que gana es el de Empleos —negrita y
+            // color, que es lo que hace legible un menu de cuatro palabras— y
+            // ahora vive aqui, no copiado en cada seccion.
+            "absolute right-0 z-50 max-h-[calc(100dvh-2rem)] min-w-[190px] overflow-y-auto rounded-xl border border-[#e5e7eb] bg-white p-1.5 shadow-[0_18px_45px_-22px_rgba(15,23,42,0.55)]",
             placement === "down" ? "top-[calc(100%+6px)]" : "bottom-[calc(100%+6px)]",
             menuClassName,
           )}
@@ -73,8 +85,12 @@ export function CardActionsMenu({ actions, label, placement = "up", triggerClass
               type="button"
               onClick={() => { setOpen(false); a.onClick(); }}
               className={cn(
-                "flex w-full items-center gap-3 px-3.5 py-2.5 text-left text-sm transition-colors",
-                a.destructive ? "text-red-600 hover:bg-red-50" : "text-[#374151] hover:bg-[#f9fafb]",
+                "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-bold transition-colors",
+                a.destructive
+                  ? "text-red-700 hover:bg-red-50"
+                  : a.primary
+                    ? "text-[#008fc3] hover:bg-[#f0f9fc]"
+                    : "text-[#162543] hover:bg-[#f4f8fb]",
                 itemClassName,
               )}
             >

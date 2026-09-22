@@ -4,7 +4,7 @@ import { canRunSeededRegression, E2E_USERS, ensureRegressionSeed, type Regressio
 
 const professionalTabs = [
   // En escritorio «home» cae en la sección de arranque del panel profesional
-  // (Oportunidades); en teléfono muestra el menú de secciones con el cambio de panel.
+  // en teléfono muestra el menú de secciones con el cambio de panel.
   { tab: "home", marker: /Mis proyectos|My projects|Mi perfil|My profile/i },
   { tab: "profile", marker: /Mi perfil|My profile|Perfil|Profile/i },
   // Los nombres de las secciones cambiaron para que digan lo que son: «Ofertas»
@@ -13,7 +13,6 @@ const professionalTabs = [
   // Un solo nombre por cosa, el mismo que lee el cliente en la ficha pública.
   { tab: "services", marker: /Servicios|Services/i },
   { tab: "photos", marker: /Casos de .xito|Success stories/i },
-  { tab: "proposals", marker: /Oportunidades|Opportunities/i },
   { tab: "jobs", marker: /Empleos|Jobs/i },
   { tab: "offers", marker: /Promociones|Promotions/i },
   // Seguir se retiró en 553536d1 («guardar es el único gesto para lo quiero a

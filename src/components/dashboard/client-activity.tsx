@@ -1029,7 +1029,7 @@ export function ClientActivity({ section, onCount }: { section: ClientActivitySe
                                     { label: t("cancelProject"), onClick: () => openCancelProject(project.id), destructive: true },
                                   ]
                                 : [
-                                    { label: t("reopenProject"), onClick: () => void updateProjectStatus(project.id, "open") },
+                                    { label: t("reopenProject"), primary: true, onClick: () => void updateProjectStatus(project.id, "open") },
                                     { label: t("delete"), onClick: () => setDeleteTarget(project.id), destructive: true },
                                   ]}
                             />

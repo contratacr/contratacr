@@ -418,7 +418,10 @@ export function NotificationsList({ scope = "mode", titulo }: { scope?: "mode" |
           </button>
           {globalMenuOpen && (
             <div role="menu" className={cn(
-              "min-w-[220px] overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white py-1.5 shadow-xl",
+              // El mismo dibujo que el «···» de las tarjetas del panel: radio,
+              // relleno y sombra. Aqui era rounded-2xl con shadow-xl y la letra
+              // mas palida, asi que dos menus del mismo panel no se parecian.
+              "min-w-[220px] overflow-hidden rounded-xl border border-[#e5e7eb] bg-white p-1.5 shadow-[0_18px_45px_-22px_rgba(15,23,42,0.55)]",
               nativeApp && scope === "all"
                 ? "fixed right-3 top-[calc(var(--ccr-native-header-height,64px)+6px)] z-[240] shadow-xl"
                 : "absolute right-0 top-full z-30 mt-1",
@@ -431,7 +434,7 @@ export function NotificationsList({ scope = "mode", titulo }: { scope?: "mode" |
                     setGlobalMenuOpen(false);
                     void markAllRead();
                   }}
-                  className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm font-semibold text-[#374151] transition-colors hover:bg-[#f9fafb]"
+                  className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-bold text-[#162543] transition-colors hover:bg-[#f4f8fb]"
                 >
                   <CheckCheck className="h-4 w-4 text-[#009FD9]" />
                   {t("markAllRead")}
@@ -445,7 +448,7 @@ export function NotificationsList({ scope = "mode", titulo }: { scope?: "mode" |
                   setGlobalMenuOpen(false);
                   setConfirmDelete(true);
                 }}
-                className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm font-semibold text-red-600 transition-colors hover:bg-red-50"
+                className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-bold text-red-700 transition-colors hover:bg-red-50"
               >
                 <Trash2 className="h-4 w-4" />
                 {t("deleteAll")}
@@ -749,7 +752,7 @@ export function NotificationsList({ scope = "mode", titulo }: { scope?: "mode" |
                       ref={itemMenuPortalRef}
                       role="menu"
                       data-notification-item-menu
-                      className="fixed z-[240] min-w-[190px] overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white py-1.5 shadow-xl"
+                      className="fixed z-[240] min-w-[190px] overflow-hidden rounded-xl border border-[#e5e7eb] bg-white p-1.5 shadow-[0_18px_45px_-22px_rgba(15,23,42,0.55)]"
                       style={{ top: itemMenuPosition.top, right: itemMenuPosition.right }}
                     >
                       {!n.read && (
@@ -757,7 +760,7 @@ export function NotificationsList({ scope = "mode", titulo }: { scope?: "mode" |
                           type="button"
                           role="menuitem"
                           onClick={(event) => void markOneRead(event, n.id)}
-                          className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm font-semibold text-[#374151] transition-colors hover:bg-[#f9fafb]"
+                          className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-bold text-[#162543] transition-colors hover:bg-[#f4f8fb]"
                         >
                           <Check className="h-4 w-4 text-[#15803d]" />
                           {t("markRead")}
@@ -767,7 +770,7 @@ export function NotificationsList({ scope = "mode", titulo }: { scope?: "mode" |
                         type="button"
                         role="menuitem"
                         onClick={(event) => void dismiss(event, n.id)}
-                        className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm font-semibold text-red-600 transition-colors hover:bg-red-50"
+                        className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-bold text-red-700 transition-colors hover:bg-red-50"
                       >
                         <Trash2 className="h-4 w-4" />
                         {t("delete")}
