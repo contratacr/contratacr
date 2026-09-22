@@ -170,7 +170,6 @@ const OFFER_TABS: Tab[] = ([
   ...(PAYMENTS_ENABLED ? (["suscripcion"] as Tab[]) : []),
 ] as Tab[]).filter((tab) => EMPLEOS_VISIBLE || tab !== "jobs");
 const USE_TABS: Tab[] = ["sent_projects", "saved", "profile", "soporte", "guides"] as Tab[];
-const OPPORTUNITY_MODAL_SEEN_STORAGE_PREFIX = "contratacr:seen-opportunity-modal";
 // «Mis publicaciones» reúne TODO lo que uno saca a un tablero público: el
 // proyecto que pide un trabajo, el empleo que ofrece uno y la promoción. Son el
 // mismo acto —publicar— y antes vivían en dos paneles distintos, con un
@@ -317,37 +316,6 @@ function compactDisplayName(name: string) {
   const parts = name.trim().split(/\s+/).filter(Boolean);
   if (name.length <= 29 || parts.length < 4) return name;
   return [parts[0], ...parts.slice(-2)].join(" ");
-}
-
-type OpportunityProjectSummary = { id?: string | null };
-
-function opportunitySeenStorageKey(userId: string) {
-  return `${OPPORTUNITY_MODAL_SEEN_STORAGE_PREFIX}:${userId}`;
-}
-
-function opportunityProjectKey(project: { id?: string | null }) {
-  return project.id ? `project:${project.id}` : null;
-}
-
-function readSeenOpportunityKeys(userId: string): Set<string> {
-  try {
-    const raw = window.localStorage.getItem(opportunitySeenStorageKey(userId));
-    const parsed = raw ? JSON.parse(raw) : [];
-    return new Set(Array.isArray(parsed) ? parsed.filter((item): item is string => typeof item === "string") : []);
-  } catch {
-    return new Set();
-  }
-}
-
-function rememberSeenOpportunityKeys(userId: string, keys: string[]) {
-  if (keys.length === 0) return;
-  try {
-    const current = readSeenOpportunityKeys(userId);
-    for (const key of keys) current.add(key);
-    window.localStorage.setItem(opportunitySeenStorageKey(userId), JSON.stringify([...current].slice(-200)));
-  } catch {
-    // If storage is unavailable, the notification list still works; the modal may show again.
-  }
 }
 
 // Guías es una PANTALLA del panel, no un modal: llegar por navegación (o por el
@@ -733,8 +701,6 @@ export default function DashboardPage() {
     returnToRef.current = externalReturnTo;
     if (externalReturnTo.startsWith("/mensajes")) chatReturnRef.current = externalReturnTo;
   }, [externalReturnTo]);
-  const shouldCheckOpportunityWelcome = searchParams.get("welcomeOpportunities") === "1";
-  const opportunityWelcomeParamCount = Math.max(0, Number.parseInt(searchParams.get("welcomeOpportunityCount") ?? "0", 10) || 0);
 
   const [pro, setPro] = useState<ProData | null>(null);
   const [profile, setProfile] = useState<DashboardProfileData | null>(null);
@@ -789,8 +755,6 @@ export default function DashboardPage() {
   const [proLoadError, setProLoadError] = useState(false);
   const [mobilePanelOpen, setMobilePanelOpen] = useState(false);
   const [preferMobileMenuDefault, setPreferMobileMenuDefault] = useState(false);
-  const [opportunityWelcomeCount, setOpportunityWelcomeCount] = useState<number | null>(null);
-  const [opportunityWelcomeKeys, setOpportunityWelcomeKeys] = useState<string[]>([]);
   const contentRef = useRef<HTMLDivElement>(null);
   const headerPhotoInputRef = useRef<HTMLInputElement>(null);
   const headerPhotoMenuRef = useRef<HTMLDivElement>(null);
@@ -801,8 +765,6 @@ export default function DashboardPage() {
   const [shareKitTab, setShareKitTab] = useState<string | null>(null);
   const [headerPhotoPreviewOpen, setHeaderPhotoPreviewOpen] = useState(false);
   const [headerPhotoUploading, setHeaderPhotoUploading] = useState(false);
-  const opportunityWelcomeCheckedRef = useRef(false);
-  const opportunityWelcomeDismissedRef = useRef(false);
   const proFetchSequenceRef = useRef(0);
   // Lo último que se logró cargar: si ya hay panel en pantalla, un fallo de red
   // se reintenta en silencio en vez de sustituirlo por una pantalla de error.
@@ -1296,66 +1258,7 @@ export default function DashboardPage() {
     router.replace("/registro/profesional");
   }, [authLoading, loading, pro, user, router, noProTries, fetchPro, proLoadError]);
 
-  const clearOpportunityWelcomeParam = useCallback(() => {
-    const params = new URLSearchParams(window.location.search);
-    if (!params.has("welcomeOpportunities") && !params.has("welcomeOpportunityCount")) return;
 
-    params.delete("welcomeOpportunities");
-    params.delete("welcomeOpportunityCount");
-    const qs = params.toString();
-    window.history.replaceState(null, "", `${window.location.pathname}${qs ? `?${qs}` : ""}${window.location.hash}`);
-  }, []);
-
-  useEffect(() => {
-    if (
-      !shouldCheckOpportunityWelcome ||
-      authLoading ||
-      loading ||
-      !user ||
-      !pro ||
-      opportunityWelcomeCheckedRef.current
-    ) {
-      return;
-    }
-
-    opportunityWelcomeCheckedRef.current = true;
-    let mounted = true;
-
-    if (opportunityWelcomeParamCount > 0) {
-      queueMicrotask(() => {
-        if (!mounted) return;
-        setOpportunityWelcomeKeys([]);
-        setOpportunityWelcomeCount(opportunityWelcomeParamCount);
-        clearOpportunityWelcomeParam();
-      });
-      return () => {
-        mounted = false;
-      };
-    }
-
-    fetch("/api/projects?role=professional", { cache: "no-store" })
-      .then(async (res) => (res.ok ? res.json() : { projects: [] }))
-      .then((data) => {
-        if (!mounted) return;
-        const projects: OpportunityProjectSummary[] = Array.isArray(data?.projects) ? data.projects : [];
-        const keys = projects.map(opportunityProjectKey).filter((key): key is string => !!key);
-        if (keys.length > 0) {
-          setOpportunityWelcomeKeys(keys);
-          setOpportunityWelcomeCount(keys.length);
-        }
-      })
-      .catch((error) => {
-        console.error("[dashboard] opportunity welcome load failed:", error);
-      })
-      .finally(() => {
-        if (!mounted) return;
-        clearOpportunityWelcomeParam();
-      });
-
-    return () => {
-      mounted = false;
-    };
-  }, [authLoading, clearOpportunityWelcomeParam, loading, opportunityWelcomeParamCount, pro, shouldCheckOpportunityWelcome, user]);
 
   // Una sola forma de estrenar arriba en toda la app: `irAlInicio()`. Aquí
   // había una copia propia que solo repetía el `scrollTo` en dos cuadros, y eso
@@ -1714,23 +1617,6 @@ export default function DashboardPage() {
     }
   }
 
-  function dismissOpportunityWelcome() {
-    opportunityWelcomeDismissedRef.current = true;
-    if (user) rememberSeenOpportunityKeys(user.id, opportunityWelcomeKeys);
-    setOpportunityWelcomeCount(null);
-    setOpportunityWelcomeKeys([]);
-    clearOpportunityWelcomeParam();
-  }
-
-  function closeOpportunityWelcome() {
-    dismissOpportunityWelcome();
-  }
-
-  function viewOpportunityWelcome() {
-    dismissOpportunityWelcome();
-    // Los proyectos viven en el tablero público, no en una pestaña del panel.
-    router.push("/proyectos");
-  }
 
   // Una sola barra superior: dentro de una sección, la barra de la app muestra
   // "← Título" en vez del logo. El panel publica el título y atiende el atrás;
@@ -2250,43 +2136,6 @@ export default function DashboardPage() {
     )}>
       <Navbar mobileSearch={false} />
       {formularioPublicar}
-      {opportunityWelcomeCount !== null && (
-        <div className="app-modal-screen app-centered-modal-screen fixed inset-0 z-[90] flex items-center justify-center bg-[#0f172a]/45 p-4 backdrop-blur-sm">
-          <div
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="opportunity-welcome-title"
-            aria-describedby="opportunity-welcome-body"
-            className="app-centered-modal relative max-h-[calc(var(--app-visual-viewport-height)-2rem)] w-full max-w-md overflow-y-auto overscroll-contain rounded-2xl bg-white px-5 py-6 text-center shadow-[0_24px_80px_rgba(15,23,42,0.28)] sm:px-6"
-          >
-            <button
-              type="button"
-              onClick={closeOpportunityWelcome}
-              aria-label={t("opportunityWelcome.close")}
-              className="absolute right-4 top-4 inline-flex h-9 w-9 items-center justify-center rounded-full text-[#68778d] transition-colors hover:bg-[#f3f4f6] hover:text-[#374151]"
-            >
-              <X className="h-5 w-5" />
-            </button>
-
-            <BrandIconBadge icon={Handshake} size={56} className="mx-auto mb-4" />
-            <h2 id="opportunity-welcome-title" className="mx-auto max-w-[22rem] text-xl font-bold leading-tight text-[#162543] sm:text-[22px]">
-              {t("opportunityWelcome.title", { count: opportunityWelcomeCount })}
-            </h2>
-            <p id="opportunity-welcome-body" className="mx-auto mt-3 max-w-sm text-sm leading-relaxed text-[#6b7280]">
-              {t("opportunityWelcome.body")}
-            </p>
-
-            <div className="mt-6 flex flex-col-reverse items-stretch justify-center gap-2 sm:flex-row sm:items-center">
-              <Button type="button" variant="outline" onClick={closeOpportunityWelcome} className="w-full sm:w-auto sm:min-w-[96px]">
-                {t("opportunityWelcome.later")}
-              </Button>
-              <Button type="button" onClick={viewOpportunityWelcome} className="w-full sm:w-auto sm:min-w-[170px]">
-                {t("opportunityWelcome.view")}
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
       <main className={cn(
         "ccr-dashboard-main flex-1 min-h-[calc(100svh-88px)] bg-[#f4f7fa] lg:bg-[#fafafa]",
         // Con una sección abierta, el lienzo es el GRIS de la sección en todo

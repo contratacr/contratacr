@@ -203,6 +203,10 @@ export function Modal({
         conFlecha || fullscreenMobile
           ? "absolute left-4 top-1/2 -translate-y-1/2 sm:static sm:translate-y-0"
           : "absolute right-4 top-1/2 -translate-y-1/2 sm:static sm:translate-y-0",
+        // Centrada, la equis se ancla al filo igual que el «···» del otro lado:
+        // quieta en la fila quedaba con el relleno de la cabecera encima (24 px)
+        // mientras el «···» iba a 16, y el reparto se veía torcido.
+        cabeceraCentrada && "sm:absolute sm:left-auto sm:right-4 sm:top-1/2 sm:-translate-y-1/2",
       )}
     >
       {conFlecha ? (

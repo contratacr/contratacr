@@ -50,7 +50,6 @@ export function FilaInterruptor({
         // si perteneciera a otra cosa.
         "flex min-h-12 w-full items-center justify-between gap-3 rounded-xl border px-4 py-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9]/30 disabled:cursor-not-allowed disabled:opacity-60",
         checked ? "border-[#cce8f3] bg-[#f4fbfe]" : "border-[#e5e7eb] bg-white hover:bg-[#f8fafc]",
-        ayuda && "items-start",
         className,
       )}
     >
@@ -58,11 +57,13 @@ export function FilaInterruptor({
         <span className="block text-sm font-semibold text-[#162543]">{titulo}</span>
         {ayuda && <span className="mt-0.5 block text-[13px] leading-snug text-[#68778d]">{ayuda}</span>}
       </span>
-      {/* -2 px: el titulo mide 20 px de renglon y el interruptor 24, asi que
-          sin el corrimiento su centro cae dos pixeles por debajo del texto. */}
-      <span className={cn("flex", ayuda && "mt-[-2px]")}>
-        <ToggleSwitch checked={checked} disabled={disabled} />
-      </span>
+      {/* EL INTERRUPTOR VA CENTRADO EN LA FILA, tambien cuando hay una linea
+          de ayuda debajo. Estuvo pegado al renglon del titulo y con dos
+          renglones quedaba arriba, con un hueco debajo: la caja se veia
+          desbalanceada. Material 3 y los Ajustes de iOS centran el control de
+          la derecha en toda la celda, no en su primera linea, y es lo que se
+          reconoce como una fila de ajuste. */}
+      <ToggleSwitch checked={checked} disabled={disabled} />
     </button>
   );
 }

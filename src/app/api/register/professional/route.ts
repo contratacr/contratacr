@@ -7,13 +7,11 @@ import { runIdentityVerification } from "@/lib/verification/run-verification";
 import { reconcileProfileEmail } from "@/lib/auth/reconcile-profile-email";
 import { parseMoneyAmount } from "@/lib/money-limits";
 import { LONG_TEXT_MAX_LENGTH, NAME_MAX_LENGTH, PROFILE_BIO_MAX_LENGTH, limitTrimmedText } from "@/lib/text-limits";
-import { anyVideoConsultCategory, getCategoryLabel, OTHER_CATEGORY } from "@/lib/data/categories";
+import { anyVideoConsultCategory, getCategoryLabel } from "@/lib/data/categories";
 import { auditUserAction } from "@/lib/audit/user-action";
 import { writeSourceColumns } from "@/lib/security/write-guard";
 import { attributionColumnsFromBody, withoutAttributionColumns } from "@/lib/analytics/attribution-server";
-import { sendNotificationPushRows } from "@/lib/push/notify";
 
-const INITIAL_OPPORTUNITY_NOTIFICATION_LIMIT = 10;
 
 type SeedService = {
   id: string;
@@ -50,11 +48,6 @@ function hasStoredServices(services: unknown): boolean {
   return Array.isArray(services) && services.length > 0;
 }
 
-function notificationProjectId(data: unknown): string | null {
-  if (!data || typeof data !== "object") return null;
-  const projectId = (data as { project_id?: unknown }).project_id;
-  return typeof projectId === "string" ? projectId : null;
-}
 
 async function rollbackFreshSignup(supabase: ReturnType<typeof createAdminClient>, userId: string, freshSignup: boolean) {
   if (!freshSignup) return;
@@ -65,60 +58,13 @@ async function rollbackFreshSignup(supabase: ReturnType<typeof createAdminClient
   }
 }
 
-async function notifyMatchingOpenProjectsForProfessional(
-  supabase: ReturnType<typeof createAdminClient>,
-  userId: string,
-  professions: string[],
-) {
-  const matchable = [...new Set(professions.filter((id) => id && id !== OTHER_CATEGORY.id))];
-  if (matchable.length === 0) return 0;
+// UNA CUENTA NUEVA NO ESTRENA CON DIEZ AVISOS. Al registrarse se le sembraban
+// hasta 10 proyectos abiertos de sus categorias, con su push cada uno: era del
+// tiempo en que los proyectos vivian en «Oportunidades», una bandeja propia del
+// profesional que habia que ir a vaciar. Hoy los proyectos son un tablero
+// publico —como empleos y promociones—, y a un tablero se entra a mirar. Lo que
+// se publique DESPUES si le llega, por el aviso de siempre.
 
-  const { data: projects, error: projectsError } = await supabase
-    .from("projects")
-    .select("id, title, category_id")
-    .eq("status", "open")
-    .neq("client_id", userId)
-    .in("category_id", matchable)
-    .order("created_at", { ascending: false })
-    .limit(INITIAL_OPPORTUNITY_NOTIFICATION_LIMIT);
-
-  if (projectsError) throw projectsError;
-  if (!projects || projects.length === 0) return 0;
-  const opportunityCount = projects.length;
-
-  const { data: existing, error: existingError } = await supabase
-    .from("notifications")
-    .select("data")
-    .eq("user_id", userId)
-    .eq("type", "new_project");
-
-  if (existingError) throw existingError;
-
-  const alreadyNotified = new Set(
-    (existing ?? [])
-      .map((row) => notificationProjectId(row.data))
-      .filter((id): id is string => !!id)
-  );
-
-  const rows = projects
-    .filter((project) => !alreadyNotified.has(project.id))
-    .map((project) => ({
-      user_id: userId,
-      type: "new_project",
-      // «Oportunidad» era el nombre de la seccion que se retiro, y ademas dos
-      // avisos del MISMO tipo llevaban titulos distintos en el push.
-      title: "Nuevo proyecto",
-      message: `Un cliente publicó "${project.title || "un proyecto"}" en ${getCategoryLabel(project.category_id)}.`,
-      data: { link: "/es/proyectos", project_id: project.id },
-  }));
-
-  if (rows.length > 0) {
-    const { error } = await supabase.from("notifications").insert(rows);
-    if (error) throw error;
-    await sendNotificationPushRows(rows);
-  }
-  return opportunityCount;
-}
 
 export async function POST(req: Request) {
   // Public endpoint: bound abuse and enumeration per client IP.
@@ -360,14 +306,6 @@ export async function POST(req: Request) {
         await rollbackFreshSignup(supabase, userId, freshSignup);
         return NextResponse.json({ error: "No pudimos actualizar tu perfil. Intenta de nuevo." }, { status: 500 });
       }
-
-      let opportunityCount = 0;
-      try {
-        opportunityCount = await notifyMatchingOpenProjectsForProfessional(supabase, userId, professions);
-      } catch (e) {
-        console.error("[register/professional] open opportunity notify:", e);
-      }
-
       // Fire automatic identity verification (best-effort; never blocks).
       // Registration → in-app notification only (no email); re-saves notify only
       // when the status actually changes (no duplicate "identidad verificada").
@@ -389,7 +327,7 @@ export async function POST(req: Request) {
         },
       });
 
-      return NextResponse.json({ ok: true, slug: existingPro.slug, opportunityCount });
+      return NextResponse.json({ ok: true, slug: existingPro.slug });
     }
 
     // ── 5. Build slug ─────────────────────────────────────────────────────────
@@ -452,14 +390,6 @@ export async function POST(req: Request) {
         console.error("[register/professional] verification outreach:", e);
       }
     }
-
-    let opportunityCount = 0;
-    try {
-      opportunityCount = await notifyMatchingOpenProjectsForProfessional(supabase, userId, professions);
-    } catch (e) {
-      console.error("[register/professional] open opportunity notify:", e);
-    }
-
     // Fire automatic identity verification against the padrón (best-effort).
     // First-ever run for this brand-new pro: in-app notification only (no email),
     // and `isInitial` so the result still shows once even if status is unchanged.
@@ -488,7 +418,7 @@ export async function POST(req: Request) {
       console.error("[register] auto-verify:", e);
     }
 
-    return NextResponse.json({ ok: true, slug, opportunityCount });
+    return NextResponse.json({ ok: true, slug });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Error interno del servidor";
     return NextResponse.json({ error: message }, { status: 500 });

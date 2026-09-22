@@ -1521,13 +1521,6 @@
     "offerGateCta": "Complete my profile",
     "offerInviteTitle": "Do you promotion services?",
     "offerInviteCta": "Promotion my services",
-    "opportunityWelcome": {
-      "title": "We found {count, plural, one {# client project for your services} other {# client projects for your services}}",
-      "body": "These are client projects that match the services you just added.",
-      "view": "View projects",
-      "later": "Later",
-      "close": "Close"
-    },
     "postLoginActivity": {
       "title": "You have new activity",
       "body": "While you were away, you received: {summary}.",
