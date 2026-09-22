@@ -133,7 +133,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
         <style
           data-ccr-carriles=""
           dangerouslySetInnerHTML={{
-            __html: `.ccr-carril-chips .ccr-ver-mas{display:none!important}@media (min-width:1024px) and (hover:hover) and (pointer:fine){[data-ccr-degradado]{scrollbar-width:none!important}[data-ccr-degradado]::-webkit-scrollbar{display:none!important}.ccr-carril{scrollbar-width:thin!important;scrollbar-color:transparent transparent}.ccr-carril:hover{scrollbar-color:#c5d2de transparent}.ccr-carril::-webkit-scrollbar{display:block!important;height:6px}.ccr-carril::-webkit-scrollbar-track{background:transparent}.ccr-carril::-webkit-scrollbar-thumb{background:transparent;border-radius:999px}.ccr-carril:hover::-webkit-scrollbar-thumb{background:#c5d2de}.ccr-carril:hover::-webkit-scrollbar-thumb:hover{background:#9fb1c2}}`,
+            __html: `.ccr-carril-chips .ccr-ver-mas{display:none!important}@media (min-width:1024px) and (hover:hover) and (pointer:fine){.ccr-carril{scrollbar-width:thin!important;scrollbar-color:transparent transparent}.ccr-carril:hover{scrollbar-color:#c5d2de transparent}.ccr-carril::-webkit-scrollbar{display:block!important;height:6px}.ccr-carril::-webkit-scrollbar-track{background:transparent}.ccr-carril::-webkit-scrollbar-thumb{background:transparent;border-radius:999px}.ccr-carril:hover::-webkit-scrollbar-thumb{background:#c5d2de}.ccr-carril:hover::-webkit-scrollbar-thumb:hover{background:#9fb1c2}[data-ccr-degradado]{scrollbar-width:none!important}[data-ccr-degradado]::-webkit-scrollbar{display:none!important}}`,
           }}
         />
         {/* La fila de acciones de TODA tarjeta del panel —Mis proyectos, Mis

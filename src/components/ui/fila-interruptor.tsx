@@ -44,7 +44,11 @@ export function FilaInterruptor({
         // o quedaba pegado al texto sin nada que los uniera—; la caja resuelve
         // las dos, porque marca hasta donde llega la opcion. Encendida se tine
         // de celeste, asi que el estado se lee de lejos sin mirar la perilla.
-        "flex min-h-12 w-full max-w-xl items-center justify-between gap-3 rounded-xl border px-4 py-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9]/30 disabled:cursor-not-allowed disabled:opacity-60",
+        // Mide lo MISMO que los campos de su formulario —ni un tope propio—:
+        // con 36rem la caja sobresalia por la derecha de los telefonos de
+        // arriba y de abajo, y una fila mas larga que sus vecinas se lee como
+        // si perteneciera a otra cosa.
+        "flex min-h-12 w-full items-center justify-between gap-3 rounded-xl border px-4 py-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9]/30 disabled:cursor-not-allowed disabled:opacity-60",
         checked ? "border-[#cce8f3] bg-[#f4fbfe]" : "border-[#e5e7eb] bg-white hover:bg-[#f8fafc]",
         ayuda && "items-start",
         className,

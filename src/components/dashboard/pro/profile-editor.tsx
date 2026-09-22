@@ -147,6 +147,10 @@ function ProfileCheckRow({
 }) {
   return (
     <FilaInterruptor
+      // La misma medida que los campos de esta pantalla (32rem): la caja del
+      // interruptor no puede ser mas larga que el telefono de arriba y el de
+      // abajo, o se lee como si perteneciera a otra cosa.
+      className="sm:max-w-[32rem]"
       titulo={<span aria-label={ariaLabel}>{title}</span>}
       ayuda={description}
       checked={checked}
@@ -1116,7 +1120,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
           </label>
           {canOfferVideoConsult ? (
             <FilaInterruptor
-              className="mb-4"
+              className="mb-4 sm:max-w-[32rem]"
               titulo={t("videoConsultOption")}
               ayuda={t("videoCountryHelp")}
               checked={videoConsult && videoCoverageCountry}

@@ -13,7 +13,7 @@ import {
   User, Award, CalendarCheck, CalendarClock, CalendarDays, Wrench,
   ShieldCheck, Bell, Handshake, ClipboardList, Bookmark, Settings, Headset, CreditCard,
   ArrowLeft, ArrowRight, ChevronDown, ChevronRight, Sparkles, Plus, AlertCircle, X, MessageSquareMore, Home, LogOut, Users, CheckCircle2, FileText, Search, Camera, Eye, Trash2, Loader2,
-  BriefcaseBusiness, Star, ReceiptText,
+  BriefcaseBusiness, Star, ReceiptText, ExternalLink, Share2, BookOpen,
   } from "lucide-react";
 import { QuotesSection } from "@/components/quotes/quotes-section";
 import { SectionBoundary } from "@/components/dashboard/section-boundary";
@@ -645,7 +645,14 @@ function GuidePreview({ id, t }: { id: string; t: ReturnType<typeof useTranslati
 
 // Las acciones de texto del encabezado del panel (Ver perfil, Compartir,
 // Guías): una sola clase para que no vuelvan a separarse.
-const ENLACE_DE_CABECERA = "inline-flex shrink-0 items-center whitespace-nowrap text-[13px] font-semibold leading-none text-[#526277] transition hover:text-[#009FD9] focus-visible:outline-none focus-visible:underline";
+// Cada una con su icono de 14 px delante: tres palabras grises seguidas se
+// leian como un pie de pagina, no como acciones. El icono le da a cada una
+// algo que reconocer antes de leerla —la flecha de salir, el nodo de
+// compartir, el libro— y es como se dibujan las acciones secundarias de una
+// cabecera en GitHub o Linear. Sin caja ni borde: siguen sin competir con el
+// nombre de la cuenta.
+const ENLACE_DE_CABECERA = "group/enlace inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap text-[13px] font-semibold leading-none text-[#526277] transition hover:text-[#009FD9] focus-visible:outline-none focus-visible:underline";
+const ICONO_DE_CABECERA = "h-[14px] w-[14px] shrink-0 text-[#8a97a8] transition-colors group-hover/enlace:text-[#009FD9]";
 
 export default function DashboardPage() {
   const { user, loading: authLoading } = useAuth();
@@ -2418,11 +2425,13 @@ export default function DashboardPage() {
                         data-testid="panel-ver-perfil"
                         className={ENLACE_DE_CABECERA}
                       >
+                        <ExternalLink className={ICONO_DE_CABECERA} />
                         {locale === "en" ? "View profile" : "Ver perfil"}
                       </Link>
                     )}
                     {publicProfileHref && (
                       <button type="button" data-testid="panel-compartir-perfil" onClick={() => setShareKitTab(activeTab)} className={ENLACE_DE_CABECERA}>
+                        <Share2 className={ICONO_DE_CABECERA} />
                         {locale === "en" ? "Share" : "Compartir"}
                       </button>
                     )}
@@ -2432,6 +2441,7 @@ export default function DashboardPage() {
                       onClick={() => setGuiasAbiertas(true)}
                       className={ENLACE_DE_CABECERA}
                     >
+                      <BookOpen className={ICONO_DE_CABECERA} />
                       {panelTabLabel("guides")}
                     </button>
                   </div>
