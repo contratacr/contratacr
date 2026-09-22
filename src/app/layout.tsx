@@ -224,6 +224,23 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
             __html: `@media (max-width:1023px){html:not([data-keyboard-open]).contratacr-chat-thread-open :is(.ccr-support-thread,.direct-chat-shell--thread){top:0!important;left:0!important}html:not([data-keyboard-open]).contratacr-chat-thread-open body:not(.ccr-native-app) :is(.ccr-support-thread,.direct-chat-shell--thread){height:100dvh!important;max-height:100dvh!important}}`,
           }}
         />
+        {/* LA BARRA DE DESPLAZAMIENTO DE UN CHAT NO SE QUEDA A LA VISTA.
+            El app pinta una barra propia y SIEMPRE visible —7 px, gris #94a3b8
+            y 72 px de alto minimo—, asi que en la conversacion aparecia una
+            barrita gris corta flotando junto a los globos: parecia una sombra
+            suelta, no una barra. WhatsApp y Messenger la esconden hasta que uno
+            pasa el cursor por encima, que es lo que se hace aqui: transparente
+            en reposo y gris claro al acercarse. El espacio sigue reservado, asi
+            que nada se mueve cuando aparece.
+            Va en el documento y no en clases de Tailwind porque una utilidad
+            recien estrenada puede no llegar al CSS servido (ver la regla de la
+            franja de acciones, mismo motivo). */}
+        <style
+          data-ccr-barra-chat=""
+          dangerouslySetInnerHTML={{
+            __html: `:is(.ccr-support-thread-messages,.ccr-direct-chat-thread-scroll,.ccr-direct-chat-list){scrollbar-color:transparent transparent}:is(.ccr-support-thread-messages,.ccr-direct-chat-thread-scroll,.ccr-direct-chat-list):hover{scrollbar-color:#cbd5e1 transparent}:is(.ccr-support-thread-messages,.ccr-direct-chat-thread-scroll,.ccr-direct-chat-list)::-webkit-scrollbar-thumb{background:transparent;transition:background .18s ease-out}:is(.ccr-support-thread-messages,.ccr-direct-chat-thread-scroll,.ccr-direct-chat-list):hover::-webkit-scrollbar-thumb{background:#cbd5e1}`,
+          }}
+        />
         {/* /BUSCAR EN EL TELÉFONO LLENA LA PANTALLA HASTA ABAJO.
             El área del mapa medía «pantalla − cabecera», pero arranca en y=0,
             DEBAJO de la cabecera fija (el espaciador se quitó en el teléfono

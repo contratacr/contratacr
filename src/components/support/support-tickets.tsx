@@ -639,8 +639,8 @@ export function SupportTickets({
                   placeholder={ticket.status === "resolved" ? t("reopenPlaceholder") : t("messagePlaceholder")}
                   className="max-h-36 min-h-10 min-w-0 flex-1 resize-none overflow-hidden bg-transparent px-3.5 py-2 text-[15px] leading-6 outline-none"
                 />
-                <button onClick={sendReply} disabled={sending || !reply.trim()} className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[#009FD9] text-white transition hover:bg-[#008fca] disabled:bg-[#e3eaf0] disabled:text-[#a9b7c4]" aria-label={sending ? t("sending") : t("send")}>
-                  {sending ? <Clock3 className="h-5 w-5 animate-spin" /> : <SendHorizontal className="h-[18px] w-[18px]" />}
+                <button onClick={sendReply} disabled={sending || !reply.trim()} className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#009FD9] text-white transition hover:bg-[#008fca] disabled:bg-[#e3eaf0] disabled:text-[#a9b7c4]" aria-label={sending ? t("sending") : t("send")}>
+                  {sending ? <Clock3 className="h-5 w-5 animate-spin" /> : <SendHorizontal className="h-4 w-4" />}
                 </button>
               </div>
             </div>
