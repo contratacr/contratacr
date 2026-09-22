@@ -10,6 +10,7 @@ import { useAvisosSinLeer } from "@/hooks/use-avisos-sin-leer";
 import { useLocale, useTranslations } from "next-intl";
 import { Headset, ArrowLeft, SendHorizontal, Shield, Plus, Clock3, CheckCircle2 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
+import { useSombrasDeBorde } from "@/components/ui/modal";
 import { createClient } from "@/lib/supabase/client";
 import { SupportModal } from "@/components/support/support-modal";
 import { SupportForm } from "@/components/support/support-form";
@@ -191,6 +192,10 @@ export function SupportTickets({
   const [showModal, setShowModal] = useState(false);
   const [showNewTicketPage, setShowNewTicketPage] = useState(false);
   const messagesRef = useRef<HTMLDivElement>(null);
+  // La separacion entre la cabecera, la charla y el campo de escribir sale de
+  // aqui: sombra solo cuando hay conversacion por encima o por debajo. `openId`
+  // como clave porque el hilo se monta despues de esta pantalla.
+  const sombrasDelHilo = useSombrasDeBorde(messagesRef, openId);
   const threadRef = useRef<HTMLDivElement | null>(null);
   const altoHilo = useAltoDisponible(threadRef, !!openId);
 
@@ -485,10 +490,15 @@ export function SupportTickets({
           </div>
         ) : (
           <div className="ccr-support-thread-card flex min-h-0 flex-1 flex-col overflow-hidden bg-white">
-            {/* La cabecera respira como la de una ficha: 68 px de alto, linea
-                fina y nada de sombra propia —la ponia siempre, hubiera o no
-                algo mas arriba, y competia con el borde—. */}
-            <header className="grid min-h-[68px] shrink-0 grid-cols-[40px_minmax(0,1fr)] items-center gap-2 border-b border-[#e7edf3] bg-white px-3 py-2.5 sm:grid-cols-[44px_minmax(0,1fr)] sm:gap-3 sm:px-5">
+            {/* SIN LINEAS DURAS. La cabecera, el lienzo y el campo de escribir
+                estaban separados por dos bordes de 1 px que partian la tarjeta
+                en tres cajas y dejaban el gris del medio como un recuadro
+                metido adentro. Es lo que Intercom llama su Messenger «sin
+                bordes»: una sola superficie continua, y la separacion aparece
+                SOLA —en sombra— solo cuando hay conversacion por encima o por
+                debajo. Con un mensaje no hay ninguna linea; con veinte, las
+                dos. */}
+            <header className={`grid min-h-[68px] shrink-0 grid-cols-[40px_minmax(0,1fr)] items-center gap-2 bg-white px-3 py-2.5 transition-shadow sm:grid-cols-[44px_minmax(0,1fr)] sm:gap-3 sm:px-5 ${sombrasDelHilo.arriba ? "shadow-[0_8px_12px_-6px_rgba(15,23,42,0.14)]" : ""}`}>
               <button onClick={closeThread} className="grid h-10 w-10 shrink-0 place-items-center rounded-full text-[#526277] transition active:bg-[#eef6fb]" aria-label={t("backToTickets")}>
                 <ArrowLeft className="h-5 w-5" />
               </button>
@@ -509,7 +519,7 @@ export function SupportTickets({
             {/* Una conversacion se lee de arriba hacia abajo: el primero
                 arriba. El vacio de abajo es el lienzo de la charla, no un
                 error, y ahi es donde van a caer las respuestas. */}
-            <div ref={messagesRef} className="ccr-support-thread-messages flex min-h-0 flex-1 flex-col gap-1.5 overflow-y-auto overscroll-contain bg-[#f6f9fb] px-4 py-5 sm:px-6">
+            <div ref={messagesRef} className="ccr-support-thread-messages flex min-h-0 flex-1 flex-col gap-1.5 overflow-y-auto overscroll-contain bg-white px-4 py-5 sm:px-6">
               {/* Lo único que espera son los mensajes, y esperan con forma de
                   mensaje: dos globos grises, uno de cada lado. */}
               {threadLoading && messages.length === 0 && (
@@ -578,7 +588,7 @@ export function SupportTickets({
                 el boton adentro, como Intercom o Messenger. Sueltos, la
                 cascara blanca de abajo se leia como una franja vacia con dos
                 cosas encima. */}
-            <div className="ccr-support-thread-composer shrink-0 border-t border-[#e7edf3] bg-white px-3 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-3 sm:px-6 sm:pb-5">
+            <div className={`ccr-support-thread-composer shrink-0 bg-white px-3 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-3 transition-shadow sm:px-6 sm:pb-5 ${sombrasDelHilo.abajo ? "shadow-[0_-8px_12px_-6px_rgba(15,23,42,0.14)]" : ""}`}>
               <div className="flex items-end gap-2 rounded-[24px] border border-[#d8e5ee] bg-white p-1 transition focus-within:border-[#009FD9] focus-within:ring-2 focus-within:ring-[#009FD9]/10">
                 <textarea
                   value={reply}
