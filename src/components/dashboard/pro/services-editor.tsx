@@ -29,7 +29,6 @@ import { SectionHeadline } from "@/components/dashboard/section-headline";
 import { AutoSaveHint } from "@/components/dashboard/auto-save-hint";
 import { PIE_VENTANA_BASE } from "@/components/ui/acciones-al-pie";
 import { ToggleSwitch } from "@/components/ui/toggle-switch";
-import { useSombrasDeBorde } from "@/components/ui/modal";
 import { FilaInterruptor } from "@/components/ui/fila-interruptor";
 
 export type ProService = {
@@ -203,7 +202,6 @@ export function ServicesEditor({
   const [pickerMode, setPickerMode] = useState<"add" | "change" | null>(null);
   const [pickerQuery, setPickerQuery] = useState("");
   const catalogoRef = useRef<HTMLDivElement>(null);
-  const sombrasDelCatalogo = useSombrasDeBorde(catalogoRef, pickerMode);
   const [activePickerGroupId, setActivePickerGroupId] = useState<string | null>(null);
   // Admin-approved custom categories — selectable as services too.
   const customCategories = useCustomCategories();
@@ -1019,7 +1017,7 @@ export function ServicesEditor({
             {/* El buscador esta pegado arriba y la lista pasa por debajo: sin
                 sombra, las filas se cortaban contra el como si no hubiera nada
                 mas. La mide el mismo enganche que usa el resto del app. */}
-            <div className={cn("sticky top-0 z-10 shrink-0 bg-[#f4f7fa] px-4 pb-3 pt-4 transition-shadow sm:px-5", sombrasDelCatalogo.arriba && "shadow-[0_8px_12px_-6px_rgba(15,23,42,0.18)]")}>
+            <div className={cn("sticky top-0 z-10 shrink-0 bg-[#f4f7fa] px-4 pb-3 pt-4 transition-shadow sm:px-5")}>
               <div className="relative">
                 <Search className="pointer-events-none absolute left-3.5 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-[#68778d]" />
                 <input

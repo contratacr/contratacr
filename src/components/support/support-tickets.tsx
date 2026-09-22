@@ -10,7 +10,6 @@ import { useAvisosSinLeer } from "@/hooks/use-avisos-sin-leer";
 import { useLocale, useTranslations } from "next-intl";
 import { Headset, ArrowLeft, SendHorizontal, Shield, Plus, Clock3, CheckCircle2 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
-import { useSombrasDeBorde } from "@/components/ui/modal";
 import { createClient } from "@/lib/supabase/client";
 import { SupportModal } from "@/components/support/support-modal";
 import { SupportForm } from "@/components/support/support-form";
@@ -195,7 +194,6 @@ export function SupportTickets({
   // La separacion entre la cabecera, la charla y el campo de escribir sale de
   // aqui: sombra solo cuando hay conversacion por encima o por debajo. `openId`
   // como clave porque el hilo se monta despues de esta pantalla.
-  const sombrasDelHilo = useSombrasDeBorde(messagesRef, openId);
   const threadRef = useRef<HTMLDivElement | null>(null);
   const altoHilo = useAltoDisponible(threadRef, !!openId);
 
@@ -509,7 +507,7 @@ export function SupportTickets({
                 SOLA —en sombra— solo cuando hay conversacion por encima o por
                 debajo. Con un mensaje no hay ninguna linea; con veinte, las
                 dos. */}
-            <header className={`grid min-h-[68px] shrink-0 grid-cols-[40px_minmax(0,1fr)] items-center gap-2 bg-white px-3 py-2.5 transition-shadow sm:grid-cols-[44px_minmax(0,1fr)] sm:gap-3 sm:px-5 ${sombrasDelHilo.arriba ? "shadow-[0_8px_12px_-6px_rgba(15,23,42,0.14)]" : ""}`}>
+            <header className={`grid min-h-[68px] shrink-0 grid-cols-[40px_minmax(0,1fr)] items-center gap-2 bg-white px-3 py-2.5 transition-shadow sm:grid-cols-[44px_minmax(0,1fr)] sm:gap-3 sm:px-5`}>
               <button onClick={closeThread} className="grid h-10 w-10 shrink-0 place-items-center rounded-full text-[#526277] transition active:bg-[#eef6fb]" aria-label={t("backToTickets")}>
                 <ArrowLeft className="h-5 w-5" />
               </button>
@@ -599,7 +597,7 @@ export function SupportTickets({
                 el boton adentro, como Intercom o Messenger. Sueltos, la
                 cascara blanca de abajo se leia como una franja vacia con dos
                 cosas encima. */}
-            <div className={`ccr-support-thread-composer shrink-0 bg-white px-3 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-3 transition-shadow sm:px-6 sm:pb-5 ${sombrasDelHilo.abajo ? "shadow-[0_-8px_12px_-6px_rgba(15,23,42,0.14)]" : ""}`}>
+            <div className={`ccr-support-thread-composer shrink-0 bg-white px-3 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-3 transition-shadow sm:px-6 sm:pb-5`}>
               {/* Pildora RELLENA, sin linea alrededor, como el «Aa» de
                   Messenger: sobre un lienzo blanco, un campo con borde era una
                   caja mas. El foco lo dice un anillo suave, no un borde.

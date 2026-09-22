@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useSombrasDeBorde } from "@/components/ui/modal";
 import { useLocale, useTranslations } from "next-intl";
 import { X, ChevronLeft, ChevronRight } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
@@ -98,7 +97,6 @@ function addDateSlot(map: Record<string, string[]>, date: string, time: string) 
 
 export function RescheduleModal({ professionalId, bookingId, currentWhen, slotLocationId, slotLocationLabel, onClose, onDone }: RescheduleModalProps) {
   const hoja = useRef<HTMLDivElement>(null);
-  const sombrasHoja = useSombrasDeBorde(hoja);
   const t = useTranslations("reschedule");
   const locale = useLocale();
   const today = useMemo(() => { const d = new Date(); d.setHours(0, 0, 0, 0); return d; }, []);
@@ -228,7 +226,7 @@ export function RescheduleModal({ professionalId, bookingId, currentWhen, slotLo
       >
         {/* La cabecera pegada tambien enciende su sombra: aqui la hoja entera
             desplaza y no habia nada que lo midiera. */}
-        <div className={cn("sticky top-0 z-10 flex items-center justify-between border-b border-[#e5e7eb] bg-white px-4 py-3 transition-shadow", sombrasHoja.arriba && "shadow-[0_8px_12px_-6px_rgba(15,23,42,0.18)]")}>
+        <div className={cn("sticky top-0 z-10 flex items-center justify-between border-b border-[#e5e7eb] bg-white px-4 py-3 transition-shadow")}>
           <div className="min-w-0">
             <h2 className="text-base font-bold text-[#162543]">{t("title")}</h2>
             {currentWhen && <p className="text-xs text-[#68778d] truncate">{t("current", { when: currentWhen })}</p>}

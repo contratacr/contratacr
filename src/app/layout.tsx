@@ -300,7 +300,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
         <style
           data-ccr-franja=""
           dangerouslySetInnerHTML={{
-            __html: `@media (max-width:639px){.ccr-barra-accion{box-sizing:border-box;background:#fff;border-top:1px solid #e5e7eb;padding:16px max(20px,env(safe-area-inset-right)) calc(env(safe-area-inset-bottom) + 28px) max(20px,env(safe-area-inset-left))}.ccr-barra-accion.ccr-sin-linea{border-top-color:transparent}:is(.ccr-barra-fija,.ccr-barra-ventana){position:fixed;left:0;right:0;bottom:var(--ccr-reserva-barra,0px);z-index:20;transition:box-shadow .18s ease-out}body:not([data-ccr-al-final]) .ccr-barra-fija{box-shadow:0 -8px 12px -6px rgba(15,23,42,.18)}}
+            __html: `@media (max-width:639px){.ccr-barra-accion{box-sizing:border-box;background:#fff;border-top:1px solid #e5e7eb;padding:16px max(20px,env(safe-area-inset-right)) calc(env(safe-area-inset-bottom) + 28px) max(20px,env(safe-area-inset-left))}.ccr-barra-accion.ccr-sin-linea{border-top-color:transparent}:is(.ccr-barra-fija,.ccr-barra-ventana){position:fixed;left:0;right:0;bottom:var(--ccr-reserva-barra,0px);z-index:20;transition:box-shadow .18s ease-out}}
 /* ccr-barra-ventana es la MISMA franja, pero dentro de una ventana: se coloca
    igual y NO lleva la sombra de estas reglas, porque estas miran el
    desplazamiento de la PÁGINA. Dentro de una ventana la página de atrás no
@@ -308,15 +308,13 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
    y eso lo decide data-ccr-hay-mas, que el propio Modal pone al medir su
    cuerpo. Sin esta separación, abrir «Contactar soporte» sobre una página larga
    pintaba la sombra aunque el formulario cupiera entero. */
-/* La sombra del pie estaba encerrada en el @media del teléfono: de 640 px en
-   adelante las franjas de los formularios siguen pegadas (sticky bottom-0),
-   siguen tapando el final y se habían quedado sin ella. La marca
-   ccr-pie-pegado la lleva solo quien se pega también en pantalla grande; una
-   franja que pasado el teléfono se va al final del contenido no la lleva. */
 .ccr-pie-pegado{transition:box-shadow .18s ease-out}
-@media (min-width:640px){body:not([data-ccr-al-final]) .ccr-pie-pegado{box-shadow:0 -8px 12px -6px rgba(15,23,42,.18)}}
-.ccr-pie-ventana,.ccr-pie-formulario,.ccr-cabecera-pegada{transition:box-shadow .18s ease-out}
-body[data-ccr-desplazado] .ccr-cabecera-pegada{box-shadow:0 8px 12px -6px rgba(15,23,42,.18)}
+/* NI EL NAVBAR NI LAS FRANJAS DE ABAJO LLEVAN SOMBRA, NUNCA, tampoco al
+   desplazar. Se separan con su linea fina y nada mas. Estuvieron encendiendola
+   «cuando habia algo pasando por debajo» y el resultado era una mancha gris
+   sobre el contenido: en el telefono, con la linea ya puesta, eran dos
+   separaciones sobre la misma junta. La app nativa ya lo habia resuelto asi
+   (shadow-none en su encabezado) y ahora es la regla del app entero. */
 /* La pantalla de error se centra en la VENTANA, no debajo de la barra. Pide
    100vh de alto y, si además queda el hueco que reserva la barra, el bloque
    entero baja justo esa altura y deja un claro arriba. En una pantalla de error
@@ -331,7 +329,7 @@ body:has(.ccr-error-screen) .ccr-navbar-spacer{display:none}
  .ccr-filtro-anclado{position:absolute;left:var(--ccr-anc-x,0px);top:var(--ccr-anc-y,0px);width:22rem;max-width:22rem;border-radius:14px}
  .ccr-filtro-anclado-velo{background:transparent}
 }
-[data-ccr-hay-mas] .ccr-pie-ventana,[data-ccr-hay-mas] .ccr-pie-formulario{box-shadow:0 -8px 12px -6px rgba(15,23,42,.18)}`,
+`,
           }}
         />
         <script

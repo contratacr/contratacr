@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 import { ArrowLeft, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { PIE_VENTANA_BASE } from "@/components/ui/acciones-al-pie";
@@ -80,66 +80,6 @@ interface ModalProps {
  * títulos grandes de iOS y Material. La línea de siempre se queda: separa
  * aunque no haya nada que levantar.
  */
-/**
- * QUIEN DESPLAZA NO SIEMPRE ES EL NODO QUE SE LE PASA. Varias ventanas dejan su
- * cuerpo en `overflow-hidden` y ponen el desplazamiento en un hijo —el selector
- * de «Agregar servicio» es el caso claro—, y entonces el nodo medido siempre
- * decia «no hay nada mas»: ni la cabecera ni el pie encendian nunca su sombra,
- * aunque las clases estuvieran puestas. Antes de medir, se busca quien desplaza
- * de verdad: el propio nodo si puede, y si no el primer descendiente que si.
- */
-function elQueDesplaza(nodo: HTMLElement): HTMLElement {
-  if (nodo.scrollHeight - nodo.clientHeight > 1) return nodo;
-  const candidatos = nodo.querySelectorAll<HTMLElement>("*");
-  for (const hijo of Array.from(candidatos)) {
-    if (hijo.scrollHeight - hijo.clientHeight <= 1) continue;
-    const desborde = getComputedStyle(hijo).overflowY;
-    if (desborde === "auto" || desborde === "scroll") return hijo;
-  }
-  return nodo;
-}
-
-/**
- * `clave` existe para lo que se monta DESPUES del componente que mide: una
- * ventana que se abre, un paso que aparece. Sin ella el efecto corria una sola
- * vez, con `ref.current` todavia en nulo, y no volvia a correr nunca: las
- * sombras del selector de «Agregar servicio» se quedaban apagadas para siempre.
- */
-export function useSombrasDeBorde(ref: React.RefObject<HTMLDivElement | null>, clave?: unknown) {
-  const [sombras, setSombras] = useState({ arriba: false, abajo: false });
-  useEffect(() => {
-    const raiz = ref.current;
-    if (!raiz) return;
-    let vigilado: HTMLElement | null = null;
-    const medir = () => {
-      const nodo = elQueDesplaza(raiz);
-      if (nodo !== vigilado) {
-        vigilado?.removeEventListener("scroll", medir);
-        vigilado = nodo;
-        nodo.addEventListener("scroll", medir, { passive: true });
-      }
-      setSombras({
-        arriba: nodo.scrollTop > 1,
-        abajo: nodo.scrollTop + nodo.clientHeight < nodo.scrollHeight - 1,
-      });
-    };
-    medir();
-    // El cuerpo crece y encoge solo: un desplegable que se abre, un error que
-    // aparece, un adjunto que se agrega. Y el contenido puede llegar despues,
-    // asi que tambien se mira si cambia la lista de hijos.
-    const observador = new ResizeObserver(medir);
-    observador.observe(raiz);
-    for (const hijo of Array.from(raiz.children)) observador.observe(hijo);
-    const mutaciones = new MutationObserver(medir);
-    mutaciones.observe(raiz, { childList: true, subtree: true });
-    return () => {
-      vigilado?.removeEventListener("scroll", medir);
-      observador.disconnect();
-      mutaciones.disconnect();
-    };
-  }, [ref, clave]);
-  return sombras;
-}
 
 /**
  * Hacia abajo (la lleva la cabecera) y hacia arriba (la lleva el pie).
@@ -149,8 +89,6 @@ export function useSombrasDeBorde(ref: React.RefObject<HTMLDivElement | null>, c
  * menos de un píxel: estaba aplicada —se leía en el estilo calculado— y no se
  * veía. Con 12 y -6 se extiende unos 9 px, que es lo que se nota sin pesar.
  */
-const SOMBRA_ABAJO = "shadow-[0_8px_12px_-6px_rgba(15,23,42,0.18)]";
-const SOMBRA_ARRIBA = "shadow-[0_-8px_12px_-6px_rgba(15,23,42,0.18)]";
 
 export function Modal({
   open = true,
@@ -184,7 +122,6 @@ export function Modal({
   useNativeFullscreenLayer(Boolean(open) && (mobilePresentation === "sheet" || mobilePresentation === "fullscreen"));
 
   const cuerpo = useRef<HTMLDivElement>(null);
-  const sombras = useSombrasDeBorde(cuerpo);
 
   if (!open) return null;
 
@@ -242,7 +179,6 @@ export function Modal({
         // pie DENTRO del cuerpo (soporte, publicar empleo): la regla
         // `[data-ccr-hay-mas] .ccr-pie-ventana` de layout.tsx se lo da a todos
         // sin que cada uno tenga que enterarse.
-        data-ccr-hay-mas={sombras.abajo ? "" : undefined}
         className={cn(
           "relative z-10 flex w-full flex-col overflow-hidden bg-white shadow-2xl sm:max-h-[90vh] sm:rounded-2xl",
           fullscreenMobile
@@ -261,7 +197,6 @@ export function Modal({
             // pinta después. Sin esto, un cuerpo con fondo propio —el gris de
             // soporte— la borraba.
             "relative z-10 flex shrink-0 gap-3 border-b border-[#e5e7eb] bg-white px-5 py-4 transition-shadow sm:px-6",
-            sombras.arriba && SOMBRA_ABAJO,
             // En el teléfono el título va centrado y la X flota al lado: si la X
             // ocupara lugar en la fila, el título quedaría corrido su ancho
             // (22 px medidos) y "centrado" sería mentira.
@@ -329,14 +264,14 @@ export function Modal({
         </div>
 
         {footerNotice && (
-          <div className={cn("relative z-10 shrink-0 border-t border-[#eef2f6] bg-white px-5 pt-3 transition-shadow sm:px-6", sombras.abajo && SOMBRA_ARRIBA)}>
+          <div className={cn("relative z-10 shrink-0 border-t border-[#eef2f6] bg-white px-5 pt-3 sm:px-6")}>
             {footerNotice}
           </div>
         )}
 
         {/* Footer (pinned) */}
         {footer && (
-          <div className={cn(PIE_VENTANA_BASE, "relative z-10 flex justify-end gap-3 transition-shadow", sombras.abajo && SOMBRA_ARRIBA, footerNotice && "border-t-0", footerClassName)}>
+          <div className={cn(PIE_VENTANA_BASE, "relative z-10 flex justify-end gap-3", footerNotice && "border-t-0", footerClassName)}>
             {footer}
           </div>
         )}
