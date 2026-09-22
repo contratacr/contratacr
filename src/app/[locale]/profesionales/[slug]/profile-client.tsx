@@ -36,9 +36,9 @@ import { ProfessionalSchedule, type ScheduleSlot } from "@/components/profession
 import { DirectChatLauncher } from "@/components/professionals/direct-chat-launcher";
 import { ClientRegistrationModal } from "@/components/auth/client-registration-modal";
 import { SelfActionModal, SELF_MSG } from "@/components/professionals/self-action-modal";
-import { SaveButton, useGuardarProfesional, type SavedPro } from "@/components/professionals/save-button";
+import { useGuardarProfesional, type SavedPro } from "@/components/professionals/save-button";
 import { MenuFicha } from "@/components/ui/menu-ficha";
-import { BotonCompartir, CaraCompartir, useCompartir } from "@/components/ui/boton-compartir";
+import { CaraCompartir, useCompartir } from "@/components/ui/boton-compartir";
 import type { ProfessionalDetail } from "@/lib/queries/professionals";
 import { getProfessionalDisplayName } from "@/lib/display-name";
 import { trackMetaEvent } from "@/lib/analytics/meta-pixel";
@@ -686,6 +686,34 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
     ].filter((x) => x.href);
   })();
 
+  // Las acciones de la ficha, en UN SOLO SITIO: las usa el «···» de la barra
+  // del teléfono y el «···» de computadora. Antes en computadora iban sueltas
+  // —«Guardar» y «Copiar enlace» escritas en la esquina—, así que la misma
+  // ficha ofrecía sus acciones de dos formas según la pantalla, y ninguna otra
+  // sección lo hace: en Empleos, Promociones y Proyectos siempre es el «···».
+  const opcionesDeLaFicha = [
+          // En la ficha propia no se ofrece guardar, igual que en la ficha
+          // propia de un empleo, una promoción o un proyecto. Antes salía y,
+          // al tocarlo, no pasaba nada: el aviso que lo explica solo lo dibuja
+          // el botón de computadora, no este menú.
+          ...(isOwn ? [] : [{
+            id: "guardar",
+            icono: <Bookmark className={`h-4 w-4 ${guardarPro.guardado ? "fill-current text-[#0089bb]" : ""}`} />,
+            texto: guardarPro.etiqueta,
+            onSelect: () => void guardarPro.alternar(),
+          }]),
+          // Las dos caras pintadas y el CSS elige, como en `BotonCompartir`:
+          // Chrome en macOS trae `navigator.share` y el menú decía «Compartir».
+          {
+            id: "compartir",
+            icono: <CaraCompartir dedo={<Share2 className="h-4 w-4" />} raton={<Link2 className="h-4 w-4" />} />,
+            texto: <CaraCompartir dedo={tMenu("share")} raton={tMenu("copyLink")} />,
+            etiqueta: tMenu("share"),
+            onSelect: shareProfile,
+          },
+          ...(isOwn ? [] : [{ id: "reportar", icono: <Flag className="h-4 w-4" />, texto: tMenu("reportProfile"), peligro: true, onSelect: () => setReportOpen(true) }]),
+  ];
+
   const bloqueContacto = (conAncla: boolean) => (
     <div {...(conAncla ? { id: "perfil-contacto" } : {})} className="mx-auto flex w-full max-w-md flex-col gap-4 lg:max-w-none">
       <div>
@@ -847,10 +875,37 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
                     closeLabel={locale === "en" ? "Close" : "Cerrar"}
                     className="sm:col-start-1 sm:row-start-1 sm:row-span-2 sm:self-center"
                   >
-                    <Avatar className="h-[72px] w-[72px] shrink-0 sm:h-[88px] sm:w-[88px]">
-                      <AvatarImage src={professional.avatarUrl ? cldThumb(professional.avatarUrl, 320) : undefined} loading="eager" alt={professional.fullName} className="object-cover" />
-                      <AvatarFallback className="bg-[#EBF5FB] text-xl font-bold text-[#009FD9] sm:text-2xl">{getInitials(professional.fullName)}</AvatarFallback>
-                    </Avatar>
+                    {/* LA FOTO LA PINTA EL SERVIDOR, Y LAS INICIALES SON LAS DEL
+                        NOMBRE QUE SE LEE ARRIBA.
+                        Con el avatar de Radix, la etiqueta <img> no existe hasta
+                        que el NAVEGADOR carga la imagen: medido, el HTML del
+                        servidor no traía la foto. Así que en cada recarga se
+                        veían primero las iniciales y después la foto, siempre.
+                        Y encima eran las del nombre personal —«MH» de Mateo
+                        Herrera— mientras el título decía «Redes Bahía», que es
+                        lo que Isaac reportó como «iniciales que no tienen nada
+                        que ver». Una <img> normal viaja en el HTML y las
+                        iniciales quedan DETRÁS: se ven solo si no hay foto. */}
+                    <span className="relative grid h-[72px] w-[72px] shrink-0 place-items-center overflow-hidden rounded-full bg-[#EBF5FB] sm:h-[88px] sm:w-[88px]">
+                      {/* Las iniciales SOLO si no hay foto: detrás de un logo con
+                          fondo transparente se veían por debajo del dibujo. */}
+                      {!professional.avatarUrl && (
+                        <span aria-hidden className="text-xl font-bold text-[#009FD9] sm:text-2xl">{getInitials(displayName.primaryMobile)}</span>
+                      )}
+                      {professional.avatarUrl && (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={cldThumb(professional.avatarUrl, 320)}
+                          alt={displayName.primaryMobile}
+                          loading="eager"
+                          fetchPriority="high"
+                          decoding="async"
+                          // `bg-white`: un PNG con fondo transparente no deja
+                          // ver el azul del hueco detrás.
+                          className="absolute inset-0 h-full w-full bg-white object-cover"
+                        />
+                      )}
+                    </span>
                   </ImagePreviewDialog>
                   <div className="w-full min-w-0 sm:col-start-2 sm:row-start-1 sm:w-auto">
                     <div className="min-w-0">
@@ -916,10 +971,13 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
                     pestaña de por medio. En computadora sigue siendo la columna
                     de la derecha, que ya está siempre visible. */}
                 <div className="mt-4 border-t border-[#eef2f6] pt-4 lg:hidden">{bloqueContacto(true)}</div>
-                <div className="hidden sm:absolute sm:right-3 sm:top-3 sm:flex sm:items-center sm:gap-1">
-                  <SaveButton pro={savedPro} isOwn={isOwn} sutil />
-                  <BotonCompartir onPress={shareProfile} sutil />
-                </div>
+                {/* EL «···», COMO EN LAS DEMÁS SECCIONES. Aquí «Guardar» y
+                    «Copiar enlace» iban sueltas en la esquina, escritas con su
+                    rótulo: la misma ficha ofrecía sus acciones de dos formas
+                    según la pantalla —menú en el teléfono, botones sueltos en
+                    computadora— y ninguna otra sección lo hace. Mismas
+                    opciones, mismo orden, mismo sitio. */}
+                <MenuFicha className="hidden sm:absolute sm:right-2 sm:top-2 sm:block" opciones={opcionesDeLaFicha} />
             </div>
             <div id="resenas" className="scroll-mt-24 [.ccr-native-app_&]:scroll-mt-0">
               <div className="rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">
@@ -1409,33 +1467,12 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
         </Modal>
       )}
 
-      {/* La hoja del «...» de la barra: el MISMO componente, las mismas
-          opciones y el mismo orden que en Empleos, Promociones y Proyectos.
-          El botón que la abre lo dibuja la barra de arriba. */}
+      {/* La hoja del «...» de la barra del teléfono: el MISMO componente, las
+          mismas opciones y el mismo orden que en Empleos, Promociones y
+          Proyectos. El botón que la abre lo dibuja la barra de arriba. */}
       <MenuFicha
         controlado={{ abierto: menuFichaAbierto, onCambio: setMenuFichaAbierto }}
-        opciones={[
-          // En la ficha propia no se ofrece guardar, igual que en la ficha
-          // propia de un empleo, una promoción o un proyecto. Antes salía y,
-          // al tocarlo, no pasaba nada: el aviso que lo explica solo lo dibuja
-          // el botón de computadora, no este menú.
-          ...(isOwn ? [] : [{
-            id: "guardar",
-            icono: <Bookmark className={`h-4 w-4 ${guardarPro.guardado ? "fill-current text-[#0089bb]" : ""}`} />,
-            texto: guardarPro.etiqueta,
-            onSelect: () => void guardarPro.alternar(),
-          }]),
-          // Las dos caras pintadas y el CSS elige, como en `BotonCompartir`:
-          // Chrome en macOS trae `navigator.share` y el menú decía «Compartir».
-          {
-            id: "compartir",
-            icono: <CaraCompartir dedo={<Share2 className="h-4 w-4" />} raton={<Link2 className="h-4 w-4" />} />,
-            texto: <CaraCompartir dedo={tMenu("share")} raton={tMenu("copyLink")} />,
-            etiqueta: tMenu("share"),
-            onSelect: shareProfile,
-          },
-          ...(isOwn ? [] : [{ id: "reportar", icono: <Flag className="h-4 w-4" />, texto: tMenu("reportProfile"), peligro: true, onSelect: () => setReportOpen(true) }]),
-        ]}
+        opciones={opcionesDeLaFicha}
       />
 
       {reportOpen && (
