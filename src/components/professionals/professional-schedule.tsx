@@ -75,6 +75,12 @@ interface ProfessionalScheduleProps {
   businessName?: string;
   /** Abre la lista completa de zonas (la pestaña Información de la ficha). */
   onVerZonas?: () => void;
+  /**
+   * Debajo de esta tarjeta viene algo más —las redes del profesional, que las
+   * pinta la ficha—. Sin eso, la raya que cierra la ubicación no separa nada:
+   * queda una línea suelta contra el borde de la tarjeta.
+   */
+  hayContenidoDespues?: boolean;
   /** STACKED single-column layout for the professional-profile contact card (no two-column
    *  grid, no `info` slot): location tabs → 3-day strip → buttons. In stacked mode the
    *  contact buttons (WhatsApp + Llamar) ALWAYS show, plus "Ver disponibilidad" when
@@ -148,7 +154,7 @@ function cubrePaisEntero(w: { level?: string; id?: string }, nombre: string) {
   return w.level === "country" || w.id === "wp_todo_costa_rica" || /^Todo Costa Rica$/i.test(nombre) || /^All of Costa Rica$/i.test(nombre);
 }
 
-export function ProfessionalSchedule({ professional, categoryName, searchedPlace, availabilityPublic, contactPreference = "ambas", videoConsultApplies = true, slots: allSlots, slotsInitiallyLoaded = true, activeCategory, isOwn = false, viewerPendiente = false, info, placeFallback = "", placeAddress = "", businessName = "", onVerZonas, stacked = false, forceContactOnly = false, preferredLocationId, restrictToPreferredLocation = false, syncWithSearchLoading = false }: ProfessionalScheduleProps) {
+export function ProfessionalSchedule({ professional, categoryName, searchedPlace, availabilityPublic, contactPreference = "ambas", videoConsultApplies = true, slots: allSlots, slotsInitiallyLoaded = true, activeCategory, isOwn = false, viewerPendiente = false, info, placeFallback = "", placeAddress = "", businessName = "", onVerZonas, stacked = false, forceContactOnly = false, preferredLocationId, restrictToPreferredLocation = false, syncWithSearchLoading = false, hayContenidoDespues = false}: ProfessionalScheduleProps) {
   const t = useTranslations("schedule");
   const tLoading = useTranslations("loading");
   const locale = useLocale();
@@ -693,7 +699,7 @@ export function ProfessionalSchedule({ professional, categoryName, searchedPlace
           </div>
         )}
       </div>
-      <div className="mt-1 h-px w-full bg-[#e5e7eb]" aria-hidden />
+      {(addressLine || hayContenidoDespues) && <div className="mt-1 h-px w-full bg-[#e5e7eb]" aria-hidden />}
       {addressLine && (
         <p className="mt-1.5 text-[11px] leading-snug text-[#6b7280]">
           {venueName && <span className="font-semibold text-[#374151]">{venueName} · </span>}

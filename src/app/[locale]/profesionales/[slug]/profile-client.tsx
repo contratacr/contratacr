@@ -716,6 +716,9 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
         businessName={professional.businessName ?? ""}
         // «+N zonas» abre Información, que es donde vive la lista completa con
         // sus direcciones. Antes la ficha la tenía dos veces.
+        // Las redes van después de esta tarjeta: si no hay, la raya que cierra
+        // la ubicación no separa nada y queda suelta contra el borde.
+        hayContenidoDespues={redesDelProfesional.length > 0}
         onVerZonas={() => {
           setActiveTab("sobre");
           requestAnimationFrame(() => document.getElementById("resenas")?.scrollIntoView({ behavior: "smooth", block: "start" }));
