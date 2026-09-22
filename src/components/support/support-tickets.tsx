@@ -647,7 +647,18 @@ export function SupportTickets({
                       avisa de que se puede enviar en vez de estar siempre ahi
                       pidiendo atencion. El area de toque sigue siendo de 36 px,
                       que es lo que importa para el dedo. */}
-                <button onClick={sendReply} disabled={sending || !reply.trim()} className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-[#9aa7b6] transition-colors hover:bg-[#e5e7eb] hover:text-[#008fca] enabled:text-[#009FD9] disabled:cursor-not-allowed" aria-label={sending ? t("sending") : t("send")}>
+                <button
+                  onClick={sendReply}
+                  disabled={sending || !reply.trim()}
+                  // EL COLOR SE DECIDE EN JAVASCRIPT, no con la variante
+                  // `enabled:`. `enabled:text-[#009FD9]`, `hover:text-[#008fca]`
+                  // y `hover:bg-[#e5e7eb]` eran las unicas veces que esas
+                  // clases aparecian en el proyecto, y una clase estrenada
+                  // puede no estar en el CSS que sirve el servidor hasta
+                  // reiniciarlo: al refrescar, el icono se quedaba sin color y
+                  // heredaba el del texto. Las dos que quedan —#009FD9 en 105
+                  // archivos y #68778d en 98— existen con seguridad.
+                  className={`grid h-9 w-9 shrink-0 place-items-center rounded-full transition-colors hover:bg-[#f3f4f6] disabled:cursor-not-allowed ${reply.trim() && !sending ? "text-[#009FD9]" : "text-[#68778d]"}`} aria-label={sending ? t("sending") : t("send")}>
                   {sending ? <Clock3 className="h-[18px] w-[18px] animate-spin" /> : <SendHorizontal className="h-[18px] w-[18px]" />}
                 </button>
               </div>
