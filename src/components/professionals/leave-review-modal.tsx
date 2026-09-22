@@ -72,7 +72,23 @@ export function LeaveReviewModal({
         : `professionalId=${professionalId}`;
   // Sin esta espera el cuadro se pintaba vacío ("Dejar tu reseña", 0 estrellas)
   // y saltaba a la reseña existente cuando llegaba la respuesta: el parpadeo.
-  const prefillReady = !isAuthenticated || Boolean(initialReview) || prefilledKey === query;
+  // SIN ESQUELETO PARA PREGUNTAR ALGO QUE CASI SIEMPRE ES «NO».
+  //
+  // La caja preguntaba al servidor si esta persona YA dejó una reseña, para
+  // precargarla, y mientras tanto dibujaba un esqueleto. Con sesión iniciada eso
+  // pasaba en CADA recarga, aunque no hubiera nada que precargar: medido, el
+  // esqueleto aparecía DESPUÉS de que la página ya estaba pintada —contenido,
+  // esqueleto, contenido— que es un parpadeo de manual.
+  //
+  // Un esqueleto es para cuando no hay NADA que enseñar. Aquí sí lo hay: el
+  // formulario vacío, que es exactamente lo que le toca a la enorme mayoría.
+  // Si la consulta vuelve con una reseña anterior, se rellena y pasa a modo
+  // editar: eso no es un parpadeo, es una mejora que llega.
+  //
+  // El dato no puede venir del servidor: la ficha se cachea cinco minutos y es
+  // la misma para todos, así que nada que dependa de quién mira puede entrar
+  // en ese render.
+  void prefilledKey;
   // Con el nombre por delante, nada que precargar: la reseña es nueva siempre.
 
   useEffect(() => {
@@ -274,16 +290,6 @@ export function LeaveReviewModal({
         ))}
       </div>
       <p className="text-center text-sm text-[#6b7280]">{t("thanksSub")}</p>
-    </div>
-  ) : embedded && !prefillReady ? (
-    <div
-      aria-hidden
-      className="flex animate-pulse flex-col gap-3 rounded-2xl border border-[#dbe7ef] bg-white p-3.5 shadow-[0_10px_26px_-24px_rgba(15,23,42,0.55)] sm:p-4"
-    >
-      <div className="h-4 w-32 rounded bg-[#eef2f6]" />
-      <div className="h-7 w-40 rounded bg-[#eef2f6]" />
-      <div className="h-[72px] rounded-xl bg-[#f4f7fa]" />
-      <div className="h-11 w-40 self-end rounded-full bg-[#eef2f6]" />
     </div>
   ) : (
     <form onSubmit={handleSubmit} className={`flex flex-col ${embedded ? "gap-3 rounded-2xl border border-[#dbe7ef] bg-white p-3.5 shadow-[0_10px_26px_-24px_rgba(15,23,42,0.55)] sm:p-4" : "gap-4 px-6 py-5"}`}>
