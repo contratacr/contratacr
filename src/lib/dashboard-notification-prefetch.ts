@@ -8,9 +8,7 @@ async function fetchRows<T>(url: string, key: string): Promise<T[]> {
 
 const proBookingsKey = (userId: string) => `dashboard:pro-bookings:${userId}`;
 const clientBookingsKey = (userId: string) => `dashboard:client-bookings:${userId}`;
-const clientProjectsKey = (userId: string) => `dashboard:client-projects:${userId}`;
 const proOpenProjectsKey = (userId: string, categoryId?: string) => `dashboard:pro-open-projects:${userId}:${categoryId ?? "all"}`;
-const proMyProposalsKey = (userId: string) => `dashboard:pro-my-proposals:${userId}`;
 
 const PRO_BOOKING_TYPES = new Set([
   "booking_received",
@@ -28,21 +26,14 @@ const CLIENT_BOOKING_TYPES = new Set([
 ]);
 
 const PRO_PROJECT_TYPES = new Set([
-  "proposal_accepted",
-  "project_proposal_accepted",
-  "project_proposal_declined",
   "new_project",
   "project_cancelled",
   "project_deleted",
   "project_completed",
 ]);
 
-const CLIENT_PROJECT_TYPES = new Set([
-  "proposal_received",
-  "proposal_updated",
-  "proposal_withdrawn",
-  "project_work_done",
-]);
+// Los avisos de propuesta —recibida, corregida, retirada, trabajo marcado como
+// hecho— ya no se emiten: el cliente no tiene nada que precargar al recibirlos.
 
 function settleWithin<T>(promise: Promise<T>) {
   return promise.catch(() => undefined);
@@ -60,14 +51,8 @@ export async function prefetchDashboardDataForNotification(userId: string, type:
   }
 
   if (PRO_PROJECT_TYPES.has(type)) {
-    await Promise.all([
-      settleWithin(loadDashboardCache(proMyProposalsKey(userId), () => fetchRows("/api/proposals?mine=true", "proposals"), { force: true })),
-      settleWithin(loadDashboardCache(proOpenProjectsKey(userId), () => fetchRows("/api/projects?role=professional", "projects"), { force: true })),
-    ]);
+    await settleWithin(loadDashboardCache(proOpenProjectsKey(userId), () => fetchRows("/api/projects?role=professional", "projects"), { force: true }));
     return;
   }
 
-  if (CLIENT_PROJECT_TYPES.has(type)) {
-    await settleWithin(loadDashboardCache(clientProjectsKey(userId), () => fetchRows("/api/projects?role=client", "projects"), { force: true }));
-  }
 }

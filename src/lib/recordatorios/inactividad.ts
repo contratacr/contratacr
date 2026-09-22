@@ -24,10 +24,7 @@ export const HITOS_DIAS = [3, 7] as const;
 type Hito = (typeof HITOS_DIAS)[number];
 
 export const TIPOS_RECORDATORIO = [
-  "project_proposals_waiting",
   "booking_pending_reminder",
-  "project_in_progress_idle",
-  "project_confirmation_pending",
   "booking_past_date_idle",
   "job_applications_waiting",
   "quote_awaiting_client",
@@ -71,12 +68,9 @@ async function avisarPorCorreo(destino: string, aviso: { title: string; message:
 }
 
 export type ResumenRecordatorios = {
-  propuestasSinResponder: number;
   postulacionesSinRevisar: number;
   cotizacionesSinRespuesta: number;
   solicitudesSinResponder: number;
-  proyectosDetenidos: number;
-  confirmacionesPendientes: number;
   citasSinCerrar: number;
   enviados: number;
   /** De los enviados, cuántos además salieron por correo. */
@@ -131,12 +125,9 @@ async function perfilesDeProfesionales(
 export async function recolectarPendientes(): Promise<{ avisos: Aviso[]; resumen: ResumenRecordatorios }> {
   const admin = createAdminClient();
   const resumen: ResumenRecordatorios = {
-    propuestasSinResponder: 0,
     postulacionesSinRevisar: 0,
     cotizacionesSinRespuesta: 0,
     solicitudesSinResponder: 0,
-    proyectosDetenidos: 0,
-    confirmacionesPendientes: 0,
     citasSinCerrar: 0,
     enviados: 0,
     porCorreo: 0,
@@ -148,52 +139,10 @@ export async function recolectarPendientes(): Promise<{ avisos: Aviso[]; resumen
   // scheduled_date es `date`, no timestamp: hay que compararlo como fecha.
   const corteFecha = corteISO.slice(0, 10);
 
-  // ── 1. Propuestas que el cliente no ha respondido ────────────────────────
-  // Le toca al CLIENTE: tiene profesionales esperando una decisión.
-  const { data: propuestas } = await admin
-    .from("proposals")
-    .select("id, created_at, project_id, projects:project_id(title, status, client_id)")
-    .eq("status", "pending")
-    .lt("created_at", corteISO);
-
-  type FilaPropuesta = {
-    created_at: string;
-    project_id: string;
-    projects: { title?: string; status?: string; client_id?: string } | Array<{ title?: string; status?: string; client_id?: string }> | null;
-  };
-  const porProyecto = new Map<string, { titulo: string; clientId: string; desde: string; cuantas: number }>();
-  for (const fila of (propuestas ?? []) as FilaPropuesta[]) {
-    const proyecto = Array.isArray(fila.projects) ? fila.projects[0] : fila.projects;
-    if (!proyecto?.client_id || proyecto.status !== "open") continue;
-    const previo = porProyecto.get(fila.project_id);
-    porProyecto.set(fila.project_id, {
-      titulo: proyecto.title ?? "tu proyecto",
-      clientId: proyecto.client_id,
-      // La más antigua manda: es la que lleva más tiempo esperando.
-      desde: previo && previo.desde < fila.created_at ? previo.desde : fila.created_at,
-      cuantas: (previo?.cuantas ?? 0) + 1,
-    });
-  }
-  for (const [projectId, info] of porProyecto) {
-    const hito = hitoDe(info.desde);
-    if (!hito) continue;
-    resumen.propuestasSinResponder += 1;
-    avisos.push({
-      user_id: info.clientId,
-      type: "project_proposals_waiting",
-      title: info.cuantas === 1 ? "Tienes una respuesta sin contestar" : `Tienes ${info.cuantas} respuestas sin contestar`,
-      message: `Nadie ha respondido en "${info.titulo}" desde hace ${hito} días. Revisa las respuestas y elige a quien te sirva.`,
-      data: {
-        link: "/es/dashboard/cliente?tab=projects",
-        project_id: projectId,
-        project_title: info.titulo,
-        hito,
-        pendientes: info.cuantas,
-      },
-      referencia: projectId,
-      hito,
-    });
-  }
+  // Los bloques 1, 3 y 4 —propuestas sin responder, proyectos aceptados que
+  // nadie avanza y trabajos por confirmar— se retiraron con las propuestas: un
+  // proyecto ya no tiene profesional aceptado ni pasa por «realizado», asi que
+  // esos avisos no le podian llegar a nadie.
 
   // ── 2. Solicitudes que el profesional no ha respondido ───────────────────
   // Le toca al PROFESIONAL: alguien pidió un servicio y sigue esperando.
@@ -217,58 +166,6 @@ export async function recolectarPendientes(): Promise<{ avisos: Aviso[]; resumen
       message: `"${que}" lleva ${hito} días esperando. Escríbele al cliente para coordinar o cancélala con un motivo para que sepa a qué atenerse.`,
       data: { link: "/es/dashboard/profesional?tab=bookings", booking_id: solicitud.id, hito },
       referencia: solicitud.id,
-      hito,
-    });
-  }
-
-  // ── 3. Proyectos aceptados que nadie avanza ──────────────────────────────
-  // Le toca al PROFESIONAL: aceptó el trabajo y solo él puede marcarlo hecho.
-  const { data: proyectos } = await admin
-    .from("projects")
-    .select("id, title, updated_at, created_at, accepted_professional_id")
-    .eq("status", "in_progress")
-    .not("accepted_professional_id", "is", null)
-    .lt("updated_at", corteISO);
-
-  const perfilProyectos = await perfilesDeProfesionales(admin, (proyectos ?? []).map((p) => p.accepted_professional_id));
-  for (const proyecto of (proyectos ?? []) as Array<{ id: string; title?: string; updated_at?: string; created_at?: string; accepted_professional_id: string }>) {
-    const hito = hitoDe(proyecto.updated_at ?? proyecto.created_at);
-    const perfil = perfilProyectos.get(proyecto.accepted_professional_id);
-    if (!hito || !perfil) continue;
-    resumen.proyectosDetenidos += 1;
-    const titulo = proyecto.title ?? "un proyecto";
-    avisos.push({
-      user_id: perfil,
-      type: "project_in_progress_idle",
-      title: "¿Ya terminaste este trabajo?",
-      message: `"${titulo}" lleva ${hito} días sin movimiento. Escríbele al cliente para coordinar o retira tu respuesta si no vas a poder.`,
-      data: { link: "/es/proyectos", project_id: proyecto.id, project_title: titulo, hito },
-      referencia: proyecto.id,
-      hito,
-    });
-  }
-
-  // ── 4. Trabajos marcados como hechos que el cliente no confirma ──────────
-  // Le toca al CLIENTE. El sistema auto-confirma a los 7 días, pero solo
-  // cuando alguien entra al panel: el aviso llega igual aunque nadie entre.
-  const { data: porConfirmar } = await admin
-    .from("projects")
-    .select("id, title, work_done_at, updated_at, client_id")
-    .eq("status", "awaiting_confirmation")
-    .lt("work_done_at", corteISO);
-
-  for (const proyecto of (porConfirmar ?? []) as Array<{ id: string; title?: string; work_done_at?: string; updated_at?: string; client_id?: string }>) {
-    const hito = hitoDe(proyecto.work_done_at ?? proyecto.updated_at);
-    if (!hito || !proyecto.client_id) continue;
-    resumen.confirmacionesPendientes += 1;
-    const titulo = proyecto.title ?? "tu proyecto";
-    avisos.push({
-      user_id: proyecto.client_id,
-      type: "project_confirmation_pending",
-      title: "Confirma si el trabajo quedó listo",
-      message: `El profesional marcó "${titulo}" como terminado hace ${hito} días. Confirmalo para cerrar el proyecto y dejar tu reseña.`,
-      data: { link: "/es/dashboard/cliente?tab=projects", project_id: proyecto.id, project_title: titulo, hito },
-      referencia: proyecto.id,
       hito,
     });
   }
