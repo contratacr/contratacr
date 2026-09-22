@@ -2555,7 +2555,12 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
               className="mx-auto flex h-full max-w-[560px] flex-col"
             >
               <div className="space-y-3">
-                <div className="flex h-13 items-center rounded-xl border border-[#d8e4ec] bg-white px-3 shadow-[0_8px_24px_-20px_rgba(15,23,42,0.7)]">
+                {/* LOS DOS CAMPOS DE UNA BÚSQUEDA SE DIBUJAN IGUAL. Este llevaba
+                    16 px de radio, otro gris de borde y una sombra, mientras el
+                    de arriba —el del tablero— va con 10 px, #e5e7eb y sin
+                    sombra: uno encima del otro se leían como piezas de dos
+                    pantallas distintas. Y sombra, ninguna. */}
+                <div className="flex h-13 min-w-0 items-center rounded-[10px] border border-[#e5e7eb] bg-white px-3">
                   <button
                     type="button"
                     onClick={closeNativeSearch}
@@ -2585,7 +2590,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                     aria-expanded={showNativeServiceSuggestions}
                   />
                 </div>
-                <div className="flex h-13 items-center rounded-xl border border-[#d8e4ec] bg-white px-3 shadow-[0_8px_24px_-20px_rgba(15,23,42,0.7)]">
+                <div className="flex h-13 min-w-0 items-center rounded-[10px] border border-[#e5e7eb] bg-white px-3">
                   <MapPin className="ml-2 h-6 w-6 shrink-0 text-[#1A2744]" />
                   <input
                     ref={nativeLocationInputRef}

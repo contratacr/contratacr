@@ -263,7 +263,7 @@ function MultiFilterSheetContent({
               </button>
             );
           })}
-          <button type="button" onClick={() => onApply(draftValues)} className="mt-4 inline-flex h-12 w-full items-center justify-center rounded-[8px] bg-[#009FD9] px-5 text-[15px] font-bold text-white">
+          <button type="button" onClick={() => onApply(draftValues)} className="mt-4 inline-flex h-12 w-full items-center justify-center rounded-full bg-[#009FD9] px-5 text-sm font-bold text-white">
             {t("filters.showResults")}
           </button>
         </div>
