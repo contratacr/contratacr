@@ -610,8 +610,14 @@ export function SupportTickets({
                   blanco segun lo que tuviera la hoja en cache del navegador:
                   al editar se veia bien, porque la recarga en caliente inyecta
                   lo nuevo, y al REFRESCAR volvia el CSS viejo sin esas reglas.
-                  Con utilidades que el proyecto ya usa, eso no puede pasar. */}
-              <div className="flex items-end gap-2 rounded-3xl bg-[#f3f4f6] p-1 pl-2 transition focus-within:ring-2 focus-within:ring-[#009FD9]/30">
+                  Con utilidades que el proyecto ya usa, eso no puede pasar.
+                  El anillo de foco tambien: `focus-within:ring-[#009FD9]/20`
+                  es el que ya lleva el buscador del navbar. Con `/30`, que no
+                  usaba nadie, el navegador caia al color por defecto del
+                  anillo —que en Tailwind v4 es el color del texto— y al hacer
+                  foco aparecia un contorno NEGRO grueso que ademas parecia
+                  cortar el boton de mandar. */}
+              <div className="flex items-end gap-2 rounded-3xl bg-[#f3f4f6] p-1 pl-2 transition focus-within:ring-2 focus-within:ring-[#009FD9]/20">
                 <textarea
                   value={reply}
                   onChange={(e) => {
