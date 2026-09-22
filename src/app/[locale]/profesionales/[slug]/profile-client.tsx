@@ -977,7 +977,14 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
                     según la pantalla —menú en el teléfono, botones sueltos en
                     computadora— y ninguna otra sección lo hace. Mismas
                     opciones, mismo orden, mismo sitio. */}
-                <MenuFicha className="hidden sm:absolute sm:right-2 sm:top-2 sm:block" opciones={opcionesDeLaFicha} />
+                {/* EN LA FILA, NO EN LA ESQUINA. La tarjeta es una rejilla de
+                    foto | nombre y cifras | acciones, y el «···» es la tercera
+                    columna: flotando en la esquina de arriba quedaba huérfano a
+                    500 px de lo último que hay escrito. Alineado con el nombre
+                    se lee como lo que es —lo que se puede hacer con esta
+                    ficha— y sigue cerrando la fila por la derecha, que es donde
+                    está en Empleos, Promociones y Proyectos. */}
+                <MenuFicha className="hidden sm:col-start-3 sm:row-start-1 sm:row-span-2 sm:block sm:self-center" opciones={opcionesDeLaFicha} />
             </div>
             <div id="resenas" className="scroll-mt-24 [.ccr-native-app_&]:scroll-mt-0">
               <div className="rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">
