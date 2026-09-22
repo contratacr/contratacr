@@ -1,6 +1,7 @@
 "use client";
 
 import { PantallaFija } from "@/components/util/pantalla-fija";
+import { Link } from "@/i18n/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Loader2, RefreshCw, SlidersHorizontal } from "lucide-react";
@@ -16,6 +17,8 @@ interface SearchResultsLayoutProps {
   drawerFilters?: React.ReactNode;
   /** Mobile-only "<N> profesionales en <área>" count shown in the sheet header. */
   countLabel?: string;
+  /** La salida de los filtros, junto al conteo. */
+  limpiar?: { href: string; label: string };
   mapData: MapProfessional[];
   apiKey: string;
   locale: string;
@@ -81,7 +84,7 @@ function snapIndex(value: number, points = mobileSheetSnapPoints()) {
  *  DESKTOP is unchanged (same `lg:` classes). The bottom-sheet wrapper is `lg:contents`, so on
  *  desktop it dissolves and the card column (`lg:order-2`) drops into the 3-column flex shell.
  */
-export function SearchResultsLayout({ children, filters, quickFilters, drawerFilters, countLabel, mapData, apiKey, locale, numbering, mapFocusTarget = null, resetKey, sinResultados = false }: SearchResultsLayoutProps) {
+export function SearchResultsLayout({ children, filters, quickFilters, drawerFilters, countLabel, limpiar, mapData, apiKey, locale, numbering, mapFocusTarget = null, resetKey, sinResultados = false }: SearchResultsLayoutProps) {
   const t = useTranslations("search");
   const [showFilters, setShowFilters] = useState(false); // full-filter drawer (mobile + lg-xl)
   const sheetRef = useRef<HTMLDivElement | null>(null);
@@ -546,7 +549,7 @@ export function SearchResultsLayout({ children, filters, quickFilters, drawerFil
                 {quickFilters}
               </div>
             )}
-            {countLabel && <p className="px-4 pb-2 pt-0.5 text-[13px] font-semibold text-[#162543]">{countLabel}</p>}
+            {countLabel && <p className="px-4 pb-2 pt-0.5 text-[13px] font-semibold text-[#162543]">{countLabel}{limpiar && <> · <Link href={limpiar.href} className="text-[#007fae] hover:underline">{limpiar.label}</Link></>}</p>}
             <div data-sheet-drag-handle aria-hidden="true" className="h-1 bg-[#f6f8fb] shadow-[inset_0_1px_0_rgba(226,232,240,0.58)]" />
           </div>
 

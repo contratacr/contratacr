@@ -1,7 +1,8 @@
 "use client";
 
-import { startTransition, useCallback, useEffect, useMemo, useState } from "react";
+import { startTransition, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Carril } from "@/components/ui/carril";
+import { useDesvanecidoVertical } from "@/hooks/use-desvanecido-vertical";
 import { useHairlineOnScroll } from "@/components/util/use-hairline-on-scroll";
 import { PanelEmptyState } from "@/components/ui/content-loading";
 import { cn } from "@/lib/utils";
@@ -38,6 +39,8 @@ export function ServiciosClient({ catalogoInicial }: { catalogoInicial: string |
   // Si de verdad cambió algo (llegar aquí navegando, con un catálogo más nuevo
   // que el que ya había), el resto de la pantalla se entera ya fuera del render.
   useEffect(() => { if (catalogoCambio) avisarCambioDeCatalogo(); }, [catalogoCambio]);
+  const listaDeGruposRef = useRef<HTMLElement | null>(null);
+  const { mascara: mascaraDeGrupos } = useDesvanecidoVertical(listaDeGruposRef);
   const t = useTranslations("categories");
   const tp = useTranslations("categoriesPage");
   const locale = useLocale();
@@ -414,7 +417,14 @@ export function ServiciosClient({ catalogoInicial }: { catalogoInicial: string |
               </section>
             ) : (
                 <section className="grid scroll-mt-32 lg:min-h-[560px] lg:grid-cols-[300px_minmax(0,1fr)]">
-                  <aside className="min-w-0 overflow-hidden border-b border-[#eef2f6] bg-[#f8fafc] p-2 lg:border-b-0 lg:border-r">
+                  {/* EN COMPUTADORA LA LISTA SE DESPLAZA POR DENTRO Y SE DESVANECE
+                      ABAJO. Medía lo que midiera la columna de al lado y estaba
+                      en `overflow-hidden`: con un grupo corto elegido (Creatividad,
+                      12 opciones) la columna quedaba más baja que las 17 categorías
+                      y las últimas se cortaban SIN forma de llegar a ellas. Ahora
+                      la lista se desplaza y el velo del borde deja ver la fila
+                      cortada, que es lo que dice «hay más». */}
+                  <aside ref={listaDeGruposRef} style={{ maskImage: mascaraDeGrupos, WebkitMaskImage: mascaraDeGrupos }} className="min-w-0 overflow-hidden border-b border-[#eef2f6] bg-[#f8fafc] p-2 lg:overflow-y-auto lg:border-b-0 lg:border-r">
                     <Carril className="flex w-full min-w-0 gap-2 overflow-x-auto pb-1 lg:block lg:space-y-1 lg:overflow-visible lg:pb-0">
                       {groups.map((group) => {
                         const Icon = group.Icon;

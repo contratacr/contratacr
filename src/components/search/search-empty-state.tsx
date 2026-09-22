@@ -30,14 +30,17 @@ export function SearchEmptyState({ title, description, cta, href }: { title: str
         description={description}
         className="flex-1 lg:min-h-[20rem] lg:px-8 lg:py-12"
         action={(
-          // PRIMERO LA SALIDA BARATA. Si hay filtros puestos, lo más probable
-          // es que sobre uno: quitarlos devuelve resultados al instante.
-          // Publicar lo que se necesita es la otra salida, y sigue siendo la
-          // principal cuando no hay nada que quitar.
+          // LA MISMA PASTILLA DE 44 px QUE TODO EL APP. Sin alto, el botón
+          // salía aplastado —solo el texto con su relleno lateral— y era el
+          // único así. Dice «Publicar lo que necesito» y no «Publicar
+          // proyecto»: ese es el llamado del cliente en todo el sitio (cabecera,
+          // pie, panel, cómo funciona); «proyecto» solo se usa dentro de las
+          // pantallas de proyectos, donde la palabra ya está en escena. Quien
+          // llega a un vacío de búsqueda no ha visto «proyecto» todavía.
           <div className="flex flex-col items-center gap-2 sm:flex-row sm:justify-center sm:gap-3">
             <Link
               href={href}
-              className="inline-flex items-center justify-center rounded-full bg-[#009FD9] px-6 text-sm font-bold text-white whitespace-nowrap transition-colors hover:bg-[#0089bb]"
+              className="inline-flex h-11 items-center justify-center rounded-full bg-[#009FD9] px-6 text-sm font-bold text-white whitespace-nowrap transition-colors hover:bg-[#0089bb]"
             >
               {cta}
             </Link>

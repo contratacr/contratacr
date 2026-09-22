@@ -255,6 +255,20 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
   // decisión aunque haya cinco vacantes. La FECHA no: el tablero ya viene
   // ordenado por lo más reciente, así que filtrar por fecha solo quita; vuelve
   // cuando haya volumen de verdad.
+  // La salida de los filtros vive en la línea del conteo (ver MarketplaceClearFilters).
+  const limpiarFiltros = (
+    <MarketplaceClearFilters
+      conSeparador
+      activos={[workplace, employment, experience, published].filter((value) => value !== "all").length}
+      onClear={() => {
+        setWorkplace("all");
+        setEmployment("all");
+        setExperience("all");
+        setPublished("all");
+      }}
+    />
+  );
+
   const renderFilters = () => (
     <>
       <MarketplaceFilterChip label={copy.workplace} value={workplace} onChange={setWorkplace} options={[["all", copy.anyWorkplace], ...Object.keys(WORKPLACE_TYPES).map((value) => [value, workplaceTypeLabel(value as keyof typeof WORKPLACE_TYPES, locale)] as [string, string])]} />
@@ -263,15 +277,6 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
       {conFiltroDeFecha(jobs.length) && (
         <MarketplaceFilterChip label={copy.published} value={published} onChange={setPublished} options={[["all", copy.anyDate], ["1", copy.last24Hours], ["7", copy.lastWeek], ["30", copy.lastMonth]]} />
       )}
-      <MarketplaceClearFilters
-        activos={[workplace, employment, experience, published].filter((value) => value !== "all").length}
-        onClear={() => {
-          setWorkplace("all");
-          setEmployment("all");
-          setExperience("all");
-          setPublished("all");
-        }}
-      />
     </>
   );
   const renderActions = () => (
@@ -419,6 +424,7 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
             {hasActiveFilters && filtered.length > 0 && (
               <span className="text-[13px] font-semibold text-[#68778d]">
                 <span className="tabular-nums">{filtered.length}</span> {filtered.length === 1 ? copy.job.toLocaleLowerCase(locale) : copy.jobs.toLocaleLowerCase(locale)}{locationFilter.trim() ? ` · ${locationFilter.trim()}` : ""}
+                {limpiarFiltros}
               </span>
             )}
           </div>
@@ -488,7 +494,7 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
           {/* Con cero, el vacío ya lo dice: «0 empleos» encima era lo mismo dos veces. */}
           {hasActiveFilters && filtered.length > 0 && (
             <div className="border-b border-[#e5e7eb] px-4 py-3 lg:hidden">
-              <p className="font-bold">{filtered.length} {filtered.length === 1 ? copy.job.toLocaleLowerCase(locale) : copy.jobs.toLocaleLowerCase(locale)}</p>
+              <p className="font-bold">{filtered.length} {filtered.length === 1 ? copy.job.toLocaleLowerCase(locale) : copy.jobs.toLocaleLowerCase(locale)}{limpiarFiltros}</p>
               {/* La zona que se buscó, no un país fijo: «Costa Rica» debajo del
                   número era siempre la misma palabra; si alguien buscó en
                   Atenas, lo útil es que diga Atenas. */}

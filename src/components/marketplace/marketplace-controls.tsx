@@ -562,18 +562,24 @@ export function MarketplaceSearch({
  * se escribió en el buscador y la ubicación se quedan donde estaban, que es lo
  * que hacen LinkedIn e Indeed.
  */
-export function MarketplaceClearFilters({ activos, onClear }: { activos: number; onClear: () => void }) {
+/**
+ * «LIMPIAR FILTROS» VA EN LA LÍNEA DEL CONTEO, como enlace de texto, no como
+ * pastilla entre las pastillas. Entre los filtros competía con ellos —parecía
+ * un filtro más— y en el teléfono se cortaba contra el filo del carril. Es lo
+ * que hacen Airbnb, Booking e Idealista: el conteo dice cuántos quedaron y, al
+ * lado, la salida para volver a verlos todos. Aparece solo cuando hay algo que
+ * limpiar, y sin conteo propio: las pastillas ya muestran cuáles están puestas.
+ */
+export function MarketplaceClearFilters({ activos, onClear, conSeparador = false }: { activos: number; onClear: () => void; conSeparador?: boolean }) {
   const copy = MARKETPLACE_CONTROL_COPY[useLocale() === "en" ? "en" : "es"];
   if (activos < 1) return null;
   return (
-    <button
-      type="button"
-      onClick={onClear}
-      className="inline-flex h-9 shrink-0 items-center gap-1 rounded-full px-2.5 text-[13px] font-bold text-[#007fae] underline-offset-2 hover:underline sm:px-3"
-    >
-      <X className="h-3.5 w-3.5 shrink-0" />
-      <span className="whitespace-nowrap">{copy.clearFilters} ({activos})</span>
-    </button>
+    <>
+      {conSeparador && <span aria-hidden="true"> · </span>}
+      <button type="button" onClick={onClear} className="inline font-semibold text-[#007fae] hover:underline">
+        {copy.clearFilters}
+      </button>
+    </>
   );
 }
 

@@ -455,6 +455,15 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     (!!params.aseguradora && canFilterByInsurer) ||
     (!!params.sortBy && params.sortBy !== "rating" && params.sortBy !== "cercania") ||
     (!!params.modalidad && params.modalidad !== "any");
+  // Solo lo que se puso DESDE LAS PASTILLAS: el servicio y la ubicación son lo
+  // que la persona vino a buscar, no un filtro que se le quita.
+  const hayFiltrosDePastilla =
+    languageIds.length > 0 ||
+    !!priceType ||
+    priceUnits.length > 0 ||
+    (!!params.aseguradora && canFilterByInsurer) ||
+    (!!params.sortBy && params.sortBy !== "rating" && params.sortBy !== "cercania") ||
+    (!!params.modalidad && params.modalidad !== "any");
   // La salida del vacío: se queda lo que la persona BUSCÓ —el texto, la
   // categoría y la ubicación— y se sueltan los filtros que recortaron la lista.
   // Borrarlo todo la devolvía al catálogo entero, que no es lo que pidió.
@@ -528,7 +537,11 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
               <h1 className="truncate text-lg font-bold leading-tight text-[#162543]">{pageTitle}</h1>
               {/* On mobile the count is shown in the results panel (above the list); avoid
                   duplicating it here. Desktop keeps it in the header. */}
-              <p className="hidden shrink-0 whitespace-nowrap text-[13px] leading-tight text-[#6b7280] lg:block">· {subtitle}</p>
+              <p className="hidden shrink-0 whitespace-nowrap text-[13px] leading-tight text-[#6b7280] lg:block">
+                · {subtitle}
+                {/* La salida de los filtros, al lado del conteo (ver MarketplaceClearFilters). */}
+                {hayFiltrosDePastilla && <> · <Link href={sinFiltrosHref} className="font-semibold text-[#007fae] hover:underline">{t("filters.clearAll")}</Link></>}
+              </p>
             </div>
             {/* LOS FILTROS, EN LA MISMA FILA DEL TÍTULO, como en Empleos,
                 Promociones y Proyectos: nombre de la pantalla a la izquierda y
@@ -551,6 +564,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
             locale={locale}
             numbering={numbering}
             countLabel={subtitle}
+            limpiar={hayFiltrosDePastilla ? { href: sinFiltrosHref, label: t("filters.clearAll") } : undefined}
             hasActiveFilters={hasActiveFilters}
             mapFocusTarget={mapFocusTarget}
             resetKey={`${currentPage}:${paginationParams.toString()}`}
