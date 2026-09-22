@@ -63,7 +63,21 @@ export type ProyectoParaEditar = {
   cantonId: string;
 };
 
-export function PublishProjectModal({ onClose, onSuccess, editar }: { onClose: () => void; onSuccess?: () => void; editar?: ProyectoParaEditar }) {
+export function PublishProjectModal({ onClose, onSuccess, editar, duplicar }: {
+  onClose: () => void;
+  onSuccess?: () => void;
+  editar?: ProyectoParaEditar;
+  /**
+   * UN PROYECTO TERMINADO NO SE REABRE: SE PUBLICA OTRO IGUAL. Reabrirlo
+   * borraria quien lo hizo y la fecha en que se cerro —y con eso la resena
+   * queda colgando de un trabajo que dice que nunca paso—. Por eso «volver a
+   * publicar» solo existe para los cancelados, que no tienen historia que
+   * perder, y el terminado se copia en uno nuevo, como «Publicar similar» de
+   * LinkedIn. Los campos vienen llenos; el proyecto viejo no se toca.
+   */
+  duplicar?: ProyectoParaEditar;
+}) {
+  const base = editar ?? duplicar;
   const t = useTranslations("publicarProyecto");
   const locale = useLocale();
   const searchParams = useSearchParams();
@@ -72,10 +86,10 @@ export function PublishProjectModal({ onClose, onSuccess, editar }: { onClose: (
   const initialCategoryId = searchParams.get("categoria") || "";
 
   const [form, setForm] = useState({
-    categoryId: editar?.categoryId || initialCategoryId,
-    description: editar?.description || "",
-    provinciaId: editar?.provinciaId || searchParams.get("provincia") || "",
-    cantonId: editar?.cantonId || searchParams.get("canton") || "",
+    categoryId: base?.categoryId || initialCategoryId,
+    description: base?.description || "",
+    provinciaId: base?.provinciaId || searchParams.get("provincia") || "",
+    cantonId: base?.cantonId || searchParams.get("canton") || "",
   });
   const [telefono, setTelefono] = useState("");
   const [error, setError] = useState<string | null>(null);
