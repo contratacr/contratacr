@@ -1,4 +1,5 @@
 import { getProfessionalBySlug } from "@/lib/queries/professionals";
+import { publicacionesDelProfesional } from "@/lib/queries/publicaciones-del-profesional";
 import ProfileClient from "./profile-client";
 import { DatosEstructurados } from "@/components/seo/datos-estructurados";
 import { getCategoryLabel } from "@/lib/data/categories";
@@ -20,10 +21,13 @@ export const revalidate = 300;
 export default async function ProfilePage({ params }: { params: Promise<{ locale: string; slug: string }> }) {
   const { locale, slug } = await params;
   const ficha = await getProfessionalBySlug(slug);
+  // Las promociones y los empleos también vienen pintados: si no, la fila de
+  // pestañas nace con cinco y salta a siete al llegar el navegador.
+  const publicaciones = ficha ? await publicacionesDelProfesional(ficha.id) : { ofertas: [], empleos: [] };
   return (
     <>
       {ficha && <DatosEstructurados datos={fichaComoNegocioLocal(ficha, locale)} />}
-      <ProfileClient fichaInicial={ficha} />
+      <ProfileClient fichaInicial={ficha} ofertasIniciales={publicaciones.ofertas} empleosIniciales={publicaciones.empleos} />
     </>
   );
 }

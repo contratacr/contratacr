@@ -137,7 +137,7 @@ type ProfilePageData = {
  * metadatos. El dato ya lo tenía el servidor —la cabecera lo consulta para los
  * metadatos, con la misma consulta cacheada—, así que traerlo no cuesta nada.
  */
-export default function ProfilePage({ fichaInicial }: { fichaInicial?: ProfessionalDetail | null }) {
+export default function ProfilePage({ fichaInicial, ofertasIniciales = [], empleosIniciales = [] }: { fichaInicial?: ProfessionalDetail | null; ofertasIniciales?: ProfessionalOffer[]; empleosIniciales?: JobPost[] }) {
   const t = useTranslations("profile");
   const tMenu = useTranslations("menuFicha");
   const locale = useLocale();
@@ -147,8 +147,11 @@ export default function ProfilePage({ fichaInicial }: { fichaInicial?: Professio
   const routeSlug = Array.isArray(routeSlugParam) ? routeSlugParam[0] : routeSlugParam;
   const [professional, setProfessional] = useState<ProfessionalDetail | null>(fichaInicial ?? null);
   const [profileSlots, setProfileSlots] = useState<ScheduleSlot[]>([]);
-  const [publicOffers, setPublicOffers] = useState<ProfessionalOffer[]>([]);
-  const [publicJobs, setPublicJobs] = useState<JobPost[]>([]);
+  // NACEN CON LO QUE PINTÓ EL SERVIDOR. Arrancando en [] la fila de pestañas
+  // salía con cinco y pasaba a siete al llegar la consulta del navegador:
+  // «Promociones» y «Empleos» aparecían tarde y corrían de sitio a las demás.
+  const [publicOffers, setPublicOffers] = useState<ProfessionalOffer[]>(ofertasIniciales);
+  const [publicJobs, setPublicJobs] = useState<JobPost[]>(empleosIniciales);
   // Con la ficha del servidor no hay nada que esperar: se pinta y la consulta
   // de fondo solo confirma.
   const [loading, setLoading] = useState(!fichaInicial);
@@ -796,11 +799,11 @@ export default function ProfilePage({ fichaInicial }: { fichaInicial?: Professio
           ) : (
             <div className={cn(
               "-mx-4 mb-6 flex items-center justify-between gap-3 border-b border-[#e5e7eb] bg-white px-4 py-2.5 sm:-mx-6 sm:px-6",
-              // En computadora, un enlace discreto encima del contenido, igual que
-              // en una oferta o un empleo: la franja blanca de lado a lado solo
-              // para dos palabras empujaba la ficha hacia abajo y competía con la
-              // barra del sitio, que ahí está siempre a la vista.
-              "lg:mx-0 lg:mb-3 lg:border-0 lg:bg-transparent lg:px-0 lg:py-0",
+              // EN COMPUTADORA NO SE DIBUJA. La flecha del navegador ya está a
+              // la izquierda de la dirección y hace exactamente eso; una segunda
+              // dentro de la página duplica el camino. En el teléfono se queda,
+              // que ahí no hay otra. (Prueba: sin-volver-en-computadora.spec.ts)
+              "lg:hidden",
               // La barra superior toma el título y el «volver» SOLO en el teléfono
               // (ahí es donde dibuja «← Título»). En computadora la barra no lo
               // dibuja, así que ocultar el de la página dejaba la ficha sin ningún

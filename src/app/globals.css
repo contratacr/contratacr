@@ -2088,9 +2088,15 @@ body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-native-fab {
 
 /* Pictures that mount only once loaded (Radix avatars) reveal with a short fade
    instead of popping over their fallback. */
-@keyframes ccr-img-reveal { from { opacity: 0; } to { opacity: 1; } }
-.ccr-img-reveal { animation: ccr-img-reveal 220ms ease-out both; }
-@media (prefers-reduced-motion: reduce) { .ccr-img-reveal { animation: none; } }
+/* LA FOTO QUE YA VINO PINTADA NO SE ESCONDE PARA VOLVER A APARECER.
+   Esta clase hacía un fundido de 220 ms desde opacidad 0 en TODA foto de perfil,
+   en cada carga, viniera o no en el HTML del servidor: medido, la de la ficha
+   del profesional arrancaba en 0 y subía a 1 a la vista, en computadora y en
+   teléfono. No hacía falta para nada: Radix ya muestra las iniciales mientras
+   la imagen no está, así que no hay ningún salto que suavizar —solo se estaba
+   tapando algo que ya se veía—. Se queda el nombre de la clase, sin animación,
+   porque lo usa el componente de avatar. */
+.ccr-img-reveal { animation: none; }
 
 /* The mobile results sheet must never show the map beneath its lower edge. In-app
    browsers on iOS (Facebook/Instagram's WKWebView) shift the "fixed" bottom by the

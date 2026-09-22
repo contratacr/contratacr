@@ -2032,7 +2032,13 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                   )
                 ) : (
                 <div className="ml-auto flex shrink-0 items-center gap-0.5">
-                  {user && !sectionMenu && !sectionPaso && <NotificationBell scope="all" />}
+                  {/* EL «···» ES SIEMPRE EL ÚLTIMO DE LA DERECHA y la campana va
+                      a su izquierda. Antes la campana se escondía en cuanto la
+                      pantalla traía «···», así que en la ficha de un profesional
+                      se perdían las notificaciones. El menú que desborda va al
+                      final: así el pulgar encuentra lo mismo en la misma
+                      esquina, pantalla tras pantalla. */}
+                  {user && !sectionPaso && <NotificationBell scope="all" />}
                   {user && sectionPaso && !sectionMenu && <span className="h-10 w-10" aria-hidden />}
                   {!user && !sectionShare && !sectionMenu && <HeaderAccountLink />}
                 </div>
