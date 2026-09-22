@@ -4024,6 +4024,7 @@
     "priceUnit_paquete": "Paquete"
   },
   "shareKit": {
+    "toolsHeading": "Herramientas",
     "title": "Compartir mi perfil",
     "subtitle": "Los clientes que ya te conocen son los que más te recomiendan.",
     "cardTitle": "Tarjeta con QR",

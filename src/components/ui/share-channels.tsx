@@ -1,14 +1,12 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { Mail, Share2 } from "lucide-react";
 import { ShareLinkPanel } from "@/components/ui/share-link-panel";
-import { useNativeShare } from "@/hooks/use-native-share";
 
 // El enlace y las tres formas en que la gente lo manda de verdad. Lo usan el
 // "Compartir" del perfil y el kit del profesional, para que sea lo mismo en
 // los dos lados.
-type Props = { url: string; name: string; linkLabel?: string; copyLabel?: string; mensaje?: string; asunto?: string };
+type Props = { url: string; name: string; linkLabel?: string; copyLabel?: string; mensaje?: string };
 
 export function WhatsAppIcon({ className }: { className?: string }) {
   return (
@@ -20,51 +18,34 @@ export function WhatsAppIcon({ className }: { className?: string }) {
 
 
 
-export function ShareChannels({ url, name, linkLabel, copyLabel, mensaje, asunto }: Props) {
+export function ShareChannels({ url, name, linkLabel, copyLabel, mensaje }: Props) {
   const t = useTranslations("shareProfile");
-  const nativo = useNativeShare();
-
   const texto = mensaje ?? t("message", { name });
   const wa = `https://wa.me/?text=${encodeURIComponent(`${texto} ${url}`)}`;
-  const correo = `mailto:?subject=${encodeURIComponent(asunto ?? t("emailSubject", { name }))}&body=${encodeURIComponent(`${texto}\n${url}`)}`;
 
-  // INSTAGRAM Y FACEBOOK SE RETIRAN.
+  // DOS FORMAS, NO SEIS. Un enlace se manda por WhatsApp o se copia y se pega
+  // donde sea; todo lo demas era relleno con problemas propios.
   //
-  // Instagram no recibe enlaces: no existe forma de mandarle uno desde el
-  // navegador. Lo que habia era un apano —copiar el enlace, abrir
-  // instagram.com y avisar que lo pegaras—, y encima el `window.open` venia
-  // despues de un `await` al portapapeles, asi que el navegador lo tomaba como
-  // ventana emergente sin permiso y la bloqueaba: de cara a quien lo tocaba, no
-  // pasaba nada.
-  //
-  // Facebook si funciona, pero solo con una direccion publica —en pruebas no
-  // hace nada— y detras de un dialogo que pide iniciar sesion. En el telefono,
-  // «Mas opciones» abre la hoja del sistema, que lleva a Instagram, Facebook y
-  // a lo que la persona tenga instalado, y lo hace bien.
-  //
-  // Queda lo que de verdad se usa: WhatsApp, copiar el enlace, correo y la hoja
-  // del sistema.
+  // Instagram NO RECIBE ENLACES: no hay forma de mandarle uno desde el
+  // navegador. Lo que habia era un apano —copiar, abrir instagram.com y avisar
+  // que lo pegaras— y encima el `window.open` iba despues de un `await` al
+  // portapapeles, asi que el navegador lo bloqueaba por emergente. Facebook
+  // solo funciona con una direccion publica y detras de un dialogo que pide
+  // iniciar sesion. El correo no es como se comparte un perfil aqui, y «Mas
+  // opciones» solo existia en el telefono: dos botones que la mitad de la
+  // gente nunca veia.
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-2.5">
       <ShareLinkPanel url={url} label={linkLabel ?? t("linkLabel")} copyLabel={copyLabel ?? t("copy")} copiedLabel={t("copied")} />
-      <a href={wa} target="_blank" rel="noopener noreferrer" className="inline-flex h-12 w-full items-center justify-center gap-2.5 rounded-full bg-[#25d366] px-5 text-[15px] font-bold text-white transition-colors hover:bg-[#1eb457]">
-        <WhatsAppIcon className="h-5 w-5" />{t("whatsapp")}
+      <a
+        href={wa}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="inline-flex h-12 w-full items-center justify-center gap-2.5 rounded-2xl bg-[#25d366] px-5 text-[15px] font-bold text-white shadow-[0_8px_18px_-12px_rgba(37,211,102,0.9)] transition-colors hover:bg-[#1eb457]"
+      >
+        <WhatsAppIcon className="h-[18px] w-[18px]" />{t("whatsapp")}
       </a>
-      <div className="flex flex-wrap gap-2.5">
-        <a href={correo} className="inline-flex h-10 flex-1 items-center justify-center gap-2 rounded-full border border-[#d7e1ea] px-4 text-[13px] font-bold text-[#162543] transition-colors hover:border-[#b9c8d6] hover:bg-[#f6f9fb]">
-          <Mail className="h-4 w-4" />{t("email")}
-        </a>
-        {nativo && (
-          <button
-            type="button"
-            onClick={() => { void navigator.share({ title: name, text: texto, url }).catch(() => {}); }}
-            className="inline-flex h-10 flex-1 items-center justify-center gap-2 rounded-full border border-[#d7e1ea] px-4 text-[13px] font-bold text-[#162543] transition-colors hover:border-[#b9c8d6] hover:bg-[#f6f9fb]"
-          >
-            <Share2 className="h-4 w-4" />{t("more")}
-          </button>
-        )}
-      </div>
     </div>
   );
 }

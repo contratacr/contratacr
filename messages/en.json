@@ -4024,6 +4024,7 @@
     "priceUnit_paquete": "Package"
   },
   "shareKit": {
+    "toolsHeading": "Tools",
     "title": "Share my profile",
     "subtitle": "The clients who already know you are the ones who recommend you most.",
     "cardTitle": "QR card",

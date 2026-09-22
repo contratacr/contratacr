@@ -241,7 +241,10 @@ export function ShareKit({ open, onClose, profileUrl, name, services = [], avata
           {/* Es MI perfil el que comparto: «Mira el perfil de Isaac…» lo escribiría
               otra persona. */}
           <ShareChannels url={profileUrl} name={name} mensaje={tShare("messageOwn")} linkLabel={t("linkLabel")} copyLabel={t("copy")} />
-          <div className="mt-1 h-px bg-[#eef2f6]" />
+          {/* Sin la linea suelta: lo de arriba es MANDAR el enlace y lo de
+              abajo son dos herramientas que se preparan. El aire y el rotulo
+              separan mejor que un filete de 1 px. */}
+          <p className="mt-1 text-[11px] font-bold uppercase tracking-[0.12em] text-[#8fa1b6]">{t("toolsHeading")}</p>
           {option(miniTarjeta, t("cardTitle"), t("cardBody"), () => setView("card"))}
           {option(miniResena, t("reviewsTitle"), t("reviewsBody"), () => setView("reviews"))}
         </div>
