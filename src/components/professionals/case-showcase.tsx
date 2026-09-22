@@ -138,7 +138,15 @@ export function CaseShowcase({
           value={selectedActive}
           onChange={(id) => setActive(id || selectedActive)}
           labelFor={profLabel}
-          siempreCarril
+          // EL MISMO CONTROL QUE EN EL PANEL. Elegir a qué servicio pertenece un
+          // caso es la misma decisión en los dos sitios, y se dibujaba distinta:
+          // aquí una barra segmentada gris siempre en carril, y en el panel
+          // pastillas de contorno. Las pastillas ganan porque esto no es una
+          // etapa de una misma lista —eso sí es una barra segmentada— sino un
+          // servicio entre varios; y en computadora se envuelven en más líneas
+          // en vez de esconder los últimos a la derecha.
+          variant="chips"
+          limpiable={false}
         />
       )}
 
