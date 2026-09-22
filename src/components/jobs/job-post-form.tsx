@@ -24,7 +24,7 @@ import {
 } from "@/lib/jobs";
 import { SelectMenu } from "@/components/ui/select-menu";
 import { FutureDatePicker } from "@/components/ui/future-date-picker";
-import { ToggleSwitch } from "@/components/ui/toggle-switch";
+import { FilaInterruptor } from "@/components/ui/fila-interruptor";
 import { PROVINCES, getCantonById, getCantonsByProvince, getProvinceById } from "@/lib/data/cr-geography";
 import { MAX_MONEY_AMOUNT, formatNumberForMessage, isWholeNumberInRange, parseOptionalWholeNumber } from "@/lib/forms/numeric-validation";
 import { employmentTypeLabel, experienceLevelLabel, marketplaceLocale, salaryPeriodLabel, workplaceTypeLabel } from "@/lib/marketplace-copy";
@@ -522,18 +522,13 @@ export function JobPostForm({ professionalId, backHref = "/empleos", initialJob 
               <FieldError>{fieldErrors.deadline}</FieldError>
             </div>
           </div>
-          <button
-            type="button"
-            role="switch"
-            aria-checked={showSalary}
-            aria-disabled={!haySalario}
+          <FilaInterruptor
+            className="mt-5"
+            titulo={copy.showSalary}
+            checked={showSalary}
             disabled={!haySalario}
-            onClick={() => setShowSalary((current) => !current)}
-            className="mt-5 flex w-full items-center justify-between gap-4 py-1 text-left text-sm font-semibold text-[#162543] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9]/35 disabled:cursor-not-allowed disabled:text-[#8a98aa]"
-          >
-            <span>{copy.showSalary}</span>
-            <ToggleSwitch checked={showSalary} disabled={!haySalario} />
-          </button>
+            onChange={(valor) => setShowSalary(valor)}
+          />
           {error && <p role="alert" className="mt-5 rounded-lg bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">{error}</p>}
           </div>
           <div className={cn(

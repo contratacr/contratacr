@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { UnsavedChangesGuard } from "@/components/dashboard/unsaved-changes-guard";
 import { useLocale, useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
+import { ToggleSwitch } from "@/components/ui/toggle-switch";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import { X, Lock, Loader2, MapPin, ChevronDown, ChevronLeft, ChevronRight, Calendar, CalendarClock, Pencil, Trash2, MoreHorizontal, Video } from "lucide-react";
@@ -27,26 +28,6 @@ const COUNTRY_LOCATION_ID = "wp_todo_costa_rica";
 // Monday-first display order (JS getDay: 0=Sun ... 6=Sat).
 const WEEKDAY_ORDER = [1, 2, 3, 4, 5, 6, 0];
 const DURATION_OPTIONS = [30, 45, 60, 90, 120];
-
-function AvailabilitySwitch({ checked, disabled = false }: { checked: boolean; disabled?: boolean }) {
-  return (
-    <span
-      aria-hidden="true"
-      className={cn(
-        "relative inline-flex h-6 w-11 shrink-0 rounded-full transition-colors duration-200",
-        checked ? "bg-[#009FD9]" : "bg-[#cbd5e1]",
-        disabled && "opacity-55",
-      )}
-    >
-      <span
-        className={cn(
-          "absolute top-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition-transform duration-200",
-          checked ? "translate-x-5.5" : "translate-x-0.5",
-        )}
-      />
-    </span>
-  );
-}
 
 type Franja = { id: string; start: string; end: string };
 // A weekly time block in the UNIFIED per-day view - a franja that CARRIES its own
@@ -889,10 +870,16 @@ export function AvailabilityEditor({
       role="switch"
       aria-checked={checked}
       aria-label={ariaLabel}
-      className="inline-flex w-fit items-center gap-3 text-left text-sm font-semibold text-[#162543] transition-opacity disabled:cursor-not-allowed disabled:opacity-60"
+      // EL MISMO ORDEN QUE EL RESTO DEL APP: el rotulo primero y el interruptor
+      // a la derecha, con el mismo tope de ancho de `FilaInterruptor`. Aqui
+      // estaba al reves —interruptor y despues texto— y en la misma pantalla
+      // convivian los dos dibujos. No usa `FilaInterruptor` porque mientras
+      // guarda cambia el interruptor por la rueda, y eso ese componente no lo
+      // sabe hacer; el dibujo, eso si, es exactamente el mismo.
+      className="flex w-full max-w-xl items-center justify-between gap-4 text-left text-sm font-semibold text-[#162543] transition-opacity disabled:cursor-not-allowed disabled:opacity-60"
     >
-      {loading ? <Loader2 className="h-5 w-5 shrink-0 animate-spin text-[#009FD9]" /> : <AvailabilitySwitch checked={checked} disabled={disabled} />}
-      <span>{title}</span>
+      <span className="min-w-0">{title}</span>
+      {loading ? <Loader2 className="h-5 w-5 shrink-0 animate-spin text-[#009FD9]" /> : <ToggleSwitch checked={checked} disabled={disabled} />}
     </button>
   );
 
@@ -1030,7 +1017,7 @@ export function AvailabilityEditor({
                         aria-label={t(`weekday${wd}` as `weekday${number}`)}
                         aria-pressed={on}
                       >
-                        <AvailabilitySwitch checked={on} disabled={scheduleControlsDisabled} />
+                        <ToggleSwitch checked={on} disabled={scheduleControlsDisabled} />
                       </button>
                     </div>
 
@@ -1043,7 +1030,7 @@ export function AvailabilityEditor({
                         aria-label={t(`weekday${wd}` as `weekday${number}`)}
                         aria-pressed={on}
                       >
-                        <AvailabilitySwitch checked={on} disabled={scheduleControlsDisabled} />
+                        <ToggleSwitch checked={on} disabled={scheduleControlsDisabled} />
                       </button>
                     </div>
 
@@ -1101,7 +1088,7 @@ export function AvailabilityEditor({
                             aria-label={t(`weekday${wd}` as `weekday${number}`)}
                             aria-pressed={false}
                           >
-                            <AvailabilitySwitch checked={false} disabled={scheduleControlsDisabled} />
+                            <ToggleSwitch checked={false} disabled={scheduleControlsDisabled} />
                           </button>
                         </div>
                       ))}

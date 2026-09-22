@@ -28,6 +28,7 @@ import { professionalCredentialSuggestion, serviceSupportsProfessionalCredential
 import { SectionHeadline } from "@/components/dashboard/section-headline";
 import { AutoSaveHint } from "@/components/dashboard/auto-save-hint";
 import { PIE_VENTANA_BASE } from "@/components/ui/acciones-al-pie";
+import { ToggleSwitch } from "@/components/ui/toggle-switch";
 import { FilaInterruptor } from "@/components/ui/fila-interruptor";
 
 export type ProService = {
@@ -84,25 +85,6 @@ interface ServiceFormState {
 const EMPTY_FORM: ServiceFormState = { description: "", priceUnit: "por_hora", priceAmount: "", aConsultar: false, startedAt: "", imageUrl: "", professionalCredentialLabel: "", professionalCredentialNumber: "", professionalCredentialIssuer: "" };
 const SERVICE_DESCRIPTION_MAX_LENGTH = 600;
 const PROFESSIONAL_CREDENTIAL_MAX_LENGTH = 80;
-
-function ServiceActiveToggle({ checked }: { checked: boolean }) {
-  return (
-    <span
-      aria-hidden="true"
-      className={cn(
-        "relative inline-flex h-6 w-11 shrink-0 items-center rounded-full border transition-colors",
-        checked ? "border-[#009FD9] bg-[#009FD9]" : "border-[#d7e1ea] bg-[#e2e8f0]",
-      )}
-    >
-      <span
-        className={cn(
-          "h-5 w-5 rounded-full bg-white shadow-[0_1px_3px_rgba(15,23,42,0.22)] transition-transform",
-          checked ? "translate-x-[21px]" : "translate-x-0.5",
-        )}
-      />
-    </span>
-  );
-}
 
 function trimCredential(value: string) {
   return value.trim().slice(0, PROFESSIONAL_CREDENTIAL_MAX_LENGTH);
@@ -722,7 +704,7 @@ export function ServicesEditor({
                       aria-pressed={isActive}
                       className="inline-flex shrink-0 items-center gap-2 rounded-md px-1 py-0.5 text-xs font-bold text-[#526277] transition-colors hover:text-[#162543] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9] focus-visible:ring-offset-2"
                     >
-                      <ServiceActiveToggle checked={isActive} />
+                      <ToggleSwitch checked={isActive} />
                     </button>
                   </div>
 

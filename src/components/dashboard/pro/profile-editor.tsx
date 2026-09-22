@@ -6,7 +6,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { UnsavedChangesGuard } from "@/components/dashboard/unsaved-changes-guard";
 import { useReportSaveStatus } from "@/components/dashboard/save-status-context";
-import { ToggleSwitch } from "@/components/ui/toggle-switch";
+import { FilaInterruptor } from "@/components/ui/fila-interruptor";
 import { Input } from "@/components/ui/input";
 import { ImagePreviewDialog } from "@/components/ui/image-preview-dialog";
 import { PhoneInput, isPhoneComplete } from "@/components/ui/phone-input";
@@ -130,6 +130,8 @@ function Section({ id, title, desc, open, mobileFocused, onToggle, onActivate, c
   );
 }
 
+/** La misma fila de siempre, ya no dibujada aparte: `FilaInterruptor` es la
+ *  unica que sabe hasta donde puede alejarse el interruptor de su rotulo. */
 function ProfileCheckRow({
   title,
   description,
@@ -144,20 +146,12 @@ function ProfileCheckRow({
   ariaLabel: string;
 }) {
   return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={checked}
-      aria-label={ariaLabel}
-      onClick={onToggle}
-      className="flex w-full items-center justify-between gap-4 py-1 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9]/35"
-    >
-      <span className="min-w-0">
-        <span className="block text-sm font-semibold text-[#162543]">{title}</span>
-        {description ? <span className="mt-0.5 block text-xs leading-5 text-[#64748b]">{description}</span> : null}
-      </span>
-      <ToggleSwitch checked={checked} />
-    </button>
+    <FilaInterruptor
+      titulo={<span aria-label={ariaLabel}>{title}</span>}
+      ayuda={description}
+      checked={checked}
+      onChange={onToggle}
+    />
   );
 }
 
@@ -1121,25 +1115,17 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
             {t("workplaces")} <span className="text-red-500">*</span>
           </label>
           {canOfferVideoConsult ? (
-            <button
-              type="button"
-              role="switch"
-              aria-checked={videoConsult && videoCoverageCountry}
-              aria-label={t("videoConsultOption")}
-              onClick={() => {
-                const next = !(videoConsult && videoCoverageCountry);
+            <FilaInterruptor
+              className="mb-4"
+              titulo={t("videoConsultOption")}
+              ayuda={t("videoCountryHelp")}
+              checked={videoConsult && videoCoverageCountry}
+              onChange={(next) => {
                 setVideoConsult(next);
                 setVideoCoverageCountry(next);
                 touch("location");
               }}
-              className="mb-4 flex w-full items-center justify-between gap-4 py-1 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9]/35"
-            >
-              <span className="min-w-0">
-                <span className="block text-sm font-semibold text-[#162543]">{t("videoConsultOption")}</span>
-                <span className="mt-0.5 block text-xs leading-5 text-[#64748b]">{t("videoCountryHelp")}</span>
-              </span>
-              <ToggleSwitch checked={videoConsult && videoCoverageCountry} />
-            </button>
+            />
           ) : null}
           <WorkplacesPicker
             value={workplaces}

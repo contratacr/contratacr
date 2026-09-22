@@ -38,7 +38,7 @@ import { getImageUploadPreparationErrorCode, prepareImageForUpload, uploadPhotoF
 import { trackMetaEvent } from "@/lib/analytics/meta-pixel";
 import { readAttribution } from "@/lib/analytics/attribution";
 import { PanelSwitch } from "@/components/dashboard/panel-toggle-row";
-import { ToggleSwitch } from "@/components/ui/toggle-switch";
+import { FilaInterruptor } from "@/components/ui/fila-interruptor";
 import { BARRA_ACCION_FIJA, useBarraAccionFija } from "@/components/ui/acciones-al-pie";
 
 // Category data lives in src/lib/data/categories.ts (single source of truth).
@@ -1399,17 +1399,12 @@ export default function RegisterProfessionalPage() {
                   {/* Un renglón y un interruptor, idéntico a «Contacto» en Mi
                       perfil: el mismo control tiene que verse igual en los dos
                       lados, si no parecen dos ajustes distintos. */}
-                  <button
-                    type="button"
-                    role="switch"
-                    aria-checked={aceptaLlamadas}
-                    aria-label={t("allowCallsLabel")}
-                    onClick={() => setAceptaLlamadas((v) => !v)}
-                    className="mt-3 flex w-full items-center justify-between gap-4 py-1 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9]/35"
-                  >
-                    <span className="min-w-0 text-sm font-semibold text-[#162543]">{t("allowCallsLabel")}</span>
-                    <ToggleSwitch checked={aceptaLlamadas} />
-                  </button>
+                  <FilaInterruptor
+                    className="mt-3"
+                    titulo={t("allowCallsLabel")}
+                    checked={aceptaLlamadas}
+                    onChange={setAceptaLlamadas}
+                  />
               </section>
 
               <BarraDeAcciones activa={!!currentUser}>
