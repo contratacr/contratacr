@@ -96,6 +96,7 @@ export function BookingRequests() {
   const dateLocale = locale === "en" ? "en-US" : "es-CR";
   const { dialogNode, showMessage } = useAppDialog();
   const errorTitle = locale === "en" ? "Something went wrong" : "No se pudo completar la acción";
+  const moreOptionsLabel = locale === "en" ? "More options" : "Más opciones";
 
   function ageLabel(dob?: string | null) {
     const age = dob ? computeAge(dob) : null;
@@ -509,7 +510,7 @@ export function BookingRequests() {
                   </div>
                   {/* El mismo «···» compartido de todo el panel. */}
                   <CardActionsMenu
-                    label={locale === "en" ? "More options" : "Más opciones"}
+                    label={moreOptionsLabel}
                     menuClassName="w-48"
                     triggerClassName="border-[#d7e1ea]"
                     actions={[
@@ -589,7 +590,7 @@ export function BookingRequests() {
                     )}
                   </div>
                   <CardActionsMenu
-                    label={locale === "en" ? "More options" : "Más opciones"}
+                    label={moreOptionsLabel}
                     menuClassName="w-48"
                     triggerClassName="border-[#d7e1ea]"
                     actions={[

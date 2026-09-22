@@ -600,8 +600,13 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
   const initialSort = initialParam("sortBy");
   const [sortBy, setSortBy] = useState(normalizeSort(initialSort));
   const sortLabel = t(`sort.${SORT_OPTIONS.includes(sortBy as (typeof SORT_OPTIONS)[number]) ? sortBy : "rating"}`);
+  // UNA SOLA MODALIDAD. Solo hay dos —presencial y videoconsulta— y la
+  // consulta filtra únicamente cuando hay UNA marcada: con las dos no filtraba
+  // nada, pero el chip decía «Modalidad (2)». Un estado muerto. Es una opción
+  // única con «Cualquier modalidad», como Orden y Precio a su lado; se guarda
+  // en lista de uno para no tocar la dirección (`modalidad=`) ni la consulta.
   const [modalities, setModalities] = useState<SearchModality[]>(() =>
-    parseMultiParam(initialParam("modalidad")).filter(isSearchModality)
+    parseMultiParam(initialParam("modalidad")).filter(isSearchModality).slice(0, 1)
   );
   const [insurers, setInsurers] = useState(() =>
     isHealthCategory(initialCategory) ? parseMultiParam(initialParam("aseguradora")) : []
@@ -650,7 +655,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
     const nextProvince = params.get("provincia") ?? initialValues?.provincia ?? "";
     const nextCanton = params.get("canton") ?? initialValues?.canton ?? "";
     const nextSort = params.get("sortBy") ?? initialValues?.sortBy ?? "";
-    const nextModalities = parseMultiParam(params.get("modalidad") ?? initialValues?.modalidad ?? "").filter((value) => value === "video" || value === "in_person");
+    const nextModalities = parseMultiParam(params.get("modalidad") ?? initialValues?.modalidad ?? "").filter((value) => value === "video" || value === "in_person").slice(0, 1);
     const nextInsurers = parseMultiParam(params.get("aseguradora") ?? initialValues?.aseguradora ?? "");
     const nextLanguages = parseMultiParam(params.get("idioma") ?? initialValues?.idioma ?? "");
     const nextPrice = params.get("precio") ?? initialValues?.precio ?? "";
@@ -1141,7 +1146,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
             <span className="min-w-0 whitespace-nowrap">{priceText}</span><ChevronDown className="h-3 w-3 shrink-0 min-[390px]:h-3.5 min-[390px]:w-3.5" />
           </button>
           {showVideoFilter && <button type="button" onPointerDown={anclarEn} onClick={alTocarChip(() => setOpenChip("modality"))} className={pill}>
-            <span className="min-w-0 whitespace-nowrap">{modalities.length ? `${t("filters.attention")} (${modalities.length})` : t("filters.attention")}</span><ChevronDown className="h-3.5 w-3.5 shrink-0" />
+            <span className="min-w-0 whitespace-nowrap">{modalityOptions.find((option) => option.value === modalities[0])?.label ?? t("filters.attention")}</span><ChevronDown className="h-3.5 w-3.5 shrink-0" />
           </button>}
           {showInsurerFilter && <button type="button" onPointerDown={anclarEn} onClick={alTocarChip(() => setOpenChip("insurer"))} className={pill}>
             <span className="min-w-0 whitespace-nowrap">{insurers.length ? `${t("filters.insurer")} (${insurers.length})` : t("filters.insurer")}</span><ChevronDown className="h-3.5 w-3.5 shrink-0" />
@@ -1194,7 +1199,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
             setOpenChip(null);
           }}
         />
-        {showVideoFilter && <MultiFilterSheet ancla={anclaChip} open={openChip === "modality"} title={t("filters.attention")} values={modalities} options={modalityOptions} onClose={() => setOpenChip(null)} onApply={(next) => { const nextModalities = next.filter(isSearchModality); setModalities(nextModalities); applyFilters({ modalidad: serializeMultiParam(nextModalities) }); setOpenChip(null); }} />}
+        {showVideoFilter && <FilterSheet ancla={anclaChip} open={openChip === "modality"} title={t("filters.attention")} value={modalities[0] ?? ""} options={[{ value: "", label: t("filters.attentionAny") }, ...modalityOptions]} onClose={() => setOpenChip(null)} onSelect={(value) => { const next = isSearchModality(value) ? [value] : []; setModalities(next); applyFilters({ modalidad: serializeMultiParam(next) }); setOpenChip(null); }} />}
         {showInsurerFilter && <MultiFilterSheet ancla={anclaChip} open={openChip === "insurer"} title={t("filters.insurer")} values={insurers} options={insurerOptions.map((item) => ({ value: item.id, label: item.label }))} onClose={() => setOpenChip(null)} onApply={(next) => { setInsurers(next); applyFilters({ aseguradora: serializeMultiParam(next) }); setOpenChip(null); }} />}
       </Carril>
     );
