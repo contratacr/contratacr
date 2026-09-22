@@ -215,7 +215,7 @@ export function StatusFilterTabs({
     const plegados = tabs.filter((tab) => !siempreVisibles.has(tab.id)).length;
     const CHIP = "inline-flex h-9 shrink-0 items-center gap-1 whitespace-nowrap rounded-full border px-3.5 text-[13px] font-semibold transition-colors";
     return (
-      <div data-status-filter-tabs="" data-filter-layout="chips" className="group/carril relative w-full max-w-full min-w-0 overflow-hidden lg:overflow-visible">
+      <div data-status-filter-tabs="" data-filter-layout="chips" className="group/carril relative w-full max-w-full min-w-0 overflow-hidden">
         <FlechasDeCarril carril={carrilRef} />
         {/* EL DEGRADADO TAMBIÉN AQUÍ. Se calculaba (`mascaraCarril`) pero solo
             se aplicaba en la variante segmentada: estas pastillas se quedaban

@@ -70,8 +70,11 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
         />
         {/* LOS CARRILES EN COMPUTADORA. En pantalla grande con mouse nadie
             desliza con el dedo, así que:
-            · los filtros en pastillas (`ccr-carril-chips`) NO se desplazan:
-              bajan a otro renglón y quedan todos a la vista;
+            · los filtros en pastillas (`ccr-carril-chips`) van SIEMPRE en una
+              sola línea, también en computadora: envueltos, seis servicios ya
+              eran tres renglones y la fila de filtros empujaba el contenido
+              hacia abajo. Es el carril de YouTube, LinkedIn y Airbnb: una
+              línea, degradado a la derecha y flechas con el cursor encima;
             · lo que sí tiene que ir en una línea —pestañas, miniaturas—
               (`ccr-carril`) enseña una barrita fina al pasar el cursor y se
               puede arrastrar con el mouse (use-arrastre-horizontal).
@@ -124,7 +127,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
         <style
           data-ccr-carriles=""
           dangerouslySetInnerHTML={{
-            __html: `.ccr-carril-chips .ccr-ver-mas{display:none!important}@media (min-width:1024px) and (hover:hover) and (pointer:fine){.ccr-carril-chips [data-plegado]{display:none!important}.ccr-carril-chips .ccr-ver-mas{display:inline-flex!important}.ccr-carril-chips{flex-wrap:wrap!important;overflow:visible!important;-webkit-mask-image:none!important;mask-image:none!important}.ccr-carril{scrollbar-width:thin!important;scrollbar-color:transparent transparent}.ccr-carril:hover{scrollbar-color:#c5d2de transparent}.ccr-carril::-webkit-scrollbar{display:block!important;height:6px}.ccr-carril::-webkit-scrollbar-track{background:transparent}.ccr-carril::-webkit-scrollbar-thumb{background:transparent;border-radius:999px}.ccr-carril:hover::-webkit-scrollbar-thumb{background:#c5d2de}.ccr-carril:hover::-webkit-scrollbar-thumb:hover{background:#9fb1c2}}`,
+            __html: `.ccr-carril-chips .ccr-ver-mas{display:none!important}@media (min-width:1024px) and (hover:hover) and (pointer:fine){.ccr-carril{scrollbar-width:thin!important;scrollbar-color:transparent transparent}.ccr-carril:hover{scrollbar-color:#c5d2de transparent}.ccr-carril::-webkit-scrollbar{display:block!important;height:6px}.ccr-carril::-webkit-scrollbar-track{background:transparent}.ccr-carril::-webkit-scrollbar-thumb{background:transparent;border-radius:999px}.ccr-carril:hover::-webkit-scrollbar-thumb{background:#c5d2de}.ccr-carril:hover::-webkit-scrollbar-thumb:hover{background:#9fb1c2}}`,
           }}
         />
         {/* La fila de acciones de TODA tarjeta del panel —Mis proyectos, Mis
