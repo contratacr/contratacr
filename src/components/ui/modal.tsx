@@ -203,10 +203,10 @@ export function Modal({
         conFlecha || fullscreenMobile
           ? "absolute left-4 top-1/2 -translate-y-1/2 sm:static sm:translate-y-0"
           : "absolute right-4 top-1/2 -translate-y-1/2 sm:static sm:translate-y-0",
-        // Centrada, la equis se ancla al filo igual que el «···» del otro lado:
-        // quieta en la fila quedaba con el relleno de la cabecera encima (24 px)
-        // mientras el «···» iba a 16, y el reparto se veía torcido.
-        cabeceraCentrada && "sm:absolute sm:left-auto sm:right-4 sm:top-1/2 sm:-translate-y-1/2",
+        // Centrada, la SALIDA se queda a la IZQUIERDA en todos los tamaños,
+        // que es donde ya estaba en el teléfono: la misma ventana tenía la
+        // equis a un lado en el teléfono y al otro en computadora.
+        cabeceraCentrada && "sm:absolute sm:left-4 sm:right-auto sm:top-1/2 sm:-translate-y-1/2",
       )}
     >
       {conFlecha ? (
@@ -291,14 +291,13 @@ export function Modal({
           {accionCabecera && (
             <div className={cn(
               "absolute top-1/2 flex -translate-y-1/2 items-center",
-              // Centrada, el «···» se va al extremo CONTRARIO de la equis: uno
-              // a cada lado del título, que es como se reparte la cabecera de
-              // una ficha. Si no, vuelve a la fila junto a la salida.
-              // En el teléfono NO se toca: ahí la salida es la flecha de la
-              // izquierda y el «···» ya vive pegado al filo derecho. El reparto
-              // a tres piezas es de computadora, que es donde se pidió.
+              // Centrada, el «···» se queda a la DERECHA en todos los tamaños:
+              // es donde vive en el resto del app —las tarjetas del panel, la
+              // ficha, cada fila de avisos— y donde ya estaba en el teléfono.
+              // La salida se va al otro extremo, que en el teléfono también es
+              // el suyo: así la misma ventana se reparte igual en los dos.
               fullscreenMobile ? "right-3" : "right-12",
-              cabeceraCentrada ? "sm:left-4 sm:right-auto" : "sm:static sm:translate-y-0 sm:order-none sm:self-start",
+              cabeceraCentrada ? "sm:right-4" : "sm:static sm:translate-y-0 sm:order-none sm:self-start",
             )}>
               {accionCabecera}
             </div>
