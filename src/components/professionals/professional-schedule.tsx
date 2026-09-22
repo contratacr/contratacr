@@ -658,7 +658,15 @@ export function ProfessionalSchedule({ professional, categoryName, searchedPlace
               {zonaPrincipalEsVideo ? <Video className="h-3 w-3 shrink-0" /> : <MapPin className="h-3 w-3 shrink-0" />}
               <span className="min-w-0">{locTabLabel(primaryLocationTabs[0].label)}</span>
             </span>
-            {zonasRestantes > 0 && (onVerZonas ? (
+            {/* «+N zonas más» SOLO donde lleva a algún lado.
+                En la ficha es un botón que abre Información con la lista
+                entera. En una tarjeta de resultados no hay lista que abrir, así
+                que quedaba como texto muerto: decía que hay cinco zonas más y
+                no daba manera de verlas. Y sobre todo, no respondía la pregunta
+                de quien busca —«¿me cubre a mí?»—, que ya está respondida por
+                el hecho de que la tarjeta aparezca: si se buscó con ubicación,
+                todos los resultados la cubren. */}
+            {zonasRestantes > 0 && onVerZonas && (
               <button
                 type="button"
                 onClick={onVerZonas}
@@ -666,9 +674,7 @@ export function ProfessionalSchedule({ professional, categoryName, searchedPlace
               >
                 {t("moreZones", { count: zonasRestantes })}
               </button>
-            ) : (
-              <span className="shrink-0 font-bold text-[#52627a]">{t("moreZones", { count: zonasRestantes })}</span>
-            ))}
+            )}
           </p>
         )}
         {locationMenuOpen && extraLocationCount > 0 && (
