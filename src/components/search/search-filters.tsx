@@ -1116,6 +1116,19 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
       { value: "in_person", label: t("filters.attentionInPerson") },
       { value: "video", label: t("filters.attentionVideo") },
     ];
+    // Solo cuenta lo que se pone DESDE ESTA FILA. El servicio y la ubicación
+    // vienen del buscador de arriba y no se borran aquí.
+    const filtrosDeChipActivos =
+      (sortBy && sortBy !== "rating" ? 1 : 0) +
+      (priceFilter ? 1 : 0) + (priceUnits.length ? 1 : 0) +
+      (languages.length ? 1 : 0) +
+      (showVideoFilter && modalities.length ? 1 : 0) +
+      (showInsurerFilter && insurers.length ? 1 : 0);
+    const limpiarChips = () => {
+      setSortBy("rating"); setPriceFilter(""); setPriceUnits([]); setLanguages([]); setModalities([]); setInsurers([]);
+      applyFilters({ sortBy: "rating", precio: "", unidadPrecio: "", idioma: "", modalidad: "", aseguradora: "" });
+      setOpenChip(null);
+    };
     const priceChoice = priceChoiceFromFilters(priceFilter, priceUnits);
     const priceText = priceChoice === ANY_PRICE ? t("filters.price") : t(`priceFilter.${priceChoice}`);
     const languageText = languages.length === 1
@@ -1146,6 +1159,23 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
           <button data-testid="mobile-language-filter" type="button" onPointerDown={anclarEn} onClick={alTocarChip(() => setOpenChip("language"))} className={pill}>
             <span className="min-w-0 whitespace-nowrap">{languageText}</span><ChevronDown className="h-3 w-3 shrink-0 min-[390px]:h-3.5 min-[390px]:w-3.5" />
           </button>
+          {/* UNA FILA DE FILTROS NECESITA SALIDA. Con el orden, el precio, el
+              idioma y la modalidad puestos, volver al principio pedía abrir
+              cuatro paneles y desmarcarlos uno por uno. Sale SOLO cuando hay
+              algo puesto, para no ocupar lugar en la fila limpia, y NO toca la
+              búsqueda: el servicio y la ubicación son lo que la persona vino a
+              buscar, no un filtro que se le quita por debajo. */}
+          {filtrosDeChipActivos > 0 && (
+            <button
+              type="button"
+              onPointerDown={onPointerDownChip}
+              onClick={alTocarChip(limpiarChips)}
+              className="inline-flex h-9 w-max shrink-0 items-center gap-1 whitespace-nowrap rounded-full px-2 text-[11px] font-bold text-[#007fae] underline-offset-2 hover:underline min-[390px]:text-[12px]"
+            >
+              <X className="h-3 w-3 shrink-0 min-[390px]:h-3.5 min-[390px]:w-3.5" />
+              {t("filters.clearAll")} ({filtrosDeChipActivos})
+            </button>
+          )}
         </div>
         <FilterSheet ancla={anclaChip}
           open={openChip === "sort"}

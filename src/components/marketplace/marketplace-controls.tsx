@@ -24,6 +24,7 @@ const MARKETPLACE_CONTROL_COPY = {
     closeFilter: "Cerrar filtro",
     close: "Cerrar",
     showResults: "Ver resultados",
+    clearFilters: "Limpiar filtros",
   },
   en: {
     clearSearch: "Clear search",
@@ -41,6 +42,7 @@ const MARKETPLACE_CONTROL_COPY = {
     closeFilter: "Close filter",
     close: "Close",
     showResults: "Show results",
+    clearFilters: "Clear filters",
   },
 } as const;
 
@@ -544,6 +546,30 @@ export function MarketplaceSearch({
         </div>
       )}
     </div>
+  );
+}
+
+/**
+ * UNA FILA DE FILTROS SIN SALIDA NO ES UNA FILA DE FILTROS. Con cuatro chips
+ * puestos, volver a «todos» obligaba a abrir los cuatro y desmarcarlos uno por
+ * uno; en el teléfono, además, los de la derecha ni se ven. Este chip aparece
+ * SOLO cuando hay algo puesto —así no ocupa lugar en la fila vacía— y devuelve
+ * todos los filtros a su valor inicial de un toque. No toca la búsqueda: lo que
+ * se escribió en el buscador y la ubicación se quedan donde estaban, que es lo
+ * que hacen LinkedIn e Indeed.
+ */
+export function MarketplaceClearFilters({ activos, onClear }: { activos: number; onClear: () => void }) {
+  const copy = MARKETPLACE_CONTROL_COPY[useLocale() === "en" ? "en" : "es"];
+  if (activos < 1) return null;
+  return (
+    <button
+      type="button"
+      onClick={onClear}
+      className="inline-flex h-9 shrink-0 items-center gap-1 rounded-full px-2.5 text-[13px] font-bold text-[#007fae] underline-offset-2 hover:underline sm:px-3"
+    >
+      <X className="h-3.5 w-3.5 shrink-0" />
+      <span className="whitespace-nowrap">{copy.clearFilters} ({activos})</span>
+    </button>
   );
 }
 

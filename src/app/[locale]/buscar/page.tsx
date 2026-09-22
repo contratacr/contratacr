@@ -455,6 +455,18 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     (!!params.aseguradora && canFilterByInsurer) ||
     (!!params.sortBy && params.sortBy !== "rating" && params.sortBy !== "cercania") ||
     (!!params.modalidad && params.modalidad !== "any");
+  // La salida del vacío: se queda lo que la persona BUSCÓ —el texto, la
+  // categoría y la ubicación— y se sueltan los filtros que recortaron la lista.
+  // Borrarlo todo la devolvía al catálogo entero, que no es lo que pidió.
+  const sinFiltrosHref = (() => {
+    const quedan = new URLSearchParams();
+    for (const clave of ["q", "categoria", "ubicacion", "provincia", "canton", "lat", "lng"] as const) {
+      const valor = params[clave];
+      if (typeof valor === "string" && valor) quedan.set(clave, valor);
+    }
+    const cadena = quedan.toString();
+    return cadena ? `/buscar?${cadena}` : "/buscar";
+  })();
   const searchReturnParams = new URLSearchParams();
   for (const [key, value] of Object.entries(params)) {
     if (value) searchReturnParams.set(key, value);
@@ -561,6 +573,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                   description={t("noResults.desc")}
                   cta={t("noResults.publishCta")}
                   href={`/dashboard/profesional?tab=sent_projects&openPublish=1${selectedCategory ? `&categoria=${encodeURIComponent(selectedCategory)}` : ""}`}
+                  limpiar={hasActiveFilters ? { etiqueta: t("filters.clearAll"), href: sinFiltrosHref } : undefined}
                 />
               ) : (
                 <>

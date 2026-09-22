@@ -16,7 +16,7 @@ import { recordRecentVisit } from "@/lib/recent-visits";
 import { ContrataCRMark, HeaderAccountLink, HeaderMessagesLink, HeaderNotificationsLink } from "@/components/landing/landing-navbar";
 import { NotificationBell } from "@/components/notifications/notification-bell";
 import { useDirectMessageUnread } from "@/hooks/use-direct-message-unread";
-import { MarketplaceFilterChip, MarketplaceNavbarPortal, MarketplaceSearch } from "@/components/marketplace/marketplace-controls";
+import { MarketplaceClearFilters, MarketplaceFilterChip, MarketplaceNavbarPortal, MarketplaceSearch } from "@/components/marketplace/marketplace-controls";
 import { ScrollRail } from "@/components/ui/scroll-rail";
 import { Modal } from "@/components/ui/modal";
 import { JobPostForm } from "@/components/jobs/job-post-form";
@@ -263,6 +263,15 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
       {conFiltroDeFecha(jobs.length) && (
         <MarketplaceFilterChip label={copy.published} value={published} onChange={setPublished} options={[["all", copy.anyDate], ["1", copy.last24Hours], ["7", copy.lastWeek], ["30", copy.lastMonth]]} />
       )}
+      <MarketplaceClearFilters
+        activos={[workplace, employment, experience, published].filter((value) => value !== "all").length}
+        onClear={() => {
+          setWorkplace("all");
+          setEmployment("all");
+          setExperience("all");
+          setPublished("all");
+        }}
+      />
     </>
   );
   const renderActions = () => (

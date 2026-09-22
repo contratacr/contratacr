@@ -337,7 +337,7 @@ export function ServiciosClient({ catalogoInicial }: { catalogoInicial: string |
             media pantalla hacia abajo, y ninguna otra sección del app se
             presenta a sí misma. El título sigue en la pestaña del navegador y
             en los metadatos, que es donde hace falta para Google. */}
-        <section className="px-4 pb-16 pt-0">
+        <section className="px-4 pb-16 pt-6">
           <div className="mx-auto max-w-6xl">
           <div className="overflow-hidden rounded-[28px] border border-[#e5e7eb] bg-white shadow-[0_18px_44px_rgba(15,23,42,0.06)]">
             <div className="border-b border-[#eef2f6] bg-white p-3 sm:p-4">

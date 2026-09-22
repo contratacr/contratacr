@@ -7,7 +7,7 @@ import { ScrollRail } from "@/components/ui/scroll-rail";
 import { X } from "lucide-react";
 import { useLocale } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
-import { MarketplaceFilterChip, MarketplaceNavbarPortal, MarketplaceSearch } from "@/components/marketplace/marketplace-controls";
+import { MarketplaceClearFilters, MarketplaceFilterChip, MarketplaceNavbarPortal, MarketplaceSearch } from "@/components/marketplace/marketplace-controls";
 import { COMMON_JOB_TITLES, type EmploymentType, type ExperienceLevel, type WorkplaceType } from "@/lib/jobs";
 import { employmentTypeLabel, experienceLevelLabel, marketplaceLocale, workplaceTypeLabel } from "@/lib/marketplace-copy";
 import { CABECERA_BOTON, CABECERA_FILA_CENTRADA, CABECERA_GLIFO, CABECERA_TITULO } from "@/components/layout/cabecera";
@@ -120,6 +120,16 @@ export function JobMarketplaceHeader({ initialQuery = "", initialLocation = "", 
       <MarketplaceFilterChip label={copy.workplace} value={workplace} onChange={(value) => { setWorkplace(value); go({ workplace: value }); }} options={[["all", copy.anyWorkplace], ...(["onsite", "hybrid", "remote"] as WorkplaceType[]).map((value) => [value, workplaceTypeLabel(value, locale)] as [string, string])]} />
       <MarketplaceFilterChip label={copy.experience} value={experience} onChange={(value) => { setExperience(value); go({ experience: value }); }} options={[["all", copy.anyExperience], ...(["any", "one_plus", "two_plus", "three_plus", "five_plus"] as ExperienceLevel[]).map((value) => [value, experienceLevelLabel(value, locale)] as [string, string])]} />
       <MarketplaceFilterChip label={copy.employment} value={employment} onChange={(value) => { setEmployment(value); go({ employment: value }); }} options={[["all", copy.anyEmployment], ...(["full_time", "part_time", "contract", "temporary", "internship"] as EmploymentType[]).map((value) => [value, employmentTypeLabel(value, locale)] as [string, string])]} />
+      <MarketplaceClearFilters
+        activos={[published, workplace, experience, employment].filter((value) => value !== "all").length}
+        onClear={() => {
+          setPublished("all");
+          setWorkplace("all");
+          setExperience("all");
+          setEmployment("all");
+          go({ published: "all", workplace: "all", experience: "all", employment: "all" });
+        }}
+      />
     </>
   );
 
