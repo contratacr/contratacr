@@ -487,7 +487,13 @@ export function SupportTickets({
         // debajo. Ahora crece con la conversacion y se detiene donde estaba:
         // corto se ve corto, largo se desplaza. En el telefono no cambia —un
         // chat ahi ocupa la pantalla entera—.
-        className="ccr-support-thread flex h-[calc(100dvh-153px)] min-h-[360px] flex-col lg:h-auto lg:min-h-[380px] lg:max-h-[min(720px,calc(100dvh-260px))]"
+        // EL CHAT LLENA LA TARJETA. Estaba 20 px adentro por cada lado —el
+        // relleno de la seccion— y con el lienzo tenido quedaba una caja de
+        // 814 px flotando dentro de una de 864: el blanco de los costados se
+        // leia como una franja, y una charla encajonada no parece un chat.
+        // Los margenes negativos anulan ese relleno en computadora; el borde
+        // inferior redondeado es el de la propia tarjeta.
+        className="ccr-support-thread flex h-[calc(100dvh-153px)] min-h-[360px] flex-col lg:-mx-5 lg:-mb-5 lg:h-auto lg:min-h-[380px] lg:max-h-[min(720px,calc(100dvh-260px))] lg:overflow-hidden lg:rounded-b-2xl"
       >
         {!ticket ? (
           <div className="grid min-h-0 flex-1 place-items-center px-4">
@@ -521,14 +527,10 @@ export function SupportTickets({
               </div>
             </header>
 
-            {/* EL ORDEN NO CAMBIA —el primer mensaje sigue arriba— pero el
-                bloque se APOYA sobre el campo de escribir. `justify-end` no
-                invierte nada: solo empuja la conversacion hacia abajo, asi que
-                el hueco queda ARRIBA, esperando lo que aun no se ha dicho, en
-                vez de debajo del ultimo mensaje, donde se leia como si la
-                tarjeta se hubiera quedado a medias. Es como se ven WhatsApp,
-                Messenger e Intercom con una charla corta. */}
-            <div ref={messagesRef} className="ccr-support-thread-messages flex min-h-0 flex-1 flex-col justify-end gap-1.5 overflow-y-auto overscroll-contain bg-[#f7f9fb] px-4 py-5 sm:px-6">
+            {/* El primer mensaje ARRIBA, como en un chat: Isaac lo pidio dos
+                veces y la segunda con razon. Apoyar el bloque sobre el campo
+                dejaba el hueco encima y se leia como una lista al reves. */}
+            <div ref={messagesRef} className="ccr-support-thread-messages flex min-h-0 flex-1 flex-col gap-1.5 overflow-y-auto overscroll-contain bg-white px-4 py-5 sm:px-6">
               {/* Lo único que espera son los mensajes, y esperan con forma de
                   mensaje: dos globos grises, uno de cada lado. */}
               {threadLoading && messages.length === 0 && (
@@ -547,25 +549,25 @@ export function SupportTickets({
                       <span className="rounded-full bg-[#e8eef4] px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-[#68778d]">{dia(m.created_at)}</span>
                     </div>
                   )}
-                <div className={`flex ${m.sender_role === "user" ? "justify-end" : "justify-start"} ${i > 0 && messages[i - 1].sender_role !== m.sender_role ? "mt-2" : ""}`}>
+                {/* El nombre de quien contesta va ENCIMA de su globo, chiquito y
+                    gris, como en Messenger; solo cuando cambia quien habla. */}
+                {m.sender_role === "admin" && (i === 0 || messages[i - 1].sender_role !== "admin") && (
+                  <span className="mt-2 flex items-center gap-1 px-3 text-[12px] font-semibold text-[#68778d]"><Shield className="h-3 w-3" />{t("supportName")}</span>
+                )}
+                <div className={`flex ${m.sender_role === "user" ? "justify-end" : "justify-start"} ${i > 0 && messages[i - 1].sender_role !== m.sender_role && m.sender_role === "user" ? "mt-2" : ""}`}>
                   {/* El globo se ajusta al texto y no pasa de 34rem: a lo
                       ancho de una pantalla de computadora, un renglon de 900 px
                       deja de leerse como un mensaje y parece un parrafo de una
                       pagina. La esquina del lado de quien habla va recta, que
                       es lo que hace de pico. */}
-                  <div className={`max-w-[min(34rem,86%)] rounded-2xl px-4 py-2.5 text-[14px] leading-relaxed shadow-[0_1px_2px_rgba(15,23,42,0.06)] ${m.sender_role === "user" ? "rounded-br-sm bg-[#009FD9] text-white" : "rounded-bl-sm border border-[#e7edf3] bg-white text-[#25364d]"}`}>
+                  <div className={`max-w-[min(34rem,86%)] rounded-[18px] px-4 py-2.5 text-[15px] leading-relaxed ${m.sender_role === "user" ? "rounded-br-md bg-[#009FD9] text-white" : "rounded-bl-md bg-[#eef1f5] text-[#162543]"}`}>
                     {/* EN EL PROPIO GLOBO NO SE FIRMA. Un globo azul a la
                         derecha ya dice «yo» —es el idioma de cualquier chat— y
                         «Tu» con su monigote encima ocupaba mas alto que el
                         mensaje. De soporte SI se dice quien contesta, que ahi
                         no es obvio. La hora baja al pie del globo, chiquita. */}
-                    {m.sender_role === "admin" && (
-                      <div className="mb-1 flex items-center gap-1.5 text-[11px] font-bold text-[#0089bb]">
-                        <Shield className="h-3 w-3" />{t("supportName")}
-                      </div>
-                    )}
-                    <p className="text-sm leading-relaxed whitespace-pre-wrap">{m.body}</p>
-                    <div className={`mt-1 text-[11px] leading-none ${m.sender_role === "user" ? "text-right text-white/70" : "text-[#8fa1b6]"}`}>{hora(m.created_at)}</div>
+                    <p className="whitespace-pre-wrap">{m.body}</p>
+                    <div className={`mt-1 text-[11px] leading-none ${m.sender_role === "user" ? "text-right text-white/65" : "text-[#8fa1b6]"}`}>{hora(m.created_at)}</div>
                   </div>
                 </div>
                 </Fragment>
@@ -598,7 +600,10 @@ export function SupportTickets({
                 cascara blanca de abajo se leia como una franja vacia con dos
                 cosas encima. */}
             <div className={`ccr-support-thread-composer shrink-0 bg-white px-3 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-3 transition-shadow sm:px-6 sm:pb-5 ${sombrasDelHilo.abajo ? "shadow-[0_-8px_12px_-6px_rgba(15,23,42,0.14)]" : ""}`}>
-              <div className="flex items-end gap-2 rounded-[24px] border border-[#d8e5ee] bg-white p-1 transition focus-within:border-[#009FD9] focus-within:ring-2 focus-within:ring-[#009FD9]/10">
+              {/* Pildora RELLENA, sin linea alrededor, como el «Aa» de
+                  Messenger: sobre un lienzo blanco, un campo con borde era una
+                  caja mas. El foco lo dice un anillo suave, no un borde. */}
+              <div className="flex items-end gap-2 rounded-[24px] bg-[#f0f2f5] p-1 pl-2 transition focus-within:ring-2 focus-within:ring-[#009FD9]/25">
                 <textarea
                   value={reply}
                   onChange={(e) => {
