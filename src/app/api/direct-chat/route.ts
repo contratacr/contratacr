@@ -241,7 +241,6 @@ export async function POST(req: Request) {
   const conversationId = String(body.conversationId ?? "");
   const bookingId = String(body.bookingId ?? "");
   const projectId = String(body.projectId ?? "");
-  const proposalId = String(body.proposalId ?? "");
   const contextTitle = limitTrimmedText(body.contextTitle, 160);
   const message = limitTrimmedText(body.message, 2000);
   const nativeRequest = isNativeRequest(req);
@@ -265,18 +264,15 @@ export async function POST(req: Request) {
     let resolvedProfessionalId = professionalId;
     let resolvedBookingId: string | null = null;
     let resolvedProjectId: string | null = null;
-    let resolvedProposalId: string | null = null;
     let subject = contextTitle || "Conversación desde un perfil";
 
     if (bookingId) {
       const { data: booking } = await db.from("bookings").select("id, client_id, professional_id, service_description").eq("id", bookingId).maybeSingle();
       if (!booking) return NextResponse.json({ error: "Solicitud no encontrada." }, { status: 404 });
       clientId = booking.client_id; resolvedProfessionalId = booking.professional_id; resolvedBookingId = booking.id; subject = booking.service_description;
-    } else if (proposalId) {
-      const { data: proposal } = await db.from("proposals").select("id, professional_id, project_id, projects(client_id, title)").eq("id", proposalId).maybeSingle();
-      const project = Array.isArray(proposal?.projects) ? proposal.projects[0] : proposal?.projects;
-      if (!proposal || !project) return NextResponse.json({ error: "Propuesta no encontrada." }, { status: 404 });
-      clientId = project.client_id; resolvedProfessionalId = proposal.professional_id; resolvedProjectId = proposal.project_id; resolvedProposalId = proposal.id; subject = project.title;
+    // Abrir un chat DESDE una propuesta ya no existe: no hay propuestas. Las
+    // conversaciones que nacieron asi se siguen leyendo; lo que se retira es la
+    // puerta para crear nuevas.
     } else if (projectId && professionalId) {
       const { data: project } = await db.from("projects").select("id, client_id, title").eq("id", projectId).maybeSingle();
       if (!project) return NextResponse.json({ error: "Proyecto no encontrado." }, { status: 404 });
@@ -326,12 +322,11 @@ export async function POST(req: Request) {
       conversation.client_deleted_at = null;
       conversation.professional_deleted_at = null;
     }
-    const nuevoOrigen = resolvedBookingId || resolvedProjectId || resolvedProposalId
+    const nuevoOrigen = resolvedBookingId || resolvedProjectId
       ? {
-        type: resolvedProposalId ? "proposal" : resolvedProjectId ? "project" : "booking",
+        type: resolvedProjectId ? "project" : "booking",
         bookingId: resolvedBookingId,
         projectId: resolvedProjectId,
-        proposalId: resolvedProposalId,
         title: subject,
         at: new Date().toISOString(),
       }
@@ -340,7 +335,7 @@ export async function POST(req: Request) {
     if (!conversation) {
       const base = {
         client_id: clientId, professional_id: resolvedProfessionalId, professional_profile_id: professionalProfileId,
-        booking_id: resolvedBookingId, project_id: resolvedProjectId, proposal_id: resolvedProposalId, subject,
+        booking_id: resolvedBookingId, project_id: resolvedProjectId, subject,
       };
       let { data: inserted, error } = await db.from("direct_conversations")
         .insert({ ...base, contexts: nuevoOrigen ? [nuevoOrigen] : [] })
@@ -357,8 +352,7 @@ export async function POST(req: Request) {
       const previos = Array.isArray(conversation.contexts) ? conversation.contexts : [];
       const mismaClave = (item: Record<string, unknown>) =>
         (item.bookingId ?? null) === nuevoOrigen.bookingId
-        && (item.projectId ?? null) === nuevoOrigen.projectId
-        && (item.proposalId ?? null) === nuevoOrigen.proposalId;
+        && (item.projectId ?? null) === nuevoOrigen.projectId;
       if (!previos.some((item) => mismaClave(item as Record<string, unknown>))) {
         const siguientes = [nuevoOrigen, ...previos].slice(0, 12);
         const { error: ctxError } = await db.from("direct_conversations")
@@ -366,7 +360,6 @@ export async function POST(req: Request) {
             contexts: siguientes,
             booking_id: resolvedBookingId ?? conversation.booking_id,
             project_id: resolvedProjectId ?? conversation.project_id,
-            proposal_id: resolvedProposalId ?? conversation.proposal_id,
             subject,
             updated_at: new Date().toISOString(),
           })
@@ -378,7 +371,6 @@ export async function POST(req: Request) {
         conversation.subject = subject;
         conversation.booking_id = resolvedBookingId ?? conversation.booking_id;
         conversation.project_id = resolvedProjectId ?? conversation.project_id;
-        conversation.proposal_id = resolvedProposalId ?? conversation.proposal_id;
       }
     }
   }

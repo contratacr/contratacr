@@ -16,7 +16,6 @@ type MessageLauncherProps = {
   professionalName: string;
   bookingId?: string;
   projectId?: string;
-  proposalId?: string;
   contextTitle?: string;
   isOwn?: boolean;
   className?: string;
@@ -31,7 +30,6 @@ function buildDraftHref({
   professionalName,
   bookingId,
   projectId,
-  proposalId,
   contextTitle,
   initialMessage,
 }: MessageLauncherProps) {
@@ -44,7 +42,6 @@ function buildDraftHref({
   if (professionalName) params.set("professionalName", professionalName);
   if (bookingId) params.set("bookingId", bookingId);
   if (projectId) params.set("projectId", projectId);
-  if (proposalId) params.set("proposalId", proposalId);
   if (contextTitle) params.set("contextTitle", contextTitle);
   if (initialMessage) params.set("draftMessage", initialMessage);
   return `/mensajes?${params.toString()}`;
@@ -56,7 +53,6 @@ export function MessageLauncher(props: MessageLauncherProps) {
     professionalName,
     bookingId,
     projectId,
-    proposalId,
     contextTitle,
     isOwn = false,
     className = "",
@@ -79,7 +75,7 @@ export function MessageLauncher(props: MessageLauncherProps) {
   const [registrando, setRegistrando] = useState(false);
   const label = buttonLabel || (isEn ? "Send message" : "Enviar mensaje");
 
-  const mensajeSugerido = initialMessage || (contextTitle && (bookingId || projectId || proposalId)
+  const mensajeSugerido = initialMessage || (contextTitle && (bookingId || projectId)
     ? (isEn ? `Hi, I'm writing about "${contextTitle}".` : `Hola, te escribo por "${contextTitle}".`)
     : "");
 
@@ -90,7 +86,7 @@ export function MessageLauncher(props: MessageLauncherProps) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          professionalId, bookingId, projectId, proposalId, contextTitle,
+          professionalId, bookingId, projectId, contextTitle,
           initialMessage: texto, openConversation: true,
         }),
       });

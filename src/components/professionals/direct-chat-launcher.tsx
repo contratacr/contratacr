@@ -17,7 +17,6 @@ type DirectChatLauncherProps = {
   professionalName: string;
   bookingId?: string;
   projectId?: string;
-  proposalId?: string;
   contextTitle?: string;
   isOwn?: boolean;
   className?: string;
@@ -39,7 +38,6 @@ export function DirectChatLauncher({
   professionalName,
   bookingId,
   projectId,
-  proposalId,
   contextTitle,
   isOwn = false,
   className = "",
@@ -74,7 +72,6 @@ export function DirectChatLauncher({
         professionalName={professionalName}
         bookingId={bookingId}
         projectId={projectId}
-        proposalId={proposalId}
         contextTitle={contextTitle}
         isOwn={isOwn}
         className={className}
@@ -97,7 +94,6 @@ export function DirectChatLauncher({
           bookingId,
           professionalName,
           projectId,
-          proposalId,
           contextTitle,
           initialMessage,
           intent,

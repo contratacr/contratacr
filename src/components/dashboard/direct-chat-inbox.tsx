@@ -52,7 +52,6 @@ type PendingDraft = {
   professionalId?: string;
   bookingId?: string;
   projectId?: string;
-  proposalId?: string;
   contextTitle?: string;
   draftMessage?: string;
 };
@@ -210,10 +209,11 @@ function buildPendingDraft(searchParams: URLSearchParams, userId: string | undef
   const professionalName = searchParams.get("professionalName") || (isEn ? "Professional" : "Profesional");
   const bookingId = searchParams.get("bookingId") || undefined;
   const projectId = searchParams.get("projectId") || undefined;
-  const proposalId = searchParams.get("proposalId") || undefined;
   const contextTitle = searchParams.get("contextTitle") || (isEn ? "General inquiry" : "Consulta general");
   const draftMessage = searchParams.get("draftMessage") || "";
-  const contextType: "booking" | "project" | "proposal" | "profile" = bookingId ? "booking" : proposalId ? "proposal" : projectId ? "project" : "profile";
+  // «proposal» sigue existiendo como tipo porque hay conversaciones guardadas
+  // que nacieron de una propuesta; lo que ya no se puede es abrir una nueva asi.
+  const contextType: "booking" | "project" | "proposal" | "profile" = bookingId ? "booking" : projectId ? "project" : "profile";
   const currentUserId = userId || "__current_user__";
   const pendingAsClient = Boolean(professionalId);
   const conversation: Conversation = {
@@ -223,7 +223,6 @@ function buildPendingDraft(searchParams: URLSearchParams, userId: string | undef
     professional_profile_id: pendingAsClient ? "__draft_professional__" : currentUserId,
     booking_id: bookingId ?? null,
     project_id: projectId ?? null,
-    proposal_id: proposalId ?? null,
     subject: contextTitle,
     last_message: isEn ? "New message" : "Nuevo mensaje",
     last_message_at: new Date().toISOString(),
@@ -239,12 +238,11 @@ function buildPendingDraft(searchParams: URLSearchParams, userId: string | undef
       title: contextTitle,
       service_description: bookingId ? contextTitle : null,
       status: "open",
-      proposal_status: proposalId ? "open" : null,
     },
   };
   return {
     conversation,
-    payload: { professionalId, bookingId, projectId, proposalId, contextTitle, draftMessage },
+    payload: { professionalId, bookingId, projectId, contextTitle, draftMessage },
   };
 }
 
@@ -252,7 +250,6 @@ function findExistingDraftConversation(rows: Conversation[], payload: PendingDra
   if (!payload) return null;
   return rows.find((item) => {
     if (payload.bookingId) return item.booking_id === payload.bookingId;
-    if (payload.proposalId) return item.proposal_id === payload.proposalId;
     if (payload.projectId && payload.professionalId) return item.project_id === payload.projectId && item.professional_id === payload.professionalId;
     if (payload.professionalId) {
       return item.professional_id === payload.professionalId && !item.booking_id && !item.project_id && !item.proposal_id;
@@ -764,7 +761,6 @@ export function DirectChatInbox() {
     if (stored.name) params.set("professionalName", stored.name);
     if (stored.payload.bookingId) params.set("bookingId", stored.payload.bookingId);
     if (stored.payload.projectId) params.set("projectId", stored.payload.projectId);
-    if (stored.payload.proposalId) params.set("proposalId", stored.payload.proposalId);
     if (stored.payload.contextTitle) params.set("contextTitle", stored.payload.contextTitle);
     params.set("draftMessage", stored.text);
     const revived = buildPendingDraft(params, userId, isEn);
@@ -1010,7 +1006,6 @@ export function DirectChatInbox() {
             professionalId: pendingDraftPayload?.professionalId,
             bookingId: pendingDraftPayload?.bookingId,
             projectId: pendingDraftPayload?.projectId,
-            proposalId: pendingDraftPayload?.proposalId,
             contextTitle: pendingDraftPayload?.contextTitle,
             openConversation: true,
           }),
@@ -1025,7 +1020,6 @@ export function DirectChatInbox() {
           professionalId: pendingDraftPayload?.professionalId,
           bookingId: pendingDraftPayload?.bookingId,
           projectId: pendingDraftPayload?.projectId,
-          proposalId: pendingDraftPayload?.proposalId,
           contextTitle: pendingDraftPayload?.contextTitle,
           message: body,
         }
