@@ -8,7 +8,7 @@ import { lockBodyScroll } from "@/lib/body-scroll-lock";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useAvisosSinLeer } from "@/hooks/use-avisos-sin-leer";
 import { useLocale, useTranslations } from "next-intl";
-import { Headset, ArrowLeft, SendHorizontal, User, Shield, Plus, Clock3, CheckCircle2 } from "lucide-react";
+import { Headset, ArrowLeft, SendHorizontal, Shield, Plus, Clock3, CheckCircle2 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { createClient } from "@/lib/supabase/client";
 import { SupportModal } from "@/components/support/support-modal";
@@ -501,7 +501,14 @@ export function SupportTickets({
               </div>
             </header>
 
-            <div ref={messagesRef} className="ccr-support-thread-messages flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto overscroll-contain bg-[#f3f7fa] p-4 sm:p-5">
+            {/* LA CONVERSACION SE APOYA ABAJO, sobre el campo de escribir. Con
+                `flex-col` a secas, un caso de un solo mensaje dejaba el globo
+                pegado al techo y media pantalla de gris vacio debajo, como si
+                se hubieran borrado las respuestas. `justify-end` es lo que
+                hacen WhatsApp, Intercom y Slack: mientras la charla es corta
+                crece hacia arriba desde el campo, y cuando pasa del alto se
+                desplaza normal. */}
+            <div ref={messagesRef} className="ccr-support-thread-messages flex min-h-0 flex-1 flex-col justify-end gap-3 overflow-y-auto overscroll-contain bg-[#f3f7fa] p-4 sm:p-5">
               {/* Lo único que espera son los mensajes, y esperan con forma de
                   mensaje: dos globos grises, uno de cada lado. */}
               {threadLoading && messages.length === 0 && (
@@ -513,11 +520,18 @@ export function SupportTickets({
               {messages.map((m) => (
                 <div key={m.id} className={`flex ${m.sender_role === "user" ? "justify-end" : "justify-start"}`}>
                   <div className={`max-w-[86%] rounded-[18px] px-3.5 py-2.5 text-[14px] leading-relaxed shadow-[0_4px_12px_-8px_rgba(15,23,42,0.55)] sm:max-w-[78%] ${m.sender_role === "user" ? "rounded-br-md bg-[#009FD9] font-medium text-white" : "rounded-bl-md border border-[#e5e7eb] bg-white text-[#25364d]"}`}>
-                    <div className="flex items-center gap-1.5 mb-1 text-[11px] opacity-70">
-                      {m.sender_role === "admin" ? <Shield className="h-3 w-3" /> : <User className="h-3 w-3" />}
-                      {m.sender_role === "admin" ? t("supportName") : t("you")} · {fmt(m.created_at)}
-                    </div>
+                    {/* EN EL PROPIO GLOBO NO SE FIRMA. Un globo azul a la
+                        derecha ya dice «yo» —es el idioma de cualquier chat— y
+                        «Tu» con su monigote encima ocupaba mas alto que el
+                        mensaje. De soporte SI se dice quien contesta, que ahi
+                        no es obvio. La hora baja al pie del globo, chiquita. */}
+                    {m.sender_role === "admin" && (
+                      <div className="mb-1 flex items-center gap-1.5 text-[11px] font-bold text-[#0089bb]">
+                        <Shield className="h-3 w-3" />{t("supportName")}
+                      </div>
+                    )}
                     <p className="text-sm leading-relaxed whitespace-pre-wrap">{m.body}</p>
+                    <div className={`mt-1 text-[11px] leading-none ${m.sender_role === "user" ? "text-right text-white/70" : "text-[#8fa1b6]"}`}>{fmt(m.created_at)}</div>
                   </div>
                 </div>
               ))}
