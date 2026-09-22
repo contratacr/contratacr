@@ -639,8 +639,16 @@ export function SupportTickets({
                   placeholder={ticket.status === "resolved" ? t("reopenPlaceholder") : t("messagePlaceholder")}
                   className="max-h-36 min-h-10 min-w-0 flex-1 resize-none overflow-hidden bg-transparent px-3.5 py-2 text-[15px] leading-6 outline-none"
                 />
-                <button onClick={sendReply} disabled={sending || !reply.trim()} className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#009FD9] text-white transition hover:bg-[#008fca] disabled:bg-[#e3eaf0] disabled:text-[#a9b7c4]" aria-label={sending ? t("sending") : t("send")}>
-                  {sending ? <Clock3 className="h-5 w-5 animate-spin" /> : <SendHorizontal className="h-4 w-4" />}
+                {/* SIN CIRCULO RELLENO. Un circulo azul de 36 px dentro de una
+                      pildora gris pesa mas que el propio campo, y apagado —un
+                      circulo GRIS lleno— se lee como un boton muerto. Telegram,
+                      Messenger e Intercom usan el icono solo: apagado en gris,
+                      y en color en cuanto hay algo que mandar. Asi el boton
+                      avisa de que se puede enviar en vez de estar siempre ahi
+                      pidiendo atencion. El area de toque sigue siendo de 36 px,
+                      que es lo que importa para el dedo. */}
+                <button onClick={sendReply} disabled={sending || !reply.trim()} className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-[#9aa7b6] transition-colors hover:bg-[#e5e7eb] hover:text-[#008fca] enabled:text-[#009FD9] disabled:cursor-not-allowed" aria-label={sending ? t("sending") : t("send")}>
+                  {sending ? <Clock3 className="h-[18px] w-[18px] animate-spin" /> : <SendHorizontal className="h-[18px] w-[18px]" />}
                 </button>
               </div>
             </div>
