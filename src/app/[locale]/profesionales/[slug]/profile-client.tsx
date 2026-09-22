@@ -259,18 +259,18 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
   // Aviso de "enlace copiado" del botón Compartir. Vive aquí, con el resto de
   // los hooks: debajo de los `return` de carga React contaba un hook de más.
   const { compartir: compartirEnlace, avisoNodo: avisoCompartir } = useCompartir();
-  const nombreEnBarra = professional
-    ? getProfessionalDisplayName(professional.fullName, professional.businessName).primaryMobile
-    : "";
-  const [nombreFueraDeVista, setNombreFueraDeVista] = useState(false);
-  // Arriba dice a dónde te devuelve la flecha (convención de iOS); al desplazar,
-  // cuando el nombre ya no está a la vista, la barra pasa a decir de quién es el
-  // perfil.
-  // Cuando la barra aún no muestra el nombre, lo que lleva es el rótulo de la
-  // VUELTA («Volver a favoritos»). Eso no es un título: es la etiqueta de la
-  // flecha, así que va pegada a ella y no centrada.
-  const nombreEnLaBarra = Boolean(nombreFueraDeVista && nombreEnBarra);
-  const tituloBarra = nombreEnLaBarra ? nombreEnBarra : profileReturnLabel(profileReturnHref, locale);
+  // LA BARRA DICE SIEMPRE LO MISMO: a dónde devuelve la flecha.
+  //
+  // Antes cambiaba al desplazar: cuando el nombre de la tarjeta salía de la
+  // vista, el rótulo pasaba de «Volver a resultados» al nombre del profesional
+  // —la convención de iOS del título grande que se recoge—. Deja de funcionar
+  // desde que el rótulo va PEGADO A LA FLECHA: ahí «← Redes Bahía» se lee como
+  // «volver a Redes Bahía», que es justo lo contrario de lo que hace. Y rompe la
+  // regla de la casa: un control no cambia de texto mientras uno lo mira.
+  //
+  // El nombre no se pierde: es el h1 de la tarjeta, y está a un dedo de
+  // distancia hacia arriba.
+  const tituloBarra = profileReturnLabel(profileReturnHref, locale);
   useEffect(() => {
     if (previewMode) return;
     const global = window as unknown as {
@@ -286,8 +286,8 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
     // El «...» de la barra, igual que en Empleos, Promociones y Proyectos:
     // guardar, compartir y reportar en el mismo orden y en la misma hoja.
     global.__ccrSectionMenu = true;
-    global.__ccrSectionVolver = !nombreEnLaBarra;
-    window.dispatchEvent(new CustomEvent("ccr:section-header", { detail: { title: tituloBarra, menu: true, volver: !nombreEnLaBarra } }));
+    global.__ccrSectionVolver = true;
+    window.dispatchEvent(new CustomEvent("ccr:section-header", { detail: { title: tituloBarra, menu: true, volver: true } }));
     return () => {
       global.__ccrSectionHeader = null;
       global.__ccrSectionActive = false;
@@ -297,20 +297,7 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
       setNavbarOwnsHeader(false);
       window.dispatchEvent(new CustomEvent("ccr:section-header", { detail: null }));
     };
-  }, [previewMode, tituloBarra, nombreEnLaBarra]);
-
-  // El nombre de la tarjeta decide qué muestra la barra.
-  useEffect(() => {
-    if (previewMode || !professional) return;
-    const nodo = document.querySelector('[data-testid="professional-profile-name"]');
-    if (!nodo) return;
-    const observador = new IntersectionObserver(
-      ([entrada]) => setNombreFueraDeVista(!entrada.isIntersecting),
-      { threshold: 0 },
-    );
-    observador.observe(nodo);
-    return () => observador.disconnect();
-  }, [previewMode, professional]);
+  }, [previewMode, tituloBarra]);
 
   const volverRef = useRef<(() => void) | null>(null);
   const compartirRef = useRef<(() => void) | null>(null);
