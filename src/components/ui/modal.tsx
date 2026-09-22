@@ -64,7 +64,7 @@ interface ModalProps {
  * títulos grandes de iOS y Material. La línea de siempre se queda: separa
  * aunque no haya nada que levantar.
  */
-function useSombrasDeBorde(ref: React.RefObject<HTMLDivElement | null>) {
+export function useSombrasDeBorde(ref: React.RefObject<HTMLDivElement | null>) {
   const [sombras, setSombras] = useState({ arriba: false, abajo: false });
   useEffect(() => {
     const nodo = ref.current;

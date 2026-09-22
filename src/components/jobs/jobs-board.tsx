@@ -316,7 +316,7 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
     {avisoNode}
     {showingMobileDetail && selected && (
       <section className="lg:hidden">
-        <header className={cn("ccr-marketplace-sticky sticky top-0 z-20 border-b bg-white transition-colors duration-200", CABECERA_FILA_CENTRADA, conLinea ? "border-[#e5e7eb]" : "border-transparent")}>
+        <header className={cn("ccr-cabecera-pegada ccr-marketplace-sticky sticky top-0 z-20 border-b bg-white transition-colors duration-200", CABECERA_FILA_CENTRADA, conLinea ? "border-[#e5e7eb]" : "border-transparent")}>
           <Link
             href={detailBackHref}
             aria-label={detailBackLabel}
@@ -347,7 +347,7 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
         />
       </section>
     )}
-    <section ref={cabeceraRef} className={cn(showingMobileDetail && "hidden", "ccr-marketplace-sticky sticky top-0 z-20 border-b bg-white transition-colors duration-200 lg:hidden", conLinea ? "border-[#e5e7eb]" : "border-transparent")}>
+    <section ref={cabeceraRef} className={cn(showingMobileDetail && "hidden", "ccr-cabecera-pegada ccr-marketplace-sticky sticky top-0 z-20 border-b bg-white transition-colors duration-200 lg:hidden", conLinea ? "border-[#e5e7eb]" : "border-transparent")}>
       <div className="px-0">
         <div className={CABECERA_FILA}>
           <button type="button" onClick={() => window.dispatchEvent(new Event("ccr:open-mobile-menu"))} aria-label={copy.openMenu} className={CABECERA_BOTON}>

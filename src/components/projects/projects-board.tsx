@@ -416,7 +416,7 @@ export function ProjectsBoard({
       <section
         ref={cabeceraRef}
         className={cn(
-          "ccr-marketplace-sticky sticky top-0 z-20 border-b bg-white transition-colors duration-200 lg:hidden",
+          "ccr-cabecera-pegada ccr-marketplace-sticky sticky top-0 z-20 border-b bg-white transition-colors duration-200 lg:hidden",
           conLinea ? "border-[#e5e7eb]" : "border-transparent",
         )}
       >

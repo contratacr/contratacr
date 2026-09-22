@@ -2532,7 +2532,7 @@ export default function DashboardPage() {
               {activeTab !== "home" && (
                 <>
                 <div ref={cabeceraRef as React.RefObject<HTMLDivElement>} style={COLUMNAS_CABECERA} className={cn(
-                  "sticky top-0 z-20 grid min-h-16 items-center border-b bg-white px-4 py-2 text-[#162543] transition-colors duration-200 lg:hidden",
+                  "ccr-cabecera-pegada sticky top-0 z-20 grid min-h-16 items-center border-b bg-white px-4 py-2 text-[#162543] transition-colors duration-200 lg:hidden",
                   conLinea ? "border-[#e5e7eb]" : "border-transparent",
                   navbarOwnsHeader && "hidden",
                 )}>

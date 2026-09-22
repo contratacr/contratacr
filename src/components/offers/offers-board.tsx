@@ -357,7 +357,7 @@ export function OffersBoard({
   return (
     <main className="min-h-[calc(100vh-72px)] overflow-x-clip bg-white pb-0 text-[#162543] sm:bg-[#fafafa] sm:pb-16 lg:flex lg:h-[calc(100dvh-64px)] lg:min-h-0 lg:flex-col lg:overflow-hidden lg:bg-white lg:pb-0">
       {avisoNode}
-      <section ref={cabeceraRef} className={cn("ccr-marketplace-sticky sticky top-0 z-20 border-b bg-white transition-colors duration-200 lg:hidden", conLinea ? "border-[#e5e7eb]" : "border-transparent")}>
+      <section ref={cabeceraRef} className={cn("ccr-cabecera-pegada ccr-marketplace-sticky sticky top-0 z-20 border-b bg-white transition-colors duration-200 lg:hidden", conLinea ? "border-[#e5e7eb]" : "border-transparent")}>
         <div className="px-0">
           <div className={CABECERA_FILA}>
             <button

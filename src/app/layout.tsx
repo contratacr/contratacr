@@ -275,6 +275,13 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
           data-ccr-franja=""
           dangerouslySetInnerHTML={{
             __html: `@media (max-width:639px){.ccr-barra-accion{box-sizing:border-box;background:#fff;border-top:1px solid #e5e7eb;padding:16px max(20px,env(safe-area-inset-right)) calc(env(safe-area-inset-bottom) + 28px) max(20px,env(safe-area-inset-left))}.ccr-barra-accion.ccr-sin-linea{border-top-color:transparent}.ccr-barra-fija{position:fixed;left:0;right:0;bottom:var(--ccr-reserva-barra,0px);z-index:20;transition:box-shadow .18s ease-out}body:not([data-ccr-al-final]) .ccr-barra-fija{box-shadow:0 -8px 12px -6px rgba(15,23,42,.18)}}
+/* La sombra del pie estaba encerrada en el @media del teléfono: de 640 px en
+   adelante las franjas de los formularios siguen pegadas (sticky bottom-0),
+   siguen tapando el final y se habían quedado sin ella. La marca
+   ccr-pie-pegado la lleva solo quien se pega también en pantalla grande; una
+   franja que pasado el teléfono se va al final del contenido no la lleva. */
+.ccr-pie-pegado{transition:box-shadow .18s ease-out}
+@media (min-width:640px){body:not([data-ccr-al-final]) .ccr-pie-pegado{box-shadow:0 -8px 12px -6px rgba(15,23,42,.18)}}
 .ccr-pie-ventana,.ccr-pie-formulario,.ccr-cabecera-pegada{transition:box-shadow .18s ease-out}
 body[data-ccr-desplazado] .ccr-cabecera-pegada{box-shadow:0 8px 12px -6px rgba(15,23,42,.18)}
 [data-ccr-hay-mas] .ccr-pie-ventana,[data-ccr-hay-mas] .ccr-pie-formulario{box-shadow:0 -8px 12px -6px rgba(15,23,42,.18)}`,

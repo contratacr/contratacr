@@ -24,6 +24,7 @@ import { NativeBottomNav } from "@/components/mobile/native-bottom-nav";
 import { MobileAppBridge } from "@/components/mobile/mobile-app-bridge";
 import { NativeFirstRunOnboarding } from "@/components/mobile/native-first-run-onboarding";
 import { AppIntlProvider } from "@/components/app-intl-provider";
+import { SombrasAlDesplazar } from "@/components/util/sombras-al-desplazar";
 import { GlobalActionLoading } from "@/components/global-action-loading";
 import { GlobalDataRefresh } from "@/components/util/global-data-refresh";
 import { RouteScrollReset } from "@/components/util/route-scroll-reset";
@@ -192,6 +193,7 @@ export default async function LocaleLayout({
         <DocumentLocale locale={locale} />
         <EmojiBlocker />
         <ViewportEnvironment />
+        <SombrasAlDesplazar />
         <AppResumeRecovery />
         <MobileAppBridge />
         <NativeFirstRunOnboarding />

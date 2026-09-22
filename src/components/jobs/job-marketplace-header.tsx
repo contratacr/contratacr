@@ -125,7 +125,7 @@ export function JobMarketplaceHeader({ initialQuery = "", initialLocation = "", 
 
   return (
     <>
-      <section ref={cabeceraRef} className={cn("sticky top-0 z-20 border-b bg-white transition-colors duration-200 lg:hidden", conLinea ? "border-[#e5e7eb]" : "border-transparent")}>
+      <section ref={cabeceraRef} className={cn("ccr-cabecera-pegada sticky top-0 z-20 border-b bg-white transition-colors duration-200 lg:hidden", conLinea ? "border-[#e5e7eb]" : "border-transparent")}>
         <div className={CABECERA_FILA_CENTRADA}>
           <Link href="/empleos" aria-label={copy.close} className={cn("absolute left-4 top-1/2 -translate-y-1/2", CABECERA_BOTON)}>
             <X className={CABECERA_GLIFO} strokeWidth={2.4} />

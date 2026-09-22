@@ -167,7 +167,7 @@ export function ServiciosClient({ catalogoInicial }: { catalogoInicial: string |
 
       <main className="flex-1 bg-white lg:bg-[#fafafa]">
         <section data-services-mobile="" className="mx-auto w-full bg-white pb-[calc(2rem+env(safe-area-inset-bottom))] [.ccr-native-app_&]:pb-3 lg:hidden">
-          <header ref={cabeceraRef} className={cn("sticky top-0 z-20 border-b bg-white transition-colors duration-200", conLinea ? "border-[#e5e7eb]" : "border-transparent")}>
+          <header ref={cabeceraRef} className={cn("ccr-cabecera-pegada sticky top-0 z-20 border-b bg-white transition-colors duration-200", conLinea ? "border-[#e5e7eb]" : "border-transparent")}>
             {mobileGroup ? (
               <div className={CABECERA_FILA_CENTRADA}>
                 <button

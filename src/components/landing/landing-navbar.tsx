@@ -1915,22 +1915,26 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
           data-hydrated={hydrated ? "true" : "false"}
           data-compact-search={effectiveCompact ? "visible" : "hidden"}
           className={cn(
-            "ccr-app-header fixed top-0 left-0 right-0 z-50 border-b bg-white/96 backdrop-blur-md",
-            // La barra se separa del contenido con una línea, no con sombra: en
-            // escritorio la sombra proyectada ensuciaba el borde del contenido.
-            // En la app la línea aparece solo al desplazar.
+            "ccr-app-header ccr-cabecera-pegada fixed top-0 left-0 right-0 z-50 border-b bg-white/96 backdrop-blur-md",
+            // LA SOMBRA VUELVE, PERO SOLO AL DESPLAZAR Y MUCHO MÁS SUAVE.
+            // Se había quitado porque «ensuciaba el borde del contenido» y «se
+            // veía como una mancha gris»: era una sombra encendida siempre. La
+            // de ahora la enciende `ccr-cabecera-pegada` únicamente cuando hay
+            // algo pasando por debajo, y mide 0.18 de opacidad con el borde
+            // recogido, que es la misma de todas las cabeceras del app. En
+            // reposo la barra sigue separándose con la línea de siempre.
             rutaConFiltrosPegados
               // En la app la barra se funde con los filtros; en computadora la
               // línea va siempre, o el encabezado y los filtros se leían como
               // una sola mancha blanca.
-              ? (nativeHeaderShell ? "border-transparent shadow-none" : "border-[#e5e7eb] shadow-none")
+              ? (nativeHeaderShell ? "border-transparent shadow-none" : "border-[#e5e7eb]")
               : nativeHeaderShell
                 // En la app también manda la línea: la sombra proyectada bajo el
                 // encabezado se veía como una mancha gris sobre el contenido.
                 ? cn("transition-[border-color] duration-200 shadow-none", contenidoDebajo || lienzoBlanco
                     ? "border-gray-100/80"
                     : "border-transparent")
-                : "border-[#e5e7eb] shadow-none",
+                : "border-[#e5e7eb]",
             drawerOnly && "hidden",
           )}
         >

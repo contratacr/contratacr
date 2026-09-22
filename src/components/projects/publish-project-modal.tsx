@@ -14,6 +14,7 @@ import { createClient } from "@/lib/supabase/client";
 import { getCategoryLabel } from "@/lib/data/categories";
 import { useLocale } from "next-intl";
 import { lockBodyScroll } from "@/lib/body-scroll-lock";
+import { useSombrasDeBorde } from "@/components/ui/modal";
 import { useAuth } from "@/hooks/use-auth";
 import { Link } from "@/i18n/navigation";
 import { BARRA_ACCION_BASE } from "@/components/ui/acciones-al-pie";
@@ -81,6 +82,11 @@ export function PublishProjectModal({ onClose, onSuccess, editar }: { onClose: (
   const [errorField, setErrorField] = useState<ProjectErrorField | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [published, setPublished] = useState<{ notifiedCount: number; service: string } | null>(null);
+  // Esta ventana se dibuja a mano, no con `Modal`, así que nunca recibía la
+  // marca que enciende la sombra del pie: era la franja de referencia del
+  // sistema y la única que no la tenía en ninguna pantalla.
+  const cuerpo = useRef<HTMLDivElement>(null);
+  const sombras = useSombrasDeBorde(cuerpo);
   const categoryFieldRef = useRef<HTMLDivElement>(null);
   const descriptionFieldRef = useRef<HTMLDivElement>(null);
 
@@ -226,6 +232,7 @@ export function PublishProjectModal({ onClose, onSuccess, editar }: { onClose: (
         role="dialog"
         aria-modal="true"
         aria-labelledby="publish-project-title"
+        data-ccr-hay-mas={sombras.abajo ? "" : undefined}
         className="app-fullscreen-modal relative z-10 flex h-[var(--app-visual-viewport-height)] min-h-0 w-full max-h-[var(--app-visual-viewport-height)] flex-col overflow-hidden bg-white shadow-none sm:h-auto sm:max-h-[90vh] sm:max-w-2xl sm:rounded-2xl sm:shadow-2xl"
       >
         <div className="relative flex shrink-0 items-center justify-center gap-3 border-b border-[#e5e7eb] px-14 py-4 sm:items-start sm:justify-between sm:px-6">
@@ -254,7 +261,7 @@ export function PublishProjectModal({ onClose, onSuccess, editar }: { onClose: (
               <p className="max-w-[22rem] text-sm leading-relaxed text-[#6b7280]">{t("successNext")}</p>
             </PantallaDeExito>
           ) : (
-            <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain bg-[#f4f7fa] px-4 py-5 sm:max-h-[calc(90vh-145px)] sm:flex-none">
+            <div ref={cuerpo} className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain bg-[#f4f7fa] px-4 py-5 sm:max-h-[calc(90vh-145px)] sm:flex-none">
               <div className="flex flex-col gap-6 rounded-2xl border border-[#e5e7eb] bg-white p-5 shadow-sm">
                 <div ref={categoryFieldRef}>
                   <label className={fieldLabel}>{t("category")}{obligatorio}</label>
