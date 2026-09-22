@@ -1383,6 +1383,9 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   const [sectionRoot, setSectionRoot] = useState(false);
   const [sectionShare, setSectionShare] = useState(false);
   const [sectionMenu, setSectionMenu] = useState(false);
+  // El rótulo de la barra es la etiqueta de la FLECHA («Volver a favoritos»), no
+  // un título: va pegado a ella, no centrado.
+  const [sectionVolver, setSectionVolver] = useState(false);
   useEffect(() => {
     // La pantalla puede haber publicado su título antes de que esta barra
     // montara, así que se lee también el valor global.
@@ -1397,6 +1400,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
       // confirmación (con la ficha pintada desde el servidor, todo monta en el
       // mismo cuadro). La confirmación queda también aquí para que la pantalla
       // la lea al montar; si no, se veían dos «Volver a resultados».
+      __ccrSectionVolver?: boolean;
       __ccrSectionAck?: boolean;
     };
     const inicial = global.__ccrSectionHeader ?? null;
@@ -1407,11 +1411,12 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
       setSectionShare(!!global.__ccrSectionShare);
       setSectionMenu(!!global.__ccrSectionMenu);
       setSectionPaso(!!global.__ccrSectionPaso);
+      setSectionVolver(!!global.__ccrSectionVolver);
       global.__ccrSectionAck = true;
       window.dispatchEvent(new Event("ccr:section-header-ack"));
     }
     const onHeader = (event: Event) => {
-      const detail = (event as CustomEvent<{ title?: string | null; share?: boolean; root?: boolean; menu?: boolean; paso?: boolean } | null>).detail;
+      const detail = (event as CustomEvent<{ title?: string | null; share?: boolean; root?: boolean; menu?: boolean; paso?: boolean; volver?: boolean } | null>).detail;
       const title = detail?.title ?? null;
       setSectionTitle(title);
       setSectionActive(detail !== null);
@@ -1419,6 +1424,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
       setSectionShare(!!detail?.share);
       setSectionMenu(!!detail?.menu);
       setSectionPaso(!!detail?.paso);
+      setSectionVolver(!!detail?.volver);
       global.__ccrSectionAck = detail !== null;
       if (detail !== null) window.dispatchEvent(new Event("ccr:section-header-ack"));
     };
@@ -1978,10 +1984,11 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                     >
                       <ArrowLeft className="h-5 w-5" />
                     </button>
-                    {/* Al centro, como en el panel, en las fichas y en los
-                        formularios de publicar: la misma barra de «flecha +
-                        título» estaba alineada a la izquierda solo aquí. */}
-                    <p data-ccr-section-title="" className={cn(CABECERA_TITULO, "flex-1 text-center")}>{sectionTitle}</p>
+                    {/* Un TÍTULO va al centro, como en el panel y en los
+                        formularios de publicar. Un «Volver a…» no: es la
+                        etiqueta de la flecha que tiene al lado, y centrado se
+                        leía como el nombre de la pantalla. */}
+                    <p data-ccr-section-title="" className={cn(CABECERA_TITULO, sectionVolver ? "mr-auto min-w-0 truncate" : "flex-1 text-center")}>{sectionTitle}</p>
                     {!sectionTitle && <span className="flex-1" aria-hidden />}
                   </>
                 ) : (
@@ -2032,13 +2039,12 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                   )
                 ) : (
                 <div className="ml-auto flex shrink-0 items-center gap-0.5">
-                  {/* EL «···» ES SIEMPRE EL ÚLTIMO DE LA DERECHA y la campana va
-                      a su izquierda. Antes la campana se escondía en cuanto la
-                      pantalla traía «···», así que en la ficha de un profesional
-                      se perdían las notificaciones. El menú que desborda va al
-                      final: así el pulgar encuentra lo mismo en la misma
-                      esquina, pantalla tras pantalla. */}
-                  {user && !sectionPaso && <NotificationBell scope="all" />}
+                  {/* EN UNA FICHA LA CABECERA ES DE LA FICHA: flecha, de dónde
+                      se vuelve y el «···» de la publicación. La campana es de la
+                      cuenta, no de lo que se está mirando, y ahí solo compite
+                      con el «···» —que es el que cierra la fila por la derecha,
+                      como en todas las apps—. En las secciones sí va. */}
+                  {user && !sectionPaso && !sectionMenu && <NotificationBell scope="all" />}
                   {user && sectionPaso && !sectionMenu && <span className="h-10 w-10" aria-hidden />}
                   {!user && !sectionShare && !sectionMenu && <HeaderAccountLink />}
                 </div>

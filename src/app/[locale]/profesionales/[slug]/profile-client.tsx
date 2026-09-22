@@ -266,8 +266,11 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
   // Arriba dice a dónde te devuelve la flecha (convención de iOS); al desplazar,
   // cuando el nombre ya no está a la vista, la barra pasa a decir de quién es el
   // perfil.
-  const tituloBarra =
-    nombreFueraDeVista && nombreEnBarra ? nombreEnBarra : profileReturnLabel(profileReturnHref, locale);
+  // Cuando la barra aún no muestra el nombre, lo que lleva es el rótulo de la
+  // VUELTA («Volver a favoritos»). Eso no es un título: es la etiqueta de la
+  // flecha, así que va pegada a ella y no centrada.
+  const nombreEnLaBarra = Boolean(nombreFueraDeVista && nombreEnBarra);
+  const tituloBarra = nombreEnLaBarra ? nombreEnBarra : profileReturnLabel(profileReturnHref, locale);
   useEffect(() => {
     if (previewMode) return;
     const global = window as unknown as {
@@ -275,6 +278,7 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
       __ccrSectionActive?: boolean;
       __ccrSectionShare?: boolean;
       __ccrSectionMenu?: boolean;
+      __ccrSectionVolver?: boolean;
     };
     global.__ccrSectionHeader = tituloBarra;
     global.__ccrSectionActive = true;
@@ -282,16 +286,18 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
     // El «...» de la barra, igual que en Empleos, Promociones y Proyectos:
     // guardar, compartir y reportar en el mismo orden y en la misma hoja.
     global.__ccrSectionMenu = true;
-    window.dispatchEvent(new CustomEvent("ccr:section-header", { detail: { title: tituloBarra, menu: true } }));
+    global.__ccrSectionVolver = !nombreEnLaBarra;
+    window.dispatchEvent(new CustomEvent("ccr:section-header", { detail: { title: tituloBarra, menu: true, volver: !nombreEnLaBarra } }));
     return () => {
       global.__ccrSectionHeader = null;
       global.__ccrSectionActive = false;
       global.__ccrSectionShare = false;
       global.__ccrSectionMenu = false;
+      global.__ccrSectionVolver = false;
       setNavbarOwnsHeader(false);
       window.dispatchEvent(new CustomEvent("ccr:section-header", { detail: null }));
     };
-  }, [previewMode, tituloBarra]);
+  }, [previewMode, tituloBarra, nombreEnLaBarra]);
 
   // El nombre de la tarjeta decide qué muestra la barra.
   useEffect(() => {

@@ -164,7 +164,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
         <style
           data-ccr-notificaciones=""
           dangerouslySetInnerHTML={{
-            __html: `.ccr-notifications-items [data-punto-no-leida]{right:25px!important}.ccr-notifications-items [data-menu-fila]{top:50%!important;right:42px!important;transform:translateY(-50%)}@media (hover:hover) and (pointer:fine){.ccr-notifications-items li [data-menu-fila]:not([data-abierto]){opacity:0;transition:opacity .15s}.ccr-notifications-items li:hover [data-menu-fila],.ccr-notifications-items li:focus-within [data-menu-fila]{opacity:1}}`,
+            __html: `.ccr-notifications-items [data-punto-no-leida]{right:52px!important}.ccr-notifications-items [data-menu-fila]{top:50%!important;right:12px!important;transform:translateY(-50%)}@media (hover:hover) and (pointer:fine){.ccr-notifications-items li [data-menu-fila]:not([data-abierto]){opacity:0;transition:opacity .15s}.ccr-notifications-items li:hover [data-menu-fila],.ccr-notifications-items li:focus-within [data-menu-fila]{opacity:1}}`,
           }}
         />
         {/* El verde de WhatsApp de la marca, en el documento: un botón con

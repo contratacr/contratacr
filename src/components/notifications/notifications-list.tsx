@@ -711,9 +711,13 @@ export function NotificationsList({ scope = "mode", titulo }: { scope?: "mode" |
                     <span
                       data-punto-no-leida=""
                       aria-label={locale === "en" ? "Unread" : "Sin leer"}
+                      // EL «···» ES EL ÚLTIMO DE LA DERECHA y el punto va a su
+                      // izquierda: el menú que desborda cierra siempre la fila,
+                      // en la cabecera del sitio y aquí. Estaba al revés —el
+                      // punto por fuera del «···»— y la fila terminaba en una
+                      // marca de estado en vez de en un control.
                       // La posición la pone la regla del documento
-                      // (data-ccr-notificaciones): en la misma columna que el
-                      // «···» general de arriba.
+                      // (data-ccr-notificaciones).
                       className="absolute top-1/2 h-2.5 w-2.5 -translate-y-1/2 rounded-full bg-[#009FD9]"
                     />
                   )}
