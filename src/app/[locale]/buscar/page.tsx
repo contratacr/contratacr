@@ -518,6 +518,13 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                   duplicating it here. Desktop keeps it in the header. */}
               <p className="hidden shrink-0 whitespace-nowrap text-[13px] leading-tight text-[#6b7280] lg:block">· {subtitle}</p>
             </div>
+            {/* LOS FILTROS, EN LA MISMA FILA DEL TÍTULO, como en Empleos,
+                Promociones y Proyectos: nombre de la pantalla a la izquierda y
+                las pastillas a su derecha. Debajo de la lista quedaban en un
+                renglón propio que solo servía para empujar los resultados. */}
+            <div className="ml-4 min-w-0 flex-1">
+              <Suspense fallback={null}><SearchFilters variant="chips" initialValues={filterInitialValues} /></Suspense>
+            </div>
           </div>
         </div>
       </div>
