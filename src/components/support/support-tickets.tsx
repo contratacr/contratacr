@@ -482,7 +482,12 @@ export function SupportTickets({
       <div
         ref={threadRef}
         style={altoHilo ? { height: altoHilo } : undefined}
-        className="ccr-support-thread flex h-[calc(100dvh-153px)] min-h-[360px] flex-col lg:h-[min(720px,calc(100dvh-260px))] lg:min-h-[480px]"
+        // EN COMPUTADORA EL ALTO SIGUE AL CONTENIDO. Eran 720 px fijos, asi
+        // que un caso de un solo mensaje dejaba media pantalla en blanco
+        // debajo. Ahora crece con la conversacion y se detiene donde estaba:
+        // corto se ve corto, largo se desplaza. En el telefono no cambia —un
+        // chat ahi ocupa la pantalla entera—.
+        className="ccr-support-thread flex h-[calc(100dvh-153px)] min-h-[360px] flex-col lg:h-auto lg:min-h-[380px] lg:max-h-[min(720px,calc(100dvh-260px))]"
       >
         {!ticket ? (
           <div className="grid min-h-0 flex-1 place-items-center px-4">
@@ -519,7 +524,7 @@ export function SupportTickets({
             {/* Una conversacion se lee de arriba hacia abajo: el primero
                 arriba. El vacio de abajo es el lienzo de la charla, no un
                 error, y ahi es donde van a caer las respuestas. */}
-            <div ref={messagesRef} className="ccr-support-thread-messages flex min-h-0 flex-1 flex-col gap-1.5 overflow-y-auto overscroll-contain bg-white px-4 py-5 sm:px-6">
+            <div ref={messagesRef} className="ccr-support-thread-messages flex min-h-0 flex-1 flex-col gap-1.5 overflow-y-auto overscroll-contain bg-[#f7f9fb] px-4 py-5 sm:px-6">
               {/* Lo único que espera son los mensajes, y esperan con forma de
                   mensaje: dos globos grises, uno de cada lado. */}
               {threadLoading && messages.length === 0 && (
