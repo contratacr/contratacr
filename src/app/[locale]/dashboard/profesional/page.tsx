@@ -37,7 +37,6 @@ import { StatusFilterTabs } from "@/components/dashboard/status-filter-tabs";
 import { OffersPanel } from "@/components/dashboard/pro/offers-panel";
 import { SaveStatusProvider } from "@/components/dashboard/save-status-context";
 import { BookingRequests } from "@/components/dashboard/pro/booking-requests";
-import { ProposalsTab } from "@/components/dashboard/pro/proposals-tab";
 import { VerificationPanel } from "@/components/dashboard/pro/verification-panel";
 import { ClientActivity } from "@/components/dashboard/client-activity";
 import { ClientConnections } from "@/components/dashboard/client-connections";
@@ -86,7 +85,7 @@ import { Modal } from "@/components/ui/modal";
 // (the offer capability, unlocked by completing the professional profile). There
 // is no separate client panel; everyone lives here.
 type Tab =
-  | "home" | "profile" | "services" | "photos" | "availability" | "bookings" | "proposals" | "quotes" | "verificacion"
+  | "home" | "profile" | "services" | "photos" | "availability" | "bookings" | "quotes" | "verificacion"
   | "jobs" | "offers" | "publicaciones" | "completion"
   | "suscripcion"
   | "sent_bookings" | "sent_projects" | "applications" | "saved" | "connections"
@@ -96,7 +95,7 @@ type Tab =
 type ProData = Record<string, any>;
 
 const ALL_TABS = new Set<Tab>([
-  "home", "profile", "services", "photos", "availability", "bookings", "proposals", "quotes", "verificacion",
+  "home", "profile", "services", "photos", "availability", "bookings", "quotes", "verificacion",
   "jobs", "offers", "publicaciones", "completion", "suscripcion", "sent_bookings", "sent_projects", "applications", "saved", "connections",
   "chat", "notifications", "soporte", "cuenta", "guides",
 ]);
@@ -108,7 +107,6 @@ const TAB_ICONS: Record<Tab, React.ReactNode> = {
   photos: <Award className="h-4 w-4" />,
   availability: <CalendarDays className="h-4 w-4" />,
   bookings: <CalendarCheck className="h-4 w-4" />,
-  proposals: <Handshake className="h-4 w-4" />,
   quotes: <ReceiptText className="h-4 w-4" />,
   verificacion: <ShieldCheck className="h-4 w-4" />,
   suscripcion: <CreditCard className="h-4 w-4" />,
@@ -134,7 +132,7 @@ const TAB_ICONS: Record<Tab, React.ReactNode> = {
 // los filtros, no en la cabecera de la tarjeta: la cabecera solo existe de
 // 1024px para arriba y a media pantalla el subtítulo desaparecía.
 const TABS_WITH_SUBTITLE = new Set<Tab>([
-  "bookings", "proposals", "availability", "verificacion", "suscripcion", "completion",
+  "bookings", "availability", "verificacion", "suscripcion", "completion",
   "sent_bookings", "applications", "saved", "connections", "notifications", "cuenta", "guides",
 ]);
 
@@ -145,7 +143,7 @@ const TABS_WITH_SUBTITLE = new Set<Tab>([
 // Mode membership. The first three render only in "offer" mode, the next three
 // only in "use" mode; "profile" + the shared tabs are valid in both, so the mode
 // for those is taken from the URL (?mode=) or defaults to the account's capability.
-const OFFER_ONLY = new Set<Tab>(["services", "photos", "availability", "bookings", "proposals", "quotes", "verificacion", "suscripcion", "jobs", "offers", "completion"]);
+const OFFER_ONLY = new Set<Tab>(["services", "photos", "availability", "bookings", "quotes", "verificacion", "suscripcion", "jobs", "offers", "completion"]);
 // Ya no hay dos paneles: «Mis proyectos» es del profesional tanto como del
 // cliente —publicar un proyecto es publicar, tenga o no ficha—, así que ninguna
 // sección fuerza el panel de cliente. Se conserva el conjunto vacío porque el
@@ -211,7 +209,6 @@ function agruparPestanas(tabs: Tab[]): Tab[][] {
 
 const PANEL_TAB_LABELS: Partial<Record<Tab, { es: string; en: string }>> = {
   bookings: { es: "Citas", en: "Appointments" },
-  proposals: { es: "Oportunidades", en: "Opportunities" },
   quotes: { es: "Cotizaciones", en: "Quotes" },
   sent_bookings: { es: "Mis citas", en: "My appointments" },
   sent_projects: { es: "Mis proyectos", en: "My projects" },
@@ -705,7 +702,11 @@ export default function DashboardPage() {
   const locale = useLocale();
   const rawRequestedTab = searchParams.get("tab");
   const legacyVerificationTab = rawRequestedTab === "verificacion";
-  const normalizedTab = legacyVerificationTab ? "profile" : rawRequestedTab;
+  // `?tab=proposals` es una direccion VIEJA: Oportunidades ya no existe, pero
+  // sigue llegando desde avisos guardados, push y enlaces de cotizaciones. Cae
+  // en «Mis proyectos», que es donde esta ahora lo que esa pantalla mostraba,
+  // en vez de dejar a la persona en una seccion que no existe.
+  const normalizedTab = legacyVerificationTab ? "profile" : rawRequestedTab === "proposals" ? "sent_projects" : rawRequestedTab;
   // Un ?tab= desconocido mostraba una sección vacía titulada con el id crudo:
   // se ignora y cae al inicio del panel.
   const requestedTab = (normalizedTab && ALL_TABS.has(normalizedTab as Tab) ? normalizedTab : null) as Tab | null;
@@ -2798,14 +2799,6 @@ export default function DashboardPage() {
                             proName={professionalDisplayName}
                             proSlug={typeof pro?.slug === "string" ? pro.slug : null}
                             puedeCrear={!!pro?.id}
-                          />
-                        )}
-                        {activeTab === "proposals" && pro && (
-                          <ProposalsTab
-                            key={`proposals-${pro.id}`}
-                            categoryId={pro.category_id}
-                            professions={(pro.professions && pro.professions.length > 0) ? pro.professions : (pro.category_id ? [pro.category_id] : [])}
-                            services={pro.services ?? []}
                           />
                         )}
                         {/* "Usar servicios", the seek capability. */}

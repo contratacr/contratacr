@@ -15,12 +15,11 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Link, useRouter } from "@/i18n/navigation";
 import { openInNewTabOnDesktop } from "@/lib/desktop-new-tab";
 import { getCategoryLabel } from "@/lib/data/categories";
 import { computeAge } from "@/lib/age";
-import { getInitials, cn, formatRelativeOrDate } from "@/lib/utils";
+import { cn, formatRelativeOrDate } from "@/lib/utils";
 import { etapaEnMasculino, StatusFilterTabs, SOLICITUD_TABS, PUBLICACION_ESTADO_TABS, solicitudMatches, solicitudBucket, proyectoPublicacionBucket, bucketCounts, sinFiltros } from "@/components/dashboard/status-filter-tabs";
 import { ExpandToggle } from "@/components/dashboard/expand-toggle";
 import { SectionHeadline } from "@/components/dashboard/section-headline";
@@ -91,8 +90,6 @@ type Project = {
   categories?: { name: string };
   provincias?: { name: string };
   cantones?: { name: string };
-  proposals?: { id: string; status: string }[];
-  accepted_professional_id?: string | null;
   archived_by_client?: boolean;
   for_someone_else?: boolean;
   beneficiary_name?: string | null;
@@ -100,25 +97,7 @@ type Project = {
   beneficiary_is_minor?: boolean;
 };
 
-type Proposal = {
-  id: string;
-  price?: number;
-  message: string;
-  status: string;
-  created_at: string;
-  professionals?: {
-    id: string;
-    slug: string;
-    whatsapp?: string;
-    allow_phone_call?: boolean | null;
-    verification_status?: string | null;
-    category_id?: string | null;
-    rating_avg?: number | null;
-    review_count?: number | null;
-    profiles: { full_name: string; avatar_url?: string };
-    categories: { name: string };
-  };
-};
+;
 
 // ONE shared status→colour mapping (sprint 440), identical to the pro side so a
 // UN color por significado, no un color por estado: azul de marca = está vivo
@@ -221,7 +200,6 @@ export function ClientActivity({ section, onCount }: { section: ClientActivitySe
   // Solicitudes is now a collapsible accordion too (sprint 440) — same card language
   // as the professional Solicitudes / Proyectos sections and Mis proyectos.
   const [expandedBooking, setExpandedBooking] = useState<string | null>(null);
-  const [projectProposals, setProjectProposals] = useState<Record<string, Proposal[]>>({});
   const [showPublish, setShowPublish] = useState(false);
   // Corregir lo que se pidió, desde el panel: es donde el cliente llega a ver
   // sus proyectos, igual que edita sus empleos y sus promociones desde el suyo.
@@ -242,7 +220,7 @@ export function ClientActivity({ section, onCount }: { section: ClientActivitySe
   const [cancelNote, setCancelNote] = useState("");
   const [cancelling, setCancelling] = useState(false);
   // Published request cancel confirm. Separate from appointment cancel because projects
-  // do not free a calendar slot, but professionals with proposals should still be warned.
+  // do not free a calendar slot, but the professional should still be warned.
   const [cancelProjectTarget, setCancelProjectTarget] = useState<string | null>(null);
   const [cancellingProject, setCancellingProject] = useState(false);
   // Delete-project confirm dialog (clean modal, not a browser confirm()).
@@ -268,17 +246,6 @@ export function ClientActivity({ section, onCount }: { section: ClientActivitySe
     else if (section === "projects") await refreshProjectRows();
   }, [user, section, refreshBookings, refreshProjectRows]);
 
-  const reloadLoadedProjectProposals = useCallback(async () => {
-    const ids = [...new Set([...Object.keys(projectProposals), expandedProject].filter(Boolean))] as string[];
-    if (ids.length === 0) return;
-    const entries = await Promise.all(ids.map(async (projectId) => {
-      const res = await fetch(`/api/proposals?project=${projectId}`, { cache: "no-store" });
-      const { proposals } = await res.json().catch(() => ({ proposals: [] }));
-      return [projectId, proposals ?? []] as const;
-    }));
-    setProjectProposals((prev) => ({ ...prev, ...Object.fromEntries(entries) }));
-  }, [expandedProject, projectProposals]);
-
   const refreshSoon = useCallback(() => {
     if (section === "saved" || document.visibilityState !== "visible") return;
     if (refreshTimerRef.current) window.clearTimeout(refreshTimerRef.current);
@@ -287,9 +254,8 @@ export function ClientActivity({ section, onCount }: { section: ClientActivitySe
     refreshTimerRef.current = window.setTimeout(() => {
       lastSilentRefreshRef.current = Date.now();
       void fetchSection();
-      if (section === "projects") void reloadLoadedProjectProposals();
     }, delay);
-  }, [fetchSection, reloadLoadedProjectProposals, section]);
+  }, [fetchSection, section]);
 
   // Las cotizaciones se piden junto con la lista, no al abrir cada tarjeta:
   // así el bloque de cotización ya está cuando la tarjeta se despliega.
@@ -360,7 +326,6 @@ export function ClientActivity({ section, onCount }: { section: ClientActivitySe
       window.setTimeout(() => { noInsistirArriba(); return document.getElementById(`project-${projectId}`)?.scrollIntoView({ block: "center", behavior: "smooth" }); }, 80);
     }, 0);
     return () => window.clearTimeout(id);
-    // `loadProposals` reads the current proposals map; targetProjectHandledRef prevents repeat opens.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fetchSection, projects, searchParams, section]);
 
@@ -470,13 +435,7 @@ export function ClientActivity({ section, onCount }: { section: ClientActivitySe
       void showMessage({ title: errorTitle, description: t("projectUpdateError"), tone: "danger" });
       return;
     }
-    setProjects((prev) => prev.map((p) => (p.id === projectId ? { ...p, status, ...(status === "open" ? { proposals: [] } : {}) } : p)));
-    if (status === "open") {
-      setProjectProposals((prev) => {
-        if (!prev[projectId]) return prev;
-        return { ...prev, [projectId]: [] };
-      });
-    }
+    setProjects((prev) => prev.map((p) => (p.id === projectId ? { ...p, status } : p)));
     refreshProjects();
   }
 
@@ -494,59 +453,10 @@ export function ClientActivity({ section, onCount }: { section: ClientActivitySe
 
   // "Ya lo resolví": cierra la solicitud y, si eligió a alguien de los que
   // respondieron, lo deja registrado para la reseña.
-  const [resolveTarget, setResolveTarget] = useState<string | null>(null);
-  const [resolveChoice, setResolveChoice] = useState<string>("");
-  const [resolving, setResolving] = useState(false);
 
   // Elegir con quién sigue, sin cerrar la solicitud: el profesional queda
   // habilitado para cotizar y coordinar, y la solicitud se cierra después con
   // "Marcar como resuelta".
-
-  async function openResolve(projectId: string) {
-    const lista = await loadProposals(projectId);
-    // Sin propuestas no hay a quién señalar: preguntar «¿quién te ayudó?» para
-    // que la única respuesta posible sea «lo resolví por otro lado» es una
-    // pregunta con una sola salida. Desde que se responde por WhatsApp ya no
-    // entran propuestas nuevas, así que este es el caso normal; la ventana
-    // queda para los proyectos viejos que sí las tienen, que son los únicos
-    // donde se puede dejar una reseña.
-    if (lista.length === 0) {
-      setResolveChoice("");
-      await resolverProyecto(projectId, null);
-      return;
-    }
-    // Con una sola respuesta, casi siempre fue esa persona: viene marcada para
-    // que un cierre rápido no le quite el crédito (ni la reseña).
-    const unico = lista.length === 1 ? lista[0]?.professionals?.id ?? "" : "";
-    setResolveChoice(unico);
-    setResolveTarget(projectId);
-  }
-
-  // El cierre en sí, sin ventana de por medio: lo usan tanto el atajo sin
-  // propuestas como la confirmación de la ventana.
-  async function resolverProyecto(projectId: string, professionalId: string | null) {
-    setResolving(true);
-    const res = await fetch("/api/projects", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: projectId, action: "resolve", professionalId: professionalId || null }),
-    });
-    setResolving(false);
-    if (!res.ok) {
-      void showMessage({ title: errorTitle, description: t("resolveError"), tone: "danger" });
-      return;
-    }
-    const chosen = (projectProposals[projectId] ?? []).find((p) => p.professionals?.id === professionalId);
-    setProjects((prev) => prev.map((p) => (p.id === projectId ? { ...p, status: "completed", accepted_professional_id: chosen?.professionals?.id ?? null } : p)));
-    setResolveTarget(null);
-    setProjectFilter("finalizadas");
-    refreshProjects();
-  }
-
-  async function confirmResolve() {
-    if (!resolveTarget) return;
-    await resolverProyecto(resolveTarget, resolveChoice || null);
-  }
 
   async function confirmDeleteProject() {
     if (!deleteTarget) return;
@@ -561,15 +471,6 @@ export function ClientActivity({ section, onCount }: { section: ClientActivitySe
     setProjects((prev) => prev.filter((p) => p.id !== deleteTarget));
     setDeleting(false);
     setDeleteTarget(null);
-  }
-
-  async function loadProposals(projectId: string, force = false): Promise<Proposal[]> {
-    if (!force && projectProposals[projectId]) return projectProposals[projectId];
-    const res = await fetch(`/api/proposals?project=${projectId}`, { cache: "no-store" });
-    const { proposals } = await res.json();
-    const lista: Proposal[] = proposals ?? [];
-    setProjectProposals((prev) => ({ ...prev, [projectId]: lista }));
-    return lista;
   }
 
   if (section === "saved") {
@@ -1127,7 +1028,6 @@ export function ClientActivity({ section, onCount }: { section: ClientActivitySe
                               label={t("actions")}
                               actions={isActive
                                 ? [
-                                    { label: t("resolve"), onClick: () => openResolve(project.id) },
                                     { label: t("cancelProject"), onClick: () => openCancelProject(project.id), destructive: true },
                                   ]
                                 : project.status === "cancelled"
@@ -1163,48 +1063,6 @@ export function ClientActivity({ section, onCount }: { section: ClientActivitySe
           )}
         </div>
       )}
-
-      {/* "Ya lo resolví" — ¿quién te ayudó? */}
-      {resolveTarget && (() => {
-        const list = projectProposals[resolveTarget] ?? [];
-        return (
-          <Modal
-            onClose={() => { if (!resolving) setResolveTarget(null); }}
-            title={t("resolveTitle")}
-            size="sm"
-            mobilePresentation="center"
-            footerClassName="justify-center sm:justify-end"
-            footer={(
-              <>
-                <Button variant="outline" size="sm" className="flex-1 rounded-lg sm:flex-none" onClick={() => setResolveTarget(null)} disabled={resolving}>{t("cancelBack")}</Button>
-                <Button size="sm" className="flex-1 rounded-lg sm:flex-none" onClick={confirmResolve} disabled={resolving} loading={resolving}>{t("resolveConfirm")}</Button>
-              </>
-            )}
-          >
-            <p className="mb-3 text-sm leading-6 text-[#6b7280]">{t("resolveBody")}</p>
-            <div className="flex flex-col gap-2">
-              {list.filter((p) => p.professionals?.id).map((p) => {
-                const id = p.professionals!.id;
-                const active = resolveChoice === id;
-                return (
-                  <button key={p.id} type="button" onClick={() => setResolveChoice(id)} aria-pressed={active} className={cn("flex items-center gap-3 rounded-xl border px-3 py-2.5 text-left transition-colors", active ? "border-[#009FD9] bg-[#f5fbfe]" : "border-[#e5e7eb] bg-white hover:border-[#c3d2de]")}>
-                    <Avatar className="h-9 w-9 shrink-0">
-                      <AvatarImage src={p.professionals?.profiles?.avatar_url} />
-                      <AvatarFallback className="bg-[#EBF5FB] text-xs font-semibold text-[#009FD9]">{getInitials(p.professionals?.profiles?.full_name ?? "?")}</AvatarFallback>
-                    </Avatar>
-                    <span className="min-w-0 flex-1 truncate text-sm font-semibold text-[#162543]">{p.professionals?.profiles?.full_name}</span>
-                    <span className={cn("h-4 w-4 shrink-0 rounded-full border-2", active ? "border-[#009FD9] bg-[#009FD9]" : "border-[#d7e1ea]")} aria-hidden />
-                  </button>
-                );
-              })}
-              <button type="button" onClick={() => setResolveChoice("")} aria-pressed={resolveChoice === ""} className={cn("flex items-center gap-3 rounded-xl border px-3 py-2.5 text-left text-sm font-semibold transition-colors", resolveChoice === "" ? "border-[#009FD9] bg-[#f5fbfe] text-[#0089bb]" : "border-[#e5e7eb] bg-white text-[#374151] hover:border-[#c3d2de]")}>
-                <span className="min-w-0 flex-1">{t("resolveNobody")}</span>
-                <span className={cn("h-4 w-4 shrink-0 rounded-full border-2", resolveChoice === "" ? "border-[#009FD9] bg-[#009FD9]" : "border-[#d7e1ea]")} aria-hidden />
-              </button>
-            </div>
-          </Modal>
-        );
-      })()}
 
       {reviewModal && (
         <LeaveReviewModal
