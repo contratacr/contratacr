@@ -235,7 +235,9 @@ export function PublishProjectModal({ onClose, onSuccess, editar }: { onClose: (
         data-ccr-hay-mas={sombras.abajo ? "" : undefined}
         className="app-fullscreen-modal relative z-10 flex h-[var(--app-visual-viewport-height)] min-h-0 w-full max-h-[var(--app-visual-viewport-height)] flex-col overflow-hidden bg-white shadow-none sm:h-auto sm:max-h-[90vh] sm:max-w-2xl sm:rounded-2xl sm:shadow-2xl"
       >
-        <div className="relative flex shrink-0 items-center justify-center gap-3 border-b border-[#e5e7eb] px-14 py-4 sm:items-start sm:justify-between sm:px-6">
+        {/* La cabecera tambien enciende: el enganche ya media las dos orillas
+            y aqui solo se estaba usando la de abajo. */}
+        <div className={cn("relative flex shrink-0 items-center justify-center gap-3 border-b border-[#e5e7eb] px-14 py-4 transition-shadow sm:items-start sm:justify-between sm:px-6", sombras.arriba && "shadow-[0_8px_12px_-6px_rgba(15,23,42,0.18)]")}>
           {/* Solo el título: la línea de apoyo repetía lo que el propio
               formulario ya promete y robaba alto en el teléfono. */}
           <div className="min-w-0 text-center sm:text-left">

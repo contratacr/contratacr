@@ -80,24 +80,64 @@ interface ModalProps {
  * títulos grandes de iOS y Material. La línea de siempre se queda: separa
  * aunque no haya nada que levantar.
  */
-export function useSombrasDeBorde(ref: React.RefObject<HTMLDivElement | null>) {
+/**
+ * QUIEN DESPLAZA NO SIEMPRE ES EL NODO QUE SE LE PASA. Varias ventanas dejan su
+ * cuerpo en `overflow-hidden` y ponen el desplazamiento en un hijo —el selector
+ * de «Agregar servicio» es el caso claro—, y entonces el nodo medido siempre
+ * decia «no hay nada mas»: ni la cabecera ni el pie encendian nunca su sombra,
+ * aunque las clases estuvieran puestas. Antes de medir, se busca quien desplaza
+ * de verdad: el propio nodo si puede, y si no el primer descendiente que si.
+ */
+function elQueDesplaza(nodo: HTMLElement): HTMLElement {
+  if (nodo.scrollHeight - nodo.clientHeight > 1) return nodo;
+  const candidatos = nodo.querySelectorAll<HTMLElement>("*");
+  for (const hijo of Array.from(candidatos)) {
+    if (hijo.scrollHeight - hijo.clientHeight <= 1) continue;
+    const desborde = getComputedStyle(hijo).overflowY;
+    if (desborde === "auto" || desborde === "scroll") return hijo;
+  }
+  return nodo;
+}
+
+/**
+ * `clave` existe para lo que se monta DESPUES del componente que mide: una
+ * ventana que se abre, un paso que aparece. Sin ella el efecto corria una sola
+ * vez, con `ref.current` todavia en nulo, y no volvia a correr nunca: las
+ * sombras del selector de «Agregar servicio» se quedaban apagadas para siempre.
+ */
+export function useSombrasDeBorde(ref: React.RefObject<HTMLDivElement | null>, clave?: unknown) {
   const [sombras, setSombras] = useState({ arriba: false, abajo: false });
   useEffect(() => {
-    const nodo = ref.current;
-    if (!nodo) return;
-    const medir = () => setSombras({
-      arriba: nodo.scrollTop > 1,
-      abajo: nodo.scrollTop + nodo.clientHeight < nodo.scrollHeight - 1,
-    });
+    const raiz = ref.current;
+    if (!raiz) return;
+    let vigilado: HTMLElement | null = null;
+    const medir = () => {
+      const nodo = elQueDesplaza(raiz);
+      if (nodo !== vigilado) {
+        vigilado?.removeEventListener("scroll", medir);
+        vigilado = nodo;
+        nodo.addEventListener("scroll", medir, { passive: true });
+      }
+      setSombras({
+        arriba: nodo.scrollTop > 1,
+        abajo: nodo.scrollTop + nodo.clientHeight < nodo.scrollHeight - 1,
+      });
+    };
     medir();
-    nodo.addEventListener("scroll", medir, { passive: true });
     // El cuerpo crece y encoge solo: un desplegable que se abre, un error que
-    // aparece, un adjunto que se agrega.
+    // aparece, un adjunto que se agrega. Y el contenido puede llegar despues,
+    // asi que tambien se mira si cambia la lista de hijos.
     const observador = new ResizeObserver(medir);
-    observador.observe(nodo);
-    for (const hijo of Array.from(nodo.children)) observador.observe(hijo);
-    return () => { nodo.removeEventListener("scroll", medir); observador.disconnect(); };
-  }, [ref]);
+    observador.observe(raiz);
+    for (const hijo of Array.from(raiz.children)) observador.observe(hijo);
+    const mutaciones = new MutationObserver(medir);
+    mutaciones.observe(raiz, { childList: true, subtree: true });
+    return () => {
+      vigilado?.removeEventListener("scroll", medir);
+      observador.disconnect();
+      mutaciones.disconnect();
+    };
+  }, [ref, clave]);
   return sombras;
 }
 

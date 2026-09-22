@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useSombrasDeBorde } from "@/components/ui/modal";
 import { useLocale, useTranslations } from "next-intl";
 import { X, ChevronLeft, ChevronRight } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
@@ -96,6 +97,8 @@ function addDateSlot(map: Record<string, string[]>, date: string, time: string) 
 }
 
 export function RescheduleModal({ professionalId, bookingId, currentWhen, slotLocationId, slotLocationLabel, onClose, onDone }: RescheduleModalProps) {
+  const hoja = useRef<HTMLDivElement>(null);
+  const sombrasHoja = useSombrasDeBorde(hoja);
   const t = useTranslations("reschedule");
   const locale = useLocale();
   const today = useMemo(() => { const d = new Date(); d.setHours(0, 0, 0, 0); return d; }, []);
@@ -217,12 +220,15 @@ export function RescheduleModal({ professionalId, bookingId, currentWhen, slotLo
     <div className="app-modal-screen fixed inset-0 z-[100] flex items-end justify-center sm:items-center">
       <div className="absolute inset-0 bg-black/50" onClick={onClose} aria-hidden />
       <div
+        ref={hoja}
         role="dialog"
         aria-modal="true"
         aria-label={t("title")}
         className="app-bottom-sheet relative w-full overflow-y-auto overscroll-contain rounded-t-2xl bg-white pb-[max(env(safe-area-inset-bottom),1rem)] shadow-2xl sm:max-w-md sm:rounded-2xl"
       >
-        <div className="sticky top-0 z-10 flex items-center justify-between border-b border-[#e5e7eb] bg-white px-4 py-3">
+        {/* La cabecera pegada tambien enciende su sombra: aqui la hoja entera
+            desplaza y no habia nada que lo midiera. */}
+        <div className={cn("sticky top-0 z-10 flex items-center justify-between border-b border-[#e5e7eb] bg-white px-4 py-3 transition-shadow", sombrasHoja.arriba && "shadow-[0_8px_12px_-6px_rgba(15,23,42,0.18)]")}>
           <div className="min-w-0">
             <h2 className="text-base font-bold text-[#162543]">{t("title")}</h2>
             {currentWhen && <p className="text-xs text-[#68778d] truncate">{t("current", { when: currentWhen })}</p>}

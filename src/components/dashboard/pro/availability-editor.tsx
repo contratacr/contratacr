@@ -1,4 +1,5 @@
 "use client";
+import { useSombrasDeBorde } from "@/components/ui/modal";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { UnsavedChangesGuard } from "@/components/dashboard/unsaved-changes-guard";
@@ -1404,6 +1405,11 @@ function DayModal({ initialDate, existing, markedDates, defaultDuration, dateLoc
     if (m !== "closed" && franjas.length === 0) setFranjas([{ id: genId(), start: m === "extra" ? "18:00" : "08:00", end: m === "extra" ? "20:00" : "17:00" }]);
   }
 
+  // Las dos orillas de esta hoja: no medía nada y ni la cabecera ni la franja
+  // de botones encendían su sombra con el cuerpo a medio recorrer.
+  const cuerpoDelDia = useRef<HTMLDivElement>(null);
+  const sombrasDelDia = useSombrasDeBorde(cuerpoDelDia);
+
   const hhmmLocal = (mins: number) => `${String(Math.floor(mins / 60)).padStart(2, "0")}:${String(mins % 60).padStart(2, "0")}`;
   const invalid = mode !== "closed" && (franjas.length === 0 || franjas.some((f) => toMins(f.end) <= toMins(f.start)));
 
@@ -1419,8 +1425,8 @@ function DayModal({ initialDate, existing, markedDates, defaultDuration, dateLoc
   return (
     <div className="ccr-availability-modal app-modal-screen fixed inset-0 z-[200] flex items-stretch justify-center p-0 sm:items-center sm:p-4">
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
-      <div className="ccr-availability-modal-panel app-bottom-sheet relative z-10 flex h-full w-full flex-col overflow-hidden rounded-none bg-white shadow-2xl sm:h-auto sm:max-h-[90vh] sm:max-w-2xl sm:rounded-2xl">
-        <div className="flex shrink-0 items-start justify-between gap-3 border-b border-[#e5e7eb] p-4 pt-[max(env(safe-area-inset-top),1rem)] sm:p-5">
+      <div data-ccr-hay-mas={sombrasDelDia.abajo ? "" : undefined} className="ccr-availability-modal-panel app-bottom-sheet relative z-10 flex h-full w-full flex-col overflow-hidden rounded-none bg-white shadow-2xl sm:h-auto sm:max-h-[90vh] sm:max-w-2xl sm:rounded-2xl">
+        <div className={cn("relative z-10 flex shrink-0 items-start justify-between gap-3 border-b border-[#e5e7eb] p-4 pt-[max(env(safe-area-inset-top),1rem)] transition-shadow sm:p-5", sombrasDelDia.arriba && "shadow-[0_8px_12px_-6px_rgba(15,23,42,0.18)]")}>
           <div>
             <h3 className="text-base font-bold text-[#162543]">{t("modalTitle")}</h3>
             <p className="mt-0.5 text-xs text-[#6b7280]">{t("modalSub")}</p>
@@ -1430,7 +1436,7 @@ function DayModal({ initialDate, existing, markedDates, defaultDuration, dateLoc
           </button>
         </div>
 
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain grid grid-cols-1 gap-5 p-4 sm:grid-cols-2 sm:p-5">
+        <div ref={cuerpoDelDia} className="min-h-0 flex-1 overflow-y-auto overscroll-contain grid grid-cols-1 gap-5 p-4 sm:grid-cols-2 sm:p-5">
           <MonthCalendar value={date} onChange={setDate} marked={markedDates} dateLocale={dateLocale} />
 
           <div className="flex flex-col gap-3">

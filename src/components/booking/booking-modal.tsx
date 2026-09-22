@@ -1,4 +1,5 @@
 "use client";
+import { useSombrasDeBorde } from "@/components/ui/modal";
 
 import { BOTON_DE_EXITO, PantallaDeExito } from "@/components/ui/pantalla-de-exito";
 import { Carril } from "@/components/ui/carril";
@@ -260,6 +261,12 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
   const [selectedDate, setSelectedDate] = useState("");
   const [selectedTime, setSelectedTime] = useState("");
   const slotsRef = useRef<HTMLDivElement>(null);
+  // Las dos orillas de esta ventana: no usaba nada y ni la cabecera ni la
+  // franja de botones encendian su sombra aunque el cuerpo siguiera hacia
+  // abajo. `data-ccr-hay-mas` es lo que la regla del documento mira para
+  // darsela a `.ccr-pie-formulario`.
+  const cuerpoDePasos = useRef<HTMLDivElement>(null);
+  const sombrasDelPaso = useSombrasDeBorde(cuerpoDePasos);
   const [availability, setAvailability] = useState<WeeklyAvailability>({});
   const [dateSlots, setDateSlots] = useState<Record<string, string[]>>({});
   const [blockedDates, setBlockedDates] = useState<string[]>([]);
@@ -1186,7 +1193,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
   // Mismo contenido, dos armazones: página propia o capa sobre la pantalla.
   const contenido = (
     <>
-          <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-[#f4f7fa]">
+          <div data-ccr-hay-mas={sombrasDelPaso.abajo ? "" : undefined} className="flex min-h-0 flex-1 flex-col overflow-hidden bg-[#f4f7fa]">
             {/* Cabecera con el mismo patrón que las demás pantallas: salida a la
                 izquierda (flecha en el teléfono, X en escritorio), título centrado y
                 el avance en una barra fina bajo la línea, en vez de puntitos. */}
@@ -1194,7 +1201,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                 desalineaba de la flecha, y el avance ya lo dice la barra de abajo.
                 El relleno del área segura va en el envoltorio, así la flecha y el
                 título quedan centrados entre sí en el teléfono y en escritorio. */}
-            <div className="shrink-0 border-b border-[#e5e7eb] bg-white pt-[max(env(safe-area-inset-top),0.875rem)] lg:pt-0">
+            <div className={cn("relative z-10 shrink-0 border-b border-[#e5e7eb] bg-white pt-[max(env(safe-area-inset-top),0.875rem)] transition-shadow lg:pt-0", sombrasDelPaso.arriba && "shadow-[0_8px_12px_-6px_rgba(15,23,42,0.18)]")}>
               <div className="relative flex items-center justify-center px-14 pb-3.5 lg:px-6 lg:py-4">
                 <h2 className="text-lg font-bold text-[#162543]">{t("title")}</h2>
                 <button
@@ -1219,7 +1226,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
             )}
 
             {/* Step content */}
-            <div className={cn("flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto bg-[#f4f7fa] px-4 pb-[max(env(safe-area-inset-bottom),1rem)] pt-4 md:px-6 md:pb-4", asPage && "lg:bg-white lg:px-8 lg:pt-7")}>
+            <div ref={cuerpoDePasos} className={cn("flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto bg-[#f4f7fa] px-4 pb-[max(env(safe-area-inset-bottom),1rem)] pt-4 md:px-6 md:pb-4", asPage && "lg:bg-white lg:px-8 lg:pt-7")}>
               {/* Con quién es la cita: una fila compacta, no medio modal. */}
               {step !== "success" && (
                 <div className={cn("flex shrink-0 items-center gap-3 rounded-2xl border border-[#e5e7eb] bg-white px-4 py-3", asPage && "lg:hidden")}>
