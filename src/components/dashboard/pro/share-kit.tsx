@@ -232,8 +232,10 @@ export function ShareKit({ open, onClose, profileUrl, name, services = [], avata
   // Al cerrar se vuelve al menú, para que la próxima apertura empiece limpia.
   const cerrar = () => { setView("menu"); setCopied(null); onClose(); };
 
+  // El subtitulo existia en los textos y no se estaba usando: dice POR QUE vale
+  // la pena compartir el perfil, que es lo unico que la ventana no contaba.
   return (
-    <Modal open={open} onClose={cerrar} title={t("title")} size="sm" mobilePresentation="center" closeLabel={t("close")}>
+    <Modal open={open} onClose={cerrar} title={t("title")} subtitle={t("subtitle")} size="sm" mobilePresentation="center" closeLabel={t("close")}>
       {view === "menu" && (
         <div className="flex flex-col gap-3">
           {/* Lo mismo que ve un cliente al compartir un perfil (enlace a la vista,

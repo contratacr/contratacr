@@ -649,7 +649,10 @@ function GuidePreview({ id, t }: { id: string; t: ReturnType<typeof useTranslati
 // cabecera en GitHub o Linear. Sin caja ni borde: siguen sin competir con el
 // nombre de la cuenta.
 const ENLACE_DE_CABECERA = "group/enlace inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap text-[13px] font-semibold leading-none text-[#526277] transition hover:text-[#009FD9] focus-visible:outline-none focus-visible:underline";
-const ICONO_DE_CABECERA = "h-[14px] w-[14px] shrink-0 text-[#8a97a8] transition-colors group-hover/enlace:text-[#009FD9]";
+// 12 px y trazo fino: son ACOMPANANTES del rotulo, no botones. A 14 px con el
+// trazo normal pesaban tanto como la palabra y la fila se leia como tres
+// botones con icono en vez de tres enlaces de texto.
+const ICONO_DE_CABECERA = "h-3 w-3 shrink-0 stroke-[1.9] text-[#9aa7b6] transition-colors group-hover/enlace:text-[#009FD9]";
 
 export default function DashboardPage() {
   const { user, loading: authLoading } = useAuth();

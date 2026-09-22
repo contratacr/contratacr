@@ -42,9 +42,11 @@ export function ShareChannels({ url, name, linkLabel, copyLabel, mensaje }: Prop
         href={wa}
         target="_blank"
         rel="noopener noreferrer"
+        // «WhatsApp» a secas era una etiqueta, no una accion: al lado de
+        // «Copiar enlace» —que si dice lo que hace— parecia un rotulo de marca.
         className="inline-flex h-12 w-full items-center justify-center gap-2.5 rounded-2xl bg-[#25d366] px-5 text-[15px] font-bold text-white shadow-[0_8px_18px_-12px_rgba(37,211,102,0.9)] transition-colors hover:bg-[#1eb457]"
       >
-        <WhatsAppIcon className="h-[18px] w-[18px]" />{t("whatsapp")}
+        <WhatsAppIcon className="h-[18px] w-[18px]" />{t("shareWhatsapp")}
       </a>
     </div>
   );
