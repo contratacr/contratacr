@@ -93,8 +93,16 @@ export function FlechasDeCarril({ carril, enMargen = false }: {
           style={{ position: "absolute", top: centro ?? "50%", transform: "translateY(-50%)", [lado === "derecha" ? "right" : "left"]: -10, zIndex: 10 }}
           className={cn(
             "hidden h-7 w-7 place-items-center rounded-full border border-[#e5e7eb] bg-white text-[#162543] shadow-[0_2px_8px_-2px_rgba(15,23,42,0.35)] transition-opacity duration-150",
-            // Solo con ratón, y solo cuando la mano se acerca al carril.
+            // Con ratón: aparece cuando la mano se acerca al carril.
             "lg:grid lg:opacity-0 lg:group-hover/carril:opacity-100 lg:focus-visible:opacity-100 hover:bg-[#eef5f9]",
+            // CON EL DEDO: SIEMPRE A LA VISTA mientras haya a dónde ir.
+            // La idea era que en el teléfono bastara con ver media pastilla
+            // cortada, y funciona cuando de verdad asoma media. Donde la fila
+            // no pasa por `ScrollRail` no hay quien fuerce ese asomo, y la
+            // pastilla siguiente se queda en un hilo de 8 px contra el filo:
+            // medido en los servicios de un caso de éxito. Sin flecha y sin
+            // asomo no queda ninguna señal, así que aquí sí se dibuja.
+            "max-lg:[@media(hover:none)]:grid max-lg:[@media(hover:none)]:opacity-100",
             enMargen && (lado === "derecha" ? "lg:!right-0" : "lg:!left-0"),
           )}
         >
