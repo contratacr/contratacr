@@ -37,19 +37,20 @@ export function FilaInterruptor({
       data-testid={testId}
       onClick={() => onChange(!checked)}
       className={cn(
-        // UNA SOLA CAJA PARA TODOS LOS INTERRUPTORES, la que ya usaba Idiomas:
-        // rotulo a la izquierda, interruptor a la derecha y un recuadro que los
-        // encierra a los dos. Sueltos sobre el formulario pasaba una de dos
-        // cosas —o el interruptor se iba al otro extremo de una fila de 768 px,
-        // o quedaba pegado al texto sin nada que los uniera—; la caja resuelve
-        // las dos, porque marca hasta donde llega la opcion. Encendida se tine
-        // de celeste, asi que el estado se lee de lejos sin mirar la perilla.
-        // Mide lo MISMO que los campos de su formulario —ni un tope propio—:
-        // con 36rem la caja sobresalia por la derecha de los telefonos de
-        // arriba y de abajo, y una fila mas larga que sus vecinas se lee como
-        // si perteneciera a otra cosa.
-        "flex min-h-12 w-full items-center justify-between gap-3 rounded-xl border px-4 py-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9]/30 disabled:cursor-not-allowed disabled:opacity-60",
-        checked ? "border-[#cce8f3] bg-[#f4fbfe]" : "border-[#e5e7eb] bg-white hover:bg-[#f8fafc]",
+        // SIN CAJA PINTADA. Un interruptor que vive entre campos de un
+        // formulario no es una tarjeta: es un campo mas, y el recuadro con su
+        // tinte lo hacia pesar mas que los telefonos y los textos de al lado.
+        // Lo que sustituye a la caja es la MEDIDA: la fila toma el mismo ancho
+        // que sus vecinos, asi que el interruptor nunca se va al otro extremo
+        // de una fila de 768 px, que era el problema que la caja resolvia.
+        //
+        // Rotulo a la izquierda e interruptor a la DERECHA, no pegado al texto:
+        // con dos o mas seguidos, pegarlos al rotulo los deja en zigzag —cada
+        // uno a una distancia distinta segun lo largo del texto— y la guia de
+        // Material lo dice explicito, que en una lista de ajustes los controles
+        // se alinean en un eje vertical. Encendido lo dice el propio
+        // interruptor, que se pone celeste; para eso esta.
+        "flex min-h-11 w-full items-center justify-between gap-4 py-1 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9]/35 disabled:cursor-not-allowed disabled:opacity-60",
         className,
       )}
     >

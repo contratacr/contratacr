@@ -877,10 +877,7 @@ export function AvailabilityEditor({
       // guarda cambia el interruptor por la rueda. No usa `FilaInterruptor` porque mientras
       // guarda cambia el interruptor por la rueda, y eso ese componente no lo
       // sabe hacer; el dibujo, eso si, es exactamente el mismo.
-      className={cn(
-        "flex min-h-12 w-full items-center justify-between gap-3 rounded-xl border px-4 py-3 text-left text-sm font-semibold text-[#162543] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9]/30 disabled:cursor-not-allowed disabled:opacity-60",
-        checked ? "border-[#cce8f3] bg-[#f4fbfe]" : "border-[#e5e7eb] bg-white hover:bg-[#f8fafc]",
-      )}
+      className="flex min-h-11 w-full max-w-xl items-center justify-between gap-4 py-1 text-left text-sm font-semibold text-[#162543] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9]/35 disabled:cursor-not-allowed disabled:opacity-60"
     >
       <span className="min-w-0">{title}</span>
       {loading ? <Loader2 className="h-5 w-5 shrink-0 animate-spin text-[#009FD9]" /> : <ToggleSwitch checked={checked} disabled={disabled} />}
