@@ -395,9 +395,6 @@ export function ClientActivity({ section, onCount }: { section: ClientActivitySe
   function bookingReview(bookingId: string) {
     return myReviews.find((r) => r.booking_id === bookingId);
   }
-  function projectReview(projectId: string) {
-    return myReviews.find((r) => r.project_id === projectId);
-  }
 
   // CLIENT cancel — low-friction: a clean confirm dialog with an OPTIONAL note (no
   // forced reason; the slot frees + the pro is notified either way). Sprint 434.
@@ -544,9 +541,6 @@ export function ClientActivity({ section, onCount }: { section: ClientActivitySe
     setResolveTarget(null);
     setProjectFilter("finalizadas");
     refreshProjects();
-    if (chosen?.professionals?.id) {
-      setReviewModal({ professionalId: chosen.professionals.id, professionalName: chosen.professionals.profiles?.full_name ?? t("professional"), projectId });
-    }
   }
 
   async function confirmResolve() {
@@ -576,25 +570,6 @@ export function ClientActivity({ section, onCount }: { section: ClientActivitySe
     const lista: Proposal[] = proposals ?? [];
     setProjectProposals((prev) => ({ ...prev, [projectId]: lista }));
     return lista;
-  }
-
-  async function reviewProjectPro(projectId: string) {
-    let list = projectProposals[projectId];
-    if (!list) {
-      const res = await fetch(`/api/proposals?project=${projectId}`);
-      const json = await res.json().catch(() => ({ proposals: [] }));
-      list = json.proposals ?? [];
-      setProjectProposals((prev) => ({ ...prev, [projectId]: list }));
-    }
-    const project = projects.find((p) => p.id === projectId);
-    const chosen = (list ?? []).find((p) => p.professionals?.id && p.professionals.id === project?.accepted_professional_id)
-      ?? (list ?? []).find((p) => p.status === "accepted");
-    const pro = chosen?.professionals;
-    if (pro?.id) {
-      setReviewModal({ professionalId: pro.id, professionalName: pro.profiles?.full_name ?? t("professional"), projectId });
-    } else {
-      void showMessage({ title: errorTitle, description: t("noAssignedPro"), tone: "danger" });
-    }
   }
 
   if (section === "saved") {
@@ -1128,14 +1103,15 @@ export function ClientActivity({ section, onCount }: { section: ClientActivitySe
                                   Empleos y Promociones ya viven en el menú. Aquí
                                   estaban sueltas y en turquesa, así que una fila
                                   de un proyecto tenía hasta cuatro botones y las
-                                  otras dos secciones tres. «Dejar reseña» SÍ se
-                                  queda: no cambia nada, le pide algo a la
-                                  persona, y es lo único que la fila espera. */}
-                              {project.status === "completed" && project.accepted_professional_id && (
-                                <Button size="sm" className={actionButtonClass} onClick={() => reviewProjectPro(project.id)}>
-                                  {projectReview(project.id) ? t("editReview") : t("leaveReview")}
-                                </Button>
-                              )}
+                                  otras dos secciones tres.
+
+                                  LA RESEÑA NO SE DEJA DESDE UN PROYECTO. Se deja
+                                  en la ficha del profesional, con cuenta, y ahí
+                                  el formulario está abierto arriba de la lista:
+                                  esa es la única puerta. Aquí había una segunda
+                                  —y una tercera, que se abría sola al marcar el
+                                  proyecto como finalizado— para escribir
+                                  exactamente lo mismo. */}
                             </div>
                             {/* TODA FILA TIENE SU «···», tambien las inactivas:
                                 era la unica de las tres secciones donde una
