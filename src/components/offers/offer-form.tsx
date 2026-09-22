@@ -583,7 +583,6 @@ export function OfferForm({ professionalId, serviceOptions, backHref = "/ofertas
           <div className="my-6 border-t border-[#e5e7eb] pt-6"><h2 className="font-bold">{copy.priceAndValidity}</h2></div>
           <div className="grid gap-4 sm:grid-cols-2">
             <FilaInterruptor
-              conBorde
               className="sm:col-span-2"
               testId="promo-sin-precio"
               titulo={copy.negotiable}

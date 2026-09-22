@@ -17,7 +17,6 @@ export function FilaInterruptor({
   checked,
   onChange,
   disabled = false,
-  conBorde = false,
   className,
   testId,
 }: {
@@ -26,8 +25,6 @@ export function FilaInterruptor({
   checked: boolean;
   onChange: (valor: boolean) => void;
   disabled?: boolean;
-  /** Dentro de su propia caja, cuando la opción va sola en el formulario. */
-  conBorde?: boolean;
   className?: string;
   testId?: string;
 }) {
@@ -40,14 +37,16 @@ export function FilaInterruptor({
       data-testid={testId}
       onClick={() => onChange(!checked)}
       className={cn(
-        // EL INTERRUPTOR VA PEGADO A SU ROTULO. Estaba al otro extremo de una
-        // fila que heredaba el ancho del formulario, asi que en «Mi perfil» y
-        // en «Publicar empleo» quedaba a cientos de pixeles de su texto, con
-        // nada en medio: a esa distancia no se lee como una pareja y hay que
-        // recorrer la linea con la vista para saber que apaga. Ahora la fila
-        // mide lo que mide el par, no lo que mide el formulario.
-        "inline-flex w-fit max-w-full items-center gap-3 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9]/35 disabled:cursor-not-allowed disabled:opacity-60",
-        conBorde ? "rounded-2xl border border-[#e5e7eb] bg-white px-4 py-3" : "py-1",
+        // UNA SOLA CAJA PARA TODOS LOS INTERRUPTORES, la que ya usaba Idiomas:
+        // rotulo a la izquierda, interruptor a la derecha y un recuadro que los
+        // encierra a los dos. Sueltos sobre el formulario pasaba una de dos
+        // cosas —o el interruptor se iba al otro extremo de una fila de 768 px,
+        // o quedaba pegado al texto sin nada que los uniera—; la caja resuelve
+        // las dos, porque marca hasta donde llega la opcion. Encendida se tine
+        // de celeste, asi que el estado se lee de lejos sin mirar la perilla.
+        "flex min-h-12 w-full max-w-xl items-center justify-between gap-3 rounded-xl border px-4 py-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9]/30 disabled:cursor-not-allowed disabled:opacity-60",
+        checked ? "border-[#cce8f3] bg-[#f4fbfe]" : "border-[#e5e7eb] bg-white hover:bg-[#f8fafc]",
+        ayuda && "items-start",
         className,
       )}
     >
@@ -55,7 +54,11 @@ export function FilaInterruptor({
         <span className="block text-sm font-semibold text-[#162543]">{titulo}</span>
         {ayuda && <span className="mt-0.5 block text-[13px] leading-snug text-[#68778d]">{ayuda}</span>}
       </span>
-      <ToggleSwitch checked={checked} disabled={disabled} />
+      {/* -2 px: el titulo mide 20 px de renglon y el interruptor 24, asi que
+          sin el corrimiento su centro cae dos pixeles por debajo del texto. */}
+      <span className={cn("flex", ayuda && "mt-[-2px]")}>
+        <ToggleSwitch checked={checked} disabled={disabled} />
+      </span>
     </button>
   );
 }

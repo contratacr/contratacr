@@ -871,12 +871,16 @@ export function AvailabilityEditor({
       role="switch"
       aria-checked={checked}
       aria-label={ariaLabel}
-      // EL MISMO DIBUJO QUE EL RESTO DEL APP: el rotulo y, pegado a su
-      // derecha, el interruptor. Aqui estaba al reves —interruptor y despues
-      // texto— y en la misma pantalla convivian los dos. No usa `FilaInterruptor` porque mientras
+      // LA MISMA CAJA QUE `FilaInterruptor`. Aqui el orden estaba al reves
+      // —interruptor y despues texto— y sin recuadro, asi que en la misma
+      // pantalla convivian dos dibujos. No usa el componente porque mientras
+      // guarda cambia el interruptor por la rueda. No usa `FilaInterruptor` porque mientras
       // guarda cambia el interruptor por la rueda, y eso ese componente no lo
       // sabe hacer; el dibujo, eso si, es exactamente el mismo.
-      className="inline-flex w-fit max-w-full items-center gap-3 text-left text-sm font-semibold text-[#162543] transition-opacity disabled:cursor-not-allowed disabled:opacity-60"
+      className={cn(
+        "flex min-h-12 w-full max-w-xl items-center justify-between gap-3 rounded-xl border px-4 py-3 text-left text-sm font-semibold text-[#162543] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9]/30 disabled:cursor-not-allowed disabled:opacity-60",
+        checked ? "border-[#cce8f3] bg-[#f4fbfe]" : "border-[#e5e7eb] bg-white hover:bg-[#f8fafc]",
+      )}
     >
       <span className="min-w-0">{title}</span>
       {loading ? <Loader2 className="h-5 w-5 shrink-0 animate-spin text-[#009FD9]" /> : <ToggleSwitch checked={checked} disabled={disabled} />}

@@ -300,7 +300,6 @@ export function AccountSecuritySection({ showHeading = true }: { showHeading?: b
             <h3 className="text-sm font-semibold text-[#374151]">{t("whatsappHeading")}</h3>
           </div>
           <FilaInterruptor
-            conBorde
             titulo={t("whatsappOptIn")}
             ayuda={<>{t("whatsappOptInHelp")}{telefonoDelPerfil ? ` (${telefonoDelPerfil})` : ""}</>}
             checked={permisoWhatsapp}
