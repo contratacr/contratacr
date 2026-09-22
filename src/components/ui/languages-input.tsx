@@ -37,8 +37,14 @@ export function LanguagesInput({ value, onChange }: Props) {
     onChange(Array.from(next));
   }
 
+  // DOS COLUMNAS QUE MIDEN LO QUE MIDE EL IDIOMA MÁS LARGO. En una sola
+  // columna, siete idiomas dejaban un desierto a la derecha y obligaban a
+  // recorrer la lista entera hacia abajo. La rejilla es `inline-grid` y
+  // `w-fit`: las columnas se ajustan al contenido en vez de repartirse el
+  // ancho del formulario, así que el interruptor no se aleja de su palabra, y
+  // dentro de cada columna todos caen en la misma vertical.
   return (
-    <div className="inline-flex w-fit max-w-full flex-col gap-1">
+    <div className="inline-grid w-fit max-w-full grid-cols-1 gap-x-6 gap-y-1 sm:grid-cols-2">
       {LANGUAGES.map((language) => {
         const checked = selected.has(language.id);
         return (

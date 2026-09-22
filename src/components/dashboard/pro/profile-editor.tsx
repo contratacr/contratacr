@@ -1230,7 +1230,11 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
                 </label>
                 {/* Prefix shows the network so the pro types ONLY their username. */}
                 <div className={`flex h-11 rounded-xl border bg-white overflow-hidden transition-all focus-within:ring-2 focus-within:ring-[#009FD9] ${invalid ? "border-red-300" : "border-[#e5e7eb]"}`}>
-                  <span className="flex items-center px-3 bg-[#f9fafb] text-xs text-[#6b7280] border-r border-[#e5e7eb] whitespace-nowrap">{prefix}</span>
+                  {/* TODAS LAS RAYAS EN LA MISMA VERTICAL. El prefijo medía lo que medía
+                      su dominio —«tiktok.com/@» corto, «linkedin.com/in/» largo— y la
+                      raya divisoria saltaba de sitio en cada renglón, así que los cuatro
+                      campos parecían desalineados aunque las cajas estuvieran a escuadra. */}
+                  <span className="flex w-32 shrink-0 items-center px-3 bg-[#f9fafb] text-xs text-[#6b7280] border-r border-[#e5e7eb] whitespace-nowrap">{prefix}</span>
                   <input
                     type="text"
                     inputMode="text"
