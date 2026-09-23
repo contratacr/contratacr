@@ -154,7 +154,7 @@ test.describe("@mobile native shell contracts", () => {
     await loginAs(page, E2E_USERS.client.email, E2E_USERS.client.password);
   });
 
-  test("signed-out public pages keep the marketplace header pinned at the top and the register icon in the drawer", async ({ page }) => {
+  test("signed-out public pages keep the marketplace header pinned at the top and a single way in", async ({ page }) => {
     await resetAuth(page);
     await gotoOK(page, "/es/ofertas");
 
@@ -183,16 +183,17 @@ test.describe("@mobile native shell contracts", () => {
 
     await expect(page.getByRole("checkbox")).toHaveCount(0);
 
-    // Sin sesión, entrar y registrarse viven en el cajón (el tablero no pinta
-    // botones de sesión ni los accesos con Apple/Google: esos están en /login).
+    // Sin sesión, entrar vive en el cajón (el tablero no pinta botones de
+    // sesión ni los accesos con Apple/Google: esos están en /login).
     await page.getByRole("button", { name: /abrir men[uú]/i }).click();
     // Hay dos enlaces «Ingresar» en el DOM (navbar de escritorio oculto + cajón).
     await expect(page.getByRole("link", { name: /^ingresar$/i }).locator("visible=true").first()).toBeVisible();
-    // Registrarse va con su ícono; "Ofrecer mis servicios" salió del navbar en
-    // a8c05f7a y el rol se elige en /registro.
-    const register = page.getByRole("link", { name: /Registrarse|Crear cuenta/i }).first();
-    await expect(register).toBeVisible();
-    await expect(register.locator("svg")).toHaveCount(1);
+    // Y UNA sola puerta, no dos. «Registrarse» se quitó del cajón a propósito:
+    // como un renglón más junto a «Ingresar» el menú se leía el doble de largo,
+    // y la pantalla de ingreso ya ofrece crear cuenta ahí mismo. Que no vuelva
+    // es parte del contrato. (La prueba pedía ese enlace y llevaba fallando
+    // desde que se retiró.)
+    await expect(page.getByRole("link", { name: /^registrarse$|^crear cuenta$/i }).locator("visible=true")).toHaveCount(0);
   });
 
   test("first installation keeps incomplete login and registration journeys retryable", async ({ page }) => {

@@ -25,7 +25,6 @@ test.describe("@seeded contextual direct chat", () => {
   const reportIds: string[] = [];
   let bookingId = "";
   let projectId = "";
-  let proposalId = "";
 
   // Desde a8c05f7a hay UNA conversación por pareja: un chat previo entre el
   // cliente y el profesional sembrados (de otra suite, o de la prueba anterior
@@ -89,7 +88,6 @@ test.describe("@seeded contextual direct chat", () => {
         ...conversationIds,
         bookingId,
         projectId,
-        proposalId,
       ].filter(Boolean);
       const { data: generatedNotifications, error: notificationLookupError } = await admin
         .from("notifications")
@@ -112,7 +110,6 @@ test.describe("@seeded contextual direct chat", () => {
       await admin.from("direct_conversations").delete().in("id", conversationIds);
     }
     if (bookingId) await admin.from("bookings").delete().eq("id", bookingId);
-    if (proposalId) await admin.from("proposals").delete().eq("id", proposalId);
     if (projectId) await admin.from("projects").delete().eq("id", projectId);
     if (reportIds.length) await admin.from("reports").delete().in("id", reportIds);
     // Se devuelve el chat sembrado tal como estaba (una conversación por pareja:

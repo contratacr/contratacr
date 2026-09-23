@@ -281,6 +281,11 @@ test.describe("@seeded marketplace editors through the real screens", () => {
     await gotoOK(page, "/es/empleos/publicar");
     const titulo = `Empleo mínimo ${Date.now()}`;
     await page.locator('input[name="title"]').fill(titulo);
+    // El servicio TAMBIÉN es obligatorio: de ahí sale a quién se le avisa la
+    // vacante. Esta prueba llenaba el camino mínimo de antes, sin él.
+    await page.locator("text=/plomería, electricista|plumbing, electrician/").first().click();
+    await page.getByPlaceholder(/Buscar servicio|Search service/).fill("Desarrollo web");
+    await page.getByRole("button", { name: /^Desarrollo web$/ }).first().click();
     await pickSelectMenu(page, /^Presencial$/, /^Remoto$/);
     await page.locator('textarea[name="description"]').fill("Empleo publicado solo con los campos obligatorios para validar el camino mínimo.");
     await page.getByRole("button", { name: /^Publicar empleo$/ }).click();
