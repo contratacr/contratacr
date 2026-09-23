@@ -183,7 +183,7 @@
       },
       "step2": {
         "title": "Revisa perfiles",
-        "desc": "Lee reseñas verificadas, mira el portafolio y compáralos."
+        "desc": "Lee reseñas verificadas, mira sus casos de éxito y compáralos."
       },
       "step3": {
         "title": "Contáctalo por WhatsApp",
@@ -287,7 +287,7 @@
     "sort": {
       "rating": "Mejor calificados",
       "cercania": "Más cercanos",
-      "successCases": "Ver más casos",
+      "successCases": "Más casos de éxito",
       "experience": "Más experiencia",
       "followers": "Más seguidores",
       "reviews": "Más reseñas",
@@ -473,7 +473,7 @@
     "searchExamples": "Por ejemplo: plomero, psicólogo, niñera, electricista."
   },
   "gallery": {
-    "workAlt": "Trabajo {n}",
+    "workAlt": "Caso de éxito {n}",
     "close": "Cerrar",
     "prev": "Anterior",
     "next": "Siguiente",
@@ -1126,7 +1126,7 @@
         "saved": "¡Cambios guardados!"
       },
       "photos": {
-        "title": "Fotos del portafolio",
+        "title": "Casos de éxito",
         "hint": "Muestra tu trabajo. Máx. 10 fotos.",
         "upload": "Subir foto",
         "uploading": "Subiendo...",
@@ -1362,8 +1362,8 @@
         "serviceMany": "{count} servicios agregados",
         "workplaceOne": "1 lugar de trabajo agregado",
         "workplaceMany": "{count} lugares de trabajo agregados",
-        "caseOne": "1 trabajo agregado",
-        "caseMany": "{count} trabajos agregados",
+        "caseOne": "1 caso de éxito agregado",
+        "caseMany": "{count} casos de éxito agregados",
         "trainingOne": "1 formación agregada",
         "trainingMany": "{count} formaciones agregadas",
         "languageOne": "1 idioma agregado",
@@ -1412,7 +1412,7 @@
         },
         "photos": {
           "title": "Casos de éxito",
-          "body": "Agregue fotos de trabajos para generar más confianza."
+          "body": "Agregue casos de éxito con fotos para generar más confianza."
         },
         "availability": {
           "title": "Mi agenda",
@@ -1508,7 +1508,7 @@
       "previewTitle": "Ejemplo visual",
       "preview": {
         "profile": {
-          "body": "Un perfil completo muestra identidad, servicio principal, reseñas, trabajos, cobertura y formas de contacto."
+          "body": "Un perfil completo muestra identidad, servicio principal, reseñas, casos de éxito, cobertura y formas de contacto."
         },
         "services": {
           "title": "Servicios en tu panel",
@@ -1720,7 +1720,7 @@
         },
         "successCases": {
           "title": "Casos de éxito",
-          "short": "Trabajos reales con fotos",
+          "short": "Casos de éxito reales con fotos",
           "body": "Casos de éxito muestra lo que ya hiciste y ayuda a que los clientes confíen antes de contactarte.",
           "steps": [
             "Selecciona el servicio relacionado.",
@@ -1787,7 +1787,7 @@
       "bookings": "Tu agenda con los clientes.",
       "proposals": "Trabajos que publicaron los clientes y a los que puedes postularte.",
       "quotes": "Los precios que le pasaste a un cliente.",
-      "photos": "Trabajos que ya hiciste, con fotos. Es lo que más convence.",
+      "photos": "Casos de éxito que ya hiciste, con fotos. Es lo que más convence.",
       "services": "Tus servicios y a qué precio.",
       "availability": "Los días y las horas en que te pueden reservar.",
       "verificacion": "Manda tu cédula y consigue el sello azul.",
@@ -1805,7 +1805,7 @@
     },
     "profileSections": {
       "servicesDesc": "Los servicios y las profesiones que aparecen en tu perfil.",
-      "photosDesc": "Fotos y trabajos realizados que ven los clientes.",
+      "photosDesc": "Casos de éxito con fotos que ven los clientes.",
       "availabilityDesc": "Horarios, contacto y disponibilidad visible para clientes.",
       "verificationDesc": "Identidad y estado de verificación.",
       "accountDesc": "Correo, contraseña y seguridad de la cuenta."
@@ -1847,7 +1847,7 @@
       "education": "Agrega formación",
       "serviceImage": "Agrega imagen del servicio",
       "serviceCredential": "Agrega credencial profesional",
-      "portfolio": "Agrega trabajos",
+      "portfolio": "Agrega casos de éxito",
       "optionalShort": "opcional",
       "ignoreStep": "Ignorar paso",
       "ignoreOptional": "Ignorar pasos opcionales",
@@ -3397,7 +3397,7 @@
     "clientStep0Title": "Escribe lo que necesitas",
     "clientStep0Body": "Puedes buscar por servicio, categoría, provincia, cantón o frases como “necesito limpiar mi casa”.",
     "clientStep1Title": "Compara perfiles",
-    "clientStep1Body": "Revisa identidad verificada, trabajos anteriores, reseñas, precios de referencia, zonas de trabajo y disponibilidad.",
+    "clientStep1Body": "Revisa identidad verificada, casos de éxito, reseñas, precios de referencia, zonas de trabajo y disponibilidad.",
     "clientStep2Title": "Contacta o agenda",
     "clientStep2Body": "Reserva una cita, elige horario cuando esté disponible y usa las opciones de contacto habilitadas.",
     "clientPathCta": "Ver profesionales",
@@ -3418,7 +3418,7 @@
     "clientBenefit0Title": "Búsqueda inteligente",
     "clientBenefit0Body": "El buscador entiende servicios, categorías, cantones y frases comunes para ayudarte a llegar al profesional correcto.",
     "clientBenefit1Title": "Más confianza",
-    "clientBenefit1Body": "Ves perfiles, identificación verificada cuando exista, reseñas, fotos de trabajos y datos relevantes antes de contactar.",
+    "clientBenefit1Body": "Ves perfiles, identificación verificada cuando exista, reseñas, fotos de casos de éxito y datos relevantes antes de contactar.",
     "clientBenefit2Title": "Horarios claros",
     "clientBenefit2Body": "Cuando el profesional publica disponibilidad, puedes elegir fecha y hora sin escribir de ida y vuelta. Si coordina directamente, lo haces por WhatsApp.",
     "clientBenefit3Title": "Favoritos y seguimiento",
@@ -3432,13 +3432,13 @@
     "proStep0Title": "Crea tu perfil profesional",
     "proStep0Body": "Agrega foto, descripción, servicios, años de experiencia, precios de referencia, idiomas y zonas donde trabajas.",
     "proStep1Title": "Muestra tu trabajo",
-    "proStep1Body": "Publica trabajos con fotos, completa tus lugares de trabajo y verifica tu identidad para generar más confianza.",
+    "proStep1Body": "Publica casos de éxito con fotos, completa tus lugares de trabajo y verifica tu identidad para generar más confianza.",
     "proStep2Title": "Gestiona citas y proyectos",
     "proStep2Body": "Recibe citas, responde proyectos de clientes, envía cotizaciones y publica empleos o promociones desde tu panel profesional.",
     "proBenefit0Title": "Identidad verificada",
     "proBenefit0Body": "El sello de verificación ayuda a que los clientes sepan que están hablando con una persona real y verificable.",
-    "proBenefit1Title": "Mis trabajos",
-    "proBenefit1Body": "Muestra fotos de trabajos anteriores para que tu perfil no sea solo texto y el cliente entienda tu calidad.",
+    "proBenefit1Title": "Casos de éxito",
+    "proBenefit1Body": "Muestra fotos de tus casos de éxito para que tu perfil no sea solo texto y el cliente entienda tu calidad.",
     "proBenefit2Title": "Zonas de trabajo",
     "proBenefit2Body": "Define cantones, lugares exactos o zonas donde atiendes para aparecer en búsquedas relevantes.",
     "proBenefit3Title": "Notificaciones",
@@ -3577,9 +3577,9 @@
     "tip1Title": "Verifica tu identidad",
     "tip1Body": "La verificación confirma tu identidad con registros oficiales cuando aplica. No certifica la calidad de tu trabajo, pero sí ayuda a que el cliente sepa que eres una persona real y verificable. Los profesionales verificados aparecen primero en los resultados y muestran el sello 'Verificado'.",
     "tip1Highlight": "Los profesionales verificados se muestran antes en las búsquedas.",
-    "tip2Title": "Publica fotos de trabajos anteriores",
-    "tip2Body": "Las fotos de trabajos reales funcionan como tu portafolio. Antes de contratar, muchos clientes quieren ver ejemplos de lo que haces: una cocina remozada, un jardín bien mantenido, un diseño que hiciste o cualquier evidencia real de tu trabajo.",
-    "tip2Highlight": "Las fotos de tus trabajos generan más confianza.",
+    "tip2Title": "Publica casos de éxito con fotos",
+    "tip2Body": "Las fotos de casos de éxito reales son lo que más convence. Antes de contratar, muchos clientes quieren ver ejemplos de lo que haces: una cocina remozada, un jardín bien mantenido, un diseño que hiciste o cualquier evidencia real de tu trabajo.",
+    "tip2Highlight": "Las fotos de tus casos de éxito generan más confianza.",
     "tip3Title": "Responde rápido por WhatsApp",
     "tip3Body": "Las respuestas rápidas generan confianza. Si un cliente te contacta por WhatsApp y tardas demasiado, probablemente buscará otra opción. Mantén tus datos actualizados y responde apenas puedas.",
     "tip3Highlight": "La rapidez de respuesta es tu mayor diferenciador.",
@@ -3765,7 +3765,7 @@
       "point2Title": "Agenda o escribe por WhatsApp",
       "point2Desc": "Si hay horarios publicados, revisas disponibilidad. Si no, coordinas directo por WhatsApp.",
       "point3Title": "Elige con más confianza",
-      "point3Desc": "Cada perfil muestra verificación, reseñas, cobertura, experiencia y trabajos del profesional.",
+      "point3Desc": "Cada perfil muestra verificación, reseñas, cobertura, experiencia y casos de éxito del profesional.",
       "pitchTitle": "¿Ofreces servicios?",
       "pitchDesc": "Tu perfil aparece en búsquedas, puedes recibir citas, manejar disponibilidad, responder proyectos y construir reseñas.",
       "pitchCta": "Ofrecer mis servicios",

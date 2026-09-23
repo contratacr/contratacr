@@ -203,9 +203,11 @@ export function ProfessionalCard({ professional, className, searchedPlace, highl
     return years > 0 || months > 0;
   });
   const yearsExperience = Math.max(0, Math.floor(serviceExperience?.years ?? professional.yearsExperience ?? 0));
+  // La sección se llama «Casos de éxito» en todo el app: la tarjeta la nombraba
+  // «trabajos», que es el nombre viejo.
   const casesLabel = locale === "en"
-    ? `${portfolioCount} success ${portfolioCount === 1 ? "case" : "cases"}`
-    : `${portfolioCount} ${portfolioCount === 1 ? "trabajo" : "trabajos"}`;
+    ? `${portfolioCount} success ${portfolioCount === 1 ? "story" : "stories"}`
+    : `${portfolioCount} ${portfolioCount === 1 ? "caso de éxito" : "casos de éxito"}`;
   const ratingLabel = professional.reviewCount > 0
     ? tCard("reviewsCount", { count: professional.reviewCount })
     : tCard("noReviews");
@@ -216,7 +218,7 @@ export function ProfessionalCard({ professional, className, searchedPlace, highl
       return (
         <Link href={casesHref} className={desktopMetricClass} aria-label={casesLabel}>
           <span className="font-semibold tabular-nums text-[#5f6f86]">{portfolioCount}</span>
-          <span>{portfolioCount === 1 ? (locale === "en" ? "job" : "trabajo") : (locale === "en" ? "jobs done" : "trabajos")}</span>
+          <span>{portfolioCount === 1 ? (locale === "en" ? "success story" : "caso de éxito") : (locale === "en" ? "success stories" : "casos de éxito")}</span>
         </Link>
       );
     }
@@ -268,7 +270,7 @@ export function ProfessionalCard({ professional, className, searchedPlace, highl
       return (
         <Link href={casesHref} className={mobileMetricClass} aria-label={casesLabel}>
           <span className="font-bold tabular-nums text-[#162543]">{portfolioCount}</span>
-          <span className="whitespace-nowrap">{portfolioCount === 1 ? (locale === "en" ? "job" : "trabajo") : (locale === "en" ? "jobs done" : "trabajos")}</span>
+          <span className="whitespace-nowrap">{portfolioCount === 1 ? (locale === "en" ? "success story" : "caso de éxito") : (locale === "en" ? "success stories" : "casos de éxito")}</span>
         </Link>
       );
     }

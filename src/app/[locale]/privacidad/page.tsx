@@ -30,7 +30,7 @@ const ES_SECTIONS: LegalSection[] = [
       { k: "ul", items: [
         "Nombre o nombre comercial, servicios, descripción, teléfonos, correo de contacto y enlaces profesionales.",
         "Provincia, cantón, lugares de trabajo, zonas de cobertura y, si lo agrega, un punto en el mapa.",
-        "Fotografía de perfil, portafolio, certificaciones, idiomas, aseguradoras, disponibilidad y horarios.",
+        "Fotografía de perfil, casos de éxito, certificaciones, idiomas, aseguradoras, disponibilidad y horarios.",
         "Citas recibidas, proyectos, respuestas, reseñas, casos de éxito y demás actividad relacionada con su perfil.",
       ] },
       { k: "sub", text: "2.4 Mensajes, soporte y archivos" },
@@ -72,7 +72,7 @@ const ES_SECTIONS: LegalSection[] = [
     id: "publicos",
     h: "4. Información pública",
     body: [
-      { k: "p", text: "Los perfiles profesionales publicados pueden ser visibles sin iniciar sesión, compartirse mediante enlaces y aparecer en motores de búsqueda. Esto puede incluir nombre o nombre comercial, fotografía, servicios, zona general, descripción, portafolio, disponibilidad pública, reseñas e insignias." },
+      { k: "p", text: "Los perfiles profesionales publicados pueden ser visibles sin iniciar sesión, compartirse mediante enlaces y aparecer en motores de búsqueda. Esto puede incluir nombre o nombre comercial, fotografía, servicios, zona general, descripción, casos de éxito, disponibilidad pública, reseñas e insignias." },
       { k: "p", text: "No mostramos públicamente contraseñas, tokens, el número completo de identificación, conversaciones privadas ni documentos privados. Usted debe evitar publicar en campos públicos información que no desea difundir." },
     ],
   },
@@ -166,7 +166,7 @@ const EN_SECTIONS: LegalSection[] = [
     { k: "sub", text: "2.1 Account and identity" },
     { k: "ul", items: ["Name, email, phone number, and basic data shared by sign-in providers such as Google.", "Credentials securely managed by our authentication provider. ContrataCR does not keep your password in readable text.", "Identification number when you choose to provide it or when needed for a request, plus the protected verification result."] },
     { k: "sub", text: "2.2 Client and Professional activity" },
-    { k: "ul", items: ["Requests, posts, appointments, proposals, reviews, favorites, and related activity.", "Professional profile data, services, location, work areas, portfolio, availability, and contact details.", "Content you include in descriptions, notes, reports, and conversations."] },
+    { k: "ul", items: ["Requests, posts, appointments, proposals, reviews, favorites, and related activity.", "Professional profile data, services, location, work areas, success stories, availability, and contact details.", "Content you include in descriptions, notes, reports, and conversations."] },
     { k: "sub", text: "2.3 Messages, files, support, and AI" },
     { k: "ul", items: ["Private messages and the data needed to identify participants and conversation context.", "Images and PDF documents attached to messages or support requests.", "AI assistant prompts, responses, and saved history when you are signed in. Do not submit unnecessary sensitive information."] },
     { k: "sub", text: "2.4 Device, location, and usage" },
@@ -177,7 +177,7 @@ const EN_SECTIONS: LegalSection[] = [
     { k: "note", text: "**We do not sell personal data.** We do not allow third parties to use private conversation content to send advertising." },
   ] },
   { id: "public", h: "4. Public information", body: [
-    { k: "p", text: "Published Professional profiles may be visible without signing in, shared through links, and indexed by search engines. Public information may include name or business name, photo, services, general area, description, portfolio, public availability, reviews, and badges." },
+    { k: "p", text: "Published Professional profiles may be visible without signing in, shared through links, and indexed by search engines. Public information may include name or business name, photo, services, general area, description, success stories, public availability, reviews, and badges." },
     { k: "p", text: "Passwords, tokens, full identification numbers, private conversations, and private documents are not displayed publicly." },
   ] },
   { id: "providers", h: "5. Providers and transfers", body: [

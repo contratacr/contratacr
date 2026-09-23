@@ -11,7 +11,7 @@ const COPY = {
     placeholder: "¿Qué promoción buscas?",
   },
   en: {
-    placeholder: "What offer are you looking for?",
+    placeholder: "What promotion are you looking for?",
   },
 } as const;
 

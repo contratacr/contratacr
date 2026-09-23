@@ -248,8 +248,8 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
       const count = pro.portfolioCount ?? 0;
       if (count <= 0) return null;
       return locale === "en"
-        ? `${count} ${count === 1 ? "success case" : "success cases"}`
-        : `${count} ${count === 1 ? "trabajo" : "trabajos"}`;
+        ? `${count} ${count === 1 ? "success story" : "success stories"}`
+        : `${count} ${count === 1 ? "caso de éxito" : "casos de éxito"}`;
     }
     if (sortBy === "followers") {
       const count = pro.followerCount ?? 0;

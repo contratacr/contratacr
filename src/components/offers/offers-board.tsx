@@ -128,7 +128,7 @@ const OFFERS_COPY = {
     publishFirst: "Post the first promotion",
     publishSubtitle: "Post a clear promotion that is easy to compare.",
     editOffer: "Edit promotion",
-    editSubtitle: "Update this offer's information.",
+    editSubtitle: "Update this promotion's information.",
     manageOffer: "Manage promotion",
     professional: "Professional",
     profile: "View profile",

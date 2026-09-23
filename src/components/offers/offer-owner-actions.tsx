@@ -14,7 +14,7 @@ const OWNER_ACTION_COPY = {
   // ahí y salía como «Editar promo…», que no es un botón, es un acertijo. La
   // pantalla ya dice de qué es: al lado está «Administrar», también en corto.
   es: { edit: "Editar promoción", editCorto: "Editar", manage: "Administrar promoción", manageCorto: "Administrar", subtitle: "Actualiza la información de esta publicación." },
-  en: { edit: "Edit offer", editCorto: "Edit", manage: "Manage offer", manageCorto: "Manage", subtitle: "Update this offer's information." },
+  en: { edit: "Edit promotion", editCorto: "Edit", manage: "Manage promotion", manageCorto: "Manage", subtitle: "Update this promotion's information." },
 } as const;
 
 type Props = {

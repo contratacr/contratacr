@@ -848,10 +848,10 @@ const PRODUCT_INTENTS: ProductIntent[] = [
     test: (n) => /(public|cre[oa]|sub[oi]|pon[eg]|hac[eo]|publish|create|post).{0,15}(una oferta|oferta|ofertas|promocion|descuento|an offer|offer|deal)/.test(n),
     action: "open_dashboard",
     answer: {
-      es: "Las ofertas las publican los profesionales: en tu panel abre la pestaña Ofertas y toca «Publicar oferta» (título, precio de oferta, foto y vigencia). Los clientes las ven en la sección Ofertas de la app.",
-      en: "Offers are published by professionals: in your panel open the Offers tab and tap \"Publish offer\" (title, offer price, photo and validity). Clients see them in the app's Offers section.",
+      es: "Las promociones las publican los profesionales: en tu panel abre la pestaña Promociones y toca «Publicar promoción» (título, precio con descuento, foto y vigencia). Los clientes las ven en la sección Promociones de la app.",
+      en: "Promotions are published by professionals: in your panel open the Promotions tab and tap \"Publish promotion\" (title, discounted price, photo and validity). Clients see them in the app's Promotions section.",
     },
-    cta: { es: "Ir a Ofertas", en: "Open Offers" },
+    cta: { es: "Ir a Promociones", en: "Open Promotions" },
     href: (locale) => `/${locale}/dashboard/profesional?tab=offers`,
   },
   {
@@ -866,8 +866,8 @@ const PRODUCT_INTENTS: ProductIntent[] = [
   {
     test: (n) => EMPLEOS_VISIBLE && (/(postular|postulo|postularme|aplicar|aplico|apply|applying).{0,20}(trabajo|empleo|puesto|vacante|job|position)/.test(n) || /(trabajo|empleo|job).{0,20}(postular|aplicar|apply)/.test(n)),    action: "help",
     answer: {
-      es: "Entra a Empleos, abre el puesto que te interesa y toca «Postular»: adjuntas tu currículum y un mensaje. Tus postulaciones quedan en tu panel, pestaña Postulaciones.",
-      en: "Go to Jobs, open the position you like and tap \"Apply\": attach your résumé and a message. Your applications stay in your panel, Applications tab.",
+      es: "Entra a Empleos, abre el puesto que te interesa y toca «Postular»: adjuntas tu currículum y un mensaje. Tus postulaciones quedan en tu panel, pestaña Mis postulaciones.",
+      en: "Go to Jobs, open the position you like and tap \"Apply\": attach your résumé and a message. Your applications stay in your panel, in the My applications tab.",
     },
     cta: { es: "Ver empleos", en: "See jobs" },
     href: (locale) => `/${locale}/empleos`,

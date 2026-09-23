@@ -11,6 +11,7 @@
     "lint": "eslint",
     "lint:i18n": "node scripts/check-bilingual-budget.mjs",
     "text:check": "node scripts/check-text-encoding.mjs",
+    "lint:vocabulario": "node scripts/ci/verify-vocabulario.mjs",
     "security:env": "node scripts/check-private-env-files.mjs",
     "security:smoke": "node scripts/security-smoke.mjs",
     "supabase:templates:validate": "node scripts/sync-supabase-email-templates.mjs --validate-only",

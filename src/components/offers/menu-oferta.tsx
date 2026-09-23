@@ -85,7 +85,7 @@ export function MenuOferta({
         <ReportProfileModal
           professionalName={profesionalNombre}
           professionalSlug={profesionalSlug}
-          contexto={`Oferta "${titulo}" (${ofertaId})`}
+          contexto={`Promoción "${titulo}" (${ofertaId})`}
           titulo={t("reportOffer")}
           onClose={() => setReportando(false)}
         />

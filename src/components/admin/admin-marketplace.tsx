@@ -305,7 +305,7 @@ export function AdminMarketplace({ kind }: { kind: "jobs" | "offers" }) {
         {loading ? (
           <div className="flex justify-center py-16"><Loader2 className="h-7 w-7 animate-spin text-[#009FD9]" /></div>
         ) : items.length === 0 ? (
-          <div className="py-16 text-center text-sm text-[#6b7280]">{isJobs ? "No hay empleos en esta vista." : "No hay ofertas en esta vista."}</div>
+          <div className="py-16 text-center text-sm text-[#6b7280]">{isJobs ? "No hay empleos en esta vista." : "No hay promociones en esta vista."}</div>
         ) : (
           <ul className="divide-y divide-[#eef2f6]">
             {items.map((item) => (

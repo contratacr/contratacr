@@ -124,6 +124,9 @@ jobs:
       - name: Reject new hard-coded bilingual strings
         run: npm run lint:i18n
 
+      - name: Reject old section names (one name per section)
+        run: npm run lint:vocabulario
+
       - name: Build the production application locally
         run: npm run build
 
