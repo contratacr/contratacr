@@ -127,21 +127,38 @@ async function cleanupActor(actor, users) {
 }
 
 async function interruptedDeletionActors() {
+  // CUALQUIER prefijo, no una lista escrita a mano. `createDisposableAccount`
+  // arma el correo como `<prefijo>-<marca>-<8 hex>@contratacr.test` y el nombre
+  // SIEMPRE como «Cuenta desechable <marca>»; el prefijo lo elige cada prueba.
+  // Antes aquí solo se reconocían `deletion-*` y `onb*`, así que una prueba
+  // nueva con otro prefijo —`admin-cycle-*`— dejaba su cuenta tirada y la
+  // verificación se ponía roja sin que nadie hubiera tocado el app. El nombre
+  // es la señal confiable: se exige que coincida exactamente con la marca del
+  // correo, así que ninguna cuenta de verdad puede caer aquí por accidente.
   const profiles = await must(
     "interrupted account-deletion profiles",
-    admin.from("profiles").select("id,email,full_name").or("email.ilike.deletion-%@contratacr.test,email.ilike.onb%@contratacr.test"),
+    admin.from("profiles").select("id,email,full_name").ilike("email", "%@contratacr.test"),
   );
-  const emailPattern = /^(?:deletion-(?:target|sentinel)|onb\d+)-(\d+-[0-9a-f]{8})@contratacr\.test$/i;
-  return profiles.flatMap((profile) => {
+  const emailPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*-(\d+-[0-9a-f]{8})@contratacr\.test$/i;
+  const desechables = profiles.flatMap((profile) => {
     const match = (profile.email || "").match(emailPattern);
     if (!match || profile.full_name !== `Cuenta desechable ${match[1]}`) return [];
-    return [{
-      email: profile.email.toLowerCase(),
-      name: new RegExp(`^Cuenta desechable ${escapeRegex(match[1])}$`),
-      // Onboarding disposables are plain client accounts; only the deletion ones own a professional slug.
-      ...(/^onb\d+-/i.test(profile.email) ? {} : { slug: `regression-disposable-${match[1]}` }),
-    }];
+    return [{ profile, token: match[1] }];
   });
+  if (!desechables.length) return [];
+  // Solo las de borrado de cuenta tienen ficha profesional con slug; las demás
+  // son clientes o administradores sueltos. Se CONSULTA si existe en vez de
+  // deducirlo del prefijo, que era lo que ataba esto a una lista cerrada.
+  const fichas = await must(
+    "disposable professional slugs",
+    admin.from("professionals").select("profile_id,slug").in("profile_id", desechables.map((d) => d.profile.id)),
+  );
+  const slugPorPerfil = new Map(fichas.map((row) => [row.profile_id, row.slug]));
+  return desechables.map(({ profile, token }) => ({
+    email: profile.email.toLowerCase(),
+    name: new RegExp(`^Cuenta desechable ${escapeRegex(token)}$`),
+    ...(slugPorPerfil.get(profile.id) ? { slug: slugPorPerfil.get(profile.id) } : {}),
+  }));
 }
 
 async function interruptedDeletionBookings() {

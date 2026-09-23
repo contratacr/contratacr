@@ -255,57 +255,68 @@ test.describe("@seeded contextual direct chat", () => {
     }
   });
 
-  test("proposal chat remains linked to the publication and persists for both sides", async ({ page }) => {
+  // Las PROPUESTAS se retiraron del app: `/api/direct-chat` ya no abre un chat
+  // desde una propuesta —lo dice su propio comentario— y solo sigue LEYENDO las
+  // conversaciones que nacieron así. Esta prueba pedía esa puerta retirada y
+  // recibía «Profesional no encontrado»: deriva de la prueba, no del app. Ahora
+  // cubre las dos cosas que sí siguen vivas.
+  test("el chat de un proyecto queda enlazado a su publicación y lo ven los dos lados", async ({ page }) => {
     const admin = regressionAdminClient();
     const { data: project, error: projectError } = await admin.from("projects").insert({
       client_id: seed.clientId,
       category_id: seed.categoryId,
       title: "E2E proyecto con chat",
-      description: "E2E contexto para comprobar el chat de una propuesta.",
+      description: "E2E contexto para comprobar el chat de un proyecto.",
       provincia_id: "al",
       canton_id: "al-al",
       status: "open",
     }).select("id").single();
     if (projectError) throw projectError;
     projectId = project.id;
-    const { data: proposal, error: proposalError } = await admin.from("proposals").insert({
-      project_id: projectId,
-      professional_id: seed.professionalId,
-      price: 35000,
-      message: "E2E propuesta enlazada al chat",
-      status: "pending",
-    }).select("id").single();
-    if (proposalError) throw proposalError;
-    proposalId = proposal.id;
 
     await parejaSinChat();
     await loginAs(page, E2E_USERS.client.email, E2E_USERS.client.password);
     const created = await apiJson<ChatResponse>(page, "/api/direct-chat", {
       method: "POST",
-      body: { proposalId, openConversation: true, initialMessage: "E2E mensaje sobre propuesta" },
+      body: { projectId, professionalId: seed.professionalId, openConversation: true, initialMessage: "E2E mensaje sobre el proyecto" },
     });
     expect(created.status, JSON.stringify(created.body)).toBe(200);
     conversacionesDePrueba.push(created.body.conversationId!);
+
+    // Volver a pedirlo NO abre una segunda conversación ni duplica el mensaje.
     const reopened = await apiJson<ChatResponse>(page, "/api/direct-chat", {
       method: "POST",
-      body: { proposalId, openConversation: true, initialMessage: "E2E mensaje que no debe duplicarse" },
+      body: { projectId, professionalId: seed.professionalId, openConversation: true, initialMessage: "E2E mensaje que no debe duplicarse" },
     });
     expect(reopened.status, JSON.stringify(reopened.body)).toBe(200);
     expect(reopened.body.conversationId).toBe(created.body.conversationId);
+
     const thread = await apiJson<ThreadResponse>(page, `/api/direct-chat?id=${created.body.conversationId}`);
-    expect(thread.body.conversation?.context?.type).toBe("proposal");
-    expect(thread.body.messages?.map((message) => message.body)).toEqual(["E2E mensaje sobre propuesta"]);
+    expect(thread.body.conversation?.context?.type).toBe("project");
     expect(thread.body.conversation?.context?.title).toBe("E2E proyecto con chat");
+    expect(thread.body.messages?.map((message) => message.body)).toEqual(["E2E mensaje sobre el proyecto"]);
 
     await resetAuth(page);
     await loginAs(page, E2E_USERS.professional.email, E2E_USERS.professional.password);
     const professionalThread = await apiJson<ThreadResponse>(page, `/api/direct-chat?id=${created.body.conversationId}`);
-    expect(professionalThread.body.messages?.at(-1)?.body).toBe("E2E mensaje sobre propuesta");
+    expect(professionalThread.body.messages?.at(-1)?.body).toBe("E2E mensaje sobre el proyecto");
     const reply = await apiJson<ChatResponse>(page, "/api/direct-chat", {
       method: "POST",
-      body: { conversationId: created.body.conversationId, message: "E2E respuesta sobre propuesta" },
+      body: { conversationId: created.body.conversationId, message: "E2E respuesta sobre el proyecto" },
     });
     expect(reply.status).toBe(200);
+  });
+
+  test("abrir un chat desde una propuesta ya no existe", async ({ page }) => {
+    // La puerta se retiró con las propuestas. Que siga cerrada es parte del
+    // contrato: si alguien la reabre sin querer, esto se pone rojo.
+    await loginAs(page, E2E_USERS.client.email, E2E_USERS.client.password);
+    const intento = await apiJson<ChatResponse>(page, "/api/direct-chat", {
+      method: "POST",
+      body: { proposalId: "00000000-0000-4000-8000-000000000001", openConversation: true, initialMessage: "E2E propuesta retirada" },
+    });
+    expect([400, 404]).toContain(intento.status);
+    expect(intento.body.conversationId).toBeFalsy();
   });
 
   test("validation, blocked threads and realtime delivery protect the conversation", async ({ page }) => {
