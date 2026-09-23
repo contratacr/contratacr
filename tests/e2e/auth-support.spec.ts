@@ -25,7 +25,10 @@ test.describe("@smoke auth and support", () => {
     await expect(page.getByRole("textbox", { name: /tucorreo/i })).toBeVisible();
     await expect(page.getByRole("textbox", { name: /Describe tu consulta/i })).toBeVisible();
 
-    await expect(page.getByRole("button", { name: /Selecciona el motivo/i })).toBeVisible();
+    // El selector se rotula con su marcador, «Motivo de tu consulta». Decía
+    // «Selecciona el motivo», texto que el formulario ya no usa: deriva de la
+    // prueba, no del app.
+    await expect(page.getByRole("button", { name: /Motivo de tu consulta|Reason for your enquiry/i })).toBeVisible();
     await expectNoHorizontalOverflow(page);
   });
 
