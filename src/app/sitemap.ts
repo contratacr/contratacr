@@ -20,17 +20,41 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // buscadores entraran a un entorno de pruebas.
   if (!/^https:\/\/(www\.)?contratacr\.com$/.test(APP_URL.replace(/\/$/, ""))) return [];
   const supply = await getSupplyCounts();
-  const now = new Date();
   const out: MetadataRoute.Sitemap = [];
+
+  // `lastModified` tiene que ser una fecha REAL. Antes las páginas fijas y las
+  // de oficio llevaban `new Date()`, o sea el instante de la consulta: Google
+  // veía 1 586 direcciones que decían haber cambiado todas justo en ese
+  // segundo, en CADA lectura del mapa. Un dato que siempre dice «cambié ahora»
+  // no distingue nada, así que el buscador aprende a ignorarlo —y de paso
+  // gasta rastreo volviendo a páginas que no se tocaron, que en un sitio
+  // chico es rastreo que les falta a las que sí importan.
+  //
+  // Lo que de verdad cambia en una página de oficio es su lista de
+  // profesionales, así que la fecha sale del último perfil actualizado. Si no
+  // se puede leer, se omite: no poner fecha es honesto; poner una inventada,
+  // no.
+  let ultimoCambio: Date | undefined;
+  try {
+    const { data } = await createAdminClient()
+      .from("professionals")
+      .select("updated_at")
+      .eq("is_banned", false)
+      .order("updated_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    const crudo = (data as { updated_at?: string } | null)?.updated_at;
+    if (crudo) ultimoCambio = new Date(crudo);
+  } catch { /* sin fecha es mejor que una fecha falsa */ }
   const fijos = ["", "/buscar", "/servicios", "/ofertas", "/empleos", "/proyectos", "/como-funciona", "/ayuda", "/atraer-clientes"];
-  for (const p of fijos) for (const l of IDIOMAS) out.push({ url: `${APP_URL}/${l}${p}`, lastModified: now, changeFrequency: "daily", priority: p === "" ? 1 : 0.8 });
+  for (const p of fijos) for (const l of IDIOMAS) out.push({ url: `${APP_URL}/${l}${p}`, lastModified: ultimoCambio, changeFrequency: "daily", priority: p === "" ? 1 : 0.8 });
 
   for (const cat of getAllCategories()) {
     if ((supply.byCategory[supplyKey(cat.id)] ?? 0) < MIN_SUPPLY_FOR_LANDING) continue;
-    for (const l of IDIOMAS) out.push({ url: `${APP_URL}/${l}/servicios/${cat.id}`, lastModified: now, changeFrequency: "weekly", priority: 0.9 });
+    for (const l of IDIOMAS) out.push({ url: `${APP_URL}/${l}/servicios/${cat.id}`, lastModified: ultimoCambio, changeFrequency: "weekly", priority: 0.9 });
     for (const prov of PROVINCES) {
       if ((supply.byCategoryProvince[supplyKey(cat.id, prov.id)] ?? 0) < MIN_SUPPLY_FOR_LANDING) continue;
-      for (const l of IDIOMAS) out.push({ url: `${APP_URL}/${l}/servicios/${cat.id}/${prov.id}`, lastModified: now, changeFrequency: "weekly", priority: 0.8 });
+      for (const l of IDIOMAS) out.push({ url: `${APP_URL}/${l}/servicios/${cat.id}/${prov.id}`, lastModified: ultimoCambio, changeFrequency: "weekly", priority: 0.8 });
     }
   }
 
@@ -44,7 +68,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       .not("slug", "is", null)
       .limit(5000);
     for (const row of (data ?? []) as { slug: string; updated_at?: string | null }[]) {
-      for (const l of IDIOMAS) out.push({ url: `${APP_URL}/${l}/profesionales/${row.slug}`, lastModified: row.updated_at ? new Date(row.updated_at) : now, changeFrequency: "weekly", priority: 0.6 });
+      for (const l of IDIOMAS) out.push({ url: `${APP_URL}/${l}/profesionales/${row.slug}`, lastModified: row.updated_at ? new Date(row.updated_at) : ultimoCambio, changeFrequency: "weekly", priority: 0.6 });
     }
   } catch (err) {
     console.error("[sitemap] perfiles:", err);
@@ -54,16 +78,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Google («vacante de X en Y»), y no estaban en el mapa —solo los tableros—.
   try {
     const supabase = createAdminClient();
-    const hoy = now.toISOString().slice(0, 10);
+    const hoy = new Date().toISOString().slice(0, 10);
     const [{ data: empleos }, { data: ofertas }] = await Promise.all([
       supabase.from("job_posts").select("id, updated_at").eq("status", "published").limit(2000),
       supabase.from("professional_offers").select("id, updated_at, valid_until").eq("status", "published").or(`valid_until.is.null,valid_until.gte.${hoy}`).limit(2000),
     ]);
     for (const row of (empleos ?? []) as { id: string; updated_at?: string | null }[]) {
-      for (const l of IDIOMAS) out.push({ url: `${APP_URL}/${l}/empleos/${row.id}`, lastModified: row.updated_at ? new Date(row.updated_at) : now, changeFrequency: "weekly", priority: 0.7 });
+      for (const l of IDIOMAS) out.push({ url: `${APP_URL}/${l}/empleos/${row.id}`, lastModified: row.updated_at ? new Date(row.updated_at) : ultimoCambio, changeFrequency: "weekly", priority: 0.7 });
     }
     for (const row of (ofertas ?? []) as { id: string; updated_at?: string | null }[]) {
-      for (const l of IDIOMAS) out.push({ url: `${APP_URL}/${l}/ofertas/${row.id}`, lastModified: row.updated_at ? new Date(row.updated_at) : now, changeFrequency: "weekly", priority: 0.6 });
+      for (const l of IDIOMAS) out.push({ url: `${APP_URL}/${l}/ofertas/${row.id}`, lastModified: row.updated_at ? new Date(row.updated_at) : ultimoCambio, changeFrequency: "weekly", priority: 0.6 });
     }
   } catch (err) {
     console.error("[sitemap] empleos/ofertas:", err);
