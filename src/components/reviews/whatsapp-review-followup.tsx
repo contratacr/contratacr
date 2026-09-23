@@ -177,12 +177,20 @@ export function WhatsAppReviewFollowUp() {
   // MIDE la barra, que es lo único que no depende de en qué orden llegan las
   // clases. Sin barra (la web) el alto es 0 y la tarjeta no se mueve.
   const [altoBarra, setAltoBarra] = useState(0);
+  // Y se aparta cuando hay algo abierto ENCIMA. Esta tarjeta vive en z-145, por
+  // encima de los modales (z-100): mientras estaba abierta le comía los toques
+  // al asistente y a cualquier ventana. Es un recordatorio pasivo —puede
+  // esperar—, así que se esconde mientras haya un diálogo y vuelve al cerrarlo.
+  const [hayVentana, setHayVentana] = useState(false);
   useEffect(() => {
     if (!followUp) return;
     const medir = () => {
       const barra = document.querySelector<HTMLElement>(".ccr-native-bottom-nav");
       const alto = barra ? barra.getBoundingClientRect().height : 0;
       setAltoBarra((previo) => (Math.abs(previo - alto) > 1 ? alto : previo));
+      const ajena = Array.from(document.querySelectorAll('.app-modal-screen, [role="dialog"]'))
+        .some((el) => !el.classList.contains("ccr-seguimiento-servicio"));
+      setHayVentana((previo) => (previo === ajena ? previo : ajena));
     };
     medir();
     const observador = new ResizeObserver(medir);
@@ -199,7 +207,7 @@ export function WhatsAppReviewFollowUp() {
 
   return (
     <>
-      {followUp && (
+      {followUp && !hayVentana && (
         <section
           role="dialog"
           aria-label={isEn ? "Service follow-up" : "Seguimiento del servicio"}
