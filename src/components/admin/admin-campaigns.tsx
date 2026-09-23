@@ -18,14 +18,27 @@ import { useAppDialog } from "@/hooks/use-app-dialog";
  * oficio vacío es peor que no mandar el correo. Publicar queda mencionado para
  * quien prefiera que lo busquen a él.
  */
+// La plantilla anterior («¿Necesitas un electricista?», colgada de que
+// empezaban las lluvias) se retiró por dos motivos que se discutieron con
+// Isaac y que valen para cualquier campaña futura:
+//
+//  · El motivo era INVENTADO. Aquí llueve medio año y nadie piensa «está
+//    lloviendo, voy a buscar un electricista»; cuando se va la luz es del ICE.
+//  · El asunto era una pregunta de sí o no, y quien contesta «no» —casi
+//    todos— borra el correo sin abrirlo.
+//
+// Esta dice algo CIERTO que el destinatario no sabe: que esto no es un solo
+// oficio. Mucha gente se registró por una cosa puntual y no tiene idea de la
+// amplitud. Las cifras salen de producción (288 profesionales, 263
+// verificados contra el padrón) y hay que revisarlas antes de mandar.
 const PLANTILLAS = [
   {
-    id: "lluvias",
-    nombre: "Antes de las lluvias fuertes",
-    subject: "¿Necesitas un electricista?",
-    body: "Hola,\n\nYa empezaron los meses más lluviosos del año.\n\nSi necesitas un electricista, en ContrataCR están los de tu zona: verificados, con reseñas y su WhatsApp a mano.",
-    ctaLabel: "Ver electricistas cerca de mí",
-    ctaPath: "/es/buscar?categoria=electricidad",
+    id: "recordatorio",
+    nombre: "Recordatorio de lo que hay",
+    subject: "263 profesionales verificados, en un solo lugar",
+    body: "Hola,\n\nPor si no lo tenías presente: en ContrataCR hay electricistas, construcción, remodelación, abogados, mecánicos, contadores, desarrollo web y bastante más.\n\nTodos con identidad verificada contra el padrón, con reseñas, y les escribís por WhatsApp directo — sin formularios ni esperas.",
+    ctaLabel: "Ver todos los servicios",
+    ctaPath: "/es/servicios",
   },
 ];
 
