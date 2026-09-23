@@ -21,7 +21,7 @@ const LOCALES: LocaleContract[] = [
     navLabel: "Navegación de la app",
     // La cuenta e2e también ofrece servicios: desde 7d551539 quien ofrece ve
     // «Cotizaciones» en el centro de la barra; el Asistente queda para clientes.
-    navItems: ["Buscar", "Ofertas", "Cotizaciones", "Empleos", "Panel"],
+    navItems: ["Buscar", "Promociones", "Cotizaciones", "Empleos", "Panel"],
     messages: "Mensajes",
     assistant: "Asistente",
     assistantDialog: /Asistente ContrataCR/i,
@@ -256,7 +256,10 @@ test.describe("@mobile native shell contracts", () => {
     await gotoOK(page, "/es");
 
     for (const destination of [
-      { label: "Ofertas", path: "/es/ofertas", heading: "Ofertas" },
+      // La sección se llama «Promociones» en todo el app; la RUTA sigue siendo
+      // /ofertas porque hay enlaces publicados con ella. La prueba usaba el
+      // nombre viejo para las dos cosas.
+      { label: "Promociones", path: "/es/ofertas", heading: "Promociones" },
       { label: "Empleos", path: "/es/empleos", heading: "Empleos" },
     ]) {
       const nativeNav = page.locator("nav.ccr-native-bottom-nav").filter({ visible: true });
