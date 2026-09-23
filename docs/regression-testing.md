@@ -109,15 +109,14 @@ It covers:
 - Search results and professional cards, including responsive favorite-button layout.
 - Public professional profile and professional Open Graph image generation.
 - Client booking API flow: create request, block double booking, professional view, mark work done, client completion.
-- Booking/project/proposal notifications for create, edit, accept, reject, work done, complete, withdraw and cancellation paths.
-- Projects/proposals API flow: publish request, professional proposal, edit proposal, reject/accept ownership rules, complete project.
-- Proposal withdrawal, declined-proposal behavior, and cancellation noise checks.
-- Dashboard surfaces for professional mode: profile, services, success cases, availability, requests received, opportunities, verification, messages, notifications, support, account security.
+- Booking/project notifications for create, edit, work done, complete and cancellation paths.
+- Projects API flow: publish request, ownership rules, reopen and delete.
+- Dashboard surfaces for professional mode: profile, services, success cases, availability, requests received, verification, messages, notifications, support, account security.
 - Dashboard surfaces for client mode: profile, my requests, my posts, favorites, messages, notifications, support, account security.
 - UI entry points for booking and publishing request modals without submitting.
 - Editable review lifecycle after completed work, including one-review-per-request persistence.
 - Signed-in and guest support ticket creation, automatic acknowledgement, reply, reopen, and confirmation.
-- Contextual in-app chat from profiles, requests and proposals, including both participants, unread state, realtime delivery, archive/restore and access control.
+- Contextual in-app chat from profiles and requests, including both participants, unread state, realtime delivery, archive/restore and access control.
 - ContrataCR AI routing, local documented answers, bounded Workers AI fallback, live search results, safety boundaries, localized actions, responsive visibility and private account history. OpenAI remains disabled by default.
 - Real password change and restored seeded credentials.
 - Real professional bio, service description, success-case upload, and availability privacy persistence.
@@ -131,7 +130,7 @@ No regression suite can prove literally every possible user-data combination or 
 ## Test tags
 
 - `@smoke`: public routes, support/login rendering, services catalog, admin signed-out surface, and public APIs. These do not need seeded users.
-- `@seeded`: search cards, professional profile, profile share image, dashboard surfaces, booking/project/proposal flows, and modal entry points. These use the test Supabase project and skip automatically if seeded regression is disabled.
+- `@seeded`: search cards, professional profile, profile share image, dashboard surfaces, booking/project flows, and modal entry points. These use the test Supabase project and skip automatically if seeded regression is disabled.
 
 ## GitHub Actions
 

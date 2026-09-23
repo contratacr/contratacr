@@ -16,7 +16,6 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
 import { Link, useRouter, usePathname } from "@/i18n/navigation";
-import { openInNewTabOnDesktop } from "@/lib/desktop-new-tab";
 import { getCategoryLabel } from "@/lib/data/categories";
 import { computeAge } from "@/lib/age";
 import { cn, formatRelativeOrDate } from "@/lib/utils";
@@ -589,7 +588,7 @@ export function ClientActivity({ section, onCount }: { section: ClientActivitySe
                                 {b.professionals?.slug ? (
                                   <Link
                                     href={`/profesionales/${b.professionals.slug}?from=${encodeURIComponent("/dashboard/profesional?tab=sent_bookings")}`}
-                                    onClick={(e) => { e.stopPropagation(); openInNewTabOnDesktop(e); }}
+                                    onClick={(e) => e.stopPropagation()}
                                     className="hover:text-[#009FD9] hover:underline"
                                   >
                                     {b.professionals?.profiles?.full_name ?? t("professional")}
@@ -735,13 +734,8 @@ export function ClientActivity({ section, onCount }: { section: ClientActivitySe
                                 const perfilHref = `/profesionales/${b.professionals?.slug}?from=${encodeURIComponent("/dashboard/profesional?tab=sent_bookings")}`;
                                 menu.push({
                                   label: t("bookAgain"),
-                                  onClick: () => {
-                                    if (window.matchMedia("(min-width: 1024px)").matches) {
-                                      window.open(`/${locale}${perfilHref}`, "_blank", "noopener,noreferrer");
-                                      return;
-                                    }
-                                    router.push(perfilHref);
-                                  },
+                                  // MISMA PESTAÑA: la ficha trae `?from=` para volver aquí.
+                                  onClick: () => router.push(perfilHref),
                                 });
                               }
                               // En una cita terminada lo que toca es la reseña, no escribirle:
@@ -973,7 +967,7 @@ export function ClientActivity({ section, onCount }: { section: ClientActivitySe
                             // en los inactivos—.
                             return (
                           <div className="ccr-acciones-tarjeta flex items-start gap-2 border-t border-[#eef2f6] pt-4 sm:justify-end">
-                            <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2 sm:flex-none sm:justify-end">
+                            <div className="grid min-w-0 flex-1 grid-cols-2 items-center gap-2 sm:flex sm:flex-none sm:flex-wrap sm:justify-end">
                               {/* VER EL PROYECTO, COMO EN EMPLEOS Y PROMOCIONES.
                                   Las tres listas del panel son lo mismo —algo
                                   que publiqué— y las otras dos abren su ficha

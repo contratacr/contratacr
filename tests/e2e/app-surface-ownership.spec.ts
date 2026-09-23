@@ -50,7 +50,7 @@ const handlerRules: OwnershipRule[] = [
   { match: /^\/api\/ai-assistant(?:\/|$)/, owner: "ai-assistant.spec.ts" },
   { match: /^\/api\/account(?:\/|$)/, owner: "account-lifecycle.spec.ts" },
   { match: /^\/api\/auth(?:\/|$)/, owner: "auth-support.spec.ts" },
-  { match: /^\/api\/(?:bookings|projects|proposals|reviews|support|quotes)(?:\/|$)/, owner: "seeded-regression.spec.ts" },
+  { match: /^\/api\/(?:bookings|projects|reviews|support|quotes)(?:\/|$)/, owner: "seeded-regression.spec.ts" },
   { match: /^\/api\/(?:jobs|offers)(?:\/|$)/, owner: "marketplace-lifecycle.spec.ts" },
   { match: /^\/api\/direct-chat(?:\/|$)/, owner: "direct-chat.spec.ts", parked: true },
   { match: /^\/api\/(?:push|internal\/push)(?:\/|$)/, owner: "push-outbox-contract.spec.ts" },
@@ -59,9 +59,9 @@ const handlerRules: OwnershipRule[] = [
   { match: /^\/api\/contact(?:\/|$)/, owner: "whatsapp-review-followup.spec.ts" },
   { match: /^\/api\/(?:upload|media)(?:\/|$)/, owner: "extended-lifecycle.spec.ts" },
   { match: /^\/api\/(?:register|cedula|cedula-available|add-cedula|verify-identity)(?:\/|$)/, owner: "product-contract.spec.ts" },
-  { match: /^\/api\/(?:appeals|report|report-client|report-professional|portfolio-like|professional-followers|client\/connections)(?:\/|$)/, owner: "interaction-surfaces.spec.ts" },
+  { match: /^\/api\/(?:appeals|report|report-client|report-professional|portfolio-like|client\/connections)(?:\/|$)/, owner: "interaction-surfaces.spec.ts" },
   { match: /^\/api\/(?:public-availability|check-availability|professionals|buscar)(?:\/|$)/, owner: "search-results.spec.ts" },
-  { match: /^\/api\/(?:analytics|attribution|translate|client-error|opportunities)(?:\/|$)/, owner: "product-contract.spec.ts" },
+  { match: /^\/api\/(?:analytics|attribution|translate|client-error)(?:\/|$)/, owner: "product-contract.spec.ts" },
   { match: /^\/api\/health$/, owner: "health.spec.ts" },
 ];
 

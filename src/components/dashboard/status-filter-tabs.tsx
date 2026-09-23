@@ -548,18 +548,6 @@ export function publicacionBucket(status?: string | null): string {
   return status === "published" ? "activas" : "cerradas";
 }
 
-// ── PROYECTOS (a PRO's own proposal) ────────────────────────────────────────
-// Bucketed by the PROPOSAL first (so a declined proposal lands in Canceladas even
-// if the project moved on with someone else), then the project's lifecycle once
-// the proposal was accepted.
-export function proposalBucket(proposalStatus?: string | null, projectStatus?: string | null): string {
-  // El trabajo se hizo → finalizada. El proyecto se cayó, o la propuesta quedó
-  // fuera (el cliente la descartó o el profesional la retiró) → cancelada.
-  if (projectStatus === "completed") return "finalizadas";
-  if (projectStatus === "cancelled") return "canceladas";
-  if (proposalStatus === "declined" || proposalStatus === "withdrawn") return "canceladas";
-  return "respondidas";
-}
 // Build a {bucket: count} map for the count badges. Pass the items' resolved buckets.
 export function bucketCounts(buckets: string[]): Record<string, number> {
   const counts: Record<string, number> = { activas: 0, en_curso: 0, finalizadas: 0 };
@@ -580,8 +568,4 @@ const SOLICITUD_PRIMARY: Record<string, string[]> = {
 };
 export function solicitudStatusRedundant(status: string, scheduledDate?: string | null): boolean {
   return SOLICITUD_PRIMARY[solicitudBucket(status, scheduledDate)]?.includes(status) ?? false;
-}
-export function proposalStatusRedundant(proposalStatus: string, projectStatus?: string | null): boolean {
-  // La única insignia útil es la de la solicitud (resuelta / cancelada / te eligió).
-  return proposalStatus === "pending" && (!projectStatus || projectStatus === "open");
 }

@@ -21,8 +21,10 @@ async function pickSelectMenu(page: Page, label: RegExp, option: RegExp) {
 
 // Desktop edits inside a modal; the phone layout navigates to the edit page.
 // Either way the same form shows up with the saved values.
-async function openOwnerEditor(page: Page, label: string, editPath: RegExp) {
-  await page.getByText(label, { exact: true }).filter({ visible: true }).first().click();
+// `boton`: lo que dice el botón en la ficha («Editar», en corto, porque va
+// en media columna); `label`: el título del editor que abre («Editar promoción»).
+async function openOwnerEditor(page: Page, label: string, editPath: RegExp, boton: string | RegExp = label) {
+  await page.getByRole("button", { name: boton }).or(page.getByRole("link", { name: boton })).filter({ visible: true }).first().click();
   const dialog = page.getByRole("dialog").filter({ hasText: label });
   const inDialog = await dialog.isVisible({ timeout: 4_000 }).catch(() => false);
   if (inDialog) return dialog;
@@ -39,7 +41,14 @@ async function expectUpdatedDetail(page: Page, text: string) {
   await expectVisibleText(page.locator("body"), text, 30_000);
 }
 async function openItemActions(page: Page, card: ReturnType<Page["locator"]>) {
-  await card.getByRole("button", { name: /M[aá]s opciones|More options/i }).first().click();
+  const mas = card.getByRole("button", { name: /M[aá]s opciones|More options/i }).first();
+  // El «···» vive dentro de la tarjeta desplegada: si está plegada (al cambiar
+  // de pestaña se pliega), primero se abre.
+  if (!(await mas.isVisible().catch(() => false))) {
+    const plegada = card.locator('button[aria-expanded="false"]').first();
+    if (await plegada.count()) await plegada.click();
+  }
+  await mas.click();
 }
 
 // The row menu renders inside the card, so scope the action there: the page
@@ -163,7 +172,7 @@ test.describe("@seeded marketplace editors through the real screens", () => {
     await expectHealthyPage(page);
 
     // Owner actions on the detail lead to the edit form with the saved values.
-    const offerEditor = await openOwnerEditor(page, "Editar promoción", /\/ofertas\/[0-9a-f-]{36}\/editar/);
+    const offerEditor = await openOwnerEditor(page, "Editar promoción", /\/ofertas\/[0-9a-f-]{36}\/editar/, /^Editar$/);
     await expect(offerEditor.locator('input[name="title"]')).toHaveValue(offerTitle);
     await offerEditor.locator('input[name="title"]').fill(`${offerTitle} editada`);
     await offerEditor.locator('input[name="price_now"]').fill("40000");
@@ -174,20 +183,24 @@ test.describe("@seeded marketplace editors through the real screens", () => {
     await expectVisibleText(page.locator("body"), /40[\s.,]?000/);
     await expectHealthyPage(page);
 
-    // Manager: pause, then publish again, with the status pill following along.
+    // Manager: close, then publish again. «Pausar» se retiró: hacía lo mismo
+    // que «Cerrar promoción» (la saca del tablero y la manda a «Inactivas») y
+    // las dos se deshacían con «Volver a publicar». Y en la tarjeta ya no se
+    // escribe el estado: la pestaña lo dice.
     await gotoOK(page, "/es/ofertas/mis-ofertas");
     const card = page.locator("article").filter({ hasText: `${offerTitle} editada` }).first();
     await expect(card).toBeVisible();
     await card.getByRole("button", { name: new RegExp(`${offerTitle} editada`) }).first().click();
     await openItemActions(page, card);
-    await chooseItemAction(card, /^Pausar$/);
+    await chooseItemAction(card, /^Cerrar promoción$/);
     // Con pocas publicaciones no se dibujan etapas y la lista sale entera; en
-    // cuanto hay suficientes, una pausada se va a «Inactivas». La cuenta de
+    // cuanto hay suficientes, una cerrada se va a «Inactivas». La cuenta de
     // pruebas acumula publicaciones entre corridas, así que la prueba cambia de
     // pestaña cuando esa pestaña existe.
     const cerradas = page.getByRole("tab", { name: /Inactivas/ }).or(page.getByRole("button", { name: /^Inactivas/ })).filter({ visible: true }).first();
     if (await cerradas.count()) await cerradas.click();
-    await expectVisibleText(card, /Pausada/);
+    await expect(card).toBeVisible();
+    await card.getByRole("button", { name: new RegExp(`${offerTitle} editada`) }).first().click();
     await openItemActions(page, card);
     // El menú es consciente del estado: una publicación cerrada ya no ofrece
     // «Publicar oferta» sino «Volver a publicar».
@@ -196,9 +209,8 @@ test.describe("@seeded marketplace editors through the real screens", () => {
     if (await activas.count()) await activas.click();
     // En «Activas» el estado NO se escribe en la tarjeta: todas están
     // publicadas y repetiría la pestaña. Lo que se comprueba es que la
-    // publicación volvió a la lista viva y ya no dice «Pausada».
+    // publicación volvió a la lista viva.
     await expect(card).toBeVisible();
-    await expect(card).not.toContainText(/Pausada/);
     await expectHealthyPage(page);
   });
 
@@ -224,7 +236,7 @@ test.describe("@seeded marketplace editors through the real screens", () => {
     await expectVisibleText(page.locator("body"), /Remoto/);
     await expectHealthyPage(page);
 
-    const jobEditor = await openOwnerEditor(page, "Editar empleo", /\/empleos\/[0-9a-f-]{36}\/editar/);
+    const jobEditor = await openOwnerEditor(page, "Editar empleo", /\/empleos\/[0-9a-f-]{36}\/editar/, /^Editar(?: empleo)?$/);
     await expect(jobEditor.locator('input[name="title"]')).toHaveValue(jobTitle);
     await jobEditor.locator('input[name="title"]').fill(`${jobTitle} editado`);
     await jobEditor.locator('input[name="openings"]').fill("1");
@@ -245,9 +257,8 @@ test.describe("@seeded marketplace editors through the real screens", () => {
     // Empleos es masculino: la pestaña dice «Inactivos» (Promociones, «Inactivas»).
     const cerradasEmpleos = page.getByRole("tab", { name: /Inactivos/ }).or(page.getByRole("button", { name: /^Inactivos/ })).filter({ visible: true }).first();
     if (await cerradasEmpleos.count()) await cerradasEmpleos.click();
-    // La tarjeta dice la idea completa, no la etiqueta suelta: «Cerrado» al
-    // lado del título de un empleo no dice qué está cerrado.
-    await expectVisibleText(card, /Vacante cerrada/i);
+    // En la tarjeta ya no se escribe el estado: la pestaña «Inactivos» lo dice.
+    await expect(card).toBeVisible();
     await expectHealthyPage(page);
 
     // A closed vacancy is no longer on the public board.

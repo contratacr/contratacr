@@ -1,6 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
+import { rutaInternaSegura } from "@/lib/navigation/ruta-interna";
 import { useSearchParams } from "next/navigation";
 import { UserRoundSearch, BriefcaseBusiness, ArrowRight } from "lucide-react";
 import { Link } from "@/i18n/navigation";
@@ -11,7 +12,7 @@ import { useRedirectIfRegistered } from "@/hooks/use-redirect-if-registered";
 export default function RegisterPage() {
   const t = useTranslations("registerChoice");
   const searchParams = useSearchParams();
-  const redirect = searchParams.get("redirect");
+  const redirect = rutaInternaSegura(searchParams.get("redirect"));
   const redirectSuffix = redirect ? `?redirect=${encodeURIComponent(redirect)}` : "";
   // A logged-in user with an existing account must never see the "choose account
   // type" screen — send them to their panel. Genuinely-new visitors see the chooser.

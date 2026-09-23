@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { ArrowLeft } from "lucide-react";
 import { Link } from "@/i18n/navigation";
+import { metadatosDePantalla } from "@/lib/seo/alternates";
 import { marketplaceReturnLabelKey, safeMarketplaceReturnHref } from "@/lib/navigation/marketplace-return";
 import { JobsPageContent } from "../page";
 import { createClient, hasSupabaseServerConfig } from "@/lib/supabase/server";
@@ -40,10 +41,19 @@ export async function generateMetadata({ params }: Props) {
   const { id } = await params;
   if (!hasSupabaseServerConfig()) return {};
   const supabase = await createClient();
-  const { data } = await supabase.from("job_posts").select("id").eq("id", id).eq("status", "published").maybeSingle();
+  const { data } = await supabase.from("job_posts").select("id, title, location_label, description").eq("id", id).eq("status", "published").maybeSingle();
   // Solo la vacante viva se indexa. La cerrada se marca para que salga del
   // buscador: dejarla indexada manda gente a una puerta que ya está cerrada.
-  return data ? {} : { robots: { index: false, follow: true } };
+  if (!data) return { robots: { index: false, follow: true } };
+  // Cada vacante con su propio título y descripción: antes todas compartían
+  // los del tablero y Google no tenía nada con qué distinguirlas.
+  const { locale } = await params;
+  const en = locale === "en";
+  const lugar = (data as { location_label?: string | null }).location_label;
+  const titulo = `${(data as { title: string }).title}${lugar ? ` · ${lugar}` : ""} | ContrataCR`;
+  const cuerpo = String((data as { description?: string | null }).description ?? "").replace(/\s+/g, " ").trim();
+  const descripcion = cuerpo ? cuerpo.slice(0, 155) : (en ? "Job opening in Costa Rica. Open the posting and message whoever published it on WhatsApp." : "Vacante en Costa Rica. Abre la publicación y escríbele por WhatsApp a quien la publicó.");
+  return metadatosDePantalla({ locale, ruta: `/empleos/${id}`, titulo, descripcion });
 }
 
 export default async function JobDetailRedirect({ params, searchParams }: Props) {
@@ -57,7 +67,32 @@ export default async function JobDetailRedirect({ params, searchParams }: Props)
     .eq("id", id)
     .eq("status", "published")
     .maybeSingle();
-  if (publicado) return <JobsPageContent initialSelectedJobId={id} returnTo={from} detailOnly />;
+  if (publicado) {
+    // JobPosting: el esquema que Google for Jobs necesita para listar la vacante.
+    const { data: vacante } = await createAdminClient()
+      .from("job_posts")
+      .select("title, description, employment_type, created_at, location_label, professionals!job_posts_employer_id_fkey(business_name,profiles(full_name))")
+      .eq("id", id)
+      .maybeSingle();
+    const empleadorDeVacante = vacante?.professionals as { business_name?: string | null; profiles?: { full_name?: string | null } | null } | null | undefined;
+    const tipoEmpleo: Record<string, string> = { full_time: "FULL_TIME", part_time: "PART_TIME", contract: "CONTRACTOR", temporary: "TEMPORARY", internship: "INTERN", freelance: "CONTRACTOR" };
+    const jobPosting = vacante ? {
+      "@context": "https://schema.org",
+      "@type": "JobPosting",
+      title: vacante.title,
+      description: vacante.description || vacante.title,
+      datePosted: vacante.created_at,
+      employmentType: tipoEmpleo[String(vacante.employment_type ?? "")] ?? undefined,
+      hiringOrganization: { "@type": "Organization", name: empleadorDeVacante?.business_name || empleadorDeVacante?.profiles?.full_name || "ContrataCR" },
+      jobLocation: { "@type": "Place", address: { "@type": "PostalAddress", addressLocality: vacante.location_label || "Costa Rica", addressCountry: "CR" } },
+    } : null;
+    return (
+      <>
+        {jobPosting && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jobPosting) }} />}
+        <JobsPageContent initialSelectedJobId={id} returnTo={from} detailOnly />
+      </>
+    );
+  }
 
   const cerrado = await empleoCerrado(id);
   if (!cerrado) notFound();

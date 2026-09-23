@@ -146,7 +146,6 @@ test.describe("@contract product safety contracts", () => {
       { name: "add identity", response: apiJson(page, "/api/add-cedula", { method: "POST", body: { cedula: "990000001" } }) },
       { name: "identity appeal", response: apiJson(page, "/api/appeals", { method: "POST", body: { message: "E2E" } }) },
       { name: "support", response: apiJson(page, "/api/support") },
-      { name: "remove follower", response: apiJson(page, "/api/professional-followers", { method: "DELETE", body: { followId: "00000000-0000-4000-8000-000000000001" } }) },
     ];
 
     const results = await Promise.all(checks.map(async ({ name, response }) => ({ name, result: await response })));
@@ -192,8 +191,6 @@ test.describe("@contract product safety contracts", () => {
       { name: "client connections", response: apiJson(page, "/api/client/connections") },
       { name: "portfolio like", response: apiJson(page, "/api/portfolio-like", { method: "POST", body: {} }) },
       { name: "job post", response: apiJson(page, "/api/jobs/posts", { method: "POST", body: {} }) },
-      { name: "job applications", response: apiJson(page, "/api/jobs/applications") },
-      { name: "job resume", response: apiJson(page, "/api/jobs/resume") },
       { name: "chat attachment", response: apiJson(page, "/api/direct-chat/attachments", { method: "POST" }) },
       { name: "push register", response: apiJson(page, "/api/push/register", { method: "POST", body: {} }) },
       { name: "push status", response: apiJson(page, "/api/push/status") },

@@ -15,13 +15,12 @@ despacha a mano desde **Actions → el flujo → Run workflow**.
 | **Mobile Native Regression** | cada push a `mobile` | contratos nativos y las suites de WebView. El emulador de Android y el trabajo de iOS **no** corren aquí | ~8 min de Linux |
 | **Migrations drift** | al empujar migraciones a `main`, y todos los días 6:30 a.m. CR | simula las migraciones en test y en producción y avisa si un ambiente quedó atrás | ~2 min |
 | **Supabase backup** | todos los días 2:10 a.m. CR | respaldo completo de producción | ~3 min |
-| **Inactivity reminders** | todos los días 9:00 a.m. CR | manda los avisos de 3 y 7 días | ~1 min + correos |
 | **Regression tests (Safari)** | lunes 5:00 a.m. CR | las pantallas públicas en WebKit, el motor del iPhone | ~8 min de Linux |
 | **Push drain** | cada 10 minutos | vacía la cola de avisos push. Si el ambiente no está configurado se salta solo, sin fallar | segundos |
 
 Eso es todo lo recurrente: unos 25 minutos de Linux por push a `test` y un
 puñado de minutos diarios. Nada de esto escribe en producción salvo el respaldo
-(que solo lee) y los recordatorios.
+(que solo lee).
 
 ## Lo despachás vos, cuando hace falta
 
@@ -61,7 +60,7 @@ verificación y las pruebas. Si cambiás un nombre o un slug ahí, cambia en tod
 repositorio.
 
 Entre las dos tienen de todo para revisar el app a mano: solicitudes en los seis
-estados, proyectos, propuestas, conversaciones, empleos con postulaciones,
+estados, proyectos, conversaciones, empleos,
 ofertas, tiquetes de soporte, reseñas, favoritos y notificaciones. Para
 rearmarlas:
 
@@ -74,7 +73,7 @@ npm run seed:test:verify   # confirma que no falte nada
 
 - Push a `test`: ~25 min de Linux (seguridad + compatibilidad + regresión).
 - Push a `main`: ~10 min (no corre la regresión; ya pasó en `test`).
-- Diario: ~6 min entre respaldo, recordatorios y control de migraciones.
+- Diario: ~6 min entre respaldo y control de migraciones.
 - La cola de push: 144 corridas de segundos al día; se salta sola si no hay nada.
 
 Con el ritmo de un bloque de trabajo por día, eso son unas 20 horas de Linux al

@@ -22,7 +22,7 @@ export function JobsPanel({ professionalId, onCount }: { professionalId: string;
   // sin tener que entrar a cada vista.
   useEffect(() => { if (!loading) onCount?.(jobs.length); }, [jobs.length, loading, onCount]);
   if (loading) {
-    return <PanelListSkeleton rows={2} />;
+    return <PanelListSkeleton rows={2} withHeader withTabs />;
   }
   return <JobsManager initialJobs={jobs} professionalId={professionalId} embedded onRefresh={() => void refresh()} />;
 }

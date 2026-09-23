@@ -12,7 +12,7 @@ import { NAME_MAX_LENGTH, limitTrimmedText } from "@/lib/text-limits";
 import { auditUserAction } from "@/lib/audit/user-action";
 import { writeSourceColumns } from "@/lib/security/write-guard";
 import { recordServerInteraction } from "@/lib/analytics/server-interactions";
-import { sendNotificationPush, sendNotificationPushRows } from "@/lib/push/notify";
+import { hasDurablePushOutbox, sendNotificationPush, sendNotificationPushRows } from "@/lib/push/notify";
 
 const PROJECT_TITLE_MAX_LENGTH = 80;
 const PROJECT_DESCRIPTION_MAX_LENGTH = 300;
@@ -352,7 +352,10 @@ export async function POST(req: NextRequest) {
             },
           }));
           await admin.from("notifications").insert(rows);
-          await Promise.all(rows.map((row) => sendNotificationPush({
+          // Con la migración 167 el INSERT de arriba ya cayó en el outbox durable y
+          // el push sale de ahí: no hay que llamar N veces a un envío que devuelve
+          // sin hacer nada. Solo sin outbox se manda en línea, uno por profesional.
+          if (!(await hasDurablePushOutbox())) await Promise.all(rows.map((row) => sendNotificationPush({
             userId: row.user_id,
             title: row.title,
             message: row.message,

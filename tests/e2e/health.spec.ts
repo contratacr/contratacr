@@ -12,7 +12,11 @@ test.describe("deployment health contract", () => {
     expect(body.status).toBe("ok");
     // `supabase` trae solo banderas (url/anonKey/serviceKey presentes) y el ref del
     // proyecto, que es público: sirve para confirmar secretos por entorno sin exponerlos.
-    expect(Object.keys(body).sort()).toEqual(["commitSha", "status", "supabase"]);
+    // `integraciones` dice qué llaves tiene ESTE despliegue (correo, push,
+    // traducción…) y solo con sí/no: sirve para ver desde fuera si el ambiente
+    // está completo sin exponer ningún valor.
+    expect(Object.keys(body).sort()).toEqual(["commitSha", "integraciones", "status", "supabase"]);
+    for (const v of Object.values(body.integraciones as Record<string, unknown>)) expect(typeof v).toBe("boolean");
     const supabase = body.supabase as Record<string, unknown>;
     for (const k of ["url", "anonKey", "serviceKey"]) expect(typeof supabase[k]).toBe("boolean");
     expect(String(supabase.projectRef ?? "")).not.toMatch(/eyJ|sb_secret/);

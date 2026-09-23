@@ -150,8 +150,11 @@ test.describe("@visual recent bug contracts", () => {
     await page.setViewportSize({ width: 390, height: 844 });
     await loginAs(page, E2E_USERS.professional.email, E2E_USERS.professional.password);
 
+    // Citas ya no se reservan desde el app (RESERVAR_POR_CALENDARIO), así que la
+    // pestaña no tiene citas activas que desplegar; el «···» de una lista se
+    // comprueba en Proyectos, Empleos y Promociones.
     for (const route of [
-      "/es/dashboard/profesional?tab=bookings",
+      "/es/dashboard/profesional?tab=sent_projects",
       `/es/dashboard/profesional?tab=jobs&job=${seed.publishedJobId}`,
       `/es/dashboard/profesional?tab=offers&offer=${seed.publishedOfferId}`,
     ]) {
@@ -166,14 +169,14 @@ test.describe("@visual recent bug contracts", () => {
   test("paired actions keep equal geometry and compact dialogs stay centered", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await loginAs(page, E2E_USERS.professional.email, E2E_USERS.professional.password);
-    await gotoOK(page, "/es/dashboard/profesional?tab=bookings");
-    const booking = page.locator('[id^="booking-"]').first();
+    // Citas ya no se reservan desde el app y la pestaña no tiene citas activas
+    // que desplegar: la pareja de acciones se mide en un proyecto propio
+    // («Ver proyecto» + «Editar», con el «···» al lado).
+    await gotoOK(page, "/es/dashboard/profesional?tab=sent_projects");
+    const booking = page.locator('[id^="project-"]').first();
     await expect(booking).toBeVisible();
-    await booking.locator(":scope > button[aria-expanded='false']").click();
-    // La fila de una cita es «acción principal + contacto + ⋮»: con una cita
-    // activa la principal es cotizar (antes decía «Enviar mensaje»). Lo que se
-    // mide es la pareja, no qué dice cada una.
-    const actions = booking.locator("button, a").filter({ hasText: /Enviar cotizaci[oó]n|Enviar mensaje|Mensaje|WhatsApp|Finalizar/i });
+    await booking.locator("button[aria-expanded='false']").first().click();
+    const actions = booking.locator("button, a").filter({ hasText: /^(Ver proyecto|Editar|View project|Edit)$/i });
     await expect(actions).toHaveCount(2);
     const boxes = await actions.evaluateAll((nodes) => nodes.map((node) => {
       const box = node.getBoundingClientRect();

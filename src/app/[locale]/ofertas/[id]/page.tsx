@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { ArrowLeft, ChevronRight } from "lucide-react";
 import { Link } from "@/i18n/navigation";
+import { metadatosDePantalla } from "@/lib/seo/alternates";
 import { OfferImageGallery } from "@/components/offers/offer-image-gallery";
 import { OfferDetailNavbarSearch } from "@/components/offers/offer-detail-navbar-search";
 import { OfferContactActions } from "@/components/offers/offers-board";
@@ -83,11 +84,19 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const supabase = await createClient();
   const { data } = await supabase
     .from("professional_offers")
-    .select("id, status, valid_until")
+    .select("id, status, valid_until, title, description")
     .eq("id", clave.id)
     .maybeSingle();
   const viva = data && data.status === "published" && !isOfferExpired({ valid_until: (data as { valid_until?: string | null }).valid_until ?? null }, crTodayISO());
-  return viva ? {} : { robots: { index: false, follow: true } };
+  if (!viva) return { robots: { index: false, follow: true } };
+  // Cada promoción con su propio título y descripción, no los del tablero.
+  const { locale: idioma } = await params;
+  const en = idioma === "en";
+  const fila = data as { title?: string | null; description?: string | null };
+  const titulo = `${fila.title ?? (en ? "Promotion" : "Promoción")} | ContrataCR`;
+  const cuerpo = String(fila.description ?? "").replace(/\s+/g, " ").trim();
+  const descripcion = cuerpo ? cuerpo.slice(0, 155) : (en ? "Promotion from a verified professional in Costa Rica." : "Promoción de un profesional verificado en Costa Rica.");
+  return metadatosDePantalla({ locale: idioma, ruta: `/ofertas/${clave.id}`, titulo, descripcion });
 }
 
 export default async function OfferDetailPage({ params, searchParams }: { params: Promise<{ id: string; locale: string }>; searchParams?: Promise<{ from?: string }> }) {

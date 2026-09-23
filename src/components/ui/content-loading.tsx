@@ -51,11 +51,17 @@ export function PanelListSkeleton({
   rows = 3,
   withTabs = false,
   withSearch = false,
+  withHeader = false,
+  compacto = false,
   className,
 }: {
   rows?: number;
   withTabs?: boolean;
   withSearch?: boolean;
+  /** Título y botón de publicar encima de la lista (Empleos, Promociones). */
+  withHeader?: boolean;
+  /** Filas de dos líneas (cotizaciones): la de tres líneas medía 114 px donde llegan 76. */
+  compacto?: boolean;
   className?: string;
 }) {
   const t = useTranslations("loading");
@@ -63,6 +69,14 @@ export function PanelListSkeleton({
   return (
     <div data-panel-loading="" className={cn("ccr-delayed-loading space-y-4", className)} aria-busy="true" role="status">
       <span className="sr-only">{t("generic")}</span>
+      {withHeader && (
+        // La cabecera real de Empleos/Promociones: título de 32 px y el botón
+        // de publicar de 44 px; sin ella la lista llegaba 120 px más abajo.
+        <div className="mb-5 flex flex-col gap-4">
+          <Skeleton className="h-8 w-40 rounded-full" />
+          <Skeleton className="h-11 w-full rounded-full" />
+        </div>
+      )}
       {withSearch && (
         <div className="rounded-2xl border border-[#e5e7eb] bg-white p-3 shadow-sm">
           <Skeleton className="h-11 w-full rounded-xl" />
@@ -88,7 +102,7 @@ export function PanelListSkeleton({
               <div className="min-w-0 flex-1 space-y-2.5">
                 <Skeleton className="h-4 w-2/3 rounded-full lg:w-1/4" />
                 <Skeleton className="h-3 w-1/2 rounded-full lg:w-1/3" />
-                <Skeleton className="h-3 w-5/6 rounded-full lg:w-1/4" />
+                {!compacto && <Skeleton className="h-3 w-5/6 rounded-full lg:w-1/4" />}
               </div>
               <Skeleton className="h-6 w-6 shrink-0 rounded-full" />
             </div>

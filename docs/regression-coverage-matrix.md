@@ -19,14 +19,14 @@ Legend:
 | Account security | Real password change/login/restore, email-change states, account write protection, and deletion of authenticated WhatsApp follow-ups without affecting another account | UI + API + DB |
 | Client requests | Create booking, double-book prevention, professional receipt, work completion, client confirmation, cancellation | API + DB + notification assertions |
 | Reviews | Create after completion, edit existing review, one review per request | API + DB |
-| Publications/opportunities | Publish, propose, edit, withdraw, reject, accept, ownership, complete, cancel, notification noise rules | API + DB + notification assertions |
+| Projects | Publish, edit, ownership, reopen, delete, cancel, notification to every professional of the category | API + DB + notification assertions |
 | Availability | Weekly slots, video/in-person shared capacity, double-book prevention, private/public agenda persistence | UI + API + DB |
 | Professional services | Add-service selector, real service-description persistence, image replacement/preview, contained month/year menus, and stable save-button geometry while saving | UI + DB |
 | Success cases | Modal, image upload, stored case, cleanup | UI + DB |
 | Profile | Professional bio persistence, every client/professional panel section, and a visible non-collapsing loading body while the first request is pending | UI + DB |
 | Notifications | Lifecycle rows, cancellation recipients, every type translated, unified-panel destination | API + DB + Contract |
 | Support | Guest and signed-in creation, acknowledgement, conversation, reopen, resolve/confirm | API + DB |
-| Direct chat | One conversation per context, profile/request/proposal linkage, both participants, unread/read state, realtime delivery, archive/restore/reopen, blocked threads and outsider rejection | UI + API + DB |
+| Direct chat | One conversation per context, profile/request linkage, both participants, unread/read state, realtime delivery, archive/restore/reopen, blocked threads and outsider rejection | UI + API + DB |
 | ContrataCR AI | Real OpenAI provider, complete action routing, live professional results, service suggestions, emergency guardrail, prompt-injection privacy, Spanish/English, responsive UI, navigation continuity, private account history and deletion | UI + API + DB + Contract |
 | Admin | Signed-out boundary, private API boundaries and authenticated routes for overview, verification, users, requests, publications, reports, insurers, services, accounts, subscriptions, support, analytics and activity | UI + API |
 | Localization | Public routes in Spanish/English, English panels, notification labels and destinations | UI + Contract |

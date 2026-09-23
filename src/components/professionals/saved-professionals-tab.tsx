@@ -15,7 +15,6 @@ import { formatServicePrice } from "@/lib/pricing";
 import { cldThumb } from "@/lib/cloudinary";
 import { getCategoryLabel } from "@/lib/data/categories";
 import { applyPendingSavedPro, getSavedPros, syncSavedPros, unsaveProRemote, type SavedPro } from "./save-button";
-import { openInNewTabOnDesktop } from "@/lib/desktop-new-tab";
 import { getProfessionalDisplayName } from "@/lib/display-name";
 import { ResponsiveVerifiedName } from "@/components/professionals/responsive-verified-name";
 import { ProgressiveImage } from "@/components/ui/progressive-image";
@@ -103,7 +102,7 @@ function SavedProCard({ pro, onUnsave }: { pro: SavedPro; onUnsave: (id: string)
 
       <div className="col-span-2 flex min-w-0 items-center gap-2 sm:col-span-1 sm:shrink-0">
         <Button variant="outline" size="sm" className="min-w-0 flex-1 sm:flex-none" asChild>
-          <Link href={volverAFavoritos(`/profesionales/${pro.slug}`)} onClick={openInNewTabOnDesktop}>
+          <Link href={volverAFavoritos(`/profesionales/${pro.slug}`)}>
             <ExternalLink className="h-3.5 w-3.5" />
             {tSaved("viewProfile")}
           </Link>
@@ -157,7 +156,7 @@ function SavedGenericCard({ item, onRemove }: { item: SavedItem; onRemove: (item
       </div>
       <div className="col-span-2 flex min-w-0 items-center gap-2 sm:col-span-1 sm:shrink-0">
         <Button variant="outline" size="sm" className="min-w-0 flex-1 sm:flex-none" asChild>
-          <Link href={href} onClick={openInNewTabOnDesktop}>
+          <Link href={href}>
             <ExternalLink className="h-3.5 w-3.5" />
             {/* "Ver oferta" / "Ver empleo", no "Ver" a secas: las tres pestañas de
                 Favoritos se ven juntas y la de profesionales ya decía "Ver perfil".

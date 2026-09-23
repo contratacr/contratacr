@@ -9,7 +9,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { PanelEmptyState, PanelFilterEmpty, PanelListSkeleton } from "@/components/ui/content-loading";
 import { getInitials, formatRelativeOrDate } from "@/lib/utils";
-import { openInNewTabOnDesktop } from "@/lib/desktop-new-tab";
 import { getCategoryLabel } from "@/lib/data/categories";
 import { useAuth } from "@/hooks/use-auth";
 import { useCachedResource } from "@/hooks/use-cached-resource";
@@ -148,7 +147,7 @@ export function ClientConnections() {
                   {/* El destino es el panel unificado, no la ruta vieja
                       /dashboard/cliente: esa solo redirige y metía un giro de
                       carga antes de volver a «Volver a contratar». */}
-                  <Link href={`/profesionales/${item.slug}?from=${encodeURIComponent("/dashboard/profesional?tab=connections")}`} onClick={openInNewTabOnDesktop}>
+                  <Link href={`/profesionales/${item.slug}?from=${encodeURIComponent("/dashboard/profesional?tab=connections")}`}>
                     {t("viewProfile")}
                   </Link>
                 </Button>

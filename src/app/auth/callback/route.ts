@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { rutaInternaSegura } from "@/lib/navigation/ruta-interna";
 import { createServerClient } from "@supabase/ssr";
 import type { EmailOtpType, SupabaseClient, User } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
@@ -170,7 +171,7 @@ export async function GET(request: NextRequest) {
   const tokenHash = searchParams.get("token_hash");
   const type = searchParams.get("type");
   const next = searchParams.get("next");
-  const safeNext = next && next.startsWith("/") && !next.startsWith("//") ? next : null;
+  const safeNext = rutaInternaSegura(next);
   const callbackLocale = resolveAuthCallbackLocale(searchParams.get("locale"), safeNext);
 
   // Native app: Apple/Google already signed in through signInWithIdToken, so

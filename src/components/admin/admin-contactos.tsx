@@ -117,7 +117,7 @@ export function AdminContactos() {
                 {pro.canales.telefono ? <span className="inline-flex items-center gap-1"><Phone className="h-3.5 w-3.5" />{pro.canales.telefono}</span> : null}
                 {pro.canales.correo ? <span className="inline-flex items-center gap-1"><Mail className="h-3.5 w-3.5" />{pro.canales.correo}</span> : null}
                 {pro.slug && (
-                  <Link href={`/profesionales/${pro.slug}`} target="_blank" className="inline-flex items-center gap-1 text-[#0b7fe8] hover:underline">
+                  <Link href={`/profesionales/${pro.slug}`} className="inline-flex items-center gap-1 text-[#0b7fe8] hover:underline">
                     <ExternalLink className="h-3.5 w-3.5" />Ficha
                   </Link>
                 )}

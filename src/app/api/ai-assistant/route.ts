@@ -885,10 +885,10 @@ const PRODUCT_INTENTS: ProductIntent[] = [
     test: (n) => /(editar|modificar|cambiar|corregir|retirar|borrar|edit|change|withdraw).{0,15}(mi propuesta|una propuesta|la propuesta|propuesta|mi respuesta|la respuesta|respuesta|proposal|reply)/.test(n),
     action: "open_dashboard",
     answer: {
-      es: "Las respuestas no se editan: si quieres cambiar algo, escríbele al cliente directamente. En tu panel → Proyectos → «Respondidas» ves lo que enviaste. Si aún nadie te eligió puedes retirar tu respuesta y volver a responder; si ya te eligieron, usa «Ya no puedo hacerlo» para avisarle al cliente.",
-      en: "Replies can't be edited: if you want to change something, write to the client directly. In your panel → Projects → \"Respondidas\" you can see what you sent. While nobody has chosen you, you can withdraw the reply and answer again; once chosen, use \"I can no longer do it\" so the client is told.",
+      es: "Ya no hay propuestas ni respuestas dentro del app: abre el proyecto en Proyectos y escríbele al cliente por WhatsApp. Lo que acuerden pasa ahí.",
+      en: "There are no proposals or replies inside the app any more: open the project in Projects and message the client on WhatsApp. Whatever you agree happens there.",
     },
-    cta: { es: "Ver mis respuestas", en: "See my replies" },
+    cta: { es: "Ver proyectos", en: "See projects" },
     href: (locale) => `/${locale}/proyectos`,
   },
   {
@@ -998,8 +998,8 @@ function localAnswer(message: string, locale: Locale): AssistantPayload {
       confidence: 1,
       documented: true,
       answer: locale === "en"
-        ? "ContrataCR helps you find professionals, compare profiles, create projects, receive proposals, book services and coordinate directly."
-        : "ContrataCR permite buscar profesionales, comparar perfiles, crear proyectos, recibir propuestas, agendar servicios y coordinar directamente.",
+        ? "ContrataCR helps you find professionals, compare profiles, post what you need and coordinate directly on WhatsApp."
+        : "ContrataCR permite buscar profesionales, comparar perfiles, publicar lo que necesitas y coordinar directamente por WhatsApp.",
       ctaLabel: locale === "en" ? "See how it works" : "Ver cómo funciona",
     };
   }
@@ -1085,8 +1085,8 @@ function localAnswer(message: string, locale: Locale): AssistantPayload {
       action: "publish_request",
       confidence: 1,
       answer: locale === "en"
-        ? "Create a project with what you need, the area and the details. ContrataCR will notify professionals related to that service so they can send proposals."
-        : "Crea un proyecto con lo que necesitas, la zona y los detalles. ContrataCR notificará a profesionales relacionados con ese servicio para que puedan enviar propuestas.",
+        ? "Create a project with what you need, the area and the details. ContrataCR notifies every professional of that service, and whoever is interested messages you on WhatsApp."
+        : "Crea un proyecto con lo que necesitas, la zona y los detalles. ContrataCR avisa a todos los profesionales de ese servicio, y quien se interese te escribe por WhatsApp.",
       ctaLabel: locale === "en" ? "Post what I need" : "Publicar lo que necesito",
     };
   }
@@ -1543,9 +1543,9 @@ function normalizePayload(
       ...payload,
       action: "open_dashboard",
       answer: locale === "en"
-        ? "Yes. You can edit a pending proposal from My proposals while the project still allows it. An accepted, rejected or withdrawn proposal can no longer be edited."
-        : "Sí. Puedes editar una propuesta pendiente desde Mis propuestas mientras el proyecto todavía lo permita. Una propuesta aceptada, rechazada o retirada ya no se puede editar.",
-      ctaLabel: locale === "en" ? "Open my proposals" : "Ver mis propuestas",
+        ? "There are no proposals any more: open the project in Projects and message the client on WhatsApp. Whatever you agree happens there."
+        : "Ya no hay propuestas: abre el proyecto en Proyectos y escríbele al cliente por WhatsApp. Lo que acuerden pasa ahí.",
+      ctaLabel: locale === "en" ? "See projects" : "Ver proyectos",
     };
   }
   if (includesAny(normalized, ["profesional puede reprogramar", "profesional puede cambiar mi cita", "can the professional reschedule", "provider reschedule my appointment"])) {
@@ -1573,8 +1573,8 @@ function normalizePayload(
       ...payload,
       action: "login",
       answer: locale === "en"
-        ? "You need to sign in to create a project so proposals and notifications stay linked to your account. If you do not have an account yet, you can create one from the sign-in screen."
-        : "Necesitas iniciar sesión para crear un proyecto, así las propuestas y notificaciones quedan vinculadas a tu cuenta. Si todavía no tienes una, puede crearla desde la pantalla de ingreso.",
+        ? "You need to sign in to create a project so it stays linked to your account. If you do not have an account yet, you can create one from the sign-in screen."
+        : "Necesitas iniciar sesión para crear un proyecto, así queda vinculado a tu cuenta. Si todavía no tienes una, puede crearla desde la pantalla de ingreso.",
       ctaLabel: locale === "en" ? "Sign in" : "Iniciar sesión",
     };
   }
@@ -1593,8 +1593,8 @@ function normalizePayload(
       ...payload,
       action: "open_dashboard",
       answer: locale === "en"
-        ? "Open Projects in your professional dashboard to review the projects related to your services and reply to them."
-        : "Abre Proyectos en tu panel profesional para revisar los proyectos relacionados con tus servicios y responderlos.",
+        ? "Open Projects in your professional dashboard to see the projects related to your services and message the client on WhatsApp."
+        : "Abre Proyectos en tu panel profesional para ver los proyectos relacionados con tus servicios y escribirle al cliente por WhatsApp.",
       ctaLabel: locale === "en" ? "Open projects" : "Ver proyectos",
     };
   }

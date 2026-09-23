@@ -27,6 +27,8 @@ const nextConfig: NextConfig = {
   // (paneles, chat, tablones cachean y refrescan por su cuenta), así que
   // cachear el armazón unos minutos no muestra nada viejo.
   experimental: {
+    // 177 importaciones de `lucide-react`: que cada una traiga su icono y no el barril.
+    optimizePackageImports: ["lucide-react"],
     staleTimes: {
       dynamic: 300,
       static: 1800,

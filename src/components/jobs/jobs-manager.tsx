@@ -18,7 +18,6 @@ import { SectionHeadline } from "@/components/dashboard/section-headline";
 import { JobPostForm } from "@/components/jobs/job-post-form";
 import { cn } from "@/lib/utils";
 import { StatusFilterTabs, PUBLICACION_ESTADO_TABS, publicacionBucket, sinFiltros } from "@/components/dashboard/status-filter-tabs";
-import { openInNewTabOnDesktop } from "@/lib/desktop-new-tab";
 import { useLocale } from "next-intl";
 import { employmentTypeLabel, marketplaceLocale, type MarketplaceLocale } from "@/lib/marketplace-copy";
 
@@ -184,7 +183,7 @@ export function JobsManager({ initialJobs, embedded = false, backHref = "/dashbo
             const isOpen = openId === job.id;
             return (
               <article key={job.id} className="relative overflow-visible rounded-2xl border border-[#e5e7eb] bg-white shadow-[0_2px_8px_rgba(15,23,42,0.06)]">
-                <button type="button" onClick={() => setOpenId(isOpen ? null : job.id)} className="flex h-24 w-full items-center gap-3 px-4 text-left sm:gap-4 sm:px-5">
+                <button type="button" onClick={() => setOpenId(isOpen ? null : job.id)} aria-expanded={isOpen} className="flex h-24 w-full items-center gap-3 px-4 text-left sm:gap-4 sm:px-5">
                   {/* Empleos era la única de las tres listas del panel sin caja al
                       inicio: la fila arrancaba en el título y no se alineaba con
                       Mis proyectos ni con Mis promociones. */}
@@ -222,7 +221,7 @@ export function JobsManager({ initialJobs, embedded = false, backHref = "/dashbo
                         y editar es a lo que se viene cuando se abre una
                         publicación propia. La misma fila en las tres secciones. */}
                     <div data-job-actions={job.id} className="ccr-acciones-tarjeta relative grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_40px] gap-2">
-                      <Link href={`/empleos/${job.id}?from=${volverAqui}`} onClick={openInNewTabOnDesktop} className="inline-flex h-10 w-full items-center justify-center rounded-full border border-[#d7e1ea] px-3 text-xs font-bold text-[#162543]">{copy.view}</Link>
+                      <Link href={`/empleos/${job.id}?from=${volverAqui}`} className="inline-flex h-10 w-full items-center justify-center rounded-full border border-[#d7e1ea] px-3 text-xs font-bold text-[#162543]">{copy.view}</Link>
                       <button type="button" onClick={() => setEditingJob(job)} className="hidden h-10 w-full items-center justify-center rounded-full bg-[#009FD9] px-3 text-xs font-bold text-white transition-colors hover:bg-[#0089bb] lg:inline-flex">{copy.edit}</button>
                       <Link href={`/empleos/${job.id}/editar?from=panel`} className="inline-flex h-10 w-full items-center justify-center rounded-full bg-[#009FD9] px-3 text-xs font-bold text-white transition-colors hover:bg-[#0089bb] lg:hidden">{copy.edit}</Link>
                       {/* EL MISMO «···» Y LAS MISMAS DOS OPCIONES QUE EN

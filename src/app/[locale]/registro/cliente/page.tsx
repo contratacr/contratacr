@@ -1,5 +1,9 @@
 "use client";
 
+import { rutaInternaSegura } from "@/lib/navigation/ruta-interna";
+
+import { Link } from "@/i18n/navigation";
+
 import { FooterSoloWeb } from "@/components/landing/footer-solo-web";
 import { useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
@@ -48,7 +52,8 @@ export default function RegisterClientPage() {
   const [success, setSuccess] = useState(false);
   const [otpEmail, setOtpEmail] = useState<string | null>(null);
   const [oauthPhoto, setOauthPhoto] = useState<string | null>(null);
-  const panelHref = searchParams.get("redirect") || "/dashboard/profesional?mode=use";
+  // Solo una ruta interna válida; cualquier otra cosa cae al panel.
+  const panelHref = rutaInternaSegura(searchParams.get("redirect")) ?? "/dashboard/profesional?mode=use";
 
   async function completeSuccess() {
     const { data } = await createClient().auth.getUser();
@@ -371,16 +376,16 @@ export default function RegisterClientPage() {
 
               <p className="text-center text-xs text-[#68778d]">
                 {t.rich("terms", {
-                  terms: (c) => <a href={`/${locale}/terminos`} className="underline hover:text-[#374151]">{c}</a>,
-                  privacy: (c) => <a href={`/${locale}/privacidad`} className="underline hover:text-[#374151]">{c}</a>,
+                  terms: (c) => <Link href="/terminos" className="underline hover:text-[#374151]">{c}</Link>,
+                  privacy: (c) => <Link href="/privacidad" className="underline hover:text-[#374151]">{c}</Link>,
                 })}
               </p>
 
               <div className="text-center text-sm text-[#6b7280]">
                 {t("haveAccount")}{" "}
-                <a href={`/${locale}/login`} className="text-[#009FD9] font-medium hover:underline">
+                <Link href="/login" className="text-[#009FD9] font-medium hover:underline">
                   {t("signIn")}
-                </a>
+                </Link>
               </div>
             </form>
           </div>

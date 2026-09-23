@@ -670,8 +670,8 @@ export function ClientRegistrationModal({
                 <p className="text-center text-xs text-[#68778d] mt-3">
                   {t.rich("terms", {
                     // Inside the app the legal pages open in place (a new tab would leave the app).
-                    terms: (c) => nativeApp ? <Link href={`/${locale}/terminos`} className="underline hover:text-[#374151]">{c}</Link> : <a href="/terminos" target="_blank" rel="noopener noreferrer" className="underline hover:text-[#374151]">{c}</a>,
-                    privacy: (c) => nativeApp ? <Link href={`/${locale}/privacidad`} className="underline hover:text-[#374151]">{c}</Link> : <a href="/privacidad" target="_blank" rel="noopener noreferrer" className="underline hover:text-[#374151]">{c}</a>,
+                    terms: (c) => nativeApp ? <Link href={`/${locale}/terminos`} className="underline hover:text-[#374151]">{c}</Link> : <a href={`/${locale}/terminos`} target="_blank" rel="noopener noreferrer" className="underline hover:text-[#374151]">{c}</a>,
+                    privacy: (c) => nativeApp ? <Link href={`/${locale}/privacidad`} className="underline hover:text-[#374151]">{c}</Link> : <a href={`/${locale}/privacidad`} target="_blank" rel="noopener noreferrer" className="underline hover:text-[#374151]">{c}</a>,
                   })}
                 </p>
               )}

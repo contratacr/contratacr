@@ -94,8 +94,7 @@ instead of supabase.co.
 (memory + session storage, five minutes), which now notifies subscribers on every
 write and is cleared on sign-out. A section paints what the browser already has
 and re-fetches quietly; skeletons appear only on a first visit. Migrated: the five
-panel tabs (solicitudes, oportunidades/propuestas, solicitudes enviadas, proyectos,
-postulaciones, conexiones), the five admin tables/coverage (keyed by their filters,
+panel tabs (solicitudes, solicitudes enviadas, proyectos, conexiones), the five admin tables/coverage (keyed by their filters,
 so a page already seen is instant), chat threads (`chat:thread:*`, opened once →
 instant) and the public professional profile (`profile:<slug>`). The
 notification-driven prefetch now writes the exact keys the tabs read, so a toast

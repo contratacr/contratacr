@@ -28,7 +28,7 @@ const handlerRules = [
   [/^\/api\/ai-assistant(?:\/|$)/, "ai-assistant.spec.ts"],
   [/^\/api\/account(?:\/|$)/, "account-lifecycle.spec.ts"],
   [/^\/api\/auth(?:\/|$)/, "auth-support.spec.ts"],
-  [/^\/api\/(?:bookings|projects|proposals|reviews|support|quotes)(?:\/|$)/, "seeded-regression.spec.ts"],
+  [/^\/api\/(?:bookings|projects|reviews|support|quotes)(?:\/|$)/, "seeded-regression.spec.ts"],
   [/^\/api\/(?:jobs|offers)(?:\/|$)/, "marketplace-lifecycle.spec.ts"],
   [/^\/api\/direct-chat(?:\/|$)/, "direct-chat.spec.ts", true],
   [/^\/api\/(?:push|internal\/push)(?:\/|$)/, "push-outbox-contract.spec.ts"],
@@ -37,9 +37,9 @@ const handlerRules = [
   [/^\/api\/contact(?:\/|$)/, "whatsapp-review-followup.spec.ts"],
   [/^\/api\/(?:upload|media)(?:\/|$)/, "extended-lifecycle.spec.ts"],
   [/^\/api\/(?:register|cedula|cedula-available|add-cedula|verify-identity)(?:\/|$)/, "product-contract.spec.ts"],
-  [/^\/api\/(?:appeals|report|report-client|report-professional|portfolio-like|professional-followers|client\/connections)(?:\/|$)/, "interaction-surfaces.spec.ts"],
+  [/^\/api\/(?:appeals|report|report-client|report-professional|portfolio-like|client\/connections)(?:\/|$)/, "interaction-surfaces.spec.ts"],
   [/^\/api\/(?:public-availability|check-availability|professionals|buscar)(?:\/|$)/, "search-results.spec.ts"],
-  [/^\/api\/(?:analytics|attribution|translate|client-error|opportunities)(?:\/|$)/, "product-contract.spec.ts"],
+  [/^\/api\/(?:analytics|attribution|translate|client-error)(?:\/|$)/, "product-contract.spec.ts"],
   [/^\/api\/health$/, "health.spec.ts"],
 ];
 

@@ -474,10 +474,9 @@ test.describe("@seeded ContrataCR AI", () => {
     await gotoOK(page, "/es");
     const cases = [
       { prompt: "¿La verificación garantiza que el profesional es bueno?", action: "answer", answer: /no garantiza|no\. la verificación/i },
-      // Una respuesta enviada NO se edita (ver /api/proposals): para corregirla
-      // se retira y se responde de nuevo. El asistente dice eso; la prueba
-      // esperaba lo contrario.
-      { prompt: "¿Puedo editar una propuesta después de enviarla?", action: "open_dashboard", href: "tab=proposals", answer: /no se editan|no puedes editar|retira|escr.bele al cliente/i },
+      // Las propuestas salieron del producto: el asistente lo dice y manda al
+      // tablero de proyectos, donde se contacta al cliente por WhatsApp.
+      { prompt: "¿Puedo editar una propuesta después de enviarla?", action: "open_dashboard", href: "/es/proyectos", answer: /ya no hay propuestas|WhatsApp/i },
       { prompt: "¿El profesional puede reprogramar mi cita?", action: "answer", answer: /cliente reprograma|no\. el cliente/i },
       { prompt: "¿Puedo crear un proyecto sin cuenta?", action: "login", href: "/es/login", answer: /iniciar sesión/i },
       { prompt: "Me duele mucho el pecho, ¿busco un cardiólogo aquí?", action: "answer", answer: /9-1-1/i },
@@ -485,7 +484,7 @@ test.describe("@seeded ContrataCR AI", () => {
       { prompt: "¿Cómo cambio de cliente a profesional?", action: "open_dashboard", href: "/es/dashboard/profesional", answer: /selector Cliente \/ Profesional/i },
       { prompt: "¿Cómo agrego otro servicio a mi perfil?", action: "open_dashboard", href: "tab=services", answer: /servicio/i },
       { prompt: "¿Cómo cambio mi contraseña?", action: "open_dashboard", href: "tab=cuenta", answer: /contraseña/i },
-      { prompt: "¿Dónde reviso las oportunidades para mis servicios?", action: "open_dashboard", href: "tab=proposals", answer: /proyectos/i },
+      { prompt: "¿Dónde reviso las oportunidades para mis servicios?", action: "open_dashboard", href: "/es/proyectos", answer: /proyectos/i },
     ];
 
     for (const item of cases) {

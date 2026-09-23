@@ -1,5 +1,13 @@
 # Pendientes antes y después de publicar en producción
 
+> **Verificado el 23-sep-2026** con dos despachos en seco de `supabase-migrations.yml`
+> (`production` desde `main`, `test` desde `test`): los dos ambientes responden
+> «Remote database is up to date» hasta la **209**. La tabla de abajo es histórica.
+> La **210** (borra los disparadores de seguir, postularse y proponer) entra con
+> el bloque del 22/23-sep y se aplica primero en test y luego en producción,
+> antes de empujar `main`.
+
+
 Bitácora viva del bloque de trabajo de septiembre 2026 (captación de clientes,
 cotizaciones y precios). Cada punto dice qué falta y quién lo hace.
 

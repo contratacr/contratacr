@@ -4,29 +4,20 @@ import { useEffect, useState } from "react";
 import { Megaphone, Send, Loader2 } from "lucide-react";
 import { useAppDialog } from "@/hooks/use-app-dialog";
 
-/** Plantillas de temporada: el texto se puede editar antes de enviar. */
+/**
+ * UNA sola plantilla, la de la temporada que corre. Había tres (lluvias, fin
+ * de año, verano) y las tres prometían «recibe hasta 3 cotizaciones», un flujo
+ * que ya no existe: hoy el cliente publica y los profesionales de su zona le
+ * escriben por WhatsApp. Septiembre y octubre son los meses más lluviosos del
+ * año en Costa Rica, así que la de lluvias es la que va. El texto se puede
+ * editar antes de enviar; la campaña se mide por `utm_campaign` (el asunto).
+ */
 const PLANTILLAS = [
   {
     id: "lluvias",
-    nombre: "Antes de las lluvias",
-    subject: "Antes de que llueva fuerte: revisa canoas, techo y electricidad",
-    body: "Hola,\n\nSe viene la época de lluvias y es el mejor momento para adelantarse: limpiar canoas, revisar goteras en el techo y asegurarse de que la instalación eléctrica esté en orden.\n\nEn ContrataCR encuentras profesionales verificados con cédula, con reseñas y contacto directo por WhatsApp. Elige el tuyo o publica lo que necesitas y recibe hasta 3 cotizaciones sin compromiso.",
-    ctaLabel: "Publicar lo que necesito",
-    ctaPath: "/es/publicar-proyecto",
-  },
-  {
-    id: "fin-de-ano",
-    nombre: "Fin de año",
-    subject: "Deja la casa lista para diciembre",
-    body: "Hola,\n\nDiciembre llega con visitas, reuniones y poco tiempo. Pintura, limpieza profunda, jardinería o esa reparación pendiente: en ContrataCR lo resuelves con profesionales verificados de tu zona.\n\nPublica lo que necesitas y recibe hasta 3 cotizaciones sin compromiso.",
-    ctaLabel: "Publicar lo que necesito",
-    ctaPath: "/es/publicar-proyecto",
-  },
-  {
-    id: "verano",
-    nombre: "Verano",
-    subject: "Verano: aire acondicionado, piscina y pintura exterior",
-    body: "Hola,\n\nCon el calor llegan los mantenimientos de verano: aire acondicionado, limpieza de piscina y pintura exterior. En ContrataCR encuentras profesionales verificados con cédula y reseñas reales.\n\nElige el tuyo o cuéntanos qué necesitas y recibe hasta 3 cotizaciones.",
+    nombre: "Antes de las lluvias fuertes",
+    subject: "Se vienen las lluvias fuertes: revisa canoas, techo y electricidad esta semana",
+    body: "Hola,\n\nSeptiembre y octubre son los meses más lluviosos del año: canoas tapadas, goteras y cortos eléctricos aparecen todos a la vez, y los buenos profesionales se llenan rápido.\n\nAdelantate hoy: en ContrataCR publicas lo que necesitas en un minuto y los profesionales verificados de tu zona te escriben directo por WhatsApp. Sin comisiones y sin intermediarios.\n\n¿Ofreces servicios? Publica una promoción de temporada y aparece primero para quienes buscan justo ahora.",
     ctaLabel: "Publicar lo que necesito",
     ctaPath: "/es/publicar-proyecto",
   },

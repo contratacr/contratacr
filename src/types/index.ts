@@ -79,17 +79,7 @@ export type Project = {
   created_at: string;
 };
 
-export type ProposalStatus = "pending" | "accepted" | "declined";
 
-export type Proposal = {
-  id: string;
-  project_id: string;
-  professional_id: string;
-  price?: number;
-  message: string;
-  status: ProposalStatus;
-  created_at: string;
-};
 
 export type SearchFilters = {
   query?: string;

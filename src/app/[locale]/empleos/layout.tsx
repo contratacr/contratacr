@@ -13,6 +13,6 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
     locale,
     ruta: "/empleos",
     titulo: en ? 'Jobs and vacancies | ContrataCR' : 'Empleos y vacantes | ContrataCR',
-    descripcion: en ? 'Openings posted by professionals and companies in Costa Rica. Apply online with your résumé.' : 'Vacantes publicadas por profesionales y empresas de Costa Rica. Postúlate en línea con tu currículum.',
+    descripcion: en ? 'Openings posted by professionals and companies in Costa Rica. Open the posting and message whoever published it on WhatsApp.' : 'Vacantes publicadas por profesionales y empresas de Costa Rica. Postúlate en línea con tu currículum.',
   });
 }

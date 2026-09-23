@@ -89,7 +89,7 @@ export function QuotesSection({ proName, proSlug, puedeCrear = true }: { proName
       {quotes === null ? (
         // El MISMO esqueleto que el resto del panel: este se dibujaba a mano,
         // así que Cotizaciones cargaba distinto de todas las demás secciones.
-        <PanelListSkeleton rows={3} />
+        <PanelListSkeleton rows={3} compacto />
       ) : quotes.length === 0 ? (
         // El MISMO vacío que el resto del panel, en vez de uno dibujado a mano:
         // este llevaba esquinas más redondas, un título más grande y su propio

@@ -20,7 +20,6 @@ import type { SelectMenuOption } from "@/components/ui/select-menu";
 import { cn } from "@/lib/utils";
 import { StatusFilterTabs, PUBLICACION_ESTADO_TABS, publicacionBucket, sinFiltros } from "@/components/dashboard/status-filter-tabs";
 import { crTodayISO } from "@/lib/time-cr";
-import { openInNewTabOnDesktop } from "@/lib/desktop-new-tab";
 import { marketplaceLocale, offerTypeLabel } from "@/lib/marketplace-copy";
 import { invalidateAppData } from "@/lib/app-data-invalidation";
 
@@ -189,7 +188,7 @@ export function OffersManager({ initialOffers, embedded = false, backHref = "/da
             const displayStatus = effectiveOfferStatus(offer, crTodayISO());
             return (
               <article key={offer.id} className="relative overflow-visible rounded-2xl border border-[#e5e7eb] bg-white shadow-[0_2px_8px_rgba(15,23,42,0.06)]">
-                <button type="button" onClick={() => setOpenId(isOpen ? null : offer.id)} className="relative grid h-28 w-full grid-cols-[52px_minmax(0,1fr)] items-center gap-3 px-4 pr-11 text-left sm:h-24 sm:grid-cols-[56px_minmax(0,1fr)] sm:gap-4 sm:px-5 sm:pr-12">
+                <button type="button" onClick={() => setOpenId(isOpen ? null : offer.id)} aria-expanded={isOpen} className="relative grid h-28 w-full grid-cols-[52px_minmax(0,1fr)] items-center gap-3 px-4 pr-11 text-left sm:h-24 sm:grid-cols-[56px_minmax(0,1fr)] sm:gap-4 sm:px-5 sm:pr-12">
                   {/* La misma caja que Mis proyectos y Favoritos: antes el icono
                       iba suelto, sin fondo, y la fila no se parecía a las de al
                       lado. SIN RELIEVE: en una lista, diez degradados con
@@ -235,7 +234,7 @@ export function OffersManager({ initialOffers, embedded = false, backHref = "/da
                         y editar es a lo que se viene cuando se abre una
                         publicación propia. La misma fila en las tres secciones. */}
                     <div data-offer-actions={offer.id} className="ccr-acciones-tarjeta relative grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_40px] gap-2">
-                      <Link href={`/ofertas/${offer.id}?from=${volverAqui}`} onClick={openInNewTabOnDesktop} className="inline-flex h-10 w-full items-center justify-center rounded-full border border-[#d7e1ea] px-3 text-xs font-bold text-[#162543]">{copy.view}</Link>
+                      <Link href={`/ofertas/${offer.id}?from=${volverAqui}`} className="inline-flex h-10 w-full items-center justify-center rounded-full border border-[#d7e1ea] px-3 text-xs font-bold text-[#162543]">{copy.view}</Link>
                       <button type="button" onClick={() => setEditingOffer(offer)} className="hidden h-10 w-full items-center justify-center rounded-full bg-[#009FD9] px-3 text-xs font-bold text-white transition-colors hover:bg-[#0089bb] lg:inline-flex">{copy.edit}</button>
                       <Link href={`/ofertas/${offer.id}/editar?from=panel`} className="inline-flex h-10 w-full items-center justify-center rounded-full bg-[#009FD9] px-3 text-xs font-bold text-white transition-colors hover:bg-[#0089bb] lg:hidden">{copy.edit}</Link>
                       {/* LAS MISMAS DOS OPCIONES QUE EN EMPLEOS Y PROYECTOS.

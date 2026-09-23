@@ -11,11 +11,19 @@ function Hueso({ className }: { className: string }) {
 // Barra superior a la altura del encabezado real, para que no salte al llegar.
 function BarraSuperior() {
   return (
-    <div className="flex h-16 items-center gap-3 bg-white px-4">
-      <Hueso className="h-9 w-9 rounded-xl" />
-      <Hueso className="h-5 w-36 rounded-full" />
-      <span className="flex-1" />
-      <Hueso className="h-9 w-9 rounded-full" />
+    // En computadora la barra real vive en un contenedor centrado (logo a la
+    // izquierda del contenedor, no del borde); el esqueleto tenía siempre la
+    // forma del teléfono y el logo saltaba de x=16 al centro al llegar.
+    <div className="bg-white">
+      <div className="mx-auto flex h-16 max-w-7xl items-center gap-3 px-4 lg:px-8">
+        <Hueso className="h-9 w-9 rounded-xl lg:hidden" />
+        <Hueso className="h-5 w-36 rounded-full lg:h-7 lg:w-40" />
+        <span className="flex-1" />
+        <Hueso className="hidden h-11 w-96 rounded-full lg:block" />
+        <span className="hidden flex-1 lg:block" />
+        <Hueso className="h-9 w-9 rounded-full" />
+        <Hueso className="hidden h-9 w-9 rounded-full lg:block" />
+      </div>
     </div>
   );
 }

@@ -65,7 +65,7 @@ test.describe("@seeded interaction surfaces", () => {
   // «...» donde no. Devuelve cuando el gesto ya se disparó.
   async function alternarGuardado(page: import("playwright/test").Page) {
     const boton = page.locator("[data-save-button]").filter({ visible: true }).first();
-    const opciones = page.getByRole("button", { name: /^(Options|Opciones|More|Más)$/i }).filter({ visible: true }).first();
+    const opciones = page.getByRole("button", { name: /^(Options|Opciones|More|Más|Más opciones|More options)$/i }).filter({ visible: true }).first();
     // Esperar a que aparezca UNO de los dos antes de decidir: `count()` no
     // espera, y con la ficha todavía cargando daba 0 y la prueba se iba a
     // buscar el «···» del teléfono en computadora (15 s colgada, a veces).
@@ -76,7 +76,7 @@ test.describe("@seeded interaction surfaces", () => {
       await expect(boton).not.toHaveAttribute("aria-pressed", antes ?? "false");
       return;
     }
-    await page.getByRole("button", { name: /^(Options|Opciones|More|Más)$/i }).filter({ visible: true }).first().click();
+    await page.getByRole("button", { name: /^(Options|Opciones|More|Más|Más opciones|More options)$/i }).filter({ visible: true }).first().click();
     await page.getByRole("menuitem", { name: /Save|Saved|Guardar|Guardado/i }).first().click();
   }
 
@@ -118,76 +118,6 @@ test.describe("@seeded interaction surfaces", () => {
     }
   });
 
-  test("the followers endpoint only lets a professional remove their own follower", async ({ page }) => {
-    // La pantalla de seguidores salió del panel con el gesto de Seguir
-    // (553536d1), pero el endpoint sigue vivo para las cuentas que ya tenían
-    // relaciones: lo que hay que sostener es que NADIE pueda borrar una
-    // relación ajena.
-    const admin = regressionAdminClient();
-    let owner: DisposableAccount | undefined;
-    let follower: DisposableAccount | undefined;
-    try {
-      owner = await createDisposableAccount({ prefix: "remove-follower-owner", professional: true });
-      follower = await createDisposableAccount({ prefix: "remove-follower-source", professional: true });
-      const { data: relation, error: relationError } = await admin
-        .from("professional_follows")
-        .insert({ follower_id: follower.id, professional_id: owner.professionalId! })
-        .select("id")
-        .single();
-      if (relationError || !relation) throw relationError ?? new Error("Could not create disposable follower relation");
-      const { data: foreignRelation, error: foreignRelationError } = await admin
-        .from("professional_follows")
-        .insert({ follower_id: owner.id, professional_id: follower.professionalId! })
-        .select("id")
-        .single();
-      if (foreignRelationError || !foreignRelation) {
-        throw foreignRelationError ?? new Error("Could not create foreign ownership guard relation");
-      }
-
-      await loginAs(page, owner.email, owner.password);
-
-      // Una relación de la que no se es dueño se rechaza sin tocar nada.
-      const foreignDelete = await apiJson<{ success?: boolean; removed?: boolean }>(page, "/api/professional-followers", {
-        method: "DELETE",
-        body: { followId: foreignRelation.id },
-      });
-      expect(foreignDelete.status).toBe(200);
-      expect(foreignDelete.body).toMatchObject({ success: true, removed: false });
-      const { count: foreignRelationCount } = await admin
-        .from("professional_follows")
-        .select("id", { count: "exact", head: true })
-        .eq("id", foreignRelation.id);
-      expect(foreignRelationCount).toBe(1);
-
-      // La propia sí se retira.
-      const ownDelete = await apiJson<{ success?: boolean; removed?: boolean }>(page, "/api/professional-followers", {
-        method: "DELETE",
-        body: { followId: relation.id },
-      });
-      expect(ownDelete.status).toBe(200);
-      expect(ownDelete.body).toMatchObject({ success: true, removed: true });
-      await expect.poll(async () => {
-        const { count } = await admin
-          .from("professional_follows")
-          .select("id", { count: "exact", head: true })
-          .eq("id", relation.id);
-        return count ?? 0;
-      }).toBe(0);
-      await admin.from("professional_follows").delete().eq("id", foreignRelation.id);
-    } finally {
-      if (owner) {
-        await admin.from("notifications").delete().contains("data", { follower_id: owner.id });
-      }
-      if (follower) {
-        await admin.from("notifications").delete().contains("data", { follower_id: follower.id });
-      }
-      await cleanupDisposableAccount(follower);
-      await cleanupDisposableAccount(owner);
-    }
-  });
-
-  // Los filtros de Favoritos son por TIPO, no por etapa: se dibujan siempre,
-  // también con la lista vacía, porque dicen qué se puede guardar.
   test("empty favorites keep the type filters in English", async ({ page }) => {
     let account: DisposableAccount | undefined;
     try {

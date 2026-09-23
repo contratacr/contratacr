@@ -18,7 +18,7 @@ export type StoredNotificationPush = {
 
 let durableOutboxDetected = false;
 
-async function hasDurablePushOutbox() {
+export async function hasDurablePushOutbox() {
   if (durableOutboxDetected) return true;
   const { error } = await createAdminClient()
     .from("notification_push_outbox")

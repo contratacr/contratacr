@@ -75,11 +75,17 @@ test.describe("@seeded professional profile", () => {
     // junto al título); en computadora es el enlace de la página. Los dos llevan
     // al mismo sitio, así que la prueba toma el que exista.
     const enTelefono = (page.viewportSize()?.width ?? 1280) < 1024;
-    const volver = enTelefono
-      ? page.locator("[data-ccr-section-back]")
-      : page.getByRole("link", { name: /Volver a resultados|Back to results/i });
-    await volver.first().click();
-    await expect(page).toHaveURL(/\/es\/buscar\?categoria=enfermeria$/);
+    // En computadora la ficha NO dibuja «Volver a resultados»: la flecha del
+    // navegador ya hace eso (ver sin-volver-en-computadora.spec.ts). En el
+    // teléfono el «volver» vive en la barra superior y sí se comprueba.
+    if (enTelefono) {
+      await page.locator("[data-ccr-section-back]").first().click();
+      await expect(page).toHaveURL(/\/es\/buscar\?categoria=enfermeria$/);
+    } else {
+      // Sin ese viaje, volver a la misma dirección sería solo un cambio de
+      // ancla (#resenas) y no habría respuesta que esperar.
+      await gotoOK(page, "/es");
+    }
 
     await gotoOK(page, reviewsHref);
     await expect(page.getByRole("heading", { name: /Reseñas|Reviews/i }).first()).toBeVisible();
@@ -151,7 +157,7 @@ test.describe("@seeded professional profile", () => {
     } else {
       // En el teléfono Guardar vive en el «···» y en la ficha propia no se
       // ofrece: lo que se prueba es que no esté.
-      await page.getByRole("button", { name: /^(Options|Opciones|More|Más)$/i }).filter({ visible: true }).first().click({ timeout: 10_000 });
+      await page.getByRole("button", { name: /^(Options|Opciones|More|Más|Más opciones|More options)$/i }).filter({ visible: true }).first().click({ timeout: 10_000 });
       // «Compartir» donde hay hoja del sistema, «Copiar enlace» donde no.
       await expect(page.getByRole("menuitem", { name: /Compartir|Share|Copiar enlace|Copy link/i }).first()).toBeVisible();
       await expect(page.getByRole("menuitem", { name: /^(Save|Saved|Guardar|Guardado)$/i })).toHaveCount(0);

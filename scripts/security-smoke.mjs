@@ -63,61 +63,7 @@ if (requiredActivityRpcRules.some((rule) => !rule.test(activityRpcSql))) {
   process.exit(1);
 }
 
-const resumeSecurityFiles = {
-  upload: "src/app/api/jobs/resume/route.ts",
-  list: "src/app/api/jobs/applications/route.ts",
-  download: "src/app/api/jobs/applications/[id]/resume/route.ts",
-  manager: "src/components/jobs/jobs-manager.tsx",
-  // El botón de ver el CV se mudó a su propio componente: la ruta protegida vive
-  // ahí, no en la lista del empleador.
-  viewer: "src/components/jobs/visor-cv.tsx",
-};
-
-for (const [label, file] of Object.entries(resumeSecurityFiles)) {
-  if (!fs.existsSync(file)) {
-    console.error(`Missing protected resume ${label} implementation: ${file}`);
-    process.exit(1);
-  }
-}
-
-const resumeUpload = fs.readFileSync(resumeSecurityFiles.upload, "utf8");
-const applicationList = fs.readFileSync(resumeSecurityFiles.list, "utf8");
-const resumeDownload = fs.readFileSync(resumeSecurityFiles.download, "utf8");
-const jobsManager = fs.readFileSync(resumeSecurityFiles.manager, "utf8");
-const resumeViewer = fs.readFileSync(resumeSecurityFiles.viewer, "utf8");
-
-const resumeSecurityRules = [
-  {
-    ok: /return\s+NextResponse\.json\(\{\s*url:\s*path,\s*name,\s*path\s*\}/s.test(resumeUpload),
-    message: "Resume uploads must return the private object path, not a reusable signed URL.",
-  },
-  {
-    ok: /resumeUrl:\s*application\.resume_url\s*\?\s*`\/api\/jobs\/applications\/\$\{application\.id\}\/resume`\s*:\s*null/.test(applicationList),
-    message: "Application responses must expose only the protected resume route.",
-  },
-  {
-    ok: /application\.applicant_id\s*===\s*user\.id/.test(resumeDownload)
-      && /employer\?\.profile_id\s*===\s*user\.id/.test(resumeDownload)
-      && /resumeBelongsToApplicant/.test(resumeDownload)
-      && /createSignedUrl\(path,\s*5\s*\*\s*60/.test(resumeDownload),
-    message: "Resume downloads must authorize applicant/employer ownership and use a short-lived URL.",
-  },
-  {
-    // Lo que importa es que NADIE enlace el valor guardado y que el CV se pida
-    // siempre por la ruta protegida, la arme la lista o el visor.
-    ok: !/href=\{application\.resume_url\}/.test(jobsManager)
-      && !/href=\{[^}]*resume_url[^}]*\}/.test(resumeViewer)
-      && (/\/api\/jobs\/applications\/\$\{application\.id\}\/resume/.test(jobsManager)
-        || /\/api\/jobs\/applications\/\$\{applicationId\}\/resume/.test(resumeViewer)),
-    message: "Employer UI must never link directly to the stored resume value.",
-  },
-];
-
-for (const rule of resumeSecurityRules) {
-  if (!rule.ok) {
-    console.error(rule.message);
-    process.exit(1);
-  }
-}
+// El flujo de currículums (postularse a un empleo) salió del producto: sus
+// rutas y su visor ya no existen, así que no hay nada que vigilar ahí.
 
 console.log("Security smoke checks passed.");

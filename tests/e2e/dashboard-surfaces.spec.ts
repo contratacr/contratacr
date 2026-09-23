@@ -30,7 +30,6 @@ const clientTabs = [
   { tab: "home&mode=use", marker: /Mis proyectos|My projects/i },
   { tab: "profile&mode=use", marker: /Perfil|Profile/i },
   { tab: "sent_projects", marker: /Mis proyectos|My projects/i },
-  { tab: "applications", marker: /Mis postulaciones|My applications/i },
   { tab: "connections", marker: /Volver a contratar|Hire again/i },
   { tab: "saved", marker: /Favoritos|Favorites/i },
   { tab: "notifications&mode=use", marker: /Notificaciones|Notifications/i },
