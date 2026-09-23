@@ -2595,6 +2595,27 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                     aria-controls="native-service-suggestions"
                     aria-expanded={showNativeServiceSuggestions}
                   />
+                  {/* El campo del servicio también se limpia. La flecha de la
+                      izquierda CIERRA el buscador, que es otra cosa: quien
+                      quería corregir lo escrito no tenía cómo, salvo borrar
+                      letra por letra —y la ubicación, justo debajo, sí tenía
+                      su equis—. Misma pieza, mismo sitio, misma medida. */}
+                  {searchQuery && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSearchQuery("");
+                        setSearchCategoryId(null);
+                        setSearchActiveIdx(-1);
+                        setSearchFocused(true);
+                        nativeSearchInputRef.current?.focus();
+                      }}
+                      className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[#eef2f6] text-[#8a97a8]"
+                      aria-label={locale === "en" ? "Clear service" : "Limpiar servicio"}
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  )}
                 </div>
                 <div className="flex h-13 min-w-0 items-center rounded-[10px] border border-[#e5e7eb] bg-white px-3">
                   <MapPin className="ml-2 h-6 w-6 shrink-0 text-[#1A2744]" />

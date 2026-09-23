@@ -168,7 +168,12 @@ test.describe("@mobile native shell contracts", () => {
     await expect(main).toBeVisible();
     await expect(page.locator("header.ccr-app-header:visible")).toHaveCount(0);
 
-    const geometry = await page.evaluate(() => {
+    // La franja reservada la quita el armazón nativo DESPUÉS de hidratar, así
+    // que esta medición hay que sondearla: leerla de una agarraba la cabecera
+    // 64 px más abajo —el alto de la reserva— y la prueba alternaba verde y
+    // rojo entre corridas sin que nadie tocara nada. La otra prueba de este
+    // mismo archivo ya sondeaba por esa razón; a esta le faltaba.
+    const leerGeometria = () => page.evaluate(() => {
       const headerElement = document.querySelector<HTMLElement>("section.ccr-marketplace-sticky");
       const mainElement = document.querySelector<HTMLElement>("main");
       if (!headerElement || !mainElement) return null;
@@ -176,6 +181,8 @@ test.describe("@mobile native shell contracts", () => {
       const mainRect = mainElement.getBoundingClientRect();
       return { headerTop: headerRect.top, headerHeight: headerRect.height, mainTop: mainRect.top };
     });
+    await expect.poll(async () => (await leerGeometria())?.headerTop ?? -1, { timeout: 8_000 }).toBeLessThanOrEqual(1);
+    const geometry = await leerGeometria();
     expect(geometry).not.toBeNull();
     expect(geometry!.headerTop).toBeLessThanOrEqual(1);
     expect(geometry!.headerHeight).toBeGreaterThan(40);
