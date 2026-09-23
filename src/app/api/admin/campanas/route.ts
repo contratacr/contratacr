@@ -149,7 +149,7 @@ export async function POST(request: Request) {
   const replyTo = { email: "soporte@contratacr.com", name: "ContrataCR" };
 
   if (payload.mode !== "all") {
-    const result = await sendBrevoEmail({ to: admin.email, subject: `[PRUEBA] ${subject}`, html, replyTo });
+    const result = await sendBrevoEmail({ to: admin.email, subject: `[PRUEBA] ${subject}`, html, replyTo, nivel: "masivo" });
     return NextResponse.json({ mode: "test", to: admin.email, ...result });
   }
 
@@ -177,7 +177,7 @@ export async function POST(request: Request) {
 
   let sent = 0, failed = 0, skipped = 0;
   for (const client of tanda) {
-    const result = await sendBrevoEmail({ to: client.email, subject, html, replyTo });
+    const result = await sendBrevoEmail({ to: client.email, subject, html, replyTo, nivel: "masivo" });
     if (result.ok) {
       sent += 1;
       // Se anota SOLO lo que salió: lo que falló vuelve a intentarse mañana.

@@ -493,7 +493,9 @@ export async function PATCH(req: Request) {
     // human sees it inside the 24-hour window. A delivery failure never blocks
     // the user, who is already protected by the blocked conversation.
     const escaped = reportReason.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    // Un aviso: molesta perderlo, pero nadie se queda afuera por eso.
     void sendBrevoEmail({
+      nivel: "normal",
       to: "soporte@contratacr.com",
       replyTo: user.email ?? undefined,
       subject: `[Reporte] Mensaje directo bloqueado — conversación ${conversationId.slice(0, 8)}`,

@@ -83,7 +83,9 @@ export async function notifyRecipientOutsideApp({
   const email = authUser?.user?.email ?? null;
   const tasks: Promise<unknown>[] = [];
   if (email) {
+    // Aviso, no puerta de entrada: cede antes que los correos de cuenta.
     tasks.push(sendBrevoEmail({
+      nivel: "normal",
       to: email,
       subject: `${senderName} te escribió en ContrataCR`,
       html: emailHtml({ origin, senderName, preview, threadUrl }),

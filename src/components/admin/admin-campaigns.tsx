@@ -35,6 +35,11 @@ export function AdminCampaigns() {
   // Cuántos faltan de ESTA campaña y cuándo se puede mandar la próxima tanda.
   const [tanda, setTanda] = useState({ porTanda: 200, enviados: 0, restantes: 0, horasParaLaProxima: 0 });
   const [adminEmail, setAdminEmail] = useState("");
+  // Cuánto correo queda HOY. Los 300 diarios del plan gratuito los comparten
+  // esta campaña con los correos que el app necesita mandar (crear cuenta,
+  // recuperar contraseña, soporte). Este número es el que dice si vale la pena
+  // pagar el plan o esperar a mañana.
+  const [cuota, setCuota] = useState<{ enviados: number; tope: number; restantes: number; margenMasivo: number } | null>(null);
   const [plantilla, setPlantilla] = useState(PLANTILLAS[0]);
   const [subject, setSubject] = useState(PLANTILLAS[0].subject);
   const [body, setBody] = useState(PLANTILLAS[0].body);
@@ -54,6 +59,17 @@ export function AdminCampaigns() {
         horasParaLaProxima: Number(d.horasParaLaProxima ?? 0),
       });
     } catch { setClientes(0); }
+    try {
+      const c = await (await fetch("/api/admin/correo")).json();
+      if (typeof c?.enviados === "number") {
+        setCuota({
+          enviados: c.enviados,
+          tope: c.tope,
+          restantes: c.restantes,
+          margenMasivo: c.margenPorNivel?.masivo ?? 0,
+        });
+      }
+    } catch { /* el contador es informativo: si falla, la pantalla sigue */ }
   }
   // El estado se pide en el cuadro siguiente: llamarlo derecho dentro del
   // efecto encadena renders (lo marca el linter), y aquí no corre prisa.
@@ -108,6 +124,20 @@ export function AdminCampaigns() {
         <h1 className="flex items-center gap-2 text-2xl font-extrabold text-[#162543]"><Megaphone className="h-6 w-6 text-[#009FD9]" />Campañas por correo</h1>
         <p className="mt-1 text-sm text-[#68778d]">Avisos de temporada a todas las cuentas registradas, clientes y profesionales: un profesional también contrata. {clientes === null ? "Contando…" : `${clientes} cuentas con correo.`}</p>
       </div>
+
+      {cuota && (
+        <div className={`rounded-2xl border p-4 ${cuota.margenMasivo > 0 ? "border-[#d7e1ea] bg-white" : "border-amber-200 bg-amber-50"}`}>
+          <p className="text-[11px] font-extrabold uppercase tracking-[0.08em] text-[#8a94a6]">Correo de hoy</p>
+          <p className="mt-1 text-[15px] font-bold text-[#162543]">
+            {cuota.enviados} de {cuota.tope} enviados · quedan {cuota.margenMasivo} para campañas
+          </p>
+          <p className="mt-1 text-[13px] leading-snug text-[#68778d]">
+            {cuota.margenMasivo > 0
+              ? `Los ${cuota.tope} del día se comparten con los correos que el app necesita mandar. Una campaña deja de salir cuando quedan 100 libres, para que nadie se quede sin su código de cuenta ni sin respuesta de soporte.`
+              : `Hoy ya no salen campañas: quedan ${cuota.restantes} correos y están reservados para crear cuentas, recuperar contraseñas y soporte. Vuelve mañana o sube de plan.`}
+          </p>
+        </div>
+      )}
 
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_380px]">
         <div className="space-y-4 rounded-2xl border border-[#e5e7eb] bg-white p-5">

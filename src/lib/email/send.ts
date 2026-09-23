@@ -1,3 +1,4 @@
+import { hayCupoPara, registrarEnvio, type NivelDeCorreo } from "@/lib/email/cuota";
 // Single send path for ALL of the app's CODE-SENT email — Brevo transactional API.
 // Every email the app sends from its own code (verification status, support inbox +
 // replies, notifications, reports, new-ticket) routes through here, so the
@@ -73,6 +74,15 @@ export async function sendBrevoEmail(opts: {
   to: string | undefined | null;
   subject: string;
   html: string;
+  /**
+   * Qué tan imprescindible es este correo. Decide si sale cuando el día se
+   * está acabando: los 300 diarios del plan gratuito los comparten los correos
+   * que el app NECESITA mandar con los avisos y con las campañas.
+   *
+   * Por defecto `critico`: quien no lo declara es porque manda algo de entrar a
+   * la cuenta o de soporte, y ante la duda es mejor que salga.
+   */
+  nivel?: NivelDeCorreo;
   /** Reply-To — e.g. the user's email on a support-inbox notification, so a human
    *  reply from the inbox goes to them. */
   replyTo?: string | { email: string; name?: string };
@@ -83,6 +93,11 @@ export async function sendBrevoEmail(opts: {
   const key = process.env.BREVO_API_KEY;
   if (!key) return { ok: false, status: "skipped", detail: "Brevo not configured (BREVO_API_KEY missing)" };
   if (!opts.to) return { ok: false, status: "skipped", detail: "No recipient email" };
+
+  const nivel = opts.nivel ?? "critico";
+  if (!(await hayCupoPara(nivel))) {
+    return { ok: false, status: "skipped", detail: `Sin cupo diario para correo de nivel ${nivel}` };
+  }
 
   const replyTo =
     typeof opts.replyTo === "string" ? { email: opts.replyTo } : opts.replyTo;
@@ -107,6 +122,7 @@ export async function sendBrevoEmail(opts: {
       console.error("[brevo] send failed:", res.status, txt);
       return { ok: false, status: "failed", detail: `HTTP ${res.status} ${txt}` };
     }
+    await registrarEnvio(nivel);
     return { ok: true, status: "sent", detail: null };
   } catch (err) {
     console.error("[brevo] send error:", err);
