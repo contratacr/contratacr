@@ -25,6 +25,8 @@ type AdminProject = {
   completed_at: string | null;
   work_done_at: string | null;
   archived_by_client: boolean;
+  /** Falso solo en los publicados antes del tablero público: no salen ahí. */
+  allow_direct_contact: boolean;
   for_someone_else: boolean;
   beneficiary_name: string | null;
   beneficiary_dob: string | null;
@@ -173,6 +175,32 @@ export function AdminProjects() {
   }, [q]);
 
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [publicandoId, setPublicandoId] = useState<string | null>(null);
+  // Un proyecto abierto de antes del tablero no lo ve NADIE hoy: bajo la regla
+  // vieja lo veían los profesionales de su oficio en «Oportunidades», y esa
+  // pestaña ya no existe. Esto le devuelve audiencia, con el alcance mayor que
+  // eso implica; por eso lo decide un administrador y queda en la bitácora.
+  async function publicarEnTablero(id: string) {
+    if (!window.confirm("El proyecto saldrá en el tablero público /proyectos, donde lo ve cualquiera. ¿Continuar?")) return;
+    setPublicandoId(id);
+    try {
+      const res = await fetch("/api/admin/projects", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, action: "publicar_en_tablero" }),
+      });
+      if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || "No se pudo publicar.");
+      setListing((current) => ({
+        ...current,
+        items: current.items.map((item) => (item.id === id ? { ...item, allow_direct_contact: true } : item)),
+      }));
+    } catch (error) {
+      window.alert(error instanceof Error ? error.message : "No se pudo publicar.");
+    } finally {
+      setPublicandoId(null);
+    }
+  }
+
   async function removeProject(id: string) {
     if (!window.confirm("Esta eliminación es permanente: el proyecto y sus propuestas desaparecen. ¿Deseas continuar?")) return;
     setDeletingId(id);
@@ -314,6 +342,17 @@ export function AdminProjects() {
                         <p className="mt-1 text-xs text-[#68778d]">Creada: {fmtDateTime(project.created_at)} · ID: {project.id.slice(0, 8)}</p>
                       </div>
                       <div className="sm:col-span-2 lg:col-span-1 xl:col-span-2">
+                        {project.status === "open" && !project.allow_direct_contact && (
+                          <button
+                            type="button"
+                            disabled={publicandoId === project.id}
+                            onClick={() => void publicarEnTablero(project.id)}
+                            className="inline-flex h-8 items-center gap-1 rounded-lg px-2.5 text-xs font-semibold text-[#007fae] hover:bg-[#eaf6fc] disabled:opacity-60"
+                          >
+                            {publicandoId === project.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
+                            Publicar en el tablero
+                          </button>
+                        )}
                         <button
                           type="button"
                           disabled={deletingId === project.id}

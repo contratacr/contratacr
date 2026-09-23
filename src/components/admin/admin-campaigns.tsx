@@ -32,6 +32,8 @@ const PLANTILLAS = [
 export function AdminCampaigns() {
   const { dialogNode, showMessage, confirm } = useAppDialog();
   const [clientes, setClientes] = useState<number | null>(null);
+  // Cuántos faltan de ESTA campaña y cuándo se puede mandar la próxima tanda.
+  const [tanda, setTanda] = useState({ porTanda: 200, enviados: 0, restantes: 0, horasParaLaProxima: 0 });
   const [adminEmail, setAdminEmail] = useState("");
   const [plantilla, setPlantilla] = useState(PLANTILLAS[0]);
   const [subject, setSubject] = useState(PLANTILLAS[0].subject);
@@ -40,9 +42,28 @@ export function AdminCampaigns() {
   const [ctaPath, setCtaPath] = useState(PLANTILLAS[0].ctaPath);
   const [enviando, setEnviando] = useState<"test" | "all" | null>(null);
 
+  async function cargarEstado() {
+    try {
+      const d = await (await fetch(`/api/admin/campanas?asunto=${encodeURIComponent(subject)}`)).json();
+      setClientes(Number(d.clients ?? 0));
+      setAdminEmail(String(d.adminEmail ?? ""));
+      setTanda({
+        porTanda: Number(d.porTanda ?? 200),
+        enviados: Number(d.enviados ?? 0),
+        restantes: Number(d.restantes ?? d.clients ?? 0),
+        horasParaLaProxima: Number(d.horasParaLaProxima ?? 0),
+      });
+    } catch { setClientes(0); }
+  }
+  // El estado se pide en el cuadro siguiente: llamarlo derecho dentro del
+  // efecto encadena renders (lo marca el linter), y aquí no corre prisa.
   useEffect(() => {
-    void fetch("/api/admin/campanas").then((r) => r.json()).then((d) => { setClientes(Number(d.clients ?? 0)); setAdminEmail(String(d.adminEmail ?? "")); }).catch(() => setClientes(0));
-  }, []);
+    const id = requestAnimationFrame(() => { void cargarEstado(); });
+    return () => cancelAnimationFrame(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [subject]);
+
+
 
   function usarPlantilla(id: string) {
     const p = PLANTILLAS.find((x) => x.id === id) ?? PLANTILLAS[0];
@@ -52,8 +73,8 @@ export function AdminCampaigns() {
   async function enviar(mode: "test" | "all") {
     if (mode === "all") {
       const { confirmed, value } = await confirm({
-        title: `¿Enviar a ${clientes ?? 0} cuentas?`,
-        description: "Se envía de inmediato a todas las cuentas de cliente activas con correo. No se puede deshacer.",
+        title: `¿Enviar a ${Math.min(tanda.porTanda, tanda.restantes)} cuentas?`,
+        description: `Sale ahora a las primeras ${tanda.porTanda} que faltan (quedan ${tanda.restantes} de ${clientes ?? 0}). El resto se manda mañana: el proveedor solo deja 300 correos por día y esos mismos los usa el soporte del app. No se puede deshacer.`,
         confirmLabel: "Enviar ahora",
         tone: "danger",
         input: { label: "Escribe ENVIAR para confirmar", placeholder: "ENVIAR" },
@@ -66,7 +87,14 @@ export function AdminCampaigns() {
       const d = await res.json();
       if (!res.ok) { await showMessage({ title: "No se pudo enviar", description: d.error ?? "Intenta de nuevo.", tone: "danger" }); return; }
       if (mode === "test") await showMessage({ title: d.ok ? "Prueba enviada" : "La prueba no salió", description: d.ok ? `Revisa ${d.to}.` : String(d.detail ?? ""), tone: d.ok ? "success" : "danger" });
-      else await showMessage({ title: "Campaña enviada", description: `Enviados ${d.sent} · fallidos ${d.failed} · omitidos ${d.skipped} de ${d.total}.`, tone: "success" });
+      else {
+        await showMessage({
+          title: d.completa ? "Campaña completa" : "Tanda enviada",
+          description: `Enviados ${d.sent} · fallidos ${d.failed} · omitidos ${d.skipped}. ${d.completa ? "No queda nadie por recibirla." : `Quedan ${d.restantes}: la próxima tanda se puede mandar en 24 horas.`}`,
+          tone: "success",
+        });
+        await cargarEstado();
+      }
     } finally {
       setEnviando(null);
     }
@@ -98,8 +126,8 @@ export function AdminCampaigns() {
             <button type="button" disabled={!!enviando} onClick={() => void enviar("test")} className="inline-flex h-11 items-center justify-center gap-2 rounded-full border border-[#d7e1ea] bg-white px-5 text-sm font-bold text-[#162543] transition hover:border-[#b9c8d6] hover:bg-[#f6f9fb] disabled:opacity-60">
               {enviando === "test" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}Enviarme una prueba{adminEmail ? ` (${adminEmail})` : ""}
             </button>
-            <button type="button" disabled={!!enviando || !clientes} onClick={() => void enviar("all")} className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[#009FD9] px-5 text-sm font-bold text-white transition hover:bg-[#0089bb] disabled:opacity-60">
-              {enviando === "all" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Megaphone className="h-4 w-4" />}Enviar a {clientes ?? 0} cuentas
+            <button type="button" disabled={!!enviando || !clientes || tanda.restantes === 0 || tanda.horasParaLaProxima > 0} onClick={() => void enviar("all")} className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[#009FD9] px-5 text-sm font-bold text-white transition hover:bg-[#0089bb] disabled:opacity-60">
+              {enviando === "all" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Megaphone className="h-4 w-4" />}{tanda.horasParaLaProxima > 0 ? `Disponible en ${tanda.horasParaLaProxima} h` : tanda.restantes === 0 ? "Ya la recibieron todos" : `Enviar a ${Math.min(tanda.porTanda, tanda.restantes)} (quedan ${tanda.restantes})`}
             </button>
           </div>
         </div>

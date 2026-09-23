@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getApiAdmin } from "@/lib/auth/admin";
+import { auditUserAction } from "@/lib/audit/user-action";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getCategoryLabel } from "@/lib/data/categories";
 import { getCantonById, getProvinceById } from "@/lib/data/cr-geography";
@@ -32,6 +33,7 @@ type ProjectRow = {
   completed_at: string | null;
   work_done_at: string | null;
   archived_by_client: boolean | null;
+  allow_direct_contact: boolean | null;
   for_someone_else: boolean | null;
   beneficiary_name: string | null;
   beneficiary_dob: string | null;
@@ -101,7 +103,7 @@ export async function GET(req: Request) {
         budget_min, budget_max, timeline, client_identity_status,
         client_name_snapshot, client_email_snapshot, client_phone_snapshot,
         client_id, accepted_professional_id, created_at, updated_at,
-        completed_at, work_done_at, archived_by_client,
+        completed_at, work_done_at, archived_by_client, allow_direct_contact,
         for_someone_else, beneficiary_name, beneficiary_dob,
         profiles:client_id(full_name, email, cedula, avatar_url),
         proposals(id, status, professional_id)
@@ -181,6 +183,8 @@ export async function GET(req: Request) {
       completed_at: row.completed_at,
       work_done_at: row.work_done_at,
       archived_by_client: row.archived_by_client === true,
+      // Falso solo en los publicados antes del tablero público.
+      allow_direct_contact: row.allow_direct_contact !== false,
       for_someone_else: row.for_someone_else === true,
       beneficiary_name: row.beneficiary_name,
       beneficiary_dob: row.beneficiary_dob,
@@ -220,6 +224,42 @@ export async function GET(req: Request) {
   });
 }
 // DELETE /api/admin/projects?id=… — removes the project and its proposals.
+// PATCH /api/admin/projects — saca al tablero público un proyecto que se
+// publicó antes de que el tablero existiera. Esos nacieron con el permiso en
+// `false` (migración 207): bajo la regla vieja los veían los profesionales de
+// su oficio en «Oportunidades», y al retirarse esa pestaña dejaron de verse
+// del todo. Encenderlo les devuelve audiencia; el alcance es mayor, así que la
+// decisión es de un administrador y queda en la bitácora.
+export async function PATCH(req: Request) {
+  const admin = await getApiAdmin();
+  if (!admin) return NextResponse.json({ error: "No autorizado" }, { status: 403 });
+  const { id, action } = await req.json().catch(() => ({ id: "", action: "" }));
+  if (!/^[0-9a-f-]{36}$/i.test(String(id ?? ""))) return NextResponse.json({ error: "Identificador requerido." }, { status: 400 });
+  if (action !== "publicar_en_tablero") return NextResponse.json({ error: "Acción no soportada." }, { status: 400 });
+
+  const db = createAdminClient();
+  const { data: proyecto } = await db.from("projects").select("id, status, title, client_id").eq("id", id).maybeSingle();
+  if (!proyecto) return NextResponse.json({ error: "Proyecto no encontrado." }, { status: 404 });
+  if (proyecto.status !== "open") return NextResponse.json({ error: "Solo un proyecto abierto sale al tablero." }, { status: 409 });
+
+  const { error } = await db.from("projects").update({ allow_direct_contact: true }).eq("id", id);
+  if (error) {
+    console.error("[admin/projects] publicar", error.message);
+    return NextResponse.json({ error: "No se pudo publicar en el tablero." }, { status: 500 });
+  }
+  await auditUserAction(db, req, {
+    actorUserId: admin.id,
+    actorRole: "admin",
+    action: "project.publicar_en_tablero",
+    entityTable: "projects",
+    entityId: String(id),
+    entityOwnerUserId: proyecto.client_id ?? null,
+    beforeData: { allow_direct_contact: false, title: proyecto.title },
+    afterData: { allow_direct_contact: true, title: proyecto.title },
+  });
+  return NextResponse.json({ ok: true, id });
+}
+
 export async function DELETE(req: Request) {
   const admin = await getApiAdmin();
   if (!admin) return NextResponse.json({ error: "No autorizado" }, { status: 403 });
