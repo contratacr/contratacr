@@ -258,11 +258,13 @@ test.describe("@mobile native shell contracts", () => {
     page.on("pageerror", (error) => {
       pageErrors.push(`[${page.url()}] ${error.message}`);
     });
+    // TODO ruido: se recogen TODOS los errores de consola de la portada para
+    // que React entregue el stack del componente que rompe la hidratación. En
+    // producción el mensaje viene minificado y el stack es lo único que
+    // identifica al culpable. Se recorta en cuanto se sepa quién es.
     page.on("console", (mensaje) => {
-      const texto = mensaje.text();
-      if (mensaje.type() === "error" && /hydrat|did not match|Text content/i.test(texto)) {
-        pageErrors.push(`[${page.url()}] consola: ${texto.slice(0, 500)}`);
-      }
+      if (mensaje.type() !== "error") return;
+      pageErrors.push(`[${page.url()}] consola: ${mensaje.text().slice(0, 1200)}`);
     });
 
     await gotoOK(page, "/es");
