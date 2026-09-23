@@ -3676,7 +3676,7 @@
     "emailLabel": "Email address",
     "emailPlaceholder": "youremail@example.com",
     "subjectLabel": "Subject",
-    "subjectPlaceholder": "Select the reason for your inquiry",
+    "subjectPlaceholder": "Reason for your question",
     "subject0": "Technical problem on the platform",
     "subject1": "Account, login, or personal details",
     "subject2": "Report a user or content",

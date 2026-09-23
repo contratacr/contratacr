@@ -1,6 +1,7 @@
 "use client";
 
 import { conFiltroDeFecha } from "@/lib/marketplace/filtros-por-volumen";
+import { formatPersonDisplayName } from "@/lib/display-name";
 import { useAppDialog } from "@/hooks/use-app-dialog";
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
@@ -256,7 +257,10 @@ function Tarjeta({ proyecto, en, elegida = false, onElegir }: { proyecto: Proyec
             {proyecto.location_label || copy.todoElPais}
           </p>
           <div className="mt-1 flex items-baseline justify-between gap-3 text-xs text-[#8794a7]">
-            <span className="min-w-0 truncate">{copy.publicado} {proyecto.client_name}</span>
+            {/* PRIMER NOMBRE Y PRIMER APELLIDO. «Pedro Alejandro Saborío
+                Matamoros» no cabe en la fila y salía cortado con puntos
+                suspensivos, que es un nombre a medias: no dice quién es. */}
+            <span className="min-w-0 truncate">{copy.publicado} {formatPersonDisplayName(proyecto.client_name, "mobile")}</span>
             <span className="shrink-0">{cuandoSePublico(proyecto.created_at, en)}</span>
           </div>
         </div>

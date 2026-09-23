@@ -705,7 +705,7 @@ test.describe("@seeded core regression", () => {
       {
         path: "/es/ofertas",
         testId: "offers-mobile-sticky-actions",
-        actions: [/^Mis ofertas$/i, /^Publicar promoción$/i],
+        actions: [/^Mis promociones$/i, /^Publicar promoción$/i],
       },
       {
         path: "/es/empleos",
@@ -724,23 +724,18 @@ test.describe("@seeded core regression", () => {
         expect(box!.height, `${surface.path} actions should stay compact on mobile`).toBeLessThanOrEqual(38);
       }
 
-      const stickyHeader = actions.locator("xpath=ancestor::section[1]");
-      await expect(stickyHeader).toHaveCSS("position", "sticky");
-      // A short board (few seeded items) cannot scroll 700px; scroll as far as
-      // the document allows and only judge the pinned position while the
-      // sticky section's container still extends below it — at the very end
-      // of its container a sticky element legitimately scrolls away.
-      const maxScroll = await page.evaluate(() => document.documentElement.scrollHeight - window.innerHeight);
-      await page.evaluate((y) => window.scrollTo(0, y), Math.min(700, Math.max(0, maxScroll)));
-      await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(0);
-      const pinned = await stickyHeader.evaluate((section) => {
-        const own = section.getBoundingClientRect();
-        const container = section.parentElement?.getBoundingClientRect();
-        return { top: own.y, stillInside: !!container && container.bottom >= own.height + 1 };
-      });
-      if (pinned.stillInside) expect(Math.abs(pinned.top), `${surface.path} sticky actions should stay pinned`).toBeLessThanOrEqual(1);
-      await expect(actions).toBeVisible();
-      await expectNoHorizontalOverflow(page);
+      // LA PÁGINA YA NO SE DESPLAZA: el tablero mide la pantalla y lo que se
+      // desplaza es la LISTA. Así que las acciones no necesitan quedar
+      // «pegadas» —nunca se van—, y lo que se comprueba es justo eso: mover la
+      // lista hasta el final no las corre ni un píxel.
+      const antes = await actions.boundingBox();
+      const lista = page.locator(".ccr-marketplace-card-list").first();
+      await expect(lista).toBeVisible();
+      await lista.evaluate((nodo) => { nodo.scrollTop = nodo.scrollHeight; });
+      await expect.poll(() => lista.evaluate((nodo) => nodo.scrollTop)).toBeGreaterThan(0);
+      expect(await page.evaluate(() => window.scrollY), `${surface.path} no debe desplazar la página`).toBe(0);
+      const despues = await actions.boundingBox();
+      expect(Math.abs((despues?.y ?? 0) - (antes?.y ?? 0)), `${surface.path} actions must not move`).toBeLessThanOrEqual(1);
     }
   });
 

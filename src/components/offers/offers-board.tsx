@@ -779,7 +779,7 @@ function OfferRow({
               {offer.service_label && <><span aria-hidden="true" className="mx-1.5 text-[#c0cad5]">·</span>{offer.service_label}</>}
               {offer.location_label && <><span aria-hidden="true" className="mx-1.5 text-[#c0cad5]">·</span>{offer.location_label}</>}
             </p>
-            <div className="flex min-w-0 items-center gap-1.5 overflow-hidden text-[11px] leading-4 sm:text-xs lg:hidden">
+            <div className="flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[11px] leading-4 sm:text-xs lg:hidden">
               <span className="shrink-0 text-[#68778d]">
                  {offerTypeLabel(offer.offer_type, locale)}
               </span>

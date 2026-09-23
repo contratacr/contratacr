@@ -22,8 +22,8 @@ const PLANTILLAS = [
   {
     id: "lluvias",
     nombre: "Antes de las lluvias fuertes",
-    subject: "Antes del próximo aguacero",
-    body: "Hola,\n\nYa empezaron los meses más lluviosos del año. Si tienes algo eléctrico pendiente en la casa, mejor resolverlo antes del próximo aguacero.\n\nToca el botón y vas a ver los electricistas verificados de tu zona, con reseñas y su WhatsApp a la vista. Les escribes directo, sin comisiones.\n\n¿Ofreces servicios? Publica una promoción de temporada y apareces de primero para quien busca ahora.",
+    subject: "¿Necesitas un electricista?",
+    body: "Hola,\n\nYa empezaron los meses más lluviosos del año.\n\nSi necesitas un electricista, en ContrataCR están los de tu zona: verificados, con reseñas y su WhatsApp a mano.",
     ctaLabel: "Ver electricistas cerca de mí",
     ctaPath: "/es/buscar?categoria=electricidad",
   },

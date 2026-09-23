@@ -3676,7 +3676,7 @@
     "emailLabel": "Correo electrónico",
     "emailPlaceholder": "tucorreo@ejemplo.com",
     "subjectLabel": "Asunto",
-    "subjectPlaceholder": "Selecciona el motivo de tu consulta",
+    "subjectPlaceholder": "Motivo de tu consulta",
     "subject0": "Problema técnico en la plataforma",
     "subject1": "Cuenta, inicio de sesión o datos",
     "subject2": "Reportar usuario o contenido",

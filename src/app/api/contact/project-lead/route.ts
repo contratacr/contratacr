@@ -65,7 +65,15 @@ export async function POST(req: Request) {
   // El proyecto guarda el teléfono del momento de publicarlo; si cambió después,
   // manda el del perfil, que es el que la persona mantiene al día.
   const { data: perfil } = await db.from("profiles").select("phone").eq("id", fila.client_id ?? "").maybeSingle();
-  const crudo = ((perfil as { phone?: string | null } | null)?.phone || fila.client_phone_snapshot || "").replace(/\D/g, "");
+  let telefono = (perfil as { phone?: string | null } | null)?.phone || fila.client_phone_snapshot || "";
+  // Y si la cuenta no guardó teléfono —proyectos viejos, cuentas creadas con
+  // Google—, el de su ficha profesional: quien publica un proyecto puede tener
+  // también perfil de profesional, y ahí el WhatsApp es obligatorio.
+  if (telefono.replace(/\D/g, "").length < 8) {
+    const { data: comoPro } = await db.from("professionals").select("whatsapp").eq("profile_id", fila.client_id ?? "").maybeSingle();
+    telefono = (comoPro as { whatsapp?: string | null } | null)?.whatsapp || telefono;
+  }
+  const crudo = telefono.replace(/\D/g, "");
   if (crudo.length < 8) return NextResponse.json({ error: "Este cliente no dejó un WhatsApp." }, { status: 404 });
   const numero = crudo.length === 8 ? `506${crudo}` : crudo;
 
