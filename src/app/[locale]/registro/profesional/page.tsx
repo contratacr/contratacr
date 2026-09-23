@@ -15,6 +15,8 @@ import { CabeceraDeTramite } from "@/components/layout/focused-header";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { PhoneInput, isPhoneComplete } from "@/components/ui/phone-input";
+import { PriceInput } from "@/components/ui/price-input";
+import { EtiquetaOpcional } from "@/components/ui/etiqueta-campo";
 import { IdentityField } from "@/components/ui/identity-field";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { createClient } from "@/lib/supabase/client";
@@ -1440,9 +1442,34 @@ export default function RegisterProfessionalPage() {
           {/* ── Step 2: Profile + Photo ──────────────────────────────────── */}
           {step === 2 && (
             <form noValidate onSubmit={form3.handleSubmit(onStep3, scrollToFirstError)} className="flex flex-col gap-4">
-              {/* Photo upload — the only step-3 field. Guidance about services /
-                  casos de éxito now lives in the panel's profile-completion flow. */}
+              {/* Photo upload. Guidance about services / casos de éxito lives in
+                  the panel's profile-completion flow. */}
               <PhotoPicker preview={photoPreview} onFile={handlePhotoSelect} onRemove={handlePhotoRemove} />
+
+              {/* La tarifa se pregunta AQUÍ, por la misma razón que el WhatsApp:
+                  medido en producción, solo 3 de 288 profesionales volvieron a
+                  tocar su perfil después del primer día. Lo que no se pide al
+                  registrarse, no se pide nunca —y se nota: de 848 servicios
+                  publicados, 832 dicen «Consultar precio», no porque el
+                  profesional lo eligiera sino porque el registro lo escribía a
+                  la fuerza sin preguntar—.
+
+                  Es OPCIONAL a propósito. Hay oficios donde un precio por hora
+                  no significa nada, y forzarlo haría que se inventen un número
+                  o que abandonen el registro; quien lo deja en blanco se queda
+                  con «Consultar precio», como hasta ahora. */}
+              <div>
+                <label htmlFor="tarifa-por-hora" className="mb-1.5 block text-sm font-medium text-[#374151]">
+                  <EtiquetaOpcional>{t("rateLabel")}</EtiquetaOpcional>
+                </label>
+                <PriceInput
+                  id="tarifa-por-hora"
+                  placeholder={t("ratePlaceholder")}
+                  value={form3.watch("hourlyRate") ?? ""}
+                  onChange={(v) => form3.setValue("hourlyRate", v)}
+                />
+                <p className="mt-1.5 text-xs leading-snug text-[#68778d]">{t("rateHelp")}</p>
+              </div>
 
               <BarraDeAcciones activa={!!currentUser}>
                 {(

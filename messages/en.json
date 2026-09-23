@@ -912,7 +912,10 @@
       "videoCountryRemove": "Remove All Costa Rica",
       "inPersonSectionTitle": "In-person care",
       "skipCedulaNote": "You will appear without the Verified badge. You can verify your identity later from your panel.",
-      "allowCallsLabel": "Allow contact by phone call"
+      "allowCallsLabel": "Allow contact by phone call",
+      "rateLabel": "What do you charge per hour, starting from?",
+      "rateHelp": "It shows on your card as «₡X /hour» and it is the first thing a client looks at. Leave it blank and it says «Ask for price», and many people leave without writing. You can change it later.",
+      "ratePlaceholder": "12 000"
     },
     "client": {
       "title": "Create client account",

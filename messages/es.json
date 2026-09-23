@@ -912,7 +912,10 @@
       "videoCountryRemove": "Quitar Todo Costa Rica",
       "inPersonSectionTitle": "Atención presencial",
       "skipCedulaNote": "Aparecerás sin la insignia Verificado. Podrás verificar tu identidad luego desde tu panel.",
-      "allowCallsLabel": "Permitir contacto por llamada"
+      "allowCallsLabel": "Permitir contacto por llamada",
+      "rateLabel": "¿Desde cuánto cobrás por hora?",
+      "rateHelp": "Sale en tu tarjeta como «₡X /hora» y es lo primero que mira un cliente. Si lo dejás en blanco dirá «Consultar precio», y mucha gente se va sin escribir. Lo podés cambiar después.",
+      "ratePlaceholder": "12 000"
     },
     "client": {
       "title": "Crear cuenta de cliente",
