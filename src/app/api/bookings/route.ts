@@ -1,4 +1,5 @@
 import { getCategoryLabel } from "@/lib/data/categories";
+import { mensajeDeError } from "@/lib/api-errors";
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -44,7 +45,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Falta el profesional." }, { status: 400 });
     }
     if (!serviceDescription) {
-      return NextResponse.json({ error: "Cuéntanos qué necesitas o elige un servicio." }, { status: 400 });
+      return NextResponse.json({ error: mensajeDeError(req, { es: "Cuéntanos qué necesitas o elige un servicio.", en: "Tell us what you need or pick a service." }) }, { status: 400 });
     }
 
     const supabase = await createClient();
@@ -101,7 +102,7 @@ export async function POST(req: NextRequest) {
         if (idType === "cedula") {
           const result = await getIdentityVerifier().lookup(cleanClientCedula);
           if (result.unavailable) {
-            return NextResponse.json({ error: "No pudimos consultar el padrón en este momento. Intenta de nuevo en unos minutos." }, { status: 503 });
+            return NextResponse.json({ error: mensajeDeError(req, { es: "No pudimos consultar el padrón en este momento. Intenta de nuevo en unos minutos.", en: "We could not reach the civil registry right now. Try again in a few minutes." }) }, { status: 503 });
           }
           identityProvider = result.provider;
           if (result.found) {

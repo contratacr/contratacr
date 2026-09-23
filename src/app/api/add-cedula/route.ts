@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { mensajeDeError } from "@/lib/api-errors";
 import { enforceRateLimit } from "@/lib/rate-limit";
 import { createClient as createServerClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -22,7 +23,7 @@ export async function POST(req: Request) {
   // Format check (cédula 9 / NITE 10 / DIMEX 11-12).
   const validFormat = /^[1-9]\d{8}$/.test(cedula) || /^\d{10}$/.test(cedula) || /^\d{11,12}$/.test(cedula);
   if (!validFormat) {
-    return NextResponse.json({ error: "Formato inválido. CR: 9 dígitos · DIMEX: 11-12 · NITE: 10." }, { status: 400 });
+    return NextResponse.json({ error: mensajeDeError(req, { es: "Formato inválido. CR: 9 dígitos · DIMEX: 11-12 · NITE: 10.", en: "Invalid format. CR: 9 digits · DIMEX: 11-12 · NITE: 10." }) }, { status: 400 });
   }
 
   const db = createAdminClient();
@@ -35,7 +36,7 @@ export async function POST(req: Request) {
     .neq("id", user.id)
     .maybeSingle();
   if (dupe) {
-    return NextResponse.json({ error: "Esta identificación ya está registrada en ContrataCR." }, { status: 409 });
+    return NextResponse.json({ error: mensajeDeError(req, { es: "Esta identificación ya está registrada en ContrataCR.", en: "That ID is already registered with ContrataCR." }) }, { status: 409 });
   }
 
   const { data: pro } = await db
@@ -48,9 +49,9 @@ export async function POST(req: Request) {
   // verificada sí se deja pasar: reintentar con el mismo número es legítimo.)
   const { data: propio } = await db.from("profiles").select("cedula").eq("id", user.id).maybeSingle();
   if ((propio?.cedula ?? "").replace(/\D/g, "") === cedula && (pro as { verification_status?: string } | null)?.verification_status === "verified") {
-    return NextResponse.json({ error: "Esta ya es tu identificación verificada." }, { status: 409 });
+    return NextResponse.json({ error: mensajeDeError(req, { es: "Esta ya es tu identificación verificada.", en: "That is already your verified ID." }) }, { status: 409 });
   }
-  if (!pro) return NextResponse.json({ error: "No se encontró tu perfil." }, { status: 404 });
+  if (!pro) return NextResponse.json({ error: mensajeDeError(req, { es: "No se encontró tu perfil.", en: "We could not find your profile." }) }, { status: 404 });
 
   await db.from("profiles").update({ cedula }).eq("id", user.id);
   // Clear the no-CR-ID flag (best-effort if the column exists) so the normal

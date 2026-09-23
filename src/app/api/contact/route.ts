@@ -1,6 +1,7 @@
 export const runtime = "nodejs";
 
 import { NextRequest, NextResponse } from "next/server";
+import { mensajeDeError } from "@/lib/api-errors";
 import { correoValido, escaparHtml } from "@/lib/email/escape";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { enforceRateLimit } from "@/lib/rate-limit";
@@ -227,7 +228,7 @@ export async function POST(req: NextRequest) {
 
     const totalAttachmentBytes = fileAttachments.reduce((total, file) => total + file.content.length, 0);
     if (totalAttachmentBytes > 3.7 * 1024 * 1024) {
-      return NextResponse.json({ ok: false, error: "Los archivos juntos son muy pesados. Usa menos archivos o archivos más livianos." }, { status: 400 });
+      return NextResponse.json({ ok: false, error: mensajeDeError(req, { es: "Los archivos juntos son muy pesados. Usa menos archivos o archivos más livianos.", en: "The files are too large together. Use fewer or lighter files." }) }, { status: 400 });
     }
 
     // Validate EVERY attachment by magic bytes — safe images OR PDF only (no SVG /

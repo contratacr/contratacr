@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { mensajeDeError } from "@/lib/api-errors";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getCategoryLabel, isHealthCategory, OTHER_CATEGORY } from "@/lib/data/categories";
@@ -88,7 +89,7 @@ export async function POST(req: NextRequest) {
     const requestedBeneficiaryDob = typeof body.beneficiaryDob === "string" ? body.beneficiaryDob : "";
 
     if (!cleanDescription) {
-      return NextResponse.json({ error: "Cuéntanos brevemente qué hay que hacer." }, { status: 400 });
+      return NextResponse.json({ error: mensajeDeError(req, { es: "Cuéntanos brevemente qué hay que hacer.", en: "Tell us briefly what needs doing." }) }, { status: 400 });
     }
     // Category is required: it routes the project to matching professionals.
     if (!categoryId) {
@@ -144,7 +145,7 @@ export async function POST(req: NextRequest) {
     const telefonoNuevo = String(phone ?? "").replace(/[^\d+]/gu, "").trim();
     const telefonoFinal = telefonoGuardado || telefonoNuevo;
     if (telefonoFinal.replace(/\D/gu, "").length < 8) {
-      return NextResponse.json({ error: "Necesitamos tu WhatsApp para que te puedan responder." }, { status: 400 });
+      return NextResponse.json({ error: mensajeDeError(req, { es: "Necesitamos tu WhatsApp para que te puedan responder.", en: "We need your WhatsApp so they can answer you." }) }, { status: 400 });
     }
     if (!telefonoGuardado && telefonoNuevo) {
       await admin.from("profiles").update({ phone: telefonoNuevo }).eq("id", uid);
@@ -160,7 +161,7 @@ export async function POST(req: NextRequest) {
       if (idType === "cedula") {
         const result = await getIdentityVerifier().lookup(cedula);
         if (result.unavailable) {
-          return NextResponse.json({ error: "No pudimos consultar el padrón en este momento. Intenta de nuevo en unos minutos." }, { status: 503 });
+          return NextResponse.json({ error: mensajeDeError(req, { es: "No pudimos consultar el padrón en este momento. Intenta de nuevo en unos minutos.", en: "We could not reach the civil registry right now. Try again in a few minutes." }) }, { status: 503 });
         }
         identityProvider = result.provider;
         if (result.found) {
@@ -528,7 +529,7 @@ export async function PATCH(req: NextRequest) {
     const categoryId = typeof body.categoryId === "string" ? body.categoryId.trim() : "";
     const description = typeof body.description === "string" ? body.description.trim().slice(0, PROJECT_DESCRIPTION_MAX_LENGTH) : "";
     if (!categoryId) return NextResponse.json({ error: "Elige el servicio que necesitas." }, { status: 400 });
-    if (!description) return NextResponse.json({ error: "Cuéntanos qué hay que hacer." }, { status: 400 });
+    if (!description) return NextResponse.json({ error: mensajeDeError(req, { es: "Cuéntanos qué hay que hacer.", en: "Tell us what needs doing." }) }, { status: 400 });
 
     const provinciaId = typeof body.provinciaId === "string" && body.provinciaId ? body.provinciaId : null;
     const cantonId = typeof body.cantonId === "string" && body.cantonId ? body.cantonId : null;

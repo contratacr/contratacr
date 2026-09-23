@@ -60,7 +60,12 @@ export function sniffFileType(buf: Uint8Array): FileKind | null {
   return null;
 }
 
-export type ValidateResult = { ok: true; kind: FileKind } | { ok: false; error: string };
+/** El motivo, en clave: el front DECIDE con esto, no con el texto. */
+export type MotivoRechazo = "vacio" | "muy_grande" | "formato";
+
+export type ValidateResult =
+  | { ok: true; kind: FileKind }
+  | { ok: false; error: string; motivo: MotivoRechazo };
 
 /**
  * Validate a file buffer against an allow-list of kinds + a size cap. The error
@@ -70,13 +75,13 @@ export function validateUpload(
   buf: Uint8Array,
   opts: { allow: FileKind[]; maxBytes: number; allowLabel: string }
 ): ValidateResult {
-  if (buf.length === 0) return { ok: false, error: "El archivo está vacío." };
+  if (buf.length === 0) return { ok: false, error: "El archivo está vacío.", motivo: "vacio" };
   if (buf.length > opts.maxBytes) {
-    return { ok: false, error: `El archivo supera el límite de ${Math.round(opts.maxBytes / (1024 * 1024))} MB.` };
+    return { ok: false, error: `El archivo supera el límite de ${Math.round(opts.maxBytes / (1024 * 1024))} MB.`, motivo: "muy_grande" };
   }
   const kind = sniffFileType(buf);
   if (!kind || !opts.allow.includes(kind)) {
-    return { ok: false, error: `Formato no permitido. Usa ${opts.allowLabel}.` };
+    return { ok: false, error: `Formato no permitido. Usa ${opts.allowLabel}.`, motivo: "formato" };
   }
   return { ok: true, kind };
 }

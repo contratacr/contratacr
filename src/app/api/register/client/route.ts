@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { mensajeDeError } from "@/lib/api-errors";
 import { enforceRateLimit } from "@/lib/rate-limit";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient as createServerClient } from "@/lib/supabase/server";
@@ -34,11 +35,11 @@ export async function POST(req: Request) {
       name = limitTrimmedText(fullName ?? (sessionUser.user_metadata?.full_name as string) ?? "", NAME_MAX_LENGTH);
     } else {
       if (!bodyUserId) {
-        return NextResponse.json({ error: "Usuario inválido." }, { status: 401 });
+        return NextResponse.json({ error: mensajeDeError(req, { es: "Usuario inválido.", en: "Invalid user." }) }, { status: 401 });
       }
       const { data: adminLookup, error: adminError } = await supabase.auth.admin.getUserById(bodyUserId);
       if (adminError || !adminLookup.user) {
-        return NextResponse.json({ error: "No se encontró el usuario." }, { status: 401 });
+        return NextResponse.json({ error: mensajeDeError(req, { es: "No se encontró el usuario.", en: "User not found." }) }, { status: 401 });
       }
       userId = adminLookup.user.id;
       email = adminLookup.user.email ?? "";
@@ -97,10 +98,10 @@ export async function POST(req: Request) {
       }
 
       if (isDupEmail(profileError.message)) {
-        return NextResponse.json({ error: "Este correo ya está registrado. Inicia sesión.", code: "email_taken" }, { status: 409 });
+        return NextResponse.json({ error: mensajeDeError(req, { es: "Este correo ya está registrado. Inicia sesión.", en: "That email is already registered. Sign in." }), code: "email_taken" }, { status: 409 });
       }
       if (isDupCedula(profileError.message)) {
-        return NextResponse.json({ error: "Esta cédula ya está registrada.", code: "cedula_taken" }, { status: 409 });
+        return NextResponse.json({ error: mensajeDeError(req, { es: "Esta cédula ya está registrada.", en: "That ID is already registered." }), code: "cedula_taken" }, { status: 409 });
       }
       return NextResponse.json({ error: "No pudimos crear tu cuenta. Intenta de nuevo en unos minutos." }, { status: 500 });
     }

@@ -451,7 +451,13 @@ export function JobPostForm({ professionalId, backHref = "/empleos", initialJob 
       router.refresh();
     } catch (submitError) {
       const message = submitError instanceof Error ? submitError.message : "";
-      setError((submitError as { delServidor?: boolean } | null)?.delServidor || message.startsWith("No pudimos") || message.startsWith("We couldn't") ? message : copy.saveFailed);
+      // Se muestra el mensaje del servidor solo cuando VIENE marcado como tal.
+      // Antes, además, se miraba si empezaba con «No pudimos» / «We couldn't»:
+      // un prefijo. Traducir esos textos —que es justo lo que hacía falta para
+      // el usuario en inglés— habría roto la comprobación sin que nadie se
+      // enterara, y todo habría caído en el mensaje genérico.
+      const delServidor = (submitError as { delServidor?: boolean } | null)?.delServidor === true;
+      setError(delServidor && message ? message : copy.saveFailed);
       setSaving(false);
     }
   }

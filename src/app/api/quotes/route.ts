@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { mensajeDeError } from "@/lib/api-errors";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { auditUserAction } from "@/lib/audit/user-action";
@@ -41,7 +42,7 @@ async function whoAmI() {
 
 export async function GET(req: NextRequest) {
   const me = await whoAmI();
-  if (!me) return NextResponse.json({ error: "Inicia sesión." }, { status: 401 });
+  if (!me) return NextResponse.json({ error: mensajeDeError(req, { es: "Inicia sesión.", en: "Sign in." }) }, { status: 401 });
   const url = new URL(req.url);
   const bookingId = url.searchParams.get("bookingId");
   const projectId = url.searchParams.get("projectId");
@@ -88,11 +89,11 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   const me = await whoAmI();
-  if (!me) return NextResponse.json({ error: "Inicia sesión." }, { status: 401 });
-  if (!me.proId) return NextResponse.json({ error: "Solo los profesionales envían cotizaciones." }, { status: 403 });
+  if (!me) return NextResponse.json({ error: mensajeDeError(req, { es: "Inicia sesión.", en: "Sign in." }) }, { status: 401 });
+  if (!me.proId) return NextResponse.json({ error: mensajeDeError(req, { es: "Solo los profesionales envían cotizaciones.", en: "Only professionals send quotes." }) }, { status: 403 });
   const body = await req.json().catch(() => ({})) as Record<string, unknown>;
   const items = sanitizeQuoteItems(body.items);
-  if (items.length === 0) return NextResponse.json({ error: "Agrega al menos un renglón con descripción y precio." }, { status: 400 });
+  if (items.length === 0) return NextResponse.json({ error: mensajeDeError(req, { es: "Agrega al menos un renglón con descripción y precio.", en: "Add at least one line with a description and a price." }) }, { status: 400 });
   const taxMode = TAX_MODES.has(body.taxMode as QuoteTaxMode) ? (body.taxMode as QuoteTaxMode) : "incluido";
   const title = String(body.title ?? "").replace(/\s+/g, " ").trim().slice(0, 120) || null;
   const notes = String(body.notes ?? "").trim().slice(0, 1000) || null;
@@ -104,7 +105,7 @@ export async function POST(req: NextRequest) {
   const clientPhone = String(body.clientPhone ?? "").replace(/[^\d+]/g, "").slice(0, 20) || null;
   const clientCedula = String(body.clientCedula ?? "").replace(/\D/g, "").slice(0, 20) || null;
   const clientEmail = String(body.clientEmail ?? "").trim().slice(0, 120).toLowerCase() || null;
-  if (!bookingId && !projectId && !clientName) return NextResponse.json({ error: "Escribe para quién es la cotización." }, { status: 400 });
+  if (!bookingId && !projectId && !clientName) return NextResponse.json({ error: mensajeDeError(req, { es: "Escribe para quién es la cotización.", en: "Enter who the quote is for." }) }, { status: 400 });
 
   // El contexto tiene que ser del profesional: su cita, o un proyecto que respondió.
   let clientId: string | null = null; let contextTitle = "";
@@ -121,7 +122,7 @@ export async function POST(req: NextRequest) {
     // de una cita.
     clientId = p.client_id ?? null; contextTitle = p.title ?? "";
   }
-  if ((bookingId || projectId) && !clientId) return NextResponse.json({ error: "Esta cita no tiene una cuenta de cliente a la que enviarle la cotización." }, { status: 400 });
+  if ((bookingId || projectId) && !clientId) return NextResponse.json({ error: mensajeDeError(req, { es: "Esta cita no tiene una cuenta de cliente a la que enviarle la cotización.", en: "This appointment has no client account to send the quote to." }) }, { status: 400 });
 
   // El consecutivo del profesional: 1, 2, 3… Si dos cotizaciones salen al mismo
   // tiempo, la segunda choca con el índice único y se reintenta con el siguiente.
@@ -162,18 +163,18 @@ export async function POST(req: NextRequest) {
 
 export async function PATCH(req: NextRequest) {
   const me = await whoAmI();
-  if (!me) return NextResponse.json({ error: "Inicia sesión." }, { status: 401 });
+  if (!me) return NextResponse.json({ error: mensajeDeError(req, { es: "Inicia sesión.", en: "Sign in." }) }, { status: 401 });
   const body = await req.json().catch(() => ({})) as { id?: string; action?: string; bookingId?: string; projectId?: string };
   const id = String(body.id ?? ""); const action = String(body.action ?? "");
   if (!id || !["accept", "decline", "withdraw", "attach", "detach", "delete"].includes(action)) return NextResponse.json({ error: "Acción no válida." }, { status: 400 });
   const { data: q, error } = await me.admin.from("quotes").select(SELECT).eq("id", id).is("deleted_at", null).maybeSingle();
-  if (error || !q) return NextResponse.json({ error: "Cotización no encontrada." }, { status: 404 });
+  if (error || !q) return NextResponse.json({ error: mensajeDeError(req, { es: "Cotización no encontrada.", en: "Quote not found." }) }, { status: 404 });
 
   // Borrar: solo las que no están en una cita o proyecto (ahí se retira, que
   // deja rastro) y solo si nadie respondió. El número NO se reutiliza.
   if (action === "delete") {
     if (q.professional_id !== me.proId) return NextResponse.json({ error: "Solo quien la hizo puede borrarla." }, { status: 403 });
-    if (q.booking_id || q.project_id) return NextResponse.json({ error: "Está en una cita o proyecto: quitala de ahí primero." }, { status: 409 });
+    if (q.booking_id || q.project_id) return NextResponse.json({ error: mensajeDeError(req, { es: "Está en una cita o proyecto: quitala de ahí primero.", en: "It belongs to an appointment or project: remove it from there first." }) }, { status: 409 });
     const patch = { deleted_at: new Date().toISOString(), updated_at: new Date().toISOString() };
     const { error: upErr } = await me.admin.from("quotes").update(patch).eq("id", id);
     if (upErr) return NextResponse.json({ error: upErr.message }, { status: 500 });
@@ -181,7 +182,7 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ deleted: true });
   }
 
-  if (q.status !== "sent") return NextResponse.json({ error: "Esta cotización ya se cerró." }, { status: 409 });
+  if (q.status !== "sent") return NextResponse.json({ error: mensajeDeError(req, { es: "Esta cotización ya se cerró.", en: "This quote is already closed." }) }, { status: 409 });
 
   // Quitarla de la cita o del proyecto: vuelve a ser un documento suelto. Solo
   // mientras nadie la haya respondido (arriba ya se exige status "sent").
@@ -222,10 +223,10 @@ export async function PATCH(req: NextRequest) {
   const now = new Date().toISOString();
   let patch: Record<string, unknown>;
   if (action === "withdraw") {
-    if (q.professional_id !== me.proId) return NextResponse.json({ error: "Solo quien la envió puede retirarla." }, { status: 403 });
+    if (q.professional_id !== me.proId) return NextResponse.json({ error: mensajeDeError(req, { es: "Solo quien la envió puede retirarla.", en: "Only whoever sent it can withdraw it." }) }, { status: 403 });
     patch = { status: "withdrawn", updated_at: now };
   } else {
-    if (q.client_id !== me.user.id) return NextResponse.json({ error: "Solo el cliente puede responder la cotización." }, { status: 403 });
+    if (q.client_id !== me.user.id) return NextResponse.json({ error: mensajeDeError(req, { es: "Solo el cliente puede responder la cotización.", en: "Only the client can answer the quote." }) }, { status: 403 });
     patch = action === "accept" ? { status: "accepted", accepted_at: now, updated_at: now } : { status: "declined", declined_at: now, updated_at: now };
   }
   const { data: updated, error: upErr } = await me.admin.from("quotes").update(patch).eq("id", id).select(SELECT).single();

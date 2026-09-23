@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { idiomaDeLaPeticion, mensajeDeError } from "@/lib/api-errors";
 import { enforceRateLimit } from "@/lib/rate-limit";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -55,7 +56,7 @@ async function reseñaSinCuenta(
 
   const nombre = (datos.clientName ?? "").trim().replace(/\s+/gu, " ").slice(0, NAME_MAX_LENGTH);
   if (nombre.length < 2) {
-    return NextResponse.json({ error: "Escribe tu nombre para publicar la reseña." }, { status: 400 });
+    return NextResponse.json({ error: mensajeDeError(req, { es: "Escribe tu nombre para publicar la reseña.", en: "Enter your name to post the review." }) }, { status: 400 });
   }
 
   const { data: pro } = await admin
@@ -138,10 +139,10 @@ export async function POST(req: NextRequest) {
 
   const r = Number(rating);
   if (!(r >= 0.5 && r <= 5 && r * 2 === Math.floor(r * 2))) {
-    return NextResponse.json({ error: "Calificación inválida." }, { status: 400 });
+    return NextResponse.json({ error: mensajeDeError(req, { es: "Calificación inválida.", en: "Invalid rating." }) }, { status: 400 });
   }
 
-  const reviewText = validateReviewText(comment);
+  const reviewText = validateReviewText(comment, idiomaDeLaPeticion(req));
   if (!reviewText.ok) {
     return NextResponse.json({ error: reviewText.error }, { status: 400 });
   }
@@ -170,7 +171,7 @@ export async function POST(req: NextRequest) {
   }
 
   if (targetPro.profile_id === user.id) {
-    return NextResponse.json({ error: "No puedes dejarte una reseña a ti mismo." }, { status: 400 });
+    return NextResponse.json({ error: mensajeDeError(req, { es: "No puedes dejarte una reseña a ti mismo.", en: "You cannot review yourself." }) }, { status: 400 });
   }
 
   let jobTitle: string | null = null;

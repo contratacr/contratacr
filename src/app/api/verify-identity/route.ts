@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { mensajeDeError } from "@/lib/api-errors";
 import { createClient as createServerClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { runIdentityVerification } from "@/lib/verification/run-verification";
@@ -7,7 +8,7 @@ import { runIdentityVerification } from "@/lib/verification/run-verification";
 // Runs automatic identity verification for the calling professional against the
 // padrón. Called right after registration and from the verification panel. Only
 // runs for the authenticated user's own professional record (internal use).
-export async function POST() {
+export async function POST(req: Request) {
   const session = await createServerClient();
   const {
     data: { user },
@@ -20,7 +21,7 @@ export async function POST() {
     .select("id, verification_status")
     .eq("profile_id", user.id)
     .maybeSingle();
-  if (!pro) return NextResponse.json({ error: "No se encontró tu perfil profesional." }, { status: 404 });
+  if (!pro) return NextResponse.json({ error: mensajeDeError(req, { es: "No se encontró tu perfil profesional.", en: "We could not find your professional profile." }) }, { status: 404 });
 
   // Already verified → no-op (don't re-run unnecessarily).
   if (pro.verification_status === "verified") {

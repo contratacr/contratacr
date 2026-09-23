@@ -300,9 +300,14 @@ export function OfferForm({ professionalId, serviceOptions, backHref = "/ofertas
         body.append("type", "portfolio");
         const response = await uploadPhotoFormDataWithRetry(body);
         if (!response.ok || !response.data.url) {
-          const serverMessage = response.data.error ?? "";
-          if (/supera el límite|too large/i.test(serverMessage)) throw new Error(copy.uploadTooLarge);
-          if (/formato no permitido|not supported/i.test(serverMessage)) throw new Error(copy.uploadUnsupported);
+          // Se decide con el CÓDIGO, no con el texto. Antes esto miraba si el
+          // mensaje del servidor decía «supera el límite» o «formato no
+          // permitido»: traducir esas cadenas —que es justo lo que había que
+          // hacer para el usuario en inglés— habría roto la clasificación en
+          // silencio y todo habría caído en «no se pudo subir».
+          const motivo = (response.data as { code?: string }).code;
+          if (motivo === "muy_grande") throw new Error(copy.uploadTooLarge);
+          if (motivo === "formato") throw new Error(copy.uploadUnsupported);
           throw new Error(copy.uploadFailed);
         }
         urls.push(response.data.url);

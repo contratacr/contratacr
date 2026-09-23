@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { mensajeDeError } from "@/lib/api-errors";
 import { v2 as cloudinary } from "cloudinary";
 import { validateUpload, IMAGE_KINDS, MIME_FOR, type FileKind } from "@/lib/upload-validation";
 import { enforceRateLimit } from "@/lib/rate-limit";
@@ -25,14 +26,14 @@ export async function POST(req: Request) {
   if (rl) return rl;
 
   const user = await safeGetUser(await createClient());
-  if (!user) return NextResponse.json({ error: "Inicia sesión para subir imágenes." }, { status: 401 });
+  if (!user) return NextResponse.json({ error: mensajeDeError(req, { es: "Inicia sesión para subir imágenes.", en: "Sign in to upload images." }) }, { status: 401 });
 
   try {
     const formData = await req.formData();
     const file = formData.get("file") as File | null;
 
     if (!file) {
-      return NextResponse.json({ error: "No se recibió ningún archivo" }, { status: 400 });
+      return NextResponse.json({ error: mensajeDeError(req, { es: "No se recibió ningún archivo", en: "No file was received." }) }, { status: 400 });
     }
 
     const buffer = Buffer.from(await file.arrayBuffer());
@@ -46,7 +47,7 @@ export async function POST(req: Request) {
       maxBytes: 4 * 1024 * 1024,
       allowLabel: "JPG, PNG, WEBP, AVIF, HEIC/HEIF o GIF",
     });
-    if (!check.ok) return NextResponse.json({ error: check.error }, { status: 400 });
+    if (!check.ok) return NextResponse.json({ error: check.error, code: check.motivo }, { status: 400 });
 
     // Correct MIME from the DETECTED kind (never the uploaded file.type).
     const dataUri = `data:${MIME_FOR[check.kind]};base64,${buffer.toString("base64")}`;
@@ -80,7 +81,7 @@ export async function POST(req: Request) {
     const apiSecret = process.env.CLOUDINARY_API_SECRET;
     if (!cloudName || !apiKey || !apiSecret) {
       return NextResponse.json(
-        { error: "Cloudinary no está configurado. Revisa las variables de entorno en Vercel." },
+        { error: mensajeDeError(req, { es: "Cloudinary no está configurado. Revisa las variables de entorno en Vercel.", en: "Cloudinary is not configured. Check the environment variables." }) },
         { status: 503 }
       );
     }

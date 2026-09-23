@@ -729,12 +729,15 @@ export default function RegisterProfessionalPage() {
       }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : t("errTitle");
+      const codigo = (err as { codigo?: string } | null)?.codigo;
+      // Los textos que quedan son los de SUPABASE, que no controlamos y llegan
+      // siempre en inglés; los nuestros se reconocen por código.
       if (
+        codigo === "email_taken" ||
+        codigo === "cedula_taken" ||
         msg.includes("already registered") ||
         msg.includes("already been registered") ||
-        msg.includes("already exists") ||
-        msg.includes("ya está registrado") ||
-        msg.includes("Ya existe una cuenta")
+        msg.includes("already exists")
       ) {
         const provider = await detectSocialOnly(data.email);
         form1.setError("email", { message: provider ? t("errSocialAccount", { provider: providerLabel(provider) }) : t("errAccountExists") });
@@ -904,8 +907,15 @@ export default function RegisterProfessionalPage() {
       });
 
       if (!proRes.ok) {
-        const { error: proErr } = await proRes.json();
-        throw new Error(proErr ?? t("errCreateProfile"));
+        const { error: proErr, code: proCode } = await proRes.json();
+        // El CÓDIGO viaja con el error: es lo que se mira para decidir, porque
+        // un texto se traduce y se reescribe. Antes esto se resolvía buscando
+        // «ya está registrado» dentro del mensaje, así que traducirlo al inglés
+        // —lo que hacía falta para el usuario en inglés— habría hecho que esa
+        // cuenta existente dejara de detectarse.
+        const fallo = new Error(proErr ?? t("errCreateProfile")) as Error & { codigo?: string };
+        fallo.codigo = typeof proCode === "string" ? proCode : undefined;
+        throw fallo;
       }
       const proResult = await proRes.json().catch(() => ({}));
 

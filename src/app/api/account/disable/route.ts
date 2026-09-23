@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { mensajeDeError } from "@/lib/api-errors";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -27,7 +28,7 @@ export async function POST(req: Request) {
   const reason = typeof body.reason === "string" ? body.reason.trim() : "";
 
   if (action === "disable" && !reason) {
-    return NextResponse.json({ error: "Cuéntanos el motivo para cerrar tu cuenta." }, { status: 400 });
+    return NextResponse.json({ error: mensajeDeError(req, { es: "Cuéntanos el motivo para cerrar tu cuenta.", en: "Tell us why you are closing your account." }) }, { status: 400 });
   }
 
   const admin = createAdminClient();
@@ -39,7 +40,7 @@ export async function POST(req: Request) {
       .in("status", ["pending", "processing", "failed"])
       .maybeSingle();
     if (deletion) {
-      return NextResponse.json({ error: "La eliminación permanente de esta cuenta ya fue iniciada." }, { status: 409 });
+      return NextResponse.json({ error: mensajeDeError(req, { es: "La eliminación permanente de esta cuenta ya fue iniciada.", en: "Permanent deletion of this account has already started." }) }, { status: 409 });
     }
   }
   const update = action === "disable"
@@ -48,7 +49,7 @@ export async function POST(req: Request) {
 
   const { error } = await admin.from("profiles").update(update).eq("id", user.id);
   if (error && /is_disabled|disabled_reason|disabled_at|column|schema cache|PGRST204/i.test(error.message)) {
-    return NextResponse.json({ error: "Función no disponible todavía. Intenta más tarde." }, { status: 503 });
+    return NextResponse.json({ error: mensajeDeError(req, { es: "Función no disponible todavía. Intenta más tarde.", en: "This is not available yet. Try again later." }) }, { status: 503 });
   }
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 

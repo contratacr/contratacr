@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { idiomaDeLaPeticion, mensajeDeError } from "@/lib/api-errors";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { limitTrimmedText } from "@/lib/text-limits";
@@ -184,8 +185,8 @@ export async function GET(req: Request) {
     const deletedForParticipant = conversation && (conversation.client_id === user.id
       ? conversation.client_deleted_at
       : conversation.professional_deleted_at);
-    if (deletedForParticipant) return NextResponse.json({ error: "Conversación no encontrada" }, { status: 404 });
-    if (!conversation || !participant(conversation, user.id)) return NextResponse.json({ error: "Conversación no encontrada" }, { status: 404 });
+    if (deletedForParticipant) return NextResponse.json({ error: mensajeDeError(req, { es: "Conversación no encontrada", en: "Conversation not found" }) }, { status: 404 });
+    if (!conversation || !participant(conversation, user.id)) return NextResponse.json({ error: mensajeDeError(req, { es: "Conversación no encontrada", en: "Conversation not found" }) }, { status: 404 });
     const { data: messages, error } = await db.from("direct_messages")
       .select("id, conversation_id, sender_id, body, attachment_urls, read_at, created_at")
       .eq("conversation_id", id).order("created_at", { ascending: true });
@@ -235,7 +236,7 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   const user = await currentUser();
-  if (!user) return NextResponse.json({ error: "Inicia sesión para usar el chat." }, { status: 401 });
+  if (!user) return NextResponse.json({ error: mensajeDeError(req, { es: "Inicia sesión para usar el chat.", en: "Sign in to use chat." }) }, { status: 401 });
   const body = await req.json().catch(() => ({}));
   const professionalId = String(body.professionalId ?? "");
   const conversationId = String(body.conversationId ?? "");
@@ -245,7 +246,7 @@ export async function POST(req: Request) {
   const message = limitTrimmedText(body.message, 2000);
   const nativeRequest = isNativeRequest(req);
   if (nativeRequest) {
-    const moderation = validateDirectMessage(message);
+    const moderation = validateDirectMessage(message, idiomaDeLaPeticion(req));
     if (!moderation.ok) return NextResponse.json({ error: moderation.error }, { status: 422 });
   }
   const initialMessage = limitTrimmedText(body.initialMessage, 2000);
@@ -376,7 +377,7 @@ export async function POST(req: Request) {
   }
 
   if (!conversation || !participant(conversation, user.id)) return NextResponse.json({ error: "No autorizado" }, { status: 403 });
-  if (conversation.status === "blocked") return NextResponse.json({ error: "Esta conversación está bloqueada." }, { status: 403 });
+  if (conversation.status === "blocked") return NextResponse.json({ error: mensajeDeError(req, { es: "Esta conversación está bloqueada.", en: "This conversation is blocked." }) }, { status: 403 });
   if (openConversation && !conversationCreated) {
     return NextResponse.json({ ok: true, conversationId: conversation.id, created: false });
   }
@@ -472,7 +473,7 @@ export async function PATCH(req: Request) {
     const db = createAdminClient();
     const { data } = await db.from("direct_conversations").select("*").eq("id", conversationId).maybeSingle();
     const conversation = data as ConversationRow | null;
-    if (!conversation || !participant(conversation, user.id)) return NextResponse.json({ error: "Conversación no encontrada" }, { status: 404 });
+    if (!conversation || !participant(conversation, user.id)) return NextResponse.json({ error: mensajeDeError(req, { es: "Conversación no encontrada", en: "Conversation not found" }) }, { status: 404 });
     if (reportReason.length < 3) return NextResponse.json({ error: "Explica brevemente el motivo del reporte." }, { status: 400 });
 
     const reportingAsClient = conversation.client_id === user.id;
@@ -512,11 +513,11 @@ export async function PATCH(req: Request) {
     return NextResponse.json({ ok: true, blocked: true });
   }
   const archived = body.status === "archived" ? true : body.status === "open" ? false : null;
-  if (!conversationId || archived === null) return NextResponse.json({ error: "Acción inválida." }, { status: 400 });
+  if (!conversationId || archived === null) return NextResponse.json({ error: mensajeDeError(req, { es: "Acción inválida.", en: "Invalid action." }) }, { status: 400 });
   const db = createAdminClient();
   const { data } = await db.from("direct_conversations").select("*").eq("id", conversationId).maybeSingle();
   const conversation = data as ConversationRow | null;
-  if (!conversation || !participant(conversation, user.id)) return NextResponse.json({ error: "Conversación no encontrada" }, { status: 404 });
+  if (!conversation || !participant(conversation, user.id)) return NextResponse.json({ error: mensajeDeError(req, { es: "Conversación no encontrada", en: "Conversation not found" }) }, { status: 404 });
   const now = new Date().toISOString();
   const archiveField = conversation.client_id === user.id ? "client_archived_at" : "professional_archived_at";
   const { error } = await db.from("direct_conversations").update({ [archiveField]: archived ? now : null, updated_at: now }).eq("id", conversationId);
@@ -529,12 +530,12 @@ export async function DELETE(req: Request) {
   if (!user) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   const body = await req.json().catch(() => ({}));
   const conversationId = String(body.conversationId ?? "");
-  if (!conversationId) return NextResponse.json({ error: "Acción inválida." }, { status: 400 });
+  if (!conversationId) return NextResponse.json({ error: mensajeDeError(req, { es: "Acción inválida.", en: "Invalid action." }) }, { status: 400 });
 
   const db = createAdminClient();
   const { data } = await db.from("direct_conversations").select("*").eq("id", conversationId).maybeSingle();
   const conversation = data as ConversationRow | null;
-  if (!conversation || !participant(conversation, user.id)) return NextResponse.json({ error: "Conversación no encontrada" }, { status: 404 });
+  if (!conversation || !participant(conversation, user.id)) return NextResponse.json({ error: mensajeDeError(req, { es: "Conversación no encontrada", en: "Conversation not found" }) }, { status: 404 });
 
   const isClient = conversation.client_id === user.id;
   const archiveField = isClient ? "client_archived_at" : "professional_archived_at";

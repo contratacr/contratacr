@@ -180,7 +180,7 @@ export async function POST(req: Request) {
         await supabase.auth.admin.getUserById(bodyUserId);
       if (adminError || !adminLookup.user) {
         return NextResponse.json(
-          { error: "Este correo ya está registrado. Inicia sesión." },
+          { error: "Este correo ya está registrado. Inicia sesión.", code: "email_taken" },
           { status: 409 }
         );
       }
