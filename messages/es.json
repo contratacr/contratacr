@@ -304,7 +304,8 @@
       "por_proyecto": "Por proyecto"
     },
     "metaTitle": "{category} en {place} · profesionales verificados | ContrataCR",
-    "metaDesc": "Compara profesionales de {category} en {place}: verificados con cédula, con reseñas, precios y contacto directo."
+    "metaDesc": "Compara profesionales de {category} en {place}: verificados con cédula, con reseñas, precios y contacto directo.",
+    "wholeProvince": "Toda la provincia"
   },
   "hero": {
     "categoryPlaceholder": "¿Qué servicio necesitas?",

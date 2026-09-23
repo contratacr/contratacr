@@ -304,7 +304,8 @@
       "por_proyecto": "Per project"
     },
     "metaTitle": "{category} in {place} · verified professionals | ContrataCR",
-    "metaDesc": "Compare {category} professionals in {place}: ID-verified, with reviews, prices and direct contact."
+    "metaDesc": "Compare {category} professionals in {place}: ID-verified, with reviews, prices and direct contact.",
+    "wholeProvince": "Whole province"
   },
   "hero": {
     "categoryPlaceholder": "What service do you need?",

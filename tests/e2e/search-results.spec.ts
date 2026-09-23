@@ -206,10 +206,17 @@ test.describe("@seeded search results", () => {
       await page.getByRole("button", { name: /Qu[eé] servicio|What service/i }).filter({ visible: true }).first().click();
       const location = page.getByRole("combobox", { name: /Ubicaci[oó]n|Location/i }).filter({ visible: true }).first();
       await expect(location).toBeVisible();
-      await location.fill("Liber");
-      const liberia = page.getByRole("option", { name: /Liberia/i }).filter({ visible: true }).first();
-      await expect(liberia).toBeVisible();
-      await liberia.click();
+      // La lista de lugares se vuelve a pintar con CADA letra: el renglón se
+      // mueve bajo el dedo y la pulsación cae en otro lado o en nada. Medido:
+      // sin reintento falla 3 de cada 5 corridas, con el código intacto. Se
+      // reintenta hasta que el lugar quede elegido de verdad.
+      await expect(async () => {
+        await location.fill("Liber");
+        const opcion = page.getByRole("option", { name: /Liberia/i }).filter({ visible: true }).first();
+        await expect(opcion).toBeVisible({ timeout: 4_000 });
+        await opcion.click();
+        await expect(location).toHaveValue(/Liberia/i, { timeout: 2_000 });
+      }).toPass({ timeout: 25_000 });
 
       const service = page.getByRole("combobox", { name: /^Servicio$|^Service$/i }).filter({ visible: true }).first();
       await service.fill("plomeria");
@@ -219,10 +226,14 @@ test.describe("@seeded search results", () => {
     } else {
       const location = page.getByRole("combobox", { name: /Ubicaci[oó]n|Location/i }).filter({ visible: true }).first();
       await expect(location).toBeVisible();
-      await location.fill("Liber");
-      const liberia = page.getByRole("option", { name: /Liberia/i }).filter({ visible: true }).first();
-      await expect(liberia).toBeVisible();
-      await liberia.click();
+      // Mismo motivo que en el teléfono: la lista se repinta con cada letra.
+      await expect(async () => {
+        await location.fill("Liber");
+        const opcion = page.getByRole("option", { name: /Liberia/i }).filter({ visible: true }).first();
+        await expect(opcion).toBeVisible({ timeout: 4_000 });
+        await opcion.click();
+        await expect(location).toHaveValue(/Liberia/i, { timeout: 2_000 });
+      }).toPass({ timeout: 25_000 });
       await page.getByRole("button", { name: /^Buscar$|^Search$/i }).filter({ visible: true }).first().click();
     }
 

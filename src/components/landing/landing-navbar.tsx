@@ -953,6 +953,10 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   const router = useRouter();
   const t = useTranslations("header");
   const tNav = useTranslations("bottomNav");
+  // Una provincia ES «toda la provincia», pero eso no se veía: al escribir
+  // «alajuela» salían «Alajuela» (provincia) y «Alajuela» (cantón) una debajo
+  // de otra diciendo casi lo mismo, y nada indicaba que la primera cubre todo.
+  const tWholeProvince = useTranslations("search")("wholeProvince");
   const switchLang = useSwitchLang();
   const alternateLocale = locale === "en" ? "es" : "en";
   const alternateLanguageLabel = locale === "en" ? "Español" : "English";
@@ -2377,7 +2381,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                                     <span className="block text-sm font-medium text-[#1a2744] truncate">{s.label}</span>
                                     {s.type === "canton" && <span className="block text-[11px] text-gray-400 truncate">{s.sublabel}</span>}
                                   </span>
-                                  <span className="text-[10px] uppercase tracking-wide text-gray-300 shrink-0">{s.type === "province" ? t("province") : t("canton")}</span>
+                                  <span className="text-[10px] uppercase tracking-wide text-gray-300 shrink-0">{s.type === "province" ? tWholeProvince : t("canton")}</span>
                                 </button>
                               ))}
                             </div>
