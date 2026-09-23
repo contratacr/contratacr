@@ -250,8 +250,20 @@ test.describe("@mobile native shell contracts", () => {
   });
 
   test("native marketplace tabs survive localized document navigations", async ({ page }) => {
+    // Con el mensaje pelado, un error de hidratación en producción sale
+    // minificado («Minified React error #418») y no dice ni en qué pantalla
+    // pasó: imposible de perseguir desde el registro de CI. Se anota la
+    // dirección y el momento junto al error.
     const pageErrors: string[] = [];
-    page.on("pageerror", (error) => pageErrors.push(error.message));
+    page.on("pageerror", (error) => {
+      pageErrors.push(`[${page.url()}] ${error.message}`);
+    });
+    page.on("console", (mensaje) => {
+      const texto = mensaje.text();
+      if (mensaje.type() === "error" && /hydrat|did not match|Text content/i.test(texto)) {
+        pageErrors.push(`[${page.url()}] consola: ${texto.slice(0, 500)}`);
+      }
+    });
 
     await gotoOK(page, "/es");
 
@@ -280,7 +292,7 @@ test.describe("@mobile native shell contracts", () => {
       await expect(page.getByRole("heading", { name: "Algo salió mal", exact: true })).toHaveCount(0);
     }
 
-    expect(pageErrors).toEqual([]);
+    expect(pageErrors, pageErrors.join("\n")).toEqual([]);
   });
 
   test("native search owns the full viewport without a hidden footer reserve", async ({ page }) => {
