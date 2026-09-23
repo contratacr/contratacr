@@ -271,14 +271,28 @@ async function main() {
     professional_name_snapshot: "Publicidad ContrataCR",
     professional_email_snapshot: EMAIL,
   })).filter((row) => row.project_id);
+  // Una postulación por empleo, y ni una más. La clave única de la tabla es la
+  // pareja (job_id, applicant_id), pero el clon repartía los empleos con
+  // `index % jobs.length`: en cuanto había más postulaciones de origen que
+  // empleos, dos clones caían en el mismo empleo con el mismo postulante y el
+  // upsert —que va por `id`, no por esa pareja— chocaba contra la restricción.
+  // Es el mismo fallo que ya se arregló en `saved_items`.
+  const vistas = new Set();
   const applications = sourceApplications.map((row, index) => ({
     ...cloneBase("job_applications", row),
     job_id: jobs[index % Math.max(jobs.length, 1)]?.id,
     applicant_id: user.id,
     applicant_email: EMAIL,
     phone: "+506 7000 0099",
-  })).filter((row) => row.job_id);
+  })).filter((row) => {
+    if (!row.job_id || vistas.has(row.job_id)) return false;
+    vistas.add(row.job_id);
+    return true;
+  });
   await upsertRows("proposals", proposals);
+  // Y se borran las de la corrida anterior: si el id derivado cambió, el clon
+  // nuevo chocaría con el viejo por esa misma pareja.
+  await must("old advertising job applications", admin.from("job_applications").delete().eq("applicant_id", user.id));
   await upsertRows("job_applications", applications);
 
   const tickets = sourceTickets.map((row, index) => ({

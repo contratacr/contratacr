@@ -240,7 +240,10 @@ async function verifyPrivateActorIsolation(owners, ignoredOwners = []) {
     must("private bookings", admin.from("bookings").select("id,client_id,professional_id").limit(5000)),
     must("private projects", admin.from("projects").select("id,client_id,accepted_professional_id").limit(5000)),
     must("private conversations", admin.from("direct_conversations").select("id,client_id,professional_id,professional_profile_id").limit(5000)),
-    must("pair jobs", admin.from("job_posts").select("id,employer_id").in("employer_id", [...professionalIds]).limit(5000)),
+    // También los de las cuentas ignoradas (publicidad): sus empleos son de
+    // prueba y el app se postula a ellos, así que hay que conocerlos para no
+    // confundir esa postulación con datos de alguien real.
+    must("pair jobs", admin.from("job_posts").select("id,employer_id").in("employer_id", [...professionalIds, ...ignoredProfessionalIds].filter(Boolean)).limit(5000)),
     must("pair offers", admin.from("professional_offers").select("id,professional_id").in("professional_id", [...professionalIds]).limit(5000)),
     must("private follows", admin.from("professional_follows").select("id,follower_id,professional_id").limit(5000)),
     must("private saved professionals", admin.from("saved_professionals").select("id,client_id,professional_id").limit(5000)),
@@ -282,7 +285,17 @@ async function verifyPrivateActorIsolation(owners, ignoredOwners = []) {
   assertRows("reviews", reviews, (row) => ignoredProfileIds.has(row.client_id)
     || ignoredProfessionalIds.has(row.professional_id)
     || (profileIds.has(row.client_id) && professionalIds.has(row.professional_id)));
-  assertRows("notifications", notifications, (row) => profileIds.has(row.user_id) || ignoredProfileIds.has(row.user_id));
+  const AVISOS_DE_DIFUSION = new Set(["new_job", "new_project"]);
+  // Los avisos de DIFUSIÓN llegan a toda una categoría por diseño: publicar un
+  // empleo o un proyecto en la prueba le avisa también a los profesionales
+  // copiados del espejo de producción, y eso no es una fuga. Su contenido es
+  // enteramente público —enlace, id, título y categoría de algo ya publicado—,
+  // sin nada privado de nadie. La regla de «solo cuentas de prueba» es para los
+  // avisos PERSONALES (un mensaje, una cita, una reseña), que sí llevan datos
+  // de alguien.
+  assertRows("notifications", notifications, (row) => AVISOS_DE_DIFUSION.has(row.type)
+    || profileIds.has(row.user_id)
+    || ignoredProfileIds.has(row.user_id));
   assert(!deletionRequests.length, `Completed/pending disposable deletion requests remain: ${deletionRequests.map((row) => row.id).join(", ")}.`);
   assertRows("reports", reports, (row) => {
     const reporterEmail = (row.reporter_email || "").toLowerCase();
@@ -304,7 +317,13 @@ async function verifyPrivateActorIsolation(owners, ignoredOwners = []) {
     || ignoredProfileIds.has(row.professional_profile_id)
     || ignoredProfessionalIds.has(row.professional_id)).map((row) => row.id));
   const conversationIds = new Set(conversations.filter((row) => !ignoredConversationIds.has(row.id)).map((row) => row.id));
-  const jobIds = new Set(jobs.map((row) => row.id));
+  // Los empleos de la cuenta de publicidad también son de prueba: esa cuenta
+  // está en la lista de «ignoradas» (su contenido es un clon, no se compara),
+  // pero sus empleos existen justamente para que el app los use. Una
+  // postulación de una cuenta de prueba a uno de ellos es legítima y antes se
+  // marcaba como fuga de datos de alguien real.
+  const jobIds = new Set(jobs.filter((row) => !ignoredProfessionalIds.has(row.employer_id)).map((row) => row.id));
+  const ignoredJobIds = new Set(jobs.filter((row) => ignoredProfessionalIds.has(row.employer_id)).map((row) => row.id));
   const offerIds = new Set(offers.map((row) => row.id));
   const ignoredTicketIds = new Set(supportTickets.filter((row) => ignoredProfileIds.has(row.user_id)
     || ignoredProfessionalIds.has(row.professional_id)).map((row) => row.id));
@@ -323,6 +342,7 @@ async function verifyPrivateActorIsolation(owners, ignoredOwners = []) {
     || ignoredProfileIds.has(row.sender_id)
     || (conversationIds.has(row.conversation_id) && profileIds.has(row.sender_id)));
   assertRows("job applications", applications, (row) => ignoredProfileIds.has(row.applicant_id)
+    || ignoredJobIds.has(row.job_id)
     || (jobIds.has(row.job_id) && profileIds.has(row.applicant_id)));
   assertRows("saved marketplace items", savedItems, (row) => ignoredProfileIds.has(row.user_id) || profileIds.has(row.user_id)
     && ((row.item_type === "job" && jobIds.has(row.item_id)) || (row.item_type === "offer" && offerIds.has(row.item_id))));
@@ -418,10 +438,16 @@ async function verifyPrivateActorIsolation(owners, ignoredOwners = []) {
 
   const [pushTokens, pushOutbox] = await Promise.all([
     must("private push tokens", admin.from("user_push_tokens").select("id,user_id").limit(5000)),
-    optionalPushTable("private push outbox", admin.from("notification_push_outbox").select("id,user_id,status").limit(5000)),
+    optionalPushTable("private push outbox", admin.from("notification_push_outbox").select("id,user_id,status,notification_id").limit(5000)),
   ]);
   assertRows("push tokens", pushTokens, (row) => profileIds.has(row.user_id) || ignoredProfileIds.has(row.user_id));
-  assertRows("push outbox", pushOutbox, (row) => profileIds.has(row.user_id) || ignoredProfileIds.has(row.user_id));
+  // La cola de push es la sombra de los avisos: si el aviso es de difusión, su
+  // fila de push también lo es. Se resuelve por `notification_id` en vez de
+  // repetir la lista de tipos.
+  const avisosDeDifusionIds = new Set(notifications.filter((row) => AVISOS_DE_DIFUSION.has(row.type)).map((row) => row.id));
+  assertRows("push outbox", pushOutbox, (row) => avisosDeDifusionIds.has(row.notification_id)
+    || profileIds.has(row.user_id)
+    || ignoredProfileIds.has(row.user_id));
   assert(
     !pushOutbox.some((row) => row.status === "processing"),
     "Push outbox has a leased regression row after cleanup.",
@@ -434,6 +460,7 @@ async function verifyPrivateActorIsolation(owners, ignoredOwners = []) {
     ...projectIds,
     ...conversationIds,
     ...jobIds,
+    ...ignoredJobIds,
     ...offerIds,
     ...ticketIds,
     ...reviews.map((row) => row.id),
@@ -448,6 +475,12 @@ async function verifyPrivateActorIsolation(owners, ignoredOwners = []) {
   ]);
   const uuidPattern = /[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}/gi;
   assertRows("notification references", scopedNotifications, (row) => {
+    // Un aviso de difusión SOBREVIVE a lo que anuncia: la prueba publica un
+    // empleo, se avisa a toda la categoría y después el empleo se borra. El
+    // aviso queda apuntando a un id que ya no existe, y eso no es una fuga
+    // —su enlace va al tablero, no al registro muerto—. Exigirle que su
+    // referencia resuelva sería exigirle que el empleo viva para siempre.
+    if (AVISOS_DE_DIFUSION.has(row.type)) return true;
     const references = JSON.stringify(row.data ?? {}).match(uuidPattern) ?? [];
     return references.every((id) => allowedNotificationIds.has(id.toLowerCase()));
   });
@@ -482,7 +515,10 @@ function verifyProfessionCoverage(owner) {
 }
 
 async function verifyNoRetiredAuthUsers() {
-  const allowed = new Set(["e2e.client@contratacr.test", "e2e.pro@contratacr.test", ADVERTISING_EMAIL]);
+  // `cliente.pruebas@…` es la cuenta con la que Isaac prueba a mano. Ya está
+  // reconocida más abajo para el aislamiento de datos; aquí faltaba, así que la
+  // verificación la tomaba por un resto de una prueba vieja y se ponía roja.
+  const allowed = new Set(["e2e.client@contratacr.test", "e2e.pro@contratacr.test", "cliente.pruebas@contratacr.test", ADVERTISING_EMAIL]);
   const unexpectedProfiles = await must(
     "unexpected test profiles",
     admin.from("profiles").select("email").ilike("email", "%@contratacr.test"),
