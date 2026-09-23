@@ -21,6 +21,7 @@ import { SpamNotice } from "@/components/ui/spam-notice";
 import { NAME_MAX_LENGTH, limitText } from "@/lib/text-limits";
 import { trackMetaEvent } from "@/lib/analytics/meta-pixel";
 import { readAttribution } from "@/lib/analytics/attribution";
+import { PhoneInput, isPhoneComplete } from "@/components/ui/phone-input";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -209,6 +210,7 @@ export function ClientRegistrationModal({
 }: ClientRegistrationModalProps) {
   const t = useTranslations("clientRegModal");
   const tRp = useTranslations("resetPassword");
+  const tRc = useTranslations("registerClient");
   const locale = useLocale();
   const nativeApp = useNativeApp();
   const [view, setView] = useState<ModalView>("register");
@@ -231,11 +233,17 @@ export function ClientRegistrationModal({
   const [error, setError] = useState<string | null>(null);
   const [duplicateEmailDetected, setDuplicateEmailDetected] = useState(false);
   const [checkingEmail, setCheckingEmail] = useState(false);
+  // El WhatsApp es la única vía por la que el profesional responde. Esta puerta
+  // de registro lo pedía en /registro/cliente pero NO aquí, así que por el modal
+  // entraban cuentas sin número: luego publicaban un proyecto y el tablero decía
+  // «este cliente no dejó un WhatsApp». Se pide en el mismo paso que el correo.
+  const [telefono, setTelefono] = useState("");
 
   function reset() {
     setView("register");
     setStep("identity");
     setEmail("");
+    setTelefono("");
     setFullName("");
     setManualName("");
     setCedula("");
@@ -329,7 +337,7 @@ export function ClientRegistrationModal({
         const res = await fetch("/api/register/client", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ userId: signUpData.user.id, fullName: resolved, attribution: readAttribution() }),
+          body: JSON.stringify({ userId: signUpData.user.id, fullName: resolved, phone: telefono.trim(), attribution: readAttribution() }),
         });
         const json = await res.json().catch(() => ({}));
         if (!res.ok && json?.code === "cedula_taken") {
@@ -576,14 +584,21 @@ export function ClientRegistrationModal({
 
                 {/* STEP: email */}
                 {step === "email" && (
-                  <Input
-                    label={t("emailLabel")}
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="tu@email.com"
-                    autoFocus
-                  />
+                  <div className="flex flex-col gap-4">
+                    <Input
+                      label={t("emailLabel")}
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="tu@email.com"
+                      autoFocus
+                    />
+                    <PhoneInput
+                      label={tRc("phone")}
+                      value={telefono}
+                      onChange={setTelefono}
+                    />
+                  </div>
                 )}
 
                 {/* STEP: password */}
@@ -650,7 +665,7 @@ export function ClientRegistrationModal({
                     loading={submitting || checkingEmail}
                     disabled={
                       (step === "identity" && !identityReady) ||
-                      (step === "email" && !email.includes("@")) ||
+                      (step === "email" && (!email.includes("@") || !isPhoneComplete(telefono))) ||
                       (step === "password" && (!isPasswordValid() || !confirmPassword))
                     }
                     onClick={() => {

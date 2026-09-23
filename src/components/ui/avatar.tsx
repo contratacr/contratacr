@@ -10,7 +10,7 @@ const Avatar = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <AvatarPrimitive.Root
     ref={ref}
-    className={cn("relative flex h-12 w-12 shrink-0 overflow-hidden rounded-full", className)}
+    className={cn("relative isolate flex h-12 w-12 shrink-0 overflow-hidden rounded-full", className)}
     {...props}
   />
 ));
@@ -22,6 +22,9 @@ Avatar.displayName = AvatarPrimitive.Root.displayName;
 // foto, cambiando de nodo. Aquí la foto ya viene en el HTML (el navegador la
 // pide mientras lee la página) y se pinta ENCIMA de las iniciales, que quedan
 // debajo como relleno. No hay cambio de nodo ni salto de tamaño.
+// El `z-10` vive dentro del avatar gracias al `isolate` de la raíz: sin él la
+// foto le ganaba también a la insignia de la cámara que va ENCIMA del avatar
+// (el panel del profesional), y el aro blanco salía mordido.
 const AvatarImage = React.forwardRef<
   HTMLImageElement,
   React.ComponentPropsWithoutRef<typeof AvatarPrimitive.Image>
