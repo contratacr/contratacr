@@ -175,7 +175,12 @@ export function WhatsAppReviewFollowUp() {
         <section
           role="dialog"
           aria-label={isEn ? "Service follow-up" : "Seguimiento del servicio"}
-          className="fixed inset-x-3 bottom-[max(0.75rem,env(safe-area-inset-bottom))] z-[145] rounded-2xl border border-[#d9e8f2] bg-white p-4 shadow-[0_18px_55px_-18px_rgba(26,39,68,0.38)] sm:inset-x-auto sm:bottom-6 sm:right-6 sm:w-[390px] sm:p-5"
+          // La tarjeta se sienta SOBRE la barra de navegación, no encima de
+          // ella: en la app se pintaba justo en el borde inferior con z-145 y
+          // se comía los toques de la barra —quien tocaba «Empleos» le
+          // respondía la tarjeta—. `--ccr-native-live-bottom-nav-height` vale
+          // 0 fuera de la app, así que en la web nada cambia.
+          className="ccr-seguimiento-servicio fixed inset-x-3 bottom-[max(0.75rem,env(safe-area-inset-bottom))] z-[145] rounded-2xl border border-[#d9e8f2] bg-white p-4 shadow-[0_18px_55px_-18px_rgba(26,39,68,0.38)] sm:inset-x-auto sm:bottom-6 sm:right-6 sm:w-[390px] sm:p-5"
         >
           <button
             type="button"

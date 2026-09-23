@@ -311,6 +311,15 @@ body.ccr-native-app.ccr-native-search-route button:not([aria-label]) {
 
 .ccr-native-app header button:active,
 .ccr-native-app header a:active,
+/* La tarjeta de «Seguimiento del servicio» flota abajo a la derecha. En la app
+   eso la ponía JUSTO encima de la barra de navegación —z-145 contra la barra—,
+   y sus toques no llegaban: quien tocaba «Empleos» le respondía la tarjeta.
+   Se la sube por encima de la barra. Fuera de la app la variable no existe y
+   la tarjeta se queda donde estaba. */
+.ccr-native-app .ccr-seguimiento-servicio {
+  bottom: calc(max(0.75rem, env(safe-area-inset-bottom)) + var(--ccr-native-live-bottom-nav-height, 0px));
+}
+
 .ccr-native-app .ccr-native-bottom-nav button:active,
 .ccr-native-app .ccr-native-bottom-nav a:active {
   transform: none;
