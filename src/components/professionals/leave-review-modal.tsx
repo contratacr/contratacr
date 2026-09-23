@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { EtiquetaObligatoria } from "@/components/ui/etiqueta-campo";
 import { useTranslations } from "next-intl";
 import { AlertCircle, Star, X } from "lucide-react";
 import { SuccessIcon } from "@/components/ui/success-icon";
@@ -326,12 +327,13 @@ export function LeaveReviewModal({
       </div>
       {(!embedded || rating > 0 || isEditing) && <div>
         <div className={`flex items-center ${embedded ? "mb-1.5 justify-end" : "mb-1.5 justify-between"}`}>
-          {!embedded && <p className="text-sm font-medium text-[#374151]">{t("commentLabel")}</p>}
+          {!embedded && <p className="text-sm font-medium text-[#374151]"><EtiquetaObligatoria>{t("commentLabel")}</EtiquetaObligatoria></p>}
           <span className="text-xs tabular-nums text-[#68778d]">{comment.length}/300</span>
         </div>
         <textarea
           value={comment}
           onChange={(event) => setComment(event.target.value)}
+          aria-required
           maxLength={300}
           rows={embedded ? 3 : 4}
           placeholder={t("commentPlaceholder")}
@@ -342,11 +344,12 @@ export function LeaveReviewModal({
           para que la reseña se pueda leer. */}
       {pedirNombre && (!embedded || rating > 0) && (
         <div>
-          <p className="mb-1.5 text-sm font-medium text-[#374151]">{t("nameLabel")}</p>
+          <p className="mb-1.5 text-sm font-medium text-[#374151]"><EtiquetaObligatoria>{t("nameLabel")}</EtiquetaObligatoria></p>
           <input
             type="text"
             value={nombre}
             onChange={(event) => setNombre(event.target.value)}
+            aria-required
             maxLength={80}
             autoComplete="name"
             placeholder={t("namePlaceholder")}

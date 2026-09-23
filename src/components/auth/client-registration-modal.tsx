@@ -287,7 +287,13 @@ export function ClientRegistrationModal({
   // ── SignUp ─────────────────────────────────────────────────────────────────
 
   async function handleSignUp() {
-    if (!isPasswordValid()) return;
+    // Antes esto era un `return` pelado: se tocaba «Crear cuenta» y no pasaba
+    // NADA, sin una sola palabra. La lista de requisitos está justo debajo,
+    // pero nadie mira una lista que ya vio si cree que el botón está roto.
+    if (!isPasswordValid()) {
+      setError(tRp("passwordNotReady"));
+      return;
+    }
     if (password !== confirmPassword) {
       setError(tRp("passwordsDontMatch"));
       return;

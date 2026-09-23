@@ -1,6 +1,7 @@
 "use client";
 
 import { irAlInicio, noInsistirArriba } from "@/lib/ir-al-inicio";
+import { AvisoDeError } from "@/components/ui/etiqueta-campo";
 import { useState, useRef, useEffect } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
@@ -907,11 +908,10 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
 
   return (
     <div className="mx-auto flex w-full max-w-none flex-col gap-4">
-      {error && (
-        <div className="rounded-xl bg-red-50 border border-red-100 px-4 py-3 text-sm text-red-600">
-          {error}
-        </div>
-      )}
+      {/* El banner vive arriba y el botón de guardar en la barra de abajo: sin
+          esto, en el teléfono el mensaje quedaba fuera de pantalla y parecía
+          que «Guardar» no hacía nada. */}
+      <AvisoDeError>{error}</AvisoDeError>
 
       {/* ONE cohesive settings card (instead of 6 separate boxes) — the sections are
           divider-separated rows; each expands inline into a soft inset field panel. */}

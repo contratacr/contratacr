@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { AvisoDeError } from "@/components/ui/etiqueta-campo";
 import { useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
 import { User as UserIcon, AlertCircle, Camera } from "lucide-react";
@@ -171,12 +172,10 @@ export default function CompleteProfilePage() {
             {t("subtitle")}
           </p>
 
-          {error && (
-            <div className="flex items-center gap-2 p-3 mb-4 bg-red-50 border border-red-100 rounded-xl text-xs text-red-600">
-              <AlertCircle className="h-3.5 w-3.5 shrink-0" />
-              {error}
-            </div>
-          )}
+          {/* Mismo caso que el editor de perfil: aviso arriba, botón abajo. */}
+          <AvisoDeError className="mb-4 flex items-center gap-2 rounded-xl border border-red-100 bg-red-50 p-3 text-xs text-red-600">
+            {error}
+          </AvisoDeError>
 
           <form noValidate onSubmit={handleSubmit} className="flex flex-col gap-4">
             {/* Optional profile photo */}

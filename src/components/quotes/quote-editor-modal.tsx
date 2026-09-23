@@ -7,6 +7,7 @@ import { Modal } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
 import { CedulaInput } from "@/components/ui/cedula-input";
 import { PhoneInput } from "@/components/ui/phone-input";
+import { EtiquetaObligatoria, EtiquetaOpcional } from "@/components/ui/etiqueta-campo";
 import { cleanId, isValidId } from "@/lib/cedula";
 import { Totales } from "@/components/quotes/quote-detail-modal";
 import { quoteTotals, QUOTE_MAX_ITEMS, type Quote, type QuoteItem, type QuoteTaxMode } from "@/lib/quotes";
@@ -80,6 +81,13 @@ export function QuoteEditorModal({ open, onClose, bookingId, projectId, defaultT
   async function enviar() {
     if (suelta && !clientName.trim()) { setError(t("errorNeedsClient")); return; }
     if (items.length === 0) { setError(t("errorNeedsItems")); return; }
+    // Una línea sin precio se enviaba en ₡0 sin decir nada: el cliente recibía
+    // una cotización que no cotiza. No se bloquea el ítem gratis a propósito
+    // —eso se escribe con un 0— sino el campo VACÍO, que es un descuido.
+    if (rows.some((r) => r.description.trim() && String(r.unit_price).trim() === "")) {
+      setError(t("errorNeedsPrices"));
+      return;
+    }
     setSending(true); setError(null);
     try {
       const res = await fetch("/api/quotes", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ bookingId, projectId, clientName, clientPhone, clientEmail, clientCedula: cleanId(cedula), title, items, taxMode, notes, validDays }) });
@@ -135,12 +143,12 @@ export function QuoteEditorModal({ open, onClose, bookingId, projectId, defaultT
                 {cedulaSinRegistro && <p className="mt-1.5 text-[12px] text-[#68778d]">{t("clientCedulaNotFound")}</p>}
               </div>
               <label className="block sm:col-span-2">
-                <span className={rotulo}>{t("clientNameLabel")}</span>
-                <input value={clientName} onChange={(e) => setClientName(e.target.value.slice(0, 80))} placeholder={t("clientNamePlaceholder")} className={campo} />
+                <span className={rotulo}><EtiquetaObligatoria>{t("clientNameLabel")}</EtiquetaObligatoria></span>
+                <input aria-required value={clientName} onChange={(e) => setClientName(e.target.value.slice(0, 80))} placeholder={t("clientNamePlaceholder")} className={campo} />
               </label>
               <PhoneInput value={clientPhone} onChange={setClientPhone} label={t("clientPhoneLabel")} optional />
               <label className="block">
-                <span className={rotulo}>{t("clientEmailLabel")}</span>
+                <span className={rotulo}><EtiquetaOpcional>{t("clientEmailLabel")}</EtiquetaOpcional></span>
                 <input type="email" inputMode="email" value={clientEmail} onChange={(e) => setClientEmail(e.target.value.slice(0, 120))} placeholder={t("clientEmailPlaceholder")} className={campo} />
               </label>
               <p className="text-[12px] leading-snug text-[#68778d] sm:col-span-2">{t("clientContactHint")}</p>
@@ -153,12 +161,12 @@ export function QuoteEditorModal({ open, onClose, bookingId, projectId, defaultT
         <section className={bloque}>
           <p className={tituloBloque}><ListChecks className="h-3.5 w-3.5" />{t("sectionWork")}</p>
           <label className="block">
-            <span className={rotulo}>{t("titleLabel")}</span>
+            <span className={rotulo}><EtiquetaOpcional>{t("titleLabel")}</EtiquetaOpcional></span>
             <input value={title} onChange={(e) => setTitle(e.target.value)} maxLength={120} placeholder={t("titlePlaceholder")} className={campo} />
           </label>
 
           <div className="mt-4">
-            <span className={rotulo}>{t("itemsLabel")}</span>
+            <span className={rotulo}><EtiquetaObligatoria>{t("itemsLabel")}</EtiquetaObligatoria></span>
             <div className="flex flex-col gap-2.5">
               {rows.map((r, indice) => {
                 const cantidad = Number(String(r.quantity).replace(",", ".")) || 0;

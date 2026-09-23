@@ -607,7 +607,8 @@
     "suggestThanks": "Gracias. Enviamos tu sugerencia al equipo para revisión.",
     "sending": "Enviando…",
     "send": "Enviar",
-    "cancel": "Cancelar"
+    "cancel": "Cancelar",
+    "optional": "opcional"
   },
   "profile": {
     "writeReview": "Escribir reseña",
@@ -2920,7 +2921,8 @@
     "ruleLower": "Una letra minúscula",
     "ruleNumber": "Un número",
     "ruleSpecial": "Un carácter especial (!@#$%^&*)",
-    "passwordsDontMatch": "Las contraseñas no coinciden"
+    "passwordsDontMatch": "Las contraseñas no coinciden",
+    "passwordNotReady": "La contraseña todavía no cumple los requisitos de abajo."
   },
   "registerClient": {
     "errName": "El nombre es requerido.",
@@ -4101,7 +4103,8 @@
     "sectionTerms": "Condiciones",
     "itemNumber": "Línea {n}",
     "itemLineTotal": "Total de la línea",
-    "notesHeading": "Nota"
+    "notesHeading": "Nota",
+    "errorNeedsPrices": "Hay líneas sin precio. Ponles su monto o quítalas: una cotización en ₡0 no le sirve a nadie."
   },
   "menuFicha": {
     "more": "Más opciones",

@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { cn } from "@/lib/utils";
+import { EtiquetaObligatoria, EtiquetaOpcional } from "@/components/ui/etiqueta-campo";
 
 // One consistent phone field. The country selector drives the dial code and the
 // exact national digit length. The stored value is ALWAYS the full number with
@@ -118,8 +119,11 @@ export function PhoneInput({ value, onChange, label, error, required, optional, 
     <div className={className}>
       {label && (
         <label htmlFor={id} className="text-sm font-medium text-[#374151] block mb-1.5">
-          {label}{required && <span className="text-red-500"> *</span>}
-          {optional && <span className="text-[#68778d] font-normal"> (opcional)</span>}
+          {/* «(opcional)» estaba escrito a mano en español, así que en inglés
+              también decía «(opcional)». Ahora sale del componente compartido. */}
+          {required ? <EtiquetaObligatoria>{label}</EtiquetaObligatoria>
+            : optional ? <EtiquetaOpcional>{label}</EtiquetaOpcional>
+            : label}
         </label>
       )}
       {/* One unified field: the prefix + input share a single border and the
@@ -159,6 +163,10 @@ export function PhoneInput({ value, onChange, label, error, required, optional, 
           inputMode="numeric"
           value={isCR ? formatCRNational(national) : national}
           onChange={(e) => changeNational(e.target.value)}
+          // El asterisco es un símbolo: quien oye la pantalla necesita que el
+          // CAMPO diga que es obligatorio. En todo el app no había un solo
+          // `aria-required`.
+          aria-required={required || undefined}
           aria-invalid={!!error}
           className="flex-1 min-w-0 h-full px-3 bg-transparent border-0 text-sm text-[#162543] placeholder:text-[#68778d] focus:outline-none focus:ring-0"
         />

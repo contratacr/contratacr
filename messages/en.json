@@ -607,7 +607,8 @@
     "suggestThanks": "Thanks. We sent your suggestion to the team for review.",
     "sending": "Sending…",
     "send": "Send",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "optional": "optional"
   },
   "profile": {
     "back": "Back to results",
@@ -2920,7 +2921,8 @@
     "ruleLower": "One lowercase letter",
     "ruleNumber": "One number",
     "ruleSpecial": "One special character (!@#$%^&*)",
-    "passwordsDontMatch": "Passwords don't match"
+    "passwordsDontMatch": "Passwords don't match",
+    "passwordNotReady": "The password does not meet the requirements below yet."
   },
   "registerClient": {
     "errName": "Name is required.",
@@ -4101,7 +4103,8 @@
     "sectionTerms": "Terms",
     "itemNumber": "Line {n}",
     "itemLineTotal": "Line total",
-    "notesHeading": "Note"
+    "notesHeading": "Note",
+    "errorNeedsPrices": "Some lines have no price. Add their amount or remove them: a quote for ₡0 helps nobody."
   },
   "menuFicha": {
     "more": "More options",
