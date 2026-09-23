@@ -44,14 +44,39 @@ export async function middleware(request: NextRequest) {
   // single redirect makes the `[locale]` routes the source of truth, so old
   // non-localized bookmarks/links (/buscar, /login, /registro, /profesionales/…,
   // and any other path) never 404 — they land on the real localized page.
-  // Locale = the stored preference (NEXT_LOCALE cookie) when it's "en", else the
-  // default "es". First-time visitors (no cookie) still get Spanish — we
-  // deliberately do NOT use Accept-Language, so an English browser does not
-  // silently flip the site to English. Temporary (307) because the target
+  // Locale = la elección guardada si la hay; si no, el idioma del dispositivo
+  // (ver `idiomaPreferido`), que solo devuelve inglés cuando el navegador lo
+  // prefiere POR ENCIMA del español. Temporary (307) because the target
   // depends on the cookie (a user can switch locale anytime); SEO canonical-
   // ization is handled by the page metadata, not the redirect status.
   // Vanity bio links (see next.config redirects — this middleware runs first on
   // OpenNext, so they must be resolved here or the locale redirect swallows them).
+  // Idioma del dispositivo, SOLO para quien nunca ha elegido uno a mano.
+  // Costa Rica es el mercado, así que el español es el punto de partida: solo
+  // se abre en inglés cuando el navegador dice preferir inglés POR ENCIMA del
+  // español. Un `Accept-Language: es-CR,en;q=0.8` sigue siendo español. En
+  // cuanto alguien toca el selector, su elección manda y esto no vuelve a
+  // opinar (cookie `ccr_locale_elegido`).
+  const idiomaPreferido = (): "es" | "en" => {
+    if (request.cookies.get("ccr_locale_elegido")?.value === "1") {
+      return request.cookies.get("NEXT_LOCALE")?.value === "en" ? "en" : "es";
+    }
+    const guardado = request.cookies.get("NEXT_LOCALE")?.value;
+    if (guardado === "en" || guardado === "es") return guardado;
+    const cabecera = request.headers.get("accept-language") ?? "";
+    let mejorEs = 0;
+    let mejorEn = 0;
+    for (const parte of cabecera.split(",")) {
+      const [etiqueta, ...resto] = parte.trim().split(";");
+      const q = Number.parseFloat(resto.find((r) => r.trim().startsWith("q="))?.split("=")[1] ?? "1");
+      const peso = Number.isFinite(q) ? q : 1;
+      const base = etiqueta.trim().toLowerCase().split("-")[0];
+      if (base === "es") mejorEs = Math.max(mejorEs, peso);
+      if (base === "en") mejorEn = Math.max(mejorEn, peso);
+    }
+    return mejorEn > mejorEs ? "en" : "es";
+  };
+
   const VANITY: Record<string, string> = {
     "/ig": "/es?utm_source=instagram&utm_medium=organic&utm_campaign=bio",
     "/tt": "/es?utm_source=tiktok&utm_medium=organic&utm_campaign=bio",
@@ -71,7 +96,7 @@ export async function middleware(request: NextRequest) {
   const FICHAS: Record<string, string> = { o: "ofertas", e: "empleos", c: "cotizacion" };
   const fichaCorta = /^\/([oec])\/([a-z0-9][a-z0-9-]{3,80})$/i.exec(pathname);
   if (fichaCorta) {
-    const locale = request.cookies.get("NEXT_LOCALE")?.value === "en" ? "en" : "es";
+    const locale = idiomaPreferido();
     const destino = new URL(`/${locale}/${FICHAS[fichaCorta[1].toLowerCase()]}/${fichaCorta[2].toLowerCase()}`, request.url);
     destino.search = request.nextUrl.search;
     return NextResponse.rewrite(destino);
@@ -82,7 +107,7 @@ export async function middleware(request: NextRequest) {
   // sección del sitio (RUTAS_DEL_SITIO, verificada en CI).
   const perfilCorto = /^\/@?([a-z0-9][a-z0-9-]{2,80})$/.exec(pathname.toLowerCase());
   if (perfilCorto && !RUTAS_DEL_SITIO.has(perfilCorto[1])) {
-    const locale = request.cookies.get("NEXT_LOCALE")?.value === "en" ? "en" : "es";
+    const locale = idiomaPreferido();
     const destino = new URL(`/${locale}/profesionales/${perfilCorto[1]}`, request.url);
     destino.search = request.nextUrl.search;
     return NextResponse.redirect(destino, 307);
@@ -90,8 +115,7 @@ export async function middleware(request: NextRequest) {
 
   const hasLocalePrefix = /^\/(?:es|en)(?:\/|$)/.test(pathname);
   if (!hasLocalePrefix) {
-    const cookieLocale = request.cookies.get("NEXT_LOCALE")?.value;
-    const target = cookieLocale === "en" ? "en" : "es";
+    const target = idiomaPreferido();
     const url = request.nextUrl.clone();
     url.pathname = `/${target}${pathname === "/" ? "" : pathname}`;
     return NextResponse.redirect(url);

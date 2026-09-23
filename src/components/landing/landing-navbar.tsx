@@ -126,11 +126,17 @@ export function useSwitchLang() {
     const currentState =
       typeof window === "undefined" ? "" : `${window.location.search}${window.location.hash}`;
     if (typeof window !== "undefined") {
-      // Cookie de SESIÓN (sin max-age): el idioma elegido vale para esta visita
-      // —lo lee el middleware para las direcciones sin prefijo— y se borra al
-      // cerrar la app o el navegador, así que la próxima entrada vuelve a
-      // español. Tampoco se guarda en localStorage, que sobrevive al cierre.
-      document.cookie = `NEXT_LOCALE=${lang}; path=/; samesite=lax`;
+      // ELEGIR el idioma con este botón sí se recuerda: un año. Antes era
+      // cookie de sesión y quien elegía inglés volvía a encontrarse el sitio en
+      // español la próxima vez —una decisión explícita que el app olvidaba—.
+      // Lo que NO se recuerda entre visitas es el idioma que uno solo viene
+      // LEYENDO por un enlace: esa marca la pone el middleware como cookie de
+      // sesión. Así el inglés de paso no se queda pegado para siempre, pero el
+      // inglés elegido a mano sí manda.
+      document.cookie = `NEXT_LOCALE=${lang}; path=/; samesite=lax; max-age=${60 * 60 * 24 * 365}`;
+      // Marca aparte para que el middleware sepa que hubo una elección a mano
+      // y no vuelva a pisarla con la detección del idioma del dispositivo.
+      document.cookie = `ccr_locale_elegido=1; path=/; samesite=lax; max-age=${60 * 60 * 24 * 365}`;
       document.documentElement.setAttribute("data-locale-switch", "1");
       window.setTimeout(() => document.documentElement.removeAttribute("data-locale-switch"), 2500);
     }

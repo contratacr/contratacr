@@ -1304,7 +1304,7 @@
     "groupPro": "Offering services",
     "groupClient": "Looking for services",
     "tabs": {
-      "home": "Panel",
+      "home": "Dashboard",
       "profile": "My profile",
       "services": "Services",
       "photos": "Success stories",
@@ -1541,7 +1541,7 @@
       "close": "Close"
     },
     "bottomNav": {
-      "home": "Panel",
+      "home": "Dashboard",
       "profile": "Profile",
       "services": "Services",
       "photos": "Wins",
