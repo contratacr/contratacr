@@ -114,6 +114,27 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(destino, 307);
   }
 
+  // Direcciones que se renombraron. Los `redirect()` que vivían en la propia
+  // página NUNCA redirigieron de verdad: `/es/categorias` y `/es/contacto`
+  // devolvían 200 con el título de la portada y sin canonical, en producción
+  // incluida. En este app —middleware de next-intl + OpenNext— el redirect de
+  // un componente no llega a la respuesta; el del middleware sí. Los archivos
+  // de página se dejan como respaldo para la navegación interna.
+  const RENOMBRADAS: Record<string, string> = {
+    "/categorias": "/servicios",
+    "/contacto": "/soporte",
+    // Recortar la dirección hacia arriba es un gesto normal: quien está en el
+    // perfil de alguien borra el último tramo para ver «todos». No hay índice
+    // de profesionales —el buscador ES el índice—, así que lleva ahí.
+    "/profesionales": "/buscar",
+  };
+  const renombrada = /^\/(es|en)(\/[a-z-]+)\/?$/i.exec(pathname);
+  if (renombrada && RENOMBRADAS[renombrada[2].toLowerCase()]) {
+    const destino = new URL(`/${renombrada[1]}${RENOMBRADAS[renombrada[2].toLowerCase()]}`, request.url);
+    destino.search = request.nextUrl.search;
+    return NextResponse.redirect(destino, 308);
+  }
+
   // Las páginas de oficio + provincia se nombraban con el código de dos letras
   // (`/servicios/electricidad/sj`). Son las direcciones con más intención de
   // compra del sitio —alguien que busca «electricista en San José» ya sabe lo
