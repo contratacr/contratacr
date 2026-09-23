@@ -142,7 +142,10 @@ requireMatch(
   aiConcierge,
   /nativeApp && result\.actionKind === "message"[\s\S]*<MessageLauncher[\s\S]*buttonLabel=\{lang === "en" \? "Message" : "Mensaje"\}/,
 );
-requireMatch("Web assistant WhatsApp copy", aiAssistantRoute, /"Contact on WhatsApp"[\s\S]*"Contactar por WhatsApp"/);
+// En la web el asistente ofrece «Enviar mensaje»: el contacto por WhatsApp se
+// abre desde la ficha, no desde una respuesta del asistente (28cd2273). Lo que
+// el contrato vigila es que el rótulo siga existiendo en los dos idiomas.
+requireMatch("Web assistant message copy", aiAssistantRoute, /"Send message"[\s\S]*"Enviar mensaje"/);
 requireMatch("Global assistant", localeLayout, /<AiConcierge\s*\/>/);
 requireMatch("Native footer hidden", globalCss, /\.ccr-native-app \.ccr-app-footer\s*\{\s*display:\s*none;/);
 requireMatch(
