@@ -529,8 +529,11 @@ export function SearchResultsLayout({ children, filters, quickFilters, drawerFil
             ve. No cambia el diseño ni mueve nada. */}
         <div
           aria-hidden
-          className="pointer-events-none fixed inset-x-0 bottom-0 z-0 bg-white lg:hidden"
-          style={{ height: "max(1px, env(safe-area-inset-bottom))" }}
+          className="pointer-events-none fixed inset-x-0 z-0 bg-white lg:hidden"
+          // La receta comprobada para Safari 26: un poco por debajo del borde y
+          // con alto mínimo, para que cuente como «pegado al borde» aunque el
+          // navegador redondee. Ancho completo: Safari exige al menos el 80 %.
+          style={{ bottom: "-8px", minHeight: "12px" }}
         />
 
         {/* BOTTOM SHEET — mobile: a fixed draggable panel over the map holding the count + the

@@ -2852,10 +2852,20 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
         {/* Mobile menu - slide-in LEFT drawer + transparent outside click layer (OUTSIDE <header>: the
             header's backdrop-filter would otherwise become the containing block
             for these `fixed` elements, breaking full-viewport positioning). */}
+          {/* CERRADO, NO EXISTE (`hidden`), en vez de quedarse con opacidad cero.
+              Safari 26 en el iPhone tiñe su barra de abajo con el color del
+              elemento `fixed` más alto que ocupa el borde inferior, y un
+              elemento oculto con `opacity-0` LO SIGUE MUESTREANDO. Este fondo
+              es `fixed inset-0`, transparente, y con el z-index más alto de
+              toda la pantalla (10050): Safari lo elegía, no encontraba color,
+              y caía a lo que se pintaba detrás —los botones verdes de
+              WhatsApp en /buscar—. Por eso la barra salía verde. Como es
+              transparente incluso abierto (solo atrapa el clic de cierre), la
+              transición de opacidad nunca se veía: `hidden` no quita nada. */}
           <div
             className={cn(
-              "lg:hidden fixed inset-0 z-[10050] bg-transparent transition-opacity duration-300",
-              mobileOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+              "lg:hidden fixed inset-0 z-[10050] bg-transparent",
+              mobileOpen ? "block" : "hidden"
             )}
             onClick={() => setMobileOpen(false)}
             aria-hidden="true"
