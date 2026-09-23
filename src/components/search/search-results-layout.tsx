@@ -159,6 +159,25 @@ export function SearchResultsLayout({ children, filters, quickFilters, drawerFil
   const curRef = useRef<number>(sinResultados ? SSR_SNAP_POINTS[SSR_SNAP_POINTS.length - 1] : CARD_PEEK);
   const expandedStart = currentSnapPoints[1] ?? CARD_PEEK;
   const expandedEnd = currentSnapPoints[currentSnapPoints.length - 1] ?? FULL;
+
+  // Quedarse sin resultados MIENTRAS se busca sube el panel.
+  //
+  // El alto inicial ya contemplaba el caso sin resultados, pero `useState` solo
+  // usa su valor inicial al MONTAR: quien ya estaba buscando y aplicó un filtro
+  // que dejó cero —cambiar el idioma, apretar la zona— no remonta nada, así que
+  // el panel se quedaba a media pantalla y el aviso «No encontramos resultados»
+  // y su botón quedaban abajo del borde. Había que arrastrarlo a mano para leer
+  // lo que acababa de pasar.
+  //
+  // Solo sube; nunca baja. Si la persona lo arrastró hacia abajo a propósito
+  // para ver el mapa, eso se respeta.
+  const habiaResultados = useRef(!sinResultados);
+  useEffect(() => {
+    if (sinResultados && habiaResultados.current) {
+      setHeightFr((altura) => Math.max(altura, expandedEnd));
+    }
+    habiaResultados.current = !sinResultados;
+  }, [sinResultados, expandedEnd]);
   const sheetScrollable = heightFr > (expandedStart + expandedEnd) / 2;
   const sheetFullyExpanded = sheetScrollable;
 
