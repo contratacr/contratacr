@@ -16,7 +16,9 @@ async function manejar(request: Request) {
     return NextResponse.json({ ok: false, error: "unauthorized" }, { status: 401 });
   }
   try {
-    const resumen = await repescarVerificacionesSinRespuesta();
+    // `?simular=1` pregunta al padrón y devuelve el conteo SIN escribir nada.
+    const simular = new URL(request.url).searchParams.get("simular") === "1";
+    const resumen = await repescarVerificacionesSinRespuesta({ simular });
     return NextResponse.json({ ok: true, ...resumen });
   } catch {
     return NextResponse.json({ ok: false, error: "verification_retry_failed" }, { status: 500 });

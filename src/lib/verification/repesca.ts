@@ -16,7 +16,8 @@ import { runIdentityVerification } from "@/lib/verification/run-verification";
 const DECISIONES_REALES = ["auto_pending", "authorized", "rejected", "under_appeal", "appeal_failed", "legal_entity_pending"];
 const POR_TANDA = 50;
 
-export async function repescarVerificacionesSinRespuesta(): Promise<{
+export async function repescarVerificacionesSinRespuesta(opts: { simular?: boolean } = {}): Promise<{
+  simulado: boolean;
   revisados: number;
   verificados: number;
   siguenPendientes: number;
@@ -48,6 +49,23 @@ export async function repescarVerificacionesSinRespuesta(): Promise<{
   let verificados = 0;
   let siguenPendientes = 0;
   let padronSigueCaido = 0;
+
+  // Simulación: se le PREGUNTA al padrón pero no se escribe nada. Verificar
+  // concede la insignia y reemplaza el nombre del perfil por el oficial; antes
+  // de hacerle eso a gente de verdad conviene ver el número.
+  if (opts.simular) {
+    const { getIdentityVerifier } = await import("@/lib/verification/identity-verifier");
+    const verificador = getIdentityVerifier();
+    for (const id of candidatos) {
+      const pro = (pendientes ?? []).find((p) => p.id === id);
+      const salida = await verificador.lookup(String(pro?.cedula ?? ""));
+      if (salida.unavailable) padronSigueCaido += 1;
+      else if (salida.found) verificados += 1;
+      else siguenPendientes += 1;
+    }
+    return { simulado: true, revisados: candidatos.length, verificados, siguenPendientes, padronSigueCaido };
+  }
+
   for (const id of candidatos) {
     // Sin `isInitial`: si el resultado no cambia nada, no se le vuelve a avisar
     // a alguien que ya recibió su aviso el día del registro.
@@ -57,5 +75,5 @@ export async function repescarVerificacionesSinRespuesta(): Promise<{
     else siguenPendientes += 1;
   }
 
-  return { revisados: candidatos.length, verificados, siguenPendientes, padronSigueCaido };
+  return { simulado: false, revisados: candidatos.length, verificados, siguenPendientes, padronSigueCaido };
 }

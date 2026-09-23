@@ -30,6 +30,19 @@ test.describe("repesca de verificaciones sin respuesta del padrón", () => {
     expect([401, 503]).toContain(conSecretoMalo.status());
   });
 
+  test("en simulación pregunta al padrón pero no escribe nada", async () => {
+    const fuente = repescarVerificacionesSinRespuesta.toString();
+    // El camino de simulación devuelve ANTES de cualquier escritura: solo
+    // consulta el padrón y cuenta. Conceder la insignia reemplaza además el
+    // nombre del perfil por el oficial, así que ver el número primero importa.
+    expect(fuente).toContain("opts.simular");
+    expect(fuente).toContain("simulado: true");
+    const antesDeEscribir = fuente.indexOf("simulado: true");
+    const primeraEscritura = fuente.indexOf("runIdentityVerification");
+    expect(antesDeEscribir).toBeGreaterThan(0);
+    expect(antesDeEscribir).toBeLessThan(primeraEscritura);
+  });
+
   test("no toca a quien el padrón ya revisó", async () => {
     const fuente = repescarVerificacionesSinRespuesta.toString();
     // Solo entran los pendientes…

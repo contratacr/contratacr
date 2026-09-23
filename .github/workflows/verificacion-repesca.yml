@@ -26,6 +26,11 @@ on:
         options:
           - production
           - test
+      simular:
+        description: "Solo contar: pregunta al padrón y NO cambia nada."
+        required: false
+        default: true
+        type: boolean
 
 concurrency:
   group: verificacion-repesca-${{ github.event_name == 'schedule' && 'production' || inputs.target }}
@@ -42,6 +47,8 @@ jobs:
     environment: ${{ github.event_name == 'schedule' && 'production' || inputs.target }}
     env:
       TARGET: ${{ github.event_name == 'schedule' && 'production' || inputs.target }}
+      # La tarea diaria SÍ verifica; a mano se simula salvo que se pida lo contrario.
+      SIMULAR: ${{ github.event_name != 'schedule' && inputs.simular && '?simular=1' || '' }}
       APP_URL: ${{ secrets.NEXT_PUBLIC_APP_URL }}
       CRON_SECRET: ${{ secrets.CRON_SECRET }}
     steps:
@@ -75,7 +82,7 @@ jobs:
           # puede llegar a la línea de comandos ni al registro.
           status="$(curl -sS -o "$body" -w '%{http_code}' \
             --retry 3 --retry-delay 10 --retry-all-errors --max-time 120 \
-            -X POST "$base/api/internal/verificacion/reintentar" \
+            -X POST "$base/api/internal/verificacion/reintentar$SIMULAR" \
             -H "Authorization: Bearer $CRON_SECRET" \
             -H "Content-Type: application/json")"
 
