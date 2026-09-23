@@ -671,9 +671,7 @@ export default function DashboardPage() {
   ) : null;
   const t = useTranslations("proPanel");
   const locale = useLocale();
-  // El catálogo de servicios para el formulario de empleos: la vacante dice a
   // qué oficio pertenece, y de ahí sale a quién se le avisa.
-  const opcionesDeServicio = useMemo(() => getAllCategories().map((category) => ({ value: category.id, label: getCategoryLabel(category.id, locale) })), [locale]);
   const rawRequestedTab = searchParams.get("tab");
   const legacyVerificationTab = rawRequestedTab === "verificacion";
   // `?tab=proposals` es una direccion VIEJA: Oportunidades ya no existe, pero
@@ -2676,7 +2674,7 @@ export default function DashboardPage() {
                             }}
                           />
                         )}
-                        {activeTab === "jobs" && pro && <JobsPanel serviceOptions={opcionesDeServicio} professionalId={pro.id} />}
+                        {activeTab === "jobs" && pro && <JobsPanel professionalId={pro.id} />}
                         {activeTab === "offers" && pro && <OffersPanel professionalId={pro.id} />}
                         {/* Publicar es publicar: el proyecto que pide un trabajo,
                             el empleo que ofrece uno y la promoción viven juntos.
@@ -2708,7 +2706,7 @@ export default function DashboardPage() {
                             </div>
                             {pro && EMPLEOS_VISIBLE && (
                               <div hidden={publicacionTipo !== "empleos"}>
-                                <JobsPanel serviceOptions={opcionesDeServicio} professionalId={pro.id} onCount={(n) => anotarConteo("empleos", n)} />
+                                <JobsPanel professionalId={pro.id} onCount={(n) => anotarConteo("empleos", n)} />
                               </div>
                             )}
                             {pro && (

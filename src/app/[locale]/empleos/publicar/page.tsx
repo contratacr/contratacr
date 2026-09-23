@@ -18,7 +18,5 @@ export default async function PublishJobPage({ searchParams }: { searchParams: P
   if (!user) redirect(`/${locale}/login?redirect=${encodeURIComponent(publishPath)}`);
   const { data: professional } = await supabase.from("professionals").select("id").eq("profile_id", user.id).maybeSingle();
   if (!professional) redirect(`/${locale}/registro/profesional?redirect=${encodeURIComponent(publishPath)}`);
-  // El catálogo de servicios: el formulario pide a qué oficio pertenece la vacante.
-  const serviceOptions = getAllCategories().map((category) => ({ value: category.id, label: getCategoryLabel(category.id, locale) }));
-  return <JobPostForm serviceOptions={serviceOptions} professionalId={professional.id} backHref={backHref} />;
+  return <JobPostForm professionalId={professional.id} backHref={backHref} />;
 }

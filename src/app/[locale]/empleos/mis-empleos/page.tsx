@@ -15,8 +15,6 @@ export const dynamic = "force-dynamic";
 export default async function MyJobsPage() {
   const tSecciones = await getTranslations("sectionTitles");
   const locale = await getLocale();
-  // El catálogo de servicios para el formulario de editar.
-  const serviceOptions = getAllCategories().map((category) => ({ value: category.id, label: getCategoryLabel(category.id, locale) }));
   const supabase = await createClient();
   const user = await safeGetUser(supabase);
   if (!user) redirect(`/${locale}/login?redirect=${encodeURIComponent(`/${locale}/empleos/mis-empleos`)}`);
@@ -35,7 +33,7 @@ export default async function MyJobsPage() {
     <main data-route-content="jobs-manager">
       <LandingNavbar mobileSearch={false} />
       <SectionHeaderTitle title={tSecciones("myJobs")} fallbackHref="/empleos" />
-      <JobsManager serviceOptions={serviceOptions} initialJobs={jobs} />
+      <JobsManager initialJobs={jobs} />
     </main>
   );
 }

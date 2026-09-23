@@ -9,16 +9,9 @@ import { repairVisibleText } from "@/lib/text/repair-visible-text";
 import { contactFlagsFor, profesionalesBloqueados } from "@/lib/contact-flags";
 
 export const dynamic = "force-dynamic";
-
-// El catálogo de servicios para el formulario de publicar: el empleo dice a
 // qué oficio pertenece, y de ahí sale a quién se le avisa.
-async function catalogoDeServicios() {
-  const locale = await getLocale();
-  return getAllCategories().map((category) => ({ value: category.id, label: getCategoryLabel(category.id, locale) }));
-}
 
 export async function JobsPageContent({ initialSelectedJobId = null, returnTo = null, detailOnly = false }: { initialSelectedJobId?: string | null; returnTo?: string | null; detailOnly?: boolean } = {}) {
-  const serviceOptions = await catalogoDeServicios();
   const supabase = await createClient();
   const user = await safeGetUser(supabase);
   // Ni el CV ni las postulaciones del visitante hacen falta ya: se responde por
@@ -76,7 +69,7 @@ export async function JobsPageContent({ initialSelectedJobId = null, returnTo = 
   }
 
   return (
-    <JobsBoard serviceOptions={serviceOptions}
+    <JobsBoard
       jobs={jobs}
       canPost={!!professional}
       initialSelectedJobId={initialSelectedJobId}
@@ -89,10 +82,9 @@ export async function JobsPageContent({ initialSelectedJobId = null, returnTo = 
 }
 
 export default async function JobsPage() {
-  const serviceOptions = await catalogoDeServicios();
   if (!hasSupabaseServerConfig()) {
     return (
-      <JobsBoard serviceOptions={serviceOptions}
+      <JobsBoard
         jobs={[]}
         canPost={false}
         initialSelectedJobId={null}
@@ -109,7 +101,7 @@ export default async function JobsPage() {
   } catch (error) {
     console.error("Could not initialize jobs page", error);
     return (
-      <JobsBoard serviceOptions={serviceOptions}
+      <JobsBoard
         jobs={[]}
         canPost={false}
         initialSelectedJobId={null}

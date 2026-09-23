@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect } from "react";
-import { type OpcionDeServicio } from "@/components/ui/selector-de-servicio";
 import { useCachedResource } from "@/hooks/use-cached-resource";
 import { JobsManager, type ManagedJob } from "@/components/jobs/jobs-manager";
 import { createClient } from "@/lib/supabase/client";
@@ -13,7 +12,7 @@ const SIN_EMPLEOS: ManagedJob[] = [];
 // Caché de sesión: al volver a la sección se pinta lo último que se vio y la
 // consulta se repite por detrás. Antes cada entrada arrancaba de cero y
 // mostraba el esqueleto aunque no hubiera nada nuevo que cargar.
-export function JobsPanel({ professionalId, serviceOptions, onCount }: { professionalId: string; serviceOptions: OpcionDeServicio[]; onCount?: (total: number) => void }) {
+export function JobsPanel({ professionalId, onCount }: { professionalId: string; onCount?: (total: number) => void }) {
   const { data: jobs, loading, refresh } = useCachedResource<ManagedJob[]>(
     `dashboard:jobs:${professionalId}`,
     () => cargarEmpleos(professionalId),
@@ -25,7 +24,7 @@ export function JobsPanel({ professionalId, serviceOptions, onCount }: { profess
   if (loading) {
     return <PanelListSkeleton rows={2} withHeader withTabs />;
   }
-  return <JobsManager serviceOptions={serviceOptions} initialJobs={jobs} professionalId={professionalId} embedded onRefresh={() => void refresh()} />;
+  return <JobsManager initialJobs={jobs} professionalId={professionalId} embedded onRefresh={() => void refresh()} />;
 }
 
 async function cargarEmpleos(professionalId: string): Promise<ManagedJob[]> {

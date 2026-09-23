@@ -22,7 +22,7 @@ import {
   type SalaryPeriod,
   type WorkplaceType,
 } from "@/lib/jobs";
-import { SelectorDeServicio, type OpcionDeServicio } from "@/components/ui/selector-de-servicio";
+import { CategorySearch } from "@/components/ui/category-search";
 import { SelectMenu } from "@/components/ui/select-menu";
 import { FutureDatePicker } from "@/components/ui/future-date-picker";
 import { FilaInterruptor } from "@/components/ui/fila-interruptor";
@@ -43,8 +43,8 @@ const JOB_POST_COPY = {
   es: {
     optional: "opcional",
     position: "Puesto",
-    service: "Servicio relacionado",
-    selectService: "Selecciona un servicio",
+    service: "¿De qué es el trabajo?",
+    selectService: "Ej.: plomería, electricista, pintura…",
     searchService: "Buscar servicio",
     noService: "Ningún servicio coincide",
     serviceError: "Elige el servicio al que pertenece la vacante.",
@@ -109,8 +109,8 @@ const JOB_POST_COPY = {
   en: {
     optional: "optional",
     position: "Job title",
-    service: "Related service",
-    selectService: "Select a service",
+    service: "What is the job about?",
+    selectService: "E.g. plumbing, electrician, painting…",
     searchService: "Search service",
     noService: "No service matches",
     serviceError: "Choose the service this job belongs to.",
@@ -308,7 +308,7 @@ function EditableList({
 
 type JobPostFormInitial = Partial<Pick<JobPost, "service_category_id" | "id" | "title" | "description" | "responsibilities" | "requirements" | "benefits" | "duration_label" | "employment_type" | "experience_level" | "workplace_type" | "location_label" | "salary_min" | "salary_max" | "salary_period" | "currency" | "show_salary" | "openings" | "application_deadline" | "contact_whatsapp" | "status">>;
 
-export function JobPostForm({ professionalId, serviceOptions, backHref = "/empleos", initialJob = null, presentation = "page", onSaved, onCancel }: { professionalId: string; serviceOptions: OpcionDeServicio[]; backHref?: string; initialJob?: JobPostFormInitial | null; presentation?: "page" | "modal"; onSaved?: (id: string) => void; onCancel?: () => void }) {
+export function JobPostForm({ professionalId, backHref = "/empleos", initialJob = null, presentation = "page", onSaved, onCancel }: { professionalId: string; backHref?: string; initialJob?: JobPostFormInitial | null; presentation?: "page" | "modal"; onSaved?: (id: string) => void; onCancel?: () => void }) {
   const { cabeceraRef, conLinea } = useHairlineOnScroll();
   const editing = Boolean(initialJob?.id);
   const router = useRouter();
@@ -483,18 +483,13 @@ export function JobPostForm({ professionalId, serviceOptions, backHref = "/emple
             <label className="block" data-campo-con-error={fieldErrors.service ? "" : undefined}>
               <span className="text-sm font-semibold"><RequiredLabel>{copy.service}</RequiredLabel></span>
               <div className="mt-1.5">
-                <SelectorDeServicio
-                  id="job-service"
-                  opciones={serviceOptions}
-                  valor={servicio}
-                  onChange={(valor) => { setServicio(valor); setFieldErrors((actuales) => ({ ...actuales, service: undefined })); setConCambios(true); }}
-                  etiquetaVacia={copy.selectService}
-                  buscarTexto={copy.searchService}
-                  sinResultados={copy.noService}
-                  invalido={!!fieldErrors.service}
+                <CategorySearch
+                  value={servicio}
+                  onChange={(id) => { setServicio(id); setFieldErrors((actuales) => ({ ...actuales, service: undefined })); setConCambios(true); }}
+                  placeholder={copy.selectService}
+                  error={fieldErrors.service}
                 />
               </div>
-              <FieldError>{fieldErrors.service}</FieldError>
             </label>
             <SelectMenu label={<RequiredLabel>{copy.employmentType}</RequiredLabel>} value={employmentType} onChange={setEmploymentType} options={(Object.keys(EMPLOYMENT_TYPES) as EmploymentType[]).map((value) => ({ value, label: employmentTypeLabel(value, locale) }))} />
             <SelectMenu label={<RequiredLabel>{copy.workplaceType}</RequiredLabel>} value={workplaceType} onChange={setWorkplaceType} options={(Object.keys(WORKPLACE_TYPES) as WorkplaceType[]).map((value) => ({ value, label: workplaceTypeLabel(value, locale) }))} />
