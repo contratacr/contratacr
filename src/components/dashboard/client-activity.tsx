@@ -90,6 +90,9 @@ type Project = {
   provincias?: { name: string };
   cantones?: { name: string };
   archived_by_client?: boolean;
+  // Falso solo en los publicados antes del tablero público: se publicaron bajo
+  // otra regla y no salen ahí hasta que su dueño lo pida.
+  allow_direct_contact?: boolean;
   for_someone_else?: boolean;
   beneficiary_name?: string | null;
   beneficiary_dob?: string | null;
@@ -383,6 +386,22 @@ export function ClientActivity({ section, onCount }: { section: ClientActivitySe
     setCancelling(false);
     setCancelTarget(null);
     setCancelNote("");
+  }
+
+  // Un proyecto abierto que NO sale en el tablero (se publicó antes de que
+  // existiera) puede salir ahora, si su dueño lo pide. Hasta entonces seguía
+  // «activo» en el panel sin que nadie pudiera verlo.
+  async function publicarEnTablero(id: string) {
+    const res = await fetch("/api/projects", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, action: "publicar_en_tablero" }),
+    });
+    if (!res.ok) {
+      void showMessage({ title: errorTitle, description: t("publicarEnTableroError"), tone: "danger" });
+      return;
+    }
+    setProjects((prev) => prev.map((p) => (p.id === id ? { ...p, allow_direct_contact: true } : p)));
   }
 
   async function archiveBooking(id: string) {
@@ -966,6 +985,24 @@ export function ClientActivity({ section, onCount }: { section: ClientActivitySe
                             // abrir la ficha, y por eso «Ver proyecto» no salía
                             // en los inactivos—.
                             return (
+                          <>
+                          {project.status === "open" && project.allow_direct_contact === false && (
+                            // DECIRLO, QUE ES LO HONESTO. Este proyecto se
+                            // publicó antes del tablero público: solo lo veían
+                            // los profesionales de su oficio. Quedaba «activo»
+                            // para siempre sin que nadie pudiera verlo.
+                            <div className="mt-4 rounded-xl bg-[#f4f7fa] p-3.5 text-left">
+                              <p className="text-[13px] font-semibold text-[#162543]">{t("fueraDelTablero")}</p>
+                              <p className="mt-0.5 text-[12px] leading-snug text-[#68778d]">{t("fueraDelTableroAyuda")}</p>
+                              <button
+                                type="button"
+                                onClick={() => void publicarEnTablero(project.id)}
+                                className="mt-3 inline-flex h-10 items-center justify-center rounded-full bg-[#009FD9] px-4 text-[13px] font-bold text-white transition-colors hover:bg-[#0089bb]"
+                              >
+                                {t("publicarEnTablero")}
+                              </button>
+                            </div>
+                          )}
                           <div className="ccr-acciones-tarjeta flex items-start gap-2 border-t border-[#eef2f6] pt-4 sm:justify-end">
                             <div className="grid min-w-0 flex-1 grid-cols-2 items-center gap-2 sm:flex sm:flex-none sm:flex-wrap sm:justify-end">
                               {/* VER EL PROYECTO, COMO EN EMPLEOS Y PROMOCIONES.
@@ -1039,6 +1076,7 @@ export function ClientActivity({ section, onCount }: { section: ClientActivitySe
                                   ]}
                             />
                           </div>
+                          </>
                             );
                           })()}
 

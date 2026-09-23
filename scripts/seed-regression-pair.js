@@ -604,6 +604,11 @@ async function main() {
     },
   ], { onConflict: "id" }));
 
+  // EL PERMISO SE ESCRIBE SIEMPRE. El upsert le pone fecha nueva a un proyecto
+  // que ya existía, pero no toca las columnas que no manda: uno sembrado antes
+  // de la migración 207 se quedaba con `allow_direct_contact` en false y no
+  // salía al tablero, con fecha de esta semana. El dato tiene que decir lo
+  // mismo que la fecha.
   await must("projects", supabase.from("projects").upsert([
     {
       id: ids.projects[0], client_id: c.profile.id, category_id: s.professional.category_id,
@@ -611,6 +616,7 @@ async function main() {
       provincia_id: c.professional.provincia_id, canton_id: c.professional.canton_id, budget_min: 100000, budget_max: 250000,
       timeline: "Este mes", status: "in_progress", accepted_professional_id: s.professional.id,
       client_name_snapshot: cName, client_email_snapshot: "e2e.client@contratacr.test", client_phone_snapshot: "+506 7000 0001",
+      allow_direct_contact: true,
       created_at: iso(-5), updated_at: iso(-2), created_app_environment: SEED, created_source_host: "test.contratacr.com",
       created_supabase_project_ref: TEST_PROJECT_REF,
     },
@@ -620,6 +626,7 @@ async function main() {
       provincia_id: s.professional.provincia_id, canton_id: s.professional.canton_id, budget_min: 180000, budget_max: 450000,
       timeline: "Próximo mes", status: "open", client_name_snapshot: sName,
       client_email_snapshot: "e2e.pro@contratacr.test", client_phone_snapshot: "+506 7000 0002",
+      allow_direct_contact: true,
       created_at: iso(-3), updated_at: iso(-1), created_app_environment: SEED, created_source_host: "test.contratacr.com",
       created_supabase_project_ref: TEST_PROJECT_REF,
     },
@@ -729,6 +736,13 @@ async function main() {
   ];
   await must("offers", supabase.from("professional_offers").upsert(offers, { onConflict: "id" }));
 
+  // «Guardado» tiene llave única por (usuario, tipo, elemento), y el upsert va
+  // por `id`: una fila que dejó otra corrida —con el mismo par pero otro id—
+  // hacía chocar la siembra entera. Se borra ese par antes de escribirlo.
+  for (const usuario of [c.profile.id, s.profile.id]) {
+    await supabase.from("saved_items").delete().eq("user_id", usuario)
+      .in("item_id", [ids.offers[0], ids.offers[1], ids.jobs[0], ids.jobs[1]]);
+  }
   await must("saved marketplace", supabase.from("saved_items").upsert([
     { id: ids.savedItems[0], user_id: c.profile.id, item_type: "offer", item_id: ids.offers[1], snapshot: { regressionSeed: SEED, title: offers[1].title, professional_name: sName }, created_at: iso(-1) },
     { id: ids.savedItems[1], user_id: s.profile.id, item_type: "job", item_id: ids.jobs[0], snapshot: { regressionSeed: SEED, title: jobs[0].title, employer_name: cName }, created_at: iso(-1) },

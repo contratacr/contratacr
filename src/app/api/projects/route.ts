@@ -555,6 +555,31 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ success: true });
   }
 
+  // ── El dueño saca su proyecto viejo al tablero público ──────────────────
+  // Los publicados antes del 15-sep nacieron con el permiso en `false`: se
+  // publicaron bajo otra regla —solo los veían los profesionales de su
+  // oficio— y nadie aceptó un tablero público. Quedaban «activos» en el panel
+  // sin que nadie pudiera verlos, así que el panel lo dice y ofrece este
+  // botón. Solo lo enciende quien lo publicó, y solo si sigue abierto.
+  if (action === "publicar_en_tablero") {
+    const { data: project } = await admin.from("projects").select("client_id, status, title").eq("id", id).maybeSingle();
+    if (!project || project.client_id !== uid) return NextResponse.json({ error: "No autorizado." }, { status: 403 });
+    if (project.status !== "open") return NextResponse.json({ error: "Solo un proyecto abierto sale al tablero." }, { status: 409 });
+    const { error } = await admin.from("projects").update({ allow_direct_contact: true }).eq("id", id);
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    await auditUserAction(admin, req, {
+      actorUserId: uid,
+      actorRole: "client",
+      action: "project.publicar_en_tablero",
+      entityTable: "projects",
+      entityId: id,
+      entityOwnerUserId: project.client_id,
+      beforeData: { allow_direct_contact: false, title: project.title },
+      afterData: { allow_direct_contact: true, title: project.title },
+    });
+    return NextResponse.json({ success: true });
+  }
+
   if (action === "archive") {
     const { data: project } = await admin.from("projects").select("client_id, status, title").eq("id", id).maybeSingle();
     if (!project || project.client_id !== uid) return NextResponse.json({ error: "No autorizado." }, { status: 403 });

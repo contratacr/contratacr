@@ -11,7 +11,6 @@ const adminRoutes = [
   { path: "/es/admin/aseguradoras", marker: /Aseguradoras/i },
   { path: "/es/admin/servicios", marker: /Servicios/i },
   { path: "/es/admin/categorias", marker: /Servicios/i },
-  { path: "/es/admin/solicitudes", marker: /Citas/i },
   { path: "/es/admin/publicaciones", marker: /Proyectos/i },
   { path: "/es/admin/empleos", marker: /Empleos/i },
   // La sección se llama «Promociones» desde el cambio de nombres; la dirección
@@ -55,7 +54,6 @@ test.describe("@admin surfaces", () => {
   test("admin APIs reject unauthenticated access", async ({ request }) => {
     const routes = [
       "/api/admin/projects",
-      "/api/admin/bookings",
       "/api/admin/users",
       "/api/admin/providers",
       "/api/admin/reports",

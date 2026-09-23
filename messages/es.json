@@ -2591,7 +2591,11 @@
     "chosenPro": "Elegido",
     "chooseShort": "Elegir",
     "viewProject": "Ver proyecto",
-    "editProject": "Editar"
+    "editProject": "Editar",
+    "fueraDelTablero": "Este proyecto no sale en el tablero público",
+    "fueraDelTableroAyuda": "Se publicó antes de que existiera el tablero, cuando solo lo veían los profesionales de su categoría. Publicalo ahí y lo verá cualquiera que entre a Proyectos.",
+    "publicarEnTablero": "Publicar en el tablero",
+    "publicarEnTableroError": "No se pudo publicar en el tablero. Intentá de nuevo."
   },
   "clientPage": {
     "greeting": "Hola, {name} 👋",

@@ -1,0 +1,95 @@
+name: Cierre de casos sin respuesta
+
+# Un caso de soporte no se queda abierto para siempre esperando a quien ya no
+# va a responder. Esta tarea cierra los que llevan siete días en silencio
+# DESPUÉS de una respuesta de soporte: si el último mensaje es del usuario, la
+# pelota es nuestra y no se toca.
+#
+# El cierre publica el mismo mensaje que el cierre a mano con el motivo «Sin
+# respuesta del usuario» —en el hilo, por correo y por campana—, y responder
+# reabre el MISMO caso con todo su historial. Por eso cerrar aquí no pierde
+# nada y siete días es holgado.
+
+on:
+  schedule:
+    # 8:00 a.m. en Costa Rica: el resumen llega en horario de oficina y no a
+    # media noche, por si hay que revisar algo.
+    - cron: "0 14 * * *"
+  workflow_dispatch:
+    inputs:
+      target:
+        description: "Ambiente donde cerrar los casos en silencio."
+        required: true
+        type: choice
+        options:
+          - production
+          - test
+
+concurrency:
+  group: cierre-soporte-${{ github.event_name == 'schedule' && 'production' || inputs.target }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  cerrar:
+    name: Cerrar casos en silencio en ${{ github.event_name == 'schedule' && 'production' || inputs.target }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: ${{ github.event_name == 'schedule' && 'production' || inputs.target }}
+    env:
+      TARGET: ${{ github.event_name == 'schedule' && 'production' || inputs.target }}
+      APP_URL: ${{ secrets.NEXT_PUBLIC_APP_URL }}
+      CRON_SECRET: ${{ secrets.CRON_SECRET }}
+    steps:
+      - name: Validate target and secrets
+        id: revisar
+        run: |
+          set -euo pipefail
+          if [ -z "$CRON_SECRET" ]; then
+            echo "::warning::$TARGET todavía no tiene CRON_SECRET; el cierre automático no está configurado."
+            echo "configurado=no" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if [ -z "$APP_URL" ]; then
+            echo "::warning::$TARGET todavía no tiene NEXT_PUBLIC_APP_URL."
+            echo "configurado=no" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "configurado=si" >> "$GITHUB_OUTPUT"
+          case "$APP_URL" in
+            https://*) ;;
+            *) echo "::error::NEXT_PUBLIC_APP_URL must be an https URL."; exit 1 ;;
+          esac
+
+      - name: Cerrar los casos en silencio
+        if: ${{ steps.revisar.outputs.configurado == 'si' }}
+        run: |
+          set -euo pipefail
+          base="${APP_URL%/}"
+          body="$(mktemp)"
+          # El secreto solo viaja en una cabecera escrita desde el entorno: no
+          # puede llegar a la línea de comandos ni al registro.
+          status="$(curl -sS -o "$body" -w '%{http_code}' \
+            --retry 3 --retry-delay 10 --retry-all-errors --max-time 120 \
+            -X POST "$base/api/internal/soporte/cerrar-sin-respuesta" \
+            -H "Authorization: Bearer $CRON_SECRET" \
+            -H "Content-Type: application/json")"
+
+          echo "HTTP $status"
+          # La respuesta solo trae contadores, nunca el contenido de un caso.
+          cat "$body"; echo
+
+          if [ "$status" = "503" ] && grep -q "cron_not_configured" "$body"; then
+            echo "::warning::$TARGET todavía no tiene configurado el cierre automático."
+            exit 0
+          fi
+          if [ "$status" != "200" ]; then
+            echo "::error::El cierre respondió HTTP $status."
+            exit 1
+          fi
+          if ! grep -q '"ok":true' "$body"; then
+            echo "::error::El cierre reportó una falla."
+            exit 1
+          fi

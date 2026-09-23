@@ -25,7 +25,20 @@ export async function cargarProyectosPublicos(limite = 100): Promise<ProyectoPub
   const locale = await getLocale();
   const db = createAdminClient();
   const columnas = "id, title, description, category_id, provincia_id, canton_id, created_at, client_name_snapshot, client_id, status";
-  const consulta = (extra: string) => db
+  // Con la columna puesta (migración 207) manda el PERMISO: los viejos nacieron
+  // en `false` y los nuevos en `true`, así que la fecha ya no hace falta y el
+  // cliente puede sacar el suyo al tablero desde su panel. Sin la columna se
+  // cae a la fecha, que es como se comportaba antes de la migración.
+  const consulta = (extra: string, porPermiso: boolean) => {
+    const base = db
+      .from("projects")
+      .select(`${columnas}${extra}`)
+      .eq("status", "open");
+    return (porPermiso ? base.eq("allow_direct_contact", true) : base.gte("created_at", TABLERO_PUBLICO_DESDE))
+      .order("created_at", { ascending: false })
+      .limit(limite);
+  };
+  const consultaVieja = (extra: string) => db
     .from("projects")
     .select(`${columnas}${extra}`)
     .eq("status", "open")
@@ -39,8 +52,8 @@ export async function cargarProyectosPublicos(limite = 100): Promise<ProyectoPub
     .order("created_at", { ascending: false })
     .limit(limite);
 
-  let { data, error } = await consulta(", allow_direct_contact");
-  if (error?.code === "42703") ({ data, error } = await consulta(""));
+  let { data, error } = await consulta(", allow_direct_contact", true);
+  if (error?.code === "42703") ({ data, error } = await consultaVieja(""));
   if (error) {
     console.error("Could not load public projects", error.message);
     return [];

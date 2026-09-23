@@ -5,21 +5,27 @@ import { Megaphone, Send, Loader2 } from "lucide-react";
 import { useAppDialog } from "@/hooks/use-app-dialog";
 
 /**
- * UNA sola plantilla, la de la temporada que corre. Había tres (lluvias, fin
- * de año, verano) y las tres prometían «recibe hasta 3 cotizaciones», un flujo
- * que ya no existe: hoy el cliente publica y los profesionales de su zona le
- * escriben por WhatsApp. Septiembre y octubre son los meses más lluviosos del
- * año en Costa Rica, así que la de lluvias es la que va. El texto se puede
- * editar antes de enviar; la campaña se mide por `utm_campaign` (el asunto).
+ * UNA sola plantilla, la de la temporada que corre, y con el camino MÁS CORTO.
+ *
+ * Antes el botón decía «Publicar lo que necesito» y llevaba al formulario de
+ * proyecto: exige sesión, cuatro campos y un WhatsApp. Es el camino de más
+ * fricción del app, y a un correo se llega de paso, con poca paciencia. Buscar
+ * no pide nada: se abre la lista de electricistas verificados de la zona y cada
+ * tarjeta ya trae su botón de WhatsApp. Del correo a la conversación, dos toques.
+ *
+ * Y se aterriza en ELECTRICIDAD porque es donde hay oferta de verdad (45
+ * profesionales, contra 8 en techos y 6 en impermeabilización): mandar a un
+ * oficio vacío es peor que no mandar el correo. Publicar queda mencionado para
+ * quien prefiera que lo busquen a él.
  */
 const PLANTILLAS = [
   {
     id: "lluvias",
     nombre: "Antes de las lluvias fuertes",
-    subject: "Se vienen las lluvias fuertes: revisa canoas, techo y electricidad esta semana",
-    body: "Hola,\n\nSeptiembre y octubre son los meses más lluviosos del año: canoas tapadas, goteras y cortos eléctricos aparecen todos a la vez, y los buenos profesionales se llenan rápido.\n\nAdelantate hoy: en ContrataCR publicas lo que necesitas en un minuto y los profesionales verificados de tu zona te escriben directo por WhatsApp. Sin comisiones y sin intermediarios.\n\n¿Ofreces servicios? Publica una promoción de temporada y aparece primero para quienes buscan justo ahora.",
-    ctaLabel: "Publicar lo que necesito",
-    ctaPath: "/es/publicar-proyecto",
+    subject: "Antes del próximo aguacero: revisá tu instalación eléctrica",
+    body: "Hola,\n\nSeptiembre y octubre son los meses más lluviosos del año. Un corto, una toma mojada o un breaker que salta siempre aparecen en el peor momento.\n\nToca el botón y te salen los electricistas verificados de tu zona, con reseñas y su WhatsApp a la vista. Sin formularios y sin comisiones: escribís directo a quien te guste.\n\n¿Preferís que te busquen a vos? Publicá lo que necesitás en contratacr.com y los profesionales de tu zona te escriben.\n\n¿Ofrecés servicios? Publicá una promoción de temporada y aparecés primero para quien busca justo ahora.",
+    ctaLabel: "Ver electricistas cerca de mí",
+    ctaPath: "/es/buscar?categoria=electricidad",
   },
 ];
 

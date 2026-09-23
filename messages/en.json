@@ -2591,7 +2591,11 @@
     "chosenPro": "Chosen",
     "chooseShort": "Choose",
     "viewProject": "View project",
-    "editProject": "Edit"
+    "editProject": "Edit",
+    "fueraDelTablero": "This project is not on the public board",
+    "fueraDelTableroAyuda": "It was posted before the board existed, when only professionals in its category could see it. Post it there and anyone who opens Projects will see it.",
+    "publicarEnTablero": "Post it on the board",
+    "publicarEnTableroError": "Could not post it on the board. Please try again."
   },
   "clientPage": {
     "greeting": "Hi, {name} 👋",

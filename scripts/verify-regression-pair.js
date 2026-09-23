@@ -707,7 +707,15 @@ async function main() {
       await verifyAdvertisingDataParity(contratacr, advertising);
     }
   }
-  await verifyPrivateActorIsolation([contratacr, sg], advertising ? [advertising] : []);
+  // La cuenta con la que Isaac prueba a mano (`cliente.pruebas@contratacr.test`,
+  // creada por seed-cuenta-cliente.js) también es un fixture: sus proyectos y
+  // conversaciones son legítimos y no deben leerse como datos de una persona
+  // real. Se busca por correo, y si no existe simplemente no se ignora nada.
+  const manuales = [];
+  const { data: perfilesManuales } = await admin.from("profiles").select("id, email").in("email", ["cliente.pruebas@contratacr.test"]);
+  for (const perfil of perfilesManuales ?? []) manuales.push({ profile: perfil, professional: { id: null } });
+
+  await verifyPrivateActorIsolation([contratacr, sg], [...(advertising ? [advertising] : []), ...manuales]);
 
   await Promise.all(Object.entries(REQUIRED_FIXTURE_IDS).map(([label, ids]) => {
     const tableByLabel = {

@@ -1,14 +1,14 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { MessageCircle, ShieldCheck, Flag, Shield, Tag, Headset, Users, LayoutGrid, BarChart3, CalendarCheck, ClipboardList, ArrowLeft, Star, Briefcase, BadgePercent, MapPinned, Wallet, Megaphone } from "lucide-react";
+import { MessageCircle, ShieldCheck, Flag, Shield, Tag, Headset, Users, LayoutGrid, BarChart3, ClipboardList, ArrowLeft, Star, Briefcase, BadgePercent, MapPinned, Wallet, Megaphone } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
 import { ContrataCRLogo } from "@/components/landing/landing-navbar";
 import { ADMIN_REFRESH_EVENT } from "@/hooks/use-admin-auto-refresh";
 
 export type AdminTab =
-  | "resumen" | "verificacion" | "usuarios" | "solicitudes" | "publicaciones" | "reportes" | "aseguradoras"
+  | "resumen" | "verificacion" | "usuarios" | "publicaciones" | "reportes" | "aseguradoras"
   | "categorias" | "cuentas" | "soporte" | "analitica" | "actividad" | "resenas" | "empleos" | "ofertas" | "cobertura" | "costos" | "campanas" | "contactos";
 
 // Admin chrome — a navy (#0f172a) LEFT SIDEBAR with a #38bdf8 accent (horizontal
@@ -73,7 +73,6 @@ export function AdminShell({
     { id: "resumen", label: "Resumen", icon: LayoutGrid, href: "/admin", badge: 0 },
     { id: "verificacion", label: "Verificación", icon: ShieldCheck, href: "/admin/verificacion", badge: counts.verificacion ?? 0 },
     { id: "usuarios", label: "Usuarios", icon: Users, href: "/admin/usuarios", badge: 0 },
-    { id: "solicitudes", label: "Citas", icon: CalendarCheck, href: "/admin/solicitudes", badge: 0 },
     { id: "publicaciones", label: "Proyectos", icon: ClipboardList, href: "/admin/publicaciones", badge: 0 },
     { id: "resenas", label: "Reseñas", icon: Star, href: "/admin/resenas", badge: 0 },
     { id: "empleos", label: "Empleos", icon: Briefcase, href: "/admin/empleos", badge: 0 },
@@ -143,7 +142,7 @@ export function AdminShell({
         <nav className="flex-1 overflow-y-auto px-3 py-2">
           {[
             { label: "Principal", ids: ["resumen", "usuarios"] },
-            { label: "Operación", ids: ["verificacion", "solicitudes", "publicaciones", "resenas", "reportes", "soporte"] },
+            { label: "Operación", ids: ["verificacion", "publicaciones", "resenas", "reportes", "soporte"] },
             { label: "Marketplace", ids: ["empleos", "ofertas", "campanas"] },
             { label: "Gestión", ids: ["categorias", "aseguradoras", "cuentas"] },
             { label: "Información", ids: ["analitica", "cobertura", "costos"] },
