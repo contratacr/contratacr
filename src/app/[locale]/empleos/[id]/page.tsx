@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { claveDeTramo, rangoDePrefijo } from "@/lib/marketplace-url";
 import { getTranslations } from "next-intl/server";
 import { ArrowLeft } from "lucide-react";
 import { Link } from "@/i18n/navigation";
@@ -27,6 +28,31 @@ type Props = {
   searchParams?: Promise<{ from?: string }>;
 };
 
+/**
+ * El id real detrás del tramo de la dirección.
+ *
+ * El enlace corto `/e/<8 caracteres>` se reescribe a `/es/empleos/<8
+ * caracteres>`, pero esta pantalla consultaba `.eq("id", id)` con el tramo
+ * CRUDO: ocho caracteres no son un UUID, la consulta no devolvía nada y el
+ * enlace terminaba en «página no encontrada». O sea, el enlace corto de
+ * empleos estaba roto desde que existe. Promociones ya resolvía el prefijo
+ * con `rangoDePrefijo`; esto replica ese patrón.
+ */
+async function idDelTramo(tramo: string): Promise<string | null> {
+  const clave = claveDeTramo(tramo);
+  if (clave.id) return clave.id;
+  if (!clave.prefijo) return null;
+  const { desde, hasta } = rangoDePrefijo(clave.prefijo);
+  const { data } = await createAdminClient()
+    .from("job_posts")
+    .select("id")
+    .gte("id", desde)
+    .lte("id", hasta)
+    .limit(1)
+    .maybeSingle();
+  return (data as { id?: string } | null)?.id ?? null;
+}
+
 /** Lo mínimo para la lápida. Nada de contacto: ya no hay a quién escribirle. */
 async function empleoCerrado(id: string) {
   const { data } = await createAdminClient()
@@ -38,8 +64,10 @@ async function empleoCerrado(id: string) {
 }
 
 export async function generateMetadata({ params }: Props) {
-  const { id } = await params;
+  const { id: tramo } = await params;
   if (!hasSupabaseServerConfig()) return {};
+  const id = await idDelTramo(tramo);
+  if (!id) return { robots: { index: false, follow: true } };
   const supabase = await createClient();
   const { data } = await supabase.from("job_posts").select("id, title, location_label, description").eq("id", id).eq("status", "published").maybeSingle();
   // Solo la vacante viva se indexa. La cerrada se marca para que salga del
@@ -57,9 +85,11 @@ export async function generateMetadata({ params }: Props) {
 }
 
 export default async function JobDetailRedirect({ params, searchParams }: Props) {
-  const { id } = await params;
+  const { id: tramo } = await params;
   const from = (await searchParams)?.from;
   if (!hasSupabaseServerConfig()) notFound();
+  const id = await idDelTramo(tramo);
+  if (!id) notFound();
   const supabase = await createClient();
   const { data: publicado } = await supabase
     .from("job_posts")

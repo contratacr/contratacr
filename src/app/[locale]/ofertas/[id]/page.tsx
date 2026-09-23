@@ -80,13 +80,22 @@ const COPY = {
 export async function generateMetadata({ params }: { params: Promise<{ id: string; locale: string }> }) {
   const { id } = await params;
   const clave = claveDeTramo(id);
-  if (!clave.id) return {};
+  if (!clave.id && !clave.prefijo) return {};
   const supabase = await createClient();
-  const { data } = await supabase
+  // El enlace corto (/o/<8 caracteres>) traía el contenido bien pero se rendía
+  // aquí con `return {}`: la página abría SIN título propio, sin canonical y
+  // sin tarjeta al compartirla por WhatsApp —justo el enlace que existe para
+  // compartir—. Se resuelve el prefijo igual que en el cuerpo de la página.
+  const porPrefijo = !clave.id;
+  const base = supabase
     .from("professional_offers")
-    .select("id, status, valid_until, title, description")
-    .eq("id", clave.id)
-    .maybeSingle();
+    .select("id, status, valid_until, title, description");
+  const { data } = porPrefijo
+    ? await (() => {
+        const { desde, hasta } = rangoDePrefijo(clave.prefijo!);
+        return base.gte("id", desde).lte("id", hasta).limit(1).maybeSingle();
+      })()
+    : await base.eq("id", clave.id!).maybeSingle();
   const viva = data && data.status === "published" && !isOfferExpired({ valid_until: (data as { valid_until?: string | null }).valid_until ?? null }, crTodayISO());
   if (!viva) return { robots: { index: false, follow: true } };
   // Cada promoción con su propio título y descripción, no los del tablero.
