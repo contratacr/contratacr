@@ -26,11 +26,18 @@ on:
         options:
           - production
           - test
-      simular:
-        description: "Solo contar: pregunta al padrón y NO cambia nada."
-        required: false
-        default: true
-        type: boolean
+      modo:
+        description: "Qué hacer."
+        required: true
+        default: simular
+        type: choice
+        options:
+          # Cuenta a cuántos verificaría, sin escribir nada.
+          - simular
+          # Mide el padrón mismo: cuántas filas cargaron.
+          - medir-padron
+          # Verifica de verdad. Concede insignias y fija el nombre oficial.
+          - verificar
 
 concurrency:
   group: verificacion-repesca-${{ github.event_name == 'schedule' && 'production' || inputs.target }}
@@ -48,7 +55,7 @@ jobs:
     env:
       TARGET: ${{ github.event_name == 'schedule' && 'production' || inputs.target }}
       # La tarea diaria SÍ verifica; a mano se simula salvo que se pida lo contrario.
-      SIMULAR: ${{ github.event_name != 'schedule' && inputs.simular && '?simular=1' || '' }}
+      SIMULAR: ${{ github.event_name == 'schedule' && '' || (inputs.modo == 'simular' && '?simular=1' || (inputs.modo == 'medir-padron' && '?padron=1' || '')) }}
       APP_URL: ${{ secrets.NEXT_PUBLIC_APP_URL }}
       CRON_SECRET: ${{ secrets.CRON_SECRET }}
     steps:
