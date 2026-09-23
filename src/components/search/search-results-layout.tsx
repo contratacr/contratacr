@@ -514,6 +514,25 @@ export function SearchResultsLayout({ children, filters, quickFilters, drawerFil
           </div>
         </aside>
 
+        {/* EL COLOR DE LA BARRA DE SAFARI. Safari 26 en el iPhone ignora
+            `theme-color` y tiñe su barra de abajo con el color del elemento
+            `fixed` que ocupa el borde inferior de la pantalla. El panel de
+            resultados, a media altura, NO termina en ese borde: cuelga por
+            debajo (medido: borde en 1084 px con una pantalla de 844). Lo único
+            fijo que sí ocupa el borde exacto es el fondo transparente del menú
+            lateral, y sin un color que leer Safari cae a lo que se pinta
+            detrás: los botones verdes de WhatsApp. Por eso la barra salía
+            verde con un cantón elegido y blanca con el panel arriba.
+
+            Esta franja es blanca, opaca, fija y del alto exacto del área bajo
+            la barra del navegador, así que Safari la lee y la persona nunca la
+            ve. No cambia el diseño ni mueve nada. */}
+        <div
+          aria-hidden
+          className="pointer-events-none fixed inset-x-0 bottom-0 z-0 bg-white lg:hidden"
+          style={{ height: "max(1px, env(safe-area-inset-bottom))" }}
+        />
+
         {/* BOTTOM SHEET — mobile: a fixed draggable panel over the map holding the count + the
             scrolling card list. Desktop: `lg:contents` dissolves it so the card column
             (order-2) and the desktop map sit in the flex shell. */}
