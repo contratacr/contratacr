@@ -54,7 +54,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     for (const l of IDIOMAS) out.push({ url: `${APP_URL}/${l}/servicios/${cat.id}`, lastModified: ultimoCambio, changeFrequency: "weekly", priority: 0.9 });
     for (const prov of PROVINCES) {
       if ((supply.byCategoryProvince[supplyKey(cat.id, prov.id)] ?? 0) < MIN_SUPPLY_FOR_LANDING) continue;
-      for (const l of IDIOMAS) out.push({ url: `${APP_URL}/${l}/servicios/${cat.id}/${prov.id}`, lastModified: ultimoCambio, changeFrequency: "weekly", priority: 0.8 });
+      for (const l of IDIOMAS) out.push({ url: `${APP_URL}/${l}/servicios/${cat.id}/${prov.slug}`, lastModified: ultimoCambio, changeFrequency: "weekly", priority: 0.8 });
     }
   }
 

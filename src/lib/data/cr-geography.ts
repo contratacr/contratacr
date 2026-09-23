@@ -1,5 +1,16 @@
 export type Province = {
   id: string;
+  /**
+   * El nombre para la dirección: `san-jose`, no `sj`.
+   *
+   * Las páginas de oficio+provincia son las de más intención de compra del
+   * sitio —alguien que busca «electricista en San José» ya sabe lo que
+   * quiere— y su dirección decía `/servicios/electricidad/sj`. Dos letras que
+   * no significan nada para Google ni para quien lee el enlace antes de
+   * tocarlo. El id de dos letras se sigue aceptando y redirige aquí, porque
+   * está en el sitemap y en enlaces ya publicados.
+   */
+  slug: string;
   name: string;
   cantons: Canton[];
 };
@@ -13,6 +24,7 @@ export type Canton = {
 export const PROVINCES: Province[] = [
   {
     id: "sj",
+    slug: "san-jose",
     name: "San José",
     cantons: [
       { id: "sj-sj", name: "San José", provinceId: "sj" },
@@ -39,6 +51,7 @@ export const PROVINCES: Province[] = [
   },
   {
     id: "al",
+    slug: "alajuela",
     name: "Alajuela",
     cantons: [
       { id: "al-al", name: "Alajuela", provinceId: "al" },
@@ -61,6 +74,7 @@ export const PROVINCES: Province[] = [
   },
   {
     id: "ca",
+    slug: "cartago",
     name: "Cartago",
     cantons: [
       { id: "ca-ca", name: "Cartago", provinceId: "ca" },
@@ -75,6 +89,7 @@ export const PROVINCES: Province[] = [
   },
   {
     id: "he",
+    slug: "heredia",
     name: "Heredia",
     cantons: [
       { id: "he-he", name: "Heredia", provinceId: "he" },
@@ -91,6 +106,7 @@ export const PROVINCES: Province[] = [
   },
   {
     id: "gu",
+    slug: "guanacaste",
     name: "Guanacaste",
     cantons: [
       { id: "gu-li", name: "Liberia", provinceId: "gu" },
@@ -108,6 +124,7 @@ export const PROVINCES: Province[] = [
   },
   {
     id: "pu",
+    slug: "puntarenas",
     name: "Puntarenas",
     cantons: [
       { id: "pu-pu", name: "Puntarenas", provinceId: "pu" },
@@ -127,6 +144,7 @@ export const PROVINCES: Province[] = [
   },
   {
     id: "li",
+    slug: "limon",
     name: "Limón",
     cantons: [
       { id: "li-li", name: "Limón", provinceId: "li" },
@@ -269,6 +287,17 @@ export function getCantonsByProvince(provinceId: string): Canton[] {
 
 export function getProvinceById(id: string): Province | undefined {
   return PROVINCES.find((p) => p.id === id);
+}
+
+/**
+ * Acepta las dos formas de nombrar una provincia en una dirección: el nombre
+ * legible (`san-jose`) y el código viejo de dos letras (`sj`). El código se
+ * sigue aceptando para no romper lo que ya está indexado y compartido; la
+ * página lo redirige a la forma legible.
+ */
+export function getProvinceBySlugOrId(valor: string): Province | undefined {
+  const limpio = valor.toLowerCase();
+  return PROVINCES.find((p) => p.slug === limpio) ?? PROVINCES.find((p) => p.id === limpio);
 }
 
 // Approximate province centroids (by province id) for the geolocation feature:

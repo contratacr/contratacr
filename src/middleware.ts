@@ -1,4 +1,5 @@
 import { createServerClient } from "@supabase/ssr";
+import { getProvinceById } from "@/lib/data/cr-geography";
 import { RUTAS_DEL_SITIO } from "@/lib/site-routes";
 import createIntlMiddleware from "next-intl/middleware";
 import { type NextRequest, NextResponse } from "next/server";
@@ -111,6 +112,28 @@ export async function middleware(request: NextRequest) {
     const destino = new URL(`/${locale}/profesionales/${perfilCorto[1]}`, request.url);
     destino.search = request.nextUrl.search;
     return NextResponse.redirect(destino, 307);
+  }
+
+  // Las páginas de oficio + provincia se nombraban con el código de dos letras
+  // (`/servicios/electricidad/sj`). Son las direcciones con más intención de
+  // compra del sitio —alguien que busca «electricista en San José» ya sabe lo
+  // que quiere— y no decían el lugar: ni Google las lee, ni se entienden al
+  // compartirlas. Ahora la canónica es `/san-jose` y el código viejo trae aquí
+  // con un 308 permanente, para que Google traslade a la nueva lo que la vieja
+  // hubiera ganado en vez de tratarlas como dos páginas distintas.
+  //
+  // Va en el middleware y no en la página por dos razones: la página se genera
+  // estáticamente, así que un redirect en el componente no se ejecuta; y en
+  // OpenNext/Cloudflare el middleware corre primero y se traga lo que devuelva
+  // la página (ver el comentario de `next.config`).
+  const oficioProvincia = /^\/(es|en)\/servicios\/([a-z0-9_]+)\/([a-z]{2})\/?$/i.exec(pathname);
+  if (oficioProvincia) {
+    const provincia = getProvinceById(oficioProvincia[3].toLowerCase());
+    if (provincia) {
+      const destino = new URL(`/${oficioProvincia[1]}/servicios/${oficioProvincia[2]}/${provincia.slug}`, request.url);
+      destino.search = request.nextUrl.search;
+      return NextResponse.redirect(destino, 308);
+    }
   }
 
   const hasLocalePrefix = /^\/(?:es|en)(?:\/|$)/.test(pathname);
