@@ -356,13 +356,20 @@ export default function RegisterClientPage() {
                   their location when SEARCHING or REQUESTING A SERVICE, where it's actually
                   used. Keeping it out of registration reduces friction. */}
 
-              <PhoneInput
-                label={t("phone")}
-                required
-                value={phone}
-                onChange={(v) => { setPhone(v); setPhoneError(null); }}
-                error={phoneError ?? undefined}
-              />
+              <div>
+                <PhoneInput
+                  label={t("phone")}
+                  required
+                  value={phone}
+                  onChange={(v) => { setPhone(v); setPhoneError(null); }}
+                  error={phoneError ?? undefined}
+                />
+                {/* Quien da su número quiere saber quién lo va a ver. El del
+                    cliente NO es público: solo llega al profesional que le
+                    responde. El del profesional sí, y por eso su pantalla dice
+                    lo contrario. */}
+                <p className="mt-1.5 text-xs text-[#68778d]">{t("phoneHelp")}</p>
+              </div>
 
               {error && (
                 <div className="rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">

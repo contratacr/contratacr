@@ -48,15 +48,28 @@ export async function POST(req: Request) {
     .select(`id, title, status, client_id, created_at, client_phone_snapshot${extra}`)
     .eq("id", projectId)
     .maybeSingle();
+  let hayColumna = true;
   let respuesta = await traer(", allow_direct_contact") as { data: unknown; error: { code?: string } | null };
-  if (respuesta.error?.code === "42703") respuesta = await traer("") as { data: unknown; error: { code?: string } | null };
+  if (respuesta.error?.code === "42703") {
+    hayColumna = false;
+    respuesta = await traer("") as { data: unknown; error: { code?: string } | null };
+  }
   const fila = respuesta.data as {
     title?: string; status?: string; client_id?: string; created_at?: string;
     allow_direct_contact?: boolean | null; client_phone_snapshot?: string | null;
   } | null;
-  if (!fila || fila.status !== "open" || fila.allow_direct_contact === false
-      || String(fila.created_at ?? "") < TABLERO_PUBLICO_DESDE) {
-    return NextResponse.json({ error: "Este proyecto ya no recibe mensajes." }, { status: 404 });
+  // EXACTAMENTE la regla del tablero, ni una condición más. Antes aquí se
+  // exigían las dos cosas —permiso Y fecha— mientras el tablero pedía una sola,
+  // así que un proyecto anterior al 15 de septiembre que su dueño sacó al
+  // tablero a mano SE VEÍA pero su botón de WhatsApp fallaba siempre. Y como
+  // ese rechazo compartía el 404 con «no dejó WhatsApp», la pantalla le echaba
+  // la culpa al teléfono del cliente. La fecha solo manda donde la columna no
+  // existe todavía, que es como se comportaba antes de la migración 207.
+  const admitido = hayColumna
+    ? fila?.allow_direct_contact === true
+    : String(fila?.created_at ?? "") >= TABLERO_PUBLICO_DESDE;
+  if (!fila || fila.status !== "open" || !admitido) {
+    return NextResponse.json({ error: "Este proyecto ya no recibe mensajes.", code: "no_publicado" }, { status: 404 });
   }
   // Nadie se escribe a sí mismo: un profesional también puede publicar proyectos.
   if (fila.client_id === user.id) {
@@ -74,7 +87,7 @@ export async function POST(req: Request) {
     telefono = (comoPro as { whatsapp?: string | null } | null)?.whatsapp || telefono;
   }
   const crudo = telefono.replace(/\D/g, "");
-  if (crudo.length < 8) return NextResponse.json({ error: "Este cliente no dejó un WhatsApp." }, { status: 404 });
+  if (crudo.length < 8) return NextResponse.json({ error: "Este cliente no dejó un WhatsApp.", code: "sin_whatsapp" }, { status: 404 });
   const numero = crudo.length === 8 ? `506${crudo}` : crudo;
 
   const perfilPro = pro as { business_name?: string | null; profiles?: { full_name?: string | null } | null };

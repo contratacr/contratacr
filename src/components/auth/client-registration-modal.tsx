@@ -593,11 +593,15 @@ export function ClientRegistrationModal({
                       placeholder="tu@email.com"
                       autoFocus
                     />
-                    <PhoneInput
-                      label={tRc("phone")}
-                      value={telefono}
-                      onChange={setTelefono}
-                    />
+                    <div>
+                      <PhoneInput
+                        label={tRc("phone")}
+                        required
+                        value={telefono}
+                        onChange={setTelefono}
+                      />
+                      <p className="mt-1.5 text-xs text-[#68778d]">{tRc("phoneHelp")}</p>
+                    </div>
                   </div>
                 )}
 

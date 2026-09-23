@@ -1380,6 +1380,11 @@ export default function RegisterProfessionalPage() {
                     onChange={(digits) => { setWhatsappValue(digits); form2.setValue("whatsapp", digits, { shouldValidate: true }); }}
                     error={form2.formState.errors.whatsapp?.message}
                   />
+                  {/* Este número SÍ es público: es el botón de WhatsApp de su
+                      ficha. Antes la ayuda decía «para la información de tu
+                      cuenta», que no solo es vago sino falso, y nadie se
+                      enteraba de que estaba publicando su teléfono. */}
+                  <p className="mt-1.5 text-xs text-[#68778d]">{t("whatsappHint")}</p>
                   {/* Se pregunta AQUÍ y no en el panel: medido en producción,
                       solo 3 de 288 profesionales volvieron a tocar su perfil
                       después del primer día. Lo que no se pide al registrarse,

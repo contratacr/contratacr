@@ -63,6 +63,8 @@ const COPY = {
     sinResultadosSub: "Prueba otra búsqueda o cambia los filtros.",
     verTodos: "Ver todos los proyectos",
     sinContacto: "Este cliente no dejó un WhatsApp.",
+    noPublicado: "Este proyecto ya no recibe mensajes.",
+    fallo: "No pudimos abrir WhatsApp. Intentá de nuevo en un momento.",
     necesitaCuenta: "Entra con tu cuenta profesional para escribirle.",
     esTuyo: "Este proyecto es tuyo.",
     todoElPais: "Todo Costa Rica",
@@ -96,6 +98,8 @@ const COPY = {
     sinResultadosSub: "Try another search or change the filters.",
     verTodos: "View all projects",
     sinContacto: "This client did not leave a WhatsApp number.",
+    noPublicado: "This project is no longer taking messages.",
+    fallo: "We could not open WhatsApp. Try again in a moment.",
     necesitaCuenta: "Sign in with your professional account to write to them.",
     esTuyo: "This project is yours.",
     todoElPais: "All Costa Rica",
@@ -132,10 +136,16 @@ function BotonEscribir({ proyecto, className = "" }: { proyecto: ProyectoPublico
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ projectId: proyecto.id }),
       });
-      const payload = (await res.json().catch(() => ({}))) as { href?: string };
+      const payload = (await res.json().catch(() => ({}))) as { href?: string; code?: string };
+      // El servidor dice POR QUÉ, no solo que no. Antes cualquier fallo caía en
+      // «este cliente no dejó un WhatsApp» —hasta cuando el proyecto sí tenía
+      // teléfono y lo que pasaba era otra cosa—, así que el aviso mentía y el
+      // dueño del proyecto quedaba señalado sin motivo.
       const aviso = res.status === 401 || res.status === 403 ? copy.necesitaCuenta
         : res.status === 409 ? copy.esTuyo
-        : !res.ok || !payload.href ? copy.sinContacto
+        : payload.code === "sin_whatsapp" ? copy.sinContacto
+        : payload.code === "no_publicado" ? copy.noPublicado
+        : !res.ok || !payload.href ? copy.fallo
         : null;
       if (aviso) { await showMessage({ title: copy.escribir, description: aviso }); return; }
       window.open(payload.href, "_blank", "noopener,noreferrer");
