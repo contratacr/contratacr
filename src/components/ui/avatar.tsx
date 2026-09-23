@@ -16,19 +16,33 @@ const Avatar = React.forwardRef<
 ));
 Avatar.displayName = AvatarPrimitive.Root.displayName;
 
+// La foto va como <img> de verdad, no como `AvatarPrimitive.Image`: ese no
+// pinta NADA hasta que la imagen termina de cargar —ni en el servidor—, así que
+// cada tarjeta salía primero con el círculo de iniciales y después saltaba a la
+// foto, cambiando de nodo. Aquí la foto ya viene en el HTML (el navegador la
+// pide mientras lee la página) y se pinta ENCIMA de las iniciales, que quedan
+// debajo como relleno. No hay cambio de nodo ni salto de tamaño.
 const AvatarImage = React.forwardRef<
-  React.ElementRef<typeof AvatarPrimitive.Image>,
+  HTMLImageElement,
   React.ComponentPropsWithoutRef<typeof AvatarPrimitive.Image>
->(({ className, ...props }, ref) => (
-  <AvatarPrimitive.Image
-    ref={ref}
-    loading="lazy"
-    decoding="async"
-    className={cn("ccr-img-reveal aspect-square h-full w-full object-cover", className)}
-    {...props}
-  />
-));
-AvatarImage.displayName = AvatarPrimitive.Image.displayName;
+>(({ className, src, ...props }, ref) => {
+  if (!src) return null;
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      ref={ref}
+      src={typeof src === "string" ? src : undefined}
+      loading="lazy"
+      decoding="async"
+      className={cn(
+        "ccr-img-reveal absolute inset-0 z-10 aspect-square h-full w-full object-cover",
+        className,
+      )}
+      {...(props as React.ImgHTMLAttributes<HTMLImageElement>)}
+    />
+  );
+});
+AvatarImage.displayName = "AvatarImage";
 
 const AvatarFallback = React.forwardRef<
   React.ElementRef<typeof AvatarPrimitive.Fallback>,

@@ -39,6 +39,9 @@ const CARD_PEEK = 0.5;
 const FULL = 0.92;
 const SHEET_TOP_GAP = 58;
 const SSR_SNAP_POINTS = [MAP_PEEK, CARD_PEEK, 0.82] as const;
+// El alto de reposo de la hoja, en unidades del navegador: idéntico en el
+// servidor y en el teléfono, así que no hay un segundo pintado que corrija.
+const ALTO_EXTENDIDO = `calc(100dvh - var(--ccr-native-header-height, 124px) - ${SHEET_TOP_GAP}px)`;
 
 function mobileSheetSnapPoints(): readonly number[] {
   if (typeof window === "undefined") return SSR_SNAP_POINTS;
@@ -502,10 +505,15 @@ export function SearchResultsLayout({ children, filters, quickFilters, drawerFil
           // expanded. The list scrolls inside the sheet; the sheet itself should never cover
           // the filter/map affordances at the top of the mobile map.
           style={{
-            height: `${expandedEnd * 100}dvh`,
-            maxHeight: `calc(100dvh - var(--ccr-native-header-height, 124px) - ${SHEET_TOP_GAP}px)`,
+            // El alto extendido se dice en CSS, no en una fracción calculada en
+            // JS. Antes el servidor pintaba con la constante 0.82 de pantalla y,
+            // al hidratar, `mobileSheetSnapPoints()` la reemplazaba por la medida
+            // real del teléfono: la hoja entera —y con ella toda la lista— daba
+            // un brinco de ~60 px en cada carga. Esta fórmula es la MISMA que ya
+            // usaba `maxHeight`, así que el primer pintado ya es el definitivo.
+            height: ALTO_EXTENDIDO,
             // Never negative: the sheet only ever moves down from its laid-out place.
-            transform: `translate3d(0, ${Math.max(0, expandedEnd - heightFr) * 100}dvh, 0)`,
+            transform: `translate3d(0, max(0px, calc(${ALTO_EXTENDIDO} - ${heightFr * 100}dvh)), 0)`,
             transition: dragging ? "none" : "transform .18s cubic-bezier(.22,.8,.3,1)",
             willChange: "transform",
           }}

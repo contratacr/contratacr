@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { ArrowLeft, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { PIE_VENTANA_BASE } from "@/components/ui/acciones-al-pie";
@@ -109,6 +110,9 @@ export function Modal({
   accionCabecera,
   cabeceraCentrada = false,
 }: ModalProps) {
+  // El <body> no existe al renderizar en el servidor.
+  const [montado, setMontado] = useState(false);
+  useEffect(() => { setMontado(true); }, []);
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
@@ -159,7 +163,15 @@ export function Modal({
     </button>
   );
 
-  return (
+  // AL <body>, SIEMPRE. Un modal pintado donde lo llaman queda preso del
+  // contexto de apilado de su ancestro: en el tablero de proyectos vive dentro
+  // de una barra `sticky` con `z-index: 10`, así que su `z-100` valía solo
+  // dentro de ESA capa y el navbar (`z-50`, hijo del documento) le quedaba
+  // encima —el fondo salía borroso y la barra nítida—. Montado en el body no
+  // hay ancestro que lo encierre, y vale para todos los modales del app.
+  if (!montado) return null;
+  return createPortal(
+
     <div
       className={cn(
         "app-modal-screen fixed inset-0 z-[100] flex justify-center",
@@ -276,6 +288,7 @@ export function Modal({
           </div>
         )}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

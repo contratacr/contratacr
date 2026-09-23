@@ -9,10 +9,20 @@ import { gotoOK, isMobileProject } from "./helpers";
 // la función que arma la dirección, que entonces salía a ADIVINARLO del texto
 // escrito —y podía adivinar otro—.
 async function elegirServicio(page: Page, texto: string) {
+  // Hay que ESPERAR a que el botón del buscador pinte. Con `isVisible()` a secas
+  // se consultaba en el instante de la carga: si todavía no estaba, el ayudante
+  // se saltaba el clic y después esperaba un campo que nadie había abierto —por
+  // eso fallaba solo con `?provincia=sj` y no con la búsqueda que ya traía cantón.
   const abrir = page.getByRole("button", { name: /Qué servicio|What service|Atenas|Profesionales/i }).filter({ visible: true }).first();
-  if (await abrir.isVisible().catch(() => false)) await abrir.click();
+  await expect(abrir).toBeVisible();
   const campo = page.getByRole("combobox", { name: /^Servicio$|^Service$/i }).filter({ visible: true }).first();
-  await expect(campo).toBeVisible();
+  // El botón se pinta desde el servidor y durante unos milisegundos todavía no
+  // tiene quién le escuche el toque: ese primer clic se pierde. Se reintenta
+  // hasta que el buscador abra de verdad.
+  await expect(async () => {
+    await abrir.click();
+    await expect(campo).toBeVisible({ timeout: 1500 });
+  }).toPass({ timeout: 15000 });
   await campo.fill(texto);
   const opcion = page.getByRole("option").filter({ visible: true }).first();
   await expect(opcion).toBeVisible();
