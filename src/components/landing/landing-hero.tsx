@@ -86,6 +86,15 @@ const WORD_HOLD_MS = 1400; // pause on the full word before it leaves.
 
 function RotatingLine({ lines }: { lines: string[] }) {
   const [index, setIndex] = useState(0);
+  // El servidor pinta la palabra como UN solo nodo de texto; las letras sueltas
+  // —que es lo que la anima— aparecen recién después de hidratar. Antes el
+  // servidor mandaba «Salud,» partida en once <span>, y para cuando el
+  // navegador terminaba de hidratar (en producción el paquete es grande y
+  // tarda) la rotación ya iba en otra palabra: React encontraba un texto
+  // distinto del que él mismo había pintado y tiraba el error #418 en la
+  // portada. Con un solo nodo no hay nada que reconciliar letra por letra.
+  const [montado, setMontado] = useState(false);
+  useEffect(() => { setMontado(true); }, []);
   const [shown, setShown] = useState(false);   // letters in place (entered)
   const [leaving, setLeaving] = useState(false); // letters sliding out
 
@@ -114,8 +123,18 @@ function RotatingLine({ lines }: { lines: string[] }) {
       className="flex justify-center overflow-hidden"
       style={{ height: `${ROLL_LINE}em` }}
       aria-label={word}
+      // Esta palabra cambia sola cada pocos segundos y se reconcilia LETRA POR
+      // LETRA. El servidor manda la primera («Salud,») y para cuando el
+      // navegador termina de hidratar —en producción el paquete es grande y
+      // tarda— la animación ya va en otra, así que React encontraba un texto
+      // distinto del que había pintado y tiraba el error #418 en la portada.
+      // No es un fallo que se vea: es ruido de hidratación. `suppressHydration`
+      // existe exactamente para un subárbol cuyo texto se espera que difiera.
+      suppressHydrationWarning
     >
-      {Array.from(word).map((ch, i) => (
+      {!montado ? (
+        <span style={{ display: "inline-block", color: "#009FD9" }}>{word}</span>
+      ) : Array.from(word).map((ch, i) => (
         <span
           key={`${index}-${i}`}
           aria-hidden
