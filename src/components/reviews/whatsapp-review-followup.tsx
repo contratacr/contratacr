@@ -169,6 +169,34 @@ export function WhatsAppReviewFollowUp() {
       : `1 de ${pendingCount} confirmaciones pendientes`
     : "";
 
+  // La tarjeta flota en el borde inferior. En la app ahí vive la barra de
+  // navegación, y la tarjeta le tapaba los toques: quien tocaba «Empleos» le
+  // respondía la tarjeta. Se intentó resolver por CSS —primero con
+  // `.ccr-native-app`, después con `--ccr-aviso-barra-app`— pero ninguna de las
+  // dos está puesta con certeza en el momento en que la tarjeta aparece. Se
+  // MIDE la barra, que es lo único que no depende de en qué orden llegan las
+  // clases. Sin barra (la web) el alto es 0 y la tarjeta no se mueve.
+  const [altoBarra, setAltoBarra] = useState(0);
+  useEffect(() => {
+    if (!followUp) return;
+    const medir = () => {
+      const barra = document.querySelector<HTMLElement>(".ccr-native-bottom-nav");
+      const alto = barra ? barra.getBoundingClientRect().height : 0;
+      setAltoBarra((previo) => (Math.abs(previo - alto) > 1 ? alto : previo));
+    };
+    medir();
+    const observador = new ResizeObserver(medir);
+    const barra = document.querySelector(".ccr-native-bottom-nav");
+    if (barra) observador.observe(barra);
+    window.addEventListener("resize", medir);
+    const repaso = window.setInterval(medir, 500);
+    return () => {
+      observador.disconnect();
+      window.removeEventListener("resize", medir);
+      window.clearInterval(repaso);
+    };
+  }, [followUp]);
+
   return (
     <>
       {followUp && (
@@ -180,7 +208,11 @@ export function WhatsAppReviewFollowUp() {
           // se comía los toques de la barra —quien tocaba «Empleos» le
           // respondía la tarjeta—. `--ccr-native-live-bottom-nav-height` vale
           // 0 fuera de la app, así que en la web nada cambia.
-          className="ccr-seguimiento-servicio fixed inset-x-3 bottom-[max(0.75rem,env(safe-area-inset-bottom))] z-[145] rounded-2xl border border-[#d9e8f2] bg-white p-4 shadow-[0_18px_55px_-18px_rgba(26,39,68,0.38)] sm:inset-x-auto sm:bottom-6 sm:right-6 sm:w-[390px] sm:p-5"
+          className="ccr-seguimiento-servicio fixed inset-x-3 bottom-[calc(max(0.75rem,env(safe-area-inset-bottom))+var(--ccr-barra-app,0px))] z-[145] rounded-2xl border border-[#d9e8f2] bg-white p-4 shadow-[0_18px_55px_-18px_rgba(26,39,68,0.38)] sm:inset-x-auto sm:bottom-[calc(1.5rem+var(--ccr-barra-app,0px))] sm:right-6 sm:w-[390px] sm:p-5"
+          // La medida entra como variable, no como `bottom` a secas: así se
+          // conserva el margen distinto de escritorio (`sm:`), que un estilo en
+          // línea habría pisado.
+          style={{ "--ccr-barra-app": `${altoBarra}px` } as React.CSSProperties}
         >
           <button
             type="button"
