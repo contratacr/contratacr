@@ -271,10 +271,24 @@ export function ServiciosClient({ catalogoInicial }: { catalogoInicial: string |
               <p className="border-b border-[#d7e1ea] px-4 py-3 text-[13px] font-bold uppercase tracking-wide text-[#64748b]">
                 {serviceResultsTitle}
               </p>
+              {/* Cada oficio lleva a SU página, no a los resultados de búsqueda.
+                  Antes todos apuntaban a `/buscar?categoria=X`, así que las 784
+                  páginas por oficio y provincia —que existen, están bien hechas
+                  y están en el sitemap— no recibían UN SOLO enlace desde el
+                  sitio. Search Console lo dijo con todas sus letras: «Página de
+                  referencia: no se ha detectado ninguna» y «Último rastreo:
+                  N/D». Google las conocía solo por el sitemap y nunca las
+                  visitó, porque una página a la que nadie enlaza parece una
+                  página que no importa.
+
+                  La cadena ya estaba armada del segundo eslabón en adelante: la
+                  página de oficio enlaza a sus provincias y a los perfiles, y
+                  tiene salida a `/buscar` para quien quiera filtrar. Solo
+                  faltaba el primero. */}
               {searchResults.map(({ id, groupLabel }) => {
                 const IconoFamilia = getCategoryGroupIcon(getCategoryGroupId(id));
                 return (
-                <Link key={id} href={`/buscar?categoria=${id}`} className="flex min-h-[62px] items-center justify-between gap-3 border-b border-[#d7e1ea] px-4 py-3 last:border-b-0">
+                <Link key={id} href={`/servicios/${id}`} className="flex min-h-[62px] items-center justify-between gap-3 border-b border-[#d7e1ea] px-4 py-3 last:border-b-0">
                   <IconoFamilia className="h-5 w-5 shrink-0 text-[#64748b]" />
                   <span className="min-w-0 flex-1">
                     <span className="block text-[16px] font-extrabold leading-tight text-[#162543] [overflow-wrap:anywhere]">
@@ -299,7 +313,7 @@ export function ServiciosClient({ catalogoInicial }: { catalogoInicial: string |
                 {locale === "en" ? `All ${mobileGroup.label} services` : `Todos los servicios de ${mobileGroup.label}`}
               </Link>
               {mobileGroup.visibleIds.map((id) => (
-                <Link key={id} href={`/buscar?categoria=${id}`} className="flex min-h-[62px] items-center border-b border-[#d7e1ea] px-4 py-3 last:border-b-0">
+                <Link key={id} href={`/servicios/${id}`} className="flex min-h-[62px] items-center border-b border-[#d7e1ea] px-4 py-3 last:border-b-0">
                   <span className="min-w-0 text-[16px] font-extrabold leading-tight text-[#162543] [overflow-wrap:anywhere]">
                     {getCategoryLabel(id, locale)}
                   </span>
@@ -400,7 +414,7 @@ export function ServiciosClient({ catalogoInicial }: { catalogoInicial: string |
                     {searchResults.map(({ id, groupLabel }) => (
                       <Link
                         key={id}
-                        href={`/buscar?categoria=${id}`}
+                        href={`/servicios/${id}`}
                         className="group flex min-h-12 items-center justify-between gap-2 rounded-xl px-3 py-2 text-sm font-semibold leading-snug text-[#374151] transition-colors hover:bg-[#EBF5FB] hover:text-[#0089bb]"
                       >
                         <span className="min-w-0">
@@ -472,7 +486,7 @@ export function ServiciosClient({ catalogoInicial }: { catalogoInicial: string |
                         {activeGroup.ids.map((id) => (
                           <Link
                             key={id}
-                            href={`/buscar?categoria=${id}`}
+                            href={`/servicios/${id}`}
                             className="group flex min-h-10 items-center justify-between gap-2 rounded-xl px-3 py-2 text-sm font-semibold leading-snug text-[#374151] transition-colors hover:bg-[#EBF5FB] hover:text-[#0089bb]"
                           >
                             <span className="min-w-0 [overflow-wrap:anywhere]">
