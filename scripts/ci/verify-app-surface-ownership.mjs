@@ -33,6 +33,7 @@ const handlerRules = [
   [/^\/api\/direct-chat(?:\/|$)/, "direct-chat.spec.ts", true],
   [/^\/api\/(?:push|internal\/push)(?:\/|$)/, "push-outbox-contract.spec.ts"],
   [/^\/api\/internal\/soporte(?:\/|$)/, "soporte-cierre-automatico.spec.ts"],
+  [/^\/api\/internal\/verificacion(?:\/|$)/, "verificacion-repesca.spec.ts"],
   [/^\/api\/payments(?:\/|$)/, "product-contract.spec.ts"],
   [/^\/api\/(?:search|categories|insurers)(?:\/|$)/, "api-smoke.spec.ts"],
   [/^\/api\/contact(?:\/|$)/, "whatsapp-review-followup.spec.ts"],

@@ -1,0 +1,97 @@
+name: Repesca de verificaciones sin respuesta
+
+# Un profesional no se queda «pendiente de revisión» para siempre porque el
+# padrón no contestó el día que se registró.
+#
+# El fallo era silencioso: si el padrón no respondía, la verificación devolvía
+# "skipped", nadie lo miraba, y como `verification_status` nace en 'pending' el
+# profesional se quedaba ahí con la misma cara que una cédula de verdad no
+# encontrada —pero sin motivo que leer en el historial—.
+#
+# Esta tarea reintenta UNA VEZ AL DÍA solo a quien nunca llegó a una decisión:
+# si el padrón sí lo revisó hay una fila en el historial y ese caso es de la
+# cola de Isaac, no de un reintento automático.
+
+on:
+  schedule:
+    # 9:00 a.m. en Costa Rica, una hora después del cierre de soporte para no
+    # pisarse con él.
+    - cron: "0 15 * * *"
+  workflow_dispatch:
+    inputs:
+      target:
+        description: "Ambiente donde repescar las verificaciones sin respuesta."
+        required: true
+        type: choice
+        options:
+          - production
+          - test
+
+concurrency:
+  group: verificacion-repesca-${{ github.event_name == 'schedule' && 'production' || inputs.target }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  repescar:
+    name: Repescar verificaciones en ${{ github.event_name == 'schedule' && 'production' || inputs.target }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: ${{ github.event_name == 'schedule' && 'production' || inputs.target }}
+    env:
+      TARGET: ${{ github.event_name == 'schedule' && 'production' || inputs.target }}
+      APP_URL: ${{ secrets.NEXT_PUBLIC_APP_URL }}
+      CRON_SECRET: ${{ secrets.CRON_SECRET }}
+    steps:
+      - name: Validate target and secrets
+        id: revisar
+        run: |
+          set -euo pipefail
+          if [ -z "$CRON_SECRET" ]; then
+            echo "::warning::$TARGET todavía no tiene CRON_SECRET; la repesca no está configurada."
+            echo "configurado=no" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if [ -z "$APP_URL" ]; then
+            echo "::warning::$TARGET todavía no tiene NEXT_PUBLIC_APP_URL."
+            echo "configurado=no" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "configurado=si" >> "$GITHUB_OUTPUT"
+          case "$APP_URL" in
+            https://*) ;;
+            *) echo "::error::NEXT_PUBLIC_APP_URL must be an https URL."; exit 1 ;;
+          esac
+
+      - name: Repescar las verificaciones sin respuesta
+        if: ${{ steps.revisar.outputs.configurado == 'si' }}
+        run: |
+          set -euo pipefail
+          base="${APP_URL%/}"
+          body="$(mktemp)"
+          # El secreto solo viaja en una cabecera escrita desde el entorno: no
+          # puede llegar a la línea de comandos ni al registro.
+          status="$(curl -sS -o "$body" -w '%{http_code}' \
+            --retry 3 --retry-delay 10 --retry-all-errors --max-time 120 \
+            -X POST "$base/api/internal/verificacion/reintentar" \
+            -H "Authorization: Bearer $CRON_SECRET" \
+            -H "Content-Type: application/json")"
+
+          echo "HTTP $status"
+          # La respuesta solo trae contadores, nunca una cédula ni un nombre.
+          cat "$body"; echo
+
+          if [ "$status" = "503" ] && grep -q "cron_not_configured" "$body"; then
+            echo "::warning::$TARGET todavía no tiene configurada la repesca."
+            exit 0
+          fi
+          if [ "$status" != "200" ]; then
+            echo "::error::La repesca respondió HTTP $status."
+            exit 1
+          fi
+          if ! grep -q '"ok":true' "$body"; then
+            echo "::error::La repesca reportó una falla."
+            exit 1
+          fi

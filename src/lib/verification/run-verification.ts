@@ -92,7 +92,25 @@ export async function runIdentityVerification(
 
   const verifier = getIdentityVerifier();
   const result = await verifier.lookup(cedula);
-  if (result.unavailable) return "skipped";
+  // El padrón no contestó. Antes esto salía en silencio: no se tocaba nada, y
+  // como `verification_status` nace en 'pending', el profesional quedaba
+  // «pendiente de revisión» SIN fila en el historial —idéntico a una cédula que
+  // el padrón sí revisó y no encontró, pero sin motivo que leer—. Ahora queda
+  // escrito, para que en la cola se distinga «no está en el padrón» de «no
+  // pudimos preguntar», y `/api/internal/verificacion/reintentar` lo repesca
+  // cuando el padrón vuelve.
+  if (result.unavailable) {
+    await admin.from("provider_verification_log").insert({
+      professional_id: professionalId,
+      admin_id: null,
+      admin_name: "Verificación automática",
+      action: "padron_no_disponible",
+      from_status: pro.verification_status as string,
+      to_status: pro.verification_status as string,
+      reason: "El padrón no respondió. Queda pendiente y se reintenta solo.",
+    });
+    return "skipped";
+  }
 
   const now = new Date().toISOString();
   const fromStatus = pro.verification_status as string;
