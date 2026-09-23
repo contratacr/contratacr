@@ -7,6 +7,7 @@ import { getCategoryLabel } from "./data/categories";
 export const TRANSLATED_NOTIFICATION_TYPES = new Set([
   "review_received",
   "new_project",
+  "new_job",
   "project_cancelled",
   "support_reply",
   "verification",
@@ -34,6 +35,7 @@ type NotificationLocale = "es" | "en";
 const TITLES: Record<string, Record<NotificationLocale, string>> = {
   review_received: { es: "Nueva reseña recibida", en: "New review received" },
   new_project: { es: "Nuevo proyecto", en: "New project" },
+  new_job: { es: "Nueva vacante", en: "New job" },
   project_cancelled: { es: "Proyecto cancelado", en: "Project cancelled" },
   support_reply: { es: "Respuesta de soporte", en: "Support reply" },
   verification: { es: "Actualización de verificación", en: "Verification update" },
@@ -155,6 +157,18 @@ export function localizedNotificationCopy(notification: NotificationCopyInput, l
       message: en
         ? `The client chose you${project ? ` for "${project}"` : ""}. Coordinate the details by message.`
         : `El cliente te eligió${project ? ` para "${project}"` : ""}. Coordinen los detalles por mensaje.`,
+    };
+  }
+
+  if (notification.type === "new_job") {
+    const job = stringData(data, "job_title") || quotedValue(normalizedMessage) || (en ? "a new job" : "una vacante");
+    const categoryId = stringData(data, "category_id");
+    const category = categoryId ? getCategoryLabel(categoryId, language) : "";
+    return {
+      title,
+      message: en
+        ? `A job was posted: "${job}"${category ? ` in ${category}` : ""}. Open it and message whoever published it on WhatsApp.`
+        : `Publicaron "${job}"${category ? ` en ${category}` : ""}. Abre el empleo y escríbele por WhatsApp a quien lo publicó.`,
     };
   }
 

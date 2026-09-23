@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { PanelEmptyState } from "@/components/ui/content-loading";
 import { Modal } from "@/components/ui/modal";
 import { SectionHeadline } from "@/components/dashboard/section-headline";
+import { type OpcionDeServicio } from "@/components/ui/selector-de-servicio";
 import { JobPostForm } from "@/components/jobs/job-post-form";
 import { cn } from "@/lib/utils";
 import { StatusFilterTabs, PUBLICACION_ESTADO_TABS, publicacionBucket, sinFiltros } from "@/components/dashboard/status-filter-tabs";
@@ -58,7 +59,7 @@ const JOBS_MANAGER_COPY = {
 // no seleccionado). Un empleo cerrado suele ser el final feliz — pintarlo de
 // rojo lo hacía leer como error, y con todo de colores el color deja de decir.
 
-export function JobsManager({ initialJobs, embedded = false, backHref = "/dashboard/profesional?mode=offer&tab=jobs", professionalId, onRefresh }: { initialJobs: ManagedJob[]; embedded?: boolean; backHref?: string; professionalId?: string; onRefresh?: () => void }) {
+export function JobsManager({ initialJobs, serviceOptions, embedded = false, backHref = "/dashboard/profesional?mode=offer&tab=jobs", professionalId, onRefresh }: { serviceOptions: OpcionDeServicio[]; initialJobs: ManagedJob[]; embedded?: boolean; backHref?: string; professionalId?: string; onRefresh?: () => void }) {
   const nativeApp = useNativeApp();
   const locale = marketplaceLocale(useLocale());
   const copy = JOBS_MANAGER_COPY[locale];
@@ -272,12 +273,12 @@ export function JobsManager({ initialJobs, embedded = false, backHref = "/dashbo
       </div>
       {publishOpen && professionalId && (
         <Modal onClose={() => setPublishOpen(false)} title={copy.publishTitle} size="lg" bodyClassName="bg-[#f4f7fa] px-0 py-0">
-          <JobPostForm onCancel={() => setPublishOpen(false)} professionalId={professionalId} presentation="modal" backHref={backHref} onSaved={(id) => { setPublishOpen(false); onRefresh?.(); router.push(`/empleos/${id}?from=panel`); }} />
+          <JobPostForm serviceOptions={serviceOptions} onCancel={() => setPublishOpen(false)} professionalId={professionalId} presentation="modal" backHref={backHref} onSaved={(id) => { setPublishOpen(false); onRefresh?.(); router.push(`/empleos/${id}?from=panel`); }} />
         </Modal>
       )}
       {editingJob && professionalId && (
         <Modal onClose={() => setEditingJob(null)} title={copy.editTitle} size="lg" bodyClassName="bg-[#f4f7fa] px-0 py-0">
-          <JobPostForm onCancel={() => setEditingJob(null)} key={editingJob.id} professionalId={professionalId} initialJob={editingJob} presentation="modal" backHref={backHref} onSaved={() => { setEditingJob(null); onRefresh?.(); router.refresh(); }} />
+          <JobPostForm serviceOptions={serviceOptions} onCancel={() => setEditingJob(null)} key={editingJob.id} professionalId={professionalId} initialJob={editingJob} presentation="modal" backHref={backHref} onSaved={() => { setEditingJob(null); onRefresh?.(); router.refresh(); }} />
         </Modal>
       )}
       {dialogNode}

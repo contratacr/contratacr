@@ -1,4 +1,5 @@
 import { notFound, redirect } from "next/navigation";
+import { getAllCategories, getCategoryLabel } from "@/lib/data/categories";
 import { getLocale } from "next-intl/server";
 import { JobPostForm } from "@/components/jobs/job-post-form";
 import { safeGetUser } from "@/lib/supabase/get-user";
@@ -19,5 +20,7 @@ export default async function EditJobPage({ params, searchParams }: { params: Pr
   if (!professional) redirect(`/${locale}/dashboard/profesional?mode=offer`);
   const { data: job } = await supabase.from("job_posts").select("*").eq("id", id).eq("employer_id", professional.id).maybeSingle();
   if (!job) notFound();
-  return <JobPostForm professionalId={professional.id} initialJob={job} backHref={fromPanel ? "/dashboard/profesional?mode=offer&tab=jobs" : `/empleos/${id}`} />;
+  // El catálogo de servicios: el formulario pide a qué oficio pertenece la vacante.
+  const serviceOptions = getAllCategories().map((category) => ({ value: category.id, label: getCategoryLabel(category.id, locale) }));
+  return <JobPostForm serviceOptions={serviceOptions} professionalId={professional.id} initialJob={job} backHref={fromPanel ? "/dashboard/profesional?mode=offer&tab=jobs" : `/empleos/${id}`} />;
 }

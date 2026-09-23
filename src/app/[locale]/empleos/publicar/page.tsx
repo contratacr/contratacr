@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { getAllCategories, getCategoryLabel } from "@/lib/data/categories";
 import { getLocale } from "next-intl/server";
 import { JobPostForm } from "@/components/jobs/job-post-form";
 import { safeGetUser } from "@/lib/supabase/get-user";
@@ -17,5 +18,7 @@ export default async function PublishJobPage({ searchParams }: { searchParams: P
   if (!user) redirect(`/${locale}/login?redirect=${encodeURIComponent(publishPath)}`);
   const { data: professional } = await supabase.from("professionals").select("id").eq("profile_id", user.id).maybeSingle();
   if (!professional) redirect(`/${locale}/registro/profesional?redirect=${encodeURIComponent(publishPath)}`);
-  return <JobPostForm professionalId={professional.id} backHref={backHref} />;
+  // El catálogo de servicios: el formulario pide a qué oficio pertenece la vacante.
+  const serviceOptions = getAllCategories().map((category) => ({ value: category.id, label: getCategoryLabel(category.id, locale) }));
+  return <JobPostForm serviceOptions={serviceOptions} professionalId={professional.id} backHref={backHref} />;
 }

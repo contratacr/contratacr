@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { avisarVacanteAProfesionales } from "@/lib/jobs/aviso-de-vacante";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { auditUserAction } from "@/lib/audit/user-action";
@@ -102,6 +103,20 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No pudimos guardar el empleo. Inténtalo nuevamente." }, { status: 500 });
     }
     revalidateJobViews(data.id);
+    // Una vacante publicada le suena a quien hace ese oficio. Si falla el
+    // aviso, la vacante ya quedó guardada: no se devuelve un error por eso.
+    if (!editingId && payload.status === "published") {
+      try {
+        await avisarVacanteAProfesionales({
+          jobId: data.id,
+          serviceCategoryId: payload.service_category_id,
+          title: String(payload.title ?? ""),
+          employerProfileId: user.id,
+        });
+      } catch (avisoError) {
+        console.error("[POST /api/jobs/posts] aviso a profesionales", avisoError);
+      }
+    }
     return NextResponse.json({ id: data.id });
   } catch (error) {
     console.error("[POST /api/jobs/posts] unexpected failure", error);

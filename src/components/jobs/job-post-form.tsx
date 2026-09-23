@@ -22,6 +22,7 @@ import {
   type SalaryPeriod,
   type WorkplaceType,
 } from "@/lib/jobs";
+import { SelectorDeServicio, type OpcionDeServicio } from "@/components/ui/selector-de-servicio";
 import { SelectMenu } from "@/components/ui/select-menu";
 import { FutureDatePicker } from "@/components/ui/future-date-picker";
 import { FilaInterruptor } from "@/components/ui/fila-interruptor";
@@ -32,7 +33,7 @@ import { invalidateAppData } from "@/lib/app-data-invalidation";
 import { Button } from "@/components/ui/button";
 import { CABECERA_BOTON, CABECERA_FILA_CENTRADA, CABECERA_GLIFO, CABECERA_TITULO } from "@/components/layout/cabecera";
 
-type FieldErrors = Partial<Record<"title" | "location" | "description" | "responsibilities" | "requirements" | "salary" | "openings" | "deadline" | "whatsapp", string>>;
+type FieldErrors = Partial<Record<"title" | "service" | "location" | "description" | "responsibilities" | "requirements" | "salary" | "openings" | "deadline" | "whatsapp", string>>;
 
 const TODAY = new Date().toISOString().slice(0, 10);
 const FIELD_CLASS = "mt-1.5 h-11 w-full rounded-xl border border-[#d7e1ea] bg-white px-3 text-sm outline-none transition-colors focus:border-[#009fd9]";
@@ -42,6 +43,11 @@ const JOB_POST_COPY = {
   es: {
     optional: "opcional",
     position: "Puesto",
+    service: "Servicio relacionado",
+    selectService: "Selecciona un servicio",
+    searchService: "Buscar servicio",
+    noService: "Ningún servicio coincide",
+    serviceError: "Elige el servicio al que pertenece la vacante.",
     positionPlaceholder: "Ej. Asistente contable",
     remove: "Quitar",
     titleShort: "Escribe un puesto de al menos 3 caracteres.",
@@ -74,10 +80,10 @@ const JOB_POST_COPY = {
     description: "Descripción",
     descriptionPlaceholder: "Explica el puesto, el equipo y qué hará la persona.",
     responsibilities: "Responsabilidades",
-    responsibilityPlaceholder: "Ej. Preparar reportes mensuales",
+    responsibilityPlaceholder: "Ej. Atender clientes",
     addResponsibility: "Agregar responsabilidad",
     requirements: "Requisitos",
-    requirementPlaceholder: "Ej. Manejo intermedio de Excel",
+    requirementPlaceholder: "Ej. Excel intermedio",
     addRequirement: "Agregar requisito",
     benefits: "Beneficios",
     benefitPlaceholder: "Ej. Horario flexible",
@@ -103,6 +109,11 @@ const JOB_POST_COPY = {
   en: {
     optional: "optional",
     position: "Job title",
+    service: "Related service",
+    selectService: "Select a service",
+    searchService: "Search service",
+    noService: "No service matches",
+    serviceError: "Choose the service this job belongs to.",
     positionPlaceholder: "E.g. Accounting assistant",
     remove: "Remove",
     titleShort: "Enter a job title with at least 3 characters.",
@@ -135,10 +146,10 @@ const JOB_POST_COPY = {
     description: "Description",
     descriptionPlaceholder: "Explain the role, the team, and what the person will do.",
     responsibilities: "Responsibilities",
-    responsibilityPlaceholder: "E.g. Prepare monthly reports",
+    responsibilityPlaceholder: "E.g. Assist customers",
     addResponsibility: "Add responsibility",
     requirements: "Requirements",
-    requirementPlaceholder: "E.g. Intermediate Excel skills",
+    requirementPlaceholder: "E.g. Intermediate Excel",
     addRequirement: "Add requirement",
     benefits: "Benefits",
     benefitPlaceholder: "E.g. Flexible schedule",
@@ -295,9 +306,9 @@ function EditableList({
   );
 }
 
-type JobPostFormInitial = Partial<Pick<JobPost, "id" | "title" | "description" | "responsibilities" | "requirements" | "benefits" | "duration_label" | "employment_type" | "experience_level" | "workplace_type" | "location_label" | "salary_min" | "salary_max" | "salary_period" | "currency" | "show_salary" | "openings" | "application_deadline" | "contact_whatsapp" | "status">>;
+type JobPostFormInitial = Partial<Pick<JobPost, "service_category_id" | "id" | "title" | "description" | "responsibilities" | "requirements" | "benefits" | "duration_label" | "employment_type" | "experience_level" | "workplace_type" | "location_label" | "salary_min" | "salary_max" | "salary_period" | "currency" | "show_salary" | "openings" | "application_deadline" | "contact_whatsapp" | "status">>;
 
-export function JobPostForm({ professionalId, backHref = "/empleos", initialJob = null, presentation = "page", onSaved, onCancel }: { professionalId: string; backHref?: string; initialJob?: JobPostFormInitial | null; presentation?: "page" | "modal"; onSaved?: (id: string) => void; onCancel?: () => void }) {
+export function JobPostForm({ professionalId, serviceOptions, backHref = "/empleos", initialJob = null, presentation = "page", onSaved, onCancel }: { professionalId: string; serviceOptions: OpcionDeServicio[]; backHref?: string; initialJob?: JobPostFormInitial | null; presentation?: "page" | "modal"; onSaved?: (id: string) => void; onCancel?: () => void }) {
   const { cabeceraRef, conLinea } = useHairlineOnScroll();
   const editing = Boolean(initialJob?.id);
   const router = useRouter();
@@ -308,6 +319,8 @@ export function JobPostForm({ professionalId, backHref = "/empleos", initialJob 
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
+  // El servicio del catálogo: es lo que decide a quién se le avisa.
+  const [servicio, setServicio] = useState(initialJob?.service_category_id ?? "");
   // El formulario se referencia para llevar la vista al primer campo señalado,
   // y recuerda si hay algo escrito para avisar antes de salir sin publicar.
   const formRef = useRef<HTMLFormElement>(null);
@@ -377,6 +390,7 @@ export function JobPostForm({ professionalId, backHref = "/empleos", initialJob 
     if (!isWholeNumberInRange(salaryMin, 0, MAX_MONEY_AMOUNT) || !isWholeNumberInRange(salaryMax, 0, MAX_MONEY_AMOUNT)) nextErrors.salary = copy.salaryRange(formatNumberForMessage(MAX_MONEY_AMOUNT));
     if (!Number.isInteger(openings) || openings < 1 || openings > 100) nextErrors.openings = copy.openingsRange;
     setFieldErrors(nextErrors);
+    if (!servicio) nextErrors.service = copy.serviceError;
     if (Object.keys(nextErrors).length) {
       // Llevar la vista al primer campo señalado.
       requestAnimationFrame(() => {
@@ -393,7 +407,7 @@ export function JobPostForm({ professionalId, backHref = "/empleos", initialJob 
     const payload = {
       id: editing ? initialJob?.id : null,
       employer_id: professionalId,
-      service_category_id: null,
+      service_category_id: servicio || null,
       title,
       description,
       responsibilities: cleanResponsibilities,
@@ -463,6 +477,25 @@ export function JobPostForm({ professionalId, backHref = "/empleos", initialJob 
           <div className="rounded-2xl border border-[#e5e7eb] bg-white p-5 shadow-sm">
           <div className="grid gap-5 sm:grid-cols-2">
             <JobTitleInput defaultValue={initialJob?.title ?? ""} error={fieldErrors.title} locale={locale} copy={copy} />
+            {/* EL SERVICIO, ELEGIDO DE LA LISTA. De aquí sale a qué
+                profesionales se les avisa de la vacante: deducirlo del título
+                mandaría «Mecánico Diésel» también a los mecánicos industriales. */}
+            <label className="block" data-campo-con-error={fieldErrors.service ? "" : undefined}>
+              <span className="text-sm font-semibold"><RequiredLabel>{copy.service}</RequiredLabel></span>
+              <div className="mt-1.5">
+                <SelectorDeServicio
+                  id="job-service"
+                  opciones={serviceOptions}
+                  valor={servicio}
+                  onChange={(valor) => { setServicio(valor); setFieldErrors((actuales) => ({ ...actuales, service: undefined })); setConCambios(true); }}
+                  etiquetaVacia={copy.selectService}
+                  buscarTexto={copy.searchService}
+                  sinResultados={copy.noService}
+                  invalido={!!fieldErrors.service}
+                />
+              </div>
+              <FieldError>{fieldErrors.service}</FieldError>
+            </label>
             <SelectMenu label={<RequiredLabel>{copy.employmentType}</RequiredLabel>} value={employmentType} onChange={setEmploymentType} options={(Object.keys(EMPLOYMENT_TYPES) as EmploymentType[]).map((value) => ({ value, label: employmentTypeLabel(value, locale) }))} />
             <SelectMenu label={<RequiredLabel>{copy.workplaceType}</RequiredLabel>} value={workplaceType} onChange={setWorkplaceType} options={(Object.keys(WORKPLACE_TYPES) as WorkplaceType[]).map((value) => ({ value, label: workplaceTypeLabel(value, locale) }))} />
             {workplaceType !== "remote" && (

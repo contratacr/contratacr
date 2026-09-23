@@ -22,8 +22,8 @@ const PLANTILLAS = [
   {
     id: "lluvias",
     nombre: "Antes de las lluvias fuertes",
-    subject: "Antes del próximo aguacero: revisá tu instalación eléctrica",
-    body: "Hola,\n\nSeptiembre y octubre son los meses más lluviosos del año. Un corto, una toma mojada o un breaker que salta siempre aparecen en el peor momento.\n\nToca el botón y te salen los electricistas verificados de tu zona, con reseñas y su WhatsApp a la vista. Sin formularios y sin comisiones: escribís directo a quien te guste.\n\n¿Preferís que te busquen a vos? Publicá lo que necesitás en contratacr.com y los profesionales de tu zona te escriben.\n\n¿Ofrecés servicios? Publicá una promoción de temporada y aparecés primero para quien busca justo ahora.",
+    subject: "Antes del próximo aguacero",
+    body: "Hola,\n\nYa empezaron los meses más lluviosos del año. Si tienes algo eléctrico pendiente en la casa, mejor resolverlo antes del próximo aguacero.\n\nToca el botón y vas a ver los electricistas verificados de tu zona, con reseñas y su WhatsApp a la vista. Les escribes directo, sin comisiones.\n\n¿Ofreces servicios? Publica una promoción de temporada y apareces de primero para quien busca ahora.",
     ctaLabel: "Ver electricistas cerca de mí",
     ctaPath: "/es/buscar?categoria=electricidad",
   },

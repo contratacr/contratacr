@@ -19,6 +19,7 @@ import { useDirectMessageUnread } from "@/hooks/use-direct-message-unread";
 import { MarketplaceClearFilters, MarketplaceFilterChip, MarketplaceNavbarPortal, MarketplaceSearch } from "@/components/marketplace/marketplace-controls";
 import { ScrollRail } from "@/components/ui/scroll-rail";
 import { Modal } from "@/components/ui/modal";
+import { type OpcionDeServicio } from "@/components/ui/selector-de-servicio";
 import { JobPostForm } from "@/components/jobs/job-post-form";
 import { SaveItemButton } from "@/components/saved/save-item-button";
 import { DirectChatLauncher } from "@/components/professionals/direct-chat-launcher";
@@ -35,6 +36,8 @@ import { useAvisoPerfilProfesional } from "@/components/marketplace/use-aviso-pe
 type Props = {
   jobs: JobPost[];
   canPost: boolean;
+  /** El catálogo de servicios, para el formulario de publicar. */
+  serviceOptions: OpcionDeServicio[];
   initialSelectedJobId?: string | null;
   returnTo?: string | null;
   currentProfessionalId?: string | null;
@@ -120,7 +123,7 @@ function JobMetaLine({ job, className = "", showApplicants = false }: { job: Job
   </p>;
 }
 
-export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo = null, currentProfessionalId = null, currentUserId = null, detailOnly = false }: Props) {
+export function JobsBoard({ jobs, canPost, serviceOptions, initialSelectedJobId = null, returnTo = null, currentProfessionalId = null, currentUserId = null, detailOnly = false }: Props) {
   const { avisoNode, avisar } = useAvisoPerfilProfesional();
   const { cabeceraRef, conLinea } = useHairlineOnScroll();
   const locale = marketplaceLocale(useLocale());
@@ -542,7 +545,7 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
     </div>}
     {publishOpen && currentProfessionalId && (
       <Modal onClose={() => setPublishOpen(false)} title={copy.publishJob} size="lg" bodyClassName="bg-[#f4f7fa] px-0 py-0">
-        <JobPostForm
+        <JobPostForm serviceOptions={serviceOptions}
           onCancel={() => setPublishOpen(false)}
           professionalId={currentProfessionalId}
           presentation="modal"
@@ -558,7 +561,7 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
     )}
     {editingJob && currentProfessionalId && (
       <Modal onClose={() => setEditingJob(null)} title={copy.editJob} size="lg" bodyClassName="bg-[#f4f7fa] px-0 py-0">
-        <JobPostForm
+        <JobPostForm serviceOptions={serviceOptions}
           onCancel={() => setEditingJob(null)}
           professionalId={currentProfessionalId}
           initialJob={editingJob}

@@ -24,6 +24,7 @@ export type NotificationContext = "professional" | "client" | "support" | null;
 const PRO_TYPES = new Set([
   "review_received",
   "new_project",
+  "new_job",
 ]);
 
 const CLIENT_TYPES = new Set([
@@ -98,6 +99,10 @@ export function notificationHref(n: NotificationLinkInput, _role?: string, local
 
   let href: string;
   switch (n.type) {
+    case "new_job":
+      href = "/empleos";
+      break;
+
     case "new_project":
     case "project_cancelled":
       href = "/proyectos";

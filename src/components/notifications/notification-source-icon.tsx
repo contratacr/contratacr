@@ -1,12 +1,14 @@
 "use client";
 
-import { Bell, Handshake, Headset, ReceiptText, ShieldCheck, Star } from "lucide-react";
+import { Bell, Handshake, Headset, ReceiptText, ShieldCheck, Star, Briefcase } from "lucide-react";
 
 // Un icono por familia de aviso VIVA. Las de citas, propuestas, postulaciones,
 // seguir y recordatorios se retiraron con sus flujos; lo historico cae en la
 // campana generica.
 export function NotificationSourceIcon({ type, className }: { type: string; className?: string }) {
   switch (type) {
+    case "new_job":
+      return <Briefcase className={className} />;
     case "new_project":
     case "project_cancelled":
       return <Handshake className={className} />;
