@@ -33,7 +33,7 @@ const LOCALES: LocaleContract[] = [
   {
     locale: "en",
     navLabel: "App navigation",
-    navItems: ["Search", "Deals", "Quotes", "Jobs", "Panel"],
+    navItems: ["Search", "Promotions", "Quotes", "Jobs", "Panel"],
     messages: "Messages",
     assistant: "Assistant",
     assistantDialog: /ContrataCR Assistant/i,
