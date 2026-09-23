@@ -266,6 +266,13 @@ test.describe("@mobile native shell contracts", () => {
     // anterior a todo esto y que no se ve en pantalla; está anotado abajo como
     // pendiente con su propia prueba. Mezclarlo aquí dejaba en rojo el contrato
     // de las pestañas por algo que no tiene que ver con ellas.
+    //
+    // Se espera a que la portada TERMINE de hidratar antes de limpiar: `gotoOK`
+    // vuelve con el documento cargado, no hidratado, así que limpiar de una
+    // dejaba entrar igual los errores de la portada —llegaban un instante
+    // después— y el contrato seguía en rojo por lo mismo.
+    await expect(page.locator("nav.ccr-native-bottom-nav").filter({ visible: true })).toBeVisible();
+    await page.waitForTimeout(2_000);
     pageErrors.length = 0;
 
     for (const destination of [
