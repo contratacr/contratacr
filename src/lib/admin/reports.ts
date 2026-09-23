@@ -58,6 +58,11 @@ export type AdminAcquisition = {
   since: string | null;
   rows: AcquisitionRow[];
   campaigns: AcquisitionCampaign[];
+  /** Por qué PÁGINA entraron. Es lo que dice si las páginas por oficio traen
+   *  gente o si todo llega por la portada. */
+  landings: Count[];
+  /** De qué SITIO venían. Google, Facebook, Instagram, ChatGPT… */
+  referrers: Count[];
 };
 export type AdminReports = {
   insights: AdminInsights;
@@ -122,7 +127,7 @@ export async function getAdminReports(locale = "es"): Promise<AdminReports> {
       platform: { web: 0, native: 0 },
       tracking: { since: null, events14d: 0 },
     },
-    acquisition: { tracked: 0, untracked: 0, tracked30: 0, untracked30: 0, since: null, rows: [], campaigns: [] },
+    acquisition: { tracked: 0, untracked: 0, tracked30: 0, untracked30: 0, since: null, rows: [], campaigns: [], landings: [], referrers: [] },
     users: { total: 0, clients: 0, pros: 0, verifiedPros: 0, activeClients: 0, reg30: days30.map((d) => ({ date: d, pros: 0, clients: 0 })) },
     pros: { total: 0, verified: 0, pending: 0, unverified: 0, rejected: 0, byCategory: [], byProvince: [], traveling: 0, fixed: 0, withSchedule: 0, withoutSchedule: 0, withServices: 0, withoutServices: 0 },
     activity: { solicitudesTotal: 0, solicitudesByStatus: [], solicitudesResponded: 0, proyectosTotal: 0, proyectosByStatus: [], topCategories: [], series30: days30.map((d) => ({ date: d, solicitudes: 0, proyectos: 0 })) },
@@ -196,17 +201,23 @@ export async function getAdminReports(locale = "es"): Promise<AdminReports> {
     try {
       const { data: acq, error: acqError } = await admin
         .from("profiles")
-        .select("id, role, created_at, acquisition_source, acquisition_medium, acquisition_campaign, acquisition_captured_at");
+        .select("id, role, created_at, acquisition_source, acquisition_medium, acquisition_campaign, acquisition_captured_at, acquisition_landing_path, acquisition_referrer_host");
       if (acqError) throw acqError;
       const cut30 = now - 30 * DAY;
       const rows = new Map<string, AcquisitionRow>();
       const campaigns = new Map<string, AcquisitionCampaign>();
+      const landings = new Map<string, number>();
+      const referrers = new Map<string, number>();
       let since: string | null = null;
       for (const profile of acq ?? []) {
         const isPro = professionalProfileIds.has(profile.id);
         const isClient = profile.role === "client" && !isPro;
         if (!isPro && !isClient) continue;
         const recent = new Date(profile.created_at as string).getTime() >= cut30;
+        const landing = (profile.acquisition_landing_path as string | null) ?? null;
+        if (landing) landings.set(landing, (landings.get(landing) ?? 0) + 1);
+        const referrer = (profile.acquisition_referrer_host as string | null) ?? null;
+        if (referrer) referrers.set(referrer, (referrers.get(referrer) ?? 0) + 1);
         const source = (profile.acquisition_source as string | null) ?? null;
         if (!source) {
           empty.acquisition.untracked += 1;
@@ -232,6 +243,12 @@ export async function getAdminReports(locale = "es"): Promise<AdminReports> {
       empty.acquisition.since = since;
       empty.acquisition.rows = [...rows.values()].sort((a, b) => (b.pros + b.clients) - (a.pros + a.clients));
       empty.acquisition.campaigns = [...campaigns.values()].sort((a, b) => (b.pros + b.clients) - (a.pros + a.clients));
+      const aLista = (m: Map<string, number>) => [...m.entries()]
+        .map(([label, value]) => ({ label, value }))
+        .sort((x, y) => y.value - x.value)
+        .slice(0, 12);
+      empty.acquisition.landings = aLista(landings);
+      empty.acquisition.referrers = aLista(referrers);
     } catch { /* columns missing until migration 177 runs */ }
   } catch (e) { console.error("[reports] users/pros", e); }
 

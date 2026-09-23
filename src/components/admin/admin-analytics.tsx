@@ -228,6 +228,23 @@ export function AdminAnalytics({ data }: { data: AdminReports }) {
         <Acquisition data={data.acquisition} />
       </Section>
 
+      {/* El canal dice «google» o «meta», pero no dice POR DÓNDE entraron. Eso
+          es lo que contesta si las páginas por oficio —hay 784, una por oficio
+          y provincia— están trayendo gente o si todo llega por la portada. El
+          dato ya se guardaba; no se estaba mirando. */}
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+        <Section icon={Search} title="Por dónde entraron" sub="Primera página de cada cuenta registrada">
+          {data.acquisition.landings.length
+            ? <Ranked items={data.acquisition.landings} color="#009FD9" />
+            : <p className="text-sm text-[#94a3b8]">Todavía sin datos.</p>}
+        </Section>
+        <Section icon={Megaphone} title="De qué sitio venían" sub="El sitio que los mandó">
+          {data.acquisition.referrers.length
+            ? <Ranked items={data.acquisition.referrers} color="#16a34a" />
+            : <p className="text-sm text-[#94a3b8]">Llegaron directo, sin sitio que los refiriera.</p>}
+        </Section>
+      </div>
+
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
         <Section icon={Search} title="Del interés a la contratación" sub="Últimos 7 días · % del paso anterior">
           <Funnel steps={[
