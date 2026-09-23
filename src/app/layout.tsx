@@ -308,7 +308,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
         <style
           data-ccr-aviso-guardado=""
           dangerouslySetInnerHTML={{
-            __html: `html.ccr-native-bottom-nav-visible{--ccr-aviso-barra-app:var(--ccr-native-live-bottom-nav-height,0px)}@media (max-width:639px){body.ccr-con-barra-accion{--ccr-aviso-franja:var(--ccr-alto-barra,0px)}}`,
+            __html: `html.ccr-native-bottom-nav-visible,body.ccr-native-bottom-nav-visible{--ccr-aviso-barra-app:var(--ccr-native-live-bottom-nav-height,0px)}@media (max-width:639px){body.ccr-con-barra-accion{--ccr-aviso-franja:var(--ccr-alto-barra,0px)}}`,
           }}
         />
         <style
