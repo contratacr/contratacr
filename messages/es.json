@@ -388,7 +388,9 @@
     "wholeCountryName": "Todo Costa Rica",
     "wholeCountryTag": "Cobertura nacional",
     "addedPlaces": "Lugares agregados ({count})",
-    "removePlace": "Quitar lugar"
+    "removePlace": "Quitar lugar",
+    "todoElPaisTitulo": "Viajo a todo el país",
+    "todoElPaisAyuda": "Se suma a tus zonas: también sales en otras provincias."
   },
   "reviewModal": {
     "titleEdit": "Editar tu reseña",
@@ -914,7 +916,8 @@
       "allowCallsLabel": "Permitir contacto por llamada",
       "rateLabel": "¿Desde cuánto cobrás por hora?",
       "rateHelp": "Sale en tu tarjeta como «₡X /hora» y es lo primero que mira un cliente. Si lo dejás en blanco dirá «Consultar precio», y mucha gente se va sin escribir. Lo podés cambiar después.",
-      "ratePlaceholder": "12 000"
+      "ratePlaceholder": "12 000",
+      "errWorkplaceSiempre": "Agrega al menos una zona donde trabajas. Cubrir todo Costa Rica no reemplaza tu zona: es un añadido."
     },
     "client": {
       "title": "Crear cuenta de cliente",

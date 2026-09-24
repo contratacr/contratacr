@@ -8,6 +8,7 @@ import { PROVINCES, getCantonsByProvince, getCantonById, getProvinceById } from 
 import { AnchoredDropdown } from "@/components/ui/anchored-dropdown";
 import { SelectMenu } from "@/components/ui/select-menu";
 import { cn } from "@/lib/utils";
+import { FilaInterruptor } from "@/components/ui/fila-interruptor";
 
 export type Workplace = {
   id: string;
@@ -44,7 +45,6 @@ interface WorkplacesPickerProps {
 type GMaps = any;
 
 const COSTA_RICA_CENTER = { lat: 9.7489, lng: -83.7534 };
-const COUNTRY_OPTION = "__country__";
 
 function genId() {
   return `wp_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
@@ -110,26 +110,9 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
   }, [draftPin]);
 
   function commitWorkplace() {
-    if (!province || province === COUNTRY_OPTION) {
-      onChange([
-        ...valueRef.current.filter((wp) => wp.level !== "country"),
-        {
-          id: "wp_todo_costa_rica",
-          name: t("wholeCountryName"),
-          address: "",
-          level: "country",
-        },
-      ]);
-      setProvince("");
-      setCanton("");
-      setDraftPin(null);
-      setShowMap(false);
-      setAdding(false);
-      setAddrQuery("");
-      setAddrSug([]);
-      setAddrOpen(false);
-      return;
-    }
+    // Sin provincia no hay nada que agregar. «Todo Costa Rica» es el
+    // interruptor de abajo, que se SUMA a las zonas; aquí ya no se agrega.
+    if (!province) return;
     const pin = canton ? draftPinRef.current : null;
     const cantonName = getCantonById(canton)?.name ?? "";
     const provinceName = getProvinceById(province)?.name ?? "";
@@ -391,15 +374,17 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
           onChange={(v) => { setProvince(v); setCanton(""); }}
           placeholder={t("provincePlaceholder")}
           className="[&>button]:h-11 [&>button]:rounded-xl [&>button]:border-[#e5e7eb] [&>button]:bg-white [&>button]:pl-3.5 [&>button]:pr-8 [&>button]:shadow-none [&>button>span]:text-[13px] sm:[&>button>span]:text-sm"
-          options={[
-            { value: COUNTRY_OPTION, label: t("wholeCountryName") },
-            ...PROVINCES.map((p) => ({ value: p.id, label: p.name })),
-          ]}
+          // SOLO provincias. «Todo Costa Rica» vivía aquí, como si fuera una
+          // provincia más, y la gente lo elegía EN LUGAR de poner su zona: 63
+          // de 288 perfiles terminaron sin provincia ni cantón y quedaron
+          // fuera de toda búsqueda por lugar (medido). Ahora es un
+          // interruptor aparte, abajo, que se SUMA a las zonas.
+          options={PROVINCES.map((p) => ({ value: p.id, label: p.name }))}
         />
         <SelectMenu
           value={canton}
           onChange={setCanton}
-          disabled={!province || province === COUNTRY_OPTION}
+          disabled={!province}
           placeholder={t("cantonPlaceholder")}
           className="[&>button]:h-11 [&>button]:rounded-xl [&>button]:border-[#e5e7eb] [&>button]:bg-white [&>button]:pl-3.5 [&>button]:pr-8 [&>button]:shadow-none [&>button>span]:text-[13px] sm:[&>button>span]:text-sm"
           options={[
@@ -411,7 +396,7 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
 
       {/* 2 - OPTIONAL exact pin (refinement), HIDDEN by default. A clean expandable
              link reveals the address search + map only when the pro chooses to pin. */}
-      {effectiveKey && canton && province !== COUNTRY_OPTION ? (
+      {effectiveKey && canton ? (
         <div className="flex flex-col gap-2">
           <button
             type="button"
@@ -485,7 +470,7 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
           )}
         </div>
       ) : (
-        canton && province !== COUNTRY_OPTION && <p className="text-xs text-[#68778d]">{t("mapUnavailable")}</p>
+        canton && <p className="text-xs text-[#68778d]">{t("mapUnavailable")}</p>
       )}
 
       {/* 3 - Add THIS zone (the one selected above). Enabled once provincia + cantón
@@ -495,10 +480,40 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
         onClick={commitWorkplace}
         className="self-start inline-flex h-10 items-center gap-1.5 rounded-full bg-[#e8f7fd] px-3.5 text-sm font-bold text-[#0089bb] transition-colors hover:bg-[#d8f1fb]"
       >
-        <Plus className="h-4 w-4" /> {!province || province === COUNTRY_OPTION ? t("addWholeCountry") : canton ? t("addThisPlace") : t("addWholeProvince")}
+        <Plus className="h-4 w-4" /> {canton ? t("addThisPlace") : t("addWholeProvince")}
       </button>
       </div>
       )}
+
+      {/* «TAMBIÉN TRABAJO EN TODO COSTA RICA», un añadido, no una zona.
+          Antes esto era la primera opción del desplegable de provincias y la
+          gente lo elegía EN LUGAR de decir dónde trabaja: 63 de 288 perfiles
+          se quedaron sin provincia ni cantón, y con eso fuera de todas las
+          búsquedas por lugar —lo contrario de lo que la opción promete—.
+          Aquí abajo, con su explicación al lado, se lee como lo que es. */}
+      {/* EL MISMO INTERRUPTOR QUE EL RESTO DEL APP (`FilaInterruptor`), no una
+          casilla: el propio componente dice que la casilla se reserva para
+          aceptar términos o marcar varias opciones de una lista, y aquí es un
+          sí/no. Al lado, arriba, está el de Videoconsultas: dos dibujos
+          distintos para dos preguntas del mismo bloque se veía desprolijo.
+
+          Y el texto dice VIAJAR, no cubrir: «todo Costa Rica» se leía
+          como otra zona más, que es justo lo que hizo que 63 perfiles la
+          pusieran EN LUGAR de su provincia. Al encenderlo aparece en la lista
+          de arriba como una zona más, junto a «Toda la provincia de Alajuela»:
+          son lo mismo —me desplazo por esta área—, solo que la provincia hay
+          que elegirla y el país no. */}
+      <FilaInterruptor
+        titulo={t("todoElPaisTitulo")}
+        ayuda={t("todoElPaisAyuda")}
+        checked={value.some((wp) => wp.level === "country")}
+        onChange={(encendido) => {
+          const sinPais = valueRef.current.filter((wp) => wp.level !== "country");
+          onChange(encendido
+            ? [...sinPais, { id: "wp_todo_costa_rica", name: t("wholeCountryName"), address: "", level: "country" as const }]
+            : sinPais);
+        }}
+      />
 
       {/* Separate, explicit way to add ANOTHER zone (only when the draft is closed). */}
       {!showAddForm && (
