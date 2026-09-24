@@ -29,7 +29,7 @@ import { useNativeApp } from "@/hooks/use-native-app";
 import { ALL_CATEGORIES, CATEGORY_GROUPS, searchCategories, normalizeText, getCategoryLabel, getCategoryGroupLabel, resolveCategoryIntent, getAllCategories, getAllCategoryGroups, getCategoryGroupId } from "@/lib/data/categories";
 import { getCategoryGroupIcon } from "@/lib/data/category-group-visuals";
 import { useCustomCategories } from "@/lib/data/use-custom-categories";
-import { HOME_CATEGORIES } from "@/lib/data/home-categories";
+
 import { allLocationSuggestions, searchLocations, resolveLocation, type LocationSuggestion } from "@/lib/data/location-search";
 import { lockBodyScroll } from "@/lib/body-scroll-lock";
 import { createClient } from "@/lib/supabase/client";
@@ -904,6 +904,20 @@ function guardarCapacidad(capacidad: CapacidadGuardada) {
   try { window.localStorage.setItem(CLAVE_CAPACIDAD + capacidad.userId, JSON.stringify(capacidad)); } catch { /* sin almacenamiento */ }
 }
 
+/** Lo que se ofrece en el buscador del teléfono cuando no hay nada escrito ni
+ *  nada reciente. Uno por grupo, a propósito: hogar, automotriz, belleza,
+ *  tecnología, empresarial, legal, salud y eventos. */
+const OFICIOS_DE_ARRANQUE = [
+  "limpieza",          // hogar
+  "electricidad",      // hogar (el oficio más buscado del sitio)
+  "mecanica",          // automotriz
+  "peluqueria",        // belleza
+  "desarrollo_web",    // tecnología
+  "contabilidad",      // empresarial
+  "legal",             // legal
+  "psicologia",        // salud
+];
+
 export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobileSearch = false, marketplaceDesktop = false, drawerOnly = false }: { mobileInline?: React.ReactNode; forceCompactSearch?: boolean; mobileSearch?: boolean; marketplaceDesktop?: boolean; drawerOnly?: boolean } = {}) {
   const [compact, setCompact] = useState(false);
   const [openMenu, setOpenMenu] = useState<string | null>(null);
@@ -1515,12 +1529,18 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   // Se filtran contra el catálogo vivo: un servicio que el administrador
   // escondió o renombró no puede quedar ofrecido aquí de adorno. `catalogo`
   // solo está para que la lista se rehaga cuando llegue el catálogo de la base.
-  // Sin `useMemo` a propósito: son 26 comparaciones, y el catálogo de la base
+  // Ocho oficios de OCHO grupos distintos. Tomados de corrido de la lista de la
+  // portada salían siete de hogar seguidos, y esta pantalla es lo primero que
+  // ve alguien que no conoce el sitio: si solo enseña plomería y pintura,
+  // nadie se entera de que también hay abogados, contadores o desarrollo web
+  // —que es justo lo que cuesta que la gente sepa—.
+  //
+  // Sin `useMemo` a propósito: son ocho comparaciones, y el catálogo de la base
   // llega después (`useCustomCategories` vuelve a pintar cuando eso pasa), así
   // que una lista memorizada se quedaría con los nombres viejos.
   const serviciosMasBuscados = (() => {
     const vivos = new Set(getAllCategories().map((c) => c.id));
-    return HOME_CATEGORIES.filter((id) => vivos.has(id)).slice(0, 8);
+    return OFICIOS_DE_ARRANQUE.filter((id) => vivos.has(id)).slice(0, 8);
   })();
   const compactSuggestions = matchCategories(searchQuery, 8, locale);
   const showNativeServiceSuggestions =
