@@ -1,6 +1,7 @@
 "use client";
 
 import { instalarCatalogoDesdeTexto } from "@/lib/data/categories";
+import { instalarOficiosDeArranque } from "@/lib/data/oficios-de-arranque";
 
 /**
  * EL CATÁLOGO DE SERVICIOS, TAMBIÉN EN LA CAPA DE CLIENTE.
@@ -23,7 +24,10 @@ import { instalarCatalogoDesdeTexto } from "@/lib/data/categories";
  * componente pida un nombre el registro ya está lleno de los dos lados.
  * Instalar el mismo texto dos veces no hace nada.
  */
-export function CatalogoDelServidor({ texto }: { texto: string | null }) {
+export function CatalogoDelServidor({ texto, oficios }: { texto: string | null; oficios?: string[] | null }) {
   instalarCatalogoDesdeTexto(texto);
+  // Los oficios del buscador vacío viajan por el mismo camino y por la misma
+  // razón: se eligen con la cuenta de oferta, que solo existe en el servidor.
+  instalarOficiosDeArranque(oficios);
   return null;
 }

@@ -6,6 +6,8 @@ import { NativeDebugLogger } from "@/components/mobile/native-debug-logger";
 import { CatalogoDelServidor } from "@/components/util/catalogo-del-servidor";
 import { NATIVE_ONBOARDING_COMPLETED_KEY } from "@/lib/mobile-onboarding";
 import { catalogoParaElCliente } from "@/lib/data/server-category-catalog";
+import { elegirOficiosDeArranque } from "@/lib/data/oficios-de-arranque";
+import { getSupplyCounts, MIN_SUPPLY_FOR_LANDING } from "@/lib/queries/supply";
 import "./globals.css";
 
 const inter = Inter({
@@ -57,6 +59,12 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
   // Con tope de 3 s y caché de 20 s por instancia: casi siempre es gratis, y si
   // la base tarda, la página sale igual (sin catálogo, como antes).
   const catalogoEnTexto = await catalogoParaElCliente().catch(() => null);
+  // Los oficios que ofrece el buscador del teléfono cuando está vacío: uno por
+  // grupo y solo donde hay gente registrada. La cuenta de oferta se guarda una
+  // hora; si no contesta, sale la lista fija.
+  const oficiosDeArranque = await getSupplyCounts()
+    .then((oferta) => elegirOficiosDeArranque(oferta.byCategory, MIN_SUPPLY_FOR_LANDING))
+    .catch(() => null);
   return (
     <html
       lang={idioma}
@@ -427,7 +435,7 @@ body:has(.ccr-error-screen) .ccr-navbar-spacer{display:none}
         {/* El mismo catálogo, instalado también en la capa de módulos de los
             componentes de cliente: sin esto sus nombres los pintaba el servidor
             con el texto fijo del código y el navegador con el de la base. */}
-        <CatalogoDelServidor texto={catalogoEnTexto} />
+        <CatalogoDelServidor texto={catalogoEnTexto} oficios={oficiosDeArranque} />
         <StaticNativeFirstRunPrepaint />
         <NativeDebugLogger />
         {/* SIN frontera de espera aquí. Con un <Suspense> encima de todas las
