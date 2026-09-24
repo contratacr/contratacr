@@ -176,17 +176,46 @@ export function localityTier(pro: SearchResult, filters: SearchFiltersResolved) 
 }
 
 /**
- * Ordena por cercanía administrativa sin tocar el orden elegido: el reordenado
- * es estable, así que dentro de cada grupo se conserva la nota, la verificación
- * y todo lo demás. No se aplica con coordenadas exactas: ahí la distancia real
- * ya es una señal mejor que el nombre del cantón.
+ * EL ORDEN FINAL: el filtro que la persona eligió MANDA, la zona DESEMPATA.
+ *
+ * Antes esto era un pase aparte que corría DESPUÉS de ordenar y repartía por
+ * cercanía, así que le pasaba por encima al filtro: con «Mejor calificados»,
+ * en electricidad + Atenas, el único electricista con reseñas (5,0) se iba al
+ * fondo por no ser de Atenas, y arriba quedaban diez sin una sola reseña. Si
+ * la persona pide los mejor calificados, el mejor calificado va primero.
+ *
+ * La zona sigue contando, pero donde corresponde: cuando dos van igual de bien
+ * en el criterio elegido, primero el que trabaja EN la zona, después el que
+ * cubre la provincia y de último el que viaja a todo el país. Y si también
+ * empatan ahí, se conserva el orden con el que venían.
  */
-function porZonaPedida(results: SearchResult[], filters: SearchFiltersResolved) {
+function ordenFinal(results: SearchResult[], filters: SearchFiltersResolved) {
+  // Con coordenadas exactas manda la distancia real, que es mejor señal que el
+  // nombre del cantón.
   if (typeof filters.nearLat === "number" && typeof filters.nearLng === "number") return results;
   if (!filters.selectedCantonId && !filters.selectedProvinceId) return results;
   const tier = new Map<SearchResult, number>();
   for (const pro of results) tier.set(pro, localityTier(pro, filters));
-  return [...results].sort((a, b) => (tier.get(b) ?? 0) - (tier.get(a) ?? 0));
+  const venia = new Map<SearchResult, number>();
+  results.forEach((pro, i) => venia.set(pro, i));
+
+  // Las señales del criterio elegido, de más a menos importante. Menor = antes.
+  // Los tres criterios que ofrece la pantalla: «Mejor calificados» (el de
+  // entrada), «Cerca de mí» —que sale antes, por coordenadas— y «Experiencia».
+  const claves: ((p: SearchResult) => number)[] =
+    filters.sortBy === "experience"
+      ? [(p) => -experienceMonths(p)]
+      // Primero quien TIENE reseñas, luego la nota, luego cuántas: sin
+      // reseñas no hay nota que comparar y todos empatarían en cero.
+      : [(p) => ((p.reviewCount ?? 0) > 0 ? 0 : 1), (p) => -(p.ratingAvg ?? 0), (p) => -(p.reviewCount ?? 0)];
+
+  return [...results].sort((a, b) => {
+    for (const clave of claves) {
+      const d = clave(a) - clave(b);
+      if (d) return d;
+    }
+    return (tier.get(b) ?? 0) - (tier.get(a) ?? 0) || (venia.get(a) ?? 0) - (venia.get(b) ?? 0);
+  });
 }
 
 /** Which location a card should show, and whether it drops to contact-only. */
@@ -309,5 +338,5 @@ async function resolveSearchResultsUncached(params: SearchPageParams) {
   }, {
     fresh: process.env.E2E_FIXTURES_READY === "1" && Boolean(params.regression),
   });
-  return { filters, ordered: porZonaPedida(sortResults(results, filters.sortBy), filters) };
+  return { filters, ordered: ordenFinal(sortResults(results, filters.sortBy), filters) };
 }

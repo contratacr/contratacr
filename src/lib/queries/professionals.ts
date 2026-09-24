@@ -441,7 +441,13 @@ async function searchProfessionalsUncached(
             ? query.or([
                 `search_provincias.cs.{${filters.provinceId}}`,
                 `provincia_id.eq.${filters.provinceId}`,
-                includeVideoNationwide ? "coverage_country.eq.true" : "",
+                // «Cubro todo Costa Rica» cuenta SIEMPRE, no solo en los
+                // oficios que se dan a distancia. La casilla dice que trabaja
+                // en todo el país y hacía justo lo contrario: dejaba al
+                // profesional fuera de TODAS las búsquedas por zona (63 de 288
+                // perfiles, medido). Quien la marca sale en cualquier zona,
+                // pero de último (ver `soloPorTodoElPais` más abajo).
+                "coverage_country.eq.true",
                 includeVideoNationwide ? "videoconsulta.eq.true" : "",
               ].filter(Boolean).join(","))
             : query.eq("provincia_id", filters.provinceId);
@@ -452,10 +458,8 @@ async function searchProfessionalsUncached(
           const parts = [`search_cantones.cs.{${filters.cantonId}}`, `canton_id.eq.${filters.cantonId}`];
           if (modern) {
             if (filters.provinceId && filters.provinceId !== "todas") parts.push(`coverage_provincias.cs.{${filters.provinceId}}`);
-            if (includeVideoNationwide) {
-              parts.push("coverage_country.eq.true");
-              parts.push("videoconsulta.eq.true");
-            }
+            parts.push("coverage_country.eq.true");
+            if (includeVideoNationwide) parts.push("videoconsulta.eq.true");
           }
           query = modern ? query.or(parts.join(",")) : query.eq("canton_id", filters.cantonId);
         }
@@ -480,7 +484,7 @@ async function searchProfessionalsUncached(
                 ? [
                     `search_provincias.cs.{${loc.id}}`,
                     `provincia_id.eq.${loc.id}`,
-                    queryIncludesVideoNationwide ? "coverage_country.eq.true" : "",
+                    "coverage_country.eq.true",
                     queryIncludesVideoNationwide ? "videoconsulta.eq.true" : "",
                   ].filter(Boolean)
                 : [`provincia_id.eq.${loc.id}`];
@@ -490,7 +494,7 @@ async function searchProfessionalsUncached(
                   `search_cantones.cs.{${loc.id}}`,
                   `canton_id.eq.${loc.id}`,
                   `coverage_provincias.cs.{${loc.provinceId}}`,
-                  queryIncludesVideoNationwide ? "coverage_country.eq.true" : "",
+                  "coverage_country.eq.true",
                   queryIncludesVideoNationwide ? "videoconsulta.eq.true" : "",
                 ].filter(Boolean)
               : [`canton_id.eq.${loc.id}`];

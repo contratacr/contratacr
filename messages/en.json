@@ -388,7 +388,9 @@
     "wholeCountryName": "All Costa Rica",
     "wholeCountryTag": "National coverage",
     "addedPlaces": "Added places ({count})",
-    "removePlace": "Remove place"
+    "removePlace": "Remove place",
+    "todoElPaisTitulo": "I travel anywhere in the country",
+    "todoElPaisAyuda": "Adds to your areas: you also show up in other provinces."
   },
   "reviewModal": {
     "titleEdit": "Edit your review",
@@ -914,7 +916,8 @@
       "allowCallsLabel": "Allow contact by phone call",
       "rateLabel": "What do you charge per hour, starting from?",
       "rateHelp": "It shows on your card as «₡X /hour» and it is the first thing a client looks at. Leave it blank and it says «Ask for price», and many people leave without writing. You can change it later.",
-      "ratePlaceholder": "12 000"
+      "ratePlaceholder": "12 000",
+      "errWorkplaceSiempre": "Add at least one area where you work. Covering all of Costa Rica does not replace your area: it adds to it."
     },
     "client": {
       "title": "Create client account",

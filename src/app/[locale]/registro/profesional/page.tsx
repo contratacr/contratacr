@@ -795,9 +795,20 @@ export default function RegisterProfessionalPage() {
       form2.setError("whatsapp", { message: t("errPhoneIncomplete") });
       return;
     }
-    // At least one work zone (provincia/cantón) is required — it drives /buscar.
-    if (workplaces.length === 0 && !effectiveVideoCoverageCountry) {
-      setLocationError(canOfferVideoConsult ? t("errWorkplace") : t("errWorkplaceInPerson"));
+    // SIEMPRE hace falta al menos una zona, aunque cubra todo el país.
+    //
+    // Antes, marcar «cubro todo Costa Rica» dejaba terminar el registro sin
+    // decir NADA de dónde se trabaja, y el resultado era lo contrario de lo
+    // que la casilla promete: 63 de 288 profesionales quedaron sin una sola
+    // zona y por lo tanto fuera de toda búsqueda por lugar (medido). Ni la
+    // provincia, ni el cantón, ni los pines, ni el mapa, ni la bio decían
+    // dónde estaban: no había forma de recuperarlo sin preguntarles.
+    //
+    // Todo profesional sale de algún lado, aunque viaje a todo el país o
+    // atienda por videoconsulta. La cobertura nacional es un AÑADIDO a esa
+    // base, no un sustituto.
+    if (workplaces.length === 0) {
+      setLocationError(t("errWorkplaceSiempre"));
       return;
     }
     setLocationError(null);
