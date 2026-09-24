@@ -9,31 +9,37 @@ import { LandingFooter } from "@/components/landing/landing-footer";
 import { InstallAppGuide } from "@/components/landing/install-app-card";
 import { Link } from "@/i18n/navigation";
 import {
-  CalendarDays,
+  FileText,
   BriefcaseBusiness,
   ChevronDown,
   Headset,
+  MessageCircle,
+  ReceiptText,
   Search,
-  ShieldCheck,
   Smartphone,
   Star,
   Tags,
   UserCheck,
 } from "lucide-react";
+import { VerifiedSeal } from "@/components/ui/verified-seal";
 
 // `cat` es el índice del texto (cat0Title…), fijo aunque se esconda un tema.
 const TOPICS = [
   { icon: UserCheck, faq: 1, cat: 0 },
   { icon: Search, faq: 3, cat: 1 },
-  { icon: ShieldCheck, faq: 2, cat: 2 },
-  { icon: CalendarDays, faq: 6, cat: 3 },
+  { icon: VerifiedSeal, faq: 2, cat: 2 },
+  { icon: FileText, faq: 6, cat: 3 },
   { icon: Star, faq: 5, cat: 4 },
   { icon: Smartphone, faq: 8, cat: 5 },
   { icon: BriefcaseBusiness, faq: 9, cat: 6 },
   { icon: Tags, faq: 10, cat: 7 },
+  // Cotizaciones y Mensajes existen en el panel desde hace tiempo y el centro
+  // de ayuda no los mencionaba en ninguna parte.
+  { icon: ReceiptText, faq: 12, cat: 8 },
+  { icon: MessageCircle, faq: 13, cat: 9 },
 ].filter((topic) => EMPLEOS_VISIBLE || topic.cat !== 6);
 // La pregunta 9 es sobre postularse a un empleo.
-const FAQS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].filter((faq) => EMPLEOS_VISIBLE || faq !== 9);
+const FAQS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14].filter((faq) => EMPLEOS_VISIBLE || faq !== 9);
 
 export default function AyudaPage() {
   const tSeccion = useTranslations("sectionTitles");

@@ -131,7 +131,7 @@ export function ServiciosClient({ catalogoInicial }: { catalogoInicial: string |
     ? mobileGroups.find((group) => group.key === mobileGroupKey) ?? null
     : null;
   const servicesTitle = locale === "en" ? "Services" : "Servicios";
-  const allCategoriesTitle = locale === "en" ? "All categories" : "Todas las categorías";
+  const allCategoriesTitle = locale === "en" ? "All services" : "Todos los servicios";
   const serviceSearchPlaceholder = locale === "en" ? "What service are you looking for?" : "¿Qué servicio estás buscando?";
   const serviceResultsTitle = locale === "en" ? "Matching services" : "Servicios encontrados";
 

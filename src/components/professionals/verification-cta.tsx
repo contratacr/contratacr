@@ -1,7 +1,7 @@
 "use client";
 
+import { VerifiedSeal } from "@/components/ui/verified-seal";
 import { useEffect, useState } from "react";
-import { ShieldCheck } from "lucide-react";
 import { useRouter } from "@/i18n/navigation";
 import { useAuth } from "@/hooks/use-auth";
 import { createClient } from "@/lib/supabase/client";
@@ -40,7 +40,7 @@ export function VerificationCta({ className }: { className?: string }) {
 
   return (
     <button onClick={go} className={className}>
-      <ShieldCheck className="h-4 w-4" /> Solicitar mi verificación
+      <VerifiedSeal className="h-4 w-4" /> Solicitar mi verificación
     </button>
   );
 }

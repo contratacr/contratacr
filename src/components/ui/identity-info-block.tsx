@@ -1,7 +1,7 @@
 "use client";
 
+import { VerifiedSeal } from "@/components/ui/verified-seal";
 import { useTranslations } from "next-intl";
-import { ShieldCheck } from "lucide-react";
 import { formatId } from "@/lib/cedula";
 import { computeAge, formatAge } from "@/lib/age";
 
@@ -31,7 +31,7 @@ export function IdentityInfoBlock({
   return (
     <div className="rounded-2xl border border-[#bae6fd] bg-[#f8fbff] px-4 py-3 shadow-sm">
       <div className="flex items-start gap-3">
-        <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-[#009FD9]" />
+        <VerifiedSeal className="mt-0.5 h-5 w-5 shrink-0 text-[#009FD9]" />
 
         <div className="min-w-0 flex-1">
           {verified && <p className="text-xs font-semibold text-[#64748b]">{t("confirmed")}</p>}

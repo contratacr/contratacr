@@ -14,6 +14,6 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
     locale,
     ruta: "/ayuda",
     titulo: en ? 'Help center | ContrataCR' : 'Centro de ayuda | ContrataCR',
-    descripcion: en ? 'Answers about finding professionals, booking appointments, posting projects and getting paid for your services in Costa Rica.' : 'Respuestas a las dudas más comunes sobre buscar profesionales, agendar citas, publicar proyectos y cobrar por tus servicios en Costa Rica.',
+    descripcion: en ? 'Answers about finding professionals, posting projects, requesting quotes and getting paid for your services in Costa Rica.' : 'Respuestas a las dudas más comunes sobre buscar profesionales, publicar proyectos, pedir cotizaciones y cobrar por tus servicios en Costa Rica.',
   });
 }

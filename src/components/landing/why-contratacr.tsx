@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { getTranslations } from "next-intl/server";
-import { Search, CalendarDays, BadgeCheck, MessageCircle } from "lucide-react";
+import { Search, CalendarDays, MessageCircle } from "lucide-react";
+import { VerifiedSeal } from "@/components/ui/verified-seal";
 import { Link } from "@/i18n/navigation";
 import { FadeInUp } from "@/components/landing/fade-in-up";
 
@@ -9,7 +10,7 @@ const POINTS = [
   { Icon: Search, key: "point0" },
   { Icon: CalendarDays, key: "point1" },
   { Icon: MessageCircle, key: "point2" },
-  { Icon: BadgeCheck, key: "point3" },
+  { Icon: VerifiedSeal, key: "point3" },
 ];
 
 const leadIconClass = "absolute -left-[18px] top-0 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border-4 border-white bg-[#EAF7FD] text-[#0089bb] shadow-[0_8px_18px_-14px_rgba(0,159,217,0.9)]";

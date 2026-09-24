@@ -8,7 +8,6 @@ import { LandingFooter } from "@/components/landing/landing-footer";
 import { Link } from "@/i18n/navigation";
 import {
   ArrowRight,
-  CheckCircle2,
   BriefcaseBusiness,
   FileText,
   Search,
@@ -16,6 +15,7 @@ import {
   Tags,
   ClipboardList,
 } from "lucide-react";
+import { VerifiedSeal } from "@/components/ui/verified-seal";
 
 type IconComponent = (props: { className?: string }) => ReactNode;
 
@@ -115,7 +115,7 @@ export default async function ComoFuncionaPage() {
           </div>
         </section>
 
-        <section className="px-4 py-6 sm:py-10">
+        <section className="px-4 py-10 sm:py-12">
           <div className="mx-auto max-w-4xl">
             <Journey icon={Search} label={t("clientPathBadge")} title={t("clientPathTitle")} description={t("clientPathDesc")} steps={steps("client")} href="/buscar" cta={t("clientPathCta")} />
             <Journey icon={FileText} label={t("publishPathBadge")} title={t("publishPathTitle")} description={t("publishPathDesc")} steps={steps("publish")} href="/publicar-proyecto" cta={t("publishPathCta")} emphasized />
@@ -167,7 +167,7 @@ export default async function ComoFuncionaPage() {
           </div>
         </section>
 
-        <section className="border-b border-[#e5e7eb] px-4 py-12">
+        <section className="px-4 py-12">
           <div className="mx-auto max-w-4xl">
             <div className="mb-7 max-w-2xl">
               <p className="text-xs font-bold uppercase text-[#009fd9]">{t("trustEyebrow")}</p>
@@ -176,11 +176,11 @@ export default async function ComoFuncionaPage() {
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
               {[
-                { icon: CheckCircle2, title: t("trust0Title"), body: t("trust0Body"), simple: true },
-                { icon: Star, title: t("trust1Title"), body: t("trust1Body"), simple: false },
-              ].map(({ icon: Icon, title, body, simple }) => (
+                { icon: VerifiedSeal, title: t("trust0Title"), body: t("trust0Body") },
+                { icon: Star, title: t("trust1Title"), body: t("trust1Body") },
+              ].map(({ icon: Icon, title, body }) => (
                 <div key={title} className="flex gap-3 rounded-lg border border-[#e5e7eb] bg-white p-5">
-                  <Icon className={`${simple ? "mt-[3px] h-4 w-4" : "mt-0.5 h-5 w-5"} shrink-0 text-[#009fd9]`} />
+                  <Icon className="mt-0.5 h-5 w-5 shrink-0 text-[#009FD9]" />
                   <div><h3 className="text-sm font-bold text-[#162543]">{title}</h3><p className="mt-1 text-sm leading-6 text-[#6b7280]">{body}</p></div>
                 </div>
               ))}
@@ -188,7 +188,7 @@ export default async function ComoFuncionaPage() {
           </div>
         </section>
 
-        <section className="px-4 py-14 text-center">
+        <section className="border-t border-[#e5e7eb] px-4 py-12 text-center">
           <h2 className="text-2xl font-extrabold text-[#162543]">{t("ctaTitle")}</h2>
           <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-[#6b7280]">{t("ctaSubtitle")}</p>
           <Link href="/ayuda" className="mt-6 inline-flex min-h-11 items-center gap-2 rounded-full border border-[#cdd8e1] px-5 text-sm font-bold text-[#162543] hover:border-[#009fd9] hover:text-[#0089bb]">

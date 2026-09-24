@@ -7,7 +7,6 @@ import { LandingFooter } from "@/components/landing/landing-footer";
 import { Link } from "@/i18n/navigation";
 import {
   ArrowRight,
-  BadgeCheck,
   BriefcaseBusiness,
   CalendarDays,
   Camera,
@@ -17,10 +16,11 @@ import {
   Star,
   Tags,
 } from "lucide-react";
+import { VerifiedSeal } from "@/components/ui/verified-seal";
 
 const PROFILE_ACTIONS = [
   { index: 0, icon: Camera },
-  { index: 1, icon: BadgeCheck },
+  { index: 1, icon: VerifiedSeal },
   { index: 2, icon: Images },
   { index: 4, icon: Star },
   { index: 5, icon: MapPin },

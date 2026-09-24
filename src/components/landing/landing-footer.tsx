@@ -1,12 +1,12 @@
 "use client";
 
 import { useTranslations } from "next-intl";
+import { EMPLEOS_VISIBLE } from "@/lib/feature-flags";
 import { Link } from "@/i18n/navigation";
 import { ContrataCRLogo } from "./landing-navbar";
 import { SmartRegisterLink } from "@/components/layout/smart-register-link";
 import { SupportLink } from "@/components/support/support-link";
 import { useAuth } from "@/hooks/use-auth";
-import { canOffer } from "@/lib/auth/capabilities";
 
 function InstagramIcon() {
   return (
@@ -39,6 +39,11 @@ const SOCIAL_LINKS = [
 
 // Labels resolve to footer.<key> at render so they translate per locale.
 // Every href points to a CURRENT, existing page (verified against the app routes).
+// Los encabezados nombran la ACCIÓN, no a la persona. «Para clientes» y «Para
+// profesionales» partían a la gente en dos tipos, y este app dice lo contrario
+// en su propio código: no hay panel de cliente («everyone lives here») y un
+// profesional también contrata. Quien se leía «Para profesionales» se saltaba
+// la primera columna creyendo que no era suya.
 const COLUMNS = [
   {
     headingKey: "clients.title",
@@ -57,7 +62,9 @@ const COLUMNS = [
       // Los tres tableros son la puerta de entrada al trabajo: de aquí sale el
       // enlace interno que los buscadores siguen hasta ellos.
       { key: "pros.projects",     href: "/proyectos" },
-      { key: "pros.jobs",         href: "/empleos" },
+      // Empleos se puede apagar entero con la bandera; el resto del app la
+      // respeta y el pie lo enlazaba igual.
+      ...(EMPLEOS_VISIBLE ? [{ key: "pros.jobs", href: "/empleos" }] : []),
       { key: "pros.attract",      href: "/mejorar-mi-perfil" },
       { key: "pros.verification", href: "/verificacion-de-identidad" },
     ],
@@ -78,7 +85,9 @@ const COLUMNS = [
 export function LandingFooter() {
   const t = useTranslations("footer");
   const { user } = useAuth();
-  const panelHref = canOffer(user) ? "/dashboard/profesional" : "/dashboard/profesional?mode=use";
+    // Un solo panel para todos: `?mode=use` era del modo cliente, que ya no
+  // existe —el panel lo acepta y lo ignora—, así que el enlace es el mismo.
+  const panelHref = "/dashboard/profesional";
   return (
     // Un píxel hacia arriba y por encima de lo anterior: si la última fila de
     // una lista llega justo hasta el pie, su línea de abajo queda tapada —el pie

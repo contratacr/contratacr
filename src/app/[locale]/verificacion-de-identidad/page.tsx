@@ -1,4 +1,5 @@
 import { IdCard, ScanFace, RefreshCw, Search } from "lucide-react";
+import { VerifiedSeal } from "@/components/ui/verified-seal";
 import { getTranslations } from "next-intl/server";
 import { Navbar } from "@/components/layout/navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
@@ -26,7 +27,13 @@ export default async function IdentityVerificationPage() {
         {/* Hero */}
         <section className="bg-white border-b border-[#e5e7eb]">
           <div className="mx-auto max-w-3xl px-4 sm:px-6 py-12 text-center">
-            <div className="inline-flex items-center rounded-full bg-[#dcfce7] px-3 py-1 text-sm font-semibold text-[#15803d]">
+            {/* El MISMO sello que trae hasta aquí. Esta es la página a la que
+                apunta cada distintivo «Verificado» del app (#que-significa), y
+                enseñaba una píldora verde sin sello: se llegaba desde una marca
+                azul a otra cosa y no se reconocía. Ahora la píldora repite el
+                sello y el azul de la marca. */}
+            <div className="inline-flex items-center gap-1.5 rounded-full bg-[#eaf7fd] px-3 py-1 text-sm font-semibold text-[#0089bb]">
+              <VerifiedSeal className="h-4 w-4 text-[#009FD9]" />
               {t("badge")}
             </div>
             <h1 className="mt-4 text-3xl font-bold text-[#162543]">{t("h1")}</h1>
@@ -64,7 +71,7 @@ export default async function IdentityVerificationPage() {
           <div className="mt-8 flex flex-wrap gap-3">
             <Link
               href="/buscar"
-              className="inline-flex items-center gap-2 rounded-xl bg-[#16a34a] px-5 py-3 text-sm font-bold text-white hover:bg-[#15803d]"
+              className="inline-flex items-center gap-2 rounded-xl bg-[#009FD9] px-5 py-3 text-sm font-bold text-white hover:bg-[#0089bb]"
             >
               <Search className="h-4 w-4" /> {t("ctaVerified")}
             </Link>
