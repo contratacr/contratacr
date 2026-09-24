@@ -748,7 +748,7 @@ export function LandingHero() {
             {/* Caja blanca de esquinas suaves: la misma forma que usa el
                 buscador del navbar, para que al bajar se sienta que es el
                 mismo buscador que se quedó pegado arriba. */}
-            <div className="flex h-14 items-center overflow-hidden rounded-[10px] border border-[#e5e7eb] bg-white pl-5 shadow-[0_8px_48px_rgba(0,0,0,0.12)] transition-shadow duration-300 focus-within:border-[#009FD9] hover:shadow-[0_12px_60px_rgba(0,159,217,0.20)]">
+            <div className="flex h-14 items-center overflow-hidden rounded-[10px] border border-[#e5e7eb] bg-white pl-5 shadow-[0_8px_48px_rgba(0,0,0,0.12)] transition-shadow duration-300 focus-within:ring-2 focus-within:ring-[#009FD9]/20 hover:shadow-[0_12px_60px_rgba(0,159,217,0.20)]">
               {/* Service input — its dropdown PORTALS to <body> (anchored to this wrapper),
                   so the bar's `overflow-hidden` can never clip it. */}
               <div ref={svcDesktopRef} className="flex items-center gap-3 flex-1 min-w-0 h-full">
@@ -804,7 +804,7 @@ export function LandingHero() {
           {/* Mobile stacked layout — service, then location, then Buscar */}
           <div className="sm:hidden flex flex-col gap-2">
             <div ref={svcMobileRef} className="relative">
-              <div className="flex h-12 items-center overflow-hidden rounded-[10px] border border-[#e5e7eb] bg-white pl-4 pr-3 transition-colors focus-within:border-[#009FD9]">
+              <div className="flex h-12 items-center overflow-hidden rounded-[10px] border border-[#e5e7eb] bg-white pl-4 pr-3 transition-colors focus-within:ring-2 focus-within:ring-[#009FD9]/20">
                 <Search className="mr-3 h-5 w-5 shrink-0 text-[#8f9aaa]" />
                 <input
                   type="text"
@@ -825,7 +825,7 @@ export function LandingHero() {
               <SuggestionsDropdown anchorRef={svcMobileRef} open={openSug} suggestions={suggestions} activeIdx={activeIdx} onPick={(s) => selectSuggestion(s, true)} />
             </div>
             <div ref={locMobileRef} className="relative">
-              <div className="flex h-12 items-center overflow-hidden rounded-[10px] border border-[#e5e7eb] bg-white pl-4 pr-3 transition-colors focus-within:border-[#009FD9]">
+              <div className="flex h-12 items-center overflow-hidden rounded-[10px] border border-[#e5e7eb] bg-white pl-4 pr-3 transition-colors focus-within:ring-2 focus-within:ring-[#009FD9]/20">
                 <MapPin className="mr-3 h-5 w-5 shrink-0 text-[#8f9aaa]" />
                 <input
                   type="text"

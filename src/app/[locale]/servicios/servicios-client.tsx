@@ -226,7 +226,7 @@ export function ServiciosClient({ catalogoInicial }: { catalogoInicial: string |
             )}
 
             <form onSubmit={submitSearch} data-testid="services-page-mobile-search" className="px-4 pb-4">
-              <div className="flex h-11 w-full items-center gap-3 rounded-[10px] border border-[#e5e7eb] bg-white px-4 transition-colors focus-within:border-[#009FD9]">
+              <div className="flex h-11 w-full items-center gap-3 rounded-[10px] border border-[#e5e7eb] bg-white px-4 transition-colors focus-within:ring-2 focus-within:ring-[#009FD9]/20">
                 <Search className="h-5 w-5 shrink-0 text-[#162543]" />
                 <input
                   type="text"
@@ -361,7 +361,7 @@ export function ServiciosClient({ catalogoInicial }: { catalogoInicial: string |
               <form
                 onSubmit={submitSearch}
                 data-testid="services-page-search"
-                className="flex h-11 w-full items-center gap-3 rounded-[10px] border border-[#e5e7eb] bg-white px-4 text-left transition-colors focus-within:border-[#009FD9]"
+                className="flex h-11 w-full items-center gap-3 rounded-[10px] border border-[#e5e7eb] bg-white px-4 text-left transition-colors focus-within:ring-2 focus-within:ring-[#009FD9]/20"
               >
                 <Search className="h-5 w-5 shrink-0 text-[#8a94a6]" />
                 <input
