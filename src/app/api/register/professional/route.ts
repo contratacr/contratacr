@@ -100,6 +100,7 @@ export async function POST(req: Request) {
       searchCantones: bodySearchCant,
       coverageProvincias: bodyCoverageProv,
       coverageCountry: bodyCoverageCountry,
+      videoconsulta: bodyVideoconsulta,
       noCrId: bodyNoCrId,
       idDocNote: bodyIdDocNote,
     } = body;
@@ -121,8 +122,12 @@ export async function POST(req: Request) {
     const noCrId = !!bodyNoCrId;
     const idDocNote = limitTrimmedText(bodyIdDocNote, LONG_TEXT_MAX_LENGTH) || null;
     const professions = uniqueServices(category, bodyProfessions);
-    const supportsCountryCoverage = anyVideoConsultCategory(professions);
-    const coverageCountry = supportsCountryCoverage && !!bodyCoverageCountry;
+    // «Trabajo a domicilio en todo el país» vale para CUALQUIER oficio: antes
+    // solo se aceptaba en los que admiten videoconsulta, así que un electricista
+    // que lo marcaba lo perdía en silencio. Las videoconsultas sí siguen
+    // limitadas a los servicios que se pueden dar a distancia.
+    const coverageCountry = !!bodyCoverageCountry;
+    const videoconsulta = anyVideoConsultCategory(professions) && !!bodyVideoconsulta;
     const coverageAreas = rawCoverageAreas.filter((area) => !isCountryCoverageArea(area) || coverageCountry);
     const seededServices = seedServicesFromProfessions(professions);
 
@@ -137,7 +142,7 @@ export async function POST(req: Request) {
       search_cantones: searchCantones,
       coverage_provincias: coverageProvincias,
       coverage_country: coverageCountry,
-      videoconsulta: coverageCountry,
+      videoconsulta,
       no_cr_id: noCrId,
       id_document_note: idDocNote,
       // Public agenda by default → contact via both WhatsApp + schedule.

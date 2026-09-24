@@ -485,50 +485,39 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
       </div>
       )}
 
-      {/* «TAMBIÉN TRABAJO EN TODO COSTA RICA», un añadido, no una zona.
-          Antes esto era la primera opción del desplegable de provincias y la
-          gente lo elegía EN LUGAR de decir dónde trabaja: 63 de 288 perfiles
-          se quedaron sin provincia ni cantón, y con eso fuera de todas las
-          búsquedas por lugar —lo contrario de lo que la opción promete—.
-          Aquí abajo, con su explicación al lado, se lee como lo que es. */}
-      {/* EL MISMO INTERRUPTOR QUE EL RESTO DEL APP (`FilaInterruptor`), no una
-          casilla: el propio componente dice que la casilla se reserva para
-          aceptar términos o marcar varias opciones de una lista, y aquí es un
-          sí/no. Al lado, arriba, está el de Videoconsultas: dos dibujos
-          distintos para dos preguntas del mismo bloque se veía desprolijo.
-
-          Y el texto dice VIAJAR, no cubrir: «todo Costa Rica» se leía
-          como otra zona más, que es justo lo que hizo que 63 perfiles la
-          pusieran EN LUGAR de su provincia. Al encenderlo aparece en la lista
-          de arriba como una zona más, junto a «Toda la provincia de Alajuela»:
-          son lo mismo —me desplazo por esta área—, solo que la provincia hay
-          que elegirla y el país no. */}
-      <FilaInterruptor
-        titulo={t("todoElPaisTitulo")}
-        ayuda={t("todoElPaisAyuda")}
-        checked={value.some((wp) => wp.level === "country")}
-        onChange={(encendido) => {
-          const sinPais = valueRef.current.filter((wp) => wp.level !== "country");
-          onChange(encendido
-            ? [...sinPais, { id: "wp_todo_costa_rica", name: t("wholeCountryName"), address: "", level: "country" as const }]
-            : sinPais);
-        }}
-      />
-
-      {/* Separate, explicit way to add ANOTHER zone (only when the draft is closed). */}
+      {/* Agregar otro lugar (solo con el borrador cerrado). */}
       {!showAddForm && (
-        <div className="flex flex-wrap items-center gap-3">
-          <button
-            type="button"
-            onClick={() => setAdding(true)}
-            className="inline-flex h-10 items-center gap-1.5 rounded-full px-1 text-sm font-bold text-[#009FD9] transition-colors hover:text-[#0089bb]"
-          >
-            <Plus className="h-4 w-4" /> {t("addAnotherPlace")}
-          </button>
-        </div>
+        <button
+          type="button"
+          onClick={() => setAdding(true)}
+          className="inline-flex h-10 w-fit items-center gap-1.5 rounded-full px-1 text-sm font-bold text-[#009FD9] transition-colors hover:text-[#0089bb]"
+        >
+          <Plus className="h-4 w-4" /> {t("addAnotherPlace")}
+        </button>
       )}
 
-      {extraActions && <div className="flex flex-wrap items-center gap-3 pt-1">{extraActions}</div>}
+      {/* LO QUE SE SUMA A LOS LUGARES, al final y junto: «Trabajo a domicilio
+          en todo el país» y, si el oficio lo permite, «Videoconsultas en todo el
+          país» (lo pone el padre por `extraActions`). Antes «todo Costa Rica»
+          era la primera opción del desplegable de provincias y la gente lo
+          elegía EN LUGAR de su provincia (63 de 288 perfiles sin zona,
+          medido); y las videoconsultas iban arriba con otro dibujo. Los dos
+          con el mismo interruptor del app, en paralelo, sin texto de ayuda:
+          el título ya dice lo que es, y al encenderlo aparece en la lista
+          como un lugar más. */}
+      <div className="flex flex-col gap-1 pt-1">
+        <FilaInterruptor
+          titulo={t("todoElPaisTitulo")}
+          checked={value.some((wp) => wp.level === "country")}
+          onChange={(encendido) => {
+            const sinPais = valueRef.current.filter((wp) => wp.level !== "country");
+            onChange(encendido
+              ? [...sinPais, { id: "wp_todo_costa_rica", name: t("wholeCountryName"), address: "", level: "country" as const }]
+              : sinPais);
+          }}
+        />
+        {extraActions}
+      </div>
     </div>
   );
 }
