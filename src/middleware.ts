@@ -94,7 +94,7 @@ export async function middleware(request: NextRequest) {
   // /e/… (empleo) y /c/… (cotización). Se REESCRIBEN, no se redirigen: la
   // dirección se queda corta en la barra, que es de lo que se trata. La forma
   // larga de siempre sigue abriendo lo mismo.
-  const FICHAS: Record<string, string> = { o: "ofertas", e: "empleos", c: "cotizacion" };
+  const FICHAS: Record<string, string> = { o: "promociones", e: "empleos", c: "cotizacion" };
   const fichaCorta = /^\/([oec])\/([a-z0-9][a-z0-9-]{3,80})$/i.exec(pathname);
   if (fichaCorta) {
     const locale = idiomaPreferido();
@@ -127,7 +127,28 @@ export async function middleware(request: NextRequest) {
     // perfil de alguien borra el último tramo para ver «todos». No hay índice
     // de profesionales —el buscador ES el índice—, así que lleva ahí.
     "/profesionales": "/buscar",
+    // Dos direcciones con nombre de otra época. La página se llama «¿Qué es la
+    // verificación de identidad?» y el enlace del pie «Mejorar mi perfil»; las
+    // rutas decían «proveedores autorizados» y «atraer clientes».
+    "/proveedores-autorizados": "/verificacion-de-identidad",
+    "/atraer-clientes": "/mejorar-mi-perfil",
   };
+  // /ofertas → /promociones, con todo lo que cuelga: la ficha, publicar y
+  // «mis ofertas» → «mis promociones». La sección se llama Promociones en
+  // TODA la pantalla desde hace tiempo; solo la dirección conservaba el nombre
+  // viejo. Es 308 permanente: hay 20 direcciones en el sitemap y enlaces
+  // compartidos por WhatsApp, y Google tiene que trasladar lo ganado, no
+  // tratarlas como dos páginas. Va antes del perfil corto y del prefijo de
+  // idioma, así que `/ofertas` a secas también llega bien.
+  const promociones = /^(?:\/(es|en))?\/ofertas(\/.*)?$/i.exec(pathname);
+  if (promociones) {
+    const idioma = promociones[1] ?? (request.cookies.get("NEXT_LOCALE")?.value === "en" ? "en" : "es");
+    const cola = (promociones[2] ?? "").replace(/^\/mis-ofertas(?=\/|$)/i, "/mis-promociones");
+    const destino = new URL(`/${idioma}/promociones${cola}`, request.url);
+    destino.search = request.nextUrl.search;
+    return NextResponse.redirect(destino, 308);
+  }
+
   const renombrada = /^\/(es|en)(\/[a-z-]+)\/?$/i.exec(pathname);
   if (renombrada && RENOMBRADAS[renombrada[2].toLowerCase()]) {
     const destino = new URL(`/${renombrada[1]}${RENOMBRADAS[renombrada[2].toLowerCase()]}`, request.url);

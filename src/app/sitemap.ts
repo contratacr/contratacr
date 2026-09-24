@@ -46,7 +46,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const crudo = (data as { updated_at?: string } | null)?.updated_at;
     if (crudo) ultimoCambio = new Date(crudo);
   } catch { /* sin fecha es mejor que una fecha falsa */ }
-  const fijos = ["", "/buscar", "/servicios", "/ofertas", "/empleos", "/proyectos", "/como-funciona", "/ayuda", "/atraer-clientes"];
+  const fijos = ["", "/buscar", "/servicios", "/promociones", "/empleos", "/proyectos", "/como-funciona", "/ayuda", "/mejorar-mi-perfil"];
   for (const p of fijos) for (const l of IDIOMAS) out.push({ url: `${APP_URL}/${l}${p}`, lastModified: ultimoCambio, changeFrequency: "daily", priority: p === "" ? 1 : 0.8 });
 
   for (const cat of getAllCategories()) {
@@ -87,7 +87,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       for (const l of IDIOMAS) out.push({ url: `${APP_URL}/${l}/empleos/${row.id}`, lastModified: row.updated_at ? new Date(row.updated_at) : ultimoCambio, changeFrequency: "weekly", priority: 0.7 });
     }
     for (const row of (ofertas ?? []) as { id: string; updated_at?: string | null }[]) {
-      for (const l of IDIOMAS) out.push({ url: `${APP_URL}/${l}/ofertas/${row.id}`, lastModified: row.updated_at ? new Date(row.updated_at) : ultimoCambio, changeFrequency: "weekly", priority: 0.6 });
+      for (const l of IDIOMAS) out.push({ url: `${APP_URL}/${l}/promociones/${row.id}`, lastModified: row.updated_at ? new Date(row.updated_at) : ultimoCambio, changeFrequency: "weekly", priority: 0.6 });
     }
   } catch (err) {
     console.error("[sitemap] empleos/ofertas:", err);

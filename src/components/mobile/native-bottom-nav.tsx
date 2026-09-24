@@ -56,7 +56,7 @@ export function NativeBottomNav() {
   const nativePanelHref = user ? primaryPanelHref : `/login?redirect=${encodeURIComponent(`/${locale}${panelHref}`)}`;
 
   // Publicar ocupa la pantalla entera: ahí la barra no va.
-  const fullscreenRoute = /(^|\/)(?:publicar-proyecto|(?:empleos|ofertas)\/publicar)(?:\/|$)/.test(pathname ?? "");
+  const fullscreenRoute = /(^|\/)(?:publicar-proyecto|(?:empleos|promociones)\/publicar)(?:\/|$)/.test(pathname ?? "");
   const visible = hydrated && nativeApp && !fullscreenRoute;
 
   // Solo una pestaña encendida a la vez: mientras hay una pendiente, manda esa.
@@ -98,7 +98,7 @@ export function NativeBottomNav() {
   useEffect(() => {
     if (!visible) return;
     const id = window.setTimeout(() => {
-      for (const destino of ["/", "/buscar", "/ofertas", ...(EMPLEOS_VISIBLE ? ["/empleos"] : []), primaryPanelHref]) router.prefetch(destino);
+      for (const destino of ["/", "/buscar", "/promociones", ...(EMPLEOS_VISIBLE ? ["/empleos"] : []), primaryPanelHref]) router.prefetch(destino);
     }, 800);
     return () => window.clearTimeout(id);
   }, [pathname, primaryPanelHref, router, visible]);
@@ -177,7 +177,7 @@ export function NativeBottomNav() {
   // Retirarse al desplazar donde hay una lista larga que se recorre sin fin:
   // portada, Ofertas, Empleos y los resultados de /buscar. En Panel o Mensajes
   // la lista es corta y la barra yéndose y viniendo sería ruido.
-  const permiteRetirarse = /^\/(?:ofertas|empleos|buscar)?\/?$/.test(pathname ?? "/");
+  const permiteRetirarse = /^\/(?:promociones|empleos|buscar)?\/?$/.test(pathname ?? "/");
 
   const [escondida, setEscondida] = useState(false);
   useEffect(() => {
@@ -284,14 +284,14 @@ export function NativeBottomNav() {
         </Link>
 
         <Link
-          href="/ofertas"
+          href="/promociones"
           prefetch={true}
           aria-label={etiquetas.ofertas}
-          onClick={(event) => irA(event, "/ofertas")}
-          className={itemClass("/ofertas")}
+          onClick={(event) => irA(event, "/promociones")}
+          className={itemClass("/promociones")}
         >
-          {marca("/ofertas")}
-          <OfferTagPercentIcon className="h-5 w-5" strokeWidth={isActive("/ofertas") ? 2.4 : 2} />
+          {marca("/promociones")}
+          <OfferTagPercentIcon className="h-5 w-5" strokeWidth={isActive("/promociones") ? 2.4 : 2} />
           {rotulo(etiquetas.ofertas)}
         </Link>
 

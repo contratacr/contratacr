@@ -29,7 +29,7 @@ export function OfferOwnerActions({ offer, professionalId, serviceOptions, fromP
   const locale = marketplaceLocale(useLocale());
   const copy = OWNER_ACTION_COPY[locale];
   const [editing, setEditing] = useState(false);
-  const editHref = `/ofertas/${offer.id}/editar${fromPanel ? "?from=panel" : ""}`;
+  const editHref = `/promociones/${offer.id}/editar${fromPanel ? "?from=panel" : ""}`;
 
   return (
     <>
@@ -65,7 +65,7 @@ export function OfferOwnerActions({ offer, professionalId, serviceOptions, fromP
             serviceOptions={serviceOptions}
             initialOffer={offer}
             presentation="modal"
-            backHref={`/ofertas/${offer.id}`}
+            backHref={`/promociones/${offer.id}`}
             onSaved={() => {
               setEditing(false);
               router.refresh();

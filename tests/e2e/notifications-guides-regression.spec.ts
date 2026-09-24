@@ -24,7 +24,7 @@ const GUIDE_EXPECTATIONS: GuideExpectation[] = [
   { id: "clientProfile", stepCount: 3, target: { kind: "tab", value: "profile" } },
   { id: "searchServices", stepCount: 5, target: { kind: "path", value: "/buscar" } },
   { id: "jobsGuide", stepCount: 4, target: { kind: "path", value: "/empleos" } },
-  { id: "offersGuide", stepCount: 4, target: { kind: "path", value: "/ofertas" } },
+  { id: "offersGuide", stepCount: 4, target: { kind: "path", value: "/promociones" } },
   { id: "notificationsGuide", stepCount: 5, target: { kind: "tab", value: "notifications" } },
   { id: "reviewsGuide", stepCount: 4, target: { kind: "path", value: "/buscar" } },
   { id: "supportGuide", stepCount: 3, target: { kind: "tab", value: "soporte" } },

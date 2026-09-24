@@ -57,11 +57,11 @@ test("el final de cada pantalla con franja: sin scroll al vacío y a la misma di
   const id = async (r: string, re: RegExp) => { await gotoOK(page, r); await page.waitForTimeout(1200); return ((await page.content()).match(re) ?? [])[0]; };
   const casos: Array<[string, string | undefined, ((p: Page) => Promise<void>)?]> = [
     ["publicar empleo", "/es/empleos/publicar"],
-    ["publicar promoción", "/es/ofertas/publicar"],
+    ["publicar promoción", "/es/promociones/publicar"],
     ["soporte (página)", "/es/soporte"],
     ["soporte (panel)", "/es/dashboard/profesional?tab=soporte", async (p) => { await p.getByRole("button", { name: /Contactar soporte/i }).first().click(); await p.waitForTimeout(1400); }],
     ["ficha de empleo", await id("/es/empleos", /\/es\/empleos\/[0-9a-f-]{36}/)],
-    ["ficha de promoción", await id("/es/ofertas", /\/es\/ofertas\/[0-9a-f-]{36}/)],
+    ["ficha de promoción", await id("/es/promociones", /\/es\/promociones\/[0-9a-f-]{36}/)],
     ["ficha de proyecto", await id("/es/proyectos", /\/es\/proyectos\/[0-9a-f-]{36}/)],
     ["ficha profesional", "/es/profesionales/estudio-delta-pruebas"],
   ];

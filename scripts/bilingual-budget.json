@@ -5,7 +5,7 @@
   "src/app/[locale]/layout.tsx": 4,
   "src/app/[locale]/login/page.tsx": 8,
   "src/app/[locale]/mantenimiento/page.tsx": 2,
-  "src/app/[locale]/ofertas/[id]/page.tsx": 1,
+  "src/app/[locale]/promociones/[id]/page.tsx": 1,
   "src/app/[locale]/olvide-contrasena/page.tsx": 1,
   "src/app/[locale]/opengraph-image.tsx": 1,
   "src/app/[locale]/privacidad/page.tsx": 1,

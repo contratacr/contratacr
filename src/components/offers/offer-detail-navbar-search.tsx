@@ -23,7 +23,7 @@ export function OfferDetailNavbarSearch({ title }: { title: string }) {
   function openOffers(nextQuery = query) {
     const params = new URLSearchParams();
     if (nextQuery.trim()) params.set("q", nextQuery.trim());
-    router.push(`/ofertas${params.size ? `?${params.toString()}` : ""}`);
+    router.push(`/promociones${params.size ? `?${params.toString()}` : ""}`);
   }
 
   return (

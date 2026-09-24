@@ -142,9 +142,9 @@ test.describe("@seeded marketplace editors through the real screens", () => {
       // API with one of Redes Bahía' existing images. The form with a real
       // upload is exercised by the mobile workflow against the test project.
       created.offerId = await createOfferThroughApi(page, offerTitle);
-      await gotoOK(page, `/es/ofertas/${created.offerId}`);
+      await gotoOK(page, `/es/promociones/${created.offerId}`);
     } else {
-      await gotoOK(page, "/es/ofertas/publicar");
+      await gotoOK(page, "/es/promociones/publicar");
       await expectVisibleText(page.locator("body"), /Publicar promoción/);
       await page.locator('input[name="title"]').fill(offerTitle);
       // The service picker is a trigger button that reveals a search box.
@@ -164,21 +164,21 @@ test.describe("@seeded marketplace editors through the real screens", () => {
       await page.locator('input[name="quantity_available"]').fill("3");
       await page.getByRole("button", { name: /^Publicar promoción$/ }).click();
 
-      await page.waitForURL(/\/es\/ofertas\/[0-9a-f-]{36}/, { timeout: 45_000, waitUntil: "domcontentloaded" });
-      created.offerId = page.url().match(/\/ofertas\/([0-9a-f-]{36})/)![1];
+      await page.waitForURL(/\/es\/promociones\/[0-9a-f-]{36}/, { timeout: 45_000, waitUntil: "domcontentloaded" });
+      created.offerId = page.url().match(/\/promociones\/([0-9a-f-]{36})/)![1];
     }
     await expectVisibleText(page.locator("body"), offerTitle);
     await expectVisibleText(page.locator("body"), /45[\s.,]?000/);
     await expectHealthyPage(page);
 
     // Owner actions on the detail lead to the edit form with the saved values.
-    const offerEditor = await openOwnerEditor(page, "Editar promoción", /\/ofertas\/[0-9a-f-]{36}\/editar/, /^Editar$/);
+    const offerEditor = await openOwnerEditor(page, "Editar promoción", /\/promociones\/[0-9a-f-]{36}\/editar/, /^Editar$/);
     await expect(offerEditor.locator('input[name="title"]')).toHaveValue(offerTitle);
     await offerEditor.locator('input[name="title"]').fill(`${offerTitle} editada`);
     await offerEditor.locator('input[name="price_now"]').fill("40000");
     await offerEditor.getByRole("button", { name: /^Guardar cambios$/ }).click();
     await expect(page.getByRole("dialog")).toHaveCount(0, { timeout: 45_000 });
-    await page.waitForURL(/\/es\/ofertas\/[0-9a-f-]{36}(?:\?|$)/, { timeout: 45_000, waitUntil: "domcontentloaded" });
+    await page.waitForURL(/\/es\/promociones\/[0-9a-f-]{36}(?:\?|$)/, { timeout: 45_000, waitUntil: "domcontentloaded" });
     await expectUpdatedDetail(page, `${offerTitle} editada`);
     await expectVisibleText(page.locator("body"), /40[\s.,]?000/);
     await expectHealthyPage(page);
@@ -187,7 +187,7 @@ test.describe("@seeded marketplace editors through the real screens", () => {
     // que «Cerrar promoción» (la saca del tablero y la manda a «Inactivas») y
     // las dos se deshacían con «Volver a publicar». Y en la tarjeta ya no se
     // escribe el estado: la pestaña lo dice.
-    await gotoOK(page, "/es/ofertas/mis-ofertas");
+    await gotoOK(page, "/es/promociones/mis-promociones");
     const card = page.locator("article").filter({ hasText: `${offerTitle} editada` }).first();
     await expect(card).toBeVisible();
     await card.getByRole("button", { name: new RegExp(`${offerTitle} editada`) }).first().click();
@@ -298,7 +298,7 @@ test.describe("@seeded marketplace editors through the real screens", () => {
   test("publicar oferta avisa cuando en realidad es una vacante", async ({ page }) => {
     await ensureRegressionSeed();
     await loginAs(page, E2E_USERS.professional.email, E2E_USERS.professional.password);
-    await gotoOK(page, "/es/ofertas/publicar");
+    await gotoOK(page, "/es/promociones/publicar");
     await page.waitForTimeout(1500);
     await page.locator('input[name="title"]').fill("Operario en techos");
     await page.locator('textarea[name="description"]').fill("Ocupo un operario con experiencia comprobable, tiempo completo, salario quincenal.");

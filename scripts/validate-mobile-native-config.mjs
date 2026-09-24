@@ -125,7 +125,7 @@ requireMatch("Push text encoding repair", pushSender, /repairVisibleText\(value\
 requireMatch(
   "Native bottom navigation order",
   bottomNav,
-  /href="\/buscar"[\s\S]*href="\/ofertas"[\s\S]*href=\{cotizacionesHref\}[\s\S]*contratacr:open-ai[\s\S]*href="\/empleos"[\s\S]*href=\{nativePanelHref\}/,
+  /href="\/buscar"[\s\S]*href="\/promociones"[\s\S]*href=\{cotizacionesHref\}[\s\S]*contratacr:open-ai[\s\S]*href="\/empleos"[\s\S]*href=\{nativePanelHref\}/,
 );
 requireMatch(
   // La barra es de la CUENTA, no del panel abierto: quien puede ofrecer lleva
@@ -164,7 +164,7 @@ requireMatch("Mobile regression includes native shell smoke", mobilePlaywright, 
 requireMatch(
   "Spanish native bottom navigation smoke",
   mobileShellSpec,
-  // La pestaña se llama «Promociones»; /ofertas es solo la ruta heredada.
+  // La pestaña se llama «Promociones»; /promociones es solo la ruta heredada.
   /navItems:\s*\["Buscar",\s*"Promociones",\s*"Cotizaciones",\s*"Empleos",\s*"Panel"\]/,
 );
 requireMatch(

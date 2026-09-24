@@ -19,7 +19,7 @@ function isSearchPath(pathname: string) {
 export function isNativeFullscreenPath(pathname: string) {
   // Task flows own the whole screen: no app header, no bottom nav, no reserved
   // gaps. Each one carries its own title bar and way back.
-  return /(^|\/)(?:publicar-proyecto|(?:empleos|ofertas)\/publicar)(\/|$)/.test(pathname);
+  return /(^|\/)(?:publicar-proyecto|(?:empleos|promociones)\/publicar)(\/|$)/.test(pathname);
 }
 
 // Overlays own the back gesture while they are open, and each one listens for a
@@ -67,7 +67,7 @@ function dismissTopMostNativeOverlay() {
 function isNativeMarketplaceListPath(pathname: string) {
   const normalized = pathname.replace(/\/+$/, "") || "/";
   const withoutLocale = normalized.replace(/^\/(?:es|en)(?=\/|$)/, "") || "/";
-  return withoutLocale === "/ofertas" || withoutLocale === "/empleos";
+  return withoutLocale === "/promociones" || withoutLocale === "/empleos";
 }
 
 function getNativeLocalizedPath(pathname: string) {
@@ -242,7 +242,7 @@ export function MobileAppBridge() {
     const isSearchRoute = isSearchPath(pathname);
     // Routes that, like the web, mount only the drawer and draw their own title
     // bar: the shell must not reserve space for an app header that is not there.
-    const isMarketplaceRoute = /(^|\/)(?:ofertas|empleos|servicios)(\/|$)/.test(pathname);
+    const isMarketplaceRoute = /(^|\/)(?:promociones|empleos|servicios)(\/|$)/.test(pathname);
     const isFullscreenRoute = isNativeFullscreenPath(pathname);
     document.documentElement.classList.toggle("ccr-native-search-route", isSearchRoute);
     document.body.classList.toggle("ccr-native-search-route", isSearchRoute);

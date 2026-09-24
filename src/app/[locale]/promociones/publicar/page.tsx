@@ -11,10 +11,10 @@ export default async function PublishOfferPage({ searchParams }: { searchParams:
   const locale = await getLocale();
   const params = await searchParams;
   const fromPanel = params.from === "panel";
-  const backHref = fromPanel ? "/dashboard/profesional?mode=offer&tab=offers" : "/ofertas";
+  const backHref = fromPanel ? "/dashboard/profesional?mode=offer&tab=offers" : "/promociones";
   const supabase = await createClient();
   const user = await safeGetUser(supabase);
-  const publishPath = `/${locale}/ofertas/publicar${fromPanel ? "?from=panel" : ""}`;
+  const publishPath = `/${locale}/promociones/publicar${fromPanel ? "?from=panel" : ""}`;
   if (!user) redirect(`/${locale}/login?redirect=${encodeURIComponent(publishPath)}`);
   const { data: professional } = await supabase.from("professionals").select("id").eq("profile_id", user.id).maybeSingle();
   if (!professional) redirect(`/${locale}/dashboard/profesional?mode=offer`);

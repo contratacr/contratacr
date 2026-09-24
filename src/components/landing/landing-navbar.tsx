@@ -187,7 +187,7 @@ function LanguageMenu() {
 const RESOURCES_LINKS: { key: string; href: string }[] = [
   { key: "howItWorks", href: "/como-funciona" },
   { key: "helpCenter", href: "/ayuda" },
-  { key: "proTips",    href: "/atraer-clientes" },
+  { key: "proTips",    href: "/mejorar-mi-perfil" },
   { key: "support",    href: "/soporte" },
 ];
 
@@ -1025,7 +1025,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   const accesoHref = (destino: string) => `/login?redirect=${encodeURIComponent(`/${locale}${destino}`)}`;
   const enMensajes = /(^|\/)mensajes(?:\/|$)/.test(pathname ?? "");
   const enNotificaciones = /(^|\/)notificaciones(?:\/|$)/.test(pathname ?? "");
-  const nativeFullscreenRoute = /(^|\/)(?:publicar-proyecto|(?:empleos|ofertas)\/publicar)(?:\/|$)/.test(pathname ?? "");
+  const nativeFullscreenRoute = /(^|\/)(?:publicar-proyecto|(?:empleos|promociones)\/publicar)(?:\/|$)/.test(pathname ?? "");
   // LA PRIMERA PINTURA YA SABE SI ESTA CUENTA OFRECE SERVICIOS.
   //
   // Esto decidía «Ofrecer mis servicios» y se resolvía con una consulta desde
@@ -1060,8 +1060,8 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   // the client pathname settles. Default that unknown state to the safest home
   // behavior so the compact search never flashes during hydration/refresh.
   const isHomePage = !pathname || pathname === "/" || /^\/(?:es|en)\/?$/.test(pathname);
-  const isMarketplaceEditor = /\/(?:empleos|ofertas)\/(?:publicar|[^/]+\/editar)\/?$/.test(pathname);
-  const isMarketplaceRoute = /\/(?:empleos|ofertas|proyectos)(?:\/|$)/.test(pathname);
+  const isMarketplaceEditor = /\/(?:empleos|promociones)\/(?:publicar|[^/]+\/editar)\/?$/.test(pathname);
+  const isMarketplaceRoute = /\/(?:empleos|promociones|proyectos)(?:\/|$)/.test(pathname);
   const effectiveMarketplaceDesktop = marketplaceDesktop || (isMarketplaceRoute && !isMarketplaceEditor);
   // Empleos, ofertas y /buscar traen sus propios filtros pegados a la barra: la
   // línea de la barra caía justo encima de ellos y se leía como una raya suelta.
@@ -1071,7 +1071,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   // En escritorio el buscador compacto del navbar aparece en el home al pasar el
   // hero y SIEMPRE en el resto de páginas públicas (perfil, oficios, ayuda…).
   // Se oculta donde no hay nada que buscar: panel, admin, cuenta, mensajes,
-  // reservar, y los tableros de empleos/ofertas, que traen su propio buscador.
+  // reservar, y los tableros de empleos/promociones, que traen su propio buscador.
   // Pantallas SIN buscador en la barra: el panel de administración y los
   // TRÁMITES —lo que se está llenando o completando—. Entrar, crear cuenta y
   // recuperar la contraseña salieron de esta lista: son páginas normales, con
@@ -1481,7 +1481,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   );
 
   const navigateNativeMarketplace = useCallback(
-    (event: React.MouseEvent<HTMLAnchorElement>, href: "/ofertas" | "/empleos" | "/proyectos") => {
+    (event: React.MouseEvent<HTMLAnchorElement>, href: "/promociones" | "/empleos" | "/proyectos") => {
       if (!nativeApp) return;
       // Same-document navigation, like every other tab. The old full reload
       // cost a blank frame plus re-running all scripts on each tap; if the RSC
@@ -2212,7 +2212,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                             {locale === "en" ? "Jobs" : "Empleos"}
                           </Link>
                         )}
-                        <Link href="/ofertas" onClick={() => setOpenMenu(null)} className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-[#1A2744] transition-colors hover:bg-gray-50 hover:text-[#009FD9]">
+                        <Link href="/promociones" onClick={() => setOpenMenu(null)} className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-[#1A2744] transition-colors hover:bg-gray-50 hover:text-[#009FD9]">
                           <OfferTagPercentIcon className="h-5 w-5" />
                           {locale === "en" ? "Promotions" : "Promociones"}
                         </Link>
@@ -2946,7 +2946,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                         cajón: las dos viven en el tablero de Proyectos, que es
                         donde se entiende para qué sirven. Dos puertas a lo mismo
                         alargaban la lista. */}
-                <Link href="/ofertas" onClick={(event) => { setMobileOpen(false); navigateNativeMarketplace(event, "/ofertas"); }} className={claseCajon("/ofertas")}>
+                <Link href="/promociones" onClick={(event) => { setMobileOpen(false); navigateNativeMarketplace(event, "/promociones"); }} className={claseCajon("/promociones")}>
                   <DrawerIcon><OfferTagPercentIcon className="h-5 w-5" /></DrawerIcon>
                   <span className={mobileDrawerTextClass}>{locale === "en" ? "Promotions" : "Promociones"}</span>
                 </Link>
@@ -2999,7 +2999,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                         <ResourceIcon name="helpCenter" />
                         <span className={mobileDrawerTextClass}>{t("resourceLinks.helpCenter")}</span>
                       </Link>
-                      <Link href="/atraer-clientes" onClick={() => setMobileOpen(false)} className={mobileDrawerSubItemClass}>
+                      <Link href="/mejorar-mi-perfil" onClick={() => setMobileOpen(false)} className={mobileDrawerSubItemClass}>
                         <ResourceIcon name="proTips" />
                         <span className={mobileDrawerTextClass}>{t("resourceLinks.proTips")}</span>
                       </Link>

@@ -86,7 +86,7 @@ export default function AtraerClientesPage() {
                 <div className="flex h-10 w-10 items-center justify-center rounded-lg ccr-caja-icono-plana"><Tags className="h-5 w-5" /></div>
                 <h3 className="mt-4 text-base font-bold text-[#162543]">{t("offersTitle")}</h3>
                 <p className="mt-2 text-sm leading-6 text-[#6b7280]">{t("offersBody")}</p>
-                <Link href="/ofertas" className="mt-4 inline-flex items-center gap-2 text-sm font-bold text-[#0089bb] hover:text-[#007aa7]">{t("offersCta")}<ArrowRight className="h-4 w-4" /></Link>
+                <Link href="/promociones" className="mt-4 inline-flex items-center gap-2 text-sm font-bold text-[#0089bb] hover:text-[#007aa7]">{t("offersCta")}<ArrowRight className="h-4 w-4" /></Link>
               </article>
             </div>
           </div>

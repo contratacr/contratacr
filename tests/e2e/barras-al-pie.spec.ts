@@ -94,7 +94,7 @@ test.describe("@seeded franjas de acciones al pie", () => {
     }
 
     await loginAs(page, E2E_USERS.professional.email, E2E_USERS.professional.password);
-    for (const [nombre, ruta] of [["publicar empleo", "/es/empleos/publicar"], ["publicar promoción", "/es/ofertas/publicar"]] as const) {
+    for (const [nombre, ruta] of [["publicar empleo", "/es/empleos/publicar"], ["publicar promoción", "/es/promociones/publicar"]] as const) {
       await gotoOK(page, ruta);
       medidas.push({ nombre, franja: await medirFranja(page) });
     }
@@ -195,12 +195,12 @@ test.describe("@seeded franjas de acciones al pie", () => {
     // Quién contacta depende de los datos del profesional: sin WhatsApp y sin
     // llamadas no hay botón, y la franja pintaba igual —una tira blanca pegada
     // al fondo con su línea arriba, prometiendo una acción que no existe—.
-    await gotoOK(page, "/es/ofertas");
+    await gotoOK(page, "/es/promociones");
     await page.waitForTimeout(1500);
     const fichas = await page.evaluate(() =>
       Array.from(new Set(Array.from(document.querySelectorAll("main a"))
         .map((a) => a.getAttribute("href") ?? "")
-        .filter((h) => /\/ofertas\/[0-9a-f-]{8,}/.test(h)))).slice(0, 6));
+        .filter((h) => /\/promociones\/[0-9a-f-]{8,}/.test(h)))).slice(0, 6));
     expect(fichas.length, "El tablero de promociones vino vacío").toBeGreaterThan(0);
 
     for (const ficha of fichas) {

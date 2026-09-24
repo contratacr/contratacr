@@ -11,9 +11,9 @@ export const RUTAS_DEL_SITIO = new Set([
   // secciones de src/app/[locale]
   "admin", "atraer-clientes", "ayuda", "buscar", "categorias", "como-funciona",
   "completar-perfil", "contacto", "cotizacion", "dashboard", "eliminar-cuenta", "empleos",
-  "login", "mantenimiento", "mensajes", "notificaciones", "ofertas", "proyectos",
+  "login", "mantenimiento", "mejorar-mi-perfil", "mensajes", "notificaciones", "ofertas", "promociones", "proyectos",
   "olvide-contrasena", "onboarding", "privacidad", "profesionales",
-  "proveedores-autorizados", "publicar-proyecto", "registro", "reset-password",
+  "proveedores-autorizados", "publicar-proyecto", "registro", "reset-password", "verificacion-de-identidad",
   "servicio-no-disponible", "servicios", "soporte", "terminos",
   // enlaces cortos de campañas y archivos servidos desde la raíz
   "ig", "tt", "fb", "wa", "pro",

@@ -9,8 +9,8 @@ const pageRules = [
   [/^\/\[locale\]\/admin(?:\/|$)/, "admin-smoke.spec.ts"],
   [/^\/\[locale\]\/dashboard(?:\/|$)/, "dashboard-surfaces.spec.ts"],
   // The editors (publish, edit, owner managers) are exercised through their real screens.
-  [/^\/\[locale\]\/(?:empleos|ofertas)\/(?:publicar|\[id\]\/editar|mis-empleos|mis-ofertas)$/, "marketplace-editors.spec.ts"],
-  [/^\/\[locale\]\/(?:empleos|ofertas)(?:\/|$)/, "marketplace-lifecycle.spec.ts"],
+  [/^\/\[locale\]\/(?:empleos|promociones)\/(?:publicar|\[id\]\/editar|mis-empleos|mis-promociones)$/, "marketplace-editors.spec.ts"],
+  [/^\/\[locale\]\/(?:empleos|promociones)(?:\/|$)/, "marketplace-lifecycle.spec.ts"],
   [/^\/\[locale\]\/profesionales(?:\/|$)/, "professional-profile.spec.ts"],
   [/^\/\[locale\]\/notificaciones$/, "notifications-guides-regression.spec.ts"],
   [/^\/\[locale\]\/mensajes$/, "direct-chat.spec.ts", true],

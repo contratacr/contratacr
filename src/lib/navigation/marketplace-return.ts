@@ -1,5 +1,5 @@
 const ALLOWED_RETURN_PATHS = [
-  "/ofertas",
+  "/promociones",
   "/empleos",
   "/profesionales/",
   "/dashboard/cliente",
@@ -7,10 +7,10 @@ const ALLOWED_RETURN_PATHS = [
   "/proyectos",
 ] as const;
 
-type Tablero = "/ofertas" | "/empleos" | "/proyectos";
+type Tablero = "/promociones" | "/empleos" | "/proyectos";
 
 const PANEL_POR_TABLERO: Record<Tablero, string> = {
-  "/ofertas": "/dashboard/profesional?mode=offer&tab=offers",
+  "/promociones": "/dashboard/profesional?mode=offer&tab=offers",
   "/empleos": "/dashboard/profesional?mode=offer&tab=jobs",
   "/proyectos": "/dashboard/profesional?tab=sent_projects",
 };
@@ -66,14 +66,14 @@ export function marketplaceReturnLabelKey(
   fallback: Tablero,
   sinOrigen = false,
 ) {
-  if (sinOrigen) return fallback === "/ofertas" ? "allPromotions" : fallback === "/empleos" ? "allJobs" : "allProjects";
+  if (sinOrigen) return fallback === "/promociones" ? "allPromotions" : fallback === "/empleos" ? "allJobs" : "allProjects";
   const pathname = withoutLocale(href.split(/[?#]/u)[0] || "/");
   if (pathname.startsWith("/profesionales/")) return "backToProfile";
   if (pathname.startsWith("/dashboard/")) {
     const params = new URLSearchParams(href.includes("?") ? href.split("?")[1]?.split("#")[0] : "");
     return params.get("tab") === "saved" ? "backToFavorites" : "backToDashboard";
   }
-  return fallback === "/ofertas" ? "backToPromotions" : fallback === "/empleos" ? "backToJobs" : "backToProjects";
+  return fallback === "/promociones" ? "backToPromotions" : fallback === "/empleos" ? "backToJobs" : "backToProjects";
 }
 
 /** Si la ficha se abrió desde el panel (forma vieja «panel» o dirección completa del panel). */

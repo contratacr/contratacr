@@ -14,10 +14,10 @@ const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/u;
 
 function revalidateOfferViews(id?: string | null) {
   for (const locale of ["es", "en"]) {
-    revalidatePath(`/${locale}/ofertas`);
+    revalidatePath(`/${locale}/promociones`);
     revalidatePath(`/${locale}/dashboard/profesional`);
     revalidatePath(`/${locale}/profesionales/[slug]`, "page");
-    if (id) revalidatePath(`/${locale}/ofertas/${id}`);
+    if (id) revalidatePath(`/${locale}/promociones/${id}`);
   }
 }
 

@@ -6,7 +6,7 @@ import { gotoOK } from "./helpers";
 // «q» y «location»), así que «Remoto» desde una ficha abría la lista entera.
 const TABLEROS = [
   { ruta: "/es/empleos", enlace: 'a[href*="/empleos/"]' },
-  { ruta: "/es/ofertas", enlace: 'a[href*="/ofertas/"]' },
+  { ruta: "/es/promociones", enlace: 'a[href*="/promociones/"]' },
   { ruta: "/es/proyectos", enlace: 'a[href*="/proyectos/"]' },
 ];
 

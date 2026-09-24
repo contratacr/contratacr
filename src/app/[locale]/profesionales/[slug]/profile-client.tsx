@@ -74,8 +74,8 @@ function safeProfileReturnHref(value: string | null): string {
   const path = href.split(/[?#]/u)[0]?.replace(/^\/(?:es|en)(?=\/|$)/u, "") || "/";
   const allowed = path === "/"
     || path === "/buscar"
-    || path === "/ofertas"
-    || path.startsWith("/ofertas/")
+    || path === "/promociones"
+    || path.startsWith("/promociones/")
     || path === "/empleos"
     || path.startsWith("/empleos/")
     || path.startsWith("/dashboard/cliente")
@@ -89,7 +89,7 @@ function safeProfileReturnHref(value: string | null): string {
 function profileReturnLabel(href: string, locale: string) {
   const path = href.split(/[?#]/u)[0]?.replace(/^\/(?:es|en)(?=\/|$)/u, "") || "/";
   const params = new URLSearchParams(href.includes("?") ? href.split("?")[1]?.split("#")[0] : "");
-  if (path.startsWith("/ofertas")) return locale === "en" ? "Back to promotions" : "Volver a promociones";
+  if (path.startsWith("/promociones")) return locale === "en" ? "Back to promotions" : "Volver a promociones";
   if (path.startsWith("/empleos")) return locale === "en" ? "Back to jobs" : "Volver a empleos";
   if (path.startsWith("/dashboard/profesional")) {
     if (params.get("tab") === "saved") return locale === "en" ? "Back to favorites" : "Volver a favoritos";
@@ -1189,7 +1189,7 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
                           return (
                             <Link
                               key={offer.id}
-                              href={`/ofertas/${offer.id}?from=${encodeURIComponent(`/profesionales/${routeSlug}?tab=ofertas`)}`}
+                              href={`/promociones/${offer.id}?from=${encodeURIComponent(`/profesionales/${routeSlug}?tab=ofertas`)}`}
                               className="group flex min-w-0 flex-col overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white transition-colors hover:border-[#bfe3f5]"
                             >
                               <span className="relative block aspect-[16/10] w-full overflow-hidden bg-[#eef2f6]">

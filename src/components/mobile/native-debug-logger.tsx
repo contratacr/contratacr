@@ -7,7 +7,7 @@ import { reportClientError } from "@/lib/report-client-error";
 
 function shouldLogRoute(pathname: string | null) {
   const path = pathname ?? "";
-  return /\/(?:ofertas|empleos|buscar|login|registro|mensajes|soporte)(?:\/|$)/.test(path);
+  return /\/(?:promociones|empleos|buscar|login|registro|mensajes|soporte)(?:\/|$)/.test(path);
 }
 
 function errorPayload(error: unknown) {

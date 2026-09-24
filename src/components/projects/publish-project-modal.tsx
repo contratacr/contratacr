@@ -295,7 +295,7 @@ export function PublishProjectModal({ onClose, onSuccess, editar }: {
                     <div role="status" className="mt-2.5 flex flex-col gap-2 rounded-xl border border-[#fde68a] bg-[#fffbeb] px-3.5 py-3 text-[13px] leading-relaxed text-[#92400e]">
                       <p className="font-medium">{t("avisoAnuncio")}</p>
                       <Link
-                        href={yaEsProfesional ? "/ofertas/publicar" : "/registro/profesional"}
+                        href={yaEsProfesional ? "/promociones/publicar" : "/registro/profesional"}
                         className="inline-flex h-9 w-fit items-center rounded-full bg-[#b45309] px-3.5 text-[13px] font-bold text-white transition-colors hover:bg-[#92400e]"
                       >
                         {yaEsProfesional ? t("avisoAnuncioCta") : t("avisoAnuncioCtaNew")}

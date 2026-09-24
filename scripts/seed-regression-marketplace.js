@@ -405,7 +405,7 @@ async function main() {
       {
         user_id: isaac.id, type: "followed_professional_activity", title: "Nueva oferta de SG Solutions",
         message: "SG Solutions public\u00f3 una oferta de instalaci\u00f3n de red empresarial.", read: false, created_at: iso(2),
-        data: { regressionSeed: SEED, link: `/ofertas/${ids.offers[3]}`, offer_id: ids.offers[3], activity_type: "offer" },
+        data: { regressionSeed: SEED, link: `/promociones/${ids.offers[3]}`, offer_id: ids.offers[3], activity_type: "offer" },
       },
       {
         user_id: isaac.id, type: "job_application_status", title: "Postulaci\u00f3n actualizada",

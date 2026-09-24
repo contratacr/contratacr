@@ -57,7 +57,7 @@ const PROHIBIDO = [
 // son rótulos y renombrarlos rompería la base y los enlaces publicados.
 const PERMITIDO = [
   /portfolio_urls|portfolio_items|portfolioCount|portfolioLike|portfolio-like|portfolioItems/u,
-  /\/ofertas\b|"offers"|'offers'|`offers`|offer_type|OFFER_|offerId|offersEnabled/u,
+  /\/promociones\b|"offers"|'offers'|`offers`|offer_type|OFFER_|offerId|offersEnabled/u,
   /data-portfolio|portfolio\.(webp|png|jpg)/u,
   // Carpeta de Cloudinary y el valor del campo `type` de la subida: cambiarlos
   // desconectaría las imágenes ya subidas.

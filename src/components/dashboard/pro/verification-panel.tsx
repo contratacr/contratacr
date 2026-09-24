@@ -508,7 +508,7 @@ export function VerificationPanel({
       {status !== "verified" && (
         <ActionPanel title={t("enterCedulaTitle")} body={t("enterCedulaBody")}>
           <Link
-            href="/proveedores-autorizados"
+            href="/verificacion-de-identidad"
             className="mt-2 mb-4 inline-flex text-sm font-semibold text-[#009FD9] transition-colors hover:text-[#0089bb] hover:underline"
           >
             {t.rich("howItWorks", { link: (c) => <>{c}</> })}

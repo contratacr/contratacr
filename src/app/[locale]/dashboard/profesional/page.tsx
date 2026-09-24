@@ -244,7 +244,7 @@ const GUIDE_ITEMS: GuideItem[] = ([
   { id: "clientProfile", section: "client", actionTab: "profile", targetMode: "use", stepCount: 3 },
   { id: "searchServices", section: "shared", href: "/buscar", stepCount: 5 },
   { id: "jobsGuide", section: "shared", href: "/empleos", stepCount: 4 },
-  { id: "offersGuide", section: "shared", href: "/ofertas", stepCount: 4 },
+  { id: "offersGuide", section: "shared", href: "/promociones", stepCount: 4 },
   { id: "notificationsGuide", section: "shared", actionTab: "notifications", stepCount: 5 },
   { id: "reviewsGuide", section: "shared", href: "/buscar", stepCount: 4 },
   { id: "supportGuide", section: "shared", actionTab: "soporte", stepCount: 3 },
@@ -685,7 +685,7 @@ export default function DashboardPage() {
   const requestedMode = searchParams.get("mode");
   const urlModeParam: Mode | null = requestedMode === "use" || requestedMode === "offer" ? requestedMode : null;
   const requestedReturnTo = searchParams.get("returnTo");
-  const externalReturnTo = requestedReturnTo === "/ofertas" || requestedReturnTo === "/empleos" || requestedReturnTo === "/proyectos" || requestedReturnTo === "/notificaciones"
+  const externalReturnTo = requestedReturnTo === "/promociones" || requestedReturnTo === "/empleos" || requestedReturnTo === "/proyectos" || requestedReturnTo === "/notificaciones"
     ? requestedReturnTo
     : requestedReturnTo?.startsWith("/mensajes") && !requestedReturnTo.startsWith("//") && !requestedReturnTo.includes("\\")
       ? requestedReturnTo

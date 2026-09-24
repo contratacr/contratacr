@@ -45,7 +45,7 @@ const COLUMNS = [
     links: [
       { key: "clients.search",     href: "/buscar" },
       { key: "clients.categories", href: "/servicios" },
-      { key: "clients.offers",     href: "/ofertas" },
+      { key: "clients.offers",     href: "/promociones" },
       { key: "clients.howItWorks", href: "/como-funciona" },
       { key: "clients.publish",    href: "/publicar-proyecto" },
     ],
@@ -58,8 +58,8 @@ const COLUMNS = [
       // enlace interno que los buscadores siguen hasta ellos.
       { key: "pros.projects",     href: "/proyectos" },
       { key: "pros.jobs",         href: "/empleos" },
-      { key: "pros.attract",      href: "/atraer-clientes" },
-      { key: "pros.verification", href: "/proveedores-autorizados" },
+      { key: "pros.attract",      href: "/mejorar-mi-perfil" },
+      { key: "pros.verification", href: "/verificacion-de-identidad" },
     ],
   },
   {

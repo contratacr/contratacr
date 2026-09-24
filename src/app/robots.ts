@@ -33,8 +33,8 @@ const EN_LOS_DOS_IDIOMAS = [
   "/publicar-proyecto",
   "/empleos/publicar",
   "/empleos/mis-empleos",
-  "/ofertas/publicar",
-  "/ofertas/mis-ofertas",
+  "/promociones/publicar",
+  "/promociones/mis-promociones",
 ];
 
 /** La reserva cuelga de cada perfil, así que se nombra con comodín. */

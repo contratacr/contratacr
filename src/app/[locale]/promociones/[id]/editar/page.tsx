@@ -12,7 +12,7 @@ export default async function EditOfferPage({ params, searchParams }: { params: 
   const { id } = await params;
   const query = await searchParams;
   const fromPanel = query.from === "panel";
-  const editPath = `/${locale}/ofertas/${id}/editar${fromPanel ? "?from=panel" : ""}`;
+  const editPath = `/${locale}/promociones/${id}/editar${fromPanel ? "?from=panel" : ""}`;
   const supabase = await createClient();
   const user = await safeGetUser(supabase);
   if (!user) redirect(`/${locale}/login?redirect=${encodeURIComponent(editPath)}`);
@@ -24,5 +24,5 @@ export default async function EditOfferPage({ params, searchParams }: { params: 
   if (offer.service_category_id && !serviceOptions.some((option) => option.value === offer.service_category_id)) {
     serviceOptions.unshift({ value: offer.service_category_id, label: offer.service_label ? String(offer.service_label) : getCategoryLabel(offer.service_category_id, locale) });
   }
-  return <OfferForm professionalId={professional.id} serviceOptions={serviceOptions} initialOffer={offer} backHref={fromPanel ? "/dashboard/profesional?mode=offer&tab=offers" : `/ofertas/${id}`} />;
+  return <OfferForm professionalId={professional.id} serviceOptions={serviceOptions} initialOffer={offer} backHref={fromPanel ? "/dashboard/profesional?mode=offer&tab=offers" : `/promociones/${id}`} />;
 }

@@ -136,7 +136,7 @@ function SavedGenericCard({ item, onRemove }: { item: SavedItem; onRemove: (item
   const meta = isJob || isProject
     ? [text(snapshot.location_label, "Costa Rica"), text(snapshot.salary)].filter(Boolean).join(" · ")
     : [text(snapshot.service_label), text(snapshot.price)].filter(Boolean).join(" · ");
-  const href = volverAFavoritos(isJob ? `/empleos/${item.item_id}` : isProject ? `/proyectos/${item.item_id}` : `/ofertas/${item.item_id}`);
+  const href = volverAFavoritos(isJob ? `/empleos/${item.item_id}` : isProject ? `/proyectos/${item.item_id}` : `/promociones/${item.item_id}`);
   const Icon = isJob ? BriefcaseBusiness : isProject ? ClipboardList : Tag;
 
   return (

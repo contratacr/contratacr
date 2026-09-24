@@ -331,7 +331,7 @@ export function OffersBoard({
             {copy.publishOffer}
           </button>
           <Link
-            href="/ofertas/publicar"
+            href="/promociones/publicar"
             className="inline-flex h-9 items-center justify-center rounded-full bg-[#009fd9] px-3 text-[13px] font-bold text-white transition hover:bg-[#008fc3] lg:hidden"
           >
             {copy.publishOffer}
@@ -340,12 +340,12 @@ export function OffersBoard({
       ) : currentUserId ? (
         // Ver la nota de Empleos: con sesión y sin perfil profesional se
         // explica qué falta, no se manda al login.
-        <button type="button" onClick={() => void avisar("promocion", "/ofertas/publicar")} className="inline-flex h-9 flex-1 items-center justify-center rounded-full bg-[#009fd9] px-4 text-[13px] font-bold text-white transition hover:bg-[#008fc3] sm:flex-none lg:h-10 lg:px-5 lg:text-sm">
+        <button type="button" onClick={() => void avisar("promocion", "/promociones/publicar")} className="inline-flex h-9 flex-1 items-center justify-center rounded-full bg-[#009fd9] px-4 text-[13px] font-bold text-white transition hover:bg-[#008fc3] sm:flex-none lg:h-10 lg:px-5 lg:text-sm">
           {copy.publishOffer}
         </button>
       ) : (
         <Link
-          href="/login?redirect=/ofertas/publicar"
+          href="/login?redirect=/promociones/publicar"
           className="inline-flex h-9 flex-1 items-center justify-center rounded-full bg-[#009fd9] px-4 text-[13px] font-bold text-white transition hover:bg-[#008fc3] sm:flex-none lg:h-10 lg:px-5 lg:text-sm"
         >
           {copy.publishOffer}
@@ -488,7 +488,7 @@ export function OffersBoard({
                         {copy.publishFirst}
                       </button>
                       <Link
-                        href="/ofertas/publicar"
+                        href="/promociones/publicar"
                         className="inline-flex items-center justify-center rounded-full bg-[#009fd9] px-5 text-sm font-bold text-white transition hover:bg-[#008fc3] lg:hidden"
                       >
                         {copy.publishFirst}
@@ -523,10 +523,10 @@ export function OffersBoard({
             professionalId={currentProfessionalId}
             serviceOptions={publishServiceOptions}
             presentation="modal"
-            backHref="/ofertas"
+            backHref="/promociones"
             onSaved={(id) => {
               setPublishOpen(false);
-              router.push(`/ofertas/${id}`);
+              router.push(`/promociones/${id}`);
             }}
           />
         </Modal>
@@ -545,7 +545,7 @@ export function OffersBoard({
             serviceOptions={publishServiceOptions}
             initialOffer={editingOffer}
             presentation="modal"
-            backHref="/ofertas"
+            backHref="/promociones"
             onSaved={() => {
               setEditingOffer(null);
               router.refresh();
@@ -623,7 +623,7 @@ export function OfferSaveButton({
       itemId={offer.id}
       snapshot={offerSaveSnapshot(offer, locale)}
       userId={userId}
-      loginRedirect={`/ofertas/${offer.id}`}
+      loginRedirect={`/promociones/${offer.id}`}
       withLabel={pastilla}
       sutil={!pastilla}
       className={`shrink-0 ${className}`}
@@ -749,7 +749,7 @@ function OfferRow({
         className="absolute inset-0 hidden lg:block"
       />
       <Link
-        href={`/ofertas/${offer.id}`}
+        href={`/promociones/${offer.id}`}
         className="relative z-[1] block lg:pointer-events-none"
       >
         <div className="flex gap-2.5 sm:gap-3">
@@ -852,7 +852,7 @@ function OfferPreview({
             <div className="min-w-0 flex-1">
               {offer.professional_slug ? (
                 <Link
-                  href={`/profesionales/${offer.professional_slug}?from=${encodeURIComponent(`/ofertas/${offer.id}`)}`}
+                  href={`/profesionales/${offer.professional_slug}?from=${encodeURIComponent(`/promociones/${offer.id}`)}`}
                   className="inline-flex max-w-full items-center gap-1 font-semibold text-[#005eaa] hover:underline"
                 >
                   <span className="min-w-0 truncate">{offer.professional_name}</span>

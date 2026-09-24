@@ -14,7 +14,7 @@ const PANTALLAS: Array<{ ruta: string; como?: "pro" | "cliente" }> = [
   { ruta: "/es/buscar" },
   { ruta: "/es/servicios" },
   { ruta: "/es/empleos" },
-  { ruta: "/es/ofertas" },
+  { ruta: "/es/promociones" },
   { ruta: "/es/proyectos" },
   { ruta: "/es/soporte" },
   { ruta: "/es/como-funciona" },

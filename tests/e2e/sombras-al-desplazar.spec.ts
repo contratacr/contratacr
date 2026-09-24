@@ -9,7 +9,7 @@ import { expect, test } from "playwright/test";
 // Esta prueba existía para exigir lo contrario. Se conserva —con el sentido
 // invertido— porque el mecanismo que encendía esas sombras era global y fácil
 // de revivir sin querer.
-const PANTALLAS = ["/es/servicios", "/es/empleos", "/es/ofertas", "/es/buscar"];
+const PANTALLAS = ["/es/servicios", "/es/empleos", "/es/promociones", "/es/buscar"];
 
 const BORDES = ".ccr-cabecera-pegada, .ccr-barra-fija, .ccr-pie-pegado, .ccr-pie-ventana, .ccr-pie-formulario";
 

@@ -17,7 +17,7 @@ import { isMobileProject } from "./helpers";
  * `span` con `truncate` decía «busca…» donde el `input` decía «buscas?», y eso
  * no lo caza ninguna medición de cajas.
  */
-const TABLEROS = ["/es/empleos", "/es/ofertas", "/es/proyectos", "/en/ofertas"];
+const TABLEROS = ["/es/empleos", "/es/promociones", "/es/proyectos", "/en/promociones"];
 
 test("el gemelo del buscador viene del servidor y calza al píxel", async ({ page }, testInfo) => {
   test.skip(isMobileProject(testInfo), "el buscador en la barra es de computadora");

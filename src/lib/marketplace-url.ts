@@ -1,12 +1,12 @@
 // El enlace que se comparte de una oferta o de un empleo:
-// contratacr.com/ofertas/camaras-de-seguridad-b1baacf7
+// contratacr.com/promociones/camaras-de-seguridad-b1baacf7
 //
 // Se lee como el del perfil (contratacr.com/nombre-apellido) y el de una
 // cotización: sin el idioma en medio y sin el identificador de 36 caracteres.
 // El tramo final son los 8 primeros del id, que es lo que lo hace único: dos
 // ofertas pueden llamarse igual, dos ids no empiezan igual.
 //
-// El enlace largo de siempre (/es/ofertas/<id completo>) sigue funcionando, así
+// El enlace largo de siempre (/es/promociones/<id completo>) sigue funcionando, así
 // que nada de lo ya compartido o indexado se rompe.
 
 const SUFIJO = /-([0-9a-f]{8})$/i;

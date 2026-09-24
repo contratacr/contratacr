@@ -527,7 +527,7 @@ export function AdminUserProfile({
               </div>
               <div className="lg:border-t lg:border-[#eef2f6]">
                 <p className="px-4 pt-3 text-[11px] font-semibold uppercase tracking-wide text-[#68778d]">Promociones publicadas</p>
-                {offers.length === 0 ? <Empty text="Sin promociones publicadas." /> : <ul className="divide-y divide-[#eef2f6]">{offers.slice(0, 8).map((o) => <Row key={o.id} title={o.title} meta={`${money(o.price_now, o.currency)} · ${fmt(o.created_at)}`} status={o.status} external={`/es/ofertas/${o.id}`} />)}</ul>}
+                {offers.length === 0 ? <Empty text="Sin promociones publicadas." /> : <ul className="divide-y divide-[#eef2f6]">{offers.slice(0, 8).map((o) => <Row key={o.id} title={o.title} meta={`${money(o.price_now, o.currency)} · ${fmt(o.created_at)}`} status={o.status} external={`/es/promociones/${o.id}`} />)}</ul>}
               </div>
             </div>
           </Section>

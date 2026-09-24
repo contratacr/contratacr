@@ -153,7 +153,7 @@ export default async function ComoFuncionaPage() {
                   {t("marketplaceProjectsCta")}<ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
                 </span>
               </Link>
-              <Link href="/ofertas" className="group flex min-h-40 flex-col justify-between rounded-lg border border-[#e5e7eb] bg-white p-5 transition-colors hover:border-[#9bd8ef]">
+              <Link href="/promociones" className="group flex min-h-40 flex-col justify-between rounded-lg border border-[#e5e7eb] bg-white p-5 transition-colors hover:border-[#9bd8ef]">
                 <div>
                   <Tags className="h-5 w-5 text-[#009fd9]" />
                   <h3 className="mt-4 text-lg font-bold text-[#162543]">{t("marketplaceOffersTitle")}</h3>

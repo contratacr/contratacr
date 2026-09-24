@@ -156,7 +156,7 @@ test.describe("@mobile native shell contracts", () => {
 
   test("signed-out public pages keep the marketplace header pinned at the top and a single way in", async ({ page }) => {
     await resetAuth(page);
-    await gotoOK(page, "/es/ofertas");
+    await gotoOK(page, "/es/promociones");
 
     // En teléfono y en la app, ofertas/empleos NO llevan el navbar de la web
     // (el marco lo pinta solo para el cajón y el escritorio, 39bc6c44): la
@@ -284,9 +284,9 @@ test.describe("@mobile native shell contracts", () => {
 
     for (const destination of [
       // La sección se llama «Promociones» en todo el app; la RUTA sigue siendo
-      // /ofertas porque hay enlaces publicados con ella. La prueba usaba el
+      // /promociones porque hay enlaces publicados con ella. La prueba usaba el
       // nombre viejo para las dos cosas.
-      { label: "Promociones", path: "/es/ofertas", heading: "Promociones" },
+      { label: "Promociones", path: "/es/promociones", heading: "Promociones" },
       { label: "Empleos", path: "/es/empleos", heading: "Empleos" },
     ]) {
       const nativeNav = page.locator("nav.ccr-native-bottom-nav").filter({ visible: true });

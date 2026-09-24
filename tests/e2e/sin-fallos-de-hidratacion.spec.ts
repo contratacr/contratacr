@@ -22,10 +22,10 @@ import { firstProfessionalHref, loginAs } from "./helpers";
  */
 const PUBLICAS = [
   "/es", "/en", "/es/buscar", "/es/buscar?provincia=sj", "/es/buscar?categoria=plomeria",
-  "/es/servicios", "/es/empleos", "/es/ofertas", "/es/proyectos", "/es/ayuda", "/es/como-funciona", "/es/login",
+  "/es/servicios", "/es/empleos", "/es/promociones", "/es/proyectos", "/es/ayuda", "/es/como-funciona", "/es/login",
 ];
 const CON_SESION = [
-  "/es", "/es/buscar?provincia=sj", "/es/empleos", "/es/ofertas",
+  "/es", "/es/buscar?provincia=sj", "/es/empleos", "/es/promociones",
   "/es/dashboard/profesional", "/es/dashboard/profesional?tab=profile", "/es/dashboard/profesional?tab=services",
   "/es/dashboard/profesional?tab=offers", "/es/notificaciones",
 ];

@@ -26,9 +26,9 @@ async function MyOffersContent() {
   const locale = await getLocale();
   const supabase = await createClient();
   const user = await safeGetUser(supabase);
-  if (!user) redirect(`/${locale}/login?redirect=${encodeURIComponent(`/${locale}/ofertas/mis-ofertas`)}`);
+  if (!user) redirect(`/${locale}/login?redirect=${encodeURIComponent(`/${locale}/promociones/mis-promociones`)}`);
   const { data: professional } = await supabase.from("professionals").select("id").eq("profile_id", user.id).maybeSingle();
-  if (!professional) redirect(`/${locale}/ofertas`);
+  if (!professional) redirect(`/${locale}/promociones`);
   const { data } = await supabase.from("professional_offers").select("*").eq("professional_id", professional.id).order("created_at", { ascending: false });
   const offers = ((data ?? []) as Array<Record<string, unknown>>).map((row) => ({
     ...row,
@@ -39,7 +39,7 @@ async function MyOffersContent() {
   return (
     <main data-route-content="offers-manager">
       <LandingNavbar mobileSearch={false} />
-      <SectionHeaderTitle title={tSecciones("myOffers")} fallbackHref="/ofertas" />
+      <SectionHeaderTitle title={tSecciones("myOffers")} fallbackHref="/promociones" />
       <OffersManager initialOffers={offers} />
     </main>
   );

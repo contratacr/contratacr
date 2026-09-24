@@ -60,7 +60,7 @@ function meaningfulRedirect(raw: string | null): string | null {
   // entrar. Antes se le devolvía al panel y perdía lo que iba a hacer.
   if (
     pathname === "/empleos/publicar"
-    || pathname === "/ofertas/publicar"
+    || pathname === "/promociones/publicar"
     || pathname === "/publicar-proyecto"
     || /^\/profesionales\/[^/]+\/reservar$/.test(pathname)
   ) return raw;

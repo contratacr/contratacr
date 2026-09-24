@@ -164,7 +164,7 @@ export async function GET(request: Request) {
       createdAt: row.created_at,
       updatedAt: row.updated_at,
       creator,
-      href: `/ofertas/${row.id}`,
+      href: `/promociones/${row.id}`,
     };
   });
 

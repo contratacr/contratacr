@@ -8,7 +8,7 @@ const FANTASMA = "d4000000-0000-4000-8000-0000000fffff";
 
 test("@seeded una dirección que no existe no enseña otra publicación", async ({ page }) => {
   test.skip(isMobileProject(test.info()), "Basta comprobarlo una vez.");
-  for (const ruta of [`/es/empleos/${FANTASMA}`, `/es/ofertas/${FANTASMA}`, `/es/proyectos/${FANTASMA}`]) {
+  for (const ruta of [`/es/empleos/${FANTASMA}`, `/es/promociones/${FANTASMA}`, `/es/proyectos/${FANTASMA}`]) {
     await page.goto(ruta);
     await expect(page.locator("h1, h2").first(), `${ruta} no debe enseñar otra ficha`).toHaveText(/no encontrada|not found/i);
   }

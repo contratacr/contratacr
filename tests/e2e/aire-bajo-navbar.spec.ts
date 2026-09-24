@@ -33,8 +33,8 @@ test("el contenido arranca a la misma distancia del navbar", async ({ page }, te
   await loginAs(page, "e2e.pro@contratacr.test", process.env.E2E_TEST_PASSWORD ?? "");
   const esperado = telefono ? 16 : 32;
   const rutas = telefono
-    ? ["/es/notificaciones", "/es/soporte", "/es/ayuda", "/es/como-funciona", "/es/terminos", "/es/privacidad", "/es/atraer-clientes", `/es/profesionales/${seed.professionalSlug}`]
-    : ["/es/notificaciones", "/es/dashboard/profesional", "/es/mensajes", "/es/soporte", "/es/ayuda", "/es/como-funciona", "/es/terminos", "/es/privacidad", "/es/atraer-clientes", "/es/empleos/publicar", "/es/ofertas/publicar", "/es/servicios", `/es/profesionales/${seed.professionalSlug}`];
+    ? ["/es/notificaciones", "/es/soporte", "/es/ayuda", "/es/como-funciona", "/es/terminos", "/es/privacidad", "/es/mejorar-mi-perfil", `/es/profesionales/${seed.professionalSlug}`]
+    : ["/es/notificaciones", "/es/dashboard/profesional", "/es/mensajes", "/es/soporte", "/es/ayuda", "/es/como-funciona", "/es/terminos", "/es/privacidad", "/es/mejorar-mi-perfil", "/es/empleos/publicar", "/es/promociones/publicar", "/es/servicios", `/es/profesionales/${seed.professionalSlug}`];
   const medidas: Record<string, number> = {};
   for (const ruta of rutas) {
     await page.goto(ruta, { waitUntil: "networkidle" });

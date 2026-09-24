@@ -271,7 +271,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
           }}
         />
         {/* EL DESPLAZAMIENTO VIVE DENTRO DE LOS CONTENEDORES, no en la página,
-            en /buscar, /empleos y /ofertas, en teléfono y en computadora (al
+            en /buscar, /empleos y /promociones, en teléfono y en computadora (al
             estilo LinkedIn). El cascarón mide la pantalla y no se mueve; lo que
             se desplaza es la lista (o la ficha, en el teléfono) y en /buscar la
             columna de resultados, con el mapa quieto al lado. Sin página que
@@ -403,7 +403,7 @@ body:has(.ccr-error-screen) .ccr-navbar-spacer{display:none}
           type="text/javascript"
           suppressHydrationWarning
           dangerouslySetInnerHTML={{
-            __html: `try{if(/^\\/(es|en)?\\/?$/.test(window.location.pathname)){document.documentElement.classList.add("ccr-ruta-portada")}}catch(e){}try{if(/^\\/(?:es|en)?\\/?(?:buscar|empleos|ofertas|proyectos)\\/?$/.test(window.location.pathname)){document.documentElement.classList.add("ccr-ruta-sin-desplazar")}}catch(e){}try{if(document.documentElement.classList.contains("ccr-native-app")){document.body.classList.add("ccr-native-app");var r=window.location.pathname;if(!/(^|\\/)(publicar-proyecto|(empleos|ofertas)\\/publicar)(\\/|$)/.test(r)){document.documentElement.classList.add("ccr-native-bottom-nav-visible");document.body.classList.add("ccr-native-bottom-nav-visible")}if(/(^|\\/)buscar(\\/|$)/.test(r)){document.documentElement.classList.add("ccr-native-search-route");document.body.classList.add("ccr-native-search-route")}}}catch(e){}`,
+            __html: `try{if(/^\\/(es|en)?\\/?$/.test(window.location.pathname)){document.documentElement.classList.add("ccr-ruta-portada")}}catch(e){}try{if(/^\\/(?:es|en)?\\/?(?:buscar|empleos|promociones|proyectos)\\/?$/.test(window.location.pathname)){document.documentElement.classList.add("ccr-ruta-sin-desplazar")}}catch(e){}try{if(document.documentElement.classList.contains("ccr-native-app")){document.body.classList.add("ccr-native-app");var r=window.location.pathname;if(!/(^|\\/)(publicar-proyecto|(empleos|promociones)\\/publicar)(\\/|$)/.test(r)){document.documentElement.classList.add("ccr-native-bottom-nav-visible");document.body.classList.add("ccr-native-bottom-nav-visible")}if(/(^|\\/)buscar(\\/|$)/.test(r)){document.documentElement.classList.add("ccr-native-search-route");document.body.classList.add("ccr-native-search-route")}}}catch(e){}`,
           }}
         />
         <StaticNativeFirstRunPrepaint />

@@ -162,7 +162,7 @@ export function OffersManager({ initialOffers, embedded = false, backHref = "/da
           <SectionHeadline subtitulo={copy.subtitle}>
               {offers.length > 0 && (<>
               <button type="button" onClick={() => setPublishOpen(true)} className="hidden h-11 w-full items-center justify-center gap-2 rounded-full bg-[#009FD9] px-4 text-sm font-bold text-white transition-colors hover:bg-[#0089bb] sm:w-auto sm:px-6 lg:flex"><Plus className="h-4 w-4" />{copy.publish}</button>
-              <Link href="/ofertas/publicar?from=panel" className="flex h-11 w-full items-center justify-center gap-2 rounded-full bg-[#009FD9] px-4 text-sm font-bold text-white transition-colors hover:bg-[#0089bb] sm:w-auto sm:px-6 lg:hidden max-sm:[&>svg]:hidden"><Plus className="h-4 w-4" />{copy.publish}</Link>
+              <Link href="/promociones/publicar?from=panel" className="flex h-11 w-full items-center justify-center gap-2 rounded-full bg-[#009FD9] px-4 text-sm font-bold text-white transition-colors hover:bg-[#0089bb] sm:w-auto sm:px-6 lg:hidden max-sm:[&>svg]:hidden"><Plus className="h-4 w-4" />{copy.publish}</Link>
               </>)}
           </SectionHeadline>
         </div>
@@ -234,9 +234,9 @@ export function OffersManager({ initialOffers, embedded = false, backHref = "/da
                         y editar es a lo que se viene cuando se abre una
                         publicación propia. La misma fila en las tres secciones. */}
                     <div data-offer-actions={offer.id} className="ccr-acciones-tarjeta relative grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_40px] gap-2">
-                      <Link href={`/ofertas/${offer.id}?from=${volverAqui}`} className="inline-flex h-10 w-full items-center justify-center rounded-full border border-[#d7e1ea] px-3 text-xs font-bold text-[#162543]">{copy.view}</Link>
+                      <Link href={`/promociones/${offer.id}?from=${volverAqui}`} className="inline-flex h-10 w-full items-center justify-center rounded-full border border-[#d7e1ea] px-3 text-xs font-bold text-[#162543]">{copy.view}</Link>
                       <button type="button" onClick={() => setEditingOffer(offer)} className="hidden h-10 w-full items-center justify-center rounded-full bg-[#009FD9] px-3 text-xs font-bold text-white transition-colors hover:bg-[#0089bb] lg:inline-flex">{copy.edit}</button>
-                      <Link href={`/ofertas/${offer.id}/editar?from=panel`} className="inline-flex h-10 w-full items-center justify-center rounded-full bg-[#009FD9] px-3 text-xs font-bold text-white transition-colors hover:bg-[#0089bb] lg:hidden">{copy.edit}</Link>
+                      <Link href={`/promociones/${offer.id}/editar?from=panel`} className="inline-flex h-10 w-full items-center justify-center rounded-full bg-[#009FD9] px-3 text-xs font-bold text-white transition-colors hover:bg-[#0089bb] lg:hidden">{copy.edit}</Link>
                       {/* LAS MISMAS DOS OPCIONES QUE EN EMPLEOS Y PROYECTOS.
                           Eran TRES para cerrar —pausar, marcar agotada, marcar
                           vencida— y las tres hacian lo mismo: sacarla del
@@ -273,7 +273,7 @@ export function OffersManager({ initialOffers, embedded = false, backHref = "/da
               description={copy.emptyBody}
               action={(<>
                 <Button type="button" size="crear" onClick={() => setPublishOpen(true)} className="hidden lg:inline-flex">{copy.publishTitle}</Button>
-                <Button asChild size="crear" className="lg:hidden"><Link href="/ofertas/publicar?from=panel">{copy.publishTitle}</Link></Button>
+                <Button asChild size="crear" className="lg:hidden"><Link href="/promociones/publicar?from=panel">{copy.publishTitle}</Link></Button>
               </>)}
             />
           )}
@@ -282,7 +282,7 @@ export function OffersManager({ initialOffers, embedded = false, backHref = "/da
       </div>
       {publishOpen && professionalId && (
         <Modal onClose={() => setPublishOpen(false)} title={copy.publishTitle} size="lg" bodyClassName="bg-[#f4f7fa] px-0 py-0">
-          <OfferForm onCancel={() => setPublishOpen(false)} professionalId={professionalId} serviceOptions={serviceOptions} presentation="modal" backHref={backHref} onSaved={(id) => { setPublishOpen(false); onRefresh?.(); router.push(`/ofertas/${id}?from=panel`); }} />
+          <OfferForm onCancel={() => setPublishOpen(false)} professionalId={professionalId} serviceOptions={serviceOptions} presentation="modal" backHref={backHref} onSaved={(id) => { setPublishOpen(false); onRefresh?.(); router.push(`/promociones/${id}?from=panel`); }} />
         </Modal>
       )}
       {editingOffer && professionalId && (

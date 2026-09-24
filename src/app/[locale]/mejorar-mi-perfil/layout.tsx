@@ -12,7 +12,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   const en = locale === "en";
   return metadatosDePantalla({
     locale,
-    ruta: "/atraer-clientes",
+    ruta: "/mejorar-mi-perfil",
     titulo: en ? 'How to attract more clients | ContrataCR' : 'Cómo atraer más clientes | ContrataCR',
     descripcion: en ? 'A practical guide for professionals in Costa Rica: complete your profile, earn reviews and rank first in searches.' : 'Guía práctica para profesionales en Costa Rica: cómo completar tu perfil, conseguir reseñas y aparecer de primero en las búsquedas.',
   });

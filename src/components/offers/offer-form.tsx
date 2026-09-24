@@ -204,7 +204,7 @@ export function pareceVacante(texto: string): boolean {
   return SENALES_DE_VACANTE.filter((senal) => senal.test(limpio)).length >= 2;
 }
 
-export function OfferForm({ professionalId, serviceOptions, backHref = "/ofertas", initialOffer = null, presentation = "page", onSaved, onCancel }: OfferFormProps) {
+export function OfferForm({ professionalId, serviceOptions, backHref = "/promociones", initialOffer = null, presentation = "page", onSaved, onCancel }: OfferFormProps) {
   const { cabeceraRef, conLinea } = useHairlineOnScroll();
   const locale = marketplaceLocale(useLocale());
   const copy = OFFER_FORM_COPY[locale];
@@ -413,7 +413,7 @@ export function OfferForm({ professionalId, serviceOptions, backHref = "/ofertas
       }
       const returnToPanel = backHref.includes("/dashboard/profesional");
       setConCambios(false);
-      router.replace(`/ofertas/${data.id}${returnToPanel ? "?from=panel" : ""}`);
+      router.replace(`/promociones/${data.id}${returnToPanel ? "?from=panel" : ""}`);
       router.refresh();
     } catch (err) {
       const message = err instanceof Error ? err.message : "";

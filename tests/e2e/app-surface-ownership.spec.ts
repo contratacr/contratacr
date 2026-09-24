@@ -32,8 +32,8 @@ function appRoute(file: string, terminal: "page.tsx" | "route.ts") {
 const pageRules: OwnershipRule[] = [
   { match: /^\/\[locale\]\/admin(?:\/|$)/, owner: "admin-smoke.spec.ts" },
   { match: /^\/\[locale\]\/dashboard(?:\/|$)/, owner: "dashboard-surfaces.spec.ts" },
-  { match: /^\/\[locale\]\/(?:empleos|ofertas)\/(?:publicar|\[id\]\/editar|mis-empleos|mis-ofertas)$/, owner: "marketplace-editors.spec.ts" },
-  { match: /^\/\[locale\]\/(?:empleos|ofertas)(?:\/|$)/, owner: "marketplace-lifecycle.spec.ts" },
+  { match: /^\/\[locale\]\/(?:empleos|promociones)\/(?:publicar|\[id\]\/editar|mis-empleos|mis-promociones)$/, owner: "marketplace-editors.spec.ts" },
+  { match: /^\/\[locale\]\/(?:empleos|promociones)(?:\/|$)/, owner: "marketplace-lifecycle.spec.ts" },
   { match: /^\/\[locale\]\/profesionales(?:\/|$)/, owner: "professional-profile.spec.ts" },
   { match: /^\/\[locale\]\/notificaciones$/, owner: "notifications-guides-regression.spec.ts" },
   { match: /^\/\[locale\]\/mensajes$/, owner: "direct-chat.spec.ts", parked: true },
@@ -55,6 +55,7 @@ const handlerRules: OwnershipRule[] = [
   { match: /^\/api\/direct-chat(?:\/|$)/, owner: "direct-chat.spec.ts", parked: true },
   { match: /^\/api\/(?:push|internal\/push)(?:\/|$)/, owner: "push-outbox-contract.spec.ts" },
   { match: /^\/api\/internal\/soporte(?:\/|$)/, owner: "soporte-cierre-automatico.spec.ts" },
+  { match: /^\/api\/internal\/verificacion(?:\/|$)/, owner: "verificacion-repesca.spec.ts" },
   { match: /^\/api\/payments(?:\/|$)/, owner: "product-contract.spec.ts" },
   { match: /^\/api\/(?:search|categories|insurers)(?:\/|$)/, owner: "api-smoke.spec.ts" },
   { match: /^\/api\/contact(?:\/|$)/, owner: "whatsapp-review-followup.spec.ts" },

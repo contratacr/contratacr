@@ -94,7 +94,7 @@ test.describe("@seeded offers, jobs and application lifecycle", () => {
       expect(jobId).toBeTruthy();
 
       for (const locale of ["es", "en"] as const) {
-        await gotoOK(page, `/${locale}/ofertas/${offerId}`);
+        await gotoOK(page, `/${locale}/promociones/${offerId}`);
         await expectVisibleText(page.locator("main"), offerTitle);
         await expectHealthyPage(page);
         await gotoOK(page, `/${locale}/empleos/${jobId}`);
