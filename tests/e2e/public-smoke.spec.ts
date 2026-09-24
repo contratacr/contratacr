@@ -285,4 +285,22 @@ test.describe("@smoke public routes", () => {
       expect(respuesta.status(), `${ruta} debería responder ${esperado}`).toBe(esperado);
     }
   });
+
+  // EL BUSCADOR NUNCA SE QUEDA EN BLANCO.
+  //
+  // Con el cursor en «Servicio», sin nada escrito y sin búsquedas recientes
+  // —o sea, todo el mundo la primera vez— el panel del teléfono no pintaba
+  // absolutamente nada: la primera pantalla del sitio era una hoja vacía que
+  // no decía qué se puede buscar.
+  test("el panel de servicio ofrece oficios aunque no haya búsquedas recientes", async ({ page }, testInfo) => {
+    test.skip(!testInfo.project.name.includes("mobile"), "El panel a pantalla completa es del teléfono.");
+    await gotoOK(page, "/es/buscar?regression=1");
+    await page.getByRole("button", { name: "¿Qué servicio estás buscando?" }).click();
+    await expect(page.getByRole("combobox", { name: "Servicio" })).toBeVisible();
+    const panel = page.locator("#native-location-suggestions");
+    await expect(panel).toBeVisible();
+    await expect(panel.getByText(/Los más buscados/i)).toBeVisible();
+    // Y son oficios de verdad en los que se puede pulsar, no un rótulo suelto.
+    await expect(panel.getByRole("button").filter({ visible: true }).nth(2)).toBeVisible();
+  });
 });

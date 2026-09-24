@@ -29,6 +29,7 @@ import { useNativeApp } from "@/hooks/use-native-app";
 import { ALL_CATEGORIES, CATEGORY_GROUPS, searchCategories, normalizeText, getCategoryLabel, getCategoryGroupLabel, resolveCategoryIntent, getAllCategories, getAllCategoryGroups, getCategoryGroupId } from "@/lib/data/categories";
 import { getCategoryGroupIcon } from "@/lib/data/category-group-visuals";
 import { useCustomCategories } from "@/lib/data/use-custom-categories";
+import { HOME_CATEGORIES } from "@/lib/data/home-categories";
 import { allLocationSuggestions, searchLocations, resolveLocation, type LocationSuggestion } from "@/lib/data/location-search";
 import { lockBodyScroll } from "@/lib/body-scroll-lock";
 import { createClient } from "@/lib/supabase/client";
@@ -1510,6 +1511,17 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
     return () => window.clearTimeout(id);
   }, [pathname]);
 
+  // Los oficios que se ofrecen cuando no hay nada escrito ni nada reciente.
+  // Se filtran contra el catálogo vivo: un servicio que el administrador
+  // escondió o renombró no puede quedar ofrecido aquí de adorno. `catalogo`
+  // solo está para que la lista se rehaga cuando llegue el catálogo de la base.
+  // Sin `useMemo` a propósito: son 26 comparaciones, y el catálogo de la base
+  // llega después (`useCustomCategories` vuelve a pintar cuando eso pasa), así
+  // que una lista memorizada se quedaría con los nombres viejos.
+  const serviciosMasBuscados = (() => {
+    const vivos = new Set(getAllCategories().map((c) => c.id));
+    return HOME_CATEGORIES.filter((id) => vivos.has(id)).slice(0, 8);
+  })();
   const compactSuggestions = matchCategories(searchQuery, 8, locale);
   const showNativeServiceSuggestions =
     nativeSearchOpen && searchFocused && searchQuery.trim().length >= 2 && compactSuggestions.length > 0;
@@ -2801,6 +2813,41 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                             </button>
                           </div>
                         ))}
+                    </div>
+                  )}
+                  {/* LA PANTALLA NUNCA SE QUEDA EN BLANCO.
+                      Con el cursor en «Servicio», sin nada escrito y sin
+                      recientes —o sea, TODO EL MUNDO la primera vez— aquí no se
+                      pintaba absolutamente nada: el buscador, que es la primera
+                      pantalla del sitio, era una hoja vacía y no decía qué se
+                      puede buscar. Salen los oficios más buscados, que además
+                      enseñan de un vistazo que esto no es solo para arreglos de
+                      casa (hay abogados, contadores, desarrollo web). Van
+                      DESPUÉS de los recientes: quien ya buscó algo ve primero
+                      lo suyo, y de todos modos tiene ideas debajo. */}
+                  {searchFocused && !searchQuery.trim() && (
+                    <div className="space-y-1">
+                      <p className="px-2 pb-1 pt-1 text-[12px] font-extrabold uppercase tracking-[0.12em] text-[#7a8797]">
+                        {t("masBuscados")}
+                      </p>
+                      {serviciosMasBuscados.map((id) => (
+                        <button
+                          key={id}
+                          type="button"
+                          onClick={() => selectNativeCompactSuggestion(id)}
+                          className="flex w-full items-center gap-4 rounded-xl px-2 py-3 text-left active:bg-[#eef9fd]"
+                        >
+                          <Search className="h-5 w-5 shrink-0 text-[#009FD9]" />
+                          <span className="min-w-0 flex-1">
+                            <span className="block truncate text-[16px] font-bold text-[#1A2744]">
+                              {getCategoryLabel(id, locale)}
+                            </span>
+                            <span className="block truncate text-[12px] font-semibold text-[#6b7280]">
+                              {getCategoryGroupLabel(getCategoryGroupId(id) ?? "", locale)}
+                            </span>
+                          </span>
+                        </button>
+                      ))}
                     </div>
                   )}
                   {!searchFocused && (
