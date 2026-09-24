@@ -2697,11 +2697,13 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                         aria-selected={index === searchActiveIdx}
                         onClick={() => selectNativeCompactSuggestion(suggestion.id)}
                         className={cn(
-                          "flex w-full items-center gap-4 rounded-xl px-2 py-3 text-left active:bg-[#eef9fd]",
+                          "flex w-full items-center gap-3 rounded-xl px-2 py-2.5 text-left active:bg-[#eef9fd]",
                           index === searchActiveIdx && "bg-[#eef9fd]",
                         )}
                       >
-                        <Search className="h-5 w-5 shrink-0 text-[#009FD9]" />
+                        <span className="grid h-9 w-9 shrink-0 place-items-center">
+                          <Search className="h-5 w-5 text-[#009FD9]" />
+                        </span>
                         <span className="min-w-0 flex-1">
                           <span className="block truncate text-[16px] font-bold text-[#1A2744]">
                             {getCategoryLabel(suggestion.id, locale)}
@@ -2753,7 +2755,13 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                         ...visitasRecientes.map((visita) => ({ clave: `v:${visita.id}`, at: visita.at ?? 0, busqueda: null as BusquedaReciente | null, visita })),
                       ]
                         .sort((primero, segundo) => segundo.at - primero.at)
-                        .slice(0, 8)
+                        // CINCO, no ocho. Con ocho, «Los más buscados» caía al
+                        // filo de la pantalla (medido: y=662 de 844, y en el
+                        // iPhone la barra de Safari lo tapaba): había que
+                        // desplazar para descubrir que abajo había algo. Cinco
+                        // bastan para retomar lo que uno estaba haciendo y
+                        // dejan los oficios a la vista (y=452).
+                        .slice(0, 5)
                         .map((reciente) => reciente.busqueda ? (
                           <div key={reciente.clave} className="flex w-full items-center rounded-xl active:bg-[#eef9fd]">
                             <button
@@ -2763,9 +2771,17 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                                 setSearchCategoryId(null);
                                 window.setTimeout(() => runCompactSearch(), 0);
                               }}
-                              className="flex min-w-0 flex-1 items-center gap-4 rounded-xl px-2 py-3 text-left"
+                              className="flex min-w-0 flex-1 items-center gap-3 rounded-xl px-2 py-2.5 text-left"
                             >
-                              <Clock className="h-5 w-5 shrink-0 text-[#8b95a5]" />
+                              {/* Hueco de icono de 36 px, el mismo que ocupa la foto de un
+                              profesional: así el texto de TODAS las filas del
+                              panel empieza en la misma raya. Con el reloj suelto
+                              (20 px) los servicios arrancaban 12 px más a la
+                              izquierda que los profesionales y la lista se veía
+                              quebrada. */}
+                              <span className="grid h-9 w-9 shrink-0 place-items-center">
+                                <Clock className="h-5 w-5 text-[#8b95a5]" />
+                              </span>
                               <span className="min-w-0 flex-1 truncate text-[16px] font-bold text-[#1A2744]">{reciente.busqueda.termino}</span>
                             </button>
                             <button
@@ -2839,9 +2855,11 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                           key={id}
                           type="button"
                           onClick={() => selectNativeCompactSuggestion(id)}
-                          className="flex w-full items-center gap-4 rounded-xl px-2 py-3 text-left active:bg-[#eef9fd]"
+                          className="flex w-full items-center gap-3 rounded-xl px-2 py-2.5 text-left active:bg-[#eef9fd]"
                         >
-                          <Search className="h-5 w-5 shrink-0 text-[#009FD9]" />
+                          <span className="grid h-9 w-9 shrink-0 place-items-center">
+                            <Search className="h-5 w-5 text-[#009FD9]" />
+                          </span>
                           <span className="min-w-0 flex-1">
                             <span className="block truncate text-[16px] font-bold text-[#1A2744]">
                               {getCategoryLabel(id, locale)}
@@ -2858,9 +2876,11 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                   <button
                     type="button"
                     onClick={searchCurrentLocation}
-                    className="flex w-full items-center gap-4 rounded-xl px-2 py-3 text-left text-[16px] font-bold text-[#009FD9] active:bg-[#eef9fd]"
+                    className="flex w-full items-center gap-3 rounded-xl px-2 py-2.5 text-left text-[16px] font-bold text-[#009FD9] active:bg-[#eef9fd]"
                   >
-                    <MapPin className="h-5 w-5 shrink-0" />
+                    <span className="grid h-9 w-9 shrink-0 place-items-center">
+                      <MapPin className="h-5 w-5" />
+                    </span>
                         <span>{locale === "en" ? "Search near me" : "Buscar cerca de mí"}</span>
                   </button>
                   )}
@@ -2884,9 +2904,11 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                         nativeSearchInputRef.current?.focus();
                         setSearchFocused(true);
                       }}
-                      className="flex w-full items-center gap-4 rounded-xl px-2 py-3 text-left text-[16px] font-bold text-[#1A2744] active:bg-[#f4f7fa]"
+                      className="flex w-full items-center gap-3 rounded-xl px-2 py-2.5 text-left text-[16px] font-bold text-[#1A2744] active:bg-[#f4f7fa]"
                     >
-                      <MapPin className="h-6 w-6 text-[#1A2744]" />
+                      <span className="grid h-9 w-9 shrink-0 place-items-center">
+                        <MapPin className="h-6 w-6 text-[#1A2744]" />
+                      </span>
                       <span>
                         {suggestion.label}
                         {suggestion.type === "canton" && <span className="block text-[12px] font-semibold text-[#6b7280]">{suggestion.sublabel}</span>}
