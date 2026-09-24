@@ -418,7 +418,9 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
   const hayCambiosReales = huellaActual !== huellaGuardada || !!pendingAvatarFile;
 
   const callPhoneIsValid = !allowPhoneCall || !callPhone.trim() || isPhoneComplete(callPhone);
-  const hasWorkplace = workplaces.length > 0 || (canOfferVideoConsult && videoConsult && videoCoverageCountry);
+  // Un lugar SIEMPRE: «todo el país» y las videoconsultas se suman, no
+  // sustituyen (la misma regla que el registro).
+  const hasWorkplace = workplaces.some((wp) => wp.level !== "country");
   const socialIsValid =
     (!website.trim() || isValidWebsiteUrl(website)) &&
     SOCIAL_NETWORKS.every(({ key }) => {
@@ -438,8 +440,8 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
     }
     if (sectionId === "location" && !hasWorkplace) {
       return locale === "en"
-        ? "Add a workplace or enable video consultations."
-        : "Agrega un lugar de trabajo o activa las videoconsultas.";
+        ? "Add at least one workplace."
+        : "Agrega al menos un lugar de trabajo.";
     }
     if (sectionId === "contact") {
       if (!isPhoneComplete(whatsapp)) {
@@ -1117,27 +1119,25 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
           <label className="text-sm font-medium text-[#374151] block mb-2">
             {t("workplaces")} <span className="text-red-500">*</span>
           </label>
-          {canOfferVideoConsult ? (
-            <FilaInterruptor
-              className="mb-4"
-              titulo={t("videoConsultOption")}
-              ayuda={t("videoCountryHelp")}
-              checked={videoConsult && videoCoverageCountry}
-              onChange={(next) => {
-                setVideoConsult(next);
-                setVideoCoverageCountry(next);
-                touch("location");
-              }}
-            />
-          ) : null}
           <WorkplacesPicker
             value={workplaces}
             onChange={(next) => { setWorkplaces(next); touch("location"); }}
             mapHeight={168}
+            extraActions={canOfferVideoConsult ? (
+              <FilaInterruptor
+                titulo={t("videoConsultOption")}
+                checked={videoConsult && videoCoverageCountry}
+                onChange={(next) => {
+                  setVideoConsult(next);
+                  setVideoCoverageCountry(next);
+                  touch("location");
+                }}
+              />
+            ) : undefined}
           />
           {dirty && activeDirtySection === "location" && !hasWorkplace ? (
             <p className="mt-2 text-xs text-red-500">
-              {locale === "en" ? "Add a workplace or enable video consultations." : "Agrega un lugar de trabajo o activa las videoconsultas."}
+              {locale === "en" ? "Add at least one workplace." : "Agrega al menos un lugar de trabajo."}
             </p>
           ) : null}
         </div>
