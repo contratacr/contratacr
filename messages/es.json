@@ -1497,7 +1497,7 @@
         ]
       },
       "providerNoteTitle": "Si eres profesional:",
-      "providerNoteBody": "Como profesional también puedes usar el panel cliente con la misma cuenta.",
+      "providerNoteBody": "Con la misma cuenta puedes ofrecer tus servicios y contratar a otros: es un solo panel para las dos cosas.",
       "clientNoteTitle": "Si solo usas ContrataCR como cliente:",
       "clientNoteBody": "Las guías profesionales quedan disponibles si luego quieres ofrecer servicios, publicar empleos o promociones.",
       "activateProfessionalCta": "Crear perfil profesional",
@@ -1603,8 +1603,8 @@
         },
         "searchServices": {
           "title": "Buscar profesionales",
-          "short": "Mapa, filtros y disponibilidad",
-          "body": "Buscar profesionales te permite encontrar opciones por servicio y ubicación, con mapa, filtros y disponibilidad.",
+          "short": "Mapa, filtros y reseñas",
+          "body": "Buscar profesionales te permite encontrar opciones por servicio y ubicación, con mapa, filtros y reseñas.",
           "steps": [
             "Escribe el servicio y la ubicación o usa tu ubicación actual.",
             "Usa Buscar en esta zona cuando muevas el mapa.",
@@ -2584,7 +2584,7 @@
     "bDoneEmpty": "Todavía no tienes citas finalizadas",
     "bDoneEmptySub": "Aquí quedan las citas que ya pasaron y las reseñas que puedes dejar.",
     "pActiveEmpty": "No tienes proyectos activos",
-    "pActiveEmptySub": "Publica lo que necesitas y recibe propuestas de profesionales de tu zona.",
+    "pActiveEmptySub": "Publica lo que necesitas y los profesionales de tu zona te escriben por WhatsApp desde la publicación.",
     "pDoneEmpty": "Todavía no hay proyectos finalizados",
     "pDoneEmptySub": "Aquí quedan los proyectos que ya resolviste o cancelaste.",
     "hiredTitle": "Quien hizo el trabajo",
@@ -4156,7 +4156,7 @@
     "body": "Solo lo tuyo: mensajes, citas, proyectos y reseñas. Nada más.",
     "reason": {
       "messages": "Mensajes en cuanto te escriban",
-      "bookings": "Citas, propuestas y cotizaciones",
+      "bookings": "Proyectos nuevos y cotizaciones",
       "reviews": "Reseñas y avisos de tu cuenta"
     },
     "card": {

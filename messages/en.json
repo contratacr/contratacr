@@ -1620,7 +1620,7 @@
         ]
       },
       "providerNoteTitle": "If you are a professional:",
-      "providerNoteBody": "As a professional, you can also use the client panel with the same account.",
+      "providerNoteBody": "With the same account you can offer your services and hire others: one dashboard for both.",
       "clientNoteTitle": "If you only use ContrataCR as a client:",
       "clientNoteBody": "The professional guides stay available if you later want to offer services or post jobs or promotions.",
       "activateProfessionalCta": "Create professional profile",
@@ -1726,8 +1726,8 @@
         },
         "searchServices": {
           "title": "Find professionals",
-          "short": "Map, filters and availability",
-          "body": "Find professionals by service and location with a map, filters and availability.",
+          "short": "Map, filters and reviews",
+          "body": "Find professionals lets you search options by service and location, with a map, filters and reviews.",
           "steps": [
             "Type the service and location or use your current location.",
             "Use Search this area when you move the map.",
@@ -2584,7 +2584,7 @@
     "bDoneEmpty": "No finished appointments yet",
     "bDoneEmptySub": "Past appointments stay here, along with the reviews you can leave.",
     "pActiveEmpty": "No active projects",
-    "pActiveEmptySub": "Post what you need and get proposals from professionals in your area.",
+    "pActiveEmptySub": "Post what you need and professionals in your area message you on WhatsApp straight from the post.",
     "pDoneEmpty": "No finished projects yet",
     "pDoneEmptySub": "Projects you resolved or cancelled stay here.",
     "hiredTitle": "Who did the work",
@@ -4156,7 +4156,7 @@
     "body": "Only what's yours: messages, bookings, projects and reviews. Nothing else.",
     "reason": {
       "messages": "Messages the moment they write",
-      "bookings": "Bookings, proposals and quotes",
+      "bookings": "New projects and quotes",
       "reviews": "Reviews and account notices"
     },
     "card": {

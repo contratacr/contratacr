@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { PushNotifications, type Token } from "@capacitor/push-notifications";
 import { Capacitor } from "@capacitor/core";
-import { Bell, BellRing, CalendarCheck, CheckCircle2, MessageCircle, Settings, Star } from "lucide-react";
+import { Bell, BellRing, FileText, CheckCircle2, MessageCircle, Settings, Star } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { EVENTO_MOMENTO_AVISO, type MotivoDeAviso } from "@/lib/push-moment";
@@ -502,7 +502,7 @@ export function PushTokenManager() {
           <ul className="mx-auto mt-4 flex max-w-[21rem] flex-col gap-2">
             {[
               { Icono: MessageCircle, texto: t("reason.messages") },
-              { Icono: CalendarCheck, texto: t("reason.bookings") },
+              { Icono: FileText, texto: t("reason.bookings") },
               { Icono: Star, texto: t("reason.reviews") },
             ].map(({ Icono, texto }) => (
               <li key={texto} className="flex items-center gap-2.5 text-[13.5px] font-medium text-[#334155]">
