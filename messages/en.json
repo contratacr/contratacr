@@ -389,8 +389,8 @@
     "wholeCountryTag": "National coverage",
     "addedPlaces": "Added places ({count})",
     "removePlace": "Remove place",
-    "todoElPaisTitulo": "I travel anywhere in the country",
-    "todoElPaisAyuda": "Adds to your areas: you also show up in other provinces."
+    "todoElPaisTitulo": "I do home service anywhere in the country",
+    "todoElPaisAyuda": "Besides your own areas, you show up in searches in any province."
   },
   "reviewModal": {
     "titleEdit": "Edit your review",

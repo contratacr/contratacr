@@ -315,7 +315,7 @@ export function MarketplaceSearch({
 
   return (
     <div ref={rootRef} className="relative min-w-0 flex-1">
-      <div className="flex h-11 w-full items-center gap-3 rounded-[10px] border border-[#e5e7eb] bg-white px-4 transition-colors focus-within:border-[#009FD9]">
+      <div className="flex h-11 w-full items-center gap-3 rounded-[10px] border border-[#e5e7eb] bg-white px-4 transition-colors focus-within:ring-2 focus-within:ring-[#009FD9]/20">
         <Search className="h-5 w-5 shrink-0 text-[#162543]" />
         <div className="relative min-w-0 flex-[1.85]">
           <input
