@@ -1849,26 +1849,34 @@ export const CATEGORIES = ALL_CATEGORIES.map(({ id, keywords }) => ({
    un nombre, así que para entonces el registro ya está lleno.
    En silencio: todavía no hay nadie suscrito, y no hay a quién avisar. */
 let catalogoDeArranqueEnTexto: string | null = null;
-if (typeof document !== "undefined") {
+
+/** Mete en ESTE registro el catálogo que venga en texto. Es idempotente: con el
+ *  mismo texto no vuelve a instalar nada. Lo usan los dos arranques —el del
+ *  navegador (abajo) y el del render del servidor en la capa de cliente
+ *  (`components/util/catalogo-del-servidor.tsx`)— para que los dos lados
+ *  escriban exactamente los mismos nombres. */
+export function instalarCatalogoDesdeTexto(texto: string | null | undefined, silencioso = true): void {
+  if (!texto || texto === catalogoDeArranqueEnTexto) return;
   try {
-    const crudo = document.getElementById("ccr-catalogo")?.textContent;
-    if (crudo) {
-      const d = JSON.parse(crudo) as { categoryFlags?: unknown; categories?: unknown; groups?: unknown };
-      if (Array.isArray(d.categoryFlags)) setCategoryFeatureOverrides(d.categoryFlags as Parameters<typeof setCategoryFeatureOverrides>[0], true);
-      if (Array.isArray(d.categories)) {
-        setCustomCategories(
-          d.categories as Parameters<typeof setCustomCategories>[0],
-          (Array.isArray(d.groups) ? d.groups : []) as Parameters<typeof setCustomCategories>[1],
-          true,
-        );
-      }
-      // Vuelto a texto, es idéntico al cuerpo de /api/categories/approved: la
-      // revalidación posterior lo reconoce por igualdad y no reinstala nada.
-      catalogoDeArranqueEnTexto = JSON.stringify(d);
+    const d = JSON.parse(texto) as { categoryFlags?: unknown; categories?: unknown; groups?: unknown };
+    if (Array.isArray(d.categoryFlags)) setCategoryFeatureOverrides(d.categoryFlags as Parameters<typeof setCategoryFeatureOverrides>[0], silencioso);
+    if (Array.isArray(d.categories)) {
+      setCustomCategories(
+        d.categories as Parameters<typeof setCustomCategories>[0],
+        (Array.isArray(d.groups) ? d.groups : []) as Parameters<typeof setCustomCategories>[1],
+        silencioso,
+      );
     }
+    // Vuelto a texto, es idéntico al cuerpo de /api/categories/approved: la
+    // revalidación posterior lo reconoce por igualdad y no reinstala nada.
+    catalogoDeArranqueEnTexto = JSON.stringify(d);
   } catch {
     // Sin catálogo de arranque todo sigue como antes: lo completa la red.
   }
+}
+
+if (typeof document !== "undefined") {
+  instalarCatalogoDesdeTexto(document.getElementById("ccr-catalogo")?.textContent);
 }
 
 /** El catálogo con el que arrancó esta página, en texto (o null). */

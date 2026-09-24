@@ -310,16 +310,16 @@ test.describe("@mobile native shell contracts", () => {
     expect(pageErrors, pageErrors.join("\n")).toEqual([]);
   });
 
-  // PENDIENTE (a64243cb): la portada tira un error #418 de hidratación en
-  // producción. No se ve en pantalla —React re-pinta y sigue— pero es real.
-  // Ya se corrigió un causante: el titular rotatorio mandaba la palabra partida
-  // en letras y la rotación se adelantaba a la hidratación. Queda otro.
-  //
-  // Lo que se sabe: pasa en `/es`, SOLO con la compilación de producción, y no
-  // se reproduce en local —ni en desarrollo, ni con `next start`, ni forzando
-  // zonas horarias—. React en producción no entrega el stack del componente,
-  // así que hace falta otra vía para identificarlo.
-  test.fixme("la portada no debe romper la hidratación", async ({ page }) => {
+  // La portada tiraba un error #418 de hidratación SOLO en producción. Causa:
+  // el carrusel de servicios es un componente de cliente, y un componente de
+  // cliente se pre-renderiza en OTRA capa de módulos, donde el registro de
+  // servicios va vacío —el cargador del servidor solo llena el suyo—. El
+  // servidor pintaba el nombre fijo del código («Nutrición y dietética») y el
+  // navegador, que sí lee el catálogo del documento antes de hidratar, el de la
+  // base («Nutrición»). Por eso no se reproducía en local: sin base a mano el
+  // catálogo sale vacío y los dos lados coinciden por casualidad. Lo instala
+  // ahora `components/util/catalogo-del-servidor.tsx` en las dos capas.
+  test("la portada no debe romper la hidratación", async ({ page }) => {
     const errores: string[] = [];
     page.on("pageerror", (error) => errores.push(error.message));
     await gotoOK(page, "/es");

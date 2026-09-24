@@ -1,7 +1,9 @@
 import { Suspense, type ReactNode } from "react";
+import type { Viewport } from "next";
 import { cookies, headers } from "next/headers";
 import { Inter } from "next/font/google";
 import { NativeDebugLogger } from "@/components/mobile/native-debug-logger";
+import { CatalogoDelServidor } from "@/components/util/catalogo-del-servidor";
 import { NATIVE_ONBOARDING_COMPLETED_KEY } from "@/lib/mobile-onboarding";
 import { catalogoParaElCliente } from "@/lib/data/server-category-catalog";
 import "./globals.css";
@@ -19,6 +21,27 @@ const inter = Inter({
 // (scripts/check-text-encoding.mjs) la toma por un texto dañado y no deja ni
 // arrancar el servidor ni compilar.
 const MENOR_QUE_ESCAPADO = `${String.fromCharCode(92)}u003c`;
+
+// EL VIEWPORT VIVE AQUÍ Y EN UN SOLO LUGAR. Estaba escrito dos veces —a mano
+// en este <head> y como `export const viewport` del layout de [locale]—, así
+// que el HTML salía con DOS <meta name="viewport">, y el segundo (el de a mano)
+// no llevaba `interactive-widget`: el navegador leía dos declaraciones que no
+// decían lo mismo. Se escribía a mano porque Next lo ponía después de un script
+// síncrono y WebKit hacía el primer layout con el viewport por defecto (568 pt,
+// la página a escala 1.68x que se reacomodaba: el parpadeo del arranque en la
+// app); hoy Next lo emite de primero, antes de todos los scripts —verificado en
+// el HTML de producción—, así que la copia a mano sobra. Y al vivir en el layout
+// RAÍZ cubre también las pantallas de fuera de [locale] (la raíz y el 404), que
+// con el export en [locale] se quedaban sin viewport.
+// viewport-fit=cover expone los valores de env(safe-area-inset-*) que usa el
+// mapa de la búsqueda en teléfonos con muesca o barra de inicio.
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  themeColor: "#ffffff",
+  interactiveWidget: "resizes-content",
+  viewportFit: "cover",
+};
 
 export default async function RootLayout({ children }: { children: ReactNode }) {
   // La app nativa se reconoce por su cookie ya EN EL SERVIDOR: las clases del
@@ -42,11 +65,6 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
       suppressHydrationWarning
     >
       <head>
-        {/* PRIMERO el viewport, antes de cualquier script síncrono: WebKit hace
-            el primer layout al toparse con el script, y si el meta aún no llegó
-            usa el viewport por defecto (568pt) — la página pintaba a escala
-            1.68x y se reacomodaba después: el parpadeo del arranque en la app. */}
-        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
         {/* LA FRANJA DE ACCIONES, escrita aquí y no en la hoja de estilos.
             Se rompió una y otra vez por lo mismo: su relleno dependía de clases
             de Tailwind recién agregadas, y en desarrollo esas clases NO llegan
@@ -406,6 +424,10 @@ body:has(.ccr-error-screen) .ccr-navbar-spacer{display:none}
             __html: `try{if(/^\\/(es|en)?\\/?$/.test(window.location.pathname)){document.documentElement.classList.add("ccr-ruta-portada")}}catch(e){}try{if(/^\\/(?:es|en)?\\/?(?:buscar|empleos|promociones|proyectos)\\/?$/.test(window.location.pathname)){document.documentElement.classList.add("ccr-ruta-sin-desplazar")}}catch(e){}try{if(document.documentElement.classList.contains("ccr-native-app")){document.body.classList.add("ccr-native-app");var r=window.location.pathname;if(!/(^|\\/)(publicar-proyecto|(empleos|promociones)\\/publicar)(\\/|$)/.test(r)){document.documentElement.classList.add("ccr-native-bottom-nav-visible");document.body.classList.add("ccr-native-bottom-nav-visible")}if(/(^|\\/)buscar(\\/|$)/.test(r)){document.documentElement.classList.add("ccr-native-search-route");document.body.classList.add("ccr-native-search-route")}}}catch(e){}`,
           }}
         />
+        {/* El mismo catálogo, instalado también en la capa de módulos de los
+            componentes de cliente: sin esto sus nombres los pintaba el servidor
+            con el texto fijo del código y el navegador con el de la base. */}
+        <CatalogoDelServidor texto={catalogoEnTexto} />
         <StaticNativeFirstRunPrepaint />
         <NativeDebugLogger />
         <Suspense fallback={<InitialRouteLoading />}>

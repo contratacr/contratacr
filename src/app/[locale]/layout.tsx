@@ -1,4 +1,4 @@
-import type { Metadata, Viewport } from "next";
+import type { Metadata } from "next";
 import { Suspense } from "react";
 import { getMessages } from "next-intl/server";
 import { notFound } from "next/navigation";
@@ -98,16 +98,6 @@ export async function generateMetadata({ params }: LocaleParams): Promise<Metada
   const { locale } = await params;
   return buildMetadata(locale);
 }
-
-// viewport-fit=cover exposes the env(safe-area-inset-*) values used by the
-// search map on notched / home-bar devices.
-export const viewport: Viewport = {
-  width: "device-width",
-  initialScale: 1,
-  themeColor: "#ffffff",
-  interactiveWidget: "resizes-content",
-  viewportFit: "cover",
-};
 
 export default async function LocaleLayout({
   children,

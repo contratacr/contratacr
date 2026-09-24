@@ -26,10 +26,18 @@ async function pickSelectMenu(page: Page, label: RegExp, option: RegExp) {
 async function openOwnerEditor(page: Page, label: string, editPath: RegExp, boton: string | RegExp = label) {
   await page.getByRole("button", { name: boton }).or(page.getByRole("link", { name: boton })).filter({ visible: true }).first().click();
   const dialog = page.getByRole("dialog").filter({ hasText: label });
-  const inDialog = await dialog.isVisible({ timeout: 4_000 }).catch(() => false);
-  if (inDialog) return dialog;
-  await page.waitForURL(editPath, { waitUntil: "domcontentloaded" });
-  return page.locator("main");
+  // `isVisible()` NO espera: la opción `timeout` que llevaba aquí se ignora y
+  // la respuesta es inmediata. En computadora el editor abre en una ventana y
+  // no navega, así que si la ventana todavía no estaba pintada en ese mismo
+  // instante la prueba se iba a esperar una navegación que nunca pasa y moría a
+  // los 30 s. Se espera de verdad, y a lo que ocurra primero: la ventana o la
+  // página de edición.
+  const abierto = await Promise.race([
+    dialog.waitFor({ state: "visible", timeout: 30_000 }).then(() => "ventana" as const).catch(() => null),
+    page.waitForURL(editPath, { waitUntil: "domcontentloaded", timeout: 30_000 }).then(() => "pagina" as const).catch(() => null),
+  ]);
+  expect(abierto, `el editor «${label}» no abrió ni como ventana ni como página`).toBeTruthy();
+  return abierto === "ventana" ? dialog : page.locator("main");
 }
 
 // After a save the detail is re-rendered on the server; CI runners can take
@@ -58,6 +66,28 @@ async function chooseItemAction(card: ReturnType<Page["locator"]>, label: RegExp
 }
 
 const LOCAL_STACK = process.env.LOCAL_REGRESSION_SEED === "1";
+
+/** ¿Hay dónde subir una imagen en este entorno?
+ *
+ *  La promoción exige imagen, así que esta prueba solo puede pasar por el
+ *  formulario real donde `/api/upload/photo` funcione. Antes eso se decidía con
+ *  `LOCAL_REGRESSION_SEED`, una variable que SOLO pone el flujo de CI: en la
+ *  máquina de quien desarrolla la prueba tomaba el camino del formulario, la
+ *  subida respondía 503 y fallaba siempre —un rojo permanente que no decía nada
+ *  del código—. Ahora se le pregunta al entorno en vez de adivinar. */
+async function hayServidorDeImagenes(page: Page): Promise<boolean> {
+  const estado = await page.evaluate(async () => {
+    try {
+      const res = await fetch("/api/upload/photo", { method: "POST", body: new FormData() });
+      return res.status;
+    } catch {
+      return 0;
+    }
+  });
+  // 503 = sin Cloudinary/R2 configurados. Cualquier otra respuesta (400 por
+  // venir sin archivo, 401 por sesión) significa que la ruta sí puede subir.
+  return estado !== 503 && estado !== 0;
+}
 
 async function createOfferThroughApi(page: Page, title: string) {
   const admin = regressionAdminClient();
@@ -136,11 +166,12 @@ test.describe("@seeded marketplace editors through the real screens", () => {
     test.slow();
     await loginAs(page, E2E_USERS.professional.email, E2E_USERS.professional.password);
 
-    if (LOCAL_STACK) {
-      // The runner's local stack has no image host (/api/upload/photo answers
-      // 503), and an offer requires an image, so the offer starts through the
-      // API with one of Redes Bahía' existing images. The form with a real
-      // upload is exercised by the mobile workflow against the test project.
+    if (LOCAL_STACK || !(await hayServidorDeImagenes(page))) {
+      // Sin servidor de imágenes (/api/upload/photo responde 503) la promoción
+      // no se puede crear desde el formulario, porque exige imagen: se siembra
+      // por la API con una de las imágenes que ya tiene Redes Bahía. El
+      // formulario con subida real lo ejercita el flujo móvil contra el
+      // proyecto de prueba.
       created.offerId = await createOfferThroughApi(page, offerTitle);
       await gotoOK(page, `/es/promociones/${created.offerId}`);
     } else {
