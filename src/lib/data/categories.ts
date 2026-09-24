@@ -1,3 +1,4 @@
+import { idDesdeDireccion } from "@/lib/data/category-slug";
 import { hasBrokenVisibleText, repairVisibleText } from "@/lib/text/repair-visible-text";
 
 export type CategoryItem = {
@@ -1698,6 +1699,24 @@ export function getCategoryLabel(id: string, locale?: string): string {
     .replace(/^sg_/, "")
     .replace(/_/g, " ")
     .replace(/^\w/, (c) => c.toUpperCase()));
+}
+
+/** La dirección pública de un servicio y su vuelta: viven en
+ *  `lib/data/category-slug.ts` (sin dependencias) para que el middleware pueda
+ *  usarlas sin arrastrar el catálogo entero al borde. */
+export { categorySlug } from "@/lib/data/category-slug";
+
+/** El identificador a partir de lo que venga en la dirección, ya comprobado
+ *  contra el catálogo. Acepta la dirección nueva («aire-acondicionado») y
+ *  también la llave tal cual («aire_acondicionado»), porque las direcciones
+ *  viejas siguen llegando de Google y de enlaces ya compartidos. Devuelve null
+ *  si ese servicio no existe. */
+export function getCategoryIdBySlug(valor: string): string | null {
+  if (!valor) return null;
+  const existe = (id: string) => getAllCategories().some((c) => c.id === id);
+  if (existe(valor)) return valor;
+  const llave = idDesdeDireccion(valor);
+  return existe(llave) ? llave : null;
 }
 
 /* ─── Get category GROUP label from group ID (locale-aware) ─── */

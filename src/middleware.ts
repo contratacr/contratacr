@@ -1,4 +1,5 @@
 import { createServerClient } from "@supabase/ssr";
+import { categorySlug, idDesdeDireccion } from "@/lib/data/category-slug";
 import { getProvinceById } from "@/lib/data/cr-geography";
 import { RUTAS_DEL_SITIO } from "@/lib/site-routes";
 import createIntlMiddleware from "next-intl/middleware";
@@ -168,11 +169,22 @@ export async function middleware(request: NextRequest) {
   // estáticamente, así que un redirect en el componente no se ejecuta; y en
   // OpenNext/Cloudflare el middleware corre primero y se traga lo que devuelva
   // la página (ver el comentario de `next.config`).
-  const oficioProvincia = /^\/(es|en)\/servicios\/([a-z0-9_]+)\/([a-z]{2})\/?$/i.exec(pathname);
-  if (oficioProvincia) {
-    const provincia = getProvinceById(oficioProvincia[3].toLowerCase());
-    if (provincia) {
-      const destino = new URL(`/${oficioProvincia[1]}/servicios/${oficioProvincia[2]}/${provincia.slug}`, request.url);
+  //
+  // La misma regla arregla las DOS mitades de la dirección de un oficio, y en
+  // un solo salto: el servicio con guiones en vez de guion bajo (Google separa
+  // palabras por guion; el guion bajo las pega, así que leía
+  // «aireacondicionado») y la provincia por su nombre en vez de su código. En
+  // dos reglas encadenadas habría dos 308 seguidos para la misma dirección.
+  const oficio = /^\/(es|en)\/servicios\/([a-z0-9_-]+)(?:\/([a-z-]{2,}))?\/?$/i.exec(pathname);
+  if (oficio) {
+    const servicioPedido = oficio[2];
+    const provinciaPedida = oficio[3];
+    const servicioBueno = categorySlug(idDesdeDireccion(servicioPedido));
+    const provincia = provinciaPedida ? getProvinceById(provinciaPedida.toLowerCase()) : null;
+    const provinciaBuena = provincia ? provincia.slug : provinciaPedida;
+    if (servicioBueno !== servicioPedido || provinciaBuena !== provinciaPedida) {
+      const cola = provinciaBuena ? `/${provinciaBuena}` : "";
+      const destino = new URL(`/${oficio[1]}/servicios/${servicioBueno}${cola}`, request.url);
       destino.search = request.nextUrl.search;
       return NextResponse.redirect(destino, 308);
     }

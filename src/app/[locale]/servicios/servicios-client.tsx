@@ -15,7 +15,7 @@ import { Link, useRouter } from "@/i18n/navigation";
 import { avisarCambioDeCatalogo, instalarCatalogoDelServidor, useCustomCategories } from "@/lib/data/use-custom-categories";
 import { useNativeApp } from "@/hooks/use-native-app";
 import { useAuth } from "@/hooks/use-auth";
-import { categorySearchScore, getAllCategories, getAllCategoryGroups, getCategoryGroupLabel, getCategoryLabel, isOtherCategoryGroup, normalizeText, searchCategories, getCategoryGroupId } from "@/lib/data/categories";
+import { categorySlug, categorySearchScore, getAllCategories, getAllCategoryGroups, getCategoryGroupLabel, getCategoryLabel, isOtherCategoryGroup, normalizeText, searchCategories, getCategoryGroupId } from "@/lib/data/categories";
 import { getCategoryGroupIcon } from "@/lib/data/category-group-visuals";
 import {
   ArrowLeft,
@@ -288,7 +288,7 @@ export function ServiciosClient({ catalogoInicial }: { catalogoInicial: string |
               {searchResults.map(({ id, groupLabel }) => {
                 const IconoFamilia = getCategoryGroupIcon(getCategoryGroupId(id));
                 return (
-                <Link key={id} href={`/servicios/${id}`} className="flex min-h-[62px] items-center justify-between gap-3 border-b border-[#d7e1ea] px-4 py-3 last:border-b-0">
+                <Link key={id} href={`/servicios/${categorySlug(id)}`} className="flex min-h-[62px] items-center justify-between gap-3 border-b border-[#d7e1ea] px-4 py-3 last:border-b-0">
                   <IconoFamilia className="h-5 w-5 shrink-0 text-[#64748b]" />
                   <span className="min-w-0 flex-1">
                     <span className="block text-[16px] font-extrabold leading-tight text-[#162543] [overflow-wrap:anywhere]">
@@ -313,7 +313,7 @@ export function ServiciosClient({ catalogoInicial }: { catalogoInicial: string |
                 {locale === "en" ? `All ${mobileGroup.label} services` : `Todos los servicios de ${mobileGroup.label}`}
               </Link>
               {mobileGroup.visibleIds.map((id) => (
-                <Link key={id} href={`/servicios/${id}`} className="flex min-h-[62px] items-center border-b border-[#d7e1ea] px-4 py-3 last:border-b-0">
+                <Link key={id} href={`/servicios/${categorySlug(id)}`} className="flex min-h-[62px] items-center border-b border-[#d7e1ea] px-4 py-3 last:border-b-0">
                   <span className="min-w-0 text-[16px] font-extrabold leading-tight text-[#162543] [overflow-wrap:anywhere]">
                     {getCategoryLabel(id, locale)}
                   </span>
@@ -414,7 +414,7 @@ export function ServiciosClient({ catalogoInicial }: { catalogoInicial: string |
                     {searchResults.map(({ id, groupLabel }) => (
                       <Link
                         key={id}
-                        href={`/servicios/${id}`}
+                        href={`/servicios/${categorySlug(id)}`}
                         className="group flex min-h-12 items-center justify-between gap-2 rounded-xl px-3 py-2 text-sm font-semibold leading-snug text-[#374151] transition-colors hover:bg-[#EBF5FB] hover:text-[#0089bb]"
                       >
                         <span className="min-w-0">
@@ -486,7 +486,7 @@ export function ServiciosClient({ catalogoInicial }: { catalogoInicial: string |
                         {activeGroup.ids.map((id) => (
                           <Link
                             key={id}
-                            href={`/servicios/${id}`}
+                            href={`/servicios/${categorySlug(id)}`}
                             className="group flex min-h-10 items-center justify-between gap-2 rounded-xl px-3 py-2 text-sm font-semibold leading-snug text-[#374151] transition-colors hover:bg-[#EBF5FB] hover:text-[#0089bb]"
                           >
                             <span className="min-w-0 [overflow-wrap:anywhere]">

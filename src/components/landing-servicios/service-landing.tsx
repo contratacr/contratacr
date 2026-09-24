@@ -5,7 +5,7 @@ import { LandingNavbar } from "@/components/landing/landing-navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { VerifiedSeal } from "@/components/ui/verified-seal";
 import { Star, MapPin, ArrowRight } from "lucide-react";
-import { getCategoryLabel } from "@/lib/data/categories";
+import { categorySlug, getCategoryLabel } from "@/lib/data/categories";
 import { PROVINCES, getProvinceById } from "@/lib/data/cr-geography";
 import { searchProfessionals } from "@/lib/queries/professionals";
 import { getSupplyCounts, supplyKey, MIN_SUPPLY_FOR_LANDING } from "@/lib/queries/supply";
@@ -78,9 +78,9 @@ export async function ServiceLanding({ locale, categoryId, provinceId }: { local
               <div className="mt-5">
                 <p className="mb-2 text-[12px] font-bold uppercase tracking-wide text-[#68778d]">{t("whereLabel")}</p>
                 <Carril className="scrollbar-none -mx-4 flex gap-2 overflow-x-auto px-4 sm:mx-0 sm:flex-wrap sm:px-0">
-                  <Link href={`/servicios/${categoryId}`} className={chip(!province)}>{t("allCountry")}</Link>
+                  <Link href={`/servicios/${categorySlug(categoryId)}`} className={chip(!province)}>{t("allCountry")}</Link>
                   {provincesWithSupply.map((p) => (
-                    <Link key={p.id} href={`/servicios/${categoryId}/${p.slug}`} className={chip(province?.id === p.id)}>{p.name}</Link>
+                    <Link key={p.id} href={`/servicios/${categorySlug(categoryId)}/${p.slug}`} className={chip(province?.id === p.id)}>{p.name}</Link>
                   ))}
                 </Carril>
               </div>
@@ -99,7 +99,7 @@ export async function ServiceLanding({ locale, categoryId, provinceId }: { local
                 return (
                   <Link
                     key={pro.id}
-                    href={`/profesionales/${pro.slug}?from=${encodeURIComponent(`/servicios/${categoryId}${province ? `/${province.slug}` : ""}`)}`}
+                    href={`/profesionales/${pro.slug}?from=${encodeURIComponent(`/servicios/${categorySlug(categoryId)}${province ? `/${province.slug}` : ""}`)}`}
                     className={`flex items-center gap-3 px-4 py-3.5 transition-colors hover:bg-[#f8fafc] ${i > 0 ? "border-t border-[#eef2f6]" : ""}`}
                   >
                     <span className="grid h-14 w-14 shrink-0 place-items-center overflow-hidden rounded-full text-base font-bold ccr-caja-icono">
@@ -177,7 +177,7 @@ export async function ServiceLanding({ locale, categoryId, provinceId }: { local
               <p className="mt-6 flex flex-wrap items-center gap-x-2 gap-y-1 text-[13px] text-[#68778d]">
                 <span>{t("otherPlaces")}</span>
                 {provincesWithSupply.filter((p) => p.id !== province?.id).map((p) => (
-                  <Link key={p.id} href={`/servicios/${categoryId}/${p.slug}`} className="font-semibold text-[#0089bb] hover:underline">{p.name}</Link>
+                  <Link key={p.id} href={`/servicios/${categorySlug(categoryId)}/${p.slug}`} className="font-semibold text-[#0089bb] hover:underline">{p.name}</Link>
                 ))}
               </p>
             )}

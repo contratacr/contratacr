@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { getAllCategories } from "@/lib/data/categories";
+import { categorySlug, getAllCategories } from "@/lib/data/categories";
 import { PROVINCES } from "@/lib/data/cr-geography";
 import { getSupplyCounts, supplyKey, MIN_SUPPLY_FOR_LANDING } from "@/lib/queries/supply";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -51,10 +51,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   for (const cat of getAllCategories()) {
     if ((supply.byCategory[supplyKey(cat.id)] ?? 0) < MIN_SUPPLY_FOR_LANDING) continue;
-    for (const l of IDIOMAS) out.push({ url: `${APP_URL}/${l}/servicios/${cat.id}`, lastModified: ultimoCambio, changeFrequency: "weekly", priority: 0.9 });
+    for (const l of IDIOMAS) out.push({ url: `${APP_URL}/${l}/servicios/${categorySlug(cat.id)}`, lastModified: ultimoCambio, changeFrequency: "weekly", priority: 0.9 });
     for (const prov of PROVINCES) {
       if ((supply.byCategoryProvince[supplyKey(cat.id, prov.id)] ?? 0) < MIN_SUPPLY_FOR_LANDING) continue;
-      for (const l of IDIOMAS) out.push({ url: `${APP_URL}/${l}/servicios/${cat.id}/${prov.slug}`, lastModified: ultimoCambio, changeFrequency: "weekly", priority: 0.8 });
+      for (const l of IDIOMAS) out.push({ url: `${APP_URL}/${l}/servicios/${categorySlug(cat.id)}/${prov.slug}`, lastModified: ultimoCambio, changeFrequency: "weekly", priority: 0.8 });
     }
   }
 

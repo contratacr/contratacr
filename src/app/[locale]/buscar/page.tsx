@@ -12,7 +12,7 @@ import { ProfessionalCard } from "@/components/professionals/professional-card";
 import { SaveableCard } from "@/components/professionals/save-button";
 import type { ProService } from "@/lib/queries/professionals";
 import { primaryPricingLabel } from "@/lib/pricing";
-import { getAllCategories, getAllCategoryGroups, getCategoryGroupLabel, getCategoryLabel, isHealthCategory, normalizeText, supportsVideoConsultCategory } from "@/lib/data/categories";
+import { categorySlug, getAllCategories, getAllCategoryGroups, getCategoryGroupLabel, getCategoryLabel, isHealthCategory, normalizeText, supportsVideoConsultCategory } from "@/lib/data/categories";
 import { haversineKm, PROVINCES } from "@/lib/data/cr-geography";
 import { SearchResultsLayout } from "@/components/search/search-results-layout";
 import { SearchResultsInfinite } from "@/components/search/search-results-infinite";
@@ -124,7 +124,11 @@ export async function generateMetadata({ searchParams }: { searchParams: Promise
   const social = imagenSocial(locale);
   const compartir = { title, description, openGraph: { title, description, ...social.openGraph }, twitter: { title, description, ...social.twitter } };
   if (!indexable) return { ...compartir, robots: { index: false, follow: true } };
-  return { ...compartir, alternates: { canonical: `/${locale}/servicios/${categoria}${provincia ? `/${provincia.id}` : ""}` } };
+  // El canónico tiene que apuntar a la dirección REAL de la página del oficio:
+  // con el servicio en guiones y la provincia por su nombre. Con la llave de la
+  // base («aire_acondicionado», «sj») apuntaba a una dirección que responde 308,
+  // y un canónico que redirige es un canónico que Google descarta.
+  return { ...compartir, alternates: { canonical: `/${locale}/servicios/${categorySlug(categoria)}${provincia ? `/${provincia.slug}` : ""}` } };
 }
 
 export default async function SearchPage({ searchParams }: SearchPageProps) {
