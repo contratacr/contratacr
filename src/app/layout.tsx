@@ -1,4 +1,4 @@
-import { Suspense, type ReactNode } from "react";
+import type { ReactNode } from "react";
 import type { Viewport } from "next";
 import { cookies, headers } from "next/headers";
 import { Inter } from "next/font/google";
@@ -430,9 +430,15 @@ body:has(.ccr-error-screen) .ccr-navbar-spacer{display:none}
         <CatalogoDelServidor texto={catalogoEnTexto} />
         <StaticNativeFirstRunPrepaint />
         <NativeDebugLogger />
-        <Suspense fallback={<InitialRouteLoading />}>
-          {children}
-        </Suspense>
+        {/* SIN frontera de espera aquí. Con un <Suspense> encima de todas las
+            páginas la respuesta salía con estado 200 antes de que la página
+            pudiera decir que ese contenido no existe: las direcciones
+            inventadas respondían «todo bien» con un 404 dibujado (un falso 404,
+            de lo que peor le sienta a un sitio que pelea por indexarse). La
+            espera vive ahora en un `loading.tsx` por sección, solo en las
+            pantallas privadas que de verdad tardan. Ver
+            `components/util/lienzo-de-ruta.tsx`. */}
+        {children}
       </body>
     </html>
   );
@@ -470,14 +476,3 @@ function StaticNativeFirstRunPrepaint() {
   );
 }
 
-function InitialRouteLoading() {
-  // Ninguna espera muestra la marca: en la app la marca es del splash nativo y
-  // en la web el logotipo a pantalla completa se leía como una pantalla de carga
-  // más. Se pinta el lienzo con la barra y el contenido llega con esqueletos.
-  return (
-    <main className="ccr-page-route-loading fixed inset-0 z-[100000] bg-[#f4f7fa]" aria-busy="true" role="status">
-      <div className="h-16 bg-white shadow-[0_1px_0_#e5e7eb]" />
-      <span className="sr-only">Cargando...</span>
-    </main>
-  );
-}

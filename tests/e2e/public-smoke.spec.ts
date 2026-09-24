@@ -257,4 +257,32 @@ test.describe("@smoke public routes", () => {
       await expectHealthyPage(page);
     }
   });
+
+  // LO QUE NO EXISTE TIENE QUE DECIR QUE NO EXISTE.
+  //
+  // Con un `<Suspense>` encima de todas las páginas la respuesta salía con su
+  // estado —200— antes de que la página pudiera decir que ese contenido no
+  // está, así que una dirección inventada respondía «todo bien» mientras
+  // dibujaba un 404. Google lo llama falso 404 y le hace desconfiar del sitio
+  // entero. Se perdió en silencio durante meses porque en pantalla se veía
+  // bien: solo se nota mirando el ESTADO de la respuesta, que es justo lo que
+  // mide esta prueba.
+  test("una dirección que no existe responde 404, no 200", async ({ page }) => {
+    const inexistente = "00000000-0000-0000-0000-000000000000";
+    const casos: Array<[string, number]> = [
+      ["/es/pagina-que-no-existe-jamas", 404],
+      ["/es/servicios/oficio-que-no-existe", 404],
+      ["/es/servicios/electricidad/provincia-que-no-existe", 404],
+      [`/es/promociones/${inexistente}`, 404],
+      [`/es/empleos/${inexistente}`, 404],
+      [`/es/proyectos/${inexistente}`, 404],
+      // Y lo que sí existe sigue respondiendo que sí.
+      ["/es/servicios/electricidad", 200],
+      ["/es/servicios/electricidad/san-jose", 200],
+    ];
+    for (const [ruta, esperado] of casos) {
+      const respuesta = await page.request.get(ruta, { maxRedirects: 0 });
+      expect(respuesta.status(), `${ruta} debería responder ${esperado}`).toBe(esperado);
+    }
+  });
 });

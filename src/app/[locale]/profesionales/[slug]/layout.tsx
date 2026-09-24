@@ -30,7 +30,13 @@ export async function generateMetadata({ params }: ProfileLayoutProps): Promise<
     const description = isEn
       ? "Find and hire service professionals in Costa Rica."
       : "Encuentra y contrata profesionales de servicios en Costa Rica.";
-    return { title, description };
+    // NO se llama a `notFound()` a propósito. Esta consulta devuelve lo mismo
+    // —nada— cuando la ficha no existe y cuando la base no contestó, y la
+    // página se guarda cinco minutos: un fallo pasajero dejaría a un
+    // profesional de verdad respondiendo 404 durante cinco minutos, y eso a
+    // Google le cuesta mucho más que un falso 404 (el 19-sep un nodo se cayó
+    // así). Lo que sí se puede decir sin riesgo es que esto no se indexa.
+    return { title, description, robots: { index: false, follow: true } };
   }
 
   const displayName = pro.businessName?.trim() || proDisplayName(pro.fullName);
