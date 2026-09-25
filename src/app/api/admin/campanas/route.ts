@@ -20,7 +20,11 @@ const MAX_BODY = 4000;
  * transaccional el resto del día, que es mucho peor que tardar dos días en
  * mandarla. Con 200 queda un colchón de 100 para lo que sí es urgente.
  */
-const POR_TANDA = 200;
+// 250 por tanda: con la reserva de masivos en 50 caben en el tope diario de
+// Brevo (300 − 50), y con eso las 404 cuentas se terminan en dos tandas en vez
+// de tres. Si el app gastó correos ese día, la cuota corta sola y lo que no
+// salió queda pendiente para la siguiente.
+const POR_TANDA = 250;
 
 /** Entre una tanda y la siguiente: el tope del proveedor es por día natural. */
 
