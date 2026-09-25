@@ -23,6 +23,12 @@ type MessageLauncherProps = {
   initialMessage?: string;
   onSelfAction?: () => void;
   tone?: "primary" | "contrast" | "outline";
+  /**
+   * Qué hacer si el profesional no tiene la app. El chat vive solo en la app:
+   * escribirle a quien no la tiene es escribir a un pozo. Quien lo monta
+   * decide la salida (en la ficha, WhatsApp).
+   */
+  onUnreachable?: () => Promise<void> | void;
 };
 
 function buildDraftHref({
@@ -60,6 +66,7 @@ export function MessageLauncher(props: MessageLauncherProps) {
     initialMessage = "",
     onSelfAction,
     tone = "primary",
+    onUnreachable,
   } = props;
   const locale = useLocale();
   const isEn = locale === "en";
@@ -82,6 +89,17 @@ export function MessageLauncher(props: MessageLauncherProps) {
   async function abrirHilo(texto: string) {
     setLoading(true);
     try {
+      if (onUnreachable && professionalId) {
+        const estado = await fetch(`/api/direct-chat?reachable=${encodeURIComponent(professionalId)}`)
+          .then((r) => (r.ok ? r.json() : null))
+          .catch(() => null);
+        // Solo un «no» explícito desvía: si la consulta falla, el chat sigue
+        // siendo el camino y el aviso por correo hace el resto.
+        if (estado && estado.reachable === false) {
+          await onUnreachable();
+          return;
+        }
+      }
       const response = await fetch("/api/direct-chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },

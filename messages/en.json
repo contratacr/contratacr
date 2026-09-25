@@ -3843,6 +3843,11 @@
     "taken": "That time was just booked. Pick another time.",
     "error": "Couldn't reschedule. Please try again."
   },
+  "mensajesSoloApp": {
+    "titulo": "Messages live in the app",
+    "cuerpo": "ContrataCR messages are read and answered in the app. From the web you can write to any professional on WhatsApp from their profile.",
+    "accion": "Find professionals"
+  },
   "sectionTitles": {
     "messages": "Messages",
     "notifications": "Notifications",

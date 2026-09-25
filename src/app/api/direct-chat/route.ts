@@ -15,7 +15,8 @@ function isNativeRequest(req: Request) {
 }
 import { sendNotificationPush } from "@/lib/push/notify";
 import { brandedEmailDocument, sendBrevoEmail } from "@/lib/email/send";
-import { notifyRecipientOutsideApp, usersWithActivePush } from "@/lib/direct-chat/outside-app-notify";
+import { notifyRecipientOutsideApp, usersWithFreshPush } from "@/lib/direct-chat/outside-app-notify";
+import { drainPushOutbox } from "@/lib/push/worker";
 import { despuesDeResponder } from "@/lib/after-response";
 
 type ConversationRow = {
@@ -132,7 +133,7 @@ async function enrichConversations(db: ReturnType<typeof createAdminClient>, row
   const bookings = new Map((bookingsResult.data ?? []).map((row) => [row.id, row]));
   const projects = new Map((projectsResult.data ?? []).map((row) => [row.id, row]));
   const proposals = new Map((proposalsResult.data ?? []).map((row) => [row.id, row]));
-  const withPush = await usersWithActivePush(db, rows.flatMap((row) => [row.client_id, row.professional_profile_id]));
+  const withPush = await usersWithFreshPush(db, rows.flatMap((row) => [row.client_id, row.professional_profile_id]));
   return rows.map((row) => {
     const professionalHasApp = withPush.has(row.professional_profile_id);
     const joined = row.professionals as { whatsapp?: string | null } | null | undefined;
@@ -178,6 +179,17 @@ export async function GET(req: Request) {
   if (!user) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   const db = createAdminClient();
   const searchParams = new URL(req.url).searchParams;
+  // Antes de abrir un chat, la app pregunta si el profesional lo va a poder
+  // leer. Un mensaje a quien no tiene la app es un mensaje a un pozo: la web no
+  // lo muestra. Si no la tiene, el botón cae a WhatsApp.
+  const reachable = searchParams.get("reachable");
+  if (reachable) {
+    const { data: professional } = await db.from("professionals").select("profile_id").eq("id", reachable).maybeSingle();
+    const profileId = (professional as { profile_id?: string } | null)?.profile_id;
+    if (!profileId) return NextResponse.json({ reachable: false });
+    const fresh = await usersWithFreshPush(db, [profileId]);
+    return NextResponse.json({ reachable: fresh.has(profileId) });
+  }
   const id = searchParams.get("id");
   if (id) {
     const { data } = await db.from("direct_conversations")
@@ -447,6 +459,12 @@ export async function POST(req: Request) {
       proposal_id: conversation.proposal_id,
     },
   }), "direct-chat:push");
+  // El push de este mensaje ya está en la cola (lo encola un trigger al
+  // insertar el aviso). El cron la vacía cada 10 minutos; para un chat eso es
+  // una eternidad, así que se vacía AHORA. El trabajador reclama cada fila con
+  // un arriendo, de modo que pisarse con el cron no duplica envíos. Sin
+  // `PUSH_DELIVERY_ENABLED` no hace nada.
+  despuesDeResponder(drainPushOutbox({ limit: 10 }), "direct-chat:drain");
   // Push only lands on installed apps. Someone without one hears about the
   // first unread message by email (professionals also by WhatsApp); later
   // messages in the same unread run stay quiet so a long exchange is one notice.
@@ -454,9 +472,14 @@ export async function POST(req: Request) {
   const priorUnread = Number(
     (recipientIsProfessional ? conversation.professional_unread_count : conversation.client_unread_count) ?? 0,
   );
-  if (nativeRequest && priorUnread === 0) {
+  // Depende de QUIEN RECIBE, no de quien escribe. Antes exigía que el
+  // remitente viniera de la app: si escribía desde la web, al otro no le
+  // llegaba ni correo ni WhatsApp aunque no tuviera la app. La pregunta
+  // correcta es si el destinatario puede enterarse por push, y eso solo lo
+  // dice su token.
+  if (priorUnread === 0) {
     despuesDeResponder((async () => {
-      const reachable = await usersWithActivePush(db, [recipientId]);
+      const reachable = await usersWithFreshPush(db, [recipientId]);
       if (!reachable.has(recipientId)) {
         const [{ data: senderProfile }, { data: senderProfessional }] = await Promise.all([
           db.from("profiles").select("full_name").eq("id", user.id).maybeSingle(),

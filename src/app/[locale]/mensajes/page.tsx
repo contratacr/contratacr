@@ -1,40 +1,25 @@
-"use client";
-
-import { DirectChatInbox } from "@/components/dashboard/direct-chat-inbox";
-import { FooterSoloWeb } from "@/components/landing/footer-solo-web";
-import { LandingNavbar } from "@/components/landing/landing-navbar";
-import { SectionHeaderTitle } from "@/components/mobile/section-header-title";
-import { useTranslations } from "next-intl";
+import { cookies } from "next/headers";
+import { MensajesEnLaApp } from "./mensajes-en-la-app";
+import { MensajesSoloEnLaApp } from "./mensajes-solo-en-la-app";
 
 /**
- * Mensajes, en la app Y en la web.
+ * Mensajes: SOLO en la app. En la web, una pantalla que dice dónde están.
  *
- * Esta ruta respondía 404 fuera de la app nativa, y con eso quedaban dos
- * caminos rotos en la web: la notificación «Nuevo mensaje» —que apunta a
- * /mensajes?conversation=…— y el panel, que redirige aquí cuando le piden
- * ?tab=chat. Las dos puertas llevaban a «Página no encontrada», así que en la
- * web NO había forma de leer un mensaje recibido.
+ * Decisión de producto: el chat vive en la app nativa, y desde la web el
+ * contacto es WhatsApp. Pero un 404 aquí ya se probó y rompió tres puertas a
+ * la vez —la campana «Nuevo mensaje», el panel con `?tab=chat` y el correo de
+ * aviso— porque las tres traen a esta dirección. Quien recibía un mensaje veía
+ * «Página no encontrada» y nunca supo que le escribieron.
  *
- * Lo que sigue siendo de la app es el ICONO de Mensajes en la barra de arriba;
- * en la web se llega desde el menú, desde el panel y desde el aviso. La
- * pantalla ya traía su propio marco para la web (navbar y pie), solo estaba
- * apagada.
+ * Por eso la web no da 404: dice que el mensaje existe y que se lee en la app.
+ * No se lee ni se responde desde aquí; eso es lo que se quería.
+ *
+ * La app se reconoce por su cookie ya EN EL SERVIDOR, igual que el armazón
+ * (ver `src/app/layout.tsx`): así la pantalla correcta viaja pintada y no hay
+ * un cuadro de la otra. La pantalla web vuelve a mirar en el cliente por si la
+ * cookie aún no existe en el primer arranque de la app.
  */
-export default function MessagesPage() {
-  const tSeccion = useTranslations("sectionTitles");
-
-  return (
-    <div className="flex min-h-screen flex-col bg-[#f5f8fb]">
-      <LandingNavbar />
-      <SectionHeaderTitle title={tSeccion("messages")} fallbackHref="/" raiz />
-      <main data-messages-page-main className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-0 pb-0 pt-16 sm:px-6 sm:pb-12 sm:pt-24 lg:px-8">
-        <section data-messages-page-shell className="min-h-[calc(100dvh-4rem)] overflow-hidden bg-white shadow-sm sm:min-h-[680px] sm:rounded-2xl sm:border sm:border-[#e5e7eb]">
-          <DirectChatInbox />
-        </section>
-      </main>
-      <div className="hidden sm:block">
-        <FooterSoloWeb soloEscritorio />
-      </div>
-    </div>
-  );
+export default async function MessagesPage() {
+  const esApp = (await cookies()).get("ccr_platform")?.value === "native";
+  return esApp ? <MensajesEnLaApp /> : <MensajesSoloEnLaApp />;
 }

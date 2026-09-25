@@ -79,6 +79,7 @@ export function DirectChatLauncher({
         initialMessage={initialMessage}
         onSelfAction={onSelfAction}
         tone={tone}
+        onUnreachable={openChat}
       />
     );
   }
