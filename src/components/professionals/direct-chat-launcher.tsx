@@ -25,7 +25,7 @@ type DirectChatLauncherProps = {
   initialMessage?: string;
   onSelfAction?: () => void;
   tone?: "primary" | "contrast" | "outline";
-  analyticsSource?: "search" | "profile" | "profile_service" | "booking" | "favorites" | "unknown";
+  analyticsSource?: "search" | "profile" | "profile_service" | "booking" | "favorites" | "jobs" | "offers" | "unknown";
   /** Da forma al mensaje: "job" escribe el saludo de una postulación. */
   intent?: "job";
   /** La publicación desde la que se escribe: puede tener su propio WhatsApp. */

@@ -75,7 +75,7 @@ export function ContactButton({
       if (!res.ok || !href) { await showMessage({ title: professionalName, description: t("noContact") }); return; }
       trackMetaEvent("Contact", { content_type: "professional_service", method, source });
       trackInteraction({
-        type: method === "phone" ? "phone_click" : "external_link_click",
+        type: method === "phone" ? "phone_click" : "email_click",
         professionalId,
         source,
         locale,

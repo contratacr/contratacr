@@ -196,11 +196,10 @@ function Acquisition({ data }: { data: AdminAcquisition }) {
 }
 
 export function AdminAnalytics({ data }: { data: AdminReports }) {
-  const { users, pros, activity, support, insights } = data;
+  const { users, pros, support, insights } = data;
   const week = insights.week;
   const platformTotal = insights.platform.web + insights.platform.native;
   const nativeShare = pct(insights.platform.native, platformTotal);
-  const respRate = pct(activity.solicitudesResponded, activity.solicitudesTotal);
   const gateSince = insights.gateSince ? new Date(insights.gateSince).toLocaleDateString("es-CR", { day: "numeric", month: "short" }) : null;
   const pendingTickets = support.byStatus.filter((s) => s.label !== "Resuelto").reduce((sum, s) => sum + s.value, 0);
 
@@ -218,9 +217,8 @@ export function AdminAnalytics({ data }: { data: AdminReports }) {
           <Kpi label="Profesionales nuevos" data={week.pros} />
           <Kpi label="Clientes nuevos" data={week.clients} />
           <Kpi label="Búsquedas" data={week.searches} />
-          <Kpi label="Contactos" data={week.contacts} help="WhatsApp, llamadas, enlaces y citas iniciadas" />
-          <Kpi label="Citas y proyectos" data={week.requests} help="Citas reservadas y proyectos publicados por clientes" />
-          <Kpi label="Postulaciones" data={week.applications} help="Postulaciones a empleos" />
+          <Kpi label="Contactos" data={week.contacts} help="WhatsApp, llamadas y correos" />
+          <Kpi label="Proyectos publicados" data={week.requests} help="Proyectos que publicaron los clientes en el tablero" />
         </div>
       </Section>
 
@@ -252,7 +250,7 @@ export function AdminAnalytics({ data }: { data: AdminReports }) {
             { label: "Vistas de perfil", value: insights.funnel.profileViews, help: "Abrieron el perfil de un profesional" },
             { label: "Intentaron contactar", value: insights.funnel.contactAttempts, help: "Tocaron WhatsApp, llamar o correo — con cuenta o sin ella" },
             { label: "Contactaron", value: insights.funnel.contacts, help: "Ya con cuenta: el contacto se completó. La diferencia con el paso anterior es la gente que se detuvo en el registro" },
-            { label: "Citas y proyectos creados", value: insights.funnel.requests, help: "Reservaron una cita o publicaron un proyecto" },
+            { label: "Proyectos publicados", value: insights.funnel.requests, help: "Publicaron un proyecto en el tablero" },
           ]} />
           {insights.searchQuality.total > 0 && (
             <p className="mt-3 text-xs text-[#64748b]">
@@ -276,11 +274,6 @@ export function AdminAnalytics({ data }: { data: AdminReports }) {
           {gateSince && (
             <p className="mt-3 text-xs text-[#64748b]">
               Los intentos de contacto se registran desde el <strong className="text-[#0f172a]">{gateSince}</strong>; antes de esa fecha solo se contaban los contactos completados.
-            </p>
-          )}
-          {respRate != null && (
-            <p className="mt-4 text-xs text-[#64748b]">
-              Citas atendidas por profesionales: <strong className="text-[#0f172a]">{respRate}%</strong> <span className="text-[#94a3b8]">({fmt(activity.solicitudesResponded)} de {fmt(activity.solicitudesTotal)}, histórico)</span>
             </p>
           )}
         </Section>

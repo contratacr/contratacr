@@ -37,7 +37,7 @@ export type SearchQuality = {
   topEmpty: EmptySearch[];
 };
 export type AdminInsights = {
-  week: { pros: WeekCompare; clients: WeekCompare; searches: WeekCompare; requests: WeekCompare; contacts: WeekCompare; applications: WeekCompare };
+  week: { pros: WeekCompare; clients: WeekCompare; searches: WeekCompare; requests: WeekCompare; contacts: WeekCompare };
   funnel: { searches: number; profileViews: number; contactAttempts: number; contacts: number; requests: number };
   /** When contact_gate_shown started being recorded — before it, attempts are undercounted. */
   gateSince: string | null;
@@ -119,7 +119,7 @@ export async function getAdminReports(locale = "es"): Promise<AdminReports> {
 
   const empty: AdminReports = {
     insights: {
-      week: { pros: { now: 0, prev: 0 }, clients: { now: 0, prev: 0 }, searches: { now: 0, prev: 0 }, requests: { now: 0, prev: 0 }, contacts: { now: 0, prev: 0 }, applications: { now: 0, prev: 0 } },
+      week: { pros: { now: 0, prev: 0 }, clients: { now: 0, prev: 0 }, searches: { now: 0, prev: 0 }, requests: { now: 0, prev: 0 }, contacts: { now: 0, prev: 0 } },
       funnel: { searches: 0, profileViews: 0, contactAttempts: 0, contacts: 0, requests: 0 },
       gateSince: null,
       demand: [],
@@ -139,7 +139,8 @@ export async function getAdminReports(locale = "es"): Promise<AdminReports> {
   let proCreated: string[] = [];
   let clientCreated: string[] = [];
   let supplyByCategory = new Map<string, number>();
-  let requestCreated: string[] = [];
+  // Solo proyectos: el KPI y el embudo ya no mezclan citas retiradas.
+  let projectCreated: string[] = [];
   let projectRowsForDemand: Array<{ created_at: string; category_id: string | null }> = [];
 
   // ── Users + professionals + clients ──
@@ -262,7 +263,7 @@ export async function getAdminReports(locale = "es"): Promise<AdminReports> {
     const pRows = projects ?? [];
 
     empty.users.activeClients = new Set(bRows.map((b) => b.client_id).filter(Boolean)).size;
-    requestCreated = [...bRows.map((b) => b.created_at as string), ...pRows.map((p) => p.created_at as string)];
+    projectCreated = pRows.map((p) => p.created_at as string);
     projectRowsForDemand = pRows.map((p) => ({ created_at: p.created_at as string, category_id: (p.category_id as string | null) ?? null }));
 
     empty.activity.solicitudesTotal = bRows.length;
@@ -310,26 +311,29 @@ export async function getAdminReports(locale = "es"): Promise<AdminReports> {
     const inPrev7 = (t: string) => { const v = new Date(t).getTime(); return v < t7 && v >= now - 14 * DAY; };
     const countWeek = (times: string[]): WeekCompare => ({ now: times.filter(inLast7).length, prev: times.filter(inPrev7).length });
     const eventTimes = (types: string[]) => events.filter((e) => types.includes(e.event_type)).map((e) => e.created_at);
-    const CONTACT_TYPES = ["whatsapp_click", "phone_click", "service_request_started", "external_link_click"];
-    // A guest who taps "Contactar" is stopped by the account gate, so the attempt
-    // is only in contact_gate_shown; a signed-in visitor goes straight through.
-    // Attempts = both, and the drop between them is what the gate costs.
+    // CONTACTO es lo que abre una conversación con el profesional: WhatsApp,
+    // llamada o correo. Antes estaban aquí `service_request_started` —un clic
+    // que solo ABRE la página de reservar, de las citas retiradas— y
+    // `external_link_click`, que incluye los clics a Instagram y Facebook del
+    // profesional: el KPI y el embudo contaban como contacto lo que no lo es.
+    const CONTACT_TYPES = ["whatsapp_click", "phone_click", "email_click"];
     const gateEvents = events.filter((e) => e.event_type === "contact_gate_shown");
 
     empty.insights.week = {
       pros: countWeek(proCreated),
       clients: countWeek(clientCreated),
       searches: countWeek(eventTimes(["search_performed"])),
-      requests: countWeek(requestCreated),
+      // Proyectos publicados, no «citas y proyectos»: las citas salieron del
+      // producto y el KPI mezclaba dos cosas, una de ellas siempre en cero.
+      requests: countWeek(projectCreated),
       contacts: countWeek(eventTimes(CONTACT_TYPES)),
-      applications: countWeek(eventTimes(["job_application_sent"])),
     };
     empty.insights.funnel = {
       searches: eventTimes(["search_performed"]).filter(inLast7).length,
       profileViews: eventTimes(["profile_view"]).filter(inLast7).length,
       contactAttempts: eventTimes([...CONTACT_TYPES, "contact_gate_shown"]).filter(inLast7).length,
       contacts: eventTimes(CONTACT_TYPES).filter(inLast7).length,
-      requests: requestCreated.filter(inLast7).length,
+      requests: projectCreated.filter(inLast7).length,
     };
     empty.insights.gateSince = gateEvents.length > 0
       ? gateEvents.map((e) => e.created_at).sort()[0]
@@ -396,21 +400,16 @@ export async function getAdminReports(locale = "es"): Promise<AdminReports> {
       profile_view: "Vistas de perfil",
       whatsapp_click: "WhatsApp",
       phone_click: "Llamadas",
-      availability_view: "Ver disponibilidad",
       schedule_slot_selected: "Horarios seleccionados",
       favorite_add: "Perfiles agregados a favoritos",
       favorite_remove: "Perfiles eliminados de favoritos",
       profile_share: "Perfiles compartidos",
-      external_link_click: "Enlaces externos",
-      service_request_started: "Citas iniciadas",
-      service_request_created: "Citas creadas",
+      external_link_click: "Clics a sus redes",
+      email_click: "Correos",
       project_published: "Proyectos creados",
-      proposal_sent: "Propuestas enviadas",
-      proposal_accepted: "Propuestas aceptadas",
       review_created: "Reseñas recibidas",
       search_performed: "Búsquedas",
       job_view: "Vistas de empleos",
-      job_application_sent: "Postulaciones enviadas",
       offer_view: "Vistas de ofertas",
       assistant_question: "Preguntas al asistente",
     };

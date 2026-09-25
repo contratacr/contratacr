@@ -675,7 +675,7 @@ export function OfferContactActions({
       professionalId={offer.professional_id}
       professionalName={offer.professional_name || copy.professional}
       contextTitle={offer.title}
-      analyticsSource="unknown"
+      analyticsSource="offers"
       offerId={offer.id}
       className={`${alto} ${letra} w-full rounded-full`}
     />
@@ -698,7 +698,7 @@ export function OfferContactActions({
             professionalId={offer.professional_id}
             professionalName={offer.professional_name || copy.professional}
             contextTitle={offer.title}
-            analyticsSource="unknown"
+            analyticsSource="offers"
             offerId={offer.id}
             className="h-12 min-w-fit flex-1 basis-0 rounded-full px-3 text-base font-semibold"
           />

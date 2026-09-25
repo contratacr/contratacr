@@ -16,7 +16,11 @@ import { createAdminClient } from "@/lib/supabase/admin";
  */
 export const dynamic = "force-dynamic";
 
-const CONTACTO = ["whatsapp_click", "phone_click", "external_link_click"];
+// Lo que abre una conversación con el profesional. `external_link_click` NO
+// entra: son los clics a su Instagram, su Facebook y su web, que aquí se
+// etiquetaban como «correo» e inflaban la tasa de contacto. El correo tiene
+// ahora su propio tipo.
+const CONTACTO = ["whatsapp_click", "phone_click", "email_click"];
 
 export async function GET(request: Request) {
   const admin = await getApiAdmin();
@@ -50,7 +54,7 @@ export async function GET(request: Request) {
         professional_id: fila.professional_id,
         created_at: fila.created_at,
         category_id: fila.category_id,
-        canal: fila.event_type === "phone_click" ? "telefono" : fila.event_type === "external_link_click" ? "correo" : "whatsapp",
+        canal: fila.event_type === "phone_click" ? "telefono" : fila.event_type === "email_click" ? "correo" : "whatsapp",
         conCuenta: !!fila.viewer_user_id,
       });
     }
