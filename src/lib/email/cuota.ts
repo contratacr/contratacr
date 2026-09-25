@@ -20,13 +20,17 @@ export type NivelDeCorreo = "critico" | "normal" | "masivo";
  *    y soporte. Si estos no salen, alguien se queda sin entrar.
  *  · `normal` se corta con 40 libres: los avisos del app. Molesta perderlos,
  *    pero nadie se queda afuera.
- *  · `masivo` se corta con 100 libres: campañas. Son lo primero que cede, y con
- *    holgura, porque son las que pueden vaciar el día de golpe.
+ *  · `masivo` se corta con 50 libres: campañas. Son lo primero que cede. La
+ *    reserva era de 100 y dejaba la tanda en 200, que no alcanzaba para
+ *    terminar una campaña de 404 cuentas en dos días. Medido en Brevo: el app
+ *    gasta unos 10 correos al día, así que 50 libres siguen siendo cinco veces
+ *    el uso real y nadie se queda sin crear su cuenta ni sin recuperar su
+ *    contraseña.
  */
 const RESERVA: Record<NivelDeCorreo, number> = {
   critico: 0,
   normal: 40,
-  masivo: 100,
+  masivo: 50,
 };
 
 /** EL DÍA DE BREVO, no el nuestro.
