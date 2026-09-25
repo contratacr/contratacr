@@ -4,6 +4,10 @@
 -- pedirla justo después de que alguien deja una reseña a un profesional es
 -- evasivo: acaba de hacernos un favor. Un aviso en la campanita no cuesta
 -- nada, no interrumpe y queda esperando a que la persona entre.
+--
+-- La lista se copia de la 212, que es la ÚLTIMA que tocó esta regla. Copiarla
+-- de la 206 (como se intentó primero) dejaba fuera `new_job`, que la 212 había
+-- agregado, y la migración se caía contra las filas que ya existen (23514).
 
 alter table public.notifications drop constraint if exists notifications_type_check;
 alter table public.notifications add constraint notifications_type_check
@@ -24,7 +28,7 @@ alter table public.notifications add constraint notifications_type_check
     'quote_sent','quote_accepted','quote_declined','pricing_request',
     'counterparty_account_deleted',
     -- Invitación a dejar una reseña en Google, dentro del app.
-    'resena_google'
+    'resena_google','new_job'
   ));
 
 notify pgrst, 'reload schema';
