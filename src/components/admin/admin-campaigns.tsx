@@ -53,6 +53,31 @@ export function AdminCampaigns() {
   // recuperar contraseña, soporte). Este número es el que dice si vale la pena
   // pagar el plan o esperar a mañana.
   const [cuota, setCuota] = useState<{ enviados: number; tope: number; restantes: number; margenMasivo: number } | null>(null);
+  const [resena, setResena] = useState<{ cuentas: number; yaTenian: number } | null>(null);
+  const [invitando, setInvitando] = useState(false);
+
+  useEffect(() => {
+    void fetch("/api/admin/invitar-resena")
+      .then((r) => r.json())
+      .then((d) => setResena({ cuentas: Number(d.cuentas ?? 0), yaTenian: Number(d.yaTienen ?? 0) }))
+      .catch(() => setResena(null));
+  }, []);
+
+  async function invitarResenas() {
+    setInvitando(true);
+    try {
+      const r = await fetch("/api/admin/invitar-resena", { method: "POST" });
+      const d = await r.json();
+      await showMessage({
+        title: r.ok ? "Aviso enviado" : "No se pudo enviar",
+        description: r.ok ? `Le llegó a ${d.enviadas} cuenta(s). ${d.yaTenian} ya lo tenían.` : String(d.error ?? ""),
+        tone: r.ok ? "success" : "danger",
+      });
+      setResena({ cuentas: Number(d.cuentas ?? 0), yaTenian: Number(d.yaTenian ?? 0) + Number(d.enviadas ?? 0) });
+    } finally {
+      setInvitando(false);
+    }
+  }
   const [plantilla, setPlantilla] = useState(PLANTILLAS[0]);
   const [subject, setSubject] = useState(PLANTILLAS[0].subject);
   const [body, setBody] = useState(PLANTILLAS[0].body);
@@ -151,6 +176,30 @@ export function AdminCampaigns() {
           </p>
         </div>
       )}
+
+      {/* LA INVITACIÓN A RESEÑAR EN GOOGLE. Va aquí, junto a las campañas,
+          porque es lo mismo —un aviso a todas las cuentas— pero por la
+          campanita en vez de por correo: no gasta del cupo diario y no
+          interrumpe. Se puede pulsar más de una vez sin miedo: a quien ya la
+          recibió no le llega de nuevo, así que sirve para alcanzar a los que
+          se registraron después. */}
+      <div className="rounded-2xl border border-[#d7e1ea] bg-white p-4">
+        <p className="text-[11px] font-extrabold uppercase tracking-[0.08em] text-[#8a94a6]">Reseñas en Google</p>
+        <p className="mt-1 text-[15px] font-bold text-[#162543]">
+          {resena ? `${resena.yaTenian} de ${resena.cuentas} cuentas ya tienen el aviso` : "Aviso en la campanita, no por correo"}
+        </p>
+        <p className="mt-1 text-[13px] leading-snug text-[#68778d]">
+          Les llega un aviso invitándolos a dejar una reseña en Google. No gasta del cupo de correo. Quien ya lo recibió no lo vuelve a recibir.
+        </p>
+        <button
+          type="button"
+          disabled={invitando}
+          onClick={() => void invitarResenas()}
+          className="mt-3 inline-flex h-10 items-center gap-2 rounded-full bg-[#009FD9] px-4 text-sm font-bold text-white hover:bg-[#0089bb] disabled:opacity-60"
+        >
+          {invitando ? "Enviando…" : "Enviar el aviso a quien falte"}
+        </button>
+      </div>
 
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_380px]">
         <div className="space-y-4 rounded-2xl border border-[#e5e7eb] bg-white p-5">

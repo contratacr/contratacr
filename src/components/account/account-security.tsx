@@ -479,7 +479,12 @@ export function AccountSecuritySection({ showHeading = true }: { showHeading?: b
                 </div>
               </div>
             ) : (
-              <button type="button" onClick={sendReset} disabled={resetBusy} className="self-start text-xs text-[#009FD9] hover:underline disabled:opacity-60">
+              /* EN GRIS Y SEPARADO, no en azul de marca justo debajo de
+                 «Guardar»: eran dos acciones distintas con el mismo aspecto y
+                 el enlace quedaba pegado al botón, así que al intentar cambiar
+                 la contraseña aquí mismo se terminaba pidiendo el correo de
+                 restablecer. El primario es guardar; esto es la salida. */
+              <button type="button" onClick={sendReset} disabled={resetBusy} className="mt-3 self-start border-t border-[#eef2f6] pt-3 text-xs text-[#68778d] hover:text-[#374151] hover:underline disabled:opacity-60">
                 {resetBusy ? t("sending") : t("forgotPassword")}
               </button>
             )}

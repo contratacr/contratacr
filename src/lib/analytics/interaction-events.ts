@@ -15,8 +15,6 @@ export const INTERACTION_EVENT_TYPES = [
   // el profesional que escribe a un proyecto del tablero, la verificación
   // aprobada y el clic que llega desde un correo de campaña.
   "quote_created",
-  "quote_accepted",
-  "quote_declined",
   "internal_message_sent",
   "project_lead_whatsapp",
   "identity_verified",

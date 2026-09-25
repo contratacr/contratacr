@@ -255,15 +255,6 @@ export async function PATCH(req: NextRequest) {
   }
   const { data: updated, error: upErr } = await me.admin.from("quotes").update(patch).eq("id", id).select(SELECT).single();
   if (upErr) return NextResponse.json({ error: upErr.message }, { status: 500 });
-  if (action === "accept" || action === "decline") {
-    // El porcentaje de aceptación es lo que dice si las cotizaciones sirven.
-    await recordServerInteraction(me.admin, req, {
-      type: action === "accept" ? "quote_accepted" : "quote_declined",
-      professionalId: (q as { professional_id?: string }).professional_id ?? null,
-      viewerUserId: me.user.id,
-      source: "api",
-    });
-  }
   await auditUserAction(me.admin, req, { actorUserId: me.user.id, actorRole: action === "withdraw" ? "professional" : "client", action: `quote.${action}`, entityTable: "quotes", entityId: id, entityOwnerUserId: q.client_id, afterData: patch });
   // Sin aviso al profesional: aceptar o rechazar dentro del app solo existia
   // para las cotizaciones atadas a una cita o a un proyecto, que ya no se

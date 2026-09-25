@@ -131,7 +131,7 @@ export async function POST(req: NextRequest) {
   // Una reseña por minuto de sobra; sin esto no había ningún tope.
   const limitado = enforceRateLimit(req, "reviews", 10, 60_000);
   if (limitado) return limitado;
-  const { professionalId, rating, comment, bookingId, projectId, contactId, clientName } = await req.json();
+  const { professionalId, rating, comment, contactId, clientName } = await req.json();
 
   if (!professionalId || !rating) {
     return NextResponse.json({ error: "Faltan campos requeridos." }, { status: 400 });
@@ -175,10 +175,10 @@ export async function POST(req: NextRequest) {
   }
 
   let jobTitle: string | null = null;
-  let reviewBookingId: string | null = null;
-  let reviewProjectId: string | null = null;
   let reviewContactId: string | null = null;
-
+  // Las reseñas POR CITA y POR PROYECTO se retiraron con esas funciones: ya
+  // ningún formulario manda `bookingId` ni `projectId`. Queda el contacto de
+  // WhatsApp, que es el que usa el seguimiento del servicio.
   if (contactId) {
     const { data: contact } = await createAdminClient()
       .from("whatsapp_contact_followups")
@@ -191,49 +191,22 @@ export async function POST(req: NextRequest) {
       reviewContactId = contactId;
       if (contact.service_name) jobTitle = String(contact.service_name).slice(0, 80);
     }
-  } else if (bookingId) {
-    const { data: booking } = await supabase
-      .from("bookings")
-      .select("id, service_description")
-      .eq("id", bookingId)
-      .eq("client_id", user.id)
-      .eq("professional_id", professionalId)
-      .maybeSingle();
-    if (booking) {
-      reviewBookingId = bookingId;
-      if (booking.service_description) jobTitle = String(booking.service_description).slice(0, 80);
-    }
-  } else if (projectId) {
-    const { data: project } = await supabase
-      .from("projects")
-      .select("id, title")
-      .eq("id", projectId)
-      .eq("client_id", user.id)
-      .eq("accepted_professional_id", professionalId)
-      .maybeSingle();
-    if (project) {
-      reviewProjectId = projectId;
-      if (project.title) jobTitle = String(project.title).slice(0, 80);
-    }
   }
 
-  let existingQuery = supabase
+  // UNA RESEÑA POR PERSONA Y PROFESIONAL. Antes la búsqueda de «ya reseñó» se
+  // hacía por CONTEXTO —una por cita, otra por proyecto, otra suelta desde la
+  // ficha—, así que la misma persona acumulaba varias del mismo profesional y
+  // editar una creaba otra en vez de cambiarla (se encontraron duplicadas en
+  // la base). Ahora la llave es la persona y el profesional: la que exista se
+  // actualiza, venga del contexto que venga.
+  const { data: existing } = await supabase
     .from("reviews")
     .select("id")
     .eq("client_id", user.id)
-    .eq("professional_id", professionalId);
-
-  if (reviewContactId) existingQuery = existingQuery.eq("whatsapp_contact_id", reviewContactId);
-  else if (reviewBookingId) existingQuery = existingQuery.eq("booking_id", reviewBookingId);
-  else if (reviewProjectId) existingQuery = existingQuery.eq("project_id", reviewProjectId);
-  else {
-    existingQuery = existingQuery
-      .is("whatsapp_contact_id", null)
-      .is("booking_id", null)
-      .is("project_id", null);
-  }
-
-  const { data: existing } = await existingQuery.limit(1).maybeSingle();
+    .eq("professional_id", professionalId)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
 
   if (existing) {
     let { error } = await supabase
@@ -259,8 +232,6 @@ export async function POST(req: NextRequest) {
         professional_id: professionalId,
         rating,
         comment: cleanComment,
-        booking_id: reviewBookingId,
-        project_id: reviewProjectId,
         whatsapp_contact_id: reviewContactId,
       },
     });
@@ -277,8 +248,6 @@ export async function POST(req: NextRequest) {
     comment: cleanComment,
     ...writeSourceColumns(req),
   };
-  if (reviewBookingId) row.booking_id = reviewBookingId;
-  if (reviewProjectId) row.project_id = reviewProjectId;
   if (reviewContactId) row.whatsapp_contact_id = reviewContactId;
   if (jobTitle) row.job_title = jobTitle;
 
@@ -315,8 +284,6 @@ export async function POST(req: NextRequest) {
       professional_id: professionalId,
       rating,
       comment: cleanComment,
-      booking_id: reviewBookingId,
-      project_id: reviewProjectId,
       whatsapp_contact_id: reviewContactId,
       job_title: jobTitle,
     },
@@ -351,10 +318,8 @@ export async function POST(req: NextRequest) {
     type: "review_created",
     professionalId,
     viewerUserId: user.id,
-    source: reviewBookingId ? "booking" : reviewProjectId ? "project" : reviewContactId ? "whatsapp_followup" : "profile",
+    source: reviewContactId ? "whatsapp_followup" : "profile",
     metadata: {
-      booking_id: reviewBookingId,
-      project_id: reviewProjectId,
       whatsapp_contact_id: reviewContactId,
       rating: r,
     },

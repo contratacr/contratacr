@@ -316,7 +316,10 @@ export async function getAdminReports(locale = "es"): Promise<AdminReports> {
     // que solo ABRE la página de reservar, de las citas retiradas— y
     // `external_link_click`, que incluye los clics a Instagram y Facebook del
     // profesional: el KPI y el embudo contaban como contacto lo que no lo es.
-    const CONTACT_TYPES = ["whatsapp_click", "phone_click", "email_click", "internal_message_sent"];
+    // El mensaje interno NO entra todavía: el chat solo existe en la app y la
+    // app no está publicada, así que sumarlo solo prometía un número que nunca
+    // llega. El evento se sigue guardando; cuando la app salga, se agrega aquí.
+    const CONTACT_TYPES = ["whatsapp_click", "phone_click", "email_click"];
     const gateEvents = events.filter((e) => e.event_type === "contact_gate_shown");
 
     empty.insights.week = {
@@ -413,8 +416,6 @@ export async function getAdminReports(locale = "es"): Promise<AdminReports> {
       email_click: "Correos",
       internal_message_sent: "Mensajes en la app",
       quote_created: "Cotizaciones enviadas",
-      quote_accepted: "Cotizaciones aceptadas",
-      quote_declined: "Cotizaciones rechazadas",
       project_lead_whatsapp: "Escribieron a un proyecto",
       identity_verified: "Identidades verificadas",
       campaign_click: "Clics desde un correo",
