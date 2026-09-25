@@ -9,6 +9,7 @@ import { AnchoredDropdown } from "@/components/ui/anchored-dropdown";
 import { SelectMenu } from "@/components/ui/select-menu";
 import { cn } from "@/lib/utils";
 import { FilaInterruptor } from "@/components/ui/fila-interruptor";
+import { EtiquetaOpcional } from "@/components/ui/etiqueta-campo";
 
 export type Workplace = {
   id: string;
@@ -509,7 +510,13 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
           interruptores caen en la misma vertical, pegados al texto (ver
           `estirar` en FilaInterruptor). Sueltos, cada uno quedaba donde
           terminaba su frase. */}
-      <div className="inline-flex w-fit max-w-full flex-col gap-1 pt-1">
+      {/* Rótulo del grupo, con «(opcional)» como en todo el app: arriba el
+          lugar lleva asterisco, aquí lo que se suma lleva «opcional». Sin este
+          contraste, los dos interruptores se leían como otra forma de elegir
+          el lugar, y era justo lo que hacía que la gente marcara «todo el
+          país» en vez de su provincia. */}
+      <div className="inline-flex w-fit max-w-full flex-col gap-1 pt-2">
+        <span className="mb-1 text-sm font-medium text-[#374151]"><EtiquetaOpcional>{t("coberturaAdicional")}</EtiquetaOpcional></span>
         <FilaInterruptor
           estirar
           titulo={t("todoElPaisTitulo")}

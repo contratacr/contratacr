@@ -440,8 +440,8 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
     }
     if (sectionId === "location" && !hasWorkplace) {
       return locale === "en"
-        ? "Your workplace is missing: choose the province and, if you want, the canton."
-        : "Falta tu lugar de trabajo: elige la provincia y, si quieres, el cantón.";
+        ? "Your workplace is missing: choose the province and the canton, or the whole province."
+        : "Falta tu lugar de trabajo: elige la provincia y el cantón, o toda la provincia.";
     }
     if (sectionId === "contact") {
       if (!isPhoneComplete(whatsapp)) {
@@ -1138,7 +1138,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
           />
           {dirty && activeDirtySection === "location" && !hasWorkplace ? (
             <p className="mt-2 text-xs text-red-500">
-              {locale === "en" ? "Your workplace is missing: choose the province and, if you want, the canton." : "Falta tu lugar de trabajo: elige la provincia y, si quieres, el cantón."}
+              {locale === "en" ? "Your workplace is missing: choose the province and the canton, or the whole province." : "Falta tu lugar de trabajo: elige la provincia y el cantón, o toda la provincia."}
             </p>
           ) : null}
         </div>
