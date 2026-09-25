@@ -29,13 +29,17 @@ const RESERVA: Record<NivelDeCorreo, number> = {
   masivo: 100,
 };
 
-function diaDeCostaRica(): string {
-  return new Intl.DateTimeFormat("en-CA", {
-    timeZone: "America/Costa_Rica",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(new Date());
+/** EL DÍA DE BREVO, no el nuestro.
+ *
+ *  Este contador existe para no pasarse del tope diario de Brevo, y ese tope
+ *  se reinicia a medianoche UTC. Se estaba contando por el día de Costa Rica
+ *  (UTC-6), así que entre las 18:00 y la medianoche de acá Brevo ya había
+ *  reiniciado —decía 0 correos enviados— y nuestro contador seguía con los de
+ *  la mañana: seis horas al día en las que el panel decía «quedan 0 para
+ *  campañas» aunque hubiera 300 disponibles. Pasó el 24-sep-2026. La ventana
+ *  que se cuenta tiene que ser la misma que la que se quiere respetar. */
+function diaDelProveedor(): string {
+  return new Date().toISOString().slice(0, 10);
 }
 
 export type ResumenDeCuota = {
@@ -51,7 +55,7 @@ export type ResumenDeCuota = {
 };
 
 export async function resumenDeCuota(): Promise<ResumenDeCuota> {
-  const dia = diaDeCostaRica();
+  const dia = diaDelProveedor();
   const admin = createAdminClient();
   const { data } = await admin
     .from("email_cuota_diaria")

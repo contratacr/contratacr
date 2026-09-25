@@ -4244,5 +4244,14 @@
     "unavailable": "This job is no longer accepting applications.",
     "backAll": "See all jobs",
     "heading": "Job"
+  },
+  "reviews": {
+    "google": {
+      "titulo": "Thanks for your review",
+      "cuerpo": "Would you leave us one on Google too? It takes 30 seconds and helps more people find ContrataCR.",
+      "boton": "Leave a Google review",
+      "ahoraNo": "Not now",
+      "cerrar": "Close"
+    }
   }
 }

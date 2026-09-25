@@ -5,6 +5,7 @@ import { EtiquetaObligatoria } from "@/components/ui/etiqueta-campo";
 import { useTranslations } from "next-intl";
 import { AlertCircle, Star, X } from "lucide-react";
 import { SuccessIcon } from "@/components/ui/success-icon";
+import { EVENTO_RESENA_ENVIADA } from "@/components/reviews/pedir-resena-google";
 
 interface LeaveReviewModalProps {
   professionalId: string;
@@ -169,6 +170,9 @@ export function LeaveReviewModal({
         }
         window.sessionStorage.removeItem(pendingReviewKey);
         setSuccess(true);
+        // Quien acaba de reseñar a un profesional es a quien se le pide la
+        // de Google (ver `reviews/pedir-resena-google.tsx`).
+        window.dispatchEvent(new CustomEvent(EVENTO_RESENA_ENVIADA));
         window.setTimeout(() => {
           onSuccess?.();
           if (!embedded) onClose();
@@ -222,6 +226,9 @@ export function LeaveReviewModal({
           return;
         }
         setSuccess(true);
+        // Quien acaba de reseñar a un profesional es a quien se le pide la
+        // de Google (ver `reviews/pedir-resena-google.tsx`).
+        window.dispatchEvent(new CustomEvent(EVENTO_RESENA_ENVIADA));
         window.setTimeout(() => {
           onSuccess?.();
           if (!embedded) onClose();
