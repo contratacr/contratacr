@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Megaphone, Send, Loader2 } from "lucide-react";
+import { Megaphone, Send, Loader2, Star } from "lucide-react";
 import { useAppDialog } from "@/hooks/use-app-dialog";
 
 /**
@@ -177,30 +177,6 @@ export function AdminCampaigns() {
         </div>
       )}
 
-      {/* LA INVITACIÓN A RESEÑAR EN GOOGLE. Va aquí, junto a las campañas,
-          porque es lo mismo —un aviso a todas las cuentas— pero por la
-          campanita en vez de por correo: no gasta del cupo diario y no
-          interrumpe. Se puede pulsar más de una vez sin miedo: a quien ya la
-          recibió no le llega de nuevo, así que sirve para alcanzar a los que
-          se registraron después. */}
-      <div className="rounded-2xl border border-[#d7e1ea] bg-white p-4">
-        <p className="text-[11px] font-extrabold uppercase tracking-[0.08em] text-[#8a94a6]">Reseñas en Google</p>
-        <p className="mt-1 text-[15px] font-bold text-[#162543]">
-          {resena ? `${resena.yaTenian} de ${resena.cuentas} cuentas ya tienen el aviso` : "Aviso en la campanita, no por correo"}
-        </p>
-        <p className="mt-1 text-[13px] leading-snug text-[#68778d]">
-          Les llega un aviso invitándolos a dejar una reseña en Google. No gasta del cupo de correo. Quien ya lo recibió no lo vuelve a recibir.
-        </p>
-        <button
-          type="button"
-          disabled={invitando}
-          onClick={() => void invitarResenas()}
-          className="mt-3 inline-flex h-10 items-center gap-2 rounded-full bg-[#009FD9] px-4 text-sm font-bold text-white hover:bg-[#0089bb] disabled:opacity-60"
-        >
-          {invitando ? "Enviando…" : "Enviar el aviso a quien falte"}
-        </button>
-      </div>
-
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_380px]">
         <div className="space-y-4 rounded-2xl border border-[#e5e7eb] bg-white p-5">
           <div className="flex flex-wrap gap-2">
@@ -237,6 +213,44 @@ export function AdminCampaigns() {
         </div>
       </div>
       {dialogNode}
+
+      {/* LA INVITACIÓN A RESEÑAR EN GOOGLE. Va al FINAL y separada por una
+          línea, no entre las tarjetas de correo: no es una campaña ni gasta
+          cupo: es un aviso de la campanita. Metida arriba se leía como otro
+          bloque de correo y no se entendía de qué era. */}
+      <div className="border-t border-[#e5e7eb] pt-6">
+        <h2 className="flex items-center gap-2 text-lg font-extrabold text-[#162543]">
+          <Star className="h-5 w-5 text-[#009FD9]" />Pedir reseñas en Google
+        </h2>
+        <p className="mt-1 text-sm text-[#68778d]">
+          Un aviso en la campanita del app, no un correo: no gasta del cupo diario. Invita a dejar una reseña del negocio en Google.
+        </p>
+        <div className="mt-3 rounded-2xl border border-[#d7e1ea] bg-white p-4">
+          <p className="text-[15px] font-bold text-[#162543]">
+            {resena
+              ? resena.yaTenian >= resena.cuentas
+                ? `Ya lo tienen las ${resena.cuentas} cuentas`
+                : `Le falta a ${resena.cuentas - resena.yaTenian} de ${resena.cuentas} cuentas`
+              : "Cargando…"}
+          </p>
+          <p className="mt-1 text-[13px] leading-snug text-[#68778d]">
+            Quien ya lo recibió no lo vuelve a recibir, así que se puede pulsar cuantas veces haga falta: sirve para alcanzar a quien se registró después. A las cuentas nuevas les llega solo.
+          </p>
+          <button
+            type="button"
+            disabled={invitando || (!!resena && resena.yaTenian >= resena.cuentas)}
+            onClick={() => void invitarResenas()}
+            className="mt-3 inline-flex h-10 items-center gap-2 rounded-full bg-[#009FD9] px-4 text-sm font-bold text-white hover:bg-[#0089bb] disabled:opacity-60"
+          >
+            {invitando ? <Loader2 className="h-4 w-4 animate-spin" /> : <Star className="h-4 w-4" />}
+            {invitando
+              ? "Enviando…"
+              : resena && resena.yaTenian >= resena.cuentas
+                ? "Ya lo tienen todas"
+                : `Pedir reseña a ${resena ? resena.cuentas - resena.yaTenian : ""} cuenta(s)`}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
