@@ -390,7 +390,8 @@
     "addedPlaces": "Lugares agregados ({count})",
     "removePlace": "Quitar lugar",
     "todoElPaisTitulo": "Trabajo a domicilio en todo el país",
-    "coberturaAdicional": "Cobertura adicional"
+    "coberturaAdicional": "Cobertura adicional",
+    "yaAgregado": "Ese lugar ya está en tu lista."
   },
   "reviewModal": {
     "titleEdit": "Editar tu reseña",
@@ -443,7 +444,9 @@
     "email": "Correo",
     "countryCoverage": "Todo Costa Rica",
     "share": "Compartir",
-    "moreZones": "+{count, plural, one {# zona más} other {# zonas más}}"
+    "moreZones": "+{count, plural, one {# zona más} other {# zonas más}}",
+    "atiendeEnProvincia": "Atiende en {lugar} · toda la provincia",
+    "atiendeEnPais": "Atiende en {lugar} · todo el país"
   },
   "selfAction": {
     "title": "Este es tu perfil",

@@ -390,7 +390,8 @@
     "addedPlaces": "Added places ({count})",
     "removePlace": "Remove place",
     "todoElPaisTitulo": "I do home service anywhere in the country",
-    "coberturaAdicional": "Additional coverage"
+    "coberturaAdicional": "Additional coverage",
+    "yaAgregado": "That place is already on your list."
   },
   "reviewModal": {
     "titleEdit": "Edit your review",
@@ -443,7 +444,9 @@
     "email": "Email",
     "countryCoverage": "All of Costa Rica",
     "share": "Share",
-    "moreZones": "+{count, plural, one {# more area} other {# more areas}}"
+    "moreZones": "+{count, plural, one {# more area} other {# more areas}}",
+    "atiendeEnProvincia": "Serves {lugar} · whole province",
+    "atiendeEnPais": "Serves {lugar} · nationwide"
   },
   "selfAction": {
     "title": "This is your profile",
