@@ -8,6 +8,7 @@ import { NATIVE_ONBOARDING_COMPLETED_KEY } from "@/lib/mobile-onboarding";
 import { catalogoParaElCliente } from "@/lib/data/server-category-catalog";
 import { elegirOficiosDeArranque } from "@/lib/data/oficios-de-arranque";
 import { getSupplyCounts, MIN_SUPPLY_FOR_LANDING } from "@/lib/queries/supply";
+import { withPromiseTimeout } from "@/lib/promise-timeout";
 import "./globals.css";
 
 const inter = Inter({
@@ -58,13 +59,18 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
   const clasesNativas = esApp ? " ccr-native-app ccr-native-bottom-nav-visible" : "";
   // Con tope de 3 s y caché de 20 s por instancia: casi siempre es gratis, y si
   // la base tarda, la página sale igual (sin catálogo, como antes).
-  const catalogoEnTexto = await catalogoParaElCliente().catch(() => null);
-  // Los oficios que ofrece el buscador del teléfono cuando está vacío: uno por
-  // grupo y solo donde hay gente registrada. La cuenta de oferta se guarda una
-  // hora; si no contesta, sale la lista fija.
-  const oficiosDeArranque = await getSupplyCounts()
-    .then((oferta) => elegirOficiosDeArranque(oferta.byCategory, MIN_SUPPLY_FOR_LANDING))
-    .catch(() => null);
+  // Las dos consultas EN PARALELO y la de oferta con tope corto. Iban en
+  // serie y la cuenta de oferta sin tope: en un proceso frío cuesta 170–380 ms
+  // (medido), y como este layout corre en CADA navegación —incluida la de
+  // portada a resultados—, esa espera se sumaba a cada búsqueda. Con la
+  // caché caliente cuesta cero; fría, como mucho 300 ms y a la vez que el
+  // catálogo. Si no llega, sale la lista fija de oficios.
+  const [catalogoEnTexto, oficiosDeArranque] = await Promise.all([
+    catalogoParaElCliente().catch(() => null),
+    withPromiseTimeout(getSupplyCounts(), 300, "cuenta de oferta: tiempo agotado")
+      .then((oferta) => elegirOficiosDeArranque(oferta.byCategory, MIN_SUPPLY_FOR_LANDING))
+      .catch(() => null),
+  ]);
   return (
     <html
       lang={idioma}

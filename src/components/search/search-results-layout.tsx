@@ -529,7 +529,14 @@ export function SearchResultsLayout({ children, filters, quickFilters, drawerFil
             ve. No cambia el diseño ni mueve nada. */}
         <div
           aria-hidden
-          className="pointer-events-none fixed inset-x-0 z-0 bg-white lg:hidden"
+          // z-[35]: por ENCIMA de la hoja (z-30). Safari 26 tiñe su barra con lo que
+          // pinta el elemento fijo MÁS ALTO que toca el borde de abajo, y la hoja
+          // sobresale del viewport (medido: su borde inferior queda 240 px por
+          // debajo), así que lo que tocaba el borde eran los botones verdes de
+          // WhatsApp dentro de ella. Con z-0 esta franja quedaba debajo y no
+          // contaba: la barra volvió a salir verde el 24-sep. Por eso la franja
+          // tiene que ser la de arriba en ese borde.
+          className="pointer-events-none fixed inset-x-0 z-[35] bg-white lg:hidden"
           // La receta comprobada para Safari 26: un poco por debajo del borde y
           // con alto mínimo, para que cuente como «pegado al borde» aunque el
           // navegador redondee. Ancho completo: Safari exige al menos el 80 %.
