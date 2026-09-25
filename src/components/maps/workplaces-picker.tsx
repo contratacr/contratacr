@@ -83,6 +83,7 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
   // place SEARCH now lives inside the map option (no separate "name" field).
   const [province, setProvince] = useState("");
   const [canton, setCanton] = useState("");
+  const [avisoRepetido, setAvisoRepetido] = useState<string | null>(null);
   const [showMap, setShowMap] = useState(false);
   // The draft form is shown while adding; once a zone is committed it collapses
   // behind an explicit "+ Agregar otra ubicación" action so the flow is clear.
@@ -120,6 +121,19 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
     const readable = canton
       ? [cantonName, provinceName].filter(Boolean).join(", ")
       : t("wholeProvinceName", { province: provinceName });
+    // El mismo lugar dos veces no es un lugar más. Sin esto, pulsar «Agregar
+    // toda la provincia» con Alajuela ya en la lista metía un segundo chip
+    // idéntico, y quien lo pulsaba no sabía si había pasado algo. Se avisa y
+    // no se agrega (un punto en el mapa sí distingue: es otra dirección).
+    const repetido = !pin && valueRef.current.some((wp) => {
+      const w = wp as { provinciaId?: string; cantonId?: string; lat?: number | null };
+      return w.provinciaId === province && (w.cantonId ?? "") === (canton || "") && w.lat == null;
+    });
+    if (repetido) {
+      setAvisoRepetido(readable);
+      window.setTimeout(() => setAvisoRepetido(null), 2500);
+      return;
+    }
     onChange([
       ...valueRef.current,
       {
@@ -483,6 +497,9 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
       >
         <Plus className="h-4 w-4" /> {canton ? t("addThisPlace") : t("addWholeProvince")}
       </button>
+      {avisoRepetido && (
+        <p role="status" className="text-xs font-semibold text-[#0089bb]">{t("yaAgregado")}</p>
+      )}
       </div>
       )}
 

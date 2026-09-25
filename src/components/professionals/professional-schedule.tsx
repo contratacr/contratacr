@@ -424,12 +424,27 @@ export function ProfessionalSchedule({ professional, categoryName, searchedPlace
         && ((!!searchedPlace?.provinceId && lugar.provinciaId === searchedPlace.provinceId) || (!!searchedPlace?.provinceName && label.includes(searchedPlace.provinceName)));
       const cubreElPaisYBuscaronLugar = !!lugarBuscado && cubrePaisEntero(lugar, label);
       if (!isVideoWorkplace && !yaAtiendeElCanton && (cubreLaProvinciaBuscada || cubreElPaisYBuscaronLugar)) {
-        const repetido = Array.from(primero.values()).includes(lugarBuscado)
-          || Array.from(map.values()).includes(lugarBuscado);
-        if (!primero.size && !repetido) primero.set(id, lugarBuscado);
+        // Decir LAS DOS COSAS: que llega al lugar buscado, y desde qué
+        // cobertura. «Atenas, Alajuela» a secas presentaba como vecino a
+        // quien cubre cuatro provincias desde San Ramón; «Toda la provincia
+        // de Alajuela» a secas obligaba al cliente a deducir si Atenas entra.
+        // En Atenas, 23 de 27 tarjetas eran de cobertura, no del cantón.
+        // Buscando solo una provincia, la cobertura de esa provincia se queda
+        // con el nombre de la provincia, que ya dice todo.
+        const rotulo = cubreElPaisYBuscaronLugar
+          ? t("atiendeEnPais", { lugar: searchedPlace?.cantonName || searchedPlace?.provinceName || "" })
+          : searchedPlace?.cantonName
+            ? t("atiendeEnProvincia", { lugar: searchedPlace.cantonName })
+            : lugarBuscado;
+        const repetido = Array.from(primero.values()).includes(rotulo)
+          || Array.from(map.values()).includes(rotulo);
+        if (!primero.size && !repetido) primero.set(id, rotulo);
         continue;
       }
       map.set(id, label);
+    }
+    if (lugarBuscado && !yaAtiendeElCanton && !primero.size && professional.coverage?.country) {
+      primero.set("pais", t("atiendeEnPais", { lugar: searchedPlace?.cantonName || searchedPlace?.provinceName || "" }));
     }
     for (const [id, label] of Array.from(map)) { if (!primero.has(id)) primero.set(id, label); }
     map.clear();
