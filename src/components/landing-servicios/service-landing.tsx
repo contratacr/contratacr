@@ -13,6 +13,9 @@ import { primaryPricingLabel, formatColones, type PricingType } from "@/lib/pric
 import { cldThumb } from "@/lib/cloudinary";
 import { getInitials, proDisplayName } from "@/lib/utils";
 import type { ProfessionalCardData } from "@/components/professionals/professional-card";
+import { DatosEstructurados } from "@/components/seo/datos-estructurados";
+
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://contratacr.com";
 
 /**
  * Página de aterrizaje por oficio (y opcionalmente provincia). Es la primera
@@ -60,8 +63,30 @@ export async function ServiceLanding({ locale, categoryId, provinceId }: { local
   const chip = (active: boolean) =>
     `inline-flex h-9 shrink-0 items-center rounded-full border px-3.5 text-[13px] font-bold transition-colors ${active ? "border-[#009FD9] bg-[#009FD9] text-white" : "border-[#d7e1ea] bg-white text-[#162543] hover:border-[#009FD9] hover:text-[#009FD9]"}`;
 
+  // La lista de profesionales marcada como `ItemList`. Para un buscador, la
+  // diferencia entre una página de aterrizaje que vale y una página vacía es
+  // si hay contenido real detrás; sin esto, seis enlaces con nombre y
+  // calificación se leen como texto suelto. Cada elemento apunta a la ficha,
+  // que ya trae su propio `LocalBusiness` con estrellas.
+  const listaComoDatos =
+    top.length > 0
+      ? {
+          "@context": "https://schema.org",
+          "@type": "ItemList",
+          name: province ? `${category} — ${placeName}` : category,
+          numberOfItems: top.length,
+          itemListElement: top.map((pro, i) => ({
+            "@type": "ListItem",
+            position: i + 1,
+            name: pro.businessName?.trim() || proDisplayName(pro.fullName),
+            url: `${APP_URL}/${locale}/profesionales/${pro.slug}`,
+          })),
+        }
+      : null;
+
   return (
     <div className="flex min-h-screen flex-col bg-[#f4f7fa]">
+      <DatosEstructurados datos={listaComoDatos} />
       <LandingNavbar />
       <main className="flex-1 pt-16">
         <section className="bg-white px-4 pb-6 pt-7 sm:px-6">

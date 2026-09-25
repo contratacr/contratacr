@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { campanaDesdeAsunto } from "@/lib/email/campana";
 import { getApiAdmin } from "@/lib/auth/admin";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { brandedEmailDocument, sendBrevoEmail } from "@/lib/email/send";
@@ -81,27 +82,29 @@ function bodyToHtml(body: string, ctaLabel: string, ctaHref: string) {
   return parrafos + cta + firma + pie;
 }
 
-function campanaDesdeAsunto(asunto: string) {
-  return asunto.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40) || "campana";
-}
-
 /** A quién ya le salió esta campaña, y cuándo fue la última vez. */
 async function estadoDeCampana(campana: string) {
   const db = createAdminClient();
   const { data, error } = await db
     .from("admin_campaign_sends")
-    .select("email, enviado_en")
+    .select("email, enviado_en, abierto_en, click_en, rebote_en")
     .eq("campana", campana)
     .order("enviado_en", { ascending: false })
     .limit(5000);
   // Sin la tabla (migración 211 todavía sin correr) la campaña sigue saliendo,
   // solo que sin memoria: es mejor que bloquear el envío.
-  if (error) return { correos: new Set<string>(), enviados: 0, ultimoEnvio: null as string | null };
-  const filas = data ?? [];
+  if (error) return { correos: new Set<string>(), enviados: 0, ultimoEnvio: null as string | null, abiertos: 0, clics: 0, rebotes: 0 };
+  const filas = (data ?? []) as Record<string, unknown>[];
   return {
     correos: new Set(filas.map((f) => String(f.email).toLowerCase())),
     enviados: filas.length,
-    ultimoEnvio: filas[0]?.enviado_en ?? null,
+    ultimoEnvio: (filas[0]?.enviado_en as string) ?? null,
+    // Lo que contesta «¿sirvió?»: cuántos lo abrieron y cuántos tocaron el
+    // botón. Lo anota el webhook de Brevo; antes de conectarlo quedan en cero,
+    // que es honesto —no se sabe— y no cero resultados.
+    abiertos: filas.filter((f) => f.abierto_en).length,
+    clics: filas.filter((f) => f.click_en).length,
+    rebotes: filas.filter((f) => f.rebote_en).length,
   };
 }
 
@@ -127,13 +130,18 @@ export async function GET(request: Request) {
   // Cuánto queda de ESTA campaña: el panel necesita decir «quedan N» y cuándo
   // se puede mandar la próxima tanda, no solo cuántas cuentas hay.
   const campana = campanaDesdeAsunto(new URL(request.url).searchParams.get("asunto") ?? "");
-  const { enviados, ultimoEnvio } = await estadoDeCampana(campana);
+  const { enviados, ultimoEnvio, abiertos, clics, rebotes } = await estadoDeCampana(campana);
   return NextResponse.json({
     clients: clients.length,
     adminEmail: admin.email,
     porTanda: POR_TANDA,
     campana,
     enviados,
+    abiertos,
+    clics,
+    rebotes,
+    // El panel necesita distinguir «nadie abrió» de «todavía no medimos».
+    midiendo: Boolean(process.env.BREVO_WEBHOOK_SECRET),
     restantes: Math.max(0, clients.length - enviados),
     horasParaLaProxima: horasQueFaltan(ultimoEnvio),
   });
@@ -151,7 +159,7 @@ export async function POST(request: Request) {
   // El enlace viaja MARCADO: sin utm no hay forma de saber si el correo produjo
   // algo, y una campaña que no se puede medir se repite a ciegas. La marca es la
   // misma que ya entiende la atribución del app.
-  const campana = subject.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40) || "campana";
+  const campana = campanaDesdeAsunto(subject);
   const conMarca = (ruta: string) => {
     const separador = ruta.includes("?") ? "&" : "?";
     return `${APP_URL}${ruta}${separador}utm_source=correo&utm_medium=campana&utm_campaign=${encodeURIComponent(campana)}`;
@@ -189,7 +197,10 @@ export async function POST(request: Request) {
 
   let sent = 0, failed = 0, skipped = 0;
   for (const client of tanda) {
-    const result = await sendBrevoEmail({ to: client.email, subject, html, replyTo, nivel: "masivo" });
+    // La etiqueta va en el envío para que el aviso de Brevo (apertura, clic,
+    // rebote) se pueda anotar en la fila correcta: llega con el correo de la
+    // persona, pero sin la etiqueta no dice de qué campaña habla.
+    const result = await sendBrevoEmail({ to: client.email, subject, html, replyTo, nivel: "masivo", campana });
     if (result.ok) {
       sent += 1;
       // Se anota SOLO lo que salió: lo que falló vuelve a intentarse mañana.

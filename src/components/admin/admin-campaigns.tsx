@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Megaphone, Send, Loader2, Star } from "lucide-react";
+import { Megaphone, Send, Loader2, Star, History } from "lucide-react";
 import { useAppDialog } from "@/hooks/use-app-dialog";
 
 /**
@@ -46,7 +46,7 @@ export function AdminCampaigns() {
   const { dialogNode, showMessage, confirm } = useAppDialog();
   const [clientes, setClientes] = useState<number | null>(null);
   // Cuántos faltan de ESTA campaña y cuándo se puede mandar la próxima tanda.
-  const [tanda, setTanda] = useState({ porTanda: 200, enviados: 0, restantes: 0, horasParaLaProxima: 0 });
+  const [tanda, setTanda] = useState({ porTanda: 200, enviados: 0, restantes: 0, horasParaLaProxima: 0, abiertos: 0, clics: 0, rebotes: 0, midiendo: false });
   const [adminEmail, setAdminEmail] = useState("");
   // Cuánto correo queda HOY. Los 300 diarios del plan gratuito los comparten
   // esta campaña con los correos que el app necesita mandar (crear cuenta,
@@ -55,6 +55,8 @@ export function AdminCampaigns() {
   const [cuota, setCuota] = useState<{ enviados: number; tope: number; restantes: number; margenMasivo: number } | null>(null);
   const [resena, setResena] = useState<{ cuentas: number; yaTenian: number } | null>(null);
   const [invitando, setInvitando] = useState(false);
+  const [rescatando, setRescatando] = useState(false);
+  const [rescate, setRescate] = useState<string | null>(null);
 
   useEffect(() => {
     void fetch("/api/admin/invitar-resena")
@@ -95,6 +97,10 @@ export function AdminCampaigns() {
         enviados: Number(d.enviados ?? 0),
         restantes: Number(d.restantes ?? d.clients ?? 0),
         horasParaLaProxima: Number(d.horasParaLaProxima ?? 0),
+        abiertos: Number(d.abiertos ?? 0),
+        clics: Number(d.clics ?? 0),
+        rebotes: Number(d.rebotes ?? 0),
+        midiendo: Boolean(d.midiendo),
       });
     } catch { setClientes(0); }
     try {
@@ -198,6 +204,61 @@ export function AdminCampaigns() {
               {enviando === "all" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Megaphone className="h-4 w-4" />}{tanda.horasParaLaProxima > 0 ? `Disponible en ${tanda.horasParaLaProxima} h` : tanda.restantes === 0 ? "Ya la recibieron todos" : `Enviar a ${Math.min(tanda.porTanda, tanda.restantes)} (quedan ${tanda.restantes})`}
             </button>
           </div>
+
+          {/* «Se enviaron 200» es trabajo hecho, no resultado. Lo que decide si
+              vale la pena mandar la siguiente es cuántos la abrieron y cuántos
+              tocaron el botón. */}
+          {tanda.enviados > 0 && (
+            <div className="mt-5 border-t border-[#e5e7eb] pt-4">
+              <p className="mb-3 text-xs font-bold uppercase tracking-wide text-[#68778d]">Resultado de esta campaña</p>
+              {tanda.midiendo ? (
+                <dl className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                  {[
+                    { etiqueta: "Enviados", valor: tanda.enviados, de: null },
+                    { etiqueta: "La abrieron", valor: tanda.abiertos, de: tanda.enviados },
+                    { etiqueta: "Tocaron el botón", valor: tanda.clics, de: tanda.enviados },
+                    { etiqueta: "No llegaron", valor: tanda.rebotes, de: tanda.enviados },
+                  ].map((m) => (
+                    <div key={m.etiqueta} className="rounded-xl bg-[#f4f7fa] px-4 py-3">
+                      <dt className="text-[12px] font-bold uppercase tracking-wide text-[#68778d]">{m.etiqueta}</dt>
+                      <dd className="mt-1 text-[19px] font-extrabold text-[#162543]">{m.valor}</dd>
+                      {m.de ? <dd className="text-[12px] font-semibold text-[#007fae]">{Math.round((m.valor / m.de) * 100)}% de {m.de}</dd> : null}
+                    </div>
+                  ))}
+                </dl>
+              ) : (
+                <p className="text-[13px] leading-6 text-[#52627a]">
+                  Salieron {tanda.enviados} correos. Todavía no se sabe cuántos los abrieron: falta conectar el aviso de Brevo
+                  (webhook a <span className="font-semibold">/api/webhooks/brevo</span> con la clave del entorno).
+                </p>
+              )}
+
+              {/* Las tandas que salieron antes del webhook no están perdidas:
+                  Brevo guarda 30 días de eventos con el asunto, y el asunto es
+                  de donde sale el nombre de la campaña. */}
+              <div className="mt-3 flex flex-wrap items-center gap-3">
+                <button
+                  type="button"
+                  disabled={rescatando}
+                  onClick={async () => {
+                    setRescatando(true);
+                    setRescate(null);
+                    try {
+                      const r = await (await fetch("/api/admin/campanas/recuperar", { method: "POST" })).json();
+                      setRescate(r.error ? `No se pudo: ${r.error}` : `Se revisaron ${r.revisados} eventos y se anotaron ${r.anotados}.`);
+                      await cargarEstado();
+                    } catch { setRescate("No se pudo consultar a Brevo."); }
+                    setRescatando(false);
+                  }}
+                  className="inline-flex h-10 items-center justify-center gap-2 rounded-full border border-[#d7e1ea] bg-white px-4 text-[13px] font-bold text-[#162543] transition hover:border-[#b9c8d6] hover:bg-[#f6f9fb] disabled:opacity-60"
+                >
+                  {rescatando ? <Loader2 className="h-4 w-4 animate-spin" /> : <History className="h-4 w-4" />}
+                  Traer resultados de lo ya enviado
+                </button>
+                {rescate && <span className="text-[12px] font-semibold text-[#52627a]">{rescate}</span>}
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="rounded-2xl border border-[#e5e7eb] bg-[#f4f7fa] p-5">

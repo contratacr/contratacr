@@ -31,15 +31,29 @@ const DATOS_ESTRUCTURADOS = (locale: string) => JSON.stringify([
     "@context": "https://schema.org",
     "@type": "Organization",
     name: "ContrataCR",
+    // LAS VARIANTES CON LAS QUE LA GENTE NOS BUSCA. Google corregía
+    // «contratacr» a «contratar» —«estos son los resultados de contratar»—
+    // porque no reconocía la marca y la trataba como un error de dedo.
+    // `alternateName` es una de las señales con las que aprende que el nombre
+    // existe; la otra son los enlaces de fuera, que no dependen del código.
+    alternateName: ["Contrata CR", "contratacr.com", "Contrata Costa Rica"],
     url: "https://contratacr.com",
     logo: "https://contratacr.com/logo-mark.png",
     areaServed: { "@type": "Country", name: "Costa Rica" },
-    sameAs: ["https://www.instagram.com/contratacr", "https://www.facebook.com/contratacr", "https://www.tiktok.com/@contratacr"],
+    // La ficha de Google Business va aquí: es lo que ata el sitio con el
+    // negocio que Google ya tiene registrado.
+    sameAs: [
+      "https://www.instagram.com/contratacr",
+      "https://www.facebook.com/contratacr",
+      "https://www.tiktok.com/@contratacr",
+      "https://g.page/r/CeZkdYZpL2enECE",
+    ],
   },
   {
     "@context": "https://schema.org",
     "@type": "WebSite",
     name: "ContrataCR",
+    alternateName: ["Contrata CR", "contratacr.com"],
     url: `https://contratacr.com/${locale}`,
     inLanguage: locale,
     potentialAction: {

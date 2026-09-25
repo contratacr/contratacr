@@ -57,6 +57,7 @@ const handlerRules: OwnershipRule[] = [
   { match: /^\/api\/internal\/soporte(?:\/|$)/, owner: "soporte-cierre-automatico.spec.ts" },
   { match: /^\/api\/internal\/verificacion(?:\/|$)/, owner: "verificacion-repesca.spec.ts" },
   { match: /^\/api\/payments(?:\/|$)/, owner: "product-contract.spec.ts" },
+  { match: /^\/api\/webhooks(?:\/|$)/, owner: "product-contract.spec.ts" },
   { match: /^\/api\/(?:search|categories|insurers)(?:\/|$)/, owner: "api-smoke.spec.ts" },
   { match: /^\/api\/contact(?:\/|$)/, owner: "whatsapp-review-followup.spec.ts" },
   { match: /^\/api\/(?:upload|media)(?:\/|$)/, owner: "extended-lifecycle.spec.ts" },

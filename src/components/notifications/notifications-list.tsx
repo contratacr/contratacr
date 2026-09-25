@@ -395,12 +395,36 @@ export function NotificationsList({ scope = "mode", titulo }: { scope?: "mode" |
   // tarjeta del alto de la pantalla el pie nace bajo el borde en los tres
   // estados, y la lista al crecer lo empuja fuera de la vista, no a la vista.
   // En el teléfono web no hay pie, así que ahí se queda la tarjeta normal.
+  // Y EN EL TELÉFONO WEB TAMBIÉN LLEGA HASTA ABAJO. Eran 24rem fijos: con una
+  // sola notificación quedaba un bloque de 384 px flotando en una pantalla de
+  // 844 y debajo un vacío gris, que se lee como «esto se cortó». Con el alto
+  // de la pantalla, una notificación o veinte se ven igual de terminadas.
+  const listaRef = useRef<HTMLUListElement | null>(null);
+  const [listaLlena, setListaLlena] = useState(false);
+
   const altoDeLaTarjeta = nativeApp
     ? "min-h-[calc(100dvh-8.75rem)] sm:min-h-[calc(100dvh-16rem)]"
-    : "min-h-[24rem] sm:min-h-[26rem] lg:min-h-[calc(100dvh-16rem)]";
+    : "min-h-[calc(100dvh-9.5rem)] sm:min-h-[26rem] lg:min-h-[calc(100dvh-16rem)]";
 
   // El «...» general vive en la misma fila que «Nuevas», el primer rótulo de
   // la lista: suelto arriba quedaba a otra altura y parecía de otra cosa.
+  // ¿Las filas llenan la tarjeta? De eso depende si la última lleva borde.
+  useEffect(() => {
+    const ul = listaRef.current;
+    if (!ul) return;
+    const medir = () => {
+      const filas = [...ul.children] as HTMLElement[];
+      const ultima = filas[filas.length - 1];
+      if (!ultima) { setListaLlena(false); return; }
+      // Llena = la última fila termina pegada al final de la lista (±2 px).
+      setListaLlena(ul.getBoundingClientRect().bottom - ultima.getBoundingClientRect().bottom <= 2);
+    };
+    medir();
+    const observador = new ResizeObserver(medir);
+    observador.observe(ul);
+    return () => observador.disconnect();
+  }, [mostrando, ordenadas.length]);
+
   const menuGeneral = hasVisibleNotifications ? (
         <div ref={globalMenuRef} data-menu-general-notificaciones="" className={cn("relative shrink-0", nativeApp && scope === "all" && "[&>button]:sr-only")}>
           <button
@@ -562,7 +586,7 @@ export function NotificationsList({ scope = "mode", titulo }: { scope?: "mode" |
           // cuando la lista crece lo empuja fuera de la vista, no a la vista
           // (medido: saltos de 0,78 en teléfono y 0,49 en escritorio).
           <>
-          <ul className={cn("ccr-notifications-items", scope === "all" ? altoDeLaTarjeta : "min-h-[16rem] sm:min-h-[18rem]")}>
+          <ul ref={listaRef} className={cn("ccr-notifications-items", scope === "all" ? altoDeLaTarjeta : "min-h-[16rem] sm:min-h-[18rem]")}>
             {ordenadas.slice(0, mostrando).map((n, indice) => {
               const grupo = grupoDe(n);
               const abreGrupo = indice === 0 || grupoDe(ordenadas[indice - 1]) !== grupo;
@@ -573,7 +597,11 @@ export function NotificationsList({ scope = "mode", titulo }: { scope?: "mode" |
               <li
                 key={n.id}
                 data-unread={!n.read ? "true" : undefined}
-                className="relative group border-b border-[#eef2f6] last:border-0"
+                // El borde de abajo se queda SIEMPRE, salvo en la última fila cuando la
+                // lista llena la tarjeta (ahí el borde de la tarjeta ya cierra y
+                // se verían dos líneas). Con una sola notificación la fila no toca
+                // el fondo, así que sin borde quedaba abierta contra el vacío.
+                className={cn("relative group border-b border-[#eef2f6]", listaLlena && "last:border-0")}
                 onTouchStart={(event) => {
                   if (!nativeApp) return;
                   arrastreRef.current = {

@@ -89,6 +89,13 @@ export async function sendBrevoEmail(opts: {
   /** Override the From (still must be on the verified @contratacr.com domain). */
   sender?: { name?: string; email: string };
   attachments?: EmailAttachment[];
+  /**
+   * Etiqueta de campaña. Viaja a Brevo como `tags` y vuelve en el aviso del
+   * webhook: es lo único que permite saber a qué envío pertenece una apertura
+   * o un clic. Sin ella el aviso llega con el correo de la persona pero sin
+   * decir de cuál campaña, y no se puede anotar en ninguna fila.
+   */
+  campana?: string;
 }): Promise<EmailResult> {
   const key = process.env.BREVO_API_KEY;
   if (!key) return { ok: false, status: "skipped", detail: "Brevo not configured (BREVO_API_KEY missing)" };
@@ -109,6 +116,7 @@ export async function sendBrevoEmail(opts: {
     htmlContent: opts.html,
     ...(replyTo ? { replyTo } : {}),
     ...(opts.attachments && opts.attachments.length > 0 ? { attachment: opts.attachments } : {}),
+    ...(opts.campana ? { tags: [opts.campana] } : {}),
   };
 
   try {

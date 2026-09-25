@@ -4,8 +4,9 @@ import { alternativasDeIdioma } from "@/lib/seo/alternates";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { ServiceLanding } from "@/components/landing-servicios/service-landing";
+import { DatosEstructurados } from "@/components/seo/datos-estructurados";
 import { categorySlug, getCategoryIdBySlug, getCategoryLabel } from "@/lib/data/categories";
-import { getProvinceBySlugOrId } from "@/lib/data/cr-geography";
+import { getProvinceBySlugOrId, type Province } from "@/lib/data/cr-geography";
 import { getSupplyCounts, supplyKey, MIN_SUPPLY_FOR_LANDING } from "@/lib/queries/supply";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://contratacr.com";
@@ -60,5 +61,51 @@ export default async function CategoryProvinceLandingPage({ params }: Props) {
   // aquí: esta página se genera estáticamente (`revalidate`), así que un
   // redirect en el componente no llega a ejecutarse, y además en producción el
   // middleware corre primero y se traga lo que devuelva la página.
-  return <ServiceLanding locale={locale} categoryId={id} provinceId={province.id} />;
+  return (
+    <>
+      {/* Estas son las páginas de más intención del sitio —quien busca
+          «electricista en Alajuela» ya quiere contratar— y eran las únicas
+          landings sin datos estructurados: el nivel oficio sí los tenía. Sin
+          ellos Google no sabe que la página cubre una provincia concreta ni
+          puede pintar las migas de pan, así que el resultado sale como una
+          dirección suelta frente a competidores que sí las traen. */}
+      <DatosEstructurados datos={oficioEnProvincia(locale, id, province)} />
+      <ServiceLanding locale={locale} categoryId={id} provinceId={province.id} />
+    </>
+  );
+}
+
+function oficioEnProvincia(locale: string, categoria: string, province: Province) {
+  const base = APP_URL;
+  const nombre = getCategoryLabel(categoria, locale);
+  const direccion = categorySlug(categoria);
+  const esEn = locale === "en";
+  const url = `${base}/${locale}/servicios/${direccion}/${province.slug}`;
+  return [
+    {
+      "@context": "https://schema.org",
+      "@type": "Service",
+      name: esEn ? `${nombre} in ${province.name}` : `${nombre} en ${province.name}`,
+      serviceType: nombre,
+      url,
+      // `State` es el tipo que schema.org usa para una división de primer
+      // nivel de un país; la provincia de Costa Rica es exactamente eso.
+      areaServed: {
+        "@type": "State",
+        name: province.name,
+        containedInPlace: { "@type": "Country", name: "Costa Rica" },
+      },
+      provider: { "@type": "Organization", name: "ContrataCR", url: `${base}/${locale}` },
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        { "@type": "ListItem", position: 1, name: esEn ? "Home" : "Inicio", item: `${base}/${locale}` },
+        { "@type": "ListItem", position: 2, name: esEn ? "Services" : "Servicios", item: `${base}/${locale}/servicios` },
+        { "@type": "ListItem", position: 3, name: nombre, item: `${base}/${locale}/servicios/${direccion}` },
+        { "@type": "ListItem", position: 4, name: province.name, item: url },
+      ],
+    },
+  ];
 }
