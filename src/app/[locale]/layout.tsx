@@ -18,6 +18,7 @@ import { createClient, hasSupabaseServerConfig } from "@/lib/supabase/server";
 import { safeGetUser } from "@/lib/supabase/get-user";
 import { notificationContext } from "@/lib/notification-link";
 import { WhatsAppReviewFollowUp } from "@/components/reviews/whatsapp-review-followup";
+import { PedirResenaGoogle } from "@/components/reviews/pedir-resena-google";
 import { PushTokenManager } from "@/components/push/push-token-manager";
 import { AppResumeRecovery } from "@/components/util/app-resume-recovery";
 import { NativeBottomNav } from "@/components/mobile/native-bottom-nav";
@@ -198,6 +199,7 @@ export default async function LocaleLayout({
         {children}
         <NativeBottomNav />
         <WhatsAppReviewFollowUp />
+        <PedirResenaGoogle />
         <AiConcierge />
         <FreezeMonitor />
       </AuthProvider>

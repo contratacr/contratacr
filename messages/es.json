@@ -4244,5 +4244,14 @@
     "unavailable": "Este empleo ya no recibe postulaciones.",
     "backAll": "Ver todos los empleos",
     "heading": "Empleo"
+  },
+  "reviews": {
+    "google": {
+      "titulo": "Gracias por tu reseña",
+      "cuerpo": "¿Nos dejas una también en Google? Tarda 30 segundos y ayuda a que más gente encuentre ContrataCR.",
+      "boton": "Dejar reseña en Google",
+      "ahoraNo": "Ahora no",
+      "cerrar": "Cerrar"
+    }
   }
 }
