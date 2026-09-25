@@ -11,6 +11,16 @@ export const INTERACTION_EVENT_TYPES = [
   // El correo es un CONTACTO; un clic a Instagram no. Iban con el mismo tipo,
   // así que la tasa de contacto del panel contaba clics a redes sociales.
   "email_click",
+  // Lo que el app hace HOY y no se medía: la cotización, el mensaje interno,
+  // el profesional que escribe a un proyecto del tablero, la verificación
+  // aprobada y el clic que llega desde un correo de campaña.
+  "quote_created",
+  "quote_accepted",
+  "quote_declined",
+  "internal_message_sent",
+  "project_lead_whatsapp",
+  "identity_verified",
+  "campaign_click",
   "service_request_started",
   "service_request_created",
   "project_published",

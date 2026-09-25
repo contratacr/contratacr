@@ -135,6 +135,18 @@ export async function runIdentityVerification(
       } catch { /* ignore — header just keeps the old display name until next sync */ }
     }
 
+    // Cuántas se aprueban y cuánto tardan desde el registro: sin esto no se
+    // puede saber si el cuello de botella es el equipo o la gente que no
+    // termina de mandar su identificación.
+    await admin.from("interaction_events").insert({
+      event_type: "identity_verified",
+      professional_id: professionalId,
+      visitor_hash: professionalId,
+      source: "api",
+      locale: "es",
+      metadata: { metodo: "automatico", proveedor: result.provider ?? null },
+    }).then(() => undefined, () => undefined);
+
     await admin
       .from("professionals")
       .update({

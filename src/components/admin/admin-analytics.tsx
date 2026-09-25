@@ -217,8 +217,10 @@ export function AdminAnalytics({ data }: { data: AdminReports }) {
           <Kpi label="Profesionales nuevos" data={week.pros} />
           <Kpi label="Clientes nuevos" data={week.clients} />
           <Kpi label="Búsquedas" data={week.searches} />
-          <Kpi label="Contactos" data={week.contacts} help="WhatsApp, llamadas y correos" />
+          <Kpi label="Contactos" data={week.contacts} help="WhatsApp, llamadas, correos y mensajes en la app" />
           <Kpi label="Proyectos publicados" data={week.requests} help="Proyectos que publicaron los clientes en el tablero" />
+          <Kpi label="Respuestas al tablero" data={week.projectLeads} help="Profesionales que le escribieron a un proyecto publicado" />
+          <Kpi label="Cotizaciones" data={week.quotes} help="Cotizaciones que enviaron los profesionales" />
         </div>
       </Section>
 
@@ -251,6 +253,7 @@ export function AdminAnalytics({ data }: { data: AdminReports }) {
             { label: "Intentaron contactar", value: insights.funnel.contactAttempts, help: "Tocaron WhatsApp, llamar o correo — con cuenta o sin ella" },
             { label: "Contactaron", value: insights.funnel.contacts, help: "Ya con cuenta: el contacto se completó. La diferencia con el paso anterior es la gente que se detuvo en el registro" },
             { label: "Proyectos publicados", value: insights.funnel.requests, help: "Publicaron un proyecto en el tablero" },
+            { label: "Respuestas al tablero", value: insights.funnel.projectLeads, help: "Profesionales que le escribieron a alguno de esos proyectos" },
           ]} />
           {insights.searchQuality.total > 0 && (
             <p className="mt-3 text-xs text-[#64748b]">

@@ -37,8 +37,8 @@ export type SearchQuality = {
   topEmpty: EmptySearch[];
 };
 export type AdminInsights = {
-  week: { pros: WeekCompare; clients: WeekCompare; searches: WeekCompare; requests: WeekCompare; contacts: WeekCompare };
-  funnel: { searches: number; profileViews: number; contactAttempts: number; contacts: number; requests: number };
+  week: { pros: WeekCompare; clients: WeekCompare; searches: WeekCompare; requests: WeekCompare; contacts: WeekCompare; quotes: WeekCompare; projectLeads: WeekCompare };
+  funnel: { searches: number; profileViews: number; contactAttempts: number; contacts: number; requests: number; projectLeads: number };
   /** When contact_gate_shown started being recorded — before it, attempts are undercounted. */
   gateSince: string | null;
   demand: DemandRow[];
@@ -119,8 +119,8 @@ export async function getAdminReports(locale = "es"): Promise<AdminReports> {
 
   const empty: AdminReports = {
     insights: {
-      week: { pros: { now: 0, prev: 0 }, clients: { now: 0, prev: 0 }, searches: { now: 0, prev: 0 }, requests: { now: 0, prev: 0 }, contacts: { now: 0, prev: 0 } },
-      funnel: { searches: 0, profileViews: 0, contactAttempts: 0, contacts: 0, requests: 0 },
+      week: { pros: { now: 0, prev: 0 }, clients: { now: 0, prev: 0 }, searches: { now: 0, prev: 0 }, requests: { now: 0, prev: 0 }, contacts: { now: 0, prev: 0 }, quotes: { now: 0, prev: 0 }, projectLeads: { now: 0, prev: 0 } },
+      funnel: { searches: 0, profileViews: 0, contactAttempts: 0, contacts: 0, requests: 0, projectLeads: 0 },
       gateSince: null,
       demand: [],
       searchQuality: { total: 0, empty: 0, topEmpty: [] },
@@ -316,7 +316,7 @@ export async function getAdminReports(locale = "es"): Promise<AdminReports> {
     // que solo ABRE la página de reservar, de las citas retiradas— y
     // `external_link_click`, que incluye los clics a Instagram y Facebook del
     // profesional: el KPI y el embudo contaban como contacto lo que no lo es.
-    const CONTACT_TYPES = ["whatsapp_click", "phone_click", "email_click"];
+    const CONTACT_TYPES = ["whatsapp_click", "phone_click", "email_click", "internal_message_sent"];
     const gateEvents = events.filter((e) => e.event_type === "contact_gate_shown");
 
     empty.insights.week = {
@@ -327,6 +327,10 @@ export async function getAdminReports(locale = "es"): Promise<AdminReports> {
       // producto y el KPI mezclaba dos cosas, una de ellas siempre en cero.
       requests: countWeek(projectCreated),
       contacts: countWeek(eventTimes(CONTACT_TYPES)),
+      quotes: countWeek(eventTimes(["quote_created"])),
+      // Cuántos profesionales le escribieron a un proyecto del tablero: la
+      // única medida de si publicar sirve para algo.
+      projectLeads: countWeek(eventTimes(["project_lead_whatsapp"])),
     };
     empty.insights.funnel = {
       searches: eventTimes(["search_performed"]).filter(inLast7).length,
@@ -334,6 +338,7 @@ export async function getAdminReports(locale = "es"): Promise<AdminReports> {
       contactAttempts: eventTimes([...CONTACT_TYPES, "contact_gate_shown"]).filter(inLast7).length,
       contacts: eventTimes(CONTACT_TYPES).filter(inLast7).length,
       requests: projectCreated.filter(inLast7).length,
+      projectLeads: eventTimes(["project_lead_whatsapp"]).filter(inLast7).length,
     };
     empty.insights.gateSince = gateEvents.length > 0
       ? gateEvents.map((e) => e.created_at).sort()[0]
@@ -406,6 +411,13 @@ export async function getAdminReports(locale = "es"): Promise<AdminReports> {
       profile_share: "Perfiles compartidos",
       external_link_click: "Clics a sus redes",
       email_click: "Correos",
+      internal_message_sent: "Mensajes en la app",
+      quote_created: "Cotizaciones enviadas",
+      quote_accepted: "Cotizaciones aceptadas",
+      quote_declined: "Cotizaciones rechazadas",
+      project_lead_whatsapp: "Escribieron a un proyecto",
+      identity_verified: "Identidades verificadas",
+      campaign_click: "Clics desde un correo",
       project_published: "Proyectos creados",
       review_created: "Reseñas recibidas",
       search_performed: "Búsquedas",
