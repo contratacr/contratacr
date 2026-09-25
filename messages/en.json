@@ -389,7 +389,8 @@
     "wholeCountryTag": "National coverage",
     "addedPlaces": "Added places ({count})",
     "removePlace": "Remove place",
-    "todoElPaisTitulo": "I do home service anywhere in the country"
+    "todoElPaisTitulo": "I do home service anywhere in the country",
+    "coberturaAdicional": "Additional coverage"
   },
   "reviewModal": {
     "titleEdit": "Edit your review",
@@ -916,7 +917,7 @@
       "rateLabel": "What do you charge per hour, starting from?",
       "rateHelp": "It shows on your card as «₡X /hour» and it is the first thing a client looks at. Leave it blank and it says «Ask for price», and many people leave without writing. You can change it later.",
       "ratePlaceholder": "12 000",
-      "errWorkplaceSiempre": "Your workplace is missing: choose the province and, if you want, the canton."
+      "errWorkplaceSiempre": "Your workplace is missing: choose the province and the canton, or the whole province."
     },
     "client": {
       "title": "Create client account",

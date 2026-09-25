@@ -389,7 +389,8 @@
     "wholeCountryTag": "Cobertura nacional",
     "addedPlaces": "Lugares agregados ({count})",
     "removePlace": "Quitar lugar",
-    "todoElPaisTitulo": "Trabajo a domicilio en todo el país"
+    "todoElPaisTitulo": "Trabajo a domicilio en todo el país",
+    "coberturaAdicional": "Cobertura adicional"
   },
   "reviewModal": {
     "titleEdit": "Editar tu reseña",
@@ -916,7 +917,7 @@
       "rateLabel": "¿Desde cuánto cobrás por hora?",
       "rateHelp": "Sale en tu tarjeta como «₡X /hora» y es lo primero que mira un cliente. Si lo dejás en blanco dirá «Consultar precio», y mucha gente se va sin escribir. Lo podés cambiar después.",
       "ratePlaceholder": "12 000",
-      "errWorkplaceSiempre": "Falta tu lugar de trabajo: elige la provincia y, si quieres, el cantón."
+      "errWorkplaceSiempre": "Falta tu lugar de trabajo: elige la provincia y el cantón, o toda la provincia."
     },
     "client": {
       "title": "Crear cuenta de cliente",
