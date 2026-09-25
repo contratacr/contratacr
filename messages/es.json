@@ -916,7 +916,7 @@
       "rateLabel": "¿Desde cuánto cobrás por hora?",
       "rateHelp": "Sale en tu tarjeta como «₡X /hora» y es lo primero que mira un cliente. Si lo dejás en blanco dirá «Consultar precio», y mucha gente se va sin escribir. Lo podés cambiar después.",
       "ratePlaceholder": "12 000",
-      "errWorkplaceSiempre": "Agrega al menos un lugar de trabajo."
+      "errWorkplaceSiempre": "Falta tu lugar de trabajo: elige la provincia y, si quieres, el cantón."
     },
     "client": {
       "title": "Crear cuenta de cliente",

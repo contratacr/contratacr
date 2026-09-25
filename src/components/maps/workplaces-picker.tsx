@@ -505,8 +505,13 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
           con el mismo interruptor del app, en paralelo, sin texto de ayuda:
           el título ya dice lo que es, y al encenderlo aparece en la lista
           como un lugar más. */}
-      <div className="flex flex-col gap-1 pt-1">
+      {/* Columna de lo ancho del rótulo más largo, filas estiradas: los dos
+          interruptores caen en la misma vertical, pegados al texto (ver
+          `estirar` en FilaInterruptor). Sueltos, cada uno quedaba donde
+          terminaba su frase. */}
+      <div className="inline-flex w-fit max-w-full flex-col gap-1 pt-1">
         <FilaInterruptor
+          estirar
           titulo={t("todoElPaisTitulo")}
           checked={value.some((wp) => wp.level === "country")}
           onChange={(encendido) => {

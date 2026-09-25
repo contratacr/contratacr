@@ -916,7 +916,7 @@
       "rateLabel": "What do you charge per hour, starting from?",
       "rateHelp": "It shows on your card as «₡X /hour» and it is the first thing a client looks at. Leave it blank and it says «Ask for price», and many people leave without writing. You can change it later.",
       "ratePlaceholder": "12 000",
-      "errWorkplaceSiempre": "Add at least one workplace."
+      "errWorkplaceSiempre": "Your workplace is missing: choose the province and, if you want, the canton."
     },
     "client": {
       "title": "Create client account",
