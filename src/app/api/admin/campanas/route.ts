@@ -23,7 +23,6 @@ const MAX_BODY = 4000;
 const POR_TANDA = 200;
 
 /** Entre una tanda y la siguiente: el tope del proveedor es por día natural. */
-const HORAS_ENTRE_TANDAS = 24;
 
 /**
  * Quien manda la campaña también la recibe como la recibe la gente. La prueba
@@ -104,9 +103,18 @@ async function estadoDeCampana(campana: string) {
 
 function horasQueFaltan(ultimoEnvio: string | null) {
   if (!ultimoEnvio) return 0;
-  const pasadas = (Date.now() - new Date(ultimoEnvio).getTime()) / 3_600_000;
-  return Math.max(0, Math.ceil(HORAS_ENTRE_TANDAS - pasadas));
+  // SE LIBERA CUANDO BREVO REINICIA, no 24 horas exactas después del envío.
+  // El tope que hay que respetar es el diario del proveedor, y ese se reinicia
+  // a medianoche UTC: contar 24 h desde el minuto del último envío dejaba la
+  // campaña bloqueada horas después de que ya hubiera cupo nuevo. Si la tanda
+  // anterior salió en un día UTC anterior, no falta nada.
+  const salida = new Date(ultimoEnvio);
+  const hoy = new Date();
+  if (salida.toISOString().slice(0, 10) < hoy.toISOString().slice(0, 10)) return 0;
+  const proximoReinicio = Date.UTC(hoy.getUTCFullYear(), hoy.getUTCMonth(), hoy.getUTCDate() + 1);
+  return Math.max(0, Math.ceil((proximoReinicio - hoy.getTime()) / 3_600_000));
 }
+
 
 export async function GET(request: Request) {
   const admin = await getApiAdmin();
@@ -164,7 +172,7 @@ export async function POST(request: Request) {
   const faltan = horasQueFaltan(ultimoEnvio);
   if (faltan > 0) {
     return NextResponse.json({
-      error: `La tanda anterior salió hace menos de ${HORAS_ENTRE_TANDAS} horas. Faltan ${faltan} h para la siguiente.`,
+      error: `Ya salió una tanda de esta campaña hoy. El cupo diario de Brevo se renueva en ${faltan} h.`,
       horasParaLaProxima: faltan,
     }, { status: 429 });
   }

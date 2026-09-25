@@ -217,7 +217,7 @@ export function AdminAnalytics({ data }: { data: AdminReports }) {
           <Kpi label="Profesionales nuevos" data={week.pros} />
           <Kpi label="Clientes nuevos" data={week.clients} />
           <Kpi label="Búsquedas" data={week.searches} />
-          <Kpi label="Contactos" data={week.contacts} help="WhatsApp, llamadas, correos y mensajes en la app" />
+          <Kpi label="Contactos" data={week.contacts} help="WhatsApp, llamadas y correos" />
           <Kpi label="Proyectos publicados" data={week.requests} help="Proyectos que publicaron los clientes en el tablero" />
           <Kpi label="Respuestas al tablero" data={week.projectLeads} help="Profesionales que le escribieron a un proyecto publicado" />
           <Kpi label="Cotizaciones" data={week.quotes} help="Cotizaciones que enviaron los profesionales" />

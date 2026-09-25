@@ -2700,7 +2700,7 @@
     "newPassword": "Nueva contraseña (mínimo 8 caracteres)",
     "repeatPassword": "Repite la nueva contraseña",
     "savePassword": "Guardar contraseña",
-    "forgotPassword": "¿Olvidaste tu contraseña actual? Te enviamos un enlace por correo",
+    "forgotPassword": "No recuerdo mi contraseña actual: enviarme un enlace por correo",
     "resetSent": "✓ Te enviamos un enlace a {email} para restablecer tu contraseña.",
     "sending": "Enviando…",
     "changePassword": "Cambiar contraseña",
@@ -4253,5 +4253,11 @@
       "ahoraNo": "Ahora no",
       "cerrar": "Cerrar"
     }
+  },
+  "resenaGoogle": {
+    "titulo": "¿Nos dejas una reseña?",
+    "cuerpo": "ContrataCR es un proyecto tico y pequeño. Una reseña en Google ayuda a que más personas nos encuentren cuando buscan un profesional.",
+    "boton": "Dejar reseña en Google",
+    "nota": "Tarda menos de un minuto. Se abre en Google."
   }
 }

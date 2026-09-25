@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { notifyVerificationOutreach } from "@/lib/verification-notify";
 import { enforceRateLimit } from "@/lib/rate-limit";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { invitarAResenaDeGoogle } from "@/lib/notifications/invitacion-resena-google";
 import { createClient as createServerClient } from "@/lib/supabase/server";
 import { runIdentityVerification } from "@/lib/verification/run-verification";
 import { reconcileProfileEmail } from "@/lib/auth/reconcile-profile-email";
@@ -423,6 +424,8 @@ export async function POST(req: Request) {
       console.error("[register] auto-verify:", e);
     }
 
+    // Queda esperando en la campanita; no interrumpe el registro.
+    await invitarAResenaDeGoogle(supabase, [userId]);
     return NextResponse.json({ ok: true, slug });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Error interno del servidor";

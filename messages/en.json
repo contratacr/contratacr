@@ -2700,7 +2700,7 @@
     "newPassword": "New password (at least 8 characters)",
     "repeatPassword": "Repeat the new password",
     "savePassword": "Save password",
-    "forgotPassword": "Forgot your current password? We'll send you a link by email",
+    "forgotPassword": "I don't remember my current password: email me a link",
     "resetSent": "✓ We sent a link to {email} to reset your password.",
     "sending": "Sending…",
     "changePassword": "Change password",
@@ -4253,5 +4253,11 @@
       "ahoraNo": "Not now",
       "cerrar": "Close"
     }
+  },
+  "resenaGoogle": {
+    "titulo": "Would you leave us a review?",
+    "cuerpo": "ContrataCR is a small Costa Rican project. A Google review helps more people find us when they look for a professional.",
+    "boton": "Leave a Google review",
+    "nota": "It takes less than a minute. It opens in Google."
   }
 }
