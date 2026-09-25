@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 import { captureAttribution, readAttribution } from "@/lib/analytics/attribution";
+import { trackInteraction } from "@/lib/analytics/interaction-events";
 import { useAuth } from "@/hooks/use-auth";
 
 const CLAIMED_KEY = "contratacr:attribution-claimed";
@@ -19,6 +20,21 @@ export function AttributionCapture() {
 
   useEffect(() => {
     captureAttribution();
+  }, [pathname, searchParams]);
+
+  // EL CLIC QUE LLEGA DE UN CORREO DE CAMPAÑA. Hasta ahora solo se sabía de
+  // quien terminaba REGISTRÁNDOSE: los `utm_*` se guardan en el perfil, así
+  // que mandar 400 correos y que entren 40 personas sin crear cuenta se veía
+  // igual que no mandar ninguno. Se registra una vez por campaña y visita.
+  useEffect(() => {
+    if (searchParams.get("utm_medium") !== "campana") return;
+    const campana = (searchParams.get("utm_campaign") ?? "").slice(0, 120) || "sin_nombre";
+    const clave = `ccr:clic-campana:${campana}`;
+    try {
+      if (window.sessionStorage.getItem(clave)) return;
+      window.sessionStorage.setItem(clave, "1");
+    } catch { /* sin almacenamiento se registra igual, como mucho dos veces */ }
+    void trackInteraction({ type: "campaign_click", source: "api", metadata: { campana, ruta: pathname } });
   }, [pathname, searchParams]);
 
   useEffect(() => {

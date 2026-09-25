@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { mensajeDeError } from "@/lib/api-errors";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { recordServerInteraction } from "@/lib/analytics/server-interactions";
 import { auditUserAction } from "@/lib/audit/user-action";
 import { writeSourceColumns } from "@/lib/security/write-guard";
 import { randomBytes } from "node:crypto";
@@ -87,6 +88,16 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({ quotes });
 }
 
+/** El monto en rangos: el tamaño típico de una cotización sin guardar el
+ *  precio exacto de cada trabajo en la tabla de métricas. */
+function rangoDeMonto(total: number): string {
+  if (!Number.isFinite(total) || total <= 0) return "sin_monto";
+  if (total < 25_000) return "menos_de_25k";
+  if (total < 100_000) return "25k_100k";
+  if (total < 500_000) return "100k_500k";
+  return "mas_de_500k";
+}
+
 export async function POST(req: NextRequest) {
   const me = await whoAmI();
   if (!me) return NextResponse.json({ error: mensajeDeError(req, { es: "Inicia sesión.", en: "Sign in." }) }, { status: 401 });
@@ -145,6 +156,19 @@ export async function POST(req: NextRequest) {
     const res = await me.admin.from("quotes").insert({ ...insert, quote_number: numero }).select(SELECT).single();
     if (res.error && /idx_quotes_number_per_pro|duplicate key/i.test(res.error.message)) continue;
     data = res.data as Record<string, unknown> | null; error = res.error;
+  }
+  if (data) {
+    // Cuántas cotizaciones se mandan, por profesional y servicio. El monto va
+    // en rangos, no exacto: sirve para ver el tamaño típico sin guardar el
+    // precio de cada trabajo en la tabla de métricas.
+    const totalCrc = Number((data as Record<string, unknown>).total ?? 0);
+    await recordServerInteraction(me.admin, req, {
+      type: "quote_created",
+      professionalId: me.proId,
+      viewerUserId: me.user.id,
+      source: "api",
+      metadata: { rango: rangoDeMonto(totalCrc), tiene_proyecto: !!projectId },
+    });
   }
   if (error || !data) {
     if (error && tableMissing(error.message)) return NextResponse.json({ error: "Las cotizaciones todavía no están habilitadas." }, { status: 503 });
@@ -231,6 +255,15 @@ export async function PATCH(req: NextRequest) {
   }
   const { data: updated, error: upErr } = await me.admin.from("quotes").update(patch).eq("id", id).select(SELECT).single();
   if (upErr) return NextResponse.json({ error: upErr.message }, { status: 500 });
+  if (action === "accept" || action === "decline") {
+    // El porcentaje de aceptación es lo que dice si las cotizaciones sirven.
+    await recordServerInteraction(me.admin, req, {
+      type: action === "accept" ? "quote_accepted" : "quote_declined",
+      professionalId: (q as { professional_id?: string }).professional_id ?? null,
+      viewerUserId: me.user.id,
+      source: "api",
+    });
+  }
   await auditUserAction(me.admin, req, { actorUserId: me.user.id, actorRole: action === "withdraw" ? "professional" : "client", action: `quote.${action}`, entityTable: "quotes", entityId: id, entityOwnerUserId: q.client_id, afterData: patch });
   // Sin aviso al profesional: aceptar o rechazar dentro del app solo existia
   // para las cotizaciones atadas a una cita o a un proyecto, que ya no se

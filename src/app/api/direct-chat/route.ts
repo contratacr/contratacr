@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 import { idiomaDeLaPeticion, mensajeDeError } from "@/lib/api-errors";
 import { createClient } from "@/lib/supabase/server";
+import type { NextRequest } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { recordServerInteraction } from "@/lib/analytics/server-interactions";
 import { limitTrimmedText } from "@/lib/text-limits";
 import { validateDirectMessage } from "@/lib/moderation/messages";
 
@@ -405,6 +407,25 @@ export async function POST(req: Request) {
   if (msgError) return NextResponse.json({ error: msgError.message }, { status: 500 });
   const msg = Array.isArray(sentMessages) ? sentMessages[0] : sentMessages;
   if (!msg) return NextResponse.json({ error: "No se pudo guardar el mensaje." }, { status: 500 });
+  // El mensaje interno es un CANAL DE CONTACTO más, como WhatsApp o la
+  // llamada, y no se medía: el chat solo existe en la app, así que sin esto
+  // no había forma de saber si la app sirve para algo. Solo el primero de la
+  // conversación cuenta como contacto; los demás son la conversación.
+  if (conversation.client_id === user.id) {
+    const { count } = await db
+      .from("direct_messages")
+      .select("id", { count: "exact", head: true })
+      .eq("conversation_id", conversation.id);
+    if ((count ?? 0) <= 1) {
+      await recordServerInteraction(db, req as unknown as NextRequest, {
+        type: "internal_message_sent",
+        professionalId: conversation.professional_id ?? null,
+        viewerUserId: user.id,
+        source: "profile",
+        metadata: { platform: "native" },
+      });
+    }
+  }
   const recipientId = conversation.client_id === user.id
     ? conversation.professional_profile_id
     : conversation.client_id;

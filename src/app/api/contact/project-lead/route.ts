@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+import { recordServerInteraction } from "@/lib/analytics/server-interactions";
 import { enforceRateLimit } from "@/lib/rate-limit";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
@@ -98,6 +100,17 @@ export async function POST(req: Request) {
   const { data: cliente } = await db.from("profiles").select("full_name").eq("id", fila.client_id ?? "").maybeSingle();
   const saludo = nombreDeSaludo((cliente as { full_name?: string | null } | null)?.full_name);
   const texto = `Hola${saludo ? ` ${saludo}` : ""}, soy ${quien}. Vi tu proyecto "${(fila.title ?? "").slice(0, 60)}" en ContrataCR y puedo ayudarte. ¿Lo conversamos?`;
+  // LA ÚNICA MEDIDA DE SI EL TABLERO SIRVE. Se publican proyectos y se
+  // notifica a toda la categoría, pero no había forma de saber cuántos
+  // profesionales llegan a escribirle al cliente: el tablero podía estar
+  // vacío de respuestas y el panel se veía igual.
+  await recordServerInteraction(db, req as NextRequest, {
+    type: "project_lead_whatsapp",
+    professionalId: (perfilPro as { id?: string }).id ?? null,
+    viewerUserId: user.id,
+    source: "project",
+    metadata: { project_id: projectId },
+  });
   return NextResponse.json(
     { href: `https://wa.me/${numero}?text=${encodeURIComponent(texto)}` },
     { headers: { "Cache-Control": "no-store" } },
