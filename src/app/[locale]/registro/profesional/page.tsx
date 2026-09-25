@@ -1348,6 +1348,7 @@ export default function RegisterProfessionalPage() {
                     onChange={(n) => { setWorkplaces(n); setLocationError(null); }}
                     extraActions={canOfferVideoConsult ? (
                       <FilaInterruptor
+                        estirar
                         titulo={t("videoConsultOption")}
                         checked={videoCoverageCountry}
                         onChange={(next) => { setVideoCoverageCountry(next); setLocationError(null); }}
