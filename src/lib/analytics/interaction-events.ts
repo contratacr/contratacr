@@ -8,6 +8,9 @@ export const INTERACTION_EVENT_TYPES = [
   "favorite_remove",
   "profile_share",
   "external_link_click",
+  // El correo es un CONTACTO; un clic a Instagram no. Iban con el mismo tipo,
+  // así que la tasa de contacto del panel contaba clics a redes sociales.
+  "email_click",
   "service_request_started",
   "service_request_created",
   "project_published",
