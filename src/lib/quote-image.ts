@@ -214,12 +214,6 @@ async function dibujar(quote: Quote, proName: string, textos: Textos, fechaVigen
   return { canvas, enlace: { x: M, y: enlaceY - 26, w: anchoEnlace, h: 32 * lineasEnlace.length + 8, url } };
 }
 
-/** La cotización como PNG (para el estado de WhatsApp o guardarla). */
-export async function renderQuoteImage(quote: Quote, proName: string, textos: Textos, fechaVigencia: string | null, perfilUrl = ""): Promise<Blob | null> {
-  const dibujo = await dibujar(quote, proName, textos, fechaVigencia, perfilUrl);
-  if (!dibujo) return null;
-  return new Promise((resolve) => dibujo.canvas.toBlob((b) => resolve(b), "image/png"));
-}
 
 /**
  * La cotización como PDF de una página. Es el formato que la gente espera de

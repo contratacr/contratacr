@@ -33,37 +33,7 @@ export function EtiquetaOpcional({ children }: { children: ReactNode }) {
   );
 }
 
-/**
- * El error de un campo, pegado al campo. `data-campo-con-error` es lo que usan
- * los formularios para desplazarse al primero que falló, y `role="alert"` hace
- * que el lector de pantalla lo anuncie en cuanto aparece.
- */
-export function ErrorDeCampo({ children }: { children?: string }) {
-  if (!children) return null;
-  return (
-    <p data-campo-con-error="" role="alert" className="mt-1.5 text-xs font-medium text-red-600">
-      {children}
-    </p>
-  );
-}
 
-/**
- * Lleva la pantalla al primer campo que falló y le da el foco. Sin esto el
- * aviso puede quedar fuera de pantalla —varios formularios ponen el error
- * arriba y el botón abajo— y la persona ve que no pasa nada al guardar.
- */
-export function irAlPrimerError(raiz?: HTMLElement | null) {
-  if (typeof document === "undefined") return;
-  const campo = (raiz ?? document).querySelector<HTMLElement>(
-    '[data-campo-con-error], [aria-invalid="true"]',
-  );
-  if (!campo) return;
-  const enfocable = campo.matches("input, textarea, select, button")
-    ? campo
-    : campo.closest("label, div")?.querySelector<HTMLElement>("input, textarea, select") ?? null;
-  (enfocable ?? campo).scrollIntoView({ behavior: "smooth", block: "center" });
-  enfocable?.focus({ preventScroll: true });
-}
 
 /**
  * El aviso de error que se trae la pantalla a sí mismo.

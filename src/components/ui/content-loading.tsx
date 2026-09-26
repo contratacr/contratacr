@@ -3,39 +3,12 @@
 import type { ElementType, ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { useTranslations } from "next-intl";
-import { LoadingMarkImage } from "@/components/ui/loading-mark-image";
 
 export function Skeleton({ className }: { className: string }) {
   return <span aria-hidden className={`ccr-delayed-loading ccr-skeleton-shimmer block ${className}`} />;
 }
 
-export function BrandLoadingMark({ className, children }: { className?: string; children?: ReactNode } = {}) {
-  const t = useTranslations("loading");
-  return (
-    <div className={cn("grid place-items-center", className)} aria-busy="true" role="status">
-      <LoadingMarkImage />
-      {children ?? <span className="sr-only">{t("generic")}</span>}
-    </div>
-  );
-}
 
-export function PanelSectionLoading({ title, description, className }: { rows?: number; title?: ReactNode; description?: ReactNode; className?: string } = {}) {
-  const t = useTranslations("loading");
-  // Sin ruedita: la espera se dibuja como skeleton. Barras neutras, no
-  // tarjetas, porque aún no se sabe si la sección tendrá registros.
-  return (
-    <div data-panel-loading="" className={cn("ccr-delayed-loading ccr-panel-section-loading min-h-[14rem] px-4 py-6 sm:min-h-[16rem]", className)} aria-busy="true" role="status">
-      <span className="sr-only">{title ?? t("generic")}</span>
-      {description && <span className="sr-only">{description}</span>}
-      <div className="mx-auto w-full max-w-xl space-y-3 lg:max-w-none">
-        <Skeleton className="h-4 w-2/5 rounded-full lg:w-1/4" />
-        <Skeleton className="h-3 w-4/5 rounded-full lg:w-1/2" />
-        <Skeleton className="h-3 w-3/5 rounded-full lg:w-2/5" />
-        <Skeleton className="h-24 w-full rounded-2xl" />
-      </div>
-    </div>
-  );
-}
 
 // El esqueleto de una sección de lista tiene la forma de la sección: sus
 // pestañas, su buscador y sus tarjetas, en teléfono y en escritorio.

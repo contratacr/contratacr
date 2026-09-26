@@ -6,7 +6,7 @@ import { useToquePropio } from "@/hooks/use-toque-propio";
 import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
-import { Search, X, Loader2, MapPin, SlidersHorizontal, ChevronDown, Check } from "lucide-react";
+import { Search, X, Loader2, MapPin, ChevronDown, Check } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { matchProvinceCanton, PROVINCES } from "@/lib/data/cr-geography";
@@ -34,7 +34,6 @@ const FILTER_CONTENT = "min-w-0 w-[var(--radix-select-trigger-width)]";
 // an empty-string value, so we map this back to "" = no insurer filter).
 const ANY_PRICE = "__any_price__";
 const ANY_LANGUAGE = "__any_language__";
-const ANY_MODALITY = "any";
 const GMAPS_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "";
 const SORT_OPTIONS = ["rating", "cercania", "experience"] as const;
 const BASE_SORT_OPTIONS = ["rating", "experience"] as const;
@@ -60,7 +59,6 @@ const filtersFromPriceChoice = (choice: string) => {
 };
 const parseMultiParam = (value?: string | null) =>
   Array.from(new Set((value ?? "").split(",").map((item) => item.trim()).filter(Boolean)));
-const parseSingleParam = (value?: string | null) => parseMultiParam(value)[0] ?? "";
 const serializeMultiParam = (values: string[]) => values.join(",");
 const toggleMultiValue = (values: string[], value: string) =>
   values.includes(value) ? values.filter((item) => item !== value) : [...values, value];
@@ -1540,32 +1538,6 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
   );
 }
 
-// -- MOBILE "Filtros" icon-button (in the single-line /buscar header) --
-// Compact icon-only trigger; dispatches `ccr:open-filters`, which `SearchResultsLayout`
-// listens for to open the full-filter drawer. A brand-blue dot marks active filters.
-export function MobileFiltersButton() {
-  const t = useTranslations("search");
-  const params = useSearchParams();
-  const hasActiveInsurer = !!params.get("aseguradora") && isHealthCategory(params.get("categoria"));
-  const hasActive =
-    !!params.get("categoria") || !!params.get("provincia") || !!params.get("canton") ||
-    hasActiveInsurer || !!params.get("idioma") || !!params.get("precio") || !!params.get("unidadPrecio") || !!params.get("lat") ||
-    (!!params.get("sortBy") && params.get("sortBy") !== "rating") || (!!params.get("modalidad") && params.get("modalidad") !== ANY_MODALITY);
-  return (
-    <button
-      type="button"
-      aria-label={t("filters.title")}
-      onClick={() => window.dispatchEvent(new CustomEvent("ccr:open-filters"))}
-      // Obvious filter affordance (sprint 524): a brand-tint pill with the sliders icon + the
-      // "Filtros" label (not a bare icon), so it clearly reads as a tappable filter control.
-      className="relative shrink-0 inline-flex h-10 items-center justify-center gap-1.5 rounded-full border border-[#bfdbfe] px-3.5 text-[13px] font-bold shadow-sm active:scale-95 transition-transform ccr-caja-icono-plana"
-    >
-      <SlidersHorizontal className="h-[17px] w-[17px]" />
-      <span>{t("filters.title")}</span>
-      {hasActive && <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full border-2 border-white bg-[#008ce0]" />}
-    </button>
-  );
-}
 
 // -- MOBILE service-search bar (the "Busca un servicio..." field, pinned at the top) --
 // Self-contained: manages the `q` param (PRESERVING every other param), AND autocompletes

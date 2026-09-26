@@ -2,9 +2,6 @@
 
 import { isSigningOut } from "@/lib/auth/sign-out";
 
-export function DashboardRouteLoading() {
-  return <PageRouteLoading />;
-}
 
 /**
  * Espera entre pantallas: lienzo neutro con la barra, nunca la marca. El

@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState, type CSSProperties, type ImgHTMLAttributes, type SyntheticEvent } from "react";
-import Image, { type ImageProps } from "next/image";
 import { cldPreview } from "@/lib/cloudinary";
 import { cn } from "@/lib/utils";
 
@@ -112,38 +111,3 @@ function unsplashPreview(src: string): string | null {
   return url.toString();
 }
 
-/** next/image with `fill`, revealed the same way: a soft preview of the same
- *  picture underneath (Cloudinary or Unsplash), and a fade once the file lands. */
-export function RevealImage({ src, className, style, onLoad, ...rest }: ImageProps) {
-  const [phase, setPhase] = useState<Fase>(faseInicial);
-  const ref = useRef<HTMLImageElement | null>(null);
-  const url = typeof src === "string" ? src : null;
-  const previewUrl = url ? cldPreview(url) ?? unsplashPreview(url) : null;
-  useEffect(() => {
-    appYaHidratada = true;
-    const img = ref.current;
-    if (!img) return;
-    setPhase((fase) => (fase === "ssr" ? "ssr" : img.complete && img.naturalWidth > 0 ? "loaded" : "waiting"));
-  }, [url]);
-  return (
-    <>
-      <span
-        aria-hidden
-        className={cn("absolute inset-0", !previewUrl && "bg-[#dfe6ee]")}
-        style={previewUrl ? { backgroundImage: `url("${previewUrl}")`, backgroundSize: "cover", backgroundPosition: "center" } : undefined}
-      />
-      <Image
-        ref={ref}
-        src={src}
-        className={className}
-        style={{
-          opacity: phase === "waiting" ? 0 : 1,
-          transition: phase === "ssr" ? undefined : "opacity 300ms ease-out",
-          ...style,
-        }}
-        onLoad={(event) => { setPhase((fase) => (fase === "ssr" ? "ssr" : "loaded")); onLoad?.(event); }}
-        {...rest}
-      />
-    </>
-  );
-}

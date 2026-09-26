@@ -307,8 +307,7 @@
   },
   "hero": {
     "categoryPlaceholder": "What service do you need?",
-    "provincePlaceholder": "Province",
-    "searchButton": "Search"
+    "provincePlaceholder": "Province"
   },
   "card": {
     "exp": "yr exp.",
@@ -353,10 +352,8 @@
   "locationPicker": {
     "searchPlaceholder": "Search your place's address… example: Escazú Centro",
     "mapUnavailable": "Map unavailable — set NEXT_PUBLIC_GOOGLE_MAPS_API_KEY",
-    "searchOrClick": "Search an address above or click the map",
     "locating": "Locating…",
-    "useMyLocation": "Use my location",
-    "clear": "Clear"
+    "useMyLocation": "Use my location"
   },
   "workplacesPicker": {
     "lead": "Choose the province and canton where you offer your services.",
@@ -3747,10 +3744,6 @@
       "publishCardBody": "Professionals in your area reply and you choose.",
       "publishOr": "or"
     },
-    "pros": {
-      "headingPre": "Services for whatever you need in",
-      "headingHighlight": "Your Area."
-    },
     "carousel": {
       "titlePre": "Explore",
       "titleHighlight": "services",
@@ -3808,11 +3801,7 @@
     },
     "explore": {
       "heading": "Explore more services.",
-      "subtitle": "Pros in every category, in your area.",
-      "tab0": "Home Maintenance",
-      "tab1": "Home Remodeling",
-      "tab2": "Outdoor Upkeep",
-      "tab3": "Essential Services"
+      "subtitle": "Pros in every category, in your area."
     },
     "marquee": {
       "heading": "Powering services across Costa Rica."
@@ -3820,16 +3809,12 @@
     "app": {
       "badge": "Coming soon",
       "heading": "The app you need for everything.",
-      "subtitle": "From personalized guides to effortless planning — all in one free app.",
-      "feature0": "Personalized service guides",
-      "feature1": "Real-time estimates",
-      "feature2": "Hiring history"
+      "subtitle": "From personalized guides to effortless planning — all in one free app."
     }
   },
   "saveStatus": {
     "saving": "Saving…",
-    "saved": "Saved",
-    "unsaved": "Unsaved"
+    "saved": "Saved"
   },
   "reschedule": {
     "title": "Reschedule appointment",
@@ -4153,16 +4138,7 @@
     "jobTitle": "Share this job",
     "offerTitle": "Share this promotion",
     "subtitle": "Send it where you already talk to people.",
-    "jobMessage": "Check out this job on ContrataCR: {name}",
-    "offerMessage": "Check out this promotion on ContrataCR: {name}",
-    "jobSubject": "Job on ContrataCR: {name}",
-    "offerSubject": "Promotion on ContrataCR: {name}",
-    "jobLink": "Job link",
-    "offerLink": "Promotion link",
-    "projectTitle": "Share this project",
-    "projectMessage": "Check out this project on ContrataCR: {name}",
-    "projectSubject": "Project on ContrataCR: {name}",
-    "projectLink": "Project link"
+    "projectTitle": "Share this project"
   },
   "pushPrompt": {
     "now": "now",

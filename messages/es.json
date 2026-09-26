@@ -307,8 +307,7 @@
   },
   "hero": {
     "categoryPlaceholder": "¿Qué servicio necesitas?",
-    "provincePlaceholder": "Provincia",
-    "searchButton": "Buscar"
+    "provincePlaceholder": "Provincia"
   },
   "card": {
     "priceConsult": "Consultar precio",
@@ -353,10 +352,8 @@
   "locationPicker": {
     "searchPlaceholder": "Busca la dirección de tu local… ejemplo: Escazú Centro",
     "mapUnavailable": "Mapa no disponible — configura NEXT_PUBLIC_GOOGLE_MAPS_API_KEY",
-    "searchOrClick": "Busca una dirección arriba o haz clic en el mapa",
     "locating": "Localizando…",
-    "useMyLocation": "Usar mi ubicación",
-    "clear": "Borrar"
+    "useMyLocation": "Usar mi ubicación"
   },
   "workplacesPicker": {
     "lead": "Elige la provincia y el cantón donde ofreces tus servicios.",
@@ -3747,10 +3744,6 @@
       "publishCardBody": "Los profesionales de tu zona te responden y tú eliges.",
       "publishOr": "o"
     },
-    "pros": {
-      "headingPre": "Servicios para lo que necesitas en",
-      "headingHighlight": "Tu Zona."
-    },
     "carousel": {
       "titlePre": "Explora",
       "titleHighlight": "servicios",
@@ -3808,11 +3801,7 @@
     },
     "explore": {
       "heading": "Explora más servicios.",
-      "subtitle": "Servicios en cada categoría, en tu cantón.",
-      "tab0": "Mantenimiento del hogar",
-      "tab1": "Remodelación",
-      "tab2": "Exterior y jardín",
-      "tab3": "Servicios esenciales"
+      "subtitle": "Servicios en cada categoría, en tu cantón."
     },
     "marquee": {
       "heading": "Impulsando servicios en toda Costa Rica."
@@ -3820,16 +3809,12 @@
     "app": {
       "badge": "Muy pronto",
       "heading": "La app que necesitas para todo.",
-      "subtitle": "Desde guías personalizadas hasta planificación sin esfuerzo — todo en una app gratuita.",
-      "feature0": "Guías de servicios personalizadas",
-      "feature1": "Presupuestos en tiempo real",
-      "feature2": "Historial de contrataciones"
+      "subtitle": "Desde guías personalizadas hasta planificación sin esfuerzo — todo en una app gratuita."
     }
   },
   "saveStatus": {
     "saving": "Guardando…",
-    "saved": "Guardado",
-    "unsaved": "Sin guardar"
+    "saved": "Guardado"
   },
   "reschedule": {
     "title": "Reprogramar cita",
@@ -4153,16 +4138,7 @@
     "jobTitle": "Compartir este empleo",
     "offerTitle": "Compartir esta promoción",
     "subtitle": "Mándalo por donde ya hablas con la gente.",
-    "jobMessage": "Mira este empleo en ContrataCR: {name}",
-    "offerMessage": "Mira esta promoción en ContrataCR: {name}",
-    "jobSubject": "Empleo en ContrataCR: {name}",
-    "offerSubject": "Promoción en ContrataCR: {name}",
-    "jobLink": "Enlace del empleo",
-    "offerLink": "Enlace de la promoción",
-    "projectTitle": "Compartir este proyecto",
-    "projectMessage": "Mira este proyecto en ContrataCR: {name}",
-    "projectSubject": "Proyecto en ContrataCR: {name}",
-    "projectLink": "Enlace del proyecto"
+    "projectTitle": "Compartir este proyecto"
   },
   "pushPrompt": {
     "now": "ahora",

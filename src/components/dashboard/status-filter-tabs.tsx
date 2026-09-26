@@ -465,16 +465,6 @@ export function StatusFilterTabs({
 
 // Lo que puede tomar, lo que está en juego y lo que ya se cerró. Sin la tercera,
 // "Mis propuestas" mezclaba las vivas con trabajos terminados de hace meses.
-// Cuatro etapas, con el mismo vocabulario que Citas: lo que terminó bien y lo
-// que se cayó son finales opuestos y merecen pestaña propia. Con una sola
-// («Terminadas») hacía falta un distintivo dentro de cada tarjeta para saber
-// cuál era cuál.
-export const PROPUESTA_TABS: readonly FilterTab[] = [
-  { id: "nuevas" },
-  { id: "respondidas" },
-  { id: "finalizadas" },
-  { id: "canceladas" },
-];
 export const SOLICITUD_TABS: readonly FilterTab[] = [
   { id: "en_curso" },
   { id: "finalizadas" },
@@ -560,12 +550,3 @@ export function bucketCounts(buckets: string[]): Record<string, number> {
 // granular status is the bucket's PRIMARY status just repeats the tab → don't show
 // the badge again. Genuine SUB-states (in_progress, awaiting_confirmation,
 // rescheduled, declined-vs-cancelled, …) return false → the badge IS still shown.
-const SOLICITUD_PRIMARY: Record<string, string[]> = {
-  nuevas: ["pending"],
-  en_curso: ["confirmed", "in_progress", "pending"],
-  // En Finalizadas conviven completadas y canceladas: la insignia debe distinguirlas.
-  finalizadas: [],
-};
-export function solicitudStatusRedundant(status: string, scheduledDate?: string | null): boolean {
-  return SOLICITUD_PRIMARY[solicitudBucket(status, scheduledDate)]?.includes(status) ?? false;
-}

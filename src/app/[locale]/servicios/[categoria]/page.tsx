@@ -5,7 +5,7 @@ import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { ServiceLanding } from "@/components/landing-servicios/service-landing";
 import { DatosEstructurados } from "@/components/seo/datos-estructurados";
-import { categorySlug, getAllCategories, getCategoryIdBySlug, getCategoryLabel } from "@/lib/data/categories";
+import { categorySlug, getCategoryIdBySlug, getCategoryLabel } from "@/lib/data/categories";
 import { getSupplyCounts, supplyKey, MIN_SUPPLY_FOR_LANDING } from "@/lib/queries/supply";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://contratacr.com";
@@ -15,9 +15,6 @@ type Props = { params: Promise<{ locale: string; categoria: string }> };
 
 export const revalidate = 3600;
 
-export function isKnownCategory(id: string) {
-  return getAllCategories().some((c) => c.id === id);
-}
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale, categoria } = await params;

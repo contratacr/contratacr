@@ -150,8 +150,3 @@ export async function loadDashboardCache<T>(
   return promise;
 }
 
-export function prefetchDashboardCache<T>(key: string, loader: () => Promise<T>) {
-  void loadDashboardCache(key, loader).catch((error) => {
-    console.warn("[dashboard-prefetch] failed", error);
-  });
-}
