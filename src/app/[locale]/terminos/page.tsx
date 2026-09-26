@@ -77,7 +77,8 @@ const ES_SECTIONS: LegalSection[] = [
     body: [
       { k: "p", text: "Los mensajes sirven para coordinar servicios. Los participantes son responsables de lo que envían. Puede adjuntar únicamente imágenes o documentos legítimos, necesarios y seguros; no debe incluir información sensible innecesaria." },
       { k: "p", text: "ContrataCR puede aplicar controles automáticos, límites, bloqueo de archivos y revisión asociada a reportes o seguridad. No supervisamos de forma permanente todas las conversaciones." },
-      { k: "p", text: "Si activa notificaciones, podemos enviar avisos sobre mensajes, citas, proyectos, respuestas, reseñas, seguridad y actividad de su cuenta. Puede desactivarlas desde el sistema operativo, aunque ciertos correos esenciales de cuenta o seguridad seguirán enviándose." },
+      { k: "p", text: "Si activa notificaciones, podemos enviar avisos sobre mensajes, proyectos, cotizaciones, reseñas, seguridad y actividad de su cuenta. Puede desactivarlas desde el sistema operativo, aunque ciertos correos esenciales de cuenta o seguridad seguirán enviándose." },
+      { k: "p", text: "También podemos enviarle por correo novedades ocasionales sobre ContrataCR. Puede pedir la baja respondiendo a cualquiera de esos correos." },
     ],
   },
   {
@@ -188,7 +189,7 @@ const EN_SECTIONS: LegalSection[] = [
   ] },
   { id: "messages", h: "7. Messages, files, and notifications", body: [
     { k: "p", text: "Messages are for service coordination. Users are responsible for what they send and may only attach legitimate, necessary, and safe images or documents. Do not include unnecessary sensitive information." },
-    { k: "p", text: "We may apply automated safeguards, limits, file blocking, and review connected to reports or security. If notifications are enabled, we may send account and marketplace activity alerts." },
+    { k: "p", text: "We may apply automated safeguards, limits, file blocking, and review connected to reports or security. If notifications are enabled, we may send account and marketplace activity alerts. We may also send occasional ContrataCR news by email; you can opt out by replying to any such email, and essential account and security emails still apply." },
   ] },
   { id: "ai", h: "8. Artificial intelligence assistant", body: [
     { k: "p", text: "The assistant can help interpret needs and find services, but may be incomplete or wrong. It is not professional, medical, legal, financial, emergency, or safety advice. Verify information before acting." },
@@ -238,7 +239,7 @@ export default async function TerminosPage({ params }: { params: Promise<{ local
   return (
     <LegalDocument
       title={en ? "Terms and Conditions" : "Términos y Condiciones"}
-      updated={en ? "July 23, 2026" : "23 de julio de 2026"}
+      updated={en ? "September 25, 2026" : "25 de septiembre de 2026"}
       intro={en
         ? "These Terms explain the rules for using ContrataCR as a Client or Professional across the website and mobile applications."
         : "Estos Términos explican las reglas para utilizar ContrataCR como Cliente o Profesional en el sitio web y las aplicaciones móviles."}

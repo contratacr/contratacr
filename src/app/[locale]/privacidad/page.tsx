@@ -16,13 +16,14 @@ const ES_SECTIONS: LegalSection[] = [
     body: [
       { k: "sub", text: "2.1 Cuenta e identidad" },
       { k: "ul", items: [
-        "Nombre, correo electrónico, teléfono y datos básicos compartidos por proveedores de inicio de sesión, como Google.",
+        "Nombre, correo electrónico, teléfono y datos básicos compartidos por proveedores de inicio de sesión, como Google y Apple.",
         "Credenciales de acceso administradas de forma segura por nuestro proveedor de autenticación. ContrataCR no conserva su contraseña en texto legible.",
         "Número de identificación cuando usted decide aportarlo o cuando sea necesario para una solicitud. Para la insignia Verificado conservamos el número de forma protegida y el resultado de la comprobación.",
       ] },
       { k: "sub", text: "2.2 Actividad como Cliente" },
       { k: "ul", items: [
-        "Citas, proyectos, respuestas recibidas, reseñas y favoritos.",
+        "Proyectos, cotizaciones, reseñas y favoritos.",
+        "Los datos que aporta al pedir una cotización: nombre, teléfono, correo y, si lo indica, número de identificación.",
         "Información incluida por usted en descripciones, notas, reportes y conversaciones.",
         "Zona, ubicación o punto geográfico cuando lo proporciona o autoriza.",
       ] },
@@ -30,8 +31,8 @@ const ES_SECTIONS: LegalSection[] = [
       { k: "ul", items: [
         "Nombre o nombre comercial, servicios, descripción, teléfonos, correo de contacto y enlaces profesionales.",
         "Provincia, cantón, lugares de trabajo, zonas de cobertura y, si lo agrega, un punto en el mapa.",
-        "Fotografía de perfil, casos de éxito, certificaciones, idiomas, aseguradoras, disponibilidad y horarios.",
-        "Citas recibidas, proyectos, respuestas, reseñas, casos de éxito y demás actividad relacionada con su perfil.",
+        "Fotografía de perfil, casos de éxito, certificaciones, idiomas, aseguradoras y disponibilidad.",
+        "Proyectos, reseñas, casos de éxito y demás actividad relacionada con su perfil.",
       ] },
       { k: "sub", text: "2.4 Mensajes, soporte y archivos" },
       { k: "ul", items: [
@@ -45,6 +46,7 @@ const ES_SECTIONS: LegalSection[] = [
       { k: "ul", items: [
         "Dirección IP, tipo de dispositivo y navegador, sistema operativo, idioma, versión de la aplicación, identificadores técnicos y registros de seguridad.",
         "Interacciones con perfiles, servicios, botones de contacto, favoritos, proyectos y funciones de la Plataforma.",
+        "Lo que escribe en el buscador junto con la zona y el orden elegidos, para entender qué se busca y qué no encuentra respuesta.",
         "Token de notificaciones push, plataforma, identificador del dispositivo y estado del permiso cuando activa notificaciones.",
         "Cookies y tecnologías similares necesarias para sesión, idioma, seguridad y funcionamiento; además de medición publicitaria cuando corresponda.",
       ] },
@@ -57,9 +59,10 @@ const ES_SECTIONS: LegalSection[] = [
       { k: "ul", items: [
         "Crear, autenticar y administrar su cuenta.",
         "Publicar perfiles profesionales y conectar Clientes con Profesionales.",
-        "Gestionar búsquedas, citas, proyectos, respuestas, mensajes, archivos, reseñas y soporte.",
+        "Gestionar búsquedas, proyectos, cotizaciones, mensajes, archivos, reseñas y soporte.",
         "Personalizar resultados según servicio, zona y preferencias indicadas.",
         "Enviar correos y notificaciones relacionados con su cuenta o actividad.",
+        "Enviarle novedades y avisos ocasionales sobre ContrataCR. Puede pedir la baja respondiendo a cualquiera de esos correos; los correos esenciales de cuenta y seguridad se siguen enviando.",
         "Operar el asistente de IA y conservar su historial cuando corresponda.",
         "Medir el uso, mejorar el producto y evaluar campañas de adquisición.",
         "Prevenir fraude, abuso, suplantación y fallos de seguridad.",
@@ -83,13 +86,16 @@ const ES_SECTIONS: LegalSection[] = [
       { k: "p", text: "Utilizamos proveedores tecnológicos para operar la Plataforma. Según la función utilizada, pueden intervenir:" },
       { k: "ul", items: [
         "**Supabase:** autenticación, base de datos y almacenamiento privado.",
-        "**Vercel:** alojamiento y entrega de la aplicación web.",
+        "**Cloudflare:** alojamiento y entrega de la aplicación web.",
         "**Cloudinary:** procesamiento y alojamiento de imágenes y determinados archivos.",
+        "**Cloudflare R2:** almacenamiento de archivos y contenido multimedia.",
         "**Firebase:** entrega de notificaciones push.",
-        "**OpenAI:** procesamiento de consultas dirigidas al asistente.",
-        "**Google y proveedores de mapas:** inicio de sesión, mapas, ubicación y servicios relacionados.",
-        "**Meta:** medición de campañas mediante Meta Pixel para entender el rendimiento de nuestros anuncios.",
-        "Proveedores de correo y otros servicios necesarios para comunicaciones, seguridad y soporte.",
+        "**Cloudflare Workers AI:** procesamiento de las consultas dirigidas al asistente. La consulta se depura antes de salir: se ocultan correos, teléfonos, números de identificación y enlaces.",
+        "**OpenAI:** respaldo del asistente cuando el proveedor principal no responde.",
+        "**Google y Apple:** inicio de sesión con su cuenta, mapas, ubicación y servicios relacionados.",
+        "**Meta:** medición de campañas mediante Meta Pixel y envío de avisos por WhatsApp. Para enviarle un aviso por WhatsApp, Meta recibe su número de teléfono y el texto del aviso, que nunca incluye el contenido de sus conversaciones.",
+        "**Brevo:** envío de los correos de la Plataforma y medición de si un correo se entregó, se abrió o si usted tocó un enlace.",
+        "Otros servicios necesarios para comunicaciones, seguridad y soporte.",
       ] },
       { k: "p", text: "Algunos proveedores pueden procesar datos fuera de Costa Rica. Procuramos trabajar con proveedores que ofrecen medidas contractuales, técnicas y organizativas apropiadas. También podemos comunicar información a autoridades cuando exista una obligación legal." },
     ],
@@ -99,7 +105,7 @@ const ES_SECTIONS: LegalSection[] = [
     h: "6. Cookies, analítica y publicidad",
     body: [
       { k: "p", text: "Usamos cookies o almacenamiento local necesarios para mantener la sesión, recordar el idioma, conservar preferencias, proteger la cuenta y mejorar el rendimiento." },
-      { k: "p", text: "También medimos visitas y acciones para comprender el uso de ContrataCR y el rendimiento de campañas. Meta Pixel puede informar a Meta que una visita o acción ocurrió en ContrataCR. No recibe el contenido privado de sus mensajes, solicitudes, propuestas ni conversaciones." },
+      { k: "p", text: "También medimos visitas y acciones para comprender el uso de ContrataCR, y si nuestros correos se entregaron, se abrieron o si usted tocó alguno de sus enlaces. Meta Pixel puede informar a Meta que una visita o acción ocurrió en ContrataCR. No recibe el contenido privado de sus mensajes, solicitudes ni conversaciones." },
       { k: "p", text: "Puede limitar cookies desde su navegador y gestionar permisos de ubicación y notificaciones desde el sistema operativo. Desactivar tecnologías necesarias puede afectar algunas funciones." },
     ],
   },
@@ -164,16 +170,17 @@ const EN_SECTIONS: LegalSection[] = [
   ] },
   { id: "data", h: "2. Data we process", body: [
     { k: "sub", text: "2.1 Account and identity" },
-    { k: "ul", items: ["Name, email, phone number, and basic data shared by sign-in providers such as Google.", "Credentials securely managed by our authentication provider. ContrataCR does not keep your password in readable text.", "Identification number when you choose to provide it or when needed for a request, plus the protected verification result."] },
+    { k: "ul", items: ["Name, email, phone number, and basic data shared by sign-in providers such as Google and Apple.", "Credentials securely managed by our authentication provider. ContrataCR does not keep your password in readable text.", "Identification number when you choose to provide it or when needed for a request, plus the protected verification result."] },
     { k: "sub", text: "2.2 Client and Professional activity" },
-    { k: "ul", items: ["Requests, posts, appointments, proposals, reviews, favorites, and related activity.", "Professional profile data, services, location, work areas, success stories, availability, and contact details.", "Content you include in descriptions, notes, reports, and conversations."] },
+    { k: "ul", items: ["Requests, posts, quotes, reviews, favorites, and related activity.", "Professional profile data, services, location, work areas, success stories, availability, and contact details.", "Content you include in descriptions, notes, reports, and conversations."] },
     { k: "sub", text: "2.3 Messages, files, support, and AI" },
     { k: "ul", items: ["Private messages and the data needed to identify participants and conversation context.", "Images and PDF documents attached to messages or support requests.", "AI assistant prompts, responses, and saved history when you are signed in. Do not submit unnecessary sensitive information."] },
     { k: "sub", text: "2.4 Device, location, and usage" },
     { k: "ul", items: ["IP address, device and browser type, operating system, language, app version, technical identifiers, and security logs.", "Location when you provide it or grant permission.", "Push token, platform, device identifier, and permission status when notifications are enabled.", "Interactions, cookies, local storage, analytics, and campaign measurement data."] },
   ] },
   { id: "purposes", h: "3. Why we use data", body: [
-    { k: "ul", items: ["Create and secure accounts.", "Publish professional profiles and connect Clients with Professionals.", "Operate search, requests, appointments, proposals, messages, files, reviews, support, AI, and notifications.", "Personalize results, measure product use, improve the service, and assess acquisition campaigns.", "Prevent fraud, abuse, impersonation, and security incidents.", "Comply with legal obligations and lawful authority requests."] },
+    { k: "ul", items: ["Create and secure accounts.",
+      "Send account and activity emails and notifications, plus occasional ContrataCR news you can opt out of by replying to any such email.", "Publish professional profiles and connect Clients with Professionals.", "Operate search, requests, quotes, messages, files, reviews, support, AI, and notifications.", "Personalize results, measure product use, improve the service, and assess acquisition campaigns.", "Prevent fraud, abuse, impersonation, and security incidents.", "Comply with legal obligations and lawful authority requests."] },
     { k: "note", text: "**We do not sell personal data.** We do not allow third parties to use private conversation content to send advertising." },
   ] },
   { id: "public", h: "4. Public information", body: [
@@ -181,11 +188,11 @@ const EN_SECTIONS: LegalSection[] = [
     { k: "p", text: "Passwords, tokens, full identification numbers, private conversations, and private documents are not displayed publicly." },
   ] },
   { id: "providers", h: "5. Providers and transfers", body: [
-    { k: "p", text: "Depending on the feature, we use providers including **Supabase** (authentication, database, private storage), **Vercel** (hosting), **Cloudinary** and **Cloudflare R2** (media/files), **Firebase** (push notifications), **OpenAI** (assistant), Google and map providers, Meta (campaign measurement), and email or support providers." },
+    { k: "p", text: "Depending on the feature, we use providers including **Supabase** (authentication, database, private storage), **Cloudflare** (hosting, and R2 for media and files), **Cloudinary** (image processing and hosting), **Firebase** (push notifications), **Cloudflare Workers AI** (assistant, with emails, phone numbers, identification numbers and links stripped before the query leaves), **OpenAI** (assistant fallback), **Brevo** (sending our emails and measuring whether an email was delivered, opened, or a link was tapped), **Google** and **Apple** (sign-in, maps, location), and **Meta** (campaign measurement through Meta Pixel, and delivery of WhatsApp notices — Meta receives your phone number and the notice text, never your conversation content)." },
     { k: "p", text: "Some providers may process data outside Costa Rica. We seek providers with appropriate contractual, technical, and organizational safeguards. We may also disclose information when legally required." },
   ] },
   { id: "cookies", h: "6. Cookies, analytics, and advertising", body: [
-    { k: "p", text: "We use cookies or local storage for session, language, preferences, security, and performance. We also measure visits and actions. Meta Pixel may tell Meta that a visit or action occurred on ContrataCR, but it does not receive private messages, requests, proposals, or conversation content." },
+    { k: "p", text: "We use cookies or local storage for session, language, preferences, security, and performance. We also measure visits and actions, and whether our emails were delivered, opened, or their links tapped. Meta Pixel may tell Meta that a visit or action occurred on ContrataCR, but it does not receive private messages, requests, or conversation content." },
     { k: "p", text: "You can manage cookies in your browser and location or notification permissions in your operating system. Disabling necessary technologies may affect functionality." },
   ] },
   { id: "retention", h: "7. Retention and deletion", body: [
@@ -222,7 +229,7 @@ export default async function PrivacidadPage({ params }: { params: Promise<{ loc
   return (
     <LegalDocument
       title={en ? "Privacy Policy" : "Política de Privacidad"}
-      updated={en ? "July 23, 2026" : "23 de julio de 2026"}
+      updated={en ? "September 25, 2026" : "25 de septiembre de 2026"}
       intro={en
         ? "This Policy explains what data ContrataCR processes across the website and mobile applications, why it is used, who may process it, and how you can exercise your rights."
         : "Esta Política explica qué datos trata ContrataCR en el sitio web y las aplicaciones móviles, para qué se utilizan, quiénes pueden procesarlos y cómo puede ejercer sus derechos."}

@@ -12,6 +12,7 @@ import { z } from "zod";
 import { Navbar } from "@/components/layout/navbar";
 import { CabeceraDeTramite } from "@/components/layout/focused-header";
 import { Input } from "@/components/ui/input";
+import { CasillaDeTerminos } from "@/components/auth/casilla-de-terminos";
 import { Button } from "@/components/ui/button";
 import { PhoneInput, isPhoneComplete } from "@/components/ui/phone-input";
 import { PriceInput } from "@/components/ui/price-input";
@@ -463,6 +464,8 @@ export default function RegisterProfessionalPage() {
   const [whatsappValue, setWhatsappValue] = useState("");
   const [aceptaLlamadas, setAceptaLlamadas] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  // Apple (1.2) pide aceptación, no solo que se muestren los términos.
+  const [terminosAceptados, setTerminosAceptados] = useState(false);
   // After a successful create we navigate to the panel. Render a full-screen
   // loader meanwhile so the form/step never flashes back (item 6).
   const [redirecting, setRedirecting] = useState(false);
@@ -1171,17 +1174,14 @@ export default function RegisterProfessionalPage() {
                 <PasswordChecklist password={watchedPassword} />
               </div>
 
+              {/* La aceptación va antes del botón, no debajo: es lo que Apple
+                  pide mostrar antes de registrarse (regla 1.2). */}
+              <CasillaDeTerminos aceptado={terminosAceptados} onCambio={setTerminosAceptados} />
               <BarraDeAcciones activa={!!currentUser}>
-                <Button type="submit" size="lg" className="flex-1" loading={submitting} disabled={submitting}>
+                <Button type="submit" size="lg" className="flex-1" loading={submitting} disabled={submitting || !terminosAceptados}>
                   {t("continue")}
                 </Button>
               </BarraDeAcciones>
-              <p className="text-center text-xs text-[#68778d]">
-                {t.rich("termsAgree", {
-                  terms: (c) => <Link href="/terminos" className="text-[#009FD9] hover:underline">{c}</Link>,
-                  privacy: (c) => <Link href="/privacidad" className="text-[#009FD9] hover:underline">{c}</Link>,
-                })}
-              </p>
             </form>
             </div>
           )}

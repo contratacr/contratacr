@@ -17,6 +17,7 @@ import { trackMetaEvent } from "@/lib/analytics/meta-pixel";
 import { Navbar } from "@/components/layout/navbar";
 import { CabeceraDeTramite } from "@/components/layout/focused-header";
 import { Button } from "@/components/ui/button";
+import { CasillaDeTerminos } from "@/components/auth/casilla-de-terminos";
 import { PhoneInput, isPhoneComplete } from "@/components/ui/phone-input";
 import { OtpVerification } from "@/components/auth/otp-verification";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -49,6 +50,8 @@ export default function RegisterClientPage() {
   const [phoneError, setPhoneError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  // Apple (1.2) pide aceptación, no solo que se muestren los términos.
+  const [terminosAceptados, setTerminosAceptados] = useState(false);
   const [success, setSuccess] = useState(false);
   const [otpEmail, setOtpEmail] = useState<string | null>(null);
   const [oauthPhoto, setOauthPhoto] = useState<string | null>(null);
@@ -377,16 +380,13 @@ export default function RegisterClientPage() {
                 </div>
               )}
 
-              <Button type="submit" size="lg" className="w-full mt-1" loading={submitting} disabled={submitting}>
+              {/* Antes del botón: el acuerdo se marca antes de crear la cuenta
+                  (Apple, regla 1.2). */}
+              <CasillaDeTerminos aceptado={terminosAceptados} onCambio={setTerminosAceptados} />
+
+              <Button type="submit" size="lg" className="w-full mt-1" loading={submitting} disabled={submitting || !terminosAceptados}>
                 {submitting ? t("creating") : user ? t("saveContinue") : t("createFree")}
               </Button>
-
-              <p className="text-center text-xs text-[#68778d]">
-                {t.rich("terms", {
-                  terms: (c) => <Link href="/terminos" className="underline hover:text-[#374151]">{c}</Link>,
-                  privacy: (c) => <Link href="/privacidad" className="underline hover:text-[#374151]">{c}</Link>,
-                })}
-              </p>
 
               <div className="text-center text-sm text-[#6b7280]">
                 {t("haveAccount")}{" "}

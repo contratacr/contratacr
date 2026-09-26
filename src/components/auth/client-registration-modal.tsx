@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Input } from "@/components/ui/input";
+import { CasillaDeTerminos } from "@/components/auth/casilla-de-terminos";
 import { Button } from "@/components/ui/button";
 import { IdentityField } from "@/components/ui/identity-field";
 import { cleanId, isValidId } from "@/lib/cedula";
@@ -230,6 +231,9 @@ export function ClientRegistrationModal({
 
   // Async states
   const [submitting, setSubmitting] = useState(false);
+  // Apple (regla 1.2) pide que el usuario ACEPTE los términos antes de
+  // registrarse, no solo que se los muestren. Sin la marca, no hay cuenta.
+  const [terminosAceptados, setTerminosAceptados] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [duplicateEmailDetected, setDuplicateEmailDetected] = useState(false);
   const [checkingEmail, setCheckingEmail] = useState(false);
@@ -653,6 +657,13 @@ export function ClientRegistrationModal({
           {/* Footer */}
           {step !== "otp" && (
             <div className="px-6 py-4 border-t border-[#eef2f6] shrink-0 flex flex-col gap-3">
+              {/* La aceptación va ARRIBA del botón que crea la cuenta: el acuerdo
+                  se ve y se marca antes de registrarse, que es lo que Apple
+                  pide mostrar en el video de revisión (regla 1.2). */}
+              {view === "register" && step === "password" && (
+                <CasillaDeTerminos aceptado={terminosAceptados} onCambio={setTerminosAceptados} />
+              )}
+
               {/* Actions */}
               {view === "register" ? (
                 <div className="flex gap-3">
@@ -676,7 +687,7 @@ export function ClientRegistrationModal({
                     disabled={
                       (step === "identity" && !identityReady) ||
                       (step === "email" && (!email.includes("@") || !isPhoneComplete(telefono))) ||
-                      (step === "password" && (!isPasswordValid() || !confirmPassword))
+                      (step === "password" && (!isPasswordValid() || !confirmPassword || !terminosAceptados))
                     }
                     onClick={() => {
                       setError(null);
@@ -691,15 +702,7 @@ export function ClientRegistrationModal({
                   </Button>
                 </div>
               ) : null}
-              {view === "register" && step === "password" && (
-                <p className="text-center text-xs text-[#68778d] mt-3">
-                  {t.rich("terms", {
-                    // Inside the app the legal pages open in place (a new tab would leave the app).
-                    terms: (c) => nativeApp ? <Link href={`/${locale}/terminos`} className="underline hover:text-[#374151]">{c}</Link> : <a href={`/${locale}/terminos`} target="_blank" rel="noopener noreferrer" className="underline hover:text-[#374151]">{c}</a>,
-                    privacy: (c) => nativeApp ? <Link href={`/${locale}/privacidad`} className="underline hover:text-[#374151]">{c}</Link> : <a href={`/${locale}/privacidad`} target="_blank" rel="noopener noreferrer" className="underline hover:text-[#374151]">{c}</a>,
-                  })}
-                </p>
-              )}
+
               {view === "login" && (
                 <div className="flex gap-3">
                   <Button variant="outline" size="md" onClick={() => { setView("register"); setError(null); }}>

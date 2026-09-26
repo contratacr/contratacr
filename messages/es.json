@@ -3848,6 +3848,9 @@
     "cuerpo": "Los mensajes de ContrataCR se leen y se responden desde la app. Desde la web puedes escribirle a cualquier profesional por WhatsApp desde su perfil.",
     "accion": "Buscar profesionales"
   },
+  "terminosCasilla": {
+    "texto": "Acepto los <terms>Términos de uso</terms> y la <privacy>Política de Privacidad</privacy>. Entiendo que ContrataCR no tolera contenido ofensivo ni usuarios abusivos."
+  },
   "sectionTitles": {
     "messages": "Mensajes",
     "notifications": "Notificaciones",

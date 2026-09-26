@@ -1,4 +1,5 @@
 import { getCategoryLabel } from "@/lib/data/categories";
+import { CITAS_ACTIVAS } from "@/lib/citas";
 import { mensajeDeError } from "@/lib/api-errors";
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
@@ -31,6 +32,10 @@ async function autoCloseStale(admin: ReturnType<typeof createAdminClient>, filte
 }
 
 export async function POST(req: NextRequest) {
+  // Con las citas apagadas esta puerta no existe. Antes seguía abierta: sin
+  // sesión aceptaba cédula, teléfono, fecha de nacimiento y los datos de un
+  // beneficiario menor de edad, para algo que nadie podía usar.
+  if (!CITAS_ACTIVAS) return NextResponse.json({ error: "No encontrado" }, { status: 404 });
   try {
     const body = await req.json();
     const { professionalId, clientCedula, clientName, clientEmail, preferredDateText } = body;

@@ -3848,6 +3848,9 @@
     "cuerpo": "ContrataCR messages are read and answered in the app. From the web you can write to any professional on WhatsApp from their profile.",
     "accion": "Find professionals"
   },
+  "terminosCasilla": {
+    "texto": "I agree to the <terms>Terms of Use</terms> and the <privacy>Privacy Policy</privacy>. I understand that ContrataCR has zero tolerance for objectionable content or abusive users."
+  },
   "sectionTitles": {
     "messages": "Messages",
     "notifications": "Notifications",

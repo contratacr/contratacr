@@ -1,19 +1,10 @@
 "use client";
 
-/**
- * Reservar por el calendario está APAGADO.
- *
- * Las citas salieron del producto: no están en el menú del panel, «Mi agenda»
- * tampoco, y por lo tanto un profesional ya no puede agregar ni quitar horas.
- * Lo que quedaba era medio camino: 44 fichas seguían mostrando un calendario
- * —9.473 horas, casi todas puestas en julio y agosto y nunca revisadas— y un
- * cliente podía reservar una hora que el profesional ya ni recordaba. En toda
- * la historia de producción hubo CERO citas.
- *
- * No se borró nada: ni las horas, ni el código de reservar, ni la pantalla
- * /reservar. Con poner esto en `true` vuelve entero.
- */
-const RESERVAR_POR_CALENDARIO = false;
+// El interruptor de citas vive en `@/lib/citas`, no aquí: apagar esta
+// pantalla no apagaba la API, que era la puerta de verdad.
+import { CITAS_ACTIVAS } from "@/lib/citas";
+
+const RESERVAR_POR_CALENDARIO = CITAS_ACTIVAS;
 
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useSearchParams } from "next/navigation";
