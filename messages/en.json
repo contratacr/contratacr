@@ -3854,8 +3854,8 @@
   "bajaCorreos": {
     "listoTitulo": "Done, no more news emails",
     "listoCuerpo": "You will not receive ContrataCR news emails any more. Account and security messages — signing in, password recovery, support — are still sent.",
-    "falloTitulo": "We could not unsubscribe you",
-    "falloCuerpo": "The link may have changed or expired. Write to soporte@contratacr.com and we will do it for you.",
+    "falloTitulo": "We could not do it",
+    "falloCuerpo": "The link may have changed or expired. Write to soporte@contratacr.com and we will stop sending you news.",
     "volver": "Go home"
   },
   "sectionTitles": {

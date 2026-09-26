@@ -19,9 +19,13 @@ export type PublicQuoteData = {
 const DATE_LOCALE: Record<string, string> = { es: "es-CR", en: "en-US" };
 
 /**
- * Lo que ve el cliente al abrir el enlace: quién cotiza, qué incluye, cuánto
- * es, y un botón para aceptar. Nada que descargar ni cuenta que crear. Es
- * también la puerta por la que ese cliente entra a ContrataCR.
+ * Lo que ve el cliente al abrir el enlace: quién cotiza, qué incluye y cuánto
+ * es. Sin cuenta que crear. Es también la puerta por la que ese cliente entra
+ * a ContrataCR.
+ *
+ * NO hay botón de aceptar: aceptar y rechazar salieron del producto. Una
+ * cotización se envía, se comparte y se descarga; el trato se cierra por
+ * WhatsApp, que es donde la gente ya está hablando.
  */
 export function PublicQuote({ locale, data }: { locale: string; data: PublicQuoteData | null }) {
   const t = useTranslations("quotes");

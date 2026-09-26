@@ -202,7 +202,7 @@ export function AdminProjects() {
   }
 
   async function removeProject(id: string) {
-    if (!window.confirm("Esta eliminación es permanente: el proyecto y sus propuestas desaparecen. ¿Deseas continuar?")) return;
+    if (!window.confirm("Esta eliminación es permanente: el proyecto desaparece. ¿Deseas continuar?")) return;
     setDeletingId(id);
     try {
       const res = await fetch(`/api/admin/projects?id=${encodeURIComponent(id)}`, { method: "DELETE" });
@@ -240,7 +240,7 @@ export function AdminProjects() {
           <ClipboardList className="h-5 w-5 text-[#009FD9]" />
           <div>
             <h1 className="text-xl font-bold text-[#162543]">Proyectos</h1>
-            <p className="mt-0.5 text-sm text-[#6b7280]">Proyectos creados por clientes para recibir propuestas de profesionales.</p>
+            <p className="mt-0.5 text-sm text-[#6b7280]">Proyectos publicados por clientes. Los profesionales responden por WhatsApp..</p>
           </div>
         </div>
         {!loading && (

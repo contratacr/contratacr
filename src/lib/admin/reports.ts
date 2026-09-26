@@ -8,7 +8,7 @@ import { getCategoryLabel } from "@/lib/data/categories";
 
 export type Count = { label: string; value: number };
 export type RegPoint = { date: string; pros: number; clients: number };
-export type ActPoint = { date: string; solicitudes: number; proyectos: number };
+export type ActPoint = { date: string; proyectos: number };
 export type InteractionPoint = { date: string; total: number };
 export type ProfessionalInteraction = {
   professionalId: string;
@@ -68,8 +68,8 @@ export type AdminReports = {
   insights: AdminInsights;
   acquisition: AdminAcquisition;
   users: { total: number; clients: number; pros: number; verifiedPros: number; activeClients: number; reg30: RegPoint[] };
-  pros: { total: number; verified: number; pending: number; unverified: number; rejected: number; byCategory: Count[]; byProvince: Count[]; traveling: number; fixed: number; withSchedule: number; withoutSchedule: number; withServices: number; withoutServices: number };
-  activity: { solicitudesTotal: number; solicitudesByStatus: Count[]; solicitudesResponded: number; proyectosTotal: number; proyectosByStatus: Count[]; topCategories: Count[]; series30: ActPoint[] };
+  pros: { total: number; verified: number; pending: number; unverified: number; rejected: number; byCategory: Count[]; byProvince: Count[]; traveling: number; fixed: number; withServices: number; withoutServices: number };
+  activity: { proyectosTotal: number; proyectosByStatus: Count[]; topCategories: Count[]; series30: ActPoint[] };
   support: { total: number; byStatus: Count[]; series30: { date: string; tickets: number }[] };
   interactions: { total: number; uniqueVisitors: number; byType: Count[]; series30: InteractionPoint[]; professionals: ProfessionalInteraction[] };
 };
@@ -129,8 +129,8 @@ export async function getAdminReports(locale = "es"): Promise<AdminReports> {
     },
     acquisition: { tracked: 0, untracked: 0, tracked30: 0, untracked30: 0, since: null, rows: [], campaigns: [], landings: [], referrers: [] },
     users: { total: 0, clients: 0, pros: 0, verifiedPros: 0, activeClients: 0, reg30: days30.map((d) => ({ date: d, pros: 0, clients: 0 })) },
-    pros: { total: 0, verified: 0, pending: 0, unverified: 0, rejected: 0, byCategory: [], byProvince: [], traveling: 0, fixed: 0, withSchedule: 0, withoutSchedule: 0, withServices: 0, withoutServices: 0 },
-    activity: { solicitudesTotal: 0, solicitudesByStatus: [], solicitudesResponded: 0, proyectosTotal: 0, proyectosByStatus: [], topCategories: [], series30: days30.map((d) => ({ date: d, solicitudes: 0, proyectos: 0 })) },
+    pros: { total: 0, verified: 0, pending: 0, unverified: 0, rejected: 0, byCategory: [], byProvince: [], traveling: 0, fixed: 0, withServices: 0, withoutServices: 0 },
+    activity: { proyectosTotal: 0, proyectosByStatus: [], topCategories: [], series30: days30.map((d) => ({ date: d, proyectos: 0 })) },
     support: { total: 0, byStatus: [], series30: days30.map((d) => ({ date: d, tickets: 0 })) },
     interactions: { total: 0, uniqueVisitors: 0, byType: [], series30: days30.map((d) => ({ date: d, total: 0 })), professionals: [] },
   };
@@ -189,14 +189,6 @@ export async function getAdminReports(locale = "es"): Promise<AdminReports> {
     for (const p of proRows) if (p.provincia_id) provCounts.set(p.provincia_id as string, (provCounts.get(p.provincia_id as string) ?? 0) + 1);
     empty.pros.byProvince = [...provCounts.entries()].sort((a, b) => b[1] - a[1]).map(([id, value]) => ({ label: getProvinceById(id)?.name ?? id, value }));
 
-    // With/without published schedule (distinct professional_id in availability_slots)
-    try {
-      const { data: slots } = await admin.from("availability_slots").select("professional_id");
-      const withSched = new Set((slots ?? []).map((s) => s.professional_id));
-      empty.pros.withSchedule = [...withSched].filter(Boolean).length;
-      empty.pros.withoutSchedule = proRows.length - empty.pros.withSchedule;
-    } catch { /* table missing */ }
-
     // Where registrations come from (migration 177). Separate query so an older
     // schema only empties this section.
     try {
@@ -253,23 +245,18 @@ export async function getAdminReports(locale = "es"): Promise<AdminReports> {
     } catch { /* columns missing until migration 177 runs */ }
   } catch (e) { console.error("[reports] users/pros", e); }
 
-  // ── Active clients (sent ≥1 solicitud) + marketplace activity ──
+  // ── Clientes activos + actividad del marketplace ──
+  // Ya no se consulta `bookings`: las citas salieron del producto, y este
+  // bloque cargaba la tabla ENTERA en cada visita a Analítica para calcular
+  // unos campos que ningún componente pintaba. «Cliente activo» era «cliente
+  // con al menos una cita», o sea cero; ahora es quien publicó un proyecto.
   try {
-    const [{ data: bookings }, { data: projects }] = await Promise.all([
-      admin.from("bookings").select("id, status, created_at, client_id"),
-      admin.from("projects").select("id, status, created_at, category_id"),
-    ]);
-    const bRows = bookings ?? [];
+    const { data: projects } = await admin.from("projects").select("id, status, created_at, category_id, client_id");
     const pRows = projects ?? [];
 
-    empty.users.activeClients = new Set(bRows.map((b) => b.client_id).filter(Boolean)).size;
+    empty.users.activeClients = new Set(pRows.map((p) => p.client_id).filter(Boolean)).size;
     projectCreated = pRows.map((p) => p.created_at as string);
     projectRowsForDemand = pRows.map((p) => ({ created_at: p.created_at as string, category_id: (p.category_id as string | null) ?? null }));
-
-    empty.activity.solicitudesTotal = bRows.length;
-    const bStatusLabels: Record<string, string> = { pending: "Pendiente", confirmed: "Confirmada", in_progress: "En curso", awaiting_confirmation: "Por confirmar", completed: "Completada", cancelled: "Cancelada", rescheduled: "Reprogramada" };
-    empty.activity.solicitudesByStatus = tally(bRows.map((b) => b.status as string), bStatusLabels);
-    empty.activity.solicitudesResponded = bRows.filter((b) => ["confirmed", "in_progress", "awaiting_confirmation", "completed"].includes(b.status as string)).length;
 
     empty.activity.proyectosTotal = pRows.length;
     const pStatusLabels: Record<string, string> = { open: "Abierto", in_progress: "En curso", awaiting_confirmation: "Por confirmar", completed: "Completado", cancelled: "Cancelado" };
@@ -279,9 +266,8 @@ export async function getAdminReports(locale = "es"): Promise<AdminReports> {
     for (const p of pRows) if (p.category_id) catCounts.set(p.category_id as string, (catCounts.get(p.category_id as string) ?? 0) + 1);
     empty.activity.topCategories = [...catCounts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 6).map(([id, value]) => ({ label: getCategoryLabel(id, locale), value }));
 
-    const bBucket = bucketByDay(bRows.map((b) => b.created_at as string), days30);
     const pBucket = bucketByDay(pRows.map((p) => p.created_at as string), days30);
-    empty.activity.series30 = days30.map((d) => ({ date: d, solicitudes: bBucket[d], proyectos: pBucket[d] }));
+    empty.activity.series30 = days30.map((d) => ({ date: d, proyectos: pBucket[d] }));
   } catch (e) { console.error("[reports] activity", e); }
 
   // ── Support tickets ──
@@ -302,7 +288,7 @@ export async function getAdminReports(locale = "es"): Promise<AdminReports> {
     const since30 = new Date(now - 30 * DAY).toISOString();
     const [{ data: recent }, { data: demandEvents }, { data: oldest }] = await Promise.all([
       admin.from("interaction_events").select("event_type, created_at, category_id, metadata").gte("created_at", since14),
-      admin.from("interaction_events").select("event_type, category_id").gte("created_at", since30).in("event_type", ["search_performed", "profile_view", "service_request_started"]),
+      admin.from("interaction_events").select("event_type, category_id").gte("created_at", since30).in("event_type", ["search_performed", "profile_view"]),
       admin.from("interaction_events").select("created_at").order("created_at", { ascending: true }).limit(1),
     ]);
     const events = (recent ?? []) as Array<{ event_type: string; created_at: string; category_id: string | null; metadata: Record<string, unknown> | null }>;

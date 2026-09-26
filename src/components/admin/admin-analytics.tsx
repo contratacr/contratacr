@@ -311,7 +311,7 @@ export function AdminAnalytics({ data }: { data: AdminReports }) {
           </div>
         </Section>
 
-        <Section icon={UserCheck} title="Profesionales" sub={`${fmt(pros.total)} registrados · ${fmt(pros.withSchedule)} con agenda`}>
+        <Section icon={UserCheck} title="Profesionales" sub={`${fmt(pros.total)} registrados · ${fmt(pros.withServices)} con servicios publicados`}>
           <Segmented parts={[
             { label: "Verificados", value: pros.verified, color: "#16a34a" },
             { label: "Pendientes", value: pros.pending, color: "#f59e0b" },

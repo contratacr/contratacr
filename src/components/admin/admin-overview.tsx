@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { UserPlus, Users, Briefcase, ShieldCheck, ArrowUpRight, ArrowDownRight, FolderOpen, Headset } from "lucide-react";
+import { UserPlus, Users, MessageCircle, FileText, ShieldCheck, ArrowUpRight, ArrowDownRight, FolderOpen, Headset } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { formatRelativeTime } from "@/lib/utils";
 import type { AdminOverview as Data, Kpi } from "@/lib/admin/overview";
@@ -95,7 +95,7 @@ const ATTENTION: { key: string; label: string; href: string; hint: string }[] = 
 const ACTIVITY_META: Record<ActivityKind, { icon: typeof UserPlus; bg: string; fg: string; tag: string }> = {
   pro: { icon: UserPlus, bg: "bg-[#e0f2fe]", fg: "text-[#0369a1]", tag: "Profesional" },
   client: { icon: Users, bg: "bg-[#dcfce7]", fg: "text-[#15803d]", tag: "Cliente" },
-  solicitud: { icon: Briefcase, bg: "bg-[#ede9fe]", fg: "text-[#6d28d9]", tag: "Cita" },
+  cotizacion: { icon: FileText, bg: "bg-[#ede9fe]", fg: "text-[#6d28d9]", tag: "Cotización" },
   proyecto: { icon: FolderOpen, bg: "bg-[#fef3c7]", fg: "text-[#b45309]", tag: "Proyecto" },
   ticket: { icon: Headset, bg: "bg-[#fee2e2]", fg: "text-[#b91c1c]", tag: "Soporte" },
 };
@@ -125,7 +125,7 @@ export function AdminOverview({ adminName, data, activity = [] }: { adminName: s
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <KpiCard icon={UserPlus} label="Nuevos profesionales" value={data.newPros.value} kpi={data.newPros} color="#008ce0" deltaSuffix="esta semana" />
         <KpiCard icon={Users} label="Nuevos clientes" value={data.newClients.value} kpi={data.newClients} color="#16a34a" deltaSuffix="esta semana" />
-        <KpiCard icon={Briefcase} label="Servicios facilitados" value={data.servicios.value} kpi={data.servicios} color="#7c3aed" deltaSuffix="este mes" />
+        <KpiCard icon={MessageCircle} label="Contactos a profesionales" value={data.servicios.value} kpi={data.servicios} color="#7c3aed" deltaSuffix="este mes" />
         <KpiCard icon={ShieldCheck} label="Tasa de verificación" value={data.verificationRate.value} suffix="%" kpi={data.verificationRate} color="#f59e0b" deltaSuffix="vs. mes pasado" />
       </div>
 

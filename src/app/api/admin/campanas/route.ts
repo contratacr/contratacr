@@ -26,7 +26,17 @@ const MAX_BODY = 4000;
 // Brevo (300 − 50), y con eso las 404 cuentas se terminan en dos tandas en vez
 // de tres. Si el app gastó correos ese día, la cuota corta sola y lo que no
 // salió queda pendiente para la siguiente.
-const POR_TANDA = 250;
+// CUÁNTOS SALEN POR TANDA.
+//
+// Estaba en 250 para terminar las 404 cuentas pendientes en dos envíos, y eso
+// ya se hizo. Para lo que viene el objetivo es otro: la investigación de
+// entrega es unánime en que «los picos repentinos de volumen son una causa
+// principal de caer en No deseado», y este dominio pasó de unos pocos correos
+// diarios a 200 de golpe. La tasa de apertura quedó en 13%.
+//
+// 60 es un punto de partida prudente para un dominio con poca historia. Sube
+// conforme las aperturas aguanten; si bajan, no subas.
+const POR_TANDA = 60;
 
 /** Entre una tanda y la siguiente: el tope del proveedor es por día natural. */
 
@@ -60,8 +70,19 @@ function escapeHtml(s: string) {
   return s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c] as string));
 }
 
-function bodyToHtml(body: string, ctaLabel: string, ctaHref: string, bajaHref: string) {
-  const parrafos = body.split(/\n{2,}/).map((p) => `<p style="margin:0 0 14px;font-size:15px;line-height:1.6;color:#162543">${escapeHtml(p.trim()).replace(/\n/g, "<br>")}</p>`).join("");
+function primerNombre(nombre: string | null | undefined) {
+  const limpio = (nombre ?? "").trim().split(/\s+/)[0] ?? "";
+  // Un nombre de una letra o un correo metido en el campo no sirven de saludo.
+  return /^[\p{L}][\p{L}'\-]{1,}$/u.test(limpio) ? limpio : "";
+}
+
+function bodyToHtml(body: string, ctaLabel: string, ctaHref: string, bajaHref: string, nombre: string) {
+  // POR NOMBRE. El envío ya traía `full_name` de cada persona y no lo usaba:
+  // todas las campañas salían sin saludo. Un correo que no te llama por tu
+  // nombre se lee como publicidad masiva, que es justo lo que los buzones
+  // clasifican aparte. Si no hay nombre usable, no se saluda a medias.
+  const saludo = nombre ? `<p style="margin:0 0 14px;font-size:15px;line-height:1.6;color:#162543">Hola ${escapeHtml(nombre)},</p>` : "";
+  const parrafos = saludo + body.split(/\n{2,}/).map((p) => `<p style="margin:0 0 14px;font-size:15px;line-height:1.6;color:#162543">${escapeHtml(p.trim()).replace(/\n/g, "<br>")}</p>`).join("");
   const cta = ctaLabel && ctaHref
     ? `<p style="margin:22px 0 8px"><a href="${escapeHtml(ctaHref)}" style="display:inline-block;background:#009FD9;color:#fff;text-decoration:none;font-weight:700;padding:12px 22px;border-radius:999px;font-size:15px">${escapeHtml(ctaLabel)}</a></p>`
     : "";
@@ -82,8 +103,15 @@ function bodyToHtml(body: string, ctaLabel: string, ctaHref: string, bajaHref: s
   // Un enlace, no una instrucción. «Responde con la palabra BAJA» le sirve a
   // una persona pero no a Gmail, y era parte de por qué estos correos caían en
   // No deseado. Este enlace es el mismo que viaja en la cabecera.
-  const pie = `<p style="margin:18px 0 0;font-size:12px;line-height:1.5;color:#68778d">Recibes este correo porque tienes una cuenta en ContrataCR. Si no quieres recibir novedades, <a href="${escapeHtml(bajaHref)}" style="color:#68778d;text-decoration:underline">date de baja aquí</a>.</p>`;
-  return parrafos + cta + firma + pie;
+  //
+  // El texto del enlace es la frase que la persona diría, no «date de baja»:
+  // nadie recuerda haberse suscrito a nada, se hizo una cuenta.
+  // Invitar a responder no es cortesía: cuando alguien contesta, su buzón
+  // aprende que este remitente es legítimo. Una respuesta limpia más
+  // reputación que cien entregas.
+  const responder = `<p style="margin:14px 0 0;font-size:14px;line-height:1.6;color:#52627a">¿Alguna duda? Responde a este correo y te contestamos.</p>`;
+  const pie = `<p style="margin:18px 0 0;font-size:12px;line-height:1.5;color:#68778d">Recibes este correo porque tienes una cuenta en ContrataCR. <a href="${escapeHtml(bajaHref)}" style="color:#68778d;text-decoration:underline">No quiero recibir novedades</a>.</p>`;
+  return parrafos + cta + responder + firma + pie;
 }
 
 /** A quién ya le salió esta campaña, y cuándo fue la última vez. */
@@ -169,11 +197,11 @@ export async function POST(request: Request) {
     return `${APP_URL}${ruta}${separador}utm_source=correo&utm_medium=campana&utm_campaign=${encodeURIComponent(campana)}`;
   };
   const ctaHref = ctaPath && ctaPath.startsWith("/") ? conMarca(ctaPath) : "";
-  const htmlPara = (correo: string) => brandedEmailDocument({ title: subject, bodyHtml: bodyToHtml(body, ctaLabel, ctaHref, enlaceDeBaja(APP_URL, correo)), origin: APP_URL });
+  const htmlPara = (correo: string, nombre?: string | null) => brandedEmailDocument({ title: subject, bodyHtml: bodyToHtml(body, ctaLabel, ctaHref, enlaceDeBaja(APP_URL, correo), primerNombre(nombre)), origin: APP_URL });
   const replyTo = { email: "soporte@contratacr.com", name: "ContrataCR" };
 
   if (payload.mode !== "all") {
-    const result = await sendBrevoEmail({ to: admin.email, subject: `[PRUEBA] ${subject}`, html: htmlPara(admin.email), replyTo, nivel: "masivo" });
+    const result = await sendBrevoEmail({ to: admin.email, subject: `[PRUEBA] ${subject}`, html: htmlPara(admin.email, "Isaac"), replyTo, nivel: "masivo" });
     return NextResponse.json({ mode: "test", to: admin.email, ...result });
   }
 
@@ -214,7 +242,7 @@ export async function POST(request: Request) {
     // La etiqueta va en el envío para que el aviso de Brevo (apertura, clic,
     // rebote) se pueda anotar en la fila correcta: llega con el correo de la
     // persona, pero sin la etiqueta no dice de qué campaña habla.
-    const result = await sendBrevoEmail({ to: client.email, subject, html: htmlPara(String(client.email)), replyTo, nivel: "masivo", campana });
+    const result = await sendBrevoEmail({ to: client.email, subject, html: htmlPara(String(client.email), client.full_name), replyTo, nivel: "masivo", campana });
     if (result.ok) {
       sent += 1;
       // Se anota SOLO lo que salió: lo que falló vuelve a intentarse mañana.

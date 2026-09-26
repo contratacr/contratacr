@@ -233,7 +233,7 @@ export function AdminMarketplace({ kind }: { kind: "jobs" | "offers" }) {
   }
 
   async function remove(item: Item) {
-    if (!window.confirm(`Esta eliminación es permanente: se borra "${item.title}" con sus postulaciones y avisos. ¿Deseas continuar?`)) return;
+    if (!window.confirm(`Esta eliminación es permanente: se borra "${item.title}" con sus avisos. ¿Deseas continuar?`)) return;
     setBusy(item.id);
     setNotice(null);
     try {
@@ -275,7 +275,7 @@ export function AdminMarketplace({ kind }: { kind: "jobs" | "offers" }) {
           <div>
             <h1 className="text-xl font-bold text-[#162543]">{isJobs ? "Empleos" : "Promociones"}</h1>
             <p className="mt-0.5 text-sm text-[#6b7280]">
-              {isJobs ? "Vacantes publicadas por profesionales y empresas, con quién las creó y cuántas postulaciones reciben." : "Promociones, paquetes y productos publicados por profesionales, con quién los creó."}
+              {isJobs ? "Vacantes publicadas por profesionales y empresas, con quién las creó y en qué estado están." : "Promociones, paquetes y productos publicados por profesionales, con quién los creó."}
             </p>
           </div>
         </div>

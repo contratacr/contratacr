@@ -2,17 +2,19 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { getCategoryLabel } from "@/lib/data/categories";
 
 // ── Recent cross-table activity feed for the admin "Actividad" view. ──
-export type ActivityKind = "pro" | "client" | "solicitud" | "proyecto" | "ticket";
+// `solicitud` era la cita. Las citas salieron del producto, así que el feed
+// muestra cotizaciones, que sí se siguen creando.
+export type ActivityKind = "pro" | "client" | "cotizacion" | "proyecto" | "ticket";
 export type ActivityEvent = { id: string; kind: ActivityKind; title: string; sub: string; createdAt: string };
 
 export async function getAdminActivity(limit = 40, locale = "es"): Promise<ActivityEvent[]> {
   try {
     const admin = createAdminClient();
     const N = 15;
-    const [pros, clients, bookings, projects, tickets] = await Promise.all([
+    const [pros, clients, cotizaciones, projects, tickets] = await Promise.all([
       admin.from("professionals").select("id, created_at, category_id, profiles(full_name)").order("created_at", { ascending: false }).limit(N),
       admin.from("profiles").select("id, created_at, full_name").eq("role", "client").order("created_at", { ascending: false }).limit(N),
-      admin.from("bookings").select("id, created_at, service_description, client_name").order("created_at", { ascending: false }).limit(N),
+      admin.from("quotes").select("id, created_at, title, client_name").order("created_at", { ascending: false }).limit(N),
       admin.from("projects").select("id, created_at, title, category_id").order("created_at", { ascending: false }).limit(N),
       admin.from("support_tickets").select("id, created_at, subject, name").order("created_at", { ascending: false }).limit(N),
     ]);
@@ -23,7 +25,7 @@ export async function getAdminActivity(limit = 40, locale = "es"): Promise<Activ
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     for (const c of (clients.data ?? []) as any[]) events.push({ id: `cli-${c.id}`, kind: "client", title: c.full_name || "Cliente", sub: "Nuevo cliente", createdAt: c.created_at });
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    for (const b of (bookings.data ?? []) as any[]) events.push({ id: `sol-${b.id}`, kind: "solicitud", title: b.client_name || "Cliente", sub: `Cita: ${(b.service_description || "").slice(0, 60) || "servicio"}`, createdAt: b.created_at });
+    for (const q of (cotizaciones.data ?? []) as any[]) events.push({ id: `cot-${q.id}`, kind: "cotizacion", title: q.client_name || "Cliente", sub: `Cotización: ${(q.title || "").slice(0, 60) || "sin título"}`, createdAt: q.created_at });
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     for (const pr of (projects.data ?? []) as any[]) events.push({ id: `proy-${pr.id}`, kind: "proyecto", title: pr.title || "Proyecto", sub: `Proyecto publicado${pr.category_id ? ` · ${getCategoryLabel(pr.category_id, locale)}` : ""}`, createdAt: pr.created_at });
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

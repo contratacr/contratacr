@@ -199,45 +199,8 @@ export async function GET(req: Request) {
       userMetadata.is_provider !== true &&
       !professional;
 
-    const [followingRowsResult, followerRowsResult] = await Promise.all([
-      db
-        .from("professional_follows")
-        .select("id, professional_id, created_at")
-        .eq("follower_id", profileId)
-        .order("created_at", { ascending: false }),
-      professional
-        ? db
-            .from("professional_follows")
-            .select("id, follower_id, created_at")
-            .eq("professional_id", professional.id)
-            .order("created_at", { ascending: false })
-        : Promise.resolve({ data: [] }),
-    ]);
-
-    const followingRows = followingRowsResult.data ?? [];
-    const followerRows = followerRowsResult.data ?? [];
-    const followedProfessionalIds = followingRows.map((row) => row.professional_id);
-    const followerProfileIds = followerRows.map((row) => row.follower_id);
-    const [followedProsResult, followerProfilesResult] = await Promise.all([
-      followedProfessionalIds.length > 0
-        ? db
-            .from("professionals")
-            .select("id, slug, business_name, profile_id, profiles(full_name, avatar_url)")
-            .in("id", followedProfessionalIds)
-        : Promise.resolve({ data: [] }),
-      followerProfileIds.length > 0
-        ? db
-            .from("profiles")
-            .select("id, full_name, avatar_url, professionals(id, slug, business_name)")
-            .in("id", followerProfileIds)
-        : Promise.resolve({ data: [] }),
-    ]);
-    const followedPros = new Map((followedProsResult.data ?? []).map((item) => [item.id, item]));
-    const followerProfiles = new Map((followerProfilesResult.data ?? []).map((item) => [item.id, item]));
-    const followNetwork = {
-      following: followingRows.map((row) => ({ ...row, professional: followedPros.get(row.professional_id) ?? null })),
-      followers: followerRows.map((row) => ({ ...row, profile: followerProfiles.get(row.follower_id) ?? null })),
-    };
+    // Seguir profesionales se retiró: aquí vivían 4 consultas a
+    // `professional_follows` que siempre devolvían vacío.
 
     const { data: tickets } = await db
       .from("support_tickets")
@@ -251,9 +214,11 @@ export async function GET(req: Request) {
       .eq("client_id", profileId)
       .order("created_at", { ascending: false });
 
-    const { data: bookings } = await db
-      .from("bookings")
-      .select("id, service_description, status, preferred_date, created_at")
+    // Las citas salieron del producto: esta consulta siempre devolvía vacío.
+    // Lo que el cliente sí recibe hoy son cotizaciones.
+    const { data: quotes } = await db
+      .from("quotes")
+      .select("id, title, status, total, created_at")
       .eq("client_id", profileId)
       .order("created_at", { ascending: false });
 
@@ -298,12 +263,7 @@ export async function GET(req: Request) {
         profileViews: countType(["profile_view"]),
         whatsappClicks: countType(["whatsapp_click"]),
         phoneClicks: countType(["phone_click"]),
-        availabilityActions: countType(["availability_view", "schedule_slot_selected"]),
         favorites: countType(["favorite_add"]),
-        serviceRequestsStarted: countType(["service_request_started"]),
-        serviceRequestsCreated: countType(["service_request_created"]),
-        proposalsSent: countType(["proposal_sent"]),
-        proposalsAccepted: countType(["proposal_accepted"]),
         reviewsReceived: countType(["review_created"]),
         shares: countType(["profile_share"]),
         lastInteractionAt: interactions[0]?.created_at ?? null,
@@ -317,40 +277,27 @@ export async function GET(req: Request) {
     // Everything the account created or received, so the owner sees the whole
     // picture in one place: vacancies, offers, applications, requests received
     // as a professional and the reviews it got.
-    const [applicationsRes, jobsRes, offersRes, receivedBookingsRes, receivedReviewsRes, proposalsRes] = await Promise.all([
-      db.from("job_applications").select("id, job_id, status, created_at, job_posts(title, status)").eq("applicant_id", profileId).order("created_at", { ascending: false }),
-      professional ? db.from("job_posts").select("id, title, status, created_at, job_applications(count)").eq("employer_id", professional.id).order("created_at", { ascending: false }) : Promise.resolve({ data: [] }),
+    // Postulaciones, citas recibidas y propuestas salieron: ninguna se produce
+    // hoy, y eran tres consultas más por cada ficha que se abre.
+    const [jobsRes, offersRes, receivedReviewsRes] = await Promise.all([
+      professional ? db.from("job_posts").select("id, title, status, created_at").eq("employer_id", professional.id).order("created_at", { ascending: false }) : Promise.resolve({ data: [] }),
       professional ? db.from("professional_offers").select("id, title, status, price_now, currency, created_at").eq("professional_id", professional.id).order("created_at", { ascending: false }) : Promise.resolve({ data: [] }),
-      professional ? db.from("bookings").select("id, service_description, status, preferred_date, created_at, client_name").eq("professional_id", professional.id).order("created_at", { ascending: false }) : Promise.resolve({ data: [] }),
       professional ? db.from("reviews").select("id, rating, comment, moderation_status, created_at, client_name_snapshot").eq("professional_id", professional.id).order("created_at", { ascending: false }) : Promise.resolve({ data: [] }),
-      professional ? db.from("proposals").select("id, status, price, created_at, projects(id, title, status, client_name_snapshot)").eq("professional_id", professional.id).order("created_at", { ascending: false }) : Promise.resolve({ data: [] }),
     ]);
-    const receivedProjects = (proposalsRes.data ?? []).map((row) => {
-      const project = (Array.isArray(row.projects) ? row.projects[0] : row.projects) as { id?: string; title?: string; status?: string; client_name_snapshot?: string | null } | null;
-      return { id: row.id, project_id: project?.id ?? null, title: project?.title ?? "Proyecto", project_status: project?.status ?? null, proposal_status: row.status, price: row.price, client_name: project?.client_name_snapshot ?? null, created_at: row.created_at };
-    });
-
     return NextResponse.json({
       profile,
       professional: professional ?? null,
       professionalSignupIncomplete,
       tickets: tickets ?? [],
       projects: projects ?? [],
-      bookings: bookings ?? [],
-      applications: (applicationsRes.data ?? []).map((row) => {
-        const job = Array.isArray(row.job_posts) ? row.job_posts[0] : row.job_posts;
-        return { id: row.id, job_id: row.job_id, status: row.status, created_at: row.created_at, job_title: (job as { title?: string } | null)?.title ?? null, job_status: (job as { status?: string } | null)?.status ?? null };
-      }),
-      jobs: (jobsRes.data ?? []).map((row) => ({ id: row.id, title: row.title, status: row.status, created_at: row.created_at, applications: Number((Array.isArray(row.job_applications) ? row.job_applications[0] : row.job_applications)?.count ?? 0) })),
+      quotes: quotes ?? [],
+      jobs: jobsRes.data ?? [],
       offers: offersRes.data ?? [],
-      receivedBookings: receivedBookingsRes.data ?? [],
       receivedReviews: receivedReviewsRes.data ?? [],
-      receivedProjects,
       verificationLog,
       appeals,
       reports,
       analytics,
-      followNetwork,
     });
   }
 

@@ -94,7 +94,7 @@ export function AdminQueue() {
       const res = await fetch("/api/admin/providers/outreach", { method: "POST" });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "No se pudo contactar.");
-      setOutreachResult(`${data.pending} pendientes · ${data.notified} avisados por primera vez · ${data.reminded ?? 0} recordatorios (pasaron 30 días) · ${data.alreadyNotified} sin avisar (ya recibieron los dos mensajes o aún no cumplen 30 días). El WhatsApp se envía a mano desde el botón verde de cada fila.`);
+      setOutreachResult(`${data.pending} pendientes · ${data.notified} avisados por primera vez · ${data.reminded ?? 0} recordatorios (pasaron 30 días) · ${data.alreadyNotified} sin avisar (ya recibieron los dos mensajes o aún no cumplen 30 días)${data.restantes ? ` · quedan ${data.restantes} para la próxima vez` : ""}. El WhatsApp se envía a mano desde el botón verde de cada fila.`);
     } catch (error) {
       setOutreachResult(error instanceof Error ? error.message : "No se pudo contactar.");
     } finally {

@@ -6,7 +6,7 @@ import {
   ArrowLeft, Loader2, ExternalLink, ShieldCheck, Headset, Flag, FolderOpen,
   CalendarDays, Ban, ShieldOff, Mail, Phone, IdCard, History,
   CheckCircle2, RotateCcw, XCircle, Clock3, MousePointerClick,
-  Users, Trash2, Star, MessageCircle, Inbox,
+  Trash2, Star, Inbox,
 } from "lucide-react";
 import { WhatsAppLogo } from "@/components/ui/whatsapp-logo";
 import { Link } from "@/i18n/navigation";
@@ -35,12 +35,10 @@ type Professional = {
 };
 type Ticket = { id: string; subject: string; status: string; topic?: string | null; case_number?: number | null; created_at: string; last_reply_role?: string | null };
 type Project = { id: string; title: string; status: string; category_id: string | null; created_at: string };
-type Booking = { id: string; service_description: string; status: string; preferred_date: string | null; created_at: string; client_name?: string | null };
-type Application = { id: string; job_id: string; status: string; created_at: string; job_title: string | null; job_status: string | null };
+type Quote = { id: string; title: string | null; status: string | null; total: number | null; created_at: string };
 type Job = { id: string; title: string; status: string; created_at: string; applications: number };
 type Offer = { id: string; title: string; status: string; price_now: number | null; currency: string | null; created_at: string };
 type Review = { id: string; rating: number; comment: string | null; moderation_status: string | null; created_at: string; client_name_snapshot: string | null };
-type ReceivedProject = { id: string; project_id: string | null; title: string; project_status: string | null; proposal_status: string; price: number | null; client_name: string | null; created_at: string };
 type LogRow = { id: string; action?: string; decision?: string; status?: string; note?: string; reason?: string; admin_name?: string; created_at: string };
 type Appeal = { id: string; message?: string; status?: string; created_at: string };
 type Report = { id: string; reason: string; status: string; reporter_email: string | null; created_at: string };
@@ -51,32 +49,11 @@ type Analytics = {
   profileViews: number;
   whatsappClicks: number;
   phoneClicks: number;
-  availabilityActions: number;
   favorites: number;
-  serviceRequestsStarted: number;
-  serviceRequestsCreated: number;
-  proposalsSent: number;
-  proposalsAccepted: number;
   reviewsReceived: number;
   shares: number;
   lastInteractionAt: string | null;
   bySource: { label: string; value: number }[];
-};
-type FollowNetworkItem = {
-  id: string;
-  created_at: string;
-  professional?: {
-    id: string;
-    slug: string;
-    business_name: string | null;
-    profiles?: { full_name: string | null; avatar_url: string | null } | Array<{ full_name: string | null; avatar_url: string | null }>;
-  } | null;
-  profile?: {
-    id: string;
-    full_name: string | null;
-    avatar_url: string | null;
-    professionals?: { id: string; slug: string; business_name: string | null } | Array<{ id: string; slug: string; business_name: string | null }>;
-  } | null;
 };
 
 type Data = {
@@ -85,18 +62,14 @@ type Data = {
   professionalSignupIncomplete?: boolean;
   tickets: Ticket[];
   projects: Project[];
-  bookings: Booking[];
-  applications?: Application[];
+  quotes: Quote[];
   jobs?: Job[];
   offers?: Offer[];
-  receivedBookings?: Booking[];
   receivedReviews?: Review[];
-  receivedProjects?: ReceivedProject[];
   verificationLog: LogRow[];
   appeals: Appeal[];
   reports: Report[];
   analytics: Analytics | null;
-  followNetwork?: { following: FollowNetworkItem[]; followers: FollowNetworkItem[] };
 };
 
 function fmt(d?: string | null) {
@@ -280,13 +253,10 @@ export function AdminUserProfile({
     );
   }
 
-  const { profile, professional: pro, professionalSignupIncomplete, tickets, projects, bookings, verificationLog, appeals, reports, analytics, followNetwork } = data;
-  const applications = data.applications ?? [];
+  const { profile, professional: pro, professionalSignupIncomplete, tickets, projects, quotes, verificationLog, appeals, reports, analytics } = data;
   const jobs = data.jobs ?? [];
   const offers = data.offers ?? [];
-  const receivedBookings = data.receivedBookings ?? [];
   const receivedReviews = data.receivedReviews ?? [];
-  const receivedProjects = data.receivedProjects ?? [];
   const identityStatus = accountVerificationStatus(profile, pro);
   const isIdentityVerified = identityStatus === "verified";
   const isIdentityPending = identityStatus === "pending";
@@ -295,9 +265,11 @@ export function AdminUserProfile({
   const wa = pro?.whatsapp || profile.phone || null;
   const call = pro?.call_phone || wa;
   const services = pro ? (pro.professions?.length ? pro.professions : pro.category_id ? [pro.category_id] : []) : [];
-  const clientItems = [...projects, ...bookings];
-  const clientActive = clientItems.filter((item) => ["open", "pending", "confirmed", "in_progress", "awaiting_confirmation"].includes(item.status)).length;
-  const clientCompleted = clientItems.filter((item) => item.status === "completed").length;
+  // Solo proyectos, y con los estados que los proyectos de verdad tienen. Antes
+  // mezclaba proyectos con citas y buscaba estados de cita (`pending`,
+  // `confirmed`) que un proyecto nunca ha usado: el contador quedaba corto.
+  const clientActive = projects.filter((p) => ["open", "in_progress", "awaiting_confirmation"].includes(p.status)).length;
+  const clientCompleted = projects.filter((p) => p.status === "completed").length;
   const averageRating = receivedReviews.length ? receivedReviews.reduce((sum, review) => sum + (review.rating ?? 0), 0) / receivedReviews.length : null;
   const waDigits = wa ? wa.replace(/\D/g, "") : "";
   const waHref = waDigits ? `https://wa.me/${waDigits.length === 8 ? `506${waDigits}` : waDigits}` : null;
@@ -462,23 +434,18 @@ export function AdminUserProfile({
       {/* ── 3. As a client ── */}
       <Section icon={FolderOpen} title="Como cliente" sub="Lo que pidió o publicó">
         <div className="grid grid-cols-2 gap-3 p-4 md:grid-cols-4">
-          <Tile label="Citas reservadas" value={bookings.length} />
           <Tile label="Proyectos publicados" value={projects.length} />
-          <Tile label="Postulaciones a empleos" value={applications.length} />
-          <Tile label="Activas · completadas" value={`${clientActive} · ${clientCompleted}`} />
+          <Tile label="Cotizaciones recibidas" value={quotes.length} />
+          <Tile label="Abiertos · completados" value={`${clientActive} · ${clientCompleted}`} />
         </div>
-        <div className="grid gap-0 border-t border-[#eef2f6] lg:grid-cols-3 lg:divide-x lg:divide-[#eef2f6]">
-          <div>
-            <p className="px-4 pt-3 text-[11px] font-semibold uppercase tracking-wide text-[#68778d]">Citas reservadas</p>
-            {bookings.length === 0 ? <Empty text="Sin citas." /> : <ul className="divide-y divide-[#eef2f6]">{bookings.slice(0, 8).map((b) => <Row key={b.id} title={b.service_description} meta={`${b.preferred_date ? `Fecha: ${fmtDate(b.preferred_date)} · ` : ""}${fmt(b.created_at)}`} status={b.status} />)}</ul>}
-          </div>
+        <div className="grid gap-0 border-t border-[#eef2f6] lg:grid-cols-2 lg:divide-x lg:divide-[#eef2f6]">
           <div>
             <p className="px-4 pt-3 text-[11px] font-semibold uppercase tracking-wide text-[#68778d]">Proyectos publicados</p>
             {projects.length === 0 ? <Empty text="Sin proyectos." /> : <ul className="divide-y divide-[#eef2f6]">{projects.slice(0, 8).map((p) => <Row key={p.id} title={p.title} meta={`${p.category_id ? `${getCategoryLabel(p.category_id)} · ` : ""}${fmt(p.created_at)}`} status={p.status} />)}</ul>}
           </div>
           <div>
-            <p className="px-4 pt-3 text-[11px] font-semibold uppercase tracking-wide text-[#68778d]">Postulaciones a empleos</p>
-            {applications.length === 0 ? <Empty text="Sin postulaciones." /> : <ul className="divide-y divide-[#eef2f6]">{applications.slice(0, 8).map((a) => <Row key={a.id} title={a.job_title ?? "Empleo"} meta={fmt(a.created_at)} status={a.status} href={`/admin/empleos`} />)}</ul>}
+            <p className="px-4 pt-3 text-[11px] font-semibold uppercase tracking-wide text-[#68778d]">Cotizaciones recibidas</p>
+            {quotes.length === 0 ? <Empty text="Sin cotizaciones." /> : <ul className="divide-y divide-[#eef2f6]">{quotes.slice(0, 8).map((q) => <Row key={q.id} title={q.title ?? "Cotización"} meta={`${money(q.total, "CRC")} · ${fmt(q.created_at)}`} status={q.status ?? undefined} />)}</ul>}
           </div>
         </div>
       </Section>
@@ -488,18 +455,12 @@ export function AdminUserProfile({
         <>
           <Section icon={Inbox} title="Como profesional" sub="Lo que recibió y publicó">
             <div className="grid grid-cols-2 gap-3 p-4 md:grid-cols-3 xl:grid-cols-6">
-              <Tile label="Citas recibidas" value={receivedBookings.length} />
-              <Tile label="Proyectos recibidos" value={receivedProjects.length} />
               <Tile label="Reseñas recibidas" value={receivedReviews.length} />
               <Tile label="Calificación" value={averageRating != null ? `${averageRating.toFixed(1)} ★` : "—"} />
               <Tile label="Empleos publicados" value={jobs.length} />
               <Tile label="Promociones publicadas" value={offers.length} />
             </div>
             <div className="grid gap-0 border-t border-[#eef2f6] lg:grid-cols-2 lg:divide-x lg:divide-[#eef2f6]">
-              <div>
-                <p className="px-4 pt-3 text-[11px] font-semibold uppercase tracking-wide text-[#68778d]">Citas recibidas</p>
-                {receivedBookings.length === 0 ? <Empty text="Todavía no recibe citas." /> : <ul className="divide-y divide-[#eef2f6]">{receivedBookings.slice(0, 8).map((b) => <Row key={b.id} title={b.service_description} meta={`${b.client_name ? `${b.client_name} · ` : ""}${fmt(b.created_at)}`} status={b.status} />)}</ul>}
-              </div>
               <div>
                 <p className="px-4 pt-3 text-[11px] font-semibold uppercase tracking-wide text-[#68778d]">Reseñas recibidas</p>
                 {receivedReviews.length === 0 ? <Empty text="Todavía no tiene reseñas." /> : (
@@ -518,12 +479,8 @@ export function AdminUserProfile({
                 )}
               </div>
               <div className="lg:border-t lg:border-[#eef2f6]">
-                <p className="px-4 pt-3 text-[11px] font-semibold uppercase tracking-wide text-[#68778d]">Proyectos recibidos</p>
-                {receivedProjects.length === 0 ? <Empty text="Todavía no envió propuestas a proyectos." /> : <ul className="divide-y divide-[#eef2f6]">{receivedProjects.slice(0, 8).map((p) => <Row key={p.id} title={p.title} meta={`${p.client_name ? `${p.client_name} · ` : ""}propuesta ${money(p.price, "CRC")} · ${fmt(p.created_at)}`} status={p.proposal_status} />)}</ul>}
-              </div>
-              <div className="lg:border-t lg:border-[#eef2f6]">
                 <p className="px-4 pt-3 text-[11px] font-semibold uppercase tracking-wide text-[#68778d]">Empleos publicados</p>
-                {jobs.length === 0 ? <Empty text="Sin empleos publicados." /> : <ul className="divide-y divide-[#eef2f6]">{jobs.slice(0, 8).map((j) => <Row key={j.id} title={j.title} meta={`${j.applications} ${j.applications === 1 ? "postulación" : "postulaciones"} · ${fmt(j.created_at)}`} status={j.status} external={`/es/empleos/${j.id}`} />)}</ul>}
+                {jobs.length === 0 ? <Empty text="Sin empleos publicados." /> : <ul className="divide-y divide-[#eef2f6]">{jobs.slice(0, 8).map((j) => <Row key={j.id} title={j.title} meta={fmt(j.created_at)} status={j.status} external={`/es/empleos/${j.id}`} />)}</ul>}
               </div>
               <div className="lg:border-t lg:border-[#eef2f6]">
                 <p className="px-4 pt-3 text-[11px] font-semibold uppercase tracking-wide text-[#68778d]">Promociones publicadas</p>
@@ -542,12 +499,11 @@ export function AdminUserProfile({
                     <Tile label="Vistas de perfil" value={analytics.profileViews} />
                     <Tile label="Visitantes únicos" value={analytics.uniqueVisitors} />
                     <Tile label="Contactos (WhatsApp + llamadas)" value={analytics.whatsappClicks + analytics.phoneClicks} />
-                    <Tile label="Citas creadas" value={analytics.serviceRequestsCreated} />
+                    <Tile label="Reseñas recibidas" value={analytics.reviewsReceived} />
                   </div>
                   <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
                     <Tile label="Agregado a favoritos" value={analytics.favorites} />
-                    <Tile label="Disponibilidad consultada" value={analytics.availabilityActions} />
-                    <Tile label="Propuestas enviadas · aceptadas" value={`${analytics.proposalsSent} · ${analytics.proposalsAccepted}`} />
+                    <Tile label="Veces compartido" value={analytics.shares} />
                     <Tile label="Última interacción" value={fmtDate(analytics.lastInteractionAt) || "—"} />
                   </div>
                   {analytics.bySource.length > 0 && (
@@ -583,44 +539,6 @@ export function AdminUserProfile({
           )}
         </Section>
       </div>
-
-      {/* ── 6. Network ── */}
-      <Section icon={Users} title="Seguidos y seguidores">
-        <div className="grid gap-4 p-4 lg:grid-cols-2">
-          {([
-            { key: "following" as const, label: "Sigue a", items: followNetwork?.following ?? [] },
-            { key: "followers" as const, label: "Lo siguen", items: followNetwork?.followers ?? [] },
-          ]).map((group) => (
-            <div key={group.key} className="overflow-hidden rounded-xl border border-[#e5e7eb]">
-              <div className="flex items-center justify-between border-b border-[#eef2f6] bg-[#f8fafc] px-3 py-2.5">
-                <h3 className="text-sm font-bold text-[#334155]">{group.label}</h3>
-                <span className="rounded-full bg-white px-2 py-0.5 text-xs font-bold text-[#526277] ring-1 ring-[#dce5ec]">{group.items.length}</span>
-              </div>
-              {group.items.length === 0 ? (
-                <p className="px-3 py-5 text-center text-sm text-[#94a3b8]">Nadie todavía.</p>
-              ) : (
-                <div className="max-h-60 overflow-y-auto">
-                  {group.items.map((item) => {
-                    const followedProfile = item.professional ? (Array.isArray(item.professional.profiles) ? item.professional.profiles[0] : item.professional.profiles) : null;
-                    const followerProfessional = item.profile ? (Array.isArray(item.profile.professionals) ? item.profile.professionals[0] : item.profile.professionals) : null;
-                    const name = group.key === "following" ? item.professional?.business_name || followedProfile?.full_name || "Profesional" : followerProfessional?.business_name || item.profile?.full_name || "Usuario";
-                    const accountId = group.key === "following" ? item.professional?.id : item.profile?.id;
-                    return (
-                      <div key={item.id} className="flex items-center justify-between gap-3 border-b border-[#eef2f6] px-3 py-2 last:border-b-0">
-                        <div className="min-w-0">
-                          <p className="truncate text-sm font-semibold text-[#162543]">{name}</p>
-                          <p className="text-[11px] text-[#8492a5]">Desde {fmtDate(item.created_at)}</p>
-                        </div>
-                        {accountId && <Link href={`/admin/usuarios/${accountId}`} className="shrink-0 text-xs font-bold text-[#0089bb] hover:underline">Ver cuenta</Link>}
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-      </Section>
 
       {/* ── 7. Danger zone ── */}
       <section className="rounded-xl border border-[#fecaca] bg-[#fff7f7] p-4">

@@ -1,9 +1,9 @@
-// ─── Support contact — update these when the final number is confirmed ────────
-
-export const SUPPORT_WHATSAPP_NUMBER = "89624340";
-export const SUPPORT_WHATSAPP_DISPLAY = "+506 8962-4340";
-export const SUPPORT_WHATSAPP_URL = `https://wa.me/506${SUPPORT_WHATSAPP_NUMBER}`;
-export const SUPPORT_EMAIL            = "soporte@contratacr.com";
+// ─── Contacto de soporte ──────────────────────────────────────────────────────
+// El WhatsApp salió de aquí. Era un número provisional («hasta confirmar el
+// definitivo») que apuntaba a la API de Meta, cuyo buzón no lee nadie — y aun
+// así se coló en el aviso de verificación, mandando a los profesionales a
+// enviar sus fotos a un lugar donde no llegaban. El correo sí se lee.
+export const SUPPORT_EMAIL = "soporte@contratacr.com";
 
 // ─── How a professional wants to be contacted ────────────────────────────────
 // `solo_citas` is a LEGACY stored value (the old app-only option). It's no longer

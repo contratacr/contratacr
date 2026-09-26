@@ -248,6 +248,8 @@ function emailShell(
  */
 export const MAX_AVISOS_DE_VERIFICACION = 2;
 export const DIAS_ENTRE_AVISOS = 30;
+/** Cuántos avisos salen por cada pulsada del botón del panel. */
+export const POR_TANDA_DE_VERIFICACION = 25;
 
 /** Qué aviso toca ahora para esta persona, o `null` si ya no toca ninguno. */
 export async function avisoQueTocaDeVerificacion(
@@ -289,22 +291,29 @@ export async function notifyVerificationOutreach(professionalId: string): Promis
     const profile = pro.profiles as any;
     const firstName = (profile?.full_name ?? "profesional").split(" ")[0];
     const hasId = !!profile?.cedula;
-    const steps = [
-      `una foto tuya sosteniendo tu identificación${hasId ? "" : " (cédula, DIMEX o pasaporte)"} junto a tu rostro`,
-      "una foto o documento que respalde tu oficio (título, carné, patente o certificado)",
-      "una foto de un trabajo reciente",
+    // DOS FOTOS, NI UNA MÁS. Antes se pedía además «algo que respalde tu
+    // oficio»: título, carné, patente o certificado. Eso deja afuera a un
+    // pintor, una señora que hace limpieza o un albañil —la gente que llena
+    // este app— y además contradice lo que la insignia dice ser (Términos,
+    // sección 5: «confirma de manera limitada una coincidencia de identidad.
+    // No certifica experiencia, licencias, permisos, calidad»).
+    //
+    // Una foto de un trabajo sí la puede tomar cualquiera que trabaje.
+    const fotos = [
+      `Tu cara junto a tu ${hasId ? "cédula" : "cédula, DIMEX o pasaporte"}, donde se vea tu rostro y se lean los datos.`,
+      "Una foto de un trabajo tuyo.",
     ];
     // El mismo titulo que pinta la campana, para que el push y la campana no
     // digan cosas distintas del mismo aviso.
-    const title = toca === "recordatorio" ? "Te falta poco para tu insignia" : "Terminemos tu verificación";
+    const title = toca === "recordatorio" ? "Falta poco para verificar tu perfil" : "Tu perfil todavía no está verificado";
     // CORTO A PROPÓSITO. El mensaje anterior medía 373 caracteres y el push se
     // recorta a 112: a la gente le llegaba «…necesitamos: 1) una foto tuya
-    // sos…» y ahí terminaba. Ni el número, ni los tres pasos, ni qué hacer.
+    // sos…» y ahí terminaba. Lo esencial va primero y el detalle vive en el
+    // correo, que sí tiene espacio.
     //
-    // Ahora lo esencial va primero y el número ENTRA en el recorte, porque el
-    // número es la acción. El detalle de las tres fotos vive en el correo, que
-    // sí tiene espacio, y el aviso lleva al panel.
-    const message = `Hola ${firstName}, faltan 3 fotos para activar tu insignia de verificado. Envíalas al WhatsApp 8962 4340.`;
+    // Y SOLO POR CORREO: el WhatsApp que se ofrecía era el número de la API,
+    // cuyo buzón no lee nadie. Las respuestas al correo sí llegan a soporte.
+    const message = `Hola ${firstName}, te escribimos al correo con lo que necesitamos para verificarte.`;
     // `link`, no `href`: `notificationHref` solo mira `link`, asi que este
     // aviso no llevaba a la pantalla de verificacion sino a la lista de avisos.
     const notification = { user_id: pro.profile_id, type: "verification_outreach", title, message, data: { link: PRO_LINK } };
@@ -314,18 +323,21 @@ export async function notifyVerificationOutreach(professionalId: string): Promis
     if (profile?.email) {
       const html = emailShell(
         firstName,
-        toca === "recordatorio" ? "Todavía podés activar tu insignia" : "Verificación de tu perfil",
+        toca === "recordatorio" ? "Todavía puedes verificar tu perfil" : "Verificación de tu perfil",
         "#009FD9",
-        `${toca === "recordatorio" ? "Te escribimos hace un mes y tu insignia sigue pendiente. " : ""}Tu perfil quedó en revisión manual. Para activar la insignia de verificado necesitamos:<br/><br/>` +
-          `1) ${escapeHtml(steps[0])}<br/>2) ${escapeHtml(steps[1])}<br/>3) ${escapeHtml(steps[2])}<br/><br/>` +
-          `Responde a este correo con las fotos o envíalas por WhatsApp al <a href="https://wa.me/50689624340" style="color:#009FD9;font-weight:700;text-decoration:none">+506&nbsp;8962&nbsp;4340</a> y te activamos la insignia en cuanto las revisemos.`,
+        `${toca === "recordatorio" ? "Te escribimos hace un mes y tu perfil sigue sin verificar. " : ""}` +
+          `Tu perfil todavía no está verificado. El check azul sale junto a tu nombre, y los perfiles verificados aparecen primero cuando alguien busca tu servicio.<br/><br/>` +
+          `Es gratis y solo necesitamos <strong>dos fotos</strong>. Con el celular está bien:<br/><br/>` +
+          `1. ${fotos[0]}<br/>2. ${fotos[1]}<br/><br/>` +
+          `<strong>Responde a este correo con las dos fotos.</strong> Las revisamos y te avisamos en la app cuando quede lista. Si alguna no se ve bien, te decimos cuál repetir.<br/><br/>` +
+          `Tu cédula solo la usamos para confirmar que eres tú. No sale en tu perfil.`,
         null
       );
       await sendBrevoEmail({
         to: profile.email,
         subject: toca === "recordatorio"
-          ? "Tu insignia de verificado sigue pendiente"
-          : "Para activar tu insignia de verificado en ContrataCR",
+          ? "Tu perfil sigue sin verificar"
+          : "Falta poco para verificar tu perfil en ContrataCR",
         html,
         replyTo: "soporte@contratacr.com",
       });
@@ -338,17 +350,26 @@ export async function notifyVerificationOutreach(professionalId: string): Promis
 // Admin button "Avisar por app y correo": every professional still waiting gets the
 // first-contact notice in the app and by email, at most once each. Free, and the
 // answer lands in the support mailbox the owner actually reads.
-export async function outreachPendingProfessionals(): Promise<{ pending: number; notified: number; alreadyNotified: number; reminded: number }> {
+export async function outreachPendingProfessionals(): Promise<{ pending: number; notified: number; alreadyNotified: number; reminded: number; restantes: number }> {
   const admin = createAdminClient();
   const { data: pending } = await admin.from("professionals").select("id, profile_id").in("verification_status", ["pending", "under_appeal"]);
   let notified = 0, alreadyNotified = 0, reminded = 0;
   for (const pro of pending ?? []) {
+    // Tope por pulsada. El límite real no es la reputación del correo: este
+    // mensaje pide que la persona CONTESTE con dos fotos, y esas respuestas
+    // las revisa alguien a mano. Mandar 200 de golpe es prometer 200
+    // revisiones el mismo día. Se pulsa otra vez mañana.
+    if (notified + reminded >= POR_TANDA_DE_VERIFICACION) break;
     // La misma regla que aplica el envío, para que el panel no prometa un
     // número distinto del que sale.
     const toca = await avisoQueTocaDeVerificacion(admin, (pro.profile_id as string | null) ?? null);
     if (!toca) { alreadyNotified += 1; continue; }
     await notifyVerificationOutreach(pro.id);
     if (toca === "recordatorio") reminded += 1; else notified += 1;
+    // Un respiro entre envíos, igual que las campañas. Una ráfaga desde un
+    // dominio que manda poco es de las cosas que más castigan los buzones.
+    await new Promise((r) => setTimeout(r, 200));
   }
-  return { pending: (pending ?? []).length, notified, alreadyNotified, reminded };
+  const restantes = Math.max(0, (pending ?? []).length - notified - reminded - alreadyNotified);
+  return { pending: (pending ?? []).length, notified, alreadyNotified, reminded, restantes };
 }
