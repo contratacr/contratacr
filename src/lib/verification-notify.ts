@@ -236,6 +236,43 @@ function emailShell(
 // business-initiated messages would need a Meta template, and replies to the
 // API number land in an inbox nobody reads. The owner writes those by hand from
 // the admin queue, where the message comes pre-written and the contact is logged.
+/**
+ * CUÁNTAS VECES SE LE INSISTE A ALGUIEN, Y CADA CUÁNTO.
+ *
+ * Como mucho DOS avisos en toda la vida de la cuenta: el primero cuando el
+ * perfil queda en revisión, y un único recordatorio 30 días después. No hay un
+ * tercero a propósito: quien ignoró dos mensajes no manda las fotos al quinto,
+ * y seguir escribiéndole a alguien que no contesta es lo que hace que el
+ * dominio entero termine en No deseado —el problema que acabamos de arreglar
+ * en las campañas—. Una insignia no es una urgencia.
+ */
+export const MAX_AVISOS_DE_VERIFICACION = 2;
+export const DIAS_ENTRE_AVISOS = 30;
+
+/** Qué aviso toca ahora para esta persona, o `null` si ya no toca ninguno. */
+export async function avisoQueTocaDeVerificacion(
+  admin: ReturnType<typeof createAdminClient>,
+  profileId: string | null,
+): Promise<"primero" | "recordatorio" | null> {
+  if (!profileId) return null;
+  const { data, error } = await admin
+    .from("notifications")
+    .select("created_at")
+    .eq("user_id", profileId)
+    .eq("type", "verification_outreach")
+    .order("created_at", { ascending: false })
+    .limit(MAX_AVISOS_DE_VERIFICACION);
+  // Si la consulta falla no se avisa: repetirle a quien ya recibió el mensaje
+  // es peor que dejarlo para el próximo intento.
+  if (error) return null;
+  const avisos = data ?? [];
+  if (avisos.length === 0) return "primero";
+  if (avisos.length >= MAX_AVISOS_DE_VERIFICACION) return null;
+  const ultimo = new Date(avisos[0].created_at as string).getTime();
+  if (Number.isNaN(ultimo)) return null;
+  return Date.now() - ultimo >= DIAS_ENTRE_AVISOS * 86_400_000 ? "recordatorio" : null;
+}
+
 export async function notifyVerificationOutreach(professionalId: string): Promise<void> {
   try {
     const admin = createAdminClient();
@@ -245,13 +282,8 @@ export async function notifyVerificationOutreach(professionalId: string): Promis
       .eq("id", professionalId)
       .maybeSingle();
     if (!pro?.profile_id) return;
-    const { data: already } = await admin
-      .from("notifications")
-      .select("id")
-      .eq("user_id", pro.profile_id)
-      .eq("type", "verification_outreach")
-      .limit(1);
-    if (already && already.length) return;
+    const toca = await avisoQueTocaDeVerificacion(admin, pro.profile_id as string);
+    if (!toca) return;
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const profile = pro.profiles as any;
@@ -264,8 +296,15 @@ export async function notifyVerificationOutreach(professionalId: string): Promis
     ];
     // El mismo titulo que pinta la campana, para que el push y la campana no
     // digan cosas distintas del mismo aviso.
-    const title = "Terminemos tu verificación";
-    const message = `Hola ${firstName}, tu perfil quedó en revisión manual. Para marcarte como verificado necesitamos: 1) ${steps[0]}, 2) ${steps[1]} y 3) ${steps[2]}. Envíalas por WhatsApp al +506 8962 4340 o responde a nuestro correo y activamos tu insignia.`;
+    const title = toca === "recordatorio" ? "Te falta poco para tu insignia" : "Terminemos tu verificación";
+    // CORTO A PROPÓSITO. El mensaje anterior medía 373 caracteres y el push se
+    // recorta a 112: a la gente le llegaba «…necesitamos: 1) una foto tuya
+    // sos…» y ahí terminaba. Ni el número, ni los tres pasos, ni qué hacer.
+    //
+    // Ahora lo esencial va primero y el número ENTRA en el recorte, porque el
+    // número es la acción. El detalle de las tres fotos vive en el correo, que
+    // sí tiene espacio, y el aviso lleva al panel.
+    const message = `Hola ${firstName}, faltan 3 fotos para activar tu insignia de verificado. Envíalas al WhatsApp 8962 4340.`;
     // `link`, no `href`: `notificationHref` solo mira `link`, asi que este
     // aviso no llevaba a la pantalla de verificacion sino a la lista de avisos.
     const notification = { user_id: pro.profile_id, type: "verification_outreach", title, message, data: { link: PRO_LINK } };
@@ -275,14 +314,21 @@ export async function notifyVerificationOutreach(professionalId: string): Promis
     if (profile?.email) {
       const html = emailShell(
         firstName,
-        "Verificación de tu perfil",
+        toca === "recordatorio" ? "Todavía podés activar tu insignia" : "Verificación de tu perfil",
         "#009FD9",
-        `Tu perfil quedó en revisión manual. Para activar la insignia de verificado necesitamos:<br/><br/>` +
+        `${toca === "recordatorio" ? "Te escribimos hace un mes y tu insignia sigue pendiente. " : ""}Tu perfil quedó en revisión manual. Para activar la insignia de verificado necesitamos:<br/><br/>` +
           `1) ${escapeHtml(steps[0])}<br/>2) ${escapeHtml(steps[1])}<br/>3) ${escapeHtml(steps[2])}<br/><br/>` +
           `Responde a este correo con las fotos o envíalas por WhatsApp al <a href="https://wa.me/50689624340" style="color:#009FD9;font-weight:700;text-decoration:none">+506&nbsp;8962&nbsp;4340</a> y te activamos la insignia en cuanto las revisemos.`,
         null
       );
-      await sendBrevoEmail({ to: profile.email, subject: "Para activar tu insignia de verificado en ContrataCR", html, replyTo: "soporte@contratacr.com" });
+      await sendBrevoEmail({
+        to: profile.email,
+        subject: toca === "recordatorio"
+          ? "Tu insignia de verificado sigue pendiente"
+          : "Para activar tu insignia de verificado en ContrataCR",
+        html,
+        replyTo: "soporte@contratacr.com",
+      });
     }
   } catch (error) {
     console.warn("[verification] outreach not sent", error instanceof Error ? error.message : error);
@@ -292,20 +338,17 @@ export async function notifyVerificationOutreach(professionalId: string): Promis
 // Admin button "Avisar por app y correo": every professional still waiting gets the
 // first-contact notice in the app and by email, at most once each. Free, and the
 // answer lands in the support mailbox the owner actually reads.
-export async function outreachPendingProfessionals(): Promise<{ pending: number; notified: number; alreadyNotified: number }> {
+export async function outreachPendingProfessionals(): Promise<{ pending: number; notified: number; alreadyNotified: number; reminded: number }> {
   const admin = createAdminClient();
   const { data: pending } = await admin.from("professionals").select("id, profile_id").in("verification_status", ["pending", "under_appeal"]);
-  let notified = 0, alreadyNotified = 0;
+  let notified = 0, alreadyNotified = 0, reminded = 0;
   for (const pro of pending ?? []) {
-    const { data: before } = await admin
-      .from("notifications")
-      .select("id")
-      .eq("type", "verification_outreach")
-      .eq("user_id", (pro.profile_id as string | null) ?? "00000000-0000-0000-0000-000000000000")
-      .limit(1);
-    if (before && before.length) { alreadyNotified += 1; continue; }
+    // La misma regla que aplica el envío, para que el panel no prometa un
+    // número distinto del que sale.
+    const toca = await avisoQueTocaDeVerificacion(admin, (pro.profile_id as string | null) ?? null);
+    if (!toca) { alreadyNotified += 1; continue; }
     await notifyVerificationOutreach(pro.id);
-    notified += 1;
+    if (toca === "recordatorio") reminded += 1; else notified += 1;
   }
-  return { pending: (pending ?? []).length, notified, alreadyNotified };
+  return { pending: (pending ?? []).length, notified, alreadyNotified, reminded };
 }
