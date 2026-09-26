@@ -3851,6 +3851,13 @@
   "terminosCasilla": {
     "texto": "Acepto los <terms>Términos de uso</terms> y la <privacy>Política de Privacidad</privacy>. Entiendo que ContrataCR no tolera contenido ofensivo ni usuarios abusivos."
   },
+  "bajaCorreos": {
+    "listoTitulo": "Listo, no te mandamos más novedades",
+    "listoCuerpo": "No vas a recibir más correos de novedades de ContrataCR. Los avisos de tu cuenta y de seguridad —entrar, recuperar la contraseña, soporte— se siguen enviando.",
+    "falloTitulo": "No pudimos darte de baja",
+    "falloCuerpo": "El enlace puede haber cambiado o ya no ser válido. Escribinos a soporte@contratacr.com y lo hacemos nosotros.",
+    "volver": "Ir al inicio"
+  },
   "sectionTitles": {
     "messages": "Mensajes",
     "notifications": "Notificaciones",

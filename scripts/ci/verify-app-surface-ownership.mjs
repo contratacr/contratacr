@@ -36,6 +36,7 @@ const handlerRules = [
   [/^\/api\/internal\/verificacion(?:\/|$)/, "verificacion-repesca.spec.ts"],
   [/^\/api\/payments(?:\/|$)/, "product-contract.spec.ts"],
   [/^\/api\/webhooks(?:\/|$)/, "product-contract.spec.ts"],
+  [/^\/api\/email(?:\/|$)/, "product-contract.spec.ts"],
   [/^\/api\/(?:search|categories|insurers)(?:\/|$)/, "api-smoke.spec.ts"],
   [/^\/api\/contact(?:\/|$)/, "whatsapp-review-followup.spec.ts"],
   [/^\/api\/(?:upload|media)(?:\/|$)/, "extended-lifecycle.spec.ts"],

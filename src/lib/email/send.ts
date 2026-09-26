@@ -1,4 +1,5 @@
 import { hayCupoPara, registrarEnvio, type NivelDeCorreo } from "@/lib/email/cuota";
+import { enlaceDeBaja } from "@/lib/email/baja";
 // Single send path for ALL of the app's CODE-SENT email — Brevo transactional API.
 // Every email the app sends from its own code (verification status, support inbox +
 // replies, notifications, reports, new-ticket) routes through here, so the
@@ -14,6 +15,7 @@ import { hayCupoPara, registrarEnvio, type NivelDeCorreo } from "@/lib/email/cuo
 //  • The app's own code-sent emails (below) → Brevo, via this helper.
 
 const BREVO_ENDPOINT = "https://api.brevo.com/v3/smtp/email";
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://contratacr.com";
 
 // Default From on the verified domain. Brevo wants name + email separately (not the
 // "Name <email>" form), so we keep them split here.
@@ -117,6 +119,27 @@ export async function sendBrevoEmail(opts: {
     ...(replyTo ? { replyTo } : {}),
     ...(opts.attachments && opts.attachments.length > 0 ? { attachment: opts.attachments } : {}),
     ...(opts.campana ? { tags: [opts.campana] } : {}),
+    // LA CABECERA QUE DECIDE SI EL CORREO CAE EN NO DESEADO.
+    //
+    // Gmail y Yahoo la exigen desde 2024 a quien manda en volumen: es lo que
+    // pinta el botón «Cancelar suscripción» arriba del mensaje. El pie decía
+    // «responde con la palabra BAJA», que le sirve a una persona pero que el
+    // buzón no puede leer; para Gmail esto era correo masivo sin salida.
+    //
+    // `List-Unsubscribe-Post` es la parte que de verdad cuenta (RFC 8058):
+    // autoriza al buzón a dar de baja él mismo, con un POST y sin abrir nada.
+    //
+    // Solo en los correos de novedades. Los de cuenta y seguridad no la
+    // llevan: no son publicidad, y ofrecer darse de baja de «recuperar tu
+    // contraseña» dejaría a alguien sin poder entrar.
+    ...(nivel === "masivo"
+      ? {
+          headers: {
+            "List-Unsubscribe": `<${enlaceDeBaja(APP_URL, opts.to)}>, <mailto:soporte@contratacr.com?subject=BAJA>`,
+            "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+          },
+        }
+      : {}),
   };
 
   try {

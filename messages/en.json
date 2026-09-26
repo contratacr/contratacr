@@ -3851,6 +3851,13 @@
   "terminosCasilla": {
     "texto": "I agree to the <terms>Terms of Use</terms> and the <privacy>Privacy Policy</privacy>. I understand that ContrataCR has zero tolerance for objectionable content or abusive users."
   },
+  "bajaCorreos": {
+    "listoTitulo": "Done, no more news emails",
+    "listoCuerpo": "You will not receive ContrataCR news emails any more. Account and security messages — signing in, password recovery, support — are still sent.",
+    "falloTitulo": "We could not unsubscribe you",
+    "falloCuerpo": "The link may have changed or expired. Write to soporte@contratacr.com and we will do it for you.",
+    "volver": "Go home"
+  },
   "sectionTitles": {
     "messages": "Messages",
     "notifications": "Notifications",

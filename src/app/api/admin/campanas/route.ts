@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { campanaDesdeAsunto } from "@/lib/email/campana";
+import { enlaceDeBaja } from "@/lib/email/baja";
 import { getApiAdmin } from "@/lib/auth/admin";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { brandedEmailDocument, sendBrevoEmail } from "@/lib/email/send";
@@ -59,7 +60,7 @@ function escapeHtml(s: string) {
   return s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c] as string));
 }
 
-function bodyToHtml(body: string, ctaLabel: string, ctaHref: string) {
+function bodyToHtml(body: string, ctaLabel: string, ctaHref: string, bajaHref: string) {
   const parrafos = body.split(/\n{2,}/).map((p) => `<p style="margin:0 0 14px;font-size:15px;line-height:1.6;color:#162543">${escapeHtml(p.trim()).replace(/\n/g, "<br>")}</p>`).join("");
   const cta = ctaLabel && ctaHref
     ? `<p style="margin:22px 0 8px"><a href="${escapeHtml(ctaHref)}" style="display:inline-block;background:#009FD9;color:#fff;text-decoration:none;font-weight:700;padding:12px 22px;border-radius:999px;font-size:15px">${escapeHtml(ctaLabel)}</a></p>`
@@ -78,7 +79,10 @@ function bodyToHtml(body: string, ctaLabel: string, ctaHref: string) {
         </p>
       </td></tr>
     </table>`;
-  const pie = `<p style="margin:18px 0 0;font-size:12px;line-height:1.5;color:#68778d">Recibes este correo porque tienes una cuenta en ContrataCR. Si no quieres recibir avisos de temporada, responde a este correo con la palabra BAJA.</p>`;
+  // Un enlace, no una instrucción. «Responde con la palabra BAJA» le sirve a
+  // una persona pero no a Gmail, y era parte de por qué estos correos caían en
+  // No deseado. Este enlace es el mismo que viaja en la cabecera.
+  const pie = `<p style="margin:18px 0 0;font-size:12px;line-height:1.5;color:#68778d">Recibes este correo porque tienes una cuenta en ContrataCR. Si no quieres recibir novedades, <a href="${escapeHtml(bajaHref)}" style="color:#68778d;text-decoration:underline">date de baja aquí</a>.</p>`;
   return parrafos + cta + firma + pie;
 }
 
@@ -165,11 +169,11 @@ export async function POST(request: Request) {
     return `${APP_URL}${ruta}${separador}utm_source=correo&utm_medium=campana&utm_campaign=${encodeURIComponent(campana)}`;
   };
   const ctaHref = ctaPath && ctaPath.startsWith("/") ? conMarca(ctaPath) : "";
-  const html = brandedEmailDocument({ title: subject, bodyHtml: bodyToHtml(body, ctaLabel, ctaHref), origin: APP_URL });
+  const htmlPara = (correo: string) => brandedEmailDocument({ title: subject, bodyHtml: bodyToHtml(body, ctaLabel, ctaHref, enlaceDeBaja(APP_URL, correo)), origin: APP_URL });
   const replyTo = { email: "soporte@contratacr.com", name: "ContrataCR" };
 
   if (payload.mode !== "all") {
-    const result = await sendBrevoEmail({ to: admin.email, subject: `[PRUEBA] ${subject}`, html, replyTo, nivel: "masivo" });
+    const result = await sendBrevoEmail({ to: admin.email, subject: `[PRUEBA] ${subject}`, html: htmlPara(admin.email), replyTo, nivel: "masivo" });
     return NextResponse.json({ mode: "test", to: admin.email, ...result });
   }
 
@@ -189,7 +193,17 @@ export async function POST(request: Request) {
     }, { status: 429 });
   }
 
-  const pendientes = clients.filter((client) => !yaEnviados.has(String(client.email).toLowerCase()));
+  // Quien pidió la baja no vuelve a recibir novedades. Se consulta aquí y no
+  // al enviar: si la lista falla, es mejor no mandar la tanda que escribirle a
+  // alguien que pidió que no le escribamos.
+  const { data: bajas, error: errorBajas } = await db.from("email_bajas").select("correo").limit(20000);
+  if (errorBajas) return NextResponse.json({ error: `No se pudo leer las bajas: ${errorBajas.message}` }, { status: 500 });
+  const dadosDeBaja = new Set((bajas ?? []).map((b) => String(b.correo).toLowerCase()));
+
+  const pendientes = clients.filter((client) => {
+    const correo = String(client.email).toLowerCase();
+    return !yaEnviados.has(correo) && !dadosDeBaja.has(correo);
+  });
   const tanda = pendientes.slice(0, POR_TANDA);
   if (tanda.length === 0) {
     return NextResponse.json({ mode: "all", total: clients.length, sent: 0, failed: 0, skipped: 0, restantes: 0, completa: true });
@@ -200,7 +214,7 @@ export async function POST(request: Request) {
     // La etiqueta va en el envío para que el aviso de Brevo (apertura, clic,
     // rebote) se pueda anotar en la fila correcta: llega con el correo de la
     // persona, pero sin la etiqueta no dice de qué campaña habla.
-    const result = await sendBrevoEmail({ to: client.email, subject, html, replyTo, nivel: "masivo", campana });
+    const result = await sendBrevoEmail({ to: client.email, subject, html: htmlPara(String(client.email)), replyTo, nivel: "masivo", campana });
     if (result.ok) {
       sent += 1;
       // Se anota SOLO lo que salió: lo que falló vuelve a intentarse mañana.
