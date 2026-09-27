@@ -33,8 +33,28 @@ export async function POST(request: Request) {
   const aviso = (await request.json().catch(() => null)) as Record<string, unknown> | null;
   if (!aviso) return NextResponse.json({ error: "Cuerpo inválido" }, { status: 400 });
 
-  const columna = COLUMNA_POR_EVENTO[String(aviso.event ?? "")];
+  const evento = String(aviso.event ?? "");
+  const columna = COLUMNA_POR_EVENTO[evento];
   const email = String(aviso.email ?? "").toLowerCase().trim();
+
+  // BAJA DESDE EL BUZÓN.
+  //
+  // Nuestro enlace de baja pasa por `/api/email/baja` y ahí sí se anota. Pero
+  // hay dos salidas más que nunca tocan ese enlace: el botón que Brevo pone al
+  // pie de sus propios correos, y el «Esto es spam» del buzón. Las dos llegan
+  // solo por aquí. Sin esto, alguien se da de baja, Gmail y Brevo lo dan por
+  // hecho, y la próxima campaña se lo vuelve a mandar: exactamente la queja
+  // que más castiga la reputación del dominio.
+  //
+  // Una queja de spam pesa más que una baja, no menos: se trata igual.
+  if (email && (evento === "unsubscribed" || evento === "spam")) {
+    const motivo = evento === "spam" ? "lo marcó como no deseado" : "botón del buzón";
+    const { error } = await createAdminClient()
+      .from("email_bajas")
+      .upsert({ correo: email, motivo }, { onConflict: "correo", ignoreDuplicates: true });
+    if (error) console.error("[brevo-webhook] no se pudo anotar la baja:", error.message);
+  }
+
   // La etiqueta puede llegar como lista (`tags`) o suelta (`tag`), según el
   // tipo de aviso; Brevo no es consistente entre unos y otros.
   const etiquetas = Array.isArray(aviso.tags) ? aviso.tags.map(String) : aviso.tag ? [String(aviso.tag)] : [];
