@@ -158,36 +158,45 @@ function BotonEscribir({ proyecto, className = "" }: { proyecto: ProyectoPublico
   }
 
   if (!proyecto.allow_direct_contact) return null;
-  return (
-    <>
+  // El mismo acomodo que la ficha del profesional: las dos formas de contactar
+  // COMPARTEN RENGLÓN —escribir a la izquierda, llamar a la derecha—, cada una
+  // con media franja. Cuando solo hay una, ocupa el ancho completo: media
+  // píldora para la única forma de contactar se lee como algo menor.
+  const botonEscribir = (
     <button
       type="button"
       onClick={(e) => { e.preventDefault(); e.stopPropagation(); void abrir(); }}
       disabled={cargando}
       // 48 px de alto: el botón vive en la franja del fondo y ahí mide lo
       // mismo que «Publicar» en Crear proyecto.
-      className={cn("inline-flex h-12 w-full items-center justify-center gap-1.5 ccr-boton-whatsapp rounded-full px-4 text-base font-semibold text-white transition disabled:opacity-60", className)}
+      className={cn("inline-flex h-12 w-full items-center justify-center gap-1.5 ccr-boton-whatsapp rounded-full px-4 text-base font-semibold text-white transition disabled:opacity-60", !proyecto.allow_phone_contact && className)}
     >
       {cargando ? <Loader2 className="h-4 w-4 animate-spin" /> : <WhatsAppLogo />}
       {copy.escribir}
     </button>
+  );
+  return (
+    <>
     {/* SOLO SI QUIEN PUBLICÓ LO AUTORIZÓ. No se puede saber si un número está
         en WhatsApp —Meta no lo expone—, así que cuando no lo está el proyecto
         queda sin forma de contacto. Esto lo resuelve, pero por proyecto y con
         permiso: que a alguien le llamen es decisión suya. Hoy se enciende a
         mano desde el panel; si resulta que hace falta seguido, se agrega la
         casilla al formulario de publicar. */}
-    {proyecto.allow_phone_contact && (
-      <button
-        type="button"
-        onClick={(e) => { e.preventDefault(); e.stopPropagation(); void abrir("llamada"); }}
-        disabled={cargando}
-        className={cn("mt-2 inline-flex h-12 w-full items-center justify-center gap-1.5 rounded-full border border-[#d7e1ea] bg-white px-4 text-base font-semibold text-[#162543] transition hover:border-[#b9c8d6] hover:bg-[#f6f9fb] disabled:opacity-60", className)}
-      >
-        <Phone className="h-4 w-4" />
-        {copy.llamar}
-      </button>
-    )}
+    {proyecto.allow_phone_contact ? (
+      <div className={cn("grid grid-cols-2 gap-2", className)}>
+        {botonEscribir}
+        <button
+          type="button"
+          onClick={(e) => { e.preventDefault(); e.stopPropagation(); void abrir("llamada"); }}
+          disabled={cargando}
+          className="inline-flex h-12 w-full items-center justify-center gap-1.5 rounded-full border border-[#d7e1ea] bg-white px-4 text-base font-semibold text-[#162543] transition hover:border-[#b9c8d6] hover:bg-[#f6f9fb] disabled:opacity-60"
+        >
+          <Phone className="h-4 w-4" />
+          {copy.llamar}
+        </button>
+      </div>
+    ) : botonEscribir}
     {dialogNode}
     </>
   );
