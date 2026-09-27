@@ -30,9 +30,7 @@ type AdminProject = {
   for_someone_else: boolean;
   beneficiary_name: string | null;
   beneficiary_dob: string | null;
-  proposals_count: number;
-  pending_proposals_count: number;
-  accepted_proposals_count: number;
+  contactos: number;
   client: {
     id: string | null;
     name: string | null;
@@ -324,10 +322,11 @@ export function AdminProjects() {
                         {project.client.cedula && <p className="mt-0.5 text-xs text-[#6b7280]">{formatId(project.client.cedula)}</p>}
                       </div>
                       <div className="min-w-0">
-                        <p className="text-[11px] font-semibold uppercase tracking-wide text-[#68778d]">Propuestas</p>
+                        <p className="text-[11px] font-semibold uppercase tracking-wide text-[#68778d]">Contactos</p>
                         <p className="mt-0.5 text-sm font-semibold text-[#162543]">
-                          {project.proposals_count} total
-                          {project.pending_proposals_count > 0 ? ` · ${project.pending_proposals_count} pendiente${project.pending_proposals_count === 1 ? "" : "s"}` : ""}
+                          {project.contactos === 0
+                            ? "Nadie le ha escrito"
+                            : `${project.contactos} profesional${project.contactos === 1 ? "" : "es"} le escribió por WhatsApp`}
                         </p>
                         {project.accepted_professional ? (
                           <>

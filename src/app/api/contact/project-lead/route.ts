@@ -112,7 +112,13 @@ export async function POST(req: Request) {
     metadata: { project_id: projectId },
   });
   return NextResponse.json(
-    { href: `https://wa.me/${numero}?text=${encodeURIComponent(texto)}` },
+    {
+      href: `https://wa.me/${numero}?text=${encodeURIComponent(texto)}`,
+      // El mismo número, para llamar. No se puede saber si un número está en
+      // WhatsApp —Meta no lo expone—, así que cuando no lo está el profesional
+      // se quedaba sin forma de contactar a quien publicó. Llamar sirve igual.
+      tel: `tel:+${numero}`,
+    },
     { headers: { "Cache-Control": "no-store" } },
   );
 }

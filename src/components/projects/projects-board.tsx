@@ -6,7 +6,7 @@ import { useAppDialog } from "@/hooks/use-app-dialog";
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useLocale } from "next-intl";
-import { ArrowLeft, ClipboardList, Loader2, Menu } from "lucide-react";
+import { ArrowLeft, ClipboardList, Loader2, Menu, Phone } from "lucide-react";
 import { Link, useRouter } from "@/i18n/navigation";
 import { ContrataCRMark, HeaderAccountLink } from "@/components/landing/landing-navbar";
 import { NotificationBell } from "@/components/notifications/notification-bell";
@@ -56,6 +56,7 @@ const COPY = {
     volver: "Volver a proyectos",
     ficha: "Proyecto",
     escribir: "WhatsApp",
+    llamar: "¿No tiene WhatsApp? Llamar",
     publicado: "Publicado por",
     vacio: "Todavía no hay proyectos",
     vacioSub: "Cuando alguien publique lo que necesita, aparecerá aquí.",
@@ -91,6 +92,7 @@ const COPY = {
     volver: "Back to projects",
     ficha: "Project",
     escribir: "WhatsApp",
+    llamar: "No WhatsApp? Call instead",
     publicado: "Posted by",
     vacio: "There are no projects yet",
     vacioSub: "When someone posts what they need, it will show up here.",
@@ -128,7 +130,7 @@ function BotonEscribir({ proyecto, className = "" }: { proyecto: ProyectoPublico
   // página. Aquí se está contactando a alguien: es el peor momento para eso.
   const { dialogNode, showMessage } = useAppDialog();
 
-  async function abrir() {
+  async function abrir(canal: "whatsapp" | "llamada" = "whatsapp") {
     setCargando(true);
     try {
       const res = await fetch("/api/contact/project-lead", {
@@ -136,7 +138,7 @@ function BotonEscribir({ proyecto, className = "" }: { proyecto: ProyectoPublico
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ projectId: proyecto.id }),
       });
-      const payload = (await res.json().catch(() => ({}))) as { href?: string; code?: string };
+      const payload = (await res.json().catch(() => ({}))) as { href?: string; tel?: string; code?: string };
       // El servidor dice POR QUÉ, no solo que no. Antes cualquier fallo caía en
       // «este cliente no dejó un WhatsApp» —hasta cuando el proyecto sí tenía
       // teléfono y lo que pasaba era otra cosa—, así que el aviso mentía y el
@@ -148,6 +150,7 @@ function BotonEscribir({ proyecto, className = "" }: { proyecto: ProyectoPublico
         : !res.ok || !payload.href ? copy.fallo
         : null;
       if (aviso) { await showMessage({ title: copy.escribir, description: aviso }); return; }
+      if (canal === "llamada" && payload.tel) { window.location.href = payload.tel; return; }
       window.open(payload.href, "_blank", "noopener,noreferrer");
     } finally {
       setCargando(false);
@@ -167,6 +170,24 @@ function BotonEscribir({ proyecto, className = "" }: { proyecto: ProyectoPublico
     >
       {cargando ? <Loader2 className="h-4 w-4 animate-spin" /> : <WhatsAppLogo />}
       {copy.escribir}
+    </button>
+    {/* SALIDA, NO SEGUNDO BOTÓN. No hay forma de saber si un número está en
+        WhatsApp —Meta no lo expone—, así que cuando no lo está el profesional
+        se quedaba sin cómo contactar a quien publicó. Va como enlace discreto
+        y no como botón: WhatsApp sigue siendo el camino, esto solo existe para
+        quien lo intentó y no le funcionó.
+
+        Y es LLAMADA, no correo: ese número ya se comparte para el WhatsApp, así
+        que llamar no revela nada nuevo. El correo sí sería un dato que quien
+        publicó no eligió entregar. */}
+    <button
+      type="button"
+      onClick={(e) => { e.preventDefault(); e.stopPropagation(); void abrir("llamada"); }}
+      disabled={cargando}
+      className="mt-2 inline-flex w-full items-center justify-center gap-1.5 text-[13px] font-semibold text-[#68778d] underline decoration-[#c7d3e0] underline-offset-2 transition hover:text-[#162543] disabled:opacity-60"
+    >
+      <Phone className="h-3.5 w-3.5" />
+      {copy.llamar}
     </button>
     {dialogNode}
     </>

@@ -106,7 +106,6 @@ export async function GET(req: Request) {
         completed_at, work_done_at, archived_by_client, allow_direct_contact,
         for_someone_else, beneficiary_name, beneficiary_dob,
         profiles:client_id(full_name, email, cedula, avatar_url),
-        proposals(id, status, professional_id)
       `)
       .order("created_at", { ascending: false })
       .range(from, from + batchSize - 1);
@@ -163,9 +162,27 @@ export async function GET(req: Request) {
 
   const total = filtered.length;
   const start = (page - 1) * pageSize;
+  // CUÁNTOS LE ESCRIBIERON, no cuántas propuestas recibió. Las propuestas se
+  // retiraron: el panel mostraba «0 total» en todos los proyectos porque ya
+  // nadie las crea. Hoy el profesional contacta por WhatsApp y eso sí queda
+  // registrado, con el proyecto en la metadata del evento.
+  const contactosPorProyecto = new Map<string, number>();
+  {
+    const idsPagina = filtered.slice(start, start + pageSize).map((row) => row.id as string);
+    if (idsPagina.length) {
+      const { data: contactos } = await db
+        .from("interaction_events")
+        .select("metadata")
+        .eq("event_type", "project_lead_whatsapp")
+        .limit(5000);
+      for (const fila of contactos ?? []) {
+        const pid = (fila.metadata as { project_id?: string } | null)?.project_id;
+        if (pid && idsPagina.includes(pid)) contactosPorProyecto.set(pid, (contactosPorProyecto.get(pid) ?? 0) + 1);
+      }
+    }
+  }
   const items = filtered.slice(start, start + pageSize).map((row) => {
     const accepted = row.accepted_professional_id ? professionalMap.get(row.accepted_professional_id) : null;
-    const proposals = row.proposals ?? [];
     return {
       id: row.id,
       title: row.title ?? "Proyecto sin titulo",
@@ -188,9 +205,7 @@ export async function GET(req: Request) {
       for_someone_else: row.for_someone_else === true,
       beneficiary_name: row.beneficiary_name,
       beneficiary_dob: row.beneficiary_dob,
-      proposals_count: proposals.length,
-      pending_proposals_count: proposals.filter((proposal) => proposal.status === "pending").length,
-      accepted_proposals_count: proposals.filter((proposal) => proposal.status === "accepted").length,
+      contactos: contactosPorProyecto.get(row.id as string) ?? 0,
       client: {
         id: row.client_id,
         name: row.client_name_snapshot ?? row.profiles?.full_name ?? "Cliente",
