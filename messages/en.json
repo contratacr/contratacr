@@ -2449,7 +2449,7 @@
     "verifiedTitle": "Verification status",
     "verifiedBody": "Your ID matches the official records. The <strong>Verified</strong> status appears on your profile and in results.",
     "verifiedChip": "Verified",
-    "pendingBody": "You're not verified yet, so you appear without the <strong>Verified</strong> status and lower in results. Verifying is optional, but it helps you stand out.",
+    "pendingBody": "You are not verified yet, so you appear without the <strong>Verified</strong> status and lower in results.",
     "underAppealBody": "It didn't match on the automatic re-check, so we opened a support case. We'll let you know the result.",
     "rejectedBody": "Your account is still active. Fix what's indicated and appeal for a new review.",
     "howItWorks": "<link>What is identity verification?</link>",
@@ -2468,7 +2468,13 @@
     "idTypeNite": "NITE",
     "changeId": "Change ID",
     "changeIdTitle": "Change ID",
-    "changeIdBody": "Enter the new ID and confirm the details before saving."
+    "changeIdBody": "Enter the new ID and confirm the details before saving.",
+    "pendingComoTitulo": "How to get verified",
+    "pendingComoBody": "Write to <strong>soporte@contratacr.com</strong> with two photos, taken with your phone:",
+    "pendingFoto1": "Your face next to your ID, with your face visible and the details readable.",
+    "pendingFoto2": "A photo of your own work.",
+    "pendingComoPie": "We review them and let you know here once it is done. We only use your ID to confirm it is you: it never appears on your profile.",
+    "pendingEscribir": "Write to support"
   },
   "clientActivity": {
     "bStatus": {

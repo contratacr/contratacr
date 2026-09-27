@@ -411,6 +411,22 @@ export function VerificationPanel({
             <>
               {reason && <span className="block">{t("reason", { reason })}</span>}
               <span className={reason ? "mt-1 block" : undefined}>{t.rich("pendingBody", rich)}</span>
+              {/* QUÉ HACER, no solo en qué estado está. El aviso que trae a
+                  esta pantalla dice «te escribimos al correo con lo que
+                  necesitamos», y aquí la persona llegaba a un texto que solo
+                  decía que verificarse «es opcional»: nunca se enteraba de qué
+                  mandar. Son las mismas dos fotos que pide el correo. */}
+              <span className="mt-3 block font-bold text-[#162543]">{t("pendingComoTitulo")}</span>
+              <span className="mt-1 block">{t.rich("pendingComoBody", rich)}</span>
+              <span className="mt-2 block">1. {t("pendingFoto1")}</span>
+              <span className="block">2. {t("pendingFoto2")}</span>
+              <span className="mt-2 block">{t("pendingComoPie")}</span>
+              <a
+                href="mailto:soporte@contratacr.com?subject=Verificaci%C3%B3n%20de%20mi%20perfil"
+                className="mt-3 inline-flex h-10 items-center justify-center rounded-full bg-[#009FD9] px-5 text-[13px] font-bold text-white transition-colors hover:bg-[#0089bb]"
+              >
+                {t("pendingEscribir")}
+              </a>
             </>
           )}
           {status === "under_appeal" && t("underAppealBody")}

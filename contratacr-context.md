@@ -1,4 +1,64 @@
 # ContrataCR.com — Project Context
+
+> ## ⚠️ LEE ESTO ANTES QUE NADA — Estado real al 27 de septiembre de 2026
+>
+> **Lo que sigue debajo es un REGISTRO HISTÓRICO de 597 sprints, no una descripción del
+> producto actual.** Describe funciones que ya se retiraron. Si armás tu idea del app
+> leyendo los sprints, te vas a equivocar: pasó dos veces en un solo día, y las dos
+> veces llegó a los documentos legales antes de que alguien lo notara.
+>
+> **Verificá siempre contra el código.** Que un archivo exista no significa que se use:
+> buscá quién lo LLAMA, no si está.
+>
+> ### Funciones RETIRADAS (el código puede seguir ahí)
+>
+> | Función | Estado |
+> |---|---|
+> | **Citas / reservas** | Apagadas con `CITAS_ACTIVAS` en `src/lib/citas.ts`. `POST /api/bookings` responde 404. La pantalla `/reservar`, el modal y la agenda siguen en el repo pero no se alcanzan. Cero citas en toda la historia de producción. |
+> | **Propuestas a proyectos** | No existe ruta que las cree. Solo quedan lecturas y borrados. Hoy el profesional responde por WhatsApp. |
+> | **Postulaciones a empleos** | No existe ruta que las cree. El formulario se retiró; el contacto es por WhatsApp. |
+> | **Seguir profesionales** | Retirado (migración 210). |
+> | **Aceptar/rechazar cotizaciones** | Fuera de la interfaz. Se envían, se comparten y se descargan; el profesional puede retirarlas. |
+> | **`contact_leads`** | Tabla eliminada (migración 206). |
+> | **Pagos** | No hay pasarela. `PAYMENTS_ENABLED` apagado y el gateway es un stub. |
+>
+> ### Funciones VIVAS
+>
+> Búsqueda y fichas públicas · páginas por oficio y por oficio+provincia (432 con oferta) ·
+> proyectos · **cotizaciones** · mensajes directos (con reportar y bloquear, solo en la app) ·
+> empleos y promociones (contacto por WhatsApp) · reseñas (una por persona y profesional) ·
+> soporte · verificación de identidad · campañas de correo con medición de aperturas y clics ·
+> asistente de IA (**solo en la app nativa**; la web responde 404).
+>
+> ### Infraestructura real
+>
+> - **Alojamiento: Cloudflare** (OpenNext). *No es Vercel* — el registro viejo dice Vercel y es falso.
+> - Base y autenticación: **Supabase**. Producción `kskueodxaksxvjrysouw`, pruebas `oqheayqqprpciqdvdaqo`.
+> - Archivos: **Cloudinary** y **Cloudflare R2**.
+> - Correo: **Brevo**. Ojo: hay DOS cuentas. La llave de `.env.test` es de una cuenta distinta
+>   a la de producción, y sus estadísticas **no** dicen nada de producción.
+> - Asistente: **Cloudflare Workers AI** como principal, **OpenAI** solo de respaldo.
+> - Avisos al celular: **Firebase**. ⚠️ **Solo funciona en Android.** El proyecto iOS no tiene
+>   Firebase ni `GoogleService-Info.plist`: entrega el token de APNs crudo y el servidor lo
+>   rechaza. **El push en iPhone nunca ha funcionado.**
+> - WhatsApp: **API de Meta**. El buzón de ese número no lo lee nadie.
+>
+> ### Reglas que no se deducen del código
+>
+> - La insignia **Verificado** confirma identidad, nada más. No certifica oficio ni experiencia
+>   (Términos, sección 5). Por eso la verificación pide dos fotos —cara con identificación y un
+>   trabajo— y **no** título, carné ni patente.
+> - El app trata al usuario de **tú**, no de vos.
+> - Apagar una pantalla **no** apaga una función: la puerta es la API. Las citas quedaron con
+>   `POST /api/bookings` abierto, recibiendo cédulas y fechas de nacimiento de menores, porque
+>   el interruptor vivía dentro de un componente.
+> - Este archivo tiene un byte que no es UTF-8 válido (posición ~1.136.720). Hay que leerlo en
+>   binario o repararlo con `scripts/repair-text-encoding.mjs`.
+>
+> ---
+
+_Registro histórico de sprints, el más reciente primero. Es historia, no el estado actual._
+
 _Last updated: 2026-07-02 (sprint 597 - **Open Graph share images refined for service positioning** (`src/app/[locale]/opengraph-image.tsx`, `src/app/[locale]/profesionales/[slug]/opengraph-image.tsx`). The main app share image now uses the transparent logo mark above the exact navbar wordmark on a clean white brand card, with no decorative corner rings/circles. The localized service-focused tagline is now `Contrata servicios profesionales en Costa Rica` / `Hire professional services in Costa Rica`. Professional profile share images keep their existing profile-card layout and add the same localized tagline in the header as a single-line brand statement.)_
 
 _Last updated: 2026-07-02 (sprint 596 - **Main app share image changed to white brand card** (src/app/[locale]/opengraph-image.tsx). Replaced the previous app-preview/dark-card attempts with the requested clean white Open Graph image: the exact navbar wordmark asset (logo-wordmark-transparent.png) centered, subtle brand-blue rings, a short blue divider, and localized ES/EN tagline. No extra logo container, no redrawn wordmark text.)_
