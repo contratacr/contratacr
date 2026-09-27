@@ -1,13 +1,26 @@
 import UIKit
 import Capacitor
+import FirebaseCore
+import FirebaseMessaging
 
 @UIApplicationMain
-class AppDelegate: UIResponder, UIApplicationDelegate {
+class AppDelegate: UIResponder, UIApplicationDelegate, MessagingDelegate {
 
     var window: UIWindow?
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        // Override point for customization after application launch.
+        // EL PUSH EN iPHONE NUNCA FUNCIONÓ, Y ESTA ERA LA PIEZA QUE FALTABA.
+        //
+        // Capacitor entrega el token de APNs tal cual lo da Apple. El servidor
+        // manda por Firebase, y Firebase NO puede enviar a un token de APNs:
+        // por eso `/api/push/register` lo rechazaba con un 422 y ningún
+        // iPhone quedaba registrado. Android sí funcionaba porque ahí el SDK
+        // de Firebase ya estaba puesto y entregaba un token FCM.
+        //
+        // Firebase arranca aquí y, más abajo, recibe el token de APNs para
+        // canjearlo por uno de FCM. Ahí el servidor deja de rechazarlo.
+        FirebaseApp.configure()
+        Messaging.messaging().delegate = self
         return true
     }
 
@@ -34,7 +47,22 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
 
     func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
-        NotificationCenter.default.post(name: .capacitorDidRegisterForRemoteNotifications, object: deviceToken)
+        // El token de APNs va SOLO a Firebase, no a Capacitor. Antes se le
+        // pasaba tal cual al plugin, el plugin se lo daba al JavaScript y el
+        // JavaScript lo mandaba a `/api/push/register`, que lo rechazaba con
+        // un 422 porque Firebase no puede enviar a un token de APNs.
+        //
+        // Con esto Firebase lo canjea, y abajo devolvemos el token FCM.
+        Messaging.messaging().apnsToken = deviceToken
+    }
+
+    // El plugin de Capacitor acepta el token como texto además de como `Data`
+    // (ver `didRegisterForRemoteNotificationsWithDeviceToken` en
+    // PushNotificationsPlugin.swift), así que el token FCM entra por la misma
+    // puerta y el JavaScript no cambia: sigue escuchando `registration`.
+    func messaging(_ messaging: Messaging, didReceiveRegistrationToken fcmToken: String?) {
+        guard let fcmToken else { return }
+        NotificationCenter.default.post(name: .capacitorDidRegisterForRemoteNotifications, object: fcmToken)
     }
 
     func application(_ application: UIApplication, didFailToRegisterForRemoteNotificationsWithError error: Error) {
