@@ -165,6 +165,11 @@ jobs:
           # demás: el paso solo sube las que existen, así que una llave que
           # todavía no se creó no rompe nada.
           BREVO_API_KEY: ${{ secrets.BREVO_API_KEY }}
+          # Sin esto el botón «Cancelar suscripción» que pinta Gmail no hace
+          # nada: la ruta ve que no hay secreto, contesta «ignorado» y la baja
+          # no queda guardada. El enlace del pie del correo sí funciona sin
+          # ella, así que el fallo era silencioso.
+          BREVO_WEBHOOK_SECRET: ${{ secrets.BREVO_WEBHOOK_SECRET }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           OPENAI_MODEL: ${{ secrets.OPENAI_MODEL }}
           WHATSAPP_CLOUD_TOKEN: ${{ secrets.WHATSAPP_CLOUD_TOKEN }}
@@ -197,6 +202,7 @@ jobs:
             "CRON_SECRET",
             "GOOGLE_TRANSLATE_API_KEY",
             "PUSH_DELIVERY_ENABLED",
+            "BREVO_WEBHOOK_SECRET",
             "FIREBASE_PROJECT_ID",
             "FIREBASE_CLIENT_EMAIL",
             "FIREBASE_PRIVATE_KEY",
