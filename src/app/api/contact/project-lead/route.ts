@@ -51,14 +51,14 @@ export async function POST(req: Request) {
     .eq("id", projectId)
     .maybeSingle();
   let hayColumna = true;
-  let respuesta = await traer(", allow_direct_contact") as { data: unknown; error: { code?: string } | null };
+  let respuesta = await traer(", allow_direct_contact, allow_phone_contact") as { data: unknown; error: { code?: string } | null };
   if (respuesta.error?.code === "42703") {
     hayColumna = false;
     respuesta = await traer("") as { data: unknown; error: { code?: string } | null };
   }
   const fila = respuesta.data as {
     title?: string; status?: string; client_id?: string; created_at?: string;
-    allow_direct_contact?: boolean | null; client_phone_snapshot?: string | null;
+    allow_direct_contact?: boolean | null; allow_phone_contact?: boolean | null; client_phone_snapshot?: string | null;
   } | null;
   // EXACTAMENTE la regla del tablero, ni una condición más. Antes aquí se
   // exigían las dos cosas —permiso Y fecha— mientras el tablero pedía una sola,
@@ -114,10 +114,13 @@ export async function POST(req: Request) {
   return NextResponse.json(
     {
       href: `https://wa.me/${numero}?text=${encodeURIComponent(texto)}`,
-      // El mismo número, para llamar. No se puede saber si un número está en
-      // WhatsApp —Meta no lo expone—, así que cuando no lo está el profesional
-      // se quedaba sin forma de contactar a quien publicó. Llamar sirve igual.
-      tel: `tel:+${numero}`,
+      // El mismo número, para llamar, SOLO si quien publicó lo autorizó. No se
+      // puede saber si un número está en WhatsApp —Meta no lo expone—, así que
+      // cuando no lo está el proyecto queda sin contacto; esto lo resuelve, pero
+      // con permiso. Va también aquí y no solo en la pantalla: si el permiso
+      // viviera únicamente en el botón, bastaría llamar a esta ruta para
+      // obtener el número igual.
+      ...(fila.allow_phone_contact === true ? { tel: `tel:+${numero}` } : {}),
     },
     { headers: { "Cache-Control": "no-store" } },
   );

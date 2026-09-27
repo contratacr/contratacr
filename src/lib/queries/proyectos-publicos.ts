@@ -52,7 +52,7 @@ export async function cargarProyectosPublicos(limite = 100): Promise<ProyectoPub
     .order("created_at", { ascending: false })
     .limit(limite);
 
-  let { data, error } = await consulta(", allow_direct_contact", true);
+  let { data, error } = await consulta(", allow_direct_contact, allow_phone_contact", true);
   if (error?.code === "42703") ({ data, error } = await consultaVieja(""));
   if (error) {
     console.error("Could not load public projects", error.message);
@@ -113,6 +113,9 @@ function aProyectoPublico(
       client_name: nombreDeLaCuenta || primerNombre(nombreDeLaCuenta),
       client_avatar_url: cuenta?.foto ?? null,
       allow_direct_contact: fila.allow_direct_contact !== false,
+      // Apagado por omisión, y también cuando la columna todavía no existe:
+      // que a alguien le llamen se concede, no se asume.
+      allow_phone_contact: fila.allow_phone_contact === true,
     } satisfies ProyectoPublico;
 }
 

@@ -462,14 +462,7 @@ export default function RegisterProfessionalPage() {
   // step: -1=loading, 0=identity/account, 1=service+location, 2=profile+photo
   const [step, setStep] = useState(-1);
   const [whatsappValue, setWhatsappValue] = useState("");
-  // LOS DOS APAGADOS. El de llamadas venía encendido con el argumento de que
-  // «lo que no se pide al registrarse no se pide nunca», pero exponer el
-  // teléfono de alguien es una decisión suya, no un valor por defecto: las
-  // apps de este tipo —Airbnb, Thumbtack, Fiverr— esconden el número salvo que
-  // la persona lo active. El WhatsApp es obligatorio, así que nadie queda
-  // incomunicado por tenerlos apagados.
-  const [aceptaLlamadas, setAceptaLlamadas] = useState(false);
-  const [aceptaCorreo, setAceptaCorreo] = useState(false);
+  const [aceptaLlamadas, setAceptaLlamadas] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   // Apple (1.2) pide aceptación, no solo que se muestren los términos.
   const [terminosAceptados, setTerminosAceptados] = useState(false);
@@ -927,9 +920,6 @@ export default function RegisterProfessionalPage() {
           lng: workplaces[0]?.lng ?? null,
           whatsapp: step2Data.whatsapp,
           allowPhoneCall: aceptaLlamadas,
-          // `userEmail` y no `step1Data`: quien entró con Google no pasó por
-          // el paso 1 y ahí el correo viene de la sesión.
-          contactEmail: aceptaCorreo ? userEmail || null : null,
           yearsExperience: data.yearsExperience,
           hourlyRate: data.hourlyRate,
         }),
@@ -1397,18 +1387,6 @@ export default function RegisterProfessionalPage() {
                     titulo={t("allowCallsLabel")}
                     checked={aceptaLlamadas}
                     onChange={setAceptaLlamadas}
-                  />
-                  {/* El correo es el de la cuenta, que ya se pidió en el paso
-                      anterior: no hay campo nuevo que llenar. Salió del perfil
-                      en septiembre por «cero clics», pero esa medición no se
-                      podía sacar limpia —hasta el 24 de septiembre el clic en
-                      correo se contaba junto con Instagram y Facebook, en
-                      `external_link_click`. Ahora hay `email_click` aparte, así
-                      que esta vez sí se va a poder medir. */}
-                  <FilaInterruptor
-                    titulo={t("allowEmailLabel")}
-                    checked={aceptaCorreo}
-                    onChange={setAceptaCorreo}
                   />
               </section>
 

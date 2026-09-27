@@ -56,6 +56,7 @@ const COPY = {
     volver: "Volver a proyectos",
     ficha: "Proyecto",
     escribir: "WhatsApp",
+    llamar: "Llamar",
     publicado: "Publicado por",
     vacio: "Todavía no hay proyectos",
     vacioSub: "Cuando alguien publique lo que necesita, aparecerá aquí.",
@@ -91,6 +92,7 @@ const COPY = {
     volver: "Back to projects",
     ficha: "Project",
     escribir: "WhatsApp",
+    llamar: "Call",
     publicado: "Posted by",
     vacio: "There are no projects yet",
     vacioSub: "When someone posts what they need, it will show up here.",
@@ -128,7 +130,7 @@ function BotonEscribir({ proyecto, className = "" }: { proyecto: ProyectoPublico
   // página. Aquí se está contactando a alguien: es el peor momento para eso.
   const { dialogNode, showMessage } = useAppDialog();
 
-  async function abrir() {
+  async function abrir(canal: "whatsapp" | "llamada" = "whatsapp") {
     setCargando(true);
     try {
       const res = await fetch("/api/contact/project-lead", {
@@ -136,7 +138,7 @@ function BotonEscribir({ proyecto, className = "" }: { proyecto: ProyectoPublico
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ projectId: proyecto.id }),
       });
-      const payload = (await res.json().catch(() => ({}))) as { href?: string; code?: string };
+      const payload = (await res.json().catch(() => ({}))) as { href?: string; tel?: string; code?: string };
       // El servidor dice POR QUÉ, no solo que no. Antes cualquier fallo caía en
       // «este cliente no dejó un WhatsApp» —hasta cuando el proyecto sí tenía
       // teléfono y lo que pasaba era otra cosa—, así que el aviso mentía y el
@@ -148,6 +150,7 @@ function BotonEscribir({ proyecto, className = "" }: { proyecto: ProyectoPublico
         : !res.ok || !payload.href ? copy.fallo
         : null;
       if (aviso) { await showMessage({ title: copy.escribir, description: aviso }); return; }
+      if (canal === "llamada" && payload.tel) { window.location.href = payload.tel; return; }
       window.open(payload.href, "_blank", "noopener,noreferrer");
     } finally {
       setCargando(false);
@@ -168,6 +171,23 @@ function BotonEscribir({ proyecto, className = "" }: { proyecto: ProyectoPublico
       {cargando ? <Loader2 className="h-4 w-4 animate-spin" /> : <WhatsAppLogo />}
       {copy.escribir}
     </button>
+    {/* SOLO SI QUIEN PUBLICÓ LO AUTORIZÓ. No se puede saber si un número está
+        en WhatsApp —Meta no lo expone—, así que cuando no lo está el proyecto
+        queda sin forma de contacto. Esto lo resuelve, pero por proyecto y con
+        permiso: que a alguien le llamen es decisión suya. Hoy se enciende a
+        mano desde el panel; si resulta que hace falta seguido, se agrega la
+        casilla al formulario de publicar. */}
+    {proyecto.allow_phone_contact && (
+      <button
+        type="button"
+        onClick={(e) => { e.preventDefault(); e.stopPropagation(); void abrir("llamada"); }}
+        disabled={cargando}
+        className={cn("mt-2 inline-flex h-12 w-full items-center justify-center gap-1.5 rounded-full border border-[#d7e1ea] bg-white px-4 text-base font-semibold text-[#162543] transition hover:border-[#b9c8d6] hover:bg-[#f6f9fb] disabled:opacity-60", className)}
+      >
+        <Phone className="h-4 w-4" />
+        {copy.llamar}
+      </button>
+    )}
     {dialogNode}
     </>
   );

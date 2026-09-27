@@ -20,6 +20,8 @@ export type ProyectoPublico = {
   /** Su foto de cuenta, que muchas veces es la foto de su perfil profesional. */
   client_avatar_url: string | null;
   allow_direct_contact: boolean;
+  /** Quien publicó autorizó que le llamen al mismo número del WhatsApp. */
+  allow_phone_contact: boolean;
 };
 
 /** El primer nombre alcanza; el apellido no aporta nada en un tablero público. */
