@@ -1830,7 +1830,16 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
     };
   }, [nativeSearchOpen]);
 
-  // Selecting a suggestion FILLS the field - it does NOT search immediately.
+  // ELEGIR EL SEGUNDO CAMPO BUSCA. Antes rellenaba y se quedaba ahí: quien ya
+  // tenía la ubicación puesta y elegía el servicio de la lista se quedaba
+  // mirando la pantalla sin que pasara nada, esperando que adivinara que
+  // faltaba tocar la lupa. La hoja del teléfono sí buscaba
+  // (`selectNativeCompactSuggestion`), así que el mismo gesto hacía dos cosas
+  // distintas según el tamaño de la pantalla.
+  //
+  // Va en el manejador de selección y NO en un efecto sobre los dos campos:
+  // los dos son texto libre, y un efecto dispararía la navegación mientras la
+  // persona escribe.
   function selectCompactSuggestion(id: string) {
     const picked = compactSuggestions.find((c) => c.id === id);
     if (picked) {
@@ -1839,6 +1848,20 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
     }
     setSearchActiveIdx(-1);
     setSearchFocused(false);
+    // La regla es sobre lo que la persona VE escrito, no sobre coordenadas
+    // que quedaron de una búsqueda anterior.
+    const ubicacionEscrita = navLocation.trim().length > 0 || !!navLocationSel;
+    if (ubicacionEscrita) {
+      // El override es imprescindible: el `setSearchCategoryId` de arriba
+      // todavía no se ve desde aquí en este render.
+      window.setTimeout(() => runCompactSearch({ categoria: id, servicio: picked ? repairVisibleText(picked.label) : undefined }), 0);
+      return;
+    }
+    // Sin ubicación, el foco salta al campo que falta.
+    window.setTimeout(() => {
+      navLocationInputRef.current?.focus();
+      setNavLocOpen(navLocation.trim().length >= 2);
+    }, 50);
   }
 
   function selectNativeCompactSuggestion(id: string) {
@@ -1869,8 +1892,10 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
     setNavCurrentCoords(null);
     setNavLocOpen(false);
     setNavLocActive(-1);
-    if (nativeSearchOpen && hasSearchService) {
-      closeNativeSearch();
+    // Antes esto exigía `nativeSearchOpen`, o sea que solo buscaba en la hoja
+    // del teléfono; en escritorio rellenaba el campo y no pasaba nada más.
+    if (hasSearchService) {
+      if (nativeSearchOpen) closeNativeSearch();
       window.setTimeout(() => runCompactSearch({ location: s }), 0);
     }
   }
