@@ -119,14 +119,20 @@ requireMatch("iOS APNs upload guard", pushTokenManager, /if \(platform === "ios"
 requireMatch("iOS APNs API rejection", pushRegisterRoute, /platform === "ios" && \/\^\[a-f0-9\]\{64\}\$\/i\.test\(token\)[\s\S]*iOS push no esta configurado/);
 requireMatch("FCM sender transport filter", pushSender, /\.eq\("transport", "fcm"\)/);
 requireMatch("Push text encoding repair", pushSender, /repairVisibleText\(value\)/);
-// El tercer lugar de la barra tiene dueño según quién mira: el profesional en su
-// modo cotiza desde ahí y el Asistente pasa al menú; el cliente conserva el
-// Asistente. El orden de los otros cuatro no cambia.
+// El tercer lugar de la barra tiene dueño según quién mira: el profesional
+// cotiza desde ahí y el cliente ve Proyectos. El Asistente ya no vive en la
+// barra —se abre encima y se cierra, no es un destino—: vive en el menú
+// lateral para todos. El orden de los otros cuatro no cambia.
 requireMatch(
   "Native bottom navigation order",
   bottomNav,
-  /href="\/buscar"[\s\S]*href="\/promociones"[\s\S]*href=\{cotizacionesHref\}[\s\S]*contratacr:open-ai[\s\S]*href="\/empleos"[\s\S]*href=\{nativePanelHref\}/,
+  /href="\/buscar"[\s\S]*href="\/promociones"[\s\S]*href=\{cotizacionesHref\}[\s\S]*href="\/proyectos"[\s\S]*href="\/empleos"[\s\S]*href=\{nativePanelHref\}/,
 );
+// El Asistente salió de la barra: si alguien lo devuelve sin querer, esto lo
+// dice antes de que llegue a la tienda.
+if (/contratacr:open-ai/.test(bottomNav)) {
+  failures.push("Native bottom navigation still opens the assistant; it belongs in the drawer");
+}
 requireMatch(
   // La barra es de la CUENTA, no del panel abierto: quien puede ofrecer lleva
   // Cotizaciones fija, también con el panel puesto en cliente.
