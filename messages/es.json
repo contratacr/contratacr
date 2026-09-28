@@ -3877,7 +3877,11 @@
     "blocked": "Bloqueados",
     "unblock": "Desbloquear",
     "blockedEmpty": "No has bloqueado a nadie.",
-    "blockedHint": "Aquí están las conversaciones que bloqueaste. Al desbloquear vuelven a tu bandeja y las dos partes pueden escribirse otra vez. El reporte que enviaste sigue en revisión."
+    "blockedHint": "Aquí están las conversaciones que bloqueaste. Al desbloquear vuelven a tu bandeja y las dos partes pueden escribirse otra vez. El reporte que enviaste sigue en revisión.",
+    "blockedTitle": "Esta conversación está bloqueada",
+    "blockedMineHint": "Ninguno de los dos puede escribir. Al desbloquear vuelve a tu bandeja; el reporte sigue en revisión.",
+    "blockedOtherHint": "No puedes escribir aquí. Si crees que es un error, escribe a soporte@contratacr.com.",
+    "unblockFailed": "No se pudo desbloquear."
   },
   "bottomNav": {
     "search": "Buscar",

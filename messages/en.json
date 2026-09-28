@@ -3877,7 +3877,11 @@
     "blocked": "Blocked",
     "unblock": "Unblock",
     "blockedEmpty": "You haven't blocked anyone.",
-    "blockedHint": "These are the conversations you blocked. Unblocking brings them back to your inbox and both sides can write again. The report you sent stays under review."
+    "blockedHint": "These are the conversations you blocked. Unblocking brings them back to your inbox and both sides can write again. The report you sent stays under review.",
+    "blockedTitle": "This conversation is blocked",
+    "blockedMineHint": "Neither of you can write. Unblocking brings it back to your inbox; the report stays under review.",
+    "blockedOtherHint": "You can't write here. If you think this is a mistake, write to soporte@contratacr.com.",
+    "unblockFailed": "Could not unblock."
   },
   "bottomNav": {
     "search": "Search",

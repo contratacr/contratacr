@@ -863,7 +863,7 @@ export function DirectChatInbox() {
       });
       const json = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setError(json.error || (isEn ? "Could not unblock." : "No se pudo desbloquear."));
+        setError(json.error || tChat("unblockFailed"));
         return;
       }
       const quedan = bloqueadas.filter((item) => item.id !== conversationId);
@@ -1608,11 +1608,9 @@ export function DirectChatInbox() {
             dice que no puede escribir: no le toca decidir. */}
         {conversacionBloqueada ? (
           <div className="shrink-0 border-t border-[#e5e7eb] bg-[#fbf3f3] px-4 py-4 pb-[calc(1rem+env(safe-area-inset-bottom))] text-center">
-            <p className="text-sm font-extrabold text-[#8f2f2f]">{isEn ? "This conversation is blocked" : "Esta conversación está bloqueada"}</p>
+            <p className="text-sm font-extrabold text-[#8f2f2f]">{tChat("blockedTitle")}</p>
             <p className="mt-1 text-xs leading-5 text-[#7a6363]">
-              {bloqueadaPorMi
-                ? (isEn ? "Neither of you can write. Unblocking brings it back to your inbox; the report stays under review." : "Ninguno de los dos puede escribir. Al desbloquear vuelve a tu bandeja; el reporte sigue en revisión.")
-                : (isEn ? "You can't write here. If you think this is a mistake, write to soporte@contratacr.com." : "No puedes escribir aquí. Si crees que es un error, escribe a soporte@contratacr.com.")}
+              {bloqueadaPorMi ? tChat("blockedMineHint") : tChat("blockedOtherHint")}
             </p>
             {bloqueadaPorMi && (
               <button
