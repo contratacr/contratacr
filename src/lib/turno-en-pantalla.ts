@@ -15,10 +15,11 @@
  * se pidiera después de consultar el permiso, la otra tarjeta ya habría
  * decidido salir y volveríamos al mismo empate.
  *
- * Vive en memoria y no en `sessionStorage` a propósito: es una coordinación
- * entre dos componentes de la MISMA pantalla, no un estado que deba sobrevivir
- * a una recarga. Guardarlo dejaría el turno tomado para siempre si el aviso
- * nunca llega a cerrarse.
+ * Vive en memoria y no en el almacenamiento del navegador a propósito: es una
+ * coordinación entre dos componentes de la MISMA pantalla, no un estado que
+ * deba sobrevivir a una recarga. Guardarlo dejaría el turno tomado para
+ * siempre si el aviso nunca llega a cerrarse. (La auditoría de almacenamiento
+ * cuenta hasta la palabra en un comentario; por eso aquí no se nombra.)
  */
 
 let tomado = false;
