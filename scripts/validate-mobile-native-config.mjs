@@ -165,12 +165,12 @@ requireMatch(
   "Spanish native bottom navigation smoke",
   mobileShellSpec,
   // La pestaña se llama «Promociones»; /promociones es solo la ruta heredada.
-  /navItems:\s*\["Buscar",\s*"Promociones",\s*"Cotizaciones",\s*"Empleos",\s*"Panel"\]/,
+  /navItems:\s*\["Buscar",\s*"Promociones",\s*"Proyectos",\s*"Empleos",\s*"Panel"\]/,
 );
 requireMatch(
   "English native bottom navigation smoke",
   mobileShellSpec,
-  /navItems:\s*\["Search",\s*"Promotions",\s*"Quotes",\s*"Jobs",\s*"Panel"\]/,
+  /navItems:\s*\["Search",\s*"Promotions",\s*"Projects",\s*"Jobs",\s*"Panel"\]/,
 );
 requireMatch("Native assistant opens direct chat smoke", mobileShellSpec, /\/api\/direct-chat[\s\S]*actionKind:\s*"message"[\s\S]*\/mensajes\\\\\?conversation=/);
 requireMatch("Mobile-only Playwright workflow", mobileWorkflow, /npm run test:e2e:mobile/);
