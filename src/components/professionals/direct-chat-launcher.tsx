@@ -18,6 +18,7 @@ type DirectChatLauncherProps = {
   bookingId?: string;
   projectId?: string;
   contextTitle?: string;
+  contextKind?: "promocion" | "empleo";
   isOwn?: boolean;
   className?: string;
   buttonLabel?: string;
@@ -49,6 +50,7 @@ export function DirectChatLauncher({
   intent,
   jobId,
   offerId,
+  contextKind,
 }: DirectChatLauncherProps) {
   const locale = useLocale();
   const isEn = locale === "en";
@@ -64,6 +66,19 @@ export function DirectChatLauncher({
   // El aviso del app, no el del navegador (ver BotonEscribir en Proyectos).
   const { dialogNode, showMessage } = useAppDialog();
 
+  // EN LA APP, «Enviar mensaje» ABRE EL CHAT. SIEMPRE.
+  //
+  // Antes preguntaba primero si el profesional tenía la app con push fresco y,
+  // si no, abría WhatsApp. Como casi ningún profesional la tiene todavía, en la
+  // práctica el chat propio no se usaba nunca: tocar «Enviar mensaje» sacaba de
+  // la app. Y la razón que lo justificaba ya no existe —«escribirle a quien no
+  // tiene la app es escribir a un pozo»—: al enviar, a quien no tiene push se
+  // le avisa por correo y, si es profesional, también por WhatsApp con un
+  // enlace de vuelta a la conversación (outside-app-notify). El mensaje llega
+  // igual, y llega DENTRO del app, que es donde viven la moderación, el
+  // historial y el bloqueo.
+  //
+  // En la web no cambia nada: ahí no hay chat y el botón sigue siendo WhatsApp.
   if (nativeApp) {
     const safeLabel = buttonLabel && !/whatsapp/i.test(buttonLabel) ? buttonLabel : undefined;
     return (
@@ -79,7 +94,7 @@ export function DirectChatLauncher({
         initialMessage={initialMessage}
         onSelfAction={onSelfAction}
         tone={tone}
-        onUnreachable={openChat}
+        contextKind={contextKind}
       />
     );
   }

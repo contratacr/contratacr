@@ -10,6 +10,7 @@ import { ClientRegistrationModal } from "@/components/auth/client-registration-m
 import { trackInteraction } from "@/lib/analytics/interaction-events";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
+import { useLugarDeLaBusqueda } from "@/hooks/use-lugar-de-la-busqueda";
 
 type MessageLauncherProps = {
   professionalId?: string;
@@ -17,6 +18,8 @@ type MessageLauncherProps = {
   bookingId?: string;
   projectId?: string;
   contextTitle?: string;
+  /** De dónde salió el botón, para empezar el mensaje con la frase que toca. */
+  contextKind?: "promocion" | "empleo";
   isOwn?: boolean;
   className?: string;
   buttonLabel?: string;
@@ -28,7 +31,6 @@ type MessageLauncherProps = {
    * escribirle a quien no la tiene es escribir a un pozo. Quien lo monta
    * decide la salida (en la ficha, WhatsApp).
    */
-  onUnreachable?: () => Promise<void> | void;
 };
 
 function buildDraftHref({
@@ -66,7 +68,7 @@ export function MessageLauncher(props: MessageLauncherProps) {
     initialMessage = "",
     onSelfAction,
     tone = "primary",
-    onUnreachable,
+    contextKind,
   } = props;
   const locale = useLocale();
   const isEn = locale === "en";
@@ -82,34 +84,28 @@ export function MessageLauncher(props: MessageLauncherProps) {
   const [registrando, setRegistrando] = useState(false);
   const label = buttonLabel || (isEn ? "Send message" : "Enviar mensaje");
 
-  const mensajeSugerido = initialMessage || (contextTitle && (bookingId || projectId)
-    ? (isEn ? `Hi, I'm writing about "${contextTitle}".` : `Hola, te escribo por "${contextTitle}".`)
-    : "");
+  // EL MENSAJE YA VIENE EMPEZADO, SEGÚN DE DÓNDE SE TOCÓ EL BOTÓN.
+  //
+  // Antes solo se armaba viniendo de una cita o un proyecto, así que desde una
+  // búsqueda, una ficha, una promoción o un empleo —que es por donde entra casi
+  // todo el mundo— el chat abría en blanco y había que escribir desde cero
+  // frente a un desconocido. Ahora cada origen tiene su frase, y la de búsqueda
+  // incluye el lugar cuando la dirección lo dice (/buscar/electricidad/alajuela/atenas).
+  const lugarDeLaBusqueda = useLugarDeLaBusqueda();
+  const mensajeSugerido = initialMessage || (() => {
+    const tema = (contextTitle ?? "").trim();
+    if (!tema) return "";
+    if (bookingId) return t("sugerencia.cita", { tema });
+    if (projectId) return t("sugerencia.proyecto", { tema });
+    if (contextKind === "promocion" || contextKind === "empleo") return t(`sugerencia.${contextKind}`, { tema });
+    return lugarDeLaBusqueda
+      ? t("sugerencia.servicioEnLugar", { tema: tema.toLocaleLowerCase(locale), lugar: lugarDeLaBusqueda })
+      : t("sugerencia.servicio", { tema: tema.toLocaleLowerCase(locale) });
+  })();
 
   async function abrirHilo(texto: string) {
     setLoading(true);
     try {
-      if (onUnreachable && professionalId) {
-        const estado = await fetch(`/api/direct-chat?reachable=${encodeURIComponent(professionalId)}`)
-          .then((r) => (r.ok ? r.json() : null))
-          .catch(() => null);
-        // Solo un «no» explícito desvía: si la consulta falla, el chat sigue
-        // siendo el camino y el aviso por correo hace el resto.
-        if (estado && estado.reachable === false) {
-          await onUnreachable();
-          return;
-        }
-        // Una conversación bloqueada se abre tal cual, sin mandar el texto
-        // escrito ni guardarlo como borrador: el chat dice que está bloqueado y
-        // ahí se decide qué hacer.
-        if (estado && typeof estado.blocked === "string" && estado.blocked) {
-          // Sin `origin` a secas: ese nombre existe como global del navegador
-          // (la URL completa) y compilaba sin quejarse apuntando a lo que no era.
-          const volverA = (window.location.pathname + window.location.search).replace(/^\/(?:es|en)(?=\/|$)/u, "") || "/";
-          router.push(`/mensajes?conversation=${encodeURIComponent(estado.blocked)}&back=${encodeURIComponent(volverA)}`);
-          return;
-        }
-      }
       const response = await fetch("/api/direct-chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },

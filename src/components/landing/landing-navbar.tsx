@@ -1356,6 +1356,17 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   // "seleccionado", que es otra cosa. Todos sus enlaces se ven igual.
   const claseCajon = (_href: string) => mobileDrawerItemClass;
 
+  // CERRAR EL CAJÓN NO ALCANZA SI EL ASISTENTE SIGUE ENCIMA. El cajón se pinta
+  // sobre el asistente (z-10060 contra z-120), así que se puede abrir y tocar
+  // «Cotizaciones» con el asistente abierto: la navegación ocurre, pero al
+  // cerrarse el cajón vuelve a verse el asistente tapando la pantalla nueva y
+  // el toque parece no haber hecho nada. El logo ya lo apartaba; ahora lo hace
+  // cualquier salida del cajón.
+  const cerrarCajon = useCallback(() => {
+    setMobileOpen(false);
+    window.dispatchEvent(new Event("contratacr:close-ai"));
+  }, []);
+
   const irAlInicio = useCallback((event: React.MouseEvent<HTMLAnchorElement>) => {
     if (!nativeApp) return;
     event.preventDefault();
@@ -1492,7 +1503,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
       // payload ever fails, the route error boundary still offers a retry.
       event.preventDefault();
       event.stopPropagation();
-      setMobileOpen(false);
+      cerrarCajon();
       prepareNativeNavigation(href);
       router.push(href);
     },
@@ -2974,7 +2985,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
               "lg:hidden fixed inset-0 z-[10050] bg-transparent",
               mobileOpen ? "block" : "hidden"
             )}
-            onClick={() => setMobileOpen(false)}
+            onClick={cerrarCajon}
             aria-hidden="true"
           />
           <div
@@ -2998,7 +3009,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                 {user ? (
                   <>
                     {!nativeHeaderShell && (
-                      <Link href={primaryPanelHref} onClick={() => setMobileOpen(false)} className={mobileDrawerStrongItemClass}>
+                      <Link href={primaryPanelHref} onClick={cerrarCajon} className={mobileDrawerStrongItemClass}>
                         <DrawerIcon><UserRound /></DrawerIcon>
                         <span className={mobileDrawerTextClass}>{locale === "en" ? "My dashboard" : "Mi panel"}</span>
                       </Link>
@@ -3006,7 +3017,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                     {mostrarOfrecerServicios && (
                       <Link
                         href="/registro/profesional"
-                        onClick={() => setMobileOpen(false)}
+                        onClick={cerrarCajon}
                         className={cn(mobileDrawerItemClass, "text-[#009FD9] hover:bg-[#EBF5FB]")}
                       >
                         <DrawerIcon><UserRoundPlus /></DrawerIcon>
@@ -3033,7 +3044,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                 {!nativeHeaderShell && (
                   <button
                     type="button"
-                    onClick={() => { setMobileOpen(false); openNativeSearch(); }}
+                    onClick={() => { cerrarCajon(); openNativeSearch(); }}
                     className={mobileDrawerItemClass}
                   >
                     <DrawerIcon><Search /></DrawerIcon>
@@ -3043,19 +3054,19 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                 {/* Proyectos vive fijo en la barra de abajo de la app. Aquí solo
                     aparece en la web móvil, donde no hay barra. */}
                 {!nativeHeaderShell && (
-                  <Link href="/proyectos" onClick={(event) => { setMobileOpen(false); navigateNativeMarketplace(event, "/proyectos"); }} className={claseCajon("/proyectos")}>
+                  <Link href="/proyectos" onClick={(event) => { cerrarCajon(); navigateNativeMarketplace(event, "/proyectos"); }} className={claseCajon("/proyectos")}>
                     <DrawerIcon><ClipboardList /></DrawerIcon>
                     <span className={mobileDrawerTextClass}>{locale === "en" ? "Projects" : "Proyectos"}</span>
                   </Link>
                 )}
                 {!nativeHeaderShell && (
-                  <Link href="/promociones" onClick={(event) => { setMobileOpen(false); navigateNativeMarketplace(event, "/promociones"); }} className={claseCajon("/promociones")}>
+                  <Link href="/promociones" onClick={(event) => { cerrarCajon(); navigateNativeMarketplace(event, "/promociones"); }} className={claseCajon("/promociones")}>
                     <DrawerIcon><OfferTagPercentIcon className="h-5 w-5" /></DrawerIcon>
                     <span className={mobileDrawerTextClass}>{locale === "en" ? "Promotions" : "Promociones"}</span>
                   </Link>
                 )}
                 {EMPLEOS_VISIBLE && !nativeHeaderShell && (
-                  <Link href="/empleos" onClick={(event) => { setMobileOpen(false); navigateNativeMarketplace(event, "/empleos"); }} className={claseCajon("/empleos")}>
+                  <Link href="/empleos" onClick={(event) => { cerrarCajon(); navigateNativeMarketplace(event, "/empleos"); }} className={claseCajon("/empleos")}>
                     <DrawerIcon><Briefcase /></DrawerIcon>
                     <span className={mobileDrawerTextClass}>{locale === "en" ? "Jobs" : "Empleos"}</span>
                   </Link>
@@ -3064,7 +3075,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                     es trabajo del profesional y va arriba del Asistente, que es
                     una ayuda que se abre encima y se cierra. */}
                 {isPro && (
-                  <Link href="/dashboard/profesional?tab=quotes" onClick={() => setMobileOpen(false)} className={claseCajon("/dashboard/profesional?tab=quotes")}>
+                  <Link href="/dashboard/profesional?tab=quotes" onClick={cerrarCajon} className={claseCajon("/dashboard/profesional?tab=quotes")}>
                     <DrawerIcon><FileText /></DrawerIcon>
                     <span className={mobileDrawerTextClass}>{tNav("quotes")}</span>
                   </Link>
@@ -3073,17 +3084,17 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                     app: una ayuda que se abre encima y se cierra, no un destino.
                     Va para todos, con sesión o sin ella. */}
                 {nativeHeaderShell && (
-                  <button type="button" onClick={() => { setMobileOpen(false); window.dispatchEvent(new Event("contratacr:open-ai")); }} className={mobileDrawerItemClass}>
+                  <button type="button" onClick={() => { cerrarCajon(); window.dispatchEvent(new Event("contratacr:open-ai")); }} className={mobileDrawerItemClass}>
                     <DrawerIcon><Bot /></DrawerIcon>
                     <span className={mobileDrawerTextClass}>{tNav("assistant")}</span>
                   </button>
                 )}
-                <Link href="/servicios" onClick={() => setMobileOpen(false)} className={claseCajon("/servicios")}>
+                <Link href="/servicios" onClick={cerrarCajon} className={claseCajon("/servicios")}>
                   <DrawerIcon><Wrench /></DrawerIcon>
                   <span className={mobileDrawerTextClass}>{t("categories")}</span>
                 </Link>
                 {user && isAdminUser && (
-                  <Link href="/admin" onClick={() => setMobileOpen(false)} className={mobileDrawerItemClass}>
+                  <Link href="/admin" onClick={cerrarCajon} className={mobileDrawerItemClass}>
                     <DrawerIcon><Shield /></DrawerIcon>
                     <span className={mobileDrawerTextClass}>{locale === "en" ? "Admin panel" : "Panel admin"}</span>
                   </Link>
@@ -3107,29 +3118,29 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                   </button>
                   {mobileHelpOpen && (
                     <div className="mt-1 grid gap-1 pl-[52px]">
-                      <Link href="/como-funciona" onClick={() => setMobileOpen(false)} className={mobileDrawerSubItemClass}>
+                      <Link href="/como-funciona" onClick={cerrarCajon} className={mobileDrawerSubItemClass}>
                         <ResourceIcon name="howItWorks" />
                         <span className={mobileDrawerTextClass}>{t("resourceLinks.howItWorks")}</span>
                       </Link>
-                      <Link href="/ayuda" onClick={() => setMobileOpen(false)} className={mobileDrawerSubItemClass}>
+                      <Link href="/ayuda" onClick={cerrarCajon} className={mobileDrawerSubItemClass}>
                         <ResourceIcon name="helpCenter" />
                         <span className={mobileDrawerTextClass}>{t("resourceLinks.helpCenter")}</span>
                       </Link>
-                      <Link href="/mejorar-mi-perfil" onClick={() => setMobileOpen(false)} className={mobileDrawerSubItemClass}>
+                      <Link href="/mejorar-mi-perfil" onClick={cerrarCajon} className={mobileDrawerSubItemClass}>
                         <ResourceIcon name="proTips" />
                         <span className={mobileDrawerTextClass}>{t("resourceLinks.proTips")}</span>
                       </Link>
-                      <SupportLink onNavigate={() => setMobileOpen(false)} className={mobileDrawerSubItemClass}>
+                      <SupportLink onNavigate={cerrarCajon} className={mobileDrawerSubItemClass}>
                         <ResourceIcon name="support" />
                         <span className={mobileDrawerTextClass}>{t("resourceLinks.support")}</span>
                       </SupportLink>
                       {nativeHeaderShell && (
                         <>
-                          <Link href="/terminos" onClick={() => setMobileOpen(false)} className={mobileDrawerSubItemClass}>
+                          <Link href="/terminos" onClick={cerrarCajon} className={mobileDrawerSubItemClass}>
                             <ResourceIcon name="terms" />
                             <span className={mobileDrawerTextClass}>{t("resourceLinks.terms")}</span>
                           </Link>
-                          <Link href="/privacidad" onClick={() => setMobileOpen(false)} className={mobileDrawerSubItemClass}>
+                          <Link href="/privacidad" onClick={cerrarCajon} className={mobileDrawerSubItemClass}>
                             <ResourceIcon name="privacy" />
                             <span className={mobileDrawerTextClass}>{t("resourceLinks.privacy")}</span>
                           </Link>
@@ -3147,7 +3158,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
               {!user && (
                 <Link
                   href={loginHref}
-                  onClick={() => setMobileOpen(false)}
+                  onClick={cerrarCajon}
                   className="mt-3 flex h-12 w-full items-center justify-center rounded-full bg-[#009FD9] text-[15px] font-bold text-white transition-colors hover:bg-[#0089bb]"
                 >
                   {t("login")}
@@ -3188,7 +3199,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                     type="button"
                     onClick={() => {
                       setMobileHelpOpen(false);
-                      setMobileOpen(false);
+                      cerrarCajon();
                       void handleSignOut();
                     }}
                     className="inline-flex h-10 items-center justify-center gap-2 rounded-full bg-[#f1f5f9] px-3.5 text-[13px] font-bold text-[#52627a] transition-colors hover:bg-[#fdeaea] hover:text-[#b4232a]"

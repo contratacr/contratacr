@@ -1,0 +1,14 @@
+import { chromium } from "playwright";
+const b = await chromium.connectOverCDP("http://localhost:9222");
+const ctx = b.contexts()[0];
+const p = ctx.pages()[ctx.pages().length - 1];
+await p.goto("https://developer.apple.com/account", { waitUntil: "domcontentloaded" });
+await p.waitForTimeout(8000);
+const t = await p.evaluate(() => document.body.innerText);
+const pendiente = /program license agreement has been updated|Accept the latest Apple Developer Program License Agreement/i.test(t);
+console.log("¿sigue pendiente en developer.apple.com?:", pendiente ? "SÍ" : "no");
+await p.goto("https://appstoreconnect.apple.com/apps", { waitUntil: "domcontentloaded" });
+await p.waitForTimeout(8000);
+const t2 = await p.evaluate(() => document.body.innerText);
+console.log("¿aviso en App Store Connect?:", /License Agreement Updated|needs to be reviewed/i.test(t2) ? "SÍ" : "no");
+await b.close();

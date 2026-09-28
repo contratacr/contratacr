@@ -4219,7 +4219,15 @@
     "marcador": "Ej.: Necesito cambiar dos tomas en mi casa en Alajuela. ¿Cuándo podrías?",
     "nota": "El profesional ve tu mensaje y te responde por aquí.",
     "enviar": "Enviar mensaje",
-    "cerrar": "Cerrar"
+    "cerrar": "Cerrar",
+    "sugerencia": {
+      "servicio": "Hola, te escribo por {tema}.",
+      "servicioEnLugar": "Hola, te escribo por {tema} en {lugar}.",
+      "proyecto": "Hola, te escribo por el proyecto «{tema}».",
+      "cita": "Hola, te escribo por la cita de {tema}.",
+      "promocion": "Hola, vi tu promoción «{tema}» y me interesa.",
+      "empleo": "Hola, te escribo por la vacante «{tema}»."
+    }
   },
   "perfilProfesionalGate": {
     "jobTitle": "Disponible para cuentas profesionales",

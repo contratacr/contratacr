@@ -4219,7 +4219,15 @@
     "marcador": "E.g.: I need two outlets replaced at my house in Alajuela. When could you come?",
     "nota": "The professional sees your message and replies here.",
     "enviar": "Send message",
-    "cerrar": "Close"
+    "cerrar": "Close",
+    "sugerencia": {
+      "servicio": "Hi, I'm writing about {tema}.",
+      "servicioEnLugar": "Hi, I'm writing about {tema} in {lugar}.",
+      "proyecto": "Hi, I'm writing about the project “{tema}”.",
+      "cita": "Hi, I'm writing about the {tema} appointment.",
+      "promocion": "Hi, I saw your promotion “{tema}” and I'm interested.",
+      "empleo": "Hi, I'm writing about the “{tema}” job posting."
+    }
   },
   "perfilProfesionalGate": {
     "jobTitle": "Available for professional accounts",
