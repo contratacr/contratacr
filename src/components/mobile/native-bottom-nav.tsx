@@ -1,5 +1,6 @@
 "use client";
 import { EMPLEOS_VISIBLE } from "@/lib/feature-flags";
+import { sinBarraDeAbajo } from "@/lib/rutas-sin-barra";
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Search, Briefcase, UserRound, ClipboardList } from "lucide-react";
@@ -56,8 +57,8 @@ export function NativeBottomNav() {
   const nativePanelHref = user ? primaryPanelHref : `/login?redirect=${encodeURIComponent(`/${locale}${panelHref}`)}`;
 
   // Publicar ocupa la pantalla entera: ahí la barra no va.
-  const fullscreenRoute = /(^|\/)(?:publicar-proyecto|(?:empleos|promociones)\/publicar)(?:\/|$)/.test(pathname ?? "");
-  const visible = hydrated && nativeApp && !fullscreenRoute;
+  // Pantalla completa o de detalle: sin barra (ver src/lib/rutas-sin-barra.ts).
+  const visible = hydrated && nativeApp && !sinBarraDeAbajo(pathname);
 
   // Solo una pestaña encendida a la vez: mientras hay una pendiente, manda esa.
   const isActive = useCallback(

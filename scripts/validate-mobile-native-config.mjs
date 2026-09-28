@@ -119,6 +119,15 @@ requireMatch("iOS APNs upload guard", pushTokenManager, /if \(platform === "ios"
 requireMatch("iOS APNs API rejection", pushRegisterRoute, /platform === "ios" && \/\^\[a-f0-9\]\{64\}\$\/i\.test\(token\)[\s\S]*iOS push no esta configurado/);
 requireMatch("FCM sender transport filter", pushSender, /\.eq\("transport", "fcm"\)/);
 requireMatch("Push text encoding repair", pushSender, /repairVisibleText\(value\)/);
+// SIN BARRA EN LAS PANTALLAS DE DETALLE. La regla vive en src/lib/rutas-sin-barra.ts
+// y, en literal, en el script de arranque de layout.tsx (corre antes de
+// hidratar). Si una cambia y la otra no, la barra aparece un cuadro y se va.
+const rutasSinBarra = await text("src/lib/rutas-sin-barra.ts");
+const layoutRaiz = await text("src/app/layout.tsx");
+requireMatch("Bottom nav uses the shared no-bar rule", bottomNav, /sinBarraDeAbajo\(pathname\)/);
+const detalleEnHelper = /RUTA_DE_DETALLE = \/(.+)\/;/.exec(rutasSinBarra)?.[1];
+if (!detalleEnHelper) failures.push("rutas-sin-barra.ts: RUTA_DE_DETALLE not found");
+else if (!layoutRaiz.includes(detalleEnHelper.replace(/\\/g, "\\\\"))) failures.push("layout.tsx boot script does not carry the same RUTA_DE_DETALLE as rutas-sin-barra.ts");
 // La barra es la MISMA para todos: cinco lugares fijos, sin ramas por cuenta.
 // El Asistente y Cotizaciones viven en el menú lateral.
 requireMatch(
