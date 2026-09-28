@@ -19,6 +19,8 @@ import { createClient } from "@/lib/supabase/client";
 import { loadGoogleMaps } from "@/lib/maps/loader";
 import { useCustomCategories } from "@/lib/data/use-custom-categories";
 import { cn } from "@/lib/utils";
+import { rutaDeBusqueda } from "@/lib/buscar-url";
+import { useParametrosDeBusqueda } from "@/hooks/use-parametros-de-busqueda";
 
 // Filter Select triggers stay on the ContrataCR blue system for focus/hover so
 // the fields read the same whether a service filter is active or not.
@@ -545,7 +547,7 @@ type SearchFiltersProps = {
 export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHeader = false, closable = false, initialValues }: SearchFiltersProps = {}) {
   const router = useRouter();
   const pathname = usePathname();
-  const params = useSearchParams();
+  const params = useParametrosDeBusqueda();
   const t = useTranslations("search");
   const locale = useLocale();
   const customCategories = useCustomCategories();
@@ -858,7 +860,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
         next.set("e", vals.e);
         next.set("w", vals.w);
       }
-      router.push(`${pathname}?${next.toString()}`);
+      router.push(rutaDeBusqueda(next));
     },
     [query, category, province, canton, sortBy, modalities, insurers, languages, priceFilter, priceUnits, params, router, pathname, variant]
   );
@@ -1087,7 +1089,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
     setQuery(""); setCategory(""); setProvince(""); setCanton(""); setLocationQuery(""); setSortBy("rating"); setModalities([]); setInsurers([]); setLanguages([]); setPriceFilter(""); setPriceUnits([]);
     setAddressSuggestions([]);
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    router.push(pathname);
+    router.push("/buscar");
   }
 
   // The unified service field (free text OR a picked category) counts as ONE filter - not
@@ -1547,7 +1549,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
 export function MobileServiceSearch() {
   const router = useRouter();
   const pathname = usePathname();
-  const params = useSearchParams();
+  const params = useParametrosDeBusqueda();
   const t = useTranslations("search");
   const tHeader = useTranslations("header");
   const locale = useLocale();
@@ -1571,7 +1573,7 @@ export function MobileServiceSearch() {
     const next = new URLSearchParams(params.toString());
     if (value.trim()) next.set("q", value); else next.delete("q");
     next.delete("page");
-    router.push(`${pathname}?${next.toString()}`);
+    router.push(rutaDeBusqueda(next));
   }, [params, router, pathname]);
 
   const pickCategory = useCallback((id: string) => {
@@ -1583,7 +1585,7 @@ export function MobileServiceSearch() {
     next.delete("page");
     setQ(getCategoryLabel(id, locale));
     setOpen(false);
-    router.push(`${pathname}?${next.toString()}`);
+    router.push(rutaDeBusqueda(next));
   }, [params, router, pathname, locale]);
 
   function onChange(value: string) {

@@ -1,6 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { categorySlug, idDesdeDireccion } from "@/lib/data/category-slug";
 import { getProvinceById } from "@/lib/data/cr-geography";
+import { filtrosDeRuta, rutaDeBusqueda } from "@/lib/buscar-url";
 import { RUTAS_DEL_SITIO } from "@/lib/site-routes";
 import createIntlMiddleware from "next-intl/middleware";
 import { type NextRequest, NextResponse } from "next/server";
@@ -175,6 +176,28 @@ export async function middleware(request: NextRequest) {
   // palabras por guion; el guion bajo las pega, así que leía
   // «aireacondicionado») y la provincia por su nombre en vez de su código. En
   // dos reglas encadenadas habría dos 308 seguidos para la misma dirección.
+  // LA BÚSQUEDA SE LEE: /buscar/construccion/alajuela/grecia. La forma vieja con
+  // parámetros (?categoria=…&provincia=al&canton=al-gr) salta a la bonita, y la
+  // bonita se reescribe por dentro a la de parámetros, que es la que la página
+  // entiende. La reescritura no vuelve a pasar por aquí, así que no hay bucle.
+  const buscarRaiz = /^\/(es|en)\/buscar\/?$/.exec(pathname);
+  if (buscarRaiz && (request.nextUrl.searchParams.has("categoria") || request.nextUrl.searchParams.has("provincia"))) {
+    const bonita = rutaDeBusqueda(request.nextUrl.searchParams);
+    if (!/^\/buscar\/?(?:\?|$)/.test(bonita)) {
+      return NextResponse.redirect(new URL(`/${buscarRaiz[1]}${bonita}`, request.url), 308);
+    }
+  }
+  const buscarBonito = /^\/(es|en)\/buscar\/[^/?#]+/.exec(pathname);
+  if (buscarBonito) {
+    const enRuta = filtrosDeRuta(pathname);
+    if (enRuta) {
+      const destino = new URL(`/${buscarBonito[1]}/buscar`, request.url);
+      destino.search = request.nextUrl.search;
+      for (const [clave, valor] of Object.entries(enRuta)) if (valor) destino.searchParams.set(clave, valor);
+      return NextResponse.rewrite(destino);
+    }
+  }
+
   const oficio = /^\/(es|en)\/servicios\/([a-z0-9_-]+)(?:\/([a-z-]{2,}))?\/?$/i.exec(pathname);
   if (oficio) {
     const servicioPedido = oficio[2];

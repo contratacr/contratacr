@@ -74,6 +74,7 @@ function safeProfileReturnHref(value: string | null): string {
   const path = href.split(/[?#]/u)[0]?.replace(/^\/(?:es|en)(?=\/|$)/u, "") || "/";
   const allowed = path === "/"
     || path === "/buscar"
+    || path.startsWith("/buscar/")
     || path === "/promociones"
     || path.startsWith("/promociones/")
     || path === "/empleos"

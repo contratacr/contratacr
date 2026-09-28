@@ -18,6 +18,7 @@ import { loadGoogleMaps } from "@/lib/maps/loader";
 import { matchProvinceCanton } from "@/lib/data/cr-geography";
 import { resolveCategoryIntent } from "@/lib/data/categories";
 import { trackMetaEvent } from "@/lib/analytics/meta-pixel";
+import { rutaDeBusqueda } from "@/lib/buscar-url";
 
 // A Google Places ADDRESS prediction shown alongside our province/cantón suggestions, so the
 // location field autocompletes real addresses (not just province/cantón names).
@@ -599,7 +600,7 @@ export function LandingHero() {
       search_string: params.get("categoria") ? "category" : params.get("q") ? "text" : "general",
       has_location: params.has("provincia") || params.has("canton") || params.has("lat"),
     });
-    router.push(`/buscar?${params.toString()}`);
+    router.push(rutaDeBusqueda(params));
   }
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {

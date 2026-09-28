@@ -8,6 +8,7 @@ import { Link, useRouter } from "@/i18n/navigation";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { getCategoryLabel } from "@/lib/data/categories";
 import { ServiceImage } from "@/components/professionals/service-image";
+import { rutaDeBusqueda } from "@/lib/buscar-url";
 
 /* ONE single staggered (zigzag) carousel. All cards live in ONE track that
    moves as a single unit (the up/down offset is purely visual). Motion is
@@ -43,12 +44,12 @@ function Card({ id, lifted, onLinkClick }: { id: string; lifted: boolean; onLink
       className={`shrink-0 mr-4 sm:mr-5 py-2 ${lifted ? "sm:-translate-y-5" : "sm:translate-y-5"}`}
     >
       <Link
-        href={`/buscar?categoria=${id}`}
+        href={rutaDeBusqueda({ categoria: id })}
         // `data-href` lets the carousel navigate PROGRAMMATICALLY on a tap (pointerup)
         // — needed because pointer capture (used for dragging) makes the browser send
         // the follow-up click to the viewport, not this <a>, so the link's own click
         // never fires. The real href stays for SEO / right-click / keyboard.
-        data-href={`/buscar?categoria=${id}`}
+        data-href={rutaDeBusqueda({ categoria: id })}
         onClick={onLinkClick}
         draggable={false}
         // No per-card will-change/3d here — that promoted all 38 cards to their

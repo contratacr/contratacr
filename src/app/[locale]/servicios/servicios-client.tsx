@@ -26,6 +26,7 @@ import {
   X,
 } from "lucide-react";
 import { CABECERA_BOTON, CABECERA_FILA, CABECERA_FILA_CENTRADA, CABECERA_GLIFO, CABECERA_TITULO } from "@/components/layout/cabecera";
+import { rutaDeBusqueda } from "@/lib/buscar-url";
 
 export function ServiciosClient({ catalogoInicial }: { catalogoInicial: string | null }) {
   // EL CATÁLOGO COMPLETO, DESDE EL PRIMER PINTADO. Esta página es de cliente y se
@@ -142,7 +143,7 @@ export function ServiciosClient({ catalogoInicial }: { catalogoInicial: string |
       return;
     }
     const first = searchResults[0]?.id;
-    if (first) router.push(`/buscar?categoria=${first}`);
+    if (first) router.push(rutaDeBusqueda({ categoria: first }));
     else router.push("/buscar");
   }
 

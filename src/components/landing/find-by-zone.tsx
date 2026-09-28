@@ -7,6 +7,7 @@ import { MapPin, ArrowRight, Loader2, Navigation } from "lucide-react";
 import { PROVINCES, getProvinceById } from "@/lib/data/cr-geography";
 import { CR_PROVINCE_PATHS, CR_MAP_VIEWBOX } from "@/lib/data/cr-map-paths";
 import type { ZoneCoverage } from "@/lib/queries/professionals";
+import { rutaDeBusqueda } from "@/lib/buscar-url";
 
 const leadIconClass = "grid shrink-0 place-items-center rounded-xl border border-[#ccecf8] bg-[#EAF7FD] text-[#0089bb] shadow-[0_8px_20px_-18px_rgba(0,159,217,0.9)]";
 
@@ -37,7 +38,7 @@ export function FindByZone({ coverage }: { coverage: ZoneCoverage }) {
   }
 
   function goToProvince() {
-    router.push(`/buscar?provincia=${activeId}`);
+    router.push(rutaDeBusqueda({ provincia: activeId }));
   }
 
   function useMyLocation() {
@@ -157,7 +158,7 @@ export function FindByZone({ coverage }: { coverage: ZoneCoverage }) {
                     <button
                       key={c.id}
                       type="button"
-                      onClick={() => router.push(`/buscar?provincia=${activeId}&canton=${c.id}`)}
+                      onClick={() => router.push(rutaDeBusqueda({ provincia: activeId, canton: c.id }))}
                       className="group inline-flex items-center gap-1.5 rounded-full border border-[#e5e7eb] bg-white pl-2.5 pr-3.5 py-1.5 text-sm font-medium text-[#374151] hover:border-[#009FD9] hover:bg-[#EBF5FB] hover:text-[#0089bb] transition-colors"
                     >
                       <span className="h-1.5 w-1.5 rounded-full bg-[#009FD9]" />

@@ -21,6 +21,7 @@ import { createClient } from "@/lib/supabase/server";
 import { redactContactEnListado } from "@/lib/contact/redact";
 import { safeGetUser } from "@/lib/supabase/get-user";
 import { recordServerInteraction } from "@/lib/analytics/server-events";
+import { rutaDeBusqueda } from "@/lib/buscar-url";
 
 interface SearchPageProps {
   searchParams: Promise<{
@@ -479,15 +480,13 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
       const valor = params[clave];
       if (typeof valor === "string" && valor) quedan.set(clave, valor);
     }
-    const cadena = quedan.toString();
-    return cadena ? `/buscar?${cadena}` : "/buscar";
+    return rutaDeBusqueda(quedan);
   })();
   const searchReturnParams = new URLSearchParams();
   for (const [key, value] of Object.entries(params)) {
     if (value) searchReturnParams.set(key, value);
   }
-  const searchReturnQuery = searchReturnParams.toString();
-  const searchReturnHref = searchReturnQuery ? `/buscar?${searchReturnQuery}` : "/buscar";
+  const searchReturnHref = rutaDeBusqueda(searchReturnParams);
   // What the growing list sends to the endpoint: the same filters, never a page.
   const infiniteQuery = (() => {
     const search = new URLSearchParams();
@@ -503,8 +502,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   const pageHref = (page: number) => {
     const next = new URLSearchParams(paginationParams);
     if (page > 1) next.set("page", String(page));
-    const query = next.toString();
-    return query ? `/buscar?${query}` : "/buscar";
+    return rutaDeBusqueda(next);
   };
   // A sliding window of pages, like Yelp: as you advance, one page drops off the
   // start and one appears at the end, so the strip never jumps or shows gaps.

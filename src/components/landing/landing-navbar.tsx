@@ -38,6 +38,8 @@ import { repairVisibleText } from "@/lib/text/repair-visible-text";
 import { OfferTagPercentIcon } from "@/components/icons/offer-tag-percent-icon";
 import { useDirectMessageUnread } from "@/hooks/use-direct-message-unread";
 import { CABECERA_TITULO } from "@/components/layout/cabecera";
+import { esRutaDeBusqueda, rutaDeBusqueda } from "@/lib/buscar-url";
+import { useParametrosDeBusqueda } from "@/hooks/use-parametros-de-busqueda";
 
 /* --- La marca (el cuadrito «CR») ---
  *
@@ -110,7 +112,7 @@ function useSlidingWords(words: string[], active: boolean) {
 export function useSwitchLang() {
   const router = useRouter();
   const pathname = usePathname();
-  const currentSearchParams = useSearchParams();
+  const currentSearchParams = useParametrosDeBusqueda();
   const locale = useLocale();
   const [, startTransition] = useTransition();
   const otroIdioma = locale === "en" ? "es" : "en";
@@ -395,7 +397,7 @@ function CategoriesMegaPanel({ onNavigate }: { onNavigate: () => void }) {
   useEffect(() => { queueMicrotask(() => setActive(0)); }, [q]);
 
   function go(id?: string) {
-    if (id) router.push(`/buscar?categoria=${id}`);
+    if (id) router.push(rutaDeBusqueda({ categoria: id }));
     else if (q.trim()) router.push(`/buscar?q=${encodeURIComponent(q.trim())}`);
     else router.push("/buscar");
     setQ("");
@@ -913,12 +915,12 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   const [nativePendingHref, setNativePendingHref] = useState<string | null>(null);
   const locale = useLocale();
   const pathname = usePathname();
-  const currentSearchParams = useSearchParams();
+  const currentSearchParams = useParametrosDeBusqueda();
   // En /buscar el campo de la barra nace YA con lo que dice la dirección. Antes
   // nacía vacío y un efecto lo llenaba tras el primer pintado: se veía el texto
   // de ayuda («Servicio») y un instante después el oficio buscado. El efecto de
   // abajo sigue leyendo la dirección al navegar; aquí solo se adelanta el primer cuadro.
-  const contextoInicial = pathname === "/buscar" ? contextoDeBusquedaDesdeUrl(currentSearchParams, locale) : null;
+  const contextoInicial = esRutaDeBusqueda(pathname) ? contextoDeBusquedaDesdeUrl(currentSearchParams, locale) : null;
   const [searchQuery, setSearchQuery] = useState(contextoInicial?.servicio ?? "");
   const [searchListDominant, setSearchListDominant] = useState(false);
   useCustomCategories();
@@ -1093,7 +1095,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   // bajar. Va DENTRO del renglón (el logotipo se reduce a la marca) para que la
   // barra no crezca a mitad del scroll y empuje la página.
   const buscadorHomeMovilBase = isHomePage && compact && !mobileInline && !rutaSinBuscador && !showMobileNavbarSearch;
-  const showSearchViewToggle = showMobileNavbarSearch && pathname === "/buscar";
+  const showSearchViewToggle = showMobileNavbarSearch && esRutaDeBusqueda(pathname);
 
   // The layout below the navbar is sized by --ccr-native-header-height. Setting it
   // only from the effect above meant the server-rendered page used the 64px default
@@ -1156,14 +1158,14 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
       : null,
     [headerLatitude, headerLongitude],
   );
-  const searchRouteHasContext = pathname === "/buscar" && Boolean(explicitHeaderService || explicitHeaderLocation);
+  const searchRouteHasContext = esRutaDeBusqueda(pathname) && Boolean(explicitHeaderService || explicitHeaderLocation);
   const headerNextServiceLabel = mobileSlidingService.next || headerServiceLabel;
   const headerServiceShouldSlide = !explicitHeaderService && showMobileNavbarSearch && !nativeSearchOpen && !searchQuery.trim() && nativeSearchServices.length > 1;
   const hasSearchService = searchQuery.trim().length > 0 || !!searchCategoryId;
   const hasSearchLocation = navLocation.trim().length > 0 || !!navLocationSel || !!navCurrentCoords;
 
   useEffect(() => {
-    if (pathname !== "/buscar") return;
+    if (!esRutaDeBusqueda(pathname)) return;
     let active = true;
     queueMicrotask(() => {
       if (!active) return;
@@ -1688,7 +1690,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
       has_location: params.has("provincia") || params.has("canton") || params.has("lat") || params.has("lng"),
       source: "navbar",
     });
-    router.push(`/buscar?${params.toString()}`);
+    router.push(rutaDeBusqueda(params));
   }
 
   function handleCompactSearch(e: React.FormEvent) {

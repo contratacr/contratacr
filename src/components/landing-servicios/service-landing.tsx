@@ -14,6 +14,7 @@ import { cldThumb } from "@/lib/cloudinary";
 import { getInitials, proDisplayName } from "@/lib/utils";
 import type { ProfessionalCardData } from "@/components/professionals/professional-card";
 import { DatosEstructurados } from "@/components/seo/datos-estructurados";
+import { rutaDeBusqueda } from "@/lib/buscar-url";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://contratacr.com";
 
@@ -42,7 +43,7 @@ export async function ServiceLanding({ locale, categoryId, provinceId, cantonId 
   const count = list.length;
   const placeName = nombreDeLugar(canton, province);
   const provincesWithSupply = PROVINCES.filter((p) => (supply.byCategoryProvince[supplyKey(categoryId, p.id)] ?? 0) >= MIN_SUPPLY_FOR_LANDING);
-  const buscarHref = `/buscar?categoria=${encodeURIComponent(categoryId)}${province ? `&provincia=${province.id}` : ""}${canton ? `&canton=${canton.id}` : ""}`;
+  const buscarHref = rutaDeBusqueda({ categoria: categoryId, provincia: province?.id, canton: canton?.id });
   // Guía de precios: rangos reales de los servicios publicados en este oficio
   // (todo el país, para que haya datos). Solo tipos con 3 o más precios.
   const fuentePrecios = province ? nationwide : list;

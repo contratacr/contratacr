@@ -6,6 +6,7 @@ import { Loader2, MapPin, RefreshCw } from "lucide-react";
 import { createGoogleMarker, loadGoogleMaps, withConfiguredMapId } from "@/lib/maps/loader";
 import { getProfessionalDisplayName } from "@/lib/display-name";
 import { APP_RESUME_EVENT } from "@/lib/app-events";
+import { filtrosDeRuta, rutaDeBusqueda } from "@/lib/buscar-url";
 
 export interface MapProfessional {
   id: string;
@@ -434,6 +435,9 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
     const fixed = (n: number) => n.toFixed(6);
 
     const sp = new URLSearchParams(window.location.search);
+    // El servicio vive en la ruta bonita, no en el «?»: se rescata antes de rearmar.
+    const enRuta = filtrosDeRuta(window.location.pathname);
+    if (enRuta?.categoria) sp.set("categoria", enRuta.categoria);
     sp.delete("page");
     sp.delete("provincia");
     sp.delete("canton");
@@ -442,7 +446,7 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
     sp.set("e", fixed(ne.lng()));
     sp.set("w", fixed(sw.lng()));
     setAreaSearching(true);
-    router.push(`${window.location.pathname}?${sp.toString()}`);
+    router.push(rutaDeBusqueda(sp));
   }
 
   useEffect(() => {
