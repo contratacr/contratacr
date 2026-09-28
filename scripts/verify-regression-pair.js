@@ -285,7 +285,12 @@ async function verifyPrivateActorIsolation(owners, ignoredOwners = []) {
   assertRows("reviews", reviews, (row) => ignoredProfileIds.has(row.client_id)
     || ignoredProfessionalIds.has(row.professional_id)
     || (profileIds.has(row.client_id) && professionalIds.has(row.professional_id)));
-  const AVISOS_DE_DIFUSION = new Set(["new_job", "new_project"]);
+  // `resena_google` es de difusión igual que los otros dos: el MISMO texto para
+  // todo el mundo —«¿Nos dejas una reseña?»— y un enlace a /resena-google. No
+  // lleva nombre, correo ni nada de nadie. Faltaba en esta lista, así que las
+  // 396 filas de la campaña del 25 de septiembre dejaban la prueba en rojo
+  // todos los días sin que hubiera ninguna fuga que arreglar.
+  const AVISOS_DE_DIFUSION = new Set(["new_job", "new_project", "resena_google"]);
   // Los avisos de DIFUSIÓN llegan a toda una categoría por diseño: publicar un
   // empleo o un proyecto en la prueba le avisa también a los profesionales
   // copiados del espejo de producción, y eso no es una fuga. Su contenido es

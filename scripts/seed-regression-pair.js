@@ -760,6 +760,25 @@ async function main() {
     { id: ids.ticketMessages[1], ticket_id: ids.tickets[1], sender_role: "user", sender_id: s.profile.id, sender_name: sName, body: "Necesito validar el estado resuelto.", created_at: iso(-3) },
   ], { onConflict: "id" }));
 
+  // EL LUGAR SE LIBERA ANTES DE ESCRIBIR. `reviews` tiene un índice único por
+  // (profesional, cliente), pero la siembra resuelve el conflicto por `id`. Si
+  // otra corrida —o una reseña hecha a mano en la prueba— dejó una fila con el
+  // MISMO par y otro id, el upsert no la reconoce, intenta insertar y choca
+  // contra el índice. No es intermitente: mientras esa fila viva, falla
+  // siempre. Por eso se borra lo que ocupe el par y no sea la fila canónica.
+  for (const [profesionalId, clienteId, idCanonico] of [
+    [s.professional.id, c.profile.id, ids.reviews[0]],
+    [c.professional.id, s.profile.id, ids.reviews[1]],
+  ]) {
+    await must(
+      "reviews del par ajenas a la siembra",
+      supabase.from("reviews").delete()
+        .eq("professional_id", profesionalId)
+        .eq("client_id", clienteId)
+        .neq("id", idCanonico),
+    );
+  }
+
   await must("reviews", supabase.from("reviews").upsert([
     { id: ids.reviews[0], professional_id: s.professional.id, client_id: c.profile.id, booking_id: ids.bookings[0], rating: 5, comment: "Excelente instalación y documentación de la red.", job_title: "Instalación de red", client_name_snapshot: cName, client_email_snapshot: "e2e.client@contratacr.test", created_at: iso(-5), created_app_environment: SEED, created_source_host: "test.contratacr.com", created_supabase_project_ref: TEST_PROJECT_REF },
     { id: ids.reviews[1], professional_id: c.professional.id, client_id: s.profile.id, project_id: ids.projects[1], rating: 5, comment: "Propuesta clara y excelente atención durante el proceso.", job_title: "Página de servicios", client_name_snapshot: sName, client_email_snapshot: "e2e.pro@contratacr.test", created_at: iso(-1), created_app_environment: SEED, created_source_host: "test.contratacr.com", created_supabase_project_ref: TEST_PROJECT_REF },
