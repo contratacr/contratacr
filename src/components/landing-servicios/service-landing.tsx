@@ -6,7 +6,7 @@ import { LandingFooter } from "@/components/landing/landing-footer";
 import { VerifiedSeal } from "@/components/ui/verified-seal";
 import { Star, MapPin, ArrowRight } from "lucide-react";
 import { categorySlug, getCategoryLabel } from "@/lib/data/categories";
-import { PROVINCES, getCantonById, getProvinceById } from "@/lib/data/cr-geography";
+import { PROVINCES, getCantonById, getProvinceById, nombreDeLugar } from "@/lib/data/cr-geography";
 import { searchProfessionals } from "@/lib/queries/professionals";
 import { getSupplyCounts, supplyKey, MIN_SUPPLY_FOR_LANDING } from "@/lib/queries/supply";
 import { primaryPricingLabel, formatColones, type PricingType } from "@/lib/pricing";
@@ -40,7 +40,7 @@ export async function ServiceLanding({ locale, categoryId, provinceId, cantonId 
     .sort((a, b) => (Number(b.isVerified) - Number(a.isVerified)) || (b.reviewCount - a.reviewCount) || (b.ratingAvg - a.ratingAvg))
     .slice(0, 6);
   const count = list.length;
-  const placeName = canton && province ? `${canton.name}, ${province.name}` : province?.name ?? "";
+  const placeName = nombreDeLugar(canton, province);
   const provincesWithSupply = PROVINCES.filter((p) => (supply.byCategoryProvince[supplyKey(categoryId, p.id)] ?? 0) >= MIN_SUPPLY_FOR_LANDING);
   const buscarHref = `/buscar?categoria=${encodeURIComponent(categoryId)}${province ? `&provincia=${province.id}` : ""}${canton ? `&canton=${canton.id}` : ""}`;
   // Guía de precios: rangos reales de los servicios publicados en este oficio

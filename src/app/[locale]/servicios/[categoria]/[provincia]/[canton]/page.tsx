@@ -6,7 +6,7 @@ import { getTranslations } from "next-intl/server";
 import { ServiceLanding } from "@/components/landing-servicios/service-landing";
 import { DatosEstructurados } from "@/components/seo/datos-estructurados";
 import { categorySlug, getCategoryIdBySlug, getCategoryLabel } from "@/lib/data/categories";
-import { getCantonBySlugOrId, getProvinceBySlugOrId, type Canton, type Province } from "@/lib/data/cr-geography";
+import { getCantonBySlugOrId, getProvinceBySlugOrId, nombreDeLugar, type Canton, type Province } from "@/lib/data/cr-geography";
 import { getSupplyCounts, supplyKey, MIN_SUPPLY_FOR_LANDING } from "@/lib/queries/supply";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://contratacr.com";
@@ -36,7 +36,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const t = await getTranslations("serviceLanding");
   const supply = await getSupplyCounts();
   const category = getCategoryLabel(id, locale);
-  const place = `${canton.name}, ${province.name}`;
+  const place = nombreDeLugar(canton, province);
   const direccion = categorySlug(id);
   // El conteo se busca por el ID de dos letras, que es como está guardado en
   // la base; la DIRECCIÓN usa el nombre legible.
@@ -89,7 +89,7 @@ function oficioEnCanton(locale: string, categoria: string, province: Province, c
     {
       "@context": "https://schema.org",
       "@type": "Service",
-      name: esEn ? `${nombre} in ${canton.name}, ${province.name}` : `${nombre} en ${canton.name}, ${province.name}`,
+      name: esEn ? `${nombre} in ${nombreDeLugar(canton, province)}` : `${nombre} en ${nombreDeLugar(canton, province)}`,
       serviceType: nombre,
       url,
       // `State` es el tipo que schema.org usa para una división de primer

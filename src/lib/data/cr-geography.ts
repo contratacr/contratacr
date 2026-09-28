@@ -408,6 +408,13 @@ for (const provincia of PROVINCES) {
   }
 }
 
+/** «Grecia, Alajuela» — y solo «Alajuela» cuando el cantón se llama como su provincia. */
+export function nombreDeLugar(canton: { name: string } | undefined, province: { name: string } | undefined): string {
+  if (!province) return canton?.name ?? "";
+  if (!canton || canton.name === province.name) return province.name;
+  return `${canton.name}, ${province.name}`;
+}
+
 /** Resuelve un cantón dentro de su provincia por slug («grecia») o por clave («al-gr»). */
 export function getCantonBySlugOrId(province: Province, valor: string): Canton | undefined {
   const v = String(valor ?? "").trim().toLowerCase();
