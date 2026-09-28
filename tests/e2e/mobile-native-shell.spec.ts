@@ -19,9 +19,9 @@ const LOCALES: LocaleContract[] = [
   {
     locale: "es",
     navLabel: "Navegación de la app",
-    // La cuenta e2e también ofrece servicios: desde 7d551539 quien ofrece ve
-    // «Cotizaciones» en el centro de la barra; el Asistente queda para clientes.
-    navItems: ["Buscar", "Promociones", "Cotizaciones", "Empleos", "Panel"],
+    // La barra es la MISMA para toda cuenta: ya no cambia el centro según quien
+    // mire. Cotizaciones y el Asistente viven en el menú lateral.
+    navItems: ["Buscar", "Promociones", "Proyectos", "Empleos", "Panel"],
     messages: "Mensajes",
     assistant: "Asistente",
     assistantDialog: /Asistente ContrataCR/i,
@@ -33,7 +33,7 @@ const LOCALES: LocaleContract[] = [
   {
     locale: "en",
     navLabel: "App navigation",
-    navItems: ["Search", "Promotions", "Quotes", "Jobs", "Panel"],
+    navItems: ["Search", "Promotions", "Projects", "Jobs", "Panel"],
     messages: "Messages",
     assistant: "Assistant",
     assistantDialog: /ContrataCR Assistant/i,
@@ -461,8 +461,8 @@ test.describe("@mobile native shell contracts", () => {
         });
       });
 
-      // Con cuenta profesional el Asistente no va en la barra de abajo (ahí va
-      // Cotizaciones, 7d551539): se abre desde el menú lateral.
+      // El Asistente ya no vive en la barra para nadie: se abre desde el menú
+      // lateral, que es la única puerta y es igual para toda cuenta.
       await page.getByRole("button", { name: /abrir men[uú]|open menu/i }).click();
       await page.getByRole("button", { name: contract.assistant, exact: true }).locator("visible=true").first().click();
       const dialog = page.getByRole("dialog", { name: contract.assistantDialog });
