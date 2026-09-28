@@ -2,7 +2,7 @@
 import { EMPLEOS_VISIBLE } from "@/lib/feature-flags";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Search, Bot, Briefcase, UserRound, ReceiptText } from "lucide-react";
+import { Search, Briefcase, UserRound, ReceiptText, ClipboardList } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { Link, useRouter, usePathname } from "@/i18n/navigation";
 import { useSearchParams } from "next/navigation";
@@ -62,7 +62,9 @@ export function NativeBottomNav() {
   // Solo una pestaña encendida a la vez: mientras hay una pendiente, manda esa.
   const isActive = useCallback(
     (href: string) => {
-      if (asistenteAbierto) return href === "assistant";
+      // El asistente ya no es una pestaña: mientras cubre la pantalla no hay
+      // ninguna encendida, porque ninguna es el lugar donde estás.
+      if (asistenteAbierto) return false;
       const base = href.split("?")[0] ?? href;
       if (pendingHref) return pendingHref === href;
       if (base === panelHref) {
@@ -249,15 +251,17 @@ export function NativeBottomNav() {
   const etiquetas = {
     buscar: tNav("search"),
     ofertas: tNav("deals"),
-    asistente: tNav("assistant"),
+    proyectos: tNav("projects"),
     empleos: tNav("jobs"),
     cotizaciones: tNav("quotes"),
   };
   // Quien tiene cuenta profesional cotiza desde la barra SIEMPRE, también con el
   // panel puesto en cliente: la barra de abajo es de la cuenta, no del panel que
   // esté abierto, y ver la opción aparecer y desaparecer al cambiar de panel
-  // hacía dudar de dónde estaban las cotizaciones. El Asistente queda para las
-  // cuentas que solo son de cliente (al profesional le vive en el menú lateral).
+  // hacía dudar de dónde estaban las cotizaciones. Las cuentas que solo son de
+  // cliente llevan Proyectos en ese espacio: es una pantalla con trabajo real
+  // publicado, y el Asistente —que es una ayuda, no un destino— pasó al menú
+  // lateral para todos.
   const cotizacionesHref = `${panelHref}?mode=offer&tab=quotes`;
   const conCotizaciones = isPro;
 
@@ -308,16 +312,17 @@ export function NativeBottomNav() {
             {rotulo(etiquetas.cotizaciones)}
           </Link>
         ) : (
-          <button
-            type="button"
-            aria-label={etiquetas.asistente}
-            onClick={() => window.dispatchEvent(new Event("contratacr:open-ai"))}
-            className={itemClass("assistant")}
+          <Link
+            href="/proyectos"
+            prefetch={true}
+            aria-label={etiquetas.proyectos}
+            onClick={(event) => irA(event, "/proyectos")}
+            className={itemClass("/proyectos")}
           >
-            {marca("assistant")}
-            <Bot className="h-5 w-5" strokeWidth={isActive("assistant") ? 2.4 : 2} />
-            {rotulo(etiquetas.asistente)}
-          </button>
+            {marca("/proyectos")}
+            <ClipboardList className="h-5 w-5" strokeWidth={isActive("/proyectos") ? 2.4 : 2} />
+            {rotulo(etiquetas.proyectos)}
+          </Link>
         )}
 
         {EMPLEOS_VISIBLE && (

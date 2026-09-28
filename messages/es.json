@@ -3881,7 +3881,8 @@
     "assistant": "Asistente",
     "jobs": "Empleos",
     "aria": "Navegación de la app",
-    "quotes": "Cotizaciones"
+    "quotes": "Cotizaciones",
+    "projects": "Proyectos"
   },
   "serviceLanding": {
     "title": "{category} en {place}",

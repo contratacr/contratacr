@@ -3004,21 +3004,8 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                         <span className={mobileDrawerTextClass}>{t("offerServices")}</span>
                       </Link>
                     )}
-                    {/* En la app, quien tiene cuenta profesional lleva Cotizaciones
-                        fija en la barra de abajo, así que el Asistente vive aquí.
-                        Las cuentas de solo cliente lo tienen en la barra. */}
-                    {nativeHeaderShell && isPro && (
-                      <button type="button" onClick={() => { setMobileOpen(false); window.dispatchEvent(new Event("contratacr:open-ai")); }} className={mobileDrawerItemClass}>
-                        <DrawerIcon><Bot /></DrawerIcon>
-                        <span className={mobileDrawerTextClass}>{tNav("assistant")}</span>
-                      </button>
-                    )}
                   </>
                 ) : null}
-                {!nativeHeaderShell && (
-                  <>
-                  </>
-                )}
                 {/* El orden lo dice el recorrido, no la jerarquía del código:
                    mi panel, buscar, los tres tableros, y al final las
                    herramientas. Cotizaciones va de último porque es un extra
@@ -3028,37 +3015,57 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                     donde estés y /buscar solo se carga cuando ya hay algo que
                     buscar. Entrar a /buscar «por si acaso» traía todas las
                     fichas y el mapa en cada visita, que es lo caro. */}
-                <button
-                  type="button"
-                  onClick={() => { setMobileOpen(false); openNativeSearch(); }}
-                  className={mobileDrawerItemClass}
-                >
-                  <DrawerIcon><Search /></DrawerIcon>
-                  <span className={mobileDrawerTextClass}>{t("searchProfessionals")}</span>
-                </button>
-                <Link href="/proyectos" onClick={(event) => { setMobileOpen(false); navigateNativeMarketplace(event, "/proyectos"); }} className={claseCajon("/proyectos")}>
-                  <DrawerIcon><ClipboardList /></DrawerIcon>
-                  <span className={mobileDrawerTextClass}>{locale === "en" ? "Projects" : "Proyectos"}</span>
-                </Link>
-                    {/* «Publicar lo que necesito» y «Mis proyectos» salieron del
-                        cajón: las dos viven en el tablero de Proyectos, que es
-                        donde se entiende para qué sirven. Dos puertas a lo mismo
-                        alargaban la lista. */}
-                <Link href="/promociones" onClick={(event) => { setMobileOpen(false); navigateNativeMarketplace(event, "/promociones"); }} className={claseCajon("/promociones")}>
-                  <DrawerIcon><OfferTagPercentIcon className="h-5 w-5" /></DrawerIcon>
-                  <span className={mobileDrawerTextClass}>{locale === "en" ? "Promotions" : "Promociones"}</span>
-                </Link>
-                {EMPLEOS_VISIBLE && (
+                {/* EL CAJÓN NO REPITE LA BARRA.
+                    En la app, Buscar, Promociones y Empleos ya están fijos
+                    abajo: tenerlos también aquí hacía una lista larga donde
+                    cuatro de seis renglones no llevaban a ningún lado nuevo.
+                    En la web móvil no hay barra de abajo, así que ahí el cajón
+                    sigue siendo la única puerta y se muestran todos. */}
+                {!nativeHeaderShell && (
+                  <button
+                    type="button"
+                    onClick={() => { setMobileOpen(false); openNativeSearch(); }}
+                    className={mobileDrawerItemClass}
+                  >
+                    <DrawerIcon><Search /></DrawerIcon>
+                    <span className={mobileDrawerTextClass}>{t("searchProfessionals")}</span>
+                  </button>
+                )}
+                {/* Proyectos solo se repite para el profesional: su barra lleva
+                    Cotizaciones en ese espacio, así que sin esto se quedaría sin
+                    ninguna puerta al tablero. */}
+                {(!nativeHeaderShell || isPro) && (
+                  <Link href="/proyectos" onClick={(event) => { setMobileOpen(false); navigateNativeMarketplace(event, "/proyectos"); }} className={claseCajon("/proyectos")}>
+                    <DrawerIcon><ClipboardList /></DrawerIcon>
+                    <span className={mobileDrawerTextClass}>{locale === "en" ? "Projects" : "Proyectos"}</span>
+                  </Link>
+                )}
+                {!nativeHeaderShell && (
+                  <Link href="/promociones" onClick={(event) => { setMobileOpen(false); navigateNativeMarketplace(event, "/promociones"); }} className={claseCajon("/promociones")}>
+                    <DrawerIcon><OfferTagPercentIcon className="h-5 w-5" /></DrawerIcon>
+                    <span className={mobileDrawerTextClass}>{locale === "en" ? "Promotions" : "Promociones"}</span>
+                  </Link>
+                )}
+                {EMPLEOS_VISIBLE && !nativeHeaderShell && (
                   <Link href="/empleos" onClick={(event) => { setMobileOpen(false); navigateNativeMarketplace(event, "/empleos"); }} className={claseCajon("/empleos")}>
                     <DrawerIcon><Briefcase /></DrawerIcon>
                     <span className={mobileDrawerTextClass}>{locale === "en" ? "Jobs" : "Empleos"}</span>
                   </Link>
                 )}
+                {/* El Asistente es lo único que el cajón aporta de nuevo en la
+                    app: una ayuda que se abre encima y se cierra, no un destino.
+                    Va para todos, con sesión o sin ella. */}
+                {nativeHeaderShell && (
+                  <button type="button" onClick={() => { setMobileOpen(false); window.dispatchEvent(new Event("contratacr:open-ai")); }} className={mobileDrawerItemClass}>
+                    <DrawerIcon><Bot /></DrawerIcon>
+                    <span className={mobileDrawerTextClass}>{tNav("assistant")}</span>
+                  </button>
+                )}
                 <Link href="/servicios" onClick={() => setMobileOpen(false)} className={claseCajon("/servicios")}>
                   <DrawerIcon><Wrench /></DrawerIcon>
                   <span className={mobileDrawerTextClass}>{t("categories")}</span>
                 </Link>
-                    {isPro && (
+                    {isPro && !nativeHeaderShell && (
                       <Link href="/dashboard/profesional?tab=quotes" onClick={() => setMobileOpen(false)} className={claseCajon("/dashboard/profesional?tab=quotes")}>
                         <DrawerIcon><FileText /></DrawerIcon>
                         <span className={mobileDrawerTextClass}>{tNav("quotes")}</span>
