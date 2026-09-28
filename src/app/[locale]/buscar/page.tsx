@@ -99,7 +99,9 @@ export async function generateMetadata({ searchParams }: { searchParams: Promise
   // Google se gasta ahí en vez de en los perfiles, y ninguna de esas
   // direcciones aporta nada nuevo. Solo oficio y provincia tienen página propia
   // —/servicios/[oficio]/[provincia]— y ahí apunta la canónica de abajo.
-  const filtrosQueNoSeIndexan = ["aseguradora", "idioma", "precio", "unidadPrecio", "modalidad", "lat", "lng", "n", "s", "e", "w", "q", "canton", "sortBy"];
+  // El cantón ya tiene página propia (/servicios/<oficio>/<provincia>/<cantón>),
+  // así que dejó de ser un filtro sin dirección.
+  const filtrosQueNoSeIndexan = ["aseguradora", "idioma", "precio", "unidadPrecio", "modalidad", "lat", "lng", "n", "s", "e", "w", "q", "sortBy"];
   const tieneFiltrosFinos = filtrosQueNoSeIndexan.some((clave) => (params[clave] ?? "").toString().trim().length > 0);
   const indexable = !!categoria && getAllCategories().some((c) => c.id === categoria) && !tieneFiltrosFinos;
 
@@ -128,7 +130,7 @@ export async function generateMetadata({ searchParams }: { searchParams: Promise
   // con el servicio en guiones y la provincia por su nombre. Con la llave de la
   // base («aire_acondicionado», «sj») apuntaba a una dirección que responde 308,
   // y un canónico que redirige es un canónico que Google descarta.
-  return { ...compartir, alternates: { canonical: `/${locale}/servicios/${categorySlug(categoria)}${provincia ? `/${provincia.slug}` : ""}` } };
+  return { ...compartir, alternates: { canonical: `/${locale}/servicios/${categorySlug(categoria)}${provincia ? `/${provincia.slug}` : ""}${provincia && canton?.slug ? `/${canton.slug}` : ""}` } };
 }
 
 export default async function SearchPage({ searchParams }: SearchPageProps) {

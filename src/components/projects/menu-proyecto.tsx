@@ -7,6 +7,7 @@ import { MenuFicha } from "@/components/ui/menu-ficha";
 import { CaraCompartir, useCompartir } from "@/components/ui/boton-compartir";
 import { useGuardado } from "@/components/saved/save-item-button";
 import { ReportProfileModal } from "@/components/professionals/report-profile-modal";
+import { tramoFicha } from "@/lib/marketplace-url";
 
 /**
  * El "..." de la ficha de un proyecto: guardar y compartir. Las dos son
@@ -47,9 +48,12 @@ export function MenuProyecto({
     userId: guardar?.userId ?? null,
     loginRedirect: `/proyectos/${proyectoId}`,
   });
+  // Se comparte el enlace que se lee —título y 8 caracteres—, no el id de 36:
+  // es el mismo trato que promociones y empleos. El largo sigue abriendo igual.
+  const tramo = tramoFicha(titulo, proyectoId);
   const enlace = typeof window === "undefined"
-    ? `/${locale}/proyectos/${proyectoId}`
-    : `${window.location.origin}/${locale}/proyectos/${proyectoId}`;
+    ? `/${locale}/proyectos/${tramo}`
+    : `${window.location.origin}/${locale}/proyectos/${tramo}`;
 
   // Como LinkedIn: con el DEDO, la hoja del sistema —WhatsApp, Mensajes,
   // AirDrop—; con el RATÓN, copiar el enlace y avisarlo. Lo decide `compartir`,

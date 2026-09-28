@@ -4281,5 +4281,12 @@
     "si": "Yes, leave a review",
     "aunNo": "Not yet",
     "no": "No"
+  },
+  "tarjetaSocial": {
+    "pie": "Offer and find services in Costa Rica.",
+    "proyecto": "Project",
+    "promocion": "Promotion",
+    "empleo": "Job",
+    "proyectoSinTitulo": "A client is looking for a professional"
   }
 }

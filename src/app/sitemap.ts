@@ -3,6 +3,8 @@ import { categorySlug, getAllCategories } from "@/lib/data/categories";
 import { PROVINCES } from "@/lib/data/cr-geography";
 import { getSupplyCounts, supplyKey, MIN_SUPPLY_FOR_LANDING } from "@/lib/queries/supply";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { tramoFicha } from "@/lib/marketplace-url";
+import { cargarProyectosPublicos } from "@/lib/queries/proyectos-publicos";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://contratacr.com";
 // El sitio es bilingüe con hreflang: el mapa tiene que decir las dos direcciones
@@ -80,17 +82,30 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const supabase = createAdminClient();
     const hoy = new Date().toISOString().slice(0, 10);
     const [{ data: empleos }, { data: ofertas }] = await Promise.all([
-      supabase.from("job_posts").select("id, updated_at").eq("status", "published").limit(2000),
-      supabase.from("professional_offers").select("id, updated_at, valid_until").eq("status", "published").or(`valid_until.is.null,valid_until.gte.${hoy}`).limit(2000),
+      supabase.from("job_posts").select("id, title, updated_at").eq("status", "published").limit(2000),
+      supabase.from("professional_offers").select("id, title, updated_at, valid_until").eq("status", "published").or(`valid_until.is.null,valid_until.gte.${hoy}`).limit(2000),
     ]);
-    for (const row of (empleos ?? []) as { id: string; updated_at?: string | null }[]) {
-      for (const l of IDIOMAS) out.push({ url: `${APP_URL}/${l}/empleos/${row.id}`, lastModified: row.updated_at ? new Date(row.updated_at) : ultimoCambio, changeFrequency: "weekly", priority: 0.7 });
+    // El sitemap publica el MISMO enlace que el canonical y el botón de
+    // compartir: título + 8 caracteres. Publicaba el UUID mientras el resto del
+    // app repartía la forma corta, y Google veía dos direcciones para lo mismo.
+    for (const row of (empleos ?? []) as { id: string; title?: string | null; updated_at?: string | null }[]) {
+      for (const l of IDIOMAS) out.push({ url: `${APP_URL}/${l}/empleos/${tramoFicha(row.title ?? "", row.id)}`, lastModified: row.updated_at ? new Date(row.updated_at) : ultimoCambio, changeFrequency: "weekly", priority: 0.7 });
     }
-    for (const row of (ofertas ?? []) as { id: string; updated_at?: string | null }[]) {
-      for (const l of IDIOMAS) out.push({ url: `${APP_URL}/${l}/promociones/${row.id}`, lastModified: row.updated_at ? new Date(row.updated_at) : ultimoCambio, changeFrequency: "weekly", priority: 0.6 });
+    for (const row of (ofertas ?? []) as { id: string; title?: string | null; updated_at?: string | null }[]) {
+      for (const l of IDIOMAS) out.push({ url: `${APP_URL}/${l}/promociones/${tramoFicha(row.title ?? "", row.id)}`, lastModified: row.updated_at ? new Date(row.updated_at) : ultimoCambio, changeFrequency: "weekly", priority: 0.6 });
     }
   } catch (err) {
     console.error("[sitemap] empleos/ofertas:", err);
+  }
+  // Los proyectos abiertos también son páginas públicas con título propio; no
+  // estaban en el sitemap.
+  try {
+    const proyectos = await cargarProyectosPublicos(2000);
+    for (const proyecto of proyectos) {
+      for (const l of IDIOMAS) out.push({ url: `${APP_URL}/${l}/proyectos/${tramoFicha(proyecto.title ?? "", proyecto.id)}`, lastModified: proyecto.created_at ? new Date(proyecto.created_at) : ultimoCambio, changeFrequency: "weekly", priority: 0.6 });
+    }
+  } catch (err) {
+    console.error("[sitemap] proyectos:", err);
   }
   return out;
 }

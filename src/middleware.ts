@@ -95,8 +95,8 @@ export async function middleware(request: NextRequest) {
   // /e/… (empleo) y /c/… (cotización). Se REESCRIBEN, no se redirigen: la
   // dirección se queda corta en la barra, que es de lo que se trata. La forma
   // larga de siempre sigue abriendo lo mismo.
-  const FICHAS: Record<string, string> = { o: "promociones", e: "empleos", c: "cotizacion" };
-  const fichaCorta = /^\/([oec])\/([a-z0-9][a-z0-9-]{3,80})$/i.exec(pathname);
+  const FICHAS: Record<string, string> = { o: "promociones", e: "empleos", c: "cotizacion", p: "proyectos" };
+  const fichaCorta = /^\/([oecp])\/([a-z0-9][a-z0-9-]{3,80})$/i.exec(pathname);
   if (fichaCorta) {
     const locale = idiomaPreferido();
     const destino = new URL(`/${locale}/${FICHAS[fichaCorta[1].toLowerCase()]}/${fichaCorta[2].toLowerCase()}`, request.url);

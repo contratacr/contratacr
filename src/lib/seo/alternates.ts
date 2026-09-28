@@ -29,16 +29,24 @@ export function metadatosDePantalla({
   ruta,
   titulo,
   descripcion,
+  tarjetaPropia = false,
 }: {
   locale: string;
   ruta: string;
   titulo: string;
   descripcion: string;
+  /**
+   * La pantalla dibuja su propia tarjeta (tiene `opengraph-image.tsx` al
+   * lado). Si aquí se pusiera la genérica, ganaría la genérica: `openGraph`
+   * explícito manda sobre el archivo. Con esto se deja el hueco para que Next
+   * enchufe la de la pantalla.
+   */
+  tarjetaPropia?: boolean;
 }): Metadata {
   const alternates = alternativasDeIdioma(locale, ruta);
   const url = `/${locale}${ruta === "/" ? "" : ruta}`;
   // Con su imagen: estos dos objetos REEMPLAZAN a los del layout, no se mezclan.
-  const social = imagenSocial(locale);
+  const social = tarjetaPropia ? { openGraph: {}, twitter: { card: "summary_large_image" as const } } : imagenSocial(locale);
   return {
     title: titulo,
     description: descripcion,

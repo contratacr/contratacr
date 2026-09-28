@@ -20,6 +20,6 @@ export const RUTAS_DEL_SITIO = new Set([
   // enlaces cortos de campañas y archivos servidos desde la raíz
   "ig", "tt", "fb", "wa", "pro",
   // enlaces cortos de ficha: /o/<oferta>, /e/<empleo>, /c/<cotización>
-  "o", "e", "c",
+  "o", "e", "c", "p",
   "sitemap.xml", "robots.txt", "favicon.ico", "manifest.json",
 ]);

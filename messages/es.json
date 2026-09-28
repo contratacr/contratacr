@@ -4281,5 +4281,12 @@
     "si": "Sí, dejar una reseña",
     "aunNo": "Aún no",
     "no": "No"
+  },
+  "tarjetaSocial": {
+    "pie": "Ofrece y encuentra servicios en Costa Rica.",
+    "proyecto": "Proyecto",
+    "promocion": "Promoción",
+    "empleo": "Empleo",
+    "proyectoSinTitulo": "Un cliente busca profesional"
   }
 }

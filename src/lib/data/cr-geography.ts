@@ -19,6 +19,8 @@ export type Canton = {
   id: string;
   name: string;
   provinceId: string;
+  /** «Vásquez de Coronado» → «vasquez-de-coronado»; lo que va en la dirección. */
+  slug?: string;
 };
 
 export const PROVINCES: Province[] = [
@@ -380,4 +382,35 @@ export function matchProvinceCanton(
     : undefined;
 
   return { provinceId: province.id, cantonId: canton?.id };
+}
+
+// EL CANTÓN EN LA DIRECCIÓN POR SU NOMBRE, NO POR SU CLAVE. La búsqueda se
+// compartía como `?provincia=al&canton=al-gr`: claves internas de la base a la
+// vista, que en un WhatsApp se leen como un enlace de máquina. Con el nombre
+// —`/servicios/electricistas/alajuela/grecia`— se lee y se entiende. El slug
+// se deriva del nombre al cargar el módulo (nada que mantener a mano) y es
+// único dentro de su provincia, que es el único ámbito en que se resuelve.
+function slugDeNombre(nombre: string): string {
+  return nombre
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+for (const provincia of PROVINCES) {
+  const vistos = new Set<string>();
+  for (const canton of provincia.cantons) {
+    let slug = slugDeNombre(canton.name);
+    if (vistos.has(slug)) slug = `${slug}-${canton.id.split("-")[1] ?? ""}`;
+    vistos.add(slug);
+    canton.slug = slug;
+  }
+}
+
+/** Resuelve un cantón dentro de su provincia por slug («grecia») o por clave («al-gr»). */
+export function getCantonBySlugOrId(province: Province, valor: string): Canton | undefined {
+  const v = String(valor ?? "").trim().toLowerCase();
+  if (!v) return undefined;
+  return province.cantons.find((c) => c.slug === v || c.id === v);
 }

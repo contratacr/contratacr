@@ -6,7 +6,7 @@ import { LandingFooter } from "@/components/landing/landing-footer";
 import { VerifiedSeal } from "@/components/ui/verified-seal";
 import { Star, MapPin, ArrowRight } from "lucide-react";
 import { categorySlug, getCategoryLabel } from "@/lib/data/categories";
-import { PROVINCES, getProvinceById } from "@/lib/data/cr-geography";
+import { PROVINCES, getCantonById, getProvinceById } from "@/lib/data/cr-geography";
 import { searchProfessionals } from "@/lib/queries/professionals";
 import { getSupplyCounts, supplyKey, MIN_SUPPLY_FOR_LANDING } from "@/lib/queries/supply";
 import { primaryPricingLabel, formatColones, type PricingType } from "@/lib/pricing";
@@ -22,13 +22,17 @@ const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://contratacr.com";
  * pantalla del tráfico pagado y la página que Google indexa: liviana, sin mapa
  * ni filtros, con pocos profesionales muy calificados y una sola acción.
  */
-export async function ServiceLanding({ locale, categoryId, provinceId }: { locale: string; categoryId: string; provinceId?: string }) {
+// El cantón es el tercer nivel de la dirección: /servicios/<oficio>/<provincia>/<cantón>.
+// Nació para que una búsqueda por cantón tenga un enlace que se lea al
+// compartirla, en vez de `?provincia=al&canton=al-gr`.
+export async function ServiceLanding({ locale, categoryId, provinceId, cantonId }: { locale: string; categoryId: string; provinceId?: string; cantonId?: string }) {
   const t = await getTranslations("serviceLanding");
   const category = getCategoryLabel(categoryId, locale);
   const province = provinceId ? getProvinceById(provinceId) : undefined;
+  const canton = province && cantonId ? getCantonById(cantonId) : undefined;
   const supply = await getSupplyCounts();
   const [results, nationwide] = await Promise.all([
-    searchProfessionals({ categoryId, provinceId: province?.id, sortBy: "rating" }),
+    searchProfessionals({ categoryId, provinceId: province?.id, cantonId: canton?.id, sortBy: "rating" }),
     province ? searchProfessionals({ categoryId, sortBy: "rating" }) : Promise.resolve<ProfessionalCardData[]>([]),
   ]);
   const list = province && results.length < MIN_SUPPLY_FOR_LANDING ? nationwide : results;
@@ -36,9 +40,9 @@ export async function ServiceLanding({ locale, categoryId, provinceId }: { local
     .sort((a, b) => (Number(b.isVerified) - Number(a.isVerified)) || (b.reviewCount - a.reviewCount) || (b.ratingAvg - a.ratingAvg))
     .slice(0, 6);
   const count = list.length;
-  const placeName = province?.name ?? "";
+  const placeName = canton && province ? `${canton.name}, ${province.name}` : province?.name ?? "";
   const provincesWithSupply = PROVINCES.filter((p) => (supply.byCategoryProvince[supplyKey(categoryId, p.id)] ?? 0) >= MIN_SUPPLY_FOR_LANDING);
-  const buscarHref = `/buscar?categoria=${encodeURIComponent(categoryId)}${province ? `&provincia=${province.id}` : ""}`;
+  const buscarHref = `/buscar?categoria=${encodeURIComponent(categoryId)}${province ? `&provincia=${province.id}` : ""}${canton ? `&canton=${canton.id}` : ""}`;
   // Guía de precios: rangos reales de los servicios publicados en este oficio
   // (todo el país, para que haya datos). Solo tipos con 3 o más precios.
   const fuentePrecios = province ? nationwide : list;

@@ -47,6 +47,10 @@ export function enlaceEmpleo(job: { id: string }, baseUrl?: string): string {
   return `${base(baseUrl)}/e/${codigoCorto(job.id)}`;
 }
 
+/** contratacr.com/p/1b93475f — el proyecto era el único sin enlace corto. */
+export function enlaceProyecto(project: { id: string }, baseUrl?: string): string {
+  return `${base(baseUrl)}/p/${codigoCorto(project.id)}`;
+}
 /** Los 8 primeros del id: es lo que hace único al enlace. */
 export function codigoCorto(id: string): string {
   return String(id ?? "").split("-")[0]?.toLowerCase() ?? "";

@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, ChevronRight } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { metadatosDePantalla } from "@/lib/seo/alternates";
+import { tramoFicha } from "@/lib/marketplace-url";
 import { OfferImageGallery } from "@/components/offers/offer-image-gallery";
 import { OfferDetailNavbarSearch } from "@/components/offers/offer-detail-navbar-search";
 import { OfferContactActions } from "@/components/offers/offers-board";
@@ -105,7 +106,10 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const titulo = `${fila.title ?? (en ? "Promotion" : "Promoción")} | ContrataCR`;
   const cuerpo = String(fila.description ?? "").replace(/\s+/g, " ").trim();
   const descripcion = cuerpo ? cuerpo.slice(0, 155) : (en ? "Promotion from a verified professional in Costa Rica." : "Promoción de un profesional verificado en Costa Rica.");
-  return metadatosDePantalla({ locale: idioma, ruta: `/promociones/${clave.id}`, titulo, descripcion });
+  // Con el enlace corto `clave.id` venía vacío y la canónica salía
+  // «/promociones/undefined». Se arma con el id de la fila encontrada, en la
+  // forma que se lee y se comparte (título + 8).
+  return metadatosDePantalla({ locale: idioma, ruta: `/promociones/${tramoFicha(fila.title ?? "", (data as { id: string }).id)}`, titulo, descripcion, tarjetaPropia: true });
 }
 
 export default async function OfferDetailPage({ params, searchParams }: { params: Promise<{ id: string; locale: string }>; searchParams?: Promise<{ from?: string }> }) {
