@@ -4265,5 +4265,21 @@
     "cuerpo": "ContrataCR is a small Costa Rican project. A Google review helps more people find us when they look for a professional.",
     "boton": "Leave a Google review",
     "nota": "It takes less than a minute. It opens in Google."
+  },
+  "seguimientoContacto": {
+    "aria": "Service follow-up",
+    "cerrar": "Close for now",
+    "metodo": {
+      "whatsapp": "by WhatsApp",
+      "phone": "by phone",
+      "email": "by email"
+    },
+    "titulo": "You contacted {nombre} {metodo}",
+    "pregunta": "Did you end up hiring them?",
+    "pendientes": "1 of {n} pending confirmations",
+    "ayuda": "Your experience can help other people choose.",
+    "si": "Yes, leave a review",
+    "aunNo": "Not yet",
+    "no": "No"
   }
 }

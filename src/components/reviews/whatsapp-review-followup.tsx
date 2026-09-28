@@ -3,9 +3,9 @@
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { alCambiarElTurno, hayAlguienEnTurno } from "@/lib/turno-en-pantalla";
 import { Clock3, Star, X } from "lucide-react";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
+import { usePathname } from "next/navigation";
 import { useAuth } from "@/hooks/use-auth";
-import { WHATSAPP_CONTACT_COOKIE } from "@/lib/contact-followup";
 import { LeaveReviewModal } from "@/components/professionals/leave-review-modal";
 
 type FollowUp = {
@@ -27,8 +27,16 @@ type ReviewTarget = {
 
 export function WhatsAppReviewFollowUp() {
   const locale = useLocale();
-  const isEn = locale === "en";
+  const t = useTranslations("seguimientoContacto");
   const { user, loading: authLoading } = useAuth();
+  // SOLO EN PANTALLAS TRANQUILAS. La tarjeta se montaba en toda ruta y salía
+  // encima de la franja de contactar de la ficha (justo sobre el botón que la
+  // persona iba a tocar), en medio del registro y en los flujos de publicar.
+  // Pedir una reseña es una conversación aparte: va en la portada, en Buscar,
+  // en el panel o en la lista de Mensajes, donde no compite con nada.
+  const pathname = usePathname();
+  const ruta = (pathname ?? "/").replace(/^\/(?:es|en)(?=\/|$)/u, "") || "/";
+  const pantallaTranquila = /^\/(?:buscar|mensajes|dashboard(?:\/[^/]+)?)?\/?$/u.test(ruta);
   const [followUp, setFollowUp] = useState<FollowUp | null>(null);
   const [pendingCount, setPendingCount] = useState(0);
   const [reviewTarget, setReviewTarget] = useState<ReviewTarget | null>(null);
@@ -90,15 +98,18 @@ export function WhatsAppReviewFollowUp() {
   useEffect(() => {
     if (authLoading) return;
     let active = true;
-    // La consulta de seguimiento solo tiene sentido para quien ya contactó a
-    // alguien: existe una marca en la cookie, o hay sesión. Sin este filtro
-    // salía una petición (y dos consultas) en CADA carga de CADA pantalla del
-    // app, también para un visitante que acaba de llegar.
-    const yaContactoAAlguien = userId !== null
-      || (typeof document !== "undefined" && document.cookie.includes(WHATSAPP_CONTACT_COOKIE));
+    if (!pantallaTranquila) return;
+    // Antes se filtraba por «hay sesión o el navegador ve la cookie de
+    // contacto». La cookie es httpOnly: el navegador NUNCA la ve, así que a
+    // quien no tenía sesión no se le preguntaba jamás al cargar. Decide el
+    // servidor, que es quien tiene la cookie; y como ahora solo se consulta en
+    // cuatro pantallas, deja de ser una petición en cada carga de cada ruta.
+    //
+    // Unos segundos de espera, no cero: la tarjeta no debe ser lo primero que
+    // aparece al entrar. Se deja llegar a la pantalla y después se pregunta.
     const initialTimer = window.setTimeout(() => {
-      if (active && yaContactoAAlguien) void checkFollowUp(active);
-    }, 0);
+      if (active) void checkFollowUp(active);
+    }, 4000);
 
     const onWhatsAppContacted = () => {
       window.setTimeout(() => {
@@ -120,7 +131,7 @@ export function WhatsAppReviewFollowUp() {
       window.removeEventListener("contratacr:whatsapp-contacted", onWhatsAppContacted);
       document.removeEventListener("visibilitychange", onVisibilityChange);
     };
-  }, [authLoading, checkFollowUp]);
+  }, [authLoading, checkFollowUp, pantallaTranquila]);
 
   async function handle(action: "hired" | "not_now" | "not_hired") {
     if (!followUp || submitting) return;
@@ -147,28 +158,9 @@ export function WhatsAppReviewFollowUp() {
 
   const service = followUp?.service_name?.trim();
   const method = followUp?.contact_method ?? "whatsapp";
-  const methodLabel = isEn
-    ? method === "phone"
-      ? "by phone"
-      : method === "email"
-        ? "by email"
-        : "by WhatsApp"
-    : method === "phone"
-      ? "por llamada"
-      : method === "email"
-        ? "por correo"
-        : "por WhatsApp";
-  const title = followUp
-    ? isEn
-      ? `You contacted ${followUp.professional_name} ${methodLabel}`
-      : `Contactaste a ${followUp.professional_name} ${methodLabel}`
-    : "";
-  const question = isEn ? "Did you end up hiring them?" : "¿Llegaste a contratarlo?";
-  const pendingLabel = pendingCount > 1
-    ? isEn
-      ? `1 of ${pendingCount} pending confirmations`
-      : `1 de ${pendingCount} confirmaciones pendientes`
-    : "";
+  const title = followUp ? t("titulo", { nombre: followUp.professional_name, metodo: t(`metodo.${method}`) }) : "";
+  const question = t("pregunta");
+  const pendingLabel = pendingCount > 1 ? t("pendientes", { n: pendingCount }) : "";
 
   // La tarjeta flota en el borde inferior. En la app ahí vive la barra de
   // navegación, y la tarjeta le tapaba los toques: quien tocaba «Empleos» le
@@ -219,16 +211,16 @@ export function WhatsAppReviewFollowUp() {
 
   return (
     <>
-      {followUp && !hayVentana && !turnoAjeno && (
+      {followUp && pantallaTranquila && !hayVentana && !turnoAjeno && (
         <section
           role="dialog"
-          aria-label={isEn ? "Service follow-up" : "Seguimiento del servicio"}
+          aria-label={t("aria")}
           // La tarjeta se sienta SOBRE la barra de navegación, no encima de
           // ella: en la app se pintaba justo en el borde inferior con z-145 y
           // se comía los toques de la barra —quien tocaba «Empleos» le
           // respondía la tarjeta—. `--ccr-native-live-bottom-nav-height` vale
           // 0 fuera de la app, así que en la web nada cambia.
-          className="ccr-seguimiento-servicio fixed inset-x-3 bottom-[calc(max(0.75rem,env(safe-area-inset-bottom))+var(--ccr-barra-app,0px))] z-[145] rounded-2xl border border-[#d9e8f2] bg-white p-4 shadow-[0_18px_55px_-18px_rgba(26,39,68,0.38)] sm:inset-x-auto sm:bottom-[calc(1.5rem+var(--ccr-barra-app,0px))] sm:right-6 sm:w-[390px] sm:p-5"
+          className="ccr-seguimiento-servicio ccr-entrada fixed inset-x-3 bottom-[calc(max(0.75rem,env(safe-area-inset-bottom))+var(--ccr-barra-app,0px))] z-[145] rounded-2xl border border-[#d9e8f2] bg-white p-4 shadow-[0_18px_55px_-18px_rgba(26,39,68,0.38)] sm:inset-x-auto sm:bottom-[calc(1.5rem+var(--ccr-barra-app,0px))] sm:right-6 sm:w-[390px] sm:p-5"
           // La medida entra como variable, no como `bottom` a secas: así se
           // conserva el margen distinto de escritorio (`sm:`), que un estilo en
           // línea habría pisado.
@@ -237,19 +229,19 @@ export function WhatsAppReviewFollowUp() {
           <button
             type="button"
             onClick={() => void handle("not_now")}
-            aria-label={isEn ? "Close for now" : "Cerrar por ahora"}
-            className="absolute right-3 top-3 rounded-md p-1 text-[#8a96aa] hover:bg-[#f2f6f9] hover:text-[#1A2744]"
+            aria-label={t("cerrar")}
+            className="absolute right-3 top-3 rounded-md p-1 text-[#8a96aa] hover:bg-[#f2f6f9] hover:text-[#162543]"
           >
             <X className="h-4 w-4" />
           </button>
           <div className="pr-7">
             <div className="min-w-0">
               {pendingLabel && <p className="mb-1 text-[11px] font-bold uppercase tracking-[0.08em] text-[#009FD9]">{pendingLabel}</p>}
-              <p className="text-[15px] font-bold leading-5 text-[#1A2744]">{title}</p>
-              <p className="mt-1 text-sm font-semibold text-[#1A2744]">{question}</p>
+              <p className="text-[15px] font-bold leading-5 text-[#162543]">{title}</p>
+              <p className="mt-1 text-sm font-semibold text-[#162543]">{question}</p>
               {service && <p className="mt-2 inline-flex rounded-full bg-[#eef4f8] px-2.5 py-1 text-xs font-semibold text-[#667085]">{service}</p>}
               <p className="mt-1 text-xs leading-5 text-[#667085]">
-                {isEn ? "Your experience can help other people choose." : "Su experiencia puede ayudar a otras personas a elegir."}
+                {t("ayuda")}
               </p>
             </div>
           </div>
@@ -258,27 +250,27 @@ export function WhatsAppReviewFollowUp() {
               type="button"
               disabled={submitting}
               onClick={() => void handle("hired")}
-              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-[#009FD9] px-4 text-sm font-bold text-white hover:bg-[#0089bb] disabled:opacity-60"
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#009FD9] px-4 text-sm font-bold text-white hover:bg-[#0089bb] disabled:opacity-60"
             >
               <Star className="h-4 w-4" />
-              {isEn ? "Yes, leave a review" : "Sí, dejar una reseña"}
+              {t("si")}
             </button>
             <button
               type="button"
               disabled={submitting}
               onClick={() => void handle("not_now")}
-              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-[#d7e1ea] px-3 text-sm font-semibold text-[#1A2744] hover:bg-[#f7fafc] disabled:opacity-60"
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-[#d7e1ea] px-3 text-sm font-semibold text-[#162543] hover:bg-[#f7fafc] disabled:opacity-60"
             >
               <Clock3 className="h-4 w-4" />
-              {isEn ? "Not yet" : "Aún no"}
+              {t("aunNo")}
             </button>
             <button
               type="button"
               disabled={submitting}
               onClick={() => void handle("not_hired")}
-              className="min-h-11 rounded-xl px-3 text-sm font-semibold text-[#667085] hover:bg-[#f7fafc] hover:text-[#1A2744] disabled:opacity-60"
+              className="min-h-11 rounded-xl px-3 text-sm font-semibold text-[#667085] hover:bg-[#f7fafc] hover:text-[#162543] disabled:opacity-60"
             >
-              {isEn ? "No" : "No"}
+              {t("no")}
             </button>
           </div>
         </section>

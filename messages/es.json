@@ -4265,5 +4265,21 @@
     "cuerpo": "ContrataCR es un proyecto tico y pequeño. Una reseña en Google ayuda a que más personas nos encuentren cuando buscan un profesional.",
     "boton": "Dejar reseña en Google",
     "nota": "Tarda menos de un minuto. Se abre en Google."
+  },
+  "seguimientoContacto": {
+    "aria": "Seguimiento del servicio",
+    "cerrar": "Cerrar por ahora",
+    "metodo": {
+      "whatsapp": "por WhatsApp",
+      "phone": "por llamada",
+      "email": "por correo"
+    },
+    "titulo": "Contactaste a {nombre} {metodo}",
+    "pregunta": "¿Llegaste a contratarlo?",
+    "pendientes": "1 de {n} confirmaciones pendientes",
+    "ayuda": "Tu experiencia puede ayudar a otras personas a elegir.",
+    "si": "Sí, dejar una reseña",
+    "aunNo": "Aún no",
+    "no": "No"
   }
 }
