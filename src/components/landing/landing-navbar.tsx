@@ -3031,10 +3031,9 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                     <span className={mobileDrawerTextClass}>{t("searchProfessionals")}</span>
                   </button>
                 )}
-                {/* Proyectos solo se repite para el profesional: su barra lleva
-                    Cotizaciones en ese espacio, así que sin esto se quedaría sin
-                    ninguna puerta al tablero. */}
-                {(!nativeHeaderShell || isPro) && (
+                {/* Proyectos vive fijo en la barra de abajo de la app. Aquí solo
+                    aparece en la web móvil, donde no hay barra. */}
+                {!nativeHeaderShell && (
                   <Link href="/proyectos" onClick={(event) => { setMobileOpen(false); navigateNativeMarketplace(event, "/proyectos"); }} className={claseCajon("/proyectos")}>
                     <DrawerIcon><ClipboardList /></DrawerIcon>
                     <span className={mobileDrawerTextClass}>{locale === "en" ? "Projects" : "Proyectos"}</span>
@@ -3052,6 +3051,15 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                     <span className={mobileDrawerTextClass}>{locale === "en" ? "Jobs" : "Empleos"}</span>
                   </Link>
                 )}
+                {/* PRIMERO LO QUE SE HACE, DESPUÉS LO QUE AYUDA. Cotizaciones
+                    es trabajo del profesional y va arriba del Asistente, que es
+                    una ayuda que se abre encima y se cierra. */}
+                {isPro && (
+                  <Link href="/dashboard/profesional?tab=quotes" onClick={() => setMobileOpen(false)} className={claseCajon("/dashboard/profesional?tab=quotes")}>
+                    <DrawerIcon><FileText /></DrawerIcon>
+                    <span className={mobileDrawerTextClass}>{tNav("quotes")}</span>
+                  </Link>
+                )}
                 {/* El Asistente es lo único que el cajón aporta de nuevo en la
                     app: una ayuda que se abre encima y se cierra, no un destino.
                     Va para todos, con sesión o sin ella. */}
@@ -3065,12 +3073,6 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                   <DrawerIcon><Wrench /></DrawerIcon>
                   <span className={mobileDrawerTextClass}>{t("categories")}</span>
                 </Link>
-                    {isPro && !nativeHeaderShell && (
-                      <Link href="/dashboard/profesional?tab=quotes" onClick={() => setMobileOpen(false)} className={claseCajon("/dashboard/profesional?tab=quotes")}>
-                        <DrawerIcon><FileText /></DrawerIcon>
-                        <span className={mobileDrawerTextClass}>{tNav("quotes")}</span>
-                      </Link>
-                    )}
                 {user && isAdminUser && (
                   <Link href="/admin" onClick={() => setMobileOpen(false)} className={mobileDrawerItemClass}>
                     <DrawerIcon><Shield /></DrawerIcon>

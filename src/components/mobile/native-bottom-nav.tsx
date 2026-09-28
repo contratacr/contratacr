@@ -2,7 +2,7 @@
 import { EMPLEOS_VISIBLE } from "@/lib/feature-flags";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Search, Briefcase, UserRound, ReceiptText, ClipboardList } from "lucide-react";
+import { Search, Briefcase, UserRound, ClipboardList } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { Link, useRouter, usePathname } from "@/i18n/navigation";
 import { useSearchParams } from "next/navigation";
@@ -67,15 +67,14 @@ export function NativeBottomNav() {
       if (asistenteAbierto) return false;
       const base = href.split("?")[0] ?? href;
       if (pendingHref) return pendingHref === href;
-      if (base === panelHref) {
-        const enPanel = (pathname ?? "").startsWith(panelHref);
-        const esCotizaciones = href.includes("tab=quotes");
-        const pestanaCotizaciones = searchParams.get("tab") === "quotes";
-        return enPanel && (esCotizaciones ? pestanaCotizaciones : !pestanaCotizaciones);
-      }
+      // El panel es UN solo lugar. Esta rama distinguía la pestaña de
+      // Cotizaciones de la del panel porque las dos vivían en la barra; ahora
+      // Cotizaciones está en el menú, así que estar en el panel —en la pestaña
+      // que sea— enciende el panel.
+      if (base === panelHref) return (pathname ?? "").startsWith(panelHref);
       return pathname === base;
     },
-    [asistenteAbierto, pathname, pendingHref, searchParams],
+    [asistenteAbierto, pathname, pendingHref],
   );
 
   const prepare = useCallback(
@@ -253,17 +252,15 @@ export function NativeBottomNav() {
     ofertas: tNav("deals"),
     proyectos: tNav("projects"),
     empleos: tNav("jobs"),
-    cotizaciones: tNav("quotes"),
   };
-  // Quien tiene cuenta profesional cotiza desde la barra SIEMPRE, también con el
-  // panel puesto en cliente: la barra de abajo es de la cuenta, no del panel que
-  // esté abierto, y ver la opción aparecer y desaparecer al cambiar de panel
-  // hacía dudar de dónde estaban las cotizaciones. Las cuentas que solo son de
-  // cliente llevan Proyectos en ese espacio: es una pantalla con trabajo real
-  // publicado, y el Asistente —que es una ayuda, no un destino— pasó al menú
-  // lateral para todos.
-  const cotizacionesHref = `${panelHref}?mode=offer&tab=quotes`;
-  const conCotizaciones = isPro;
+  // LA BARRA ES IGUAL PARA TODOS. Antes el tercer lugar cambiaba según la
+  // cuenta —Cotizaciones al profesional, otra cosa al cliente—, y una barra que
+  // no es la misma para todo el mundo obliga a mirarla antes de tocarla. Ahora
+  // los cinco lugares son fijos.
+  //
+  // Cotizaciones y el Asistente viven en el menú lateral: el primero solo le
+  // sirve al profesional, y el segundo es una ayuda que se abre encima y se
+  // cierra, no un destino. Proyectos sí lo es, y es trabajo real publicado.
 
   return (
     <nav
@@ -299,31 +296,17 @@ export function NativeBottomNav() {
           {rotulo(etiquetas.ofertas)}
         </Link>
 
-        {conCotizaciones ? (
-          <Link
-            href={cotizacionesHref}
-            prefetch={true}
-            aria-label={etiquetas.cotizaciones}
-            onClick={(event) => irA(event, cotizacionesHref)}
-            className={itemClass(cotizacionesHref)}
-          >
-            {marca(cotizacionesHref)}
-            <ReceiptText className="h-5 w-5" strokeWidth={isActive(cotizacionesHref) ? 2.4 : 2} />
-            {rotulo(etiquetas.cotizaciones)}
-          </Link>
-        ) : (
-          <Link
-            href="/proyectos"
-            prefetch={true}
-            aria-label={etiquetas.proyectos}
-            onClick={(event) => irA(event, "/proyectos")}
-            className={itemClass("/proyectos")}
-          >
-            {marca("/proyectos")}
-            <ClipboardList className="h-5 w-5" strokeWidth={isActive("/proyectos") ? 2.4 : 2} />
-            {rotulo(etiquetas.proyectos)}
-          </Link>
-        )}
+        <Link
+          href="/proyectos"
+          prefetch={true}
+          aria-label={etiquetas.proyectos}
+          onClick={(event) => irA(event, "/proyectos")}
+          className={itemClass("/proyectos")}
+        >
+          {marca("/proyectos")}
+          <ClipboardList className="h-5 w-5" strokeWidth={isActive("/proyectos") ? 2.4 : 2} />
+          {rotulo(etiquetas.proyectos)}
+        </Link>
 
         {EMPLEOS_VISIBLE && (
           <Link

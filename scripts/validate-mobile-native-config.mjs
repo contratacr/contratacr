@@ -119,27 +119,21 @@ requireMatch("iOS APNs upload guard", pushTokenManager, /if \(platform === "ios"
 requireMatch("iOS APNs API rejection", pushRegisterRoute, /platform === "ios" && \/\^\[a-f0-9\]\{64\}\$\/i\.test\(token\)[\s\S]*iOS push no esta configurado/);
 requireMatch("FCM sender transport filter", pushSender, /\.eq\("transport", "fcm"\)/);
 requireMatch("Push text encoding repair", pushSender, /repairVisibleText\(value\)/);
-// El tercer lugar de la barra tiene dueño según quién mira: el profesional
-// cotiza desde ahí y el cliente ve Proyectos. El Asistente ya no vive en la
-// barra —se abre encima y se cierra, no es un destino—: vive en el menú
-// lateral para todos. El orden de los otros cuatro no cambia.
+// La barra es la MISMA para todos: cinco lugares fijos, sin ramas por cuenta.
+// El Asistente y Cotizaciones viven en el menú lateral.
 requireMatch(
   "Native bottom navigation order",
   bottomNav,
-  /href="\/buscar"[\s\S]*href="\/promociones"[\s\S]*href=\{cotizacionesHref\}[\s\S]*href="\/proyectos"[\s\S]*href="\/empleos"[\s\S]*href=\{nativePanelHref\}/,
+  /href="\/buscar"[\s\S]*href="\/promociones"[\s\S]*href="\/proyectos"[\s\S]*href="\/empleos"[\s\S]*href=\{nativePanelHref\}/,
 );
-// El Asistente salió de la barra: si alguien lo devuelve sin querer, esto lo
-// dice antes de que llegue a la tienda.
+// Si alguien devuelve el Asistente o Cotizaciones a la barra, esto lo dice
+// antes de que llegue a la tienda.
 if (/contratacr:open-ai/.test(bottomNav)) {
   failures.push("Native bottom navigation still opens the assistant; it belongs in the drawer");
 }
-requireMatch(
-  // La barra es de la CUENTA, no del panel abierto: quien puede ofrecer lleva
-  // Cotizaciones fija, también con el panel puesto en cliente.
-  "Native quotes tab belongs to every professional account",
-  bottomNav,
-  /const conCotizaciones = isPro;/,
-);
+if (/tab=quotes/.test(bottomNav)) {
+  failures.push("Native bottom navigation still links to quotes; they belong in the drawer");
+}
 requireMatch("Native messages unread badge", navbar, /HeaderMessagesLink unreadCount=\{nativeMessageUnread\}/);
 requireMatch("Native messages badge counter", navbar, /unreadCount > 0[\s\S]*unreadCount > 9 \? "9\+" : unreadCount/);
 requireMatch("Native WhatsApp replacement", directChatLauncher, /if \(nativeApp\)[\s\S]*<MessageLauncher/);
