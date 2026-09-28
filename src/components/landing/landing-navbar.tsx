@@ -2065,8 +2065,15 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                   <div className="flex min-w-0 flex-1 items-center gap-2">{mobileInline}</div>
                 )}
 
+                {/* EN UNA PANTALLA CON FLECHA Y TÍTULO, LA CABECERA ES DE ESA
+                    PANTALLA. Mensajes y la campana son atajos de la portada; en
+                    la ficha de un profesional, en soporte o en «mis empleos» no
+                    pintan nada y compiten con el «…» propio de la pantalla. La
+                    web ya lo hacía así (abajo); la rama nativa los pintaba en
+                    toda ruta que no fuera de pantalla completa. Las pantallas
+                    raíz (Mensajes, Notificaciones) conservan lo suyo. */}
                 {nativeHeaderShell ? (
-                  !nativeFullscreenRoute ? (
+                  !nativeFullscreenRoute && !(sectionActive && !sectionRoot) ? (
                     <div className="flex h-10 shrink-0 items-center justify-end gap-1">
                       {!enMensajes && (
                         <HeaderMessagesLink
