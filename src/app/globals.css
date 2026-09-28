@@ -801,6 +801,14 @@ html[data-keyboard-visible] body.ccr-native-app.ccr-native-bottom-nav-visible {
   bottom: var(--ccr-reserva-barra, 0px);
 }
 
+/* Apoyada sobre la barra de navegación, la franja fija ya no toca el borde de
+   la pantalla: el relleno de safe-area + 28px que lleva para ese caso se
+   convertía en una banda vacía de ~60pt entre los botones y la barra. Con la
+   barra debajo basta el aire normal. */
+body.ccr-native-app.ccr-native-bottom-nav-visible:not(.ccr-native-search-route) .ccr-barra-fija.ccr-pie-formulario {
+  padding-bottom: 16px;
+}
+
 html[data-keyboard-visible] body.ccr-native-app.ccr-native-bottom-nav-visible.ccr-native-search-route .ccr-search-bottom-sheet {
   bottom: 0 !important;
   padding-bottom: env(safe-area-inset-bottom) !important;
