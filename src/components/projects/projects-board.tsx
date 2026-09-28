@@ -336,6 +336,22 @@ export function ProjectsBoard({
   // desde el primer momento. Proyectos la traía siempre puesta y de otro gris,
   // así que la misma barra se veía distinta según la sección.
   const { cabeceraRef, conLinea } = useHairlineOnScroll();
+  // Lo escrito también SALE a la dirección, como en Empleos y Promociones: sin
+  // esto una búsqueda de proyectos no se podía compartir ni recargar —la
+  // dirección se quedaba en /proyectos aunque hubiera filtros puestos—. Con un
+  // respiro de 300 ms para no reescribir la barra en cada tecla.
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      const params = new URLSearchParams(window.location.search);
+      const q = query.trim();
+      if (q) params.set("q", q); else params.delete("q");
+      const donde = lugar.trim();
+      if (donde) params.set("location", donde); else params.delete("location");
+      const cadena = params.toString();
+      window.history.replaceState(null, "", `${window.location.pathname}${cadena ? `?${cadena}` : ""}`);
+    }, 300);
+    return () => window.clearTimeout(timer);
+  }, [query, lugar]);
   // La ficha que se ve a la derecha en computadora. Llegando por
   // /proyectos/[id] es esa; si no, la primera de la lista.
   const [elegidoId, setElegidoId] = useState<string | null>(detalle?.id ?? null);
