@@ -421,6 +421,15 @@ async function main() {
     };
   }).filter((row) => row.item_id));
 
+  // Las reseñas del clon se REEMPLAZAN, igual que los horarios y por la misma
+  // razón: `reviews` tiene una llave única por (profesional, cliente) y el clon
+  // se guarda por id. Una reseña copiada en una corrida anterior, con otro id
+  // pero el mismo par, bloqueaba la copia nueva y tumbaba la siembra entera.
+  await must(
+    "reviews advertising reset",
+    admin.from("reviews").delete().or(`professional_id.eq.${PROFESSIONAL_ID},client_id.eq.${user.id}`),
+  );
+
   await upsertRows("reviews", sourceReviews.map((row, index) => {
     const advertisingIsClient = row.client_id === SOURCE_PROFILE_ID;
     return {

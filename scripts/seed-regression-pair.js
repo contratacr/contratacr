@@ -42,6 +42,10 @@ if (projectRef !== TEST_PROJECT_REF && !localRegression) {
 if (!serviceRole) throw new Error("Missing SUPABASE_SERVICE_ROLE_KEY for the test project.");
 
 const supabase = createClient(supabaseUrl, serviceRole, { auth: { persistSession: false } });
+// La contraseña de las cuentas de prueba. El mismo nombre que leen las pruebas,
+// para que no haya dos verdades: si falta, la siembra no la toca y las cuentas
+// se quedan como estaban.
+const CLAVE_DE_REGRESION = process.env.REGRESSION_TEST_PASSWORD || process.env.E2E_TEST_PASSWORD || "";
 const DAY = 24 * 60 * 60 * 1000;
 const now = Date.now();
 const iso = (days = 0) => new Date(now + days * DAY).toISOString();
@@ -300,7 +304,14 @@ async function sembrarActoresDePrueba() {
       updated_at: iso(),
     }).eq("id", actor.profileId));
 
+    // LA SIEMBRA ES DUEÑA DE LA CONTRASEÑA, no solo del perfil. Antes daba por
+    // hecho que la cuenta ya tenía la del secreto, y bastaba con que alguien la
+    // cambiara una vez —depurando a mano, por ejemplo— para que TODAS las
+    // corridas siguientes murieran en «Invalid login credentials», sin ninguna
+    // señal de por qué. Fijarla en cada siembra hace que la cuenta no pueda
+    // quedar desincronizada del secreto.
     await must(`sesión de ${actor.negocio}`, supabase.auth.admin.updateUserById(actor.profileId, {
+      ...(CLAVE_DE_REGRESION ? { password: CLAVE_DE_REGRESION } : {}),
       user_metadata: {
         full_name: actor.nombre,
         onboarding_completed: true,
