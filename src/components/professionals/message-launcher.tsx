@@ -99,6 +99,16 @@ export function MessageLauncher(props: MessageLauncherProps) {
           await onUnreachable();
           return;
         }
+        // Una conversación bloqueada se abre tal cual, sin mandar el texto
+        // escrito ni guardarlo como borrador: el chat dice que está bloqueado y
+        // ahí se decide qué hacer.
+        if (estado && typeof estado.blocked === "string" && estado.blocked) {
+          // Sin `origin` a secas: ese nombre existe como global del navegador
+          // (la URL completa) y compilaba sin quejarse apuntando a lo que no era.
+          const volverA = (window.location.pathname + window.location.search).replace(/^\/(?:es|en)(?=\/|$)/u, "") || "/";
+          router.push(`/mensajes?conversation=${encodeURIComponent(estado.blocked)}&back=${encodeURIComponent(volverA)}`);
+          return;
+        }
       }
       const response = await fetch("/api/direct-chat", {
         method: "POST",

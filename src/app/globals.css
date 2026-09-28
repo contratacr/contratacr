@@ -465,11 +465,18 @@ html.ccr-native-bottom-nav-visible body .ccr-search-bottom-sheet {
     -webkit-overflow-scrolling: touch;
   }
 
-  /* Dentro del main anclado, el pie del formulario NO debe volver a reservar la
-     barra: ese contenedor ya termina encima de ella, y sumar la reserva otra vez
-     dejaba el botón "Guardar cambios" flotando a media pantalla con contenido
-     visible por debajo. */
-  body.ccr-native-app.ccr-native-bottom-nav-visible:not(.ccr-native-search-route) main .ccr-pie-formulario {
+  /* Dentro del main anclado, el pie PEGAJOSO del formulario NO debe volver a
+     reservar la barra: ese contenedor ya termina encima de ella, y sumar la
+     reserva otra vez dejaba el botón "Guardar cambios" flotando a media
+     pantalla con contenido visible por debajo.
+
+     Solo el pegajoso. La franja FIJA (.ccr-barra-fija: la de contactar en la
+     ficha del profesional) se ancla al viewport, no al main, así que para ella
+     la reserva sí hace falta: con bottom:0 quedaba debajo de la barra de
+     navegación y el botón que trajo a la persona no se podía tocar. Es el mismo
+     bug que la regla de .ccr-pie-formulario dice haber arreglado; esta lo
+     había vuelto a meter por la puerta de atrás. */
+  body.ccr-native-app.ccr-native-bottom-nav-visible:not(.ccr-native-search-route) main .ccr-pie-formulario:not(.ccr-barra-fija) {
     bottom: 0;
   }
 

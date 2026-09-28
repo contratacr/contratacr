@@ -186,6 +186,19 @@ export async function GET(req: Request) {
     const { data: professional } = await db.from("professionals").select("profile_id").eq("id", reachable).maybeSingle();
     const profileId = (professional as { profile_id?: string } | null)?.profile_id;
     if (!profileId) return NextResponse.json({ reachable: false });
+    // EL BLOQUEO MANDA ANTES QUE LA SALIDA A WHATSAPP. Si esta persona ya tiene
+    // una conversación bloqueada con el profesional, la respuesta es ESA
+    // conversación, tenga o no la app el otro: el chat se abre mostrando el
+    // bloqueo, que es donde está la explicación y el botón de deshacerlo.
+    // Mandarla a WhatsApp sería esquivar el bloqueo por otra puerta.
+    const { data: bloqueada } = await db.from("direct_conversations")
+      .select("id")
+      .eq("client_id", user.id)
+      .eq("professional_id", reachable)
+      .eq("status", "blocked")
+      .limit(1)
+      .maybeSingle();
+    if (bloqueada) return NextResponse.json({ reachable: true, blocked: (bloqueada as { id: string }).id });
     const fresh = await usersWithFreshPush(db, [profileId]);
     return NextResponse.json({ reachable: fresh.has(profileId) });
   }
