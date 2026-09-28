@@ -379,13 +379,13 @@ export async function POST(req: Request) {
         .eq("status", "blocked")
         .limit(1)
         .maybeSingle();
+      // No se devuelve un error: se devuelve LA CONVERSACIÓN. Un aviso suelto
+      // deja a la persona sin saber qué pasó ni dónde arreglarlo; el chat
+      // abierto muestra el bloqueo en su sitio y, a quien bloqueó, el botón para
+      // deshacerlo. El mensaje que venía escrito no se guarda: bloqueada es
+      // bloqueada hasta que alguien decida lo contrario.
       if (bloqueada) {
-        return NextResponse.json({
-          error: mensajeDeError(req, {
-            es: "Esta conversación está bloqueada. Si fue un error, escribe a soporte@contratacr.com.",
-            en: "This conversation is blocked. If this was a mistake, write to soporte@contratacr.com.",
-          }),
-        }, { status: 403 });
+        return NextResponse.json({ ok: true, conversationId: bloqueada.id, blocked: true });
       }
     }
 

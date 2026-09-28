@@ -28,6 +28,7 @@ type Conversation = {
   booking_id?: string | null; project_id?: string | null; proposal_id?: string | null;
   subject?: string | null; last_message?: string | null; last_message_at?: string | null;
   status?: "open" | "archived" | "blocked";
+  blocked_by?: string | null;
   client_unread_count?: number; professional_unread_count?: number;
   client_profile?: Person | null;
   client_has_app?: boolean;
@@ -327,6 +328,10 @@ export function DirectChatInbox() {
   const [vistaBloqueados, setVistaBloqueados] = useState(false);
   const [bloqueadas, setBloqueadas] = useState<Conversation[]>([]);
   const [desbloqueando, setDesbloqueando] = useState<string | null>(null);
+  // La conversación tal como la devuelve el servidor al abrir el hilo. Hace
+  // falta aparte de la lista porque una bloqueada NO está en la lista —se
+  // esconde a propósito— y aun así se puede abrir desde la ficha o por enlace.
+  const [hiloAbierto, setHiloAbierto] = useState<Conversation | null>(null);
   const [loading, setLoading] = useState(true);
   // "Sin usuario" puede ser una sesión caída o una red que aún no responde;
   // solo lo primero justifica mandar al login.
@@ -433,6 +438,11 @@ export function DirectChatInbox() {
     [conversations, pendingDraft, showArchived],
   );
   const active = useMemo(() => displayedConversations.find((item) => item.id === activeId) ?? null, [activeId, displayedConversations]);
+  // Lo que se sabe del hilo abierto: la lista si lo tiene, o lo que trajo el
+  // servidor si no (una bloqueada nunca está en la lista).
+  const conversacionAbierta = active ?? (hiloAbierto && hiloAbierto.id === activeId ? hiloAbierto : null);
+  const conversacionBloqueada = conversacionAbierta?.status === "blocked";
+  const bloqueadaPorMi = conversacionBloqueada && !!user?.id && conversacionAbierta?.blocked_by === user.id;
 
   const [origenesAbiertos, setOrigenesAbiertos] = useState(false);
   const origenesRef = useRef<HTMLDivElement | null>(null);
@@ -665,6 +675,7 @@ export function DirectChatInbox() {
       const res = await fetchWithSessionRetry(`/api/direct-chat?id=${encodeURIComponent(id)}`, { cache: "no-store" });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || "Error");
+      if (json.conversation) setHiloAbierto(json.conversation as Conversation);
       const rows = (json.messages ?? []) as DirectMessage[];
       // Reuse this session's still-fresh signed attachment URLs: the server
       // mints a new token per load, which defeated the browser cache and
@@ -860,7 +871,7 @@ export function DirectChatInbox() {
       // Sin nada que mostrar, la bandeja se cierra sola: quedarse en una lista
       // vacía obliga a buscar cómo salir.
       if (!quedan.length) setVistaBloqueados(false);
-      await loadConversations(true);
+      await Promise.all([loadConversations(true), activeId === conversationId ? loadThread(conversationId, true) : Promise.resolve()]);
     } finally {
       setDesbloqueando(null);
     }
@@ -1207,7 +1218,9 @@ export function DirectChatInbox() {
       )}
     />
   );
-  const activePerson = active ? personFor(active) : null;
+  // Con `conversacionAbierta` y no con `active`: una bloqueada no está en la
+  // lista y aun así el hilo tiene que saber con quién es.
+  const activePerson = conversacionAbierta ? personFor(conversacionAbierta) : null;
   const activeContext = active ? contextFor(active) : null;
   const detailHref = active ? contextHref(active) : null;
   const conversacionesSinLeer = displayedConversations.filter((item) => {
@@ -1219,7 +1232,7 @@ export function DirectChatInbox() {
   const etiquetaDeOrigen = (tipo: string) =>
     contextFor({ ...(active ?? ({} as Conversation)), context: { type: tipo as "booking" } }).label;
   const hrefDeOrigen = (origen: { bookingId?: string | null; projectId?: string | null }) => {
-    const soyCliente = user?.id === active?.client_id;
+    const soyCliente = user?.id === conversacionAbierta?.client_id;
     if (origen.bookingId) return `/dashboard/profesional?tab=${soyCliente ? "sent_bookings" : "bookings"}&booking=${origen.bookingId}`;
     if (origen.projectId) return `/dashboard/profesional?tab=${soyCliente ? "sent_projects" : "proposals"}&project=${origen.projectId}`;
     return null;
@@ -1234,16 +1247,16 @@ export function DirectChatInbox() {
   const deleteLabel = isEn ? "Delete" : "Eliminar";
   const activePersonName = activePerson?.name || "";
   const otherHasApp = active
-    ? (activePerson?.role === "professional" ? active.professional_has_app : active.client_has_app)
+    ? (activePerson?.role === "professional" ? conversacionAbierta?.professional_has_app : conversacionAbierta?.client_has_app)
     : undefined;
   // Last resort after a full day without an answer from a professional who is
   // not in the app: let the client continue on WhatsApp instead of losing them.
   const whatsappEscape = (() => {
-    if (!active || !user?.id || activePerson?.role !== "professional" || otherHasApp || !active.professional_whatsapp) return null;
+    if (!conversacionAbierta || !user?.id || activePerson?.role !== "professional" || otherHasApp || !conversacionAbierta.professional_whatsapp) return null;
     const last = messages[messages.length - 1];
     if (!last || last.sender_id !== user.id) return null;
     if (Date.now() - new Date(last.created_at).getTime() < 24 * 60 * 60 * 1000) return null;
-    const digits = active.professional_whatsapp.replace(/\D/g, "");
+    const digits = conversacionAbierta.professional_whatsapp.replace(/\D/g, "");
     const number = digits.length === 8 ? `506${digits}` : digits;
     const text = isEn
       ? "Hi, I wrote to you on ContrataCR and wanted to follow up."
@@ -1379,7 +1392,7 @@ export function DirectChatInbox() {
             )}
 
           </div>
-          {nativeApp && <ChatActionButton label={isEn ? "Report and block" : "Reportar y bloquear"} onClick={() => setReportOpen(true)} className="grid h-9 w-9 place-items-center rounded-lg border border-red-100 bg-white text-red-500 shadow-sm transition hover:border-red-200 hover:bg-red-50 hover:text-red-600"><Flag className="h-4 w-4" /></ChatActionButton>}
+          {nativeApp && !conversacionBloqueada && <ChatActionButton label={isEn ? "Report and block" : "Reportar y bloquear"} onClick={() => setReportOpen(true)} className="grid h-9 w-9 place-items-center rounded-lg border border-red-100 bg-white text-red-500 shadow-sm transition hover:border-red-200 hover:bg-red-50 hover:text-red-600"><Flag className="h-4 w-4" /></ChatActionButton>}
           <ChatActionButton label={archiveLabel} onClick={() => void toggleArchiveActive()} className="grid h-9 w-9 place-items-center rounded-lg border border-[#d6e4ed] bg-[#f7fbfd] text-[#526277] shadow-sm transition hover:border-[#9fd8ec] hover:bg-[#eef9fd] hover:text-[#009FD9]">{showArchived ? <ArchiveRestore className="h-4 w-4" /> : <Archive className="h-4 w-4" />}</ChatActionButton>
           {showArchived && (
             <ChatActionButton label={deleteLabel} onClick={() => void deleteArchivedActive()} className="grid h-9 w-9 place-items-center rounded-lg border border-red-100 bg-white text-red-500 shadow-sm transition hover:border-red-200 hover:bg-red-50 hover:text-red-600">
@@ -1587,91 +1600,118 @@ export function DirectChatInbox() {
           </div>
         )}
         {(error || attachmentError) && <p className="border-t border-red-100 bg-red-50 px-4 py-2 text-sm font-semibold text-red-700">{error || attachmentError}</p>}
-        <form onSubmit={submit} className="ccr-direct-chat-composer shrink-0 border-t border-[#e5e7eb] bg-white p-3 pb-[calc(.75rem+env(safe-area-inset-bottom))] sm:p-4">
-          {!!selectedAttachments.length && (
-            <div className="ccr-carril mb-2 flex gap-2 overflow-x-auto pb-1">
-              {selectedAttachments.map((attachment) => (
-                <div key={attachment.id} className="relative flex h-16 min-w-40 max-w-48 items-center gap-2 rounded-xl border border-[#d8e5ee] bg-[#f7fbfd] p-2 pr-8">
-                  {attachment.previewUrl ? (
-                     <button
-                       type="button"
-                       onClick={() => setImagePreview({
-                         name: attachment.file.name,
-                         type: attachment.file.type,
-                         size: attachment.file.size,
-                         url: attachment.previewUrl,
-                       })}
-                       className="h-11 w-11 shrink-0 overflow-hidden rounded-lg"
-                       aria-label={isEn ? `Preview ${attachment.file.name}` : `Vista previa de ${attachment.file.name}`}
-                     >
-                       {/* eslint-disable-next-line @next/next/no-img-element */}
-                       <img src={attachment.previewUrl} alt={attachment.file.name} className="h-full w-full object-cover" />
-                     </button>
-                  ) : (
-                    <span className="grid h-11 w-11 place-items-center rounded-lg bg-[#e8f8ff] text-[#009FD9]"><FileText className="h-5 w-5" /></span>
-                  )}
-                  <span className="min-w-0">
-                    <span className="block truncate text-xs font-extrabold text-[#162543]">{attachment.file.name}</span>
-                    <span className="block text-[10px] font-semibold text-[#6b7a90]">{attachmentLabel(attachment.file.size)}</span>
-                  </span>
-                  <button type="button" onClick={() => removeAttachment(attachment.id)} className="absolute right-1.5 top-1.5 grid h-6 w-6 place-items-center rounded-full bg-white text-[#526277] shadow-sm hover:text-red-600" aria-label={isEn ? "Remove attachment" : "Quitar adjunto"}>
-                    <X className="h-3.5 w-3.5" />
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-          <div className="flex items-end gap-2">
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept={IMAGE_DOC_ACCEPT}
-            multiple
-            disabled={sending || preparingAttachments}
-            className="hidden"
-            onChange={(event) => { void addAttachments(event.currentTarget.files); }}
-          />
-          <button
-            type="button"
-            onClick={() => fileInputRef.current?.click()}
-            disabled={sending || preparingAttachments || selectedAttachments.length >= MAX_ATTACHMENTS}
-            className="grid h-[52px] w-[52px] shrink-0 place-items-center rounded-[18px] border border-[#d8e5ee] bg-[#f7fbfd] text-[#526277] transition hover:border-[#9fd8ec] hover:text-[#009FD9] disabled:opacity-45"
-            aria-label={isEn ? "Attach file" : "Adjuntar archivo"}
-          >
-            <Paperclip className="h-5 w-5" />
-          </button>
-          <textarea
-            ref={(el) => {
-              textareaRef.current = el;
-              resizeMessageTextarea(el);
-            }}
-            rows={1}
-            value={draft}
-            onChange={(e) => {
-              setDraft(e.target.value.slice(0, 2000));
-              resizeMessageTextarea(e.currentTarget);
-              keepComposerVisible();
-            }}
-            onFocus={keepComposerVisible}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                e.currentTarget.form?.requestSubmit();
-              }
-            }}
-            placeholder={isEn ? "Write a message" : "Escribe un mensaje"}
-            className="max-h-36 min-h-[52px] min-w-0 flex-1 resize-none overflow-hidden rounded-[20px] border border-[#d8e5ee] px-4 py-3 text-[15px] leading-6 outline-none transition focus:border-[#009FD9] focus:ring-2 focus:ring-[#009FD9]/10"
-          />
-          <button
-            type="submit"
-            disabled={sending || (!draft.trim() && !selectedAttachments.length)}
-            className="grid h-[52px] w-[52px] shrink-0 place-items-center rounded-[18px] bg-[#009FD9] text-white shadow-[0_8px_18px_-12px_rgba(0,159,217,0.85)] transition hover:bg-[#008fca] disabled:bg-[#d8e4e9] disabled:shadow-none"
-            aria-label={isEn ? "Send" : "Enviar"}
-          >
-            {sending ? <Loader2 className="h-5 w-5 animate-spin" /> : <SendHorizontal className="h-5 w-5" />}
-          </button>
+        {/* UNA CONVERSACIÓN BLOQUEADA SE ABRE, NO SE ESCONDE. Antes tocar
+            «Mensaje» en la ficha de alguien bloqueado daba un error suelto y
+            ninguna pista de qué pasó. Ahora el hilo se abre con sus mensajes,
+            dice que está bloqueado en el lugar del compositor y, a quien
+            bloqueó, le da el botón para deshacerlo. A la otra persona solo le
+            dice que no puede escribir: no le toca decidir. */}
+        {conversacionBloqueada ? (
+          <div className="shrink-0 border-t border-[#e5e7eb] bg-[#fbf3f3] px-4 py-4 pb-[calc(1rem+env(safe-area-inset-bottom))] text-center">
+            <p className="text-sm font-extrabold text-[#8f2f2f]">{isEn ? "This conversation is blocked" : "Esta conversación está bloqueada"}</p>
+            <p className="mt-1 text-xs leading-5 text-[#7a6363]">
+              {bloqueadaPorMi
+                ? (isEn ? "Neither of you can write. Unblocking brings it back to your inbox; the report stays under review." : "Ninguno de los dos puede escribir. Al desbloquear vuelve a tu bandeja; el reporte sigue en revisión.")
+                : (isEn ? "You can't write here. If you think this is a mistake, write to soporte@contratacr.com." : "No puedes escribir aquí. Si crees que es un error, escribe a soporte@contratacr.com.")}
+            </p>
+            {bloqueadaPorMi && (
+              <button
+                type="button"
+                disabled={desbloqueando === activeId}
+                onClick={() => { if (activeId) void desbloquear(activeId); }}
+                className="mt-3 inline-flex min-h-10 items-center justify-center rounded-lg border border-[#d8e4ec] bg-white px-4 text-sm font-extrabold text-[#008fc4] transition hover:bg-[#eef9fd] disabled:opacity-50"
+              >
+                {desbloqueando === activeId ? <Loader2 className="h-4 w-4 animate-spin" /> : tChat("unblock")}
+              </button>
+            )}
           </div>
-        </form>
+        ) : (
+          <form onSubmit={submit} className="ccr-direct-chat-composer shrink-0 border-t border-[#e5e7eb] bg-white p-3 pb-[calc(.75rem+env(safe-area-inset-bottom))] sm:p-4">
+            {!!selectedAttachments.length && (
+              <div className="ccr-carril mb-2 flex gap-2 overflow-x-auto pb-1">
+                {selectedAttachments.map((attachment) => (
+                  <div key={attachment.id} className="relative flex h-16 min-w-40 max-w-48 items-center gap-2 rounded-xl border border-[#d8e5ee] bg-[#f7fbfd] p-2 pr-8">
+                    {attachment.previewUrl ? (
+                       <button
+                         type="button"
+                         onClick={() => setImagePreview({
+                           name: attachment.file.name,
+                           type: attachment.file.type,
+                           size: attachment.file.size,
+                           url: attachment.previewUrl,
+                         })}
+                         className="h-11 w-11 shrink-0 overflow-hidden rounded-lg"
+                         aria-label={isEn ? `Preview ${attachment.file.name}` : `Vista previa de ${attachment.file.name}`}
+                       >
+                         {/* eslint-disable-next-line @next/next/no-img-element */}
+                         <img src={attachment.previewUrl} alt={attachment.file.name} className="h-full w-full object-cover" />
+                       </button>
+                    ) : (
+                      <span className="grid h-11 w-11 place-items-center rounded-lg bg-[#e8f8ff] text-[#009FD9]"><FileText className="h-5 w-5" /></span>
+                    )}
+                    <span className="min-w-0">
+                      <span className="block truncate text-xs font-extrabold text-[#162543]">{attachment.file.name}</span>
+                      <span className="block text-[10px] font-semibold text-[#6b7a90]">{attachmentLabel(attachment.file.size)}</span>
+                    </span>
+                    <button type="button" onClick={() => removeAttachment(attachment.id)} className="absolute right-1.5 top-1.5 grid h-6 w-6 place-items-center rounded-full bg-white text-[#526277] shadow-sm hover:text-red-600" aria-label={isEn ? "Remove attachment" : "Quitar adjunto"}>
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+            <div className="flex items-end gap-2">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept={IMAGE_DOC_ACCEPT}
+              multiple
+              disabled={sending || preparingAttachments}
+              className="hidden"
+              onChange={(event) => { void addAttachments(event.currentTarget.files); }}
+            />
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={sending || preparingAttachments || selectedAttachments.length >= MAX_ATTACHMENTS}
+              className="grid h-[52px] w-[52px] shrink-0 place-items-center rounded-[18px] border border-[#d8e5ee] bg-[#f7fbfd] text-[#526277] transition hover:border-[#9fd8ec] hover:text-[#009FD9] disabled:opacity-45"
+              aria-label={isEn ? "Attach file" : "Adjuntar archivo"}
+            >
+              <Paperclip className="h-5 w-5" />
+            </button>
+            <textarea
+              ref={(el) => {
+                textareaRef.current = el;
+                resizeMessageTextarea(el);
+              }}
+              rows={1}
+              value={draft}
+              onChange={(e) => {
+                setDraft(e.target.value.slice(0, 2000));
+                resizeMessageTextarea(e.currentTarget);
+                keepComposerVisible();
+              }}
+              onFocus={keepComposerVisible}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  e.currentTarget.form?.requestSubmit();
+                }
+              }}
+              placeholder={isEn ? "Write a message" : "Escribe un mensaje"}
+              className="max-h-36 min-h-[52px] min-w-0 flex-1 resize-none overflow-hidden rounded-[20px] border border-[#d8e5ee] px-4 py-3 text-[15px] leading-6 outline-none transition focus:border-[#009FD9] focus:ring-2 focus:ring-[#009FD9]/10"
+            />
+            <button
+              type="submit"
+              disabled={sending || (!draft.trim() && !selectedAttachments.length)}
+              className="grid h-[52px] w-[52px] shrink-0 place-items-center rounded-[18px] bg-[#009FD9] text-white shadow-[0_8px_18px_-12px_rgba(0,159,217,0.85)] transition hover:bg-[#008fca] disabled:bg-[#d8e4e9] disabled:shadow-none"
+              aria-label={isEn ? "Send" : "Enviar"}
+            >
+              {sending ? <Loader2 className="h-5 w-5 animate-spin" /> : <SendHorizontal className="h-5 w-5" />}
+            </button>
+            </div>
+          </form>
+        )}
       </section>
       {nativeApp && reportOpen && typeof document !== "undefined" && createPortal(
         <div className="fixed inset-0 z-[1000] grid place-items-center bg-[#0f172a]/55 p-4" role="dialog" aria-modal="true" aria-labelledby="chat-report-title">
