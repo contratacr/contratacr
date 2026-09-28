@@ -118,8 +118,15 @@ body.ccr-native-app .ccr-app-header {
 .ccr-native-app .ccr-page-route-loading {
   z-index: 100000;
   background: #f4f7fa !important;
-  /* The app shows its loading mark immediately, like any native screen. */
-  animation-delay: 0ms;
+  /* SIN PRISA POR TAPAR LA PANTALLA. Esto ponía `animation-delay: 0ms` para que
+     la app mostrara su carga «como cualquier pantalla nativa», y con eso
+     anulaba el respiro de 250 ms que la web sí tiene. El resultado era lo
+     contrario de nativo: al entrar a una sección se veían TRES pantallas en
+     menos de medio segundo —lienzo gris a pantalla completa, esqueleto del
+     panel, panel—, y eso es justo el parpadeo del que se queja quien usa la
+     app. La mayoría de las navegaciones terminan antes del respiro y ahora no
+     enseñan nada; el lienzo queda para las que de verdad tardan. */
+  animation-delay: 250ms;
 }
 
 /* ── El logo del arranque es UNO SOLO: el del splash nativo ────────────────

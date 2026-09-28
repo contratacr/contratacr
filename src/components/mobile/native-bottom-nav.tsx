@@ -31,9 +31,6 @@ export function NativeBottomNav() {
   const isPro = canOffer(user);
   const { mode } = useMode(isPro);
 
-  const [hydrated, setHydrated] = useState(false);
-  useEffect(() => setHydrated(true), []);
-
   const navRef = useRef<HTMLElement>(null);
   const [pendingHref, setPendingHref] = useState<string | null>(null);
   const [asistenteAbierto, setAsistenteAbierto] = useState(false);
@@ -59,7 +56,14 @@ export function NativeBottomNav() {
 
   // Publicar ocupa la pantalla entera: ahí la barra no va.
   // Pantalla completa o de detalle: sin barra (ver src/lib/rutas-sin-barra.ts).
-  const visible = hydrated && nativeApp && !sinBarraDeAbajo(pathname);
+  // SIN `hydrated`. `useNativeApp` se lee con `useSyncExternalStore`, así que
+  // ya trae el valor bueno en el commit de hidratación; el `hydrated` extra
+  // hacía que el PRIMER commit dijera «no visible» y el efecto de abajo BORRARA
+  // la clase `ccr-native-bottom-nav-visible` que el servidor y el script de
+  // arranque habían puesto. Esa clase gobierna el relleno inferior de `main` y
+  // varias alturas: quitarla y reponerla un cuadro después es un salto de
+  // maquetación en CADA arranque, además de la barra apareciendo de la nada.
+  const visible = nativeApp && !sinBarraDeAbajo(pathname);
 
   // Solo una pestaña encendida a la vez: mientras hay una pendiente, manda esa.
   const isActive = useCallback(

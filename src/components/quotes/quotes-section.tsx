@@ -19,7 +19,7 @@ const DATE_LOCALE: Record<string, string> = { es: "es-CR", en: "en-US" };
  * La sección "Cotizaciones" del profesional: la lista de lo que ha cotizado y
  * el botón para hacer una nueva. Creada, se abre lista para mandar.
  */
-export function QuotesSection({ proName, proSlug, puedeCrear = true }: { proName: string; proSlug?: string | null; puedeCrear?: boolean }) {
+export function QuotesSection({ proName, proSlug, proId, puedeCrear = true }: { proName: string; proSlug?: string | null; proId?: string | null; puedeCrear?: boolean }) {
   const t = useTranslations("quotes");
   const tSub = useTranslations("proPanel.subtitles");
   const locale = useLocale();
@@ -28,7 +28,10 @@ export function QuotesSection({ proName, proSlug, puedeCrear = true }: { proName
   // Cotizaciones arrancaba en cero y enseñaba el esqueleto aunque se hubiera
   // salido un segundo antes.
   const { data: quotesCargadas, loading, setData: setQuotes } = useCachedResource<Quote[]>(
-    `quotes:${proSlug ?? proName}`,
+    // Por el id, que no cambia. `proName` es el nombre para mostrar y llega
+    // vacío o distinto mientras el perfil termina de cargar: con él en la clave,
+    // la caché se invalidaba sola y la sección volvía a enseñar el esqueleto.
+    `quotes:${proId ?? proSlug ?? proName}`,
     async () => {
       const r = await fetch("/api/quotes");
       const d = await r.json();

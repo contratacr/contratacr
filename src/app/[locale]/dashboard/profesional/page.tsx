@@ -755,7 +755,15 @@ export default function DashboardPage() {
   const [supportThreadRef, setSupportThreadRef] = useState<string | null>(null);
   const [proLoadError, setProLoadError] = useState(false);
   const [mobilePanelOpen, setMobilePanelOpen] = useState(false);
-  const [preferMobileMenuDefault, setPreferMobileMenuDefault] = useState(false);
+  // EL VALOR BUENO DESDE EL PRIMER CUADRO. Arrancaba en `false` y un efecto lo
+  // corregía después, así que en el teléfono, al entrar al panel sin `?tab=`,
+  // se pintaba «Mis proyectos» y un cuadro más tarde saltaba al menú: dos
+  // pantallas distintas seguidas. `matchMedia` se puede preguntar durante el
+  // primer render en el navegador; en el servidor no existe y `false` es lo
+  // correcto, que es lo mismo que pinta la web ancha.
+  const [preferMobileMenuDefault, setPreferMobileMenuDefault] = useState(
+    () => typeof window !== "undefined" && !rawRequestedTab && window.matchMedia("(max-width: 1023px)").matches,
+  );
   const contentRef = useRef<HTMLDivElement>(null);
   const headerPhotoInputRef = useRef<HTMLInputElement>(null);
   const headerPhotoMenuRef = useRef<HTMLDivElement>(null);
@@ -2651,6 +2659,7 @@ export default function DashboardPage() {
                           <QuotesSection
                             proName={professionalDisplayName}
                             proSlug={typeof pro?.slug === "string" ? pro.slug : null}
+                            proId={typeof pro?.id === "string" ? pro.id : null}
                             puedeCrear={!!pro?.id}
                           />
                         )}
