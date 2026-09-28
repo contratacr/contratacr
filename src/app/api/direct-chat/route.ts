@@ -14,7 +14,6 @@ function isNativeRequest(req: Request) {
   return /(?:^|;\s*)ccr_platform=native(?:;|$)/.test(req.headers.get("cookie") ?? "");
 }
 import { sendNotificationPush } from "@/lib/push/notify";
-import { brandedEmailDocument, sendBrevoEmail } from "@/lib/email/send";
 import { notifyRecipientOutsideApp, usersWithFreshPush } from "@/lib/direct-chat/outside-app-notify";
 import { drainPushOutbox } from "@/lib/push/worker";
 import { despuesDeResponder } from "@/lib/after-response";
@@ -222,7 +221,26 @@ export async function GET(req: Request) {
     const [enriched] = await enrichConversations(db, [conversation]);
     return NextResponse.json({ conversation: enriched, messages: await signMessageAttachments(db, (messages ?? []) as DirectMessageRow[]) });
   }
-  const archived = searchParams.get("status") === "archived";
+  const estado = searchParams.get("status");
+  const archived = estado === "archived";
+
+  // LA BANDEJA DE BLOQUEADOS ES «LOS QUE YO BLOQUEÉ», no «los bloqueados». Se
+  // filtra por `blocked_by` a propósito: si listara todas las bloqueadas, la
+  // persona bloqueada vería una bandeja nueva apareciendo de la nada y sabría
+  // que la bloquearon. Para ella la conversación simplemente ya no está.
+  if (estado === "blocked") {
+    const { data, error } = await db.from("direct_conversations")
+      .select("*, professionals(id, slug, business_name, whatsapp, profiles(full_name, avatar_url))")
+      .or(`client_id.eq.${user.id},professional_profile_id.eq.${user.id}`)
+      .eq("status", "blocked")
+      .eq("blocked_by", user.id)
+      .order("updated_at", { ascending: false })
+      .limit(50);
+    // Sin la columna todavía en la base, la bandeja sale vacía en vez de romperse.
+    if (error) return NextResponse.json({ conversations: [] });
+    return NextResponse.json({ conversations: await enrichConversations(db, (data ?? []) as ConversationRow[]) });
+  }
+
   const buildConversationsQuery = (filterDeleted: boolean) => {
     let conversationsQuery = db.from("direct_conversations")
       .select("*, professionals(id, slug, business_name, whatsapp, profiles(full_name, avatar_url))")
@@ -346,6 +364,30 @@ export async function POST(req: Request) {
         at: new Date().toISOString(),
       }
       : null;
+
+    // UN BLOQUEO QUE SE PUEDE ESQUIVAR NO ES UN BLOQUEO. La búsqueda de arriba
+    // solo mira las conversaciones `open`, así que la bloqueada no aparecía y el
+    // código seguía de largo hasta crear una NUEVA: tocar «Mensaje» en la ficha
+    // deshacía el bloqueo en silencio, sin que ninguna de las dos partes lo
+    // decidiera. Se corta antes de crear nada, y vale para los dos lados: ni
+    // quien bloqueó ni el bloqueado reabren el canal por su cuenta.
+    if (!conversation) {
+      const { data: bloqueada } = await db.from("direct_conversations")
+        .select("id")
+        .eq("client_id", clientId)
+        .eq("professional_id", resolvedProfessionalId)
+        .eq("status", "blocked")
+        .limit(1)
+        .maybeSingle();
+      if (bloqueada) {
+        return NextResponse.json({
+          error: mensajeDeError(req, {
+            es: "Esta conversación está bloqueada. Si fue un error, escribe a soporte@contratacr.com.",
+            en: "This conversation is blocked. If this was a mistake, write to soporte@contratacr.com.",
+          }),
+        }, { status: 403 });
+      }
+    }
 
     if (!conversation) {
       const base = {
@@ -511,7 +553,31 @@ export async function PATCH(req: Request) {
   if (!user) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   const body = await req.json().catch(() => ({}));
   const conversationId = String(body.conversationId ?? "");
-  const action = body.action === "block_and_report" ? "block_and_report" : null;
+  const action = body.action === "block_and_report" || body.action === "unblock" ? body.action : null;
+
+  // DESBLOQUEAR LO PUEDE HACER SOLO QUIEN BLOQUEÓ. Si pudiera cualquiera de las
+  // dos partes, el botón quedaría en manos de la persona de la que alguien se
+  // quiso proteger y el bloqueo dejaría de servir para lo único que sirve.
+  //
+  // El reporte NO se retira: que dos personas vuelvan a hablar no borra lo que
+  // pasó, y moderación decide aparte.
+  if (conversationId && action === "unblock") {
+    const db = createAdminClient();
+    const { data } = await db.from("direct_conversations").select("*").eq("id", conversationId).maybeSingle();
+    const conversation = data as (ConversationRow & { blocked_by?: string | null }) | null;
+    if (!conversation || !participant(conversation, user.id)) {
+      return NextResponse.json({ error: mensajeDeError(req, { es: "Conversación no encontrada", en: "Conversation not found" }) }, { status: 404 });
+    }
+    if (conversation.status !== "blocked" || conversation.blocked_by !== user.id) {
+      return NextResponse.json({ error: mensajeDeError(req, { es: "Solo quien bloqueó puede desbloquear.", en: "Only whoever blocked can unblock." }) }, { status: 403 });
+    }
+    const { error } = await db.from("direct_conversations")
+      .update({ status: "open", blocked_by: null, updated_at: new Date().toISOString() })
+      .eq("id", conversationId);
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ ok: true, unblocked: true });
+  }
+
   const reportReason = limitTrimmedText(body.reason, 1000);
   if (conversationId && action) {
     const db = createAdminClient();
@@ -531,31 +597,26 @@ export async function PATCH(req: Request) {
     });
     if (reportError) return NextResponse.json({ error: reportError.message }, { status: 500 });
     const now = new Date().toISOString();
-    const { error: blockError } = await db.from("direct_conversations").update({ status: "blocked", updated_at: now }).eq("id", conversationId);
+    // Se guarda QUIÉN bloqueó: es lo que permite ofrecer «Desbloquear» solo a
+    // esa persona. Si la columna todavía no existe en la base, el bloqueo no se
+    // pierde: se reintenta sin ella y esa conversación simplemente no ofrecerá
+    // desbloqueo.
+    let { error: blockError } = await db.from("direct_conversations")
+      .update({ status: "blocked", blocked_by: user.id, updated_at: now })
+      .eq("id", conversationId);
+    if (blockError && /blocked_by/.test(blockError.message)) {
+      ({ error: blockError } = await db.from("direct_conversations")
+        .update({ status: "blocked", updated_at: now })
+        .eq("id", conversationId));
+    }
     if (blockError) return NextResponse.json({ error: blockError.message }, { status: 500 });
-    // The report is already queued for moderation; the email only makes sure a
-    // human sees it inside the 24-hour window. A delivery failure never blocks
-    // the user, who is already protected by the blocked conversation.
-    const escaped = reportReason.replace(/</g, "&lt;").replace(/>/g, "&gt;");
-    // Un aviso: molesta perderlo, pero nadie se queda afuera por eso.
-    void sendBrevoEmail({
-      nivel: "normal",
-      to: "soporte@contratacr.com",
-      replyTo: user.email ?? undefined,
-      subject: `[Reporte] Mensaje directo bloqueado — conversación ${conversationId.slice(0, 8)}`,
-      html: brandedEmailDocument({
-        title: "Reporte desde el chat — ContrataCR",
-        bodyHtml: `<div style="font-size:14px;color:#374151;line-height:1.6;">
-        <h1 style="font-size:20px;line-height:1.3;margin:0 0 12px;color:#162543;">Reporte desde el chat</h1>
-        <p style="margin:0 0 6px;"><strong>Conversación:</strong> ${conversationId}</p>
-        <p style="margin:0 0 6px;"><strong>Reportado por:</strong> ${user.email ?? "—"} (${reportingAsClient ? "cliente" : "profesional"})</p>
-        <p style="margin:0 0 6px;"><strong>Usuario reportado:</strong> ${reportingAsClient ? `profesional ${conversation.professional_id ?? "—"}` : `cliente ${conversation.client_id}`}</p>
-        <p style="margin:12px 0 4px;color:#6b7280;">Motivo:</p>
-        <div style="white-space:pre-wrap;">${escaped}</div>
-        <p style="margin:16px 0 0;color:#6b7280;font-size:12px;">La conversación quedó bloqueada de inmediato para ambas partes. Revisa el reporte en el panel de administración.</p>
-      </div>`,
-      }),
-    }).catch((error) => console.error("[direct-chat] report email failed:", error));
+    // Aquí salía un correo a soporte para que un humano viera el reporte dentro
+    // de la ventana de 24 horas que promete la pantalla. Se quitó porque el
+    // panel ya lo muestra en «Reportes abiertos», dentro de «Necesitan
+    // atención», y esa bandeja se revisa todos los días: el correo repetía el
+    // aviso sin agregar nada. Si algún día deja de revisarse a diario, esto hay
+    // que devolverlo: el panel es pasivo y no busca a nadie.
+
     return NextResponse.json({ ok: true, blocked: true });
   }
   const archived = body.status === "archived" ? true : body.status === "open" ? false : null;

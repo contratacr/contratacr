@@ -3873,7 +3873,11 @@
     "messages": "Mensajes",
     "viewArchived": "Ver archivadas",
     "copy": "Copiar",
-    "copied": "Mensaje copiado"
+    "copied": "Mensaje copiado",
+    "blocked": "Bloqueados",
+    "unblock": "Desbloquear",
+    "blockedEmpty": "No has bloqueado a nadie.",
+    "blockedHint": "Aquí están las conversaciones que bloqueaste. Al desbloquear vuelven a tu bandeja y las dos partes pueden escribirse otra vez. El reporte que enviaste sigue en revisión."
   },
   "bottomNav": {
     "search": "Buscar",

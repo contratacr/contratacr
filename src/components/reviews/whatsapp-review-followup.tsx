@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { alCambiarElTurno, hayAlguienEnTurno } from "@/lib/turno-en-pantalla";
 import { Clock3, Star, X } from "lucide-react";
 import { useLocale } from "next-intl";
 import { useAuth } from "@/hooks/use-auth";
@@ -182,6 +183,17 @@ export function WhatsAppReviewFollowUp() {
   // al asistente y a cualquier ventana. Es un recordatorio pasivo —puede
   // esperar—, así que se esconde mientras haya un diálogo y vuelve al cerrarlo.
   const [hayVentana, setHayVentana] = useState(false);
+
+  // Y también se aparta cuando el aviso de notificaciones PIDIÓ el turno, aunque
+  // todavía no haya pintado nada. Mirar si hay un diálogo abierto no alcanzaba:
+  // esa medición corre cada 500 ms y la hoja de notificaciones tarda 2,5 s en
+  // aparecer, así que al entrar por primera vez esta tarjeta se asomaba medio
+  // segundo y enseguida quedaba tapada. El turno se reserva al instante.
+  // `useSyncExternalStore` y no un efecto con `useState`: esto es suscribirse a
+  // algo de afuera de React, que es exactamente para lo que existe. En el
+  // servidor siempre vale `false` —allá no hay turno que pedir— y así el HTML
+  // pintado coincide con el primer render del navegador.
+  const turnoAjeno = useSyncExternalStore(alCambiarElTurno, hayAlguienEnTurno, () => false);
   useEffect(() => {
     if (!followUp) return;
     const medir = () => {
@@ -207,7 +219,7 @@ export function WhatsAppReviewFollowUp() {
 
   return (
     <>
-      {followUp && !hayVentana && (
+      {followUp && !hayVentana && !turnoAjeno && (
         <section
           role="dialog"
           aria-label={isEn ? "Service follow-up" : "Seguimiento del servicio"}

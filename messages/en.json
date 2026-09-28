@@ -3873,7 +3873,11 @@
     "messages": "Messages",
     "viewArchived": "View archived",
     "copy": "Copy",
-    "copied": "Message copied"
+    "copied": "Message copied",
+    "blocked": "Blocked",
+    "unblock": "Unblock",
+    "blockedEmpty": "You haven't blocked anyone.",
+    "blockedHint": "These are the conversations you blocked. Unblocking brings them back to your inbox and both sides can write again. The report you sent stays under review."
   },
   "bottomNav": {
     "search": "Search",

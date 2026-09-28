@@ -227,12 +227,11 @@ export function NativeBottomNav() {
       // La celda ENTERA es el botón (así fallan menos los toques, como en las
       // barras nativas); al presionar se ilumina completa para que su tamaño
       // real se vea, en vez de responder desde un área invisible.
-      // CELDAS IGUALES, no huecos iguales. La marca de toque ocupa la celda
-      // entera, así que con celdas del ancho de su palabra el destello salía
-      // ancho en «Cotizaciones» y angosto en «Inicio»: la misma acción se veía
-      // de tamaños distintos. Repartir la fila en partes iguales hace que el
-      // destello —y la línea de la opción activa— midan lo mismo en todas.
-      "relative flex min-w-0 flex-1 basis-0 flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1 text-[10px] max-[359px]:px-0.5 font-semibold leading-tight text-[#1A2744] transition-colors active:bg-[#eef5f9] active:text-[#009FD9] min-[360px]:text-[11px]",
+      // La celda mide lo que mide su palabra, con un mínimo de 44px para que
+      // siga siendo un blanco cómodo de tocar aunque el rótulo sea corto. Es lo
+      // que permite que los huecos queden parejos: el sobrante se reparte entre
+      // ellos en vez de quedar encerrado dentro de las celdas cortas.
+      "relative flex min-w-[44px] shrink-0 flex-col items-center justify-center gap-0.5 rounded-xl px-1.5 py-1 text-[10px] max-[359px]:px-1 font-semibold leading-tight text-[#1A2744] transition-colors active:bg-[#eef5f9] active:text-[#009FD9] min-[360px]:text-[11px]",
       isActive(href) && "font-bold text-[#009FD9]",
     );
 
@@ -271,7 +270,14 @@ export function NativeBottomNav() {
         escondida && "pointer-events-none translate-y-full",
       )}
     >
-      <div className="mx-auto flex w-full max-w-[520px] items-stretch px-0">
+      {/* HUECOS IGUALES, no celdas iguales. Con celdas del mismo ancho y
+          palabras de anchos muy distintos —«Promociones» mide 128px y «Panel»
+          52— los espacios entre rótulos salían de 41px en un punto y 87 en
+          otro, y la fila se leía mal repartida aunque cada celda midiera lo
+          mismo. Repartiendo el sobrante entre los cuatro huecos, la distancia
+          entre palabras es la misma en toda la barra, que es lo que el ojo
+          mide. */}
+      <div className="mx-auto flex w-full max-w-[520px] items-stretch justify-between px-1">
         <Link
           href="/buscar"
           prefetch={true}

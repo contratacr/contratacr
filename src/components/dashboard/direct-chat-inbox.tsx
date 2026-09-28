@@ -321,6 +321,12 @@ export function DirectChatInbox() {
   const [query, setQuery] = useState("");
   const [showArchived, setShowArchived] = useState(searchParams.get("chatStatus") === "archived");
   const [archivedCount, setArchivedCount] = useState(0);
+  // Los bloqueados son una bandeja aparte y no un filtro de la principal: son
+  // conversaciones que ya no reciben nada, y mezclarlas con las vivas obligaría
+  // a distinguirlas en cada fila.
+  const [vistaBloqueados, setVistaBloqueados] = useState(false);
+  const [bloqueadas, setBloqueadas] = useState<Conversation[]>([]);
+  const [desbloqueando, setDesbloqueando] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   // "Sin usuario" puede ser una sesión caída o una red que aún no responde;
   // solo lo primero justifica mandar al login.
@@ -608,6 +614,13 @@ export function DirectChatInbox() {
           .then((archivedRes) => archivedRes.ok ? archivedRes.json() : { conversations: [] })
           .then((archivedJson) => setArchivedCount(Array.isArray(archivedJson.conversations) ? archivedJson.conversations.length : 0))
           .catch(() => setArchivedCount(0));
+        // Los bloqueados se piden en el mismo momento y por la misma razón: la
+        // entrada solo existe si hay algo adentro, así que hace falta saberlo
+        // antes de pintar la lista. Quien nunca bloqueó no ve una puerta vacía.
+        fetch("/api/direct-chat?status=blocked", { cache: "no-store" })
+          .then((res) => res.ok ? res.json() : { conversations: [] })
+          .then((json) => setBloqueadas(Array.isArray(json.conversations) ? json.conversations as Conversation[] : []))
+          .catch(() => setBloqueadas([]));
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : isEn ? "Could not load messages." : "No se pudieron cargar los mensajes.");
@@ -825,6 +838,33 @@ export function DirectChatInbox() {
       void supabase.removeChannel(channel);
     };
   }, [activeId, loadConversations, loadThread, user]);
+
+  // Desbloquear devuelve la conversación a la bandeja y deja que las dos partes
+  // se escriban otra vez. El REPORTE no se retira: que dos personas vuelvan a
+  // hablar no borra lo que pasó, y moderación decide por su lado.
+  async function desbloquear(conversationId: string) {
+    setDesbloqueando(conversationId);
+    try {
+      const res = await fetchWithSessionRetry("/api/direct-chat", {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ conversationId, action: "unblock" }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(json.error || (isEn ? "Could not unblock." : "No se pudo desbloquear."));
+        return;
+      }
+      const quedan = bloqueadas.filter((item) => item.id !== conversationId);
+      setBloqueadas(quedan);
+      // Sin nada que mostrar, la bandeja se cierra sola: quedarse en una lista
+      // vacía obliga a buscar cómo salir.
+      if (!quedan.length) setVistaBloqueados(false);
+      await loadConversations(true);
+    } finally {
+      setDesbloqueando(null);
+    }
+  }
 
   function updateArchiveView(nextArchived: boolean, nextConversationId?: string | null) {
     setShowArchived(nextArchived);
@@ -1227,18 +1267,51 @@ export function DirectChatInbox() {
       <aside className={cn("flex min-h-0 flex-col border-r border-[#e5e7eb] bg-white", mobileThread && "hidden lg:block")}>
         <div className={cn("shrink-0 border-b border-[#e5e7eb] p-4", nativeApp && "px-4 pb-3 pt-2")}>
           <div className="flex items-center justify-between gap-3">
-            <h2 className={cn("text-lg font-extrabold text-[#162543]", nativeApp && !showArchived && "sr-only")}>{showArchived ? tChat("archived") : tChat("messages")}</h2>
-            {showArchived && (
-              <button type="button" onClick={() => updateArchiveView(false)} className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-extrabold text-[#008fc4] transition hover:bg-[#eef9fd]">
+            <h2 className={cn("text-lg font-extrabold text-[#162543]", nativeApp && !showArchived && !vistaBloqueados && "sr-only")}>{vistaBloqueados ? tChat("blocked") : showArchived ? tChat("archived") : tChat("messages")}</h2>
+            {(showArchived || vistaBloqueados) && (
+              <button type="button" onClick={() => { if (vistaBloqueados) setVistaBloqueados(false); else updateArchiveView(false); }} className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-extrabold text-[#008fc4] transition hover:bg-[#eef9fd]">
                 <ArrowLeft className="h-3.5 w-3.5" />
                 {tChat("back")}
               </button>
             )}
           </div>
-          <div className="relative mt-3"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8291a5]" /><input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={isEn ? "Search conversations" : "Buscar conversaciones"} className="h-10 w-full rounded-lg border border-[#d8e4ec] bg-white pl-9 pr-3 text-sm outline-none focus:border-[#009FD9]" /></div>
+          {!vistaBloqueados && <div className="relative mt-3"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8291a5]" /><input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={isEn ? "Search conversations" : "Buscar conversaciones"} className="h-10 w-full rounded-lg border border-[#d8e4ec] bg-white pl-9 pr-3 text-sm outline-none focus:border-[#009FD9]" /></div>}
         </div>
         <div ref={listaRef} data-lista-cabe={listaCabe ? "true" : "false"} className="ccr-direct-chat-list min-h-0 flex-1 overflow-y-auto">
-          {!showArchived && (nativeApp || archivedCount > 0) && (
+          {vistaBloqueados ? (
+            <div>
+              <p className="border-b border-[#eef2f6] bg-[#f7fafc] px-4 py-3 text-xs leading-5 text-[#64748b]">{tChat("blockedHint")}</p>
+              {bloqueadas.length === 0 ? (
+                <p className="px-4 py-8 text-center text-sm text-[#8492a5]">{tChat("blockedEmpty")}</p>
+              ) : bloqueadas.map((item) => {
+                const person = personFor(item);
+                return (
+                  <div key={item.id} className="flex items-center gap-3 border-b border-[#eef2f6] bg-white p-4 last:border-b-0">
+                    <Avatar className="h-11 w-11"><AvatarImage src={person.avatar ?? undefined} /><AvatarFallback className="bg-[#e8f8ff] font-bold text-[#009FD9]">{getInitials(person.name)}</AvatarFallback></Avatar>
+                    <strong className="min-w-0 flex-1 truncate text-sm text-[#162543]">{person.name}</strong>
+                    <button
+                      type="button"
+                      disabled={desbloqueando === item.id}
+                      onClick={() => void desbloquear(item.id)}
+                      className="shrink-0 rounded-lg border border-[#d8e4ec] px-3 py-2 text-xs font-extrabold text-[#008fc4] transition hover:bg-[#eef9fd] disabled:opacity-50"
+                    >
+                      {desbloqueando === item.id ? <Loader2 className="h-4 w-4 animate-spin" /> : tChat("unblock")}
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          ) : null}
+          {!vistaBloqueados && !showArchived && bloqueadas.length > 0 && (
+            <button type="button" onClick={() => setVistaBloqueados(true)} className="flex w-full items-center gap-3 border-b border-[#e5e7eb] bg-white px-4 py-3 text-left transition hover:bg-[#f3f8fb]">
+              <span className="grid h-10 w-10 place-items-center rounded-full bg-[#fdeeee] text-[#d64545]">
+                <Flag className="h-5 w-5" />
+              </span>
+              <span className="min-w-0 flex-1 text-sm font-extrabold text-[#162543]">{tChat("blocked")}</span>
+              <span className="grid h-5 min-w-5 place-items-center rounded-full bg-[#e8eef4] px-1.5 text-[10px] font-extrabold text-[#526277]">{bloqueadas.length > 99 ? "99+" : bloqueadas.length}</span>
+            </button>
+          )}
+          {!vistaBloqueados && !showArchived && (nativeApp || archivedCount > 0) && (
             <button type="button" onClick={() => updateArchiveView(true)} className="flex w-full items-center gap-3 border-b border-[#e5e7eb] bg-white px-4 py-3 text-left transition hover:bg-[#f3f8fb]">
               <span className="grid h-10 w-10 place-items-center rounded-full bg-[#eef8fd] text-[#009FD9]">
                 <Archive className="h-5 w-5" />
@@ -1247,7 +1320,7 @@ export function DirectChatInbox() {
               {archivedCount > 0 && <span className="grid h-5 min-w-5 place-items-center rounded-full bg-[#e8eef4] px-1.5 text-[10px] font-extrabold text-[#526277]">{archivedCount > 99 ? "99+" : archivedCount}</span>}
             </button>
           )}
-          {filtered.map((item) => { const person = personFor(item); const unread = user?.id === item.client_id ? item.client_unread_count : item.professional_unread_count; const fila = (
+          {!vistaBloqueados && filtered.map((item) => { const person = personFor(item); const unread = user?.id === item.client_id ? item.client_unread_count : item.professional_unread_count; const fila = (
             <button type="button" onClick={() => { if (filaAbierta) { setFilaAbierta(null); setConfirmaEliminar(null); return; } selectConversation(item.id); }} className={cn("flex w-full gap-3 bg-white p-4 text-left transition hover:bg-[#f7fafc]", item.id === activeId && "lg:bg-[#f2f9fd] lg:shadow-[inset_3px_0_0_#009FD9]")}>
               <Avatar className="h-11 w-11"><AvatarImage src={person.avatar ?? undefined} /><AvatarFallback className="bg-[#e8f8ff] font-bold text-[#009FD9]">{getInitials(person.name)}</AvatarFallback></Avatar>
               <span className="min-w-0 flex-1"><span className="flex items-center gap-2"><strong className="min-w-0 flex-1 truncate text-sm text-[#162543]">{person.name}</strong><time className="shrink-0 text-[11px] text-[#8492a5]">{timeLabel(item.last_message_at, locale)}</time></span><span className="mt-1 flex items-center gap-2"><span className={cn("min-w-0 flex-1 truncate text-xs", storedDrafts[item.id] ? "italic text-[#8a94a6]" : "text-[#6b7a90]")}>{storedDrafts[item.id] ? `${tChat("draft")}: ${storedDrafts[item.id]}` : item.last_message || tChat("started")}</span>{!!unread && <span className="grid h-5 min-w-5 place-items-center rounded-full bg-[#009FD9] px-1 text-[10px] font-bold text-white">{unread}</span>}</span></span>

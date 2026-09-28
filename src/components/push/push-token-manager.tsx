@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { soltarElTurno, tomarElTurno } from "@/lib/turno-en-pantalla";
 import { createPortal } from "react-dom";
 import { PushNotifications, type Token } from "@capacitor/push-notifications";
 import { Capacitor } from "@capacitor/core";
@@ -283,6 +284,7 @@ export function PushTokenManager() {
         window.localStorage.setItem(permissionGrantedKey(user.id), "1");
         void vibrar("logrado");
         setPantalla(null);
+        soltarElTurno();
         await registerCurrentDevice();
         return;
       }
@@ -299,12 +301,14 @@ export function PushTokenManager() {
 
   const dismissPrompt = useCallback(() => {
     setPantalla(null);
+    soltarElTurno();
   }, []);
 
   const abrirPantalla = useCallback((motivo: Motivo, modo: Pantalla["modo"]) => {
     if (!user) return;
     markAsked(user.id);
     void vibrar("abrir");
+    tomarElTurno();
     setPantalla({ motivo, modo });
   }, [user]);
 
@@ -352,6 +356,15 @@ export function PushTokenManager() {
     countLaunch();
     if (!canShowPermissionPrompt(pathname)) return;
 
+    // EL TURNO SE PIDE ANTES DE PREGUNTAR NADA. Consultar el permiso es
+    // asíncrono, y para cuando responde la tarjeta de «¿Contactaste a…?» ya
+    // decidió salir: por eso al entrar por primera vez se asomaba medio segundo
+    // y enseguida la tapaba esta hoja. Se reserva de una vez con lo que se sabe
+    // sin esperar —app nativa, en el panel, segundo arranque— y se suelta abajo
+    // en cuanto se descubre que no hay nada que preguntar.
+    const puedePreguntar = isPanelPath(pathname) && launches() >= 2 && canAskAgain(user.id);
+    if (puedePreguntar) tomarElTurno();
+
     let cancelled = false;
     const grantedKey = permissionGrantedKey(user.id);
 
@@ -360,20 +373,22 @@ export function PushTokenManager() {
         const permissions = await PushNotifications.checkPermissions();
         if (cancelled) return;
         if (permissions.receive === "granted") {
+          soltarElTurno();
           window.localStorage.setItem(grantedKey, "1");
           await registerCurrentDevice();
           return;
         }
         window.localStorage.removeItem(grantedKey);
-        if (permissions.receive === "denied") return;
+        if (permissions.receive === "denied") { soltarElTurno(); return; }
         // Pregunta de respaldo, sin acción de por medio: en el panel, a partir
         // del segundo arranque, y respetando los mismos límites de frecuencia.
-        if (!isPanelPath(pathname) || launches() < 2 || !canAskAgain(user.id)) return;
+        if (!puedePreguntar) { soltarElTurno(); return; }
         promptTimerRef.current = setTimeout(() => {
           if (cancelled) return;
           abrirPantalla("panel", "pedir");
         }, 2500);
       } catch (error) {
+        soltarElTurno();
         console.error("[push] permission check failed", error);
       }
     };
@@ -382,6 +397,7 @@ export function PushTokenManager() {
 
     return () => {
       cancelled = true;
+      soltarElTurno();
       if (promptTimerRef.current) {
         clearTimeout(promptTimerRef.current);
         promptTimerRef.current = null;
