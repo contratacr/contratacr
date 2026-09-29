@@ -187,7 +187,7 @@ export function NativeBottomNav() {
   // Retirarse al desplazar donde hay una lista larga que se recorre sin fin:
   // portada, Ofertas, Empleos y los resultados de /buscar. En Panel o Mensajes
   // la lista es corta y la barra yéndose y viniendo sería ruido.
-  const permiteRetirarse = /^\/(?:promociones|empleos|buscar(?:\/[^/]+){0,3})?\/?$/.test(pathname ?? "/");
+  const permiteRetirarse = /^\/(?:promociones|empleos|proyectos|buscar(?:\/[^/]+){0,3})?\/?$/.test(pathname ?? "/");
 
   const [escondida, setEscondida] = useState(false);
   useEffect(() => {
@@ -195,7 +195,7 @@ export function NativeBottomNav() {
     const posiciones = new WeakMap<Element, number>();
     const alDesplazar = (event: Event) => {
       const objetivo = event.target;
-      if (!(objetivo instanceof Element) || !objetivo.matches("main, [data-messages-page-main], .ccr-direct-chat-list, .ccr-direct-chat-thread-scroll, .ccr-search-bottom-sheet, .ccr-search-bottom-sheet *")) return;
+      if (!(objetivo instanceof Element) || !objetivo.matches("main, .ccr-tablero-marco > section, .ccr-tablero-ficha, [data-messages-page-main], .ccr-direct-chat-list, .ccr-direct-chat-thread-scroll, .ccr-search-bottom-sheet, .ccr-search-bottom-sheet *")) return;
       const actual = objetivo.scrollTop;
       const previa = posiciones.get(objetivo) ?? actual;
       posiciones.set(objetivo, actual);
@@ -228,6 +228,12 @@ export function NativeBottomNav() {
 
   if (!visible) return null;
 
+  // El orden de las celdas, para saber sobre cuál va la pastilla.
+  // La última celda es el Panel con sesión y «acceso» sin ella: la pastilla
+  // tiene que encontrarla en las dos variantes.
+  const celdas = ["/buscar", "/promociones", "/proyectos", ...(EMPLEOS_VISIBLE ? ["/empleos"] : []), user ? nativePanelHref : "acceso"];
+  const indiceActivo = celdas.findIndex((href) => isActive(href));
+
   const itemClass = (href: string) =>
     cn(
       // Azul oscuro en reposo, turquesa al estar en esa sección: el mismo par de
@@ -243,14 +249,12 @@ export function NativeBottomNav() {
       // rótulo largo corre el centro de su celda. Lo que el ojo sigue al
       // recorrer la barra es la fila de iconos, y esa es la que tiene que estar
       // a paso constante.
-      "relative flex flex-1 basis-0 flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1 text-[10px] font-semibold leading-tight text-[#1A2744] transition-colors active:bg-[#eef5f9] active:text-[#009FD9] min-[360px]:text-[11px]",
+      "relative z-[1] flex flex-1 basis-0 flex-col items-center justify-center gap-0.5 rounded-[20px] px-1 py-1.5 text-[10px] font-semibold leading-tight text-[#1A2744] transition-colors active:text-[#009FD9] min-[360px]:text-[11px]",
       isActive(href) && "font-bold text-[#009FD9]",
     );
 
   // La línea vive en el borde superior del elemento, pegada al filo de la
   // barra, como el subrayado de LinkedIn.
-  const marca = (href: string) =>
-    isActive(href) ? <span aria-hidden className="absolute inset-x-1 -top-1 h-[3px] rounded-b-full bg-[#009FD9]" /> : null;
 
   // El rótulo se encoge lo justo para que quepa el más largo («Cotizaciones»):
   // truncado se leía «Cotizacion…», que no dice nada.
@@ -278,8 +282,11 @@ export function NativeBottomNav() {
       ref={navRef}
       aria-label={tNav("aria")}
       className={cn(
-        "ccr-native-bottom-nav lg:hidden fixed inset-x-0 bottom-0 z-[90] px-1.5 transition-transform duration-200 ease-out min-[360px]:px-2",
-        escondida && "pointer-events-none translate-y-full",
+        // Flota separada de los bordes, con el fondo translúcido y desenfocado:
+        // el contenido pasa por detrás y se adivina, en vez de cortarse contra
+        // una franja blanca. Al retirarse baja hasta perderse bajo el borde.
+        "ccr-native-bottom-nav lg:hidden fixed inset-x-3 bottom-[calc(env(safe-area-inset-bottom)+10px)] z-[90] rounded-[26px] border border-[#e5e7eb]/80 bg-white/85 shadow-[0_10px_32px_-14px_rgba(15,23,42,0.45)] backdrop-blur-xl transition-transform duration-250 ease-out",
+        escondida && "pointer-events-none translate-y-[calc(100%+24px)]",
       )}
     >
       {/* HUECOS IGUALES, no celdas iguales. Con celdas del mismo ancho y
@@ -289,7 +296,16 @@ export function NativeBottomNav() {
           mismo. Repartiendo el sobrante entre los cuatro huecos, la distancia
           entre palabras es la misma en toda la barra, que es lo que el ojo
           mide. */}
-      <div className="mx-auto flex w-full max-w-[520px] items-stretch px-1">
+      <div className="relative mx-auto flex w-full max-w-[520px] items-stretch p-1.5">
+        {/* Una sola pastilla para las cinco celdas, que se DESLIZA de una a
+            otra al cambiar de sección (como en Yelp). Las celdas miden un
+            quinto exacto, así que mover la pastilla su propio ancho la deja
+            justo sobre la siguiente. Sin sección activa, desaparece. */}
+        <span
+          aria-hidden
+          className="pointer-events-none absolute inset-y-1.5 left-1.5 rounded-[20px] bg-[#eef5f9] transition-transform duration-300 ease-out"
+          style={{ width: `calc((100% - 12px) / ${celdas.length})`, transform: `translateX(${Math.max(indiceActivo, 0) * 100}%)`, opacity: indiceActivo < 0 ? 0 : 1 }}
+        />
         <Link
           href="/buscar"
           prefetch={true}
@@ -297,7 +313,6 @@ export function NativeBottomNav() {
           onClick={(event) => irA(event, "/buscar")}
           className={itemClass("/buscar")}
         >
-          {marca("/buscar")}
           <Search className="h-5 w-5" strokeWidth={isActive("/buscar") ? 2.4 : 2} />
           {rotulo(etiquetas.buscar)}
         </Link>
@@ -309,7 +324,6 @@ export function NativeBottomNav() {
           onClick={(event) => irA(event, "/promociones")}
           className={itemClass("/promociones")}
         >
-          {marca("/promociones")}
           <OfferTagPercentIcon className="h-5 w-5" strokeWidth={isActive("/promociones") ? 2.4 : 2} />
           {rotulo(etiquetas.ofertas)}
         </Link>
@@ -321,7 +335,6 @@ export function NativeBottomNav() {
           onClick={(event) => irA(event, "/proyectos")}
           className={itemClass("/proyectos")}
         >
-          {marca("/proyectos")}
           <ClipboardList className="h-5 w-5" strokeWidth={isActive("/proyectos") ? 2.4 : 2} />
           {rotulo(etiquetas.proyectos)}
         </Link>
@@ -334,7 +347,6 @@ export function NativeBottomNav() {
             onClick={(event) => irA(event, "/empleos")}
             className={itemClass("/empleos")}
           >
-            {marca("/empleos")}
             <Briefcase className="h-5 w-5" strokeWidth={isActive("/empleos") ? 2.4 : 2} />
             {rotulo(etiquetas.empleos)}
           </Link>
@@ -348,7 +360,6 @@ export function NativeBottomNav() {
             onClick={(event) => irA(event, nativePanelHref)}
             className={itemClass(nativePanelHref)}
           >
-            {marca(nativePanelHref)}
             {avatarUrl ? (
               // eslint-disable-next-line @next/next/no-img-element -- avatar pequeño de tamaño fijo; el optimizador no actúa en Cloudflare
               <img
@@ -370,7 +381,6 @@ export function NativeBottomNav() {
             aria-label={t("login")}
             className={itemClass("acceso")}
           >
-            {marca("acceso")}
             <UserRound className="h-5 w-5" strokeWidth={2} />
             {rotulo(t("login"))}
           </Link>

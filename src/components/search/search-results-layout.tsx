@@ -30,6 +30,9 @@ interface SearchResultsLayoutProps {
   /** Sin resultados el mapa no tiene nada que enseñar: el panel abre extendido
    *  para que el aviso y su salida se lean sin arrastrarlo. */
   sinResultados?: boolean;
+  /** En la app, la pestaña «Profesionales» tiene que abrir la BÚSQUEDA —la
+   *  barra y la lista—, no el mapa: el mapa queda un gesto más abajo. */
+  hojaAbiertaAlInicio?: boolean;
 }
 
 // Three mobile snap points: map-first, one-card browsing, and expanded.
@@ -87,7 +90,7 @@ function snapIndex(value: number, points = mobileSheetSnapPoints()) {
  *  DESKTOP is unchanged (same `lg:` classes). The bottom-sheet wrapper is `lg:contents`, so on
  *  desktop it dissolves and the card column (`lg:order-2`) drops into the 3-column flex shell.
  */
-export function SearchResultsLayout({ children, filters, quickFilters, drawerFilters, countLabel, limpiar, mapData, apiKey, locale, numbering, mapFocusTarget = null, resetKey, sinResultados = false }: SearchResultsLayoutProps) {
+export function SearchResultsLayout({ children, filters, quickFilters, drawerFilters, countLabel, limpiar, mapData, apiKey, locale, numbering, mapFocusTarget = null, resetKey, sinResultados = false, hojaAbiertaAlInicio = false }: SearchResultsLayoutProps) {
   const t = useTranslations("search");
   const [showFilters, setShowFilters] = useState(false); // full-filter drawer (mobile + lg-xl)
   const sheetRef = useRef<HTMLDivElement | null>(null);
@@ -138,7 +141,7 @@ export function SearchResultsLayout({ children, filters, quickFilters, drawerFil
   // a la vista). Sin resultados no hay nada que ver en el mapa y sí un aviso con
   // su botón: abre extendido, o el botón quedaba bajo el borde de la pantalla.
   // El valor sale de las props, así que servidor y cliente pintan lo mismo.
-  const [heightFr, setHeightFr] = useState<number>(sinResultados ? SSR_SNAP_POINTS[SSR_SNAP_POINTS.length - 1] : CARD_PEEK);
+  const [heightFr, setHeightFr] = useState<number>(sinResultados || hojaAbiertaAlInicio ? SSR_SNAP_POINTS[SSR_SNAP_POINTS.length - 1] : CARD_PEEK);
   // Cada cambio de posición del panel re-mide la cola (también al terminar la
   // transición con la que llega a su sitio).
   useEffect(() => {

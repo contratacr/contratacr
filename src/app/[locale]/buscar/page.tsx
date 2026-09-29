@@ -3,6 +3,7 @@ import { prefijoDeIdioma } from "@/lib/prefijo-de-idioma";
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { getTranslations, getLocale } from "next-intl/server";
+import { cookies } from "next/headers";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { FooterSoloWeb } from "@/components/landing/footer-solo-web";
@@ -137,6 +138,10 @@ export async function generateMetadata({ searchParams }: { searchParams: Promise
 
 export default async function SearchPage({ searchParams }: SearchPageProps) {
   const params = await searchParams;
+  // La misma señal que usa el armazón raíz para saber que es la app. Se lee
+  // aquí, en el servidor, para que la hoja nazca ya extendida: si lo decidiera
+  // el navegador después, se vería el mapa un instante y luego el salto.
+  const enLaApp = (await cookies()).get("ccr_platform")?.value === "native";
   const t = await getTranslations("search");
   const locale = await getLocale();
   const catLabel = (id?: string | null) => id ? getCategoryLabel(id, locale) : "";
@@ -574,6 +579,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
             mapFocusTarget={mapFocusTarget}
             resetKey={`${currentPage}:${paginationParams.toString()}`}
             sinResultados={allResults.length === 0}
+            hojaAbiertaAlInicio={enLaApp}
             filters={<Suspense fallback={null}><SearchFilters initialValues={filterInitialValues} /></Suspense>}
             quickFilters={<Suspense fallback={null}><SearchFilters variant="chips" initialValues={filterInitialValues} /></Suspense>}
             drawerFilters={<Suspense fallback={null}><SearchFilters closable initialValues={filterInitialValues} /></Suspense>}
