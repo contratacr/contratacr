@@ -31,6 +31,7 @@ import { employmentTypeLabel, experienceLevelLabel, marketplaceLocale, type Mark
 import { marketplaceReturnLabelKey, safeMarketplaceReturnHref } from "@/lib/navigation/marketplace-return";
 import { CABECERA_BOTON, CABECERA_FILA, CABECERA_FILA_CENTRADA, CABECERA_GLIFO, CABECERA_TITULO } from "@/components/layout/cabecera";
 import { useAvisoPerfilProfesional } from "@/components/marketplace/use-aviso-perfil-profesional";
+import { cuandoSePublico } from "@/lib/cuando-se-publico";
 
 type Props = {
   jobs: JobPost[];
@@ -49,7 +50,6 @@ const MARKETPLACE_LIST_CLASS = "ccr-marketplace-card-list ccr-lista-tablero min-
 
 const JOBS_COPY = {
   es: {
-    now: "Ahora", minute: (count: number) => `Hace ${count} min`, hour: (count: number) => `Hace ${count} h`, yesterday: "Ayer", days: (count: number) => `Hace ${count} días`,
     remoteCountry: "Todo Costa Rica", country: "Costa Rica", noApplicants: "Sin postulantes", applicant: "postulante", applicants: "postulantes",
     searchPlaceholder: "¿Qué empleo buscas?", published: "Fecha", anyDate: "Cualquier fecha", last24Hours: "Últimas 24 horas", lastWeek: "Última semana", lastMonth: "Último mes",
     workplace: "Modalidad", anyWorkplace: "Cualquier modalidad", experience: "Experiencia", anyExperience: "Cualquier experiencia", employmentType: "Tipo de empleo", anyEmploymentType: "Cualquier tipo",
@@ -62,7 +62,6 @@ const JOBS_COPY = {
     call: "Llamar",
   },
   en: {
-    now: "Now", minute: (count: number) => `${count} min ago`, hour: (count: number) => `${count} h ago`, yesterday: "Yesterday", days: (count: number) => `${count} days ago`,
     remoteCountry: "All Costa Rica", country: "Costa Rica", noApplicants: "No applicants", applicant: "applicant", applicants: "applicants",
     searchPlaceholder: "Search jobs", published: "Date posted", anyDate: "Any date", last24Hours: "Past 24 hours", lastWeek: "Past week", lastMonth: "Past month",
     workplace: "Workplace", anyWorkplace: "Any workplace", experience: "Experience", anyExperience: "Any experience", employmentType: "Job type", anyEmploymentType: "Any type",
@@ -76,18 +75,10 @@ const JOBS_COPY = {
   },
 } as const;
 
+// La cuenta vive en @/lib/cuando-se-publico, igual que en Proyectos y
+// Promociones: la misma antigüedad tiene que leerse igual en las tres.
 function relativeDate(value: string, locale: MarketplaceLocale) {
-  const copy = JOBS_COPY[locale];
-  const createdAt = new Date(value).getTime();
-  const elapsed = Math.max(0, Date.now() - createdAt);
-  const minutes = Math.floor(elapsed / 60_000);
-  const hours = Math.floor(elapsed / 3_600_000);
-  const days = Math.floor(elapsed / 86_400_000);
-  if (minutes < 1) return copy.now;
-  if (hours < 1) return copy.minute(minutes);
-  if (hours < 24) return copy.hour(hours);
-  if (days === 1) return copy.yesterday;
-  return copy.days(days);
+  return cuandoSePublico(value, locale === "en");
 }
 
 function jobLocationText(job: JobPost, locale: MarketplaceLocale) {
@@ -105,7 +96,6 @@ function jobApplicantsText(job: JobPost, locale: MarketplaceLocale) {
 // El conteo de postulantes salió de la vista pública. Ahora se aplica por
 // WhatsApp, así que ese número se quedaba en «Sin postulantes» para siempre y
 // lo único que decía —a quien busca trabajo— era que la vacante estaba muerta.
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function JobMetaLine({ job, className = "", showApplicants = false }: { job: JobPost; className?: string; showApplicants?: boolean }) {
   const locale = marketplaceLocale(useLocale());
   return <p className={className}>

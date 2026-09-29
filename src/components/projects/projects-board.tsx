@@ -28,6 +28,7 @@ import { SaveItemButton } from "@/components/saved/save-item-button";
 import { CABECERA_BOTON, CABECERA_FILA, CABECERA_FILA_CENTRADA, CABECERA_GLIFO, CABECERA_TITULO } from "@/components/layout/cabecera";
 import { getCategoryGroupIcon } from "@/lib/data/category-group-visuals";
 import { getCategoryGroupId } from "@/lib/data/categories";
+import { cuandoSePublico } from "@/lib/cuando-se-publico";
 
 const COPY = {
   es: {
@@ -108,16 +109,6 @@ const COPY = {
     cuenta: (n: number) => `${n} ${n === 1 ? "project" : "projects"}`,
   },
 } as const;
-
-function cuandoSePublico(iso: string, en: boolean) {
-  const minutos = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 60000));
-  if (minutos < 60) return en ? `${minutos} min ago` : `Hace ${minutos} min`;
-  const horas = Math.round(minutos / 60);
-  if (horas < 24) return en ? `${horas} h ago` : `Hace ${horas} h`;
-  const dias = Math.round(horas / 24);
-  if (dias === 1) return en ? "Yesterday" : "Ayer";
-  return en ? `${dias} days ago` : `Hace ${dias} días`;
-}
 
 /** Escribirle al cliente. El número no está en la página: se pide al tocar, y
  *  la ruta exige cuenta profesional (ver /api/contact/project-lead). */

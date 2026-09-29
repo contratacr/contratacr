@@ -44,6 +44,7 @@ import {
 } from "@/lib/marketplace-copy";
 import { CABECERA_BOTON, CABECERA_FILA, CABECERA_GLIFO, CABECERA_TITULO } from "@/components/layout/cabecera";
 import { useAvisoPerfilProfesional } from "@/components/marketplace/use-aviso-perfil-profesional";
+import { cuandoSePublico } from "@/lib/cuando-se-publico";
 
 type Props = {
   offers: ProfessionalOffer[];
@@ -776,10 +777,15 @@ function OfferRow({
             <p className="truncate text-[13px] font-extrabold leading-5 text-[#007fae] sm:text-sm lg:text-[#162543]">
                {formatOfferPrice(offer, locale)}
             </p>
+            {/* CUÁNDO SE PUBLICÓ, como en Proyectos y Empleos. Sin esto se podía
+                filtrar por «últimas 24 horas» sin que la tarjeta dijera nunca de
+                cuándo era: una promoción de hace cuatro meses se leía igual de
+                vigente que la de ayer. */}
             <p className="hidden truncate text-xs leading-4 text-[#68778d] lg:block">
               {offerTypeLabel(offer.offer_type, locale)}
               {offer.service_label && <><span aria-hidden="true" className="mx-1.5 text-[#c0cad5]">·</span>{offer.service_label}</>}
               {offer.location_label && <><span aria-hidden="true" className="mx-1.5 text-[#c0cad5]">·</span>{offer.location_label}</>}
+              {offer.created_at && <><span aria-hidden="true" className="mx-1.5 text-[#c0cad5]">·</span>{cuandoSePublico(offer.created_at, locale === "en")}</>}
             </p>
             <div className="flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[11px] leading-4 sm:text-xs lg:hidden">
               <span className="shrink-0 text-[#68778d]">
@@ -796,9 +802,11 @@ function OfferRow({
                 </>
               )}
             </div>
-            {offer.location_label && (
+            {(offer.location_label || offer.created_at) && (
               <p className="truncate text-[11px] leading-4 text-[#68778d] sm:text-xs lg:hidden">
                 {offer.location_label}
+                {offer.location_label && offer.created_at && <span aria-hidden="true" className="mx-1.5 text-[#c0cad5]">·</span>}
+                {cuandoSePublico(offer.created_at, locale === "en")}
               </p>
             )}
           </div>
