@@ -228,8 +228,20 @@ export async function middleware(request: NextRequest) {
   // visita o elección guardada) salta a /en/…; a propósito NO se mira el
   // Accept-Language aquí: un rastreador que dice preferir inglés se llevaría un
   // redirect en vez de la página española, que es la canónica.
+  // Una PRECARGA no es una lectura: el selector de idioma precarga /en/… para
+  // que el cambio sea instantáneo, y el navegador precarga cada enlace del
+  // menú. Si esas peticiones contaran como «está leyendo en inglés», la cookie
+  // quedaba en inglés después de precargar /en y desde ahí TODO enlace español
+  // saltaba a inglés (pasó en producción el 28-sep-2026). Solo la navegación
+  // de verdad —el documento— escribe la cookie o se redirige por ella.
+  // Next le quita al middleware la cabecera RSC y el `_rsc`, así que la señal
+  // es la del navegador: una navegación pide un documento; una precarga o una
+  // carga de datos del router piden «text/x-component» o un destino vacío.
+  const destino = request.headers.get("sec-fetch-dest");
+  const esPrecarga = (destino !== null && destino !== "document")
+    || (request.headers.get("accept") ?? "").includes("text/x-component");
   const locale = idiomaDeRuta(pathname);
-  if (locale === "es") {
+  if (locale === "es" && !esPrecarga) {
     const guardado = request.cookies.get("NEXT_LOCALE")?.value;
     if (guardado === "en") {
       const url = request.nextUrl.clone();
@@ -268,7 +280,7 @@ export async function middleware(request: NextRequest) {
   // navegador se borra, así que la próxima vez vuelve a abrir en español, que
   // es el idioma del país. Antes duraba un año y quien probaba el inglés una
   // vez se quedaba en inglés para siempre.
-  if (request.cookies.get("NEXT_LOCALE")?.value !== locale) {
+  if (!esPrecarga && request.cookies.get("NEXT_LOCALE")?.value !== locale) {
     response.cookies.set("NEXT_LOCALE", locale, {
       path: "/",
       sameSite: "lax",
