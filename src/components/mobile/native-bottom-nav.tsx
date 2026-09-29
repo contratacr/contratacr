@@ -244,8 +244,10 @@ export function NativeBottomNav() {
       // recorrer la barra es la fila de iconos, y esa es la que tiene que estar
       // a paso constante. `min-w-0` es lo que se lo permite: sin él un
       // elemento flex no baja de lo que mide su palabra, y «Profesionales» le
-      // comía 5 px a cada vecina (73,5 / 71,8 / 68,9, medido).
-      "relative flex min-w-0 flex-1 basis-0 flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1 text-[10px] font-semibold leading-tight text-[#1A2744] transition-colors active:bg-[#eef5f9] active:text-[#009FD9] min-[360px]:text-[11px]",
+      // comía 5 px a cada vecina (73,5 / 71,8 / 68,9, medido). Y el relleno
+      // baja a 2 px por lado: «Profesionales» necesita 61 px y con 4 px por
+      // lado solo le quedaban 59, así que se cortaba con puntos suspensivos.
+      "relative flex min-w-0 flex-1 basis-0 flex-col items-center justify-center gap-0.5 rounded-xl px-0.5 py-1 text-[10px] font-semibold leading-tight text-[#1A2744] transition-colors active:bg-[#eef5f9] active:text-[#009FD9] min-[360px]:text-[11px]",
       isActive(href) && "font-bold text-[#009FD9]",
     );
 
