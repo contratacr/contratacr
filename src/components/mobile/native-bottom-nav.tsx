@@ -248,8 +248,12 @@ export function NativeBottomNav() {
       // huecos: los huecos quedaban iguales, sí, pero los ICONOS no, porque un
       // rótulo largo corre el centro de su celda. Lo que el ojo sigue al
       // recorrer la barra es la fila de iconos, y esa es la que tiene que estar
-      // a paso constante.
-      "relative z-[1] flex flex-1 basis-0 flex-col items-center justify-center gap-0.5 rounded-[20px] px-1 py-1.5 text-[10px] font-semibold leading-tight text-[#1A2744] transition-colors active:text-[#009FD9] min-[360px]:text-[11px]",
+      // a paso constante. `min-w-0` es lo que permite que la celda de
+      // «Profesionales» mida lo mismo que las demás: sin él, un elemento flex
+      // no baja de lo que mide su palabra y la celda larga se comía 5 px de
+      // cada vecina —medido: 73,5 / 71,8 / 68,9—, y la pastilla, que sí mide
+      // un quinto exacto, iba quedando corrida.
+      "relative z-[1] flex min-w-0 flex-1 basis-0 flex-col items-center justify-center gap-0.5 rounded-[20px] px-1 py-1.5 text-[10px] font-semibold leading-tight text-[#1A2744] transition-colors active:text-[#009FD9] min-[360px]:text-[11px]",
       isActive(href) && "font-bold text-[#009FD9]",
     );
 
