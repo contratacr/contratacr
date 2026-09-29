@@ -252,8 +252,11 @@ export function NativeBottomNav() {
       // «Profesionales» mida lo mismo que las demás: sin él, un elemento flex
       // no baja de lo que mide su palabra y la celda larga se comía 5 px de
       // cada vecina —medido: 73,5 / 71,8 / 68,9—, y la pastilla, que sí mide
-      // un quinto exacto, iba quedando corrida.
-      "relative z-[1] flex min-w-0 flex-1 basis-0 flex-col items-center justify-center gap-0.5 rounded-[20px] px-1 py-1.5 text-[10px] font-semibold leading-tight text-[#1A2744] transition-colors active:text-[#009FD9] min-[360px]:text-[11px]",
+      // un quinto exacto, iba quedando corrida. Y con la celda ya a un quinto
+      // justo, «Profesionales» dejó de caber a 390 px: los píxeles se le
+      // devuelven quitándoselos a los márgenes (barra a 8 px del borde, 4 px
+      // de relleno interior, 2 px a cada lado del rótulo), no a la letra.
+      "relative z-[1] flex min-w-0 flex-1 basis-0 flex-col items-center justify-center gap-0.5 rounded-[20px] px-0.5 py-1.5 text-[10px] font-semibold leading-tight text-[#1A2744] transition-colors active:text-[#009FD9] min-[360px]:text-[11px]",
       isActive(href) && "font-bold text-[#009FD9]",
     );
 
@@ -289,7 +292,7 @@ export function NativeBottomNav() {
         // Flota separada de los bordes, con el fondo translúcido y desenfocado:
         // el contenido pasa por detrás y se adivina, en vez de cortarse contra
         // una franja blanca. Al retirarse baja hasta perderse bajo el borde.
-        "ccr-native-bottom-nav lg:hidden fixed inset-x-3 bottom-[calc(env(safe-area-inset-bottom)+10px)] z-[90] rounded-[26px] border border-[#e5e7eb]/80 bg-white/85 shadow-[0_10px_32px_-14px_rgba(15,23,42,0.45)] backdrop-blur-xl transition-transform duration-250 ease-out",
+        "ccr-native-bottom-nav lg:hidden fixed inset-x-2 bottom-[calc(env(safe-area-inset-bottom)+10px)] z-[90] rounded-[26px] border border-[#e5e7eb]/80 bg-white/85 shadow-[0_10px_32px_-14px_rgba(15,23,42,0.45)] backdrop-blur-xl transition-transform duration-250 ease-out",
         escondida && "pointer-events-none translate-y-[calc(100%+24px)]",
       )}
     >
@@ -300,15 +303,15 @@ export function NativeBottomNav() {
           mismo. Repartiendo el sobrante entre los cuatro huecos, la distancia
           entre palabras es la misma en toda la barra, que es lo que el ojo
           mide. */}
-      <div className="relative mx-auto flex w-full max-w-[520px] items-stretch p-1.5">
+      <div className="relative mx-auto flex w-full max-w-[520px] items-stretch p-1">
         {/* Una sola pastilla para las cinco celdas, que se DESLIZA de una a
             otra al cambiar de sección (como en Yelp). Las celdas miden un
             quinto exacto, así que mover la pastilla su propio ancho la deja
             justo sobre la siguiente. Sin sección activa, desaparece. */}
         <span
           aria-hidden
-          className="pointer-events-none absolute inset-y-1.5 left-1.5 rounded-[20px] bg-[#eef5f9] transition-transform duration-300 ease-out"
-          style={{ width: `calc((100% - 12px) / ${celdas.length})`, transform: `translateX(${Math.max(indiceActivo, 0) * 100}%)`, opacity: indiceActivo < 0 ? 0 : 1 }}
+          className="pointer-events-none absolute inset-y-1 left-1 rounded-[20px] bg-[#eef5f9] transition-transform duration-300 ease-out"
+          style={{ width: `calc((100% - 8px) / ${celdas.length})`, transform: `translateX(${Math.max(indiceActivo, 0) * 100}%)`, opacity: indiceActivo < 0 ? 0 : 1 }}
         />
         <Link
           href="/buscar"
