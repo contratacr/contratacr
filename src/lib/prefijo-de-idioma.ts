@@ -8,7 +8,8 @@ export type Idioma = "es" | "en";
 
 /** "" para español, "/en" para inglés. */
 export function prefijoDeIdioma(locale: string | null | undefined): "" | "/en" {
-  return locale === "en" ? "/en" : "";
+  if (locale === "en") return "/en";
+  return "";
 }
 
 /** rutaConIdioma("es", "/buscar") → "/buscar"; rutaConIdioma("en", "/buscar") → "/en/buscar"; rutaConIdioma("es", "/") → "/". */
@@ -36,6 +37,6 @@ export function idiomaDeRuta(ruta: string): Idioma {
  */
 export function rutasDeCache(locale: string | null | undefined, ruta: string): string[] {
   const publica = rutaConIdioma(locale, ruta);
-  const interna = `/${locale === "en" ? "en" : "es"}${ruta === "/" ? "" : ruta}`;
+  const interna = `${prefijoDeIdioma(locale) || "/es"}${ruta === "/" ? "" : ruta}`;
   return publica === interna ? [publica] : [publica, interna];
 }

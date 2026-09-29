@@ -21,7 +21,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   const { locale } = await params;
   return {
     alternates: {
-      canonical: locale === "en" ? "/en" : "/",
+      canonical: rutaConIdioma(locale, "/"),
       languages: { es: "/", en: "/en", "x-default": "/" },
     },
   };
