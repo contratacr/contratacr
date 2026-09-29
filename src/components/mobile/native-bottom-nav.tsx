@@ -236,18 +236,16 @@ export function NativeBottomNav() {
       // La celda ENTERA es el botón (así fallan menos los toques, como en las
       // barras nativas); al presionar se ilumina completa para que su tamaño
       // real se vea, en vez de responder desde un área invisible.
-      // CINCO COLUMNAS IGUALES, como la barra de LinkedIn: cada celda ocupa un
-      // quinto exacto (`flex-1 basis-0`) y su contenido va centrado. Antes la
-      // celda medía lo que medía su palabra y el sobrante se repartía entre los
-      // huecos: los huecos quedaban iguales, sí, pero los ICONOS no, porque un
-      // rótulo largo corre el centro de su celda. Lo que el ojo sigue al
-      // recorrer la barra es la fila de iconos, y esa es la que tiene que estar
-      // a paso constante. `min-w-0` es lo que se lo permite: sin él un
-      // elemento flex no baja de lo que mide su palabra, y «Profesionales» le
-      // comía 5 px a cada vecina (73,5 / 71,8 / 68,9, medido). Y el relleno
-      // baja a 2 px por lado: «Profesionales» necesita 61 px y con 4 px por
-      // lado solo le quedaban 59, así que se cortaba con puntos suspensivos.
-      "relative flex min-w-0 flex-1 basis-0 flex-col items-center justify-center gap-0.5 rounded-xl px-0.5 py-1 text-[10px] font-semibold leading-tight text-[#1A2744] transition-colors active:bg-[#eef5f9] active:text-[#009FD9] min-[360px]:text-[11px]",
+      // LA MISMA SEPARACIÓN ENTRE RÓTULOS, que es lo que el ojo mide al
+      // recorrer la barra. La celda mide lo que mide su palabra (con 44px de
+      // mínimo, que es el blanco táctil que pide Apple) y el sobrante se
+      // reparte entre los cuatro huecos.
+      //
+      // Con celdas de ancho igual —un quinto cada una— los ICONOS quedan a
+      // paso constante, pero los huecos entre palabras salen disparejos: con
+      // «Profesionales» y «Promociones» juntas medían 8,6 / 17,3 / 28,7 / 33px.
+      // Entre las dos formas, esta es la que se pidió.
+      "relative flex min-w-[44px] shrink-0 flex-col items-center justify-center gap-0.5 rounded-xl px-0.5 py-1 text-[10px] font-semibold leading-tight text-[#1A2744] transition-colors active:bg-[#eef5f9] active:text-[#009FD9] min-[360px]:text-[11px]",
       isActive(href) && "font-bold text-[#009FD9]",
     );
 
@@ -293,7 +291,7 @@ export function NativeBottomNav() {
           mismo. Repartiendo el sobrante entre los cuatro huecos, la distancia
           entre palabras es la misma en toda la barra, que es lo que el ojo
           mide. */}
-      <div className="mx-auto flex w-full max-w-[520px] items-stretch px-1">
+      <div className="mx-auto flex w-full max-w-[520px] items-stretch justify-between px-1">
         <Link
           href="/buscar"
           prefetch={true}
