@@ -21,7 +21,8 @@ const config: CapacitorConfig = {
     ],
   },
   android: {
-    backgroundColor: "#F4F7FA",
+    // Ver la nota de iOS: es el color que asoma bajo el WebView con el teclado.
+    backgroundColor: "#FFFFFF",
     allowMixedContent: false,
     captureInput: true,
     webContentsDebuggingEnabled: false,
@@ -29,8 +30,12 @@ const config: CapacitorConfig = {
   ios: {
     contentInset: "never",
     // Sin esto el WebView arranca en negro y se ve un cuadro oscuro antes del
-    // splash: el parpadeo al abrir la app por primera vez.
-    backgroundColor: "#F4F7FA",
+    // splash: el parpadeo al abrir la app por primera vez. BLANCO, no el gris
+    // de la marca: al abrirse el teclado el WebView se encoge y la franja que
+    // queda entre su borde y el teclado la pinta ESTE color, no el CSS. Con
+    // #F4F7FA se veía una banda gris bajo el campo de escribir, del mismo tono
+    // que el teclado, como si el compositor terminara antes de tiempo.
+    backgroundColor: "#FFFFFF",
   },
   plugins: {
     SplashScreen: {
