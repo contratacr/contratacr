@@ -402,8 +402,13 @@ export function NotificationsList({ scope = "mode", titulo }: { scope?: "mode" |
   const listaRef = useRef<HTMLUListElement | null>(null);
   const [listaLlena, setListaLlena] = useState(false);
 
+  // En la web la tarjeta se estira para que una notificación no deje un vacío
+  // gris debajo. En la APP no: ahí el área ya está fija entre el encabezado y
+  // la barra, y estirar la lista pintaba de blanco todo lo que sobraba —una
+  // franja que se leía como lista cortada—. La lista mide lo que mide y el
+  // resto es el lienzo, como en Empleos o Buscar.
   const altoDeLaTarjeta = nativeApp
-    ? "min-h-[calc(100dvh-8.75rem)] sm:min-h-[calc(100dvh-16rem)]"
+    ? "sm:min-h-[calc(100dvh-16rem)]"
     : "min-h-[calc(100dvh-9.5rem)] sm:min-h-[26rem] lg:min-h-[calc(100dvh-16rem)]";
 
   // El «...» general vive en la misma fila que «Nuevas», el primer rótulo de
@@ -533,7 +538,12 @@ export function NotificationsList({ scope = "mode", titulo }: { scope?: "mode" |
         </div>
       )}
       <div className={cn(
-        "ccr-notifications-scroll min-h-0 flex-1 overflow-hidden bg-white",
+        // En la app el fondo del área es el lienzo, no blanco: lo blanco llega
+        // hasta donde llegan las notificaciones y lo que sobra se lee como
+        // página —igual que en Empleos o Buscar—, en vez de como una franja
+        // blanca vacía que parecía lista cortada.
+        "ccr-notifications-scroll min-h-0 flex-1 overflow-hidden",
+        nativeApp && scope === "all" ? "bg-[#f5f8fb]" : "bg-white",
         // En la app la lista va de borde a borde contra la barra de abajo; en la
         // web es una tarjeta como la de cualquier otra sección.
         scope === "all" && !nativeApp && "rounded-2xl border border-[#e5e7eb] shadow-sm",
@@ -586,7 +596,7 @@ export function NotificationsList({ scope = "mode", titulo }: { scope?: "mode" |
           // cuando la lista crece lo empuja fuera de la vista, no a la vista
           // (medido: saltos de 0,78 en teléfono y 0,49 en escritorio).
           <>
-          <ul ref={listaRef} className={cn("ccr-notifications-items", scope === "all" ? altoDeLaTarjeta : "min-h-[16rem] sm:min-h-[18rem]")}>
+          <ul ref={listaRef} className={cn("ccr-notifications-items bg-white", scope === "all" ? altoDeLaTarjeta : "min-h-[16rem] sm:min-h-[18rem]")}>
             {ordenadas.slice(0, mostrando).map((n, indice) => {
               const grupo = grupoDe(n);
               const abreGrupo = indice === 0 || grupoDe(ordenadas[indice - 1]) !== grupo;
