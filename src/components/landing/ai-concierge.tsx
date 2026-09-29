@@ -618,9 +618,12 @@ export function AiConcierge({ embedded = false, onBack }: { embedded?: boolean; 
               type="button"
               onClick={resetConversation}
               aria-label={copy.reset}
-              className="ccr-ai-reset-action grid h-9 w-9 place-items-center rounded-full border border-[#bcd8f1] bg-white text-[#102f5b] shadow-sm transition hover:bg-[#eef7ff] sm:h-11 sm:w-11"
+              // Con el texto: la flecha circular sola se confunde con recargar
+              // la pantalla, y lo que hace es empezar una conversación nueva.
+              className="ccr-ai-reset-action inline-flex h-9 items-center gap-1.5 rounded-full border border-[#bcd8f1] bg-white px-3 text-[13px] font-bold text-[#102f5b] shadow-sm transition hover:bg-[#eef7ff] sm:h-11 sm:px-4 sm:text-sm"
             >
-              <RotateCcw className="h-[18px] w-[18px] sm:h-5 sm:w-5" />
+              <RotateCcw className="h-4 w-4 shrink-0 sm:h-[18px] sm:w-[18px]" />
+              {copy.reset}
             </button>
             {!embedded && !nativeAssistantShell && (
               <AppTooltip label={copy.minimize}>

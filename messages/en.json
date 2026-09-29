@@ -3881,7 +3881,12 @@
     "blockedTitle": "This conversation is blocked",
     "blockedMineHint": "Neither of you can write. Unblocking brings it back to your inbox; the report stays under review.",
     "blockedOtherHint": "You can't write here. If you think this is a mistake, write to soporte@contratacr.com.",
-    "unblockFailed": "Could not unblock."
+    "unblockFailed": "Could not unblock.",
+    "markRead": "Read",
+    "markUnread": "Unread",
+    "more": "More",
+    "reportAndBlock": "Report and block",
+    "cancel": "Cancel"
   },
   "bottomNav": {
     "search": "Professionals",

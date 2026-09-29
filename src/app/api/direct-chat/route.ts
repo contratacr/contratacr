@@ -632,13 +632,25 @@ export async function PATCH(req: Request) {
 
     return NextResponse.json({ ok: true, blocked: true });
   }
+  // Marcar leído o no leído desde la lista, como el deslizamiento de WhatsApp.
+  // «No leído» pone el contador en 1: la bandeja y la campana ya lo leen así, y
+  // el siguiente mensaje real lo vuelve a subir sin que nada más cambie.
+  const leido = typeof body.read === "boolean" ? body.read : null;
   const archived = body.status === "archived" ? true : body.status === "open" ? false : null;
-  if (!conversationId || archived === null) return NextResponse.json({ error: mensajeDeError(req, { es: "Acción inválida.", en: "Invalid action." }) }, { status: 400 });
+  if (!conversationId || (archived === null && leido === null)) return NextResponse.json({ error: mensajeDeError(req, { es: "Acción inválida.", en: "Invalid action." }) }, { status: 400 });
   const db = createAdminClient();
   const { data } = await db.from("direct_conversations").select("*").eq("id", conversationId).maybeSingle();
   const conversation = data as ConversationRow | null;
   if (!conversation || !participant(conversation, user.id)) return NextResponse.json({ error: mensajeDeError(req, { es: "Conversación no encontrada", en: "Conversation not found" }) }, { status: 404 });
   const now = new Date().toISOString();
+  if (leido !== null) {
+    const campo = conversation.client_id === user.id ? "client_unread_count" : "professional_unread_count";
+    const { error: errorDeLectura } = await db.from("direct_conversations")
+      .update({ [campo]: leido ? 0 : 1, updated_at: now })
+      .eq("id", conversationId);
+    if (errorDeLectura) return NextResponse.json({ error: errorDeLectura.message }, { status: 500 });
+    return NextResponse.json({ ok: true, read: leido });
+  }
   const archiveField = conversation.client_id === user.id ? "client_archived_at" : "professional_archived_at";
   const { error } = await db.from("direct_conversations").update({ [archiveField]: archived ? now : null, updated_at: now }).eq("id", conversationId);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });

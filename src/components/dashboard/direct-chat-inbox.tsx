@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { CITAS_ACTIVAS } from "@/lib/citas";
 import { createPortal } from "react-dom";
-import { Archive, ArchiveRestore, ArrowLeft, CalendarClock, ChevronDown, ChevronRight, ClipboardList, Copy, Download, FileText, Flag, Handshake, Loader2, MessageSquareMore, Paperclip, Search, SendHorizontal, Trash2, X } from "lucide-react";
+import { Archive, ArchiveRestore, ArrowLeft, CalendarClock, CheckCheck, ChevronDown, ChevronRight, ClipboardList, Copy, Download, FileText, Flag, Handshake, Loader2, MessageSquareMore, MoreHorizontal, Paperclip, Search, SendHorizontal, Trash2, X } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "@/i18n/navigation";
@@ -123,11 +123,17 @@ function ChatImage({ href, alt, marco }: { href: string; alt: string; marco: num
 // El icono del origen no depende de nada del componente: fuera de él se define
 // una sola vez en lugar de rehacerse en cada pintado.
 
-function FilaDeslizable({ abierta, ancho, onEstado, acciones, onPulsacionLarga, onContextMenu, children }: {
+function FilaDeslizable({ abierta, ancho, onEstado, acciones, accionesIzquierda, anchoIzquierda = 0, onCompletarDerecha, onCompletarIzquierda, onPulsacionLarga, onContextMenu, children }: {
   abierta: boolean;
   ancho: number;
   onEstado: (abierta: boolean) => void;
   acciones: ReactNode;
+  /** Lo que se descubre al deslizar de izquierda a derecha (leído / no leído). */
+  accionesIzquierda?: ReactNode;
+  anchoIzquierda?: number;
+  /** Deslizar HASTA EL FINAL aplica la acción sin tener que tocar el botón. */
+  onCompletarDerecha?: () => void;
+  onCompletarIzquierda?: () => void;
   onPulsacionLarga?: () => void;
   onContextMenu?: (event: React.MouseEvent<HTMLDivElement>) => void;
   children: ReactNode;
@@ -145,6 +151,20 @@ function FilaDeslizable({ abierta, ancho, onEstado, acciones, onPulsacionLarga, 
   // El pintado no puede leer la referencia del arrastre: la misma información
   // vive en este estado.
   const [arrastrando, setArrastrando] = useState(false);
+  // El ancho real de la fila: con él se sabe cuándo el deslizamiento llegó al
+  // final y hasta dónde tiene que estirarse el fondo de la acción para que no
+  // quede un pedazo vacío detrás.
+  const filaRef = useRef<HTMLDivElement | null>(null);
+  const [anchoDeLaFila, setAnchoDeLaFila] = useState(0);
+  useEffect(() => {
+    const fila = filaRef.current;
+    if (!fila) return;
+    const medir = () => setAnchoDeLaFila(fila.getBoundingClientRect().width);
+    medir();
+    const observador = new ResizeObserver(medir);
+    observador.observe(fila);
+    return () => observador.disconnect();
+  }, []);
 
   useEffect(() => { if (!arrastre.current) setDx(abierta ? -ancho : 0); }, [abierta, ancho]);
 
@@ -171,8 +191,14 @@ function FilaDeslizable({ abierta, ancho, onEstado, acciones, onPulsacionLarga, 
     }
     movido.current = true;
     const crudo = d.base + pasoX;
-    // Más allá del tope, avanza a un cuarto: se siente el límite sin muro seco.
-    const tope = crudo < -ancho ? -ancho + (crudo + ancho) / 4 : crudo > 0 ? crudo / 4 : crudo;
+    // Hacia la izquierda se puede llegar HASTA EL BORDE —ahí la acción se
+    // aplica sola, como en WhatsApp—; hacia la derecha, solo si esa mano tiene
+    // acciones. Pasado el tope se avanza a un cuarto: se siente el límite.
+    const topeIzq = -(anchoDeLaFila || ancho);
+    const topeDer = accionesIzquierda ? (anchoDeLaFila || anchoIzquierda) : 0;
+    const tope = crudo < topeIzq ? topeIzq + (crudo - topeIzq) / 4
+      : crudo > topeDer ? topeDer + (crudo - topeDer) / 4
+      : crudo;
     setDx(tope);
   };
   const alSoltar = (cancelado: boolean) => {
@@ -180,16 +206,45 @@ function FilaDeslizable({ abierta, ancho, onEstado, acciones, onPulsacionLarga, 
     setArrastrando(false);
     if (!arrastre.current) return;
     arrastre.current = null;
-    const final = cancelado ? (abierta ? -ancho : 0) : dxRef.current;
-    const abrir = !cancelado && final < -ancho / 2;
+    if (cancelado) { setDx(abierta ? -ancho : 0); onEstado(abierta); return; }
+    const final = dxRef.current;
+    const completo = anchoDeLaFila * 0.55;
+    // Deslizar hasta pasada la mitad de la fila aplica la acción directamente.
+    if (completo > 0 && final <= -completo && onCompletarDerecha) {
+      setDx(0); onEstado(false); onCompletarDerecha(); return;
+    }
+    if (completo > 0 && final >= completo && onCompletarIzquierda) {
+      setDx(0); onEstado(false); onCompletarIzquierda(); return;
+    }
+    // Hacia la derecha no hay estado «abierto»: o se deslizó hasta el final y
+    // se aplica, o la fila vuelve a su sitio. Es la mano de una sola acción.
+    if (final > 0) { setDx(0); onEstado(false); return; }
+    const abrir = final < -ancho / 2;
     setDx(abrir ? -ancho : 0);
     onEstado(abrir);
   };
 
   return (
-    <div className="relative overflow-hidden border-b border-[#eef2f6] bg-[#eef6fb] last:border-b-0">
-      <div className="absolute inset-y-0 right-0 flex" style={{ width: ancho }}>{acciones}</div>
+    <div ref={filaRef} className="relative overflow-hidden border-b border-[#eef2f6] bg-white last:border-b-0">
+      {/* El fondo de la acción crece con el dedo y llega hasta el borde: al
+          deslizar hasta el final no queda un pedazo vacío detrás de la fila,
+          y el icono viaja con él en vez de quedarse clavado en su casilla. */}
       <div
+        className="absolute inset-y-0 right-0 flex justify-end overflow-hidden"
+        style={{ width: Math.max(ancho, Math.min(-dx, anchoDeLaFila || ancho)) }}
+      >
+        {acciones}
+      </div>
+      {accionesIzquierda && (
+        <div
+          className="absolute inset-y-0 left-0 flex overflow-hidden"
+          style={{ width: Math.max(anchoIzquierda, Math.min(dx, anchoDeLaFila || anchoIzquierda)) }}
+        >
+          {accionesIzquierda}
+        </div>
+      )}
+      <div
+        className="relative bg-white"
         style={{ transform: `translateX(${dx}px)`, transition: arrastrando ? "none" : "transform 180ms ease-out", touchAction: "pan-y" }}
         onContextMenu={onContextMenu}
         onPointerDown={alBajar}
@@ -1084,6 +1139,19 @@ export function DirectChatInbox() {
     if (activeId === id) setActiveId(remaining[0]?.id ?? null);
   }
 
+  // Marcar leída o no leída desde el gesto, sin abrir el chat. Optimista: la
+  // fila cambia al instante y la petición confirma detrás.
+  async function marcarLeida(id: string, leer: boolean) {
+    setFilaAbierta(null);
+    setConversations((actuales) => actuales.map((c) => c.id !== id ? c : (
+      user?.id === c.client_id
+        ? { ...c, client_unread_count: leer ? 0 : 1 }
+        : { ...c, professional_unread_count: leer ? 0 : 1 }
+    )));
+    const res = await fetchWithSessionRetry("/api/direct-chat", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ conversationId: id, read: leer }) });
+    if (!res.ok) { void loadConversations(true); }
+  }
+
   // Eliminar solo existe en archivadas y pide un segundo toque de confirmación.
   async function eliminarFila(id: string) {
     if (confirmaEliminar !== id) { setConfirmaEliminar(id); return; }
@@ -1166,7 +1234,7 @@ export function DirectChatInbox() {
         {!showArchived && (
           <button type="button" onClick={() => { setActiveId(filaDeLaHoja.id); setHojaDeFila(null); setReportOpen(true); }} className="flex w-full items-center gap-3 px-5 py-3.5 text-left text-[15px] font-bold text-red-600 transition hover:bg-red-50">
             <Flag className="h-5 w-5" />
-            {isEn ? "Report and block" : "Reportar y bloquear"}
+            {tChat("reportAndBlock")}
           </button>
         )}
         {showArchived && (
@@ -1176,7 +1244,7 @@ export function DirectChatInbox() {
           </button>
         )}
         <button type="button" onClick={() => setHojaDeFila(null)} className="mt-1 flex w-full items-center justify-center border-t border-[#eef2f6] px-5 py-3.5 text-[15px] font-bold text-[#526277]">
-          {isEn ? "Cancel" : "Cancelar"}
+          {tChat("cancel")}
         </button>
       </div>
     </div>
@@ -1326,25 +1394,42 @@ export function DirectChatInbox() {
                 key={item.id}
                 onContextMenu={(event) => { event.preventDefault(); setHojaDeFila(item.id); }}
                 abierta={filaAbierta === item.id}
-                ancho={showArchived ? 176 : 88}
+                ancho={showArchived ? 176 : 176}
+                anchoIzquierda={88}
                 onEstado={(abrir) => { setFilaAbierta(abrir ? item.id : null); if (!abrir) setConfirmaEliminar(null); }}
                 onPulsacionLarga={() => setHojaDeFila(item.id)}
+                onCompletarDerecha={() => void archivarFila(item.id, !showArchived)}
+                onCompletarIzquierda={() => void marcarLeida(item.id, !!unread)}
+                accionesIzquierda={(
+                  <button type="button" onClick={() => void marcarLeida(item.id, !!unread)} className="flex w-[88px] shrink-0 flex-col items-center justify-center gap-1 bg-[#0f7a9d] text-white">
+                    {unread ? <CheckCheck className="h-5 w-5" /> : <MessageSquareMore className="h-5 w-5" />}
+                    <span className="text-[11px] font-extrabold">{unread ? (isEn ? "Read" : "Leído") : (isEn ? "Unread" : "No leído")}</span>
+                  </button>
+                )}
                 acciones={showArchived ? (
                   <>
-                    <button type="button" onClick={() => void archivarFila(item.id, false)} className="flex w-[88px] flex-col items-center justify-center gap-1 bg-[#009FD9] text-white">
-                      <ArchiveRestore className="h-5 w-5" />
-                      <span className="text-[11px] font-extrabold">{tChat("unarchive")}</span>
-                    </button>
-                    <button type="button" onClick={() => void eliminarFila(item.id)} className={cn("flex w-[88px] flex-col items-center justify-center gap-1 text-white", confirmaEliminar === item.id ? "bg-[#991b1b]" : "bg-[#dc2626]")}>
+                    <button type="button" onClick={() => void eliminarFila(item.id)} className={cn("flex w-[88px] shrink-0 flex-col items-center justify-center gap-1 text-white", confirmaEliminar === item.id ? "bg-[#991b1b]" : "bg-[#dc2626]")}>
                       <Trash2 className="h-5 w-5" />
                       <span className="text-[11px] font-extrabold">{confirmaEliminar === item.id ? tChat("confirmDelete") : tChat("delete")}</span>
                     </button>
+                    <button type="button" onClick={() => void archivarFila(item.id, false)} className="flex flex-1 shrink-0 flex-col items-center justify-center gap-1 bg-[#009FD9] text-white">
+                      <ArchiveRestore className="h-5 w-5" />
+                      <span className="text-[11px] font-extrabold">{tChat("unarchive")}</span>
+                    </button>
                   </>
                 ) : (
-                  <button type="button" onClick={() => void archivarFila(item.id, true)} className="flex w-[88px] flex-col items-center justify-center gap-1 bg-[#009FD9] text-white">
-                    <Archive className="h-5 w-5" />
-                    <span className="text-[11px] font-extrabold">{tChat("archive")}</span>
-                  </button>
+                  <>
+                    {/* «Más» a la par de «Archivar», como WhatsApp: abre la misma
+                        hoja de abajo que la pulsación larga. */}
+                    <button type="button" onClick={() => { setFilaAbierta(null); setHojaDeFila(item.id); }} className="flex w-[88px] shrink-0 flex-col items-center justify-center gap-1 bg-[#526277] text-white">
+                      <MoreHorizontal className="h-5 w-5" />
+                      <span className="text-[11px] font-extrabold">{isEn ? "More" : "Más"}</span>
+                    </button>
+                    <button type="button" onClick={() => void archivarFila(item.id, true)} className="flex flex-1 shrink-0 flex-col items-center justify-center gap-1 bg-[#009FD9] text-white">
+                      <Archive className="h-5 w-5" />
+                      <span className="text-[11px] font-extrabold">{tChat("archive")}</span>
+                    </button>
+                  </>
                 )}
               >
                 {fila}
@@ -1608,7 +1693,7 @@ export function DirectChatInbox() {
               type="button"
               onClick={() => fileInputRef.current?.click()}
               disabled={sending || preparingAttachments || selectedAttachments.length >= MAX_ATTACHMENTS}
-              className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-[#d8e5ee] bg-[#f7fbfd] text-[#526277] transition after:absolute after:-inset-1 after:content-[''] hover:border-[#9fd8ec] hover:text-[#009FD9] disabled:opacity-45"
+              className="relative grid h-10 w-10 shrink-0 place-items-center rounded-full border border-[#d8e5ee] bg-[#f7fbfd] text-[#526277] transition after:absolute after:-inset-1 after:content-[''] hover:border-[#9fd8ec] hover:text-[#009FD9] disabled:opacity-45"
               aria-label={isEn ? "Attach file" : "Adjuntar archivo"}
             >
               <Paperclip className="h-5 w-5" />

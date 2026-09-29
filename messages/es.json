@@ -3881,7 +3881,12 @@
     "blockedTitle": "Esta conversación está bloqueada",
     "blockedMineHint": "Ninguno de los dos puede escribir. Al desbloquear vuelve a tu bandeja; el reporte sigue en revisión.",
     "blockedOtherHint": "No puedes escribir aquí. Si crees que es un error, escribe a soporte@contratacr.com.",
-    "unblockFailed": "No se pudo desbloquear."
+    "unblockFailed": "No se pudo desbloquear.",
+    "markRead": "Leído",
+    "markUnread": "No leído",
+    "more": "Más",
+    "reportAndBlock": "Reportar y bloquear",
+    "cancel": "Cancelar"
   },
   "bottomNav": {
     "search": "Profesionales",
