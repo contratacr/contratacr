@@ -236,11 +236,14 @@ export function NativeBottomNav() {
       // La celda ENTERA es el botón (así fallan menos los toques, como en las
       // barras nativas); al presionar se ilumina completa para que su tamaño
       // real se vea, en vez de responder desde un área invisible.
-      // La celda mide lo que mide su palabra, con un mínimo de 44px para que
-      // siga siendo un blanco cómodo de tocar aunque el rótulo sea corto. Es lo
-      // que permite que los huecos queden parejos: el sobrante se reparte entre
-      // ellos en vez de quedar encerrado dentro de las celdas cortas.
-      "relative flex min-w-[44px] shrink-0 flex-col items-center justify-center gap-0.5 rounded-xl px-1.5 py-1 text-[10px] max-[359px]:px-1 font-semibold leading-tight text-[#1A2744] transition-colors active:bg-[#eef5f9] active:text-[#009FD9] min-[360px]:text-[11px]",
+      // CINCO COLUMNAS IGUALES, como la barra de LinkedIn: cada celda ocupa un
+      // quinto exacto (`flex-1 basis-0`) y su contenido va centrado. Antes la
+      // celda medía lo que medía su palabra y el sobrante se repartía entre los
+      // huecos: los huecos quedaban iguales, sí, pero los ICONOS no, porque un
+      // rótulo largo corre el centro de su celda. Lo que el ojo sigue al
+      // recorrer la barra es la fila de iconos, y esa es la que tiene que estar
+      // a paso constante.
+      "relative flex flex-1 basis-0 flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1 text-[10px] font-semibold leading-tight text-[#1A2744] transition-colors active:bg-[#eef5f9] active:text-[#009FD9] min-[360px]:text-[11px]",
       isActive(href) && "font-bold text-[#009FD9]",
     );
 
@@ -286,7 +289,7 @@ export function NativeBottomNav() {
           mismo. Repartiendo el sobrante entre los cuatro huecos, la distancia
           entre palabras es la misma en toda la barra, que es lo que el ojo
           mide. */}
-      <div className="mx-auto flex w-full max-w-[520px] items-stretch justify-between px-1">
+      <div className="mx-auto flex w-full max-w-[520px] items-stretch px-1">
         <Link
           href="/buscar"
           prefetch={true}

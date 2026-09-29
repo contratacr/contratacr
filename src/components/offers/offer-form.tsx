@@ -55,6 +55,7 @@ const OFFER_FORM_COPY = {
     subtitle: "Publica una promoción clara y fácil de comparar.",
     title: "Título",
     titlePlaceholder: "Ej. Paquete de fotografía",
+    titleHint: "Corto y concreto: es lo que se lee en la lista y en el enlace que compartes.",
     type: "Tipo",
     service: "Servicio",
     selectService: "Selecciona un servicio",
@@ -119,6 +120,7 @@ const OFFER_FORM_COPY = {
     subtitle: "Post a clear promotion that is easy to compare.",
     title: "Title",
     titlePlaceholder: "E.g. Photography package",
+    titleHint: "Short and concrete: it is what shows in the list and in the link you share.",
     type: "Type",
     service: "Service",
     selectService: "Select a service",
@@ -455,6 +457,12 @@ export function OfferForm({ professionalId, serviceOptions, backHref = "/promoci
             <label className="text-sm font-medium text-[#374151] sm:col-span-2">
               <RequiredLabel>{copy.title}</RequiredLabel>
               <input name="title" maxLength={120} defaultValue={initialOffer?.title ?? ""} placeholder={copy.titlePlaceholder} className={FIELD_CLASS} />
+              {/* El título viaja a tres lugares: la tarjeta del tablero, la
+                  pestaña del navegador y la dirección que se comparte. Un
+                  título de una frase entera produce un enlace de dos renglones
+                  («fumigacion-de-su-residencia-con-15-de-descuento-8e867a32»),
+                  así que se avisa aquí, que es donde se escribe. */}
+              <p className="mt-1 text-[11px] leading-snug text-[#68778d]">{copy.titleHint}</p>
               <FieldError>{fieldErrors.title}</FieldError>
             </label>
             <SelectMenu label={<RequiredLabel>{copy.type}</RequiredLabel>} value={offerType} onChange={setOfferType} options={Object.keys(OFFER_TYPES).map((value) => ({ value, label: offerTypeLabel(value as keyof typeof OFFER_TYPES, locale) }))} />
