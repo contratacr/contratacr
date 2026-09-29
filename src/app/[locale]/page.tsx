@@ -1,5 +1,5 @@
 import { LandingNavbar } from "@/components/landing/landing-navbar";
-import { prefijoDeIdioma } from "@/lib/prefijo-de-idioma";
+import { prefijoDeIdioma, rutaConIdioma } from "@/lib/prefijo-de-idioma";
 import { LandingHero } from "@/components/landing/landing-hero";
 import { FeaturedBrands } from "@/components/landing/featured-brands";
 import { ProsSection } from "@/components/landing/pros-section";
