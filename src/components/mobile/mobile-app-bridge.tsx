@@ -242,7 +242,11 @@ export function MobileAppBridge() {
     const isSearchRoute = isSearchPath(pathname);
     // Routes that, like the web, mount only the drawer and draw their own title
     // bar: the shell must not reserve space for an app header that is not there.
-    const isMarketplaceRoute = /(^|\/)(?:promociones|empleos|servicios)(\/|$)/.test(pathname);
+    // Proyectos entró a esta lista tarde: pasó a ser un tablero público con la
+    // misma cabecera propia que Promociones y Empleos, pero el cascarón seguía
+    // reservándole los 64 px de una cabecera de app que ahí no existe, y esa
+    // reserva se veía como una franja gris encima del título.
+    const isMarketplaceRoute = /(^|\/)(?:promociones|empleos|proyectos|servicios)(\/|$)/.test(pathname);
     const isFullscreenRoute = isNativeFullscreenPath(pathname);
     document.documentElement.classList.toggle("ccr-native-search-route", isSearchRoute);
     document.body.classList.toggle("ccr-native-search-route", isSearchRoute);

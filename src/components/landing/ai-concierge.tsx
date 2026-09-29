@@ -735,7 +735,7 @@ export function AiConcierge({ embedded = false, onBack }: { embedded?: boolean; 
               type="submit"
               disabled={loading || !draft.trim()}
               aria-label={copy.send}
-              className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-[#eef1f4] text-[#9aa3ad] transition enabled:bg-[#009FD9] enabled:text-white disabled:opacity-80"
+              className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-[#d8e4e9] text-white transition enabled:bg-[#009FD9] enabled:hover:bg-[#008fca]"
             >
               {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <SendHorizontal className="h-5 w-5" />}
             </button>

@@ -1673,7 +1673,7 @@ export function DirectChatInbox() {
               type="button"
               onClick={() => fileInputRef.current?.click()}
               disabled={sending || preparingAttachments || selectedAttachments.length >= MAX_ATTACHMENTS}
-              className="grid h-[52px] w-[52px] shrink-0 place-items-center rounded-[18px] border border-[#d8e5ee] bg-[#f7fbfd] text-[#526277] transition hover:border-[#9fd8ec] hover:text-[#009FD9] disabled:opacity-45"
+              className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-[#d8e5ee] bg-[#f7fbfd] text-[#526277] transition hover:border-[#9fd8ec] hover:text-[#009FD9] disabled:opacity-45"
               aria-label={isEn ? "Attach file" : "Adjuntar archivo"}
             >
               <Paperclip className="h-5 w-5" />
@@ -1703,7 +1703,7 @@ export function DirectChatInbox() {
             <button
               type="submit"
               disabled={sending || (!draft.trim() && !selectedAttachments.length)}
-              className="grid h-[52px] w-[52px] shrink-0 place-items-center rounded-[18px] bg-[#009FD9] text-white shadow-[0_8px_18px_-12px_rgba(0,159,217,0.85)] transition hover:bg-[#008fca] disabled:bg-[#d8e4e9] disabled:shadow-none"
+              className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-[#009FD9] text-white transition hover:bg-[#008fca] disabled:bg-[#d8e4e9]"
               aria-label={isEn ? "Send" : "Enviar"}
             >
               {sending ? <Loader2 className="h-5 w-5 animate-spin" /> : <SendHorizontal className="h-5 w-5" />}

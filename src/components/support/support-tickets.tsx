@@ -656,8 +656,8 @@ export function SupportTickets({
                   // reiniciarlo: al refrescar, el icono se quedaba sin color y
                   // heredaba el del texto. Las dos que quedan —#009FD9 en 105
                   // archivos y #68778d en 98— existen con seguridad.
-                  className={`grid h-9 w-9 shrink-0 place-items-center rounded-full transition-colors hover:bg-[#f3f4f6] disabled:cursor-not-allowed ${reply.trim() && !sending ? "text-[#009FD9]" : "text-[#68778d]"}`} aria-label={sending ? t("sending") : t("send")}>
-                  {sending ? <Clock3 className="h-[18px] w-[18px] animate-spin" /> : <SendHorizontal className="h-[18px] w-[18px]" />}
+                  className={`grid h-11 w-11 shrink-0 place-items-center rounded-full text-white transition-colors disabled:cursor-not-allowed ${reply.trim() && !sending ? "bg-[#009FD9] hover:bg-[#008fca]" : "bg-[#d8e4e9]"}`} aria-label={sending ? t("sending") : t("send")}>
+                  {sending ? <Clock3 className="h-5 w-5 animate-spin" /> : <SendHorizontal className="h-5 w-5" />}
                 </button>
               </div>
             </div>

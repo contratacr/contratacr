@@ -781,12 +781,12 @@ html[data-keyboard-open] body.ccr-native-app {
 /* Con el teclado abierto no hay franja del sistema abajo, así que el respiro
    tiene que ponerlo el compositor: con 0.35rem la caja de escribir quedaba
    pegada a la barra gris del teclado (la de las flechas y el visto), y las dos
-   se leían como una sola pieza. 0.7rem es el mínimo que las separa sin comerse
+   se leían como una sola pieza. 1rem las separa de forma visible sin comerse
    pantalla útil. */
 html[data-keyboard-open].ccr-native-app .ccr-direct-chat-composer,
 html[data-keyboard-open].ccr-native-app .ccr-support-thread-composer,
 html[data-keyboard-open].ccr-native-app .ccr-ai-composer {
-  padding-bottom: 0.7rem !important;
+  padding-bottom: 1rem !important;
 }
 
 /* Los paneles de chat y asistente se pintan por encima de la barra y le tapaban
