@@ -414,6 +414,8 @@ export function DirectChatInbox() {
   const [confirmaEliminar, setConfirmaEliminar] = useState<string | null>(null);
   // La conversación cuya hoja de acciones está abierta (pulsación larga).
   const [hojaDeFila, setHojaDeFila] = useState<string | null>(null);
+  // Arrastrar la hoja hacia abajo la cierra.
+  const arrastreDeLaHoja = useRef<{ id: number; y: number } | null>(null);
   const [menuMensaje, setMenuMensaje] = useState<{ id: string; texto: string; x: number; y: number } | null>(null);
   const [copiado, setCopiado] = useState(false);
   const pulsacionLarga = useRef<number | null>(null);
@@ -1235,8 +1237,28 @@ export function DirectChatInbox() {
     <div className="app-modal-screen app-sheet-compact-screen fixed inset-0 z-[200] flex items-end justify-center" role="dialog" aria-modal="true">
       <div className="absolute inset-0 bg-[#071426]/45 backdrop-blur-[2px]" onClick={() => setHojaDeFila(null)} />
       <div className="app-bottom-sheet app-sheet-compact relative z-10 w-full max-w-md rounded-t-[22px] bg-white pb-[calc(1rem+env(safe-area-inset-bottom))] pt-2 shadow-[0_-18px_48px_-24px_rgba(15,23,42,0.55)]">
-        <div className="mx-auto mb-2 h-1 w-10 rounded-full bg-[#dbe5ee]" />
-        <p className="truncate px-5 pb-2 text-[15px] font-extrabold text-[#162543]">{personaDeLaHoja?.name ?? ""}</p>
+        {/* Se cierra con la X o arrastrando la hoja hacia abajo, como en
+            WhatsApp; el renglón «Cancelar» era una opción más que competía con
+            las que sí hacen algo. */}
+        <div
+          className="cursor-grab touch-none pb-1 pt-1"
+          onPointerDown={(event) => { arrastreDeLaHoja.current = { id: event.pointerId, y: event.clientY }; }}
+          onPointerMove={(event) => {
+            const d = arrastreDeLaHoja.current;
+            if (!d || event.pointerId !== d.id) return;
+            const paso = event.clientY - d.y;
+            if (paso > 70) { arrastreDeLaHoja.current = null; setHojaDeFila(null); }
+          }}
+          onPointerUp={() => { arrastreDeLaHoja.current = null; }}
+        >
+          <div className="mx-auto h-1 w-10 rounded-full bg-[#dbe5ee]" />
+        </div>
+        <div className="flex items-center gap-2 px-5 pb-2">
+          <p className="min-w-0 flex-1 truncate text-[15px] font-extrabold text-[#162543]">{personaDeLaHoja?.name ?? ""}</p>
+          <button type="button" onClick={() => setHojaDeFila(null)} aria-label={tChat("cancel")} className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[#eef2f6] text-[#526277] transition hover:bg-[#e2e9f0]">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
         <button type="button" onClick={() => { const id = filaDeLaHoja.id; setHojaDeFila(null); void archivarFila(id, !showArchived); }} className="flex w-full items-center gap-3 px-5 py-3.5 text-left text-[15px] font-bold text-[#162543] transition hover:bg-[#f2f8fb]">
           {showArchived ? <ArchiveRestore className="h-5 w-5 text-[#009FD9]" /> : <Archive className="h-5 w-5 text-[#009FD9]" />}
           {showArchived ? tChat("unarchive") : tChat("archive")}
@@ -1253,9 +1275,6 @@ export function DirectChatInbox() {
             {tChat("delete")}
           </button>
         )}
-        <button type="button" onClick={() => setHojaDeFila(null)} className="mt-1 flex w-full items-center justify-center border-t border-[#eef2f6] px-5 py-3.5 text-[15px] font-bold text-[#526277]">
-          {tChat("cancel")}
-        </button>
       </div>
     </div>
   );
