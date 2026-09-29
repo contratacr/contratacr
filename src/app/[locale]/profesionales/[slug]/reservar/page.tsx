@@ -1,12 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams, useSearchParams } from "next/navigation";
+import { notFound, useParams, useSearchParams } from "next/navigation";
 import { useLocale } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import { BookingModal } from "@/components/booking/booking-modal";
 import { PanelListSkeleton } from "@/components/ui/content-loading";
 import { getCategoryLabel } from "@/lib/data/categories";
+import { CITAS_ACTIVAS } from "@/lib/citas";
 
 /**
  * Reservar una cita como PÁGINA propia, no como capa sobre /buscar o sobre el
@@ -16,6 +17,13 @@ import { getCategoryLabel } from "@/lib/data/categories";
  * compartir el enlace y volver con el gesto de atrás del teléfono.
  */
 export default function ReservarPage() {
+  // APAGAR UNA FUNCIÓN ES CERRAR TODAS SUS PUERTAS. Cuando se apagaron las
+  // citas se cerró `/api/bookings` (404) pero esta PANTALLA se quedó viva:
+  // pintaba el formulario entero —fechas, datos, «Confirmar cita»— y solo
+  // fallaba al enviar. Una pantalla que pide datos para algo que ya no existe
+  // es peor que no tenerla. Ver src/lib/citas.ts.
+  if (!CITAS_ACTIVAS) notFound();
+
   const params = useParams<{ slug: string }>();
   const searchParams = useSearchParams();
   const router = useRouter();
