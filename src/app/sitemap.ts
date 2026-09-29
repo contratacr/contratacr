@@ -6,6 +6,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { tramoFicha } from "@/lib/marketplace-url";
 import { rutaConIdioma } from "@/lib/prefijo-de-idioma";
 import { cargarProyectosPublicos } from "@/lib/queries/proyectos-publicos";
+import { sinOcultos } from "@/lib/queries/sin-ocultos";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://contratacr.com";
 // El sitio es bilingüe con hreflang: el mapa tiene que decir las dos direcciones
@@ -39,14 +40,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // no.
   let ultimoCambio: Date | undefined;
   try {
-    const { data } = await createAdminClient()
-      .from("professionals")
-      .select("updated_at")
-      .eq("is_banned", false)
-      .eq("oculto_del_buscador", false)
-      .order("updated_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
+    const { data } = await sinOcultos((excluirOcultos) => {
+      const q = createAdminClient()
+        .from("professionals")
+        .select("updated_at")
+        .eq("is_banned", false)
+        .order("updated_at", { ascending: false })
+        .limit(1);
+      return (excluirOcultos ? q.eq("oculto_del_buscador", false) : q).maybeSingle();
+    });
     const crudo = (data as { updated_at?: string } | null)?.updated_at;
     if (crudo) ultimoCambio = new Date(crudo);
   } catch { /* sin fecha es mejor que una fecha falsa */ }
@@ -64,14 +66,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   try {
     const supabase = createAdminClient();
-    const { data } = await supabase
-      .from("professionals")
-      .select("slug, updated_at, verification_status, is_banned")
-      .eq("is_banned", false)
-      .eq("oculto_del_buscador", false)
-      .neq("verification_status", "rejected")
-      .not("slug", "is", null)
-      .limit(5000);
+    const { data } = await sinOcultos((excluirOcultos) => {
+      const q = supabase
+        .from("professionals")
+        .select("slug, updated_at, verification_status, is_banned")
+        .eq("is_banned", false)
+        .neq("verification_status", "rejected")
+        .not("slug", "is", null)
+        .limit(5000);
+      return excluirOcultos ? q.eq("oculto_del_buscador", false) : q;
+    });
     for (const row of (data ?? []) as { slug: string; updated_at?: string | null }[]) {
       for (const l of IDIOMAS) out.push({ url: `${APP_URL}${rutaConIdioma(l, `/profesionales/${row.slug}` || "/")}`, lastModified: row.updated_at ? new Date(row.updated_at) : ultimoCambio, changeFrequency: "weekly", priority: 0.6 });
     }

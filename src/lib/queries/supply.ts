@@ -1,5 +1,6 @@
 import { unstable_cache } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { sinOcultos } from "@/lib/queries/sin-ocultos";
 import { PROVINCES } from "@/lib/data/cr-geography";
 
 /**
@@ -22,12 +23,14 @@ async function computeSupplyCounts(): Promise<SupplyCounts> {
   const empty: SupplyCounts = { byCategory: {}, byCategoryProvince: {}, total: 0, verified: 0 };
   try {
     const supabase = createAdminClient();
-    const { data, error } = await supabase
-      .from("professionals")
-      .select("category_id, professions, provincia_id, coverage_provincias, coverage_country, verification_status, is_banned, profiles(is_disabled)")
-      .eq("is_banned", false)
-      .eq("oculto_del_buscador", false)
-      .neq("verification_status", "rejected");
+    const { data, error } = await sinOcultos((excluirOcultos) => {
+      const q = supabase
+        .from("professionals")
+        .select("category_id, professions, provincia_id, coverage_provincias, coverage_country, verification_status, is_banned, profiles(is_disabled)")
+        .eq("is_banned", false)
+        .neq("verification_status", "rejected");
+      return excluirOcultos ? q.eq("oculto_del_buscador", false) : q;
+    });
     if (error || !data) return empty;
     const out: SupplyCounts = { byCategory: {}, byCategoryProvince: {}, total: 0, verified: 0 };
     for (const row of data as unknown as Record<string, unknown>[]) {

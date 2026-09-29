@@ -1,3 +1,4 @@
+import { sinOcultos } from "@/lib/queries/sin-ocultos";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getCategoryLabel } from "@/lib/data/categories";
 import { hasDurablePushOutbox, sendNotificationPush } from "@/lib/push/notify";
@@ -42,12 +43,14 @@ export async function avisarVacanteAProfesionales({
     .limit(1);
   if ((yaAvisado ?? []).length > 0) return 0;
 
-  const { data: pros } = await db
-    .from("professionals")
-    .select("profile_id")
-    .or(`category_id.eq.${serviceCategoryId},professions.cs.{${serviceCategoryId}}`)
-    .eq("is_banned", false)
-    .eq("oculto_del_buscador", false);
+  const { data: pros } = await sinOcultos((excluirOcultos) => {
+    const q = db
+      .from("professionals")
+      .select("profile_id")
+      .or(`category_id.eq.${serviceCategoryId},professions.cs.{${serviceCategoryId}}`)
+      .eq("is_banned", false);
+    return excluirOcultos ? q.eq("oculto_del_buscador", false) : q;
+  });
 
   const destinatarios = [...new Set(
     (pros ?? [])
