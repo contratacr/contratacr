@@ -156,7 +156,7 @@ test.describe("@mobile native shell contracts", () => {
 
   test("signed-out public pages keep the marketplace header pinned at the top and a single way in", async ({ page }) => {
     await resetAuth(page);
-    await gotoOK(page, "/es/promociones");
+    await gotoOK(page, "/promociones");
 
     // En teléfono y en la app, ofertas/empleos NO llevan el navbar de la web
     // (el marco lo pinta solo para el cajón y el escritorio, 39bc6c44): la
@@ -210,7 +210,7 @@ test.describe("@mobile native shell contracts", () => {
       window.localStorage.removeItem("ccr:native-first-run-onboarding:v12");
       window.localStorage.removeItem("ccr:native-first-run-pending-path:v1");
     });
-    await gotoOK(page, "/es");
+    await gotoOK(page, "/");
 
     const onboarding = page.getByTestId("native-first-run-onboarding");
     await expect(onboarding).toBeVisible();
@@ -224,34 +224,34 @@ test.describe("@mobile native shell contracts", () => {
     await clientRole.click();
     await onboarding.getByRole("button", { name: "Crear una cuenta" }).click();
     await expect(onboarding).toBeHidden();
-    await expect(page).toHaveURL(/\/es\/registro\/cliente/);
+    await expect(page).toHaveURL(/\/registro\/cliente/);
     await expect(page.getByRole("heading", { name: "Crear cuenta de cliente", exact: true })).toBeVisible();
     await expect.poll(() => page.evaluate(() => window.localStorage.getItem("ccr:native-first-run-onboarding:v12"))).toBeNull();
     await expect.poll(() => page.evaluate(() => window.localStorage.getItem("ccr:native-first-run-pending-path:v1"))).toBeNull();
     await expect.poll(() => page.evaluate(() => window.sessionStorage.getItem("ccr:native-first-run-auth-session:v1"))).toBe("1");
 
     await page.goBack({ waitUntil: "domcontentloaded" });
-    await expect(page).toHaveURL(/\/es\/?$/);
+    await expect(page).toHaveURL(/^https?:\/\/[^/]+\/?$/);
     await expect(onboarding).toBeVisible();
     await expect(onboarding.getByRole("heading", { name: "¿Cómo quieres empezar?" })).toBeVisible();
 
     await onboarding.getByRole("button", { name: /Ofrecer servicios/i }).click();
     await onboarding.getByRole("button", { name: "Crear una cuenta" }).click();
-    await expect(page).toHaveURL(/\/es\/registro\/profesional/);
+    await expect(page).toHaveURL(/\/registro\/profesional/);
     await expect(page.getByRole("heading", { name: "Crea tu cuenta profesional", exact: true })).toBeVisible();
     await page.goBack({ waitUntil: "domcontentloaded" });
-    await expect(page).toHaveURL(/\/es\/?$/);
+    await expect(page).toHaveURL(/^https?:\/\/[^/]+\/?$/);
     await expect(onboarding).toBeVisible();
 
     await onboarding.getByRole("button", { name: /Inicia sesión/i }).click();
-    await expect(page).toHaveURL(/\/es\/login/);
+    await expect(page).toHaveURL(/\/login/);
     await expect(page.getByRole("heading", { name: "Ingresa a tu cuenta", exact: true })).toBeVisible();
     await page.goBack({ waitUntil: "domcontentloaded" });
-    await expect(page).toHaveURL(/\/es\/?$/);
+    await expect(page).toHaveURL(/^https?:\/\/[^/]+\/?$/);
     await expect(onboarding).toBeVisible();
 
     await onboarding.getByRole("button", { name: /Inicia sesión/i }).click();
-    await expect(page).toHaveURL(/\/es\/login/);
+    await expect(page).toHaveURL(/\/login/);
     await expect(page.getByRole("heading", { name: "Ingresa a tu cuenta", exact: true })).toBeVisible();
     await expect.poll(() => page.evaluate(() => window.localStorage.getItem("ccr:native-first-run-onboarding:v12"))).toBeNull();
   });
@@ -267,7 +267,7 @@ test.describe("@mobile native shell contracts", () => {
     });
 
 
-    await gotoOK(page, "/es");
+    await gotoOK(page, "/");
     // Esta prueba es sobre las PESTAÑAS: que navegar entre tableros dentro de
     // la app no rompa nada. La portada trae un aviso de hidratación propio,
     // anterior a todo esto y que no se ve en pantalla; está anotado abajo como
@@ -286,8 +286,8 @@ test.describe("@mobile native shell contracts", () => {
       // La sección se llama «Promociones» en todo el app; la RUTA sigue siendo
       // /promociones porque hay enlaces publicados con ella. La prueba usaba el
       // nombre viejo para las dos cosas.
-      { label: "Promociones", path: "/es/promociones", heading: "Promociones" },
-      { label: "Empleos", path: "/es/empleos", heading: "Empleos" },
+      { label: "Promociones", path: "/promociones", heading: "Promociones" },
+      { label: "Empleos", path: "/empleos", heading: "Empleos" },
     ]) {
       const nativeNav = page.locator("nav.ccr-native-bottom-nav").filter({ visible: true });
       await expect(nativeNav).toBeVisible();
@@ -322,13 +322,13 @@ test.describe("@mobile native shell contracts", () => {
   test("la portada no debe romper la hidratación", async ({ page }) => {
     const errores: string[] = [];
     page.on("pageerror", (error) => errores.push(error.message));
-    await gotoOK(page, "/es");
+    await gotoOK(page, "/");
     await page.waitForTimeout(3_000);
     expect(errores.filter((e) => /#418|#423|#425|hydrat/i.test(e)), errores.join("\n")).toEqual([]);
   });
 
   test("native search owns the full viewport without a hidden footer reserve", async ({ page }) => {
-    await gotoOK(page, "/es/buscar?regression=1");
+    await gotoOK(page, "/buscar?regression=1");
 
     // «Buscar» es una pestaña de la barra de abajo (b8f95d62): la barra vive
     // también en los resultados y se retira al desplazar; lo que no puede
@@ -376,7 +376,7 @@ test.describe("@mobile native shell contracts", () => {
   });
 
   test("notification rows in the app delete by swipe instead of an item menu", async ({ page }) => {
-    await gotoOK(page, "/es/notificaciones");
+    await gotoOK(page, "/notificaciones");
     await expect(page.getByRole("heading", { name: "Notificaciones", exact: true })).toBeVisible();
 
     // En la app la fila no lleva el menú «Opciones» de la web (a8c05f7a): se

@@ -1,5 +1,6 @@
 "use client";
 
+import { rutaEmpleo } from "@/lib/marketplace-url";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { PhoneInput, isPhoneComplete } from "@/components/ui/phone-input";
@@ -308,7 +309,7 @@ function EditableList({
 
 type JobPostFormInitial = Partial<Pick<JobPost, "service_category_id" | "id" | "title" | "description" | "responsibilities" | "requirements" | "benefits" | "duration_label" | "employment_type" | "experience_level" | "workplace_type" | "location_label" | "salary_min" | "salary_max" | "salary_period" | "currency" | "show_salary" | "openings" | "application_deadline" | "contact_whatsapp" | "status">>;
 
-export function JobPostForm({ professionalId, backHref = "/empleos", initialJob = null, presentation = "page", onSaved, onCancel }: { professionalId: string; backHref?: string; initialJob?: JobPostFormInitial | null; presentation?: "page" | "modal"; onSaved?: (id: string) => void; onCancel?: () => void }) {
+export function JobPostForm({ professionalId, backHref = "/empleos", initialJob = null, presentation = "page", onSaved, onCancel }: { professionalId: string; backHref?: string; initialJob?: JobPostFormInitial | null; presentation?: "page" | "modal"; onSaved?: (id: string, title: string) => void; onCancel?: () => void }) {
   const { cabeceraRef, conLinea } = useHairlineOnScroll();
   const editing = Boolean(initialJob?.id);
   const router = useRouter();
@@ -441,13 +442,13 @@ export function JobPostForm({ professionalId, backHref = "/empleos", initialJob 
       }
       invalidateAppData("jobs");
       if (presentation === "modal") {
-        onSaved?.(data.id);
+        onSaved?.(data.id, title);
         setSaving(false);
         return;
       }
       setConCambios(false);
       const returnToPanel = backHref.includes("/dashboard/profesional");
-      router.replace(`/empleos/${data.id}${returnToPanel ? "?from=panel" : ""}`);
+      router.replace(`${rutaEmpleo({ id: data.id, title })}${returnToPanel ? "?from=panel" : ""}`);
       router.refresh();
     } catch (submitError) {
       const message = submitError instanceof Error ? submitError.message : "";

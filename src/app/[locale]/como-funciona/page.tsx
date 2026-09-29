@@ -1,4 +1,5 @@
 import { EMPLEOS_VISIBLE } from "@/lib/feature-flags";
+import { prefijoDeIdioma } from "@/lib/prefijo-de-idioma";
 import { alternativasDeIdioma } from "@/lib/seo/alternates";
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
@@ -24,8 +25,8 @@ const APP_URL = (process.env.NEXT_PUBLIC_APP_URL || "https://contratacr.com").re
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations("comoFunciona");
-  const path = `/${locale}/como-funciona`;
-  const imageUrl = `${APP_URL}/${locale}/opengraph-image`;
+  const path = `${prefijoDeIdioma(locale)}/como-funciona`;
+  const imageUrl = `${APP_URL}${prefijoDeIdioma(locale)}/opengraph-image`;
 
   return {
     title: t("metaTitle"),

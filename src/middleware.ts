@@ -3,6 +3,7 @@ import { categorySlug, idDesdeDireccion } from "@/lib/data/category-slug";
 import { getProvinceById } from "@/lib/data/cr-geography";
 import { filtrosDeRuta, rutaDeBusqueda } from "@/lib/buscar-url";
 import { RUTAS_DEL_SITIO } from "@/lib/site-routes";
+import { idiomaDeRuta, rutaConIdioma, sinPrefijoDeIdioma } from "@/lib/prefijo-de-idioma";
 import createIntlMiddleware from "next-intl/middleware";
 import { type NextRequest, NextResponse } from "next/server";
 import { routing } from "./i18n/routing";
@@ -43,17 +44,26 @@ export async function middleware(request: NextRequest) {
     return conCabecerasDeSeguridad(NextResponse.next());
   }
 
-  // EVERY unprefixed path redirects to its locale-prefixed canonical URL. This
-  // single redirect makes the `[locale]` routes the source of truth, so old
-  // non-localized bookmarks/links (/buscar, /login, /registro, /profesionales/…,
-  // and any other path) never 404 — they land on the real localized page.
-  // Locale = la elección guardada si la hay; si no, el idioma del dispositivo
-  // (ver `idiomaPreferido`), que solo devuelve inglés cuando el navegador lo
-  // prefiere POR ENCIMA del español. Temporary (307) because the target
-  // depends on the cookie (a user can switch locale anytime); SEO canonical-
-  // ization is handled by the page metadata, not the redirect status.
-  // Vanity bio links (see next.config redirects — this middleware runs first on
-  // OpenNext, so they must be resolved here or the locale redirect swallows them).
+  // El español vive en la raíz. Toda dirección con /es delante —años de enlaces
+  // compartidos, sitemap viejo, avisos guardados— salta con 308 PERMANENTE a la
+  // misma sin prefijo, con su consulta intacta, para que Google traslade lo
+  // ganado en vez de tratarlas como dos páginas. Va antes de cualquier otra
+  // regla: así ninguna reconstruye una dirección con /es.
+  const conEs = /^\/es(?=\/|$)/i.exec(pathname);
+  if (conEs) {
+    const destino = request.nextUrl.clone();
+    // Y de paso el nombre viejo de la sección, para que sea UN salto.
+    destino.pathname = (pathname.slice(3) || "/").replace(/^\/ofertas(?=\/|$)/i, "/promociones").replace(/^\/promociones\/mis-ofertas(?=\/|$)/i, "/promociones/mis-promociones");
+    return NextResponse.redirect(destino, 308);
+  }
+  // La sección del panel admin también se llamaba «ofertas».
+  const adminViejo = /^(?:\/en)?\/admin\/ofertas\/?$/i.exec(pathname);
+  if (adminViejo) {
+    const destino = request.nextUrl.clone();
+    destino.pathname = pathname.replace(/ofertas\/?$/i, "promociones");
+    return NextResponse.redirect(destino, 308);
+  }
+
   // Idioma del dispositivo, SOLO para quien nunca ha elegido uno a mano.
   // Costa Rica es el mercado, así que el español es el punto de partida: solo
   // se abre en inglés cuando el navegador dice preferir inglés POR ENCIMA del
@@ -81,12 +91,12 @@ export async function middleware(request: NextRequest) {
   };
 
   const VANITY: Record<string, string> = {
-    "/ig": "/es?utm_source=instagram&utm_medium=organic&utm_campaign=bio",
-    "/tt": "/es?utm_source=tiktok&utm_medium=organic&utm_campaign=bio",
-    "/fb": "/es?utm_source=facebook&utm_medium=organic&utm_campaign=bio",
-    "/wa": "/es?utm_source=whatsapp&utm_medium=referral&utm_campaign=bio",
+    "/ig": "/?utm_source=instagram&utm_medium=organic&utm_campaign=bio",
+    "/tt": "/?utm_source=tiktok&utm_medium=organic&utm_campaign=bio",
+    "/fb": "/?utm_source=facebook&utm_medium=organic&utm_campaign=bio",
+    "/wa": "/?utm_source=whatsapp&utm_medium=referral&utm_campaign=bio",
     // Professional recruiting by hand (WhatsApp outreach) — lands on the signup.
-    "/pro": "/es/registro/profesional?utm_source=whatsapp&utm_medium=outreach&utm_campaign=pro-invitacion",
+    "/pro": "/registro/profesional?utm_source=whatsapp&utm_medium=outreach&utm_campaign=pro-invitacion",
   };
   if (VANITY[pathname]) {
     return NextResponse.redirect(new URL(VANITY[pathname], request.url), 307);
@@ -111,7 +121,7 @@ export async function middleware(request: NextRequest) {
   const perfilCorto = /^\/@?([a-z0-9][a-z0-9-]{2,80})$/.exec(pathname.toLowerCase());
   if (perfilCorto && !RUTAS_DEL_SITIO.has(perfilCorto[1])) {
     const locale = idiomaPreferido();
-    const destino = new URL(`/${locale}/profesionales/${perfilCorto[1]}`, request.url);
+    const destino = new URL(rutaConIdioma(locale, `/profesionales/${perfilCorto[1]}`), request.url);
     destino.search = request.nextUrl.search;
     return NextResponse.redirect(destino, 307);
   }
@@ -146,14 +156,14 @@ export async function middleware(request: NextRequest) {
   if (promociones) {
     const idioma = promociones[1] ?? (request.cookies.get("NEXT_LOCALE")?.value === "en" ? "en" : "es");
     const cola = (promociones[2] ?? "").replace(/^\/mis-ofertas(?=\/|$)/i, "/mis-promociones");
-    const destino = new URL(`/${idioma}/promociones${cola}`, request.url);
+    const destino = new URL(rutaConIdioma(idioma, `/promociones${cola}`), request.url);
     destino.search = request.nextUrl.search;
     return NextResponse.redirect(destino, 308);
   }
 
-  const renombrada = /^\/(es|en)(\/[a-z-]+)\/?$/i.exec(pathname);
+  const renombrada = /^(?:\/(en))?(\/[a-z-]+)\/?$/i.exec(pathname);
   if (renombrada && RENOMBRADAS[renombrada[2].toLowerCase()]) {
-    const destino = new URL(`/${renombrada[1]}${RENOMBRADAS[renombrada[2].toLowerCase()]}`, request.url);
+    const destino = new URL(rutaConIdioma(renombrada[1], RENOMBRADAS[renombrada[2].toLowerCase()]), request.url);
     destino.search = request.nextUrl.search;
     return NextResponse.redirect(destino, 308);
   }
@@ -180,25 +190,26 @@ export async function middleware(request: NextRequest) {
   // parámetros (?categoria=…&provincia=al&canton=al-gr) salta a la bonita, y la
   // bonita se reescribe por dentro a la de parámetros, que es la que la página
   // entiende. La reescritura no vuelve a pasar por aquí, así que no hay bucle.
-  const buscarRaiz = /^\/(es|en)\/buscar\/?$/.exec(pathname);
+  const buscarRaiz = /^(?:\/(en))?\/buscar\/?$/.exec(pathname);
   if (buscarRaiz && (request.nextUrl.searchParams.has("categoria") || request.nextUrl.searchParams.has("provincia"))) {
     const bonita = rutaDeBusqueda(request.nextUrl.searchParams);
     if (!/^\/buscar\/?(?:\?|$)/.test(bonita)) {
-      return NextResponse.redirect(new URL(`/${buscarRaiz[1]}${bonita}`, request.url), 308);
+      return NextResponse.redirect(new URL(rutaConIdioma(buscarRaiz[1], bonita), request.url), 308);
     }
   }
-  const buscarBonito = /^\/(es|en)\/buscar\/[^/?#]+/.exec(pathname);
+  const buscarBonito = /^(?:\/(en))?\/buscar\/[^/?#]+/.exec(pathname);
   if (buscarBonito) {
     const enRuta = filtrosDeRuta(pathname);
     if (enRuta) {
-      const destino = new URL(`/${buscarBonito[1]}/buscar`, request.url);
+      // Reescritura interna: la ruta de Next sigue siendo /[locale]/buscar.
+      const destino = new URL(`/${buscarBonito[1] ?? "es"}/buscar`, request.url);
       destino.search = request.nextUrl.search;
       for (const [clave, valor] of Object.entries(enRuta)) if (valor) destino.searchParams.set(clave, valor);
       return NextResponse.rewrite(destino);
     }
   }
 
-  const oficio = /^\/(es|en)\/servicios\/([a-z0-9_-]+)(?:\/([a-z-]{2,}))?\/?$/i.exec(pathname);
+  const oficio = /^(?:\/(en))?\/servicios\/([a-z0-9_-]+)(?:\/([a-z-]{2,}))?\/?$/i.exec(pathname);
   if (oficio) {
     const servicioPedido = oficio[2];
     const provinciaPedida = oficio[3];
@@ -207,22 +218,28 @@ export async function middleware(request: NextRequest) {
     const provinciaBuena = provincia ? provincia.slug : provinciaPedida;
     if (servicioBueno !== servicioPedido || provinciaBuena !== provinciaPedida) {
       const cola = provinciaBuena ? `/${provinciaBuena}` : "";
-      const destino = new URL(`/${oficio[1]}/servicios/${servicioBueno}${cola}`, request.url);
+      const destino = new URL(rutaConIdioma(oficio[1], `/servicios/${servicioBueno}${cola}`), request.url);
       destino.search = request.nextUrl.search;
       return NextResponse.redirect(destino, 308);
     }
   }
 
-  const hasLocalePrefix = /^\/(?:es|en)(?:\/|$)/.test(pathname);
-  if (!hasLocalePrefix) {
-    const target = idiomaPreferido();
-    const url = request.nextUrl.clone();
-    url.pathname = `/${target}${pathname === "/" ? "" : pathname}`;
-    return NextResponse.redirect(url);
+  // Sin prefijo = español. Solo quien ya está leyendo en inglés (cookie de esta
+  // visita o elección guardada) salta a /en/…; a propósito NO se mira el
+  // Accept-Language aquí: un rastreador que dice preferir inglés se llevaría un
+  // redirect en vez de la página española, que es la canónica.
+  const locale = idiomaDeRuta(pathname);
+  if (locale === "es") {
+    const guardado = request.cookies.get("NEXT_LOCALE")?.value;
+    if (guardado === "en") {
+      const url = request.nextUrl.clone();
+      url.pathname = rutaConIdioma("en", pathname);
+      return NextResponse.redirect(url, 307);
+    }
   }
 
-  // Strip locale prefix to get the base path for matching
-  const withoutLocale = pathname.replace(/^\/(?:es|en)/, "") || "/";
+  // Sin el prefijo de idioma, para comparar con las listas de rutas
+  const withoutLocale = sinPrefijoDeIdioma(pathname);
 
   const isProtected = PROTECTED_PREFIXES.some(
     (p) => withoutLocale === p || withoutLocale.startsWith(p + "/")
@@ -238,9 +255,8 @@ export async function middleware(request: NextRequest) {
   // pueda escribir `<html lang>` bien desde el servidor. Antes el HTML siempre
   // decía español y un efecto lo corregía después de hidratar: un buscador que
   // lee /en recibía la página marcada como española.
-  request.headers.set("x-ccr-locale", pathname.split("/")[1] === "en" ? "en" : "es");
+  request.headers.set("x-ccr-locale", locale);
   const response = conCabecerasDeSeguridad(handleI18n(request));
-  const locale = pathname.split("/")[1] || "es";
   // La cookie recuerda el idioma que se está LEYENDO, no solo el que se eligió
   // con el botón. Sin esto, quien llega en inglés por un enlace y luego abre
   // una dirección sin prefijo (el perfil corto, /o/, /e/, /c/) volvía al
@@ -348,7 +364,7 @@ export async function middleware(request: NextRequest) {
   // Logged in but hasn't chosen a role yet → onboarding (protected routes only).
   if (needsAuthGate) {
     const onboardingDone = user.user_metadata?.onboarding_completed === true;
-    if (!onboardingDone) return redirectKeepingCookies(`/${locale}/onboarding`, request, response);
+    if (!onboardingDone) return redirectKeepingCookies(rutaConIdioma(locale, "/onboarding"), request, response);
 
     // Antes, una cuenta que había EMPEZADO el registro profesional sin
     // terminarlo no podía entrar al panel: cada visita la devolvía al
@@ -378,7 +394,7 @@ function clearAuthCookies(request: NextRequest, response: NextResponse) {
 // `?redirect=` so login can return the user there — carried through Google OAuth
 // (login → ?next= → /auth/callback). Used by both auth-gate branches.
 function redirectToLogin(locale: string, request: NextRequest, response: NextResponse) {
-  const url = new URL(`/${locale}/login`, request.url);
+  const url = new URL(rutaConIdioma(locale, "/login"), request.url);
   url.searchParams.set("redirect", request.nextUrl.pathname + request.nextUrl.search);
   const redirectRes = NextResponse.redirect(url);
   response.cookies.getAll().forEach((c) => redirectRes.cookies.set(c));

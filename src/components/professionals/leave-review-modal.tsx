@@ -31,9 +31,9 @@ interface LeaveReviewModalProps {
 const PENDING_REVIEW_KEY_PREFIX = "contratacr:pending-profile-review:";
 
 function currentLocalePrefix() {
-  if (typeof window === "undefined") return "/es";
+  if (typeof window === "undefined") return "";
   const segment = window.location.pathname.split("/")[1];
-  return segment === "en" ? "/en" : "/es";
+  return segment === "en" ? "/en" : "";
 }
 
 export function LeaveReviewModal({

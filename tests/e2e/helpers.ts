@@ -249,7 +249,7 @@ export async function loginAs(page: Page, email: string, password: string) {
   let lastError: unknown;
   for (let attempt = 0; attempt < 2; attempt += 1) {
     await resetAuth(page);
-    await gotoOK(page, "/es/login");
+    await gotoOK(page, "/login");
     await waitForInteractivePage(page);
     await openLoginForm(page);
 
@@ -279,7 +279,7 @@ export async function resetAuth(page: Page) {
   const platform = (await page.context().cookies()).find((cookie) => cookie.name === "ccr_platform");
   await page.context().clearCookies();
   if (platform) await page.context().addCookies([{ name: platform.name, value: platform.value, domain: platform.domain, path: platform.path }]);
-  await page.goto("/es", { waitUntil: "domcontentloaded" }).catch(() => undefined);
+  await page.goto("/", { waitUntil: "domcontentloaded" }).catch(() => undefined);
   await page.evaluate(() => {
     localStorage.clear();
     sessionStorage.clear();
@@ -316,7 +316,7 @@ export function isMobileProject(testInfo: TestInfo) {
 }
 
 export async function firstProfessionalHref(page: Page) {
-  await gotoOK(page, "/es/buscar");
+  await gotoOK(page, "/buscar");
   const links = page.locator('a[href*="/profesionales/"]').filter({ visible: true });
 
   await expect

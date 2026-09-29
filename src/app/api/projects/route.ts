@@ -345,7 +345,7 @@ export async function POST(req: NextRequest) {
             // (Y «publico» iba sin tilde: el push muestra este texto tal cual.)
             message: `Un cliente publicó "${finalTitle}" en ${label}. Escríbele por WhatsApp si te interesa.`,
             data: {
-              link: "/es/proyectos",
+              link: "/proyectos",
               project_id: projectId,
               project_created_at: projectCreatedAt,
               project_title: finalTitle,
@@ -480,7 +480,7 @@ async function autoCloseStale(admin: any, rows: any[]): Promise<any[]> {
     type: "project_cancelled",
     title: "Cerramos tu proyecto por inactividad",
     message: `"${r.title}" llevaba ${AUTO_CLOSE_DAYS} días sin movimiento. Si todavía la necesitas, puedes volver a publicarla con un toque.`,
-    data: { link: "/es/dashboard/profesional?tab=sent_projects", project_id: r.id, project_title: r.title, project_action: "auto_closed" },
+    data: { link: "/dashboard/profesional?tab=sent_projects", project_id: r.id, project_title: r.title, project_action: "auto_closed" },
   }));
   try {
     await admin.from("notifications").insert(notifications);

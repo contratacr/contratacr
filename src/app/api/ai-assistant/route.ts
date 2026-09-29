@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { prefijoDeIdioma } from "@/lib/prefijo-de-idioma";
 import { unstable_cache } from "next/cache";
 import { EMPLEOS_VISIBLE } from "@/lib/feature-flags";
 import { recordServerInteraction } from "@/lib/analytics/server-events";
@@ -773,8 +774,8 @@ const PRODUCT_INTENTS: ProductIntent[] = [
   {
     test: (n) => /^(ayuda|help|\?+|necesito algo|no se|que puedes hacer|que haces|what can you do|menu)[\s?!.]*$/.test(n),
     answer: {
-      es: "Puedo hacer tres cosas: buscar profesionales por servicio y zona (escribe, por ejemplo, «ocupo un plomero en Cartago»), explicarte cómo reservar una cita, chatear, publicar lo que necesitas o dejar una reseña, y ayudarte con tu cuenta (contraseña, cédula, notificaciones). ¿Por dónde empezamos?",
-      en: "I can do three things: find professionals by service and area (for example \"I need a plumber in Cartago\"), explain how to book an appointment, chat, post what you need or leave a review, and help with your account (password, ID, notifications). Where do we start?",
+      es: "Puedo hacer tres cosas: buscar profesionales por servicio y zona (escribe, por ejemplo, «ocupo un plomero en Cartago»), explicarte cómo escribirle a un profesional, publicar lo que necesitas o dejar una reseña, y ayudarte con tu cuenta (contraseña, cédula, notificaciones). ¿Por dónde empezamos?",
+      en: "I can do three things: find professionals by service and area (for example \"I need a plumber in Cartago\"), explain how to message a professional, post what you need or leave a review, and help with your account (password, ID, notifications). Where do we start?",
     },
   },
   {
@@ -792,7 +793,7 @@ const PRODUCT_INTENTS: ProductIntent[] = [
       en: "Tap \"Forgot your password?\" on the sign-in screen: we email you a link to create a new one.",
     },
     cta: { es: "Restablecer contraseña", en: "Reset password" },
-    href: (locale) => `/${locale}/olvide-contrasena`,
+    href: (locale) => `${prefijoDeIdioma(locale)}/olvide-contrasena`,
   },
   {
     test: (n) => /(cambi|actualiz|modific|poner|nueva|change|update|new).{0,20}(contrasena|clave|password)/.test(n) || /(contrasena|clave|password).{0,20}(cambi|nueva|new)/.test(n),
@@ -802,17 +803,17 @@ const PRODUCT_INTENTS: ProductIntent[] = [
       en: "In your panel, open Account & security: enter your current password and the new one. If you don't remember it, use \"Forgot your password?\" when signing in.",
     },
     cta: { es: "Ir a Cuenta y seguridad", en: "Open Account & security" },
-    href: (locale) => `/${locale}/dashboard/profesional?tab=cuenta`,
+    href: (locale) => `${prefijoDeIdioma(locale)}/dashboard/profesional?tab=cuenta`,
   },
   {
     test: (n) => /(elimin|borr|cerr|dar de baja|desactiv|delete|close|deactivate|remove).{0,20}(mi cuenta|la cuenta|cuenta|my account|account)/.test(n),
     action: "open_dashboard",
     answer: {
-      es: "En tu panel, abre Cuenta y seguridad y baja hasta «Eliminar cuenta». Se borran tu perfil, tus citas, tus proyectos y tus mensajes; no se puede deshacer.",
+      es: "En tu panel, abre Cuenta y seguridad y baja hasta «Eliminar cuenta». Se borran tu perfil, tus proyectos y tus mensajes; no se puede deshacer.",
       en: "In your panel, open Account & security and scroll to \"Delete account\". Your profile, requests and messages are removed; it cannot be undone.",
     },
     cta: { es: "Ir a Cuenta y seguridad", en: "Open Account & security" },
-    href: (locale) => `/${locale}/dashboard/profesional?tab=cuenta`,
+    href: (locale) => `${prefijoDeIdioma(locale)}/dashboard/profesional?tab=cuenta`,
   },
   {
     test: (n) => /(verific|validar|confirmar|verify|validate).{0,25}(cedula|identidad|identity|id\b)/.test(n) || /(cedula|identidad).{0,20}(verific|validar)/.test(n),
@@ -822,7 +823,7 @@ const PRODUCT_INTENTS: ProductIntent[] = [
       en: "In your panel, open Account & security → Basic details and enter your ID number: it is checked against the national registry and your name gets verified. Professionals also go through the team's verification, shown as \"Verified\" on the profile.",
     },
     cta: { es: "Ir a Cuenta y seguridad", en: "Open Account & security" },
-    href: (locale) => `/${locale}/dashboard/profesional?tab=cuenta`,
+    href: (locale) => `${prefijoDeIdioma(locale)}/dashboard/profesional?tab=cuenta`,
   },
   {
     test: (n) => /(cambi|subir|poner|actualiz|change|upload|update).{0,20}(foto|imagen|photo|picture|avatar)/.test(n) || /(foto|photo).{0,20}(perfil|profile)/.test(n),
@@ -832,7 +833,7 @@ const PRODUCT_INTENTS: ProductIntent[] = [
       en: "Professionals: in your panel open My profile and tap the photo to change it. Clients: Account & security → Basic details.",
     },
     cta: { es: "Ir a mi panel", en: "Open my panel" },
-    href: (locale) => `/${locale}/dashboard/profesional?tab=cuenta`,
+    href: (locale) => `${prefijoDeIdioma(locale)}/dashboard/profesional?tab=cuenta`,
   },
   {
     test: (n) => /(notificacion|notificaciones|avisos|alertas|notification|notifications)/.test(n) && /(no me llegan|no llegan|no recibo|no salen|no suenan|activar|desactivar|apagar|prender|configurar|not (getting|receiving)|turn (on|off)|enable|disable)/.test(n),
@@ -842,7 +843,7 @@ const PRODUCT_INTENTS: ProductIntent[] = [
     },
     cta: { es: "Ver notificaciones", en: "See notifications" },
     action: "help",
-    href: (locale) => `/${locale}/notificaciones`,
+    href: (locale) => `${prefijoDeIdioma(locale)}/notificaciones`,
   },
   {
     test: (n) => /(public|cre[oa]|sub[oi]|pon[eg]|hac[eo]|publish|create|post).{0,15}(una oferta|oferta|ofertas|promocion|descuento|an offer|offer|deal)/.test(n),
@@ -852,7 +853,7 @@ const PRODUCT_INTENTS: ProductIntent[] = [
       en: "Promotions are published by professionals: in your panel open the Promotions tab and tap \"Publish promotion\" (title, discounted price, photo and validity). Clients see them in the app's Promotions section.",
     },
     cta: { es: "Ir a Promociones", en: "Open Promotions" },
-    href: (locale) => `/${locale}/dashboard/profesional?tab=offers`,
+    href: (locale) => `${prefijoDeIdioma(locale)}/dashboard/profesional?tab=offers`,
   },
   {
     test: (n) => EMPLEOS_VISIBLE && (/(public|cre[oa]|sub[oi]|pon[eg]|hac[eo]|busco|necesito|ocupo|publish|create|post|hire).{0,15}(un empleo|empleo|empleos|vacante|puesto|plaza|un trabajo para|personal|empleado|empleada|a job|job post|vacancy)/.test(n) && !/(postul|aplic|apply)/.test(n)),    action: "open_dashboard",
@@ -861,7 +862,7 @@ const PRODUCT_INTENTS: ProductIntent[] = [
       en: "To hire staff, publish a job from your panel: Jobs tab → \"Publish job\" (position, contract type, place, salary if you want to show it). People apply from the Jobs section and you see the applications right there.",
     },
     cta: { es: "Ir a Empleos", en: "Open Jobs" },
-    href: (locale) => `/${locale}/dashboard/profesional?tab=jobs`,
+    href: (locale) => `${prefijoDeIdioma(locale)}/dashboard/profesional?tab=jobs`,
   },
   {
     test: (n) => EMPLEOS_VISIBLE && (/(postular|postulo|postularme|aplicar|aplico|apply|applying).{0,20}(trabajo|empleo|puesto|vacante|job|position)/.test(n) || /(trabajo|empleo|job).{0,20}(postular|aplicar|apply)/.test(n)),    action: "help",
@@ -870,7 +871,7 @@ const PRODUCT_INTENTS: ProductIntent[] = [
       en: "Go to Jobs, open the position you like and tap \"Apply\": attach your résumé and a message. Your applications stay in your panel, in the My applications tab.",
     },
     cta: { es: "Ver empleos", en: "See jobs" },
-    href: (locale) => `/${locale}/empleos`,
+    href: (locale) => `${prefijoDeIdioma(locale)}/empleos`,
   },
   {
     test: (n) => EMPLEOS_VISIBLE && (/(ver|buscar|hay|busco|donde|where|see|find|show).{0,15}(ofertas de trabajo|ofertas de empleo|empleos|trabajos|vacantes|puestos|jobs|job offers|vacancies)/.test(n) || /^(empleos|trabajos|vacantes|jobs)[\s?!.]*$/.test(n)),    action: "help",
@@ -879,7 +880,7 @@ const PRODUCT_INTENTS: ProductIntent[] = [
       en: "Open jobs are in the Jobs section: filter by place and contract type, and apply from each position.",
     },
     cta: { es: "Ver empleos", en: "See jobs" },
-    href: (locale) => `/${locale}/empleos`,
+    href: (locale) => `${prefijoDeIdioma(locale)}/empleos`,
   },
   {
     test: (n) => /(editar|modificar|cambiar|corregir|retirar|borrar|edit|change|withdraw).{0,15}(mi propuesta|una propuesta|la propuesta|propuesta|mi respuesta|la respuesta|respuesta|proposal|reply)/.test(n),
@@ -889,7 +890,7 @@ const PRODUCT_INTENTS: ProductIntent[] = [
       en: "There are no proposals or replies inside the app any more: open the project in Projects and message the client on WhatsApp. Whatever you agree happens there.",
     },
     cta: { es: "Ver proyectos", en: "See projects" },
-    href: (locale) => `/${locale}/proyectos`,
+    href: (locale) => `${prefijoDeIdioma(locale)}/proyectos`,
   },
   {
     test: (n) => /(instal|descarg|baj[oa]|install|download).{0,15}(la app|app|aplicacion|contratacr)/.test(n) || /(app|aplicacion).{0,15}(instal|descarg|install|download)/.test(n),
@@ -899,14 +900,16 @@ const PRODUCT_INTENTS: ProductIntent[] = [
       en: "You are already in the app 🙂. To install it on another phone, open contratacr.com/ayuda from that phone: the guide for the App Store and Google Play is there.",
     },
     cta: { es: "Ver la guía", en: "See the guide" },
-    href: (locale) => `/${locale}/ayuda`,
+    href: (locale) => `${prefijoDeIdioma(locale)}/ayuda`,
   },
   {
     test: (n) => /(como|how).{0,12}(agend|reserv|sacar|pedir|program|book|schedule).{0,15}(cita|hora|horario|servicio|turno|appointment|service)/.test(n) || /^(agendar|reservar)( una)? (cita|hora)[\s?!.]*$/.test(n),
     unlessService: true,
     answer: {
-      es: "Busca el servicio, abre el perfil del profesional y toca un horario del calendario o «Ver horario completo»: eliges día y hora y tu cita queda agendada; el profesional la ve en su panel y te avisamos si algo cambia. Si el profesional coordina por WhatsApp, verás «Enviar mensaje» en su lugar. Dime el servicio y la zona y te muestro opciones.",
-      en: "Search the service, open the professional's profile and tap a time in the calendar or \"See full schedule\": choose day and time and your appointment is booked; the professional sees it in their panel and we notify you if anything changes. If the professional coordinates by WhatsApp you will see \"Send message\" instead. Tell me the service and the area and I'll show you options.",
+      // En el app no se agenda: se contacta. La respuesta anterior explicaba
+      // paso a paso cómo elegir día y hora en un calendario que ya no existe.
+      es: "Busca el servicio, abre el perfil del profesional y toca «Enviar mensaje»: le escribes por aquí mismo y coordinan el día y la hora entre ustedes. Si prefiere el teléfono, verás «Llamar». Dime el servicio y la zona y te muestro opciones.",
+      en: "Search the service, open the professional's profile and tap \"Send message\": you write to them right here and the two of you agree on the day and time. If they prefer the phone, you will see \"Call\". Tell me the service and the area and I'll show you options.",
     },
   },
   {
@@ -918,24 +921,24 @@ const PRODUCT_INTENTS: ProductIntent[] = [
     },
     cta: { es: "Ir a Mensajes", en: "Open Messages" },
     action: "help",
-    href: (locale) => `/${locale}/mensajes`,
+    href: (locale) => `${prefijoDeIdioma(locale)}/mensajes`,
   },
   {
     test: (n) => /(dej|pon|escrib|hac|dar|doy|leave|write|give).{0,15}(una resena|resena|calificacion|opinion|review|rating)/.test(n) || /(calific|resen|rate|review).{0,15}(profesional|servicio|professional|service)/.test(n),
     action: "open_dashboard",
     answer: {
-      es: "Cuando el servicio termina, en tu panel → Mis citas (o Mis proyectos, si publicaste uno) aparece «Dejar reseña» junto a ese servicio: pones estrellas y un comentario, y se muestra en el perfil del profesional.",
-      en: "When the service is done, in your panel → My appointments (or My projects, if you posted one) you'll see \"Leave a review\" next to that service: give stars and a comment, and it shows on the professional's profile.",
+      es: "Cuando el servicio termina, en tu panel → Mis proyectos aparece «Dejar reseña» junto a ese servicio: pones estrellas y un comentario, y se muestra en el perfil del profesional.",
+      en: "When the service is done, in your panel → My projects you'll see \"Leave a review\" next to that service: give stars and a comment, and it shows on the professional's profile.",
     },
-    cta: { es: "Ver mis citas", en: "See my appointments" },
-    href: (locale) => `/${locale}/dashboard/profesional?mode=use&tab=sent_bookings`,
+    cta: { es: "Ver mis proyectos", en: "See my projects" },
+    href: (locale) => `${prefijoDeIdioma(locale)}/dashboard/profesional?tab=sent_projects`,
   },
   {
     test: (n) => /(videoconsulta|video consulta|videollamada|consulta virtual|en linea|online|video call|video consultation)/.test(n) && /(como|funciona|hay|puedo|how|work)/.test(n),
     unlessService: true,
     answer: {
-      es: "Algunos profesionales atienden por videoconsulta: en tu perfil aparece «Videoconsulta» junto a la ubicación, y al agendar eliges esa modalidad. En la búsqueda puedes filtrar «Videoconsulta» en la ubicación para ver solo esos profesionales.",
-      en: "Some professionals attend by video consultation: their profile shows \"Video consultation\" next to the location, and you pick that modality when booking. In search, filter \"Video consultation\" under location to see only those professionals.",
+      es: "Algunos profesionales atienden por videoconsulta: en tu perfil aparece «Videoconsulta» junto a la ubicación, y al escribirle acuerdan esa modalidad. En la búsqueda puedes filtrar «Videoconsulta» en la ubicación para ver solo esos profesionales.",
+      en: "Some professionals attend by video consultation: their profile shows \"Video consultation\" next to the location, and you agree on that modality when you message them. In search, filter \"Video consultation\" under location to see only those professionals.",
     },
     cta: { es: "Buscar por videoconsulta", en: "Search video consultations" },
     action: "help",
@@ -1039,8 +1042,8 @@ function localAnswer(message: string, locale: Locale): AssistantPayload {
       confidence: 1,
       documented: true,
       answer: locale === "en"
-        ? "Create a client account to save professionals, book appointments, post requests and read the replies from your panel."
-        : "Crea una cuenta de cliente para guardar profesionales, reservar citas, publicar lo que necesitas y leer las respuestas desde tu panel.",
+        ? "Create a client account to save professionals, message them, post what you need and read the replies from your panel."
+        : "Crea una cuenta de cliente para guardar profesionales, escribirles, publicar lo que necesitas y leer las respuestas desde tu panel.",
       ctaLabel: locale === "en" ? "Create client account" : "Crear cuenta de cliente",
     };
   }
@@ -1051,8 +1054,8 @@ function localAnswer(message: string, locale: Locale): AssistantPayload {
       confidence: 1,
       documented: true,
       answer: locale === "en"
-        ? "Open sign in to access your panel, messages, saved professionals, appointments and projects."
-        : "Abre inicio de sesión para entrar a tu panel, mensajes, favoritos, citas y proyectos.",
+        ? "Open sign in to access your panel, messages, saved professionals and projects."
+        : "Abre inicio de sesión para entrar a tu panel, mensajes, favoritos y proyectos.",
       ctaLabel: locale === "en" ? "Sign in" : "Iniciar sesión",
     };
   }
@@ -1279,37 +1282,37 @@ function actionHref(payload: AssistantPayload, originalMessage: string, locale: 
       params.set("provincia", place.provinceId);
       params.set("canton", place.id);
     }
-    return `/${locale}/dashboard/profesional?${params.toString()}`;
+    return `${prefijoDeIdioma(locale)}/dashboard/profesional?${params.toString()}`;
   }
-  if (payload.action === "how_it_works") return `/${locale}/como-funciona`;
-  if (payload.action === "support") return `/${locale}/soporte`;
-  if (payload.action === "suggest_service") return `/${locale}/servicios`;
+  if (payload.action === "how_it_works") return `${prefijoDeIdioma(locale)}/como-funciona`;
+  if (payload.action === "support") return `${prefijoDeIdioma(locale)}/soporte`;
+  if (payload.action === "suggest_service") return `${prefijoDeIdioma(locale)}/servicios`;
   if (payload.action === "select_professional") return null;
-  if (payload.action === "browse_services") return `/${locale}/servicios`;
-  if (payload.action === "register_client") return `/${locale}/registro/cliente`;
-  if (payload.action === "register_professional") return `/${locale}/registro/profesional`;
-  if (payload.action === "login") return `/${locale}/login`;
-  if (payload.action === "reset_password") return `/${locale}/olvide-contrasena`;
+  if (payload.action === "browse_services") return `${prefijoDeIdioma(locale)}/servicios`;
+  if (payload.action === "register_client") return `${prefijoDeIdioma(locale)}/registro/cliente`;
+  if (payload.action === "register_professional") return `${prefijoDeIdioma(locale)}/registro/profesional`;
+  if (payload.action === "login") return `${prefijoDeIdioma(locale)}/login`;
+  if (payload.action === "reset_password") return `${prefijoDeIdioma(locale)}/olvide-contrasena`;
   if (payload.action === "open_dashboard") {
     const normalized = normalizeText(originalMessage);
     if (includesAny(normalized, ["disponibilidad", "agenda", "horario", "availability", "schedule"])) {
-      return `/${locale}/dashboard/profesional?tab=availability`;
+      return `${prefijoDeIdioma(locale)}/dashboard/profesional?tab=availability`;
     }
     if (includesAny(normalized, ["oportunidad", "oportunidades", "propuesta", "propuestas", "opportunity", "opportunities", "proposal", "proposals"])) {
-      return `/${locale}/proyectos`;
+      return `${prefijoDeIdioma(locale)}/proyectos`;
     }
     if (includesAny(normalized, ["mensaje", "mensajes", "chat", "message", "messages"])) {
-      return `/${locale}/mensajes`;
+      return `${prefijoDeIdioma(locale)}/mensajes`;
     }
     if (includesAny(normalized, ["correo de mi cuenta", "cambiar el correo", "cambio mi correo", "contrasena de mi cuenta", "cambiar mi contrasena", "cambio mi contrasena", "cerrar mi cuenta", "cuenta y seguridad", "account security", "change my email", "change my password", "close my account"])) {
-      return `/${locale}/dashboard/profesional?tab=cuenta`;
+      return `${prefijoDeIdioma(locale)}/dashboard/profesional?tab=cuenta`;
     }
     if (includesAny(normalized, ["mis servicios", "servicio que ofrezco", "servicios que ofrezco", "agregar otro servicio", "agregar un servicio", "agrego otro servicio", "agrego un servicio", "anadir otro servicio", "anadir un servicio", "anado otro servicio", "anado un servicio", "editar mis servicios", "my services", "add a service", "edit my services"])) {
-      return `/${locale}/dashboard/profesional?tab=services`;
+      return `${prefijoDeIdioma(locale)}/dashboard/profesional?tab=services`;
     }
-    return `/${locale}/dashboard/profesional`;
+    return `${prefijoDeIdioma(locale)}/dashboard/profesional`;
   }
-  if (payload.action === "help") return `/${locale}/ayuda`;
+  if (payload.action === "help") return `${prefijoDeIdioma(locale)}/ayuda`;
   if (payload.action === "search_professionals" && !payload.serviceId && payload.searchQuery) {
     const place = userMessagePlace(originalMessage) ?? resolveLocationIntent(payload.locationText || "");
     if (!place) return freeTextSearchHref(payload.searchQuery);
@@ -1553,8 +1556,9 @@ function normalizePayload(
       ...payload,
       action: "answer",
       answer: locale === "en"
-        ? "No. The client reschedules an active appointment from My appointments in client mode. The professional can cancel it with an optional reason and coordinate another time through WhatsApp, but cannot move the appointment unilaterally."
-        : "No. El cliente reprograma una cita activa desde Mis citas en modo cliente. El profesional puede cancelarla con un motivo opcional y coordinar otro horario por WhatsApp, pero no puede mover la cita unilateralmente.",
+        // Ya no se agenda dentro del app: el día y la hora se acuerdan por mensaje.
+        ? "There are no in-app appointments any more. You agree on the day and time with the professional by message, and either of you can change it there."
+        : "Ya no se agendan citas dentro del app. El día y la hora los acuerdan por mensaje con el profesional, y ahí mismo cualquiera de los dos puede cambiarlos.",
       ctaLabel: null,
     };
   }
@@ -1563,8 +1567,8 @@ function normalizePayload(
       ...payload,
       action: "answer",
       answer: locale === "en"
-        ? "You will receive a notification and the appointment will appear as cancelled. A cancelled appointment cannot be rescheduled; book a new available time or coordinate another time with the professional through WhatsApp."
-        : "Recibirás una notificación y la cita aparecerá como cancelada. Una cita cancelada no se puede reprogramar; reserva una nueva cita en un horario disponible o coordina otro momento con el profesional por WhatsApp.",
+        ? "There are no in-app appointments any more. If the professional can no longer come, write to them in the chat and agree on another time, or look for another professional."
+        : "Ya no se agendan citas dentro del app. Si el profesional ya no puede llegar, escríbele por el chat y acuerdan otro momento, o busca a otro profesional.",
       ctaLabel: null,
     };
   }
@@ -1968,7 +1972,7 @@ function assistantProfessionalResult(
   const location = professional.workplaces?.[0]?.name?.trim()
     || [professional.cantonName, professional.provinceName].filter(Boolean).join(", ")
     || (professional.videoconsulta ? (locale === "en" ? "Video consultation" : "Videoconsulta") : "Costa Rica");
-  const profileHref = `/${locale}/profesionales/${professional.slug}`;
+  const profileHref = `${prefijoDeIdioma(locale)}/profesionales/${professional.slug}`;
   const actionKind: "availability" | "message" =
     hasPublicAvailability && professional.availabilityPublic !== false && professional.contactPreference !== "solo_whatsapp"
       ? "availability"
@@ -2048,7 +2052,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
     const rawMessage = canonicalizeMessage(limitTrimmedText(body.message, Math.min(LONG_TEXT_MAX_LENGTH, 1200)));
-    const pagePath = limitTrimmedText(body.pagePath, 240) || `/${locale}`;
+    const pagePath = limitTrimmedText(body.pagePath, 240) || `${prefijoDeIdioma(locale) || "/"}`;
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
     const pageContext = assistantPageContext(pagePath, Boolean(user));

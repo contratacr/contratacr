@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { prefijoDeIdioma } from "@/lib/prefijo-de-idioma";
 import { getAllCategories, getCategoryLabel } from "@/lib/data/categories";
 import { getLocale } from "next-intl/server";
 import { JobPostForm } from "@/components/jobs/job-post-form";
@@ -14,9 +15,9 @@ export default async function PublishJobPage({ searchParams }: { searchParams: P
   const backHref = fromPanel ? "/dashboard/profesional?mode=offer&tab=jobs" : "/empleos";
   const supabase = await createClient();
   const user = await safeGetUser(supabase);
-  const publishPath = `/${locale}/empleos/publicar${fromPanel ? "?from=panel" : ""}`;
-  if (!user) redirect(`/${locale}/login?redirect=${encodeURIComponent(publishPath)}`);
+  const publishPath = `${prefijoDeIdioma(locale)}/empleos/publicar${fromPanel ? "?from=panel" : ""}`;
+  if (!user) redirect(`${prefijoDeIdioma(locale)}/login?redirect=${encodeURIComponent(publishPath)}`);
   const { data: professional } = await supabase.from("professionals").select("id").eq("profile_id", user.id).maybeSingle();
-  if (!professional) redirect(`/${locale}/registro/profesional?redirect=${encodeURIComponent(publishPath)}`);
+  if (!professional) redirect(`${prefijoDeIdioma(locale)}/registro/profesional?redirect=${encodeURIComponent(publishPath)}`);
   return <JobPostForm professionalId={professional.id} backHref={backHref} />;
 }

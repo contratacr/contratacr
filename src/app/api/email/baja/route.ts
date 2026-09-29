@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { prefijoDeIdioma } from "@/lib/prefijo-de-idioma";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { firmaValida, normalizarCorreo } from "@/lib/email/baja";
 
@@ -47,5 +48,5 @@ export async function GET(request: Request) {
   const url = new URL(request.url);
   const ok = await darDeBaja(url, "enlace");
   const idioma = url.pathname.startsWith("/en") ? "en" : "es";
-  return NextResponse.redirect(new URL(`/${idioma}/baja-correos?ok=${ok ? "1" : "0"}`, url.origin));
+  return NextResponse.redirect(new URL(`${prefijoDeIdioma(idioma)}/baja-correos?ok=${ok ? "1" : "0"}`, url.origin));
 }

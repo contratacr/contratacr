@@ -574,7 +574,7 @@
     "titlePassword": "Create your password",
     "titleOtp": "Verification code",
     "subEmail": "Enter the email you'll use for your account.",
-    "subName": "What's your name? We'll only ask for your ID when you book an appointment.",
+    "subName": "What's your name? We only need your name to create the account.",
     "subIdentity": "Enter your ID and we'll take your name from the padrón. No ID? Type it manually.",
     "subPassword": "Choose a secure password for your account.",
     "subOtp": "Enter the 6-digit code sent to your email.",
@@ -1318,7 +1318,7 @@
       "chat": "Messages",
       "assistant": "Assistant",
       "bookings": "Appointments",
-      "proposals": "Opportunities",
+      "proposals": "Projects",
       "verificacion": "Verification",
       "suscripcion": "Subscription",
       "sent_bookings": "My appointments",
@@ -1409,7 +1409,7 @@
           "body": "See the appointments clients booked from your profile."
         },
         "opportunities": {
-          "title": "Opportunities",
+          "title": "Projects",
           "body": "Reply to open projects that match your services."
         },
         "services": {
@@ -1555,10 +1555,10 @@
       "chat": "Messages",
       "assistant": "Assistant",
       "bookings": "Appointments",
-      "proposals": "Opportunities",
+      "proposals": "Projects",
       "verificacion": "Verification",
       "sent_bookings": "Appointments",
-      "sent_projects": "Opportunities",
+      "sent_projects": "Projects",
       "notifications": "Notifications",
       "soporte": "Support",
       "cuenta": "Account",
@@ -1608,17 +1608,17 @@
         "points": [
           "Search professionals by service, area or name.",
           "Save professionals, offers and jobs to review later.",
-          "Send requests or create projects when you need to hire.",
-          "Review requests, projects, applications and connections from the panel."
+          "Post a project when you need to hire and get replies.",
+          "Check your projects, favorites and connections from the panel."
         ]
       },
       "proPanel": {
         "title": "Professional panel",
         "body": "For offering services and building trust.",
         "points": [
-          "Complete your profile, services, coverage and availability.",
+          "Complete your profile, services, coverage and prices.",
           "Upload success stories to show real work.",
-          "Reply to requests and opportunities from one place.",
+          "Handle projects, messages and quotes in one place.",
           "You also keep the client panel to hire other services."
         ]
       },
@@ -1660,7 +1660,7 @@
           "cta": "Reply"
         },
         "opportunities": {
-          "title": "Open opportunity",
+          "title": "Open project",
           "project": "Website for a local business",
           "body": "A client project waiting for professionals' replies.",
           "cta": "Send reply"
@@ -2615,7 +2615,7 @@
     "searchPros": "Find services",
     "signOut": "Sign out",
     "tabBookings": "Appointments",
-    "tabProjects": "Opportunities",
+    "tabProjects": "Projects",
     "tabSaved": "Favorites",
     "tabNotifications": "Notifications",
     "tabSupport": "Support",
@@ -4115,7 +4115,7 @@
     "sendByEmail": "Send by email",
     "downloadClient": "Download PDF",
     "attachTabBookings": "Appointments",
-    "attachTabProjects": "Opportunities",
+    "attachTabProjects": "Projects",
     "attachSend": "Send here",
     "attachConfirmTitle": "Send it here?",
     "attachConfirmBody": "The client sees it in their panel and can accept it. If you picked the wrong one, you can remove it later.",

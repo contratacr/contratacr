@@ -1,6 +1,7 @@
 "use client";
 
 import { startTransition, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { prefijoDeIdioma } from "@/lib/prefijo-de-idioma";
 import { Carril } from "@/components/ui/carril";
 import { useDesvanecidoVertical } from "@/hooks/use-desvanecido-vertical";
 import { useHairlineOnScroll } from "@/components/util/use-hairline-on-scroll";
@@ -206,12 +207,12 @@ export function ServiciosClient({ catalogoInicial }: { catalogoInicial: string |
                     <HeaderMessagesLink
                       unreadCount={0}
                       label={tp("messages")}
-                      href={`/login?redirect=${encodeURIComponent(`/${locale}/mensajes`)}`}
+                      href={`/login?redirect=${encodeURIComponent(`${prefijoDeIdioma(locale)}/mensajes`)}`}
                     />
                   )}
                   {nativeApp ? (
                     <HeaderNotificationsLink
-                      href={`/login?redirect=${encodeURIComponent(`/${locale}/notificaciones`)}`}
+                      href={`/login?redirect=${encodeURIComponent(`${prefijoDeIdioma(locale)}/notificaciones`)}`}
                       label={tp("notifications")}
                     />
                   ) : (

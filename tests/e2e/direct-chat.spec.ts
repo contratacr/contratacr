@@ -190,7 +190,7 @@ test.describe("@seeded contextual direct chat", () => {
 
     const reply = await apiJson<ChatResponse>(page, "/api/direct-chat", { method: "POST", body: { conversationId: first.body.conversationId, message: "E2E respuesta profesional" } });
     expect(reply.status).toBe(200);
-    await gotoOK(page, `/es/mensajes?conversation=${first.body.conversationId}`);
+    await gotoOK(page, `/mensajes?conversation=${first.body.conversationId}`);
     await expect(page.getByText("E2E respuesta profesional").last()).toBeVisible();
     // Desde a8c05f7a (un chat por persona) la cabecera del hilo muestra a la
     // persona, no el asunto «Conversación desde un perfil»: ese texto ya no
@@ -236,7 +236,7 @@ test.describe("@seeded contextual direct chat", () => {
     await loginAs(page, E2E_USERS.client.email, E2E_USERS.client.password);
     const created = await apiJson<ChatResponse>(page, "/api/direct-chat", { method: "POST", body: { bookingId, message: "E2E consulta de solicitud" } });
     expect(created.status).toBe(200); conversacionesDePrueba.push(created.body.conversationId!);
-    await gotoOK(page, `/es/mensajes?conversation=${created.body.conversationId}`);
+    await gotoOK(page, `/mensajes?conversation=${created.body.conversationId}`);
     await expect(page.getByText("E2E reparación contextual").last()).toBeVisible();
     // La cabecera del hilo ya no lleva el botón «Ver cita» (a8c05f7a): el
     // contexto se lee en el propio hilo, con la descripción de la cita.
@@ -339,7 +339,7 @@ test.describe("@seeded contextual direct chat", () => {
 
     await resetAuth(page);
     await loginAs(page, E2E_USERS.videoProfessional.email, E2E_USERS.videoProfessional.password);
-    await gotoOK(page, `/es/mensajes?conversation=${created.body.conversationId}`);
+    await gotoOK(page, `/mensajes?conversation=${created.body.conversationId}`);
     await expect(page.getByText("E2E inicia tiempo real").last()).toBeVisible();
     const realtimeBody = `E2E tiempo real ${Date.now()}`;
     const { error: realtimeError } = await admin.rpc("send_direct_message_atomic", {

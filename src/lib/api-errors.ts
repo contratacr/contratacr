@@ -27,7 +27,7 @@ export function idiomaDeLaPeticion(req: NextRequest | Request, declarado?: strin
     try {
       const ruta = new URL(referer).pathname;
       if (ruta === "/en" || ruta.startsWith("/en/")) return "en";
-      if (ruta === "/es" || ruta.startsWith("/es/")) return "es";
+      return "es";
     } catch { /* referer malformado: se ignora */ }
   }
 

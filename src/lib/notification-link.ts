@@ -76,8 +76,10 @@ function withTargetParams(link: string, data?: NotificationLinkInput["data"]): s
 
 function withLocale(link: string, locale: string): string {
   const safeLocale = locale === "en" ? "en" : "es";
+  // Los enlaces guardados de otra época empiezan por /es/: hoy el español va sin
+  // prefijo, así que /es/ se quita y /en/ se pone solo si se lee en inglés.
   if (link.startsWith("/es/") || link.startsWith("/en/")) {
-    return link.replace(/^\/(es|en)\//, `/${safeLocale}/`);
+    return link.replace(/^\/(es|en)\//, safeLocale === "en" ? "/en/" : "/");
   }
   if (link.startsWith("/")) return `/${safeLocale}${link}`;
   return link;

@@ -10,7 +10,7 @@ import { writeFileSync } from "node:fs";
 const BASE = (process.argv[2] ?? "http://localhost:3000").replace(/\/+$/, "");
 const OUT = process.argv[3] ?? "docs/assistant-review-matrix.md";
 
-const P = (tipo, message, locale = "es", platform = "native", pagePath = "/es") => ({ tipo, message, locale, platform, pagePath });
+const P = (tipo, message, locale = "es", platform = "native", pagePath = "/") => ({ tipo, message, locale, platform, pagePath });
 const MATRIX = [
   P("básica", "¿Cómo funciona ContrataCR?"), P("básica", "que es contratacr"), P("básica", "Necesito ayuda con mi cuenta"),
   P("básica", "Soy profesional, quiero ofrecer mis servicios"), P("básica", "Quiero registrarme como cliente"), P("básica", "No puedo iniciar sesión"),

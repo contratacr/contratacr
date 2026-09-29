@@ -5,7 +5,7 @@ import { expect, test } from "playwright/test";
 //    llegaban con la consulta del navegador) y todo lo de al lado se corría;
 //  - la foto de perfil arrancaba en opacidad 0 y subía, por una animación de
 //    CSS que revelaba TODA foto en cada carga, viniera o no ya pintada.
-const FICHA = "/es/profesionales/redes-bahia-pruebas";
+const FICHA = "/profesionales/redes-bahia-pruebas";
 
 test("@seeded la fila de pestañas no cambia después de cargar", async ({ page, request }) => {
   // Lo que pinta el servidor tiene que ser ya la lista completa.

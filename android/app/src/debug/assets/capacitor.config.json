@@ -3,7 +3,7 @@
 	"appName": "ContrataCR",
 	"webDir": "mobile-web",
 	"server": {
-		"url": "http://localhost:3000/es",
+		"url": "http://localhost:3000",
 		"allowNavigation": [
 			"contratacr.com",
 			"*.contratacr.com",

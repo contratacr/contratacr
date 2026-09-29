@@ -4,30 +4,30 @@ import { canRunSeededRegression, ensureRegressionSeed, regressionAdminClient, ty
 import { cleanupDisposableAccount, createDisposableAccount, type DisposableAccount } from "./disposable-account";
 
 const adminRoutes = [
-  { path: "/es/admin", marker: /Resumen|Panel de administracion|Panel de administraci.n/i },
-  { path: "/es/admin/verificacion", marker: /Verificacion|Verificaci.n/i },
-  { path: "/es/admin/usuarios", marker: /Usuarios/i },
-  { path: "/es/admin/reportes", marker: /Reportes/i },
-  { path: "/es/admin/aseguradoras", marker: /Aseguradoras/i },
-  { path: "/es/admin/servicios", marker: /Servicios/i },
-  { path: "/es/admin/categorias", marker: /Servicios/i },
-  { path: "/es/admin/publicaciones", marker: /Proyectos/i },
-  { path: "/es/admin/empleos", marker: /Empleos/i },
+  { path: "/admin", marker: /Resumen|Panel de administracion|Panel de administraci.n/i },
+  { path: "/admin/verificacion", marker: /Verificacion|Verificaci.n/i },
+  { path: "/admin/usuarios", marker: /Usuarios/i },
+  { path: "/admin/reportes", marker: /Reportes/i },
+  { path: "/admin/aseguradoras", marker: /Aseguradoras/i },
+  { path: "/admin/servicios", marker: /Servicios/i },
+  { path: "/admin/categorias", marker: /Servicios/i },
+  { path: "/admin/publicaciones", marker: /Proyectos/i },
+  { path: "/admin/empleos", marker: /Empleos/i },
   // La sección se llama «Promociones» desde el cambio de nombres; la dirección
   // se conserva para no romper enlaces guardados.
-  { path: "/es/admin/ofertas", marker: /Promociones/i },
-  { path: "/es/admin/cuentas", marker: /Cuentas/i },
-  { path: "/es/admin/soporte", marker: /Soporte/i },
-  { path: "/es/admin/analitica", marker: /Analitica|Anal.tica/i },
-  { path: "/es/admin/cobertura", marker: /Cobertura/i },
-  { path: "/es/admin/costos", marker: /Costos/i },
-  { path: "/es/admin/actividad", marker: /Resumen|Actividad reciente/i },
-  { path: "/es/admin/resenas", marker: /Rese.nas|Reseñas/i },
+  { path: "/admin/promociones", marker: /Promociones/i },
+  { path: "/admin/cuentas", marker: /Cuentas/i },
+  { path: "/admin/soporte", marker: /Soporte/i },
+  { path: "/admin/analitica", marker: /Analitica|Anal.tica/i },
+  { path: "/admin/cobertura", marker: /Cobertura/i },
+  { path: "/admin/costos", marker: /Costos/i },
+  { path: "/admin/actividad", marker: /Resumen|Actividad reciente/i },
+  { path: "/admin/resenas", marker: /Rese.nas|Reseñas/i },
 ] as const;
 
 async function loginAdmin(page: Page, account: DisposableAccount) {
   await resetAuth(page);
-  await gotoOK(page, "/es/admin");
+  await gotoOK(page, "/admin");
   await waitForInteractivePage(page);
   await page.getByPlaceholder(/Correo de administrador/i).fill(account.email);
   await page.getByPlaceholder(/Contrase.a|Contrasena/i).fill(account.password);
@@ -44,7 +44,7 @@ test.describe("@admin surfaces", () => {
 
   test("admin entry shows the restricted login when signed out", async ({ page }) => {
     await resetAuth(page);
-    await gotoOK(page, "/es/admin");
+    await gotoOK(page, "/admin");
     await expect(page.getByText(/Panel de administracion|Panel de administraci.n/i).first()).toBeVisible();
     await expect(page.getByPlaceholder(/Correo de administrador/i)).toBeVisible();
     await expect(page.getByPlaceholder(/Contrase.a|Contrasena/i)).toBeVisible();
@@ -98,8 +98,8 @@ test.describe("@admin surfaces", () => {
 
       if (seed) {
         for (const detail of [
-          { path: `/es/admin/usuarios/${seed.clientId}`, marker: /ContrataCR|B.squeda de usuarios/i },
-          { path: `/es/admin/proveedores/${seed.professionalId}`, marker: /Redes Bahía|Proveedor/i },
+          { path: `/admin/usuarios/${seed.clientId}`, marker: /ContrataCR|B.squeda de usuarios/i },
+          { path: `/admin/proveedores/${seed.professionalId}`, marker: /Redes Bahía|Proveedor/i },
         ]) {
           await gotoOK(page, detail.path);
           await expectVisibleText(page.locator("body"), detail.marker);
@@ -145,7 +145,7 @@ test.describe("@admin surfaces", () => {
       await loginAdmin(page, account);
 
       // Ofertas: the owner finds the publication with its creator and moderates it.
-      await gotoOK(page, "/es/admin/ofertas");
+      await gotoOK(page, "/admin/promociones");
       await expectVisibleText(page.locator("body"), /en esta vista/);
       await page.getByPlaceholder(/Título, servicio, ubicación, creador o correo/).filter({ visible: true }).first().fill(offerTitle);
       const row = page.locator("li").filter({ hasText: offerTitle }).first();
@@ -168,7 +168,7 @@ test.describe("@admin surfaces", () => {
       await expectHealthyPage(page);
 
       // Empleos: the seeded SG job lists its creator and the application count.
-      await gotoOK(page, "/es/admin/empleos");
+      await gotoOK(page, "/admin/empleos");
       await expectVisibleText(page.locator("body"), /en esta vista/);
       await page.getByPlaceholder(/Título, servicio, ubicación, creador o correo/).filter({ visible: true }).first().fill("Redes Bahía");
       await expect(page.locator("li").filter({ hasText: "Redes Bahía" }).first()).toBeVisible();
@@ -176,7 +176,7 @@ test.describe("@admin surfaces", () => {
       await expectHealthyPage(page);
 
       // Cobertura: services with supply, every province, a canton by search.
-      await gotoOK(page, "/es/admin/cobertura");
+      await gotoOK(page, "/admin/cobertura");
       await expectVisibleText(page.locator("body"), /Servicios con oferta/);
       // Every category is on screen, with its services, and the category filter narrows the list.
       await expect(page.getByRole("button", { name: /^Hogar/ }).first()).toBeVisible();
@@ -207,7 +207,7 @@ test.describe("@admin surfaces", () => {
       await expectHealthyPage(page);
 
       // Servicios: categories fold with counts; a search shows the service with its professionals.
-      await gotoOK(page, "/es/admin/servicios");
+      await gotoOK(page, "/admin/servicios");
       const homeGroup = page.getByRole("button", { name: /^Hogar/ }).first();
       await expect(homeGroup).toBeVisible();
       await expect(homeGroup).toContainText(/servicios · \d+ con profesionales/);
@@ -216,17 +216,17 @@ test.describe("@admin surfaces", () => {
       await expectHealthyPage(page);
 
       // Reseñas: the professional behind a seeded review is named, never the generic label.
-      await gotoOK(page, "/es/admin/resenas");
+      await gotoOK(page, "/admin/resenas");
       await expect(page.getByText("Redes Bahía").first()).toBeVisible();
       await expectHealthyPage(page);
 
       // Verificación names the identification type of everyone waiting.
-      await gotoOK(page, "/es/admin/verificacion");
+      await gotoOK(page, "/admin/verificacion");
       await page.getByRole("button", { name: /^Todos/ }).click();
       await expect(page.getByText(/Nacional|Jurídica|DIMEX|NITE|Manual/).first()).toBeVisible();
 
       // Analítica reads in plain words: this week, the funnel, demand vs supply.
-      await gotoOK(page, "/es/admin/analitica");
+      await gotoOK(page, "/admin/analitica");
       await expectVisibleText(page.locator("body"), /Esta semana/);
       await expectVisibleText(page.locator("body"), /7 días anteriores/);
       await expectVisibleText(page.locator("body"), /De dónde vienen los registros/);
@@ -236,7 +236,7 @@ test.describe("@admin surfaces", () => {
       await expectHealthyPage(page);
 
       // Resumen: what needs attention today, new accounts and recent activity, in words.
-      await gotoOK(page, "/es/admin");
+      await gotoOK(page, "/admin");
       await expectVisibleText(page.locator("body"), /Qué necesita tu atención|Nada pendiente hoy/);
       await expectVisibleText(page.locator("body"), /Verificaciones por revisar/);
       await expectVisibleText(page.locator("body"), /Cuentas nuevas/);
@@ -244,7 +244,7 @@ test.describe("@admin surfaces", () => {
       await expectHealthyPage(page);
 
       // The account page reads top to bottom: identity, verification, client, professional, reach, support, network, danger zone.
-      await gotoOK(page, `/es/admin/usuarios/${state.professionalUserId}`);
+      await gotoOK(page, `/admin/usuarios/${state.professionalUserId}`);
       for (const heading of [/Verificación de identidad/, /Como cliente/, /Como profesional/, /Citas recibidas/, /Reseñas recibidas/, /Empleos publicados/, /(?:Ofertas|Promociones) publicadas/, /Alcance del perfil/, /Casos de soporte/, /Reportes recibidos/, /Seguidos y seguidores/, /Eliminar esta cuenta al 100%/]) {
         await expectVisibleText(page.locator("body"), heading);
       }
@@ -284,7 +284,7 @@ test.describe("@admin surfaces", () => {
       await loginAdmin(page, account);
 
       // Soporte: open the case and delete it with its thread.
-      await gotoOK(page, "/es/admin/soporte");
+      await gotoOK(page, "/admin/soporte");
       await page.getByText(`Caso admin regression ${stamp}`).first().click();
       await expectVisibleText(page.locator("body"), /Eliminar caso/);
       page.once("dialog", (dialog) => void dialog.accept());
@@ -294,7 +294,7 @@ test.describe("@admin surfaces", () => {
       await expectHealthyPage(page);
 
       // Reportes: delete the record.
-      await gotoOK(page, "/es/admin/reportes");
+      await gotoOK(page, "/admin/reportes");
       const reportRow = page.locator("li").filter({ hasText: `Reporte admin regression ${stamp}` }).first();
       await expect(reportRow).toBeVisible();
       page.once("dialog", (dialog) => void dialog.accept());
@@ -304,7 +304,7 @@ test.describe("@admin surfaces", () => {
       await expectHealthyPage(page);
 
       // Usuarios: delete a whole account from its profile (confirm + typed word).
-      await gotoOK(page, `/es/admin/usuarios/${victim.id}`);
+      await gotoOK(page, `/admin/usuarios/${victim.id}`);
       await expectVisibleText(page.locator("body"), /Eliminar esta cuenta al 100%/);
       page.on("dialog", (dialog) => void (dialog.type() === "prompt" ? dialog.accept("ELIMINAR") : dialog.accept()));
       await page.getByRole("button", { name: /Eliminar cuenta/ }).click();
@@ -318,10 +318,10 @@ test.describe("@admin surfaces", () => {
       // Servicios: a renamed service is what the server renders, not only what the browser patches later.
       const marker = `Redes e internet ${stamp}`;
       await admin.from("categories").update({ name: marker }).eq("id", renamedId);
-      await expect.poll(async () => (await page.request.get(`/es/buscar?categoria=${renamedId}`)).text().then((html) => html.includes(marker)), { timeout: 45_000, intervals: [2_000] }).toBe(true);
+      await expect.poll(async () => (await page.request.get(`/buscar?categoria=${renamedId}`)).text().then((html) => html.includes(marker)), { timeout: 45_000, intervals: [2_000] }).toBe(true);
       const professionalSlug = (await admin.from("professionals").select("slug").eq("id", state.professionalId).single()).data?.slug;
       expect(professionalSlug).toBeTruthy();
-      await expect.poll(async () => (await page.request.get(`/es/profesionales/${professionalSlug}`)).text().then((html) => html.includes(marker)), { timeout: 45_000, intervals: [2_000] }).toBe(true);
+      await expect.poll(async () => (await page.request.get(`/profesionales/${professionalSlug}`)).text().then((html) => html.includes(marker)), { timeout: 45_000, intervals: [2_000] }).toBe(true);
     } finally {
       if (originalName) await admin.from("categories").update({ name: originalName }).eq("id", renamedId);
       if (ticketId) await admin.from("support_tickets").delete().eq("id", ticketId);

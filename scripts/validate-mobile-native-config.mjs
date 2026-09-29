@@ -6,7 +6,8 @@ const expected = {
   // The store builds load production; set MOBILE_SERVER_ORIGIN to check a build
   // pointed somewhere else (e.g. https://test.contratacr.com while testing).
   serverOrigin: process.env.MOBILE_SERVER_ORIGIN || "https://contratacr.com",
-  serverPath: "/es",
+  // El español vive en la raíz: la app abre contratacr.com a secas.
+  serverPath: "",
   firebaseProjectId: "contratacr-95d6f",
 };
 
@@ -196,7 +197,7 @@ if (!firebasePackages.includes(expected.appId)) {
 }
 
 if (process.argv.includes("--remote")) {
-  for (const path of ["/es", "/es/buscar", "/es/login", "/es/privacidad"]) {
+  for (const path of ["/", "/buscar", "/login", "/privacidad"]) {
     const response = await fetch(`${expected.serverOrigin}${path}`, { redirect: "follow" });
     const body = await response.text();
     if (!response.ok) failures.push(`${path} returned HTTP ${response.status}`);

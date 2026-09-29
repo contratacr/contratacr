@@ -119,7 +119,7 @@ export async function PATCH(req: Request) {
         type: "support_reply",
         title: "Caso de soporte cerrado",
         message: `Soporte cerró tu caso "${ticket.subject}". Puedes responder si el problema continúa.`,
-        data: { link: `/es/dashboard/${panel}?tab=soporte&ticket=${id}`, ticketId: id, ticket_subject: ticket.subject },
+        data: { link: `/dashboard/${panel}?tab=soporte&ticket=${id}`, ticketId: id, ticket_subject: ticket.subject },
       };
       await db.from("notifications").insert(notification);
       await sendNotificationPush({ userId: notification.user_id, ...notification });
@@ -180,7 +180,7 @@ export async function POST(req: Request) {
       title: "Respuesta de soporte",
       message: `Soporte respondió a tu ticket "${ticket.subject}".`,
       data: {
-        link: `/es/dashboard/${panel}?tab=soporte&ticket=${id}`,
+        link: `/dashboard/${panel}?tab=soporte&ticket=${id}`,
         ticketId: id,
         ticket_subject: ticket.subject,
       },

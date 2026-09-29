@@ -1,5 +1,6 @@
 "use client";
 
+import { rutaProyecto } from "@/lib/marketplace-url";
 import { QuoteBlock } from "@/components/quotes/quote-block";
 import { noInsistirArriba } from "@/lib/ir-al-inicio";
 import { cargarCotizaciones } from "@/lib/quotes-store";
@@ -1012,7 +1013,7 @@ export function ClientActivity({ section, onCount }: { section: ClientActivitySe
                                   primero, que es el orden de las otras dos:
                                   primero mirar, después actuar. */}
                               <Link
-                                href={`/proyectos/${project.id}?from=${volverAqui}`}
+                                href={`${rutaProyecto(project)}?from=${volverAqui}`}
                                 className={cn(actionButtonClass, "inline-flex items-center justify-center border border-[#d7e1ea] bg-white text-[#162543] transition hover:border-[#b9c8d6] hover:bg-[#f6f9fb]")}
                               >
                                 {t("viewProject")}

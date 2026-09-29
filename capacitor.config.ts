@@ -5,7 +5,7 @@ const config: CapacitorConfig = {
   appName: "ContrataCR",
   webDir: "mobile-web",
   server: {
-    url: "https://contratacr.com/es",
+    url: "https://contratacr.com",
     allowNavigation: [
       // localhost/127.0.0.1: al apuntar la app al servidor local, Capacitor solo
       // considera "de la app" las URLs que empiezan por server.url; sin estos

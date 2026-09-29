@@ -6,7 +6,7 @@ import { gotoOK, loginAs } from "./helpers";
 // primero la pintaba dos pantallas más abajo (y=1853 en una pantalla de 900).
 test("apagar el primer servicio confirma «Guardado» dentro de la pantalla", async ({ page }) => {
   await loginAs(page, "e2e.pro@contratacr.test", process.env.E2E_TEST_PASSWORD ?? "");
-  await gotoOK(page, "/es/dashboard/profesional?tab=services");
+  await gotoOK(page, "/dashboard/profesional?tab=services");
   const interruptor = page.locator("[data-servicio]").first().locator("button[aria-pressed]").first();
   await expect(interruptor).toBeVisible();
   await page.evaluate(() => window.scrollTo(0, 0));

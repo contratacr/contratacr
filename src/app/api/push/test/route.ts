@@ -15,7 +15,7 @@ async function sendTestPush() {
       userId: user.id,
       title: "Nueva propuesta recibida",
       body: "Un profesional respondio a tu proyecto. Revisalo desde tu panel.",
-      url: "/es/dashboard/profesional?tab=sent_projects",
+      url: "/dashboard/profesional?tab=sent_projects",
     });
 
     if (result.sent === 0 && result.failed === 0) {

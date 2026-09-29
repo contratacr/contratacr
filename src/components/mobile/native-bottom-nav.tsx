@@ -1,5 +1,6 @@
 "use client";
 import { EMPLEOS_VISIBLE } from "@/lib/feature-flags";
+import { rutaConIdioma } from "@/lib/prefijo-de-idioma";
 import { sinBarraDeAbajo } from "@/lib/rutas-sin-barra";
 import { esRutaDeBusqueda } from "@/lib/buscar-url";
 
@@ -52,7 +53,7 @@ export function NativeBottomNav() {
 
   const panelHref = "/dashboard/profesional";
   const primaryPanelHref = isPro && mode === "offer" ? `${panelHref}?mode=offer` : `${panelHref}?mode=use`;
-  const nativePanelHref = user ? primaryPanelHref : `/login?redirect=${encodeURIComponent(`/${locale}${panelHref}`)}`;
+  const nativePanelHref = user ? primaryPanelHref : `/login?redirect=${encodeURIComponent(rutaConIdioma(locale, panelHref))}`;
 
   // Publicar ocupa la pantalla entera: ahí la barra no va.
   // Pantalla completa o de detalle: sin barra (ver src/lib/rutas-sin-barra.ts).

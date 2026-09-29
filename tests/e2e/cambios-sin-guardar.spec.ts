@@ -8,7 +8,7 @@ import { gotoOK, isMobileProject, loginAs } from "./helpers";
 test("encender y apagar un interruptor no saca de la sección ni deja cambios", async ({ page }, testInfo) => {
   test.skip(!isMobileProject(testInfo), "El paso interno con historial solo existe en el teléfono.");
   await loginAs(page, "e2e.pro@contratacr.test", process.env.E2E_TEST_PASSWORD ?? "");
-  await gotoOK(page, "/es/dashboard/profesional?tab=profile");
+  await gotoOK(page, "/dashboard/profesional?tab=profile");
   const seccion = page.locator("#sec-contact");
   await seccion.scrollIntoViewIfNeeded();
   const guardar = page.getByTestId("profile-save-contact");

@@ -1,5 +1,6 @@
 "use client";
 import { EMPLEOS_VISIBLE } from "@/lib/feature-flags";
+import { prefijoDeIdioma, rutaConIdioma } from "@/lib/prefijo-de-idioma";
 
 import { useState, useEffect, useRef, useMemo, useCallback, useTransition, type ReactNode } from "react";
 import { soltarFoco } from "@/lib/soltar-foco";
@@ -748,7 +749,7 @@ export function HeaderAccountLink() {
   if (/(^|\/)(login|registro|olvide-contrasena|reset-password|onboarding)(\/|$)/.test(pathname ?? "")) {
     return <span className="h-10 w-10 shrink-0" aria-hidden />;
   }
-  const aqui = pathname && pathname !== "/" ? `/${locale}${pathname}${busqueda}` : "";
+  const aqui = pathname && pathname !== "/" ? `${rutaConIdioma(locale, pathname)}${busqueda}` : "";
   return (
     <Link
       href={aqui ? `/login?redirect=${encodeURIComponent(aqui)}` : "/login"}
@@ -1026,7 +1027,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   // Search is a full-viewport map + results sheet. Do not merely hide the nav
   // with CSS: leaving it mounted keeps its layout class and safe-area reserve
   // active, which shortens the sheet and the full-screen search overlay.
-  const accesoHref = (destino: string) => `/login?redirect=${encodeURIComponent(`/${locale}${destino}`)}`;
+  const accesoHref = (destino: string) => `/login?redirect=${encodeURIComponent(rutaConIdioma(locale, destino))}`;
   const enMensajes = /(^|\/)mensajes(?:\/|$)/.test(pathname ?? "");
   const enNotificaciones = /(^|\/)notificaciones(?:\/|$)/.test(pathname ?? "");
   const nativeFullscreenRoute = /(^|\/)(?:publicar-proyecto|(?:empleos|promociones)\/publicar)(?:\/|$)/.test(pathname ?? "");
@@ -1058,7 +1059,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   );
   // Depending on whether this render comes from an i18n client transition or a
   // hard refresh, usePathname can expose the home route as `/` or with its
-  // locale prefix (`/es`, `/en`). Treat all three as home so the compact search
+  // locale prefix (`/`, `/en`). Treat all three as home so the compact search
   // is controlled only by the hero sentinel, never by the URL representation.
   // next-intl mirrors Next's runtime behavior and can briefly return null while
   // the client pathname settles. Default that unknown state to the safest home
@@ -1374,7 +1375,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
     // Con el asistente encima, el logo primero lo aparta — si la ruta de abajo
     // ya era la portada, sin esto el toque "no hacía nada".
     window.dispatchEvent(new Event("contratacr:close-ai"));
-    const destino = `/${locale}`;
+    const destino = `${prefijoDeIdioma(locale) || "/"}`;
     if (window.location.pathname === destino) {
       window.scrollTo({ top: 0, behavior: "smooth" });
       document.querySelector("main")?.scrollTo({ top: 0, behavior: "smooth" });

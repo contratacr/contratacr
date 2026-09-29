@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
+import { prefijoDeIdioma, rutaConIdioma } from "@/lib/prefijo-de-idioma";
 import {
   MessageSquareText,
   Bell,
@@ -200,11 +201,11 @@ function actionIcon(kind?: string | null) {
 
 function localizedDestination(href: string, lang: "es" | "en") {
   const trimmed = href.trim();
-  if (!trimmed) return `/${lang}`;
+  if (!trimmed) return `${prefijoDeIdioma(lang) || "/"}`;
   if (/^https?:\/\//i.test(trimmed)) return trimmed;
   const withSlash = trimmed.startsWith("/") ? trimmed : `/${trimmed}`;
   const unlocalized = withSlash.replace(/^\/(?:es|en)(?=\/|\?|$)/, "") || "/";
-  return `/${lang}${unlocalized === "/" ? "" : unlocalized}`;
+  return rutaConIdioma(lang, unlocalized === "/" ? "" : unlocalized);
 }
 
 function ProfessionalResult({ result, copy, onNavigate, nativeApp, lang }: {

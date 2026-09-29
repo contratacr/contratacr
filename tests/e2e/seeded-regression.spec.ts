@@ -256,18 +256,18 @@ test.describe("@seeded core regression", () => {
   test.afterEach(cleanupGeneratedRows);
 
   test("email-change states render cleanly without stacking duplicate messages", async ({ page }) => {
-    await gotoOK(page, "/es/login?emailChanged=1");
+    await gotoOK(page, "/login?emailChanged=1");
     await openLoginForm(page);
     await expect(page.getByText("Correo actualizado").first()).toBeVisible();
     await expect(page.getByText("Inicia sesión con tu correo nuevo.").first()).toBeVisible();
     await expectNoHorizontalOverflow(page);
 
     await loginAs(page, E2E_USERS.professional.email, E2E_USERS.professional.password);
-    await gotoOK(page, "/es/dashboard/profesional?tab=cuenta&emailChanged=1");
+    await gotoOK(page, "/dashboard/profesional?tab=cuenta&emailChanged=1");
     await expect(page.getByText("Correo actualizado").first()).toBeVisible();
     await expect(page.getByText("Revisa tu correo nuevo").first()).toBeHidden();
 
-    await gotoOK(page, "/es/dashboard/profesional?tab=cuenta&emailChangePending=1");
+    await gotoOK(page, "/dashboard/profesional?tab=cuenta&emailChangePending=1");
     await expect(page.getByText("Cambio pendiente").first()).toBeVisible();
     await expectNoHorizontalOverflow(page);
   });
@@ -357,7 +357,7 @@ test.describe("@seeded core regression", () => {
       insertedMessageIds = (insertedMessages ?? []).map((message) => message.id);
 
       await loginAs(page, E2E_USERS.client.email, E2E_USERS.client.password);
-      await gotoOK(page, `/es/dashboard/profesional?tab=soporte&mode=use&ticket=${ticket.id}`);
+      await gotoOK(page, `/dashboard/profesional?tab=soporte&mode=use&ticket=${ticket.id}`);
       await expect(page.getByText(/SUP-/).filter({ visible: true }).first()).toBeVisible();
       await expect(page.getByText(/Cuenta, inicio de sesi[oó]n o datos|Account, login/i).filter({ visible: true }).first()).toBeVisible();
       await expect(page.getByText(firstMessage).filter({ visible: true }).first()).toBeVisible();
@@ -645,7 +645,7 @@ test.describe("@seeded core regression", () => {
     const categoryLabel = getCategoryLabel(seed.categoryId, "es");
 
     await resetAuth(page);
-    await gotoOK(page, `/es/profesionales/${seed.professionalSlug}`);
+    await gotoOK(page, `/profesionales/${seed.professionalSlug}`);
     await expect(
       page.locator("h1").filter({ hasText: E2E_USERS.professional.fullName, visible: true }).first(),
     ).toBeVisible();
@@ -657,9 +657,9 @@ test.describe("@seeded core regression", () => {
     await expect(page.getByText(categoryLabel, { exact: true }).filter({ visible: true }).first()).toBeVisible();
     await expectNoHorizontalOverflow(page);
 
-    await gotoOK(page, `/es/buscar?categoria=${encodeURIComponent(seed.categoryId)}`);
+    await gotoOK(page, `/buscar?categoria=${encodeURIComponent(seed.categoryId)}`);
     const resultCard = page.locator("article", {
-      has: page.locator(`a[href^="/es/profesionales/${seed.professionalSlug}"]`),
+      has: page.locator(`a[href^="/profesionales/${seed.professionalSlug}"]`),
     }).filter({ visible: true }).first();
     await expect(resultCard).toBeVisible();
     await expect(resultCard.getByRole("link", { name: new RegExp(`^${E2E_USERS.professional.fullName}`) }).first()).toBeVisible();
@@ -671,13 +671,13 @@ test.describe("@seeded core regression", () => {
     const publishedOfferTitle = `${E2E_USERS.professional.fullName}: oferta published`;
     const secondaryOfferTitle = `${E2E_USERS.client.fullName}: oferta published`;
     await resetAuth(page);
-    await gotoOK(page, "/es/promociones");
+    await gotoOK(page, "/promociones");
 
     await expect(page.getByText(publishedOfferTitle).first()).toBeVisible();
     await expect(page.getByText(secondaryOfferTitle).first()).toBeVisible();
     await expectNoHorizontalOverflow(page);
 
-    await gotoOK(page, `/es/promociones/${seed.publishedOfferId}`);
+    await gotoOK(page, `/promociones/${seed.publishedOfferId}`);
     await expect(page.getByRole("heading", { name: publishedOfferTitle })).toBeVisible();
     await expect(page.getByText("Atenas, Alajuela").first()).toBeVisible();
     await expectNoHorizontalOverflow(page);
@@ -685,13 +685,13 @@ test.describe("@seeded core regression", () => {
 
   test("anonymous visitors can see seeded jobs and open a job detail", async ({ page }) => {
     await resetAuth(page);
-    await gotoOK(page, "/es/empleos");
+    await gotoOK(page, "/empleos");
 
     await expect(page.getByText(seed.publishedJobTitle, { exact: true }).first()).toBeVisible();
     await expect(page.getByText(seed.secondaryJobTitle, { exact: true }).first()).toBeVisible();
     await expectNoHorizontalOverflow(page);
 
-    await gotoOK(page, `/es/empleos/${seed.publishedJobId}`);
+    await gotoOK(page, `/empleos/${seed.publishedJobId}`);
     await expect(page.getByRole("heading", { name: seed.publishedJobTitle, exact: true }).first()).toBeVisible();
     await expect(page.getByRole("heading", { name: "Responsabilidades" })).toBeVisible();
     await expectNoHorizontalOverflow(page);
@@ -703,12 +703,12 @@ test.describe("@seeded core regression", () => {
 
     for (const surface of [
       {
-        path: "/es/promociones",
+        path: "/promociones",
         testId: "offers-mobile-sticky-actions",
         actions: [/^Mis promociones$/i, /^Publicar promoción$/i],
       },
       {
-        path: "/es/empleos",
+        path: "/empleos",
         testId: "jobs-mobile-sticky-actions",
         actions: [/^Mis empleos$/i, /^Publicar empleo$/i],
       },

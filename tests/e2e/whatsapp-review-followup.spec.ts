@@ -30,7 +30,7 @@ test("contact follow-up is readable and dismissible without blocking the page", 
   });
 
   await marcarContactoPrevio(page, test.info());
-  await page.goto("/es/como-funciona");
+  await page.goto("/como-funciona");
   const dialog = page.getByRole("dialog", { name: "Seguimiento del servicio" });
   await expect(dialog).toBeVisible();
   await expect(dialog).toContainText("Contactaste a Redes Bahía por WhatsApp");
@@ -73,7 +73,7 @@ test("contact follow-up shows pending confirmations one at a time", async ({ pag
   });
 
   await marcarContactoPrevio(page, test.info());
-  await page.goto("/es/como-funciona");
+  await page.goto("/como-funciona");
   const dialog = page.getByRole("dialog", { name: "Seguimiento del servicio" });
   await expect(dialog).toContainText("1 de 2 confirmaciones pendientes");
   await expect(dialog).toContainText("Redes Bahía");
@@ -103,7 +103,7 @@ test("«Aún no» deja de preguntar en esa visita aunque queden pendientes", asy
   });
 
   await marcarContactoPrevio(page, test.info());
-  await page.goto("/es/como-funciona");
+  await page.goto("/como-funciona");
   const dialog = page.getByRole("dialog", { name: "Seguimiento del servicio" });
   await expect(dialog).toContainText("Redes Bahía");
   await dialog.getByRole("button", { name: "Aún no" }).click();
@@ -129,7 +129,7 @@ test("contact follow-up names phone and email contact methods", async ({ page })
     });
 
     await marcarContactoPrevio(page, test.info());
-  await page.goto("/es/como-funciona");
+  await page.goto("/como-funciona");
     await expect(page.getByRole("dialog", { name: "Seguimiento del servicio" })).toContainText(method.text);
     await page.unroute("**/api/contact/follow-up");
   }
@@ -145,16 +145,16 @@ test("an anonymous review intent continues through login", async ({ page }) => {
   });
 
   await marcarContactoPrevio(page, test.info());
-  await page.goto("/es/como-funciona");
+  await page.goto("/como-funciona");
   await page.getByRole("button", { name: "Sí, dejar una reseña" }).click();
-  await expect(page).toHaveURL(/\/es\/login$/);
+  await expect(page).toHaveURL(/\/login$/);
 });
 
 // Reseñar sin cuenta: quien contactó desde ESTE dispositivo puede publicar su
 // reseña dando solo el nombre. Lo que se protege es la cadena: sin la cookie del
 // contacto, la ruta no acepta nada.
 test("la reseña sin cuenta exige la cookie del contacto", async ({ page }) => {
-  await page.goto("/es/como-funciona");
+  await page.goto("/como-funciona");
   const sinCookie = await page.evaluate(async () => {
     const res = await fetch("/api/reviews", {
       method: "POST",

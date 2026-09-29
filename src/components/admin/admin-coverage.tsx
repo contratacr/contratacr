@@ -273,7 +273,7 @@ export function AdminCoverage() {
                             <span className={cn("rounded-md px-2 py-0.5 text-[11px] font-semibold", pro.basedHere ? "bg-[#e0f2fe] text-[#0369a1]" : "bg-[#f1f5f9] text-[#64748b]")}>{pro.basedHere ? "Con sede aquí" : pro.nationwide ? "Todo el país" : "Atiende aquí"}</span>
                           )}
                           {pro.slug && (
-                            <a href={`/es/profesionales/${pro.slug}`} target="_blank" rel="noopener noreferrer" aria-label="Ver perfil público" className="grid h-7 w-7 place-items-center rounded-md border border-[#e5e7eb] text-[#6b7280] hover:text-[#009FD9]"><ExternalLink className="h-3.5 w-3.5" /></a>
+                            <a href={`/profesionales/${pro.slug}`} target="_blank" rel="noopener noreferrer" aria-label="Ver perfil público" className="grid h-7 w-7 place-items-center rounded-md border border-[#e5e7eb] text-[#6b7280] hover:text-[#009FD9]"><ExternalLink className="h-3.5 w-3.5" /></a>
                           )}
                         </div>
                       </li>

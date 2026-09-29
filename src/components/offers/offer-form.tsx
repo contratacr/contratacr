@@ -1,5 +1,6 @@
 "use client";
 
+import { rutaPromocion } from "@/lib/marketplace-url";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { PhoneInput } from "@/components/ui/phone-input";
@@ -34,7 +35,7 @@ type OfferFormProps = {
   backHref?: string;
   initialOffer?: Partial<ProfessionalOffer> | null;
   presentation?: "page" | "modal";
-  onSaved?: (id: string) => void;
+  onSaved?: (id: string, title: string) => void;
   /** Salida explícita cuando el formulario vive en una ventana. */
   onCancel?: () => void;
 };
@@ -407,13 +408,13 @@ export function OfferForm({ professionalId, serviceOptions, backHref = "/promoci
       }
       invalidateAppData("offers");
       if (presentation === "modal") {
-        onSaved?.(data.id);
+        onSaved?.(data.id, title);
         setSaving(false);
         return;
       }
       const returnToPanel = backHref.includes("/dashboard/profesional");
       setConCambios(false);
-      router.replace(`/promociones/${data.id}${returnToPanel ? "?from=panel" : ""}`);
+      router.replace(`${rutaPromocion({ id: data.id, title })}${returnToPanel ? "?from=panel" : ""}`);
       router.refresh();
     } catch (err) {
       const message = err instanceof Error ? err.message : "";

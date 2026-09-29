@@ -17,7 +17,7 @@ const BUDGETS = {
   routeTotalKb: 800,      // everything transferred on any route
   fcpMs: 1500,            // first contentful paint on the throttled phone
 };
-const ROUTES = ["/es", "/es/buscar", "/es/categorias", "/es/login", "/es/empleos"];
+const ROUTES = ["/", "/buscar", "/categorias", "/login", "/empleos"];
 
 const browser = await chromium.launch();
 const results = [];
@@ -60,7 +60,7 @@ try {
 let failed = false;
 const line = (r) => {
   const flags = [];
-  if (r.route === "/es" && r.jsKb > BUDGETS.homeJsKb) flags.push(`JS > ${BUDGETS.homeJsKb} KB`);
+  if (r.route === "/" && r.jsKb > BUDGETS.homeJsKb) flags.push(`JS > ${BUDGETS.homeJsKb} KB`);
   if (r.totalKb > BUDGETS.routeTotalKb) flags.push(`total > ${BUDGETS.routeTotalKb} KB`);
   if (r.fcpMs !== null && r.fcpMs > BUDGETS.fcpMs) flags.push(`FCP > ${BUDGETS.fcpMs} ms`);
   if (flags.length) failed = true;

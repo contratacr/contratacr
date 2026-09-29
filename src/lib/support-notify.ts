@@ -49,7 +49,7 @@ export async function notifySupportInbox(opts: {
     headline,
     `<p style="margin:0 0 12px 0;"><strong>De:</strong> ${escapeHtml(opts.fromName || "Sin nombre")} &lt;${escapeHtml(opts.fromEmail)}&gt;<br/><strong>Asunto:</strong> ${escapeHtml(opts.subject)}</p>
      <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:14px;white-space:pre-wrap;">${escapeHtml(opts.body)}</div>`,
-    { href: `${SITE}/es/admin/soporte`, label: "Abrir en el panel" },
+    { href: `${SITE}/admin/soporte`, label: "Abrir en el panel" },
   );
   await sendEmail(SUPPORT_TO, `[Soporte] ${opts.isReply ? "Re: " : ""}${opts.subject}`, html, opts.fromEmail);
 }
@@ -106,13 +106,13 @@ export async function notifyUserOfReply(opts: {
   // Account holders → deep-link straight to THIS ticket open in their panel. The
   // target is carried through login + Google OAuth (login → ?redirect=… → callback
   // ?next=…), so even a logged-out click lands on the open conversation.
-  const ticketPath = `/es/dashboard/${panel}?tab=soporte${opts.ticketId ? `&ticket=${opts.ticketId}` : ""}`;
+  const ticketPath = `/dashboard/${panel}?tab=soporte${opts.ticketId ? `&ticket=${opts.ticketId}` : ""}`;
   const followHtml = opts.hasAccount
     ? `<p style="margin:14px 0 0 0;color:#6b7280;font-size:13px;">Puedes responder desde tu panel para continuar la conversación.</p>`
     : `<p style="margin:14px 0 0 0;color:#6b7280;font-size:13px;">Para ver la conversación completa y seguir respondiendo, crea una cuenta o inicia sesión con este correo (${escapeHtml(opts.toEmail)}). Encontrarás este caso en tu panel.</p>`;
   const cta = opts.hasAccount
     ? { href: `${SITE}${ticketPath}`, label: "Ver conversación" }
-    : { href: `${SITE}/es/login`, label: "Crear cuenta o iniciar sesión" };
+    : { href: `${SITE}/login`, label: "Crear cuenta o iniciar sesión" };
   const html = shell(
     "Tienes una respuesta de soporte",
     `<p style="margin:0 0 12px 0;">${firstName ? `Hola ${escapeHtml(firstName)}, ` : ""}respondimos a tu consulta <strong>“${escapeHtml(opts.subject)}”</strong>:</p>

@@ -507,7 +507,7 @@ export async function POST(req: Request) {
     title: "Nuevo mensaje",
     message: pushPreview,
     data: {
-      link: "/es/mensajes",
+      link: "/mensajes",
       conversation_id: conversation.id,
       booking_id: conversation.booking_id,
       project_id: conversation.project_id,

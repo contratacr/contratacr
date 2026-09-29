@@ -1,4 +1,5 @@
 import { permanentRedirect } from "next/navigation";
+import { prefijoDeIdioma } from "@/lib/prefijo-de-idioma";
 
 /**
  * Recortar la dirección hacia arriba es un gesto normal: alguien que está en
@@ -11,5 +12,5 @@ import { permanentRedirect } from "next/navigation";
  */
 export default async function ProfesionalesRedirect({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
-  permanentRedirect(`/${locale}/buscar`);
+  permanentRedirect(`${prefijoDeIdioma(locale)}/buscar`);
 }

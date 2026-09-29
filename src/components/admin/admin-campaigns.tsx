@@ -38,7 +38,7 @@ const PLANTILLAS = [
     subject: "263 profesionales verificados, en un solo lugar",
     body: "Hola,\n\nPor si no lo tenías presente: en ContrataCR hay electricistas, construcción, remodelación, abogados, mecánicos, contadores, desarrollo web y bastante más.\n\nTodos con identidad verificada contra el padrón, con reseñas, y les escribís por WhatsApp directo — sin formularios ni esperas.",
     ctaLabel: "Ver todos los servicios",
-    ctaPath: "/es/servicios",
+    ctaPath: "/servicios",
   },
 ];
 
@@ -194,7 +194,7 @@ export function AdminCampaigns() {
           <label className="block"><span className="mb-1 block text-xs font-bold uppercase tracking-wide text-[#68778d]">Texto (párrafos separados por una línea en blanco)</span><textarea value={body} onChange={(e) => setBody(e.target.value)} rows={9} maxLength={4000} className={`${campo} resize-y`} /></label>
           <div className="grid gap-3 sm:grid-cols-2">
             <label className="block"><span className="mb-1 block text-xs font-bold uppercase tracking-wide text-[#68778d]">Botón</span><input value={ctaLabel} onChange={(e) => setCtaLabel(e.target.value)} maxLength={60} className={campo} /></label>
-            <label className="block"><span className="mb-1 block text-xs font-bold uppercase tracking-wide text-[#68778d]">Ruta del botón</span><input value={ctaPath} onChange={(e) => setCtaPath(e.target.value)} placeholder="/es/servicios/electricidad" className={campo} /></label>
+            <label className="block"><span className="mb-1 block text-xs font-bold uppercase tracking-wide text-[#68778d]">Ruta del botón</span><input value={ctaPath} onChange={(e) => setCtaPath(e.target.value)} placeholder="/servicios/electricidad" className={campo} /></label>
           </div>
           <div className="flex flex-col gap-2 border-t border-[#eef2f6] pt-4 sm:flex-row">
             <button type="button" disabled={!!enviando} onClick={() => void enviar("test")} className="inline-flex h-11 items-center justify-center gap-2 rounded-full border border-[#d7e1ea] bg-white px-5 text-sm font-bold text-[#162543] transition hover:border-[#b9c8d6] hover:bg-[#f6f9fb] disabled:opacity-60">

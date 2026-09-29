@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { prefijoDeIdioma } from "@/lib/prefijo-de-idioma";
 import { getLocale } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { safeGetUser } from "@/lib/supabase/get-user";
@@ -22,7 +23,7 @@ export default async function PublicarProyectoPage({ searchParams }: { searchPar
   const user = await safeGetUser(supabase);
 
   if (!user) {
-    redirect(`/${locale}/login?redirect=projects${volverA ? `&desde=proyectos` : ""}`);
+    redirect(`${prefijoDeIdioma(locale)}/login?redirect=projects${volverA ? `&desde=proyectos` : ""}`);
   }
 
   // Resolve the role authoritatively (metadata is often missing/stale):
@@ -41,5 +42,5 @@ export default async function PublicarProyectoPage({ searchParams }: { searchPar
   // dirección dejaba a la persona en la lista de sus proyectos, con un botón
   // más que buscar: quien entra por «Crear proyecto» ya dijo lo que quiere.
   void role;
-  redirect(`/${locale}/dashboard/profesional?tab=sent_projects&openPublish=1${volverA ? `&returnTo=${volverA}` : ""}`);
+  redirect(`${prefijoDeIdioma(locale)}/dashboard/profesional?tab=sent_projects&openPublish=1${volverA ? `&returnTo=${volverA}` : ""}`);
 }

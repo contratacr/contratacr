@@ -37,14 +37,14 @@ test.describe("@seeded contact gate", () => {
     expect(reveal.status).toBe(404);
 
     // Search HTML carries no phone numbers for guests.
-    const html = await page.evaluate(async () => (await fetch("/es/buscar")).text());
+    const html = await page.evaluate(async () => (await fetch("/buscar")).text());
     expect(html).not.toMatch(/"whatsapp":"\+?\d{8,}/);
     expect(html).not.toMatch(/tel:\+\d{8,}/);
   });
 
   test("un invitado contacta de un solo toque, sin ventana de por medio", async ({ page }) => {
     await resetAuth(page);
-    await gotoOK(page, `/es/profesionales/${seed.professionalSlug}`);
+    await gotoOK(page, `/profesionales/${seed.professionalSlug}`);
     await waitForInteractivePage(page);
 
     // El botón abre WhatsApp en otra pestaña; lo que se comprueba aquí es que

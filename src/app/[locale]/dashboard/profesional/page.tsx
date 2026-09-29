@@ -1,5 +1,6 @@
 "use client";
 import { useAppDialog } from "@/hooks/use-app-dialog";
+import { prefijoDeIdioma, rutaConIdioma } from "@/lib/prefijo-de-idioma";
 import { irAlInicio } from "@/lib/ir-al-inicio";
 import { enlacePerfil } from "@/lib/profile-url";
 import { EMPLEOS_VISIBLE } from "@/lib/feature-flags";
@@ -31,6 +32,7 @@ import { ProfileEditor } from "@/components/dashboard/pro/profile-editor";
 import { ProfileCompletion, computeCompletion } from "@/components/dashboard/pro/profile-completion";
 import { PhotoGallery } from "@/components/dashboard/pro/photo-gallery";
 import { AvailabilityEditor } from "@/components/dashboard/pro/availability-editor";
+import { CITAS_ACTIVAS } from "@/lib/citas";
 import { ServicesEditor } from "@/components/dashboard/pro/services-editor";
 import { JobsPanel } from "@/components/dashboard/pro/jobs-panel";
 import { StatusFilterTabs } from "@/components/dashboard/status-filter-tabs";
@@ -94,11 +96,18 @@ type Tab =
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type ProData = Record<string, any>;
 
-const ALL_TABS = new Set<Tab>([
+// Las tres pestañas de citas —agenda, citas recibidas y mis citas— ya no salen
+// en ningún menú, pero seguían abriéndose por ?tab= desde avisos y chats
+// viejos: una pantalla viva de una función apagada. Salen del conjunto mientras
+// CITAS_ACTIVAS sea falso, así el enlace viejo cae en el inicio del panel; el
+// día que se reactiven las citas vuelven solas.
+const TABS_DE_CITAS: Tab[] = ["availability", "bookings", "sent_bookings"];
+
+const ALL_TABS = new Set<Tab>(([
   "home", "profile", "services", "photos", "availability", "bookings", "quotes", "verificacion",
   "jobs", "offers", "publicaciones", "completion", "suscripcion", "sent_bookings", "sent_projects", "applications", "saved", "connections",
   "chat", "notifications", "soporte", "cuenta", "guides",
-]);
+] as Tab[]).filter((tab) => CITAS_ACTIVAS || !TABS_DE_CITAS.includes(tab)));
 
 const TAB_ICONS: Record<Tab, React.ReactNode> = {
   home: <Home className="h-4 w-4" />,
@@ -352,11 +361,11 @@ function GuidesBody({
   const go = (guide: GuideItem) => {
     onClose?.();
     if (!isProvider && guide.section === "professional") {
-      window.location.assign(`/${locale}/registro/profesional`);
+      window.location.assign(`${prefijoDeIdioma(locale)}/registro/profesional`);
       return;
     }
     if (guide.href) {
-      window.location.assign(`/${locale}${guide.href}`);
+      window.location.assign(rutaConIdioma(locale, guide.href));
       return;
     }
     if (guide.actionTab) onGo(guide);
@@ -451,7 +460,7 @@ function GuidesBody({
           type="button"
           onClick={() => {
             onClose?.();
-            window.location.assign(`/${locale}/dashboard/profesional?tab=soporte`);
+            window.location.assign(`${prefijoDeIdioma(locale)}/dashboard/profesional?tab=soporte`);
           }}
           className="flex h-11 w-full items-center justify-center gap-2 rounded-full bg-[#009FD9] px-4 text-sm font-bold text-white transition-colors hover:bg-[#0089bb]"
         >
@@ -2497,6 +2506,27 @@ export default function DashboardPage() {
                         {/* Cada sección dentro de su propio límite: si una revienta,
                             cae ella sola con su aviso y su reintento, y el error queda
                             registrado. Antes se llevaba la pantalla entera. */}
+                        {/* Una suspensión no se avisa por correo: se avisa acá, que
+                            es donde el profesional se entera cuando importa y tiene
+                            el botón de reclamo al lado. La cuenta sigue viva —puede
+                            entrar, leer sus mensajes y apelar—; lo que está apagado
+                            es la ficha. */}
+                        {pro?.is_banned === true && (
+                          <div className="mb-4 rounded-xl border border-[#fecaca] bg-[#fef2f2] px-4 py-3">
+                            <p className="text-sm font-bold text-[#991b1b]">Tu perfil está suspendido</p>
+                            <p className="mt-1 text-sm text-[#7f1d1d]">
+                              No aparece en las búsquedas ni en el mapa, y nadie puede ver tus datos de contacto.
+                              {pro.banned_reason ? ` Motivo: ${pro.banned_reason}` : ""}
+                            </p>
+                            <button
+                              type="button"
+                              onClick={() => router.push(`${prefijoDeIdioma(locale)}/dashboard/profesional?tab=soporte`)}
+                              className="mt-2 inline-flex h-9 items-center rounded-lg bg-[#b91c1c] px-3 text-xs font-bold text-white hover:bg-[#991b1b]"
+                            >
+                              Si creés que es un error, escribinos
+                            </button>
+                          </div>
+                        )}
                         <SectionBoundary titulo={t("sectionErrorTitle")} cuerpo={t("sectionErrorBody")} reintentar={t("sectionErrorRetry")}>
                         {TABS_WITH_SUBTITLE.has(activeTab) && (
                           <SectionHeadline subtitulo={t(`subtitles.${activeTab}`)} className="mb-4" />

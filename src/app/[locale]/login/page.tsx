@@ -1,6 +1,7 @@
 "use client";
 
 import { useTranslations, useLocale } from "next-intl";
+import { rutaConIdioma } from "@/lib/prefijo-de-idioma";
 import { Link } from "@/i18n/navigation";
 import { useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
@@ -200,7 +201,7 @@ export default function LoginPage() {
     // profesional a medias caía en el formulario en cada inicio de sesión y no
     // había forma de llegar a su propio panel sin terminarlo.
     if (redirect && redirect !== "projects") {
-      const dest = /^\/(es|en)(\/|$)/.test(redirect) ? redirect : `/${locale}${redirect}`;
+      const dest = /^\/(es|en)(\/|$)/.test(redirect) ? redirect : rutaConIdioma(locale, redirect);
       window.location.assign(withPostLoginActivity(dest));
       return;
     }
@@ -212,7 +213,7 @@ export default function LoginPage() {
         // lista, y conserva de dónde venía para la flecha de atrás.
         ? `/dashboard/profesional?tab=sent_projects&openPublish=1${desde === "proyectos" ? "&returnTo=/proyectos" : ""}`
         : "/dashboard/profesional";
-    window.location.assign(withPostLoginActivity(`/${locale}${dest}`));
+    window.location.assign(withPostLoginActivity(rutaConIdioma(locale, dest)));
   }
 
   async function onSubmit(data: FormData) {

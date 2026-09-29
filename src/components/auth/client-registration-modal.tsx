@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { prefijoDeIdioma } from "@/lib/prefijo-de-idioma";
 import { useNativeApp } from "@/hooks/use-native-app";
 
 import { useState, useRef, useEffect } from "react";
@@ -522,7 +523,7 @@ export function ClientRegistrationModal({
                     reset page; does NOT touch the booking flow's login (which still closes
                     + continues via onSuccess on success). */}
                 <a
-                  href={`/${locale}/olvide-contrasena`}
+                  href={`${prefijoDeIdioma(locale)}/olvide-contrasena`}
                   className="self-start -mt-2.5 text-sm text-[#009FD9] hover:underline"
                 >
                   {t("forgotPassword")}

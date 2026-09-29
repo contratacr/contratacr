@@ -19,7 +19,7 @@ test.describe("@seeded interaction surfaces", () => {
   // dirección, y eso es lo que se comprueba aquí.
   test("booking screen still opens by its own address without submitting", async ({ page }) => {
     await loginAs(page, E2E_USERS.client.email, E2E_USERS.client.password);
-    await gotoOK(page, `/es/profesionales/${seed.professionalSlug}/reservar`);
+    await gotoOK(page, `/profesionales/${seed.professionalSlug}/reservar`);
 
     await expectVisibleText(
       page.locator("body"),
@@ -30,7 +30,7 @@ test.describe("@seeded interaction surfaces", () => {
 
   test("create project modal opens from client projects without submitting", async ({ page }) => {
     await loginAs(page, E2E_USERS.client.email, E2E_USERS.client.password);
-    await gotoOK(page, "/es/dashboard/profesional?tab=sent_projects");
+    await gotoOK(page, "/dashboard/profesional?tab=sent_projects");
 
     const publish = page.getByRole("button", { name: /Publicar proyecto|Post a project|Crear/i }).first();
     await expect(publish).toBeVisible();

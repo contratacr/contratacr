@@ -67,7 +67,7 @@ test.describe("@visual recent bug contracts", () => {
   test("web test keeps the production navbar, WhatsApp flow and footer at both viewports", async ({ page }) => {
     for (const viewport of [{ width: 1366, height: 900 }, { width: 390, height: 844 }]) {
       await page.setViewportSize(viewport);
-      await gotoOK(page, "/es");
+      await gotoOK(page, "/");
       if (viewport.width < 600) {
         await page.getByRole("button", { name: /Abrir men[uú]|Open menu/i }).first().click();
       }
@@ -77,7 +77,7 @@ test.describe("@visual recent bug contracts", () => {
       await expect(page.getByText(/^Mensajes$|^Messages$/i).filter({ visible: true })).toHaveCount(0);
       await expectHealthyPage(page);
 
-      await gotoOK(page, `/es/profesionales/${seed.professionalSlug}`);
+      await gotoOK(page, `/profesionales/${seed.professionalSlug}`);
     // La ficha termina de armarse con los horarios: pulsando antes, el clic caía
     // sobre el hueco de carga y se iba a otra pantalla.
     await waitForInteractivePage(page);
@@ -95,7 +95,7 @@ test.describe("@visual recent bug contracts", () => {
       for (const width of [1366, 390]) {
         await page.setViewportSize({ width, height: width > 600 ? 900 : 844 });
         await loginAs(page, clientOnly.email, clientOnly.password);
-        await gotoOK(page, "/es");
+        await gotoOK(page, "/");
         const clientNavigation = width < 600
           ? page.getByRole("dialog", { name: /Men[uú]|Menu/i })
           : page.getByRole("banner");
@@ -116,7 +116,7 @@ test.describe("@visual recent bug contracts", () => {
         expect(style.background).toMatch(/rgba\(0, 0, 0, 0\)|transparent/);
 
         await loginAs(page, provider.email, provider.password);
-        await gotoOK(page, "/es");
+        await gotoOK(page, "/");
         const providerNavigation = width < 600
           ? page.getByRole("dialog", { name: /Men[uú]|Menu/i })
           : page.getByRole("banner");
@@ -154,9 +154,9 @@ test.describe("@visual recent bug contracts", () => {
     // pestaña no tiene citas activas que desplegar; el «···» de una lista se
     // comprueba en Proyectos, Empleos y Promociones.
     for (const route of [
-      "/es/dashboard/profesional?tab=sent_projects",
-      `/es/dashboard/profesional?tab=jobs&job=${seed.publishedJobId}`,
-      `/es/dashboard/profesional?tab=offers&offer=${seed.publishedOfferId}`,
+      "/dashboard/profesional?tab=sent_projects",
+      `/dashboard/profesional?tab=jobs&job=${seed.publishedJobId}`,
+      `/dashboard/profesional?tab=offers&offer=${seed.publishedOfferId}`,
     ]) {
       await gotoOK(page, route);
       await expectVerticalMenuInsideViewport(page, await resolveMoreOptions(page));
@@ -172,7 +172,7 @@ test.describe("@visual recent bug contracts", () => {
     // Citas ya no se reservan desde el app y la pestaña no tiene citas activas
     // que desplegar: la pareja de acciones se mide en un proyecto propio
     // («Ver proyecto» + «Editar», con el «···» al lado).
-    await gotoOK(page, "/es/dashboard/profesional?tab=sent_projects");
+    await gotoOK(page, "/dashboard/profesional?tab=sent_projects");
     const booking = page.locator('[id^="project-"]').first();
     await expect(booking).toBeVisible();
     await booking.locator("button[aria-expanded='false']").first().click();
@@ -193,7 +193,7 @@ test.describe("@visual recent bug contracts", () => {
 
     // Use the professional's own public profile: the blocked self-action is the
     // compact informational dialog from the recent responsive bug report.
-    await gotoOK(page, `/es/profesionales/${seed.professionalSlug}`);
+    await gotoOK(page, `/profesionales/${seed.professionalSlug}`);
     // «Ver disponibilidad» salió de la ficha junto con las citas: el aviso de
     // «esta es tu propia ficha» lo abre ahora cualquier botón de contacto.
     const serviceRequest = page
@@ -229,7 +229,7 @@ test.describe("@visual recent bug contracts", () => {
   });
 
   test("brand loading mark uses the breathing animation without remount flicker", async ({ page }) => {
-    await gotoOK(page, "/es/buscar");
+    await gotoOK(page, "/buscar");
     const contract = await page.evaluate(async () => {
       const mark = document.createElement("img");
       mark.className = "ccr-brand-loading-mark";

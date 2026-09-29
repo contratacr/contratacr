@@ -44,7 +44,7 @@ async function clsAlRecargar(page: Page, ruta: string) {
 test("/buscar no salta al cargar", async ({ page }) => {
   test.setTimeout(120_000);
   await page.addInitScript(medir);
-  const r = await clsAlRecargar(page, "/es/buscar");
+  const r = await clsAlRecargar(page, "/buscar");
   expect(r.cls, `lo que más se movió: ${r.peor}`).toBeLessThan(UMBRAL);
 });
 
@@ -52,6 +52,6 @@ test("/notificaciones no salta al cargar", async ({ page }, testInfo) => {
   test.setTimeout(180_000);
   await loginAs(page, "e2e.pro@contratacr.test", process.env.E2E_TEST_PASSWORD || "");
   await page.addInitScript(medir);
-  const r = await clsAlRecargar(page, "/es/notificaciones");
+  const r = await clsAlRecargar(page, "/notificaciones");
   expect(r.cls, `[${isMobileProject(testInfo) ? "teléfono" : "computadora"}] lo que más se movió: ${r.peor}`).toBeLessThan(UMBRAL);
 });

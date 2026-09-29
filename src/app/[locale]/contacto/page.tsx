@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { prefijoDeIdioma } from "@/lib/prefijo-de-idioma";
 import { getLocale } from "next-intl/server";
 
 // "/contacto" was a near-duplicate of the support ticket center: it created the
@@ -9,5 +10,5 @@ import { getLocale } from "next-intl/server";
 // The legal contact email (soporte@contratacr.com) stays on Términos/Privacidad.
 export default async function ContactoRedirect() {
   const locale = await getLocale();
-  redirect(`/${locale}/soporte`);
+  redirect(`${prefijoDeIdioma(locale)}/soporte`);
 }

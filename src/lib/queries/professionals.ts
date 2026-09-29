@@ -899,6 +899,24 @@ export async function getProfessionalBySlug(slug: string): Promise<ProfessionalD
   const pro = await getProfessionalBySlugCached(slug);
   if (!pro) return null;
 
+  // Una suspensión lo saca de la búsqueda, del mapa y del sitemap, pero la ficha
+  // seguía abriendo por enlace directo —el que la tenía guardada, o llegó por
+  // Google— y ahí el baneo no servía de nada. La suspensión se consulta FUERA de
+  // la caché de la ficha: si esperara al recálculo, el perfil suspendido seguiría
+  // visible hasta media hora después de suspenderlo.
+  try {
+    const { createPublicClient } = await import("@/lib/supabase/server");
+    const publico = await createPublicClient();
+    const { data: estado, error } = await publico
+      .from("professionals")
+      .select("is_banned")
+      .eq("id", pro.id)
+      .maybeSingle();
+    if (!error && (estado as { is_banned?: boolean | null } | null)?.is_banned) return null;
+  } catch {
+    /* columna ausente o base sin responder: la ficha se comporta como siempre */
+  }
+
   // La ficha guardada en caché es la que ve cualquiera. El correo de contacto
   // solo está permitido para quien inició sesión, así que se pide aparte: si no
   // hay sesión la consulta no devuelve nada y la ficha se queda como está.

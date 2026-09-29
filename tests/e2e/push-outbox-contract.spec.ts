@@ -31,7 +31,7 @@ test.describe("@contract push outbox safety contracts", () => {
       title: `  ${"T".repeat(90)}  `,
       body: `Message\n${"body ".repeat(40)}`,
       data: {
-        link: "/es/dashboard/profesional?tab=notifications",
+        link: "/dashboard/profesional?tab=notifications",
         project_id: "project-contract",
         private_note: "must-not-leave-the-server",
       },
@@ -41,7 +41,7 @@ test.describe("@contract push outbox safety contracts", () => {
     expect(payload.notification?.title).toHaveLength(72);
     expect(payload.notification?.body?.length).toBeLessThanOrEqual(112);
     expect(payload.data).toEqual({
-      url: "/es/dashboard/profesional?tab=notifications&project=project-contract",
+      url: "/dashboard/profesional?tab=notifications&project=project-contract",
       notificationId: "notification-contract",
     });
     expect(payload.android?.collapseKey).toBe("notification-contract");
@@ -51,9 +51,9 @@ test.describe("@contract push outbox safety contracts", () => {
   });
 
   test("push destinations stay app-relative", () => {
-    expect(notificationPushUrl({ link: "https://attacker.invalid/path" })).toBe("/es/notificaciones");
-    expect(notificationPushUrl({ link: "//attacker.invalid/path" })).toBe("/es/notificaciones");
-    expect(notificationPushUrl(null)).toBe("/es/notificaciones");
+    expect(notificationPushUrl({ link: "https://attacker.invalid/path" })).toBe("/notificaciones");
+    expect(notificationPushUrl({ link: "//attacker.invalid/path" })).toBe("/notificaciones");
+    expect(notificationPushUrl(null)).toBe("/notificaciones");
   });
 
   test("provider failures distinguish dead tokens from retryable outages", () => {

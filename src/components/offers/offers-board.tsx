@@ -1,6 +1,7 @@
 "use client";
 
 import { conFiltroDeFecha } from "@/lib/marketplace/filtros-por-volumen";
+import { rutaConIdioma } from "@/lib/prefijo-de-idioma";
 import { ProgressiveImage } from "@/components/ui/progressive-image";
 import { PanelEmptyState } from "@/components/ui/content-loading";
 import { cn } from "@/lib/utils";
@@ -27,7 +28,7 @@ import { OfferForm } from "@/components/offers/offer-form";
 import { OfferImageGallery } from "@/components/offers/offer-image-gallery";
 import { SaveItemButton } from "@/components/saved/save-item-button";
 import { offerSaveSnapshot } from "@/lib/offer-snapshot";
-import { enlaceOferta } from "@/lib/marketplace-url";
+import { enlaceOferta, rutaPromocion } from "@/lib/marketplace-url";
 import {
   formatOfferBeforePrice,
   formatOfferPrice,
@@ -174,7 +175,7 @@ export function OffersBoard({
   const deferredQuery = useDeferredValue(query);
 
   // Sin sesión, los avisos llevan a la pantalla de acceso y de ahí a su destino.
-  const accesoHref = (destino: string) => `/login?redirect=${encodeURIComponent(`/${locale}${destino}`)}`;
+  const accesoHref = (destino: string) => `/login?redirect=${encodeURIComponent(rutaConIdioma(locale, destino))}`;
 
   useEffect(() => {
     if (!nativeApp) return;
@@ -525,9 +526,9 @@ export function OffersBoard({
             serviceOptions={publishServiceOptions}
             presentation="modal"
             backHref="/promociones"
-            onSaved={(id) => {
+            onSaved={(id, title) => {
               setPublishOpen(false);
-              router.push(`/promociones/${id}`);
+              router.push(rutaPromocion({ id, title }));
             }}
           />
         </Modal>
@@ -624,7 +625,7 @@ export function OfferSaveButton({
       itemId={offer.id}
       snapshot={offerSaveSnapshot(offer, locale)}
       userId={userId}
-      loginRedirect={`/promociones/${offer.id}`}
+      loginRedirect={rutaPromocion(offer)}
       withLabel={pastilla}
       sutil={!pastilla}
       className={`shrink-0 ${className}`}
@@ -752,7 +753,7 @@ function OfferRow({
         className="absolute inset-0 hidden lg:block"
       />
       <Link
-        href={`/promociones/${offer.id}`}
+        href={rutaPromocion(offer)}
         className="relative z-[1] block lg:pointer-events-none"
       >
         <div className="flex gap-2.5 sm:gap-3">
@@ -862,7 +863,7 @@ function OfferPreview({
             <div className="min-w-0 flex-1">
               {offer.professional_slug ? (
                 <Link
-                  href={`/profesionales/${offer.professional_slug}?from=${encodeURIComponent(`/promociones/${offer.id}`)}`}
+                  href={`/profesionales/${offer.professional_slug}?from=${encodeURIComponent(rutaPromocion(offer))}`}
                   className="inline-flex max-w-full items-center gap-1 font-semibold text-[#005eaa] hover:underline"
                 >
                   <span className="min-w-0 truncate">{offer.professional_name}</span>

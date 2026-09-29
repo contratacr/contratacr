@@ -194,7 +194,7 @@ test.describe("@seeded extended lifecycle", () => {
         });
       });
       await loginAs(page, account.email, account.password);
-      await gotoOK(page, "/es/dashboard/profesional?tab=profile&mode=offer");
+      await gotoOK(page, "/dashboard/profesional?tab=profile&mode=offer");
       await page.getByRole("button", { name: /Datos b.sicos/i }).click();
       const bio = page.locator('[data-field="bio"] textarea');
       await expect(bio).toBeVisible();
@@ -223,7 +223,7 @@ test.describe("@seeded extended lifecycle", () => {
       // remaining location/contact/auth synchronization requests.
       await expect(saveProfile).toBeHidden();
 
-      await gotoOK(page, "/es/dashboard/profesional?tab=services&mode=offer");
+      await gotoOK(page, "/dashboard/profesional?tab=services&mode=offer");
       const serviceCard = page.locator("section").filter({ has: page.getByRole("button", { name: /Editar informaci/i }) }).first();
       await expect(serviceCard).toHaveCount(1);
       await page.evaluate(() => {
@@ -352,7 +352,7 @@ test.describe("@seeded extended lifecycle", () => {
         });
       });
       await loginAs(page, account.email, account.password);
-      await gotoOK(page, "/es/dashboard/profesional?tab=photos&mode=offer");
+      await gotoOK(page, "/dashboard/profesional?tab=photos&mode=offer");
       const add = page.getByRole("button", { name: /Agregar.*caso de .xito/i }).filter({ visible: true });
       await expect(add).toHaveCount(1);
       await add.click();
@@ -388,7 +388,7 @@ test.describe("@seeded extended lifecycle", () => {
     try {
       account = await createDisposableAccount({ prefix: "availability", professional: true });
       await loginAs(page, account.email, account.password);
-      await gotoOK(page, "/es/dashboard/profesional?tab=availability&mode=offer");
+      await gotoOK(page, "/dashboard/profesional?tab=availability&mode=offer");
       const privacy = page.getByRole("switch", { name: /Hacer (?:privada|p.blica)/i }).filter({ visible: true });
       await expect(privacy).toHaveCount(1);
       await expect(privacy).toHaveAttribute("aria-checked", "false");
@@ -401,7 +401,7 @@ test.describe("@seeded extended lifecycle", () => {
       await confirm.click();
       await expect.poll(async () => (await admin.from("professionals").select("availability_public").eq("id", account!.professionalId!).single()).data?.availability_public).toBe(false);
 
-      await gotoOK(page, "/es/dashboard/profesional?tab=availability&mode=offer");
+      await gotoOK(page, "/dashboard/profesional?tab=availability&mode=offer");
       const publish = page.getByRole("switch", { name: /Hacer (?:privada|p.blica)/i }).filter({ visible: true });
       await expect(publish).toHaveCount(1);
       await expect(publish).toHaveAttribute("aria-checked", "true");

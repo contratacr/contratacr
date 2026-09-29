@@ -3,7 +3,6 @@ import type { User } from "@supabase/supabase-js";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { notifySupportInbox } from "@/lib/support-notify";
 import { enforceRateLimit } from "@/lib/rate-limit";
 import { LONG_TEXT_MAX_LENGTH, limitTrimmedText } from "@/lib/text-limits";
 import { auditUserAction } from "@/lib/audit/user-action";
@@ -139,7 +138,6 @@ export async function POST(req: Request) {
     await db.from("support_ticket_messages").insert({
       ticket_id: ticketId, sender_role: "user", sender_id: user.id, sender_name: senderName, body: safeBody || "El usuario solicitó reabrir el ticket: el problema continúa.",
     });
-    despuesDeResponder(notifySupportInbox({ subject: ticket.subject, fromName: senderName, fromEmail: contact.email || ticket.email || user.email || "", body: "Solicitud de reapertura: el problema continúa.", isReply: true }), "support.reopen:email");
     despuesDeResponder(auditUserAction(db, req, {
       actorUserId: user.id,
       actorRole: "user",
@@ -173,11 +171,8 @@ export async function POST(req: Request) {
   // aclarando lo mismo mandaban tres correos. En cuanto el equipo responde, el
   // siguiente mensaje vuelve a avisar. Es el mismo criterio que el chat directo
   // ya usa con los mensajes sin leer.
-  if (ticket.last_reply_role !== "user") {
-    despuesDeResponder(notifySupportInbox({
-      subject: ticket.subject, fromName: senderName, fromEmail: contact.email || ticket.email || user.email || "", body: safeBody, isReply: true,
-    }), "support.reply:email");
-  }
+  // Sin correo al buzón: el ticket pasa a «en proceso» con última respuesta del
+  // usuario y eso es exactamente lo que cuenta el contador de Soporte del panel.
 
   despuesDeResponder(auditUserAction(db, req, {
     actorUserId: user.id,

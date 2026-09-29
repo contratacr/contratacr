@@ -1,5 +1,6 @@
 import { imagenSocial } from "@/lib/seo/imagen-social";
 import type { Metadata } from "next";
+import { rutaConIdioma } from "@/lib/prefijo-de-idioma";
 
 /**
  * La dirección canónica de una pantalla y sus versiones por idioma.
@@ -13,12 +14,13 @@ import type { Metadata } from "next";
  */
 export function alternativasDeIdioma(locale: string, ruta: string): Metadata["alternates"] {
   const limpia = ruta === "/" ? "" : ruta;
+  // Español sin prefijo (es la canónica y la x-default); inglés con /en.
   return {
-    canonical: `/${locale}${limpia}`,
+    canonical: rutaConIdioma(locale, limpia || "/"),
     languages: {
-      es: `/es${limpia}`,
-      en: `/en${limpia}`,
-      "x-default": `/es${limpia}`,
+      es: rutaConIdioma("es", limpia || "/"),
+      en: rutaConIdioma("en", limpia || "/"),
+      "x-default": rutaConIdioma("es", limpia || "/"),
     },
   };
 }
@@ -44,7 +46,7 @@ export function metadatosDePantalla({
   tarjetaPropia?: boolean;
 }): Metadata {
   const alternates = alternativasDeIdioma(locale, ruta);
-  const url = `/${locale}${ruta === "/" ? "" : ruta}`;
+  const url = rutaConIdioma(locale, ruta || "/");
   // Con su imagen: estos dos objetos REEMPLAZAN a los del layout, no se mezclan.
   const social = tarjetaPropia ? { openGraph: {}, twitter: { card: "summary_large_image" as const } } : imagenSocial(locale);
   return {

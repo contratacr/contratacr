@@ -1,4 +1,5 @@
 "use client";
+import { rutaPromocion } from "@/lib/marketplace-url";
 import { CardActionsMenu } from "@/components/dashboard/card-actions-menu";
 
 import { AutoSaveHint, useAvisoDeGuardado } from "@/components/dashboard/auto-save-hint";
@@ -234,7 +235,7 @@ export function OffersManager({ initialOffers, embedded = false, backHref = "/da
                         y editar es a lo que se viene cuando se abre una
                         publicación propia. La misma fila en las tres secciones. */}
                     <div data-offer-actions={offer.id} className="ccr-acciones-tarjeta relative grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_40px] gap-2">
-                      <Link href={`/promociones/${offer.id}?from=${volverAqui}`} className="inline-flex h-10 w-full items-center justify-center rounded-full border border-[#d7e1ea] px-3 text-xs font-bold text-[#162543]">{copy.view}</Link>
+                      <Link href={`${rutaPromocion(offer)}?from=${volverAqui}`} className="inline-flex h-10 w-full items-center justify-center rounded-full border border-[#d7e1ea] px-3 text-xs font-bold text-[#162543]">{copy.view}</Link>
                       <button type="button" onClick={() => setEditingOffer(offer)} className="hidden h-10 w-full items-center justify-center rounded-full bg-[#009FD9] px-3 text-xs font-bold text-white transition-colors hover:bg-[#0089bb] lg:inline-flex">{copy.edit}</button>
                       <Link href={`/promociones/${offer.id}/editar?from=panel`} className="inline-flex h-10 w-full items-center justify-center rounded-full bg-[#009FD9] px-3 text-xs font-bold text-white transition-colors hover:bg-[#0089bb] lg:hidden">{copy.edit}</Link>
                       {/* LAS MISMAS DOS OPCIONES QUE EN EMPLEOS Y PROYECTOS.
@@ -282,7 +283,7 @@ export function OffersManager({ initialOffers, embedded = false, backHref = "/da
       </div>
       {publishOpen && professionalId && (
         <Modal onClose={() => setPublishOpen(false)} title={copy.publishTitle} size="lg" bodyClassName="bg-[#f4f7fa] px-0 py-0">
-          <OfferForm onCancel={() => setPublishOpen(false)} professionalId={professionalId} serviceOptions={serviceOptions} presentation="modal" backHref={backHref} onSaved={(id) => { setPublishOpen(false); onRefresh?.(); router.push(`/promociones/${id}?from=panel`); }} />
+          <OfferForm onCancel={() => setPublishOpen(false)} professionalId={professionalId} serviceOptions={serviceOptions} presentation="modal" backHref={backHref} onSaved={(id, title) => { setPublishOpen(false); onRefresh?.(); router.push(`${rutaPromocion({ id, title })}?from=panel`); }} />
         </Modal>
       )}
       {editingOffer && professionalId && (

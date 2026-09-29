@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { prefijoDeIdioma } from "@/lib/prefijo-de-idioma";
 import { useLocale } from "next-intl";
 import { useAuth } from "@/hooks/use-auth";
 import { createClient } from "@/lib/supabase/client";
@@ -78,7 +79,7 @@ export function useRedirectIfRegistered(): { checking: boolean } {
 
       if (complete) {
         if ((role === "professional" || user.user_metadata?.intended_role === "professional") && !hasProfessionalProfile) {
-          window.location.assign(`/${locale}/registro/profesional`);
+          window.location.assign(`${prefijoDeIdioma(locale)}/registro/profesional`);
           return;
         }
         // Heal the metadata flag (best-effort) so the proxy/onboarding stop bouncing
@@ -89,7 +90,7 @@ export function useRedirectIfRegistered(): { checking: boolean } {
           } catch { /* best-effort */ }
         }
         // One unified panel for everyone; it opens in the right mode by itself.
-        window.location.assign(`/${locale}/dashboard/profesional`);
+        window.location.assign(`${prefijoDeIdioma(locale)}/dashboard/profesional`);
         return;
       }
 

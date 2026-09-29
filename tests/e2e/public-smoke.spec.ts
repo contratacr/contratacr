@@ -2,31 +2,31 @@ import { expect, test } from "playwright/test";
 import { expectHealthyPage, expectPageShell, gotoOK, isMobileProject, waitForInteractivePage } from "./helpers";
 
 const routes = [
-  "/es",
-  "/es/categorias",
-  "/es/servicios",
-  "/es/buscar",
-  "/es/empleos",
-  "/es/promociones",
-  "/es/proyectos",
-  "/es/login",
-  "/es/registro",
-  "/es/registro/cliente",
-  "/es/registro/profesional",
-  "/es/olvide-contrasena",
-  "/es/reset-password",
-  "/es/soporte",
-  "/es/ayuda",
-  "/es/contacto",
-  "/es/como-funciona",
-  "/es/mejorar-mi-perfil",
-  "/es/publicar-proyecto",
-  "/es/verificacion-de-identidad",
-  "/es/eliminar-cuenta",
-  "/es/mantenimiento",
-  "/es/servicio-no-disponible",
-  "/es/privacidad",
-  "/es/terminos",
+  "/",
+  "/categorias",
+  "/servicios",
+  "/buscar",
+  "/empleos",
+  "/promociones",
+  "/proyectos",
+  "/login",
+  "/registro",
+  "/registro/cliente",
+  "/registro/profesional",
+  "/olvide-contrasena",
+  "/reset-password",
+  "/soporte",
+  "/ayuda",
+  "/contacto",
+  "/como-funciona",
+  "/mejorar-mi-perfil",
+  "/publicar-proyecto",
+  "/verificacion-de-identidad",
+  "/eliminar-cuenta",
+  "/mantenimiento",
+  "/servicio-no-disponible",
+  "/privacidad",
+  "/terminos",
   "/en",
   "/en/categorias",
   "/en/servicios",
@@ -64,7 +64,7 @@ test.describe("@smoke public routes", () => {
   }
 
   test("navbar exposes the core public actions", async ({ page }, testInfo) => {
-    await gotoOK(page, "/es");
+    await gotoOK(page, "/");
     await waitForInteractivePage(page);
     await expect(page.getByRole("link", { name: /ContrataCR/i }).first()).toBeVisible();
 
@@ -156,7 +156,7 @@ test.describe("@smoke public routes", () => {
 
   test("home near-me search uses proximity params", async ({ page }) => {
     await page.context().setGeolocation({ latitude: 9.9281, longitude: -84.0907 });
-    await gotoOK(page, "/es");
+    await gotoOK(page, "/");
     await waitForInteractivePage(page);
     await page.context().grantPermissions(["geolocation"], { origin: new URL(page.url()).origin });
 
@@ -177,13 +177,13 @@ test.describe("@smoke public routes", () => {
     const homeSearchForm = page.locator("form").filter({ has: location });
     await expect(homeSearchForm).toHaveCount(1);
     await homeSearchForm.getByRole("button", { name: /^Buscar$|^Search$/i }).click();
-    await expect(page).toHaveURL(/\/es\/buscar/);
+    await expect(page).toHaveURL(/\/buscar/);
     await expect(page).toHaveURL(/lat=9\.92810/);
     await expect(page).toHaveURL(/lng=-84\.09070/);
   });
 
   test("services navigation keeps the matching section context", async ({ page }, testInfo) => {
-    await gotoOK(page, "/es");
+    await gotoOK(page, "/");
     await waitForInteractivePage(page);
 
     if (isMobileProject(testInfo)) {
@@ -208,7 +208,7 @@ test.describe("@smoke public routes", () => {
   });
 
   test("services search uses the canonical design and art label", async ({ page }, testInfo) => {
-    await gotoOK(page, "/es/servicios");
+    await gotoOK(page, "/servicios");
     await waitForInteractivePage(page);
     const pageSearch = page
       .getByTestId(isMobileProject(testInfo) ? "services-page-mobile-search" : "services-page-search")
@@ -221,7 +221,7 @@ test.describe("@smoke public routes", () => {
     await expectHealthyPage(page);
 
     if (!isMobileProject(testInfo)) {
-      await gotoOK(page, "/es");
+      await gotoOK(page, "/");
       await waitForInteractivePage(page);
       await page.getByRole("button", { name: /^Servicios$/i }).first().click();
       const megaMenu = page.getByTestId("services-mega-menu");
@@ -270,15 +270,15 @@ test.describe("@smoke public routes", () => {
   test("una dirección que no existe responde 404, no 200", async ({ page }) => {
     const inexistente = "00000000-0000-0000-0000-000000000000";
     const casos: Array<[string, number]> = [
-      ["/es/pagina-que-no-existe-jamas", 404],
-      ["/es/servicios/oficio-que-no-existe", 404],
-      ["/es/servicios/electricidad/provincia-que-no-existe", 404],
-      [`/es/promociones/${inexistente}`, 404],
-      [`/es/empleos/${inexistente}`, 404],
-      [`/es/proyectos/${inexistente}`, 404],
+      ["/pagina-que-no-existe-jamas", 404],
+      ["/servicios/oficio-que-no-existe", 404],
+      ["/servicios/electricidad/provincia-que-no-existe", 404],
+      [`/promociones/${inexistente}`, 404],
+      [`/empleos/${inexistente}`, 404],
+      [`/proyectos/${inexistente}`, 404],
       // Y lo que sí existe sigue respondiendo que sí.
-      ["/es/servicios/electricidad", 200],
-      ["/es/servicios/electricidad/san-jose", 200],
+      ["/servicios/electricidad", 200],
+      ["/servicios/electricidad/san-jose", 200],
     ];
     for (const [ruta, esperado] of casos) {
       const respuesta = await page.request.get(ruta, { maxRedirects: 0 });
@@ -294,7 +294,7 @@ test.describe("@smoke public routes", () => {
   // no decía qué se puede buscar.
   test("el panel de servicio ofrece oficios aunque no haya búsquedas recientes", async ({ page }, testInfo) => {
     test.skip(!testInfo.project.name.includes("mobile"), "El panel a pantalla completa es del teléfono.");
-    await gotoOK(page, "/es/buscar?regression=1");
+    await gotoOK(page, "/buscar?regression=1");
     await page.getByRole("button", { name: "¿Qué servicio estás buscando?" }).click();
     await expect(page.getByRole("combobox", { name: "Servicio" })).toBeVisible();
     const panel = page.locator("#native-location-suggestions");

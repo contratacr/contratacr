@@ -15,7 +15,7 @@ const SECCIONES = [
 ] as const;
 
 async function medir(page: import("playwright/test").Page, tab: string) {
-  await page.goto(`/es/dashboard/profesional?tab=${tab}`, { waitUntil: "networkidle" });
+  await page.goto(`/dashboard/profesional?tab=${tab}`, { waitUntil: "networkidle" });
   const abrir = page.locator("button:has(h2), button:has(h3)").filter({ visible: true }).first();
   if (await abrir.count()) await abrir.click();
   const fila = page.locator(".ccr-acciones-tarjeta").filter({ visible: true }).first();

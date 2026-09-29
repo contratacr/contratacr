@@ -74,7 +74,7 @@ export async function notifyNewBooking({
       title,
       message,
       data: {
-        link: "/es/dashboard/profesional?tab=bookings",
+        link: "/dashboard/profesional?tab=bookings",
         booking_id: bookingId ?? null,
         client_name: clientName,
         service_description: serviceDescription,
@@ -144,7 +144,7 @@ export async function notifyBookingStatusChange(
         title,
         message,
         data: {
-          link: "/es/dashboard/profesional?tab=sent_bookings",
+          link: "/dashboard/profesional?tab=sent_bookings",
           booking_id: bookingId,
           professional_name: proName,
           service_description: service,
@@ -212,7 +212,7 @@ export async function notifyBookingRescheduled(bookingId: string): Promise<void>
         title,
         message,
         data: {
-          link: "/es/dashboard/profesional?tab=bookings",
+          link: "/dashboard/profesional?tab=bookings",
           booking_id: bookingId,
           client_name: clientFirst,
           service_description: service,

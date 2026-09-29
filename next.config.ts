@@ -51,10 +51,10 @@ const nextConfig: NextConfig = {
   // attribution parameters the app stores at registration (migration 177).
   async redirects() {
     return [
-      { source: "/ig", destination: "/es?utm_source=instagram&utm_medium=organic&utm_campaign=bio", permanent: false },
-      { source: "/tt", destination: "/es?utm_source=tiktok&utm_medium=organic&utm_campaign=bio", permanent: false },
-      { source: "/fb", destination: "/es?utm_source=facebook&utm_medium=organic&utm_campaign=bio", permanent: false },
-      { source: "/wa", destination: "/es?utm_source=whatsapp&utm_medium=referral&utm_campaign=bio", permanent: false },
+      { source: "/ig", destination: "/?utm_source=instagram&utm_medium=organic&utm_campaign=bio", permanent: false },
+      { source: "/tt", destination: "/?utm_source=tiktok&utm_medium=organic&utm_campaign=bio", permanent: false },
+      { source: "/fb", destination: "/?utm_source=facebook&utm_medium=organic&utm_campaign=bio", permanent: false },
+      { source: "/wa", destination: "/?utm_source=whatsapp&utm_medium=referral&utm_campaign=bio", permanent: false },
     ];
   },
 };

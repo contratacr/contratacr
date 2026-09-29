@@ -1,5 +1,6 @@
 "use client";
 
+import { rutaProyecto } from "@/lib/marketplace-url";
 import { conFiltroDeFecha } from "@/lib/marketplace/filtros-por-volumen";
 import { formatPersonDisplayName } from "@/lib/display-name";
 import { useAppDialog } from "@/hooks/use-app-dialog";
@@ -258,7 +259,7 @@ function Tarjeta({ proyecto, en, elegida = false, onElegir }: { proyecto: Proyec
   const copy = COPY[en ? "en" : "es"];
   return (
     <Link
-      href={`/proyectos/${proyecto.id}`}
+      href={rutaProyecto(proyecto)}
       // En computadora la ficha se abre AL LADO, como en Empleos y
       // Promociones: la tarjeta la elige sin salir de la lista. En el teléfono
       // no hay lado, así que sigue abriendo su pantalla.

@@ -21,7 +21,7 @@ function compactPushText(value: string, maxLength = 112) {
   return `${text.slice(0, maxLength - 1).trimEnd()}…`;
 }
 
-export async function sendUserPush({ userId, title, body, url = "/es/notificaciones" }: SendUserPushOptions) {
+export async function sendUserPush({ userId, title, body, url = "/notificaciones" }: SendUserPushOptions) {
   const db = createAdminClient();
   let { data, error } = await db
     .from("user_push_tokens")

@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { prefijoDeIdioma } from "@/lib/prefijo-de-idioma";
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { LandingNavbar } from "@/components/landing/landing-navbar";
@@ -26,9 +27,9 @@ async function MyOffersContent() {
   const locale = await getLocale();
   const supabase = await createClient();
   const user = await safeGetUser(supabase);
-  if (!user) redirect(`/${locale}/login?redirect=${encodeURIComponent(`/${locale}/promociones/mis-promociones`)}`);
+  if (!user) redirect(`${prefijoDeIdioma(locale)}/login?redirect=${encodeURIComponent(`${prefijoDeIdioma(locale)}/promociones/mis-promociones`)}`);
   const { data: professional } = await supabase.from("professionals").select("id").eq("profile_id", user.id).maybeSingle();
-  if (!professional) redirect(`/${locale}/promociones`);
+  if (!professional) redirect(`${prefijoDeIdioma(locale)}/promociones`);
   const { data } = await supabase.from("professional_offers").select("*").eq("professional_id", professional.id).order("created_at", { ascending: false });
   const offers = ((data ?? []) as Array<Record<string, unknown>>).map((row) => ({
     ...row,

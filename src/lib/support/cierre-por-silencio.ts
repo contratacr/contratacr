@@ -87,7 +87,7 @@ export async function cerrarCasosSinRespuesta(dias = DIAS_DE_SILENCIO): Promise<
           type: "support_reply",
           title: "Caso de soporte cerrado",
           message: `Soporte cerró tu caso "${caso.subject}". Puedes responder si el problema continúa.`,
-          data: { link: `/es/dashboard/${panel}?tab=soporte&ticket=${caso.id}`, ticketId: caso.id, ticket_subject: caso.subject },
+          data: { link: `/dashboard/${panel}?tab=soporte&ticket=${caso.id}`, ticketId: caso.id, ticket_subject: caso.subject },
         };
         await db.from("notifications").insert(aviso);
         await sendNotificationPush({ userId: aviso.user_id, ...aviso });

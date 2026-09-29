@@ -1,4 +1,5 @@
 import { LandingNavbar } from "@/components/landing/landing-navbar";
+import { prefijoDeIdioma } from "@/lib/prefijo-de-idioma";
 import { LandingHero } from "@/components/landing/landing-hero";
 import { FeaturedBrands } from "@/components/landing/featured-brands";
 import { ProsSection } from "@/components/landing/pros-section";
@@ -20,8 +21,8 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   const { locale } = await params;
   return {
     alternates: {
-      canonical: `/${locale}`,
-      languages: { es: "/es", en: "/en", "x-default": "/es" },
+      canonical: locale === "en" ? "/en" : "/",
+      languages: { es: "/", en: "/en", "x-default": "/" },
     },
   };
 }
@@ -54,11 +55,11 @@ const DATOS_ESTRUCTURADOS = (locale: string) => JSON.stringify([
     "@type": "WebSite",
     name: "ContrataCR",
     alternateName: ["Contrata CR", "contratacr.com"],
-    url: `https://contratacr.com/${locale}`,
+    url: `https://contratacr.com${prefijoDeIdioma(locale) || "/"}`,
     inLanguage: locale,
     potentialAction: {
       "@type": "SearchAction",
-      target: { "@type": "EntryPoint", urlTemplate: `https://contratacr.com/${locale}/buscar?q={search_term_string}` },
+      target: { "@type": "EntryPoint", urlTemplate: `https://contratacr.com${prefijoDeIdioma(locale)}/buscar?q={search_term_string}` },
       "query-input": "required name=search_term_string",
     },
   },

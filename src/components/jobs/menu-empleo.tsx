@@ -1,5 +1,6 @@
 "use client";
 
+import { tramoFicha } from "@/lib/marketplace-url";
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { Bookmark, Flag, Link2, Share2 } from "lucide-react";
@@ -46,7 +47,7 @@ export function MenuEmpleo({
     itemId: empleoId,
     snapshot: guardar?.snapshot ?? {},
     userId: guardar?.userId ?? null,
-    loginRedirect: `/empleos/${empleoId}`,
+    loginRedirect: `/empleos/${tramoFicha(titulo, empleoId)}`,
   });
 
   // Como LinkedIn: con el DEDO, la hoja del sistema —WhatsApp, Mensajes,

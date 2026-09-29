@@ -56,7 +56,7 @@ test.describe("Google Maps configuration", () => {
     const requestUrls: string[] = [];
     page.on("request", (request) => requestUrls.push(request.url()));
 
-    await gotoOK(page, "/es/buscar");
+    await gotoOK(page, "/buscar");
     await waitForInteractivePage(page);
     await page.waitForTimeout(1_000);
 

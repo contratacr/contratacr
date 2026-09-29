@@ -102,7 +102,7 @@ async function reseñaSinCuenta(
       title: "Nueva reseña recibida",
       message: `${nombre.split(" ")[0]} te dejó una reseña de ${estrellas} estrellas.`,
       data: {
-        link: `/es/profesionales/${(pro as { slug?: string }).slug ?? ""}?tab=resenas#resenas`,
+        link: `/profesionales/${(pro as { slug?: string }).slug ?? ""}?tab=resenas#resenas`,
         professional_id: professionalId,
         review_id: creada.id,
         client_name: nombre.split(" ")[0],
@@ -299,7 +299,7 @@ export async function POST(req: NextRequest) {
       title: "Nueva reseña recibida",
       message: `${clientName} te dejó una reseña de ${stars} estrellas.`,
       data: {
-        link: `/es/profesionales/${targetPro.slug}?tab=resenas#resenas`,
+        link: `/profesionales/${targetPro.slug}?tab=resenas#resenas`,
         professional_id: professionalId,
         review_id: insertedReview.id,
         client_name: clientName,

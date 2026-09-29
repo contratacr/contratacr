@@ -1,4 +1,5 @@
 import { notFound, redirect } from "next/navigation";
+import { prefijoDeIdioma } from "@/lib/prefijo-de-idioma";
 import { getLocale } from "next-intl/server";
 import { OfferForm } from "@/components/offers/offer-form";
 import { getAllCategories, getCategoryLabel } from "@/lib/data/categories";
@@ -12,12 +13,12 @@ export default async function EditOfferPage({ params, searchParams }: { params: 
   const { id } = await params;
   const query = await searchParams;
   const fromPanel = query.from === "panel";
-  const editPath = `/${locale}/promociones/${id}/editar${fromPanel ? "?from=panel" : ""}`;
+  const editPath = `${prefijoDeIdioma(locale)}/promociones/${id}/editar${fromPanel ? "?from=panel" : ""}`;
   const supabase = await createClient();
   const user = await safeGetUser(supabase);
-  if (!user) redirect(`/${locale}/login?redirect=${encodeURIComponent(editPath)}`);
+  if (!user) redirect(`${prefijoDeIdioma(locale)}/login?redirect=${encodeURIComponent(editPath)}`);
   const { data: professional } = await supabase.from("professionals").select("id").eq("profile_id", user.id).maybeSingle();
-  if (!professional) redirect(`/${locale}/dashboard/profesional?mode=offer`);
+  if (!professional) redirect(`${prefijoDeIdioma(locale)}/dashboard/profesional?mode=offer`);
   const { data: offer } = await supabase.from("professional_offers").select("*").eq("id", id).eq("professional_id", professional.id).maybeSingle();
   if (!offer) notFound();
   const serviceOptions = getAllCategories().map((category) => ({ value: category.id, label: getCategoryLabel(category.id, locale) }));

@@ -21,13 +21,13 @@ import { firstProfessionalHref, loginAs } from "./helpers";
  * cuál: recorre el app y exige cero errores de hidratación.
  */
 const PUBLICAS = [
-  "/es", "/en", "/es/buscar", "/es/buscar?provincia=sj", "/es/buscar?categoria=plomeria",
-  "/es/servicios", "/es/empleos", "/es/promociones", "/es/proyectos", "/es/ayuda", "/es/como-funciona", "/es/login",
+  "/", "/en", "/buscar", "/buscar?provincia=sj", "/buscar?categoria=plomeria",
+  "/servicios", "/empleos", "/promociones", "/proyectos", "/ayuda", "/como-funciona", "/login",
 ];
 const CON_SESION = [
-  "/es", "/es/buscar?provincia=sj", "/es/empleos", "/es/promociones",
-  "/es/dashboard/profesional", "/es/dashboard/profesional?tab=profile", "/es/dashboard/profesional?tab=services",
-  "/es/dashboard/profesional?tab=offers", "/es/notificaciones",
+  "/", "/buscar?provincia=sj", "/empleos", "/promociones",
+  "/dashboard/profesional", "/dashboard/profesional?tab=profile", "/dashboard/profesional?tab=services",
+  "/dashboard/profesional?tab=offers", "/notificaciones",
 ];
 
 async function fallosDeHidratacion(page: Page, rutas: string[]) {

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { rutasDeCache } from "@/lib/prefijo-de-idioma";
 import { mensajeDeError } from "@/lib/api-errors";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -14,10 +15,10 @@ const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/u;
 
 function revalidateOfferViews(id?: string | null) {
   for (const locale of ["es", "en"]) {
-    revalidatePath(`/${locale}/promociones`);
-    revalidatePath(`/${locale}/dashboard/profesional`);
-    revalidatePath(`/${locale}/profesionales/[slug]`, "page");
-    if (id) revalidatePath(`/${locale}/promociones/${id}`);
+    for (const r of rutasDeCache(locale, `/promociones`)) revalidatePath(r);
+    for (const r of rutasDeCache(locale, `/dashboard/profesional`)) revalidatePath(r);
+    for (const r of rutasDeCache(locale, `/profesionales/[slug]`)) revalidatePath(r, "page");
+    if (id) for (const r of rutasDeCache(locale, `/promociones/${id}`)) revalidatePath(r);
   }
 }
 

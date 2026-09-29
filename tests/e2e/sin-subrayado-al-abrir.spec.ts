@@ -27,7 +27,7 @@ test("una sección abre sin subrayado oscuro", async ({ page }, testInfo) => {
   test.setTimeout(180_000);
 
   await loginAs(page, CLIENTE, CLAVE);
-  await page.goto("/es/dashboard/profesional?tab=profile");
+  await page.goto("/dashboard/profesional?tab=profile");
   await page.waitForTimeout(3500);
 
   await page.evaluate(() => {

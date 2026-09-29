@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { rutasDeCache } from "@/lib/prefijo-de-idioma";
 import { mensajeDeError } from "@/lib/api-errors";
 import { avisarVacanteAProfesionales } from "@/lib/jobs/aviso-de-vacante";
 import { createClient } from "@/lib/supabase/server";
@@ -14,9 +15,9 @@ const STATUSES = new Set(["draft", "published", "paused", "closed"]);
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/u;
 function revalidateJobViews(id?: string | null) {
   for (const locale of ["es", "en"]) {
-    revalidatePath(`/${locale}/empleos`);
-    revalidatePath(`/${locale}/dashboard/profesional`);
-    if (id) revalidatePath(`/${locale}/empleos/${id}`);
+    for (const r of rutasDeCache(locale, `/empleos`)) revalidatePath(r);
+    for (const r of rutasDeCache(locale, `/dashboard/profesional`)) revalidatePath(r);
+    if (id) for (const r of rutasDeCache(locale, `/empleos/${id}`)) revalidatePath(r);
   }
 }
 const cleanList = (value: unknown) => Array.isArray(value) ? value.filter((item): item is string => typeof item === "string").map((item) => item.trim()).filter(Boolean).slice(0, 20) : [];

@@ -16,24 +16,24 @@ function randomCedula() {
 test.describe("@account screens through the real pages", () => {
   test("registration chooser offers the two roles and leads to their forms", async ({ page }) => {
     await resetAuth(page);
-    await gotoOK(page, "/es/registro");
+    await gotoOK(page, "/registro");
     // Dos tarjetas con el mismo peso: las dos puertas hacen falta.
     await expectVisibleText(page.locator("body"), /Busco servicios/);
     await expectVisibleText(page.locator("body"), /Ofrezco servicios/);
     await page.getByRole("link", { name: /Busco servicios/ }).first().click();
-    await page.waitForURL(/\/es\/registro\/cliente/, { waitUntil: "domcontentloaded" });
+    await page.waitForURL(/\/registro\/cliente/, { waitUntil: "domcontentloaded" });
     await expectVisibleText(page.locator("body"), /Crear cuenta de cliente/);
     await expectHealthyPage(page);
 
-    await gotoOK(page, "/es/registro");
+    await gotoOK(page, "/registro");
     await page.getByRole("link", { name: /Ofrezco servicios/ }).first().click();
-    await page.waitForURL(/\/es\/registro\/profesional/, { waitUntil: "domcontentloaded" });
+    await page.waitForURL(/\/registro\/profesional/, { waitUntil: "domcontentloaded" });
     await expectHealthyPage(page);
   });
 
   test("recovery page without a valid link explains that the link expired", async ({ page }) => {
     await resetAuth(page);
-    await gotoOK(page, "/es/reset-password");
+    await gotoOK(page, "/reset-password");
     await waitForInteractivePage(page);
     await expectVisibleText(page.locator("body"), /El enlace puede haber expirado/);
     await expectHealthyPage(page);
@@ -54,7 +54,7 @@ test.describe("@account screens through the real pages", () => {
 
     test("an existing account never sees the onboarding role cards again", async ({ page }) => {
       await loginAs(page, account!.email, account!.password);
-      await gotoOK(page, "/es/onboarding");
+      await gotoOK(page, "/onboarding");
       // The page resolves the account before rendering the cards and hands off
       // to the panel; the role question must not flash for someone who already chose.
       await page.waitForURL(/\/dashboard\//, { timeout: 30_000, waitUntil: "domcontentloaded" });
@@ -64,7 +64,7 @@ test.describe("@account screens through the real pages", () => {
 
     test("profile completion validates and saves name, phone and identification", async ({ page }) => {
       await loginAs(page, account!.email, account!.password);
-      await gotoOK(page, "/es/completar-perfil");
+      await gotoOK(page, "/completar-perfil");
       await expectVisibleText(page.locator("body"), /Completa tu perfil/);
 
       // Sin nombre no se guarda. El teléfono y la identificación se llenan

@@ -1,5 +1,6 @@
 "use client";
 
+import { rutaEmpleo, rutaPromocion } from "@/lib/marketplace-url";
 import { useEffect, useState } from "react";
 import { cldThumb } from "@/lib/cloudinary";
 import {
@@ -234,7 +235,7 @@ export function AdminUserProfile({
       const res = await fetch(`/api/admin/users?id=${encodeURIComponent(userId)}`, { method: "DELETE" });
       const json = await res.json().catch(() => ({}));
       if (!res.ok || json.error) throw new Error(json.error ?? "No se pudo eliminar la cuenta.");
-      window.location.assign("/es/admin/usuarios?deleted=1");
+      window.location.assign("/admin/usuarios?deleted=1");
     } catch (err) {
       setDeleteError(err instanceof Error ? err.message : "No se pudo eliminar la cuenta.");
       setDeleting(false);
@@ -325,7 +326,7 @@ export function AdminUserProfile({
                 </Link>
               )}
               {pro?.slug && (
-                <a href={`/es/profesionales/${pro.slug}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 rounded-lg border border-[#e5e7eb] px-3 py-2 text-xs font-semibold text-[#374151] hover:bg-[#f9fafb]">
+                <a href={`/profesionales/${pro.slug}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 rounded-lg border border-[#e5e7eb] px-3 py-2 text-xs font-semibold text-[#374151] hover:bg-[#f9fafb]">
                   <ExternalLink className="h-3.5 w-3.5" /> Perfil público
                 </a>
               )}
@@ -480,11 +481,11 @@ export function AdminUserProfile({
               </div>
               <div className="lg:border-t lg:border-[#eef2f6]">
                 <p className="px-4 pt-3 text-[11px] font-semibold uppercase tracking-wide text-[#68778d]">Empleos publicados</p>
-                {jobs.length === 0 ? <Empty text="Sin empleos publicados." /> : <ul className="divide-y divide-[#eef2f6]">{jobs.slice(0, 8).map((j) => <Row key={j.id} title={j.title} meta={fmt(j.created_at)} status={j.status} external={`/es/empleos/${j.id}`} />)}</ul>}
+                {jobs.length === 0 ? <Empty text="Sin empleos publicados." /> : <ul className="divide-y divide-[#eef2f6]">{jobs.slice(0, 8).map((j) => <Row key={j.id} title={j.title} meta={fmt(j.created_at)} status={j.status} external={rutaEmpleo(j)} />)}</ul>}
               </div>
               <div className="lg:border-t lg:border-[#eef2f6]">
                 <p className="px-4 pt-3 text-[11px] font-semibold uppercase tracking-wide text-[#68778d]">Promociones publicadas</p>
-                {offers.length === 0 ? <Empty text="Sin promociones publicadas." /> : <ul className="divide-y divide-[#eef2f6]">{offers.slice(0, 8).map((o) => <Row key={o.id} title={o.title} meta={`${money(o.price_now, o.currency)} · ${fmt(o.created_at)}`} status={o.status} external={`/es/promociones/${o.id}`} />)}</ul>}
+                {offers.length === 0 ? <Empty text="Sin promociones publicadas." /> : <ul className="divide-y divide-[#eef2f6]">{offers.slice(0, 8).map((o) => <Row key={o.id} title={o.title} meta={`${money(o.price_now, o.currency)} · ${fmt(o.created_at)}`} status={o.status} external={rutaPromocion(o)} />)}</ul>}
               </div>
             </div>
           </Section>

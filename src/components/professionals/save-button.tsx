@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { prefijoDeIdioma } from "@/lib/prefijo-de-idioma";
 import { useLocale, useTranslations } from "next-intl";
 import { Bookmark } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -348,7 +349,7 @@ export function useGuardarProfesional({ pro, isOwn = false }: { pro: SavedPro; i
     if (!saved && !activeUser) {
       writePendingSave(pro);
       const redirect = encodeURIComponent("/dashboard/profesional?tab=saved&mode=use");
-      window.location.assign(`/${locale}/login?redirect=${redirect}`);
+      window.location.assign(`${prefijoDeIdioma(locale)}/login?redirect=${redirect}`);
       return;
     }
     if (!activeUser) return;

@@ -11,12 +11,12 @@ const opcionesDelMenu = (page: Page) =>
 test("la cuenta profesional ve su panel aunque el enlace pida el de cliente", async ({ page }, testInfo) => {
   test.skip(isMobileProject(testInfo), "El menú lateral es de computadora; en el teléfono el panel es una lista.");
   await loginAs(page, "e2e.pro@contratacr.test", process.env.E2E_TEST_PASSWORD ?? "");
-  await gotoOK(page, "/es/dashboard/profesional?tab=sent_projects");
+  await gotoOK(page, "/dashboard/profesional?tab=sent_projects");
   await expect(page.locator("aside").first()).toBeVisible();
   const completo = await opcionesDelMenu(page);
   expect(completo).toBeGreaterThan(5);
 
-  for (const viejo of ["/es/dashboard/profesional?tab=sent_projects&mode=use", "/es/dashboard/profesional?tab=saved&mode=use", "/es/dashboard/cliente?tab=projects"]) {
+  for (const viejo of ["/dashboard/profesional?tab=sent_projects&mode=use", "/dashboard/profesional?tab=saved&mode=use", "/dashboard/cliente?tab=projects"]) {
     await gotoOK(page, viejo);
     await expect(page.locator("aside").first()).toBeVisible();
     await expect.poll(() => opcionesDelMenu(page), { message: viejo }).toBe(completo);
@@ -25,7 +25,7 @@ test("la cuenta profesional ve su panel aunque el enlace pida el de cliente", as
 
 test("«Mis proyectos» del tablero de Proyectos no pide el panel de cliente", async ({ page }) => {
   await loginAs(page, "e2e.pro@contratacr.test", process.env.E2E_TEST_PASSWORD ?? "");
-  await gotoOK(page, "/es/proyectos");
+  await gotoOK(page, "/proyectos");
   const enlace = page.getByRole("link", { name: /Mis proyectos/i }).filter({ visible: true }).first();
   await expect(enlace).toBeVisible();
   expect(await enlace.getAttribute("href")).not.toContain("mode=use");
@@ -35,14 +35,14 @@ test("«Mis proyectos» del tablero de Proyectos no pide el panel de cliente", a
 // avisos que un visitante no tiene, ni un hueco—, y devuelve a donde se estaba.
 test("sin sesión la barra del teléfono lleva a iniciar sesión y vuelve a la misma página", async ({ page }, testInfo) => {
   test.skip(!isMobileProject(testInfo), "En computadora la barra ya trae Iniciar sesión y Registrarse.");
-  for (const ruta of ["/es", "/es/empleos", "/es/proyectos", "/es/ayuda"]) {
+  for (const ruta of ["/", "/empleos", "/proyectos", "/ayuda"]) {
     await gotoOK(page, ruta);
     await expect(page.locator("[data-acceso-cabecera]").filter({ visible: true }), ruta).toHaveCount(1);
     await expect(page.getByRole("link", { name: "Notificaciones" }).filter({ visible: true }), ruta).toHaveCount(0);
   }
-  await gotoOK(page, "/es/buscar?categoria=plomeria");
+  await gotoOK(page, "/buscar?categoria=plomeria");
   const cuenta = page.locator("[data-acceso-cabecera]").filter({ visible: true });
   await expect(cuenta).toHaveAttribute("href", /redirect=.*buscar.*categoria.*plomeria/);
-  await gotoOK(page, "/es/login");
+  await gotoOK(page, "/login");
   await expect(page.locator("[data-acceso-cabecera]").filter({ visible: true })).toHaveCount(0);
 });

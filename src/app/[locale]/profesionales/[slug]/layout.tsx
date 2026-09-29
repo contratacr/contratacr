@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { prefijoDeIdioma } from "@/lib/prefijo-de-idioma";
 import { alternativasDeIdioma } from "@/lib/seo/alternates";
 import { getProfessionalBySlug } from "@/lib/queries/professionals";
 import { getCategoryLabel } from "@/lib/data/categories";
@@ -49,7 +50,7 @@ export async function generateMetadata({ params }: ProfileLayoutProps): Promise<
     ? `View ${displayName}'s professional profile on ContrataCR${location ? ` in ${location}` : ""}.`
     : `Conoce el perfil profesional de ${displayName} en ContrataCR${location ? ` en ${location}` : ""}.`;
   const description = cleanDescription(pro.bio) || fallbackDescription;
-  const path = `/${locale}/profesionales/${slug}`;
+  const path = `${prefijoDeIdioma(locale)}/profesionales/${slug}`;
   const absoluteUrl = `${APP_URL}${path}`;
   const imageUrl = `${APP_URL}${path}/opengraph-image`;
 

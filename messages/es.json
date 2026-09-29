@@ -574,7 +574,7 @@
     "titlePassword": "Crea tu contraseña",
     "titleOtp": "Código de verificación",
     "subEmail": "Ingresa el correo que usarás para tu cuenta.",
-    "subName": "¿Cómo te llamas? Tu identificación te la pediremos solo al reservar una cita.",
+    "subName": "¿Cómo te llamas? Solo necesitamos tu nombre para crear la cuenta.",
     "subIdentity": "Ingresa tu identificación y tomamos tu nombre del padrón. Si no tienes identificación, lo escribes a mano.",
     "subPassword": "Elige una contraseña segura para tu cuenta.",
     "subOtp": "Ingresa el código de 6 dígitos enviado a tu correo.",
@@ -1318,7 +1318,7 @@
       "chat": "Mensajes",
       "assistant": "Asistente",
       "bookings": "Citas",
-      "proposals": "Oportunidades",
+      "proposals": "Proyectos",
       "verificacion": "Verificación",
       "suscripcion": "Suscripción",
       "sent_bookings": "Mis citas",
@@ -1409,7 +1409,7 @@
           "body": "Vea las citas que le reservaron desde su perfil."
         },
         "opportunities": {
-          "title": "Oportunidades",
+          "title": "Proyectos",
           "body": "Trabajos que publicaron los clientes y a los que puedes postularte."
         },
         "services": {
@@ -1485,17 +1485,17 @@
         "points": [
           "Busca profesionales por servicio, zona o nombre.",
           "Guarda profesionales, promociones y empleos para revisarlos después.",
-          "Reserva una cita o publica un proyecto cuando necesites contratar.",
-          "Revisa tus citas, proyectos, favoritos y conexiones desde el panel."
+          "Publica un proyecto cuando necesites contratar y recibe respuestas.",
+          "Revisa tus proyectos, favoritos y conexiones desde el panel."
         ]
       },
       "proPanel": {
         "title": "Panel profesional",
         "body": "Para ofrecer servicios y construir confianza.",
         "points": [
-          "Completa tu perfil, servicios, cobertura y disponibilidad.",
+          "Completa tu perfil, servicios, cobertura y precios.",
           "Sube casos de éxito para mostrar trabajos reales.",
-          "Atiende citas, proyectos y cotizaciones desde un solo lugar.",
+          "Atiende proyectos, mensajes y cotizaciones desde un solo lugar.",
           "También conservas el panel cliente para contratar otros servicios."
         ]
       },
@@ -1537,7 +1537,7 @@
           "cta": "Responder"
         },
         "opportunities": {
-          "title": "Oportunidad abierta",
+          "title": "Proyecto abierto",
           "project": "Sitio web para negocio local",
           "body": "Proyecto de un cliente esperando respuestas de profesionales.",
           "cta": "Enviar respuesta"
@@ -1900,10 +1900,10 @@
       "chat": "Mensajes",
       "assistant": "Asistente",
       "bookings": "Citas",
-      "proposals": "Oportunidades",
+      "proposals": "Proyectos",
       "verificacion": "Verificación",
       "sent_bookings": "Citas",
-      "sent_projects": "Oportunidades",
+      "sent_projects": "Proyectos",
       "notifications": "Notificaciones",
       "soporte": "Soporte",
       "cuenta": "Cuenta",
@@ -2615,7 +2615,7 @@
     "searchPros": "Buscar profesionales",
     "signOut": "Salir",
     "tabBookings": "Citas",
-    "tabProjects": "Oportunidades",
+    "tabProjects": "Proyectos",
     "tabSaved": "Favoritos",
     "tabNotifications": "Notificaciones",
     "tabSupport": "Soporte",
@@ -4115,7 +4115,7 @@
     "sendByEmail": "Enviar por correo",
     "downloadClient": "Descargar PDF",
     "attachTabBookings": "Citas",
-    "attachTabProjects": "Oportunidades",
+    "attachTabProjects": "Proyectos",
     "attachSend": "Enviar aquí",
     "attachConfirmTitle": "¿Enviar aquí?",
     "attachConfirmBody": "El cliente la ve en su panel y puede aceptarla. Si te equivocaste, después puedes quitarla.",

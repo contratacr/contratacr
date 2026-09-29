@@ -68,7 +68,15 @@ export async function POST(req: NextRequest) {
       console.error("[report] persist failed (continuing to email):", e);
     }
 
-    const profileUrl = `https://contratacr.com/es/profesionales/${professionalSlug}`;
+    // El reporte YA vive en la cola de moderación del panel admin, con su
+    // contador en la barra lateral (Reportes ← /api/admin/pending-counts, que
+    // cuenta los que están en «open»). Mandar además un correo a soporte era
+    // avisar dos veces de lo mismo, así que el correo queda SOLO como red: si
+    // el guardado falló, el reporte no aparecería en ninguna pantalla y ahí sí
+    // hay que enterarse por correo.
+    if (reportId) return NextResponse.json({ ok: true });
+
+    const profileUrl = `https://contratacr.com/profesionales/${professionalSlug}`;
     const html = brandedEmailDocument({
       title: "Reporte de perfil — ContrataCR",
       bodyHtml: `
@@ -86,13 +94,12 @@ export async function POST(req: NextRequest) {
     const r = await sendBrevoEmail({
       to: SUPPORT_TO,
       replyTo: correoValido(reporterEmail) || undefined,
-      subject: `${isImpersonation ? "[PRIORIDAD ALTA] " : ""}[Reporte] Perfil de ${escaparHtml(professionalName ?? professionalSlug)}`,
+      subject: `${isImpersonation ? "[PRIORIDAD ALTA] " : ""}[Reporte SIN GUARDAR] Perfil de ${escaparHtml(professionalName ?? professionalSlug)}`,
       html,
     });
 
-    // The report is already persisted to the moderation queue above, so a skipped
-    // (Brevo not configured) or failed email still succeeds for the user. Only a
-    // hard failure surfaces an error.
+    // Aquí el guardado falló: el correo es lo único que queda, así que un fallo
+    // duro sí se le devuelve a quien reportó.
     if (r.status === "failed") {
       return NextResponse.json({ error: "No se pudo enviar el reporte." }, { status: 500 });
     }

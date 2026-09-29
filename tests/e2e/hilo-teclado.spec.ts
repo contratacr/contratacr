@@ -8,7 +8,7 @@ import { gotoOK, isMobileProject, loginAs } from "./helpers";
 test("el hilo de soporte vuelve a su sitio al cerrarse el teclado", async ({ page }, testInfo) => {
   test.skip(!isMobileProject(testInfo), "El hilo a pantalla completa es del teléfono.");
   await loginAs(page, "e2e.pro@contratacr.test", process.env.E2E_TEST_PASSWORD ?? "");
-  await gotoOK(page, "/es/dashboard/profesional?tab=soporte");
+  await gotoOK(page, "/dashboard/profesional?tab=soporte");
   const fila = page.locator("[data-tiquete]").first();
   // La lista se pide al montar: sin esperarla, la fila «no existe» todavía.
   await expect(fila).toBeVisible({ timeout: 20_000 });
@@ -44,7 +44,7 @@ test("el hilo de soporte vuelve a su sitio al cerrarse el teclado", async ({ pag
 test("al soltar el campo el app deja de creer que hay teclado", async ({ page }, testInfo) => {
   test.skip(!isMobileProject(testInfo), "El hilo a pantalla completa es del teléfono.");
   await loginAs(page, "e2e.pro@contratacr.test", process.env.E2E_TEST_PASSWORD ?? "");
-  await gotoOK(page, "/es/dashboard/profesional?tab=soporte");
+  await gotoOK(page, "/dashboard/profesional?tab=soporte");
   const fila = page.locator("[data-tiquete]").first();
   await expect(fila).toBeVisible({ timeout: 20_000 });
   await fila.click();

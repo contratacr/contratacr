@@ -1,6 +1,6 @@
 import type { MulticastMessage } from "firebase-admin/messaging";
 
-const DEFAULT_NOTIFICATION_URL = "/es/notificaciones";
+const DEFAULT_NOTIFICATION_URL = "/notificaciones";
 
 export function compactPushText(value: string, maxLength: number) {
   const text = value.replace(/\s+/g, " ").trim();

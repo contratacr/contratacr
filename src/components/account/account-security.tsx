@@ -1,6 +1,7 @@
 "use client";
 
 import { AutoSaveHint, useAvisoDeGuardado } from "@/components/dashboard/auto-save-hint";
+import { prefijoDeIdioma } from "@/lib/prefijo-de-idioma";
 import { useEffect, useState } from "react";
 import { FilaInterruptor } from "@/components/ui/fila-interruptor";
 import { CheckCircle2, MessageCircle, Clock, Mail, Lock, ShieldCheck, Eye, EyeOff, Info, ExternalLink } from "lucide-react";
@@ -209,7 +210,7 @@ export function AccountSecuritySection({ showHeading = true }: { showHeading?: b
   async function performEmailChange(): Promise<string | null> {
     const supabase = createClient();
     const role = (user?.user_metadata?.role as string | undefined) === "professional" ? "profesional" : "cliente";
-    const next = `/${locale}/dashboard/${role}?tab=cuenta&emailChanged=1`;
+    const next = `${prefijoDeIdioma(locale)}/dashboard/${role}?tab=cuenta&emailChanged=1`;
     const emailRedirectTo = `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`;
     const { error } = await supabase.auth.updateUser(
       {
@@ -266,7 +267,7 @@ export function AccountSecuritySection({ showHeading = true }: { showHeading?: b
     if (!user?.email) return;
     const supabase = createClient();
     await supabase.auth.resetPasswordForEmail(user.email, {
-      redirectTo: `${window.location.origin}/${locale}/reset-password`,
+      redirectTo: `${window.location.origin}${prefijoDeIdioma(locale)}/reset-password`,
     });
   }
 

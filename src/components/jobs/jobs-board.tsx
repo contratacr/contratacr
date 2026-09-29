@@ -1,6 +1,7 @@
 "use client";
 
 import { conFiltroDeFecha } from "@/lib/marketplace/filtros-por-volumen";
+import { rutaConIdioma } from "@/lib/prefijo-de-idioma";
 import { ProgressiveImage } from "@/components/ui/progressive-image";
 import { PanelEmptyState } from "@/components/ui/content-loading";
 import { cn } from "@/lib/utils";
@@ -24,7 +25,7 @@ import { SaveItemButton } from "@/components/saved/save-item-button";
 import { DirectChatLauncher } from "@/components/professionals/direct-chat-launcher";
 import { AccionesAlPie } from "@/components/ui/acciones-al-pie";
 import { MenuEmpleo } from "@/components/jobs/menu-empleo";
-import { enlaceEmpleo, idCoincide } from "@/lib/marketplace-url";
+import { enlaceEmpleo, idCoincide, rutaEmpleo } from "@/lib/marketplace-url";
 import { useNativeApp } from "@/hooks/use-native-app";
 import { COMMON_JOB_TITLES, EMPLOYMENT_TYPES, EXPERIENCE_LEVELS, formatJobSalary, jobMatchesSearch, type JobPost, WORKPLACE_TYPES } from "@/lib/jobs";
 import { employmentTypeLabel, experienceLevelLabel, marketplaceLocale, type MarketplaceLocale, workplaceTypeLabel } from "@/lib/marketplace-copy";
@@ -144,7 +145,7 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
   const [selectedId, setSelectedId] = useState(() => searchParams.get("job") ?? searchParams.get("apply") ?? initialSelectedJobId ?? jobs[0]?.id ?? "");
 
   // Sin sesión, los avisos llevan a la pantalla de acceso y de ahí a su destino.
-  const accesoHref = (destino: string) => `/login?redirect=${encodeURIComponent(`/${locale}${destino}`)}`;
+  const accesoHref = (destino: string) => `/login?redirect=${encodeURIComponent(rutaConIdioma(locale, destino))}`;
 
   useEffect(() => {
     if (!nativeApp) return;
@@ -309,7 +310,7 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
       titulo: selected.title,
       subtitulo: selected.employer_name ?? undefined,
       imagen: selected.employer_avatar_url ?? undefined,
-      href: `/empleos/${selected.id}`,
+      href: rutaEmpleo(selected),
     });
   }, [selected, showingMobileDetail]);
   const tSalida = useTranslations("marketplaceReturn");
@@ -537,10 +538,10 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
           professionalId={currentProfessionalId}
           presentation="modal"
           backHref="/empleos"
-          onSaved={(id) => {
+          onSaved={(id, title) => {
             setSelectedId(id);
             setPublishOpen(false);
-            router.push(`/empleos/${id}`);
+            router.push(rutaEmpleo({ id, title }));
             router.refresh();
           }}
         />
@@ -553,7 +554,7 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
           professionalId={currentProfessionalId}
           initialJob={editingJob}
           presentation="modal"
-          backHref={`/empleos/${editingJob.id}`}
+          backHref={rutaEmpleo(editingJob)}
           onSaved={() => {
             setEditingJob(null);
             router.refresh();
@@ -583,7 +584,7 @@ function JobRow({ job, selected, onSelect }: { job: JobPost; selected: boolean; 
   const copy = JOBS_COPY[locale];
   return <article className={`relative min-h-[7.25rem] overflow-hidden border-b lg:min-h-0 border-[#e5e7eb] bg-white px-3 py-3 transition sm:max-lg:last:border-b-0 hover:bg-[#f8fafc] sm:px-4 ${selected ? "lg:bg-[#eef9fd] lg:shadow-[inset_4px_0_0_#162543]" : ""}`}>
     <button type="button" onClick={onSelect} aria-label={`Ver ${job.title}`} className="absolute inset-0 hidden lg:block" />
-    <Link href={`/empleos/${job.id}`} className="relative z-[1] block w-full text-left lg:pointer-events-none">
+    <Link href={rutaEmpleo(job)} className="relative z-[1] block w-full text-left lg:pointer-events-none">
       <div className="flex min-w-0 items-start gap-2.5 sm:gap-3">
         <EmployerAvatar job={job} />
         <div className="min-w-0 flex-1">
@@ -787,7 +788,7 @@ function JobContactActions({ job, isOwner, userId, soloContacto = false, escrito
       {/* Fuera de la ficha —en la lista— la acción que funciona se lleva la
           línea entera y lo secundario comparte la de abajo. */}
       <div className="grid grid-cols-1 gap-2">
-        <SaveItemButton itemType="job" itemId={job.id} snapshot={jobSaveSnapshot(job, locale)} userId={userId} loginRedirect={`/empleos/${job.id}`} withLabel className={secundario} />
+        <SaveItemButton itemType="job" itemId={job.id} snapshot={jobSaveSnapshot(job, locale)} userId={userId} loginRedirect={rutaEmpleo(job)} withLabel className={secundario} />
       </div>
     </div>
   );

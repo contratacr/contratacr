@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { prefijoDeIdioma } from "@/lib/prefijo-de-idioma";
 import { Suspense } from "react";
 import { getMessages } from "next-intl/server";
 import { notFound } from "next/navigation";
@@ -49,7 +50,7 @@ function buildMetadata(locale: string): Metadata {
   const socialDescription = isEn
     ? "Offer and find services in Costa Rica"
     : "Ofrece y encuentra servicios en Costa Rica";
-  const socialImage = `/${locale}/opengraph-image`;
+  const socialImage = `${prefijoDeIdioma(locale)}/opengraph-image`;
 
   return {
     metadataBase: new URL("https://contratacr.com"),

@@ -81,7 +81,7 @@ async function seedNotifications(userId: string, locale: Locale) {
       type: "new_project",
       title: "Nuevo proyecto",
       message: `Un cliente publicó "${projectTitle}" en Desarrollo web.`,
-      data: { regression_run: runId, push_suppressed: true, link: "/es/proyectos", project_title: projectTitle, category_id: "desarrollo_web" },
+      data: { regression_run: runId, push_suppressed: true, link: "/proyectos", project_title: projectTitle, category_id: "desarrollo_web" },
       read: false,
     },
     {

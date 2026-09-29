@@ -88,7 +88,7 @@ export async function notifyRecipientOutsideApp({
   senderName: string;
   preview: string;
 }) {
-  const threadUrl = `${origin.replace(/\/$/, "")}/es/mensajes?conversation=${encodeURIComponent(conversationId)}`;
+  const threadUrl = `${origin.replace(/\/$/, "")}/mensajes?conversation=${encodeURIComponent(conversationId)}`;
 
   const [{ data: authUser }, professional] = await Promise.all([
     db.auth.admin.getUserById(recipientId),

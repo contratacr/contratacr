@@ -1,4 +1,5 @@
 import { getProfessionalBySlug } from "@/lib/queries/professionals";
+import { prefijoDeIdioma } from "@/lib/prefijo-de-idioma";
 import { publicacionesDelProfesional } from "@/lib/queries/publicaciones-del-profesional";
 import ProfileClient from "./profile-client";
 import { DatosEstructurados } from "@/components/seo/datos-estructurados";
@@ -42,7 +43,7 @@ function fichaComoNegocioLocal(pro: Awaited<ReturnType<typeof getProfessionalByS
     .map((id) => getCategoryLabel(id, locale))
     .filter(Boolean);
   const zona = [pro.cantonName, pro.provinceName].filter(Boolean).join(", ");
-  const url = `${process.env.NEXT_PUBLIC_APP_URL || "https://contratacr.com"}/${locale}/profesionales/${pro.slug}`;
+  const url = `${process.env.NEXT_PUBLIC_APP_URL || "https://contratacr.com"}${prefijoDeIdioma(locale)}/profesionales/${pro.slug}`;
   return {
     "@context": "https://schema.org",
     "@type": "LocalBusiness",

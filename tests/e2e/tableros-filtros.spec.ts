@@ -5,9 +5,9 @@ import { gotoOK } from "./helpers";
 // filtros desde la ficha de un empleo, y el tablero los ignoraba (solo leía
 // «q» y «location»), así que «Remoto» desde una ficha abría la lista entera.
 const TABLEROS = [
-  { ruta: "/es/empleos", enlace: 'a[href*="/empleos/"]' },
-  { ruta: "/es/promociones", enlace: 'a[href*="/promociones/"]' },
-  { ruta: "/es/proyectos", enlace: 'a[href*="/proyectos/"]' },
+  { ruta: "/empleos", enlace: 'a[href*="/empleos/"]' },
+  { ruta: "/promociones", enlace: 'a[href*="/promociones/"]' },
+  { ruta: "/proyectos", enlace: 'a[href*="/proyectos/"]' },
 ];
 
 async function contar(page: Page, ruta: string, enlace: string, consulta = "") {
@@ -25,7 +25,7 @@ for (const { ruta, enlace } of TABLEROS) {
   });
 }
 
-test("/es/empleos: los filtros que llegan por la dirección se aplican", async ({ page }) => {
+test("/empleos: los filtros que llegan por la dirección se aplican", async ({ page }) => {
   const { ruta, enlace } = TABLEROS[0];
   const todo = await contar(page, ruta, enlace);
   test.skip(todo < 2, "Hacen falta al menos dos empleos sembrados.");

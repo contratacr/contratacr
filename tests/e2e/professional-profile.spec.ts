@@ -15,7 +15,7 @@ test.describe("@seeded professional profile", () => {
     expect(href, "The verified production mirror must expose at least one professional").toBeTruthy();
 
     await gotoOK(page, href!);
-    await expect(page).toHaveURL(/\/es\/profesionales\//);
+    await expect(page).toHaveURL(/\/profesionales\//);
     await expect(page.locator("h1").first()).toBeVisible();
     await expect(page.locator("main").getByText(/Servicios|Sobre mi|Rese|Casos de/i).first()).toBeVisible();
     await expectNoHorizontalOverflow(page);
@@ -80,11 +80,11 @@ test.describe("@seeded professional profile", () => {
     // teléfono el «volver» vive en la barra superior y sí se comprueba.
     if (enTelefono) {
       await page.locator("[data-ccr-section-back]").first().click();
-      await expect(page).toHaveURL(/\/es\/buscar\?categoria=enfermeria$/);
+      await expect(page).toHaveURL(/\/buscar\?categoria=enfermeria$/);
     } else {
       // Sin ese viaje, volver a la misma dirección sería solo un cambio de
       // ancla (#resenas) y no habría respuesta que esperar.
-      await gotoOK(page, "/es");
+      await gotoOK(page, "/");
     }
 
     await gotoOK(page, reviewsHref);
@@ -94,7 +94,7 @@ test.describe("@seeded professional profile", () => {
     // se comprobó arriba.
     if (!enTelefono) {
       await page.getByRole("banner").getByRole("link", { name: /ContrataCR inicio/i }).click();
-      await expect(page).toHaveURL(/\/es\/?$/);
+      await expect(page).toHaveURL(/^https?:\/\/[^/]+\/?$/);
     }
   });
 
@@ -104,7 +104,7 @@ test.describe("@seeded professional profile", () => {
     try {
       account = await createDisposableAccount({ prefix: "profile-review-inline" });
       await loginAs(page, account.email, account.password);
-      await gotoOK(page, `/es/profesionales/${seed!.professionalSlug}?tab=resenas#resenas`);
+      await gotoOK(page, `/profesionales/${seed!.professionalSlug}?tab=resenas#resenas`);
 
       await expect(page.getByText("¿Ya trabajaste con este profesional?")).toBeVisible();
       await expect(page.getByRole("button", { name: "Escribir reseña" })).toHaveCount(0);
@@ -147,7 +147,7 @@ test.describe("@seeded professional profile", () => {
     const admin = regressionAdminClient();
     await admin.from("saved_professionals").delete().eq("client_id", seed.professionalUserId).eq("professional_id", seed.professionalId);
     await loginAs(page, E2E_USERS.professional.email, E2E_USERS.professional.password);
-    await gotoOK(page, `/es/profesionales/${seed.professionalSlug}`);
+    await gotoOK(page, `/profesionales/${seed.professionalSlug}`);
     // Sin esperar: se pulsa apenas la ficha aparece, que es cuando se rompía.
     // En computadora Guardar es un botón; en el teléfono vive en el «···».
     const boton = page.locator("[data-save-button]").filter({ visible: true }).first();

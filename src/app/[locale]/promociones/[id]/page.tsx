@@ -9,7 +9,7 @@ import { OfferContactActions } from "@/components/offers/offers-board";
 import { offerSaveSnapshot } from "@/lib/offer-snapshot";
 import { AccionesAlPie } from "@/components/ui/acciones-al-pie";
 import { MenuOferta } from "@/components/offers/menu-oferta";
-import { claveDeTramo, enlaceOferta, rangoDePrefijo } from "@/lib/marketplace-url";
+import { claveDeTramo, enlaceOferta, rangoDePrefijo, rutaPromocion } from "@/lib/marketplace-url";
 import { OfferOwnerActions } from "@/components/offers/offer-owner-actions";
 import { getAllCategories, getCategoryLabel } from "@/lib/data/categories";
 import {
@@ -202,7 +202,7 @@ export default async function OfferDetailPage({ params, searchParams }: { params
     ...(offer.quantity_available != null ? [[copy.rowAvailable, `${offer.quantity_available}`] as [string, string]] : []),
   ] as Array<[string, string]>).filter(([, valor]) => Boolean(valor));
   const quienPublica = offer.professional_slug ? (
-    <Link href={`/profesionales/${offer.professional_slug}?from=${encodeURIComponent(`/promociones/${offer.id}`)}`} className="inline-flex min-w-0 max-w-full items-center gap-1 font-semibold text-[#005eaa] hover:underline">
+    <Link href={`/profesionales/${offer.professional_slug}?from=${encodeURIComponent(rutaPromocion(offer))}`} className="inline-flex min-w-0 max-w-full items-center gap-1 font-semibold text-[#005eaa] hover:underline">
       <span className="min-w-0 truncate">{offer.professional_name}</span>
       <ChevronRight className="h-4 w-4 shrink-0" />
     </Link>
@@ -226,7 +226,7 @@ export default async function OfferDetailPage({ params, searchParams }: { params
           titulo: offer.title,
           subtitulo: offer.professional_name ?? undefined,
           imagen: offer.image_urls?.[0],
-          href: `/promociones/${offer.id}`,
+          href: rutaPromocion(offer),
         }}
       />
       {/* La línea bajo la cabecera SE VE SIEMPRE, como en Empleos, la ficha del
@@ -250,7 +250,7 @@ export default async function OfferDetailPage({ params, searchParams }: { params
             profesionalNombre={offer.professional_name || copy.professionalFallback}
             profesionalSlug={offer.professional_slug}
             esPropia={isOwner}
-            guardar={isOwner ? undefined : { itemId: offer.id, snapshot: offerSaveSnapshot(offer, idioma), userId: user?.id ?? null, loginRedirect: `/promociones/${offer.id}` }}
+            guardar={isOwner ? undefined : { itemId: offer.id, snapshot: offerSaveSnapshot(offer, idioma), userId: user?.id ?? null, loginRedirect: rutaPromocion(offer) }}
           />
         </div>
       </header>
@@ -363,7 +363,7 @@ export default async function OfferDetailPage({ params, searchParams }: { params
           <p className="text-xs font-bold uppercase text-[#7a899d]">{copy.title}</p><p className="mt-1 text-2xl font-extrabold text-[#007fae]">{formatOfferPrice(offer, locale)}</p>{before && <p className="mt-1 text-sm font-bold text-[#8794a7] line-through">{copy.before} {before}</p>}
           {/* Una sola línea: la que separa los datos de la acción. Quién
               publicó es un dato más, como el precio de arriba. */}
-          <p className="mb-4 mt-3 border-b border-[#e5e7eb] pb-4 text-sm font-semibold text-[#52627a]">{copy.publishedBy}{" "}{offer.professional_slug ? (<Link href={`/profesionales/${offer.professional_slug}?from=${encodeURIComponent(`/promociones/${offer.id}`)}`} className="text-[#005eaa] hover:underline">{offer.professional_name}</Link>) : offer.professional_name}</p>
+          <p className="mb-4 mt-3 border-b border-[#e5e7eb] pb-4 text-sm font-semibold text-[#52627a]">{copy.publishedBy}{" "}{offer.professional_slug ? (<Link href={`/profesionales/${offer.professional_slug}?from=${encodeURIComponent(rutaPromocion(offer))}`} className="text-[#005eaa] hover:underline">{offer.professional_name}</Link>) : offer.professional_name}</p>
           {isOwner ? (
             <OfferOwnerActions offer={offer} professionalId={offer.professional_id} serviceOptions={serviceOptions} fromPanel={vieneDelPanel(from)} />
           ) : (

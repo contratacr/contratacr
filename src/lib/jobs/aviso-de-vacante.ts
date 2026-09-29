@@ -61,7 +61,7 @@ export async function avisarVacanteAProfesionales({
     type: "new_job",
     title: "Nueva vacante",
     message: `Publicaron "${title}" en ${oficio}. Abre el empleo y escríbele por WhatsApp a quien lo publicó.`,
-    data: { link: "/es/empleos", job_id: jobId, job_title: title, category_id: serviceCategoryId },
+    data: { link: "/empleos", job_id: jobId, job_title: title, category_id: serviceCategoryId },
   }));
   await db.from("notifications").insert(filas);
 

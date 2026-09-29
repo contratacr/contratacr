@@ -534,7 +534,7 @@ export async function PATCH(req: NextRequest) {
         title: labelMap[status].title,
         message: labelMap[status].message,
         data: {
-          link: "/es/dashboard/profesional?tab=sent_bookings",
+          link: "/dashboard/profesional?tab=sent_bookings",
           booking_id: id,
           booking_status: status,
         },
@@ -551,7 +551,7 @@ export async function PATCH(req: NextRequest) {
           type: "booking_completed_by_client",
           title: "El cliente confirmó la finalización",
           message: "La cita quedó finalizada.",
-          data: { link: "/es/dashboard/profesional?tab=bookings", booking_id: id, booking_status: "completed" },
+          data: { link: "/dashboard/profesional?tab=bookings", booking_id: id, booking_status: "completed" },
         };
         await admin.from("notifications").insert(notification);
         await sendNotificationPush({ userId: notification.user_id, ...notification });
@@ -569,7 +569,7 @@ export async function PATCH(req: NextRequest) {
           title: "El cliente canceló la cita",
           message: `El cliente canceló su cita. El horario quedó libre.${motivo}`,
           data: {
-            link: "/es/dashboard/profesional?tab=bookings",
+            link: "/dashboard/profesional?tab=bookings",
             booking_id: id,
             booking_status: "cancelled",
             ...(typeof cancelReason === "string" && cancelReason.trim() ? { cancel_reason: cancelReason.trim() } : {}),
@@ -601,7 +601,7 @@ export async function PATCH(req: NextRequest) {
           title: "¿Cómo te fue?",
           message: `Tu servicio con ${proName} se marcó como completado. Deja una reseña para ayudar a otros clientes.`,
           data: {
-            link: "/es/dashboard/profesional?tab=sent_bookings",
+            link: "/dashboard/profesional?tab=sent_bookings",
             booking_id: id,
             professional_name: proName,
           },

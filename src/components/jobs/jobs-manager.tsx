@@ -1,5 +1,6 @@
 "use client";
 
+import { rutaEmpleo } from "@/lib/marketplace-url";
 import { CardActionsMenu } from "@/components/dashboard/card-actions-menu";
 import { AutoSaveHint, useAvisoDeGuardado } from "@/components/dashboard/auto-save-hint";
 import { useAppDialog } from "@/hooks/use-app-dialog";
@@ -221,7 +222,7 @@ export function JobsManager({ initialJobs, embedded = false, backHref = "/dashbo
                         y editar es a lo que se viene cuando se abre una
                         publicación propia. La misma fila en las tres secciones. */}
                     <div data-job-actions={job.id} className="ccr-acciones-tarjeta relative grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_40px] gap-2">
-                      <Link href={`/empleos/${job.id}?from=${volverAqui}`} className="inline-flex h-10 w-full items-center justify-center rounded-full border border-[#d7e1ea] px-3 text-xs font-bold text-[#162543]">{copy.view}</Link>
+                      <Link href={`${rutaEmpleo(job)}?from=${volverAqui}`} className="inline-flex h-10 w-full items-center justify-center rounded-full border border-[#d7e1ea] px-3 text-xs font-bold text-[#162543]">{copy.view}</Link>
                       <button type="button" onClick={() => setEditingJob(job)} className="hidden h-10 w-full items-center justify-center rounded-full bg-[#009FD9] px-3 text-xs font-bold text-white transition-colors hover:bg-[#0089bb] lg:inline-flex">{copy.edit}</button>
                       <Link href={`/empleos/${job.id}/editar?from=panel`} className="inline-flex h-10 w-full items-center justify-center rounded-full bg-[#009FD9] px-3 text-xs font-bold text-white transition-colors hover:bg-[#0089bb] lg:hidden">{copy.edit}</Link>
                       {/* EL MISMO «···» Y LAS MISMAS DOS OPCIONES QUE EN
@@ -272,7 +273,7 @@ export function JobsManager({ initialJobs, embedded = false, backHref = "/dashbo
       </div>
       {publishOpen && professionalId && (
         <Modal onClose={() => setPublishOpen(false)} title={copy.publishTitle} size="lg" bodyClassName="bg-[#f4f7fa] px-0 py-0">
-          <JobPostForm onCancel={() => setPublishOpen(false)} professionalId={professionalId} presentation="modal" backHref={backHref} onSaved={(id) => { setPublishOpen(false); onRefresh?.(); router.push(`/empleos/${id}?from=panel`); }} />
+          <JobPostForm onCancel={() => setPublishOpen(false)} professionalId={professionalId} presentation="modal" backHref={backHref} onSaved={(id, title) => { setPublishOpen(false); onRefresh?.(); router.push(`${rutaEmpleo({ id, title })}?from=panel`); }} />
         </Modal>
       )}
       {editingJob && professionalId && (

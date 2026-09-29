@@ -9,24 +9,24 @@ function servicesSearch(page: Page, mobile: boolean) {
 
 test.describe("@smoke services catalog", () => {
   test("service search finds a known service without leaving the page", async ({ page }, testInfo) => {
-    await gotoOK(page, "/es/servicios");
+    await gotoOK(page, "/servicios");
     await waitForInteractivePage(page);
 
     const search = servicesSearch(page, isMobileProject(testInfo));
     await search.fill("Plomer");
     const result = page.locator("main").getByRole("link", { name: /Plomer[ií]a/i }).filter({ visible: true }).first();
     await expect(result).toBeVisible();
-    await expect(result).toHaveAttribute("href", /\/es\/buscar\?categoria=plomeria/);
+    await expect(result).toHaveAttribute("href", /\/buscar\?categoria=plomeria/);
 
     await search.fill("");
     await expect(search).toHaveValue("");
-    await expect(page).toHaveURL(/\/es\/servicios\/?\??$/);
+    await expect(page).toHaveURL(/\/servicios\/?\??$/);
     await expect(page.locator("body")).not.toContainText(/servicesPage\./i);
     await expectHealthyPage(page);
   });
 
   test("unknown service shows one consistent suggestion CTA", async ({ page }, testInfo) => {
-    await gotoOK(page, "/es/servicios");
+    await gotoOK(page, "/servicios");
     await waitForInteractivePage(page);
 
     const search = servicesSearch(page, isMobileProject(testInfo));
@@ -61,7 +61,7 @@ test.describe("@smoke services catalog", () => {
       });
     });
 
-    await gotoOK(page, "/es/servicios");
+    await gotoOK(page, "/servicios");
     await waitForInteractivePage(page);
 
     const groupOptions = page.getByTestId("services-group-option");
@@ -71,7 +71,7 @@ test.describe("@smoke services catalog", () => {
   });
 
   test("Moda y Turismo use distinct service group icons", async ({ page }, testInfo) => {
-    await gotoOK(page, "/es/servicios");
+    await gotoOK(page, "/servicios");
     await waitForInteractivePage(page);
 
     const groups = page.getByTestId(isMobileProject(testInfo) ? "services-mobile-group-option" : "services-group-option");
@@ -89,7 +89,7 @@ test.describe("@smoke services catalog", () => {
   });
 
   test("selected service groups do not create a large empty gap before the service list", async ({ page }, testInfo) => {
-    await gotoOK(page, "/es/servicios");
+    await gotoOK(page, "/servicios");
     await waitForInteractivePage(page);
 
     const mobile = isMobileProject(testInfo);

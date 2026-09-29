@@ -49,7 +49,7 @@ export function AdminLogin() {
     }
 
     await waitForAuthCookie();
-    window.location.assign("/es/admin");
+    window.location.assign("/admin");
   }
 
   const inputClass =

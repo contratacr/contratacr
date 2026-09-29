@@ -1,4 +1,5 @@
 import { imagenSocial } from "@/lib/seo/imagen-social";
+import { prefijoDeIdioma } from "@/lib/prefijo-de-idioma";
 import type { Metadata } from "next";
 import { alternativasDeIdioma } from "@/lib/seo/alternates";
 import { notFound } from "next/navigation";
@@ -28,7 +29,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const category = getCategoryLabel(id, locale);
   const count = supply.byCategory[supplyKey(id)] ?? 0;
   const direccion = categorySlug(id);
-  const path = `/${locale}/servicios/${direccion}`;
+  const path = `${prefijoDeIdioma(locale)}/servicios/${direccion}`;
   const title = t("metaTitleCountry", { category });
   const description = t("metaDesc", { count, category, place: "Costa Rica" });
   return {
@@ -68,17 +69,17 @@ function oficioComoServicio(locale: string, categoria: string) {
       "@type": "Service",
       name: nombre,
       serviceType: nombre,
-      url: `${base}/${locale}/servicios/${direccion}`,
+      url: `${base}${prefijoDeIdioma(locale)}/servicios/${direccion}`,
       areaServed: { "@type": "Country", name: "Costa Rica" },
-      provider: { "@type": "Organization", name: "ContrataCR", url: `${base}/${locale}` },
+      provider: { "@type": "Organization", name: "ContrataCR", url: `${base}${prefijoDeIdioma(locale) || "/"}` },
     },
     {
       "@context": "https://schema.org",
       "@type": "BreadcrumbList",
       itemListElement: [
-        { "@type": "ListItem", position: 1, name: esEn ? "Home" : "Inicio", item: `${base}/${locale}` },
-        { "@type": "ListItem", position: 2, name: esEn ? "Services" : "Servicios", item: `${base}/${locale}/servicios` },
-        { "@type": "ListItem", position: 3, name: nombre, item: `${base}/${locale}/servicios/${direccion}` },
+        { "@type": "ListItem", position: 1, name: esEn ? "Home" : "Inicio", item: `${base}${prefijoDeIdioma(locale) || "/"}` },
+        { "@type": "ListItem", position: 2, name: esEn ? "Services" : "Servicios", item: `${base}${prefijoDeIdioma(locale)}/servicios` },
+        { "@type": "ListItem", position: 3, name: nombre, item: `${base}${prefijoDeIdioma(locale)}/servicios/${direccion}` },
       ],
     },
   ];

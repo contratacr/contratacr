@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { prefijoDeIdioma } from "@/lib/prefijo-de-idioma";
 import { Bookmark } from "lucide-react";
 import { useLocale } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
@@ -113,7 +114,7 @@ export function useGuardado({
   async function alternar() {
     if (!userId) {
       const redirect = encodeURIComponent(loginRedirect || window.location.pathname + window.location.search);
-      window.location.assign(`/${locale}/login?redirect=${redirect}`);
+      window.location.assign(`${prefijoDeIdioma(locale)}/login?redirect=${redirect}`);
       return;
     }
     const supabase = createClient();

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { prefijoDeIdioma } from "@/lib/prefijo-de-idioma";
 import { Star } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
 import { useRouter } from "next/navigation";
@@ -100,7 +101,7 @@ export function ReviewSection({
 
   const reviewRedirectPath =
     typeof window === "undefined"
-      ? `/${locale}/profesionales`
+      ? `${prefijoDeIdioma(locale)}/profesionales`
       : `${window.location.pathname}?tab=resenas&pendingReview=1#resenas`;
 
   return (

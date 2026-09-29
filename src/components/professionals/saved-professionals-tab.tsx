@@ -1,4 +1,5 @@
 "use client";
+import { rutaEmpleo, rutaProyecto, rutaPromocion } from "@/lib/marketplace-url";
 import { EMPLEOS_VISIBLE } from "@/lib/feature-flags";
 import { cn } from "@/lib/utils";
 
@@ -136,7 +137,8 @@ function SavedGenericCard({ item, onRemove }: { item: SavedItem; onRemove: (item
   const meta = isJob || isProject
     ? [text(snapshot.location_label, "Costa Rica"), text(snapshot.salary)].filter(Boolean).join(" · ")
     : [text(snapshot.service_label), text(snapshot.price)].filter(Boolean).join(" · ");
-  const href = volverAFavoritos(isJob ? `/empleos/${item.item_id}` : isProject ? `/proyectos/${item.item_id}` : `/promociones/${item.item_id}`);
+  const ficha = { id: item.item_id, title: typeof snapshot.title === "string" ? snapshot.title : "" };
+  const href = volverAFavoritos(isJob ? rutaEmpleo(ficha) : isProject ? rutaProyecto(ficha) : rutaPromocion(ficha));
   const Icon = isJob ? BriefcaseBusiness : isProject ? ClipboardList : Tag;
 
   return (

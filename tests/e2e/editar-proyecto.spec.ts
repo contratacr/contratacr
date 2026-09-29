@@ -8,7 +8,7 @@ test("@seeded el cliente corrige su proyecto y el cambio queda", async ({ page }
   test.skip(isMobileProject(test.info()), "La tarjeta de acciones del dueño es de computadora.");
   await page.setViewportSize({ width: 1366, height: 900 });
   await loginAs(page, "cliente.pruebas@contratacr.test", "ClientePruebas2026!");
-  await page.goto("/es/proyectos");
+  await page.goto("/proyectos");
   const enlaces = await page.locator('a[href*="/proyectos/"]').evaluateAll((ns) => ns.map((n) => (n as HTMLAnchorElement).getAttribute("href")));
   const ficha = enlaces.find((h) => h && /[0-9a-f-]{20,}/.test(h));
   expect(ficha, "el tablero sembrado trae al menos un proyecto").toBeTruthy();

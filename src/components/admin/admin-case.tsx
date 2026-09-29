@@ -166,7 +166,7 @@ export function AdminCase({ providerId }: { providerId: string }) {
                 </p>
                 {pro.slug && (
                   <a
-                    href={`/es/profesionales/${pro.slug}`}
+                    href={`/profesionales/${pro.slug}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-1 text-xs text-[#009FD9] hover:underline mt-1"

@@ -31,7 +31,7 @@ async function elegirServicio(page: Page, texto: string) {
 
 test("elegir el servicio conserva la ubicación que ya estaba", async ({ page }, testInfo) => {
   test.skip(!isMobileProject(testInfo), "El buscador en panel es el del teléfono.");
-  await gotoOK(page, "/es/buscar?provincia=al&canton=al-at");
+  await gotoOK(page, "/buscar?provincia=al&canton=al-at");
   await elegirServicio(page, "Fletes y carga");
   await expect(page).toHaveURL(/categoria=fletes/);
   await expect(page).toHaveURL(/provincia=al/);
@@ -40,7 +40,7 @@ test("elegir el servicio conserva la ubicación que ya estaba", async ({ page },
 
 test("con el servicio escrito a medias se elige el de la lista, no otro", async ({ page }, testInfo) => {
   test.skip(!isMobileProject(testInfo), "El buscador en panel es el del teléfono.");
-  await gotoOK(page, "/es/buscar?provincia=sj");
+  await gotoOK(page, "/buscar?provincia=sj");
   await elegirServicio(page, "Fletes");
   await expect(page).toHaveURL(/categoria=fletes(&|$)/);
   await expect(page).toHaveURL(/provincia=sj/);

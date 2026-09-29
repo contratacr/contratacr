@@ -3,7 +3,7 @@
   "name": "ContrataCR",
   "short_name": "ContrataCR",
   "description": "Ofrece y encuentra servicios en Costa Rica.",
-  "start_url": "/es",
+  "start_url": "/",
   "scope": "/",
   "icons": [
     {

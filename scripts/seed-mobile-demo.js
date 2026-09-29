@@ -785,11 +785,11 @@ async function main() {
   });
 
   await must("insert notifications", supabase.from("notifications").insert([
-    { user_id: isaac.id, type: "direct_message", title: "Nuevo mensaje", message: "SG Solutions respondió sobre la instalación de red WiFi.", data: { demoSeed: demo, href: "/es/mensajes", conversationId: conv1?.id }, read: false, created_at: iso(0) },
-    { user_id: isaac.id, type: "booking_received", title: "Nueva solicitud", message: "Cliente Demo solicitó desarrollo web para su negocio.", data: { demoSeed: demo, href: "/es/panel?tab=solicitudes" }, read: false, created_at: iso(1) },
-    { user_id: isaac.id, type: "proposal_received", title: "Nueva propuesta", message: "Conta Clara envió una propuesta para ordenar la contabilidad mensual.", data: { demoSeed: demo, href: "/es/panel?tab=proyectos" }, read: false, created_at: iso(2) },
-    { user_id: isaac.id, type: "review_request", title: "Reseña pendiente", message: "Ya puede calificar el servicio recibido de Limpieza Total CR.", data: { demoSeed: demo, href: "/es/panel?tab=solicitudes" }, read: true, created_at: iso(3) },
-    { user_id: isaac.id, type: "support_reply", title: "Soporte respondió", message: "Revisamos su consulta y dejamos una respuesta en el centro de soporte.", data: { demoSeed: demo, href: "/es/soporte" }, read: true, created_at: iso(4) },
+    { user_id: isaac.id, type: "direct_message", title: "Nuevo mensaje", message: "SG Solutions respondió sobre la instalación de red WiFi.", data: { demoSeed: demo, href: "/mensajes", conversationId: conv1?.id }, read: false, created_at: iso(0) },
+    { user_id: isaac.id, type: "booking_received", title: "Nueva solicitud", message: "Cliente Demo solicitó desarrollo web para su negocio.", data: { demoSeed: demo, href: "/panel?tab=solicitudes" }, read: false, created_at: iso(1) },
+    { user_id: isaac.id, type: "proposal_received", title: "Nueva propuesta", message: "Conta Clara envió una propuesta para ordenar la contabilidad mensual.", data: { demoSeed: demo, href: "/panel?tab=proyectos" }, read: false, created_at: iso(2) },
+    { user_id: isaac.id, type: "review_request", title: "Reseña pendiente", message: "Ya puede calificar el servicio recibido de Limpieza Total CR.", data: { demoSeed: demo, href: "/panel?tab=solicitudes" }, read: true, created_at: iso(3) },
+    { user_id: isaac.id, type: "support_reply", title: "Soporte respondió", message: "Revisamos su consulta y dejamos una respuesta en el centro de soporte.", data: { demoSeed: demo, href: "/soporte" }, read: true, created_at: iso(4) },
   ]));
 
   await must("insert reviews", supabase.from("reviews").insert([

@@ -11,19 +11,19 @@ import { isMobileProject, loginAs } from "./helpers";
 const VOLVER = /^(←\s*)?(Volver|Ver todos los|Ver todas las|Back to|See all)\b/i;
 
 const PANTALLAS: Array<{ ruta: string; como?: "pro" | "cliente" }> = [
-  { ruta: "/es/buscar" },
-  { ruta: "/es/servicios" },
-  { ruta: "/es/empleos" },
-  { ruta: "/es/promociones" },
-  { ruta: "/es/proyectos" },
-  { ruta: "/es/soporte" },
-  { ruta: "/es/como-funciona" },
-  { ruta: "/es/ayuda" },
-  { ruta: "/es/dashboard/profesional", como: "pro" },
+  { ruta: "/buscar" },
+  { ruta: "/servicios" },
+  { ruta: "/empleos" },
+  { ruta: "/promociones" },
+  { ruta: "/proyectos" },
+  { ruta: "/soporte" },
+  { ruta: "/como-funciona" },
+  { ruta: "/ayuda" },
+  { ruta: "/dashboard/profesional", como: "pro" },
   // La ficha de un profesional llegando del panel y llegando de resultados: es
   // donde salía «Volver a mi panel» y «Volver a resultados».
-  { ruta: "/es/profesionales/redes-bahia-pruebas?from=panel", como: "pro" },
-  { ruta: "/es/profesionales/redes-bahia-pruebas?from=%2Fbuscar" },
+  { ruta: "/profesionales/redes-bahia-pruebas?from=panel", como: "pro" },
+  { ruta: "/profesionales/redes-bahia-pruebas?from=%2Fbuscar" },
 ];
 
 async function volveresVisibles(page: import("playwright/test").Page) {
@@ -59,7 +59,7 @@ test("@seeded ninguna pantalla de computadora ofrece «volver»", async ({ page 
     if (encontrados.length) fallos.push(`${ruta} → ${encontrados.join(" | ")}`);
 
     // Y también la ficha que se abre desde esa pantalla, que es donde más salían.
-    const base = ruta.replace("/es", "");
+    const base = ruta.replace("/", "");
     const enlaces = await page.locator(`a[href*="${base}/"]`).evaluateAll((ns) => ns.map((n) => (n as HTMLAnchorElement).getAttribute("href")));
     const ficha = enlaces.find((h) => h && /[0-9a-f-]{20,}/.test(h) && !/editar|publicar|mis-/.test(h));
     if (ficha) {

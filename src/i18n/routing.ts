@@ -3,7 +3,10 @@ import { defineRouting } from "next-intl/routing";
 export const routing = defineRouting({
   locales: ["es", "en"],
   defaultLocale: "es",
-  localePrefix: "always",
+  // El español —el idioma del país— va SIN prefijo: contratacr.com/buscar. Solo
+  // el inglés lleva /en. Las direcciones viejas con /es/ saltan con 308 desde el
+  // middleware, así Google traslada lo ganado en vez de ver dos páginas.
+  localePrefix: "as-needed",
   localeDetection: false,
   // next-intl NO toca la cookie NEXT_LOCALE: la escribe solo nuestro middleware
   // (y el botón de idioma). Con la cookie a cargo de next-intl, su router la

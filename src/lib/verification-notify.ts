@@ -2,7 +2,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { brandedEmailDocument, sendBrevoEmail } from "@/lib/email/send";
 import { sendNotificationPush } from "@/lib/push/notify";
 
-const PRO_LINK = "/es/dashboard/profesional?tab=profile&mode=offer&focus=verification";
+const PRO_LINK = "/dashboard/profesional?tab=profile&mode=offer&focus=verification";
 
 type DecisionKind = "verified" | "pending" | "rejected" | "reverted";
 
@@ -163,7 +163,7 @@ export async function notifyAppealReceived(
       title: "Nueva apelación de verificación",
       message: `${providerName} apeló su revisión: "${appealMessage.slice(0, 120)}"`,
       data: {
-        link: `/es/admin/proveedores/${professionalId}`,
+        link: `/admin/proveedores/${professionalId}`,
         provider_name: providerName,
         appeal_message: appealMessage.slice(0, 120),
       },
@@ -178,6 +178,9 @@ export async function notifyAppealReceived(
       })));
     }
 
+    // Sin correo al equipo: la apelación deja al profesional en «under_appeal»
+    // y el contador de Verificación del panel la muestra en cuanto llega.
+    if (process.env.CORREO_DE_APELACIONES_AL_EQUIPO !== "1") return;
     const html = emailShell(
       "equipo",
       "Nueva apelación de verificación",

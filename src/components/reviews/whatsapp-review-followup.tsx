@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { prefijoDeIdioma } from "@/lib/prefijo-de-idioma";
 import { alCambiarElTurno, hayAlguienEnTurno } from "@/lib/turno-en-pantalla";
 import { Clock3, Star, X } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
@@ -56,7 +57,7 @@ export function WhatsAppReviewFollowUp() {
     });
     const payload = await response.json().catch(() => ({}));
     if (response.status === 401 && payload.authRequired) {
-      window.location.assign(`/${locale}/login`);
+      window.location.assign(`${prefijoDeIdioma(locale)}/login`);
       return null;
     }
     if (!response.ok) throw new Error(payload.error || "Follow-up failed");

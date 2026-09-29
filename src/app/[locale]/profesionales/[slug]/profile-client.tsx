@@ -1,5 +1,6 @@
 "use client";
 
+import { rutaEmpleo, rutaPromocion } from "@/lib/marketplace-url";
 import { FichaVacio } from "@/components/professionals/ficha-vacio";
 import { enlacePerfil } from "@/lib/profile-url";
 import { useState, useEffect, useCallback, useRef, type ReactNode } from "react";
@@ -56,7 +57,7 @@ import { FlechasDeCarril } from "@/components/ui/flechas-de-carril";
 // ─── WhatsApp icon ────────────────────────────────────────────────────────────
 // ─── Sub-rating row ───────────────────────────────────────────────────────────
 // ─── Tab types ────────────────────────────────────────────────────────────────
-type Tab = "disponibilidad" | "servicios" | "ofertas" | "empleos" | "casos" | "certificaciones" | "resenas" | "sobre";
+type Tab = "disponibilidad" | "servicios" | "promociones" | "empleos" | "casos" | "certificaciones" | "resenas" | "sobre";
 
 function searchParamFromUrl(key: string): string | null {
   if (typeof window === "undefined") return null;
@@ -169,7 +170,7 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
   const searchParams = useSearchParams();
   const tabFromUrl = ((): Tab | null => {
     const value = searchParams.get("tab");
-    return (["disponibilidad", "servicios", "ofertas", "empleos", "casos", "certificaciones", "resenas", "sobre"] as const).includes(value as Tab)
+    return (["disponibilidad", "servicios", "promociones", "empleos", "casos", "certificaciones", "resenas", "sobre"] as const).includes(value as Tab)
       ? (value as Tab)
       : null;
   })();
@@ -662,7 +663,7 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
     { id: "servicios",      label: t("tabs.servicios") },
     { id: "resenas",        label: t("tabs.resenas") },
     ...(hasCasos ? [{ id: "casos" as Tab, label: t("tabs.casos") }] : []),
-    ...(publicOffers.length > 0 ? [{ id: "ofertas" as Tab, label: locale === "en" ? "Promotions" : "Promociones" }] : []),
+    ...(publicOffers.length > 0 ? [{ id: "promociones" as Tab, label: locale === "en" ? "Promotions" : "Promociones" }] : []),
     ...(EMPLEOS_VISIBLE && publicJobs.length > 0 ? [{ id: "empleos" as Tab, label: locale === "en" ? "Jobs" : "Empleos" }] : []),
     // La formación vuelve a tener pestaña propia: solo aparece si hay algo que mostrar.
     ...(hasCerts ? [{ id: "certificaciones" as Tab, label: t("tabs.certificaciones") }] : []),
@@ -1167,7 +1168,7 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
                       section here would only duplicate it. */}
 
                   {/* ── TAB: Casos de éxito (grouped per profession/service) ── */}
-                  {montada("ofertas") && <div hidden={tabEfectiva !== "ofertas"}>{(
+                  {montada("promociones") && <div hidden={tabEfectiva !== "promociones"}>{(
                     <section className="space-y-5">
                       <div>
                         <h2 className="text-lg font-semibold text-[#162543]">
@@ -1190,7 +1191,7 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
                           return (
                             <Link
                               key={offer.id}
-                              href={`/promociones/${offer.id}?from=${encodeURIComponent(`/profesionales/${routeSlug}?tab=ofertas`)}`}
+                              href={`${rutaPromocion(offer)}?from=${encodeURIComponent(`/profesionales/${routeSlug}?tab=promociones`)}`}
                               className="group flex min-w-0 flex-col overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white transition-colors hover:border-[#bfe3f5]"
                             >
                               <span className="relative block aspect-[16/10] w-full overflow-hidden bg-[#eef2f6]">
@@ -1237,7 +1238,7 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
                         {publicJobs.map((job) => (
                           <Link
                             key={job.id}
-                            href={`/empleos/${job.id}?from=${encodeURIComponent(`/profesionales/${routeSlug}?tab=empleos`)}`}
+                            href={`${rutaEmpleo(job)}?from=${encodeURIComponent(`/profesionales/${routeSlug}?tab=empleos`)}`}
                             className="group flex min-w-0 items-center gap-3 rounded-2xl border border-[#e5e7eb] bg-white p-4 transition-colors hover:border-[#bfe3f5] hover:bg-[#f8fcfe]"
                           >
                             <span className="min-w-0 flex-1">

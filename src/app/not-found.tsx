@@ -33,10 +33,10 @@ export default async function NotFound() {
           : "La dirección puede haber cambiado o ya no existe. Podés volver al inicio o buscar un profesional."
       }
     >
-      <a href={en ? "/en" : "/es"} className={errorPrimaryBtn}>
+      <a href={en ? "/en" : "/"} className={errorPrimaryBtn}>
         {en ? "Go home" : "Ir al inicio"}
       </a>
-      <a href={en ? "/en/buscar" : "/es/buscar"} className={errorSecondaryBtn}>
+      <a href={en ? "/en/buscar" : "/buscar"} className={errorSecondaryBtn}>
         <Search className="h-4 w-4" /> {en ? "Search professionals" : "Buscar profesionales"}
       </a>
     </ErrorScreen>

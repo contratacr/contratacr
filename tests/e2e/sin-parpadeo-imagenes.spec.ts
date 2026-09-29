@@ -38,7 +38,7 @@ test("las fotos de la lista no se apagan al hidratar con red lenta", async ({ pa
     requestAnimationFrame(mirar);
   });
 
-  await page.goto("/es/empleos");
+  await page.goto("/empleos");
   await page.waitForTimeout(4500);
 
   const opacidades = await page.evaluate(() => (window as unknown as { __opacidades: Record<string, number[]> }).__opacidades);

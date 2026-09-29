@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { prefijoDeIdioma } from "@/lib/prefijo-de-idioma";
 import { getAllCategories, getCategoryLabel } from "@/lib/data/categories";
 import { getTranslations } from "next-intl/server";
 import { LandingNavbar } from "@/components/landing/landing-navbar";
@@ -17,9 +18,9 @@ export default async function MyJobsPage() {
   const locale = await getLocale();
   const supabase = await createClient();
   const user = await safeGetUser(supabase);
-  if (!user) redirect(`/${locale}/login?redirect=${encodeURIComponent(`/${locale}/empleos/mis-empleos`)}`);
+  if (!user) redirect(`${prefijoDeIdioma(locale)}/login?redirect=${encodeURIComponent(`${prefijoDeIdioma(locale)}/empleos/mis-empleos`)}`);
   const { data: professional } = await supabase.from("professionals").select("id").eq("profile_id", user.id).maybeSingle();
-  if (!professional) redirect(`/${locale}/empleos`);
+  if (!professional) redirect(`${prefijoDeIdioma(locale)}/empleos`);
   const { data } = await supabase.from("job_posts").select("*, job_applications(id,status,created_at,cover_letter,applicant_email,phone,resume_url,portfolio_url,profiles(full_name))").eq("employer_id", professional.id).order("created_at", { ascending: false });
   const jobs = ((data ?? []) as Array<Record<string, unknown>>).map((row) => ({
     ...row,

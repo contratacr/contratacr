@@ -43,15 +43,15 @@ test.describe("@contract product safety contracts", () => {
 
   test("public account deletion CTA opens Account and security", async ({ page }) => {
     await resetAuth(page);
-    await page.goto("/es/eliminar-cuenta");
+    await page.goto("/eliminar-cuenta");
     const cta = page.getByRole("link", { name: "Ir a Cuenta y seguridad" });
-    await expect(cta).toHaveAttribute("href", "/es/dashboard/profesional?tab=cuenta");
+    await expect(cta).toHaveAttribute("href", "/dashboard/profesional?tab=cuenta");
   });
 
   test("OAuth callback locale follows English login and safe English deep links", () => {
     expect(resolveAuthCallbackLocale("en", null)).toBe("en");
     expect(resolveAuthCallbackLocale(null, "/en/dashboard/profesional?tab=cuenta")).toBe("en");
-    expect(resolveAuthCallbackLocale("es", "/es/dashboard/profesional")).toBe("es");
+    expect(resolveAuthCallbackLocale("es", "/dashboard/profesional")).toBe("es");
     expect(resolveAuthCallbackLocale(null, null)).toBe("es");
   });
 
@@ -173,7 +173,7 @@ test.describe("@contract product safety contracts", () => {
       method: "POST",
       body: {
         email: `missing-${Date.now()}@contratacr.test`,
-        redirectTo: `${new URL(page.url()).origin}/es/reset-password`,
+        redirectTo: `${new URL(page.url()).origin}/reset-password`,
       },
     });
     expect(unknown.status).toBe(200);

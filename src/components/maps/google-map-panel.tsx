@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { prefijoDeIdioma } from "@/lib/prefijo-de-idioma";
 import { useRouter } from "next/navigation";
 import { Loader2, MapPin, RefreshCw } from "lucide-react";
 import { createGoogleMarker, loadGoogleMaps, withConfiguredMapId } from "@/lib/maps/loader";
@@ -322,7 +323,7 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
     closePopup();
     popupKeyRef.current = pro.id;
     const from = encodeURIComponent(window.location.pathname + window.location.search);
-    const href = `/${locale}/profesionales/${pro.slug}?from=${from}`;
+    const href = `${prefijoDeIdioma(locale)}/profesionales/${pro.slug}?from=${from}`;
     const professionLabels = (pro.professions ?? []).filter(Boolean);
     const primaryProfession = professionLabels[0] || pro.categoryLabel || "";
     const extraProfessions = Math.max(0, professionLabels.length - 1);
@@ -541,7 +542,7 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
         if (canHover) {
           // DESKTOP CLICK → go straight to the professional (reliable navigation).
           hidePopup();
-          router.push(`/${locale}/profesionales/${pro.slug}?from=${encodeURIComponent(window.location.pathname + window.location.search)}`);
+          router.push(`${prefijoDeIdioma(locale)}/profesionales/${pro.slug}?from=${encodeURIComponent(window.location.pathname + window.location.search)}`);
         } else {
           // MOBILE TAP → show the stable mini-card (tap the card itself to open the profile).
           showPinPopup();
@@ -550,7 +551,7 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
       marker.addListener?.("click", () => {
         if (canHover) {
           hidePopup();
-          router.push(`/${locale}/profesionales/${pro.slug}?from=${encodeURIComponent(window.location.pathname + window.location.search)}`);
+          router.push(`${prefijoDeIdioma(locale)}/profesionales/${pro.slug}?from=${encodeURIComponent(window.location.pathname + window.location.search)}`);
         } else {
           showPinPopup();
         }

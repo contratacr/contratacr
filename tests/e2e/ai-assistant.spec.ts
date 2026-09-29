@@ -38,7 +38,7 @@ type HistoryResponse = {
 const ask = (page: Parameters<typeof apiJson>[0], message: string, options: Record<string, unknown> = {}) =>
   apiJson<AssistantResponse>(page, "/api/ai-assistant", {
     method: "POST",
-    body: { message, locale: "es", pagePath: "/es", platform: "native", ...options },
+    body: { message, locale: "es", pagePath: "/", platform: "native", ...options },
   });
 
 test.describe.configure({ mode: "serial" });
@@ -84,7 +84,7 @@ test.describe("@smoke ContrataCR AI service resolver", () => {
   });
 
   test("does not guess a catalog category when the need is unclear", async ({ page }) => {
-    await gotoOK(page, "/es");
+    await gotoOK(page, "/");
     const response = await ask(page, "Ocupo ayuda con algo raro que no se como se llama");
     expect(response.status, JSON.stringify(response.body)).toBe(200);
     expect(response.body.searchHref, JSON.stringify(response.body)).toBeTruthy();
@@ -94,7 +94,7 @@ test.describe("@smoke ContrataCR AI service resolver", () => {
   });
 
   test("keeps unclear Spanish and English requests as free-text searches", async ({ page }) => {
-    await gotoOK(page, "/es");
+    await gotoOK(page, "/");
     const unclearRequests = [
       "No se que profesional buscar para una cosa de la casa",
       "No se si ocupo abogado o notario",
@@ -114,7 +114,7 @@ test.describe("@smoke ContrataCR AI service resolver", () => {
   });
 
   test("asks before guessing when the service word is too generic", async ({ page }) => {
-    await gotoOK(page, "/es");
+    await gotoOK(page, "/");
     const genericRequests = ["soporte", "mantenimiento", "reparacion", "asesoria"];
 
     for (const prompt of genericRequests) {
@@ -157,7 +157,7 @@ test.describe("@smoke ContrataCR AI service resolver", () => {
   });
 
   test("keeps obvious first messages and follow-ups out of the uncertain fallback", async ({ page }) => {
-    await gotoOK(page, "/es");
+    await gotoOK(page, "/");
     const prompts = [
       ["Hola, mi casa esta muy sucia necesito limpiarla", "limpieza"],
       ["limpieza", "limpieza"],
@@ -174,7 +174,7 @@ test.describe("@smoke ContrataCR AI service resolver", () => {
   });
 
   test("does not reuse an old location for a fresh service-only search", async ({ page }) => {
-    await gotoOK(page, "/es");
+    await gotoOK(page, "/");
     const response = await ask(page, "limpieza", {
       history: [
         { role: "user", content: "Necesito un electricista en Siquirres" },
@@ -190,7 +190,7 @@ test.describe("@smoke ContrataCR AI service resolver", () => {
   });
 
   test("does not turn emergencies or unsafe requests into service searches", async ({ page }) => {
-    await gotoOK(page, "/es");
+    await gotoOK(page, "/");
     const cases = [
       { prompt: "Me duele fuerte el pecho", answer: /9-1-1/i },
       { prompt: "Una persona no respira", answer: /9-1-1/i },
@@ -331,7 +331,7 @@ test.describe("@seeded ContrataCR AI", () => {
 
   test("does not promise availability when a matched professional has no public slots", async ({ page }) => {
     expect(aiProfessional?.professionalId).toBeTruthy();
-    await gotoOK(page, "/es");
+    await gotoOK(page, "/");
     const response = await ask(page, "Necesito un plomero en Atenas, Alajuela");
     expect(response.status, JSON.stringify(response.body)).toBe(200);
     expect(response.body.action).toBe("search_professionals");
@@ -350,13 +350,13 @@ test.describe("@seeded ContrataCR AI", () => {
   });
 
   test("answers product questions with stable, actionable destinations", async ({ page }) => {
-    await gotoOK(page, "/es");
+    await gotoOK(page, "/");
     const cases = [
-      { prompt: "¿Cómo funciona ContrataCR?", action: "how_it_works", href: "/es/como-funciona" },
-      { prompt: "Quiero hablar con soporte", action: "support", href: "/es/soporte" },
-      { prompt: "Quiero ofrecer mis servicios", action: "register_professional", href: "/es/registro/profesional" },
-      { prompt: "Olvidé mi contraseña", action: "reset_password", href: "/es/olvide-contrasena" },
-      { prompt: "Quiero ver todos los servicios", action: "browse_services", href: "/es/servicios" },
+      { prompt: "¿Cómo funciona ContrataCR?", action: "how_it_works", href: "/como-funciona" },
+      { prompt: "Quiero hablar con soporte", action: "support", href: "/soporte" },
+      { prompt: "Quiero ofrecer mis servicios", action: "register_professional", href: "/registro/profesional" },
+      { prompt: "Olvidé mi contraseña", action: "reset_password", href: "/olvide-contrasena" },
+      { prompt: "Quiero ver todos los servicios", action: "browse_services", href: "/servicios" },
     ];
     for (const item of cases) {
       const response = await ask(page, item.prompt);
@@ -375,14 +375,14 @@ test.describe("@seeded ContrataCR AI", () => {
   });
 
   test("covers every assistant navigation intent and validation boundary", async ({ page }) => {
-    await gotoOK(page, "/es");
+    await gotoOK(page, "/");
     const cases = [
-      { prompt: "Quiero crear una cuenta de cliente", action: "register_client", href: "/es/registro/cliente" },
-      { prompt: "Quiero iniciar sesion", action: "login", href: "/es/login" },
-      { prompt: "Necesito ayuda con la app", action: "help", href: "/es/ayuda" },
-      { prompt: "Soy profesional, quiero cambiar mi disponibilidad", action: "open_dashboard", href: "/es/dashboard/profesional?tab=availability" },
-      { prompt: "Soy profesional, quiero editar mis servicios", action: "open_dashboard", href: "/es/dashboard/profesional?tab=services" },
-      { prompt: "Quiero sugerir el servicio de domador de leones", action: "suggest_service", href: "/es/servicios" },
+      { prompt: "Quiero crear una cuenta de cliente", action: "register_client", href: "/registro/cliente" },
+      { prompt: "Quiero iniciar sesion", action: "login", href: "/login" },
+      { prompt: "Necesito ayuda con la app", action: "help", href: "/ayuda" },
+      { prompt: "Soy profesional, quiero cambiar mi disponibilidad", action: "open_dashboard", href: "/dashboard/profesional?tab=availability" },
+      { prompt: "Soy profesional, quiero editar mis servicios", action: "open_dashboard", href: "/dashboard/profesional?tab=services" },
+      { prompt: "Quiero sugerir el servicio de domador de leones", action: "suggest_service", href: "/servicios" },
     ];
     for (const item of cases) {
       const response = await ask(page, item.prompt);
@@ -418,7 +418,7 @@ test.describe("@seeded ContrataCR AI", () => {
 
     const empty = await apiJson<AssistantResponse>(page, "/api/ai-assistant", {
       method: "POST",
-      body: { message: "   ", locale: "es", pagePath: "/es", platform: "native" },
+      body: { message: "   ", locale: "es", pagePath: "/", platform: "native" },
     });
     expect(empty.status).toBe(200);
     expect(empty.body.action).toBe("answer");
@@ -471,20 +471,20 @@ test.describe("@seeded ContrataCR AI", () => {
   });
 
   test("answers high-risk product questions without turning them into service searches", async ({ page }) => {
-    await gotoOK(page, "/es");
+    await gotoOK(page, "/");
     const cases = [
       { prompt: "¿La verificación garantiza que el profesional es bueno?", action: "answer", answer: /no garantiza|no\. la verificación/i },
       // Las propuestas salieron del producto: el asistente lo dice y manda al
       // tablero de proyectos, donde se contacta al cliente por WhatsApp.
-      { prompt: "¿Puedo editar una propuesta después de enviarla?", action: "open_dashboard", href: "/es/proyectos", answer: /ya no hay propuestas|WhatsApp/i },
+      { prompt: "¿Puedo editar una propuesta después de enviarla?", action: "open_dashboard", href: "/proyectos", answer: /ya no hay propuestas|WhatsApp/i },
       { prompt: "¿El profesional puede reprogramar mi cita?", action: "answer", answer: /cliente reprograma|no\. el cliente/i },
-      { prompt: "¿Puedo crear un proyecto sin cuenta?", action: "login", href: "/es/login", answer: /iniciar sesión/i },
+      { prompt: "¿Puedo crear un proyecto sin cuenta?", action: "login", href: "/login", answer: /iniciar sesión/i },
       { prompt: "Me duele mucho el pecho, ¿busco un cardiólogo aquí?", action: "answer", answer: /9-1-1/i },
       { prompt: "¿Qué hago si un profesional cancela mi cita?", action: "answer", answer: /no se puede reprogramar/i },
-      { prompt: "¿Cómo cambio de cliente a profesional?", action: "open_dashboard", href: "/es/dashboard/profesional", answer: /selector Cliente \/ Profesional/i },
+      { prompt: "¿Cómo cambio de cliente a profesional?", action: "open_dashboard", href: "/dashboard/profesional", answer: /selector Cliente \/ Profesional/i },
       { prompt: "¿Cómo agrego otro servicio a mi perfil?", action: "open_dashboard", href: "tab=services", answer: /servicio/i },
       { prompt: "¿Cómo cambio mi contraseña?", action: "open_dashboard", href: "tab=cuenta", answer: /contraseña/i },
-      { prompt: "¿Dónde reviso las oportunidades para mis servicios?", action: "open_dashboard", href: "/es/proyectos", answer: /proyectos/i },
+      { prompt: "¿Dónde reviso las oportunidades para mis servicios?", action: "open_dashboard", href: "/proyectos", answer: /proyectos/i },
     ];
 
     for (const item of cases) {
@@ -497,7 +497,7 @@ test.describe("@seeded ContrataCR AI", () => {
   });
 
   test("keeps the contact flow inside the app in Spanish and English", async ({ page }) => {
-    await gotoOK(page, "/es");
+    await gotoOK(page, "/");
     const spanish = await ask(page, "¿Cómo contacto a un profesional?");
     expect(spanish.status, JSON.stringify(spanish.body)).toBe(200);
     // The documented contact answer routes to the help center.
@@ -513,7 +513,7 @@ test.describe("@seeded ContrataCR AI", () => {
   });
 
   test("uses internal messaging copy and actions for the native app", async ({ page }) => {
-    await gotoOK(page, "/es");
+    await gotoOK(page, "/");
     const response = await ask(page, "¿Cómo contacto a un profesional?", { platform: "native" });
     expect(response.status, JSON.stringify(response.body)).toBe(200);
     expect(response.body.answer).toMatch(/mensaje/i);
@@ -529,7 +529,7 @@ test.describe("@seeded ContrataCR AI", () => {
   });
 
   test("searches real professionals through a trustworthy filtered-results link", async ({ page }) => {
-    await gotoOK(page, "/es");
+    await gotoOK(page, "/");
     const search = await ask(page, "Necesito un plomero en Atenas, Alajuela");
     expect(search.status, JSON.stringify(search.body)).toBe(200);
     expect(search.body.action).toBe("search_professionals");
@@ -548,7 +548,7 @@ test.describe("@seeded ContrataCR AI", () => {
   });
 
   test("keeps search intent, service and location across natural follow-ups", async ({ page }) => {
-    await gotoOK(page, "/es");
+    await gotoOK(page, "/");
     const firstPrompt = "Hola, necesito algún profesional en redes en Alajuela";
     const first = await ask(page, firstPrompt);
     expect(first.status).toBe(200);
@@ -601,7 +601,7 @@ test.describe("@seeded ContrataCR AI", () => {
   });
 
   test("uses deterministic safety guidance and does not expose internal instructions", async ({ page }) => {
-    await gotoOK(page, "/es");
+    await gotoOK(page, "/");
     const emergency = await ask(page, "Es una emergencia médica, la persona no respira");
     expect(emergency.status).toBe(200);
     expect(emergency.body.answer).toContain("9-1-1");
@@ -649,7 +649,7 @@ test.describe("@seeded ContrataCR AI", () => {
 
   test("keeps the retired assistant UI out of public navigation", async ({ page }, testInfo) => {
     await resetAuth(page);
-    await gotoOK(page, "/es");
+    await gotoOK(page, "/");
 
     const expectAssistantAbsent = async () => {
       await expect(page.getByRole("button", { name: /Abrir asistente de ContrataCR|Open ContrataCR assistant/i })).toHaveCount(0);
@@ -662,7 +662,7 @@ test.describe("@seeded ContrataCR AI", () => {
       await expect(page.getByText(/^Asistente$|^Assistant$/i).filter({ visible: true })).toHaveCount(0);
     }
 
-    await gotoOK(page, "/es/como-funciona");
+    await gotoOK(page, "/como-funciona");
     await expectAssistantAbsent();
     await expectNoHorizontalOverflow(page);
     await expectHealthyPage(page);

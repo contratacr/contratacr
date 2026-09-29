@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { prefijoDeIdioma } from "@/lib/prefijo-de-idioma";
 import { useLocale, useTranslations } from "next-intl";
 import { UserRoundSearch, BriefcaseBusiness, ArrowRight } from "lucide-react";
 import { Link, useRouter } from "@/i18n/navigation";
@@ -76,7 +77,7 @@ export default function OnboardingPage() {
       if (cancelled) return;
       if (done) {
         if ((role === "professional" || user.user_metadata?.intended_role === "professional") && !hasProfessionalProfile) {
-          window.location.assign(`/${locale}/registro/profesional`);
+          window.location.assign(`${prefijoDeIdioma(locale)}/registro/profesional`);
           return;
         }
         // Heal the metadata flag (best-effort) so the proxy stops sending this account
@@ -86,7 +87,7 @@ export default function OnboardingPage() {
             await supabase.auth.updateUser({ data: { onboarding_completed: true, ...(role ? { role } : {}) } });
           } catch { /* best-effort */ }
         }
-        window.location.assign(`/${locale}/dashboard/${role === "professional" ? "profesional" : "cliente"}`);
+        window.location.assign(`${prefijoDeIdioma(locale)}/dashboard/${role === "professional" ? "profesional" : "cliente"}`);
         return;
       }
       setCheckingExisting(false); // genuinely new → show the role cards
@@ -143,7 +144,7 @@ export default function OnboardingPage() {
 
     // "Ofrezco" → complete the professional profile to unlock offering. "Busco" →
     // straight into the unified panel (it opens in "Usar servicios" mode).
-    window.location.assign(role === "professional" ? `/${locale}/registro/profesional` : `/${locale}/dashboard/profesional`);
+    window.location.assign(role === "professional" ? `${prefijoDeIdioma(locale)}/registro/profesional` : `${prefijoDeIdioma(locale)}/dashboard/profesional`);
   }
 
   // Loader until we KNOW this is a new user (existing users are redirected above) —

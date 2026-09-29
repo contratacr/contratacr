@@ -1,4 +1,5 @@
 import { imagenSocial } from "@/lib/seo/imagen-social";
+import { prefijoDeIdioma } from "@/lib/prefijo-de-idioma";
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { getTranslations, getLocale } from "next-intl/server";
@@ -131,7 +132,7 @@ export async function generateMetadata({ searchParams }: { searchParams: Promise
   // con el servicio en guiones y la provincia por su nombre. Con la llave de la
   // base («aire_acondicionado», «sj») apuntaba a una dirección que responde 308,
   // y un canónico que redirige es un canónico que Google descarta.
-  return { ...compartir, alternates: { canonical: `/${locale}/servicios/${categorySlug(categoria)}${provincia ? `/${provincia.slug}` : ""}${provincia && canton?.slug ? `/${canton.slug}` : ""}` } };
+  return { ...compartir, alternates: { canonical: `${prefijoDeIdioma(locale)}/servicios/${categorySlug(categoria)}${provincia ? `/${provincia.slug}` : ""}${provincia && canton?.slug ? `/${canton.slug}` : ""}` } };
 }
 
 export default async function SearchPage({ searchParams }: SearchPageProps) {

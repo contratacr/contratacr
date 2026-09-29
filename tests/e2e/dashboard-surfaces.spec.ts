@@ -41,7 +41,7 @@ async function exerciseVisibleFilters(page: import("playwright/test").Page) {
   const filters = page.locator("[data-status-filter-tabs]:visible");
   const visibleFilterEmptyState = page
     .getByText(
-      /^(?:No tienes (?:citas|proyectos) activ[oa]s|Todav[ií]a no (?:hay|tienes) (?:citas|proyectos|tiquetes) finalizad[oa]s|No hay proyectos nuevos por ahora|No tienes tiquetes pendientes|No hay tiquetes en proceso|No tienes (?:profesionales favoritos|ofertas favoritas|empleos favoritos)\.)$/i,
+      /^(?:No tienes (?:citas|proyectos) activ[oa]s|Todav[ií]a no (?:hay|tienes) (?:citas|proyectos|tiquetes) finalizad[oa]s|No hay proyectos nuevos por ahora|No tienes tiquetes pendientes|No hay tiquetes en proceso|No tienes (?:profesionales favoritos|ofertas favoritas|promociones favoritas|empleos favoritos)\.)$/i,
       { exact: true },
     )
     .filter({ visible: true });
@@ -142,7 +142,7 @@ test.describe("@seeded dashboard surfaces", () => {
     await loginAs(page, E2E_USERS.professional.email, E2E_USERS.professional.password);
 
     for (const section of professionalTabs) {
-      await gotoOK(page, `/es/dashboard/profesional?tab=${section.tab}`);
+      await gotoOK(page, `/dashboard/profesional?tab=${section.tab}`);
       await expectVisibleText(page.locator("body"), section.marker);
       await expectHealthyPage(page);
     }
@@ -150,7 +150,7 @@ test.describe("@seeded dashboard surfaces", () => {
 
   test("responsive identity keeps a single-line name with its badge and aligns profile access with network counts", async ({ page }) => {
     await loginAs(page, E2E_USERS.professional.email, E2E_USERS.professional.password);
-    await gotoOK(page, "/es/dashboard/profesional");
+    await gotoOK(page, "/dashboard/profesional");
     if ((page.viewportSize()?.width ?? 1280) >= 640) return;
 
     const name = page.getByTestId("dashboard-identity-name");
@@ -192,7 +192,7 @@ test.describe("@seeded dashboard surfaces", () => {
     // primera carga. Se sale a una pantalla que no pide proyectos —así muere
     // cualquier consulta en vuelo del panel, que si no escribiría la caché
     // después de borrarla— y recién ahí se limpia.
-    await gotoOK(page, "/es");
+    await gotoOK(page, "/");
     await page.evaluate(() => {
       for (const key of Object.keys(sessionStorage)) {
         if (key.startsWith("ccr:dashboard-cache:")) sessionStorage.removeItem(key);
@@ -210,7 +210,7 @@ test.describe("@seeded dashboard surfaces", () => {
     });
 
     try {
-      await gotoOK(page, "/es/dashboard/profesional?tab=sent_projects");
+      await gotoOK(page, "/dashboard/profesional?tab=sent_projects");
       await projectsRequest;
 
       const sectionCard = page.locator(".dashboard-section-card:visible").first();
@@ -237,7 +237,7 @@ test.describe("@seeded dashboard surfaces", () => {
 
   test("panel tabs navigate without reloading the document", async ({ page }) => {
     await loginAs(page, E2E_USERS.professional.email, E2E_USERS.professional.password);
-    await gotoOK(page, "/es/dashboard/profesional?tab=offers");
+    await gotoOK(page, "/dashboard/profesional?tab=offers");
 
     await page.evaluate(() => {
       (window as Window & { __contratacrSoftNavigation?: string }).__contratacrSoftNavigation = "active";
@@ -272,7 +272,7 @@ test.describe("@seeded dashboard surfaces", () => {
 
   test("dashboard landing keeps core sections in the panel and shared tools in the navbar", async ({ page }, testInfo) => {
     await loginAs(page, E2E_USERS.professional.email, E2E_USERS.professional.password);
-    await gotoOK(page, "/es/dashboard/profesional");
+    await gotoOK(page, "/dashboard/profesional");
 
     // El panel dejó de tener dos caras: «Mis publicaciones» reúne proyectos,
     // empleos y promociones, y lo demás siempre fue compartido. Lo que se
@@ -297,7 +297,7 @@ test.describe("@seeded dashboard surfaces", () => {
 
   test("navbar hides professional registration for providers", async ({ page }, testInfo) => {
     await loginAs(page, E2E_USERS.professional.email, E2E_USERS.professional.password);
-    await gotoOK(page, "/es");
+    await gotoOK(page, "/");
     if (isMobileProject(testInfo)) {
       await page.getByRole("button", { name: /Abrir men|Open menu/i }).first().click();
       const navigation = page.getByRole("dialog", { name: /Men[uú]|Menu/i });
@@ -316,7 +316,7 @@ test.describe("@seeded dashboard surfaces", () => {
     // En el teléfono la cabecera del panel —y con ella el botón de Guías— vive
     // en el inicio: con una sección abierta la pantalla es de la sección.
     const seccion = isMobileProject(testInfo) ? "home" : "offers";
-    await gotoOK(page, `/es/dashboard/profesional?tab=${seccion}`);
+    await gotoOK(page, `/dashboard/profesional?tab=${seccion}`);
 
     await page.getByRole("button", { name: /^Gu[ií]as$/i }).filter({ visible: true }).first().click();
     const ventana = page.getByRole("dialog").filter({ visible: true }).first();
@@ -332,7 +332,7 @@ test.describe("@seeded dashboard surfaces", () => {
   // La dirección vieja sigue viva: abre la ventana encima del inicio del panel.
   test("the old guides address still opens them", async ({ page }) => {
     await loginAs(page, E2E_USERS.professional.email, E2E_USERS.professional.password);
-    await gotoOK(page, "/es/dashboard/profesional?tab=guides");
+    await gotoOK(page, "/dashboard/profesional?tab=guides");
     const ventana = page.getByRole("dialog").filter({ visible: true }).first();
     await expect(ventana).toBeVisible();
     await expect(ventana.getByPlaceholder(/Buscar en las gu[ií]as|Search the guides/i)).toBeVisible();
@@ -341,12 +341,12 @@ test.describe("@seeded dashboard surfaces", () => {
   // Los filtros de Favoritos son por TIPO y se dibujan siempre, con su conteo.
   test("favorites keep every saveable filter and connections show verification", async ({ page }) => {
     await loginAs(page, E2E_USERS.client.email, E2E_USERS.client.password);
-    await gotoOK(page, "/es/dashboard/profesional?tab=saved&mode=use");
+    await gotoOK(page, "/dashboard/profesional?tab=saved&mode=use");
     for (const label of [/^Profesionales ?\d*$/i, /^Promociones ?\d*$/i, /^Empleos ?\d*$/i]) {
       await expect(page.getByRole("button", { name: label }).filter({ visible: true }).first()).toBeVisible();
     }
 
-    await gotoOK(page, "/es/dashboard/profesional?tab=connections&mode=use");
+    await gotoOK(page, "/dashboard/profesional?tab=connections&mode=use");
     await expect(page.locator('svg[aria-label="Verificado"]').filter({ visible: true }).first()).toBeVisible();
   });
 
@@ -366,7 +366,7 @@ test.describe("@seeded dashboard surfaces", () => {
     for (const width of [320, 390, 1366]) {
       await page.setViewportSize({ width, height: width >= 1000 ? 900 : 844 });
       for (const section of professionalSections) {
-        await gotoOK(page, `/es/dashboard/profesional?tab=${section}`);
+        await gotoOK(page, `/dashboard/profesional?tab=${section}`);
         await exerciseVisibleFilters(page);
       }
 
@@ -376,7 +376,7 @@ test.describe("@seeded dashboard surfaces", () => {
     for (const width of [320, 390, 1366]) {
       await page.setViewportSize({ width, height: width >= 1000 ? 900 : 844 });
       for (const section of clientSections) {
-        await gotoOK(page, `/es/dashboard/profesional?tab=${section}`);
+        await gotoOK(page, `/dashboard/profesional?tab=${section}`);
         await exerciseVisibleFilters(page);
       }
       await expectHealthyPage(page);
@@ -429,7 +429,7 @@ test.describe("@seeded dashboard surfaces", () => {
   test("professional add-service picker keeps its scroll inside the modal", async ({ page }) => {
     test.slow();
     await loginAs(page, E2E_USERS.professional.email, E2E_USERS.professional.password);
-    await gotoOK(page, "/es/dashboard/profesional?tab=services");
+    await gotoOK(page, "/dashboard/profesional?tab=services");
     await expectVisibleText(page.locator("main"), /Servicios|Services/i);
 
     await page.getByRole("button", { name: /Agregar servicio|Add service/i }).last().click();
@@ -461,7 +461,7 @@ test.describe("@seeded dashboard surfaces", () => {
     await loginAs(page, E2E_USERS.client.email, E2E_USERS.client.password);
 
     for (const section of clientTabs) {
-      await gotoOK(page, `/es/dashboard/profesional?tab=${section.tab}`);
+      await gotoOK(page, `/dashboard/profesional?tab=${section.tab}`);
       // El título de la sección vive en la barra, no dentro de <main>.
       await expectVisibleText(page.locator("body"), section.marker);
       await expectHealthyPage(page);
@@ -556,7 +556,7 @@ test.describe("@seeded dashboard surfaces", () => {
     await ensureRegressionSeed();
     await page.setViewportSize({ width: 390, height: 844 });
     await loginAs(page, E2E_USERS.professional.email, E2E_USERS.professional.password);
-    await gotoOK(page, "/es/dashboard/profesional?tab=offers");
+    await gotoOK(page, "/dashboard/profesional?tab=offers");
     await page.waitForTimeout(1500);
     await page.evaluate(() => window.scrollTo(0, 500));
     await page.waitForTimeout(400);

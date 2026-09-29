@@ -9,7 +9,7 @@ import { ADMIN_REFRESH_EVENT } from "@/hooks/use-admin-auto-refresh";
 
 export type AdminTab =
   | "resumen" | "verificacion" | "usuarios" | "publicaciones" | "reportes" | "aseguradoras"
-  | "categorias" | "cuentas" | "soporte" | "analitica" | "actividad" | "resenas" | "empleos" | "ofertas" | "cobertura" | "costos" | "campanas" | "contactos";
+  | "categorias" | "cuentas" | "soporte" | "analitica" | "actividad" | "resenas" | "empleos" | "promociones" | "cobertura" | "costos" | "campanas" | "contactos";
 
 // Admin chrome — a navy (#0f172a) LEFT SIDEBAR with a #38bdf8 accent (horizontal
 // scroll strip on small screens). "Resumen" is the home/overview; the other
@@ -48,11 +48,15 @@ export function AdminShell({
         .catch(() => {});
     };
     fetchCounts();
+    // Sin correos de aviso, el contador es el aviso: se refresca solo cada
+    // minuto mientras la pestaña está a la vista, no solo al volver a ella.
+    const cadaMinuto = window.setInterval(fetchCounts, 60_000);
     const onFocus = () => fetchCounts();
     window.addEventListener("focus", onFocus);
     document.addEventListener("visibilitychange", onFocus);
     return () => {
       alive = false;
+      window.clearInterval(cadaMinuto);
       window.removeEventListener("focus", onFocus);
       document.removeEventListener("visibilitychange", onFocus);
     };
@@ -76,7 +80,7 @@ export function AdminShell({
     { id: "publicaciones", label: "Proyectos", icon: ClipboardList, href: "/admin/publicaciones", badge: 0 },
     { id: "resenas", label: "Reseñas", icon: Star, href: "/admin/resenas", badge: 0 },
     { id: "empleos", label: "Empleos", icon: Briefcase, href: "/admin/empleos", badge: 0 },
-    { id: "ofertas", label: "Promociones", icon: BadgePercent, href: "/admin/ofertas", badge: 0 },
+    { id: "promociones", label: "Promociones", icon: BadgePercent, href: "/admin/promociones", badge: 0 },
     { id: "cobertura", label: "Cobertura", icon: MapPinned, href: "/admin/cobertura", badge: 0 },
     { id: "costos", label: "Costos", icon: Wallet, href: "/admin/costos", badge: 0 },
     { id: "contactos", label: "Contactos", icon: MessageCircle, href: "/admin/contactos", badge: 0 },
@@ -143,7 +147,7 @@ export function AdminShell({
           {[
             { label: "Principal", ids: ["resumen", "usuarios"] },
             { label: "Operación", ids: ["verificacion", "publicaciones", "resenas", "reportes", "soporte"] },
-            { label: "Marketplace", ids: ["empleos", "ofertas", "campanas"] },
+            { label: "Marketplace", ids: ["empleos", "promociones", "campanas"] },
             { label: "Gestión", ids: ["categorias", "aseguradoras", "cuentas"] },
             { label: "Información", ids: ["analitica", "cobertura", "costos"] },
           ].map((group, index) => (

@@ -173,9 +173,9 @@ test.describe("@seeded marketplace editors through the real screens", () => {
       // formulario con subida real lo ejercita el flujo móvil contra el
       // proyecto de prueba.
       created.offerId = await createOfferThroughApi(page, offerTitle);
-      await gotoOK(page, `/es/promociones/${created.offerId}`);
+      await gotoOK(page, `/promociones/${created.offerId}`);
     } else {
-      await gotoOK(page, "/es/promociones/publicar");
+      await gotoOK(page, "/promociones/publicar");
       await expectVisibleText(page.locator("body"), /Publicar promoción/);
       await page.locator('input[name="title"]').fill(offerTitle);
       // The service picker is a trigger button that reveals a search box.
@@ -195,7 +195,7 @@ test.describe("@seeded marketplace editors through the real screens", () => {
       await page.locator('input[name="quantity_available"]').fill("3");
       await page.getByRole("button", { name: /^Publicar promoción$/ }).click();
 
-      await page.waitForURL(/\/es\/promociones\/[0-9a-f-]{36}/, { timeout: 45_000, waitUntil: "domcontentloaded" });
+      await page.waitForURL(/\/promociones\/[0-9a-f-]{36}/, { timeout: 45_000, waitUntil: "domcontentloaded" });
       created.offerId = page.url().match(/\/promociones\/([0-9a-f-]{36})/)![1];
     }
     await expectVisibleText(page.locator("body"), offerTitle);
@@ -209,7 +209,7 @@ test.describe("@seeded marketplace editors through the real screens", () => {
     await offerEditor.locator('input[name="price_now"]').fill("40000");
     await offerEditor.getByRole("button", { name: /^Guardar cambios$/ }).click();
     await expect(page.getByRole("dialog")).toHaveCount(0, { timeout: 45_000 });
-    await page.waitForURL(/\/es\/promociones\/[0-9a-f-]{36}(?:\?|$)/, { timeout: 45_000, waitUntil: "domcontentloaded" });
+    await page.waitForURL(/\/promociones\/[0-9a-f-]{36}(?:\?|$)/, { timeout: 45_000, waitUntil: "domcontentloaded" });
     await expectUpdatedDetail(page, `${offerTitle} editada`);
     await expectVisibleText(page.locator("body"), /40[\s.,]?000/);
     await expectHealthyPage(page);
@@ -218,7 +218,7 @@ test.describe("@seeded marketplace editors through the real screens", () => {
     // que «Cerrar promoción» (la saca del tablero y la manda a «Inactivas») y
     // las dos se deshacían con «Volver a publicar». Y en la tarjeta ya no se
     // escribe el estado: la pestaña lo dice.
-    await gotoOK(page, "/es/promociones/mis-promociones");
+    await gotoOK(page, "/promociones/mis-promociones");
     const card = page.locator("article").filter({ hasText: `${offerTitle} editada` }).first();
     await expect(card).toBeVisible();
     await card.getByRole("button", { name: new RegExp(`${offerTitle} editada`) }).first().click();
@@ -249,7 +249,7 @@ test.describe("@seeded marketplace editors through the real screens", () => {
     test.slow();
     await loginAs(page, E2E_USERS.professional.email, E2E_USERS.professional.password);
 
-    await gotoOK(page, "/es/empleos/publicar");
+    await gotoOK(page, "/empleos/publicar");
     await expectVisibleText(page.locator("body"), /Publicar empleo/);
     await page.locator('input[name="title"]').fill(jobTitle);
     // El empleo dice a qué oficio pertenece: de ahí sale a quién se le avisa.
@@ -266,7 +266,7 @@ test.describe("@seeded marketplace editors through the real screens", () => {
     await page.locator('input[name="openings"]').fill("2");
     await page.getByRole("button", { name: /^Publicar empleo$/ }).click();
 
-    await page.waitForURL(/\/es\/empleos\/[0-9a-f-]{36}/, { timeout: 45_000, waitUntil: "domcontentloaded" });
+    await page.waitForURL(/\/empleos\/[0-9a-f-]{36}/, { timeout: 45_000, waitUntil: "domcontentloaded" });
     created.jobId = page.url().match(/\/empleos\/([0-9a-f-]{36})/)![1];
     await expectVisibleText(page.locator("body"), jobTitle);
     await expectVisibleText(page.locator("body"), /Remoto/);
@@ -278,11 +278,11 @@ test.describe("@seeded marketplace editors through the real screens", () => {
     await jobEditor.locator('input[name="openings"]').fill("1");
     await jobEditor.getByRole("button", { name: /^Guardar cambios$/ }).click();
     await expect(page.getByRole("dialog")).toHaveCount(0, { timeout: 45_000 });
-    await page.waitForURL(/\/es\/empleos\/[0-9a-f-]{36}(?:\?|$)/, { timeout: 45_000, waitUntil: "domcontentloaded" });
+    await page.waitForURL(/\/empleos\/[0-9a-f-]{36}(?:\?|$)/, { timeout: 45_000, waitUntil: "domcontentloaded" });
     await expectUpdatedDetail(page, `${jobTitle} editado`);
     await expectHealthyPage(page);
 
-    await gotoOK(page, "/es/empleos/mis-empleos");
+    await gotoOK(page, "/empleos/mis-empleos");
     const card = page.locator("article").filter({ hasText: `${jobTitle} editado` }).first();
     await expect(card).toBeVisible();
     await card.getByRole("button", { name: new RegExp(`${jobTitle} editado`) }).first().click();
@@ -298,7 +298,7 @@ test.describe("@seeded marketplace editors through the real screens", () => {
     await expectHealthyPage(page);
 
     // A closed vacancy is no longer on the public board.
-    await gotoOK(page, "/es/empleos");
+    await gotoOK(page, "/empleos");
     await expect(page.getByText(`${jobTitle} editado`)).toHaveCount(0);
   });
 
@@ -309,7 +309,7 @@ test.describe("@seeded marketplace editors through the real screens", () => {
   test("publica un empleo solo con los campos obligatorios", async ({ page }) => {
     test.slow();
     await loginAs(page, E2E_USERS.professional.email, E2E_USERS.professional.password);
-    await gotoOK(page, "/es/empleos/publicar");
+    await gotoOK(page, "/empleos/publicar");
     const titulo = `Empleo mínimo ${Date.now()}`;
     await page.locator('input[name="title"]').fill(titulo);
     // El servicio TAMBIÉN es obligatorio: de ahí sale a quién se le avisa la
@@ -320,7 +320,7 @@ test.describe("@seeded marketplace editors through the real screens", () => {
     await pickSelectMenu(page, /^Presencial$/, /^Remoto$/);
     await page.locator('textarea[name="description"]').fill("Empleo publicado solo con los campos obligatorios para validar el camino mínimo.");
     await page.getByRole("button", { name: /^Publicar empleo$/ }).click();
-    await page.waitForURL(/\/es\/empleos\/[0-9a-f-]{36}/, { timeout: 45_000, waitUntil: "domcontentloaded" });
+    await page.waitForURL(/\/empleos\/[0-9a-f-]{36}/, { timeout: 45_000, waitUntil: "domcontentloaded" });
     const id = page.url().match(/\/empleos\/([0-9a-f-]{36})/)![1];
     await expectVisibleText(page.locator("body"), titulo);
     await regressionAdminClient().from("job_posts").delete().eq("id", id);
@@ -329,7 +329,7 @@ test.describe("@seeded marketplace editors through the real screens", () => {
   test("publicar oferta avisa cuando en realidad es una vacante", async ({ page }) => {
     await ensureRegressionSeed();
     await loginAs(page, E2E_USERS.professional.email, E2E_USERS.professional.password);
-    await gotoOK(page, "/es/promociones/publicar");
+    await gotoOK(page, "/promociones/publicar");
     await page.waitForTimeout(1500);
     await page.locator('input[name="title"]').fill("Operario en techos");
     await page.locator('textarea[name="description"]').fill("Ocupo un operario con experiencia comprobable, tiempo completo, salario quincenal.");

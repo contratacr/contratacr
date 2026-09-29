@@ -37,6 +37,21 @@ export function tramoFicha(titulo: string, id: string): string {
   return [nombre, corto].filter(Boolean).join("-");
 }
 
+/**
+ * Ruta interna de la ficha, con el título delante: /promociones/camaras-b1baacf7.
+ * El sitemap y el canonical ya la usaban; los enlaces de la app seguían
+ * poniendo el UUID entero y esa era la dirección que se veía en la barra.
+ */
+export function rutaPromocion(offer: { id: string; title?: string | null }): string {
+  return `/promociones/${tramoFicha(offer.title ?? "", offer.id)}`;
+}
+export function rutaEmpleo(job: { id: string; title?: string | null }): string {
+  return `/empleos/${tramoFicha(job.title ?? "", job.id)}`;
+}
+export function rutaProyecto(project: { id: string; title?: string | null }): string {
+  return `/proyectos/${tramoFicha(project.title ?? "", project.id)}`;
+}
+
 /** contratacr.com/o/b1baacf7 */
 export function enlaceOferta(offer: { id: string }, baseUrl?: string): string {
   return `${base(baseUrl)}/o/${codigoCorto(offer.id)}`;

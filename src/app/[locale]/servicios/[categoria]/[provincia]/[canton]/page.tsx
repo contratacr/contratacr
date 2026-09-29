@@ -1,4 +1,5 @@
 import { imagenSocial } from "@/lib/seo/imagen-social";
+import { prefijoDeIdioma } from "@/lib/prefijo-de-idioma";
 import type { Metadata } from "next";
 import { alternativasDeIdioma } from "@/lib/seo/alternates";
 import { notFound } from "next/navigation";
@@ -41,7 +42,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   // El conteo se busca por el ID de dos letras, que es como está guardado en
   // la base; la DIRECCIÓN usa el nombre legible.
   const count = supply.byCategoryProvince[supplyKey(id, province.id)] ?? 0;
-  const path = `/${locale}/servicios/${direccion}/${province.slug}/${canton.slug}`;
+  const path = `${prefijoDeIdioma(locale)}/servicios/${direccion}/${province.slug}/${canton.slug}`;
   const title = t("metaTitle", { category, place });
   const description = t("metaDesc", { count, category, place });
   return {
@@ -83,7 +84,7 @@ function oficioEnCanton(locale: string, categoria: string, province: Province, c
   const nombre = getCategoryLabel(categoria, locale);
   const direccion = categorySlug(categoria);
   const esEn = locale === "en";
-  const urlProvincia = `${base}/${locale}/servicios/${direccion}/${province.slug}`;
+  const urlProvincia = `${base}${prefijoDeIdioma(locale)}/servicios/${direccion}/${province.slug}`;
   const url = `${urlProvincia}/${canton.slug}`;
   return [
     {
@@ -99,15 +100,15 @@ function oficioEnCanton(locale: string, categoria: string, province: Province, c
         name: canton.name,
         containedInPlace: { "@type": "State", name: province.name, containedInPlace: { "@type": "Country", name: "Costa Rica" } },
       },
-      provider: { "@type": "Organization", name: "ContrataCR", url: `${base}/${locale}` },
+      provider: { "@type": "Organization", name: "ContrataCR", url: `${base}${prefijoDeIdioma(locale) || "/"}` },
     },
     {
       "@context": "https://schema.org",
       "@type": "BreadcrumbList",
       itemListElement: [
-        { "@type": "ListItem", position: 1, name: esEn ? "Home" : "Inicio", item: `${base}/${locale}` },
-        { "@type": "ListItem", position: 2, name: esEn ? "Services" : "Servicios", item: `${base}/${locale}/servicios` },
-        { "@type": "ListItem", position: 3, name: nombre, item: `${base}/${locale}/servicios/${direccion}` },
+        { "@type": "ListItem", position: 1, name: esEn ? "Home" : "Inicio", item: `${base}${prefijoDeIdioma(locale) || "/"}` },
+        { "@type": "ListItem", position: 2, name: esEn ? "Services" : "Servicios", item: `${base}${prefijoDeIdioma(locale)}/servicios` },
+        { "@type": "ListItem", position: 3, name: nombre, item: `${base}${prefijoDeIdioma(locale)}/servicios/${direccion}` },
         { "@type": "ListItem", position: 4, name: province.name, item: urlProvincia },
         { "@type": "ListItem", position: 5, name: canton.name, item: url },
       ],

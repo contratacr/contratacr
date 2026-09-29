@@ -4,6 +4,7 @@ import { PROVINCES } from "@/lib/data/cr-geography";
 import { getSupplyCounts, supplyKey, MIN_SUPPLY_FOR_LANDING } from "@/lib/queries/supply";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { tramoFicha } from "@/lib/marketplace-url";
+import { rutaConIdioma } from "@/lib/prefijo-de-idioma";
 import { cargarProyectosPublicos } from "@/lib/queries/proyectos-publicos";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://contratacr.com";
@@ -49,14 +50,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     if (crudo) ultimoCambio = new Date(crudo);
   } catch { /* sin fecha es mejor que una fecha falsa */ }
   const fijos = ["", "/buscar", "/servicios", "/promociones", "/empleos", "/proyectos", "/como-funciona", "/ayuda", "/mejorar-mi-perfil"];
-  for (const p of fijos) for (const l of IDIOMAS) out.push({ url: `${APP_URL}/${l}${p}`, lastModified: ultimoCambio, changeFrequency: "daily", priority: p === "" ? 1 : 0.8 });
+  for (const p of fijos) for (const l of IDIOMAS) out.push({ url: `${APP_URL}${rutaConIdioma(l, `${p}` || "/")}`, lastModified: ultimoCambio, changeFrequency: "daily", priority: p === "" ? 1 : 0.8 });
 
   for (const cat of getAllCategories()) {
     if ((supply.byCategory[supplyKey(cat.id)] ?? 0) < MIN_SUPPLY_FOR_LANDING) continue;
-    for (const l of IDIOMAS) out.push({ url: `${APP_URL}/${l}/servicios/${categorySlug(cat.id)}`, lastModified: ultimoCambio, changeFrequency: "weekly", priority: 0.9 });
+    for (const l of IDIOMAS) out.push({ url: `${APP_URL}${rutaConIdioma(l, `/servicios/${categorySlug(cat.id)}` || "/")}`, lastModified: ultimoCambio, changeFrequency: "weekly", priority: 0.9 });
     for (const prov of PROVINCES) {
       if ((supply.byCategoryProvince[supplyKey(cat.id, prov.id)] ?? 0) < MIN_SUPPLY_FOR_LANDING) continue;
-      for (const l of IDIOMAS) out.push({ url: `${APP_URL}/${l}/servicios/${categorySlug(cat.id)}/${prov.slug}`, lastModified: ultimoCambio, changeFrequency: "weekly", priority: 0.8 });
+      for (const l of IDIOMAS) out.push({ url: `${APP_URL}${rutaConIdioma(l, `/servicios/${categorySlug(cat.id)}/${prov.slug}` || "/")}`, lastModified: ultimoCambio, changeFrequency: "weekly", priority: 0.8 });
     }
   }
 
@@ -70,7 +71,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       .not("slug", "is", null)
       .limit(5000);
     for (const row of (data ?? []) as { slug: string; updated_at?: string | null }[]) {
-      for (const l of IDIOMAS) out.push({ url: `${APP_URL}/${l}/profesionales/${row.slug}`, lastModified: row.updated_at ? new Date(row.updated_at) : ultimoCambio, changeFrequency: "weekly", priority: 0.6 });
+      for (const l of IDIOMAS) out.push({ url: `${APP_URL}${rutaConIdioma(l, `/profesionales/${row.slug}` || "/")}`, lastModified: row.updated_at ? new Date(row.updated_at) : ultimoCambio, changeFrequency: "weekly", priority: 0.6 });
     }
   } catch (err) {
     console.error("[sitemap] perfiles:", err);
@@ -89,10 +90,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // compartir: título + 8 caracteres. Publicaba el UUID mientras el resto del
     // app repartía la forma corta, y Google veía dos direcciones para lo mismo.
     for (const row of (empleos ?? []) as { id: string; title?: string | null; updated_at?: string | null }[]) {
-      for (const l of IDIOMAS) out.push({ url: `${APP_URL}/${l}/empleos/${tramoFicha(row.title ?? "", row.id)}`, lastModified: row.updated_at ? new Date(row.updated_at) : ultimoCambio, changeFrequency: "weekly", priority: 0.7 });
+      for (const l of IDIOMAS) out.push({ url: `${APP_URL}${rutaConIdioma(l, `/empleos/${tramoFicha(row.title ?? "", row.id)}` || "/")}`, lastModified: row.updated_at ? new Date(row.updated_at) : ultimoCambio, changeFrequency: "weekly", priority: 0.7 });
     }
     for (const row of (ofertas ?? []) as { id: string; title?: string | null; updated_at?: string | null }[]) {
-      for (const l of IDIOMAS) out.push({ url: `${APP_URL}/${l}/promociones/${tramoFicha(row.title ?? "", row.id)}`, lastModified: row.updated_at ? new Date(row.updated_at) : ultimoCambio, changeFrequency: "weekly", priority: 0.6 });
+      for (const l of IDIOMAS) out.push({ url: `${APP_URL}${rutaConIdioma(l, `/promociones/${tramoFicha(row.title ?? "", row.id)}` || "/")}`, lastModified: row.updated_at ? new Date(row.updated_at) : ultimoCambio, changeFrequency: "weekly", priority: 0.6 });
     }
   } catch (err) {
     console.error("[sitemap] empleos/ofertas:", err);
@@ -102,7 +103,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   try {
     const proyectos = await cargarProyectosPublicos(2000);
     for (const proyecto of proyectos) {
-      for (const l of IDIOMAS) out.push({ url: `${APP_URL}/${l}/proyectos/${tramoFicha(proyecto.title ?? "", proyecto.id)}`, lastModified: proyecto.created_at ? new Date(proyecto.created_at) : ultimoCambio, changeFrequency: "weekly", priority: 0.6 });
+      for (const l of IDIOMAS) out.push({ url: `${APP_URL}${rutaConIdioma(l, `/proyectos/${tramoFicha(proyecto.title ?? "", proyecto.id)}` || "/")}`, lastModified: proyecto.created_at ? new Date(proyecto.created_at) : ultimoCambio, changeFrequency: "weekly", priority: 0.6 });
     }
   } catch (err) {
     console.error("[sitemap] proyectos:", err);

@@ -1,4 +1,5 @@
 import { getTranslations } from "next-intl/server";
+import { prefijoDeIdioma } from "@/lib/prefijo-de-idioma";
 import { Carril } from "@/components/ui/carril";
 import { Link } from "@/i18n/navigation";
 import { LandingNavbar } from "@/components/landing/landing-navbar";
@@ -84,7 +85,7 @@ export async function ServiceLanding({ locale, categoryId, provinceId, cantonId 
             "@type": "ListItem",
             position: i + 1,
             name: pro.businessName?.trim() || proDisplayName(pro.fullName),
-            url: `${APP_URL}/${locale}/profesionales/${pro.slug}`,
+            url: `${APP_URL}${prefijoDeIdioma(locale)}/profesionales/${pro.slug}`,
           })),
         }
       : null;

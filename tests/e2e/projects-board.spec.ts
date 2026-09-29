@@ -33,7 +33,7 @@ test.describe("@seeded tablero público de proyectos", () => {
 
   test("un invitado ve el tablero y ningún teléfono viaja con la página", async ({ page }) => {
     await resetAuth(page);
-    await gotoOK(page, "/es/proyectos");
+    await gotoOK(page, "/proyectos");
     await waitForInteractivePage(page);
 
     const tarjetas = page.locator('a[href*="/proyectos/"]').filter({ visible: true });
@@ -52,7 +52,7 @@ test.describe("@seeded tablero público de proyectos", () => {
 
     // Sin cuenta: la ruta no entrega nada.
     await resetAuth(page);
-    await gotoOK(page, "/es/proyectos");
+    await gotoOK(page, "/proyectos");
     const invitado = await apiJson<{ error?: string }>(page, "/api/contact/project-lead", {
       method: "POST",
       body: { projectId: abiertos[0].id },
@@ -61,7 +61,7 @@ test.describe("@seeded tablero público de proyectos", () => {
 
     // Con cuenta profesional: enlace de WhatsApp, y nunca al propio proyecto.
     await loginAs(page, E2E_USERS.professional.email, E2E_USERS.professional.password);
-    await gotoOK(page, "/es/proyectos");
+    await gotoOK(page, "/proyectos");
     const { data: pro } = await admin
       .from("professionals")
       .select("profile_id")

@@ -1,6 +1,7 @@
 "use client";
 
 import { BOTON_DE_EXITO, PantallaDeExito } from "@/components/ui/pantalla-de-exito";
+import { prefijoDeIdioma } from "@/lib/prefijo-de-idioma";
 import { Carril } from "@/components/ui/carril";
 import { VerifiedSeal } from "@/components/ui/verified-seal";
 import { useState, useEffect, useMemo, useRef } from "react";
@@ -907,7 +908,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
       service: description,
       date: selectedDate,
       time: selectedTime,
-      whatsappLink: createdBookingId ? `${window.location.origin}/${locale}/dashboard/profesional?tab=sent_bookings&booking=${createdBookingId}` : `${window.location.origin}/${locale}/dashboard/profesional?tab=sent_bookings`,
+      whatsappLink: createdBookingId ? `${window.location.origin}${prefijoDeIdioma(locale)}/dashboard/profesional?tab=sent_bookings&booking=${createdBookingId}` : `${window.location.origin}${prefijoDeIdioma(locale)}/dashboard/profesional?tab=sent_bookings`,
     });
     const blob = new Blob([ics], { type: "text/calendar;charset=utf-8" });
     const url = URL.createObjectURL(blob);

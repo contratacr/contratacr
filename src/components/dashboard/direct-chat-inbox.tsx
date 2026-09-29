@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
+import { CITAS_ACTIVAS } from "@/lib/citas";
 import { createPortal } from "react-dom";
 import { Archive, ArchiveRestore, ArrowLeft, CalendarClock, ChevronDown, ChevronRight, ClipboardList, Copy, Download, FileText, Flag, Handshake, Loader2, MessageSquareMore, Paperclip, Search, SendHorizontal, Trash2, X } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
@@ -1163,7 +1164,7 @@ export function DirectChatInbox() {
   }
 
   function contextHref(item: Conversation) {
-    if (item.booking_id) return `/dashboard/profesional?tab=${user?.id === item.client_id ? "sent_bookings" : "bookings"}&booking=${item.booking_id}`;
+    if (item.booking_id && CITAS_ACTIVAS) return `/dashboard/profesional?tab=${user?.id === item.client_id ? "sent_bookings" : "bookings"}&booking=${item.booking_id}`;
     if (item.project_id) return `/dashboard/profesional?tab=${user?.id === item.client_id ? "sent_projects" : "proposals"}&project=${item.project_id}`;
     const isClientSide = user?.id === item.client_id;
     return isClientSide && item.professionals?.slug ? `/profesionales/${item.professionals.slug}` : null;
@@ -1233,7 +1234,7 @@ export function DirectChatInbox() {
     contextFor({ ...(active ?? ({} as Conversation)), context: { type: tipo as "booking" } }).label;
   const hrefDeOrigen = (origen: { bookingId?: string | null; projectId?: string | null }) => {
     const soyCliente = user?.id === conversacionAbierta?.client_id;
-    if (origen.bookingId) return `/dashboard/profesional?tab=${soyCliente ? "sent_bookings" : "bookings"}&booking=${origen.bookingId}`;
+    if (origen.bookingId && CITAS_ACTIVAS) return `/dashboard/profesional?tab=${soyCliente ? "sent_bookings" : "bookings"}&booking=${origen.bookingId}`;
     if (origen.projectId) return `/dashboard/profesional?tab=${soyCliente ? "sent_projects" : "proposals"}&project=${origen.projectId}`;
     return null;
   };

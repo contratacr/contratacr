@@ -79,13 +79,13 @@ test.describe("@seeded franjas de acciones al pie", () => {
         return Array.from(document.querySelectorAll("main a")).map((a) => a.getAttribute("href") ?? "").find((h) => re.test(h)) ?? null;
       }, patron);
     };
-    const empleo = await primerEnlace("/es/empleos", "/empleos/[0-9a-f-]{8,}");
-    const proyecto = await primerEnlace("/es/proyectos", "/proyectos/[0-9a-f-]{8,}");
+    const empleo = await primerEnlace("/empleos", "/empleos/[0-9a-f-]{8,}");
+    const proyecto = await primerEnlace("/proyectos", "/proyectos/[0-9a-f-]{8,}");
 
-    pantallas.push({ nombre: "soporte", abrir: async () => { await gotoOK(page, "/es/soporte"); } });
+    pantallas.push({ nombre: "soporte", abrir: async () => { await gotoOK(page, "/soporte"); } });
     if (empleo) pantallas.push({ nombre: "ficha de empleo", abrir: async () => { await gotoOK(page, empleo); } });
     if (proyecto) pantallas.push({ nombre: "ficha de proyecto", abrir: async () => { await gotoOK(page, proyecto); } });
-    pantallas.push({ nombre: "ficha profesional", abrir: async () => { await gotoOK(page, "/es/profesionales/redes-bahia-pruebas"); await page.waitForTimeout(1200); } });
+    pantallas.push({ nombre: "ficha profesional", abrir: async () => { await gotoOK(page, "/profesionales/redes-bahia-pruebas"); await page.waitForTimeout(1200); } });
 
     const medidas: { nombre: string; franja: Franja }[] = [];
     for (const pantalla of pantallas) {
@@ -94,13 +94,13 @@ test.describe("@seeded franjas de acciones al pie", () => {
     }
 
     await loginAs(page, E2E_USERS.professional.email, E2E_USERS.professional.password);
-    for (const [nombre, ruta] of [["publicar empleo", "/es/empleos/publicar"], ["publicar promoción", "/es/promociones/publicar"]] as const) {
+    for (const [nombre, ruta] of [["publicar empleo", "/empleos/publicar"], ["publicar promoción", "/promociones/publicar"]] as const) {
       await gotoOK(page, ruta);
       medidas.push({ nombre, franja: await medirFranja(page) });
     }
 
     // La referencia, medida en el mismo viaje.
-    await gotoOK(page, "/es/dashboard/profesional?tab=sent_projects");
+    await gotoOK(page, "/dashboard/profesional?tab=sent_projects");
     await page.waitForTimeout(1200);
     await page.getByRole("button", { name: /Publicar proyecto|Post a project/i }).filter({ visible: true }).first().click();
     const referencia = await medirFranja(page);
@@ -144,7 +144,7 @@ test.describe("@seeded franjas de acciones al pie", () => {
     // 320 px es el teléfono más angosto que soportamos: si algo va a desbordar,
     // desborda aquí primero.
     await page.setViewportSize({ width: 320, height: 720 });
-    for (const ruta of ["/es/soporte", "/es/profesionales/redes-bahia-pruebas"]) {
+    for (const ruta of ["/soporte", "/profesionales/redes-bahia-pruebas"]) {
       await gotoOK(page, ruta);
       const franja = await medirFranja(page);
       expect(franja.caja, `«${ruta}» perdió su franja a 320 px`).not.toBeNull();
@@ -162,7 +162,7 @@ test.describe("@seeded franjas de acciones al pie", () => {
     // franja salía sin relleno, sin línea y con los botones contra el filo. La
     // regla vive ahora DENTRO del documento (layout.tsx). Esta prueba le quita
     // a la franja todas sus utilidades y exige que siga midiendo lo mismo.
-    for (const ruta of ["/es/soporte", "/es/profesionales/redes-bahia-pruebas"]) {
+    for (const ruta of ["/soporte", "/profesionales/redes-bahia-pruebas"]) {
       await gotoOK(page, ruta);
       await page.waitForTimeout(1200);
       await expect(page.locator("style[data-ccr-franja]"), "La regla de la franja tiene que viajar dentro del documento").toHaveCount(1);
@@ -195,7 +195,7 @@ test.describe("@seeded franjas de acciones al pie", () => {
     // Quién contacta depende de los datos del profesional: sin WhatsApp y sin
     // llamadas no hay botón, y la franja pintaba igual —una tira blanca pegada
     // al fondo con su línea arriba, prometiendo una acción que no existe—.
-    await gotoOK(page, "/es/promociones");
+    await gotoOK(page, "/promociones");
     await page.waitForTimeout(1500);
     const fichas = await page.evaluate(() =>
       Array.from(new Set(Array.from(document.querySelectorAll("main a"))
@@ -228,7 +228,7 @@ test.describe("@seeded separación entre botones", () => {
   test("Cancelar y Publicar empleo quedan a 12 px, sin clases de Tailwind", async ({ page }, testInfo) => {
     test.skip(isMobileProject(testInfo), "En el teléfono la ventana solo lleva el botón de publicar.");
     await loginAs(page, E2E_USERS.professional.email, E2E_USERS.professional.password);
-    await gotoOK(page, "/es/empleos");
+    await gotoOK(page, "/empleos");
     await page.getByRole("button", { name: /Publicar empleo/i }).filter({ visible: true }).first().click();
     const franja = page.locator("[role='dialog'] .ccr-barra-accion").filter({ visible: true }).first();
     await expect(franja).toBeVisible();
@@ -252,7 +252,7 @@ test.describe("@seeded la franja no tapa el final", () => {
     test.skip(!isMobileProject(testInfo), "La franja fija solo existe en el teléfono.");
     const { ensureRegressionSeed } = await import("./seed");
     const seed = await ensureRegressionSeed();
-    await gotoOK(page, `/es/profesionales/${seed.professionalSlug}`);
+    await gotoOK(page, `/profesionales/${seed.professionalSlug}`);
     for (const pestaña of [/Información|Information/, /Servicios|Services/]) {
       await page.getByRole("tab", { name: pestaña }).first().click();
       // Hasta abajo DE VERDAD. Bajar una sola vez justo tras el clic medía la

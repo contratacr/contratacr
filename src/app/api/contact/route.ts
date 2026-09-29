@@ -33,7 +33,7 @@ function localeFromRequest(req: NextRequest, submittedLocale?: string | null): S
     try {
       const path = new URL(referer).pathname;
       if (path === "/en" || path.startsWith("/en/")) return "en";
-      if (path === "/es" || path.startsWith("/es/")) return "es";
+      return "es";
     } catch { /* ignore malformed referers */ }
   }
   return normalizeLocale(req.headers.get("accept-language")?.toLowerCase().startsWith("en") ? "en" : "es");
@@ -248,7 +248,13 @@ export async function POST(req: NextRequest) {
     // inbox by email — via Brevo. Even if the email can't be sent, the ticket is
     // already saved and shows in the admin panel.
     const ticketSaved = await saveTicket(req, name, email, subject, message, topic, locale);
-    const sent = await sendInboxEmail(name, email, subject, message, fileAttachments);
+    // El ticket ES el registro y el contador de Soporte en el panel es el aviso.
+    // El correo al buzón queda para dos casos: cuando el caso trae ADJUNTOS
+    // —el ticket no los guarda, solo viajan en el correo— y cuando el guardado
+    // falló, porque entonces el caso no aparecería en ninguna pantalla.
+    const sent = (fileAttachments.length > 0 || !ticketSaved)
+      ? await sendInboxEmail(name, email, subject, message, fileAttachments)
+      : false;
     if (ticketSaved) {
       await notifyUserTicketCreated({
         toEmail: email,

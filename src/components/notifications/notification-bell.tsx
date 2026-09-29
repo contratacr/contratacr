@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { prefijoDeIdioma } from "@/lib/prefijo-de-idioma";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { Bell, ArrowRight } from "lucide-react";
@@ -164,7 +165,7 @@ export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "o
 
   const openNotifications = () => {
     setMenuOpen(false);
-    router.push(`/${locale}/notificaciones`);
+    router.push(`${prefijoDeIdioma(locale)}/notificaciones`);
   };
 
   async function openNotification(item: Notification) {
@@ -175,7 +176,7 @@ export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "o
       await supabase.from("notifications").update({ read: true }).eq("id", item.id);
       window.dispatchEvent(new CustomEvent("notificationsChanged"));
     }
-    router.push(notificationActionHref(item, undefined, locale) ?? `/${locale}/notificaciones`);
+    router.push(notificationActionHref(item, undefined, locale) ?? `${prefijoDeIdioma(locale)}/notificaciones`);
   }
 
   async function markAllRead() {

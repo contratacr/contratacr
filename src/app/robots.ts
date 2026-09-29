@@ -38,12 +38,12 @@ const EN_LOS_DOS_IDIOMAS = [
 ];
 
 /** La reserva cuelga de cada perfil, así que se nombra con comodín. */
-const CON_COMODIN = ["/es/profesionales/*/reservar", "/en/profesionales/*/reservar"];
+const CON_COMODIN = ["/profesionales/*/reservar", "/en/profesionales/*/reservar"];
 
 const CERRADAS = [
   "/api/",
   "/admin",
-  ...EN_LOS_DOS_IDIOMAS.flatMap((ruta) => [`/es${ruta}`, `/en${ruta}`]),
+  ...EN_LOS_DOS_IDIOMAS.flatMap((ruta) => [ruta, `/en${ruta}`]),
   ...CON_COMODIN,
 ];
 

@@ -16,14 +16,14 @@ const LENTO_MS = Number(process.env.VIGILANCIA_LENTO_MS || 6000);
 const pruebas = [
   {
     nombre: "Portada",
-    ruta: "/es",
+    ruta: "/",
     // La portada es estática: basta con que pinte su propio nombre.
     revisar: (texto) => texto.includes("ContrataCR"),
     queFalta: "el nombre del sitio",
   },
   {
     nombre: "Buscar",
-    ruta: "/es/buscar",
+    ruta: "/buscar",
     // Este es el que importa: el conteo sale de Supabase. Si dice cero, o la
     // base no contestó o las fichas dejaron de ser públicas.
     revisar: (texto) => {
@@ -35,7 +35,7 @@ const pruebas = [
   },
   {
     nombre: "Servicios",
-    ruta: "/es/servicios",
+    ruta: "/servicios",
     revisar: (texto) => texto.includes("ContrataCR"),
     queFalta: "el contenido de la página",
   },

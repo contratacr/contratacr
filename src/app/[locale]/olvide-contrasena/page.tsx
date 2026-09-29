@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { prefijoDeIdioma } from "@/lib/prefijo-de-idioma";
 import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { useForm } from "react-hook-form";
@@ -48,7 +49,7 @@ export default function OlvideContrasenaPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         email,
-        redirectTo: `${window.location.origin}/${locale}/reset-password`,
+        redirectTo: `${window.location.origin}${prefijoDeIdioma(locale)}/reset-password`,
       }),
     });
     const json = await res.json().catch(() => ({}));

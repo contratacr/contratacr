@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { prefijoDeIdioma } from "@/lib/prefijo-de-idioma";
 import { useRouter } from "next/navigation";
 import { APP_RESUME_EVENT } from "@/lib/app-events";
 
@@ -16,7 +17,7 @@ export function AppResumeRecovery() {
   useEffect(() => {
     const path = window.location.pathname;
     const locale = path.startsWith("/en") ? "en" : "es";
-    const localeRoot = path === `/${locale}` || path === `/${locale}/`;
+    const localeRoot = path === `${prefijoDeIdioma(locale) || "/"}` || path === `${prefijoDeIdioma(locale)}/`;
     const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
     const searchParams = new URLSearchParams(window.location.search);
     const isRecoveryHash =
@@ -25,12 +26,12 @@ export function AppResumeRecovery() {
     const hasRecoveryCode = localeRoot && !!searchParams.get("code");
 
     if (localeRoot && isRecoveryHash) {
-      window.location.replace(`/${locale}/reset-password${window.location.hash}`);
+      window.location.replace(`${prefijoDeIdioma(locale)}/reset-password${window.location.hash}`);
       return;
     }
 
     if (hasRecoveryCode) {
-      window.location.replace(`/${locale}/reset-password${window.location.search}`);
+      window.location.replace(`${prefijoDeIdioma(locale)}/reset-password${window.location.search}`);
       return;
     }
 

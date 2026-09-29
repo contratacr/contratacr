@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useMemo } from "react";
+import { prefijoDeIdioma, rutaConIdioma } from "@/lib/prefijo-de-idioma";
 import { useTranslations, useLocale } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
 import {
@@ -635,9 +636,9 @@ export default function RegisterProfessionalPage() {
   function destinoTrasCrear(sufijo = ""): string {
     const guardado = typeof window === "undefined" ? null : new URLSearchParams(window.location.search).get("redirect");
     if (guardado && guardado.startsWith("/") && !guardado.startsWith("//")) {
-      return /^\/(es|en)(\/|$)/.test(guardado) ? guardado : `/${locale}${guardado}`;
+      return /^\/(es|en)(\/|$)/.test(guardado) ? guardado : rutaConIdioma(locale, guardado);
     }
-    return `/${locale}/dashboard/profesional?mode=offer${sufijo}`;
+    return `${prefijoDeIdioma(locale)}/dashboard/profesional?mode=offer${sufijo}`;
   }
 
   function handlePhotoSelect(file: File) {

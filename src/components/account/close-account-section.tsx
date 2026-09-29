@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { prefijoDeIdioma } from "@/lib/prefijo-de-idioma";
 import { useLocale, useTranslations } from "next-intl";
 import { AlertTriangle, EyeOff } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
@@ -46,7 +47,7 @@ export function CloseAccountSection({ initialDisabled = false }: { initialDisabl
       if (accountId) clearAccountLocalCache(accountId);
       await prepareForAccountSignOut();
       await supabase.auth.signOut();
-      window.location.assign(`/${locale}`);
+      window.location.assign(`${prefijoDeIdioma(locale) || "/"}`);
     } catch {
       setError(t("connError"));
     } finally {
@@ -93,7 +94,7 @@ export function CloseAccountSection({ initialDisabled = false }: { initialDisabl
       await prepareForAccountSignOut();
       await supabase.auth.signOut();
       const status = result?.status === "completed" ? "completed" : "pending";
-      window.location.assign(`/${locale}?accountDeletion=${status}`);
+      window.location.assign(`${prefijoDeIdioma(locale) || "/"}?accountDeletion=${status}`);
     } catch {
       setDeleteError(t("connError"));
     } finally {

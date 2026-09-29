@@ -8,7 +8,7 @@ const FANTASMA = "d4000000-0000-4000-8000-0000000fffff";
 
 test("@seeded una dirección que no existe no enseña otra publicación", async ({ page }) => {
   test.skip(isMobileProject(test.info()), "Basta comprobarlo una vez.");
-  for (const ruta of [`/es/empleos/${FANTASMA}`, `/es/promociones/${FANTASMA}`, `/es/proyectos/${FANTASMA}`]) {
+  for (const ruta of [`/empleos/${FANTASMA}`, `/promociones/${FANTASMA}`, `/proyectos/${FANTASMA}`]) {
     await page.goto(ruta);
     await expect(page.locator("h1, h2").first(), `${ruta} no debe enseñar otra ficha`).toHaveText(/no encontrada|not found/i);
   }
@@ -16,7 +16,7 @@ test("@seeded una dirección que no existe no enseña otra publicación", async 
 
 test("@seeded un empleo vivo abre su ficha y se deja indexar", async ({ page, request }) => {
   test.skip(isMobileProject(test.info()), "Basta comprobarlo una vez.");
-  await page.goto("/es/empleos");
+  await page.goto("/empleos");
   const enlaces = await page.locator('a[href*="/empleos/"]').evaluateAll((ns) => ns.map((n) => (n as HTMLAnchorElement).getAttribute("href")));
   const vivo = enlaces.find((h) => h && /[0-9a-f-]{20,}/.test(h) && !/editar|publicar|mis-/.test(h));
   expect(vivo, "el tablero sembrado trae al menos un empleo").toBeTruthy();

@@ -1,5 +1,6 @@
 "use client";
 
+import { rutaPromocion } from "@/lib/marketplace-url";
 import { useState } from "react";
 import { useLocale } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
@@ -65,7 +66,7 @@ export function OfferOwnerActions({ offer, professionalId, serviceOptions, fromP
             serviceOptions={serviceOptions}
             initialOffer={offer}
             presentation="modal"
-            backHref={`/promociones/${offer.id}`}
+            backHref={rutaPromocion(offer)}
             onSaved={() => {
               setEditing(false);
               router.refresh();

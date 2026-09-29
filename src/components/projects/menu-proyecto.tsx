@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { prefijoDeIdioma } from "@/lib/prefijo-de-idioma";
 import { useLocale, useTranslations } from "next-intl";
 import { Bookmark, Flag, Link2, Share2 } from "lucide-react";
 import { MenuFicha } from "@/components/ui/menu-ficha";
@@ -46,14 +47,14 @@ export function MenuProyecto({
     itemId: proyectoId,
     snapshot: guardar?.snapshot ?? {},
     userId: guardar?.userId ?? null,
-    loginRedirect: `/proyectos/${proyectoId}`,
+    loginRedirect: `/proyectos/${tramoFicha(titulo, proyectoId)}`,
   });
   // Se comparte el enlace que se lee —título y 8 caracteres—, no el id de 36:
   // es el mismo trato que promociones y empleos. El largo sigue abriendo igual.
   const tramo = tramoFicha(titulo, proyectoId);
   const enlace = typeof window === "undefined"
-    ? `/${locale}/proyectos/${tramo}`
-    : `${window.location.origin}/${locale}/proyectos/${tramo}`;
+    ? `${prefijoDeIdioma(locale)}/proyectos/${tramo}`
+    : `${window.location.origin}${prefijoDeIdioma(locale)}/proyectos/${tramo}`;
 
   // Como LinkedIn: con el DEDO, la hoja del sistema —WhatsApp, Mensajes,
   // AirDrop—; con el RATÓN, copiar el enlace y avisarlo. Lo decide `compartir`,

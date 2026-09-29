@@ -27,7 +27,7 @@ test.describe("abrir una sección", () => {
     page.evaluate(() => Math.round(window.scrollY));
 
   async function seccionLargaYAbajoDelTodo(page: import("playwright/test").Page) {
-    await page.goto("/es/dashboard/profesional?tab=services");
+    await page.goto("/dashboard/profesional?tab=services");
     await page.waitForTimeout(2500);
     await page.evaluate(() => window.scrollTo(0, 99999));
     await page.waitForTimeout(400);
@@ -75,7 +75,7 @@ test.describe("abrir una sección", () => {
   });
 
   test("abrir una sección desde el menú no devuelve la pantalla abajo", async ({ page }) => {
-    await page.goto("/es/dashboard/profesional");
+    await page.goto("/dashboard/profesional");
     await page.waitForTimeout(2500);
     await page.evaluate(() => window.scrollTo(0, 99999));
     await page.waitForTimeout(400);

@@ -1,3 +1,4 @@
+import { rutaEmpleo, rutaPromocion } from "@/lib/marketplace-url";
 import { NextResponse } from "next/server";
 import { getApiAdmin } from "@/lib/auth/admin";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -146,7 +147,7 @@ export async function GET(request: Request) {
         createdAt: row.created_at,
         updatedAt: row.updated_at,
         creator,
-        href: `/empleos/${row.id}`,
+        href: rutaEmpleo({ id: row.id, title: row.title }),
       };
     }
     return {
@@ -164,7 +165,7 @@ export async function GET(request: Request) {
       createdAt: row.created_at,
       updatedAt: row.updated_at,
       creator,
-      href: `/promociones/${row.id}`,
+      href: rutaPromocion({ id: row.id, title: row.title }),
     };
   });
 

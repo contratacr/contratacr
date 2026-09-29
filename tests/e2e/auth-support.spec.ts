@@ -6,7 +6,7 @@ import { cleanupDisposableAccount, createDisposableAccount } from "./disposable-
 
 test.describe("@smoke auth and support", () => {
   test("login page exposes password and OAuth entry points without submitting", async ({ page }) => {
-    await gotoOK(page, "/es/login");
+    await gotoOK(page, "/login");
     await openLoginForm(page);
 
     await expect(page.getByRole("heading", { name: /Ingresa a tu cuenta|Bienvenido de vuelta/i })).toBeVisible();
@@ -19,7 +19,7 @@ test.describe("@smoke auth and support", () => {
   });
 
   test("support form opens the reason dropdown and keeps required fields visible", async ({ page }) => {
-    await gotoOK(page, "/es/soporte");
+    await gotoOK(page, "/soporte");
 
     await expect(page.getByRole("textbox", { name: /Tu nombre/i })).toBeVisible();
     await expect(page.getByRole("textbox", { name: /tucorreo/i })).toBeVisible();
@@ -33,7 +33,7 @@ test.describe("@smoke auth and support", () => {
   });
 
   test("forgot-password validates the email and shows the privacy-safe confirmation state", async ({ page }) => {
-    await gotoOK(page, "/es/olvide-contrasena");
+    await gotoOK(page, "/olvide-contrasena");
     await waitForInteractivePage(page);
 
     const email = page.getByLabel(/Correo/i).first();
@@ -67,7 +67,7 @@ test.describe("@smoke auth and support", () => {
     try {
       // 1. The real request screen, with an address that does exist.
       await resetAuth(page);
-      await gotoOK(page, "/es/olvide-contrasena");
+      await gotoOK(page, "/olvide-contrasena");
       await waitForInteractivePage(page);
       await page.getByLabel(/Correo/i).first().fill(account.email);
       await page.getByRole("button", { name: /Enviar|Restablecer/i }).click();
@@ -92,7 +92,7 @@ test.describe("@smoke auth and support", () => {
 
       await gotoOK(
         page,
-        `/es/reset-password#access_token=${verified.session!.access_token}&refresh_token=${verified.session!.refresh_token}&type=recovery`,
+        `/reset-password#access_token=${verified.session!.access_token}&refresh_token=${verified.session!.refresh_token}&type=recovery`,
       );
       await waitForInteractivePage(page);
       await expect(page.getByRole("heading", { name: /Nueva contrase/i })).toBeVisible();

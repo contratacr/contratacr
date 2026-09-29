@@ -12,7 +12,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   return metadatosDePantalla({
     locale,
     ruta: "/promociones",
-    titulo: en ? 'Deals and promotions from professionals | ContrataCR' : 'Ofertas y promociones de profesionales | ContrataCR',
+    titulo: en ? 'Promotions from professionals | ContrataCR' : 'Promociones de profesionales | ContrataCR',
     descripcion: en ? 'Discounts and promotions published by verified professionals in Costa Rica. Use them before they expire.' : 'Descuentos y promociones publicadas por profesionales verificados en Costa Rica. Aprovéchalas antes de que venzan.',
   });
 }

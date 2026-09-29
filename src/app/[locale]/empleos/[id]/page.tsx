@@ -32,7 +32,7 @@ type Props = {
 /**
  * El id real detrás del tramo de la dirección.
  *
- * El enlace corto `/e/<8 caracteres>` se reescribe a `/es/empleos/<8
+ * El enlace corto `/e/<8 caracteres>` se reescribe a `/empleos/<8
  * caracteres>`, pero esta pantalla consultaba `.eq("id", id)` con el tramo
  * CRUDO: ocho caracteres no son un UUID, la consulta no devolvía nada y el
  * enlace terminaba en «página no encontrada». O sea, el enlace corto de

@@ -52,7 +52,7 @@ export async function notifyCounterparties(db: SupabaseClient, name: string, par
       const message = `${name} eliminó su cuenta de ContrataCR. Tenían ${party.what}; ya no aparece en tu panel y no hace falta que hagas nada. Si necesitas ayuda, escríbenos a soporte.`;
       const notification = { user_id: party.userId, type: "counterparty_account_deleted", title, message, // `link`, no `href`: `notificationHref` solo mira `link`, asi que el
         // aviso se enlazaba a si mismo —abria la propia lista de avisos—.
-        data: { link: "/es/dashboard/profesional?tab=soporte" } };
+        data: { link: "/dashboard/profesional?tab=soporte" } };
       const { error } = await db.from("notifications").insert(notification);
       if (error) throw error;
       await sendNotificationPush({ userId: party.userId, title, message, data: notification.data });
