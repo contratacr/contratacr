@@ -46,7 +46,8 @@ export async function avisarVacanteAProfesionales({
     .from("professionals")
     .select("profile_id")
     .or(`category_id.eq.${serviceCategoryId},professions.cs.{${serviceCategoryId}}`)
-    .eq("is_banned", false);
+    .eq("is_banned", false)
+    .eq("oculto_del_buscador", false);
 
   const destinatarios = [...new Set(
     (pros ?? [])

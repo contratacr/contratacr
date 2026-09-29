@@ -26,6 +26,7 @@ async function computeSupplyCounts(): Promise<SupplyCounts> {
       .from("professionals")
       .select("category_id, professions, provincia_id, coverage_provincias, coverage_country, verification_status, is_banned, profiles(is_disabled)")
       .eq("is_banned", false)
+      .eq("oculto_del_buscador", false)
       .neq("verification_status", "rejected");
     if (error || !data) return empty;
     const out: SupplyCounts = { byCategory: {}, byCategoryProvince: {}, total: 0, verified: 0 };

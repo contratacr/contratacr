@@ -401,7 +401,7 @@ async function searchProfessionalsUncached(
              cantones(id, name)`
           );
 
-        if (modern) query = query.eq("is_banned", false);
+        if (modern) query = query.eq("is_banned", false).eq("oculto_del_buscador", false);
         // Unverified professionals (no_cr_id / pending / under appeal) ARE listed -
         // shown with an explicit "Identidad sin verificar" label and ranked BELOW
         // verified ones (see the verified-first pass below). Only rejected profiles
@@ -563,7 +563,7 @@ async function searchProfessionalsUncached(
       };
 
       let { data, error } = await build(true);
-      if (error && /is_banned|search_provincias|search_cantones|coverage_|no_cr_id|certifications|call_phone|public_business_name_only|column/i.test(error.message)) {
+      if (error && /is_banned|oculto_del_buscador|search_provincias|search_cantones|coverage_|no_cr_id|certifications|call_phone|public_business_name_only|column/i.test(error.message)) {
         ({ data, error } = await build(false)); // pre-migration fallback
       }
       if (error) throw error;
@@ -831,11 +831,11 @@ async function getZoneCoverageUncached(): Promise<ZoneCoverage> {
         );
 
     let res = await withPromiseTimeout(
-      select(true).eq("is_banned", false).neq("verification_status", "rejected"),
+      select(true).eq("is_banned", false).eq("oculto_del_buscador", false).neq("verification_status", "rejected"),
       4_000,
       "home-zone-coverage-timeout",
     );
-    if (res.error && /is_banned|search_|coverage_|column/i.test(res.error.message)) {
+    if (res.error && /is_banned|oculto_del_buscador|search_|coverage_|column/i.test(res.error.message)) {
       res = await withPromiseTimeout(
         select(false).neq("verification_status", "rejected"),
         4_000,

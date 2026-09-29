@@ -43,6 +43,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       .from("professionals")
       .select("updated_at")
       .eq("is_banned", false)
+      .eq("oculto_del_buscador", false)
       .order("updated_at", { ascending: false })
       .limit(1)
       .maybeSingle();
@@ -67,6 +68,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       .from("professionals")
       .select("slug, updated_at, verification_status, is_banned")
       .eq("is_banned", false)
+      .eq("oculto_del_buscador", false)
       .neq("verification_status", "rejected")
       .not("slug", "is", null)
       .limit(5000);

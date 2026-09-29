@@ -1,0 +1,10 @@
+import { chromium } from "playwright";
+setTimeout(() => { console.log("TIEMPO AGOTADO"); process.exit(2); }, 160000);
+const b = await chromium.connectOverCDP("http://127.0.0.1:9222", { timeout: 20000 });
+const p = b.contexts()[0].pages().find(x => /testing-credentials/.test(x.url()));
+const pos = await p.evaluate(() => { const el = [...document.querySelectorAll("*")].find(e => e.children.length === 0 && e.textContent.trim() === "edit"); if (!el) return null; const r = el.getBoundingClientRect(); return { x: r.x + r.width/2, y: r.y + r.height/2 }; });
+console.log("botón editar:", pos);
+await p.mouse.click(pos.x, pos.y); await p.waitForTimeout(7000);
+const campos = await p.evaluate(() => [...document.querySelectorAll("input[type=text], input[type=email], input:not([type]), textarea")].map(e => ({ lab: e.closest("div")?.innerText?.split("\n")[0]?.slice(0,40), val: e.value })));
+console.log(JSON.stringify(campos, null, 1).slice(0, 1200));
+process.exit(0);
