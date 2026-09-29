@@ -170,8 +170,6 @@ jobs:
           # no queda guardada. El enlace del pie del correo sí funciona sin
           # ella, así que el fallo era silencioso.
           BREVO_WEBHOOK_SECRET: ${{ secrets.BREVO_WEBHOOK_SECRET }}
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          OPENAI_MODEL: ${{ secrets.OPENAI_MODEL }}
           WHATSAPP_CLOUD_TOKEN: ${{ secrets.WHATSAPP_CLOUD_TOKEN }}
           WHATSAPP_PHONE_NUMBER_ID: ${{ secrets.WHATSAPP_PHONE_NUMBER_ID }}
           PUSH_WORKER_SECRET: ${{ secrets.PUSH_WORKER_SECRET }}
@@ -207,8 +205,6 @@ jobs:
             "FIREBASE_CLIENT_EMAIL",
             "FIREBASE_PRIVATE_KEY",
             "BREVO_API_KEY",
-            "OPENAI_API_KEY",
-            "OPENAI_MODEL",
             "WHATSAPP_CLOUD_TOKEN",
             "WHATSAPP_PHONE_NUMBER_ID",
             "PUSH_WORKER_SECRET"

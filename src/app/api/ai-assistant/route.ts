@@ -75,13 +75,15 @@ type AssistantProfessionalResult = {
   categoryId: string | null;
 };
 
-const OPENAI_MODEL = process.env.OPENAI_MODEL || "gpt-4o-mini";
-const OPENAI_URL = "https://api.openai.com/v1/chat/completions";
 const WORKERS_AI_MODEL = "@cf/meta/llama-3.1-8b-instruct-fp8-fast";
 const MAX_HISTORY_MESSAGES = 6;
 const MAX_HISTORY_CONTENT = 700;
-const PUBLISH_REQUEST_PHRASE_RE = /(?:quiero|necesito|ocupo|deseo|como puedo|como|i want to|i need to|how can i)?\s*(?:publicar|crear|hacer|abrir|publish|create|open)\s+(?:una\s+|un\s+|a\s+)?(?:solicitud|proyecto|request|project)/gi;
-const EXPLICIT_PUBLISH_INTENT_RE = /^\s*(?:(?:quiero|necesito|ocupo|deseo)\s+(?:publicar|crear|hacer|abrir)|(?:como|cómo)\s+(?:puedo\s+)?(?:publicar|crear|hacer|abrir)|(?:publicar|crear|hacer|abrir)|(?:i want to|i need to|how can i)\s+(?:publish|create|open)|(?:publish|create|open))\s+(?:una\s+|un\s+|a\s+)?(?:solicitud|proyecto|request|project)\b/i;
+// La gente no escribe el infinitivo: escribe «cómo publico un proyecto». Estas
+// dos expresiones aceptan el conjugado («publico», «creo», «hago») además del
+// infinitivo, y «lo que necesito», que es como se nombra un proyecto cuando no
+// se sabe que se llama proyecto.
+const PUBLISH_REQUEST_PHRASE_RE = /(?:quiero|necesito|ocupo|deseo|como puedo|como|i want to|i need to|how can i)?\s*(?:publicar|publico|crear|creo|hacer|hago|abrir|abro|publish|create|open|post)\s+(?:una\s+|un\s+|a\s+|mi\s+|lo que\s+)?(?:solicitud|proyecto|request|project|necesito|need)/gi;
+const EXPLICIT_PUBLISH_INTENT_RE = /^\s*(?:(?:quiero|necesito|ocupo|deseo)\s+(?:publicar|crear|hacer|abrir)|(?:como|cómo)\s+(?:puedo\s+)?(?:publicar|publico|crear|creo|hacer|hago|abrir|abro)|(?:publicar|publico|crear|creo|hacer|hago|abrir|abro)|(?:i want to|i need to|how can i)\s+(?:publish|create|open|post)|(?:publish|create|open|post))\s+(?:una\s+|un\s+|a\s+|mi\s+|lo que\s+)?(?:solicitud|proyecto|request|project|necesito|need)\b/i;
 
 function localeKey(value: unknown): Locale {
   return value === "en" ? "en" : "es";
@@ -779,7 +781,7 @@ const PRODUCT_INTENTS: ProductIntent[] = [
     },
   },
   {
-    test: (n) => /(pagar|pago|pagos|cobra|cobran|tarjeta|suscripcion|mensualidad|premium|pay|payment|subscription)/.test(n) && /(app|aplicacion|contratacr|plataforma|cuenta|usar|por usar|premium|suscripcion|subscription)/.test(n),
+    test: (n) => /(comision|comisiones|commission|porcentaje)/.test(n) || (/(pagar|pago|pagos|cobra|cobran|tarjeta|suscripcion|mensualidad|premium|pay|payment|subscription)/.test(n) && /(app|aplicacion|contratacr|plataforma|cuenta|usar|por usar|premium|suscripcion|subscription)/.test(n)),
     answer: {
       es: "No hay nada que pagar: ContrataCR es gratis, no tiene suscripciones ni pagos dentro de la app y no cobra comisión. Lo que cueste un servicio lo acuerdas directamente con el profesional.",
       en: "There is nothing to pay: ContrataCR is free, has no subscriptions or in-app payments and charges no commission. Whatever a service costs is agreed directly with the professional.",
@@ -844,6 +846,39 @@ const PRODUCT_INTENTS: ProductIntent[] = [
     cta: { es: "Ver notificaciones", en: "See notifications" },
     action: "help",
     href: (locale) => `${prefijoDeIdioma(locale)}/notificaciones`,
+  },
+  {
+    // Cotizaciones no tenía una sola regla, y es una pestaña del panel.
+    test: (n) => /(cotizacion|cotizaciones|cotizar|presupuesto|presupuestos|quote|quotes|estimate)/.test(n),
+    action: "open_dashboard",
+    answer: {
+      es: "Las cotizaciones viven en tu panel, en la pestaña Cotizaciones: ahí armas el detalle con precios y se la envías al cliente por el chat. También ves las que ya mandaste y su estado.",
+      en: "Quotes live in your panel, in the Quotes tab: there you build the detail with prices and send it to the client through the chat. You also see the ones you already sent and their status.",
+    },
+    cta: { es: "Ir a Cotizaciones", en: "Open Quotes" },
+    href: (locale) => `${prefijoDeIdioma(locale)}/dashboard/profesional?tab=quotes`,
+  },
+  {
+    // Mensajes tampoco tenía respuesta propia, y es donde ocurre todo.
+    test: (n) => /(mensaje|mensajes|chat|chats|conversacion|conversaciones|escribirle|escribir a|hablar con|contactar|message|messages|conversation|write to|contact)/.test(n) && !/(soporte|support|ticket)/.test(n),
+    action: "help",
+    answer: {
+      es: "Todos tus chats están en Mensajes. Para empezar uno, abre el perfil del profesional (o su promoción o empleo) y toca «Enviar mensaje»: el chat se abre dentro de la app y le llega el aviso. No hace falta salir a WhatsApp.",
+      en: "All your chats are in Messages. To start one, open the professional's profile (or their promotion or job) and tap \"Send message\": the chat opens inside the app and they get notified. No need to go out to WhatsApp.",
+    },
+    cta: { es: "Abrir mensajes", en: "Open messages" },
+    href: (locale) => `${prefijoDeIdioma(locale)}/mensajes`,
+  },
+  {
+    // Publicar un proyecto es la acción central del app y caía al buscador.
+    test: (n) => /(publicar|publico|crear|creo|hacer|hago|abrir|abro|publish|create|post).{0,18}(proyecto|project|solicitud|lo que necesito|what i need)/.test(n) || /^(publicar proyecto|publish project|proyecto nuevo|new project)$/.test(n),
+    action: "publish_request",
+    answer: {
+      es: "Publicar un proyecto es contar qué necesitas para que te escriban varios profesionales de esa categoría. Toca «Publicar proyecto», elige el servicio, describe el trabajo y agrega la zona; los profesionales interesados te escriben por Mensajes y comparas.",
+      en: "Posting a project means describing what you need so several professionals in that category write to you. Tap \"Post project\", pick the service, describe the job and add the area; interested professionals message you and you compare.",
+    },
+    cta: { es: "Publicar proyecto", en: "Post project" },
+    href: (locale) => `${prefijoDeIdioma(locale)}/publicar-proyecto`,
   },
   {
     test: (n) => /(public|cre[oa]|sub[oi]|pon[eg]|hac[eo]|publish|create|post).{0,15}(una oferta|oferta|ofertas|promocion|descuento|an offer|offer|deal)/.test(n),
@@ -1107,12 +1142,16 @@ function localAnswer(message: string, locale: Locale): AssistantPayload {
     };
   }
 
+  // Nada calzó. Antes de que el modelo del Worker intente, y si él tampoco
+  // sabe, esta es la respuesta: decirlo y ofrecer las dos salidas que SÍ
+  // resuelven —las guías y un caso de soporte—, en vez de dar un rodeo.
   return {
-    action: "answer",
+    action: "support",
     confidence: 0,
     answer: locale === "en"
-      ? "Tell me the service and area you need. I can also explain any ContrataCR feature."
-      : "Dime qué servicio necesitas y en qué zona; también puedo explicarte cualquier función de ContrataCR.",
+      ? "I do not have that answer. Tell me the service and area and I will find a professional, or check the guides in your panel; if it is about your account, open a support case and a person will reply."
+      : "No tengo esa respuesta. Dime qué servicio necesitas y en qué zona y te busco un profesional, o mira las guías en tu panel; si es algo de tu cuenta, abre un caso de soporte y te contesta una persona.",
+    ctaLabel: locale === "en" ? "Open support" : "Ir a soporte",
   };
 }
 
@@ -1172,47 +1211,6 @@ ${compactLocations()}
 `.trim();
 }
 
-async function openAiAnswer(message: string, locale: Locale, history: HistoryMessage[], catalogPrompt: string, pageContext: string): Promise<AssistantPayload | null> {
-  const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey) return null;
-
-  const res = await fetch(OPENAI_URL, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model: OPENAI_MODEL,
-      temperature: 0.25,
-      response_format: { type: "json_object" },
-      messages: [
-        { role: "system", content: systemPrompt(locale, catalogPrompt, pageContext) },
-        ...history,
-        { role: "user", content: message },
-      ],
-      max_tokens: 320,
-    }),
-    signal: AbortSignal.timeout(8_000),
-  });
-
-  if (!res.ok) {
-    const detail = await res.text().catch(() => "");
-    console.error("[ai-assistant] OpenAI failed", res.status, detail.slice(0, 500));
-    return null;
-  }
-
-  const json = await res.json();
-  const content = json?.choices?.[0]?.message?.content;
-  if (!content) return null;
-  try {
-    const parsed = JSON.parse(content) as AssistantPayload;
-    return typeof parsed.answer === "string" && parsed.answer.trim() ? parsed : null;
-  } catch (error) {
-    console.error("[ai-assistant] invalid JSON", error);
-    return null;
-  }
-}
 
 type WorkersAiBinding = {
   run(model: string, input: Record<string, unknown>): Promise<unknown>;
@@ -2094,17 +2092,19 @@ export async function POST(req: Request) {
     const externalRateLimited = needsExternalFallback
       ? enforceRateLimit(req, "ai-assistant-external", 3, 60_000)
       : null;
-    // Product documentation, guided intents and catalog matches always win.
-    // Workers AI is a bounded fallback for genuinely open questions. OpenAI stays
-    // explicitly opt-in, so exhausted Workers AI capacity never consumes credit.
+    // Lo escrito por nosotros manda: documentación del producto, intenciones
+    // guiadas y el catálogo real. Workers AI es el respaldo acotado para las
+    // preguntas genuinamente abiertas, y corre en el mismo Worker donde vive el
+    // app, así que no cuesta por consulta.
+    //
+    // No hay un tercer escalón de pago. Cuando el respaldo tampoco sabe, el
+    // asistente lo DICE y ofrece las dos salidas que sí resuelven —las guías o
+    // un caso de soporte—: inventar es peor que admitir que no se sabe, y no se
+    // paga un proveedor por consulta para adivinar.
     const workersPayload = safetyPayload || !needsExternalFallback || externalRateLimited
       ? null
       : await workersAiAnswer(rawMessage, locale, history, catalog.prompt, pageContext);
-    const openAiEnabled = process.env.AI_ASSISTANT_OPENAI_FALLBACK === "true";
-    const openAiPayload = safetyPayload || workersPayload || !openAiEnabled || !needsExternalFallback || externalRateLimited
-      ? null
-      : await openAiAnswer(rawMessage, locale, externalHistory(history), catalog.prompt, pageContext);
-    const aiPayload = workersPayload ?? openAiPayload;
+    const aiPayload = workersPayload;
     // Safety guidance is terminal: ordinary search-intent normalization must never
     // turn an emergency response back into a professional search.
     const payload = safetyPayload ?? normalizePayload(aiPayload ?? documentedPayload, rawMessage, locale, history, catalog.labels);
@@ -2242,7 +2242,7 @@ export async function POST(req: Request) {
           .replace(/WhatsApp/gi, locale === "en" ? "internal messaging" : "mensajería interna")
       : rawAssistantAnswer;
 
-    const assistantProvider = workersPayload ? "workers-ai" : openAiPayload ? "openai" : "local";
+    const assistantProvider = workersPayload ? "workers-ai" : "local";
     void recordServerInteraction({
       type: "assistant_question",
       source: "assistant",
@@ -2266,7 +2266,7 @@ export async function POST(req: Request) {
       selectedResultIndex: payload.action === "select_professional" && Number.isInteger(payload.selectedResultIndex)
         ? payload.selectedResultIndex
         : null,
-      aiProvider: workersPayload ? "workers-ai" : openAiPayload ? "openai" : "local",
+      aiProvider: workersPayload ? "workers-ai" : "local",
     });
   } catch (error) {
     console.error("[ai-assistant]", error);

@@ -615,7 +615,7 @@ export function SupportTickets({
                   anillo —que en Tailwind v4 es el color del texto— y al hacer
                   foco aparecia un contorno NEGRO grueso que ademas parecia
                   cortar el boton de mandar. */}
-              <div className="flex items-end gap-2 rounded-3xl bg-[#f3f4f6] p-1 pl-2 transition focus-within:ring-2 focus-within:ring-[#009FD9]/20">
+              <div className="flex items-center gap-2 rounded-3xl bg-[#f3f4f6] p-1 pl-2 transition focus-within:ring-2 focus-within:ring-[#009FD9]/20">
                 <textarea
                   value={reply}
                   onChange={(e) => {
@@ -656,7 +656,7 @@ export function SupportTickets({
                   // reiniciarlo: al refrescar, el icono se quedaba sin color y
                   // heredaba el del texto. Las dos que quedan —#009FD9 en 105
                   // archivos y #68778d en 98— existen con seguridad.
-                  className={`grid h-11 w-11 shrink-0 place-items-center rounded-full text-white transition-colors disabled:cursor-not-allowed ${reply.trim() && !sending ? "bg-[#009FD9] hover:bg-[#008fca]" : "bg-[#d8e4e9]"}`} aria-label={sending ? t("sending") : t("send")}>
+                  className={`relative grid h-10 w-10 shrink-0 place-items-center rounded-full text-white transition-colors after:absolute after:-inset-1 after:content-[''] disabled:cursor-not-allowed ${reply.trim() && !sending ? "bg-[#009FD9] hover:bg-[#008fca]" : "bg-[#d8e4e9]"}`} aria-label={sending ? t("sending") : t("send")}>
                   {sending ? <Clock3 className="h-5 w-5 animate-spin" /> : <SendHorizontal className="h-5 w-5" />}
                 </button>
               </div>

@@ -108,7 +108,7 @@ export function NativeBottomNav() {
   useEffect(() => {
     if (!visible) return;
     const id = window.setTimeout(() => {
-      for (const destino of ["/", "/buscar", "/promociones", ...(EMPLEOS_VISIBLE ? ["/empleos"] : []), primaryPanelHref]) router.prefetch(destino);
+      for (const destino of ["/", "/buscar", ...(EMPLEOS_VISIBLE ? ["/empleos"] : []), "/proyectos", "/promociones", primaryPanelHref]) router.prefetch(destino);
     }, 800);
     return () => window.clearTimeout(id);
   }, [pathname, primaryPanelHref, router, visible]);
@@ -236,16 +236,16 @@ export function NativeBottomNav() {
       // La celda ENTERA es el botón (así fallan menos los toques, como en las
       // barras nativas); al presionar se ilumina completa para que su tamaño
       // real se vea, en vez de responder desde un área invisible.
-      // LA MISMA SEPARACIÓN ENTRE RÓTULOS, que es lo que el ojo mide al
-      // recorrer la barra. La celda mide lo que mide su palabra (con 44px de
-      // mínimo, que es el blanco táctil que pide Apple) y el sobrante se
-      // reparte entre los cuatro huecos.
+      // CINCO COLUMNAS DE ANCHO IGUAL: una al centro, dos a cada lado, todas
+      // con la misma separación, como la barra de LinkedIn. Medido sobre su
+      // captura, sus iconos van a 242 / 241 / 243 / 240 px: un quinto exacto
+      // cada celda. Así la del medio cae justo en el centro de la barra y la
+      // fila de iconos —que es lo que el ojo sigue— va a paso constante.
       //
-      // Con celdas de ancho igual —un quinto cada una— los ICONOS quedan a
-      // paso constante, pero los huecos entre palabras salen disparejos: con
-      // «Profesionales» y «Promociones» juntas medían 8,6 / 17,3 / 28,7 / 33px.
-      // Entre las dos formas, esta es la que se pidió.
-      "relative flex min-w-[44px] shrink-0 flex-col items-center justify-center gap-0.5 rounded-xl px-0.5 py-1 text-[10px] font-semibold leading-tight text-[#1A2744] transition-colors active:bg-[#eef5f9] active:text-[#009FD9] min-[360px]:text-[11px]",
+      // La letra va un punto más chica que en la web: con la celda fija, el
+      // hueco entre dos palabras es lo que le sobra a la celda, y a 10 px
+      // «Profesionales» y «Promociones» se quedaban a 8,6 px una de otra.
+      "relative flex min-w-0 flex-1 basis-0 flex-col items-center justify-center gap-0.5 rounded-xl px-0.5 py-1 text-[10px] font-semibold leading-tight text-[#1A2744] transition-colors active:bg-[#eef5f9] active:text-[#009FD9] min-[360px]:text-[11px]",
       isActive(href) && "font-bold text-[#009FD9]",
     );
 
@@ -257,7 +257,7 @@ export function NativeBottomNav() {
   // El rótulo se encoge lo justo para que quepa el más largo («Cotizaciones»):
   // truncado se leía «Cotizacion…», que no dice nada.
   const rotulo = (texto: string) => (
-    <span className="max-w-full truncate" style={{ fontSize: "clamp(9px, 2.55vw, 11px)" }}>{texto}</span>
+    <span className="max-w-full truncate" style={{ fontSize: "clamp(8.5px, 2.3vw, 10px)" }}>{texto}</span>
   );
 
   const etiquetas = {
@@ -291,7 +291,7 @@ export function NativeBottomNav() {
           mismo. Repartiendo el sobrante entre los cuatro huecos, la distancia
           entre palabras es la misma en toda la barra, que es lo que el ojo
           mide. */}
-      <div className="mx-auto flex w-full max-w-[520px] items-stretch justify-between px-1">
+      <div className="mx-auto flex w-full max-w-[520px] items-stretch px-1">
         <Link
           href="/buscar"
           prefetch={true}
@@ -302,30 +302,6 @@ export function NativeBottomNav() {
           {marca("/buscar")}
           <Search className="h-5 w-5" strokeWidth={isActive("/buscar") ? 2.4 : 2} />
           {rotulo(etiquetas.buscar)}
-        </Link>
-
-        <Link
-          href="/promociones"
-          prefetch={true}
-          aria-label={etiquetas.ofertas}
-          onClick={(event) => irA(event, "/promociones")}
-          className={itemClass("/promociones")}
-        >
-          {marca("/promociones")}
-          <OfferTagPercentIcon className="h-5 w-5" strokeWidth={isActive("/promociones") ? 2.4 : 2} />
-          {rotulo(etiquetas.ofertas)}
-        </Link>
-
-        <Link
-          href="/proyectos"
-          prefetch={true}
-          aria-label={etiquetas.proyectos}
-          onClick={(event) => irA(event, "/proyectos")}
-          className={itemClass("/proyectos")}
-        >
-          {marca("/proyectos")}
-          <ClipboardList className="h-5 w-5" strokeWidth={isActive("/proyectos") ? 2.4 : 2} />
-          {rotulo(etiquetas.proyectos)}
         </Link>
 
         {EMPLEOS_VISIBLE && (
@@ -341,6 +317,30 @@ export function NativeBottomNav() {
             {rotulo(etiquetas.empleos)}
           </Link>
         )}
+
+        <Link
+          href="/proyectos"
+          prefetch={true}
+          aria-label={etiquetas.proyectos}
+          onClick={(event) => irA(event, "/proyectos")}
+          className={itemClass("/proyectos")}
+        >
+          {marca("/proyectos")}
+          <ClipboardList className="h-5 w-5" strokeWidth={isActive("/proyectos") ? 2.4 : 2} />
+          {rotulo(etiquetas.proyectos)}
+        </Link>
+
+        <Link
+          href="/promociones"
+          prefetch={true}
+          aria-label={etiquetas.ofertas}
+          onClick={(event) => irA(event, "/promociones")}
+          className={itemClass("/promociones")}
+        >
+          {marca("/promociones")}
+          <OfferTagPercentIcon className="h-5 w-5" strokeWidth={isActive("/promociones") ? 2.4 : 2} />
+          {rotulo(etiquetas.ofertas)}
+        </Link>
 
         {user ? (
           <Link

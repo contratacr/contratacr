@@ -122,19 +122,21 @@ function ChatImage({ href, alt, marco }: { href: string; alt: string; marco: num
 // si el navegador gana la vertical llega un pointercancel y la fila se repliega.
 // El icono del origen no depende de nada del componente: fuera de él se define
 // una sola vez en lugar de rehacerse en cada pintado.
-function IconoDeOrigen({ tipo }: { tipo: string }) {
-  if (tipo === "booking") return <CalendarClock className="h-3.5 w-3.5 shrink-0 text-[#8b9bb0]" />;
-  if (tipo === "proposal") return <Handshake className="h-3.5 w-3.5 shrink-0 text-[#8b9bb0]" />;
-  return <ClipboardList className="h-3.5 w-3.5 shrink-0 text-[#8b9bb0]" />;
-}
 
-function FilaDeslizable({ abierta, ancho, onEstado, acciones, children }: {
+function FilaDeslizable({ abierta, ancho, onEstado, acciones, onPulsacionLarga, onContextMenu, children }: {
   abierta: boolean;
   ancho: number;
   onEstado: (abierta: boolean) => void;
   acciones: ReactNode;
+  onPulsacionLarga?: () => void;
+  onContextMenu?: (event: React.MouseEvent<HTMLDivElement>) => void;
   children: ReactNode;
 }) {
+  // Medio segundo con el dedo quieto abre la hoja de acciones. Si el dedo se
+  // mueve —porque empezó a deslizar o a desplazar la lista— se cancela: el
+  // gesto que ya existía manda sobre este.
+  const temporizador = useRef<number | null>(null);
+  const cancelarPulsacion = () => { if (temporizador.current) { window.clearTimeout(temporizador.current); temporizador.current = null; } };
   const [dx, setDx] = useState(abierta ? -ancho : 0);
   const dxRef = useRef(dx);
   useEffect(() => { dxRef.current = dx; }, [dx]);
@@ -148,6 +150,10 @@ function FilaDeslizable({ abierta, ancho, onEstado, acciones, children }: {
 
   const alBajar = (event: React.PointerEvent<HTMLDivElement>) => {
     if (event.pointerType === "mouse") return;
+    if (onPulsacionLarga) {
+      cancelarPulsacion();
+      temporizador.current = window.setTimeout(() => { temporizador.current = null; onPulsacionLarga(); }, 500);
+    }
     arrastre.current = { id: event.pointerId, x: event.clientX, y: event.clientY, base: dxRef.current, eje: "" };
     movido.current = false;
     setArrastrando(true);
@@ -157,6 +163,7 @@ function FilaDeslizable({ abierta, ancho, onEstado, acciones, children }: {
     if (!d || event.pointerId !== d.id) return;
     const pasoX = event.clientX - d.x;
     const pasoY = event.clientY - d.y;
+    if (Math.abs(pasoX) > 6 || Math.abs(pasoY) > 6) cancelarPulsacion();
     if (!d.eje) {
       if (Math.abs(pasoX) < 6 && Math.abs(pasoY) < 6) return;
       d.eje = Math.abs(pasoX) > Math.abs(pasoY) ? "x" : "y";
@@ -169,6 +176,7 @@ function FilaDeslizable({ abierta, ancho, onEstado, acciones, children }: {
     setDx(tope);
   };
   const alSoltar = (cancelado: boolean) => {
+    cancelarPulsacion();
     setArrastrando(false);
     if (!arrastre.current) return;
     arrastre.current = null;
@@ -183,6 +191,7 @@ function FilaDeslizable({ abierta, ancho, onEstado, acciones, children }: {
       <div className="absolute inset-y-0 right-0 flex" style={{ width: ancho }}>{acciones}</div>
       <div
         style={{ transform: `translateX(${dx}px)`, transition: arrastrando ? "none" : "transform 180ms ease-out", touchAction: "pan-y" }}
+        onContextMenu={onContextMenu}
         onPointerDown={alBajar}
         onPointerMove={alMover}
         onPointerUp={() => alSoltar(false)}
@@ -341,6 +350,8 @@ export function DirectChatInbox() {
   // Fila con acciones descubiertas por deslizamiento; solo una a la vez.
   const [filaAbierta, setFilaAbierta] = useState<string | null>(null);
   const [confirmaEliminar, setConfirmaEliminar] = useState<string | null>(null);
+  // La conversación cuya hoja de acciones está abierta (pulsación larga).
+  const [hojaDeFila, setHojaDeFila] = useState<string | null>(null);
   const [menuMensaje, setMenuMensaje] = useState<{ id: string; texto: string; x: number; y: number } | null>(null);
   const [copiado, setCopiado] = useState(false);
   const pulsacionLarga = useRef<number | null>(null);
@@ -445,67 +456,11 @@ export function DirectChatInbox() {
   const conversacionBloqueada = conversacionAbierta?.status === "blocked";
   const bloqueadaPorMi = conversacionBloqueada && !!user?.id && conversacionAbierta?.blocked_by === user.id;
 
-  const [origenesAbiertos, setOrigenesAbiertos] = useState(false);
-  const origenesRef = useRef<HTMLDivElement | null>(null);
   // La línea de la última conversación cierra la lista cuando esta termina
   // antes del final de la pantalla. Si la lista se desplaza, esa línea queda
   // colgando contra la barra de abajo, así que ahí no va.
   const listaRef = useRef<HTMLDivElement | null>(null);
   const [listaCabe, setListaCabe] = useState(true);
-  // Al cambiar de conversación el desplegable de orígenes se cierra. Se ajusta
-  // durante el pintado —no en un efecto— para no encadenar un segundo pintado.
-  const [conversacionDelDesplegable, setConversacionDelDesplegable] = useState(activeId);
-  if (conversacionDelDesplegable !== activeId) {
-    setConversacionDelDesplegable(activeId);
-    setOrigenesAbiertos(false);
-  }
-  useEffect(() => {
-    if (!origenesAbiertos) return;
-    const cerrar = (event: PointerEvent) => {
-      if (!origenesRef.current?.contains(event.target as Node)) setOrigenesAbiertos(false);
-    };
-    document.addEventListener("pointerdown", cerrar);
-    return () => document.removeEventListener("pointerdown", cerrar);
-  }, [origenesAbiertos]);
-  const origenesFijados = useMemo(() => {
-    // Se fija lo que sigue vivo: en cuanto la solicitud o el proyecto se cierra
-    // deja de encabezar el chat. Y aunque nadie lo cierre nunca, a los noventa
-    // días deja de fijarse — si no, un trabajo olvidado quedaría ahí para
-    // siempre. Cuatro como tope, los más recientes primero.
-    // Se nombran los estados terminados, no los vivos: si mañana nace un estado
-    // nuevo, el origen se sigue fijando en vez de desaparecer sin aviso.
-    const ESTADOS_CERRADOS = new Set(["completed", "cancelled", "canceled", "declined", "rejected", "expired", "closed", "archived"]);
-    const CADUCIDAD_MS = 90 * 24 * 60 * 60 * 1000;
-    const sigueVivo = (origen: { status?: string | null; at?: string | null }) => {
-      if (origen.status && ESTADOS_CERRADOS.has(origen.status)) return false;
-      if (origen.at) {
-        const cuando = Date.parse(origen.at);
-        if (Number.isFinite(cuando) && Date.now() - cuando > CADUCIDAD_MS) return false;
-      }
-      return true;
-    };
-    const guardados = (active?.contexts ?? []).filter((origen) => origen.type !== "profile" && origen.title);
-    if (guardados.length > 0) return guardados.filter(sigueVivo).slice(0, 4);
-    // Conversaciones anteriores a la fusión: su único origen viene en `context`.
-    // Solo se consulta si no hay orígenes guardados; si los hay y todos vencieron,
-    // la barra queda vacía en vez de revivir el que acaba de caducar.
-    if (active?.context && active.context.type !== "profile" && !ESTADOS_CERRADOS.has(active.context.status ?? "")) {
-      const titulo = active.context.service_description || active.context.title || null;
-      if (titulo) {
-        return [{
-          type: active.context.type,
-          bookingId: active.booking_id ?? null,
-          projectId: active.project_id ?? null,
-          proposalId: active.proposal_id ?? null,
-          title: titulo,
-          status: active.context.status ?? null,
-          at: null,
-        }];
-      }
-    }
-    return [];
-  }, [active]);
-
 
   useEffect(() => {
     const next = buildPendingDraft(searchParams, user?.id, isEn);
@@ -879,6 +834,11 @@ export function DirectChatInbox() {
   }
 
   function updateArchiveView(nextArchived: boolean, nextConversationId?: string | null) {
+    // Cambiar de bandeja enciende «cargando» EN EL MISMO cambio de estado. Sin
+    // esto React pintaba un cuadro intermedio —la bandeja nueva con la lista
+    // vieja, que no tiene nada de esa bandeja— y durante medio segundo se leía
+    // «No hay conversaciones archivadas» antes de que llegara la respuesta.
+    if (nextArchived !== showArchived) setLoading(true);
     setShowArchived(nextArchived);
     setPendingDraft(null);
     setPendingDraftPayload(null);
@@ -1186,6 +1146,42 @@ export function DirectChatInbox() {
     />
   );
 
+  // Hoja de acciones de una conversación: sale al dejar la fila pulsada (o con
+  // el botón derecho en computadora). Es la otra mitad del gesto: deslizar da
+  // lo frecuente —archivar— y la hoja da todo, incluido reportar, que antes
+  // vivía en la cabecera del hilo.
+  const filaDeLaHoja = conversations.find((c) => c.id === hojaDeFila) ?? null;
+  const personaDeLaHoja = filaDeLaHoja ? personFor(filaDeLaHoja) : null;
+
+  const hojaDeAcciones = filaDeLaHoja && (
+    <div className="app-modal-screen fixed inset-0 z-[200] flex items-end justify-center" role="dialog" aria-modal="true">
+      <div className="absolute inset-0 bg-[#071426]/45 backdrop-blur-[2px]" onClick={() => setHojaDeFila(null)} />
+      <div className="relative z-10 w-full max-w-md rounded-t-[22px] bg-white pb-[calc(1rem+env(safe-area-inset-bottom))] pt-2 shadow-[0_-18px_48px_-24px_rgba(15,23,42,0.55)]">
+        <div className="mx-auto mb-2 h-1 w-10 rounded-full bg-[#dbe5ee]" />
+        <p className="truncate px-5 pb-2 text-[15px] font-extrabold text-[#162543]">{personaDeLaHoja?.name ?? ""}</p>
+        <button type="button" onClick={() => { const id = filaDeLaHoja.id; setHojaDeFila(null); void archivarFila(id, !showArchived); }} className="flex w-full items-center gap-3 px-5 py-3.5 text-left text-[15px] font-bold text-[#162543] transition hover:bg-[#f2f8fb]">
+          {showArchived ? <ArchiveRestore className="h-5 w-5 text-[#009FD9]" /> : <Archive className="h-5 w-5 text-[#009FD9]" />}
+          {showArchived ? tChat("unarchive") : tChat("archive")}
+        </button>
+        {!showArchived && (
+          <button type="button" onClick={() => { setActiveId(filaDeLaHoja.id); setHojaDeFila(null); setReportOpen(true); }} className="flex w-full items-center gap-3 px-5 py-3.5 text-left text-[15px] font-bold text-red-600 transition hover:bg-red-50">
+            <Flag className="h-5 w-5" />
+            {isEn ? "Report and block" : "Reportar y bloquear"}
+          </button>
+        )}
+        {showArchived && (
+          <button type="button" onClick={() => { const id = filaDeLaHoja.id; setHojaDeFila(null); void eliminarFila(id); }} className="flex w-full items-center gap-3 px-5 py-3.5 text-left text-[15px] font-bold text-red-600 transition hover:bg-red-50">
+            <Trash2 className="h-5 w-5" />
+            {tChat("delete")}
+          </button>
+        )}
+        <button type="button" onClick={() => setHojaDeFila(null)} className="mt-1 flex w-full items-center justify-center border-t border-[#eef2f6] px-5 py-3.5 text-[15px] font-bold text-[#526277]">
+          {isEn ? "Cancel" : "Cancelar"}
+        </button>
+      </div>
+    </div>
+  );
+
   if (loading) return (
     <div className="ccr-delayed-loading min-h-[calc(100dvh-153px)] bg-white sm:min-h-[520px]" aria-busy="true" role="status">
       <span className="sr-only">{tChat("loadingConversations")}</span>
@@ -1210,7 +1206,7 @@ export function DirectChatInbox() {
       plano
       icon={MessageSquareMore}
       title={showArchived ? (isEn ? "No archived conversations" : "No hay conversaciones archivadas") : (isEn ? "No conversations yet" : "No hay conversaciones todavía")}
-      description={isEn ? "Messages related to profiles, appointments and projects will be organized here." : "Aquí se organizarán los mensajes relacionados con perfiles, citas y proyectos."}
+      description={isEn ? "Messages about profiles, projects, promotions and jobs are organized here." : "Aquí se organizan los mensajes sobre perfiles, proyectos, promociones y empleos."}
       action={(
         <button type="button" onClick={() => updateArchiveView(!showArchived)} className="inline-flex items-center justify-center gap-1.5 text-sm font-bold text-[#008fc4] hover:underline">
           {showArchived && <ArrowLeft className="h-4 w-4" />}
@@ -1229,21 +1225,6 @@ export function DirectChatInbox() {
     return (user?.id === item.client_id ? item.client_unread_count : item.professional_unread_count) ?? 0;
   }).length;
 
-  // ── Orígenes fijados del hilo ──────────────────────────────────────────────
-  const etiquetaDeOrigen = (tipo: string) =>
-    contextFor({ ...(active ?? ({} as Conversation)), context: { type: tipo as "booking" } }).label;
-  const hrefDeOrigen = (origen: { bookingId?: string | null; projectId?: string | null }) => {
-    const soyCliente = user?.id === conversacionAbierta?.client_id;
-    if (origen.bookingId && CITAS_ACTIVAS) return `/dashboard/profesional?tab=${soyCliente ? "sent_bookings" : "bookings"}&booking=${origen.bookingId}`;
-    if (origen.projectId) return `/dashboard/profesional?tab=${soyCliente ? "sent_projects" : "proposals"}&project=${origen.projectId}`;
-    return null;
-  };
-  const abrirOrigen = (origen: { bookingId?: string | null; projectId?: string | null }) => {
-    const href = hrefDeOrigen(origen);
-    if (!href) return;
-    const chatPath = activeId ? `/mensajes?conversation=${encodeURIComponent(activeId)}` : "/mensajes";
-    router.push(`${href}&returnTo=${encodeURIComponent(chatPath)}`);
-  };
   const archiveLabel = showArchived ? (isEn ? "Unarchive" : "Desarchivar") : (isEn ? "Archive" : "Archivar");
   const deleteLabel = isEn ? "Delete" : "Eliminar";
   const activePersonName = activePerson?.name || "";
@@ -1343,9 +1324,11 @@ export function DirectChatInbox() {
             return (
               <FilaDeslizable
                 key={item.id}
+                onContextMenu={(event) => { event.preventDefault(); setHojaDeFila(item.id); }}
                 abierta={filaAbierta === item.id}
                 ancho={showArchived ? 176 : 88}
                 onEstado={(abrir) => { setFilaAbierta(abrir ? item.id : null); if (!abrir) setConfirmaEliminar(null); }}
+                onPulsacionLarga={() => setHojaDeFila(item.id)}
                 acciones={showArchived ? (
                   <>
                     <button type="button" onClick={() => void archivarFila(item.id, false)} className="flex w-[88px] flex-col items-center justify-center gap-1 bg-[#009FD9] text-white">
@@ -1393,68 +1376,20 @@ export function DirectChatInbox() {
             )}
 
           </div>
-          {nativeApp && !conversacionBloqueada && <ChatActionButton label={isEn ? "Report and block" : "Reportar y bloquear"} onClick={() => setReportOpen(true)} className="grid h-9 w-9 place-items-center rounded-lg border border-red-100 bg-white text-red-500 shadow-sm transition hover:border-red-200 hover:bg-red-50 hover:text-red-600"><Flag className="h-4 w-4" /></ChatActionButton>}
-          <ChatActionButton label={archiveLabel} onClick={() => void toggleArchiveActive()} className="grid h-9 w-9 place-items-center rounded-lg border border-[#d6e4ed] bg-[#f7fbfd] text-[#526277] shadow-sm transition hover:border-[#9fd8ec] hover:bg-[#eef9fd] hover:text-[#009FD9]">{showArchived ? <ArchiveRestore className="h-4 w-4" /> : <Archive className="h-4 w-4" />}</ChatActionButton>
-          {showArchived && (
-            <ChatActionButton label={deleteLabel} onClick={() => void deleteArchivedActive()} className="grid h-9 w-9 place-items-center rounded-lg border border-red-100 bg-white text-red-500 shadow-sm transition hover:border-red-200 hover:bg-red-50 hover:text-red-600">
-              <Trash2 className="h-4 w-4" />
-            </ChatActionButton>
+          {/* La cabecera solo dice con quién estás hablando. Archivar, reportar
+              y eliminar viven en la FILA de la lista —deslizándola o dejándola
+              pulsada—, como en WhatsApp: son acciones sobre la conversación,
+              no sobre lo que estás leyendo, y arriba invitaban a tocarlas por
+              accidente con el pulgar. En computadora, donde no hay gesto, la
+              fila las ofrece con el botón derecho. */}
+          {!nativeApp && (
+            <ChatActionButton label={archiveLabel} onClick={() => void toggleArchiveActive()} className="grid h-9 w-9 place-items-center rounded-lg border border-[#d6e4ed] bg-[#f7fbfd] text-[#526277] shadow-sm transition hover:border-[#9fd8ec] hover:bg-[#eef9fd] hover:text-[#009FD9]">{showArchived ? <ArchiveRestore className="h-4 w-4" /> : <Archive className="h-4 w-4" />}</ChatActionButton>
           )}
         </header>
         {/* Orígenes del hilo: la conversación es de la persona y cada solicitud,
             proyecto o propuesta se va anclando aquí. Se muestra el más reciente
             y, si hay más, se despliegan hasta cuatro como en los fijados de
             WhatsApp. */}
-        {!threadLoading && origenesFijados.length > 0 && (
-          <div ref={origenesRef} className="relative z-20 border-b border-[#e5e7eb] bg-white">
-            <div className="flex items-center">
-              <button
-                type="button"
-                onClick={() => abrirOrigen(origenesFijados[0])}
-                disabled={!hrefDeOrigen(origenesFijados[0])}
-                className="flex min-w-0 flex-1 items-center gap-2 px-4 py-1.5 text-left transition active:bg-[#f4f9fc] disabled:opacity-70 sm:px-6"
-              >
-                <IconoDeOrigen tipo={origenesFijados[0].type} />
-                <span className="min-w-0 flex-1 truncate text-[12px] leading-tight">
-                  <span className="font-semibold text-[#8b9bb0]">{etiquetaDeOrigen(origenesFijados[0].type)} · </span>
-                  <span className="font-bold text-[#162543]">{origenesFijados[0].title}</span>
-                </span>
-                {hrefDeOrigen(origenesFijados[0]) && <ChevronRight className="h-3.5 w-3.5 shrink-0 text-[#a9b6c6]" />}
-              </button>
-              {origenesFijados.length > 1 && (
-                <button
-                  type="button"
-                  onClick={() => setOrigenesAbiertos((abierto) => !abierto)}
-                  aria-expanded={origenesAbiertos}
-                  className="mr-3 inline-flex h-7 shrink-0 items-center gap-0.5 px-1 text-[12px] font-extrabold text-[#009FD9] sm:mr-5"
-                >
-                  +{origenesFijados.length - 1}
-                  <ChevronDown className={cn("h-3 w-3 transition-transform", origenesAbiertos && "rotate-180")} />
-                </button>
-              )}
-            </div>
-            {origenesAbiertos && (
-              <div className="absolute inset-x-0 top-full max-h-[248px] overflow-y-auto overscroll-contain border-b border-[#e5e7eb] bg-white shadow-[0_16px_28px_-20px_rgba(15,23,42,0.55)]">
-            {origenesFijados.slice(1).map((origen, indice) => (
-              <button
-                key={`${origen.type}-${origen.bookingId ?? origen.projectId ?? origen.proposalId ?? indice}`}
-                type="button"
-                onClick={() => abrirOrigen(origen)}
-                disabled={!hrefDeOrigen(origen)}
-                className="flex w-full items-center gap-2 border-t border-[#eef2f6] px-4 py-1.5 text-left transition active:bg-[#f4f9fc] disabled:opacity-70 sm:px-6"
-              >
-                <IconoDeOrigen tipo={origen.type} />
-                <span className="min-w-0 flex-1 truncate text-[12px] leading-tight">
-                  <span className="font-semibold text-[#8b9bb0]">{etiquetaDeOrigen(origen.type)} · </span>
-                  <span className="font-bold text-[#162543]">{origen.title}</span>
-                </span>
-                {hrefDeOrigen(origen) && <ChevronRight className="h-3.5 w-3.5 shrink-0 text-[#a9b6c6]" />}
-              </button>
-            ))}
-              </div>
-            )}
-          </div>
-        )}
         <div ref={scrollRef} className="ccr-direct-chat-thread-scroll min-h-0 flex-1 space-y-2 overflow-y-auto overscroll-contain bg-[#f3f7fa] px-4 py-5 sm:px-6">
           {threadLoading ? (
             <div className="ccr-delayed-loading space-y-3 py-2" aria-busy="true" role="status">
@@ -1659,7 +1594,7 @@ export function DirectChatInbox() {
                 ))}
               </div>
             )}
-            <div className="flex items-end gap-2">
+            <div className="flex items-center gap-2">
             <input
               ref={fileInputRef}
               type="file"
@@ -1673,7 +1608,7 @@ export function DirectChatInbox() {
               type="button"
               onClick={() => fileInputRef.current?.click()}
               disabled={sending || preparingAttachments || selectedAttachments.length >= MAX_ATTACHMENTS}
-              className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-[#d8e5ee] bg-[#f7fbfd] text-[#526277] transition hover:border-[#9fd8ec] hover:text-[#009FD9] disabled:opacity-45"
+              className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-[#d8e5ee] bg-[#f7fbfd] text-[#526277] transition after:absolute after:-inset-1 after:content-[''] hover:border-[#9fd8ec] hover:text-[#009FD9] disabled:opacity-45"
               aria-label={isEn ? "Attach file" : "Adjuntar archivo"}
             >
               <Paperclip className="h-5 w-5" />
@@ -1698,12 +1633,12 @@ export function DirectChatInbox() {
                 }
               }}
               placeholder={isEn ? "Write a message" : "Escribe un mensaje"}
-              className="max-h-36 min-h-[52px] min-w-0 flex-1 resize-none overflow-hidden rounded-[20px] border border-[#d8e5ee] px-4 py-3 text-[15px] leading-6 outline-none transition focus:border-[#009FD9] focus:ring-2 focus:ring-[#009FD9]/10"
+              className="max-h-36 min-h-12 min-w-0 flex-1 resize-none overflow-hidden rounded-[20px] border border-[#d8e5ee] px-4 py-2.5 text-[15px] leading-6 outline-none transition focus:border-[#009FD9] focus:ring-2 focus:ring-[#009FD9]/10"
             />
             <button
               type="submit"
               disabled={sending || (!draft.trim() && !selectedAttachments.length)}
-              className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-[#009FD9] text-white transition hover:bg-[#008fca] disabled:bg-[#d8e4e9]"
+              className="relative grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[#009FD9] text-white transition after:absolute after:-inset-1 after:content-[''] hover:bg-[#008fca] disabled:bg-[#d8e4e9]"
               aria-label={isEn ? "Send" : "Enviar"}
             >
               {sending ? <Loader2 className="h-5 w-5 animate-spin" /> : <SendHorizontal className="h-5 w-5" />}
@@ -1790,6 +1725,8 @@ export function DirectChatInbox() {
         </div>,
         document.body,
       )}
+
+      {hojaDeAcciones && createPortal(hojaDeAcciones, document.body)}
     </div>
   );
 }
