@@ -114,6 +114,13 @@ const CANONICAL_SKIP = new Set(("gracias buenas buenos mucho muchas necesito qui
   + "disponibilidad videoconsulta instalar instalo descargar aplicacion postular postulo postulacion postulaciones pagar pagos suscripcion "
   + "verificar verifico cedula identidad eliminar elimino cambiar cambio actualizar imagen gracias ayuda saber tener querer conseguir "
   + "urgente domicilio online zona cerca precio precios cotizacion cotizar presupuesto whatsapp telefono correo direccion provincia canton "
+  // «comisión» se convertía en «admisión» —dos letras de diferencia con una
+  // palabra del catálogo— y preguntar por la comisión terminaba ofreciendo
+  // preparación universitaria. Son palabras del producto o del habla corriente:
+  // ninguna debe «repararse» contra el catálogo de oficios.
+  + "comision comisiones porcentaje ganancia ganancias factura facturas recibo recibos garantia garantias contrato contratos "
+  + "promocion promociones descuento descuentos anuncio anuncios archivar archivado archivados bloquear bloqueado reportar reporte "
+  + "seguridad privacidad politica politicas terminos condiciones soporte guias tutorial ejemplo ejemplos verificacion verificado "
   // Appointment verbs: the typo repair rewrote "cancela" into "cancelar" and the
   // documented appointment answers stopped matching.
   + "cancela cancelo cancelar cancelada cancelado reprograma reprogramo reprogramar reprogramada cancels cancelled reschedule "
@@ -818,7 +825,7 @@ const PRODUCT_INTENTS: ProductIntent[] = [
     href: (locale) => `${prefijoDeIdioma(locale)}/dashboard/profesional?tab=cuenta`,
   },
   {
-    test: (n) => /(verific|validar|confirmar|verify|validate).{0,25}(cedula|identidad|identity|id\b)/.test(n) || /(cedula|identidad).{0,20}(verific|validar)/.test(n),
+    test: (n) => /(verific|validar|confirmar|verify|validate).{0,25}(cedula|identidad|identity|id\b)/.test(n) || /(cedula|identidad).{0,20}(verific|validar)/.test(n) || /(verificacion|verificado|verificarme|verification|verified)/.test(n),
     action: "open_dashboard",
     answer: {
       es: "En tu panel, abre Cuenta y seguridad → Datos básicos y escribe tu número de cédula: se comprueba contra el padrón y tu nombre queda verificado. Los profesionales además pasan por la verificación del equipo, que aparece como «Verificado» en el perfil.",
@@ -848,6 +855,18 @@ const PRODUCT_INTENTS: ProductIntent[] = [
     href: (locale) => `${prefijoDeIdioma(locale)}/notificaciones`,
   },
   {
+    // «Contratar un empleado» es publicar un EMPLEO. Sin esta regla el buscador
+    // de oficios lo resolvía como «Abogados y servicios legales».
+    test: (n) => /(contratar|contrato|busco|necesito|quiero|publicar|publico).{0,20}(empleado|empleada|trabajador|trabajadora|personal|colaborador|employee|worker|staff)/.test(n),
+    action: "open_dashboard",
+    answer: {
+      es: "Para contratar a alguien publicas un empleo: en tu panel abre la pestaña Empleos y toca «Publicar empleo» (puesto, modalidad, zona y salario si querés). Los interesados te escriben por Mensajes.",
+      en: "To hire someone you publish a job: in your panel open the Jobs tab and tap \"Publish job\" (position, type, area and salary if you want). Interested people message you.",
+    },
+    cta: { es: "Ir a Empleos", en: "Open Jobs" },
+    href: (locale) => `${prefijoDeIdioma(locale)}/dashboard/profesional?tab=jobs`,
+  },
+  {
     // Cotizaciones no tenía una sola regla, y es una pestaña del panel.
     test: (n) => /(cotizacion|cotizaciones|cotizar|presupuesto|presupuestos|quote|quotes|estimate)/.test(n),
     action: "open_dashboard",
@@ -860,7 +879,7 @@ const PRODUCT_INTENTS: ProductIntent[] = [
   },
   {
     // Mensajes tampoco tenía respuesta propia, y es donde ocurre todo.
-    test: (n) => /(mensaje|mensajes|chat|chats|conversacion|conversaciones|escribirle|escribir a|hablar con|contactar|message|messages|conversation|write to|contact)/.test(n) && !/(soporte|support|ticket)/.test(n),
+    test: (n) => /(mensaje|mensajes|chat|chats|conversacion|conversaciones|escrib|hablar con|contact|message|messages|conversation|write to)/.test(n) && !/(soporte|support|ticket)/.test(n),
     action: "help",
     answer: {
       es: "Todos tus chats están en Mensajes. Para empezar uno, abre el perfil del profesional (o su promoción o empleo) y toca «Enviar mensaje»: el chat se abre dentro de la app y le llega el aviso. No hace falta salir a WhatsApp.",
@@ -948,7 +967,7 @@ const PRODUCT_INTENTS: ProductIntent[] = [
     },
   },
   {
-    test: (n) => /(como|how|puedo|can i).{0,12}(chate|hablar|escribir|contactar|mensaje|mandar|chat|message|contact|talk|write).{0,25}(profesional|professional|alguien)/.test(n),
+    test: (n) => /(como|how|puedo|can i).{0,12}(chate|habl|escrib|contact|mensaje|mand|chat|message|talk|write).{0,25}(profesional|professional|alguien|cliente|persona)/.test(n),
     unlessService: true,
     answer: {
       es: "Abre el perfil del profesional y toca «Enviar mensaje»: la conversación queda en Mensajes y te avisamos cuando responda. Necesitas una cuenta (es gratis).",
@@ -2071,13 +2090,15 @@ export async function POST(req: Request) {
       !resolveLocationIntent(publishDetailText)
     ) {
       return NextResponse.json({
-        // One question at a time: service first, the area comes on the next turn.
+        // Una pregunta a la vez: primero el servicio. Pero antes se dice QUÉ es
+        // publicar un proyecto y se deja el botón; suelta, la pregunta no le
+        // servía a quien todavía no sabe cómo funciona.
         answer: locale === "en"
-          ? "What service do you need? For example: plumbing, electrical or cleaning."
-          : "¿Qué servicio necesitas? Por ejemplo: plomería, electricidad o limpieza.",
-        action: "answer",
-        searchHref: null,
-        ctaLabel: null,
+          ? "Posting a project means describing what you need so several professionals in that category write to you. What service is it? For example: plumbing, electrical or cleaning."
+          : "Publicar un proyecto es contar qué necesitas para que te escriban varios profesionales de esa categoría. ¿De qué servicio se trata? Por ejemplo: plomería, electricidad o limpieza.",
+        action: "publish_request",
+        searchHref: `${prefijoDeIdioma(locale)}/publicar-proyecto`,
+        ctaLabel: locale === "en" ? "Post project" : "Publicar proyecto",
       });
     }
 
