@@ -127,7 +127,9 @@ function FilaDeslizable({ abierta, ancho, onEstado, acciones, accionesIzquierda,
   abierta: boolean;
   ancho: number;
   onEstado: (abierta: boolean) => void;
-  acciones: ReactNode;
+  /** Recibe si el dedo ya pasó el punto de no retorno: ahí queda SOLO la acción
+   *  que se va a aplicar, como en WhatsApp, no la fila entera de botones. */
+  acciones: (completando: boolean) => ReactNode;
   /** Lo que se descubre al deslizar de izquierda a derecha (leído / no leído). */
   accionesIzquierda?: ReactNode;
   anchoIzquierda?: number;
@@ -229,13 +231,18 @@ function FilaDeslizable({ abierta, ancho, onEstado, acciones, accionesIzquierda,
       {/* El fondo de la acción crece con el dedo y llega hasta el borde: al
           deslizar hasta el final no queda un pedazo vacío detrás de la fila,
           y el icono viaja con él en vez de quedarse clavado en su casilla. */}
-      <div
-        className="absolute inset-y-0 right-0 flex justify-end overflow-hidden"
-        style={{ width: Math.max(ancho, Math.min(-dx, anchoDeLaFila || ancho)) }}
-      >
-        {acciones}
-      </div>
-      {accionesIzquierda && (
+      {/* Solo se pinta la mano hacia la que se está deslizando. Con las dos
+          montadas, al correr la fila hacia un lado asomaban por el otro los
+          botones que no correspondían. */}
+      {dx <= 0 && (
+        <div
+          className="absolute inset-y-0 right-0 flex justify-end overflow-hidden"
+          style={{ width: Math.max(ancho, Math.min(-dx, anchoDeLaFila || ancho)) }}
+        >
+          {acciones(anchoDeLaFila > 0 && -dx >= anchoDeLaFila * 0.55)}
+        </div>
+      )}
+      {accionesIzquierda && dx > 0 && (
         <div
           className="absolute inset-y-0 left-0 flex overflow-hidden"
           style={{ width: Math.max(anchoIzquierda, Math.min(dx, anchoDeLaFila || anchoIzquierda)) }}
@@ -1221,10 +1228,13 @@ export function DirectChatInbox() {
   const filaDeLaHoja = conversations.find((c) => c.id === hojaDeFila) ?? null;
   const personaDeLaHoja = filaDeLaHoja ? personFor(filaDeLaHoja) : null;
 
+  // `app-sheet-compact-screen` es lo que evita que el armazón nativo la estire
+  // a pantalla completa: esta hoja mide lo que miden sus opciones y se apoya en
+  // el borde de abajo, como la de WhatsApp.
   const hojaDeAcciones = filaDeLaHoja && (
-    <div className="app-modal-screen fixed inset-0 z-[200] flex items-end justify-center" role="dialog" aria-modal="true">
+    <div className="app-modal-screen app-sheet-compact-screen fixed inset-0 z-[200] flex items-end justify-center" role="dialog" aria-modal="true">
       <div className="absolute inset-0 bg-[#071426]/45 backdrop-blur-[2px]" onClick={() => setHojaDeFila(null)} />
-      <div className="relative z-10 w-full max-w-md rounded-t-[22px] bg-white pb-[calc(1rem+env(safe-area-inset-bottom))] pt-2 shadow-[0_-18px_48px_-24px_rgba(15,23,42,0.55)]">
+      <div className="app-bottom-sheet app-sheet-compact relative z-10 w-full max-w-md rounded-t-[22px] bg-white pb-[calc(1rem+env(safe-area-inset-bottom))] pt-2 shadow-[0_-18px_48px_-24px_rgba(15,23,42,0.55)]">
         <div className="mx-auto mb-2 h-1 w-10 rounded-full bg-[#dbe5ee]" />
         <p className="truncate px-5 pb-2 text-[15px] font-extrabold text-[#162543]">{personaDeLaHoja?.name ?? ""}</p>
         <button type="button" onClick={() => { const id = filaDeLaHoja.id; setHojaDeFila(null); void archivarFila(id, !showArchived); }} className="flex w-full items-center gap-3 px-5 py-3.5 text-left text-[15px] font-bold text-[#162543] transition hover:bg-[#f2f8fb]">
@@ -1406,12 +1416,14 @@ export function DirectChatInbox() {
                     <span className="text-[11px] font-extrabold">{unread ? (isEn ? "Read" : "Leído") : (isEn ? "Unread" : "No leído")}</span>
                   </button>
                 )}
-                acciones={showArchived ? (
+                acciones={(completando) => showArchived ? (
                   <>
+                    {!completando && (
                     <button type="button" onClick={() => void eliminarFila(item.id)} className={cn("flex w-[88px] shrink-0 flex-col items-center justify-center gap-1 text-white", confirmaEliminar === item.id ? "bg-[#991b1b]" : "bg-[#dc2626]")}>
                       <Trash2 className="h-5 w-5" />
                       <span className="text-[11px] font-extrabold">{confirmaEliminar === item.id ? tChat("confirmDelete") : tChat("delete")}</span>
                     </button>
+                    )}
                     <button type="button" onClick={() => void archivarFila(item.id, false)} className="flex flex-1 shrink-0 flex-col items-center justify-center gap-1 bg-[#009FD9] text-white">
                       <ArchiveRestore className="h-5 w-5" />
                       <span className="text-[11px] font-extrabold">{tChat("unarchive")}</span>
@@ -1421,10 +1433,12 @@ export function DirectChatInbox() {
                   <>
                     {/* «Más» a la par de «Archivar», como WhatsApp: abre la misma
                         hoja de abajo que la pulsación larga. */}
+                    {!completando && (
                     <button type="button" onClick={() => { setFilaAbierta(null); setHojaDeFila(item.id); }} className="flex w-[88px] shrink-0 flex-col items-center justify-center gap-1 bg-[#526277] text-white">
                       <MoreHorizontal className="h-5 w-5" />
                       <span className="text-[11px] font-extrabold">{isEn ? "More" : "Más"}</span>
                     </button>
+                    )}
                     <button type="button" onClick={() => void archivarFila(item.id, true)} className="flex flex-1 shrink-0 flex-col items-center justify-center gap-1 bg-[#009FD9] text-white">
                       <Archive className="h-5 w-5" />
                       <span className="text-[11px] font-extrabold">{tChat("archive")}</span>
