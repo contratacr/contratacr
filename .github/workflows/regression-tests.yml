@@ -136,6 +136,23 @@ jobs:
       - name: Build the production application locally
         run: npm run build
 
+      - name: Si el código no cambió desde la última certificación, no se repite
+        if: github.event_name == 'schedule'
+        id: novedad
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Una regresión de 20 minutos sobre el mismo commit que ya pasó anoche
+          # no dice nada nuevo. Se busca la última corrida exhaustiva en verde:
+          # si fue sobre este mismo commit, la de hoy se salta.
+          ultimo=$(gh run list --workflow=regression-tests.yml --branch test --status success --limit 20 --json headSha,event -q '[.[] | select(.event != "push")] | .[0].headSha // ""')
+          if [ "$ultimo" = "${{ github.sha }}" ]; then
+            echo "Sin cambios desde la última certificación ($ultimo): no se repite."
+            echo "repetir=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "repetir=true" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: ¿Es lunes? (Safari pasa una vez por semana)
         id: dia
         if: github.event_name == 'schedule'
@@ -154,11 +171,11 @@ jobs:
           public-smoke search-results professional-profile services recent-visual-regression
 
       - name: Install Playwright browser for a manual release regression
-        if: github.event_name != 'push'
+        if: github.event_name != 'push' && steps.novedad.outputs.repetir != 'false'
         run: npx playwright install --with-deps chromium
 
       - name: Run the exhaustive local release regression once
-        if: github.event_name != 'push'
+        if: github.event_name != 'push' && steps.novedad.outputs.repetir != 'false'
         shell: bash
         run: |
           set -euo pipefail
@@ -174,7 +191,7 @@ jobs:
           done
 
       - name: Dump the local Supabase container logs after a failed regression
-        if: github.event_name != 'push' && failure()
+        if: github.event_name != 'push' && steps.novedad.outputs.repetir != 'false' && failure()
         shell: bash
         run: |
           for name in $(docker ps --format '{{.Names}}' | grep -E 'supabase_(auth|rest|kong)_' || true); do
@@ -186,7 +203,7 @@ jobs:
           done
 
       - name: Require zero failures, flakies and unexpected skips
-        if: github.event_name != 'push'
+        if: github.event_name != 'push' && steps.novedad.outputs.repetir != 'false'
         shell: bash
         run: |
           set -euo pipefail
@@ -195,11 +212,11 @@ jobs:
           done
 
       - name: Verify synthetic fixtures after the release regression
-        if: github.event_name != 'push' && always()
+        if: github.event_name != 'push' && steps.novedad.outputs.repetir != 'false' && always()
         run: npm run verify:local:relations
 
       - name: Upload Playwright report
-        if: github.event_name != 'push' && always()
+        if: github.event_name != 'push' && steps.novedad.outputs.repetir != 'false' && always()
         uses: actions/upload-artifact@v5
         with:
           name: playwright-report
