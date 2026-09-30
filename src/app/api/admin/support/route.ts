@@ -5,6 +5,7 @@ import { notifyUserOfReply } from "@/lib/support-notify";
 import { LONG_TEXT_MAX_LENGTH, limitTrimmedText } from "@/lib/text-limits";
 import { sendNotificationPush } from "@/lib/push/notify";
 import { buildSupportCloseMessage, supportCloseReason } from "@/lib/support/close-reasons";
+import { adjuntosValidos, firmarAdjuntos } from "@/lib/support/adjuntos";
 
 const STATUSES = ["open", "in_progress", "resolved"];
 
@@ -25,7 +26,7 @@ export async function GET(req: Request) {
       .select("*")
       .eq("ticket_id", id)
       .order("created_at", { ascending: true });
-    return NextResponse.json({ ticket, messages: messages ?? [] });
+    return NextResponse.json({ ticket, messages: await firmarAdjuntos(db, messages ?? []) });
   }
 
   const status = url.searchParams.get("status") ?? "open";
@@ -134,9 +135,10 @@ export async function POST(req: Request) {
   const admin = await getApiAdmin();
   if (!admin) return NextResponse.json({ error: "No autorizado" }, { status: 403 });
 
-  const { id, body } = await req.json();
+  const { id, body, attachments } = await req.json();
   const safeBody = limitTrimmedText(body, LONG_TEXT_MAX_LENGTH);
-  if (!id || !safeBody) {
+  const adjuntos = id ? adjuntosValidos(attachments, id) : [];
+  if (!id || (!safeBody && !adjuntos.length)) {
     return NextResponse.json({ error: "Escribe una respuesta." }, { status: 400 });
   }
   const db = createAdminClient();
@@ -146,6 +148,7 @@ export async function POST(req: Request) {
   const now = new Date().toISOString();
   const { error: msgErr } = await db.from("support_ticket_messages").insert({
     ticket_id: id, sender_role: "admin", sender_id: admin.id, sender_name: admin.fullName, body: safeBody,
+    ...(adjuntos.length ? { attachments: adjuntos } : {}),
   });
   if (msgErr) return NextResponse.json({ error: msgErr.message }, { status: 500 });
 
@@ -171,7 +174,7 @@ export async function POST(req: Request) {
   if (ticket.email) {
     // `user_id` set → the requester has an account → deep-link to the exact ticket in
     // their panel; null → a guest (no panel) → "create account / sign in" path instead.
-    await notifyUserOfReply({ toEmail: ticket.email, toName: ticket.name, subject: ticket.subject, body: safeBody, hasAccount: !!ticket.user_id, panel, ticketId: id });
+    await notifyUserOfReply({ toEmail: ticket.email, toName: ticket.name, subject: ticket.subject, body: safeBody || "Te enviamos un archivo adjunto.", hasAccount: !!ticket.user_id, panel, ticketId: id });
   }
   if (ticket.user_id) {
     const notification = {

@@ -52,10 +52,15 @@
   --color-muted-foreground: #6b7280;
   --color-foreground: #111827;
   --ccr-responsive-footer-reserve: 0px;
-  --ccr-native-bottom-nav-height: calc(64px + max(env(safe-area-inset-bottom), 0.2rem));
+  --ccr-native-bottom-nav-height: calc(44px + max(calc(env(safe-area-inset-bottom) - 14px), 0.5rem));
   /* ResizeObserver reports the complete native nav height, safe-area included. */
-  --ccr-native-bottom-nav-total: var(--ccr-native-bottom-nav-height);
-  --ccr-native-live-bottom-nav-height: var(--ccr-native-bottom-nav-total);
+  /* LA BARRA FLOTA (30-sep-2026): las pantallas ya no le reservan su franja
+     —el contenido llega hasta abajo y se ve pasar a través de la pastilla—.
+     `--ccr-barra-flotante` es su alto: el margen interior del final de cada
+     lista y lo que debe quedar ENCIMA de ella (avisos, diálogos, botones). */
+  --ccr-barra-flotante: var(--ccr-native-bottom-nav-height);
+  --ccr-native-bottom-nav-total: 0px;
+  --ccr-native-live-bottom-nav-height: var(--ccr-barra-flotante);
   --ccr-native-keyboard-inset: 0px;
 
   --radius-sm: 0.375rem;
@@ -357,8 +362,9 @@ body.ccr-native-app.ccr-native-search-route button:not([aria-label]) {
 
 .ccr-native-app {
   --ccr-native-header-height: 64px;
-  --ccr-native-bottom-nav-height: calc(64px + max(env(safe-area-inset-bottom), 0.2rem));
-  --ccr-native-bottom-nav-total: var(--ccr-native-bottom-nav-height);
+  --ccr-native-bottom-nav-height: calc(44px + max(calc(env(safe-area-inset-bottom) - 14px), 0.5rem));
+  --ccr-native-bottom-nav-total: 0px;
+  --ccr-barra-flotante: var(--ccr-native-bottom-nav-height);
   /* El contenido llega casi hasta la barra de pestañas, como en Facebook: 24px
      dejaban una franja vacía en todas las secciones. */
   --ccr-native-panel-end-gap: 0.5rem;
@@ -374,8 +380,8 @@ body.ccr-native-app.ccr-native-bottom-nav-visible:not(.ccr-native-search-route) 
   min-height: calc(100svh - var(--ccr-native-header-height) - var(--ccr-native-bottom-nav-total));
   /* Reserve layout space for the fixed nav itself so the last control never
      sits underneath it.  The end gap above remains intentionally small. */
-  padding-bottom: calc(var(--ccr-native-bottom-nav-total) + var(--ccr-native-content-end-gap));
-  scroll-padding-bottom: calc(var(--ccr-native-bottom-nav-total) + var(--ccr-native-content-end-gap));
+  padding-bottom: calc(var(--ccr-barra-flotante, 0px) + var(--ccr-native-content-end-gap));
+  scroll-padding-bottom: calc(var(--ccr-barra-flotante, 0px) + var(--ccr-native-content-end-gap));
 }
 
 body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-home-services-section {
@@ -478,10 +484,25 @@ html.ccr-native-bottom-nav-visible body .ccr-search-bottom-sheet {
     box-sizing: border-box;
     /* Un respiro al final: sin él, la última tarjeta terminaba pegada a la barra
        de abajo y parecía cortada. No es la reserva de la barra (este contenedor
-       ya termina encima de ella), solo el aire del final del contenido. */
-    padding-bottom: 1rem !important;
+       ya termina encima de ella), solo el aire del final del contenido.
+       Con la barra flotante el contenedor llega hasta abajo y pasa por detrás
+       de ella: el final deja además su alto. */
+    padding-bottom: calc(var(--ccr-barra-flotante, 0px) + 1rem) !important;
     scroll-padding-bottom: var(--ccr-native-content-end-gap);
     -webkit-overflow-scrolling: touch;
+  }
+
+  /* Tableros (empleos, promociones, proyectos): el que se desplaza es la lista,
+     no el main. El main llega hasta abajo sin reserva y la lista deja al final
+     el alto de la barra flotante: así pasa por detrás de ella. */
+  body.ccr-native-app.ccr-native-bottom-nav-visible:not(.ccr-native-search-route) .ccr-cascaron-tablero main.ccr-tablero-fijo {
+    padding-bottom: 0 !important;
+  }
+
+  body.ccr-native-app.ccr-native-bottom-nav-visible:not(.ccr-native-search-route) .ccr-cascaron-tablero main.ccr-tablero-fijo .ccr-tablero-marco > section,
+  body.ccr-native-app.ccr-native-bottom-nav-visible:not(.ccr-native-search-route) .ccr-cascaron-tablero main.ccr-tablero-fijo > .ccr-tablero-ficha {
+    padding-bottom: calc(var(--ccr-barra-flotante, 0px) + 1rem);
+    scroll-padding-bottom: calc(var(--ccr-barra-flotante, 0px) + 1rem);
   }
 
   /* Dentro del main anclado, el pie PEGAJOSO del formulario NO debe volver a
@@ -512,8 +533,8 @@ html.ccr-native-bottom-nav-visible body .ccr-search-bottom-sheet {
   }
 
   body.ccr-native-app.ccr-native-bottom-nav-visible:not(.ccr-native-search-route) .ccr-direct-chat-list {
-    padding-bottom: var(--ccr-native-content-end-gap);
-    scroll-padding-bottom: var(--ccr-native-content-end-gap);
+    padding-bottom: calc(var(--ccr-barra-flotante, 0px) + var(--ccr-native-content-end-gap));
+    scroll-padding-bottom: calc(var(--ccr-barra-flotante, 0px) + var(--ccr-native-content-end-gap));
   }
 
   /* El compositor va en flujo debajo del hilo: reservar aquí el alto de la
@@ -532,7 +553,7 @@ html.ccr-native-bottom-nav-visible body .ccr-search-bottom-sheet {
 
   body.ccr-native-app.ccr-native-bottom-nav-visible:not(.ccr-native-search-route) .dashboard-panel-content {
     min-height: 0;
-    padding-bottom: var(--ccr-native-content-end-gap) !important;
+    padding-bottom: calc(var(--ccr-barra-flotante, 0px) + var(--ccr-native-content-end-gap)) !important;
     background: #fff;
     overscroll-behavior-y: contain;
   }
@@ -547,7 +568,9 @@ html.ccr-native-bottom-nav-visible body .ccr-search-bottom-sheet {
 
   body.ccr-native-app.ccr-native-bottom-nav-visible:not(.ccr-native-search-route) .ccr-dashboard-main > .dashboard-panel-content {
     margin-bottom: 0 !important;
-    padding-bottom: var(--ccr-native-content-end-gap) !important;
+    /* El panel pasa por DETRÁS de la barra flotante: el final deja su alto
+       además del respiro, o lo último (Guías, Salir) quedaba tapado. */
+    padding-bottom: calc(var(--ccr-barra-flotante, 0px) + var(--ccr-native-content-end-gap)) !important;
   }
 
   body.ccr-native-app.ccr-native-bottom-nav-visible .dashboard-section-card {
@@ -629,9 +652,13 @@ html.ccr-native-bottom-nav-visible body .ccr-search-bottom-sheet {
     -webkit-overflow-scrolling: touch;
   }
 
+  body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-notifications-scroll {
+    /* La lista pasa por detrás de la barra flotante; al final deja su alto
+       para que la última notificación se pueda leer entera. */
+    padding-bottom: var(--ccr-barra-flotante, 0px);
+  }
+
   body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-notifications-items {
-    /* La última fila se recorta contra la barra; una franja blanca ahí se lee
-       como que la lista terminó. */
     padding-bottom: 0;
   }
 
@@ -647,7 +674,10 @@ html.ccr-native-bottom-nav-visible body .ccr-search-bottom-sheet {
     /* Contra la pantalla que de verdad se ve, como hace Mensajes: en el
        teléfono `100dvh` cuenta franjas que el sistema tapa, y el hilo quedaba
        corto —el tiquete terminaba a media pantalla y debajo sobraba fondo—. */
-    height: calc(var(--app-visual-viewport-height, 100dvh) - var(--ccr-native-header-height, 64px) - var(--ccr-reserva-barra, 0px));
+    height: calc(var(--app-visual-viewport-height, 100dvh) - var(--ccr-native-header-height, 64px));
+    /* Llega hasta el borde: la barra flota encima y el panel le deja su alto por dentro. */
+    box-sizing: border-box;
+    padding-bottom: var(--ccr-reserva-barra, 0px);
     min-height: 0;
     background: #fff;
   }
@@ -707,41 +737,59 @@ html.ccr-native-bottom-nav-visible body .ccr-search-bottom-sheet {
    cuadro. Sin ella, la portada pintaba completa y la barra "caía" después —
    el parpadeo del arranque. Al montar la barra real, la franja se retira. */
 html.ccr-native-app.ccr-native-bottom-nav-visible:not(.ccr-nav-montada) body::after {
+  /* La misma pastilla flotante que pinta el menú real, en su mismo lugar. */
   content: "";
   position: fixed;
-  inset-inline: 0;
-  bottom: 0;
+  inset-inline: max(1rem, calc((100vw - 420px) / 2));
+  bottom: max(calc(env(safe-area-inset-bottom) - 14px), 0.5rem);
   z-index: 89;
-  height: var(--ccr-native-bottom-nav-height);
-  background: #fff;
-  border-top: 1px solid #dce6ef;
+  height: 44px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.86);
+  box-shadow: 0 4px 14px -6px rgba(15, 23, 42, 0.18), 0 0 0 1px rgba(15, 23, 42, 0.05);
 }
 
+/* EL MENÚ DE ABAJO FLOTA (30-sep-2026), como el de Facebook: una pastilla
+   despegada de los bordes y del fondo del teléfono. El contenedor es
+   transparente; lo que se ve es la pastilla, translúcida y con desenfoque, así
+   lo que se desplaza debajo se ve pasar a través de ella. Su propia capa
+   (translateZ) para que el desenfoque no se atrase al desplazar rápido. */
 .ccr-native-app .ccr-native-bottom-nav {
   isolation: isolate;
-  background: #fff !important;
-  border-top: 1px solid #dce6ef !important;
+  background: transparent !important;
+  border-top: 0 !important;
   margin-top: 0 !important;
   padding-top: 0 !important;
-  padding-bottom: max(env(safe-area-inset-bottom), 0.2rem) !important;
-  /* Solo un filete la separa de lo que tiene encima: una sombra la haría
-     parecer una capa flotando sobre el contenido. */
+  padding-bottom: max(calc(env(safe-area-inset-bottom) - 14px), 0.5rem) !important;
   box-shadow: none !important;
-  overflow: hidden;
+  overflow: visible;
+}
+
+/* Al tocar una opción el ícono se encoge un poco y al soltar rebota apenas
+   más grande antes de asentarse (curva con rebote), como en iOS. */
+.ccr-toque-barra > * {
+  transition: transform 420ms cubic-bezier(0.34, 1.8, 0.5, 1);
+}
+.ccr-toque-barra:active > * {
+  transform: scale(0.86);
+  transition-duration: 90ms;
 }
 
 .ccr-native-app .ccr-native-bottom-nav::before {
   content: none;
 }
 
-.ccr-native-app .ccr-native-bottom-nav > div {
-  min-height: 64px;
-  align-items: center;
-}
-
-.ccr-native-app .ccr-native-bottom-nav a,
-.ccr-native-app .ccr-native-bottom-nav button {
-  min-height: 56px !important;
+.ccr-native-app .ccr-barra-flotante-pastilla {
+  /* Más vidrio que blanco: se ve pasar lo de atrás; el desenfoque fuerte
+     mantiene los íconos legibles sobre fotos. */
+  background: rgba(255, 255, 255, 0.55);
+  -webkit-backdrop-filter: blur(24px) saturate(1.8);
+  backdrop-filter: blur(24px) saturate(1.8);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  /* Sombra apenas visible y corta: separa la barra de un fondo blanco sin
+     dibujar un bloque debajo de ella. */
+  box-shadow: 0 4px 14px -6px rgba(15, 23, 42, 0.18), 0 0 0 1px rgba(15, 23, 42, 0.05);
+  transform: translateZ(0);
 }
 
 .ccr-native-app .ccr-search-bottom-sheet {
@@ -765,10 +813,14 @@ html.ccr-native-app body.ccr-native-bottom-nav-visible .ccr-search-bottom-sheet 
 /* En /buscar el panel se apoya sobre la barra de pestañas en lugar de taparla. */
 body.ccr-native-app.ccr-native-bottom-nav-visible.ccr-native-search-route .ccr-search-bottom-sheet,
 html.ccr-native-app body.ccr-native-app.ccr-native-bottom-nav-visible.ccr-native-search-route .ccr-search-bottom-sheet {
-  bottom: var(--ccr-native-bottom-nav-total) !important;
+  /* LLEGA HASTA EL FONDO y la barra flota encima. Apoyado sobre la barra, al
+     retirarse ella al desplazar quedaba a la vista la tira blanca de debajo
+     del panel: la franja fija. Lo que asoma recogido ya sube el alto de la
+     barra (mobileSheetSnapPoints) y la lista deja ese alto al final. */
+  bottom: 0 !important;
   padding-bottom: 0 !important;
   max-height: calc(
-    var(--app-visual-viewport-height) - var(--ccr-native-header-height) - var(--ccr-native-bottom-nav-total) - 58px
+    var(--app-visual-viewport-height) - var(--ccr-native-header-height) - 58px
   ) !important;
 }
 
@@ -823,12 +875,16 @@ html.contratacr-chat-thread-open .ccr-native-bottom-nav {
 body.ccr-native-app.ccr-native-bottom-nav-visible.contratacr-chat-thread-open {
   --ccr-reserva-barra: 0px;
 }
-body.ccr-native-app.ccr-native-bottom-nav-visible.contratacr-chat-thread-open:not(.ccr-native-search-route) .ccr-direct-chat-composer {
+body.ccr-native-app.ccr-native-bottom-nav-visible.contratacr-chat-thread-open:not(.ccr-native-search-route) .ccr-direct-chat-composer,
+/* El hilo de soporte es un chat igual: sin barra de abajo, su barra de
+   escribir recupera el borde del teléfono (se cortaba contra la rayita). */
+body.ccr-native-app.contratacr-chat-thread-open .ccr-support-thread-composer,
+html.ccr-native-app.contratacr-chat-thread-open .ccr-support-thread-composer {
   padding-bottom: max(env(safe-area-inset-bottom), 0.75rem) !important;
 }
 
 body.ccr-native-app.ccr-native-bottom-nav-visible {
-  --ccr-reserva-barra: var(--ccr-native-bottom-nav-total);
+  --ccr-reserva-barra: var(--ccr-barra-flotante, 0px);
 }
 
 html[data-keyboard-visible] body.ccr-native-app.ccr-native-bottom-nav-visible {
@@ -887,8 +943,8 @@ body.ccr-native-app.ccr-native-bottom-nav-visible.ccr-native-search-route .ccr-s
 }
 
 body.ccr-native-app.ccr-native-bottom-nav-visible.ccr-native-search-route .ccr-search-sheet-scroll {
-  padding-bottom: calc(var(--ccr-native-bottom-nav-total) + var(--ccr-native-content-end-gap) + var(--ccr-cola-fuera, 0px)) !important;
-  scroll-padding-bottom: calc(var(--ccr-native-bottom-nav-total) + var(--ccr-native-content-end-gap) + var(--ccr-cola-fuera, 0px));
+  padding-bottom: calc(var(--ccr-barra-flotante, 0px) + var(--ccr-native-content-end-gap) + var(--ccr-cola-fuera, 0px)) !important;
+  scroll-padding-bottom: calc(var(--ccr-barra-flotante, 0px) + var(--ccr-native-content-end-gap) + var(--ccr-cola-fuera, 0px));
 }
 
 html[data-keyboard-visible] body.ccr-native-app.ccr-native-search-route .ccr-search-results-list {
@@ -1302,13 +1358,13 @@ html[data-self-action-modal-open="true"] [data-save-button] {
      descuenta lo mismo para que un diálogo largo no se salga por arriba. */
   body.ccr-native-app.ccr-native-bottom-nav-visible .app-modal-screen.app-centered-modal-screen {
     padding-top: calc(var(--ccr-native-header-height, 0px) + 1rem);
-    padding-bottom: calc(var(--ccr-native-bottom-nav-total, 0px) + 1rem);
+    padding-bottom: calc(var(--ccr-barra-flotante, 0px) + 1rem);
   }
 
   body.ccr-native-app.ccr-native-bottom-nav-visible .app-modal-screen.app-centered-modal-screen .app-centered-modal {
     max-height: calc(
       var(--app-visual-viewport-height) - var(--ccr-native-header-height, 0px) -
-        var(--ccr-native-bottom-nav-total, 0px) - 2rem
+        var(--ccr-barra-flotante, 0px) - 2rem
     );
   }
 
@@ -1425,7 +1481,7 @@ body.ccr-native-app.ccr-native-fullscreen-layer nav.ccr-native-bottom-nav { disp
 /* Floating actions anchor to the viewport bottom; in the app that edge belongs
    to the bottom nav, so they ride above it. */
 body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-native-fab {
-  bottom: calc(var(--ccr-native-bottom-nav-total) + 0.75rem) !important;
+  bottom: calc(var(--ccr-barra-flotante, 0px) + 0.75rem) !important;
 }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { min-height: 72px; background: #94a3b8; border-radius: 999px; }
@@ -1592,7 +1648,10 @@ body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-native-fab {
     bottom: auto;
     left: var(--app-visual-viewport-left);
     z-index: 110;
-    height: calc(var(--app-visual-viewport-height) - var(--ccr-reserva-barra, 0px));
+    height: calc(var(--app-visual-viewport-height));
+    /* Llega hasta el borde: la barra flota encima y el panel le deja su alto por dentro. */
+    box-sizing: border-box;
+    padding-bottom: var(--ccr-reserva-barra, 0px);
     width: var(--app-visual-viewport-width);
     min-height: 0;
     border-radius: 0;
@@ -1601,8 +1660,11 @@ body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-native-fab {
   html.ccr-native-app.contratacr-chat-thread-open .direct-chat-shell--thread {
     /* Deja fuera el alto de la barra de pestañas: si no, el compositor queda
        detrás de ella y no se puede escribir. */
-    height: calc(var(--app-visual-viewport-height) - var(--ccr-reserva-barra, 0px) + var(--ccr-extra-teclado, 0px)) !important;
-    max-height: calc(var(--app-visual-viewport-height) - var(--ccr-reserva-barra, 0px) + var(--ccr-extra-teclado, 0px)) !important;
+    height: calc(var(--app-visual-viewport-height) + var(--ccr-extra-teclado, 0px)) !important;
+    /* Llega hasta el borde: la barra flota encima y el panel le deja su alto por dentro. */
+    box-sizing: border-box !important;
+    padding-bottom: var(--ccr-reserva-barra, 0px) !important;
+    max-height: calc(var(--app-visual-viewport-height) + var(--ccr-extra-teclado, 0px)) !important;
   }
 
   .contratacr-chat-thread-open .ccr-support-thread {
@@ -1626,8 +1688,11 @@ body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-native-fab {
   html.ccr-native-app.contratacr-chat-thread-open .ccr-support-thread {
     /* El tiquete ya arranca bajo su propio encabezado: sumarle el área segura
        lo empujaba por detrás del teclado. */
-    height: calc(var(--app-visual-viewport-height) - var(--ccr-reserva-barra, 0px)) !important;
-    max-height: calc(var(--app-visual-viewport-height) - var(--ccr-reserva-barra, 0px)) !important;
+    height: calc(var(--app-visual-viewport-height)) !important;
+    /* Llega hasta el borde: la barra flota encima y el panel le deja su alto por dentro. */
+    box-sizing: border-box !important;
+    padding-bottom: var(--ccr-reserva-barra, 0px) !important;
+    max-height: calc(var(--app-visual-viewport-height)) !important;
   }
 
 
@@ -1705,11 +1770,14 @@ body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-native-fab {
     bottom: auto !important;
     left: var(--app-visual-viewport-left, 0px) !important;
     right: auto !important;
-    height: calc(var(--app-visual-viewport-height, 100dvh) - var(--ccr-reserva-barra, 0px)) !important;
+    height: calc(var(--app-visual-viewport-height, 100dvh)) !important;
+    /* Llega hasta el borde: la barra flota encima y el panel le deja su alto por dentro. */
+    box-sizing: border-box !important;
+    padding-bottom: var(--ccr-reserva-barra, 0px) !important;
     width: var(--app-visual-viewport-width, 100vw) !important;
     min-height: 0 !important;
     max-height: none !important;
-    padding: 0 !important;
+    padding: 0 0 var(--ccr-reserva-barra, 0px) !important;
     border-radius: 0 !important;
     align-items: stretch !important;
     justify-content: stretch !important;
@@ -2202,11 +2270,64 @@ body.ccr-search-sheet-page {
    asomaban los botones de la tarjeta de abajo ("Enviar mensaje"). El panel
    sigue exactamente la misma regla que la barra: se detiene sobre ella cuando
    está, y llega hasta el borde cuando no. */
+/* En la app la búsqueda arranca desde arriba de todo (el encabezado flota
+   encima): el mapa mide la pantalla entera. Con «pantalla menos encabezado»
+   le faltaban 124 px abajo y, con el panel recogido, se veía un fondo gris. */
+body.ccr-native-app.ccr-native-search-route .ccr-search-results-layout {
+  height: 100dvh;
+}
+
+/* SIN BARRA DE ABAJO EN LAS PANTALLAS-TAREA. Una pantalla con su botón de
+   acción fijo al pie (contactar soporte, publicar, registrarse, guardar un
+   editor) es algo que se llena y se envía: ahí la barra de abajo sobra, se
+   montaba justo debajo del botón y lo empujaba hacia arriba. La marca
+   `ccr-con-barra-accion` la pone useBarraAccionFija mientras esa franja está.
+   Sin barra tampoco se le reserva espacio, y la franja recupera su respiro
+   del borde del teléfono. */
+html.ccr-native-app body.ccr-con-barra-accion .ccr-native-bottom-nav {
+  display: none !important;
+}
+html.ccr-native-app body.ccr-con-barra-accion {
+  --ccr-reserva-barra: 0px;
+  /* Lo que el contenido deja libre al final ahora es la franja del botón (su
+     alto medido): con 0 el final del formulario quedaba detrás de ella. */
+  --ccr-barra-flotante: var(--ccr-alto-barra, 0px);
+  --ccr-native-live-bottom-nav-height: 0px;
+}
+html.ccr-native-app body.ccr-con-barra-accion .ccr-barra-fija.ccr-pie-formulario {
+  bottom: 0 !important;
+}
+
+/* LA FRANJA DEL BOTÓN, MÁS BAJA EN LA APP. En la web lleva «borde seguro +
+   28 px» abajo porque Safari tiñe su barra con el borde de la página; en la
+   app no hay barra de Safari y esos 28 px eran una franja blanca de más. Aquí
+   basta el borde seguro del teléfono (la rayita de inicio) y 12 px arriba. */
+@media (max-width: 639px) {
+  html.ccr-native-app .ccr-barra-accion {
+    padding-top: 12px !important;
+    padding-bottom: max(env(safe-area-inset-bottom), 12px) !important;
+  }
+}
+
+/* Lo que solo tiene sentido en la web (p. ej. «Agregar app al celular»):
+   dentro de la app ya instalada no se muestra. */
+html.ccr-native-app .ccr-solo-web {
+  display: none !important;
+}
+
 .ccr-native-search-panel { bottom: 0; }
+/* Llega hasta abajo (sin franja de la pantalla de atrás) y deja el alto de la
+   barra flotante por dentro. */
 body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-native-search-panel {
-  bottom: var(--ccr-native-bottom-nav-total);
+  bottom: 0;
+  padding-bottom: var(--ccr-barra-flotante, 0px);
 }
 html[data-keyboard-visible] body.ccr-native-app .ccr-native-search-panel { bottom: 0; }
+/* Con el buscador abierto la barra sigue flotando ENCIMA de él (el buscador
+   va en la capa 220): si no, tocar Asistente o + no le llegaba. */
+body.ccr-native-app:has(.ccr-native-search-panel) .ccr-native-bottom-nav {
+  z-index: 225 !important;
+}
 
 /* Hueco de una imagen que todavía viaja: el mismo tamaño que tendrá la foto,
    con un brillo que la recorre. Antes era un gris plano con una ruedita dentro

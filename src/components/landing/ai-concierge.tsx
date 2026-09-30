@@ -19,17 +19,22 @@ import {
   Loader2,
   MapPin,
   Minus,
-  RotateCcw,
+  SquarePen,
+  Tag,
+  PlusCircle,
   Search,
   SendHorizontal,
   Sparkles,
   Star,
   Wrench,
 } from "lucide-react";
+import { CABECERA_BOTON, CABECERA_GLIFO, CABECERA_TITULO } from "@/components/layout/cabecera";
 import Image from "next/image";
 import { useLocale } from "next-intl";
 import { Link, usePathname, useRouter } from "@/i18n/navigation";
+import { useRouter as useRouterDeNext } from "next/navigation";
 import { useAuth } from "@/hooks/use-auth";
+import { canOffer } from "@/lib/auth/capabilities";
 import { useContainedTouchScroll } from "@/hooks/use-contained-touch-scroll";
 import { useNativeApp } from "@/hooks/use-native-app";
 import { lockBodyScroll } from "@/lib/body-scroll-lock";
@@ -61,11 +66,13 @@ function topicIcon(icon: GuidedTopic["icon"]) {
   if (icon === "request") return <ClipboardList className={className} />;
   if (icon === "offer") return <Wrench className={className} />;
   if (icon === "jobs") return <BriefcaseBusiness className={className} />;
+  if (icon === "deal") return <Tag className={className} />;
+  if (icon === "service") return <PlusCircle className={className} />;
   if (icon === "how") return <HelpCircle className={className} />;
   return <LifeBuoy className={className} />;
 }
 
-type GuidedTopic = { label: string; example: string; prompt: string; icon: "search" | "request" | "offer" | "jobs" | "how" | "support" };
+type GuidedTopic = { label: string; example: string; prompt: string; icon: "search" | "request" | "offer" | "jobs" | "deal" | "service" | "how" | "support" };
 type ChatMessage = {
   role: "assistant" | "user";
   body: string;
@@ -113,6 +120,9 @@ function storePendingIntent(href: string) {
   }
 }
 
+/** Dirección desde la que un botón del asistente llevó a otra pantalla. */
+const VOLVER_AL_ASISTENTE = "ccr:volver-al-asistente";
+
 const COPY = {
   es: {
     closedLabel: "Abrir asistente de ContrataCR",
@@ -131,12 +141,22 @@ const COPY = {
     reset: "Nuevo chat",
     resetHint: "Limpia esta conversacion y empieza de cero.",
     emptyTitle: "¿En qué te ayudo?",
-    emptySubtitle: "Te guío dentro de ContrataCR con información de la app: profesionales, citas, proyectos, empleos y tu cuenta.",
+    emptySubtitle: "Te guío dentro de ContrataCR con información de la app: profesionales, proyectos, empleos, promociones y tu cuenta.",
+    // Quien NO es profesional: buscar, mirar, pedir y la puerta para ofrecer.
     topics: [
       { label: "Buscar un profesional", example: "Necesito un profesional", prompt: "Quiero buscar un profesional", icon: "search" },
-      { label: "Publicar un proyecto", example: "Quiero publicar un proyecto", prompt: "Quiero publicar un proyecto", icon: "request" },
+      { label: "Empleos y promociones", example: "¿Dónde veo empleos y promociones?", prompt: "¿Dónde veo empleos y promociones?", icon: "jobs" },
+      { label: "Proyectos", example: "Crear o buscar proyectos", prompt: "¿Cómo creo o busco proyectos?", icon: "request" },
       { label: "Ofrecer mis servicios", example: "Quiero ofrecer mis servicios", prompt: "Quiero ofrecer mis servicios", icon: "offer" },
-      { label: "Empleos", example: "¿Cómo aplico a un empleo?", prompt: "¿Cómo aplico a un empleo?", icon: "jobs" },
+      { label: "Cómo funciona la app", example: "¿Cómo funciona ContrataCR?", prompt: "¿Cómo funciona ContrataCR?", icon: "how" },
+      { label: "Soporte", example: "Necesito ayuda con mi cuenta", prompt: "Necesito soporte", icon: "support" },
+    ] satisfies GuidedTopic[],
+    // El profesional: todo lo que publica, y ya no «ofrecer mis servicios».
+    topicsPro: [
+      { label: "Publicar un proyecto", example: "Quiero publicar un proyecto", prompt: "Quiero publicar un proyecto", icon: "request" },
+      { label: "Publicar un empleo", example: "Quiero publicar un empleo", prompt: "Quiero publicar un empleo", icon: "jobs" },
+      { label: "Publicar una promoción", example: "Quiero publicar una promoción", prompt: "Quiero publicar una promoción", icon: "deal" },
+      { label: "Agregar un servicio", example: "Quiero agregar un servicio", prompt: "Quiero agregar un servicio", icon: "service" },
       { label: "Cómo funciona la app", example: "¿Cómo funciona ContrataCR?", prompt: "¿Cómo funciona ContrataCR?", icon: "how" },
       { label: "Soporte", example: "Necesito ayuda con mi cuenta", prompt: "Necesito soporte", icon: "support" },
     ] satisfies GuidedTopic[],
@@ -161,9 +181,17 @@ const COPY = {
     emptySubtitle: "I guide you through ContrataCR with data from the app: professionals, projects, jobs and your account.",
     topics: [
       { label: "Find a professional", example: "I need a professional", prompt: "I want to find a professional", icon: "search" },
-      { label: "Publish a project", example: "I want to publish a project", prompt: "I want to publish a project", icon: "request" },
+      { label: "Jobs and promotions", example: "Where do I see jobs and promotions?", prompt: "Where do I see jobs and promotions?", icon: "jobs" },
+      { label: "Projects", example: "Create or find projects", prompt: "How do I create or find projects?", icon: "request" },
       { label: "Offer my services", example: "I want to offer my services", prompt: "I want to offer my services", icon: "offer" },
-      { label: "Jobs", example: "How do I apply to a job?", prompt: "How do I apply to a job?", icon: "jobs" },
+      { label: "How the app works", example: "How does ContrataCR work?", prompt: "How does ContrataCR work?", icon: "how" },
+      { label: "Support", example: "I need help with my account", prompt: "I need support", icon: "support" },
+    ] satisfies GuidedTopic[],
+    topicsPro: [
+      { label: "Post a project", example: "I want to publish a project", prompt: "I want to publish a project", icon: "request" },
+      { label: "Post a job", example: "I want to post a job", prompt: "I want to post a job", icon: "jobs" },
+      { label: "Post a promotion", example: "I want to publish a promotion", prompt: "I want to publish a promotion", icon: "deal" },
+      { label: "Add a service", example: "I want to add a service", prompt: "I want to add a service", icon: "service" },
       { label: "How the app works", example: "How does ContrataCR work?", prompt: "How does ContrataCR work?", icon: "how" },
       { label: "Support", example: "I need help with my account", prompt: "I need support", icon: "support" },
     ] satisfies GuidedTopic[],
@@ -263,8 +291,12 @@ function ProfessionalResult({ result, copy, onNavigate, nativeApp, lang }: {
 export function AiConcierge({ embedded = false, onBack }: { embedded?: boolean; onBack?: () => void } = {}) {
   const locale = useLocale();
   const router = useRouter();
+  // Los destinos del asistente ya traen su prefijo de idioma: van por el router
+  // de Next tal cual (el de next-intl lo agregaría otra vez).
+  const routerDeNext = useRouterDeNext();
   const pathname = usePathname();
   const { user, loading: authLoading } = useAuth();
+  const esProfesional = canOffer(user);
   const nativeApp = useNativeApp();
   const lang = language(locale);
   const copy = COPY[lang];
@@ -303,11 +335,23 @@ export function AiConcierge({ embedded = false, onBack }: { embedded?: boolean; 
     if (embedded) return;
     const openAssistant = () => setOpen(true);
     const closeAssistant = () => setOpen(false);
+    // VOLVER AL CHAT: si un botón del asistente llevó a otra pantalla, la
+    // flecha atrás regresa a la dirección desde donde se tocó y ahí el
+    // asistente se vuelve a abrir, con la conversación como estaba.
+    const alVolver = () => {
+      let origen: string | null = null;
+      try { origen = window.sessionStorage.getItem(VOLVER_AL_ASISTENTE); } catch { /* sin almacenamiento */ }
+      if (!origen || origen !== `${window.location.pathname}${window.location.search}`) return;
+      try { window.sessionStorage.removeItem(VOLVER_AL_ASISTENTE); } catch { /* sin almacenamiento */ }
+      setOpen(true);
+    };
     window.addEventListener("contratacr:open-ai", openAssistant);
     window.addEventListener("contratacr:close-ai", closeAssistant);
+    window.addEventListener("popstate", alVolver);
     return () => {
       window.removeEventListener("contratacr:open-ai", openAssistant);
       window.removeEventListener("contratacr:close-ai", closeAssistant);
+      window.removeEventListener("popstate", alVolver);
     };
   }, [embedded]);
 
@@ -502,7 +546,20 @@ export function AiConcierge({ embedded = false, onBack }: { embedded?: boolean; 
     } catch {
       /* Navigation still works when browser storage is unavailable. */
     }
-    window.location.assign(destination);
+    // SIN RECARGAR LA APP. `location.assign` bajaba la página entera otra vez
+    // (lo que hacía tardar «Publicar proyecto»); el router cambia solo la
+    // pantalla y el asistente —que vive en el layout— conserva el chat.
+    if (/^https?:\/\//.test(destination)) {
+      window.location.assign(destination);
+      return;
+    }
+    try {
+      window.sessionStorage.setItem(VOLVER_AL_ASISTENTE, `${window.location.pathname}${window.location.search}`);
+    } catch {
+      /* Sin almacenamiento solo se pierde el regreso al chat. */
+    }
+    if (!embedded) setOpen(false);
+    routerDeNext.push(destination);
   }
 
   function resetConversation() {
@@ -569,21 +626,25 @@ export function AiConcierge({ embedded = false, onBack }: { embedded?: boolean; 
             : "max-h-full h-[min(820px,calc(var(--app-visual-viewport-height)_-_0.5rem))] rounded-t-[34px] sm:pointer-events-auto sm:fixed sm:bottom-6 sm:right-6 sm:h-[min(780px,calc(100dvh-3rem))] sm:w-[min(520px,calc(100vw-3rem))] sm:rounded-[34px]",
         )}
       >
-        <header className="relative flex shrink-0 items-center gap-1.5 border-b border-[#e5e7eb] bg-white px-2.5 py-3 sm:gap-3 sm:px-5 sm:py-4">
+        {/* En la app (barraDeIndice) la cabecera es la MISMA de toda pantalla
+            (cabecera.ts): fila de 64, menú de 40 a 16 px del borde, marca de 32
+            y título de 17. Con medidas propias el logo y el título salían más
+            chicos y corridos al pasar de otra sección al Asistente. */}
+        <header className={cn("relative flex shrink-0 items-center border-b border-[#e5e7eb] bg-white", barraDeIndice ? "min-h-16 gap-2 px-4 sm:gap-3 sm:px-5 sm:py-4" : "gap-1.5 px-2.5 py-3 sm:gap-3 sm:px-5 sm:py-4")}>
           {barraDeIndice && (
             <>
               <button
                 type="button"
                 onClick={() => window.dispatchEvent(new Event("ccr:open-mobile-menu"))}
                 aria-label={lang === "en" ? "Open menu" : "Abrir menú"}
-                className="grid h-9 w-9 shrink-0 place-items-center rounded-xl text-[#162543] transition hover:bg-[#eef5f9] sm:h-10 sm:w-10"
+                className={CABECERA_BOTON}
               >
-                <Menu className="h-5 w-5" strokeWidth={2.5} />
+                <Menu className={CABECERA_GLIFO} strokeWidth={2.5} />
               </button>
               <Link
                 href="/"
                 aria-label="ContrataCR inicio"
-                className="-ml-0.5 shrink-0"
+                className="shrink-0"
                 onClick={(event) => {
                   // El logo SIEMPRE deja al usuario en la portada: cierra esta
                   // ventana y, si la ruta de abajo no era la portada, navega.
@@ -595,7 +656,7 @@ export function AiConcierge({ embedded = false, onBack }: { embedded?: boolean; 
                 }}
               >
                 {/* eslint-disable-next-line @next/next/no-img-element -- marca de 28px; el optimizador no actúa en Cloudflare */}
-                <img src="/logo-mark-transparent.png" alt="ContrataCR" width={28} height={28} className="h-7 w-7 select-none" />
+                <img src="/logo-mark-transparent.png" alt="ContrataCR" width={32} height={32} className="h-8 w-8 select-none" />
               </Link>
             </>
           )}
@@ -611,19 +672,19 @@ export function AiConcierge({ embedded = false, onBack }: { embedded?: boolean; 
           )}
           <div className={cn("-my-2 -ml-1.5 h-[58px] w-[58px] shrink-0 sm:-my-3 sm:-ml-2 sm:h-[92px] sm:w-[92px]", barraDeIndice && "hidden")}><Image src="/brand/ai-assistant-robot.webp" alt="" width={112} height={112} priority className="h-full w-full object-contain drop-shadow-[0_10px_16px_rgba(0,99,189,0.18)]" /></div>
           <div className="min-w-0 flex-1 py-1">
-            <h2 className="truncate text-[14px] font-black text-[#102746] min-[380px]:text-[15px] sm:text-lg">{barraDeIndice ? copy.shortTitle : copy.title}</h2>
+            <h2 className={cn(CABECERA_TITULO, "sm:text-lg")}>{barraDeIndice ? copy.shortTitle : copy.title}</h2>
           </div>
           <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
             <button
               type="button"
               onClick={resetConversation}
               aria-label={copy.reset}
-              // Con el texto: la flecha circular sola se confunde con recargar
-              // la pantalla, y lo que hace es empezar una conversación nueva.
-              className="ccr-ai-reset-action inline-flex h-9 items-center gap-1.5 rounded-full border border-[#bcd8f1] bg-white px-3 text-[13px] font-bold text-[#102f5b] shadow-sm transition hover:bg-[#eef7ff] sm:h-11 sm:px-4 sm:text-sm"
+              // El ícono de «nueva conversación» (hoja con lápiz), el de ChatGPT
+              // y WhatsApp: la flecha circular se confundía con recargar, y el
+              // botón con texto pesaba tanto como el título.
+              className="ccr-ai-reset-action grid h-10 w-10 place-items-center rounded-full text-[#162543] transition hover:bg-[#eef7ff] active:scale-95"
             >
-              <RotateCcw className="h-4 w-4 shrink-0 sm:h-[18px] sm:w-[18px]" />
-              {copy.reset}
+              <SquarePen className="h-[22px] w-[22px]" />
             </button>
             {!embedded && !nativeAssistantShell && (
               <AppTooltip label={copy.minimize}>
@@ -691,7 +752,7 @@ export function AiConcierge({ embedded = false, onBack }: { embedded?: boolean; 
               </div>
 
               <div className="overflow-hidden rounded-[22px] border border-[#dbe7f0] bg-white shadow-[0_10px_30px_-24px_rgba(0,91,145,0.5)]">
-                {copy.topics.map((topic, index) => (
+                {(esProfesional ? copy.topicsPro : copy.topics).map((topic, index) => (
                   <button
                     key={topic.prompt}
                     type="button"

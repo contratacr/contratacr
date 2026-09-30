@@ -54,7 +54,14 @@ function mobileSheetSnapPoints(): readonly number[] {
   const headerHeight = Number.parseFloat(headerValue) || 124;
   const expanded = Math.max(CARD_PEEK + 0.2, Math.min(FULL, (viewportHeight - headerHeight - SHEET_TOP_GAP) / viewportHeight));
   const oneCard = Math.min(CARD_PEEK, expanded - 0.2);
-  return [MAP_PEEK, oneCard, expanded];
+  // En la app el panel llega hasta el fondo y la barra flotante tapa su parte
+  // de abajo: recogido y a media altura sube ese alto para que lo que asoma
+  // (el total, los filtros, la primera tarjeta) no quede debajo de la barra.
+  const barra = document.querySelector<HTMLElement>("nav.ccr-native-bottom-nav")?.offsetHeight ?? 0;
+  const reserva = barra / viewportHeight;
+  // Recogido asoman el asa, los filtros y el total (~130 px) por encima de la barra.
+  const recogido = barra ? (130 + barra) / viewportHeight : MAP_PEEK;
+  return [Math.min(Math.max(MAP_PEEK, recogido), oneCard), Math.min(oneCard + reserva, expanded - 0.1), expanded];
 }
 
 // El panel se desplaza hacia abajo para "asomar" en vez de cambiar de alto (así
@@ -62,11 +69,14 @@ function mobileSheetSnapPoints(): readonly number[] {
 // queda FUERA de la pantalla — y con él, el final de la lista: por eso no se
 // podía llegar al último profesional. Aquí se publica cuánto quedó fuera para
 // que la zona desplazable se recorte exactamente igual.
-function colocarHoja(hoja: HTMLElement | null, fuera: number) {
+function colocarHoja(hoja: HTMLElement | null, fuera: number, avisar = true) {
   if (!hoja) return;
   hoja.style.transform = `translate3d(0, ${fuera * 100}dvh, 0)`;
   // Aviso para que la lista vuelva a medir cuánto quedó fuera de la pantalla.
-  window.dispatchEvent(new Event("ccr:search-sheet-moved"));
+  // MIENTRAS SE ARRASTRA NO: medir la lista y cambiarle el relleno en cada
+  // movimiento del dedo recalculaba todas las tarjetas por cuadro (el arrastre
+  // «lagueado»). Se mide una vez, al soltar.
+  if (avisar) window.dispatchEvent(new Event("ccr:search-sheet-moved"));
 }
 
 function snapIndex(value: number, points = mobileSheetSnapPoints()) {
@@ -237,6 +247,11 @@ export function SearchResultsLayout({ children, filters, quickFilters, drawerFil
     };
   }, [showFilters]);
 
+  // Al soltar (y en cada cambio de altura) la lista se mide una sola vez.
+  useEffect(() => {
+    if (!dragging) window.dispatchEvent(new Event("ccr:search-sheet-moved"));
+  }, [dragging, heightFr]);
+
   useEffect(() => {
     curRef.current = heightFr;
     const points = mobileSheetSnapPoints();
@@ -310,7 +325,7 @@ export function SearchResultsLayout({ children, filters, quickFilters, drawerFil
     curRef.current = h;
     // Move the already-laid-out sheet on the compositor layer. Animating its
     // height would force the browser to recalculate every result card.
-    colocarHoja(sheetRef.current, Math.max(0, max - h));
+    colocarHoja(sheetRef.current, Math.max(0, max - h), false);
   }
   // Where a released gesture lands. A short but deliberate move (≥12px) or a flick
   // goes to the next state in that direction — Yelp-style, the panel answers the
@@ -410,7 +425,7 @@ export function SearchResultsLayout({ children, filters, quickFilters, drawerFil
       const vh = window.innerHeight || 1;
       const h = Math.min(max, Math.max(min, startH + dyUp / vh));
       curRef.current = h;
-      colocarHoja(sheetRef.current, Math.max(0, max - h));
+      colocarHoja(sheetRef.current, Math.max(0, max - h), false);
     };
     const onEnd = () => {
       const wasSheet = mode === "sheet";

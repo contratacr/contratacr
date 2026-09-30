@@ -6,7 +6,7 @@ import { esServicioDelCatalogo } from "@/lib/data/categories";
 import { esRutaDeBusqueda } from "@/lib/buscar-url";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Search, Briefcase, UserRound, ClipboardList } from "lucide-react";
+import { Bell, Bot, Plus, Search, UserRound } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { Link, useRouter, usePathname } from "@/i18n/navigation";
 import { useSearchParams } from "next/navigation";
@@ -14,7 +14,8 @@ import { useNativeApp } from "@/hooks/use-native-app";
 import { useAuth } from "@/hooks/use-auth";
 import { useMode } from "@/hooks/use-mode";
 import { canOffer } from "@/lib/auth/capabilities";
-import { OfferTagPercentIcon } from "@/components/icons/offer-tag-percent-icon";
+import { HojaDeCrear } from "@/components/mobile/hoja-de-crear";
+import { useAvisosPorVer } from "@/hooks/use-avisos-por-ver";
 import { cn } from "@/lib/utils";
 
 // La barra vive en el armazón, montada una sola vez, y NO dentro de cada
@@ -36,6 +37,23 @@ export function NativeBottomNav() {
   const navRef = useRef<HTMLElement>(null);
   const [pendingHref, setPendingHref] = useState<string | null>(null);
   const [asistenteAbierto, setAsistenteAbierto] = useState(false);
+  const [hojaDeCrear, setHojaDeCrear] = useState(false);
+  const [buscadorAbierto, setBuscadorAbierto] = useState(false);
+  // La opción tocada se enciende EN EL ACTO; la dirección llega después.
+  // Esperarla hacía parecer que el toque no había hecho nada.
+  const [tocada, setTocada] = useState<{ indice: number; desde: string } | null>(null);
+  useEffect(() => {
+    const alCambiar = (event: Event) => setBuscadorAbierto(!!(event as CustomEvent<{ abierto?: boolean }>).detail?.abierto);
+    window.addEventListener("ccr:buscador-nativo", alCambiar);
+    return () => window.removeEventListener("ccr:buscador-nativo", alCambiar);
+  }, []);
+  // Si la pantalla nueva no llega (o era la misma), el toque anotado caduca.
+  useEffect(() => {
+    if (!tocada) return;
+    const id = window.setTimeout(() => setTocada(null), 4000);
+    return () => window.clearTimeout(id);
+  }, [tocada]);
+  const avisosPorVer = useAvisosPorVer(nativeApp);
 
   // El estado real de la ventana del asistente, anunciado por ella misma. El
   // marcado por "pendiente" se limpiaba con cualquier navegación de fondo y la
@@ -134,6 +152,7 @@ export function NativeBottomNav() {
         window.dispatchEvent(pedido);
         if (pedido.detail.atendido) return;
       }
+      setTocada({ indice: base === "/profesionales" ? 0 : base === "/notificaciones" ? 3 : 4, desde: pathname ?? "" });
       if (pathname === base || (base === "/profesionales" && esRutaDeBusqueda(pathname, esServicioDelCatalogo))) {
         // Misma RUTA no siempre es el mismo lugar: las secciones del panel viven
         // en ?tab=, una búsqueda con resultados en ?q=, un listado filtrado en
@@ -241,156 +260,131 @@ export function NativeBottomNav() {
 
   if (!visible) return null;
 
-  const itemClass = (href: string) =>
-    cn(
-      // Azul oscuro en reposo, turquesa al estar en esa sección: el mismo par de
-      // colores que el menú lateral, para que las dos formas de navegar hablen
-      // igual. El gris azulado de antes se leía apagado a 10px sobre blanco.
-      // La celda ENTERA es el botón (así fallan menos los toques, como en las
-      // barras nativas); al presionar se ilumina completa para que su tamaño
-      // real se vea, en vez de responder desde un área invisible.
-      // CINCO COLUMNAS DE ANCHO IGUAL: una al centro, dos a cada lado, todas
-      // con la misma separación, como la barra de LinkedIn. Medido sobre su
-      // captura, sus iconos van a 242 / 241 / 243 / 240 px: un quinto exacto
-      // cada celda. Así la del medio cae justo en el centro de la barra y la
-      // fila de iconos —que es lo que el ojo sigue— va a paso constante.
-      //
-      // La letra va un punto más chica que en la web: con la celda fija, el
-      // hueco entre dos palabras es lo que le sobra a la celda, y a 10 px
-      // «Profesionales» y «Promociones» se quedaban a 8,6 px una de otra.
-      "relative flex min-w-0 flex-1 basis-0 flex-col items-center justify-center gap-0.5 rounded-xl px-0.5 py-1 text-[10px] font-semibold leading-tight text-[#1A2744] transition-colors active:bg-[#eef5f9] active:text-[#009FD9] min-[360px]:text-[11px]",
-      isActive(href) && "font-bold text-[#009FD9]",
-    );
+  // CUÁL ESTÁ ENCENDIDA, para que la pastilla de fondo viaje hasta ella. El «+»
+  // no se enciende nunca: abre una hoja encima, no es un lugar.
+  const enBusqueda = esRutaDeBusqueda(pathname, esServicioDelCatalogo);
+  // Lo tocado manda solo mientras la dirección no ha cambiado todavía.
+  const tocadaVigente = tocada && tocada.desde === (pathname ?? "") ? tocada.indice : null;
+  const indice = asistenteAbierto ? 1
+    : hojaDeCrear ? -1
+    : tocadaVigente ?? (buscadorAbierto ? 0
+    : enBusqueda ? 0
+    : isActive("/notificaciones") ? 3
+    : user && isActive(nativePanelHref) ? 4
+    : -1);
 
-  // La línea vive en el borde superior del elemento, pegada al filo de la
-  // barra, como el subrayado de LinkedIn.
-  const marca = (href: string) =>
-    isActive(href) ? <span aria-hidden className="absolute inset-x-1 -top-1 h-[3px] rounded-b-full bg-[#009FD9]" /> : null;
-
-  // El rótulo se encoge lo justo para que quepa el más largo («Cotizaciones»):
-  // truncado se leía «Cotizacion…», que no dice nada.
-  const rotulo = (texto: string) => (
-    <span className="max-w-full truncate" style={{ fontSize: "clamp(8.5px, 2.3vw, 10px)" }}>{texto}</span>
+  const celda = (activa: boolean) => cn(
+    "relative z-10 grid h-full min-w-0 flex-1 basis-0 place-items-center rounded-full text-[#1A2744] transition-colors duration-200 ccr-toque-barra",
+    activa && "text-[#009FD9]",
   );
-
-  const etiquetas = {
-    buscar: tNav("search"),
-    ofertas: tNav("deals"),
-    proyectos: tNav("projects"),
-    empleos: tNav("jobs"),
-  };
-  // LA BARRA ES IGUAL PARA TODOS. Antes el tercer lugar cambiaba según la
-  // cuenta —Cotizaciones al profesional, otra cosa al cliente—, y una barra que
-  // no es la misma para todo el mundo obliga a mirarla antes de tocarla. Ahora
-  // los cinco lugares son fijos.
-  //
-  // Cotizaciones y el Asistente viven en el menú lateral: el primero solo le
-  // sirve al profesional, y el segundo es una ayuda que se abre encima y se
-  // cierra, no un destino. Proyectos sí lo es, y es trabajo real publicado.
+  const trazo = (activa: boolean) => (activa ? 2.4 : 2);
 
   return (
+    <>
     <nav
       ref={navRef}
       aria-label={tNav("aria")}
       className={cn(
-        "ccr-native-bottom-nav lg:hidden fixed inset-x-0 bottom-0 z-[90] px-1.5 transition-transform duration-200 ease-out min-[360px]:px-2",
-        escondida && "pointer-events-none translate-y-full",
+        // FLOTANTE, como la de Facebook: una pastilla despegada de los bordes,
+        // translúcida y con desenfoque, así lo que se desplaza debajo se ve
+        // pasar a través de ella.
+        "ccr-native-bottom-nav ccr-barra-flotante pointer-events-none fixed inset-x-0 bottom-0 z-[90] px-4 transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] lg:hidden",
+        escondida && "translate-y-[calc(100%+1rem)]",
       )}
     >
-      {/* HUECOS IGUALES, no celdas iguales. Con celdas del mismo ancho y
-          palabras de anchos muy distintos —«Promociones» mide 128px y «Panel»
-          52— los espacios entre rótulos salían de 41px en un punto y 87 en
-          otro, y la fila se leía mal repartida aunque cada celda midiera lo
-          mismo. Repartiendo el sobrante entre los cuatro huecos, la distancia
-          entre palabras es la misma en toda la barra, que es lo que el ojo
-          mide. */}
-      <div className="mx-auto flex w-full max-w-[520px] items-stretch px-1">
-        <Link
-          href="/profesionales"
-          prefetch={false}
-          aria-label={etiquetas.buscar}
-          onClick={(event) => irA(event, "/profesionales")}
-          className={itemClass("/profesionales")}
-        >
-          {marca("/profesionales")}
-          <Search className="h-5 w-5" strokeWidth={isActive("/profesionales") ? 2.4 : 2} />
-          {rotulo(etiquetas.buscar)}
+      <div
+        className="ccr-barra-flotante-pastilla pointer-events-auto relative mx-auto flex h-[44px] w-full max-w-[420px] items-stretch rounded-full p-1"
+        // Al tocar cualquier opción la barra entera «late», como la de
+        // Facebook: crece apenas y vuelve con un rebote. Con la API de
+        // animaciones se reinicia en cada toque, aunque se toque seguido.
+        // En la fase de CAPTURA y al apoyar el dedo: los enlaces cortan el
+        // clic (stopPropagation) y con onClick el brinco nunca llegaba.
+        onPointerDownCapture={(event) => {
+          event.currentTarget.animate(
+            [
+              { transform: "translateZ(0) scale(1)" },
+              { transform: "translateZ(0) scale(1.07)", offset: 0.35 },
+              { transform: "translateZ(0) scale(0.99)", offset: 0.7 },
+              { transform: "translateZ(0) scale(1)" },
+            ],
+            { duration: 420, easing: "ease-out" },
+          );
+        }}
+      >
+        {/* La pastilla de la pestaña encendida VIAJA de una a otra. */}
+        <span
+          aria-hidden
+          // Pastilla FIJA (56×34) centrada bajo el ícono, igual en las cinco
+          // opciones: estirada a lo ancho de la celda era un óvalo que en la
+          // primera y la última tocaba el borde de la barra.
+          className="absolute top-1/2 h-[34px] w-14 -translate-y-1/2 rounded-full bg-[#009FD9]/12 transition-[left,opacity] duration-[380ms] ease-[cubic-bezier(0.22,1,0.36,1)]"
+          style={{ left: `calc(0.25rem + (100% - 0.5rem) / 5 * ${Math.max(indice, 0)} + ((100% - 0.5rem) / 5 - 3.5rem) / 2)`, opacity: indice < 0 ? 0 : 1 }}
+        />
+
+        <Link href="/profesionales" prefetch={false} aria-label={tNav("searchAria")} onClick={(event) => irA(event, "/profesionales")} className={celda(indice === 0)}>
+          <Search className="h-6 w-6" strokeWidth={trazo(indice === 0)} />
         </Link>
 
-        {EMPLEOS_VISIBLE && (
-          <Link
-            href="/empleos"
-            prefetch={true}
-            aria-label={etiquetas.empleos}
-            onClick={(event) => irA(event, "/empleos")}
-            className={itemClass("/empleos")}
-          >
-            {marca("/empleos")}
-            <Briefcase className="h-5 w-5" strokeWidth={isActive("/empleos") ? 2.4 : 2} />
-            {rotulo(etiquetas.empleos)}
-          </Link>
-        )}
-
-        <Link
-          href="/proyectos"
-          prefetch={true}
-          aria-label={etiquetas.proyectos}
-          onClick={(event) => irA(event, "/proyectos")}
-          className={itemClass("/proyectos")}
+        <button
+          type="button"
+          aria-label={tNav("assistant")}
+          onClick={() => {
+            window.dispatchEvent(new Event("ccr:close-native-search"));
+            window.dispatchEvent(new Event(asistenteAbierto ? "contratacr:close-ai" : "contratacr:open-ai"));
+          }}
+          className={celda(indice === 1)}
         >
-          {marca("/proyectos")}
-          <ClipboardList className="h-5 w-5" strokeWidth={isActive("/proyectos") ? 2.4 : 2} />
-          {rotulo(etiquetas.proyectos)}
-        </Link>
+          <Bot className="h-6 w-6" strokeWidth={trazo(indice === 1)} />
+        </button>
 
+        <button type="button" aria-label={tNav("create")} aria-haspopup="dialog" onClick={() => { window.dispatchEvent(new Event("ccr:close-native-search")); setHojaDeCrear(true); }} className="relative z-10 grid h-full min-w-0 flex-1 basis-0 place-items-center ccr-toque-barra">
+          <span className="grid h-9 w-9 place-items-center rounded-full bg-[#009FD9] text-white shadow-[0_4px_10px_-4px_rgba(0,159,217,0.7)]">
+            <Plus className="h-5 w-5" strokeWidth={2.8} />
+          </span>
+        </button>
+
+        {/* Sin sesión la campana pide entrar (y luego abre Notificaciones), igual
+            que el ícono de mensajes: abrirla decía «No tienes notificaciones»,
+            como si ya hubiera una cuenta. */}
         <Link
-          href="/promociones"
-          prefetch={true}
-          aria-label={etiquetas.ofertas}
-          onClick={(event) => irA(event, "/promociones")}
-          className={itemClass("/promociones")}
+          href={user ? "/notificaciones" : "/login?redirect=%2Fnotificaciones"}
+          prefetch={!!user}
+          aria-label={tNav("notifications")}
+          onClick={(event) => { if (user) irA(event, "/notificaciones"); }}
+          className={celda(indice === 3)}
         >
-          {marca("/promociones")}
-          <OfferTagPercentIcon className="h-5 w-5" strokeWidth={isActive("/promociones") ? 2.4 : 2} />
-          {rotulo(etiquetas.ofertas)}
+          <span className="relative">
+            <Bell className="h-6 w-6" strokeWidth={trazo(indice === 3)} />
+            {avisosPorVer > 0 && (
+              <span className="absolute -right-2 -top-1.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[#009FD9] px-1 text-[10px] font-bold leading-none text-white ring-2 ring-white">
+                {avisosPorVer > 9 ? "9+" : avisosPorVer}
+              </span>
+            )}
+          </span>
         </Link>
 
         {user ? (
-          <Link
-            href={nativePanelHref}
-            prefetch={true}
-            aria-label="Panel"
-            onClick={(event) => irA(event, nativePanelHref)}
-            className={itemClass(nativePanelHref)}
-          >
-            {marca(nativePanelHref)}
+          <Link href={nativePanelHref} prefetch={true} aria-label={tNav("panel")} onClick={(event) => irA(event, nativePanelHref)} className={celda(indice === 4)}>
             {avatarUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element -- avatar pequeño de tamaño fijo; el optimizador no actúa en Cloudflare
-              <img
-                src={avatarUrl}
-                alt=""
-                className={cn(
-                  "h-5 w-5 max-w-none rounded-full object-cover",
-                  isActive(nativePanelHref) ? "ring-2 ring-[#009FD9]" : "ring-1 ring-[#d5dfe9]",
-                )}
-              />
+              // El aro de «activa» va POR DENTRO del borde de la foto: por fuera
+              // la agrandaba y el resaltado se veía distinto al de las demás.
+              <span className="relative block h-7 w-7">
+                {/* eslint-disable-next-line @next/next/no-img-element -- avatar pequeño de tamaño fijo; el optimizador no actúa en Cloudflare */}
+                <img src={avatarUrl} alt="" className="h-7 w-7 max-w-none rounded-full object-cover" />
+                <span aria-hidden className={cn("pointer-events-none absolute inset-0 rounded-full ring-inset", indice === 4 ? "ring-2 ring-[#009FD9]" : "ring-1 ring-[#d5dfe9]")} />
+              </span>
             ) : (
-              <UserRound className="h-5 w-5" strokeWidth={isActive(nativePanelHref) ? 2.4 : 2} />
+              <UserRound className="h-6 w-6" strokeWidth={trazo(indice === 4)} />
             )}
-            {rotulo("Panel")}
           </Link>
         ) : (
-          <Link
-            href="/login"
-            aria-label={t("login")}
-            className={itemClass("acceso")}
-          >
-            {marca("acceso")}
-            <UserRound className="h-5 w-5" strokeWidth={2} />
-            {rotulo(t("login"))}
+          <Link href="/login" aria-label={t("login")} className={celda(false)}>
+            <UserRound className="h-6 w-6" strokeWidth={2} />
           </Link>
         )}
       </div>
     </nav>
+    <HojaDeCrear abierta={hojaDeCrear} onCerrar={() => setHojaDeCrear(false)} esProfesional={isPro} avatarUrl={avatarUrl} />
+    </>
   );
 }

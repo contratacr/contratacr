@@ -19,9 +19,10 @@ const LOCALES: LocaleContract[] = [
   {
     locale: "es",
     navLabel: "Navegación de la app",
-    // La barra es la MISMA para toda cuenta: ya no cambia el centro según quien
-    // mire. Cotizaciones y el Asistente viven en el menú lateral.
-    navItems: ["Buscar", "Promociones", "Proyectos", "Empleos", "Panel"],
+    // Barra flotante de solo íconos, la MISMA para toda cuenta: se reconoce
+    // por el nombre accesible de cada botón. Promociones, Proyectos, Empleos y
+    // Cotizaciones viven en el menú lateral; el Asistente, en la barra.
+    navItems: ["Buscar profesionales", "Asistente", "Crear", "Notificaciones", "Mi panel"],
     messages: "Mensajes",
     assistant: "Asistente",
     assistantDialog: /Asistente ContrataCR/i,
@@ -33,7 +34,7 @@ const LOCALES: LocaleContract[] = [
   {
     locale: "en",
     navLabel: "App navigation",
-    navItems: ["Search", "Promotions", "Projects", "Jobs", "Panel"],
+    navItems: ["Search professionals", "Assistant", "Create", "Notifications", "My dashboard"],
     messages: "Messages",
     assistant: "Assistant",
     assistantDialog: /ContrataCR Assistant/i,
@@ -67,7 +68,8 @@ async function assertNativeChrome(page: Page, contract: LocaleContract) {
   const nav = page.locator("nav.ccr-native-bottom-nav");
   await expect(nav).toBeVisible();
   await expect(nav).toHaveAttribute("aria-label", contract.navLabel);
-  await expect(nav.locator(":scope > div > *")).toHaveText(contract.navItems);
+  await expect.poll(() => nav.locator(".ccr-barra-flotante-pastilla > a, .ccr-barra-flotante-pastilla > button")
+    .evaluateAll((items) => items.map((item) => item.getAttribute("aria-label")))).toEqual(contract.navItems);
 
   const messagesLink = page.locator(`header a[href$="/mensajes"][aria-label="${contract.messages}"]`).filter({ visible: true });
   await expect(messagesLink).toHaveCount(1);
@@ -90,7 +92,8 @@ async function assertNativeChrome(page: Page, contract: LocaleContract) {
     };
   });
   expect(geometry).not.toBeNull();
-  expect(geometry!.mainBottom).toBeLessThanOrEqual(geometry!.navTop + 1);
+  // La barra flota: el contenido pasa por detrás de ella hasta el borde.
+  expect(geometry!.mainBottom).toBeLessThanOrEqual(geometry!.viewportHeight + 1);
   expect(geometry!.navBottom).toBeLessThanOrEqual(geometry!.viewportHeight + 1);
 }
 
@@ -291,9 +294,11 @@ test.describe("@mobile native shell contracts", () => {
     ]) {
       const nativeNav = page.locator("nav.ccr-native-bottom-nav").filter({ visible: true });
       await expect(nativeNav).toBeVisible();
+      // Las secciones se abren desde el menú lateral; la barra solo se queda.
+      await page.getByRole("button", { name: /abrir men[uú]|open menu/i }).click();
       await Promise.all([
         page.waitForURL(new RegExp(`${destination.path.replaceAll("/", "\\/")}(?:[?#].*)?$`), { waitUntil: "domcontentloaded" }),
-        nativeNav.getByRole("link", { name: destination.label, exact: true }).click(),
+        page.getByRole("link", { name: destination.label, exact: true }).locator("visible=true").first().click(),
       ]);
       await expect(page.getByRole("heading", { name: destination.heading, exact: true })).toBeVisible();
       // Same as the web: the board owns its title row and no app header is
@@ -340,7 +345,12 @@ test.describe("@mobile native shell contracts", () => {
     const sheet = page.locator(".ccr-search-bottom-sheet");
     const handle = sheet.getByRole("button", { name: "Cambiar tamaño del panel de resultados" });
     await expect(sheet).toBeVisible();
-    await handle.press("Enter");
+    // El asa recorre las alturas de una en una (recogido → medio → alto):
+    // se avanza hasta la alta.
+    for (let intento = 0; intento < 3 && ((await sheet.boundingBox())?.y ?? 999) > 183; intento += 1) {
+      await handle.press("Enter");
+      await page.waitForTimeout(400);
+    }
     await expect.poll(async () => {
       const box = await sheet.boundingBox();
       return box?.y ?? 999;
@@ -363,8 +373,8 @@ test.describe("@mobile native shell contracts", () => {
       const overlay = element.closest<HTMLElement>(".fixed.z-\\[220\\]");
       if (!overlay) return null;
       const rect = overlay.getBoundingClientRect();
-      // La barra de abajo sigue montada bajo la hoja de servicios: la hoja
-      // llega hasta el borde superior de la barra, no hasta el fondo.
+      // La barra flota encima de la hoja de servicios: la hoja llega hasta el
+      // fondo y le deja su alto por dentro.
       const nav = document.querySelector<HTMLElement>("nav.ccr-native-bottom-nav");
       const navTop = nav ? nav.getBoundingClientRect().top : window.innerHeight;
       return { top: rect.top, bottom: rect.bottom, viewportHeight: window.innerHeight, navTop };
@@ -372,7 +382,7 @@ test.describe("@mobile native shell contracts", () => {
     expect(overlayGeometry).not.toBeNull();
     expect(overlayGeometry!.top).toBe(0);
     expect(overlayGeometry!.bottom).toBeLessThanOrEqual(overlayGeometry!.viewportHeight + 1);
-    expect(overlayGeometry!.bottom).toBeGreaterThanOrEqual(Math.min(overlayGeometry!.navTop, overlayGeometry!.viewportHeight) - 1);
+    expect(overlayGeometry!.bottom).toBeGreaterThanOrEqual(overlayGeometry!.viewportHeight - 1);
   });
 
   test("notification rows in the app delete by swipe instead of an item menu", async ({ page }) => {
@@ -461,10 +471,8 @@ test.describe("@mobile native shell contracts", () => {
         });
       });
 
-      // El Asistente ya no vive en la barra para nadie: se abre desde el menú
-      // lateral, que es la única puerta y es igual para toda cuenta.
-      await page.getByRole("button", { name: /abrir men[uú]|open menu/i }).click();
-      await page.getByRole("button", { name: contract.assistant, exact: true }).locator("visible=true").first().click();
+      // El Asistente vive en la barra flotante, igual para toda cuenta.
+      await page.locator("nav.ccr-native-bottom-nav").getByRole("button", { name: contract.assistant, exact: true }).click();
       const dialog = page.getByRole("dialog", { name: contract.assistantDialog });
       await expect(dialog).toBeVisible();
       // La barra de abajo se queda bajo el asistente: tocar una pestaña lo
@@ -485,11 +493,10 @@ test.describe("@mobile native shell contracts", () => {
 
       await expect.poll(() => directChatRequests).toBe(1);
       // El enlace lleva además el camino de vuelta (`back=`) al panel desde donde se abrió.
-      await expect(page).toHaveURL(new RegExp(`/${contract.locale}/mensajes\\?conversation=${conversationId}(?:&.*)?$`));
+      await expect(page).toHaveURL(new RegExp(`${contract.locale === "es" ? "" : "/en"}/mensajes\\?conversation=${conversationId}(?:&.*)?$`));
       await expect(page.locator("html")).toHaveClass(/contratacr-chat-thread-open/);
-      // En Mensajes la barra de abajo se queda (solo se retira al desplazar en
-      // portada, Ofertas, Empleos y /buscar).
-      await expect(page.locator("nav.ccr-native-bottom-nav")).toBeVisible();
+      // Dentro de un chat no hay barra de abajo, como en WhatsApp.
+      await expect(page.locator("nav.ccr-native-bottom-nav")).toBeHidden();
       await expect(page.locator(".ccr-direct-chat-composer")).toBeVisible();
       await assertKeyboardSafeComposer(
         page,

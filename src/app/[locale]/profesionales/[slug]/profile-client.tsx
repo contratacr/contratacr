@@ -724,7 +724,9 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
   ];
 
   const bloqueContacto = (conAncla: boolean) => (
-    <div {...(conAncla ? { id: "perfil-contacto" } : {})} className="mx-auto flex w-full max-w-md flex-col gap-4 lg:max-w-none">
+    // Precio y zona son UN bloque («cuánto y dónde»): con 16 px entre los dos,
+    // y la línea alta del precio, se leían como dos secciones sueltas.
+    <div {...(conAncla ? { id: "perfil-contacto" } : {})} className="mx-auto flex w-full max-w-md flex-col gap-1.5 lg:max-w-none">
       <div>
         {(() => {
           const label = primaryPricingLabel(professional.pricing, professional.hourlyRate, locale);
@@ -950,9 +952,15 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
                       se leían como dos datos sueltos. El ícono de cada una ya
                       marca dónde empieza la siguiente. */}
                   {(professional.reviewCount > 0 || expYears > 0) && (
-                    <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12.5px] text-[#68778d] sm:mt-3 sm:gap-x-5 sm:text-[13px]">
+                    <div className="mt-1.5 flex flex-nowrap items-center gap-x-3 overflow-hidden text-[12.5px] text-[#68778d] sm:mt-3 sm:gap-x-5 sm:text-[13px]">
+                      {/* SIEMPRE una sola línea, en español e inglés: con «años
+                          de experiencia» completo no cabía al lado de las
+                          reseñas y se partía en dos renglones. */}
                       {professional.reviewCount > 0 && (
-                        <button type="button" onClick={() => setActiveTab("resenas")} className="inline-flex min-w-0 items-center gap-1.5">
+                        // Con etiqueta queda fuera de la regla de 44 px de alto
+                        // mínimo de la app: estiraba el bloque del nombre y ya
+                        // no quedaba centrado con la foto.
+                        <button type="button" onClick={() => setActiveTab("resenas")} aria-label={`${professional.ratingAvg.toFixed(1)} · ${t("reviewCountLabel", { count: professional.reviewCount })}`} className="relative inline-flex min-w-0 items-center gap-1.5 after:absolute after:-inset-2 after:content-['']">
                           <Star className="h-3.5 w-3.5 shrink-0 fill-[#ff9b32] text-[#ff9b32]" />
                           <span className="text-[14px] font-bold text-[#162543] sm:text-[15px]">{professional.ratingAvg.toFixed(1)}</span>
                           <span className="whitespace-nowrap">{t("reviewCountLabel", { count: professional.reviewCount })}</span>

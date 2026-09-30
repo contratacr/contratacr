@@ -1722,7 +1722,9 @@ export default function DashboardPage() {
   const professionalRecordResolving = !!user && canOffer(user) && !pro && !proLoadError;
   if (isSigningOut()) return null;
   if (authLoading || loading || !user || professionalRecordResolving) {
-    return <>{formularioPublicar}<PanelSkeleton seccion={activeTab !== "home"} /></>;
+    return <>{formularioPublicar}{/* La forma sale solo de la URL: la preferencia del teléfono no existe
+        en el servidor y romper la hidratación rehacía toda la página. */}
+      <PanelSkeleton seccion={allowedRequestedTab !== null && allowedRequestedTab !== "home"} /></>;
   }
 
   const proProfile = Array.isArray(pro?.profiles) ? pro?.profiles[0] : pro?.profiles;

@@ -772,9 +772,37 @@ const PRODUCT_INTENTS: ProductIntent[] = [
   {
     test: (n) => /^(hola|holi|buenas|buenos dias|buenas tardes|buenas noches|hello|hi|hey|saludos)[\s!.,]*(\w+[\s!.,]*){0,3}$/.test(n) && n.split(/\s+/).length <= 4,
     answer: {
-      es: "¡Hola! Puedo ayudarte a encontrar un profesional (dime el servicio y la zona, por ejemplo «un electricista en Heredia») o explicarte cómo funciona ContrataCR. ¿Qué necesitass?",
+      es: "¡Hola! Puedo ayudarte a encontrar un profesional (dime el servicio y la zona, por ejemplo «un electricista en Heredia») o explicarte cómo funciona ContrataCR. ¿Qué necesitas?",
       en: "Hi! I can help you find a professional (tell me the service and the area, for example \"an electrician in Heredia\") or explain how ContrataCR works. What do you need?",
     },
+  },
+  {
+    test: (n) => /(agreg|anad|sum|add).{0,12}(un |otro |mas |another |a )?(servicio|servicios|service|services)/.test(n),
+    answer: {
+      es: "Para agregar un servicio abre tu panel, entra a Servicios y toca «Agregar servicio»: eliges el servicio, tus zonas y el precio de referencia. Aparece en tu perfil y en las búsquedas de ese servicio.",
+      en: "To add a service open your panel, go to Services and tap \"Add service\": pick the service, your areas and a reference price. It shows on your profile and in searches for that service.",
+    },
+    cta: { es: "Ir a Servicios", en: "Open Services" },
+    href: (locale) => `${prefijoDeIdioma(locale)}/dashboard/profesional?tab=services`,
+  },
+  // Los dos temas del menú del cliente que juntan dos secciones.
+  {
+    test: (n) => /(empleos?|trabajos?|jobs?).{0,25}(promociones?|ofertas?|descuentos?|deals?|promotions?)|(promociones?|ofertas?|deals?|promotions?).{0,25}(empleos?|trabajos?|jobs?)/.test(n),
+    answer: {
+      es: "Los empleos y las promociones están en el menú (las tres rayas de arriba). En Empleos abres un puesto y le escribes a quien lo publicó por WhatsApp o por Mensajes; ahí mismo le mandas tu currículum. En Promociones ves los descuentos de los profesionales y les escribes igual, desde cada promoción.",
+      en: "Jobs and promotions are in the menu (the three lines at the top). In Jobs you open a position and write to whoever posted it on WhatsApp or through Messages, sending your résumé there. In Promotions you see professionals' discounts and write to them the same way, from each promotion.",
+    },
+    cta: { es: "Ver promociones", en: "See promotions" },
+    href: (locale) => `${prefijoDeIdioma(locale)}/promociones`,
+  },
+  {
+    test: (n) => /(crear|creo|publicar|publico|create|post).{0,10}(o|or).{0,10}(buscar|busco|ver|find|see).{0,15}(proyectos?|projects?)/.test(n),
+    answer: {
+      es: "Para pedir un trabajo, toca el «+» de abajo y elige «Publicar un proyecto»: cuentas qué necesitas y los profesionales de ese servicio te escriben. Los proyectos que ya publicó la gente están en Proyectos, en el menú de arriba.",
+      en: "To request a job, tap the \"+\" at the bottom and choose \"Post a project\": you describe what you need and professionals in that service write to you. Projects other people posted are in Projects, in the top menu.",
+    },
+    cta: { es: "Publicar proyecto", en: "Post project" },
+    href: (locale) => `${prefijoDeIdioma(locale)}/publicar-proyecto`,
   },
   {
     test: (n) => /^(muchas gracias|mil gracias|gracias|thank you|thanks|ok gracias|perfecto gracias)[\s!.]*$/.test(n),
@@ -912,8 +940,8 @@ const PRODUCT_INTENTS: ProductIntent[] = [
   {
     test: (n) => EMPLEOS_VISIBLE && (/(public|cre[oa]|sub[oi]|pon[eg]|hac[eo]|busco|necesito|ocupo|publish|create|post|hire).{0,15}(un empleo|empleo|empleos|vacante|puesto|plaza|un trabajo para|personal|empleado|empleada|a job|job post|vacancy)/.test(n) && !/(postul|aplic|apply)/.test(n)),    action: "open_dashboard",
     answer: {
-      es: "Para contratar personal, publica un empleo desde tu panel: pestaña Empleos → «Publicar empleo» (puesto, tipo de contrato, lugar, salario si quieres mostrarlo). Las personas postulan desde la sección Empleos y tú ves las postulaciones ahí mismo.",
-      en: "To hire staff, publish a job from your panel: Jobs tab → \"Publish job\" (position, contract type, place, salary if you want to show it). People apply from the Jobs section and you see the applications right there.",
+      es: "Para contratar personal, publica un empleo desde tu panel: pestaña Empleos → «Publicar empleo» (puesto, tipo de contrato, lugar, salario si quieres mostrarlo). Quienes quieran el puesto te escriben por WhatsApp o, en la app, por Mensajes, y por ahí mismo te envían su currículum.",
+      en: "To hire staff, publish a job from your panel: Jobs tab → \"Publish job\" (position, contract type, place, salary if you want to show it). Candidates write to you on WhatsApp or, in the app, through Messages, and send their résumé right there.",
     },
     cta: { es: "Ir a Empleos", en: "Open Jobs" },
     href: (locale) => `${prefijoDeIdioma(locale)}/dashboard/profesional?tab=jobs`,
@@ -921,8 +949,8 @@ const PRODUCT_INTENTS: ProductIntent[] = [
   {
     test: (n) => EMPLEOS_VISIBLE && (/(postular|postulo|postularme|aplicar|aplico|apply|applying).{0,20}(trabajo|empleo|puesto|vacante|job|position)/.test(n) || /(trabajo|empleo|job).{0,20}(postular|aplicar|apply)/.test(n)),    action: "help",
     answer: {
-      es: "Entra a Empleos, abre el puesto que te interesa y toca «Postular»: adjuntas tu currículum y un mensaje. Tus postulaciones quedan en tu panel, pestaña Mis postulaciones.",
-      en: "Go to Jobs, open the position you like and tap \"Apply\": attach your résumé and a message. Your applications stay in your panel, in the My applications tab.",
+      es: "Entra a Empleos y abre el puesto que te interesa. Desde ahí le escribes a quien lo publicó por WhatsApp o, en la app, por Mensajes, y por ese mismo chat le envías tu currículum.",
+      en: "Go to Jobs and open the position you like. From there you write to whoever posted it on WhatsApp or, in the app, through Messages, and send your résumé in that same chat.",
     },
     cta: { es: "Ver empleos", en: "See jobs" },
     href: (locale) => `${prefijoDeIdioma(locale)}/empleos`,
@@ -930,8 +958,8 @@ const PRODUCT_INTENTS: ProductIntent[] = [
   {
     test: (n) => EMPLEOS_VISIBLE && (/(ver|buscar|hay|busco|donde|where|see|find|show).{0,15}(ofertas de trabajo|ofertas de empleo|empleos|trabajos|vacantes|puestos|jobs|job offers|vacancies)/.test(n) || /^(empleos|trabajos|vacantes|jobs)[\s?!.]*$/.test(n)),    action: "help",
     answer: {
-      es: "Los empleos disponibles están en la sección Empleos: puedes filtrar por lugar y tipo de contrato, y postular desde cada puesto.",
-      en: "Open jobs are in the Jobs section: filter by place and contract type, and apply from each position.",
+      es: "Los empleos disponibles están en la sección Empleos: puedes filtrar por lugar y tipo de contrato, y desde cada puesto le escribes a quien lo publicó.",
+      en: "Open jobs are in the Jobs section: filter by place and contract type, and from each position write to whoever posted it.",
     },
     cta: { es: "Ver empleos", en: "See jobs" },
     href: (locale) => `${prefijoDeIdioma(locale)}/empleos`,
@@ -2254,7 +2282,11 @@ export async function POST(req: Request) {
             ? "That service is not in the current catalog yet. You can suggest it for the ContrataCR team to review."
             : "Ese servicio todavía no está en el catálogo. Puedes sugerirlo para que el equipo de ContrataCR lo revise."
           : payload.answer;
-    const assistantAnswer = nativeApp
+    // En la app, una respuesta que solo nombra WhatsApp se dice «mensaje». La
+    // que ya nombra las DOS vías (WhatsApp o Mensajes, como empleos) se deja:
+    // cambiarla decía «por mensaje o por Mensajes».
+    const nombraLasDosVias = /whatsapp/i.test(rawAssistantAnswer) && /\b(Mensajes|Messages)\b/.test(rawAssistantAnswer);
+    const assistantAnswer = nativeApp && !nombraLasDosVias
       ? rawAssistantAnswer
           .replace(/contact(?:ar)?(?:lo)? por WhatsApp/gi, "enviar un mensaje")
           .replace(/(?:a trav[eé]s de|por) WhatsApp/gi, "por mensaje")

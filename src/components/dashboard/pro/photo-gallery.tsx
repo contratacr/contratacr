@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { confirmarSalidaSinGuardar } from "@/lib/confirmar-salida";
 import { useLocale, useTranslations } from "next-intl";
 import { AlertCircle, CalendarDays, Check, ImageUp, Images, Loader2, Pencil, Plus, Trash2, X } from "lucide-react";
@@ -153,6 +153,21 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
     const prof = targetProf || primary || "";
     setDraft({ id: genId(), profession: prof, photos: [] });
   }
+
+  // Desde el «+» de la barra de abajo se llega con ?nuevo=1: el formulario de
+  // un caso nuevo se abre solo. Se limpia de la dirección para que recargar o
+  // volver no lo abra otra vez.
+  const abrioNuevo = useRef(false);
+  useEffect(() => {
+    if (abrioNuevo.current || professions.length === 0) return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("nuevo") !== "1") return;
+    abrioNuevo.current = true;
+    params.delete("nuevo");
+    const resto = params.toString();
+    window.history.replaceState(window.history.state, "", `${window.location.pathname}${resto ? `?${resto}` : ""}`);
+    window.setTimeout(openAdd, 0);
+  });
   function openEdit(c: SuccessCase) { setDraft({ ...c, photos: [...c.photos] }); }
 
   async function uploadPhotos(files: FileList) {

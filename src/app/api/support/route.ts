@@ -7,6 +7,7 @@ import { enforceRateLimit } from "@/lib/rate-limit";
 import { LONG_TEXT_MAX_LENGTH, limitTrimmedText } from "@/lib/text-limits";
 import { auditUserAction } from "@/lib/audit/user-action";
 import { despuesDeResponder } from "@/lib/after-response";
+import { adjuntosValidos, firmarAdjuntos } from "@/lib/support/adjuntos";
 
 // Guest→account linking: when a user with a VERIFIED email views/uses support,
 // attach any prior GUEST tickets (user_id null) with the same email to their
@@ -58,7 +59,7 @@ export async function GET(req: Request) {
       .select("*")
       .eq("ticket_id", id)
       .order("created_at", { ascending: true });
-    return NextResponse.json({ ticket, messages: messages ?? [] });
+    return NextResponse.json({ ticket, messages: await firmarAdjuntos(db, messages ?? []) });
   }
 
   const selectUserTickets = () => db
@@ -93,7 +94,7 @@ export async function POST(req: Request) {
   const { data: { user } } = await supa.auth.getUser();
   if (!user) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
 
-  const { ticketId, body, action } = await req.json();
+  const { ticketId, body, action, attachments } = await req.json();
   if (!ticketId) return NextResponse.json({ error: "Datos inválidos" }, { status: 400 });
 
   const db = createAdminClient();
@@ -151,11 +152,14 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: true });
   }
 
-  // Otherwise: a normal reply message.
-  if (!safeBody) return NextResponse.json({ error: "Escribe un mensaje." }, { status: 400 });
-  const { data: savedMessage, error: msgErr } = await db.from("support_ticket_messages").insert({
+  // Otherwise: a normal reply message (texto, adjuntos o ambos).
+  const adjuntos = adjuntosValidos(attachments, ticketId);
+  if (!safeBody && !adjuntos.length) return NextResponse.json({ error: "Escribe un mensaje." }, { status: 400 });
+  const { data: filaGuardada, error: msgErr } = await db.from("support_ticket_messages").insert({
     ticket_id: ticketId, sender_role: "user", sender_id: user.id, sender_name: senderName, body: safeBody,
+    ...(adjuntos.length ? { attachments: adjuntos } : {}),
   }).select("*").single();
+  const [savedMessage] = filaGuardada ? await firmarAdjuntos(db, [filaGuardada]) : [filaGuardada];
   if (msgErr) return NextResponse.json({ error: msgErr.message }, { status: 500 });
 
   // A user reply re-opens a resolved ticket into "En proceso" (same thread).
@@ -183,7 +187,7 @@ export async function POST(req: Request) {
     entityOwnerUserId: user.id,
     beforeData: { status: ticket.status },
     afterData: { status: nextStatus, last_reply_role: "user" },
-    metadata: { message_length: safeBody.length },
+    metadata: { message_length: safeBody.length, attachments: adjuntos.length },
   }), "support.reply:audit");
 
   return NextResponse.json({ ok: true, message: savedMessage, status: nextStatus });

@@ -5,7 +5,7 @@ import { prefijoDeIdioma, rutaConIdioma } from "@/lib/prefijo-de-idioma";
 import { useState, useEffect, useRef, useMemo, useCallback, useTransition, type ReactNode } from "react";
 import { soltarFoco } from "@/lib/soltar-foco";
 import {
-  X, Menu, ChevronDown, ChevronRight, Search, MapPin, List, Map as MapIcon, ArrowLeft, Share2, Bot, ReceiptText,
+  X, Menu, ChevronDown, ChevronRight, Search, MapPin, List, Map as MapIcon, ArrowLeft, Share2, ReceiptText,
   Briefcase, Compass, Wrench,
   UserRound, UserRoundPlus, LogOut, FileText, MessageSquareText, Settings, Bell, MoreHorizontal,
   HelpCircle, ListChecks, Lightbulb, Headset, Globe2, Shield, Mail, ClipboardList, Clock, Bookmark } from "lucide-react";
@@ -937,6 +937,12 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   const [searchActiveIdx, setSearchActiveIdx] = useState(-1);
   const [searchFocused, setSearchFocused] = useState(false);
   const [nativeSearchOpen, setNativeSearchOpen] = useState(false);
+  // La barra de abajo marca «Buscar» mientras el buscador está abierto: el
+  // buscador va encima de cualquier pantalla y la dirección no cambia, así que
+  // sin este aviso la barra no sabía que se estaba buscando.
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent("ccr:buscador-nativo", { detail: { abierto: nativeSearchOpen } }));
+  }, [nativeSearchOpen]);
   const [busquedasRecientes, setBusquedasRecientes] = useState<BusquedaReciente[]>([]);
   const [visitasRecientes, setVisitasRecientes] = useState<RecentVisit[]>([]);
   const [currentLocationSuggestions, setCurrentLocationSuggestions] = useState<LocationSuggestion[] | null>(null);
@@ -1040,7 +1046,6 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   // active, which shortens the sheet and the full-screen search overlay.
   const accesoHref = (destino: string) => `/login?redirect=${encodeURIComponent(rutaConIdioma(locale, destino))}`;
   const enMensajes = /(^|\/)mensajes(?:\/|$)/.test(pathname ?? "");
-  const enNotificaciones = /(^|\/)notificaciones(?:\/|$)/.test(pathname ?? "");
   const nativeFullscreenRoute = /(^|\/)(?:publicar-proyecto|(?:empleos|promociones)\/publicar)(?:\/|$)/.test(pathname ?? "");
   // LA PRIMERA PINTURA YA SABE SI ESTA CUENTA OFRECE SERVICIOS.
   //
@@ -1824,8 +1829,15 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
       if (pedido) pedido.atendido = true;
       openNativeSearch();
     };
+    // El Asistente y el «+» no cambian de dirección: el buscador no se
+    // cerraba solo y quedaba ENCIMA de lo que abrían. Lo piden cerrar.
+    const cerrar = () => closeNativeSearch();
     window.addEventListener("ccr:open-native-search", open);
-    return () => window.removeEventListener("ccr:open-native-search", open);
+    window.addEventListener("ccr:close-native-search", cerrar);
+    return () => {
+      window.removeEventListener("ccr:open-native-search", open);
+      window.removeEventListener("ccr:close-native-search", cerrar);
+    };
   }, []);
 
   useEffect(() => {
@@ -1896,7 +1908,12 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   }
 
   function selectNativeCompactSuggestion(id: string) {
-    const picked = compactSuggestions.find((c) => c.id === id);
+    // «Los más buscados» se tocan con el campo VACÍO: ahí las sugerencias de lo
+    // escrito no tienen nada y el servicio no llegaba al campo. El nombre sale
+    // del catálogo cuando no está entre las sugerencias.
+    const sugerido = compactSuggestions.find((c) => c.id === id);
+    const nombre = sugerido?.label ?? getCategoryLabel(id, locale);
+    const picked = nombre ? { id, label: nombre } : undefined;
     if (picked) {
       setSearchQuery(repairVisibleText(picked.label));
       setSearchCategoryId(id);
@@ -2036,9 +2053,10 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
             )}>
               <div className={cn(
                 "absolute left-0 right-0 top-0 flex h-16 items-center lg:hidden",
-                nativeHeaderShell
-                  ? "justify-start gap-1.5"
-                  : "justify-start gap-2",
+                // gap-2 en la app también: la marca a 64 y el título a 104,
+                // como en los tableros (cabecera.ts). Con gap-1.5 quedaban 2 px
+                // corridos al pasar de Empleos a Notificaciones.
+                "justify-start gap-2",
               )}>
                 {sectionActive && sectionRoot ? (
                   <>
@@ -2116,15 +2134,8 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                           href={user ? "/mensajes" : accesoHref("/mensajes")}
                         />
                       )}
-                      {!enNotificaciones &&
-                        (user ? (
-                          <NotificationBell scope="all" />
-                        ) : (
-                          <HeaderNotificationsLink
-                            href={accesoHref("/notificaciones")}
-                            label={locale === "en" ? "Notifications" : "Notificaciones"}
-                          />
-                        ))}
+                      {/* Sin campana: en la app Notificaciones vive en el menú
+                          de abajo (30-sep-2026). Aquí solo Mensajes. */}
                     </div>
                   ) : (
                     <span className="h-10 w-10 shrink-0" aria-hidden />
@@ -3072,26 +3083,31 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                     <span className={mobileDrawerTextClass}>{t("searchProfessionals")}</span>
                   </button>
                 )}
-                {/* Proyectos vive fijo en la barra de abajo de la app. Aquí solo
-                    aparece en la web móvil, donde no hay barra. */}
-                {!nativeHeaderShell && (
+                {/* Desde el menú flotante (30-sep-2026) Proyectos, Promociones y
+                    Empleos viven aquí también en la app: abajo quedan buscar,
+                    el asistente, crear, notificaciones y el panel. */}
+                {(
                   <Link href="/proyectos" onClick={(event) => { cerrarCajon(); navigateNativeMarketplace(event, "/proyectos"); }} className={claseCajon("/proyectos")}>
                     <DrawerIcon><ClipboardList /></DrawerIcon>
                     <span className={mobileDrawerTextClass}>{locale === "en" ? "Projects" : "Proyectos"}</span>
                   </Link>
                 )}
-                {!nativeHeaderShell && (
+                {(
                   <Link href="/promociones" onClick={(event) => { cerrarCajon(); navigateNativeMarketplace(event, "/promociones"); }} className={claseCajon("/promociones")}>
                     <DrawerIcon><OfferTagPercentIcon className="h-5 w-5" /></DrawerIcon>
                     <span className={mobileDrawerTextClass}>{locale === "en" ? "Promotions" : "Promociones"}</span>
                   </Link>
                 )}
-                {EMPLEOS_VISIBLE && !nativeHeaderShell && (
+                {EMPLEOS_VISIBLE && (
                   <Link href="/empleos" onClick={(event) => { cerrarCajon(); navigateNativeMarketplace(event, "/empleos"); }} className={claseCajon("/empleos")}>
                     <DrawerIcon><Briefcase /></DrawerIcon>
                     <span className={mobileDrawerTextClass}>{locale === "en" ? "Jobs" : "Empleos"}</span>
                   </Link>
                 )}
+                <Link href="/servicios" onClick={cerrarCajon} className={claseCajon("/servicios")}>
+                  <DrawerIcon><Wrench /></DrawerIcon>
+                  <span className={mobileDrawerTextClass}>{t("categories")}</span>
+                </Link>
                 {/* PRIMERO LO QUE SE HACE, DESPUÉS LO QUE AYUDA. Cotizaciones
                     es trabajo del profesional y va arriba del Asistente, que es
                     una ayuda que se abre encima y se cierra. */}
@@ -3104,16 +3120,6 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                 {/* El Asistente es lo único que el cajón aporta de nuevo en la
                     app: una ayuda que se abre encima y se cierra, no un destino.
                     Va para todos, con sesión o sin ella. */}
-                {nativeHeaderShell && (
-                  <button type="button" onClick={() => { cerrarCajon(); window.dispatchEvent(new Event("contratacr:open-ai")); }} className={mobileDrawerItemClass}>
-                    <DrawerIcon><Bot /></DrawerIcon>
-                    <span className={mobileDrawerTextClass}>{tNav("assistant")}</span>
-                  </button>
-                )}
-                <Link href="/servicios" onClick={cerrarCajon} className={claseCajon("/servicios")}>
-                  <DrawerIcon><Wrench /></DrawerIcon>
-                  <span className={mobileDrawerTextClass}>{t("categories")}</span>
-                </Link>
                 {user && isAdminUser && (
                   <Link href="/admin" onClick={cerrarCajon} className={mobileDrawerItemClass}>
                     <DrawerIcon><Shield /></DrawerIcon>

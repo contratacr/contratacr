@@ -9,7 +9,7 @@ import { PanelEmptyState } from "@/components/ui/content-loading";
 import { cn } from "@/lib/utils";
 import { useLocale } from "next-intl";
 import { useTranslations } from "next-intl";
-import { ContrataCRMark, HeaderAccountLink, HeaderMessagesLink, HeaderNotificationsLink, LandingNavbar } from "@/components/landing/landing-navbar";
+import { ContrataCRMark, HeaderAccountLink, HeaderMessagesLink, LandingNavbar } from "@/components/landing/landing-navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { CategorySuggestionBox } from "@/components/ui/category-suggestion";
 import { Link, useRouter } from "@/i18n/navigation";
@@ -210,12 +210,7 @@ export function ServiciosClient({ catalogoInicial }: { catalogoInicial: string |
                       href={`/login?redirect=${encodeURIComponent(`${prefijoDeIdioma(locale)}/mensajes`)}`}
                     />
                   )}
-                  {nativeApp ? (
-                    <HeaderNotificationsLink
-                      href={`/login?redirect=${encodeURIComponent(`${prefijoDeIdioma(locale)}/notificaciones`)}`}
-                      label={tp("notifications")}
-                    />
-                  ) : (
+                  {nativeApp ? null : (
                     /* El acceso SOLO sin sesión. Esta cabecera es propia de la
                        pantalla —no la barra—, así que no se enteraba de la
                        sesión y enseñaba la silueta de «Iniciar sesión» a quien

@@ -129,18 +129,14 @@ requireMatch("Bottom nav uses the shared no-bar rule", bottomNav, /sinBarraDeAba
 const detalleEnHelper = /RUTA_DE_DETALLE = \/(.+)\/;/.exec(rutasSinBarra)?.[1];
 if (!detalleEnHelper) failures.push("rutas-sin-barra.ts: RUTA_DE_DETALLE not found");
 else if (!layoutRaiz.includes(detalleEnHelper.replace(/\\/g, "\\\\"))) failures.push("layout.tsx boot script does not carry the same RUTA_DE_DETALLE as rutas-sin-barra.ts");
-// La barra es la MISMA para todos: cinco lugares fijos, sin ramas por cuenta.
-// El Asistente y Cotizaciones viven en el menú lateral.
+// La barra es la MISMA para todos y FLOTA (30-sep-2026): buscar, asistente,
+// crear (+), notificaciones y el panel, en ese orden. Proyectos, Promociones,
+// Empleos, Servicios y Cotizaciones viven en el menú lateral.
 requireMatch(
   "Native bottom navigation order",
   bottomNav,
-  /href="\/profesionales"[\s\S]*href="\/empleos"[\s\S]*href="\/proyectos"[\s\S]*href="\/promociones"[\s\S]*href=\{nativePanelHref\}/,
+  /href="\/profesionales"[\s\S]*contratacr:open-ai[\s\S]*setHojaDeCrear\(true\)[\s\S]*"\/notificaciones"[\s\S]*href=\{nativePanelHref\}/,
 );
-// Si alguien devuelve el Asistente o Cotizaciones a la barra, esto lo dice
-// antes de que llegue a la tienda.
-if (/contratacr:open-ai/.test(bottomNav)) {
-  failures.push("Native bottom navigation still opens the assistant; it belongs in the drawer");
-}
 if (/tab=quotes/.test(bottomNav)) {
   failures.push("Native bottom navigation still links to quotes; they belong in the drawer");
 }
@@ -177,12 +173,12 @@ requireMatch(
   "Spanish native bottom navigation smoke",
   mobileShellSpec,
   // La pestaña se llama «Promociones»; /promociones es solo la ruta heredada.
-  /navItems:\s*\["Buscar",\s*"Promociones",\s*"Proyectos",\s*"Empleos",\s*"Panel"\]/,
+  /navItems:\s*\["Buscar profesionales",\s*"Asistente",\s*"Crear",\s*"Notificaciones",\s*"Mi panel"\]/,
 );
 requireMatch(
   "English native bottom navigation smoke",
   mobileShellSpec,
-  /navItems:\s*\["Search",\s*"Promotions",\s*"Projects",\s*"Jobs",\s*"Panel"\]/,
+  /navItems:\s*\["Search professionals",\s*"Assistant",\s*"Create",\s*"Notifications",\s*"My dashboard"\]/,
 );
 requireMatch("Native assistant opens direct chat smoke", mobileShellSpec, /\/api\/direct-chat[\s\S]*actionKind:\s*"message"[\s\S]*\/mensajes\\\\\?conversation=/);
 requireMatch("Mobile-only Playwright workflow", mobileWorkflow, /npm run test:e2e:mobile/);

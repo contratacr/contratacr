@@ -680,7 +680,12 @@ export function ProfessionalSchedule({ professional, categoryName, searchedPlace
                 <button
                   type="button"
                   onClick={onVerZonas}
-                  className="shrink-0 rounded-sm font-bold text-[#007fae] underline-offset-2 hover:underline"
+                  aria-label={t("moreZones", { count: zonasRestantes })}
+                  // La etiqueta lo saca de la regla de 44 px de alto mínimo de la
+                  // app (globals.css): estiraba la fila entera y metía ~12 px de
+                  // aire invisible arriba de la zona. El área de toque sigue
+                  // grande con el ::after.
+                  className="relative min-h-0 shrink-0 rounded-sm font-bold text-[#007fae] underline-offset-2 after:absolute after:-inset-3 after:content-[''] hover:underline"
                 >
                   {t("moreZones", { count: zonasRestantes })}
                 </button>
@@ -718,7 +723,9 @@ export function ProfessionalSchedule({ professional, categoryName, searchedPlace
           </div>
         )}
       </div>
-      {(addressLine || hayContenidoDespues) && <div className="mt-1 h-px w-full bg-[#e5e7eb]" aria-hidden />}
+      {/* mt-4: el mismo aire arriba de esta línea que el que hay entre la línea
+          de arriba y el precio (con mt-1 quedaba pegada a la zona). */}
+      {(addressLine || hayContenidoDespues) && <div className="mt-4 h-px w-full bg-[#e5e7eb]" aria-hidden />}
       {addressLine && (
         <p className="mt-1.5 text-[11px] leading-snug text-[#6b7280]">
           {venueName && <span className="font-semibold text-[#374151]">{venueName} · </span>}

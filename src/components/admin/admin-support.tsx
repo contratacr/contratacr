@@ -3,12 +3,13 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { SUPPORT_CLOSE_REASONS } from "@/lib/support/close-reasons";
-import { Headset, ArrowLeft, Send, User, Shield, UserSearch, Loader2, Trash2 } from "lucide-react";
+import { Headset, ArrowLeft, User, Shield, UserSearch, Loader2, Trash2 } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { AdminUserSearch } from "@/components/admin/admin-user-search";
 import { supportTicketRef } from "@/lib/support-ticket";
+import { AdjuntosDelMensaje, CompositorDeSoporte } from "@/components/support/compositor-de-soporte";
+import { conservarEnlaces, type AdjuntoDeSoporte } from "@/lib/support/adjuntos";
 import { AdminFilterTabs } from "@/components/admin/admin-filter-tabs";
-import { LONG_TEXT_MAX_LENGTH, limitText } from "@/lib/text-limits";
 import { useAdminAutoRefresh } from "@/hooks/use-admin-auto-refresh";
 import { useAppDialog } from "@/hooks/use-app-dialog";
 
@@ -35,6 +36,7 @@ type Message = {
   sender_name?: string | null;
   body: string;
   created_at: string;
+  attachments?: AdjuntoDeSoporte[] | null;
 };
 
 const STATUSES = [
@@ -69,8 +71,6 @@ export function AdminSupport() {
   const [ticket, setTicket] = useState<Ticket | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [threadLoading, setThreadLoading] = useState(false);
-  const [reply, setReply] = useState("");
-  const [sending, setSending] = useState(false);
   const { dialogNode, showMessage } = useAppDialog();
 
   const load = useCallback((s: string, silent = false) => {
@@ -90,15 +90,14 @@ export function AdminSupport() {
     if (!silent) setThreadLoading(true);
     fetch(`/api/admin/support?id=${id}`)
       .then((r) => r.json())
-      .then(({ ticket, messages }) => { setTicket(ticket); setMessages(messages ?? []); })
+      .then(({ ticket, messages }) => { setTicket(ticket); setMessages((previos) => conservarEnlaces(previos, messages ?? [])); })
       .finally(() => { if (!silent) setThreadLoading(false); });
   }, []);
 
   useAdminAutoRefresh(() => {
-    if (sending || reply.trim()) return;
     if (openId) openTicket(openId, true);
     else load(status, true);
-  }, [load, openId, openTicket, reply, sending, status]);
+  }, [load, openId, openTicket, status]);
 
   // Deep-link: open a specific ticket on mount (e.g. ?ticket=<id> from the "Abrir"
   // link on a user's admin profile). Runs once so the admin can still go back to the
@@ -114,17 +113,16 @@ export function AdminSupport() {
     }
   }, [initialTicketId, openTicket]);
 
-  async function sendReply() {
-    if (!reply.trim() || !openId) return;
-    setSending(true);
+  async function sendReply(texto: string, adjuntos: AdjuntoDeSoporte[]): Promise<boolean> {
+    if ((!texto && !adjuntos.length) || !openId) return false;
     const res = await fetch("/api/admin/support", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: openId, body: reply.trim() }),
-    });
-    setSending(false);
-    if (res.ok) { setReply(""); openTicket(openId); }
-    else void showMessage({ title: "No se pudo enviar la respuesta", description: "Inténtalo de nuevo en unos segundos.", tone: "danger" });
+      body: JSON.stringify({ id: openId, body: texto, attachments: adjuntos.map((a) => ({ path: a.path, name: a.name, type: a.type, size: a.size })) }),
+    }).catch(() => null);
+    if (res?.ok) { openTicket(openId); return true; }
+    void showMessage({ title: "No se pudo enviar la respuesta", description: "Inténtalo de nuevo en unos segundos.", tone: "danger" });
+    return false;
   }
 
   const [cerrando, setCerrando] = useState(false);
@@ -282,28 +280,20 @@ export function AdminSupport() {
                       {m.sender_role === "admin" ? <Shield className="h-3 w-3" /> : <User className="h-3 w-3" />}
                       {m.sender_role === "admin" ? "Soporte ContrataCR" : (m.sender_name || "Usuario")} · {fmt(m.created_at)}
                     </div>
-                    <p className="text-sm leading-relaxed whitespace-pre-wrap">{m.body}</p>
+                    <AdjuntosDelMensaje adjuntos={m.attachments} propio={m.sender_role === "admin"} />
+                    {m.body && <p className="text-sm leading-relaxed whitespace-pre-wrap">{m.body}</p>}
                   </div>
                 </div>
               ))}
             </div>
 
-            {/* Reply box */}
-            <div className="p-4 border-t border-[#e5e7eb]">
-              <textarea
-                value={reply}
-                onChange={(e) => setReply(limitText(e.target.value, LONG_TEXT_MAX_LENGTH))}
-                maxLength={LONG_TEXT_MAX_LENGTH}
-                rows={3}
-                placeholder="Escribe tu respuesta… (se envía por correo al usuario)"
-                className="w-full rounded-xl border border-[#e5e7eb] px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0f172a]/20"
-              />
-              <div className="flex justify-end mt-2">
-                <button onClick={sendReply} disabled={sending || !reply.trim()} className="inline-flex items-center gap-1.5 rounded-lg bg-[#0f172a] text-white text-sm font-medium px-4 py-2 hover:bg-[#1e293b] disabled:opacity-50">
-                  <Send className="h-4 w-4" /> {sending ? "Enviando…" : "Responder"}
-                </button>
-              </div>
-            </div>
+            {/* La misma barra que ve la persona: clip, campo y enviar. */}
+            <CompositorDeSoporte
+              key={openId}
+              ticketId={openId}
+              placeholder="Escribe tu respuesta… (se envía por correo al usuario)"
+              onEnviar={sendReply}
+            />
           </div>
         )}
       </div>

@@ -262,13 +262,13 @@ export async function loginAs(page: Page, email: string, password: string) {
     await main.getByRole("button", { name: /Ingresar|Sign in/i }).first().click();
 
     try {
-      await page.waitForURL(/\/(?:es|en)\/dashboard\/profesional/, { timeout: 30_000, waitUntil: "domcontentloaded" });
+      await page.waitForURL(/(?:\/en)?\/dashboard\/profesional/, { timeout: 30_000, waitUntil: "domcontentloaded" });
       await expectAuthCookie(page);
       await page.locator("body").waitFor({ state: "visible", timeout: 5_000 });
       return;
     } catch (error) {
       lastError = error;
-      if (!/\/(?:es|en)\/login\?/.test(page.url())) break;
+      if (!/(?:\/en)?\/login\?/.test(page.url())) break;
     }
   }
   throw lastError;
