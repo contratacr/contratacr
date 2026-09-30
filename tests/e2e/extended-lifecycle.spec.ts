@@ -230,12 +230,9 @@ test.describe("@seeded extended lifecycle", () => {
       await gotoOK(page, "/dashboard/profesional?tab=services&mode=offer");
       const serviceCard = page.locator("section").filter({ has: page.getByRole("button", { name: /Editar informaci/i }) }).first();
       await expect(serviceCard).toHaveCount(1);
-      await page.evaluate(() => {
-        const spacer = document.createElement("div");
-        spacer.dataset.testid = "service-editor-scroll-regression-spacer";
-        spacer.style.height = "720px";
-        document.body.prepend(spacer);
-      });
+      // Ya no se antepone un bloque de 720 px al body: el panel se desplaza en su
+      // propio contenedor y ese bloque empujaba la sección fuera de la pantalla,
+      // donde nada podía llevarla.
       // El panel se desplaza en su propio contenedor (window.scrollY queda en
       // 0) y puede haber una copia oculta de la sección: se va al botón VISIBLE.
       const editarServicio = page.getByRole("button", { name: /Editar informaci/i }).filter({ visible: true }).first();

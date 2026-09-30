@@ -961,7 +961,8 @@ const PRODUCT_INTENTS: ProductIntent[] = [
   },
   {
     // Publicar un proyecto es la acción central del app y caía al buscador.
-    test: (n) => /(publicar|publico|crear|creo|hacer|hago|abrir|abro|publish|create|post).{0,18}(proyecto|project|solicitud|lo que necesito|what i need)/.test(n) || /^(publicar proyecto|publish project|proyecto nuevo|new project)$/.test(n),
+    // «¿…sin cuenta?» tiene su respuesta propia más abajo (hay que entrar).
+    test: (n) => !/sin cuenta|without (an )?account/.test(n) && (/(publicar|publico|crear|creo|hacer|hago|abrir|abro|publish|create|post).{0,18}(proyecto|project|solicitud|lo que necesito|what i need)/.test(n) || /^(publicar proyecto|publish project|proyecto nuevo|new project)$/.test(n)),
     action: "publish_request",
     answer: {
       es: "Publicar un proyecto es contar qué necesitas para que te escriban varios profesionales de esa categoría. Toca «Publicar proyecto», elige el servicio, describe el trabajo y agrega la zona; los profesionales interesados te escriben por Mensajes y comparas.",
