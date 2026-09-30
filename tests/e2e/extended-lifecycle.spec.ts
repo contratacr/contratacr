@@ -237,7 +237,9 @@ test.describe("@seeded extended lifecycle", () => {
         document.body.prepend(spacer);
       });
       await serviceCard.scrollIntoViewIfNeeded();
-      await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(100);
+      // El panel se desplaza en su propio contenedor, no en la ventana
+      // (window.scrollY queda en 0): lo que importa es que la tarjeta quedó a la vista.
+      await expect(serviceCard).toBeInViewport();
       await serviceCard.getByRole("button", { name: /Editar informaci/i }).click();
       const dialog = page.getByRole("dialog").filter({ has: page.locator("textarea") });
       await expect(dialog).toBeVisible();

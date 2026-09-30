@@ -853,7 +853,9 @@ const PRODUCT_INTENTS: ProductIntent[] = [
     href: (locale) => `${prefijoDeIdioma(locale)}/dashboard/profesional?tab=cuenta`,
   },
   {
-    test: (n) => /(verific|validar|confirmar|verify|validate).{0,25}(cedula|identidad|identity|id\b)/.test(n) || /(cedula|identidad).{0,20}(verific|validar)/.test(n) || /(verificacion|verificado|verificarme|verification|verified)/.test(n),
+    // Preguntar si la verificación GARANTIZA algo no es preguntar cómo
+    // verificarse: esa tiene su respuesta propia más abajo.
+    test: (n) => !/garantiz|guarantee/.test(n) && (/(verific|validar|confirmar|verify|validate).{0,25}(cedula|identidad|identity|id\b)/.test(n) || /(cedula|identidad).{0,20}(verific|validar)/.test(n) || /(verificacion|verificado|verificarme|verification|verified)/.test(n)),
     action: "open_dashboard",
     answer: {
       es: "En tu panel, abre Cuenta y seguridad → Datos básicos y escribe tu número de cédula: se comprueba contra el padrón y tu nombre queda verificado. Los profesionales además pasan por la verificación del equipo, que aparece como «Verificado» en el perfil.",

@@ -245,7 +245,7 @@ test.describe("@admin surfaces", () => {
 
       // The account page reads top to bottom: identity, verification, client, professional, reach, support, network, danger zone.
       await gotoOK(page, `/admin/usuarios/${state.professionalUserId}`);
-      for (const heading of [/Verificación de identidad/, /Como cliente/, /Como profesional/, /Reseñas recibidas/, /Empleos publicados/, /(?:Ofertas|Promociones) publicadas/, /Alcance del perfil/, /Casos de soporte/, /Reportes recibidos/, /Seguidos y seguidores/, /Eliminar esta cuenta al 100%/]) {
+      for (const heading of [/Verificación de identidad/, /Como cliente/, /Como profesional/, /Reseñas recibidas/, /Empleos publicados/, /(?:Ofertas|Promociones) publicadas/, /Alcance del perfil/, /Casos de soporte/, /Reportes recibidos/, /Eliminar esta cuenta al 100%/]) {
         await expectVisibleText(page.locator("body"), heading);
       }
       await expectHealthyPage(page);

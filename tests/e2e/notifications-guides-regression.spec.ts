@@ -215,8 +215,9 @@ test.describe("@notifications-guides disposable bilingual UI regression", () => 
         // El «...» general ya no vive en la cabecera de la lista: se movió a la
         // misma fila que «Nuevas», el primer rótulo, para que no quedara suelto
         // a otra altura. Se busca dentro de la lista, no en una fila concreta.
-        await list.getByRole("button", { name: copy.globalOptions, exact: true }).first().click();
-        await page.getByRole("menuitem", { name: copy.markAll, exact: true }).click();
+        // Desde el 29-sep entrar a Notificaciones las marca todas leídas (como
+        // Facebook): «Marcar todas como leídas» solo sale si queda alguna sin
+        // leer, y aquí ya no queda ninguna. Lo que se comprueba es el efecto.
         await expect.poll(async () => {
           const rows = await notificationRows(seeded.ids);
           return rows.length === seeded.ids.length && rows.every((row) => row.read);

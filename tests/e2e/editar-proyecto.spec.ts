@@ -10,7 +10,8 @@ test("@seeded el cliente corrige su proyecto y el cambio queda", async ({ page }
   await loginAs(page, "cliente.pruebas@contratacr.test", "ClientePruebas2026!");
   await page.goto("/proyectos");
   const enlaces = await page.locator('a[href*="/proyectos/"]').evaluateAll((ns) => ns.map((n) => (n as HTMLAnchorElement).getAttribute("href")));
-  const ficha = enlaces.find((h) => h && /[0-9a-f-]{20,}/.test(h));
+  // La ficha es «/proyectos/nombre-códigocorto» desde el 28-sep (antes, el id completo).
+  const ficha = enlaces.find((h) => h && /\/proyectos\/[^/?#]*[0-9a-f]{8}(?:[?#]|$)/.test(h));
   expect(ficha, "el tablero sembrado trae al menos un proyecto").toBeTruthy();
   await page.goto(ficha!);
 
