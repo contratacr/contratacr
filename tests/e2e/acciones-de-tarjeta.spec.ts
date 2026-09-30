@@ -15,7 +15,10 @@ const SECCIONES = [
 ] as const;
 
 async function medir(page: import("playwright/test").Page, tab: string) {
-  await page.goto(`/dashboard/profesional?tab=${tab}`, { waitUntil: "networkidle" });
+  // «networkidle» no llega nunca en el panel (avisos en vivo): se espera al
+  // documento y a que la sección pinte, no a que la red se calle.
+  await page.goto(`/dashboard/profesional?tab=${tab}`, { waitUntil: "domcontentloaded" });
+  await page.waitForLoadState("load", { timeout: 15_000 }).catch(() => undefined);
   const abrir = page.locator("button:has(h2), button:has(h3)").filter({ visible: true }).first();
   if (await abrir.count()) await abrir.click();
   const fila = page.locator(".ccr-acciones-tarjeta").filter({ visible: true }).first();

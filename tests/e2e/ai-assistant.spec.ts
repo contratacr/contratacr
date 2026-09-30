@@ -520,7 +520,9 @@ test.describe("@seeded ContrataCR AI", () => {
     const response = await ask(page, "¿Cómo contacto a un profesional?", { platform: "native" });
     expect(response.status, JSON.stringify(response.body)).toBe(200);
     expect(response.body.answer).toMatch(/mensaje/i);
-    expect(response.body.answer).not.toMatch(/WhatsApp/i);
+    // Manda a Mensajes; puede nombrar WhatsApp solo para decir que no hace falta salir.
+    expect(response.body.answer).toMatch(/Mensajes/);
+    expect(response.body.answer).not.toMatch(/abre WhatsApp|escr[ií]bele por WhatsApp/i);
 
     const search = await ask(page, "Necesito un plomero en Atenas, Alajuela", { platform: "native" });
     expect(search.status, JSON.stringify(search.body)).toBe(200);
