@@ -83,6 +83,18 @@ export async function middleware(request: NextRequest) {
     return conCabecerasDeSeguridad(NextResponse.next());
   }
 
+  // UNA REESCRITURA INTERNA YA PROCESADA PASA TAL CUAL. Con `next start` (el
+  // servidor del CI) el middleware vuelve a correr sobre la dirección a la que
+  // él mismo reescribió (/ → /es/…): las reglas de idioma la veían como una
+  // visita con /es y la devolvían a /, en bucle —toda página en español
+  // respondía 307/308 a sí misma y la regresión no podía ni arrancar desde el
+  // 28-sep—. En Cloudflare no se vuelve a correr, por eso el sitio andaba. La
+  // reescritura trae el idioma en X-NEXT-INTL-LOCALE y la ruta interna con su
+  // prefijo; una visita real a /es/… no trae ese encabezado.
+  if (request.headers.has("x-next-intl-locale") && /^\/(?:es|en)(?=\/|$)/.test(pathname)) {
+    return conCabecerasDeSeguridad(NextResponse.next());
+  }
+
   // El español vive en la raíz. Toda dirección con /es delante —años de enlaces
   // compartidos, sitemap viejo, avisos guardados— salta con 308 PERMANENTE a la
   // misma sin prefijo, con su consulta intacta, para que Google traslade lo
