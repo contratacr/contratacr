@@ -911,6 +911,10 @@ function guardarCapacidad(capacidad: CapacidadGuardada) {
   try { window.localStorage.setItem(CLAVE_CAPACIDAD + capacidad.userId, JSON.stringify(capacidad)); } catch { /* sin almacenamiento */ }
 }
 
+// Se enciende la primera vez que un encabezado termina de hidratar (ver
+// `hydrated` en LandingNavbar).
+let encabezadoYaHidratado = false;
+
 export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobileSearch = false, marketplaceDesktop = false, drawerOnly = false }: { mobileInline?: React.ReactNode; forceCompactSearch?: boolean; mobileSearch?: boolean; marketplaceDesktop?: boolean; drawerOnly?: boolean } = {}) {
   const [compact, setCompact] = useState(false);
   const [openMenu, setOpenMenu] = useState<string | null>(null);
@@ -1023,7 +1027,12 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
     return () => document.removeEventListener("scroll", onScroll, { capture: true });
   }, [nativeApp]);
   const nativeMessageUnread = useDirectMessageUnread(nativeApp);
-  const [hydrated, setHydrated] = useState(false);
+  // La espera de «hidratado» es para la PRIMERA carga, donde el servidor no
+  // sabe si es la app y el primer pintado tiene que coincidir con el suyo.
+  // Cada pantalla monta su propio encabezado: después de esa primera vez, uno
+  // nuevo nace ya en su versión de la app. Si no, en cada navegación el icono
+  // de Mensajes faltaba uno o dos cuadros (el «parpadeo» del icono).
+  const [hydrated, setHydrated] = useState(() => encabezadoYaHidratado);
   const nativeHeaderShell = hydrated && nativeApp;
   const { user, loading: authLoading, accountName, hasProfessionalProfile: fichaProDelServidor } = useAuth();
   // Search is a full-viewport map + results sheet. Do not merely hide the nav
@@ -1183,6 +1192,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   }, [explicitHeaderLocation, explicitHeaderService, headerCategoryId, headerGroupLabel, headerCoordinates, headerLocationSuggestion, pathname]);
 
   useEffect(() => {
+    encabezadoYaHidratado = true;
     queueMicrotask(() => setHydrated(true));
   }, []);
 
