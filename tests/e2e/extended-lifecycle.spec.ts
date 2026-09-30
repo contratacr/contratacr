@@ -387,6 +387,8 @@ test.describe("@seeded extended lifecycle", () => {
   });
 
   test("availability privacy changes persist and can be published again", async ({ page }) => {
+    // La agenda es parte de las citas, apagadas (src/lib/citas.ts).
+    test.skip(!CITAS_ACTIVAS, "Citas apagadas");
     const admin = regressionAdminClient();
     let account: DisposableAccount | undefined;
     try {

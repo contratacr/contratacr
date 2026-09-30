@@ -792,6 +792,7 @@ const PRODUCT_INTENTS: ProductIntent[] = [
   },
   {
     test: (n) => /(agreg|anad|sum|add).{0,12}(un |otro |mas |another |a )?(servicio|servicios|service|services)/.test(n),
+    action: "open_dashboard",
     answer: {
       es: "Para agregar un servicio abre tu panel, entra a Servicios y toca «Agregar servicio»: eliges el servicio, tus zonas y el precio de referencia. Aparece en tu perfil y en las búsquedas de ese servicio.",
       en: "To add a service open your panel, go to Services and tap \"Add service\": pick the service, your areas and a reference price. It shows on your profile and in searches for that service.",

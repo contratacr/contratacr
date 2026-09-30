@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import { expect, test } from "playwright/test";
+import { CITAS_ACTIVAS } from "../../src/lib/citas";
 import { apiJson, expectNoHorizontalOverflow, gotoOK, loginAs, openLoginForm, resetAuth } from "./helpers";
 import { canRunSeededRegression, E2E_USERS, ensureRegressionSeed, regressionAdminClient, type RegressionSeedState } from "./seed";
 import { getCategoryLabel } from "../../src/lib/data/categories";
@@ -457,6 +458,8 @@ test.describe("@seeded core regression", () => {
   });
 
   test("client booking flow creates a request, blocks double booking, and supports completion", async ({ page }) => {
+    // Las citas están apagadas (src/lib/citas.ts). Vuelve cuando se prendan.
+    test.skip(!CITAS_ACTIVAS, "Citas apagadas");
     const marker = regressionMarker("booking");
 
     await loginAs(page, E2E_USERS.client.email, E2E_USERS.client.password);
@@ -520,6 +523,8 @@ test.describe("@seeded core regression", () => {
   });
 
   test("video consultation and in-person slots can share schedule but one booking blocks both", async ({ page }) => {
+    // Las citas están apagadas (src/lib/citas.ts). Vuelve cuando se prendan.
+    test.skip(!CITAS_ACTIVAS, "Citas apagadas");
     const marker = regressionMarker("video shared availability");
 
     await loginAs(page, E2E_USERS.professional.email, E2E_USERS.professional.password);

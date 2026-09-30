@@ -482,7 +482,7 @@ test.describe("@seeded ContrataCR AI", () => {
       { prompt: "¿El profesional puede reprogramar mi cita?", action: "answer", answer: /ya no se agendan citas|acuerdan por mensaje/i },
       { prompt: "¿Puedo crear un proyecto sin cuenta?", action: "login", href: "/login", answer: /iniciar sesión/i },
       { prompt: "Me duele mucho el pecho, ¿busco un cardiólogo aquí?", action: "answer", answer: /9-1-1/i },
-      { prompt: "¿Qué hago si un profesional cancela mi cita?", action: "answer", answer: /no se puede reprogramar/i },
+      { prompt: "¿Qué hago si un profesional cancela mi cita?", action: "answer", answer: /ya no se agendan citas|escr[ií]bele/i },
       { prompt: "¿Cómo cambio de cliente a profesional?", action: "open_dashboard", href: "/dashboard/profesional", answer: /selector Cliente \/ Profesional/i },
       { prompt: "¿Cómo agrego otro servicio a mi perfil?", action: "open_dashboard", href: "tab=services", answer: /servicio/i },
       { prompt: "¿Cómo cambio mi contraseña?", action: "open_dashboard", href: "tab=cuenta", answer: /contraseña/i },
