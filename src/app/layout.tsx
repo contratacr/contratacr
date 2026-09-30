@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import type { Viewport } from "next";
 import { cookies, headers } from "next/headers";
-import { Inter } from "next/font/google";
+import localFont from "next/font/local";
 import { NativeDebugLogger } from "@/components/mobile/native-debug-logger";
 import { CatalogoDelServidor } from "@/components/util/catalogo-del-servidor";
 import { NATIVE_ONBOARDING_COMPLETED_KEY } from "@/lib/mobile-onboarding";
@@ -12,11 +12,24 @@ import { getSupplyCounts, MIN_SUPPLY_FOR_LANDING } from "@/lib/queries/supply";
 import { withPromiseTimeout } from "@/lib/promise-timeout";
 import "./globals.css";
 
-const inter = Inter({
-  subsets: ["latin"],
+// INTER VIVE EN EL REPO (src/app/fuentes), no se baja de Google al compilar.
+// Con `next/font/google` el build dependía de que fonts.googleapis.com
+// contestara en ese momento: el 30-sep falló en el CI y en el servidor local
+// («Can't resolve …/font/google/font») sin que nada del código cambiara. Son
+// los mismos archivos que servía Google (subconjunto latino, que cubre todo
+// el español), así que la letra no cambia. El subconjunto extendido (ő, ř…)
+// no se usa.
+const inter = localFont({
+  src: [
+    { path: "./fuentes/inter-latin-400.woff2", weight: "400", style: "normal" },
+    { path: "./fuentes/inter-latin-500.woff2", weight: "500", style: "normal" },
+    { path: "./fuentes/inter-latin-600.woff2", weight: "600", style: "normal" },
+    { path: "./fuentes/inter-latin-700.woff2", weight: "700", style: "normal" },
+    { path: "./fuentes/inter-latin-800.woff2", weight: "800", style: "normal" },
+    { path: "./fuentes/inter-latin-900.woff2", weight: "900", style: "normal" },
+  ],
   variable: "--font-sans",
   display: "swap",
-  weight: ["400", "500", "600", "700", "800", "900"],
 });
 
 // «<» escrito como secuencia de escape de JSON (barra invertida + u003c), para

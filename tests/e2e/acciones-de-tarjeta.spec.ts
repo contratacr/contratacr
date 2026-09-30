@@ -1,5 +1,5 @@
 import { expect, test } from "playwright/test";
-import { loginAs } from "./helpers";
+import { loginAs, waitForInteractivePage } from "./helpers";
 
 // Toda fila de acciones de una tarjeta del panel mide lo mismo: botones de 44 px
 // con letra de 13, «···» de 44, el mismo aire hasta el borde de la tarjeta y,
@@ -18,10 +18,13 @@ async function medir(page: import("playwright/test").Page, tab: string) {
   // «networkidle» no llega nunca en el panel (avisos en vivo): se espera al
   // documento y a que la sección pinte, no a que la red se calle.
   await page.goto(`/dashboard/profesional?tab=${tab}`, { waitUntil: "domcontentloaded" });
-  await page.waitForLoadState("load", { timeout: 15_000 }).catch(() => undefined);
+  await waitForInteractivePage(page);
+  // La sección trae sus tarjetas después de una consulta: se espera a que
+  // aparezca la fila o el botón que la despliega, no a que la red se calle.
   const abrir = page.locator("button:has(h2), button:has(h3)").filter({ visible: true }).first();
-  if (await abrir.count()) await abrir.click();
   const fila = page.locator(".ccr-acciones-tarjeta").filter({ visible: true }).first();
+  await fila.or(abrir).first().waitFor({ state: "visible", timeout: 30_000 });
+  if (!(await fila.count()) && (await abrir.count())) await abrir.click();
   await expect(fila).toBeVisible();
   return fila.evaluate((f: HTMLElement) => {
     // Sin clases de Tailwind: solo la regla del documento.
