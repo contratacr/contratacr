@@ -12,7 +12,7 @@ import { getSupplyCounts, MIN_SUPPLY_FOR_LANDING } from "@/lib/queries/supply";
 import { withPromiseTimeout } from "@/lib/promise-timeout";
 import "./globals.css";
 
-// INTER VIVE EN EL REPO (src/app/fuentes), no se baja de Google al compilar.
+// INTER VIVE EN EL REPO (src/fuentes; fuera de src/app para que no cuente como ruta), no se baja de Google al compilar.
 // Con `next/font/google` el build dependía de que fonts.googleapis.com
 // contestara en ese momento: el 30-sep falló en el CI y en el servidor local
 // («Can't resolve …/font/google/font») sin que nada del código cambiara. Son
@@ -21,12 +21,12 @@ import "./globals.css";
 // no se usa.
 const inter = localFont({
   src: [
-    { path: "./fuentes/inter-latin-400.woff2", weight: "400", style: "normal" },
-    { path: "./fuentes/inter-latin-500.woff2", weight: "500", style: "normal" },
-    { path: "./fuentes/inter-latin-600.woff2", weight: "600", style: "normal" },
-    { path: "./fuentes/inter-latin-700.woff2", weight: "700", style: "normal" },
-    { path: "./fuentes/inter-latin-800.woff2", weight: "800", style: "normal" },
-    { path: "./fuentes/inter-latin-900.woff2", weight: "900", style: "normal" },
+    { path: "../fuentes/inter-latin-400.woff2", weight: "400", style: "normal" },
+    { path: "../fuentes/inter-latin-500.woff2", weight: "500", style: "normal" },
+    { path: "../fuentes/inter-latin-600.woff2", weight: "600", style: "normal" },
+    { path: "../fuentes/inter-latin-700.woff2", weight: "700", style: "normal" },
+    { path: "../fuentes/inter-latin-800.woff2", weight: "800", style: "normal" },
+    { path: "../fuentes/inter-latin-900.woff2", weight: "900", style: "normal" },
   ],
   variable: "--font-sans",
   display: "swap",
