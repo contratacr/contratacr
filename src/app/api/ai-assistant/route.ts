@@ -768,6 +768,20 @@ type ProductIntent = {
 };
 
 const rx = (source: string) => new RegExp(source, "i");
+
+// LO QUE CONTRATACR PONE PARA ELEGIR BIEN, dicho igual en toda respuesta sobre
+// calidad, garantías o problemas: la plataforma da con qué comparar; la
+// contratación es un acuerdo directo entre cliente y profesional.
+const PARA_COMPARAR = {
+  es: "En cada perfil de ContrataCR puedes comparar antes de decidir: reseñas de otros clientes, casos de éxito con trabajos reales, formación y certificaciones, idiomas, años de experiencia, zonas donde trabaja y precio de referencia, además de la insignia «Verificado» cuando confirmó su identidad.",
+  en: "Every ContrataCR profile lets you compare before you decide: reviews from other clients, success stories with real work, training and certifications, languages, years of experience, the areas they cover and a reference price, plus the «Verified» badge when they confirmed their identity.",
+};
+const ACUERDO_DIRECTO = {
+  // Consejo, no descargo: lo legal («no presta ni garantiza») vive en los
+  // Términos; aquí se dice lo mismo como algo práctico.
+  es: "El precio, los plazos y la garantía del trabajo los acuerdas directamente con el profesional; te recomendamos dejarlo por escrito antes de empezar.",
+  en: "You agree on price, timing and any warranty on the work directly with the professional; we recommend putting it in writing before starting.",
+};
 const PRODUCT_INTENTS: ProductIntent[] = [
   {
     test: (n) => /^(hola|holi|buenas|buenos dias|buenas tardes|buenas noches|hello|hi|hey|saludos)[\s!.,]*(\w+[\s!.,]*){0,3}$/.test(n) && n.split(/\s+/).length <= 4,
@@ -784,6 +798,33 @@ const PRODUCT_INTENTS: ProductIntent[] = [
     },
     cta: { es: "Ir a Servicios", en: "Open Services" },
     href: (locale) => `${prefijoDeIdioma(locale)}/dashboard/profesional?tab=services`,
+  },
+  // CALIDAD Y CONFIANZA: cómo elegir, si hay garantía y qué hacer si algo sale
+  // mal. Siempre con qué comparar y de quién es el acuerdo.
+  {
+    test: (n) => /(como|cómo).{0,6}(se|saber|sabre|elijo|escojo|escoger|elegir|reviso|confio|confiar).{0,40}(bueno|buena|confiable|confiar|elegir|escoger|mejor|calidad|serio)/.test(n)
+      || /(en quien|en quien) confiar|profesional (bueno|confiable|serio)|how (do i|can i|to) (know|choose|pick|trust).{0,30}(good|reliable|trust|best|quality)/.test(n),
+    answer: {
+      es: `${PARA_COMPARAR.es} Lee sobre todo las reseñas y mira sus casos de éxito en trabajos parecidos al tuyo; escribe a dos o tres profesionales y compara. ${ACUERDO_DIRECTO.es}`,
+      en: `${PARA_COMPARAR.en} Read the reviews above all and look at their success stories on jobs like yours; message two or three professionals and compare. ${ACUERDO_DIRECTO.en}`,
+    },
+  },
+  {
+    test: (n) => !/verific/.test(n) && (/(garantiz|garantia|se hacen responsables|son responsables|responden por|responsabilidad)/.test(n) || /(guarantee|warranty|are you responsible|liable|liability)/.test(n)),
+    answer: {
+      es: `El trabajo lo realiza el profesional, y la garantía la acuerdas directamente con él: pídesela por escrito junto con el precio y los plazos. Para elegir con confianza, ${PARA_COMPARAR.es.charAt(0).toLowerCase()}${PARA_COMPARAR.es.slice(1)}`,
+      en: `The work is done by the professional, and you agree on any warranty directly with them: ask for it in writing along with price and timing. To choose with confidence, ${PARA_COMPARAR.en.charAt(0).toLowerCase()}${PARA_COMPARAR.en.slice(1)}`,
+    },
+  },
+  {
+    test: (n) => /(mal trabajo|trabajo mal hecho|me estafo|me estafaron|estafa|no termino|no cumplio|no llego|no vino|problema con (un|el|mi) profesional|queja|quejarme|reclamo|bad job|scam|scammed|didn.?t (finish|show)|complaint)/.test(n),
+    action: "support",
+    answer: {
+      es: "Lo sentimos. Primero háblalo con el profesional por escrito: el acuerdo lo hicieron entre ustedes. Luego deja una reseña honesta en su perfil: es lo que ayuda a los demás a elegir. Si hubo engaño, trato abusivo o algo inseguro, repórtalo desde su perfil (menú ··· → Reportar perfil) o abre un caso de soporte: lo revisamos en 24 horas y podemos limitar o suspender la cuenta. Si necesitas reclamar el dinero o el trabajo, eso se hace ante la oficina de protección al consumidor (MEIC) o las autoridades.",
+      en: "We're sorry. First raise it with the professional in writing: the agreement was between the two of you. Then leave an honest review on their profile: it's what helps others choose. If there was deceit, abuse or something unsafe, report it from their profile (··· menu → Report profile) or open a support case: we review it within 24 hours and can limit or suspend the account. To claim money or the work back, that goes through the consumer protection office (MEIC) or the authorities.",
+    },
+    cta: { es: "Abrir un caso de soporte", en: "Open a support case" },
+    href: (locale) => `${prefijoDeIdioma(locale)}/soporte`,
   },
   // Los dos temas del menú del cliente que juntan dos secciones.
   {
@@ -1583,8 +1624,8 @@ function normalizePayload(
       ...payload,
       action: "answer",
       answer: locale === "en"
-        ? "No. Identity verification confirms identity information, but it does not guarantee work quality, licensing, insurance or suitability. Review the profile, experience, reviews and service details before choosing."
-        : "No. La verificación de identidad confirma datos de identidad, pero no garantiza la calidad del trabajo, licencias, seguros ni idoneidad. Revisa el perfil, la experiencia, las reseñas y los detalles del servicio antes de elegir.",
+        ? `The «Verified» badge confirms their identity, not the quality of their work. To see that, their profile shows reviews from other clients, success stories with real work, training and certifications, languages and years of experience. ${ACUERDO_DIRECTO.en}`
+        : `La insignia «Verificado» confirma su identidad, no la calidad de su trabajo. Para conocer eso, en su perfil tienes reseñas de otros clientes, casos de éxito con trabajos reales, formación y certificaciones, idiomas y años de experiencia. ${ACUERDO_DIRECTO.es}`,
       ctaLabel: null,
     };
   }

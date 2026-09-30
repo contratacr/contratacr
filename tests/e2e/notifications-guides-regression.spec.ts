@@ -329,7 +329,7 @@ test.describe("@notifications-guides disposable bilingual UI regression", () => 
           .poll(() => {
             const url = new URL(page.url());
             return guide.target.kind === "path"
-              ? url.pathname === `/${locale}${guide.target.value}`
+              ? url.pathname === `${locale === "es" ? "" : `/${locale}`}${guide.target.value}`
               : url.pathname === `${locale === "es" ? "" : `/${locale}`}/dashboard/profesional` && url.searchParams.get("tab") === guide.target.value;
           }, {
             message: `Guide "${guide.id}" should open its documented ${locale} destination`,

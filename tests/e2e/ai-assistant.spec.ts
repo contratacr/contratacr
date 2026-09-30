@@ -475,11 +475,11 @@ test.describe("@seeded ContrataCR AI", () => {
   test("answers high-risk product questions without turning them into service searches", async ({ page }) => {
     await gotoOK(page, "/");
     const cases = [
-      { prompt: "¿La verificación garantiza que el profesional es bueno?", action: "answer", answer: /no garantiza|no\. la verificación/i },
+      { prompt: "¿La verificación garantiza que el profesional es bueno?", action: "answer", answer: /confirma su identidad, no la calidad/i },
       // Las propuestas salieron del producto: el asistente lo dice y manda al
       // tablero de proyectos, donde se contacta al cliente por WhatsApp.
       { prompt: "¿Puedo editar una propuesta después de enviarla?", action: "open_dashboard", href: "/proyectos", answer: /ya no hay propuestas|WhatsApp/i },
-      { prompt: "¿El profesional puede reprogramar mi cita?", action: "answer", answer: /cliente reprograma|no\. el cliente/i },
+      { prompt: "¿El profesional puede reprogramar mi cita?", action: "answer", answer: /ya no se agendan citas|acuerdan por mensaje/i },
       { prompt: "¿Puedo crear un proyecto sin cuenta?", action: "login", href: "/login", answer: /iniciar sesión/i },
       { prompt: "Me duele mucho el pecho, ¿busco un cardiólogo aquí?", action: "answer", answer: /9-1-1/i },
       { prompt: "¿Qué hago si un profesional cancela mi cita?", action: "answer", answer: /no se puede reprogramar/i },
