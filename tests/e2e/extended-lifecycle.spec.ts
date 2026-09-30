@@ -1,4 +1,5 @@
 import { expect, test } from "playwright/test";
+import { CITAS_ACTIVAS } from "../../src/lib/citas";
 import { apiJson, expectHealthyPage, expectVisibleText, gotoOK, loginAs, resetAuth } from "./helpers";
 import { cleanupDisposableAccount, createDisposableAccount, type DisposableAccount } from "./disposable-account";
 import { canRunSeededRegression, E2E_USERS, ensureRegressionSeed, regressionAdminClient, type RegressionSeedState } from "./seed";
@@ -22,6 +23,9 @@ test.describe("@seeded extended lifecycle", () => {
   });
 
   test("completed work supports one editable review tied to that exact request", async ({ page }) => {
+    // Las citas están apagadas (src/lib/citas.ts): la página y la API de
+    // reservar responden 404 a propósito. Vuelve a correr cuando se prendan.
+    test.skip(!CITAS_ACTIVAS, "Citas apagadas");
     const admin = regressionAdminClient();
     const marker = `E2E review ${Date.now()}`;
     let bookingId = "";

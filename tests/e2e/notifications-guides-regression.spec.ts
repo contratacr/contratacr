@@ -205,7 +205,7 @@ test.describe("@notifications-guides disposable bilingual UI regression", () => 
         // Abrir «nuevo proyecto» lleva al tablero de proyectos y deja el aviso leido.
         const projectRow = list.locator(".ccr-notifications-items > li").filter({ hasText: seeded.projectTitle });
         await projectRow.locator("div[role='button']").first().click();
-        await page.waitForURL(new RegExp(`/${locale}/proyectos`), { waitUntil: "domcontentloaded" });
+        await page.waitForURL(new RegExp(`${locale === "es" ? "" : `/${locale}`}/proyectos`), { waitUntil: "domcontentloaded" });
         await expect.poll(async () => {
           const rows = await notificationRows([seeded.projectId]);
           return rows[0]?.read;
@@ -329,7 +329,7 @@ test.describe("@notifications-guides disposable bilingual UI regression", () => 
             const url = new URL(page.url());
             return guide.target.kind === "path"
               ? url.pathname === `/${locale}${guide.target.value}`
-              : url.pathname === `/${locale}/dashboard/profesional` && url.searchParams.get("tab") === guide.target.value;
+              : url.pathname === `${locale === "es" ? "" : `/${locale}`}/dashboard/profesional` && url.searchParams.get("tab") === guide.target.value;
           }, {
             message: `Guide "${guide.id}" should open its documented ${locale} destination`,
             timeout: 30_000,
@@ -340,7 +340,7 @@ test.describe("@notifications-guides disposable bilingual UI regression", () => 
       await gotoOK(page, `/${locale}/dashboard/profesional?tab=home`);
       const seccionSoporte = await openGuides(page, locale);
       await seccionSoporte.getByRole("button", { name: messages.supportCta, exact: true }).click();
-      await page.waitForURL((url) => url.pathname === `/${locale}/dashboard/profesional` && url.searchParams.get("tab") === "soporte", { waitUntil: "domcontentloaded" });
+      await page.waitForURL((url) => url.pathname === `${locale === "es" ? "" : `/${locale}`}/dashboard/profesional` && url.searchParams.get("tab") === "soporte", { waitUntil: "domcontentloaded" });
       await expectNoRawI18nKeys(page);
       await expectNoHorizontalOverflow(page);
       await expect(page.locator("body")).not.toContainText(/Application error|Internal Server Error/i);

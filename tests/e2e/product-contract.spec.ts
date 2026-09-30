@@ -6,6 +6,7 @@ import { localizedNotificationCopy, TRANSLATED_NOTIFICATION_TYPES } from "../../
 import { resolveAuthCallbackLocale } from "../../src/lib/auth/callback-locale";
 import { IMAGE_ACCEPT, IMAGE_DOC_ACCEPT, IMAGE_KINDS, sniffFileType, validateUpload } from "../../src/lib/upload-validation";
 import { apiJson, resetAuth } from "./helpers";
+import { CITAS_ACTIVAS } from "../../src/lib/citas";
 import { repairVisibleText } from "../../src/lib/text/repair-visible-text";
 
 const notificationTypes = [...TRANSLATED_NOTIFICATION_TYPES].sort();
@@ -83,7 +84,7 @@ test.describe("@contract product safety contracts", () => {
         expect(href, `${type} must not reopen the retired client dashboard`).not.toContain("/dashboard/cliente");
 
         const target = new URL(href, "https://test.contratacr.com");
-        if (target.pathname === `/${locale}/dashboard/profesional`) {
+        if (target.pathname === `${locale === "es" ? "" : `/${locale}`}/dashboard/profesional`) {
           expect(target.searchParams.get("tab"), `${type} should target a concrete panel tab`).toBeTruthy();
         }
       }
@@ -158,7 +159,8 @@ test.describe("@contract product safety contracts", () => {
     expect(guestAiHistory.body.conversations).toEqual([]);
 
     const malformedBooking = await apiJson(page, "/api/bookings", { method: "POST", body: {} });
-    expect(malformedBooking.status).toBe(400);
+    // Con las citas apagadas (src/lib/citas.ts) la API responde 404 a todo.
+    expect(malformedBooking.status).toBe(CITAS_ACTIVAS ? 400 : 404);
   });
 
   test("password reset keeps account discovery private and validates malformed requests", async ({ page }) => {

@@ -23,6 +23,18 @@ async function pickSelectMenu(page: Page, label: RegExp, option: RegExp) {
 // Either way the same form shows up with the saved values.
 // `boton`: lo que dice el botón en la ficha («Editar», en corto, porque va
 // en media columna); `label`: el título del editor que abre («Editar promoción»).
+// Publicar deja en la ficha, cuya dirección es «nombre-códigocorto» desde el
+// 28-sep (ya no lleva el id completo). El id sale de la respuesta de la API.
+const FICHA = (seccion: "promociones" | "empleos") => new RegExp(`/${seccion}/(?!publicar|mis-)[^/?#]+(?:\\?|$)`);
+async function publicarYAbrirFicha(page: Page, seccion: "promociones" | "empleos", boton: RegExp) {
+  const api = seccion === "promociones" ? "/api/offers" : "/api/jobs/posts";
+  const respuesta = page.waitForResponse((r) => new URL(r.url()).pathname === api && r.request().method() === "POST", { timeout: 45_000 });
+  await page.getByRole("button", { name: boton }).click();
+  const cuerpo = await (await respuesta).json() as { id?: string };
+  await page.waitForURL(FICHA(seccion), { timeout: 45_000, waitUntil: "domcontentloaded" });
+  return String(cuerpo.id ?? "");
+}
+
 async function openOwnerEditor(page: Page, label: string, editPath: RegExp, boton: string | RegExp = label) {
   await page.getByRole("button", { name: boton }).or(page.getByRole("link", { name: boton })).filter({ visible: true }).first().click();
   const dialog = page.getByRole("dialog").filter({ hasText: label });
@@ -193,23 +205,20 @@ test.describe("@seeded marketplace editors through the real screens", () => {
       // hay que abrir el pliegue antes de escribir la cantidad.
       await page.getByText(/^Más opciones/).click();
       await page.locator('input[name="quantity_available"]').fill("3");
-      await page.getByRole("button", { name: /^Publicar promoción$/ }).click();
-
-      await page.waitForURL(/\/promociones\/[0-9a-f-]{36}/, { timeout: 45_000, waitUntil: "domcontentloaded" });
-      created.offerId = page.url().match(/\/promociones\/([0-9a-f-]{36})/)![1];
+      created.offerId = await publicarYAbrirFicha(page, "promociones", /^Publicar promoción$/);
     }
     await expectVisibleText(page.locator("body"), offerTitle);
     await expectVisibleText(page.locator("body"), /45[\s.,]?000/);
     await expectHealthyPage(page);
 
     // Owner actions on the detail lead to the edit form with the saved values.
-    const offerEditor = await openOwnerEditor(page, "Editar promoción", /\/promociones\/[0-9a-f-]{36}\/editar/, /^Editar$/);
+    const offerEditor = await openOwnerEditor(page, "Editar promoción", /\/promociones\/[^/?#]+\/editar/, /^Editar$/);
     await expect(offerEditor.locator('input[name="title"]')).toHaveValue(offerTitle);
     await offerEditor.locator('input[name="title"]').fill(`${offerTitle} editada`);
     await offerEditor.locator('input[name="price_now"]').fill("40000");
     await offerEditor.getByRole("button", { name: /^Guardar cambios$/ }).click();
     await expect(page.getByRole("dialog")).toHaveCount(0, { timeout: 45_000 });
-    await page.waitForURL(/\/promociones\/[0-9a-f-]{36}(?:\?|$)/, { timeout: 45_000, waitUntil: "domcontentloaded" });
+    await page.waitForURL(FICHA("promociones"), { timeout: 45_000, waitUntil: "domcontentloaded" });
     await expectUpdatedDetail(page, `${offerTitle} editada`);
     await expectVisibleText(page.locator("body"), /40[\s.,]?000/);
     await expectHealthyPage(page);
@@ -264,21 +273,18 @@ test.describe("@seeded marketplace editors through the real screens", () => {
     await page.getByLabel(/Responsabilidades 1/).fill("Completar el trabajo descrito");
     await page.getByLabel(/Requisitos 1/).fill("Experiencia demostrable");
     await page.locator('input[name="openings"]').fill("2");
-    await page.getByRole("button", { name: /^Publicar empleo$/ }).click();
-
-    await page.waitForURL(/\/empleos\/[0-9a-f-]{36}/, { timeout: 45_000, waitUntil: "domcontentloaded" });
-    created.jobId = page.url().match(/\/empleos\/([0-9a-f-]{36})/)![1];
+    created.jobId = await publicarYAbrirFicha(page, "empleos", /^Publicar empleo$/);
     await expectVisibleText(page.locator("body"), jobTitle);
     await expectVisibleText(page.locator("body"), /Remoto/);
     await expectHealthyPage(page);
 
-    const jobEditor = await openOwnerEditor(page, "Editar empleo", /\/empleos\/[0-9a-f-]{36}\/editar/, /^Editar(?: empleo)?$/);
+    const jobEditor = await openOwnerEditor(page, "Editar empleo", /\/empleos\/[^/?#]+\/editar/, /^Editar(?: empleo)?$/);
     await expect(jobEditor.locator('input[name="title"]')).toHaveValue(jobTitle);
     await jobEditor.locator('input[name="title"]').fill(`${jobTitle} editado`);
     await jobEditor.locator('input[name="openings"]').fill("1");
     await jobEditor.getByRole("button", { name: /^Guardar cambios$/ }).click();
     await expect(page.getByRole("dialog")).toHaveCount(0, { timeout: 45_000 });
-    await page.waitForURL(/\/empleos\/[0-9a-f-]{36}(?:\?|$)/, { timeout: 45_000, waitUntil: "domcontentloaded" });
+    await page.waitForURL(FICHA("empleos"), { timeout: 45_000, waitUntil: "domcontentloaded" });
     await expectUpdatedDetail(page, `${jobTitle} editado`);
     await expectHealthyPage(page);
 
@@ -319,9 +325,7 @@ test.describe("@seeded marketplace editors through the real screens", () => {
     await page.getByRole("button", { name: /^Desarrollo web$/ }).first().click();
     await pickSelectMenu(page, /^Presencial$/, /^Remoto$/);
     await page.locator('textarea[name="description"]').fill("Empleo publicado solo con los campos obligatorios para validar el camino mínimo.");
-    await page.getByRole("button", { name: /^Publicar empleo$/ }).click();
-    await page.waitForURL(/\/empleos\/[0-9a-f-]{36}/, { timeout: 45_000, waitUntil: "domcontentloaded" });
-    const id = page.url().match(/\/empleos\/([0-9a-f-]{36})/)![1];
+    const id = await publicarYAbrirFicha(page, "empleos", /^Publicar empleo$/);
     await expectVisibleText(page.locator("body"), titulo);
     await regressionAdminClient().from("job_posts").delete().eq("id", id);
   });

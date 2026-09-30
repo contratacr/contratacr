@@ -393,11 +393,13 @@ test.describe("@seeded ContrataCR AI", () => {
 
     const requestStart = await ask(page, "Quiero crear un proyecto");
     expect(requestStart.status).toBe(200);
-    expect(requestStart.body.action).toBe("answer");
+    // Desde el 29-sep el primer turno ya trae el botón de publicar (sin datos)
+    // mientras pregunta el servicio.
+    expect(requestStart.body.action).toBe("publish_request");
     expect(requestStart.body.answer).toMatch(/servicio/i);
     // One question at a time: the first turn asks only for the service.
     expect(requestStart.body.answer).not.toMatch(/zona|ubicaci/i);
-    expect(requestStart.body.searchHref).toBeNull();
+    expect(requestStart.body.searchHref).toBe("/publicar-proyecto");
 
     const requestReady = await ask(page, "carpinteria, Orotina", {
       history: [

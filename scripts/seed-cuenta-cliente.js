@@ -29,8 +29,12 @@ const password = process.env.CLIENTE_TEST_PASSWORD || "";
 if (!url || !serviceRole || !password) {
   throw new Error("Faltan las credenciales de test o CLIENTE_TEST_PASSWORD.");
 }
-if (url.includes(PROD_PROJECT_REF) || !url.includes(TEST_PROJECT_REF)) {
-  throw new Error("Esta cuenta solo se crea en el proyecto de prueba.");
+// También en la base LOCAL del CI (127.0.0.1, con LOCAL_REGRESSION_SEED=1): las
+// pruebas que entran con esta cuenta fallaban ahí porque solo existía en el
+// proyecto de prueba alojado. Nunca en producción.
+const esBaseLocalDelCi = process.env.LOCAL_REGRESSION_SEED === "1" && /^https?:\/\/(127\.0\.0\.1|localhost)(:\d+)?/.test(url);
+if (url.includes(PROD_PROJECT_REF) || (!url.includes(TEST_PROJECT_REF) && !esBaseLocalDelCi)) {
+  throw new Error("Esta cuenta solo se crea en el proyecto de prueba o en la base local del CI.");
 }
 if (password.length < 12) {
   throw new Error("CLIENTE_TEST_PASSWORD necesita al menos 12 caracteres.");

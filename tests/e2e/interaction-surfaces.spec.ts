@@ -1,4 +1,5 @@
 import { expect, test } from "playwright/test";
+import { CITAS_ACTIVAS } from "../../src/lib/citas";
 import { apiJson, expectHealthyPage, expectVisibleText, gotoOK, loginAs } from "./helpers";
 import { cleanupDisposableAccount, createDisposableAccount, type DisposableAccount } from "./disposable-account";
 import { canRunSeededRegression, E2E_USERS, ensureRegressionSeed, regressionAdminClient, type RegressionSeedState } from "./seed";
@@ -18,6 +19,9 @@ test.describe("@seeded interaction surfaces", () => {
   // disponibilidad». La pantalla de reservar sigue viva y con su propia
   // dirección, y eso es lo que se comprueba aquí.
   test("booking screen still opens by its own address without submitting", async ({ page }) => {
+    // Las citas están apagadas (src/lib/citas.ts): la página y la API de
+    // reservar responden 404 a propósito. Vuelve a correr cuando se prendan.
+    test.skip(!CITAS_ACTIVAS, "Citas apagadas");
     await loginAs(page, E2E_USERS.client.email, E2E_USERS.client.password);
     await gotoOK(page, `/profesionales/${seed.professionalSlug}/reservar`);
 

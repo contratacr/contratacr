@@ -83,6 +83,9 @@ jobs:
             echo "E2E_ALLOW_NON_TEST_SUPABASE=1"
             echo "E2E_TEST_PASSWORD=$LOCAL_REGRESSION_PASSWORD"
             echo "REGRESSION_TEST_PASSWORD=$LOCAL_REGRESSION_PASSWORD"
+            # La cuenta de solo cliente (seed-cuenta-cliente.js); la contraseña
+            # es la misma que ya usan las pruebas que entran con ella.
+            echo "CLIENTE_TEST_PASSWORD=ClientePruebas2026!"
             echo "PLAYWRIGHT_LOCAL_PRODUCTION=1"
             echo "PLAYWRIGHT_PORT=3000"
             echo "NEXT_PUBLIC_APP_URL=http://127.0.0.1:3000"
@@ -99,6 +102,7 @@ jobs:
           npm run verify:local:regression
           npm run seed:local:relations
           npm run verify:local:relations
+          node scripts/seed-cuenta-cliente.js
 
       - name: Verify account deletion isolation locally
         run: npm run test:account-deletion
