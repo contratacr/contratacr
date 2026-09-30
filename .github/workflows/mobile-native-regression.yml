@@ -133,6 +133,10 @@ jobs:
           java-version: 21
           cache: gradle
       - uses: android-actions/setup-android@v3
+        with:
+          # Por defecto instala «tools», que Google retiró de sdkmanager 16
+          # (el del runner): «Failed to find package 'tools'» tumbaba el job.
+          packages: platform-tools
       - name: Enable KVM
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' \
