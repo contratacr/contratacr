@@ -1,4 +1,4 @@
-import { getCategoryLabel } from "./data/categories";
+import { getAllCategories, getCategoryLabel } from "./data/categories";
 
 // SOLO LO QUE EL APP GENERA HOY. Las citas, las propuestas, las postulaciones,
 // seguir y las cotizaciones enviadas dentro del app salieron del producto: sus
@@ -290,6 +290,39 @@ export function localizedNotificationCopy(notification: NotificationCopyInput, l
   // Recordatorios por inactividad. El aviso guardado ya trae el texto en
   // español; los datos (hito, título, cuántas) permiten rehacerlo en inglés.
   if (notification.type === "direct_message") return { title, message: normalizedMessage };
+
+  // «Estudio Delta agregó un nuevo servicio: Sistemas de audio.» La base lo
+  // guarda en español (migración 161); en inglés se rearma con el nombre, lo
+  // que hizo y el título. Un servicio se nombra con el catálogo en inglés.
+  if (notification.type === "followed_professional_activity" && en) {
+    const TIPO_ES: Record<string, string> = {
+      success_case: "publicó un nuevo caso de éxito",
+      service: "agregó un nuevo servicio",
+      offer: "publicó una nueva oferta",
+      job: "publicó una nueva oportunidad de empleo",
+    };
+    const TIPO_EN: Record<string, string> = {
+      success_case: "posted a new success story",
+      service: "added a new service",
+      offer: "posted a new promotion",
+      job: "posted a new job opening",
+    };
+    const tipo = stringData(notification.data, "activity_type") ?? "";
+    const accionEs = TIPO_ES[tipo] ?? "publicó una novedad";
+    const [nombre, resto] = normalizedMessage.split(` ${accionEs}`);
+    if (nombre && resto !== undefined) {
+      const contenido = stringData(notification.data, "content_id") ?? "";
+      const tituloEs = resto.replace(/^:\s*/, "").replace(/\.$/, "");
+      // El aviso guarda el NOMBRE del servicio en español, no su llave: se busca
+      // en el catálogo por ese nombre para decirlo en inglés.
+      const servicio = tipo === "service" ? getAllCategories().find((c) => c.id === contenido || getCategoryLabel(c.id, "es") === tituloEs) : undefined;
+      const tituloEn = servicio ? getCategoryLabel(servicio.id, "en") : tituloEs;
+      return {
+        title: `New post from ${nombre}`,
+        message: `${nombre} ${TIPO_EN[tipo] ?? "posted an update"}${tituloEn ? `: ${tituloEn}` : ""}.`,
+      };
+    }
+  }
 
   return { title, message: legacyOr(normalizedMessage, en ? "Open the notification to see the details." : "Abre la notificación para ver los detalles.") };
 }

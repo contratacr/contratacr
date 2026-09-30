@@ -36,6 +36,18 @@ const PUBLIC_PREFIXES = [
 // convention introduced by Next.js 16. Keep this request boundary in the legacy
 // Edge Middleware convention until the adapter supports Node Proxy. It still runs
 // before every matched route: i18n locale routing + the Supabase auth gate.
+// UNA REESCRITURA NUESTRA SALTA EL MIDDLEWARE DE next-intl, que es el que le
+// dice a la página en qué idioma está (encabezado X-NEXT-INTL-LOCALE). Sin él la
+// página cae al español: /en/profesionales/… salía con «3 profesionales en
+// Santa Bárbara», los filtros y hasta el menú de abajo en español. El idioma
+// sale de la ruta de destino (/es/… o /en/…).
+function reescribirConIdioma(request: NextRequest, destino: URL) {
+  const idioma = /^\/(en|es)(?=\/|$)/.exec(destino.pathname)?.[1] ?? "es";
+  const encabezados = new Headers(request.headers);
+  encabezados.set("X-NEXT-INTL-LOCALE", idioma);
+  return NextResponse.rewrite(destino, { request: { headers: encabezados } });
+}
+
 // ¿/profesionales/<x> es un servicio? El catálogo real vive en la tabla
 // `categories` —incluye los servicios creados desde el panel, que el código no
 // conoce—. Se lee sin sesión (es público) y se guarda cinco minutos por
@@ -143,7 +155,7 @@ export async function middleware(request: NextRequest) {
     const locale = idiomaPreferido();
     const destino = new URL(`/${locale}/${FICHAS[fichaCorta[1].toLowerCase()]}/${fichaCorta[2].toLowerCase()}`, request.url);
     destino.search = request.nextUrl.search;
-    return NextResponse.rewrite(destino);
+    return reescribirConIdioma(request, destino);
   }
 
   // Enlace público de cada profesional: contratacr.com/nombre-apellido (y la
@@ -230,7 +242,23 @@ export async function middleware(request: NextRequest) {
   }
   const busqueda = /^(?:\/(en))?\/profesionales(?:\/([^/?#]+))?(?:\/([^/?#]+))?(?:\/([^/?#]+))?\/?$/.exec(pathname);
   if (busqueda) {
-    const idioma = busqueda[1] ?? "es";
+    // EL IDIOMA ELEGIDO MANDA, como en el resto del sitio. Esto armaba la
+    // búsqueda en español siempre que la dirección no trajera /en (ya pasaba
+    // con /buscar): con la app en inglés salía «3 profesionales en Santa
+    // Bárbara». Una página pedida sin /en por quien eligió inglés salta a /en;
+    // las cargas internas del router se arman en su idioma sin saltar.
+    const eligioIngles = request.cookies.get("NEXT_LOCALE")?.value === "en";
+    if (!busqueda[1] && eligioIngles) {
+      const destinoDePagina = request.headers.get("sec-fetch-dest");
+      const esCargaInterna = (destinoDePagina !== null && destinoDePagina !== "document")
+        || (request.headers.get("accept") ?? "").includes("text/x-component");
+      if (!esCargaInterna) {
+        const url = request.nextUrl.clone();
+        url.pathname = rutaConIdioma("en", pathname);
+        return NextResponse.redirect(url, 307);
+      }
+    }
+    const idioma = busqueda[1] ?? (eligioIngles ? "en" : "es");
     const [, , primero, segundo] = busqueda;
     if (!primero && conFiltrosEnParametros) {
       const bonita = rutaDeBusqueda(request.nextUrl.searchParams);
@@ -244,7 +272,7 @@ export async function middleware(request: NextRequest) {
       destino.search = request.nextUrl.search;
       // Ya se sabe que es búsqueda: el servicio del primer tramo está confirmado.
       for (const [clave, valor] of Object.entries(filtrosDeRuta(pathname, () => true) ?? {})) if (valor) destino.searchParams.set(clave, valor);
-      return NextResponse.rewrite(destino);
+      return reescribirConIdioma(request, destino);
     }
   }
 

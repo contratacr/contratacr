@@ -1,5 +1,6 @@
 "use client";
 
+import { prefijoDeIdioma } from "@/lib/prefijo-de-idioma";
 import { conFiltroDeFecha } from "@/lib/marketplace/filtros-por-volumen";
 import { rutaConIdioma } from "@/lib/prefijo-de-idioma";
 import { ProgressiveImage } from "@/components/ui/progressive-image";
@@ -528,7 +529,8 @@ export function OffersBoard({
             backHref="/promociones"
             onSaved={(id, title) => {
               setPublishOpen(false);
-              router.push(rutaPromocion({ id, title }));
+              // Con su idioma: en inglés esto abría la ficha en español.
+              router.push(`${prefijoDeIdioma(locale)}${rutaPromocion({ id, title })}`);
             }}
           />
         </Modal>
