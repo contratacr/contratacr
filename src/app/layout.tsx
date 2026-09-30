@@ -350,12 +350,6 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
           }}
         />
         <style
-          data-ccr-portada=""
-          dangerouslySetInnerHTML={{
-            __html: `html.ccr-ruta-portada .ccr-page-route-loading{background:#fff!important}`,
-          }}
-        />
-        <style
           data-ccr-teclado=""
           dangerouslySetInnerHTML={{
             __html: `@media (max-width:767px){html[data-teclado-formulario-largo] :is(.ccr-pie-ventana,.ccr-barra-accion):not(.ccr-booking-modal-panel *){display:none!important}}`,
@@ -455,9 +449,11 @@ body:has(.ccr-error-screen) .ccr-navbar-spacer{display:none}
             pudiera decir que ese contenido no existe: las direcciones
             inventadas respondían «todo bien» con un 404 dibujado (un falso 404,
             de lo que peor le sienta a un sitio que pelea por indexarse). La
-            espera vive ahora en un `loading.tsx` por sección, solo en las
-            pantallas privadas que de verdad tardan. Ver
-            `components/util/lienzo-de-ruta.tsx`. */}
+            espera ya no vive en ningún `loading.tsx`: al navegar se queda la
+            pantalla anterior hasta que la nueva está lista, y cada sección
+            pinta su propio esqueleto donde de verdad carga algo. Los lienzos
+            vacíos se leían como «entró a una página en blanco y luego
+            cargó» (30-sep-2026). */}
         {children}
       </body>
     </html>

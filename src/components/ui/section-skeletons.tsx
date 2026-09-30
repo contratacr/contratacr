@@ -29,7 +29,31 @@ function BarraSuperior() {
 }
 
 // Panel: la tarjeta de perfil y la lista de tarjetas de sección.
-export function PanelSkeleton() {
+/**
+ * `seccion`: se entra DIRECTO a una sección del panel (Cotizaciones, Mis
+ * proyectos…), no a su inicio. Esperar con la tarjeta de perfil del inicio y
+ * que llegue una lista se leía como «contenedor blanco que parpadea y cambia»:
+ * la espera tiene la forma de lo que viene, una lista.
+ */
+export function PanelSkeleton({ seccion = false }: { seccion?: boolean } = {}) {
+  if (seccion) {
+    return (
+      <div className="min-h-screen bg-[#f4f7fa]" aria-busy="true" role="status">
+        <BarraSuperior />
+        <div className="mx-auto w-full max-w-xl space-y-3 px-4 pt-6 lg:max-w-4xl lg:px-8 lg:pt-8">
+          {[0, 1, 2, 3].map((fila) => (
+            <div key={fila} className="flex items-start gap-3 rounded-2xl border border-[#e5e7eb] bg-white p-4">
+              <Hueso className="h-11 w-11 shrink-0 rounded-xl" />
+              <div className="min-w-0 flex-1 space-y-2.5">
+                <Hueso className="h-4 w-2/3 rounded-full" />
+                <Hueso className="h-3 w-1/2 rounded-full" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
   return (
     <div className="min-h-screen bg-[#f4f7fa]" aria-busy="true" role="status">
       <BarraSuperior />

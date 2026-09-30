@@ -48,6 +48,11 @@ export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "o
   const portalHost = typeof document === "undefined" ? null : document.body;
   const [posicionPanel, setPosicionPanel] = useState<{ top: number; right: number } | null>(null);
   const nativeApp = useNativeApp();
+  // En la app la campana lleva a la pantalla de Notificaciones: se precarga
+  // para que tocarla entre al instante (es liviana; se arma en el teléfono).
+  useEffect(() => {
+    if (nativeApp) router.prefetch(`${prefijoDeIdioma(locale)}/notificaciones`);
+  }, [locale, nativeApp, router]);
   const menuRef = useRef<HTMLDivElement | null>(null);
   const menuPanelRef = useRef<HTMLDivElement | null>(null);
 

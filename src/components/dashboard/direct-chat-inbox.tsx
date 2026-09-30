@@ -295,6 +295,11 @@ export function DirectChatInbox({ alCambiarSubvista }: {
   // venían en camino—, ninguna recarga los devuelve a la bandeja de donde
   // salieron: eso era el parpadeo de «se va, vuelve y se va».
   const movimientosPendientes = useRef(new Map<string, "open" | "archived">());
+  // Lo mismo para leído / no leído: tocarlo varias veces seguidas dejaba varias
+  // peticiones en camino y una recarga en vivo traía un estado intermedio que
+  // deshacía el último toque. Manda siempre la ÚLTIMA elección de cada chat.
+  const lecturasPendientes = useRef(new Map<string, { leer: boolean; turno: number }>());
+  const turnoDeLectura = useRef(0);
   // "Sin usuario" puede ser una sesión caída o una red que aún no responde;
   // solo lo primero justifica mandar al login.
   const [sesionSinConfirmar, setSesionSinConfirmar] = useState(false);
@@ -585,6 +590,11 @@ export function DirectChatInbox({ alCambiarSubvista }: {
       const rows = ((json.conversations ?? []) as Conversation[]).filter((fila) => {
         const destino = movimientosPendientes.current.get(fila.id);
         return !destino || destino === bandejaPedida;
+      }).map((fila) => {
+        const eleccion = lecturasPendientes.current.get(fila.id);
+        if (!eleccion) return fila;
+        const valor = eleccion.leer ? 0 : 1;
+        return user?.id === fila.client_id ? { ...fila, client_unread_count: valor } : { ...fila, professional_unread_count: valor };
       });
       if (!showArchived) storeConversations(rows);
       bandejasRef.current[showArchived ? "archived" : "open"] = rows;
@@ -631,7 +641,7 @@ export function DirectChatInbox({ alCambiarSubvista }: {
     } catch (err) {
       setError(err instanceof Error ? err.message : isEn ? "Could not load messages." : "No se pudieron cargar los mensajes.");
     } finally { if (!quiet) setLoading(false); }
-  }, [isEn, pendingDraft, pendingDraftPayload, showArchived]);
+  }, [isEn, pendingDraft, pendingDraftPayload, showArchived, user?.id]);
 
   // Al recargar el hilo, cada mensaje volvía como un objeto nuevo aunque fuera
   // el mismo: React rehacía todas las burbujas y las imágenes se volvían a
@@ -1179,9 +1189,14 @@ export function DirectChatInbox({ alCambiarSubvista }: {
         ? { ...c, client_unread_count: leer ? 0 : 1 }
         : { ...c, professional_unread_count: leer ? 0 : 1 }
     )));
+    const turno = ++turnoDeLectura.current;
+    lecturasPendientes.current.set(id, { leer, turno });
     const res = await fetchWithSessionRetry("/api/direct-chat", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ conversationId: id, read: leer }) });
-    if (!res.ok) { void loadConversations(true); }
+    // Una respuesta vieja no decide nada si después hubo otro toque.
+    if (lecturasPendientes.current.get(id)?.turno !== turno) return;
+    if (!res.ok) { lecturasPendientes.current.delete(id); void loadConversations(true); }
     window.dispatchEvent(new Event("directMessagesChanged"));
+    window.setTimeout(() => { if (lecturasPendientes.current.get(id)?.turno === turno) lecturasPendientes.current.delete(id); }, 3000);
   }
 
   // Eliminar vive solo en la hoja de «Más» y pide un segundo toque de confirmación.

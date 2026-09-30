@@ -824,6 +824,9 @@ export function HeaderMessagesLink({ unreadCount, label, href = "/mensajes" }: {
   return (
     <Link
       href={href}
+      // Precargada entera: la bandeja es liviana (se arma en el teléfono) y así
+      // tocar el icono entra al instante, sin la espera de ~300 ms del servidor.
+      prefetch={true}
       aria-label={label}
       className="relative grid h-10 w-10 place-items-center rounded-xl text-[#1A2744] transition-colors hover:bg-[#f3f4f6] hover:text-[#009FD9]"
     >

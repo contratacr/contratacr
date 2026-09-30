@@ -1722,7 +1722,7 @@ export default function DashboardPage() {
   const professionalRecordResolving = !!user && canOffer(user) && !pro && !proLoadError;
   if (isSigningOut()) return null;
   if (authLoading || loading || !user || professionalRecordResolving) {
-    return <>{formularioPublicar}<PanelSkeleton /></>;
+    return <>{formularioPublicar}<PanelSkeleton seccion={activeTab !== "home"} /></>;
   }
 
   const proProfile = Array.isArray(pro?.profiles) ? pro?.profiles[0] : pro?.profiles;
