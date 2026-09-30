@@ -12,7 +12,7 @@ export function prefijoDeIdioma(locale: string | null | undefined): "" | "/en" {
   return "";
 }
 
-/** rutaConIdioma("es", "/buscar") → "/buscar"; rutaConIdioma("en", "/buscar") → "/en/buscar"; rutaConIdioma("es", "/") → "/". */
+/** rutaConIdioma("es", "/profesionales") → "/profesionales"; rutaConIdioma("en", "/profesionales") → "/en/profesionales"; rutaConIdioma("es", "/") → "/". */
 export function rutaConIdioma(locale: string | null | undefined, ruta: string): string {
   const limpia = ruta.startsWith("/") ? ruta : `/${ruta}`;
   const prefijo = prefijoDeIdioma(locale);
@@ -20,7 +20,7 @@ export function rutaConIdioma(locale: string | null | undefined, ruta: string): 
   return `${prefijo}${limpia}`;
 }
 
-/** Quita el prefijo de idioma, venga o no: "/en/buscar" y "/es/buscar" → "/buscar". */
+/** Quita el prefijo de idioma, venga o no: "/en/profesionales" y "/es/profesionales" → "/profesionales". */
 export function sinPrefijoDeIdioma(ruta: string): string {
   return ruta.replace(/^\/(?:es|en)(?=\/|$)/, "") || "/";
 }

@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
+import { esRutaDeBusqueda } from "@/lib/buscar-url";
+import { esServicioDelCatalogo } from "@/lib/data/categories";
 import { isNativeAppRuntime } from "@/hooks/use-native-app";
 import { NATIVE_ONBOARDING_COMPLETED_KEY } from "@/lib/mobile-onboarding";
 
@@ -11,7 +13,7 @@ const NATIVE_BACK_ROOT_STATE_KEY = "__ccrNativeBackRoot";
 const NATIVE_BACK_ROOT_SESSION_KEY = "ccr-native-back-root";
 
 function isSearchPath(pathname: string) {
-  return /(^|\/)buscar(\/|$)/.test(pathname);
+  return esRutaDeBusqueda(pathname, esServicioDelCatalogo);
 }
 
 // Flows that own the whole screen: no app header and no bottom nav, because the

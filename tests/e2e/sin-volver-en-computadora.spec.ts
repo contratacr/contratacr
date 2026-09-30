@@ -11,7 +11,7 @@ import { isMobileProject, loginAs } from "./helpers";
 const VOLVER = /^(←\s*)?(Volver|Ver todos los|Ver todas las|Back to|See all)\b/i;
 
 const PANTALLAS: Array<{ ruta: string; como?: "pro" | "cliente" }> = [
-  { ruta: "/buscar" },
+  { ruta: "/profesionales" },
   { ruta: "/servicios" },
   { ruta: "/empleos" },
   { ruta: "/promociones" },
@@ -23,7 +23,7 @@ const PANTALLAS: Array<{ ruta: string; como?: "pro" | "cliente" }> = [
   // La ficha de un profesional llegando del panel y llegando de resultados: es
   // donde salía «Volver a mi panel» y «Volver a resultados».
   { ruta: "/profesionales/redes-bahia-pruebas?from=panel", como: "pro" },
-  { ruta: "/profesionales/redes-bahia-pruebas?from=%2Fbuscar" },
+  { ruta: "/profesionales/redes-bahia-pruebas?from=%2Fprofesionales" },
 ];
 
 async function volveresVisibles(page: import("playwright/test").Page) {

@@ -318,7 +318,7 @@ test.describe("@admin surfaces", () => {
       // Servicios: a renamed service is what the server renders, not only what the browser patches later.
       const marker = `Redes e internet ${stamp}`;
       await admin.from("categories").update({ name: marker }).eq("id", renamedId);
-      await expect.poll(async () => (await page.request.get(`/buscar?categoria=${renamedId}`)).text().then((html) => html.includes(marker)), { timeout: 45_000, intervals: [2_000] }).toBe(true);
+      await expect.poll(async () => (await page.request.get(`/profesionales?categoria=${renamedId}`)).text().then((html) => html.includes(marker)), { timeout: 45_000, intervals: [2_000] }).toBe(true);
       const professionalSlug = (await admin.from("professionals").select("slug").eq("id", state.professionalId).single()).data?.slug;
       expect(professionalSlug).toBeTruthy();
       await expect.poll(async () => (await page.request.get(`/profesionales/${professionalSlug}`)).text().then((html) => html.includes(marker)), { timeout: 45_000, intervals: [2_000] }).toBe(true);

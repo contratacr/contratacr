@@ -21,6 +21,11 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  // Sin el círculo «N» de desarrollo: caía justo encima de la pestaña
+  // Profesionales del menú de abajo y el toque le llegaba a él, no a la pestaña
+  // (parecía que el botón no respondía). Los errores de compilación y de
+  // ejecución se siguen mostrando igual. En producción no existe.
+  devIndicators: false,
   // Volver a una sección ya visitada no debe recargarla: el armazón de cada
   // página queda en el caché del cliente y la navegación es instantánea, sin
   // skeleton ni marca. Los datos frescos los piden las propias pantallas

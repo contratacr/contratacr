@@ -27,7 +27,7 @@ import { prefetchDashboardBootstrap } from "@/lib/dashboard-bootstrap-cache";
 import { prefetchConversations } from "@/lib/direct-chat/conversations-cache";
 import { trackMetaEvent } from "@/lib/analytics/meta-pixel";
 import { useNativeApp } from "@/hooks/use-native-app";
-import { ALL_CATEGORIES, CATEGORY_GROUPS, searchCategories, normalizeText, getCategoryLabel, getCategoryGroupLabel, resolveCategoryIntent, getAllCategories, getAllCategoryGroups, getCategoryGroupId } from "@/lib/data/categories";
+import { ALL_CATEGORIES, CATEGORY_GROUPS, searchCategories, normalizeText, getCategoryLabel, getCategoryGroupLabel, resolveCategoryIntent, getAllCategories, getAllCategoryGroups, getCategoryGroupId, esServicioDelCatalogo } from "@/lib/data/categories";
 import { getCategoryGroupIcon } from "@/lib/data/category-group-visuals";
 import { useCustomCategories } from "@/lib/data/use-custom-categories";
 import { oficiosDeArranque } from "@/lib/data/oficios-de-arranque";
@@ -399,8 +399,8 @@ function CategoriesMegaPanel({ onNavigate }: { onNavigate: () => void }) {
 
   function go(id?: string) {
     if (id) router.push(rutaDeBusqueda({ categoria: id }));
-    else if (q.trim()) router.push(`/buscar?q=${encodeURIComponent(q.trim())}`);
-    else router.push("/buscar");
+    else if (q.trim()) router.push(`/profesionales?q=${encodeURIComponent(q.trim())}`);
+    else router.push("/profesionales");
     setQ("");
     onNavigate();
   }
@@ -921,7 +921,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   // nacía vacío y un efecto lo llenaba tras el primer pintado: se veía el texto
   // de ayuda («Servicio») y un instante después el oficio buscado. El efecto de
   // abajo sigue leyendo la dirección al navegar; aquí solo se adelanta el primer cuadro.
-  const contextoInicial = esRutaDeBusqueda(pathname) ? contextoDeBusquedaDesdeUrl(currentSearchParams, locale) : null;
+  const contextoInicial = esRutaDeBusqueda(pathname, esServicioDelCatalogo) ? contextoDeBusquedaDesdeUrl(currentSearchParams, locale) : null;
   const [searchQuery, setSearchQuery] = useState(contextoInicial?.servicio ?? "");
   const [searchListDominant, setSearchListDominant] = useState(false);
   useCustomCategories();
@@ -1023,7 +1023,6 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   const [hydrated, setHydrated] = useState(false);
   const nativeHeaderShell = hydrated && nativeApp;
   const { user, loading: authLoading, accountName, hasProfessionalProfile: fichaProDelServidor } = useAuth();
-  const nativeSearchRoute = /(^|\/)buscar(?:\/|$)/.test(pathname ?? "");
   // Search is a full-viewport map + results sheet. Do not merely hide the nav
   // with CSS: leaving it mounted keeps its layout class and safe-area reserve
   // active, which shortens the sheet and the full-screen search overlay.
@@ -1070,7 +1069,8 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   const effectiveMarketplaceDesktop = marketplaceDesktop || (isMarketplaceRoute && !isMarketplaceEditor);
   // Empleos, ofertas y /buscar traen sus propios filtros pegados a la barra: la
   // línea de la barra caía justo encima de ellos y se leía como una raya suelta.
-  const rutaConFiltrosPegados = (isMarketplaceRoute && !isMarketplaceEditor) || /\/buscar(?:\/|$)/.test(pathname ?? "");
+  // Mensajes igual: su buscador va pegado a la barra, como el de Empleos.
+  const rutaConFiltrosPegados = (isMarketplaceRoute && !isMarketplaceEditor) || esRutaDeBusqueda(pathname, esServicioDelCatalogo) || enMensajes;
   const compactEnabled = true;
   const effectiveCompact = compactEnabled && (forceCompactSearch || !isHomePage || compact);
   // En escritorio el buscador compacto del navbar aparece en el home al pasar el
@@ -1096,7 +1096,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   // bajar. Va DENTRO del renglón (el logotipo se reduce a la marca) para que la
   // barra no crezca a mitad del scroll y empuje la página.
   const buscadorHomeMovilBase = isHomePage && compact && !mobileInline && !rutaSinBuscador && !showMobileNavbarSearch;
-  const showSearchViewToggle = showMobileNavbarSearch && esRutaDeBusqueda(pathname);
+  const showSearchViewToggle = showMobileNavbarSearch && esRutaDeBusqueda(pathname, esServicioDelCatalogo);
 
   // The layout below the navbar is sized by --ccr-native-header-height. Setting it
   // only from the effect above meant the server-rendered page used the 64px default
@@ -1159,14 +1159,14 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
       : null,
     [headerLatitude, headerLongitude],
   );
-  const searchRouteHasContext = esRutaDeBusqueda(pathname) && Boolean(explicitHeaderService || explicitHeaderLocation);
+  const searchRouteHasContext = esRutaDeBusqueda(pathname, esServicioDelCatalogo) && Boolean(explicitHeaderService || explicitHeaderLocation);
   const headerNextServiceLabel = mobileSlidingService.next || headerServiceLabel;
   const headerServiceShouldSlide = !explicitHeaderService && showMobileNavbarSearch && !nativeSearchOpen && !searchQuery.trim() && nativeSearchServices.length > 1;
   const hasSearchService = searchQuery.trim().length > 0 || !!searchCategoryId;
   const hasSearchLocation = navLocation.trim().length > 0 || !!navLocationSel || !!navCurrentCoords;
 
   useEffect(() => {
-    if (!esRutaDeBusqueda(pathname)) return;
+    if (!esRutaDeBusqueda(pathname, esServicioDelCatalogo)) return;
     let active = true;
     queueMicrotask(() => {
       if (!active) return;
@@ -1330,7 +1330,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   // use Next's prefetched route payload instead of waiting after the click.
   useEffect(() => {
     const timeout = window.setTimeout(() => {
-      router.prefetch("/buscar");
+      router.prefetch("/profesionales");
       if (user && !pathname.startsWith("/dashboard/profesional")) {
         router.prefetch(primaryPanelHref);
         prefetchDashboardBootstrap(user.id);
@@ -1341,7 +1341,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
 
   useEffect(() => {
     if (!nativeApp) return;
-    router.prefetch("/buscar");
+    router.prefetch("/profesionales");
   }, [nativeApp, router]);
 
   useEffect(() => {
@@ -1994,7 +1994,10 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
             // algo pasando por debajo, y mide 0.18 de opacidad con el borde
             // recogido, que es la misma de todas las cabeceras del app. En
             // reposo la barra sigue separándose con la línea de siempre.
-            rutaConFiltrosPegados
+            // Dentro de Archivados/Bloqueados (una vista con flecha, sin
+            // buscador) la barra vuelve a llevar su línea, como toda pantalla
+            // interna: el buscador pegado, que la hacía sobrar, no está.
+            rutaConFiltrosPegados && !(enMensajes && sectionActive && !sectionRoot)
               // En la app la barra se funde con los filtros; en computadora la
               // línea va siempre, o el encabezado y los filtros se leían como
               // una sola mancha blanca.
@@ -2264,7 +2267,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                             entra a este menú. Antes solo se llegaba escribiendo
                             en el buscador de la barra, así que quien no sabía
                             que ese campo llevaba a algún lado no llegaba nunca. */}
-                        <Link href="/buscar" onClick={() => setOpenMenu(null)} className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-[#1A2744] transition-colors hover:bg-gray-50 hover:text-[#009FD9]">
+                        <Link href="/profesionales" onClick={() => setOpenMenu(null)} className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-[#1A2744] transition-colors hover:bg-gray-50 hover:text-[#009FD9]">
                           <Search className="h-5 w-5 shrink-0" />
                           {locale === "en" ? "Find professionals" : "Buscar profesionales"}
                         </Link>

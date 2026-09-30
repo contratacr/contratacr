@@ -37,7 +37,7 @@ test.describe("@seeded contact gate", () => {
     expect(reveal.status).toBe(404);
 
     // Search HTML carries no phone numbers for guests.
-    const html = await page.evaluate(async () => (await fetch("/buscar")).text());
+    const html = await page.evaluate(async () => (await fetch("/profesionales")).text());
     expect(html).not.toMatch(/"whatsapp":"\+?\d{8,}/);
     expect(html).not.toMatch(/tel:\+\d{8,}/);
   });

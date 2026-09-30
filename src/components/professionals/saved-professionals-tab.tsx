@@ -339,7 +339,7 @@ export function SavedProfessionalsTab() {
           <PanelFilterEmpty
             icon={Bookmark}
             title={selectedEmptyLabel}
-            action={filter === "professionals" ? <Button asChild><Link href="/buscar">{t("searchPros")}</Link></Button> : undefined}
+            action={filter === "professionals" ? <Button asChild><Link href="/profesionales">{t("searchPros")}</Link></Button> : undefined}
           />
         )}
       </div>

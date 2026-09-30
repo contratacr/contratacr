@@ -328,7 +328,7 @@ test.describe("@mobile native shell contracts", () => {
   });
 
   test("native search owns the full viewport without a hidden footer reserve", async ({ page }) => {
-    await gotoOK(page, "/buscar?regression=1");
+    await gotoOK(page, "/profesionales?regression=1");
 
     // «Buscar» es una pestaña de la barra de abajo (b8f95d62): la barra vive
     // también en los resultados y se retira al desplazar; lo que no puede

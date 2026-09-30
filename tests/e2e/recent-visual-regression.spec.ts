@@ -229,7 +229,7 @@ test.describe("@visual recent bug contracts", () => {
   });
 
   test("brand loading mark uses the breathing animation without remount flicker", async ({ page }) => {
-    await gotoOK(page, "/buscar");
+    await gotoOK(page, "/profesionales");
     const contract = await page.evaluate(async () => {
       const mark = document.createElement("img");
       mark.className = "ccr-brand-loading-mark";

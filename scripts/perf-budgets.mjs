@@ -17,15 +17,17 @@ const BUDGETS = {
   routeTotalKb: 800,      // everything transferred on any route
   fcpMs: 1500,            // first contentful paint on the throttled phone
 };
-const ROUTES = ["/", "/buscar", "/categorias", "/login", "/empleos"];
+const ROUTES = ["/", "/profesionales", "/categorias", "/login", "/empleos"];
 
 const browser = await chromium.launch();
 const results = [];
 try {
   // One warm visit fetches a professional slug for the profile route.
   const scout = await browser.newPage();
-  await scout.goto(`${BASE}/es/buscar`, { waitUntil: "domcontentloaded" });
-  const slug = await scout.evaluate(() => document.querySelector('a[href*="/profesionales/"]')?.getAttribute("href") ?? null);
+  await scout.goto(`${BASE}/profesionales`, { waitUntil: "domcontentloaded" });
+  // En la búsqueda también hay enlaces /profesionales/<servicio>: el de un
+  // perfil es el que termina en su sufijo aleatorio.
+  const slug = await scout.evaluate(() => [...document.querySelectorAll('a[href*="/profesionales/"]')].map((a) => a.getAttribute("href")).find((h) => /\/profesionales\/[^/?#]+-[a-z0-9]{8}(?:[?#]|$)/.test(h ?? "")) ?? null);
   await scout.close();
   if (slug) ROUTES.push(slug.replace(/^https?:\/\/[^/]+/, ""));
 

@@ -88,7 +88,7 @@ test.describe("application surface ownership", () => {
     const routes = filesNamed(appRoot, "route.ts").map((file) => appRoute(file, "route.ts")).sort();
     expect(routes.length).toBeGreaterThan(0);
     const parked = routes.filter((route) => ownership(route, handlerRules).parked);
-    expect(parked).toEqual(["/api/direct-chat", "/api/direct-chat/attachments"]);
+    expect(parked).toEqual(["/api/direct-chat", "/api/direct-chat/attachments", "/api/direct-chat/mensaje"]);
   });
 
   test("the default web suite only excludes the parked chat and the app-only shell", () => {

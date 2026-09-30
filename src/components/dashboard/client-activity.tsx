@@ -546,7 +546,7 @@ export function ClientActivity({ section, onCount }: { section: ClientActivitySe
               icon={CalendarDays}
               title={t("bEmpty")}
               description={t("bEmptySub")}
-              action={<Button asChild><Link href="/buscar">{t("searchPros")}</Link></Button>}
+              action={<Button asChild><Link href="/profesionales">{t("searchPros")}</Link></Button>}
             />
           ) : (
             <>
@@ -559,7 +559,7 @@ export function ClientActivity({ section, onCount }: { section: ClientActivitySe
                   title={effectiveBookingFilter === "finalizadas" ? t("bDoneEmpty") : t("bActiveEmpty")}
                   description={effectiveBookingFilter === "finalizadas" ? t("bDoneEmptySub") : t("bActiveEmptySub")}
                   action={effectiveBookingFilter === "finalizadas" ? undefined : (
-                    <Button asChild variant="outline"><Link href="/buscar">{t("searchPros")}</Link></Button>
+                    <Button asChild variant="outline"><Link href="/profesionales">{t("searchPros")}</Link></Button>
                   )}
                 />
               ) : (

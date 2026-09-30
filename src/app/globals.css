@@ -72,6 +72,14 @@ body.ccr-native-app [data-messages-page-main] {
   padding-top: 0 !important;
 }
 
+/* Abajo tampoco. La regla general de `main` con el menú visible deja 1rem de
+   aire al final (y su selector pesa más que el de esta pantalla): aquí, donde
+   la lista se desplaza por dentro, ese aire era una franja blanca fija entre
+   la lista y el menú. Promociones y Empleos terminan pegados al menú. */
+body.ccr-native-app.ccr-native-bottom-nav-visible:not(.ccr-native-search-route) main.ccr-notifications-page-main {
+  padding-bottom: 0 !important;
+}
+
 body.ccr-native-app .ccr-notifications-page-panel {
   padding-top: 0.5rem !important;
 }
@@ -425,12 +433,16 @@ html.ccr-native-bottom-nav-visible body .ccr-search-bottom-sheet {
   }
 }
 
-/* La última conversación normalmente no lleva línea abajo: sobra cuando la
-   lista sigue más allá de la pantalla, porque la línea queda pegada a la barra
-   de abajo. Pero cuando la lista termina antes del final, sin esa línea parece
-   cortada a la mitad. Ahí sí se pinta. */
-.ccr-direct-chat-list[data-lista-cabe="true"] > :last-child {
-  border-bottom-width: 1px;
+/* La línea del último chat se esconde: cuando la lista sigue más allá de la
+   pantalla quedaría pegada a la barra de abajo. Si la lista termina antes, sí
+   va, o parece cortada a la mitad. Es la línea con sangría de cada fila, no un
+   borde: el aviso de «no hay conversaciones» no trae ninguna (antes salía una
+   raya negra sobre él). */
+.ccr-direct-chat-list > .ccr-fila-chat:last-child .ccr-separador-chat {
+  display: none;
+}
+.ccr-direct-chat-list[data-lista-cabe="true"] > .ccr-fila-chat:last-child .ccr-separador-chat {
+  display: block;
 }
 
 @media (max-width: 1023px) {
@@ -600,8 +612,9 @@ html.ccr-native-bottom-nav-visible body .ccr-search-bottom-sheet {
     height: 100%;
     min-height: 0;
     /* Pegado al encabezado y a la barra, como en Facebook: la lista se recorta
-       contra la barra en vez de dejar una franja blanca. */
-    padding: 0.5rem 0 0 !important;
+       contra los dos. Los 0.5rem de arriba quedaban como una franja blanca fija
+       bajo el encabezado mientras la lista pasaba por debajo. */
+    padding: 0 !important;
   }
 
   body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-notifications-list {
@@ -610,7 +623,9 @@ html.ccr-native-bottom-nav-visible body .ccr-search-bottom-sheet {
 
   body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-notifications-scroll {
     overflow-y: auto;
-    overscroll-behavior: contain;
+    /* Sin rebote: al tirar de la lista iOS la despegaba del encabezado y
+       asomaba el fondo gris del área como otra franja. */
+    overscroll-behavior: none;
     -webkit-overflow-scrolling: touch;
   }
 
@@ -789,13 +804,27 @@ html[data-keyboard-open].ccr-native-app .ccr-ai-composer {
   padding-bottom: 1rem !important;
 }
 
-/* Los paneles de chat y asistente se pintan por encima de la barra y le tapaban
-   el borde superior: la barra manda sobre ellos. */
-body.contratacr-chat-thread-open .ccr-native-bottom-nav,
+/* El asistente se pinta por encima de la barra y le tapaba el borde superior:
+   la barra manda sobre él. */
 body.contratacr-ai-open .ccr-native-bottom-nav,
-html.contratacr-chat-thread-open .ccr-native-bottom-nav,
 html.contratacr-ai-open .ccr-native-bottom-nav {
   z-index: 130 !important;
+}
+
+/* DENTRO DE UN CHAT NO HAY BARRA DE ABAJO, como en WhatsApp: lo que importa ahí
+   es escribir. Con ella la barra de escribir subía ~70px, se perdía
+   conversación y era fácil tocar una pestaña queriendo tocar el clip. Para
+   salir está la flecha de arriba. Sin barra tampoco se le reserva espacio, y la
+   barra de escribir recupera el margen del borde del teléfono. */
+body.contratacr-chat-thread-open .ccr-native-bottom-nav,
+html.contratacr-chat-thread-open .ccr-native-bottom-nav {
+  display: none !important;
+}
+body.ccr-native-app.ccr-native-bottom-nav-visible.contratacr-chat-thread-open {
+  --ccr-reserva-barra: 0px;
+}
+body.ccr-native-app.ccr-native-bottom-nav-visible.contratacr-chat-thread-open:not(.ccr-native-search-route) .ccr-direct-chat-composer {
+  padding-bottom: max(env(safe-area-inset-bottom), 0.75rem) !important;
 }
 
 body.ccr-native-app.ccr-native-bottom-nav-visible {

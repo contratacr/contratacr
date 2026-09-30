@@ -23,7 +23,7 @@ const pruebas = [
   },
   {
     nombre: "Buscar",
-    ruta: "/buscar",
+    ruta: "/profesionales",
     // Este es el que importa: el conteo sale de Supabase. Si dice cero, o la
     // base no contestó o las fichas dejaron de ser públicas.
     revisar: (texto) => {

@@ -1,10 +1,12 @@
 "use client";
 
-import { Bell, Handshake, Headset, ReceiptText, ShieldCheck, Star, Briefcase } from "lucide-react";
+import { Handshake, Headset, MessageSquareText, ReceiptText, ShieldCheck, Star, Briefcase } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 // Un icono por familia de aviso VIVA. Las de citas, propuestas, postulaciones,
-// seguir y recordatorios se retiraron con sus flujos; lo historico cae en la
-// campana generica.
+// seguir y recordatorios se retiraron con sus flujos. Lo demás lleva la marca
+// de ContrataCR: una campana DENTRO de Notificaciones no dice nada —todo ahí es
+// una notificación— y el aviso que no es de nadie en particular es de la app.
 export function NotificationSourceIcon({ type, className }: { type: string; className?: string }) {
   switch (type) {
     case "new_job":
@@ -13,7 +15,10 @@ export function NotificationSourceIcon({ type, className }: { type: string; clas
     case "project_cancelled":
       return <Handshake className={className} />;
     case "review_received":
+    case "resena_google":
       return <Star className={className} />;
+    case "direct_message":
+      return <MessageSquareText className={className} />;
     case "verification_approved":
     case "verification_pending":
     case "verification_rejected":
@@ -27,6 +32,7 @@ export function NotificationSourceIcon({ type, className }: { type: string; clas
     case "support_reply":
       return <Headset className={className} />;
     default:
-      return <Bell className={className} />;
+      // eslint-disable-next-line @next/next/no-img-element -- isotipo fijo y pequeño
+      return <img src="/logo-mark-transparent.png" alt="" className={cn(className, "scale-125 object-contain")} />;
   }
 }

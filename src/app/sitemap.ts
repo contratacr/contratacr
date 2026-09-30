@@ -52,7 +52,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const crudo = (data as { updated_at?: string } | null)?.updated_at;
     if (crudo) ultimoCambio = new Date(crudo);
   } catch { /* sin fecha es mejor que una fecha falsa */ }
-  const fijos = ["", "/buscar", "/servicios", "/promociones", "/empleos", "/proyectos", "/como-funciona", "/ayuda", "/mejorar-mi-perfil"];
+  const fijos = ["", "/profesionales", "/servicios", "/promociones", "/empleos", "/proyectos", "/como-funciona", "/ayuda", "/mejorar-mi-perfil"];
   for (const p of fijos) for (const l of IDIOMAS) out.push({ url: `${APP_URL}${rutaConIdioma(l, `${p}` || "/")}`, lastModified: ultimoCambio, changeFrequency: "daily", priority: p === "" ? 1 : 0.8 });
 
   for (const cat of getAllCategories()) {

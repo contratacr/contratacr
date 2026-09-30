@@ -16,7 +16,7 @@ test.describe("@smoke services catalog", () => {
     await search.fill("Plomer");
     const result = page.locator("main").getByRole("link", { name: /Plomer[ií]a/i }).filter({ visible: true }).first();
     await expect(result).toBeVisible();
-    await expect(result).toHaveAttribute("href", /\/buscar\?categoria=plomeria/);
+    await expect(result).toHaveAttribute("href", /\/servicios\/plomeria/);
 
     await search.fill("");
     await expect(search).toHaveValue("");

@@ -1676,6 +1676,14 @@ export function getCategoryGroupId(id: string): string | undefined {
   return custom?.groupId;
 }
 
+/** ¿Es un servicio del catálogo (el del código o uno creado desde el panel)?
+ *  Decide si /profesionales/<x> es la búsqueda de ese servicio o un perfil. */
+export function esServicioDelCatalogo(id: string): boolean {
+  return ALL_CATEGORIES.some((c) => c.id === id)
+    || CUSTOM_CATEGORIES.some((c) => c.id === id)
+    || CATEGORY_CATALOG_OVERRIDES.has(id);
+}
+
 /* ─── Get category label from ID (locale-aware) ─── */
 export function getCategoryLabel(id: string, locale?: string): string {
   const override = CATEGORY_CATALOG_OVERRIDES.get(id);

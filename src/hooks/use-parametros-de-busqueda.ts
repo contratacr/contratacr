@@ -3,6 +3,7 @@
 import { useMemo } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 import { filtrosDeRuta } from "@/lib/buscar-url";
+import { esServicioDelCatalogo } from "@/lib/data/categories";
 
 /**
  * Los parámetros de la búsqueda tal como la página los entiende, aunque la
@@ -16,7 +17,7 @@ export function useParametrosDeBusqueda(): URLSearchParams {
   const pathname = usePathname();
   return useMemo(() => {
     const juntos = new URLSearchParams(sp.toString());
-    const enRuta = filtrosDeRuta(pathname);
+    const enRuta = filtrosDeRuta(pathname, esServicioDelCatalogo);
     if (enRuta?.categoria) juntos.set("categoria", enRuta.categoria);
     if (enRuta?.provincia) juntos.set("provincia", enRuta.provincia);
     if (enRuta?.canton) juntos.set("canton", enRuta.canton);

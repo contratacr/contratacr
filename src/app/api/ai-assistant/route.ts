@@ -740,7 +740,7 @@ function resolveSearch(message: string, locale: Locale, serviceId?: string | nul
     params.set("canton", place.id);
   }
   return {
-    href: `/buscar${params.toString() ? `?${params.toString()}` : ""}`,
+    href: `/profesionales${params.toString() ? `?${params.toString()}` : ""}`,
     category,
     place,
   };
@@ -750,7 +750,7 @@ function freeTextSearchHref(message: string) {
   const params = new URLSearchParams();
   const query = message.trim();
   if (query) params.set("q", query);
-  return `/buscar${params.toString() ? `?${params.toString()}` : ""}`;
+  return `/profesionales${params.toString() ? `?${params.toString()}` : ""}`;
 }
 
 function userMessagePlace(message: string) {
@@ -996,7 +996,7 @@ const PRODUCT_INTENTS: ProductIntent[] = [
     },
     cta: { es: "Buscar por videoconsulta", en: "Search video consultations" },
     action: "help",
-    href: () => "/buscar?modalidad=videoconsulta",
+    href: () => "/profesionales?modalidad=videoconsulta",
   },
 ];
 
@@ -1339,7 +1339,7 @@ function actionHref(payload: AssistantPayload, originalMessage: string, locale: 
       params.set("provincia", place.provinceId);
       params.set("canton", place.id);
     }
-    return `/buscar?${params.toString()}`;
+    return `/profesionales?${params.toString()}`;
   }
   return resolveSearch(originalMessage, locale, payload.serviceId, payload.locationText).href;
 }

@@ -1327,7 +1327,8 @@
       "guides": "Guides",
       "notifications": "Notifications",
       "soporte": "Support",
-      "cuenta": "Account & security"
+      "cuenta": "Account & security",
+      "privacidad": "Privacy"
     },
     "home": {
       "useEyebrow": "Client panel",
@@ -1469,7 +1470,8 @@
       "photosDesc": "Success stories with photos that clients can see.",
       "availabilityDesc": "Hours, contact preferences and availability shown to clients.",
       "verificationDesc": "Identity and verification status.",
-      "accountDesc": "Email, password and account security."
+      "accountDesc": "Email, password and account security.",
+      "privacyDesc": "Who sees when you read your messages."
     },
     "completion": {
       "completeTitle": "Your profile is complete!",
@@ -3139,7 +3141,9 @@
     "groupEarlier": "Earlier",
     "loadErrorTitle": "We could not load your notifications",
     "loadErrorBody": "Check your connection and try again.",
-    "loadErrorRetry": "Try again"
+    "loadErrorRetry": "Try again",
+    "deletedToast": "Notification deleted",
+    "undo": "Undo"
   },
   "projects": {
     "title": "Tell us what you need",
@@ -3886,7 +3890,27 @@
     "markUnread": "Unread",
     "more": "More",
     "reportAndBlock": "Report and block",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "editMessage": "Edit",
+    "editingMessage": "Editing message",
+    "edited": "Edited",
+    "deleteMessage": "Delete",
+    "deleteForEveryone": "Delete for everyone",
+    "deleteForMe": "Delete for me",
+    "deleteMessageTitle": "Delete message?",
+    "messageDeleted": "This message was deleted",
+    "youDeletedMessage": "You deleted this message",
+    "cancelEdit": "Cancel editing",
+    "saveEdit": "Save",
+    "editFailed": "Could not edit the message.",
+    "deleteMessageFailed": "Could not delete the message.",
+    "sending": "Sending…",
+    "sent": "Sent",
+    "read": "Read",
+    "archivedEmptyTitle": "No archived conversations",
+    "archivedEmptyHint": "Archive a chat by swiping it left.",
+    "delivered": "Delivered",
+    "seenAt": "Seen {hora}"
   },
   "bottomNav": {
     "search": "Professionals",
@@ -4251,7 +4275,8 @@
     "allPromotions": "See all promotions",
     "allJobs": "See all jobs",
     "backToProjects": "Back to projects",
-    "allProjects": "See all projects"
+    "allProjects": "See all projects",
+    "backToNotifications": "Back to notifications"
   },
   "tableroBuscador": {
     "empleos": "Search jobs",
@@ -4301,5 +4326,10 @@
     "promocion": "Promotion",
     "empleo": "Job",
     "proyectoSinTitulo": "A client is looking for a professional"
+  },
+  "accountPrivacy": {
+    "readReceipts": "Read receipts",
+    "readReceiptsHelp": "If you turn this off, others won't see when you read their messages and you won't see when they read yours.",
+    "readReceiptsError": "Could not save. Please try again."
   }
 }

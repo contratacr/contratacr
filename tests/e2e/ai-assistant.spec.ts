@@ -89,7 +89,7 @@ test.describe("@smoke ContrataCR AI service resolver", () => {
     expect(response.status, JSON.stringify(response.body)).toBe(200);
     expect(response.body.searchHref, JSON.stringify(response.body)).toBeTruthy();
     expect(response.body.searchHref, JSON.stringify(response.body)).not.toContain("categoria=");
-    expect(response.body.searchHref, JSON.stringify(response.body)).toMatch(/\/buscar\?q=|openPublish=1/);
+    expect(response.body.searchHref, JSON.stringify(response.body)).toMatch(/\/profesionales\?q=|openPublish=1/);
     expect(response.body.answer, JSON.stringify(response.body)).toMatch(/no estoy seguro|no tengo total certeza|crea(r)? un proyecto|publica un proyecto/i);
   });
 
@@ -108,7 +108,7 @@ test.describe("@smoke ContrataCR AI service resolver", () => {
       expect(response.status, JSON.stringify(response.body)).toBe(200);
       expect(response.body.searchHref, prompt).toBeTruthy();
       expect(response.body.searchHref, prompt).not.toContain("categoria=");
-      expect(response.body.searchHref, prompt).toMatch(/\/buscar\?q=|openPublish=1/);
+      expect(response.body.searchHref, prompt).toMatch(/\/profesionales\?q=|openPublish=1/);
       expect(response.body.answer, prompt).toMatch(/no tengo total certeza|buscar|cree un proyecto|create a project/i);
     }
   });

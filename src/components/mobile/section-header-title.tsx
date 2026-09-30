@@ -17,6 +17,7 @@ export function SectionHeaderTitle({
   raiz = false,
   menu = false,
   tambienEnLaWeb = false,
+  alVolver,
 }: {
   title: string;
   fallbackHref?: string;
@@ -26,6 +27,9 @@ export function SectionHeaderTitle({
   raiz?: boolean;
   // La barra del teléfono también toma el título en la web.
   tambienEnLaWeb?: boolean;
+  // Una vista DENTRO de la pantalla (Archivados en Mensajes): la flecha vuelve
+  // a la pantalla, no a la anterior del historial.
+  alVolver?: () => void;
 }) {
   const nativeApp = useNativeApp();
   const publica = nativeApp || tambienEnLaWeb;
@@ -58,12 +62,13 @@ export function SectionHeaderTitle({
   useEffect(() => {
     if (!publica) return;
     const volver = () => {
-      if (window.history.length > 1) router.back();
+      if (alVolver) alVolver();
+      else if (window.history.length > 1) router.back();
       else router.push(fallbackHref);
     };
     window.addEventListener("ccr:section-back", volver);
     return () => window.removeEventListener("ccr:section-back", volver);
-  }, [fallbackHref, publica, router]);
+  }, [alVolver, fallbackHref, publica, router]);
 
   return null;
 }

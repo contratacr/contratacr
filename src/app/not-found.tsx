@@ -36,7 +36,7 @@ export default async function NotFound() {
       <a href={en ? "/en" : "/"} className={errorPrimaryBtn}>
         {en ? "Go home" : "Ir al inicio"}
       </a>
-      <a href={en ? "/en/buscar" : "/buscar"} className={errorSecondaryBtn}>
+      <a href={en ? "/en/profesionales" : "/profesionales"} className={errorSecondaryBtn}>
         <Search className="h-4 w-4" /> {en ? "Search professionals" : "Buscar profesionales"}
       </a>
     </ErrorScreen>

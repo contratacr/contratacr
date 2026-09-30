@@ -1,10 +1,8 @@
 "use client";
 
-import { AutoSaveHint, useAvisoDeGuardado } from "@/components/dashboard/auto-save-hint";
 import { prefijoDeIdioma } from "@/lib/prefijo-de-idioma";
 import { useEffect, useState } from "react";
-import { FilaInterruptor } from "@/components/ui/fila-interruptor";
-import { CheckCircle2, MessageCircle, Clock, Mail, Lock, ShieldCheck, Eye, EyeOff, Info, ExternalLink } from "lucide-react";
+import { CheckCircle2, Clock, Mail, Lock, ShieldCheck, Eye, EyeOff, Info, ExternalLink } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
@@ -81,52 +79,7 @@ export function AccountSecuritySection({ showHeading = true }: { showHeading?: b
   const { user } = useAuth();
   const locale = useLocale();
   const t = useTranslations("accountSecurity");
-  const avisoPermiso = useAvisoDeGuardado();
-  const [errorPermiso, setErrorPermiso] = useState(false);
   const tc = useTranslations("common");
-
-  // Avisos por WhatsApp: el permiso vive en el perfil y solo lo enciende la
-  // persona. Sin él no se le escribe por ese canal, que es lo que exige la
-  // política de Meta y lo que evita que un bloqueo cuente como mensaje no
-  // solicitado.
-  const [permisoWhatsapp, setPermisoWhatsapp] = useState<boolean | null>(null);
-  const [guardandoPermiso, setGuardandoPermiso] = useState(false);
-  const [telefonoDelPerfil, setTelefonoDelPerfil] = useState<string | null>(null);
-  useEffect(() => {
-    if (!user) return;
-    let vivo = true;
-    void createClient()
-      .from("profiles")
-      .select("whatsapp_opt_in, phone")
-      .eq("id", user.id)
-      .maybeSingle()
-      .then(({ data }) => {
-        if (!vivo || !data) return;
-        setPermisoWhatsapp(Boolean((data as { whatsapp_opt_in?: boolean }).whatsapp_opt_in));
-        setTelefonoDelPerfil(((data as { phone?: string | null }).phone ?? null));
-      });
-    return () => { vivo = false; };
-  }, [user]);
-
-  async function cambiarPermisoWhatsapp(siguiente: boolean) {
-    if (!user) return;
-    setGuardandoPermiso(true);
-    setErrorPermiso(false);
-    const anterior = permisoWhatsapp;
-    setPermisoWhatsapp(siguiente);
-    // Se guarda en el momento: se confirma a la vista y, si falla, SE DICE. Antes
-    // el interruptor se devolvía solo, sin una palabra, y parecía un fallo de la
-    // pantalla.
-    const ok = await avisoPermiso.correr(async () => {
-      const { error } = await createClient()
-        .from("profiles")
-        .update({ whatsapp_opt_in: siguiente })
-        .eq("id", user.id);
-      return !error;
-    });
-    if (!ok) { setPermisoWhatsapp(anterior ?? false); setErrorPermiso(true); }
-    setGuardandoPermiso(false);
-  }
 
   // Email change
   const [emailMode, setEmailMode] = useState(false);
@@ -293,25 +246,6 @@ export function AccountSecuritySection({ showHeading = true }: { showHeading?: b
           DENTRO de la tarjeta blanca del perfil, y una tarjeta blanca con borde
           dentro de otra igual solo suma marcos. Los recuadros con color sí se
           quedan: ahí el color es el mensaje. */}
-      {/* Avisos por WhatsApp */}
-      {permisoWhatsapp !== null && (
-        <div className="border-t border-[#eef2f6] pt-4 first:border-t-0 first:pt-0">
-          <div className="mb-2 flex items-center gap-2">
-            <MessageCircle className="h-4 w-4 text-[#6b7280]" />
-            <h3 className="text-sm font-semibold text-[#374151]">{t("whatsappHeading")}</h3>
-          </div>
-          <FilaInterruptor
-            titulo={t("whatsappOptIn")}
-            ayuda={<>{t("whatsappOptInHelp")}{telefonoDelPerfil ? ` (${telefonoDelPerfil})` : ""}</>}
-            checked={permisoWhatsapp}
-            disabled={guardandoPermiso}
-            onChange={(valor) => { void cambiarPermisoWhatsapp(valor); }}
-          />
-          {errorPermiso && <p role="alert" className="mt-2 text-sm font-semibold text-[#b91c1c]">{t("whatsappOptInError")}</p>}
-          <AutoSaveHint {...avisoPermiso.estado} />
-        </div>
-      )}
-
       {/* Email */}
       <div className="border-t border-[#eef2f6] pt-4 first:border-t-0 first:pt-0">
         <div className="flex items-center gap-2 mb-2">

@@ -94,7 +94,7 @@ test.describe("@seeded cabeceras", () => {
     // la ventana; en /buscar era el buscador el que lo cedía todo y quedaba en
     // dos íconos dentro de una cajita. La regla: nada sale de la pantalla y el
     // buscador nunca baja de 260 px; lo primero que cede es «Sobre ContrataCR».
-    for (const ruta of ["/empleos", "/buscar?q=desarrollo", "/promociones"]) {
+    for (const ruta of ["/empleos", "/profesionales?q=desarrollo", "/promociones"]) {
       for (const ancho of [1024, 1100, 1180, 1280, 1366]) {
         await page.setViewportSize({ width: ancho, height: 800 });
         await gotoOK(page, ruta);

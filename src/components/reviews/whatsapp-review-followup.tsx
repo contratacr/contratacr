@@ -1,6 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { esRutaDeBusqueda } from "@/lib/buscar-url";
+import { esServicioDelCatalogo } from "@/lib/data/categories";
 import { prefijoDeIdioma } from "@/lib/prefijo-de-idioma";
 import { alCambiarElTurno, hayAlguienEnTurno } from "@/lib/turno-en-pantalla";
 import { Clock3, Star, X } from "lucide-react";
@@ -37,7 +39,7 @@ export function WhatsAppReviewFollowUp() {
   // en el panel o en la lista de Mensajes, donde no compite con nada.
   const pathname = usePathname();
   const ruta = (pathname ?? "/").replace(/^\/(?:es|en)(?=\/|$)/u, "") || "/";
-  const pantallaTranquila = /^\/(?:buscar|mensajes|dashboard(?:\/[^/]+)?)?\/?$/u.test(ruta);
+  const pantallaTranquila = /^\/(?:mensajes|dashboard(?:\/[^/]+)?)?\/?$/u.test(ruta) || esRutaDeBusqueda(ruta, esServicioDelCatalogo);
   const [followUp, setFollowUp] = useState<FollowUp | null>(null);
   const [pendingCount, setPendingCount] = useState(0);
   const [reviewTarget, setReviewTarget] = useState<ReviewTarget | null>(null);

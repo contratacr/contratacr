@@ -2,6 +2,7 @@
 import { EMPLEOS_VISIBLE } from "@/lib/feature-flags";
 import { rutaConIdioma } from "@/lib/prefijo-de-idioma";
 import { sinBarraDeAbajo } from "@/lib/rutas-sin-barra";
+import { esServicioDelCatalogo } from "@/lib/data/categories";
 import { esRutaDeBusqueda } from "@/lib/buscar-url";
 
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -79,8 +80,8 @@ export function NativeBottomNav() {
       // Cotizaciones está en el menú, así que estar en el panel —en la pestaña
       // que sea— enciende el panel.
       if (base === panelHref) return (pathname ?? "").startsWith(panelHref);
-      // /buscar/construccion/alajuela sigue siendo Buscar.
-      if (base === "/buscar") return esRutaDeBusqueda(pathname);
+      // /profesionales/construccion/alajuela sigue siendo Profesionales; un perfil no.
+      if (base === "/profesionales") return esRutaDeBusqueda(pathname, esServicioDelCatalogo);
       return pathname === base;
     },
     [asistenteAbierto, pathname, pendingHref],
@@ -108,7 +109,7 @@ export function NativeBottomNav() {
   useEffect(() => {
     if (!visible) return;
     const id = window.setTimeout(() => {
-      for (const destino of ["/", "/buscar", ...(EMPLEOS_VISIBLE ? ["/empleos"] : []), "/proyectos", "/promociones", primaryPanelHref]) router.prefetch(destino);
+      for (const destino of ["/", "/profesionales", ...(EMPLEOS_VISIBLE ? ["/empleos"] : []), "/proyectos", "/promociones", primaryPanelHref]) router.prefetch(destino);
     }, 800);
     return () => window.clearTimeout(id);
   }, [pathname, primaryPanelHref, router, visible]);
@@ -121,7 +122,7 @@ export function NativeBottomNav() {
       // Con el asistente encima, la pestaña primero lo aparta.
       if (asistenteAbierto) window.dispatchEvent(new Event("contratacr:close-ai"));
       const [base, consulta = ""] = href.split("?");
-      if (pathname === base || (base === "/buscar" && esRutaDeBusqueda(pathname))) {
+      if (pathname === base || (base === "/profesionales" && esRutaDeBusqueda(pathname, esServicioDelCatalogo))) {
         // Misma RUTA no siempre es el mismo lugar: las secciones del panel viven
         // en ?tab=, una búsqueda con resultados en ?q=, un listado filtrado en
         // sus propios parámetros. Todo eso está MÁS ADENTRO que la portada de la
@@ -187,7 +188,7 @@ export function NativeBottomNav() {
   // Retirarse al desplazar donde hay una lista larga que se recorre sin fin:
   // portada, Ofertas, Empleos y los resultados de /buscar. En Panel o Mensajes
   // la lista es corta y la barra yéndose y viniendo sería ruido.
-  const permiteRetirarse = /^\/(?:promociones|empleos|proyectos|buscar(?:\/[^/]+){0,3})?\/?$/.test(pathname ?? "/");
+  const permiteRetirarse = /^\/(?:promociones|empleos|proyectos)?\/?$/.test(pathname ?? "/") || esRutaDeBusqueda(pathname, esServicioDelCatalogo);
 
   const [escondida, setEscondida] = useState(false);
   useEffect(() => {
@@ -293,14 +294,14 @@ export function NativeBottomNav() {
           mide. */}
       <div className="mx-auto flex w-full max-w-[520px] items-stretch px-1">
         <Link
-          href="/buscar"
+          href="/profesionales"
           prefetch={true}
           aria-label={etiquetas.buscar}
-          onClick={(event) => irA(event, "/buscar")}
-          className={itemClass("/buscar")}
+          onClick={(event) => irA(event, "/profesionales")}
+          className={itemClass("/profesionales")}
         >
-          {marca("/buscar")}
-          <Search className="h-5 w-5" strokeWidth={isActive("/buscar") ? 2.4 : 2} />
+          {marca("/profesionales")}
+          <Search className="h-5 w-5" strokeWidth={isActive("/profesionales") ? 2.4 : 2} />
           {rotulo(etiquetas.buscar)}
         </Link>
 

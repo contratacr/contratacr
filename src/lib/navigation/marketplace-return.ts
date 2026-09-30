@@ -5,6 +5,7 @@ const ALLOWED_RETURN_PATHS = [
   "/dashboard/cliente",
   "/dashboard/profesional",
   "/proyectos",
+  "/notificaciones",
 ] as const;
 
 type Tablero = "/promociones" | "/empleos" | "/proyectos";
@@ -69,6 +70,7 @@ export function marketplaceReturnLabelKey(
   if (sinOrigen) return fallback === "/promociones" ? "allPromotions" : fallback === "/empleos" ? "allJobs" : "allProjects";
   const pathname = withoutLocale(href.split(/[?#]/u)[0] || "/");
   if (pathname.startsWith("/profesionales/")) return "backToProfile";
+  if (pathname === "/notificaciones") return "backToNotifications";
   if (pathname.startsWith("/dashboard/")) {
     const params = new URLSearchParams(href.includes("?") ? href.split("?")[1]?.split("#")[0] : "");
     return params.get("tab") === "saved" ? "backToFavorites" : "backToDashboard";

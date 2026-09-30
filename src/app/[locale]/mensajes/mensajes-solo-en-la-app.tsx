@@ -33,7 +33,7 @@ export function MensajesSoloEnLaApp() {
             description={t("cuerpo")}
             className="px-5 py-14"
             action={(
-              <Link href="/buscar" className="inline-flex h-11 items-center justify-center rounded-full bg-[#009FD9] px-6 text-[14px] font-bold text-white transition-colors hover:bg-[#0089bb]">
+              <Link href="/profesionales" className="inline-flex h-11 items-center justify-center rounded-full bg-[#009FD9] px-6 text-[14px] font-bold text-white transition-colors hover:bg-[#0089bb]">
                 {t("accion")}
               </Link>
             )}

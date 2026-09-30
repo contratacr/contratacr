@@ -62,6 +62,18 @@ export function useDirectMessageUnread(enabled = true) {
     reload();
     window.addEventListener("notificationsChanged", reload);
     window.addEventListener("directMessagesChanged", reload);
+    // Un cambio hecho AQUÍ (marcar leído / no leído) mueve el número al instante;
+    // el servidor lo confirma después con «directMessagesChanged».
+    const ajustar = (event: Event) => {
+      const delta = Number((event as CustomEvent<number>).detail) || 0;
+      if (!delta) return;
+      setUnread((actual) => {
+        const siguiente = Math.max(0, actual + delta);
+        ultimoConteo = { userId: user.id, total: siguiente };
+        return siguiente;
+      });
+    };
+    window.addEventListener("ccr:mensajes-sin-leer", ajustar);
     // RealtimeClient reuses channels by topic. React can reconnect passive
     // effects before removeChannel() finishes, so a stable topic may return a
     // channel that has already subscribed and reject new postgres callbacks.
@@ -88,6 +100,7 @@ export function useDirectMessageUnread(enabled = true) {
       stopped = true;
       window.removeEventListener("notificationsChanged", reload);
       window.removeEventListener("directMessagesChanged", reload);
+      window.removeEventListener("ccr:mensajes-sin-leer", ajustar);
       if (channel) void supabase.removeChannel(channel);
     };
   }, [enabled, refresh, user]);

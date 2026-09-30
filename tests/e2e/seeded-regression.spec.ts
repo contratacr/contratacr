@@ -657,7 +657,7 @@ test.describe("@seeded core regression", () => {
     await expect(page.getByText(categoryLabel, { exact: true }).filter({ visible: true }).first()).toBeVisible();
     await expectNoHorizontalOverflow(page);
 
-    await gotoOK(page, `/buscar?categoria=${encodeURIComponent(seed.categoryId)}`);
+    await gotoOK(page, `/profesionales?categoria=${encodeURIComponent(seed.categoryId)}`);
     const resultCard = page.locator("article", {
       has: page.locator(`a[href^="/profesionales/${seed.professionalSlug}"]`),
     }).filter({ visible: true }).first();

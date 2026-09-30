@@ -142,7 +142,8 @@ export default async function LocaleLayout({
           .from("notifications")
           .select("type")
           .eq("user_id", initialUser.id)
-          .eq("read", false),
+          .eq("read", false)
+          .neq("type", "direct_message"),
         supabase
           .from("professionals")
           .select("business_name")

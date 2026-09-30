@@ -82,7 +82,7 @@ if (!pages.length || !handlers.length) throw new Error("Application surface inve
 const parkedPages = verify(pages, pageRules, "Page");
 const parkedHandlers = verify(handlers, handlerRules, "Handler");
 const expectedParkedPages = ["/[locale]/mensajes"];
-const expectedParkedHandlers = ["/api/direct-chat", "/api/direct-chat/attachments"];
+const expectedParkedHandlers = ["/api/direct-chat", "/api/direct-chat/attachments", "/api/direct-chat/mensaje"];
 
 if (JSON.stringify(parkedPages) !== JSON.stringify(expectedParkedPages)) {
   throw new Error(`Parked pages changed: ${JSON.stringify(parkedPages)}.`);

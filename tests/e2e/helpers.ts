@@ -316,7 +316,7 @@ export function isMobileProject(testInfo: TestInfo) {
 }
 
 export async function firstProfessionalHref(page: Page) {
-  await gotoOK(page, "/buscar");
+  await gotoOK(page, "/profesionales");
   const links = page.locator('a[href*="/profesionales/"]').filter({ visible: true });
 
   await expect

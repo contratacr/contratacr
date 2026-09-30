@@ -134,7 +134,7 @@ else if (!layoutRaiz.includes(detalleEnHelper.replace(/\\/g, "\\\\"))) failures.
 requireMatch(
   "Native bottom navigation order",
   bottomNav,
-  /href="\/buscar"[\s\S]*href="\/promociones"[\s\S]*href="\/proyectos"[\s\S]*href="\/empleos"[\s\S]*href=\{nativePanelHref\}/,
+  /href="\/profesionales"[\s\S]*href="\/empleos"[\s\S]*href="\/proyectos"[\s\S]*href="\/promociones"[\s\S]*href=\{nativePanelHref\}/,
 );
 // Si alguien devuelve el Asistente o Cotizaciones a la barra, esto lo dice
 // antes de que llegue a la tienda.
@@ -146,7 +146,9 @@ if (/tab=quotes/.test(bottomNav)) {
 }
 requireMatch("Native messages unread badge", navbar, /HeaderMessagesLink unreadCount=\{nativeMessageUnread\}/);
 requireMatch("Native messages badge counter", navbar, /unreadCount > 0[\s\S]*unreadCount > 9 \? "9\+" : unreadCount/);
-requireMatch("Native WhatsApp replacement", directChatLauncher, /if \(nativeApp\)[\s\S]*<MessageLauncher/);
+// En la app el botón se adapta al profesional: chat si tiene la app, WhatsApp
+// si no (decidido el 29-sep-2026 para el lanzamiento).
+requireMatch("Native contact adapts to the professional", directChatLauncher, /useProfesionalConApp\(professionalId, nativeApp\)[\s\S]*if \(usaChat\)[\s\S]*<MessageLauncher/);
 requireMatch(
   "Native assistant message action",
   aiConcierge,
@@ -197,7 +199,7 @@ if (!firebasePackages.includes(expected.appId)) {
 }
 
 if (process.argv.includes("--remote")) {
-  for (const path of ["/", "/buscar", "/login", "/privacidad"]) {
+  for (const path of ["/", "/profesionales", "/login", "/privacidad"]) {
     const response = await fetch(`${expected.serverOrigin}${path}`, { redirect: "follow" });
     const body = await response.text();
     if (!response.ok) failures.push(`${path} returned HTTP ${response.status}`);

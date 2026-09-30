@@ -4,9 +4,25 @@ import { getCantonBySlugOrId, getProvinceBySlugOrId } from "@/lib/data/cr-geogra
 /**
  * LA DIRECCIÓN DE UNA BÚSQUEDA SE LEE:
  *
- *   /buscar/construccion/alajuela/grecia
+ *   /profesionales/construccion/alajuela/grecia
  *
- * y no /buscar?categoria=construccion&provincia=al&canton=al-gr, que es lo
+ * La búsqueda vive en su sección, como /empleos y /promociones; hasta el 29 de
+ * septiembre de 2026 vivía en /buscar, una palabra que servía igual para
+ * empleos, promociones o proyectos. /buscar/… salta aquí con un 308.
+ *
+ * COMPARTE LA RAÍZ CON LOS PERFILES (/profesionales/juan-perez-k3d9f2a1). Se
+ * distinguen así, sin adivinar:
+ *   · /profesionales                          → búsqueda
+ *   · /profesionales/todos[/…]                → búsqueda (solo por lugar)
+ *   · /profesionales/<x>/<provincia>[/<cantón>] → búsqueda: un perfil nunca
+ *     lleva provincia detrás (lo suyo es /reservar, /opengraph-image)
+ *   · /profesionales/<x>                      → búsqueda SOLO si <x> es un
+ *     servicio del catálogo real (el de la base, con los creados desde el
+ *     panel); si no, es un perfil. Quien pregunta pasa `esServicio`.
+ * Un perfil no puede llamarse como un servicio: todo perfil lleva un sufijo
+ * aleatorio de 8 caracteres, y el 29-sep-2026 no había ningún choque.
+ *
+ * y no /profesionales?categoria=construccion&provincia=al&canton=al-gr, que es lo
  * que salía en la barra del navegador y en cada WhatsApp reenviado: claves de
  * máquina a la vista, que se leen como un enlace de fraude.
  *
@@ -14,24 +30,50 @@ import { getCantonBySlugOrId, getProvinceBySlugOrId } from "@/lib/data/cr-geogra
  * comparte—; el texto libre (`q`) y los filtros finos (precio, idioma, orden,
  * «cerca de mí», el rectángulo del mapa) se quedan como parámetros detrás.
  * «todos» ocupa el lugar del servicio cuando la búsqueda es solo por lugar
- * (/buscar/todos/alajuela), para que provincia y servicio no se confundan.
+ * (/profesionales/todos/alajuela), para que provincia y servicio no se confundan.
  *
  * La página sigue entendiendo la forma con parámetros: el middleware traduce
  * la ruta bonita a esa forma por dentro (reescritura) y manda la forma vieja
  * a la bonita (308), así que nada de lo ya compartido se rompe. Este archivo
  * no importa nada pesado a propósito: el middleware lo corre en el borde.
  */
-const SIN_SERVICIO = "todos";
+export const RAIZ_DE_BUSQUEDA = "/profesionales";
+export const SIN_SERVICIO = "todos";
 const EN_LA_RUTA = ["categoria", "provincia", "canton"] as const;
+// La dirección vieja (/buscar/…) y la de hoy. Las dos se leen igual.
+const RUTA = /^\/(?:(?:es|en)\/)?(profesionales|buscar)(?:\/([^/?#]+))?(?:\/([^/?#]+))?(?:\/([^/?#]+))?\/?$/;
 
-export function esRutaDeBusqueda(pathname: string | null | undefined): boolean {
-  return /^\/(?:(?:es|en)\/)?buscar(?:\/|$)/.test(pathname ?? "");
+function tramo(valor: string) {
+  try { return decodeURIComponent(valor).toLowerCase(); } catch { return valor.toLowerCase(); }
 }
 
-/** Lo que la ruta bonita dice de la búsqueda, en las claves que la página usa. */
-export function filtrosDeRuta(pathname: string | null | undefined): { categoria?: string; provincia?: string; canton?: string } | null {
-  const m = /^\/(?:(?:es|en)\/)?buscar\/([^/?#]+)(?:\/([^/?#]+))?(?:\/([^/?#]+))?\/?$/.exec(pathname ?? "");
-  if (!m) return null;
+/** ¿Este segundo tramo es una provincia? Entonces lo de antes es un servicio. */
+export function esProvinciaDeRuta(valor: string | undefined): boolean {
+  return Boolean(valor && getProvinceBySlugOrId(tramo(valor)));
+}
+
+/**
+ * ¿Esta dirección es la búsqueda? `esServicio` responde por el caso de un solo
+ * tramo (/profesionales/techos): recibe la LLAVE del servicio (techos,
+ * aire_acondicionado). Sin ella, un solo tramo cuenta como perfil.
+ */
+export function esRutaDeBusqueda(pathname: string | null | undefined, esServicio?: (id: string) => boolean): boolean {
+  const m = RUTA.exec((pathname ?? "").split(/[?#]/)[0]);
+  if (!m) return false;
+  if (m[1] === "buscar" || !m[2]) return true;
+  if (tramo(m[2]) === SIN_SERVICIO) return true;
+  if (m[3]) return esProvinciaDeRuta(m[3]);
+  return Boolean(esServicio?.(idDesdeDireccion(tramo(m[2]))));
+}
+
+/** Lo que la ruta bonita dice de la búsqueda, en las claves que la página usa.
+ *  En un perfil (/profesionales/juan-perez-k3d9f2a1) devuelve null: por eso
+ *  pide `esServicio`, igual que `esRutaDeBusqueda`. */
+export function filtrosDeRuta(pathname: string | null | undefined, esServicio?: (id: string) => boolean): { categoria?: string; provincia?: string; canton?: string } | null {
+  if (!esRutaDeBusqueda(pathname, esServicio)) return null;
+  const partes = RUTA.exec((pathname ?? "").split(/[?#]/)[0]);
+  if (!partes || !partes[2]) return null;
+  const m = [partes[0], partes[2], partes[3], partes[4]] as const;
   const salida: { categoria?: string; provincia?: string; canton?: string } = {};
   const servicio = decodeURIComponent(m[1]).toLowerCase();
   if (servicio !== SIN_SERVICIO) salida.categoria = idDesdeDireccion(servicio);
@@ -64,5 +106,5 @@ export function rutaDeBusqueda(params: URLSearchParams | Record<string, string |
   if (province) tramos.push(province.slug);
   if (canton?.slug) tramos.push(canton.slug);
   const cadena = resto.toString();
-  return `/buscar${tramos.length ? `/${tramos.join("/")}` : ""}${cadena ? `?${cadena}` : ""}`;
+  return `${RAIZ_DE_BUSQUEDA}${tramos.length ? `/${tramos.join("/")}` : ""}${cadena ? `?${cadena}` : ""}`;
 }

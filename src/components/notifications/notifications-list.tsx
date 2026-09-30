@@ -18,6 +18,7 @@ import { canOffer } from "@/lib/auth/capabilities";
 import { NotificationSourceIcon } from "@/components/notifications/notification-source-icon";
 import { getNotificationProjectCreatedAt, useNotificationProjectTimes } from "@/hooks/use-notification-project-times";
 import { PanelEmptyState, PanelListSkeleton } from "@/components/ui/content-loading";
+import { FilaDeslizable, iconoDeAccion } from "@/components/ui/fila-deslizable";
 import { AppTooltip } from "@/components/ui/app-tooltip";
 import { cacheNotifications, readCachedNotifications, uniqueNotifications } from "@/lib/notifications-cache";
 
@@ -40,6 +41,21 @@ type Notification = {
 // "Notificaciones" item + the navbar bell (sprint 500). Replaces the per-type icons:
 // the kind of notification is already clear from its title/text, and a single shared
 // icon reads as "this is your notifications", consistent across the app.
+
+// LA FLECHA DE ATRÁS VUELVE A NOTIFICACIONES. Cada pantalla de destino decide
+// su regreso con un parámetro propio —el panel `returnTo`, el chat `back`, las
+// fichas `from`— y sin él caía en la lista general de su sección: se abría una
+// promoción desde una notificación y la flecha llevaba a Promociones.
+function conRegresoANotificaciones(href: string) {
+  const ruta = href.replace(/^\/(?:es|en)(?=\/|$)/u, "");
+  const clave = ruta.startsWith("/dashboard/") ? "returnTo"
+    : ruta.startsWith("/mensajes") ? "back"
+    : /^\/(?:promociones|empleos|proyectos|profesionales)\//u.test(ruta) ? "from"
+    : null;
+  if (!clave || new RegExp(`[?&]${clave}=`).test(href)) return href;
+  const [base, ancla] = href.split("#");
+  return `${base}${base.includes("?") ? "&" : "?"}${clave}=${encodeURIComponent("/notificaciones")}${ancla ? `#${ancla}` : ""}`;
+}
 
 // Shared notifications list. The standalone /notificaciones page shows the full
 // account history; the legacy panel tab can still scope by the active mode.
@@ -73,13 +89,19 @@ export function NotificationsList({ scope = "mode", titulo }: { scope?: "mode" |
   const DE_A = 15;
   const [mostrando, setMostrando] = useState(DE_A);
   // Entrar a la pantalla es leerlas: el globo se limpia solo, como en Instagram.
-  // El punto azul dura lo que dura la visita, que es cuando sirve. Se marca
-  // una vez por visita, aunque lo no leído sea más viejo que lo que se cargó.
+  // COMO FACEBOOK: al entrar, todo queda leído EN EL SERVIDOR y la campana baja
+  // a cero en el acto; pero los puntos azules se quedan en pantalla durante esta
+  // visita, para que se vea qué era nuevo. En la siguiente ya salen leídas.
+  // Antes se esperaba 1,5 s y el punto se borraba delante de la persona.
   const marcadoEnEstaVisita = useRef(false);
+  // Se marca DESPUÉS de traer la lista: si no, el servidor ya la devolvía leída
+  // y no quedaba ningún punto que mostrar.
+  const [listaDelServidor, setListaDelServidor] = useState(false);
+  const [nuevasDeEstaVisita, setNuevasDeEstaVisita] = useState<Set<string>>(() => new Set());
   useEffect(() => {
-    if (!nativeApp || scope !== "all" || !user || marcadoEnEstaVisita.current) return;
-    const marcar = window.setTimeout(() => { marcadoEnEstaVisita.current = true; void markAllRead(); }, 1500);
-    return () => window.clearTimeout(marcar);
+    if (scope !== "all" || !user || !listaDelServidor || marcadoEnEstaVisita.current) return;
+    marcadoEnEstaVisita.current = true;
+    void markAllRead(true);
   });
 
   useEffect(() => {
@@ -88,14 +110,21 @@ export function NotificationsList({ scope = "mode", titulo }: { scope?: "mode" |
     return () => window.removeEventListener("ccr:section-menu", abrir);
   }, []);
   const [itemMenuOpenId, setItemMenuOpenId] = useState<string | null>(null);
-  // Deslizar revela el botón de borrar (como Mail): nunca borra por el gesto,
-  // que sería irreversible sin querer.
-  const ANCHO_BORRAR = 88;
-  const arrastreRef = useRef<{ id: string; x: number; y: number; base: number; horizontal: boolean } | null>(null);
-  const [arrastre, setArrastre] = useState<{ id: string; dx: number } | null>(null);
+  // Deslizar hacia la izquierda, como en Mensajes: un poco muestra «Eliminar»;
+  // pasado el punto, el botón cubre la fila y soltar la borra. Borrar sin
+  // querer se arregla con «Deshacer» (ver borrarPorDeslizar).
   const [filaAbierta, setFilaAbierta] = useState<string | null>(null);
-  const desplazamientoDe = (id: string) =>
-    arrastre?.id === id ? arrastre.dx : filaAbierta === id ? -ANCHO_BORRAR : 0;
+  const borradoPendiente = useRef<{ quitada: Notification; indice: number; temporizador: number } | null>(null);
+  const [puedeDeshacer, setPuedeDeshacer] = useState(false);
+  // Salir de la pantalla con un borrado pendiente lo confirma: quien deslizó
+  // quería borrarla.
+  useEffect(() => () => {
+    const pendiente = borradoPendiente.current;
+    if (!pendiente) return;
+    window.clearTimeout(pendiente.temporizador);
+    void createClient().from("notifications").delete().eq("id", pendiente.quitada.id)
+      .then(() => window.dispatchEvent(new CustomEvent("notificationsChanged")));
+  }, []);
   const [itemMenuPosition, setItemMenuPosition] = useState<{ top: number; right: number } | null>(null);
   const instanceId = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const globalMenuRef = useRef<HTMLDivElement | null>(null);
@@ -113,6 +142,10 @@ export function NotificationsList({ scope = "mode", titulo }: { scope?: "mode" |
       .from("notifications")
       .select("*")
       .eq("user_id", user.id)
+      // Los mensajes del chat no son notificaciones, como en Facebook: tienen su
+      // propio icono con su contador. La fila existe igual —es la que dispara el
+      // push—, pero no se lista.
+      .neq("type", "direct_message")
       .order("created_at", { ascending: false })
       .limit(100);
 
@@ -135,6 +168,7 @@ export function NotificationsList({ scope = "mode", titulo }: { scope?: "mode" |
     setNotificationState({ userId: user.id, items: next });
     cacheNotifications(user.id, next);
     setBusy(false);
+    setListaDelServidor(true);
   }, [user]);
 
   useEffect(() => {
@@ -230,13 +264,16 @@ export function NotificationsList({ scope = "mode", titulo }: { scope?: "mode" |
   }, [itemMenuOpenId]);
 
   // Only the active mode's notifications are shown / acted on here.
+  // Las que eran nuevas al entrar conservan su punto toda la visita, aunque ya
+  // estén leídas en el servidor y la lista se recargue (ver markAllRead).
+  const esNueva = (n: Notification) => !n.read || nuevasDeEstaVisita.has(n.id);
   const visible = scope === "all" ? items : items.filter((n) => notificationInMode(n.type, mode));
   // Mismo filtro que el panel de la campana: lo primero que uno quiere es ver
   // lo que no ha leído.
   const unread = visible.filter((n) => !n.read).length;
   // Como Facebook: primero todas las nuevas, luego las leídas por fecha. Si se
   // ordenara solo por fecha, los encabezados de grupo se repetirían.
-  const ordenadas = [...visible].sort((a, b) => Number(a.read) - Number(b.read));
+  const ordenadas = [...visible].sort((a, b) => Number(!esNueva(a)) - Number(!esNueva(b)));
   const hasVisibleNotifications = visible.length > 0;
   const notificationTitle = (n: Notification) => localizedNotificationCopy(n, locale).title;
   const notificationMessage = (n: Notification) => localizedNotificationCopy(n, locale).message;
@@ -244,7 +281,7 @@ export function NotificationsList({ scope = "mode", titulo }: { scope?: "mode" |
   const fotoDe = useActorPhotos(items);
 
   const grupoDe = (n: Notification) => {
-    if (!n.read) return "newGroup" as const;
+    if (esNueva(n)) return "newGroup" as const;
     const dia = 24 * 60 * 60 * 1000;
     const edad = Date.now() - new Date(n.created_at).getTime();
     if (edad < dia) return "todayGroup" as const;
@@ -266,7 +303,7 @@ export function NotificationsList({ scope = "mode", titulo }: { scope?: "mode" |
   // activo, y para vaciarla ya está «Marcar todas como leídas». Filtrar a «no
   // leídas» dejaba además una lista que se vaciaba sola al ir leyendo.
 
-  async function markAllRead() {
+  async function markAllRead(dejarPuntosEnPantalla = false) {
     if (!user) return;
     const supabase = createClient();
     const ids = visible.filter((n) => !n.read).map((n) => n.id);
@@ -278,11 +315,19 @@ export function NotificationsList({ scope = "mode", titulo }: { scope?: "mode" |
       if (ids.length === 0) return;
       await supabase.from("notifications").update({ read: true }).in("id", ids);
     }
-    setNotificationState((prev) => {
-      const next = prev.items.map((n) => (scope === "all" || ids.includes(n.id) ? { ...n, read: true } : n));
-      cacheNotifications(user.id, next);
-      return { userId: user.id, items: next };
-    });
+    const leidas = (lista: Notification[]) => lista.map((n) => (scope === "all" || ids.includes(n.id) ? { ...n, read: true } : n));
+    if (dejarPuntosEnPantalla) {
+      setNuevasDeEstaVisita(new Set(items.filter((n) => !n.read).map((n) => n.id)));
+      // La memoria ya las guarda leídas (así vuelven la próxima vez); la
+      // pantalla de ahora conserva sus puntos.
+      cacheNotifications(user.id, leidas(items));
+    } else {
+      setNotificationState((prev) => {
+        const next = leidas(prev.items);
+        cacheNotifications(user.id, next);
+        return { userId: user.id, items: next };
+      });
+    }
     window.dispatchEvent(new CustomEvent("notificationsChanged"));
   }
 
@@ -336,22 +381,49 @@ export function NotificationsList({ scope = "mode", titulo }: { scope?: "mode" |
       });
     }
     if (!href) return;
-    const destino =
-      href.includes("/dashboard/") && !href.includes("returnTo=")
-        ? `${href}${href.includes("?") ? "&" : "?"}returnTo=${encodeURIComponent("/notificaciones")}`
-        : href;
-    router.push(destino);
+    router.push(conRegresoANotificaciones(href));
   }
 
-  async function borrarPorDeslizar(id: string) {
+  // BORRAR CON RED: la fila sale al instante, pero la base la borra a los
+  // cinco segundos. Mientras tanto «Deshacer» la devuelve a su sitio. Un solo
+  // borrado pendiente: si llega otro, el anterior se confirma ya.
+  function borrarPorDeslizar(id: string) {
+    const indice = items.findIndex((item) => item.id === id);
+    if (indice < 0) return;
+    confirmarBorradoPendiente();
+    const quitada = items[indice];
     setNotificationState((prev) => {
       const next = prev.items.filter((item) => item.id !== id);
       cacheNotifications(user?.id, next);
       return { userId: user?.id, items: next };
     });
-    const supabase = createClient();
-    await supabase.from("notifications").delete().eq("id", id);
-    window.dispatchEvent(new CustomEvent("notificationsChanged"));
+    const temporizador = window.setTimeout(() => confirmarBorradoPendiente(), 5000);
+    borradoPendiente.current = { quitada, indice, temporizador };
+    setPuedeDeshacer(true);
+  }
+
+  function confirmarBorradoPendiente() {
+    const pendiente = borradoPendiente.current;
+    if (!pendiente) return;
+    borradoPendiente.current = null;
+    window.clearTimeout(pendiente.temporizador);
+    setPuedeDeshacer(false);
+    void createClient().from("notifications").delete().eq("id", pendiente.quitada.id)
+      .then(() => window.dispatchEvent(new CustomEvent("notificationsChanged")));
+  }
+
+  function deshacerBorrado() {
+    const pendiente = borradoPendiente.current;
+    if (!pendiente) return;
+    borradoPendiente.current = null;
+    window.clearTimeout(pendiente.temporizador);
+    setPuedeDeshacer(false);
+    setNotificationState((prev) => {
+      const next = [...prev.items];
+      next.splice(Math.min(pendiente.indice, next.length), 0, pendiente.quitada);
+      cacheNotifications(user?.id, next);
+      return { userId: user?.id, items: next };
+    });
   }
 
   async function dismiss(e: React.MouseEvent, id: string) {
@@ -399,8 +471,6 @@ export function NotificationsList({ scope = "mode", titulo }: { scope?: "mode" |
   // sola notificación quedaba un bloque de 384 px flotando en una pantalla de
   // 844 y debajo un vacío gris, que se lee como «esto se cortó». Con el alto
   // de la pantalla, una notificación o veinte se ven igual de terminadas.
-  const listaRef = useRef<HTMLUListElement | null>(null);
-  const [listaLlena, setListaLlena] = useState(false);
 
   // En la web la tarjeta se estira para que una notificación no deje un vacío
   // gris debajo. En la APP no: ahí el área ya está fija entre el encabezado y
@@ -413,22 +483,6 @@ export function NotificationsList({ scope = "mode", titulo }: { scope?: "mode" |
 
   // El «...» general vive en la misma fila que «Nuevas», el primer rótulo de
   // la lista: suelto arriba quedaba a otra altura y parecía de otra cosa.
-  // ¿Las filas llenan la tarjeta? De eso depende si la última lleva borde.
-  useEffect(() => {
-    const ul = listaRef.current;
-    if (!ul) return;
-    const medir = () => {
-      const filas = [...ul.children] as HTMLElement[];
-      const ultima = filas[filas.length - 1];
-      if (!ultima) { setListaLlena(false); return; }
-      // Llena = la última fila termina pegada al final de la lista (±2 px).
-      setListaLlena(ul.getBoundingClientRect().bottom - ultima.getBoundingClientRect().bottom <= 2);
-    };
-    medir();
-    const observador = new ResizeObserver(medir);
-    observador.observe(ul);
-    return () => observador.disconnect();
-  }, [mostrando, ordenadas.length]);
 
   const menuGeneral = hasVisibleNotifications ? (
         <div ref={globalMenuRef} data-menu-general-notificaciones="" className={cn("relative shrink-0", nativeApp && scope === "all" && "[&>button]:sr-only")}>
@@ -546,7 +600,9 @@ export function NotificationsList({ scope = "mode", titulo }: { scope?: "mode" |
         nativeApp && scope === "all" ? "bg-[#f5f8fb]" : "bg-white",
         // En la app la lista va de borde a borde contra la barra de abajo; en la
         // web es una tarjeta como la de cualquier otra sección.
-        scope === "all" && !nativeApp && "rounded-2xl border border-[#e5e7eb] shadow-sm",
+        // La tarjeta solo en computadora: en el teléfono (app o web) la lista va
+        // de borde a borde, como en la app.
+        scope === "all" && !nativeApp && "lg:rounded-2xl lg:border lg:border-[#e5e7eb] lg:shadow-sm",
       )}>
         {/* El título va DENTRO de la tarjeta, con el «···» en su renglón, como
             Facebook. Por debajo de 1024 px el título ya lo dice la barra de
@@ -596,7 +652,7 @@ export function NotificationsList({ scope = "mode", titulo }: { scope?: "mode" |
           // cuando la lista crece lo empuja fuera de la vista, no a la vista
           // (medido: saltos de 0,78 en teléfono y 0,49 en escritorio).
           <>
-          <ul ref={listaRef} className={cn("ccr-notifications-items bg-white", scope === "all" ? altoDeLaTarjeta : "min-h-[16rem] sm:min-h-[18rem]")}>
+          <ul className={cn("ccr-notifications-items bg-white", scope === "all" ? altoDeLaTarjeta : "min-h-[16rem] sm:min-h-[18rem]")}>
             {ordenadas.slice(0, mostrando).map((n, indice) => {
               const grupo = grupoDe(n);
               const abreGrupo = indice === 0 || grupoDe(ordenadas[indice - 1]) !== grupo;
@@ -606,45 +662,14 @@ export function NotificationsList({ scope = "mode", titulo }: { scope?: "mode" |
               return (
               <li
                 key={n.id}
-                data-unread={!n.read ? "true" : undefined}
+                data-unread={esNueva(n) ? "true" : undefined}
                 // El borde de abajo se queda SIEMPRE, salvo en la última fila cuando la
                 // lista llena la tarjeta (ahí el borde de la tarjeta ya cierra y
                 // se verían dos líneas). Con una sola notificación la fila no toca
                 // el fondo, así que sin borde quedaba abierta contra el vacío.
-                className={cn("relative group border-b border-[#eef2f6]", listaLlena && "last:border-0")}
-                onTouchStart={(event) => {
-                  if (!nativeApp) return;
-                  arrastreRef.current = {
-                    id: n.id,
-                    x: event.touches[0].clientX,
-                    y: event.touches[0].clientY,
-                    base: filaAbierta === n.id ? -ANCHO_BORRAR : 0,
-                    horizontal: false,
-                  };
-                }}
-                onTouchMove={(event) => {
-                  const inicio = arrastreRef.current;
-                  if (!inicio || inicio.id !== n.id) return;
-                  const recorridoX = event.touches[0].clientX - inicio.x;
-                  const recorridoY = event.touches[0].clientY - inicio.y;
-                  if (!inicio.horizontal) {
-                    if (Math.abs(recorridoY) > 10 && Math.abs(recorridoY) > Math.abs(recorridoX)) {
-                      arrastreRef.current = null;
-                      return;
-                    }
-                    if (Math.abs(recorridoX) < 12) return;
-                    inicio.horizontal = true;
-                  }
-                  const dx = Math.max(-ANCHO_BORRAR - 24, Math.min(0, inicio.base + recorridoX));
-                  setArrastre({ id: n.id, dx });
-                }}
-                onTouchEnd={() => {
-                  const movido = arrastre?.id === n.id ? arrastre.dx : desplazamientoDe(n.id);
-                  arrastreRef.current = null;
-                  setArrastre(null);
-                  // Pasada la mitad se queda abierta; si no, vuelve a su sitio.
-                  setFilaAbierta(movido < -ANCHO_BORRAR / 2 ? n.id : null);
-                }}
+                // Sin línea entre filas, como Facebook: el icono y el aire de
+                // cada fila ya las separan, y los rótulos (Hoy, Ayer…) agrupan.
+                className="relative group"
               >
                 {abreGrupo && (
                   <div className="flex items-center justify-between gap-2 bg-white px-4 pb-1 pt-3">
@@ -655,20 +680,30 @@ export function NotificationsList({ scope = "mode", titulo }: { scope?: "mode" |
                   </div>
                 )}
                 {/* El botón vive con la fila, no con el encabezado del grupo. */}
-                <div className="relative overflow-hidden">
-                {nativeApp && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setFilaAbierta(null);
-                      void borrarPorDeslizar(n.id);
-                    }}
-                    aria-label={t("delete")}
-                    className="absolute inset-y-0 right-0 grid w-[88px] place-items-center bg-[#dc2626] text-white"
-                  >
-                    <Trash2 className="h-5 w-5" />
-                  </button>
-                )}
+                {/* Se desliza para borrar en el teléfono, app o web: el gesto es
+                    solo del dedo y el mouse no lo activa. */}
+                <FilaDeslizable
+                  abierta={filaAbierta === n.id}
+                  ancho={88}
+                  onEstado={(abrir) => setFilaAbierta(abrir ? n.id : null)}
+                  onCompletarDerecha={() => borrarPorDeslizar(n.id)}
+                  acciones={(completando) => (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setFilaAbierta(null);
+                        borrarPorDeslizar(n.id);
+                      }}
+                      aria-label={t("delete")}
+                      className="relative flex-1 shrink-0 bg-[#dc2626] text-white"
+                    >
+                      <span className="absolute top-1/2 flex w-16 -translate-y-1/2 flex-col items-center gap-1" style={iconoDeAccion(completando, "left")}>
+                        <Trash2 className="h-5 w-5" />
+                        <span className="text-[11px] font-extrabold">{t("delete")}</span>
+                      </span>
+                    </button>
+                  )}
+                >
                 <div
                   role="button"
                   tabIndex={0}
@@ -693,9 +728,7 @@ export function NotificationsList({ scope = "mode", titulo }: { scope?: "mode" |
                     // derecha, como en Facebook. El fondo tintado se leía gris.
                     "bg-white",
                     notificationActionHref(n, role, locale) ? "cursor-pointer hover:bg-[#f9fafb]" : "cursor-default",
-                    arrastre?.id === n.id ? "transition-none" : "transition-transform duration-200",
                   )}
-                  style={{ transform: `translateX(${desplazamientoDe(n.id)}px)` }}
                 >
                   {/* Icono del tipo; lo no leído va con un punto azul a la derecha. */}
                   <div className="flex items-start gap-3">
@@ -720,11 +753,11 @@ export function NotificationsList({ scope = "mode", titulo }: { scope?: "mode" |
                       <p className={cn(
                         "whitespace-pre-line text-sm leading-snug [overflow-wrap:anywhere] break-words",
                         !expanded && "line-clamp-3",
-                        n.read ? "font-medium text-[#374151]" : "font-semibold text-[#162543]",
+                        !esNueva(n) ? "font-medium text-[#374151]" : "font-semibold text-[#162543]",
                       )}>
                         {message || notificationTitle(n)}
                       </p>
-                      <p className={cn("mt-0.5 text-[12px] font-semibold", n.read ? "text-[#94a3b8]" : "text-[#0089bb]")}>
+                      <p className={cn("mt-0.5 text-[12px] font-semibold", !esNueva(n) ? "text-[#94a3b8]" : "text-[#0089bb]")}>
                         {notificationTime(n)}
                       </p>
                       {canExpand && (
@@ -748,7 +781,7 @@ export function NotificationsList({ scope = "mode", titulo }: { scope?: "mode" |
                       )}
                     </div>
                   </div>
-                  {!n.read && (
+                  {esNueva(n) && (
                     <span
                       data-punto-no-leida=""
                       aria-label={locale === "en" ? "Unread" : "Sin leer"}
@@ -771,7 +804,7 @@ export function NotificationsList({ scope = "mode", titulo }: { scope?: "mode" |
                   }}
                   data-menu-fila=""
                   data-abierto={itemMenuOpenId === n.id ? "" : undefined}
-                  className={cn("absolute", nativeApp && "hidden")}
+                  className={cn("absolute", nativeApp ? "hidden" : "max-lg:hidden")}
                 >
                   <AppTooltip label={locale === "en" ? "Options" : "Opciones"}>
                     <button
@@ -780,9 +813,12 @@ export function NotificationsList({ scope = "mode", titulo }: { scope?: "mode" |
                       aria-haspopup="menu"
                       aria-expanded={itemMenuOpenId === n.id}
                       onClick={(event) => toggleItemMenu(event, n)}
-                      className="inline-flex h-8 w-8 items-center justify-center rounded-full text-[#526277] transition-colors hover:bg-black/5 hover:text-[#162543]"
+                      // Círculo blanco con borde y sombra, como Facebook: sobre la
+                      // fila resaltada al pasar el cursor, el «…» suelto casi no
+                      // se veía.
+                      className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[#d6dde5] bg-white text-[#526277] shadow-[0_2px_6px_-2px_rgba(15,23,42,0.25)] transition-colors hover:bg-[#f3f6f9] hover:text-[#162543]"
                     >
-                      <MoreHorizontal className="h-4 w-4" />
+                      <MoreHorizontal className="h-5 w-5" strokeWidth={2.5} />
                     </button>
                   </AppTooltip>
                   {itemMenuOpenId === n.id && itemMenuPosition && typeof document !== "undefined" && createPortal(
@@ -817,13 +853,15 @@ export function NotificationsList({ scope = "mode", titulo }: { scope?: "mode" |
                     document.body,
                   )}
                 </div>
-                </div>
+                </FilaDeslizable>
               </li>
               );
             })}
           </ul>
           {ordenadas.length > mostrando && (
-            <div className="px-4 pb-4 pt-2 sm:px-5">
+            // Dentro del bloque blanco de la lista, como su última fila: sobre
+            // el fondo gris se leía como algo aparte, fuera del contenedor.
+            <div className="bg-white px-4 py-3 sm:px-5">
               <button
                 type="button"
                 data-ver-anteriores=""
@@ -837,6 +875,21 @@ export function NotificationsList({ scope = "mode", titulo }: { scope?: "mode" |
           </>
         )}
       </div>
+      {puedeDeshacer && createPortal(
+        <div
+          className="fixed inset-x-0 z-[1100] flex justify-center px-4"
+          style={{ bottom: "calc(var(--ccr-native-live-bottom-nav-height, 0px) + 12px)" }}
+          role="status"
+        >
+          <div className="flex w-full max-w-sm items-center justify-between gap-3 rounded-2xl bg-[#162543] py-2.5 pl-4 pr-2 text-[14px] font-semibold text-white shadow-[0_16px_36px_-18px_rgba(15,23,42,0.8)]">
+            <span>{t("deletedToast")}</span>
+            <button type="button" onClick={deshacerBorrado} className="rounded-xl px-3 py-1.5 text-[14px] font-extrabold text-[#7fd6f5] active:bg-white/10">
+              {t("undo")}
+            </button>
+          </div>
+        </div>,
+        document.body,
+      )}
     </div>
   );
 }

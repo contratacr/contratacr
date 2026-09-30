@@ -6,6 +6,7 @@ import { NativeDebugLogger } from "@/components/mobile/native-debug-logger";
 import { CatalogoDelServidor } from "@/components/util/catalogo-del-servidor";
 import { NATIVE_ONBOARDING_COMPLETED_KEY } from "@/lib/mobile-onboarding";
 import { catalogoParaElCliente } from "@/lib/data/server-category-catalog";
+import { DIRECCIONES_DE_SERVICIO } from "@/lib/data/category-slug";
 import { elegirOficiosDeArranque } from "@/lib/data/oficios-de-arranque";
 import { getSupplyCounts, MIN_SUPPLY_FOR_LANDING } from "@/lib/queries/supply";
 import { withPromiseTimeout } from "@/lib/promise-timeout";
@@ -45,6 +46,11 @@ export const viewport: Viewport = {
   interactiveWidget: "resizes-content",
   viewportFit: "cover",
 };
+
+// Los pocos servicios cuya dirección no sale de cambiar «_» por «-» (ver
+// lib/data/category-slug.ts), para que el script de arranque reconozca también
+// esas búsquedas: /profesionales/instalacion-de-adoquines.
+const DIRECCIONES_POR_TRAMO = JSON.stringify(Object.fromEntries(Object.entries(DIRECCIONES_DE_SERVICIO).map(([id, tramo]) => [tramo, id])));
 
 export default async function RootLayout({ children }: { children: ReactNode }) {
   // La app nativa se reconoce por su cookie ya EN EL SERVIDOR: las clases del
@@ -435,7 +441,7 @@ body:has(.ccr-error-screen) .ccr-navbar-spacer{display:none}
           type="text/javascript"
           suppressHydrationWarning
           dangerouslySetInnerHTML={{
-            __html: `try{if(/^\\/(es|en)?\\/?$/.test(window.location.pathname)){document.documentElement.classList.add("ccr-ruta-portada")}}catch(e){}try{if(/^\\/(?:es|en)?\\/?(?:buscar(?:\\/[^/]+){0,3}|empleos|promociones|proyectos)\\/?$/.test(window.location.pathname)){document.documentElement.classList.add("ccr-ruta-sin-desplazar")}}catch(e){}try{if(document.documentElement.classList.contains("ccr-native-app")){document.body.classList.add("ccr-native-app");var r=window.location.pathname;if(!/(^|\\/)(publicar-proyecto|(empleos|promociones)\\/publicar)(\\/|$)/.test(r)&&!/^\\/(?:(?:es|en)\\/)?(?:profesionales\\/[^/]+|proyectos\\/[^/]+|promociones\\/(?!publicar\\/?$|mis-promociones\\/?$)[^/]+|empleos\\/(?!publicar\\/?$|mis-empleos\\/?$)[^/]+)\\/?$/.test(r)){document.documentElement.classList.add("ccr-native-bottom-nav-visible");document.body.classList.add("ccr-native-bottom-nav-visible")}if(/(^|\\/)buscar(\\/|$)/.test(r)){document.documentElement.classList.add("ccr-native-search-route");document.body.classList.add("ccr-native-search-route")}}}catch(e){}`,
+            __html: `var D=${DIRECCIONES_POR_TRAMO};var B=function(p){var m=/^\\/(?:(?:es|en)\\/)?(profesionales|buscar)(?:\\/([^/]+))?(?:\\/[^/]+){0,2}\\/?$/.exec(p);if(!m)return false;if(m[1]==="buscar"||!m[2])return true;var s=m[2].toLowerCase();try{s=decodeURIComponent(s)}catch(e){}if(s==="todos")return true;var id=D[s]||s.replace(/-/g,"_");try{var d=JSON.parse(document.getElementById("ccr-catalogo").textContent);return(d.categories||[]).concat(d.categoryFlags||[]).some(function(c){return c.id===id})}catch(e){return!/-[a-z0-9]{8}$/.test(s)}};try{if(/^\\/(es|en)?\\/?$/.test(window.location.pathname)){document.documentElement.classList.add("ccr-ruta-portada")}}catch(e){}try{var q=window.location.pathname;if(B(q)||/^\\/(?:es|en)?\\/?(?:empleos|promociones|proyectos)\\/?$/.test(q)){document.documentElement.classList.add("ccr-ruta-sin-desplazar")}}catch(e){}try{if(document.documentElement.classList.contains("ccr-native-app")){document.body.classList.add("ccr-native-app");var r=window.location.pathname;var b=B(r);if(!/(^|\\/)(publicar-proyecto|(empleos|promociones)\\/publicar)(\\/|$)/.test(r)&&(b||!/^\\/(?:(?:es|en)\\/)?(?:profesionales\\/[^/]+|proyectos\\/[^/]+|promociones\\/(?!publicar\\/?$|mis-promociones\\/?$)[^/]+|empleos\\/(?!publicar\\/?$|mis-empleos\\/?$)[^/]+)\\/?$/.test(r))){document.documentElement.classList.add("ccr-native-bottom-nav-visible");document.body.classList.add("ccr-native-bottom-nav-visible")}if(b){document.documentElement.classList.add("ccr-native-search-route");document.body.classList.add("ccr-native-search-route")}}}catch(e){}`,
           }}
         />
         {/* El mismo catálogo, instalado también en la capa de módulos de los

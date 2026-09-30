@@ -1,3 +1,6 @@
+import { esRutaDeBusqueda } from "@/lib/buscar-url";
+import { esServicioDelCatalogo } from "@/lib/data/categories";
+
 export const CONTRATACR_PRODUCT_KNOWLEDGE = `
 PRODUCT IDENTITY
 - ContrataCR is a Costa Rica service marketplace: clients find professionals and businesses, message them in the app, post projects, publish promotions and job posts, and agree the work in chat.
@@ -83,10 +86,10 @@ export function assistantPageContext(pathname: string, authenticated: boolean) {
     ? "professional dashboard"
     : path.includes("/dashboard/cliente")
       ? "client dashboard"
-      : path.includes("/profesionales/")
-        ? "public professional profile"
-        : path.includes("/buscar")
-          ? "professional search"
+      : esRutaDeBusqueda(path, esServicioDelCatalogo)
+        ? "professional search"
+        : path.includes("/profesionales/")
+          ? "public professional profile"
           : path.includes("/servicios")
             ? "service catalog"
             : path.includes("/publicar-proyecto")

@@ -77,7 +77,7 @@ test.describe("@seeded search results", () => {
 
   test("mobile cards keep services above a single-line review and price row", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
-    await gotoOK(page, "/buscar");
+    await gotoOK(page, "/profesionales");
 
     const card = page.locator("[data-pro-id]").first();
     await expect(card).toBeVisible();
@@ -119,7 +119,7 @@ test.describe("@seeded search results", () => {
   test("mobile experience sort shows experience metric on result cards", async ({ page }, testInfo) => {
     if (!isMobileProject(testInfo)) return;
     await page.setViewportSize({ width: 390, height: 844 });
-    await gotoOK(page, "/buscar?sortBy=experience");
+    await gotoOK(page, "/profesionales?sortBy=experience");
 
     const card = page.locator("[data-pro-id]").first();
     await expect(card).toBeVisible();
@@ -172,7 +172,7 @@ test.describe("@seeded search results", () => {
     await search.fill("plomeria");
     await search.press("Enter");
     await page.keyboard.press("Enter");
-    await expect(page).toHaveURL(/\/buscar/);
+    await expect(page).toHaveURL(/\/profesionales/);
     await expect(
       page.locator("article").first().or(page.getByText(/No encontramos resultados/i).first()),
     ).toBeVisible();
@@ -181,7 +181,7 @@ test.describe("@seeded search results", () => {
   test("mobile no-results state uses the full-width search sheet layout", async ({ page }, testInfo) => {
     if (!isMobileProject(testInfo)) return;
     await page.setViewportSize({ width: 390, height: 844 });
-    await gotoOK(page, "/buscar?q=__contratacr_no_results_visual_regression__");
+    await gotoOK(page, "/profesionales?q=__contratacr_no_results_visual_regression__");
     await waitForInteractivePage(page);
 
     const emptyState = page.locator("[data-search-empty-state]");
@@ -199,7 +199,7 @@ test.describe("@seeded search results", () => {
   });
 
   test("location search suggests Costa Rica provinces and cantons", async ({ page }, testInfo) => {
-    await gotoOK(page, "/buscar");
+    await gotoOK(page, "/profesionales");
     await waitForInteractivePage(page);
 
     if (isMobileProject(testInfo)) {
@@ -237,13 +237,14 @@ test.describe("@seeded search results", () => {
       await page.getByRole("button", { name: /^Buscar$|^Search$/i }).filter({ visible: true }).first().click();
     }
 
-    await expect(page).toHaveURL(/canton=gu-li/);
-    await expect(page).toHaveURL(/provincia=gu/);
+    // El lugar va en la ruta: /profesionales/<servicio o «todos»>/guanacaste/liberia
+    // (en el teléfono la prueba además elige Plomería).
+    await expect(page).toHaveURL(/\/profesionales\/[^/]+\/guanacaste\/liberia(?:\?|$)/);
     await expectHealthyPage(page);
   });
 
   test("filters expose the current search controls and retired controls stay gone", async ({ page }, testInfo) => {
-    await gotoOK(page, "/buscar?categoria=desarrollo_web");
+    await gotoOK(page, "/profesionales?categoria=desarrollo_web");
     await waitForInteractivePage(page);
     await openFiltersIfNeeded(page, testInfo);
 
@@ -271,7 +272,7 @@ test.describe("@seeded search results", () => {
 
   test("completed searches keep the selected service and location in the mobile search header", async ({ page }, testInfo) => {
     if (!isMobileProject(testInfo)) return;
-    await gotoOK(page, "/buscar?categoria=aire_acondicionado&provincia=al&canton=al-al");
+    await gotoOK(page, "/profesionales?categoria=aire_acondicionado&provincia=al&canton=al-al");
     await waitForInteractivePage(page);
 
     const summary = page.getByTestId("search-context-summary");
@@ -287,8 +288,8 @@ test.describe("@seeded search results", () => {
     const cacheBust = Date.now();
 
     for (const query of [
-      `/buscar?categoria=${seed.videoCategoryId}&provincia=gu&canton=gu-li&lat=10.6346&lng=-85.4404&regression=${cacheBust}`,
-      `/buscar?categoria=${seed.videoCategoryId}&provincia=gu&canton=gu-li&modalidad=video&lat=10.6346&lng=-85.4404&regression=${cacheBust}`,
+      `/profesionales?categoria=${seed.videoCategoryId}&provincia=gu&canton=gu-li&lat=10.6346&lng=-85.4404&regression=${cacheBust}`,
+      `/profesionales?categoria=${seed.videoCategoryId}&provincia=gu&canton=gu-li&modalidad=video&lat=10.6346&lng=-85.4404&regression=${cacheBust}`,
     ]) {
       await gotoOK(page, query);
       await waitForInteractivePage(page);
@@ -321,9 +322,9 @@ test.describe("@seeded search results", () => {
     const categoryLabel = getCategoryLabel(categoryId, "es");
 
     for (const query of [
-      `/buscar?categoria=${categoryId}&provincia=al&regression=${cacheBust}`,
-      `/buscar?categoria=${categoryId}&provincia=al&canton=al-al&regression=${cacheBust}`,
-      `/buscar?categoria=${categoryId}&provincia=al&canton=al-al&lat=10.01625&lng=-84.21163&regression=${cacheBust}`,
+      `/profesionales?categoria=${categoryId}&provincia=al&regression=${cacheBust}`,
+      `/profesionales?categoria=${categoryId}&provincia=al&canton=al-al&regression=${cacheBust}`,
+      `/profesionales?categoria=${categoryId}&provincia=al&canton=al-al&lat=10.01625&lng=-84.21163&regression=${cacheBust}`,
     ]) {
       await gotoOK(page, query);
       await waitForInteractivePage(page);

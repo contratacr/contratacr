@@ -9,6 +9,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { trackInteraction } from "@/lib/analytics/interaction-events";
 import { useNativeApp } from "@/hooks/use-native-app";
+import { useProfesionalConApp } from "@/hooks/use-profesional-con-app";
 import { MessageLauncher } from "@/components/professionals/message-launcher";
 import { useContactGate } from "@/components/professionals/contact-gate";
 
@@ -66,20 +67,19 @@ export function DirectChatLauncher({
   // El aviso del app, no el del navegador (ver BotonEscribir en Proyectos).
   const { dialogNode, showMessage } = useAppDialog();
 
-  // EN LA APP, «Enviar mensaje» ABRE EL CHAT. SIEMPRE.
+  // EN LA APP EL BOTÓN SE ADAPTA AL PROFESIONAL. Si tiene la app, «Mensaje»
+  // abre el chat; si no, es WhatsApp, igual que en la web. Al lanzar casi ningún
+  // profesional la tiene: con el chat fijo, el cliente escribía a alguien que
+  // solo se enteraba por un aviso y tenía que volver a la app a contestar. El
+  // chat crece solo a medida que los profesionales instalan la app.
   //
-  // Antes preguntaba primero si el profesional tenía la app con push fresco y,
-  // si no, abría WhatsApp. Como casi ningún profesional la tiene todavía, en la
-  // práctica el chat propio no se usaba nunca: tocar «Enviar mensaje» sacaba de
-  // la app. Y la razón que lo justificaba ya no existe —«escribirle a quien no
-  // tiene la app es escribir a un pozo»—: al enviar, a quien no tiene push se
-  // le avisa por correo y, si es profesional, también por WhatsApp con un
-  // enlace de vuelta a la conversación (outside-app-notify). El mensaje llega
-  // igual, y llega DENTRO del app, que es donde viven la moderación, el
-  // historial y el bloqueo.
-  //
-  // En la web no cambia nada: ahí no hay chat y el botón sigue siendo WhatsApp.
-  if (nativeApp) {
+  // El botón dice a dónde va antes de tocarlo —uno que dice «Mensaje» y abre
+  // WhatsApp engaña—: nace WhatsApp y pasa a «Mensaje» cuando se confirma que
+  // el profesional tiene la app. Sin profesional (la otra punta de una
+  // conversación ya existente) sigue siendo el chat.
+  const conApp = useProfesionalConApp(professionalId, nativeApp);
+  const usaChat = nativeApp && (!professionalId || conApp);
+  if (usaChat) {
     const safeLabel = buttonLabel && !/whatsapp/i.test(buttonLabel) ? buttonLabel : undefined;
     return (
       <MessageLauncher

@@ -29,7 +29,9 @@ export function useAvisosSinLeer(userId: string | null | undefined) {
         .from("notifications")
         .select("id, type, data")
         .eq("user_id", userId!)
-        .eq("read", false);
+        .eq("read", false)
+        // Los mensajes del chat van en el icono de Mensajes, no aquí.
+        .neq("type", "direct_message");
       return (filas ?? []) as AvisoSinLeer[];
     },
     vacio,

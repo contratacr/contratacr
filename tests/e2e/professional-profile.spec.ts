@@ -67,7 +67,7 @@ test.describe("@seeded professional profile", () => {
     expect(href, "The verified production mirror must expose at least one professional").toBeTruthy();
 
     const profile = new URL(href!, page.url());
-    const reviewsHref = `${profile.pathname}?tab=resenas&from=${encodeURIComponent("/buscar?categoria=enfermeria")}#resenas`;
+    const reviewsHref = `${profile.pathname}?tab=resenas&from=${encodeURIComponent("/profesionales/enfermeria")}#resenas`;
 
     await gotoOK(page, reviewsHref);
     await expect(page.getByRole("heading", { name: /Reseñas|Reviews/i }).first()).toBeVisible();
@@ -80,7 +80,7 @@ test.describe("@seeded professional profile", () => {
     // teléfono el «volver» vive en la barra superior y sí se comprueba.
     if (enTelefono) {
       await page.locator("[data-ccr-section-back]").first().click();
-      await expect(page).toHaveURL(/\/buscar\?categoria=enfermeria$/);
+      await expect(page).toHaveURL(/\/profesionales\/enfermeria$/);
     } else {
       // Sin ese viaje, volver a la misma dirección sería solo un cambio de
       // ancla (#resenas) y no habría respuesta que esperar.

@@ -21,11 +21,11 @@ import { firstProfessionalHref, loginAs } from "./helpers";
  * cuál: recorre el app y exige cero errores de hidratación.
  */
 const PUBLICAS = [
-  "/", "/en", "/buscar", "/buscar?provincia=sj", "/buscar?categoria=plomeria",
+  "/", "/en", "/profesionales", "/profesionales?provincia=sj", "/profesionales?categoria=plomeria",
   "/servicios", "/empleos", "/promociones", "/proyectos", "/ayuda", "/como-funciona", "/login",
 ];
 const CON_SESION = [
-  "/", "/buscar?provincia=sj", "/empleos", "/promociones",
+  "/", "/profesionales?provincia=sj", "/empleos", "/promociones",
   "/dashboard/profesional", "/dashboard/profesional?tab=profile", "/dashboard/profesional?tab=services",
   "/dashboard/profesional?tab=offers", "/notificaciones",
 ];
