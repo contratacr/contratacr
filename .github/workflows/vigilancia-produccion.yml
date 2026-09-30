@@ -30,6 +30,7 @@ jobs:
     name: Vistazo a producción
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    environment: production
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -67,3 +68,14 @@ jobs:
             --data-urlencode "text=${texto}" \
             --data-urlencode "disable_web_page_preview=true" \
             -o /dev/null -w 'Telegram respondió %{http_code}\n'
+
+      - name: Avisar por correo
+        if: failure()
+        env:
+          BREVO_API_KEY: ${{ secrets.BREVO_API_KEY }}
+          ALERTAS_CORREO: ${{ vars.ALERTAS_CORREO }}
+          CORRIDA: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: >-
+          node scripts/ci/avisar-por-correo.mjs
+          "🔴 ContrataCR: producción no responde bien"
+          "${{ steps.mirar.outputs.resumen }}"

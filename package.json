@@ -42,6 +42,8 @@
     "test:e2e:mobile:smoke": "playwright test --config=playwright.mobile.config.ts tests/e2e/mobile-native-shell.spec.ts",
     "test:e2e:mobile:chat": "playwright test --config=playwright.mobile.config.ts tests/e2e/direct-chat.spec.ts",
     "test:e2e:smoke": "playwright test --grep @smoke",
+    "test:e2e:smoke:test": "PLAYWRIGHT_BASE_URL=https://test.contratacr.com playwright test --grep @smoke",
+    "test:e2e:smoke:produccion": "PLAYWRIGHT_BASE_URL=https://www.contratacr.com playwright test public-smoke api-smoke services health sin-parpadeo-buscador sin-parpadeo-imagenes pantallas-en-todos-los-anchos reanudar-la-app",
     "test:e2e:ui": "playwright test --ui",
     "padron:load:neon": "node scripts/load-padron-neon.mjs",
     "padron:check:neon": "node scripts/check-padron-neon.mjs",

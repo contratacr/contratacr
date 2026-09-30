@@ -1,4 +1,19 @@
-# Regression testing
+# Regresión de ContrataCR
+
+> **Qué corre y cuándo** (30-sep-2026): la lista completa de lo que se prueba,
+> ambiente por ambiente, está en [`regression-coverage-matrix.md`](./regression-coverage-matrix.md).
+>
+> | Cuándo | Qué |
+> | --- | --- |
+> | Cada push a `test` | Compuerta rápida (esquema, contratos, build). |
+> | Cada madrugada 3:00 CR | Regresión exhaustiva completa (`regression-tests.yml`); los lunes también Safari. |
+> | Cada mañana 6:00 CR | Smoke diario en test.contratacr.com (con sesión) y www.contratacr.com (solo lectura) (`smoke-diario.yml`). |
+> | Cada 3 horas | Vigilancia de producción (5 peticiones). |
+> | A mano | Regresión de la app nativa (Android + iOS) y Safari antes de publicar diseño. |
+>
+> Todo fallo avisa por correo a soporte@contratacr.com (`scripts/ci/avisar-por-correo.mjs`).
+> Para correr el smoke a mano: `npm run test:e2e:smoke:test` o `npm run test:e2e:smoke:produccion`.
+
 
 ## Local database gate
 

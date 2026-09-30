@@ -6,10 +6,11 @@ on:
     branches:
       - test
   schedule:
-    # Safari, los lunes a las 5:00 a.m. de Costa Rica. Es el motor del iPhone y
-    # de la app nativa, el único que no corre en cada push; una vez por semana
-    # cuesta unos minutos de Linux y atrapa lo que Chrome no puede ver.
-    - cron: "0 11 * * 1"
+    # Cada madrugada (3:00 a.m. de Costa Rica) corre la regresión EXHAUSTIVA
+    # completa, la misma que antes solo salía a mano: así un fallo aparece al
+    # día siguiente y no cuando alguien se acuerda de despacharla. Los lunes
+    # además pasa Safari (WebKit), el motor del iPhone y de la app.
+    - cron: "0 9 * * *"
 
 concurrency:
   # This workflow only touches the local Supabase stack it starts itself, so it
@@ -135,12 +136,17 @@ jobs:
       - name: Build the production application locally
         run: npm run build
 
-      - name: Install Safari for the weekly WebKit pass
+      - name: ¿Es lunes? (Safari pasa una vez por semana)
+        id: dia
         if: github.event_name == 'schedule'
+        run: echo "lunes=$([ "$(date -u +%u)" = "1" ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+
+      - name: Install Safari for the weekly WebKit pass
+        if: steps.dia.outputs.lunes == 'true'
         run: npx playwright install --with-deps webkit
 
       - name: Run the public surfaces in Safari
-        if: github.event_name == 'schedule'
+        if: steps.dia.outputs.lunes == 'true'
         env:
           PLAYWRIGHT_WEBKIT: "1"
         run: >-
@@ -148,11 +154,11 @@ jobs:
           public-smoke search-results professional-profile services recent-visual-regression
 
       - name: Install Playwright browser for a manual release regression
-        if: github.event_name == 'workflow_dispatch'
+        if: github.event_name != 'push'
         run: npx playwright install --with-deps chromium
 
       - name: Run the exhaustive local release regression once
-        if: github.event_name == 'workflow_dispatch'
+        if: github.event_name != 'push'
         shell: bash
         run: |
           set -euo pipefail
@@ -168,7 +174,7 @@ jobs:
           done
 
       - name: Dump the local Supabase container logs after a failed regression
-        if: github.event_name == 'workflow_dispatch' && failure()
+        if: github.event_name != 'push' && failure()
         shell: bash
         run: |
           for name in $(docker ps --format '{{.Names}}' | grep -E 'supabase_(auth|rest|kong)_' || true); do
@@ -180,7 +186,7 @@ jobs:
           done
 
       - name: Require zero failures, flakies and unexpected skips
-        if: github.event_name == 'workflow_dispatch'
+        if: github.event_name != 'push'
         shell: bash
         run: |
           set -euo pipefail
@@ -189,11 +195,11 @@ jobs:
           done
 
       - name: Verify synthetic fixtures after the release regression
-        if: github.event_name == 'workflow_dispatch' && always()
+        if: github.event_name != 'push' && always()
         run: npm run verify:local:relations
 
       - name: Upload Playwright report
-        if: github.event_name == 'workflow_dispatch' && always()
+        if: github.event_name != 'push' && always()
         uses: actions/upload-artifact@v5
         with:
           name: playwright-report
@@ -203,3 +209,23 @@ jobs:
       - name: Stop local Supabase
         if: always()
         run: supabase stop --no-backup
+
+  avisar:
+    name: Avisar por correo si algo falló
+    needs: [local-database-contract]
+    if: ${{ always() && needs.local-database-contract.result == 'failure' }}
+    runs-on: ubuntu-latest
+    environment: test
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - env:
+          BREVO_API_KEY: ${{ secrets.BREVO_API_KEY }}
+          ALERTAS_CORREO: ${{ vars.ALERTAS_CORREO }}
+          CORRIDA: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: >-
+          node scripts/ci/avisar-por-correo.mjs
+          "🔴 ContrataCR: la regresión falló (${{ github.event_name }}, ${{ github.ref_name }})"
+          "Commit ${{ github.sha }}. Abre la corrida para ver qué prueba cayó."

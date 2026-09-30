@@ -153,11 +153,20 @@ test.describe("@admin surfaces", () => {
       await expect(row.getByText("Redes Bahía")).toBeVisible();
       await expect(row.getByText("Publicada", { exact: true })).toBeVisible();
       await row.getByRole("button", { name: /^Pausar$/ }).click();
+      // Desde el 26-sep las promociones se filtran por estado: al pausarla, la
+      // fila pasa a la pestaña «Pausadas» (y al publicarla, a «Publicadas»).
+      const pestana = async (nombre: string) => {
+        const boton = page.getByRole("button", { name: new RegExp(`^${nombre}`) }).filter({ visible: true }).first();
+        if (await boton.count()) await boton.click();
+      };
+      await pestana("Pausadas");
       await expect(row.getByText("Pausada", { exact: true })).toBeVisible();
       await expect.poll(async () => (await admin.from("professional_offers").select("status").eq("id", offerId).single()).data?.status).toBe("paused");
       await row.getByRole("button", { name: /^Publicar$/ }).click();
+      await pestana("Publicadas");
       await expect(row.getByText("Publicada", { exact: true })).toBeVisible();
       await row.getByRole("button", { name: /^Marcar vencida$/ }).click();
+      await pestana("Vencidas");
       await expect(row.getByText("Vencida", { exact: true })).toBeVisible();
       await expect.poll(async () => (await admin.from("professional_offers").select("status").eq("id", offerId).single()).data?.status).toBe("expired");
       page.once("dialog", (dialog) => void dialog.accept());

@@ -504,14 +504,15 @@ test.describe("@seeded ContrataCR AI", () => {
     expect(spanish.status, JSON.stringify(spanish.body)).toBe(200);
     // The documented contact answer routes to the help center.
     expect(spanish.body.action).toBe("help");
-    expect(spanish.body.answer).toMatch(/mensaje/i);
-    expect(spanish.body.answer).not.toMatch(/WhatsApp/i);
+    // Manda a Mensajes; puede nombrar WhatsApp solo para decir que no hace falta salir.
+    expect(spanish.body.answer).toMatch(/Mensajes/);
+    expect(spanish.body.answer).not.toMatch(/abre WhatsApp|escr[ií]bele por WhatsApp/i);
 
     const english = await ask(page, "How do I contact a professional?", { locale: "en", pagePath: "/en" });
     expect(english.status, JSON.stringify(english.body)).toBe(200);
     expect(english.body.action).toBe("help");
-    expect(english.body.answer).toMatch(/message/i);
-    expect(english.body.answer).not.toMatch(/WhatsApp/i);
+    expect(english.body.answer).toMatch(/Messages/);
+    expect(english.body.answer).not.toMatch(/open WhatsApp|write (to them )?on WhatsApp/i);
   });
 
   test("uses internal messaging copy and actions for the native app", async ({ page }) => {
