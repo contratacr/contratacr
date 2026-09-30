@@ -1330,7 +1330,9 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   // use Next's prefetched route payload instead of waiting after the click.
   useEffect(() => {
     const timeout = window.setTimeout(() => {
-      router.prefetch("/profesionales");
+      // En la app la pestaña Profesionales abre el buscador, no la página: no
+      // se precarga la búsqueda en cada pantalla. En la web sí se entra a ella.
+      if (!nativeApp) router.prefetch("/profesionales");
       if (user && !pathname.startsWith("/dashboard/profesional")) {
         router.prefetch(primaryPanelHref);
         prefetchDashboardBootstrap(user.id);
@@ -1339,10 +1341,6 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
     return () => window.clearTimeout(timeout);
   }, [nativeApp, pathname, primaryPanelHref, router, user]);
 
-  useEffect(() => {
-    if (!nativeApp) return;
-    router.prefetch("/profesionales");
-  }, [nativeApp, router]);
 
   useEffect(() => {
     if (!nativeApp || !user) return;

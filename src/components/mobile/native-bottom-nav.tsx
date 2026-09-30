@@ -109,7 +109,10 @@ export function NativeBottomNav() {
   useEffect(() => {
     if (!visible) return;
     const id = window.setTimeout(() => {
-      for (const destino of ["/", "/profesionales", ...(EMPLEOS_VISIBLE ? ["/empleos"] : []), "/proyectos", "/promociones", primaryPanelHref]) router.prefetch(destino);
+      // Sin /profesionales: esa pestaña abre el buscador, no la página, así que
+      // precargar la búsqueda en cada pantalla era trabajo del servidor para
+      // nada. Se carga cuando la persona elige qué buscar.
+      for (const destino of ["/", ...(EMPLEOS_VISIBLE ? ["/empleos"] : []), "/proyectos", "/promociones", primaryPanelHref]) router.prefetch(destino);
     }, 800);
     return () => window.clearTimeout(id);
   }, [pathname, primaryPanelHref, router, visible]);
@@ -304,7 +307,7 @@ export function NativeBottomNav() {
       <div className="mx-auto flex w-full max-w-[520px] items-stretch px-1">
         <Link
           href="/profesionales"
-          prefetch={true}
+          prefetch={false}
           aria-label={etiquetas.buscar}
           onClick={(event) => irA(event, "/profesionales")}
           className={itemClass("/profesionales")}
