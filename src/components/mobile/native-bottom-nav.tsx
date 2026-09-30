@@ -122,6 +122,15 @@ export function NativeBottomNav() {
       // Con el asistente encima, la pestaña primero lo aparta.
       if (asistenteAbierto) window.dispatchEvent(new Event("contratacr:close-ai"));
       const [base, consulta = ""] = href.split("?");
+      // PROFESIONALES ABRE EL BUSCADOR, no la página: Servicio y ubicación con
+      // Recientes y Los más buscados, el teclado arriba, en el acto y sin pedir
+      // nada al servidor. La búsqueda se carga cuando se elige qué buscar. Si
+      // en esta pantalla no hay buscador que lo atienda, se va a la página.
+      if (base === "/profesionales") {
+        const pedido = new CustomEvent("ccr:open-native-search", { detail: { atendido: false } });
+        window.dispatchEvent(pedido);
+        if (pedido.detail.atendido) return;
+      }
       if (pathname === base || (base === "/profesionales" && esRutaDeBusqueda(pathname, esServicioDelCatalogo))) {
         // Misma RUTA no siempre es el mismo lugar: las secciones del panel viven
         // en ?tab=, una búsqueda con resultados en ?q=, un listado filtrado en

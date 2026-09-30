@@ -1806,7 +1806,13 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   }
 
   useEffect(() => {
-    const open = () => openNativeSearch();
+    // Quien lo pide (la pestaña Profesionales) sabe así que hubo un buscador
+    // que lo atendió; si no, navega a la búsqueda.
+    const open = (event: Event) => {
+      const pedido = (event as CustomEvent<{ atendido?: boolean } | null>).detail;
+      if (pedido) pedido.atendido = true;
+      openNativeSearch();
+    };
     window.addEventListener("ccr:open-native-search", open);
     return () => window.removeEventListener("ccr:open-native-search", open);
   }, []);
