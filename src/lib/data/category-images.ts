@@ -14,6 +14,10 @@ import { CATEGORY_GROUPS } from "@/lib/data/categories";
 const U = (id: string) => `https://images.unsplash.com/photo-${id}?w=800&auto=format&fit=crop&q=80`;
 
 export const CATEGORY_IMAGE: Record<string, string> = {
+  electromecanica: U("1649038780045-235e4b6e40b4"), // técnico trabajando un motor eléctrico (1-oct-2026)
+  soldadura: U("1504328345606-18bbc8c9d7d1"),   // soldador con careta (1-oct-2026)
+  aire_acondicionado: U("1759772238012-9d5ad59ae637"), // equipo split en la pared (1-oct-2026)
+  reparacion_electrodomesticos: U("1610259998914-d1b9afe0dc55"), // técnico reparando un electrodoméstico (1-oct-2026)
   // ── Hogar y construcción ──
   plomeria: U("1607472586893-edb57bdc0e39"),            // v
   electricidad: U("1621905251189-08b45d6a269e"),        // v
@@ -95,7 +99,7 @@ export const CATEGORY_IMAGE: Record<string, string> = {
   cctv: U("1557597774-9d273605dfa9"),                   // v
   camaras_seguridad: U("1557597774-9d273605dfa9"),      // v
   guardas_seguridad: U("1551836022-d5d88e9218df"),
-  alarmas: U("1558002038-1055907df827"),
+  alarmas: U("1697382608786-bcf4c113b86e"),            // teclado de alarma (antes repetía la de cerrajería)
   // ── Vehículos y movilidad (verified mecánica photo reused) ──
   mecanica: U("1625047509248-ec889cbff17f"),            // v
   hojalateria: U("1599256621730-535171e28e50"),
