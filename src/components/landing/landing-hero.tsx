@@ -672,25 +672,26 @@ export function LandingHero() {
       <FotoDeFondo />
       <div className="relative z-10 mx-auto w-full max-w-7xl px-6 pb-[35px] pt-20 sm:px-6 sm:py-10 lg:px-8">
       {/* El título y el buscador en un panel translúcido, centrado sobre la foto. */}
-      <div className="ccr-hero-entra rounded-lg bg-black/[0.32] px-4 py-6 sm:px-10 sm:py-10 lg:mx-0 lg:max-w-[640px]">
+      <div className="ccr-hero-entra rounded-lg bg-black/[0.32] px-4 py-6 sm:px-10 sm:py-10 lg:mx-0 lg:max-w-[820px] lg:px-12 lg:py-12">
       {/* En computadora el panel va a la IZQUIERDA y el texto alineado a la izquierda, como Angi. */}
-      <div className="relative mx-auto max-w-3xl pb-7 text-center lg:text-left">
+      <div className="relative mx-auto max-w-3xl pb-7 text-center lg:mx-0 lg:text-left">
         <h1
           className="font-extrabold text-white tracking-tight drop-shadow-[0_2px_12px_rgba(0,0,0,0.35)]"
           style={{ fontSize: "clamp(1.45rem, 6.6vw, 2.6rem)", lineHeight: 1.12 }}
+          data-titular-portada=""
         >
           {/* Fijo, como Angi: con las fotos pasando de fondo, una palabra que
               además cambia eran dos cosas moviéndose a la vez. */}
           {/* «|» marca los cortes: siempre tres líneas, como Angi, y cada una
               entera (la letra se ajusta al ancho para que no se parta). */}
           {t("titular").split("|").map((tramo, i) => (
-            <span key={i} className="block whitespace-nowrap">{tramo}</span>
+            <span key={i} className="block whitespace-nowrap lg:inline lg:whitespace-normal">{tramo}{" "}</span>
           ))}
         </h1>
       </div>
 
       {/* ── Buscador ── */}
-      <div className="mx-auto max-w-3xl">
+      <div className="mx-auto max-w-3xl lg:mx-0 lg:max-w-none">
         <form
           onSubmit={handleSearch}
           className="w-full"
@@ -701,7 +702,7 @@ export function LandingHero() {
             {/* Caja blanca de esquinas suaves: la misma forma que usa el
                 buscador del navbar, para que al bajar se sienta que es el
                 mismo buscador que se quedó pegado arriba. */}
-            <div ref={pildoraRef} className="flex h-[54px] items-center overflow-hidden rounded-full border border-white bg-white pl-5 pr-4 shadow-[0_8px_30px_rgba(0,0,0,0.18)] sm:h-16 sm:pl-7 sm:pr-6 transition-shadow duration-300 focus-within:ring-2 focus-within:ring-[#009FD9]/20 hover:shadow-[0_12px_60px_rgba(0,159,217,0.20)]">
+            <div ref={pildoraRef} className="flex h-[54px] items-center overflow-hidden rounded-full border border-white bg-white pl-5 pr-4 shadow-[0_8px_30px_rgba(0,0,0,0.18)] sm:h-16 sm:pl-7 sm:pr-6 lg:h-[68px] lg:pr-2.5 transition-shadow duration-300 focus-within:ring-2 focus-within:ring-[#009FD9]/20 hover:shadow-[0_12px_60px_rgba(0,159,217,0.20)]">
               {/* Service input — its dropdown PORTALS to <body> (anchored to this wrapper),
                   so the bar's `overflow-hidden` can never clip it. */}
               <div ref={svcDesktopRef} className="flex items-center gap-3 flex-1 min-w-0 h-full">
@@ -743,6 +744,15 @@ export function LandingHero() {
                 />
                 <LocationDropdown anchorRef={pildoraRef} open={openLoc && location.trim().length >= 2} suggestions={locSug} addresses={addrSug} activeIdx={locActive} onPick={(s) => selectLocation(s, true)} onPickAddress={selectAddress} onNearMe={requestNearMe} nearMeLabel={t("nearMe")} geoLoading={geoLoading} />
               </div>
+              {/* En computadora, la lupa que busca (como Angi). En el teléfono no:
+                  elegir una sugerencia o Enter ya buscan. */}
+              <button
+                type="submit"
+                aria-label={t("search")}
+                className="ml-2 hidden h-12 w-12 shrink-0 place-items-center rounded-full bg-[#009FD9] text-white shadow-[0_6px_16px_-6px_rgba(0,159,217,0.8)] transition hover:bg-[#0089bb] lg:grid"
+              >
+                <Search className="h-5 w-5" strokeWidth={2.6} />
+              </button>
             </div>
           </div>
 

@@ -2599,3 +2599,8 @@ html.ccr-native-app .ccr-fin-de-portada > section {
 @media (prefers-reduced-motion: reduce) {
   .ccr-hero-entra, #servicios-de-la-seccion > a { animation: none !important; opacity: 1 !important; }
 }
+
+/* El titular de la portada en computadora: dos líneas grandes, como Angi. */
+@media (min-width: 1024px) {
+  [data-titular-portada] { font-size: 3.25rem !important; line-height: 1.1 !important; }
+}

@@ -2070,14 +2070,6 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
               )}>
                 {sectionActive && sectionRoot ? (
                   <>
-                    <button
-                      type="button"
-                      onClick={openMobileMenu}
-                      className="grid h-10 w-10 shrink-0 place-items-center rounded-xl text-[#162543] transition-colors hover:bg-gray-50"
-                      aria-label={t("openMenu")}
-                    >
-                      <Menu className="h-5 w-5 stroke-[2.5]" />
-                    </button>
                     <Link href="/" aria-label="ContrataCR inicio" onClick={irAlInicio} className="shrink-0">
                       <ContrataCRMark />
                     </Link>
@@ -2106,17 +2098,6 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                   </>
                 ) : (
                   <>
-                <button
-                  type="button"
-                  onClick={openMobileMenu}
-                  className={cn(
-                    "grid h-10 w-10 shrink-0 place-items-center rounded-xl text-[#162543] transition-colors hover:bg-gray-50",
-                  )}
-                  aria-label={t("openMenu")}
-                >
-                  <Menu className="h-5 w-5 stroke-[2.5]" />
-                </button>
-
                 <Link href="/" aria-label="ContrataCR inicio" onClick={irAlInicio} className={cn("shrink-0", nativeHeaderShell && "mr-auto flex min-w-0 items-center justify-start")}>
                   {mobileInline ? <ContrataCRMark /> : <ContrataCRLogo />}
                 </Link>
@@ -2161,6 +2142,19 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                   {user && sectionPaso && !sectionMenu && <span className="h-10 w-10" aria-hidden />}
                   {!user && !sectionShare && !sectionMenu && <HeaderAccountLink />}
                 </div>
+                )}
+                {/* EL MENÚ VA A LA DERECHA (1-oct-2026): la marca queda sola a la
+                    izquierda y el menú cierra la fila, y su cajón entra desde la
+                    derecha. Solo donde antes había menú (no en pantallas con flecha). */}
+                {(!sectionActive || sectionRoot) && (
+                  <button
+                    type="button"
+                    onClick={openMobileMenu}
+                    className="grid h-10 w-10 shrink-0 place-items-center rounded-xl text-[#162543] transition-colors hover:bg-gray-50"
+                    aria-label={t("openMenu")}
+                  >
+                    <Menu className="h-5 w-5 stroke-[2.5]" />
+                  </button>
                 )}
                 {sectionMenu && (
                   <button
@@ -3009,7 +3003,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
           </div>
         )}
 
-        {/* Mobile menu - slide-in LEFT drawer + transparent outside click layer (OUTSIDE <header>: the
+        {/* Mobile menu - slide-in RIGHT drawer + transparent outside click layer (OUTSIDE <header>: the
             header's backdrop-filter would otherwise become the containing block
             for these `fixed` elements, breaking full-viewport positioning). */}
           {/* CERRADO, NO EXISTE (`hidden`), en vez de quedarse con opacidad cero.
@@ -3037,16 +3031,20 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
             onTouchStart={(e) => { drawerTouchX.current = e.touches[0].clientX; }}
             onTouchEnd={(e) => {
               if (drawerTouchX.current == null) return;
-              // Swipe left to close.
-              if (e.changedTouches[0].clientX - drawerTouchX.current < -55) setMobileOpen(false);
+              // Entra por la derecha: deslizar a la DERECHA lo cierra.
+              if (e.changedTouches[0].clientX - drawerTouchX.current > 55) setMobileOpen(false);
               drawerTouchX.current = null;
             }}
             className={cn(
-              "lg:hidden fixed top-0 left-0 bottom-0 z-[10060] w-[76vw] max-w-[320px] bg-white shadow-[18px_0_46px_-24px_rgba(15,23,42,0.65)] flex flex-col transition-[transform,visibility] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] will-change-transform",
-              mobileOpen ? "visible translate-x-0 pointer-events-auto" : "invisible -translate-x-full pointer-events-none"
+              "lg:hidden fixed top-0 right-0 bottom-0 z-[10060] w-[76vw] max-w-[320px] bg-white shadow-[-18px_0_46px_-24px_rgba(15,23,42,0.65)] flex flex-col transition-[transform,visibility] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] will-change-transform",
+              mobileOpen ? "visible translate-x-0 pointer-events-auto" : "invisible translate-x-full pointer-events-none"
             )}
           >
-            <div className="ccr-mobile-drawer-scroll flex flex-1 flex-col overflow-y-auto bg-white px-5 pb-7 pt-[calc(env(safe-area-inset-top)+28px)]">
+            <div className="ccr-mobile-drawer-scroll flex flex-1 flex-col overflow-y-auto bg-white px-5 pb-7 pt-[calc(env(safe-area-inset-top)+20px)]">
+              {/* La marca, arriba del cajón. */}
+              <Link href="/" aria-label="ContrataCR inicio" onClick={(e) => { cerrarCajon(); irAlInicio(e); }} className="mb-5 flex shrink-0 items-center px-3">
+                <ContrataCRLogo />
+              </Link>
               <nav className="flex flex-col gap-1">
                 {user ? (
                   <>
