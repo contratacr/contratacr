@@ -18,7 +18,9 @@ test("@seeded un empleo vivo abre su ficha y se deja indexar", async ({ page, re
   test.skip(isMobileProject(test.info()), "Basta comprobarlo una vez.");
   await page.goto("/empleos");
   const enlaces = await page.locator('a[href*="/empleos/"]').evaluateAll((ns) => ns.map((n) => (n as HTMLAnchorElement).getAttribute("href")));
-  const vivo = enlaces.find((h) => h && /[0-9a-f-]{20,}/.test(h) && !/editar|publicar|mis-/.test(h));
+  // La ficha lleva un enlace bonito con el id corto al final
+  // (/empleos/tecnico-de-redes-b8000000), ya no el uuid entero.
+  const vivo = enlaces.find((h) => h && /\/empleos\/[^/?#]*[0-9a-f]{8}(?:[?#]|$)/.test(h) && !/editar|publicar|mis-/.test(h));
   expect(vivo, "el tablero sembrado trae al menos un empleo").toBeTruthy();
   await page.goto(vivo!);
   await expect(page.locator("article h2").first()).not.toHaveText("");

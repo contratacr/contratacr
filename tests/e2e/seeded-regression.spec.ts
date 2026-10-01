@@ -587,6 +587,8 @@ test.describe("@seeded core regression", () => {
   });
 
   test("cancellations notify only the affected opposite side", async ({ page }) => {
+    // Las citas están apagadas (src/lib/citas.ts). Vuelve cuando se prendan.
+    test.skip(!CITAS_ACTIVAS, "Citas apagadas");
     const bookingMarker = regressionMarker("cancel booking");
 
     await loginAs(page, E2E_USERS.client.email, E2E_USERS.client.password);

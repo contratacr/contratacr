@@ -270,6 +270,9 @@ test.describe("@smoke public routes", () => {
   // bien: solo se nota mirando el ESTADO de la respuesta, que es justo lo que
   // mide esta prueba.
   test("una dirección que no existe responde 404, no 200", async ({ page }) => {
+    // Sin la cookie de idioma que deja la prueba anterior al pasar por /en:
+    // con ella, cualquier ruta sin /en responde 307 hacia /en/… antes del 404.
+    await page.context().clearCookies();
     const inexistente = "00000000-0000-0000-0000-000000000000";
     const casos: Array<[string, number]> = [
       ["/pagina-que-no-existe-jamas", 404],
