@@ -1413,8 +1413,9 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
     router.push("/");
   }, [locale, nativeApp, router]);
 
+  // Filas como las de Angi: texto grande, línea debajo y flecha a la derecha.
   const mobileDrawerItemClass =
-    "flex w-full items-center gap-3 rounded-2xl px-2 py-3 text-left text-[16px] font-semibold leading-snug text-[#162543] transition-colors hover:bg-[#f4f7fa] hover:text-[#009FD9]";
+    "ccr-menu-fila flex w-full items-center gap-3 border-b border-[#e5e9ee] py-[18px] text-left text-[18px] font-semibold leading-snug text-[#162543] transition-colors hover:text-[#009FD9]";
   const mobileDrawerTextClass = "min-w-0 flex-1 whitespace-normal break-words";
   const mobileDrawerStrongItemClass = cn(mobileDrawerItemClass, "font-extrabold");
   const mobileDrawerSubItemClass =
@@ -1492,7 +1493,12 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
     };
   }, []);
 
+  // El menú pone su fila de arriba EXACTAMENTE donde está la cabecera de la
+  // página (logo y botón en el mismo píxel), lea el aparato el margen que lea.
+  const [altoSobreCabecera, setAltoSobreCabecera] = useState(0);
   const openMobileMenu = useCallback(() => {
+    const fila = document.querySelector<HTMLElement>("header .lg\\:hidden.flex.h-16");
+    if (fila) setAltoSobreCabecera(Math.max(0, Math.round(fila.getBoundingClientRect().top)));
     setMobileHelpOpen(false);
     setMobileOpen(true);
   }, []);
@@ -3036,16 +3042,26 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
               drawerTouchX.current = null;
             }}
             className={cn(
-              "lg:hidden fixed top-0 right-0 bottom-0 z-[10060] w-[76vw] max-w-[320px] bg-white shadow-[-18px_0_46px_-24px_rgba(15,23,42,0.65)] flex flex-col transition-[transform,visibility] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] will-change-transform",
-              mobileOpen ? "visible translate-x-0 pointer-events-auto" : "invisible translate-x-full pointer-events-none"
+              // COMO ANGI (1-oct-2026): el menú ocupa TODA la pantalla y su fila
+              // de arriba cae justo donde está la cabecera —logo a la izquierda,
+              // X donde estaba el botón—. Entra despacio: se funde y baja un poco.
+              "ccr-menu-completo lg:hidden fixed inset-0 z-[10060] flex flex-col bg-white",
+              mobileOpen ? "ccr-menu-abierto visible pointer-events-auto" : "invisible pointer-events-none"
             )}
           >
-            <div className="ccr-mobile-drawer-scroll flex flex-1 flex-col overflow-y-auto bg-white px-5 pb-7 pt-[calc(env(safe-area-inset-top)+20px)]">
-              {/* La marca, arriba del cajón. */}
-              <Link href="/" aria-label="ContrataCR inicio" onClick={(e) => { cerrarCajon(); irAlInicio(e); }} className="mb-5 flex shrink-0 items-center px-3">
-                <ContrataCRLogo />
-              </Link>
-              <nav className="flex flex-col gap-1">
+            {/* La fila de arriba: igual que la cabecera de la página. */}
+            <div className="shrink-0 bg-white shadow-[0_2px_10px_-6px_rgba(15,23,42,0.25)]" style={{ paddingTop: altoSobreCabecera }}>
+              <div className="flex h-16 items-center justify-between px-4 sm:px-6">
+                <Link href="/" aria-label="ContrataCR inicio" onClick={(e) => { cerrarCajon(); irAlInicio(e); }} className="shrink-0">
+                  <ContrataCRLogo />
+                </Link>
+                <button type="button" onClick={cerrarCajon} aria-label={locale === "en" ? "Close menu" : "Cerrar menú"} className="grid h-10 w-10 place-items-center rounded-xl text-[#162543] transition-colors hover:bg-gray-50">
+                  <X className="h-6 w-6" strokeWidth={2.2} />
+                </button>
+              </div>
+            </div>
+            <div className="ccr-mobile-drawer-scroll ccr-menu-cuerpo flex flex-1 flex-col overflow-y-auto bg-white px-6 pb-7 pt-3">
+              <nav className="flex flex-col">
                 {user ? (
                   <>
                     {!nativeHeaderShell && (

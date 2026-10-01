@@ -169,23 +169,25 @@ const b = await chromium.launch();
 for (const [clave, escena] of Object.entries(escenas)) {
   if (process.argv[4] && process.argv[4] !== clave) continue;
   const ctx = await b.newContext({
-    viewport: { width: 402, height: 875 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true, locale: "es-CR",
+    viewport: { width: 402, height: 874 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true, locale: "es-CR",
     userAgent: "Mozilla/5.0 (iPhone; CPU iPhone OS 26_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148",
   });
   await ctx.addCookies([base, TEST, INICIO].map((url) => ({ name: "ccr_platform", value: "native", url })));
   await ctx.addInitScript(() => { try { localStorage.setItem("ccr:native-first-run-onboarding:v12", "1"); } catch {} });
-  // En la grabación no existe el margen de seguridad del iPhone (env() vale 0):
-  // se simula, así el menú de abajo no queda tapado por las esquinas redondeadas
-  // del teléfono dibujado en la portada.
+  // Sin el aviso de desarrollo de Next en las grabaciones.
   await ctx.addInitScript(() => {
     const st = document.createElement("style");
-    st.textContent = "nextjs-portal{display:none!important} .ccr-native-app .ccr-native-bottom-nav{padding-bottom:30px!important} html.ccr-native-app{--ccr-native-bottom-nav-height:calc(44px + 30px)!important}";
+    st.textContent = "nextjs-portal{display:none!important}";
     document.documentElement.appendChild(st);
   });
   // Los botones de contacto se VEN (la pantalla queda como es), pero el video nunca los toca.
   const p = await ctx.newPage();
   if (process.env.DEPURAR) { p.on("response", (r) => { if (/\/api\//.test(r.url()) && r.request().method() !== "GET") r.text().then((t) => console.log("API", r.status(), r.url().split("/api/")[1], t.slice(0, 160))).catch(() => {}); }); p.on("console", (m) => { if (m.type() === "error") console.log("CONSOLA", m.text().slice(0, 160)); }); }
   const cdp = await ctx.newCDPSession(p);
+  // EL MARGEN DE SEGURIDAD DEL iPHONE (iPhone 17: 62 arriba, 34 abajo). Sin él,
+  // env(safe-area-inset-*) vale 0 y el menú de abajo y los botones fijos quedan
+  // pegados al borde, donde las esquinas redondeadas del teléfono los tapan.
+  await cdp.send("Emulation.setSafeAreaInsetsOverride", { insets: { top: 62, bottom: 34, left: 0, right: 0 } });
   const cuadros = []; const cortes = []; let grabando = false; let corrimiento = 0;
   cdp.on("Page.screencastFrame", async ({ data, metadata, sessionId }) => {
     if (grabando && !enMano) cuadros.push({ t: metadata.timestamp + corrimiento, data });

@@ -705,7 +705,10 @@ export function LandingHero() {
             <div ref={pildoraRef} className="flex h-[54px] items-center overflow-hidden rounded-full border border-white bg-white pl-5 pr-4 shadow-[0_8px_30px_rgba(0,0,0,0.18)] sm:h-16 sm:pl-7 sm:pr-6 lg:h-[68px] lg:pr-2.5 transition-shadow duration-300 focus-within:ring-2 focus-within:ring-[#009FD9]/20 hover:shadow-[0_12px_60px_rgba(0,159,217,0.20)]">
               {/* Service input — its dropdown PORTALS to <body> (anchored to this wrapper),
                   so the bar's `overflow-hidden` can never clip it. */}
-              <div ref={svcDesktopRef} className="flex items-center gap-3 flex-1 min-w-0 h-full">
+              {/* EL SERVICIO NUNCA SE CORTA: elegido, su campo toma el ancho de su
+                  nombre y la ubicación se queda con el resto (lo que se escribe
+                  ahí se desplaza dentro de su campo). */}
+              <div ref={svcDesktopRef} className="flex h-full min-w-0 flex-1 items-center gap-3" style={service.trim() ? { flex: `0 0 min(${service.trim().length + 1.5}ch, 68%)` } : undefined}>
                 <input
                   type="text"
                   value={service}
@@ -725,7 +728,7 @@ export function LandingHero() {
               </div>
               {/* Divider + location autocomplete */}
               <div className="mx-3 my-3 w-px shrink-0 self-stretch bg-[#cfd8e2] sm:mx-4" />
-              <div ref={locDesktopRef} className="flex h-full w-[38%] min-w-[112px] shrink-0 items-center gap-2 sm:w-[34%]">
+              <div ref={locDesktopRef} className={cn("flex h-full min-w-[96px] items-center gap-2", service.trim() ? "flex-1" : "w-[38%] shrink-0 sm:w-[34%]")}>
                 <MapPin className="h-5 w-5 shrink-0 text-[#162543] sm:h-6 sm:w-6" />
                 <input
                   type="text"

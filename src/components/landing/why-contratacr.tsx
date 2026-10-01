@@ -21,7 +21,8 @@ export async function WhyContratacr() {
   }));
 
   return (
-    <section className="relative overflow-hidden bg-white py-5 sm:py-7">
+    <section className="relative bg-white pb-12 pt-5 sm:pb-16 sm:pt-7">
+      {/* Sin overflow-hidden: recortaba la sombra del teléfono y quedaba un borde. */}
       <div className="relative mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
         <div className="mb-10 text-center sm:mb-14">
           <h2 className="text-3xl font-extrabold text-[#1a2744] sm:text-4xl">{t("guia.titulo")}</h2>

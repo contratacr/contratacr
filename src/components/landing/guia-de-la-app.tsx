@@ -62,7 +62,7 @@ export function GuiaDeLaApp({ pasos }: { pasos: PasoDeLaGuia[] }) {
   // Al terminar un video pasa al siguiente paso; si la persona eligió uno, se repite ese.
   const alTerminar = (i: number) => {
     if (i !== activo) return;
-    if (quieta) { const v = videos.current[i]; if (v) { v.currentTime = 0; v.play().catch(() => {}); setVuelta((n) => n + 1); } return; }
+    // Aunque la persona haya tocado una opción, al terminar pasa a la siguiente.
     setActivo((activo + 1) % pasos.length);
   };
 
