@@ -45,47 +45,105 @@ async function bajar(p, px, msPedido) {
 // y empleos se abre en PRODUCCIÓN (en test salen publicaciones de prueba): la
 // grabación se pausa mientras carga, así el corte no se ve.
 const INICIO = process.env.INICIO || "http://localhost:3000";
-async function tocar(p, loc) { await loc.scrollIntoViewIfNeeded(); await p.waitForTimeout(350); await loc.tap(); }
-async function porElMenu(p, grabar, pausar, texto, destino) {
-  await p.goto(INICIO + "/", { waitUntil: "load" });
+async function sinAvisoDeDesarrollo(p) { await p.addStyleTag({ content: "nextjs-portal,[data-nextjs-toast],[data-next-badge-root]{display:none!important}" }).catch(() => {}); }
+// Cada toque se VE: un círculo gris que aparece donde cae el dedo, como en las
+// grabaciones de pantalla del iPhone con «mostrar toques».
+async function marcarToque(p, loc) {
+  const caja = await loc.boundingBox();
+  if (!caja) return;
+  await p.evaluate(({ x, y }) => {
+    const d = document.createElement("div");
+    d.style.cssText = `position:fixed;left:${x - 22}px;top:${y - 22}px;width:44px;height:44px;border-radius:50%;background:rgba(40,48,60,.32);border:2px solid rgba(255,255,255,.85);box-shadow:0 2px 10px rgba(0,0,0,.25);z-index:2147483647;pointer-events:none;transform:scale(.6);opacity:0;transition:transform .18s ease-out,opacity .18s ease-out`;
+    document.documentElement.appendChild(d);
+    requestAnimationFrame(() => { d.style.transform = "scale(1)"; d.style.opacity = "1"; });
+    setTimeout(() => { d.style.transform = "scale(1.25)"; d.style.opacity = "0"; }, 520);
+    setTimeout(() => d.remove(), 800);
+  }, { x: caja.x + caja.width / 2, y: caja.y + caja.height / 2 });
+  await p.waitForTimeout(330);
+}
+async function tocar(p, loc) { await loc.scrollIntoViewIfNeeded(); await p.waitForTimeout(300); await marcarToque(p, loc); await loc.tap(); }
+// Solo se marca el toque: no se abre nada (WhatsApp, Publicar).
+async function señalar(p, loc) { await loc.scrollIntoViewIfNeeded(); await p.waitForTimeout(300); await marcarToque(p, loc); await p.waitForTimeout(700); }
+async function escribir(p, loc, texto) { await tocar(p, loc); await p.waitForTimeout(250); await p.keyboard.type(texto, { delay: 55 }); }
+
+// Inicio → menú → la sección (producción) → «Publicar…» → el formulario, que se
+// llena a medias y NUNCA se envía (con la cuenta profesional de prueba, en local).
+async function porElMenu(p, grabar, pausar, texto, destino, boton, formulario, llenar) {
+  await p.goto(INICIO + "/", { waitUntil: "load" }); await sinAvisoDeDesarrollo(p);
   await p.waitForTimeout(3500);
   grabar();
-  await p.waitForTimeout(1400);
+  await p.waitForTimeout(700);
   await tocar(p, p.getByRole("button", { name: /menú|menu/i }).first());
-  await p.waitForTimeout(1100);
+  await p.waitForTimeout(900);
   await tocar(p, p.getByRole("link", { name: texto, exact: true }).first());
   await p.waitForTimeout(250);
   pausar();
   await p.goto(base + destino, { waitUntil: "load" });
   await p.waitForTimeout(3000);
   grabar();
-  await p.waitForTimeout(900); await bajar(p, 520, 3400); await p.waitForTimeout(1400);
+  await bajar(p, 300, 2000); await p.waitForTimeout(200);
+  const publicar = p.getByRole("link", { name: boton }).or(p.getByRole("button", { name: boton })).filter({ visible: true }).first();
+  await publicar.scrollIntoViewIfNeeded(); await p.waitForTimeout(300);
+  await marcarToque(p, publicar);
+  // Se ve el toque; la grabación se corta antes de que pinte el login de producción.
+  await p.evaluate(() => new Promise((r) => requestAnimationFrame(r)));
+  pausar();
+  await publicar.tap().catch(() => {});
+  await p.goto(INICIO + formulario, { waitUntil: "load" }); await sinAvisoDeDesarrollo(p);
+  await p.waitForTimeout(3500);
+  grabar();
+  await p.waitForTimeout(500);
+  await llenar(p);
+  await p.waitForTimeout(400);
+  await señalar(p, p.getByRole("button", { name: /^Publicar/ }).filter({ visible: true }).last());
 }
+
 const escenas = {
-  // Inicio → pestaña Tecnología → Cámaras de seguridad → el perfil de SG Solutions.
+  // Inicio → «¿Qué necesitas?» Cámaras → «Ubicación» Alajuela → resultados
+  // (producción) → el perfil de SG Solutions. No se toca WhatsApp.
   profesionales: async (p, grabar, pausar) => {
-    await p.goto(INICIO + "/", { waitUntil: "load" });
+    await p.goto(INICIO + "/", { waitUntil: "load" }); await sinAvisoDeDesarrollo(p);
     await p.waitForTimeout(3500);
     grabar();
-    await p.waitForTimeout(1200);
-    await bajar(p, 330, 2000); await p.waitForTimeout(700);
-    await tocar(p, p.getByRole("tab", { name: "Tecnología" }));
-    await p.waitForTimeout(900);
-    await tocar(p, p.locator("#servicios-de-la-seccion a", { hasText: "Cámaras de seguridad" }).first());
+    await p.waitForTimeout(700);
+    await escribir(p, p.getByPlaceholder(/Qué necesitas/i).filter({ visible: true }).first(), "Cámaras");
+    await p.waitForTimeout(700);
+    await tocar(p, p.getByRole("option").filter({ hasText: "Cámaras de seguridad" }).first());
+    await p.waitForTimeout(500);
+    await escribir(p, p.getByPlaceholder(/Ubicación/i).filter({ visible: true }).first(), "Alajuela");
+    await p.waitForTimeout(700);
+    await tocar(p, p.getByRole("option").filter({ hasText: "Provincia" }).first());
     await p.waitForTimeout(250);
     pausar();
-    // Los resultados y el perfil, de producción (en test no está SG Solutions).
-    await p.goto(base + "/profesionales?q=" + encodeURIComponent("Cámaras de seguridad"), { waitUntil: "load" });
+    await p.goto(base + "/profesionales?q=" + encodeURIComponent("Cámaras de seguridad") + "&provincia=al", { waitUntil: "load" });
     await p.waitForTimeout(4500);
     grabar();
-    await p.waitForTimeout(900);
-    await bajar(p, 260, 1800); await p.waitForTimeout(700);
+    await p.waitForTimeout(500);
+    await bajar(p, 200, 1500);
     await tocar(p, p.getByText("SG Solutions", { exact: true }).first());
-    await p.waitForTimeout(2600); await bajar(p, 420, 3000); await p.waitForTimeout(1400);
+    await p.waitForTimeout(2400); await bajar(p, 420, 3000); await p.waitForTimeout(300);
+    await señalar(p, p.getByRole("link", { name: /^WhatsApp$/ }).or(p.getByRole("button", { name: /^WhatsApp$/ })).filter({ visible: true }).last());
   },
-  proyectos: (p, g, s) => porElMenu(p, g, s, "Proyectos", "/proyectos"),
-  promociones: (p, g, s) => porElMenu(p, g, s, "Promociones", "/promociones"),
-  empleos: (p, g, s) => porElMenu(p, g, s, "Empleos", "/empleos"),
+  proyectos: (p, g, s) => porElMenu(p, g, s, "Proyectos", "/proyectos", /Publicar proyecto/i, "/publicar-proyecto", async (p) => {
+    // El servicio es un botón que abre su buscador.
+    await tocar(p, p.getByRole("button", { name: /plomería, electricista/i }).filter({ visible: true }).first());
+    await p.waitForTimeout(600);
+    await p.keyboard.type("Plomer", { delay: 55 });
+    await p.waitForTimeout(700);
+    await tocar(p, p.getByRole("button", { name: "Plomería", exact: true }).filter({ visible: true }).first());
+    await p.waitForTimeout(500);
+    await escribir(p, p.locator("textarea").first(), "Fuga debajo del lavamanos.");
+  }),
+  promociones: (p, g, s) => porElMenu(p, g, s, "Promociones", "/promociones", /Publicar promoción/i, "/promociones/publicar", async (p) => {
+    await escribir(p, p.getByPlaceholder(/Paquete de fotografía/i).first(), "Limpieza profunda de casa");
+    await p.waitForTimeout(400);
+    await escribir(p, p.locator("textarea").first(), "Cocina, baños y ventanas.");
+  }),
+  empleos: (p, g, s) => porElMenu(p, g, s, "Empleos", "/empleos", /Publicar empleo/i, "/empleos/publicar", async (p) => {
+    await escribir(p, p.getByPlaceholder(/Asistente contable/i).first(), "Asistente de oficina");
+    await p.waitForTimeout(400);
+    await escribir(p, p.locator("textarea").first(), "Atención al cliente.");
+  }),
 };
 
 // Se graba con el «screencast» de Chromium: cuadros a resolución real (2x),
@@ -94,11 +152,13 @@ const b = await chromium.launch();
 for (const [clave, escena] of Object.entries(escenas)) {
   if (process.argv[4] && process.argv[4] !== clave) continue;
   const ctx = await b.newContext({
+    ...(process.env.SESION ? { storageState: process.env.SESION } : {}),
     viewport: { width: 402, height: 875 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true, locale: "es-CR",
     userAgent: "Mozilla/5.0 (iPhone; CPU iPhone OS 26_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148",
   });
   await ctx.addCookies([base, TEST, INICIO].map((url) => ({ name: "ccr_platform", value: "native", url })));
   await ctx.addInitScript(() => { try { localStorage.setItem("ccr:native-first-run-onboarding:v12", "1"); } catch {} });
+  await ctx.addInitScript(() => { const st = document.createElement("style"); st.textContent = "nextjs-portal{display:none!important}"; document.documentElement.appendChild(st); });
   // Los botones de contacto se VEN (la pantalla queda como es), pero el video nunca los toca.
   const p = await ctx.newPage();
   const cdp = await ctx.newCDPSession(p);

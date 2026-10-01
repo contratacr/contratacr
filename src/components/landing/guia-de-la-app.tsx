@@ -51,12 +51,12 @@ export function GuiaDeLaApp({ pasos }: { pasos: PasoDeLaGuia[] }) {
     const quieto = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     videos.current.forEach((v, i) => {
       if (!v) return;
-      if (i === activo && visible && !quieto) {
-        v.currentTime = 0;
-        v.play().catch(() => {});
-      } else v.pause();
+      // Solo un CAMBIO de paso vuelve al inicio. Salir y volver a la pantalla
+      // continúa donde iba (antes reiniciaba y el video parecía repetirse).
+      if (i !== activo) { v.pause(); v.currentTime = 0; }
+      else if (visible && !quieto) v.play().catch(() => {});
+      else v.pause();
     });
-    setCorriendo(false);
   }, [activo, visible]);
 
   // Al terminar un video pasa al siguiente paso; si la persona eligió uno, se repite ese.

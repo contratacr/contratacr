@@ -52,7 +52,7 @@
   --color-muted-foreground: #6b7280;
   --color-foreground: #111827;
   --ccr-responsive-footer-reserve: 0px;
-  --ccr-native-bottom-nav-height: calc(44px + max(calc(env(safe-area-inset-bottom) - 14px), 0.5rem));
+  --ccr-native-bottom-nav-height: calc(44px + max(calc(env(safe-area-inset-bottom) - 6px), 1rem));
   /* ResizeObserver reports the complete native nav height, safe-area included. */
   /* LA BARRA FLOTA (30-sep-2026): las pantallas ya no le reservan su franja
      —el contenido llega hasta abajo y se ve pasar a través de la pastilla—.
@@ -362,7 +362,7 @@ body.ccr-native-app.ccr-native-search-route button:not([aria-label]) {
 
 .ccr-native-app {
   --ccr-native-header-height: 64px;
-  --ccr-native-bottom-nav-height: calc(44px + max(calc(env(safe-area-inset-bottom) - 14px), 0.5rem));
+  --ccr-native-bottom-nav-height: calc(44px + max(calc(env(safe-area-inset-bottom) - 6px), 1rem));
   --ccr-native-bottom-nav-total: 0px;
   --ccr-barra-flotante: var(--ccr-native-bottom-nav-height);
   /* El contenido llega casi hasta la barra de pestañas, como en Facebook: 24px
@@ -743,7 +743,7 @@ html.ccr-native-app.ccr-native-bottom-nav-visible:not(.ccr-nav-montada) body::af
   content: "";
   position: fixed;
   inset-inline: max(1rem, calc((100vw - 420px) / 2));
-  bottom: max(calc(env(safe-area-inset-bottom) - 14px), 0.5rem);
+  bottom: max(calc(env(safe-area-inset-bottom) - 6px), 1rem);
   z-index: 89;
   height: 44px;
   border-radius: 9999px;
@@ -762,7 +762,7 @@ html.ccr-native-app.ccr-native-bottom-nav-visible:not(.ccr-nav-montada) body::af
   border-top: 0 !important;
   margin-top: 0 !important;
   padding-top: 0 !important;
-  padding-bottom: max(calc(env(safe-area-inset-bottom) - 14px), 0.5rem) !important;
+  padding-bottom: max(calc(env(safe-area-inset-bottom) - 6px), 1rem) !important;
   box-shadow: none !important;
   overflow: visible;
 }
@@ -1983,11 +1983,6 @@ body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-native-fab {
 }
 
 /* Featured brands: a compact logo ribbon immediately above the footer. */
-@keyframes featured-brands-scroll {
-  from { transform: translate3d(0, 0, 0); }
-  to { transform: translate3d(-25%, 0, 0); }
-}
-
 /* Banda blanca propia, bajo el hero. Casi ningún logo trae fondo transparente:
    con «multiplicar» su fondo blanco o crema se funde con el blanco de la banda
    y queda solo la marca, sin cajas desparejas. */
@@ -2003,12 +1998,21 @@ body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-native-fab {
 .featured-brands-marquee {
   width: 100%;
   overflow: hidden;
+  /* El desplazamiento vertical sigue siendo de la página; el horizontal lo
+     maneja featured-brands.tsx para poder arrastrar la cinta. */
+  touch-action: pan-y;
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: grab;
+}
+
+.featured-brands-marquee.is-dragging {
+  cursor: grabbing;
 }
 
 .featured-brands-track {
   display: flex;
   width: max-content;
-  animation: featured-brands-scroll 38s linear infinite;
   will-change: transform;
 }
 
@@ -2026,6 +2030,8 @@ body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-native-fab {
   flex: 0 0 auto;
   align-items: center;
   justify-content: center;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
 }
 
 .featured-brand-logo {
@@ -2056,16 +2062,6 @@ body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-native-fab {
 
 .featured-brand-logo--sg {
   transform: scale(0.92);
-}
-
-.featured-brands-marquee:hover .featured-brands-track {
-  animation-play-state: paused;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .featured-brands-track {
-    animation-play-state: paused;
-  }
 }
 
 .ccr-marketplace-result-list {
