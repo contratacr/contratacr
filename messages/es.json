@@ -3799,7 +3799,35 @@
       "guideCta": "Ver cómo funciona",
       "installLink": "Agregar app al celular",
       "mockResults": "118 profesionales en Costa Rica",
-      "mockSearch": "Buscar contador"
+      "mockSearch": "Buscar contador",
+      "guia": {
+        "titulo": "Todo ContrataCR en tu teléfono",
+        "subtitulo": "Encuentra a quien necesitas, publica lo que buscas o haz crecer tu negocio, desde una sola app.",
+        "profesionales": {
+          "titulo": "Buscar profesionales",
+          "texto": "Busca por servicio y zona, compara reseñas y perfiles verificados, y escríbeles por WhatsApp o por mensaje.",
+          "cta": "Buscar profesionales",
+          "alt": "Resultados de profesionales en la app de ContrataCR"
+        },
+        "proyectos": {
+          "titulo": "Publicar un proyecto",
+          "texto": "Cuenta qué necesitas y deja que los profesionales de tu zona te escriban. Comparas y eliges sin buscar uno por uno.",
+          "cta": "Publicar un proyecto",
+          "alt": "Tablero de proyectos en la app de ContrataCR"
+        },
+        "empleos": {
+          "titulo": "Empleos",
+          "texto": "Encuentra trabajo en servicios o publica una vacante para tu negocio, con postulaciones por la app.",
+          "cta": "Ver empleos",
+          "alt": "Tablero de empleos en la app de ContrataCR"
+        },
+        "promociones": {
+          "titulo": "Promociones",
+          "texto": "Descuentos y paquetes de profesionales cerca de ti. Si ofreces servicios, publica las tuyas gratis.",
+          "cta": "Ver promociones",
+          "alt": "Promociones de profesionales en la app de ContrataCR"
+        }
+      }
     },
     "why": {
       "heading": "Por qué los clientes eligen ContrataCR.",

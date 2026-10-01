@@ -2567,3 +2567,8 @@ body.ccr-native-app.ccr-native-bottom-nav-visible:not(.ccr-native-search-route) 
 html.ccr-native-app .ccr-fin-de-portada > section {
   padding-bottom: calc(1.5rem + var(--ccr-barra-flotante, 0px) + var(--ccr-native-content-end-gap));
 }
+
+/* La barra de tiempo de la guía de la app: se llena en lo que tarda el paso. */
+@keyframes ccr-guia-progreso { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+.ccr-guia-progreso { animation: ccr-guia-progreso linear forwards; }
+@media (prefers-reduced-motion: reduce) { .ccr-guia-progreso { display: none; } }

@@ -3799,7 +3799,35 @@
       "guideCta": "See how it works",
       "installLink": "Add app to phone",
       "mockResults": "118 professionals in Costa Rica",
-      "mockSearch": "Search accountant"
+      "mockSearch": "Search accountant",
+      "guia": {
+        "titulo": "All of ContrataCR on your phone",
+        "subtitulo": "Find who you need, post what you're looking for or grow your business, from one app.",
+        "profesionales": {
+          "titulo": "Find professionals",
+          "texto": "Search by service and area, compare reviews and verified profiles, and message them on WhatsApp or in the app.",
+          "cta": "Find professionals",
+          "alt": "Professional results in the ContrataCR app"
+        },
+        "proyectos": {
+          "titulo": "Post a project",
+          "texto": "Say what you need and let professionals in your area reach out. Compare and choose without searching one by one.",
+          "cta": "Post a project",
+          "alt": "Projects board in the ContrataCR app"
+        },
+        "empleos": {
+          "titulo": "Jobs",
+          "texto": "Find work in services or post an opening for your business, with applications through the app.",
+          "cta": "See jobs",
+          "alt": "Jobs board in the ContrataCR app"
+        },
+        "promociones": {
+          "titulo": "Promotions",
+          "texto": "Discounts and packages from professionals near you. If you offer services, post yours for free.",
+          "cta": "See promotions",
+          "alt": "Professional promotions in the ContrataCR app"
+        }
+      }
     },
     "why": {
       "heading": "Why customers choose ContrataCR.",
