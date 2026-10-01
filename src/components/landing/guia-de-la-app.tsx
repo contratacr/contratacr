@@ -91,8 +91,8 @@ export function GuiaDeLaApp({ pasos }: { pasos: PasoDeLaGuia[] }) {
                   elegido ? "border-[#009FD9] bg-[#f2faff] shadow-[0_18px_40px_-28px_rgba(0,159,217,0.6)]" : "border-[#e3e9ef] bg-white hover:border-[#9fd6ee]",
                 )}
               >
-                <span className={cn("grid h-11 w-11 shrink-0 place-items-center rounded-xl transition-colors", elegido ? "bg-[#009FD9] text-white" : "bg-[#e8f4fa] text-[#0089bb]")}>
-                  <Icono className="h-5 w-5" strokeWidth={2} />
+                <span className={cn("grid h-12 w-12 shrink-0 place-items-center rounded-2xl transition-all", elegido ? "ccr-caja-icono-activa text-white" : "ccr-caja-icono")}>
+                  <Icono className="h-[22px] w-[22px]" strokeWidth={1.8} />
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className="block text-[17px] font-extrabold leading-snug text-[#1a2744]">{p.titulo}</span>
@@ -108,11 +108,6 @@ export function GuiaDeLaApp({ pasos }: { pasos: PasoDeLaGuia[] }) {
             </li>
           );
         })}
-        <li className="pl-5 pt-2">
-          <Link href={paso.href} className="inline-flex items-center gap-1.5 text-[15px] font-bold text-[#009FD9] hover:underline">
-            {paso.cta}<ArrowRight className="h-4 w-4" />
-          </Link>
-        </li>
       </ol>
 
       {/* En el teléfono y la tableta: pestañas con ícono ENCIMA del aparato, como
@@ -130,8 +125,8 @@ export function GuiaDeLaApp({ pasos }: { pasos: PasoDeLaGuia[] }) {
               onClick={() => elegir(i)}
               className={cn("relative flex min-w-0 flex-col items-center gap-1.5 pb-3 pt-1 text-[13px] font-semibold transition-colors", elegido ? "text-[#009FD9]" : "text-[#6b7686]")}
             >
-              <span className={cn("grid h-11 w-11 place-items-center rounded-2xl transition-colors", elegido ? "bg-[#009FD9] text-white shadow-[0_8px_18px_-8px_rgba(0,159,217,0.7)]" : "bg-[#eef5fa] text-[#3c4a5c]")}>
-                <Icono className="h-5 w-5" strokeWidth={2} />
+              <span className={cn("grid h-11 w-11 place-items-center rounded-2xl transition-colors", elegido ? "ccr-caja-icono-activa text-white" : "ccr-caja-icono")}>
+                <Icono className="h-[22px] w-[22px]" strokeWidth={1.8} />
               </span>
               <span className="max-w-full truncate">{p.pestana}</span>
               <span aria-hidden className={cn("absolute inset-x-2 bottom-0 h-[3px] overflow-hidden rounded-full", elegido ? "bg-[#cfeaf7]" : "bg-transparent")}>

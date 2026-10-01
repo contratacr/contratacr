@@ -51,7 +51,7 @@ export function ServiciosPorSeccion({ secciones, verTodos }: { secciones: Seccio
         ref={fila}
         role="tablist"
         aria-label={seccion.label}
-        className="scrollbar-none -mx-4 flex gap-1 overflow-x-auto overflow-y-hidden overscroll-x-contain border-b border-[#e3e9ef] px-4 sm:mx-0 sm:px-0"
+        className="scrollbar-none -mx-4 flex gap-1 overflow-x-auto overflow-y-hidden overscroll-x-contain border-b border-[#e3e9ef] px-4 sm:mx-0 sm:px-0 lg:[&>*:first-child]:ml-auto lg:[&>*:last-child]:mr-auto"
       >
         {secciones.map((s, indice) => {
           const { Icon } = getCategoryGroupVisual(s.id);

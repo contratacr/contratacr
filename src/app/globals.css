@@ -2400,6 +2400,12 @@ body.ccr-native-app:has(.ccr-native-search-panel) .ccr-native-bottom-nav {
   color: #162543;
 }
 
+.ccr-caja-icono-activa {
+  /* La caja del ícono ELEGIDO: azul de marca con degradado (la guía de la portada). */
+  background: linear-gradient(135deg, #33b8ea 0%, #0089c2 100%);
+  box-shadow: 0 10px 22px -10px rgba(0, 137, 194, 0.8);
+}
+
 .ccr-caja-icono {
   background: linear-gradient(135deg, #eaf6fc 0%, #cbe8f6 55%, #f0f8fd 100%);
   color: #162543;

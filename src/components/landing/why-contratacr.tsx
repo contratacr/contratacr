@@ -1,5 +1,4 @@
 import { getTranslations } from "next-intl/server";
-import { Link } from "@/i18n/navigation";
 import { GuiaDeLaApp, type PasoDeLaGuia } from "@/components/landing/guia-de-la-app";
 
 /* «Todo ContrataCR en tu teléfono»: la guía de la app con un teléfono que
@@ -27,18 +26,6 @@ export async function WhyContratacr() {
         <div className="mb-10 text-center sm:mb-14">
           <h2 className="text-3xl font-extrabold text-[#1a2744] sm:text-4xl">{t("guia.titulo")}</h2>
           <p className="mx-auto mt-3 max-w-xl text-gray-500">{t("guia.subtitulo")}</p>
-          <div className="mt-5 flex flex-wrap justify-center gap-x-5 gap-y-2">
-            <Link href="/como-funciona" className="text-sm font-bold text-[#009FD9] transition-colors hover:text-[#007da8] hover:underline">
-              {t("guideCta")}
-            </Link>
-            <Link
-              href="/ayuda#agregar-a-inicio"
-              // En la app ya está instalada: agregarla al celular no aplica.
-              className="ccr-solo-web text-sm font-bold text-[#009FD9] transition-colors hover:text-[#007da8] hover:underline"
-            >
-              {t("installLink")}
-            </Link>
-          </div>
         </div>
         <GuiaDeLaApp pasos={pasos} />
       </div>

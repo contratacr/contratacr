@@ -64,11 +64,18 @@ async function marcarToque(p, loc) {
 async function tocar(p, loc) { await loc.scrollIntoViewIfNeeded(); await p.waitForTimeout(300); await marcarToque(p, loc); await loc.tap(); }
 // Solo se marca el toque: no se abre nada (WhatsApp, Publicar).
 async function señalar(p, loc) { await loc.scrollIntoViewIfNeeded(); await p.waitForTimeout(300); await marcarToque(p, loc); await p.waitForTimeout(700); }
+async function elegir(p, abrir, texto, cual) {
+  await tocar(p, p.locator("button", { hasText: abrir }).filter({ visible: true }).first());
+  await p.waitForTimeout(500);
+  if (texto) { await p.keyboard.type(texto, { delay: 55 }); await p.waitForTimeout(600); }
+  await tocar(p, p.locator("button").filter({ visible: true }).filter({ hasText: cual }).filter({ hasNotText: /Selecciona|plomería, electricista|piscina/i }).last());
+  await p.waitForTimeout(400);
+}
 async function escribir(p, loc, texto) { await tocar(p, loc); await p.waitForTimeout(250); await p.keyboard.type(texto, { delay: 55 }); }
 
 // Inicio → menú → la sección (producción) → «Publicar…» → el formulario, que se
 // llena a medias y NUNCA se envía (con la cuenta profesional de prueba, en local).
-async function porElMenu(p, grabar, pausar, texto, destino, boton, formulario, llenar) {
+async function porElMenu(p, grabar, pausar, texto, destino, boton, formulario, llenar, deVerdad) {
   await p.goto(INICIO + "/", { waitUntil: "load" }); await sinAvisoDeDesarrollo(p);
   await p.waitForTimeout(3500);
   grabar();
@@ -89,13 +96,24 @@ async function porElMenu(p, grabar, pausar, texto, destino, boton, formulario, l
   await p.evaluate(() => new Promise((r) => requestAnimationFrame(r)));
   pausar();
   await publicar.tap().catch(() => {});
+  // Publicar pide cuenta: aquí, y solo aquí, entra la cuenta profesional de prueba.
+  if (process.env.SESION) await p.context().addCookies(JSON.parse(fs.readFileSync(process.env.SESION, "utf8")).cookies);
   await p.goto(INICIO + formulario, { waitUntil: "load" }); await sinAvisoDeDesarrollo(p);
   await p.waitForTimeout(3500);
   grabar();
   await p.waitForTimeout(500);
   await llenar(p);
   await p.waitForTimeout(400);
-  await señalar(p, p.getByRole("button", { name: /^Publicar/ }).filter({ visible: true }).last());
+  const botonPublicar = p.getByRole("button", { name: /^Publicar( promoción| empleo)?$/ }).filter({ visible: true }).last();
+  // Se publica DE VERDAD en TEST (local, cuenta de prueba) y se ve el resultado.
+  // Al terminar la grabación se borra lo publicado.
+  await botonPublicar.scrollIntoViewIfNeeded(); await p.waitForTimeout(300);
+  await marcarToque(p, botonPublicar);
+  // Como al cerrar el teclado: el texto suelta el foco antes del toque.
+  await p.evaluate(() => document.activeElement?.blur?.()); await p.waitForTimeout(300);
+  await botonPublicar.tap({ timeout: 8000 }).catch(() => botonPublicar.evaluate((b) => b.click()));
+  await deVerdad(p);
+  await p.waitForTimeout(2200);
 }
 
 const escenas = {
@@ -125,25 +143,24 @@ const escenas = {
     await señalar(p, p.getByRole("link", { name: /^WhatsApp$/ }).or(p.getByRole("button", { name: /^WhatsApp$/ })).filter({ visible: true }).last());
   },
   proyectos: (p, g, s) => porElMenu(p, g, s, "Proyectos", "/proyectos", /Publicar proyecto/i, "/publicar-proyecto", async (p) => {
-    // El servicio es un botón que abre su buscador.
-    await tocar(p, p.getByRole("button", { name: /plomería, electricista/i }).filter({ visible: true }).first());
-    await p.waitForTimeout(600);
-    await p.keyboard.type("Plomer", { delay: 55 });
-    await p.waitForTimeout(700);
-    await tocar(p, p.getByRole("button", { name: "Plomería", exact: true }).filter({ visible: true }).first());
-    await p.waitForTimeout(500);
-    await escribir(p, p.locator("textarea").first(), "Fuga debajo del lavamanos.");
-  }),
+    await elegir(p, /plomería, electricista/i, "Plomer", /^Plomería$/);
+    await escribir(p, p.locator("textarea").first(), "Hay una fuga debajo del lavamanos de la cocina.");
+  }, (p) => p.getByText(/Listo, ya está publicad/i).first().waitFor({ timeout: 20000 })),
   promociones: (p, g, s) => porElMenu(p, g, s, "Promociones", "/promociones", /Publicar promoción/i, "/promociones/publicar", async (p) => {
     await escribir(p, p.getByPlaceholder(/Paquete de fotografía/i).first(), "Limpieza profunda de casa");
-    await p.waitForTimeout(400);
+    await elegir(p, /Selecciona un servicio/i, "Limpie", /^Limpieza del hogar/);
     await escribir(p, p.locator("textarea").first(), "Cocina, baños y ventanas.");
-  }),
+    await p.locator("input[type=file]").first().setInputFiles(new URL("./foto-promocion.jpg", import.meta.url).pathname);
+    await p.waitForTimeout(2500);
+    await escribir(p, p.getByPlaceholder("25000").first(), "35000");
+  }, (p) => p.waitForURL(/\/promociones\/limpieza-profunda/, { timeout: 25000 })),
   empleos: (p, g, s) => porElMenu(p, g, s, "Empleos", "/empleos", /Publicar empleo/i, "/empleos/publicar", async (p) => {
-    await escribir(p, p.getByPlaceholder(/Asistente contable/i).first(), "Asistente de oficina");
-    await p.waitForTimeout(400);
-    await escribir(p, p.locator("textarea").first(), "Atención al cliente.");
-  }),
+    await escribir(p, p.getByPlaceholder(/Asistente contable/i).first(), "Asistente contable");
+    await elegir(p, /plomería, electricista/i, "Contab", /^Contabilidad/);
+    await elegir(p, /^Provincia$/, null, /^Alajuela$/);
+    await elegir(p, /^Cantón$/, null, /^Alajuela$/);
+    await escribir(p, p.locator("textarea").first(), "Atención al cliente y facturas.");
+  }, (p) => p.waitForURL(/\/empleos\/asistente-contable/, { timeout: 25000 })),
 };
 
 // Se graba con el «screencast» de Chromium: cuadros a resolución real (2x),
@@ -152,15 +169,22 @@ const b = await chromium.launch();
 for (const [clave, escena] of Object.entries(escenas)) {
   if (process.argv[4] && process.argv[4] !== clave) continue;
   const ctx = await b.newContext({
-    ...(process.env.SESION ? { storageState: process.env.SESION } : {}),
     viewport: { width: 402, height: 875 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true, locale: "es-CR",
     userAgent: "Mozilla/5.0 (iPhone; CPU iPhone OS 26_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148",
   });
   await ctx.addCookies([base, TEST, INICIO].map((url) => ({ name: "ccr_platform", value: "native", url })));
   await ctx.addInitScript(() => { try { localStorage.setItem("ccr:native-first-run-onboarding:v12", "1"); } catch {} });
-  await ctx.addInitScript(() => { const st = document.createElement("style"); st.textContent = "nextjs-portal{display:none!important}"; document.documentElement.appendChild(st); });
+  // En la grabación no existe el margen de seguridad del iPhone (env() vale 0):
+  // se simula, así el menú de abajo no queda tapado por las esquinas redondeadas
+  // del teléfono dibujado en la portada.
+  await ctx.addInitScript(() => {
+    const st = document.createElement("style");
+    st.textContent = "nextjs-portal{display:none!important} .ccr-native-app .ccr-native-bottom-nav{padding-bottom:30px!important} html.ccr-native-app{--ccr-native-bottom-nav-height:calc(44px + 30px)!important}";
+    document.documentElement.appendChild(st);
+  });
   // Los botones de contacto se VEN (la pantalla queda como es), pero el video nunca los toca.
   const p = await ctx.newPage();
+  if (process.env.DEPURAR) { p.on("response", (r) => { if (/\/api\//.test(r.url()) && r.request().method() !== "GET") r.text().then((t) => console.log("API", r.status(), r.url().split("/api/")[1], t.slice(0, 160))).catch(() => {}); }); p.on("console", (m) => { if (m.type() === "error") console.log("CONSOLA", m.text().slice(0, 160)); }); }
   const cdp = await ctx.newCDPSession(p);
   const cuadros = []; const cortes = []; let grabando = false; let corrimiento = 0;
   cdp.on("Page.screencastFrame", async ({ data, metadata, sessionId }) => {
@@ -186,7 +210,9 @@ for (const [clave, escena] of Object.entries(escenas)) {
   const terminarMano = () => { if (enMano) { enMano = false; corrimiento = manoT - Date.now() / 1000; } };
   const pa = new Proxy(p, { get: (o, k) => (typeof o[k] === "function" ? o[k].bind(o) : o[k]) });
   globalThis.__terminarMano = terminarMano;
+  try {
   await escena(pa, () => { grabando = true; }, () => { grabando = false; cortes.push(cuadros.length); });
+  } catch (e) { if (process.env.CAPTURA) await p.screenshot({ path: process.env.CAPTURA }).catch(() => {}); throw e; }
   terminarMano();
   const finDeEscena = Date.now() / 1000 + corrimiento;
   await cdp.send("Page.stopScreencast"); await ctx.close();
@@ -212,3 +238,19 @@ for (const [clave, escena] of Object.entries(escenas)) {
   console.log("listo", clave, cuadros.length, "cuadros", (finDeEscena - cuadros[0].t).toFixed(1) + "s", Math.round(fs.statSync(`${salida}${clave}.mp4`).size / 1024) + " KB");
 }
 await b.close();
+
+// El proyecto que publicó la grabación se borra de la base de TEST.
+if (process.argv[4] !== "profesionales") {
+  const env = Object.fromEntries(fs.readFileSync(new URL("../../.env.test", import.meta.url), "utf8").split("\n").filter((l) => l.includes("=") && !l.startsWith("#")).map((l) => { const i = l.indexOf("="); return [l.slice(0, i), l.slice(i + 1).replace(/^["']|["']$/g, "")]; }));
+  const url = env.NEXT_PUBLIC_SUPABASE_URL, key = env.SUPABASE_SERVICE_ROLE_KEY;
+  if (url.includes("oqheayqqprpciqdvdaqo")) {
+    const desde = new Date(Date.now() - 15 * 60 * 1000).toISOString();
+    const borrar = async (tabla, filtro) => {
+      const r = await fetch(`${url}/rest/v1/${tabla}?${filtro}&created_at=gte.${desde}`, { method: "DELETE", headers: { apikey: key, Authorization: `Bearer ${key}`, Prefer: "return=representation" } });
+      console.log("borrado de la grabación:", tabla, (await r.json()).length);
+    };
+    await borrar("projects", `description=eq.${encodeURIComponent("Hay una fuga debajo del lavamanos de la cocina.")}`);
+    await borrar("professional_offers", `title=eq.${encodeURIComponent("Limpieza profunda de casa")}`);
+    await borrar("job_posts", `title=eq.${encodeURIComponent("Asistente contable")}`);
+  }
+}
