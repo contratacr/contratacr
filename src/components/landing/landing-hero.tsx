@@ -166,7 +166,7 @@ function SuggestionsDropdown({
         >
           <Search className="h-4 w-4 text-[#009FD9] shrink-0" />
           <span className="flex-1 min-w-0">
-            <span className="block text-sm text-[#162543] truncate">{s.label}</span>
+            <span className="block text-sm leading-snug text-[#162543] break-words">{s.label}</span>
           </span>
           <span className="text-[10px] uppercase tracking-wide text-gray-300 shrink-0">
             Servicio
@@ -238,9 +238,9 @@ function LocationDropdown({
         >
           <MapPin className="h-4 w-4 text-[#009FD9] shrink-0" />
           <span className="flex-1 min-w-0">
-            <span className="block text-sm text-[#162543] truncate">{s.label}</span>
+            <span className="block text-sm leading-snug text-[#162543] break-words">{s.label}</span>
             {s.type === "canton" && (
-              <span className="block text-xs text-gray-400 truncate">{s.sublabel}</span>
+              <span className="block text-xs leading-snug text-gray-400 break-words">{s.sublabel}</span>
             )}
           </span>
           <span className="text-[10px] uppercase tracking-wide text-gray-300 shrink-0">
@@ -260,7 +260,7 @@ function LocationDropdown({
           className="w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors hover:bg-gray-50"
         >
           <MapPin className="h-4 w-4 text-[#009FD9] shrink-0" />
-          <span className="flex-1 min-w-0 block text-sm text-[#162543] truncate">{a.label}</span>
+          <span className="flex-1 min-w-0 block text-sm leading-snug text-[#162543] break-words">{a.label}</span>
           <span className="text-[10px] uppercase tracking-wide text-gray-300 shrink-0">Dirección</span>
         </button>
       ))}
@@ -280,6 +280,9 @@ export function LandingHero() {
   // mobile both mount; the hidden one has a 0×0 rect, so its dropdown renders nothing).
   const svcDesktopRef = useRef<HTMLDivElement>(null);
   const svcMobileRef = useRef<HTMLDivElement>(null);
+  // Las listas de sugerencias se anclan a TODA la píldora: anclada a un campo,
+  // en el teléfono medían media pantalla y cortaban los nombres.
+  const pildoraRef = useRef<HTMLDivElement>(null);
   // La portada dibuja las DOS variantes a la vez (una oculta por CSS) y ambas
   // llevaban el mismo ref: React se quedaba con la última, la de teléfono, así
   // que en escritorio el foco iba a un campo invisible y el Enter no hacía nada.
@@ -655,12 +658,10 @@ export function LandingHero() {
   }
 
   return (
-    <section className="ccr-hero-foto relative isolate flex min-h-[600px] items-end overflow-hidden sm:min-h-[580px] lg:min-h-[640px] lg:items-end">
-      {/* Como Angi: en el teléfono el panel va ABAJO y la foto se ve arriba; en
-          computadora el panel se corre a la izquierda y el profesional queda a
-          la derecha, sin texto encima. */}
+    <section className="ccr-hero-foto relative isolate flex min-h-[560px] items-center overflow-hidden sm:min-h-[580px] lg:min-h-[620px]">
+      {/* El panel, centrado en todo tamaño; la foto se ve alrededor. */}
       <FotoDeFondo />
-      <div className="relative z-10 mx-auto w-full max-w-7xl px-4 pb-8 pt-48 sm:px-6 sm:pb-12 lg:px-8 lg:pb-14 lg:pt-56">
+      <div className="relative z-10 mx-auto w-full max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
       {/* El título y el buscador en un panel translúcido, centrado sobre la foto. */}
       <div className="rounded-xl bg-[#111827]/70 px-5 py-8 backdrop-blur-[3px] sm:px-10 sm:py-10 lg:mx-auto lg:max-w-[640px]">
       <div className="relative mx-auto max-w-3xl text-center pb-7">
@@ -690,7 +691,7 @@ export function LandingHero() {
             {/* Caja blanca de esquinas suaves: la misma forma que usa el
                 buscador del navbar, para que al bajar se sienta que es el
                 mismo buscador que se quedó pegado arriba. */}
-            <div className="flex h-[54px] items-center overflow-hidden rounded-full border border-white bg-white pl-5 pr-4 shadow-[0_8px_30px_rgba(0,0,0,0.18)] sm:h-16 sm:pl-7 sm:pr-6 transition-shadow duration-300 focus-within:ring-2 focus-within:ring-[#009FD9]/20 hover:shadow-[0_12px_60px_rgba(0,159,217,0.20)]">
+            <div ref={pildoraRef} className="flex h-[54px] items-center overflow-hidden rounded-full border border-white bg-white pl-5 pr-4 shadow-[0_8px_30px_rgba(0,0,0,0.18)] sm:h-16 sm:pl-7 sm:pr-6 transition-shadow duration-300 focus-within:ring-2 focus-within:ring-[#009FD9]/20 hover:shadow-[0_12px_60px_rgba(0,159,217,0.20)]">
               {/* Service input — its dropdown PORTALS to <body> (anchored to this wrapper),
                   so the bar's `overflow-hidden` can never clip it. */}
               <div ref={svcDesktopRef} className="flex items-center gap-3 flex-1 min-w-0 h-full">
@@ -709,7 +710,7 @@ export function LandingHero() {
                   aria-expanded={openSug}
                   aria-autocomplete="list"
                 />
-                <SuggestionsDropdown anchorRef={svcDesktopRef} open={openSug} suggestions={suggestions} activeIdx={activeIdx} onPick={(s) => selectSuggestion(s, true)} />
+                <SuggestionsDropdown anchorRef={pildoraRef} open={openSug} suggestions={suggestions} activeIdx={activeIdx} onPick={(s) => selectSuggestion(s, true)} />
               </div>
               {/* Divider + location autocomplete */}
               <div className="mx-3 my-3 w-px shrink-0 self-stretch bg-[#cfd8e2] sm:mx-4" />
@@ -730,7 +731,7 @@ export function LandingHero() {
                   aria-expanded={openLoc}
                   aria-autocomplete="list"
                 />
-                <LocationDropdown anchorRef={locDesktopRef} open={openLoc && location.trim().length >= 2} suggestions={locSug} addresses={addrSug} activeIdx={locActive} onPick={(s) => selectLocation(s, true)} onPickAddress={selectAddress} onNearMe={requestNearMe} nearMeLabel={t("nearMe")} geoLoading={geoLoading} />
+                <LocationDropdown anchorRef={pildoraRef} open={openLoc && location.trim().length >= 2} suggestions={locSug} addresses={addrSug} activeIdx={locActive} onPick={(s) => selectLocation(s, true)} onPickAddress={selectAddress} onNearMe={requestNearMe} nearMeLabel={t("nearMe")} geoLoading={geoLoading} />
               </div>
             </div>
           </div>

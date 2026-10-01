@@ -90,7 +90,7 @@ export default async function HomePage({
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: DATOS_ESTRUCTURADOS(locale) }} />
       <LandingNavbar />
 
-      <main className="flex-1">
+      <main className="ccr-portada flex-1">
         {deletionStatus && (
           <div className="mx-auto mt-5 flex w-[calc(100%-2rem)] max-w-4xl items-start gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-emerald-800 shadow-sm" role="status">
             <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0" />

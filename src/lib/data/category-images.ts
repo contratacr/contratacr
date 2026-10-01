@@ -11,7 +11,7 @@ import { CATEGORY_GROUPS } from "@/lib/data/categories";
 //
 // "v" = verified (reused from the live landing carousel/explore-tabs, known-good).
 // The rest are best-effort matches; broken URLs degrade to the branded fallback via onError.
-const U = (id: string) => `https://images.unsplash.com/photo-${id}?w=800&auto=format&fit=crop&q=80`;
+const U = (id: string) => `https://images.unsplash.com/photo-${id}?w=1100&auto=format&fit=crop&q=85`;
 
 export const CATEGORY_IMAGE: Record<string, string> = {
   electromecanica: U("1649038780045-235e4b6e40b4"), // técnico trabajando un motor eléctrico (1-oct-2026)
