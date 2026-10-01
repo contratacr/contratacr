@@ -51,17 +51,12 @@ export async function ProsSection() {
     }));
 
   return (
-    <section className="ccr-home-services-section bg-white pb-8 pt-8 sm:py-12">
+    <section className="ccr-home-services-section bg-white py-10 sm:py-14">
       <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
         <h2 className="mb-4 text-[1.7rem] font-extrabold leading-tight text-[#1a2744] sm:mb-8 sm:text-center sm:text-4xl">
           {t("titlePre")} <span className="text-[#009FD9]">{t("titleHighlight")}</span>
         </h2>
-        <ServiciosPorSeccion secciones={secciones} />
-        <div className="mt-5 text-center">
-          <Link href="/servicios" className="inline-flex items-center gap-1.5 text-sm font-bold text-[#009FD9] hover:underline">
-            {t("viewAll")}
-          </Link>
-        </div>
+        <ServiciosPorSeccion secciones={secciones} verTodos={{ href: "/servicios", label: t("viewAll") }} />
       </div>
     </section>
   );

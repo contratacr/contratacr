@@ -17,7 +17,7 @@ export type SeccionDeServicios = {
 // de esa sección, con foto. Antes era un carrusel que pasaba solo: quien
 // buscaba algo de salud tenía que esperar a que apareciera. Aquí va directo.
 // Los cuatro más buscados de cada sección: 2×2 en el teléfono, una fila en computadora.
-export function ServiciosPorSeccion({ secciones }: { secciones: SeccionDeServicios[] }) {
+export function ServiciosPorSeccion({ secciones, verTodos }: { secciones: SeccionDeServicios[]; verTodos?: { href: string; label: string } }) {
   const [activa, setActiva] = useState(0);
   const fila = useRef<HTMLDivElement | null>(null);
   const seccion = secciones[activa] ?? secciones[0];
@@ -64,19 +64,27 @@ export function ServiciosPorSeccion({ secciones }: { secciones: SeccionDeServici
         })}
       </div>
 
+      {/* «Ver todos» arriba, a la derecha: con tarjetas altas no cabría abajo
+          en la misma pantalla del teléfono. */}
+      {verTodos && (
+        <div className="mt-3 flex justify-end">
+          <Link href={verTodos.href} className="text-[14px] font-bold text-[#009FD9] hover:underline">{verTodos.label} →</Link>
+        </div>
+      )}
+
       {/* Los cuatro más buscados de la sección: 2×2 en el teléfono (como
           Thumbtack), una fila de cuatro desde computadora. */}
       <div
         id="servicios-de-la-seccion"
         role="tabpanel"
         key={seccion.id}
-        className="ccr-entrada mt-4 grid grid-cols-2 gap-3 sm:mt-7 sm:gap-4 lg:grid-cols-4"
+        className="ccr-entrada mt-2 grid grid-cols-2 gap-3 sm:mt-7 sm:gap-4 lg:grid-cols-4"
       >
         {seccion.servicios.slice(0, 4).map((servicio) => (
           <Link
             key={servicio.id}
             href={servicio.href}
-            className="group relative block aspect-[4/3] overflow-hidden rounded-2xl bg-[#e8eef3] shadow-[0_6px_18px_-12px_rgba(15,23,42,0.45)] lg:aspect-[4/3.4]"
+            className="group relative block aspect-[4/5] overflow-hidden rounded-2xl bg-[#e8eef3] shadow-[0_6px_18px_-12px_rgba(15,23,42,0.45)] lg:aspect-[4/3.4]"
           >
             <ServiceImage categoryId={servicio.id} badge={false} className="pointer-events-none absolute inset-0 h-full w-full transition-transform duration-500 group-hover:scale-[1.04]" />
             <span aria-hidden className="absolute inset-0" style={{ background: "linear-gradient(to top, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.12) 55%, transparent 100%)" }} />
