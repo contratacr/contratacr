@@ -1992,7 +1992,7 @@ body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-native-fab {
   overflow: hidden;
   border-block: 1px solid #eef2f6;
   background: #fff;
-  padding-block: 1.25rem 0.75rem;
+  padding-block: 0.75rem;
 }
 
 .featured-brands-marquee {

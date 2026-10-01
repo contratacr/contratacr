@@ -662,11 +662,15 @@ export function LandingHero() {
       <div className="relative mx-auto max-w-3xl text-center pb-7">
         <h1
           className="font-extrabold text-white tracking-tight drop-shadow-[0_2px_12px_rgba(0,0,0,0.35)]"
-          style={{ fontSize: "clamp(1.85rem, 5vw, 3.6rem)", lineHeight: 1.1 }}
+          style={{ fontSize: "clamp(1.45rem, 6.6vw, 3.4rem)", lineHeight: 1.12 }}
         >
           {/* Fijo, como Angi: con las fotos pasando de fondo, una palabra que
               además cambia eran dos cosas moviéndose a la vez. */}
-          {t("titular")}
+          {/* «|» marca los cortes: siempre tres líneas, como Angi, y cada una
+              entera (la letra se ajusta al ancho para que no se parta). */}
+          {t("titular").split("|").map((tramo, i) => (
+            <span key={i} className="block whitespace-nowrap">{tramo}</span>
+          ))}
         </h1>
       </div>
 

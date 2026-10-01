@@ -19,7 +19,6 @@ export async function FeaturedBrands() {
 
   return (
     <section className="featured-brands-ribbon" aria-label={label}>
-      <p className="mb-2 text-center text-[12px] font-bold uppercase tracking-[0.14em] text-[#6b7686]">{label}</p>
       <div className="featured-brands-marquee">
         <div className="featured-brands-track">
           <BrandSet />
