@@ -658,7 +658,7 @@ export function LandingHero() {
   }
 
   return (
-    <section className="ccr-hero-foto relative isolate flex min-h-[560px] items-center overflow-hidden sm:min-h-[580px] lg:min-h-[620px]">
+    <section className="ccr-hero-foto relative isolate flex min-h-[460px] items-center overflow-hidden sm:min-h-[500px] lg:min-h-[520px]">
       {/* El panel, centrado en todo tamaño; la foto se ve alrededor. */}
       <FotoDeFondo />
       <div className="relative z-10 mx-auto w-full max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
