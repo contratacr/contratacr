@@ -110,12 +110,16 @@ export default async function HomePage({
 
 
         {/* How it works + trust, merged into one sticky-phone story. */}
-        <WhyContratacr />
+        <FadeInUp>
+          <WhyContratacr />
+        </FadeInUp>
 
         {/* Zones: find professionals by province using real coverage. */}
         {/* Negocios reales, al abrir «Encuentra profesionales en tu zona»: la
             prueba de que en tu zona ya hay negocios de verdad. */}
-        <FeaturedBrands />
+        <FadeInUp>
+          <FeaturedBrands />
+        </FadeInUp>
 
         <FadeInUp delay={40} className="ccr-fin-de-portada">
           <FindByZone coverage={coverage} />

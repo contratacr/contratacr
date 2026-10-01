@@ -658,12 +658,14 @@ export function LandingHero() {
   }
 
   return (
-    <section className="ccr-hero-foto relative isolate flex min-h-[460px] items-center overflow-hidden sm:min-h-[500px] lg:min-h-[520px]">
-      {/* El panel, centrado en todo tamaño; la foto se ve alrededor. */}
+    <section className="ccr-hero-foto relative isolate flex min-h-[373px] items-end overflow-hidden sm:min-h-[480px] sm:items-center lg:min-h-[520px]">
+      {/* Medidas de Angi en el teléfono: foto de ~373 px de alto, panel abajo
+          con 35 px de margen inferior y 24 a los lados, negro al 32 %. En
+          computadora, centrado. */}
       <FotoDeFondo />
-      <div className="relative z-10 mx-auto w-full max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+      <div className="relative z-10 mx-auto w-full max-w-7xl px-6 pb-[35px] pt-20 sm:px-6 sm:py-10 lg:px-8">
       {/* El título y el buscador en un panel translúcido, centrado sobre la foto. */}
-      <div className="rounded-xl bg-[#5a5a5a]/50 px-5 py-8 sm:px-10 sm:py-10 lg:mx-auto lg:max-w-[640px]">
+      <div className="ccr-hero-entra rounded-lg bg-black/[0.32] px-4 py-6 sm:px-10 sm:py-10 lg:mx-auto lg:max-w-[640px]">
       <div className="relative mx-auto max-w-3xl text-center pb-7">
         <h1
           className="font-extrabold text-white tracking-tight drop-shadow-[0_2px_12px_rgba(0,0,0,0.35)]"
