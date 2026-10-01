@@ -482,7 +482,11 @@ export function JobPostForm({ professionalId, backHref = "/empleos", initialJob 
           setHaySalario(Boolean(String(campos.get("salary_min") ?? "").trim() || String(campos.get("salary_max") ?? "").trim()));
         }} onChange={() => setConCambios(true)} noValidate className="max-sm:pb-2">
           <div className="rounded-2xl border border-[#e5e7eb] bg-white p-5 shadow-sm">
-          <div className="grid gap-5 sm:grid-cols-2">
+          {/* Columna «minmax(0, 1fr)» en el teléfono: con la implícita (auto) un
+              campo con ancho propio —un <select>, cuyo ancho sale de su
+              opción más larga y del tipo de letra del sistema— ensanchaba la
+              columna y la página entera (397 px en una pantalla de 390). */}
+          <div className="grid grid-cols-[minmax(0,1fr)] gap-5 sm:grid-cols-2">
             <JobTitleInput defaultValue={initialJob?.title ?? ""} error={fieldErrors.title} locale={locale} copy={copy} />
             {/* EL SERVICIO, ELEGIDO DE LA LISTA. De aquí sale a qué
                 profesionales se les avisa de la vacante: deducirlo del título
@@ -544,7 +548,7 @@ export function JobPostForm({ professionalId, backHref = "/empleos", initialJob 
             <EditableList title={copy.requirements} optional values={requirements} onChange={setRequirements} placeholder={copy.requirementPlaceholder} addLabel={copy.addRequirement} optionalLabel={copy.optional} removeLabel={copy.remove} error={fieldErrors.requirements} />
             <EditableList title={copy.benefits} optional values={benefits} onChange={setBenefits} placeholder={copy.benefitPlaceholder} addLabel={copy.addBenefit} optionalLabel={copy.optional} removeLabel={copy.remove} />
           <div className="my-6 border-t border-[#e5e7eb] pt-6"><h2 className="font-bold">{copy.salaryAndValidity}</h2><p className="mt-1 text-xs text-[#68778d]">{copy.optionalInformation}</p></div>
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid grid-cols-[minmax(0,1fr)] gap-4 sm:grid-cols-2">
             <label className="text-sm font-medium text-[#374151]">{copy.salaryFrom} <span className="font-normal text-[#68778d]">({copy.optional})</span><input name="salary_min" inputMode="numeric" maxLength={String(MAX_MONEY_AMOUNT).length} defaultValue={initialJob?.salary_min ?? ""} placeholder="450000" className={FIELD_CLASS} /></label>
             <label className="text-sm font-medium text-[#374151]">{copy.salaryTo} <span className="font-normal text-[#68778d]">({copy.optional})</span><input name="salary_max" inputMode="numeric" maxLength={String(MAX_MONEY_AMOUNT).length} defaultValue={initialJob?.salary_max ?? ""} placeholder="650000" className={FIELD_CLASS} /><FieldError>{fieldErrors.salary}</FieldError></label>
             <SelectMenu label={copy.currency} value={currency} onChange={setCurrency} options={[{ value: "CRC", label: copy.colones }, { value: "USD", label: copy.dollars }]} />

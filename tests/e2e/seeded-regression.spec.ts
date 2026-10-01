@@ -758,9 +758,12 @@ test.describe("@seeded core regression", () => {
     // El tablero ya no lleva la frase de apoyo bajo el título ni filtros fijos
     // (salen con volumen): lo que prueba que está en inglés es el verbo de cada
     // tarjeta («View …») y el texto de ayuda del buscador.
-    await expect(page.getByPlaceholder(/promotion/i).first()).toBeVisible();
-    // En computadora cada tarjeta lleva su «View …»; en el teléfono la tarjeta entera es el enlace.
-    if (!isMobileProject(test.info())) await expect(page.getByRole("button", { name: /^View / }).first()).toBeVisible();
+    // En computadora el buscador va a la vista y cada tarjeta lleva su «View …»;
+    // en el teléfono el buscador se abre aparte y la tarjeta entera es el enlace.
+    if (!isMobileProject(test.info())) {
+      await expect(page.getByPlaceholder(/promotion/i).first()).toBeVisible();
+      await expect(page.getByRole("button", { name: /^View / }).first()).toBeVisible();
+    }
     const publishedOfferTitle = `${E2E_USERS.professional.fullName}: oferta published`;
     await expect(page.getByText(publishedOfferTitle).first()).toBeVisible();
     await expectNoHorizontalOverflow(page);
