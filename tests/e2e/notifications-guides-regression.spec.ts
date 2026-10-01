@@ -3,7 +3,7 @@ import { expect, test, type Page } from "playwright/test";
 import esMessages from "../../messages/es.json";
 import enMessages from "../../messages/en.json";
 import { cleanupDisposableAccount, createDisposableAccount, type DisposableAccount } from "./disposable-account";
-import { expectNoHorizontalOverflow, expectNoRawI18nKeys, gotoOK, loginAs, isMobileProject } from "./helpers";
+import { expectNoHorizontalOverflow, expectNoRawI18nKeys, gotoOK, loginAs, isMobileProject, waitForInteractivePage } from "./helpers";
 import { canRunSeededRegression, ensureRegressionSeed, regressionAdminClient } from "./seed";
 
 type Locale = "es" | "en";
@@ -59,11 +59,16 @@ async function openGuides(page: Page, locale: Locale) {
   const buttonName = locale === "en" ? "Guides" : "Guías";
   const openButton = page.getByRole("button", { name: buttonName, exact: true }).filter({ visible: true }).first();
   await expect(openButton).toBeVisible({ timeout: 30_000 });
-  await openButton.click();
+  // El botón llega pintado del servidor antes de tener vida: un toque antes de
+  // la hidratación no hace nada. Se espera a la página interactiva y, si aun
+  // así la ventana no abrió, se toca otra vez (una persona también lo haría).
+  await waitForInteractivePage(page);
   // Guías es una ventana sobre el panel, no una sección con dirección propia.
   const ventana = page.getByRole("dialog").filter({ visible: true }).first();
-  // Tras decenas de recargas seguidas el servidor del CI tarda en abrirla.
-  await expect(ventana).toBeVisible({ timeout: 30_000 });
+  await expect(async () => {
+    if (!(await ventana.isVisible())) await openButton.click();
+    await expect(ventana).toBeVisible({ timeout: 5_000 });
+  }).toPass({ timeout: 30_000 });
   return ventana;
 }
 
