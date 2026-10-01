@@ -3803,30 +3803,30 @@
       "mockResults": "118 professionals in Costa Rica",
       "mockSearch": "Search accountant",
       "guia": {
-        "titulo": "All of ContrataCR on your phone",
-        "subtitulo": "Find who you need, post what you're looking for or grow your business, from one app.",
+        "titulo": "How ContrataCR works",
+        "subtitulo": "The real app, in action. Search, post and hire from your phone.",
         "profesionales": {
           "titulo": "Find professionals",
-          "texto": "Search by service and area, compare reviews and verified profiles, and message them on WhatsApp or in the app.",
+          "texto": "Pick a service and area, compare reviews and message them on WhatsApp.",
           "cta": "Find professionals",
           "alt": "Professional results in the ContrataCR app"
         },
         "proyectos": {
-          "titulo": "Post a project",
-          "texto": "Say what you need and let professionals in your area reach out. Compare and choose without searching one by one.",
+          "titulo": "Post your project",
+          "texto": "Say what you need and professionals reach out.",
           "cta": "Post a project",
           "alt": "Projects board in the ContrataCR app"
         },
         "empleos": {
           "titulo": "Jobs",
-          "texto": "Find work in services or post an opening for your business, with applications through the app.",
+          "texto": "Find work or post an opening for your business.",
           "cta": "See jobs",
           "alt": "Jobs board in the ContrataCR app"
         },
         "promociones": {
-          "titulo": "Promotions",
-          "texto": "Discounts and packages from professionals near you. If you offer services, post yours for free.",
-          "cta": "See promotions",
+          "titulo": "Deals",
+          "texto": "Discounts from professionals near you.",
+          "cta": "See deals",
           "alt": "Professional promotions in the ContrataCR app"
         }
       }
@@ -3979,7 +3979,14 @@
     "tileJob": "Job",
     "createDeal": "Post a deal",
     "createJob": "Post a job",
-    "forPros": "For professionals"
+    "forPros": "For professionals",
+    "tileProjectPost": "Post a project",
+    "tileOffer": "Offer services",
+    "tileOfferSub": "Get clients",
+    "tileCase": "Success story",
+    "tileCaseSub": "Show your work",
+    "tileDealSub": "Deals & discounts",
+    "tileJobSub": "Find staff"
   },
   "serviceLanding": {
     "title": "{category} in {place}",

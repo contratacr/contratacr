@@ -3803,29 +3803,29 @@
       "mockResults": "118 profesionales en Costa Rica",
       "mockSearch": "Buscar contador",
       "guia": {
-        "titulo": "Todo ContrataCR en tu teléfono",
-        "subtitulo": "Encuentra a quien necesitas, publica lo que buscas o haz crecer tu negocio, desde una sola app.",
+        "titulo": "Así se usa ContrataCR",
+        "subtitulo": "La app real, en acción. Busca, publica y contrata desde tu teléfono.",
         "profesionales": {
-          "titulo": "Buscar profesionales",
-          "texto": "Busca por servicio y zona, compara reseñas y perfiles verificados, y escríbeles por WhatsApp o por mensaje.",
+          "titulo": "Busca profesionales",
+          "texto": "Elige servicio y zona, compara reseñas y escríbeles por WhatsApp.",
           "cta": "Buscar profesionales",
           "alt": "Resultados de profesionales en la app de ContrataCR"
         },
         "proyectos": {
-          "titulo": "Publicar un proyecto",
-          "texto": "Cuenta qué necesitas y deja que los profesionales de tu zona te escriban. Comparas y eliges sin buscar uno por uno.",
+          "titulo": "Publica tu proyecto",
+          "texto": "Cuenta qué necesitas y los profesionales te contactan.",
           "cta": "Publicar un proyecto",
           "alt": "Tablero de proyectos en la app de ContrataCR"
         },
         "empleos": {
           "titulo": "Empleos",
-          "texto": "Encuentra trabajo en servicios o publica una vacante para tu negocio, con postulaciones por la app.",
+          "texto": "Encuentra trabajo o publica una vacante para tu negocio.",
           "cta": "Ver empleos",
           "alt": "Tablero de empleos en la app de ContrataCR"
         },
         "promociones": {
           "titulo": "Promociones",
-          "texto": "Descuentos y paquetes de profesionales cerca de ti. Si ofreces servicios, publica las tuyas gratis.",
+          "texto": "Descuentos de profesionales cerca de ti.",
           "cta": "Ver promociones",
           "alt": "Promociones de profesionales en la app de ContrataCR"
         }
@@ -3979,7 +3979,14 @@
     "tileJob": "Empleo",
     "createDeal": "Publicar una promoción",
     "createJob": "Publicar un empleo",
-    "forPros": "Para profesionales"
+    "forPros": "Para profesionales",
+    "tileProjectPost": "Publicar proyecto",
+    "tileOffer": "Ofrecer servicios",
+    "tileOfferSub": "Recibe clientes",
+    "tileCase": "Caso de éxito",
+    "tileCaseSub": "Muestra tu trabajo",
+    "tileDealSub": "Ofertas y descuentos",
+    "tileJobSub": "Busca personal"
   },
   "serviceLanding": {
     "title": "{category} en {place}",

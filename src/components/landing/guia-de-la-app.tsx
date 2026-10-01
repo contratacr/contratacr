@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import Image from "next/image";
 import { BriefcaseBusiness, ClipboardList, Search, Tag, ArrowRight } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
@@ -12,12 +11,12 @@ export type PasoDeLaGuia = {
   texto: string;
   cta: string;
   href: string;
-  pantalla: string;
+  video: string;
+  poster: string;
   alt: string;
 };
 
 const ICONOS = { profesionales: Search, proyectos: ClipboardList, empleos: BriefcaseBusiness, promociones: Tag } as const;
-const CADA_MS = 5200;
 
 // LA GUÍA DE LA APP: cuatro cosas que se hacen en ContrataCR y, al lado, el
 // teléfono con la pantalla REAL de cada una. Avanza sola; en cuanto la persona
@@ -27,13 +26,40 @@ const CADA_MS = 5200;
 export function GuiaDeLaApp({ pasos }: { pasos: PasoDeLaGuia[] }) {
   const [activo, setActivo] = useState(0);
   const [quieta, setQuieta] = useState(false);
+  const [progreso, setProgreso] = useState(0);
   const pastillas = useRef<HTMLDivElement | null>(null);
+  const videos = useRef<(HTMLVideoElement | null)[]>([]);
+  const caja = useRef<HTMLDivElement | null>(null);
+  const [visible, setVisible] = useState(false);
 
+  // Solo se reproduce cuando la sección está a la vista: no gasta datos ni batería antes.
   useEffect(() => {
-    if (quieta || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    const id = window.setInterval(() => setActivo((i) => (i + 1) % pasos.length), CADA_MS);
-    return () => window.clearInterval(id);
-  }, [quieta, pasos.length]);
+    const el = caja.current;
+    if (!el) return;
+    const o = new IntersectionObserver(([e]) => setVisible(e.isIntersecting), { threshold: 0.25 });
+    o.observe(el);
+    return () => o.disconnect();
+  }, []);
+
+  // El video del paso elegido arranca desde el inicio; los demás se pausan.
+  useEffect(() => {
+    const quieto = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    videos.current.forEach((v, i) => {
+      if (!v) return;
+      if (i === activo && visible && !quieto) {
+        v.currentTime = 0;
+        v.play().catch(() => {});
+      } else v.pause();
+    });
+    setProgreso(0);
+  }, [activo, visible]);
+
+  // Al terminar un video pasa al siguiente paso; si la persona eligió uno, se repite ese.
+  const alTerminar = (i: number) => {
+    if (i !== activo) return;
+    if (quieta) { const v = videos.current[i]; if (v) { v.currentTime = 0; v.play().catch(() => {}); } return; }
+    setActivo((activo + 1) % pasos.length);
+  };
 
   const elegir = (i: number) => {
     setQuieta(true);
@@ -69,8 +95,10 @@ export function GuiaDeLaApp({ pasos }: { pasos: PasoDeLaGuia[] }) {
                   <span className={cn("block overflow-hidden text-[15px] leading-relaxed text-[#5b6778] transition-all duration-300", elegido ? "mt-1 max-h-24 opacity-100" : "max-h-0 opacity-0")}>{p.texto}</span>
                 </span>
                 {/* La barra de tiempo: cuánto falta para el siguiente paso. */}
-                {elegido && !quieta && (
-                  <span aria-hidden key={`barra-${activo}`} className="ccr-guia-progreso absolute inset-x-5 bottom-0 h-[3px] origin-left rounded-full bg-[#009FD9]" style={{ animationDuration: `${CADA_MS}ms` }} />
+                {elegido && (
+                  <span aria-hidden className="absolute inset-x-5 bottom-0 h-[3px] overflow-hidden rounded-full bg-[#e3f2fa]">
+                    <span className="block h-full origin-left rounded-full bg-[#009FD9]" style={{ transform: `scaleX(${progreso})` }} />
+                  </span>
                 )}
               </button>
             </li>
@@ -84,7 +112,7 @@ export function GuiaDeLaApp({ pasos }: { pasos: PasoDeLaGuia[] }) {
       </ol>
 
       {/* El teléfono, con las cuatro pantallas fundiéndose. */}
-      <div className="relative flex flex-col items-center">
+      <div ref={caja} className="relative flex flex-col items-center">
         <div aria-hidden className="pointer-events-none absolute bottom-24 left-1/2 h-6 w-48 -translate-x-1/2 rounded-[50%] bg-[#1a2744]/10 blur-2xl lg:bottom-1" />
         <div className="relative w-[262px] sm:w-[290px] lg:w-[320px]">
           <div aria-hidden className="absolute -left-[2px] top-[108px] h-8 w-[3px] rounded-l-sm bg-[#2b2f36]" />
@@ -102,15 +130,19 @@ export function GuiaDeLaApp({ pasos }: { pasos: PasoDeLaGuia[] }) {
             <div className="relative" style={{ background: "#04060a", borderRadius: 51, padding: 8 }}>
               <div className="relative overflow-hidden bg-white" style={{ borderRadius: 44, aspectRatio: "588 / 1280" }}>
                 {pasos.map((p, i) => (
-                  <Image
+                  <video
                     key={p.clave}
-                    src={p.pantalla}
-                    alt={i === activo ? p.alt : ""}
+                    ref={(el) => { videos.current[i] = el; }}
+                    src={p.video}
+                    poster={p.poster}
+                    muted
+                    playsInline
+                    preload={i === activo ? "auto" : "metadata"}
+                    aria-label={i === activo ? p.alt : undefined}
                     aria-hidden={i !== activo || undefined}
-                    fill
-                    sizes="(max-width: 640px) 262px, (max-width: 1024px) 290px, 320px"
-                    className={cn("object-cover object-top transition-opacity duration-500", i === activo ? "opacity-100" : "opacity-0")}
-                    priority={i === 0}
+                    onTimeUpdate={(e) => { if (i === activo && e.currentTarget.duration) setProgreso(e.currentTarget.currentTime / e.currentTarget.duration); }}
+                    onEnded={() => alTerminar(i)}
+                    className={cn("absolute inset-0 h-full w-full object-cover object-top transition-opacity duration-500", i === activo ? "opacity-100" : "opacity-0")}
                   />
                 ))}
                 <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 z-20 h-16 bg-gradient-to-b from-white/14 to-transparent" />
@@ -132,11 +164,13 @@ export function GuiaDeLaApp({ pasos }: { pasos: PasoDeLaGuia[] }) {
                   onClick={() => elegir(i)}
                   aria-pressed={elegido}
                   className={cn(
-                    "flex h-10 shrink-0 items-center gap-2 rounded-full border px-4 text-[14px] font-bold transition-colors",
+                    "relative flex h-10 shrink-0 items-center gap-2 overflow-hidden rounded-full border px-4 text-[14px] font-bold transition-colors",
                     elegido ? "border-[#009FD9] bg-[#009FD9] text-white" : "border-[#dbe5ee] bg-white text-[#3c4a5c]",
                   )}
                 >
-                  <Icono className="h-4 w-4" strokeWidth={2.2} />{p.titulo}
+                  {/* El avance del video, como un relleno más oscuro dentro de la pastilla. */}
+                  {elegido && <span aria-hidden className="absolute inset-y-0 left-0 w-full origin-left bg-[#0089bb]" style={{ transform: `scaleX(${progreso})` }} />}
+                  <Icono className="relative h-4 w-4" strokeWidth={2.2} /><span className="relative">{p.titulo}</span>
                 </button>
               );
             })}

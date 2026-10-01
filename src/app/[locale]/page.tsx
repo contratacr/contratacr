@@ -103,6 +103,10 @@ export default async function HomePage({
         {/* Hero: rotating headline + primary search. */}
         <LandingHero />
 
+        {/* Negocios reales justo bajo el hero, antes de los servicios: la
+            prueba de que ContrataCR ya tiene negocios de verdad. */}
+        <FeaturedBrands />
+
         {/* Services carousel. */}
         <FadeInUp>
           <ProsSection />
@@ -115,12 +119,6 @@ export default async function HomePage({
         </FadeInUp>
 
         {/* Zones: find professionals by province using real coverage. */}
-        {/* Negocios reales, al abrir «Encuentra profesionales en tu zona»: la
-            prueba de que en tu zona ya hay negocios de verdad. */}
-        <FadeInUp>
-          <FeaturedBrands />
-        </FadeInUp>
-
         <FadeInUp delay={40} className="ccr-fin-de-portada">
           <FindByZone coverage={coverage} />
         </FadeInUp>

@@ -20,6 +20,8 @@ export type SeccionDeServicios = {
 // Los cuatro más buscados de cada sección: 2×2 en el teléfono, una fila en computadora.
 export function ServiciosPorSeccion({ secciones, verTodos }: { secciones: SeccionDeServicios[]; verTodos?: { href: string; label: string } }) {
   const [activa, setActiva] = useState(0);
+  // El servicio tocado se queda agrandado hasta que la página nueva reemplaza a esta.
+  const [tocado, setTocado] = useState<string | null>(null);
   const fila = useRef<HTMLDivElement | null>(null);
   const seccion = secciones[activa] ?? secciones[0];
   if (!seccion) return null;
@@ -101,9 +103,11 @@ export function ServiciosPorSeccion({ secciones, verTodos }: { secciones: Seccio
           <Link
             key={servicio.id}
             href={servicio.href}
+            onClick={() => setTocado(servicio.id)}
+            data-tocado={tocado === servicio.id || undefined}
             className="group relative block aspect-[4/5] overflow-hidden rounded-2xl bg-[#e8eef3] shadow-[0_6px_18px_-12px_rgba(15,23,42,0.45)] lg:aspect-[4/5.2]"
           >
-            <ServiceImage categoryId={servicio.id} badge={false} className="pointer-events-none absolute inset-0 h-full w-full transition-transform duration-500 ease-out group-hover:scale-[1.06] group-active:scale-[1.06]" />
+            <ServiceImage categoryId={servicio.id} badge={false} className="pointer-events-none absolute inset-0 h-full w-full transition-transform duration-500 ease-out group-hover:scale-[1.06] group-active:scale-[1.06] group-data-[tocado]:scale-[1.06]" />
             <span aria-hidden className="absolute inset-0" style={{ background: "linear-gradient(to top, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.12) 55%, transparent 100%)" }} />
             <span className="absolute inset-x-0 bottom-0 p-3.5 text-[15px] font-bold leading-tight text-white drop-shadow sm:p-4 sm:text-base lg:p-6 lg:text-2xl">
               {servicio.label}
