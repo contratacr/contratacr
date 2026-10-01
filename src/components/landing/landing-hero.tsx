@@ -31,25 +31,47 @@ const ROTATING_LINES: Record<string, string[]> = {
    libre para el título y el buscador. Unsplash entrega cada ancho ya
    recortado (en Cloudflare /_next/image no optimiza). La miniatura de 48 px va
    en línea para que el primer cuadro ya tenga la foto, no un hueco. */
-const HERO_FOTO = "https://images.unsplash.com/photo-1589939705384-5185137a7f0f";
-const HERO_MINIATURA = "data:image/jpeg;base64,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";
+// Cuatro profesionales trabajando, en fotos claras; van pasando con un fundido
+// y un zoom lento. La persona va hacia un lado para dejar libre el centro.
+const HERO_FOTOS: { id: string; foco: string }[] = [
+  { id: "1505798577917-a65157d3320a", foco: "30% center" }, // ingletadora en una remodelación (clara: va primero)
+  { id: "1660330589693-99889d60181e", foco: "35% center" }, // electricista en un tablero
+  { id: "1749532125405-70950966b0e5", foco: "60% center" }, // fontanero en un baño
+  { id: "1589939705384-5185137a7f0f", foco: "70% center" }, // carpintería con casco
+];
+const HERO_MINIATURA = "data:image/jpeg;base64,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";
+const CADA_FOTO_MS = 6500;
+const urlDeFoto = (id: string, w: number) => `https://images.unsplash.com/photo-${id}?w=${w}&q=72&auto=format&fit=crop`;
 
 function FotoDeFondo() {
+  const [actual, setActual] = useState(0);
+  // Las otras fotos se piden después de la primera, no compiten con ella.
+  const [cargarResto, setCargarResto] = useState(false);
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const empezar = window.setTimeout(() => setCargarResto(true), 1500);
+    const id = window.setInterval(() => setActual((i) => (i + 1) % HERO_FOTOS.length), CADA_FOTO_MS);
+    return () => { window.clearTimeout(empezar); window.clearInterval(id); };
+  }, []);
   const anchos = [800, 1200, 1600, 2200];
   return (
-    <div aria-hidden className="absolute inset-0 bg-[#3a3128]" style={{ backgroundImage: `url("${HERO_MINIATURA}")`, backgroundSize: "cover", backgroundPosition: "70% center" }}>
-      {/* eslint-disable-next-line @next/next/no-img-element -- ya viene del tamaño justo desde Unsplash */}
-      <img
-        src={`${HERO_FOTO}?w=1600&q=72&auto=format&fit=crop`}
-        srcSet={anchos.map((w) => `${HERO_FOTO}?w=${w}&q=72&auto=format&fit=crop ${w}w`).join(", ")}
-        sizes="100vw"
-        alt=""
-        fetchPriority="high"
-        decoding="async"
-        className="absolute inset-0 h-full w-full object-cover object-[70%_center]"
-      />
-      {/* Oscurece lo justo para que el texto blanco se lea sobre cualquier zona. */}
-      <div className="absolute inset-0 bg-gradient-to-b from-black/45 via-black/30 to-black/55" />
+    <div aria-hidden className="absolute inset-0 overflow-hidden bg-[#8a7a68]" style={{ backgroundImage: `url("${HERO_MINIATURA}")`, backgroundSize: "cover", backgroundPosition: "30% center" }}>
+      {HERO_FOTOS.map((foto, i) => (i === 0 || cargarResto) && (
+        // eslint-disable-next-line @next/next/no-img-element -- ya viene del tamaño justo desde Unsplash
+        <img
+          key={foto.id}
+          src={urlDeFoto(foto.id, 1600)}
+          srcSet={anchos.map((w) => `${urlDeFoto(foto.id, w)} ${w}w`).join(", ")}
+          sizes="100vw"
+          alt=""
+          fetchPriority={i === 0 ? "high" : "low"}
+          decoding="async"
+          className={cn("ccr-hero-foto-capa absolute inset-0 h-full w-full object-cover transition-opacity duration-[1400ms] ease-in-out", i === actual ? "opacity-100 ccr-hero-foto-activa" : "opacity-0")}
+          style={{ objectPosition: foto.foco }}
+        />
+      ))}
+      {/* Apenas un velo: la foto se ve clara y el panel da el contraste al texto. */}
+      <div className="absolute inset-0 bg-black/10" />
     </div>
   );
 }
@@ -722,7 +744,7 @@ export function LandingHero() {
       <FotoDeFondo />
       <div className="relative z-10 mx-auto w-full max-w-4xl px-4 py-12 sm:px-6 sm:py-16">
       {/* El título y el buscador en un panel translúcido, centrado sobre la foto. */}
-      <div className="rounded-3xl bg-[#0b1626]/40 px-4 py-8 shadow-[0_30px_80px_-40px_rgba(0,0,0,0.6)] backdrop-blur-[3px] sm:px-10 sm:py-12">
+      <div className="rounded-xl bg-[#5f5f5f]/55 px-5 py-9 backdrop-blur-[2px] sm:px-12 sm:py-12">
       <div className="relative mx-auto max-w-3xl text-center pb-7">
         <h1
           className="font-extrabold text-white tracking-tight drop-shadow-[0_2px_12px_rgba(0,0,0,0.35)]"
@@ -739,16 +761,16 @@ export function LandingHero() {
           onSubmit={handleSearch}
           className="w-full"
         >
-          {/* Desktop row: single line h-14 */}
-          <div className="hidden sm:block relative">
+          {/* UNA píldora con los dos campos, como Angi, en todos los tamaños.
+              Sin botón: elegir una sugerencia busca, y Enter también. */}
+          <div className="relative">
             {/* Caja blanca de esquinas suaves: la misma forma que usa el
                 buscador del navbar, para que al bajar se sienta que es el
                 mismo buscador que se quedó pegado arriba. */}
-            <div className="flex h-14 items-center overflow-hidden rounded-[10px] border border-[#e5e7eb] bg-white pl-5 shadow-[0_8px_48px_rgba(0,0,0,0.12)] transition-shadow duration-300 focus-within:ring-2 focus-within:ring-[#009FD9]/20 hover:shadow-[0_12px_60px_rgba(0,159,217,0.20)]">
+            <div className="flex h-[54px] items-center overflow-hidden rounded-full border border-white bg-white pl-5 pr-4 shadow-[0_8px_30px_rgba(0,0,0,0.18)] sm:h-16 sm:pl-7 sm:pr-6 transition-shadow duration-300 focus-within:ring-2 focus-within:ring-[#009FD9]/20 hover:shadow-[0_12px_60px_rgba(0,159,217,0.20)]">
               {/* Service input — its dropdown PORTALS to <body> (anchored to this wrapper),
                   so the bar's `overflow-hidden` can never clip it. */}
               <div ref={svcDesktopRef} className="flex items-center gap-3 flex-1 min-w-0 h-full">
-                <Search className="h-5 w-5 shrink-0 text-[#8f9aaa]" />
                 <input
                   type="text"
                   value={service}
@@ -758,8 +780,8 @@ export function LandingHero() {
                   onKeyDown={handleKeyDown}
                   onFocus={() => { if (suggestions.length > 0) setOpenSug(true); }}
                   onBlur={() => setTimeout(() => setOpenSug(false), 120)}
-                  placeholder={t("searchPlaceholder")}
-                  className="min-w-0 flex-1 bg-transparent text-base text-[#162543] placeholder:text-[#8f9aaa] focus:outline-none"
+                  placeholder={t("searchPlaceholderShort")}
+                  className="min-w-0 flex-1 bg-transparent text-[16px] text-[#162543] placeholder:text-[#6b7686] focus:outline-none sm:text-lg"
                   role="combobox"
                   aria-expanded={openSug}
                   aria-autocomplete="list"
@@ -767,9 +789,9 @@ export function LandingHero() {
                 <SuggestionsDropdown anchorRef={svcDesktopRef} open={openSug} suggestions={suggestions} activeIdx={activeIdx} onPick={(s) => selectSuggestion(s, true)} />
               </div>
               {/* Divider + location autocomplete */}
-              <div className="mx-2 my-3 w-px shrink-0 self-stretch bg-[#dbe4ee]" />
-              <div ref={locDesktopRef} className="flex h-full min-w-[160px] shrink-0 items-center gap-2">
-                <MapPin className="h-5 w-5 shrink-0 text-[#8f9aaa]" />
+              <div className="mx-3 my-3 w-px shrink-0 self-stretch bg-[#cfd8e2] sm:mx-4" />
+              <div ref={locDesktopRef} className="flex h-full w-[38%] min-w-[112px] shrink-0 items-center gap-2 sm:w-[34%]">
+                <MapPin className="h-5 w-5 shrink-0 text-[#162543] sm:h-6 sm:w-6" />
                 <input
                   type="text"
                   value={location}
@@ -780,79 +802,16 @@ export function LandingHero() {
                   onFocus={() => { ensureMaps(); setOpenLoc(location.trim().length >= 2); }}
                   onBlur={() => setTimeout(() => setOpenLoc(false), 120)}
                   placeholder={t("location")}
-                  className="w-full min-w-0 flex-1 bg-transparent text-base text-[#162543] placeholder:text-[#8f9aaa] focus:outline-none"
+                  className="w-full min-w-0 flex-1 bg-transparent text-[16px] text-[#162543] placeholder:text-[#6b7686] focus:outline-none sm:text-lg"
                   role="combobox"
                   aria-expanded={openLoc}
                   aria-autocomplete="list"
                 />
                 <LocationDropdown anchorRef={locDesktopRef} open={openLoc && location.trim().length >= 2} suggestions={locSug} addresses={addrSug} activeIdx={locActive} onPick={(s) => selectLocation(s, true)} onPickAddress={selectAddress} onNearMe={requestNearMe} nearMeLabel={t("nearMe")} geoLoading={geoLoading} />
               </div>
-              {/* Buscar button */}
-              <button
-                type="submit"
-                aria-busy={buscando || undefined}
-                className="relative ml-2 h-full shrink-0 self-stretch whitespace-nowrap bg-[#009FD9] px-8 text-base font-bold text-white transition-colors duration-150 hover:bg-[#0089bb] active:bg-[#007da8]"
-              >
-                {/* El rótulo se queda (invisible) para que el botón no cambie de ancho. */}
-                <span className={cn(buscando && "invisible")}>{t("search")}</span>
-                {buscando && <Loader2 aria-hidden className="absolute inset-0 m-auto h-5 w-5 animate-spin" />}
-              </button>
             </div>
           </div>
 
-          {/* Mobile stacked layout — service, then location, then Buscar */}
-          <div className="sm:hidden flex flex-col gap-2">
-            <div ref={svcMobileRef} className="relative">
-              <div className="flex h-12 items-center overflow-hidden rounded-[10px] border border-[#e5e7eb] bg-white pl-4 pr-3 transition-colors focus-within:ring-2 focus-within:ring-[#009FD9]/20">
-                <Search className="mr-3 h-5 w-5 shrink-0 text-[#8f9aaa]" />
-                <input
-                  type="text"
-                  value={service}
-                  onChange={(e) => { recienElegidoRef.current = false; setService(e.target.value); setServiceSel(null); }}
-                  ref={servicioMobileRef}
-                  enterKeyHint={service.trim() && !location.trim() ? "next" : "search"}
-                  onKeyDown={handleKeyDown}
-                  onFocus={() => { if (suggestions.length > 0) setOpenSug(true); }}
-                  onBlur={() => setTimeout(() => setOpenSug(false), 120)}
-                  placeholder={t("searchPlaceholderShort")}
-                  className="min-w-0 flex-1 bg-transparent text-base text-[#162543] placeholder:text-[#8f9aaa] focus:outline-none"
-                  role="combobox"
-                  aria-expanded={openSug}
-                  aria-autocomplete="list"
-                />
-              </div>
-              <SuggestionsDropdown anchorRef={svcMobileRef} open={openSug} suggestions={suggestions} activeIdx={activeIdx} onPick={(s) => selectSuggestion(s, true)} />
-            </div>
-            <div ref={locMobileRef} className="relative">
-              <div className="flex h-12 items-center overflow-hidden rounded-[10px] border border-[#e5e7eb] bg-white pl-4 pr-3 transition-colors focus-within:ring-2 focus-within:ring-[#009FD9]/20">
-                <MapPin className="mr-3 h-5 w-5 shrink-0 text-[#8f9aaa]" />
-                <input
-                  type="text"
-                  value={location}
-                  onChange={(e) => handleLocationChange(e.target.value)}
-                  ref={ubicacionMobileRef}
-                  enterKeyHint={location.trim() && !service.trim() ? "next" : "search"}
-                  onKeyDown={handleLocKeyDown}
-                  onFocus={() => { ensureMaps(); setOpenLoc(location.trim().length >= 2); }}
-                  onBlur={() => setTimeout(() => setOpenLoc(false), 120)}
-                  placeholder={t("location")}
-                  className="min-w-0 flex-1 bg-transparent text-base text-[#162543] placeholder:text-[#8f9aaa] focus:outline-none"
-                  role="combobox"
-                  aria-expanded={openLoc}
-                  aria-autocomplete="list"
-                />
-              </div>
-              <LocationDropdown anchorRef={locMobileRef} open={openLoc && location.trim().length >= 2} suggestions={locSug} addresses={addrSug} activeIdx={locActive} onPick={(s) => selectLocation(s, true)} onPickAddress={selectAddress} onNearMe={requestNearMe} nearMeLabel={t("nearMe")} geoLoading={geoLoading} />
-            </div>
-            <button
-              type="submit"
-              aria-busy={buscando || undefined}
-              className="relative h-12 w-full rounded-[10px] bg-[#009FD9] text-base font-bold text-white transition-all duration-150 hover:bg-[#0089bb] active:scale-[0.97]"
-            >
-              <span className={cn(buscando && "invisible")}>{t("search")}</span>
-              {buscando && <Loader2 aria-hidden className="absolute inset-0 m-auto h-5 w-5 animate-spin" />}
-            </button>
-          </div>
         </form>
 
         {/* Sentinel — IntersectionObserver in navbar watches this */}
