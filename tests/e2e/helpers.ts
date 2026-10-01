@@ -354,7 +354,9 @@ export async function firstProfessionalHref(page: Page) {
   const count = await links.count();
   for (let i = 0; i < count; i += 1) {
     const href = await links.nth(i).getAttribute("href");
-    if (href?.includes("/profesionales/") && !href.includes("?tab=")) return href;
+    // Las cuentas desechables de otras pruebas pueden seguir en la lista hasta
+    // que vence su caché (5 min) aunque ya se hayan borrado: no sirven de muestra.
+    if (href?.includes("/profesionales/") && !href.includes("?tab=") && !/regression-disposable|disposable-regression/i.test(href)) return href;
   }
   return null;
 }
