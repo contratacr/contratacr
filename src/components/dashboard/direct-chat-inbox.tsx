@@ -1674,7 +1674,7 @@ export function DirectChatInbox({ alCambiarSubvista }: {
                       <button
                         type="button"
                         onClick={(event) => { event.stopPropagation(); irAlMensaje(message.reply_to_id!); }}
-                        className={cn("mb-1.5 block w-full min-w-0 rounded-lg border-l-[3px] px-2.5 py-1.5 text-left", mine ? "border-white/80 bg-white/15" : "border-[#009FD9] bg-[#f2f9fd]")}
+                        className={cn("mb-1.5 block w-full min-w-0 rounded-md border-l-[3px] px-2.5 py-1.5 text-left", mine ? "border-white/40 bg-white/15" : "border-[#009FD9] bg-[#f2f9fd]")}
                         data-cita
                       >
                         <span className={cn("block truncate text-[12px] font-extrabold", mine ? "text-white" : "text-[#009FD9]")}>{autorDeMensaje(citada) || tChat("originalMessage")}</span>
