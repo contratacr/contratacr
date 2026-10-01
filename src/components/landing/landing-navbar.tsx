@@ -3150,11 +3150,6 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                     <span className={mobileDrawerTextClass}>{locale === "en" ? "Admin panel" : "Panel admin"}</span>
                   </Link>
                 )}
-                {/* Entrar a la cuenta NO es un destino más de la lista: es la
-                    acción de la pantalla. Como dos renglones iguales a los demás
-                    —«Ingresar» y «Registrarse»— el menú se leía el doble de
-                    largo de lo que es. Va como un solo botón, separado, y la
-                    pantalla de ingreso ya ofrece crear cuenta ahí mismo. */}
 
                 <div className="mt-1">
                   <button
@@ -3167,36 +3162,28 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                     <span className="min-w-0 flex-1 whitespace-nowrap">{locale === "en" ? "Help and support" : "Ayuda y soporte"}</span>
                     <ChevronDown className={cn("h-5 w-5 shrink-0 text-[#64748b] transition-transform", mobileHelpOpen && "rotate-180")} />
                   </button>
+                  {/* El submenú, al estilo de las filas de arriba: sin íconos, alineado
+                      con «Ayuda y soporte», un punto más chico y en gris oscuro, con
+                      línea fina entre opciones. Términos y Privacidad, al pie, chicos. */}
                   {mobileHelpOpen && (
-                    <div className="mt-1 grid gap-1 pl-[52px]">
-                      <Link href="/como-funciona" onClick={cerrarCajon} className={mobileDrawerSubItemClass}>
-                        <ResourceIcon name="howItWorks" />
-                        <span className={mobileDrawerTextClass}>{t("resourceLinks.howItWorks")}</span>
-                      </Link>
-                      <Link href="/ayuda" onClick={cerrarCajon} className={mobileDrawerSubItemClass}>
-                        <ResourceIcon name="helpCenter" />
-                        <span className={mobileDrawerTextClass}>{t("resourceLinks.helpCenter")}</span>
-                      </Link>
-                      <Link href="/mejorar-mi-perfil" onClick={cerrarCajon} className={mobileDrawerSubItemClass}>
-                        <ResourceIcon name="proTips" />
-                        <span className={mobileDrawerTextClass}>{t("resourceLinks.proTips")}</span>
-                      </Link>
-                      <SupportLink onNavigate={cerrarCajon} className={mobileDrawerSubItemClass}>
-                        <ResourceIcon name="support" />
-                        <span className={mobileDrawerTextClass}>{t("resourceLinks.support")}</span>
+                    <div className="ccr-menu-sub">
+                      {[
+                        { href: "/como-funciona", es: "Cómo funciona", en: "How it works" },
+                        { href: "/ayuda", es: "Preguntas frecuentes", en: "FAQ" },
+                        // Para quien tiene o puede tener perfil: no para un cliente con sesión.
+                        ...(!user || isPro ? [{ href: "/mejorar-mi-perfil", es: "Consejos para profesionales", en: "Tips for professionals" }] : []),
+                      ].map((o) => (
+                        <Link key={o.href} href={o.href} onClick={cerrarCajon} className="ccr-menu-sub-fila">
+                          {locale === "en" ? o.en : o.es}
+                        </Link>
+                      ))}
+                      <SupportLink onNavigate={cerrarCajon} className="ccr-menu-sub-fila">
+                        {locale === "en" ? "Contact support" : "Escribir a soporte"}
                       </SupportLink>
-                      {nativeHeaderShell && (
-                        <>
-                          <Link href="/terminos" onClick={cerrarCajon} className={mobileDrawerSubItemClass}>
-                            <ResourceIcon name="terms" />
-                            <span className={mobileDrawerTextClass}>{t("resourceLinks.terms")}</span>
-                          </Link>
-                          <Link href="/privacidad" onClick={cerrarCajon} className={mobileDrawerSubItemClass}>
-                            <ResourceIcon name="privacy" />
-                            <span className={mobileDrawerTextClass}>{t("resourceLinks.privacy")}</span>
-                          </Link>
-                        </>
-                      )}
+                      <div className="flex gap-5 pb-1 pt-3 text-[13px] font-semibold text-[#7a8696]">
+                        <Link href="/terminos" onClick={cerrarCajon} className="hover:text-[#009FD9]">{t("resourceLinks.terms")}</Link>
+                        <Link href="/privacidad" onClick={cerrarCajon} className="hover:text-[#009FD9]">{t("resourceLinks.privacy")}</Link>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -3206,16 +3193,18 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                   cuenta. Iban con el mismo peso que «Mis citas» y hacían ver el
                   cajón más largo y más cargado de lo que es. Van al pie, tras
                   una línea, en letra menor y sin el mosaico del icono. */}
+              {/* Como Angi: «Ingresar» con borde y «Crear cuenta» lleno, separados
+                  de la lista. shrink-0: el cajón es columna flexible y al abrir
+                  «Ayuda y soporte» los botones se encogían. */}
               {!user && (
-                <Link
-                  href={loginHref}
-                  onClick={cerrarCajon}
-                  // shrink-0: el cajón es una columna flexible; al abrir «Ayuda y
-                  // soporte» el contenido pasaba del alto y el botón se encogía.
-                  className="mt-3 flex h-12 w-full shrink-0 items-center justify-center rounded-full bg-[#009FD9] text-[15px] font-bold text-white transition-colors hover:bg-[#0089bb]"
-                >
-                  {t("login")}
-                </Link>
+                <div className="mt-7 grid shrink-0 gap-3">
+                  <Link href={loginHref} onClick={cerrarCajon} className="flex h-12 w-full items-center justify-center rounded-full border-[1.5px] border-[#162543] text-[15px] font-bold text-[#162543] transition-colors hover:bg-[#f4f7fa]">
+                    {t("login")}
+                  </Link>
+                  <Link href="/registro" onClick={cerrarCajon} className="flex h-12 w-full items-center justify-center rounded-full bg-[#009FD9] text-[15px] font-bold text-white transition-colors hover:bg-[#0089bb]">
+                    {locale === "en" ? "Create account" : "Crear cuenta"}
+                  </Link>
+                </div>
               )}
 
               {/* El pie no son opciones: son ajustes. El idioma es un conmutador
