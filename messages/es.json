@@ -3912,7 +3912,14 @@
     "archivedEmptyTitle": "No hay conversaciones archivadas",
     "archivedEmptyHint": "Archiva un chat deslizándolo hacia la izquierda.",
     "delivered": "Recibido",
-    "seenAt": "Visto {hora}"
+    "seenAt": "Visto {hora}",
+    "replyMessage": "Responder",
+    "replyingTo": "Respondiendo a {name}",
+    "cancelReply": "No responder a este mensaje",
+    "you": "Tú",
+    "originalMessage": "Mensaje original",
+    "photo": "Foto",
+    "file": "Archivo"
   },
   "bottomNav": {
     "search": "Profesionales",

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { createPortal } from "react-dom";
-import { Archive, ArchiveRestore, ArrowLeft, Ban, Check, ChevronRight, Copy, Download, FileText, Flag, Loader2, MessageSquareMore, MessageSquareText, MoreHorizontal, Paperclip, Pencil, Search, SendHorizontal, Trash2, X } from "lucide-react";
+import { Archive, ArchiveRestore, ArrowLeft, Ban, Check, ChevronRight, Copy, Download, FileText, Flag, Loader2, MessageSquareMore, MessageSquareText, MoreHorizontal, Paperclip, Pencil, Reply, Search, SendHorizontal, Trash2, X } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "@/i18n/navigation";
@@ -49,7 +49,7 @@ type Conversation = {
   context?: { type: "booking" | "project" | "proposal" | "profile"; title?: string | null; service_description?: string | null; status?: string | null; proposal_status?: string | null };
 };
 type DirectAttachment = { path?: string; name: string; type: string; size: number; url?: string | null };
-type DirectMessage = { id: string; sender_id: string; body: string; created_at: string; attachment_urls?: DirectAttachment[]; edited_at?: string | null; deleted_at?: string | null; read_at?: string | null; delivered_at?: string | null };
+type DirectMessage = { id: string; sender_id: string; body: string; created_at: string; attachment_urls?: DirectAttachment[]; edited_at?: string | null; deleted_at?: string | null; read_at?: string | null; delivered_at?: string | null; reply_to_id?: string | null };
 type SelectedAttachment = { id: string; file: File; previewUrl?: string };
 type PendingDraft = {
   professionalId?: string;
@@ -321,6 +321,9 @@ export function DirectChatInbox({ alCambiarSubvista }: {
   // no se muestra; lo que llegue en vivo tampoco lo enciende.
   const vistosVisibles = useRef(true);
   const [editando, setEditando] = useState<{ id: string; original: string } | null>(null);
+  // RESPONDER CITANDO (migración 228): el mensaje al que se responde, mientras
+  // se escribe. Se manda con el envío y se borra al salir.
+  const [respondiendoA, setRespondiendoA] = useState<string | null>(null);
   // El mensaje cuya hoja «¿Eliminar mensaje?» está abierta.
   const [mensajeAEliminar, setMensajeAEliminar] = useState<string | null>(null);
   const [copiado, setCopiado] = useState(false);
@@ -341,8 +344,25 @@ export function DirectChatInbox({ alCambiarSubvista }: {
     setMenuMensaje({ id, caja: { top: r.top, left: r.left, right: r.right, bottom: r.bottom, width: r.width }, mio });
   }
 
+  function empezarRespuesta(mensaje: DirectMessage) {
+    setMenuMensaje(null);
+    if (editando) cancelarEdicion();
+    setRespondiendoA(mensaje.id);
+    window.requestAnimationFrame(() => textareaRef.current?.focus());
+  }
+
+  // Llevar al mensaje citado y marcarlo un instante, como WhatsApp.
+  function irAlMensaje(id: string) {
+    const nodo = document.getElementById(`msg-${id}`);
+    if (!nodo) return;
+    nodo.scrollIntoView({ block: "center", behavior: "smooth" });
+    nodo.classList.add("ccr-mensaje-senalado");
+    window.setTimeout(() => nodo.classList.remove("ccr-mensaje-senalado"), 1400);
+  }
+
   function empezarEdicion(mensaje: DirectMessage) {
     setMenuMensaje(null);
+    setRespondiendoA(null);
     setEditando({ id: mensaje.id, original: mensaje.body });
     setDraft(mensaje.body);
     window.requestAnimationFrame(() => {
@@ -1074,14 +1094,15 @@ export function DirectChatInbox({ alCambiarSubvista }: {
     if (editando) { void guardarEdicion(); return; }
     if (!activeId || sending || (!draft.trim() && !selectedAttachments.length)) return;
     const body = draft.trim(); const optimisticId = `pending-${Date.now()}`;
+    const citado = respondiendoA;
     const optimisticAttachments = selectedAttachments.map((attachment) => ({
       name: attachment.file.name,
       type: attachment.file.type,
       size: attachment.file.size,
       url: attachment.previewUrl ?? null,
     }));
-    setDraft(""); setSending(true); setError(""); setAttachmentError("");
-    setMessages((current) => [...current, { id: optimisticId, sender_id: user?.id || "", body: body || (isEn ? "Attachment" : "Archivo adjunto"), attachment_urls: optimisticAttachments, created_at: new Date().toISOString() }]);
+    setDraft(""); setRespondiendoA(null); setSending(true); setError(""); setAttachmentError("");
+    setMessages((current) => [...current, { id: optimisticId, sender_id: user?.id || "", body: body || (isEn ? "Attachment" : "Archivo adjunto"), attachment_urls: optimisticAttachments, created_at: new Date().toISOString(), reply_to_id: citado }]);
     try {
       let targetConversationId = activeId;
       if (activeId === DRAFT_CONVERSATION_ID && selectedAttachments.length) {
@@ -1109,7 +1130,7 @@ export function DirectChatInbox({ alCambiarSubvista }: {
           contextTitle: pendingDraftPayload?.contextTitle,
           message: body,
         }
-        : { conversationId: targetConversationId, message: body, attachmentUrls };
+        : { conversationId: targetConversationId, message: body, attachmentUrls, ...(citado ? { replyToId: citado } : {}) };
       const res = await fetchWithSessionRetry("/api/direct-chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || "Error");
@@ -1142,7 +1163,7 @@ export function DirectChatInbox({ alCambiarSubvista }: {
         await Promise.all([loadThread(activeId, true), loadConversations(true)]);
       }
     } catch (err) {
-      setMessages((current) => current.filter((message) => message.id !== optimisticId)); setDraft(body);
+      setMessages((current) => current.filter((message) => message.id !== optimisticId)); setDraft(body); setRespondiendoA(citado);
       setError(err instanceof Error ? err.message : isEn ? "Could not send the message." : "No se pudo enviar el mensaje.");
     } finally { setSending(false); }
   }
@@ -1362,6 +1383,16 @@ export function DirectChatInbox({ alCambiarSubvista }: {
 
   const archiveLabel = showArchived ? (isEn ? "Unarchive" : "Desarchivar") : (isEn ? "Archive" : "Archivar");
   const activePersonName = activePerson?.name || "";
+  // Cómo se nombra un mensaje citado: quién lo escribió y una línea de lo que
+  // decía (o «Foto», «Archivo», «Mensaje eliminado»).
+  const autorDeMensaje = (m: DirectMessage | null | undefined) => !m ? "" : m.sender_id === user?.id ? tChat("you") : activePersonName;
+  const resumenDeMensaje = (m: DirectMessage | null | undefined) => {
+    if (!m) return tChat("originalMessage");
+    if (m.deleted_at) return tChat("messageDeleted");
+    const soloAdjunto = Boolean(m.attachment_urls?.length) && (m.body === "Archivo adjunto" || m.body === "Attachment");
+    if (m.body.trim() && !soloAdjunto) return m.body;
+    return m.attachment_urls?.some(isImageAttachment) ? tChat("photo") : tChat("file");
+  };
   const otherHasApp = active
     ? (activePerson?.role === "professional" ? conversacionAbierta?.professional_has_app : conversacionAbierta?.client_has_app)
     : undefined;
@@ -1602,7 +1633,7 @@ export function DirectChatInbox({ alCambiarSubvista }: {
             // encoge mientras la imagen viaja y se abre de golpe al llegar.
             const fotos = message.attachment_urls?.filter(isImageAttachment).length ?? 0;
             return (
-              <div key={message.id} className={cn("flex items-end gap-2", mine && "justify-end")}>
+              <div key={message.id} id={`msg-${message.id}`} className={cn("flex items-end gap-2 rounded-2xl", mine && "justify-end")}>
                 {!mine && (
                   <Avatar className="h-7 w-7 shrink-0 shadow-sm">
                     <AvatarImage src={activePerson?.avatar ?? undefined} alt={activePersonName} />
@@ -1637,6 +1668,20 @@ export function DirectChatInbox({ alCambiarSubvista }: {
                     : "max-w-[calc(86%_-_2.25rem)] rounded-bl-md border border-[#e5e7eb] bg-white text-[#25364d] sm:max-w-[72%]",
                   fotos > 0 && (mine ? "w-[86%] sm:w-[78%]" : "w-[calc(86%_-_2.25rem)] sm:w-[72%]"),
                 )}>
+                  {message.reply_to_id && !message.deleted_at && (() => {
+                    const citada = messages.find((m) => m.id === message.reply_to_id);
+                    return (
+                      <button
+                        type="button"
+                        onClick={(event) => { event.stopPropagation(); irAlMensaje(message.reply_to_id!); }}
+                        className={cn("mb-1.5 block w-full min-w-0 rounded-lg border-l-[3px] px-2.5 py-1.5 text-left", mine ? "border-white/80 bg-white/15" : "border-[#009FD9] bg-[#f2f9fd]")}
+                        data-cita
+                      >
+                        <span className={cn("block truncate text-[12px] font-extrabold", mine ? "text-white" : "text-[#009FD9]")}>{autorDeMensaje(citada) || tChat("originalMessage")}</span>
+                        {citada && <span className={cn("block truncate text-[12.5px] font-medium", mine ? "text-white/85" : "text-[#526277]")}>{resumenDeMensaje(citada)}</span>}
+                      </button>
+                    );
+                  })()}
                   {message.deleted_at ? (
                     <p className="flex items-center gap-1.5 italic"><Ban className="h-3.5 w-3.5 shrink-0" aria-hidden />{mine ? tChat("youDeletedMessage") : tChat("messageDeleted")}</p>
                   ) : <>
@@ -1796,6 +1841,21 @@ export function DirectChatInbox({ alCambiarSubvista }: {
                 ))}
               </div>
             )}
+            {respondiendoA && !editando && (() => {
+              const citada = messages.find((m) => m.id === respondiendoA);
+              return (
+                <div className="mb-2 flex items-center gap-3 rounded-xl border-l-4 border-[#009FD9] bg-[#f2f9fd] py-2 pl-3 pr-2" data-respuesta-en-curso>
+                  <Reply className="h-4 w-4 shrink-0 text-[#009FD9]" aria-hidden />
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-xs font-extrabold text-[#009FD9]">{tChat("replyingTo", { name: autorDeMensaje(citada) })}</span>
+                    <span className="block truncate text-[13px] text-[#526277]">{resumenDeMensaje(citada)}</span>
+                  </span>
+                  <button type="button" onClick={() => setRespondiendoA(null)} aria-label={tChat("cancelReply")} className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-[#526277] hover:bg-white">
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+              );
+            })()}
             {editando && (
               // Sin X aquí: la salida de la edición ocupa el lugar del clip,
               // como en WhatsApp —editando no se adjunta nada—.
@@ -1950,7 +2010,8 @@ export function DirectChatInbox({ alCambiarSubvista }: {
             className="absolute w-52"
             style={(() => {
               const { caja, mio } = menuMensaje;
-              const alto = 3 * 48 + 8;
+              // Hasta cuatro opciones: responder, copiar, editar y eliminar.
+              const alto = 4 * 48 + 8;
               const abajo = caja.bottom + 8;
               const cabeAbajo = abajo + alto <= window.innerHeight - 24;
               const top = cabeAbajo ? abajo : Math.max(caja.top - 8 - alto, 72);
@@ -1961,8 +2022,13 @@ export function DirectChatInbox({ alCambiarSubvista }: {
             })()}
           >
         <div role="menu" className="overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-[0_16px_36px_-18px_rgba(15,23,42,0.55)]">
+            {!mensajeDelMenu.deleted_at && (
+              <button type="button" role="menuitem" onClick={() => empezarRespuesta(mensajeDelMenu)} className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm font-bold text-[#162543] active:bg-[#f2f8fb]">
+                <Reply className="h-4 w-4 text-[#526277]" />{tChat("replyMessage")}
+              </button>
+            )}
             {!mensajeDelMenu.deleted_at && !!mensajeDelMenu.body.trim() && (
-              <button type="button" role="menuitem" onClick={() => void copiarMensaje(mensajeDelMenu.body)} className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm font-bold text-[#162543] active:bg-[#f2f8fb]">
+              <button type="button" role="menuitem" onClick={() => void copiarMensaje(mensajeDelMenu.body)} className="flex w-full items-center gap-3 border-t border-[#eef2f6] px-4 py-3 text-left text-sm font-bold text-[#162543] active:bg-[#f2f8fb]">
                 <Copy className="h-4 w-4 text-[#526277]" />{tChat("copy")}
               </button>
             )}

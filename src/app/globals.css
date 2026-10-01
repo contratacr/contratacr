@@ -2542,3 +2542,10 @@ body.ccr-native-app:has(.ccr-native-search-panel) .ccr-native-bottom-nav {
     display: none;
   }
 }
+
+/* Al tocar una cita, el mensaje original se marca un instante, como WhatsApp. */
+@keyframes ccr-senal-de-mensaje {
+  0%, 55% { background-color: rgba(0, 159, 217, 0.14); }
+  100% { background-color: transparent; }
+}
+.ccr-mensaje-senalado { animation: ccr-senal-de-mensaje 1.4s ease-out; }

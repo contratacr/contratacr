@@ -3912,7 +3912,14 @@
     "archivedEmptyTitle": "No archived conversations",
     "archivedEmptyHint": "Archive a chat by swiping it left.",
     "delivered": "Delivered",
-    "seenAt": "Seen {hora}"
+    "seenAt": "Seen {hora}",
+    "replyMessage": "Reply",
+    "replyingTo": "Replying to {name}",
+    "cancelReply": "Don't reply to this message",
+    "you": "You",
+    "originalMessage": "Original message",
+    "photo": "Photo",
+    "file": "File"
   },
   "bottomNav": {
     "search": "Professionals",

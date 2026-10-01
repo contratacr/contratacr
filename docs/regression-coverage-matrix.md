@@ -99,7 +99,7 @@ parpadeos, saltos · **Manual** = se revisa a mano antes de publicar.
 | Mis servicios: agregar, editar descripción y precio, foto, menús contenidos | UI + BD | Automática |
 | Mi perfil: bio, zonas, teléfonos, foto, redes | UI + BD | Automática |
 | Casos de éxito, favoritos, guías | UI + BD | Automática |
-| Cotizaciones: listado, crear, PDF, enlace público `/cotizacion/<código>` | UI (listado) | **Parcial**: crear/PDF/enlace público sin prueba automática |
+| Cotizaciones: listado, crear, PDF, enlace público `/cotizacion/<código>` y `/c/<código>` | `cotizaciones.spec.ts` (montos con IVA, panel, PDF real, enlace sin sesión y noindex, borrar) | **Cubierto** (1-oct-2026) |
 | Agenda y citas | — | Apagadas en el producto (`src/lib/citas.ts`); sus pruebas están en pausa |
 | Filtros de cada sección sin cortarse a 320, 390 y PC | Visual | Automática |
 
@@ -181,13 +181,10 @@ parpadeos, saltos · **Manual** = se revisa a mano antes de publicar.
 
 ## Lo que sigue sin prueba automática (pendientes, en orden)
 
-1. **Cotizaciones**: crear una, generar el PDF y abrir `/cotizacion/<código>`.
-2. **Safari (WebKit)**: dos casos en rojo desde el 21-sep (navegación entre
-   reseñas y menús «···»); hay que arreglarlos para que el lunes pase en verde.
-3. **Proveedores externos** (Google/Apple login, WhatsApp real, push real,
+1. **Proveedores externos** (Google/Apple login, WhatsApp real, push real,
    Cloudinary, Maps): siempre a mano, en test, cuando cambie algo de eso.
-4. **Firefox**: sin cobertura; no vale el costo hoy.
-5. **Android en la tienda**: la regresión del emulador pasa, pero la app no
+2. **Firefox**: sin cobertura; no vale el costo hoy.
+3. **Android en la tienda**: la regresión del emulador pasa, pero la app no
    está publicada.
 
 ## Contratos permanentes por bug reportado

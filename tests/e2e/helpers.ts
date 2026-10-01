@@ -77,7 +77,16 @@ export async function gotoOK(page: Page, path: string) {
   // at the new document's commit so those expected aborts cannot contaminate
   // the health contract for the page we are actually asserting.
   runtimeIssues.set(page, []);
-  const response = await page.goto(path, { waitUntil: "commit" });
+  // Safari (WebKit) puede recibir TARDE una navegación de la página anterior
+  // —p. ej. la portada que vuelve a «/» al notar que se cerró la sesión— y
+  // cortar la nueva («interrupted by another navigation»). En Chrome esa
+  // vuelta termina antes. Se reintenta una vez, ya sin nada pendiente.
+  let response = await page.goto(path, { waitUntil: "commit" }).catch(async (error: Error) => {
+    if (!/interrupted by another navigation/i.test(error.message)) throw error;
+    await page.waitForLoadState("load").catch(() => undefined);
+    return page.goto(path, { waitUntil: "commit" });
+  });
+  if (response === null && page.url().endsWith(path)) response = await page.goto(path, { waitUntil: "commit" });
   runtimeIssues.set(page, []);
   await page.waitForLoadState("domcontentloaded");
   expect(response, `Expected a response for ${path}`).not.toBeNull();
