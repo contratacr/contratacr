@@ -83,6 +83,16 @@ export async function middleware(request: NextRequest) {
     return conCabecerasDeSeguridad(NextResponse.next());
   }
 
+  // UNA SOLA DIRECCIÓN: contratacr.com. www.contratacr.com respondía 200 como
+  // un sitio aparte (con la canónica apuntando a la raíz, pero dos direcciones
+  // reparten enlaces y señales). Ahora salta con 308 PERMANENTE a la misma ruta
+  // sin www, con su consulta. Solo páginas: /api y /auth siguen respondiendo en
+  // www para no romper inicios de sesión ni versiones viejas de la app.
+  if (request.headers.get("host")?.toLowerCase().startsWith("www.contratacr.com")) {
+    const destino = new URL(request.nextUrl.pathname + request.nextUrl.search, "https://contratacr.com");
+    return conCabecerasDeSeguridad(NextResponse.redirect(destino, 308));
+  }
+
   // UNA REESCRITURA INTERNA YA PROCESADA PASA TAL CUAL. Con `next start` (el
   // servidor del CI) el middleware vuelve a correr sobre la dirección a la que
   // él mismo reescribió (/ → /es/…): las reglas de idioma la veían como una

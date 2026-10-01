@@ -5,7 +5,7 @@ name: Smoke diario
 #
 #  · test.contratacr.com — con las cuentas de regresión: entra, busca, abre
 #    perfiles, el asistente, soporte, y las pruebas de parpadeo e hidratación.
-#  · www.contratacr.com — SOLO lectura y sin sesión: portada, servicios,
+#  · contratacr.com — SOLO lectura y sin sesión: portada, servicios,
 #    búsqueda, APIs públicas, salud y parpadeos. Nada escribe en producción.
 #
 # Corre en Chrome de computadora (1366) y de teléfono (390). No reemplaza la
@@ -78,13 +78,13 @@ jobs:
           path: playwright-report/
 
   produccion:
-    name: Smoke de solo lectura en www.contratacr.com
+    name: Smoke de solo lectura en contratacr.com
     if: ${{ github.event_name == 'schedule' || inputs.solo != 'test' }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
       CI: true
-      PLAYWRIGHT_BASE_URL: https://www.contratacr.com
+      PLAYWRIGHT_BASE_URL: https://contratacr.com
       # Sin E2E_FIXTURES_READY ninguna prueba inicia sesión ni escribe: las
       # que lo necesitan se saltan solas (canRunSeededRegression).
       PLAYWRIGHT_JSON_REPORT: test-results/results-produccion.json
@@ -129,4 +129,4 @@ jobs:
         run: >-
           node scripts/ci/avisar-por-correo.mjs
           "🔴 ContrataCR: el smoke diario falló"
-          "test.contratacr.com: ${{ needs.test.result }} · www.contratacr.com: ${{ needs.produccion.result }}"
+          "test.contratacr.com: ${{ needs.test.result }} · contratacr.com: ${{ needs.produccion.result }}"
