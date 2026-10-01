@@ -67,6 +67,11 @@ async function esServicioPublicado(id: string): Promise<boolean> {
       );
       if (!respuesta.ok) throw new Error(`catálogo ${respuesta.status}`);
       const filas = await respuesta.json() as Array<{ id: string }>;
+      // Un catálogo VACÍO no es «no hay servicios»: es que la base no dejó
+      // leerlo (1-oct-2026: la seguridad por filas de producción devolvía cero
+      // filas y todo /profesionales/<servicio> abría «Perfil no encontrado»).
+      // Se trata como una falla: decide la forma y se reintenta en la próxima.
+      if (!Array.isArray(filas) || filas.length === 0) throw new Error("catálogo vacío");
       serviciosPublicados = { ids: new Set(filas.map((f) => f.id)), hasta: Date.now() + 5 * 60_000 };
     } catch {
       return !/-[a-z0-9]{8}$/.test(categorySlug(id));
