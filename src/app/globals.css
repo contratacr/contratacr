@@ -1994,7 +1994,9 @@ body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-native-fab {
   overflow: hidden;
   border: 0;
   background: #fff;
-  padding-block: 0.75rem;
+  /* Entre dos secciones de 20 px de relleno: con 20 más de cada lado, la
+     separación arriba y abajo de las marcas también suma 40 px. */
+  padding-block: 1.25rem;
 }
 
 .featured-brands-marquee {

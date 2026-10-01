@@ -64,21 +64,13 @@ export function ServiciosPorSeccion({ secciones, verTodos }: { secciones: Seccio
         })}
       </div>
 
-      {/* «Ver todos» arriba, a la derecha: con tarjetas altas no cabría abajo
-          en la misma pantalla del teléfono. */}
-      {verTodos && (
-        <div className="mt-3 flex justify-end">
-          <Link href={verTodos.href} className="text-[14px] font-bold text-[#009FD9] hover:underline">{verTodos.label} →</Link>
-        </div>
-      )}
-
       {/* Los cuatro más buscados de la sección: 2×2 en el teléfono (como
           Thumbtack), una fila de cuatro desde computadora. */}
       <div
         id="servicios-de-la-seccion"
         role="tabpanel"
         key={seccion.id}
-        className="ccr-entrada mt-2 grid grid-cols-2 gap-3 sm:mt-7 sm:gap-4 lg:grid-cols-4"
+        className="ccr-entrada mt-4 grid grid-cols-2 gap-3 sm:mt-7 sm:gap-4 lg:grid-cols-4"
       >
         {seccion.servicios.slice(0, 4).map((servicio) => (
           <Link
@@ -94,6 +86,11 @@ export function ServiciosPorSeccion({ secciones, verTodos }: { secciones: Seccio
           </Link>
         ))}
       </div>
+      {verTodos && (
+        <div className="mt-5 text-center">
+          <Link href={verTodos.href} className="text-[14px] font-bold text-[#009FD9] hover:underline">{verTodos.label}</Link>
+        </div>
+      )}
     </div>
   );
 }
