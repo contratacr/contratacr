@@ -122,67 +122,79 @@ export function FindByZone({ coverage }: { coverage: ZoneCoverage }) {
             </div>
           </div>
 
-          {/* ── Panel de la provincia: título, hasta 8 cantones en cuadrícula y
-              las dos acciones juntas abajo. Con San José eran 20 píldoras
-              sueltas y el panel no terminaba nunca. ── */}
-          <div className="rounded-3xl border border-[#eef2f6] bg-white p-5 shadow-[0_18px_50px_rgba(16,39,68,0.10)] sm:p-7">
-            <div className="flex items-center gap-3">
-              <span className={`${leadIconClass} h-11 w-11 shrink-0`}>
-                <MapPin className="h-5 w-5" />
-              </span>
-              <div className="min-w-0">
-                <span className="block text-xl font-extrabold leading-tight text-[#1a2744]">{province.name}</span>
-                <span className={`block text-[13px] font-semibold ${count > 0 ? "text-[#0089bb]" : "text-[#68778d]"}`}>
-                  {count > 0 ? t("coverageCount", { count }) : t("noPros")}
+          {/* ── Active-province panel ── */}
+          <div className="rounded-3xl bg-white border border-[#eef2f6] p-7 sm:p-8 shadow-[0_18px_50px_rgba(16,39,68,0.10)]">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-5">
+              <div className="flex items-center gap-2.5">
+                <span className={`${leadIconClass} h-11 w-11`}>
+                  <MapPin className="h-5 w-5" />
                 </span>
+                <div>
+                  {/* Province name has priority — never truncate it. */}
+                  <span className="block text-xl font-extrabold text-[#1a2744] leading-tight">{province.name}</span>
+                  {count > 0 ? (
+                    <span className="block text-[12px] font-semibold text-[#0089bb]">
+                      {t("coverageCount", { count })}
+                    </span>
+                  ) : (
+                    <span className="block text-[12px] font-medium text-[#68778d]">{t("noPros")}</span>
+                  )}
+                </div>
               </div>
-            </div>
-
-            {count > 0 ? (
-              <div className="mt-5 grid grid-cols-2 gap-2">
-                {coveredCantons.slice(0, 8).map((c) => (
-                  <button
-                    key={c.id}
-                    type="button"
-                    onClick={() => router.push(rutaDeBusqueda({ provincia: activeId, canton: c.id }))}
-                    className="flex min-w-0 items-center gap-2 rounded-xl bg-[#f5f8fb] px-3 py-2.5 text-left text-[14px] font-semibold text-[#1a2744] transition-colors hover:bg-[#e8f4fa] hover:text-[#0089bb]"
-                  >
-                    <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#009FD9]" />
-                    <span className="min-w-0 break-words leading-tight">{c.name}</span>
-                  </button>
-                ))}
-                {coveredCantons.length > 8 && (
-                  <button type="button" onClick={goToProvince} className="col-span-2 rounded-xl px-3 py-2 text-[14px] font-bold text-[#009FD9] hover:underline">
-                    {t("allCantons", { count: coveredCantons.length })}
-                  </button>
-                )}
-              </div>
-            ) : (
-              <p className="mt-5 rounded-2xl bg-[#f5f8fb] p-4 text-[14px] leading-relaxed text-[#5b6778]">
-                <span className="block font-semibold text-[#374151]">{t("emptyTitle", { province: province.name })}</span>
-                {t("emptyDesc")}
-              </p>
-            )}
-
-            <div className="mt-5 grid gap-2 sm:grid-cols-[1fr_auto]">
               <button
                 type="button"
                 onClick={goToProvince}
-                className="inline-flex h-12 items-center justify-center gap-1.5 rounded-xl bg-[#009FD9] px-4 text-[15px] font-bold text-white transition-colors hover:bg-[#0089bb]"
+                className="w-full sm:w-auto shrink-0 inline-flex items-center justify-center gap-1.5 rounded-xl bg-[#009FD9] hover:bg-[#0089bb] px-4 py-2.5 text-sm font-bold text-white transition-colors shadow-[0_8px_22px_rgba(0,159,217,0.3)]"
               >
                 {t("viewPros")} <ArrowRight className="h-4 w-4" />
               </button>
+            </div>
+
+            {count > 0 ? (
+              <>
+                <p className="text-[11px] font-bold uppercase tracking-wide text-[#68778d] mb-3">{t("cantonsWithPros")}</p>
+                {/* Todos los cantones, en cuadrícula pareja y por orden alfabético. */}
+                <div className="mb-6 grid grid-cols-2 gap-2 sm:grid-cols-3">
+                  {[...coveredCantons].sort((x, y) => x.name.localeCompare(y.name, "es")).map((c) => (
+                    <button
+                      key={c.id}
+                      type="button"
+                      onClick={() => router.push(rutaDeBusqueda({ provincia: activeId, canton: c.id }))}
+                      className="group flex min-w-0 items-center gap-1.5 rounded-xl border border-[#e5e7eb] bg-white px-3 py-2 text-left text-sm font-medium leading-tight text-[#374151] hover:border-[#009FD9] hover:bg-[#EBF5FB] hover:text-[#0089bb] transition-colors"
+                    >
+                      <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#009FD9]" />
+                      {c.name}
+                    </button>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <div className="rounded-2xl bg-[#f9fafb] border border-[#e5e7eb] p-5 mb-6">
+                <p className="text-sm font-semibold text-[#374151]">{t("emptyTitle", { province: province.name })}</p>
+                <p className="text-[13px] text-[#6b7280] mt-1">
+                  {t("emptyDesc")}
+                </p>
+              </div>
+            )}
+
+            {/* Geolocation + disclaimer */}
+            <div className="border-t border-[#eef2f6] pt-5">
               <button
                 type="button"
                 onClick={useMyLocation}
                 disabled={geoLoading}
-                className="inline-flex h-12 items-center justify-center gap-2 rounded-xl border border-[#dbe5ee] bg-white px-4 text-[15px] font-bold text-[#1a2744] transition-colors hover:border-[#009FD9] hover:text-[#009FD9] disabled:opacity-60"
+                className="inline-flex items-center gap-2.5 rounded-xl border border-[#e5e7eb] bg-white px-4 py-2.5 text-sm font-bold text-[#1a2744] hover:border-[#009FD9] hover:text-[#009FD9] transition-colors disabled:opacity-60"
               >
-                {geoLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Navigation className="h-4 w-4" />}
+                <span className={`${leadIconClass} h-7 w-7 rounded-lg`}>
+                  {geoLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Navigation className="h-4 w-4" />}
+                </span>
                 {t("useLocation")}
               </button>
+              {geoError && <p className="mt-2 text-[12px] text-[#b45309]">{geoError}</p>}
+              <p className="mt-3 text-[11px] text-[#68778d] leading-relaxed">
+                {t("disclaimer")}
+              </p>
             </div>
-            {geoError && <p className="mt-2 text-[12px] text-[#b45309]">{geoError}</p>}
           </div>
         </div>
       </div>
