@@ -3757,8 +3757,8 @@
       "publishOr": "o"
     },
     "carousel": {
-      "titlePre": "Explora",
-      "titleHighlight": "servicios",
+      "titlePre": "Los servicios",
+      "titleHighlight": "más buscados",
       "viewAll": "Ver todos los servicios"
     },
     "zones": {
