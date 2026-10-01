@@ -1990,7 +1990,6 @@ body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-native-fab {
    y queda solo la marca, sin cajas desparejas. */
 .featured-brands-ribbon {
   overflow: hidden;
-  border-block: 1px solid #eef2f6;
   background: #fff;
   padding-block: 0.75rem;
 }

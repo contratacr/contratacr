@@ -20,7 +20,6 @@ export const MIN_SUPPLY_FOR_LANDING = 3;
 const ALL_PROVINCES = PROVINCES.map((p) => p.id);
 
 async function computeSupplyCounts(): Promise<SupplyCounts> {
-  const empty: SupplyCounts = { byCategory: {}, byCategoryProvince: {}, total: 0, verified: 0 };
   try {
     const supabase = createAdminClient();
     const { data, error } = await sinOcultos((excluirOcultos) => {
@@ -31,7 +30,10 @@ async function computeSupplyCounts(): Promise<SupplyCounts> {
         .neq("verification_status", "rejected");
       return excluirOcultos ? q.eq("oculto_del_buscador", false) : q;
     });
-    if (error || !data) return empty;
+    // Una falla NO se devuelve como «cero»: unstable_cache la guardaría una
+    // hora y la portada se quedaba sin servicios todo ese rato. Se lanza, no se
+    // guarda, y quien llama decide (getSupplyCounts devuelve vacío sin cachear).
+    if (error || !data) throw new Error(error?.message ?? "sin datos");
     const out: SupplyCounts = { byCategory: {}, byCategoryProvince: {}, total: 0, verified: 0 };
     for (const row of data as unknown as Record<string, unknown>[]) {
       if ((row.profiles as { is_disabled?: boolean } | null)?.is_disabled) continue;
@@ -55,11 +57,18 @@ async function computeSupplyCounts(): Promise<SupplyCounts> {
     return out;
   } catch (err) {
     console.error("[supply] error:", err);
-    return empty;
+    throw err;
   }
 }
 
-export const getSupplyCounts = unstable_cache(computeSupplyCounts, ["supply-counts-v1"], { revalidate: 3600 });
+const supplyCountsCached = unstable_cache(computeSupplyCounts, ["supply-counts-v2"], { revalidate: 3600 });
+export async function getSupplyCounts(): Promise<SupplyCounts> {
+  try {
+    return await supplyCountsCached();
+  } catch {
+    return { byCategory: {}, byCategoryProvince: {}, total: 0, verified: 0 };
+  }
+}
 
 export function supplyKey(categoryId: string, provinceId?: string | null) {
   return provinceId ? `${categoryId}|${provinceId}` : categoryId;

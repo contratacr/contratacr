@@ -20,7 +20,11 @@ export async function ProsSection() {
   const orden = (id: string) => rango.get(id) ?? 1000 - Math.min(999, supply.byCategory[id] ?? 0);
 
   const porSeccion = new Map<string, string[]>();
-  for (const [id, cuantos] of Object.entries(supply.byCategory)) {
+  // Sin datos de oferta (la base no contestó), los más buscados igual: una
+  // portada sin servicios es peor que mostrar alguno con poca oferta.
+  const sinDatos = supply.total === 0;
+  const candidatos: [string, number][] = sinDatos ? DEMANDA_DE_SERVICIOS.map((id) => [id, 2]) : Object.entries(supply.byCategory);
+  for (const [id, cuantos] of candidatos) {
     if ((cuantos ?? 0) < 2 || !categoryImageUrl(id)) continue;
     const grupo = categoryGroupId(id);
     if (!grupo) continue;
@@ -39,7 +43,7 @@ export async function ProsSection() {
     }));
 
   return (
-    <section className="ccr-home-services-section bg-[#f4f7fa] pb-8 pt-8 sm:py-12">
+    <section className="ccr-home-services-section bg-white pb-8 pt-8 sm:py-12">
       <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
         <h2 className="mb-6 text-[1.9rem] font-extrabold leading-tight text-[#1a2744] sm:mb-8 sm:text-center sm:text-4xl">
           {t("titlePre")} <span className="text-[#009FD9]">{t("titleHighlight")}</span>

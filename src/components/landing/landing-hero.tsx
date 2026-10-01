@@ -38,7 +38,7 @@ const HERO_FOTOS: { id: string; foco: string }[] = [
 ];
 const HERO_MINIATURA = "data:image/jpeg;base64,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";
 const CADA_FOTO_MS = 6500;
-const urlDeFoto = (id: string, w: number) => `https://images.unsplash.com/photo-${id}?w=${w}&q=72&auto=format&fit=crop`;
+const urlDeFoto = (id: string, w: number) => `https://images.unsplash.com/photo-${id}?w=${w}&q=85&auto=format&fit=crop`;
 
 function FotoDeFondo() {
   const [actual, setActual] = useState(0);
@@ -50,7 +50,7 @@ function FotoDeFondo() {
     const id = window.setInterval(() => setActual((i) => (i + 1) % HERO_FOTOS.length), CADA_FOTO_MS);
     return () => { window.clearTimeout(empezar); window.clearInterval(id); };
   }, []);
-  const anchos = [800, 1200, 1600, 2200];
+  const anchos = [800, 1200, 1600, 2200, 2800];
   return (
     <div aria-hidden className="absolute inset-0 overflow-hidden bg-[#8a7a68]" style={{ backgroundImage: `url("${HERO_MINIATURA}")`, backgroundSize: "cover", backgroundPosition: "30% center" }}>
       {HERO_FOTOS.map((foto, i) => (i === 0 || cargarResto) && (
@@ -68,7 +68,7 @@ function FotoDeFondo() {
         />
       ))}
       {/* Apenas un velo: la foto se ve clara y el panel da el contraste al texto. */}
-      <div className="absolute inset-0 bg-black/10" />
+      
     </div>
   );
 }
@@ -655,14 +655,14 @@ export function LandingHero() {
   }
 
   return (
-    <section className="ccr-hero-foto relative isolate flex min-h-[600px] items-end overflow-hidden sm:min-h-[580px] lg:min-h-[620px] lg:items-center">
+    <section className="ccr-hero-foto relative isolate flex min-h-[600px] items-end overflow-hidden sm:min-h-[580px] lg:min-h-[640px] lg:items-end">
       {/* Como Angi: en el teléfono el panel va ABAJO y la foto se ve arriba; en
           computadora el panel se corre a la izquierda y el profesional queda a
           la derecha, sin texto encima. */}
       <FotoDeFondo />
-      <div className="relative z-10 mx-auto w-full max-w-7xl px-4 pb-8 pt-48 sm:px-6 sm:pb-12 lg:px-8 lg:py-16">
+      <div className="relative z-10 mx-auto w-full max-w-7xl px-4 pb-8 pt-48 sm:px-6 sm:pb-12 lg:px-8 lg:pb-14 lg:pt-56">
       {/* El título y el buscador en un panel translúcido, centrado sobre la foto. */}
-      <div className="rounded-xl bg-[#111827]/70 px-5 py-8 backdrop-blur-[3px] sm:px-10 sm:py-10 lg:max-w-[620px]">
+      <div className="rounded-xl bg-[#111827]/70 px-5 py-8 backdrop-blur-[3px] sm:px-10 sm:py-10 lg:mx-auto lg:max-w-[640px]">
       <div className="relative mx-auto max-w-3xl text-center pb-7">
         <h1
           className="font-extrabold text-white tracking-tight drop-shadow-[0_2px_12px_rgba(0,0,0,0.35)]"
