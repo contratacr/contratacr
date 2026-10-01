@@ -15,7 +15,8 @@ const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "guia-"));
 fs.mkdirSync(salida, { recursive: true });
 
 // Desplaza lo que de verdad se desplaza en esa pantalla (en la app no siempre es la ventana).
-async function bajar(p, px, ms) {
+async function bajar(p, px, msPedido) {
+  const ms = Math.max(msPedido, Math.abs(px) * 6);
   await p.evaluate(async ({ px, ms }) => {
     const candidatos = [document.scrollingElement, ...document.querySelectorAll("main, main *, [class*=scroll]")]
       .filter((el) => el && el.scrollHeight - el.clientHeight > 200 && getComputedStyle(el).overflowY !== "hidden");
@@ -23,7 +24,7 @@ async function bajar(p, px, ms) {
     const inicio = el.scrollTop, t0 = performance.now();
     await new Promise((fin) => {
       const paso = (t) => {
-        const k = Math.min(1, (t - t0) / ms), e = k < 0.5 ? 2 * k * k : 1 - (-2 * k + 2) ** 2 / 2;
+        const k = Math.min(1, (t - t0) / ms), e = (1 - Math.cos(Math.PI * k)) / 2;
         el.scrollTop = inicio + px * e;
         k < 1 ? requestAnimationFrame(paso) : fin();
       };
@@ -51,7 +52,7 @@ async function porElMenu(p, grabar, pausar, texto, destino) {
   await p.goto(base + destino, { waitUntil: "load" });
   await p.waitForTimeout(3000);
   grabar();
-  await p.waitForTimeout(900); await bajar(p, 560, 2600); await p.waitForTimeout(700); await bajar(p, -560, 1400); await p.waitForTimeout(600);
+  await p.waitForTimeout(900); await bajar(p, 520, 3400); await p.waitForTimeout(1400);
 }
 const escenas = {
   // Inicio → pestaña Tecnología → Cámaras de seguridad → el perfil de SG Solutions.
@@ -60,7 +61,7 @@ const escenas = {
     await p.waitForTimeout(3500);
     grabar();
     await p.waitForTimeout(1200);
-    await bajar(p, 330, 1200); await p.waitForTimeout(500);
+    await bajar(p, 330, 2000); await p.waitForTimeout(700);
     await tocar(p, p.getByRole("tab", { name: "Tecnología" }));
     await p.waitForTimeout(900);
     await tocar(p, p.locator("#servicios-de-la-seccion a", { hasText: "Cámaras de seguridad" }).first());
@@ -71,9 +72,9 @@ const escenas = {
     await p.waitForTimeout(4500);
     grabar();
     await p.waitForTimeout(900);
-    await bajar(p, 380, 1500); await p.waitForTimeout(500);
+    await bajar(p, 260, 1800); await p.waitForTimeout(700);
     await tocar(p, p.getByText("SG Solutions", { exact: true }).first());
-    await p.waitForTimeout(3000); await bajar(p, 520, 2400); await p.waitForTimeout(900);
+    await p.waitForTimeout(2600); await bajar(p, 420, 3000); await p.waitForTimeout(1400);
   },
   proyectos: (p, g, s) => porElMenu(p, g, s, "Proyectos", "/proyectos"),
   promociones: (p, g, s) => porElMenu(p, g, s, "Promociones", "/promociones"),
@@ -91,6 +92,17 @@ for (const [clave, escena] of Object.entries(escenas)) {
   });
   await ctx.addCookies([base, TEST, INICIO].map((url) => ({ name: "ccr_platform", value: "native", url })));
   await ctx.addInitScript(() => { try { localStorage.setItem("ccr:native-first-run-onboarding:v12", "1"); } catch {} });
+  // Los videos enseñan a encontrar, no a contactar: se ocultan WhatsApp, llamar,
+  // contactar y postularse (en tarjetas, perfiles y la barra de abajo).
+  await ctx.addInitScript(() => {
+    const ocultar = () => {
+      for (const el of document.querySelectorAll("a, button")) {
+        const t = (el.textContent || "").trim();
+        if (/^(contactar|whatsapp|llamar|postular|aplicar|enviar mensaje|escribir)/i.test(t)) el.style.visibility = "hidden";
+      }
+    };
+    new MutationObserver(ocultar).observe(document, { childList: true, subtree: true });
+  });
   const p = await ctx.newPage();
   const cdp = await ctx.newCDPSession(p);
   const cuadros = []; const cortes = []; let grabando = false;
