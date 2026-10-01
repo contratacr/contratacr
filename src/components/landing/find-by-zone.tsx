@@ -191,9 +191,6 @@ export function FindByZone({ coverage }: { coverage: ZoneCoverage }) {
                 {t("useLocation")}
               </button>
               {geoError && <p className="mt-2 text-[12px] text-[#b45309]">{geoError}</p>}
-              <p className="mt-3 text-[11px] text-[#68778d] leading-relaxed">
-                {t("disclaimer")}
-              </p>
             </div>
           </div>
         </div>
