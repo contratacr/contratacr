@@ -49,8 +49,10 @@ const today = () => new Date().toISOString().slice(0, 10);
 
 function Tile({ label, value, hint, accent }: { label: string; value: string; hint?: string; accent?: boolean }) {
   return (
-    <div className={cn("rounded-xl border bg-white p-3", accent ? "border-[#009FD9]/40 bg-[#f0f9ff]" : "border-[#e5e7eb]")}>
-      <p className="text-xl font-bold leading-none tabular-nums text-[#0f172a] sm:text-2xl">{value}</p>
+    // min-w-0 + break-words: una cifra larga («$1,234.56 + ₡1,234,567») no
+    // cabe en media pantalla de teléfono y, sin corte, ensanchaba la página entera.
+    <div className={cn("min-w-0 rounded-xl border bg-white p-3", accent ? "border-[#009FD9]/40 bg-[#f0f9ff]" : "border-[#e5e7eb]")}>
+      <p className="break-words text-xl font-bold leading-tight tabular-nums text-[#0f172a] sm:text-2xl">{value}</p>
       <p className="mt-1.5 text-xs text-[#64748b]">{label}</p>
       {hint && <p className="text-[11px] text-[#94a3b8]">{hint}</p>}
     </div>

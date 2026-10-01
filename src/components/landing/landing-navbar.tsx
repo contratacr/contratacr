@@ -798,8 +798,13 @@ function GemeloDelBuscador({ pathname }: { pathname: string | null }) {
         <div className="relative min-w-0 flex-[1.85]">
           {/* Recorta, sin puntos suspensivos: así recorta un <input> su texto de
               ayuda. Con `truncate` el gemelo decía «busca…» y el campo de
-              verdad «buscas?», 67 píxeles de diferencia al montarse. */}
-          <span className="block h-11 w-full min-w-0 overflow-hidden whitespace-nowrap pr-9 text-base font-normal leading-[2.75rem] text-gray-400">{t(tablero)}</span>
+              verdad «buscas?», 67 píxeles de diferencia al montarse. Y recorta
+              en el borde del CONTENIDO, no del relleno: un <input> no deja ver
+              texto bajo su pr-9, un <span> con overflow-hidden sí (en una barra
+              angosta el gemelo decía «buscas?» y el campo «buscas», 52 px). */}
+          <span className="block h-11 w-full min-w-0 pr-9">
+            <span className="block h-11 w-full min-w-0 overflow-hidden whitespace-nowrap text-base font-normal leading-[2.75rem] text-gray-400">{t(tablero)}</span>
+          </span>
         </div>
         <span className="block h-6 w-px shrink-0 bg-[#dfe5eb]" />
         <div style={{ minWidth: 120 }} className="relative flex-1">

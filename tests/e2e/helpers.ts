@@ -236,8 +236,16 @@ export async function expectNoHorizontalOverflow(page: Page) {
   const size = await page.evaluate(() => {
     const clientWidth = document.documentElement.clientWidth;
     // Qué se sale, para no adivinar desde el CI: los elementos más anchos que la pantalla.
+    // Lo que vive dentro de un carril con desplazamiento propio (overflow-x
+    // auto/hidden/scroll) no ensancha el documento: se descarta.
+    const dentroDeCarril = (el: HTMLElement) => {
+      for (let p = el.parentElement; p && p !== document.body; p = p.parentElement) {
+        if (/(auto|scroll|hidden)/.test(getComputedStyle(p).overflowX)) return true;
+      }
+      return false;
+    };
     const culpables = Array.from(document.querySelectorAll<HTMLElement>("body *"))
-      .filter((el) => el.getBoundingClientRect().right > clientWidth + 1 && el.getBoundingClientRect().width > 0)
+      .filter((el) => el.getBoundingClientRect().right > clientWidth + 1 && el.getBoundingClientRect().width > 0 && !dentroDeCarril(el))
       .slice(0, 6)
       .map((el) => `${el.tagName.toLowerCase()}.${[...el.classList].slice(0, 3).join(".")} right=${Math.round(el.getBoundingClientRect().right)} «${(el.textContent ?? "").trim().slice(0, 40)}»`);
     return { clientWidth, scrollWidth: document.documentElement.scrollWidth, culpables };

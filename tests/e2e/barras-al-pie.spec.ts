@@ -123,7 +123,7 @@ test.describe("@seeded franjas de acciones al pie", () => {
       // letra—, no el ancho.
       // 12 px entre botones: la separación única de la app (data-ccr-separacion).
       const anchoEsperado = franja.botones.length > 1 ? (botonRef.ancho - 12) / 2 : botonRef.ancho;
-      expect(Math.abs(b.ancho - anchoEsperado), `«${nombre}» no reparte el ancho de la franja entre sus botones: ${JSON.stringify(franja.botones)} ref=${JSON.stringify(botonRef)}`).toBeLessThanOrEqual(1);
+      expect(Math.abs(b.ancho - anchoEsperado), `«${nombre}» no reparte el ancho de la franja entre sus botones: ${JSON.stringify(franja.botones)} aire=${JSON.stringify(franja.aire)} ref=${JSON.stringify(botonRef)} refAire=${JSON.stringify(referencia.aire)}`).toBeLessThanOrEqual(1);
     }
       expect(franja.fija, `«${nombre}» no deja la franja pegada al fondo`).toBe(true);
       expect(franja.alFondo, `«${nombre}» deja la franja despegada del borde`).toBe(true);

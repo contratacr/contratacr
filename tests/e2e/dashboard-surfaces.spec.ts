@@ -430,7 +430,8 @@ test.describe("@seeded dashboard surfaces", () => {
     test.slow();
     await loginAs(page, E2E_USERS.professional.email, E2E_USERS.professional.password);
     await gotoOK(page, "/dashboard/profesional?tab=services");
-    await expectVisibleText(page.locator("main"), /Servicios|Services/i);
+    // La sección pinta esqueleto hasta que llega su consulta; en el CI tarda.
+    await expectVisibleText(page.locator("main"), /Servicios|Services/i, 30_000);
 
     await page.getByRole("button", { name: /Agregar servicio|Add service/i }).last().click();
     const dialog = page.getByRole("dialog").filter({ hasText: /Agregar servicio|Add service/i }).first();
