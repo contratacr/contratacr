@@ -3809,25 +3809,29 @@
           "titulo": "Find professionals",
           "texto": "Pick a service and area, compare reviews and message them on WhatsApp.",
           "cta": "Find professionals",
-          "alt": "Professional results in the ContrataCR app"
+          "alt": "Professional results in the ContrataCR app",
+          "pestana": "Pros"
         },
         "proyectos": {
           "titulo": "Post your project",
           "texto": "Say what you need and professionals reach out.",
           "cta": "Post a project",
-          "alt": "Projects board in the ContrataCR app"
+          "alt": "Projects board in the ContrataCR app",
+          "pestana": "Projects"
         },
         "empleos": {
           "titulo": "Jobs",
           "texto": "Find work or post an opening for your business.",
           "cta": "See jobs",
-          "alt": "Jobs board in the ContrataCR app"
+          "alt": "Jobs board in the ContrataCR app",
+          "pestana": "Jobs"
         },
         "promociones": {
           "titulo": "Deals",
           "texto": "Discounts from professionals near you.",
           "cta": "See deals",
-          "alt": "Professional promotions in the ContrataCR app"
+          "alt": "Professional promotions in the ContrataCR app",
+          "pestana": "Deals"
         }
       }
     },

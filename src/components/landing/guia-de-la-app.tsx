@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 export type PasoDeLaGuia = {
   clave: "profesionales" | "proyectos" | "empleos" | "promociones";
   titulo: string;
+  pestana: string;
   texto: string;
   cta: string;
   href: string;
@@ -27,7 +28,6 @@ export function GuiaDeLaApp({ pasos }: { pasos: PasoDeLaGuia[] }) {
   const [activo, setActivo] = useState(0);
   const [quieta, setQuieta] = useState(false);
   const [progreso, setProgreso] = useState(0);
-  const pastillas = useRef<HTMLDivElement | null>(null);
   const videos = useRef<(HTMLVideoElement | null)[]>([]);
   const caja = useRef<HTMLDivElement | null>(null);
   const [visible, setVisible] = useState(false);
@@ -64,13 +64,12 @@ export function GuiaDeLaApp({ pasos }: { pasos: PasoDeLaGuia[] }) {
   const elegir = (i: number) => {
     setQuieta(true);
     setActivo(i);
-    pastillas.current?.children[i]?.scrollIntoView({ inline: "center", block: "nearest", behavior: "smooth" });
-  };
+      };
 
   const paso = pasos[activo];
 
   return (
-    <div className="grid grid-cols-1 items-center gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(320px,400px)] lg:gap-16">
+    <div className="grid grid-cols-1 items-center gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(320px,400px)] lg:gap-16">
       {/* Pasos: en computadora, lista a la izquierda. */}
       <ol className="hidden space-y-3 lg:block">
         {pasos.map((p, i) => {
@@ -84,7 +83,7 @@ export function GuiaDeLaApp({ pasos }: { pasos: PasoDeLaGuia[] }) {
                 aria-pressed={elegido}
                 className={cn(
                   "group relative flex w-full items-start gap-4 overflow-hidden rounded-2xl border p-5 text-left transition-all duration-300",
-                  elegido ? "border-[#bfe4f4] bg-white shadow-[0_18px_40px_-28px_rgba(15,23,42,0.45)]" : "border-transparent hover:bg-white/60",
+                  elegido ? "border-[#009FD9] bg-[#f2faff] shadow-[0_18px_40px_-28px_rgba(0,159,217,0.6)]" : "border-[#e3e9ef] bg-white hover:border-[#9fd6ee]",
                 )}
               >
                 <span className={cn("grid h-11 w-11 shrink-0 place-items-center rounded-xl transition-colors", elegido ? "bg-[#009FD9] text-white" : "bg-[#e8f4fa] text-[#0089bb]")}>
@@ -92,7 +91,7 @@ export function GuiaDeLaApp({ pasos }: { pasos: PasoDeLaGuia[] }) {
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className="block text-[17px] font-extrabold leading-snug text-[#1a2744]">{p.titulo}</span>
-                  <span className={cn("block overflow-hidden text-[15px] leading-relaxed text-[#5b6778] transition-all duration-300", elegido ? "mt-1 max-h-24 opacity-100" : "max-h-0 opacity-0")}>{p.texto}</span>
+                  <span className="mt-1 block text-[15px] leading-relaxed text-[#5b6778]">{p.texto}</span>
                 </span>
                 {/* La barra de tiempo: cuánto falta para el siguiente paso. */}
                 {elegido && (
@@ -110,6 +109,33 @@ export function GuiaDeLaApp({ pasos }: { pasos: PasoDeLaGuia[] }) {
           </Link>
         </li>
       </ol>
+
+      {/* En el teléfono y la tableta: pestañas con ícono ENCIMA del aparato, como
+          las de «Los servicios más buscados». La raya de abajo se llena con el video. */}
+      <div role="tablist" className="-mx-4 grid grid-cols-4 border-b border-[#e3e9ef] px-2 lg:hidden">
+        {pasos.map((p, i) => {
+          const Icono = ICONOS[p.clave];
+          const elegido = i === activo;
+          return (
+            <button
+              key={p.clave}
+              type="button"
+              role="tab"
+              aria-selected={elegido}
+              onClick={() => elegir(i)}
+              className={cn("relative flex min-w-0 flex-col items-center gap-1.5 pb-3 pt-1 text-[13px] font-semibold transition-colors", elegido ? "text-[#009FD9]" : "text-[#6b7686]")}
+            >
+              <span className={cn("grid h-11 w-11 place-items-center rounded-2xl transition-colors", elegido ? "bg-[#009FD9] text-white shadow-[0_8px_18px_-8px_rgba(0,159,217,0.7)]" : "bg-[#eef5fa] text-[#3c4a5c]")}>
+                <Icono className="h-5 w-5" strokeWidth={2} />
+              </span>
+              <span className="max-w-full truncate">{p.pestana}</span>
+              <span aria-hidden className={cn("absolute inset-x-2 bottom-0 h-[3px] overflow-hidden rounded-full", elegido ? "bg-[#cfeaf7]" : "bg-transparent")}>
+                {elegido && <span className="block h-full w-full origin-left rounded-full bg-[#009FD9]" style={{ transform: `scaleX(${progreso})` }} />}
+              </span>
+            </button>
+          );
+        })}
+      </div>
 
       {/* El teléfono, con las cuatro pantallas fundiéndose. */}
       <div ref={caja} className="relative flex flex-col items-center">
@@ -151,30 +177,8 @@ export function GuiaDeLaApp({ pasos }: { pasos: PasoDeLaGuia[] }) {
           </div>
         </div>
 
-        {/* En el teléfono y la tableta: pastillas debajo del aparato y la explicación del paso elegido. */}
-        <div className="mt-7 w-full lg:hidden">
-          <div ref={pastillas} className="scrollbar-none -mx-4 flex gap-2 overflow-x-auto px-4 sm:justify-center">
-            {pasos.map((p, i) => {
-              const Icono = ICONOS[p.clave];
-              const elegido = i === activo;
-              return (
-                <button
-                  key={p.clave}
-                  type="button"
-                  onClick={() => elegir(i)}
-                  aria-pressed={elegido}
-                  className={cn(
-                    "relative flex h-10 shrink-0 items-center gap-2 overflow-hidden rounded-full border px-4 text-[14px] font-bold transition-colors",
-                    elegido ? "border-[#009FD9] bg-[#009FD9] text-white" : "border-[#dbe5ee] bg-white text-[#3c4a5c]",
-                  )}
-                >
-                  {/* El avance del video, como un relleno más oscuro dentro de la pastilla. */}
-                  {elegido && <span aria-hidden className="absolute inset-y-0 left-0 w-full origin-left bg-[#0089bb]" style={{ transform: `scaleX(${progreso})` }} />}
-                  <Icono className="relative h-4 w-4" strokeWidth={2.2} /><span className="relative">{p.titulo}</span>
-                </button>
-              );
-            })}
-          </div>
+        {/* En el teléfono y la tableta: el texto del paso elegido debajo del aparato. */}
+        <div className="mt-2 w-full lg:hidden">
           <div key={paso.clave} className="ccr-entrada mx-auto mt-4 max-w-md text-center">
             <p className="text-[15px] leading-relaxed text-[#5b6778]">{paso.texto}</p>
             <Link href={paso.href} className="mt-2 inline-flex items-center gap-1.5 text-[15px] font-bold text-[#009FD9]">

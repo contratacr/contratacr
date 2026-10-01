@@ -9,9 +9,10 @@ import { GuiaDeLaApp, type PasoDeLaGuia } from "@/components/landing/guia-de-la-
    cuentas y publicaciones de prueba). */
 export async function WhyContratacr() {
   const t = await getTranslations("landing.howItWorks");
-  const pasos: PasoDeLaGuia[] = (["profesionales", "proyectos", "empleos", "promociones"] as const).map((clave) => ({
+  const pasos: PasoDeLaGuia[] = (["profesionales", "proyectos", "promociones", "empleos"] as const).map((clave) => ({
     clave,
     titulo: t(`guia.${clave}.titulo`),
+    pestana: t(`guia.${clave}.pestana`),
     texto: t(`guia.${clave}.texto`),
     cta: t(`guia.${clave}.cta`),
     href: { profesionales: "/profesionales", proyectos: "/publicar-proyecto", empleos: "/empleos", promociones: "/promociones" }[clave],

@@ -3809,25 +3809,29 @@
           "titulo": "Busca profesionales",
           "texto": "Elige servicio y zona, compara reseñas y escríbeles por WhatsApp.",
           "cta": "Buscar profesionales",
-          "alt": "Resultados de profesionales en la app de ContrataCR"
+          "alt": "Resultados de profesionales en la app de ContrataCR",
+          "pestana": "Profesionales"
         },
         "proyectos": {
           "titulo": "Publica tu proyecto",
           "texto": "Cuenta qué necesitas y los profesionales te contactan.",
           "cta": "Publicar un proyecto",
-          "alt": "Tablero de proyectos en la app de ContrataCR"
+          "alt": "Tablero de proyectos en la app de ContrataCR",
+          "pestana": "Proyectos"
         },
         "empleos": {
           "titulo": "Empleos",
           "texto": "Encuentra trabajo o publica una vacante para tu negocio.",
           "cta": "Ver empleos",
-          "alt": "Tablero de empleos en la app de ContrataCR"
+          "alt": "Tablero de empleos en la app de ContrataCR",
+          "pestana": "Empleos"
         },
         "promociones": {
           "titulo": "Promociones",
           "texto": "Descuentos de profesionales cerca de ti.",
           "cta": "Ver promociones",
-          "alt": "Promociones de profesionales en la app de ContrataCR"
+          "alt": "Promociones de profesionales en la app de ContrataCR",
+          "pestana": "Promociones"
         }
       }
     },
