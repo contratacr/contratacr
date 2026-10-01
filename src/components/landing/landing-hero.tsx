@@ -5,13 +5,7 @@ import { createPortal } from "react-dom";
 import { ArrowRight, Loader2, Search, MapPin } from "lucide-react";
 import { Link, useRouter } from "@/i18n/navigation";
 import { useLocale, useTranslations } from "next-intl";
-import Image from "next/image";
 import { cn } from "@/lib/utils";
-import { cloudinaryAssetUrl, cloudinaryImageLoader } from "@/lib/cloudinary";
-
-const HERO_MAX_WIDTH = 800;
-const heroLoader = (params: { src: string; width: number; quality?: number }) =>
-  cloudinaryImageLoader({ ...params, width: Math.min(params.width, HERO_MAX_WIDTH) });
 import type { SearchSuggestion } from "@/app/api/search/suggestions/route";
 import { searchLocations, resolveLocation, type LocationSuggestion } from "@/lib/data/location-search";
 import { loadGoogleMaps } from "@/lib/maps/loader";
@@ -32,46 +26,31 @@ const ROTATING_LINES: Record<string, string[]> = {
   en: ["Health,", "Accounting,", "Physical therapy,", "Electrical,", "Technology,", "Psychology,", "Architecture,", "Veterinary,"],
 };
 
-/* ── Hero image — ONE easy-to-swap asset shown in the dome. ──
-   Replace `src` (and `alt`) with the final high-quality Costa Rican photo when
-   it's provided; nothing else needs to change. Placeholder = a local service
-   professional at work (never a foreign-looking house). */
-const HERO_IMAGE = {
-  // The loader rewrites this width per device; 1600 is only the desktop ceiling.
-  src: cloudinaryAssetUrl("contratacr/home/hero-sanjose.jpg", "f_auto,q_auto,w_1600"),
-  alt: "Vista de la ciudad de San José, Costa Rica al atardecer",
-  // A 128px WebP of the same photo (2.3 KB), inlined so the arch shows a
-  // recognisable city from the very first paint. It is painted as the box's own
-  // background, not through next/image's placeholder: that one re-blurs whatever
-  // it is given with an SVG filter, which turned the photo into a flat blob.
-  placeholder: "data:image/webp;base64,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",
-};
+/* ── FOTO DE FONDO DEL HERO, a todo el ancho (como Angi) ──
+   Un profesional trabajando, con la persona hacia la derecha: el centro queda
+   libre para el título y el buscador. Unsplash entrega cada ancho ya
+   recortado (en Cloudflare /_next/image no optimiza). La miniatura de 48 px va
+   en línea para que el primer cuadro ya tenga la foto, no un hueco. */
+const HERO_FOTO = "https://images.unsplash.com/photo-1589939705384-5185137a7f0f";
+const HERO_MINIATURA = "data:image/jpeg;base64,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";
 
-function HeroPhoto() {
-  const ref = useRef<HTMLImageElement | null>(null);
-  const [phase, setPhase] = useState<"ssr" | "waiting" | "loaded">("ssr");
-  useEffect(() => {
-    const img = ref.current;
-    if (!img) return;
-    setPhase(img.complete && img.naturalWidth > 0 ? "loaded" : "waiting");
-  }, []);
+function FotoDeFondo() {
+  const anchos = [800, 1200, 1600, 2200];
   return (
-    <Image
-      ref={ref}
-      src={HERO_IMAGE.src}
-      alt={HERO_IMAGE.alt}
-      fill
-      className="object-cover object-center"
-      style={{
-        opacity: phase === "waiting" ? 0 : 1,
-        transition: phase === "ssr" ? undefined : "opacity 320ms ease-out",
-      }}
-      onLoad={() => setPhase("loaded")}
-      priority
-      fetchPriority="high"
-      loader={heroLoader}
-      sizes="(min-width:860px) 800px, 100vw"
-    />
+    <div aria-hidden className="absolute inset-0 bg-[#3a3128]" style={{ backgroundImage: `url("${HERO_MINIATURA}")`, backgroundSize: "cover", backgroundPosition: "70% center" }}>
+      {/* eslint-disable-next-line @next/next/no-img-element -- ya viene del tamaño justo desde Unsplash */}
+      <img
+        src={`${HERO_FOTO}?w=1600&q=72&auto=format&fit=crop`}
+        srcSet={anchos.map((w) => `${HERO_FOTO}?w=${w}&q=72&auto=format&fit=crop ${w}w`).join(", ")}
+        sizes="100vw"
+        alt=""
+        fetchPriority="high"
+        decoding="async"
+        className="absolute inset-0 h-full w-full object-cover object-[70%_center]"
+      />
+      {/* Oscurece lo justo para que el texto blanco se lea sobre cualquier zona. */}
+      <div className="absolute inset-0 bg-gradient-to-b from-black/45 via-black/30 to-black/55" />
+    </div>
   );
 }
 
@@ -134,14 +113,14 @@ function RotatingLine({ lines }: { lines: string[] }) {
       suppressHydrationWarning
     >
       {!montado ? (
-        <span style={{ display: "inline-block", color: "#009FD9" }}>{word}</span>
+        <span style={{ display: "inline-block", color: "#5CCBF5" }}>{word}</span>
       ) : Array.from(word).map((ch, i) => (
         <span
           key={`${index}-${i}`}
           aria-hidden
           style={{
             display: "inline-block",
-            color: "#009FD9",
+            color: "#5CCBF5",
             willChange: "transform, opacity",
             transform: visible ? "translateY(0)" : `translateY(${leaving ? "-110%" : "110%"})`,
             opacity: visible ? 1 : 0,
@@ -739,11 +718,14 @@ export function LandingHero() {
   }
 
   return (
-    <section className="relative bg-white overflow-hidden">
-      {/* Headline — narrower container for readability */}
-      <div className="relative mx-auto max-w-3xl px-4 sm:px-6 text-center pt-20 sm:pt-28 pb-8">
+    <section className="ccr-hero-foto relative isolate flex min-h-[520px] items-center overflow-hidden sm:min-h-[560px] lg:min-h-[600px]">
+      <FotoDeFondo />
+      <div className="relative z-10 mx-auto w-full max-w-4xl px-4 py-12 sm:px-6 sm:py-16">
+      {/* El título y el buscador en un panel translúcido, centrado sobre la foto. */}
+      <div className="rounded-3xl bg-[#0b1626]/40 px-4 py-8 shadow-[0_30px_80px_-40px_rgba(0,0,0,0.6)] backdrop-blur-[3px] sm:px-10 sm:py-12">
+      <div className="relative mx-auto max-w-3xl text-center pb-7">
         <h1
-          className="font-extrabold text-[#1a2744] tracking-tight"
+          className="font-extrabold text-white tracking-tight drop-shadow-[0_2px_12px_rgba(0,0,0,0.35)]"
           style={{ fontSize: "clamp(2rem, 5.5vw, 3.6rem)", lineHeight: 1.1 }}
         >
           <RotatingLine lines={lines} />
@@ -751,8 +733,8 @@ export function LandingHero() {
         </h1>
       </div>
 
-      {/* ── Search bar — full-width in wider container ── */}
-      <div className="mx-auto max-w-5xl px-4 sm:px-8 pb-6">
+      {/* ── Buscador ── */}
+      <div className="mx-auto max-w-3xl">
         <form
           onSubmit={handleSearch}
           className="w-full"
@@ -877,25 +859,12 @@ export function LandingHero() {
         <div id="hero-search-sentinel" aria-hidden className="h-0" />
 
         {geoError && (
-          <p className="mt-2 text-center text-xs font-medium text-red-600">{geoError}</p>
+          <p className="mt-3 text-center text-xs font-semibold text-red-200">{geoError}</p>
         )}
 
       </div>
 
-      {/* Arch / dome image — responsive height */}
-      <div className="flex justify-center px-4 pb-0">
-        <div
-          className="relative overflow-hidden w-full h-[140px] bg-[#c9d6e0] min-[400px]:h-[170px] sm:h-[250px] md:h-[300px] lg:h-[330px]"
-          style={{
-            maxWidth: 800,
-            borderRadius: "50% 50% 0 0 / 100% 100% 0 0",
-            backgroundImage: `url("${HERO_IMAGE.placeholder}")`,
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-          }}
-        >
-          <HeroPhoto />
-        </div>
+      </div>
       </div>
     </section>
   );
