@@ -3765,7 +3765,7 @@
     "zones": {
       "eyebrow": "Cobertura local",
       "heading": "Encuentra profesionales en tu zona",
-      "subtitle": "Toca tu provincia en el mapa, afina por cantón o deja que te ubiquemos. Profesionales cerca de ti, en distintas zonas del país.",
+      "subtitle": "Toca tu provincia y elige tu cantón.",
       "mapAria": "Mapa de Costa Rica por provincia",
       "coverageCount": "{count, plural, one {# cantón con cobertura} other {# cantones con cobertura}}",
       "noPros": "Aún sin servicios",
