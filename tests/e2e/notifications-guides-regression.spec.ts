@@ -3,7 +3,7 @@ import { expect, test, type Page } from "playwright/test";
 import esMessages from "../../messages/es.json";
 import enMessages from "../../messages/en.json";
 import { cleanupDisposableAccount, createDisposableAccount, type DisposableAccount } from "./disposable-account";
-import { expectNoHorizontalOverflow, expectNoRawI18nKeys, gotoOK, loginAs } from "./helpers";
+import { expectNoHorizontalOverflow, expectNoRawI18nKeys, gotoOK, loginAs, isMobileProject } from "./helpers";
 import { canRunSeededRegression, ensureRegressionSeed, regressionAdminClient } from "./seed";
 
 type Locale = "es" | "en";
@@ -228,16 +228,19 @@ test.describe("@notifications-guides disposable bilingual UI regression", () => 
         await expect(list.locator(".ccr-notifications-items > li [data-unread='true']")).toHaveCount(0);
 
         const applicationRow = list.locator(".ccr-notifications-items > li").filter({ hasText: seeded.reviewerName });
-        // The row menu lives inside the row on the web and in a portal inside
-        // the native shell, so locate its item by role wherever it renders.
-        await applicationRow.getByRole("button", { name: copy.rowOptions, exact: true }).click();
-        const deleteOne = page.getByRole("menuitem", { name: copy.deleteOne, exact: true }).filter({ visible: true }).first();
-        await expect(deleteOne).toBeVisible();
-        await deleteOne.click();
-        await expect.poll(async () => (await notificationRows([seeded.reviewId])).length, {
-          message: "Deleting one notification should remove only that row",
-        }).toBe(0);
-        await expect(applicationRow).toHaveCount(0);
+        // En el teléfono (web) la fila no lleva menú: se borra deslizando, y
+        // eso lo cubre la suite móvil. El menú de fila existe en computadora
+        // y, en un portal, dentro de la app nativa.
+        if (!isMobileProject(test.info())) {
+          await applicationRow.getByRole("button", { name: copy.rowOptions, exact: true }).click();
+          const deleteOne = page.getByRole("menuitem", { name: copy.deleteOne, exact: true }).filter({ visible: true }).first();
+          await expect(deleteOne).toBeVisible();
+          await deleteOne.click();
+          await expect.poll(async () => (await notificationRows([seeded.reviewId])).length, {
+            message: "Deleting one notification should remove only that row",
+          }).toBe(0);
+          await expect(applicationRow).toHaveCount(0);
+        }
 
         await list.getByRole("button", { name: copy.globalOptions, exact: true }).first().click();
         await page.getByRole("menuitem", { name: copy.deleteAll, exact: true }).click();

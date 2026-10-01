@@ -111,7 +111,9 @@ async function pageShellState(page: Page) {
       .map((main) => (main as HTMLElement).innerText)
       .join(" ")
       .trim();
-    const routeLoading = Array.from(document.querySelectorAll<HTMLElement>(".ccr-page-route-loading[aria-busy='true']"))
+    // El esqueleto de una sección del panel (PanelSkeleton) también es un
+    // estado de carga visible: anuncia aria-busy y role=status.
+    const routeLoading = Array.from(document.querySelectorAll<HTMLElement>(".ccr-page-route-loading[aria-busy='true'], [role='status'][aria-busy='true']"))
       .some((node) => {
         const style = window.getComputedStyle(node);
         const box = node.getBoundingClientRect();
@@ -231,11 +233,16 @@ async function expectAuthCookie(page: Page) {
 }
 
 export async function expectNoHorizontalOverflow(page: Page) {
-  const size = await page.evaluate(() => ({
-    clientWidth: document.documentElement.clientWidth,
-    scrollWidth: document.documentElement.scrollWidth,
-  }));
-  expect(size.scrollWidth, "Page should not overflow horizontally").toBeLessThanOrEqual(size.clientWidth + 4);
+  const size = await page.evaluate(() => {
+    const clientWidth = document.documentElement.clientWidth;
+    // Qué se sale, para no adivinar desde el CI: los elementos más anchos que la pantalla.
+    const culpables = Array.from(document.querySelectorAll<HTMLElement>("body *"))
+      .filter((el) => el.getBoundingClientRect().right > clientWidth + 1 && el.getBoundingClientRect().width > 0)
+      .slice(0, 6)
+      .map((el) => `${el.tagName.toLowerCase()}.${[...el.classList].slice(0, 3).join(".")} right=${Math.round(el.getBoundingClientRect().right)} «${(el.textContent ?? "").trim().slice(0, 40)}»`);
+    return { clientWidth, scrollWidth: document.documentElement.scrollWidth, culpables };
+  });
+  expect(size.scrollWidth, `Page should not overflow horizontally (${page.url()}): ${size.culpables.join(" | ")}`).toBeLessThanOrEqual(size.clientWidth + 4);
 }
 
 export async function openLoginForm(page: Page) {

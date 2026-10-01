@@ -671,8 +671,10 @@ export function NotificationsList({ scope = "mode", titulo }: { scope?: "mode" |
                 // cada fila ya las separan, y los rótulos (Hoy, Ayer…) agrupan.
                 className="relative group"
               >
+                {/* 9 px arriba y no 12: con el aire de la lista, el primer rótulo
+                    (HOY, AYER) queda a 16 px del navbar, como abre toda pantalla. */}
                 {abreGrupo && (
-                  <div className="flex items-center justify-between gap-2 bg-white px-4 pb-1 pt-3">
+                  <div className="flex items-center justify-between gap-2 bg-white px-4 pb-1 pt-[9px]">
                     <p className="min-w-0 truncate text-[11px] font-extrabold uppercase tracking-wide text-[#8b95a5]">
                       {t(grupo)}
                     </p>

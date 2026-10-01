@@ -191,6 +191,11 @@ jobs:
             export PLAYWRIGHT_JSON_REPORT="test-results/results-${shard}.json"
             export PLAYWRIGHT_OUTPUT_DIR="test-results/shard-${shard}"
             export PLAYWRIGHT_HTML_OUTPUT_DIR="playwright-report/shard-${shard}"
+            # La caché de datos de Next (unstable_cache) vive en disco y sobrevive
+            # al reinicio del servidor entre tramos; al vencer sirve lo viejo y
+            # recalcula después, así que un tramo veía profesionales desechables
+            # del tramo anterior. Cada tramo arranca con la caché limpia.
+            rm -rf .next/cache/fetch-cache
             npx playwright test --shard="${shard}/4" || fallidos="${fallidos} ${shard}"
           done
           if [ -n "$fallidos" ]; then

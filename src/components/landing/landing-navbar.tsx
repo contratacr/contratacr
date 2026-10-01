@@ -740,16 +740,21 @@ export function HeaderAccountLink() {
   const t = useTranslations("nav");
   const label = t("login");
   const pathname = usePathname();
-  const locale = useLocale();
-  const [busqueda, setBusqueda] = useState("");
-  // Los filtros de la dirección (los de /buscar, por ejemplo) se leen ya en el
-  // navegador: leerlos con useSearchParams obligaría a envolver cada barra en
-  // un Suspense.
-  useEffect(() => { queueMicrotask(() => setBusqueda(window.location.search)); }, [pathname]);
+  const [aqui, setAqui] = useState("");
+  // La dirección de vuelta se lee ya en el navegador, de window.location: los
+  // filtros (leerlos con useSearchParams obligaría a envolver cada barra en un
+  // Suspense) y también la ruta, porque usePathname devuelve la interna
+  // —/buscar— cuando la persona está en /profesionales/… y volvía ahí sin su
+  // categoría ni su zona.
+  useEffect(() => {
+    queueMicrotask(() => {
+      const { pathname: ruta, search } = window.location;
+      setAqui(ruta && ruta !== "/" && ruta !== "/en" ? `${ruta}${search}` : "");
+    });
+  }, [pathname]);
   if (/(^|\/)(login|registro|olvide-contrasena|reset-password|onboarding)(\/|$)/.test(pathname ?? "")) {
     return <span className="h-10 w-10 shrink-0" aria-hidden />;
   }
-  const aqui = pathname && pathname !== "/" ? `${rutaConIdioma(locale, pathname)}${busqueda}` : "";
   return (
     <Link
       href={aqui ? `/login?redirect=${encodeURIComponent(aqui)}` : "/login"}

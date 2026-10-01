@@ -123,7 +123,7 @@ test.describe("@seeded franjas de acciones al pie", () => {
       // letra—, no el ancho.
       // 12 px entre botones: la separación única de la app (data-ccr-separacion).
       const anchoEsperado = franja.botones.length > 1 ? (botonRef.ancho - 12) / 2 : botonRef.ancho;
-      expect(Math.abs(b.ancho - anchoEsperado), `«${nombre}» no reparte el ancho de la franja entre sus botones`).toBeLessThanOrEqual(1);
+      expect(Math.abs(b.ancho - anchoEsperado), `«${nombre}» no reparte el ancho de la franja entre sus botones: ${JSON.stringify(franja.botones)} ref=${JSON.stringify(botonRef)}`).toBeLessThanOrEqual(1);
     }
       expect(franja.fija, `«${nombre}» no deja la franja pegada al fondo`).toBe(true);
       expect(franja.alFondo, `«${nombre}» deja la franja despegada del borde`).toBe(true);
@@ -200,7 +200,10 @@ test.describe("@seeded franjas de acciones al pie", () => {
     const fichas = await page.evaluate(() =>
       Array.from(new Set(Array.from(document.querySelectorAll("main a"))
         .map((a) => a.getAttribute("href") ?? "")
-        .filter((h) => /\/promociones\/[0-9a-f-]{8,}/.test(h)))).slice(0, 6));
+        // La ficha lleva un enlace bonito con el id corto al final (rutaPromocion).
+        .filter((h) => /\/promociones\/[^/?#]*[0-9a-f]{8}(?:[?#]|$)/.test(h)))).slice(0, 6));
+    // La base local del CI no siembra promociones: ahí no hay fichas que mirar.
+    if (fichas.length === 0 && process.env.LOCAL_REGRESSION_SEED === "1") test.skip(true, "Sin promociones en la base local del CI.");
     expect(fichas.length, "El tablero de promociones vino vacío").toBeGreaterThan(0);
 
     for (const ficha of fichas) {
