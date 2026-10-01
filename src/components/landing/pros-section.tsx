@@ -53,7 +53,7 @@ export async function ProsSection() {
   return (
     <section className="ccr-home-services-section bg-white pb-5 pt-10 sm:pb-7 sm:pt-14">
       <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-        <h2 className="mb-4 text-[1.7rem] font-extrabold leading-tight text-[#1a2744] sm:mb-8 sm:text-center sm:text-4xl">
+        <h2 className="mb-4 whitespace-nowrap text-[clamp(1.15rem,6.3vw,2.25rem)] font-extrabold leading-tight text-[#1a2744] sm:mb-8 sm:text-center sm:text-4xl">
           {t("titlePre")} <span className="text-[#009FD9]">{t("titleHighlight")}</span>
         </h2>
         <ServiciosPorSeccion secciones={secciones} verTodos={{ href: "/servicios", label: t("viewAll") }} />

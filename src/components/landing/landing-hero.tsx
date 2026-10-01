@@ -56,7 +56,7 @@ function FotoDeFondo() {
   }, []);
   const anchos = [800, 1200, 1600, 2200, 2800];
   return (
-    <div aria-hidden className="absolute inset-0 overflow-hidden bg-[#8a7a68]" style={{ backgroundImage: `url("${HERO_MINIATURA}")`, backgroundSize: "cover", backgroundPosition: "30% center" }}>
+    <div aria-hidden className="absolute inset-0 isolate z-0 overflow-hidden bg-[#8a7a68]" style={{ backgroundImage: `url("${HERO_MINIATURA}")`, backgroundSize: "cover", backgroundPosition: "30% center" }}>
       {HERO_FOTOS.map((foto, i) => (i === 0 || cargarResto) && (
         // eslint-disable-next-line @next/next/no-img-element -- ya viene del tamaño justo desde Unsplash
         <img
