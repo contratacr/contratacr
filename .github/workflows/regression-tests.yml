@@ -183,12 +183,20 @@ jobs:
           # to make localhost stop answering late in the release suite. Keep the
           # database and runner isolated, but restart Next.js and Chromium between
           # four sequential shards so this remains one exhaustive certification.
+          # Los cuatro tramos corren siempre, aunque uno falle: si el primero se
+          # detuviera, los fallos de los otros tres solo aparecerían corrida a
+          # corrida (así pasó el 30-sep: tres días viendo solo el tramo 1).
+          fallidos=""
           for shard in 1 2 3 4; do
             export PLAYWRIGHT_JSON_REPORT="test-results/results-${shard}.json"
             export PLAYWRIGHT_OUTPUT_DIR="test-results/shard-${shard}"
             export PLAYWRIGHT_HTML_OUTPUT_DIR="playwright-report/shard-${shard}"
-            npx playwright test --shard="${shard}/4"
+            npx playwright test --shard="${shard}/4" || fallidos="${fallidos} ${shard}"
           done
+          if [ -n "$fallidos" ]; then
+            echo "::error::Tramos con fallos:${fallidos}"
+            exit 1
+          fi
 
       - name: Dump the local Supabase container logs after a failed regression
         if: github.event_name != 'push' && steps.novedad.outputs.repetir != 'false' && failure()
