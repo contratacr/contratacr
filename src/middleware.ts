@@ -88,15 +88,12 @@ export async function middleware(request: NextRequest) {
     return conCabecerasDeSeguridad(NextResponse.next());
   }
 
-  // UNA SOLA DIRECCIÓN: contratacr.com. www.contratacr.com respondía 200 como
-  // un sitio aparte (con la canónica apuntando a la raíz, pero dos direcciones
-  // reparten enlaces y señales). Ahora salta con 308 PERMANENTE a la misma ruta
-  // sin www, con su consulta. Solo páginas: /api y /auth siguen respondiendo en
-  // www para no romper inicios de sesión ni versiones viejas de la app.
-  if (request.headers.get("host")?.toLowerCase().startsWith("www.contratacr.com")) {
-    const destino = new URL(request.nextUrl.pathname + request.nextUrl.search, "https://contratacr.com");
-    return conCabecerasDeSeguridad(NextResponse.redirect(destino, 308));
-  }
+  // www.contratacr.com NO SE REDIRIGE (probado y deshecho el 1-oct-2026).
+  // Quien agregó la app web a la pantalla de inicio desde www la tiene atada a
+  // ese dominio: con www → contratacr.com, iOS la ve salir de su sitio y le pone
+  // la barra de Safari arriba y abajo. No hay forma de distinguir desde aquí a
+  // quien la abre desde el ícono. Para Google basta la canónica, que en todas
+  // las páginas apunta a contratacr.com.
 
   // UNA REESCRITURA INTERNA YA PROCESADA PASA TAL CUAL. Con `next start` (el
   // servidor del CI) el middleware vuelve a correr sobre la dirección a la que
