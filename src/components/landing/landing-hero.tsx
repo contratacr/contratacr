@@ -32,7 +32,7 @@ const HERO_FOTOS: { id: string; foco: string }[] = [
   // computadora, angosto en el teléfono— lo deje siempre a la vista.
   // Teléfono: lo que importa queda arriba (y). Computadora: el profesional a la derecha (x).
   { id: "1505798577917-a65157d3320a", foco: "40% 15%" }, // ingletadora en una remodelación (clara: va primero)
-  { id: "1660330589693-99889d60181e", foco: "55% 20%" }, // electricista en un tablero
+  { id: "1555963966-b7ae5404b6ed", foco: "72% 30%" }, // liniero trabajando en un poste, a un costado
   { id: "1749532125405-70950966b0e5", foco: "65% 25%" }, // fontanero en un baño
   { id: "1589939705384-5185137a7f0f", foco: "75% 20%" }, // carpintería con casco
 ];

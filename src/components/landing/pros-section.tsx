@@ -19,21 +19,29 @@ export async function ProsSection() {
   const rango = new Map(DEMANDA_DE_SERVICIOS.map((id, i) => [id, i]));
   const orden = (id: string) => rango.get(id) ?? 1000 - Math.min(999, supply.byCategory[id] ?? 0);
 
-  const porSeccion = new Map<string, string[]>();
-  // Sin datos de oferta (la base no contestó), los más buscados igual: una
-  // portada sin servicios es peor que mostrar alguno con poca oferta.
+  // CUATRO POR SECCIÓN, todos con profesionales de verdad. Primero los que
+  // tienen ≥2 profesionales, por demanda; si no llegan a cuatro, se completa
+  // con los que tienen al menos 1. Una sección que ni así llega a cuatro no
+  // sale: la portada no promete servicios vacíos.
   const sinDatos = supply.total === 0;
-  const candidatos: [string, number][] = sinDatos ? DEMANDA_DE_SERVICIOS.map((id) => [id, 2]) : Object.entries(supply.byCategory);
-  for (const [id, cuantos] of candidatos) {
-    if ((cuantos ?? 0) < 2 || !categoryImageUrl(id)) continue;
+  const oferta = (id: string) => (sinDatos ? 2 : (supply.byCategory[id] ?? 0));
+  const todos = new Set<string>([...DEMANDA_DE_SERVICIOS, ...Object.keys(supply.byCategory)]);
+  const porSeccion = new Map<string, string[]>();
+  for (const id of todos) {
+    if (oferta(id) < 1 || !categoryImageUrl(id)) continue;
     const grupo = categoryGroupId(id);
     if (!grupo) continue;
     porSeccion.set(grupo, [...(porSeccion.get(grupo) ?? []), id]);
   }
+  const cuatro = (ids: string[]) => {
+    const fuertes = ids.filter((id) => oferta(id) >= 2).sort((a, b) => orden(a) - orden(b));
+    const resto = ids.filter((id) => oferta(id) < 2).sort((a, b) => orden(a) - orden(b));
+    return [...fuertes, ...resto].slice(0, 4);
+  };
 
   const secciones: SeccionDeServicios[] = CATEGORY_GROUPS
-    .map((g) => ({ g, ids: (porSeccion.get(g.id) ?? []).sort((a, b) => orden(a) - orden(b)) }))
-    .filter(({ ids }) => ids.length >= 2)
+    .map((g) => ({ g, ids: cuatro(porSeccion.get(g.id) ?? []) }))
+    .filter(({ ids }) => ids.length === 4)
     .sort((a, b) => orden(a.ids[0]) - orden(b.ids[0]))
     .slice(0, 9)
     .map(({ g, ids }) => ({
@@ -45,11 +53,11 @@ export async function ProsSection() {
   return (
     <section className="ccr-home-services-section bg-white pb-8 pt-8 sm:py-12">
       <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-        <h2 className="mb-6 text-[1.9rem] font-extrabold leading-tight text-[#1a2744] sm:mb-8 sm:text-center sm:text-4xl">
+        <h2 className="mb-4 text-[1.7rem] font-extrabold leading-tight text-[#1a2744] sm:mb-8 sm:text-center sm:text-4xl">
           {t("titlePre")} <span className="text-[#009FD9]">{t("titleHighlight")}</span>
         </h2>
         <ServiciosPorSeccion secciones={secciones} />
-        <div className="mt-8 text-center">
+        <div className="mt-5 text-center">
           <Link href="/servicios" className="inline-flex items-center gap-1.5 text-sm font-bold text-[#009FD9] hover:underline">
             {t("viewAll")}
           </Link>

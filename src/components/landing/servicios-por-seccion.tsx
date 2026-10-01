@@ -70,13 +70,13 @@ export function ServiciosPorSeccion({ secciones }: { secciones: SeccionDeServici
         id="servicios-de-la-seccion"
         role="tabpanel"
         key={seccion.id}
-        className="ccr-entrada mt-5 grid grid-cols-2 gap-3 sm:mt-7 sm:gap-4 lg:grid-cols-4"
+        className="ccr-entrada mt-4 grid grid-cols-2 gap-3 sm:mt-7 sm:gap-4 lg:grid-cols-4"
       >
         {seccion.servicios.slice(0, 4).map((servicio) => (
           <Link
             key={servicio.id}
             href={servicio.href}
-            className="group relative block aspect-[4/5] overflow-hidden rounded-2xl bg-[#e8eef3] shadow-[0_6px_18px_-12px_rgba(15,23,42,0.45)] lg:aspect-[4/3.4]"
+            className="group relative block aspect-[4/3] overflow-hidden rounded-2xl bg-[#e8eef3] shadow-[0_6px_18px_-12px_rgba(15,23,42,0.45)] lg:aspect-[4/3.4]"
           >
             <ServiceImage categoryId={servicio.id} badge={false} className="pointer-events-none absolute inset-0 h-full w-full transition-transform duration-500 group-hover:scale-[1.04]" />
             <span aria-hidden className="absolute inset-0" style={{ background: "linear-gradient(to top, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.12) 55%, transparent 100%)" }} />

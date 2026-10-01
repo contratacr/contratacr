@@ -384,9 +384,11 @@ body.ccr-native-app.ccr-native-bottom-nav-visible:not(.ccr-native-search-route) 
   scroll-padding-bottom: calc(var(--ccr-barra-flotante, 0px) + var(--ccr-native-content-end-gap));
 }
 
+/* Antes la sección sumaba el alto de la cabecera (96 px) para un salto que
+   ya no existe: dejaba un hueco grande bajo el hero. Solo el margen de
+   desplazamiento, para cuando se llega a ella por un enlace. */
 body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-home-services-section {
   scroll-margin-top: calc(var(--ccr-native-header-height) + 1rem);
-  padding-top: calc(var(--ccr-native-header-height) + 2rem);
 }
 
 body.ccr-native-bottom-nav-visible .ccr-search-bottom-sheet,

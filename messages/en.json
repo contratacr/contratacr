@@ -3776,7 +3776,8 @@
       "useLocation": "Use my location",
       "geoUnsupported": "Your browser doesn't allow location. Choose your province on the map.",
       "geoFailed": "We couldn't get your location. Choose your province on the map.",
-      "disclaimer": "We don't promise nationwide coverage: we only show the professionals who actually work in your area."
+      "disclaimer": "We don't promise nationwide coverage: we only show the professionals who actually work in your area.",
+      "allCantons": "See all {count} cantons"
     },
     "howItWorks": {
       "eyebrow": "How it works",
