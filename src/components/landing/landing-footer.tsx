@@ -172,6 +172,8 @@ export function LandingFooter() {
           <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2">
             <Link href="/terminos" className="text-xs text-white/40 hover:text-white transition-colors">{t("terms")}</Link>
             <Link href="/privacidad" className="text-xs text-white/40 hover:text-white transition-colors">{t("privacy")}</Link>
+            {/* Google Play y Apple exigen que borrar la cuenta sea fácil de encontrar. */}
+            <Link href="/eliminar-cuenta" className="text-xs text-white/40 hover:text-white transition-colors">{t("deleteAccount")}</Link>
           </div>
         </div>
       </div>

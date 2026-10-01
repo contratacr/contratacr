@@ -976,7 +976,8 @@
     "rights": "© {year} ContrataCR. Todos los derechos reservados.",
     "terms": "Términos y Condiciones",
     "privacy": "Política de Privacidad",
-    "madeIn": "Hecho en Costa Rica"
+    "madeIn": "Hecho en Costa Rica",
+    "deleteAccount": "Eliminar cuenta"
   },
   "notFound": {
     "title": "Página no encontrada",

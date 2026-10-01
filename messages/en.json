@@ -976,7 +976,8 @@
     "rights": "© {year} ContrataCR. All rights reserved.",
     "terms": "Terms & Conditions",
     "privacy": "Privacy Policy",
-    "madeIn": "Made in Costa Rica"
+    "madeIn": "Made in Costa Rica",
+    "deleteAccount": "Delete account"
   },
   "notFound": {
     "title": "Page not found",
