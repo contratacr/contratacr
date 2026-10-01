@@ -2532,6 +2532,17 @@ body.ccr-native-app:has(.ccr-native-search-panel) .ccr-native-bottom-nav {
   margin-top: auto;
   margin-bottom: auto;
 }
+/* En el teléfono, ARRIBA: centrar a lo alto dejaba un hueco grande sobre un
+   contenido corto (registro, login), peor con las barras de Safari en la app de
+   inicio. Arranca a 16 px del navbar, como toda pantalla. */
+@media (max-width: 639px) {
+  .ccr-centrado-seguro {
+    padding-top: 1rem !important;
+  }
+  .ccr-centrado-seguro > * {
+    margin-top: 0;
+  }
+}
 
 /* Donde hay una franja de acciones fija abajo, el pie del sitio sobra en el
    teléfono: quedaba detrás del botón, y es una lista de salidas justo debajo de
