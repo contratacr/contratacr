@@ -22,6 +22,10 @@ test("el hilo de soporte vuelve a su sitio al cerrarse el teclado", async ({ pag
   expect(inicial.alto).toBeGreaterThanOrEqual(inicial.pantalla - 2);
 
   // Lo que hace iOS: desplaza el hilo y lo encoge mientras se escribe…
+  // Con el campo enfocado, como de verdad: sin foco, el vigilante del app
+  // (siguiente prueba) apaga la marca de teclado por su cuenta y, según cuándo
+  // corriera, esta prueba medía 0 en vez de 260.
+  await hilo.locator("textarea, input[type=text]").first().focus();
   await page.evaluate(() => {
     const raiz = document.documentElement;
     raiz.style.setProperty("--app-visual-viewport-top", "260px");
@@ -31,7 +35,10 @@ test("el hilo de soporte vuelve a su sitio al cerrarse el teclado", async ({ pag
   await expect.poll(async () => (await caja()).top).toBe(260);
 
   // …y al cerrarse deja los valores viejos puestos. El hilo igual vuelve entero.
-  await page.evaluate(() => document.documentElement.toggleAttribute("data-keyboard-open", false));
+  await page.evaluate(() => {
+    (document.activeElement as HTMLElement | null)?.blur();
+    document.documentElement.toggleAttribute("data-keyboard-open", false);
+  });
   await expect.poll(async () => (await caja()).top).toBe(0);
   const final = await caja();
   expect(final.alto).toBeGreaterThanOrEqual(final.pantalla - 2);
