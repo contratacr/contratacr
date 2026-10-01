@@ -2559,6 +2559,11 @@ body.ccr-native-app:has(.ccr-native-search-panel) .ccr-native-bottom-nav {
 /* La portada termina en «Buscar por zona», que trae 80 px abajo para separarse
    del pie del sitio. En la app no hay pie: ese aire se sumaba a la reserva de la
    barra y quedaba un hueco grande al final. */
+/* …y la reserva de la barra la ocupa la propia sección, con su fondo: en el
+   main quedaba como una franja blanca pura bajo el gris claro de la sección. */
+body.ccr-native-app.ccr-native-bottom-nav-visible:not(.ccr-native-search-route) main:has(> .ccr-fin-de-portada:last-child) {
+  padding-bottom: 0 !important;
+}
 html.ccr-native-app .ccr-fin-de-portada > section {
-  padding-bottom: 1.5rem;
+  padding-bottom: calc(1.5rem + var(--ccr-barra-flotante, 0px) + var(--ccr-native-content-end-gap));
 }
