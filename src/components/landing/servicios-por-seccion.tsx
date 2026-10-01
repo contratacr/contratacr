@@ -16,7 +16,7 @@ export type SeccionDeServicios = {
 // cada sección (Hogar, Tecnología, Salud…) y debajo los servicios MÁS BUSCADOS
 // de esa sección, con foto. Antes era un carrusel que pasaba solo: quien
 // buscaba algo de salud tenía que esperar a que apareciera. Aquí va directo.
-// En el teléfono 2×2; en computadora una fila de 4 (hasta 8).
+// Cuatro por sección: en el teléfono, una fila que se desliza; desde tableta, a la vista.
 export function ServiciosPorSeccion({ secciones }: { secciones: SeccionDeServicios[] }) {
   const [activa, setActiva] = useState(0);
   const fila = useRef<HTMLDivElement | null>(null);
@@ -64,21 +64,20 @@ export function ServiciosPorSeccion({ secciones }: { secciones: SeccionDeServici
         })}
       </div>
 
+      {/* Cuatro por sección. En el teléfono, UNA fila que se desliza de lado
+          (se ve el borde de la siguiente, para que se note que hay más); desde
+          tableta, los cuatro a la vista. */}
       <div
         id="servicios-de-la-seccion"
         role="tabpanel"
         key={seccion.id}
-        className="ccr-entrada mt-5 grid grid-cols-2 gap-3 sm:mt-7 sm:gap-4 lg:grid-cols-4"
+        className="ccr-entrada scrollbar-none -mx-4 mt-5 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-2 sm:mx-0 sm:mt-7 sm:grid sm:grid-cols-4 sm:gap-4 sm:overflow-visible sm:px-0 sm:pb-0"
       >
-        {seccion.servicios.slice(0, 8).map((servicio, indice) => (
+        {seccion.servicios.slice(0, 4).map((servicio) => (
           <Link
             key={servicio.id}
             href={servicio.href}
-            className={cn(
-              "group relative block aspect-[4/3.6] overflow-hidden rounded-2xl bg-[#e8eef3] shadow-[0_6px_18px_-12px_rgba(15,23,42,0.45)] sm:aspect-[4/3]",
-              // En el teléfono, 2×2: lo que pasa de 4 queda para computadora.
-              indice >= 4 && "max-lg:hidden",
-            )}
+            className="group relative block aspect-[4/3.5] w-[64%] shrink-0 snap-start scroll-ml-4 overflow-hidden rounded-2xl bg-[#e8eef3] shadow-[0_6px_18px_-12px_rgba(15,23,42,0.45)] sm:aspect-[4/3.4] sm:w-auto"
           >
             <ServiceImage categoryId={servicio.id} badge={false} className="pointer-events-none absolute inset-0 h-full w-full transition-transform duration-500 group-hover:scale-[1.04]" />
             <span aria-hidden className="absolute inset-0" style={{ background: "linear-gradient(to top, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.12) 55%, transparent 100%)" }} />
