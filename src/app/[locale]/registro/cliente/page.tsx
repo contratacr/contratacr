@@ -221,7 +221,7 @@ export default function RegisterClientPage() {
             <Button size="lg" className="w-full" onClick={() => router.push(panelHref)}>
               {t("goToPanel")}
             </Button>
-            <Button variant="outline" size="lg" className="w-full mt-3" onClick={() => router.push("/buscar")}>
+            <Button variant="outline" size="lg" className="w-full mt-3" onClick={() => router.push("/profesionales")}>
               {t("searchPros")}
             </Button>
           </div>

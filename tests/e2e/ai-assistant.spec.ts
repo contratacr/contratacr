@@ -89,7 +89,7 @@ test.describe("@smoke ContrataCR AI service resolver", () => {
     expect(response.status, JSON.stringify(response.body)).toBe(200);
     expect(response.body.searchHref, JSON.stringify(response.body)).toBeTruthy();
     expect(response.body.searchHref, JSON.stringify(response.body)).not.toContain("categoria=");
-    expect(response.body.searchHref, JSON.stringify(response.body)).toMatch(/\/buscar\?q=|openPublish=1/);
+    expect(response.body.searchHref, JSON.stringify(response.body)).toMatch(/\/profesionales\?q=|openPublish=1/);
     expect(response.body.answer, JSON.stringify(response.body)).toMatch(/no estoy seguro|no tengo total certeza|crea(r)? un proyecto|publica un proyecto/i);
   });
 
@@ -108,7 +108,7 @@ test.describe("@smoke ContrataCR AI service resolver", () => {
       expect(response.status, JSON.stringify(response.body)).toBe(200);
       expect(response.body.searchHref, prompt).toBeTruthy();
       expect(response.body.searchHref, prompt).not.toContain("categoria=");
-      expect(response.body.searchHref, prompt).toMatch(/\/buscar\?q=|openPublish=1/);
+      expect(response.body.searchHref, prompt).toMatch(/\/profesionales\?q=|openPublish=1/);
       expect(response.body.answer, prompt).toMatch(/no tengo total certeza|buscar|cree un proyecto|create a project/i);
     }
   });
@@ -393,11 +393,13 @@ test.describe("@seeded ContrataCR AI", () => {
 
     const requestStart = await ask(page, "Quiero crear un proyecto");
     expect(requestStart.status).toBe(200);
-    expect(requestStart.body.action).toBe("answer");
+    // Desde el 29-sep el primer turno ya trae el botón de publicar (sin datos)
+    // mientras pregunta el servicio.
+    expect(requestStart.body.action).toBe("publish_request");
     expect(requestStart.body.answer).toMatch(/servicio/i);
     // One question at a time: the first turn asks only for the service.
     expect(requestStart.body.answer).not.toMatch(/zona|ubicaci/i);
-    expect(requestStart.body.searchHref).toBeNull();
+    expect(requestStart.body.searchHref).toBe("/publicar-proyecto");
 
     const requestReady = await ask(page, "carpinteria, Orotina", {
       history: [
@@ -473,14 +475,14 @@ test.describe("@seeded ContrataCR AI", () => {
   test("answers high-risk product questions without turning them into service searches", async ({ page }) => {
     await gotoOK(page, "/");
     const cases = [
-      { prompt: "¿La verificación garantiza que el profesional es bueno?", action: "answer", answer: /no garantiza|no\. la verificación/i },
+      { prompt: "¿La verificación garantiza que el profesional es bueno?", action: "answer", answer: /confirma su identidad, no la calidad/i },
       // Las propuestas salieron del producto: el asistente lo dice y manda al
       // tablero de proyectos, donde se contacta al cliente por WhatsApp.
       { prompt: "¿Puedo editar una propuesta después de enviarla?", action: "open_dashboard", href: "/proyectos", answer: /ya no hay propuestas|WhatsApp/i },
-      { prompt: "¿El profesional puede reprogramar mi cita?", action: "answer", answer: /cliente reprograma|no\. el cliente/i },
+      { prompt: "¿El profesional puede reprogramar mi cita?", action: "answer", answer: /ya no se agendan citas|acuerdan por mensaje/i },
       { prompt: "¿Puedo crear un proyecto sin cuenta?", action: "login", href: "/login", answer: /iniciar sesión/i },
       { prompt: "Me duele mucho el pecho, ¿busco un cardiólogo aquí?", action: "answer", answer: /9-1-1/i },
-      { prompt: "¿Qué hago si un profesional cancela mi cita?", action: "answer", answer: /no se puede reprogramar/i },
+      { prompt: "¿Qué hago si un profesional cancela mi cita?", action: "answer", answer: /ya no se agendan citas|escr[ií]bele/i },
       { prompt: "¿Cómo cambio de cliente a profesional?", action: "open_dashboard", href: "/dashboard/profesional", answer: /selector Cliente \/ Profesional/i },
       { prompt: "¿Cómo agrego otro servicio a mi perfil?", action: "open_dashboard", href: "tab=services", answer: /servicio/i },
       { prompt: "¿Cómo cambio mi contraseña?", action: "open_dashboard", href: "tab=cuenta", answer: /contraseña/i },
@@ -502,14 +504,15 @@ test.describe("@seeded ContrataCR AI", () => {
     expect(spanish.status, JSON.stringify(spanish.body)).toBe(200);
     // The documented contact answer routes to the help center.
     expect(spanish.body.action).toBe("help");
-    expect(spanish.body.answer).toMatch(/mensaje/i);
-    expect(spanish.body.answer).not.toMatch(/WhatsApp/i);
+    // Manda a Mensajes; puede nombrar WhatsApp solo para decir que no hace falta salir.
+    expect(spanish.body.answer).toMatch(/Mensajes/);
+    expect(spanish.body.answer).not.toMatch(/abre WhatsApp|escr[ií]bele por WhatsApp/i);
 
     const english = await ask(page, "How do I contact a professional?", { locale: "en", pagePath: "/en" });
     expect(english.status, JSON.stringify(english.body)).toBe(200);
     expect(english.body.action).toBe("help");
-    expect(english.body.answer).toMatch(/message/i);
-    expect(english.body.answer).not.toMatch(/WhatsApp/i);
+    expect(english.body.answer).toMatch(/Messages/);
+    expect(english.body.answer).not.toMatch(/open WhatsApp|write (to them )?on WhatsApp/i);
   });
 
   test("uses internal messaging copy and actions for the native app", async ({ page }) => {
@@ -517,7 +520,9 @@ test.describe("@seeded ContrataCR AI", () => {
     const response = await ask(page, "¿Cómo contacto a un profesional?", { platform: "native" });
     expect(response.status, JSON.stringify(response.body)).toBe(200);
     expect(response.body.answer).toMatch(/mensaje/i);
-    expect(response.body.answer).not.toMatch(/WhatsApp/i);
+    // Manda a Mensajes; puede nombrar WhatsApp solo para decir que no hace falta salir.
+    expect(response.body.answer).toMatch(/Mensajes/);
+    expect(response.body.answer).not.toMatch(/abre WhatsApp|escr[ií]bele por WhatsApp/i);
 
     const search = await ask(page, "Necesito un plomero en Atenas, Alajuela", { platform: "native" });
     expect(search.status, JSON.stringify(search.body)).toBe(200);

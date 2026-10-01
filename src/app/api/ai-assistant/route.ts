@@ -75,13 +75,15 @@ type AssistantProfessionalResult = {
   categoryId: string | null;
 };
 
-const OPENAI_MODEL = process.env.OPENAI_MODEL || "gpt-4o-mini";
-const OPENAI_URL = "https://api.openai.com/v1/chat/completions";
 const WORKERS_AI_MODEL = "@cf/meta/llama-3.1-8b-instruct-fp8-fast";
 const MAX_HISTORY_MESSAGES = 6;
 const MAX_HISTORY_CONTENT = 700;
-const PUBLISH_REQUEST_PHRASE_RE = /(?:quiero|necesito|ocupo|deseo|como puedo|como|i want to|i need to|how can i)?\s*(?:publicar|crear|hacer|abrir|publish|create|open)\s+(?:una\s+|un\s+|a\s+)?(?:solicitud|proyecto|request|project)/gi;
-const EXPLICIT_PUBLISH_INTENT_RE = /^\s*(?:(?:quiero|necesito|ocupo|deseo)\s+(?:publicar|crear|hacer|abrir)|(?:como|cómo)\s+(?:puedo\s+)?(?:publicar|crear|hacer|abrir)|(?:publicar|crear|hacer|abrir)|(?:i want to|i need to|how can i)\s+(?:publish|create|open)|(?:publish|create|open))\s+(?:una\s+|un\s+|a\s+)?(?:solicitud|proyecto|request|project)\b/i;
+// La gente no escribe el infinitivo: escribe «cómo publico un proyecto». Estas
+// dos expresiones aceptan el conjugado («publico», «creo», «hago») además del
+// infinitivo, y «lo que necesito», que es como se nombra un proyecto cuando no
+// se sabe que se llama proyecto.
+const PUBLISH_REQUEST_PHRASE_RE = /(?:quiero|necesito|ocupo|deseo|como puedo|como|i want to|i need to|how can i)?\s*(?:publicar|publico|crear|creo|hacer|hago|abrir|abro|publish|create|open|post)\s+(?:una\s+|un\s+|a\s+|mi\s+|lo que\s+)?(?:solicitud|proyecto|request|project|necesito|need)/gi;
+const EXPLICIT_PUBLISH_INTENT_RE = /^\s*(?:(?:quiero|necesito|ocupo|deseo)\s+(?:publicar|crear|hacer|abrir)|(?:como|cómo)\s+(?:puedo\s+)?(?:publicar|publico|crear|creo|hacer|hago|abrir|abro)|(?:publicar|publico|crear|creo|hacer|hago|abrir|abro)|(?:i want to|i need to|how can i)\s+(?:publish|create|open|post)|(?:publish|create|open|post))\s+(?:una\s+|un\s+|a\s+|mi\s+|lo que\s+)?(?:solicitud|proyecto|request|project|necesito|need)\b/i;
 
 function localeKey(value: unknown): Locale {
   return value === "en" ? "en" : "es";
@@ -112,6 +114,13 @@ const CANONICAL_SKIP = new Set(("gracias buenas buenos mucho muchas necesito qui
   + "disponibilidad videoconsulta instalar instalo descargar aplicacion postular postulo postulacion postulaciones pagar pagos suscripcion "
   + "verificar verifico cedula identidad eliminar elimino cambiar cambio actualizar imagen gracias ayuda saber tener querer conseguir "
   + "urgente domicilio online zona cerca precio precios cotizacion cotizar presupuesto whatsapp telefono correo direccion provincia canton "
+  // «comisión» se convertía en «admisión» —dos letras de diferencia con una
+  // palabra del catálogo— y preguntar por la comisión terminaba ofreciendo
+  // preparación universitaria. Son palabras del producto o del habla corriente:
+  // ninguna debe «repararse» contra el catálogo de oficios.
+  + "comision comisiones porcentaje ganancia ganancias factura facturas recibo recibos garantia garantias contrato contratos "
+  + "promocion promociones descuento descuentos anuncio anuncios archivar archivado archivados bloquear bloqueado reportar reporte "
+  + "seguridad privacidad politica politicas terminos condiciones soporte guias tutorial ejemplo ejemplos verificacion verificado "
   // Appointment verbs: the typo repair rewrote "cancela" into "cancelar" and the
   // documented appointment answers stopped matching.
   + "cancela cancelo cancelar cancelada cancelado reprograma reprogramo reprogramar reprogramada cancels cancelled reschedule "
@@ -731,7 +740,7 @@ function resolveSearch(message: string, locale: Locale, serviceId?: string | nul
     params.set("canton", place.id);
   }
   return {
-    href: `/buscar${params.toString() ? `?${params.toString()}` : ""}`,
+    href: `/profesionales${params.toString() ? `?${params.toString()}` : ""}`,
     category,
     place,
   };
@@ -741,7 +750,7 @@ function freeTextSearchHref(message: string) {
   const params = new URLSearchParams();
   const query = message.trim();
   if (query) params.set("q", query);
-  return `/buscar${params.toString() ? `?${params.toString()}` : ""}`;
+  return `/profesionales${params.toString() ? `?${params.toString()}` : ""}`;
 }
 
 function userMessagePlace(message: string) {
@@ -759,13 +768,83 @@ type ProductIntent = {
 };
 
 const rx = (source: string) => new RegExp(source, "i");
+
+// LO QUE CONTRATACR PONE PARA ELEGIR BIEN, dicho igual en toda respuesta sobre
+// calidad, garantías o problemas: la plataforma da con qué comparar; la
+// contratación es un acuerdo directo entre cliente y profesional.
+const PARA_COMPARAR = {
+  es: "En cada perfil de ContrataCR puedes comparar antes de decidir: reseñas de otros clientes, casos de éxito con trabajos reales, formación y certificaciones, idiomas, años de experiencia, zonas donde trabaja y precio de referencia, además de la insignia «Verificado» cuando confirmó su identidad.",
+  en: "Every ContrataCR profile lets you compare before you decide: reviews from other clients, success stories with real work, training and certifications, languages, years of experience, the areas they cover and a reference price, plus the «Verified» badge when they confirmed their identity.",
+};
+const ACUERDO_DIRECTO = {
+  // Consejo, no descargo: lo legal («no presta ni garantiza») vive en los
+  // Términos; aquí se dice lo mismo como algo práctico.
+  es: "El precio, los plazos y la garantía del trabajo los acuerdas directamente con el profesional; te recomendamos dejarlo por escrito antes de empezar.",
+  en: "You agree on price, timing and any warranty on the work directly with the professional; we recommend putting it in writing before starting.",
+};
 const PRODUCT_INTENTS: ProductIntent[] = [
   {
     test: (n) => /^(hola|holi|buenas|buenos dias|buenas tardes|buenas noches|hello|hi|hey|saludos)[\s!.,]*(\w+[\s!.,]*){0,3}$/.test(n) && n.split(/\s+/).length <= 4,
     answer: {
-      es: "¡Hola! Puedo ayudarte a encontrar un profesional (dime el servicio y la zona, por ejemplo «un electricista en Heredia») o explicarte cómo funciona ContrataCR. ¿Qué necesitass?",
+      es: "¡Hola! Puedo ayudarte a encontrar un profesional (dime el servicio y la zona, por ejemplo «un electricista en Heredia») o explicarte cómo funciona ContrataCR. ¿Qué necesitas?",
       en: "Hi! I can help you find a professional (tell me the service and the area, for example \"an electrician in Heredia\") or explain how ContrataCR works. What do you need?",
     },
+  },
+  {
+    test: (n) => /(agreg|anad|sum|add).{0,12}(un |otro |mas |another |a )?(servicio|servicios|service|services)/.test(n),
+    action: "open_dashboard",
+    answer: {
+      es: "Para agregar un servicio abre tu panel, entra a Servicios y toca «Agregar servicio»: eliges el servicio, tus zonas y el precio de referencia. Aparece en tu perfil y en las búsquedas de ese servicio.",
+      en: "To add a service open your panel, go to Services and tap \"Add service\": pick the service, your areas and a reference price. It shows on your profile and in searches for that service.",
+    },
+    cta: { es: "Ir a Servicios", en: "Open Services" },
+    href: (locale) => `${prefijoDeIdioma(locale)}/dashboard/profesional?tab=services`,
+  },
+  // CALIDAD Y CONFIANZA: cómo elegir, si hay garantía y qué hacer si algo sale
+  // mal. Siempre con qué comparar y de quién es el acuerdo.
+  {
+    test: (n) => /(como|cómo).{0,6}(se|saber|sabre|elijo|escojo|escoger|elegir|reviso|confio|confiar).{0,40}(bueno|buena|confiable|confiar|elegir|escoger|mejor|calidad|serio)/.test(n)
+      || /(en quien|en quien) confiar|profesional (bueno|confiable|serio)|how (do i|can i|to) (know|choose|pick|trust).{0,30}(good|reliable|trust|best|quality)/.test(n),
+    answer: {
+      es: `${PARA_COMPARAR.es} Lee sobre todo las reseñas y mira sus casos de éxito en trabajos parecidos al tuyo; escribe a dos o tres profesionales y compara. ${ACUERDO_DIRECTO.es}`,
+      en: `${PARA_COMPARAR.en} Read the reviews above all and look at their success stories on jobs like yours; message two or three professionals and compare. ${ACUERDO_DIRECTO.en}`,
+    },
+  },
+  {
+    test: (n) => !/verific/.test(n) && (/(garantiz|garantia|se hacen responsables|son responsables|responden por|responsabilidad)/.test(n) || /(guarantee|warranty|are you responsible|liable|liability)/.test(n)),
+    answer: {
+      es: `El trabajo lo realiza el profesional, y la garantía la acuerdas directamente con él: pídesela por escrito junto con el precio y los plazos. Para elegir con confianza, ${PARA_COMPARAR.es.charAt(0).toLowerCase()}${PARA_COMPARAR.es.slice(1)}`,
+      en: `The work is done by the professional, and you agree on any warranty directly with them: ask for it in writing along with price and timing. To choose with confidence, ${PARA_COMPARAR.en.charAt(0).toLowerCase()}${PARA_COMPARAR.en.slice(1)}`,
+    },
+  },
+  {
+    test: (n) => /(mal trabajo|trabajo mal hecho|me estafo|me estafaron|estafa|no termino|no cumplio|no llego|no vino|problema con (un|el|mi) profesional|queja|quejarme|reclamo|bad job|scam|scammed|didn.?t (finish|show)|complaint)/.test(n),
+    action: "support",
+    answer: {
+      es: "Lo sentimos. Primero háblalo con el profesional por escrito: el acuerdo lo hicieron entre ustedes. Luego deja una reseña honesta en su perfil: es lo que ayuda a los demás a elegir. Si hubo engaño, trato abusivo o algo inseguro, repórtalo desde su perfil (menú ··· → Reportar perfil) o abre un caso de soporte: lo revisamos en 24 horas y podemos limitar o suspender la cuenta. Si necesitas reclamar el dinero o el trabajo, eso se hace ante la oficina de protección al consumidor (MEIC) o las autoridades.",
+      en: "We're sorry. First raise it with the professional in writing: the agreement was between the two of you. Then leave an honest review on their profile: it's what helps others choose. If there was deceit, abuse or something unsafe, report it from their profile (··· menu → Report profile) or open a support case: we review it within 24 hours and can limit or suspend the account. To claim money or the work back, that goes through the consumer protection office (MEIC) or the authorities.",
+    },
+    cta: { es: "Abrir un caso de soporte", en: "Open a support case" },
+    href: (locale) => `${prefijoDeIdioma(locale)}/soporte`,
+  },
+  // Los dos temas del menú del cliente que juntan dos secciones.
+  {
+    test: (n) => /(empleos?|trabajos?|jobs?).{0,25}(promociones?|ofertas?|descuentos?|deals?|promotions?)|(promociones?|ofertas?|deals?|promotions?).{0,25}(empleos?|trabajos?|jobs?)/.test(n),
+    answer: {
+      es: "Los empleos y las promociones están en el menú (las tres rayas de arriba). En Empleos abres un puesto y le escribes a quien lo publicó por WhatsApp o por Mensajes; ahí mismo le mandas tu currículum. En Promociones ves los descuentos de los profesionales y les escribes igual, desde cada promoción.",
+      en: "Jobs and promotions are in the menu (the three lines at the top). In Jobs you open a position and write to whoever posted it on WhatsApp or through Messages, sending your résumé there. In Promotions you see professionals' discounts and write to them the same way, from each promotion.",
+    },
+    cta: { es: "Ver promociones", en: "See promotions" },
+    href: (locale) => `${prefijoDeIdioma(locale)}/promociones`,
+  },
+  {
+    test: (n) => /(crear|creo|publicar|publico|create|post).{0,10}(o|or).{0,10}(buscar|busco|ver|find|see).{0,15}(proyectos?|projects?)/.test(n),
+    answer: {
+      es: "Para pedir un trabajo, toca el «+» de abajo y elige «Publicar un proyecto»: cuentas qué necesitas y los profesionales de ese servicio te escriben. Los proyectos que ya publicó la gente están en Proyectos, en el menú de arriba.",
+      en: "To request a job, tap the \"+\" at the bottom and choose \"Post a project\": you describe what you need and professionals in that service write to you. Projects other people posted are in Projects, in the top menu.",
+    },
+    cta: { es: "Publicar proyecto", en: "Post project" },
+    href: (locale) => `${prefijoDeIdioma(locale)}/publicar-proyecto`,
   },
   {
     test: (n) => /^(muchas gracias|mil gracias|gracias|thank you|thanks|ok gracias|perfecto gracias)[\s!.]*$/.test(n),
@@ -779,7 +858,7 @@ const PRODUCT_INTENTS: ProductIntent[] = [
     },
   },
   {
-    test: (n) => /(pagar|pago|pagos|cobra|cobran|tarjeta|suscripcion|mensualidad|premium|pay|payment|subscription)/.test(n) && /(app|aplicacion|contratacr|plataforma|cuenta|usar|por usar|premium|suscripcion|subscription)/.test(n),
+    test: (n) => /(comision|comisiones|commission|porcentaje)/.test(n) || (/(pagar|pago|pagos|cobra|cobran|tarjeta|suscripcion|mensualidad|premium|pay|payment|subscription)/.test(n) && /(app|aplicacion|contratacr|plataforma|cuenta|usar|por usar|premium|suscripcion|subscription)/.test(n)),
     answer: {
       es: "No hay nada que pagar: ContrataCR es gratis, no tiene suscripciones ni pagos dentro de la app y no cobra comisión. Lo que cueste un servicio lo acuerdas directamente con el profesional.",
       en: "There is nothing to pay: ContrataCR is free, has no subscriptions or in-app payments and charges no commission. Whatever a service costs is agreed directly with the professional.",
@@ -816,7 +895,9 @@ const PRODUCT_INTENTS: ProductIntent[] = [
     href: (locale) => `${prefijoDeIdioma(locale)}/dashboard/profesional?tab=cuenta`,
   },
   {
-    test: (n) => /(verific|validar|confirmar|verify|validate).{0,25}(cedula|identidad|identity|id\b)/.test(n) || /(cedula|identidad).{0,20}(verific|validar)/.test(n),
+    // Preguntar si la verificación GARANTIZA algo no es preguntar cómo
+    // verificarse: esa tiene su respuesta propia más abajo.
+    test: (n) => !/garantiz|guarantee/.test(n) && (/(verific|validar|confirmar|verify|validate).{0,25}(cedula|identidad|identity|id\b)/.test(n) || /(cedula|identidad).{0,20}(verific|validar)/.test(n) || /(verificacion|verificado|verificarme|verification|verified)/.test(n)),
     action: "open_dashboard",
     answer: {
       es: "En tu panel, abre Cuenta y seguridad → Datos básicos y escribe tu número de cédula: se comprueba contra el padrón y tu nombre queda verificado. Los profesionales además pasan por la verificación del equipo, que aparece como «Verificado» en el perfil.",
@@ -846,6 +927,52 @@ const PRODUCT_INTENTS: ProductIntent[] = [
     href: (locale) => `${prefijoDeIdioma(locale)}/notificaciones`,
   },
   {
+    // «Contratar un empleado» es publicar un EMPLEO. Sin esta regla el buscador
+    // de oficios lo resolvía como «Abogados y servicios legales».
+    test: (n) => /(contratar|contrato|busco|necesito|quiero|publicar|publico).{0,20}(empleado|empleada|trabajador|trabajadora|personal|colaborador|employee|worker|staff)/.test(n),
+    action: "open_dashboard",
+    answer: {
+      es: "Para contratar a alguien publicas un empleo: en tu panel abre la pestaña Empleos y toca «Publicar empleo» (puesto, modalidad, zona y salario si querés). Los interesados te escriben por Mensajes.",
+      en: "To hire someone you publish a job: in your panel open the Jobs tab and tap \"Publish job\" (position, type, area and salary if you want). Interested people message you.",
+    },
+    cta: { es: "Ir a Empleos", en: "Open Jobs" },
+    href: (locale) => `${prefijoDeIdioma(locale)}/dashboard/profesional?tab=jobs`,
+  },
+  {
+    // Cotizaciones no tenía una sola regla, y es una pestaña del panel.
+    test: (n) => /(cotizacion|cotizaciones|cotizar|presupuesto|presupuestos|quote|quotes|estimate)/.test(n),
+    action: "open_dashboard",
+    answer: {
+      es: "Las cotizaciones viven en tu panel, en la pestaña Cotizaciones: ahí armas el detalle con precios y se la envías al cliente por el chat. También ves las que ya mandaste y su estado.",
+      en: "Quotes live in your panel, in the Quotes tab: there you build the detail with prices and send it to the client through the chat. You also see the ones you already sent and their status.",
+    },
+    cta: { es: "Ir a Cotizaciones", en: "Open Quotes" },
+    href: (locale) => `${prefijoDeIdioma(locale)}/dashboard/profesional?tab=quotes`,
+  },
+  {
+    // Mensajes tampoco tenía respuesta propia, y es donde ocurre todo.
+    test: (n) => /(mensaje|mensajes|chat|chats|conversacion|conversaciones|escrib|hablar con|contact|message|messages|conversation|write to)/.test(n) && !/(soporte|support|ticket)/.test(n),
+    action: "help",
+    answer: {
+      es: "Todos tus chats están en Mensajes. Para empezar uno, abre el perfil del profesional (o su promoción o empleo) y toca «Enviar mensaje»: el chat se abre dentro de la app y le llega el aviso. No hace falta salir a WhatsApp.",
+      en: "All your chats are in Messages. To start one, open the professional's profile (or their promotion or job) and tap \"Send message\": the chat opens inside the app and they get notified. No need to go out to WhatsApp.",
+    },
+    cta: { es: "Abrir mensajes", en: "Open messages" },
+    href: (locale) => `${prefijoDeIdioma(locale)}/mensajes`,
+  },
+  {
+    // Publicar un proyecto es la acción central del app y caía al buscador.
+    // «¿…sin cuenta?» tiene su respuesta propia más abajo (hay que entrar).
+    test: (n) => !/sin cuenta|without (an )?account/.test(n) && (/(publicar|publico|crear|creo|hacer|hago|abrir|abro|publish|create|post).{0,18}(proyecto|project|solicitud|lo que necesito|what i need)/.test(n) || /^(publicar proyecto|publish project|proyecto nuevo|new project)$/.test(n)),
+    action: "publish_request",
+    answer: {
+      es: "Publicar un proyecto es contar qué necesitas para que te escriban varios profesionales de esa categoría. Toca «Publicar proyecto», elige el servicio, describe el trabajo y agrega la zona; los profesionales interesados te escriben por Mensajes y comparas.",
+      en: "Posting a project means describing what you need so several professionals in that category write to you. Tap \"Post project\", pick the service, describe the job and add the area; interested professionals message you and you compare.",
+    },
+    cta: { es: "Publicar proyecto", en: "Post project" },
+    href: (locale) => `${prefijoDeIdioma(locale)}/publicar-proyecto`,
+  },
+  {
     test: (n) => /(public|cre[oa]|sub[oi]|pon[eg]|hac[eo]|publish|create|post).{0,15}(una oferta|oferta|ofertas|promocion|descuento|an offer|offer|deal)/.test(n),
     action: "open_dashboard",
     answer: {
@@ -858,8 +985,8 @@ const PRODUCT_INTENTS: ProductIntent[] = [
   {
     test: (n) => EMPLEOS_VISIBLE && (/(public|cre[oa]|sub[oi]|pon[eg]|hac[eo]|busco|necesito|ocupo|publish|create|post|hire).{0,15}(un empleo|empleo|empleos|vacante|puesto|plaza|un trabajo para|personal|empleado|empleada|a job|job post|vacancy)/.test(n) && !/(postul|aplic|apply)/.test(n)),    action: "open_dashboard",
     answer: {
-      es: "Para contratar personal, publica un empleo desde tu panel: pestaña Empleos → «Publicar empleo» (puesto, tipo de contrato, lugar, salario si quieres mostrarlo). Las personas postulan desde la sección Empleos y tú ves las postulaciones ahí mismo.",
-      en: "To hire staff, publish a job from your panel: Jobs tab → \"Publish job\" (position, contract type, place, salary if you want to show it). People apply from the Jobs section and you see the applications right there.",
+      es: "Para contratar personal, publica un empleo desde tu panel: pestaña Empleos → «Publicar empleo» (puesto, tipo de contrato, lugar, salario si quieres mostrarlo). Quienes quieran el puesto te escriben por WhatsApp o, en la app, por Mensajes, y por ahí mismo te envían su currículum.",
+      en: "To hire staff, publish a job from your panel: Jobs tab → \"Publish job\" (position, contract type, place, salary if you want to show it). Candidates write to you on WhatsApp or, in the app, through Messages, and send their résumé right there.",
     },
     cta: { es: "Ir a Empleos", en: "Open Jobs" },
     href: (locale) => `${prefijoDeIdioma(locale)}/dashboard/profesional?tab=jobs`,
@@ -867,8 +994,8 @@ const PRODUCT_INTENTS: ProductIntent[] = [
   {
     test: (n) => EMPLEOS_VISIBLE && (/(postular|postulo|postularme|aplicar|aplico|apply|applying).{0,20}(trabajo|empleo|puesto|vacante|job|position)/.test(n) || /(trabajo|empleo|job).{0,20}(postular|aplicar|apply)/.test(n)),    action: "help",
     answer: {
-      es: "Entra a Empleos, abre el puesto que te interesa y toca «Postular»: adjuntas tu currículum y un mensaje. Tus postulaciones quedan en tu panel, pestaña Mis postulaciones.",
-      en: "Go to Jobs, open the position you like and tap \"Apply\": attach your résumé and a message. Your applications stay in your panel, in the My applications tab.",
+      es: "Entra a Empleos y abre el puesto que te interesa. Desde ahí le escribes a quien lo publicó por WhatsApp o, en la app, por Mensajes, y por ese mismo chat le envías tu currículum.",
+      en: "Go to Jobs and open the position you like. From there you write to whoever posted it on WhatsApp or, in the app, through Messages, and send your résumé in that same chat.",
     },
     cta: { es: "Ver empleos", en: "See jobs" },
     href: (locale) => `${prefijoDeIdioma(locale)}/empleos`,
@@ -876,8 +1003,8 @@ const PRODUCT_INTENTS: ProductIntent[] = [
   {
     test: (n) => EMPLEOS_VISIBLE && (/(ver|buscar|hay|busco|donde|where|see|find|show).{0,15}(ofertas de trabajo|ofertas de empleo|empleos|trabajos|vacantes|puestos|jobs|job offers|vacancies)/.test(n) || /^(empleos|trabajos|vacantes|jobs)[\s?!.]*$/.test(n)),    action: "help",
     answer: {
-      es: "Los empleos disponibles están en la sección Empleos: puedes filtrar por lugar y tipo de contrato, y postular desde cada puesto.",
-      en: "Open jobs are in the Jobs section: filter by place and contract type, and apply from each position.",
+      es: "Los empleos disponibles están en la sección Empleos: puedes filtrar por lugar y tipo de contrato, y desde cada puesto le escribes a quien lo publicó.",
+      en: "Open jobs are in the Jobs section: filter by place and contract type, and from each position write to whoever posted it.",
     },
     cta: { es: "Ver empleos", en: "See jobs" },
     href: (locale) => `${prefijoDeIdioma(locale)}/empleos`,
@@ -913,7 +1040,7 @@ const PRODUCT_INTENTS: ProductIntent[] = [
     },
   },
   {
-    test: (n) => /(como|how|puedo|can i).{0,12}(chate|hablar|escribir|contactar|mensaje|mandar|chat|message|contact|talk|write).{0,25}(profesional|professional|alguien)/.test(n),
+    test: (n) => /(como|how|puedo|can i).{0,12}(chate|habl|escrib|contact|mensaje|mand|chat|message|talk|write).{0,25}(profesional|professional|alguien|cliente|persona)/.test(n),
     unlessService: true,
     answer: {
       es: "Abre el perfil del profesional y toca «Enviar mensaje»: la conversación queda en Mensajes y te avisamos cuando responda. Necesitas una cuenta (es gratis).",
@@ -942,7 +1069,7 @@ const PRODUCT_INTENTS: ProductIntent[] = [
     },
     cta: { es: "Buscar por videoconsulta", en: "Search video consultations" },
     action: "help",
-    href: () => "/buscar?modalidad=videoconsulta",
+    href: () => "/profesionales?modalidad=videoconsulta",
   },
 ];
 
@@ -1107,12 +1234,16 @@ function localAnswer(message: string, locale: Locale): AssistantPayload {
     };
   }
 
+  // Nada calzó. Antes de que el modelo del Worker intente, y si él tampoco
+  // sabe, esta es la respuesta: decirlo y ofrecer las dos salidas que SÍ
+  // resuelven —las guías y un caso de soporte—, en vez de dar un rodeo.
   return {
-    action: "answer",
+    action: "support",
     confidence: 0,
     answer: locale === "en"
-      ? "Tell me the service and area you need. I can also explain any ContrataCR feature."
-      : "Dime qué servicio necesitas y en qué zona; también puedo explicarte cualquier función de ContrataCR.",
+      ? "I do not have that answer. Tell me the service and area and I will find a professional, or check the guides in your panel; if it is about your account, open a support case and a person will reply."
+      : "No tengo esa respuesta. Dime qué servicio necesitas y en qué zona y te busco un profesional, o mira las guías en tu panel; si es algo de tu cuenta, abre un caso de soporte y te contesta una persona.",
+    ctaLabel: locale === "en" ? "Open support" : "Ir a soporte",
   };
 }
 
@@ -1172,47 +1303,6 @@ ${compactLocations()}
 `.trim();
 }
 
-async function openAiAnswer(message: string, locale: Locale, history: HistoryMessage[], catalogPrompt: string, pageContext: string): Promise<AssistantPayload | null> {
-  const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey) return null;
-
-  const res = await fetch(OPENAI_URL, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model: OPENAI_MODEL,
-      temperature: 0.25,
-      response_format: { type: "json_object" },
-      messages: [
-        { role: "system", content: systemPrompt(locale, catalogPrompt, pageContext) },
-        ...history,
-        { role: "user", content: message },
-      ],
-      max_tokens: 320,
-    }),
-    signal: AbortSignal.timeout(8_000),
-  });
-
-  if (!res.ok) {
-    const detail = await res.text().catch(() => "");
-    console.error("[ai-assistant] OpenAI failed", res.status, detail.slice(0, 500));
-    return null;
-  }
-
-  const json = await res.json();
-  const content = json?.choices?.[0]?.message?.content;
-  if (!content) return null;
-  try {
-    const parsed = JSON.parse(content) as AssistantPayload;
-    return typeof parsed.answer === "string" && parsed.answer.trim() ? parsed : null;
-  } catch (error) {
-    console.error("[ai-assistant] invalid JSON", error);
-    return null;
-  }
-}
 
 type WorkersAiBinding = {
   run(model: string, input: Record<string, unknown>): Promise<unknown>;
@@ -1322,7 +1412,7 @@ function actionHref(payload: AssistantPayload, originalMessage: string, locale: 
       params.set("provincia", place.provinceId);
       params.set("canton", place.id);
     }
-    return `/buscar?${params.toString()}`;
+    return `/profesionales?${params.toString()}`;
   }
   return resolveSearch(originalMessage, locale, payload.serviceId, payload.locationText).href;
 }
@@ -1536,8 +1626,8 @@ function normalizePayload(
       ...payload,
       action: "answer",
       answer: locale === "en"
-        ? "No. Identity verification confirms identity information, but it does not guarantee work quality, licensing, insurance or suitability. Review the profile, experience, reviews and service details before choosing."
-        : "No. La verificación de identidad confirma datos de identidad, pero no garantiza la calidad del trabajo, licencias, seguros ni idoneidad. Revisa el perfil, la experiencia, las reseñas y los detalles del servicio antes de elegir.",
+        ? `The «Verified» badge confirms their identity, not the quality of their work. To see that, their profile shows reviews from other clients, success stories with real work, training and certifications, languages and years of experience. ${ACUERDO_DIRECTO.en}`
+        : `La insignia «Verificado» confirma su identidad, no la calidad de su trabajo. Para conocer eso, en su perfil tienes reseñas de otros clientes, casos de éxito con trabajos reales, formación y certificaciones, idiomas y años de experiencia. ${ACUERDO_DIRECTO.es}`,
       ctaLabel: null,
     };
   }
@@ -2073,13 +2163,15 @@ export async function POST(req: Request) {
       !resolveLocationIntent(publishDetailText)
     ) {
       return NextResponse.json({
-        // One question at a time: service first, the area comes on the next turn.
+        // Una pregunta a la vez: primero el servicio. Pero antes se dice QUÉ es
+        // publicar un proyecto y se deja el botón; suelta, la pregunta no le
+        // servía a quien todavía no sabe cómo funciona.
         answer: locale === "en"
-          ? "What service do you need? For example: plumbing, electrical or cleaning."
-          : "¿Qué servicio necesitas? Por ejemplo: plomería, electricidad o limpieza.",
-        action: "answer",
-        searchHref: null,
-        ctaLabel: null,
+          ? "Posting a project means describing what you need so several professionals in that category write to you. What service is it? For example: plumbing, electrical or cleaning."
+          : "Publicar un proyecto es contar qué necesitas para que te escriban varios profesionales de esa categoría. ¿De qué servicio se trata? Por ejemplo: plomería, electricidad o limpieza.",
+        action: "publish_request",
+        searchHref: `${prefijoDeIdioma(locale)}/publicar-proyecto`,
+        ctaLabel: locale === "en" ? "Post project" : "Publicar proyecto",
       });
     }
 
@@ -2094,17 +2186,19 @@ export async function POST(req: Request) {
     const externalRateLimited = needsExternalFallback
       ? enforceRateLimit(req, "ai-assistant-external", 3, 60_000)
       : null;
-    // Product documentation, guided intents and catalog matches always win.
-    // Workers AI is a bounded fallback for genuinely open questions. OpenAI stays
-    // explicitly opt-in, so exhausted Workers AI capacity never consumes credit.
+    // Lo escrito por nosotros manda: documentación del producto, intenciones
+    // guiadas y el catálogo real. Workers AI es el respaldo acotado para las
+    // preguntas genuinamente abiertas, y corre en el mismo Worker donde vive el
+    // app, así que no cuesta por consulta.
+    //
+    // No hay un tercer escalón de pago. Cuando el respaldo tampoco sabe, el
+    // asistente lo DICE y ofrece las dos salidas que sí resuelven —las guías o
+    // un caso de soporte—: inventar es peor que admitir que no se sabe, y no se
+    // paga un proveedor por consulta para adivinar.
     const workersPayload = safetyPayload || !needsExternalFallback || externalRateLimited
       ? null
       : await workersAiAnswer(rawMessage, locale, history, catalog.prompt, pageContext);
-    const openAiEnabled = process.env.AI_ASSISTANT_OPENAI_FALLBACK === "true";
-    const openAiPayload = safetyPayload || workersPayload || !openAiEnabled || !needsExternalFallback || externalRateLimited
-      ? null
-      : await openAiAnswer(rawMessage, locale, externalHistory(history), catalog.prompt, pageContext);
-    const aiPayload = workersPayload ?? openAiPayload;
+    const aiPayload = workersPayload;
     // Safety guidance is terminal: ordinary search-intent normalization must never
     // turn an emergency response back into a professional search.
     const payload = safetyPayload ?? normalizePayload(aiPayload ?? documentedPayload, rawMessage, locale, history, catalog.labels);
@@ -2233,7 +2327,11 @@ export async function POST(req: Request) {
             ? "That service is not in the current catalog yet. You can suggest it for the ContrataCR team to review."
             : "Ese servicio todavía no está en el catálogo. Puedes sugerirlo para que el equipo de ContrataCR lo revise."
           : payload.answer;
-    const assistantAnswer = nativeApp
+    // En la app, una respuesta que solo nombra WhatsApp se dice «mensaje». La
+    // que ya nombra las DOS vías (WhatsApp o Mensajes, como empleos) se deja:
+    // cambiarla decía «por mensaje o por Mensajes».
+    const nombraLasDosVias = /whatsapp/i.test(rawAssistantAnswer) && /\b(Mensajes|Messages)\b/.test(rawAssistantAnswer);
+    const assistantAnswer = nativeApp && !nombraLasDosVias
       ? rawAssistantAnswer
           .replace(/contact(?:ar)?(?:lo)? por WhatsApp/gi, "enviar un mensaje")
           .replace(/(?:a trav[eé]s de|por) WhatsApp/gi, "por mensaje")
@@ -2242,7 +2340,7 @@ export async function POST(req: Request) {
           .replace(/WhatsApp/gi, locale === "en" ? "internal messaging" : "mensajería interna")
       : rawAssistantAnswer;
 
-    const assistantProvider = workersPayload ? "workers-ai" : openAiPayload ? "openai" : "local";
+    const assistantProvider = workersPayload ? "workers-ai" : "local";
     void recordServerInteraction({
       type: "assistant_question",
       source: "assistant",
@@ -2266,7 +2364,7 @@ export async function POST(req: Request) {
       selectedResultIndex: payload.action === "select_professional" && Number.isInteger(payload.selectedResultIndex)
         ? payload.selectedResultIndex
         : null,
-      aiProvider: workersPayload ? "workers-ai" : openAiPayload ? "openai" : "local",
+      aiProvider: workersPayload ? "workers-ai" : "local",
     });
   } catch (error) {
     console.error("[ai-assistant]", error);

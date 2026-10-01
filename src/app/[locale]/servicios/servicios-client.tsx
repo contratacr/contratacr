@@ -9,7 +9,7 @@ import { PanelEmptyState } from "@/components/ui/content-loading";
 import { cn } from "@/lib/utils";
 import { useLocale } from "next-intl";
 import { useTranslations } from "next-intl";
-import { ContrataCRMark, HeaderAccountLink, HeaderMessagesLink, HeaderNotificationsLink, LandingNavbar } from "@/components/landing/landing-navbar";
+import { ContrataCRMark, HeaderAccountLink, HeaderMessagesLink, LandingNavbar } from "@/components/landing/landing-navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { CategorySuggestionBox } from "@/components/ui/category-suggestion";
 import { Link, useRouter } from "@/i18n/navigation";
@@ -140,12 +140,12 @@ export function ServiciosClient({ catalogoInicial }: { catalogoInicial: string |
   function submitSearch(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!query.trim()) {
-      router.push("/buscar");
+      router.push("/profesionales");
       return;
     }
     const first = searchResults[0]?.id;
     if (first) router.push(rutaDeBusqueda({ categoria: first }));
-    else router.push("/buscar");
+    else router.push("/profesionales");
   }
 
   function clearMobileSearch() {
@@ -210,12 +210,7 @@ export function ServiciosClient({ catalogoInicial }: { catalogoInicial: string |
                       href={`/login?redirect=${encodeURIComponent(`${prefijoDeIdioma(locale)}/mensajes`)}`}
                     />
                   )}
-                  {nativeApp ? (
-                    <HeaderNotificationsLink
-                      href={`/login?redirect=${encodeURIComponent(`${prefijoDeIdioma(locale)}/notificaciones`)}`}
-                      label={tp("notifications")}
-                    />
-                  ) : (
+                  {nativeApp ? null : (
                     /* El acceso SOLO sin sesión. Esta cabecera es propia de la
                        pantalla —no la barra—, así que no se enteraba de la
                        sesión y enseñaba la silueta de «Iniciar sesión» a quien
@@ -274,7 +269,7 @@ export function ServiciosClient({ catalogoInicial }: { catalogoInicial: string |
                 {serviceResultsTitle}
               </p>
               {/* Cada oficio lleva a SU página, no a los resultados de búsqueda.
-                  Antes todos apuntaban a `/buscar?categoria=X`, así que las 784
+                  Antes todos apuntaban a `/profesionales?categoria=X`, así que las 784
                   páginas por oficio y provincia —que existen, están bien hechas
                   y están en el sitemap— no recibían UN SOLO enlace desde el
                   sitio. Search Console lo dijo con todas sus letras: «Página de
@@ -285,7 +280,7 @@ export function ServiciosClient({ catalogoInicial }: { catalogoInicial: string |
 
                   La cadena ya estaba armada del segundo eslabón en adelante: la
                   página de oficio enlaza a sus provincias y a los perfiles, y
-                  tiene salida a `/buscar` para quien quiera filtrar. Solo
+                  tiene salida a `/profesionales` para quien quiera filtrar. Solo
                   faltaba el primero. */}
               {searchResults.map(({ id, groupLabel }) => {
                 const IconoFamilia = getCategoryGroupIcon(getCategoryGroupId(id));
@@ -306,7 +301,7 @@ export function ServiciosClient({ catalogoInicial }: { catalogoInicial: string |
           ) : mobileGroup ? (
             <section className="mx-4 mt-3 overflow-hidden rounded border border-[#d7e1ea] bg-white">
               <Link
-                href={`/buscar?grupo=${mobileGroup.key}`}
+                href={`/profesionales?grupo=${mobileGroup.key}`}
                 className="flex min-h-[62px] items-center gap-3 border-b border-[#d7e1ea] px-4 py-3 text-[16px] font-extrabold leading-tight text-[#009FD9]"
               >
                 <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#eef8fc] text-[#009FD9]">

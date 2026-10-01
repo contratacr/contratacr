@@ -191,7 +191,10 @@ export function StatusFilterTabs({
   // Con cuatro o cinco etapas la celda es angosta: el conteo se queda a la
   // derecha del rótulo —como en el resto de la app— y lo que se aprieta es el
   // relleno, la separación y el tamaño del conteo, no la disposición.
-  const compacto = useSegmentedLayout && !dosOpciones && (tabs.length >= 4 || !shortLabels);
+  // En menos de 360px tres etapas con su conteo no caben aunque los rótulos
+  // sean cortos («Pendiente 1 · En proceso 2 · Resuelto 1» medía 257 de 243
+  // px): ahí también se desliza, como dice la regla de arriba.
+  const compacto = useSegmentedLayout && !dosOpciones && (tabs.length >= 4 || !shortLabels || pantallaAngosta);
 
   // PILLS — same segmented language, without count badges. Used for profession
   // filters where labels can be long; 2–4 fit the row, 5+ become a clean rail.

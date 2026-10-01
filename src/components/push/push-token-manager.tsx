@@ -255,8 +255,12 @@ export function PushTokenManager() {
       if (registrationAbortRef.current === controller) registrationAbortRef.current = null;
     };
 
+    // Aviso, no error: en el simulador de iOS Apple nunca entrega el token
+    // (la app está firmada para producción) y el registro falla siempre; como
+    // error, el servidor de desarrollo lo tapaba todo con su recuadro rojo. En
+    // un teléfono real sigue quedando en el registro.
     const onError = (error: unknown) => {
-      console.error("[push] registration error", error);
+      console.warn("[push] registration error", error);
     };
 
     try {

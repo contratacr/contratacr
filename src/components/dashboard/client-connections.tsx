@@ -72,7 +72,7 @@ export function ClientConnections() {
         icon={Users}
         title={t("emptyTitle")}
         description={t("emptyDescription")}
-        action={<Button asChild><Link href="/buscar">{t("searchProfessionals")}</Link></Button>}
+        action={<Button asChild><Link href="/profesionales">{t("searchProfessionals")}</Link></Button>}
       />
     );
   }

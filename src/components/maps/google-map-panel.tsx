@@ -8,6 +8,7 @@ import { createGoogleMarker, loadGoogleMaps, withConfiguredMapId } from "@/lib/m
 import { getProfessionalDisplayName } from "@/lib/display-name";
 import { APP_RESUME_EVENT } from "@/lib/app-events";
 import { filtrosDeRuta, rutaDeBusqueda } from "@/lib/buscar-url";
+import { esServicioDelCatalogo } from "@/lib/data/categories";
 
 export interface MapProfessional {
   id: string;
@@ -437,7 +438,7 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
 
     const sp = new URLSearchParams(window.location.search);
     // El servicio vive en la ruta bonita, no en el «?»: se rescata antes de rearmar.
-    const enRuta = filtrosDeRuta(window.location.pathname);
+    const enRuta = filtrosDeRuta(window.location.pathname, esServicioDelCatalogo);
     if (enRuta?.categoria) sp.set("categoria", enRuta.categoria);
     sp.delete("page");
     sp.delete("provincia");
@@ -447,7 +448,9 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
     sp.set("e", fixed(ne.lng()));
     sp.set("w", fixed(sw.lng()));
     setAreaSearching(true);
-    router.push(rutaDeBusqueda(sp));
+    // Con su prefijo de idioma, como los enlaces a las fichas de abajo: sin él,
+    // en inglés la búsqueda de la zona volvía armada en español.
+    router.push(`${prefijoDeIdioma(locale)}${rutaDeBusqueda(sp)}`);
   }
 
   useEffect(() => {

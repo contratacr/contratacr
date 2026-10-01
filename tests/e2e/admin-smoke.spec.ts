@@ -153,11 +153,20 @@ test.describe("@admin surfaces", () => {
       await expect(row.getByText("Redes Bahía")).toBeVisible();
       await expect(row.getByText("Publicada", { exact: true })).toBeVisible();
       await row.getByRole("button", { name: /^Pausar$/ }).click();
+      // Desde el 26-sep las promociones se filtran por estado: al pausarla, la
+      // fila pasa a la pestaña «Pausadas» (y al publicarla, a «Publicadas»).
+      const pestana = async (nombre: string) => {
+        const boton = page.getByRole("button", { name: new RegExp(`^${nombre}`) }).filter({ visible: true }).first();
+        if (await boton.count()) await boton.click();
+      };
+      await pestana("Pausadas");
       await expect(row.getByText("Pausada", { exact: true })).toBeVisible();
       await expect.poll(async () => (await admin.from("professional_offers").select("status").eq("id", offerId).single()).data?.status).toBe("paused");
       await row.getByRole("button", { name: /^Publicar$/ }).click();
+      await pestana("Publicadas");
       await expect(row.getByText("Publicada", { exact: true })).toBeVisible();
       await row.getByRole("button", { name: /^Marcar vencida$/ }).click();
+      await pestana("Vencidas");
       await expect(row.getByText("Vencida", { exact: true })).toBeVisible();
       await expect.poll(async () => (await admin.from("professional_offers").select("status").eq("id", offerId).single()).data?.status).toBe("expired");
       page.once("dialog", (dialog) => void dialog.accept());
@@ -245,7 +254,7 @@ test.describe("@admin surfaces", () => {
 
       // The account page reads top to bottom: identity, verification, client, professional, reach, support, network, danger zone.
       await gotoOK(page, `/admin/usuarios/${state.professionalUserId}`);
-      for (const heading of [/Verificación de identidad/, /Como cliente/, /Como profesional/, /Citas recibidas/, /Reseñas recibidas/, /Empleos publicados/, /(?:Ofertas|Promociones) publicadas/, /Alcance del perfil/, /Casos de soporte/, /Reportes recibidos/, /Seguidos y seguidores/, /Eliminar esta cuenta al 100%/]) {
+      for (const heading of [/Verificación de identidad/, /Como cliente/, /Como profesional/, /Reseñas recibidas/, /Empleos publicados/, /(?:Ofertas|Promociones) publicadas/, /Alcance del perfil/, /Casos de soporte/, /Reportes recibidos/, /Eliminar esta cuenta al 100%/]) {
         await expectVisibleText(page.locator("body"), heading);
       }
       await expectHealthyPage(page);
@@ -318,7 +327,7 @@ test.describe("@admin surfaces", () => {
       // Servicios: a renamed service is what the server renders, not only what the browser patches later.
       const marker = `Redes e internet ${stamp}`;
       await admin.from("categories").update({ name: marker }).eq("id", renamedId);
-      await expect.poll(async () => (await page.request.get(`/buscar?categoria=${renamedId}`)).text().then((html) => html.includes(marker)), { timeout: 45_000, intervals: [2_000] }).toBe(true);
+      await expect.poll(async () => (await page.request.get(`/profesionales?categoria=${renamedId}`)).text().then((html) => html.includes(marker)), { timeout: 45_000, intervals: [2_000] }).toBe(true);
       const professionalSlug = (await admin.from("professionals").select("slug").eq("id", state.professionalId).single()).data?.slug;
       expect(professionalSlug).toBeTruthy();
       await expect.poll(async () => (await page.request.get(`/profesionales/${professionalSlug}`)).text().then((html) => html.includes(marker)), { timeout: 45_000, intervals: [2_000] }).toBe(true);

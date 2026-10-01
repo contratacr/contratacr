@@ -1,5 +1,5 @@
 import { test, expect } from "playwright/test";
-import { gotoOK, isMobileProject, loginAs } from "./helpers";
+import { gotoOK, isMobileProject, loginAs, expectNoHorizontalOverflow } from "./helpers";
 import { E2E_USERS } from "./seed";
 
 // La franja de acciones pegada al fondo es UNA sola pantalla repetida: soporte,
@@ -96,6 +96,9 @@ test.describe("@seeded franjas de acciones al pie", () => {
     await loginAs(page, E2E_USERS.professional.email, E2E_USERS.professional.password);
     for (const [nombre, ruta] of [["publicar empleo", "/empleos/publicar"], ["publicar promoción", "/promociones/publicar"]] as const) {
       await gotoOK(page, ruta);
+      // Si la página se ensancha (en el CI la franja de empleo medía 397 px en
+      // una pantalla de 390), el desborde dice qué se sale antes que la franja.
+      await expectNoHorizontalOverflow(page);
       medidas.push({ nombre, franja: await medirFranja(page) });
     }
 
@@ -123,7 +126,7 @@ test.describe("@seeded franjas de acciones al pie", () => {
       // letra—, no el ancho.
       // 12 px entre botones: la separación única de la app (data-ccr-separacion).
       const anchoEsperado = franja.botones.length > 1 ? (botonRef.ancho - 12) / 2 : botonRef.ancho;
-      expect(Math.abs(b.ancho - anchoEsperado), `«${nombre}» no reparte el ancho de la franja entre sus botones`).toBeLessThanOrEqual(1);
+      expect(Math.abs(b.ancho - anchoEsperado), `«${nombre}» no reparte el ancho de la franja entre sus botones: ${JSON.stringify(franja.botones)} aire=${JSON.stringify(franja.aire)} ref=${JSON.stringify(botonRef)} refAire=${JSON.stringify(referencia.aire)}`).toBeLessThanOrEqual(1);
     }
       expect(franja.fija, `«${nombre}» no deja la franja pegada al fondo`).toBe(true);
       expect(franja.alFondo, `«${nombre}» deja la franja despegada del borde`).toBe(true);
@@ -200,7 +203,10 @@ test.describe("@seeded franjas de acciones al pie", () => {
     const fichas = await page.evaluate(() =>
       Array.from(new Set(Array.from(document.querySelectorAll("main a"))
         .map((a) => a.getAttribute("href") ?? "")
-        .filter((h) => /\/promociones\/[0-9a-f-]{8,}/.test(h)))).slice(0, 6));
+        // La ficha lleva un enlace bonito con el id corto al final (rutaPromocion).
+        .filter((h) => /\/promociones\/[^/?#]*[0-9a-f]{8}(?:[?#]|$)/.test(h)))).slice(0, 6));
+    // La base local del CI no siembra promociones: ahí no hay fichas que mirar.
+    if (fichas.length === 0 && process.env.LOCAL_REGRESSION_SEED === "1") test.skip(true, "Sin promociones en la base local del CI.");
     expect(fichas.length, "El tablero de promociones vino vacío").toBeGreaterThan(0);
 
     for (const ficha of fichas) {

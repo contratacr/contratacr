@@ -40,9 +40,9 @@ test("sin sesión la barra del teléfono lleva a iniciar sesión y vuelve a la m
     await expect(page.locator("[data-acceso-cabecera]").filter({ visible: true }), ruta).toHaveCount(1);
     await expect(page.getByRole("link", { name: "Notificaciones" }).filter({ visible: true }), ruta).toHaveCount(0);
   }
-  await gotoOK(page, "/buscar?categoria=plomeria");
+  await gotoOK(page, "/profesionales?categoria=plomeria");
   const cuenta = page.locator("[data-acceso-cabecera]").filter({ visible: true });
-  await expect(cuenta).toHaveAttribute("href", /redirect=.*buscar.*categoria.*plomeria/);
+  await expect(cuenta).toHaveAttribute("href", /redirect=.*profesionales.*plomeria/);
   await gotoOK(page, "/login");
   await expect(page.locator("[data-acceso-cabecera]").filter({ visible: true })).toHaveCount(0);
 });

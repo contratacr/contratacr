@@ -52,7 +52,7 @@ export function FindByZone({ coverage }: { coverage: ZoneCoverage }) {
       (pos) => {
         const { latitude, longitude } = pos.coords;
         setGeoLoading(false);
-        router.push(`/buscar?lat=${latitude.toFixed(5)}&lng=${longitude.toFixed(5)}`);
+        router.push(`/profesionales?lat=${latitude.toFixed(5)}&lng=${longitude.toFixed(5)}`);
       },
       () => {
         setGeoLoading(false);

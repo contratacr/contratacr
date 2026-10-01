@@ -453,7 +453,11 @@ export function OfferForm({ professionalId, serviceOptions, backHref = "/promoci
           className="max-sm:pb-2"
         >
           <div className="rounded-2xl border border-[#e5e7eb] bg-white p-5 shadow-sm">
-          <div className="grid gap-5 sm:grid-cols-2">
+          {/* Columna «minmax(0, 1fr)» en el teléfono: con la implícita (auto) un
+              campo con ancho propio —un <select>, cuyo ancho sale de su
+              opción más larga y del tipo de letra del sistema— ensanchaba la
+              columna y la página entera (397 px en una pantalla de 390). */}
+          <div className="grid grid-cols-[minmax(0,1fr)] gap-5 sm:grid-cols-2">
             <label className="text-sm font-medium text-[#374151] sm:col-span-2">
               <RequiredLabel>{copy.title}</RequiredLabel>
               <input name="title" maxLength={120} defaultValue={initialOffer?.title ?? ""} placeholder={copy.titlePlaceholder} className={FIELD_CLASS} />
@@ -595,7 +599,7 @@ export function OfferForm({ professionalId, serviceOptions, backHref = "/promoci
           </section>
 
           <div className="my-6 border-t border-[#e5e7eb] pt-6"><h2 className="font-bold">{copy.priceAndValidity}</h2></div>
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid grid-cols-[minmax(0,1fr)] gap-4 sm:grid-cols-2">
             <FilaInterruptor
               className="sm:col-span-2"
               testId="promo-sin-precio"

@@ -1,6 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { esRutaDeBusqueda } from "@/lib/buscar-url";
+import { esServicioDelCatalogo } from "@/lib/data/categories";
 import { prefijoDeIdioma } from "@/lib/prefijo-de-idioma";
 import { alCambiarElTurno, hayAlguienEnTurno } from "@/lib/turno-en-pantalla";
 import { Clock3, Star, X } from "lucide-react";
@@ -37,7 +39,7 @@ export function WhatsAppReviewFollowUp() {
   // en el panel o en la lista de Mensajes, donde no compite con nada.
   const pathname = usePathname();
   const ruta = (pathname ?? "/").replace(/^\/(?:es|en)(?=\/|$)/u, "") || "/";
-  const pantallaTranquila = /^\/(?:buscar|mensajes|dashboard(?:\/[^/]+)?)?\/?$/u.test(ruta);
+  const pantallaTranquila = /^\/(?:mensajes|dashboard(?:\/[^/]+)?)?\/?$/u.test(ruta) || esRutaDeBusqueda(ruta, esServicioDelCatalogo);
   const [followUp, setFollowUp] = useState<FollowUp | null>(null);
   const [pendingCount, setPendingCount] = useState(0);
   const [reviewTarget, setReviewTarget] = useState<ReviewTarget | null>(null);
@@ -193,8 +195,16 @@ export function WhatsAppReviewFollowUp() {
       const barra = document.querySelector<HTMLElement>(".ccr-native-bottom-nav");
       const alto = barra ? barra.getBoundingClientRect().height : 0;
       setAltoBarra((previo) => (Math.abs(previo - alto) > 1 ? alto : previo));
-      const ajena = Array.from(document.querySelectorAll('.app-modal-screen, [role="dialog"]'))
-        .some((el) => !el.classList.contains("ccr-seguimiento-servicio"));
+      // Solo cuenta una ventana que SE VE. El menú lateral vive montado y
+      // escondido en todas las pantallas (role="dialog"): contándolo, la tarjeta
+      // se asomaba medio segundo y se escondía para siempre.
+      const ajena = Array.from(document.querySelectorAll<HTMLElement>('.app-modal-screen, [role="dialog"]'))
+        .some((el) => {
+          if (el.classList.contains("ccr-seguimiento-servicio")) return false;
+          const caja = el.getBoundingClientRect();
+          const estilo = getComputedStyle(el);
+          return caja.width > 0 && caja.height > 0 && estilo.visibility !== "hidden" && estilo.display !== "none" && Number(estilo.opacity) > 0;
+        });
       setHayVentana((previo) => (previo === ajena ? previo : ajena));
     };
     medir();

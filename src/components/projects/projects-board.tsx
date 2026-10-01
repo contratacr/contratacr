@@ -11,6 +11,7 @@ import { ArrowLeft, ClipboardList, Loader2, Menu, Phone } from "lucide-react";
 import { Link, useRouter } from "@/i18n/navigation";
 import { ContrataCRMark, HeaderAccountLink } from "@/components/landing/landing-navbar";
 import { NotificationBell } from "@/components/notifications/notification-bell";
+import { useNativeApp } from "@/hooks/use-native-app";
 import { MarketplaceFilterChip, MarketplaceNavbarPortal, MarketplaceSearch } from "@/components/marketplace/marketplace-controls";
 import { ScrollRail } from "@/components/ui/scroll-rail";
 import { useHairlineOnScroll } from "@/components/util/use-hairline-on-scroll";
@@ -318,6 +319,7 @@ export function ProjectsBoard({
   const locale = marketplaceLocale(useLocale());
   const en = locale === "en";
   const copy = COPY[locale];
+  const nativeApp = useNativeApp();
   // Se puede llegar con la búsqueda puesta en la dirección, como en Empleos y
   // Promociones: un enlace a /proyectos?q=fontaneria tiene que abrir ya
   // filtrado, si no el enlace miente.
@@ -521,7 +523,8 @@ export function ProjectsBoard({
           <h1 className={CABECERA_TITULO}>{copy.titulo}</h1>
           <div className="ml-auto flex shrink-0 items-center gap-0.5">
             {/* Sin sesión va la cuenta; la campana queda para quien ya entró. */}
-            {currentUserId ? <NotificationBell scope="all" /> : <HeaderAccountLink />}
+            {/* En la app Notificaciones vive en el menú de abajo. */}
+            {!nativeApp && (currentUserId ? <NotificationBell scope="all" /> : <HeaderAccountLink />)}
           </div>
         </div>
         )}

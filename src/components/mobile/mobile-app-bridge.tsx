@@ -1,7 +1,9 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
+import { esRutaDeBusqueda } from "@/lib/buscar-url";
+import { esServicioDelCatalogo } from "@/lib/data/categories";
 import { isNativeAppRuntime } from "@/hooks/use-native-app";
 import { NATIVE_ONBOARDING_COMPLETED_KEY } from "@/lib/mobile-onboarding";
 
@@ -11,7 +13,7 @@ const NATIVE_BACK_ROOT_STATE_KEY = "__ccrNativeBackRoot";
 const NATIVE_BACK_ROOT_SESSION_KEY = "ccr-native-back-root";
 
 function isSearchPath(pathname: string) {
-  return /(^|\/)buscar(\/|$)/.test(pathname);
+  return esRutaDeBusqueda(pathname, esServicioDelCatalogo);
 }
 
 // Flows that own the whole screen: no app header and no bottom nav, because the
@@ -145,8 +147,17 @@ export function MobileAppBridge() {
     };
   }, [pathname]);
 
+  // La decisión se toma UNA vez, al primer pintado, y se guarda. En desarrollo
+  // React monta, desmonta y vuelve a montar cada efecto a propósito; el
+  // desmontaje quitaba `ccr-native-app`, y al volver a montar la comprobación
+  // —que mira justo esa clase— ya daba falso y el modo app no regresaba nunca.
+  // Por eso el armazón nativo no se podía ver en localhost y cada revisión
+  // visual había que publicarla a test. En producción no se notaba porque ahí
+  // los efectos se montan una sola vez.
+  const [esAppNativa] = useState(() => isNativeAppRuntime());
+
   useEffect(() => {
-    if (!isNativeAppRuntime()) return;
+    if (!esAppNativa) return;
     document.documentElement.classList.add("ccr-native-app");
     document.body.classList.add("ccr-native-app");
     // Server-side analytics read this to tell app traffic from web traffic.
@@ -223,7 +234,7 @@ export function MobileAppBridge() {
       document.documentElement.classList.remove("ccr-native-app");
       document.body.classList.remove("ccr-native-app");
     };
-  }, []);
+  }, [esAppNativa]);
 
   // Every section opens from its top. In the app the scroll container is the
   // fixed <main>, not the window, so the router's own scroll reset never reaches

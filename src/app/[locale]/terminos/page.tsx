@@ -32,11 +32,23 @@ const ES_SECTIONS: LegalSection[] = [
         "Cada Usuario decide con quién contratar y debe evaluar identidad, experiencia, licencias, seguros, precio y condiciones.",
         "ContrataCR no garantiza disponibilidad, calidad, seguridad, legalidad, puntualidad, resultado o finalización de un servicio.",
       ] },
+      { k: "p", text: "Para que cada Usuario elija con información, la Plataforma muestra en los perfiles **datos para comparar**: reseñas de Clientes, casos de éxito, formación y certificaciones, idiomas, años de experiencia, zonas de trabajo, precio de referencia y, cuando corresponde, la insignia Verificado. Esa información la publica cada Profesional —las reseñas, los Clientes— y es responsabilidad de quien la publica. Revisarla, comparar y decidir con quién contratar corresponde a cada Usuario." },
+    ],
+  },
+  {
+    id: "publicaciones",
+    h: "4. Proyectos, promociones y empleos",
+    body: [
+      { k: "ul", items: [
+        "**Proyectos:** al publicar un proyecto, este se muestra a los Profesionales del servicio elegido para que puedan escribirle. El teléfono que indique no se publica: se comparte solo con el Profesional que le responda.",
+        "**Promociones:** el precio, las condiciones, la vigencia y la disponibilidad de una promoción los define y cumple el Profesional que la publica.",
+        "**Empleos:** ContrataCR no es el empleador ni interviene en la selección. Quien se interese por un empleo se comunica directamente con quien lo publicó, por WhatsApp o por Mensajes. Desconfíe de cualquier oferta que pida pagos para postularse y repórtela.",
+      ] },
     ],
   },
   {
     id: "pagos",
-    h: "4. Contratación y pagos",
+    h: "5. Contratación y pagos",
     body: [
       { k: "p", text: "El precio, alcance, fecha, garantías, facturación y forma de pago del servicio profesional se acuerdan directamente entre Cliente y Profesional. ContrataCR no procesa ni custodia esos pagos, salvo que una función futura lo indique expresamente mediante condiciones adicionales." },
       { k: "p", text: "ContrataCR no responde por anticipos, falta de pago, cobros indebidos, reembolsos, daños o disputas económicas entre Usuarios. Recomendamos documentar por escrito el alcance y las condiciones antes de iniciar un trabajo." },
@@ -44,7 +56,7 @@ const ES_SECTIONS: LegalSection[] = [
   },
   {
     id: "profesionales",
-    h: "5. Obligaciones de los Profesionales",
+    h: "6. Obligaciones de los Profesionales",
     body: [
       { k: "ul", items: [
         "Publicar información verdadera, vigente y suficiente sobre sus servicios.",
@@ -58,7 +70,7 @@ const ES_SECTIONS: LegalSection[] = [
   },
   {
     id: "usuarios",
-    h: "6. Reglas de conducta",
+    h: "7. Reglas de conducta",
     body: [
       { k: "p", text: "Cada Usuario es responsable de su cuenta, de la información que publica y de la actividad realizada con sus credenciales." },
       { k: "ul", items: [
@@ -73,17 +85,19 @@ const ES_SECTIONS: LegalSection[] = [
   },
   {
     id: "mensajes",
-    h: "7. Mensajes, archivos y notificaciones",
+    h: "8. Mensajes, archivos y notificaciones",
     body: [
       { k: "p", text: "Los mensajes sirven para coordinar servicios. Los participantes son responsables de lo que envían. Puede adjuntar únicamente imágenes o documentos legítimos, necesarios y seguros; no debe incluir información sensible innecesaria." },
       { k: "p", text: "ContrataCR puede aplicar controles automáticos, límites, bloqueo de archivos y revisión asociada a reportes o seguridad. No supervisamos de forma permanente todas las conversaciones." },
+      { k: "p", text: "Un mensaje propio puede editarse o eliminarse para todos durante los 15 minutos siguientes a su envío; después solo puede ocultarse para usted. La conversación puede mostrar si un mensaje fue enviado, recibido o visto; los avisos de «Visto» son recíprocos y pueden desactivarse en Privacidad." },
+      { k: "p", text: "Cuando el contacto ocurre fuera de la Plataforma —por WhatsApp, llamada u otro medio— esa comunicación queda fuera del control de ContrataCR." },
       { k: "p", text: "Si activa notificaciones, podemos enviar avisos sobre mensajes, proyectos, cotizaciones, reseñas, seguridad y actividad de su cuenta. Puede desactivarlas desde el sistema operativo, aunque ciertos correos esenciales de cuenta o seguridad seguirán enviándose." },
       { k: "p", text: "También podemos enviarle por correo novedades ocasionales sobre ContrataCR. Puede pedir la baja respondiendo a cualquiera de esos correos." },
     ],
   },
   {
     id: "ia",
-    h: "8. Asistente de inteligencia artificial",
+    h: "9. Asistente de inteligencia artificial",
     body: [
       { k: "p", text: "El asistente ayuda a interpretar necesidades y encontrar funciones o servicios, pero sus respuestas pueden ser incompletas o incorrectas. No constituye asesoría profesional, médica, legal, financiera ni de emergencia." },
       { k: "p", text: "Usted debe verificar la información antes de tomar decisiones y no debe enviar al asistente contraseñas, información financiera, números completos de identificación ni datos sensibles innecesarios." },
@@ -91,7 +105,7 @@ const ES_SECTIONS: LegalSection[] = [
   },
   {
     id: "contenido",
-    h: "9. Contenido, perfiles y propiedad intelectual",
+    h: "10. Contenido, perfiles y propiedad intelectual",
     body: [
       { k: "p", text: "El Usuario conserva la titularidad de su contenido. Al publicarlo, otorga a ContrataCR una licencia no exclusiva, mundial y gratuita, durante el tiempo necesario para alojarlo, copiarlo técnicamente, adaptarlo a formatos o tamaños, mostrarlo, distribuirlo dentro de la Plataforma, moderarlo y crear copias de respaldo para operar y promocionar su perfil o solicitud." },
       { k: "p", text: "El Usuario declara que posee los derechos y permisos necesarios sobre el contenido publicado. La marca, logotipo, diseño, textos propios y software de ContrataCR pertenecen a ContrataCR o a sus licenciantes y no pueden utilizarse sin autorización." },
@@ -99,7 +113,7 @@ const ES_SECTIONS: LegalSection[] = [
   },
   {
     id: "resenas",
-    h: "10. Reseñas, reportes y moderación",
+    h: "11. Reseñas, reportes y moderación",
     body: [
       { k: "p", text: "ContrataCR mantiene **tolerancia cero frente a contenido ofensivo y usuarios abusivos**." },
       { k: "ul", items: [
@@ -114,7 +128,7 @@ const ES_SECTIONS: LegalSection[] = [
   },
   {
     id: "cuenta",
-    h: "11. Cuenta, suspensión y eliminación",
+    h: "12. Cuenta, suspensión y eliminación",
     body: [
       { k: "p", text: "Debe mantener datos de contacto correctos y proteger sus credenciales. Notifique de inmediato cualquier acceso no autorizado." },
       { k: "p", text: "Puede **desactivar su cuenta** desde Cuenta y seguridad. Al desactivarla, el perfil deja de estar visible y se cierra la sesión." },
@@ -125,7 +139,7 @@ const ES_SECTIONS: LegalSection[] = [
   },
   {
     id: "terceros",
-    h: "12. Servicios y enlaces de terceros",
+    h: "13. Servicios y enlaces de terceros",
     body: [
       { k: "p", text: "La Plataforma depende de proveedores de autenticación, alojamiento, almacenamiento, mapas, correo, notificaciones, IA y otros servicios. Sus condiciones y políticas también pueden aplicar cuando usted utiliza esas funciones." },
       { k: "p", text: "ContrataCR no controla la disponibilidad o el contenido de sitios externos y no responde por interrupciones atribuibles a terceros fuera de nuestro control razonable." },
@@ -133,7 +147,7 @@ const ES_SECTIONS: LegalSection[] = [
   },
   {
     id: "disponibilidad",
-    h: "13. Disponibilidad y limitación de responsabilidad",
+    h: "14. Disponibilidad y limitación de responsabilidad",
     body: [
       { k: "p", text: "Procuramos mantener la Plataforma segura y disponible, pero puede presentar mantenimiento, errores, interrupciones o pérdida temporal de funciones. No garantizamos funcionamiento continuo o libre de errores." },
       { k: "p", text: "En la máxima medida permitida por la ley, ContrataCR no responde por daños derivados del servicio prestado por un Profesional, acuerdos entre Usuarios, contenido publicado por terceros o eventos fuera de nuestro control razonable." },
@@ -142,14 +156,14 @@ const ES_SECTIONS: LegalSection[] = [
   },
   {
     id: "privacidad",
-    h: "14. Privacidad",
+    h: "15. Privacidad",
     body: [
       { k: "p", text: "El tratamiento de datos se rige por nuestra **Política de Privacidad**. Al utilizar permisos del dispositivo, como ubicación, archivos o notificaciones, se le mostrará la solicitud correspondiente y podrá administrarla desde el sistema operativo." },
     ],
   },
   {
     id: "cambios",
-    h: "15. Cambios en estos Términos",
+    h: "16. Cambios en estos Términos",
     body: [
       { k: "p", text: "Podemos actualizar estos Términos para reflejar cambios legales, de seguridad o del producto. Publicaremos la versión y fecha vigentes. Cuando el cambio sea material, procuraremos comunicarlo por un medio razonable antes de su entrada en vigor." },
       { k: "p", text: "El uso continuado después de la entrada en vigor implica aceptación de la versión actualizada. Si no está de acuerdo, puede dejar de usar la Plataforma y solicitar eliminar su cuenta." },
@@ -157,7 +171,7 @@ const ES_SECTIONS: LegalSection[] = [
   },
   {
     id: "ley",
-    h: "16. Legislación, controversias y contacto",
+    h: "17. Legislación, controversias y contacto",
     body: [
       { k: "p", text: "Estos Términos se rigen por las leyes de la República de Costa Rica. Las controversias se someterán a las autoridades y tribunales costarricenses competentes, sin perjuicio de derechos irrenunciables del consumidor." },
       { k: "p", text: "Consultas, reportes o solicitudes de revisión: **soporte@contratacr.com**." },
@@ -174,53 +188,58 @@ const EN_SECTIONS: LegalSection[] = [
   { id: "intermediary", h: "3. ContrataCR is an intermediary", body: [
     { k: "p", text: "**ContrataCR facilitates contact and coordination between Users.** It does not provide, perform, supervise, or guarantee Professional services." },
     { k: "ul", items: ["ContrataCR is not a party to agreements between Users.", "Professionals are not employees, agents, or representatives of ContrataCR.", "Each User must assess identity, experience, licenses, insurance, price, and terms.", "ContrataCR does not guarantee availability, quality, safety, legality, timeliness, results, or completion."] },
+    { k: "p", text: "So that each User can choose with information, profiles show **data to compare**: Client reviews, success stories, training and certifications, languages, years of experience, work areas, a reference price and, where applicable, the Verified badge. Each Professional publishes that information —reviews come from Clients— and is responsible for it. Reviewing it, comparing and deciding whom to hire is up to each User." },
   ] },
-  { id: "payments", h: "4. Hiring and payments", body: [
+  { id: "listings", h: "4. Projects, promotions, and jobs", body: [
+    { k: "ul", items: ["**Projects:** a published project is shown to Professionals in the chosen service so they can write to you. The phone number you provide is not published: it is shared only with the Professional who replies.", "**Promotions:** the price, conditions, validity, and availability of a promotion are set and honored by the Professional who publishes it.", "**Jobs:** ContrataCR is not the employer and does not take part in hiring. Anyone interested contacts the poster directly via WhatsApp or Messages. Be wary of any job asking for payment to apply, and report it."] },
+  ] },
+  { id: "payments", h: "5. Hiring and payments", body: [
     { k: "p", text: "Clients and Professionals directly agree on price, scope, timing, warranties, invoicing, and payment. ContrataCR does not process or hold those payments unless a future feature expressly states otherwise under additional terms." },
     { k: "p", text: "ContrataCR is not liable for deposits, non-payment, improper charges, refunds, damages, or financial disputes between Users." },
   ] },
-  { id: "professionals", h: "5. Professional obligations", body: [
+  { id: "professionals", h: "6. Professional obligations", body: [
     { k: "ul", items: ["Publish truthful, current information.", "Maintain licenses, permits, professional registration, insurance, or authorization required for the activity.", "Do not claim qualifications or experience you do not have.", "Comply with applicable labor, tax, health, professional, and consumer law.", "Handle Client data lawfully and confidentially."] },
     { k: "note", text: "The **Verified** badge only confirms a limited identity match. It does not certify experience, licenses, quality, or results." },
   ] },
-  { id: "conduct", h: "6. Conduct rules", body: [
+  { id: "conduct", h: "7. Conduct rules", body: [
     { k: "p", text: "Each User is responsible for their account, published information, and activity." },
     { k: "ul", items: ["No impersonation, fraud, harassment, spam, illegal or dangerous activity.", "No false, misleading, discriminatory, threatening, defamatory, sexually explicit, or unlawful content.", "No unauthorized access, abusive automation, interference, malware, or harmful files.", "No collection, disclosure, or sale of User data outside legitimate service coordination."] },
   ] },
-  { id: "messages", h: "7. Messages, files, and notifications", body: [
+  { id: "messages", h: "8. Messages, files, and notifications", body: [
     { k: "p", text: "Messages are for service coordination. Users are responsible for what they send and may only attach legitimate, necessary, and safe images or documents. Do not include unnecessary sensitive information." },
+    { k: "p", text: "Your own message can be edited or deleted for everyone within 15 minutes of sending; after that it can only be hidden for you. Conversations may show whether a message was sent, delivered, or seen; «Seen» receipts are reciprocal and can be turned off in Privacy. Contact outside the Platform —WhatsApp, calls, or other means— is outside ContrataCR's control." },
     { k: "p", text: "We may apply automated safeguards, limits, file blocking, and review connected to reports or security. If notifications are enabled, we may send account and marketplace activity alerts. We may also send occasional ContrataCR news by email; you can opt out by replying to any such email, and essential account and security emails still apply." },
   ] },
-  { id: "ai", h: "8. Artificial intelligence assistant", body: [
+  { id: "ai", h: "9. Artificial intelligence assistant", body: [
     { k: "p", text: "The assistant can help interpret needs and find services, but may be incomplete or wrong. It is not professional, medical, legal, financial, emergency, or safety advice. Verify information before acting." },
   ] },
-  { id: "content", h: "9. Content and intellectual property", body: [
+  { id: "content", h: "10. Content and intellectual property", body: [
     { k: "p", text: "Users retain ownership of their content and grant ContrataCR a non-exclusive, worldwide, royalty-free license, for as long as needed, to host, technically copy, format, display, distribute within the Platform, moderate, back up, and promote the relevant profile or request." },
     { k: "p", text: "Users represent that they have the required rights. ContrataCR's brand, logo, design, original text, and software belong to ContrataCR or its licensors." },
   ] },
-  { id: "moderation", h: "10. Reviews, reports, and moderation", body: [
+  { id: "moderation", h: "11. Reviews, reports, and moderation", body: [
     { k: "p", text: "ContrataCR has **zero tolerance for objectionable content and abusive users**." },
     { k: "ul", items: ["Reviews must describe genuine experiences respectfully.", "Users may report profiles, messages, reviews, or conduct and immediately block the other person from supported surfaces.", "Reported content may be hidden immediately while it is reviewed.", "ContrataCR seeks to review and act on safety or abuse reports within 24 hours.", "ContrataCR may investigate, limit visibility, remove content, warn, suspend, or terminate accounts for breach, risk, fraud, legal orders, or community protection.", "Where reasonably possible, Users may contact support to request review of an action."] },
   ] },
-  { id: "account", h: "11. Account, suspension, and deletion", body: [
+  { id: "account", h: "12. Account, suspension, and deletion", body: [
     { k: "p", text: "Keep contact information accurate and credentials secure. You can **disable your account** from Account & security. When disabled, your profile is hidden and your session is signed out." },
     { k: "p", text: "If you want **permanent deletion** of the account or specific personal data, you can request it from Account & security or through the public account or data deletion page. If you cannot access your panel, use the prefilled support case available on that page so we can confirm your identity and follow up." },
     { k: "p", text: "Deletion is handled according to the Privacy Policy. Some data may be temporarily retained for security, claims, or legal duties." },
     { k: "p", text: "ContrataCR may suspend or terminate accounts for breach, fraud, risk to others, prolonged inactivity, legal requirements, or harmful use." },
   ] },
-  { id: "third-parties", h: "12. Third-party services", body: [
+  { id: "third-parties", h: "13. Third-party services", body: [
     { k: "p", text: "The Platform relies on authentication, hosting, storage, maps, email, notifications, AI, and other providers. Their terms and policies may also apply. ContrataCR does not control external websites or outages outside its reasonable control." },
   ] },
-  { id: "availability", h: "13. Availability and liability", body: [
+  { id: "availability", h: "14. Availability and liability", body: [
     { k: "p", text: "We seek to keep the Platform secure and available, but maintenance, errors, interruptions, or temporary loss of features may occur. Continuous, error-free operation is not guaranteed." },
     { k: "p", text: "To the extent permitted by law, ContrataCR is not liable for Professional services, agreements between Users, third-party content, or events outside its reasonable control." },
     { k: "note", text: "**Nothing in these Terms limits rights or responsibilities that Costa Rican law does not allow us to exclude**, including applicable consumer rights." },
   ] },
-  { id: "privacy", h: "14. Privacy", body: [{ k: "p", text: "Data processing is governed by the **Privacy Policy**. Device permissions such as location, files, and notifications can be managed through the operating system." }] },
-  { id: "changes", h: "15. Changes to these Terms", body: [
+  { id: "privacy", h: "15. Privacy", body: [{ k: "p", text: "Data processing is governed by the **Privacy Policy**. Device permissions such as location, files, and notifications can be managed through the operating system." }] },
+  { id: "changes", h: "16. Changes to these Terms", body: [
     { k: "p", text: "We may update these Terms for legal, security, or product changes. We will publish the current version and date and seek to provide reasonable advance notice of material changes." },
   ] },
-  { id: "law", h: "16. Law, disputes, and contact", body: [
+  { id: "law", h: "17. Law, disputes, and contact", body: [
     { k: "p", text: "These Terms are governed by Costa Rican law. Disputes are subject to the competent Costa Rican authorities and courts, without limiting non-waivable consumer rights." },
     { k: "p", text: "Questions, reports, or review requests: **soporte@contratacr.com**." },
   ] },
@@ -239,7 +258,7 @@ export default async function TerminosPage({ params }: { params: Promise<{ local
   return (
     <LegalDocument
       title={en ? "Terms and Conditions" : "Términos y Condiciones"}
-      updated={en ? "September 25, 2026" : "25 de septiembre de 2026"}
+      updated={en ? "September 30, 2026" : "30 de septiembre de 2026"}
       intro={en
         ? "These Terms explain the rules for using ContrataCR as a Client or Professional across the website and mobile applications."
         : "Estos Términos explican las reglas para utilizar ContrataCR como Cliente o Profesional en el sitio web y las aplicaciones móviles."}

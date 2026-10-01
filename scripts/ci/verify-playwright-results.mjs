@@ -14,6 +14,10 @@ export function analyzePlaywrightReport(report) {
             name: [...nextParents, spec.title, test.projectName].filter(Boolean).join(" › "),
             expectedStatus: test.expectedStatus,
             results: test.results ?? [],
+            // test.skip(condición, "motivo") deja una anotación «skip» con su
+            // descripción, en la prueba o en su resultado según la versión.
+            skipReason: [...(test.annotations ?? []), ...(test.results ?? []).flatMap((r) => r.annotations ?? [])]
+              .find((a) => a.type === "skip" && a.description?.trim())?.description?.trim() ?? null,
           });
         }
       }
@@ -22,7 +26,13 @@ export function analyzePlaywrightReport(report) {
   }
 
   collect(report.suites ?? []);
+  // SALTO DECLARADO ≠ SALTO INESPERADO. Una prueba que solo aplica al
+  // teléfono se salta en computadora, y las de citas mientras estén apagadas:
+  // son saltos con motivo escrito, decididos. Lo que no puede pasar es un salto
+  // sin explicación (un test.skip() suelto, una prueba que no llegó a correr),
+  // y eso sigue tumbando la certificación.
   const skipped = [];
+  const declaredSkips = [];
   const flaky = [];
   const failed = [];
 
@@ -30,7 +40,8 @@ export function analyzePlaywrightReport(report) {
     const statuses = item.results.map((result) => result.status);
     const finalStatus = statuses.at(-1);
     if (item.expectedStatus === "skipped" || finalStatus === "skipped" || statuses.length === 0) {
-      skipped.push(item.name);
+      if (statuses.length > 0 && item.skipReason) declaredSkips.push(`${item.name} — ${item.skipReason}`);
+      else skipped.push(item.name);
       continue;
     }
     if (finalStatus !== "passed") {
@@ -40,7 +51,7 @@ export function analyzePlaywrightReport(report) {
     if (statuses.slice(0, -1).some((status) => status !== "passed")) flaky.push(item.name);
   }
 
-  return { total: cases.length, failed, flaky, skipped };
+  return { total: cases.length, failed, flaky, skipped, declaredSkips };
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
@@ -54,7 +65,9 @@ if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1]
     failed: result.failed.length,
     flaky: result.flaky.length,
     skipped: result.skipped.length,
+    declaredSkips: result.declaredSkips.length,
   }, null, 2));
+  if (result.declaredSkips.length) console.log(`Saltos declarados (con motivo):\n${result.declaredSkips.join("\n")}`);
 
   const problems = [
     ...result.failed.map((name) => `failed: ${name}`),

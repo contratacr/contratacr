@@ -73,6 +73,8 @@ export function pedirAvisos(userId: string): Promise<Aviso[]> {
     .from("notifications")
     .select("*")
     .eq("user_id", userId)
+    // Los mensajes del chat van en el icono de Mensajes, no en la campana.
+    .neq("type", "direct_message")
     .order("created_at", { ascending: false })
     .limit(20)
     .then(
@@ -90,5 +92,6 @@ export function pedirTotalSinLeer(userId: string): Promise<number | null> {
     .select("id", { count: "exact", head: true })
     .eq("user_id", userId)
     .eq("read", false)
+    .neq("type", "direct_message")
     .then(({ count, error }) => (!error && typeof count === "number" ? count : null), () => null));
 }

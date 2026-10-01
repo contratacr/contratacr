@@ -21,6 +21,9 @@
  * contrato de `scripts/validate-mobile-native-config.mjs` vigila que las dos
  * no se separen.
  */
+import { esRutaDeBusqueda } from "@/lib/buscar-url";
+import { esServicioDelCatalogo } from "@/lib/data/categories";
+
 export const RUTA_DE_PANTALLA_COMPLETA = /(^|\/)(?:publicar-proyecto|(?:empleos|promociones)\/publicar)(?:\/|$)/;
 
 // Un solo tramo después de la sección; `publicar`, `mis-empleos` y
@@ -29,5 +32,7 @@ export const RUTA_DE_DETALLE = /^\/(?:(?:es|en)\/)?(?:profesionales\/[^/]+|proye
 
 export function sinBarraDeAbajo(pathname: string | null | undefined): boolean {
   const ruta = pathname ?? "";
-  return RUTA_DE_PANTALLA_COMPLETA.test(ruta) || RUTA_DE_DETALLE.test(ruta);
+  // /profesionales/techos tiene la forma de una ficha pero es la búsqueda de
+  // ese servicio: esa sí lleva la barra.
+  return RUTA_DE_PANTALLA_COMPLETA.test(ruta) || (RUTA_DE_DETALLE.test(ruta) && !esRutaDeBusqueda(ruta, esServicioDelCatalogo));
 }

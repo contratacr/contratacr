@@ -35,7 +35,8 @@ export async function WhyContratacr() {
             </Link>
             <Link
               href="/ayuda#agregar-a-inicio"
-              className="text-sm font-bold text-[#009FD9] transition-colors hover:text-[#007da8] hover:underline"
+              // En la app ya está instalada: agregarla al celular no aplica.
+              className="ccr-solo-web text-sm font-bold text-[#009FD9] transition-colors hover:text-[#007da8] hover:underline"
             >
               {t("installLink")}
             </Link>

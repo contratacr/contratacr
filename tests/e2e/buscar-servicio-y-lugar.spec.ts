@@ -31,17 +31,15 @@ async function elegirServicio(page: Page, texto: string) {
 
 test("elegir el servicio conserva la ubicación que ya estaba", async ({ page }, testInfo) => {
   test.skip(!isMobileProject(testInfo), "El buscador en panel es el del teléfono.");
-  await gotoOK(page, "/buscar?provincia=al&canton=al-at");
+  await gotoOK(page, "/profesionales?provincia=al&canton=al-at");
   await elegirServicio(page, "Fletes y carga");
-  await expect(page).toHaveURL(/categoria=fletes/);
-  await expect(page).toHaveURL(/provincia=al/);
-  await expect(page).toHaveURL(/canton=al-at/);
+  // El servicio y el lugar van en la ruta: /profesionales/fletes/alajuela/atenas.
+  await expect(page).toHaveURL(/\/profesionales\/fletes\/alajuela\/atenas(?:\?|$)/);
 });
 
 test("con el servicio escrito a medias se elige el de la lista, no otro", async ({ page }, testInfo) => {
   test.skip(!isMobileProject(testInfo), "El buscador en panel es el del teléfono.");
-  await gotoOK(page, "/buscar?provincia=sj");
+  await gotoOK(page, "/profesionales?provincia=sj");
   await elegirServicio(page, "Fletes");
-  await expect(page).toHaveURL(/categoria=fletes(&|$)/);
-  await expect(page).toHaveURL(/provincia=sj/);
+  await expect(page).toHaveURL(/\/profesionales\/fletes\/san-jose(?:\?|$)/);
 });

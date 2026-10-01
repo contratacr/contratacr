@@ -60,7 +60,7 @@ function Journey({
   title: string;
   description: string;
   steps: Array<{ title: string; body: string }>;
-  href: "/buscar" | "/publicar-proyecto" | "/registro/profesional";
+  href: "/profesionales" | "/publicar-proyecto" | "/registro/profesional";
   cta: string;
   emphasized?: boolean;
 }) {
@@ -118,7 +118,7 @@ export default async function ComoFuncionaPage() {
 
         <section className="px-4 py-10 sm:py-12">
           <div className="mx-auto max-w-4xl">
-            <Journey icon={Search} label={t("clientPathBadge")} title={t("clientPathTitle")} description={t("clientPathDesc")} steps={steps("client")} href="/buscar" cta={t("clientPathCta")} />
+            <Journey icon={Search} label={t("clientPathBadge")} title={t("clientPathTitle")} description={t("clientPathDesc")} steps={steps("client")} href="/profesionales" cta={t("clientPathCta")} />
             <Journey icon={FileText} label={t("publishPathBadge")} title={t("publishPathTitle")} description={t("publishPathDesc")} steps={steps("publish")} href="/publicar-proyecto" cta={t("publishPathCta")} emphasized />
             <Journey icon={BriefcaseBusiness} label={t("prosEyebrow")} title={t("proFlowTitle")} description={t("proFlowDesc")} steps={steps("pro")} href="/registro/profesional" cta={t("prosCta")} />
           </div>

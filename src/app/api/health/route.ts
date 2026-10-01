@@ -27,7 +27,8 @@ export function GET() {
   // segundo, si el ambiente está completo.
   const integraciones = {
     correo: !!process.env.BREVO_API_KEY,
-    asistente: !!process.env.OPENAI_API_KEY,
+    // El asistente ya no depende de una llave externa: responde con lo
+    // documentado y, para lo abierto, con el modelo del propio Worker.
     traduccion: !!process.env.GOOGLE_TRANSLATE_API_KEY || !!process.env.GOOGLE_TRANSLATE_SERVICE_ACCOUNT_JSON,
     push: !!process.env.FIREBASE_PRIVATE_KEY || !!process.env.FCM_PRIVATE_KEY,
     whatsapp: !!process.env.WHATSAPP_CLOUD_TOKEN && !!process.env.WHATSAPP_PHONE_NUMBER_ID,

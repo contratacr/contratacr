@@ -1089,7 +1089,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
     setQuery(""); setCategory(""); setProvince(""); setCanton(""); setLocationQuery(""); setSortBy("rating"); setModalities([]); setInsurers([]); setLanguages([]); setPriceFilter(""); setPriceUnits([]);
     setAddressSuggestions([]);
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    router.push("/buscar");
+    router.push("/profesionales");
   }
 
   // The unified service field (free text OR a picked category) counts as ONE filter - not

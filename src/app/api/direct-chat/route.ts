@@ -49,6 +49,8 @@ type DirectMessageRow = {
   attachment_urls?: unknown;
   read_at?: string | null;
   created_at: string;
+  edited_at?: string | null;
+  deleted_at?: string | null;
 };
 
 const ATTACHMENT_BUCKET = "direct-message-attachments";
@@ -178,29 +180,32 @@ export async function GET(req: Request) {
   if (!user) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   const db = createAdminClient();
   const searchParams = new URL(req.url).searchParams;
-  // Antes de abrir un chat, la app pregunta si el profesional lo va a poder
-  // leer. Un mensaje a quien no tiene la app es un mensaje a un pozo: la web no
-  // lo muestra. Si no la tiene, el botón cae a WhatsApp.
-  const reachable = searchParams.get("reachable");
-  if (reachable) {
-    const { data: professional } = await db.from("professionals").select("profile_id").eq("id", reachable).maybeSingle();
-    const profileId = (professional as { profile_id?: string } | null)?.profile_id;
-    if (!profileId) return NextResponse.json({ reachable: false });
-    // EL BLOQUEO MANDA ANTES QUE LA SALIDA A WHATSAPP. Si esta persona ya tiene
-    // una conversación bloqueada con el profesional, la respuesta es ESA
-    // conversación, tenga o no la app el otro: el chat se abre mostrando el
-    // bloqueo, que es donde está la explicación y el botón de deshacerlo.
-    // Mandarla a WhatsApp sería esquivar el bloqueo por otra puerta.
-    const { data: bloqueada } = await db.from("direct_conversations")
-      .select("id")
-      .eq("client_id", user.id)
-      .eq("professional_id", reachable)
-      .eq("status", "blocked")
-      .limit(1)
-      .maybeSingle();
-    if (bloqueada) return NextResponse.json({ reachable: true, blocked: (bloqueada as { id: string }).id });
-    const fresh = await usersWithFreshPush(db, [profileId]);
-    return NextResponse.json({ reachable: fresh.has(profileId) });
+  // ¿QUÉ PROFESIONALES TIENEN LA APP? De eso depende el botón de contacto en la
+  // app: «Mensaje» (el chat) si el profesional la tiene, «WhatsApp» si no. Al
+  // lanzar casi nadie la tiene, y mandar al cliente a un chat que el otro no
+  // abre era la peor primera experiencia. Se pregunta por varios a la vez: una
+  // búsqueda pinta muchas tarjetas y cada una necesita saberlo antes de pintar
+  // su botón, no al tocarlo.
+  //
+  // EL BLOQUEO MANDA ANTES QUE LA SALIDA A WHATSAPP. Si esta persona tiene una
+  // conversación bloqueada con el profesional, el botón es el chat, tenga o no
+  // la app el otro: ahí está la explicación y el botón de deshacerlo. Mandarla a
+  // WhatsApp sería esquivar el bloqueo por otra puerta.
+  const conApp = searchParams.get("conApp");
+  if (conApp) {
+    const ids = [...new Set(conApp.split(",").map((v) => v.trim()).filter(Boolean))].slice(0, 60);
+    const { data: filas } = await db.from("professionals").select("id, profile_id").in("id", ids);
+    const perfiles = ((filas ?? []) as { id: string; profile_id: string | null }[]).filter((f) => f.profile_id);
+    const [conPush, { data: bloqueadas }] = await Promise.all([
+      usersWithFreshPush(db, perfiles.map((f) => f.profile_id as string)),
+      db.from("direct_conversations").select("professional_id")
+        .eq("client_id", user.id).eq("status", "blocked").in("professional_id", ids),
+    ]);
+    const conBloqueo = new Set(((bloqueadas ?? []) as { professional_id: string }[]).map((b) => b.professional_id));
+    const resultado: Record<string, boolean> = {};
+    for (const id of ids) resultado[id] = false;
+    for (const f of perfiles) resultado[f.id] = conPush.has(f.profile_id as string) || conBloqueo.has(f.id);
+    return NextResponse.json({ conApp: resultado });
   }
   const id = searchParams.get("id");
   if (id) {
@@ -214,16 +219,38 @@ export async function GET(req: Request) {
     if (deletedForParticipant) return NextResponse.json({ error: mensajeDeError(req, { es: "Conversación no encontrada", en: "Conversation not found" }) }, { status: 404 });
     if (!conversation || !participant(conversation, user.id)) return NextResponse.json({ error: mensajeDeError(req, { es: "Conversación no encontrada", en: "Conversation not found" }) }, { status: 404 });
     const { data: messages, error } = await db.from("direct_messages")
-      .select("id, conversation_id, sender_id, body, attachment_urls, read_at, created_at")
-      .eq("conversation_id", id).order("created_at", { ascending: true });
+      .select("id, conversation_id, sender_id, body, attachment_urls, read_at, delivered_at, created_at, edited_at, deleted_at")
+      .eq("conversation_id", id)
+      // Lo que esta persona eliminó «para mí» no le vuelve a llegar.
+      .not("hidden_for", "cs", `{${user.id}}`)
+      .order("created_at", { ascending: true });
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    // CONFIRMACIONES DE LECTURA, recíprocas (migración 226). Quien las apagó no
+    // marca «visto» lo que lee, y quien habla con alguien que las apagó —o las
+    // apagó él— no ve el «visto» de sus mensajes. Sin la columna, todos
+    // encendidos, que es como estaban.
+    const otraParte = conversation.client_id === user.id ? conversation.professional_profile_id : conversation.client_id;
+    const { data: preferencias } = await db.from("profiles").select("id, confirmaciones_de_lectura").in("id", [user.id, otraParte]);
+    const confirma = (quien: string) => (preferencias as { id: string; confirmaciones_de_lectura?: boolean }[] | null)
+      ?.find((fila) => fila.id === quien)?.confirmaciones_de_lectura !== false;
+    const marcoVisto = confirma(user.id);
+    const veoVistos = marcoVisto && confirma(otraParte);
     const readAt = new Date().toISOString();
-    const [{ error: readError }, { error: unreadError }] = await Promise.all([
+    const [{ error: readError }, , { error: unreadError }] = await Promise.all([
+      marcoVisto
+        ? db.from("direct_messages")
+          .update({ read_at: readAt })
+          .eq("conversation_id", id)
+          .neq("sender_id", user.id)
+          .is("read_at", null)
+        : Promise.resolve({ error: null }),
+      // Visto implica recibido: si nunca pasó por «recibido» (quien lee desde
+      // un aviso sin haber abierto antes la app), se marca a la vez.
       db.from("direct_messages")
-        .update({ read_at: readAt })
+        .update({ delivered_at: readAt })
         .eq("conversation_id", id)
         .neq("sender_id", user.id)
-        .is("read_at", null),
+        .is("delivered_at", null),
       db.from("direct_conversations").update(conversation.client_id === user.id
         ? { client_unread_count: 0 }
         : { professional_unread_count: 0 }).eq("id", id),
@@ -232,7 +259,10 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: readError?.message ?? unreadError?.message }, { status: 500 });
     }
     const [enriched] = await enrichConversations(db, [conversation]);
-    return NextResponse.json({ conversation: enriched, messages: await signMessageAttachments(db, (messages ?? []) as DirectMessageRow[]) });
+    const visibles = ((messages ?? []) as DirectMessageRow[]).map((m) => (
+      !veoVistos && m.sender_id === user.id ? { ...m, read_at: null } : m
+    ));
+    return NextResponse.json({ conversation: enriched, messages: await signMessageAttachments(db, visibles), vistos: veoVistos });
   }
   const estado = searchParams.get("status");
   const archived = estado === "archived";
@@ -276,6 +306,22 @@ export async function GET(req: Request) {
     ({ data, error } = await buildConversationsQuery(false));
   }
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  // RECIBIDO (✓✓): la app de esta persona acaba de cargar sus conversaciones,
+  // así que lo que le escribieron ya le llegó. Solo en la app —la web no
+  // muestra el chat— y solo donde tiene algo sin leer. Va después de responder:
+  // la lista no espera por esto.
+  if (isNativeRequest(req)) {
+    const conPendientes = ((data ?? []) as ConversationRow[])
+      .filter((c) => Number(c.client_id === user.id ? c.client_unread_count : c.professional_unread_count) > 0)
+      .map((c) => c.id);
+    if (conPendientes.length) {
+      despuesDeResponder(Promise.resolve(db.from("direct_messages")
+        .update({ delivered_at: new Date().toISOString() })
+        .in("conversation_id", conPendientes)
+        .neq("sender_id", user.id)
+        .is("delivered_at", null)), "direct-chat:recibido");
+    }
+  }
   return NextResponse.json({ conversations: await enrichConversations(db, (data ?? []) as ConversationRow[]) });
 }
 
@@ -632,13 +678,25 @@ export async function PATCH(req: Request) {
 
     return NextResponse.json({ ok: true, blocked: true });
   }
+  // Marcar leído o no leído desde la lista, como el deslizamiento de WhatsApp.
+  // «No leído» pone el contador en 1: la bandeja y la campana ya lo leen así, y
+  // el siguiente mensaje real lo vuelve a subir sin que nada más cambie.
+  const leido = typeof body.read === "boolean" ? body.read : null;
   const archived = body.status === "archived" ? true : body.status === "open" ? false : null;
-  if (!conversationId || archived === null) return NextResponse.json({ error: mensajeDeError(req, { es: "Acción inválida.", en: "Invalid action." }) }, { status: 400 });
+  if (!conversationId || (archived === null && leido === null)) return NextResponse.json({ error: mensajeDeError(req, { es: "Acción inválida.", en: "Invalid action." }) }, { status: 400 });
   const db = createAdminClient();
   const { data } = await db.from("direct_conversations").select("*").eq("id", conversationId).maybeSingle();
   const conversation = data as ConversationRow | null;
   if (!conversation || !participant(conversation, user.id)) return NextResponse.json({ error: mensajeDeError(req, { es: "Conversación no encontrada", en: "Conversation not found" }) }, { status: 404 });
   const now = new Date().toISOString();
+  if (leido !== null) {
+    const campo = conversation.client_id === user.id ? "client_unread_count" : "professional_unread_count";
+    const { error: errorDeLectura } = await db.from("direct_conversations")
+      .update({ [campo]: leido ? 0 : 1, updated_at: now })
+      .eq("id", conversationId);
+    if (errorDeLectura) return NextResponse.json({ error: errorDeLectura.message }, { status: 500 });
+    return NextResponse.json({ ok: true, read: leido });
+  }
   const archiveField = conversation.client_id === user.id ? "client_archived_at" : "professional_archived_at";
   const { error } = await db.from("direct_conversations").update({ [archiveField]: archived ? now : null, updated_at: now }).eq("id", conversationId);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
@@ -658,11 +716,11 @@ export async function DELETE(req: Request) {
   if (!conversation || !participant(conversation, user.id)) return NextResponse.json({ error: mensajeDeError(req, { es: "Conversación no encontrada", en: "Conversation not found" }) }, { status: 404 });
 
   const isClient = conversation.client_id === user.id;
-  const archiveField = isClient ? "client_archived_at" : "professional_archived_at";
   const deleteField = isClient ? "client_deleted_at" : "professional_deleted_at";
-  if (!conversation[archiveField]) {
-    return NextResponse.json({ error: "Solo puedes eliminar conversaciones archivadas." }, { status: 409 });
-  }
+  // Eliminar ya no exige archivar primero: el menú de la fila lo ofrece en
+  // cualquier conversación, como WhatsApp, y la confirmación vive en la
+  // pantalla. El borrado sigue siendo POR PERSONA —la otra parte conserva su
+  // hilo—, así que no destruye nada de nadie más.
 
   const now = new Date().toISOString();
   const { error } = await db.from("direct_conversations").update({ [deleteField]: now, updated_at: now }).eq("id", conversationId);

@@ -5,7 +5,7 @@ const routes = [
   "/",
   "/categorias",
   "/servicios",
-  "/buscar",
+  "/profesionales",
   "/empleos",
   "/promociones",
   "/proyectos",
@@ -30,7 +30,7 @@ const routes = [
   "/en",
   "/en/categorias",
   "/en/servicios",
-  "/en/buscar",
+  "/en/profesionales",
   "/en/empleos",
   "/en/promociones",
   "/en/proyectos",
@@ -177,7 +177,7 @@ test.describe("@smoke public routes", () => {
     const homeSearchForm = page.locator("form").filter({ has: location });
     await expect(homeSearchForm).toHaveCount(1);
     await homeSearchForm.getByRole("button", { name: /^Buscar$|^Search$/i }).click();
-    await expect(page).toHaveURL(/\/buscar/);
+    await expect(page).toHaveURL(/\/profesionales/);
     await expect(page).toHaveURL(/lat=9\.92810/);
     await expect(page).toHaveURL(/lng=-84\.09070/);
   });
@@ -237,8 +237,10 @@ test.describe("@smoke public routes", () => {
   });
 
   test("footer keeps localized resources and safe external destinations", async ({ page }) => {
+    // Desde el 28-sep-2026 el español va SIN prefijo: /servicios, /en/servicios.
     for (const locale of ["es", "en"] as const) {
-      await gotoOK(page, `/${locale}`);
+      const prefijo = locale === "es" ? "" : "/en";
+      await gotoOK(page, prefijo || "/");
       await expectPageShell(page);
       const footer = page.locator("footer.ccr-app-footer").filter({ visible: true });
       await expect(footer, "The page should expose exactly one visible application footer").toHaveCount(1);
@@ -246,7 +248,7 @@ test.describe("@smoke public routes", () => {
 
       const internalRoutes = ["servicios", "como-funciona", "ayuda", "soporte", "privacidad", "terminos"];
       for (const route of internalRoutes) {
-        await expect(footer.locator(`a[href="/${locale}/${route}"]`).first(), `Missing /${locale}/${route} in footer`).toBeVisible();
+        await expect(footer.locator(`a[href="${prefijo}/${route}"]`).first(), `Missing ${prefijo}/${route} in footer`).toBeVisible();
       }
 
       const external = footer.locator('a[target="_blank"]');
@@ -268,9 +270,11 @@ test.describe("@smoke public routes", () => {
   // bien: solo se nota mirando el ESTADO de la respuesta, que es justo lo que
   // mide esta prueba.
   test("una dirección que no existe responde 404, no 200", async ({ page }) => {
+    // Sin la cookie de idioma que deja la prueba anterior al pasar por /en:
+    // con ella, cualquier ruta sin /en responde 307 hacia /en/… antes del 404.
+    await page.context().clearCookies();
     const inexistente = "00000000-0000-0000-0000-000000000000";
     const casos: Array<[string, number]> = [
-      ["/pagina-que-no-existe-jamas", 404],
       ["/servicios/oficio-que-no-existe", 404],
       ["/servicios/electricidad/provincia-que-no-existe", 404],
       [`/promociones/${inexistente}`, 404],
@@ -281,9 +285,23 @@ test.describe("@smoke public routes", () => {
       ["/servicios/electricidad/san-jose", 200],
     ];
     for (const [ruta, esperado] of casos) {
-      const respuesta = await page.request.get(ruta, { maxRedirects: 0 });
-      expect(respuesta.status(), `${ruta} debería responder ${esperado}`).toBe(esperado);
+      // Se siguen las redirecciones y se mira la respuesta FINAL: una ruta
+      // suelta en la raíz (/lo-que-sea) salta a /profesionales/lo-que-sea —son
+      // los enlaces viejos de perfil— y es ahí donde tiene que decir 404. Lo que
+      // se vigila es que ninguna termine en un 200 que dibuja «no encontrado».
+      const respuesta = await page.request.get(ruta, { headers: { "accept-language": "es-CR,es;q=0.9" } });
+      expect(respuesta.status(), `${ruta} debería responder ${esperado} (terminó en ${respuesta.url()})`).toBe(esperado);
     }
+
+    // La excepción, a propósito: una dirección suelta en la raíz es un enlace
+    // de perfil (/nombre-apellido → /profesionales/…) y la ficha que no existe
+    // responde 200 con noindex, no 404. La consulta no distingue «no existe»
+    // de «la base no contestó» y la página se guarda cinco minutos: un 404
+    // cacheado dejaría a un profesional real fuera de Google (19-sep-2026).
+    const raiz = await page.request.get("/pagina-que-no-existe-jamas", { headers: { "accept-language": "es-CR,es;q=0.9" } });
+    expect(raiz.status(), "una ruta suelta en la raíz termina en la ficha").toBe(200);
+    expect(raiz.url()).toContain("/profesionales/pagina-que-no-existe-jamas");
+    expect(await raiz.text(), "la ficha inexistente debe pedir no indexarse").toMatch(/name="robots" content="noindex/);
   });
 
   // EL BUSCADOR NUNCA SE QUEDA EN BLANCO.
@@ -294,7 +312,7 @@ test.describe("@smoke public routes", () => {
   // no decía qué se puede buscar.
   test("el panel de servicio ofrece oficios aunque no haya búsquedas recientes", async ({ page }, testInfo) => {
     test.skip(!testInfo.project.name.includes("mobile"), "El panel a pantalla completa es del teléfono.");
-    await gotoOK(page, "/buscar?regression=1");
+    await gotoOK(page, "/profesionales?regression=1");
     await page.getByRole("button", { name: "¿Qué servicio estás buscando?" }).click();
     await expect(page.getByRole("combobox", { name: "Servicio" })).toBeVisible();
     const panel = page.locator("#native-location-suggestions");

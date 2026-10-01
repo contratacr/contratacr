@@ -111,7 +111,9 @@ async function pageShellState(page: Page) {
       .map((main) => (main as HTMLElement).innerText)
       .join(" ")
       .trim();
-    const routeLoading = Array.from(document.querySelectorAll<HTMLElement>(".ccr-page-route-loading[aria-busy='true']"))
+    // El esqueleto de una sección del panel (PanelSkeleton) también es un
+    // estado de carga visible: anuncia aria-busy y role=status.
+    const routeLoading = Array.from(document.querySelectorAll<HTMLElement>(".ccr-page-route-loading[aria-busy='true'], [role='status'][aria-busy='true']"))
       .some((node) => {
         const style = window.getComputedStyle(node);
         const box = node.getBoundingClientRect();
@@ -231,11 +233,31 @@ async function expectAuthCookie(page: Page) {
 }
 
 export async function expectNoHorizontalOverflow(page: Page) {
-  const size = await page.evaluate(() => ({
-    clientWidth: document.documentElement.clientWidth,
-    scrollWidth: document.documentElement.scrollWidth,
-  }));
-  expect(size.scrollWidth, "Page should not overflow horizontally").toBeLessThanOrEqual(size.clientWidth + 4);
+  const size = await page.evaluate(() => {
+    const clientWidth = document.documentElement.clientWidth;
+    // Qué se sale, para no adivinar desde el CI: los elementos más anchos que la pantalla.
+    // Lo que vive dentro de un carril con desplazamiento propio (overflow-x
+    // auto/hidden/scroll) no ensancha el documento: se descarta.
+    const dentroDeCarril = (el: HTMLElement) => {
+      for (let p = el.parentElement; p && p !== document.body; p = p.parentElement) {
+        if (/(auto|scroll|hidden)/.test(getComputedStyle(p).overflowX)) return true;
+      }
+      return false;
+    };
+    const seSale = (el: Element) => el.getBoundingClientRect().right > clientWidth + 1 && el.getBoundingClientRect().width > 0;
+    // Solo los culpables RAÍZ: los que se salen sin que su padre se salga. Un
+    // formulario entero a 397 px señala a su contenedor, no a cada campo.
+    const culpables = Array.from(document.querySelectorAll<HTMLElement>("body *"))
+      .filter((el) => seSale(el) && !dentroDeCarril(el) && !(el.parentElement && el.parentElement !== document.body && seSale(el.parentElement)))
+      .slice(0, 5)
+      .map((el) => {
+        const cs = getComputedStyle(el); const r = el.getBoundingClientRect();
+        return `${el.tagName.toLowerCase()}.${[...el.classList].slice(0, 4).join(".")} x=${Math.round(r.x)} w=${Math.round(r.width)} css(w=${cs.width} pad=${cs.paddingLeft}/${cs.paddingRight} mar=${cs.marginLeft}/${cs.marginRight} pos=${cs.position}) «${(el.textContent ?? "").trim().slice(0, 30)}»`;
+      });
+    const medidas = `innerWidth=${window.innerWidth} html=${document.documentElement.getBoundingClientRect().width} body=${document.body.getBoundingClientRect().width} main=${document.querySelector("main")?.getBoundingClientRect().width ?? "-"}`;
+    return { clientWidth, scrollWidth: document.documentElement.scrollWidth, culpables: [medidas, ...culpables] };
+  });
+  expect(size.scrollWidth, `Page should not overflow horizontally (${page.url()}): ${size.culpables.join(" | ")}`).toBeLessThanOrEqual(size.clientWidth + 4);
 }
 
 export async function openLoginForm(page: Page) {
@@ -262,13 +284,13 @@ export async function loginAs(page: Page, email: string, password: string) {
     await main.getByRole("button", { name: /Ingresar|Sign in/i }).first().click();
 
     try {
-      await page.waitForURL(/\/(?:es|en)\/dashboard\/profesional/, { timeout: 30_000, waitUntil: "domcontentloaded" });
+      await page.waitForURL(/(?:\/en)?\/dashboard\/profesional/, { timeout: 30_000, waitUntil: "domcontentloaded" });
       await expectAuthCookie(page);
       await page.locator("body").waitFor({ state: "visible", timeout: 5_000 });
       return;
     } catch (error) {
       lastError = error;
-      if (!/\/(?:es|en)\/login\?/.test(page.url())) break;
+      if (!/(?:\/en)?\/login\?/.test(page.url())) break;
     }
   }
   throw lastError;
@@ -316,7 +338,7 @@ export function isMobileProject(testInfo: TestInfo) {
 }
 
 export async function firstProfessionalHref(page: Page) {
-  await gotoOK(page, "/buscar");
+  await gotoOK(page, "/profesionales");
   const links = page.locator('a[href*="/profesionales/"]').filter({ visible: true });
 
   await expect
@@ -332,7 +354,9 @@ export async function firstProfessionalHref(page: Page) {
   const count = await links.count();
   for (let i = 0; i < count; i += 1) {
     const href = await links.nth(i).getAttribute("href");
-    if (href?.includes("/profesionales/") && !href.includes("?tab=")) return href;
+    // Las cuentas desechables de otras pruebas pueden seguir en la lista hasta
+    // que vence su caché (5 min) aunque ya se hayan borrado: no sirven de muestra.
+    if (href?.includes("/profesionales/") && !href.includes("?tab=") && !/regression-disposable|disposable-regression/i.test(href)) return href;
   }
   return null;
 }

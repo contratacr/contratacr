@@ -133,6 +133,10 @@ jobs:
           java-version: 21
           cache: gradle
       - uses: android-actions/setup-android@v3
+        with:
+          # Por defecto instala «tools», que Google retiró de sdkmanager 16
+          # (el del runner): «Failed to find package 'tools'» tumbaba el job.
+          packages: platform-tools
       - name: Enable KVM
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' \
@@ -215,3 +219,23 @@ jobs:
             build/ios-simulator/contratacr-launch.png
             build/ios-simulator/Logs/
           if-no-files-found: ignore
+
+  avisar:
+    name: Avisar por correo si algo falló
+    needs: [contracts, mobile-webview, android, ios]
+    if: ${{ always() && contains(needs.*.result, 'failure') }}
+    runs-on: ubuntu-latest
+    environment: test
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - env:
+          BREVO_API_KEY: ${{ secrets.BREVO_API_KEY }}
+          ALERTAS_CORREO: ${{ vars.ALERTAS_CORREO }}
+          CORRIDA: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: >-
+          node scripts/ci/avisar-por-correo.mjs
+          "🔴 ContrataCR: la regresión de la app nativa falló"
+          "contratos: ${{ needs.contracts.result }} · webview: ${{ needs.mobile-webview.result }} · Android: ${{ needs.android.result }} · iOS: ${{ needs.ios.result }}"

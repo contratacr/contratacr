@@ -6,6 +6,22 @@ import { getCategoryLabel } from "@/lib/data/categories";
 // professionals, marketplace activity, interactions and support.
 // Best-effort per section (try/catch) so a missing table/column never 500s.
 
+/**
+ * La página de entrada, con la dirección que tiene HOY. Se guardó tal cual
+ * entró cada persona, así que la misma página aparecía repetida con nombres
+ * viejos: /es y /, /es/registro/profesional y /registro/profesional, /es/buscar
+ * y /profesionales. El español dejó de llevar /es (28-sep-2026), la búsqueda
+ * pasó de /buscar a /profesionales (29-sep-2026) y Ofertas se llama
+ * Promociones. Sin la consulta (?…) ni el ancla (#…).
+ */
+function paginaDeEntradaActual(ruta: string): string {
+  let limpia = ruta.split(/[?#]/)[0] || "/";
+  limpia = limpia.replace(/^\/es(?=\/|$)/i, "") || "/";
+  limpia = limpia.replace(/^(\/en)?\/buscar(?=\/|$)/i, "$1/profesionales");
+  limpia = limpia.replace(/^(\/en)?\/ofertas(?=\/|$)/i, "$1/promociones");
+  return limpia.length > 1 ? limpia.replace(/\/$/, "") : limpia;
+}
+
 export type Count = { label: string; value: number };
 export type RegPoint = { date: string; pros: number; clients: number };
 export type ActPoint = { date: string; proyectos: number };
@@ -208,7 +224,10 @@ export async function getAdminReports(locale = "es"): Promise<AdminReports> {
         if (!isPro && !isClient) continue;
         const recent = new Date(profile.created_at as string).getTime() >= cut30;
         const landing = (profile.acquisition_landing_path as string | null) ?? null;
-        if (landing) landings.set(landing, (landings.get(landing) ?? 0) + 1);
+        if (landing) {
+          const pagina = paginaDeEntradaActual(landing);
+          landings.set(pagina, (landings.get(pagina) ?? 0) + 1);
+        }
         const referrer = (profile.acquisition_referrer_host as string | null) ?? null;
         if (referrer) referrers.set(referrer, (referrers.get(referrer) ?? 0) + 1);
         const source = (profile.acquisition_source as string | null) ?? null;

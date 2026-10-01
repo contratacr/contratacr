@@ -24,6 +24,7 @@ const ES_SECTIONS: LegalSection[] = [
       { k: "ul", items: [
         "Proyectos, cotizaciones, reseñas y favoritos.",
         "Los datos que aporta al pedir una cotización: nombre, teléfono, correo y, si lo indica, número de identificación.",
+        "El teléfono que indica al publicar un proyecto, que no se publica y solo se comparte con el Profesional que le responda.",
         "Información incluida por usted en descripciones, notas, reportes y conversaciones.",
         "Zona, ubicación o punto geográfico cuando lo proporciona o autoriza.",
       ] },
@@ -37,6 +38,7 @@ const ES_SECTIONS: LegalSection[] = [
       { k: "sub", text: "2.4 Mensajes, soporte y archivos" },
       { k: "ul", items: [
         "Mensajes enviados dentro de ContrataCR y datos necesarios para identificar a los participantes y el contexto de la conversación.",
+        "El estado de cada mensaje (enviado, recibido o visto), si fue editado o eliminado, y su preferencia de confirmaciones de lectura, que puede desactivar en Privacidad.",
         "Imágenes y documentos PDF que usted adjunte en mensajes o solicitudes de soporte.",
         "Consultas, tickets, reportes y comunicaciones con soporte.",
       ] },
@@ -172,9 +174,9 @@ const EN_SECTIONS: LegalSection[] = [
     { k: "sub", text: "2.1 Account and identity" },
     { k: "ul", items: ["Name, email, phone number, and basic data shared by sign-in providers such as Google and Apple.", "Credentials securely managed by our authentication provider. ContrataCR does not keep your password in readable text.", "Identification number when you choose to provide it or when needed for a request, plus the protected verification result."] },
     { k: "sub", text: "2.2 Client and Professional activity" },
-    { k: "ul", items: ["Requests, posts, quotes, reviews, favorites, and related activity.", "Professional profile data, services, location, work areas, success stories, availability, and contact details.", "Content you include in descriptions, notes, reports, and conversations."] },
+    { k: "ul", items: ["Requests, posts, quotes, reviews, favorites, and related activity.", "The phone number you give when posting a project, which is not published and is shared only with the Professional who replies.", "Professional profile data, services, location, work areas, success stories, availability, and contact details.", "Content you include in descriptions, notes, reports, and conversations."] },
     { k: "sub", text: "2.3 Messages, files, support, and AI" },
-    { k: "ul", items: ["Private messages and the data needed to identify participants and conversation context.", "Images and PDF documents attached to messages or support requests.", "AI assistant prompts, responses, and saved history when you are signed in. Do not submit unnecessary sensitive information."] },
+    { k: "ul", items: ["Private messages and the data needed to identify participants and conversation context.", "Each message's status (sent, delivered, or seen), whether it was edited or deleted, and your read-receipt preference, which you can turn off in Privacy.", "Images and PDF documents attached to messages or support requests.", "AI assistant prompts, responses, and saved history when you are signed in. Do not submit unnecessary sensitive information."] },
     { k: "sub", text: "2.4 Device, location, and usage" },
     { k: "ul", items: ["IP address, device and browser type, operating system, language, app version, technical identifiers, and security logs.", "Location when you provide it or grant permission.", "Push token, platform, device identifier, and permission status when notifications are enabled.", "Interactions, cookies, local storage, analytics, and campaign measurement data."] },
   ] },
@@ -229,7 +231,7 @@ export default async function PrivacidadPage({ params }: { params: Promise<{ loc
   return (
     <LegalDocument
       title={en ? "Privacy Policy" : "Política de Privacidad"}
-      updated={en ? "September 25, 2026" : "25 de septiembre de 2026"}
+      updated={en ? "September 30, 2026" : "30 de septiembre de 2026"}
       intro={en
         ? "This Policy explains what data ContrataCR processes across the website and mobile applications, why it is used, who may process it, and how you can exercise your rights."
         : "Esta Política explica qué datos trata ContrataCR en el sitio web y las aplicaciones móviles, para qué se utilizan, quiénes pueden procesarlos y cómo puede ejercer sus derechos."}

@@ -1,0 +1,132 @@
+name: Smoke diario
+
+# Cada mañana, ANTES de que Isaac empiece el día, el navegador recorre los dos
+# ambientes reales con la parte de la regresión que no siembra datos:
+#
+#  · test.contratacr.com — con las cuentas de regresión: entra, busca, abre
+#    perfiles, el asistente, soporte, y las pruebas de parpadeo e hidratación.
+#  · www.contratacr.com — SOLO lectura y sin sesión: portada, servicios,
+#    búsqueda, APIs públicas, salud y parpadeos. Nada escribe en producción.
+#
+# Corre en Chrome de computadora (1366) y de teléfono (390). No reemplaza la
+# regresión completa (regression-tests.yml, cada madrugada sobre una base
+# local): esta es la que ve lo que un cliente ve HOY en los dominios de verdad,
+# con Cloudflare, la base alojada y las llaves de cada ambiente.
+#
+# Si algo falla, avisa por correo (scripts/ci/avisar-por-correo.mjs).
+
+on:
+  schedule:
+    - cron: "0 12 * * *" # 6:00 a.m. Costa Rica
+  workflow_dispatch:
+    inputs:
+      solo:
+        description: "Qué recorrer: ambos, test o produccion"
+        required: false
+        default: ambos
+        type: choice
+        options: [ambos, test, produccion]
+
+concurrency:
+  group: smoke-diario
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Smoke en test.contratacr.com
+    if: ${{ github.event_name == 'schedule' || inputs.solo != 'produccion' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: test
+    env:
+      CI: true
+      PLAYWRIGHT_BASE_URL: https://test.contratacr.com
+      E2E_FIXTURES_READY: "1"
+      EXPECTED_SUPABASE_PROJECT_REF: oqheayqqprpciqdvdaqo
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL || secrets.SUPABASE_URL }}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      REGRESSION_TEST_PASSWORD: ${{ secrets.REGRESSION_TEST_PASSWORD }}
+      E2E_TEST_PASSWORD: ${{ secrets.E2E_TEST_PASSWORD }}
+      ADVERTISING_TEST_PASSWORD: ${{ secrets.ADVERTISING_TEST_PASSWORD }}
+      VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+      PLAYWRIGHT_JSON_REPORT: test-results/results-test.json
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Recorrer test.contratacr.com
+        run: >-
+          npx playwright test --grep "@smoke"
+          public-smoke api-smoke services health auth-support ai-assistant
+          sin-fallos-de-hidratacion sin-parpadeo-buscador sin-parpadeo-imagenes
+          sin-saltos-de-diseno cabeceras pantallas-en-todos-los-anchos reanudar-la-app
+      - name: Sin fallas ni pruebas inestables
+        if: always()
+        run: npm run test:e2e:verify-results
+      - uses: actions/upload-artifact@v5
+        if: failure()
+        with:
+          name: smoke-test-report
+          path: playwright-report/
+
+  produccion:
+    name: Smoke de solo lectura en www.contratacr.com
+    if: ${{ github.event_name == 'schedule' || inputs.solo != 'test' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      CI: true
+      PLAYWRIGHT_BASE_URL: https://www.contratacr.com
+      # Sin E2E_FIXTURES_READY ninguna prueba inicia sesión ni escribe: las
+      # que lo necesitan se saltan solas (canRunSeededRegression).
+      PLAYWRIGHT_JSON_REPORT: test-results/results-produccion.json
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Recorrer producción sin escribir nada
+        run: >-
+          npx playwright test
+          public-smoke api-smoke services health
+          sin-parpadeo-buscador sin-parpadeo-imagenes sombras-al-desplazar
+          pantallas-en-todos-los-anchos reanudar-la-app
+      - name: Sin fallas ni pruebas inestables
+        if: always()
+        run: npm run test:e2e:verify-results
+      - uses: actions/upload-artifact@v5
+        if: failure()
+        with:
+          name: smoke-produccion-report
+          path: playwright-report/
+
+  avisar:
+    name: Avisar por correo si algo falló
+    needs: [test, produccion]
+    if: ${{ always() && contains(needs.*.result, 'failure') }}
+    runs-on: ubuntu-latest
+    environment: test
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - env:
+          BREVO_API_KEY: ${{ secrets.BREVO_API_KEY }}
+          ALERTAS_CORREO: ${{ vars.ALERTAS_CORREO }}
+          CORRIDA: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: >-
+          node scripts/ci/avisar-por-correo.mjs
+          "🔴 ContrataCR: el smoke diario falló"
+          "test.contratacr.com: ${{ needs.test.result }} · www.contratacr.com: ${{ needs.produccion.result }}"

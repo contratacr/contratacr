@@ -1,6 +1,9 @@
+import { esRutaDeBusqueda } from "@/lib/buscar-url";
+import { esServicioDelCatalogo } from "@/lib/data/categories";
+
 export const CONTRATACR_PRODUCT_KNOWLEDGE = `
 PRODUCT IDENTITY
-- ContrataCR is a Costa Rica service marketplace for finding professionals and businesses, booking them, posting requests, getting replies and coordinating work.
+- ContrataCR is a Costa Rica service marketplace: clients find professionals and businesses, message them in the app, post projects, publish promotions and job posts, and agree the work in chat.
 - Core use is currently free. ContrataCR does not add a commission to the price agreed between client and professional. Never promise future prices or plans.
 - Spanish and English are available. Costa Rican Spanish must be clear and formal, without voseo or tuteo.
 
@@ -22,10 +25,9 @@ PROFESSIONAL PROFILES AND CONTACT
 - Reviews can be left from a professional profile by signed-in users. If the person is not signed in, send them to login/register and return them to the profile reviews tab. Reviews from projects or WhatsApp follow-ups may keep that context, and users can edit an existing review.
 
 CONTACTING A PROFESSIONAL
-- There is NO booking flow. From a professional's profile the client taps "Enviar mensaje" ("Send message") and the in-app chat opens; the day, the time and the price are agreed there. Some professionals also enable "Llamar" ("Call").
-- Never explain calendars, time slots, reserving, rescheduling or cancelling an appointment: none of that exists. If someone asks how to book, explain how to message the professional.
+- To reach a professional the client taps "Enviar mensaje" ("Send message") on their profile and the in-app chat opens; the day, the time and the price are agreed there. Some professionals also enable "Llamar" ("Call"). There are no calendars, time slots or reservations of any kind — if someone asks how to book, explain how to message.
 - A posted need is a "proyecto" / "project"; the professional's answer to it is a "respuesta" / "reply". Never call it a solicitud, opportunity or proposal.
-- Nobody marks work as completed or confirms anything: a booking with a date closes automatically once its day has passed; a booking without a date is closed by the client with "Ya me atendieron". After that the client can leave a review.
+- A project closes on its own once its work is done or it expires; the client can then leave a review from My projects.
 - Cancellation notifications go to the affected opposite party, not back to the person who performed the cancellation.
 - Projects and professional profiles can lead to reviews. Cancelled records can be removed/archived where the UI offers that action; do not promise deletion of legal or system records.
 
@@ -34,7 +36,6 @@ PROJECTS (PROYECTOS)
 - Matching professionals see it under Projects (Proyectos) → Nuevas and reply with one message; the project then moves to Respondidas. Replies cannot be edited. A pending reply can be withdrawn ("Retirar mi respuesta"), which deletes it and lets the professional reply again; once the client chose them, the professional can only step away with a reason ("Ya no puedo hacerlo"), which reopens the project.
 - The client reads the replies in My projects (Mis proyectos) → Activos, writes to whoever they like (in-app chat inside the app, WhatsApp on the web) and closes the project with "Ya lo resolví", choosing who helped (optional review). The professional chosen sees "Te eligió".
 - There is no accept, assign, mark-done or confirm step. An open project with no activity for 30 days closes automatically and the client is told.
-- There are NO appointments (Citas) any more: contacting a professional from their profile opens the in-app chat, and the day and time are agreed there. Posted needs are projects (Proyectos) for both clients and professionals. Never call them citas, reservas, solicitudes, opportunities or proposals.
 
 PROFESSIONAL PANEL
 - Main sections: Projects (Proyectos), Promotions (Promociones), Jobs (Empleos), Quotes (Cotizaciones), Success cases, Services, Support, Profile and Guides. Replies sent by the professional live under Projects → Respondidas.
@@ -44,8 +45,8 @@ PROFESSIONAL PANEL
 - Success cases show real completed work and images uploaded by the professional. Do not call them social posts or an unlimited gallery.
 - Verification uses the saved identity and may require manual review when the identification is not found in the Costa Rican registry.
 
-CLIENT PANEL
-- Main sections: My projects (Mis proyectos), Messages (Mensajes), Hire again, Favorites, Support, Profile and Guides.
+PANEL (one panel for everyone; there is no separate client panel)
+- Main sections: My projects (Mis proyectos), Jobs (Empleos), Promotions (Promociones), Quotes (Cotizaciones), Messages (Mensajes), Saved (Guardados), Profile, Support and Guides.
 - A user who also offers services can switch between client and professional panels; actions and records remain separated by their role/context.
 
 NOTIFICATIONS
@@ -85,10 +86,10 @@ export function assistantPageContext(pathname: string, authenticated: boolean) {
     ? "professional dashboard"
     : path.includes("/dashboard/cliente")
       ? "client dashboard"
-      : path.includes("/profesionales/")
-        ? "public professional profile"
-        : path.includes("/buscar")
-          ? "professional search"
+      : esRutaDeBusqueda(path, esServicioDelCatalogo)
+        ? "professional search"
+        : path.includes("/profesionales/")
+          ? "public professional profile"
           : path.includes("/servicios")
             ? "service catalog"
             : path.includes("/publicar-proyecto")

@@ -48,7 +48,7 @@ const COLUMNS = [
   {
     headingKey: "clients.title",
     links: [
-      { key: "clients.search",     href: "/buscar" },
+      { key: "clients.search",     href: "/profesionales" },
       { key: "clients.categories", href: "/servicios" },
       { key: "clients.offers",     href: "/promociones" },
       { key: "clients.howItWorks", href: "/como-funciona" },

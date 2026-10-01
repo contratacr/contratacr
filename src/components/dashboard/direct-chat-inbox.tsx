@@ -1,9 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
-import { CITAS_ACTIVAS } from "@/lib/citas";
 import { createPortal } from "react-dom";
-import { Archive, ArchiveRestore, ArrowLeft, CalendarClock, ChevronDown, ChevronRight, ClipboardList, Copy, Download, FileText, Flag, Handshake, Loader2, MessageSquareMore, Paperclip, Search, SendHorizontal, Trash2, X } from "lucide-react";
+import { Archive, ArchiveRestore, ArrowLeft, Ban, Check, ChevronRight, Copy, Download, FileText, Flag, Loader2, MessageSquareMore, MessageSquareText, MoreHorizontal, Paperclip, Pencil, Search, SendHorizontal, Trash2, X } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "@/i18n/navigation";
@@ -18,6 +17,8 @@ import { createClient } from "@/lib/supabase/client";
 import { AppTooltip } from "@/components/ui/app-tooltip";
 import { PanelEmptyState, Skeleton } from "@/components/ui/content-loading";
 import { IMAGE_DOC_ACCEPT } from "@/lib/upload-validation";
+import { FilaDeslizable, iconoDeAccion, vibrarSuave } from "@/components/ui/fila-deslizable";
+import { dentroDeLaVentanaDeEdicion } from "@/lib/direct-chat/edicion-de-mensajes";
 import { getImageUploadPreparationErrorCode, prepareImageForUpload } from "@/lib/client-image-upload";
 import { readCachedConversations, storeConversations } from "@/lib/direct-chat/conversations-cache";
 import { ProgressiveImage } from "@/components/ui/progressive-image";
@@ -48,7 +49,7 @@ type Conversation = {
   context?: { type: "booking" | "project" | "proposal" | "profile"; title?: string | null; service_description?: string | null; status?: string | null; proposal_status?: string | null };
 };
 type DirectAttachment = { path?: string; name: string; type: string; size: number; url?: string | null };
-type DirectMessage = { id: string; sender_id: string; body: string; created_at: string; attachment_urls?: DirectAttachment[] };
+type DirectMessage = { id: string; sender_id: string; body: string; created_at: string; attachment_urls?: DirectAttachment[]; edited_at?: string | null; deleted_at?: string | null; read_at?: string | null; delivered_at?: string | null };
 type SelectedAttachment = { id: string; file: File; previewUrl?: string };
 type PendingDraft = {
   professionalId?: string;
@@ -115,84 +116,30 @@ function ChatImage({ href, alt, marco }: { href: string; alt: string; marco: num
   );
 }
 
-// Deslizar una fila hacia la izquierda descubre sus acciones —archivar, y en
-// archivadas también eliminar—, como en WhatsApp. Solo con el dedo: en
-// escritorio la lista convive con el hilo y ahí no hay gesto. `touch-action:
-// pan-y` deja el desplazamiento vertical al navegador y reclama el horizontal;
-// si el navegador gana la vertical llega un pointercancel y la fila se repliega.
-// El icono del origen no depende de nada del componente: fuera de él se define
-// una sola vez en lugar de rehacerse en cada pintado.
-function IconoDeOrigen({ tipo }: { tipo: string }) {
-  if (tipo === "booking") return <CalendarClock className="h-3.5 w-3.5 shrink-0 text-[#8b9bb0]" />;
-  if (tipo === "proposal") return <Handshake className="h-3.5 w-3.5 shrink-0 text-[#8b9bb0]" />;
-  return <ClipboardList className="h-3.5 w-3.5 shrink-0 text-[#8b9bb0]" />;
+// LA LÍNEA ENTRE CHATS, COMO WHATSAPP: empieza donde empieza el nombre (16 de
+// margen + 44 de foto + 12 de separación = 72px) y termina donde termina la
+// hora (16 del borde). No cruza la foto: la foto ya separa una fila de otra.
+function SeparadorDeChat() {
+  return <span aria-hidden className="ccr-separador-chat pointer-events-none absolute bottom-0 left-[72px] right-4 h-px bg-[#e9eef3]" />;
 }
 
-function FilaDeslizable({ abierta, ancho, onEstado, acciones, children }: {
-  abierta: boolean;
-  ancho: number;
-  onEstado: (abierta: boolean) => void;
-  acciones: ReactNode;
-  children: ReactNode;
-}) {
-  const [dx, setDx] = useState(abierta ? -ancho : 0);
-  const dxRef = useRef(dx);
-  useEffect(() => { dxRef.current = dx; }, [dx]);
-  const arrastre = useRef<{ id: number; x: number; y: number; base: number; eje: "" | "x" | "y" } | null>(null);
-  const movido = useRef(false);
-  // El pintado no puede leer la referencia del arrastre: la misma información
-  // vive en este estado.
-  const [arrastrando, setArrastrando] = useState(false);
-
-  useEffect(() => { if (!arrastre.current) setDx(abierta ? -ancho : 0); }, [abierta, ancho]);
-
-  const alBajar = (event: React.PointerEvent<HTMLDivElement>) => {
-    if (event.pointerType === "mouse") return;
-    arrastre.current = { id: event.pointerId, x: event.clientX, y: event.clientY, base: dxRef.current, eje: "" };
-    movido.current = false;
-    setArrastrando(true);
-  };
-  const alMover = (event: React.PointerEvent<HTMLDivElement>) => {
-    const d = arrastre.current;
-    if (!d || event.pointerId !== d.id) return;
-    const pasoX = event.clientX - d.x;
-    const pasoY = event.clientY - d.y;
-    if (!d.eje) {
-      if (Math.abs(pasoX) < 6 && Math.abs(pasoY) < 6) return;
-      d.eje = Math.abs(pasoX) > Math.abs(pasoY) ? "x" : "y";
-      if (d.eje === "y") { arrastre.current = null; setArrastrando(false); return; }
-    }
-    movido.current = true;
-    const crudo = d.base + pasoX;
-    // Más allá del tope, avanza a un cuarto: se siente el límite sin muro seco.
-    const tope = crudo < -ancho ? -ancho + (crudo + ancho) / 4 : crudo > 0 ? crudo / 4 : crudo;
-    setDx(tope);
-  };
-  const alSoltar = (cancelado: boolean) => {
-    setArrastrando(false);
-    if (!arrastre.current) return;
-    arrastre.current = null;
-    const final = cancelado ? (abierta ? -ancho : 0) : dxRef.current;
-    const abrir = !cancelado && final < -ancho / 2;
-    setDx(abrir ? -ancho : 0);
-    onEstado(abrir);
-  };
-
+/** «No leído»: el MISMO icono de Mensajes de la barra de arriba, con su globo
+ *  lleno en azul claro en la esquina, como cuando hay algo sin leer. «Leído» es
+ *  ese mismo icono sin el globo. */
+function IconoNoLeido({ className, anillo = "ring-[#009FD9]" }: { className?: string; anillo?: string }) {
   return (
-    <div className="relative overflow-hidden border-b border-[#eef2f6] bg-[#eef6fb] last:border-b-0">
-      <div className="absolute inset-y-0 right-0 flex" style={{ width: ancho }}>{acciones}</div>
-      <div
-        style={{ transform: `translateX(${dx}px)`, transition: arrastrando ? "none" : "transform 180ms ease-out", touchAction: "pan-y" }}
-        onPointerDown={alBajar}
-        onPointerMove={alMover}
-        onPointerUp={() => alSoltar(false)}
-        onPointerCancel={() => alSoltar(true)}
-        onClickCapture={(event) => { if (movido.current) { event.preventDefault(); event.stopPropagation(); movido.current = false; } }}
-      >
-        {children}
-      </div>
-    </div>
+    <span className={cn("relative inline-flex", className)} aria-hidden>
+      <MessageSquareText className="h-5 w-5" />
+      <span className={cn("absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full bg-[#7fdcff] ring-2", anillo)} />
+    </span>
   );
+}
+
+/** La conversación que se abre SOLA: solo en computadora, donde se ve al lado de
+ *  la lista. En el teléfono, ninguna hasta que la persona toca una. */
+function conversacionAlLado(id: string | undefined): string | null {
+  if (!id || typeof window === "undefined") return null;
+  return window.matchMedia("(min-width: 1024px)").matches ? id : null;
 }
 
 function attachmentLabel(bytes: number) {
@@ -300,7 +247,11 @@ function writeStoredPendingDraft(userId: string, value: StoredPendingDraft | nul
   } catch { /* drafts are a convenience */ }
 }
 
-export function DirectChatInbox() {
+export function DirectChatInbox({ alCambiarSubvista }: {
+  /** Archivados y Bloqueados son vistas dentro de Mensajes: la página las pone
+   *  en la barra de arriba («← Archivados») con esta flecha de vuelta. */
+  alCambiarSubvista?: (subvista: { titulo: string; volver: () => void } | null) => void;
+} = {}) {
   const locale = useLocale();
   const tChat = useTranslations("directChat");
   const isEn = locale === "en";
@@ -334,6 +285,21 @@ export function DirectChatInbox() {
   // esconde a propósito— y aun así se puede abrir desde la ficha o por enlace.
   const [hiloAbierto, setHiloAbierto] = useState<Conversation | null>(null);
   const [loading, setLoading] = useState(true);
+  const bandejasRef = useRef<{ open: Conversation[] | null; archived: Conversation[] | null }>({ open: null, archived: null });
+  // La bandeja que se ve AHORA. Una respuesta que llega tarde de la otra solo
+  // alimenta su memoria: sin esto, ir y volver rápido pintaba en Chats la
+  // lista de Archivados.
+  const bandejaVisibleRef = useRef(showArchived);
+  // Chats que se acaban de mover de bandeja (archivar / desarchivar). Hasta que
+  // el servidor lo confirme —y un par de segundos más, por las lecturas que ya
+  // venían en camino—, ninguna recarga los devuelve a la bandeja de donde
+  // salieron: eso era el parpadeo de «se va, vuelve y se va».
+  const movimientosPendientes = useRef(new Map<string, "open" | "archived">());
+  // Lo mismo para leído / no leído: tocarlo varias veces seguidas dejaba varias
+  // peticiones en camino y una recarga en vivo traía un estado intermedio que
+  // deshacía el último toque. Manda siempre la ÚLTIMA elección de cada chat.
+  const lecturasPendientes = useRef(new Map<string, { leer: boolean; turno: number }>());
+  const turnoDeLectura = useRef(0);
   // "Sin usuario" puede ser una sesión caída o una red que aún no responde;
   // solo lo primero justifica mandar al login.
   const [sesionSinConfirmar, setSesionSinConfirmar] = useState(false);
@@ -341,24 +307,89 @@ export function DirectChatInbox() {
   // Fila con acciones descubiertas por deslizamiento; solo una a la vez.
   const [filaAbierta, setFilaAbierta] = useState<string | null>(null);
   const [confirmaEliminar, setConfirmaEliminar] = useState<string | null>(null);
-  const [menuMensaje, setMenuMensaje] = useState<{ id: string; texto: string; x: number; y: number } | null>(null);
+  // La conversación cuya hoja de acciones está abierta (pulsación larga).
+  const [hojaDeFila, setHojaDeFila] = useState<string | null>(null);
+  // Arrastrar la hoja hacia abajo la cierra.
+  const arrastreDeLaHoja = useRef<{ id: number; y: number } | null>(null);
+  // El menú de un mensaje guarda DÓNDE está la burbuja, no dónde cayó el dedo:
+  // así sale siempre en el mismo sitio respecto al mensaje, como en WhatsApp.
+  const [menuMensaje, setMenuMensaje] = useState<{ id: string; caja: { top: number; left: number; right: number; bottom: number; width: number }; mio: boolean } | null>(null);
+  const burbujaDelMenu = useRef<HTMLElement | null>(null);
+  // El mensaje propio que se está corrigiendo: su texto pasa al compositor y
+  // «enviar» guarda la edición en vez de mandar uno nuevo.
+  // Si alguna de las dos partes apagó las confirmaciones de lectura, el «visto»
+  // no se muestra; lo que llegue en vivo tampoco lo enciende.
+  const vistosVisibles = useRef(true);
+  const [editando, setEditando] = useState<{ id: string; original: string } | null>(null);
+  // El mensaje cuya hoja «¿Eliminar mensaje?» está abierta.
+  const [mensajeAEliminar, setMensajeAEliminar] = useState<string | null>(null);
   const [copiado, setCopiado] = useState(false);
   const pulsacionLarga = useRef<number | null>(null);
 
   useEffect(() => {
     if (!menuMensaje) return;
-    const cerrar = () => setMenuMensaje(null);
-    document.addEventListener("pointerdown", cerrar);
-    window.addEventListener("scroll", cerrar, true);
-    return () => {
-      document.removeEventListener("pointerdown", cerrar);
-      window.removeEventListener("scroll", cerrar, true);
-    };
+    const cerrar = (event: KeyboardEvent) => { if (event.key === "Escape") setMenuMensaje(null); };
+    window.addEventListener("keydown", cerrar);
+    return () => window.removeEventListener("keydown", cerrar);
   }, [menuMensaje]);
 
-  function abrirMenuMensaje(id: string, texto: string, x: number, y: number) {
-    if (!texto.trim()) return;
-    setMenuMensaje({ id, texto, x, y });
+  function abrirMenuMensaje(id: string, burbuja: HTMLElement, mio: boolean) {
+    if (id.startsWith("pending-")) return;
+    const r = burbuja.getBoundingClientRect();
+    burbujaDelMenu.current = burbuja;
+    vibrarSuave();
+    setMenuMensaje({ id, caja: { top: r.top, left: r.left, right: r.right, bottom: r.bottom, width: r.width }, mio });
+  }
+
+  function empezarEdicion(mensaje: DirectMessage) {
+    setMenuMensaje(null);
+    setEditando({ id: mensaje.id, original: mensaje.body });
+    setDraft(mensaje.body);
+    window.requestAnimationFrame(() => {
+      const campo = textareaRef.current;
+      if (!campo) return;
+      campo.focus();
+      campo.setSelectionRange(campo.value.length, campo.value.length);
+      resizeMessageTextarea(campo);
+    });
+  }
+
+  function cancelarEdicion() {
+    setEditando(null);
+    setDraft("");
+  }
+
+  // Optimista, como el envío: la burbuja cambia al instante y, si el servidor
+  // lo rechaza (pasaron los 15 minutos, moderación), vuelve a su texto.
+  async function guardarEdicion() {
+    if (!editando) return;
+    const texto = draft.trim();
+    const { id, original } = editando;
+    setEditando(null);
+    setDraft("");
+    if (!texto || texto === original.trim()) return;
+    setMessages((actuales) => actuales.map((m) => m.id === id ? { ...m, body: texto, edited_at: new Date().toISOString() } : m));
+    const res = await fetchWithSessionRetry("/api/direct-chat/mensaje", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ messageId: id, body: texto }) });
+    if (!res.ok) {
+      const json = await res.json().catch(() => ({}));
+      setMessages((actuales) => actuales.map((m) => m.id === id ? { ...m, body: original } : m));
+      setError(json.error || tChat("editFailed"));
+    }
+  }
+
+  async function eliminarMensaje(id: string, alcance: "everyone" | "me") {
+    setMensajeAEliminar(null);
+    const antes = messages;
+    setMessages((actuales) => alcance === "me"
+      ? actuales.filter((m) => m.id !== id)
+      : actuales.map((m) => m.id === id ? { ...m, body: "", attachment_urls: [], deleted_at: new Date().toISOString() } : m));
+    if (editando?.id === id) cancelarEdicion();
+    const res = await fetchWithSessionRetry("/api/direct-chat/mensaje", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ messageId: id, scope: alcance }) });
+    if (!res.ok) {
+      const json = await res.json().catch(() => ({}));
+      setMessages(antes);
+      setError(json.error || tChat("deleteMessageFailed"));
+    }
   }
 
   async function copiarMensaje(texto: string) {
@@ -432,6 +463,18 @@ export function DirectChatInbox() {
     };
   }, [mobileThread]);
 
+  // La flecha de la barra llama siempre a la versión actual de «volver».
+  const volverDeSubvista = useRef<() => void>(() => {});
+  volverDeSubvista.current = () => { if (vistaBloqueados) setVistaBloqueados(false); else updateArchiveView(false); };
+  const subvistaEnLaBarra = nativeApp && (showArchived || vistaBloqueados) && !mobileThread
+    ? (vistaBloqueados ? tChat("blocked") : tChat("archived"))
+    : null;
+  useEffect(() => {
+    if (!alCambiarSubvista) return;
+    alCambiarSubvista(subvistaEnLaBarra ? { titulo: subvistaEnLaBarra, volver: () => volverDeSubvista.current() } : null);
+  }, [alCambiarSubvista, subvistaEnLaBarra]);
+  useEffect(() => () => alCambiarSubvista?.(null), [alCambiarSubvista]);
+
   const displayedConversations = useMemo(
     () => pendingDraft && !showArchived
       ? [pendingDraft, ...conversations.filter((item) => item.id !== DRAFT_CONVERSATION_ID)]
@@ -445,67 +488,11 @@ export function DirectChatInbox() {
   const conversacionBloqueada = conversacionAbierta?.status === "blocked";
   const bloqueadaPorMi = conversacionBloqueada && !!user?.id && conversacionAbierta?.blocked_by === user.id;
 
-  const [origenesAbiertos, setOrigenesAbiertos] = useState(false);
-  const origenesRef = useRef<HTMLDivElement | null>(null);
   // La línea de la última conversación cierra la lista cuando esta termina
   // antes del final de la pantalla. Si la lista se desplaza, esa línea queda
   // colgando contra la barra de abajo, así que ahí no va.
   const listaRef = useRef<HTMLDivElement | null>(null);
   const [listaCabe, setListaCabe] = useState(true);
-  // Al cambiar de conversación el desplegable de orígenes se cierra. Se ajusta
-  // durante el pintado —no en un efecto— para no encadenar un segundo pintado.
-  const [conversacionDelDesplegable, setConversacionDelDesplegable] = useState(activeId);
-  if (conversacionDelDesplegable !== activeId) {
-    setConversacionDelDesplegable(activeId);
-    setOrigenesAbiertos(false);
-  }
-  useEffect(() => {
-    if (!origenesAbiertos) return;
-    const cerrar = (event: PointerEvent) => {
-      if (!origenesRef.current?.contains(event.target as Node)) setOrigenesAbiertos(false);
-    };
-    document.addEventListener("pointerdown", cerrar);
-    return () => document.removeEventListener("pointerdown", cerrar);
-  }, [origenesAbiertos]);
-  const origenesFijados = useMemo(() => {
-    // Se fija lo que sigue vivo: en cuanto la solicitud o el proyecto se cierra
-    // deja de encabezar el chat. Y aunque nadie lo cierre nunca, a los noventa
-    // días deja de fijarse — si no, un trabajo olvidado quedaría ahí para
-    // siempre. Cuatro como tope, los más recientes primero.
-    // Se nombran los estados terminados, no los vivos: si mañana nace un estado
-    // nuevo, el origen se sigue fijando en vez de desaparecer sin aviso.
-    const ESTADOS_CERRADOS = new Set(["completed", "cancelled", "canceled", "declined", "rejected", "expired", "closed", "archived"]);
-    const CADUCIDAD_MS = 90 * 24 * 60 * 60 * 1000;
-    const sigueVivo = (origen: { status?: string | null; at?: string | null }) => {
-      if (origen.status && ESTADOS_CERRADOS.has(origen.status)) return false;
-      if (origen.at) {
-        const cuando = Date.parse(origen.at);
-        if (Number.isFinite(cuando) && Date.now() - cuando > CADUCIDAD_MS) return false;
-      }
-      return true;
-    };
-    const guardados = (active?.contexts ?? []).filter((origen) => origen.type !== "profile" && origen.title);
-    if (guardados.length > 0) return guardados.filter(sigueVivo).slice(0, 4);
-    // Conversaciones anteriores a la fusión: su único origen viene en `context`.
-    // Solo se consulta si no hay orígenes guardados; si los hay y todos vencieron,
-    // la barra queda vacía en vez de revivir el que acaba de caducar.
-    if (active?.context && active.context.type !== "profile" && !ESTADOS_CERRADOS.has(active.context.status ?? "")) {
-      const titulo = active.context.service_description || active.context.title || null;
-      if (titulo) {
-        return [{
-          type: active.context.type,
-          bookingId: active.booking_id ?? null,
-          projectId: active.project_id ?? null,
-          proposalId: active.proposal_id ?? null,
-          title: titulo,
-          status: active.context.status ?? null,
-          at: null,
-        }];
-      }
-    }
-    return [];
-  }, [active]);
-
 
   useEffect(() => {
     const next = buildPendingDraft(searchParams, user?.id, isEn);
@@ -542,11 +529,6 @@ export function DirectChatInbox() {
     if (context.type === "profile") return context.title;
     return `${context.label} · ${context.title}`;
   }, [contextFor]);
-  const contextActionFor = useCallback((item: Conversation) => {
-    const type = item.context?.type ?? "profile";
-    const labels = isEn ? { booking: "View appointment", project: "View project", proposal: "View reply", profile: "View profile" } : { booking: "Ver cita", project: "Ver proyecto", proposal: "Ver respuesta", profile: "Ver perfil" };
-    return labels[type];
-  }, [isEn]);
 
   const filtered = useMemo(() => {
     const needle = query.trim().toLocaleLowerCase(locale);
@@ -589,7 +571,10 @@ export function DirectChatInbox() {
 
   const loadConversations = useCallback(async (quiet = false) => {
     // Paint the warmed list at once; the network refresh below replaces it.
-    const warm = !showArchived && !quiet ? (readCachedConversations() as Conversation[] | null) : null;
+    // Cada bandeja guarda su última lista en memoria: pasar de Chats a
+    // Archivados pinta lo que ya se tenía y refresca detrás, sin esqueleto.
+    const enMemoria = bandejasRef.current[showArchived ? "archived" : "open"];
+    const warm = quiet ? null : enMemoria ?? (!showArchived ? (readCachedConversations() as Conversation[] | null) : null);
     if (warm) {
       setConversations(warm);
       setLoading(false);
@@ -601,8 +586,19 @@ export function DirectChatInbox() {
       const res = await fetchWithSessionRetry(`/api/direct-chat${showArchived ? "?status=archived" : ""}`, { cache: "no-store" });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || "Error");
-      const rows = json.conversations ?? [];
+      const bandejaPedida = showArchived ? "archived" : "open";
+      const rows = ((json.conversations ?? []) as Conversation[]).filter((fila) => {
+        const destino = movimientosPendientes.current.get(fila.id);
+        return !destino || destino === bandejaPedida;
+      }).map((fila) => {
+        const eleccion = lecturasPendientes.current.get(fila.id);
+        if (!eleccion) return fila;
+        const valor = eleccion.leer ? 0 : 1;
+        return user?.id === fila.client_id ? { ...fila, client_unread_count: valor } : { ...fila, professional_unread_count: valor };
+      });
       if (!showArchived) storeConversations(rows);
+      bandejasRef.current[showArchived ? "archived" : "open"] = rows;
+      if (bandejaVisibleRef.current !== showArchived) return;
       const existingDraftConversation = findExistingDraftConversation(rows, pendingDraftPayload);
       setConversations(rows);
       if (existingDraftConversation) {
@@ -612,7 +608,11 @@ export function DirectChatInbox() {
         setActiveId(existingDraftConversation.id);
         sincronizarUrl(`conversation=${existingDraftConversation.id}`);
       } else {
-        setActiveId((current) => current || (pendingDraft ? DRAFT_CONVERSATION_ID : rows[0]?.id || null));
+        // En computadora la conversación se ve al lado de la lista y se abre la
+        // primera. En el teléfono NO: ahí solo se ve la lista, y abrirla por
+        // detrás la marcaba como leída (y «vista» para el otro) sin que nadie
+        // la hubiera abierto.
+        setActiveId((current) => current || (pendingDraft ? DRAFT_CONVERSATION_ID : conversacionAlLado(rows[0]?.id)));
       }
       if (showArchived) {
         setArchivedCount(json.conversations?.length ?? 0);
@@ -623,7 +623,12 @@ export function DirectChatInbox() {
         // pide cuando la persona abre o recarga Mensajes de verdad.
         fetch("/api/direct-chat?status=archived", { cache: "no-store" })
           .then((archivedRes) => archivedRes.ok ? archivedRes.json() : { conversations: [] })
-          .then((archivedJson) => setArchivedCount(Array.isArray(archivedJson.conversations) ? archivedJson.conversations.length : 0))
+          .then((archivedJson) => {
+            const archivadas = Array.isArray(archivedJson.conversations) ? archivedJson.conversations as Conversation[] : [];
+            // Ya vino la lista entera: queda lista para cuando se abra la bandeja.
+            bandejasRef.current.archived = archivadas;
+            setArchivedCount(archivadas.length);
+          })
           .catch(() => setArchivedCount(0));
         // Los bloqueados se piden en el mismo momento y por la misma razón: la
         // entrada solo existe si hay algo adentro, así que hace falta saberlo
@@ -636,7 +641,7 @@ export function DirectChatInbox() {
     } catch (err) {
       setError(err instanceof Error ? err.message : isEn ? "Could not load messages." : "No se pudieron cargar los mensajes.");
     } finally { if (!quiet) setLoading(false); }
-  }, [isEn, pendingDraft, pendingDraftPayload, router, showArchived]);
+  }, [isEn, pendingDraft, pendingDraftPayload, showArchived, user?.id]);
 
   // Al recargar el hilo, cada mensaje volvía como un objeto nuevo aunque fuera
   // el mismo: React rehacía todas las burbujas y las imágenes se volvían a
@@ -677,6 +682,8 @@ export function DirectChatInbox() {
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || "Error");
       if (json.conversation) setHiloAbierto(json.conversation as Conversation);
+      // ¿Se muestran los «visto» en este chat? (confirmaciones de lectura).
+      vistosVisibles.current = json.vistos !== false;
       const rows = (json.messages ?? []) as DirectMessage[];
       // Reuse this session's still-fresh signed attachment URLs: the server
       // mints a new token per load, which defeated the browser cache and
@@ -844,6 +851,19 @@ export function DirectChatInbox() {
         if (row.sender_id === user.id) return;
         if (row.conversation_id === activeId) void loadThread(activeId, true);
         recargarPronto();
+      })
+      // La otra persona editó o eliminó un mensaje del hilo abierto.
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "direct_messages" }, (payload) => {
+        const row = payload.new as DirectMessage & { conversation_id?: string };
+        if (row.conversation_id !== activeId) return;
+        // Mis mensajes: lo único que cambia desde el otro lado es el visto.
+        if (row.sender_id === user.id) {
+          const leido = vistosVisibles.current ? row.read_at : null;
+          if (leido || row.delivered_at) setMessages((actuales) => actuales.map((m) => m.id === row.id ? { ...m, read_at: leido ?? m.read_at, delivered_at: row.delivered_at ?? m.delivered_at } : m));
+          return;
+        }
+        if (!row.edited_at && !row.deleted_at) return;
+        void loadThread(activeId, true);
       }).subscribe();
     return () => {
       if (pendiente) window.clearTimeout(pendiente);
@@ -879,6 +899,16 @@ export function DirectChatInbox() {
   }
 
   function updateArchiveView(nextArchived: boolean, nextConversationId?: string | null) {
+    // Cambiar de bandeja enciende «cargando» EN EL MISMO cambio de estado. Sin
+    // esto React pintaba un cuadro intermedio —la bandeja nueva con la lista
+    // vieja, que no tiene nada de esa bandeja— y durante medio segundo se leía
+    // «No hay conversaciones archivadas» antes de que llegara la respuesta.
+    bandejaVisibleRef.current = nextArchived;
+    if (nextArchived !== showArchived) {
+      const guardada = bandejasRef.current[nextArchived ? "archived" : "open"];
+      if (guardada) setConversations(guardada);
+      else setLoading(true);
+    }
     setShowArchived(nextArchived);
     setPendingDraft(null);
     setPendingDraftPayload(null);
@@ -909,6 +939,7 @@ export function DirectChatInbox() {
 
   function selectConversation(id: string) {
     backHrefRef.current = "";
+    if (editando) cancelarEdicion();
     setActiveId(id); setMobileThread(true); setError("");
     if (id === DRAFT_CONVERSATION_ID) return;
     sincronizarUrl(`${showArchived ? "chatStatus=archived&" : ""}conversation=${id}`);
@@ -922,6 +953,8 @@ export function DirectChatInbox() {
   }
 
   function closeThread() {
+    // Salir del hilo a media edición la descarta: el texto no es un borrador.
+    if (editando) cancelarEdicion();
     // Opened from outside (a profile, request or project): back goes THERE.
     if (backHrefRef.current) {
       const target = backHrefRef.current;
@@ -1038,6 +1071,7 @@ export function DirectChatInbox() {
 
   async function submit(e: FormEvent) {
     e.preventDefault();
+    if (editando) { void guardarEdicion(); return; }
     if (!activeId || sending || (!draft.trim() && !selectedAttachments.length)) return;
     const body = draft.trim(); const optimisticId = `pending-${Date.now()}`;
     const optimisticAttachments = selectedAttachments.map((attachment) => ({
@@ -1114,17 +1148,58 @@ export function DirectChatInbox() {
   }
 
   // Archivar o desarchivar una fila desde el gesto, sin abrir el chat.
+  // Optimista: la fila sale al instante y pasa a la otra bandeja en memoria,
+  // así al abrirla ya está ahí; si el servidor falla, se recarga la lista.
   async function archivarFila(id: string, archivar: boolean) {
     setFilaAbierta(null);
-    const res = await fetchWithSessionRetry("/api/direct-chat", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ conversationId: id, status: archivar ? "archived" : "open" }) });
-    if (!res.ok) { const json = await res.json().catch(() => ({})); setError(json.error || (isEn ? "Could not update the conversation." : "No se pudo actualizar la conversación.")); return; }
+    const fila = conversations.find((item) => item.id === id);
     const remaining = conversations.filter((item) => item.id !== id);
     setConversations(remaining);
+    const origen = archivar ? "open" : "archived";
+    const destino = archivar ? "archived" : "open";
+    bandejasRef.current[origen] = remaining;
+    const enDestino = bandejasRef.current[destino];
+    if (fila && enDestino) bandejasRef.current[destino] = [fila, ...enDestino.filter((item) => item.id !== id)];
     setArchivedCount((count) => archivar ? count + 1 : Math.max(0, count - 1));
-    if (activeId === id) setActiveId(remaining[0]?.id ?? null);
+    if (activeId === id) setActiveId(conversacionAlLado(remaining[0]?.id));
+    movimientosPendientes.current.set(id, destino);
+    const res = await fetchWithSessionRetry("/api/direct-chat", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ conversationId: id, status: archivar ? "archived" : "open" }) });
+    if (!res.ok) {
+      movimientosPendientes.current.delete(id);
+      const json = await res.json().catch(() => ({}));
+      setError(json.error || (isEn ? "Could not update the conversation." : "No se pudo actualizar la conversación."));
+      bandejasRef.current[destino] = null;
+      void loadConversations(true);
+      return;
+    }
+    window.setTimeout(() => { if (movimientosPendientes.current.get(id) === destino) movimientosPendientes.current.delete(id); }, 3000);
   }
 
-  // Eliminar solo existe en archivadas y pide un segundo toque de confirmación.
+  // Marcar leída o no leída desde el gesto, sin abrir el chat. Optimista: la
+  // fila cambia al instante y la petición confirma detrás.
+  async function marcarLeida(id: string, leer: boolean) {
+    setFilaAbierta(null);
+    // El icono de Mensajes de arriba cambia YA, sin esperar al servidor.
+    const conversacion = conversations.find((c) => c.id === id);
+    const antes = conversacion ? Number((user?.id === conversacion.client_id ? conversacion.client_unread_count : conversacion.professional_unread_count) ?? 0) : 0;
+    const delta = (leer ? 0 : 1) - antes;
+    if (delta) window.dispatchEvent(new CustomEvent("ccr:mensajes-sin-leer", { detail: delta }));
+    setConversations((actuales) => actuales.map((c) => c.id !== id ? c : (
+      user?.id === c.client_id
+        ? { ...c, client_unread_count: leer ? 0 : 1 }
+        : { ...c, professional_unread_count: leer ? 0 : 1 }
+    )));
+    const turno = ++turnoDeLectura.current;
+    lecturasPendientes.current.set(id, { leer, turno });
+    const res = await fetchWithSessionRetry("/api/direct-chat", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ conversationId: id, read: leer }) });
+    // Una respuesta vieja no decide nada si después hubo otro toque.
+    if (lecturasPendientes.current.get(id)?.turno !== turno) return;
+    if (!res.ok) { lecturasPendientes.current.delete(id); void loadConversations(true); }
+    window.dispatchEvent(new Event("directMessagesChanged"));
+    window.setTimeout(() => { if (lecturasPendientes.current.get(id)?.turno === turno) lecturasPendientes.current.delete(id); }, 3000);
+  }
+
+  // Eliminar vive solo en la hoja de «Más» y pide un segundo toque de confirmación.
   async function eliminarFila(id: string) {
     if (confirmaEliminar !== id) { setConfirmaEliminar(id); return; }
     setConfirmaEliminar(null);
@@ -1133,8 +1208,9 @@ export function DirectChatInbox() {
     if (!res.ok) { const json = await res.json().catch(() => ({})); setError(json.error || (isEn ? "Could not delete the conversation." : "No se pudo eliminar la conversación.")); return; }
     const remaining = conversations.filter((item) => item.id !== id);
     setConversations(remaining);
-    setArchivedCount((count) => Math.max(0, count - 1));
-    if (activeId === id) setActiveId(remaining[0]?.id ?? null);
+    bandejasRef.current[showArchived ? "archived" : "open"] = remaining;
+    if (showArchived) setArchivedCount((count) => Math.max(0, count - 1));
+    if (activeId === id) setActiveId(conversacionAlLado(remaining[0]?.id));
   }
 
   async function toggleArchiveActive() {
@@ -1142,32 +1218,11 @@ export function DirectChatInbox() {
     const res = await fetchWithSessionRetry("/api/direct-chat", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ conversationId: activeId, status: showArchived ? "open" : "archived" }) });
     if (!res.ok) { const json = await res.json().catch(() => ({})); setError(json.error || (isEn ? "Could not update the conversation." : "No se pudo actualizar la conversación.")); return; }
     const remaining = conversations.filter((item) => item.id !== activeId);
-    const nextId = remaining[0]?.id ?? null;
+    const nextId = conversacionAlLado(remaining[0]?.id);
     setConversations(remaining);
+    bandejasRef.current = { open: null, archived: null };
     setArchivedCount((count) => showArchived ? Math.max(0, count - 1) : count + 1);
     updateArchiveView(showArchived, nextId);
-  }
-
-  async function deleteArchivedActive() {
-    if (!activeId || !showArchived || activeId === DRAFT_CONVERSATION_ID) return;
-    const res = await fetchWithSessionRetry("/api/direct-chat", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ conversationId: activeId }) });
-    if (!res.ok) {
-      const json = await res.json().catch(() => ({}));
-      setError(json.error || (isEn ? "Could not delete the conversation." : "No se pudo eliminar la conversación."));
-      return;
-    }
-    const remaining = conversations.filter((item) => item.id !== activeId);
-    const nextId = remaining[0]?.id ?? null;
-    setConversations(remaining);
-    setArchivedCount((count) => Math.max(0, count - 1));
-    updateArchiveView(true, nextId);
-  }
-
-  function contextHref(item: Conversation) {
-    if (item.booking_id && CITAS_ACTIVAS) return `/dashboard/profesional?tab=${user?.id === item.client_id ? "sent_bookings" : "bookings"}&booking=${item.booking_id}`;
-    if (item.project_id) return `/dashboard/profesional?tab=${user?.id === item.client_id ? "sent_projects" : "proposals"}&project=${item.project_id}`;
-    const isClientSide = user?.id === item.client_id;
-    return isClientSide && item.professionals?.slug ? `/profesionales/${item.professionals.slug}` : null;
   }
 
   if (sesionSinConfirmar && !user) return (
@@ -1184,6 +1239,83 @@ export function DirectChatInbox() {
         </button>
       )}
     />
+  );
+
+  // Hoja de acciones de una conversación: sale al dejar la fila pulsada (o con
+  // el botón derecho en computadora). Es la otra mitad del gesto: deslizar da
+  // lo frecuente —archivar— y la hoja da todo, incluido reportar, que antes
+  // vivía en la cabecera del hilo.
+  const mensajeDelMenu = menuMensaje ? messages.find((m) => m.id === menuMensaje.id) ?? null : null;
+  const esPropioYReciente = (m: DirectMessage | null) => Boolean(m && m.sender_id === user?.id && !m.deleted_at && dentroDeLaVentanaDeEdicion(m.created_at));
+  const puedeEditarDelMenu = esPropioYReciente(mensajeDelMenu) && Boolean(mensajeDelMenu?.body.trim()) && !(mensajeDelMenu?.attachment_urls?.length && (mensajeDelMenu.body === "Archivo adjunto" || mensajeDelMenu.body === "Attachment"));
+  const mensajeEliminable = mensajeAEliminar ? messages.find((m) => m.id === mensajeAEliminar) ?? null : null;
+  const puedeEliminarParaTodos = esPropioYReciente(mensajeEliminable);
+  const filaDeLaHoja = conversations.find((c) => c.id === hojaDeFila) ?? null;
+  const personaDeLaHoja = filaDeLaHoja ? personFor(filaDeLaHoja) : null;
+  const hojaSinLeer = filaDeLaHoja ? Boolean(user?.id === filaDeLaHoja.client_id ? filaDeLaHoja.client_unread_count : filaDeLaHoja.professional_unread_count) : false;
+
+  // `app-sheet-compact-screen` es lo que evita que el armazón nativo la estire
+  // a pantalla completa: esta hoja mide lo que miden sus opciones y se apoya en
+  // el borde de abajo, como la de WhatsApp.
+  const hojaDeAcciones = filaDeLaHoja && (
+    <div className="app-modal-screen app-sheet-compact-screen fixed inset-0 z-[200] flex items-end justify-center" role="dialog" aria-modal="true">
+      <div className="absolute inset-0 bg-[#071426]/45 backdrop-blur-[2px]" onClick={() => { setHojaDeFila(null); setConfirmaEliminar(null); }} />
+      <div className="app-bottom-sheet app-sheet-compact relative z-10 w-full max-w-md rounded-t-[22px] bg-white pb-[calc(1rem+env(safe-area-inset-bottom))] pt-2 shadow-[0_-18px_48px_-24px_rgba(15,23,42,0.55)]">
+        {/* Se cierra con la X o arrastrando la hoja hacia abajo, como en
+            WhatsApp; el renglón «Cancelar» era una opción más que competía con
+            las que sí hacen algo. */}
+        <div
+          className="cursor-grab touch-none pb-1 pt-1"
+          onPointerDown={(event) => { arrastreDeLaHoja.current = { id: event.pointerId, y: event.clientY }; }}
+          onPointerMove={(event) => {
+            const d = arrastreDeLaHoja.current;
+            if (!d || event.pointerId !== d.id) return;
+            const paso = event.clientY - d.y;
+            if (paso > 70) { arrastreDeLaHoja.current = null; setHojaDeFila(null); }
+          }}
+          onPointerUp={() => { arrastreDeLaHoja.current = null; }}
+        >
+          <div className="mx-auto h-1 w-10 rounded-full bg-[#dbe5ee]" />
+        </div>
+        <div className="flex items-center gap-2 px-5 pb-2">
+          <p className="min-w-0 flex-1 truncate text-[15px] font-extrabold text-[#162543]">{personaDeLaHoja?.name ?? ""}</p>
+          <button type="button" onClick={() => { setHojaDeFila(null); setConfirmaEliminar(null); }} aria-label={tChat("cancel")} className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[#eef2f6] text-[#526277] transition hover:bg-[#e2e9f0]">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+        {/* Lo mismo que el deslizado hacia la derecha, para quien no lo conoce. */}
+        <button type="button" onClick={() => { const id = filaDeLaHoja.id; setHojaDeFila(null); void marcarLeida(id, hojaSinLeer); }} className="flex w-full items-center gap-3 px-5 py-3.5 text-left text-[15px] font-bold text-[#162543] transition hover:bg-[#f2f8fb]">
+          {hojaSinLeer ? <MessageSquareText className="h-5 w-5 text-[#009FD9]" /> : <IconoNoLeido className="text-[#009FD9]" anillo="ring-white" />}
+          {hojaSinLeer ? (isEn ? "Mark as read" : "Marcar como leído") : (isEn ? "Mark as unread" : "Marcar como no leído")}
+        </button>
+        <button type="button" onClick={() => { const id = filaDeLaHoja.id; setHojaDeFila(null); void archivarFila(id, !showArchived); }} className="flex w-full items-center gap-3 px-5 py-3.5 text-left text-[15px] font-bold text-[#162543] transition hover:bg-[#f2f8fb]">
+          {showArchived ? <ArchiveRestore className="h-5 w-5 text-[#009FD9]" /> : <Archive className="h-5 w-5 text-[#009FD9]" />}
+          {showArchived ? tChat("unarchive") : tChat("archive")}
+        </button>
+        {!showArchived && (
+          <button type="button" onClick={() => { setActiveId(filaDeLaHoja.id); setHojaDeFila(null); setReportOpen(true); }} className="flex w-full items-center gap-3 px-5 py-3.5 text-left text-[15px] font-bold text-red-600 transition hover:bg-red-50">
+            <Flag className="h-5 w-5" />
+            {tChat("reportAndBlock")}
+          </button>
+        )}
+        {/* Eliminar va SIEMPRE, no solo en archivadas, y aparte de lo demás:
+            es lo único de la hoja que no se deshace. El borrado es por persona
+            —la otra parte conserva su hilo—, y el segundo toque confirma. */}
+        <button
+          type="button"
+          onClick={() => {
+            const id = filaDeLaHoja.id;
+            if (confirmaEliminar !== id) { setConfirmaEliminar(id); return; }
+            setHojaDeFila(null);
+            void eliminarFila(id);
+          }}
+          className="mt-1 flex w-full items-center gap-3 border-t border-[#eef2f6] px-5 py-3.5 text-left text-[15px] font-bold text-red-600 transition hover:bg-red-50"
+        >
+          <Trash2 className="h-5 w-5" />
+          {confirmaEliminar === filaDeLaHoja.id ? tChat("confirmDelete") : tChat("delete")}
+        </button>
+      </div>
+    </div>
   );
 
   if (loading) return (
@@ -1205,16 +1337,17 @@ export function DirectChatInbox() {
     </div>
   );
 
-  if (!displayedConversations.length) return (
+  // Archivados vacío NO reemplaza la pantalla: se queda con su encabezado
+  // «← Archivados» y el vacío va dentro de la lista (más abajo).
+  if (!displayedConversations.length && !showArchived) return (
     <PanelEmptyState
       plano
       icon={MessageSquareMore}
-      title={showArchived ? (isEn ? "No archived conversations" : "No hay conversaciones archivadas") : (isEn ? "No conversations yet" : "No hay conversaciones todavía")}
-      description={isEn ? "Messages related to profiles, appointments and projects will be organized here." : "Aquí se organizarán los mensajes relacionados con perfiles, citas y proyectos."}
+      title={isEn ? "No conversations yet" : "No hay conversaciones todavía"}
+      description={isEn ? "Messages about profiles, projects, promotions and jobs are organized here." : "Aquí se organizan los mensajes sobre perfiles, proyectos, promociones y empleos."}
       action={(
-        <button type="button" onClick={() => updateArchiveView(!showArchived)} className="inline-flex items-center justify-center gap-1.5 text-sm font-bold text-[#008fc4] hover:underline">
-          {showArchived && <ArrowLeft className="h-4 w-4" />}
-          {showArchived ? tChat("back") : tChat("viewArchived")}
+        <button type="button" onClick={() => updateArchiveView(true)} className="inline-flex items-center justify-center gap-1.5 text-sm font-bold text-[#008fc4] hover:underline">
+          {tChat("viewArchived")}
         </button>
       )}
     />
@@ -1222,30 +1355,12 @@ export function DirectChatInbox() {
   // Con `conversacionAbierta` y no con `active`: una bloqueada no está en la
   // lista y aun así el hilo tiene que saber con quién es.
   const activePerson = conversacionAbierta ? personFor(conversacionAbierta) : null;
-  const activeContext = active ? contextFor(active) : null;
-  const detailHref = active ? contextHref(active) : null;
   const conversacionesSinLeer = displayedConversations.filter((item) => {
     if (item.id === activeId) return false;
     return (user?.id === item.client_id ? item.client_unread_count : item.professional_unread_count) ?? 0;
   }).length;
 
-  // ── Orígenes fijados del hilo ──────────────────────────────────────────────
-  const etiquetaDeOrigen = (tipo: string) =>
-    contextFor({ ...(active ?? ({} as Conversation)), context: { type: tipo as "booking" } }).label;
-  const hrefDeOrigen = (origen: { bookingId?: string | null; projectId?: string | null }) => {
-    const soyCliente = user?.id === conversacionAbierta?.client_id;
-    if (origen.bookingId && CITAS_ACTIVAS) return `/dashboard/profesional?tab=${soyCliente ? "sent_bookings" : "bookings"}&booking=${origen.bookingId}`;
-    if (origen.projectId) return `/dashboard/profesional?tab=${soyCliente ? "sent_projects" : "proposals"}&project=${origen.projectId}`;
-    return null;
-  };
-  const abrirOrigen = (origen: { bookingId?: string | null; projectId?: string | null }) => {
-    const href = hrefDeOrigen(origen);
-    if (!href) return;
-    const chatPath = activeId ? `/mensajes?conversation=${encodeURIComponent(activeId)}` : "/mensajes";
-    router.push(`${href}&returnTo=${encodeURIComponent(chatPath)}`);
-  };
   const archiveLabel = showArchived ? (isEn ? "Unarchive" : "Desarchivar") : (isEn ? "Archive" : "Archivar");
-  const deleteLabel = isEn ? "Delete" : "Eliminar";
   const activePersonName = activePerson?.name || "";
   const otherHasApp = active
     ? (activePerson?.role === "professional" ? conversacionAbierta?.professional_has_app : conversacionAbierta?.client_has_app)
@@ -1264,32 +1379,41 @@ export function DirectChatInbox() {
       : "Hola, te escribí por ContrataCR y quería dar seguimiento.";
     return `https://wa.me/${number}?text=${encodeURIComponent(text)}`;
   })();
-  const activeContextTitle = activeContext?.title || "";
-  const activeContextAction = active ? contextActionFor(active) : "";
-  // One compact, descriptive line: "Solicitud · Cámaras de seguridad" instead
-  // of a bare uppercase label stacked over the title.
-  const headerContextLine = activeContext
-    ? activeContext.type !== "profile" && activeContextTitle
-      ? `${activeContext.label} · ${activeContextTitle}`
-      : activeContextTitle
-    : "";
   return (
     <div className={cn(
       "direct-chat-shell grid h-[calc(100dvh-153px)] min-h-[360px] grid-cols-[minmax(0,1fr)] overflow-hidden bg-white lg:h-[min(760px,calc(100dvh-220px))] lg:min-h-[500px] lg:grid-cols-[320px_minmax(0,1fr)] xl:grid-cols-[340px_minmax(0,1fr)]",
       mobileThread && "direct-chat-shell--thread",
     )}>
-      <aside className={cn("flex min-h-0 flex-col border-r border-[#e5e7eb] bg-white", mobileThread && "hidden lg:block")}>
-        <div className={cn("shrink-0 border-b border-[#e5e7eb] p-4", nativeApp && "px-4 pb-3 pt-2")}>
-          <div className="flex items-center justify-between gap-3">
-            <h2 className={cn("text-lg font-extrabold text-[#162543]", nativeApp && !showArchived && !vistaBloqueados && "sr-only")}>{vistaBloqueados ? tChat("blocked") : showArchived ? tChat("archived") : tChat("messages")}</h2>
+      <aside className={cn("flex min-h-0 flex-col bg-white lg:border-r lg:border-[#e5e7eb]", mobileThread && "hidden lg:block")}>
+        <div className={cn("shrink-0 border-b border-[#e5e7eb] p-4", nativeApp && "border-b-0 px-4 pb-2 pt-2", subvistaEnLaBarra && "hidden")}>
+          {/* Archivados y Bloqueados son una pantalla DENTRO de Mensajes: su
+              encabezado cambia a «← Archivados», con la flecha a la izquierda
+              como en WhatsApp. El «Volver» chico a la derecha, lejos del
+              título, no se leía como la salida. */}
+          <div className={cn("flex items-center gap-1", subvistaEnLaBarra && "hidden")}>
             {(showArchived || vistaBloqueados) && (
-              <button type="button" onClick={() => { if (vistaBloqueados) setVistaBloqueados(false); else updateArchiveView(false); }} className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-extrabold text-[#008fc4] transition hover:bg-[#eef9fd]">
-                <ArrowLeft className="h-3.5 w-3.5" />
-                {tChat("back")}
+              <button
+                type="button"
+                onClick={() => { if (vistaBloqueados) setVistaBloqueados(false); else updateArchiveView(false); }}
+                aria-label={tChat("back")}
+                className="-ml-2 grid h-10 w-10 shrink-0 place-items-center rounded-full text-[#162543] transition active:bg-[#eef6fb] hover:bg-[#eef9fd]"
+              >
+                <ArrowLeft className="h-5 w-5" />
               </button>
             )}
+            <h2 className={cn("text-lg font-extrabold text-[#162543]", nativeApp && !showArchived && !vistaBloqueados && "sr-only")}>{vistaBloqueados ? tChat("blocked") : showArchived ? tChat("archived") : tChat("messages")}</h2>
           </div>
-          {!vistaBloqueados && <div className="relative mt-3"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8291a5]" /><input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={isEn ? "Search conversations" : "Buscar conversaciones"} className="h-10 w-full rounded-lg border border-[#d8e4ec] bg-white pl-9 pr-3 text-sm outline-none focus:border-[#009FD9]" /></div>}
+          {/* El mismo campo que Profesionales, Empleos y Proyectos (MarketplaceSearch):
+              solo cambia el texto. Filtra en vivo, sin pantalla de búsqueda. */}
+          {!vistaBloqueados && !subvistaEnLaBarra && (
+            <div className={cn("flex h-11 w-full items-center gap-3 rounded-[10px] border border-[#e5e7eb] bg-white px-4 transition-colors focus-within:ring-2 focus-within:ring-[#009FD9]/20", (showArchived || !nativeApp) && "mt-3")}>
+              <Search className="h-5 w-5 shrink-0 text-[#162543]" />
+              <div className="relative min-w-0 flex-1">
+                <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={isEn ? "Search conversations" : "Buscar conversaciones"} className="h-11 w-full min-w-0 bg-transparent pr-9 text-[15px] font-semibold text-[#162543] outline-none placeholder:text-[#8f9aaa] lg:text-base lg:font-normal lg:text-gray-700 lg:placeholder:text-gray-400" />
+                {query && <button type="button" onClick={() => setQuery("")} aria-label={isEn ? "Clear search" : "Borrar búsqueda"} className="absolute right-0 top-1/2 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-full text-[#8b96a5] hover:bg-[#edf3f7]"><X className="h-4 w-4" /></button>}
+              </div>
+            </div>
+          )}
         </div>
         <div ref={listaRef} data-lista-cabe={listaCabe ? "true" : "false"} className="ccr-direct-chat-list min-h-0 flex-1 overflow-y-auto">
           {vistaBloqueados ? (
@@ -1317,21 +1441,26 @@ export function DirectChatInbox() {
             </div>
           ) : null}
           {!vistaBloqueados && !showArchived && bloqueadas.length > 0 && (
-            <button type="button" onClick={() => setVistaBloqueados(true)} className="flex w-full items-center gap-3 border-b border-[#e5e7eb] bg-white px-4 py-3 text-left transition hover:bg-[#f3f8fb]">
-              <span className="grid h-10 w-10 place-items-center rounded-full bg-[#fdeeee] text-[#d64545]">
-                <Flag className="h-5 w-5" />
+            <button type="button" onClick={() => setVistaBloqueados(true)} className="relative flex w-full items-center gap-3 bg-white px-4 py-3 text-left transition hover:bg-[#f3f8fb]">
+              <span className="grid w-11 shrink-0 place-items-center text-[#526277]">
+                <Flag className="h-[18px] w-[18px]" />
               </span>
-              <span className="min-w-0 flex-1 text-sm font-extrabold text-[#162543]">{tChat("blocked")}</span>
+              <strong className="min-w-0 flex-1 text-sm text-[#162543]">{tChat("blocked")}</strong>
               <span className="grid h-5 min-w-5 place-items-center rounded-full bg-[#e8eef4] px-1.5 text-[10px] font-extrabold text-[#526277]">{bloqueadas.length > 99 ? "99+" : bloqueadas.length}</span>
+              <SeparadorDeChat />
             </button>
           )}
           {!vistaBloqueados && !showArchived && (nativeApp || archivedCount > 0) && (
-            <button type="button" onClick={() => updateArchiveView(true)} className="flex w-full items-center gap-3 border-b border-[#e5e7eb] bg-white px-4 py-3 text-left transition hover:bg-[#f3f8fb]">
-              <span className="grid h-10 w-10 place-items-center rounded-full bg-[#eef8fd] text-[#009FD9]">
-                <Archive className="h-5 w-5" />
+            // Como WhatsApp: el icono suelto, del alto de la palabra y centrado
+            // en la columna de las fotos, para que «Archivados» empiece donde
+            // empiezan los nombres y se lea con su mismo tamaño y color.
+            <button type="button" onClick={() => updateArchiveView(true)} className="relative flex w-full items-center gap-3 bg-white px-4 py-3 text-left transition hover:bg-[#f3f8fb]">
+              <span className="grid w-11 shrink-0 place-items-center text-[#526277]">
+                <Archive className="h-[18px] w-[18px]" />
               </span>
-              <span className="min-w-0 flex-1 text-sm font-extrabold text-[#162543]">{tChat("archived")}</span>
+              <strong className="min-w-0 flex-1 text-sm text-[#162543]">{tChat("archived")}</strong>
               {archivedCount > 0 && <span className="grid h-5 min-w-5 place-items-center rounded-full bg-[#e8eef4] px-1.5 text-[10px] font-extrabold text-[#526277]">{archivedCount > 99 ? "99+" : archivedCount}</span>}
+              <SeparadorDeChat />
             </button>
           )}
           {!vistaBloqueados && filtered.map((item) => { const person = personFor(item); const unread = user?.id === item.client_id ? item.client_unread_count : item.professional_unread_count; const fila = (
@@ -1339,41 +1468,73 @@ export function DirectChatInbox() {
               <Avatar className="h-11 w-11"><AvatarImage src={person.avatar ?? undefined} /><AvatarFallback className="bg-[#e8f8ff] font-bold text-[#009FD9]">{getInitials(person.name)}</AvatarFallback></Avatar>
               <span className="min-w-0 flex-1"><span className="flex items-center gap-2"><strong className="min-w-0 flex-1 truncate text-sm text-[#162543]">{person.name}</strong><time className="shrink-0 text-[11px] text-[#8492a5]">{timeLabel(item.last_message_at, locale)}</time></span><span className="mt-1 flex items-center gap-2"><span className={cn("min-w-0 flex-1 truncate text-xs", storedDrafts[item.id] ? "italic text-[#8a94a6]" : "text-[#6b7a90]")}>{storedDrafts[item.id] ? `${tChat("draft")}: ${storedDrafts[item.id]}` : item.last_message || tChat("started")}</span>{!!unread && <span className="grid h-5 min-w-5 place-items-center rounded-full bg-[#009FD9] px-1 text-[10px] font-bold text-white">{unread}</span>}</span></span>
             </button>);
-            if (item.id === DRAFT_CONVERSATION_ID) return <div key={item.id} className="border-b border-[#eef2f6] last:border-b-0">{fila}</div>;
+            if (item.id === DRAFT_CONVERSATION_ID) return <div key={item.id} className="ccr-fila-chat relative">{fila}<SeparadorDeChat /></div>;
             return (
               <FilaDeslizable
                 key={item.id}
+                className="ccr-fila-chat"
+                onContextMenu={(event) => { event.preventDefault(); setHojaDeFila(item.id); }}
                 abierta={filaAbierta === item.id}
-                ancho={showArchived ? 176 : 88}
+                ancho={showArchived ? 176 : 176}
+                anchoIzquierda={88}
                 onEstado={(abrir) => { setFilaAbierta(abrir ? item.id : null); if (!abrir) setConfirmaEliminar(null); }}
-                acciones={showArchived ? (
+                onPulsacionLarga={() => setHojaDeFila(item.id)}
+                resaltada={hojaDeFila === item.id}
+                onCompletarDerecha={() => void archivarFila(item.id, !showArchived)}
+                onCompletarIzquierda={() => void marcarLeida(item.id, !!unread)}
+                accionesIzquierda={(completando) => (
+                  <button type="button" onClick={() => void marcarLeida(item.id, !!unread)} className="relative min-w-[88px] flex-1 shrink-0 bg-[#009FD9] text-white">
+                    <span className="absolute top-1/2 flex w-16 -translate-y-1/2 flex-col items-center gap-1" style={iconoDeAccion(completando, "right")}>
+                      {unread ? <MessageSquareText className="h-5 w-5" /> : <IconoNoLeido />}
+                      <span className="text-[11px] font-extrabold">{unread ? (isEn ? "Read" : "Leído") : (isEn ? "Unread" : "No leído")}</span>
+                    </span>
+                  </button>
+                )}
+                acciones={(completando) => showArchived ? (
                   <>
-                    <button type="button" onClick={() => void archivarFila(item.id, false)} className="flex w-[88px] flex-col items-center justify-center gap-1 bg-[#009FD9] text-white">
+                    {/* En Archivados también «Más», no «Eliminar»: borrar es irreversible y
+                        vive solo dentro de la hoja, con su doble confirmación. */}
+                    <button type="button" tabIndex={completando ? -1 : 0} onClick={() => { setFilaAbierta(null); setHojaDeFila(item.id); }} className={cn("flex shrink-0 flex-col items-center justify-center gap-1 overflow-hidden whitespace-nowrap bg-[#162543] text-white transition-[width] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]", completando ? "w-0" : "w-[88px]")}>
+                      <MoreHorizontal className="h-5 w-5" />
+                      <span className="text-[11px] font-extrabold">{isEn ? "More" : "Más"}</span>
+                    </button>
+                    <button type="button" onClick={() => void archivarFila(item.id, false)} className="relative flex-1 shrink-0 bg-[#009FD9] text-white">
+                      <span className="absolute top-1/2 flex w-16 -translate-y-1/2 flex-col items-center gap-1" style={iconoDeAccion(completando, "left")}>
                       <ArchiveRestore className="h-5 w-5" />
                       <span className="text-[11px] font-extrabold">{tChat("unarchive")}</span>
-                    </button>
-                    <button type="button" onClick={() => void eliminarFila(item.id)} className={cn("flex w-[88px] flex-col items-center justify-center gap-1 text-white", confirmaEliminar === item.id ? "bg-[#991b1b]" : "bg-[#dc2626]")}>
-                      <Trash2 className="h-5 w-5" />
-                      <span className="text-[11px] font-extrabold">{confirmaEliminar === item.id ? tChat("confirmDelete") : tChat("delete")}</span>
+                      </span>
                     </button>
                   </>
                 ) : (
-                  <button type="button" onClick={() => void archivarFila(item.id, true)} className="flex w-[88px] flex-col items-center justify-center gap-1 bg-[#009FD9] text-white">
-                    <Archive className="h-5 w-5" />
-                    <span className="text-[11px] font-extrabold">{tChat("archive")}</span>
-                  </button>
+                  <>
+                    {/* «Más» a la par de «Archivar», como WhatsApp: abre la misma
+                        hoja de abajo que la pulsación larga. */}
+                    <button type="button" tabIndex={completando ? -1 : 0} onClick={() => { setFilaAbierta(null); setHojaDeFila(item.id); }} className={cn("flex shrink-0 flex-col items-center justify-center gap-1 overflow-hidden whitespace-nowrap bg-[#162543] text-white transition-[width] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]", completando ? "w-0" : "w-[88px]")}>
+                      <MoreHorizontal className="h-5 w-5" />
+                      <span className="text-[11px] font-extrabold">{isEn ? "More" : "Más"}</span>
+                    </button>
+                    <button type="button" onClick={() => void archivarFila(item.id, true)} className="relative flex-1 shrink-0 bg-[#009FD9] text-white">
+                      <span className="absolute top-1/2 flex w-16 -translate-y-1/2 flex-col items-center gap-1" style={iconoDeAccion(completando, "left")}>
+                      <Archive className="h-5 w-5" />
+                      <span className="text-[11px] font-extrabold">{tChat("archive")}</span>
+                      </span>
+                    </button>
+                  </>
                 )}
               >
                 {fila}
+                <SeparadorDeChat />
               </FilaDeslizable>
             ); })}
-          {!filtered.length && <p className="p-6 text-center text-sm text-[#6b7a90]">{isEn ? "No matching conversations." : "No hay conversaciones que coincidan."}</p>}
+          {!vistaBloqueados && showArchived && !displayedConversations.length ? (
+            <PanelEmptyState plano icon={Archive} title={tChat("archivedEmptyTitle")} description={tChat("archivedEmptyHint")} />
+          ) : !filtered.length && <p className="p-6 text-center text-sm text-[#6b7a90]">{isEn ? "No matching conversations." : "No hay conversaciones que coincidan."}</p>}
         </div>
       </aside>
 
       <section className={cn("min-h-0 flex-col", mobileThread ? "flex" : "hidden lg:flex")}>
         <header className="ccr-direct-chat-thread-header flex min-h-[65px] shrink-0 items-center gap-2.5 border-b border-[#e5e7eb] bg-white px-3 py-2.5 shadow-[0_8px_22px_-24px_rgba(15,23,42,0.45)] sm:gap-3 sm:px-5 sm:py-3">
-          <button type="button" data-native-back="conversations" onClick={closeThread} className="inline-flex h-10 shrink-0 items-center gap-1 rounded-full pl-1 pr-1.5 text-[#526277] transition active:bg-[#eef6fb] lg:hidden" aria-label={isEn ? "Back to conversations" : "Volver a conversaciones"}>
+          <button type="button" data-native-back="conversations" onClick={closeThread} className="inline-flex h-10 shrink-0 items-center gap-1 rounded-full pl-1 pr-1.5 text-[#162543] transition active:bg-[#eef6fb] lg:hidden" aria-label={isEn ? "Back to conversations" : "Volver a conversaciones"}>
             <ArrowLeft className="h-5 w-5 shrink-0" />
             {conversacionesSinLeer > 0 && (
               <span className="text-[13px] font-extrabold tabular-nums text-[#009FD9]">{conversacionesSinLeer > 99 ? "99+" : conversacionesSinLeer}</span>
@@ -1393,68 +1554,20 @@ export function DirectChatInbox() {
             )}
 
           </div>
-          {nativeApp && !conversacionBloqueada && <ChatActionButton label={isEn ? "Report and block" : "Reportar y bloquear"} onClick={() => setReportOpen(true)} className="grid h-9 w-9 place-items-center rounded-lg border border-red-100 bg-white text-red-500 shadow-sm transition hover:border-red-200 hover:bg-red-50 hover:text-red-600"><Flag className="h-4 w-4" /></ChatActionButton>}
-          <ChatActionButton label={archiveLabel} onClick={() => void toggleArchiveActive()} className="grid h-9 w-9 place-items-center rounded-lg border border-[#d6e4ed] bg-[#f7fbfd] text-[#526277] shadow-sm transition hover:border-[#9fd8ec] hover:bg-[#eef9fd] hover:text-[#009FD9]">{showArchived ? <ArchiveRestore className="h-4 w-4" /> : <Archive className="h-4 w-4" />}</ChatActionButton>
-          {showArchived && (
-            <ChatActionButton label={deleteLabel} onClick={() => void deleteArchivedActive()} className="grid h-9 w-9 place-items-center rounded-lg border border-red-100 bg-white text-red-500 shadow-sm transition hover:border-red-200 hover:bg-red-50 hover:text-red-600">
-              <Trash2 className="h-4 w-4" />
-            </ChatActionButton>
+          {/* La cabecera solo dice con quién estás hablando. Archivar, reportar
+              y eliminar viven en la FILA de la lista —deslizándola o dejándola
+              pulsada—, como en WhatsApp: son acciones sobre la conversación,
+              no sobre lo que estás leyendo, y arriba invitaban a tocarlas por
+              accidente con el pulgar. En computadora, donde no hay gesto, la
+              fila las ofrece con el botón derecho. */}
+          {!nativeApp && (
+            <ChatActionButton label={archiveLabel} onClick={() => void toggleArchiveActive()} className="grid h-9 w-9 place-items-center rounded-lg border border-[#d6e4ed] bg-[#f7fbfd] text-[#526277] shadow-sm transition hover:border-[#9fd8ec] hover:bg-[#eef9fd] hover:text-[#009FD9]">{showArchived ? <ArchiveRestore className="h-4 w-4" /> : <Archive className="h-4 w-4" />}</ChatActionButton>
           )}
         </header>
         {/* Orígenes del hilo: la conversación es de la persona y cada solicitud,
             proyecto o propuesta se va anclando aquí. Se muestra el más reciente
             y, si hay más, se despliegan hasta cuatro como en los fijados de
             WhatsApp. */}
-        {!threadLoading && origenesFijados.length > 0 && (
-          <div ref={origenesRef} className="relative z-20 border-b border-[#e5e7eb] bg-white">
-            <div className="flex items-center">
-              <button
-                type="button"
-                onClick={() => abrirOrigen(origenesFijados[0])}
-                disabled={!hrefDeOrigen(origenesFijados[0])}
-                className="flex min-w-0 flex-1 items-center gap-2 px-4 py-1.5 text-left transition active:bg-[#f4f9fc] disabled:opacity-70 sm:px-6"
-              >
-                <IconoDeOrigen tipo={origenesFijados[0].type} />
-                <span className="min-w-0 flex-1 truncate text-[12px] leading-tight">
-                  <span className="font-semibold text-[#8b9bb0]">{etiquetaDeOrigen(origenesFijados[0].type)} · </span>
-                  <span className="font-bold text-[#162543]">{origenesFijados[0].title}</span>
-                </span>
-                {hrefDeOrigen(origenesFijados[0]) && <ChevronRight className="h-3.5 w-3.5 shrink-0 text-[#a9b6c6]" />}
-              </button>
-              {origenesFijados.length > 1 && (
-                <button
-                  type="button"
-                  onClick={() => setOrigenesAbiertos((abierto) => !abierto)}
-                  aria-expanded={origenesAbiertos}
-                  className="mr-3 inline-flex h-7 shrink-0 items-center gap-0.5 px-1 text-[12px] font-extrabold text-[#009FD9] sm:mr-5"
-                >
-                  +{origenesFijados.length - 1}
-                  <ChevronDown className={cn("h-3 w-3 transition-transform", origenesAbiertos && "rotate-180")} />
-                </button>
-              )}
-            </div>
-            {origenesAbiertos && (
-              <div className="absolute inset-x-0 top-full max-h-[248px] overflow-y-auto overscroll-contain border-b border-[#e5e7eb] bg-white shadow-[0_16px_28px_-20px_rgba(15,23,42,0.55)]">
-            {origenesFijados.slice(1).map((origen, indice) => (
-              <button
-                key={`${origen.type}-${origen.bookingId ?? origen.projectId ?? origen.proposalId ?? indice}`}
-                type="button"
-                onClick={() => abrirOrigen(origen)}
-                disabled={!hrefDeOrigen(origen)}
-                className="flex w-full items-center gap-2 border-t border-[#eef2f6] px-4 py-1.5 text-left transition active:bg-[#f4f9fc] disabled:opacity-70 sm:px-6"
-              >
-                <IconoDeOrigen tipo={origen.type} />
-                <span className="min-w-0 flex-1 truncate text-[12px] leading-tight">
-                  <span className="font-semibold text-[#8b9bb0]">{etiquetaDeOrigen(origen.type)} · </span>
-                  <span className="font-bold text-[#162543]">{origen.title}</span>
-                </span>
-                {hrefDeOrigen(origen) && <ChevronRight className="h-3.5 w-3.5 shrink-0 text-[#a9b6c6]" />}
-              </button>
-            ))}
-              </div>
-            )}
-          </div>
-        )}
         <div ref={scrollRef} className="ccr-direct-chat-thread-scroll min-h-0 flex-1 space-y-2 overflow-y-auto overscroll-contain bg-[#f3f7fa] px-4 py-5 sm:px-6">
           {threadLoading ? (
             <div className="ccr-delayed-loading space-y-3 py-2" aria-busy="true" role="status">
@@ -1500,26 +1613,33 @@ export function DirectChatInbox() {
                 )}
                 <div
                   onContextMenu={(event) => {
-                    if (!message.body) return;
+                    if (uploading) return;
                     event.preventDefault();
-                    abrirMenuMensaje(message.id, message.body, event.clientX, event.clientY);
+                    abrirMenuMensaje(message.id, event.currentTarget, mine);
                   }}
                   onPointerDown={(event) => {
-                    if (event.pointerType === "mouse" || !message.body) return;
-                    const { clientX, clientY } = event;
+                    if (event.pointerType === "mouse" || uploading) return;
+                    const burbuja = event.currentTarget;
                     if (pulsacionLarga.current) window.clearTimeout(pulsacionLarga.current);
-                    pulsacionLarga.current = window.setTimeout(() => abrirMenuMensaje(message.id, message.body!, clientX, clientY), 450);
+                    pulsacionLarga.current = window.setTimeout(() => abrirMenuMensaje(message.id, burbuja, mine), 450);
                   }}
                   onPointerMove={() => { if (pulsacionLarga.current) window.clearTimeout(pulsacionLarga.current); }}
                   onPointerUp={() => { if (pulsacionLarga.current) window.clearTimeout(pulsacionLarga.current); }}
                   onPointerCancel={() => { if (pulsacionLarga.current) window.clearTimeout(pulsacionLarga.current); }}
                   className={cn(
-                  "min-w-[86px] select-text rounded-[18px] px-3.5 py-2.5 text-[14px] leading-relaxed shadow-[0_4px_12px_-8px_rgba(15,23,42,0.55)]",
-                  mine
+                  "min-w-[86px] rounded-[18px] px-3.5 py-2.5 text-[14px] leading-relaxed shadow-[0_4px_12px_-8px_rgba(15,23,42,0.55)]",
+                  nativeApp ? "select-none [-webkit-touch-callout:none]" : "select-text",
+                  menuMensaje?.id === message.id && "ring-2 ring-[#009FD9]/35",
+                  message.deleted_at
+                    ? cn("max-w-[86%] border border-dashed border-[#d6e1ea] bg-[#f7fafc] text-[#6b7a90] shadow-none sm:max-w-[78%]", mine ? "rounded-br-md" : "rounded-bl-md")
+                    : mine
                     ? "max-w-[86%] rounded-br-md bg-[#009FD9] font-medium text-white sm:max-w-[78%]"
                     : "max-w-[calc(86%_-_2.25rem)] rounded-bl-md border border-[#e5e7eb] bg-white text-[#25364d] sm:max-w-[72%]",
                   fotos > 0 && (mine ? "w-[86%] sm:w-[78%]" : "w-[calc(86%_-_2.25rem)] sm:w-[72%]"),
                 )}>
+                  {message.deleted_at ? (
+                    <p className="flex items-center gap-1.5 italic"><Ban className="h-3.5 w-3.5 shrink-0" aria-hidden />{mine ? tChat("youDeletedMessage") : tChat("messageDeleted")}</p>
+                  ) : <>
                   {message.body && !(message.attachment_urls?.length && (message.body === "Archivo adjunto" || message.body === "Attachment")) && (
                     <p className="whitespace-pre-wrap break-words">{message.body}</p>
                   )}
@@ -1586,11 +1706,28 @@ export function DirectChatInbox() {
                     </div>
                     );
                   })()}
-                  <time className={cn("mt-1 block text-right text-[10px]", mine ? "text-white/75" : "text-[#8996a8]")}>{timeLabel(message.created_at, locale)}</time>
+                  </>}
+                  <time className={cn("mt-1 block text-right text-[10px]", mine && !message.deleted_at ? "text-white/75" : "text-[#8996a8]")}>
+                    {message.edited_at && !message.deleted_at && <span className="mr-1">{tChat("edited")} ·</span>}
+                    {timeLabel(message.created_at, locale)}
+                  </time>
                 </div>
               </div>
             );
           })}
+          {/* EL ESTADO, COMO iMESSAGE: texto gris bajo tu ÚLTIMO mensaje, solo si
+              la conversación termina en él (si el otro ya contestó, sobra). Los
+              checks de color no se entendían sobre la burbuja azul. */}
+          {(() => {
+            const ultimo = messages[messages.length - 1];
+            if (!ultimo || ultimo.sender_id !== user?.id || ultimo.deleted_at) return null;
+            const texto = ultimo.id.startsWith("pending-")
+              ? tChat("sending")
+              : ultimo.read_at
+                ? tChat("seenAt", { hora: timeLabel(ultimo.read_at, locale) })
+                : ultimo.delivered_at ? tChat("delivered") : tChat("sent");
+            return <p className="-mt-1 pr-1 text-right text-[11px] font-semibold text-[#8996a8]" aria-live="polite">{texto}</p>;
+          })()}
         </div>
         {nativeApp && whatsappEscape && (
           <div className="border-t border-[#e5e7eb] bg-[#fffbeb] px-4 py-2.5 text-xs font-semibold text-[#8a6d1f]">
@@ -1659,7 +1796,18 @@ export function DirectChatInbox() {
                 ))}
               </div>
             )}
-            <div className="flex items-end gap-2">
+            {editando && (
+              // Sin X aquí: la salida de la edición ocupa el lugar del clip,
+              // como en WhatsApp —editando no se adjunta nada—.
+              <div className="mb-2 flex items-center gap-3 rounded-xl border-l-4 border-[#009FD9] bg-[#f2f9fd] py-2 pl-3 pr-3">
+                <Pencil className="h-4 w-4 shrink-0 text-[#009FD9]" aria-hidden />
+                <span className="min-w-0 flex-1">
+                  <span className="block text-xs font-extrabold text-[#009FD9]">{tChat("editingMessage")}</span>
+                  <span className="block truncate text-[13px] text-[#526277]">{editando.original}</span>
+                </span>
+              </div>
+            )}
+            <div className="flex items-center gap-2">
             <input
               ref={fileInputRef}
               type="file"
@@ -1669,15 +1817,26 @@ export function DirectChatInbox() {
               className="hidden"
               onChange={(event) => { void addAttachments(event.currentTarget.files); }}
             />
+            {editando ? (
+              <button
+                type="button"
+                onClick={cancelarEdicion}
+                className="relative grid h-10 w-10 shrink-0 place-items-center rounded-full border border-[#d8e5ee] bg-[#f7fbfd] text-[#526277] transition after:absolute after:-inset-1 after:content-[''] hover:text-[#162543]"
+                aria-label={tChat("cancelEdit")}
+              >
+                <X className="h-5 w-5" />
+              </button>
+            ) : (
             <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={sending || preparingAttachments || selectedAttachments.length >= MAX_ATTACHMENTS}
-              className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-[#d8e5ee] bg-[#f7fbfd] text-[#526277] transition hover:border-[#9fd8ec] hover:text-[#009FD9] disabled:opacity-45"
-              aria-label={isEn ? "Attach file" : "Adjuntar archivo"}
-            >
-              <Paperclip className="h-5 w-5" />
-            </button>
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={sending || preparingAttachments || selectedAttachments.length >= MAX_ATTACHMENTS}
+                className="relative grid h-10 w-10 shrink-0 place-items-center rounded-full border border-[#d8e5ee] bg-[#f7fbfd] text-[#526277] transition after:absolute after:-inset-1 after:content-[''] hover:border-[#9fd8ec] hover:text-[#009FD9] disabled:opacity-45"
+                aria-label={isEn ? "Attach file" : "Adjuntar archivo"}
+              >
+                <Paperclip className="h-5 w-5" />
+              </button>
+            )}
             <textarea
               ref={(el) => {
                 textareaRef.current = el;
@@ -1698,15 +1857,15 @@ export function DirectChatInbox() {
                 }
               }}
               placeholder={isEn ? "Write a message" : "Escribe un mensaje"}
-              className="max-h-36 min-h-[52px] min-w-0 flex-1 resize-none overflow-hidden rounded-[20px] border border-[#d8e5ee] px-4 py-3 text-[15px] leading-6 outline-none transition focus:border-[#009FD9] focus:ring-2 focus:ring-[#009FD9]/10"
+              className="max-h-36 min-h-12 min-w-0 flex-1 resize-none overflow-hidden rounded-[20px] border border-[#d8e5ee] px-4 py-2.5 text-[15px] leading-6 outline-none transition focus:border-[#009FD9] focus:ring-2 focus:ring-[#009FD9]/10"
             />
             <button
               type="submit"
               disabled={sending || (!draft.trim() && !selectedAttachments.length)}
-              className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-[#009FD9] text-white transition hover:bg-[#008fca] disabled:bg-[#d8e4e9]"
-              aria-label={isEn ? "Send" : "Enviar"}
+              className="relative grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[#009FD9] text-white transition after:absolute after:-inset-1 after:content-[''] hover:bg-[#008fca] disabled:bg-[#d8e4e9]"
+              aria-label={editando ? tChat("saveEdit") : isEn ? "Send" : "Enviar"}
             >
-              {sending ? <Loader2 className="h-5 w-5 animate-spin" /> : <SendHorizontal className="h-5 w-5" />}
+              {sending ? <Loader2 className="h-5 w-5 animate-spin" /> : editando ? <Check className="h-5 w-5" strokeWidth={2.6} /> : <SendHorizontal className="h-5 w-5" />}
             </button>
             </div>
           </form>
@@ -1766,20 +1925,80 @@ export function DirectChatInbox() {
         document.body,
       )}
 
-      {menuMensaje && createPortal(
-        <div
-          className="fixed z-[1100] -translate-x-1/2 -translate-y-full pb-2"
-          style={{ left: Math.min(Math.max(menuMensaje.x, 90), window.innerWidth - 90), top: Math.max(menuMensaje.y - 6, 60) }}
-          onPointerDown={(event) => event.stopPropagation()}
-        >
-          <button
-            type="button"
-            onClick={() => void copiarMensaje(menuMensaje.texto)}
-            className="flex items-center gap-2 rounded-xl border border-[#e5e7eb] bg-white px-4 py-2.5 text-sm font-bold text-[#162543] shadow-[0_16px_36px_-18px_rgba(15,23,42,0.55)]"
+      {mensajeDelMenu && menuMensaje && createPortal(
+        // COMO WHATSAPP: el fondo se oscurece, el mensaje queda ENCIMA —una
+        // copia exacta en su mismo lugar— y el menú sale pegado a él, debajo y
+        // del lado de la burbuja; si abajo no cabe, arriba. Siempre en el mismo
+        // sitio respecto al mensaje, nunca donde cayó el dedo.
+        <div className="fixed inset-0 z-[1100]" role="presentation">
+          <div className="absolute inset-0 bg-[#071426]/40 backdrop-blur-[2px]" onClick={() => setMenuMensaje(null)} />
+          <div
+            aria-hidden
+            className="pointer-events-none absolute"
+            style={{ top: menuMensaje.caja.top, left: menuMensaje.caja.left, width: menuMensaje.caja.width }}
+            ref={(nodo) => {
+              const original = burbujaDelMenu.current;
+              if (!nodo || !original || nodo.firstChild) return;
+              const copia = original.cloneNode(true) as HTMLElement;
+              copia.style.maxWidth = "none";
+              copia.style.width = "100%";
+              copia.classList.remove("ring-2");
+              nodo.appendChild(copia);
+            }}
+          />
+          <div
+            className="absolute w-52"
+            style={(() => {
+              const { caja, mio } = menuMensaje;
+              const alto = 3 * 48 + 8;
+              const abajo = caja.bottom + 8;
+              const cabeAbajo = abajo + alto <= window.innerHeight - 24;
+              const top = cabeAbajo ? abajo : Math.max(caja.top - 8 - alto, 72);
+              const horizontal = mio
+                ? { right: Math.max(12, window.innerWidth - caja.right) }
+                : { left: Math.max(12, caja.left) };
+              return { top, ...horizontal };
+            })()}
           >
-            <Copy className="h-4 w-4 text-[#526277]" />
-            {tChat("copy")}
-          </button>
+        <div role="menu" className="overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-[0_16px_36px_-18px_rgba(15,23,42,0.55)]">
+            {!mensajeDelMenu.deleted_at && !!mensajeDelMenu.body.trim() && (
+              <button type="button" role="menuitem" onClick={() => void copiarMensaje(mensajeDelMenu.body)} className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm font-bold text-[#162543] active:bg-[#f2f8fb]">
+                <Copy className="h-4 w-4 text-[#526277]" />{tChat("copy")}
+              </button>
+            )}
+            {puedeEditarDelMenu && (
+              <button type="button" role="menuitem" onClick={() => empezarEdicion(mensajeDelMenu)} className="flex w-full items-center gap-3 border-t border-[#eef2f6] px-4 py-3 text-left text-sm font-bold text-[#162543] active:bg-[#f2f8fb]">
+                <Pencil className="h-4 w-4 text-[#526277]" />{tChat("editMessage")}
+              </button>
+            )}
+            <button type="button" role="menuitem" onClick={() => { setMenuMensaje(null); setMensajeAEliminar(mensajeDelMenu.id); }} className="flex w-full items-center gap-3 border-t border-[#eef2f6] px-4 py-3 text-left text-sm font-bold text-red-600 active:bg-red-50">
+              <Trash2 className="h-4 w-4" />{tChat("deleteMessage")}
+            </button>
+          </div>
+          </div>
+        </div>,
+        document.body,
+      )}
+
+      {mensajeEliminable && createPortal(
+        <div className="app-modal-screen app-sheet-compact-screen fixed inset-0 z-[200] flex items-end justify-center" role="dialog" aria-modal="true" aria-label={tChat("deleteMessageTitle")}>
+          <div className="absolute inset-0 bg-[#071426]/45 backdrop-blur-[2px]" onClick={() => setMensajeAEliminar(null)} />
+          <div className="app-bottom-sheet app-sheet-compact relative z-10 w-full max-w-md rounded-t-[22px] bg-white pb-[calc(1rem+env(safe-area-inset-bottom))] pt-2 shadow-[0_-18px_48px_-24px_rgba(15,23,42,0.55)]">
+            <div className="flex items-center justify-between gap-3 px-5 pb-2 pt-2">
+              <p className="text-[16px] font-extrabold text-[#162543]">{tChat("deleteMessageTitle")}</p>
+              <button type="button" onClick={() => setMensajeAEliminar(null)} aria-label={tChat("cancel")} className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[#eef2f6] text-[#526277]">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            {puedeEliminarParaTodos && (
+              <button type="button" onClick={() => void eliminarMensaje(mensajeEliminable.id, "everyone")} className="flex w-full items-center gap-3 px-5 py-3.5 text-left text-[15px] font-bold text-red-600 active:bg-red-50">
+                <Trash2 className="h-5 w-5" />{tChat("deleteForEveryone")}
+              </button>
+            )}
+            <button type="button" onClick={() => void eliminarMensaje(mensajeEliminable.id, "me")} className="flex w-full items-center gap-3 px-5 py-3.5 text-left text-[15px] font-bold text-red-600 active:bg-red-50">
+              <Trash2 className="h-5 w-5" />{tChat("deleteForMe")}
+            </button>
+          </div>
         </div>,
         document.body,
       )}
@@ -1790,6 +2009,8 @@ export function DirectChatInbox() {
         </div>,
         document.body,
       )}
+
+      {hojaDeAcciones && createPortal(hojaDeAcciones, document.body)}
     </div>
   );
 }

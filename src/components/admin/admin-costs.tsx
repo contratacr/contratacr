@@ -49,8 +49,10 @@ const today = () => new Date().toISOString().slice(0, 10);
 
 function Tile({ label, value, hint, accent }: { label: string; value: string; hint?: string; accent?: boolean }) {
   return (
-    <div className={cn("rounded-xl border bg-white p-3", accent ? "border-[#009FD9]/40 bg-[#f0f9ff]" : "border-[#e5e7eb]")}>
-      <p className="text-xl font-bold leading-none tabular-nums text-[#0f172a] sm:text-2xl">{value}</p>
+    // min-w-0 + break-words: una cifra larga («$1,234.56 + ₡1,234,567») no
+    // cabe en media pantalla de teléfono y, sin corte, ensanchaba la página entera.
+    <div className={cn("min-w-0 rounded-xl border bg-white p-3", accent ? "border-[#009FD9]/40 bg-[#f0f9ff]" : "border-[#e5e7eb]")}>
+      <p className="break-words text-xl font-bold leading-tight tabular-nums text-[#0f172a] sm:text-2xl">{value}</p>
       <p className="mt-1.5 text-xs text-[#64748b]">{label}</p>
       {hint && <p className="text-[11px] text-[#94a3b8]">{hint}</p>}
     </div>
@@ -156,7 +158,7 @@ function Summary({ data }: { data: Payload }) {
         <p className="mt-2 text-[11px] text-[#94a3b8]">Cada barra suma las suscripciones activas ese mes más los movimientos registrados. Los colones se muestran junto a los dólares, no se convierten.</p>
       </section>
 
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-4 lg:grid-cols-2">
         <section className="rounded-2xl border border-[#e5e7eb] bg-white p-4">
           <h2 className="mb-3 text-sm font-bold text-[#0f172a]">La factura de cada mes</h2>
           <ul className="divide-y divide-[#eef2f6]">
@@ -201,7 +203,7 @@ function Technologies({ services, apply }: { services: CostServiceView[]; apply:
         return (
           <section key={category}>
             <h2 className="mb-2 text-xs font-bold uppercase tracking-wide text-[#64748b]">{COST_CATEGORY_LABELS[category]}</h2>
-            <div className="grid gap-3 lg:grid-cols-2">
+            <div className="grid grid-cols-[minmax(0,1fr)] gap-3 lg:grid-cols-2">
               {list.map((service) => <ServiceCard key={service.id} service={service} apply={apply} />)}
             </div>
           </section>
@@ -244,7 +246,7 @@ function ServiceCard({ service, apply }: { service: CostServiceView; apply: (wor
         <div><dt className="text-xs font-semibold text-[#64748b]">Si se pasa</dt><dd className="text-[#0f172a]">{service.limit.beyond}</dd></div>
       </dl>
       {editing ? (
-        <form onSubmit={save} className="mt-3 grid gap-3 sm:grid-cols-2">
+        <form onSubmit={save} className="mt-3 grid grid-cols-[minmax(0,1fr)] gap-3 sm:grid-cols-2">
           {!service.variable && (
             <>
               <label className="block text-xs font-semibold text-[#374151]">Al mes (USD)
@@ -347,7 +349,7 @@ function Ledger({ entries, apply }: { entries: CostEntry[]; apply: (work: () => 
           <button type="button" onClick={() => preset("video")} className="inline-flex h-8 items-center gap-1.5 rounded-full border border-[#e5e7eb] bg-[#f8fafc] px-3 text-xs font-semibold text-[#374151]"><Receipt className="h-3.5 w-3.5" /> Video · ₡20 000</button>
           <button type="button" onClick={() => pickService("meta-ads")} className="inline-flex h-8 items-center gap-1.5 rounded-full border border-[#e5e7eb] bg-[#f8fafc] px-3 text-xs font-semibold text-[#374151]"><Megaphone className="h-3.5 w-3.5" /> Gasto en Meta Ads</button>
         </div>
-        <form onSubmit={submit} className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <form onSubmit={submit} className="grid grid-cols-[minmax(0,1fr)] gap-3 sm:grid-cols-2 lg:grid-cols-3">
           <label className="block text-xs font-semibold text-[#374151]">Tipo
             <select value={form.kind} onChange={(e) => setForm({ ...form, kind: e.target.value as CostEntryKind })} className="mt-1 h-10 w-full rounded-lg border border-[#e5e7eb] bg-white px-3 text-sm">
               {(Object.keys(KIND_LABELS) as CostEntryKind[]).map((k) => <option key={k} value={k}>{KIND_LABELS[k]}</option>)}

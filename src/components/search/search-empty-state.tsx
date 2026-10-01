@@ -7,7 +7,7 @@ import { PanelEmptyState } from "@/components/ui/content-loading";
 /**
  * El vacío de /buscar, con el MISMO dibujo que el resto del app.
  *
- * Existe como componente de cliente porque `/buscar` es una página de servidor
+ * Existe como componente de cliente porque `/profesionales` es una página de servidor
  * y un icono no se puede pasar por las props a través de esa frontera; antes
  * por eso el vacío estaba copiado a mano y se había quedado con un mosaico de
  * 80px que empujaba el botón fuera de la pantalla.

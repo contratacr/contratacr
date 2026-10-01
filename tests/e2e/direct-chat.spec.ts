@@ -1,4 +1,5 @@
 import { expect, test } from "playwright/test";
+import { CITAS_ACTIVAS } from "../../src/lib/citas";
 import { apiJson, gotoOK, loginAs, resetAuth } from "./helpers";
 import { canRunSeededRegression, E2E_USERS, ensureRegressionSeed, regressionAdminClient, type RegressionSeedState } from "./seed";
 import { cleanupDisposableAccount, createDisposableAccount } from "./disposable-account";
@@ -230,6 +231,9 @@ test.describe("@seeded contextual direct chat", () => {
   });
 
   test("booking chat carries its context and rejects outsiders", async ({ page }) => {
+    // Las citas están apagadas (src/lib/citas.ts): no hay chat de cita que
+    // abrir. Vuelve a correr cuando se prendan.
+    test.skip(!CITAS_ACTIVAS, "Citas apagadas");
     const admin = regressionAdminClient();
     const { data: booking, error } = await admin.from("bookings").insert({ professional_id: seed.professionalId, client_id: seed.clientId, service_description: "E2E reparación contextual", status: "pending" }).select("id").single();
     if (error) throw error; bookingId = booking.id;

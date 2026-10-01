@@ -1327,7 +1327,8 @@
       "guides": "Guides",
       "notifications": "Notifications",
       "soporte": "Support",
-      "cuenta": "Account & security"
+      "cuenta": "Account & security",
+      "privacidad": "Privacy"
     },
     "home": {
       "useEyebrow": "Client panel",
@@ -1469,7 +1470,8 @@
       "photosDesc": "Success stories with photos that clients can see.",
       "availabilityDesc": "Hours, contact preferences and availability shown to clients.",
       "verificationDesc": "Identity and verification status.",
-      "accountDesc": "Email, password and account security."
+      "accountDesc": "Email, password and account security.",
+      "privacyDesc": "Who sees when you read your messages."
     },
     "completion": {
       "completeTitle": "Your profile is complete!",
@@ -2759,7 +2761,7 @@
     "yesResolved": "Yes, it's resolved",
     "noStillIssue": "No, I still have the problem",
     "confirmedResolved": "✓ You confirmed this case is resolved.",
-    "messagePlaceholder": "Write your message…",
+    "messagePlaceholder": "Write a message",
     "send": "Send",
     "sending": "Sending…",
     "sendError": "Couldn't send the message.",
@@ -2989,7 +2991,7 @@
     "step3Title": "Always up to date",
     "step3Body": "The padrón is updated periodically. If your case doesn't pass automatically, you can appeal and it's re-verified.",
     "disclaimerTitle": "Important notice",
-    "disclaimer": "ContrataCR is an <strong>intermediary platform</strong> that connects clients with service providers; it is not the service provider. The <strong>“Verified”</strong> badge only confirms the ID is real and the name matches official records. <strong>It does not guarantee or ensure the quality, outcome or completion of any work</strong>, and does not by itself prove that the person who registered is physically that person. Hiring happens directly between the client and the provider.",
+    "disclaimer": "ContrataCR is an <strong>intermediary platform</strong> that connects clients with service providers; it is not the service provider. The <strong>“Verified”</strong> badge only confirms the ID is real and the name matches official records. <strong>It does not guarantee or ensure the quality, outcome or completion of any work</strong>, and does not by itself prove that the person who registered is physically that person. Hiring happens directly between the client and the provider. To choose well, every profile lets you compare <strong>reviews, success stories, training, languages and years of experience</strong>.",
     "ctaVerified": "See professionals"
   },
   "contacto": {
@@ -3139,7 +3141,9 @@
     "groupEarlier": "Earlier",
     "loadErrorTitle": "We could not load your notifications",
     "loadErrorBody": "Check your connection and try again.",
-    "loadErrorRetry": "Try again"
+    "loadErrorRetry": "Try again",
+    "deletedToast": "Notification deleted",
+    "undo": "Undo"
   },
   "projects": {
     "title": "Tell us what you need",
@@ -3553,7 +3557,7 @@
     "faq1Q": "How do I start offering services?",
     "faq1A": "Click 'Offer my services' in the navigation bar. You can sign up with your email or with Google. First you choose your services and work areas; then you complete your photo, description, and profile details.",
     "faq2Q": "How is an ID verified?",
-    "faq2A": "We validate identification against official records when applicable. National and legal-entity IDs follow the flow for their type; DIMEX, NITE, and special cases may require review. The badge confirms identity, not the quality of the work.",
+    "faq2A": "We validate identification against official records when applicable. National and legal-entity IDs follow the flow for their type; DIMEX, NITE, and special cases may require review. The badge confirms identity, not the quality of the work. Every profile lets you compare reviews from other clients, success stories, training and certifications, languages, years of experience, areas and a reference price. That way you choose with information.",
     "faq3Q": "How do I find professionals?",
     "faq3A": "Use the search bar on the home page or Find professionals. You can search by service, province, and canton, and sort by rating. Search understands synonyms: typing 'nanny' can also find childcare professionals.",
     "faq4Q": "How do I coordinate the service?",
@@ -3586,7 +3590,9 @@
     "faq13Q": "Can I message a professional without giving out my number?",
     "faq13A": "Yes. Besides WhatsApp and phone, ContrataCR has its own messages: you write from their profile and the conversation stays in the Messages section of your dashboard. They only see your number if you choose to share it.",
     "faq14Q": "How do I delete my account?",
-    "faq14A": "Open your dashboard, go to My profile and look for Delete account. We explain what gets deleted and what is kept before you confirm. If you would rather we do it, open a case in the Support centre."
+    "faq14A": "Open your dashboard, go to My profile and look for Delete account. We explain what gets deleted and what is kept before you confirm. If you would rather we do it, open a case in the Support centre.",
+    "faq15Q": "How do I choose a good professional? Does ContrataCR guarantee the work?",
+    "faq15A": "ContrataCR gives you what you need to compare: reviews from other clients, success stories, training and certifications, languages, years of experience, areas and a reference price. Read the reviews, look at success stories on jobs like yours and message two or three professionals. You agree on price, timing and any warranty on the work directly with the professional: put it in writing before starting. If something goes wrong, leave an honest review and, if there was deceit or abuse, report the profile."
   },
   "atraerClientes": {
     "eyebrow": "For professionals",
@@ -3881,7 +3887,32 @@
     "blockedTitle": "This conversation is blocked",
     "blockedMineHint": "Neither of you can write. Unblocking brings it back to your inbox; the report stays under review.",
     "blockedOtherHint": "You can't write here. If you think this is a mistake, write to soporte@contratacr.com.",
-    "unblockFailed": "Could not unblock."
+    "unblockFailed": "Could not unblock.",
+    "markRead": "Read",
+    "markUnread": "Unread",
+    "more": "More",
+    "reportAndBlock": "Report and block",
+    "cancel": "Cancel",
+    "editMessage": "Edit",
+    "editingMessage": "Editing message",
+    "edited": "Edited",
+    "deleteMessage": "Delete",
+    "deleteForEveryone": "Delete for everyone",
+    "deleteForMe": "Delete for me",
+    "deleteMessageTitle": "Delete message?",
+    "messageDeleted": "This message was deleted",
+    "youDeletedMessage": "You deleted this message",
+    "cancelEdit": "Cancel editing",
+    "saveEdit": "Save",
+    "editFailed": "Could not edit the message.",
+    "deleteMessageFailed": "Could not delete the message.",
+    "sending": "Sending…",
+    "sent": "Sent",
+    "read": "Read",
+    "archivedEmptyTitle": "No archived conversations",
+    "archivedEmptyHint": "Archive a chat by swiping it left.",
+    "delivered": "Delivered",
+    "seenAt": "Seen {hora}"
   },
   "bottomNav": {
     "search": "Professionals",
@@ -3890,7 +3921,28 @@
     "jobs": "Jobs",
     "aria": "App navigation",
     "quotes": "Quotes",
-    "projects": "Projects"
+    "projects": "Projects",
+    "searchAria": "Search professionals",
+    "create": "Create",
+    "createTitle": "What do you want to post?",
+    "notifications": "Notifications",
+    "panel": "My dashboard",
+    "close": "Close",
+    "createProject": "Post a project",
+    "createProjectDesc": "Say what you need and professionals message you",
+    "createDealDesc": "Post a deal or discount on your service",
+    "createJobDesc": "Find staff for your business",
+    "createOffer": "Offer my services",
+    "createOfferDesc": "Create your profile and get clients",
+    "createCase": "Post a success story",
+    "createCaseDesc": "Show a job you did",
+    "createProjectAsk": "What do you need?",
+    "tileProject": "Project",
+    "tileDeal": "Promotion",
+    "tileJob": "Job",
+    "createDeal": "Post a deal",
+    "createJob": "Post a job",
+    "forPros": "For professionals"
   },
   "serviceLanding": {
     "title": "{category} in {place}",
@@ -4246,7 +4298,8 @@
     "allPromotions": "See all promotions",
     "allJobs": "See all jobs",
     "backToProjects": "Back to projects",
-    "allProjects": "See all projects"
+    "allProjects": "See all projects",
+    "backToNotifications": "Back to notifications"
   },
   "tableroBuscador": {
     "empleos": "Search jobs",
@@ -4296,5 +4349,10 @@
     "promocion": "Promotion",
     "empleo": "Job",
     "proyectoSinTitulo": "A client is looking for a professional"
+  },
+  "accountPrivacy": {
+    "readReceipts": "Read receipts",
+    "readReceiptsHelp": "If you turn this off, others won't see when you read their messages and you won't see when they read yours.",
+    "readReceiptsError": "Could not save. Please try again."
   }
 }

@@ -44,7 +44,7 @@ async function clsAlRecargar(page: Page, ruta: string) {
 test("/buscar no salta al cargar", async ({ page }) => {
   test.setTimeout(120_000);
   await page.addInitScript(medir);
-  const r = await clsAlRecargar(page, "/buscar");
+  const r = await clsAlRecargar(page, "/profesionales");
   expect(r.cls, `lo que más se movió: ${r.peor}`).toBeLessThan(UMBRAL);
 });
 

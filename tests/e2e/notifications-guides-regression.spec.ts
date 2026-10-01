@@ -3,7 +3,7 @@ import { expect, test, type Page } from "playwright/test";
 import esMessages from "../../messages/es.json";
 import enMessages from "../../messages/en.json";
 import { cleanupDisposableAccount, createDisposableAccount, type DisposableAccount } from "./disposable-account";
-import { expectNoHorizontalOverflow, expectNoRawI18nKeys, gotoOK, loginAs } from "./helpers";
+import { expectNoHorizontalOverflow, expectNoRawI18nKeys, gotoOK, loginAs, isMobileProject, waitForInteractivePage } from "./helpers";
 import { canRunSeededRegression, ensureRegressionSeed, regressionAdminClient } from "./seed";
 
 type Locale = "es" | "en";
@@ -22,11 +22,11 @@ const GUIDE_EXPECTATIONS: GuideExpectation[] = [
   { id: "clientProjects", stepCount: 3, target: { kind: "tab", value: "sent_projects" } },
   { id: "clientSaved", stepCount: 4, target: { kind: "tab", value: "saved" } },
   { id: "clientProfile", stepCount: 3, target: { kind: "tab", value: "profile" } },
-  { id: "searchServices", stepCount: 5, target: { kind: "path", value: "/buscar" } },
+  { id: "searchServices", stepCount: 5, target: { kind: "path", value: "/profesionales" } },
   { id: "jobsGuide", stepCount: 4, target: { kind: "path", value: "/empleos" } },
   { id: "offersGuide", stepCount: 4, target: { kind: "path", value: "/promociones" } },
   { id: "notificationsGuide", stepCount: 5, target: { kind: "tab", value: "notifications" } },
-  { id: "reviewsGuide", stepCount: 4, target: { kind: "path", value: "/buscar" } },
+  { id: "reviewsGuide", stepCount: 4, target: { kind: "path", value: "/profesionales" } },
   { id: "supportGuide", stepCount: 3, target: { kind: "tab", value: "soporte" } },
   { id: "accountSecurityGuide", stepCount: 4, target: { kind: "tab", value: "cuenta" } },
   { id: "professionalPanel", stepCount: 4, target: { kind: "tab", value: "publicaciones" } },
@@ -59,10 +59,16 @@ async function openGuides(page: Page, locale: Locale) {
   const buttonName = locale === "en" ? "Guides" : "Guías";
   const openButton = page.getByRole("button", { name: buttonName, exact: true }).filter({ visible: true }).first();
   await expect(openButton).toBeVisible({ timeout: 30_000 });
-  await openButton.click();
+  // El botón llega pintado del servidor antes de tener vida: un toque antes de
+  // la hidratación no hace nada. Se espera a la página interactiva y, si aun
+  // así la ventana no abrió, se toca otra vez (una persona también lo haría).
+  await waitForInteractivePage(page);
   // Guías es una ventana sobre el panel, no una sección con dirección propia.
   const ventana = page.getByRole("dialog").filter({ visible: true }).first();
-  await expect(ventana).toBeVisible();
+  await expect(async () => {
+    if (!(await ventana.isVisible())) await openButton.click();
+    await expect(ventana).toBeVisible({ timeout: 5_000 });
+  }).toPass({ timeout: 30_000 });
   return ventana;
 }
 
@@ -205,7 +211,7 @@ test.describe("@notifications-guides disposable bilingual UI regression", () => 
         // Abrir «nuevo proyecto» lleva al tablero de proyectos y deja el aviso leido.
         const projectRow = list.locator(".ccr-notifications-items > li").filter({ hasText: seeded.projectTitle });
         await projectRow.locator("div[role='button']").first().click();
-        await page.waitForURL(new RegExp(`/${locale}/proyectos`), { waitUntil: "domcontentloaded" });
+        await page.waitForURL(new RegExp(`${locale === "es" ? "" : `/${locale}`}/proyectos`), { waitUntil: "domcontentloaded" });
         await expect.poll(async () => {
           const rows = await notificationRows([seeded.projectId]);
           return rows[0]?.read;
@@ -215,8 +221,9 @@ test.describe("@notifications-guides disposable bilingual UI regression", () => 
         // El «...» general ya no vive en la cabecera de la lista: se movió a la
         // misma fila que «Nuevas», el primer rótulo, para que no quedara suelto
         // a otra altura. Se busca dentro de la lista, no en una fila concreta.
-        await list.getByRole("button", { name: copy.globalOptions, exact: true }).first().click();
-        await page.getByRole("menuitem", { name: copy.markAll, exact: true }).click();
+        // Desde el 29-sep entrar a Notificaciones las marca todas leídas (como
+        // Facebook): «Marcar todas como leídas» solo sale si queda alguna sin
+        // leer, y aquí ya no queda ninguna. Lo que se comprueba es el efecto.
         await expect.poll(async () => {
           const rows = await notificationRows(seeded.ids);
           return rows.length === seeded.ids.length && rows.every((row) => row.read);
@@ -227,16 +234,19 @@ test.describe("@notifications-guides disposable bilingual UI regression", () => 
         await expect(list.locator(".ccr-notifications-items > li [data-unread='true']")).toHaveCount(0);
 
         const applicationRow = list.locator(".ccr-notifications-items > li").filter({ hasText: seeded.reviewerName });
-        // The row menu lives inside the row on the web and in a portal inside
-        // the native shell, so locate its item by role wherever it renders.
-        await applicationRow.getByRole("button", { name: copy.rowOptions, exact: true }).click();
-        const deleteOne = page.getByRole("menuitem", { name: copy.deleteOne, exact: true }).filter({ visible: true }).first();
-        await expect(deleteOne).toBeVisible();
-        await deleteOne.click();
-        await expect.poll(async () => (await notificationRows([seeded.reviewId])).length, {
-          message: "Deleting one notification should remove only that row",
-        }).toBe(0);
-        await expect(applicationRow).toHaveCount(0);
+        // En el teléfono (web) la fila no lleva menú: se borra deslizando, y
+        // eso lo cubre la suite móvil. El menú de fila existe en computadora
+        // y, en un portal, dentro de la app nativa.
+        if (!isMobileProject(test.info())) {
+          await applicationRow.getByRole("button", { name: copy.rowOptions, exact: true }).click();
+          const deleteOne = page.getByRole("menuitem", { name: copy.deleteOne, exact: true }).filter({ visible: true }).first();
+          await expect(deleteOne).toBeVisible();
+          await deleteOne.click();
+          await expect.poll(async () => (await notificationRows([seeded.reviewId])).length, {
+            message: "Deleting one notification should remove only that row",
+          }).toBe(0);
+          await expect(applicationRow).toHaveCount(0);
+        }
 
         await list.getByRole("button", { name: copy.globalOptions, exact: true }).first().click();
         await page.getByRole("menuitem", { name: copy.deleteAll, exact: true }).click();
@@ -328,8 +338,8 @@ test.describe("@notifications-guides disposable bilingual UI regression", () => 
           .poll(() => {
             const url = new URL(page.url());
             return guide.target.kind === "path"
-              ? url.pathname === `/${locale}${guide.target.value}`
-              : url.pathname === `/${locale}/dashboard/profesional` && url.searchParams.get("tab") === guide.target.value;
+              ? url.pathname === `${locale === "es" ? "" : `/${locale}`}${guide.target.value}`
+              : url.pathname === `${locale === "es" ? "" : `/${locale}`}/dashboard/profesional` && url.searchParams.get("tab") === guide.target.value;
           }, {
             message: `Guide "${guide.id}" should open its documented ${locale} destination`,
             timeout: 30_000,
@@ -340,7 +350,7 @@ test.describe("@notifications-guides disposable bilingual UI regression", () => 
       await gotoOK(page, `/${locale}/dashboard/profesional?tab=home`);
       const seccionSoporte = await openGuides(page, locale);
       await seccionSoporte.getByRole("button", { name: messages.supportCta, exact: true }).click();
-      await page.waitForURL((url) => url.pathname === `/${locale}/dashboard/profesional` && url.searchParams.get("tab") === "soporte", { waitUntil: "domcontentloaded" });
+      await page.waitForURL((url) => url.pathname === `${locale === "es" ? "" : `/${locale}`}/dashboard/profesional` && url.searchParams.get("tab") === "soporte", { waitUntil: "domcontentloaded" });
       await expectNoRawI18nKeys(page);
       await expectNoHorizontalOverflow(page);
       await expect(page.locator("body")).not.toContainText(/Application error|Internal Server Error/i);

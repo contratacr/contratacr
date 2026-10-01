@@ -8,7 +8,7 @@ import { lockBodyScroll } from "@/lib/body-scroll-lock";
 import { Fragment, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useAvisosSinLeer } from "@/hooks/use-avisos-sin-leer";
 import { useLocale, useTranslations } from "next-intl";
-import { Headset, ArrowLeft, SendHorizontal, Shield, Plus, Clock3, CheckCircle2 } from "lucide-react";
+import { Headset, ArrowLeft, Shield, Plus, Clock3, CheckCircle2 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { createClient } from "@/lib/supabase/client";
 import { SupportModal } from "@/components/support/support-modal";
@@ -17,7 +17,8 @@ import { StatusFilterTabs } from "@/components/dashboard/status-filter-tabs";
 import { Button } from "@/components/ui/button";
 import { SectionHeadline } from "@/components/dashboard/section-headline";
 import { supportTicketRef } from "@/lib/support-ticket";
-import { LONG_TEXT_MAX_LENGTH, limitText } from "@/lib/text-limits";
+import { AdjuntosDelMensaje, CompositorDeSoporte } from "@/components/support/compositor-de-soporte";
+import { conservarEnlaces, type AdjuntoDeSoporte } from "@/lib/support/adjuntos";
 import { useAppDialog } from "@/hooks/use-app-dialog";
 import { PanelEmptyState, PanelFilterEmpty, PanelListSkeleton } from "@/components/ui/content-loading";
 import { getDashboardCache, setDashboardCache } from "@/lib/dashboard-prefetch-cache";
@@ -41,6 +42,7 @@ type Message = {
   sender_name?: string | null;
   body: string;
   created_at: string;
+  attachments?: AdjuntoDeSoporte[] | null;
 };
 
 const STATUS_COLOR: Record<string, string> = {
@@ -120,13 +122,6 @@ function useAltoDisponible(ref: { current: HTMLDivElement | null }, activo: bool
   return alto;
 }
 
-function ajustarAlto(textarea: HTMLTextAreaElement | null) {
-  if (!textarea) return;
-  textarea.style.height = "auto";
-  const alto = Math.min(textarea.scrollHeight, 144);
-  textarea.style.height = `${alto}px`;
-  textarea.style.overflowY = textarea.scrollHeight > 144 ? "auto" : "hidden";
-}
 
 export function SupportTickets({
   initialTicketId,
@@ -183,7 +178,6 @@ export function SupportTickets({
   const [ticket, setTicket] = useState<Ticket | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [threadLoading, setThreadLoading] = useState(false);
-  const [reply, setReply] = useState("");
   const [sending, setSending] = useState(false);
   // In-panel "Contactar soporte" opens the support form as a MODAL (no navigation
   // away from the panel). On submit we close it and reload the list so the new
@@ -318,7 +312,7 @@ export function SupportTickets({
       // fall back to the list gracefully instead of a stuck loader.
       .then(({ ticket, messages }) => {
         if (!ticket) { setOpenId(null); return; }
-        setTicket(ticket); setMessages(messages ?? []);
+        setTicket(ticket); setMessages((previos) => conservarEnlaces(previos, messages ?? []));
         // Reflect the ticket's ACTUAL status in the filter (so an email deep-link to
         // an in-progress conversation lands in the in-progress view, not pending).
         if (ticket.status) setFilter(ticket.status);
@@ -356,9 +350,8 @@ export function SupportTickets({
     });
   }, [initialNewSupport]);
 
-  async function sendReply() {
-    const texto = reply.trim();
-    if (!texto || !openId) return;
+  async function sendReply(texto: string, adjuntos: AdjuntoDeSoporte[]): Promise<boolean> {
+    if ((!texto && !adjuntos.length) || !openId) return false;
     // El mensaje aparece de una vez, como en Mensajes: la burbuja se pinta
     // antes de la ida y vuelta y luego se reemplaza por la fila guardada. Si
     // el envío falla, se quita y el texto vuelve al compositor.
@@ -369,14 +362,14 @@ export function SupportTickets({
       sender_name: null,
       body: texto,
       created_at: new Date().toISOString(),
+      attachments: adjuntos,
     };
     setMessages((previos) => [...previos, provisional]);
-    setReply("");
     setSending(true);
     const res = await fetch("/api/support", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ticketId: openId, body: texto }),
+      body: JSON.stringify({ ticketId: openId, body: texto, attachments: adjuntos.map((a) => ({ path: a.path, name: a.name, type: a.type, size: a.size })) }),
     }).catch(() => null);
     const data = res ? await res.json().catch(() => ({})) : {};
     setSending(false);
@@ -384,18 +377,21 @@ export function SupportTickets({
       if (data?.message) {
         setMessages((previos) => {
           const sinProvisional = previos.filter((m) => m.id !== idProvisional);
-          return sinProvisional.some((m) => m.id === data.message.id) ? sinProvisional : [...sinProvisional, data.message];
+          // La foto recién subida ya está en pantalla: se queda con su enlace.
+          const guardado = conservarEnlaces([provisional], [data.message as Message])[0];
+          return sinProvisional.some((m) => m.id === guardado.id) ? sinProvisional : [...sinProvisional, guardado];
         });
         if (data.status) setTicket((actual) => actual ? { ...actual, status: data.status } : actual);
       } else {
         void openTicket(openId, { silencioso: true });
       }
-    } else {
-      setMessages((previos) => previos.filter((m) => m.id !== idProvisional));
-      setReply(texto);
-      void showMessage({ title: errorTitle, description: t("sendError"), tone: "danger" });
+      return true;
     }
+    setMessages((previos) => previos.filter((m) => m.id !== idProvisional));
+    void showMessage({ title: errorTitle, description: t("sendError"), tone: "danger" });
+    return false;
   }
+
 
   async function ticketAction(action: "confirm" | "reopen") {
     if (!openId) return;
@@ -507,8 +503,8 @@ export function SupportTickets({
                 SOLA —en sombra— solo cuando hay conversacion por encima o por
                 debajo. Con un mensaje no hay ninguna linea; con veinte, las
                 dos. */}
-            <header className={`grid min-h-[68px] shrink-0 grid-cols-[40px_minmax(0,1fr)] items-center gap-2 bg-white px-3 py-2.5 transition-shadow sm:grid-cols-[44px_minmax(0,1fr)] sm:gap-3 sm:px-5`}>
-              <button onClick={closeThread} className="grid h-10 w-10 shrink-0 place-items-center rounded-full text-[#526277] transition active:bg-[#eef6fb]" aria-label={t("backToTickets")}>
+            <header className={`grid min-h-[65px] shrink-0 grid-cols-[40px_minmax(0,1fr)] items-center gap-2 border-b border-[#e5e7eb] bg-white px-3 py-2.5 shadow-[0_8px_22px_-24px_rgba(15,23,42,0.45)] sm:grid-cols-[44px_minmax(0,1fr)] sm:gap-3 sm:px-5`}>
+              <button onClick={closeThread} className="grid h-10 w-10 shrink-0 place-items-center rounded-full text-[#162543] transition active:bg-[#eef6fb]" aria-label={t("backToTickets")}>
                 <ArrowLeft className="h-5 w-5" />
               </button>
               <div className="flex min-w-0 items-center gap-3">
@@ -528,7 +524,7 @@ export function SupportTickets({
             {/* El primer mensaje ARRIBA, como en un chat: Isaac lo pidio dos
                 veces y la segunda con razon. Apoyar el bloque sobre el campo
                 dejaba el hueco encima y se leia como una lista al reves. */}
-            <div ref={messagesRef} className="ccr-support-thread-messages flex min-h-0 flex-1 flex-col gap-1.5 overflow-y-auto overscroll-contain bg-white px-4 py-5 sm:px-6">
+            <div ref={messagesRef} className="ccr-support-thread-messages flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto overscroll-contain bg-[#f3f7fa] px-4 py-5 sm:px-6">
               {/* Lo único que espera son los mensajes, y esperan con forma de
                   mensaje: dos globos grises, uno de cada lado. */}
               {threadLoading && messages.length === 0 && (
@@ -558,13 +554,16 @@ export function SupportTickets({
                       deja de leerse como un mensaje y parece un parrafo de una
                       pagina. La esquina del lado de quien habla va recta, que
                       es lo que hace de pico. */}
-                  <div className={`max-w-[86%] rounded-[18px] sm:max-w-lg px-4 py-2.5 text-[15px] leading-relaxed ${m.sender_role === "user" ? "rounded-br-md bg-[#009FD9] text-white" : "rounded-bl-md bg-[#eef1f5] text-[#162543]"}`}>
+                  {/* El MISMO globo que Mensajes: el propio azul, el de soporte blanco
+                      con borde, sobre el lienzo gris azulado. */}
+                  <div className={`min-w-[86px] max-w-[86%] rounded-[18px] px-3.5 py-2.5 text-[14px] leading-relaxed shadow-[0_4px_12px_-8px_rgba(15,23,42,0.55)] sm:max-w-lg ${m.sender_role === "user" ? "rounded-br-md bg-[#009FD9] font-medium text-white" : "rounded-bl-md border border-[#e5e7eb] bg-white text-[#25364d]"}`}>
                     {/* EN EL PROPIO GLOBO NO SE FIRMA. Un globo azul a la
                         derecha ya dice «yo» —es el idioma de cualquier chat— y
                         «Tu» con su monigote encima ocupaba mas alto que el
                         mensaje. De soporte SI se dice quien contesta, que ahi
                         no es obvio. La hora baja al pie del globo, chiquita. */}
-                    <p className="whitespace-pre-wrap">{m.body}</p>
+                    <AdjuntosDelMensaje adjuntos={m.attachments} propio={m.sender_role === "user"} />
+                    {m.body && <p className="whitespace-pre-wrap">{m.body}</p>}
                     <div className={`mt-1 text-[11px] leading-none ${m.sender_role === "user" ? "text-right text-white/65" : "text-[#8fa1b6]"}`}>{hora(m.created_at)}</div>
                   </div>
                 </div>
@@ -593,74 +592,13 @@ export function SupportTickets({
               </div>
             )}
 
-            {/* El campo y el boton comparten caja: una sola pieza redonda con
-                el boton adentro, como Intercom o Messenger. Sueltos, la
-                cascara blanca de abajo se leia como una franja vacia con dos
-                cosas encima. */}
-            <div className={`ccr-support-thread-composer shrink-0 bg-white px-3 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-3 transition-shadow sm:px-6 sm:pb-5`}>
-              {/* Pildora RELLENA, sin linea alrededor, como el «Aa» de
-                  Messenger: sobre un lienzo blanco, un campo con borde era una
-                  caja mas. El foco lo dice un anillo suave, no un borde.
-                  NADA DE CLASES ARBITRARIAS ESTRENADAS AQUI. `rounded-3xl` es
-                  24 px y es del nucleo de Tailwind; el gris #f3f4f6 ya se usa
-                  en 70 sitios. Con `rounded-[24px]` y #f0f2f5 —valores que no
-                  aparecian en ningun otro archivo— el campo salia cuadrado o
-                  blanco segun lo que tuviera la hoja en cache del navegador:
-                  al editar se veia bien, porque la recarga en caliente inyecta
-                  lo nuevo, y al REFRESCAR volvia el CSS viejo sin esas reglas.
-                  Con utilidades que el proyecto ya usa, eso no puede pasar.
-                  El anillo de foco tambien: `focus-within:ring-[#009FD9]/20`
-                  es el que ya lleva el buscador del navbar. Con `/30`, que no
-                  usaba nadie, el navegador caia al color por defecto del
-                  anillo —que en Tailwind v4 es el color del texto— y al hacer
-                  foco aparecia un contorno NEGRO grueso que ademas parecia
-                  cortar el boton de mandar. */}
-              <div className="flex items-end gap-2 rounded-3xl bg-[#f3f4f6] p-1 pl-2 transition focus-within:ring-2 focus-within:ring-[#009FD9]/20">
-                <textarea
-                  value={reply}
-                  onChange={(e) => {
-                    setReply(limitText(e.target.value, LONG_TEXT_MAX_LENGTH));
-                    ajustarAlto(e.currentTarget);
-                  }}
-                  onKeyDown={(e) => {
-                    // Mismo trato que en Mensajes: Enter manda, Mayús+Enter salta
-                    // de línea. Antes Enter solo abría un renglón y había que ir
-                    // al botón, que es lo contrario a lo que hace cualquier chat.
-                    if (e.key === "Enter" && !e.shiftKey) {
-                      e.preventDefault();
-                      if (!sending && reply.trim()) void sendReply();
-                    }
-                  }}
-                  onFocus={() => window.requestAnimationFrame(() => keepLatestMessageVisible())}
-                  maxLength={LONG_TEXT_MAX_LENGTH}
-                  rows={1}
-                  placeholder={ticket.status === "resolved" ? t("reopenPlaceholder") : t("messagePlaceholder")}
-                  className="max-h-36 min-h-10 min-w-0 flex-1 resize-none overflow-hidden bg-transparent px-3.5 py-2 text-[15px] leading-6 outline-none"
-                />
-                {/* SIN CIRCULO RELLENO. Un circulo azul de 36 px dentro de una
-                      pildora gris pesa mas que el propio campo, y apagado —un
-                      circulo GRIS lleno— se lee como un boton muerto. Telegram,
-                      Messenger e Intercom usan el icono solo: apagado en gris,
-                      y en color en cuanto hay algo que mandar. Asi el boton
-                      avisa de que se puede enviar en vez de estar siempre ahi
-                      pidiendo atencion. El area de toque sigue siendo de 36 px,
-                      que es lo que importa para el dedo. */}
-                <button
-                  onClick={sendReply}
-                  disabled={sending || !reply.trim()}
-                  // EL COLOR SE DECIDE EN JAVASCRIPT, no con la variante
-                  // `enabled:`. `enabled:text-[#009FD9]`, `hover:text-[#008fca]`
-                  // y `hover:bg-[#e5e7eb]` eran las unicas veces que esas
-                  // clases aparecian en el proyecto, y una clase estrenada
-                  // puede no estar en el CSS que sirve el servidor hasta
-                  // reiniciarlo: al refrescar, el icono se quedaba sin color y
-                  // heredaba el del texto. Las dos que quedan —#009FD9 en 105
-                  // archivos y #68778d en 98— existen con seguridad.
-                  className={`grid h-11 w-11 shrink-0 place-items-center rounded-full text-white transition-colors disabled:cursor-not-allowed ${reply.trim() && !sending ? "bg-[#009FD9] hover:bg-[#008fca]" : "bg-[#d8e4e9]"}`} aria-label={sending ? t("sending") : t("send")}>
-                  {sending ? <Clock3 className="h-5 w-5 animate-spin" /> : <SendHorizontal className="h-5 w-5" />}
-                </button>
-              </div>
-            </div>
+            {/* La misma barra de Mensajes: clip, campo con borde y enviar. */}
+            <CompositorDeSoporte
+              key={ticket.id}
+              ticketId={ticket.id}
+              placeholder={ticket.status === "resolved" ? t("reopenPlaceholder") : t("messagePlaceholder")}
+              onEnviar={sendReply}
+            />
           </div>
         )}
       </div>

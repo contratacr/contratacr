@@ -8,6 +8,11 @@ async function marcarContactoPrevio(page: import("playwright/test").Page, info: 
   await page.context().addCookies([{ name: "ccr_whatsapp_contact", value: "e2e", url: base }]);
 }
 
+// La tarjeta solo sale en pantallas tranquilas (portada, Buscar, panel,
+// Mensajes) y unos segundos después de llegar: se prueba en la portada y se
+// le da tiempo.
+const ESPERA = { timeout: 15_000 };
+
 const followUp = {
   id: "00000000-0000-4000-8000-000000000134",
   professional_id: "00000000-0000-4000-8000-000000000001",
@@ -30,9 +35,9 @@ test("contact follow-up is readable and dismissible without blocking the page", 
   });
 
   await marcarContactoPrevio(page, test.info());
-  await page.goto("/como-funciona");
+  await page.goto("/");
   const dialog = page.getByRole("dialog", { name: "Seguimiento del servicio" });
-  await expect(dialog).toBeVisible();
+  await expect(dialog).toBeVisible(ESPERA);
   await expect(dialog).toContainText("Contactaste a Redes Bahía por WhatsApp");
   await expect(dialog).toContainText("¿Llegaste a contratarlo?");
   await expect(dialog).toContainText("Reparación de computadoras");
@@ -73,9 +78,9 @@ test("contact follow-up shows pending confirmations one at a time", async ({ pag
   });
 
   await marcarContactoPrevio(page, test.info());
-  await page.goto("/como-funciona");
+  await page.goto("/");
   const dialog = page.getByRole("dialog", { name: "Seguimiento del servicio" });
-  await expect(dialog).toContainText("1 de 2 confirmaciones pendientes");
+  await expect(dialog).toContainText("1 de 2 confirmaciones pendientes", ESPERA);
   await expect(dialog).toContainText("Redes Bahía");
 
   // Con una respuesta de verdad («No») se pasa a la siguiente: la persona está
@@ -103,7 +108,7 @@ test("«Aún no» deja de preguntar en esa visita aunque queden pendientes", asy
   });
 
   await marcarContactoPrevio(page, test.info());
-  await page.goto("/como-funciona");
+  await page.goto("/");
   const dialog = page.getByRole("dialog", { name: "Seguimiento del servicio" });
   await expect(dialog).toContainText("Redes Bahía");
   await dialog.getByRole("button", { name: "Aún no" }).click();
@@ -129,8 +134,8 @@ test("contact follow-up names phone and email contact methods", async ({ page })
     });
 
     await marcarContactoPrevio(page, test.info());
-  await page.goto("/como-funciona");
-    await expect(page.getByRole("dialog", { name: "Seguimiento del servicio" })).toContainText(method.text);
+  await page.goto("/");
+    await expect(page.getByRole("dialog", { name: "Seguimiento del servicio" })).toContainText(method.text, ESPERA);
     await page.unroute("**/api/contact/follow-up");
   }
 });
@@ -145,8 +150,8 @@ test("an anonymous review intent continues through login", async ({ page }) => {
   });
 
   await marcarContactoPrevio(page, test.info());
-  await page.goto("/como-funciona");
-  await page.getByRole("button", { name: "Sí, dejar una reseña" }).click();
+  await page.goto("/");
+  await page.getByRole("button", { name: "Sí, dejar una reseña" }).click(ESPERA);
   await expect(page).toHaveURL(/\/login$/);
 });
 
@@ -154,7 +159,7 @@ test("an anonymous review intent continues through login", async ({ page }) => {
 // reseña dando solo el nombre. Lo que se protege es la cadena: sin la cookie del
 // contacto, la ruta no acepta nada.
 test("la reseña sin cuenta exige la cookie del contacto", async ({ page }) => {
-  await page.goto("/como-funciona");
+  await page.goto("/");
   const sinCookie = await page.evaluate(async () => {
     const res = await fetch("/api/reviews", {
       method: "POST",

@@ -14,7 +14,7 @@ export default async function NotFound() {
       message={t("desc")}
     >
       <Link href="/" className={errorPrimaryBtn}>{t("home")}</Link>
-      <Link href="/buscar" className={errorSecondaryBtn}>
+      <Link href="/profesionales" className={errorSecondaryBtn}>
         <Search className="h-4 w-4" /> {t("search")}
       </Link>
     </ErrorScreen>

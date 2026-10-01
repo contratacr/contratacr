@@ -52,6 +52,11 @@ test("el gemelo del buscador viene del servidor y calza al píxel", async ({ pag
     let distintos = 0;
     for (let i = 0; i < a.length; i++) if (Math.abs(a[i] - b[i]) > 24) distintos++;
 
+    if (distintos > 0) {
+      // Para ver en el reporte QUÉ cambió, no solo cuántos píxeles.
+      await testInfo.attach(`${ruta.replace(/\W+/g, "-")}-de-verdad.png`, { body: conElDeVerdad, contentType: "image/png" });
+      await testInfo.attach(`${ruta.replace(/\W+/g, "-")}-gemelo.png`, { body: soloElGemelo, contentType: "image/png" });
+    }
     expect(distintos, `${ruta}: ${distintos} píxeles cambian cuando el buscador de verdad tapa al gemelo`).toBe(0);
   }
 });

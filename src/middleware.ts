@@ -1,7 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { categorySlug, idDesdeDireccion } from "@/lib/data/category-slug";
 import { getProvinceById } from "@/lib/data/cr-geography";
-import { filtrosDeRuta, rutaDeBusqueda } from "@/lib/buscar-url";
+import { RAIZ_DE_BUSQUEDA, SIN_SERVICIO, esProvinciaDeRuta, filtrosDeRuta, rutaDeBusqueda } from "@/lib/buscar-url";
 import { RUTAS_DEL_SITIO } from "@/lib/site-routes";
 import { idiomaDeRuta, rutaConIdioma, sinPrefijoDeIdioma } from "@/lib/prefijo-de-idioma";
 import createIntlMiddleware from "next-intl/middleware";
@@ -36,11 +36,62 @@ const PUBLIC_PREFIXES = [
 // convention introduced by Next.js 16. Keep this request boundary in the legacy
 // Edge Middleware convention until the adapter supports Node Proxy. It still runs
 // before every matched route: i18n locale routing + the Supabase auth gate.
+// UNA REESCRITURA NUESTRA SALTA EL MIDDLEWARE DE next-intl, que es el que le
+// dice a la página en qué idioma está (encabezado X-NEXT-INTL-LOCALE). Sin él la
+// página cae al español: /en/profesionales/… salía con «3 profesionales en
+// Santa Bárbara», los filtros y hasta el menú de abajo en español. El idioma
+// sale de la ruta de destino (/es/… o /en/…).
+function reescribirConIdioma(request: NextRequest, destino: URL) {
+  const idioma = /^\/(en|es)(?=\/|$)/.exec(destino.pathname)?.[1] ?? "es";
+  const encabezados = new Headers(request.headers);
+  encabezados.set("X-NEXT-INTL-LOCALE", idioma);
+  return NextResponse.rewrite(destino, { request: { headers: encabezados } });
+}
+
+// ¿/profesionales/<x> es un servicio? El catálogo real vive en la tabla
+// `categories` —incluye los servicios creados desde el panel, que el código no
+// conoce—. Se lee sin sesión (es público) y se guarda cinco minutos por
+// instancia: un perfil no paga una consulta por visita. Si la base no contesta,
+// decide la forma: todo perfil termina en un sufijo aleatorio de 8 caracteres.
+let serviciosPublicados: { ids: Set<string>; hasta: number } | null = null;
+async function esServicioPublicado(id: string): Promise<boolean> {
+  if (!serviciosPublicados || serviciosPublicados.hasta < Date.now()) {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const llave = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    try {
+      if (!url || !llave) throw new Error("sin supabase");
+      const respuesta = await withPromiseTimeout(
+        fetch(`${url}/rest/v1/categories?select=id`, { headers: { apikey: llave, Authorization: `Bearer ${llave}` } }),
+        1500,
+        "catálogo de servicios: tiempo agotado",
+      );
+      if (!respuesta.ok) throw new Error(`catálogo ${respuesta.status}`);
+      const filas = await respuesta.json() as Array<{ id: string }>;
+      serviciosPublicados = { ids: new Set(filas.map((f) => f.id)), hasta: Date.now() + 5 * 60_000 };
+    } catch {
+      return !/-[a-z0-9]{8}$/.test(categorySlug(id));
+    }
+  }
+  return serviciosPublicados.ids.has(id);
+}
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   if (pathname.startsWith("/api/")) {
     if (isUnsafeLocalProductionWrite(request)) return unsafeLocalProductionWriteResponse();
+    return conCabecerasDeSeguridad(NextResponse.next());
+  }
+
+  // UNA REESCRITURA INTERNA YA PROCESADA PASA TAL CUAL. Con `next start` (el
+  // servidor del CI) el middleware vuelve a correr sobre la dirección a la que
+  // él mismo reescribió (/ → /es/…): las reglas de idioma la veían como una
+  // visita con /es y la devolvían a /, en bucle —toda página en español
+  // respondía 307/308 a sí misma y la regresión no podía ni arrancar desde el
+  // 28-sep—. En Cloudflare no se vuelve a correr, por eso el sitio andaba. La
+  // reescritura trae el idioma en X-NEXT-INTL-LOCALE y la ruta interna con su
+  // prefijo; una visita real a /es/… no trae ese encabezado.
+  if (request.headers.has("x-next-intl-locale") && /^\/(?:es|en)(?=\/|$)/.test(pathname)) {
     return conCabecerasDeSeguridad(NextResponse.next());
   }
 
@@ -53,7 +104,11 @@ export async function middleware(request: NextRequest) {
   if (conEs) {
     const destino = request.nextUrl.clone();
     // Y de paso el nombre viejo de la sección, para que sea UN salto.
-    destino.pathname = (pathname.slice(3) || "/").replace(/^\/ofertas(?=\/|$)/i, "/promociones").replace(/^\/promociones\/mis-ofertas(?=\/|$)/i, "/promociones/mis-promociones");
+    destino.pathname = (pathname.slice(3) || "/").replace(/^\/ofertas(?=\/|$)/i, "/promociones").replace(/^\/promociones\/mis-ofertas(?=\/|$)/i, "/promociones/mis-promociones").replace(/^\/buscar(?=\/|$)/i, RAIZ_DE_BUSQUEDA);
+    // /es/buscar?categoria=…: la búsqueda con parámetros va directo a la bonita.
+    if (/^\/profesionales\/?$/.test(destino.pathname) && (destino.searchParams.has("categoria") || destino.searchParams.has("provincia"))) {
+      return NextResponse.redirect(new URL(rutaDeBusqueda(destino.searchParams), request.url), 308);
+    }
     return NextResponse.redirect(destino, 308);
   }
   // La sección del panel admin también se llamaba «ofertas».
@@ -112,7 +167,7 @@ export async function middleware(request: NextRequest) {
     const locale = idiomaPreferido();
     const destino = new URL(`/${locale}/${FICHAS[fichaCorta[1].toLowerCase()]}/${fichaCorta[2].toLowerCase()}`, request.url);
     destino.search = request.nextUrl.search;
-    return NextResponse.rewrite(destino);
+    return reescribirConIdioma(request, destino);
   }
 
   // Enlace público de cada profesional: contratacr.com/nombre-apellido (y la
@@ -135,10 +190,6 @@ export async function middleware(request: NextRequest) {
   const RENOMBRADAS: Record<string, string> = {
     "/categorias": "/servicios",
     "/contacto": "/soporte",
-    // Recortar la dirección hacia arriba es un gesto normal: quien está en el
-    // perfil de alguien borra el último tramo para ver «todos». No hay índice
-    // de profesionales —el buscador ES el índice—, así que lleva ahí.
-    "/profesionales": "/buscar",
     // Dos direcciones con nombre de otra época. La página se llama «¿Qué es la
     // verificación de identidad?» y el enlace del pie «Mejorar mi perfil»; las
     // rutas decían «proveedores autorizados» y «atraer clientes».
@@ -186,26 +237,54 @@ export async function middleware(request: NextRequest) {
   // palabras por guion; el guion bajo las pega, así que leía
   // «aireacondicionado») y la provincia por su nombre en vez de su código. En
   // dos reglas encadenadas habría dos 308 seguidos para la misma dirección.
-  // LA BÚSQUEDA SE LEE: /buscar/construccion/alajuela/grecia. La forma vieja con
-  // parámetros (?categoria=…&provincia=al&canton=al-gr) salta a la bonita, y la
-  // bonita se reescribe por dentro a la de parámetros, que es la que la página
-  // entiende. La reescritura no vuelve a pasar por aquí, así que no hay bucle.
-  const buscarRaiz = /^(?:\/(en))?\/buscar\/?$/.exec(pathname);
-  if (buscarRaiz && (request.nextUrl.searchParams.has("categoria") || request.nextUrl.searchParams.has("provincia"))) {
-    const bonita = rutaDeBusqueda(request.nextUrl.searchParams);
-    if (!/^\/buscar\/?(?:\?|$)/.test(bonita)) {
-      return NextResponse.redirect(new URL(rutaConIdioma(buscarRaiz[1], bonita), request.url), 308);
-    }
+  // LA BÚSQUEDA DE PROFESIONALES VIVE EN /profesionales (ver lib/buscar-url.ts
+  // para cómo se distingue de un perfil). Tres pasos, cada uno de un salto:
+  //  1. /buscar/… (la dirección hasta el 29-sep-2026) → 308 a /profesionales/…
+  //  2. la forma con parámetros (?categoria=…&provincia=al) → 308 a la bonita
+  //  3. la bonita se REESCRIBE por dentro a /[locale]/buscar con parámetros,
+  //     que es la página que busca. La reescritura no vuelve a pasar por aquí.
+  const conFiltrosEnParametros = request.nextUrl.searchParams.has("categoria") || request.nextUrl.searchParams.has("provincia");
+  const buscarViejo = /^(?:\/(en))?\/buscar(\/[^?#]*)?$/.exec(pathname);
+  if (buscarViejo) {
+    const cola = (buscarViejo[2] ?? "").replace(/\/$/, "");
+    const destino = !cola && conFiltrosEnParametros
+      ? rutaDeBusqueda(request.nextUrl.searchParams)
+      : `${RAIZ_DE_BUSQUEDA}${cola}${request.nextUrl.search}`;
+    return NextResponse.redirect(new URL(rutaConIdioma(buscarViejo[1], destino), request.url), 308);
   }
-  const buscarBonito = /^(?:\/(en))?\/buscar\/[^/?#]+/.exec(pathname);
-  if (buscarBonito) {
-    const enRuta = filtrosDeRuta(pathname);
-    if (enRuta) {
-      // Reescritura interna: la ruta de Next sigue siendo /[locale]/buscar.
-      const destino = new URL(`/${buscarBonito[1] ?? "es"}/buscar`, request.url);
+  const busqueda = /^(?:\/(en))?\/profesionales(?:\/([^/?#]+))?(?:\/([^/?#]+))?(?:\/([^/?#]+))?\/?$/.exec(pathname);
+  if (busqueda) {
+    // EL IDIOMA ELEGIDO MANDA, como en el resto del sitio. Esto armaba la
+    // búsqueda en español siempre que la dirección no trajera /en (ya pasaba
+    // con /buscar): con la app en inglés salía «3 profesionales en Santa
+    // Bárbara». Una página pedida sin /en por quien eligió inglés salta a /en;
+    // las cargas internas del router se arman en su idioma sin saltar.
+    const eligioIngles = request.cookies.get("NEXT_LOCALE")?.value === "en";
+    if (!busqueda[1] && eligioIngles) {
+      const destinoDePagina = request.headers.get("sec-fetch-dest");
+      const esCargaInterna = (destinoDePagina !== null && destinoDePagina !== "document")
+        || (request.headers.get("accept") ?? "").includes("text/x-component");
+      if (!esCargaInterna) {
+        const url = request.nextUrl.clone();
+        url.pathname = rutaConIdioma("en", pathname);
+        return NextResponse.redirect(url, 307);
+      }
+    }
+    const idioma = busqueda[1] ?? (eligioIngles ? "en" : "es");
+    const [, , primero, segundo] = busqueda;
+    if (!primero && conFiltrosEnParametros) {
+      const bonita = rutaDeBusqueda(request.nextUrl.searchParams);
+      if (bonita.split("?")[0] !== RAIZ_DE_BUSQUEDA) return NextResponse.redirect(new URL(rutaConIdioma(busqueda[1], bonita), request.url), 308);
+    }
+    const esBusqueda = !primero
+      || primero.toLowerCase() === SIN_SERVICIO
+      || (segundo ? esProvinciaDeRuta(segundo) : await esServicioPublicado(idDesdeDireccion(primero.toLowerCase())));
+    if (esBusqueda) {
+      const destino = new URL(`/${idioma}/buscar`, request.url);
       destino.search = request.nextUrl.search;
-      for (const [clave, valor] of Object.entries(enRuta)) if (valor) destino.searchParams.set(clave, valor);
-      return NextResponse.rewrite(destino);
+      // Ya se sabe que es búsqueda: el servicio del primer tramo está confirmado.
+      for (const [clave, valor] of Object.entries(filtrosDeRuta(pathname, () => true) ?? {})) if (valor) destino.searchParams.set(clave, valor);
+      return reescribirConIdioma(request, destino);
     }
   }
 

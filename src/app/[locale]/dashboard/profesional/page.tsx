@@ -47,6 +47,8 @@ import { BasicProfileSection } from "@/components/dashboard/basic-profile-sectio
 import { detectIdType } from "@/lib/cedula";
 import { NotificationsList } from "@/components/notifications/notifications-list";
 import { AccountSecuritySection } from "@/components/account/account-security";
+import { AccountPrivacySection } from "@/components/account/account-privacy";
+import { useNativeApp } from "@/hooks/use-native-app";
 import { CloseAccountSection } from "@/components/account/close-account-section";
 import { SupportTickets } from "@/components/support/support-tickets";
 import { SubscriptionPanel } from "@/components/dashboard/pro/subscription-panel";
@@ -251,11 +253,11 @@ const GUIDE_ITEMS: GuideItem[] = ([
   { id: "clientProjects", section: "client", actionTab: "sent_projects", targetMode: "use", stepCount: 3 },
   { id: "clientSaved", section: "client", actionTab: "saved", targetMode: "use", stepCount: 4 },
   { id: "clientProfile", section: "client", actionTab: "profile", targetMode: "use", stepCount: 3 },
-  { id: "searchServices", section: "shared", href: "/buscar", stepCount: 5 },
+  { id: "searchServices", section: "shared", href: "/profesionales", stepCount: 5 },
   { id: "jobsGuide", section: "shared", href: "/empleos", stepCount: 4 },
   { id: "offersGuide", section: "shared", href: "/promociones", stepCount: 4 },
   { id: "notificationsGuide", section: "shared", actionTab: "notifications", stepCount: 5 },
-  { id: "reviewsGuide", section: "shared", href: "/buscar", stepCount: 4 },
+  { id: "reviewsGuide", section: "shared", href: "/profesionales", stepCount: 4 },
   { id: "supportGuide", section: "shared", actionTab: "soporte", stepCount: 3 },
   { id: "accountSecurityGuide", section: "shared", actionTab: "cuenta", stepCount: 4 },
   { id: "professionalPanel", section: "professional", actionTab: "publicaciones", targetMode: "offer", stepCount: 4 },
@@ -679,6 +681,7 @@ export default function DashboardPage() {
     />
   ) : null;
   const t = useTranslations("proPanel");
+  const nativeApp = useNativeApp();
   const locale = useLocale();
   // qué oficio pertenece, y de ahí sale a quién se le avisa.
   const rawRequestedTab = searchParams.get("tab");
@@ -1719,7 +1722,9 @@ export default function DashboardPage() {
   const professionalRecordResolving = !!user && canOffer(user) && !pro && !proLoadError;
   if (isSigningOut()) return null;
   if (authLoading || loading || !user || professionalRecordResolving) {
-    return <>{formularioPublicar}<PanelSkeleton /></>;
+    return <>{formularioPublicar}{/* La forma sale solo de la URL: la preferencia del teléfono no existe
+        en el servidor y romper la hidratación rehacía toda la página. */}
+      <PanelSkeleton seccion={allowedRequestedTab !== null && allowedRequestedTab !== "home"} /></>;
   }
 
   const proProfile = Array.isArray(pro?.profiles) ? pro?.profiles[0] : pro?.profiles;
@@ -2591,6 +2596,14 @@ export default function DashboardPage() {
                                   />
                                 ),
                               },
+                              // Privacidad: solo en la app, que es donde existe el chat.
+                              ...(nativeApp ? [{
+                                id: "privacidad",
+                                title: t("tabs.privacidad"),
+                                desc: t("profileSections.privacyDesc"),
+                                footer: null,
+                                children: <AccountPrivacySection />,
+                              }] : []),
                               {
                                 id: "cuenta",
                                 title: t("tabs.cuenta"),
@@ -2609,6 +2622,14 @@ export default function DashboardPage() {
                         {activeTab === "profile" && mode === "use" && (
                           <BasicProfileSection
                             extraSections={[
+                              // Privacidad: solo en la app, que es donde existe el chat.
+                              ...(nativeApp ? [{
+                                id: "privacidad",
+                                title: t("tabs.privacidad"),
+                                desc: t("profileSections.privacyDesc"),
+                                footer: null,
+                                children: <AccountPrivacySection />,
+                              }] : []),
                               {
                                 id: "cuenta",
                                 title: t("tabs.cuenta"),

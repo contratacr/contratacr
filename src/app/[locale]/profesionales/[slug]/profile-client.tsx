@@ -1,5 +1,6 @@
 "use client";
 
+import { esRutaDeBusqueda } from "@/lib/buscar-url";
 import { rutaEmpleo, rutaPromocion } from "@/lib/marketplace-url";
 import { FichaVacio } from "@/components/professionals/ficha-vacio";
 import { enlacePerfil } from "@/lib/profile-url";
@@ -21,7 +22,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ImagePreviewDialog } from "@/components/ui/image-preview-dialog";
 import { getInitials, proDisplayName, cn } from "@/lib/utils";
 import { RecordRecentVisit } from "@/components/mobile/record-recent-visit";
-import { anyVideoConsultCategory, getCategoryLabel } from "@/lib/data/categories";
+import { anyVideoConsultCategory, getCategoryLabel, esServicioDelCatalogo } from "@/lib/data/categories";
 import { casoProfession, countCases } from "@/lib/services";
 import { addTaxIncludedToPriceLabel, formatServicePrice, primaryPricingLabel, splitPricingLabel } from "@/lib/pricing";
 import { languageLabel } from "@/lib/data/languages";
@@ -64,28 +65,29 @@ function searchParamFromUrl(key: string): string | null {
   return new URLSearchParams(window.location.search).get(key);
 }
 function safeProfileReturnHref(value: string | null): string {
-  if (!value) return "/buscar";
+  if (!value) return "/profesionales";
   let href = value;
   try {
     href = decodeURIComponent(value);
   } catch {
     href = value;
   }
-  if (!href.startsWith("/") || href.startsWith("//") || href.includes("\\")) return "/buscar";
+  if (!href.startsWith("/") || href.startsWith("//") || href.includes("\\")) return "/profesionales";
   const path = href.split(/[?#]/u)[0]?.replace(/^\/(?:es|en)(?=\/|$)/u, "") || "/";
   const allowed = path === "/"
-    || path === "/buscar"
-    || path.startsWith("/buscar/")
+    || path === "/profesionales"
+    || path.startsWith("/profesionales/")
     || path === "/promociones"
     || path.startsWith("/promociones/")
     || path === "/empleos"
     || path.startsWith("/empleos/")
     || path.startsWith("/dashboard/cliente")
     || path.startsWith("/dashboard/profesional")
-    || path === "/mensajes";
+    || path === "/mensajes"
+    || path === "/notificaciones";
   // The i18n <Link> re-adds the locale: hand back a bare path even when the
   // sender included one, so the return never becomes /es/es/... .
-  return allowed ? href.replace(/^\/(?:es|en)(?=\/|$)/u, "") || "/" : "/buscar";
+  return allowed ? href.replace(/^\/(?:es|en)(?=\/|$)/u, "") || "/" : "/profesionales";
 }
 
 function profileReturnLabel(href: string, locale: string) {
@@ -113,14 +115,16 @@ function initialProfileReturnHref() {
   if (typeof document !== "undefined" && document.referrer) {
     try {
       const referrer = new URL(document.referrer);
-      if (referrer.origin === window.location.origin && !referrer.pathname.includes("/profesionales/")) {
+      // Otro perfil no es un lugar al que volver; la búsqueda de un servicio
+      // (/profesionales/techos) sí, aunque tenga la misma forma.
+      if (referrer.origin === window.location.origin && (!referrer.pathname.includes("/profesionales/") || esRutaDeBusqueda(referrer.pathname, esServicioDelCatalogo))) {
         return safeProfileReturnHref(`${referrer.pathname}${referrer.search}${referrer.hash}`);
       }
     } catch {
-      return "/buscar";
+      return "/profesionales";
     }
   }
-  return "/buscar";
+  return "/profesionales";
 }
 
 // ─── Main page ────────────────────────────────────────────────────────────────
@@ -144,6 +148,7 @@ type ProfilePageData = {
 export default function ProfilePage({ fichaInicial, ofertasIniciales = [], empleosIniciales = [] }: { fichaInicial?: ProfessionalDetail | null; ofertasIniciales?: ProfessionalOffer[]; empleosIniciales?: JobPost[] }) {
   const t = useTranslations("profile");
   const tMenu = useTranslations("menuFicha");
+  const tVolver = useTranslations("marketplaceReturn");
   const locale = useLocale();
   const catLabel = (id?: string | null) => id ? getCategoryLabel(id, locale) : "";
   const routeParams = useParams();
@@ -232,7 +237,7 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
   // mandan). El referrer, que solo existe en el navegador, apenas afina después.
   const [profileReturnHref, setProfileReturnHref] = useState(() => {
     const explicit = searchParams.get("from");
-    return explicit ? safeProfileReturnHref(explicit) : "/buscar";
+    return explicit ? safeProfileReturnHref(explicit) : "/profesionales";
   });
   useEffect(() => {
     setProfileReturnHref(initialProfileReturnHref());
@@ -279,7 +284,9 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
   //
   // El nombre no se pierde: es el h1 de la tarjeta, y está a un dedo de
   // distancia hacia arriba.
-  const tituloBarra = profileReturnLabel(profileReturnHref, locale);
+  // Notificaciones usa el rótulo compartido de las fichas (en messages/*.json).
+  const rotuloDeRegreso = profileReturnHref === "/notificaciones" ? tVolver("backToNotifications") : profileReturnLabel(profileReturnHref, locale);
+  const tituloBarra = rotuloDeRegreso;
   useEffect(() => {
     if (previewMode) return;
     const global = window as unknown as {
@@ -526,7 +533,7 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
                 </Link>
               )}
               <Link
-                href="/buscar"
+                href="/profesionales"
                 className={
                   panelHref
                     ? "inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-[#e5e7eb] px-6 py-3 text-sm font-semibold text-[#374151] transition-colors hover:border-[#009FD9] hover:text-[#009FD9] sm:w-auto"
@@ -717,7 +724,9 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
   ];
 
   const bloqueContacto = (conAncla: boolean) => (
-    <div {...(conAncla ? { id: "perfil-contacto" } : {})} className="mx-auto flex w-full max-w-md flex-col gap-4 lg:max-w-none">
+    // Precio y zona son UN bloque («cuánto y dónde»): con 16 px entre los dos,
+    // y la línea alta del precio, se leían como dos secciones sueltas.
+    <div {...(conAncla ? { id: "perfil-contacto" } : {})} className="mx-auto flex w-full max-w-md flex-col gap-1.5 lg:max-w-none">
       <div>
         {(() => {
           const label = primaryPricingLabel(professional.pricing, professional.hourlyRate, locale);
@@ -842,7 +851,7 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
                 className="inline-flex h-10 min-w-0 items-center gap-1.5 text-sm font-semibold text-[#374151] transition-colors hover:text-[#009FD9] lg:rounded-lg lg:px-2 lg:font-extrabold lg:text-[#162543] lg:hover:bg-[#eaf6fc]"
               >
                 <ArrowLeft className="h-4 w-4 shrink-0" />
-                <span className="truncate">{profileReturnLabel(profileReturnHref, locale)}</span>
+                <span className="truncate">{rotuloDeRegreso}</span>
               </Link>
 
             </div>
@@ -943,9 +952,15 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
                       se leían como dos datos sueltos. El ícono de cada una ya
                       marca dónde empieza la siguiente. */}
                   {(professional.reviewCount > 0 || expYears > 0) && (
-                    <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12.5px] text-[#68778d] sm:mt-3 sm:gap-x-5 sm:text-[13px]">
+                    <div className="mt-1.5 flex flex-nowrap items-center gap-x-3 overflow-hidden text-[12.5px] text-[#68778d] sm:mt-3 sm:gap-x-5 sm:text-[13px]">
+                      {/* SIEMPRE una sola línea, en español e inglés: con «años
+                          de experiencia» completo no cabía al lado de las
+                          reseñas y se partía en dos renglones. */}
                       {professional.reviewCount > 0 && (
-                        <button type="button" onClick={() => setActiveTab("resenas")} className="inline-flex min-w-0 items-center gap-1.5">
+                        // Con etiqueta queda fuera de la regla de 44 px de alto
+                        // mínimo de la app: estiraba el bloque del nombre y ya
+                        // no quedaba centrado con la foto.
+                        <button type="button" onClick={() => setActiveTab("resenas")} aria-label={`${professional.ratingAvg.toFixed(1)} · ${t("reviewCountLabel", { count: professional.reviewCount })}`} className="relative inline-flex min-w-0 items-center gap-1.5 after:absolute after:-inset-2 after:content-['']">
                           <Star className="h-3.5 w-3.5 shrink-0 fill-[#ff9b32] text-[#ff9b32]" />
                           <span className="text-[14px] font-bold text-[#162543] sm:text-[15px]">{professional.ratingAvg.toFixed(1)}</span>
                           <span className="whitespace-nowrap">{t("reviewCountLabel", { count: professional.reviewCount })}</span>

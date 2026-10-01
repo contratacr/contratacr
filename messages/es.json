@@ -654,7 +654,7 @@
     "identityUnverified": "Identidad sin verificar",
     "viewReviewsCount": "Ver {count, plural, one {# reseña} other {# reseñas}}",
     "reviewCountLabel": "{count, plural, one {# reseña} other {# reseñas}}",
-    "statYears": "años de experiencia",
+    "statYears": "años de exp.",
     "statCasos": "trabajos",
     "from": "Desde",
     "viewFullSchedule": "Ver disponibilidad",
@@ -1327,7 +1327,8 @@
       "notifications": "Notificaciones",
       "guides": "Guías",
       "soporte": "Soporte",
-      "cuenta": "Cuenta y seguridad"
+      "cuenta": "Cuenta y seguridad",
+      "privacidad": "Privacidad"
     },
     "home": {
       "useEyebrow": "Panel cliente",
@@ -1814,7 +1815,8 @@
       "photosDesc": "Casos de éxito con fotos que ven los clientes.",
       "availabilityDesc": "Horarios, contacto y disponibilidad visible para clientes.",
       "verificationDesc": "Identidad y estado de verificación.",
-      "accountDesc": "Correo, contraseña y seguridad de la cuenta."
+      "accountDesc": "Correo, contraseña y seguridad de la cuenta.",
+      "privacyDesc": "Quién ve cuándo lees tus mensajes."
     },
     "completion": {
       "completeTitle": "¡Tu perfil está completo!",
@@ -2759,7 +2761,7 @@
     "yesResolved": "Sí, está resuelto",
     "noStillIssue": "No, sigo con el problema",
     "confirmedResolved": "✓ Confirmaste que este caso quedó resuelto.",
-    "messagePlaceholder": "Escribe tu mensaje…",
+    "messagePlaceholder": "Escribe un mensaje",
     "send": "Enviar",
     "sending": "Enviando…",
     "sendError": "No se pudo enviar el mensaje.",
@@ -2989,7 +2991,7 @@
     "step3Title": "Datos siempre al día",
     "step3Body": "El padrón se actualiza periódicamente. Si tu caso no pasa automáticamente, puedes apelar y se vuelve a verificar.",
     "disclaimerTitle": "Aviso importante",
-    "disclaimer": "ContrataCR es una <strong>plataforma intermediaria</strong> que conecta a clientes con proveedores de servicios; no es la proveedora del servicio. La insignia <strong>“Verificado”</strong> confirma únicamente que la cédula es real y el nombre coincide con los registros oficiales. <strong>No garantiza ni asegura la calidad, el resultado ni la finalización de ningún trabajo</strong>, y no prueba por sí sola que quien se registró sea físicamente esa persona. La contratación ocurre directamente entre el cliente y el proveedor.",
+    "disclaimer": "ContrataCR es una <strong>plataforma intermediaria</strong> que conecta a clientes con proveedores de servicios; no es la proveedora del servicio. La insignia <strong>“Verificado”</strong> confirma únicamente que la cédula es real y el nombre coincide con los registros oficiales. <strong>No garantiza ni asegura la calidad, el resultado ni la finalización de ningún trabajo</strong>, y no prueba por sí sola que quien se registró sea físicamente esa persona. La contratación ocurre directamente entre el cliente y el proveedor. Para elegir bien, en cada perfil puedes comparar <strong>reseñas, casos de éxito, formación, idiomas y años de experiencia</strong>.",
     "ctaVerified": "Ver profesionales"
   },
   "contacto": {
@@ -3139,7 +3141,9 @@
     "groupEarlier": "Anteriores",
     "loadErrorTitle": "No pudimos cargar tus notificaciones",
     "loadErrorBody": "Revisa tu conexión e intenta de nuevo.",
-    "loadErrorRetry": "Reintentar"
+    "loadErrorRetry": "Reintentar",
+    "deletedToast": "Notificación eliminada",
+    "undo": "Deshacer"
   },
   "projects": {
     "title": "Cuéntanos qué necesitas",
@@ -3553,7 +3557,7 @@
     "faq1Q": "¿Cómo empiezo a ofrecer servicios?",
     "faq1A": "Haz clic en 'Ofrecer mis servicios' en la barra de navegación. Puedes registrarte con tu correo o con Google. Primero eliges tus servicios y zonas de trabajo; después completas tu foto, descripción y datos del perfil.",
     "faq2Q": "¿Cómo se verifica la identificación?",
-    "faq2A": "Validamos la identificación con registros oficiales cuando aplica. La cédula nacional y la jurídica siguen el flujo correspondiente a su tipo; DIMEX, NITE y casos especiales pueden requerir revisión. El sello confirma identidad, no garantiza la calidad del trabajo.",
+    "faq2A": "Validamos la identificación con registros oficiales cuando aplica. La cédula nacional y la jurídica siguen el flujo correspondiente a su tipo; DIMEX, NITE y casos especiales pueden requerir revisión. El sello confirma identidad, no garantiza la calidad del trabajo. En cada perfil puedes comparar reseñas de otros clientes, casos de éxito, formación y certificaciones, idiomas, años de experiencia, zonas y precio de referencia. Así eliges con información.",
     "faq3Q": "¿Cómo busco profesionales?",
     "faq3A": "Usa la barra de búsqueda en la página principal o en Buscar. Puedes buscar por servicio, provincia y cantón, y ordenar por calificación. El buscador entiende sinónimos: si escribes 'niñera', también encontrará profesionales de cuidado infantil.",
     "faq4Q": "¿Cómo coordino el servicio?",
@@ -3586,7 +3590,9 @@
     "faq13Q": "¿Puedo escribirle a un profesional sin dar mi número?",
     "faq13A": "Sí. Además de WhatsApp y llamada, ContrataCR tiene mensajes propios: le escribes desde su ficha y la conversación queda en la sección Mensajes de tu panel. Tu número solo lo ve si decides dárselo.",
     "faq14Q": "¿Cómo elimino mi cuenta?",
-    "faq14A": "Entra a tu panel, abre Mi perfil y busca Eliminar cuenta. Te explicamos qué se borra y qué se conserva antes de confirmar. Si prefieres que lo hagamos nosotros, abre un caso en el Centro de soporte."
+    "faq14A": "Entra a tu panel, abre Mi perfil y busca Eliminar cuenta. Te explicamos qué se borra y qué se conserva antes de confirmar. Si prefieres que lo hagamos nosotros, abre un caso en el Centro de soporte.",
+    "faq15Q": "¿Cómo elijo un buen profesional? ¿ContrataCR garantiza el trabajo?",
+    "faq15A": "ContrataCR te da con qué comparar para elegir bien: reseñas de otros clientes, casos de éxito, formación y certificaciones, idiomas, años de experiencia, zonas y precio de referencia. Lee las reseñas, mira casos de éxito en trabajos parecidos al tuyo y escribe a dos o tres profesionales. El precio, los plazos y la garantía del trabajo los acuerdas directamente con el profesional: déjalo por escrito antes de empezar. Si algo sale mal, deja una reseña honesta y, si hubo engaño o abuso, reporta el perfil."
   },
   "atraerClientes": {
     "eyebrow": "Para profesionales",
@@ -3881,7 +3887,32 @@
     "blockedTitle": "Esta conversación está bloqueada",
     "blockedMineHint": "Ninguno de los dos puede escribir. Al desbloquear vuelve a tu bandeja; el reporte sigue en revisión.",
     "blockedOtherHint": "No puedes escribir aquí. Si crees que es un error, escribe a soporte@contratacr.com.",
-    "unblockFailed": "No se pudo desbloquear."
+    "unblockFailed": "No se pudo desbloquear.",
+    "markRead": "Leído",
+    "markUnread": "No leído",
+    "more": "Más",
+    "reportAndBlock": "Reportar y bloquear",
+    "cancel": "Cancelar",
+    "editMessage": "Editar",
+    "editingMessage": "Editando mensaje",
+    "edited": "Editado",
+    "deleteMessage": "Eliminar",
+    "deleteForEveryone": "Eliminar para todos",
+    "deleteForMe": "Eliminar para mí",
+    "deleteMessageTitle": "¿Eliminar mensaje?",
+    "messageDeleted": "Se eliminó este mensaje",
+    "youDeletedMessage": "Eliminaste este mensaje",
+    "cancelEdit": "Cancelar edición",
+    "saveEdit": "Guardar",
+    "editFailed": "No se pudo editar el mensaje.",
+    "deleteMessageFailed": "No se pudo eliminar el mensaje.",
+    "sending": "Enviando…",
+    "sent": "Enviado",
+    "read": "Leído",
+    "archivedEmptyTitle": "No hay conversaciones archivadas",
+    "archivedEmptyHint": "Archiva un chat deslizándolo hacia la izquierda.",
+    "delivered": "Recibido",
+    "seenAt": "Visto {hora}"
   },
   "bottomNav": {
     "search": "Profesionales",
@@ -3890,7 +3921,28 @@
     "jobs": "Empleos",
     "aria": "Navegación de la app",
     "quotes": "Cotizaciones",
-    "projects": "Proyectos"
+    "projects": "Proyectos",
+    "searchAria": "Buscar profesionales",
+    "create": "Crear",
+    "createTitle": "¿Qué quieres publicar?",
+    "notifications": "Notificaciones",
+    "panel": "Mi panel",
+    "close": "Cerrar",
+    "createProject": "Publicar un proyecto",
+    "createProjectDesc": "Cuenta qué necesitas y los profesionales te escriben",
+    "createDealDesc": "Publica una oferta o descuento de tu servicio",
+    "createJobDesc": "Encuentra personal para tu negocio",
+    "createOffer": "Ofrecer mis servicios",
+    "createOfferDesc": "Crea tu perfil y recibe clientes",
+    "createCase": "Publicar un caso de éxito",
+    "createCaseDesc": "Muestra un trabajo que hiciste",
+    "createProjectAsk": "¿Qué necesitas?",
+    "tileProject": "Proyecto",
+    "tileDeal": "Promoción",
+    "tileJob": "Empleo",
+    "createDeal": "Publicar una promoción",
+    "createJob": "Publicar un empleo",
+    "forPros": "Para profesionales"
   },
   "serviceLanding": {
     "title": "{category} en {place}",
@@ -4246,7 +4298,8 @@
     "allPromotions": "Ver todas las promociones",
     "allJobs": "Ver todos los empleos",
     "backToProjects": "Volver a proyectos",
-    "allProjects": "Ver todos los proyectos"
+    "allProjects": "Ver todos los proyectos",
+    "backToNotifications": "Volver a notificaciones"
   },
   "tableroBuscador": {
     "empleos": "¿Qué empleo buscas?",
@@ -4296,5 +4349,10 @@
     "promocion": "Promoción",
     "empleo": "Empleo",
     "proyectoSinTitulo": "Un cliente busca profesional"
+  },
+  "accountPrivacy": {
+    "readReceipts": "Confirmaciones de lectura",
+    "readReceiptsHelp": "Si lo apagas, los demás no verán cuándo leíste sus mensajes y tú tampoco verás cuándo leen los tuyos.",
+    "readReceiptsError": "No se pudo guardar. Intenta de nuevo."
   }
 }

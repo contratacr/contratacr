@@ -1,21 +1,35 @@
 import type { ReactNode } from "react";
 import type { Viewport } from "next";
 import { cookies, headers } from "next/headers";
-import { Inter } from "next/font/google";
+import localFont from "next/font/local";
 import { NativeDebugLogger } from "@/components/mobile/native-debug-logger";
 import { CatalogoDelServidor } from "@/components/util/catalogo-del-servidor";
 import { NATIVE_ONBOARDING_COMPLETED_KEY } from "@/lib/mobile-onboarding";
 import { catalogoParaElCliente } from "@/lib/data/server-category-catalog";
+import { DIRECCIONES_DE_SERVICIO } from "@/lib/data/category-slug";
 import { elegirOficiosDeArranque } from "@/lib/data/oficios-de-arranque";
 import { getSupplyCounts, MIN_SUPPLY_FOR_LANDING } from "@/lib/queries/supply";
 import { withPromiseTimeout } from "@/lib/promise-timeout";
 import "./globals.css";
 
-const inter = Inter({
-  subsets: ["latin"],
+// INTER VIVE EN EL REPO (src/fuentes; fuera de src/app para que no cuente como ruta), no se baja de Google al compilar.
+// Con `next/font/google` el build dependía de que fonts.googleapis.com
+// contestara en ese momento: el 30-sep falló en el CI y en el servidor local
+// («Can't resolve …/font/google/font») sin que nada del código cambiara. Son
+// los mismos archivos que servía Google (subconjunto latino, que cubre todo
+// el español), así que la letra no cambia. El subconjunto extendido (ő, ř…)
+// no se usa.
+const inter = localFont({
+  src: [
+    { path: "../fuentes/inter-latin-400.woff2", weight: "400", style: "normal" },
+    { path: "../fuentes/inter-latin-500.woff2", weight: "500", style: "normal" },
+    { path: "../fuentes/inter-latin-600.woff2", weight: "600", style: "normal" },
+    { path: "../fuentes/inter-latin-700.woff2", weight: "700", style: "normal" },
+    { path: "../fuentes/inter-latin-800.woff2", weight: "800", style: "normal" },
+    { path: "../fuentes/inter-latin-900.woff2", weight: "900", style: "normal" },
+  ],
   variable: "--font-sans",
   display: "swap",
-  weight: ["400", "500", "600", "700", "800", "900"],
 });
 
 // «<» escrito como secuencia de escape de JSON (barra invertida + u003c), para
@@ -45,6 +59,11 @@ export const viewport: Viewport = {
   interactiveWidget: "resizes-content",
   viewportFit: "cover",
 };
+
+// Los pocos servicios cuya dirección no sale de cambiar «_» por «-» (ver
+// lib/data/category-slug.ts), para que el script de arranque reconozca también
+// esas búsquedas: /profesionales/instalacion-de-adoquines.
+const DIRECCIONES_POR_TRAMO = JSON.stringify(Object.fromEntries(Object.entries(DIRECCIONES_DE_SERVICIO).map(([id, tramo]) => [tramo, id])));
 
 export default async function RootLayout({ children }: { children: ReactNode }) {
   // La app nativa se reconoce por su cookie ya EN EL SERVIDOR: las clases del
@@ -344,12 +363,6 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
           }}
         />
         <style
-          data-ccr-portada=""
-          dangerouslySetInnerHTML={{
-            __html: `html.ccr-ruta-portada .ccr-page-route-loading{background:#fff!important}`,
-          }}
-        />
-        <style
           data-ccr-teclado=""
           dangerouslySetInnerHTML={{
             __html: `@media (max-width:767px){html[data-teclado-formulario-largo] :is(.ccr-pie-ventana,.ccr-barra-accion):not(.ccr-booking-modal-panel *){display:none!important}}`,
@@ -435,7 +448,7 @@ body:has(.ccr-error-screen) .ccr-navbar-spacer{display:none}
           type="text/javascript"
           suppressHydrationWarning
           dangerouslySetInnerHTML={{
-            __html: `try{if(/^\\/(es|en)?\\/?$/.test(window.location.pathname)){document.documentElement.classList.add("ccr-ruta-portada")}}catch(e){}try{if(/^\\/(?:es|en)?\\/?(?:buscar(?:\\/[^/]+){0,3}|empleos|promociones|proyectos)\\/?$/.test(window.location.pathname)){document.documentElement.classList.add("ccr-ruta-sin-desplazar")}}catch(e){}try{if(document.documentElement.classList.contains("ccr-native-app")){document.body.classList.add("ccr-native-app");var r=window.location.pathname;if(!/(^|\\/)(publicar-proyecto|(empleos|promociones)\\/publicar)(\\/|$)/.test(r)&&!/^\\/(?:(?:es|en)\\/)?(?:profesionales\\/[^/]+|proyectos\\/[^/]+|promociones\\/(?!publicar\\/?$|mis-promociones\\/?$)[^/]+|empleos\\/(?!publicar\\/?$|mis-empleos\\/?$)[^/]+)\\/?$/.test(r)){document.documentElement.classList.add("ccr-native-bottom-nav-visible");document.body.classList.add("ccr-native-bottom-nav-visible")}if(/(^|\\/)buscar(\\/|$)/.test(r)){document.documentElement.classList.add("ccr-native-search-route");document.body.classList.add("ccr-native-search-route")}}}catch(e){}`,
+            __html: `var D=${DIRECCIONES_POR_TRAMO};var B=function(p){var m=/^\\/(?:(?:es|en)\\/)?(profesionales|buscar)(?:\\/([^/]+))?(?:\\/[^/]+){0,2}\\/?$/.exec(p);if(!m)return false;if(m[1]==="buscar"||!m[2])return true;var s=m[2].toLowerCase();try{s=decodeURIComponent(s)}catch(e){}if(s==="todos")return true;var id=D[s]||s.replace(/-/g,"_");try{var d=JSON.parse(document.getElementById("ccr-catalogo").textContent);return(d.categories||[]).concat(d.categoryFlags||[]).some(function(c){return c.id===id})}catch(e){return!/-[a-z0-9]{8}$/.test(s)}};try{if(/^\\/(es|en)?\\/?$/.test(window.location.pathname)){document.documentElement.classList.add("ccr-ruta-portada")}}catch(e){}try{var q=window.location.pathname;if(B(q)||/^\\/(?:es|en)?\\/?(?:empleos|promociones|proyectos)\\/?$/.test(q)){document.documentElement.classList.add("ccr-ruta-sin-desplazar")}}catch(e){}try{if(document.documentElement.classList.contains("ccr-native-app")){document.body.classList.add("ccr-native-app");var r=window.location.pathname;var b=B(r);if(!/(^|\\/)(publicar-proyecto|(empleos|promociones)\\/publicar)(\\/|$)/.test(r)&&(b||!/^\\/(?:(?:es|en)\\/)?(?:profesionales\\/[^/]+|proyectos\\/[^/]+|promociones\\/(?!publicar\\/?$|mis-promociones\\/?$)[^/]+|empleos\\/(?!publicar\\/?$|mis-empleos\\/?$)[^/]+)\\/?$/.test(r))){document.documentElement.classList.add("ccr-native-bottom-nav-visible");document.body.classList.add("ccr-native-bottom-nav-visible")}if(b){document.documentElement.classList.add("ccr-native-search-route");document.body.classList.add("ccr-native-search-route")}}}catch(e){}`,
           }}
         />
         {/* El mismo catálogo, instalado también en la capa de módulos de los
@@ -449,9 +462,11 @@ body:has(.ccr-error-screen) .ccr-navbar-spacer{display:none}
             pudiera decir que ese contenido no existe: las direcciones
             inventadas respondían «todo bien» con un 404 dibujado (un falso 404,
             de lo que peor le sienta a un sitio que pelea por indexarse). La
-            espera vive ahora en un `loading.tsx` por sección, solo en las
-            pantallas privadas que de verdad tardan. Ver
-            `components/util/lienzo-de-ruta.tsx`. */}
+            espera ya no vive en ningún `loading.tsx`: al navegar se queda la
+            pantalla anterior hasta que la nueva está lista, y cada sección
+            pinta su propio esqueleto donde de verdad carga algo. Los lienzos
+            vacíos se leían como «entró a una página en blanco y luego
+            cargó» (30-sep-2026). */}
         {children}
       </body>
     </html>

@@ -6,10 +6,11 @@ on:
     branches:
       - test
   schedule:
-    # Safari, los lunes a las 5:00 a.m. de Costa Rica. Es el motor del iPhone y
-    # de la app nativa, el único que no corre en cada push; una vez por semana
-    # cuesta unos minutos de Linux y atrapa lo que Chrome no puede ver.
-    - cron: "0 11 * * 1"
+    # Cada madrugada (3:00 a.m. de Costa Rica) corre la regresión EXHAUSTIVA
+    # completa, la misma que antes solo salía a mano: así un fallo aparece al
+    # día siguiente y no cuando alguien se acuerda de despacharla. Los lunes
+    # además pasa Safari (WebKit), el motor del iPhone y de la app.
+    - cron: "0 9 * * *"
 
 concurrency:
   # This workflow only touches the local Supabase stack it starts itself, so it
@@ -83,6 +84,9 @@ jobs:
             echo "E2E_ALLOW_NON_TEST_SUPABASE=1"
             echo "E2E_TEST_PASSWORD=$LOCAL_REGRESSION_PASSWORD"
             echo "REGRESSION_TEST_PASSWORD=$LOCAL_REGRESSION_PASSWORD"
+            # La cuenta de solo cliente (seed-cuenta-cliente.js); la contraseña
+            # es la misma que ya usan las pruebas que entran con ella.
+            echo "CLIENTE_TEST_PASSWORD=ClientePruebas2026!"
             echo "PLAYWRIGHT_LOCAL_PRODUCTION=1"
             echo "PLAYWRIGHT_PORT=3000"
             echo "NEXT_PUBLIC_APP_URL=http://127.0.0.1:3000"
@@ -99,6 +103,8 @@ jobs:
           npm run verify:local:regression
           npm run seed:local:relations
           npm run verify:local:relations
+          # En este mismo paso GITHUB_ENV todavía no rige: la contraseña va directa.
+          CLIENTE_TEST_PASSWORD='ClientePruebas2026!' node scripts/seed-cuenta-cliente.js
 
       - name: Verify account deletion isolation locally
         run: npm run test:account-deletion
@@ -130,12 +136,34 @@ jobs:
       - name: Build the production application locally
         run: npm run build
 
-      - name: Install Safari for the weekly WebKit pass
+      - name: Si el código no cambió desde la última certificación, no se repite
         if: github.event_name == 'schedule'
+        id: novedad
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Una regresión de 20 minutos sobre el mismo commit que ya pasó anoche
+          # no dice nada nuevo. Se busca la última corrida exhaustiva en verde:
+          # si fue sobre este mismo commit, la de hoy se salta.
+          ultimo=$(gh run list --workflow=regression-tests.yml --branch test --status success --limit 20 --json headSha,event -q '[.[] | select(.event != "push")] | .[0].headSha // ""')
+          if [ "$ultimo" = "${{ github.sha }}" ]; then
+            echo "Sin cambios desde la última certificación ($ultimo): no se repite."
+            echo "repetir=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "repetir=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: ¿Es lunes? (Safari pasa una vez por semana)
+        id: dia
+        if: github.event_name == 'schedule'
+        run: echo "lunes=$([ "$(date -u +%u)" = "1" ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+
+      - name: Install Safari for the weekly WebKit pass
+        if: steps.dia.outputs.lunes == 'true'
         run: npx playwright install --with-deps webkit
 
       - name: Run the public surfaces in Safari
-        if: github.event_name == 'schedule'
+        if: steps.dia.outputs.lunes == 'true'
         env:
           PLAYWRIGHT_WEBKIT: "1"
         run: >-
@@ -143,11 +171,11 @@ jobs:
           public-smoke search-results professional-profile services recent-visual-regression
 
       - name: Install Playwright browser for a manual release regression
-        if: github.event_name == 'workflow_dispatch'
+        if: github.event_name != 'push' && steps.novedad.outputs.repetir != 'false'
         run: npx playwright install --with-deps chromium
 
       - name: Run the exhaustive local release regression once
-        if: github.event_name == 'workflow_dispatch'
+        if: github.event_name != 'push' && steps.novedad.outputs.repetir != 'false'
         shell: bash
         run: |
           set -euo pipefail
@@ -155,15 +183,28 @@ jobs:
           # to make localhost stop answering late in the release suite. Keep the
           # database and runner isolated, but restart Next.js and Chromium between
           # four sequential shards so this remains one exhaustive certification.
+          # Los cuatro tramos corren siempre, aunque uno falle: si el primero se
+          # detuviera, los fallos de los otros tres solo aparecerían corrida a
+          # corrida (así pasó el 30-sep: tres días viendo solo el tramo 1).
+          fallidos=""
           for shard in 1 2 3 4; do
             export PLAYWRIGHT_JSON_REPORT="test-results/results-${shard}.json"
             export PLAYWRIGHT_OUTPUT_DIR="test-results/shard-${shard}"
             export PLAYWRIGHT_HTML_OUTPUT_DIR="playwright-report/shard-${shard}"
-            npx playwright test --shard="${shard}/4"
+            # La caché de datos de Next (unstable_cache) vive en disco y sobrevive
+            # al reinicio del servidor entre tramos; al vencer sirve lo viejo y
+            # recalcula después, así que un tramo veía profesionales desechables
+            # del tramo anterior. Cada tramo arranca con la caché limpia.
+            rm -rf .next/cache/fetch-cache
+            npx playwright test --shard="${shard}/4" || fallidos="${fallidos} ${shard}"
           done
+          if [ -n "$fallidos" ]; then
+            echo "::error::Tramos con fallos:${fallidos}"
+            exit 1
+          fi
 
       - name: Dump the local Supabase container logs after a failed regression
-        if: github.event_name == 'workflow_dispatch' && failure()
+        if: github.event_name != 'push' && steps.novedad.outputs.repetir != 'false' && failure()
         shell: bash
         run: |
           for name in $(docker ps --format '{{.Names}}' | grep -E 'supabase_(auth|rest|kong)_' || true); do
@@ -175,7 +216,7 @@ jobs:
           done
 
       - name: Require zero failures, flakies and unexpected skips
-        if: github.event_name == 'workflow_dispatch'
+        if: github.event_name != 'push' && steps.novedad.outputs.repetir != 'false'
         shell: bash
         run: |
           set -euo pipefail
@@ -184,11 +225,11 @@ jobs:
           done
 
       - name: Verify synthetic fixtures after the release regression
-        if: github.event_name == 'workflow_dispatch' && always()
+        if: github.event_name != 'push' && steps.novedad.outputs.repetir != 'false' && always()
         run: npm run verify:local:relations
 
       - name: Upload Playwright report
-        if: github.event_name == 'workflow_dispatch' && always()
+        if: github.event_name != 'push' && steps.novedad.outputs.repetir != 'false' && always()
         uses: actions/upload-artifact@v5
         with:
           name: playwright-report
@@ -198,3 +239,23 @@ jobs:
       - name: Stop local Supabase
         if: always()
         run: supabase stop --no-backup
+
+  avisar:
+    name: Avisar por correo si algo falló
+    needs: [local-database-contract]
+    if: ${{ always() && needs.local-database-contract.result == 'failure' }}
+    runs-on: ubuntu-latest
+    environment: test
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - env:
+          BREVO_API_KEY: ${{ secrets.BREVO_API_KEY }}
+          ALERTAS_CORREO: ${{ vars.ALERTAS_CORREO }}
+          CORRIDA: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: >-
+          node scripts/ci/avisar-por-correo.mjs
+          "🔴 ContrataCR: la regresión falló (${{ github.event_name }}, ${{ github.ref_name }})"
+          "Commit ${{ github.sha }}. Abre la corrida para ver qué prueba cayó."

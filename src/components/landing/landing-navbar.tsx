@@ -5,7 +5,7 @@ import { prefijoDeIdioma, rutaConIdioma } from "@/lib/prefijo-de-idioma";
 import { useState, useEffect, useRef, useMemo, useCallback, useTransition, type ReactNode } from "react";
 import { soltarFoco } from "@/lib/soltar-foco";
 import {
-  X, Menu, ChevronDown, ChevronRight, Search, MapPin, List, Map as MapIcon, ArrowLeft, Share2, Bot, ReceiptText,
+  X, Menu, ChevronDown, ChevronRight, Search, MapPin, List, Map as MapIcon, ArrowLeft, Share2, ReceiptText,
   Briefcase, Compass, Wrench,
   UserRound, UserRoundPlus, LogOut, FileText, MessageSquareText, Settings, Bell, MoreHorizontal,
   HelpCircle, ListChecks, Lightbulb, Headset, Globe2, Shield, Mail, ClipboardList, Clock, Bookmark } from "lucide-react";
@@ -27,7 +27,7 @@ import { prefetchDashboardBootstrap } from "@/lib/dashboard-bootstrap-cache";
 import { prefetchConversations } from "@/lib/direct-chat/conversations-cache";
 import { trackMetaEvent } from "@/lib/analytics/meta-pixel";
 import { useNativeApp } from "@/hooks/use-native-app";
-import { ALL_CATEGORIES, CATEGORY_GROUPS, searchCategories, normalizeText, getCategoryLabel, getCategoryGroupLabel, resolveCategoryIntent, getAllCategories, getAllCategoryGroups, getCategoryGroupId } from "@/lib/data/categories";
+import { ALL_CATEGORIES, CATEGORY_GROUPS, searchCategories, normalizeText, getCategoryLabel, getCategoryGroupLabel, resolveCategoryIntent, getAllCategories, getAllCategoryGroups, getCategoryGroupId, esServicioDelCatalogo } from "@/lib/data/categories";
 import { getCategoryGroupIcon } from "@/lib/data/category-group-visuals";
 import { useCustomCategories } from "@/lib/data/use-custom-categories";
 import { oficiosDeArranque } from "@/lib/data/oficios-de-arranque";
@@ -399,8 +399,8 @@ function CategoriesMegaPanel({ onNavigate }: { onNavigate: () => void }) {
 
   function go(id?: string) {
     if (id) router.push(rutaDeBusqueda({ categoria: id }));
-    else if (q.trim()) router.push(`/buscar?q=${encodeURIComponent(q.trim())}`);
-    else router.push("/buscar");
+    else if (q.trim()) router.push(`/profesionales?q=${encodeURIComponent(q.trim())}`);
+    else router.push("/profesionales");
     setQ("");
     onNavigate();
   }
@@ -740,16 +740,21 @@ export function HeaderAccountLink() {
   const t = useTranslations("nav");
   const label = t("login");
   const pathname = usePathname();
-  const locale = useLocale();
-  const [busqueda, setBusqueda] = useState("");
-  // Los filtros de la dirección (los de /buscar, por ejemplo) se leen ya en el
-  // navegador: leerlos con useSearchParams obligaría a envolver cada barra en
-  // un Suspense.
-  useEffect(() => { queueMicrotask(() => setBusqueda(window.location.search)); }, [pathname]);
+  const [aqui, setAqui] = useState("");
+  // La dirección de vuelta se lee ya en el navegador, de window.location: los
+  // filtros (leerlos con useSearchParams obligaría a envolver cada barra en un
+  // Suspense) y también la ruta, porque usePathname devuelve la interna
+  // —/buscar— cuando la persona está en /profesionales/… y volvía ahí sin su
+  // categoría ni su zona.
+  useEffect(() => {
+    queueMicrotask(() => {
+      const { pathname: ruta, search } = window.location;
+      setAqui(ruta && ruta !== "/" && ruta !== "/en" ? `${ruta}${search}` : "");
+    });
+  }, [pathname]);
   if (/(^|\/)(login|registro|olvide-contrasena|reset-password|onboarding)(\/|$)/.test(pathname ?? "")) {
     return <span className="h-10 w-10 shrink-0" aria-hidden />;
   }
-  const aqui = pathname && pathname !== "/" ? `${rutaConIdioma(locale, pathname)}${busqueda}` : "";
   return (
     <Link
       href={aqui ? `/login?redirect=${encodeURIComponent(aqui)}` : "/login"}
@@ -793,8 +798,13 @@ function GemeloDelBuscador({ pathname }: { pathname: string | null }) {
         <div className="relative min-w-0 flex-[1.85]">
           {/* Recorta, sin puntos suspensivos: así recorta un <input> su texto de
               ayuda. Con `truncate` el gemelo decía «busca…» y el campo de
-              verdad «buscas?», 67 píxeles de diferencia al montarse. */}
-          <span className="block h-11 w-full min-w-0 overflow-hidden whitespace-nowrap pr-9 text-base font-normal leading-[2.75rem] text-gray-400">{t(tablero)}</span>
+              verdad «buscas?», 67 píxeles de diferencia al montarse. Y recorta
+              en el borde del CONTENIDO, no del relleno: un <input> no deja ver
+              texto bajo su pr-9, un <span> con overflow-hidden sí (en una barra
+              angosta el gemelo decía «buscas?» y el campo «buscas», 52 px). */}
+          <span className="block h-11 w-full min-w-0 pr-9">
+            <span className="block h-11 w-full min-w-0 overflow-hidden whitespace-nowrap text-base font-normal leading-[2.75rem] text-gray-400">{t(tablero)}</span>
+          </span>
         </div>
         <span className="block h-6 w-px shrink-0 bg-[#dfe5eb]" />
         <div style={{ minWidth: 120 }} className="relative flex-1">
@@ -824,6 +834,9 @@ export function HeaderMessagesLink({ unreadCount, label, href = "/mensajes" }: {
   return (
     <Link
       href={href}
+      // Precargada entera: la bandeja es liviana (se arma en el teléfono) y así
+      // tocar el icono entra al instante, sin la espera de ~300 ms del servidor.
+      prefetch={true}
       aria-label={label}
       className="relative grid h-10 w-10 place-items-center rounded-xl text-[#1A2744] transition-colors hover:bg-[#f3f4f6] hover:text-[#009FD9]"
     >
@@ -908,6 +921,10 @@ function guardarCapacidad(capacidad: CapacidadGuardada) {
   try { window.localStorage.setItem(CLAVE_CAPACIDAD + capacidad.userId, JSON.stringify(capacidad)); } catch { /* sin almacenamiento */ }
 }
 
+// Se enciende la primera vez que un encabezado termina de hidratar (ver
+// `hydrated` en LandingNavbar).
+let encabezadoYaHidratado = false;
+
 export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobileSearch = false, marketplaceDesktop = false, drawerOnly = false }: { mobileInline?: React.ReactNode; forceCompactSearch?: boolean; mobileSearch?: boolean; marketplaceDesktop?: boolean; drawerOnly?: boolean } = {}) {
   const [compact, setCompact] = useState(false);
   const [openMenu, setOpenMenu] = useState<string | null>(null);
@@ -921,7 +938,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   // nacía vacío y un efecto lo llenaba tras el primer pintado: se veía el texto
   // de ayuda («Servicio») y un instante después el oficio buscado. El efecto de
   // abajo sigue leyendo la dirección al navegar; aquí solo se adelanta el primer cuadro.
-  const contextoInicial = esRutaDeBusqueda(pathname) ? contextoDeBusquedaDesdeUrl(currentSearchParams, locale) : null;
+  const contextoInicial = esRutaDeBusqueda(pathname, esServicioDelCatalogo) ? contextoDeBusquedaDesdeUrl(currentSearchParams, locale) : null;
   const [searchQuery, setSearchQuery] = useState(contextoInicial?.servicio ?? "");
   const [searchListDominant, setSearchListDominant] = useState(false);
   useCustomCategories();
@@ -930,6 +947,12 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   const [searchActiveIdx, setSearchActiveIdx] = useState(-1);
   const [searchFocused, setSearchFocused] = useState(false);
   const [nativeSearchOpen, setNativeSearchOpen] = useState(false);
+  // La barra de abajo marca «Buscar» mientras el buscador está abierto: el
+  // buscador va encima de cualquier pantalla y la dirección no cambia, así que
+  // sin este aviso la barra no sabía que se estaba buscando.
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent("ccr:buscador-nativo", { detail: { abierto: nativeSearchOpen } }));
+  }, [nativeSearchOpen]);
   const [busquedasRecientes, setBusquedasRecientes] = useState<BusquedaReciente[]>([]);
   const [visitasRecientes, setVisitasRecientes] = useState<RecentVisit[]>([]);
   const [currentLocationSuggestions, setCurrentLocationSuggestions] = useState<LocationSuggestion[] | null>(null);
@@ -1020,16 +1043,19 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
     return () => document.removeEventListener("scroll", onScroll, { capture: true });
   }, [nativeApp]);
   const nativeMessageUnread = useDirectMessageUnread(nativeApp);
-  const [hydrated, setHydrated] = useState(false);
+  // La espera de «hidratado» es para la PRIMERA carga, donde el servidor no
+  // sabe si es la app y el primer pintado tiene que coincidir con el suyo.
+  // Cada pantalla monta su propio encabezado: después de esa primera vez, uno
+  // nuevo nace ya en su versión de la app. Si no, en cada navegación el icono
+  // de Mensajes faltaba uno o dos cuadros (el «parpadeo» del icono).
+  const [hydrated, setHydrated] = useState(() => encabezadoYaHidratado);
   const nativeHeaderShell = hydrated && nativeApp;
   const { user, loading: authLoading, accountName, hasProfessionalProfile: fichaProDelServidor } = useAuth();
-  const nativeSearchRoute = /(^|\/)buscar(?:\/|$)/.test(pathname ?? "");
   // Search is a full-viewport map + results sheet. Do not merely hide the nav
   // with CSS: leaving it mounted keeps its layout class and safe-area reserve
   // active, which shortens the sheet and the full-screen search overlay.
   const accesoHref = (destino: string) => `/login?redirect=${encodeURIComponent(rutaConIdioma(locale, destino))}`;
   const enMensajes = /(^|\/)mensajes(?:\/|$)/.test(pathname ?? "");
-  const enNotificaciones = /(^|\/)notificaciones(?:\/|$)/.test(pathname ?? "");
   const nativeFullscreenRoute = /(^|\/)(?:publicar-proyecto|(?:empleos|promociones)\/publicar)(?:\/|$)/.test(pathname ?? "");
   // LA PRIMERA PINTURA YA SABE SI ESTA CUENTA OFRECE SERVICIOS.
   //
@@ -1070,7 +1096,8 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   const effectiveMarketplaceDesktop = marketplaceDesktop || (isMarketplaceRoute && !isMarketplaceEditor);
   // Empleos, ofertas y /buscar traen sus propios filtros pegados a la barra: la
   // línea de la barra caía justo encima de ellos y se leía como una raya suelta.
-  const rutaConFiltrosPegados = (isMarketplaceRoute && !isMarketplaceEditor) || /\/buscar(?:\/|$)/.test(pathname ?? "");
+  // Mensajes igual: su buscador va pegado a la barra, como el de Empleos.
+  const rutaConFiltrosPegados = (isMarketplaceRoute && !isMarketplaceEditor) || esRutaDeBusqueda(pathname, esServicioDelCatalogo) || enMensajes;
   const compactEnabled = true;
   const effectiveCompact = compactEnabled && (forceCompactSearch || !isHomePage || compact);
   // En escritorio el buscador compacto del navbar aparece en el home al pasar el
@@ -1096,7 +1123,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   // bajar. Va DENTRO del renglón (el logotipo se reduce a la marca) para que la
   // barra no crezca a mitad del scroll y empuje la página.
   const buscadorHomeMovilBase = isHomePage && compact && !mobileInline && !rutaSinBuscador && !showMobileNavbarSearch;
-  const showSearchViewToggle = showMobileNavbarSearch && esRutaDeBusqueda(pathname);
+  const showSearchViewToggle = showMobileNavbarSearch && esRutaDeBusqueda(pathname, esServicioDelCatalogo);
 
   // The layout below the navbar is sized by --ccr-native-header-height. Setting it
   // only from the effect above meant the server-rendered page used the 64px default
@@ -1159,14 +1186,14 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
       : null,
     [headerLatitude, headerLongitude],
   );
-  const searchRouteHasContext = esRutaDeBusqueda(pathname) && Boolean(explicitHeaderService || explicitHeaderLocation);
+  const searchRouteHasContext = esRutaDeBusqueda(pathname, esServicioDelCatalogo) && Boolean(explicitHeaderService || explicitHeaderLocation);
   const headerNextServiceLabel = mobileSlidingService.next || headerServiceLabel;
   const headerServiceShouldSlide = !explicitHeaderService && showMobileNavbarSearch && !nativeSearchOpen && !searchQuery.trim() && nativeSearchServices.length > 1;
   const hasSearchService = searchQuery.trim().length > 0 || !!searchCategoryId;
   const hasSearchLocation = navLocation.trim().length > 0 || !!navLocationSel || !!navCurrentCoords;
 
   useEffect(() => {
-    if (!esRutaDeBusqueda(pathname)) return;
+    if (!esRutaDeBusqueda(pathname, esServicioDelCatalogo)) return;
     let active = true;
     queueMicrotask(() => {
       if (!active) return;
@@ -1180,6 +1207,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   }, [explicitHeaderLocation, explicitHeaderService, headerCategoryId, headerGroupLabel, headerCoordinates, headerLocationSuggestion, pathname]);
 
   useEffect(() => {
+    encabezadoYaHidratado = true;
     queueMicrotask(() => setHydrated(true));
   }, []);
 
@@ -1330,7 +1358,9 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   // use Next's prefetched route payload instead of waiting after the click.
   useEffect(() => {
     const timeout = window.setTimeout(() => {
-      router.prefetch("/buscar");
+      // En la app la pestaña Profesionales abre el buscador, no la página: no
+      // se precarga la búsqueda en cada pantalla. En la web sí se entra a ella.
+      if (!nativeApp) router.prefetch("/profesionales");
       if (user && !pathname.startsWith("/dashboard/profesional")) {
         router.prefetch(primaryPanelHref);
         prefetchDashboardBootstrap(user.id);
@@ -1339,10 +1369,6 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
     return () => window.clearTimeout(timeout);
   }, [nativeApp, pathname, primaryPanelHref, router, user]);
 
-  useEffect(() => {
-    if (!nativeApp) return;
-    router.prefetch("/buscar");
-  }, [nativeApp, router]);
 
   useEffect(() => {
     if (!nativeApp || !user) return;
@@ -1806,9 +1832,22 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   }
 
   useEffect(() => {
-    const open = () => openNativeSearch();
+    // Quien lo pide (la pestaña Profesionales) sabe así que hubo un buscador
+    // que lo atendió; si no, navega a la búsqueda.
+    const open = (event: Event) => {
+      const pedido = (event as CustomEvent<{ atendido?: boolean } | null>).detail;
+      if (pedido) pedido.atendido = true;
+      openNativeSearch();
+    };
+    // El Asistente y el «+» no cambian de dirección: el buscador no se
+    // cerraba solo y quedaba ENCIMA de lo que abrían. Lo piden cerrar.
+    const cerrar = () => closeNativeSearch();
     window.addEventListener("ccr:open-native-search", open);
-    return () => window.removeEventListener("ccr:open-native-search", open);
+    window.addEventListener("ccr:close-native-search", cerrar);
+    return () => {
+      window.removeEventListener("ccr:open-native-search", open);
+      window.removeEventListener("ccr:close-native-search", cerrar);
+    };
   }, []);
 
   useEffect(() => {
@@ -1879,7 +1918,12 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   }
 
   function selectNativeCompactSuggestion(id: string) {
-    const picked = compactSuggestions.find((c) => c.id === id);
+    // «Los más buscados» se tocan con el campo VACÍO: ahí las sugerencias de lo
+    // escrito no tienen nada y el servicio no llegaba al campo. El nombre sale
+    // del catálogo cuando no está entre las sugerencias.
+    const sugerido = compactSuggestions.find((c) => c.id === id);
+    const nombre = sugerido?.label ?? getCategoryLabel(id, locale);
+    const picked = nombre ? { id, label: nombre } : undefined;
     if (picked) {
       setSearchQuery(repairVisibleText(picked.label));
       setSearchCategoryId(id);
@@ -1994,7 +2038,10 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
             // algo pasando por debajo, y mide 0.18 de opacidad con el borde
             // recogido, que es la misma de todas las cabeceras del app. En
             // reposo la barra sigue separándose con la línea de siempre.
-            rutaConFiltrosPegados
+            // Dentro de Archivados/Bloqueados (una vista con flecha, sin
+            // buscador) la barra vuelve a llevar su línea, como toda pantalla
+            // interna: el buscador pegado, que la hacía sobrar, no está.
+            rutaConFiltrosPegados && !(enMensajes && sectionActive && !sectionRoot)
               // En la app la barra se funde con los filtros; en computadora la
               // línea va siempre, o el encabezado y los filtros se leían como
               // una sola mancha blanca.
@@ -2016,9 +2063,10 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
             )}>
               <div className={cn(
                 "absolute left-0 right-0 top-0 flex h-16 items-center lg:hidden",
-                nativeHeaderShell
-                  ? "justify-start gap-1.5"
-                  : "justify-start gap-2",
+                // gap-2 en la app también: la marca a 64 y el título a 104,
+                // como en los tableros (cabecera.ts). Con gap-1.5 quedaban 2 px
+                // corridos al pasar de Empleos a Notificaciones.
+                "justify-start gap-2",
               )}>
                 {sectionActive && sectionRoot ? (
                   <>
@@ -2096,15 +2144,8 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                           href={user ? "/mensajes" : accesoHref("/mensajes")}
                         />
                       )}
-                      {!enNotificaciones &&
-                        (user ? (
-                          <NotificationBell scope="all" />
-                        ) : (
-                          <HeaderNotificationsLink
-                            href={accesoHref("/notificaciones")}
-                            label={locale === "en" ? "Notifications" : "Notificaciones"}
-                          />
-                        ))}
+                      {/* Sin campana: en la app Notificaciones vive en el menú
+                          de abajo (30-sep-2026). Aquí solo Mensajes. */}
                     </div>
                   ) : (
                     <span className="h-10 w-10 shrink-0" aria-hidden />
@@ -2264,7 +2305,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                             entra a este menú. Antes solo se llegaba escribiendo
                             en el buscador de la barra, así que quien no sabía
                             que ese campo llevaba a algún lado no llegaba nunca. */}
-                        <Link href="/buscar" onClick={() => setOpenMenu(null)} className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-[#1A2744] transition-colors hover:bg-gray-50 hover:text-[#009FD9]">
+                        <Link href="/profesionales" onClick={() => setOpenMenu(null)} className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-[#1A2744] transition-colors hover:bg-gray-50 hover:text-[#009FD9]">
                           <Search className="h-5 w-5 shrink-0" />
                           {locale === "en" ? "Find professionals" : "Buscar profesionales"}
                         </Link>
@@ -3052,26 +3093,31 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                     <span className={mobileDrawerTextClass}>{t("searchProfessionals")}</span>
                   </button>
                 )}
-                {/* Proyectos vive fijo en la barra de abajo de la app. Aquí solo
-                    aparece en la web móvil, donde no hay barra. */}
-                {!nativeHeaderShell && (
+                {/* Desde el menú flotante (30-sep-2026) Proyectos, Promociones y
+                    Empleos viven aquí también en la app: abajo quedan buscar,
+                    el asistente, crear, notificaciones y el panel. */}
+                {(
                   <Link href="/proyectos" onClick={(event) => { cerrarCajon(); navigateNativeMarketplace(event, "/proyectos"); }} className={claseCajon("/proyectos")}>
                     <DrawerIcon><ClipboardList /></DrawerIcon>
                     <span className={mobileDrawerTextClass}>{locale === "en" ? "Projects" : "Proyectos"}</span>
                   </Link>
                 )}
-                {!nativeHeaderShell && (
+                {(
                   <Link href="/promociones" onClick={(event) => { cerrarCajon(); navigateNativeMarketplace(event, "/promociones"); }} className={claseCajon("/promociones")}>
                     <DrawerIcon><OfferTagPercentIcon className="h-5 w-5" /></DrawerIcon>
                     <span className={mobileDrawerTextClass}>{locale === "en" ? "Promotions" : "Promociones"}</span>
                   </Link>
                 )}
-                {EMPLEOS_VISIBLE && !nativeHeaderShell && (
+                {EMPLEOS_VISIBLE && (
                   <Link href="/empleos" onClick={(event) => { cerrarCajon(); navigateNativeMarketplace(event, "/empleos"); }} className={claseCajon("/empleos")}>
                     <DrawerIcon><Briefcase /></DrawerIcon>
                     <span className={mobileDrawerTextClass}>{locale === "en" ? "Jobs" : "Empleos"}</span>
                   </Link>
                 )}
+                <Link href="/servicios" onClick={cerrarCajon} className={claseCajon("/servicios")}>
+                  <DrawerIcon><Wrench /></DrawerIcon>
+                  <span className={mobileDrawerTextClass}>{t("categories")}</span>
+                </Link>
                 {/* PRIMERO LO QUE SE HACE, DESPUÉS LO QUE AYUDA. Cotizaciones
                     es trabajo del profesional y va arriba del Asistente, que es
                     una ayuda que se abre encima y se cierra. */}
@@ -3084,16 +3130,6 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                 {/* El Asistente es lo único que el cajón aporta de nuevo en la
                     app: una ayuda que se abre encima y se cierra, no un destino.
                     Va para todos, con sesión o sin ella. */}
-                {nativeHeaderShell && (
-                  <button type="button" onClick={() => { cerrarCajon(); window.dispatchEvent(new Event("contratacr:open-ai")); }} className={mobileDrawerItemClass}>
-                    <DrawerIcon><Bot /></DrawerIcon>
-                    <span className={mobileDrawerTextClass}>{tNav("assistant")}</span>
-                  </button>
-                )}
-                <Link href="/servicios" onClick={cerrarCajon} className={claseCajon("/servicios")}>
-                  <DrawerIcon><Wrench /></DrawerIcon>
-                  <span className={mobileDrawerTextClass}>{t("categories")}</span>
-                </Link>
                 {user && isAdminUser && (
                   <Link href="/admin" onClick={cerrarCajon} className={mobileDrawerItemClass}>
                     <DrawerIcon><Shield /></DrawerIcon>

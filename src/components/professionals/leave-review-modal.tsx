@@ -36,6 +36,31 @@ function currentLocalePrefix() {
   return segment === "en" ? "/en" : "";
 }
 
+// LA RESEÑA PROPIA, RECORDADA. Si ya dejaste una, la caja arrancaba vacía y
+// cambiaba a tu reseña al llegar la consulta; y como la caja se vuelve a crear
+// al cambiar de pestaña, eso pasaba cada vez. Lo ya consultado se guarda en la
+// sesión: al volver sale al instante y la consulta solo lo mantiene al día.
+type ReseñaPropia = { rating: number; comment: string } | null;
+const reseñasPropias = new Map<string, ReseñaPropia>();
+const CLAVE_RESEÑA_PROPIA = "ccr:resena-propia:";
+function leerReseñaPropia(consulta: string): ReseñaPropia | undefined {
+  if (reseñasPropias.has(consulta)) return reseñasPropias.get(consulta);
+  if (typeof window === "undefined") return undefined;
+  try {
+    const crudo = window.sessionStorage.getItem(CLAVE_RESEÑA_PROPIA + consulta);
+    if (crudo === null) return undefined;
+    const valor = JSON.parse(crudo) as ReseñaPropia;
+    reseñasPropias.set(consulta, valor);
+    return valor;
+  } catch {
+    return undefined;
+  }
+}
+function guardarReseñaPropia(consulta: string, valor: ReseñaPropia) {
+  reseñasPropias.set(consulta, valor);
+  try { window.sessionStorage.setItem(CLAVE_RESEÑA_PROPIA + consulta, JSON.stringify(valor)); } catch { /* sin almacenamiento */ }
+}
+
 export function LeaveReviewModal({
   professionalId,
   professionalName,
@@ -51,19 +76,6 @@ export function LeaveReviewModal({
   pedirNombre = false,
 }: LeaveReviewModalProps) {
   const t = useTranslations("reviewModal");
-  const [rating, setRating] = useState(initialReview?.rating ?? 0);
-  const [hovered, setHovered] = useState(0);
-  const [comment, setComment] = useState(initialReview?.comment ?? "");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
-  const [isEditing, setIsEditing] = useState(Boolean(initialReview));
-  const [nombre, setNombre] = useState("");
-  // La reseña propia se consulta al montar. Sin esta espera el cuadro se pintaba
-  // vacío ("Dejar tu reseña", 0 estrellas) y saltaba a la reseña existente
-  // cuando llegaba la respuesta: eso era el parpadeo.
-  const [prefilledKey, setPrefilledKey] = useState<string | null>(null);
-  const pendingReviewKey = `${PENDING_REVIEW_KEY_PREFIX}${professionalId}`;
   const query = bookingId
     ? `bookingId=${bookingId}`
     : projectId
@@ -71,6 +83,22 @@ export function LeaveReviewModal({
       : contactId
         ? `contactId=${contactId}`
         : `professionalId=${professionalId}`;
+  // Lo ya consultado en esta sesión (el Map vive mientras la app no se recarga,
+  // así que en una carga completa arranca vacío y no descuadra la hidratación).
+  const recordada = isAuthenticated && !initialReview ? reseñasPropias.get(query) ?? null : null;
+  const [rating, setRating] = useState(initialReview?.rating ?? recordada?.rating ?? 0);
+  const [hovered, setHovered] = useState(0);
+  const [comment, setComment] = useState(initialReview?.comment ?? recordada?.comment ?? "");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
+  const [isEditing, setIsEditing] = useState(Boolean(initialReview) || Boolean(recordada));
+  const [nombre, setNombre] = useState("");
+  // La reseña propia se consulta al montar. Sin esta espera el cuadro se pintaba
+  // vacío ("Dejar tu reseña", 0 estrellas) y saltaba a la reseña existente
+  // cuando llegaba la respuesta: eso era el parpadeo.
+  const [prefilledKey, setPrefilledKey] = useState<string | null>(null);
+  const pendingReviewKey = `${PENDING_REVIEW_KEY_PREFIX}${professionalId}`;
   // Sin esta espera el cuadro se pintaba vacío ("Dejar tu reseña", 0 estrellas)
   // y saltaba a la reseña existente cuando llegaba la respuesta: el parpadeo.
   // SIN ESQUELETO PARA PREGUNTAR ALGO QUE CASI SIEMPRE ES «NO».
@@ -95,13 +123,23 @@ export function LeaveReviewModal({
   useEffect(() => {
     if (!isAuthenticated || initialReview) return;
     let active = true;
+    // Tras recargar, lo guardado en la sesión se pinta antes de la consulta.
+    const guardada = reseñasPropias.has(query) ? undefined : leerReseñaPropia(query);
     void (async () => {
+      if (guardada) {
+        setRating(guardada.rating);
+        setComment(guardada.comment);
+        setIsEditing(true);
+      }
       try {
         const response = await fetch(`/api/reviews?${query}`);
         const data = await response.json();
-        if (active && data.review) {
-          setRating(data.review.rating ?? 0);
-          setComment(data.review.comment ?? "");
+        if (!response.ok) return;
+        const propia: ReseñaPropia = data.review ? { rating: data.review.rating ?? 0, comment: data.review.comment ?? "" } : null;
+        guardarReseñaPropia(query, propia);
+        if (active && propia) {
+          setRating(propia.rating);
+          setComment(propia.comment);
           setIsEditing(true);
         }
       } catch {
@@ -268,6 +306,8 @@ export function LeaveReviewModal({
         setError(data.error ?? t("errSubmit"));
         return;
       }
+      // Lo recién guardado es la reseña propia de ahora en adelante.
+      guardarReseñaPropia(query, { rating, comment: comment.trim() });
       setSuccess(true);
       window.setTimeout(() => {
         onSuccess?.();

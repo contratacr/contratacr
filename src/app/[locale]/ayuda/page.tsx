@@ -39,7 +39,7 @@ const TOPICS = [
   { icon: MessageCircle, faq: 13, cat: 9 },
 ].filter((topic) => EMPLEOS_VISIBLE || topic.cat !== 6);
 // La pregunta 9 es sobre postularse a un empleo.
-const FAQS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14].filter((faq) => EMPLEOS_VISIBLE || faq !== 9);
+const FAQS = [0, 1, 2, 15, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14].filter((faq) => EMPLEOS_VISIBLE || faq !== 9);
 
 export default function AyudaPage() {
   const tSeccion = useTranslations("sectionTitles");
@@ -69,7 +69,7 @@ export default function AyudaPage() {
   return (
     <div className="flex min-h-screen flex-col bg-white">
       <LandingNavbar />
-      <SectionHeaderTitle title={tSeccion("help")} fallbackHref="/" />
+      <SectionHeaderTitle title={tSeccion("help")} fallbackHref="/" raiz />
       <div className="ccr-navbar-spacer h-16" aria-hidden />
       <main className="flex-1">
         <section className="border-b border-[#e5e7eb] px-4 pb-10 pt-4 sm:pb-12 lg:pt-8">
@@ -94,7 +94,7 @@ export default function AyudaPage() {
               <p className="mt-1 text-sm leading-6 text-[#6b7280]">{t("topicsSubtitle")}</p>
               <nav className="mt-5 space-y-2" aria-label={t("topicsTitle")}>
                 {TOPICS.map(({ icon: Icon, faq, cat }) => (
-                  <button key={cat} type="button" onClick={() => selectTopic(faq)} className={`flex w-full items-center gap-3 rounded-lg border px-4 py-3 text-left transition-colors ${openFaq === faq ? "border-[#9bd8ef] bg-[#eaf7fd] text-[#0089bb]" : "border-[#e5e7eb] bg-white text-[#162543] hover:border-[#b8dcea]"}`}>
+                  <button key={cat} type="button" onClick={() => selectTopic(faq)} className={`${faq === 8 ? "ccr-solo-web " : ""}flex w-full items-center gap-3 rounded-lg border px-4 py-3 text-left transition-colors ${openFaq === faq ? "border-[#9bd8ef] bg-[#eaf7fd] text-[#0089bb]" : "border-[#e5e7eb] bg-white text-[#162543] hover:border-[#b8dcea]"}`}>
                     <Icon className="h-4 w-4 shrink-0" />
                     <span className="text-sm font-bold">{t(`cat${cat}Title`)}</span>
                   </button>
@@ -108,7 +108,7 @@ export default function AyudaPage() {
                 <p className="mt-1 text-sm text-[#6b7280]">{t("faqSubtitle")}</p>
               </div>
               {FAQS.map((index) => (
-                <div key={index} id={`faq-${index}`} className="scroll-mt-28 border-b border-[#eef2f6] last:border-0">
+                <div key={index} id={`faq-${index}`} className={`${index === 8 ? "ccr-solo-web " : ""}scroll-mt-28 border-b border-[#eef2f6] last:border-0`}>
                   <button type="button" onClick={() => setOpenFaq(openFaq === index ? null : index)} aria-expanded={openFaq === index} className="flex w-full items-center justify-between gap-4 py-5 text-left">
                     <span className="text-sm font-bold leading-6 text-[#162543]">{t(`faq${index}Q`)}</span>
                     <ChevronDown className={`h-5 w-5 shrink-0 text-[#68778d] transition-transform ${openFaq === index ? "rotate-180 text-[#009fd9]" : ""}`} />
