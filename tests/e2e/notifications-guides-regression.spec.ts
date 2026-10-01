@@ -62,7 +62,8 @@ async function openGuides(page: Page, locale: Locale) {
   await openButton.click();
   // Guías es una ventana sobre el panel, no una sección con dirección propia.
   const ventana = page.getByRole("dialog").filter({ visible: true }).first();
-  await expect(ventana).toBeVisible();
+  // Tras decenas de recargas seguidas el servidor del CI tarda en abrirla.
+  await expect(ventana).toBeVisible({ timeout: 30_000 });
   return ventana;
 }
 

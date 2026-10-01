@@ -753,12 +753,13 @@ test.describe("@seeded core regression", () => {
     await resetAuth(page);
     await gotoOK(page, "/en/promociones");
 
-    await expect(page.getByRole("heading", { name: "Offers" })).toBeVisible();
-    // El tablero ya no lleva la frase de apoyo bajo el título (los subtítulos
-    // sueltos salieron de las pantallas): lo que prueba que está en inglés son
-    // sus propios filtros.
-    await expect(page.getByRole("button", { name: /Date posted/i }).first()).toBeVisible();
-    await expect(page.getByRole("button", { name: /Offer type/i }).first()).toBeVisible();
+    // Desde el 28-sep-2026 «ofertas» es «promociones» en los dos idiomas.
+    await expect(page.getByRole("heading", { name: "Promotions" })).toBeVisible();
+    // El tablero ya no lleva la frase de apoyo bajo el título ni filtros fijos
+    // (salen con volumen): lo que prueba que está en inglés es el verbo de cada
+    // tarjeta («View …») y el texto de ayuda del buscador.
+    await expect(page.getByRole("button", { name: /^View / }).first()).toBeVisible();
+    await expect(page.getByPlaceholder(/promotion/i).first()).toBeVisible();
     const publishedOfferTitle = `${E2E_USERS.professional.fullName}: oferta published`;
     await expect(page.getByText(publishedOfferTitle).first()).toBeVisible();
     await expectNoHorizontalOverflow(page);

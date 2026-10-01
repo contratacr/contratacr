@@ -1,5 +1,5 @@
 import { test, expect } from "playwright/test";
-import { gotoOK, isMobileProject, loginAs } from "./helpers";
+import { gotoOK, isMobileProject, loginAs, expectNoHorizontalOverflow } from "./helpers";
 import { E2E_USERS } from "./seed";
 
 // La franja de acciones pegada al fondo es UNA sola pantalla repetida: soporte,
@@ -96,6 +96,9 @@ test.describe("@seeded franjas de acciones al pie", () => {
     await loginAs(page, E2E_USERS.professional.email, E2E_USERS.professional.password);
     for (const [nombre, ruta] of [["publicar empleo", "/empleos/publicar"], ["publicar promoción", "/promociones/publicar"]] as const) {
       await gotoOK(page, ruta);
+      // Si la página se ensancha (en el CI la franja de empleo medía 397 px en
+      // una pantalla de 390), el desborde dice qué se sale antes que la franja.
+      await expectNoHorizontalOverflow(page);
       medidas.push({ nombre, franja: await medirFranja(page) });
     }
 
