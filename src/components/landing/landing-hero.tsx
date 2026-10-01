@@ -42,12 +42,16 @@ const urlDeFoto = (id: string, w: number) => `https://images.unsplash.com/photo-
 
 function FotoDeFondo() {
   const [actual, setActual] = useState(0);
+  // La anterior se queda VISIBLE debajo mientras la nueva entra encima. Antes
+  // todas se desvanecían a la vez y, al volver a la primera (que está debajo
+  // de las demás en el DOM), por un instante se veía el fondo: un «refresco».
+  const [anterior, setAnterior] = useState<number | null>(null);
   // Las otras fotos se piden después de la primera, no compiten con ella.
   const [cargarResto, setCargarResto] = useState(false);
   useEffect(() => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const empezar = window.setTimeout(() => setCargarResto(true), 1500);
-    const id = window.setInterval(() => setActual((i) => (i + 1) % HERO_FOTOS.length), CADA_FOTO_MS);
+    const id = window.setInterval(() => setActual((i) => { setAnterior(i); return (i + 1) % HERO_FOTOS.length; }), CADA_FOTO_MS);
     return () => { window.clearTimeout(empezar); window.clearInterval(id); };
   }, []);
   const anchos = [800, 1200, 1600, 2200, 2800];
@@ -63,7 +67,10 @@ function FotoDeFondo() {
           alt=""
           fetchPriority={i === 0 ? "high" : "low"}
           decoding="async"
-          className={cn("ccr-hero-foto-capa absolute inset-0 h-full w-full object-cover transition-opacity duration-[1400ms] ease-in-out", i === actual ? "opacity-100" : "opacity-0")}
+          className={cn(
+            "ccr-hero-foto-capa absolute inset-0 h-full w-full object-cover",
+            i === actual ? "z-20 opacity-100 transition-opacity duration-[1400ms] ease-in-out" : i === anterior ? "z-10 opacity-100" : "z-0 opacity-0",
+          )}
           style={{ objectPosition: foto.foco }}
         />
       ))}
