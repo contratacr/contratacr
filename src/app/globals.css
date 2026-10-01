@@ -2016,8 +2016,8 @@ body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-native-fab {
 
 .featured-brand-item {
   display: flex;
-  width: clamp(7.25rem, 9.4vw, 9.5rem);
-  height: clamp(5rem, 5.9vw, 6rem);
+  width: clamp(5.75rem, 8vw, 8rem);
+  height: clamp(3.75rem, 4.6vw, 4.75rem);
   flex: 0 0 auto;
   align-items: center;
   justify-content: center;
@@ -2555,3 +2555,10 @@ body.ccr-native-app:has(.ccr-native-search-panel) .ccr-native-bottom-nav {
   100% { background-color: transparent; }
 }
 .ccr-mensaje-senalado { animation: ccr-senal-de-mensaje 1.4s ease-out; }
+
+/* La portada termina en «Buscar por zona», que trae 80 px abajo para separarse
+   del pie del sitio. En la app no hay pie: ese aire se sumaba a la reserva de la
+   barra y quedaba un hueco grande al final. */
+html.ccr-native-app .ccr-fin-de-portada > section {
+  padding-bottom: 1.5rem;
+}

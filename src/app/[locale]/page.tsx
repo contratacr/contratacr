@@ -117,7 +117,7 @@ export default async function HomePage({
         <WhyContratacr />
 
         {/* Zones: find professionals by province using real coverage. */}
-        <FadeInUp delay={40}>
+        <FadeInUp delay={40} className="ccr-fin-de-portada">
           <FindByZone coverage={coverage} />
         </FadeInUp>
 

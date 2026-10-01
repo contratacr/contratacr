@@ -885,7 +885,7 @@ export function LandingHero() {
       {/* Arch / dome image — responsive height */}
       <div className="flex justify-center px-4 pb-0">
         <div
-          className="relative overflow-hidden w-full h-[180px] bg-[#c9d6e0] sm:h-[280px] md:h-[360px] lg:h-[420px]"
+          className="relative overflow-hidden w-full h-[140px] bg-[#c9d6e0] min-[400px]:h-[170px] sm:h-[250px] md:h-[300px] lg:h-[330px]"
           style={{
             maxWidth: 800,
             borderRadius: "50% 50% 0 0 / 100% 100% 0 0",
