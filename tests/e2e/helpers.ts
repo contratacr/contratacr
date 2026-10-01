@@ -244,11 +244,18 @@ export async function expectNoHorizontalOverflow(page: Page) {
       }
       return false;
     };
+    const seSale = (el: Element) => el.getBoundingClientRect().right > clientWidth + 1 && el.getBoundingClientRect().width > 0;
+    // Solo los culpables RAÍZ: los que se salen sin que su padre se salga. Un
+    // formulario entero a 397 px señala a su contenedor, no a cada campo.
     const culpables = Array.from(document.querySelectorAll<HTMLElement>("body *"))
-      .filter((el) => el.getBoundingClientRect().right > clientWidth + 1 && el.getBoundingClientRect().width > 0 && !dentroDeCarril(el))
-      .slice(0, 6)
-      .map((el) => `${el.tagName.toLowerCase()}.${[...el.classList].slice(0, 3).join(".")} right=${Math.round(el.getBoundingClientRect().right)} «${(el.textContent ?? "").trim().slice(0, 40)}»`);
-    return { clientWidth, scrollWidth: document.documentElement.scrollWidth, culpables };
+      .filter((el) => seSale(el) && !dentroDeCarril(el) && !(el.parentElement && el.parentElement !== document.body && seSale(el.parentElement)))
+      .slice(0, 5)
+      .map((el) => {
+        const cs = getComputedStyle(el); const r = el.getBoundingClientRect();
+        return `${el.tagName.toLowerCase()}.${[...el.classList].slice(0, 4).join(".")} x=${Math.round(r.x)} w=${Math.round(r.width)} css(w=${cs.width} pad=${cs.paddingLeft}/${cs.paddingRight} mar=${cs.marginLeft}/${cs.marginRight} pos=${cs.position}) «${(el.textContent ?? "").trim().slice(0, 30)}»`;
+      });
+    const medidas = `innerWidth=${window.innerWidth} html=${document.documentElement.getBoundingClientRect().width} body=${document.body.getBoundingClientRect().width} main=${document.querySelector("main")?.getBoundingClientRect().width ?? "-"}`;
+    return { clientWidth, scrollWidth: document.documentElement.scrollWidth, culpables: [medidas, ...culpables] };
   });
   expect(size.scrollWidth, `Page should not overflow horizontally (${page.url()}): ${size.culpables.join(" | ")}`).toBeLessThanOrEqual(size.clientWidth + 4);
 }

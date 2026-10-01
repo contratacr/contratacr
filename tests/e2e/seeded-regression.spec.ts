@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { expect, test } from "playwright/test";
 import { CITAS_ACTIVAS } from "../../src/lib/citas";
-import { apiJson, expectNoHorizontalOverflow, gotoOK, loginAs, openLoginForm, resetAuth } from "./helpers";
+import { apiJson, expectNoHorizontalOverflow, gotoOK, loginAs, openLoginForm, resetAuth, isMobileProject } from "./helpers";
 import { canRunSeededRegression, E2E_USERS, ensureRegressionSeed, regressionAdminClient, type RegressionSeedState } from "./seed";
 import { getCategoryLabel } from "../../src/lib/data/categories";
 
@@ -758,8 +758,9 @@ test.describe("@seeded core regression", () => {
     // El tablero ya no lleva la frase de apoyo bajo el título ni filtros fijos
     // (salen con volumen): lo que prueba que está en inglés es el verbo de cada
     // tarjeta («View …») y el texto de ayuda del buscador.
-    await expect(page.getByRole("button", { name: /^View / }).first()).toBeVisible();
     await expect(page.getByPlaceholder(/promotion/i).first()).toBeVisible();
+    // En computadora cada tarjeta lleva su «View …»; en el teléfono la tarjeta entera es el enlace.
+    if (!isMobileProject(test.info())) await expect(page.getByRole("button", { name: /^View / }).first()).toBeVisible();
     const publishedOfferTitle = `${E2E_USERS.professional.fullName}: oferta published`;
     await expect(page.getByText(publishedOfferTitle).first()).toBeVisible();
     await expectNoHorizontalOverflow(page);
