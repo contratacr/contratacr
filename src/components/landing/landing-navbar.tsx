@@ -3196,7 +3196,9 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                 <Link
                   href={loginHref}
                   onClick={cerrarCajon}
-                  className="mt-3 flex h-12 w-full items-center justify-center rounded-full bg-[#009FD9] text-[15px] font-bold text-white transition-colors hover:bg-[#0089bb]"
+                  // shrink-0: el cajón es una columna flexible; al abrir «Ayuda y
+                  // soporte» el contenido pasaba del alto y el botón se encogía.
+                  className="mt-3 flex h-12 w-full shrink-0 items-center justify-center rounded-full bg-[#009FD9] text-[15px] font-bold text-white transition-colors hover:bg-[#0089bb]"
                 >
                   {t("login")}
                 </Link>
@@ -3206,7 +3208,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                   de dos estados —se ve cuál está puesto—, no un renglón más que
                   parece llevar a otra pantalla. */}
               <div className={cn(
-                "mt-3 grid gap-2 border-t border-[#eef2f6] px-1 pt-3",
+                "mt-3 grid shrink-0 gap-2 border-t border-[#eef2f6] px-1 pt-3",
                 // Los dos ajustes son del mismo tipo y se ven iguales: dos
                 // pastillas del mismo alto, repartidas a la mitad. Solo el
                 // idioma —sin sesión— se queda a la izquierda, en la misma
