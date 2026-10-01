@@ -139,7 +139,7 @@ export function GuiaDeLaApp({ pasos }: { pasos: PasoDeLaGuia[] }) {
 
       {/* El teléfono, con las cuatro pantallas fundiéndose. */}
       <div ref={caja} className="relative flex flex-col items-center">
-        <div aria-hidden className="pointer-events-none absolute bottom-24 left-1/2 h-6 w-48 -translate-x-1/2 rounded-[50%] bg-[#1a2744]/10 blur-2xl lg:bottom-1" />
+        <div aria-hidden className="pointer-events-none absolute bottom-24 left-1/2 h-5 w-44 -translate-x-1/2 rounded-[50%] bg-[#1a2744]/10 blur-xl lg:bottom-2" />
         <div className="relative w-[262px] sm:w-[290px] lg:w-[320px]">
           <div aria-hidden className="absolute -left-[2px] top-[108px] h-8 w-[3px] rounded-l-sm bg-[#2b2f36]" />
           <div aria-hidden className="absolute -left-[2px] top-[152px] h-12 w-[3px] rounded-l-sm bg-[#2b2f36]" />
@@ -150,7 +150,9 @@ export function GuiaDeLaApp({ pasos }: { pasos: PasoDeLaGuia[] }) {
               background: "linear-gradient(135deg,#f1f3f6 0%,#c6cbd2 18%,#777c85 50%,#c6cbd2 82%,#f1f3f6 100%)",
               borderRadius: 54,
               padding: 3,
-              boxShadow: "0 50px 100px -28px rgba(15,23,42,0.50), 0 24px 48px -22px rgba(15,23,42,0.42), inset 0 0 0 0.5px rgba(255,255,255,0.45)",
+              // Sombra corta: se desvanece antes de que empiece la sección siguiente (si
+              // pasa de largo, el fondo blanco de abajo la corta y se ve una línea).
+              boxShadow: "0 26px 48px -22px rgba(15,23,42,0.42), 0 12px 24px -16px rgba(15,23,42,0.30), inset 0 0 0 0.5px rgba(255,255,255,0.45)",
             }}
           >
             <div className="relative" style={{ background: "#04060a", borderRadius: 51, padding: 8 }}>
