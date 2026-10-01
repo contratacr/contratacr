@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { categorySlug, idDesdeDireccion } from "@/lib/data/category-slug";
+import { ALL_CATEGORIES } from "@/lib/data/categories";
 import { getProvinceById } from "@/lib/data/cr-geography";
 import { RAIZ_DE_BUSQUEDA, SIN_SERVICIO, esProvinciaDeRuta, filtrosDeRuta, rutaDeBusqueda } from "@/lib/buscar-url";
 import { RUTAS_DEL_SITIO } from "@/lib/site-routes";
@@ -77,8 +78,14 @@ async function esServicioPublicado(id: string): Promise<boolean> {
       return !/-[a-z0-9]{8}$/.test(categorySlug(id));
     }
   }
-  return serviciosPublicados.ids.has(id);
+  return serviciosPublicados.ids.has(id) || CATALOGO_DEL_CODIGO.has(id);
 }
+
+// Lo que el código ya conoce como servicio nunca se toma por un perfil, aunque
+// falte en la tabla: en producción hay servicios creados desde el panel que no
+// están en las migraciones (electromecánica, energía solar…) y una base armada
+// solo con migraciones —la del CI— no los tenía.
+const CATALOGO_DEL_CODIGO = new Set(ALL_CATEGORIES.map((c) => c.id));
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
