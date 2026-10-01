@@ -27,7 +27,12 @@ const ICONOS = { profesionales: Search, proyectos: ClipboardList, empleos: Brief
 export function GuiaDeLaApp({ pasos }: { pasos: PasoDeLaGuia[] }) {
   const [activo, setActivo] = useState(0);
   const [quieta, setQuieta] = useState(false);
-  const [progreso, setProgreso] = useState(0);
+  // La barra no se mueve con «timeupdate» (salta ~4 veces por segundo): es una
+  // animación lineal de CSS que dura lo mismo que el video, como las historias
+  // de Instagram. Se pausa si el video se pausa.
+  const [duracion, setDuracion] = useState(0);
+  const [corriendo, setCorriendo] = useState(false);
+  const [vuelta, setVuelta] = useState(0);
   const videos = useRef<(HTMLVideoElement | null)[]>([]);
   const caja = useRef<HTMLDivElement | null>(null);
   const [visible, setVisible] = useState(false);
@@ -51,13 +56,13 @@ export function GuiaDeLaApp({ pasos }: { pasos: PasoDeLaGuia[] }) {
         v.play().catch(() => {});
       } else v.pause();
     });
-    setProgreso(0);
+    setCorriendo(false);
   }, [activo, visible]);
 
   // Al terminar un video pasa al siguiente paso; si la persona eligió uno, se repite ese.
   const alTerminar = (i: number) => {
     if (i !== activo) return;
-    if (quieta) { const v = videos.current[i]; if (v) { v.currentTime = 0; v.play().catch(() => {}); } return; }
+    if (quieta) { const v = videos.current[i]; if (v) { v.currentTime = 0; v.play().catch(() => {}); setVuelta((n) => n + 1); } return; }
     setActivo((activo + 1) % pasos.length);
   };
 
@@ -96,7 +101,7 @@ export function GuiaDeLaApp({ pasos }: { pasos: PasoDeLaGuia[] }) {
                 {/* La barra de tiempo: cuánto falta para el siguiente paso. */}
                 {elegido && (
                   <span aria-hidden className="absolute inset-x-5 bottom-0 h-[3px] overflow-hidden rounded-full bg-[#e3f2fa]">
-                    <span className="block h-full origin-left rounded-full bg-[#009FD9]" style={{ transform: `scaleX(${progreso})` }} />
+                    <span key={`${activo}-${vuelta}`} className="ccr-guia-progreso block h-full w-full origin-left rounded-full bg-[#009FD9]" style={{ animationDuration: `${duracion}s`, animationPlayState: corriendo && duracion ? "running" : "paused" }} />
                   </span>
                 )}
               </button>
@@ -130,7 +135,7 @@ export function GuiaDeLaApp({ pasos }: { pasos: PasoDeLaGuia[] }) {
               </span>
               <span className="max-w-full truncate">{p.pestana}</span>
               <span aria-hidden className={cn("absolute inset-x-2 bottom-0 h-[3px] overflow-hidden rounded-full", elegido ? "bg-[#cfeaf7]" : "bg-transparent")}>
-                {elegido && <span className="block h-full w-full origin-left rounded-full bg-[#009FD9]" style={{ transform: `scaleX(${progreso})` }} />}
+                {elegido && <span key={`${activo}-${vuelta}`} className="ccr-guia-progreso block h-full w-full origin-left rounded-full bg-[#009FD9]" style={{ animationDuration: `${duracion}s`, animationPlayState: corriendo && duracion ? "running" : "paused" }} />}
               </span>
             </button>
           );
@@ -166,7 +171,8 @@ export function GuiaDeLaApp({ pasos }: { pasos: PasoDeLaGuia[] }) {
                     preload={i === activo ? "auto" : "metadata"}
                     aria-label={i === activo ? p.alt : undefined}
                     aria-hidden={i !== activo || undefined}
-                    onTimeUpdate={(e) => { if (i === activo && e.currentTarget.duration) setProgreso(e.currentTarget.currentTime / e.currentTarget.duration); }}
+                    onPlaying={(e) => { if (i === activo) { setDuracion(e.currentTarget.duration || 0); setCorriendo(true); } }}
+                    onPause={() => { if (i === activo) setCorriendo(false); }}
                     onEnded={() => alTerminar(i)}
                     className={cn("absolute inset-0 h-full w-full object-cover object-top transition-opacity duration-500", i === activo ? "opacity-100" : "opacity-0")}
                   />

@@ -14,23 +14,30 @@ const salida = new URL("../../public/guia/", import.meta.url).pathname;
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "guia-"));
 fs.mkdirSync(salida, { recursive: true });
 
-// Desplaza lo que de verdad se desplaza en esa pantalla (en la app no siempre es la ventana).
+// Desplaza lo que de verdad se desplaza en esa pantalla. CUADRO POR CUADRO:
+// se mueve un paso exacto, se espera a que pinte y se toma la foto, 30 por
+// segundo de video. En tiempo real la grabación perdía cuadros y se veía a saltos.
+const FPS = 30;
+let cuadroAMano = null; // lo pone la grabación: (jpg) => void
 async function bajar(p, px, msPedido) {
   const ms = Math.max(msPedido, Math.abs(px) * 6);
-  await p.evaluate(async ({ px, ms }) => {
+  const pasos = Math.round((ms / 1000) * FPS);
+  await p.evaluate(() => {
     const candidatos = [document.scrollingElement, ...document.querySelectorAll("main, main *, [class*=scroll]")]
       .filter((el) => el && el.scrollHeight - el.clientHeight > 200 && getComputedStyle(el).overflowY !== "hidden");
-    const el = candidatos.sort((a, b) => b.clientHeight - a.clientHeight)[0] || document.scrollingElement;
-    const inicio = el.scrollTop, t0 = performance.now();
-    await new Promise((fin) => {
-      const paso = (t) => {
-        const k = Math.min(1, (t - t0) / ms), e = (1 - Math.cos(Math.PI * k)) / 2;
-        el.scrollTop = inicio + px * e;
-        k < 1 ? requestAnimationFrame(paso) : fin();
-      };
-      requestAnimationFrame(paso);
-    });
-  }, { px, ms });
+    window.__rollo = candidatos.sort((a, b) => b.clientHeight - a.clientHeight)[0] || document.scrollingElement;
+    window.__inicio = window.__rollo.scrollTop;
+    window.__rollo.style.scrollBehavior = "auto";
+  });
+  for (let n = 1; n <= pasos; n++) {
+    const k = n / pasos, e = (1 - Math.cos(Math.PI * k)) / 2;
+    await p.evaluate(async (y) => {
+      window.__rollo.scrollTop = window.__inicio + y;
+      await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+    }, px * e);
+    if (cuadroAMano) cuadroAMano(await p.screenshot({ type: "jpeg", quality: 92 }));
+  }
+  globalThis.__terminarMano?.();
 }
 
 // Cada video arranca en el INICIO de la app (el de localhost, que ya lleva la
@@ -105,26 +112,46 @@ for (const [clave, escena] of Object.entries(escenas)) {
   });
   const p = await ctx.newPage();
   const cdp = await ctx.newCDPSession(p);
-  const cuadros = []; const cortes = []; let grabando = false;
+  const cuadros = []; const cortes = []; let grabando = false; let corrimiento = 0;
   cdp.on("Page.screencastFrame", async ({ data, metadata, sessionId }) => {
-    if (grabando) cuadros.push({ t: metadata.timestamp, data });
+    if (grabando && !enMano) cuadros.push({ t: metadata.timestamp + corrimiento, data });
     await cdp.send("Page.screencastFrameAck", { sessionId }).catch(() => {});
   });
   await cdp.send("Page.startScreencast", { format: "jpeg", quality: 92, maxWidth: 804, maxHeight: 1750, everyNthFrame: 1 });
-  await escena(p, () => { grabando = true; }, () => { grabando = false; cortes.push(cuadros.length); });
-  const finDeEscena = Date.now() / 1000;
+  let enMano = false;
+  // Mientras se desplaza cuadro por cuadro, la línea de tiempo la ponen esos cuadros.
+  const bajarOriginal = bajar;
+  cuadroAMano = (jpg) => {
+    if (!grabando) return;
+    if (!enMano) {
+      enMano = true; manoInicio = Date.now() / 1000;
+      const t0 = cuadros[0]?.t ?? manoInicio + corrimiento, ult = cuadros.at(-1)?.t ?? t0;
+      manoT = t0 + Math.ceil((ult - t0) * FPS + 0.5) / FPS;
+      manoT -= 1 / FPS;
+    }
+    manoT += 1 / FPS;
+    cuadros.push({ t: manoT, data: jpg.toString("base64") });
+  };
+  let manoInicio = 0, manoT = 0;
+  const terminarMano = () => { if (enMano) { enMano = false; corrimiento = manoT - Date.now() / 1000; } };
+  const pa = new Proxy(p, { get: (o, k) => (typeof o[k] === "function" ? o[k].bind(o) : o[k]) });
+  globalThis.__terminarMano = terminarMano;
+  await escena(pa, () => { grabando = true; }, () => { grabando = false; cortes.push(cuadros.length); });
+  terminarMano();
+  const finDeEscena = Date.now() / 1000 + corrimiento;
   await cdp.send("Page.stopScreencast"); await ctx.close();
   if (!cuadros.length) { console.log("sin cuadros", clave); continue; }
-  const dir = fs.mkdtempSync(path.join(tmp, clave)); const lista = [];
-  cuadros.forEach((c, n) => {
-    const f = path.join(dir, `${String(n).padStart(4, "0")}.jpg`); fs.writeFileSync(f, Buffer.from(c.data, "base64"));
-    // El último cuadro dura hasta que termina la escena (si nada se mueve, no llegan cuadros nuevos).
-    const d = cortes.includes(n + 1) ? 0.08 : n + 1 < cuadros.length ? cuadros[n + 1].t - c.t : Math.max(0.05, finDeEscena - c.t);
-    lista.push(`file '${f}'`, `duration ${d.toFixed(4)}`);
-  });
-  lista.push(`file '${path.join(dir, String(cuadros.length - 1).padStart(4, "0") + ".jpg")}'`);
-  fs.writeFileSync(path.join(dir, "lista.txt"), lista.join("\n"));
-  execFileSync(ffmpeg, ["-y", "-f", "concat", "-safe", "0", "-i", path.join(dir, "lista.txt"), "-an", "-vf", "scale=588:-2,fps=30", "-c:v", "libx264", "-preset", "slow", "-crf", "23", "-pix_fmt", "yuv420p", "-movflags", "+faststart", `${salida}${clave}.mp4`], { stdio: "ignore" });
+  // Línea de tiempo FIJA a 30 por segundo: en cada tic va el último cuadro que
+  // ya existía. Los cuadros a mano caen justo en los tics, uno por tic.
+  const dir = fs.mkdtempSync(path.join(tmp, clave));
+  const t0 = cuadros[0].t, total = Math.round((finDeEscena - t0) * FPS);
+  let c = 0;
+  for (let n = 0; n < total; n++) {
+    const tic = t0 + n / FPS + 1e-4;
+    while (c + 1 < cuadros.length && cuadros[c + 1].t <= tic) c++;
+    fs.writeFileSync(path.join(dir, `${String(n).padStart(5, "0")}.jpg`), Buffer.from(cuadros[c].data, "base64"));
+  }
+  execFileSync(ffmpeg, ["-y", "-framerate", String(FPS), "-i", path.join(dir, "%05d.jpg"), "-an", "-vf", "scale=588:-2", "-r", String(FPS), "-c:v", "libx264", "-preset", "slow", "-crf", "23", "-pix_fmt", "yuv420p", "-movflags", "+faststart", `${salida}${clave}.mp4`], { stdio: "ignore" });
   execFileSync(ffmpeg, ["-y", "-i", `${salida}${clave}.mp4`, "-frames:v", "1", "-q:v", "3", `${salida}${clave}.jpg`], { stdio: "ignore" });
   console.log("listo", clave, cuadros.length, "cuadros", (finDeEscena - cuadros[0].t).toFixed(1) + "s", Math.round(fs.statSync(`${salida}${clave}.mp4`).size / 1024) + " KB");
 }
