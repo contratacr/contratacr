@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, type RefObject } from "react";
+import { useState, useEffect, useRef, useTransition, type RefObject } from "react";
 import { createPortal } from "react-dom";
 import { ArrowRight, Loader2, Search, MapPin } from "lucide-react";
 import { Link, useRouter } from "@/i18n/navigation";
@@ -400,6 +400,19 @@ export function LandingHero() {
   const router = useRouter();
   const locale = useLocale();
   const t = useTranslations("landing.hero");
+  // BUSCAR RESPONDE AL TOQUE. La búsqueda general (Buscar sin escribir nada)
+  // es lo que más se toca de la portada, y su página trae a todos los
+  // profesionales: la primera vez de la sesión tardaba hasta 3 s y el botón no
+  // decía nada (en producción, peor: un lienzo blanco de carga). Se precarga
+  // entera cuando la portada ya terminó lo suyo, y mientras navega el botón
+  // muestra que está buscando.
+  const [buscando, startBusqueda] = useTransition();
+  useEffect(() => {
+    const id = window.setTimeout(() => {
+      router.prefetch("/profesionales", { kind: "full" } as Parameters<typeof router.prefetch>[1]);
+    }, 1200);
+    return () => window.clearTimeout(id);
+  }, [router]);
   const nearMeActiveLabel = t("nearMeActive");
 
   const lines = ROTATING_LINES[locale] ?? ROTATING_LINES.es;
@@ -600,7 +613,7 @@ export function LandingHero() {
       search_string: params.get("categoria") ? "category" : params.get("q") ? "text" : "general",
       has_location: params.has("provincia") || params.has("canton") || params.has("lat"),
     });
-    router.push(rutaDeBusqueda(params));
+    startBusqueda(() => router.push(rutaDeBusqueda(params)));
   }
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
@@ -795,9 +808,12 @@ export function LandingHero() {
               {/* Buscar button */}
               <button
                 type="submit"
-                className="ml-2 h-full shrink-0 self-stretch whitespace-nowrap bg-[#009FD9] px-8 text-base font-bold text-white transition-colors duration-150 hover:bg-[#0089bb] active:bg-[#007da8]"
+                aria-busy={buscando || undefined}
+                className="relative ml-2 h-full shrink-0 self-stretch whitespace-nowrap bg-[#009FD9] px-8 text-base font-bold text-white transition-colors duration-150 hover:bg-[#0089bb] active:bg-[#007da8]"
               >
-                {t("search")}
+                {/* El rótulo se queda (invisible) para que el botón no cambie de ancho. */}
+                <span className={cn(buscando && "invisible")}>{t("search")}</span>
+                {buscando && <Loader2 aria-hidden className="absolute inset-0 m-auto h-5 w-5 animate-spin" />}
               </button>
             </div>
           </div>
@@ -848,9 +864,11 @@ export function LandingHero() {
             </div>
             <button
               type="submit"
-              className="h-12 w-full rounded-[10px] bg-[#009FD9] text-base font-bold text-white transition-all duration-150 hover:bg-[#0089bb] active:scale-[0.97]"
+              aria-busy={buscando || undefined}
+              className="relative h-12 w-full rounded-[10px] bg-[#009FD9] text-base font-bold text-white transition-all duration-150 hover:bg-[#0089bb] active:scale-[0.97]"
             >
-              {t("search")}
+              <span className={cn(buscando && "invisible")}>{t("search")}</span>
+              {buscando && <Loader2 aria-hidden className="absolute inset-0 m-auto h-5 w-5 animate-spin" />}
             </button>
           </div>
         </form>
