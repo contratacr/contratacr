@@ -39,7 +39,7 @@ export async function ProsSection() {
     }));
 
   return (
-    <section className="ccr-home-services-section bg-[#f4f7fa] pb-14 pt-10 sm:py-20">
+    <section className="ccr-home-services-section bg-[#f4f7fa] pb-8 pt-8 sm:py-12">
       <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
         <h2 className="mb-6 text-[1.9rem] font-extrabold leading-tight text-[#1a2744] sm:mb-8 sm:text-center sm:text-4xl">
           {t("titlePre")} <span className="text-[#009FD9]">{t("titleHighlight")}</span>

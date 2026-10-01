@@ -108,16 +108,15 @@ export default async function HomePage({
           <ProsSection />
         </FadeInUp>
 
-        {/* Negocios reales, justo después de ver los servicios: la prueba de
-            confianza antes de decidir buscar o registrarse (y, para quien ofrece
-            servicios, «negocios como el tuyo ya están aquí»). Bajo el hero
-            competía con el buscador. */}
-        <FeaturedBrands />
 
         {/* How it works + trust, merged into one sticky-phone story. */}
         <WhyContratacr />
 
         {/* Zones: find professionals by province using real coverage. */}
+        {/* Negocios reales, al abrir «Encuentra profesionales en tu zona»: la
+            prueba de que en tu zona ya hay negocios de verdad. */}
+        <FeaturedBrands />
+
         <FadeInUp delay={40} className="ccr-fin-de-portada">
           <FindByZone coverage={coverage} />
         </FadeInUp>

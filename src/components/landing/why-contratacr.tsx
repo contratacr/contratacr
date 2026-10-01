@@ -20,7 +20,7 @@ export async function WhyContratacr() {
   }));
 
   return (
-    <section className="relative overflow-hidden bg-[#f4f7fa] py-16 sm:py-24">
+    <section className="relative overflow-hidden bg-[#f4f7fa] py-10 sm:py-14">
       <div className="relative mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
         <div className="mb-10 text-center sm:mb-14">
           <h2 className="text-3xl font-extrabold text-[#1a2744] sm:text-4xl">{t("guia.titulo")}</h2>
