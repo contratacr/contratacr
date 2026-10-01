@@ -99,17 +99,7 @@ for (const [clave, escena] of Object.entries(escenas)) {
   });
   await ctx.addCookies([base, TEST, INICIO].map((url) => ({ name: "ccr_platform", value: "native", url })));
   await ctx.addInitScript(() => { try { localStorage.setItem("ccr:native-first-run-onboarding:v12", "1"); } catch {} });
-  // Los videos enseñan a encontrar, no a contactar: se ocultan WhatsApp, llamar,
-  // contactar y postularse (en tarjetas, perfiles y la barra de abajo).
-  await ctx.addInitScript(() => {
-    const ocultar = () => {
-      for (const el of document.querySelectorAll("a, button")) {
-        const t = (el.textContent || "").trim();
-        if (/^(contactar|whatsapp|llamar|postular|aplicar|enviar mensaje|escribir)/i.test(t)) el.style.visibility = "hidden";
-      }
-    };
-    new MutationObserver(ocultar).observe(document, { childList: true, subtree: true });
-  });
+  // Los botones de contacto se VEN (la pantalla queda como es), pero el video nunca los toca.
   const p = await ctx.newPage();
   const cdp = await ctx.newCDPSession(p);
   const cuadros = []; const cortes = []; let grabando = false; let corrimiento = 0;
@@ -145,11 +135,17 @@ for (const [clave, escena] of Object.entries(escenas)) {
   // ya existía. Los cuadros a mano caen justo en los tics, uno por tic.
   const dir = fs.mkdtempSync(path.join(tmp, clave));
   const t0 = cuadros[0].t, total = Math.round((finDeEscena - t0) * FPS);
-  let c = 0;
+  // Lo quieto se recorta: ningún tramo sin cambios dura más de MAX_QUIETO
+  // cuadros (las esperas de carga hacían que el video pareciera pausado).
+  const MAX_QUIETO = Math.round(FPS * 0.45);
+  let c = 0, previo = -1, quietos = 0, salida_n = 0;
   for (let n = 0; n < total; n++) {
     const tic = t0 + n / FPS + 1e-4;
     while (c + 1 < cuadros.length && cuadros[c + 1].t <= tic) c++;
-    fs.writeFileSync(path.join(dir, `${String(n).padStart(5, "0")}.jpg`), Buffer.from(cuadros[c].data, "base64"));
+    quietos = c === previo ? quietos + 1 : 0;
+    previo = c;
+    if (quietos > MAX_QUIETO) continue;
+    fs.writeFileSync(path.join(dir, `${String(salida_n++).padStart(5, "0")}.jpg`), Buffer.from(cuadros[c].data, "base64"));
   }
   execFileSync(ffmpeg, ["-y", "-framerate", String(FPS), "-i", path.join(dir, "%05d.jpg"), "-an", "-vf", "scale=588:-2", "-r", String(FPS), "-c:v", "libx264", "-preset", "slow", "-crf", "23", "-pix_fmt", "yuv420p", "-movflags", "+faststart", `${salida}${clave}.mp4`], { stdio: "ignore" });
   execFileSync(ffmpeg, ["-y", "-i", `${salida}${clave}.mp4`, "-frames:v", "1", "-q:v", "3", `${salida}${clave}.jpg`], { stdio: "ignore" });
