@@ -1992,7 +1992,7 @@ body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-native-fab {
   overflow: hidden;
   border-block: 1px solid #eef2f6;
   background: #fff;
-  padding-block: 0.55rem;
+  padding-block: 1.25rem 0.75rem;
 }
 
 .featured-brands-marquee {
@@ -2573,7 +2573,4 @@ html.ccr-native-app .ccr-fin-de-portada > section {
 .ccr-guia-progreso { animation: ccr-guia-progreso linear forwards; }
 @media (prefers-reduced-motion: reduce) { .ccr-guia-progreso { display: none; } }
 
-/* Fotos del hero: la que está a la vista crece despacio mientras se muestra. */
-@keyframes ccr-hero-zoom { from { transform: scale(1); } to { transform: scale(1.07); } }
-.ccr-hero-foto-activa { animation: ccr-hero-zoom 8s ease-out forwards; }
-@media (prefers-reduced-motion: reduce) { .ccr-hero-foto-activa { animation: none; } }
+

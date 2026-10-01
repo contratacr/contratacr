@@ -103,15 +103,16 @@ export default async function HomePage({
         {/* Hero: rotating headline + primary search. */}
         <LandingHero />
 
-        {/* Negocios que ya están en ContrataCR, justo bajo Buscar: es la prueba
-            de confianza en el momento en que se decide buscar, no al final de
-            la página donde casi nadie llega. */}
-        <FeaturedBrands />
-
         {/* Services carousel. */}
         <FadeInUp>
           <ProsSection />
         </FadeInUp>
+
+        {/* Negocios reales, justo después de ver los servicios: la prueba de
+            confianza antes de decidir buscar o registrarse (y, para quien ofrece
+            servicios, «negocios como el tuyo ya están aquí»). Bajo el hero
+            competía con el buscador. */}
+        <FeaturedBrands />
 
         {/* How it works + trust, merged into one sticky-phone story. */}
         <WhyContratacr />

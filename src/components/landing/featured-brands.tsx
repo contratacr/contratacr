@@ -15,10 +15,11 @@ const FEATURED_BRANDS = [
 
 export async function FeaturedBrands() {
   const locale = await getLocale();
-  const label = locale === "en" ? "Featured businesses on ContrataCR" : "Negocios destacados en ContrataCR";
+  const label = locale === "en" ? "Businesses already on ContrataCR" : "Negocios que ya están en ContrataCR";
 
   return (
     <section className="featured-brands-ribbon" aria-label={label}>
+      <p className="mb-2 text-center text-[12px] font-bold uppercase tracking-[0.14em] text-[#6b7686]">{label}</p>
       <div className="featured-brands-marquee">
         <div className="featured-brands-track">
           <BrandSet />

@@ -19,12 +19,6 @@ import { rutaDeBusqueda } from "@/lib/buscar-url";
 type AddressSuggestion = { type: "address"; placeId: string; label: string };
 const GMAPS_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "";
 
-// Show professional, high-trust service examples first so the landing page feels
-// broad enough for Costa Rica: health, finance, technical and home services.
-const ROTATING_LINES: Record<string, string[]> = {
-  es: ["Salud,", "Contabilidad,", "Fisioterapia,", "Electricidad,", "Tecnología,", "Psicología,", "Arquitectura,", "Veterinaria,"],
-  en: ["Health,", "Accounting,", "Physical therapy,", "Electrical,", "Technology,", "Psychology,", "Architecture,", "Veterinary,"],
-};
 
 /* ── FOTO DE FONDO DEL HERO, a todo el ancho (como Angi) ──
    Un profesional trabajando, con la persona hacia la derecha: el centro queda
@@ -34,10 +28,12 @@ const ROTATING_LINES: Record<string, string[]> = {
 // Cuatro profesionales trabajando, en fotos claras; van pasando con un fundido
 // y un zoom lento. La persona va hacia un lado para dejar libre el centro.
 const HERO_FOTOS: { id: string; foco: string }[] = [
-  { id: "1505798577917-a65157d3320a", foco: "30% center" }, // ingletadora en una remodelación (clara: va primero)
-  { id: "1660330589693-99889d60181e", foco: "35% center" }, // electricista en un tablero
-  { id: "1749532125405-70950966b0e5", foco: "60% center" }, // fontanero en un baño
-  { id: "1589939705384-5185137a7f0f", foco: "70% center" }, // carpintería con casco
+  // `foco`: dónde está el profesional en la foto, para que el recorte —ancho en
+  // computadora, angosto en el teléfono— lo deje siempre a la vista.
+  { id: "1505798577917-a65157d3320a", foco: "38% 40%" }, // ingletadora en una remodelación (clara: va primero)
+  { id: "1660330589693-99889d60181e", foco: "45% 35%" }, // electricista en un tablero
+  { id: "1749532125405-70950966b0e5", foco: "62% 45%" }, // fontanero en un baño
+  { id: "1589939705384-5185137a7f0f", foco: "68% 35%" }, // carpintería con casco
 ];
 const HERO_MINIATURA = "data:image/jpeg;base64,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";
 const CADA_FOTO_MS = 6500;
@@ -66,7 +62,7 @@ function FotoDeFondo() {
           alt=""
           fetchPriority={i === 0 ? "high" : "low"}
           decoding="async"
-          className={cn("ccr-hero-foto-capa absolute inset-0 h-full w-full object-cover transition-opacity duration-[1400ms] ease-in-out", i === actual ? "opacity-100 ccr-hero-foto-activa" : "opacity-0")}
+          className={cn("ccr-hero-foto-capa absolute inset-0 h-full w-full object-cover transition-opacity duration-[1400ms] ease-in-out", i === actual ? "opacity-100" : "opacity-0")}
           style={{ objectPosition: foto.foco }}
         />
       ))}
@@ -76,87 +72,6 @@ function FotoDeFondo() {
   );
 }
 
-/* Per-letter staggered vertical slide-up. Each letter of the word rises from
-   below into place one after another (left → right), the word holds, then each
-   letter slides up and out (same staggered order) as the next word's letters
-   roll in. A clipping mask (overflow-hidden, one line tall) keeps letters within
-   the line. Word stays centered; no layout shift. Reduced-motion → static word. */
-const ROLL_LINE = 1.18;   // em — line/clip height (room for accents like í, J).
-const LETTER_MS = 520;    // per-letter slide duration.
-const STAGGER_MS = 46;    // delay between consecutive letters.
-const WORD_HOLD_MS = 1400; // pause on the full word before it leaves.
-
-function RotatingLine({ lines }: { lines: string[] }) {
-  const [index, setIndex] = useState(0);
-  // El servidor pinta la palabra como UN solo nodo de texto; las letras sueltas
-  // —que es lo que la anima— aparecen recién después de hidratar. Antes el
-  // servidor mandaba «Salud,» partida en once <span>, y para cuando el
-  // navegador terminaba de hidratar (en producción el paquete es grande y
-  // tarda) la rotación ya iba en otra palabra: React encontraba un texto
-  // distinto del que él mismo había pintado y tiraba el error #418 en la
-  // portada. Con un solo nodo no hay nada que reconciliar letra por letra.
-  const [montado, setMontado] = useState(false);
-  useEffect(() => { setMontado(true); }, []);
-  const [shown, setShown] = useState(false);   // letters in place (entered)
-  const [leaving, setLeaving] = useState(false); // letters sliding out
-
-  // Enter → hold → exit → next word, per index. This animation ALWAYS plays —
-  // reduced-motion is intentionally ignored here (the effect is subtle/smooth).
-  useEffect(() => {
-    const word = lines[index] ?? "";
-    const span = Math.max(0, word.length - 1) * STAGGER_MS;
-    const enterDur = LETTER_MS + span;
-    const exitDur = LETTER_MS + span;
-
-    setLeaving(false);
-    setShown(false);
-    const raf = requestAnimationFrame(() => requestAnimationFrame(() => setShown(true)));
-    const tExit = setTimeout(() => setLeaving(true), enterDur + WORD_HOLD_MS);
-    const tNext = setTimeout(() => setIndex((i) => (i + 1) % lines.length), enterDur + WORD_HOLD_MS + exitDur);
-
-    return () => { cancelAnimationFrame(raf); clearTimeout(tExit); clearTimeout(tNext); };
-  }, [index, lines]);
-
-  const word = lines[index] ?? "";
-  const visible = shown && !leaving;
-
-  return (
-    <span
-      className="flex justify-center overflow-hidden"
-      style={{ height: `${ROLL_LINE}em` }}
-      aria-label={word}
-      // Esta palabra cambia sola cada pocos segundos y se reconcilia LETRA POR
-      // LETRA. El servidor manda la primera («Salud,») y para cuando el
-      // navegador termina de hidratar —en producción el paquete es grande y
-      // tarda— la animación ya va en otra, así que React encontraba un texto
-      // distinto del que había pintado y tiraba el error #418 en la portada.
-      // No es un fallo que se vea: es ruido de hidratación. `suppressHydration`
-      // existe exactamente para un subárbol cuyo texto se espera que difiera.
-      suppressHydrationWarning
-    >
-      {!montado ? (
-        <span style={{ display: "inline-block", color: "#5CCBF5" }}>{word}</span>
-      ) : Array.from(word).map((ch, i) => (
-        <span
-          key={`${index}-${i}`}
-          aria-hidden
-          style={{
-            display: "inline-block",
-            color: "#5CCBF5",
-            willChange: "transform, opacity",
-            transform: visible ? "translateY(0)" : `translateY(${leaving ? "-110%" : "110%"})`,
-            opacity: visible ? 1 : 0,
-            transition: shown
-              ? `transform ${LETTER_MS}ms cubic-bezier(0.16,1,0.3,1) ${i * STAGGER_MS}ms, opacity ${LETTER_MS}ms ease ${i * STAGGER_MS}ms`
-              : "none",
-          }}
-        >
-          {ch === " " ? " " : ch}
-        </span>
-      ))}
-    </span>
-  );
-}
 
 /* Anchored position for a dropdown PORTALED to <body>.
    ──────────────────────────────────────────────────────────────────
@@ -416,7 +331,6 @@ export function LandingHero() {
   }, [router]);
   const nearMeActiveLabel = t("nearMeActive");
 
-  const lines = ROTATING_LINES[locale] ?? ROTATING_LINES.es;
   // Debounced service suggestion fetch as the user types
   useEffect(() => {
     const q = service.trim();
@@ -748,10 +662,11 @@ export function LandingHero() {
       <div className="relative mx-auto max-w-3xl text-center pb-7">
         <h1
           className="font-extrabold text-white tracking-tight drop-shadow-[0_2px_12px_rgba(0,0,0,0.35)]"
-          style={{ fontSize: "clamp(2rem, 5.5vw, 3.6rem)", lineHeight: 1.1 }}
+          style={{ fontSize: "clamp(1.85rem, 5vw, 3.6rem)", lineHeight: 1.1 }}
         >
-          <RotatingLine lines={lines} />
-          <span className="block">{t("headline2")}</span>
+          {/* Fijo, como Angi: con las fotos pasando de fondo, una palabra que
+              además cambia eran dos cosas moviéndose a la vez. */}
+          {t("titular")}
         </h1>
       </div>
 
