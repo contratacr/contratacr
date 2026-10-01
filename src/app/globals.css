@@ -782,15 +782,16 @@ html.ccr-native-app.ccr-native-bottom-nav-visible:not(.ccr-nav-montada) body::af
 }
 
 .ccr-native-app .ccr-barra-flotante-pastilla {
-  /* Más vidrio que blanco: se ve pasar lo de atrás; el desenfoque fuerte
-     mantiene los íconos legibles sobre fotos. */
-  background: rgba(255, 255, 255, 0.55);
-  -webkit-backdrop-filter: blur(24px) saturate(1.8);
-  backdrop-filter: blur(24px) saturate(1.8);
-  border: 1px solid rgba(255, 255, 255, 0.6);
-  /* Sombra apenas visible y corta: separa la barra de un fondo blanco sin
-     dibujar un bloque debajo de ella. */
-  box-shadow: 0 4px 14px -6px rgba(15, 23, 42, 0.18), 0 0 0 1px rgba(15, 23, 42, 0.05);
+  /* BLANCO ESMERILADO, como las barras de Apple: casi sólido (combina con el
+     fondo del app) y con desenfoque fuerte, así lo que pasa detrás se nota
+     como una mancha suave sin estorbar los íconos. */
+  background: rgba(250, 251, 252, 0.86);
+  -webkit-backdrop-filter: blur(28px) saturate(1.6);
+  backdrop-filter: blur(28px) saturate(1.6);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  /* Sombra suave hacia arriba y abajo y un filo fino: separa la barra aunque
+     el contenido de atrás también sea blanco. */
+  box-shadow: 0 -2px 12px -6px rgba(15, 23, 42, 0.14), 0 6px 18px -8px rgba(15, 23, 42, 0.22), 0 0 0 1px rgba(15, 23, 42, 0.06);
   transform: translateZ(0);
 }
 
