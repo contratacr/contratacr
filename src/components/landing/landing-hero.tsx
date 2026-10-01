@@ -663,7 +663,7 @@ export function LandingHero() {
       <FotoDeFondo />
       <div className="relative z-10 mx-auto w-full max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
       {/* El título y el buscador en un panel translúcido, centrado sobre la foto. */}
-      <div className="rounded-xl bg-[#111827]/70 px-5 py-8 backdrop-blur-[3px] sm:px-10 sm:py-10 lg:mx-auto lg:max-w-[640px]">
+      <div className="rounded-xl bg-[#5a5a5a]/50 px-5 py-8 sm:px-10 sm:py-10 lg:mx-auto lg:max-w-[640px]">
       <div className="relative mx-auto max-w-3xl text-center pb-7">
         <h1
           className="font-extrabold text-white tracking-tight drop-shadow-[0_2px_12px_rgba(0,0,0,0.35)]"
