@@ -1359,25 +1359,14 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   // cerrarse el cajón vuelve a verse el asistente tapando la pantalla nueva y
   // el toque parece no haber hecho nada. El logo ya lo apartaba; ahora lo hace
   // cualquier salida del cajón.
-  // Al tocar un enlace del menú, PRIMERO se ve el menú cerrarse (desliza a la
-  // derecha) y DESPUÉS se navega: si se navegaba de una, la pantalla nueva tapaba
-  // el cierre y parecía que el menú desaparecía sin efecto.
-  const CIERRE_MS = 340;
+  // Al tocar un enlace del menú se va DIRECTO a la sección: el menú desaparece
+  // sin animación de cierre (deslizar hacia afuera solo cuando se cierra con la X
+  // o con Escape, sin ir a ningún lado).
   const cerrarCajon = useCallback((event?: React.MouseEvent<HTMLElement>) => {
-    const enlace = event?.currentTarget as (HTMLAnchorElement & { __ccrPasar?: boolean }) | undefined;
-    const esEnlaceInterno = !!enlace && enlace.tagName === "A" && (enlace.getAttribute("href") ?? "").startsWith("/");
-    const sinModificadores = !!event && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey && event.button === 0;
-    const reducir = typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (event && enlace && esEnlaceInterno && sinModificadores && !enlace.__ccrPasar && !reducir) {
-      event.preventDefault();
-      event.stopPropagation();
-      setMobileOpen(false);
-      window.dispatchEvent(new Event("contratacr:close-ai"));
-      window.setTimeout(() => { enlace.__ccrPasar = true; enlace.click(); enlace.__ccrPasar = false; }, CIERRE_MS);
-      return;
-    }
+    if (event?.currentTarget?.tagName === "A") document.documentElement.classList.add("ccr-menu-sin-cierre");
     setMobileOpen(false);
     window.dispatchEvent(new Event("contratacr:close-ai"));
+    window.setTimeout(() => document.documentElement.classList.remove("ccr-menu-sin-cierre"), 600);
   }, []);
 
   const irAlInicio = useCallback((event: React.MouseEvent<HTMLAnchorElement>) => {
@@ -1522,9 +1511,9 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
       // payload ever fails, the route error boundary still offers a retry.
       event.preventDefault();
       event.stopPropagation();
-      cerrarCajon();
-      // Se ve cerrarse el menú y luego se navega (ver cerrarCajon).
-      window.setTimeout(() => { prepareNativeNavigation(href); router.push(href); }, 340);
+      cerrarCajon(event);
+      prepareNativeNavigation(href);
+      router.push(href);
     },
     [nativeApp, prepareNativeNavigation, router],
   );
