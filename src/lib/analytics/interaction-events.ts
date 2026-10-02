@@ -1,3 +1,4 @@
+import { esNavegadorAutomatizado } from "@/lib/analytics/trafico-automatizado";
 export const INTERACTION_EVENT_TYPES = [
   "profile_view",
   "whatsapp_click",
@@ -47,6 +48,8 @@ type InteractionEvent = {
 
 export function trackInteraction(event: InteractionEvent) {
   if (typeof window === "undefined") return;
+  // Las pruebas automáticas no cuentan (ver trafico-automatizado.ts).
+  if (esNavegadorAutomatizado()) return;
   const body = JSON.stringify(event);
   void fetch("/api/analytics/interaction", {
     method: "POST",

@@ -63,6 +63,7 @@ export function MetaPixel({ pixelId }: MetaPixelProps) {
           onReady={() => setReady(true)}
           dangerouslySetInnerHTML={{
             __html: `
+              if (navigator.webdriver || document.cookie.indexOf('ccr_sin_analitica=1') !== -1) { window.fbq = function(){}; } else
               !function(f,b,e,v,n,t,s)
               {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
               n.callMethod.apply(n,arguments):n.queue.push(arguments)};
@@ -71,7 +72,7 @@ export function MetaPixel({ pixelId }: MetaPixelProps) {
               t.src=v;s=b.getElementsByTagName(e)[0];
               s.parentNode.insertBefore(t,s)}(window, document,'script',
               'https://connect.facebook.net/en_US/fbevents.js');
-              fbq('init', '${id}');
+              if (!(navigator.webdriver || document.cookie.indexOf('ccr_sin_analitica=1') !== -1)) fbq('init', '${id}');
             `,
           }}
         />

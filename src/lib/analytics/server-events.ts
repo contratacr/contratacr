@@ -1,6 +1,7 @@
 import "server-only";
 import { createHash, randomUUID } from "node:crypto";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
+import { COOKIE_SIN_ANALITICA, esPeticionAutomatizada } from "@/lib/analytics/trafico-automatizado";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { InteractionEventType } from "@/lib/analytics/interaction-events";
 
@@ -43,6 +44,7 @@ export async function readPlatform(): Promise<"web" | "native"> {
 export async function recordServerInteraction(event: ServerInteraction): Promise<void> {
   try {
     const jar = await cookies();
+    if (esPeticionAutomatizada(jar.get(COOKIE_SIN_ANALITICA)?.value, (await headers()).get("user-agent"))) return;
     const sessionId = jar.get(ANALYTICS_SESSION_COOKIE)?.value || randomUUID();
     const platform = jar.get(PLATFORM_COOKIE)?.value === "native" ? "native" : "web";
     const metadata: Record<string, string | number | boolean | null> = { platform };

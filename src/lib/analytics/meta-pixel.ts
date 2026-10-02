@@ -1,3 +1,4 @@
+import { esNavegadorAutomatizado } from "@/lib/analytics/trafico-automatizado";
 type MetaPixelCommand = "init" | "track" | "trackCustom";
 
 type MetaPixelFunction = {
@@ -19,11 +20,13 @@ declare global {
 
 export function trackMetaEvent(eventName: string, params?: Record<string, unknown>) {
   if (typeof window === "undefined" || typeof window.fbq !== "function") return;
+  if (esNavegadorAutomatizado()) return;
   window.fbq("track", eventName, params);
 }
 
 export function trackMetaCustomEvent(eventName: string, params?: Record<string, unknown>) {
   if (typeof window === "undefined" || typeof window.fbq !== "function") return;
+  if (esNavegadorAutomatizado()) return;
   window.fbq("trackCustom", eventName, params);
 }
 
