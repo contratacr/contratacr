@@ -708,15 +708,19 @@ export function LandingHero() {
       <div className="relative mx-auto max-w-3xl pb-7 text-center lg:mx-0 lg:text-left">
         <h1
           className="font-extrabold text-white tracking-tight drop-shadow-[0_2px_12px_rgba(0,0,0,0.35)]"
-          style={{ fontSize: "clamp(1.45rem, 6.6vw, 2.6rem)", lineHeight: 1.12 }}
+          style={{ fontSize: "clamp(1.3rem, 5.9vw, 2.6rem)", lineHeight: 1.14 }}
           data-titular-portada=""
         >
           {/* Fijo, como Angi: con las fotos pasando de fondo, una palabra que
               además cambia eran dos cosas moviéndose a la vez. */}
           {/* «|» marca los cortes: siempre tres líneas, como Angi, y cada una
               entera (la letra se ajusta al ancho para que no se parta). */}
+          {/* Dos líneas («|» marca el corte) y la palabra entre *asteriscos* en
+              celeste: «verificados» es lo que distingue a ContrataCR. */}
           {t("titular").split("|").map((tramo, i) => (
-            <span key={i} className="block whitespace-nowrap lg:inline lg:whitespace-normal">{tramo}{" "}</span>
+            <span key={i} className="block whitespace-nowrap lg:inline lg:whitespace-normal">
+              {tramo.split("*").map((parte, j) => (j % 2 ? <span key={j} className="text-[#7fd3f7]">{parte}</span> : parte))}{" "}
+            </span>
           ))}
         </h1>
       </div>
