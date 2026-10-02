@@ -184,19 +184,30 @@ test.describe("portada y menú (1-oct-2026) @smoke", () => {
     expect(sinCargar, "logos sin cargar al terminar la página").toEqual([]);
   });
 
-  test("al tocar un enlace del menú va directo a la sección, sin animación de cierre", async ({ page }) => {
+  test("al tocar un enlace del menú no se ve el inicio entre medio: el menú se queda hasta que llega la sección", async ({ page }) => {
     test.skip(!isMobileProject(test.info()), "Menú del teléfono.");
     await gotoOK(page, "/");
     await waitForInteractivePage(page);
     await page.getByRole("button", { name: /Abrir men[uú]/i }).filter({ visible: true }).first().click();
     const menu = page.locator(".ccr-menu-completo");
     await expect.poll(() => menu.evaluate((e) => Math.round(e.getBoundingClientRect().x))).toBe(0);
+    await page.evaluate(() => {
+      const w = window as unknown as { __vioInicio: boolean };
+      w.__vioInicio = false;
+      const f = () => {
+        const m = document.querySelector(".ccr-menu-completo");
+        const tapa = m && getComputedStyle(m).visibility !== "hidden" && Math.round(m.getBoundingClientRect().x) === 0;
+        if (location.pathname === "/" && !tapa) w.__vioInicio = true;
+        if (location.pathname === "/") requestAnimationFrame(f);
+      };
+      requestAnimationFrame(f);
+    });
     await menu.getByRole("link", { name: /^Servicios$/ }).click();
-    await page.waitForTimeout(60);
-    const quedo = await menu.evaluate((e) => ({ x: Math.round(e.getBoundingClientRect().x), v: getComputedStyle(e).visibility }));
-    expect(quedo.v === "hidden" || quedo.x >= 390, `el menú siguió en pantalla deslizándose: ${JSON.stringify(quedo)}`).toBe(true);
     await expect(page).toHaveURL(/\/servicios/);
+    expect(await page.evaluate(() => (window as unknown as { __vioInicio: boolean }).__vioInicio), "se vio el inicio antes de la sección").toBe(false);
+    await expect.poll(() => menu.evaluateAll((es) => es.every((e) => getComputedStyle(e).visibility === "hidden"))).toBe(true);
   });
+
 
 });
 
