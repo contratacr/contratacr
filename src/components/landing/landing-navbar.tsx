@@ -831,6 +831,9 @@ export function HeaderNotificationsLink({ href, label }: { href: string; label: 
 }
 
 export function HeaderMessagesLink({ unreadCount, label, href = "/mensajes" }: { unreadCount: number; label: string; href?: string }) {
+  // Sin sesión no hay mensajes que ver: el ícono no se muestra (app, web móvil y computadora).
+  const { user } = useAuth();
+  if (!user) return null;
   return (
     <Link
       href={href}
