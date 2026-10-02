@@ -122,5 +122,29 @@ test.describe("portada y menú (1-oct-2026) @smoke", () => {
     const x = await menu.evaluate((e) => e.getBoundingClientRect().x);
     expect(x, "a los 120 ms el menú ya estaba casi abierto").toBeGreaterThan(150);
   });
+
+  test("con el teclado abierto, la hoja de búsqueda llega justo hasta el teclado", async ({ page }) => {
+    test.skip(!isMobileProject(test.info()), "Hoja de búsqueda de la app.");
+    await comoApp(page);
+    await gotoOK(page, "/");
+    await waitForInteractivePage(page);
+    await page.getByRole("button", { name: /Abrir men[uú]/i }).filter({ visible: true }).first().click();
+    await page.getByRole("button", { name: /^Buscar profesionales$/ }).click();
+    const panel = page.locator(".ccr-native-search-panel");
+    await expect(panel).toBeVisible();
+    const medida = await page.evaluate(() => {
+      const r = document.documentElement;
+      r.style.setProperty("--app-visual-viewport-height", "476px");
+      r.style.setProperty("--app-visual-viewport-top", "0px");
+      r.setAttribute("data-keyboard-open", "");
+      const pan = document.querySelector(".ccr-native-search-panel")!;
+      const lista = pan.querySelector<HTMLElement>(".overflow-y-auto")!;
+      lista.scrollTop = 99999;
+      const ultima = [...lista.querySelectorAll("button")].filter((e) => e.offsetParent).at(-1)!.getBoundingClientRect();
+      return { alto: Math.round(pan.getBoundingClientRect().height), ultima: Math.round(ultima.bottom) };
+    });
+    expect(medida.alto, "la hoja debe medir lo visible sobre el teclado").toBe(476);
+    expect(medida.ultima, "la última opción queda tapada por el teclado").toBeLessThanOrEqual(476);
+  });
 });
 

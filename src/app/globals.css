@@ -2327,6 +2327,17 @@ body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-native-search-panel {
   padding-bottom: var(--ccr-barra-flotante, 0px);
 }
 html[data-keyboard-visible] body.ccr-native-app .ccr-native-search-panel { bottom: 0; }
+/* CON EL TECLADO ABIERTO la hoja ocupa EXACTAMENTE lo que queda visible encima
+   del teclado (el viewport visual): antes llegaba hasta el fondo de la pantalla,
+   así que el final de «Servicio» quedaba tapado por el teclado y no se podía
+   alcanzar, y en «Ubicación» iOS desplazaba la página y sobraba espacio vacío
+   debajo de la última opción. */
+html[data-keyboard-open] body.ccr-native-app .ccr-native-search-panel {
+  top: var(--app-visual-viewport-top, 0px) !important;
+  bottom: auto !important;
+  height: var(--app-visual-viewport-height, 100dvh) !important;
+  padding-bottom: 0 !important;
+}
 /* Con el buscador abierto la barra sigue flotando ENCIMA de él (el buscador
    va en la capa 220): si no, tocar Asistente o + no le llegaba. */
 body.ccr-native-app:has(.ccr-native-search-panel) .ccr-native-bottom-nav {
