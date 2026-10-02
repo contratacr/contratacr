@@ -790,8 +790,11 @@ html.ccr-native-app.ccr-native-bottom-nav-visible:not(.ccr-nav-montada) body::af
      fondo del app) y con desenfoque fuerte, así lo que pasa detrás se nota
      como una mancha suave sin estorbar los íconos. */
   background: rgba(250, 251, 252, 0.86);
-  -webkit-backdrop-filter: blur(28px) saturate(1.6);
-  backdrop-filter: blur(28px) saturate(1.6);
+  /* blur(12px) sin saturate: el de 28px + saturate se recalculaba en cada
+     cuadro mientras la página corría debajo y hacía pesado el desplazamiento
+     en WKWebView. Con el fondo al 0.86 el esmerilado se ve igual. */
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.9);
   /* Sombra suave hacia arriba y abajo y un filo fino: separa la barra aunque
      el contenido de atrás también sea blanco. */

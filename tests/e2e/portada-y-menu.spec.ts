@@ -81,6 +81,27 @@ test.describe("portada y menú (1-oct-2026) @smoke", () => {
     expect(await activo.evaluate((v: HTMLVideoElement) => v.muted && v.hasAttribute("muted") && v.hasAttribute("playsinline"))).toBe(true);
   });
 
+  test("el video activo de la guía nunca queda invisible y la imagen fija va encima", async ({ page }) => {
+    // WebKit suspende el autoplay de un video que no «se ve»: con opacidad 0
+    // hasta que corría, el video no arrancaba hasta centrar el teléfono.
+    await gotoOK(page, "/");
+    await page.locator("h2", { hasText: /Así se usa|How ContrataCR works/ }).scrollIntoViewIfNeeded();
+    const activo = page.locator("video.ccr-guia-video.opacity-100").first();
+    await expect(activo).toBeVisible();
+    expect(await activo.evaluate((v) => Number(getComputedStyle(v).opacity))).toBe(1);
+    const poster = page.locator("img[data-guia-poster]");
+    await expect(poster).toHaveCount(1);
+    const orden = await poster.evaluate((img) => {
+      const v = img.parentElement!.querySelector("video.ccr-guia-video.opacity-100")!;
+      return {
+        despues: Boolean(v.compareDocumentPosition(img) & Node.DOCUMENT_POSITION_FOLLOWING),
+        zImg: Number(getComputedStyle(img).zIndex) || 0,
+        zVideo: Number(getComputedStyle(v).zIndex) || 0,
+      };
+    });
+    expect(orden.despues && orden.zImg >= orden.zVideo).toBe(true);
+  });
+
   test("las secciones de abajo de la portada se ven al bajar", async ({ page }) => {
     await gotoOK(page, "/");
     const zona = page.locator("h2", { hasText: /Encuentra profesionales en tu zona|Find professionals in your area/ });

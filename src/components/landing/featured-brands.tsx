@@ -52,10 +52,14 @@ export function FeaturedBrands() {
     if (!marquee || !track) return;
 
     const reducir = window.matchMedia("(prefers-reduced-motion: reduce)");
-    let offset = 0; // px desplazados hacia la izquierda, siempre en [0, ancho de un juego)
+    // La cinta avanza con una animación del COMPOSITOR (Web Animations), no con
+    // un requestAnimationFrame que escribía el transform en cada cuadro: eso
+    // ocupaba el hilo principal TODO el tiempo, aun fuera de la pantalla, y la
+    // portada se sentía pesada al desplazarse (sobre todo en la app).
+    const DURACION = SEGUNDOS_POR_VUELTA * 1000;
     let anchoJuego = 0;
-    let ultimo = performance.now();
-    let frame = 0;
+    let anim: Animation | null = null;
+    let enPantalla = true;
     // Estado del gesto
     let punteroId: number | null = null;
     let inicioX = 0;
@@ -68,25 +72,37 @@ export function FeaturedBrands() {
       anchoJuego = juego ? juego.getBoundingClientRect().width : 0;
     };
     const envolver = (x: number) => (anchoJuego > 0 ? ((x % anchoJuego) + anchoJuego) % anchoJuego : 0);
-    const pintar = () => {
-      track.style.transform = `translate3d(${-offset}px, 0, 0)`;
+    // Px desplazados hacia la izquierda según el reloj de la animación.
+    const offsetActual = () => {
+      const t = Number(anim?.currentTime ?? 0);
+      return anchoJuego > 0 ? ((t % DURACION) / DURACION) * anchoJuego : 0;
     };
-
-    const paso = (ahora: number) => {
-      const dt = Math.min(ahora - ultimo, 100);
-      ultimo = ahora;
-      if (!arrastrando && !reducir.matches && anchoJuego > 0) {
-        offset = envolver(offset + (anchoJuego / (SEGUNDOS_POR_VUELTA * 1000)) * dt);
-        pintar();
-      }
-      frame = requestAnimationFrame(paso);
+    const irA = (offset: number) => {
+      if (anim && anchoJuego > 0) anim.currentTime = (envolver(offset) / anchoJuego) * DURACION;
+    };
+    const decidir = () => {
+      if (!anim) return;
+      if (enPantalla && !arrastrando && !reducir.matches) anim.play();
+      else anim.pause();
+    };
+    const crear = () => {
+      const offset = offsetActual();
+      anim?.cancel();
+      medir();
+      if (anchoJuego <= 0) { anim = null; return; }
+      anim = track.animate(
+        [{ transform: "translate3d(0,0,0)" }, { transform: `translate3d(${-anchoJuego}px,0,0)` }],
+        { duration: DURACION, iterations: Infinity, easing: "linear" },
+      );
+      irA(offset);
+      decidir();
     };
 
     const alBajar = (e: PointerEvent) => {
       if (e.pointerType === "mouse" && e.button !== 0) return;
       punteroId = e.pointerId;
       inicioX = e.clientX;
-      inicioOffset = offset;
+      inicioOffset = offsetActual();
       arrastrando = false;
       anularClic = false;
     };
@@ -99,9 +115,9 @@ export function FeaturedBrands() {
         anularClic = true;
         try { marquee.setPointerCapture(e.pointerId); } catch { /* ya liberado */ }
         marquee.classList.add("is-dragging");
+        anim?.pause();
       }
-      offset = envolver(inicioOffset - dx);
-      pintar();
+      irA(inicioOffset - dx);
     };
     const alSoltar = (e: PointerEvent) => {
       if (e.pointerId !== punteroId) return;
@@ -109,7 +125,7 @@ export function FeaturedBrands() {
       if (arrastrando) {
         arrastrando = false;
         marquee.classList.remove("is-dragging");
-        ultimo = performance.now(); // retoma desde donde quedó, sin salto
+        decidir(); // retoma desde donde quedó, sin salto
       }
     };
     // Un arrastre no debe abrir la ficha que quedó bajo el dedo al soltar.
@@ -121,20 +137,29 @@ export function FeaturedBrands() {
       }
     };
 
-    medir();
-    pintar();
-    const ro = new ResizeObserver(() => { medir(); offset = envolver(offset); pintar(); });
+    crear();
+    let anchoVisto = anchoJuego;
+    const ro = new ResizeObserver(() => {
+      const juego = track.firstElementChild as HTMLElement | null;
+      const w = juego ? juego.getBoundingClientRect().width : 0;
+      if (Math.abs(w - anchoVisto) > 0.5) { anchoVisto = w; crear(); }
+    });
     if (track.firstElementChild) ro.observe(track.firstElementChild);
+    // Fuera de la pantalla la cinta se detiene: no gasta nada mientras no se ve.
+    const io = new IntersectionObserver(([e]) => { enPantalla = e.isIntersecting; decidir(); });
+    io.observe(marquee);
+    reducir.addEventListener?.("change", decidir);
     marquee.addEventListener("pointerdown", alBajar);
     marquee.addEventListener("pointermove", alMover);
     marquee.addEventListener("pointerup", alSoltar);
     marquee.addEventListener("pointercancel", alSoltar);
     marquee.addEventListener("click", alClic, true);
-    frame = requestAnimationFrame(paso);
 
     return () => {
-      cancelAnimationFrame(frame);
+      anim?.cancel();
       ro.disconnect();
+      io.disconnect();
+      reducir.removeEventListener?.("change", decidir);
       marquee.removeEventListener("pointerdown", alBajar);
       marquee.removeEventListener("pointermove", alMover);
       marquee.removeEventListener("pointerup", alSoltar);

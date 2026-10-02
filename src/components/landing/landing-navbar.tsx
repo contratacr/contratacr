@@ -990,14 +990,27 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
       if (objetivo instanceof HTMLElement && objetivo.tagName === "MAIN") return objetivo.scrollTop;
       return null;
     };
+    // Una lectura por cuadro como mucho, y solo avisa a React si CAMBIA.
+    let ultimo: boolean | null = null;
+    let cuadro: number | null = null;
     const onScroll = (evento: Event) => {
-      const arriba = leer(evento.target);
-      if (arriba !== null) setContenidoDebajo(arriba > 4);
+      if (cuadro !== null) return;
+      const objetivo = evento.target;
+      cuadro = requestAnimationFrame(() => {
+        cuadro = null;
+        const arriba = leer(objetivo);
+        if (arriba === null) return;
+        const debajo = arriba > 4;
+        if (debajo !== ultimo) { ultimo = debajo; setContenidoDebajo(debajo); }
+      });
     };
     const principal = document.querySelector("main");
     queueMicrotask(() => setContenidoDebajo(((document.scrollingElement?.scrollTop ?? 0) > 4) || ((principal?.scrollTop ?? 0) > 4)));
     document.addEventListener("scroll", onScroll, { capture: true, passive: true });
-    return () => document.removeEventListener("scroll", onScroll, { capture: true });
+    return () => {
+      document.removeEventListener("scroll", onScroll, { capture: true });
+      if (cuadro !== null) cancelAnimationFrame(cuadro);
+    };
   }, [nativeApp]);
   const nativeMessageUnread = useDirectMessageUnread(nativeApp);
   // La espera de «hidratado» es para la PRIMERA carga, donde el servidor no
