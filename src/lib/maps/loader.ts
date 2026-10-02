@@ -152,6 +152,9 @@ export function loadGoogleMaps(apiKey: string): Promise<void> {
       loading: "async",
       libraries: "marker,places,geocoding",
       callback: cb,
+      // El idioma del mapa sigue al de la página (sin esto salía en inglés).
+      language: document.documentElement.lang?.startsWith("en") ? "en" : "es",
+      region: "CR",
     });
     const s = document.createElement("script");
     s.src = `https://maps.googleapis.com/maps/api/js?${params.toString()}`;

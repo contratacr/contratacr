@@ -436,7 +436,11 @@ html.ccr-native-bottom-nav-visible body .ccr-search-bottom-sheet {
     scroll-padding-top: 124px;
   }
 
-  body.ccr-native-app.ccr-mobile-navbar-search-visible {
+  body.ccr-native-app.ccr-mobile-navbar-search-visible,
+  /* La búsqueda siempre lleva el buscador en la barra: la clase de la ruta la
+     siembra el script de arranque, así el alto de 124 ya vale en el primer
+     cuadro y la hoja de resultados no cambia de alto al hidratar. */
+  body.ccr-native-app.ccr-native-search-route {
     --ccr-native-header-height: 124px;
   }
 }
@@ -1472,10 +1476,11 @@ input::-ms-clear {
    web). The native shell pins `main` below the header, so the reserve must drop
    to zero there or a blank band appears above the board. */
 .ccr-native-app.ccr-native-marketplace-route,
-.ccr-native-app.ccr-native-fullscreen-route,
-.ccr-native-app.ccr-native-fullscreen-layer { --ccr-native-header-height: 0px; }
-.ccr-native-app.ccr-native-fullscreen-route,
-.ccr-native-app.ccr-native-fullscreen-layer { --ccr-native-bottom-nav-total: 0px; }
+.ccr-native-app.ccr-native-fullscreen-route { --ccr-native-header-height: 0px; }
+/* Una capa a pantalla completa (hoja «+», publicar, visor) NO toca las
+   reservas: solo esconde la cabecera y la barra. Si las bajaba a cero, el
+   <main> fijo subía 64 px debajo del velo al abrirla y bajaba al cerrarla. */
+.ccr-native-app.ccr-native-fullscreen-route { --ccr-native-bottom-nav-total: 0px; }
 body.ccr-native-app.ccr-native-fullscreen-route .ccr-app-header,
 body.ccr-native-app.ccr-native-fullscreen-layer .ccr-app-header,
 body.ccr-native-app.ccr-native-fullscreen-route nav.ccr-native-bottom-nav,
@@ -1839,13 +1844,16 @@ body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-native-fab {
 }
 
 /* Fade-in-up for scroll-triggered sections */
-.fade-in-up {
+/* Solo se esconde con JavaScript (la clase ccr-js la pone el script de
+   arranque) y nunca lo que ya está en la primera pantalla (un script al final
+   de la portada lo marca visible antes del primer cuadro). */
+html.ccr-js .fade-in-up {
   opacity: 0;
   transform: translateY(28px);
   transition: opacity 0.65s ease, transform 0.65s ease;
 }
 
-.fade-in-up.visible {
+html.ccr-js .fade-in-up.visible {
   opacity: 1;
   transform: translateY(0);
 }
@@ -2319,6 +2327,17 @@ body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-native-search-panel {
   padding-bottom: var(--ccr-barra-flotante, 0px);
 }
 html[data-keyboard-visible] body.ccr-native-app .ccr-native-search-panel { bottom: 0; }
+/* CON EL TECLADO ABIERTO la hoja ocupa EXACTAMENTE lo que queda visible encima
+   del teclado (el viewport visual): antes llegaba hasta el fondo de la pantalla,
+   así que el final de «Servicio» quedaba tapado por el teclado y no se podía
+   alcanzar, y en «Ubicación» iOS desplazaba la página y sobraba espacio vacío
+   debajo de la última opción. */
+html[data-keyboard-open] body.ccr-native-app .ccr-native-search-panel {
+  top: var(--app-visual-viewport-top, 0px) !important;
+  bottom: auto !important;
+  height: var(--app-visual-viewport-height, 100dvh) !important;
+  padding-bottom: 0 !important;
+}
 /* Con el buscador abierto la barra sigue flotando ENCIMA de él (el buscador
    va en la capa 220): si no, tocar Asistente o + no le llegaba. */
 body.ccr-native-app:has(.ccr-native-search-panel) .ccr-native-bottom-nav {
@@ -2590,7 +2609,7 @@ html.ccr-native-app .ccr-fin-de-portada > section {
    (FadeInUp) y, dentro de los servicios, las cuatro tarjetas salen en cascada. */
 @keyframes ccr-aparece { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
 /* Sin animación de entrada: en la app el panel «aparecía» de nuevo cada vez que se volvía al inicio (parpadeo). */
-.fade-in-up #servicios-de-la-seccion > a { opacity: 0; }
+html.ccr-js .fade-in-up:not(.visible) #servicios-de-la-seccion > a { opacity: 0; }
 .fade-in-up.visible #servicios-de-la-seccion > a,
 #servicios-de-la-seccion.ccr-entrada > a { animation: ccr-aparece 0.6s cubic-bezier(0.16, 1, 0.3, 1) both; }
 #servicios-de-la-seccion > a:nth-child(2) { animation-delay: 80ms; }
@@ -2608,8 +2627,10 @@ html.ccr-native-app .ccr-fin-de-portada > section {
 /* EL MENÚ A PANTALLA COMPLETA (como Angi). Entra deslizando desde la derecha y
    las filas llegan CON el panel: escalonadas, las últimas tardaban en salir. */
 /* Entra DESDE LA DERECHA, como una pantalla de iOS: desliza y frena suave. */
-.ccr-menu-completo { transform: translate3d(100%, 0, 0); transition: transform 0.55s cubic-bezier(0.32, 0.72, 0, 1), visibility 0s linear 0.55s; will-change: transform; }
-.ccr-menu-completo.ccr-menu-abierto { transform: translate3d(0, 0, 0); transition: transform 0.55s cubic-bezier(0.32, 0.72, 0, 1), visibility 0s; }
+/* Más lento y parejo: la curva anterior recorría el 90 % en los primeros 150 ms
+   y se veía casi inmediato. Esta entra suave y frena suave (0,6 s abrir, 0,45 s cerrar). */
+.ccr-menu-completo { transform: translate3d(100%, 0, 0); opacity: 0.6; transition: transform 0.55s cubic-bezier(0.45, 0, 0.2, 1), opacity 0.55s ease, visibility 0s linear 0.55s; will-change: transform; }
+.ccr-menu-completo.ccr-menu-abierto { transform: translate3d(0, 0, 0); opacity: 1; transition: transform 0.7s cubic-bezier(0.45, 0, 0.2, 1), opacity 0.4s ease, visibility 0s; }
 /* Sin íconos, como Angi; la flecha «›» va al final de cada fila. */
 .ccr-menu-completo .ccr-menu-fila > span:first-child:has(> svg) { display: none; }
 .ccr-menu-completo .ccr-menu-fila:not([aria-expanded])::after {

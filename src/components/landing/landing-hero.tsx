@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useLayoutEffect, useRef, useTransition, type RefObject } from "react";
-import { createPortal } from "react-dom";
+import { useState, useEffect, useLayoutEffect, useRef, useTransition, type RefObject, type CSSProperties } from "react";
+import { createPortal, preload } from "react-dom";
 import { ArrowRight, Loader2, Search, MapPin } from "lucide-react";
 import { Link, useRouter } from "@/i18n/navigation";
 import { useLocale, useTranslations } from "next-intl";
@@ -35,9 +35,9 @@ const HERO_FOTOS: { id: string; foco: string; focoPc: string; sube?: number; sol
   // `foco`: dónde está el profesional en la foto, para que el recorte —ancho en
   // computadora, angosto en el teléfono— lo deje siempre a la vista.
   // Teléfono: lo que importa queda arriba (y). Computadora: el profesional a la derecha (x).
-  { id: "1555963966-b7ae5404b6ed", foco: "62% 30%", focoPc: "50% 22%" }, // liniero trabajando en un poste, a un costado
+  { id: "1555963966-b7ae5404b6ed", foco: "62% 22%", focoPc: "50% 22%" }, // liniero trabajando en un poste, a un costado
   { id: "1749532125405-70950966b0e5", foco: "58% 25%", focoPc: "50% 12%" }, // fontanero en un baño
-  { id: "1589939705384-5185137a7f0f", foco: "80% 20%", focoPc: "50% 42%", sube: 30 }, // carpintería con casco
+  { id: "1589939705384-5185137a7f0f", foco: "80% 60%", focoPc: "50% 42%" }, // carpintería con casco
   { id: "1660330589693-99889d60181e", foco: "72% 30%", focoPc: "50% 35%" }, // electricista en un tablero
 ];
 // Miniatura de la PRIMERA foto (el liniero): si fuera de otra, al cargar se veía
@@ -70,6 +70,10 @@ function FotoDeFondo() {
     return () => { window.clearTimeout(empezar); window.clearInterval(id); };
   }, []);
   const anchos = [800, 1200, 1600, 2200, 2800, 3600, 4200];
+  // La primera foto se pide desde el <head> (junto con el HTML), no cuando React
+  // llega a pintarla: así la miniatura borrosa casi no se alcanza a ver.
+  const primera = HERO_FOTOS[0];
+  preload(urlDeFoto(primera.id, 1600), { as: "image", fetchPriority: "high", imageSrcSet: anchos.map((w) => `${urlDeFoto(primera.id, w)} ${w}w`).join(", "), imageSizes: "(max-width: 639px) 150vw, 100vw" });
   return (
     <div aria-hidden className="absolute inset-0 isolate z-0 overflow-hidden bg-[#8a7a68]" style={{ backgroundImage: `url("${HERO_MINIATURA}")`, backgroundSize: "cover", backgroundPosition: "50% 30%" }}>
       {HERO_FOTOS.map((foto, i) => (i === 0 || i === PRIMERA_PC || cargarResto) && (
@@ -78,7 +82,8 @@ function FotoDeFondo() {
           key={foto.id}
           src={urlDeFoto(foto.id, 1600)}
           srcSet={anchos.map((w) => `${urlDeFoto(foto.id, w)} ${w}w`).join(", ")}
-          sizes="100vw"
+          // En el teléfono la foto se recorta a lo alto: necesita ~1,5 veces el ancho de pantalla.
+          sizes="(max-width: 639px) 150vw, 100vw"
           alt=""
           fetchPriority={i === 0 || i === PRIMERA_PC ? "high" : "low"}
           decoding="async"
@@ -762,7 +767,10 @@ export function LandingHero() {
               {/* EL SERVICIO NUNCA SE CORTA: elegido, su campo toma el ancho de su
                   nombre y la ubicación se queda con el resto (lo que se escribe
                   ahí se desplaza dentro de su campo). */}
-              <div ref={svcDesktopRef} className="flex h-[54px] min-w-0 items-center gap-3 sm:h-full" style={esTelefono ? undefined : { flex: `0 0 ${foco === "loc" ? 44 : foco === "svc" ? 68 : 60}%`, transition: "flex-basis 0.38s cubic-bezier(0.22, 1, 0.36, 1)" }}>
+              {/* El reparto de anchos va por CSS (sm:), no por un estado de
+                  «es teléfono»: el servidor no sabe el ancho y pintaba el de
+                  computadora, que el teléfono corregía al hidratar. */}
+              <div ref={svcDesktopRef} className="flex h-[54px] min-w-0 items-center gap-3 sm:h-full sm:[flex:0_0_var(--ccr-ancho-servicio)] sm:[transition:flex-basis_0.38s_cubic-bezier(0.22,1,0.36,1)]" style={{ "--ccr-ancho-servicio": `${foco === "loc" ? 44 : foco === "svc" ? 68 : 60}%` } as CSSProperties}>
                 <Search className="h-5 w-5 shrink-0 text-[#162543] sm:hidden" aria-hidden />
                 <input
                   type="text"

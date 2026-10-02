@@ -517,7 +517,7 @@ export function ProjectsBoard({
           >
             <Menu className="h-5 w-5" strokeWidth={2.5} />
           </button>
-          <Link href="/" aria-label="ContrataCR inicio" className="shrink-0">
+          <Link href="/" aria-label="ContrataCR" className="shrink-0">
             <ContrataCRMark />
           </Link>
           <h1 className={CABECERA_TITULO}>{copy.titulo}</h1>

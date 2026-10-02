@@ -1007,7 +1007,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   // de Mensajes faltaba uno o dos cuadros (el «parpadeo» del icono).
   const [hydrated, setHydrated] = useState(() => encabezadoYaHidratado);
   const nativeHeaderShell = hydrated && nativeApp;
-  const { user, loading: authLoading, accountName, hasProfessionalProfile: fichaProDelServidor } = useAuth();
+  const { user, loading: authLoading, accountName, hasProfessionalProfile: fichaProDelServidor, avatarUrl: avatarUrlCuenta } = useAuth();
   // Search is a full-viewport map + results sheet. Do not merely hide the nav
   // with CSS: leaving it mounted keeps its layout class and safe-area reserve
   // active, which shortens the sheet and the full-screen search overlay.
@@ -1553,6 +1553,13 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
     if (!mobileOpen) return;
     return lockBodyScroll();
   }, [mobileOpen]);
+  // Escape cierra el menú (teclado de computadora o de iPad).
+  useEffect(() => {
+    if (!mobileOpen) return;
+    const alTeclado = (event: KeyboardEvent) => { if (event.key === "Escape") setMobileOpen(false); };
+    window.addEventListener("keydown", alTeclado);
+    return () => window.removeEventListener("keydown", alTeclado);
+  }, [mobileOpen]);
 
   useEffect(() => {
     return () => {
@@ -2033,7 +2040,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
               )}>
                 {sectionActive && sectionRoot ? (
                   <>
-                    <Link href="/" aria-label="ContrataCR inicio" onClick={irAlInicio} className="shrink-0">
+                    <Link href="/" aria-label="ContrataCR" onClick={irAlInicio} className="shrink-0">
                       <ContrataCRMark />
                     </Link>
                     {/* <p>, no <h1>: la página ya tiene su único h1 (el nombre del
@@ -2061,7 +2068,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                   </>
                 ) : (
                   <>
-                <Link href="/" aria-label="ContrataCR inicio" onClick={irAlInicio} className={cn("shrink-0", nativeHeaderShell && "mr-auto flex min-w-0 items-center justify-start")}>
+                <Link href="/" aria-label="ContrataCR" onClick={irAlInicio} className={cn("shrink-0", nativeHeaderShell && "mr-auto flex min-w-0 items-center justify-start")}>
                   {mobileInline ? <ContrataCRMark /> : <ContrataCRLogo />}
                 </Link>
                   </>
@@ -2192,7 +2199,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
               )}
 
               <div className="relative hidden h-16 items-center gap-2 lg:flex xl:gap-3">
-                <Link href="/" aria-label="ContrataCR inicio" onClick={irAlInicio} className="shrink-0">
+                <Link href="/" aria-label="ContrataCR" onClick={irAlInicio} className="shrink-0">
                   {mobileInline ? (
                     <>
                       {/* Compact mark on mobile ONLY when the inline search is present (it needs the
@@ -3013,7 +3020,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
             {/* La fila de arriba: igual que la cabecera de la página. */}
             <div className="shrink-0 bg-white shadow-[0_2px_10px_-6px_rgba(15,23,42,0.25)]" style={{ paddingTop: altoSobreCabecera }}>
               <div className="flex h-16 items-center justify-between px-4 sm:px-6">
-                <Link href="/" aria-label="ContrataCR inicio" onClick={(e) => { cerrarCajon(); irAlInicio(e); }} className="shrink-0">
+                <Link href="/" aria-label="ContrataCR" onClick={(e) => { cerrarCajon(); irAlInicio(e); }} className="shrink-0">
                   <ContrataCRLogo />
                 </Link>
                 <button type="button" onClick={cerrarCajon} aria-label={t("closeMenu")} className="grid h-10 w-10 place-items-center rounded-xl text-[#162543] transition-colors hover:bg-gray-50">
@@ -3025,12 +3032,20 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
               <nav className="flex flex-col">
                 {user ? (
                   <>
-                    {!nativeHeaderShell && (
-                      <Link href={primaryPanelHref} onClick={cerrarCajon} className={mobileDrawerStrongItemClass}>
-                        <DrawerIcon><UserRound /></DrawerIcon>
-                        <span className={mobileDrawerTextClass}>{locale === "en" ? "My dashboard" : "Mi panel"}</span>
-                      </Link>
-                    )}
+                    {/* LA CUENTA, ARRIBA DEL MENÚ (como Facebook o Angi): foto, nombre
+                        —el comercial si lo tiene— y «Ir a mi panel». En la app también,
+                        aunque el panel esté en la barra de abajo: aquí se ve QUIÉN es. */}
+                    <Link href={primaryPanelHref} onClick={cerrarCajon} className="mb-2 flex items-center gap-3 rounded-2xl bg-[#f4f7fa] p-3 transition-colors hover:bg-[#eaf2f8]">
+                      {avatarUrlCuenta
+                        // eslint-disable-next-line @next/next/no-img-element -- avatar pequeño de tamaño fijo
+                        ? <img src={avatarUrlCuenta} alt="" className="h-12 w-12 shrink-0 rounded-full object-cover ring-1 ring-[#e2e8f0]" />
+                        : <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-white ring-1 ring-[#e2e8f0]"><UserRound className="h-6 w-6 text-[#526277]" /></span>}
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-[17px] font-bold text-[#162543]">{accountDisplayName || t("myPanel")}</span>
+                        <span className="mt-0.5 block text-[14px] font-semibold text-[#009FD9]">{t("goToPanel")}</span>
+                      </span>
+                      <ChevronRight className="h-5 w-5 shrink-0 text-[#9aa7b6]" />
+                    </Link>
                     {mostrarOfrecerServicios && (
                       <Link
                         href="/registro/profesional"
@@ -3183,7 +3198,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                   de dos estados —se ve cuál está puesto—, no un renglón más que
                   parece llevar a otra pantalla. */}
               <div className={cn(
-                "mt-3 grid shrink-0 gap-2 border-t border-[#eef2f6] px-1 pt-3",
+                "mt-5 grid shrink-0 gap-2 px-1",
                 // Los dos ajustes son del mismo tipo y se ven iguales: dos
                 // pastillas del mismo alto, repartidas a la mitad. Solo el
                 // idioma —sin sesión— se queda a la izquierda, en la misma

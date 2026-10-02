@@ -1,3 +1,4 @@
+import { Navbar } from "@/components/layout/navbar";
 import { cn } from "@/lib/utils";
 
 // El esqueleto del panel: lo usa la propia pantalla mientras resuelve sesión y
@@ -131,7 +132,9 @@ export function LienzoNeutro() {
 export function PerfilSkeleton() {
   return (
     <div className="min-h-screen bg-[#f4f7fa]" aria-busy="true" role="status">
-      <div className="h-16 bg-white shadow-[0_1px_0_#e5e7eb]" />
+      {/* La barra de verdad, no una franja vacía: al llegar la ficha la
+          cabecera ya está en su sitio y no «aparece» encima del esqueleto. */}
+      <Navbar />
       <div className="bg-white px-4 pb-5 pt-5">
         <div className="mx-auto flex w-full max-w-3xl items-center gap-4">
           <Hueso className="h-20 w-20 shrink-0 rounded-full" />

@@ -373,7 +373,7 @@ export function OffersBoard({
             >
               <Menu className={CABECERA_GLIFO} strokeWidth={2.5} />
             </button>
-            <Link href="/" aria-label="ContrataCR inicio" className="shrink-0">
+            <Link href="/" aria-label="ContrataCR" className="shrink-0">
               <ContrataCRMark />
             </Link>
             <h1 className={CABECERA_TITULO}>{copy.offers}</h1>

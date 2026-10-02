@@ -122,6 +122,13 @@ export default async function HomePage({
         <FadeInUp delay={40} className="ccr-fin-de-portada">
           <FindByZone coverage={coverage} />
         </FadeInUp>
+        {/* Lo que ya cabe en la primera pantalla se marca visible antes del
+            primer cuadro: el aparecer solo es para lo que llega al desplazar. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try{document.querySelectorAll(".fade-in-up").forEach(function(e){if(e.getBoundingClientRect().top<innerHeight)e.classList.add("visible")})}catch(e){}`,
+          }}
+        />
 
       </main>
 

@@ -72,7 +72,10 @@ test.describe("@smoke public routes", () => {
       await page.getByRole("button", { name: /Abrir menu|Abrir men/i }).first().click();
       const navigation = page.getByRole("dialog", { name: /Men[uú]|Menu/i });
       await expect(page.getByRole("link", { name: /^Servicios$/i }).first()).toBeVisible();
-      await expect(page.getByRole("link", { name: /Soporte|Centro de ayuda/i }).first()).toBeVisible();
+      // «Ayuda y soporte» se despliega: adentro, Preguntas frecuentes y soporte.
+      await navigation.getByRole("button", { name: /Ayuda y soporte|Help and support/i }).click();
+      await expect(navigation.getByRole("link", { name: /Preguntas frecuentes|FAQ/i }).first()).toBeVisible();
+      await expect(navigation.getByRole("link", { name: /^Registrarme$|^Sign up$/i }).first()).toHaveAttribute("href", /\/registro/);
       // Entrar a la cuenta es UNA acción, no dos renglones más de la lista: el
       // cajón lleva un solo botón «Ingresar o crear cuenta» y la elección de
       // rol se hace ya dentro, en /registro.
@@ -85,12 +88,10 @@ test.describe("@smoke public routes", () => {
       await expect(navigation.getByRole("button", { name: /^Servicios$/i }).first()).toBeVisible();
       await expect(navigation.getByRole("button", { name: /^Explorar$/i }).first()).toBeVisible();
       await expect(navigation.getByRole("link", { name: /Ingresar/i }).first()).toBeVisible();
-      // La acción de la barra ya no es «Registrarse» a secas: contactar no pide
-      // cuenta, así que el botón invita a lo único que sí la necesita desde el
-      // primer minuto —ofrecer servicios—.
-      const registro = navigation.getByRole("link", { name: /Ofrecer mis servicios/i }).first();
+      // Desde el 1-oct-2026: «Ingresar» y «Registrarme» (el registro ofrece las dos cuentas).
+      const registro = navigation.getByRole("link", { name: /^Registrarme$|^Sign up$/i }).first();
       await expect(registro).toBeVisible();
-      await expect(registro).toHaveAttribute("href", /\/registro\/profesional/);
+      await expect(registro).toHaveAttribute("href", /\/registro$/);
     }
     await expectHealthyPage(page);
   });
@@ -176,7 +177,10 @@ test.describe("@smoke public routes", () => {
     await expect(location).toHaveValue(/Cerca de m[ií]|Near me/i);
     const homeSearchForm = page.locator("form").filter({ has: location });
     await expect(homeSearchForm).toHaveCount(1);
-    await homeSearchForm.getByRole("button", { name: /^Buscar$|^Search$/i }).click();
+    // En PC hay lupa; en el teléfono no (se busca con «Ir»): se envía el formulario.
+    const lupa = homeSearchForm.getByRole("button", { name: /^Buscar$|^Search$/i }).filter({ visible: true });
+    if (await lupa.count()) await lupa.first().click();
+    else await homeSearchForm.evaluate((f: HTMLFormElement) => f.requestSubmit());
     await expect(page).toHaveURL(/\/profesionales/);
     await expect(page).toHaveURL(/lat=9\.92810/);
     await expect(page).toHaveURL(/lng=-84\.09070/);

@@ -26,13 +26,17 @@ test("el hilo de soporte vuelve a su sitio al cerrarse el teclado", async ({ pag
   // (siguiente prueba) apaga la marca de teclado por su cuenta y, según cuándo
   // corriera, esta prueba medía 0 en vez de 260.
   await hilo.locator("textarea, input[type=text]").first().focus();
-  await page.evaluate(() => {
+  // Se vuelve a poner en cada intento: cualquier aviso tardío del viewport (el
+  // enfoque desplaza el campo a la vista, en CI llega después) hace que el
+  // vigilante del app remida —en el emulador, sin teclado: desfase 0— y borre
+  // el estado simulado. Lo que se prueba es la regla de CSS, no la carrera.
+  const simularTeclado = () => page.evaluate(() => {
     const raiz = document.documentElement;
     raiz.style.setProperty("--app-visual-viewport-top", "260px");
     raiz.style.setProperty("--app-visual-viewport-height", "420px");
     raiz.toggleAttribute("data-keyboard-open", true);
   });
-  await expect.poll(async () => (await caja()).top).toBe(260);
+  await expect.poll(async () => { await simularTeclado(); return (await caja()).top; }).toBe(260);
 
   // …y al cerrarse deja los valores viejos puestos. El hilo igual vuelve entero.
   await page.evaluate(() => {

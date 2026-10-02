@@ -196,7 +196,7 @@ export function ServiciosClient({ catalogoInicial }: { catalogoInicial: string |
                 >
                   <Menu className="h-5 w-5" strokeWidth={2.5} />
                 </button>
-                <Link href="/" aria-label="ContrataCR inicio" className="shrink-0">
+                <Link href="/" aria-label="ContrataCR" className="shrink-0">
                   <ContrataCRMark />
                 </Link>
                 <p className={CABECERA_TITULO}>{servicesTitle}</p>

@@ -45,7 +45,7 @@ export function ErrorScreen({
   return (
     <main className="ccr-error-screen min-h-screen flex flex-col items-center justify-center bg-white px-4 py-12 text-center">
       {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
-      <a href="/" aria-label="ContrataCR inicio" className="mb-8 sm:mb-10">
+      <a href="/" aria-label="ContrataCR" className="mb-8 sm:mb-10">
         <BrandLogo />
       </a>
 

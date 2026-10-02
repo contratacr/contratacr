@@ -105,7 +105,7 @@ export async function GET(req: Request) {
         client_id, accepted_professional_id, created_at, updated_at,
         completed_at, work_done_at, archived_by_client, allow_direct_contact,
         for_someone_else, beneficiary_name, beneficiary_dob,
-        profiles:client_id(full_name, email, cedula, avatar_url),
+        profiles:client_id(full_name, email, cedula, avatar_url)
       `)
       .order("created_at", { ascending: false })
       .range(from, from + batchSize - 1);

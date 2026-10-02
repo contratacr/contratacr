@@ -25,7 +25,9 @@ const medir = (page: import("playwright/test").Page, conIconos = false) => page.
     const esTexto = /^(H1|H2|H3|A|BUTTON|P|SPAN|INPUT)$/.test(el.tagName)
       && ((el.textContent || "").trim().length > 0 || (conIconos && /^(A|BUTTON)$/.test(el.tagName) && el.hasAttribute("aria-label")));
     if (r.height < 8 || (r.width < 40 && !(esTexto && conIconos)) || cs.visibility === "hidden" || r.top < bajo - 1) continue;
+    // Una caja con degradado (la caja del ícono) pinta con background-image.
     const seVe = parseFloat(cs.borderTopWidth) > 0
+      || cs.backgroundImage !== "none"
       || (cs.backgroundColor !== "rgba(0, 0, 0, 0)" && cs.backgroundColor !== getComputedStyle(document.body).backgroundColor)
       || esTexto;
     if (seVe) arriba = Math.min(arriba, r.top);

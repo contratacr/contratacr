@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useTranslations } from "next-intl";
-import { FileText, ListChecks, Loader2, Plus, Trash2, User } from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
+import { ListChecks, Loader2, Plus, Trash2, User } from "lucide-react";
 import { Modal } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
 import { CedulaInput } from "@/components/ui/cedula-input";
@@ -15,11 +15,14 @@ import { formatColones } from "@/lib/pricing";
 import { avisarMomentoDeNotificacion } from "@/lib/push-moment";
 
 /**
- * Nueva cotización: para quién, qué incluye y cuánto. Un solo formulario, en
- * orden de lectura. La cédula trae el nombre del padrón (como en el registro),
+ * Nueva cotización: lo mismo que piden Jobber o Square — cliente, líneas,
+ * total, vigencia y nota — en DOS tarjetas: el cliente y el trabajo (con sus
+ * condiciones). Antes «Condiciones» era una tercera tarjeta para tres datos. La cédula trae el nombre del padrón (como en el registro),
  * el teléfono lleva su código de país, y el IVA es una sola fila de tres
  * opciones cortas en vez de tres tarjetas.
  */
+const DATE_LOCALE: Record<string, string> = { es: "es-CR", en: "en-US" };
+
 type Row = { id: number; description: string; quantity: string; unit_price: string };
 let seq = 1;
 const nuevaFila = (): Row => ({ id: seq++, description: "", quantity: "1", unit_price: "" });
@@ -31,6 +34,7 @@ export function QuoteEditorModal({ open, onClose, bookingId, projectId, defaultT
   onSent: (quote: Quote) => void;
 }) {
   const t = useTranslations("quotes");
+  const locale = useLocale();
   const suelta = !bookingId && !projectId;
   const [cedula, setCedula] = useState("");
   // "buscando" / "sin registro" se deducen de la cédula y del resultado, en vez
@@ -48,6 +52,8 @@ export function QuoteEditorModal({ open, onClose, bookingId, projectId, defaultT
   const [taxMode, setTaxMode] = useState<QuoteTaxMode>("incluido");
   const [notes, setNotes] = useState("");
   const [validDays, setValidDays] = useState(15);
+  // La vigencia se dice como fecha, que es lo que el cliente va a leer.
+  const validaHasta = new Date(Date.now() + validDays * 86_400_000).toLocaleDateString(DATE_LOCALE[locale] ?? "es-CR", { day: "numeric", month: "short" });
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -138,7 +144,7 @@ export function QuoteEditorModal({ open, onClose, bookingId, projectId, defaultT
             <p className={tituloBloque}><User className="h-3.5 w-3.5" />{t("forWhomLabel")}</p>
             <div className="flex flex-col gap-3 sm:grid sm:grid-cols-2 sm:gap-x-4">
               <div className="sm:col-span-2">
-                <CedulaInput value={cedula} onChange={setCedula} labelText={t("clientCedulaLabel")} hint={t("clientCedulaHint")} />
+                <CedulaInput value={cedula} onChange={setCedula} labelText={t("clientCedulaLabel")} />
                 {buscandoCedula && <p className="mt-1.5 inline-flex items-center gap-1.5 text-[12px] font-semibold text-[#0089bb]"><Loader2 className="h-3.5 w-3.5 animate-spin" />{t("clientCedulaSearching")}</p>}
                 {cedulaSinRegistro && <p className="mt-1.5 text-[12px] text-[#68778d]">{t("clientCedulaNotFound")}</p>}
               </div>
@@ -151,7 +157,7 @@ export function QuoteEditorModal({ open, onClose, bookingId, projectId, defaultT
                 <span className={rotulo}><EtiquetaOpcional>{t("clientEmailLabel")}</EtiquetaOpcional></span>
                 <input type="email" inputMode="email" value={clientEmail} onChange={(e) => setClientEmail(e.target.value.slice(0, 120))} placeholder={t("clientEmailPlaceholder")} className={campo} />
               </label>
-              <p className="text-[12px] leading-snug text-[#68778d] sm:col-span-2">{t("clientContactHint")}</p>
+              <p className="-mt-1 text-[12px] leading-snug text-[#68778d] sm:col-span-2 sm:mt-0">{t("clientContactHint")}</p>
             </div>
           </section>
         )}
@@ -211,12 +217,10 @@ export function QuoteEditorModal({ open, onClose, bookingId, projectId, defaultT
               <button type="button" onClick={() => setRows((prev) => [...prev, nuevaFila()])} className="mt-2.5 inline-flex h-10 items-center gap-1.5 rounded-full border border-dashed border-[#c7d5e2] px-4 text-[13px] font-bold text-[#0089bb] transition-colors hover:border-[#009FD9] hover:bg-[#f2fbfe]"><Plus className="h-4 w-4" />{t("addItem")}</button>
             )}
           </div>
-        </section>
 
-        {/* 3 · Condiciones: impuesto, vigencia y la nota. */}
-        <section className={bloque}>
-          <p className={tituloBloque}><FileText className="h-3.5 w-3.5" />{t("sectionTerms")}</p>
-          <div className="grid gap-4 sm:grid-cols-2">
+          {/* Las condiciones van en la misma tarjeta: son tres datos del mismo
+              documento y no ameritaban una caja aparte. */}
+          <div className="mt-5 grid gap-4 border-t border-[#eef2f6] pt-4 sm:grid-cols-2">
             <div>
               <span className={rotulo}>{t("taxLabel")}</span>
               <div className="flex flex-wrap gap-2">
@@ -227,16 +231,17 @@ export function QuoteEditorModal({ open, onClose, bookingId, projectId, defaultT
             </div>
             <div>
               <span className={rotulo}>{t("validLabel")}</span>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 {[7, 15, 30].map((d) => (
                   <button key={d} type="button" onClick={() => setValidDays(d)} className={pastilla(validDays === d)}>{t("days", { count: d })}</button>
                 ))}
+                <span className="text-[13px] font-semibold text-[#52627a]">{t("validUntilShort", { date: validaHasta })}</span>
               </div>
             </div>
           </div>
 
           <label className="mt-4 block">
-            <span className={rotulo}>{t("notesLabel")}</span>
+            <span className={rotulo}><EtiquetaOpcional>{t("notesLabel")}</EtiquetaOpcional></span>
             <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} maxLength={1000} placeholder={t("notesPlaceholder")} className={`${campo} resize-none`} />
           </label>
         </section>
