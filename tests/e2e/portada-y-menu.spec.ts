@@ -146,5 +146,13 @@ test.describe("portada y menú (1-oct-2026) @smoke", () => {
     expect(medida.alto, "la hoja debe medir lo visible sobre el teclado").toBe(476);
     expect(medida.ultima, "la última opción queda tapada por el teclado").toBeLessThanOrEqual(476);
   });
+
+  test("los logos de la cinta están cargados desde el principio (ninguno en blanco)", async ({ page }) => {
+    await gotoOK(page, "/");
+    await page.waitForLoadState("load");
+    const sinCargar = await page.locator(".featured-brands-ribbon img").evaluateAll((imgs) =>
+      (imgs as HTMLImageElement[]).filter((i) => !i.complete || i.naturalWidth === 0).map((i) => i.getAttribute("src")));
+    expect(sinCargar, "logos sin cargar al terminar la página").toEqual([]);
+  });
 });
 

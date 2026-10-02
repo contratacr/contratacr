@@ -43,7 +43,7 @@ export function GuiaDeLaApp({ pasos }: { pasos: PasoDeLaGuia[] }) {
   useEffect(() => {
     const el = caja.current;
     if (!el) return;
-    const o = new IntersectionObserver(([e]) => setVisible(e.isIntersecting), { threshold: 0.1 });
+    const o = new IntersectionObserver(([e]) => setVisible(e.isIntersecting), { threshold: 0, rootMargin: "400px 0px" });
     o.observe(el);
     return () => o.disconnect();
   }, []);
@@ -170,6 +170,11 @@ export function GuiaDeLaApp({ pasos }: { pasos: PasoDeLaGuia[] }) {
           >
             <div className="relative" style={{ background: "#04060a", borderRadius: 51, padding: 8 }}>
               <div className="relative overflow-hidden bg-white" style={{ borderRadius: 44, aspectRatio: "588 / 1280" }}>
+                {/* La primera imagen de cada video va APARTE: el «poster» del video
+                    hacía que iOS pintara su botón de play encima mientras cargaba.
+                    El video se vuelve visible solo cuando ya está corriendo. */}
+                {/* eslint-disable-next-line @next/next/no-img-element -- imagen fija del tamaño justo */}
+                <img src={pasos[activo].poster} alt="" aria-hidden className="absolute inset-0 h-full w-full object-cover object-top" />
                 {pasos.map((p, i) => (
                   <video
                     key={p.clave}
@@ -181,20 +186,19 @@ export function GuiaDeLaApp({ pasos }: { pasos: PasoDeLaGuia[] }) {
                       if (el) { el.muted = true; el.defaultMuted = true; el.setAttribute("muted", ""); el.setAttribute("playsinline", ""); }
                     }}
                     src={p.video}
-                    poster={p.poster}
                     muted
                     playsInline
                     autoPlay={i === 0}
-                    preload={i === activo ? "auto" : "metadata"}
+                    preload={i === activo ? "auto" : "none"}
                     aria-label={i === activo ? p.alt : undefined}
                     aria-hidden={i !== activo || undefined}
-                    onPlaying={(e) => { if (i === activo) { setDuracion(e.currentTarget.duration || 0); setCorriendo(true); } }}
+                    onPlaying={(e) => { e.currentTarget.dataset.corriendo = "1"; if (i === activo) { setDuracion(e.currentTarget.duration || 0); setCorriendo(true); } }}
                     onPause={() => { if (i === activo) setCorriendo(false); }}
                     onEnded={() => alTerminar(i)}
                     // Safari a veces rechaza el primer play() si el video aún no
                     // cargó: al estar listo se vuelve a intentar.
                     onCanPlay={(e) => { if (i === activo && visible && e.currentTarget.paused) e.currentTarget.play().catch(() => {}); }}
-                    className={cn("ccr-guia-video absolute inset-0 h-full w-full object-cover object-top transition-opacity duration-500", i === activo ? "opacity-100" : "opacity-0")}
+                    className={cn("ccr-guia-video absolute inset-0 h-full w-full object-cover object-top transition-opacity duration-500", i === activo ? "opacity-100 [&:not([data-corriendo])]:opacity-0" : "opacity-0")}
                   />
                 ))}
                 <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 z-20 h-16 bg-gradient-to-b from-white/14 to-transparent" />

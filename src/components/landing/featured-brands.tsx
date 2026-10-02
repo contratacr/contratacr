@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { preload } from "react-dom";
 import { useLocale } from "next-intl";
 import { rutaConIdioma } from "@/lib/prefijo-de-idioma";
 
@@ -30,6 +30,8 @@ const SEGUNDOS_POR_VUELTA = 38;
 const UMBRAL_ARRASTRE = 6;
 
 export function FeaturedBrands() {
+  // Los logos se piden desde el <head>, con la página: nunca aparecen en blanco.
+  for (const b of FEATURED_BRANDS) preload(b.src, { as: "image", fetchPriority: "high" });
   const locale = useLocale();
   const routerMarcas = useRouter();
   // Las fichas de las marcas se piden en segundo plano apenas carga la portada:
@@ -161,14 +163,18 @@ function BrandSet({ locale, duplicate = false }: { locale: string; duplicate?: b
     <div className="featured-brands-set" aria-hidden={duplicate || undefined}>
       {FEATURED_BRANDS.map((brand) => {
         const logo = (
-          <Image
+          // <img> directo y sin carga diferida: con <Image> los logos del borde
+          // (SG Solutions, el de la derecha) se pedían tarde y salían en blanco.
+          // eslint-disable-next-line @next/next/no-img-element -- logos chicos ya optimizados
+          <img
             src={brand.src}
+            loading="eager"
+            decoding="sync"
             alt={duplicate ? "" : brand.name}
             width={500}
             height={500}
             draggable={false}
             className={`featured-brand-logo ${brand.crop}`}
-            sizes="(max-width: 640px) 112px, 144px"
           />
         );
         return brand.slug ? (
