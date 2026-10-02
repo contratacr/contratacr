@@ -83,10 +83,20 @@ export function GuiaDeLaApp({ pasos }: { pasos: PasoDeLaGuia[] }) {
     setActivo((activo + 1) % pasos.length);
   };
 
+  const pestanasRef = useRef<HTMLDivElement | null>(null);
   const elegir = (i: number) => {
     setQuieta(true);
     setActivo(i);
-      };
+    // En el teléfono, al tocar una pestaña se encuadra la guía: pestañas arriba
+    // (bajo la cabecera) y el video a la vista, sin que la persona tenga que bajar.
+    const t = pestanasRef.current;
+    if (t && window.matchMedia("(max-width: 1023px)").matches) {
+      const cabecera = document.querySelector("header")?.getBoundingClientRect().bottom ?? 64;
+      const delta = t.getBoundingClientRect().top - cabecera - 12;
+      const scroller = document.documentElement.classList.contains("ccr-native-app") ? document.querySelector("main") : null;
+      if (Math.abs(delta) > 8) (scroller ?? window).scrollBy({ top: delta, behavior: "smooth" });
+    }
+  };
 
   const paso = pasos[activo];
 
@@ -129,7 +139,7 @@ export function GuiaDeLaApp({ pasos }: { pasos: PasoDeLaGuia[] }) {
 
       {/* En el teléfono y la tableta: pestañas con ícono ENCIMA del aparato, como
           las de «Los servicios más buscados». La raya de abajo se llena con el video. */}
-      <div role="tablist" className="-mx-4 grid grid-cols-4 border-b border-[#e3e9ef] px-2 lg:hidden">
+      <div ref={pestanasRef} role="tablist" className="-mx-4 grid grid-cols-4 border-b border-[#e3e9ef] px-2 lg:hidden">
         {pasos.map((p, i) => {
           const Icono = ICONOS[p.clave];
           const elegido = i === activo;
@@ -152,6 +162,15 @@ export function GuiaDeLaApp({ pasos }: { pasos: PasoDeLaGuia[] }) {
             </button>
           );
         })}
+      </div>
+
+      {/* En el teléfono: qué se ve en el video y el enlace, JUSTO debajo de las
+          pestañas (antes iba bajo el aparato, fuera de la pantalla). */}
+      <div className="-mt-2 text-center lg:hidden">
+        <p className="text-[15px] leading-snug text-[#5b6778]">{paso.texto}</p>
+        <Link href={paso.href} className="mt-1.5 inline-flex items-center gap-1.5 text-[15px] font-bold text-[#009FD9]">
+          {paso.cta}<ArrowRight className="h-4 w-4" />
+        </Link>
       </div>
 
       {/* El teléfono, con las cuatro pantallas fundiéndose. */}
@@ -215,16 +234,6 @@ export function GuiaDeLaApp({ pasos }: { pasos: PasoDeLaGuia[] }) {
           </div>
         </div>
 
-        {/* En el teléfono y la tableta: el texto del paso elegido debajo del aparato. */}
-        <div className="mt-2 w-full lg:hidden">
-          {/* Cambia AL MISMO TIEMPO que la pestaña: sin animación de entrada. */}
-          <div className="mx-auto mt-4 max-w-md text-center">
-            <p className="text-[15px] leading-relaxed text-[#5b6778]">{paso.texto}</p>
-            <Link href={paso.href} className="mt-2 inline-flex items-center gap-1.5 text-[15px] font-bold text-[#009FD9]">
-              {paso.cta}<ArrowRight className="h-4 w-4" />
-            </Link>
-          </div>
-        </div>
       </div>
     </div>
   );
