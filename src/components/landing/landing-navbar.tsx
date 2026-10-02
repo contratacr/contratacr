@@ -1362,12 +1362,33 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   // Al tocar un enlace del menú se va DIRECTO a la sección: el menú desaparece
   // sin animación de cierre (deslizar hacia afuera solo cuando se cierra con la X
   // o con Escape, sin ir a ningún lado).
+  // Al tocar un enlace hacia OTRA pantalla, el menú se queda puesto hasta que
+  // la pantalla nueva esté lista y entonces se quita sin animación. Si se
+  // cerraba en el toque, por un instante se veía el inicio y después la sección.
+  const esperandoPantalla = useRef<number | null>(null);
   const cerrarCajon = useCallback((event?: React.MouseEvent<HTMLElement>) => {
-    if (event?.currentTarget?.tagName === "A") document.documentElement.classList.add("ccr-menu-sin-cierre");
-    setMobileOpen(false);
     window.dispatchEvent(new Event("contratacr:close-ai"));
+    const destino = event?.currentTarget?.tagName === "A" ? (event.currentTarget as HTMLAnchorElement).pathname : null;
+    if (destino && destino !== window.location.pathname) {
+      document.documentElement.classList.add("ccr-menu-sin-cierre");
+      if (esperandoPantalla.current) window.clearTimeout(esperandoPantalla.current);
+      // Por si la navegación no llega: a los 4 s se cierra igual.
+      esperandoPantalla.current = window.setTimeout(() => { setMobileOpen(false); esperandoPantalla.current = null; }, 4000);
+      return;
+    }
+    if (destino) document.documentElement.classList.add("ccr-menu-sin-cierre");
+    setMobileOpen(false);
     window.setTimeout(() => document.documentElement.classList.remove("ccr-menu-sin-cierre"), 600);
   }, []);
+  // La pantalla nueva ya está: se quita el menú (sin animación).
+  useEffect(() => {
+    if (!esperandoPantalla.current) return;
+    window.clearTimeout(esperandoPantalla.current);
+    esperandoPantalla.current = null;
+    setMobileOpen(false);
+    const id = window.setTimeout(() => document.documentElement.classList.remove("ccr-menu-sin-cierre"), 600);
+    return () => window.clearTimeout(id);
+  }, [pathname]);
 
   const irAlInicio = useCallback((event: React.MouseEvent<HTMLAnchorElement>) => {
     if (!nativeApp) return;
