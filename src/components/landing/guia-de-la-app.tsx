@@ -184,7 +184,8 @@ export function GuiaDeLaApp({ pasos }: { pasos: PasoDeLaGuia[] }) {
 
         {/* En el teléfono y la tableta: el texto del paso elegido debajo del aparato. */}
         <div className="mt-2 w-full lg:hidden">
-          <div key={paso.clave} className="ccr-entrada mx-auto mt-4 max-w-md text-center">
+          {/* Cambia AL MISMO TIEMPO que la pestaña: sin animación de entrada. */}
+          <div className="mx-auto mt-4 max-w-md text-center">
             <p className="text-[15px] leading-relaxed text-[#5b6778]">{paso.texto}</p>
             <Link href={paso.href} className="mt-2 inline-flex items-center gap-1.5 text-[15px] font-bold text-[#009FD9]">
               {paso.cta}<ArrowRight className="h-4 w-4" />
