@@ -3183,7 +3183,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                   de dos estados —se ve cuál está puesto—, no un renglón más que
                   parece llevar a otra pantalla. */}
               <div className={cn(
-                "mt-3 grid shrink-0 gap-2 border-t border-[#eef2f6] px-1 pt-3",
+                "mt-5 grid shrink-0 gap-2 px-1",
                 // Los dos ajustes son del mismo tipo y se ven iguales: dos
                 // pastillas del mismo alto, repartidas a la mitad. Solo el
                 // idioma —sin sesión— se queda a la izquierda, en la misma
