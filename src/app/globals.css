@@ -2602,7 +2602,7 @@ html.ccr-native-app .ccr-fin-de-portada > section {
 
 /* El titular de la portada en computadora: dos líneas grandes, como Angi. */
 @media (min-width: 1024px) {
-  [data-titular-portada] { font-size: 2.85rem !important; line-height: 1.1 !important; }
+  [data-titular-portada] { font-size: 2.6rem !important; line-height: 1.1 !important; }
 }
 
 /* EL MENÚ A PANTALLA COMPLETA (como Angi). Entra deslizando desde la derecha y
