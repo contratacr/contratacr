@@ -1,3 +1,4 @@
+import { peticionAutomatizada } from "@/lib/analytics/trafico-automatizado";
 import { createHash, randomUUID } from "node:crypto";
 import type { NextRequest } from "next/server";
 import type { createAdminClient } from "@/lib/supabase/admin";
@@ -22,6 +23,7 @@ function hashStable(value: string) {
 }
 
 export async function recordServerInteraction(admin: AdminClient, req: NextRequest, input: ServerInteractionInput) {
+  if (peticionAutomatizada(req)) return;
   try {
     const sessionId = req.cookies.get(SESSION_COOKIE)?.value;
     const visitorKey = sessionId || input.viewerUserId || randomUUID();

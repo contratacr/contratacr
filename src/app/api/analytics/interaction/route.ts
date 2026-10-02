@@ -1,3 +1,4 @@
+import { peticionAutomatizada } from "@/lib/analytics/trafico-automatizado";
 import { createHash, randomUUID } from "node:crypto";
 import { enforceRateLimit } from "@/lib/rate-limit";
 import { NextResponse, type NextRequest } from "next/server";
@@ -40,6 +41,8 @@ function cleanMetadata(value: unknown): Record<string, string | number | boolean
 }
 
 export async function POST(req: NextRequest) {
+  // Pruebas automáticas: se acepta en silencio y no se guarda.
+  if (peticionAutomatizada(req)) return new NextResponse(null, { status: 204 });
   // Cualquiera podía inflar las vistas y los contactos de un profesional en bucle.
   const limitado = enforceRateLimit(req, "analytics", 60, 60_000);
   if (limitado) return limitado;

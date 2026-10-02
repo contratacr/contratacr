@@ -109,6 +109,20 @@ body.ccr-native-app [data-messages-page-shell] {
   overscroll-behavior-y: contain;
 }
 
+/* En la web del teléfono, arrastrar desde la foto del inicio hacia abajo hacía
+   el rebote de Safari: la página bajaba y parecía que la foto «crecía». Sin
+   rebote vertical en el documento; el resto del desplazamiento es igual. */
+html:not(.ccr-native-app),
+html:not(.ccr-native-app) body {
+  overscroll-behavior-y: none;
+}
+/* La foto del inicio no se arrastra ni se selecciona con el dedo. */
+.ccr-hero-foto img {
+  -webkit-user-drag: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
 /* Marketplace sticky bars (search/filters) ride their own compositor layer:
    without it, WKWebView re-pins them a frame late on fast momentum scrolls and
    the composited cards underneath flash through the bar. */
@@ -2633,10 +2647,15 @@ html.ccr-js .fade-in-up:not(.visible) #servicios-de-la-seccion > a { opacity: 0;
 /* Sin fundido: el panel entero desliza. MISMA curva y duración al abrir y al
    cerrar (0,42 s, la de las hojas de iOS): antes abría con salida rápida y cerraba
    acelerando, y el cierre se sentía más lento que la apertura. */
-.ccr-menu-completo { transform: translate3d(100%, 0, 0); transition: transform 0.42s cubic-bezier(0.32, 0.72, 0, 1), visibility 0s linear 0.42s; will-change: transform; backface-visibility: hidden; }
-.ccr-menu-completo.ccr-menu-abierto { transform: translate3d(0, 0, 0); transition: transform 0.42s cubic-bezier(0.32, 0.72, 0, 1), visibility 0s; }
+/* Solo el CUERPO del menú entra deslizándose: la fila de arriba (logo + X)
+   aparece quieta donde ya está la cabecera, así el logo no se duplica ni se
+   corre mientras el menú entra. */
+.ccr-menu-completo { transition: visibility 0s linear 0.42s; }
+.ccr-menu-completo.ccr-menu-abierto { transition: visibility 0s; }
+.ccr-menu-completo .ccr-menu-cuerpo { transform: translate3d(100%, 0, 0); transition: transform 0.42s cubic-bezier(0.32, 0.72, 0, 1); will-change: transform; backface-visibility: hidden; }
+.ccr-menu-completo.ccr-menu-abierto .ccr-menu-cuerpo { transform: translate3d(0, 0, 0); }
 /* Al ir a una sección desde el menú, el menú se quita sin animación. */
-html.ccr-menu-sin-cierre .ccr-menu-completo { transition: none !important; }
+html.ccr-menu-sin-cierre .ccr-menu-completo, html.ccr-menu-sin-cierre .ccr-menu-completo .ccr-menu-cuerpo { transition: none !important; }
 /* Sin íconos, como Angi; la flecha «›» va al final de cada fila. */
 .ccr-menu-completo .ccr-menu-fila > span:first-child:has(> svg) { display: none; }
 .ccr-menu-completo .ccr-menu-fila:not([aria-expanded])::after {
@@ -2645,7 +2664,7 @@ html.ccr-menu-sin-cierre .ccr-menu-completo { transition: none !important; }
           mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m9 18 6-6-6-6'/%3E%3C/svg%3E") center / contain no-repeat;
 }
 @media (prefers-reduced-motion: reduce) {
-  .ccr-menu-completo { transition-duration: 0.01s !important; }
+  .ccr-menu-completo, .ccr-menu-completo .ccr-menu-cuerpo { transition-duration: 0.01s !important; }
 }
 
 /* Submenú de «Ayuda y soporte» del menú completo: un nivel debajo, sin íconos. */
