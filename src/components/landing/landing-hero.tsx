@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useLayoutEffect, useRef, useTransition, type RefObject } from "react";
+import { useState, useEffect, useLayoutEffect, useRef, useTransition, type RefObject, type CSSProperties } from "react";
 import { createPortal } from "react-dom";
 import { ArrowRight, Loader2, Search, MapPin } from "lucide-react";
 import { Link, useRouter } from "@/i18n/navigation";
@@ -762,7 +762,10 @@ export function LandingHero() {
               {/* EL SERVICIO NUNCA SE CORTA: elegido, su campo toma el ancho de su
                   nombre y la ubicación se queda con el resto (lo que se escribe
                   ahí se desplaza dentro de su campo). */}
-              <div ref={svcDesktopRef} className="flex h-[54px] min-w-0 items-center gap-3 sm:h-full" style={esTelefono ? undefined : { flex: `0 0 ${foco === "loc" ? 44 : foco === "svc" ? 68 : 60}%`, transition: "flex-basis 0.38s cubic-bezier(0.22, 1, 0.36, 1)" }}>
+              {/* El reparto de anchos va por CSS (sm:), no por un estado de
+                  «es teléfono»: el servidor no sabe el ancho y pintaba el de
+                  computadora, que el teléfono corregía al hidratar. */}
+              <div ref={svcDesktopRef} className="flex h-[54px] min-w-0 items-center gap-3 sm:h-full sm:[flex:0_0_var(--ccr-ancho-servicio)] sm:[transition:flex-basis_0.38s_cubic-bezier(0.22,1,0.36,1)]" style={{ "--ccr-ancho-servicio": `${foco === "loc" ? 44 : foco === "svc" ? 68 : 60}%` } as CSSProperties}>
                 <Search className="h-5 w-5 shrink-0 text-[#162543] sm:hidden" aria-hidden />
                 <input
                   type="text"

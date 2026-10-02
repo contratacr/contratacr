@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { createClient, hasSupabaseBrowserConfig } from "@/lib/supabase/client";
 import { FooterSoloWeb } from "@/components/landing/footer-solo-web";
 import { detectSocialOnly, providerLabel } from "@/lib/auth-method";
-import { isNativeAppRuntime } from "@/hooks/use-native-app";
+import { isNativeAppRuntime, useNativeApp } from "@/hooks/use-native-app";
 import { nativeSocialSignIn } from "@/lib/auth/native-social-login";
 import { GoogleSignInButton } from "@/components/auth/google-sign-in-button";
 import { OtpVerification } from "@/components/auth/otp-verification";
@@ -423,7 +423,10 @@ export default function LoginPage() {
   const [runtime, setRuntime] = useState<"unknown" | "native" | "browser">("unknown");
   useEffect(() => { setRuntime(isNativeAppRuntime() ? "native" : "browser"); }, []);
   const browserRuntime = runtime === "browser";
-  const nativeRuntime = runtime === "native";
+  // La app ya se sabe en el servidor (cookie): Apple viaja pintado en el HTML
+  // y no empuja a Google 56 px al hidratar.
+  const appNativa = useNativeApp();
+  const nativeRuntime = runtime === "native" || (runtime === "unknown" && appNativa);
   async function handleApple() { await handleSocial("apple"); }
 
   if (otpEmail) {

@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useSyncExternalStore } from "react";
+import { useContext, useEffect, useSyncExternalStore } from "react";
+import { NativeAppInicial } from "./native-app-inicial";
 import { Capacitor } from "@capacitor/core";
 
 export function isNativeAppRuntime(): boolean {
@@ -56,5 +57,8 @@ function suscribir(alCambiar: () => void): () => void {
  * parpadeo de "Enviar mensaje" en las citas.
  */
 export function useNativeApp(): boolean {
-  return useSyncExternalStore(suscribir, isNativeAppRuntime, () => false);
+  // El valor de servidor sale de la cookie (ver native-app-inicial.tsx): igual
+  // en el HTML y en la hidratación, así nada nativo aparece de golpe.
+  const inicial = useContext(NativeAppInicial);
+  return useSyncExternalStore(suscribir, isNativeAppRuntime, () => inicial);
 }

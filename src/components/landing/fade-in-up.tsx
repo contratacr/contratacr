@@ -32,6 +32,8 @@ export function FadeInUp({ children, delay = 0, className = "" }: FadeInUpProps)
   return (
     <div
       ref={ref}
+      // El script del final de la portada puede haberla marcado ya visible.
+      suppressHydrationWarning
       className={`fade-in-up ${className}`}
       style={{ transitionDelay: `${delay}ms` }}
     >

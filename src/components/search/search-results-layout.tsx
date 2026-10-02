@@ -1,5 +1,6 @@
 "use client";
 
+import { useNativeApp } from "@/hooks/use-native-app";
 import { PantallaFija } from "@/components/util/pantalla-fija";
 import { Link } from "@/i18n/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -166,6 +167,11 @@ export function SearchResultsLayout({ children, filters, quickFilters, drawerFil
   // Viewport-derived snap points are applied only after hydration, then kept in
   // sync when rotation or DevTools changes the available height.
   const [currentSnapPoints, setCurrentSnapPoints] = useState<readonly number[]>(SSR_SNAP_POINTS);
+  // En la app, la posición media sube el alto de la barra flotante (ver
+  // mobileSheetSnapPoints). Hasta medir, esa reserva se dice en CSS para que
+  // el primer pintado ya sea el definitivo y la hoja no se reacomode.
+  const appNativa = useNativeApp();
+  const [reservaEnCss, setReservaEnCss] = useState(true);
   const draggingRef = useRef(false);
   const startRef = useRef({ y: 0, h: CARD_PEEK });
   const dragStartedAtRef = useRef(0);
@@ -198,6 +204,7 @@ export function SearchResultsLayout({ children, filters, quickFilters, drawerFil
     const syncSnapPoints = () => {
       const points = mobileSheetSnapPoints();
       setCurrentSnapPoints(points);
+      setReservaEnCss(false);
       setHeightFr((height) => points[snapIndex(height, points)] ?? CARD_PEEK);
     };
     const frame = window.requestAnimationFrame(syncSnapPoints);
@@ -579,7 +586,7 @@ export function SearchResultsLayout({ children, filters, quickFilters, drawerFil
             // usaba `maxHeight`, así que el primer pintado ya es el definitivo.
             height: ALTO_EXTENDIDO,
             // Never negative: the sheet only ever moves down from its laid-out place.
-            transform: `translate3d(0, max(0px, calc(${ALTO_EXTENDIDO} - ${heightFr * 100}dvh)), 0)`,
+            transform: `translate3d(0, max(0px, calc(${ALTO_EXTENDIDO} - ${heightFr * 100}dvh${reservaEnCss && appNativa && heightFr === CARD_PEEK ? " - var(--ccr-native-bottom-nav-height, 0px)" : ""})), 0)`,
             transition: dragging ? "none" : "transform .18s cubic-bezier(.22,.8,.3,1)",
             willChange: "transform",
           }}

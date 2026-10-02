@@ -50,6 +50,7 @@ import { formatOfferBeforePrice, formatOfferPrice, offerDiscountPercent, type Pr
 import { formatJobSalary, WORKPLACE_TYPES, type JobPost } from "@/lib/jobs";
 import { EMPLEOS_VISIBLE } from "@/lib/feature-flags";
 import { PerfilSkeleton } from "@/components/ui/section-skeletons";
+import { useNativeApp } from "@/hooks/use-native-app";
 import { ProgressiveImage } from "@/components/ui/progressive-image";
 import { useArrastreHorizontal } from "@/hooks/use-arrastre-horizontal";
 import { useDesvanecidoDeCarril } from "@/hooks/use-desvanecido-de-carril";
@@ -242,7 +243,11 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
   useEffect(() => {
     setProfileReturnHref(initialProfileReturnHref());
   }, []);
-  const [navbarOwnsHeader, setNavbarOwnsHeader] = useState(false);
+  // En la app la barra de arriba siempre toma el «volver» (y ya se sabe en el
+  // servidor por la cookie): la fila propia de la ficha no se pinta para
+  // luego esconderse, que subía toda la ficha 85 px al llegar la confirmación.
+  const appNativa = useNativeApp();
+  const [navbarOwnsHeader, setNavbarOwnsHeader] = useState(() => appNativa && searchParams.get("preview") !== "1");
   // Deep-link support: /profesionales/[slug]?tab=casos opens that tab.
   // Preview mode (?preview=1): a pro opened "Ver cómo me ven los clientes" from
   // their panel → show a clear "Volver a mi panel" bar so they never get stuck.
@@ -312,10 +317,12 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
       global.__ccrSectionShare = false;
       global.__ccrSectionMenu = false;
       global.__ccrSectionVolver = false;
-      setNavbarOwnsHeader(false);
+      // En la app la barra nunca suelta el «volver»: bajar la bandera aquí
+      // pintaba la fila propia un cuadro entre un rótulo y el siguiente.
+      if (!appNativa) setNavbarOwnsHeader(false);
       window.dispatchEvent(new CustomEvent("ccr:section-header", { detail: null }));
     };
-  }, [previewMode, tituloBarra, hayFicha]);
+  }, [previewMode, tituloBarra, hayFicha, appNativa]);
 
   const volverRef = useRef<(() => void) | null>(null);
   const compartirRef = useRef<(() => void) | null>(null);
