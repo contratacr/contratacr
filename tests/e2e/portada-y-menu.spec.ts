@@ -123,8 +123,8 @@ test.describe("portada y menú (1-oct-2026) @smoke", () => {
     const activo = page.locator("video.ccr-guia-video.opacity-100").first();
     await expect(activo).toBeVisible();
     expect(await activo.evaluate((v) => Number(getComputedStyle(v).opacity))).toBe(1);
-    const poster = page.locator("img[data-guia-poster]");
-    await expect(poster).toHaveCount(1);
+    // Una imagen fija por paso (precargadas); se mira la del paso activo.
+    const poster = page.locator("img[data-guia-poster]").first();
     const orden = await poster.evaluate((img) => {
       const v = img.parentElement!.querySelector("video.ccr-guia-video.opacity-100")!;
       return {
@@ -171,12 +171,14 @@ test.describe("portada y menú (1-oct-2026) @smoke", () => {
     test.skip(!isMobileProject(test.info()), "Menú del teléfono.");
     await gotoOK(page, "/");
     await waitForInteractivePage(page);
-    const menu = page.locator(".ccr-menu-completo");
+    // Desliza el CUERPO del menú; la fila del logo y la X queda quieta sobre la cabecera.
+    const menu = page.locator(".ccr-menu-completo .ccr-menu-cuerpo");
     await page.getByRole("button", { name: /Abrir men[uú]/i }).filter({ visible: true }).first().click();
     await page.waitForTimeout(40);
     const enCamino = await menu.evaluate((e) => ({ x: e.getBoundingClientRect().x, o: getComputedStyle(e).opacity }));
     expect(enCamino.x, "el menú debe entrar deslizando, no aparecer de golpe").toBeGreaterThan(20);
     expect(enCamino.o, "el menú no se funde").toBe("1");
+    await expect(page.locator(".ccr-menu-completo")).toHaveClass(/ccr-menu-abierto/);
     await expect.poll(() => menu.evaluate((e) => Math.round(e.getBoundingClientRect().x))).toBe(0);
     await page.getByRole("button", { name: /Cerrar men[uú]/ }).click();
     await page.waitForTimeout(120);
