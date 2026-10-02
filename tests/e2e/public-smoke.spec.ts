@@ -177,7 +177,10 @@ test.describe("@smoke public routes", () => {
     await expect(location).toHaveValue(/Cerca de m[ií]|Near me/i);
     const homeSearchForm = page.locator("form").filter({ has: location });
     await expect(homeSearchForm).toHaveCount(1);
-    await homeSearchForm.getByRole("button", { name: /^Buscar$|^Search$/i }).click();
+    // En PC hay lupa; en el teléfono no (se busca con «Ir»): se envía el formulario.
+    const lupa = homeSearchForm.getByRole("button", { name: /^Buscar$|^Search$/i }).filter({ visible: true });
+    if (await lupa.count()) await lupa.first().click();
+    else await homeSearchForm.evaluate((f: HTMLFormElement) => f.requestSubmit());
     await expect(page).toHaveURL(/\/profesionales/);
     await expect(page).toHaveURL(/lat=9\.92810/);
     await expect(page).toHaveURL(/lng=-84\.09070/);
