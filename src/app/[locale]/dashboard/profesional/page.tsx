@@ -669,10 +669,12 @@ export default function DashboardPage() {
   const formularioPublicar = publicarDirecto ? (
     <PublishProjectModal
       onClose={() => {
-        setPublicarDirecto(false);
         // Publicado, se queda: el proyecto nuevo está en esta lista. Sin
-        // publicar, vuelve por donde vino.
-        if (publicarVolverA && !publicadoRef.current) router.push(publicarVolverA);
+        // publicar, vuelve por donde vino SIN cerrar antes el formulario: si se
+        // cerraba primero se veía el panel un instante y después Proyectos (el
+        // parpadeo al volver con la flecha). El formulario se va con la pantalla.
+        if (publicarVolverA && !publicadoRef.current) { router.push(publicarVolverA); return; }
+        setPublicarDirecto(false);
       }}
       onSuccess={() => {
         publicadoRef.current = true;

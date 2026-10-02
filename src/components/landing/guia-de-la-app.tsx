@@ -37,7 +37,6 @@ export function GuiaDeLaApp({ pasos }: { pasos: PasoDeLaGuia[] }) {
   const [vuelta, setVuelta] = useState(0);
   const videos = useRef<(HTMLVideoElement | null)[]>([]);
   const caja = useRef<HTMLDivElement | null>(null);
-  const [visible, setVisible] = useState(false);
   // Índice del video que ya está pintando cuadros: hasta entonces la imagen fija lo tapa.
   const [pintando, setPintando] = useState(-1);
   // El video ANTERIOR sigue a la vista debajo hasta que el nuevo ya corre: así el
@@ -48,20 +47,6 @@ export function GuiaDeLaApp({ pasos }: { pasos: PasoDeLaGuia[] }) {
     if (activoAnterior.current !== activo) { setPrevio(activoAnterior.current); activoAnterior.current = activo; }
   }, [activo]);
 
-  // Arranca cuando se ve ~50 % del teléfono y SIGUE corriendo mientras la persona
-  // se mueve; solo se pausa cuando la sección sale del todo de la pantalla.
-  // (Con root null funciona igual cuando el que se desplaza es <main>, en la app.)
-  useEffect(() => {
-    const el = caja.current;
-    if (!el) return;
-    const o = new IntersectionObserver(([e]) => {
-      if (!e.isIntersecting) { setVisible(false); return; }
-      const alto = Math.min(e.boundingClientRect.height, e.rootBounds?.height ?? window.innerHeight);
-      if (e.intersectionRect.height >= alto * 0.5) setVisible(true);
-    }, { threshold: [0, 0.25, 0.5, 0.6, 0.75, 0.9, 1] });
-    o.observe(el);
-    return () => o.disconnect();
-  }, []);
 
   // El video del paso elegido arranca desde el inicio; los demás se pausan.
   useEffect(() => {
@@ -71,21 +56,25 @@ export function GuiaDeLaApp({ pasos }: { pasos: PasoDeLaGuia[] }) {
       // Solo un CAMBIO de paso vuelve al inicio. Salir y volver a la pantalla
       // continúa donde iba (antes reiniciaba y el video parecía repetirse).
       if (i !== activo) { v.pause(); v.currentTime = 0; }
-      else if (visible && !quieto) v.play().catch(() => {});
-      else v.pause();
+      // El activo se pide reproducir SIEMPRE (no solo a la vista): Safari ya
+      // pausa por su cuenta un video silenciado que está fuera de pantalla y lo
+      // reanuda solo al aparecer. Antes lo pausábamos nosotros al salir y en el
+      // iPhone el aviso de «ya se ve» llegaba tarde: no arrancaba hasta centrarlo.
+      else if (!quieto) v.play().catch(() => {});
     });
-  }, [activo, visible]);
+  }, [activo]);
 
   // SIEMPRE CORRIENDO: si el navegador lo pausa por su cuenta (al volver a la
   // pestaña, al ahorrar batería, al terminar de cargar), se reanuda.
   useEffect(() => {
-    if (!visible) return;
     const id = window.setInterval(() => {
       const v = videos.current[activo];
-      if (v && v.paused && !v.ended && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) v.play().catch(() => {});
+      const r = caja.current?.getBoundingClientRect();
+      const aLaVista = !!r && r.bottom > 0 && r.top < window.innerHeight;
+      if (aLaVista && v && v.paused && !v.ended && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) v.play().catch(() => {});
     }, 1000);
     return () => window.clearInterval(id);
-  }, [activo, visible]);
+  }, [activo]);
 
   // Al terminar un video pasa al siguiente paso; si la persona eligió uno, se repite ese.
   const alTerminar = (i: number) => {
@@ -198,7 +187,7 @@ export function GuiaDeLaApp({ pasos }: { pasos: PasoDeLaGuia[] }) {
                     src={p.video}
                     muted
                     playsInline
-                    autoPlay={i === 0}
+                    autoPlay={i === activo}
                     // Todos se descargan desde el principio (son cortos): al cambiar de paso el
                     // video ya está listo y arranca al instante.
                     preload="auto"
@@ -209,7 +198,7 @@ export function GuiaDeLaApp({ pasos }: { pasos: PasoDeLaGuia[] }) {
                     onEnded={() => alTerminar(i)}
                     // Safari a veces rechaza el primer play() si el video aún no
                     // cargó: al estar listo se vuelve a intentar.
-                    onCanPlay={(e) => { if (i === activo && visible && e.currentTarget.paused) e.currentTarget.play().catch(() => {}); }}
+                    onCanPlay={(e) => { if (i === activo && e.currentTarget.paused) e.currentTarget.play().catch(() => {}); }}
                     className={cn("ccr-guia-video absolute inset-0 h-full w-full object-cover object-top", i === activo ? "z-[2] opacity-100" : i === previo ? "z-[1] opacity-100" : "opacity-0")}
                   />
                 ))}
