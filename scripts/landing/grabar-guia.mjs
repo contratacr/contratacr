@@ -45,6 +45,7 @@ async function bajar(p, px, msPedido) {
 // y empleos se abre en PRODUCCIÓN (en test salen publicaciones de prueba): la
 // grabación se pausa mientras carga, así el corte no se ve.
 const INICIO = process.env.INICIO || "https://contratacr.com";
+const LOCAL = "http://localhost:3000";
 async function sinAvisoDeDesarrollo(p) { await p.addStyleTag({ content: "nextjs-portal,[data-nextjs-toast],[data-next-badge-root]{display:none!important}" }).catch(() => {}); }
 // Cada toque se VE: un círculo gris que aparece donde cae el dedo, como en las
 // grabaciones de pantalla del iPhone con «mostrar toques».
@@ -91,10 +92,16 @@ async function porElMenu(p, grabar, pausar, texto, destino, boton, formulario, l
   await bajar(p, 300, 2000); await p.waitForTimeout(200);
   const publicar = p.getByRole("link", { name: boton }).or(p.getByRole("button", { name: boton })).filter({ visible: true }).first();
   await publicar.scrollIntoViewIfNeeded(); await p.waitForTimeout(300);
-  // El video TERMINA en el toque de «Publicar» (sin login ni formulario):
-  // se entiende que se puede publicar, y el video queda corto.
+  // Toca «Publicar» y se ve la página del formulario (en local, con la cuenta
+  // profesional de prueba: en producción pediría entrar). No se llena ni se envía.
   await marcarToque(p, publicar);
-  await p.waitForTimeout(900);
+  await p.waitForTimeout(250);
+  pausar();
+  if (process.env.SESION) await p.context().addCookies(JSON.parse(fs.readFileSync(process.env.SESION, "utf8")).cookies);
+  await p.goto(LOCAL + formulario, { waitUntil: "load" }); await sinAvisoDeDesarrollo(p);
+  await p.waitForTimeout(3000);
+  grabar();
+  await p.waitForTimeout(900); await bajar(p, 260, 2000); await p.waitForTimeout(900);
 }
 
 const escenas = {
@@ -122,11 +129,14 @@ const escenas = {
     await tocar(p, p.getByText("SG Solutions", { exact: true }).first());
     await p.waitForTimeout(2400); await bajar(p, 300, 2200); await p.waitForTimeout(300);
     // Recorre las secciones del perfil: reseñas, casos de éxito, formación.
-    for (const seccion of ["Reseñas", "Casos de éxito", "Formación", "Servicios"]) {
+    for (const seccion of ["Reseñas", "Casos de éxito", "Formación"]) {
       const pestana = p.getByRole("tab", { name: seccion }).or(p.getByRole("button", { name: seccion, exact: true })).filter({ visible: true }).first();
       if (await pestana.count()) { await tocar(p, pestana); await p.waitForTimeout(1300); await bajar(p, 180, 1400); await p.waitForTimeout(500); }
     }
-    await señalar(p, p.getByRole("link", { name: /^WhatsApp$/ }).or(p.getByRole("button", { name: /^WhatsApp$/ })).filter({ visible: true }).last());
+    // Termina tocando WhatsApp (sin abrirlo): se marca el toque y se sostiene.
+    const wa = p.locator("a, button").filter({ hasText: /^\s*WhatsApp\s*$/ }).filter({ visible: true }).last();
+    console.log("whatsapp encontrado:", await wa.count());
+    await marcarToque(p, wa); await p.waitForTimeout(120); await marcarToque(p, wa); await p.waitForTimeout(1200);
   },
   proyectos: (p, g, s) => porElMenu(p, g, s, "Proyectos", "/proyectos", /Publicar proyecto/i, "/publicar-proyecto", async (p) => {
     await elegir(p, /plomería, electricista/i, "Plomer", /^Plomería$/);
