@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
-import { Briefcase, ClipboardList, ImagePlus, UserRound, Wrench } from "lucide-react";
+import { Briefcase, BriefcaseBusiness, ClipboardList, ImagePlus } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { OfferTagPercentIcon } from "@/components/icons/offer-tag-percent-icon";
@@ -15,7 +15,7 @@ import { lockBodyScroll } from "@/lib/body-scroll-lock";
  * una línea que explica qué hace. A quien no es profesional se le dice en cada una; al
  * tocarla, esas páginas lo llevan a registrarse como profesional.
  */
-export function HojaDeCrear({ abierta, onCerrar, esProfesional, avatarUrl }: { abierta: boolean; onCerrar: () => void; esProfesional: boolean; avatarUrl?: string | null }) {
+export function HojaDeCrear({ abierta, onCerrar, esProfesional }: { abierta: boolean; onCerrar: () => void; esProfesional: boolean; avatarUrl?: string | null }) {
   const t = useTranslations("bottomNav");
   const arrastre = useRef<{ y: number } | null>(null);
   const hojaRef = useRef<HTMLDivElement | null>(null);
@@ -30,21 +30,21 @@ export function HojaDeCrear({ abierta, onCerrar, esProfesional, avatarUrl }: { a
 
   if (!abierta || typeof document === "undefined") return null;
 
-  // COMO EL «CREAR» DE FACEBOOK: arriba una tarjeta ancha con la foto de la
-  // cuenta y lo que más se publica; debajo, cuadros iguales con lo demás.
-  // Profesional: arriba su caso de éxito (su «publicación»); abajo proyecto,
-  // promoción y empleo. Cliente: arriba su proyecto; abajo ofrecer servicios.
-  const principal = esProfesional
-    ? { href: "/dashboard/profesional?tab=photos&nuevo=1", titulo: t("createCase"), texto: t("createCaseDesc"), icono: <ImagePlus className="h-6 w-6 text-[#16a34a]" /> }
-    : { href: "/publicar-proyecto", titulo: t("createProject"), texto: t("createProjectAsk"), icono: <ClipboardList className="h-6 w-6 text-[#009FD9]" /> };
-  const cuadros = esProfesional
+  // LAS MISMAS TARJETAS DE «¿CÓMO QUIERES EMPEZAR?» del registro: mosaico con
+  // degradado, ícono a línea, título y una línea celeste debajo. Dos por fila.
+  // Cliente o sin sesión: proyecto y ofrecer servicios. Profesional: caso de
+  // éxito, proyecto, promoción (y empleo si está visible).
+  const icono = "h-10 w-10 text-[#162543]";
+  const opciones = esProfesional
     ? [
-        { href: "/publicar-proyecto", titulo: t("tileProject"), fondo: "from-[#33b8ea] to-[#0089c2]", icono: <ClipboardList className="h-6 w-6" /> },
-        { href: "/promociones/publicar", titulo: t("tileDeal"), fondo: "from-[#2d4a7c] to-[#162543]", icono: <OfferTagPercentIcon className="h-6 w-6" /> },
-        ...(EMPLEOS_VISIBLE ? [{ href: "/empleos/publicar", titulo: t("tileJob"), fondo: "from-[#5ccdf2] to-[#1aa6d8]", icono: <Briefcase className="h-6 w-6" /> }] : []),
+        { href: "/dashboard/profesional?tab=photos&nuevo=1", titulo: t("tileCase"), linea: t("tileCaseSub"), mosaico: "ccr-mosaico-pro", Icono: ImagePlus },
+        { href: "/publicar-proyecto", titulo: t("tileProject"), linea: t("createProjectAsk"), mosaico: "ccr-mosaico-cliente", Icono: ClipboardList },
+        { href: "/promociones/publicar", titulo: t("tileDeal"), linea: t("tileDealSub"), mosaico: "ccr-mosaico-cliente", Icono: OfferTagPercentIcon },
+        ...(EMPLEOS_VISIBLE ? [{ href: "/empleos/publicar", titulo: t("tileJob"), linea: t("tileJobSub"), mosaico: "ccr-mosaico-pro", Icono: Briefcase }] : []),
       ]
     : [
-        { href: "/registro/profesional", titulo: t("createOffer"), fondo: "from-[#2d4a7c] to-[#162543]", icono: <Wrench className="h-6 w-6" /> },
+        { href: "/publicar-proyecto", titulo: t("tileProjectPost"), linea: t("createProjectAsk"), mosaico: "ccr-mosaico-cliente", Icono: ClipboardList },
+        { href: "/registro/profesional", titulo: t("tileOffer"), linea: t("tileOfferSub"), mosaico: "ccr-mosaico-pro", Icono: BriefcaseBusiness },
       ];
 
   return createPortal(
@@ -72,38 +72,22 @@ export function HojaDeCrear({ abierta, onCerrar, esProfesional, avatarUrl }: { a
         <div className="mx-auto mb-3 h-1.5 w-10 rounded-full bg-[#cfd8e2]" aria-hidden />
         <p className="sr-only">{t("createTitle")}</p>
 
-        <Link href={principal.href} onClick={onCerrar} className="flex items-center gap-3 rounded-2xl bg-white p-3.5 shadow-[0_8px_22px_-16px_rgba(15,23,42,0.45)] ring-1 ring-[#e8eef4] transition-transform active:scale-[0.99]">
-          {avatarUrl
-            // eslint-disable-next-line @next/next/no-img-element -- avatar pequeño de tamaño fijo
-            ? <img src={avatarUrl} alt="" className="h-12 w-12 shrink-0 rounded-full object-cover ring-1 ring-[#e2e8f0]" />
-            : <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-[#eef6fb] ring-1 ring-[#e2e8f0]"><UserRound className="h-6 w-6 text-[#526277]" /></span>}
-          <span className="min-w-0 flex-1">
-            <span className="block text-[16px] font-bold text-[#162543]">{principal.titulo}</span>
-            <span className="mt-0.5 block truncate text-[14px] text-[#64748b]">{principal.texto}</span>
-          </span>
-          <span className="shrink-0">{principal.icono}</span>
-        </Link>
-
-        {/* Una sola opción debajo (cliente) va en fila, como la de arriba: un
-            cuadro solo a todo lo ancho quedaba enorme y vacío. */}
-        {cuadros.length === 1 ? (
-          <Link href={cuadros[0].href} onClick={onCerrar} className="mt-3 flex items-center gap-3 rounded-2xl bg-white p-3.5 shadow-[0_8px_22px_-16px_rgba(15,23,42,0.45)] ring-1 ring-[#e8eef4] transition-transform active:scale-[0.99]">
-            <span className={`grid h-12 w-12 shrink-0 place-items-center rounded-full bg-gradient-to-br text-white ${cuadros[0].fondo}`}>{cuadros[0].icono}</span>
-            <span className="min-w-0 flex-1">
-              <span className="block text-[16px] font-bold text-[#162543]">{cuadros[0].titulo}</span>
-              <span className="mt-0.5 block truncate text-[14px] text-[#64748b]">{t("createOfferDesc")}</span>
-            </span>
-          </Link>
-        ) : (
-        <div className={`mt-3 grid gap-3 ${cuadros.length === 3 ? "grid-cols-3" : "grid-cols-2"}`}>
-          {cuadros.map((cuadro) => (
-            <Link key={cuadro.href} href={cuadro.href} onClick={onCerrar} className="flex flex-col items-center justify-center gap-2 rounded-2xl bg-white px-2 py-4 text-center shadow-[0_8px_22px_-16px_rgba(15,23,42,0.45)] ring-1 ring-[#e8eef4] transition-transform active:scale-[0.97]">
-              <span className={`grid h-12 w-12 place-items-center rounded-full bg-gradient-to-br text-white ${cuadro.fondo}`}>{cuadro.icono}</span>
-              <span className="text-[15px] font-bold text-[#162543]">{cuadro.titulo}</span>
+        <div className="grid grid-cols-2 gap-3">
+          {opciones.map(({ href, titulo, linea, mosaico, Icono }, n) => (
+            <Link
+              key={href}
+              href={href}
+              onClick={onCerrar}
+              className={`ccr-tarjeta-rol ${opciones.length === 3 && n === 0 ? "col-span-2" : ""} min-w-0 transition-transform active:scale-[0.98]`}
+            >
+              <span className={`ccr-tarjeta-rol-mosaico ${mosaico}`} style={{ aspectRatio: "auto", height: 96 }} aria-hidden>
+                <Icono className={icono} strokeWidth={1.4} />
+              </span>
+              <span className="mt-3 block truncate whitespace-nowrap text-center text-[15px] font-bold leading-tight text-[#162543]">{titulo}</span>
+              {linea && <span className="mt-1 block truncate whitespace-nowrap text-center text-[13px] font-semibold leading-snug text-[#009FD9]">{linea}</span>}
             </Link>
           ))}
         </div>
-        )}
       </div>
     </div>,
     document.body,

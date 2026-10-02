@@ -49,8 +49,8 @@ export default async function IdentityVerificationPage() {
           <div className="grid sm:grid-cols-3 gap-4">
             {STEPS.map((s) => (
               <div key={s.title} className="bg-white rounded-xl border border-[#e5e7eb] p-5">
-                <div className="mb-3">
-                  <s.icon className="h-6 w-6 text-[#009FD9]" />
+                <div className="mb-3 flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ccr-caja-icono">
+                  <s.icon className="h-5 w-5" />
                 </div>
                 <h3 className="font-semibold text-[#162543] text-sm">{s.title}</h3>
                 <p className="text-sm text-[#6b7280] mt-1 leading-relaxed">{s.body}</p>

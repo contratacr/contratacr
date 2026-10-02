@@ -11,11 +11,15 @@ import { CATEGORY_GROUPS } from "@/lib/data/categories";
 //
 // "v" = verified (reused from the live landing carousel/explore-tabs, known-good).
 // The rest are best-effort matches; broken URLs degrade to the branded fallback via onError.
-const U = (id: string) => `https://images.unsplash.com/photo-${id}?w=800&auto=format&fit=crop&q=80`;
+const U = (id: string) => `https://images.unsplash.com/photo-${id}?w=1100&auto=format&fit=crop&q=85`;
 
 export const CATEGORY_IMAGE: Record<string, string> = {
+  electromecanica: U("1649038780045-235e4b6e40b4"), // técnico trabajando un motor eléctrico (1-oct-2026)
+  soldadura: U("1504328345606-18bbc8c9d7d1"),   // soldador con careta (1-oct-2026)
+  aire_acondicionado: U("1759772238012-9d5ad59ae637"), // equipo split en la pared (1-oct-2026)
+  reparacion_electrodomesticos: U("1674471361352-a1977cf3f18e"), // técnico reparando un electrodoméstico (1-oct-2026)
   // ── Hogar y construcción ──
-  plomeria: U("1607472586893-edb57bdc0e39"),            // v
+  plomeria: U("1676210133055-eab6ef033ce3"),            // v
   electricidad: U("1621905251189-08b45d6a269e"),        // v
   construccion: U("1504307651254-35680f356dfd"),        // v
   pintura: U("1562259949-e8e7689d7828"),                // v
@@ -37,7 +41,7 @@ export const CATEGORY_IMAGE: Record<string, string> = {
   tecnologia: U("1518770660439-4636190af475"),          // v
   desarrollo_web: U("1547658719-da2b51169166"),
   reparacion_computadoras: U("1518770660439-4636190af475"),  // v
-  soporte_tecnico: U("1581092921461-eab62e97a780"),
+  soporte_tecnico: U("1721332154191-ba5f1534266e"),
   redes_internet: U("1544197150-b99a580bb7a8"),
   diseno_grafico: U("1626785774573-4b799315345d"),
   diseno_apps: U("1512941937669-90a1b58e7e9c"),
@@ -51,14 +55,14 @@ export const CATEGORY_IMAGE: Record<string, string> = {
   bienes_raices: U("1560518883-ce09059eeffa"),
   traduccion: U("1456513080510-7bf3a84b82f8"),
   // ── Salud y bienestar ──
-  fisioterapia: U("1571019613454-1cb2f99b2d8b"),
+  fisioterapia: U("1706353399656-210cca727a33"),
   entrenamiento_personal: U("1534438327276-14e5300c3a48"),
   entrenamiento_deportivo: U("1517649763962-0c623066013b"),
   nutricion: U("1490645935967-10de6ba17061"),
   masajes: U("1600334129128-685c5582fd35"),
-  psicologia: U("1573497019940-1c28c88b4f3e"),
+  psicologia: U("1758273240403-052b3c99f636"),
   odontologia: U("1606811841689-23dfddce3e95"),
-  medicina_domicilio: U("1576091160550-2173dba999ef"),
+  medicina_domicilio: U("1758691461935-202e2ef6b69f"),
   pediatria: U("1632053002928-1919f1c9c84e"),
   enfermeria: U("1576765608535-5f04d1e3f289"),
   veterinaria: U("1628009368231-7bb7cfcb0def"),
@@ -83,19 +87,19 @@ export const CATEGORY_IMAGE: Record<string, string> = {
   fletes: U("1601584115197-04ecc0da31d7"),
   mensajeria: U("1586528116311-ad8dd3c8310d"),
   // ── Eventos ──
-  fotografia_eventos: U("1519741497674-611481863552"),
+  fotografia_eventos: U("1629756048377-09540f52caa1"),
   videografia: U("1492684223066-81342ee5ff30"),
   dj_sonido: U("1547210841-2ceb0c5f0679"),              // Unsplash: Krys Amon
   chef: U("1577219491135-ce391730fb2c"),
   catering: U("1555244162-803834f70033"),
-  decoracion: U("1478146896981-b80fe463b330"),
+  decoracion: U("1633330977020-2bdfb8530cc2"),
   bartending: U("1514362545857-3bc16c4c7d1b"),
   // ── Seguridad (verified) ──
   seguridad: U("1557597774-9d273605dfa9"),              // v
   cctv: U("1557597774-9d273605dfa9"),                   // v
   camaras_seguridad: U("1557597774-9d273605dfa9"),      // v
   guardas_seguridad: U("1551836022-d5d88e9218df"),
-  alarmas: U("1558002038-1055907df827"),
+  alarmas: U("1697382608786-bcf4c113b86e"),            // teclado de alarma (antes repetía la de cerrajería)
   // ── Vehículos y movilidad (verified mecánica photo reused) ──
   mecanica: U("1625047509248-ec889cbff17f"),            // v
   hojalateria: U("1599256621730-535171e28e50"),
@@ -107,6 +111,36 @@ export const CATEGORY_IMAGE: Record<string, string> = {
 // CATEGORY id → its catalog GROUP id (drives the branded fallback gradient + icon).
 const ID_TO_GROUP = new Map<string, string>();
 for (const g of CATEGORY_GROUPS) for (const it of g.items) ID_TO_GROUP.set(it.id, g.id);
+
+// Punto de enfoque (CSS object-position) de las fotos cuyo sujeto queda fuera del
+// recorte vertical de las tarjetas (4/5). Sin entrada = centrado. Revisado el 1-oct-2026
+// en computadora (1440) y teléfono (iPhone 15 Pro).
+export const CATEGORY_IMAGE_POSITION: Record<string, string> = {
+  // Revisado otra vez el 1-oct-2026: el centro va sobre el TRABAJO (manos + herramienta), no la cara.
+  electricidad: "58% 50%",   // manos y tomacorriente al centro (antes solo la cara)
+  fletes: "12% 50%",         // el camión quedaba partido en el borde izquierdo
+  mecanica: "18% 50%",       // el mecánico inclinado sobre el motor
+  mudanzas: "14% 50%",       // los cargadores con la maceta
+  consultoria: "78% 50%",    // la mano con el lápiz sobre los planos
+  maquillaje: "22% 50%",     // la mano aplicando el labial
+  estetica_facial: "45% 50%", // la brocha sobre el rostro
+  fotografia_eventos: "38% 50%", // el fotógrafo con la cámara
+  fotografia: "72% 50%",     // la cámara
+  legal: "72% 50%",          // la estatua con la balanza
+  bartending: "37% 50%",     // el vaso
+  bienes_raices: "42% 50%",  // la casita y las llaves
+  diseno_grafico: "35% 50%", // la tableta con las apps
+  marketing_digital: "32% 50%", // la pantalla del portátil
+  pintura: "30% 50%",        // el rodillo
+  produccion_video: "35% 50%",
+  nutricion: "55% 50%",
+  chef: "50% 85%",           // las manos emplatando (foto vertical: sube el trabajo)
+  unhas: "50% 100%",         // las uñas, más arriba del título
+};
+
+export function categoryImagePosition(id: string): string {
+  return CATEGORY_IMAGE_POSITION[id] ?? "center";
+}
 
 export function categoryImageUrl(id: string): string | undefined {
   return CATEGORY_IMAGE[id];

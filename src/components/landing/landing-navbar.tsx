@@ -736,38 +736,11 @@ function PanelIconLink({ href, label }: { href: string; label: string }) {
 // toques, escondido en el menú. La silueta es lo que todo el mundo ya lee como
 // «entrar a mi cuenta», y al entrar se vuelve a la página donde se estaba.
 // En las pantallas de acceso no se dibuja: apuntaría a sí misma.
+// 1-oct-2026: sin la silueta en la cabecera. «Ingresar» y «Registrarme» viven
+// dentro del menú (y abajo, en el ícono de perfil). Las pantallas que todavía
+// la llaman no pintan nada.
 export function HeaderAccountLink() {
-  const t = useTranslations("nav");
-  const label = t("login");
-  const pathname = usePathname();
-  const [aqui, setAqui] = useState("");
-  // La dirección de vuelta se lee ya en el navegador, de window.location: los
-  // filtros (leerlos con useSearchParams obligaría a envolver cada barra en un
-  // Suspense) y también la ruta, porque usePathname devuelve la interna
-  // —/buscar— cuando la persona está en /profesionales/… y volvía ahí sin su
-  // categoría ni su zona.
-  useEffect(() => {
-    queueMicrotask(() => {
-      const { pathname: ruta, search } = window.location;
-      setAqui(ruta && ruta !== "/" && ruta !== "/en" ? `${ruta}${search}` : "");
-    });
-  }, [pathname]);
-  if (/(^|\/)(login|registro|olvide-contrasena|reset-password|onboarding)(\/|$)/.test(pathname ?? "")) {
-    return <span className="h-10 w-10 shrink-0" aria-hidden />;
-  }
-  return (
-    <Link
-      href={aqui ? `/login?redirect=${encodeURIComponent(aqui)}` : "/login"}
-      aria-label={label}
-      data-acceso-cabecera
-      className="relative grid h-10 w-10 shrink-0 place-items-center rounded-xl text-[#1A2744] transition-colors hover:bg-[#f3f4f6] hover:text-[#009FD9]"
-    >
-      {/* La silueta a secas, sin el aro: es el mismo dibujo que ya usa el menú
-          («Iniciar sesión») y la barra de la app, así que la cuenta se reconoce
-          igual en los tres sitios. Con aro parecía un avatar cargado. */}
-      <UserRound className="h-[22px] w-[22px]" strokeWidth={1.9} />
-    </Link>
-  );
+  return null;
 }
 
 /**
@@ -830,26 +803,10 @@ export function HeaderNotificationsLink({ href, label }: { href: string; label: 
   );
 }
 
-export function HeaderMessagesLink({ unreadCount, label, href = "/mensajes" }: { unreadCount: number; label: string; href?: string }) {
-  return (
-    <Link
-      href={href}
-      // Precargada entera: la bandeja es liviana (se arma en el teléfono) y así
-      // tocar el icono entra al instante, sin la espera de ~300 ms del servidor.
-      prefetch={true}
-      aria-label={label}
-      className="relative grid h-10 w-10 place-items-center rounded-xl text-[#1A2744] transition-colors hover:bg-[#f3f4f6] hover:text-[#009FD9]"
-    >
-      <span className="relative inline-flex">
-        <MessageSquareText className="h-5 w-5" />
-        {unreadCount > 0 && (
-          <span className="absolute -right-2 -top-2 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[#009FD9] px-1 text-[10px] font-bold leading-none text-white ring-2 ring-white">
-            {unreadCount > 9 ? "9+" : unreadCount}
-          </span>
-        )}
-      </span>
-    </Link>
-  );
+// 1-oct-2026: Mensajes vive en el MENÚ DE ABAJO (con su contador), nunca en la
+// cabecera. Las pantallas que todavía lo llaman no pintan nada.
+export function HeaderMessagesLink(_props: { unreadCount: number; label: string; href?: string }) {
+  return null;
 }
 
 function DrawerIcon({ children }: { children: ReactNode }) {
@@ -1413,8 +1370,9 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
     router.push("/");
   }, [locale, nativeApp, router]);
 
+  // Filas como las de Angi: texto grande, línea debajo y flecha a la derecha.
   const mobileDrawerItemClass =
-    "flex w-full items-center gap-3 rounded-2xl px-2 py-3 text-left text-[16px] font-semibold leading-snug text-[#162543] transition-colors hover:bg-[#f4f7fa] hover:text-[#009FD9]";
+    "ccr-menu-fila flex w-full items-center gap-3 border-b border-[#e5e9ee] py-[18px] text-left text-[18px] font-semibold leading-snug text-[#162543] transition-colors hover:text-[#009FD9]";
   const mobileDrawerTextClass = "min-w-0 flex-1 whitespace-normal break-words";
   const mobileDrawerStrongItemClass = cn(mobileDrawerItemClass, "font-extrabold");
   const mobileDrawerSubItemClass =
@@ -1492,7 +1450,12 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
     };
   }, []);
 
+  // El menú pone su fila de arriba EXACTAMENTE donde está la cabecera de la
+  // página (logo y botón en el mismo píxel), lea el aparato el margen que lea.
+  const [altoSobreCabecera, setAltoSobreCabecera] = useState(0);
   const openMobileMenu = useCallback(() => {
+    const fila = document.querySelector<HTMLElement>("header .lg\\:hidden.flex.h-16");
+    if (fila) setAltoSobreCabecera(Math.max(0, Math.round(fila.getBoundingClientRect().top)));
     setMobileHelpOpen(false);
     setMobileOpen(true);
   }, []);
@@ -2070,14 +2033,6 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
               )}>
                 {sectionActive && sectionRoot ? (
                   <>
-                    <button
-                      type="button"
-                      onClick={openMobileMenu}
-                      className="grid h-10 w-10 shrink-0 place-items-center rounded-xl text-[#162543] transition-colors hover:bg-gray-50"
-                      aria-label={t("openMenu")}
-                    >
-                      <Menu className="h-5 w-5 stroke-[2.5]" />
-                    </button>
                     <Link href="/" aria-label="ContrataCR inicio" onClick={irAlInicio} className="shrink-0">
                       <ContrataCRMark />
                     </Link>
@@ -2106,17 +2061,6 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                   </>
                 ) : (
                   <>
-                <button
-                  type="button"
-                  onClick={openMobileMenu}
-                  className={cn(
-                    "grid h-10 w-10 shrink-0 place-items-center rounded-xl text-[#162543] transition-colors hover:bg-gray-50",
-                  )}
-                  aria-label={t("openMenu")}
-                >
-                  <Menu className="h-5 w-5 stroke-[2.5]" />
-                </button>
-
                 <Link href="/" aria-label="ContrataCR inicio" onClick={irAlInicio} className={cn("shrink-0", nativeHeaderShell && "mr-auto flex min-w-0 items-center justify-start")}>
                   {mobileInline ? <ContrataCRMark /> : <ContrataCRLogo />}
                 </Link>
@@ -2137,7 +2081,9 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                 {nativeHeaderShell ? (
                   !nativeFullscreenRoute && !(sectionActive && !sectionRoot) ? (
                     <div className="flex h-10 shrink-0 items-center justify-end gap-1">
-                      {!enMensajes && (
+                      {/* En entrar y registrarse no: quien está entrando aún no tiene
+                          mensajes, y el ícono solo invita a dejar el formulario. */}
+                      {!enMensajes && !/\/(login|registro)(\/|$)/.test(pathname ?? "") && (
                         <HeaderMessagesLink
                           unreadCount={user ? nativeMessageUnread : 0}
                           label={locale === "en" ? "Messages" : "Mensajes"}
@@ -2161,6 +2107,19 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                   {user && sectionPaso && !sectionMenu && <span className="h-10 w-10" aria-hidden />}
                   {!user && !sectionShare && !sectionMenu && <HeaderAccountLink />}
                 </div>
+                )}
+                {/* EL MENÚ VA A LA DERECHA (1-oct-2026): la marca queda sola a la
+                    izquierda y el menú cierra la fila, y su cajón entra desde la
+                    derecha. Solo donde antes había menú (no en pantallas con flecha). */}
+                {(!sectionActive || sectionRoot) && (
+                  <button
+                    type="button"
+                    onClick={openMobileMenu}
+                    className="grid h-10 w-10 shrink-0 place-items-center rounded-xl text-[#162543] transition-colors hover:bg-gray-50"
+                    aria-label={t("openMenu")}
+                  >
+                    <Menu className="h-5 w-5 stroke-[2.5]" />
+                  </button>
                 )}
                 {sectionMenu && (
                   <button
@@ -2604,7 +2563,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                     <div className="flex w-auto items-center justify-end gap-2">
                       <Link
                         href={loginHref}
-                        className="text-sm font-medium px-3 py-2 rounded-xl text-[#1A2744] hover:bg-gray-50 transition-colors"
+                        className="rounded-xl bg-[#009FD9] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#0088bb]"
                       >
                         {t("login")}
                       </Link>
@@ -2615,11 +2574,13 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                           es el profesional. La cuenta normal se crea sola en el
                           momento en que hace falta (publicar, guardar, reseñar)
                           y sigue estando en /registro. */}
+                      {/* 1-oct-2026: igual que el menú del teléfono, «Ingresar» y
+                          «Crear cuenta». /registro ofrece las dos cuentas. */}
                       <Link
-                        href="/registro/profesional"
-                        className="rounded-xl bg-[#009FD9] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#0088bb]"
+                        href="/registro"
+                        className="rounded-xl bg-[#162543] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#0f1b33]"
                       >
-                        {t("offerServices")}
+                        {t("signUp")}
                       </Link>
                     </div>
                   )}
@@ -3009,7 +2970,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
           </div>
         )}
 
-        {/* Mobile menu - slide-in LEFT drawer + transparent outside click layer (OUTSIDE <header>: the
+        {/* Mobile menu - slide-in RIGHT drawer + transparent outside click layer (OUTSIDE <header>: the
             header's backdrop-filter would otherwise become the containing block
             for these `fixed` elements, breaking full-viewport positioning). */}
           {/* CERRADO, NO EXISTE (`hidden`), en vez de quedarse con opacidad cero.
@@ -3037,17 +2998,31 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
             onTouchStart={(e) => { drawerTouchX.current = e.touches[0].clientX; }}
             onTouchEnd={(e) => {
               if (drawerTouchX.current == null) return;
-              // Swipe left to close.
-              if (e.changedTouches[0].clientX - drawerTouchX.current < -55) setMobileOpen(false);
+              // Entra por la derecha: deslizar a la DERECHA lo cierra.
+              if (e.changedTouches[0].clientX - drawerTouchX.current > 55) setMobileOpen(false);
               drawerTouchX.current = null;
             }}
             className={cn(
-              "lg:hidden fixed top-0 left-0 bottom-0 z-[10060] w-[76vw] max-w-[320px] bg-white shadow-[18px_0_46px_-24px_rgba(15,23,42,0.65)] flex flex-col transition-[transform,visibility] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] will-change-transform",
-              mobileOpen ? "visible translate-x-0 pointer-events-auto" : "invisible -translate-x-full pointer-events-none"
+              // COMO ANGI (1-oct-2026): el menú ocupa TODA la pantalla y su fila
+              // de arriba cae justo donde está la cabecera —logo a la izquierda,
+              // X donde estaba el botón—. Entra despacio: se funde y baja un poco.
+              "ccr-menu-completo lg:hidden fixed inset-0 z-[10060] flex flex-col bg-white",
+              mobileOpen ? "ccr-menu-abierto visible pointer-events-auto" : "invisible pointer-events-none"
             )}
           >
-            <div className="ccr-mobile-drawer-scroll flex flex-1 flex-col overflow-y-auto bg-white px-5 pb-7 pt-[calc(env(safe-area-inset-top)+28px)]">
-              <nav className="flex flex-col gap-1">
+            {/* La fila de arriba: igual que la cabecera de la página. */}
+            <div className="shrink-0 bg-white shadow-[0_2px_10px_-6px_rgba(15,23,42,0.25)]" style={{ paddingTop: altoSobreCabecera }}>
+              <div className="flex h-16 items-center justify-between px-4 sm:px-6">
+                <Link href="/" aria-label="ContrataCR inicio" onClick={(e) => { cerrarCajon(); irAlInicio(e); }} className="shrink-0">
+                  <ContrataCRLogo />
+                </Link>
+                <button type="button" onClick={cerrarCajon} aria-label={t("closeMenu")} className="grid h-10 w-10 place-items-center rounded-xl text-[#162543] transition-colors hover:bg-gray-50">
+                  <X className="h-6 w-6" strokeWidth={2.2} />
+                </button>
+              </div>
+            </div>
+            <div className="ccr-mobile-drawer-scroll ccr-menu-cuerpo flex flex-1 flex-col overflow-y-auto bg-white px-6 pb-7 pt-3">
+              <nav className="flex flex-col">
                 {user ? (
                   <>
                     {!nativeHeaderShell && (
@@ -3083,7 +3058,10 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                     cuatro de seis renglones no llevaban a ningún lado nuevo.
                     En la web móvil no hay barra de abajo, así que ahí el cajón
                     sigue siendo la única puerta y se muestran todos. */}
-                {!nativeHeaderShell && (
+                {/* 1-oct-2026: Buscar profesionales va SIEMPRE, también en la app,
+                    aunque la lupa de abajo lleve a lo mismo: es lo principal de
+                    ContrataCR y el menú es donde alguien nuevo mira qué puede hacer. */}
+                {(
                   <button
                     type="button"
                     onClick={() => { cerrarCajon(); openNativeSearch(); }}
@@ -3118,6 +3096,17 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                   <DrawerIcon><Wrench /></DrawerIcon>
                   <span className={mobileDrawerTextClass}>{t("categories")}</span>
                 </Link>
+                {/* El asistente pasó del menú de abajo a este menú (1-oct-2026). Solo en la
+                    app: en la web el asistente no responde. */}
+                {nativeHeaderShell && (
+                  <button
+                    type="button"
+                    onClick={() => { cerrarCajon(); window.dispatchEvent(new Event("contratacr:open-ai")); }}
+                    className={mobileDrawerItemClass}
+                  >
+                    <span className={mobileDrawerTextClass}>{t("assistant")}</span>
+                  </button>
+                )}
                 {/* PRIMERO LO QUE SE HACE, DESPUÉS LO QUE AYUDA. Cotizaciones
                     es trabajo del profesional y va arriba del Asistente, que es
                     una ayuda que se abre encima y se cierra. */}
@@ -3136,11 +3125,6 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                     <span className={mobileDrawerTextClass}>{locale === "en" ? "Admin panel" : "Panel admin"}</span>
                   </Link>
                 )}
-                {/* Entrar a la cuenta NO es un destino más de la lista: es la
-                    acción de la pantalla. Como dos renglones iguales a los demás
-                    —«Ingresar» y «Registrarse»— el menú se leía el doble de
-                    largo de lo que es. Va como un solo botón, separado, y la
-                    pantalla de ingreso ya ofrece crear cuenta ahí mismo. */}
 
                 <div className="mt-1">
                   <button
@@ -3151,38 +3135,27 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                   >
                     <DrawerIcon><HelpCircle /></DrawerIcon>
                     <span className="min-w-0 flex-1 whitespace-nowrap">{locale === "en" ? "Help and support" : "Ayuda y soporte"}</span>
-                    <ChevronDown className={cn("h-5 w-5 shrink-0 text-[#64748b] transition-transform", mobileHelpOpen && "rotate-180")} />
+                    {/* La misma flecha «›» de las demás filas; abierta, apunta hacia abajo. */}
+                    <ChevronRight className={cn("ccr-menu-flecha-ayuda ml-auto h-[22px] w-[22px] shrink-0 transition-transform duration-300", mobileHelpOpen && "rotate-90")} strokeWidth={2.2} />
                   </button>
+                  {/* El submenú, al estilo de las filas de arriba: sin íconos, alineado
+                      con «Ayuda y soporte», un punto más chico y en gris oscuro, con
+                      línea fina entre opciones. Términos y Privacidad, al pie, chicos. */}
                   {mobileHelpOpen && (
-                    <div className="mt-1 grid gap-1 pl-[52px]">
-                      <Link href="/como-funciona" onClick={cerrarCajon} className={mobileDrawerSubItemClass}>
-                        <ResourceIcon name="howItWorks" />
-                        <span className={mobileDrawerTextClass}>{t("resourceLinks.howItWorks")}</span>
-                      </Link>
-                      <Link href="/ayuda" onClick={cerrarCajon} className={mobileDrawerSubItemClass}>
-                        <ResourceIcon name="helpCenter" />
-                        <span className={mobileDrawerTextClass}>{t("resourceLinks.helpCenter")}</span>
-                      </Link>
-                      <Link href="/mejorar-mi-perfil" onClick={cerrarCajon} className={mobileDrawerSubItemClass}>
-                        <ResourceIcon name="proTips" />
-                        <span className={mobileDrawerTextClass}>{t("resourceLinks.proTips")}</span>
-                      </Link>
-                      <SupportLink onNavigate={cerrarCajon} className={mobileDrawerSubItemClass}>
-                        <ResourceIcon name="support" />
-                        <span className={mobileDrawerTextClass}>{t("resourceLinks.support")}</span>
+                    <div className="ccr-menu-sub">
+                      {[
+                        { href: "/como-funciona", k: "helpHowItWorks" as const },
+                        { href: "/ayuda", k: "helpFaq" as const },
+                        // Para quien tiene o puede tener perfil: no para un cliente con sesión.
+                        ...(!user || isPro ? [{ href: "/mejorar-mi-perfil", k: "helpProTips" as const }] : []),
+                      ].map((o) => (
+                        <Link key={o.href} href={o.href} onClick={cerrarCajon} className="ccr-menu-sub-fila">
+                          {t(o.k)}
+                        </Link>
+                      ))}
+                      <SupportLink onNavigate={cerrarCajon} className="ccr-menu-sub-fila">
+                        {t("helpContact")}
                       </SupportLink>
-                      {nativeHeaderShell && (
-                        <>
-                          <Link href="/terminos" onClick={cerrarCajon} className={mobileDrawerSubItemClass}>
-                            <ResourceIcon name="terms" />
-                            <span className={mobileDrawerTextClass}>{t("resourceLinks.terms")}</span>
-                          </Link>
-                          <Link href="/privacidad" onClick={cerrarCajon} className={mobileDrawerSubItemClass}>
-                            <ResourceIcon name="privacy" />
-                            <span className={mobileDrawerTextClass}>{t("resourceLinks.privacy")}</span>
-                          </Link>
-                        </>
-                      )}
                     </div>
                   )}
                 </div>
@@ -3192,21 +3165,25 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                   cuenta. Iban con el mismo peso que «Mis citas» y hacían ver el
                   cajón más largo y más cargado de lo que es. Van al pie, tras
                   una línea, en letra menor y sin el mosaico del icono. */}
+              {/* Como Angi: «Ingresar» con borde y «Crear cuenta» lleno, separados
+                  de la lista. shrink-0: el cajón es columna flexible y al abrir
+                  «Ayuda y soporte» los botones se encogían. */}
               {!user && (
-                <Link
-                  href={loginHref}
-                  onClick={cerrarCajon}
-                  className="mt-3 flex h-12 w-full items-center justify-center rounded-full bg-[#009FD9] text-[15px] font-bold text-white transition-colors hover:bg-[#0089bb]"
-                >
-                  {t("login")}
-                </Link>
+                <div className="mt-7 grid shrink-0 gap-3">
+                  <Link href={loginHref} onClick={cerrarCajon} className="flex h-12 w-full items-center justify-center rounded-full bg-[#009FD9] text-[15px] font-bold text-white transition-colors hover:bg-[#0089bb]">
+                    {t("login")}
+                  </Link>
+                  <Link href="/registro" onClick={cerrarCajon} className="flex h-12 w-full items-center justify-center rounded-full bg-[#162543] text-[15px] font-bold text-white transition-colors hover:bg-[#0f1b33]">
+                    {t("signUp")}
+                  </Link>
+                </div>
               )}
 
               {/* El pie no son opciones: son ajustes. El idioma es un conmutador
                   de dos estados —se ve cuál está puesto—, no un renglón más que
                   parece llevar a otra pantalla. */}
               <div className={cn(
-                "mt-3 grid gap-2 border-t border-[#eef2f6] px-1 pt-3",
+                "mt-3 grid shrink-0 gap-2 border-t border-[#eef2f6] px-1 pt-3",
                 // Los dos ajustes son del mismo tipo y se ven iguales: dos
                 // pastillas del mismo alto, repartidas a la mitad. Solo el
                 // idioma —sin sesión— se queda a la izquierda, en la misma
@@ -3245,6 +3222,12 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                     <span className="min-w-0 truncate">{locale === "en" ? "Sign out" : "Salir"}</span>
                   </button>
                 )}
+              </div>
+              {/* Términos y Privacidad al PIE del menú, chicos y en gris: son
+                  legales, no destinos; siempre a la vista, sin abrir nada. */}
+              <div className="mt-4 flex shrink-0 justify-center gap-6 text-[13px] font-semibold text-[#7a8696]">
+                <Link href="/terminos" onClick={cerrarCajon} className="hover:text-[#009FD9]">{t("resourceLinks.terms")}</Link>
+                <Link href="/privacidad" onClick={cerrarCajon} className="hover:text-[#009FD9]">{t("resourceLinks.privacy")}</Link>
               </div>
             </div>
           </div>

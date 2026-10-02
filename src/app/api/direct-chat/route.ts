@@ -51,6 +51,7 @@ type DirectMessageRow = {
   created_at: string;
   edited_at?: string | null;
   deleted_at?: string | null;
+  reply_to_id?: string | null;
 };
 
 const ATTACHMENT_BUCKET = "direct-message-attachments";
@@ -218,12 +219,17 @@ export async function GET(req: Request) {
       : conversation.professional_deleted_at);
     if (deletedForParticipant) return NextResponse.json({ error: mensajeDeError(req, { es: "Conversación no encontrada", en: "Conversation not found" }) }, { status: 404 });
     if (!conversation || !participant(conversation, user.id)) return NextResponse.json({ error: mensajeDeError(req, { es: "Conversación no encontrada", en: "Conversation not found" }) }, { status: 404 });
-    const { data: messages, error } = await db.from("direct_messages")
-      .select("id, conversation_id, sender_id, body, attachment_urls, read_at, delivered_at, created_at, edited_at, deleted_at")
+    // reply_to_id (migración 228): sin la columna se piden los mensajes sin
+    // cita, en vez de dejar el chat entero sin cargar.
+    const COLUMNAS = "id, conversation_id, sender_id, body, attachment_urls, read_at, delivered_at, created_at, edited_at, deleted_at";
+    const pedirMensajes = (columnas: string) => db.from("direct_messages")
+      .select(columnas)
       .eq("conversation_id", id)
       // Lo que esta persona eliminó «para mí» no le vuelve a llegar.
       .not("hidden_for", "cs", `{${user.id}}`)
       .order("created_at", { ascending: true });
+    let { data: messages, error } = await pedirMensajes(`${COLUMNAS}, reply_to_id`);
+    if (error && /reply_to_id/.test(error.message)) ({ data: messages, error } = await pedirMensajes(COLUMNAS));
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     // CONFIRMACIONES DE LECTURA, recíprocas (migración 226). Quien las apagó no
     // marca «visto» lo que lee, y quien habla con alguien que las apagó —o las
@@ -259,7 +265,7 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: readError?.message ?? unreadError?.message }, { status: 500 });
     }
     const [enriched] = await enrichConversations(db, [conversation]);
-    const visibles = ((messages ?? []) as DirectMessageRow[]).map((m) => (
+    const visibles = ((messages ?? []) as unknown as DirectMessageRow[]).map((m) => (
       !veoVistos && m.sender_id === user.id ? { ...m, read_at: null } : m
     ));
     return NextResponse.json({ conversation: enriched, messages: await signMessageAttachments(db, visibles), vistos: veoVistos });
@@ -520,6 +526,17 @@ export async function POST(req: Request) {
   if (msgError) return NextResponse.json({ error: msgError.message }, { status: 500 });
   const msg = Array.isArray(sentMessages) ? sentMessages[0] : sentMessages;
   if (!msg) return NextResponse.json({ error: "No se pudo guardar el mensaje." }, { status: 500 });
+  // RESPONDER CITANDO (migración 228). Solo se acepta citar un mensaje de esta
+  // misma conversación. Si algo falla —la columna aún no existe, el citado no
+  // es de aquí— el mensaje ya salió y sale sin cita: nunca se pierde por eso.
+  const replyToId = typeof body.replyToId === "string" && /^[0-9a-f-]{36}$/i.test(body.replyToId) ? body.replyToId : null;
+  if (replyToId) {
+    const { data: citado } = await db.from("direct_messages").select("id, conversation_id").eq("id", replyToId).maybeSingle();
+    if (citado && (citado as { conversation_id: string }).conversation_id === conversation.id) {
+      const { error: citaError } = await db.from("direct_messages").update({ reply_to_id: replyToId }).eq("id", (msg as { id: string }).id);
+      if (!citaError) (msg as Record<string, unknown>).reply_to_id = replyToId;
+    }
+  }
   // El mensaje interno es un CANAL DE CONTACTO más, como WhatsApp o la
   // llamada, y no se medía: el chat solo existe en la app, así que sin esto
   // no había forma de saber si la app sirve para algo. Solo el primero de la

@@ -10,7 +10,7 @@
  * Sale con 1 si algo falla, y el flujo de GitHub avisa por Telegram y correo.
  */
 
-const base = (process.argv[2] || process.env.APP_URL || "https://www.contratacr.com").replace(/\/$/, "");
+const base = (process.argv[2] || process.env.APP_URL || "https://contratacr.com").replace(/\/$/, "");
 const LENTO_MS = Number(process.env.VIGILANCIA_LENTO_MS || 6000);
 
 const pruebas = [

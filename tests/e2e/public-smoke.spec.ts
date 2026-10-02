@@ -269,6 +269,27 @@ test.describe("@smoke public routes", () => {
   // entero. Se perdió en silencio durante meses porque en pantalla se veía
   // bien: solo se nota mirando el ESTADO de la respuesta, que es justo lo que
   // mide esta prueba.
+  // 1-oct-2026: en producción TODOS los servicios de «Explora servicios»
+  // abrían «Perfil no encontrado» (la base dejó de entregar el catálogo sin
+  // sesión y el middleware los tomó por perfiles). El smoke diario de
+  // producción corre esta prueba: si vuelve a pasar, avisa esa misma mañana.
+  test("cada servicio de la portada abre su búsqueda, nunca «Perfil no encontrado»", async ({ page }) => {
+    await gotoOK(page, "/");
+    const enlaces = await page.locator('a[href^="/profesionales/"]').evaluateAll((ns) =>
+      Array.from(new Set(ns.map((n) => (n as HTMLAnchorElement).getAttribute("href") ?? "")))
+        .filter((h) => /^\/profesionales\/[a-z0-9-]+$/.test(h) && !/-[a-z0-9]{8}$/.test(h)));
+    expect(enlaces.length, "la portada trae enlaces de servicios").toBeGreaterThan(0);
+    const rotos: string[] = [];
+    // Lo que SE VE (el HTML trae todos los textos de traducción, también
+    // «Perfil no encontrado», aunque no se muestre).
+    for (const ruta of enlaces.slice(0, 30)) {
+      await page.goto(ruta, { waitUntil: "domcontentloaded" });
+      const titulo = (await page.locator("h1").first().textContent({ timeout: 15_000 }).catch(() => "")) ?? "";
+      if (/Perfil no encontrado|Profile not found/i.test(titulo)) rotos.push(ruta);
+    }
+    expect(rotos, "servicios que abren «Perfil no encontrado»").toEqual([]);
+  });
+
   test("una dirección que no existe responde 404, no 200", async ({ page }) => {
     // Sin la cookie de idioma que deja la prueba anterior al pasar por /en:
     // con ella, cualquier ruta sin /en responde 307 hacia /en/… antes del 404.

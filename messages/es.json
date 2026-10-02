@@ -98,7 +98,7 @@
     },
     "resourceLinks": {
       "howItWorks": "Cómo usar",
-      "helpCenter": "Centro de ayuda",
+      "helpCenter": "Preguntas frecuentes",
       "proTips": "Consejos",
       "support": "Soporte",
       "contact": "Contacto",
@@ -141,7 +141,13 @@
     "masBuscados": "Los más buscados",
     "publishRequest": "Publicar lo que necesito",
     "register": "Registrarse",
-    "loginOrRegister": "Ingresar o crear cuenta"
+    "loginOrRegister": "Ingresar o crear cuenta",
+    "signUp": "Registrarme",
+    "assistant": "Asistente",
+    "helpHowItWorks": "Cómo funciona",
+    "helpFaq": "Preguntas frecuentes",
+    "helpProTips": "Consejos para profesionales",
+    "helpContact": "Escribir a soporte"
   },
   "home": {
     "accountDeletion": {
@@ -970,7 +976,7 @@
     "support": {
       "title": "Ayuda y soporte",
       "panel": "Mi panel",
-      "help": "Centro de ayuda",
+      "help": "Preguntas frecuentes",
       "contact": "Centro de soporte"
     },
     "rights": "© {year} ContrataCR. Todos los derechos reservados.",
@@ -3526,10 +3532,10 @@
     "ctaSearch": "Buscar profesionales",
     "ctaPublish": "Publicar lo que necesito",
     "ctaOffer": "Ofrecer mis servicios",
-    "helpCta": "Ir al centro de ayuda"
+    "helpCta": "Ver preguntas frecuentes"
   },
   "ayuda": {
-    "eyebrow": "Centro de ayuda",
+    "eyebrow": "Preguntas frecuentes",
     "title": "¿En qué te podemos ayudar?",
     "subtitle": "Busca por tarea, abre una respuesta y continúa sin recorrer información que no necesitas.",
     "topicsTitle": "Elige un tema",
@@ -3754,17 +3760,18 @@
       "proCta": "Ofrecer mis servicios",
       "publishCardTitle": "Publica lo que necesitas",
       "publishCardBody": "Los profesionales de tu zona te responden y tú eliges.",
-      "publishOr": "o"
+      "publishOr": "o",
+      "titular": "Encuentra profesionales|*verificados* en Costa Rica."
     },
     "carousel": {
-      "titlePre": "Explora",
-      "titleHighlight": "servicios",
+      "titlePre": "Los servicios",
+      "titleHighlight": "más buscados",
       "viewAll": "Ver todos los servicios"
     },
     "zones": {
       "eyebrow": "Cobertura local",
       "heading": "Encuentra profesionales en tu zona",
-      "subtitle": "Toca tu provincia en el mapa, afina por cantón o deja que te ubiquemos. Profesionales cerca de ti, en distintas zonas del país.",
+      "subtitle": "Toca tu provincia y elige tu cantón.",
       "mapAria": "Mapa de Costa Rica por provincia",
       "coverageCount": "{count, plural, one {# cantón con cobertura} other {# cantones con cobertura}}",
       "noPros": "Aún sin servicios",
@@ -3775,7 +3782,8 @@
       "useLocation": "Usar mi ubicación",
       "geoUnsupported": "Tu navegador no permite ubicación. Elige tu provincia en el mapa.",
       "geoFailed": "No pudimos obtener tu ubicación. Elige tu provincia en el mapa.",
-      "disclaimer": "No prometemos cobertura en todo el país: te mostramos solo a los profesionales que realmente trabajan en tu zona."
+      "disclaimer": "No prometemos cobertura en todo el país: te mostramos solo a los profesionales que realmente trabajan en tu zona.",
+      "allCantons": "Ver los {count} cantones"
     },
     "howItWorks": {
       "eyebrow": "Cómo funciona",
@@ -3799,7 +3807,39 @@
       "guideCta": "Ver cómo funciona",
       "installLink": "Agregar app al celular",
       "mockResults": "118 profesionales en Costa Rica",
-      "mockSearch": "Buscar contador"
+      "mockSearch": "Buscar contador",
+      "guia": {
+        "titulo": "Así se usa ContrataCR",
+        "subtitulo": "Todo lo que necesitas, en una sola app.",
+        "profesionales": {
+          "titulo": "Busca profesionales",
+          "texto": "Busca por servicio y ubicación, y escríbeles directo por WhatsApp.",
+          "cta": "Buscar profesionales",
+          "alt": "Resultados de profesionales en la app de ContrataCR",
+          "pestana": "Profesionales"
+        },
+        "proyectos": {
+          "titulo": "Publica tu proyecto",
+          "texto": "Cuenta qué necesitas y los profesionales te escriben.",
+          "cta": "Publicar un proyecto",
+          "alt": "Tablero de proyectos en la app de ContrataCR",
+          "pestana": "Proyectos"
+        },
+        "empleos": {
+          "titulo": "Empleos",
+          "texto": "Encuentra trabajo o publica una vacante.",
+          "cta": "Ver empleos",
+          "alt": "Tablero de empleos en la app de ContrataCR",
+          "pestana": "Empleos"
+        },
+        "promociones": {
+          "titulo": "Promociones",
+          "texto": "Descuentos de profesionales cerca de ti.",
+          "cta": "Ver promociones",
+          "alt": "Promociones de profesionales en la app de ContrataCR",
+          "pestana": "Promociones"
+        }
+      }
     },
     "why": {
       "heading": "Por qué los clientes eligen ContrataCR.",
@@ -3912,7 +3952,14 @@
     "archivedEmptyTitle": "No hay conversaciones archivadas",
     "archivedEmptyHint": "Archiva un chat deslizándolo hacia la izquierda.",
     "delivered": "Recibido",
-    "seenAt": "Visto {hora}"
+    "seenAt": "Visto {hora}",
+    "replyMessage": "Responder",
+    "replyingTo": "Respondiendo a {name}",
+    "cancelReply": "No responder a este mensaje",
+    "you": "Tú",
+    "originalMessage": "Mensaje original",
+    "photo": "Foto",
+    "file": "Archivo"
   },
   "bottomNav": {
     "search": "Profesionales",
@@ -3942,7 +3989,15 @@
     "tileJob": "Empleo",
     "createDeal": "Publicar una promoción",
     "createJob": "Publicar un empleo",
-    "forPros": "Para profesionales"
+    "forPros": "Para profesionales",
+    "tileProjectPost": "Publicar proyecto",
+    "tileOffer": "Ofrecer servicios",
+    "tileOfferSub": "Recibe clientes",
+    "tileCase": "Caso de éxito",
+    "tileCaseSub": "Muestra tu trabajo",
+    "tileDealSub": "Ofertas y descuentos",
+    "tileJobSub": "Busca personal",
+    "messages": "Mensajes"
   },
   "serviceLanding": {
     "title": "{category} en {place}",

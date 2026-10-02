@@ -219,23 +219,3 @@ jobs:
             build/ios-simulator/contratacr-launch.png
             build/ios-simulator/Logs/
           if-no-files-found: ignore
-
-  avisar:
-    name: Avisar por correo si algo falló
-    needs: [contracts, mobile-webview, android, ios]
-    if: ${{ always() && contains(needs.*.result, 'failure') }}
-    runs-on: ubuntu-latest
-    environment: test
-    steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-node@v5
-        with:
-          node-version: 22
-      - env:
-          BREVO_API_KEY: ${{ secrets.BREVO_API_KEY }}
-          ALERTAS_CORREO: ${{ vars.ALERTAS_CORREO }}
-          CORRIDA: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-        run: >-
-          node scripts/ci/avisar-por-correo.mjs
-          "🔴 ContrataCR: la regresión de la app nativa falló"
-          "contratos: ${{ needs.contracts.result }} · webview: ${{ needs.mobile-webview.result }} · Android: ${{ needs.android.result }} · iOS: ${{ needs.ios.result }}"

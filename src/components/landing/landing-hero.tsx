@@ -1,17 +1,11 @@
 "use client";
 
-import { useState, useEffect, useRef, useTransition, type RefObject } from "react";
+import { useState, useEffect, useLayoutEffect, useRef, useTransition, type RefObject } from "react";
 import { createPortal } from "react-dom";
 import { ArrowRight, Loader2, Search, MapPin } from "lucide-react";
 import { Link, useRouter } from "@/i18n/navigation";
 import { useLocale, useTranslations } from "next-intl";
-import Image from "next/image";
 import { cn } from "@/lib/utils";
-import { cloudinaryAssetUrl, cloudinaryImageLoader } from "@/lib/cloudinary";
-
-const HERO_MAX_WIDTH = 800;
-const heroLoader = (params: { src: string; width: number; quality?: number }) =>
-  cloudinaryImageLoader({ ...params, width: Math.min(params.width, HERO_MAX_WIDTH) });
 import type { SearchSuggestion } from "@/app/api/search/suggestions/route";
 import { searchLocations, resolveLocation, type LocationSuggestion } from "@/lib/data/location-search";
 import { loadGoogleMaps } from "@/lib/maps/loader";
@@ -25,137 +19,86 @@ import { rutaDeBusqueda } from "@/lib/buscar-url";
 type AddressSuggestion = { type: "address"; placeId: string; label: string };
 const GMAPS_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "";
 
-// Show professional, high-trust service examples first so the landing page feels
-// broad enough for Costa Rica: health, finance, technical and home services.
-const ROTATING_LINES: Record<string, string[]> = {
-  es: ["Salud,", "Contabilidad,", "Fisioterapia,", "Electricidad,", "Tecnología,", "Psicología,", "Arquitectura,", "Veterinaria,"],
-  en: ["Health,", "Accounting,", "Physical therapy,", "Electrical,", "Technology,", "Psychology,", "Architecture,", "Veterinary,"],
-};
 
-/* ── Hero image — ONE easy-to-swap asset shown in the dome. ──
-   Replace `src` (and `alt`) with the final high-quality Costa Rican photo when
-   it's provided; nothing else needs to change. Placeholder = a local service
-   professional at work (never a foreign-looking house). */
-const HERO_IMAGE = {
-  // The loader rewrites this width per device; 1600 is only the desktop ceiling.
-  src: cloudinaryAssetUrl("contratacr/home/hero-sanjose.jpg", "f_auto,q_auto,w_1600"),
-  alt: "Vista de la ciudad de San José, Costa Rica al atardecer",
-  // A 128px WebP of the same photo (2.3 KB), inlined so the arch shows a
-  // recognisable city from the very first paint. It is painted as the box's own
-  // background, not through next/image's placeholder: that one re-blurs whatever
-  // it is given with an SVG filter, which turned the photo into a flat blob.
-  placeholder: "data:image/webp;base64,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",
-};
+/* ── FOTO DE FONDO DEL HERO, a todo el ancho (como Angi) ──
+   Un profesional trabajando, con la persona hacia la derecha: el centro queda
+   libre para el título y el buscador. Unsplash entrega cada ancho ya
+   recortado (en Cloudflare /_next/image no optimiza). La miniatura de 48 px va
+   en línea para que el primer cuadro ya tenga la foto, no un hueco. */
+// Cuatro profesionales trabajando, en fotos claras; van pasando con un fundido
+// y un zoom lento. La persona va hacia un lado para dejar libre el centro.
+// `anchoPc` (solo computadora): la foto se ensancha desde la izquierda y el
+// profesional se corre a la DERECHA, fuera del recuadro del buscador.
+// `sube` (solo teléfono): la foto se agranda y se sube para que el TRABAJO
+// (manos y herramienta) quede por encima del recuadro del buscador.
+const HERO_FOTOS: { id: string; foco: string; focoPc: string; sube?: number; soloTelefono?: boolean; soloPc?: boolean }[] = [
+  // `foco`: dónde está el profesional en la foto, para que el recorte —ancho en
+  // computadora, angosto en el teléfono— lo deje siempre a la vista.
+  // Teléfono: lo que importa queda arriba (y). Computadora: el profesional a la derecha (x).
+  { id: "1555963966-b7ae5404b6ed", foco: "62% 30%", focoPc: "50% 22%" }, // liniero trabajando en un poste, a un costado
+  { id: "1749532125405-70950966b0e5", foco: "58% 25%", focoPc: "50% 12%" }, // fontanero en un baño
+  { id: "1589939705384-5185137a7f0f", foco: "80% 20%", focoPc: "50% 42%", sube: 30 }, // carpintería con casco
+  { id: "1660330589693-99889d60181e", foco: "72% 30%", focoPc: "50% 35%" }, // electricista en un tablero
+];
+// Miniatura de la PRIMERA foto (el liniero): si fuera de otra, al cargar se veía
+// un cambio de foto —el parpadeo del arranque—.
+const HERO_MINIATURA = "data:image/jpeg;base64,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";
+const CADA_FOTO_MS = 6500;
+// La primera foto que se ve en computadora (la 0 puede ser solo del teléfono):
+// se pide desde el servidor y se pinta de entrada, sin esperar.
+const PRIMERA_PC = Math.max(0, HERO_FOTOS.findIndex((f) => !f.soloTelefono));
+const urlDeFoto = (id: string, w: number) => `https://images.unsplash.com/photo-${id}?w=${w}&q=85&auto=format&fit=crop`;
 
-function HeroPhoto() {
-  const ref = useRef<HTMLImageElement | null>(null);
-  const [phase, setPhase] = useState<"ssr" | "waiting" | "loaded">("ssr");
+function FotoDeFondo() {
+  const [actual, setActual] = useState(0);
+  // La anterior se queda VISIBLE debajo mientras la nueva entra encima. Antes
+  // todas se desvanecían a la vez y, al volver a la primera (que está debajo
+  // de las demás en el DOM), por un instante se veía el fondo: un «refresco».
+  const [anterior, setAnterior] = useState<number | null>(null);
+  // Las otras fotos se piden después de la primera, no compiten con ella.
+  const [cargarResto, setCargarResto] = useState(false);
   useEffect(() => {
-    const img = ref.current;
-    if (!img) return;
-    setPhase(img.complete && img.naturalWidth > 0 ? "loaded" : "waiting");
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const empezar = window.setTimeout(() => setCargarResto(true), 1500);
+    // En computadora solo rotan las fotos con el profesional a la DERECHA (las
+    // otras lo dejaban detrás del recuadro del buscador).
+    const enPc = window.matchMedia("(min-width: 1024px)").matches;
+    // En computadora queda UNA foto fija, como Angi: la única con el profesional a la derecha.
+    const validas = HERO_FOTOS.map((f, i) => ((enPc ? f.soloTelefono : f.soloPc) ? -1 : i)).filter((i) => i >= 0);
+    setActual(validas[0]);
+    const id = window.setInterval(() => setActual((i) => { setAnterior(i); const k = validas.indexOf(i); return validas[(k + 1) % validas.length]; }), CADA_FOTO_MS);
+    return () => { window.clearTimeout(empezar); window.clearInterval(id); };
   }, []);
+  const anchos = [800, 1200, 1600, 2200, 2800, 3600, 4200];
   return (
-    <Image
-      ref={ref}
-      src={HERO_IMAGE.src}
-      alt={HERO_IMAGE.alt}
-      fill
-      className="object-cover object-center"
-      style={{
-        opacity: phase === "waiting" ? 0 : 1,
-        transition: phase === "ssr" ? undefined : "opacity 320ms ease-out",
-      }}
-      onLoad={() => setPhase("loaded")}
-      priority
-      fetchPriority="high"
-      loader={heroLoader}
-      sizes="(min-width:860px) 800px, 100vw"
-    />
-  );
-}
-
-/* Per-letter staggered vertical slide-up. Each letter of the word rises from
-   below into place one after another (left → right), the word holds, then each
-   letter slides up and out (same staggered order) as the next word's letters
-   roll in. A clipping mask (overflow-hidden, one line tall) keeps letters within
-   the line. Word stays centered; no layout shift. Reduced-motion → static word. */
-const ROLL_LINE = 1.18;   // em — line/clip height (room for accents like í, J).
-const LETTER_MS = 520;    // per-letter slide duration.
-const STAGGER_MS = 46;    // delay between consecutive letters.
-const WORD_HOLD_MS = 1400; // pause on the full word before it leaves.
-
-function RotatingLine({ lines }: { lines: string[] }) {
-  const [index, setIndex] = useState(0);
-  // El servidor pinta la palabra como UN solo nodo de texto; las letras sueltas
-  // —que es lo que la anima— aparecen recién después de hidratar. Antes el
-  // servidor mandaba «Salud,» partida en once <span>, y para cuando el
-  // navegador terminaba de hidratar (en producción el paquete es grande y
-  // tarda) la rotación ya iba en otra palabra: React encontraba un texto
-  // distinto del que él mismo había pintado y tiraba el error #418 en la
-  // portada. Con un solo nodo no hay nada que reconciliar letra por letra.
-  const [montado, setMontado] = useState(false);
-  useEffect(() => { setMontado(true); }, []);
-  const [shown, setShown] = useState(false);   // letters in place (entered)
-  const [leaving, setLeaving] = useState(false); // letters sliding out
-
-  // Enter → hold → exit → next word, per index. This animation ALWAYS plays —
-  // reduced-motion is intentionally ignored here (the effect is subtle/smooth).
-  useEffect(() => {
-    const word = lines[index] ?? "";
-    const span = Math.max(0, word.length - 1) * STAGGER_MS;
-    const enterDur = LETTER_MS + span;
-    const exitDur = LETTER_MS + span;
-
-    setLeaving(false);
-    setShown(false);
-    const raf = requestAnimationFrame(() => requestAnimationFrame(() => setShown(true)));
-    const tExit = setTimeout(() => setLeaving(true), enterDur + WORD_HOLD_MS);
-    const tNext = setTimeout(() => setIndex((i) => (i + 1) % lines.length), enterDur + WORD_HOLD_MS + exitDur);
-
-    return () => { cancelAnimationFrame(raf); clearTimeout(tExit); clearTimeout(tNext); };
-  }, [index, lines]);
-
-  const word = lines[index] ?? "";
-  const visible = shown && !leaving;
-
-  return (
-    <span
-      className="flex justify-center overflow-hidden"
-      style={{ height: `${ROLL_LINE}em` }}
-      aria-label={word}
-      // Esta palabra cambia sola cada pocos segundos y se reconcilia LETRA POR
-      // LETRA. El servidor manda la primera («Salud,») y para cuando el
-      // navegador termina de hidratar —en producción el paquete es grande y
-      // tarda— la animación ya va en otra, así que React encontraba un texto
-      // distinto del que había pintado y tiraba el error #418 en la portada.
-      // No es un fallo que se vea: es ruido de hidratación. `suppressHydration`
-      // existe exactamente para un subárbol cuyo texto se espera que difiera.
-      suppressHydrationWarning
-    >
-      {!montado ? (
-        <span style={{ display: "inline-block", color: "#009FD9" }}>{word}</span>
-      ) : Array.from(word).map((ch, i) => (
-        <span
-          key={`${index}-${i}`}
-          aria-hidden
-          style={{
-            display: "inline-block",
-            color: "#009FD9",
-            willChange: "transform, opacity",
-            transform: visible ? "translateY(0)" : `translateY(${leaving ? "-110%" : "110%"})`,
-            opacity: visible ? 1 : 0,
-            transition: shown
-              ? `transform ${LETTER_MS}ms cubic-bezier(0.16,1,0.3,1) ${i * STAGGER_MS}ms, opacity ${LETTER_MS}ms ease ${i * STAGGER_MS}ms`
-              : "none",
-          }}
-        >
-          {ch === " " ? " " : ch}
-        </span>
+    <div aria-hidden className="absolute inset-0 isolate z-0 overflow-hidden bg-[#8a7a68]" style={{ backgroundImage: `url("${HERO_MINIATURA}")`, backgroundSize: "cover", backgroundPosition: "50% 30%" }}>
+      {HERO_FOTOS.map((foto, i) => (i === 0 || i === PRIMERA_PC || cargarResto) && (
+        // eslint-disable-next-line @next/next/no-img-element -- ya viene del tamaño justo desde Unsplash
+        <img
+          key={foto.id}
+          src={urlDeFoto(foto.id, 1600)}
+          srcSet={anchos.map((w) => `${urlDeFoto(foto.id, w)} ${w}w`).join(", ")}
+          sizes="100vw"
+          alt=""
+          fetchPriority={i === 0 || i === PRIMERA_PC ? "high" : "low"}
+          decoding="async"
+          className={cn(
+            foto.soloTelefono && "lg:hidden", foto.soloPc && "hidden lg:block",
+            // Antes de que arranque la rotación, en computadora ya se ve la primera suya.
+            actual === 0 && i === PRIMERA_PC && i !== 0 && "lg:z-20 lg:opacity-100",
+            "ccr-hero-foto-capa absolute inset-x-0 top-[calc(var(--sube)*-1)] h-[calc(100%+var(--sube))] w-full object-cover [object-position:var(--foco)] lg:top-0 lg:h-full lg:[object-position:var(--foco-pc)]",
+            i === actual ? "z-20 opacity-100 transition-opacity duration-[1400ms] ease-in-out" : i === anterior ? "z-10 opacity-100" : "z-0 opacity-0",
+          )}
+          // En computadora la foto se recorta a lo ancho: lo que cuenta es la ALTURA (cara y manos a la vista).
+          style={{ "--foco": foto.foco, "--foco-pc": foto.focoPc, "--sube": `${foto.sube ?? 0}%` } as React.CSSProperties}
+        />
       ))}
-    </span>
+      {/* Apenas un velo: la foto se ve clara y el panel da el contraste al texto. */}
+      
+    </div>
   );
 }
+
 
 /* Anchored position for a dropdown PORTALED to <body>.
    ──────────────────────────────────────────────────────────────────
@@ -249,7 +192,7 @@ function SuggestionsDropdown({
         >
           <Search className="h-4 w-4 text-[#009FD9] shrink-0" />
           <span className="flex-1 min-w-0">
-            <span className="block text-sm text-[#162543] truncate">{s.label}</span>
+            <span className="block text-sm leading-snug text-[#162543] break-words">{s.label}</span>
           </span>
           <span className="text-[10px] uppercase tracking-wide text-gray-300 shrink-0">
             Servicio
@@ -321,9 +264,9 @@ function LocationDropdown({
         >
           <MapPin className="h-4 w-4 text-[#009FD9] shrink-0" />
           <span className="flex-1 min-w-0">
-            <span className="block text-sm text-[#162543] truncate">{s.label}</span>
+            <span className="block text-sm leading-snug text-[#162543] break-words">{s.label}</span>
             {s.type === "canton" && (
-              <span className="block text-xs text-gray-400 truncate">{s.sublabel}</span>
+              <span className="block text-xs leading-snug text-gray-400 break-words">{s.sublabel}</span>
             )}
           </span>
           <span className="text-[10px] uppercase tracking-wide text-gray-300 shrink-0">
@@ -343,7 +286,7 @@ function LocationDropdown({
           className="w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors hover:bg-gray-50"
         >
           <MapPin className="h-4 w-4 text-[#009FD9] shrink-0" />
-          <span className="flex-1 min-w-0 block text-sm text-[#162543] truncate">{a.label}</span>
+          <span className="flex-1 min-w-0 block text-sm leading-snug text-[#162543] break-words">{a.label}</span>
           <span className="text-[10px] uppercase tracking-wide text-gray-300 shrink-0">Dirección</span>
         </button>
       ))}
@@ -352,8 +295,37 @@ function LocationDropdown({
   );
 }
 
+// EL TEXTO NUNCA SE CORTA: si lo escrito no cabe en su campo, la letra se
+// achica de a poco (hasta un mínimo) para que entre completo.
+function useLetraQueCabe(ref: RefObject<HTMLInputElement | null>, texto: string, deps: unknown[]) {
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    el.style.fontSize = "";
+    const base = parseFloat(getComputedStyle(el).fontSize) || 16;
+    if (!texto) return;
+    const lienzo = document.createElement("canvas").getContext("2d");
+    if (!lienzo) return;
+    const estilo = getComputedStyle(el);
+    lienzo.font = `${estilo.fontWeight} ${base}px ${estilo.fontFamily}`;
+    const ancho = lienzo.measureText(texto).width;
+    const libre = el.clientWidth - 2;
+    if (ancho > libre && libre > 0) el.style.fontSize = `${Math.max(12, Math.floor(base * (libre / ancho) * 10) / 10)}px`;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [texto, ...deps]);
+}
+
 export function LandingHero() {
   const [service, setService] = useState("");
+  // Qué campo se está usando: ese crece (con transición) y el otro se achica.
+  const [foco, setFoco] = useState<"svc" | "loc" | null>(null);
+  const [esTelefono, setEsTelefono] = useState(false);
+  useEffect(() => {
+    const m = window.matchMedia("(max-width: 639px)");
+    const ver = () => setEsTelefono(m.matches);
+    ver(); m.addEventListener("change", ver);
+    return () => m.removeEventListener("change", ver);
+  }, []);
   // The chosen service suggestion (so a category filters by id, not free text).
   const [serviceSel, setServiceSel] = useState<SearchSuggestion | null>(null);
   const [suggestions, setSuggestions] = useState<SearchSuggestion[]>([]);
@@ -363,6 +335,9 @@ export function LandingHero() {
   // mobile both mount; the hidden one has a 0×0 rect, so its dropdown renders nothing).
   const svcDesktopRef = useRef<HTMLDivElement>(null);
   const svcMobileRef = useRef<HTMLDivElement>(null);
+  // Las listas de sugerencias se anclan a TODA la píldora: anclada a un campo,
+  // en el teléfono medían media pantalla y cortaban los nombres.
+  const pildoraRef = useRef<HTMLDivElement>(null);
   // La portada dibuja las DOS variantes a la vez (una oculta por CSS) y ambas
   // llevaban el mismo ref: React se quedaba con la última, la de teléfono, así
   // que en escritorio el foco iba a un campo invisible y el Enter no hacía nada.
@@ -382,6 +357,8 @@ export function LandingHero() {
   const locMobileRef = useRef<HTMLDivElement>(null);
   // Location is a typeable autocomplete over provinces + cantones AND Google Places addresses.
   const [location, setLocation] = useState("");
+  useLetraQueCabe(servicioInputRef, service, [foco, esTelefono]);
+  useLetraQueCabe(ubicacionInputRef, location, [foco, esTelefono]);
   const [locationSel, setLocationSel] = useState<LocationSuggestion | null>(null);
   const [locSug, setLocSug] = useState<LocationSuggestion[]>([]);
   const [addrSug, setAddrSug] = useState<AddressSuggestion[]>([]);
@@ -415,7 +392,6 @@ export function LandingHero() {
   }, [router]);
   const nearMeActiveLabel = t("nearMeActive");
 
-  const lines = ROTATING_LINES[locale] ?? ROTATING_LINES.es;
   // Debounced service suggestion fetch as the user types
   useEffect(() => {
     const q = service.trim();
@@ -739,34 +715,55 @@ export function LandingHero() {
   }
 
   return (
-    <section className="relative bg-white overflow-hidden">
-      {/* Headline — narrower container for readability */}
-      <div className="relative mx-auto max-w-3xl px-4 sm:px-6 text-center pt-20 sm:pt-28 pb-8">
+    <section className="ccr-hero-foto relative isolate flex min-h-[373px] items-end overflow-hidden sm:min-h-[480px] sm:items-center lg:min-h-[640px] lg:items-end">
+      {/* Medidas de Angi en el teléfono: foto de ~373 px de alto, panel abajo
+          con 35 px de margen inferior y 24 a los lados, negro al 32 %. En
+          computadora, centrado. */}
+      <FotoDeFondo />
+      <div className="relative z-10 mx-auto w-full max-w-7xl px-5 pb-6 pt-40 sm:px-6 sm:py-10 lg:max-w-none lg:px-[10%] lg:pb-9 lg:pt-0">
+      {/* El título y el buscador en un panel translúcido, centrado sobre la foto. */}
+      <div className="ccr-hero-entra rounded-lg bg-black/[0.32] px-3.5 py-4 sm:px-10 sm:py-10 lg:mx-0 lg:rounded-md lg:bg-black/[0.22] lg:backdrop-blur-[1px] lg:max-w-[820px] lg:px-11 lg:py-9">
+      {/* En computadora el panel va a la IZQUIERDA y el texto alineado a la izquierda, como Angi. */}
+      <div className="relative mx-auto max-w-3xl pb-3.5 text-center sm:pb-7 lg:mx-0 lg:text-left">
         <h1
-          className="font-extrabold text-[#1a2744] tracking-tight"
-          style={{ fontSize: "clamp(2rem, 5.5vw, 3.6rem)", lineHeight: 1.1 }}
+          className="font-extrabold text-white tracking-tight drop-shadow-[0_2px_12px_rgba(0,0,0,0.35)]"
+          style={{ fontSize: "clamp(1.3rem, 5.9vw, 2.6rem)", lineHeight: 1.14 }}
+          data-titular-portada=""
         >
-          <RotatingLine lines={lines} />
-          <span className="block">{t("headline2")}</span>
+          {/* Fijo, como Angi: con las fotos pasando de fondo, una palabra que
+              además cambia eran dos cosas moviéndose a la vez. */}
+          {/* «|» marca los cortes: siempre tres líneas, como Angi, y cada una
+              entera (la letra se ajusta al ancho para que no se parta). */}
+          {/* Dos líneas («|» marca el corte) y la palabra entre *asteriscos* en
+              celeste: «verificados» es lo que distingue a ContrataCR. */}
+          {t("titular").split("|").map((tramo, i) => (
+            <span key={i} className="block whitespace-nowrap">
+              {tramo.split("*").map((parte, j) => (j % 2 ? <span key={j} className="text-[#7fd3f7]">{parte}</span> : parte))}{" "}
+            </span>
+          ))}
         </h1>
       </div>
 
-      {/* ── Search bar — full-width in wider container ── */}
-      <div className="mx-auto max-w-5xl px-4 sm:px-8 pb-6">
+      {/* ── Buscador ── */}
+      <div className="mx-auto max-w-3xl lg:mx-0 lg:max-w-none">
         <form
           onSubmit={handleSearch}
           className="w-full"
         >
-          {/* Desktop row: single line h-14 */}
-          <div className="hidden sm:block relative">
+          {/* UNA píldora con los dos campos, como Angi, en todos los tamaños.
+              Sin botón: elegir una sugerencia busca, y Enter también. */}
+          <div className="relative">
             {/* Caja blanca de esquinas suaves: la misma forma que usa el
                 buscador del navbar, para que al bajar se sienta que es el
                 mismo buscador que se quedó pegado arriba. */}
-            <div className="flex h-14 items-center overflow-hidden rounded-[10px] border border-[#e5e7eb] bg-white pl-5 shadow-[0_8px_48px_rgba(0,0,0,0.12)] transition-shadow duration-300 focus-within:ring-2 focus-within:ring-[#009FD9]/20 hover:shadow-[0_12px_60px_rgba(0,159,217,0.20)]">
+            <div ref={pildoraRef} className="flex flex-col overflow-hidden rounded-2xl border border-white bg-white px-5 shadow-[0_8px_30px_rgba(0,0,0,0.18)] sm:h-16 sm:flex-row sm:items-center sm:rounded-full sm:pl-7 sm:pr-6 lg:h-[68px] lg:pr-2.5 transition-shadow duration-300 focus-within:ring-2 focus-within:ring-[#009FD9]/20 hover:shadow-[0_12px_60px_rgba(0,159,217,0.20)]">
               {/* Service input — its dropdown PORTALS to <body> (anchored to this wrapper),
                   so the bar's `overflow-hidden` can never clip it. */}
-              <div ref={svcDesktopRef} className="flex items-center gap-3 flex-1 min-w-0 h-full">
-                <Search className="h-5 w-5 shrink-0 text-[#8f9aaa]" />
+              {/* EL SERVICIO NUNCA SE CORTA: elegido, su campo toma el ancho de su
+                  nombre y la ubicación se queda con el resto (lo que se escribe
+                  ahí se desplaza dentro de su campo). */}
+              <div ref={svcDesktopRef} className="flex h-[54px] min-w-0 items-center gap-3 sm:h-full" style={esTelefono ? undefined : { flex: `0 0 ${foco === "loc" ? 44 : foco === "svc" ? 68 : 60}%`, transition: "flex-basis 0.38s cubic-bezier(0.22, 1, 0.36, 1)" }}>
+                <Search className="h-5 w-5 shrink-0 text-[#162543] sm:hidden" aria-hidden />
                 <input
                   type="text"
                   value={service}
@@ -774,20 +771,20 @@ export function LandingHero() {
                   ref={servicioInputRef}
                   enterKeyHint={service.trim() && !location.trim() ? "next" : "search"}
                   onKeyDown={handleKeyDown}
-                  onFocus={() => { if (suggestions.length > 0) setOpenSug(true); }}
-                  onBlur={() => setTimeout(() => setOpenSug(false), 120)}
-                  placeholder={t("searchPlaceholder")}
-                  className="min-w-0 flex-1 bg-transparent text-base text-[#162543] placeholder:text-[#8f9aaa] focus:outline-none"
+                  onFocus={() => { setFoco("svc"); if (suggestions.length > 0) setOpenSug(true); }}
+                  onBlur={() => { setFoco((f) => (f === "svc" ? null : f)); setTimeout(() => setOpenSug(false), 120); }}
+                  placeholder={t("searchPlaceholderShort")}
+                  className="min-w-0 flex-1 bg-transparent text-[16px] text-[#162543] placeholder:text-[#6b7686] focus:outline-none sm:text-lg"
                   role="combobox"
                   aria-expanded={openSug}
                   aria-autocomplete="list"
                 />
-                <SuggestionsDropdown anchorRef={svcDesktopRef} open={openSug} suggestions={suggestions} activeIdx={activeIdx} onPick={(s) => selectSuggestion(s, true)} />
+                <SuggestionsDropdown anchorRef={pildoraRef} open={openSug} suggestions={suggestions} activeIdx={activeIdx} onPick={(s) => selectSuggestion(s, true)} />
               </div>
               {/* Divider + location autocomplete */}
-              <div className="mx-2 my-3 w-px shrink-0 self-stretch bg-[#dbe4ee]" />
-              <div ref={locDesktopRef} className="flex h-full min-w-[160px] shrink-0 items-center gap-2">
-                <MapPin className="h-5 w-5 shrink-0 text-[#8f9aaa]" />
+              <div className="h-px w-full shrink-0 bg-[#e3e9ef] sm:mx-4 sm:my-3 sm:h-auto sm:w-px sm:self-stretch sm:bg-[#cfd8e2]" />
+              <div ref={locDesktopRef} className="flex h-[54px] min-w-0 shrink-0 items-center gap-2 sm:h-full sm:flex-1 sm:shrink">
+                <MapPin className="h-5 w-5 shrink-0 text-[#162543] sm:h-6 sm:w-6" />
                 <input
                   type="text"
                   value={location}
@@ -795,107 +792,40 @@ export function LandingHero() {
                   ref={ubicacionInputRef}
                   enterKeyHint={location.trim() && !service.trim() ? "next" : "search"}
                   onKeyDown={handleLocKeyDown}
-                  onFocus={() => { ensureMaps(); setOpenLoc(location.trim().length >= 2); }}
-                  onBlur={() => setTimeout(() => setOpenLoc(false), 120)}
+                  onFocus={() => { setFoco("loc"); ensureMaps(); setOpenLoc(location.trim().length >= 2); }}
+                  onBlur={() => { setFoco((f) => (f === "loc" ? null : f)); setTimeout(() => setOpenLoc(false), 120); }}
                   placeholder={t("location")}
-                  className="w-full min-w-0 flex-1 bg-transparent text-base text-[#162543] placeholder:text-[#8f9aaa] focus:outline-none"
+                  className="w-full min-w-0 flex-1 bg-transparent text-[16px] text-[#162543] placeholder:text-[#6b7686] focus:outline-none sm:text-lg"
                   role="combobox"
                   aria-expanded={openLoc}
                   aria-autocomplete="list"
                 />
-                <LocationDropdown anchorRef={locDesktopRef} open={openLoc && location.trim().length >= 2} suggestions={locSug} addresses={addrSug} activeIdx={locActive} onPick={(s) => selectLocation(s, true)} onPickAddress={selectAddress} onNearMe={requestNearMe} nearMeLabel={t("nearMe")} geoLoading={geoLoading} />
+                <LocationDropdown anchorRef={pildoraRef} open={openLoc && location.trim().length >= 2} suggestions={locSug} addresses={addrSug} activeIdx={locActive} onPick={(s) => selectLocation(s, true)} onPickAddress={selectAddress} onNearMe={requestNearMe} nearMeLabel={t("nearMe")} geoLoading={geoLoading} />
               </div>
-              {/* Buscar button */}
+              {/* En computadora, la lupa que busca (como Angi). En el teléfono no:
+                  elegir una sugerencia o Enter ya buscan. */}
               <button
                 type="submit"
-                aria-busy={buscando || undefined}
-                className="relative ml-2 h-full shrink-0 self-stretch whitespace-nowrap bg-[#009FD9] px-8 text-base font-bold text-white transition-colors duration-150 hover:bg-[#0089bb] active:bg-[#007da8]"
+                aria-label={t("search")}
+                className="ml-2 hidden h-12 w-12 shrink-0 place-items-center rounded-full bg-[#009FD9] text-white shadow-[0_6px_16px_-6px_rgba(0,159,217,0.8)] transition hover:bg-[#0089bb] lg:grid"
               >
-                {/* El rótulo se queda (invisible) para que el botón no cambie de ancho. */}
-                <span className={cn(buscando && "invisible")}>{t("search")}</span>
-                {buscando && <Loader2 aria-hidden className="absolute inset-0 m-auto h-5 w-5 animate-spin" />}
+                <Search className="h-5 w-5" strokeWidth={2.6} />
               </button>
             </div>
           </div>
 
-          {/* Mobile stacked layout — service, then location, then Buscar */}
-          <div className="sm:hidden flex flex-col gap-2">
-            <div ref={svcMobileRef} className="relative">
-              <div className="flex h-12 items-center overflow-hidden rounded-[10px] border border-[#e5e7eb] bg-white pl-4 pr-3 transition-colors focus-within:ring-2 focus-within:ring-[#009FD9]/20">
-                <Search className="mr-3 h-5 w-5 shrink-0 text-[#8f9aaa]" />
-                <input
-                  type="text"
-                  value={service}
-                  onChange={(e) => { recienElegidoRef.current = false; setService(e.target.value); setServiceSel(null); }}
-                  ref={servicioMobileRef}
-                  enterKeyHint={service.trim() && !location.trim() ? "next" : "search"}
-                  onKeyDown={handleKeyDown}
-                  onFocus={() => { if (suggestions.length > 0) setOpenSug(true); }}
-                  onBlur={() => setTimeout(() => setOpenSug(false), 120)}
-                  placeholder={t("searchPlaceholderShort")}
-                  className="min-w-0 flex-1 bg-transparent text-base text-[#162543] placeholder:text-[#8f9aaa] focus:outline-none"
-                  role="combobox"
-                  aria-expanded={openSug}
-                  aria-autocomplete="list"
-                />
-              </div>
-              <SuggestionsDropdown anchorRef={svcMobileRef} open={openSug} suggestions={suggestions} activeIdx={activeIdx} onPick={(s) => selectSuggestion(s, true)} />
-            </div>
-            <div ref={locMobileRef} className="relative">
-              <div className="flex h-12 items-center overflow-hidden rounded-[10px] border border-[#e5e7eb] bg-white pl-4 pr-3 transition-colors focus-within:ring-2 focus-within:ring-[#009FD9]/20">
-                <MapPin className="mr-3 h-5 w-5 shrink-0 text-[#8f9aaa]" />
-                <input
-                  type="text"
-                  value={location}
-                  onChange={(e) => handleLocationChange(e.target.value)}
-                  ref={ubicacionMobileRef}
-                  enterKeyHint={location.trim() && !service.trim() ? "next" : "search"}
-                  onKeyDown={handleLocKeyDown}
-                  onFocus={() => { ensureMaps(); setOpenLoc(location.trim().length >= 2); }}
-                  onBlur={() => setTimeout(() => setOpenLoc(false), 120)}
-                  placeholder={t("location")}
-                  className="min-w-0 flex-1 bg-transparent text-base text-[#162543] placeholder:text-[#8f9aaa] focus:outline-none"
-                  role="combobox"
-                  aria-expanded={openLoc}
-                  aria-autocomplete="list"
-                />
-              </div>
-              <LocationDropdown anchorRef={locMobileRef} open={openLoc && location.trim().length >= 2} suggestions={locSug} addresses={addrSug} activeIdx={locActive} onPick={(s) => selectLocation(s, true)} onPickAddress={selectAddress} onNearMe={requestNearMe} nearMeLabel={t("nearMe")} geoLoading={geoLoading} />
-            </div>
-            <button
-              type="submit"
-              aria-busy={buscando || undefined}
-              className="relative h-12 w-full rounded-[10px] bg-[#009FD9] text-base font-bold text-white transition-all duration-150 hover:bg-[#0089bb] active:scale-[0.97]"
-            >
-              <span className={cn(buscando && "invisible")}>{t("search")}</span>
-              {buscando && <Loader2 aria-hidden className="absolute inset-0 m-auto h-5 w-5 animate-spin" />}
-            </button>
-          </div>
         </form>
 
         {/* Sentinel — IntersectionObserver in navbar watches this */}
         <div id="hero-search-sentinel" aria-hidden className="h-0" />
 
         {geoError && (
-          <p className="mt-2 text-center text-xs font-medium text-red-600">{geoError}</p>
+          <p className="mt-3 text-center text-xs font-semibold text-red-200">{geoError}</p>
         )}
 
       </div>
 
-      {/* Arch / dome image — responsive height */}
-      <div className="flex justify-center px-4 pb-0">
-        <div
-          className="relative overflow-hidden w-full h-[180px] bg-[#c9d6e0] sm:h-[280px] md:h-[360px] lg:h-[420px]"
-          style={{
-            maxWidth: 800,
-            borderRadius: "50% 50% 0 0 / 100% 100% 0 0",
-            backgroundImage: `url("${HERO_IMAGE.placeholder}")`,
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-          }}
-        >
-          <HeroPhoto />
-        </div>
+      </div>
       </div>
     </section>
   );

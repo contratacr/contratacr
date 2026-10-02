@@ -5,7 +5,7 @@ name: Smoke diario
 #
 #  · test.contratacr.com — con las cuentas de regresión: entra, busca, abre
 #    perfiles, el asistente, soporte, y las pruebas de parpadeo e hidratación.
-#  · www.contratacr.com — SOLO lectura y sin sesión: portada, servicios,
+#  · contratacr.com — SOLO lectura y sin sesión: portada, servicios,
 #    búsqueda, APIs públicas, salud y parpadeos. Nada escribe en producción.
 #
 # Corre en Chrome de computadora (1366) y de teléfono (390). No reemplaza la
@@ -13,7 +13,7 @@ name: Smoke diario
 # local): esta es la que ve lo que un cliente ve HOY en los dominios de verdad,
 # con Cloudflare, la base alojada y las llaves de cada ambiente.
 #
-# Si algo falla, avisa por correo (scripts/ci/avisar-por-correo.mjs).
+# Los resultados se revisan en GitHub Actions (sin aviso por correo).
 
 on:
   schedule:
@@ -78,13 +78,13 @@ jobs:
           path: playwright-report/
 
   produccion:
-    name: Smoke de solo lectura en www.contratacr.com
+    name: Smoke de solo lectura en contratacr.com
     if: ${{ github.event_name == 'schedule' || inputs.solo != 'test' }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
       CI: true
-      PLAYWRIGHT_BASE_URL: https://www.contratacr.com
+      PLAYWRIGHT_BASE_URL: https://contratacr.com
       # Sin E2E_FIXTURES_READY ninguna prueba inicia sesión ni escribe: las
       # que lo necesitan se saltan solas (canRunSeededRegression).
       PLAYWRIGHT_JSON_REPORT: test-results/results-produccion.json
@@ -110,23 +110,3 @@ jobs:
         with:
           name: smoke-produccion-report
           path: playwright-report/
-
-  avisar:
-    name: Avisar por correo si algo falló
-    needs: [test, produccion]
-    if: ${{ always() && contains(needs.*.result, 'failure') }}
-    runs-on: ubuntu-latest
-    environment: test
-    steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-node@v5
-        with:
-          node-version: 22
-      - env:
-          BREVO_API_KEY: ${{ secrets.BREVO_API_KEY }}
-          ALERTAS_CORREO: ${{ vars.ALERTAS_CORREO }}
-          CORRIDA: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-        run: >-
-          node scripts/ci/avisar-por-correo.mjs
-          "🔴 ContrataCR: el smoke diario falló"
-          "test.contratacr.com: ${{ needs.test.result }} · www.contratacr.com: ${{ needs.produccion.result }}"

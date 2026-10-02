@@ -355,7 +355,7 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
     <section ref={cabeceraRef} className={cn(showingMobileDetail && "hidden", "ccr-cabecera-pegada ccr-marketplace-sticky sticky top-0 z-20 border-b bg-white transition-colors duration-200 lg:hidden", conLinea ? "border-[#e5e7eb]" : "border-transparent")}>
       <div className="px-0">
         <div className={CABECERA_FILA}>
-          <button type="button" onClick={() => window.dispatchEvent(new Event("ccr:open-mobile-menu"))} aria-label={copy.openMenu} className={CABECERA_BOTON}>
+          <button type="button" onClick={() => window.dispatchEvent(new Event("ccr:open-mobile-menu"))} aria-label={copy.openMenu} className={cn(CABECERA_BOTON, "order-last")}>
             <Menu className={CABECERA_GLIFO} strokeWidth={2.5} />
           </button>
           <Link href="/" aria-label="ContrataCR inicio" className="shrink-0">

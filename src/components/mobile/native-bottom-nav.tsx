@@ -6,7 +6,7 @@ import { esServicioDelCatalogo } from "@/lib/data/categories";
 import { esRutaDeBusqueda } from "@/lib/buscar-url";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Bell, Bot, Plus, Search, UserRound } from "lucide-react";
+import { Bell, MessageSquareText, Plus, Search, UserRound } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { Link, useRouter, usePathname } from "@/i18n/navigation";
 import { useSearchParams } from "next/navigation";
@@ -16,6 +16,7 @@ import { useMode } from "@/hooks/use-mode";
 import { canOffer } from "@/lib/auth/capabilities";
 import { HojaDeCrear } from "@/components/mobile/hoja-de-crear";
 import { useAvisosPorVer } from "@/hooks/use-avisos-por-ver";
+import { useDirectMessageUnread } from "@/hooks/use-direct-message-unread";
 import { cn } from "@/lib/utils";
 
 // La barra vive en el armazón, montada una sola vez, y NO dentro de cada
@@ -31,6 +32,7 @@ export function NativeBottomNav() {
   const t = useTranslations("header");
   const tNav = useTranslations("bottomNav");
   const { user, avatarUrl } = useAuth();
+  const mensajesPorLeer = useDirectMessageUnread(!!user);
   const isPro = canOffer(user);
   const { mode } = useMode(isPro);
 
@@ -265,10 +267,11 @@ export function NativeBottomNav() {
   const enBusqueda = esRutaDeBusqueda(pathname, esServicioDelCatalogo);
   // Lo tocado manda solo mientras la dirección no ha cambiado todavía.
   const tocadaVigente = tocada && tocada.desde === (pathname ?? "") ? tocada.indice : null;
-  const indice = asistenteAbierto ? 1
+  const indice = asistenteAbierto ? -1
     : hojaDeCrear ? -1
     : tocadaVigente ?? (buscadorAbierto ? 0
     : enBusqueda ? 0
+    : isActive("/mensajes") ? 1
     : isActive("/notificaciones") ? 3
     : user && isActive(nativePanelHref) ? 4
     : -1);
@@ -325,17 +328,24 @@ export function NativeBottomNav() {
           <Search className="h-6 w-6" strokeWidth={trazo(indice === 0)} />
         </Link>
 
-        <button
-          type="button"
-          aria-label={tNav("assistant")}
-          onClick={() => {
-            window.dispatchEvent(new Event("ccr:close-native-search"));
-            window.dispatchEvent(new Event(asistenteAbierto ? "contratacr:close-ai" : "contratacr:open-ai"));
-          }}
+        {/* MENSAJES en lugar del asistente (1-oct-2026): es lo que más se usa
+            después de buscar. El asistente pasó al menú de la cabecera. */}
+        <Link
+          href={user ? "/mensajes" : "/login?redirect=%2Fmensajes"}
+          prefetch={!!user}
+          aria-label={tNav("messages")}
+          onClick={(event) => { if (user) irA(event, "/mensajes"); }}
           className={celda(indice === 1)}
         >
-          <Bot className="h-6 w-6" strokeWidth={trazo(indice === 1)} />
-        </button>
+          <span className="relative">
+            <MessageSquareText className="h-6 w-6" strokeWidth={trazo(indice === 1)} />
+            {mensajesPorLeer > 0 && (
+              <span className="absolute -right-2 -top-1.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[#009FD9] px-1 text-[10px] font-bold leading-none text-white ring-2 ring-white">
+                {mensajesPorLeer > 9 ? "9+" : mensajesPorLeer}
+              </span>
+            )}
+          </span>
+        </Link>
 
         <button type="button" aria-label={tNav("create")} aria-haspopup="dialog" onClick={() => { window.dispatchEvent(new Event("ccr:close-native-search")); setHojaDeCrear(true); }} className="relative z-10 grid h-full min-w-0 flex-1 basis-0 place-items-center ccr-toque-barra">
           <span className="grid h-9 w-9 place-items-center rounded-full bg-[#009FD9] text-white shadow-[0_4px_10px_-4px_rgba(0,159,217,0.7)]">

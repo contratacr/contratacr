@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { categoryImageUrl, categoryGroupId } from "@/lib/data/category-images";
+import { categoryImageUrl, categoryImagePosition, categoryGroupId } from "@/lib/data/category-images";
 import { getCategoryGroupVisual } from "@/lib/data/category-group-visuals";
 import { cn } from "@/lib/utils";
 import { ProgressiveImage } from "@/components/ui/progressive-image";
@@ -20,7 +20,7 @@ export function ServiceImage({ categoryId, className, badge = true }: { category
       style={showPhoto ? undefined : { backgroundImage: `linear-gradient(135deg, ${from}, ${to})` }}
     >
       {showPhoto ? (
-        <ProgressiveImage src={url} alt="" fit="cover" onError={() => setFailed(true)} wrapperClassName="h-full w-full" />
+        <ProgressiveImage src={url} alt="" fit="cover" style={{ objectPosition: categoryImagePosition(categoryId) }} onError={() => setFailed(true)} wrapperClassName="h-full w-full" />
       ) : (
         <div className="flex h-full w-full items-center justify-center">
           <Icon className="h-[34%] w-[34%] text-white/85" strokeWidth={1.5} />

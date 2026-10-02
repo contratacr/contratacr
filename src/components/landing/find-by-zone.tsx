@@ -63,9 +63,9 @@ export function FindByZone({ coverage }: { coverage: ZoneCoverage }) {
   }
 
   return (
-    <section className="relative overflow-hidden bg-white py-20 sm:py-28">
+    <section className="relative overflow-hidden bg-white pb-10 pt-5 sm:pb-14 sm:pt-7">
       <div className="relative z-10 mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-12">
+        <div className="mb-7 text-center sm:mb-10">
           <h2 className="text-3xl sm:text-4xl font-extrabold text-[#1a2744]">
             {t("heading")}
           </h2>
@@ -153,15 +153,16 @@ export function FindByZone({ coverage }: { coverage: ZoneCoverage }) {
             {count > 0 ? (
               <>
                 <p className="text-[11px] font-bold uppercase tracking-wide text-[#68778d] mb-3">{t("cantonsWithPros")}</p>
-                <div className="flex flex-wrap gap-2 mb-6">
-                  {coveredCantons.map((c) => (
+                {/* Todos los cantones, en cuadrícula pareja y por orden alfabético. */}
+                <div className="mb-6 grid auto-rows-fr grid-cols-2 gap-2 sm:grid-cols-3">
+                  {[...coveredCantons].sort((x, y) => x.name.localeCompare(y.name, "es")).map((c) => (
                     <button
                       key={c.id}
                       type="button"
                       onClick={() => router.push(rutaDeBusqueda({ provincia: activeId, canton: c.id }))}
-                      className="group inline-flex items-center gap-1.5 rounded-full border border-[#e5e7eb] bg-white pl-2.5 pr-3.5 py-1.5 text-sm font-medium text-[#374151] hover:border-[#009FD9] hover:bg-[#EBF5FB] hover:text-[#0089bb] transition-colors"
+                      className="group flex min-w-0 items-center gap-1.5 rounded-xl border border-[#e5e7eb] bg-white px-3 py-2 text-left text-sm font-medium leading-tight text-[#374151] hover:border-[#009FD9] hover:bg-[#EBF5FB] hover:text-[#0089bb] transition-colors"
                     >
-                      <span className="h-1.5 w-1.5 rounded-full bg-[#009FD9]" />
+                      <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#009FD9]" />
                       {c.name}
                     </button>
                   ))}
@@ -190,9 +191,6 @@ export function FindByZone({ coverage }: { coverage: ZoneCoverage }) {
                 {t("useLocation")}
               </button>
               {geoError && <p className="mt-2 text-[12px] text-[#b45309]">{geoError}</p>}
-              <p className="mt-3 text-[11px] text-[#68778d] leading-relaxed">
-                {t("disclaimer")}
-              </p>
             </div>
           </div>
         </div>

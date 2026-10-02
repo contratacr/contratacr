@@ -15,7 +15,7 @@ type ConversationListResponse = {
 };
 type ThreadResponse = {
   conversation?: { id: string; context?: { type?: string; title?: string } };
-  messages?: Array<{ id: string; sender_id: string; body: string; read_at?: string | null }>;
+  messages?: Array<{ id: string; sender_id: string; body: string; read_at?: string | null; reply_to_id?: string | null }>;
 };
 
 test.describe.configure({ mode: "serial" });
@@ -228,6 +228,47 @@ test.describe("@seeded contextual direct chat", () => {
     expect(deleted.status).toBe(200);
     const archivedAfterDelete = await apiJson<ConversationListResponse>(page, "/api/direct-chat?status=archived");
     expect(archivedAfterDelete.body.conversations?.some((item) => item.id === first.body.conversationId)).toBe(false);
+  });
+
+  // RESPONDER CITANDO (migración 228): la respuesta lleva la cita, se ve en la
+  // burbuja, y solo se puede citar un mensaje de la MISMA conversación.
+  test("responder citando un mensaje, por la API y desde la pantalla", async ({ page }) => {
+    const marca = Date.now();
+    await loginAs(page, E2E_USERS.client.email, E2E_USERS.client.password);
+    const original = await apiJson<ChatResponse & { message?: { id: string } }>(page, "/api/direct-chat", { method: "POST", body: { professionalId: seed.professionalId, message: `E2E original ${marca}` } });
+    expect(original.status, JSON.stringify(original.body)).toBe(200);
+    const conversationId = original.body.conversationId!;
+    if (!conversacionesDePrueba.includes(conversationId)) conversacionesDePrueba.push(conversationId);
+    const originalId = original.body.message!.id;
+
+    await loginAs(page, E2E_USERS.professional.email, E2E_USERS.professional.password);
+    const respuesta = await apiJson<ChatResponse & { message?: { id: string; reply_to_id?: string | null } }>(page, "/api/direct-chat", { method: "POST", body: { conversationId, message: `E2E respuesta ${marca}`, replyToId: originalId } });
+    expect(respuesta.status, JSON.stringify(respuesta.body)).toBe(200);
+    expect(respuesta.body.message?.reply_to_id).toBe(originalId);
+
+    // Citar algo que no es de esta conversación: el mensaje sale, sin cita.
+    const ajeno = await apiJson<ChatResponse & { message?: { reply_to_id?: string | null } }>(page, "/api/direct-chat", { method: "POST", body: { conversationId, message: `E2E sin cita ${marca}`, replyToId: "00000000-0000-4000-8000-000000000000" } });
+    expect(ajeno.status).toBe(200);
+    expect(ajeno.body.message?.reply_to_id ?? null).toBeNull();
+
+    const hilo = await apiJson<ThreadResponse>(page, `/api/direct-chat?id=${conversationId}`);
+    expect(hilo.body.messages?.find((m) => m.body === `E2E respuesta ${marca}`)?.reply_to_id).toBe(originalId);
+
+    // En pantalla: la burbuja muestra la cita…
+    await gotoOK(page, `/mensajes?conversation=${conversationId}`);
+    const burbuja = page.locator(`[id^="msg-"]`).filter({ hasText: `E2E respuesta ${marca}` }).last();
+    await expect(burbuja.locator("[data-cita]")).toContainText(`E2E original ${marca}`);
+
+    // …y se responde desde el menú del mensaje.
+    const objetivo = page.locator(`[id^="msg-"]`).filter({ hasText: `E2E sin cita ${marca}` }).last();
+    await objetivo.locator("p").first().click({ button: "right" });
+    await page.getByRole("menuitem", { name: /^(Responder|Reply)$/ }).click();
+    await expect(page.locator("[data-respuesta-en-curso]")).toContainText(`E2E sin cita ${marca}`);
+    await page.locator("textarea").last().fill(`E2E desde la pantalla ${marca}`);
+    await page.getByRole("button", { name: /^(Enviar|Send)$/ }).last().click();
+    await expect(page.locator("[data-respuesta-en-curso]")).toHaveCount(0);
+    const enviada = page.locator(`[id^="msg-"]`).filter({ hasText: `E2E desde la pantalla ${marca}` }).last();
+    await expect(enviada.locator("[data-cita]")).toContainText(`E2E sin cita ${marca}`);
   });
 
   test("booking chat carries its context and rejects outsiders", async ({ page }) => {

@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { categorySlug, idDesdeDireccion } from "@/lib/data/category-slug";
+import { ALL_CATEGORIES } from "@/lib/data/categories";
 import { getProvinceById } from "@/lib/data/cr-geography";
 import { RAIZ_DE_BUSQUEDA, SIN_SERVICIO, esProvinciaDeRuta, filtrosDeRuta, rutaDeBusqueda } from "@/lib/buscar-url";
 import { RUTAS_DEL_SITIO } from "@/lib/site-routes";
@@ -67,13 +68,24 @@ async function esServicioPublicado(id: string): Promise<boolean> {
       );
       if (!respuesta.ok) throw new Error(`catálogo ${respuesta.status}`);
       const filas = await respuesta.json() as Array<{ id: string }>;
+      // Un catálogo VACÍO no es «no hay servicios»: es que la base no dejó
+      // leerlo (1-oct-2026: la seguridad por filas de producción devolvía cero
+      // filas y todo /profesionales/<servicio> abría «Perfil no encontrado»).
+      // Se trata como una falla: decide la forma y se reintenta en la próxima.
+      if (!Array.isArray(filas) || filas.length === 0) throw new Error("catálogo vacío");
       serviciosPublicados = { ids: new Set(filas.map((f) => f.id)), hasta: Date.now() + 5 * 60_000 };
     } catch {
       return !/-[a-z0-9]{8}$/.test(categorySlug(id));
     }
   }
-  return serviciosPublicados.ids.has(id);
+  return serviciosPublicados.ids.has(id) || CATALOGO_DEL_CODIGO.has(id);
 }
+
+// Lo que el código ya conoce como servicio nunca se toma por un perfil, aunque
+// falte en la tabla: en producción hay servicios creados desde el panel que no
+// están en las migraciones (electromecánica, energía solar…) y una base armada
+// solo con migraciones —la del CI— no los tenía.
+const CATALOGO_DEL_CODIGO = new Set(ALL_CATEGORIES.map((c) => c.id));
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -82,6 +94,13 @@ export async function middleware(request: NextRequest) {
     if (isUnsafeLocalProductionWrite(request)) return unsafeLocalProductionWriteResponse();
     return conCabecerasDeSeguridad(NextResponse.next());
   }
+
+  // www.contratacr.com NO SE REDIRIGE (probado y deshecho el 1-oct-2026).
+  // Quien agregó la app web a la pantalla de inicio desde www la tiene atada a
+  // ese dominio: con www → contratacr.com, iOS la ve salir de su sitio y le pone
+  // la barra de Safari arriba y abajo. No hay forma de distinguir desde aquí a
+  // quien la abre desde el ícono. Para Google basta la canónica, que en todas
+  // las páginas apunta a contratacr.com.
 
   // UNA REESCRITURA INTERNA YA PROCESADA PASA TAL CUAL. Con `next start` (el
   // servidor del CI) el middleware vuelve a correr sobre la dirección a la que

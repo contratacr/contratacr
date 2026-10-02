@@ -98,7 +98,7 @@ function mountNativeFirstRunPrepaint() {
         <span>Buscar servicios</span>
         <span>Ofrecer servicios</span>
       </div>
-      <div class="ccr-native-first-run-prepaint-cta">Crear una cuenta</div>
+      <div class="ccr-native-first-run-prepaint-cta">Registrarme</div>
       <div class="ccr-native-first-run-prepaint-login">Ya tienes una cuenta? <span>Inicia sesion</span></div>
     </div>
   `;

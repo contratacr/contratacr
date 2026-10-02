@@ -14,7 +14,7 @@ import { getCategoryLabel } from "@/lib/data/categories";
  * pasó de /buscar a /profesionales (29-sep-2026) y Ofertas se llama
  * Promociones. Sin la consulta (?…) ni el ancla (#…).
  */
-function paginaDeEntradaActual(ruta: string): string {
+export function paginaDeEntradaActual(ruta: string): string {
   let limpia = ruta.split(/[?#]/)[0] || "/";
   limpia = limpia.replace(/^\/es(?=\/|$)/i, "") || "/";
   limpia = limpia.replace(/^(\/en)?\/buscar(?=\/|$)/i, "$1/profesionales");
@@ -113,19 +113,70 @@ function tally(values: (string | null | undefined)[], labels: Record<string, str
 // Plain-language name for an origin. utm_source is free text chosen when the ad
 // link is built, so the common spellings are folded together; a paid medium
 // (utm_medium=paid|cpc|ads, or a click id) reads as "Anuncios en …".
+// UNA FUENTE, UN NOMBRE. Los enlaces etiquetados a mano y los dominios que
+// manda el navegador llegan con muchas formas para el mismo sitio: «ig» e
+// «instagram», cuatro dominios de Facebook, la app de Google en Android… y en
+// el panel salían como filas distintas. Todo pasa por aquí antes de contarse.
+const SOURCE_ALIASES: Record<string, string> = {
+  ig: "instagram", fb: "facebook", "chatgpt.com": "chatgpt", openai: "chatgpt", tt: "tiktok", wa: "whatsapp",
+};
 const SOURCE_NAMES: Record<string, string> = {
-  meta: "Meta", instagram: "Instagram", facebook: "Facebook", fb: "Facebook", ig: "Instagram",
-  tiktok: "TikTok", google: "Google", whatsapp: "WhatsApp", direct: "Directo", other: "Otros sitios",
+  meta: "Meta (Facebook e Instagram)", instagram: "Instagram", facebook: "Facebook",
+  tiktok: "TikTok", google: "Google", whatsapp: "WhatsApp", chatgpt: "ChatGPT", direct: "Directo", other: "Otros sitios",
+};
+const MEDIUM_NAMES: Record<string, string> = {
+  outreach: "invitación directa", email: "correo", qr: "código QR",
 };
 const PAID_MEDIUMS = new Set(["paid", "cpc", "ads", "ad", "paid_social", "paidsocial", "ppc"]);
-function acquisitionLabel(source: string, medium: string | null): { key: string; label: string } {
+function fuenteCanonica(source: string): string {
+  const s = source.trim().toLowerCase();
+  return SOURCE_ALIASES[s] ?? s;
+}
+export function acquisitionLabel(rawSource: string, medium: string | null): { key: string; label: string } {
+  const source = fuenteCanonica(rawSource);
   const src = SOURCE_NAMES[source] ?? source;
   const paid = !!medium && PAID_MEDIUMS.has(medium);
-  if (source === "direct") return { key: "direct", label: "Directo (sin enlace de origen)" };
+  if (source === "direct") return { key: "direct", label: "Directo (escribieron la dirección o sin enlace de origen)" };
   if (source === "other") return { key: "other", label: "Otros sitios" };
   if (paid) return { key: `${source}:paid`, label: `Anuncios en ${src}` };
-  if (medium === "organic" || medium === "social" || !medium) return { key: `${source}:organic`, label: `${src} (orgánico)` };
-  return { key: `${source}:${medium}`, label: `${src} (${medium})` };
+  if (medium === "organic" || medium === "social" || medium === "referral" || !medium) return { key: `${source}:organic`, label: `${src} (sin pagar)` };
+  return { key: `${source}:${medium}`, label: `${src} (${MEDIUM_NAMES[medium] ?? medium})` };
+}
+
+// El sitio que los mandó, por su nombre: m./l./lm.facebook.com son Facebook,
+// la búsqueda de la app de Google en Android es Google.
+export function sitioDeOrigen(host: string): string {
+  const h = host.trim().toLowerCase().replace(/^www\./, "");
+  if (/(^|\.)facebook\.com$|^fb\.(com|me)$/.test(h)) return "Facebook";
+  if (/(^|\.)instagram\.com$/.test(h)) return "Instagram";
+  if (/(^|\.)google\.[a-z.]+$|googlequicksearchbox$/.test(h)) return "Google";
+  if (/(^|\.)tiktok\.com$/.test(h)) return "TikTok";
+  if (/(^|\.)(whatsapp\.com|wa\.me)$/.test(h)) return "WhatsApp";
+  if (/(^|\.)(chatgpt\.com|openai\.com)$/.test(h)) return "ChatGPT";
+  if (/(^|\.)bing\.com$/.test(h)) return "Bing";
+  if (/(^|\.)(t\.co|x\.com|twitter\.com)$/.test(h)) return "X (Twitter)";
+  if (/(^|\.)contratacr\.com$/.test(h)) return "ContrataCR (otra página del sitio)";
+  return h;
+}
+
+// La primera página, por su nombre y no por su ruta.
+export function nombreDePagina(ruta: string): string {
+  const sinIdioma = ruta.replace(/^\/en(?=\/|$)/, "") || "/";
+  const ingles = sinIdioma !== ruta ? " (inglés)" : "";
+  const fijas: Record<string, string> = {
+    "/": "Portada", "/registro/profesional": "Registro de profesional", "/registro/cliente": "Registro de cliente",
+    "/registro": "Registro", "/login": "Iniciar sesión", "/profesionales": "Búsqueda de profesionales",
+    "/servicios": "Lista de servicios", "/onboarding": "Bienvenida", "/promociones": "Promociones",
+    "/empleos": "Empleos", "/proyectos": "Proyectos", "/publicar-proyecto": "Publicar proyecto",
+    "/ayuda": "Ayuda", "/como-funciona": "Cómo funciona", "/mejorar-mi-perfil": "Mejorar mi perfil",
+  };
+  if (fijas[sinIdioma]) return fijas[sinIdioma] + ingles;
+  if (/^\/dashboard(\/|$)/.test(sinIdioma)) return "Panel" + ingles;
+  if (/^\/servicios\/[^/]+/.test(sinIdioma)) return `Página de servicio: ${sinIdioma.split("/")[2]}` + ingles;
+  if (/^\/profesionales\/[^/]+-[a-z0-9]{8}$/.test(sinIdioma)) return "Perfil de un profesional" + ingles;
+  if (/^\/profesionales\/[^/]+/.test(sinIdioma)) return `Búsqueda: ${sinIdioma.split("/").slice(2).join(" › ")}` + ingles;
+  if (/^\/(promociones|empleos|proyectos)\/[^/]+/.test(sinIdioma)) return `Ficha de ${sinIdioma.split("/")[1].replace(/s$/, "")}` + ingles;
+  return ruta;
 }
 
 export async function getAdminReports(locale = "es"): Promise<AdminReports> {
@@ -225,11 +276,14 @@ export async function getAdminReports(locale = "es"): Promise<AdminReports> {
         const recent = new Date(profile.created_at as string).getTime() >= cut30;
         const landing = (profile.acquisition_landing_path as string | null) ?? null;
         if (landing) {
-          const pagina = paginaDeEntradaActual(landing);
+          const pagina = nombreDePagina(paginaDeEntradaActual(landing));
           landings.set(pagina, (landings.get(pagina) ?? 0) + 1);
         }
         const referrer = (profile.acquisition_referrer_host as string | null) ?? null;
-        if (referrer) referrers.set(referrer, (referrers.get(referrer) ?? 0) + 1);
+        if (referrer) {
+          const sitio = sitioDeOrigen(referrer);
+          referrers.set(sitio, (referrers.get(sitio) ?? 0) + 1);
+        }
         const source = (profile.acquisition_source as string | null) ?? null;
         if (!source) {
           empty.acquisition.untracked += 1;
@@ -246,8 +300,9 @@ export async function getAdminReports(locale = "es"): Promise<AdminReports> {
         rows.set(key, row);
         const campaign = (profile.acquisition_campaign as string | null) ?? null;
         if (campaign) {
-          const ck = `${source}|${campaign}`;
-          const c = campaigns.get(ck) ?? { label: campaign, source: SOURCE_NAMES[source] ?? source, pros: 0, clients: 0 };
+          const fuente = fuenteCanonica(source);
+          const ck = `${fuente}|${campaign}`;
+          const c = campaigns.get(ck) ?? { label: campaign, source: SOURCE_NAMES[fuente] ?? fuente, pros: 0, clients: 0 };
           if (isPro) c.pros += 1; else c.clients += 1;
           campaigns.set(ck, c);
         }
