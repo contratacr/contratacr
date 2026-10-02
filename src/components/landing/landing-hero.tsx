@@ -701,11 +701,15 @@ export function LandingHero() {
           con 35 px de margen inferior y 24 a los lados, negro al 32 %. En
           computadora, centrado. */}
       <FotoDeFondo />
-      <div className="relative z-10 mx-auto w-full max-w-7xl px-6 pb-[35px] pt-20 sm:px-6 sm:py-10 lg:px-8">
+      {/* En el teléfono no hay recuadro oscuro: solo un degradado que oscurece
+          la parte de ABAJO de la foto, donde van el titular y el buscador. Así
+          la foto se ve completa arriba y el texto se lee igual. */}
+      <div aria-hidden className="pointer-events-none absolute inset-x-0 bottom-0 z-[5] h-[72%] sm:hidden" style={{ background: "linear-gradient(to top, rgba(4,12,24,0.85) 0%, rgba(4,12,24,0.6) 50%, rgba(4,12,24,0) 100%)" }} />
+      <div className="relative z-10 mx-auto w-full max-w-7xl px-5 pb-6 pt-40 sm:px-6 sm:py-10 lg:px-8">
       {/* El título y el buscador en un panel translúcido, centrado sobre la foto. */}
-      <div className="ccr-hero-entra rounded-lg bg-black/[0.32] px-4 py-6 sm:px-10 sm:py-10 lg:mx-0 lg:max-w-[820px] lg:px-12 lg:py-12">
+      <div className="ccr-hero-entra rounded-lg sm:bg-black/[0.32] sm:px-10 sm:py-10 lg:mx-0 lg:max-w-[820px] lg:px-12 lg:py-12">
       {/* En computadora el panel va a la IZQUIERDA y el texto alineado a la izquierda, como Angi. */}
-      <div className="relative mx-auto max-w-3xl pb-7 text-center lg:mx-0 lg:text-left">
+      <div className="relative mx-auto max-w-3xl pb-4 text-left sm:pb-7 sm:text-center lg:mx-0 lg:text-left">
         <h1
           className="font-extrabold text-white tracking-tight drop-shadow-[0_2px_12px_rgba(0,0,0,0.35)]"
           style={{ fontSize: "clamp(1.3rem, 5.9vw, 2.6rem)", lineHeight: 1.14 }}
