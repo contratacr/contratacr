@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useLayoutEffect } from "react";
 import { useRouter } from "@/i18n/navigation";
 import { useNativeApp } from "@/hooks/use-native-app";
 
@@ -35,7 +35,9 @@ export function SectionHeaderTitle({
   const publica = nativeApp || tambienEnLaWeb;
   const router = useRouter();
 
-  useEffect(() => {
+  // De capa: la barra cambia en el MISMO cuadro que la pantalla (al volver se
+  // veía un cuadro con el «← título» de la pantalla que se iba).
+  useLayoutEffect(() => {
     if (!publica) return;
     const global = window as unknown as {
       __ccrSectionHeader?: string | null;

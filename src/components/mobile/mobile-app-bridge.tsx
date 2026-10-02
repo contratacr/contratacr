@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { esRutaDeBusqueda } from "@/lib/buscar-url";
 import { esServicioDelCatalogo } from "@/lib/data/categories";
@@ -248,7 +248,9 @@ export function MobileAppBridge() {
     return () => window.cancelAnimationFrame(frame);
   }, [pathname]);
 
-  useEffect(() => {
+  // De capa (antes de pintar): con useEffect la pantalla nueva se pintaba UN
+  // cuadro con lo de la anterior (barra de abajo, cabecera) y luego cambiaba.
+  useLayoutEffect(() => {
     if (!isNativeAppRuntime()) return;
     const isSearchRoute = isSearchPath(pathname);
     // Routes that, like the web, mount only the drawer and draw their own title
