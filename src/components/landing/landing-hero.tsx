@@ -709,7 +709,7 @@ export function LandingHero() {
       {/* El título y el buscador en un panel translúcido, centrado sobre la foto. */}
       <div className="ccr-hero-entra rounded-lg sm:bg-black/[0.32] sm:px-10 sm:py-10 lg:mx-0 lg:max-w-[820px] lg:px-12 lg:py-12">
       {/* En computadora el panel va a la IZQUIERDA y el texto alineado a la izquierda, como Angi. */}
-      <div className="relative mx-auto max-w-3xl pb-4 text-left sm:pb-7 sm:text-center lg:mx-0 lg:text-left">
+      <div className="relative mx-auto max-w-3xl pb-4 text-center sm:pb-7 lg:mx-0 lg:text-left">
         <h1
           className="font-extrabold text-white tracking-tight drop-shadow-[0_2px_12px_rgba(0,0,0,0.35)]"
           style={{ fontSize: "clamp(1.3rem, 5.9vw, 2.6rem)", lineHeight: 1.14 }}
