@@ -112,6 +112,19 @@ export const CATEGORY_IMAGE: Record<string, string> = {
 const ID_TO_GROUP = new Map<string, string>();
 for (const g of CATEGORY_GROUPS) for (const it of g.items) ID_TO_GROUP.set(it.id, g.id);
 
+// Punto de enfoque (CSS object-position) de las fotos cuyo sujeto queda fuera del
+// recorte vertical de las tarjetas (4/5). Sin entrada = centrado. Revisado el 1-oct-2026
+// en computadora (1440) y teléfono (iPhone 15 Pro).
+export const CATEGORY_IMAGE_POSITION: Record<string, string> = {
+  electricidad: "15% 50%",   // la cara del electricista quedaba cortada a la izquierda
+  fisioterapia: "90% 50%",   // la cabeza de la paciente quedaba fuera a la derecha
+  fletes: "12% 50%",         // el camión quedaba partido en el borde izquierdo
+};
+
+export function categoryImagePosition(id: string): string {
+  return CATEGORY_IMAGE_POSITION[id] ?? "center";
+}
+
 export function categoryImageUrl(id: string): string | undefined {
   return CATEGORY_IMAGE[id];
 }
