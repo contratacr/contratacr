@@ -56,7 +56,7 @@ export async function ProsSection() {
         <h2 className="mb-4 whitespace-nowrap text-[clamp(1.15rem,6.3vw,2.25rem)] font-extrabold leading-tight text-[#1a2744] sm:mb-8 sm:text-center sm:text-4xl">
           {t("titlePre")} <span className="text-[#009FD9]">{t("titleHighlight")}</span>
         </h2>
-        <ServiciosPorSeccion secciones={secciones} verTodos={{ href: "/servicios", label: t("viewAll") }} />
+        <ServiciosPorSeccion secciones={secciones} verTodos={{ href: "/servicios", label: t("viewAll") }} masSecciones={t("moreSections")} />
       </div>
     </section>
   );

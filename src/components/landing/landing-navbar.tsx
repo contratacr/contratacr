@@ -2033,7 +2033,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
               )}>
                 {sectionActive && sectionRoot ? (
                   <>
-                    <Link href="/" aria-label="ContrataCR inicio" onClick={irAlInicio} className="shrink-0">
+                    <Link href="/" aria-label="ContrataCR" onClick={irAlInicio} className="shrink-0">
                       <ContrataCRMark />
                     </Link>
                     {/* <p>, no <h1>: la página ya tiene su único h1 (el nombre del
@@ -2061,7 +2061,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                   </>
                 ) : (
                   <>
-                <Link href="/" aria-label="ContrataCR inicio" onClick={irAlInicio} className={cn("shrink-0", nativeHeaderShell && "mr-auto flex min-w-0 items-center justify-start")}>
+                <Link href="/" aria-label="ContrataCR" onClick={irAlInicio} className={cn("shrink-0", nativeHeaderShell && "mr-auto flex min-w-0 items-center justify-start")}>
                   {mobileInline ? <ContrataCRMark /> : <ContrataCRLogo />}
                 </Link>
                   </>
@@ -2192,7 +2192,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
               )}
 
               <div className="relative hidden h-16 items-center gap-2 lg:flex xl:gap-3">
-                <Link href="/" aria-label="ContrataCR inicio" onClick={irAlInicio} className="shrink-0">
+                <Link href="/" aria-label="ContrataCR" onClick={irAlInicio} className="shrink-0">
                   {mobileInline ? (
                     <>
                       {/* Compact mark on mobile ONLY when the inline search is present (it needs the
@@ -3013,7 +3013,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
             {/* La fila de arriba: igual que la cabecera de la página. */}
             <div className="shrink-0 bg-white shadow-[0_2px_10px_-6px_rgba(15,23,42,0.25)]" style={{ paddingTop: altoSobreCabecera }}>
               <div className="flex h-16 items-center justify-between px-4 sm:px-6">
-                <Link href="/" aria-label="ContrataCR inicio" onClick={(e) => { cerrarCajon(); irAlInicio(e); }} className="shrink-0">
+                <Link href="/" aria-label="ContrataCR" onClick={(e) => { cerrarCajon(); irAlInicio(e); }} className="shrink-0">
                   <ContrataCRLogo />
                 </Link>
                 <button type="button" onClick={cerrarCajon} aria-label={t("closeMenu")} className="grid h-10 w-10 place-items-center rounded-xl text-[#162543] transition-colors hover:bg-gray-50">

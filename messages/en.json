@@ -3767,7 +3767,8 @@
     "carousel": {
       "titlePre": "Most searched",
       "titleHighlight": "services",
-      "viewAll": "View all services"
+      "viewAll": "View all services",
+      "moreSections": "More sections"
     },
     "zones": {
       "eyebrow": "Local coverage",

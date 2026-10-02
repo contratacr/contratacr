@@ -51,7 +51,7 @@ const MARKETPLACE_LIST_CLASS = "ccr-marketplace-card-list ccr-lista-tablero min-
 
 const JOBS_COPY = {
   es: {
-    remoteCountry: "Todo Costa Rica", country: "Costa Rica", noApplicants: "Sin postulantes", applicant: "postulante", applicants: "postulantes",
+    view: "Ver", remoteCountry: "Todo Costa Rica", country: "Costa Rica", noApplicants: "Sin postulantes", applicant: "postulante", applicants: "postulantes",
     searchPlaceholder: "¿Qué empleo buscas?", published: "Fecha", anyDate: "Cualquier fecha", last24Hours: "Últimas 24 horas", lastWeek: "Última semana", lastMonth: "Último mes",
     workplace: "Modalidad", anyWorkplace: "Cualquier modalidad", experience: "Experiencia", anyExperience: "Cualquier experiencia", employmentType: "Tipo de empleo", anyEmploymentType: "Cualquier tipo",
     messages: "Mensajes",
@@ -63,7 +63,7 @@ const JOBS_COPY = {
     call: "Llamar",
   },
   en: {
-    remoteCountry: "All Costa Rica", country: "Costa Rica", noApplicants: "No applicants", applicant: "applicant", applicants: "applicants",
+    view: "View", remoteCountry: "All Costa Rica", country: "Costa Rica", noApplicants: "No applicants", applicant: "applicant", applicants: "applicants",
     searchPlaceholder: "Search jobs", published: "Date posted", anyDate: "Any date", last24Hours: "Past 24 hours", lastWeek: "Past week", lastMonth: "Past month",
     workplace: "Workplace", anyWorkplace: "Any workplace", experience: "Experience", anyExperience: "Any experience", employmentType: "Job type", anyEmploymentType: "Any type",
     messages: "Messages",
@@ -358,7 +358,7 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
           <button type="button" onClick={() => window.dispatchEvent(new Event("ccr:open-mobile-menu"))} aria-label={copy.openMenu} className={cn(CABECERA_BOTON, "order-last")}>
             <Menu className={CABECERA_GLIFO} strokeWidth={2.5} />
           </button>
-          <Link href="/" aria-label="ContrataCR inicio" className="shrink-0">
+          <Link href="/" aria-label="ContrataCR" className="shrink-0">
             <ContrataCRMark />
           </Link>
           <h1 className={CABECERA_TITULO}>{copy.jobs}</h1>
@@ -584,7 +584,7 @@ function JobRow({ job, selected, onSelect }: { job: JobPost; selected: boolean; 
   const locale = marketplaceLocale(useLocale());
   const copy = JOBS_COPY[locale];
   return <article className={`relative min-h-[7.25rem] overflow-hidden border-b lg:min-h-0 border-[#e5e7eb] bg-white px-3 py-3 transition sm:max-lg:last:border-b-0 hover:bg-[#f8fafc] sm:px-4 ${selected ? "lg:bg-[#eef9fd] lg:shadow-[inset_4px_0_0_#162543]" : ""}`}>
-    <button type="button" onClick={onSelect} aria-label={`Ver ${job.title}`} className="absolute inset-0 hidden lg:block" />
+    <button type="button" onClick={onSelect} aria-label={`${copy.view} ${job.title}`} className="absolute inset-0 hidden lg:block" />
     <Link href={rutaEmpleo(job)} className="relative z-[1] block w-full text-left lg:pointer-events-none">
       <div className="flex min-w-0 items-start gap-2.5 sm:gap-3">
         <EmployerAvatar job={job} />

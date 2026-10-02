@@ -102,7 +102,7 @@ export function LandingFooter() {
 
           {/* Brand column — spans 2 cols on lg */}
           <div className="lg:col-span-2">
-            <Link href="/" aria-label="ContrataCR inicio" className="inline-flex mb-4">
+            <Link href="/" aria-label="ContrataCR" className="inline-flex mb-4">
               <ContrataCRLogo tone="dark" />
             </Link>
             <p className="text-sm text-white/50 leading-relaxed mb-6 max-w-[260px]">

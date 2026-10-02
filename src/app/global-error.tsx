@@ -40,7 +40,7 @@ export default function GlobalError({
       <body style={{ margin: 0, fontFamily: "system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif", background: "#ffffff" }}>
         <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "48px 16px", textAlign: "center", boxSizing: "border-box" }}>
           {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
-          <a href="/" aria-label="ContrataCR inicio" style={{ display: "inline-flex", alignItems: "center", gap: 2, marginBottom: 36, textDecoration: "none" }}>
+          <a href="/" aria-label="ContrataCR" style={{ display: "inline-flex", alignItems: "center", gap: 2, marginBottom: 36, textDecoration: "none" }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/logo-mark-transparent.png" alt="ContrataCR" width={28} height={28} style={{ height: 28, width: 28 }} />
             <span style={{ fontSize: 17, fontWeight: 800, letterSpacing: "-0.02em", lineHeight: 1 }}>

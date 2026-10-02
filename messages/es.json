@@ -1877,7 +1877,7 @@
     "modeUse": "Modo cliente",
     "modeOffer": "Modo profesional",
     "offerGateTitle": "Empieza a ofrecer tus servicios como profesional",
-    "offerGateBody": "En ContrataCR, cualquiera que ofrece un servicio es un profesional: un oficio, un cuidado, una clase o una profesión. Completa tu perfil una vez y empieza a recibir clientes.",
+    "offerGateBody": "En ContrataCR, cualquiera que ofrece un servicio es un profesional: un trabajo técnico, un cuidado, una clase o una profesión. Completa tu perfil una vez y empieza a recibir clientes.",
     "offerGateCta": "Completar mi perfil",
     "offerInviteTitle": "¿Ofreces servicios?",
     "offerInviteCta": "Ofrecer mis servicios",
@@ -3767,7 +3767,8 @@
     "carousel": {
       "titlePre": "Los servicios",
       "titleHighlight": "más buscados",
-      "viewAll": "Ver todos los servicios"
+      "viewAll": "Ver todos los servicios",
+      "moreSections": "Más secciones"
     },
     "zones": {
       "eyebrow": "Cobertura local",

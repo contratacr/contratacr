@@ -18,7 +18,7 @@ export type SeccionDeServicios = {
 // de esa sección, con foto. Antes era un carrusel que pasaba solo: quien
 // buscaba algo de salud tenía que esperar a que apareciera. Aquí va directo.
 // Los cuatro más buscados de cada sección: 2×2 en el teléfono, una fila en computadora.
-export function ServiciosPorSeccion({ secciones, verTodos }: { secciones: SeccionDeServicios[]; verTodos?: { href: string; label: string } }) {
+export function ServiciosPorSeccion({ secciones, verTodos, masSecciones = "" }: { secciones: SeccionDeServicios[]; verTodos?: { href: string; label: string }; masSecciones?: string }) {
   const [activa, setActiva] = useState(0);
   // El servicio tocado se queda agrandado hasta que la página nueva reemplaza a esta.
   const [tocado, setTocado] = useState<string | null>(null);
@@ -82,7 +82,7 @@ export function ServiciosPorSeccion({ secciones, verTodos }: { secciones: Seccio
       {hayMas && (
         <button
           type="button"
-          aria-label="Más secciones"
+          aria-label={masSecciones}
           onClick={() => fila.current?.scrollBy({ left: fila.current.clientWidth * 0.7, behavior: "smooth" })}
           className="absolute right-0 top-1/2 hidden h-11 w-11 -translate-y-[60%] place-items-center rounded-full bg-white text-[#162543] shadow-[0_4px_16px_rgba(15,23,42,0.18)] transition hover:scale-105 lg:grid"
         >

@@ -643,7 +643,7 @@ export function AiConcierge({ embedded = false, onBack }: { embedded?: boolean; 
               </button>
               <Link
                 href="/"
-                aria-label="ContrataCR inicio"
+                aria-label="ContrataCR"
                 className="shrink-0"
                 onClick={(event) => {
                   // El logo SIEMPRE deja al usuario en la portada: cierra esta
