@@ -43,7 +43,7 @@ export function GuiaDeLaApp({ pasos }: { pasos: PasoDeLaGuia[] }) {
   useEffect(() => {
     const el = caja.current;
     if (!el) return;
-    const o = new IntersectionObserver(([e]) => setVisible(e.isIntersecting), { threshold: 0, rootMargin: "400px 0px" });
+    const o = new IntersectionObserver(([e]) => setVisible(e.isIntersecting), { threshold: 0, rootMargin: "100% 0px" });
     o.observe(el);
     return () => o.disconnect();
   }, []);
