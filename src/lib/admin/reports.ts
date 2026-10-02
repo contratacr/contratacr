@@ -210,12 +210,36 @@ export async function getAdminReports(locale = "es"): Promise<AdminReports> {
   let projectCreated: string[] = [];
   let projectRowsForDemand: Array<{ created_at: string; category_id: string | null }> = [];
 
+  // Todas las consultas son independientes entre sí: se lanzan juntas aquí
+  // y cada bloque espera la suya. Antes iban en fila (6 viajes seguidos a la
+  // base) y Analítica tardaba ~2 s en abrir. Un fallo de red se convierte en
+  // `{ data: null, error }`, igual que un error de Supabase, para que ningún
+  // rechazo quede sin manejar mientras otro bloque espera.
+  const iniciar = <T,>(consulta: PromiseLike<T>) =>
+    Promise.resolve(consulta).catch((error: unknown) => ({ data: null, error }) as unknown as T);
+  const since14 = new Date(now - 14 * DAY).toISOString();
+  const since30 = new Date(now - 30 * DAY).toISOString();
+  const sinceInteractions = new Date(now - 29 * DAY);
+  sinceInteractions.setHours(0, 0, 0, 0);
+  const baseQ = iniciar(Promise.all([
+    admin.from("profiles").select("id, role, created_at"),
+    admin.from("professionals").select("id, profile_id, created_at, verification_status, category_id, provincia_id, professions, service_type, availability_public, services"),
+  ]));
+  const acqQ = iniciar(admin
+    .from("profiles")
+    .select("id, role, created_at, acquisition_source, acquisition_medium, acquisition_campaign, acquisition_captured_at, acquisition_landing_path, acquisition_referrer_host"));
+  const projectsQ = iniciar(admin.from("projects").select("id, status, created_at, category_id, client_id"));
+  const ticketsQ = iniciar(admin.from("support_tickets").select("status, created_at"));
+  const insightsQ = iniciar(Promise.all([
+    admin.from("interaction_events").select("event_type, created_at, category_id, metadata").gte("created_at", since14),
+    admin.from("interaction_events").select("event_type, category_id").gte("created_at", since30).in("event_type", ["search_performed", "profile_view"]),
+    admin.from("interaction_events").select("created_at").order("created_at", { ascending: true }).limit(1),
+  ]));
+  const interactionsQ = iniciar(admin.rpc("get_admin_interaction_analytics", { p_since: sinceInteractions.toISOString() }));
+
   // ── Users + professionals + clients ──
   try {
-    const [{ data: profiles }, { data: pros }] = await Promise.all([
-      admin.from("profiles").select("id, role, created_at"),
-      admin.from("professionals").select("id, profile_id, created_at, verification_status, category_id, provincia_id, professions, service_type, availability_public, services"),
-    ]);
+    const [{ data: profiles }, { data: pros }] = await baseQ;
     const allProfiles = profiles ?? [];
     const proRows = pros ?? [];
     const professionalProfileIds = new Set(proRows.map((professional) => professional.profile_id).filter(Boolean));
@@ -259,9 +283,7 @@ export async function getAdminReports(locale = "es"): Promise<AdminReports> {
     // Where registrations come from (migration 177). Separate query so an older
     // schema only empties this section.
     try {
-      const { data: acq, error: acqError } = await admin
-        .from("profiles")
-        .select("id, role, created_at, acquisition_source, acquisition_medium, acquisition_campaign, acquisition_captured_at, acquisition_landing_path, acquisition_referrer_host");
+      const { data: acq, error: acqError } = await acqQ;
       if (acqError) throw acqError;
       const cut30 = now - 30 * DAY;
       const rows = new Map<string, AcquisitionRow>();
@@ -325,7 +347,7 @@ export async function getAdminReports(locale = "es"): Promise<AdminReports> {
   // unos campos que ningún componente pintaba. «Cliente activo» era «cliente
   // con al menos una cita», o sea cero; ahora es quien publicó un proyecto.
   try {
-    const { data: projects } = await admin.from("projects").select("id, status, created_at, category_id, client_id");
+    const { data: projects } = await projectsQ;
     const pRows = projects ?? [];
 
     empty.users.activeClients = new Set(pRows.map((p) => p.client_id).filter(Boolean)).size;
@@ -346,7 +368,7 @@ export async function getAdminReports(locale = "es"): Promise<AdminReports> {
 
   // ── Support tickets ──
   try {
-    const { data: tickets } = await admin.from("support_tickets").select("status, created_at");
+    const { data: tickets } = await ticketsQ;
     const tRows = tickets ?? [];
     empty.support.total = tRows.length;
     empty.support.byStatus = tally(tRows.map((t) => t.status as string), { open: "Pendiente", in_progress: "En proceso", resolved: "Resuelto" });
@@ -358,13 +380,7 @@ export async function getAdminReports(locale = "es"): Promise<AdminReports> {
   // demand vs supply per service and web vs app. Interaction rows of the last
   // 14 days are read directly; everything else reuses the rows above.
   try {
-    const since14 = new Date(now - 14 * DAY).toISOString();
-    const since30 = new Date(now - 30 * DAY).toISOString();
-    const [{ data: recent }, { data: demandEvents }, { data: oldest }] = await Promise.all([
-      admin.from("interaction_events").select("event_type, created_at, category_id, metadata").gte("created_at", since14),
-      admin.from("interaction_events").select("event_type, category_id").gte("created_at", since30).in("event_type", ["search_performed", "profile_view"]),
-      admin.from("interaction_events").select("created_at").order("created_at", { ascending: true }).limit(1),
-    ]);
+    const [{ data: recent }, { data: demandEvents }, { data: oldest }] = await insightsQ;
     const events = (recent ?? []) as Array<{ event_type: string; created_at: string; category_id: string | null; metadata: Record<string, unknown> | null }>;
     const t7 = now - 7 * DAY;
     const inLast7 = (t: string) => new Date(t).getTime() >= t7;
@@ -459,9 +475,7 @@ export async function getAdminReports(locale = "es"): Promise<AdminReports> {
   // First-party interaction analytics. Totals and per-professional values are
   // all-time; the compact trend remains limited to the last 30 days.
   try {
-    const since = new Date(now - 29 * DAY);
-    since.setHours(0, 0, 0, 0);
-    const { data, error } = await admin.rpc("get_admin_interaction_analytics", { p_since: since.toISOString() });
+    const { data, error } = await interactionsQ;
     if (error) throw error;
     const payload = (data ?? {}) as Record<string, unknown>;
     const typeLabels: Record<string, string> = {

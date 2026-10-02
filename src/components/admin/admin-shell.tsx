@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { MessageCircle, ShieldCheck, Flag, Shield, Tag, Headset, Users, LayoutGrid, BarChart3, ClipboardList, ArrowLeft, Star, Briefcase, BadgePercent, MapPinned, Wallet, Megaphone } from "lucide-react";
+import { useLinkStatus } from "next/link";
 import { Link } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
 import { ContrataCRLogo } from "@/components/landing/landing-navbar";
@@ -10,6 +11,33 @@ import { ADMIN_REFRESH_EVENT } from "@/hooks/use-admin-auto-refresh";
 export type AdminTab =
   | "resumen" | "verificacion" | "usuarios" | "publicaciones" | "reportes" | "aseguradoras"
   | "categorias" | "cuentas" | "soporte" | "analitica" | "actividad" | "resenas" | "empleos" | "promociones" | "cobertura" | "costos" | "campanas" | "contactos";
+
+// Cada página del panel monta su propio AdminShell, así que el componente se
+// desmonta y vuelve a montar en cada cambio de sección. Los contadores viven
+// aquí, fuera del componente, para que la barra no los pierda (ni parpadee) al
+// navegar y para no volver a pedirlos en cada toque: se piden de nuevo solo si
+// tienen más de 30 s, además del minuto, el foco y la vuelta a la pestaña.
+let countsCache: Record<string, number> = {};
+let countsCacheAt = 0;
+const COUNTS_FRESH_MS = 30_000;
+
+// Respuesta inmediata al tocar una sección: sin prefetch (ver
+// src/i18n/navigation.ts) la página tarda un viaje al servidor en llegar, y
+// en el teléfono parecía que el toque no había hecho nada. Mientras la
+// navegación está pendiente, la pestaña tocada se marca y muestra una barra.
+function PendingMark({ variant }: { variant: "side" | "top" }) {
+  const { pending } = useLinkStatus();
+  if (!pending) return null;
+  return (
+    <span
+      aria-hidden
+      className={cn(
+        "pointer-events-none absolute inset-x-2 h-0.5 animate-pulse rounded-full bg-[#38bdf8]",
+        variant === "side" ? "bottom-0.5" : "bottom-0"
+      )}
+    />
+  );
+}
 
 // Admin chrome — a navy (#0f172a) LEFT SIDEBAR with a #38bdf8 accent (horizontal
 // scroll strip on small screens). "Resumen" is the home/overview; the other
@@ -27,17 +55,19 @@ export function AdminShell({
   // Soporte) — verificación, reportes, soporte — from ONE polled
   // endpoint so the counts stay accurate and consistent. Polled + refreshed on
   // window focus so resolving an item updates its badge.
-  const [counts, setCounts] = useState<Record<string, number>>({});
-  const countsRef = useRef<Record<string, number>>({});
+  const [counts, setCounts] = useState<Record<string, number>>(countsCache);
+  const countsRef = useRef<Record<string, number>>(countsCache);
   useEffect(() => {
     let alive = true;
     const fetchCounts = () => {
       if (document.visibilityState !== "visible") return;
+      countsCacheAt = Date.now();
       fetch("/api/admin/pending-counts")
         .then((r) => r.json())
         .then((d) => {
           if (!alive) return;
           const nextCounts = (d ?? {}) as Record<string, number>;
+          countsCache = nextCounts;
           const changed = JSON.stringify(nextCounts) !== JSON.stringify(countsRef.current);
           if (!changed) return;
           const hadPreviousCounts = Object.keys(countsRef.current).length > 0;
@@ -47,7 +77,7 @@ export function AdminShell({
         })
         .catch(() => {});
     };
-    fetchCounts();
+    if (Date.now() - countsCacheAt > COUNTS_FRESH_MS) fetchCounts();
     // Sin correos de aviso, el contador es el aviso: se refresca solo cada
     // minuto mientras la pestaña está a la vista, no solo al volver a ella.
     const cadaMinuto = window.setInterval(fetchCounts, 60_000);
@@ -107,8 +137,8 @@ export function AdminShell({
       data-admin-active={active === it.id ? "true" : undefined}
       className={cn(
         variant === "side"
-          ? "flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors"
-          : "flex items-center gap-1.5 px-3 py-2.5 text-sm font-medium border-b-2 whitespace-nowrap shrink-0 transition-colors",
+          ? "relative flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors"
+          : "relative flex items-center gap-1.5 px-3 py-2.5 text-sm font-medium border-b-2 whitespace-nowrap shrink-0 transition-colors",
         active === it.id
           ? variant === "side" ? "bg-white/10 text-white" : "border-[#38bdf8] text-white"
           : variant === "side" ? "text-white/55 hover:bg-white/5 hover:text-white" : "border-transparent text-white/60 hover:text-white"
@@ -124,6 +154,7 @@ export function AdminShell({
         )}
       </span>
       <span className="truncate">{it.label}</span>
+      {active !== it.id && <PendingMark variant={variant} />}
     </Link>
   );
 
