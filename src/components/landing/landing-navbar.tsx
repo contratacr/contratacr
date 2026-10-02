@@ -3167,7 +3167,8 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                   >
                     <DrawerIcon><HelpCircle /></DrawerIcon>
                     <span className="min-w-0 flex-1 whitespace-nowrap">{locale === "en" ? "Help and support" : "Ayuda y soporte"}</span>
-                    <ChevronDown className={cn("h-5 w-5 shrink-0 text-[#64748b] transition-transform", mobileHelpOpen && "rotate-180")} />
+                    {/* La misma flecha «›» de las demás filas; abierta, apunta hacia abajo. */}
+                    <ChevronRight className={cn("ccr-menu-flecha-ayuda ml-auto h-[22px] w-[22px] shrink-0 transition-transform duration-300", mobileHelpOpen && "rotate-90")} strokeWidth={2.2} />
                   </button>
                   {/* El submenú, al estilo de las filas de arriba: sin íconos, alineado
                       con «Ayuda y soporte», un punto más chico y en gris oscuro, con
