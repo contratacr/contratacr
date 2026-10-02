@@ -68,7 +68,7 @@ function Journey({
     <article className={`border-b border-[#e5e7eb] py-9 last:border-0 sm:py-11 ${emphasized ? "bg-[#f7fbfd] px-5 sm:px-7" : ""}`}>
       <div className="grid gap-6 md:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] md:gap-10">
         <div>
-          <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-lg ccr-caja-icono-plana">
+          <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl ccr-caja-icono">
             <Icon className="h-5 w-5" />
           </div>
           <p className="text-xs font-bold uppercase text-[#009fd9]">{label}</p>
@@ -135,7 +135,7 @@ export default async function ComoFuncionaPage() {
               {EMPLEOS_VISIBLE && (
               <Link href="/empleos" className="group flex min-h-40 flex-col justify-between rounded-lg border border-[#e5e7eb] bg-white p-5 transition-colors hover:border-[#9bd8ef]">
                 <div>
-                  <BriefcaseBusiness className="h-5 w-5 text-[#009fd9]" />
+                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ccr-caja-icono"><BriefcaseBusiness className="h-5 w-5" /></span>
                   <h3 className="mt-4 text-lg font-bold text-[#162543]">{t("marketplaceJobsTitle")}</h3>
                   <p className="mt-2 text-sm leading-6 text-[#6b7280]">{t("marketplaceJobsBody")}</p>
                 </div>
@@ -146,7 +146,7 @@ export default async function ComoFuncionaPage() {
               )}
               <Link href="/proyectos" className="group flex min-h-40 flex-col justify-between rounded-lg border border-[#e5e7eb] bg-white p-5 transition-colors hover:border-[#9bd8ef]">
                 <div>
-                  <ClipboardList className="h-5 w-5 text-[#009fd9]" />
+                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ccr-caja-icono"><ClipboardList className="h-5 w-5" /></span>
                   <h3 className="mt-4 text-lg font-bold text-[#162543]">{t("marketplaceProjectsTitle")}</h3>
                   <p className="mt-2 text-sm leading-6 text-[#6b7280]">{t("marketplaceProjectsBody")}</p>
                 </div>
@@ -156,7 +156,7 @@ export default async function ComoFuncionaPage() {
               </Link>
               <Link href="/promociones" className="group flex min-h-40 flex-col justify-between rounded-lg border border-[#e5e7eb] bg-white p-5 transition-colors hover:border-[#9bd8ef]">
                 <div>
-                  <Tags className="h-5 w-5 text-[#009fd9]" />
+                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ccr-caja-icono"><Tags className="h-5 w-5" /></span>
                   <h3 className="mt-4 text-lg font-bold text-[#162543]">{t("marketplaceOffersTitle")}</h3>
                   <p className="mt-2 text-sm leading-6 text-[#6b7280]">{t("marketplaceOffersBody")}</p>
                 </div>
@@ -181,7 +181,7 @@ export default async function ComoFuncionaPage() {
                 { icon: Star, title: t("trust1Title"), body: t("trust1Body") },
               ].map(({ icon: Icon, title, body }) => (
                 <div key={title} className="flex gap-3 rounded-lg border border-[#e5e7eb] bg-white p-5">
-                  <Icon className="mt-0.5 h-5 w-5 shrink-0 text-[#009FD9]" />
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ccr-caja-icono"><Icon className="h-5 w-5" /></span>
                   <div><h3 className="text-sm font-bold text-[#162543]">{title}</h3><p className="mt-1 text-sm leading-6 text-[#6b7280]">{body}</p></div>
                 </div>
               ))}

@@ -95,7 +95,7 @@ export default function AyudaPage() {
               <nav className="mt-5 space-y-2" aria-label={t("topicsTitle")}>
                 {TOPICS.map(({ icon: Icon, faq, cat }) => (
                   <button key={cat} type="button" onClick={() => selectTopic(faq)} className={`${faq === 8 ? "ccr-solo-web " : ""}flex w-full items-center gap-3 rounded-lg border px-4 py-3 text-left transition-colors ${openFaq === faq ? "border-[#9bd8ef] bg-[#eaf7fd] text-[#0089bb]" : "border-[#e5e7eb] bg-white text-[#162543] hover:border-[#b8dcea]"}`}>
-                    <Icon className="h-4 w-4 shrink-0" />
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ccr-caja-icono"><Icon className="h-[18px] w-[18px]" /></span>
                     <span className="text-sm font-bold">{t(`cat${cat}Title`)}</span>
                   </button>
                 ))}

@@ -98,7 +98,7 @@
     },
     "resourceLinks": {
       "howItWorks": "How to use",
-      "helpCenter": "Help center",
+      "helpCenter": "FAQ",
       "proTips": "Tips",
       "support": "Support",
       "contact": "Contact",
@@ -970,7 +970,7 @@
     "support": {
       "title": "Help & support",
       "panel": "My dashboard",
-      "help": "Help center",
+      "help": "FAQ",
       "contact": "Support center"
     },
     "rights": "© {year} ContrataCR. All rights reserved.",
@@ -3526,10 +3526,10 @@
     "ctaSearch": "Find professionals",
     "ctaPublish": "Post what I need",
     "ctaOffer": "Offer my services",
-    "helpCta": "Go to the help center"
+    "helpCta": "See the FAQ"
   },
   "ayuda": {
-    "eyebrow": "Help center",
+    "eyebrow": "FAQ",
     "title": "How can we help you?",
     "subtitle": "Choose a task, open its answer, and continue without reading information you do not need.",
     "topicsTitle": "Choose a topic",

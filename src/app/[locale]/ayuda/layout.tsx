@@ -13,7 +13,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   return metadatosDePantalla({
     locale,
     ruta: "/ayuda",
-    titulo: en ? 'Help center | ContrataCR' : 'Centro de ayuda | ContrataCR',
+    titulo: en ? 'FAQ | ContrataCR' : 'Preguntas frecuentes | ContrataCR',
     descripcion: en ? 'Answers about finding professionals, posting projects, requesting quotes and getting paid for your services in Costa Rica.' : 'Respuestas a las dudas más comunes sobre buscar profesionales, publicar proyectos, pedir cotizaciones y cobrar por tus servicios en Costa Rica.',
   });
 }
