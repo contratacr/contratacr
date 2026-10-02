@@ -21,7 +21,7 @@ const FEATURED_BRANDS: ReadonlyArray<{ name: string; src: string; crop: string; 
   { name: "Ley Total Abogados", src: "/featured-brands/ley-total-abogados.webp", crop: "featured-brand-logo--ley-total", slug: "luis-gerardo-suarez-chaves-54xrmtku" },
   { name: "English Program", src: "/featured-brands/j-logo.webp", crop: "featured-brand-logo--j", slug: "jafeth-perez-umana-n80rvcg4" },
   { name: "+Kotas Pet Shop", src: "/featured-brands/kotas-pet-shop.webp", crop: "featured-brand-logo--kotas", slug: "jesus-alberto-ramirez-suarez-z5kel78z" },
-  { name: "Titanium Fitness", src: "/featured-brands/t-corporate-logo.webp", crop: "featured-brand-logo--titanium" },
+  { name: "Titanium Fitness", src: "/featured-brands/t-corporate-logo.webp", crop: "featured-brand-logo--titanium", slug: "adrian-francisco-chaves-benavides-mqh45m18" },
 ];
 
 /** Segundos que tarda un juego completo de logos en pasar (igual que la animación CSS anterior). */
