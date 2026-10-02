@@ -40,6 +40,13 @@ export function GuiaDeLaApp({ pasos }: { pasos: PasoDeLaGuia[] }) {
   const [visible, setVisible] = useState(false);
   // Índice del video que ya está pintando cuadros: hasta entonces la imagen fija lo tapa.
   const [pintando, setPintando] = useState(-1);
+  // El video ANTERIOR sigue a la vista debajo hasta que el nuevo ya corre: así el
+  // cambio es un fundido limpio (imagen del nuevo encima) y nunca se ve blanco.
+  const [previo, setPrevio] = useState<number | null>(null);
+  const activoAnterior = useRef(0);
+  useEffect(() => {
+    if (activoAnterior.current !== activo) { setPrevio(activoAnterior.current); activoAnterior.current = activo; }
+  }, [activo]);
 
   // Arranca cuando se ve ~50 % del teléfono y SIGUE corriendo mientras la persona
   // se mueve; solo se pausa cuando la sección sale del todo de la pantalla.
@@ -192,23 +199,27 @@ export function GuiaDeLaApp({ pasos }: { pasos: PasoDeLaGuia[] }) {
                     muted
                     playsInline
                     autoPlay={i === 0}
-                    preload={i === activo ? "auto" : "none"}
+                    // Todos se descargan desde el principio (son cortos): al cambiar de paso el
+                    // video ya está listo y arranca al instante.
+                    preload="auto"
                     aria-label={i === activo ? p.alt : undefined}
                     aria-hidden={i !== activo || undefined}
-                    onPlaying={(e) => { if (i === activo) { setPintando(i); setDuracion(e.currentTarget.duration || 0); setCorriendo(true); } }}
+                    onPlaying={(e) => { if (i === activo) { setPintando(i); setPrevio(null); setDuracion(e.currentTarget.duration || 0); setCorriendo(true); } }}
                     onPause={() => { if (i === activo) setCorriendo(false); }}
                     onEnded={() => alTerminar(i)}
                     // Safari a veces rechaza el primer play() si el video aún no
                     // cargó: al estar listo se vuelve a intentar.
                     onCanPlay={(e) => { if (i === activo && visible && e.currentTarget.paused) e.currentTarget.play().catch(() => {}); }}
-                    className={cn("ccr-guia-video absolute inset-0 h-full w-full object-cover object-top", i === activo ? "opacity-100" : "opacity-0")}
+                    className={cn("ccr-guia-video absolute inset-0 h-full w-full object-cover object-top", i === activo ? "z-[2] opacity-100" : i === previo ? "z-[1] opacity-100" : "opacity-0")}
                   />
                 ))}
                 {/* La primera imagen va APARTE y ENCIMA del video: el «poster» nativo
                     pintaba el botón de play de iOS. El video activo queda SIEMPRE con
                     opacidad 1 debajo: WebKit no deja arrancar un video que no «se ve». */}
-                {/* eslint-disable-next-line @next/next/no-img-element -- imagen fija del tamaño justo */}
-                <img src={pasos[activo].poster} alt="" aria-hidden data-guia-poster className={cn("pointer-events-none absolute inset-0 z-10 h-full w-full object-cover object-top transition-opacity duration-300", pintando === activo ? "opacity-0" : "opacity-100")} />
+                {pasos.map((p, i) => (
+                  // eslint-disable-next-line @next/next/no-img-element -- imagen fija del tamaño justo
+                  <img key={p.clave} src={p.poster} alt="" aria-hidden data-guia-poster className={cn("pointer-events-none absolute inset-0 z-10 h-full w-full object-cover object-top transition-opacity duration-200 ease-out", i === activo && pintando !== activo ? "opacity-100" : "opacity-0")} />
+                ))}
                 <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 z-20 h-16 bg-gradient-to-b from-white/14 to-transparent" />
               </div>
             </div>
