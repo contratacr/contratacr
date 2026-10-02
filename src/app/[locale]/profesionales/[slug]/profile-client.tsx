@@ -287,6 +287,8 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
   // Notificaciones usa el rótulo compartido de las fichas (en messages/*.json).
   const rotuloDeRegreso = profileReturnHref === "/notificaciones" ? tVolver("backToNotifications") : profileReturnLabel(profileReturnHref, locale);
   const tituloBarra = rotuloDeRegreso;
+  // El «...» (guardar, compartir, reportar) solo tiene sentido con una ficha que mostrar.
+  const hayFicha = !loading && !proNotFound && !!professional;
   useEffect(() => {
     if (previewMode) return;
     const global = window as unknown as {
@@ -301,9 +303,9 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
     global.__ccrSectionShare = false;
     // El «...» de la barra, igual que en Empleos, Promociones y Proyectos:
     // guardar, compartir y reportar en el mismo orden y en la misma hoja.
-    global.__ccrSectionMenu = true;
+    global.__ccrSectionMenu = hayFicha;
     global.__ccrSectionVolver = true;
-    window.dispatchEvent(new CustomEvent("ccr:section-header", { detail: { title: tituloBarra, menu: true, volver: true } }));
+    window.dispatchEvent(new CustomEvent("ccr:section-header", { detail: { title: tituloBarra, menu: hayFicha, volver: true } }));
     return () => {
       global.__ccrSectionHeader = null;
       global.__ccrSectionActive = false;
@@ -313,12 +315,18 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
       setNavbarOwnsHeader(false);
       window.dispatchEvent(new CustomEvent("ccr:section-header", { detail: null }));
     };
-  }, [previewMode, tituloBarra]);
+  }, [previewMode, tituloBarra, hayFicha]);
 
   const volverRef = useRef<(() => void) | null>(null);
   const compartirRef = useRef<(() => void) | null>(null);
   useEffect(() => {
-    const onBack = () => volverRef.current?.();
+    // Sin ficha (perfil no encontrado) el «volver» de la ficha no existe:
+    // la flecha regresa a la pantalla anterior, o al inicio si no hay.
+    const onBack = () => {
+      if (volverRef.current) return volverRef.current();
+      if (window.history.length > 1) window.history.back();
+      else window.location.assign("/");
+    };
     const onShare = () => compartirRef.current?.();
     const onAck = () => setNavbarOwnsHeader(true);
     const onMenu = () => setMenuFichaAbierto(true);
