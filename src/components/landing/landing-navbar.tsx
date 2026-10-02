@@ -1497,7 +1497,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
     (href: string) => {
       if (nativePendingTimer.current) window.clearTimeout(nativePendingTimer.current);
       setNativePendingHref(href);
-      router.prefetch(href);
+      // Sin router.prefetch aquí: pedía una precarga parcial que reemplazaba la completa del enlace y la navegación esperaba al servidor.
       nativePendingTimer.current = window.setTimeout(() => setNativePendingHref(null), 8000);
     },
     [nativeApp, router],
@@ -3108,24 +3108,24 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                     Empleos viven aquí también en la app: abajo quedan buscar,
                     el asistente, crear, notificaciones y el panel. */}
                 {(
-                  <Link href="/proyectos" onClick={(event) => { cerrarCajon(); navigateNativeMarketplace(event, "/proyectos"); }} className={claseCajon("/proyectos")}>
+                  <Link href="/proyectos" prefetch={true} onClick={(event) => { cerrarCajon(event); navigateNativeMarketplace(event, "/proyectos"); }} className={claseCajon("/proyectos")}>
                     <DrawerIcon><ClipboardList /></DrawerIcon>
                     <span className={mobileDrawerTextClass}>{locale === "en" ? "Projects" : "Proyectos"}</span>
                   </Link>
                 )}
                 {(
-                  <Link href="/promociones" onClick={(event) => { cerrarCajon(); navigateNativeMarketplace(event, "/promociones"); }} className={claseCajon("/promociones")}>
+                  <Link href="/promociones" prefetch={true} onClick={(event) => { cerrarCajon(event); navigateNativeMarketplace(event, "/promociones"); }} className={claseCajon("/promociones")}>
                     <DrawerIcon><OfferTagPercentIcon className="h-5 w-5" /></DrawerIcon>
                     <span className={mobileDrawerTextClass}>{locale === "en" ? "Promotions" : "Promociones"}</span>
                   </Link>
                 )}
                 {EMPLEOS_VISIBLE && (
-                  <Link href="/empleos" onClick={(event) => { cerrarCajon(); navigateNativeMarketplace(event, "/empleos"); }} className={claseCajon("/empleos")}>
+                  <Link href="/empleos" prefetch={true} onClick={(event) => { cerrarCajon(event); navigateNativeMarketplace(event, "/empleos"); }} className={claseCajon("/empleos")}>
                     <DrawerIcon><Briefcase /></DrawerIcon>
                     <span className={mobileDrawerTextClass}>{locale === "en" ? "Jobs" : "Empleos"}</span>
                   </Link>
                 )}
-                <Link href="/servicios" onClick={cerrarCajon} className={claseCajon("/servicios")}>
+                <Link href="/servicios" prefetch={true} onClick={cerrarCajon} className={claseCajon("/servicios")}>
                   <DrawerIcon><Wrench /></DrawerIcon>
                   <span className={mobileDrawerTextClass}>{t("categories")}</span>
                 </Link>
