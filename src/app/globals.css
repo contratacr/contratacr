@@ -2636,3 +2636,8 @@ html.ccr-native-app .ccr-fin-de-portada > section {
 /* Una sola línea al final del submenú (antes se apilaban tres). */
 .ccr-menu-sub { border-bottom: 0 !important; }
 .ccr-menu-sub > :last-child { border-bottom: 0; }
+
+/* Los videos de la guía nunca muestran los controles ni el botón de play de Safari. */
+.ccr-guia-video::-webkit-media-controls,
+.ccr-guia-video::-webkit-media-controls-start-playback-button,
+.ccr-guia-video::-webkit-media-controls-overlay-play-button { display: none !important; -webkit-appearance: none; opacity: 0 !important; }

@@ -61,6 +61,17 @@ export function GuiaDeLaApp({ pasos }: { pasos: PasoDeLaGuia[] }) {
     });
   }, [activo, visible]);
 
+  // SIEMPRE CORRIENDO: si el navegador lo pausa por su cuenta (al volver a la
+  // pestaña, al ahorrar batería, al terminar de cargar), se reanuda.
+  useEffect(() => {
+    if (!visible) return;
+    const id = window.setInterval(() => {
+      const v = videos.current[activo];
+      if (v && v.paused && !v.ended && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) v.play().catch(() => {});
+    }, 1000);
+    return () => window.clearInterval(id);
+  }, [activo, visible]);
+
   // Al terminar un video pasa al siguiente paso; si la persona eligió uno, se repite ese.
   const alTerminar = (i: number) => {
     if (i !== activo) return;
@@ -162,7 +173,13 @@ export function GuiaDeLaApp({ pasos }: { pasos: PasoDeLaGuia[] }) {
                 {pasos.map((p, i) => (
                   <video
                     key={p.clave}
-                    ref={(el) => { videos.current[i] = el; }}
+                    ref={(el) => {
+                      videos.current[i] = el;
+                      // React no escribe el atributo «muted» en el HTML: Safari ve un
+                      // video con sonido y BLOQUEA la reproducción automática (sale
+                      // el botón de play). Se fuerza aquí, antes de cargar.
+                      if (el) { el.muted = true; el.defaultMuted = true; el.setAttribute("muted", ""); el.setAttribute("playsinline", ""); }
+                    }}
                     src={p.video}
                     poster={p.poster}
                     muted
@@ -177,7 +194,7 @@ export function GuiaDeLaApp({ pasos }: { pasos: PasoDeLaGuia[] }) {
                     // Safari a veces rechaza el primer play() si el video aún no
                     // cargó: al estar listo se vuelve a intentar.
                     onCanPlay={(e) => { if (i === activo && visible && e.currentTarget.paused) e.currentTarget.play().catch(() => {}); }}
-                    className={cn("absolute inset-0 h-full w-full object-cover object-top transition-opacity duration-500", i === activo ? "opacity-100" : "opacity-0")}
+                    className={cn("ccr-guia-video absolute inset-0 h-full w-full object-cover object-top transition-opacity duration-500", i === activo ? "opacity-100" : "opacity-0")}
                   />
                 ))}
                 <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 z-20 h-16 bg-gradient-to-b from-white/14 to-transparent" />
