@@ -31,6 +31,15 @@ const UMBRAL_ARRASTRE = 6;
 
 export function FeaturedBrands() {
   const locale = useLocale();
+  const routerMarcas = useRouter();
+  // Las fichas de las marcas se piden en segundo plano apenas carga la portada:
+  // al tocar un logo la ficha ya está lista y abre al instante.
+  useEffect(() => {
+    const id = window.setTimeout(() => {
+      for (const b of FEATURED_BRANDS) if (b.slug) routerMarcas.prefetch(rutaConIdioma(locale, `/profesionales/${b.slug}`));
+    }, 1200);
+    return () => window.clearTimeout(id);
+  }, [locale, routerMarcas]);
   const label = locale === "en" ? "Businesses already on ContrataCR" : "Negocios que ya están en ContrataCR";
   const marqueeRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
