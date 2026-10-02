@@ -76,7 +76,7 @@ export function GuiaDeLaApp({ pasos }: { pasos: PasoDeLaGuia[] }) {
   const paso = pasos[activo];
 
   return (
-    <div className="grid grid-cols-1 items-center gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(320px,400px)] lg:gap-16">
+    <div className="grid grid-cols-1 items-center gap-6 lg:mx-auto lg:max-w-[980px] lg:grid-cols-[minmax(0,500px)_360px] lg:justify-center lg:gap-20">
       {/* Pasos: en computadora, lista a la izquierda. */}
       <ol className="hidden space-y-3 lg:block">
         {pasos.map((p, i) => {
@@ -90,7 +90,7 @@ export function GuiaDeLaApp({ pasos }: { pasos: PasoDeLaGuia[] }) {
                 aria-pressed={elegido}
                 className={cn(
                   "group relative flex w-full items-start gap-4 overflow-hidden rounded-2xl border p-5 text-left transition-all duration-300",
-                  elegido ? "border-[#009FD9] bg-[#f2faff] shadow-[0_18px_40px_-28px_rgba(0,159,217,0.6)]" : "border-[#e3e9ef] bg-white hover:border-[#9fd6ee]",
+                  elegido ? "border-transparent bg-[#eef7fc]" : "border-transparent bg-transparent hover:bg-[#f6f9fc]",
                 )}
               >
                 <span className={cn("grid h-12 w-12 shrink-0 place-items-center rounded-2xl transition-all", elegido ? "text-white" : "ccr-caja-icono")} style={elegido ? CAJA_ACTIVA : undefined}>
