@@ -2623,7 +2623,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                         href="/registro"
                         className="rounded-xl bg-[#009FD9] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#0088bb]"
                       >
-                        {locale === "en" ? "Create account" : "Crear cuenta"}
+                        {locale === "en" ? "Sign up" : "Registrarme"}
                       </Link>
                     </div>
                   )}
@@ -3209,7 +3209,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                     {t("login")}
                   </Link>
                   <Link href="/registro" onClick={cerrarCajon} className="flex h-12 w-full items-center justify-center rounded-full bg-[#009FD9] text-[15px] font-bold text-white transition-colors hover:bg-[#0089bb]">
-                    {locale === "en" ? "Create account" : "Crear cuenta"}
+                    {locale === "en" ? "Sign up" : "Registrarme"}
                   </Link>
                 </div>
               )}

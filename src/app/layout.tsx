@@ -496,7 +496,7 @@ function StaticNativeFirstRunPrepaint() {
           <span>Buscar servicios</span>
           <span>Ofrecer servicios</span>
         </div>
-        <div className="ccr-native-first-run-prepaint-cta">Crear una cuenta</div>
+        <div className="ccr-native-first-run-prepaint-cta">Registrarme</div>
         <div className="ccr-native-first-run-prepaint-login">
           Ya tienes una cuenta? <span>Inicia sesion</span>
         </div>

@@ -146,7 +146,7 @@ export function WelcomeAccessScreen({
             onClick={onCreateAccount}
             className="mt-4 min-h-14 w-full rounded-full bg-[#08a7df] px-5 text-[15px] font-extrabold text-white shadow-[0_14px_32px_rgba(0,159,217,0.3)] transition hover:bg-[#0796ca] active:scale-[0.99] motion-reduce:transform-none"
           >
-            {english ? "Create an account" : "Crear una cuenta"}
+            {english ? "Sign up" : "Registrarme"}
           </button>
 
           <button
