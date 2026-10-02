@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useLocale } from "next-intl";
 import { rutaConIdioma } from "@/lib/prefijo-de-idioma";
 
@@ -146,6 +147,7 @@ export function FeaturedBrands() {
 }
 
 function BrandSet({ locale, duplicate = false }: { locale: string; duplicate?: boolean }) {
+  const router = useRouter();
   return (
     <div className="featured-brands-set" aria-hidden={duplicate || undefined}>
       {FEATURED_BRANDS.map((brand) => {
@@ -168,6 +170,8 @@ function BrandSet({ locale, duplicate = false }: { locale: string; duplicate?: b
             draggable={false}
             tabIndex={duplicate ? -1 : undefined}
             data-brand-slug={brand.slug}
+            // Al apoyar el dedo ya se pide la ficha: cuando se suelta, está lista.
+            onPointerDown={() => router.prefetch(rutaConIdioma(locale, `/profesionales/${brand.slug}`))}
           >
             {logo}
           </Link>

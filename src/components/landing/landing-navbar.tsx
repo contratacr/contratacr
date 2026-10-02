@@ -2606,7 +2606,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                     <div className="flex w-auto items-center justify-end gap-2">
                       <Link
                         href={loginHref}
-                        className="rounded-xl bg-[#162543] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#0f1b33]"
+                        className="rounded-xl bg-[#009FD9] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#0088bb]"
                       >
                         {t("login")}
                       </Link>
@@ -2621,7 +2621,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                           «Crear cuenta». /registro ofrece las dos cuentas. */}
                       <Link
                         href="/registro"
-                        className="rounded-xl bg-[#009FD9] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#0088bb]"
+                        className="rounded-xl bg-[#162543] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#0f1b33]"
                       >
                         {locale === "en" ? "Sign up" : "Registrarme"}
                       </Link>
@@ -3205,10 +3205,10 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                   «Ayuda y soporte» los botones se encogían. */}
               {!user && (
                 <div className="mt-7 grid shrink-0 gap-3">
-                  <Link href={loginHref} onClick={cerrarCajon} className="flex h-12 w-full items-center justify-center rounded-full bg-[#162543] text-[15px] font-bold text-white transition-colors hover:bg-[#0f1b33]">
+                  <Link href={loginHref} onClick={cerrarCajon} className="flex h-12 w-full items-center justify-center rounded-full bg-[#009FD9] text-[15px] font-bold text-white transition-colors hover:bg-[#0089bb]">
                     {t("login")}
                   </Link>
-                  <Link href="/registro" onClick={cerrarCajon} className="flex h-12 w-full items-center justify-center rounded-full bg-[#009FD9] text-[15px] font-bold text-white transition-colors hover:bg-[#0089bb]">
+                  <Link href="/registro" onClick={cerrarCajon} className="flex h-12 w-full items-center justify-center rounded-full bg-[#162543] text-[15px] font-bold text-white transition-colors hover:bg-[#0f1b33]">
                     {locale === "en" ? "Sign up" : "Registrarme"}
                   </Link>
                 </div>
