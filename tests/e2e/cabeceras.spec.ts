@@ -10,8 +10,9 @@ import { E2E_USERS } from "./seed";
 // el cuerpo a la letra, en la misma esquina de la misma pantalla.
 //
 // La regla, toda junta: fila de 64; primer control de 40×40 a 16 px del borde;
-// la marca, cuando está, a 64; el título a 17.
-const REGLA = { fila: 64, control: { x: 16, tamano: 40 }, marca: { x: 64, tamano: 32 }, titulo: "17px" };
+// el título a 17. Desde el 1-oct-2026 el menú va a la DERECHA: donde hay marca,
+// la marca es lo primero a la izquierda (32×32 a 16 px) y no hay control ahí.
+const REGLA = { fila: 64, control: { x: 16, tamano: 40 }, marca: { x: 16, tamano: 32 }, titulo: "17px" };
 
 type Cabecera = { mismaFila: boolean | null; fila: number; control: { x: number; w: number; h: number } | null; marca: { x: number; w: number; h: number } | null; titulo: string | null };
 
@@ -21,9 +22,10 @@ async function medirCabecera(page: import("playwright/test").Page): Promise<Cabe
     const visible = (n: Element | null) => !!n && n.getBoundingClientRect().height > 0;
     const arriba = (n: Element) => n.getBoundingClientRect().y < 72;
     const marca = Array.from(document.querySelectorAll<HTMLImageElement>('img[alt="ContrataCR"]'))
-      .find((n) => visible(n) && !n.closest(".ccr-app-footer") && arriba(n)) ?? null;
+      // El cajón del menú (fuera de pantalla, a la derecha) también lleva marca.
+      .find((n) => visible(n) && !n.closest(".ccr-app-footer") && arriba(n) && n.getBoundingClientRect().x < window.innerWidth / 2) ?? null;
     const control = Array.from(document.querySelectorAll<HTMLElement>("header button, header a, .ccr-marketplace-sticky button, .ccr-marketplace-sticky a, div[class*='sticky'] button"))
-      .find((n) => visible(n) && arriba(n) && n.getBoundingClientRect().x < 120) ?? null;
+      .find((n) => visible(n) && arriba(n) && n.getBoundingClientRect().x < 120 && !n.querySelector('img[alt="ContrataCR"]')) ?? null;
     const titulo = Array.from(document.querySelectorAll<HTMLElement>("header h1, header h2, header p[data-ccr-section-title], .ccr-marketplace-sticky h1, div[class*='sticky'] h2"))
       .find((n) => visible(n) && arriba(n)) ?? null;
     const ancla = marca ? (marca.closest("a")?.parentElement as HTMLElement | null) : (control?.parentElement as HTMLElement | null);
@@ -41,9 +43,11 @@ async function medirCabecera(page: import("playwright/test").Page): Promise<Cabe
 
 function revisar(nombre: string, c: Cabecera) {
   expect(c.fila, `«${nombre}» dibuja la barra con otro alto`).toBe(REGLA.fila);
-  expect(c.control, `«${nombre}» no tiene control a la izquierda`).not.toBeNull();
-  expect({ x: c.control!.x, w: c.control!.w, h: c.control!.h }, `«${nombre}» pone el primer control en otro sitio o con otro tamaño`)
-    .toEqual({ x: REGLA.control.x, w: REGLA.control.tamano, h: REGLA.control.tamano });
+  expect(c.control ?? c.marca, `«${nombre}» no tiene ni control ni marca a la izquierda`).not.toBeNull();
+  if (c.control) {
+    expect({ x: c.control.x, w: c.control.w, h: c.control.h }, `«${nombre}» pone el primer control en otro sitio o con otro tamaño`)
+      .toEqual({ x: REGLA.control.x, w: REGLA.control.tamano, h: REGLA.control.tamano });
+  }
   if (c.marca) {
     expect({ x: c.marca.x, w: c.marca.w, h: c.marca.h }, `«${nombre}» dibuja la marca en otro sitio o con otro tamaño`)
       .toEqual({ x: REGLA.marca.x, w: REGLA.marca.tamano, h: REGLA.marca.tamano });

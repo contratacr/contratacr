@@ -31,18 +31,19 @@ test("«Mis proyectos» del tablero de Proyectos no pide el panel de cliente", a
   expect(await enlace.getAttribute("href")).not.toContain("mode=use");
 });
 
-// Sin sesión, a la derecha de la barra va la cuenta —no la campana, que promete
-// avisos que un visitante no tiene, ni un hueco—, y devuelve a donde se estaba.
-test("sin sesión la barra del teléfono lleva a iniciar sesión y vuelve a la misma página", async ({ page }, testInfo) => {
+// Sin sesión la barra del teléfono no lleva campana —promete avisos que un
+// visitante no tiene— ni, desde el 1-oct-2026, la silueta de cuenta: la barra es
+// marca + menú, y «Ingresar» vive dentro del menú (y abajo, en el perfil).
+test("sin sesión la barra del teléfono lleva a iniciar sesión desde el menú", async ({ page }, testInfo) => {
   test.skip(!isMobileProject(testInfo), "En computadora la barra ya trae Iniciar sesión y Registrarse.");
   for (const ruta of ["/", "/empleos", "/proyectos", "/ayuda"]) {
     await gotoOK(page, ruta);
-    await expect(page.locator("[data-acceso-cabecera]").filter({ visible: true }), ruta).toHaveCount(1);
     await expect(page.getByRole("link", { name: "Notificaciones" }).filter({ visible: true }), ruta).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Abrir menú" }).filter({ visible: true }), ruta).toHaveCount(1);
   }
   await gotoOK(page, "/profesionales?categoria=plomeria");
-  const cuenta = page.locator("[data-acceso-cabecera]").filter({ visible: true });
-  await expect(cuenta).toHaveAttribute("href", /redirect=.*profesionales.*plomeria/);
-  await gotoOK(page, "/login");
-  await expect(page.locator("[data-acceso-cabecera]").filter({ visible: true })).toHaveCount(0);
+  await page.getByRole("button", { name: "Abrir menú" }).filter({ visible: true }).click();
+  const ingresar = page.getByRole("link", { name: "Ingresar", exact: true }).filter({ visible: true });
+  await expect(ingresar).toHaveCount(1);
+  await expect(ingresar).toHaveAttribute("href", /\/login/);
 });
