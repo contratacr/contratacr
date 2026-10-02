@@ -2589,7 +2589,7 @@ html.ccr-native-app .ccr-fin-de-portada > section {
    El panel del hero entra al cargar; cada sección sube al llegar a ella
    (FadeInUp) y, dentro de los servicios, las cuatro tarjetas salen en cascada. */
 @keyframes ccr-aparece { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
-.ccr-hero-entra { animation: ccr-aparece 0.7s cubic-bezier(0.16, 1, 0.3, 1) both; }
+/* Sin animación de entrada: en la app el panel «aparecía» de nuevo cada vez que se volvía al inicio (parpadeo). */
 .fade-in-up #servicios-de-la-seccion > a { opacity: 0; }
 .fade-in-up.visible #servicios-de-la-seccion > a,
 #servicios-de-la-seccion.ccr-entrada > a { animation: ccr-aparece 0.6s cubic-bezier(0.16, 1, 0.3, 1) both; }
