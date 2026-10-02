@@ -90,9 +90,9 @@ function FotoDeFondo() {
           className={cn(
             foto.soloTelefono && "lg:hidden", foto.soloPc && "hidden lg:block",
             // Antes de que arranque la rotación, en computadora ya se ve la primera suya.
-            actual === 0 && i === PRIMERA_PC && i !== 0 && "lg:z-20 lg:opacity-100",
+            actual === 0 && i === PRIMERA_PC && i !== 0 && "lg:visible lg:z-20 lg:opacity-100",
             "ccr-hero-foto-capa absolute inset-x-0 top-[calc(var(--sube)*-1)] h-[calc(100%+var(--sube))] w-full object-cover [object-position:var(--foco)] lg:top-0 lg:h-full lg:[object-position:var(--foco-pc)]",
-            i === actual ? "z-20 opacity-100 transition-opacity duration-[1400ms] ease-in-out" : i === anterior ? "z-10 opacity-100" : "z-0 opacity-0",
+            i === actual ? "z-20 opacity-100 transition-opacity duration-[1400ms] ease-in-out" : i === anterior ? "z-10 opacity-100" : "invisible z-0 opacity-0", // las capas que no se ven no se pintan
           )}
           // En computadora la foto se recorta a lo ancho: lo que cuenta es la ALTURA (cara y manos a la vista).
           style={{ "--foco": foto.foco, "--foco-pc": foto.focoPc, "--sube": `${foto.sube ?? 0}%` } as React.CSSProperties}
@@ -146,12 +146,13 @@ function useAnchoredRect(ref: RefObject<HTMLElement | null>, open: boolean, minW
       setPos({ left, top: r.bottom + sy + 8, width, maxH });
     };
     update();
-    window.addEventListener("scroll", update, true);
+    // Pasivo: nunca frena el desplazamiento; solo existe con la lista abierta.
+    window.addEventListener("scroll", update, { capture: true, passive: true });
     window.addEventListener("resize", update);
     window.visualViewport?.addEventListener("resize", update);
     window.visualViewport?.addEventListener("scroll", update);
     return () => {
-      window.removeEventListener("scroll", update, true);
+      window.removeEventListener("scroll", update, { capture: true });
       window.removeEventListener("resize", update);
       window.visualViewport?.removeEventListener("resize", update);
       window.visualViewport?.removeEventListener("scroll", update);

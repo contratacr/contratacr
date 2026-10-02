@@ -227,13 +227,16 @@ export function NativeBottomNav() {
   useEffect(() => {
     if (!permiteRetirarse) { setEscondida(false); return; }
     const posiciones = new WeakMap<Element, number>();
+    // Solo avisa a React cuando CAMBIA: en cada evento de desplazamiento volvía a pedir render.
+    let ultima: boolean | null = null;
+    const poner = (v: boolean) => { if (v !== ultima) { ultima = v; setEscondida(v); } };
     const alDesplazar = (event: Event) => {
       const objetivo = event.target;
       if (!(objetivo instanceof Element) || !objetivo.matches("main, .ccr-tablero-marco > section, .ccr-tablero-ficha, [data-messages-page-main], .ccr-direct-chat-list, .ccr-direct-chat-thread-scroll, .ccr-search-bottom-sheet, .ccr-search-bottom-sheet *")) return;
       const actual = objetivo.scrollTop;
       const previa = posiciones.get(objetivo) ?? actual;
       posiciones.set(objetivo, actual);
-      if (actual < 48) { setEscondida(false); return; }
+      if (actual < 48) { poner(false); return; }
       // Al llegar al fondo, iOS estira la lista y la devuelve sola. Ese regreso
       // se leía como "va subiendo" y sacaba la barra sin que nadie deslizara.
       // En el borde —y más allá, mientras dura el rebote— no se decide nada;
@@ -241,12 +244,12 @@ export function NativeBottomNav() {
       const maximo = objetivo.scrollHeight - objetivo.clientHeight;
       if (maximo > 0 && actual >= maximo - 2) return;
       const delta = actual - previa;
-      if (delta > 8) setEscondida(true);
-      else if (delta < -8) setEscondida(false);
+      if (delta > 8) poner(true);
+      else if (delta < -8) poner(false);
     };
     window.addEventListener("scroll", alDesplazar, { capture: true, passive: true });
     return () => window.removeEventListener("scroll", alDesplazar, { capture: true });
-  }, [permiteRetirarse]);
+  }, [permiteRetirarse, pathname]); // con la pantalla nueva vuelve a empezar (la barra se muestra)
 
   // Cambiar de sección la trae de vuelta: la pantalla nueva empieza arriba.
   useEffect(() => { setEscondida(false); }, [pathname]);
