@@ -736,38 +736,11 @@ function PanelIconLink({ href, label }: { href: string; label: string }) {
 // toques, escondido en el menú. La silueta es lo que todo el mundo ya lee como
 // «entrar a mi cuenta», y al entrar se vuelve a la página donde se estaba.
 // En las pantallas de acceso no se dibuja: apuntaría a sí misma.
+// 1-oct-2026: sin la silueta en la cabecera. «Ingresar» y «Registrarme» viven
+// dentro del menú (y abajo, en el ícono de perfil). Las pantallas que todavía
+// la llaman no pintan nada.
 export function HeaderAccountLink() {
-  const t = useTranslations("nav");
-  const label = t("login");
-  const pathname = usePathname();
-  const [aqui, setAqui] = useState("");
-  // La dirección de vuelta se lee ya en el navegador, de window.location: los
-  // filtros (leerlos con useSearchParams obligaría a envolver cada barra en un
-  // Suspense) y también la ruta, porque usePathname devuelve la interna
-  // —/buscar— cuando la persona está en /profesionales/… y volvía ahí sin su
-  // categoría ni su zona.
-  useEffect(() => {
-    queueMicrotask(() => {
-      const { pathname: ruta, search } = window.location;
-      setAqui(ruta && ruta !== "/" && ruta !== "/en" ? `${ruta}${search}` : "");
-    });
-  }, [pathname]);
-  if (/(^|\/)(login|registro|olvide-contrasena|reset-password|onboarding)(\/|$)/.test(pathname ?? "")) {
-    return <span className="h-10 w-10 shrink-0" aria-hidden />;
-  }
-  return (
-    <Link
-      href={aqui ? `/login?redirect=${encodeURIComponent(aqui)}` : "/login"}
-      aria-label={label}
-      data-acceso-cabecera
-      className="relative grid h-10 w-10 shrink-0 place-items-center rounded-xl text-[#1A2744] transition-colors hover:bg-[#f3f4f6] hover:text-[#009FD9]"
-    >
-      {/* La silueta a secas, sin el aro: es el mismo dibujo que ya usa el menú
-          («Iniciar sesión») y la barra de la app, así que la cuenta se reconoce
-          igual en los tres sitios. Con aro parecía un avatar cargado. */}
-      <UserRound className="h-[22px] w-[22px]" strokeWidth={1.9} />
-    </Link>
-  );
+  return null;
 }
 
 /**
