@@ -3099,7 +3099,10 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                     cuatro de seis renglones no llevaban a ningún lado nuevo.
                     En la web móvil no hay barra de abajo, así que ahí el cajón
                     sigue siendo la única puerta y se muestran todos. */}
-                {!nativeHeaderShell && (
+                {/* 1-oct-2026: Buscar profesionales va SIEMPRE, también en la app,
+                    aunque la lupa de abajo lleve a lo mismo: es lo principal de
+                    ContrataCR y el menú es donde alguien nuevo mira qué puede hacer. */}
+                {(
                   <button
                     type="button"
                     onClick={() => { cerrarCajon(); openNativeSearch(); }}
