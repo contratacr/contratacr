@@ -75,7 +75,7 @@ function FotoDeFondo() {
   const primera = HERO_FOTOS[0];
   preload(urlDeFoto(primera.id, 1600), { as: "image", fetchPriority: "high", imageSrcSet: anchos.map((w) => `${urlDeFoto(primera.id, w)} ${w}w`).join(", "), imageSizes: "(max-width: 639px) 150vw, 100vw" });
   return (
-    <div aria-hidden className="absolute inset-0 isolate z-0 overflow-hidden bg-[#8a7a68]" style={{ backgroundImage: `url("${HERO_MINIATURA}")`, backgroundSize: "cover", backgroundPosition: "50% 30%" }}>
+    <div aria-hidden className="absolute inset-0 isolate z-0 overflow-hidden bg-[#8a7a68]" style={{ backgroundImage: `url("${HERO_MINIATURA}")`, backgroundSize: "cover", backgroundPosition: HERO_FOTOS[0].foco }}>
       {HERO_FOTOS.map((foto, i) => (i === 0 || i === PRIMERA_PC || cargarResto) && (
         // eslint-disable-next-line @next/next/no-img-element -- ya viene del tamaño justo desde Unsplash
         <img
@@ -98,6 +98,8 @@ function FotoDeFondo() {
           style={{ "--foco": foto.foco, "--foco-pc": foto.focoPc, "--sube": `${foto.sube ?? 0}%` } as React.CSSProperties}
         />
       ))}
+      {/* La miniatura usa el MISMO encuadre que la foto: si no, al llegar la foto
+          nítida se veía correrse hacia un lado. */}
       {/* Apenas un velo: la foto se ve clara y el panel da el contraste al texto. */}
       
     </div>
@@ -720,7 +722,7 @@ export function LandingHero() {
   }
 
   return (
-    <section className="ccr-hero-foto relative isolate flex min-h-[373px] items-end overflow-hidden sm:min-h-[480px] sm:items-center lg:min-h-[640px] lg:items-end">
+    <section className="ccr-hero-foto relative isolate flex min-h-[440px] items-end overflow-hidden sm:min-h-[480px] sm:items-center lg:min-h-[640px] lg:items-end">
       {/* Medidas de Angi en el teléfono: foto de ~373 px de alto, panel abajo
           con 35 px de margen inferior y 24 a los lados, negro al 32 %. En
           computadora, centrado. */}
