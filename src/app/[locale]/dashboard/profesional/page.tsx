@@ -1685,7 +1685,7 @@ export default function DashboardPage() {
     };
   }, [pasoInternoAbierto, activeTab]);
   const [navbarOwnsHeader, setNavbarOwnsHeader] = useState(false);
-  useEffect(() => {
+  useLayoutEffect(() => {
     const onBack = () => sectionBackRef.current?.();
     const onAck = () => setNavbarOwnsHeader(true);
     window.addEventListener("ccr:section-back", onBack);
@@ -1695,7 +1695,8 @@ export default function DashboardPage() {
       window.removeEventListener("ccr:section-header-ack", onAck);
     };
   }, []);
-  useEffect(() => {
+  // De capa: la barra cambia en el mismo cuadro que la sección.
+  useLayoutEffect(() => {
     if (!mobileSectionHeaderTitle) setNavbarOwnsHeader(false);
     // `root` distingue la RAÍZ del panel de una sección abierta: en la raíz la
     // barra lleva el menú y la marca (no hay a dónde volver), dentro de una

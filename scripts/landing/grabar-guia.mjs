@@ -44,9 +44,26 @@ async function bajar(p, px, msPedido) {
 // portada nueva) y muestra cómo se llega. El destino de proyectos, promociones
 // y empleos se abre en PRODUCCIÓN (en test salen publicaciones de prueba): la
 // grabación se pausa mientras carga, así el corte no se ve.
-const INICIO = process.env.INICIO || "https://contratacr.com";
 const LOCAL = "http://localhost:3000";
+const LOCAL_INICIO = LOCAL;
+const INICIO = process.env.INICIO || LOCAL_INICIO;
+
 async function sinAvisoDeDesarrollo(p) { await p.addStyleTag({ content: "nextjs-portal,[data-nextjs-toast],[data-next-badge-root]{display:none!important}" }).catch(() => {}); }
+// La grabación solo se reanuda con la página QUIETA: fuentes cargadas, todas
+// las imágenes visibles pintadas, sin esqueletos y la cabecera con su logo.
+// Los primeros cuadros tras un goto mostraban la página a medio cargar.
+async function asentada(p) {
+  await p.waitForLoadState("networkidle", { timeout: 15000 }).catch(() => {});
+  await p.waitForFunction(() => {
+    if (document.fonts.status !== "loaded") return false;
+    const enVista = (el) => { const r = el.getBoundingClientRect(); return r.width > 0 && r.height > 0 && r.bottom > 0 && r.top < innerHeight; };
+    if ([...document.images].some((i) => enVista(i) && !(i.complete && i.naturalWidth > 0))) return false;
+    if ([...document.querySelectorAll("[class*=animate-pulse],[class*=skeleton]")].some((el) => enVista(el) && getComputedStyle(el).animationName !== "none")) return false;
+    return true;
+  }, null, { timeout: 15000, polling: 100 }).catch(() => console.log("asentada: se agotó la espera en", p.url()));
+  await p.evaluate(() => document.fonts.ready.then(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))));
+  await p.waitForTimeout(400);
+}
 // Cada toque se VE: un círculo gris que aparece donde cae el dedo, como en las
 // grabaciones de pantalla del iPhone con «mostrar toques».
 async function marcarToque(p, loc) {
@@ -78,7 +95,7 @@ async function escribir(p, loc, texto) { await tocar(p, loc); await p.waitForTim
 // llena a medias y NUNCA se envía (con la cuenta profesional de prueba, en local).
 async function porElMenu(p, grabar, pausar, texto, destino, boton, formulario, llenar, deVerdad) {
   await p.goto(INICIO + "/", { waitUntil: "load" }); await sinAvisoDeDesarrollo(p);
-  await p.waitForTimeout(3500);
+  await p.waitForTimeout(1500); await asentada(p);
   grabar();
   await p.waitForTimeout(700);
   await tocar(p, p.getByRole("button", { name: /menú|menu/i }).first());
@@ -87,7 +104,7 @@ async function porElMenu(p, grabar, pausar, texto, destino, boton, formulario, l
   await p.waitForTimeout(250);
   pausar();
   await p.goto(base + destino, { waitUntil: "load" });
-  await p.waitForTimeout(3000);
+  await p.waitForTimeout(1500); await asentada(p);
   grabar();
   await bajar(p, 300, 2000); await p.waitForTimeout(200);
   const publicar = p.getByRole("link", { name: boton }).or(p.getByRole("button", { name: boton })).filter({ visible: true }).first();
@@ -99,7 +116,7 @@ async function porElMenu(p, grabar, pausar, texto, destino, boton, formulario, l
   pausar();
   if (process.env.SESION) await p.context().addCookies(JSON.parse(fs.readFileSync(process.env.SESION, "utf8")).cookies);
   await p.goto(LOCAL + formulario, { waitUntil: "load" }); await sinAvisoDeDesarrollo(p);
-  await p.waitForTimeout(3000);
+  await p.waitForTimeout(1500); await asentada(p);
   grabar();
   await p.waitForTimeout(900); await bajar(p, 260, 2000); await p.waitForTimeout(900);
 }
@@ -109,7 +126,7 @@ const escenas = {
   // (producción) → el perfil de SG Solutions. No se toca WhatsApp.
   profesionales: async (p, grabar, pausar) => {
     await p.goto(INICIO + "/", { waitUntil: "load" }); await sinAvisoDeDesarrollo(p);
-    await p.waitForTimeout(3500);
+    await p.waitForTimeout(1500); await asentada(p);
     grabar();
     await p.waitForTimeout(700);
     await escribir(p, p.getByPlaceholder(/Qué necesitas/i).filter({ visible: true }).first(), "Cámaras");
@@ -122,7 +139,7 @@ const escenas = {
     await p.waitForTimeout(250);
     pausar();
     await p.goto(base + "/profesionales?q=" + encodeURIComponent("Cámaras de seguridad") + "&provincia=al", { waitUntil: "load" });
-    await p.waitForTimeout(4500);
+    await p.waitForTimeout(2000); await asentada(p);
     grabar();
     await p.waitForTimeout(500);
     await bajar(p, 200, 1500);
@@ -159,8 +176,8 @@ const escenas = {
   }, (p) => p.waitForURL(/\/empleos\/asistente-contable/, { timeout: 25000 })),
 };
 
-// Se graba con el «screencast» de Chromium: cuadros a resolución real (2x),
-// cada uno con su hora, y ffmpeg los arma respetando esos tiempos.
+// Se graba con fotos seguidas a resolución real (2x), cada una con su hora,
+// y ffmpeg las arma respetando esos tiempos.
 const b = await chromium.launch();
 for (const [clave, escena] of Object.entries(escenas)) {
   if (process.argv[4] && process.argv[4] !== clave) continue;
@@ -184,12 +201,21 @@ for (const [clave, escena] of Object.entries(escenas)) {
   // env(safe-area-inset-*) vale 0 y el menú de abajo y los botones fijos quedan
   // pegados al borde, donde las esquinas redondeadas del teléfono los tapan.
   await cdp.send("Emulation.setSafeAreaInsetsOverride", { insets: { top: 62, bottom: 34, left: 0, right: 0 } });
-  const cuadros = []; const cortes = []; let grabando = false; let corrimiento = 0;
-  cdp.on("Page.screencastFrame", async ({ data, metadata, sessionId }) => {
-    if (grabando && !enMano) cuadros.push({ t: metadata.timestamp + corrimiento, data });
-    await cdp.send("Page.screencastFrameAck", { sessionId }).catch(() => {});
-  });
-  await cdp.send("Page.startScreencast", { format: "jpeg", quality: 92, maxWidth: 804, maxHeight: 1750, everyNthFrame: 1 });
+  const cuadros = []; const cortes = []; let grabando = false; let corrimiento = 0; let tramo = 0;
+  // Fotos seguidas a resolución real (2x). El «screencast» de Chromium sin
+  // ventana entrega cuadros a 1x (402 px): mezclados con las fotos 2x del
+  // desplazamiento, el texto y el logo se veían nítidos y borrosos a saltos.
+  let capturando = true;
+  const bucle = (async () => {
+    while (capturando) {
+      if (!grabando || enMano) { await new Promise((r) => setTimeout(r, 15)); continue; }
+      const t = Date.now() / 1000 + corrimiento, deTramo = tramo;
+      try {
+        const jpg = await p.screenshot({ type: "jpeg", quality: 92, caret: "initial", timeout: 5000 });
+        if (grabando && !enMano && deTramo === tramo) cuadros.push({ t, data: jpg.toString("base64") });
+      } catch { await new Promise((r) => setTimeout(r, 30)); }
+    }
+  })();
   let enMano = false;
   // Mientras se desplaza cuadro por cuadro, la línea de tiempo la ponen esos cuadros.
   const bajarOriginal = bajar;
@@ -209,11 +235,11 @@ for (const [clave, escena] of Object.entries(escenas)) {
   const pa = new Proxy(p, { get: (o, k) => (typeof o[k] === "function" ? o[k].bind(o) : o[k]) });
   globalThis.__terminarMano = terminarMano;
   try {
-  await escena(pa, () => { grabando = true; }, () => { grabando = false; cortes.push(cuadros.length); });
+  await escena(pa, () => { grabando = true; }, () => { grabando = false; tramo++; cortes.push(cuadros.length); });
   } catch (e) { if (process.env.CAPTURA) await p.screenshot({ path: process.env.CAPTURA }).catch(() => {}); throw e; }
   terminarMano();
   const finDeEscena = Date.now() / 1000 + corrimiento;
-  await cdp.send("Page.stopScreencast"); await ctx.close();
+  capturando = false; await bucle; await ctx.close();
   if (!cuadros.length) { console.log("sin cuadros", clave); continue; }
   // Línea de tiempo FIJA a 30 por segundo: en cada tic va el último cuadro que
   // ya existía. Los cuadros a mano caen justo en los tics, uno por tic.
@@ -223,14 +249,30 @@ for (const [clave, escena] of Object.entries(escenas)) {
   // cuadros (las esperas de carga hacían que el video pareciera pausado).
   const MAX_QUIETO = Math.round(FPS * 0.45);
   let c = 0, previo = -1, quietos = 0, salida_n = 0;
+  // Dónde empieza cada tramo nuevo (en cuadros de salida), para el fundido.
+  const pendientes = [...cortes].filter((k) => k > 0 && k < cuadros.length); const fundidos = [];
   for (let n = 0; n < total; n++) {
     const tic = t0 + n / FPS + 1e-4;
     while (c + 1 < cuadros.length && cuadros[c + 1].t <= tic) c++;
     quietos = c === previo ? quietos + 1 : 0;
     previo = c;
     if (quietos > MAX_QUIETO) continue;
+    while (pendientes.length && c >= pendientes[0]) { pendientes.shift(); if (salida_n > 0) fundidos.push(salida_n); }
     fs.writeFileSync(path.join(dir, `${String(salida_n++).padStart(5, "0")}.jpg`), Buffer.from(cuadros[c].data, "base64"));
   }
+  // En cada corte, fundido de ~250 ms: el último cuadro del tramo anterior
+  // se funde con los primeros del nuevo (antes era un salto seco).
+  const FUNDIDO = Math.round(FPS * 0.25);
+  const nombre = (n) => path.join(dir, `${String(n).padStart(5, "0")}.jpg`);
+  for (const k of fundidos) {
+    const antes = path.join(dir, `antes-${k}.jpg`); fs.copyFileSync(nombre(k - 1), antes);
+    for (let i = 0; i < FUNDIDO && k + i < salida_n; i++) {
+      const a = ((i + 1) / (FUNDIDO + 1)).toFixed(3), tmpj = nombre(k + i) + ".f.jpg";
+      execFileSync(ffmpeg, ["-y", "-i", antes, "-i", nombre(k + i), "-filter_complex", `[0][1]blend=all_expr=A*(1-${a})+B*${a}`, "-q:v", "2", tmpj], { stdio: "ignore" });
+      fs.renameSync(tmpj, nombre(k + i));
+    }
+  }
+  console.log("cortes con fundido", clave, fundidos.map((k) => (k / FPS).toFixed(2) + "s").join(" "));
   execFileSync(ffmpeg, ["-y", "-framerate", String(FPS), "-i", path.join(dir, "%05d.jpg"), "-an", "-vf", "scale=588:-2", "-r", String(FPS), "-c:v", "libx264", "-preset", "slow", "-crf", "23", "-pix_fmt", "yuv420p", "-movflags", "+faststart", `${salida}${clave}.mp4`], { stdio: "ignore" });
   execFileSync(ffmpeg, ["-y", "-i", `${salida}${clave}.mp4`, "-frames:v", "1", "-q:v", "3", `${salida}${clave}.jpg`], { stdio: "ignore" });
   console.log("listo", clave, cuadros.length, "cuadros", (finDeEscena - cuadros[0].t).toFixed(1) + "s", Math.round(fs.statSync(`${salida}${clave}.mp4`).size / 1024) + " KB");

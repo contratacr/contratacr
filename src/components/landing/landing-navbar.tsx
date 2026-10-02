@@ -3052,7 +3052,9 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
               // COMO ANGI (1-oct-2026): el menú ocupa TODA la pantalla y su fila
               // de arriba cae justo donde está la cabecera —logo a la izquierda,
               // X donde estaba el botón—. Entra despacio: se funde y baja un poco.
-              "ccr-menu-completo lg:hidden fixed inset-0 z-[10060] flex flex-col bg-white",
+              // Sin fondo propio ni margen de abajo: el cuerpo, que es el que entra
+              // deslizándose, lleva el blanco y el margen del iPhone.
+              "ccr-menu-completo lg:hidden fixed inset-0 z-[10060] flex flex-col !pb-0",
               mobileOpen ? "ccr-menu-abierto visible pointer-events-auto" : "invisible pointer-events-none"
             )}
           >

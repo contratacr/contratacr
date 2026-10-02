@@ -4,7 +4,7 @@ import { esRutaDeBusqueda } from "@/lib/buscar-url";
 import { rutaEmpleo, rutaPromocion } from "@/lib/marketplace-url";
 import { FichaVacio } from "@/components/professionals/ficha-vacio";
 import { enlacePerfil } from "@/lib/profile-url";
-import { useState, useEffect, useCallback, useRef, type ReactNode } from "react";
+import { useState, useEffect, useLayoutEffect, useCallback, useRef, type ReactNode } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { useParams, useSearchParams } from "next/navigation";
 import {
@@ -294,7 +294,8 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
   const tituloBarra = rotuloDeRegreso;
   // El «...» (guardar, compartir, reportar) solo tiene sentido con una ficha que mostrar.
   const hayFicha = !loading && !proNotFound && !!professional;
-  useEffect(() => {
+  // De capa: la barra cambia en el mismo cuadro que la pantalla, al entrar y al volver.
+  useLayoutEffect(() => {
     if (previewMode) return;
     const global = window as unknown as {
       __ccrSectionHeader?: string | null;
@@ -326,7 +327,7 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
 
   const volverRef = useRef<(() => void) | null>(null);
   const compartirRef = useRef<(() => void) | null>(null);
-  useEffect(() => {
+  useLayoutEffect(() => {
     // Sin ficha (perfil no encontrado) el «volver» de la ficha no existe:
     // la flecha regresa a la pantalla anterior, o al inicio si no hay.
     const onBack = () => {

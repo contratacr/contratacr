@@ -5,7 +5,7 @@ import { sinBarraDeAbajo } from "@/lib/rutas-sin-barra";
 import { esServicioDelCatalogo } from "@/lib/data/categories";
 import { esRutaDeBusqueda } from "@/lib/buscar-url";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Bell, MessageSquareText, Plus, Search, UserRound } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { Link, useRouter, usePathname } from "@/i18n/navigation";
@@ -180,7 +180,9 @@ export function NativeBottomNav() {
   );
 
   // El alto real de la barra es lo que el contenido reserva por debajo.
-  useEffect(() => {
+  // De capa (antes de pintar): con useEffect la pantalla nueva se pintaba UN
+  // cuadro con lo de la anterior (barra de abajo, cabecera) y luego cambiaba.
+  useLayoutEffect(() => {
     if (!visible || !navRef.current) return;
     const nav = navRef.current;
     const root = document.documentElement;
@@ -198,7 +200,9 @@ export function NativeBottomNav() {
     };
   }, [visible]);
 
-  useEffect(() => {
+  // De capa (antes de pintar): con useEffect la pantalla nueva se pintaba UN
+  // cuadro con lo de la anterior (barra de abajo, cabecera) y luego cambiaba.
+  useLayoutEffect(() => {
     const roots = [document.documentElement, document.body];
     roots.forEach((root) => root.classList.toggle("ccr-native-bottom-nav-visible", visible));
     return () => roots.forEach((root) => root.classList.remove("ccr-native-bottom-nav-visible"));

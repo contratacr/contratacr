@@ -60,6 +60,40 @@ test.describe("portada y menú (1-oct-2026) @smoke", () => {
     await expect(page).toHaveURL(/\/$/);
   });
 
+  test("en la app, volver con la flecha no parpadea (cabecera, carga y barra de abajo)", async ({ page }) => {
+    test.skip(!isMobileProject(test.info()), "Cabecera de la app.");
+    await comoApp(page);
+    await gotoOK(page, "/ayuda");
+    await waitForInteractivePage(page);
+    await page.locator("main a[href$='/soporte']").first().click();
+    await expect(page).toHaveURL(/\/soporte$/);
+    await expect(page.locator("[data-ccr-section-back]")).toBeVisible();
+    // Un registro por cuadro: título de la barra, lienzo de carga y si la clase
+    // de la barra de abajo coincide con la barra que de verdad está.
+    await page.evaluate(() => {
+      const w = window as unknown as { __cuadros: string[] };
+      w.__cuadros = [];
+      const tomar = () => {
+        const titulo = document.querySelector("[data-ccr-section-title]")?.textContent ?? "(logo)";
+        const carga = [...document.querySelectorAll<HTMLElement>(".ccr-page-route-loading")].some((e) => e.offsetParent !== null || getComputedStyle(e).position === "fixed");
+        const barra = !!document.querySelector("nav.ccr-native-bottom-nav");
+        const clase = document.body.classList.contains("ccr-native-bottom-nav-visible");
+        const fila = `${location.pathname}|${titulo}|carga=${carga}|barra=${barra === clase}`;
+        if (w.__cuadros.at(-1) !== fila) w.__cuadros.push(fila);
+        requestAnimationFrame(tomar);
+      };
+      requestAnimationFrame(tomar);
+    });
+    await page.locator("[data-ccr-section-back]").click();
+    await expect(page).toHaveURL(/\/ayuda$/);
+    await page.waitForTimeout(800);
+    const cuadros = await page.evaluate(() => (window as unknown as { __cuadros: string[] }).__cuadros);
+    const titulos = cuadros.map((c) => c.split("|")[1]).filter((t, i, a) => i === 0 || a[i - 1] !== t);
+    expect(titulos.length, cuadros.join("\n")).toBeLessThanOrEqual(2);
+    expect(cuadros.filter((c) => c.includes("carga=true")), cuadros.join("\n")).toEqual([]);
+    expect(cuadros.filter((c) => c.includes("barra=false")), cuadros.join("\n")).toEqual([]);
+  });
+
   test("en la app, Mensajes está en la barra de abajo y sin sesión pide entrar", async ({ page }) => {
     test.skip(!isMobileProject(test.info()), "Barra de la app.");
     await comoApp(page);
