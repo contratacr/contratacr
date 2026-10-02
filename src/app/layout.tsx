@@ -30,7 +30,8 @@ const inter = localFont({
     { path: "../fuentes/inter-latin-900.woff2", weight: "900", style: "normal" },
   ],
   variable: "--font-sans",
-  display: "swap",
+  // «optional»: la letra nunca cambia a la vista (con «swap» el título saltaba de 1 a 2 líneas al llegar Inter).
+  display: "optional",
 });
 
 // «<» escrito como secuencia de escape de JSON (barra invertida + u003c), para
