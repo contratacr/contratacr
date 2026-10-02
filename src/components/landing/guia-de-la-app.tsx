@@ -41,7 +41,7 @@ export function GuiaDeLaApp({ pasos }: { pasos: PasoDeLaGuia[] }) {
   // Índice del video que ya está pintando cuadros: hasta entonces la imagen fija lo tapa.
   const [pintando, setPintando] = useState(-1);
 
-  // Arranca cuando se ve ~75 % del teléfono y SIGUE corriendo mientras la persona
+  // Arranca cuando se ve ~50 % del teléfono y SIGUE corriendo mientras la persona
   // se mueve; solo se pausa cuando la sección sale del todo de la pantalla.
   // (Con root null funciona igual cuando el que se desplaza es <main>, en la app.)
   useEffect(() => {
@@ -50,7 +50,7 @@ export function GuiaDeLaApp({ pasos }: { pasos: PasoDeLaGuia[] }) {
     const o = new IntersectionObserver(([e]) => {
       if (!e.isIntersecting) { setVisible(false); return; }
       const alto = Math.min(e.boundingClientRect.height, e.rootBounds?.height ?? window.innerHeight);
-      if (e.intersectionRect.height >= alto * 0.75) setVisible(true);
+      if (e.intersectionRect.height >= alto * 0.5) setVisible(true);
     }, { threshold: [0, 0.25, 0.5, 0.6, 0.75, 0.9, 1] });
     o.observe(el);
     return () => o.disconnect();
