@@ -72,7 +72,10 @@ test.describe("@smoke public routes", () => {
       await page.getByRole("button", { name: /Abrir menu|Abrir men/i }).first().click();
       const navigation = page.getByRole("dialog", { name: /Men[uú]|Menu/i });
       await expect(page.getByRole("link", { name: /^Servicios$/i }).first()).toBeVisible();
-      await expect(page.getByRole("link", { name: /Soporte|Centro de ayuda/i }).first()).toBeVisible();
+      // «Ayuda y soporte» se despliega: adentro, Preguntas frecuentes y soporte.
+      await navigation.getByRole("button", { name: /Ayuda y soporte|Help and support/i }).click();
+      await expect(navigation.getByRole("link", { name: /Preguntas frecuentes|FAQ/i }).first()).toBeVisible();
+      await expect(navigation.getByRole("link", { name: /^Registrarme$|^Sign up$/i }).first()).toHaveAttribute("href", /\/registro/);
       // Entrar a la cuenta es UNA acción, no dos renglones más de la lista: el
       // cajón lleva un solo botón «Ingresar o crear cuenta» y la elección de
       // rol se hace ya dentro, en /registro.

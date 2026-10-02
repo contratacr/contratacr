@@ -75,6 +75,8 @@ export function QuotesSection({ proName, proSlug, proId, puedeCrear = true }: { 
     const apagada = "bg-[#eef2f6] text-[#68778d]";
     if (e === "enviada") return { fondo: caja, pastilla: "bg-[#eaf7fc] text-[#0089bb]", icono: q.booking_id ? <CalendarCheck className="h-[18px] w-[18px]" strokeWidth={1.6} /> : <Handshake className="h-[18px] w-[18px]" strokeWidth={1.6} /> };
     if (e === "documento") return { fondo: caja, pastilla: "bg-[#eef3f8] text-[#52627a]", icono: <ReceiptText className="h-[18px] w-[18px]" strokeWidth={1.6} /> };
+    // Vencida: un reloj (se le pasó el plazo), no una X que parece «error» o «borrar».
+    if (e === "expired") return { fondo: apagada, pastilla: "bg-[#f3f4f6] text-[#6b7280]", icono: <Clock3 className="h-[18px] w-[18px]" strokeWidth={1.6} /> };
     return { fondo: apagada, pastilla: "bg-[#f3f4f6] text-[#6b7280]", icono: <X className="h-4 w-4" strokeWidth={1.8} /> };
   };
   const lista = (quotes ?? []).filter((q) => !q.deleted_at);

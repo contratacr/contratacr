@@ -21,8 +21,8 @@ const LOCALES: LocaleContract[] = [
     navLabel: "Navegación de la app",
     // Barra flotante de solo íconos, la MISMA para toda cuenta: se reconoce
     // por el nombre accesible de cada botón. Promociones, Proyectos, Empleos y
-    // Cotizaciones viven en el menú lateral; el Asistente, en la barra.
-    navItems: ["Buscar profesionales", "Asistente", "Crear", "Notificaciones", "Mi panel"],
+    // Cotizaciones y el Asistente viven en el menú; Mensajes, en la barra.
+    navItems: ["Buscar profesionales", "Mensajes", "Crear", "Notificaciones", "Mi panel"],
     messages: "Mensajes",
     assistant: "Asistente",
     assistantDialog: /Asistente ContrataCR/i,
@@ -34,7 +34,7 @@ const LOCALES: LocaleContract[] = [
   {
     locale: "en",
     navLabel: "App navigation",
-    navItems: ["Search professionals", "Assistant", "Create", "Notifications", "My dashboard"],
+    navItems: ["Search professionals", "Messages", "Create", "Notifications", "My dashboard"],
     messages: "Messages",
     assistant: "Assistant",
     assistantDialog: /ContrataCR Assistant/i,
@@ -225,7 +225,7 @@ test.describe("@mobile native shell contracts", () => {
     await professionalRole.click();
     await expect(professionalRole).toHaveAttribute("aria-pressed", "true");
     await clientRole.click();
-    await onboarding.getByRole("button", { name: "Crear una cuenta" }).click();
+    await onboarding.getByRole("button", { name: "Registrarme" }).click();
     await expect(onboarding).toBeHidden();
     await expect(page).toHaveURL(/\/registro\/cliente/);
     await expect(page.getByRole("heading", { name: "Crear cuenta de cliente", exact: true })).toBeVisible();
@@ -239,7 +239,7 @@ test.describe("@mobile native shell contracts", () => {
     await expect(onboarding.getByRole("heading", { name: "¿Cómo quieres empezar?" })).toBeVisible();
 
     await onboarding.getByRole("button", { name: /Ofrecer servicios/i }).click();
-    await onboarding.getByRole("button", { name: "Crear una cuenta" }).click();
+    await onboarding.getByRole("button", { name: "Registrarme" }).click();
     await expect(page).toHaveURL(/\/registro\/profesional/);
     await expect(page.getByRole("heading", { name: "Crea tu cuenta profesional", exact: true })).toBeVisible();
     await page.goBack({ waitUntil: "domcontentloaded" });
@@ -471,8 +471,9 @@ test.describe("@mobile native shell contracts", () => {
         });
       });
 
-      // El Asistente vive en la barra flotante, igual para toda cuenta.
-      await page.locator("nav.ccr-native-bottom-nav").getByRole("button", { name: contract.assistant, exact: true }).click();
+      // El Asistente vive en el menú (1-oct-2026): se abre desde ahí y el menú se cierra.
+      await page.getByRole("button", { name: /Abrir men[uú]|Open menu/i }).filter({ visible: true }).first().click();
+      await page.getByRole("dialog", { name: /Men[uú]|Menu/i }).getByRole("button", { name: contract.assistant, exact: true }).click();
       const dialog = page.getByRole("dialog", { name: contract.assistantDialog });
       await expect(dialog).toBeVisible();
       // La barra de abajo se queda bajo el asistente: tocar una pestaña lo
