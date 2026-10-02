@@ -1553,6 +1553,13 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
     if (!mobileOpen) return;
     return lockBodyScroll();
   }, [mobileOpen]);
+  // Escape cierra el menú (teclado de computadora o de iPad).
+  useEffect(() => {
+    if (!mobileOpen) return;
+    const alTeclado = (event: KeyboardEvent) => { if (event.key === "Escape") setMobileOpen(false); };
+    window.addEventListener("keydown", alTeclado);
+    return () => window.removeEventListener("keydown", alTeclado);
+  }, [mobileOpen]);
 
   useEffect(() => {
     return () => {
