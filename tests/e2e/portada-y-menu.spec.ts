@@ -183,5 +183,20 @@ test.describe("portada y menú (1-oct-2026) @smoke", () => {
       (imgs as HTMLImageElement[]).filter((i) => !i.complete || i.naturalWidth === 0).map((i) => i.getAttribute("src")));
     expect(sinCargar, "logos sin cargar al terminar la página").toEqual([]);
   });
+
+  test("al tocar un enlace del menú se ve cerrarse antes de cambiar de pantalla", async ({ page }) => {
+    test.skip(!isMobileProject(test.info()), "Menú del teléfono.");
+    await gotoOK(page, "/");
+    await waitForInteractivePage(page);
+    await page.getByRole("button", { name: /Abrir men[uú]/i }).filter({ visible: true }).first().click();
+    const menu = page.locator(".ccr-menu-completo");
+    await expect.poll(() => menu.evaluate((e) => Math.round(e.getBoundingClientRect().x))).toBe(0);
+    await menu.getByRole("link", { name: /^Servicios$/ }).click();
+    await page.waitForTimeout(150);
+    expect(new URL(page.url()).pathname, "todavía no debe haber navegado").toBe("/");
+    const x = await menu.evaluate((e) => e.getBoundingClientRect().x);
+    expect(x, "el menú debe estar saliendo por la derecha").toBeGreaterThan(20);
+    await expect(page).toHaveURL(/\/servicios/);
+  });
 });
 
