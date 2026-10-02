@@ -199,13 +199,13 @@ function BrandSet({ locale, duplicate = false }: { locale: string; duplicate?: b
         return brand.slug ? (
           <Link
             key={brand.name}
-            href={rutaConIdioma(locale, `/profesionales/${brand.slug}`)}
+            href={rutaConIdioma(locale, `/profesionales/${brand.slug}`) + "?from=%2F"}
             className="featured-brand-item"
             draggable={false}
             tabIndex={duplicate ? -1 : undefined}
             data-brand-slug={brand.slug}
             // Al apoyar el dedo ya se pide la ficha: cuando se suelta, está lista.
-            onPointerDown={() => router.prefetch(rutaConIdioma(locale, `/profesionales/${brand.slug}`))}
+            onPointerDown={() => router.prefetch(rutaConIdioma(locale, `/profesionales/${brand.slug}`) + "?from=%2F")}
           >
             {logo}
           </Link>

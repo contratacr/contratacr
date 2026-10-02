@@ -46,7 +46,7 @@ test.describe("portada y menú (1-oct-2026) @smoke", () => {
     await gotoOK(page, "/");
     const enlaces = await page.locator(".featured-brands-ribbon a[data-brand-slug]").evaluateAll((as) => [...new Set(as.map((a) => a.getAttribute("href")))]);
     expect(enlaces.length).toBeGreaterThanOrEqual(9);
-    for (const href of enlaces) expect(href).toMatch(/^\/(en\/)?profesionales\/[a-z0-9-]+$/);
+    for (const href of enlaces) expect(href).toMatch(/^\/(en\/)?profesionales\/[a-z0-9-]+\?from=%2F$/);
   });
 
   test("perfil que no existe: la flecha vuelve y no hay «···»", async ({ page }) => {
