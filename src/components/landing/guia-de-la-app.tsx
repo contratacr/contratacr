@@ -76,7 +76,7 @@ export function GuiaDeLaApp({ pasos }: { pasos: PasoDeLaGuia[] }) {
   const paso = pasos[activo];
 
   return (
-    <div className="grid grid-cols-1 items-center gap-6 lg:mx-auto lg:max-w-[980px] lg:grid-cols-[minmax(0,500px)_360px] lg:justify-center lg:gap-20">
+    <div className="grid grid-cols-1 items-center gap-6 lg:grid-cols-[minmax(0,1fr)_360px] lg:gap-24">
       {/* Pasos: en computadora, lista a la izquierda. */}
       <ol className="hidden space-y-3 lg:block">
         {pasos.map((p, i) => {
