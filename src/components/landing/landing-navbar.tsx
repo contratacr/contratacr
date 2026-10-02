@@ -2124,7 +2124,9 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                 {nativeHeaderShell ? (
                   !nativeFullscreenRoute && !(sectionActive && !sectionRoot) ? (
                     <div className="flex h-10 shrink-0 items-center justify-end gap-1">
-                      {!enMensajes && (
+                      {/* En entrar y registrarse no: quien está entrando aún no tiene
+                          mensajes, y el ícono solo invita a dejar el formulario. */}
+                      {!enMensajes && !/\/(login|registro)(\/|$)/.test(pathname ?? "") && (
                         <HeaderMessagesLink
                           unreadCount={user ? nativeMessageUnread : 0}
                           label={locale === "en" ? "Messages" : "Mensajes"}

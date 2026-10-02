@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useTransition, type RefObject } from "react";
+import { useState, useEffect, useLayoutEffect, useRef, useTransition, type RefObject } from "react";
 import { createPortal } from "react-dom";
 import { ArrowRight, Loader2, Search, MapPin } from "lucide-react";
 import { Link, useRouter } from "@/i18n/navigation";
@@ -276,8 +276,37 @@ function LocationDropdown({
   );
 }
 
+// EL TEXTO NUNCA SE CORTA: si lo escrito no cabe en su campo, la letra se
+// achica de a poco (hasta un mínimo) para que entre completo.
+function useLetraQueCabe(ref: RefObject<HTMLInputElement | null>, texto: string, deps: unknown[]) {
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    el.style.fontSize = "";
+    const base = parseFloat(getComputedStyle(el).fontSize) || 16;
+    if (!texto) return;
+    const lienzo = document.createElement("canvas").getContext("2d");
+    if (!lienzo) return;
+    const estilo = getComputedStyle(el);
+    lienzo.font = `${estilo.fontWeight} ${base}px ${estilo.fontFamily}`;
+    const ancho = lienzo.measureText(texto).width;
+    const libre = el.clientWidth - 2;
+    if (ancho > libre && libre > 0) el.style.fontSize = `${Math.max(12, Math.floor(base * (libre / ancho) * 10) / 10)}px`;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [texto, ...deps]);
+}
+
 export function LandingHero() {
   const [service, setService] = useState("");
+  // Qué campo se está usando: ese crece (con transición) y el otro se achica.
+  const [foco, setFoco] = useState<"svc" | "loc" | null>(null);
+  const [esTelefono, setEsTelefono] = useState(false);
+  useEffect(() => {
+    const m = window.matchMedia("(max-width: 639px)");
+    const ver = () => setEsTelefono(m.matches);
+    ver(); m.addEventListener("change", ver);
+    return () => m.removeEventListener("change", ver);
+  }, []);
   // The chosen service suggestion (so a category filters by id, not free text).
   const [serviceSel, setServiceSel] = useState<SearchSuggestion | null>(null);
   const [suggestions, setSuggestions] = useState<SearchSuggestion[]>([]);
@@ -309,6 +338,8 @@ export function LandingHero() {
   const locMobileRef = useRef<HTMLDivElement>(null);
   // Location is a typeable autocomplete over provinces + cantones AND Google Places addresses.
   const [location, setLocation] = useState("");
+  useLetraQueCabe(servicioInputRef, service, [foco, esTelefono]);
+  useLetraQueCabe(ubicacionInputRef, location, [foco, esTelefono]);
   const [locationSel, setLocationSel] = useState<LocationSuggestion | null>(null);
   const [locSug, setLocSug] = useState<LocationSuggestion[]>([]);
   const [addrSug, setAddrSug] = useState<AddressSuggestion[]>([]);
@@ -702,13 +733,14 @@ export function LandingHero() {
             {/* Caja blanca de esquinas suaves: la misma forma que usa el
                 buscador del navbar, para que al bajar se sienta que es el
                 mismo buscador que se quedó pegado arriba. */}
-            <div ref={pildoraRef} className="flex h-[54px] items-center overflow-hidden rounded-full border border-white bg-white pl-5 pr-4 shadow-[0_8px_30px_rgba(0,0,0,0.18)] sm:h-16 sm:pl-7 sm:pr-6 lg:h-[68px] lg:pr-2.5 transition-shadow duration-300 focus-within:ring-2 focus-within:ring-[#009FD9]/20 hover:shadow-[0_12px_60px_rgba(0,159,217,0.20)]">
+            <div ref={pildoraRef} className="flex flex-col overflow-hidden rounded-2xl border border-white bg-white px-5 shadow-[0_8px_30px_rgba(0,0,0,0.18)] sm:h-16 sm:flex-row sm:items-center sm:rounded-full sm:pl-7 sm:pr-6 lg:h-[68px] lg:pr-2.5 transition-shadow duration-300 focus-within:ring-2 focus-within:ring-[#009FD9]/20 hover:shadow-[0_12px_60px_rgba(0,159,217,0.20)]">
               {/* Service input — its dropdown PORTALS to <body> (anchored to this wrapper),
                   so the bar's `overflow-hidden` can never clip it. */}
               {/* EL SERVICIO NUNCA SE CORTA: elegido, su campo toma el ancho de su
                   nombre y la ubicación se queda con el resto (lo que se escribe
                   ahí se desplaza dentro de su campo). */}
-              <div ref={svcDesktopRef} className="flex h-full min-w-0 flex-1 items-center gap-3" style={service.trim() ? { flex: `0 0 min(${service.trim().length + 1.5}ch, 68%)` } : undefined}>
+              <div ref={svcDesktopRef} className="flex h-[54px] min-w-0 items-center gap-3 sm:h-full" style={esTelefono ? undefined : { flex: `0 0 ${foco === "loc" ? 44 : foco === "svc" ? 68 : 60}%`, transition: "flex-basis 0.38s cubic-bezier(0.22, 1, 0.36, 1)" }}>
+                <Search className="h-5 w-5 shrink-0 text-[#162543] sm:hidden" aria-hidden />
                 <input
                   type="text"
                   value={service}
@@ -716,8 +748,8 @@ export function LandingHero() {
                   ref={servicioInputRef}
                   enterKeyHint={service.trim() && !location.trim() ? "next" : "search"}
                   onKeyDown={handleKeyDown}
-                  onFocus={() => { if (suggestions.length > 0) setOpenSug(true); }}
-                  onBlur={() => setTimeout(() => setOpenSug(false), 120)}
+                  onFocus={() => { setFoco("svc"); if (suggestions.length > 0) setOpenSug(true); }}
+                  onBlur={() => { setFoco((f) => (f === "svc" ? null : f)); setTimeout(() => setOpenSug(false), 120); }}
                   placeholder={t("searchPlaceholderShort")}
                   className="min-w-0 flex-1 bg-transparent text-[16px] text-[#162543] placeholder:text-[#6b7686] focus:outline-none sm:text-lg"
                   role="combobox"
@@ -727,8 +759,8 @@ export function LandingHero() {
                 <SuggestionsDropdown anchorRef={pildoraRef} open={openSug} suggestions={suggestions} activeIdx={activeIdx} onPick={(s) => selectSuggestion(s, true)} />
               </div>
               {/* Divider + location autocomplete */}
-              <div className="mx-3 my-3 w-px shrink-0 self-stretch bg-[#cfd8e2] sm:mx-4" />
-              <div ref={locDesktopRef} className={cn("flex h-full min-w-[96px] items-center gap-2", service.trim() ? "flex-1" : "w-[38%] shrink-0 sm:w-[34%]")}>
+              <div className="h-px w-full shrink-0 bg-[#e3e9ef] sm:mx-4 sm:my-3 sm:h-auto sm:w-px sm:self-stretch sm:bg-[#cfd8e2]" />
+              <div ref={locDesktopRef} className="flex h-[54px] min-w-0 shrink-0 items-center gap-2 sm:h-full sm:flex-1 sm:shrink">
                 <MapPin className="h-5 w-5 shrink-0 text-[#162543] sm:h-6 sm:w-6" />
                 <input
                   type="text"
@@ -737,8 +769,8 @@ export function LandingHero() {
                   ref={ubicacionInputRef}
                   enterKeyHint={location.trim() && !service.trim() ? "next" : "search"}
                   onKeyDown={handleLocKeyDown}
-                  onFocus={() => { ensureMaps(); setOpenLoc(location.trim().length >= 2); }}
-                  onBlur={() => setTimeout(() => setOpenLoc(false), 120)}
+                  onFocus={() => { setFoco("loc"); ensureMaps(); setOpenLoc(location.trim().length >= 2); }}
+                  onBlur={() => { setFoco((f) => (f === "loc" ? null : f)); setTimeout(() => setOpenLoc(false), 120); }}
                   placeholder={t("location")}
                   className="w-full min-w-0 flex-1 bg-transparent text-[16px] text-[#162543] placeholder:text-[#6b7686] focus:outline-none sm:text-lg"
                   role="combobox"

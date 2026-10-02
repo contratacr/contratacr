@@ -637,7 +637,7 @@ export function AiConcierge({ embedded = false, onBack }: { embedded?: boolean; 
                 type="button"
                 onClick={() => window.dispatchEvent(new Event("ccr:open-mobile-menu"))}
                 aria-label={lang === "en" ? "Open menu" : "Abrir menú"}
-                className={CABECERA_BOTON}
+                className={cn(CABECERA_BOTON, "order-last")}
               >
                 <Menu className={CABECERA_GLIFO} strokeWidth={2.5} />
               </button>

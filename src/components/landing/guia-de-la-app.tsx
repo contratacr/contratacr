@@ -17,6 +17,8 @@ export type PasoDeLaGuia = {
   alt: string;
 };
 
+// El azul del paso elegido va EN LÍNEA: no depende de que la hoja de estilos esté al día.
+const CAJA_ACTIVA = { background: "linear-gradient(135deg, #33b8ea 0%, #0089c2 100%)", boxShadow: "0 10px 22px -10px rgba(0, 137, 194, 0.8)" } as const;
 const ICONOS = { profesionales: Search, proyectos: ClipboardList, empleos: BriefcaseBusiness, promociones: Tag } as const;
 
 // LA GUÍA DE LA APP: cuatro cosas que se hacen en ContrataCR y, al lado, el
@@ -91,7 +93,7 @@ export function GuiaDeLaApp({ pasos }: { pasos: PasoDeLaGuia[] }) {
                   elegido ? "border-[#009FD9] bg-[#f2faff] shadow-[0_18px_40px_-28px_rgba(0,159,217,0.6)]" : "border-[#e3e9ef] bg-white hover:border-[#9fd6ee]",
                 )}
               >
-                <span className={cn("grid h-12 w-12 shrink-0 place-items-center rounded-2xl transition-all", elegido ? "ccr-caja-icono-activa text-white" : "ccr-caja-icono")}>
+                <span className={cn("grid h-12 w-12 shrink-0 place-items-center rounded-2xl transition-all", elegido ? "text-white" : "ccr-caja-icono")} style={elegido ? CAJA_ACTIVA : undefined}>
                   <Icono className="h-[22px] w-[22px]" strokeWidth={1.8} />
                 </span>
                 <span className="min-w-0 flex-1">
@@ -125,7 +127,7 @@ export function GuiaDeLaApp({ pasos }: { pasos: PasoDeLaGuia[] }) {
               onClick={() => elegir(i)}
               className={cn("relative flex min-w-0 flex-col items-center gap-1.5 pb-3 pt-1 text-[13px] font-semibold transition-colors", elegido ? "text-[#009FD9]" : "text-[#6b7686]")}
             >
-              <span className={cn("grid h-11 w-11 place-items-center rounded-2xl transition-colors", elegido ? "ccr-caja-icono-activa text-white" : "ccr-caja-icono")}>
+              <span className={cn("grid h-11 w-11 place-items-center rounded-2xl transition-colors", elegido ? "text-white" : "ccr-caja-icono")} style={elegido ? CAJA_ACTIVA : undefined}>
                 <Icono className="h-[22px] w-[22px]" strokeWidth={1.8} />
               </span>
               <span className="max-w-full truncate">{p.pestana}</span>

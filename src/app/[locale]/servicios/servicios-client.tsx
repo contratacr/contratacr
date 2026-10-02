@@ -191,7 +191,7 @@ export function ServiciosClient({ catalogoInicial }: { catalogoInicial: string |
                 <button
                   type="button"
                   onClick={() => window.dispatchEvent(new Event("ccr:open-mobile-menu"))}
-                  className={CABECERA_BOTON}
+                  className={cn(CABECERA_BOTON, "order-last")}
                   aria-label={locale === "en" ? "Open menu" : "Abrir menú"}
                 >
                   <Menu className="h-5 w-5" strokeWidth={2.5} />

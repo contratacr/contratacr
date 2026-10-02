@@ -513,7 +513,7 @@ export function ProjectsBoard({
             type="button"
             onClick={() => window.dispatchEvent(new Event("ccr:open-mobile-menu"))}
             aria-label={copy.abrirMenu}
-            className={CABECERA_BOTON}
+            className={cn(CABECERA_BOTON, "order-last")}
           >
             <Menu className="h-5 w-5" strokeWidth={2.5} />
           </button>
