@@ -38,12 +38,20 @@ export function GuiaDeLaApp({ pasos }: { pasos: PasoDeLaGuia[] }) {
   const videos = useRef<(HTMLVideoElement | null)[]>([]);
   const caja = useRef<HTMLDivElement | null>(null);
   const [visible, setVisible] = useState(false);
+  // Índice del video que ya está pintando cuadros: hasta entonces la imagen fija lo tapa.
+  const [pintando, setPintando] = useState(-1);
 
-  // Solo se reproduce cuando la sección está a la vista: no gasta datos ni batería antes.
+  // Arranca cuando se ve ~75 % del teléfono y SIGUE corriendo mientras la persona
+  // se mueve; solo se pausa cuando la sección sale del todo de la pantalla.
+  // (Con root null funciona igual cuando el que se desplaza es <main>, en la app.)
   useEffect(() => {
     const el = caja.current;
     if (!el) return;
-    const o = new IntersectionObserver(([e]) => setVisible(e.isIntersecting), { threshold: 0, rootMargin: "100% 0px" });
+    const o = new IntersectionObserver(([e]) => {
+      if (!e.isIntersecting) { setVisible(false); return; }
+      const alto = Math.min(e.boundingClientRect.height, e.rootBounds?.height ?? window.innerHeight);
+      if (e.intersectionRect.height >= alto * 0.75) setVisible(true);
+    }, { threshold: [0, 0.25, 0.5, 0.6, 0.75, 0.9, 1] });
     o.observe(el);
     return () => o.disconnect();
   }, []);
@@ -170,11 +178,6 @@ export function GuiaDeLaApp({ pasos }: { pasos: PasoDeLaGuia[] }) {
           >
             <div className="relative" style={{ background: "#04060a", borderRadius: 51, padding: 8 }}>
               <div className="relative overflow-hidden bg-white" style={{ borderRadius: 44, aspectRatio: "588 / 1280" }}>
-                {/* La primera imagen de cada video va APARTE: el «poster» del video
-                    hacía que iOS pintara su botón de play encima mientras cargaba.
-                    El video se vuelve visible solo cuando ya está corriendo. */}
-                {/* eslint-disable-next-line @next/next/no-img-element -- imagen fija del tamaño justo */}
-                <img src={pasos[activo].poster} alt="" aria-hidden className="absolute inset-0 h-full w-full object-cover object-top" />
                 {pasos.map((p, i) => (
                   <video
                     key={p.clave}
@@ -192,15 +195,20 @@ export function GuiaDeLaApp({ pasos }: { pasos: PasoDeLaGuia[] }) {
                     preload={i === activo ? "auto" : "none"}
                     aria-label={i === activo ? p.alt : undefined}
                     aria-hidden={i !== activo || undefined}
-                    onPlaying={(e) => { e.currentTarget.dataset.corriendo = "1"; if (i === activo) { setDuracion(e.currentTarget.duration || 0); setCorriendo(true); } }}
+                    onPlaying={(e) => { if (i === activo) { setPintando(i); setDuracion(e.currentTarget.duration || 0); setCorriendo(true); } }}
                     onPause={() => { if (i === activo) setCorriendo(false); }}
                     onEnded={() => alTerminar(i)}
                     // Safari a veces rechaza el primer play() si el video aún no
                     // cargó: al estar listo se vuelve a intentar.
                     onCanPlay={(e) => { if (i === activo && visible && e.currentTarget.paused) e.currentTarget.play().catch(() => {}); }}
-                    className={cn("ccr-guia-video absolute inset-0 h-full w-full object-cover object-top transition-opacity duration-500", i === activo ? "opacity-100 [&:not([data-corriendo])]:opacity-0" : "opacity-0")}
+                    className={cn("ccr-guia-video absolute inset-0 h-full w-full object-cover object-top", i === activo ? "opacity-100" : "opacity-0")}
                   />
                 ))}
+                {/* La primera imagen va APARTE y ENCIMA del video: el «poster» nativo
+                    pintaba el botón de play de iOS. El video activo queda SIEMPRE con
+                    opacidad 1 debajo: WebKit no deja arrancar un video que no «se ve». */}
+                {/* eslint-disable-next-line @next/next/no-img-element -- imagen fija del tamaño justo */}
+                <img src={pasos[activo].poster} alt="" aria-hidden data-guia-poster className={cn("pointer-events-none absolute inset-0 z-10 h-full w-full object-cover object-top transition-opacity duration-300", pintando === activo ? "opacity-0" : "opacity-100")} />
                 <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 z-20 h-16 bg-gradient-to-b from-white/14 to-transparent" />
               </div>
             </div>
