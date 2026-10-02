@@ -41,7 +41,7 @@ export const CATEGORY_IMAGE: Record<string, string> = {
   tecnologia: U("1518770660439-4636190af475"),          // v
   desarrollo_web: U("1547658719-da2b51169166"),
   reparacion_computadoras: U("1518770660439-4636190af475"),  // v
-  soporte_tecnico: U("1581092921461-eab62e97a780"),
+  soporte_tecnico: U("1721332154191-ba5f1534266e"),
   redes_internet: U("1544197150-b99a580bb7a8"),
   diseno_grafico: U("1626785774573-4b799315345d"),
   diseno_apps: U("1512941937669-90a1b58e7e9c"),
@@ -87,12 +87,12 @@ export const CATEGORY_IMAGE: Record<string, string> = {
   fletes: U("1601584115197-04ecc0da31d7"),
   mensajeria: U("1586528116311-ad8dd3c8310d"),
   // ── Eventos ──
-  fotografia_eventos: U("1519741497674-611481863552"),
+  fotografia_eventos: U("1629756048377-09540f52caa1"),
   videografia: U("1492684223066-81342ee5ff30"),
   dj_sonido: U("1547210841-2ceb0c5f0679"),              // Unsplash: Krys Amon
   chef: U("1577219491135-ce391730fb2c"),
   catering: U("1555244162-803834f70033"),
-  decoracion: U("1478146896981-b80fe463b330"),
+  decoracion: U("1633330977020-2bdfb8530cc2"),
   bartending: U("1514362545857-3bc16c4c7d1b"),
   // ── Seguridad (verified) ──
   seguridad: U("1557597774-9d273605dfa9"),              // v
