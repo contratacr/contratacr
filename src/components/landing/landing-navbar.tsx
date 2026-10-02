@@ -1007,7 +1007,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   // de Mensajes faltaba uno o dos cuadros (el «parpadeo» del icono).
   const [hydrated, setHydrated] = useState(() => encabezadoYaHidratado);
   const nativeHeaderShell = hydrated && nativeApp;
-  const { user, loading: authLoading, accountName, hasProfessionalProfile: fichaProDelServidor } = useAuth();
+  const { user, loading: authLoading, accountName, hasProfessionalProfile: fichaProDelServidor, avatarUrl: avatarUrlCuenta } = useAuth();
   // Search is a full-viewport map + results sheet. Do not merely hide the nav
   // with CSS: leaving it mounted keeps its layout class and safe-area reserve
   // active, which shortens the sheet and the full-screen search overlay.
@@ -3025,12 +3025,20 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
               <nav className="flex flex-col">
                 {user ? (
                   <>
-                    {!nativeHeaderShell && (
-                      <Link href={primaryPanelHref} onClick={cerrarCajon} className={mobileDrawerStrongItemClass}>
-                        <DrawerIcon><UserRound /></DrawerIcon>
-                        <span className={mobileDrawerTextClass}>{locale === "en" ? "My dashboard" : "Mi panel"}</span>
-                      </Link>
-                    )}
+                    {/* LA CUENTA, ARRIBA DEL MENÚ (como Facebook o Angi): foto, nombre
+                        —el comercial si lo tiene— y «Ir a mi panel». En la app también,
+                        aunque el panel esté en la barra de abajo: aquí se ve QUIÉN es. */}
+                    <Link href={primaryPanelHref} onClick={cerrarCajon} className="mb-2 flex items-center gap-3 rounded-2xl bg-[#f4f7fa] p-3 transition-colors hover:bg-[#eaf2f8]">
+                      {avatarUrlCuenta
+                        // eslint-disable-next-line @next/next/no-img-element -- avatar pequeño de tamaño fijo
+                        ? <img src={avatarUrlCuenta} alt="" className="h-12 w-12 shrink-0 rounded-full object-cover ring-1 ring-[#e2e8f0]" />
+                        : <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-white ring-1 ring-[#e2e8f0]"><UserRound className="h-6 w-6 text-[#526277]" /></span>}
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-[17px] font-bold text-[#162543]">{accountDisplayName || t("myPanel")}</span>
+                        <span className="mt-0.5 block text-[14px] font-semibold text-[#009FD9]">{t("goToPanel")}</span>
+                      </span>
+                      <ChevronRight className="h-5 w-5 shrink-0 text-[#9aa7b6]" />
+                    </Link>
                     {mostrarOfrecerServicios && (
                       <Link
                         href="/registro/profesional"
