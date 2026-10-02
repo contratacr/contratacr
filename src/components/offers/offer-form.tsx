@@ -567,7 +567,7 @@ export function OfferForm({ professionalId, serviceOptions, backHref = "/promoci
                 <div role="status" className="mt-2.5 flex flex-col gap-2 rounded-xl border border-[#fde68a] bg-[#fffbeb] px-3.5 py-3 text-[13px] font-normal leading-relaxed text-[#92400e]">
                   <p className="font-medium">{copy.pareceEmpleo}</p>
                   <Link
-                    href="/empleos/publicar"
+                    href="/empleos/publicar" prefetch={false}
                     className="inline-flex h-9 w-fit items-center rounded-full bg-[#b45309] px-3.5 text-[13px] font-bold text-white transition-colors hover:bg-[#92400e]"
                   >
                     {copy.pareceEmpleoCta}

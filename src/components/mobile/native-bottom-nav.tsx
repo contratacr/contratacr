@@ -123,18 +123,15 @@ export function NativeBottomNav() {
     return () => window.clearTimeout(id);
   }, [pathname]);
 
-  // La precarga completa caduca a los minutos; cada navegación la renueva para
-  // las cinco pestañas. Así el toque siempre encuentra el contenido ya en
-  // memoria y la pantalla de carga queda solo para el arranque en frío.
+  // Precarga de las pestañas UNA sola vez por sesión y escalonada (antes era en
+  // cada navegación, las cinco a la vez: con sesión son renders pesados y el
+  // siguiente toque del usuario esperaba detrás de ellos).
+  const precargadas = useRef<Set<string>>(new Set());
   useEffect(() => {
     if (!visible) return;
-    const id = window.setTimeout(() => {
-      // Sin /profesionales: esa pestaña abre el buscador, no la página, así que
-      // precargar la búsqueda en cada pantalla era trabajo del servidor para
-      // nada. Se carga cuando la persona elige qué buscar.
-      for (const destino of ["/", ...(EMPLEOS_VISIBLE ? ["/empleos"] : []), "/proyectos", "/promociones", primaryPanelHref]) router.prefetch(destino);
-    }, 800);
-    return () => window.clearTimeout(id);
+    const destinos = ["/", ...(EMPLEOS_VISIBLE ? ["/empleos"] : []), "/proyectos", "/promociones", primaryPanelHref].filter((d) => !precargadas.current.has(d));
+    const ids = destinos.map((destino, i) => window.setTimeout(() => { precargadas.current.add(destino); router.prefetch(destino); }, 1500 + i * 400));
+    return () => ids.forEach((id) => window.clearTimeout(id));
   }, [pathname, primaryPanelHref, router, visible]);
 
   const irA = useCallback(

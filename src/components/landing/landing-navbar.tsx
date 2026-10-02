@@ -3074,7 +3074,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                     {/* LA CUENTA, ARRIBA DEL MENÚ (como Facebook o Angi): foto, nombre
                         —el comercial si lo tiene— y «Ir a mi panel». En la app también,
                         aunque el panel esté en la barra de abajo: aquí se ve QUIÉN es. */}
-                    <Link href={primaryPanelHref} onClick={cerrarCajon} className="mb-2 flex items-center gap-3 rounded-2xl bg-[#f4f7fa] p-3 transition-colors hover:bg-[#eaf2f8]">
+                    <Link href={primaryPanelHref} prefetch={false} onClick={cerrarCajon} className="mb-2 flex items-center gap-3 rounded-2xl bg-[#f4f7fa] p-3 transition-colors hover:bg-[#eaf2f8]">
                       {avatarUrlCuenta
                         // eslint-disable-next-line @next/next/no-img-element -- avatar pequeño de tamaño fijo
                         ? <img src={avatarUrlCuenta} alt="" className="h-12 w-12 shrink-0 rounded-full object-cover ring-1 ring-[#e2e8f0]" />
@@ -3165,7 +3165,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                     es trabajo del profesional y va arriba del Asistente, que es
                     una ayuda que se abre encima y se cierra. */}
                 {isPro && (
-                  <Link href="/dashboard/profesional?tab=quotes" onClick={cerrarCajon} className={claseCajon("/dashboard/profesional?tab=quotes")}>
+                  <Link href="/dashboard/profesional?tab=quotes" prefetch={false} onClick={cerrarCajon} className={claseCajon("/dashboard/profesional?tab=quotes")}>
                     <DrawerIcon><FileText /></DrawerIcon>
                     <span className={mobileDrawerTextClass}>{tNav("quotes")}</span>
                   </Link>
@@ -3203,7 +3203,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                         // Para quien tiene o puede tener perfil: no para un cliente con sesión.
                         ...(!user || isPro ? [{ href: "/mejorar-mi-perfil", k: "helpProTips" as const }] : []),
                       ].map((o) => (
-                        <Link key={o.href} href={o.href} onClick={cerrarCajon} className="ccr-menu-sub-fila">
+                        <Link key={o.href} href={o.href} prefetch={false} onClick={cerrarCajon} className="ccr-menu-sub-fila">
                           {t(o.k)}
                         </Link>
                       ))}
@@ -3224,10 +3224,10 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                   «Ayuda y soporte» los botones se encogían. */}
               {!user && (
                 <div className="mt-7 grid shrink-0 gap-3">
-                  <Link href={loginHref} onClick={cerrarCajon} className="flex h-12 w-full items-center justify-center rounded-full bg-[#009FD9] text-[15px] font-bold text-white transition-colors hover:bg-[#0089bb]">
+                  <Link href={loginHref} prefetch={false} onClick={cerrarCajon} className="flex h-12 w-full items-center justify-center rounded-full bg-[#009FD9] text-[15px] font-bold text-white transition-colors hover:bg-[#0089bb]">
                     {t("login")}
                   </Link>
-                  <Link href="/registro" onClick={cerrarCajon} className="flex h-12 w-full items-center justify-center rounded-full bg-[#162543] text-[15px] font-bold text-white transition-colors hover:bg-[#0f1b33]">
+                  <Link href="/registro" prefetch={false} onClick={cerrarCajon} className="flex h-12 w-full items-center justify-center rounded-full bg-[#162543] text-[15px] font-bold text-white transition-colors hover:bg-[#0f1b33]">
                     {t("signUp")}
                   </Link>
                 </div>
@@ -3280,8 +3280,8 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
               {/* Términos y Privacidad al PIE del menú, chicos y en gris: son
                   legales, no destinos; siempre a la vista, sin abrir nada. */}
               <div className="mt-4 flex shrink-0 justify-center gap-6 text-[13px] font-semibold text-[#7a8696]">
-                <Link href="/terminos" onClick={cerrarCajon} className="hover:text-[#009FD9]">{t("resourceLinks.terms")}</Link>
-                <Link href="/privacidad" onClick={cerrarCajon} className="hover:text-[#009FD9]">{t("resourceLinks.privacy")}</Link>
+                <Link href="/terminos" prefetch={false} onClick={cerrarCajon} className="hover:text-[#009FD9]">{t("resourceLinks.terms")}</Link>
+                <Link href="/privacidad" prefetch={false} onClick={cerrarCajon} className="hover:text-[#009FD9]">{t("resourceLinks.privacy")}</Link>
               </div>
             </div>
           </div>

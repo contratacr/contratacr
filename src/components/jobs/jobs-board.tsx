@@ -282,7 +282,7 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
           <button type="button" onClick={() => setPublishOpen(true)} className="hidden h-11 items-center justify-center whitespace-nowrap rounded-full bg-[#009fd9] px-6 text-sm font-bold text-white transition hover:bg-[#008fc3] lg:inline-flex">
             {copy.publishJob}
           </button>
-          <Link href="/empleos/publicar" className="inline-flex h-9 items-center justify-center rounded-full bg-[#009fd9] px-3 text-[13px] font-bold text-white transition hover:bg-[#008fc3] lg:hidden">
+          <Link href="/empleos/publicar" prefetch={false} className="inline-flex h-9 items-center justify-center rounded-full bg-[#009fd9] px-3 text-[13px] font-bold text-white transition hover:bg-[#008fc3] lg:hidden">
             {copy.publishJob}
           </Link>
         </>
@@ -520,7 +520,7 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
                     <button type="button" onClick={() => setPublishOpen(true)} className="hidden items-center justify-center rounded-full bg-[#009fd9] px-5 text-sm font-bold text-white transition hover:bg-[#008fc3] lg:inline-flex">
                       {copy.publishFirst}
                     </button>
-                    <Link href="/empleos/publicar" className="inline-flex items-center justify-center rounded-full bg-[#009fd9] px-5 text-sm font-bold text-white transition hover:bg-[#008fc3] lg:hidden">
+                    <Link href="/empleos/publicar" prefetch={false} className="inline-flex items-center justify-center rounded-full bg-[#009fd9] px-5 text-sm font-bold text-white transition hover:bg-[#008fc3] lg:hidden">
                       {copy.publishFirst}
                     </Link>
                   </>

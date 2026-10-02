@@ -445,7 +445,7 @@ export function ProjectsBoard({
       <Link
         // `desde` viaja para que la flecha de atrás devuelva AQUÍ y no deje a
         // la persona dentro del panel, en una lista que no fue a buscar.
-        href="/publicar-proyecto?desde=proyectos"
+        href="/publicar-proyecto?desde=proyectos" prefetch={false}
         className="inline-flex h-9 items-center justify-center whitespace-nowrap rounded-full bg-[#009fd9] px-3 text-[13px] font-bold text-white transition hover:bg-[#008fc3] lg:h-11 lg:px-6 lg:text-sm"
       >
         {copy.publicar}

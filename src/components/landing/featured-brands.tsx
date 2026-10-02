@@ -33,15 +33,9 @@ export function FeaturedBrands() {
   // Los logos se piden desde el <head>, con la página: nunca aparecen en blanco.
   for (const b of FEATURED_BRANDS) preload(b.src, { as: "image", fetchPriority: "high" });
   const locale = useLocale();
-  const routerMarcas = useRouter();
-  // Las fichas de las marcas se piden en segundo plano apenas carga la portada:
-  // al tocar un logo la ficha ya está lista y abre al instante.
-  useEffect(() => {
-    const id = window.setTimeout(() => {
-      for (const b of FEATURED_BRANDS) if (b.slug) routerMarcas.prefetch(rutaConIdioma(locale, `/profesionales/${b.slug}`));
-    }, 1200);
-    return () => window.clearTimeout(id);
-  }, [locale, routerMarcas]);
+  // Sin precargar las 9 fichas al cargar: eran 9 renders pesados a la vez y el
+  // toque siguiente del usuario quedaba en cola detrás. La ficha se precarga
+  // al apoyar el dedo sobre el logo (onPointerDown), que basta.
   const label = locale === "en" ? "Businesses already on ContrataCR" : "Negocios que ya están en ContrataCR";
   const marqueeRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
