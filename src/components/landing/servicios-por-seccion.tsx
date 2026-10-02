@@ -108,7 +108,7 @@ export function ServiciosPorSeccion({ secciones, verTodos }: { secciones: Seccio
             className="group relative block aspect-[4/5] overflow-hidden rounded-2xl bg-[#e8eef3] shadow-[0_6px_18px_-12px_rgba(15,23,42,0.45)] lg:aspect-[4/5.2]"
           >
             <ServiceImage categoryId={servicio.id} badge={false} className="pointer-events-none absolute inset-0 h-full w-full transition-transform duration-500 ease-out group-hover:scale-[1.06] group-active:scale-[1.06] group-data-[tocado]:scale-[1.06]" />
-            <span aria-hidden className="absolute inset-0" style={{ background: "linear-gradient(to top, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.12) 55%, transparent 100%)" }} />
+            <span aria-hidden className="absolute inset-0" style={{ background: "linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.25) 22%, rgba(0,0,0,0) 42%)" }} />
             <span className="absolute inset-x-0 bottom-0 p-3.5 text-[15px] font-bold leading-tight text-white drop-shadow sm:p-4 sm:text-base lg:p-6 lg:text-2xl">
               {servicio.label}
             </span>

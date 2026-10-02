@@ -116,9 +116,28 @@ for (const g of CATEGORY_GROUPS) for (const it of g.items) ID_TO_GROUP.set(it.id
 // recorte vertical de las tarjetas (4/5). Sin entrada = centrado. Revisado el 1-oct-2026
 // en computadora (1440) y teléfono (iPhone 15 Pro).
 export const CATEGORY_IMAGE_POSITION: Record<string, string> = {
-  electricidad: "15% 50%",   // la cara del electricista quedaba cortada a la izquierda
+  // Revisado otra vez el 1-oct-2026: el centro va sobre el TRABAJO (manos + herramienta), no la cara.
+  reparacion_electrodomesticos: "10% 50%", // el aparato y las manos quedaban cortados a la izquierda
+  electricidad: "58% 50%",   // manos y tomacorriente al centro (antes solo la cara)
   fisioterapia: "90% 50%",   // la cabeza de la paciente quedaba fuera a la derecha
   fletes: "12% 50%",         // el camión quedaba partido en el borde izquierdo
+  mecanica: "18% 50%",       // el mecánico inclinado sobre el motor
+  mudanzas: "14% 50%",       // los cargadores con la maceta
+  consultoria: "78% 50%",    // la mano con el lápiz sobre los planos
+  maquillaje: "22% 50%",     // la mano aplicando el labial
+  estetica_facial: "45% 50%", // la brocha sobre el rostro
+  fotografia_eventos: "38% 50%", // el fotógrafo con la cámara
+  fotografia: "72% 50%",     // la cámara
+  legal: "72% 50%",          // la estatua con la balanza
+  bartending: "37% 50%",     // el vaso
+  bienes_raices: "42% 50%",  // la casita y las llaves
+  diseno_grafico: "35% 50%", // la tableta con las apps
+  marketing_digital: "32% 50%", // la pantalla del portátil
+  pintura: "30% 50%",        // el rodillo
+  produccion_video: "35% 50%",
+  nutricion: "55% 50%",
+  chef: "50% 85%",           // las manos emplatando (foto vertical: sube el trabajo)
+  unhas: "50% 100%",         // las uñas, más arriba del título
 };
 
 export function categoryImagePosition(id: string): string {
