@@ -334,7 +334,7 @@ export function OffersBoard({
             {copy.publishOffer}
           </button>
           <Link
-            href="/promociones/publicar"
+            href="/promociones/publicar" prefetch={false}
             className="inline-flex h-9 items-center justify-center rounded-full bg-[#009fd9] px-3 text-[13px] font-bold text-white transition hover:bg-[#008fc3] lg:hidden"
           >
             {copy.publishOffer}
@@ -492,7 +492,7 @@ export function OffersBoard({
                         {copy.publishFirst}
                       </button>
                       <Link
-                        href="/promociones/publicar"
+                        href="/promociones/publicar" prefetch={false}
                         className="inline-flex items-center justify-center rounded-full bg-[#009fd9] px-5 text-sm font-bold text-white transition hover:bg-[#008fc3] lg:hidden"
                       >
                         {copy.publishFirst}
