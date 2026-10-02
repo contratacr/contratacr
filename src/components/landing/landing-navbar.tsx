@@ -1359,7 +1359,23 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   // cerrarse el cajón vuelve a verse el asistente tapando la pantalla nueva y
   // el toque parece no haber hecho nada. El logo ya lo apartaba; ahora lo hace
   // cualquier salida del cajón.
-  const cerrarCajon = useCallback(() => {
+  // Al tocar un enlace del menú, PRIMERO se ve el menú cerrarse (desliza a la
+  // derecha) y DESPUÉS se navega: si se navegaba de una, la pantalla nueva tapaba
+  // el cierre y parecía que el menú desaparecía sin efecto.
+  const CIERRE_MS = 340;
+  const cerrarCajon = useCallback((event?: React.MouseEvent<HTMLElement>) => {
+    const enlace = event?.currentTarget as (HTMLAnchorElement & { __ccrPasar?: boolean }) | undefined;
+    const esEnlaceInterno = !!enlace && enlace.tagName === "A" && (enlace.getAttribute("href") ?? "").startsWith("/");
+    const sinModificadores = !!event && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey && event.button === 0;
+    const reducir = typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (event && enlace && esEnlaceInterno && sinModificadores && !enlace.__ccrPasar && !reducir) {
+      event.preventDefault();
+      event.stopPropagation();
+      setMobileOpen(false);
+      window.dispatchEvent(new Event("contratacr:close-ai"));
+      window.setTimeout(() => { enlace.__ccrPasar = true; enlace.click(); enlace.__ccrPasar = false; }, CIERRE_MS);
+      return;
+    }
     setMobileOpen(false);
     window.dispatchEvent(new Event("contratacr:close-ai"));
   }, []);
@@ -1507,8 +1523,8 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
       event.preventDefault();
       event.stopPropagation();
       cerrarCajon();
-      prepareNativeNavigation(href);
-      router.push(href);
+      // Se ve cerrarse el menú y luego se navega (ver cerrarCajon).
+      window.setTimeout(() => { prepareNativeNavigation(href); router.push(href); }, 340);
     },
     [nativeApp, prepareNativeNavigation, router],
   );
