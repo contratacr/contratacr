@@ -93,7 +93,7 @@ test.describe("@seeded professional profile", () => {
     // teléfono esa barra la ocupa el «volver» con el título de la ficha, que ya
     // se comprobó arriba.
     if (!enTelefono) {
-      await page.getByRole("banner").getByRole("link", { name: /ContrataCR inicio/i }).click();
+      await page.getByRole("banner").getByRole("link", { name: "ContrataCR", exact: true }).click();
       await expect(page).toHaveURL(/^https?:\/\/[^/]+\/?$/);
     }
   });

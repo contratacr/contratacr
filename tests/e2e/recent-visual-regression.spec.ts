@@ -128,7 +128,8 @@ test.describe("@visual recent bug contracts", () => {
         }
         await expect(providerNavigation.getByRole("link", { name: /^Ofrecer mis servicios$/i })).toHaveCount(0);
         if (width < 600) {
-          await expect(providerNavigation.getByRole("link", { name: /^Mi panel$/i })).toBeVisible();
+          // La tarjeta de la cuenta, arriba del menú: nombre e «Ir a mi panel».
+          await expect(providerNavigation.getByRole("link", { name: /Ir a mi panel/i }).first()).toBeVisible();
         } else {
           const accountMenu = providerNavigation
             .getByRole("button", { name: provider.businessName, exact: true })
