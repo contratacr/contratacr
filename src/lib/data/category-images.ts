@@ -17,9 +17,9 @@ export const CATEGORY_IMAGE: Record<string, string> = {
   electromecanica: U("1649038780045-235e4b6e40b4"), // técnico trabajando un motor eléctrico (1-oct-2026)
   soldadura: U("1504328345606-18bbc8c9d7d1"),   // soldador con careta (1-oct-2026)
   aire_acondicionado: U("1759772238012-9d5ad59ae637"), // equipo split en la pared (1-oct-2026)
-  reparacion_electrodomesticos: U("1610259998914-d1b9afe0dc55"), // técnico reparando un electrodoméstico (1-oct-2026)
+  reparacion_electrodomesticos: U("1674471361352-a1977cf3f18e"), // técnico reparando un electrodoméstico (1-oct-2026)
   // ── Hogar y construcción ──
-  plomeria: U("1607472586893-edb57bdc0e39"),            // v
+  plomeria: U("1676210133055-eab6ef033ce3"),            // v
   electricidad: U("1621905251189-08b45d6a269e"),        // v
   construccion: U("1504307651254-35680f356dfd"),        // v
   pintura: U("1562259949-e8e7689d7828"),                // v
@@ -117,7 +117,6 @@ for (const g of CATEGORY_GROUPS) for (const it of g.items) ID_TO_GROUP.set(it.id
 // en computadora (1440) y teléfono (iPhone 15 Pro).
 export const CATEGORY_IMAGE_POSITION: Record<string, string> = {
   // Revisado otra vez el 1-oct-2026: el centro va sobre el TRABAJO (manos + herramienta), no la cara.
-  reparacion_electrodomesticos: "10% 50%", // el aparato y las manos quedaban cortados a la izquierda
   electricidad: "58% 50%",   // manos y tomacorriente al centro (antes solo la cara)
   fletes: "12% 50%",         // el camión quedaba partido en el borde izquierdo
   mecanica: "18% 50%",       // el mecánico inclinado sobre el motor
