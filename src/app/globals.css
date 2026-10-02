@@ -2630,10 +2630,11 @@ html.ccr-js .fade-in-up:not(.visible) #servicios-de-la-seccion > a { opacity: 0;
 /* EL MENÚ A PANTALLA COMPLETA (como Angi). Entra deslizando desde la derecha y
    las filas llegan CON el panel: escalonadas, las últimas tardaban en salir. */
 /* Entra DESDE LA DERECHA, como una pantalla de iOS: desliza y frena suave. */
-/* Más lento y parejo: la curva anterior recorría el 90 % en los primeros 150 ms
-   y se veía casi inmediato. Esta entra suave y frena suave (0,6 s abrir, 0,45 s cerrar). */
-.ccr-menu-completo { transform: translate3d(100%, 0, 0); opacity: 0.6; transition: transform 0.55s cubic-bezier(0.45, 0, 0.2, 1), opacity 0.55s ease, visibility 0s linear 0.55s; will-change: transform; }
-.ccr-menu-completo.ccr-menu-abierto { transform: translate3d(0, 0, 0); opacity: 1; transition: transform 0.7s cubic-bezier(0.45, 0, 0.2, 1), opacity 0.4s ease, visibility 0s; }
+/* Sin fundido (al cerrar parecía volverse invisible): el panel entero desliza.
+   Abre arrancando de inmediato y frenando suave (0,5 s); cierra acelerando hacia
+   la derecha (0,38 s), como las pantallas de iOS. */
+.ccr-menu-completo { transform: translate3d(100%, 0, 0); transition: transform 0.38s cubic-bezier(0.4, 0, 0.6, 1), visibility 0s linear 0.38s; will-change: transform; backface-visibility: hidden; }
+.ccr-menu-completo.ccr-menu-abierto { transform: translate3d(0, 0, 0); transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1), visibility 0s; }
 /* Sin íconos, como Angi; la flecha «›» va al final de cada fila. */
 .ccr-menu-completo .ccr-menu-fila > span:first-child:has(> svg) { display: none; }
 .ccr-menu-completo .ccr-menu-fila:not([aria-expanded])::after {

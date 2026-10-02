@@ -133,16 +133,24 @@ test.describe("portada y menú (1-oct-2026) @smoke", () => {
     for (const c of corte) expect(c, "una foto empieza por encima de su franja (queda bajo la cabecera)").toBeGreaterThanOrEqual(0);
   });
 
-  test("el menú se abre deslizando, no de golpe", async ({ page }) => {
+  test("el menú se abre y se cierra deslizando, siempre opaco", async ({ page }) => {
     test.skip(!isMobileProject(test.info()), "Menú del teléfono.");
     await gotoOK(page, "/");
     await waitForInteractivePage(page);
     const menu = page.locator(".ccr-menu-completo");
     await page.getByRole("button", { name: /Abrir men[uú]/i }).filter({ visible: true }).first().click();
+    await page.waitForTimeout(40);
+    const enCamino = await menu.evaluate((e) => ({ x: e.getBoundingClientRect().x, o: getComputedStyle(e).opacity }));
+    expect(enCamino.x, "el menú debe entrar deslizando, no aparecer de golpe").toBeGreaterThan(20);
+    expect(enCamino.o, "el menú no se funde").toBe("1");
+    await expect.poll(() => menu.evaluate((e) => Math.round(e.getBoundingClientRect().x))).toBe(0);
+    await page.getByRole("button", { name: /Cerrar men[uú]/ }).click();
     await page.waitForTimeout(120);
-    const x = await menu.evaluate((e) => e.getBoundingClientRect().x);
-    expect(x, "a los 120 ms el menú ya estaba casi abierto").toBeGreaterThan(150);
+    const saliendo = await menu.evaluate((e) => ({ x: e.getBoundingClientRect().x, o: getComputedStyle(e).opacity }));
+    expect(saliendo.o, "al cerrar no debe volverse transparente").toBe("1");
+    expect(saliendo.x, "al cerrar debe deslizar hacia la derecha").toBeGreaterThan(5);
   });
+
 
   test("con el teclado abierto, la hoja de búsqueda llega justo hasta el teclado", async ({ page }) => {
     test.skip(!isMobileProject(test.info()), "Hoja de búsqueda de la app.");
