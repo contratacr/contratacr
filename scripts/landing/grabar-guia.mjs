@@ -139,7 +139,12 @@ const escenas = {
     await p.waitForTimeout(500);
     await bajar(p, 200, 1500);
     await tocar(p, p.getByText("SG Solutions", { exact: true }).first());
-    await p.waitForTimeout(2400); await bajar(p, 420, 3000); await p.waitForTimeout(300);
+    await p.waitForTimeout(2400); await bajar(p, 300, 2200); await p.waitForTimeout(300);
+    // Recorre las secciones del perfil: reseñas, casos de éxito, formación.
+    for (const seccion of ["Reseñas", "Casos de éxito", "Formación", "Servicios"]) {
+      const pestana = p.getByRole("tab", { name: seccion }).or(p.getByRole("button", { name: seccion, exact: true })).filter({ visible: true }).first();
+      if (await pestana.count()) { await tocar(p, pestana); await p.waitForTimeout(1300); await bajar(p, 180, 1400); await p.waitForTimeout(500); }
+    }
     await señalar(p, p.getByRole("link", { name: /^WhatsApp$/ }).or(p.getByRole("button", { name: /^WhatsApp$/ })).filter({ visible: true }).last());
   },
   proyectos: (p, g, s) => porElMenu(p, g, s, "Proyectos", "/proyectos", /Publicar proyecto/i, "/publicar-proyecto", async (p) => {
