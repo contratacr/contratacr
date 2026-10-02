@@ -154,7 +154,7 @@ export function FindByZone({ coverage }: { coverage: ZoneCoverage }) {
               <>
                 <p className="text-[11px] font-bold uppercase tracking-wide text-[#68778d] mb-3">{t("cantonsWithPros")}</p>
                 {/* Todos los cantones, en cuadrícula pareja y por orden alfabético. */}
-                <div className="mb-6 grid grid-cols-2 gap-2 sm:grid-cols-3">
+                <div className="mb-6 grid auto-rows-fr grid-cols-2 gap-2 sm:grid-cols-3">
                   {[...coveredCantons].sort((x, y) => x.name.localeCompare(y.name, "es")).map((c) => (
                     <button
                       key={c.id}
