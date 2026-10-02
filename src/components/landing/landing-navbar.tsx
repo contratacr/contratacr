@@ -2617,11 +2617,13 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                           es el profesional. La cuenta normal se crea sola en el
                           momento en que hace falta (publicar, guardar, reseñar)
                           y sigue estando en /registro. */}
+                      {/* 1-oct-2026: igual que el menú del teléfono, «Ingresar» y
+                          «Crear cuenta». /registro ofrece las dos cuentas. */}
                       <Link
-                        href="/registro/profesional"
+                        href="/registro"
                         className="rounded-xl bg-[#009FD9] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#0088bb]"
                       >
-                        {t("offerServices")}
+                        {locale === "en" ? "Create account" : "Crear cuenta"}
                       </Link>
                     </div>
                   )}
