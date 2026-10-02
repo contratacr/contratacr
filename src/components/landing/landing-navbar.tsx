@@ -2606,7 +2606,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                     <div className="flex w-auto items-center justify-end gap-2">
                       <Link
                         href={loginHref}
-                        className="text-sm font-medium px-3 py-2 rounded-xl text-[#1A2744] hover:bg-gray-50 transition-colors"
+                        className="rounded-xl bg-[#162543] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#0f1b33]"
                       >
                         {t("login")}
                       </Link>
@@ -3205,7 +3205,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                   «Ayuda y soporte» los botones se encogían. */}
               {!user && (
                 <div className="mt-7 grid shrink-0 gap-3">
-                  <Link href={loginHref} onClick={cerrarCajon} className="flex h-12 w-full items-center justify-center rounded-full border-[1.5px] border-[#162543] text-[15px] font-bold text-[#162543] transition-colors hover:bg-[#f4f7fa]">
+                  <Link href={loginHref} onClick={cerrarCajon} className="flex h-12 w-full items-center justify-center rounded-full bg-[#162543] text-[15px] font-bold text-white transition-colors hover:bg-[#0f1b33]">
                     {t("login")}
                   </Link>
                   <Link href="/registro" onClick={cerrarCajon} className="flex h-12 w-full items-center justify-center rounded-full bg-[#009FD9] text-[15px] font-bold text-white transition-colors hover:bg-[#0089bb]">
