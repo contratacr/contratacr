@@ -55,7 +55,7 @@ export const CATEGORY_IMAGE: Record<string, string> = {
   bienes_raices: U("1560518883-ce09059eeffa"),
   traduccion: U("1456513080510-7bf3a84b82f8"),
   // ── Salud y bienestar ──
-  fisioterapia: U("1571019613454-1cb2f99b2d8b"),
+  fisioterapia: U("1706353399656-210cca727a33"),
   entrenamiento_personal: U("1534438327276-14e5300c3a48"),
   entrenamiento_deportivo: U("1517649763962-0c623066013b"),
   nutricion: U("1490645935967-10de6ba17061"),
@@ -119,7 +119,6 @@ export const CATEGORY_IMAGE_POSITION: Record<string, string> = {
   // Revisado otra vez el 1-oct-2026: el centro va sobre el TRABAJO (manos + herramienta), no la cara.
   reparacion_electrodomesticos: "10% 50%", // el aparato y las manos quedaban cortados a la izquierda
   electricidad: "58% 50%",   // manos y tomacorriente al centro (antes solo la cara)
-  fisioterapia: "90% 50%",   // la cabeza de la paciente quedaba fuera a la derecha
   fletes: "12% 50%",         // el camión quedaba partido en el borde izquierdo
   mecanica: "18% 50%",       // el mecánico inclinado sobre el motor
   mudanzas: "14% 50%",       // los cargadores con la maceta

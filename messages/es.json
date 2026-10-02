@@ -3807,21 +3807,21 @@
         "subtitulo": "Todo lo que necesitas, en una sola app.",
         "profesionales": {
           "titulo": "Busca profesionales",
-          "texto": "Elige servicio y zona, compara reseñas y escríbeles por WhatsApp.",
+          "texto": "Busca por servicio y zona, y escríbele directo por WhatsApp.",
           "cta": "Buscar profesionales",
           "alt": "Resultados de profesionales en la app de ContrataCR",
           "pestana": "Profesionales"
         },
         "proyectos": {
           "titulo": "Publica tu proyecto",
-          "texto": "Cuenta qué necesitas y los profesionales te contactan.",
+          "texto": "Cuenta qué necesitas y los profesionales te escriben.",
           "cta": "Publicar un proyecto",
           "alt": "Tablero de proyectos en la app de ContrataCR",
           "pestana": "Proyectos"
         },
         "empleos": {
           "titulo": "Empleos",
-          "texto": "Encuentra trabajo o publica una vacante para tu negocio.",
+          "texto": "Encuentra trabajo o publica una vacante.",
           "cta": "Ver empleos",
           "alt": "Tablero de empleos en la app de ContrataCR",
           "pestana": "Empleos"
