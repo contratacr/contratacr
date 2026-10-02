@@ -2580,7 +2580,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                         href="/registro"
                         className="rounded-xl bg-[#162543] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#0f1b33]"
                       >
-                        {locale === "en" ? "Sign up" : "Registrarme"}
+                        {t("signUp")}
                       </Link>
                     </div>
                   )}
@@ -3016,7 +3016,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                 <Link href="/" aria-label="ContrataCR inicio" onClick={(e) => { cerrarCajon(); irAlInicio(e); }} className="shrink-0">
                   <ContrataCRLogo />
                 </Link>
-                <button type="button" onClick={cerrarCajon} aria-label={locale === "en" ? "Close menu" : "Cerrar menú"} className="grid h-10 w-10 place-items-center rounded-xl text-[#162543] transition-colors hover:bg-gray-50">
+                <button type="button" onClick={cerrarCajon} aria-label={t("closeMenu")} className="grid h-10 w-10 place-items-center rounded-xl text-[#162543] transition-colors hover:bg-gray-50">
                   <X className="h-6 w-6" strokeWidth={2.2} />
                 </button>
               </div>
@@ -3104,7 +3104,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                     onClick={() => { cerrarCajon(); window.dispatchEvent(new Event("contratacr:open-ai")); }}
                     className={mobileDrawerItemClass}
                   >
-                    <span className={mobileDrawerTextClass}>{locale === "en" ? "Assistant" : "Asistente"}</span>
+                    <span className={mobileDrawerTextClass}>{t("assistant")}</span>
                   </button>
                 )}
                 {/* PRIMERO LO QUE SE HACE, DESPUÉS LO QUE AYUDA. Cotizaciones
@@ -3144,17 +3144,17 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                   {mobileHelpOpen && (
                     <div className="ccr-menu-sub">
                       {[
-                        { href: "/como-funciona", es: "Cómo funciona", en: "How it works" },
-                        { href: "/ayuda", es: "Preguntas frecuentes", en: "FAQ" },
+                        { href: "/como-funciona", k: "helpHowItWorks" as const },
+                        { href: "/ayuda", k: "helpFaq" as const },
                         // Para quien tiene o puede tener perfil: no para un cliente con sesión.
-                        ...(!user || isPro ? [{ href: "/mejorar-mi-perfil", es: "Consejos para profesionales", en: "Tips for professionals" }] : []),
+                        ...(!user || isPro ? [{ href: "/mejorar-mi-perfil", k: "helpProTips" as const }] : []),
                       ].map((o) => (
                         <Link key={o.href} href={o.href} onClick={cerrarCajon} className="ccr-menu-sub-fila">
-                          {locale === "en" ? o.en : o.es}
+                          {t(o.k)}
                         </Link>
                       ))}
                       <SupportLink onNavigate={cerrarCajon} className="ccr-menu-sub-fila">
-                        {locale === "en" ? "Contact support" : "Escribir a soporte"}
+                        {t("helpContact")}
                       </SupportLink>
                     </div>
                   )}
@@ -3174,7 +3174,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                     {t("login")}
                   </Link>
                   <Link href="/registro" onClick={cerrarCajon} className="flex h-12 w-full items-center justify-center rounded-full bg-[#162543] text-[15px] font-bold text-white transition-colors hover:bg-[#0f1b33]">
-                    {locale === "en" ? "Sign up" : "Registrarme"}
+                    {t("signUp")}
                   </Link>
                 </div>
               )}

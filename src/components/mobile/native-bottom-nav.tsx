@@ -333,7 +333,7 @@ export function NativeBottomNav() {
         <Link
           href={user ? "/mensajes" : "/login?redirect=%2Fmensajes"}
           prefetch={!!user}
-          aria-label={locale === "en" ? "Messages" : "Mensajes"}
+          aria-label={tNav("messages")}
           onClick={(event) => { if (user) irA(event, "/mensajes"); }}
           className={celda(indice === 1)}
         >

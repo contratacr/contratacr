@@ -141,7 +141,13 @@
     "masBuscados": "Most searched",
     "publishRequest": "Post what I need",
     "register": "Sign up",
-    "loginOrRegister": "Log in or sign up"
+    "loginOrRegister": "Log in or sign up",
+    "signUp": "Sign up",
+    "assistant": "Assistant",
+    "helpHowItWorks": "How it works",
+    "helpFaq": "FAQ",
+    "helpProTips": "Tips for professionals",
+    "helpContact": "Contact support"
   },
   "home": {
     "accountDeletion": {
@@ -3990,7 +3996,8 @@
     "tileCase": "Success story",
     "tileCaseSub": "Show your work",
     "tileDealSub": "Deals & discounts",
-    "tileJobSub": "Find staff"
+    "tileJobSub": "Find staff",
+    "messages": "Messages"
   },
   "serviceLanding": {
     "title": "{category} in {place}",

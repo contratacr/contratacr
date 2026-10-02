@@ -44,7 +44,7 @@ async function bajar(p, px, msPedido) {
 // portada nueva) y muestra cómo se llega. El destino de proyectos, promociones
 // y empleos se abre en PRODUCCIÓN (en test salen publicaciones de prueba): la
 // grabación se pausa mientras carga, así el corte no se ve.
-const INICIO = process.env.INICIO || "http://localhost:3000";
+const INICIO = process.env.INICIO || "https://contratacr.com";
 async function sinAvisoDeDesarrollo(p) { await p.addStyleTag({ content: "nextjs-portal,[data-nextjs-toast],[data-next-badge-root]{display:none!important}" }).catch(() => {}); }
 // Cada toque se VE: un círculo gris que aparece donde cae el dedo, como en las
 // grabaciones de pantalla del iPhone con «mostrar toques».
@@ -91,29 +91,10 @@ async function porElMenu(p, grabar, pausar, texto, destino, boton, formulario, l
   await bajar(p, 300, 2000); await p.waitForTimeout(200);
   const publicar = p.getByRole("link", { name: boton }).or(p.getByRole("button", { name: boton })).filter({ visible: true }).first();
   await publicar.scrollIntoViewIfNeeded(); await p.waitForTimeout(300);
+  // El video TERMINA en el toque de «Publicar» (sin login ni formulario):
+  // se entiende que se puede publicar, y el video queda corto.
   await marcarToque(p, publicar);
-  // Se ve el toque; la grabación se corta antes de que pinte el login de producción.
-  await p.evaluate(() => new Promise((r) => requestAnimationFrame(r)));
-  pausar();
-  await publicar.tap().catch(() => {});
-  // Publicar pide cuenta: aquí, y solo aquí, entra la cuenta profesional de prueba.
-  if (process.env.SESION) await p.context().addCookies(JSON.parse(fs.readFileSync(process.env.SESION, "utf8")).cookies);
-  await p.goto(INICIO + formulario, { waitUntil: "load" }); await sinAvisoDeDesarrollo(p);
-  await p.waitForTimeout(3500);
-  grabar();
-  await p.waitForTimeout(500);
-  await llenar(p);
-  await p.waitForTimeout(400);
-  const botonPublicar = p.getByRole("button", { name: /^Publicar( promoción| empleo)?$/ }).filter({ visible: true }).last();
-  // Se publica DE VERDAD en TEST (local, cuenta de prueba) y se ve el resultado.
-  // Al terminar la grabación se borra lo publicado.
-  await botonPublicar.scrollIntoViewIfNeeded(); await p.waitForTimeout(300);
-  await marcarToque(p, botonPublicar);
-  // Como al cerrar el teclado: el texto suelta el foco antes del toque.
-  await p.evaluate(() => document.activeElement?.blur?.()); await p.waitForTimeout(300);
-  await botonPublicar.tap({ timeout: 8000 }).catch(() => botonPublicar.evaluate((b) => b.click()));
-  await deVerdad(p);
-  await p.waitForTimeout(2200);
+  await p.waitForTimeout(900);
 }
 
 const escenas = {

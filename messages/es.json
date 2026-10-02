@@ -141,7 +141,13 @@
     "masBuscados": "Los más buscados",
     "publishRequest": "Publicar lo que necesito",
     "register": "Registrarse",
-    "loginOrRegister": "Ingresar o crear cuenta"
+    "loginOrRegister": "Ingresar o crear cuenta",
+    "signUp": "Registrarme",
+    "assistant": "Asistente",
+    "helpHowItWorks": "Cómo funciona",
+    "helpFaq": "Preguntas frecuentes",
+    "helpProTips": "Consejos para profesionales",
+    "helpContact": "Escribir a soporte"
   },
   "home": {
     "accountDeletion": {
@@ -3990,7 +3996,8 @@
     "tileCase": "Caso de éxito",
     "tileCaseSub": "Muestra tu trabajo",
     "tileDealSub": "Ofertas y descuentos",
-    "tileJobSub": "Busca personal"
+    "tileJobSub": "Busca personal",
+    "messages": "Mensajes"
   },
   "serviceLanding": {
     "title": "{category} en {place}",

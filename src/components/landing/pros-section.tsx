@@ -46,7 +46,7 @@ export async function ProsSection() {
     .slice(0, 9)
     .map(({ g, ids }) => ({
       id: g.id,
-      label: locale === "en" ? (CATEGORY_GROUP_LABELS_EN[g.id] ?? g.label) : g.label,
+      label: (locale === "en" && CATEGORY_GROUP_LABELS_EN[g.id]) || g.label,
       servicios: ids.map((id) => ({ id, label: getCategoryLabel(id, locale), href: rutaDeBusqueda({ categoria: id }) })),
     }));
 
