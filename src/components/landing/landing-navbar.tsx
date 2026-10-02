@@ -830,29 +830,10 @@ export function HeaderNotificationsLink({ href, label }: { href: string; label: 
   );
 }
 
-export function HeaderMessagesLink({ unreadCount, label, href = "/mensajes" }: { unreadCount: number; label: string; href?: string }) {
-  // Sin sesión no hay mensajes que ver: el ícono no se muestra (app, web móvil y computadora).
-  const { user } = useAuth();
-  if (!user) return null;
-  return (
-    <Link
-      href={href}
-      // Precargada entera: la bandeja es liviana (se arma en el teléfono) y así
-      // tocar el icono entra al instante, sin la espera de ~300 ms del servidor.
-      prefetch={true}
-      aria-label={label}
-      className="relative grid h-10 w-10 place-items-center rounded-xl text-[#1A2744] transition-colors hover:bg-[#f3f4f6] hover:text-[#009FD9]"
-    >
-      <span className="relative inline-flex">
-        <MessageSquareText className="h-5 w-5" />
-        {unreadCount > 0 && (
-          <span className="absolute -right-2 -top-2 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[#009FD9] px-1 text-[10px] font-bold leading-none text-white ring-2 ring-white">
-            {unreadCount > 9 ? "9+" : unreadCount}
-          </span>
-        )}
-      </span>
-    </Link>
-  );
+// 1-oct-2026: Mensajes vive en el MENÚ DE ABAJO (con su contador), nunca en la
+// cabecera. Las pantallas que todavía lo llaman no pintan nada.
+export function HeaderMessagesLink(_props: { unreadCount: number; label: string; href?: string }) {
+  return null;
 }
 
 function DrawerIcon({ children }: { children: ReactNode }) {
@@ -3142,6 +3123,17 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                   <DrawerIcon><Wrench /></DrawerIcon>
                   <span className={mobileDrawerTextClass}>{t("categories")}</span>
                 </Link>
+                {/* El asistente pasó del menú de abajo a este menú (1-oct-2026). Solo en la
+                    app: en la web el asistente no responde. */}
+                {nativeHeaderShell && (
+                  <button
+                    type="button"
+                    onClick={() => { cerrarCajon(); window.dispatchEvent(new Event("contratacr:open-ai")); }}
+                    className={mobileDrawerItemClass}
+                  >
+                    <span className={mobileDrawerTextClass}>{locale === "en" ? "Assistant" : "Asistente"}</span>
+                  </button>
+                )}
                 {/* PRIMERO LO QUE SE HACE, DESPUÉS LO QUE AYUDA. Cotizaciones
                     es trabajo del profesional y va arriba del Asistente, que es
                     una ayuda que se abre encima y se cierra. */}
