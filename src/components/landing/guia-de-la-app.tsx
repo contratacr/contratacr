@@ -43,7 +43,7 @@ export function GuiaDeLaApp({ pasos }: { pasos: PasoDeLaGuia[] }) {
   useEffect(() => {
     const el = caja.current;
     if (!el) return;
-    const o = new IntersectionObserver(([e]) => setVisible(e.isIntersecting), { threshold: 0.25 });
+    const o = new IntersectionObserver(([e]) => setVisible(e.isIntersecting), { threshold: 0.1 });
     o.observe(el);
     return () => o.disconnect();
   }, []);
@@ -167,12 +167,16 @@ export function GuiaDeLaApp({ pasos }: { pasos: PasoDeLaGuia[] }) {
                     poster={p.poster}
                     muted
                     playsInline
+                    autoPlay={i === 0}
                     preload={i === activo ? "auto" : "metadata"}
                     aria-label={i === activo ? p.alt : undefined}
                     aria-hidden={i !== activo || undefined}
                     onPlaying={(e) => { if (i === activo) { setDuracion(e.currentTarget.duration || 0); setCorriendo(true); } }}
                     onPause={() => { if (i === activo) setCorriendo(false); }}
                     onEnded={() => alTerminar(i)}
+                    // Safari a veces rechaza el primer play() si el video aún no
+                    // cargó: al estar listo se vuelve a intentar.
+                    onCanPlay={(e) => { if (i === activo && visible && e.currentTarget.paused) e.currentTarget.play().catch(() => {}); }}
                     className={cn("absolute inset-0 h-full w-full object-cover object-top transition-opacity duration-500", i === activo ? "opacity-100" : "opacity-0")}
                   />
                 ))}
