@@ -88,12 +88,10 @@ test.describe("@smoke public routes", () => {
       await expect(navigation.getByRole("button", { name: /^Servicios$/i }).first()).toBeVisible();
       await expect(navigation.getByRole("button", { name: /^Explorar$/i }).first()).toBeVisible();
       await expect(navigation.getByRole("link", { name: /Ingresar/i }).first()).toBeVisible();
-      // La acción de la barra ya no es «Registrarse» a secas: contactar no pide
-      // cuenta, así que el botón invita a lo único que sí la necesita desde el
-      // primer minuto —ofrecer servicios—.
-      const registro = navigation.getByRole("link", { name: /Ofrecer mis servicios/i }).first();
+      // Desde el 1-oct-2026: «Ingresar» y «Registrarme» (el registro ofrece las dos cuentas).
+      const registro = navigation.getByRole("link", { name: /^Registrarme$|^Sign up$/i }).first();
       await expect(registro).toBeVisible();
-      await expect(registro).toHaveAttribute("href", /\/registro\/profesional/);
+      await expect(registro).toHaveAttribute("href", /\/registro$/);
     }
     await expectHealthyPage(page);
   });

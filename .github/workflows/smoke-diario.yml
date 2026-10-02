@@ -101,7 +101,11 @@ jobs:
           npx playwright test
           public-smoke api-smoke services health
           sin-parpadeo-buscador sin-parpadeo-imagenes sombras-al-desplazar
-          pantallas-en-todos-los-anchos reanudar-la-app
+          pantallas-en-todos-los-anchos reanudar-la-app portada-y-menu
+      - name: Safari del iPhone (WebKit), cada día en producción
+        env:
+          PLAYWRIGHT_WEBKIT: "1"
+        run: npx playwright install --with-deps webkit && npx playwright test --project=webkit-mobile public-smoke portada-y-menu
       - name: Sin fallas ni pruebas inestables
         if: always()
         run: npm run test:e2e:verify-results
