@@ -19,7 +19,7 @@ const FEATURED_BRANDS: ReadonlyArray<{ name: string; src: string; crop: string; 
   { name: "EasySA Consultoría", src: "/featured-brands/easysa.webp", crop: "featured-brand-logo--easysa", slug: "luis-josue-sanchez-monge-nxd5gjfc" },
   { name: "BH Legal", src: "/featured-brands/bh-legal.webp", crop: "featured-brand-logo--bh", slug: "rolan-francisco-munoz-rodriguez-fhq3emee" },
   { name: "Ley Total Abogados", src: "/featured-brands/ley-total-abogados.webp", crop: "featured-brand-logo--ley-total", slug: "luis-gerardo-suarez-chaves-54xrmtku" },
-  { name: "J Logo", src: "/featured-brands/j-logo.webp", crop: "featured-brand-logo--j" },
+  { name: "English Program", src: "/featured-brands/j-logo.webp", crop: "featured-brand-logo--j", slug: "jafeth-perez-umana-n80rvcg4" },
   { name: "+Kotas Pet Shop", src: "/featured-brands/kotas-pet-shop.webp", crop: "featured-brand-logo--kotas", slug: "jesus-alberto-ramirez-suarez-z5kel78z" },
   { name: "Titanium Fitness", src: "/featured-brands/t-corporate-logo.webp", crop: "featured-brand-logo--titanium" },
 ];
