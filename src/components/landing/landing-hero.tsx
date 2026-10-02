@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useLayoutEffect, useRef, useTransition, type RefObject, type CSSProperties } from "react";
-import { createPortal } from "react-dom";
+import { createPortal, preload } from "react-dom";
 import { ArrowRight, Loader2, Search, MapPin } from "lucide-react";
 import { Link, useRouter } from "@/i18n/navigation";
 import { useLocale, useTranslations } from "next-intl";
@@ -70,6 +70,10 @@ function FotoDeFondo() {
     return () => { window.clearTimeout(empezar); window.clearInterval(id); };
   }, []);
   const anchos = [800, 1200, 1600, 2200, 2800, 3600, 4200];
+  // La primera foto se pide desde el <head> (junto con el HTML), no cuando React
+  // llega a pintarla: así la miniatura borrosa casi no se alcanza a ver.
+  const primera = HERO_FOTOS[0];
+  preload(urlDeFoto(primera.id, 1600), { as: "image", fetchPriority: "high", imageSrcSet: anchos.map((w) => `${urlDeFoto(primera.id, w)} ${w}w`).join(", "), imageSizes: "(max-width: 639px) 150vw, 100vw" });
   return (
     <div aria-hidden className="absolute inset-0 isolate z-0 overflow-hidden bg-[#8a7a68]" style={{ backgroundImage: `url("${HERO_MINIATURA}")`, backgroundSize: "cover", backgroundPosition: "50% 30%" }}>
       {HERO_FOTOS.map((foto, i) => (i === 0 || i === PRIMERA_PC || cargarResto) && (
@@ -78,7 +82,8 @@ function FotoDeFondo() {
           key={foto.id}
           src={urlDeFoto(foto.id, 1600)}
           srcSet={anchos.map((w) => `${urlDeFoto(foto.id, w)} ${w}w`).join(", ")}
-          sizes="100vw"
+          // En el teléfono la foto se recorta a lo alto: necesita ~1,5 veces el ancho de pantalla.
+          sizes="(max-width: 639px) 150vw, 100vw"
           alt=""
           fetchPriority={i === 0 || i === PRIMERA_PC ? "high" : "low"}
           decoding="async"
