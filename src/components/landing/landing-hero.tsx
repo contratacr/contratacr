@@ -35,9 +35,9 @@ const HERO_FOTOS: { id: string; foco: string; focoPc: string; sube?: number; sol
   // `foco`: dónde está el profesional en la foto, para que el recorte —ancho en
   // computadora, angosto en el teléfono— lo deje siempre a la vista.
   // Teléfono: lo que importa queda arriba (y). Computadora: el profesional a la derecha (x).
-  { id: "1555963966-b7ae5404b6ed", foco: "62% 30%", focoPc: "50% 22%" }, // liniero trabajando en un poste, a un costado
+  { id: "1555963966-b7ae5404b6ed", foco: "62% 22%", focoPc: "50% 22%" }, // liniero trabajando en un poste, a un costado
   { id: "1749532125405-70950966b0e5", foco: "58% 25%", focoPc: "50% 12%" }, // fontanero en un baño
-  { id: "1589939705384-5185137a7f0f", foco: "80% 20%", focoPc: "50% 42%", sube: 30 }, // carpintería con casco
+  { id: "1589939705384-5185137a7f0f", foco: "80% 60%", focoPc: "50% 42%" }, // carpintería con casco
   { id: "1660330589693-99889d60181e", foco: "72% 30%", focoPc: "50% 35%" }, // electricista en un tablero
 ];
 // Miniatura de la PRIMERA foto (el liniero): si fuera de otra, al cargar se veía

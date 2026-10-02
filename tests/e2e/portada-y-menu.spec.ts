@@ -87,4 +87,40 @@ test.describe("portada y menú (1-oct-2026) @smoke", () => {
     await zona.scrollIntoViewIfNeeded();
     await expect.poll(() => zona.evaluate((e) => Number(getComputedStyle(e.closest("section") ?? e).opacity))).toBe(1);
   });
+
+  test("la foto del inicio empieza bajo la cabecera y no cambia de tamaño al abrir", async ({ page }) => {
+    test.skip(!isMobileProject(test.info()), "Inicio del teléfono.");
+    await comoApp(page);
+    await page.addInitScript(() => {
+      (window as unknown as { __alto: number[] }).__alto = [];
+      const t0 = performance.now();
+      const f = () => {
+        const s = document.querySelector(".ccr-hero-foto");
+        if (s) (window as unknown as { __alto: number[] }).__alto.push(Math.round(s.getBoundingClientRect().height));
+        if (performance.now() - t0 < 3000) requestAnimationFrame(f);
+      };
+      requestAnimationFrame(f);
+    });
+    await gotoOK(page, "/");
+    await page.waitForTimeout(3200);
+    const altos = await page.evaluate(() => [...new Set((window as unknown as { __alto: number[] }).__alto)]);
+    expect(altos, "el alto de la foto cambió al abrir").toHaveLength(1);
+    const corte = await page.evaluate(() => {
+      const foto = document.querySelector(".ccr-hero-foto")!.getBoundingClientRect().top;
+      return [...document.querySelectorAll(".ccr-hero-foto-capa")].map((i) => Math.round(i.getBoundingClientRect().top - foto));
+    });
+    for (const c of corte) expect(c, "una foto empieza por encima de su franja (queda bajo la cabecera)").toBeGreaterThanOrEqual(0);
+  });
+
+  test("el menú se abre deslizando, no de golpe", async ({ page }) => {
+    test.skip(!isMobileProject(test.info()), "Menú del teléfono.");
+    await gotoOK(page, "/");
+    await waitForInteractivePage(page);
+    const menu = page.locator(".ccr-menu-completo");
+    await page.getByRole("button", { name: /Abrir men[uú]/i }).filter({ visible: true }).first().click();
+    await page.waitForTimeout(120);
+    const x = await menu.evaluate((e) => e.getBoundingClientRect().x);
+    expect(x, "a los 120 ms el menú ya estaba casi abierto").toBeGreaterThan(150);
+  });
 });
+
