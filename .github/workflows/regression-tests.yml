@@ -239,23 +239,3 @@ jobs:
       - name: Stop local Supabase
         if: always()
         run: supabase stop --no-backup
-
-  avisar:
-    name: Avisar por correo si algo falló
-    needs: [local-database-contract]
-    if: ${{ always() && needs.local-database-contract.result == 'failure' }}
-    runs-on: ubuntu-latest
-    environment: test
-    steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-node@v5
-        with:
-          node-version: 22
-      - env:
-          BREVO_API_KEY: ${{ secrets.BREVO_API_KEY }}
-          ALERTAS_CORREO: ${{ vars.ALERTAS_CORREO }}
-          CORRIDA: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-        run: >-
-          node scripts/ci/avisar-por-correo.mjs
-          "🔴 ContrataCR: la regresión falló (${{ github.event_name }}, ${{ github.ref_name }})"
-          "Commit ${{ github.sha }}. Abre la corrida para ver qué prueba cayó."
