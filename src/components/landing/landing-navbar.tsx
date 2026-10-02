@@ -3183,10 +3183,6 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                       <SupportLink onNavigate={cerrarCajon} className="ccr-menu-sub-fila">
                         {locale === "en" ? "Contact support" : "Escribir a soporte"}
                       </SupportLink>
-                      <div className="flex flex-wrap gap-x-5 gap-y-2 pb-1 pt-3 text-[13px] font-semibold text-[#7a8696]">
-                        <Link href="/terminos" onClick={cerrarCajon} className="hover:text-[#009FD9]">{t("resourceLinks.terms")}</Link>
-                        <Link href="/privacidad" onClick={cerrarCajon} className="hover:text-[#009FD9]">{t("resourceLinks.privacy")}</Link>
-                      </div>
                     </div>
                   )}
                 </div>
@@ -3253,6 +3249,12 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                     <span className="min-w-0 truncate">{locale === "en" ? "Sign out" : "Salir"}</span>
                   </button>
                 )}
+              </div>
+              {/* Términos y Privacidad al PIE del menú, chicos y en gris: son
+                  legales, no destinos; siempre a la vista, sin abrir nada. */}
+              <div className="mt-4 flex shrink-0 justify-center gap-6 text-[13px] font-semibold text-[#7a8696]">
+                <Link href="/terminos" onClick={cerrarCajon} className="hover:text-[#009FD9]">{t("resourceLinks.terms")}</Link>
+                <Link href="/privacidad" onClick={cerrarCajon} className="hover:text-[#009FD9]">{t("resourceLinks.privacy")}</Link>
               </div>
             </div>
           </div>
