@@ -76,6 +76,30 @@ export function GuiaDeLaApp({ pasos }: { pasos: PasoDeLaGuia[] }) {
     return () => window.clearInterval(id);
   }, [activo]);
 
+  // ARRANCAR EN LOS MOMENTOS JUSTOS, además del vigilante de cada segundo: en
+  // cuanto el teléfono asoma en pantalla y cuando el dedo suelta el scroll (iOS
+  // retiene la reproducción mientras la página se desliza con inercia). Así no
+  // hay que esperar al siguiente segundo ni volver a deslizar.
+  useEffect(() => {
+    const el = caja.current;
+    if (!el || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const reproducir = () => {
+      const v = videos.current[activo];
+      const r = el.getBoundingClientRect();
+      if (v && v.paused && !v.ended && r.bottom > 0 && r.top < window.innerHeight) v.play().catch(() => {});
+    };
+    const io = new IntersectionObserver((entradas) => { if (entradas.some((e) => e.isIntersecting)) reproducir(); }, { threshold: [0, 0.15] });
+    io.observe(el);
+    const opciones = { capture: true, passive: true } as const;
+    window.addEventListener("scrollend", reproducir, opciones);
+    window.addEventListener("touchend", reproducir, opciones);
+    return () => {
+      io.disconnect();
+      window.removeEventListener("scrollend", reproducir, opciones);
+      window.removeEventListener("touchend", reproducir, opciones);
+    };
+  }, [activo]);
+
   // Al terminar un video pasa al siguiente paso; si la persona eligió uno, se repite ese.
   const alTerminar = (i: number) => {
     if (i !== activo) return;

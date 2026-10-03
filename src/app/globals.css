@@ -2349,11 +2349,28 @@ html[data-keyboard-visible] body.ccr-native-app .ccr-native-search-panel { botto
    así que el final de «Servicio» quedaba tapado por el teclado y no se podía
    alcanzar, y en «Ubicación» iOS desplazaba la página y sobraba espacio vacío
    debajo de la última opción. */
-html[data-keyboard-open] body.ccr-native-app .ccr-native-search-panel {
+/* 3-oct-2026: también en la WEB del teléfono. Solo valía dentro de la app y en
+   Safari la hoja seguía hasta el fondo: la lista quedaba bajo el teclado y el
+   dedo movía la vista en vez de la lista («no deja scrollear»). En Safari la
+   barra flotante del teclado (˄ ˅ ✓) va DENTRO del viewport visual: se le
+   deja su alto por debajo. */
+html[data-keyboard-open] body .ccr-native-search-panel {
   top: var(--app-visual-viewport-top, 0px) !important;
   bottom: auto !important;
   height: var(--app-visual-viewport-height, 100dvh) !important;
   padding-bottom: 0 !important;
+}
+html[data-keyboard-open] body:not(.ccr-native-app) .ccr-native-search-panel {
+  padding-bottom: 64px !important;
+}
+/* La hoja de búsqueda de Promociones, Empleos y Proyectos: lo mismo. */
+html[data-keyboard-open] body .ccr-hoja-buscador {
+  top: var(--app-visual-viewport-top, 0px) !important;
+  bottom: auto !important;
+  height: var(--app-visual-viewport-height, 100dvh) !important;
+}
+html[data-keyboard-open] body:not(.ccr-native-app) .ccr-hoja-buscador {
+  padding-bottom: 64px;
 }
 /* Con el buscador abierto la barra sigue flotando ENCIMA de él (el buscador
    va en la capa 220): si no, tocar Asistente o + no le llegaba. */

@@ -6,6 +6,7 @@ import { useLocale } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { readRecentVisits, type RecentVisit, type RecentVisitSurface } from "@/lib/recent-visits";
 import { useToquePropio } from "@/hooks/use-toque-propio";
+import { cerrarTecladoAlDeslizar } from "@/lib/cerrar-teclado";
 
 const MARKETPLACE_CONTROL_COPY = {
   es: {
@@ -388,8 +389,8 @@ export function MarketplaceSearch({
         )}
       </div>
       {open && (
-        <div className="fixed inset-0 z-[1300] bg-white text-[#162543] lg:hidden">
-          <div className="space-y-3 px-4 py-4">
+        <div className="ccr-hoja-buscador fixed inset-0 z-[1300] flex flex-col bg-white text-[#162543] lg:hidden">
+          <div className="shrink-0 space-y-3 px-4 py-4">
             <div className="flex h-13 min-w-0 items-center rounded-[10px] border border-[#e5e7eb] bg-white px-3">
               <button type="button" onClick={closeMobileSearch} aria-label={copy.back} className="grid h-10 w-10 shrink-0 place-items-center text-[#1A2744]">
                 <ChevronRight className="h-6 w-6 rotate-180" />
@@ -435,7 +436,9 @@ export function MarketplaceSearch({
               </label>
             )}
           </div>
-          <div className="px-6 py-5">
+          {/* La lista se desplaza POR DENTRO: antes la hoja no tenía nada que
+              se desplazara y con el teclado abierto lo de abajo era inalcanzable. */}
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 py-5" onTouchMove={cerrarTecladoAlDeslizar}>
             <div className="mb-3 flex items-center justify-between gap-3">
               <h2 className="text-base font-extrabold">{mobileField === "secondary" || cleanValue ? copy.suggestions : copy.recents}</h2>
               {mobileField === "primary" && !cleanValue && recents.length > 0 && (

@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import { prefijoDeIdioma } from "@/lib/prefijo-de-idioma";
 import { useRouter } from "next/navigation";
 import { APP_RESUME_EVENT } from "@/lib/app-events";
+import { createClient } from "@/lib/supabase/client";
 
 const RECOVERY_THROTTLE_MS = 2_000;
 // VIGILANTE DE LA APP DORMIDA. Isaac dejó la app abierta unos minutos y al
@@ -13,19 +14,33 @@ const RECOVERY_THROTTLE_MS = 2_000;
 // pantalla se recarga sola. Solo en la app (en la web Safari ya recarga por su
 // cuenta) y los borradores de chat quedan guardados en el navegador, así que no
 // se pierden con la recarga.
-const VIGILIA_TRAS_OCULTA_MS = 5 * 60_000;
-const VIGILIA_RESPUESTA_MS = 8_000;
+//
+// 3-oct-2026: con 5 min y 8 s × 2 el lag al retomar la app tras ~15 min podía
+// durar hasta 16 s. Ahora se DESPIERTA tras 1 minuto —en segundo plano o
+// simplemente sin tocarla— y con 3 s de espera: se renueva la sesión (si venció,
+// cada consulta esperaba a renovarla) y se abre una conexión nueva antes de que
+// la persona necesite la red.
+const DESPERTAR_TRAS_MS = 60_000;
+const VIGILIA_RESPUESTA_MS = 3_000;
 
-async function vigilarQueResponda() {
-  for (let intento = 0; intento < 2; intento += 1) {
-    try {
-      const r = await fetch("/api/health", { cache: "no-store", signal: AbortSignal.timeout(VIGILIA_RESPUESTA_MS) });
-      if (r.ok) return;
-    } catch {
-      // Sin respuesta: se intenta una vez más antes de recargar.
+let despertando = false;
+async function despertar(recargarSiNoResponde: boolean) {
+  if (despertando) return;
+  despertando = true;
+  try {
+    void createClient().auth.getSession().catch(() => undefined);
+    for (let intento = 0; intento < 2; intento += 1) {
+      try {
+        const r = await fetch("/api/health", { cache: "no-store", signal: AbortSignal.timeout(VIGILIA_RESPUESTA_MS) });
+        if (r.ok) return;
+      } catch {
+        // Sin respuesta: se intenta una vez más.
+      }
     }
+    if (recargarSiNoResponde) window.location.reload();
+  } finally {
+    despertando = false;
   }
-  window.location.reload();
 }
 
 export function AppResumeRecovery() {
@@ -79,9 +94,7 @@ export function AppResumeRecovery() {
       const dormida = ocultaDesdeRef.current ? Date.now() - ocultaDesdeRef.current : 0;
       ocultaDesdeRef.current = 0;
       recover();
-      if (dormida >= VIGILIA_TRAS_OCULTA_MS && document.documentElement.classList.contains("ccr-native-app")) {
-        void vigilarQueResponda();
-      }
+      if (dormida >= DESPERTAR_TRAS_MS) void despertar(document.documentElement.classList.contains("ccr-native-app"));
     };
 
     const onPageShow = (event: PageTransitionEvent) => {
@@ -98,6 +111,17 @@ export function AppResumeRecovery() {
       recover(force);
     };
 
+    // Sin pasar a segundo plano también se duerme: el teléfono sobre la mesa con
+    // la app abierta. El primer toque tras un rato quieta despierta la red en
+    // paralelo a lo que ese toque pida (sin recargar: la persona ya está actuando).
+    let ultimoToque = Date.now();
+    const alTocar = () => {
+      const ahora = Date.now();
+      if (ahora - ultimoToque >= DESPERTAR_TRAS_MS) void despertar(false);
+      ultimoToque = ahora;
+    };
+    window.addEventListener("pointerdown", alTocar, { capture: true, passive: true });
+
     document.addEventListener("visibilitychange", onVisibilityChange);
     window.addEventListener("pageshow", onPageShow);
     window.addEventListener("focus", onFocus);
@@ -110,6 +134,7 @@ export function AppResumeRecovery() {
       window.removeEventListener("focus", onFocus);
       window.removeEventListener("offline", onOffline);
       window.removeEventListener("online", onOnline);
+      window.removeEventListener("pointerdown", alTocar, { capture: true });
     };
   }, [router]);
 

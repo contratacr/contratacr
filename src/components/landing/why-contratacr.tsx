@@ -25,7 +25,10 @@ export async function WhyContratacr() {
       {/* Sin overflow-hidden: recortaba la sombra del teléfono y quedaba un borde. */}
       <div className="relative mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
         <div className="mb-10 text-center sm:mb-14">
-          <h2 className="text-3xl font-extrabold text-[#1a2744] sm:text-4xl">{t("guia.titulo")}</h2>
+          <h2 className="text-3xl font-extrabold text-[#1a2744] sm:text-4xl">{t.rich("guia.titulo", {
+            // ContrataCR con los colores del logo: «Contrata» oscuro, «CR» celeste.
+            marca: () => <span className="whitespace-nowrap">Contrata<span className="text-[#009FD9]">CR</span></span>,
+          })}</h2>
           <p className="mx-auto mt-3 max-w-xl text-gray-500">{t("guia.subtitulo")}</p>
         </div>
         <GuiaDeLaApp pasos={pasos} />

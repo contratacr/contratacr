@@ -41,6 +41,7 @@ import { useDirectMessageUnread } from "@/hooks/use-direct-message-unread";
 import { CABECERA_TITULO } from "@/components/layout/cabecera";
 import { esRutaDeBusqueda, rutaDeBusqueda } from "@/lib/buscar-url";
 import { useParametrosDeBusqueda } from "@/hooks/use-parametros-de-busqueda";
+import { cerrarTecladoAlDeslizar } from "@/lib/cerrar-teclado";
 
 /* --- La marca (el cuadrito «CR») ---
  *
@@ -2777,7 +2778,10 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                 </div>
               </div>
 
-              <div className="mt-4 min-h-0 flex-1 overflow-y-auto overscroll-contain pb-6">
+              {/* Deslizar la lista CIERRA el teclado, como en las apps del iPhone
+                  (Mensajes, Instagram): con el teclado abierto Safari movía la
+                  vista en vez de la lista y no dejaba bajar. */}
+              <div className="mt-4 min-h-0 flex-1 overflow-y-auto overscroll-contain pb-6" onTouchMove={cerrarTecladoAlDeslizar}>
                 {showNativeServiceSuggestions ? (
                   <div id="native-service-suggestions" className="space-y-1" role="listbox" aria-label={locale === "en" ? "Suggested services" : "Servicios sugeridos"}>
                     <p className="px-2 pb-1 pt-1 text-[12px] font-extrabold uppercase tracking-[0.12em] text-[#7a8797]">

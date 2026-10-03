@@ -48,7 +48,10 @@ const LOCAL = "http://localhost:3000";
 const LOCAL_INICIO = LOCAL;
 const INICIO = process.env.INICIO || LOCAL_INICIO;
 
-async function sinAvisoDeDesarrollo(p) { await p.addStyleTag({ content: "nextjs-portal,[data-nextjs-toast],[data-next-badge-root]{display:none!important}" }).catch(() => {}); }
+// En el video no se dibuja la barra de estado: los formularios a pantalla
+// completa reservaban su alto (62 px) y su título quedaba más abajo que el de
+// las demás pantallas. En el teléfono real ese hueco sí lo ocupa la barra.
+async function sinAvisoDeDesarrollo(p) { await p.addStyleTag({ content: "nextjs-portal,[data-nextjs-toast],[data-next-badge-root]{display:none!important}.app-fullscreen-modal.app-fullscreen-modal{padding-top:0!important}" }).catch(() => {}); }
 // La grabación solo se reanuda con la página QUIETA: fuentes cargadas, todas
 // las imágenes visibles pintadas, sin esqueletos y la cabecera con su logo.
 // Los primeros cuadros tras un goto mostraban la página a medio cargar.
