@@ -47,6 +47,7 @@ import {
 import { CABECERA_BOTON, CABECERA_FILA, CABECERA_GLIFO, CABECERA_TITULO } from "@/components/layout/cabecera";
 import { useAvisoPerfilProfesional } from "@/components/marketplace/use-aviso-perfil-profesional";
 import { cuandoSePublico } from "@/lib/cuando-se-publico";
+import { reemplazarDireccionSiCambia } from "@/lib/reemplazar-direccion";
 
 type Props = {
   offers: ProfessionalOffer[];
@@ -202,7 +203,7 @@ export function OffersBoard({
       if (cleanLocation) params.set("location", cleanLocation);
       else params.delete("location");
       const nextUrl = `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ""}`;
-      window.history.replaceState(null, "", nextUrl);
+      reemplazarDireccionSiCambia(nextUrl);
     }, 300);
 
     return () => window.clearTimeout(timer);

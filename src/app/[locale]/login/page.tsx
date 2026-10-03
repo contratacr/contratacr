@@ -55,7 +55,9 @@ function meaningfulRedirect(raw: string | null): string | null {
   const path = raw.replace(/^\/(?:es|en)(?=\/|$)/, "") || "/";
   if (path.startsWith("/dashboard")) return raw;
   const [pathname, query = ""] = path.split(/[?#]/, 2);
-  if (pathname === "/mensajes") return raw;
+  // La campana del menú de abajo sin sesión pide entrar y debe VOLVER a
+  // Notificaciones; antes caía en el panel.
+  if (pathname === "/mensajes" || pathname === "/notificaciones") return raw;
   // Acciones que EXIGEN cuenta: quien llegó a publicar un empleo, una oferta o
   // una solicitud —o a reservar una cita— tiene que volver ahí después de
   // entrar. Antes se le devolvía al panel y perdía lo que iba a hacer.

@@ -31,6 +31,7 @@ import { CABECERA_BOTON, CABECERA_FILA, CABECERA_FILA_CENTRADA, CABECERA_GLIFO, 
 import { getCategoryGroupIcon } from "@/lib/data/category-group-visuals";
 import { getCategoryGroupId } from "@/lib/data/categories";
 import { cuandoSePublico } from "@/lib/cuando-se-publico";
+import { reemplazarDireccionSiCambia } from "@/lib/reemplazar-direccion";
 
 const COPY = {
   es: {
@@ -342,7 +343,7 @@ export function ProjectsBoard({
       const donde = lugar.trim();
       if (donde) params.set("location", donde); else params.delete("location");
       const cadena = params.toString();
-      window.history.replaceState(null, "", `${window.location.pathname}${cadena ? `?${cadena}` : ""}`);
+      reemplazarDireccionSiCambia(`${window.location.pathname}${cadena ? `?${cadena}` : ""}`);
     }, 300);
     return () => window.clearTimeout(timer);
   }, [query, lugar]);

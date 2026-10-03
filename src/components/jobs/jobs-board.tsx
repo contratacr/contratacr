@@ -33,6 +33,7 @@ import { marketplaceReturnLabelKey, safeMarketplaceReturnHref } from "@/lib/navi
 import { CABECERA_BOTON, CABECERA_FILA, CABECERA_FILA_CENTRADA, CABECERA_GLIFO, CABECERA_TITULO } from "@/components/layout/cabecera";
 import { useAvisoPerfilProfesional } from "@/components/marketplace/use-aviso-perfil-profesional";
 import { cuandoSePublico } from "@/lib/cuando-se-publico";
+import { reemplazarDireccionSiCambia } from "@/lib/reemplazar-direccion";
 
 type Props = {
   jobs: JobPost[];
@@ -168,7 +169,7 @@ export function JobsBoard({ jobs, canPost, initialSelectedJobId = null, returnTo
     if (cleanLocation) params.set("location", cleanLocation);
     else params.delete("location");
     const nextUrl = `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ""}`;
-    window.history.replaceState(null, "", nextUrl);
+    reemplazarDireccionSiCambia(nextUrl);
   }, [locationFilter, query]);
 
   // Los enlaces viejos con ?apply= siguen abriendo el empleo; lo que ya no
