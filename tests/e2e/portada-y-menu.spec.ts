@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "playwright/test";
-import { gotoOK, isMobileProject, waitForInteractivePage } from "./helpers";
+import { gotoOK, isMobileProject, loginAs, waitForInteractivePage } from "./helpers";
 
 // LO NUEVO DEL 1-OCT-2026: cabecera sin íconos sin sesión, menú a pantalla
 // completa, marcas que abren su perfil, Mensajes en la barra de abajo de la app
@@ -245,5 +245,21 @@ test.describe("portada y menú (1-oct-2026) @smoke", () => {
   });
 
 
-});
+  test("en la app, tocar Notificaciones nada más llegar a Proyectos la abre (2-oct-2026)", async ({ page }) => {
+    // El tablero reescribía la dirección al montarse (replaceState 300 ms después)
+    // y Next cancelaba con eso la navegación que acababa de pedir la campana:
+    // el toque «no hacía nada». Ahora solo reescribe si la dirección cambia.
+    test.skip(!isMobileProject(test.info()), "Barra de la app.");
+    test.skip(!process.env.E2E_TEST_PASSWORD, "Necesita la cuenta e2e.");
+    await comoApp(page);
+    await loginAs(page, "e2e.pro@contratacr.test", process.env.E2E_TEST_PASSWORD ?? "");
+    // Como al abrir la app en Proyectos (iOS recarga la pantalla al volver del
+    // fondo): se toca la campana en cuanto existe, en el acto.
+    await page.goto("/proyectos", { waitUntil: "commit" });
+    const campana = page.locator("nav.ccr-native-bottom-nav").getByRole("link", { name: "Notificaciones" });
+    await campana.waitFor({ state: "attached" });
+    await campana.tap({ force: true });
+    await expect(page).toHaveURL(/\/notificaciones/, { timeout: 5_000 });
+  });
 
+});

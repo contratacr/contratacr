@@ -213,6 +213,12 @@ export function GuiaDeLaApp({ pasos }: { pasos: PasoDeLaGuia[] }) {
                     aria-label={i === activo ? p.alt : undefined}
                     aria-hidden={i !== activo || undefined}
                     onPlaying={(e) => { if (i === activo) { setPintando(i); setPrevio(null); setDuracion(e.currentTarget.duration || 0); setCorriendo(true); } }}
+                    // El primer «playing» puede llegar ANTES de que React enganche los
+                    // manejadores (el video arranca solo con el HTML del servidor, en la
+                    // app y en Safari): la imagen fija se quedaba encima y el video corría
+                    // tapado —se veía congelado en el primer cuadro hasta el paso siguiente—.
+                    // «timeupdate» se repite mientras corre, así que no se puede perder.
+                    onTimeUpdate={(e) => { const v = e.currentTarget; if (i === activo && pintando !== i && !v.paused && v.currentTime > 0) { setPintando(i); setPrevio(null); setDuracion(v.duration || 0); setCorriendo(true); } }}
                     onPause={() => { if (i === activo) setCorriendo(false); }}
                     onEnded={() => alTerminar(i)}
                     // Safari a veces rechaza el primer play() si el video aún no
