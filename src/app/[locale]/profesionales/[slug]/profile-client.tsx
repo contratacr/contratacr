@@ -934,8 +934,10 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
                       )}
                     </span>
                   </ImagePreviewDialog>
-                  <div className="w-full min-w-0 sm:col-start-2 sm:row-start-1 sm:w-auto lg:self-center">
-                    <div className="min-w-0">
+                  <div className="w-full min-w-0 sm:col-start-2 sm:row-start-1 sm:w-auto lg:col-end-4 lg:self-center">
+                    {/* En computadora el «···» va en el MISMO renglón del nombre
+                        (a la altura del nombre y el sello), al final de la fila. */}
+                    <div className="min-w-0 lg:flex lg:items-center lg:justify-between lg:gap-4">
                       <h1 data-testid="professional-profile-name" className="min-w-0 text-[17px] font-bold leading-[1.15] text-[#162543] [overflow-wrap:anywhere] sm:text-2xl sm:leading-tight sm:[overflow-wrap:normal]">
                         {/* El sello va pegado a la ÚLTIMA palabra del nombre en un
                             trozo que no se parte: así el nombre puede ocupar dos
@@ -957,6 +959,7 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
                           displayName.primaryDesktop
                         )}
                       </h1>
+                      <MenuFicha className="hidden shrink-0 lg:block" opciones={opcionesDeLaFicha} />
                     </div>
                     {/* La ubicación NO va aquí: las zonas de trabajo están en la
                         tarjeta de contacto, completas, y el cantón del perfil
@@ -1022,10 +1025,9 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
                     es el nombre. Es la misma línea en la que va en Proyectos,
                     al final del renglón de quien publica. El `-mt-1.5` compensa
                     el respiro del botón para que el círculo case con el texto. */}
-                {/* 3-oct-2026: en computadora la foto, el nombre con sus cifras y el «···»
-                    van CENTRADOS en la misma fila (con solo el nombre, el nombre
-                    queda a media altura de la foto, no pegado arriba). */}
-                <MenuFicha className="hidden sm:col-start-3 sm:row-start-1 sm:-mt-1.5 sm:block sm:self-start lg:mt-0 lg:self-center" opciones={opcionesDeLaFicha} />
+                {/* En computadora este «···» se esconde: va dentro del renglón
+                    del nombre (ver arriba), con el bloque centrado con la foto. */}
+                <MenuFicha className="hidden sm:col-start-3 sm:row-start-1 sm:-mt-1.5 sm:block sm:self-start lg:hidden" opciones={opcionesDeLaFicha} />
             </div>
             <div id="resenas" className="scroll-mt-24 [.ccr-native-app_&]:scroll-mt-0">
               <div className="rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">
