@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { unstable_cache } from "next/cache";
 import { cldThumb } from "@/lib/cloudinary";
 import type { ProfessionalCardData, Certification } from "@/components/professionals/professional-card";
@@ -895,7 +896,11 @@ async function getZoneCoverageUncached(): Promise<ZoneCoverage> {
 // son invisibles para quien mira y ahorran casi todo el tráfico.
 const PERFIL_CACHE_SECONDS = 300;
 
-export async function getProfessionalBySlug(slug: string): Promise<ProfessionalDetail | null> {
+// Una sola vez por petición: los metadatos (layout) y la página la piden los
+// dos, y cada llamada eran viajes a la base (cache de React = por petición).
+export const getProfessionalBySlug = cache(getProfessionalBySlugEnVivo);
+
+async function getProfessionalBySlugEnVivo(slug: string): Promise<ProfessionalDetail | null> {
   const pro = await getProfessionalBySlugCached(slug);
   if (!pro) return null;
 
@@ -1192,9 +1197,7 @@ async function getProfessionalBySlugUncached(
 
 /** La ficha en caché, sin las comprobaciones en vivo: solo para saber su id
  *  y adelantar otras consultas en paralelo (ver la página del perfil). */
-export function fichaEnCache(slug: string) {
-  return getProfessionalBySlugCached(slug);
-}
+export const fichaEnCache = cache((slug: string) => getProfessionalBySlugCached(slug));
 
 const getProfessionalBySlugCached = unstable_cache(
   (slug: string) => getProfessionalBySlugUncached(slug),
