@@ -165,6 +165,24 @@ test.describe("@smoke public routes", () => {
       .getByPlaceholder(/Ubicaci[oó]n|Location/i)
       .filter({ visible: true })
       .first();
+    // En el teléfono (3-oct-2026) tocar la ubicación de la portada abre el
+    // buscador a pantalla completa, con «Buscar cerca de mí» arriba: ese botón
+    // busca en el acto.
+    if ((page.viewportSize()?.width ?? 1280) < 640) {
+      await location.click();
+      const cercaEnHoja = page.locator(".ccr-native-search-panel").getByRole("button", { name: /Buscar cerca de m[ií]|Search near me/i }).filter({ visible: true }).first();
+      await expect(cercaEnHoja).toBeVisible();
+      await cercaEnHoja.click();
+      // Sin servicio elegido, «cerca de mí» deja puesta la ubicación y pasa el
+      // cursor al servicio; buscar así trae a los de cerca.
+      const hoja = page.locator(".ccr-native-search-panel").filter({ visible: true }).first();
+      await expect(hoja.getByPlaceholder(/Barrio|Neighborhood/i)).toHaveValue(/Ubicaci[oó]n actual|Current location/i);
+      await hoja.locator("form").evaluate((f: HTMLFormElement) => f.requestSubmit());
+      await expect(page).toHaveURL(/\/profesionales/);
+      await expect(page).toHaveURL(/lat=9\.92810/);
+      await expect(page).toHaveURL(/lng=-84\.09070/);
+      return;
+    }
     await location.fill("San");
 
     const nearMe = page

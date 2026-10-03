@@ -167,6 +167,18 @@ function useAnchoredRect(ref: RefObject<HTMLElement | null>, open: boolean, minW
   return pos;
 }
 
+/* EN EL TELÉFONO, LA PORTADA ABRE EL MISMO BUSCADOR A PANTALLA COMPLETA que
+   Profesionales (como Airbnb). Escribir en la píldora de la portada hacía que
+   Safari desplazara la página para el teclado —la cabecera se escondía— y las
+   sugerencias quedaban debajo del teclado. El foco pasa al buscador dentro del
+   mismo toque, así el teclado no se baja. Devuelve si lo abrió. */
+function abrirBuscadorCompleto(campo: "servicio" | "ubicacion"): boolean {
+  if (typeof window === "undefined" || !window.matchMedia("(max-width: 639px)").matches) return false;
+  const pedido = new CustomEvent("ccr:open-native-search", { detail: { atendido: false, campo } });
+  window.dispatchEvent(pedido);
+  return !!pedido.detail.atendido;
+}
+
 /* ─── Autocomplete dropdown (service/profession) — PORTALED to <body> ─── */
 function SuggestionsDropdown({
   anchorRef,
@@ -793,7 +805,7 @@ export function LandingHero() {
                   ref={servicioInputRef}
                   enterKeyHint={service.trim() && !location.trim() ? "next" : "search"}
                   onKeyDown={handleKeyDown}
-                  onFocus={() => { setFoco("svc"); if (suggestions.length > 0) setOpenSug(true); }}
+                  onFocus={() => { if (abrirBuscadorCompleto("servicio")) return; setFoco("svc"); if (suggestions.length > 0) setOpenSug(true); }}
                   onBlur={() => { setFoco((f) => (f === "svc" ? null : f)); setTimeout(() => setOpenSug(false), 120); }}
                   placeholder={t("searchPlaceholderShort")}
                   className="min-w-0 flex-1 bg-transparent text-[16px] text-[#162543] placeholder:text-[#6b7686] focus:outline-none sm:text-lg"
@@ -814,7 +826,7 @@ export function LandingHero() {
                   ref={ubicacionInputRef}
                   enterKeyHint={location.trim() && !service.trim() ? "next" : "search"}
                   onKeyDown={handleLocKeyDown}
-                  onFocus={() => { setFoco("loc"); ensureMaps(); setOpenLoc(location.trim().length >= 2); }}
+                  onFocus={() => { if (abrirBuscadorCompleto("ubicacion")) return; setFoco("loc"); ensureMaps(); setOpenLoc(location.trim().length >= 2); }}
                   onBlur={() => { setFoco((f) => (f === "loc" ? null : f)); setTimeout(() => setOpenLoc(false), 120); }}
                   placeholder={t("location")}
                   className="w-full min-w-0 flex-1 bg-transparent text-[16px] text-[#162543] placeholder:text-[#6b7686] focus:outline-none sm:text-lg"

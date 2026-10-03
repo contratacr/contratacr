@@ -1864,20 +1864,26 @@ body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-native-fab {
 /* Solo se esconde con JavaScript (la clase ccr-js la pone el script de
    arranque) y nunca lo que ya está en la primera pantalla (un script al final
    de la portada lo marca visible antes del primer cuadro). */
-/* APARICIÓN AL BAJAR (3-oct-2026), como Apple, Stripe o Linear: poco
-   recorrido (16 px, no 28) y una curva que arranca rápido y se posa suave
-   (ease-out «expo»). Con 28 px y `ease` la sección se arrastraba hacia arriba y
-   se notaba el bloque entero flotando. La opacidad va un poco más rápida que
-   el movimiento: se lee antes de terminar de asentarse. */
-html.ccr-js .fade-in-up {
+/* APARICIÓN AL BAJAR (3-oct-2026), como Apple, Stripe o Linear: POR PARTES.
+   Primero el título de la sección y, 120 ms después, su contenido (las
+   tarjetas, la guía, el mapa); poco recorrido (16 px) y una curva que arranca
+   rápido y se posa suave (ease-out «expo»). Antes subía el bloque entero 28 px
+   con `ease` y se notaba flotando. La opacidad va algo más rápida que el
+   movimiento: se lee antes de terminar de asentarse.
+   Estructura de cada sección: .fade-in-up > section > div > [título, contenido]. */
+html.ccr-js .fade-in-up > section > div > * {
   opacity: 0;
   transform: translate3d(0, 16px, 0);
   transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1), transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
 }
-
-html.ccr-js .fade-in-up.visible {
+html.ccr-js .fade-in-up.visible > section > div > * {
   opacity: 1;
-  transform: translateY(0);
+  transform: none;
+}
+html.ccr-js .fade-in-up.visible > section > div > *:nth-child(2) { transition-delay: 120ms; }
+html.ccr-js .fade-in-up.visible > section > div > *:nth-child(3) { transition-delay: 240ms; }
+@media (prefers-reduced-motion: reduce) {
+  html.ccr-js .fade-in-up > section > div > * { opacity: 1; transform: none; transition: none; }
 }
 
 /* ─── Category icon tabs ─── */

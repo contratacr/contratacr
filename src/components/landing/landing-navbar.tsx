@@ -1845,9 +1845,14 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
     // Quien lo pide (la pestaña Profesionales) sabe así que hubo un buscador
     // que lo atendió; si no, navega a la búsqueda.
     const open = (event: Event) => {
-      const pedido = (event as CustomEvent<{ atendido?: boolean } | null>).detail;
+      const pedido = (event as CustomEvent<{ atendido?: boolean; campo?: "servicio" | "ubicacion" } | null>).detail;
       if (pedido) pedido.atendido = true;
       openNativeSearch();
+      // Desde el campo «Ubicación» de la portada: el cursor va a la ubicación.
+      if (pedido?.campo === "ubicacion") {
+        setSearchFocused(false);
+        window.setTimeout(() => nativeLocationInputRef.current?.focus({ preventScroll: true }), 0);
+      }
     };
     // El Asistente y el «+» no cambian de dirección: el buscador no se
     // cerraba solo y quedaba ENCIMA de lo que abrían. Lo piden cerrar.
