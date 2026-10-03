@@ -1864,10 +1864,15 @@ body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-native-fab {
 /* Solo se esconde con JavaScript (la clase ccr-js la pone el script de
    arranque) y nunca lo que ya está en la primera pantalla (un script al final
    de la portada lo marca visible antes del primer cuadro). */
+/* APARICIÓN AL BAJAR (3-oct-2026), como Apple, Stripe o Linear: poco
+   recorrido (16 px, no 28) y una curva que arranca rápido y se posa suave
+   (ease-out «expo»). Con 28 px y `ease` la sección se arrastraba hacia arriba y
+   se notaba el bloque entero flotando. La opacidad va un poco más rápida que
+   el movimiento: se lee antes de terminar de asentarse. */
 html.ccr-js .fade-in-up {
   opacity: 0;
-  transform: translateY(28px);
-  transition: opacity 0.65s ease, transform 0.65s ease;
+  transform: translate3d(0, 16px, 0);
+  transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1), transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 html.ccr-js .fade-in-up.visible {
@@ -2678,6 +2683,10 @@ html.ccr-js .fade-in-up:not(.visible) #servicios-de-la-seccion > a { opacity: 0;
 .ccr-menu-completo.ccr-menu-abierto { transition: visibility 0s; }
 .ccr-menu-completo .ccr-menu-cuerpo { transform: translate3d(100%, 0, 0); transition: transform 0.42s cubic-bezier(0.32, 0.72, 0, 1); will-change: transform; backface-visibility: hidden; }
 .ccr-menu-completo.ccr-menu-abierto .ccr-menu-cuerpo { transform: translate3d(0, 0, 0); }
+/* AL CERRAR, la fila de arriba del menú (logo + X) se va EN EL ACTO: quedaba
+   0,42 s encima mientras salía el cuerpo y tapaba la cabecera real —en
+   Notificaciones se leía «ContrataCR» un momento antes de volver el título—. */
+.ccr-menu-completo:not(.ccr-menu-abierto) .ccr-menu-fila-superior { visibility: hidden; }
 /* Al ir a una sección desde el menú, el menú se quita sin animación. */
 html.ccr-menu-sin-cierre .ccr-menu-completo, html.ccr-menu-sin-cierre .ccr-menu-completo .ccr-menu-cuerpo { transition: none !important; }
 /* Sin íconos, como Angi; la flecha «›» va al final de cada fila. */

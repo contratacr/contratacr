@@ -863,7 +863,9 @@ export function NotificationsList({ scope = "mode", titulo }: { scope?: "mode" |
           {ordenadas.length > mostrando && (
             // Dentro del bloque blanco de la lista, como su última fila: sobre
             // el fondo gris se leía como algo aparte, fuera del contenedor.
-            <div className="bg-white px-4 py-3 sm:px-5">
+            // Con margen de sobra abajo: pegado al final de la lista, en el
+            // iPhone la barra flotante le tapaba las esquinas de abajo.
+            <div className="bg-white px-4 pb-6 pt-3 sm:px-5">
               <button
                 type="button"
                 data-ver-anteriores=""

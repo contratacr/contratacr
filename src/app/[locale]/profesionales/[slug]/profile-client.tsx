@@ -900,7 +900,7 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
                     alt={professional.fullName}
                     openLabel={locale === "en" ? "View profile photo" : "Ver foto de perfil"}
                     closeLabel={locale === "en" ? "Close" : "Cerrar"}
-                    className="sm:col-start-1 sm:row-start-1 sm:row-span-2 sm:self-center"
+                    className="sm:col-start-1 sm:row-start-1 sm:row-span-2 sm:self-center lg:row-span-1"
                   >
                     {/* LA FOTO LA PINTA EL SERVIDOR, Y LAS INICIALES SON LAS DEL
                         NOMBRE QUE SE LEE ARRIBA.
@@ -934,7 +934,7 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
                       )}
                     </span>
                   </ImagePreviewDialog>
-                  <div className="w-full min-w-0 sm:col-start-2 sm:row-start-1 sm:w-auto">
+                  <div className="w-full min-w-0 sm:col-start-2 sm:row-start-1 sm:w-auto lg:self-center">
                     <div className="min-w-0">
                       <h1 data-testid="professional-profile-name" className="min-w-0 text-[17px] font-bold leading-[1.15] text-[#162543] [overflow-wrap:anywhere] sm:text-2xl sm:leading-tight sm:[overflow-wrap:normal]">
                         {/* El sello va pegado a la ÚLTIMA palabra del nombre en un
@@ -1022,7 +1022,10 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
                     es el nombre. Es la misma línea en la que va en Proyectos,
                     al final del renglón de quien publica. El `-mt-1.5` compensa
                     el respiro del botón para que el círculo case con el texto. */}
-                <MenuFicha className="hidden sm:col-start-3 sm:row-start-1 sm:-mt-1.5 sm:block sm:self-start" opciones={opcionesDeLaFicha} />
+                {/* 3-oct-2026: en computadora la foto, el nombre con sus cifras y el «···»
+                    van CENTRADOS en la misma fila (con solo el nombre, el nombre
+                    queda a media altura de la foto, no pegado arriba). */}
+                <MenuFicha className="hidden sm:col-start-3 sm:row-start-1 sm:-mt-1.5 sm:block sm:self-start lg:mt-0 lg:self-center" opciones={opcionesDeLaFicha} />
             </div>
             <div id="resenas" className="scroll-mt-24 [.ccr-native-app_&]:scroll-mt-0">
               <div className="rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">

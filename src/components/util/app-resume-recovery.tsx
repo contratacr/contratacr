@@ -21,6 +21,7 @@ const RECOVERY_THROTTLE_MS = 2_000;
 // cada consulta esperaba a renovarla) y se abre una conexión nueva antes de que
 // la persona necesite la red.
 const DESPERTAR_TRAS_MS = 60_000;
+const RECARGAR_TRAS_MS = 10 * 60_000;
 const VIGILIA_RESPUESTA_MS = 3_000;
 
 let despertando = false;
@@ -94,7 +95,15 @@ export function AppResumeRecovery() {
       const dormida = ocultaDesdeRef.current ? Date.now() - ocultaDesdeRef.current : 0;
       ocultaDesdeRef.current = 0;
       recover();
-      if (dormida >= DESPERTAR_TRAS_MS) void despertar(document.documentElement.classList.contains("ccr-native-app"));
+      const enLaApp = document.documentElement.classList.contains("ccr-native-app");
+      // TRAS UN RATO LARGO EN OTRA APP (10 min o más), en la app se recarga la
+      // pantalla donde estaba, como hacen las apps al volver de segundo plano.
+      // iOS congela o descarta la página mientras tanto y al volver podía no
+      // responder a nada; la recarga devuelve la misma dirección, con datos
+      // nuevos, y los borradores viven en el teléfono. Un rato corto solo
+      // despierta la red (abajo).
+      if (enLaApp && dormida >= RECARGAR_TRAS_MS) { window.location.reload(); return; }
+      if (dormida >= DESPERTAR_TRAS_MS) void despertar(enLaApp);
     };
 
     const onPageShow = (event: PageTransitionEvent) => {

@@ -2479,11 +2479,15 @@ export default function DashboardPage() {
                 </>
               )}
 
-              <div className="flex flex-col gap-5 lg:flex-row lg:items-start">
+              {/* La fila se ESTIRA: una sección corta (un vacío) quedaba más baja
+                  que el menú de la izquierda. El menú no cambia —su tarjeta va
+                  dentro de un contenedor pegajoso—; la sección llega al menos a
+                  su altura. */}
+              <div className="flex flex-col gap-5 lg:flex-row lg:items-stretch">
                 {activeTab !== "home" ? desktopPanelNav() : null}
                 {/* Main content, min-w-0 so a long unbroken string inside a card can't
                     grow this flex column past the available width and break the page. */}
-                <div ref={contentRef} className="flex-1 min-w-0 scroll-mt-20 lg:scroll-mt-0">
+                <div ref={contentRef} className="flex-1 min-w-0 scroll-mt-20 lg:flex lg:scroll-mt-0 lg:flex-col">
                   <SaveStatusProvider>
                     <Card className={cn(
                       activeTab === "home" && "rounded-none border-0 bg-transparent shadow-none lg:hidden",
@@ -2491,7 +2495,7 @@ export default function DashboardPage() {
                       // En pantalla grande la columna se queda en 54rem: a 62rem las
                       // tarjetas de una cita o un proyecto quedaban como cintas de
                       // un metro con tres renglones de texto y un botón en cada punta.
-                      activeTab !== "chat" && activeTab !== "home" && "lg:max-w-[54rem]",
+                      activeTab !== "chat" && activeTab !== "home" && "lg:max-w-[54rem] lg:flex-1",
                       singleSurfaceTab && "!border-0 !bg-transparent !shadow-none",
                       mobileSectionOpen && !singleSurfaceTab && "dashboard-section-card rounded-none border-0 bg-white shadow-none lg:overflow-hidden lg:rounded-[22px] lg:border lg:border-[#e5e7eb] lg:shadow-[0_12px_34px_-28px_rgba(15,23,42,0.55)]",
                     )}>

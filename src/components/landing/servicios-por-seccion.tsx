@@ -93,26 +93,40 @@ export function ServiciosPorSeccion({ secciones, verTodos, masSecciones = "" }: 
 
       {/* Los cuatro más buscados de la sección: 2×2 en el teléfono (como
           Thumbtack), una fila de cuatro desde computadora. */}
-      <div
-        id="servicios-de-la-seccion"
-        role="tabpanel"
-        key={seccion.id}
-        className="ccr-entrada mt-4 grid grid-cols-2 gap-3 sm:mt-7 sm:gap-4 lg:grid-cols-4"
-      >
-        {seccion.servicios.slice(0, 4).map((servicio) => (
-          <Link
-            key={servicio.id}
-            href={servicio.href}
-            onClick={() => setTocado(servicio.id)}
-            data-tocado={tocado === servicio.id || undefined}
-            className="group relative block aspect-[4/5] overflow-hidden rounded-2xl bg-[#e8eef3] shadow-[0_6px_18px_-12px_rgba(15,23,42,0.45)] lg:aspect-[4/5.2]"
+      {/* LAS CUATRO SECCIONES MONTADAS DESDE EL PRINCIPIO, una encima de otra:
+          la elegida se ve y las demás esperan invisibles, ya con sus fotos
+          descargadas y decodificadas. Antes cada cambio de pestaña volvía a
+          montar la rejilla y las fotos cargaban de nuevo (con su esqueleto),
+          aunque nunca cambian. Ahora cambiar es un fundido inmediato. */}
+      <div className="relative mt-4 sm:mt-7">
+        {secciones.map((s, indice) => (
+          <div
+            key={s.id}
+            id={indice === activa ? "servicios-de-la-seccion" : undefined}
+            role={indice === activa ? "tabpanel" : undefined}
+            aria-hidden={indice !== activa || undefined}
+            className={cn(
+              "grid grid-cols-2 gap-3 transition-opacity duration-200 sm:gap-4 lg:grid-cols-4",
+              indice === activa ? "relative opacity-100" : "pointer-events-none invisible absolute inset-x-0 top-0 opacity-0",
+            )}
           >
-            <ServiceImage categoryId={servicio.id} badge={false} className="pointer-events-none absolute inset-0 h-full w-full transition-transform duration-500 ease-out group-hover:scale-[1.06] group-active:scale-[1.06] group-data-[tocado]:scale-[1.06]" />
-            <span aria-hidden className="absolute inset-0" style={{ background: "linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.25) 22%, rgba(0,0,0,0) 42%)" }} />
-            <span className="absolute inset-x-0 bottom-0 p-3.5 text-[15px] font-bold leading-tight text-white drop-shadow sm:p-4 sm:text-base lg:p-6 lg:text-2xl">
-              {servicio.label}
-            </span>
-          </Link>
+            {s.servicios.slice(0, 4).map((servicio) => (
+              <Link
+                key={servicio.id}
+                href={servicio.href}
+                tabIndex={indice === activa ? undefined : -1}
+                onClick={() => setTocado(servicio.id)}
+                data-tocado={tocado === servicio.id || undefined}
+                className="group relative block aspect-[4/5] overflow-hidden rounded-2xl bg-[#e8eef3] shadow-[0_6px_18px_-12px_rgba(15,23,42,0.45)] lg:aspect-[4/5.2]"
+              >
+                <ServiceImage categoryId={servicio.id} badge={false} className="pointer-events-none absolute inset-0 h-full w-full transition-transform duration-500 ease-out group-hover:scale-[1.06] group-active:scale-[1.06] group-data-[tocado]:scale-[1.06]" />
+                <span aria-hidden className="absolute inset-0" style={{ background: "linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.25) 22%, rgba(0,0,0,0) 42%)" }} />
+                <span className="absolute inset-x-0 bottom-0 p-3.5 text-[15px] font-bold leading-tight text-white drop-shadow sm:p-4 sm:text-base lg:p-6 lg:text-2xl">
+                  {servicio.label}
+                </span>
+              </Link>
+            ))}
+          </div>
         ))}
       </div>
       {verTodos && (

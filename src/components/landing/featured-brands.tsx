@@ -76,7 +76,9 @@ export function FeaturedBrands() {
     };
     const decidir = () => {
       if (!anim) return;
-      if (enPantalla && !arrastrando && !reducir.matches) anim.play();
+      // Corre SIEMPRE, también con «Reducir movimiento» del teléfono: en esos
+      // equipos la cinta se quedaba quieta y parecía rota (3-oct-2026).
+      if (enPantalla && !arrastrando) anim.play();
       else anim.pause();
     };
     const crear = () => {
