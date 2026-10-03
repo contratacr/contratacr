@@ -52,19 +52,27 @@ export function rutaProyecto(project: { id: string; title?: string | null }): st
   return `/proyectos/${tramoFicha(project.title ?? "", project.id)}`;
 }
 
-/** contratacr.com/o/b1baacf7 */
-export function enlaceOferta(offer: { id: string }, baseUrl?: string): string {
-  return `${base(baseUrl)}/o/${codigoCorto(offer.id)}`;
+// EL ENLACE QUE SE COMPARTE ES EL LEGIBLE (3-oct-2026): contratacr.com/empleos/
+// asistente-contable-d4000000, el mismo que el de Proyectos y el que se ve en
+// la barra. El corto (/e/d4000000, /o/…, /p/…) se leía como un código y no
+// decía qué era; sigue funcionando para lo que ya se compartió.
+function prefijoActual(): string {
+  return typeof window !== "undefined" && /^\/en(?:\/|$)/.test(window.location.pathname) ? "/en" : "";
 }
 
-/** contratacr.com/e/d4000000 */
-export function enlaceEmpleo(job: { id: string }, baseUrl?: string): string {
-  return `${base(baseUrl)}/e/${codigoCorto(job.id)}`;
+/** contratacr.com/promociones/camaras-de-seguridad-b1baacf7 */
+export function enlaceOferta(offer: { id: string; title?: string | null }, baseUrl?: string): string {
+  return `${base(baseUrl)}${prefijoActual()}${rutaPromocion(offer)}`;
 }
 
-/** contratacr.com/p/1b93475f — el proyecto era el único sin enlace corto. */
-export function enlaceProyecto(project: { id: string }, baseUrl?: string): string {
-  return `${base(baseUrl)}/p/${codigoCorto(project.id)}`;
+/** contratacr.com/empleos/asistente-contable-d4000000 */
+export function enlaceEmpleo(job: { id: string; title?: string | null }, baseUrl?: string): string {
+  return `${base(baseUrl)}${prefijoActual()}${rutaEmpleo(job)}`;
+}
+
+/** contratacr.com/proyectos/fuga-en-la-cocina-1b93475f */
+export function enlaceProyecto(project: { id: string; title?: string | null }, baseUrl?: string): string {
+  return `${base(baseUrl)}${prefijoActual()}${rutaProyecto(project)}`;
 }
 /** Los 8 primeros del id: es lo que hace único al enlace. */
 export function codigoCorto(id: string): string {
