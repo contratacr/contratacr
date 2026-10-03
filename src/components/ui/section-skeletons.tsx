@@ -145,17 +145,20 @@ export function PerfilSkeleton() {
           tarjeta, pestañas debajo y la columna de contacto a la derecha. Antes
           salía el esqueleto del teléfono a todo lo ancho y al llegar la ficha
           todo cambiaba de sitio. */}
-      <div className="mx-auto hidden max-w-7xl px-8 pb-8 pt-8 lg:block">
+      <div className="ccr-delayed-loading mx-auto hidden max-w-7xl px-8 pb-8 pt-8 lg:block">
         <Hueso className="mb-6 h-5 w-44 rounded-full" />
         <div className="flex gap-6">
           <div className="min-w-0 flex-1">
             <div className="mb-6 flex items-center gap-5 rounded-2xl border border-[#e5e7eb] bg-white p-6 shadow-sm">
               <Hueso className="h-[88px] w-[88px] shrink-0 rounded-full" />
               <div className="min-w-0 flex-1 space-y-3">
-                <Hueso className="h-6 w-64 max-w-full rounded-full" />
+                {/* El «···» va en el renglón del nombre, como en la ficha. */}
+                <div className="flex items-center justify-between gap-4">
+                  <Hueso className="h-6 w-64 max-w-full rounded-full" />
+                  <Hueso className="h-6 w-8 shrink-0 rounded-full" />
+                </div>
                 <Hueso className="h-4 w-40 max-w-full rounded-full" />
               </div>
-              <Hueso className="h-6 w-8 rounded-full" />
             </div>
             <div className="rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">
               <div className="flex gap-6 border-b border-[#eef2f6] px-6 py-4">
@@ -178,7 +181,9 @@ export function PerfilSkeleton() {
           </div>
         </div>
       </div>
-      <div className="lg:hidden">
+      {/* Los huesos esperan 250 ms antes de verse (ccr-delayed-loading): si la
+          ficha llega antes —lo normal al recargar—, no se ve ningún esqueleto. */}
+      <div className="ccr-delayed-loading lg:hidden">
       <div className="bg-white px-4 pb-5 pt-5">
         <div className="mx-auto flex w-full max-w-3xl items-center gap-4">
           <Hueso className="h-20 w-20 shrink-0 rounded-full" />

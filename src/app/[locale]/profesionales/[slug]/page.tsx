@@ -1,4 +1,4 @@
-import { getProfessionalBySlug } from "@/lib/queries/professionals";
+import { getProfessionalBySlug, fichaEnCache } from "@/lib/queries/professionals";
 import { prefijoDeIdioma } from "@/lib/prefijo-de-idioma";
 import { publicacionesDelProfesional } from "@/lib/queries/publicaciones-del-profesional";
 import ProfileClient from "./profile-client";
@@ -21,10 +21,15 @@ export const revalidate = 300;
 
 export default async function ProfilePage({ params }: { params: Promise<{ locale: string; slug: string }> }) {
   const { locale, slug } = await params;
-  const ficha = await getProfessionalBySlug(slug);
   // Las promociones y los empleos también vienen pintados: si no, la fila de
-  // pestañas nace con cinco y salta a siete al llegar el navegador.
-  const publicaciones = ficha ? await publicacionesDelProfesional(ficha.id) : { ofertas: [], empleos: [] };
+  // pestañas nace con cinco y salta a siete al llegar el navegador. Se piden A
+  // LA VEZ que las comprobaciones en vivo de la ficha (el id sale de la caché):
+  // en serie eran tres viajes a la base y casi un segundo de esqueleto.
+  const base = await fichaEnCache(slug);
+  const [ficha, publicaciones] = await Promise.all([
+    getProfessionalBySlug(slug),
+    base ? publicacionesDelProfesional(base.id) : Promise.resolve({ ofertas: [], empleos: [] }),
+  ]);
   return (
     <>
       {ficha && <DatosEstructurados datos={fichaComoNegocioLocal(ficha, locale)} />}

@@ -904,35 +904,46 @@ export async function getProfessionalBySlug(slug: string): Promise<ProfessionalD
   // Google— y ahí el baneo no servía de nada. La suspensión se consulta FUERA de
   // la caché de la ficha: si esperara al recálculo, el perfil suspendido seguiría
   // visible hasta media hora después de suspenderlo.
-  try {
-    const { createPublicClient } = await import("@/lib/supabase/server");
-    const publico = await createPublicClient();
-    const { data: estado, error } = await publico
-      .from("professionals")
-      .select("is_banned")
-      .eq("id", pro.id)
-      .maybeSingle();
-    if (!error && (estado as { is_banned?: boolean | null } | null)?.is_banned) return null;
-  } catch {
-    /* columna ausente o base sin responder: la ficha se comporta como siempre */
-  }
-
+  //
+  // La suspensión y el correo de contacto se piden A LA VEZ (3-oct-2026): uno
+  // tras otro sumaban dos viajes a la base y el perfil enseñaba su esqueleto
+  // casi un segundo en cada recarga.
+  const suspendido = (async () => {
+    try {
+      const { createPublicClient } = await import("@/lib/supabase/server");
+      const publico = await createPublicClient();
+      const { data: estado, error } = await publico
+        .from("professionals")
+        .select("is_banned")
+        .eq("id", pro.id)
+        .maybeSingle();
+      return !error && !!(estado as { is_banned?: boolean | null } | null)?.is_banned;
+    } catch {
+      /* columna ausente o base sin responder: la ficha se comporta como siempre */
+      return false;
+    }
+  })();
   // La ficha guardada en caché es la que ve cualquiera. El correo de contacto
   // solo está permitido para quien inició sesión, así que se pide aparte: si no
   // hay sesión la consulta no devuelve nada y la ficha se queda como está.
-  try {
-    const { createClient } = await import("@/lib/supabase/server");
-    const supabase = await createClient();
-    const { data } = await supabase
-      .from("professionals")
-      .select("contact_email")
-      .eq("id", pro.id)
-      .maybeSingle();
-    const correo = (data as { contact_email?: string | null } | null)?.contact_email;
-    if (correo) return { ...pro, contactEmail: correo };
-  } catch {
-    /* sin sesión o sin permiso: la ficha pública ya está completa */
-  }
+  const correo = (async () => {
+    try {
+      const { createClient } = await import("@/lib/supabase/server");
+      const supabase = await createClient();
+      const { data } = await supabase
+        .from("professionals")
+        .select("contact_email")
+        .eq("id", pro.id)
+        .maybeSingle();
+      return (data as { contact_email?: string | null } | null)?.contact_email ?? null;
+    } catch {
+      /* sin sesión o sin permiso: la ficha pública ya está completa */
+      return null;
+    }
+  })();
+  const [estaSuspendido, contactEmail] = await Promise.all([suspendido, correo]);
+  if (estaSuspendido) return null;
+  if (contactEmail) return { ...pro, contactEmail };
   return pro;
 }
 
@@ -1177,6 +1188,12 @@ async function getProfessionalBySlugUncached(
 
   // No fake/seed fallback.
   return null;
+}
+
+/** La ficha en caché, sin las comprobaciones en vivo: solo para saber su id
+ *  y adelantar otras consultas en paralelo (ver la página del perfil). */
+export function fichaEnCache(slug: string) {
+  return getProfessionalBySlugCached(slug);
 }
 
 const getProfessionalBySlugCached = unstable_cache(
