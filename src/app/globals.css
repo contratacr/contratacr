@@ -2363,6 +2363,13 @@ html[data-keyboard-open] body .ccr-native-search-panel {
 html[data-keyboard-open] body:not(.ccr-native-app) .ccr-native-search-panel {
   padding-bottom: 64px !important;
 }
+/* La hoja encogida al espacio sobre el teclado dejaba ver la página de atrás
+   arriba y abajo (Safari desplaza la vista con el teclado): un borde blanco
+   enorme la tapa toda. Así la búsqueda se ve como una pantalla propia. */
+html[data-keyboard-open] body .ccr-native-search-panel,
+html[data-keyboard-open] body .ccr-hoja-buscador {
+  box-shadow: 0 0 0 100vmax #fff;
+}
 /* La hoja de búsqueda de Promociones, Empleos y Proyectos: lo mismo. */
 html[data-keyboard-open] body .ccr-hoja-buscador {
   top: var(--app-visual-viewport-top, 0px) !important;

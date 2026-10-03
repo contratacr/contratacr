@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
+import { lockBodyScroll } from "@/lib/body-scroll-lock";
 import { soltarFoco } from "@/lib/soltar-foco";
 import { Check, ChevronDown, ChevronRight, Clock3, MapPin, Search, Wrench, X } from "lucide-react";
 import { useLocale } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { readRecentVisits, type RecentVisit, type RecentVisitSurface } from "@/lib/recent-visits";
 import { useToquePropio } from "@/hooks/use-toque-propio";
-import { cerrarTecladoAlDeslizar } from "@/lib/cerrar-teclado";
 
 const MARKETPLACE_CONTROL_COPY = {
   es: {
@@ -130,6 +130,9 @@ export function MarketplaceSearch({
   const SecondaryIcon = secondary?.icon === "location" ? MapPin : Wrench;
   const secondaryClearLabel = secondary?.clearLabel ?? copy.clearService;
   const [open, setOpen] = useState(false);
+  // Con la hoja abierta la página de atrás NO se mueve: en Safari, con el
+  // teclado abierto, arrastrar movía la página de fondo y no la lista.
+  useEffect(() => (open ? lockBodyScroll() : undefined), [open]);
   const [desktopField, setDesktopField] = useState<"primary" | "secondary" | null>(null);
   const [mobileField, setMobileField] = useState<"primary" | "secondary">("primary");
   const [recents, setRecents] = useState<string[]>([]);
@@ -438,7 +441,7 @@ export function MarketplaceSearch({
           </div>
           {/* La lista se desplaza POR DENTRO: antes la hoja no tenía nada que
               se desplazara y con el teclado abierto lo de abajo era inalcanzable. */}
-          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 py-5" onTouchMove={cerrarTecladoAlDeslizar}>
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 py-5">
             <div className="mb-3 flex items-center justify-between gap-3">
               <h2 className="text-base font-extrabold">{mobileField === "secondary" || cleanValue ? copy.suggestions : copy.recents}</h2>
               {mobileField === "primary" && !cleanValue && recents.length > 0 && (
