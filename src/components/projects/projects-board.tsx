@@ -616,7 +616,7 @@ export function ProjectsBoard({
               fichaEnMovil && "max-sm:overflow-visible max-sm:border-0 max-lg:rounded-none max-lg:border-0 max-lg:bg-transparent max-lg:shadow-none",
             )}>
               <section className={cn(
-                "min-w-0 bg-white lg:h-full lg:overflow-y-auto",
+                "ccr-lista-tablero min-w-0 bg-white lg:h-full lg:overflow-y-auto",
                 filtrados.length > 0 && "ccr-lista-tablero",
                 detalle && "hidden",
               )}>

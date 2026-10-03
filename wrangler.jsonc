@@ -11,6 +11,16 @@
   "ai": {
     "binding": "AI"
   },
+  // Caché de datos de Next (unstable_cache) en R2. Sin esto OpenNext usa una
+  // caché vacía y cada consulta «en caché» iba a la base en cada visita (el
+  // perfil enseñaba su esqueleto casi un segundo al recargar). Las claves
+  // llevan el id de cada build, así que test y producción no se mezclan.
+  "r2_buckets": [
+    {
+      "binding": "NEXT_INC_CACHE_R2_BUCKET",
+      "bucket_name": "contratacr-next-cache"
+    }
+  ],
   "d1_databases": [
     {
       "binding": "PADRON_D1",

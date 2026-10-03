@@ -38,8 +38,13 @@ function BarraSuperior() {
  */
 export function PanelSkeleton({ seccion = false }: { seccion?: boolean } = {}) {
   if (seccion) {
+    // En computadora una sección abierta se ve igual que el panel (cabecera,
+    // menú de la izquierda y tarjeta): la lista suelta de abajo es la forma del
+    // TELÉFONO, y en la computadora el acomodo saltaba al llegar los datos.
     return (
-      <div className="min-h-screen bg-[#f4f7fa]" aria-busy="true" role="status">
+      <>
+      <div className="hidden lg:block"><PanelSkeleton /></div>
+      <div className="min-h-screen bg-[#f4f7fa] lg:hidden" aria-busy="true" role="status">
         <BarraSuperior />
         <div className="mx-auto w-full max-w-xl space-y-3 px-4 pt-6 lg:max-w-4xl lg:px-8 lg:pt-8">
           {[0, 1, 2, 3].map((fila) => (
@@ -53,6 +58,7 @@ export function PanelSkeleton({ seccion = false }: { seccion?: boolean } = {}) {
           ))}
         </div>
       </div>
+      </>
     );
   }
   return (
@@ -135,6 +141,49 @@ export function PerfilSkeleton() {
       {/* La barra de verdad, no una franja vacía: al llegar la ficha la
           cabecera ya está en su sitio y no «aparece» encima del esqueleto. */}
       <Navbar />
+      {/* EN COMPUTADORA, la forma de la ficha de computadora: cabecera en
+          tarjeta, pestañas debajo y la columna de contacto a la derecha. Antes
+          salía el esqueleto del teléfono a todo lo ancho y al llegar la ficha
+          todo cambiaba de sitio. */}
+      <div className="ccr-delayed-loading mx-auto hidden max-w-7xl px-8 pb-8 pt-8 lg:block">
+        <Hueso className="mb-6 h-5 w-44 rounded-full" />
+        <div className="flex gap-6">
+          <div className="min-w-0 flex-1">
+            <div className="mb-6 flex items-center gap-5 rounded-2xl border border-[#e5e7eb] bg-white p-6 shadow-sm">
+              <Hueso className="h-[88px] w-[88px] shrink-0 rounded-full" />
+              <div className="min-w-0 flex-1 space-y-3">
+                {/* El «···» va en el renglón del nombre, como en la ficha. */}
+                <div className="flex items-center justify-between gap-4">
+                  <Hueso className="h-6 w-64 max-w-full rounded-full" />
+                  <Hueso className="h-6 w-8 shrink-0 rounded-full" />
+                </div>
+                <Hueso className="h-4 w-40 max-w-full rounded-full" />
+              </div>
+            </div>
+            <div className="rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">
+              <div className="flex gap-6 border-b border-[#eef2f6] px-6 py-4">
+                {[0, 1, 2, 3].map((n) => <Hueso key={n} className="h-4 w-24 rounded-full" />)}
+              </div>
+              <div className="space-y-3 p-6">
+                <Hueso className="h-5 w-48 rounded-full" />
+                <Hueso className="h-3.5 w-full rounded-full" />
+                <Hueso className="h-3.5 w-5/6 rounded-full" />
+                <Hueso className="mt-4 h-48 w-full rounded-2xl" />
+              </div>
+            </div>
+          </div>
+          <div className="w-[352px] shrink-0">
+            <div className="space-y-3 rounded-2xl border border-[#e5e7eb] bg-white p-6 shadow-sm">
+              <Hueso className="h-5 w-40 rounded-full" />
+              <Hueso className="h-12 w-full rounded-full" />
+              <Hueso className="h-12 w-full rounded-full" />
+            </div>
+          </div>
+        </div>
+      </div>
+      {/* Los huesos esperan 250 ms antes de verse (ccr-delayed-loading): si la
+          ficha llega antes —lo normal al recargar—, no se ve ningún esqueleto. */}
+      <div className="ccr-delayed-loading lg:hidden">
       <div className="bg-white px-4 pb-5 pt-5">
         <div className="mx-auto flex w-full max-w-3xl items-center gap-4">
           <Hueso className="h-20 w-20 shrink-0 rounded-full" />
@@ -159,6 +208,7 @@ export function PerfilSkeleton() {
             </div>
           </div>
         ))}
+      </div>
       </div>
     </div>
   );

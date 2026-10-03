@@ -3772,7 +3772,7 @@
     },
     "zones": {
       "eyebrow": "Cobertura local",
-      "heading": "Encuentra profesionales en tu zona",
+      "heading": "Encuentra profesionales cerca de ti",
       "subtitle": "Toca tu provincia y elige tu cantón.",
       "mapAria": "Mapa de Costa Rica por provincia",
       "coverageCount": "{count, plural, one {# cantón con cobertura} other {# cantones con cobertura}}",
@@ -3811,7 +3811,7 @@
       "mockResults": "118 profesionales en Costa Rica",
       "mockSearch": "Buscar contador",
       "guia": {
-        "titulo": "Así se usa ContrataCR",
+        "titulo": "Así funciona <marca></marca>",
         "subtitulo": "Todo lo que necesitas, en una sola app.",
         "profesionales": {
           "titulo": "Busca profesionales",

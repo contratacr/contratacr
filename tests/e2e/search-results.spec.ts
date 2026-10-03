@@ -169,8 +169,11 @@ test.describe("@seeded search results", () => {
     await gotoOK(page, "/");
     await waitForInteractivePage(page);
     const search = page.getByRole("combobox", { name: /Qu[eé] servicio|Qu[eé] necesitas|What service|What do you need/i }).first();
-    await search.fill("plomeria");
-    await search.press("Enter");
+    // En el teléfono el campo de la portada abre el buscador a pantalla
+    // completa y el cursor pasa ahí: se escribe donde quedó el foco.
+    await search.click();
+    await page.keyboard.type("plomeria");
+    await page.keyboard.press("Enter");
     await page.keyboard.press("Enter");
     await expect(page).toHaveURL(/\/profesionales/);
     await expect(

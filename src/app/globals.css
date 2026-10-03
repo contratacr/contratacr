@@ -1864,15 +1864,26 @@ body.ccr-native-app.ccr-native-bottom-nav-visible .ccr-native-fab {
 /* Solo se esconde con JavaScript (la clase ccr-js la pone el script de
    arranque) y nunca lo que ya está en la primera pantalla (un script al final
    de la portada lo marca visible antes del primer cuadro). */
-html.ccr-js .fade-in-up {
+/* APARICIÓN AL BAJAR (3-oct-2026), como Apple, Stripe o Linear: POR PARTES.
+   Primero el título de la sección y, 120 ms después, su contenido (las
+   tarjetas, la guía, el mapa); poco recorrido (16 px) y una curva que arranca
+   rápido y se posa suave (ease-out «expo»). Antes subía el bloque entero 28 px
+   con `ease` y se notaba flotando. La opacidad va algo más rápida que el
+   movimiento: se lee antes de terminar de asentarse.
+   Estructura de cada sección: .fade-in-up > section > div > [título, contenido]. */
+html.ccr-js .fade-in-up > section > div > * {
   opacity: 0;
-  transform: translateY(28px);
-  transition: opacity 0.65s ease, transform 0.65s ease;
+  transform: translate3d(0, 16px, 0);
+  transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1), transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
 }
-
-html.ccr-js .fade-in-up.visible {
+html.ccr-js .fade-in-up.visible > section > div > * {
   opacity: 1;
-  transform: translateY(0);
+  transform: none;
+}
+html.ccr-js .fade-in-up.visible > section > div > *:nth-child(2) { transition-delay: 120ms; }
+html.ccr-js .fade-in-up.visible > section > div > *:nth-child(3) { transition-delay: 240ms; }
+@media (prefers-reduced-motion: reduce) {
+  html.ccr-js .fade-in-up > section > div > * { opacity: 1; transform: none; transition: none; }
 }
 
 /* ─── Category icon tabs ─── */
@@ -2349,11 +2360,35 @@ html[data-keyboard-visible] body.ccr-native-app .ccr-native-search-panel { botto
    así que el final de «Servicio» quedaba tapado por el teclado y no se podía
    alcanzar, y en «Ubicación» iOS desplazaba la página y sobraba espacio vacío
    debajo de la última opción. */
-html[data-keyboard-open] body.ccr-native-app .ccr-native-search-panel {
+/* 3-oct-2026: también en la WEB del teléfono. Solo valía dentro de la app y en
+   Safari la hoja seguía hasta el fondo: la lista quedaba bajo el teclado y el
+   dedo movía la vista en vez de la lista («no deja scrollear»). En Safari la
+   barra flotante del teclado (˄ ˅ ✓) va DENTRO del viewport visual: se le
+   deja su alto por debajo. */
+html[data-keyboard-open] body .ccr-native-search-panel {
   top: var(--app-visual-viewport-top, 0px) !important;
   bottom: auto !important;
   height: var(--app-visual-viewport-height, 100dvh) !important;
   padding-bottom: 0 !important;
+}
+html[data-keyboard-open] body:not(.ccr-native-app) .ccr-native-search-panel {
+  padding-bottom: 64px !important;
+}
+/* La hoja encogida al espacio sobre el teclado dejaba ver la página de atrás
+   arriba y abajo (Safari desplaza la vista con el teclado): un borde blanco
+   enorme la tapa toda. Así la búsqueda se ve como una pantalla propia. */
+html[data-keyboard-open] body .ccr-native-search-panel,
+html[data-keyboard-open] body .ccr-hoja-buscador {
+  box-shadow: 0 0 0 100vmax #fff;
+}
+/* La hoja de búsqueda de Promociones, Empleos y Proyectos: lo mismo. */
+html[data-keyboard-open] body .ccr-hoja-buscador {
+  top: var(--app-visual-viewport-top, 0px) !important;
+  bottom: auto !important;
+  height: var(--app-visual-viewport-height, 100dvh) !important;
+}
+html[data-keyboard-open] body:not(.ccr-native-app) .ccr-hoja-buscador {
+  padding-bottom: 64px;
 }
 /* Con el buscador abierto la barra sigue flotando ENCIMA de él (el buscador
    va en la capa 220): si no, tocar Asistente o + no le llegaba. */
@@ -2654,6 +2689,10 @@ html.ccr-js .fade-in-up:not(.visible) #servicios-de-la-seccion > a { opacity: 0;
 .ccr-menu-completo.ccr-menu-abierto { transition: visibility 0s; }
 .ccr-menu-completo .ccr-menu-cuerpo { transform: translate3d(100%, 0, 0); transition: transform 0.42s cubic-bezier(0.32, 0.72, 0, 1); will-change: transform; backface-visibility: hidden; }
 .ccr-menu-completo.ccr-menu-abierto .ccr-menu-cuerpo { transform: translate3d(0, 0, 0); }
+/* AL CERRAR, la fila de arriba del menú (logo + X) se va EN EL ACTO: quedaba
+   0,42 s encima mientras salía el cuerpo y tapaba la cabecera real —en
+   Notificaciones se leía «ContrataCR» un momento antes de volver el título—. */
+.ccr-menu-completo:not(.ccr-menu-abierto) .ccr-menu-fila-superior { visibility: hidden; }
 /* Al ir a una sección desde el menú, el menú se quita sin animación. */
 html.ccr-menu-sin-cierre .ccr-menu-completo, html.ccr-menu-sin-cierre .ccr-menu-completo .ccr-menu-cuerpo { transition: none !important; }
 /* Sin íconos, como Angi; la flecha «›» va al final de cada fila. */

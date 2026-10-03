@@ -34,6 +34,7 @@ import { oficiosDeArranque } from "@/lib/data/oficios-de-arranque";
 
 import { allLocationSuggestions, searchLocations, resolveLocation, type LocationSuggestion } from "@/lib/data/location-search";
 import { lockBodyScroll } from "@/lib/body-scroll-lock";
+import { useContainedTouchScroll } from "@/hooks/use-contained-touch-scroll";
 import { createClient } from "@/lib/supabase/client";
 import { repairVisibleText } from "@/lib/text/repair-visible-text";
 import { OfferTagPercentIcon } from "@/components/icons/offer-tag-percent-icon";
@@ -1844,9 +1845,14 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
     // Quien lo pide (la pestaña Profesionales) sabe así que hubo un buscador
     // que lo atendió; si no, navega a la búsqueda.
     const open = (event: Event) => {
-      const pedido = (event as CustomEvent<{ atendido?: boolean } | null>).detail;
+      const pedido = (event as CustomEvent<{ atendido?: boolean; campo?: "servicio" | "ubicacion" } | null>).detail;
       if (pedido) pedido.atendido = true;
       openNativeSearch();
+      // Desde el campo «Ubicación» de la portada: el cursor va a la ubicación.
+      if (pedido?.campo === "ubicacion") {
+        setSearchFocused(false);
+        window.setTimeout(() => nativeLocationInputRef.current?.focus({ preventScroll: true }), 0);
+      }
     };
     // El Asistente y el «+» no cambian de dirección: el buscador no se
     // cerraba solo y quedaba ENCIMA de lo que abrían. Lo piden cerrar.
@@ -1881,6 +1887,9 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
     };
   }, [nativeSearchOpen]);
 
+  // Solo la lista del buscador se desplaza, y solo si tiene de qué (ver la hoja de los tableros).
+  const listaBuscadorRef = useRef<HTMLDivElement | null>(null);
+  useContainedTouchScroll(listaBuscadorRef, nativeSearchOpen);
   useEffect(() => {
     if (!nativeSearchOpen) return;
     const roots = [document.documentElement, document.body];
@@ -2777,7 +2786,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                 </div>
               </div>
 
-              <div className="mt-4 min-h-0 flex-1 overflow-y-auto overscroll-contain pb-6">
+              <div ref={listaBuscadorRef} className="mt-4 min-h-0 flex-1 overflow-y-auto overscroll-contain pb-6">
                 {showNativeServiceSuggestions ? (
                   <div id="native-service-suggestions" className="space-y-1" role="listbox" aria-label={locale === "en" ? "Suggested services" : "Servicios sugeridos"}>
                     <p className="px-2 pb-1 pt-1 text-[12px] font-extrabold uppercase tracking-[0.12em] text-[#7a8797]">
@@ -3059,7 +3068,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
             )}
           >
             {/* La fila de arriba: igual que la cabecera de la página. */}
-            <div className="shrink-0 bg-white shadow-[0_2px_10px_-6px_rgba(15,23,42,0.25)]" style={{ paddingTop: altoSobreCabecera }}>
+            <div className="ccr-menu-fila-superior shrink-0 bg-white shadow-[0_2px_10px_-6px_rgba(15,23,42,0.25)]" style={{ paddingTop: altoSobreCabecera }}>
               <div className="flex h-16 items-center justify-between px-4 sm:px-6">
                 <Link href="/" aria-label="ContrataCR" onClick={(e) => { cerrarCajon(); irAlInicio(e); }} className="shrink-0">
                   <ContrataCRLogo />

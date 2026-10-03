@@ -107,7 +107,7 @@ test.describe("portada y menú (1-oct-2026) @smoke", () => {
 
   test("los videos de la guía están silenciados y corren solos", async ({ page }) => {
     await gotoOK(page, "/");
-    await page.locator("h2", { hasText: /Así se usa|How ContrataCR works/ }).scrollIntoViewIfNeeded();
+    await page.locator("h2", { hasText: /Así funciona ContrataCR|How ContrataCR works/ }).scrollIntoViewIfNeeded();
     const activo = page.locator("video.ccr-guia-video.opacity-100").first();
     await expect(activo).toBeVisible();
     // Lo que Safari exige para reproducir solo: silenciado y en línea. (El Chromium
@@ -119,7 +119,7 @@ test.describe("portada y menú (1-oct-2026) @smoke", () => {
     // WebKit suspende el autoplay de un video que no «se ve»: con opacidad 0
     // hasta que corría, el video no arrancaba hasta centrar el teléfono.
     await gotoOK(page, "/");
-    await page.locator("h2", { hasText: /Así se usa|How ContrataCR works/ }).scrollIntoViewIfNeeded();
+    await page.locator("h2", { hasText: /Así funciona ContrataCR|How ContrataCR works/ }).scrollIntoViewIfNeeded();
     const activo = page.locator("video.ccr-guia-video.opacity-100").first();
     await expect(activo).toBeVisible();
     expect(await activo.evaluate((v) => Number(getComputedStyle(v).opacity))).toBe(1);
@@ -138,7 +138,7 @@ test.describe("portada y menú (1-oct-2026) @smoke", () => {
 
   test("las secciones de abajo de la portada se ven al bajar", async ({ page }) => {
     await gotoOK(page, "/");
-    const zona = page.locator("h2", { hasText: /Encuentra profesionales en tu zona|Find professionals in your area/ });
+    const zona = page.locator("h2", { hasText: /Encuentra profesionales cerca de ti|Find professionals near you/ });
     await zona.scrollIntoViewIfNeeded();
     await expect.poll(() => zona.evaluate((e) => Number(getComputedStyle(e.closest("section") ?? e).opacity))).toBe(1);
   });

@@ -1,5 +1,8 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
+import { lockBodyScroll } from "@/lib/body-scroll-lock";
+import { useContainedTouchScroll } from "@/hooks/use-contained-touch-scroll";
+import { allLocationSuggestions, searchLocations } from "@/lib/data/location-search";
 import { soltarFoco } from "@/lib/soltar-foco";
 import { Check, ChevronDown, ChevronRight, Clock3, MapPin, Search, Wrench, X } from "lucide-react";
 import { useLocale } from "next-intl";
@@ -129,6 +132,13 @@ export function MarketplaceSearch({
   const SecondaryIcon = secondary?.icon === "location" ? MapPin : Wrench;
   const secondaryClearLabel = secondary?.clearLabel ?? copy.clearService;
   const [open, setOpen] = useState(false);
+  // Con la hoja abierta la página de atrás NO se mueve: en Safari, con el
+  // teclado abierto, arrastrar movía la página de fondo y no la lista.
+  useEffect(() => (open ? lockBodyScroll() : undefined), [open]);
+  // Solo la lista se desplaza, y solo si tiene de qué: sin recientes, el dedo
+  // movía la vista de Safari y la hoja temblaba persiguiéndola.
+  const listaHojaRef = useRef<HTMLDivElement | null>(null);
+  useContainedTouchScroll(listaHojaRef, open);
   const [desktopField, setDesktopField] = useState<"primary" | "secondary" | null>(null);
   const [mobileField, setMobileField] = useState<"primary" | "secondary">("primary");
   const [recents, setRecents] = useState<string[]>([]);
@@ -173,12 +183,32 @@ export function MarketplaceSearch({
   // sin ninguno es mandar a la persona a un vacío. Como salen los que existen,
   // la lista mide lo que mida el tablero —hoy dos o tres— y no se estira hacia
   // abajo; el tope de seis es por si algún día crece.
-  const visibleSecondarySuggestions = useMemo(
-    () => uniqueSecondarySuggestions
+  //
+  //
+  // 3-oct-2026 (Isaac): la UBICACIÓN se sugiere IGUAL que en /profesionales:
+  // vacío → las siete provincias; al escribir → provincias, cantones y barrios
+  // del país (searchLocations), siete como mucho, con su provincia debajo. Un
+  // barrio filtra por su cantón, que es como vienen las publicaciones.
+  const esUbicacion = secondary?.icon === "location";
+  const lugares = useMemo(() => {
+    if (!esUbicacion) return [] as { valor: string; etiqueta: string; sub?: string }[];
+    const encontrados = secondaryNeedle ? searchLocations(secondaryNeedle, 12) : allLocationSuggestions().filter((l) => l.type === "province");
+    const vistos = new Set<string>();
+    return encontrados.flatMap((l) => {
+      const esBarrio = l.type === "canton" && l.sublabel.includes(",");
+      const valor = esBarrio ? l.sublabel.split(",")[0].trim() : l.label;
+      if (vistos.has(l.label)) return [];
+      vistos.add(l.label);
+      return [{ valor, etiqueta: l.label, sub: l.type === "canton" ? l.sublabel : undefined }];
+    }).slice(0, 7);
+  }, [esUbicacion, secondaryNeedle]);
+  const visibleSecondarySuggestions = useMemo(() => {
+    if (esUbicacion) return lugares.map((l) => l.etiqueta);
+    return uniqueSecondarySuggestions
       .filter((suggestion) => !secondaryNeedle || suggestion.toLocaleLowerCase("es-CR").includes(secondaryNeedle))
-      .slice(0, 6),
-    [secondaryNeedle, uniqueSecondarySuggestions],
-  );
+      .slice(0, 6);
+  }, [esUbicacion, lugares, secondaryNeedle, uniqueSecondarySuggestions]);
+  const lugarPorEtiqueta = useMemo(() => new Map(lugares.map((l) => [l.etiqueta, l])), [lugares]);
 
   useEffect(() => {
     setRecents(readRecentSearches(recentStorageKey));
@@ -375,7 +405,7 @@ export function MarketplaceSearch({
                     key={suggestion}
                     type="button"
                     onMouseDown={(event) => event.preventDefault()}
-                    onClick={() => chooseSecondarySuggestion(suggestion)}
+                    onClick={() => chooseSecondarySuggestion(lugarPorEtiqueta.get(suggestion)?.valor ?? suggestion)}
                     className="block w-full px-3 py-2.5 text-left text-sm font-semibold text-[#162543] transition hover:bg-[#f1f9fc] focus:bg-[#f1f9fc] focus:outline-none"
                   >
                     {suggestion}
@@ -388,8 +418,8 @@ export function MarketplaceSearch({
         )}
       </div>
       {open && (
-        <div className="fixed inset-0 z-[1300] bg-white text-[#162543] lg:hidden">
-          <div className="space-y-3 px-4 py-4">
+        <div className="ccr-hoja-buscador fixed inset-0 z-[1300] flex flex-col bg-white text-[#162543] lg:hidden">
+          <div className="shrink-0 space-y-3 px-4 py-4">
             <div className="flex h-13 min-w-0 items-center rounded-[10px] border border-[#e5e7eb] bg-white px-3">
               <button type="button" onClick={closeMobileSearch} aria-label={copy.back} className="grid h-10 w-10 shrink-0 place-items-center text-[#1A2744]">
                 <ChevronRight className="h-6 w-6 rotate-180" />
@@ -435,7 +465,9 @@ export function MarketplaceSearch({
               </label>
             )}
           </div>
-          <div className="px-6 py-5">
+          {/* La lista se desplaza POR DENTRO: antes la hoja no tenía nada que
+              se desplazara y con el teclado abierto lo de abajo era inalcanzable. */}
+          <div ref={listaHojaRef} className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 py-5">
             <div className="mb-3 flex items-center justify-between gap-3">
               <h2 className="text-base font-extrabold">{mobileField === "secondary" || cleanValue ? copy.suggestions : copy.recents}</h2>
               {mobileField === "primary" && !cleanValue && recents.length > 0 && (
@@ -449,9 +481,12 @@ export function MarketplaceSearch({
                 visibleSecondarySuggestions.map((suggestion) => (
                   // Un lugar se marca con un pin, no con una lupa: es el mismo
                   // icono que usa /buscar para lo mismo.
-                  <button key={suggestion} type="button" onClick={() => chooseSecondarySuggestion(suggestion)} className="flex min-h-14 w-full items-center gap-4 rounded-xl px-1 text-left transition hover:bg-[#f4f8fb]">
+                  <button key={suggestion} type="button" onClick={() => chooseSecondarySuggestion(lugarPorEtiqueta.get(suggestion)?.valor ?? suggestion)} className="flex min-h-14 w-full items-center gap-4 rounded-xl px-1 text-left transition hover:bg-[#f4f8fb]">
                     <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[#f4f8fb] text-[#162543]"><SecondaryIcon className="h-5 w-5" /></span>
-                    <span className="truncate text-base font-bold">{suggestion}</span>
+                    <span className="min-w-0">
+                      <span className="block truncate text-base font-bold">{suggestion}</span>
+                      {lugarPorEtiqueta.get(suggestion)?.sub && <span className="block truncate text-[12px] font-semibold text-[#6b7280]">{lugarPorEtiqueta.get(suggestion)?.sub}</span>}
+                    </span>
                   </button>
                 ))
               ) : cleanValue ? (

@@ -142,7 +142,13 @@ function useAnchoredRect(ref: RefObject<HTMLElement | null>, open: boolean, minW
       if (left + width > sx + window.innerWidth - 8) {
         left = Math.max(8 + sx, sx + window.innerWidth - 8 - width);
       }
-      const maxH = Math.max(140, Math.min(320, viewBottom - r.bottom - 12));
+      // Nunca más alta que el hueco sobre el teclado: con un mínimo fijo de 140 px
+      // la lista se metía DEBAJO del teclado (y de su barra ˄ ˅ ✓) y al deslizarla
+      // se movía la página en vez de la lista.
+      // En iOS 26 la barra flotante del teclado (˄ ˅ ✓) va DENTRO del visualViewport:
+      // con el teclado abierto se le resta su alto.
+      const conTeclado = !!vv && vv.height < window.innerHeight * 0.85;
+      const maxH = Math.max(72, Math.min(320, viewBottom - r.bottom - 12 - (conTeclado ? 80 : 0)));
       setPos({ left, top: r.bottom + sy + 8, width, maxH });
     };
     update();
@@ -159,6 +165,18 @@ function useAnchoredRect(ref: RefObject<HTMLElement | null>, open: boolean, minW
     };
   }, [open, ref, minWidth]);
   return pos;
+}
+
+/* EN EL TELÉFONO, LA PORTADA ABRE EL MISMO BUSCADOR A PANTALLA COMPLETA que
+   Profesionales (como Airbnb). Escribir en la píldora de la portada hacía que
+   Safari desplazara la página para el teclado —la cabecera se escondía— y las
+   sugerencias quedaban debajo del teclado. El foco pasa al buscador dentro del
+   mismo toque, así el teclado no se baja. Devuelve si lo abrió. */
+function abrirBuscadorCompleto(campo: "servicio" | "ubicacion"): boolean {
+  if (typeof window === "undefined" || !window.matchMedia("(max-width: 639px)").matches) return false;
+  const pedido = new CustomEvent("ccr:open-native-search", { detail: { atendido: false, campo } });
+  window.dispatchEvent(pedido);
+  return !!pedido.detail.atendido;
 }
 
 /* ─── Autocomplete dropdown (service/profession) — PORTALED to <body> ─── */
@@ -178,13 +196,18 @@ function SuggestionsDropdown({
   const show = open && suggestions.length > 0;
   const pos = useAnchoredRect(anchorRef, show, 240);
   if (!show || !pos || typeof document === "undefined") return null;
+  // Con el teclado abierto, iOS no deja desplazar bien una lista que flota sobre
+  // la página (el gesto mueve la vista, no la lista). Se muestran solo las que
+  // CABEN, ya ordenadas por relevancia: nada que desplazar. Cada fila mide ~40 px.
+  const caben = Math.max(2, Math.floor((pos.maxH - 8) / 40));
+  const visibles = suggestions.slice(0, caben);
   return createPortal(
     <div
       style={{ position: "absolute", left: pos.left, top: pos.top, width: pos.width, maxHeight: pos.maxH, zIndex: 9999 }}
       className="bg-white border border-gray-200 rounded-xl shadow-xl overflow-y-auto overscroll-contain py-1 text-left"
       role="listbox"
     >
-      {suggestions.map((s, i) => (
+      {visibles.map((s, i) => (
         <button
           key={`c-${s.id}`}
           type="button"
@@ -782,7 +805,7 @@ export function LandingHero() {
                   ref={servicioInputRef}
                   enterKeyHint={service.trim() && !location.trim() ? "next" : "search"}
                   onKeyDown={handleKeyDown}
-                  onFocus={() => { setFoco("svc"); if (suggestions.length > 0) setOpenSug(true); }}
+                  onFocus={() => { if (abrirBuscadorCompleto("servicio")) return; setFoco("svc"); if (suggestions.length > 0) setOpenSug(true); }}
                   onBlur={() => { setFoco((f) => (f === "svc" ? null : f)); setTimeout(() => setOpenSug(false), 120); }}
                   placeholder={t("searchPlaceholderShort")}
                   className="min-w-0 flex-1 bg-transparent text-[16px] text-[#162543] placeholder:text-[#6b7686] focus:outline-none sm:text-lg"
@@ -803,7 +826,7 @@ export function LandingHero() {
                   ref={ubicacionInputRef}
                   enterKeyHint={location.trim() && !service.trim() ? "next" : "search"}
                   onKeyDown={handleLocKeyDown}
-                  onFocus={() => { setFoco("loc"); ensureMaps(); setOpenLoc(location.trim().length >= 2); }}
+                  onFocus={() => { if (abrirBuscadorCompleto("ubicacion")) return; setFoco("loc"); ensureMaps(); setOpenLoc(location.trim().length >= 2); }}
                   onBlur={() => { setFoco((f) => (f === "loc" ? null : f)); setTimeout(() => setOpenLoc(false), 120); }}
                   placeholder={t("location")}
                   className="w-full min-w-0 flex-1 bg-transparent text-[16px] text-[#162543] placeholder:text-[#6b7686] focus:outline-none sm:text-lg"

@@ -76,6 +76,72 @@ export function GuiaDeLaApp({ pasos }: { pasos: PasoDeLaGuia[] }) {
     return () => window.clearInterval(id);
   }, [activo]);
 
+  // ARRANCAR EN LOS MOMENTOS JUSTOS, además del vigilante de cada segundo: en
+  // cuanto el teléfono asoma en pantalla y cuando el dedo suelta el scroll (iOS
+  // retiene la reproducción mientras la página se desliza con inercia). Así no
+  // hay que esperar al siguiente segundo ni volver a deslizar.
+  useEffect(() => {
+    const el = caja.current;
+    if (!el || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const reproducir = () => {
+      const v = videos.current[activo];
+      const r = el.getBoundingClientRect();
+      if (v && v.paused && !v.ended && r.bottom > 0 && r.top < window.innerHeight) v.play().catch(() => {});
+    };
+    const io = new IntersectionObserver((entradas) => { if (entradas.some((e) => e.isIntersecting)) reproducir(); }, { threshold: [0, 0.15] });
+    io.observe(el);
+    const opciones = { capture: true, passive: true } as const;
+    window.addEventListener("scrollend", reproducir, opciones);
+    window.addEventListener("touchend", reproducir, opciones);
+    return () => {
+      io.disconnect();
+      window.removeEventListener("scrollend", reproducir, opciones);
+      window.removeEventListener("touchend", reproducir, opciones);
+    };
+  }, [activo]);
+
+  // EN SAFARI (iPhone, iPad, Mac) EL VIDEO VA COMO IMAGEN ANIMADA. WebKit no
+  // arranca ni repinta un <video> mientras el dedo sigue deslizando la página:
+  // la guía se quedaba en el primer cuadro hasta soltar. Un .mp4 dentro de <img>
+  // (Safari lo acepta desde 2018) se anima como un GIF, en el compositor, aun
+  // durante el scroll. Cada vuelta usa una dirección blob: nueva para que la
+  // animación empiece desde el principio sin volver a descargar nada. El paso
+  // siguiente se programa con la duración real del video (de sus metadatos).
+  const [comoImagen, setComoImagen] = useState(false);
+  const [duraciones, setDuraciones] = useState<number[]>([]);
+  const [srcImagen, setSrcImagen] = useState<string | null>(null);
+  const blobs = useRef<(Blob | null)[]>([]);
+  useEffect(() => {
+    const ua = navigator.userAgent;
+    const webkit = /iP(hone|ad|od)/.test(ua) || (/Version\/[\d.]+.*Safari/.test(ua) && !/Chrome|Chromium|Edg|Android/.test(ua));
+    if (!webkit || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    let vivo = true;
+    pasos.forEach((p, i) => {
+      const v = document.createElement("video");
+      v.preload = "metadata"; v.muted = true; v.src = p.video;
+      v.onloadedmetadata = () => { if (vivo) setDuraciones((d) => { const n = [...d]; n[i] = v.duration; return n; }); };
+      fetch(p.video).then((r) => r.blob()).then((b) => { blobs.current[i] = b; if (vivo && i === 0) setComoImagen(true); }).catch(() => {});
+    });
+    return () => { vivo = false; };
+  }, [pasos]);
+  // Solo la duración DEL PASO ACTIVO: si dependiera de la lista entera, cada
+  // duración que llega de otro video reiniciaba la animación en curso.
+  const duracionActiva = duraciones[activo];
+  useEffect(() => {
+    if (!comoImagen) return;
+    const b = blobs.current[activo];
+    if (!b) return;
+    const url = URL.createObjectURL(b);
+    queueMicrotask(() => setSrcImagen(url));
+    const d = duracionActiva;
+    let id = 0;
+    if (d) {
+      queueMicrotask(() => { setDuracion(d); setCorriendo(true); });
+      id = window.setTimeout(() => setActivo((a) => (a + 1) % pasos.length), d * 1000);
+    }
+    return () => { window.clearTimeout(id); URL.revokeObjectURL(url); };
+  }, [comoImagen, activo, duracionActiva, pasos.length]);
+
   // Al terminar un video pasa al siguiente paso; si la persona eligió uno, se repite ese.
   const alTerminar = (i: number) => {
     if (i !== activo) return;
@@ -193,7 +259,11 @@ export function GuiaDeLaApp({ pasos }: { pasos: PasoDeLaGuia[] }) {
           >
             <div className="relative" style={{ background: "#04060a", borderRadius: 51, padding: 8 }}>
               <div className="relative overflow-hidden bg-white" style={{ borderRadius: 44, aspectRatio: "588 / 1280" }}>
-                {pasos.map((p, i) => (
+                {comoImagen && srcImagen && (
+                  // eslint-disable-next-line @next/next/no-img-element -- .mp4 animado (ver comoImagen)
+                  <img key={srcImagen} src={srcImagen} alt={pasos[activo].alt} onLoad={() => setPintando(activo)} className="ccr-guia-video absolute inset-0 z-[2] h-full w-full object-cover object-top" />
+                )}
+                {!comoImagen && pasos.map((p, i) => (
                   <video
                     key={p.clave}
                     ref={(el) => {
