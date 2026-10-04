@@ -345,7 +345,8 @@ test.describe("@smoke public routes", () => {
     // cacheado dejaría a un profesional real fuera de Google (19-sep-2026).
     const raiz = await page.request.get("/pagina-que-no-existe-jamas", { headers: { "accept-language": "es-CR,es;q=0.9" } });
     expect(raiz.status(), "una ruta suelta en la raíz termina en la ficha").toBe(200);
-    expect(raiz.url()).toContain("/profesionales/pagina-que-no-existe-jamas");
+    // La ficha se sirve en la misma dirección corta (sin salto, 4-oct-2026).
+    expect(raiz.url()).toContain("/pagina-que-no-existe-jamas");
     expect(await raiz.text(), "la ficha inexistente debe pedir no indexarse").toMatch(/name="robots" content="noindex/);
   });
 

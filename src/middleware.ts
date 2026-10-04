@@ -202,9 +202,12 @@ export async function middleware(request: NextRequest) {
   const perfilCorto = /^\/@?([a-z0-9][a-z0-9-]{2,80})$/.exec(pathname.toLowerCase());
   if (perfilCorto && !RUTAS_DEL_SITIO.has(perfilCorto[1])) {
     const locale = idiomaPreferido();
-    const destino = new URL(rutaConIdioma(locale, `/profesionales/${perfilCorto[1]}`), request.url);
+    // SE REESCRIBE, NO SE REDIRIGE (4-oct-2026): la ficha se sirve en la misma
+    // dirección corta, así lo que se copia de la barra es contratacr.com/nombre,
+    // igual que «Copiar enlace».
+    const destino = new URL(`/${locale}/profesionales/${perfilCorto[1]}`, request.url);
     destino.search = request.nextUrl.search;
-    return NextResponse.redirect(destino, 307);
+    return reescribirConIdioma(request, destino);
   }
 
   // Direcciones que se renombraron. Los `redirect()` que vivían en la propia

@@ -110,9 +110,29 @@ function profileReturnLabel(href: string, locale: string) {
   return locale === "en" ? "Back to results" : "Volver a resultados";
 }
 
+// El regreso calculado se guarda por ficha: al limpiar la dirección (?from= se
+// quita) la ficha puede volver a montarse y ya no lo encontraría en la URL.
+const CLAVE_REGRESO = "ccr:regreso-de-ficha";
+function regresoGuardado(): string | null {
+  try {
+    const d = JSON.parse(sessionStorage.getItem(CLAVE_REGRESO) || "null") as { ficha: string; a: string } | null;
+    return d && d.ficha === fichaDeLaDireccion() ? d.a : null;
+  } catch { return null; }
+}
+function guardarRegreso(a: string) {
+  try { sessionStorage.setItem(CLAVE_REGRESO, JSON.stringify({ ficha: fichaDeLaDireccion(), a })); } catch { /* sin almacenamiento */ }
+}
+function fichaDeLaDireccion(): string {
+  // /profesionales/nombre-1a2b3c4d o /nombre: el nombre sin el sufijo.
+  const ultimo = window.location.pathname.split("/").filter(Boolean).pop() ?? "";
+  return ultimo.replace(/-[a-z0-9]{8}$/, "");
+}
+
 function initialProfileReturnHref() {
   const explicit = searchParamFromUrl("from");
-  if (explicit) return safeProfileReturnHref(explicit);
+  if (explicit) { const a = safeProfileReturnHref(explicit); guardarRegreso(a); return a; }
+  const guardado = regresoGuardado();
+  if (guardado) return guardado;
   if (typeof document !== "undefined" && document.referrer) {
     try {
       const referrer = new URL(document.referrer);
@@ -243,6 +263,22 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
   useEffect(() => {
     setProfileReturnHref(initialProfileReturnHref());
   }, []);
+  // LA BARRA DE DIRECCIONES CON EL ENLACE BONITO (4-oct-2026): ya calculado el
+  // regreso, la dirección pasa a contratacr.com/nombre-apellido —la misma de
+  // «Copiar enlace»— sin «?from=…» ni el sufijo. Recargarla abre la misma ficha
+  // (el middleware la sirve ahí). Otros parámetros (?tab=…) se conservan.
+  useEffect(() => {
+    if (!professional?.slug || searchParamFromUrl("preview") === "1") return;
+    const corta = new URL(enlacePerfil(professional.slug, window.location.origin)).pathname;
+    const prefijo = /^\/en(?=\/|$)/.test(window.location.pathname) ? "/en" : "";
+    const params = new URLSearchParams(window.location.search);
+    params.delete("from");
+    const cadena = params.toString();
+    const destino = `${prefijo}${corta}${cadena ? `?${cadena}` : ""}${window.location.hash}`;
+    if (destino !== `${window.location.pathname}${window.location.search}${window.location.hash}`) {
+      window.history.replaceState(window.history.state, "", destino);
+    }
+  }, [professional?.slug]);
   // En la app la barra de arriba siempre toma el «volver» (y ya se sabe en el
   // servidor por la cookie): la fila propia de la ficha no se pinta para
   // luego esconderse, que subía toda la ficha 85 px al llegar la confirmación.
