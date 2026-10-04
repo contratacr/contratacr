@@ -349,7 +349,7 @@ export function OffersBoard({
         </button>
       ) : (
         <Link
-          href="/login?redirect=/promociones/publicar"
+          href="/promociones/publicar" prefetch={false}
           className="inline-flex h-9 flex-1 items-center justify-center rounded-full bg-[#009fd9] px-4 text-[13px] font-bold text-white transition hover:bg-[#008fc3] sm:flex-none lg:h-10 lg:px-5 lg:text-sm"
         >
           {copy.publishOffer}

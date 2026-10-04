@@ -13,6 +13,8 @@ import { Totales } from "@/components/quotes/quote-detail-modal";
 import { quoteTotals, QUOTE_MAX_ITEMS, type Quote, type QuoteItem, type QuoteTaxMode } from "@/lib/quotes";
 import { formatColones } from "@/lib/pricing";
 import { avisarMomentoDeNotificacion } from "@/lib/push-moment";
+import { borrarBorrador, guardarBorrador, rutaParaEntrar } from "@/lib/borrador-sin-sesion";
+import { prefijoDeIdioma } from "@/lib/prefijo-de-idioma";
 
 /**
  * Nueva cotización: lo mismo que piden Jobber o Square — cliente, líneas,
@@ -27,8 +29,19 @@ type Row = { id: number; description: string; quantity: string; unit_price: stri
 let seq = 1;
 const nuevaFila = (): Row => ({ id: seq++, description: "", quantity: "1", unit_price: "" });
 
-export function QuoteEditorModal({ open, onClose, bookingId, projectId, defaultTitle, clientName: clienteConocido, onSent }: {
+/** Lo que se guarda al «enviar» sin sesión (ver borrador-sin-sesion.ts). */
+export type BorradorDeCotizacion = {
+  cedula: string; clientName: string; clientPhone: string; clientEmail: string; title: string;
+  rows: { description: string; quantity: string; unit_price: string }[];
+  taxMode: QuoteTaxMode; notes: string; validDays: number;
+};
+
+export function QuoteEditorModal({ open, onClose, bookingId, projectId, defaultTitle, clientName: clienteConocido, onSent, sinSesion = false, inicial = null }: {
   open: boolean; onClose: () => void; bookingId?: string | null; projectId?: string | null; defaultTitle?: string;
+  /** Sin cuenta: al enviar se guarda el borrador y se pide entrar o registrarse. */
+  sinSesion?: boolean;
+  /** Borrador escrito antes de entrar: el editor se abre lleno. */
+  inicial?: BorradorDeCotizacion | null;
   /** Desde una cita o un proyecto el cliente ya se sabe: se muestra, no se pregunta. */
   clientName?: string | null;
   onSent: (quote: Quote) => void;
@@ -36,7 +49,7 @@ export function QuoteEditorModal({ open, onClose, bookingId, projectId, defaultT
   const t = useTranslations("quotes");
   const locale = useLocale();
   const suelta = !bookingId && !projectId;
-  const [cedula, setCedula] = useState("");
+  const [cedula, setCedula] = useState(inicial?.cedula ?? "");
   // "buscando" / "sin registro" se deducen de la cédula y del resultado, en vez
   // de escribirse desde el efecto (que dispara pintadas encadenadas).
   const [resultadoCedula, setResultadoCedula] = useState<{ id: string; encontrada: boolean } | null>(null);
@@ -44,14 +57,14 @@ export function QuoteEditorModal({ open, onClose, bookingId, projectId, defaultT
   const cedulaValida = isValidId(cedulaLimpia);
   const buscandoCedula = cedulaValida && resultadoCedula?.id !== cedulaLimpia;
   const cedulaSinRegistro = resultadoCedula?.id === cedulaLimpia && !resultadoCedula.encontrada;
-  const [clientName, setClientName] = useState("");
-  const [clientPhone, setClientPhone] = useState("");
-  const [clientEmail, setClientEmail] = useState("");
-  const [title, setTitle] = useState(defaultTitle ?? "");
-  const [rows, setRows] = useState<Row[]>([nuevaFila()]);
-  const [taxMode, setTaxMode] = useState<QuoteTaxMode>("incluido");
-  const [notes, setNotes] = useState("");
-  const [validDays, setValidDays] = useState(15);
+  const [clientName, setClientName] = useState(inicial?.clientName ?? "");
+  const [clientPhone, setClientPhone] = useState(inicial?.clientPhone ?? "");
+  const [clientEmail, setClientEmail] = useState(inicial?.clientEmail ?? "");
+  const [title, setTitle] = useState(inicial?.title ?? defaultTitle ?? "");
+  const [rows, setRows] = useState<Row[]>(() => (inicial?.rows?.length ? inicial.rows.map((r) => ({ ...nuevaFila(), ...r })) : [nuevaFila()]));
+  const [taxMode, setTaxMode] = useState<QuoteTaxMode>(inicial?.taxMode ?? "incluido");
+  const [notes, setNotes] = useState(inicial?.notes ?? "");
+  const [validDays, setValidDays] = useState(inicial?.validDays ?? 15);
   // La vigencia se dice como fecha, que es lo que el cliente va a leer.
   const validaHasta = new Date(Date.now() + validDays * 86_400_000).toLocaleDateString(DATE_LOCALE[locale] ?? "es-CR", { day: "numeric", month: "short" });
   const [sending, setSending] = useState(false);
@@ -94,11 +107,23 @@ export function QuoteEditorModal({ open, onClose, bookingId, projectId, defaultT
       setError(t("errorNeedsPrices"));
       return;
     }
+    // Sin cuenta: se guarda todo y se pide entrar. Al volver, el editor se
+    // abre lleno en Cotizaciones y solo falta tocar «Enviar».
+    if (sinSesion) {
+      setSending(true);
+      await guardarBorrador<BorradorDeCotizacion>("cotizacion", {
+        cedula, clientName, clientPhone, clientEmail, title, taxMode, notes, validDays,
+        rows: rows.map(({ description, quantity, unit_price }) => ({ description, quantity, unit_price })),
+      });
+      window.location.assign(rutaParaEntrar(prefijoDeIdioma(locale), "/cotizar"));
+      return;
+    }
     setSending(true); setError(null);
     try {
       const res = await fetch("/api/quotes", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ bookingId, projectId, clientName, clientPhone, clientEmail, clientCedula: cleanId(cedula), title, items, taxMode, notes, validDays }) });
       const d = await res.json().catch(() => ({}));
       if (!res.ok) { setError(res.status === 503 ? t("errorUnavailable") : d.error ?? t("errorTitle")); return; }
+      borrarBorrador("cotizacion");
       onSent(d.quote as Quote);
       avisarMomentoDeNotificacion("cotizacion");
       setRows([nuevaFila()]); setNotes(""); setTitle(defaultTitle ?? ""); setClientName(""); setClientPhone(""); setClientEmail(""); setCedula("");

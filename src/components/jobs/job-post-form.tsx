@@ -33,6 +33,8 @@ import { employmentTypeLabel, experienceLevelLabel, marketplaceLocale, salaryPer
 import { invalidateAppData } from "@/lib/app-data-invalidation";
 import { Button } from "@/components/ui/button";
 import { CABECERA_BOTON, CABECERA_FILA_CENTRADA, CABECERA_GLIFO, CABECERA_TITULO } from "@/components/layout/cabecera";
+import { prefijoDeIdioma } from "@/lib/prefijo-de-idioma";
+import { borrarBorrador, guardarBorrador, rutaParaEntrar } from "@/lib/borrador-sin-sesion";
 
 type FieldErrors = Partial<Record<"title" | "service" | "location" | "description" | "responsibilities" | "requirements" | "salary" | "openings" | "deadline" | "whatsapp", string>>;
 
@@ -309,7 +311,7 @@ function EditableList({
 
 type JobPostFormInitial = Partial<Pick<JobPost, "service_category_id" | "id" | "title" | "description" | "responsibilities" | "requirements" | "benefits" | "duration_label" | "employment_type" | "experience_level" | "workplace_type" | "location_label" | "salary_min" | "salary_max" | "salary_period" | "currency" | "show_salary" | "openings" | "application_deadline" | "contact_whatsapp" | "status">>;
 
-export function JobPostForm({ professionalId, backHref = "/empleos", initialJob = null, presentation = "page", onSaved, onCancel }: { professionalId: string; backHref?: string; initialJob?: JobPostFormInitial | null; presentation?: "page" | "modal"; onSaved?: (id: string, title: string) => void; onCancel?: () => void }) {
+export function JobPostForm({ professionalId, backHref = "/empleos", initialJob = null, presentation = "page", onSaved, onCancel }: { professionalId: string | null; backHref?: string; initialJob?: JobPostFormInitial | null; presentation?: "page" | "modal"; onSaved?: (id: string, title: string) => void; onCancel?: () => void }) {
   const { cabeceraRef, conLinea } = useHairlineOnScroll();
   const editing = Boolean(initialJob?.id);
   const router = useRouter();
@@ -335,7 +337,7 @@ export function JobPostForm({ professionalId, backHref = "/empleos", initialJob 
   // se puede cambiar: un empleo suele contestarlo otra persona.
   const [whatsapp, setWhatsapp] = useState<string>(initialJob?.contact_whatsapp ?? "");
   useEffect(() => {
-    if (initialJob?.contact_whatsapp) return;
+    if (initialJob?.contact_whatsapp || !professionalId) return;
     let vivo = true;
     void createClient().from("professionals").select("whatsapp").eq("id", professionalId).maybeSingle().then(({ data }) => {
       const guardado = String((data as { whatsapp?: string | null } | null)?.whatsapp ?? "").trim();
@@ -429,6 +431,16 @@ export function JobPostForm({ professionalId, backHref = "/empleos", initialJob 
       contact_whatsapp: whatsapp.trim() || null,
       status: editing ? (initialJob?.status ?? "published") : "published",
     };
+    // Sin sesión (o sin perfil profesional): se guarda todo y se pide entrar.
+    // Al volver, el formulario se abre lleno y solo falta tocar «Publicar».
+    if (!professionalId) {
+      const { employer_id: _sinDueño, id: _sinId, status: _sinEstado, ...borrador } = payload;
+      void _sinDueño; void _sinId; void _sinEstado;
+      await guardarBorrador("empleo", borrador);
+      setConCambios(false);
+      window.location.assign(rutaParaEntrar(prefijoDeIdioma(locale), "/empleos/publicar"));
+      return;
+    }
     try {
       const response = await fetch("/api/jobs/posts", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(payload) });
       const data = await response.json().catch(() => ({}));
@@ -441,6 +453,7 @@ export function JobPostForm({ professionalId, backHref = "/empleos", initialJob 
         throw delServidor;
       }
       invalidateAppData("jobs");
+      if (!editing) borrarBorrador("empleo");
       if (presentation === "modal") {
         onSaved?.(data.id, title);
         setSaving(false);

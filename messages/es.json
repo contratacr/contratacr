@@ -310,7 +310,14 @@
     },
     "metaTitle": "{category} en {place} · profesionales verificados | ContrataCR",
     "metaDesc": "Compara profesionales de {category} en {place}: verificados con cédula, con reseñas, precios y contacto directo.",
-    "wholeProvince": "Toda la provincia"
+    "wholeProvince": "Toda la provincia",
+    "proyectoTarjeta": {
+      "titulo": "¿No te decides?",
+      "tituloVacio": "Nadie por aquí todavía",
+      "texto": "Publica lo que necesitas y los profesionales te contactan por WhatsApp.",
+      "boton": "Publicar lo que necesito",
+      "pie": "Gratis · Tu número no se publica"
+    }
   },
   "hero": {
     "categoryPlaceholder": "¿Qué servicio necesitas?",
@@ -3061,7 +3068,7 @@
     "errBeneficiaryName": "Ingresa el nombre de la persona.",
     "errBeneficiaryDob": "Ingresa la fecha de nacimiento de la persona.",
     "phoneLabel": "WhatsApp",
-    "phoneHelp": "Los profesionales te escribirán a este WhatsApp. No aparece en la publicación: solo lo recibe quien te contacte con su cuenta profesional.",
+    "phoneHelp": "No aparece en la publicación: solo lo recibe quien te contacte con su cuenta profesional.",
     "errPhoneFijo": "Ese número parece de teléfono fijo. Escribe un celular con WhatsApp para que te puedan escribir.",
     "loadingProfile": "Cargando tus datos...",
     "errPublish": "No se pudo publicar. Intenta de nuevo.",
@@ -3107,7 +3114,6 @@
     },
     "charLimit": "Has alcanzado el límite de {max} caracteres.",
     "zone": "¿Dónde?",
-    "zoneHelp": "Para que te escriban profesionales de tu zona.",
     "successNotified": "{count, plural, =0 {Todavía no hay profesionales de este servicio en tu zona, pero la dejamos publicada para cuando se sumen.} one {Le avisamos a # profesional de {service}.} other {Le avisamos a # profesionales de {service}.}}",
     "successNext": "Te avisamos apenas alguien te responda. Después le escribes al que quieras.",
     "successGoToProjects": "Ver mis proyectos",
@@ -3120,7 +3126,9 @@
     "editTitle": "Editar proyecto",
     "editSave": "Guardar cambios",
     "editSaving": "Guardando…",
-    "editDone": "Cambios guardados"
+    "editDone": "Cambios guardados",
+    "destinatarios": "{n, plural, one {# profesional de este servicio recibirá tu proyecto} other {# profesionales de este servicio recibirán tu proyecto}}",
+    "borradorListo": "Quedó guardado. Revísalo y toca Publicar."
   },
   "notifications": {
     "title": "Notificaciones",
@@ -3752,7 +3760,16 @@
       "searchPlaceholder": "¿Qué servicio estás buscando?",
       "searchPlaceholderShort": "¿Qué necesitas?",
       "buscaPrefijo": "Busca",
-      "ejemplosBusqueda": ["un electricista", "un plomero", "limpieza del hogar", "un mecánico", "un pintor", "un abogado"],
+      "pidePrefijo": "¿No sabes a quién llamar?",
+      "pideEnlace": "Crea un proyecto",
+      "ejemplosBusqueda": [
+        "un electricista",
+        "un plomero",
+        "limpieza del hogar",
+        "un mecánico",
+        "un pintor",
+        "un abogado"
+      ],
       "location": "Ubicación",
       "nearMe": "Buscar cerca de mí",
       "nearMeActive": "Cerca de mí",
@@ -3987,21 +4004,23 @@
     "createOfferDesc": "Crea tu perfil y recibe clientes",
     "createCase": "Publicar un caso de éxito",
     "createCaseDesc": "Muestra un trabajo que hiciste",
-    "createProjectAsk": "¿Qué necesitas?",
-    "tileProject": "Proyecto",
+    "createProjectAsk": "Te contactan por WhatsApp",
+    "tileProject": "Pedir un servicio",
     "tileDeal": "Promoción",
     "tileJob": "Empleo",
     "createDeal": "Publicar una promoción",
     "createJob": "Publicar un empleo",
     "forPros": "Para profesionales",
-    "tileProjectPost": "Publicar proyecto",
+    "tileProjectPost": "Pedir un servicio",
     "tileOffer": "Ofrecer servicios",
     "tileOfferSub": "Recibe clientes",
     "tileCase": "Caso de éxito",
     "tileCaseSub": "Muestra tu trabajo",
     "tileDealSub": "Ofertas y descuentos",
     "tileJobSub": "Busca personal",
-    "messages": "Mensajes"
+    "messages": "Mensajes",
+    "tileQuote": "Hacer una cotización",
+    "tileQuoteSub": "Gratis, lista para mandar"
   },
   "serviceLanding": {
     "title": "{category} en {place}",

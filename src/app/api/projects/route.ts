@@ -391,6 +391,19 @@ export async function GET(req: NextRequest) {
 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
+  // Público: quien llena el formulario sin sesión también lo ve.
+  // Cuántos profesionales recibirían el aviso (el formulario lo muestra al
+  // elegir el servicio). La MISMA regla que el POST de arriba.
+  if (role === "destinatarios") {
+    if (!categoryId || categoryId === OTHER_CATEGORY.id || !/^[a-z0-9_-]{1,60}$/.test(categoryId)) return NextResponse.json({ total: 0 });
+    const { count } = await createAdminClient()
+      .from("professionals")
+      .select("profile_id", { count: "exact", head: true })
+      .or("category_id.eq." + categoryId + ",professions.cs.{" + categoryId + "}")
+      .neq("profile_id", user?.id ?? "00000000-0000-0000-0000-000000000000");
+    return NextResponse.json({ total: count ?? 0 });
+  }
+
   if (!user) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
 
   if (role === "client") {

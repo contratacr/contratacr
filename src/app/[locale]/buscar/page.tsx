@@ -8,6 +8,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { FooterSoloWeb } from "@/components/landing/footer-solo-web";
 import { SearchEmptyState } from "@/components/search/search-empty-state";
+import { TarjetaPublicarProyecto } from "@/components/projects/tarjeta-publicar-proyecto";
 import { LandingNavbar } from "@/components/landing/landing-navbar";
 import { SearchFilters } from "@/components/search/search-filters";
 import { ProfessionalCard } from "@/components/professionals/professional-card";
@@ -595,9 +596,10 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                 // caía bajo el borde de la pantalla.
                 <SearchEmptyState
                   title={t("noResults.title")}
-                  description={t("noResults.desc")}
+                  description={t("proyectoTarjeta.texto")}
                   cta={t("noResults.publishCta")}
-                  href={`/dashboard/profesional?tab=sent_projects&openPublish=1${selectedCategory ? `&categoria=${encodeURIComponent(selectedCategory)}` : ""}`}
+                  pie={t("proyectoTarjeta.pie")}
+                  href={`/publicar-proyecto?${new URLSearchParams(Object.entries({ categoria: selectedCategory, provincia: selectedProvinceId, canton: selectedCantonId }).filter((e): e is [string, string] => !!e[1])).toString()}`}
                 />
               ) : (
                 <>
@@ -646,6 +648,22 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                       retryLabel={t("pagination.retry")}
                     />
                   </div>
+
+                  {/* Al final de los resultados: quien no se decidió puede pedir que
+                      le escriban (4-oct-2026). Solo en la última página. */}
+                  {currentPage === totalPages && (
+                    <div className="-mx-4 bg-white px-4 pb-5 pt-1 lg:mx-0 lg:mt-5 lg:bg-transparent lg:px-0">
+                      <TarjetaPublicarProyecto
+                        titulo={t("proyectoTarjeta.titulo")}
+                        texto={t("proyectoTarjeta.texto")}
+                        boton={t("proyectoTarjeta.boton")}
+                        pie={t("proyectoTarjeta.pie")}
+                        categoria={selectedCategory}
+                        provincia={selectedProvinceId}
+                        canton={selectedCantonId}
+                      />
+                    </div>
+                  )}
 
                   {totalPages > 1 && (
                     <nav data-search-pagination aria-label={t("pagination.label")} className="-mx-4 bg-white px-4 pb-4 lg:mx-0 lg:mt-5 lg:border-t lg:border-[#e5e7eb] lg:bg-transparent lg:px-0 lg:pb-0 lg:pt-4">

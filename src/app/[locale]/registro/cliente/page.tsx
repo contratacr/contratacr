@@ -64,6 +64,9 @@ export default function RegisterClientPage() {
     // conversion counts accounts created from this page too.
     trackMetaEvent("CompleteRegistration", { content_name: "client_registration", status: "client" });
     setOtpEmail(null);
+    // Venía de llenar algo sin cuenta (?redirect=…borrador=1): vuelve directo a
+    // terminarlo, sin pasar por la pantalla de «cuenta creada».
+    if (/[?&]borrador=1/.test(searchParams.get("redirect") ?? "")) { router.push(panelHref); return; }
     setSuccess(true);
   }
 
@@ -171,6 +174,8 @@ export default function RegisterClientPage() {
       // account is considered complete. OAuth users are already verified.
       if (!user) {
         setOtpEmail(email);
+      } else if (/[?&]borrador=1/.test(searchParams.get("redirect") ?? "")) {
+        router.push(panelHref);
       } else {
         setSuccess(true);
       }

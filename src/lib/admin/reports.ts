@@ -167,7 +167,7 @@ export function nombreDePagina(ruta: string): string {
     "/": "Portada", "/registro/profesional": "Registro de profesional", "/registro/cliente": "Registro de cliente",
     "/registro": "Registro", "/login": "Iniciar sesión", "/profesionales": "Búsqueda de profesionales",
     "/servicios": "Lista de servicios", "/onboarding": "Bienvenida", "/promociones": "Promociones",
-    "/empleos": "Empleos", "/proyectos": "Proyectos", "/publicar-proyecto": "Publicar proyecto",
+    "/empleos": "Empleos", "/proyectos": "Proyectos", "/publicar-proyecto": "Publicar proyecto", "/cotizar": "Hacer cotización",
     "/ayuda": "Ayuda", "/como-funciona": "Cómo funciona", "/mejorar-mi-perfil": "Mejorar mi perfil",
   };
   if (fijas[sinIdioma]) return fijas[sinIdioma] + ingles;

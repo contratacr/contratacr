@@ -175,7 +175,8 @@ test.describe("@smoke public routes", () => {
       await page.locator(".ccr-native-search-panel").getByPlaceholder(/Ubicaci[oó]n|Location|Barrio|Neighborhood/i).filter({ visible: true }).first().click();
       const cercaEnHoja = page.locator(".ccr-native-search-panel").getByRole("button", { name: /Buscar cerca de m[ií]|Search near me/i }).filter({ visible: true }).first();
       await expect(cercaEnHoja).toBeVisible();
-      await cercaEnHoja.click();
+      // La hoja todavía se acomoda al teclado: se toca sin esperar a que quede quieta.
+      await cercaEnHoja.click({ force: true });
       // Sin servicio elegido, «cerca de mí» deja puesta la ubicación y pasa el
       // cursor al servicio; buscar así trae a los de cerca.
       const hoja = page.locator(".ccr-native-search-panel").filter({ visible: true }).first();

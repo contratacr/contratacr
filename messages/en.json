@@ -310,7 +310,14 @@
     },
     "metaTitle": "{category} in {place} · verified professionals | ContrataCR",
     "metaDesc": "Compare {category} professionals in {place}: ID-verified, with reviews, prices and direct contact.",
-    "wholeProvince": "Whole province"
+    "wholeProvince": "Whole province",
+    "proyectoTarjeta": {
+      "titulo": "Can't decide?",
+      "tituloVacio": "No one here yet",
+      "texto": "Post what you need and professionals will contact you on WhatsApp.",
+      "boton": "Post what I need",
+      "pie": "Free · Your number is never published"
+    }
   },
   "hero": {
     "categoryPlaceholder": "What service do you need?",
@@ -3061,7 +3068,7 @@
     "errBeneficiaryName": "Enter the person's name.",
     "errBeneficiaryDob": "Enter the person's date of birth.",
     "phoneLabel": "WhatsApp",
-    "phoneHelp": "Professionals will message you on this WhatsApp. It is not shown on your post: only professionals who contact you with their account get it.",
+    "phoneHelp": "It is not shown on your post: only professionals who contact you with their account get it.",
     "errPhoneFijo": "That looks like a landline. Enter a mobile number with WhatsApp so professionals can reach you.",
     "loadingProfile": "Loading your details...",
     "errPublish": "Couldn't post it. Try again.",
@@ -3107,7 +3114,6 @@
     },
     "charLimit": "You've reached the {max}-character limit.",
     "zone": "Where?",
-    "zoneHelp": "So professionals in your area can write to you.",
     "successNotified": "{count, plural, =0 {There are no professionals for this service in your area yet, but we kept it posted for when they join.} one {We notified # {service} professional.} other {We notified # {service} professionals.}}",
     "successNext": "We'll let you know as soon as someone replies. Then you write to whoever you like.",
     "successGoToProjects": "View my projects",
@@ -3120,7 +3126,9 @@
     "editTitle": "Edit project",
     "editSave": "Save changes",
     "editSaving": "Saving…",
-    "editDone": "Changes saved"
+    "editDone": "Changes saved",
+    "destinatarios": "{n, plural, one {# professional in this service will get your project} other {# professionals in this service will get your project}}",
+    "borradorListo": "It was saved. Review it and tap Publish."
   },
   "notifications": {
     "title": "Notifications",
@@ -3752,7 +3760,16 @@
       "searchPlaceholder": "What service are you looking for?",
       "searchPlaceholderShort": "What do you need?",
       "buscaPrefijo": "Find",
-      "ejemplosBusqueda": ["an electrician", "a plumber", "house cleaning", "a mechanic", "a painter", "a lawyer"],
+      "pidePrefijo": "Don't know who to call?",
+      "pideEnlace": "Post a project",
+      "ejemplosBusqueda": [
+        "an electrician",
+        "a plumber",
+        "house cleaning",
+        "a mechanic",
+        "a painter",
+        "a lawyer"
+      ],
       "location": "Location",
       "nearMe": "Search professionals near me",
       "nearMeActive": "Near me",
@@ -3987,21 +4004,23 @@
     "createOfferDesc": "Create your profile and get clients",
     "createCase": "Post a success story",
     "createCaseDesc": "Show a job you did",
-    "createProjectAsk": "What do you need?",
-    "tileProject": "Project",
+    "createProjectAsk": "Pros contact you on WhatsApp",
+    "tileProject": "Request a service",
     "tileDeal": "Promotion",
     "tileJob": "Job",
     "createDeal": "Post a deal",
     "createJob": "Post a job",
     "forPros": "For professionals",
-    "tileProjectPost": "Post a project",
+    "tileProjectPost": "Request a service",
     "tileOffer": "Offer services",
     "tileOfferSub": "Get clients",
     "tileCase": "Success story",
     "tileCaseSub": "Show your work",
     "tileDealSub": "Deals & discounts",
     "tileJobSub": "Find staff",
-    "messages": "Messages"
+    "messages": "Messages",
+    "tileQuote": "Make a quote",
+    "tileQuoteSub": "Free, ready to send"
   },
   "serviceLanding": {
     "title": "{category} in {place}",

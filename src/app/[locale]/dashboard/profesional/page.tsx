@@ -1,4 +1,6 @@
 "use client";
+
+import { rutaInternaSegura } from "@/lib/navigation/ruta-interna";
 import { useAppDialog } from "@/hooks/use-app-dialog";
 import { prefijoDeIdioma, rutaConIdioma } from "@/lib/prefijo-de-idioma";
 import { irAlInicio } from "@/lib/ir-al-inicio";
@@ -655,7 +657,9 @@ export default function DashboardPage() {
     setGuiasAbiertas(true);
     setTab("home", true);
   }, [searchParams]);
-  const [publicarVolverA] = useState(() => (searchParams.get("returnTo") === "/proyectos" ? "/proyectos" : null));
+  // A dónde vuelve la flecha del formulario abierto por /publicar-proyecto:
+  // la página de la que vino (inicio, búsqueda, Proyectos…), si es interna.
+  const [publicarVolverA] = useState(() => (publicarDirecto ? rutaInternaSegura(searchParams.get("returnTo")) : null));
   const publicadoRef = useRef(false);
   const publicarLimpiadoRef = useRef(false);
   useEffect(() => {

@@ -129,6 +129,8 @@ export function DirectChatLauncher({
         });
       }
       window.open(String(payload.href), "_blank", "noopener,noreferrer");
+      // La ficha escucha esto para ofrecer, al volver, publicar lo que necesita.
+      window.dispatchEvent(new CustomEvent("ccr:whatsapp-abierto"));
     } catch {
       await showMessage({ title: professionalName, description: isEn ? "This contact has no WhatsApp number available." : "Esta persona no tiene un número de WhatsApp disponible." });
     } finally {

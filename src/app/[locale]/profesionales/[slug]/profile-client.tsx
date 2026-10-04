@@ -10,6 +10,7 @@ import { useParams, useSearchParams } from "next/navigation";
 import {
   MapPin, Shield, ArrowLeft, Star, Briefcase, Banknote, BadgeCheck, Languages,
   Flag, Award, SearchX, Globe, BadgePercent, Users, Share2, Link2, ChevronRight, Bookmark,
+  X,
 } from "lucide-react";
 import { Modal } from "@/components/ui/modal";
 import { VerifiedSeal } from "@/components/ui/verified-seal";
@@ -395,6 +396,23 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
   // contact card: bookable pros open the booking modal (registration-gated for guests);
   // WhatsApp-only pros open WhatsApp. `bookingCat` carries the card's service as context.
   const [bookingCat, setBookingCat] = useState<string | null>(null);
+  // «¿NO TE RESPONDIÓ?» (4-oct-2026): tras abrir WhatsApp, al volver a la
+  // ficha se ofrece publicar lo que necesita para que le escriban varios.
+  // Una vez por visita; se cierra con la ✕.
+  const [ofrecerProyecto, setOfrecerProyecto] = useState(false);
+  useEffect(() => {
+    let abrio = false;
+    const alAbrir = () => { abrio = true; };
+    const alVolver = () => { if (abrio && document.visibilityState === "visible") setOfrecerProyecto(true); };
+    window.addEventListener("ccr:whatsapp-abierto", alAbrir);
+    document.addEventListener("visibilitychange", alVolver);
+    window.addEventListener("focus", alVolver);
+    return () => {
+      window.removeEventListener("ccr:whatsapp-abierto", alAbrir);
+      document.removeEventListener("visibilitychange", alVolver);
+      window.removeEventListener("focus", alVolver);
+    };
+  }, []);
   const router = useRouter();
   const [bookingReg, setBookingReg] = useState(false);
   const [serviceDescriptionOpen, setServiceDescriptionOpen] = useState<{ title: string; description: string } | null>(null);
@@ -1573,6 +1591,23 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
       {/* Room for the pinned action bar on phones, so the footer stays reachable. */}
       <SelfActionModal open={!!selfMsg} onClose={() => setSelfMsg(null)} message={selfMsg ?? ""} />
       {avisoCompartir}
+      {ofrecerProyecto && !isOwn && (
+        <div className="fixed inset-x-4 bottom-[calc(env(safe-area-inset-bottom)+88px)] z-40 mx-auto flex max-w-md items-center gap-3 rounded-2xl border border-[#e5e7eb] bg-white p-3 shadow-lg lg:bottom-6">
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-bold text-[#162543]">{locale === "en" ? "No reply?" : "¿No te respondió?"}</p>
+            <p className="text-xs text-[#5b6b82]">{locale === "en" ? "Post what you need and several will message you." : "Publica lo que necesitas y te escriben varios."}</p>
+          </div>
+          <Link
+            href={`/publicar-proyecto${professional.professions?.[0] ? `?categoria=${encodeURIComponent(professional.professions[0])}` : ""}`}
+            className="shrink-0 rounded-xl bg-[#162543] px-3 py-2 text-xs font-bold text-white"
+          >
+            {locale === "en" ? "Post" : "Publicar"}
+          </Link>
+          <button type="button" aria-label={locale === "en" ? "Close" : "Cerrar"} onClick={() => setOfrecerProyecto(false)} className="shrink-0 p-1 text-[#68778d]">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      )}
       {/* Aquí vivía una SEGUNDA franja de contacto —«Disponibilidad · WhatsApp
           · Llamar»— con su propio alto y su propio relleno, que solo salía si
           alguien llegaba por un enlace viejo a ?tab=disponibilidad: una pestaña

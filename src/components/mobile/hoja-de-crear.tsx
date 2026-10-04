@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
-import { Briefcase, BriefcaseBusiness, ClipboardList, ImagePlus } from "lucide-react";
+import { Briefcase, BriefcaseBusiness, ClipboardList, ImagePlus, ReceiptText } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { OfferTagPercentIcon } from "@/components/icons/offer-tag-percent-icon";
@@ -44,6 +44,7 @@ export function HojaDeCrear({ abierta, onCerrar, esProfesional }: { abierta: boo
       ]
     : [
         { href: "/publicar-proyecto", titulo: t("tileProjectPost"), linea: t("createProjectAsk"), mosaico: "ccr-mosaico-cliente", Icono: ClipboardList },
+        { href: "/cotizar", titulo: t("tileQuote"), linea: t("tileQuoteSub"), mosaico: "ccr-mosaico-pro", Icono: ReceiptText },
         { href: "/registro/profesional", titulo: t("tileOffer"), linea: t("tileOfferSub"), mosaico: "ccr-mosaico-pro", Icono: BriefcaseBusiness },
       ];
 
