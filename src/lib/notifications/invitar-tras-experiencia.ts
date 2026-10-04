@@ -11,12 +11,13 @@ type Admin = ReturnType<typeof createAdminClient>;
  *  - contactó a un profesional (WhatsApp, llamada) o escribió por el chat;
  *  - hizo una cotización;
  *  - dejó una reseña o, si es profesional, recibió una.
- * La interacción tiene que tener al menos un día: se pide opinión cuando ya
- * hubo tiempo de ver cómo le fue, no en el mismo momento. Cada cuenta recibe la
- * invitación una sola vez (lo garantiza invitarAResenaDeGoogle).
+ * La invitación sale EN EL MOMENTO desde cada ruta (invitar-ahora.ts); este
+ * recorrido diario es la red de seguridad para lo que no pasa por esas rutas
+ * (una llamada registrada por la analítica, o una invitación que falló).
+ * Cada cuenta la recibe una sola vez (lo garantiza invitarAResenaDeGoogle).
  */
 const VENTANA_DIAS = 60;
-const ESPERA_HORAS = 24;
+const ESPERA_HORAS = 0;
 
 type Filas = Record<string, unknown>[] | null;
 

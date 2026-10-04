@@ -790,7 +790,7 @@ function OfferRow({
               {offerTypeLabel(offer.offer_type, locale)}
               {offer.service_label && <><span aria-hidden="true" className="mx-1.5 text-[#c0cad5]">·</span>{offer.service_label}</>}
               {offer.location_label && <><span aria-hidden="true" className="mx-1.5 text-[#c0cad5]">·</span>{offer.location_label}</>}
-              {offer.created_at && <><span aria-hidden="true" className="mx-1.5 text-[#c0cad5]">·</span>{cuandoSePublico(offer.created_at, locale === "en")}</>}
+              {cuandoSePublico(offer.created_at, locale === "en") && <><span aria-hidden="true" className="mx-1.5 text-[#c0cad5]">·</span>{cuandoSePublico(offer.created_at, locale === "en")}</>}
             </p>
             <div className="flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[11px] leading-4 sm:text-xs lg:hidden">
               <span className="shrink-0 text-[#68778d]">
@@ -807,10 +807,10 @@ function OfferRow({
                 </>
               )}
             </div>
-            {(offer.location_label || offer.created_at) && (
+            {(offer.location_label || cuandoSePublico(offer.created_at, locale === "en")) && (
               <p className="truncate text-[11px] leading-4 text-[#68778d] sm:text-xs lg:hidden">
                 {offer.location_label}
-                {offer.location_label && offer.created_at && <span aria-hidden="true" className="mx-1.5 text-[#c0cad5]">·</span>}
+                {offer.location_label && cuandoSePublico(offer.created_at, locale === "en") && <span aria-hidden="true" className="mx-1.5 text-[#c0cad5]">·</span>}
                 {cuandoSePublico(offer.created_at, locale === "en")}
               </p>
             )}

@@ -102,8 +102,10 @@ function JobMetaLine({ job, className = "", showApplicants = false }: { job: Job
   const locale = marketplaceLocale(useLocale());
   return <p className={className}>
     <span>{jobLocationText(job, locale)}</span>
-    <span aria-hidden="true" className="mx-1.5 text-[#9aa8b8]">&middot;</span>
-    <span>{relativeDate(job.created_at, locale)}</span>
+    {relativeDate(job.created_at, locale) && <>
+      <span aria-hidden="true" className="mx-1.5 text-[#9aa8b8]">&middot;</span>
+      <span>{relativeDate(job.created_at, locale)}</span>
+    </>}
     {showApplicants && <>
       <span aria-hidden="true" className="mx-1.5 text-[#9aa8b8]">&middot;</span>
       {/* "1 postulante" no se parte en dos renglones: se lee como un dato. */}

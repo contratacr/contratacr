@@ -14,6 +14,7 @@ import { auditUserAction } from "@/lib/audit/user-action";
 import { writeSourceColumns } from "@/lib/security/write-guard";
 import { recordServerInteraction } from "@/lib/analytics/server-interactions";
 import { hasDurablePushOutbox, sendNotificationPush, sendNotificationPushRows } from "@/lib/push/notify";
+import { invitarAResenaAhora } from "@/lib/notifications/invitar-ahora";
 
 const PROJECT_TITLE_MAX_LENGTH = 80;
 const PROJECT_DESCRIPTION_MAX_LENGTH = 300;
@@ -368,6 +369,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    await invitarAResenaAhora(uid);
     return NextResponse.json({ id: projectId, notifiedCount, success: true, clientIdentityStatus });
   } catch (err) {
     console.error("[POST /api/projects] Unexpected error:", err);
