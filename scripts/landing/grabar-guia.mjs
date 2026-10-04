@@ -132,13 +132,16 @@ const escenas = {
     await p.waitForTimeout(1500); await asentada(p);
     grabar();
     await p.waitForTimeout(700);
-    await escribir(p, p.getByPlaceholder(/Qué necesitas/i).filter({ visible: true }).first(), "Cámaras");
+    // En el teléfono la portada tiene una sola línea («Busca …» que rueda): al
+    // tocarla se abre el buscador completo con Servicio y Ubicación.
+    await escribir(p, p.getByLabel(/Qué necesitas/i).filter({ visible: true }).first(), "Cámaras");
     await p.waitForTimeout(700);
     await tocar(p, p.getByRole("option").filter({ hasText: "Cámaras de seguridad" }).first());
     await p.waitForTimeout(500);
-    await escribir(p, p.getByPlaceholder(/Ubicación/i).filter({ visible: true }).first(), "Alajuela");
+    await escribir(p, p.getByLabel(/^Ubicación$/i).filter({ visible: true }).first(), "Alajuela");
     await p.waitForTimeout(700);
-    await tocar(p, p.getByRole("option").filter({ hasText: "Provincia" }).first());
+    // La primera sugerencia es la provincia (ya no lleva el rótulo «Provincia»).
+    await tocar(p, p.getByRole("option").filter({ hasText: "Alajuela" }).first());
     await p.waitForTimeout(250);
     pausar();
     await p.goto(base + "/profesionales?q=" + encodeURIComponent("Cámaras de seguridad") + "&provincia=al", { waitUntil: "load" });
