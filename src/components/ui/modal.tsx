@@ -193,6 +193,10 @@ export function Modal({
         // sin que cada uno tenga que enterarse.
         className={cn(
           "relative z-10 flex w-full flex-col overflow-hidden bg-white shadow-2xl sm:max-h-[90vh] sm:rounded-2xl",
+          // Sin pie, la reserva del borde del iPhone va DENTRO del cuerpo que se
+          // desplaza: puesta en la ventana quedaba como una franja blanca vacía
+          // bajo la lista (Guías).
+          !footer && "ccr-ventana-sin-pie",
           fullscreenMobile
             ? "app-fullscreen-modal h-[var(--app-visual-viewport-height)] max-h-[var(--app-visual-viewport-height)] rounded-none sm:h-auto sm:max-h-[90vh] sm:rounded-2xl"
             : centeredMobile
@@ -271,6 +275,7 @@ export function Modal({
           / (?:px|p)-0(?:\s|$)/.test(` ${bodyClassName ?? ""} `) ? "px-5" : "px-5 sm:px-6",
           "py-5",
           bodyClassName,
+          !footer && "ccr-cuerpo-sin-pie",
         )}>
           {children}
         </div>

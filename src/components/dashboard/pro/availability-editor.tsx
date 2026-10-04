@@ -1222,7 +1222,7 @@ export function AvailabilityEditor({
             aria-describedby="private-agenda-description"
             className="app-centered-modal relative z-10 max-h-[calc(var(--app-visual-viewport-height)-2rem)] w-full max-w-sm overflow-y-auto overscroll-contain rounded-2xl bg-white p-6 shadow-2xl"
           >
-            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-amber-50">
+            <div className="ccr-caja-icono mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl">
               <Lock className="h-5 w-5 text-[#b45309]" />
             </div>
             <h3 id="private-agenda-title" className="mb-1 text-lg font-bold text-[#162543]">{t("confirmTitle")}</h3>
@@ -1249,8 +1249,7 @@ export function AvailabilityEditor({
             className="app-centered-modal relative z-10 max-h-[calc(var(--app-visual-viewport-height)-2rem)] w-full max-w-sm overflow-y-auto overscroll-contain rounded-2xl bg-white p-6 text-center shadow-2xl"
           >
             <div className={cn(
-              "mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full",
-              conflict.kind === "location" ? "bg-[#EBF5FB] text-[#009FD9]" : "bg-[#fff7ed] text-[#b45309]",
+              "ccr-caja-icono mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl",
             )}>
               {conflict.kind === "location" ? (
                 <span className="relative flex h-7 w-7 items-center justify-center">

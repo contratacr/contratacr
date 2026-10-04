@@ -69,9 +69,6 @@ export function FindByZone({ coverage }: { coverage: ZoneCoverage }) {
           <h2 className="text-3xl sm:text-4xl font-extrabold text-[#1a2744]">
             {t("heading")}
           </h2>
-          <p className="text-gray-500 mt-3 max-w-xl mx-auto">
-            {t("subtitle")}
-          </p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">

@@ -7,7 +7,8 @@ import { useAppDialog } from "@/hooks/use-app-dialog";
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useLocale } from "next-intl";
-import { ArrowLeft, ClipboardList, Loader2, Menu, Phone } from "lucide-react";
+import { ArrowLeft, ClipboardList, Loader2, Menu, Phone, X } from "lucide-react";
+import { createPortal } from "react-dom";
 import { Link, useRouter } from "@/i18n/navigation";
 import { ContrataCRMark, HeaderAccountLink } from "@/components/landing/landing-navbar";
 import { NotificationBell } from "@/components/notifications/notification-bell";
@@ -70,9 +71,14 @@ const COPY = {
     sinContacto: "Este cliente no dejó un WhatsApp.",
     noPublicado: "Este proyecto ya no recibe mensajes.",
     fallo: "No pudimos abrir WhatsApp. Intentá de nuevo en un momento.",
-    necesitaCuenta: "Entra con tu cuenta profesional para escribirle.",
+    necesitaCuenta: "Entra con tu cuenta profesional para escribirle por WhatsApp o llamarle.",
     ingresar: "Ingresar",
-    ahoraNo: "Ahora no",
+    crearCuenta: "Crear cuenta profesional",
+    cerrar: "Cerrar",
+    pideCuentaTitulo: "Contacta a este cliente",
+    // La llamada solo existe si el cliente la habilitó al publicar.
+    necesitaCuentaConLlamada: "Entra con tu cuenta profesional para escribirle por WhatsApp o llamarle.",
+    necesitaCuentaSoloWhatsapp: "Entra con tu cuenta profesional para escribirle por WhatsApp.",
     esTuyo: "Este proyecto es tuyo.",
     todoElPais: "Todo Costa Rica",
     cuenta: (n: number) => `${n} ${n === 1 ? "proyecto" : "proyectos"}`,
@@ -108,9 +114,13 @@ const COPY = {
     sinContacto: "This client did not leave a WhatsApp number.",
     noPublicado: "This project is no longer taking messages.",
     fallo: "We could not open WhatsApp. Try again in a moment.",
-    necesitaCuenta: "Sign in with your professional account to write to them.",
+    necesitaCuenta: "Sign in with your professional account to message or call them.",
     ingresar: "Sign in",
-    ahoraNo: "Not now",
+    crearCuenta: "Create a professional account",
+    cerrar: "Close",
+    pideCuentaTitulo: "Contact this client",
+    necesitaCuentaConLlamada: "Sign in with your professional account to message or call them.",
+    necesitaCuentaSoloWhatsapp: "Sign in with your professional account to message them on WhatsApp.",
     esTuyo: "This project is yours.",
     todoElPais: "All Costa Rica",
     cuenta: (n: number) => `${n} ${n === 1 ? "project" : "projects"}`,
@@ -126,8 +136,32 @@ function BotonEscribir({ proyecto, className = "" }: { proyecto: ProyectoPublico
   // El aviso del app, no el del navegador: `window.alert` sale con la letra y
   // los botones del sistema, en el idioma del sistema, y encima bloquea la
   // página. Aquí se está contactando a alguien: es el peor momento para eso.
-  const { dialogNode, showMessage, confirm } = useAppDialog();
+  const { dialogNode, showMessage } = useAppDialog();
   const routerContacto = useRouter();
+  const [pideCuenta, setPideCuenta] = useState(false);
+  const irA = (ruta: string) => { setPideCuenta(false); routerContacto.push(`${ruta}?redirect=${encodeURIComponent(window.location.pathname)}`); };
+  // SIN SESIÓN: SU PROPIA VENTANA (3-oct-2026). Con el aviso genérico decía
+  // «WhatsApp» y solo «Entendido»: no era de proyectos y no tenía salida útil.
+  // Ícono de Proyectos, para qué hace falta la cuenta, entrar o crear la
+  // cuenta profesional, y la X para salir. Al entrar vuelve a este proyecto.
+  const ventanaCuenta = pideCuenta && typeof document !== "undefined" ? createPortal(
+    <div className="fixed inset-0 z-[1400] flex items-center justify-center bg-[#071426]/45 px-5" role="dialog" aria-modal="true" aria-labelledby="pide-cuenta-titulo" onClick={() => setPideCuenta(false)}>
+      <div className="relative w-full max-w-sm rounded-[28px] bg-white px-6 pb-6 pt-8 text-center shadow-2xl" onClick={(e) => e.stopPropagation()}>
+        <button type="button" onClick={() => setPideCuenta(false)} aria-label={copy.cerrar} className="absolute right-3 top-3 grid h-10 w-10 place-items-center rounded-full text-[#526277] hover:bg-[#f1f5f9]">
+          <X className="h-5 w-5" />
+        </button>
+        <span className="ccr-caja-icono mx-auto grid h-16 w-16 place-items-center rounded-2xl"><ClipboardList className="h-8 w-8" strokeWidth={1.6} /></span>
+        <h2 id="pide-cuenta-titulo" className="mt-4 text-xl font-extrabold text-[#162543]">{copy.pideCuentaTitulo}</h2>
+        <p className="mt-2 text-[15px] leading-relaxed text-[#526277]">{proyecto.allow_phone_contact ? copy.necesitaCuentaConLlamada : copy.necesitaCuentaSoloWhatsapp}</p>
+        <div className="mt-6 space-y-2.5">
+          <button type="button" onClick={() => irA("/login")} className="h-12 w-full rounded-full bg-[#009FD9] text-[15px] font-bold text-white hover:bg-[#0089bb]">{copy.ingresar}</button>
+          {/* Blanco con borde: el mismo estilo que «Registrarme» del menú (teléfono y PC). */}
+          <button type="button" onClick={() => irA("/registro/profesional")} className="h-12 w-full rounded-full border border-[#d6dde5] bg-white text-[15px] font-bold text-[#162543] hover:bg-[#f8fafc]">{copy.crearCuenta}</button>
+        </div>
+      </div>
+    </div>,
+    document.body,
+  ) : null;
 
   async function abrir(canal: "whatsapp" | "llamada" = "whatsapp") {
     setCargando(true);
@@ -145,11 +179,7 @@ function BotonEscribir({ proyecto, className = "" }: { proyecto: ProyectoPublico
       // SIN SESIÓN, EL AVISO LLEVA A ENTRAR (3-oct-2026): antes solo decía
       // «Entendido» y el profesional que quería escribir se quedaba sin camino.
       // Al entrar vuelve a este mismo proyecto.
-      if (res.status === 401) {
-        const { confirmed } = await confirm({ title: copy.escribir, description: copy.necesitaCuenta, confirmLabel: copy.ingresar, cancelLabel: copy.ahoraNo });
-        if (confirmed) routerContacto.push(`/login?redirect=${encodeURIComponent(window.location.pathname)}`);
-        return;
-      }
+      if (res.status === 401) { setPideCuenta(true); return; }
       const aviso = res.status === 403 ? copy.necesitaCuenta
         : res.status === 409 ? copy.esTuyo
         : payload.code === "sin_whatsapp" ? copy.sinContacto
@@ -205,6 +235,7 @@ function BotonEscribir({ proyecto, className = "" }: { proyecto: ProyectoPublico
       </div>
     ) : botonEscribir}
     {dialogNode}
+    {ventanaCuenta}
     </>
   );
 }

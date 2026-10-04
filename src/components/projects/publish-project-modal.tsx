@@ -18,6 +18,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { Link } from "@/i18n/navigation";
 import { BARRA_ACCION_BASE } from "@/components/ui/acciones-al-pie";
 import { cn } from "@/lib/utils";
+import { pareceFijoDeCostaRica } from "@/lib/telefono-movil";
 
 const PROJECT_DESCRIPTION_MAX_LENGTH = 300;
 const LAST_ZONE_KEY = "ccr:last-request-zone";
@@ -167,6 +168,11 @@ export function PublishProjectModal({ onClose, onSuccess, editar }: {
     if (!editar && !isPhoneComplete(telefono)) {
       setErrorField("phone");
       setError(t("errPhone"));
+      return;
+    }
+    if (!editar && pareceFijoDeCostaRica(telefono)) {
+      setErrorField("phone");
+      setError(t("errPhoneFijo"));
       return;
     }
     setSubmitting(true);

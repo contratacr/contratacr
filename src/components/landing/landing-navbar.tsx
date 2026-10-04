@@ -42,6 +42,7 @@ import { useDirectMessageUnread } from "@/hooks/use-direct-message-unread";
 import { CABECERA_TITULO } from "@/components/layout/cabecera";
 import { esRutaDeBusqueda, rutaDeBusqueda } from "@/lib/buscar-url";
 import { useParametrosDeBusqueda } from "@/hooks/use-parametros-de-busqueda";
+import { formatPersonDisplayName } from "@/lib/display-name";
 
 /* --- La marca (el cuadrito «CR») ---
  *
@@ -2375,7 +2376,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                       <form onSubmit={handleCompactSearch} className="flex min-w-0 flex-1">
                         <div className="relative w-full">
                           <div className="flex h-11 w-full items-center overflow-hidden rounded-[10px] border border-[#e5e7eb] bg-white pl-3 transition-colors focus-within:ring-2 focus-within:ring-[#009FD9]/20 sm:pl-4">
-                            <div ref={compactSvcRef} className="flex h-full min-w-0 flex-[3_1_0%] items-center gap-2 sm:gap-3">
+                            <div ref={compactSvcRef} className="relative flex h-full min-w-0 flex-[3_1_0%] items-center gap-2 sm:gap-3">
                               <button
                                 type="submit"
                                 aria-label={t("search")}
@@ -2618,7 +2619,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                     <div className="flex w-auto items-center justify-end gap-2">
                       <Link
                         href={loginHref}
-                        className="rounded-xl bg-[#009FD9] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#0088bb]"
+                        className="rounded-full bg-[#009FD9] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#0088bb]"
                       >
                         {t("login")}
                       </Link>
@@ -2633,7 +2634,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                           «Crear cuenta». /registro ofrece las dos cuentas. */}
                       <Link
                         href="/registro"
-                        className="rounded-xl bg-[#162543] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#0f1b33]"
+                        className="rounded-full border border-[#d6dde5] bg-white px-4 py-2 text-sm font-semibold text-[#162543] transition-colors hover:bg-[#f8fafc]"
                       >
                         {t("signUp")}
                       </Link>
@@ -3085,13 +3086,17 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                     {/* LA CUENTA, ARRIBA DEL MENÚ (como Facebook o Angi): foto, nombre
                         —el comercial si lo tiene— y «Ir a mi panel». En la app también,
                         aunque el panel esté en la barra de abajo: aquí se ve QUIÉN es. */}
-                    <Link href={primaryPanelHref} prefetch={false} onClick={cerrarCajon} className="mb-2 flex items-center gap-3 rounded-2xl bg-[#f4f7fa] p-3 transition-colors hover:bg-[#eaf2f8]">
+                    <Link href={primaryPanelHref} prefetch={false} onClick={cerrarCajon} className="-mx-3 mb-2 flex items-center gap-3 rounded-2xl bg-[#f4f7fa] p-3 transition-colors hover:bg-[#eaf2f8]">
                       {avatarUrlCuenta
                         // eslint-disable-next-line @next/next/no-img-element -- avatar pequeño de tamaño fijo
                         ? <img src={avatarUrlCuenta} alt="" className="h-12 w-12 shrink-0 rounded-full object-cover ring-1 ring-[#e2e8f0]" />
                         : <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-white ring-1 ring-[#e2e8f0]"><UserRound className="h-6 w-6 text-[#526277]" /></span>}
                       <span className="min-w-0 flex-1">
-                        <span className="block truncate text-[17px] font-bold text-[#162543]">{accountDisplayName || t("myPanel")}</span>
+                        {/* Primer nombre y primer apellido («Isaac Sánchez»): con los cuatro no
+                            cabía en una línea. Un nombre comercial va entero
+                            (formatPersonDisplayName lo reconoce) y, si es muy
+                            largo, se recorta al final. */}
+                        <span className="block truncate text-[17px] font-bold text-[#162543]">{formatPersonDisplayName(accountDisplayName, "mobile") || t("myPanel")}</span>
                         <span className="mt-0.5 block text-[14px] font-semibold text-[#009FD9]">{t("goToPanel")}</span>
                       </span>
                       <ChevronRight className="h-5 w-5 shrink-0 text-[#9aa7b6]" />
@@ -3238,7 +3243,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                   <Link href={loginHref} prefetch={false} onClick={cerrarCajon} className="flex h-12 w-full items-center justify-center rounded-full bg-[#009FD9] text-[15px] font-bold text-white transition-colors hover:bg-[#0089bb]">
                     {t("login")}
                   </Link>
-                  <Link href="/registro" prefetch={false} onClick={cerrarCajon} className="flex h-12 w-full items-center justify-center rounded-full bg-[#162543] text-[15px] font-bold text-white transition-colors hover:bg-[#0f1b33]">
+                  <Link href="/registro" prefetch={false} onClick={cerrarCajon} className="flex h-12 w-full items-center justify-center rounded-full border border-[#d6dde5] bg-white text-[15px] font-bold text-[#162543] transition-colors hover:bg-[#f8fafc]">
                     {t("signUp")}
                   </Link>
                 </div>

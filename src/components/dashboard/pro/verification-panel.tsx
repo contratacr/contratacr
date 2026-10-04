@@ -427,6 +427,11 @@ export function VerificationPanel({
               >
                 {t("pendingEscribir")}
               </a>
+              {/* Y SIN SALIR DEL APP: un caso de soporte, donde también se adjuntan las
+                  fotos y queda el seguimiento. El correo abre otra app (o ninguna). */}
+              <SupportLink className="ml-2 mt-3 inline-flex h-10 items-center justify-center gap-2 rounded-full border border-[#d6dde5] bg-white px-5 text-[13px] font-bold text-[#162543] transition-colors hover:bg-[#f8fafc]">
+                <Headset className="h-4 w-4 shrink-0" /> {t("supportApp")}
+              </SupportLink>
             </>
           )}
           {status === "under_appeal" && t("underAppealBody")}
@@ -451,6 +456,7 @@ export function VerificationPanel({
         fullName={hasCurrentCedula ? currentFullName : null}
         statusLabel={status === "verified" ? t("verifiedChip") : undefined}
         changeLabel={t("changeId")}
+        addLabel={t("addId")}
         changeOpen={changeCedulaOpen}
         onChangeClick={() => setChangeCedulaOpen((abierto) => {
           // Cerrar descarta el borrador: si no, al reabrir volvía a salir el
@@ -544,6 +550,7 @@ function CurrentIdentificationPanel({
   fullName,
   statusLabel,
   changeLabel,
+  addLabel,
   changeOpen = false,
   onChangeClick,
 }: {
@@ -554,6 +561,8 @@ function CurrentIdentificationPanel({
   fullName?: string | null;
   statusLabel?: string;
   changeLabel: string;
+  /** Sin identificación no hay nada que «cambiar»: se agrega. */
+  addLabel: string;
   changeOpen?: boolean;
   onChangeClick: () => void;
 }) {
@@ -565,9 +574,8 @@ function CurrentIdentificationPanel({
     <section className="border-t border-[#eef2f6] pt-4 first:border-t-0 first:pt-0">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex min-w-0 items-center gap-3">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#eaf7fd] text-[#0089bb]">
-            <ShieldCheck className="h-4.5 w-4.5" />
-          </span>
+          {/* Sin ícono (4-oct-2026): un escudo con visto junto a «no hay
+              identificación» decía lo contrario; el título ya dice qué es. */}
           <div className="min-w-0">
             <p className="text-xs font-bold uppercase tracking-[0.06em] text-[#64748b]">{title}</p>
             {/* El número va en monoespaciada y recortado si no cabe; la frase de
@@ -608,7 +616,7 @@ function CurrentIdentificationPanel({
               : "border-[#e5e7eb] bg-white text-[#162543] hover:border-[#009FD9]/50 hover:bg-[#f1fbfe] hover:text-[#0089bb]"
           }`}
         >
-          {changeLabel}
+          {value ? changeLabel : addLabel}
         </button>
       </div>
     </section>

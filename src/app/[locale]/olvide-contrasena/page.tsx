@@ -92,7 +92,7 @@ export default function OlvideContrasenaPage() {
 
           {success ? (
             <section className="text-center">
-              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#e8f6fc] text-[#009FD9]">
+              <div className="ccr-caja-icono mx-auto flex h-14 w-14 items-center justify-center rounded-2xl">
                 <MailCheck className="h-6 w-6" />
               </div>
               <h1 className="mt-4 text-2xl font-bold text-[#162543]">{t("sentTitle")}</h1>

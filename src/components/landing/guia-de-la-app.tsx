@@ -187,9 +187,8 @@ export function GuiaDeLaApp({ pasos }: { pasos: PasoDeLaGuia[] }) {
                 <span className={cn("grid h-12 w-12 shrink-0 place-items-center rounded-2xl transition-all", elegido ? "text-white" : "ccr-caja-icono")} style={elegido ? CAJA_ACTIVA : undefined}>
                   <Icono className="h-[22px] w-[22px]" strokeWidth={1.8} />
                 </span>
-                <span className="min-w-0 flex-1">
+                <span className="min-w-0 flex-1 self-center">
                   <span className="block text-[17px] font-extrabold leading-snug text-[#1a2744]">{p.titulo}</span>
-                  <span className="mt-1 block text-[15px] leading-relaxed text-[#5b6778]">{p.texto}</span>
                 </span>
                 {/* La barra de tiempo: cuánto falta para el siguiente paso. */}
                 {elegido && (
@@ -198,6 +197,12 @@ export function GuiaDeLaApp({ pasos }: { pasos: PasoDeLaGuia[] }) {
                   </span>
                 )}
               </button>
+              {/* En computadora, el enlace de la opción elegida, debajo de ella. */}
+              {elegido && (
+                <Link href={p.href} className="ml-[5.25rem] mt-2 inline-flex items-center gap-1.5 text-[15px] font-bold text-[#009FD9] hover:underline">
+                  {p.cta}<ArrowRight className="h-4 w-4" />
+                </Link>
+              )}
             </li>
           );
         })}
@@ -233,8 +238,8 @@ export function GuiaDeLaApp({ pasos }: { pasos: PasoDeLaGuia[] }) {
       {/* En el teléfono: qué se ve en el video y el enlace, JUSTO debajo de las
           pestañas (antes iba bajo el aparato, fuera de la pantalla). */}
       <div className="-mt-2 text-center lg:hidden">
-        <p className="text-[15px] leading-snug text-[#5b6778]">{paso.texto}</p>
-        <Link href={paso.href} className="mt-1.5 inline-flex items-center gap-1.5 text-[15px] font-bold text-[#009FD9]">
+        {/* Solo el enlace (4-oct-2026): la descripción repetía lo que ya enseña el video. */}
+        <Link href={paso.href} className="inline-flex items-center gap-1.5 text-[15px] font-bold text-[#009FD9]">
           {paso.cta}<ArrowRight className="h-4 w-4" />
         </Link>
       </div>

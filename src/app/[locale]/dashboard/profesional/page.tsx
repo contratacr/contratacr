@@ -1808,6 +1808,8 @@ export default function DashboardPage() {
       title={panelTabLabel("guides")}
       subtitle={t("subtitles.guides")}
       size="lg"
+      // Flecha, como las demás secciones del panel en el teléfono.
+      backLabel={locale === "en" ? "Back" : "Volver"}
       bodyClassName="px-5 py-5 sm:px-6"
     >
       <GuidesBody
@@ -2388,7 +2390,7 @@ export default function DashboardPage() {
           {proLoadError ? (
             <Card>
               <CardContent className="px-6 py-12 flex flex-col items-center text-center">
-                <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-red-50 text-red-500">
+                <div className="ccr-caja-icono mb-4 flex h-14 w-14 items-center justify-center rounded-2xl">
                   <AlertCircle className="h-7 w-7" />
                 </div>
                 <h2 className="text-xl font-bold text-[#162543] mb-2">

@@ -50,7 +50,7 @@ export function ErrorScreen({
       </a>
 
       {icon && (
-        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[#f1f5f9] mb-5 text-[#1a2744]">
+        <div className="ccr-caja-icono mb-5 flex h-16 w-16 items-center justify-center rounded-2xl">
           {icon}
         </div>
       )}

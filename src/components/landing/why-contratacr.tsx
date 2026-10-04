@@ -29,7 +29,6 @@ export async function WhyContratacr() {
             // ContrataCR con los colores del logo: «Contrata» oscuro, «CR» celeste.
             marca: () => <span className="whitespace-nowrap">Contrata<span className="text-[#009FD9]">CR</span></span>,
           })}</h2>
-          <p className="mx-auto mt-3 max-w-xl text-gray-500">{t("guia.subtitulo")}</p>
         </div>
         <GuiaDeLaApp pasos={pasos} />
       </div>
