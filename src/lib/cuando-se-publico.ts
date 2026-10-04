@@ -11,6 +11,8 @@
  * Se trunca, no se redondea: a las 23 h de publicado todavía es «Hace 23 h», no
  * «Ayer». Decir que algo es de ayer cuando es de hoy envejece la publicación.
  */
+export const DIAS_VISIBLES = 7;
+
 export function cuandoSePublico(iso: string | null | undefined, en: boolean): string {
   if (!iso) return "";
   const cuando = new Date(iso).getTime();
@@ -22,6 +24,10 @@ export function cuandoSePublico(iso: string | null | undefined, en: boolean): st
   const horas = Math.floor(transcurrido / 3_600_000);
   if (horas < 24) return en ? `${horas} h ago` : `Hace ${horas} h`;
   const dias = Math.floor(transcurrido / 86_400_000);
+  // PASADA UNA SEMANA NO SE DICE (3-oct-2026): «Hace 34 días» hacía ver la app
+  // abandonada aunque la publicación siga vigente. La fecha solo se muestra
+  // cuando juega a favor; quien la pinta oculta el separador si llega vacía.
+  if (dias > DIAS_VISIBLES) return "";
   if (dias === 1) return en ? "Yesterday" : "Ayer";
   return en ? `${dias} days ago` : `Hace ${dias} días`;
 }

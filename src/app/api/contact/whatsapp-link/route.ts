@@ -6,6 +6,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { getWhatsAppLink } from "@/lib/utils";
 import { limitTrimmedText } from "@/lib/text-limits";
 import { contactCookieValue, hashContactToken, setContactCookie } from "@/lib/contact-followup";
+import { invitarAResenaAhora } from "@/lib/notifications/invitar-ahora";
 
 const FOLLOW_UP_DELAY_MS = 5 * 24 * 60 * 60 * 1000;
 
@@ -248,6 +249,7 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  await invitarAResenaAhora(userId);
   const response = NextResponse.json({ href: getWhatsAppLink(phone, message), contactId });
   setContactCookie(response, token);
   return response;

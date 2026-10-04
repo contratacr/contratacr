@@ -7,6 +7,7 @@ import { auditUserAction } from "@/lib/audit/user-action";
 import { writeSourceColumns } from "@/lib/security/write-guard";
 import { randomBytes } from "node:crypto";
 import { quoteTotals, sanitizeQuoteItems, type QuoteTaxMode } from "@/lib/quotes";
+import { invitarAResenaAhora } from "@/lib/notifications/invitar-ahora";
 
 /**
  * Cotizaciones: el profesional las crea desde su sección (a cualquier cliente,
@@ -182,6 +183,7 @@ export async function POST(req: NextRequest) {
   // en Oportunidades—, asi que `clientId` es siempre nulo aqui. La cotizacion
   // suelta se comparte como PDF o enlace, por fuera del app.
 
+  await invitarAResenaAhora(me.user.id);
   return NextResponse.json({ quote: data });
 }
 

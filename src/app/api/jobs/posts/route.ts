@@ -9,6 +9,7 @@ import { EMPLOYMENT_TYPES, EXPERIENCE_LEVELS, SALARY_PERIODS, WORKPLACE_TYPES } 
 import { MAX_MONEY_AMOUNT } from "@/lib/forms/numeric-validation";
 import { crTodayISO } from "@/lib/time-cr";
 import { revalidatePath } from "next/cache";
+import { invitarAResenaAhora } from "@/lib/notifications/invitar-ahora";
 
 const CURRENCIES = new Set(["CRC", "USD"]);
 const STATUSES = new Set(["draft", "published", "paused", "closed"]);
@@ -119,6 +120,7 @@ export async function POST(req: NextRequest) {
         console.error("[POST /api/jobs/posts] aviso a profesionales", avisoError);
       }
     }
+    await invitarAResenaAhora(user.id);
     return NextResponse.json({ id: data.id });
   } catch (error) {
     console.error("[POST /api/jobs/posts] unexpected failure", error);

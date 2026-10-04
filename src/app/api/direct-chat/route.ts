@@ -17,6 +17,7 @@ import { sendNotificationPush } from "@/lib/push/notify";
 import { notifyRecipientOutsideApp, usersWithFreshPush } from "@/lib/direct-chat/outside-app-notify";
 import { drainPushOutbox } from "@/lib/push/worker";
 import { despuesDeResponder } from "@/lib/after-response";
+import { invitarAResenaAhora } from "@/lib/notifications/invitar-ahora";
 
 type ConversationRow = {
   id: string;
@@ -621,6 +622,7 @@ export async function POST(req: Request) {
     })(), "direct-chat:aviso-fuera-de-la-app");
   }
   const [signedMessage] = await signMessageAttachments(db, [msg as DirectMessageRow]);
+  await invitarAResenaAhora(user.id);
   return NextResponse.json({ ok: true, conversationId: conversation.id, message: signedMessage, created: conversationCreated });
 }
 

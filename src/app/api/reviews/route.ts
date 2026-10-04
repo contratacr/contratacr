@@ -10,6 +10,7 @@ import { validateReviewText } from "@/lib/moderation/reviews";
 import { sendNotificationPush } from "@/lib/push/notify";
 import { WHATSAPP_CONTACT_COOKIE, hashContactToken } from "@/lib/contact-followup";
 import { NAME_MAX_LENGTH } from "@/lib/text-limits";
+import { invitarAResenaAhora } from "@/lib/notifications/invitar-ahora";
 
 /**
  * Una reseña sin cuenta, para quien ya contactó por WhatsApp.
@@ -325,6 +326,8 @@ export async function POST(req: NextRequest) {
     },
   });
 
+  // Quien reseña y el profesional reseñado: los dos ya vivieron la app.
+  await Promise.all([invitarAResenaAhora(user.id), invitarAResenaAhora(targetPro.profile_id)]);
   return NextResponse.json({ ok: true, edited: false });
 }
 

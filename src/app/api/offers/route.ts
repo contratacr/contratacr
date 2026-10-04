@@ -8,6 +8,7 @@ import { MAX_MONEY_AMOUNT, MAX_OFFER_QUANTITY } from "@/lib/forms/numeric-valida
 import { OFFER_PRICE_UNITS, OFFER_TYPES, sanitizeOfferImages } from "@/lib/offers";
 import { crTodayISO } from "@/lib/time-cr";
 import { revalidatePath } from "next/cache";
+import { invitarAResenaAhora } from "@/lib/notifications/invitar-ahora";
 
 const STATUSES = new Set(["draft", "published", "paused", "expired", "sold_out"]);
 const CURRENCIES = new Set(["CRC", "USD"]);
@@ -99,6 +100,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: mensajeDeError(req, { es: "No pudimos guardar la oferta. Inténtalo nuevamente.", en: "We could not save the promotion. Try again." }) }, { status: 500 });
     }
     revalidateOfferViews(data.id);
+    await invitarAResenaAhora(user.id);
     return NextResponse.json({ id: data.id });
   } catch (error) {
     console.error("[POST /api/offers] unexpected failure", error);
