@@ -1,9 +1,9 @@
 name: Invitación a reseñar en Google
 
 # La invitación «¿Nos dejas una reseña?» ya no sale al registrarse: una vez al
-# día se invita a quien lleva al menos 3 días y ya tuvo una experiencia real
-# (publicó un proyecto, escribió por el chat, dejó o recibió una reseña). Cada
-# cuenta recibe la invitación una sola vez. Ver invitar-tras-experiencia.ts.
+# día se invita a toda cuenta que hizo cualquier interacción real hace al menos
+# un día (proyecto, empleo, promoción, contacto, chat, cotización o reseña).
+# Cada cuenta la recibe una sola vez. Ver invitar-tras-experiencia.ts.
 
 on:
   schedule:

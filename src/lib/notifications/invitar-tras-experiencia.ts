@@ -4,48 +4,64 @@ import { invitarAResenaDeGoogle } from "@/lib/notifications/invitacion-resena-go
 type Admin = ReturnType<typeof createAdminClient>;
 
 /**
- * LA RESEÑA EN GOOGLE SE PIDE DESPUÉS DE USAR LA APP, no al registrarse
- * (3-oct-2026). Pedirla a una cuenta recién creada es pedir opinión de algo
- * que la persona todavía no probó. Una vez al día se invita a quien:
- *  - lleva al menos 3 días con la cuenta, y
- *  - ya tuvo una experiencia real: publicó un proyecto, escribió por el chat,
- *    dejó una reseña a un profesional o, si es profesional, recibió una.
- * Cada cuenta recibe la invitación una sola vez (lo garantiza invitarAResenaDeGoogle).
+ * LA RESEÑA EN GOOGLE SE PIDE DESPUÉS DE USAR LA APP, no al registrarse.
+ * Una vez al día se invita a toda cuenta que hizo CUALQUIER interacción real
+ * (decisión de Isaac, 3-oct-2026):
+ *  - publicó un proyecto, un empleo o una promoción;
+ *  - contactó a un profesional (WhatsApp, llamada) o escribió por el chat;
+ *  - hizo una cotización;
+ *  - dejó una reseña o, si es profesional, recibió una.
+ * La interacción tiene que tener al menos un día: se pide opinión cuando ya
+ * hubo tiempo de ver cómo le fue, no en el mismo momento. Cada cuenta recibe la
+ * invitación una sola vez (lo garantiza invitarAResenaDeGoogle).
  */
-const DIAS_MINIMOS = 3;
 const VENTANA_DIAS = 60;
+const ESPERA_HORAS = 24;
+
+type Filas = Record<string, unknown>[] | null;
 
 export async function invitarTrasExperiencia(admin: Admin, { simular = false } = {}) {
   const desde = new Date(Date.now() - VENTANA_DIAS * 86_400_000).toISOString();
-  const ids = new Set<string>();
-  const sumar = (filas: Record<string, unknown>[] | null, campo: string) => (filas ?? []).forEach((f) => { const v = f[campo]; if (typeof v === "string" && v) ids.add(v); });
+  const hasta = new Date(Date.now() - ESPERA_HORAS * 3_600_000).toISOString();
+  const cuentas = new Set<string>();
+  const fichas = new Set<string>();
+  const sumar = (destino: Set<string>, filas: Filas, campo: string) => (filas ?? []).forEach((f) => { const v = f[campo]; if (typeof v === "string" && v) destino.add(v); });
+  const en = (tabla: string, campos: string) => admin.from(tabla).select(campos).gte("created_at", desde).lte("created_at", hasta).limit(5000);
 
-  const [proyectos, mensajes, escritas, recibidas] = await Promise.all([
-    admin.from("projects").select("client_id").gte("created_at", desde).limit(2000),
-    admin.from("direct_messages").select("sender_id").gte("created_at", desde).limit(5000),
-    admin.from("reviews").select("client_id").gte("created_at", desde).limit(2000),
-    admin.from("reviews").select("professional_id").gte("created_at", desde).limit(2000),
+  const [proyectos, mensajes, escritas, recibidas, empleos, promociones, cotizaciones, whatsapp, interacciones] = await Promise.all([
+    en("projects", "client_id"),
+    en("direct_messages", "sender_id"),
+    en("reviews", "client_id"),
+    en("reviews", "professional_id"),
+    en("job_posts", "employer_id"),
+    en("professional_offers", "professional_id"),
+    en("quotes", "professional_id"),
+    en("whatsapp_contact_followups", "client_id"),
+    // Contactos registrados por la analítica (WhatsApp, llamada, etc.) de quien tenía sesión.
+    en("interaction_events", "viewer_user_id, event_type").not("viewer_user_id", "is", null),
   ]);
-  sumar(proyectos.data as Record<string, unknown>[] | null, "client_id");
-  sumar(mensajes.data as Record<string, unknown>[] | null, "sender_id");
-  sumar(escritas.data as Record<string, unknown>[] | null, "client_id");
-  // La reseña recibida apunta a la ficha del profesional: se pasa a su cuenta.
-  const fichas = [...new Set(((recibidas.data ?? []) as { professional_id?: string | null }[]).map((r) => r.professional_id).filter(Boolean))] as string[];
-  if (fichas.length) {
-    const { data } = await admin.from("professionals").select("profile_id").in("id", fichas);
-    sumar(data as Record<string, unknown>[] | null, "profile_id");
+  // Lo que apunta a la CUENTA.
+  sumar(cuentas, proyectos.data as Filas, "client_id");
+  sumar(cuentas, mensajes.data as Filas, "sender_id");
+  sumar(cuentas, escritas.data as Filas, "client_id");
+  sumar(cuentas, whatsapp.data as Filas, "client_id");
+  const contactos = ((interacciones.data ?? []) as { viewer_user_id?: string | null; event_type?: string | null }[])
+    .filter((f) => /contact|whatsapp|call|llamad|lead/i.test(f.event_type ?? ""));
+  sumar(cuentas, contactos as Filas, "viewer_user_id");
+  // Lo que apunta a la FICHA del profesional: se pasa a su cuenta.
+  sumar(fichas, recibidas.data as Filas, "professional_id");
+  sumar(fichas, empleos.data as Filas, "employer_id");
+  sumar(fichas, promociones.data as Filas, "professional_id");
+  sumar(fichas, cotizaciones.data as Filas, "professional_id");
+  const listaFichas = [...fichas];
+  for (let i = 0; i < listaFichas.length; i += 200) {
+    const { data } = await admin.from("professionals").select("profile_id").in("id", listaFichas.slice(i, i + 200));
+    sumar(cuentas, data as Filas, "profile_id");
   }
-  if (ids.size === 0) return { candidatos: 0, enviadas: 0, yaTenian: 0 };
 
-  // Solo cuentas con al menos 3 días.
-  const limite = new Date(Date.now() - DIAS_MINIMOS * 86_400_000).toISOString();
-  const lista = [...ids];
-  const conAntiguedad: string[] = [];
-  for (let i = 0; i < lista.length; i += 200) {
-    const { data } = await admin.from("profiles").select("id").in("id", lista.slice(i, i + 200)).lte("created_at", limite);
-    (data ?? []).forEach((f) => conAntiguedad.push(String((f as { id: string }).id)));
-  }
-  if (simular) return { candidatos: conAntiguedad.length, enviadas: 0, yaTenian: 0 };
-  const resultado = await invitarAResenaDeGoogle(admin, conAntiguedad);
-  return { candidatos: conAntiguedad.length, ...resultado };
+  const lista = [...cuentas];
+  if (simular) return { candidatos: lista.length, enviadas: 0, yaTenian: 0 };
+  if (lista.length === 0) return { candidatos: 0, enviadas: 0, yaTenian: 0 };
+  const resultado = await invitarAResenaDeGoogle(admin, lista);
+  return { candidatos: lista.length, ...resultado };
 }
