@@ -1,14 +1,17 @@
 "use client";
 
 import { NombreQueCabe } from "@/components/ui/nombre-que-cabe";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { leerBorrador } from "@/lib/borrador-sin-sesion";
+import { AvisoDeBorrador } from "@/components/ui/aviso-de-borrador";
 import { useCachedResource } from "@/hooks/use-cached-resource";
 import { useLocale, useTranslations } from "next-intl";
 import { CalendarCheck, ChevronRight, Clock3, Handshake, Plus, ReceiptText, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatColones } from "@/lib/pricing";
 import { isQuoteExpired, type Quote } from "@/lib/quotes";
-import { QuoteEditorModal } from "@/components/quotes/quote-editor-modal";
+import { QuoteEditorModal, type BorradorDeCotizacion } from "@/components/quotes/quote-editor-modal";
 import { QuoteDetailModal } from "@/components/quotes/quote-detail-modal";
 import { SectionHeadline } from "@/components/dashboard/section-headline";
 import { PanelEmptyState, PanelListSkeleton } from "@/components/ui/content-loading";
@@ -42,7 +45,22 @@ export function QuotesSection({ proName, proSlug, proId, puedeCrear = true }: { 
     [],
   );
   const quotes: Quote[] | null = loading ? null : quotesCargadas;
-  const [editor, setEditor] = useState(false);
+  // `?nueva=1` (viene de /cotizar) abre el editor; con `&borrador=1`, lleno con
+  // lo que se escribió antes de entrar.
+  const searchParams = useSearchParams();
+  const [editor, setEditor] = useState(() => searchParams.get("nueva") === "1" && searchParams.get("borrador") !== "1");
+  const [inicial, setInicial] = useState<BorradorDeCotizacion | null>(null);
+  useEffect(() => {
+    if (searchParams.get("borrador") !== "1") return;
+    let vivo = true;
+    void leerBorrador<BorradorDeCotizacion>("cotizacion").then((b) => {
+      if (!vivo) return;
+      setInicial(b?.datos ?? null);
+      setEditor(true);
+    });
+    return () => { vivo = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- solo al entrar
+  }, []);
   const [detalle, setDetalle] = useState<{ quote: Quote; recien: boolean } | null>(null);
 
   // "Esperando respuesta" solo tiene sentido donde alguien PUEDE responder: en
@@ -137,7 +155,10 @@ export function QuotesSection({ proName, proSlug, proId, puedeCrear = true }: { 
       )}
 
       {editor && (
-        <QuoteEditorModal open onClose={() => setEditor(false)} onSent={(q) => { setQuotes((prev) => [q, ...(prev ?? [])]); setEditor(false); setDetalle({ quote: q, recien: true }); }} />
+        <>
+        {inicial && <AvisoDeBorrador texto={locale === "en" ? "Your quote was saved. Review it and tap Send." : "Tu cotización quedó guardada. Revísala y toca Enviar."} />}
+        <QuoteEditorModal open inicial={inicial} onClose={() => { setEditor(false); setInicial(null); }} onSent={(q) => { setQuotes((prev) => [q, ...(prev ?? [])]); setEditor(false); setDetalle({ quote: q, recien: true }); }} />
+        </>
       )}
       {detalle && (
         <QuoteDetailModal quote={detalle.quote} role="pro" open proName={proName} proSlug={proSlug} recienCreada={detalle.recien} onClose={() => setDetalle(null)}

@@ -15,7 +15,8 @@ test.describe("@seeded professional profile", () => {
     expect(href, "The verified production mirror must expose at least one professional").toBeTruthy();
 
     await gotoOK(page, href!);
-    await expect(page).toHaveURL(/\/profesionales\//);
+    // Desde el 4-oct-2026 la barra muestra la dirección corta (contratacr.com/nombre).
+    await expect(page).toHaveURL(/\/profesionales\/|\/[a-z0-9-]+$/);
     await expect(page.locator("h1").first()).toBeVisible();
     await expect(page.locator("main").getByText(/Servicios|Sobre mi|Rese|Casos de/i).first()).toBeVisible();
     await expectNoHorizontalOverflow(page);

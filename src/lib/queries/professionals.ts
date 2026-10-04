@@ -368,7 +368,7 @@ export async function searchProfessionals(
 
 const searchProfessionalsCached = unstable_cache(
   async (filters: SearchFilters) => searchProfessionalsUncached(filters),
-  ["public-professional-search-v4"],
+  ["public-professional-search-v5"],
   { revalidate: SEARCH_CACHE_SECONDS },
 );
 
@@ -448,7 +448,7 @@ async function searchProfessionalsUncached(
                 // profesional fuera de TODAS las búsquedas por zona (63 de 288
                 // perfiles, medido). Quien la marca sale en cualquier zona,
                 // pero de último (ver `soloPorTodoElPais` más abajo).
-                "coverage_country.eq.true",
+                inPersonOnly ? "" : "coverage_country.eq.true",
                 includeVideoNationwide ? "videoconsulta.eq.true" : "",
               ].filter(Boolean).join(","))
             : query.eq("provincia_id", filters.provinceId);
@@ -459,7 +459,9 @@ async function searchProfessionalsUncached(
           const parts = [`search_cantones.cs.{${filters.cantonId}}`, `canton_id.eq.${filters.cantonId}`];
           if (modern) {
             if (filters.provinceId && filters.provinceId !== "todas") parts.push(`coverage_provincias.cs.{${filters.provinceId}}`);
-            parts.push("coverage_country.eq.true");
+            // Con «Presencial», quien solo llega por «todo el país» (casi siempre por
+            // videoconsulta) no cuenta: se buscan los que atienden AHÍ (4-oct-2026).
+            if (!inPersonOnly) parts.push("coverage_country.eq.true");
             if (includeVideoNationwide) parts.push("videoconsulta.eq.true");
           }
           query = modern ? query.or(parts.join(",")) : query.eq("canton_id", filters.cantonId);
@@ -485,7 +487,7 @@ async function searchProfessionalsUncached(
                 ? [
                     `search_provincias.cs.{${loc.id}}`,
                     `provincia_id.eq.${loc.id}`,
-                    "coverage_country.eq.true",
+                    inPersonOnly ? "" : "coverage_country.eq.true",
                     queryIncludesVideoNationwide ? "videoconsulta.eq.true" : "",
                   ].filter(Boolean)
                 : [`provincia_id.eq.${loc.id}`];
@@ -495,7 +497,7 @@ async function searchProfessionalsUncached(
                   `search_cantones.cs.{${loc.id}}`,
                   `canton_id.eq.${loc.id}`,
                   `coverage_provincias.cs.{${loc.provinceId}}`,
-                  "coverage_country.eq.true",
+                  inPersonOnly ? "" : "coverage_country.eq.true",
                   queryIncludesVideoNationwide ? "videoconsulta.eq.true" : "",
                 ].filter(Boolean)
               : [`canton_id.eq.${loc.id}`];

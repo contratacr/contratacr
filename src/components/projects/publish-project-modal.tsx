@@ -18,6 +18,10 @@ import { useAuth } from "@/hooks/use-auth";
 import { Link } from "@/i18n/navigation";
 import { BARRA_ACCION_BASE } from "@/components/ui/acciones-al-pie";
 import { cn } from "@/lib/utils";
+import { pareceFijoDeCostaRica } from "@/lib/telefono-movil";
+import { AvisoDeBorrador } from "@/components/ui/aviso-de-borrador";
+import { borrarBorrador, guardarBorrador, leerBorrador, rutaParaEntrar } from "@/lib/borrador-sin-sesion";
+import { prefijoDeIdioma } from "@/lib/prefijo-de-idioma";
 
 const PROJECT_DESCRIPTION_MAX_LENGTH = 300;
 const LAST_ZONE_KEY = "ccr:last-request-zone";
@@ -96,6 +100,19 @@ export function PublishProjectModal({ onClose, onSuccess, editar }: {
   // El teléfono solo se pregunta cuando la cuenta no tiene ninguno. Con
   // WhatsApp como única vía de respuesta, un proyecto sin número es un proyecto
   // que nadie puede contestar.
+  // «N profesionales recibirán tu proyecto»: se pide al elegir el servicio.
+  const [destinatarios, setDestinatarios] = useState(0);
+  useEffect(() => {
+    setDestinatarios(0);
+    if (!form.categoryId) return;
+    let vivo = true;
+    fetch(`/api/projects?role=destinatarios&category=${encodeURIComponent(form.categoryId)}`)
+      .then((r) => (r.ok ? r.json() : { total: 0 }))
+      .then((d) => { if (vivo) setDestinatarios(Number(d?.total) || 0); })
+      .catch(() => {});
+    return () => { vivo = false; };
+  }, [form.categoryId]);
+
   useEffect(() => {
     if (!user) return;
     let vivo = true;
@@ -106,11 +123,28 @@ export function PublishProjectModal({ onClose, onSuccess, editar }: {
         const guardado = String((data as { phone?: string | null } | null)?.phone ?? "").trim();
         queueMicrotask(() => {
           if (!vivo) return;
-          if (guardado) setTelefono(guardado);
+          // El número escrito en el borrador manda sobre el de la cuenta.
+          if (guardado && !telefonoDelBorrador.current) setTelefono(guardado);
         });
       });
     return () => { vivo = false; };
   }, [user]);
+
+  // Lo que se escribió antes de entrar (ver borrador-sin-sesion.ts).
+  const [desdeBorrador, setDesdeBorrador] = useState(false);
+  const telefonoDelBorrador = useRef(false);
+  useEffect(() => {
+    if (editar || searchParams.get("borrador") !== "1") return;
+    let vivo = true;
+    void leerBorrador<{ form: typeof form; telefono: string }>("proyecto").then((b) => {
+      if (!vivo || !b) return;
+      setForm(b.datos.form);
+      if (b.datos.telefono) { telefonoDelBorrador.current = true; setTelefono(b.datos.telefono); }
+      setDesdeBorrador(true);
+    });
+    return () => { vivo = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- solo al abrir
+  }, []);
 
   // La zona se recuerda entre solicitudes: casi siempre es la misma casa.
   useEffect(() => {
@@ -169,6 +203,18 @@ export function PublishProjectModal({ onClose, onSuccess, editar }: {
       setError(t("errPhone"));
       return;
     }
+    if (!editar && pareceFijoDeCostaRica(telefono)) {
+      setErrorField("phone");
+      setError(t("errPhoneFijo"));
+      return;
+    }
+    // Sin sesión: se guarda todo y se pide entrar. Al volver, esta misma
+    // ventana se abre llena y solo falta tocar «Publicar».
+    if (!user && !editar) {
+      await guardarBorrador("proyecto", { form, telefono });
+      window.location.assign(rutaParaEntrar(prefijoDeIdioma(locale), "/publicar-proyecto"));
+      return;
+    }
     setSubmitting(true);
     try {
       if (editar) {
@@ -206,6 +252,7 @@ export function PublishProjectModal({ onClose, onSuccess, editar }: {
         setError(data.error ?? t("errPublish"));
         return;
       }
+      borrarBorrador("proyecto");
       try {
         window.localStorage.setItem(LAST_ZONE_KEY, JSON.stringify({ provinciaId: form.provinciaId, cantonId: form.cantonId }));
       } catch { /* sin almacenamiento */ }
@@ -240,10 +287,10 @@ export function PublishProjectModal({ onClose, onSuccess, editar }: {
         {/* La cabecera tambien enciende: el enganche ya media las dos orillas
             y aqui solo se estaba usando la de abajo. */}
         <div className={cn("relative flex shrink-0 items-center justify-center gap-3 border-b border-[#e5e7eb] px-14 py-4 transition-shadow sm:items-start sm:justify-between sm:px-6")}>
-          {/* Solo el título: la línea de apoyo repetía lo que el propio
-              formulario ya promete y robaba alto en el teléfono. */}
+          {/* Solo el título. Lo de «quedó guardado» va en la franja de arriba. */}
           <div className="min-w-0 text-center sm:text-left">
             <h2 id="publish-project-title" className="text-lg font-bold text-[#162543]">{editar ? t("editTitle") : t("title")}</h2>
+            {desdeBorrador && <AvisoDeBorrador texto={t("borradorListo")} />}
           </div>
           <button
             type="button"
@@ -275,6 +322,7 @@ export function PublishProjectModal({ onClose, onSuccess, editar }: {
                     placeholder={t("categoryPlaceholder")}
                     error={errorField === "category" ? error ?? undefined : undefined}
                   />
+                  {destinatarios > 0 && <p className="mt-1 text-xs font-semibold text-[#0f7a4a]">{t("destinatarios", { n: destinatarios })}</p>}
                 </div>
 
                 <div ref={descriptionFieldRef}>
@@ -321,7 +369,6 @@ export function PublishProjectModal({ onClose, onSuccess, editar }: {
                       options={[{ value: "", label: t("allM") }, ...cantons.map((c) => ({ value: c.id, label: c.name }))]}
                     />
                   </div>
-                  <p className="mt-1.5 text-xs text-[#68778d]">{t("zoneHelp")}</p>
                 </div>
 
                 {/* Publicar un proyecto ES pedir que lo contacten: preguntarlo
@@ -343,7 +390,6 @@ export function PublishProjectModal({ onClose, onSuccess, editar }: {
                     error={errorField === "phone" ? (error ?? undefined) : undefined}
                     required
                   />
-                  <p className="mt-1.5 text-xs text-[#68778d]">{t("phoneHelp")}</p>
                 </div>}
               </div>
             </div>

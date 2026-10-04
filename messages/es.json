@@ -310,7 +310,14 @@
     },
     "metaTitle": "{category} en {place} · profesionales verificados | ContrataCR",
     "metaDesc": "Compara profesionales de {category} en {place}: verificados con cédula, con reseñas, precios y contacto directo.",
-    "wholeProvince": "Toda la provincia"
+    "wholeProvince": "Toda la provincia",
+    "proyectoTarjeta": {
+      "titulo": "¿No te decides?",
+      "tituloVacio": "Nadie por aquí todavía",
+      "texto": "Publica lo que necesitas y los profesionales te contactan por WhatsApp.",
+      "boton": "Publicar lo que necesito",
+      "pie": "Gratis · Tu número no se publica"
+    }
   },
   "hero": {
     "categoryPlaceholder": "¿Qué servicio necesitas?",
@@ -2353,7 +2360,7 @@
     "viewAsClients": "Ver cómo me ven los clientes",
     "fullName": "Nombre completo",
     "identityVerified": "Verificado",
-    "nameLockedHelp": "Tu nombre proviene de la identificación que ingresaste al crear la cuenta. ¿Un error o cambio legal? <link>Solicítalo a soporte</link>.",
+    "nameLockedHelp": "Tu nombre sale de tu identificación. Para cambiarlo, <link>cambia tu identificación en Verificación</link>.",
     "fullNamePlaceholder": "Juan Pérez González",
     "businessName": "Nombre comercial o de tu empresa",
     "optional": "(opcional)",
@@ -2387,10 +2394,9 @@
     "videoCountryHelp": "Atiendes por video, sin desplazarte.",
     "address": "Dirección",
     "addressPlaceholder": "Ejemplo: Barrio Escalante, San José",
-    "whatsapp": "Número de contacto",
-    "whatsappHelp": "Este mismo número se usa en tu panel cliente y profesional.",
+    "whatsapp": "WhatsApp",
+    "whatsappHelp": "Los clientes te escriben a este número por WhatsApp. Debe ser un celular con WhatsApp.",
     "callNumber": "Número para llamadas",
-    "callNumberHelp": "Si lo dejas vacío, usaremos tu número de contacto para llamadas.",
     "contactEmail": "Correo de contacto",
     "emailPlaceholder": "tucorreo@ejemplo.com",
     "emailInvalid": "Ingresa un correo válido.",
@@ -2476,6 +2482,7 @@
     "idTypeDimex": "DIMEX",
     "idTypeNite": "NITE",
     "changeId": "Cambiar identificación",
+    "addId": "Agregar identificación",
     "changeIdTitle": "Cambiar identificación",
     "changeIdBody": "Ingresa la nueva identificación y confirma los datos antes de guardar.",
     "pendingComoTitulo": "Cómo verificarte",
@@ -2644,7 +2651,7 @@
     "uploading": "Subiendo...",
     "fullName": "Nombre completo",
     "verified": "Verificado",
-    "nameLockedHelp": "Tu nombre proviene de la identificación que ingresaste en tu última cita. ¿Un error o cambio legal? <link>Solicítalo a soporte</link>.",
+    "nameLockedHelp": "Tu nombre sale de tu identificación. Para cambiarlo, <link>cambia tu identificación en Verificación</link>.",
     "phone": "Teléfono de contacto",
     "optional": "(opcional)",
     "phoneNotice": "Este mismo número se usa en tu panel cliente y profesional.",
@@ -3061,7 +3068,8 @@
     "errBeneficiaryName": "Ingresa el nombre de la persona.",
     "errBeneficiaryDob": "Ingresa la fecha de nacimiento de la persona.",
     "phoneLabel": "WhatsApp",
-    "phoneHelp": "Es por donde te van a responder. Tu número no se publica: se lo damos solo al profesional que te escriba.",
+    "phoneHelp": "No aparece en la publicación: solo lo recibe quien te contacte con su cuenta profesional.",
+    "errPhoneFijo": "Ese número parece de teléfono fijo. Escribe un celular con WhatsApp para que te puedan escribir.",
     "loadingProfile": "Cargando tus datos...",
     "errPublish": "No se pudo publicar. Intenta de nuevo.",
     "errUnexpected": "Error inesperado. Intenta de nuevo.",
@@ -3106,7 +3114,6 @@
     },
     "charLimit": "Has alcanzado el límite de {max} caracteres.",
     "zone": "¿Dónde?",
-    "zoneHelp": "Para que te escriban profesionales de tu zona.",
     "successNotified": "{count, plural, =0 {Todavía no hay profesionales de este servicio en tu zona, pero la dejamos publicada para cuando se sumen.} one {Le avisamos a # profesional de {service}.} other {Le avisamos a # profesionales de {service}.}}",
     "successNext": "Te avisamos apenas alguien te responda. Después le escribes al que quieras.",
     "successGoToProjects": "Ver mis proyectos",
@@ -3119,7 +3126,9 @@
     "editTitle": "Editar proyecto",
     "editSave": "Guardar cambios",
     "editSaving": "Guardando…",
-    "editDone": "Cambios guardados"
+    "editDone": "Cambios guardados",
+    "destinatarios": "{n, plural, one {# profesional de este servicio recibirá tu proyecto} other {# profesionales de este servicio recibirán tu proyecto}}",
+    "borradorListo": "Quedó guardado. Revísalo y toca Publicar."
   },
   "notifications": {
     "title": "Notificaciones",
@@ -3750,6 +3759,17 @@
       "headline2": "sin complicaciones.",
       "searchPlaceholder": "¿Qué servicio estás buscando?",
       "searchPlaceholderShort": "¿Qué necesitas?",
+      "buscaPrefijo": "Busca",
+      "pidePrefijo": "¿No sabes a quién llamar?",
+      "pideEnlace": "Crea un proyecto",
+      "ejemplosBusqueda": [
+        "un electricista",
+        "un plomero",
+        "limpieza del hogar",
+        "un mecánico",
+        "un pintor",
+        "un abogado"
+      ],
       "location": "Ubicación",
       "nearMe": "Buscar cerca de mí",
       "nearMeActive": "Cerca de mí",
@@ -3762,7 +3782,8 @@
       "publishCardTitle": "Publica lo que necesitas",
       "publishCardBody": "Los profesionales de tu zona te responden y tú eliges.",
       "publishOr": "o",
-      "titular": "Encuentra profesionales|*verificados* en Costa Rica."
+      "titular": "Encuentra profesionales|*verificados* en Costa Rica.",
+      "titularPc": "Encuentra profesionales *verificados*|en Costa Rica."
     },
     "carousel": {
       "titlePre": "Los servicios",
@@ -3773,7 +3794,6 @@
     "zones": {
       "eyebrow": "Cobertura local",
       "heading": "Encuentra profesionales cerca de ti",
-      "subtitle": "Toca tu provincia y elige tu cantón.",
       "mapAria": "Mapa de Costa Rica por provincia",
       "coverageCount": "{count, plural, one {# cantón con cobertura} other {# cantones con cobertura}}",
       "noPros": "Aún sin servicios",
@@ -3812,7 +3832,6 @@
       "mockSearch": "Buscar contador",
       "guia": {
         "titulo": "Así funciona <marca></marca>",
-        "subtitulo": "Todo lo que necesitas, en una sola app.",
         "profesionales": {
           "titulo": "Busca profesionales",
           "texto": "Busca por servicio y ubicación, y escríbeles directo por WhatsApp.",
@@ -3985,21 +4004,23 @@
     "createOfferDesc": "Crea tu perfil y recibe clientes",
     "createCase": "Publicar un caso de éxito",
     "createCaseDesc": "Muestra un trabajo que hiciste",
-    "createProjectAsk": "¿Qué necesitas?",
-    "tileProject": "Proyecto",
+    "createProjectAsk": "Te contactan por WhatsApp",
+    "tileProject": "Pedir un servicio",
     "tileDeal": "Promoción",
     "tileJob": "Empleo",
     "createDeal": "Publicar una promoción",
     "createJob": "Publicar un empleo",
     "forPros": "Para profesionales",
-    "tileProjectPost": "Publicar proyecto",
+    "tileProjectPost": "Pedir un servicio",
     "tileOffer": "Ofrecer servicios",
     "tileOfferSub": "Recibe clientes",
     "tileCase": "Caso de éxito",
     "tileCaseSub": "Muestra tu trabajo",
     "tileDealSub": "Ofertas y descuentos",
     "tileJobSub": "Busca personal",
-    "messages": "Mensajes"
+    "messages": "Mensajes",
+    "tileQuote": "Hacer una cotización",
+    "tileQuoteSub": "Gratis, lista para mandar"
   },
   "serviceLanding": {
     "title": "{category} en {place}",

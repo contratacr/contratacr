@@ -352,7 +352,9 @@ export function NativeBottomNav() {
         </Link>
 
         <button type="button" aria-label={tNav("create")} aria-haspopup="dialog" onClick={() => { window.dispatchEvent(new Event("ccr:close-native-search")); setHojaDeCrear(true); }} className="relative z-10 grid h-full min-w-0 flex-1 basis-0 place-items-center ccr-toque-barra">
-          <span className="grid h-9 w-9 place-items-center rounded-full bg-[#009FD9] text-white shadow-[0_4px_10px_-4px_rgba(0,159,217,0.7)]">
+          {/* Del MISMO tamaño que los demás íconos (24 px), solo en celeste
+              (4-oct-2026, decisión de Isaac). */}
+          <span className="grid h-[30px] w-[30px] place-items-center rounded-full bg-[#009FD9] text-white">
             <Plus className="h-5 w-5" strokeWidth={2.8} />
           </span>
         </button>

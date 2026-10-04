@@ -15,7 +15,7 @@ import { PanelEmptyState } from "@/components/ui/content-loading";
 // SIN «LIMPIAR FILTROS» AQUÍ. La fila de pastillas de arriba ya lo tiene
 // siempre a la vista, y repetido abajo eran dos botones para lo mismo en la
 // misma pantalla: el vacío ofrece UNA salida, publicar lo que se necesita.
-export function SearchEmptyState({ title, description, cta, href }: { title: string; description: string; cta: string; href: string }) {
+export function SearchEmptyState({ title, description, cta, href, pie }: { title: string; description: string; cta: string; href: string; pie?: string }) {
   return (
     // EN COMPUTADORA LLENA LA COLUMNA. El mapa de al lado mide
     // `calc(100vh-104px)`; la tarjeta del vacío medía 20rem y debajo quedaba
@@ -44,6 +44,7 @@ export function SearchEmptyState({ title, description, cta, href }: { title: str
             >
               {cta}
             </Link>
+            {pie && <p className="text-[12px] font-semibold text-[#7a8797] sm:hidden">{pie}</p>}
           </div>
         )}
       />

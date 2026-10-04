@@ -13,6 +13,7 @@ import { matchProvinceCanton } from "@/lib/data/cr-geography";
 import { resolveCategoryIntent } from "@/lib/data/categories";
 import { trackMetaEvent } from "@/lib/analytics/meta-pixel";
 import { rutaDeBusqueda } from "@/lib/buscar-url";
+import { RodilloDeEjemplos } from "@/components/landing/rodillo-de-ejemplos";
 
 // A Google Places ADDRESS prediction shown alongside our province/cantón suggestions, so the
 // location field autocompletes real addresses (not just province/cantón names).
@@ -166,6 +167,7 @@ function useAnchoredRect(ref: RefObject<HTMLElement | null>, open: boolean, minW
   }, [open, ref, minWidth]);
   return pos;
 }
+
 
 /* EN EL TELÉFONO, LA PORTADA ABRE EL MISMO BUSCADOR A PANTALLA COMPLETA que
    Profesionales (como Airbnb). Escribir en la píldora de la portada hacía que
@@ -767,11 +769,12 @@ export function LandingHero() {
               entera (la letra se ajusta al ancho para que no se parta). */}
           {/* Dos líneas («|» marca el corte) y la palabra entre *asteriscos* en
               celeste: «verificados» es lo que distingue a ContrataCR. */}
-          {t("titular").split("|").map((tramo, i) => (
-            <span key={i} className="block whitespace-nowrap">
+          {/* En computadora cabe más: «verificados» sube a la primera línea. */}
+          {[["titular", "lg:hidden"], ["titularPc", "hidden lg:block"]].map(([clave, vista]) => t(clave).split("|").map((tramo, i) => (
+            <span key={`${clave}-${i}`} className={cn("block whitespace-nowrap", vista)}>
               {tramo.split("*").map((parte, j) => (j % 2 ? <span key={j} className="text-[#7fd3f7]">{parte}</span> : parte))}{" "}
             </span>
-          ))}
+          )))}
         </h1>
       </div>
 
@@ -796,7 +799,7 @@ export function LandingHero() {
               {/* El reparto de anchos va por CSS (sm:), no por un estado de
                   «es teléfono»: el servidor no sabe el ancho y pintaba el de
                   computadora, que el teléfono corregía al hidratar. */}
-              <div ref={svcDesktopRef} className="flex h-[54px] min-w-0 items-center gap-3 sm:h-full sm:[flex:0_0_var(--ccr-ancho-servicio)] sm:[transition:flex-basis_0.38s_cubic-bezier(0.22,1,0.36,1)]" style={{ "--ccr-ancho-servicio": `${foco === "loc" ? 44 : foco === "svc" ? 68 : 60}%` } as CSSProperties}>
+              <div ref={svcDesktopRef} className="relative flex h-[54px] min-w-0 items-center gap-3 sm:h-full sm:[flex:0_0_var(--ccr-ancho-servicio)] sm:[transition:flex-basis_0.38s_cubic-bezier(0.22,1,0.36,1)]" style={{ "--ccr-ancho-servicio": "60%" } as CSSProperties}>
                 <Search className="h-5 w-5 shrink-0 text-[#162543] sm:hidden" aria-hidden />
                 <input
                   type="text"
@@ -807,12 +810,21 @@ export function LandingHero() {
                   onKeyDown={handleKeyDown}
                   onFocus={() => { if (abrirBuscadorCompleto("servicio")) return; setFoco("svc"); if (suggestions.length > 0) setOpenSug(true); }}
                   onBlur={() => { setFoco((f) => (f === "svc" ? null : f)); setTimeout(() => setOpenSug(false), 120); }}
-                  placeholder={t("searchPlaceholderShort")}
+                  placeholder=""
+                  aria-label={t("searchPlaceholderShort")}
                   className="min-w-0 flex-1 bg-transparent text-[16px] text-[#162543] placeholder:text-[#6b7686] focus:outline-none sm:text-lg"
                   role="combobox"
                   aria-expanded={openSug}
                   aria-autocomplete="list"
                 />
+                {/* «Busca» FIJO Y EL SERVICIO SUBE (3-oct-2026), como las búsquedas
+                    sugeridas de Uber Eats: solo cambia la palabra, con un
+                    deslizamiento corto hacia arriba. Sin «…» y sin máquina de
+                    escribir, que distrae. Encima del campo vacío y sin tocar
+                    nada: el toque llega al campo de abajo. */}
+                {/* «Busca» fijo y el servicio que rueda (ver RodilloDeEjemplos): encima
+                    del campo vacío y sin tocar nada, el toque llega al campo. */}
+                {!service && <RodilloDeEjemplos quieto={!!service} className="pointer-events-none absolute inset-y-0 left-8 right-2 text-[16px] text-[#6b7686] sm:left-0 sm:text-lg" />}
                 <SuggestionsDropdown anchorRef={pildoraRef} open={openSug} suggestions={suggestions} activeIdx={activeIdx} onPick={(s) => selectSuggestion(s, true)} />
               </div>
               {/* Divider + location autocomplete */}
@@ -852,6 +864,11 @@ export function LandingHero() {
           </div>
 
         </form>
+        {/* La otra forma de conseguir quien te ayude, en una línea: pedirlo y que te escriban. */}
+        <p className="mt-3 text-center whitespace-nowrap text-[12.5px] font-semibold sm:text-[14px] text-white/90 drop-shadow lg:text-left">
+          {t("pidePrefijo")}{" "}
+          <Link href="/publicar-proyecto" className="font-extrabold text-white underline decoration-[#7fd3f7] decoration-2 underline-offset-4">{t("pideEnlace")}</Link>
+        </p>
 
         {/* Sentinel — IntersectionObserver in navbar watches this */}
         <div id="hero-search-sentinel" aria-hidden className="h-0" />

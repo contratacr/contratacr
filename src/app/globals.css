@@ -373,6 +373,12 @@ body.ccr-native-app.ccr-native-search-route button:not([aria-label]) {
 .ccr-native-app [role="dialog"] {
   padding-bottom: env(safe-area-inset-bottom);
 }
+html.ccr-native-app [role="dialog"].ccr-ventana-sin-pie {
+  padding-bottom: 0 !important;
+}
+html.ccr-native-app .ccr-ventana-sin-pie > .ccr-cuerpo-sin-pie {
+  padding-bottom: calc(1.25rem + env(safe-area-inset-bottom)) !important;
+}
 
 .ccr-native-app {
   --ccr-native-header-height: 64px;
@@ -803,7 +809,9 @@ html.ccr-native-app.ccr-native-bottom-nav-visible:not(.ccr-nav-montada) body::af
   /* BLANCO ESMERILADO, como las barras de Apple: casi sólido (combina con el
      fondo del app) y con desenfoque fuerte, así lo que pasa detrás se nota
      como una mancha suave sin estorbar los íconos. */
-  background: rgba(250, 251, 252, 0.86);
+  /* 4-oct-2026: más blanco (0.94) para que los íconos se lean bien sobre fotos
+     y videos; el poco de transparencia y el desenfoque se quedan. */
+  background: rgba(255, 255, 255, 0.94);
   /* blur(12px) sin saturate: el de 28px + saturate se recalculaba en cada
      cuadro mientras la página corría debajo y hacía pesado el desplazamiento
      en WKWebView. Con el fondo al 0.86 el esmerilado se ve igual. */
@@ -2639,7 +2647,9 @@ body.ccr-native-app:has(.ccr-native-search-panel) .ccr-native-bottom-nav {
    barra y quedaba un hueco grande al final. */
 /* …y la reserva de la barra la ocupa la propia sección, con su fondo: en el
    main quedaba como una franja blanca pura bajo el gris claro de la sección. */
-body.ccr-native-app.ccr-native-bottom-nav-visible:not(.ccr-native-search-route) main:has(> .ccr-fin-de-portada:last-child) {
+/* 4-oct-2026: sin «:last-child» — detrás del mapa va el pie (oculto en la app) y la
+   regla no aplicaba: se sumaban dos reservas y quedaba un hueco blanco al final. */
+body.ccr-native-app.ccr-native-bottom-nav-visible:not(.ccr-native-search-route) main:has(.ccr-fin-de-portada) {
   padding-bottom: 0 !important;
 }
 html.ccr-native-app .ccr-fin-de-portada > section {
@@ -2726,3 +2736,8 @@ html.ccr-menu-sin-cierre .ccr-menu-completo, html.ccr-menu-sin-cierre .ccr-menu-
 .ccr-guia-video::-webkit-media-controls,
 .ccr-guia-video::-webkit-media-controls-start-playback-button,
 .ccr-guia-video::-webkit-media-controls-overlay-play-button { display: none !important; -webkit-appearance: none; opacity: 0 !important; }
+
+/* El servicio de ejemplo del buscador de la portada entra subiendo y fundiéndose. */
+.ccr-rodillo-gira { animation: ccr-rodillo-gira 0.7s cubic-bezier(0.65, 0, 0.35, 1) both; }
+@keyframes ccr-rodillo-gira { from { transform: translateY(0); } to { transform: translateY(-1.5em); } }
+@media (prefers-reduced-motion: reduce) { .ccr-rodillo-gira { animation: none; transform: translateY(-1.5em); } }

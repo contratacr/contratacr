@@ -80,6 +80,17 @@ function colocarHoja(hoja: HTMLElement | null, fuera: number, avisar = true) {
   if (avisar) window.dispatchEvent(new Event("ccr:search-sheet-moved"));
 }
 
+// EL ARRASTRE NO PASA POR REACT (3-oct-2026). Marcar «arrastrando» en un estado
+// volvía a pintar el panel entero —cientos de tarjetas— en el primer cuadro del
+// gesto: el panel se trababa al empezar a moverlo. Se apaga la transición
+// directamente en el elemento y se devuelve al soltar.
+function empezarArrastre(hoja: HTMLElement | null) {
+  if (hoja) hoja.style.transition = "none";
+}
+function terminarArrastre(hoja: HTMLElement | null) {
+  if (hoja) hoja.style.transition = "transform .18s cubic-bezier(.22,.8,.3,1)";
+}
+
 function snapIndex(value: number, points = mobileSheetSnapPoints()) {
   return points.reduce((nearestIndex, point, index) =>
     Math.abs(point - value) < Math.abs(points[nearestIndex] - value) ? index : nearestIndex
@@ -301,6 +312,7 @@ export function SearchResultsLayout({ children, filters, quickFilters, drawerFil
   // not move stays a tap (the chip still opens); the drag only takes over once the
   // finger has travelled a few pixels, and only then captures the pointer.
   const pendingPointerRef = useRef<{ id: number; y: number; h: number; at: number } | null>(null);
+  const puntosDelArrastreRef = useRef<readonly number[] | null>(null);
   function onHandleDown(e: React.PointerEvent) {
     if (e.pointerType === "touch") return; // touch is handled by the panel's own listeners
     const target = e.target as HTMLElement;
@@ -310,7 +322,8 @@ export function SearchResultsLayout({ children, filters, quickFilters, drawerFil
   function beginHandleDrag(e: React.PointerEvent, pending: { id: number; y: number; h: number; at: number }) {
     pendingPointerRef.current = null;
     draggingRef.current = true;
-    setDragging(true);
+    empezarArrastre(sheetRef.current);
+    puntosDelArrastreRef.current = mobileSheetSnapPoints();
     startRef.current = { y: pending.y, h: pending.h };
     dragStartedAtRef.current = pending.at;
     curRef.current = pending.h;
@@ -324,7 +337,9 @@ export function SearchResultsLayout({ children, filters, quickFilters, drawerFil
     }
     if (!draggingRef.current) return;
     const vh = window.innerHeight || 1;
-    const snapPoints = mobileSheetSnapPoints();
+    // Medidas tomadas UNA vez al empezar: leerlas en cada movimiento obligaba a
+    // recalcular la página por cuadro.
+    const snapPoints = puntosDelArrastreRef.current ?? mobileSheetSnapPoints();
     const min = snapPoints[0];
     const max = snapPoints[snapPoints.length - 1];
     const dy = startRef.current.y - e.clientY; // up = grow
@@ -359,7 +374,7 @@ export function SearchResultsLayout({ children, filters, quickFilters, drawerFil
     pendingPointerRef.current = null;
     if (!draggingRef.current) return;
     draggingRef.current = false;
-    setDragging(false);
+    terminarArrastre(sheetRef.current);
     const target = resolveSnapTarget(startRef.current.h, curRef.current, performance.now() - dragStartedAtRef.current);
     curRef.current = target;
     setHeightFr(target);
@@ -369,7 +384,7 @@ export function SearchResultsLayout({ children, filters, quickFilters, drawerFil
     pendingPointerRef.current = null;
     if (!draggingRef.current) return;
     draggingRef.current = false;
-    setDragging(false);
+    terminarArrastre(sheetRef.current);
     const snapPoints = mobileSheetSnapPoints();
     const target = snapPoints[snapIndex(startRef.current.h, snapPoints)];
     curRef.current = target;
@@ -397,6 +412,7 @@ export function SearchResultsLayout({ children, filters, quickFilters, drawerFil
     let startedAt = 0;
     let inList = false;
     let mode: "undecided" | "sheet" | "native" = "undecided";
+    let points: readonly number[] = mobileSheetSnapPoints();
     const onStart = (e: TouchEvent) => {
       if (!window.matchMedia("(max-width: 1023px)").matches || e.touches.length !== 1) { mode = "native"; return; }
       const target = e.target as HTMLElement;
@@ -407,13 +423,14 @@ export function SearchResultsLayout({ children, filters, quickFilters, drawerFil
       startedAt = performance.now();
       inList = list.contains(target);
       mode = "undecided";
+      // Las alturas del panel se miden al tocar, no en cada movimiento.
+      points = mobileSheetSnapPoints();
     };
     const onMove = (e: TouchEvent) => {
       if (mode === "native" || e.touches.length !== 1) return;
       const x = e.touches[0].clientX;
       const y = e.touches[0].clientY;
       const dyUp = startY - y;
-      const points = mobileSheetSnapPoints();
       const max = points[points.length - 1];
       const min = points[0];
       if (mode === "undecided") {
@@ -424,7 +441,7 @@ export function SearchResultsLayout({ children, filters, quickFilters, drawerFil
         mode = inList ? "native" : "sheet";
         if (mode === "native") return;
         draggingRef.current = true;
-        setDragging(true);
+        empezarArrastre(sheet);
         startRef.current = { y: startY, h: startH };
         dragStartedAtRef.current = startedAt;
       }
@@ -439,7 +456,7 @@ export function SearchResultsLayout({ children, filters, quickFilters, drawerFil
       mode = "undecided";
       if (!wasSheet) return;
       draggingRef.current = false;
-      setDragging(false);
+      terminarArrastre(sheet);
       const target = resolveSnapTarget(startH, curRef.current, performance.now() - startedAt);
       curRef.current = target;
       setHeightFr(target);

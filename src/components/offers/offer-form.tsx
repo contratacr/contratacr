@@ -28,9 +28,14 @@ import { IMAGE_ACCEPT } from "@/lib/upload-validation";
 import { invalidateAppData } from "@/lib/app-data-invalidation";
 import { Button } from "@/components/ui/button";
 import { CABECERA_BOTON, CABECERA_FILA_CENTRADA, CABECERA_GLIFO, CABECERA_TITULO } from "@/components/layout/cabecera";
+import { borrarBorrador, guardarBorrador, rutaParaEntrar } from "@/lib/borrador-sin-sesion";
+import { prefijoDeIdioma } from "@/lib/prefijo-de-idioma";
 
 type OfferFormProps = {
-  professionalId: string;
+  /** Sin perfil (sin sesión): al publicar se guarda el borrador y se pide entrar. */
+  professionalId: string | null;
+  /** Fotos de un borrador guardado antes de entrar. */
+  initialFiles?: File[];
   serviceOptions: SelectMenuOption[];
   backHref?: string;
   initialOffer?: Partial<ProfessionalOffer> | null;
@@ -207,7 +212,7 @@ export function pareceVacante(texto: string): boolean {
   return SENALES_DE_VACANTE.filter((senal) => senal.test(limpio)).length >= 2;
 }
 
-export function OfferForm({ professionalId, serviceOptions, backHref = "/promociones", initialOffer = null, presentation = "page", onSaved, onCancel }: OfferFormProps) {
+export function OfferForm({ professionalId, serviceOptions, backHref = "/promociones", initialOffer = null, initialFiles, presentation = "page", onSaved, onCancel }: OfferFormProps) {
   const { cabeceraRef, conLinea } = useHairlineOnScroll();
   const locale = marketplaceLocale(useLocale());
   const copy = OFFER_FORM_COPY[locale];
@@ -219,7 +224,7 @@ export function OfferForm({ professionalId, serviceOptions, backHref = "/promoci
   // El WhatsApp de ESTA promoción: viene el de la cuenta y se puede cambiar.
   const [whatsapp, setWhatsapp] = useState<string>(initialOffer?.contact_whatsapp ?? "");
   useEffect(() => {
-    if (initialOffer?.contact_whatsapp) return;
+    if (initialOffer?.contact_whatsapp || !professionalId) return;
     let vivo = true;
     void createClient().from("professionals").select("whatsapp").eq("id", professionalId).maybeSingle().then(({ data }) => {
       const guardado = String((data as { whatsapp?: string | null } | null)?.whatsapp ?? "").trim();
@@ -234,7 +239,7 @@ export function OfferForm({ professionalId, serviceOptions, backHref = "/promoci
   const [textoEscrito, setTextoEscrito] = useState(`${initialOffer?.title ?? ""} ${initialOffer?.description ?? ""}`);
   const [error, setError] = useState("");
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
-  const [files, setFiles] = useState<File[]>([]);
+  const [files, setFiles] = useState<File[]>(initialFiles ?? []);
   const [offerType, setOfferType] = useState<string>(initialOffer?.offer_type ?? "service_offer");
   const initialServiceOption = serviceOptions.find((option) => option.value === initialOffer?.service_category_id);
   const initialServiceValue = initialServiceOption?.value
@@ -375,6 +380,28 @@ export function OfferForm({ professionalId, serviceOptions, backHref = "/promoci
       return;
     }
 
+    // Sin sesión: se guarda todo —fotos incluidas— y se pide entrar. Al
+    // volver, el formulario se abre lleno y solo falta tocar «Publicar».
+    if (!professionalId) {
+      await guardarBorrador("promocion", {
+        service_category_id: selectedService!.value,
+        title,
+        description,
+        offer_type: offerType,
+        service_label: selectedService!.label,
+        price_now: sinPrecio ? null : currentPrice,
+        price_before: sinPrecio ? null : beforePrice || null,
+        currency,
+        price_unit: priceUnit,
+        location_label: locationLabel || null,
+        valid_until: /^\d{4}-\d{2}-\d{2}$/.test(validUntil) ? validUntil : null,
+        quantity_available: quantityAvailable,
+        contact_whatsapp: whatsapp.trim() || null,
+      }, files);
+      setConCambios(false);
+      window.location.assign(rutaParaEntrar(prefijoDeIdioma(locale), "/promociones/publicar"));
+      return;
+    }
     setSaving(true);
     setError("");
     try {
@@ -409,6 +436,7 @@ export function OfferForm({ professionalId, serviceOptions, backHref = "/promoci
         throw delServidor;
       }
       invalidateAppData("offers");
+      if (!editing) borrarBorrador("promocion");
       if (presentation === "modal") {
         onSaved?.(data.id, title);
         setSaving(false);

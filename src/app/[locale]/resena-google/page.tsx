@@ -26,7 +26,7 @@ export default async function ResenaGooglePage() {
       <div className="ccr-navbar-spacer h-16" aria-hidden />
       <main className="flex-1 px-4 py-12">
         <div className="mx-auto max-w-xl text-center">
-          <span className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-[#eaf7fd] text-[#009FD9]">
+          <span className="ccr-caja-icono mx-auto grid h-14 w-14 place-items-center rounded-2xl">
             <Star className="h-7 w-7" />
           </span>
           <h1 className="mt-4 text-2xl font-black text-[#162543] sm:text-3xl">{t("titulo")}</h1>

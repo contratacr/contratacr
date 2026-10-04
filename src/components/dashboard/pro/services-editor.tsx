@@ -1036,7 +1036,7 @@ export function ServicesEditor({
                   hay nada y se apunta a la barra de abajo, que es la salida. */}
               {pickerList.length === 0 && pickerQuery.trim() ? (
               <div className="flex flex-col items-center px-6 pt-12 text-center">
-                <span className="grid h-12 w-12 place-items-center rounded-full bg-white text-[#68778d] shadow-[0_10px_26px_-24px_rgba(15,23,42,0.6)]">
+                <span className="ccr-caja-icono grid h-12 w-12 place-items-center rounded-2xl">
                   <Search className="h-5 w-5" />
                 </span>
                 <p className="mt-3 text-sm font-semibold text-[#162543]">{t("pickerNoResults")}</p>

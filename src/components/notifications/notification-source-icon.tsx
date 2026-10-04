@@ -13,6 +13,7 @@ export function NotificationSourceIcon({ type, className }: { type: string; clas
       return <Briefcase className={className} />;
     case "new_project":
     case "project_cancelled":
+    case "invita_proyecto":
       return <Handshake className={className} />;
     case "review_received":
     case "resena_google":

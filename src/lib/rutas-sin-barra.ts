@@ -24,7 +24,7 @@
 import { esRutaDeBusqueda } from "@/lib/buscar-url";
 import { esServicioDelCatalogo } from "@/lib/data/categories";
 
-export const RUTA_DE_PANTALLA_COMPLETA = /(^|\/)(?:publicar-proyecto|(?:empleos|promociones)\/publicar)(?:\/|$)/;
+export const RUTA_DE_PANTALLA_COMPLETA = /(^|\/)(?:publicar-proyecto|cotizar|(?:empleos|promociones)\/publicar)(?:\/|$)/;
 
 // Un solo tramo después de la sección; `publicar`, `mis-empleos` y
 // `mis-promociones` son listas o flujos, no fichas, y se quedan con la barra.

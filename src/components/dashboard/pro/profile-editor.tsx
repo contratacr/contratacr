@@ -1184,7 +1184,6 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
               onChange={(digits) => { setCallPhone(digits); touch("contact"); }}
               
             />
-            <p className="mt-1.5 text-xs text-[#6b7280]">{t("callNumberHelp")}</p>
           </div>
         )}
 

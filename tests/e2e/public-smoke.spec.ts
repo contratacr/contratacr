@@ -171,11 +171,12 @@ test.describe("@smoke public routes", () => {
     if ((page.viewportSize()?.width ?? 1280) < 640) {
       // En el teléfono la portada tiene UNA línea (¿Qué necesitas?); la
       // ubicación se elige dentro del buscador completo que abre.
-      await page.getByPlaceholder(/Qu[eé] necesitas|What do you need/i).filter({ visible: true }).first().click();
+      await page.getByLabel(/Qu[eé] necesitas|What do you need/i).filter({ visible: true }).first().click();
       await page.locator(".ccr-native-search-panel").getByPlaceholder(/Ubicaci[oó]n|Location|Barrio|Neighborhood/i).filter({ visible: true }).first().click();
       const cercaEnHoja = page.locator(".ccr-native-search-panel").getByRole("button", { name: /Buscar cerca de m[ií]|Search near me/i }).filter({ visible: true }).first();
       await expect(cercaEnHoja).toBeVisible();
-      await cercaEnHoja.click();
+      // La hoja todavía se acomoda al teclado: se toca sin esperar a que quede quieta.
+      await cercaEnHoja.click({ force: true });
       // Sin servicio elegido, «cerca de mí» deja puesta la ubicación y pasa el
       // cursor al servicio; buscar así trae a los de cerca.
       const hoja = page.locator(".ccr-native-search-panel").filter({ visible: true }).first();
@@ -345,7 +346,8 @@ test.describe("@smoke public routes", () => {
     // cacheado dejaría a un profesional real fuera de Google (19-sep-2026).
     const raiz = await page.request.get("/pagina-que-no-existe-jamas", { headers: { "accept-language": "es-CR,es;q=0.9" } });
     expect(raiz.status(), "una ruta suelta en la raíz termina en la ficha").toBe(200);
-    expect(raiz.url()).toContain("/profesionales/pagina-que-no-existe-jamas");
+    // La ficha se sirve en la misma dirección corta (sin salto, 4-oct-2026).
+    expect(raiz.url()).toContain("/pagina-que-no-existe-jamas");
     expect(await raiz.text(), "la ficha inexistente debe pedir no indexarse").toMatch(/name="robots" content="noindex/);
   });
 
