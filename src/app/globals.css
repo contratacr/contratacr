@@ -414,11 +414,11 @@ html.ccr-native-bottom-nav-visible body .ccr-search-bottom-sheet {
    inferior de la página: sin este relleno la última tarjeta (con su botón
    verde de WhatsApp) quedaba debajo de la barra y la teñía de verde. El
    relleno es blanco, del propio panel, y además deja el botón alcanzable. */
-@media (max-width: 1023px) {
-  .ccr-search-bottom-sheet {
-    padding-bottom: env(safe-area-inset-bottom);
-  }
-}
+/* 3-oct-2026: el relleno iba en el PANEL y quedaba como una franja blanca fija
+   abajo, sobre la que se cortaban las tarjetas al desplazar (con el panel
+   abierto del todo se veía como un contenedor vacío). Ahora va DENTRO de la
+   lista (ver `.ccr-search-sheet-scroll` abajo): las tarjetas pasan hasta el
+   borde y la última sigue terminando por encima de la barra de Safari. */
 
 /* El panel de resultados ASOMA desplazándose hacia abajo, así que su parte final
    —y con ella el último profesional— queda FUERA de la pantalla: el panel mide
@@ -430,8 +430,8 @@ html.ccr-native-bottom-nav-visible body .ccr-search-bottom-sheet {
    Dentro de la app mandan las reglas de `.ccr-native-app`, que ya lo hacían. */
 @media (max-width: 1023px) {
   .ccr-search-sheet-scroll {
-    padding-bottom: var(--ccr-cola-fuera, 0px) !important;
-    scroll-padding-bottom: var(--ccr-cola-fuera, 0px);
+    padding-bottom: calc(var(--ccr-cola-fuera, 0px) + env(safe-area-inset-bottom)) !important;
+    scroll-padding-bottom: calc(var(--ccr-cola-fuera, 0px) + env(safe-area-inset-bottom));
   }
 }
 

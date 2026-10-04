@@ -71,6 +71,8 @@ const COPY = {
     noPublicado: "Este proyecto ya no recibe mensajes.",
     fallo: "No pudimos abrir WhatsApp. Intentá de nuevo en un momento.",
     necesitaCuenta: "Entra con tu cuenta profesional para escribirle.",
+    ingresar: "Ingresar",
+    ahoraNo: "Ahora no",
     esTuyo: "Este proyecto es tuyo.",
     todoElPais: "Todo Costa Rica",
     cuenta: (n: number) => `${n} ${n === 1 ? "proyecto" : "proyectos"}`,
@@ -107,6 +109,8 @@ const COPY = {
     noPublicado: "This project is no longer taking messages.",
     fallo: "We could not open WhatsApp. Try again in a moment.",
     necesitaCuenta: "Sign in with your professional account to write to them.",
+    ingresar: "Sign in",
+    ahoraNo: "Not now",
     esTuyo: "This project is yours.",
     todoElPais: "All Costa Rica",
     cuenta: (n: number) => `${n} ${n === 1 ? "project" : "projects"}`,
@@ -122,7 +126,8 @@ function BotonEscribir({ proyecto, className = "" }: { proyecto: ProyectoPublico
   // El aviso del app, no el del navegador: `window.alert` sale con la letra y
   // los botones del sistema, en el idioma del sistema, y encima bloquea la
   // página. Aquí se está contactando a alguien: es el peor momento para eso.
-  const { dialogNode, showMessage } = useAppDialog();
+  const { dialogNode, showMessage, confirm } = useAppDialog();
+  const routerContacto = useRouter();
 
   async function abrir(canal: "whatsapp" | "llamada" = "whatsapp") {
     setCargando(true);
@@ -137,7 +142,15 @@ function BotonEscribir({ proyecto, className = "" }: { proyecto: ProyectoPublico
       // «este cliente no dejó un WhatsApp» —hasta cuando el proyecto sí tenía
       // teléfono y lo que pasaba era otra cosa—, así que el aviso mentía y el
       // dueño del proyecto quedaba señalado sin motivo.
-      const aviso = res.status === 401 || res.status === 403 ? copy.necesitaCuenta
+      // SIN SESIÓN, EL AVISO LLEVA A ENTRAR (3-oct-2026): antes solo decía
+      // «Entendido» y el profesional que quería escribir se quedaba sin camino.
+      // Al entrar vuelve a este mismo proyecto.
+      if (res.status === 401) {
+        const { confirmed } = await confirm({ title: copy.escribir, description: copy.necesitaCuenta, confirmLabel: copy.ingresar, cancelLabel: copy.ahoraNo });
+        if (confirmed) routerContacto.push(`/login?redirect=${encodeURIComponent(window.location.pathname)}`);
+        return;
+      }
+      const aviso = res.status === 403 ? copy.necesitaCuenta
         : res.status === 409 ? copy.esTuyo
         : payload.code === "sin_whatsapp" ? copy.sinContacto
         : payload.code === "no_publicado" ? copy.noPublicado

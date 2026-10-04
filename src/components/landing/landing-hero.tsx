@@ -816,8 +816,11 @@ export function LandingHero() {
                 <SuggestionsDropdown anchorRef={pildoraRef} open={openSug} suggestions={suggestions} activeIdx={activeIdx} onPick={(s) => selectSuggestion(s, true)} />
               </div>
               {/* Divider + location autocomplete */}
-              <div className="h-px w-full shrink-0 bg-[#e3e9ef] sm:mx-4 sm:my-3 sm:h-auto sm:w-px sm:self-stretch sm:bg-[#cfd8e2]" />
-              <div ref={locDesktopRef} className="flex h-[54px] min-w-0 shrink-0 items-center gap-2 sm:h-full sm:flex-1 sm:shrink">
+              {/* EN EL TELÉFONO, UNA SOLA LÍNEA (3-oct-2026): tocarla abre el
+                  buscador completo, que ya pide servicio y ubicación. Dos campos
+                  que abren lo mismo eran uno de más. En computadora siguen los dos. */}
+              <div className="hidden h-px w-full shrink-0 bg-[#e3e9ef] sm:mx-4 sm:my-3 sm:block sm:h-auto sm:w-px sm:self-stretch sm:bg-[#cfd8e2]" />
+              <div ref={locDesktopRef} className="hidden h-[54px] min-w-0 shrink-0 items-center gap-2 sm:flex sm:h-full sm:flex-1 sm:shrink">
                 <MapPin className="h-5 w-5 shrink-0 text-[#162543] sm:h-6 sm:w-6" />
                 <input
                   type="text"

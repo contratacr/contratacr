@@ -1,7 +1,4 @@
 import type { MetadataRoute } from "next";
-import { categorySlug, getAllCategories } from "@/lib/data/categories";
-import { PROVINCES } from "@/lib/data/cr-geography";
-import { getSupplyCounts, supplyKey, MIN_SUPPLY_FOR_LANDING } from "@/lib/queries/supply";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { tramoFicha } from "@/lib/marketplace-url";
 import { rutaConIdioma } from "@/lib/prefijo-de-idioma";
@@ -15,15 +12,14 @@ const IDIOMAS = ["es", "en"] as const;
 
 /**
  * Antes /sitemap.xml devolvía la página de inicio: Google no tenía mapa del
- * sitio. Lista el home, los tableros, las páginas por oficio (solo donde hay
- * oferta real) y los perfiles públicos.
+ * sitio. Lista el home, los tableros y los perfiles públicos (las páginas por
+ * servicio se borraron el 3-oct-2026: redirigen a la búsqueda).
  */
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Fuera de producción no hay mapa que ofrecer: armarlo recorre categorías,
   // oferta por provincia y los 283 perfiles, y solo servía para que los
   // buscadores entraran a un entorno de pruebas.
   if (!/^https:\/\/(www\.)?contratacr\.com$/.test(APP_URL.replace(/\/$/, ""))) return [];
-  const supply = await getSupplyCounts();
   const out: MetadataRoute.Sitemap = [];
 
   // `lastModified` tiene que ser una fecha REAL. Antes las páginas fijas y las
@@ -54,15 +50,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   } catch { /* sin fecha es mejor que una fecha falsa */ }
   const fijos = ["", "/profesionales", "/servicios", "/promociones", "/empleos", "/proyectos", "/como-funciona", "/ayuda", "/mejorar-mi-perfil", "/verificacion-de-identidad", "/terminos", "/privacidad"];
   for (const p of fijos) for (const l of IDIOMAS) out.push({ url: `${APP_URL}${rutaConIdioma(l, `${p}` || "/")}`, lastModified: ultimoCambio, changeFrequency: "daily", priority: p === "" ? 1 : 0.8 });
-
-  for (const cat of getAllCategories()) {
-    if ((supply.byCategory[supplyKey(cat.id)] ?? 0) < MIN_SUPPLY_FOR_LANDING) continue;
-    for (const l of IDIOMAS) out.push({ url: `${APP_URL}${rutaConIdioma(l, `/servicios/${categorySlug(cat.id)}` || "/")}`, lastModified: ultimoCambio, changeFrequency: "weekly", priority: 0.9 });
-    for (const prov of PROVINCES) {
-      if ((supply.byCategoryProvince[supplyKey(cat.id, prov.id)] ?? 0) < MIN_SUPPLY_FOR_LANDING) continue;
-      for (const l of IDIOMAS) out.push({ url: `${APP_URL}${rutaConIdioma(l, `/servicios/${categorySlug(cat.id)}/${prov.slug}` || "/")}`, lastModified: ultimoCambio, changeFrequency: "weekly", priority: 0.8 });
-    }
-  }
 
   try {
     const supabase = createAdminClient();

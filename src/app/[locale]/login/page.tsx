@@ -69,6 +69,8 @@ function meaningfulRedirect(raw: string | null): string | null {
   ) return raw;
   const params = new URLSearchParams(query);
   if (pathname.startsWith("/profesionales/") && params.get("pendingReview") === "1") return raw;
+  // Quien quiso escribirle al cliente de un proyecto vuelve a ese proyecto.
+  if (/^\/proyectos\/[^/]+$/.test(pathname)) return raw;
   return null;
 }
 
