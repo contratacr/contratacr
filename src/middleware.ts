@@ -118,6 +118,14 @@ export async function middleware(request: NextRequest) {
   // misma sin prefijo, con su consulta intacta, para que Google traslade lo
   // ganado en vez de tratarlas como dos páginas. Va antes de cualquier otra
   // regla: así ninguna reconstruye una dirección con /es.
+  // LAS IMÁGENES PARA COMPARTIR NO SALTAN (4-oct-2026): /es/opengraph-image
+  // saltaba a /opengraph-image, que sin idioma se lee como el perfil de un
+  // profesional llamado «opengraph-image» y devolvía una página, no la imagen.
+  // Facebook y WhatsApp quedaban sin vista previa en la portada, la búsqueda y
+  // cada página que usa la imagen general. La imagen se sirve donde está.
+  if (/\/opengraph-image\/?$/i.test(pathname) && /^\/es\//i.test(pathname)) {
+    return conCabecerasDeSeguridad(NextResponse.next());
+  }
   const conEs = /^\/es(?=\/|$)/i.exec(pathname);
   if (conEs) {
     const destino = request.nextUrl.clone();
