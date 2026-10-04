@@ -2760,7 +2760,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                       setSearchFocused(false);
                     }}
                     onKeyDown={handleNavLocKeyDown}
-                            placeholder={locale === "en" ? "Neighborhood, city or province" : "Barrio, cantón o provincia"}
+                            placeholder={locale === "en" ? "Location" : "Ubicación"}
                     className="min-w-0 flex-1 bg-transparent px-3 text-[17px] font-semibold text-[#1A2744] placeholder:text-[#a5afbd] focus:outline-none"
                             aria-label={locale === "en" ? "Location" : "Ubicación"}
                             role="combobox"

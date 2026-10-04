@@ -1,7 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { categorySlug, idDesdeDireccion } from "@/lib/data/category-slug";
 import { ALL_CATEGORIES } from "@/lib/data/categories";
-import { getProvinceById } from "@/lib/data/cr-geography";
 import { RAIZ_DE_BUSQUEDA, SIN_SERVICIO, esProvinciaDeRuta, filtrosDeRuta, rutaDeBusqueda } from "@/lib/buscar-url";
 import { RUTAS_DEL_SITIO } from "@/lib/site-routes";
 import { idiomaDeRuta, rutaConIdioma, sinPrefijoDeIdioma } from "@/lib/prefijo-de-idioma";
@@ -307,19 +306,19 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  const oficio = /^(?:\/(en))?\/servicios\/([a-z0-9_-]+)(?:\/([a-z-]{2,}))?\/?$/i.exec(pathname);
+  // LAS PÁGINAS POR SERVICIO SE BORRARON (3-oct-2026, decisión de Isaac): la
+  // búsqueda de /profesionales ya hace eso mejor (mapa, filtros, contacto). Lo
+  // que Google o un anuncio tenga guardado —/servicios/<servicio>[/<provincia>
+  // [/<cantón>]]— salta con un 308 a esa misma búsqueda, sin enlaces rotos.
+  const oficio = /^(?:\/(en))?\/servicios\/([a-z0-9_-]+)(?:\/([a-z-]{2,}))?(?:\/([a-z0-9-]+))?\/?$/i.exec(pathname);
   if (oficio) {
-    const servicioPedido = oficio[2];
-    const provinciaPedida = oficio[3];
-    const servicioBueno = categorySlug(idDesdeDireccion(servicioPedido));
-    const provincia = provinciaPedida ? getProvinceById(provinciaPedida.toLowerCase()) : null;
-    const provinciaBuena = provincia ? provincia.slug : provinciaPedida;
-    if (servicioBueno !== servicioPedido || provinciaBuena !== provinciaPedida) {
-      const cola = provinciaBuena ? `/${provinciaBuena}` : "";
-      const destino = new URL(rutaConIdioma(oficio[1], `/servicios/${servicioBueno}${cola}`), request.url);
-      destino.search = request.nextUrl.search;
-      return NextResponse.redirect(destino, 308);
-    }
+    const destino = new URL(rutaConIdioma(oficio[1], rutaDeBusqueda({
+      categoria: idDesdeDireccion(oficio[2].toLowerCase()),
+      provincia: oficio[3]?.toLowerCase(),
+      canton: oficio[4]?.toLowerCase(),
+    })), request.url);
+    for (const [clave, valor] of request.nextUrl.searchParams) destino.searchParams.set(clave, valor);
+    return NextResponse.redirect(destino, 308);
   }
 
   // Sin prefijo = español. Solo quien ya está leyendo en inglés (cookie de esta

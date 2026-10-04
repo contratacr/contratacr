@@ -34,6 +34,7 @@ const handlerRules = [
   [/^\/api\/(?:push|internal\/push)(?:\/|$)/, "push-outbox-contract.spec.ts"],
   [/^\/api\/internal\/soporte(?:\/|$)/, "soporte-cierre-automatico.spec.ts"],
   [/^\/api\/internal\/verificacion(?:\/|$)/, "verificacion-repesca.spec.ts"],
+  [/^\/api\/internal\/resena-google(?:\/|$)/, "resena-google.spec.ts"],
   [/^\/api\/payments(?:\/|$)/, "product-contract.spec.ts"],
   [/^\/api\/webhooks(?:\/|$)/, "product-contract.spec.ts"],
   [/^\/api\/email(?:\/|$)/, "product-contract.spec.ts"],

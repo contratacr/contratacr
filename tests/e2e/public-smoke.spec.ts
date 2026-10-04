@@ -169,14 +169,17 @@ test.describe("@smoke public routes", () => {
     // buscador a pantalla completa, con «Buscar cerca de mí» arriba: ese botón
     // busca en el acto.
     if ((page.viewportSize()?.width ?? 1280) < 640) {
-      await location.click();
+      // En el teléfono la portada tiene UNA línea (¿Qué necesitas?); la
+      // ubicación se elige dentro del buscador completo que abre.
+      await page.getByPlaceholder(/Qu[eé] necesitas|What do you need/i).filter({ visible: true }).first().click();
+      await page.locator(".ccr-native-search-panel").getByPlaceholder(/Ubicaci[oó]n|Location|Barrio|Neighborhood/i).filter({ visible: true }).first().click();
       const cercaEnHoja = page.locator(".ccr-native-search-panel").getByRole("button", { name: /Buscar cerca de m[ií]|Search near me/i }).filter({ visible: true }).first();
       await expect(cercaEnHoja).toBeVisible();
       await cercaEnHoja.click();
       // Sin servicio elegido, «cerca de mí» deja puesta la ubicación y pasa el
       // cursor al servicio; buscar así trae a los de cerca.
       const hoja = page.locator(".ccr-native-search-panel").filter({ visible: true }).first();
-      await expect(hoja.getByPlaceholder(/Barrio|Neighborhood/i)).toHaveValue(/Ubicaci[oó]n actual|Current location/i);
+      await expect(hoja.getByPlaceholder(/Ubicaci[oó]n|Location|Barrio|Neighborhood/i)).toHaveValue(/Ubicaci[oó]n actual|Current location/i);
       await hoja.locator("form").evaluate((f: HTMLFormElement) => f.requestSubmit());
       await expect(page).toHaveURL(/\/profesionales/);
       await expect(page).toHaveURL(/lat=9\.92810/);
@@ -318,12 +321,11 @@ test.describe("@smoke public routes", () => {
     await page.context().clearCookies();
     const inexistente = "00000000-0000-0000-0000-000000000000";
     const casos: Array<[string, number]> = [
-      ["/servicios/oficio-que-no-existe", 404],
-      ["/servicios/electricidad/provincia-que-no-existe", 404],
       [`/promociones/${inexistente}`, 404],
       [`/empleos/${inexistente}`, 404],
       [`/proyectos/${inexistente}`, 404],
-      // Y lo que sí existe sigue respondiendo que sí.
+      // Las páginas por servicio se borraron (3-oct-2026): sus direcciones
+      // terminan en la búsqueda, que responde 200.
       ["/servicios/electricidad", 200],
       ["/servicios/electricidad/san-jose", 200],
     ];
