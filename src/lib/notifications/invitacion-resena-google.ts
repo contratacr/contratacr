@@ -42,7 +42,14 @@ export async function invitarAResenaDeGoogle(admin: Admin, profileIds: string[],
         read: false,
       }));
       const { error } = await admin.from("notifications").insert(tanda);
-      if (!error) enviadas += tanda.length;
+      if (!error) { enviadas += tanda.length; continue; }
+      // Una de la tanda ya la tenía (llegó por otro lado entre la revisión y
+      // ahora: lo impide el índice único 230). Se insertan una a una para que
+      // el resto no se quede sin la suya.
+      for (const fila of tanda) {
+        const { error: unoError } = await admin.from("notifications").insert(fila);
+        if (!unoError) enviadas += 1;
+      }
     }
     return { enviadas, yaTenian: yaTienen.size };
   } catch {
