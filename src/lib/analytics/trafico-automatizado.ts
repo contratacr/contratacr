@@ -8,7 +8,11 @@
 import type { NextRequest } from "next/server";
 
 export const COOKIE_SIN_ANALITICA = "ccr_sin_analitica";
-const AGENTE_AUTOMATIZADO = /HeadlessChrome|Playwright|curl\/|node-fetch|undici|python-requests|Go-http-client|wget/i;
+// 4-oct-2026: también los RASTREADORES (Google, Bing, Facebook, WhatsApp…). La
+// búsqueda se anota en el servidor al pintar la página, así que cada visita de
+// un buscador a /profesionales/… contaba como un visitante que buscó y se fue:
+// inflaba las visitas y hundía el porcentaje que abre un perfil.
+const AGENTE_AUTOMATIZADO = /HeadlessChrome|Playwright|curl\/|node-fetch|undici|python-requests|Go-http-client|wget|bot\b|bot\/|crawler|spider|slurp|facebookexternalhit|facebookcatalog|meta-externalagent|WhatsApp|TelegramBot|Twitterbot|LinkedInBot|Discordbot|Applebot|Bytespider|GPTBot|ClaudeBot|PerplexityBot|AhrefsBot|SemrushBot|DotBot|Lighthouse|Chrome-Lighthouse|Google-InspectionTool|AdsBot|Mediapartners/i;
 
 export function esNavegadorAutomatizado(): boolean {
   if (typeof navigator === "undefined") return false;
