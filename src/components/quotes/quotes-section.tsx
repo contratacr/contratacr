@@ -24,6 +24,7 @@ const DATE_LOCALE: Record<string, string> = { es: "es-CR", en: "en-US" };
  */
 export function QuotesSection({ proName, proSlug, proId, puedeCrear = true }: { proName: string; proSlug?: string | null; proId?: string | null; puedeCrear?: boolean }) {
   const t = useTranslations("quotes");
+  const tBorrador = useTranslations("borradorGuardado");
   const tSub = useTranslations("proPanel.subtitles");
   const locale = useLocale();
   // Igual que las demás secciones del panel: lo que este navegador ya tiene se
@@ -156,7 +157,7 @@ export function QuotesSection({ proName, proSlug, proId, puedeCrear = true }: { 
 
       {editor && (
         <>
-        {inicial && <AvisoDeBorrador texto={locale === "en" ? "Your quote was saved. Review it and tap Send." : "Tu cotización quedó guardada. Revísala y toca Enviar."} />}
+        {inicial && <AvisoDeBorrador texto={tBorrador("cotizacion")} />}
         <QuoteEditorModal open inicial={inicial} onClose={() => { setEditor(false); setInicial(null); }} onSent={(q) => { setQuotes((prev) => [q, ...(prev ?? [])]); setEditor(false); setDetalle({ quote: q, recien: true }); }} />
         </>
       )}
