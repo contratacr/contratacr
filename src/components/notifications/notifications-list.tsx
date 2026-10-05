@@ -657,7 +657,9 @@ export function NotificationsList({ scope = "mode", titulo }: { scope?: "mode" |
               const grupo = grupoDe(n);
               const abreGrupo = indice === 0 || grupoDe(ordenadas[indice - 1]) !== grupo;
               const message = notificationMessage(n);
-              const canExpand = message.length > 180;
+              // Cada aviso se lee COMPLETO: «Tarda menos de un…» cortaba la mitad
+              // del mensaje y había que adivinar el resto.
+              const canExpand = false;
               const expanded = expandedIds.has(n.id);
               return (
               <li
@@ -725,7 +727,9 @@ export function NotificationsList({ scope = "mode", titulo }: { scope?: "mode" |
                   className={cn(
                     // Fondo propio: si fuera transparente, el botón rojo de
                     // borrar se vería por debajo sin haber deslizado.
-                    "relative w-full px-4 py-3 pr-20 text-left transition-colors",
+                    // A la derecha solo el espacio del punto de «no leída»: el
+                    // margen de 80 px dejaba un hueco y cortaba el texto antes.
+                    "relative w-full border-b border-[#eef2f6] px-4 py-3 pr-10 text-left transition-colors lg:pr-20",
                     // Blanca siempre: lo no leído lo marca el punto azul de la
                     // derecha, como en Facebook. El fondo tintado se leía gris.
                     "bg-white",
@@ -754,7 +758,6 @@ export function NotificationsList({ scope = "mode", titulo }: { scope?: "mode" |
                           ya dice de qué se trata. */}
                       <p className={cn(
                         "whitespace-pre-line text-sm leading-snug [overflow-wrap:anywhere] break-words",
-                        !expanded && "line-clamp-3",
                         !esNueva(n) ? "font-medium text-[#374151]" : "font-semibold text-[#162543]",
                       )}>
                         {message || notificationTitle(n)}

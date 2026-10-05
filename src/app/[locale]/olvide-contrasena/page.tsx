@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { SpamNotice } from "@/components/ui/spam-notice";
 import { useResendCooldown } from "@/hooks/use-resend-cooldown";
+import { irAlInicio } from "@/lib/ir-al-inicio";
 
 type FormData = {
   email: string;
@@ -34,7 +35,8 @@ export default function OlvideContrasenaPage() {
 
   useEffect(() => {
     if (!success) return;
-    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+    // irAlInicio insiste: en el iPhone un scrollTo suelto lo deshacía Safari.
+    irAlInicio();
   }, [success]);
 
   const {

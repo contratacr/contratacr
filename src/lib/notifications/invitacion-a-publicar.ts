@@ -36,7 +36,10 @@ export async function invitarAPublicarProyecto(admin: Admin, profileIds: string[
         read: false,
       }));
       const { error } = await admin.from("notifications").insert(tanda);
-      if (!error) enviadas += tanda.length;
+      // Un rechazo de la base no puede pasar callado: el 4-oct el tipo no
+      // existía en la regla de la base y no llegó ninguno, sin una sola señal.
+      if (error) console.error("[invita_proyecto] insert", error.code, error.message);
+      else enviadas += tanda.length;
     }
     return { enviadas, yaTenian: yaTienen.size };
   } catch {
@@ -57,4 +60,28 @@ export async function invitarAPublicarATodas(admin: Admin, { simular = false } =
   if (simular) return { cuentas: ids.length, enviadas: 0 };
   const r = await invitarAPublicarProyecto(admin, ids);
   return { cuentas: ids.length, ...r };
+}
+
+/**
+ * «COMPLETA TU PERFIL» al profesional recién registrado (5-oct-2026): lleva a
+ * los pasos que faltan (foto, descripción, servicios…). Una sola vez.
+ */
+export async function avisarCompletarPerfil(admin: Admin, profileId: string, idioma: "es" | "en" = "es") {
+  try {
+    const { data } = await admin.from("notifications").select("id").eq("type", "completa_perfil").eq("user_id", profileId).limit(1);
+    if ((data ?? []).length > 0) return;
+    const { error } = await admin.from("notifications").insert({
+      user_id: profileId,
+      type: "completa_perfil",
+      title: idioma === "en" ? "Complete your profile" : "Completa tu perfil",
+      message: idioma === "en"
+        ? "Profiles with a photo, description and prices get more clients. It takes a few minutes."
+        : "Los perfiles con foto, descripción y precios reciben más clientes. Te toma unos minutos.",
+      data: { link: "/dashboard/profesional?mode=offer&tab=completion" },
+      read: false,
+    });
+    if (error) console.error("[completa_perfil] insert", error.code, error.message);
+  } catch {
+    // Nunca tumba el registro.
+  }
 }

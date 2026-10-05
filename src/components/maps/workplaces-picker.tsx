@@ -491,15 +491,16 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
         canton && <p className="text-xs text-[#68778d]">{t("mapUnavailable")}</p>
       )}
 
-      {/* 3 - Add THIS zone (the one selected above). Enabled once provincia + cantón
-             are chosen, so it's clear it commits the current selection. */}
-      <button
+      {/* 3 - Agregar ESTA zona: solo aparece con una provincia elegida. Sin
+             ella, «Agregar toda la provincia» invitaba a tocar algo que no
+             tenía qué agregar. */}
+      {province && <button
         type="button"
         onClick={commitWorkplace}
         className="self-start inline-flex h-10 items-center gap-1.5 rounded-full bg-[#e8f7fd] px-3.5 text-sm font-bold text-[#0089bb] transition-colors hover:bg-[#d8f1fb]"
       >
         <Plus className="h-4 w-4" /> {canton ? t("addThisPlace") : t("addWholeProvince")}
-      </button>
+      </button>}
       {avisoRepetido && (
         <p role="status" className="text-xs font-semibold text-[#0089bb]">{t("yaAgregado")}</p>
       )}

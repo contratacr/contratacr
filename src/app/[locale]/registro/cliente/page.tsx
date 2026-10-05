@@ -28,6 +28,7 @@ import { getInitials } from "@/lib/utils";
 import { detectSocialOnly, providerLabel } from "@/lib/auth-method";
 import { useRedirectIfRegistered } from "@/hooks/use-redirect-if-registered";
 import { NAME_MAX_LENGTH, limitText } from "@/lib/text-limits";
+import { irAlInicio } from "@/lib/ir-al-inicio";
 
 export default function RegisterClientPage() {
   const router = useRouter();
@@ -69,6 +70,9 @@ export default function RegisterClientPage() {
     if (/[?&]borrador=1/.test(searchParams.get("redirect") ?? "")) { router.push(panelHref); return; }
     setSuccess(true);
   }
+
+  // «Cuenta creada» estrena arriba: venía del formulario, desplazado al botón.
+  useEffect(() => { if (success) irAlInicio(); }, [success]);
 
   // Pre-fill from OAuth user
   useEffect(() => {

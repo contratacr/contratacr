@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { Link, useRouter } from "@/i18n/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { irAlInicio } from "@/lib/ir-al-inicio";
 
 type FormData = { password: string; confirmPassword: string };
 
@@ -55,7 +56,8 @@ export default function ResetPasswordPage() {
 
   useEffect(() => {
     if (!done) return;
-    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+    // irAlInicio insiste: en el iPhone un scrollTo suelto lo deshacía Safari.
+    irAlInicio();
   }, [done]);
 
   // Built inside the component so validation messages localize (and reuse the

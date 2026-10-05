@@ -12,6 +12,7 @@ import { Link } from "@/i18n/navigation";
 import { SupportForm } from "@/components/support/support-form";
 import { SpamNotice } from "@/components/ui/spam-notice";
 import { canOffer } from "@/lib/auth/capabilities";
+import { irAlInicio } from "@/lib/ir-al-inicio";
 
 export default function SoportePage() {
   const tSeccion = useTranslations("sectionTitles");
@@ -25,7 +26,8 @@ export default function SoportePage() {
 
   useEffect(() => {
     if (!success) return;
-    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+    // irAlInicio insiste: en el iPhone un scrollTo suelto lo deshacía Safari.
+    irAlInicio();
   }, [success]);
 
   if (success) {

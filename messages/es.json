@@ -932,8 +932,8 @@
       "inPersonSectionTitle": "Atención presencial",
       "skipCedulaNote": "Aparecerás sin la insignia Verificado. Podrás verificar tu identidad luego desde tu panel.",
       "allowCallsLabel": "Permitir contacto por llamada",
-      "rateLabel": "¿Desde cuánto cobrás por hora?",
-      "rateHelp": "Sale en tu tarjeta como «₡X /hora» y es lo primero que mira un cliente. Si lo dejás en blanco dirá «Consultar precio», y mucha gente se va sin escribir. Lo podés cambiar después.",
+      "rateLabel": "¿Desde cuánto cobras por hora?",
+      "rateHelp": "Si lo dejas en blanco, tu perfil dirá «Consultar precio».",
       "ratePlaceholder": "12 000",
       "errWorkplaceSiempre": "Falta tu lugar de trabajo: elige la provincia y el cantón, o toda la provincia.",
       "errWorkplacePais": "Además de todo el país, elige de dónde sales: la provincia y el cantón, o toda la provincia.",
@@ -1869,7 +1869,7 @@
       "insurersBenefit": "Los pacientes filtran por su seguro: aparecer ahí te trae más citas.",
       "serviceDescription": "Describe un servicio",
       "servicePrice": "Agrega precio o consultar precio",
-      "serviceExperience": "Indica desde cuándo trabajas",
+      "serviceExperience": "Desde cuándo trabajas",
       "languages": "Agrega idiomas",
       "publicLinks": "Agrega enlaces públicos",
       "education": "Agrega formación",
@@ -1885,7 +1885,11 @@
       "nextStep": "Siguiente paso",
       "groupCore": "Esenciales",
       "groupOptional": "Para destacar",
-      "viewSteps": "Ver pasos"
+      "viewSteps": "Ver pasos",
+      "optionalGroup": "Opcionales",
+      "servicePriceBenefit": "Un precio de referencia hace que más clientes te escriban.",
+      "serviceDescriptionBenefit": "Explica qué incluye cada servicio.",
+      "serviceExperienceBenefit": "Los años de experiencia dan confianza."
     },
     "modeUse": "Modo cliente",
     "modeOffer": "Modo profesional",
@@ -2956,7 +2960,8 @@
     "ruleNumber": "Un número",
     "ruleSpecial": "Un carácter especial (!@#$%^&*)",
     "passwordsDontMatch": "Las contraseñas no coinciden",
-    "passwordNotReady": "La contraseña todavía no cumple los requisitos de abajo."
+    "passwordNotReady": "La contraseña todavía no cumple los requisitos de abajo.",
+    "confirmPlaceholder": "Repite tu contraseña"
   },
   "registerClient": {
     "errName": "El nombre es requerido.",

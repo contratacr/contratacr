@@ -1,6 +1,6 @@
 "use client";
 
-import { Handshake, Headset, MessageSquareText, ReceiptText, ShieldCheck, Star, Briefcase } from "lucide-react";
+import { UserRoundCheck, Handshake, Headset, MessageSquareText, ReceiptText, ShieldCheck, Star, Briefcase } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 // Un icono por familia de aviso VIVA. Las de citas, propuestas, postulaciones,
@@ -30,6 +30,8 @@ export function NotificationSourceIcon({ type, className }: { type: string; clas
     case "suggestion_approved":
     case "suggestion_rejected":
       return <ReceiptText className={className} />;
+    case "completa_perfil":
+      return <UserRoundCheck className={className} />;
     case "support_reply":
       return <Headset className={className} />;
     default:

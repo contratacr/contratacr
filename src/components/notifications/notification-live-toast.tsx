@@ -130,8 +130,17 @@ export function NotificationLiveToast({ scope = "all" }: { scope?: NotificationS
     burstTimerRef.current = window.setTimeout(flushBurst, 650);
   }, [flushBurst]);
 
+  // Para volver a llamar a maybeShow desde la demora de la reseña.
+  const maybeShowRef = useRef<((next: Notification, showInitial?: boolean) => void) | null>(null);
   const maybeShow = useCallback((next: Notification, showInitial = true) => {
     if (scope !== "all" && !notificationInMode(next.type, scope)) return;
+    // La invitación a reseñar se crea en el mismo instante de la acción
+    // (publicar, escribir…): salía encima de la confirmación y se sentía
+    // brusca. Espera 10 s antes de asomarse.
+    if (next.type === "resena_google" && !(next as Notification & { __demorada?: boolean }).__demorada) {
+      window.setTimeout(() => maybeShowRef.current?.({ ...next, __demorada: true } as Notification, showInitial), 10_000);
+      return;
+    }
     if (pantallaSinAvisos(window.location.pathname)) return;
     if (lastSeenIdRef.current === next.id) return;
     lastSeenIdRef.current = next.id;
@@ -153,6 +162,7 @@ export function NotificationLiveToast({ scope = "all" }: { scope?: NotificationS
     enqueueToast(next);
     window.dispatchEvent(new CustomEvent("notificationsChanged"));
   }, [enqueueToast, flushBurst, scope]);
+  useEffect(() => { maybeShowRef.current = maybeShow; }, [maybeShow]);
 
   useEffect(() => {
     cooldownUntilRef.current = Date.now() + 900;

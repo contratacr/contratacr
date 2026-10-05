@@ -206,7 +206,9 @@ export function FilaDeslizable({ className, resaltada = false, abierta, ancho, o
       {/* Solo se pinta la mano hacia la que se está deslizando. Con las dos
           montadas, al correr la fila hacia un lado asomaban por el otro los
           botones que no correspondían. */}
-      {dx <= 0 && (
+      {/* Solo mientras se desliza (dx < 0): montado en reposo, sus bordes
+          asomaban como líneas finas a la derecha de cada fila. */}
+      {dx < 0 && (
         <div
           className="absolute inset-y-0 right-0 flex justify-end overflow-hidden"
           // Con el dedo, el ancho sigue al dedo; al soltar pasado el punto de

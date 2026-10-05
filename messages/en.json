@@ -932,8 +932,8 @@
       "inPersonSectionTitle": "In-person care",
       "skipCedulaNote": "You will appear without the Verified badge. You can verify your identity later from your panel.",
       "allowCallsLabel": "Allow contact by phone call",
-      "rateLabel": "What do you charge per hour, starting from?",
-      "rateHelp": "It shows on your card as «₡X /hour» and it is the first thing a client looks at. Leave it blank and it says «Ask for price», and many people leave without writing. You can change it later.",
+      "rateLabel": "What is your starting hourly rate?",
+      "rateHelp": "Leave it blank and your profile will say «Ask for price».",
       "ratePlaceholder": "12 000",
       "errWorkplaceSiempre": "Your workplace is missing: choose the province and the canton, or the whole province.",
       "errWorkplacePais": "Besides the whole country, choose where you are based: province and canton, or the whole province.",
@@ -1540,7 +1540,11 @@
       "nextStep": "Next step",
       "groupCore": "Essentials",
       "groupOptional": "Stand out",
-      "viewSteps": "View steps"
+      "viewSteps": "View steps",
+      "optionalGroup": "Optional",
+      "servicePriceBenefit": "A reference price makes more clients message you.",
+      "serviceDescriptionBenefit": "Explain what each service includes.",
+      "serviceExperienceBenefit": "Years of experience build trust."
     },
     "modeUse": "Client mode",
     "modeOffer": "Professional mode",
@@ -2956,7 +2960,8 @@
     "ruleNumber": "One number",
     "ruleSpecial": "One special character (!@#$%^&*)",
     "passwordsDontMatch": "Passwords don't match",
-    "passwordNotReady": "The password does not meet the requirements below yet."
+    "passwordNotReady": "The password does not meet the requirements below yet.",
+    "confirmPlaceholder": "Repeat your password"
   },
   "registerClient": {
     "errName": "Name is required.",
