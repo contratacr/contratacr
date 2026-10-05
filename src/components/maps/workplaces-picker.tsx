@@ -94,7 +94,7 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
   const [geoError, setGeoError] = useState<string | null>(null);
   const cantons = getCantonsByProvince(province);
   const effectiveKey = apiKey ?? process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "";
-  const addedCount = value.length + extraPlaces.length;
+  const addedCount = value.filter((wp) => wp.level !== "country").length + extraPlaces.length;
   const showAddForm = adding || addedCount === 0;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -321,7 +321,10 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200, ext
       {/* Added zones - listed FIRST, above the add-another-location form. */}
       {addedCount > 0 && (
         <div className="flex flex-col gap-2.5">
-          {value.map((wp) => (
+          {/* «Todo el país» no se lista como lugar: es cobertura y ya lo dice su
+              interruptor. Listado aquí parecía cumplir el lugar obligatorio y el
+              formulario igual pedía uno («Falta tu lugar de trabajo»). */}
+          {value.filter((wp) => wp.level !== "country").map((wp) => (
             <div key={wp.id} className="flex items-center gap-3 rounded-xl bg-[#f8fafc] px-3 py-2.5">
               <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-white text-[#009FD9] shadow-sm ring-1 ring-[#e5eef6]">
                 <MapPin className="h-4.5 w-4.5" />

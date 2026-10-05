@@ -37,7 +37,6 @@ import { reemplazarDireccionSiCambia } from "@/lib/reemplazar-direccion";
 const COPY = {
   es: {
     titulo: "Proyectos",
-    queEs: "Aquí la gente pide servicios que necesita. No es para ofrecerlos.",
     // Cada tablero pregunta por lo suyo: aquí se buscan PROYECTOS, no
     // profesionales. «¿Qué servicio estás buscando?» es la frase de /buscar, y
     // repetida aquí parecía que la pantalla buscaba a quién contratar.
@@ -86,7 +85,6 @@ const COPY = {
   },
   en: {
     titulo: "Projects",
-    queEs: "People request services they need here. Not for offering them.",
     buscar: "Search projects",
     abrirMenu: "Open menu",
     notificaciones: "Notifications",
@@ -580,9 +578,6 @@ export function ProjectsBoard({
             <div className="px-4 pb-3">{buscador}</div>
             {filtros && <ScrollRail className="ccr-chip-row flex gap-1 px-4 pb-3 sm:gap-1.5">{filtros}</ScrollRail>}
             <div className="px-4 pb-3">{acciones}</div>
-            {/* Qué es un proyecto, en una línea: muchos profesionales publicaban
-                aquí sus servicios. */}
-            <p className="-mt-1 px-4 pb-3 text-xs text-[#5b6b82]">{copy.queEs}</p>
           </>
         )}
       </section>
@@ -610,7 +605,6 @@ export function ProjectsBoard({
                 hacía así y en computadora no. Y la raya divisoria solo si hay
                 filtros al otro lado: sin ellos separaba el título de la nada. */}
             <h1 className="text-[17px] font-extrabold text-[#162543]">{copy.titulo}</h1>
-            {!(query.trim() || lugar.trim()) && <span className="text-[13px] font-medium text-[#68778d]">{copy.queEs}</span>}
             {(query.trim() || lugar.trim()) && filtrados.length > 0 && (
               <span className="text-[13px] font-semibold text-[#68778d]">
                 {copy.cuenta(filtrados.length)}{lugar.trim() ? ` · ${lugar.trim()}` : ""}

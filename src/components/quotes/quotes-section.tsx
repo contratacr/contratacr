@@ -22,8 +22,18 @@ const DATE_LOCALE: Record<string, string> = { es: "es-CR", en: "en-US" };
  * La sección "Cotizaciones" del profesional: la lista de lo que ha cotizado y
  * el botón para hacer una nueva. Creada, se abre lista para mandar.
  */
+/** Las cotizaciones de la cuenta (también las precarga el panel al abrir). */
+export async function cargarCotizaciones(): Promise<Quote[]> {
+  const r = await fetch("/api/quotes");
+  const d = await r.json();
+  const filas = Array.isArray(d.quotes) ? d.quotes : [];
+  // Un renglón mal formado (items que no es lista) no puede romper la sección.
+  return filas.map((q: Quote) => ({ ...q, items: Array.isArray(q.items) ? q.items : [] }));
+}
+
 export function QuotesSection({ proName, proSlug, proId, puedeCrear = true }: { proName: string; proSlug?: string | null; proId?: string | null; puedeCrear?: boolean }) {
   const t = useTranslations("quotes");
+  const tBorrador = useTranslations("borradorGuardado");
   const tSub = useTranslations("proPanel.subtitles");
   const locale = useLocale();
   // Igual que las demás secciones del panel: lo que este navegador ya tiene se
@@ -35,13 +45,7 @@ export function QuotesSection({ proName, proSlug, proId, puedeCrear = true }: { 
     // vacío o distinto mientras el perfil termina de cargar: con él en la clave,
     // la caché se invalidaba sola y la sección volvía a enseñar el esqueleto.
     `quotes:${proId ?? proSlug ?? proName}`,
-    async () => {
-      const r = await fetch("/api/quotes");
-      const d = await r.json();
-      const filas = Array.isArray(d.quotes) ? d.quotes : [];
-      // Un renglón mal formado (items que no es lista) no puede romper la sección.
-      return filas.map((q: Quote) => ({ ...q, items: Array.isArray(q.items) ? q.items : [] }));
-    },
+    cargarCotizaciones,
     [],
   );
   const quotes: Quote[] | null = loading ? null : quotesCargadas;
@@ -156,7 +160,7 @@ export function QuotesSection({ proName, proSlug, proId, puedeCrear = true }: { 
 
       {editor && (
         <>
-        {inicial && <AvisoDeBorrador texto={locale === "en" ? "Your quote was saved. Review it and tap Send." : "Tu cotización quedó guardada. Revísala y toca Enviar."} />}
+        {inicial && <AvisoDeBorrador texto={tBorrador("cotizacion")} />}
         <QuoteEditorModal open inicial={inicial} onClose={() => { setEditor(false); setInicial(null); }} onSent={(q) => { setQuotes((prev) => [q, ...(prev ?? [])]); setEditor(false); setDetalle({ quote: q, recien: true }); }} />
         </>
       )}

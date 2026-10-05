@@ -1,6 +1,7 @@
 "use client";
 
 import { irAlInicio, noInsistirArriba } from "@/lib/ir-al-inicio";
+import { pareceFijoDeCostaRica } from "@/lib/telefono-movil";
 import { AvisoDeError } from "@/components/ui/etiqueta-campo";
 import { useState, useRef, useEffect } from "react";
 import { useLocale, useTranslations } from "next-intl";
@@ -447,6 +448,9 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
       if (!isPhoneComplete(whatsapp)) {
         return locale === "en" ? "Enter a complete contact number." : "Ingresa un número de contacto completo.";
       }
+      // Un fijo nunca tiene WhatsApp: el botón del perfil llevaría a
+      // «este número no está en WhatsApp».
+      if (pareceFijoDeCostaRica(whatsapp)) return t("whatsappFijo");
       if (!callPhoneIsValid) {
         return locale === "en" ? "Enter a complete call number." : "Ingresa un número para llamadas completo.";
       }
@@ -1154,7 +1158,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, col
             value={whatsapp}
             error={dirty && activeDirtySection === "contact" && !isPhoneComplete(whatsapp)
               ? (locale === "en" ? "Enter a complete contact number." : "Ingresa un número de contacto completo.")
-              : undefined}
+              : dirty && activeDirtySection === "contact" && pareceFijoDeCostaRica(whatsapp) ? t("whatsappFijo") : undefined}
             onChange={(digits) => { setWhatsapp(digits); touch("contact"); }}
             
           />

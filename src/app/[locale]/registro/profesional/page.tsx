@@ -1,5 +1,7 @@
 "use client";
 
+import { pareceFijoDeCostaRica } from "@/lib/telefono-movil";
+
 import { useState, useEffect, useRef, useMemo } from "react";
 import { prefijoDeIdioma, rutaConIdioma } from "@/lib/prefijo-de-idioma";
 import { useTranslations, useLocale } from "next-intl";
@@ -625,7 +627,11 @@ export default function RegisterProfessionalPage() {
       if (!cancelled && data) {
         setRedirecting(true);
         writeStoredMode("offer");
-        router.replace(destinoTrasCrear().replace(/^\/(es|en)/, ""));
+        // Navegación COMPLETA, no del enrutador: el destino (/cotizar,
+        // /empleos/publicar…) acababa de mandar aquí a esta cuenta cuando aún no
+        // era profesional, y el enrutador reusaba esa respuesta guardada: la
+        // página la devolvía al registro y el registro a la página, en bucle.
+        window.location.replace(destinoTrasCrear());
       }
     })();
     return () => { cancelled = true; };
@@ -797,6 +803,10 @@ export default function RegisterProfessionalPage() {
       form2.setError("whatsapp", { message: t("errPhoneIncomplete") });
       return;
     }
+    if (pareceFijoDeCostaRica(data.whatsapp)) {
+      form2.setError("whatsapp", { message: t("errPhoneFijo") });
+      return;
+    }
     // SIEMPRE hace falta al menos una zona, aunque cubra todo el país.
     //
     // Antes, marcar «cubro todo Costa Rica» dejaba terminar el registro sin
@@ -810,7 +820,8 @@ export default function RegisterProfessionalPage() {
     // atienda por videoconsulta. La cobertura nacional es un AÑADIDO a esa
     // base, no un sustituto.
     if (!workplaces.some((w) => w.level !== "country")) {
-      setLocationError(t("errWorkplaceSiempre"));
+      // Con «todo el país» encendido, lo que falta es la base: se dice así.
+      setLocationError(t(workplaces.some((w) => w.level === "country") ? "errWorkplacePais" : "errWorkplaceSiempre"));
       return;
     }
     setLocationError(null);

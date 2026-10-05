@@ -751,7 +751,11 @@
     "appBarTitle": "Professional profile",
     "linkCopied": "Link copied",
     "statCases": "{count, plural, one {past job} other {past jobs}}",
-    "linksWebsite": "Website"
+    "linksWebsite": "Website",
+    "noRespondioTitulo": "No reply?",
+    "noRespondioTexto": "Post what you need and several will message you.",
+    "noRespondioBoton": "Post",
+    "cerrar": "Close"
   },
   "auth": {
     "login": {
@@ -931,7 +935,9 @@
       "rateLabel": "What do you charge per hour, starting from?",
       "rateHelp": "It shows on your card as «₡X /hour» and it is the first thing a client looks at. Leave it blank and it says «Ask for price», and many people leave without writing. You can change it later.",
       "ratePlaceholder": "12 000",
-      "errWorkplaceSiempre": "Your workplace is missing: choose the province and the canton, or the whole province."
+      "errWorkplaceSiempre": "Your workplace is missing: choose the province and the canton, or the whole province.",
+      "errWorkplacePais": "Besides the whole country, choose where you are based: province and canton, or the whole province.",
+      "errPhoneFijo": "That looks like a landline. Enter a mobile number with WhatsApp so clients can message you."
     },
     "client": {
       "title": "Create client account",
@@ -2419,7 +2425,8 @@
     "certAllRequired": "Fill in the name, institution and year (4 digits).",
     "allowCallLabel": "Allow contact by phone call",
     "allowEmailLabel": "Allow contact by email",
-    "allowCallDesc": "If you enable it, clients will see the “Call us” option to your number."
+    "allowCallDesc": "If you enable it, clients will see the “Call us” option to your number.",
+    "whatsappFijo": "That looks like a landline. Enter a mobile number with WhatsApp so clients can message you."
   },
   "verificationPanel": {
     "appealMinError": "Tell us what you corrected (at least 10 characters).",
@@ -4431,5 +4438,10 @@
     "readReceipts": "Read receipts",
     "readReceiptsHelp": "If you turn this off, others won't see when you read their messages and you won't see when they read yours.",
     "readReceiptsError": "Could not save. Please try again."
+  },
+  "borradorGuardado": {
+    "empleo": "Your job post was saved. Review it and tap Publish.",
+    "promocion": "Your promotion was saved. Review it and tap Publish.",
+    "cotizacion": "Your quote was saved. Review it and tap Send."
   }
 }

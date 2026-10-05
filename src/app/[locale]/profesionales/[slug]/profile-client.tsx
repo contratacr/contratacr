@@ -17,6 +17,7 @@ import { VerifiedSeal } from "@/components/ui/verified-seal";
 import { InstagramIcon, FacebookIcon, TikTokIcon, LinkedInIcon } from "@/components/icons/social-icons";
 import { buildSocialUrl, buildWebsiteUrl } from "@/lib/social";
 import { Link, useRouter } from "@/i18n/navigation";
+import { rutaAnterior } from "@/lib/volver-por-historial";
 import { Navbar } from "@/components/layout/navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -134,6 +135,13 @@ function initialProfileReturnHref() {
   if (explicit) { const a = safeProfileReturnHref(explicit); guardarRegreso(a); return a; }
   const guardado = regresoGuardado();
   if (guardado) return guardado;
+  // La pantalla anterior DENTRO de la app (portada, una lista…). El referrer
+  // del navegador no cambia al navegar dentro del app: desde la portada la
+  // flecha decía «Volver a resultados» y llevaba a la búsqueda.
+  const anterior = typeof window !== "undefined" ? rutaAnterior() : null;
+  if (anterior && (!anterior.includes("/profesionales/") || esRutaDeBusqueda(anterior.split("?")[0], esServicioDelCatalogo))) {
+    return safeProfileReturnHref(anterior);
+  }
   if (typeof document !== "undefined" && document.referrer) {
     try {
       const referrer = new URL(document.referrer);
@@ -1594,16 +1602,16 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
       {ofrecerProyecto && !isOwn && (
         <div className="fixed inset-x-4 bottom-[calc(env(safe-area-inset-bottom)+88px)] z-40 mx-auto flex max-w-md items-center gap-3 rounded-2xl border border-[#e5e7eb] bg-white p-3 shadow-lg lg:bottom-6">
           <div className="min-w-0 flex-1">
-            <p className="text-sm font-bold text-[#162543]">{locale === "en" ? "No reply?" : "¿No te respondió?"}</p>
-            <p className="text-xs text-[#5b6b82]">{locale === "en" ? "Post what you need and several will message you." : "Publica lo que necesitas y te escriben varios."}</p>
+            <p className="text-sm font-bold text-[#162543]">{t("noRespondioTitulo")}</p>
+            <p className="text-xs text-[#5b6b82]">{t("noRespondioTexto")}</p>
           </div>
           <Link
             href={`/publicar-proyecto${professional.professions?.[0] ? `?categoria=${encodeURIComponent(professional.professions[0])}` : ""}`}
             className="shrink-0 rounded-xl bg-[#162543] px-3 py-2 text-xs font-bold text-white"
           >
-            {locale === "en" ? "Post" : "Publicar"}
+            {t("noRespondioBoton")}
           </Link>
-          <button type="button" aria-label={locale === "en" ? "Close" : "Cerrar"} onClick={() => setOfrecerProyecto(false)} className="shrink-0 p-1 text-[#68778d]">
+          <button type="button" aria-label={t("cerrar")} onClick={() => setOfrecerProyecto(false)} className="shrink-0 p-1 text-[#68778d]">
             <X className="h-4 w-4" />
           </button>
         </div>

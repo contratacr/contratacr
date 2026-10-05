@@ -71,6 +71,19 @@ export function reponer(p: Posicion): boolean {
   return Math.abs(el.scrollTop - p.y) <= 2;
 }
 
+/** La pantalla de la que se vino (dentro de la app), o null. */
+export function rutaAnterior(): string | null {
+  try {
+    // Mientras la pantalla nueva se pinta, el registro aún no la anotó: la
+    // «actual» anotada ES la anterior. Ya anotada, la anterior es la otra.
+    const actual = sessionStorage.getItem(CLAVE_ACTUAL);
+    if (actual && actual !== claveDeRuta()) return actual;
+    return sessionStorage.getItem(CLAVE_ANTERIOR);
+  } catch {
+    return null;
+  }
+}
+
 /** Se llama en cada cambio de ruta: la que había pasa a ser «la anterior». */
 export function anotarCambioDeRuta(): void {
   try {
