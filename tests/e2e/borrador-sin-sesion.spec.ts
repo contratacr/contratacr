@@ -28,7 +28,7 @@ const ONE_PIXEL_PNG = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCA
 const creadas: DisposableAccount[] = [];
 const correosNuevos: string[] = [];
 
-test.afterAll(async () => {
+test.afterEach(async () => {
   for (const cuenta of creadas) await cleanupDisposableAccount(cuenta).catch(() => {});
   const admin = regressionAdminClient();
   for (const correo of correosNuevos) {
@@ -36,6 +36,8 @@ test.afterAll(async () => {
     const id = (data as { id?: string } | null)?.id;
     if (id) await cleanupDisposableAccount({ id, email: correo, password: "" }).catch(() => {});
   }
+  creadas.length = 0;
+  correosNuevos.length = 0;
 });
 
 // Cada escenario registra cuentas: con su propia IP de origen el límite por
@@ -137,7 +139,18 @@ async function esperarLleno(page: Page, tipo: Tipo, marca: string) {
 }
 
 /** Publica y comprueba que quedó guardado de verdad. */
+/** ¿Este entorno puede subir fotos? La regresión local de CI no tiene servidor de imágenes (503). */
+async function puedeSubirFotos(page: Page): Promise<boolean> {
+  const estado = await page.evaluate(async () => {
+    try { return (await fetch("/api/upload/photo", { method: "POST", body: new FormData() })).status; } catch { return 0; }
+  });
+  return estado !== 503 && estado !== 0;
+}
+
 async function publicar(page: Page, tipo: Tipo, marca: string) {
+  // La promoción lleva foto: sin servidor de imágenes no hay cómo publicarla.
+  // Lo que esta prueba cuida —que vuelva llena, con su foto— ya se comprobó.
+  if (tipo === "promocion" && !(await puedeSubirFotos(page))) return;
   const api = { proyecto: "/api/projects", empleo: "/api/jobs/posts", promocion: "/api/offers", cotizacion: "/api/quotes" }[tipo];
   const respuesta = page.waitForResponse((r) => new URL(r.url()).pathname === api && r.request().method() === "POST", { timeout: 60_000 });
   const boton = { proyecto: /^Publicar$/, empleo: /^Publicar empleo$/, promocion: /^Publicar promoción$/, cotizacion: /^Crear cotización$/ }[tipo];
@@ -226,6 +239,25 @@ async function registrarCliente(page: Page, tipo: Tipo) {
   await escribirCodigo(page, alta.codigo!);
 }
 
+/**
+ * Los profesionales que esta prueba registra de verdad NO deben salir en la
+ * búsqueda: la lista pública se guarda en caché, y uno que aparece y luego se
+ * borra le mueve la pantalla a las pruebas que corren después (así falló
+ * «/buscar no salta» en la exhaustiva del 5-oct).
+ */
+async function ocultarDelBuscador() {
+  const correo = correosNuevos[correosNuevos.length - 1];
+  if (!correo) return;
+  const admin = regressionAdminClient();
+  await expect.poll(async () => {
+    const { data: perfil } = await admin.from("profiles").select("id").eq("email", correo).maybeSingle();
+    const id = (perfil as { id?: string } | null)?.id;
+    if (!id) return 0;
+    const { data } = await admin.from("professionals").update({ oculto_del_buscador: true }).eq("profile_id", id).select("id");
+    return (data ?? []).length;
+  }, { timeout: 30_000, message: "el profesional recién registrado queda fuera del buscador" }).toBeGreaterThan(0);
+}
+
 /** Pasos 2 y 3 del registro de profesional: servicio, lugar, WhatsApp y publicar. */
 async function completarPerfilProfesional(page: Page) {
   const main = page.locator("main");
@@ -239,6 +271,7 @@ async function completarPerfilProfesional(page: Page) {
   if (!(await tel.inputValue())) await tel.fill("88885555");
   await main.getByRole("button", { name: /^Continuar$/ }).click();
   await main.getByRole("button", { name: /^Publicar mi perfil$/ }).click();
+  await ocultarDelBuscador();
 }
 
 /** Crea la cuenta de profesional desde cero (sin identificación) y llena el perfil. */
@@ -307,3 +340,101 @@ for (const tipo of ["proyecto", "empleo", "promocion", "cotizacion"] as Tipo[]) 
 }
 
 
+
+// EL REGISTRO DE PROFESIONAL, PASO A PASO (lista de Isaac del 5-oct-2026).
+// Cada comprobación es algo que estuvo roto o que se pidió a mano: si alguna
+// se pierde, esta prueba lo dice antes que un usuario.
+test("registro de profesional: contraseña, provincia, tarifa, fijo, abre arriba y avisos de bienvenida", async ({ page }) => {
+  test.slow();
+  await gotoOK(page, "/registro/profesional");
+  await waitForInteractivePage(page);
+  const alta = await interceptarAlta(page);
+  const main = page.locator("main");
+  await main.getByRole("button", { name: "Registrarme sin identificación por ahora" }).click();
+  await escribirFirme(main.getByPlaceholder("Tu nombre completo"), "Pro Ajustes Octubre");
+  const correo = correoNuevo("ajustes");
+  await main.locator('input[type="email"]').fill(correo);
+  await main.getByPlaceholder("Mínimo 8 caracteres").fill(CLAVE);
+
+  // 1. «Confirmar contraseña» existe y frena cuando no coincide.
+  await main.getByPlaceholder("Repite tu contraseña").fill(`${CLAVE}x`);
+  await aceptarTerminos(main);
+  await main.getByRole("button", { name: /^Continuar$/ }).click();
+  await expect(main.getByText("Las contraseñas no coinciden")).toBeVisible();
+  expect(alta.codigo, "con contraseñas distintas no se crea la cuenta").toBeUndefined();
+  await main.getByPlaceholder("Repite tu contraseña").fill(CLAVE);
+  await main.getByRole("button", { name: /^Continuar$/ }).click();
+  await expect.poll(() => alta.codigo, { timeout: 30_000 }).toBeTruthy();
+
+  // 2. La pantalla del código abre ARRIBA (venía del formulario, desplazado).
+  await expect(page.locator('input[inputmode="numeric"]').filter({ visible: true }).first()).toBeVisible({ timeout: 30_000 });
+  await expect.poll(() => page.evaluate(() => Math.round(window.scrollY)), { timeout: 3_000 }).toBeLessThanOrEqual(4);
+  await escribirCodigo(page, alta.codigo!);
+
+  // 3. Paso 2: la tarifa va junto al servicio, con su texto corto.
+  await main.getByRole("button", { name: "Busca tu servicio" }).waitFor({ timeout: 30_000 });
+  await expect(main.getByText("¿Desde cuánto cobras por hora?")).toBeVisible();
+  await expect(main.getByText(/tu perfil dirá «Consultar precio»/)).toBeVisible();
+
+  // 4. «Agregar toda la provincia» no existe hasta elegir una provincia.
+  const agregarProvincia = main.getByRole("button", { name: /Agregar toda la provincia/ });
+  await expect(agregarProvincia).toHaveCount(0);
+  await main.getByRole("button", { name: "Busca tu servicio" }).click();
+  await page.getByPlaceholder("Buscar servicio...").fill("Desarrollo web");
+  await page.getByRole("button", { name: /^Desarrollo web/ }).or(page.getByRole("option", { name: /^Desarrollo web/ })).first().click();
+
+  // 5. «Todo el país» no cuenta como lugar: sin provincia, el aviso lo explica.
+  await main.getByRole("switch", { name: /todo el país/ }).or(main.getByText("Trabajo a domicilio en todo el país")).first().click();
+  await main.locator('input[type="tel"]').fill("88885555");
+  await main.getByRole("button", { name: /^Continuar$/ }).click();
+  await expect(main.getByText(/Además de todo el país, elige de dónde sales/)).toBeVisible();
+  await expect(main.getByText("Todo Costa Rica")).toHaveCount(0);
+
+  await main.getByRole("button", { name: /^Provincia$/ }).first().click();
+  await page.getByRole("option", { name: /^Alajuela$/ }).first().click();
+  await expect(agregarProvincia).toBeVisible();
+  await agregarProvincia.click();
+
+  // 6. Un teléfono fijo no sirve de WhatsApp.
+  await main.locator('input[type="tel"]').fill("22223333");
+  await main.getByRole("button", { name: /^Continuar$/ }).click();
+  await expect(main.getByText(/parece de teléfono fijo/)).toBeVisible();
+  await main.locator('input[type="tel"]').fill("88885555");
+  await main.getByRole("button", { name: /^Continuar$/ }).click();
+
+  // 7. Paso 3: solo la foto; la tarifa ya no está ahí.
+  const publicarPerfil = main.getByRole("button", { name: /^Publicar mi perfil$/ });
+  await publicarPerfil.waitFor({ timeout: 30_000 });
+  await expect(main.getByText("¿Desde cuánto cobras por hora?")).toHaveCount(0);
+  await publicarPerfil.click();
+
+  // 8. Cae en «Completa tu perfil», con los opcionales en su propio grupo.
+  await page.waitForURL(/tab=completion/, { timeout: 60_000 });
+  await ocultarDelBuscador();
+  await expect(page.getByText("Opcionales", { exact: true })).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByText("opcional", { exact: true })).toHaveCount(0);
+
+  // 9. Los dos avisos de bienvenida EXISTEN en la base (el 4-oct la base los
+  //    rechazaba en silencio y en producción no llegó ninguno).
+  const admin = regressionAdminClient();
+  const { data: perfil } = await admin.from("profiles").select("id").eq("email", correo).maybeSingle();
+  const idPerfil = (perfil as { id?: string } | null)?.id;
+  expect(idPerfil, "la cuenta nueva tiene perfil").toBeTruthy();
+  await expect.poll(async () => {
+    const { data } = await admin.from("notifications").select("type").eq("user_id", idPerfil!);
+    return (data ?? []).map((f) => (f as { type: string }).type).sort().join(",");
+  }, { timeout: 15_000 }).toBe("completa_perfil,invita_proyecto");
+
+  // 10. Notificaciones: el texto se lee COMPLETO y cada aviso lleva su raya.
+  await gotoOK(page, "/notificaciones");
+  const largo = page.getByText(/Es para pedir un servicio, no para ofrecerlo\./);
+  await expect(largo).toBeVisible({ timeout: 30_000 });
+  const medidas = await largo.evaluate((el) => {
+    const fila = el.closest('[role="button"]') as HTMLElement;
+    return { cortado: el.scrollHeight > el.clientHeight + 1, raya: getComputedStyle(fila).borderBottomWidth, derecha: parseFloat(getComputedStyle(fila).paddingRight) };
+  });
+  expect(medidas.cortado, "el aviso no se corta").toBe(false);
+  expect(medidas.raya).toBe("1px");
+  expect(medidas.derecha, "sin hueco grande a la derecha en el teléfono").toBeLessThanOrEqual(48);
+  await expect(page.getByText(/Los perfiles con foto, descripción y precios reciben más clientes/)).toBeVisible();
+});

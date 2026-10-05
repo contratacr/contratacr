@@ -21,6 +21,9 @@ export const TRANSLATED_NOTIFICATION_TYPES = new Set([
   "suggestion_rejected",
   "direct_message",
   "counterparty_account_deleted",
+  // Los dos de bienvenida (5-oct-2026): mismo texto para todos, en su idioma.
+  "invita_proyecto",
+  "completa_perfil",
 ]);
 
 type NotificationCopyInput = {
@@ -49,6 +52,8 @@ const TITLES: Record<string, Record<NotificationLocale, string>> = {
   direct_message: { es: "Nuevo mensaje", en: "New message" },
   verification_outreach: { es: "Terminemos tu verificación", en: "Let's finish your verification" },
   counterparty_account_deleted: { es: "Una cuenta con la que coordinabas se cerró", en: "An account you were coordinating with was closed" },
+  invita_proyecto: { es: "¿Necesitas a alguien?", en: "Need someone?" },
+  completa_perfil: { es: "Completa tu perfil", en: "Complete your profile" },
 };
 
 function normalizeLegacyNotificationText(value: string): string {
@@ -130,6 +135,17 @@ export function localizedNotificationCopy(notification: NotificationCopyInput, l
   const data = notification.data;
   const normalizedMessage = normalizeLegacyNotificationText(notification.message);
   const title = localizedTitle(notification.type, language, notification.title);
+
+  if (notification.type === "invita_proyecto") {
+    return { title, message: en
+      ? "Post what you need and professionals contact you on WhatsApp. It is for requesting a service, not offering one."
+      : "Publica lo que necesitas y los profesionales te contactan por WhatsApp. Es para pedir un servicio, no para ofrecerlo." };
+  }
+  if (notification.type === "completa_perfil") {
+    return { title, message: en
+      ? "Profiles with a photo, description and prices get more clients. It takes a few minutes."
+      : "Los perfiles con foto, descripción y precios reciben más clientes. Te toma unos minutos." };
+  }
 
   if (notification.type === "review_received") {
     const legacy = firstMatch(normalizedMessage, [

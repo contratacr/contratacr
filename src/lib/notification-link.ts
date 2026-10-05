@@ -114,6 +114,14 @@ export function notificationHref(n: NotificationLinkInput, _role?: string, local
       href = "/dashboard/profesional?tab=soporte";
       break;
 
+    case "invita_proyecto":
+      href = "/publicar-proyecto";
+      break;
+
+    case "completa_perfil":
+      href = "/dashboard/profesional?mode=offer&tab=completion";
+      break;
+
     default:
       href = "/dashboard/profesional?tab=notifications";
   }
