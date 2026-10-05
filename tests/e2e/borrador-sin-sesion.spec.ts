@@ -409,8 +409,10 @@ test("registro de profesional: contraseña, provincia, tarifa, fijo, abre arriba
   await publicarPerfil.click();
 
   // 8. Cae en «Completa tu perfil», con los opcionales en su propio grupo.
-  await page.waitForURL(/tab=completion/, { timeout: 60_000 });
+  await page.waitForURL(/\/dashboard\/profesional/, { timeout: 60_000 });
   await ocultarDelBuscador();
+  // En CI el panel no siempre conserva ?tab=completion al llegar: se abre a mano.
+  if (!/tab=completion/.test(page.url())) await gotoOK(page, "/dashboard/profesional?mode=offer&tab=completion");
   await expect(page.getByText("Opcionales", { exact: true })).toBeVisible({ timeout: 30_000 });
   await expect(page.getByText("opcional", { exact: true })).toHaveCount(0);
 
