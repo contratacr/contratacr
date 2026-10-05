@@ -192,3 +192,50 @@ test.describe("límite de solicitudes", () => {
     expect(estados[10], `el undécimo se frena: ${estados.join(",")}`).toBe(429);
   });
 });
+
+test.describe("portada: foto y cinta de marcas", () => {
+  test.use(TELEFONO);
+
+  test("la primera foto sale del propio sitio y se pide con la página", async ({ page }) => {
+    await gotoOK(page, "/");
+    // Pedida a otro servidor tardaba segundos con red de teléfono y la portada
+    // «enfocaba» de golpe; ahora es un archivo propio, liviano, precargado.
+    const foto = page.locator(".ccr-hero-foto-capa").first();
+    await expect.poll(() => foto.evaluate((img: HTMLImageElement) => (img.complete && img.naturalWidth > 0 ? new URL(img.currentSrc).pathname : "")), { timeout: 20_000 }).toMatch(/^\/hero\/liniero-\d+\.(avif|webp)$/);
+    expect(await page.locator('link[rel="preload"][as="image"][imagesrcset*="/hero/liniero-"]').count()).toBeGreaterThan(0);
+    const { status, headers } = await page.request.get("/hero/liniero-1400.avif").then((r) => ({ status: r.status(), headers: r.headers() }));
+    expect(status).toBe(200);
+    expect(Number(headers["content-length"] ?? 0), "la foto del teléfono pesa menos de 130 KB").toBeLessThan(130_000);
+  });
+
+  test("la cinta de marcas nunca deja un hueco: lo que se ve no salta al reiniciar", async ({ page }) => {
+    await gotoOK(page, "/");
+    await waitForInteractivePage(page);
+    const juegos = page.locator(".featured-brands-set");
+    await expect(juegos).toHaveCount(4);
+    await expect.poll(() => juegos.first().evaluate((j) => j.getAnimations().length), { timeout: 10_000 }).toBe(1);
+    const leer = () => page.evaluate(() => {
+      const cajas = [...document.querySelectorAll(".featured-brands-set")].map((j) => j.getBoundingClientRect()).sort((a, b) => a.left - b.left);
+      return {
+        // Entre un juego y el siguiente no hay separación ni encima.
+        huecos: cajas.slice(1).map((c, i) => Math.abs(c.left - cajas[i].right)),
+        // La pantalla está cubierta de lado a lado por algún juego.
+        cubierta: cajas[0].left <= 0 && cajas[cajas.length - 1].right >= window.innerWidth,
+      };
+    });
+    // Cada animación es la más simple posible (dos cuadros, lineal): con cuadros
+    // de «salto» Safari dejaba la franja vacía.
+    const cuadros = await juegos.evaluateAll((js) => js.map((j) => (j.getAnimations()[0].effect as KeyframeEffect).getKeyframes().length));
+    expect(cuadros).toEqual([2, 2, 2, 2]);
+    const vuelta = await juegos.first().evaluate((j) => Number(j.getAnimations()[0].effect!.getComputedTiming().duration) / 4);
+    // Justo antes y justo después de cada reinicio, y de la vuelta completa.
+    for (const n of [1, 2, 3, 4]) {
+      for (const delta of [-150, 150]) {
+        await page.evaluate((t) => { for (const j of document.querySelectorAll(".featured-brands-set")) for (const a of j.getAnimations()) { a.pause(); a.currentTime = t; } }, n * vuelta + delta);
+        const r = await leer();
+        expect(Math.max(...r.huecos), `sin huecos en la vuelta ${n} (${delta} ms)`).toBeLessThan(1);
+        expect(r.cubierta, `pantalla cubierta en la vuelta ${n} (${delta} ms)`).toBe(true);
+      }
+    }
+  });
+});

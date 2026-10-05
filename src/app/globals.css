@@ -2057,10 +2057,11 @@ html.ccr-js .fade-in-up.visible > section > div > *:nth-child(3) { transition-de
 .featured-brands-track {
   display: flex;
   width: max-content;
-  will-change: transform;
 }
 
 .featured-brands-set {
+  /* Cada juego es su propia capa: se mueve solo (ver featured-brands.tsx). */
+  will-change: transform;
   display: flex;
   align-items: center;
   gap: clamp(0.4rem, 0.9vw, 0.9rem);
