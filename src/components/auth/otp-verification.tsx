@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "@/i18n/navigation";
 import { SpamNotice } from "@/components/ui/spam-notice";
 import { writeStoredMode } from "@/hooks/use-mode";
+import { irAlInicio } from "@/lib/ir-al-inicio";
 
 interface OtpVerificationProps {
   email: string;
@@ -36,8 +37,9 @@ export function OtpVerification({ email, onVerified, autoResendOnMount = false }
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   useEffect(() => {
-    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
-    containerRef.current?.scrollIntoView({ block: "start", inline: "nearest" });
+    // La pantalla del código abre ARRIBA: viene del formulario, desplazado
+    // hasta el botón. Un scrollTo suelto lo deshacía Safari en el iPhone.
+    irAlInicio();
     window.requestAnimationFrame(() => {
       inputRefs.current[0]?.focus({ preventScroll: true });
     });

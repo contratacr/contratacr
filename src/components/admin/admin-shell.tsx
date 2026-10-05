@@ -42,6 +42,19 @@ function PendingMark({ variant }: { variant: "side" | "top" }) {
 // Admin chrome — a navy (#0f172a) LEFT SIDEBAR with a #38bdf8 accent (horizontal
 // scroll strip on small screens). "Resumen" is the home/overview; the other
 // sections (Verificación, Usuarios, …) are unchanged.
+// LAS SECCIONES DEL ADMIN, AGRUPADAS POR LO QUE SE HACE EN ELLAS (5-oct-2026).
+// Antes Proyectos estaba en «Operación» y Empleos y Promociones en
+// «Marketplace», y Contactos no estaba en ningún grupo: en computadora no
+// aparecía. Lo publicado va junto; lo que espera una respuesta, arriba.
+const GRUPOS_ADMIN: { label: string; ids: AdminTab[] }[] = [
+  { label: "Principal", ids: ["resumen", "analitica"] },
+  { label: "Por atender", ids: ["verificacion", "soporte", "reportes", "cuentas"] },
+  { label: "Publicaciones", ids: ["publicaciones", "empleos", "promociones", "resenas"] },
+  { label: "Personas", ids: ["usuarios", "contactos"] },
+  { label: "Catálogo", ids: ["categorias", "aseguradoras", "cobertura"] },
+  { label: "Negocio", ids: ["campanas", "costos"] },
+];
+
 export function AdminShell({
   adminName,
   active = "resumen",
@@ -175,13 +188,7 @@ export function AdminShell({
           </Link>
         </div>
         <nav className="flex-1 overflow-y-auto px-3 py-2">
-          {[
-            { label: "Principal", ids: ["resumen", "usuarios"] },
-            { label: "Operación", ids: ["verificacion", "publicaciones", "resenas", "reportes", "soporte"] },
-            { label: "Marketplace", ids: ["empleos", "promociones", "campanas"] },
-            { label: "Gestión", ids: ["categorias", "aseguradoras", "cuentas"] },
-            { label: "Información", ids: ["analitica", "cobertura", "costos"] },
-          ].map((group, index) => (
+          {GRUPOS_ADMIN.map((group, index) => (
             <div key={group.label} className={index === 0 ? "" : "mt-4 border-t border-white/10 pt-3"}>
               <p className="mb-1 px-3 text-[10px] font-semibold uppercase text-white/35">{group.label}</p>
               <div className="space-y-0.5">
@@ -209,7 +216,8 @@ export function AdminShell({
           </Link>
         </div>
         <div ref={railRef} className="scrollbar-none flex gap-1 overflow-x-auto px-2">
-          {items.map((it) => navLink(it, "top"))}
+          {/* El teléfono recorre las secciones en el MISMO orden de los grupos. */}
+          {GRUPOS_ADMIN.flatMap((g) => g.ids).map((id) => items.find((it) => it.id === id)).filter((it): it is (typeof items)[number] => !!it).map((it) => navLink(it, "top"))}
         </div>
       </header>
 

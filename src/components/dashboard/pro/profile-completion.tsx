@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { ChevronRight, ListChecks } from "lucide-react";
 import { serviceSupportsProfessionalCredential } from "@/lib/professional-credentials";
@@ -141,9 +141,10 @@ const STEP_HINTS: Record<string, string> = {
   photo: "photoBenefit",
   whatsapp: "whatsappBenefit",
   services: "servicesBenefit",
-  servicePrice: "serviceInfoBenefit",
-  serviceDescription: "serviceInfoBenefit",
-  serviceExperience: "serviceInfoBenefit",
+  // Una ayuda propia por paso: las tres repetían «Agrega precio y experiencia».
+  servicePrice: "servicePriceBenefit",
+  serviceDescription: "serviceDescriptionBenefit",
+  serviceExperience: "serviceExperienceBenefit",
   location: "locationBenefit",
   bio: "bioBenefit",
   verification: "verificationBenefit",
@@ -335,12 +336,17 @@ export function ProfileCompletion({
         </button>
 
         <div className="mt-5 border-t border-[#eef2f6]">
-          {visibleSteps.map((item) => (
-            // La fila es una caja, no un botón: adentro van DOS acciones —hacer
-            // el paso y omitirlo—, y un botón dentro de otro no es HTML válido.
+          {visibleSteps.map((item, n) => (
+            <Fragment key={item.key}>
+            {/* Los opcionales van en su propio grupo, con un solo rótulo: la
+                etiqueta «OPCIONAL» en cada fila partía los títulos en dos. */}
+            {item.optional && !visibleSteps[n - 1]?.optional && (
+              <p className="px-1 pb-1 pt-4 text-[11px] font-bold uppercase tracking-[0.06em] text-[#8fa1b6]">{t("optionalGroup")}</p>
+            )}
+            {/* La fila es una caja, no un botón: adentro van DOS acciones —hacer
+                el paso y omitirlo—, y un botón dentro de otro no es HTML válido. */}
             <div
-              key={item.key}
-              className="flex w-full items-center gap-2 border-b border-[#eef2f6] px-1 py-1.5 last:border-b-0"
+              className="flex w-full items-center gap-2 border-b border-[#eef2f6] px-1 py-1.5"
             >
               <button
                 type="button"
@@ -351,12 +357,7 @@ export function ProfileCompletion({
                   <ChevronRight className="h-4.5 w-4.5" />
                 </span>
                 <span className="min-w-0 flex-1">
-                  <span className="flex items-center gap-2 text-sm font-extrabold leading-snug text-[#162543]">
-                    <span className="min-w-0">{t(item.key)}</span>
-                    {item.optional && (
-                      <span className="inline-flex shrink-0 rounded-full bg-[#f1f6f9] px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.02em] text-[#7c8fa1]">{t("optionalShort")}</span>
-                    )}
-                  </span>
+                  <span className="block truncate text-sm font-extrabold leading-snug text-[#162543]">{t(item.key)}</span>
                   {STEP_HINTS[item.key] && (
                     <span className="mt-1 block text-xs font-semibold leading-snug text-[#7c8fa1]">{t(STEP_HINTS[item.key])}</span>
                   )}
@@ -373,6 +374,7 @@ export function ProfileCompletion({
                 {t("skipStep")}
               </button>
             </div>
+            </Fragment>
           ))}
         </div>
         {/* Sin «Terminar por ahora»: la sección ya se deja con la flecha de la

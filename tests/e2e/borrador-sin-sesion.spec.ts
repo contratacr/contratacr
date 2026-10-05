@@ -253,6 +253,7 @@ async function registrarProfesional(page: Page, tipo: Tipo) {
   await main.getByPlaceholder("Tu nombre completo").fill("Pro Borrador Prueba");
   await main.locator('input[type="email"]').fill(correoNuevo(tipo));
   await main.getByPlaceholder("Mínimo 8 caracteres").fill(CLAVE);
+  await main.getByPlaceholder("Repite tu contraseña").fill(CLAVE);
   await aceptarTerminos(main);
   await main.getByRole("button", { name: /^Continuar$/ }).click();
   await expect.poll(() => alta.codigo, { timeout: 30_000 }).toBeTruthy();
@@ -304,3 +305,5 @@ for (const tipo of ["proyecto", "empleo", "promocion", "cotizacion"] as Tipo[]) 
     await publicar(page, tipo, marca);
   });
 }
+
+

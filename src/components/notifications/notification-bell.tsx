@@ -250,7 +250,7 @@ export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "o
           </span>
         )}
         <span className="min-w-0 flex-1">
-          <span className={cn("block line-clamp-2 text-[13.5px] leading-snug", item.read ? "font-medium text-[#374151]" : "font-semibold text-[#162543]")}>
+          <span className={cn("block text-[13.5px] leading-snug", item.read ? "font-medium text-[#374151]" : "font-semibold text-[#162543]")}>
             {copy.message || copy.title}
           </span>
           <span className={cn("mt-0.5 block text-[12px] font-semibold", item.read ? "text-[#94a3b8]" : "text-[#0089bb]")}>

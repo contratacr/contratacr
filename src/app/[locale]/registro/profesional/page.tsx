@@ -44,6 +44,7 @@ import { trackMetaEvent } from "@/lib/analytics/meta-pixel";
 import { readAttribution } from "@/lib/analytics/attribution";
 import { FilaInterruptor } from "@/components/ui/fila-interruptor";
 import { BARRA_ACCION_FIJA, useBarraAccionFija } from "@/components/ui/acciones-al-pie";
+import { irAlInicio } from "@/lib/ir-al-inicio";
 
 // Category data lives in src/lib/data/categories.ts (single source of truth).
 // The service catalog picker shares the same taxonomy and grouped UI used in
@@ -58,7 +59,7 @@ function validateCedulaFormat(v: string): boolean {
 
 // Schemas are built INSIDE the component (useMemo) so their messages localize —
 // see `makeSchemas` near the top of RegisterProfessionalPage.
-type Step1Data = { fullName: string; cedula: string; email: string; password: string };
+type Step1Data = { fullName: string; cedula: string; email: string; password: string; confirmPassword: string };
 type Step2Data = { category: string; whatsapp: string; address?: string };
 type Step3Data = { yearsExperience?: string; hourlyRate?: string };
 
@@ -443,6 +444,14 @@ export default function RegisterProfessionalPage() {
           .regex(/[a-z]/, tRp("ruleLower"))
           .regex(/[0-9]/, tRp("ruleNumber"))
           .regex(/[!@#$%^&*]/, tRp("ruleSpecial")),
+        confirmPassword: z.string(),
+      })
+      // Vuelve el «Confirmar contraseña» (5-oct-2026, lo pidió Isaac): se había
+      // quitado el 6-sep por el ojo de mostrarla, pero un error de tipeo en la
+      // contraseña deja la cuenta inaccesible desde el primer día.
+      .refine((d) => d.password === d.confirmPassword, {
+        message: tRp("passwordsDontMatch"),
+        path: ["confirmPassword"],
       }),
     step2Schema: z.object({
       category: z.string().min(1, t("valCategoryRequired")),
@@ -517,7 +526,7 @@ export default function RegisterProfessionalPage() {
   const form1 = useForm<Step1Data>({
     resolver: zodResolver(step1Schema),
     mode: "onBlur",
-    defaultValues: { fullName: "", cedula: "", email: "", password: "" },
+    defaultValues: { fullName: "", cedula: "", email: "", password: "", confirmPassword: "" },
   });
   const form2 = useForm<Step2Data>({
     resolver: zodResolver(step2Schema),
@@ -540,10 +549,8 @@ export default function RegisterProfessionalPage() {
   );
   useEffect(() => {
     if (step < 0 || otpEmail || redirecting) return;
-    window.requestAnimationFrame(() => {
-      document.scrollingElement?.scrollTo({ top: 0, left: 0, behavior: "instant" });
-      window.scrollTo({ top: 0, left: 0, behavior: "instant" });
-    });
+    // Cada paso estrena arriba (irAlInicio insiste contra la inercia de Safari).
+    irAlInicio();
   }, [otpEmail, redirecting, step]);
 
   // On a failed submit, jump to the first field with an error.
@@ -1186,6 +1193,14 @@ export default function RegisterProfessionalPage() {
                 <PasswordChecklist password={watchedPassword} />
               </div>
 
+              <Input
+                label={<>{t("confirmPassword")} <span className="text-red-500">*</span></>}
+                type="password"
+                placeholder={tRp("confirmPlaceholder")}
+                error={form1.formState.errors.confirmPassword?.message}
+                {...form1.register("confirmPassword")}
+              />
+
               {/* La aceptación va antes del botón, no debajo: es lo que Apple
                   pide mostrar antes de registrarse (regla 1.2). */}
               <CasillaDeTerminos aceptado={terminosAceptados} onCambio={setTerminosAceptados} />
@@ -1348,6 +1363,21 @@ export default function RegisterProfessionalPage() {
 
               {/* Work zones — provincia/cantón FIRST (drives /buscar), optional exact
                   pin. "Me desplazo" travel is enabled later in the panel. */}
+                  {/* La tarifa va JUNTO AL SERVICIO (5-oct-2026): es el precio de
+                      ese servicio, no de la foto. Opcional: en blanco, el perfil
+                      dice «Consultar precio». */}
+                  <div className="mt-3">
+                    <label htmlFor="tarifa-por-hora" className="mb-1.5 block text-sm font-medium text-[#374151]">
+                      <EtiquetaOpcional>{t("rateLabel")}</EtiquetaOpcional>
+                    </label>
+                    <PriceInput
+                      id="tarifa-por-hora"
+                      placeholder={t("ratePlaceholder")}
+                      value={form3.watch("hourlyRate") ?? ""}
+                      onChange={(v) => form3.setValue("hourlyRate", v)}
+                    />
+                    <p className="mt-1.5 text-xs leading-snug text-[#68778d]">{t("rateHelp")}</p>
+                  </div>
                 </div>
               </section>
               <section className="flex flex-col gap-3 border-t border-[#eef2f6] pt-4">
@@ -1414,7 +1444,7 @@ export default function RegisterProfessionalPage() {
                     type="button"
                     className={currentUser ? "hidden lg:inline-flex" : undefined}
                     onClick={() => {
-                      if (!currentUser) form1.setValue("password", "");
+                      if (!currentUser) { form1.setValue("password", ""); form1.setValue("confirmPassword", ""); }
                       setStep(0);
                     }}
                   >
@@ -1434,31 +1464,6 @@ export default function RegisterProfessionalPage() {
               {/* Photo upload. Guidance about services / casos de éxito lives in
                   the panel's profile-completion flow. */}
               <PhotoPicker preview={photoPreview} onFile={handlePhotoSelect} onRemove={handlePhotoRemove} />
-
-              {/* La tarifa se pregunta AQUÍ, por la misma razón que el WhatsApp:
-                  medido en producción, solo 3 de 288 profesionales volvieron a
-                  tocar su perfil después del primer día. Lo que no se pide al
-                  registrarse, no se pide nunca —y se nota: de 848 servicios
-                  publicados, 832 dicen «Consultar precio», no porque el
-                  profesional lo eligiera sino porque el registro lo escribía a
-                  la fuerza sin preguntar—.
-
-                  Es OPCIONAL a propósito. Hay oficios donde un precio por hora
-                  no significa nada, y forzarlo haría que se inventen un número
-                  o que abandonen el registro; quien lo deja en blanco se queda
-                  con «Consultar precio», como hasta ahora. */}
-              <div>
-                <label htmlFor="tarifa-por-hora" className="mb-1.5 block text-sm font-medium text-[#374151]">
-                  <EtiquetaOpcional>{t("rateLabel")}</EtiquetaOpcional>
-                </label>
-                <PriceInput
-                  id="tarifa-por-hora"
-                  placeholder={t("ratePlaceholder")}
-                  value={form3.watch("hourlyRate") ?? ""}
-                  onChange={(v) => form3.setValue("hourlyRate", v)}
-                />
-                <p className="mt-1.5 text-xs leading-snug text-[#68778d]">{t("rateHelp")}</p>
-              </div>
 
               <BarraDeAcciones activa={!!currentUser}>
                 {(
