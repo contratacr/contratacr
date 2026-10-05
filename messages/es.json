@@ -936,7 +936,8 @@
       "rateHelp": "Sale en tu tarjeta como «₡X /hora» y es lo primero que mira un cliente. Si lo dejás en blanco dirá «Consultar precio», y mucha gente se va sin escribir. Lo podés cambiar después.",
       "ratePlaceholder": "12 000",
       "errWorkplaceSiempre": "Falta tu lugar de trabajo: elige la provincia y el cantón, o toda la provincia.",
-      "errWorkplacePais": "Además de todo el país, elige de dónde sales: la provincia y el cantón, o toda la provincia."
+      "errWorkplacePais": "Además de todo el país, elige de dónde sales: la provincia y el cantón, o toda la provincia.",
+      "errPhoneFijo": "Ese número parece de teléfono fijo. Escribe un celular con WhatsApp para que los clientes te puedan escribir."
     },
     "client": {
       "title": "Crear cuenta de cliente",
@@ -2424,7 +2425,8 @@
     "certAllRequired": "Completa el nombre, la institución y el año (4 dígitos).",
     "allowCallLabel": "Permitir contacto por llamada",
     "allowEmailLabel": "Permitir contacto por correo",
-    "allowCallDesc": "Si lo activas, los clientes verán la opción “Contáctanos por llamada” a tu número."
+    "allowCallDesc": "Si lo activas, los clientes verán la opción “Contáctanos por llamada” a tu número.",
+    "whatsappFijo": "Ese número parece de teléfono fijo. Escribe un celular con WhatsApp para que los clientes te puedan escribir."
   },
   "verificationPanel": {
     "appealMinError": "Cuéntanos qué corregiste (mínimo 10 caracteres).",

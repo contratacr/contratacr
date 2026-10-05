@@ -18,7 +18,7 @@ import {
   ArrowLeft, ArrowRight, ChevronDown, ChevronRight, Sparkles, AlertCircle, X, MessageSquareMore, Home, LogOut, Users, CheckCircle2, FileText, Search, Camera, Eye, Trash2, Loader2,
   BriefcaseBusiness, Star, ReceiptText, ExternalLink, Share2, BookOpen,
   } from "lucide-react";
-import { QuotesSection } from "@/components/quotes/quotes-section";
+import { QuotesSection, cargarCotizaciones } from "@/components/quotes/quotes-section";
 import { SectionBoundary } from "@/components/dashboard/section-boundary";
 import { SectionHeadline } from "@/components/dashboard/section-headline";
 import { Navbar } from "@/components/layout/navbar";
@@ -42,7 +42,7 @@ import { OffersPanel } from "@/components/dashboard/pro/offers-panel";
 import { SaveStatusProvider } from "@/components/dashboard/save-status-context";
 import { BookingRequests } from "@/components/dashboard/pro/booking-requests";
 import { VerificationPanel } from "@/components/dashboard/pro/verification-panel";
-import { ClientActivity } from "@/components/dashboard/client-activity";
+import { ClientActivity, fetchClientProjects } from "@/components/dashboard/client-activity";
 import { ClientConnections } from "@/components/dashboard/client-connections";
 import { applyPendingSavedPro } from "@/components/professionals/save-button";
 import { BasicProfileSection } from "@/components/dashboard/basic-profile-section";
@@ -722,6 +722,27 @@ export default function DashboardPage() {
   }, [externalReturnTo]);
 
   const [pro, setPro] = useState<ProData | null>(null);
+  // PRECARGA de Mis proyectos y Cotizaciones (5-oct-2026): eran las únicas
+  // secciones que la primera vez mostraban esqueleto (1-1,3 s). Al abrir el
+  // panel, en un rato libre, se llenan las MISMAS claves de caché que usan
+  // esas secciones; al entrar ya pintan de una. Solo si no hay nada guardado.
+  useEffect(() => {
+    if (!user?.id) return;
+    const uid = user.id;
+    const proId = typeof pro?.id === "string" ? pro.id : null;
+    const enRatoLibre = (fn: () => void) => {
+      if (typeof window.requestIdleCallback === "function") window.requestIdleCallback(fn, { timeout: 4000 });
+      else globalThis.setTimeout(fn, 1500);
+    };
+    enRatoLibre(() => {
+      const claveProyectos = `dashboard:client-projects:${uid}`;
+      if (!getDashboardCache(claveProyectos)) void fetchClientProjects().then((d) => { if (!getDashboardCache(claveProyectos)) setDashboardCache(claveProyectos, d); }).catch(() => {});
+      if (proId) {
+        const claveCotizaciones = `quotes:${proId}`;
+        if (!getDashboardCache(claveCotizaciones)) void cargarCotizaciones().then((d) => { if (!getDashboardCache(claveCotizaciones)) setDashboardCache(claveCotizaciones, d); }).catch(() => {});
+      }
+    });
+  }, [user?.id, pro?.id]);
   const [profile, setProfile] = useState<DashboardProfileData | null>(null);
   const [loading, setLoading] = useState(true);
   // Con caché caliente el panel se pinta ANTES del primer cuadro, sin pasar

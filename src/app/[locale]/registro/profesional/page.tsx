@@ -1,5 +1,7 @@
 "use client";
 
+import { pareceFijoDeCostaRica } from "@/lib/telefono-movil";
+
 import { useState, useEffect, useRef, useMemo } from "react";
 import { prefijoDeIdioma, rutaConIdioma } from "@/lib/prefijo-de-idioma";
 import { useTranslations, useLocale } from "next-intl";
@@ -799,6 +801,10 @@ export default function RegisterProfessionalPage() {
     // The WhatsApp number must match the exact digit length of its country.
     if (!isPhoneComplete(data.whatsapp)) {
       form2.setError("whatsapp", { message: t("errPhoneIncomplete") });
+      return;
+    }
+    if (pareceFijoDeCostaRica(data.whatsapp)) {
+      form2.setError("whatsapp", { message: t("errPhoneFijo") });
       return;
     }
     // SIEMPRE hace falta al menos una zona, aunque cubra todo el país.

@@ -131,7 +131,7 @@ async function fetchClientBookings(): Promise<Booking[]> {
   return bookings ?? [];
 }
 
-async function fetchClientProjects(): Promise<Project[]> {
+export async function fetchClientProjects(): Promise<Project[]> {
   const res = await fetch("/api/projects?role=client", { cache: "no-store" });
   const { projects } = await res.json();
   return projects ?? [];

@@ -936,7 +936,8 @@
       "rateHelp": "It shows on your card as «₡X /hour» and it is the first thing a client looks at. Leave it blank and it says «Ask for price», and many people leave without writing. You can change it later.",
       "ratePlaceholder": "12 000",
       "errWorkplaceSiempre": "Your workplace is missing: choose the province and the canton, or the whole province.",
-      "errWorkplacePais": "Besides the whole country, choose where you are based: province and canton, or the whole province."
+      "errWorkplacePais": "Besides the whole country, choose where you are based: province and canton, or the whole province.",
+      "errPhoneFijo": "That looks like a landline. Enter a mobile number with WhatsApp so clients can message you."
     },
     "client": {
       "title": "Create client account",
@@ -2424,7 +2425,8 @@
     "certAllRequired": "Fill in the name, institution and year (4 digits).",
     "allowCallLabel": "Allow contact by phone call",
     "allowEmailLabel": "Allow contact by email",
-    "allowCallDesc": "If you enable it, clients will see the “Call us” option to your number."
+    "allowCallDesc": "If you enable it, clients will see the “Call us” option to your number.",
+    "whatsappFijo": "That looks like a landline. Enter a mobile number with WhatsApp so clients can message you."
   },
   "verificationPanel": {
     "appealMinError": "Tell us what you corrected (at least 10 characters).",
