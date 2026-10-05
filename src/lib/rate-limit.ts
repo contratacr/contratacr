@@ -33,6 +33,11 @@ export function rateLimit(key: string, limit: number, windowMs: number): { ok: b
 
 /** Best-effort client IP from proxy headers (Vercel/Cloudflare set x-forwarded-for). */
 export function clientIp(req: Request): string {
+  // En Cloudflare la IP real viene en cf-connecting-ip y no se puede falsear.
+  // El primer valor de x-forwarded-for lo escribe quien hace la petición: con
+  // él solo, bastaba inventarlo para saltarse cualquier límite.
+  const cf = req.headers.get("cf-connecting-ip");
+  if (cf) return cf.trim();
   const xff = req.headers.get("x-forwarded-for");
   if (xff) return xff.split(",")[0]!.trim();
   return req.headers.get("x-real-ip") || "unknown";

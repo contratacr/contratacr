@@ -35,7 +35,7 @@ const reviewed = new Map([
   ["src/lib/account-cache.ts", { count: 1, reason: "account-scoped removal of reviewed browser caches during disable/deletion" }],
   ["src/app/[locale]/profesionales/[slug]/profile-client.tsx", { count: 2, reason: "sessionStorage: a dónde vuelve la flecha de la ficha (regreso calculado); no son datos de la cuenta" }],
   ["src/lib/borrador-sin-sesion.ts", { count: 6, reason: "borrador de proyecto/empleo/promoción escrito sin sesión (texto en localStorage, fotos en IndexedDB), vence a las 48 h y se borra al publicar; lo publicado vive en Supabase" }],
-  ["src/lib/volver-por-historial.ts", { count: 6, reason: "sessionStorage de navegación: altura de cada lista y ruta anterior para volver; no son datos de la cuenta" }],
+  ["src/lib/volver-por-historial.ts", { count: 8, reason: "sessionStorage de navegación: altura de cada lista y ruta anterior para volver; no son datos de la cuenta" }],
   ["src/app/[locale]/error.tsx", { count: 2, reason: "marca de una sola recarga cuando la pantalla pide un archivo de la versión anterior; nada de la cuenta" }],
   ["src/lib/app-data-invalidation.ts", { count: 2, reason: "cross-tab cache invalidation timestamp/domain signal; no account-owned records" }],
   ["src/components/notifications/notification-live-toast.tsx", { count: 5, reason: "notification presentation state; records persist in backend; plus a per-app-open flag so the entry summary is checked once" }],

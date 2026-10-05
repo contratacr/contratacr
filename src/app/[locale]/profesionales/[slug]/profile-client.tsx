@@ -17,6 +17,7 @@ import { VerifiedSeal } from "@/components/ui/verified-seal";
 import { InstagramIcon, FacebookIcon, TikTokIcon, LinkedInIcon } from "@/components/icons/social-icons";
 import { buildSocialUrl, buildWebsiteUrl } from "@/lib/social";
 import { Link, useRouter } from "@/i18n/navigation";
+import { rutaAnterior } from "@/lib/volver-por-historial";
 import { Navbar } from "@/components/layout/navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -134,6 +135,13 @@ function initialProfileReturnHref() {
   if (explicit) { const a = safeProfileReturnHref(explicit); guardarRegreso(a); return a; }
   const guardado = regresoGuardado();
   if (guardado) return guardado;
+  // La pantalla anterior DENTRO de la app (portada, una lista…). El referrer
+  // del navegador no cambia al navegar dentro del app: desde la portada la
+  // flecha decía «Volver a resultados» y llevaba a la búsqueda.
+  const anterior = typeof window !== "undefined" ? rutaAnterior() : null;
+  if (anterior && (!anterior.includes("/profesionales/") || esRutaDeBusqueda(anterior.split("?")[0], esServicioDelCatalogo))) {
+    return safeProfileReturnHref(anterior);
+  }
   if (typeof document !== "undefined" && document.referrer) {
     try {
       const referrer = new URL(document.referrer);

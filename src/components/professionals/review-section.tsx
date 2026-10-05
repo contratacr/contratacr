@@ -42,6 +42,19 @@ function localizedReviewJobTitle(title: string | null | undefined, locale: strin
   return category ? getCategoryLabel(category.id, locale) : title;
 }
 
+/**
+ * Nombre y primer apellido de quien reseña («Isaac Alberto Sanchez Monge» →
+ * «Isaac Sanchez»): cabe en una línea y cuida su privacidad, como en Google.
+ * Con cuatro palabras o más, el primer apellido es la penúltima; con tres, se
+ * dejan las dos primeras.
+ */
+function nombreCorto(nombre: string): string {
+  const partes = (nombre ?? "").trim().split(/\s+/).filter(Boolean);
+  if (partes.length >= 4) return `${partes[0]} ${partes[partes.length - 2]}`;
+  if (partes.length === 3) return `${partes[0]} ${partes[1]}`;
+  return partes.join(" ");
+}
+
 export function ReviewSection({
   professionalId,
   professionalName,
@@ -134,7 +147,7 @@ export function ReviewSection({
 
       <div className="flex flex-col gap-5">
         {reviews.map((review) => {
-          const clientName = review.clientName === "Cliente" && locale === "en" ? "Client" : review.clientName;
+          const clientName = nombreCorto(review.clientName === "Cliente" && locale === "en" ? "Client" : review.clientName);
           const jobTitle = localizedReviewJobTitle(review.jobTitle, locale);
           return (
             <div key={review.id} className="flex gap-3">
@@ -143,12 +156,14 @@ export function ReviewSection({
                 <AvatarFallback>{getInitials(clientName)}</AvatarFallback>
               </Avatar>
               <div className="flex-1">
-                <div className="flex items-center justify-between gap-2">
-                  <span className="text-sm font-medium text-[#162543]">{clientName}</span>
+                {/* Nombre en UNA línea y la fecha junto a las estrellas: la fecha en
+                    su propia columna apretaba el nombre y lo partía en dos. */}
+                <span className="block truncate text-sm font-medium text-[#162543]">{clientName}</span>
+                <div className="my-1 flex items-center gap-2">
+                  <StarRating rating={review.rating} size="sm" />
                   {/* "editada" is intentionally NOT shown publicly (item 4). */}
-                  <span className="text-xs text-[#68778d]">{formatRelativeTime(review.createdAt, locale)}</span>
+                  <span className="text-xs text-[#68778d]">· {formatRelativeTime(review.createdAt, locale)}</span>
                 </div>
-                <StarRating rating={review.rating} size="sm" className="my-1" />
                 {jobTitle && (
                   <p className="text-xs text-[#68778d] mt-0.5">{t("reviewOf", { title: jobTitle })}</p>
                 )}

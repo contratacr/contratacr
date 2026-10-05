@@ -1,5 +1,7 @@
 "use client";
 
+import { flushSync } from "react-dom";
+
 import { rutaEmpleo } from "@/lib/marketplace-url";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
@@ -437,7 +439,9 @@ export function JobPostForm({ professionalId, backHref = "/empleos", initialJob 
       const { employer_id: _sinDueño, id: _sinId, status: _sinEstado, ...borrador } = payload;
       void _sinDueño; void _sinId; void _sinEstado;
       await guardarBorrador("empleo", borrador);
-      setConCambios(false);
+      // El guardián de «cambios sin guardar» se apaga ANTES de salir: con un
+      // setState normal seguía puesto y el navegador frenaba la salida.
+      flushSync(() => setConCambios(false));
       window.location.assign(rutaParaEntrar(prefijoDeIdioma(locale), "/empleos/publicar"));
       return;
     }

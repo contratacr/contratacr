@@ -625,7 +625,11 @@ export default function RegisterProfessionalPage() {
       if (!cancelled && data) {
         setRedirecting(true);
         writeStoredMode("offer");
-        router.replace(destinoTrasCrear().replace(/^\/(es|en)/, ""));
+        // Navegación COMPLETA, no del enrutador: el destino (/cotizar,
+        // /empleos/publicar…) acababa de mandar aquí a esta cuenta cuando aún no
+        // era profesional, y el enrutador reusaba esa respuesta guardada: la
+        // página la devolvía al registro y el registro a la página, en bucle.
+        window.location.replace(destinoTrasCrear());
       }
     })();
     return () => { cancelled = true; };
@@ -810,7 +814,8 @@ export default function RegisterProfessionalPage() {
     // atienda por videoconsulta. La cobertura nacional es un AÑADIDO a esa
     // base, no un sustituto.
     if (!workplaces.some((w) => w.level !== "country")) {
-      setLocationError(t("errWorkplaceSiempre"));
+      // Con «todo el país» encendido, lo que falta es la base: se dice así.
+      setLocationError(t(workplaces.some((w) => w.level === "country") ? "errWorkplacePais" : "errWorkplaceSiempre"));
       return;
     }
     setLocationError(null);

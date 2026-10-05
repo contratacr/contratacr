@@ -1,5 +1,7 @@
 "use client";
 
+import { flushSync } from "react-dom";
+
 import { rutaPromocion } from "@/lib/marketplace-url";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
@@ -398,7 +400,9 @@ export function OfferForm({ professionalId, serviceOptions, backHref = "/promoci
         quantity_available: quantityAvailable,
         contact_whatsapp: whatsapp.trim() || null,
       }, files);
-      setConCambios(false);
+      // El guardián de «cambios sin guardar» se apaga ANTES de salir: con un
+      // setState normal seguía puesto y el navegador frenaba la salida.
+      flushSync(() => setConCambios(false));
       window.location.assign(rutaParaEntrar(prefijoDeIdioma(locale), "/promociones/publicar"));
       return;
     }
