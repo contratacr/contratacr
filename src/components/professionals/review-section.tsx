@@ -10,6 +10,7 @@ import { PanelEmptyState } from "@/components/ui/content-loading";
 import { StarRating } from "@/components/ui/star-rating";
 import { LeaveReviewModal } from "@/components/professionals/leave-review-modal";
 import { getInitials, formatRelativeTime } from "@/lib/utils";
+import { nombreCorto } from "@/lib/nombre-corto";
 import { ALL_CATEGORIES, getCategoryLabel } from "@/lib/data/categories";
 import type { Review } from "@/lib/queries/professionals";
 
@@ -40,19 +41,6 @@ function localizedReviewJobTitle(title: string | null | undefined, locale: strin
     return normalizedTitle === esLabel || normalizedTitle === enLabel || normalizedTitle === item.id;
   });
   return category ? getCategoryLabel(category.id, locale) : title;
-}
-
-/**
- * Nombre y primer apellido de quien reseña («Isaac Alberto Sanchez Monge» →
- * «Isaac Sanchez»): cabe en una línea y cuida su privacidad, como en Google.
- * Con cuatro palabras o más, el primer apellido es la penúltima; con tres, se
- * dejan las dos primeras.
- */
-function nombreCorto(nombre: string): string {
-  const partes = (nombre ?? "").trim().split(/\s+/).filter(Boolean);
-  if (partes.length >= 4) return `${partes[0]} ${partes[partes.length - 2]}`;
-  if (partes.length === 3) return `${partes[0]} ${partes[1]}`;
-  return partes.join(" ");
 }
 
 export function ReviewSection({

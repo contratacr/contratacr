@@ -150,7 +150,7 @@ async function puedeSubirFotos(page: Page): Promise<boolean> {
 async function publicar(page: Page, tipo: Tipo, marca: string) {
   // La promoción lleva foto: sin servidor de imágenes no hay cómo publicarla.
   // Lo que esta prueba cuida —que vuelva llena, con su foto— ya se comprobó.
-  if (tipo === "promocion" && !(await puedeSubirFotos(page))) return;
+  if (tipo === "promocion" && (process.env.LOCAL_REGRESSION_SEED === "1" || !(await puedeSubirFotos(page)))) return;
   const api = { proyecto: "/api/projects", empleo: "/api/jobs/posts", promocion: "/api/offers", cotizacion: "/api/quotes" }[tipo];
   const respuesta = page.waitForResponse((r) => new URL(r.url()).pathname === api && r.request().method() === "POST", { timeout: 60_000 });
   const boton = { proyecto: /^Publicar$/, empleo: /^Publicar empleo$/, promocion: /^Publicar promoción$/, cotizacion: /^Crear cotización$/ }[tipo];

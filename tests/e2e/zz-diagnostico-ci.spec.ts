@@ -42,3 +42,15 @@ test("diagnóstico: buscador de la portada en el teléfono", async ({ page }) =>
   await page.waitForTimeout(1500);
   console.log("[diag-buscador] tras Enter 2:", await foco());
 });
+
+test("diagnóstico: qué se mueve en /profesionales de computadora", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.addInitScript(() => {
+    const w = window as unknown as { __shifts: unknown[] }; w.__shifts = [];
+    new PerformanceObserver((l) => { for (const e of l.getEntries() as unknown as Array<{ value: number; hadRecentInput: boolean; startTime: number; sources?: Array<{ node?: Element; previousRect: DOMRect; currentRect: DOMRect }> }>) { if (e.hadRecentInput) continue; for (const s of e.sources || []) { const n = s.node; const prev = n?.previousElementSibling; w.__shifts.push({ v: +e.value.toFixed(4), t: Math.round(e.startTime), tag: n?.tagName, cls: String(n?.className || "").slice(0, 70), de: Math.round(s.previousRect.top), a: Math.round(s.currentRect.top), hermanoAnterior: prev ? `${prev.tagName}.${String(prev.className).slice(0, 60)} h=${Math.round(prev.getBoundingClientRect().height)} ${prev.textContent?.slice(0, 80)}` : "(ninguno)", padre: `${n?.parentElement?.tagName}.${String(n?.parentElement?.className || "").slice(0, 60)} hijos=${n?.parentElement?.children.length}` }); } } }).observe({ type: "layout-shift", buffered: true });
+  });
+  await page.goto("/profesionales"); await page.waitForTimeout(1200); await page.reload(); await page.waitForTimeout(4500);
+  const hijos = await page.evaluate(() => [...document.querySelectorAll(".ccr-search-results-list > *")].map((c) => `${c.tagName}.${String(c.className).slice(0, 40)} h=${Math.round(c.getBoundingClientRect().height)} :: ${c.textContent?.replace(/\s+/g, " ").slice(0, 60)}`));
+  console.log("[diag-buscar] hijos de la lista:", JSON.stringify(hijos));
+  console.log("[diag-buscar] movimientos:", JSON.stringify(await page.evaluate(() => (window as unknown as { __shifts: unknown[] }).__shifts)));
+});

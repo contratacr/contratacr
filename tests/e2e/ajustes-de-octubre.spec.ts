@@ -1,5 +1,6 @@
 import { expect, test } from "playwright/test";
 import { gotoOK, loginAs, waitForInteractivePage } from "./helpers";
+import { nombreCorto } from "../../src/lib/nombre-corto";
 import { canRunSeededRegression, E2E_USERS, ensureRegressionSeed, regressionAdminClient } from "./seed";
 import { cleanupDisposableAccount, createDisposableAccount, type DisposableAccount } from "./disposable-account";
 
@@ -113,33 +114,25 @@ test.describe("reseñas, panel y administración", () => {
   test.skip(!canRunSeededRegression(), "Necesita la base de regresión.");
 
   test("una reseña muestra nombre corto en una línea y la fecha junto a las estrellas", async ({ page }) => {
+    // La regla del nombre, con los casos que importan.
+    expect(nombreCorto("Isaac Alberto Sanchez Monge")).toBe("Isaac Sanchez");
+    expect(nombreCorto("Ana María Pérez Solano Jiménez")).toBe("Ana Solano");
+    expect(nombreCorto("Carlos Rojas Mora")).toBe("Carlos Rojas");
+    expect(nombreCorto("Andrea Vargas")).toBe("Andrea Vargas");
+    expect(nombreCorto("  Cliente ")).toBe("Cliente");
+    // Y en la ficha, con las reseñas sembradas: nombre en una línea y la fecha
+    // en la misma fila de las estrellas. (Una reseña insertada al vuelo no sirve:
+    // la ficha se guarda en caché cinco minutos.)
     await ensureRegressionSeed();
-    const admin = regressionAdminClient();
-    const { data: pro } = await admin.from("professionals").select("id").eq("slug", E2E_USERS.professional.slug).maybeSingle();
-    const proId = (pro as { id?: string } | null)?.id;
-    expect(proId).toBeTruthy();
-    // Una cuenta con nombre de cuatro palabras: nombre, segundo nombre y dos apellidos.
-    const cliente = await createDisposableAccount({ prefix: "resena-corta" });
-    const comentario = `Reseña de nombre corto ${Date.now()}`;
-    try {
-      await admin.from("profiles").update({ full_name: "Ana María Pérez Solano" }).eq("id", cliente.id);
-      const { error } = await admin.from("reviews").insert({ professional_id: proId, client_id: cliente.id, rating: 5, comment: comentario });
-      expect(error, error?.message).toBeNull();
-      await page.setViewportSize({ width: 390, height: 844 });
-      await gotoOK(page, `/profesionales/${E2E_USERS.professional.slug}?tab=resenas`);
-      const texto = page.getByText(comentario);
-      await expect(texto).toBeVisible({ timeout: 30_000 });
-      const tarjeta = texto.locator("xpath=..");
-      const nombre = tarjeta.getByText("Ana Pérez", { exact: true });
-      await expect(nombre).toBeVisible();
-      await expect(page.getByText("Ana María Pérez Solano")).toHaveCount(0);
-      // La fecha va en la misma fila de las estrellas, con su punto.
-      await expect(tarjeta.getByText(/^· /)).toBeVisible();
-      expect(await nombre.evaluate((el) => el.getClientRects().length === 1 && el.scrollWidth <= el.clientWidth + 1), "el nombre cabe en una línea").toBe(true);
-    } finally {
-      await admin.from("reviews").delete().eq("comment", comentario);
-      await cleanupDisposableAccount(cliente).catch(() => undefined);
-    }
+    await page.setViewportSize({ width: 390, height: 844 });
+    await gotoOK(page, `/profesionales/${E2E_USERS.professional.slug}?tab=resenas`);
+    const fecha = page.getByText(/^· /).first();
+    await expect(fecha).toBeVisible({ timeout: 30_000 });
+    const fila = fecha.locator("xpath=..");
+    expect(await fila.evaluate((el) => el.querySelectorAll("svg").length), "las estrellas van en la misma fila que la fecha").toBeGreaterThanOrEqual(5);
+    const nombre = fila.locator("xpath=preceding-sibling::span[1]");
+    await expect(nombre).toBeVisible();
+    expect(await nombre.evaluate((el) => el.getClientRects().length === 1 && el.scrollWidth <= el.clientWidth + 1), "el nombre cabe en una línea").toBe(true);
   });
 
   test("el panel precarga Mis proyectos y Cotizaciones: entrar no muestra esqueleto", async ({ page }) => {
