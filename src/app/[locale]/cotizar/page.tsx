@@ -9,6 +9,12 @@ import { CotizarSinSesion } from "@/components/quotes/cotizar-sin-sesion";
 
 export const dynamic = "force-dynamic";
 
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
+  const en = locale === "en";
+  return { title: en ? "Make a quote · ContrataCR" : "Hacer una cotización · ContrataCR", description: en ? "Build a free quote, ready to send on WhatsApp." : "Arma una cotización gratis, lista para mandar por WhatsApp.", openGraph: {}, twitter: { card: "summary_large_image" as const } };
+}
+
 /**
  * HACER UNA COTIZACIÓN SIN CUENTA (4-oct-2026). Se llena completa aquí; al
  * enviarla se guarda y se pide entrar o registrarse como profesional. Con

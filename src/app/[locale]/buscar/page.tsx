@@ -1,4 +1,4 @@
-import { imagenSocial } from "@/lib/seo/imagen-social";
+import { imagenDeSeccion } from "@/lib/seo/imagen-social";
 import { prefijoDeIdioma } from "@/lib/prefijo-de-idioma";
 import type { Metadata } from "next";
 import { Suspense } from "react";
@@ -25,6 +25,7 @@ import { redactContactEnListado } from "@/lib/contact/redact";
 import { safeGetUser } from "@/lib/supabase/get-user";
 import { recordServerInteraction } from "@/lib/analytics/server-events";
 import { rutaDeBusqueda } from "@/lib/buscar-url";
+import { perfilesBloqueadosPor } from "@/lib/queries/bloqueos";
 
 interface SearchPageProps {
   searchParams: Promise<{
@@ -122,12 +123,18 @@ export async function generateMetadata({ searchParams }: { searchParams: Promise
   const lugarEscrito = (params.ubicacion ?? "").trim();
   const place = canton && provincia ? `${canton.name}, ${provincia.name}` : provincia?.name ?? (lugarEscrito || "Costa Rica");
   if (!que) {
-    return indexable ? {} : { robots: { index: false, follow: true } };
+    // Sin servicio: la búsqueda general, con su imagen (sin ella Next ponía
+    // /opengraph-image a secas, que no era una imagen).
+    const tg = await getTranslations("search");
+    // La tarjeta propia de la sección: esta página se sirve por una
+    // reescritura (/profesionales → /buscar) y Next no le enchufa el archivo.
+    const general = { title: tg("metaTitleGeneral"), description: tg("metaDescGeneral"), ...imagenDeSeccion(locale, "/profesionales") };
+    return indexable ? general : { ...general, robots: { index: false, follow: true } };
   }
   const t = await getTranslations("search");
   const title = t("metaTitle", { category: que, place });
   const description = t("metaDesc", { category: que, place });
-  const social = imagenSocial(locale);
+  const social = imagenDeSeccion(locale, "/profesionales");
   const compartir = { title, description, openGraph: { title, description, ...social.openGraph }, twitter: { title, description, ...social.twitter } };
   if (!indexable) return { ...compartir, robots: { index: false, follow: true } };
   // El canónico tiene que apuntar a la dirección REAL de la página del oficio:
@@ -206,7 +213,9 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   const allResults = resolvedSearch.ordered;
   const viewerProfileId = viewer?.id;
 
-  const orderedResults = allResults;
+  // Lo de un usuario bloqueado no se muestra (6-oct-2026, regla 1.2 de Apple).
+  const bloqueadosPorMi = await perfilesBloqueadosPor(viewerProfileId);
+  const orderedResults = bloqueadosPorMi.size ? allResults.filter((pro) => !bloqueadosPorMi.has(String(pro.profileId ?? ""))) : allResults;
 
   const videoMode = videoOnly;
 

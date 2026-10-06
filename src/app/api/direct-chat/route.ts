@@ -688,6 +688,10 @@ export async function PATCH(req: Request) {
         .eq("id", conversationId));
     }
     if (blockError) return NextResponse.json({ error: blockError.message }, { status: 500 });
+    // El bloqueo desde el chat es el MISMO bloqueo que desde la ficha (6-oct-2026):
+    // la otra persona deja de verse también en búsqueda y tableros.
+    const otro = conversation.client_id === user.id ? conversation.professional_profile_id : conversation.client_id;
+    if (otro) await createAdminClient().from("user_blocks").upsert({ blocker_id: user.id, blocked_id: otro, reason: reportReason }, { onConflict: "blocker_id,blocked_id" });
     // Aquí salía un correo a soporte para que un humano viera el reporte dentro
     // de la ventana de 24 horas que promete la pantalla. Se quitó porque el
     // panel ya lo muestra en «Reportes abiertos», dentro de «Necesitan

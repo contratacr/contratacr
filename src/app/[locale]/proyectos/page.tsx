@@ -3,6 +3,7 @@ import { cargarProyectosPublicos } from "@/lib/queries/proyectos-publicos";
 import { safeGetUser } from "@/lib/supabase/get-user";
 import { idsDeMisProyectos } from "@/lib/queries/proyectos-publicos";
 import { createClient, hasSupabaseServerConfig } from "@/lib/supabase/server";
+import { perfilesBloqueadosPor } from "@/lib/queries/bloqueos";
 
 export const dynamic = "force-dynamic";
 
@@ -11,7 +12,9 @@ export default async function ProyectosPage() {
   try {
     const supabase = await createClient();
     const user = await safeGetUser(supabase);
-    const [proyectos, mios] = await Promise.all([cargarProyectosPublicos(), idsDeMisProyectos(supabase, user?.id)]);
+    const [todos, mios, bloqueados] = await Promise.all([cargarProyectosPublicos(), idsDeMisProyectos(supabase, user?.id), perfilesBloqueadosPor(user?.id)]);
+    // Los proyectos de alguien a quien bloqueé no se me muestran.
+    const proyectos = todos.filter((p) => !bloqueados.has(String((p as { client_id?: string | null }).client_id ?? "")));
     return <ProjectsBoard proyectos={proyectos} currentUserId={user?.id ?? null} misProyectos={mios} />;
   } catch (error) {
     console.error("Could not initialize projects board", error);

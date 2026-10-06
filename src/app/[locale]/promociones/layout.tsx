@@ -11,6 +11,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   const en = locale === "en";
   return metadatosDePantalla({
     locale,
+    tarjetaPropia: true,
     ruta: "/promociones",
     titulo: en ? 'Promotions from professionals | ContrataCR' : 'Promociones de profesionales | ContrataCR',
     descripcion: en ? 'Discounts and promotions published by verified professionals in Costa Rica. Use them before they expire.' : 'Descuentos y promociones publicadas por profesionales verificados en Costa Rica. Aprovéchalas antes de que venzan.',

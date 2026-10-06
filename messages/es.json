@@ -317,7 +317,9 @@
       "texto": "Publica lo que necesitas y los profesionales te contactan por WhatsApp.",
       "boton": "Publicar lo que necesito",
       "pie": "Gratis · Tu número no se publica"
-    }
+    },
+    "metaTitleGeneral": "Profesionales verificados en Costa Rica",
+    "metaDescGeneral": "Busca por servicio y lugar y contacta por WhatsApp."
   },
   "hero": {
     "categoryPlaceholder": "¿Qué servicio necesitas?",
@@ -3919,7 +3921,7 @@
     "accion": "Buscar profesionales"
   },
   "terminosCasilla": {
-    "texto": "Acepto los <terms>Términos de uso</terms> y la <privacy>Política de Privacidad</privacy>. Entiendo que ContrataCR no tolera contenido ofensivo ni usuarios abusivos."
+    "texto": "Al registrarte aceptas los <terms>Términos de uso</terms> y la <privacy>Política de privacidad</privacy> de ContrataCR."
   },
   "bajaCorreos": {
     "listoTitulo": "Listo, no te mandamos más novedades",
@@ -4437,7 +4439,37 @@
     "proyecto": "Proyecto",
     "promocion": "Promoción",
     "empleo": "Empleo",
-    "proyectoSinTitulo": "Un cliente busca profesional"
+    "proyectoSinTitulo": "Un cliente busca profesional",
+    "seccionEmpleos": {
+      "etiqueta": "Empleos",
+      "titulo": "Vacantes en Costa Rica",
+      "detalle": "Abre la vacante y escríbele por WhatsApp a quien la publicó."
+    },
+    "seccionPromociones": {
+      "etiqueta": "Promociones",
+      "titulo": "Promociones de profesionales",
+      "detalle": "Precios especiales de profesionales verificados."
+    },
+    "seccionProyectos": {
+      "etiqueta": "Proyectos",
+      "titulo": "Trabajos que la gente necesita",
+      "detalle": "Si es lo tuyo, escríbele por WhatsApp a quien lo pide."
+    },
+    "seccionProfesionales": {
+      "etiqueta": "Profesionales",
+      "titulo": "Profesionales verificados en Costa Rica",
+      "detalle": "Busca por servicio y lugar y contacta por WhatsApp."
+    },
+    "seccionPublicar": {
+      "etiqueta": "Pedir un servicio",
+      "titulo": "Publica lo que necesitas",
+      "detalle": "Gratis. Los profesionales te contactan por WhatsApp."
+    },
+    "seccionCotizar": {
+      "etiqueta": "Cotizaciones",
+      "titulo": "Haz una cotización en minutos",
+      "detalle": "Gratis, lista para mandar por WhatsApp."
+    }
   },
   "accountPrivacy": {
     "readReceipts": "Confirmaciones de lectura",
@@ -4448,5 +4480,24 @@
     "empleo": "Tu empleo quedó guardado. Revísalo y toca Publicar.",
     "promocion": "Tu promoción quedó guardada. Revísala y toca Publicar.",
     "cotizacion": "Tu cotización quedó guardada. Revísala y toca Enviar."
+  },
+  "bloqueo": {
+    "menu": "Bloquear usuario",
+    "menuPublicacion": "Bloquear a quien publicó",
+    "titulo": "¿Bloquear a {nombre}?",
+    "texto": "Dejarás de ver su perfil y sus publicaciones, y no podrán escribirse. ContrataCR revisa cada bloqueo en menos de 24 horas.",
+    "motivo": "¿Qué pasó? (opcional)",
+    "boton": "Bloquear",
+    "cancelar": "Cancelar",
+    "listo": "Usuario bloqueado",
+    "listoTexto": "Ya no verás su contenido. Puedes desbloquearlo desde Cuenta y seguridad.",
+    "error": "No se pudo bloquear. Intenta de nuevo.",
+    "entrar": "Inicia sesión para bloquear a un usuario.",
+    "pantallaTitulo": "Bloqueaste a este usuario",
+    "pantallaTexto": "No verás su perfil ni sus publicaciones. Puedes desbloquearlo desde Cuenta y seguridad.",
+    "cuentaTitulo": "Usuarios bloqueados",
+    "cuentaTexto": "No ves su perfil ni sus publicaciones, y no pueden escribirte.",
+    "cuentaVacio": "No has bloqueado a nadie.",
+    "desbloquear": "Desbloquear"
   }
 }

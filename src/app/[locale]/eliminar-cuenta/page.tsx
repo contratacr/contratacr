@@ -3,10 +3,11 @@ import { LandingNavbar } from "@/components/landing/landing-navbar";
 import { Link } from "@/i18n/navigation";
 import { safeGetUser } from "@/lib/supabase/get-user";
 import { createClient } from "@/lib/supabase/server";
+import { imagenSocial } from "@/lib/seo/imagen-social";
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
-  return locale === "en"
+  const base = locale === "en"
     ? {
         title: "Delete account - ContrataCR",
         description: "Delete or disable your ContrataCR account from Account and security.",
@@ -15,6 +16,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
         title: "Eliminar cuenta - ContrataCR",
         description: "Elimina o deshabilita tu cuenta de ContrataCR desde Cuenta y seguridad.",
       };
+  return { ...base, ...imagenSocial(locale) };
 }
 
 export default async function DeleteAccountPage({

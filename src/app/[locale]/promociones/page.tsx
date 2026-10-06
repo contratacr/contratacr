@@ -7,6 +7,7 @@ import { getLocale } from "next-intl/server";
 import { getAllCategories, getCategoryLabel } from "@/lib/data/categories";
 import { crTodayISO } from "@/lib/time-cr";
 import { contactFlagsFor, profesionalesBloqueados } from "@/lib/contact-flags";
+import { profesionalesQueBloqueo } from "@/lib/queries/bloqueos";
 
 export const dynamic = "force-dynamic";
 
@@ -50,10 +51,10 @@ async function OffersPageContent(serviceOptions: Array<{ value: string; label: s
   }
 
   const idsProfesionales = ((data ?? []) as Array<Record<string, unknown>>).map((row) => String(row.professional_id ?? ""));
-  const [banderas, bloqueados] = await Promise.all([contactFlagsFor(idsProfesionales), profesionalesBloqueados(idsProfesionales)]);
+  const [banderas, bloqueados, bloqueadosPorMi] = await Promise.all([contactFlagsFor(idsProfesionales), profesionalesBloqueados(idsProfesionales), profesionalesQueBloqueo(user?.id, idsProfesionales)]);
 
   const offers = ((data ?? []) as Array<Record<string, unknown>>)
-    .filter((row) => !bloqueados.has(String(row.professional_id ?? "")))
+    .filter((row) => !bloqueados.has(String(row.professional_id ?? "")) && !bloqueadosPorMi.has(String(row.professional_id ?? "")))
     .map((row) => {
     const professional = row.professionals as { slug?: string; business_name?: string; profiles?: { full_name?: string } | null } | null;
     return {

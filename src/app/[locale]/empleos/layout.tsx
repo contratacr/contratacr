@@ -11,8 +11,9 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   const en = locale === "en";
   return metadatosDePantalla({
     locale,
+    tarjetaPropia: true,
     ruta: "/empleos",
     titulo: en ? 'Jobs and vacancies | ContrataCR' : 'Empleos y vacantes | ContrataCR',
-    descripcion: en ? 'Openings posted by professionals and companies in Costa Rica. Open the posting and message whoever published it on WhatsApp.' : 'Vacantes publicadas por profesionales y empresas de Costa Rica. Postúlate en línea con tu currículum.',
+    descripcion: en ? 'Openings posted by professionals and companies in Costa Rica. Open the posting and message whoever published it on WhatsApp.' : 'Vacantes publicadas por profesionales y empresas de Costa Rica. Abre la vacante y escríbele por WhatsApp a quien la publicó.',
   });
 }

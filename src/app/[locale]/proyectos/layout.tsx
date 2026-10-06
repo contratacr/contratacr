@@ -11,6 +11,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   const en = locale === "en";
   return metadatosDePantalla({
     locale,
+    tarjetaPropia: true,
     ruta: "/proyectos",
     titulo: en ? "Projects clients need | ContrataCR" : "Proyectos que la gente necesita | ContrataCR",
     descripcion: en

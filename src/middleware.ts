@@ -126,6 +126,16 @@ export async function middleware(request: NextRequest) {
   if (/\/opengraph-image\/?$/i.test(pathname) && /^\/es\//i.test(pathname)) {
     return conCabecerasDeSeguridad(NextResponse.next());
   }
+  // La imagen general SIN idioma (6-oct-2026): nueve páginas con metadatos
+  // propios (términos, privacidad, verificación, cotizar…) declaraban
+  // /opengraph-image a secas, que se leía como el perfil de un profesional
+  // llamado así y devolvía una página: Facebook y WhatsApp no mostraban nada.
+  // Se sirve la imagen en español, que es la misma.
+  if (/^\/opengraph-image\/?$/i.test(pathname)) {
+    const destino = request.nextUrl.clone();
+    destino.pathname = "/es/opengraph-image";
+    return conCabecerasDeSeguridad(reescribirConIdioma(request, destino));
+  }
   const conEs = /^\/es(?=\/|$)/i.exec(pathname);
   if (conEs) {
     const destino = request.nextUrl.clone();

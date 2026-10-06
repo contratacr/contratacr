@@ -3,12 +3,13 @@
 import { useState } from "react";
 import { prefijoDeIdioma } from "@/lib/prefijo-de-idioma";
 import { useLocale, useTranslations } from "next-intl";
-import { Bookmark, Flag, Link2, Share2 } from "lucide-react";
+import { Bookmark, Ban, Flag, Link2, Share2 } from "lucide-react";
 import { MenuFicha } from "@/components/ui/menu-ficha";
 import { CaraCompartir, useCompartir } from "@/components/ui/boton-compartir";
 import { useGuardado } from "@/components/saved/save-item-button";
 import { ReportProfileModal } from "@/components/professionals/report-profile-modal";
 import { tramoFicha } from "@/lib/marketplace-url";
+import { BloquearUsuarioModal } from "@/components/moderation/bloquear-usuario-modal";
 
 /**
  * El "..." de la ficha de un proyecto: guardar y compartir. Las dos son
@@ -40,8 +41,10 @@ export function MenuProyecto({
 }) {
   const locale = useLocale();
   const t = useTranslations("menuFicha");
+  const tBloqueo = useTranslations("bloqueo");
   const { avisoNodo, compartir } = useCompartir();
   const [reportando, setReportando] = useState(false);
+  const [bloqueando, setBloqueando] = useState(false);
   const guardado = useGuardado({
     itemType: "project",
     itemId: proyectoId,
@@ -79,6 +82,7 @@ export function MenuProyecto({
             onSelect: abrirCompartir,
           },
           ...(esPropio ? [] : [{ id: "reportar", icono: <Flag className="h-4 w-4" />, texto: t("reportProject"), peligro: true, onSelect: () => setReportando(true) }]),
+          ...(esPropio ? [] : [{ id: "bloquear", icono: <Ban className="h-4 w-4" />, texto: tBloqueo("menuPublicacion"), peligro: true, onSelect: () => setBloqueando(true) }]),
         ];
 
   return (
@@ -99,6 +103,9 @@ export function MenuProyecto({
           titulo={t("reportProject")}
           onClose={() => setReportando(false)}
         />
+      )}
+      {bloqueando && (
+        <BloquearUsuarioModal nombre={clienteNombre || titulo} projectId={proyectoId} onClose={() => setBloqueando(false)} onBloqueado={() => window.location.assign(window.location.pathname.replace(/\/[^/]+$/, "") || "/")} />
       )}
     </>
   );

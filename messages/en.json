@@ -317,7 +317,9 @@
       "texto": "Post what you need and professionals will contact you on WhatsApp.",
       "boton": "Post what I need",
       "pie": "Free · Your number is never published"
-    }
+    },
+    "metaTitleGeneral": "Verified professionals in Costa Rica",
+    "metaDescGeneral": "Search by service and place and contact on WhatsApp."
   },
   "hero": {
     "categoryPlaceholder": "What service do you need?",
@@ -3919,7 +3921,7 @@
     "accion": "Find professionals"
   },
   "terminosCasilla": {
-    "texto": "I agree to the <terms>Terms of Use</terms> and the <privacy>Privacy Policy</privacy>. I understand that ContrataCR has zero tolerance for objectionable content or abusive users."
+    "texto": "By signing up you agree to ContrataCR's <terms>Terms of Use</terms> and <privacy>Privacy Policy</privacy>."
   },
   "bajaCorreos": {
     "listoTitulo": "Done, no more news emails",
@@ -4437,7 +4439,37 @@
     "proyecto": "Project",
     "promocion": "Promotion",
     "empleo": "Job",
-    "proyectoSinTitulo": "A client is looking for a professional"
+    "proyectoSinTitulo": "A client is looking for a professional",
+    "seccionEmpleos": {
+      "etiqueta": "Jobs",
+      "titulo": "Job openings in Costa Rica",
+      "detalle": "Open the posting and message whoever published it on WhatsApp."
+    },
+    "seccionPromociones": {
+      "etiqueta": "Promotions",
+      "titulo": "Deals from professionals",
+      "detalle": "Special prices from verified professionals."
+    },
+    "seccionProyectos": {
+      "etiqueta": "Projects",
+      "titulo": "Work people need done",
+      "detalle": "If it is your trade, message the requester on WhatsApp."
+    },
+    "seccionProfesionales": {
+      "etiqueta": "Professionals",
+      "titulo": "Verified professionals in Costa Rica",
+      "detalle": "Search by service and place and contact on WhatsApp."
+    },
+    "seccionPublicar": {
+      "etiqueta": "Request a service",
+      "titulo": "Post what you need",
+      "detalle": "Free. Professionals contact you on WhatsApp."
+    },
+    "seccionCotizar": {
+      "etiqueta": "Quotes",
+      "titulo": "Make a quote in minutes",
+      "detalle": "Free, ready to send on WhatsApp."
+    }
   },
   "accountPrivacy": {
     "readReceipts": "Read receipts",
@@ -4448,5 +4480,24 @@
     "empleo": "Your job post was saved. Review it and tap Publish.",
     "promocion": "Your promotion was saved. Review it and tap Publish.",
     "cotizacion": "Your quote was saved. Review it and tap Send."
+  },
+  "bloqueo": {
+    "menu": "Block user",
+    "menuPublicacion": "Block the publisher",
+    "titulo": "Block {nombre}?",
+    "texto": "You will stop seeing their profile and posts, and you will not be able to message each other. ContrataCR reviews every block within 24 hours.",
+    "motivo": "What happened? (optional)",
+    "boton": "Block",
+    "cancelar": "Cancel",
+    "listo": "User blocked",
+    "listoTexto": "You will no longer see their content. You can unblock them from Account and security.",
+    "error": "Could not block. Try again.",
+    "entrar": "Log in to block a user.",
+    "pantallaTitulo": "You blocked this user",
+    "pantallaTexto": "You will not see their profile or posts. You can unblock them from Account and security.",
+    "cuentaTitulo": "Blocked users",
+    "cuentaTexto": "You do not see their profile or posts, and they cannot message you.",
+    "cuentaVacio": "You have not blocked anyone.",
+    "desbloquear": "Unblock"
   }
 }

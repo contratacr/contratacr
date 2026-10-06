@@ -2,11 +2,12 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
-import { Bookmark, Flag, Link2, Share2 } from "lucide-react";
+import { Bookmark, Ban, Flag, Link2, Share2 } from "lucide-react";
 import { MenuFicha } from "@/components/ui/menu-ficha";
 import { CaraCompartir, useCompartir } from "@/components/ui/boton-compartir";
 import { ReportProfileModal } from "@/components/professionals/report-profile-modal";
 import { useGuardado } from "@/components/saved/save-item-button";
+import { BloquearUsuarioModal } from "@/components/moderation/bloquear-usuario-modal";
 
 /**
  * El "..." de la página de una oferta: compartir y reportar. Copiar el enlace
@@ -36,8 +37,10 @@ export function MenuOferta({
   guardar?: { itemId: string; snapshot: Record<string, unknown>; userId: string | null; loginRedirect: string };
 }) {
   const t = useTranslations("menuFicha");
+  const tBloqueo = useTranslations("bloqueo");
   const { avisoNodo, compartir } = useCompartir();
   const [reportando, setReportando] = useState(false);
+  const [bloqueando, setBloqueando] = useState(false);
   // Guardar vive DENTRO del «...», no al lado: es una acción sobre la ficha,
   // del mismo rango que compartir, y suelta en la barra le robaba sitio al
   // título. Abajo queda solo lo que contacta.
@@ -72,6 +75,7 @@ export function MenuOferta({
             onSelect: abrirCompartir,
           },
           ...(esPropia || !profesionalSlug ? [] : [{ id: "reportar", icono: <Flag className="h-4 w-4" />, texto: t("reportOffer"), peligro: true, onSelect: () => setReportando(true) }]),
+          ...(esPropia || !profesionalSlug ? [] : [{ id: "bloquear", icono: <Ban className="h-4 w-4" />, texto: tBloqueo("menuPublicacion"), peligro: true, onSelect: () => setBloqueando(true) }]),
         ];
 
   return (
@@ -91,6 +95,9 @@ export function MenuOferta({
         />
       )}
       {avisoNodo}
+      {bloqueando && (
+        <BloquearUsuarioModal nombre={profesionalNombre} slug={profesionalSlug} onClose={() => setBloqueando(false)} onBloqueado={() => window.location.assign(window.location.pathname.replace(/\/[^/]+$/, "") || "/")} />
+      )}
     </>
   );
 }

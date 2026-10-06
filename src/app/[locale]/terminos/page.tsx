@@ -1,5 +1,6 @@
 import { Link } from "@/i18n/navigation";
 import { LegalDocument, type LegalSection } from "@/components/legal/legal-document";
+import { imagenSocial } from "@/lib/seo/imagen-social";
 
 const ES_SECTIONS: LegalSection[] = [
   {
@@ -247,9 +248,10 @@ const EN_SECTIONS: LegalSection[] = [
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
-  return locale === "en"
+  const base = locale === "en"
     ? { title: "Terms and Conditions - ContrataCR", description: "Terms governing use of ContrataCR." }
     : { title: "Términos y Condiciones - ContrataCR", description: "Condiciones que regulan el uso de ContrataCR." };
+  return { ...base, ...imagenSocial(locale) };
 }
 
 export default async function TerminosPage({ params }: { params: Promise<{ locale: string }> }) {
