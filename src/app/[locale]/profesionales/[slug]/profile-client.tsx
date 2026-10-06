@@ -830,8 +830,8 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
             etiqueta: tMenu("share"),
             onSelect: shareProfile,
           },
-          ...(isOwn ? [] : [{ id: "reportar", icono: <Flag className="h-4 w-4" />, texto: tMenu("reportProfile"), peligro: true, onSelect: () => setReportOpen(true) }]),
-          ...(isOwn ? [] : [{ id: "bloquear", icono: <Ban className="h-4 w-4" />, texto: tBloqueo("menu"), peligro: true, onSelect: () => setBloqueando(true) }]),
+          ...(isOwn ? [] : [{ id: "reportar", icono: <Flag className="h-4 w-4" />, texto: tMenu("report"), peligro: true, onSelect: () => setReportOpen(true) }]),
+          ...(isOwn ? [] : [{ id: "bloquear", icono: <Ban className="h-4 w-4" />, texto: tMenu("block"), peligro: true, onSelect: () => setBloqueando(true) }]),
   ];
 
   const bloqueContacto = (conAncla: boolean) => (
@@ -1628,6 +1628,7 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
         <ReportProfileModal
           professionalName={professional.fullName}
           professionalSlug={slug}
+          bloqueo={isOwn ? undefined : { profileId: professional.profileId, onBloqueado: () => setBloqueado(true) }}
           onClose={() => setReportOpen(false)}
         />
       )}

@@ -2047,9 +2047,10 @@ export function DirectChatInbox({ alCambiarSubvista }: {
       )}
 
       {mensajeEliminable && createPortal(
-        <div className="app-modal-screen app-sheet-compact-screen fixed inset-0 z-[200] flex items-end justify-center" role="dialog" aria-modal="true" aria-label={tChat("deleteMessageTitle")}>
+        // Tarjeta centrada (6-oct-2026): dos botones no necesitan una hoja.
+        <div className="app-modal-screen app-centered-modal-screen fixed inset-0 z-[200] flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label={tChat("deleteMessageTitle")}>
           <div className="absolute inset-0 bg-[#071426]/45 backdrop-blur-[2px]" onClick={() => setMensajeAEliminar(null)} />
-          <div className="app-bottom-sheet app-sheet-compact relative z-10 w-full max-w-md rounded-t-[22px] bg-white pb-[calc(1rem+env(safe-area-inset-bottom))] pt-2 shadow-[0_-18px_48px_-24px_rgba(15,23,42,0.55)]">
+          <div className="app-centered-modal relative z-10 w-full max-w-sm overflow-hidden rounded-2xl bg-white pb-2 pt-2 shadow-2xl">
             <div className="flex items-center justify-between gap-3 px-5 pb-2 pt-2">
               <p className="text-[16px] font-extrabold text-[#162543]">{tChat("deleteMessageTitle")}</p>
               <button type="button" onClick={() => setMensajeAEliminar(null)} aria-label={tChat("cancel")} className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[#eef2f6] text-[#526277]">

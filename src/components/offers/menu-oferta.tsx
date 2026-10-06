@@ -74,8 +74,8 @@ export function MenuOferta({
             etiqueta: t("share"),
             onSelect: abrirCompartir,
           },
-          ...(esPropia || !profesionalSlug ? [] : [{ id: "reportar", icono: <Flag className="h-4 w-4" />, texto: t("reportOffer"), peligro: true, onSelect: () => setReportando(true) }]),
-          ...(esPropia || !profesionalSlug ? [] : [{ id: "bloquear", icono: <Ban className="h-4 w-4" />, texto: tBloqueo("menuPublicacion"), peligro: true, onSelect: () => setBloqueando(true) }]),
+          ...(esPropia || !profesionalSlug ? [] : [{ id: "reportar", icono: <Flag className="h-4 w-4" />, texto: t("report"), peligro: true, onSelect: () => setReportando(true) }]),
+          ...(esPropia || !profesionalSlug ? [] : [{ id: "bloquear", icono: <Ban className="h-4 w-4" />, texto: t("block"), peligro: true, onSelect: () => setBloqueando(true) }]),
         ];
 
   return (
@@ -91,6 +91,7 @@ export function MenuOferta({
           professionalSlug={profesionalSlug}
           contexto={`Promoción "${titulo}" (${ofertaId})`}
           titulo={t("reportOffer")}
+          bloqueo={{ slug: profesionalSlug, onBloqueado: () => window.location.assign(window.location.pathname.replace(/\/[^/]+$/, "") || "/") }}
           onClose={() => setReportando(false)}
         />
       )}

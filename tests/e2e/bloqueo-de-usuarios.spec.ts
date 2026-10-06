@@ -27,14 +27,14 @@ test("bloquear desde la ficha: desaparece, avisa al equipo y se puede desbloquea
     await waitForInteractivePage(page);
     // En el teléfono el «···» vive en la barra de arriba («Opciones»).
     await page.getByRole("button", { name: /^(Opciones|Options|Más opciones|More options)$/ }).filter({ visible: true }).first().click();
-    await page.getByText("Bloquear usuario", { exact: true }).first().click();
+    await page.getByRole("menuitem", { name: /^Bloquear$/ }).first().click();
     const ventana = page.getByRole("dialog");
     await expect(ventana.getByText(/¿Bloquear a/)).toBeVisible();
     if (process.env.CAPTURAS) await page.screenshot({ path: "test-results/bloqueo-1-ventana.png" });
     await ventana.getByPlaceholder(/Qué pasó/).fill("Mensajes ofensivos (prueba automática).");
     await ventana.getByRole("button", { name: /^Bloquear$/ }).click();
     await expect(ventana.getByText("Usuario bloqueado")).toBeVisible({ timeout: 20_000 });
-    await ventana.getByRole("button", { name: "OK" }).click();
+    await ventana.getByRole("button", { name: "Entendido" }).click();
 
     // 2. La ficha ya no se muestra.
     await expect(page.getByText("Bloqueaste a este usuario")).toBeVisible();
@@ -65,6 +65,19 @@ test("bloquear desde la ficha: desaparece, avisa al equipo y se puede desbloquea
     await expect.poll(async () => (await admin.from("user_blocks").select("blocked_id").eq("blocker_id", cuenta!.id)).data?.length ?? 0).toBe(0);
     await gotoOK(page, `/profesionales/${E2E_USERS.professional.slug}`);
     await expect(page.getByRole("heading", { level: 1 })).toContainText(E2E_USERS.professional.fullName.split(" ")[0], { timeout: 30_000 });
+
+    // 6. Reportar también puede bloquear («También bloquear a este usuario»).
+    await waitForInteractivePage(page);
+    await page.getByRole("button", { name: /^(Opciones|Options|Más opciones|More options)$/ }).filter({ visible: true }).first().click();
+    await page.getByRole("menuitem", { name: /Reportar/ }).first().click();
+    await page.getByText("Contenido inapropiado", { exact: true }).click();
+    await page.getByRole("checkbox", { name: /También bloquear/ }).check();
+    await page.getByRole("button", { name: /Enviar reporte/ }).click();
+    await expect(page.getByText("Reporte enviado")).toBeVisible({ timeout: 20_000 });
+    await page.getByRole("button", { name: /^(OK|Entendido|Listo)$/ }).click();
+    await expect(page.getByText("Bloqueaste a este usuario")).toBeVisible({ timeout: 20_000 });
+    await expect.poll(async () => (await admin.from("user_blocks").select("blocked_id").eq("blocker_id", cuenta!.id)).data?.length ?? 0).toBe(1);
+    await admin.from("user_blocks").delete().eq("blocker_id", cuenta.id);
     void proId;
   } finally {
     if (cuenta) {

@@ -14,6 +14,9 @@ interface ReportProfileModalProps {
   contexto?: string;
   /** Título propio del modal, para un empleo o una oferta. */
   titulo?: string;
+  /** Con esto, el reporte ofrece «También bloquear a este usuario» (6-oct-2026):
+   *  reportar y bloquear suelen ir juntos, y Apple pide las dos cosas a mano. */
+  bloqueo?: { profileId?: string; professionalId?: string; slug?: string; projectId?: string; onBloqueado?: () => void };
   onClose: () => void;
 }
 
@@ -32,14 +35,20 @@ const REASON_DEFS: { key: string; es: string }[] = [
   { key: "other", es: "Otro" },
 ];
 
-export function ReportProfileModal({ professionalName, professionalSlug, contexto, titulo, onClose }: ReportProfileModalProps) {
+export function ReportProfileModal({ professionalName, professionalSlug, contexto, titulo, bloqueo, onClose }: ReportProfileModalProps) {
   const t = useTranslations("report");
+  const tBloqueo = useTranslations("bloqueo");
   const [reason, setReason] = useState("");
+  const [tambienBloquear, setTambienBloquear] = useState(false);
+  const [bloqueado, setBloqueado] = useState(false);
   const [detail, setDetail] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Al cerrar el «Reporte enviado», si además bloqueó, la pantalla reacciona
+  // (la ficha pasa a «Bloqueaste a este usuario»; un tablero vuelve atrás).
+  const cerrar = () => { if (bloqueado) bloqueo?.onBloqueado?.(); onClose(); };
   useEffect(() => {
     const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
     document.addEventListener("keydown", handler);
@@ -70,6 +79,13 @@ export function ReportProfileModal({ professionalName, professionalSlug, context
         setError(json.error ?? t("errSend"));
         return;
       }
+      if (bloqueo && tambienBloquear && user) {
+        const b = await fetch("/api/block", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ profileId: bloqueo.profileId, professionalId: bloqueo.professionalId, slug: bloqueo.slug, projectId: bloqueo.projectId, reason: reasonEs }) });
+        if (b.ok) {
+          window.dispatchEvent(new CustomEvent("ccr:usuario-bloqueado"));
+          setBloqueado(true);
+        }
+      }
       setSent(true);
     } catch {
       setError(t("errConnection"));
@@ -82,8 +98,28 @@ export function ReportProfileModal({ professionalName, professionalSlug, context
   // atrapado en esa capa y no se veía.
   if (typeof document === "undefined") return null;
 
+  if (sent) {
+    // Enviado: tarjeta centrada (6-oct-2026). El aviso corto no es una hoja.
+    return createPortal(
+      <div className="app-modal-screen app-centered-modal-screen fixed inset-0 z-[1500] flex items-center justify-center bg-black/50 p-4" onClick={cerrar}>
+        <div className="app-centered-modal relative w-full max-w-sm rounded-2xl bg-white p-6 text-center shadow-2xl" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="reporte-enviado-titulo">
+          <SuccessIcon size={56} className="mx-auto" />
+          <p id="reporte-enviado-titulo" className="mt-4 text-lg font-semibold text-[#162543]">{t("sentTitle")}</p>
+          <p className="mt-1.5 text-sm leading-relaxed text-[#6b7280]">{t("sentBody")}</p>
+          <button
+            onClick={cerrar}
+            className="mt-5 w-full rounded-xl bg-[#009FD9] px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#0089bb]"
+          >
+            {t("ok")}
+          </button>
+        </div>
+      </div>,
+      document.body,
+    );
+  }
+
   return createPortal(
-    <div className="app-modal-screen app-sheet-compact-screen fixed inset-0 z-[1500] flex items-end justify-center bg-black/50 sm:items-center sm:px-4" onClick={onClose}>
+    <div className="app-modal-screen app-sheet-compact-screen fixed inset-0 z-[1500] flex items-end justify-center bg-black/50 sm:items-center sm:px-4" onClick={cerrar}>
       <div
         className="app-bottom-sheet app-sheet-compact relative max-h-[92vh] w-full overflow-y-auto overscroll-contain rounded-t-2xl bg-white shadow-2xl sm:max-w-[440px] sm:rounded-2xl"
         onClick={(e) => e.stopPropagation()}
@@ -96,7 +132,7 @@ export function ReportProfileModal({ professionalName, professionalSlug, context
               <p className="text-xs text-[#6b7280]">{professionalName}</p>
             </div>
           </div>
-          <button onClick={onClose} className="rounded-full p-1.5 text-[#68778d] hover:bg-[#f3f4f6] hover:text-[#374151] transition-colors">
+          <button onClick={cerrar} className="rounded-full p-1.5 text-[#68778d] hover:bg-[#f3f4f6] hover:text-[#374151] transition-colors">
             <X className="h-5 w-5" />
           </button>
         </div>
@@ -109,7 +145,7 @@ export function ReportProfileModal({ professionalName, professionalSlug, context
               {t("sentBody")}
             </p>
             <button
-              onClick={onClose}
+              onClick={cerrar}
               className="mt-2 rounded-xl bg-[#009FD9] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#0089bb] transition-colors"
             >
               {t("ok")}
@@ -164,6 +200,16 @@ export function ReportProfileModal({ professionalName, professionalSlug, context
                 className="w-full resize-none rounded-xl border border-[#e5e7eb] bg-white px-3.5 py-3 text-sm text-[#162543] placeholder:text-[#68778d] focus:border-[#009FD9] focus:outline-none focus:ring-2 focus:ring-[#009FD9]/20 transition"
               />
             </div>
+
+            {bloqueo && (
+              <label className="flex cursor-pointer items-start gap-2.5 text-sm text-[#374151]">
+                <input type="checkbox" checked={tambienBloquear} onChange={(e) => setTambienBloquear(e.target.checked)} className="mt-0.5 h-4 w-4 accent-[#009FD9]" />
+                <span>
+                  {tBloqueo("tambien")}
+                  <span className="block text-xs text-[#6b7280]">{tBloqueo("tambienTexto")}</span>
+                </span>
+              </label>
+            )}
 
             {error && (
               <div className="flex items-center gap-2 rounded-lg bg-red-50 border border-red-200 px-3 py-2.5 text-sm text-red-600">
