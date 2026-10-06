@@ -2298,6 +2298,12 @@ body.ccr-search-sheet-page {
   content-visibility: auto;
   contain-intrinsic-size: auto 320px;
 }
+/* En computadora la tarjeta mide ~154 px: con la estimación del teléfono (320)
+   lo que viene debajo —la tarjeta de publicar, la paginación— bajaba 166 px por
+   tarjeta al pintarse (salto medido: 0,06 con dos resultados). */
+@media (min-width: 1024px) {
+  .ccr-search-card-slot { contain-intrinsic-size: auto 154px; }
+}
 
 /* Con el menú de lugares abierto, la tarjeta suelta el aislamiento de pintado:
    si no, el recorte del contenedor cortaba el menú al borde de la tarjeta. */
