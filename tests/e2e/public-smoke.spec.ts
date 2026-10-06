@@ -179,10 +179,15 @@ test.describe("@smoke public routes", () => {
       // quieta, y si el toque cayó mientras se movía (en CI pasa), se repite.
       const hoja = page.locator(".ccr-native-search-panel").filter({ visible: true }).first();
       const ubicacion = hoja.getByPlaceholder(/Ubicaci[oó]n|Location|Barrio|Neighborhood/i);
+      // Cuando la ubicación ya llegó, el cursor pasa al servicio y el botón se
+      // esconde: en ese punto no se vuelve a tocar nada, se comprueba el valor.
+      const esperada = /Ubicaci[oó]n actual|Current location/i;
       await expect(async () => {
-        await cercaEnHoja.click({ force: true });
-        await expect(ubicacion).toHaveValue(/Ubicaci[oó]n actual|Current location/i, { timeout: 2_500 });
-      }).toPass({ timeout: 20_000 });
+        if (!esperada.test(await ubicacion.inputValue())) {
+          if (await cercaEnHoja.isVisible()) await cercaEnHoja.click({ force: true });
+          await expect(ubicacion).toHaveValue(esperada, { timeout: 4_000 });
+        }
+      }).toPass({ timeout: 30_000 });
       // Sin servicio elegido, «cerca de mí» deja puesta la ubicación y pasa el
       // cursor al servicio; buscar así trae a los de cerca.
       await hoja.locator("form").evaluate((f: HTMLFormElement) => f.requestSubmit());
