@@ -21,7 +21,25 @@ class AppDelegate: UIResponder, UIApplicationDelegate, MessagingDelegate {
         // canjearlo por uno de FCM. Ahí el servidor deja de rechazarlo.
         FirebaseApp.configure()
         Messaging.messaging().delegate = self
+        ocultarBarraDelTeclado()
         return true
+    }
+
+    // LA FRANJA BLANCA ENCIMA DEL TECLADO.
+    //
+    // En cualquier campo de la app, iOS ponía sobre el teclado la barra de
+    // formulario de Safari (flechas ↑ ↓ y «OK»). En una app se ve como un
+    // contenedor blanco vacío pegado al teclado, sobre todo en los buscadores.
+    // La vista web la toma de `inputAccessoryView` de su vista de contenido;
+    // devolver nada la quita en toda la app. Es lo mismo que hace por dentro el
+    // plugin de teclado de Capacitor, pero sin cambiar cómo se encoge la
+    // pantalla al abrir el teclado, que la app ya tiene ajustado a mano.
+    private func ocultarBarraDelTeclado() {
+        guard let clase = NSClassFromString("WKContentView") else { return }
+        let selector = #selector(getter: UIResponder.inputAccessoryView)
+        guard let metodo = class_getInstanceMethod(clase, selector) else { return }
+        let sinBarra: @convention(block) (AnyObject) -> UIView? = { _ in nil }
+        method_setImplementation(metodo, imp_implementationWithBlock(sinBarra))
     }
 
     func applicationWillResignActive(_ application: UIApplication) {
