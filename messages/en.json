@@ -3921,7 +3921,7 @@
     "accion": "Find professionals"
   },
   "terminosCasilla": {
-    "texto": "I agree to the <terms>Terms of Use</terms> and the <privacy>Privacy Policy</privacy>. I understand that ContrataCR has zero tolerance for objectionable content or abusive users."
+    "texto": "By signing up you agree to ContrataCR's <terms>Terms of Use</terms> and <privacy>Privacy Policy</privacy>."
   },
   "bajaCorreos": {
     "listoTitulo": "Done, no more news emails",
