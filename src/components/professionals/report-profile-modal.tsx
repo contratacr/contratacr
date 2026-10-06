@@ -98,6 +98,26 @@ export function ReportProfileModal({ professionalName, professionalSlug, context
   // atrapado en esa capa y no se veía.
   if (typeof document === "undefined") return null;
 
+  if (sent) {
+    // Enviado: tarjeta centrada (6-oct-2026). El aviso corto no es una hoja.
+    return createPortal(
+      <div className="app-modal-screen app-centered-modal-screen fixed inset-0 z-[1500] flex items-center justify-center bg-black/50 p-4" onClick={cerrar}>
+        <div className="app-centered-modal relative w-full max-w-sm rounded-2xl bg-white p-6 text-center shadow-2xl" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="reporte-enviado-titulo">
+          <SuccessIcon size={56} className="mx-auto" />
+          <p id="reporte-enviado-titulo" className="mt-4 text-lg font-semibold text-[#162543]">{t("sentTitle")}</p>
+          <p className="mt-1.5 text-sm leading-relaxed text-[#6b7280]">{t("sentBody")}</p>
+          <button
+            onClick={cerrar}
+            className="mt-5 w-full rounded-xl bg-[#009FD9] px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#0089bb]"
+          >
+            {t("ok")}
+          </button>
+        </div>
+      </div>,
+      document.body,
+    );
+  }
+
   return createPortal(
     <div className="app-modal-screen app-sheet-compact-screen fixed inset-0 z-[1500] flex items-end justify-center bg-black/50 sm:items-center sm:px-4" onClick={cerrar}>
       <div

@@ -52,8 +52,11 @@ export function BloquearUsuarioModal({ nombre, profileId, professionalId, slug, 
 
   if (typeof document === "undefined") return null;
   return createPortal(
-    <div className="app-modal-screen app-sheet-compact-screen fixed inset-0 z-[1500] flex items-end justify-center bg-black/50 sm:items-center sm:px-4" onClick={onClose}>
-      <div className="app-bottom-sheet app-sheet-compact relative max-h-[92vh] w-full overflow-y-auto overscroll-contain rounded-t-2xl bg-white shadow-2xl sm:max-w-[440px] sm:rounded-2xl" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="bloquear-titulo">
+    // Tarjeta centrada y flotante (6-oct-2026): un diálogo corto —texto y dos
+    // botones— se lee mejor en el centro que como hoja pegada abajo; la hoja
+    // queda para formularios con teclado y listas de acciones.
+    <div className="app-modal-screen app-centered-modal-screen fixed inset-0 z-[1500] flex items-center justify-center bg-black/50 p-4" onClick={onClose}>
+      <div className="app-centered-modal relative max-h-[calc(var(--app-visual-viewport-height)-2rem)] w-full max-w-sm overflow-y-auto overscroll-contain rounded-2xl bg-white shadow-2xl" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="bloquear-titulo">
         <div className="flex items-center justify-between border-b border-[#e5e7eb] px-6 pb-4 pt-6">
           <div className="flex items-center gap-2.5">
             <Ban className="h-5 w-5 shrink-0 text-red-500" />
@@ -62,7 +65,7 @@ export function BloquearUsuarioModal({ nombre, profileId, professionalId, slug, 
           <button type="button" onClick={onClose} aria-label={t("cancelar")} className="rounded-full p-1.5 text-[#68778d] transition-colors hover:bg-[#f3f4f6] hover:text-[#374151]"><X className="h-5 w-5" /></button>
         </div>
         {listo ? (
-          <div className="flex flex-col items-center gap-3 px-6 py-10 text-center">
+          <div className="flex flex-col items-center gap-3 px-6 py-7 text-center">
             <SuccessIcon size={56} />
             <p className="text-sm text-[#6b7280]">{t("listoTexto")}</p>
             <Button size="lg" className="mt-2 w-full" onClick={() => { onBloqueado?.(); onClose(); }}>{t("ok")}</Button>
