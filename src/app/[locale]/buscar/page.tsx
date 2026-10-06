@@ -647,23 +647,24 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                       failedLabel={t("pagination.loadMoreFailed")}
                       retryLabel={t("pagination.retry")}
                     />
+                    {/* Al final de los resultados: quien no se decidió puede pedir que
+                        le escriban (4-oct-2026). Solo en la última página. Va DENTRO
+                        de la lista: puesta debajo, subía 332 px en computadora cuando
+                        la lista —que nace a pantalla completa— se encogía a sus tarjetas. */}
+                    {currentPage === totalPages && (
+                      <div className="bg-white px-4 pb-5 pt-1 lg:mt-2 lg:bg-transparent lg:px-0">
+                        <TarjetaPublicarProyecto
+                          titulo={t("proyectoTarjeta.titulo")}
+                          texto={t("proyectoTarjeta.texto")}
+                          boton={t("proyectoTarjeta.boton")}
+                          pie={t("proyectoTarjeta.pie")}
+                          categoria={selectedCategory}
+                          provincia={selectedProvinceId}
+                          canton={selectedCantonId}
+                        />
+                      </div>
+                    )}
                   </div>
-
-                  {/* Al final de los resultados: quien no se decidió puede pedir que
-                      le escriban (4-oct-2026). Solo en la última página. */}
-                  {currentPage === totalPages && (
-                    <div className="-mx-4 bg-white px-4 pb-5 pt-1 lg:mx-0 lg:mt-5 lg:bg-transparent lg:px-0">
-                      <TarjetaPublicarProyecto
-                        titulo={t("proyectoTarjeta.titulo")}
-                        texto={t("proyectoTarjeta.texto")}
-                        boton={t("proyectoTarjeta.boton")}
-                        pie={t("proyectoTarjeta.pie")}
-                        categoria={selectedCategory}
-                        provincia={selectedProvinceId}
-                        canton={selectedCantonId}
-                      />
-                    </div>
-                  )}
 
                   {totalPages > 1 && (
                     <nav data-search-pagination aria-label={t("pagination.label")} className="-mx-4 bg-white px-4 pb-4 lg:mx-0 lg:mt-5 lg:border-t lg:border-[#e5e7eb] lg:bg-transparent lg:px-0 lg:pb-0 lg:pt-4">

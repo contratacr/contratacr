@@ -11,8 +11,9 @@ la app. Lo que sí puede garantizar es que **nada de lo que ya pasó vuelva a
 pasar** y que **lo que un cliente hace todos los días siga funcionando**. Cada
 bug real que se arregla se convierte en una prueba permanente (ver la tabla del
 final), así que la certeza crece con cada arreglo. Lo que ninguna prueba cubre
-es lo que nunca se ha visto: para eso están la vigilancia de producción, el
-smoke diario y la revisión manual de cada bloque antes de publicar.
+es lo que nunca se ha visto: para eso están el smoke diario y la revisión
+manual de cada bloque antes de publicar (la vigilancia cada 3 horas se retiró
+el 6-oct-2026: producción la revisa Isaac).
 
 ## Qué corre, cuándo y contra qué
 
@@ -23,7 +24,6 @@ smoke diario y la revisión manual de cada bloque antes de publicar.
 | **Cada madrugada 3:00 CR** | **Regresión exhaustiva** (los 228 casos, en 4 tandas) | Base local en GitHub, app como en producción (`next start`) | Chrome PC (1366) y Chrome teléfono (390) | **Correo** a soporte |
 | Lunes 3:00 CR | Lo mismo + las pantallas públicas en Safari (WebKit, el motor del iPhone) | Ídem | + WebKit (390) | Correo |
 | **Cada mañana 6:00 CR** | **Smoke diario**: smoke con sesión en test.contratacr.com; smoke de solo lectura en www.contratacr.com; todas las pantallas en 6 anchos; reanudar la app | Los dominios reales, con Cloudflare y las bases alojadas | Chrome PC y teléfono | **Correo** |
-| Cada 3 horas | Vigilancia de producción: portada, búsqueda con datos, servicios, mapa del sitio, salud del servidor | www.contratacr.com | Peticiones HTTP | Correo (+ Telegram si se configura) |
 | Cada mañana 6:30 CR | Las dos bases coinciden con `supabase/migrations` | test y producción | — | Correo |
 | A mano | Regresión de la app nativa: Android (emulador) e iOS (simulador, build y arranque) | Base de test alojada | Chrome + emuladores | Correo |
 | A mano, antes de publicar diseño o gestos | Safari (WebKit) sobre todo lo público | — | WebKit | — |
@@ -45,7 +45,7 @@ GitHub además manda su correo a quien disparó la corrida: activa
 | App iOS (WebView + shell nativo) | `mobile-native-shell` y `direct-chat` con la cookie nativa; build y arranque en el simulador | Automática (a mano) + revisión visual en el simulador |
 | App Android | Emulador: lint, unitarias, arranque | Automática (a mano); todavía no publicada |
 | test.contratacr.com | Smoke diario con sesión | Automática |
-| www.contratacr.com | Smoke diario de solo lectura + vigilancia cada 3 h | Automática (sin sesión ni escrituras) |
+| www.contratacr.com | Smoke diario de solo lectura | Automática (sin sesión ni escrituras) |
 | Firefox | — | **Sin cobertura** (menos del 3 % de las visitas) |
 
 ## Lista completa por sección
@@ -157,7 +157,7 @@ parpadeos, saltos · **Manual** = se revisa a mano antes de publicar.
 | Qué | Cómo | Estado |
 | --- | --- | --- |
 | Catálogo, secciones, sugerir servicio, etiquetas canónicas | UI + API + BD | Automática |
-| Páginas por servicio/provincia/cantón y mapa del sitio | UI + Vigilancia | Automática |
+| Páginas por servicio/provincia/cantón y mapa del sitio | UI | Automática |
 | Ayuda, cómo funciona, términos, privacidad en ES/EN | UI + Visual | Automática |
 
 ### Admin

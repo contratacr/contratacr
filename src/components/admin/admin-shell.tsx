@@ -192,7 +192,8 @@ export function AdminShell({
             <div key={group.label} className={index === 0 ? "" : "mt-4 border-t border-white/10 pt-3"}>
               <p className="mb-1 px-3 text-[10px] font-semibold uppercase text-white/35">{group.label}</p>
               <div className="space-y-0.5">
-                {items.filter((item) => group.ids.includes(item.id)).map((item) => (
+                {/* En el orden del GRUPO, no en el de la lista de secciones. */}
+                {group.ids.map((id) => items.find((item) => item.id === id)).filter((item): item is (typeof items)[number] => !!item).map((item) => (
                   <div key={item.id} className="relative">{navLink(item, "side")}</div>
                 ))}
               </div>

@@ -2057,10 +2057,11 @@ html.ccr-js .fade-in-up.visible > section > div > *:nth-child(3) { transition-de
 .featured-brands-track {
   display: flex;
   width: max-content;
-  will-change: transform;
 }
 
 .featured-brands-set {
+  /* Cada juego es su propia capa: se mueve solo (ver featured-brands.tsx). */
+  will-change: transform;
   display: flex;
   align-items: center;
   gap: clamp(0.4rem, 0.9vw, 0.9rem);
@@ -2296,6 +2297,12 @@ body.ccr-search-sheet-page {
 .ccr-search-card-slot {
   content-visibility: auto;
   contain-intrinsic-size: auto 320px;
+}
+/* En computadora la tarjeta mide ~154 px: con la estimación del teléfono (320)
+   lo que viene debajo —la tarjeta de publicar, la paginación— bajaba 166 px por
+   tarjeta al pintarse (salto medido: 0,06 con dos resultados). */
+@media (min-width: 1024px) {
+  .ccr-search-card-slot { contain-intrinsic-size: auto 154px; }
 }
 
 /* Con el menú de lugares abierto, la tarjeta suelta el aislamiento de pintado:
