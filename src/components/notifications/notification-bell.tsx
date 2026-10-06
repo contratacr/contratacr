@@ -15,6 +15,7 @@ import { NotificationSourceIcon } from "@/components/notifications/notification-
 import { PanelEmptyState } from "@/components/ui/content-loading";
 import { useActorPhotos } from "@/lib/notifications/use-actor-photos";
 import { pedirAvisos, pedirTotalSinLeer, suscribirseAAvisos } from "@/lib/notifications-live";
+import { avisosRecordados, recordarAvisos } from "@/hooks/use-avisos-por-ver";
 import { cn, formatRelativeOrDate } from "@/lib/utils";
 import { useNativeApp } from "@/hooks/use-native-app";
 
@@ -43,7 +44,10 @@ export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "o
   const [sincronizadoConServidor, setSincronizadoConServidor] = useState(false);
   // Conteo real de no leídas en el servidor: la lista local solo trae las 20 más
   // recientes y dejaba fuera las viejas sin leer, así el globo nunca bajaba.
-  const [unreadTotal, setUnreadTotal] = useState<number | null>(null);
+  // Arranca con lo último que se supo (la campana no está montada en la
+  // pantalla de Notificaciones; al volver, salía con el número que vino con
+  // la página —viejo— medio segundo, hasta hablar con el servidor).
+  const [unreadTotal, setUnreadTotal] = useState<number | null>(() => avisosRecordados(user?.id));
   const [menuOpen, setMenuOpen] = useState(false);
   const portalHost = typeof document === "undefined" ? null : document.body;
   const [posicionPanel, setPosicionPanel] = useState<{ top: number; right: number } | null>(null);
@@ -108,11 +112,15 @@ export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "o
       // persona: contarlos aquí evita una segunda consulta por cada carga.
       // Solo cuando viene llena puede haber más sin leer de los que se ven.
       if (next.length < 20) {
-        setUnreadTotal(next.filter((item) => !item.read).length);
+        const total = next.filter((item) => !item.read).length;
+        recordarAvisos(userId, total);
+        setUnreadTotal(total);
         return;
       }
       void pedirTotalSinLeer(userId).then((total) => {
-        if (total !== null) setUnreadTotal(total);
+        if (total === null) return;
+        recordarAvisos(userId, total);
+        setUnreadTotal(total);
       });
     });
   }, [user]);

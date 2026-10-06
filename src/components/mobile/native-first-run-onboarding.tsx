@@ -11,6 +11,7 @@ import {
   NATIVE_ONBOARDING_AUTH_SESSION_KEY,
   NATIVE_ONBOARDING_COMPLETED_EVENT,
   NATIVE_ONBOARDING_COMPLETED_KEY,
+  NATIVE_ONBOARDING_EN_CAMINO_KEY,
   NATIVE_ONBOARDING_PENDING_PATH_KEY,
   type NativeOnboardingPendingPath,
 } from "@/lib/mobile-onboarding";
@@ -85,9 +86,26 @@ export function NativeFirstRunOnboarding() {
       const pendingPath = readPendingPath();
       const currentRoute = routeWithoutLocale(pathname);
       const authSession = window.sessionStorage.getItem(NATIVE_ONBOARDING_AUTH_SESSION_KEY) === "1";
-      if (authSession && isPendingJourneyPath(currentRoute)) {
+      if (authSession) {
+        // La persona ya salió de la bienvenida en esta sesión. Mientras la
+        // pantalla a la que va no haya llegado, la bienvenida sigue tapando
+        // (si no, se ve la portada medio segundo). Y una vez fuera, no vuelve
+        // a salir en toda la sesión, aunque abra Términos o Privacidad desde
+        // el registro (antes volvía a aparecer: esas rutas no eran «del camino»).
+        // Solo el inicio («/») la vuelve a levantar.
+        const enCamino = window.sessionStorage.getItem(NATIVE_ONBOARDING_EN_CAMINO_KEY);
+        if (enCamino && currentRoute !== enCamino) return;
+        window.sessionStorage.removeItem(NATIVE_ONBOARDING_EN_CAMINO_KEY);
+        if (currentRoute === "/") {
+          // Volvió atrás hasta el inicio sin cuenta: la bienvenida otra vez,
+          // para que pueda reintentar el registro o el ingreso.
+          document.documentElement.classList.add("ccr-native-first-run-pending");
+          setVisible(true);
+          return;
+        }
         document.documentElement.classList.remove("ccr-native-first-run-pending");
         setVisible(false);
+        hideNativeSplashAfterPaint();
         return;
       }
 
@@ -161,13 +179,13 @@ export function NativeFirstRunOnboarding() {
     return "/registro/profesional";
   }, []);
 
+  // La bienvenida no se quita aquí: se quita cuando la pantalla destino ya
+  // está (syncFirstRunState, al cambiar la ruta), para que no asome la portada.
   const continuePendingJourney = useCallback((destination: NativeOnboardingPendingPath) => {
     window.localStorage.removeItem(NATIVE_ONBOARDING_PENDING_PATH_KEY);
     window.sessionStorage.setItem(NATIVE_ONBOARDING_AUTH_SESSION_KEY, "1");
-    document.documentElement.classList.remove("ccr-native-first-run-pending");
-    setVisible(false);
+    window.sessionStorage.setItem(NATIVE_ONBOARDING_EN_CAMINO_KEY, destination);
     router.push(destination);
-    hideNativeSplashAfterPaint();
   }, [router]);
 
   const continueWithRole = useCallback(() => {
@@ -175,14 +193,7 @@ export function NativeFirstRunOnboarding() {
     continuePendingJourney(destination);
   }, [continuePendingJourney, destinationFor, selectedRole]);
 
-  const goToLogin = useCallback(() => {
-    window.localStorage.removeItem(NATIVE_ONBOARDING_PENDING_PATH_KEY);
-    window.sessionStorage.setItem(NATIVE_ONBOARDING_AUTH_SESSION_KEY, "1");
-    document.documentElement.classList.remove("ccr-native-first-run-pending");
-    setVisible(false);
-    router.push("/login");
-    hideNativeSplashAfterPaint();
-  }, [router]);
+  const goToLogin = useCallback(() => continuePendingJourney("/login"), [continuePendingJourney]);
 
   if (!visible || !nativeApp) return null;
 

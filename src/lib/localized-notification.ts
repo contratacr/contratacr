@@ -138,8 +138,8 @@ export function localizedNotificationCopy(notification: NotificationCopyInput, l
 
   if (notification.type === "invita_proyecto") {
     return { title, message: en
-      ? "Post what you need and professionals contact you on WhatsApp. It is for requesting a service, not offering one."
-      : "Publica lo que necesitas y los profesionales te contactan por WhatsApp. Es para pedir un servicio, no para ofrecerlo." };
+      ? "Post what you need and professionals contact you on WhatsApp."
+      : "Publica lo que necesitas y los profesionales te contactan por WhatsApp." };
   }
   if (notification.type === "completa_perfil") {
     return { title, message: en

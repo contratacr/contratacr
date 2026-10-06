@@ -328,7 +328,9 @@ export function NotificationsList({ scope = "mode", titulo }: { scope?: "mode" |
         return { userId: user.id, items: next };
       });
     }
-    window.dispatchEvent(new CustomEvent("notificationsChanged"));
+    // Con «todas» el total pasa a cero seguro: la barra de abajo lo recuerda
+    // aunque no esté montada en esta pantalla.
+    window.dispatchEvent(new CustomEvent("notificationsChanged", { detail: scope === "all" ? { sinLeer: 0, userId: user.id } : undefined }));
   }
 
   async function markOneRead(e: React.MouseEvent, id: string) {

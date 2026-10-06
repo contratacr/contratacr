@@ -257,6 +257,17 @@ test.describe("@mobile native shell contracts", () => {
     await expect(page).toHaveURL(/\/login/);
     await expect(page.getByRole("heading", { name: "Ingresa a tu cuenta", exact: true })).toBeVisible();
     await expect.poll(() => page.evaluate(() => window.localStorage.getItem("ccr:native-first-run-onboarding:v12"))).toBeNull();
+
+    // Términos y Privacidad desde el registro (6-oct-2026): abrían la
+    // bienvenida otra vez en vez de la página, porque no eran rutas «del
+    // camino». Solo el inicio la vuelve a levantar.
+    await page.getByRole("link", { name: /Regístrate/i }).click();
+    await page.getByRole("link", { name: /Busco servicios/i }).click();
+    await expect(page).toHaveURL(/\/registro\/cliente/);
+    await page.getByRole("link", { name: "Términos de uso" }).click();
+    await expect(page).toHaveURL(/\/terminos/);
+    await expect(page.getByRole("heading", { name: /Términos y Condiciones/i })).toBeVisible();
+    await expect(onboarding).toBeHidden();
   });
 
   test("native marketplace tabs survive localized document navigations", async ({ page }) => {

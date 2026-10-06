@@ -431,7 +431,7 @@ test("registro de profesional: contraseña, provincia, tarifa, fijo, abre arriba
 
   // 10. Notificaciones: el texto se lee COMPLETO y cada aviso lleva su raya.
   await gotoOK(page, "/notificaciones");
-  const largo = page.getByText(/Es para pedir un servicio, no para ofrecerlo\./);
+  const largo = page.getByText(/Publica lo que necesitas y los profesionales te contactan por WhatsApp\./);
   await expect(largo).toBeVisible({ timeout: 30_000 });
   const medidas = await largo.evaluate((el) => {
     const fila = el.closest('[role="button"]') as HTMLElement;

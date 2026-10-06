@@ -2,6 +2,9 @@ export const NATIVE_ONBOARDING_COMPLETED_KEY = "ccr:native-first-run-onboarding:
 export const NATIVE_ONBOARDING_COMPLETED_EVENT = "contratacr:native-onboarding-complete";
 export const NATIVE_ONBOARDING_PENDING_PATH_KEY = "ccr:native-first-run-pending-path:v1";
 export const NATIVE_ONBOARDING_AUTH_SESSION_KEY = "ccr:native-first-run-auth-session:v1";
+// A dónde va la persona desde la bienvenida: la bienvenida se queda puesta
+// hasta que esa pantalla ya está, para que no se vea la portada entre medio.
+export const NATIVE_ONBOARDING_EN_CAMINO_KEY = "ccr:native-first-run-en-camino:v1";
 
 export type NativeOnboardingPendingPath =
   | "/login"
