@@ -65,7 +65,7 @@ export function BloquearUsuarioModal({ nombre, profileId, professionalId, slug, 
           <div className="flex flex-col items-center gap-3 px-6 py-10 text-center">
             <SuccessIcon size={56} />
             <p className="text-sm text-[#6b7280]">{t("listoTexto")}</p>
-            <Button size="lg" className="mt-2 w-full" onClick={() => { onBloqueado?.(); onClose(); }}>OK</Button>
+            <Button size="lg" className="mt-2 w-full" onClick={() => { onBloqueado?.(); onClose(); }}>{t("ok")}</Button>
           </div>
         ) : (
           <div className="flex flex-col gap-4 px-6 py-5">

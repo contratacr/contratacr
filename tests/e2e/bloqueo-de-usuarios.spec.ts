@@ -27,14 +27,14 @@ test("bloquear desde la ficha: desaparece, avisa al equipo y se puede desbloquea
     await waitForInteractivePage(page);
     // En el teléfono el «···» vive en la barra de arriba («Opciones»).
     await page.getByRole("button", { name: /^(Opciones|Options|Más opciones|More options)$/ }).filter({ visible: true }).first().click();
-    await page.getByText("Bloquear usuario", { exact: true }).first().click();
+    await page.getByRole("menuitem", { name: /^Bloquear$/ }).first().click();
     const ventana = page.getByRole("dialog");
     await expect(ventana.getByText(/¿Bloquear a/)).toBeVisible();
     if (process.env.CAPTURAS) await page.screenshot({ path: "test-results/bloqueo-1-ventana.png" });
     await ventana.getByPlaceholder(/Qué pasó/).fill("Mensajes ofensivos (prueba automática).");
     await ventana.getByRole("button", { name: /^Bloquear$/ }).click();
     await expect(ventana.getByText("Usuario bloqueado")).toBeVisible({ timeout: 20_000 });
-    await ventana.getByRole("button", { name: "OK" }).click();
+    await ventana.getByRole("button", { name: "Entendido" }).click();
 
     // 2. La ficha ya no se muestra.
     await expect(page.getByText("Bloqueaste a este usuario")).toBeVisible();

@@ -75,8 +75,8 @@ export function MenuEmpleo({
             etiqueta: t("share"),
             onSelect: abrirCompartir,
           },
-          ...(esPropio || !empleadorSlug ? [] : [{ id: "reportar", icono: <Flag className="h-4 w-4" />, texto: t("reportJob"), peligro: true, onSelect: () => setReportando(true) }]),
-          ...(esPropio || !empleadorSlug ? [] : [{ id: "bloquear", icono: <Ban className="h-4 w-4" />, texto: tBloqueo("menuPublicacion"), peligro: true, onSelect: () => setBloqueando(true) }]),
+          ...(esPropio || !empleadorSlug ? [] : [{ id: "reportar", icono: <Flag className="h-4 w-4" />, texto: t("report"), peligro: true, onSelect: () => setReportando(true) }]),
+          ...(esPropio || !empleadorSlug ? [] : [{ id: "bloquear", icono: <Ban className="h-4 w-4" />, texto: t("block"), peligro: true, onSelect: () => setBloqueando(true) }]),
         ];
 
   return (

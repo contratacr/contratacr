@@ -81,8 +81,8 @@ export function MenuProyecto({
             etiqueta: t("share"),
             onSelect: abrirCompartir,
           },
-          ...(esPropio ? [] : [{ id: "reportar", icono: <Flag className="h-4 w-4" />, texto: t("reportProject"), peligro: true, onSelect: () => setReportando(true) }]),
-          ...(esPropio ? [] : [{ id: "bloquear", icono: <Ban className="h-4 w-4" />, texto: tBloqueo("menuPublicacion"), peligro: true, onSelect: () => setBloqueando(true) }]),
+          ...(esPropio ? [] : [{ id: "reportar", icono: <Flag className="h-4 w-4" />, texto: t("report"), peligro: true, onSelect: () => setReportando(true) }]),
+          ...(esPropio ? [] : [{ id: "bloquear", icono: <Ban className="h-4 w-4" />, texto: t("block"), peligro: true, onSelect: () => setBloqueando(true) }]),
         ];
 
   return (

@@ -4286,11 +4286,13 @@
     "more": "Más opciones",
     "close": "Cerrar",
     "copyLink": "Copiar enlace",
-    "reportProject": "Reportar este proyecto",
-    "reportJob": "Reportar este empleo",
-    "reportOffer": "Reportar esta promoción",
-    "reportProfile": "Reportar este perfil",
-    "share": "Compartir"
+    "reportProject": "Reportar proyecto",
+    "reportJob": "Reportar empleo",
+    "reportOffer": "Reportar promoción",
+    "reportProfile": "Reportar perfil",
+    "share": "Compartir",
+    "report": "Reportar",
+    "block": "Bloquear"
   },
   "compartirFicha": {
     "jobTitle": "Compartir este empleo",
@@ -4500,6 +4502,7 @@
     "cuentaVacio": "No has bloqueado a nadie.",
     "desbloquear": "Desbloquear",
     "tambien": "También bloquear a este usuario",
-    "tambienTexto": "Dejarás de ver su perfil y sus publicaciones, y no podrán escribirse."
+    "tambienTexto": "Dejarás de ver su perfil y sus publicaciones, y no podrán escribirse.",
+    "ok": "Entendido"
   }
 }

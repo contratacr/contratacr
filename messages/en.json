@@ -4286,11 +4286,13 @@
     "more": "More options",
     "close": "Close",
     "copyLink": "Copy link",
-    "reportProject": "Report this project",
-    "reportJob": "Report this job",
-    "reportOffer": "Report this promotion",
-    "reportProfile": "Report this profile",
-    "share": "Share"
+    "reportProject": "Report project",
+    "reportJob": "Report job",
+    "reportOffer": "Report promotion",
+    "reportProfile": "Report profile",
+    "share": "Share",
+    "report": "Report",
+    "block": "Block"
   },
   "compartirFicha": {
     "jobTitle": "Share this job",
@@ -4500,6 +4502,7 @@
     "cuentaVacio": "You have not blocked anyone.",
     "desbloquear": "Unblock",
     "tambien": "Also block this user",
-    "tambienTexto": "You will stop seeing their profile and posts, and you will not be able to message each other."
+    "tambienTexto": "You will stop seeing their profile and posts, and you will not be able to message each other.",
+    "ok": "Got it"
   }
 }
