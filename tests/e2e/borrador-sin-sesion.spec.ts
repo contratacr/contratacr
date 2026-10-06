@@ -55,11 +55,13 @@ async function escribirFirme(campo: ReturnType<Page["locator"]>, texto: string) 
   }).toPass({ timeout: 20_000 });
 }
 
-/** Marca «Al registrarte aceptas los Términos…» tocando su texto, como una persona. */
+/** Marca la casilla «Al registrarte aceptas…» tocando el cuadrito, como una
+ *  persona: el centro del texto cae sobre el enlace de privacidad. */
 async function aceptarTerminos(main: ReturnType<Page["locator"]>) {
   const casilla = main.getByRole("checkbox").first();
+  const cuadrito = main.locator("label:has(input[type=checkbox])").first();
   await expect(async () => {
-    if (!(await casilla.isChecked())) await main.getByText(/^Al registrarte aceptas/).first().click();
+    if (!(await casilla.isChecked())) await cuadrito.click({ position: { x: 9, y: 9 } });
     await expect(casilla).toBeChecked({ timeout: 1_000 });
   }).toPass({ timeout: 15_000 });
 }
