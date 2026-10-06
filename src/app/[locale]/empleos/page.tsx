@@ -7,6 +7,7 @@ import { safeGetUser } from "@/lib/supabase/get-user";
 import { createClient, hasSupabaseServerConfig } from "@/lib/supabase/server";
 import { repairVisibleText } from "@/lib/text/repair-visible-text";
 import { contactFlagsFor, profesionalesBloqueados } from "@/lib/contact-flags";
+import { profesionalesQueBloqueo } from "@/lib/queries/bloqueos";
 
 export const dynamic = "force-dynamic";
 // qué oficio pertenece, y de ahí sale a quién se le avisa.
@@ -34,10 +35,10 @@ export async function JobsPageContent({ initialSelectedJobId = null, returnTo = 
   if (professionalError) console.error("Could not load current professional for jobs", professionalError.message);
 
   const idsEmpleadores = ((data ?? []) as Array<Record<string, unknown>>).map((row) => String(row.employer_id ?? ""));
-  const [banderas, bloqueados] = await Promise.all([contactFlagsFor(idsEmpleadores), profesionalesBloqueados(idsEmpleadores)]);
+  const [banderas, bloqueados, bloqueadosPorMi] = await Promise.all([contactFlagsFor(idsEmpleadores), profesionalesBloqueados(idsEmpleadores), profesionalesQueBloqueo(user?.id, idsEmpleadores)]);
 
   const jobs = ((data ?? []) as Array<Record<string, unknown>>)
-    .filter((row) => !bloqueados.has(String(row.employer_id ?? "")))
+    .filter((row) => !bloqueados.has(String(row.employer_id ?? "")) && !bloqueadosPorMi.has(String(row.employer_id ?? "")))
     .map((row) => {
     const employer = row.professionals as { slug?: string; business_name?: string; profiles?: { full_name?: string; avatar_url?: string | null } | null } | null;
     const applicationCountRow = Array.isArray(row.job_applications) ? row.job_applications[0] as { count?: number | string } | undefined : undefined;

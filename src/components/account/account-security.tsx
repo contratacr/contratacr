@@ -10,6 +10,7 @@ import { useResendCooldown } from "@/hooks/use-resend-cooldown";
 import { Button } from "@/components/ui/button";
 import { SpamNotice } from "@/components/ui/spam-notice";
 import { BrandIconBadge } from "@/components/ui/brand-icon-badge";
+import { UsuariosBloqueados } from "@/components/moderation/usuarios-bloqueados";
 
 /* Where each provider lets the user manage their account/email + sign-in security.
    Shown to OAuth users instead of fields that wouldn't work here. */
@@ -434,6 +435,7 @@ export function AccountSecuritySection({ showHeading = true }: { showHeading?: b
         )}
       </div>
 
+      <UsuariosBloqueados />
     </div>
   );
 }

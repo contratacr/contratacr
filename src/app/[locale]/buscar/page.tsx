@@ -25,6 +25,7 @@ import { redactContactEnListado } from "@/lib/contact/redact";
 import { safeGetUser } from "@/lib/supabase/get-user";
 import { recordServerInteraction } from "@/lib/analytics/server-events";
 import { rutaDeBusqueda } from "@/lib/buscar-url";
+import { perfilesBloqueadosPor } from "@/lib/queries/bloqueos";
 
 interface SearchPageProps {
   searchParams: Promise<{
@@ -212,7 +213,9 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   const allResults = resolvedSearch.ordered;
   const viewerProfileId = viewer?.id;
 
-  const orderedResults = allResults;
+  // Lo de un usuario bloqueado no se muestra (6-oct-2026, regla 1.2 de Apple).
+  const bloqueadosPorMi = await perfilesBloqueadosPor(viewerProfileId);
+  const orderedResults = bloqueadosPorMi.size ? allResults.filter((pro) => !bloqueadosPorMi.has(String(pro.profileId ?? ""))) : allResults;
 
   const videoMode = videoOnly;
 

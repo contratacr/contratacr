@@ -3,11 +3,12 @@
 import { tramoFicha } from "@/lib/marketplace-url";
 import { useState } from "react";
 import { useTranslations } from "next-intl";
-import { Bookmark, Flag, Link2, Share2 } from "lucide-react";
+import { Bookmark, Ban, Flag, Link2, Share2 } from "lucide-react";
 import { MenuFicha } from "@/components/ui/menu-ficha";
 import { CaraCompartir, useCompartir } from "@/components/ui/boton-compartir";
 import { ReportProfileModal } from "@/components/professionals/report-profile-modal";
 import { useGuardado } from "@/components/saved/save-item-button";
+import { BloquearUsuarioModal } from "@/components/moderation/bloquear-usuario-modal";
 
 /**
  * El "..." de un empleo: compartir y reportar (copiar el enlace ya vive dentro
@@ -38,8 +39,10 @@ export function MenuEmpleo({
   guardar?: { snapshot: Record<string, unknown>; userId: string | null };
 }) {
   const t = useTranslations("menuFicha");
+  const tBloqueo = useTranslations("bloqueo");
   const { avisoNodo, compartir } = useCompartir();
   const [reportando, setReportando] = useState(false);
+  const [bloqueando, setBloqueando] = useState(false);
   // Guardar vive DENTRO del «...», junto a compartir: las dos son acciones
   // sobre la publicación. Abajo queda solo lo que contacta.
   const guardado = useGuardado({
@@ -73,6 +76,7 @@ export function MenuEmpleo({
             onSelect: abrirCompartir,
           },
           ...(esPropio || !empleadorSlug ? [] : [{ id: "reportar", icono: <Flag className="h-4 w-4" />, texto: t("reportJob"), peligro: true, onSelect: () => setReportando(true) }]),
+          ...(esPropio || !empleadorSlug ? [] : [{ id: "bloquear", icono: <Ban className="h-4 w-4" />, texto: tBloqueo("menuPublicacion"), peligro: true, onSelect: () => setBloqueando(true) }]),
         ];
 
   return (
@@ -92,6 +96,9 @@ export function MenuEmpleo({
         />
       )}
       {avisoNodo}
+      {bloqueando && (
+        <BloquearUsuarioModal nombre={empleadorNombre} slug={empleadorSlug} onClose={() => setBloqueando(false)} onBloqueado={() => window.location.assign(window.location.pathname.replace(/\/[^/]+$/, "") || "/")} />
+      )}
     </>
   );
 }

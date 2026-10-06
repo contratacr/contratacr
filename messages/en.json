@@ -4480,5 +4480,24 @@
     "empleo": "Your job post was saved. Review it and tap Publish.",
     "promocion": "Your promotion was saved. Review it and tap Publish.",
     "cotizacion": "Your quote was saved. Review it and tap Send."
+  },
+  "bloqueo": {
+    "menu": "Block user",
+    "menuPublicacion": "Block the publisher",
+    "titulo": "Block {nombre}?",
+    "texto": "You will stop seeing their profile and posts, and you will not be able to message each other. ContrataCR reviews every block within 24 hours.",
+    "motivo": "What happened? (optional)",
+    "boton": "Block",
+    "cancelar": "Cancel",
+    "listo": "User blocked",
+    "listoTexto": "You will no longer see their content. You can unblock them from Account and security.",
+    "error": "Could not block. Try again.",
+    "entrar": "Log in to block a user.",
+    "pantallaTitulo": "You blocked this user",
+    "pantallaTexto": "You will not see their profile or posts. You can unblock them from Account and security.",
+    "cuentaTitulo": "Blocked users",
+    "cuentaTexto": "You do not see their profile or posts, and they cannot message you.",
+    "cuentaVacio": "You have not blocked anyone.",
+    "desbloquear": "Unblock"
   }
 }

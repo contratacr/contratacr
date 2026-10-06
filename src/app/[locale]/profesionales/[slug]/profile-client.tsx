@@ -10,7 +10,7 @@ import { useParams, useSearchParams } from "next/navigation";
 import {
   MapPin, Shield, ArrowLeft, Star, Briefcase, Banknote, BadgeCheck, Languages,
   Flag, Award, SearchX, Globe, BadgePercent, Users, Share2, Link2, ChevronRight, Bookmark,
-  X,
+  X, Ban,
 } from "lucide-react";
 import { Modal } from "@/components/ui/modal";
 import { VerifiedSeal } from "@/components/ui/verified-seal";
@@ -57,6 +57,7 @@ import { ProgressiveImage } from "@/components/ui/progressive-image";
 import { useArrastreHorizontal } from "@/hooks/use-arrastre-horizontal";
 import { useDesvanecidoDeCarril } from "@/hooks/use-desvanecido-de-carril";
 import { FlechasDeCarril } from "@/components/ui/flechas-de-carril";
+import { BloquearUsuarioModal } from "@/components/moderation/bloquear-usuario-modal";
 
 // ─── WhatsApp icon ────────────────────────────────────────────────────────────
 // ─── Sub-rating row ───────────────────────────────────────────────────────────
@@ -319,6 +320,19 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
   }, []);
   const [slug, setSlug] = useState("");
   const [reportOpen, setReportOpen] = useState(false);
+  // BLOQUEAR (6-oct-2026, regla 1.2 de Apple): desde el «···». Si esta cuenta
+  // ya bloqueó a este profesional, la ficha no se muestra.
+  const [bloqueando, setBloqueando] = useState(false);
+  const [bloqueado, setBloqueado] = useState(false);
+  const tBloqueo = useTranslations("bloqueo");
+  useEffect(() => {
+    if (!viewerId || !professional?.profileId || viewerId === professional.profileId) return;
+    let vivo = true;
+    fetch("/api/block").then((r) => (r.ok ? r.json() : null)).then((d) => {
+      if (vivo && d?.blocked?.some((b: { id: string }) => b.id === professional.profileId)) setBloqueado(true);
+    }).catch(() => {});
+    return () => { vivo = false; };
+  }, [viewerId, professional?.profileId]);
   const [menuFichaAbierto, setMenuFichaAbierto] = useState(false);
   // Aviso de "enlace copiado" del botón Compartir. Vive aquí, con el resto de
   // los hooks: debajo de los `return` de carga React contaba un hook de más.
@@ -585,6 +599,24 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
     return <PerfilSkeleton />;
   }
 
+  if (bloqueado && professional) {
+    return (
+      <div className="min-h-screen flex flex-col bg-[#f4f7fa]">
+        <Navbar />
+        <main className="flex-1 bg-white">
+          <section className="mx-auto flex min-h-[calc(100dvh-64px)] max-w-3xl flex-col items-center justify-center px-6 py-14 text-center sm:px-8 sm:py-20">
+            <BrandIconBadge icon={Ban} size={76} />
+            <div className="mt-7 space-y-4">
+              <h1 className="text-[28px] font-bold leading-tight text-[#162543] sm:text-3xl">{tBloqueo("pantallaTitulo")}</h1>
+              <p className="mx-auto max-w-md text-base leading-7 text-[#6b7280] sm:text-[17px]">{tBloqueo("pantallaTexto")}</p>
+            </div>
+            <Link href="/profesionales" className="mt-9 inline-flex min-h-12 items-center justify-center rounded-full bg-[#009FD9] px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#0089bb]">{t("searchProfessionals")}</Link>
+          </section>
+        </main>
+      </div>
+    );
+  }
+
   if (proNotFound || !professional) {
     return (
       <div className="min-h-screen flex flex-col bg-[#f4f7fa]">
@@ -799,6 +831,7 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
             onSelect: shareProfile,
           },
           ...(isOwn ? [] : [{ id: "reportar", icono: <Flag className="h-4 w-4" />, texto: tMenu("reportProfile"), peligro: true, onSelect: () => setReportOpen(true) }]),
+          ...(isOwn ? [] : [{ id: "bloquear", icono: <Ban className="h-4 w-4" />, texto: tBloqueo("menu"), peligro: true, onSelect: () => setBloqueando(true) }]),
   ];
 
   const bloqueContacto = (conAncla: boolean) => (
@@ -1588,6 +1621,9 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
         opciones={opcionesDeLaFicha}
       />
 
+      {bloqueando && (
+        <BloquearUsuarioModal nombre={professional.businessName?.trim() || proDisplayName(professional.fullName)} profileId={professional.profileId} onClose={() => setBloqueando(false)} onBloqueado={() => setBloqueado(true)} />
+      )}
       {reportOpen && (
         <ReportProfileModal
           professionalName={professional.fullName}

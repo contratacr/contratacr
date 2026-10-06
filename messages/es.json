@@ -4480,5 +4480,24 @@
     "empleo": "Tu empleo quedó guardado. Revísalo y toca Publicar.",
     "promocion": "Tu promoción quedó guardada. Revísala y toca Publicar.",
     "cotizacion": "Tu cotización quedó guardada. Revísala y toca Enviar."
+  },
+  "bloqueo": {
+    "menu": "Bloquear usuario",
+    "menuPublicacion": "Bloquear a quien publicó",
+    "titulo": "¿Bloquear a {nombre}?",
+    "texto": "Dejarás de ver su perfil y sus publicaciones, y no podrán escribirse. ContrataCR revisa cada bloqueo en menos de 24 horas.",
+    "motivo": "¿Qué pasó? (opcional)",
+    "boton": "Bloquear",
+    "cancelar": "Cancelar",
+    "listo": "Usuario bloqueado",
+    "listoTexto": "Ya no verás su contenido. Puedes desbloquearlo desde Cuenta y seguridad.",
+    "error": "No se pudo bloquear. Intenta de nuevo.",
+    "entrar": "Inicia sesión para bloquear a un usuario.",
+    "pantallaTitulo": "Bloqueaste a este usuario",
+    "pantallaTexto": "No verás su perfil ni sus publicaciones. Puedes desbloquearlo desde Cuenta y seguridad.",
+    "cuentaTitulo": "Usuarios bloqueados",
+    "cuentaTexto": "No ves su perfil ni sus publicaciones, y no pueden escribirte.",
+    "cuentaVacio": "No has bloqueado a nadie.",
+    "desbloquear": "Desbloquear"
   }
 }
