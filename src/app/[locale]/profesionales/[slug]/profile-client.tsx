@@ -1628,6 +1628,7 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
         <ReportProfileModal
           professionalName={professional.fullName}
           professionalSlug={slug}
+          bloqueo={isOwn ? undefined : { profileId: professional.profileId, onBloqueado: () => setBloqueado(true) }}
           onClose={() => setReportOpen(false)}
         />
       )}

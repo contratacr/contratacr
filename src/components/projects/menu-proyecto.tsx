@@ -101,6 +101,7 @@ export function MenuProyecto({
           professionalSlug={`proyecto-${proyectoId}`}
           contexto={`Proyecto "${titulo}" (${proyectoId})`}
           titulo={t("reportProject")}
+          bloqueo={{ projectId: proyectoId, onBloqueado: () => window.location.assign(window.location.pathname.replace(/\/[^/]+$/, "") || "/") }}
           onClose={() => setReportando(false)}
         />
       )}

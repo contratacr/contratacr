@@ -4498,6 +4498,8 @@
     "cuentaTitulo": "Usuarios bloqueados",
     "cuentaTexto": "No ves su perfil ni sus publicaciones, y no pueden escribirte.",
     "cuentaVacio": "No has bloqueado a nadie.",
-    "desbloquear": "Desbloquear"
+    "desbloquear": "Desbloquear",
+    "tambien": "También bloquear a este usuario",
+    "tambienTexto": "Dejarás de ver su perfil y sus publicaciones, y no podrán escribirse."
   }
 }

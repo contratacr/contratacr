@@ -4498,6 +4498,8 @@
     "cuentaTitulo": "Blocked users",
     "cuentaTexto": "You do not see their profile or posts, and they cannot message you.",
     "cuentaVacio": "You have not blocked anyone.",
-    "desbloquear": "Unblock"
+    "desbloquear": "Unblock",
+    "tambien": "Also block this user",
+    "tambienTexto": "You will stop seeing their profile and posts, and you will not be able to message each other."
   }
 }

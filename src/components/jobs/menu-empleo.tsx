@@ -92,6 +92,7 @@ export function MenuEmpleo({
           professionalSlug={empleadorSlug}
           contexto={`Empleo "${titulo}" (${empleoId})`}
           titulo={t("reportJob")}
+          bloqueo={{ slug: empleadorSlug, onBloqueado: () => window.location.assign(window.location.pathname.replace(/\/[^/]+$/, "") || "/") }}
           onClose={() => setReportando(false)}
         />
       )}
