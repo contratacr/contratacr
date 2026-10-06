@@ -1035,7 +1035,11 @@ async function getProfessionalBySlugUncached(
         ({ data: pro, error } = await fetchBySlug(detailSelect(false)));
       }
 
-      if (error || !pro) throw error ?? new Error("Not found");
+      if (error) throw error;
+      // Un slug que no existe no es un error: es un 404 normal (bots que
+      // prueban rutas, enlaces viejos). Antes se registraba como «Supabase
+      // error» y ensuciaba los registros de Cloudflare (6-oct-2026).
+      if (!pro) return null;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const proRow = pro as any;
 

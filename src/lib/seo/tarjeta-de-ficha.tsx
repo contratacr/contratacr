@@ -41,7 +41,10 @@ function fuentesDeLaTarjeta() {
  * se publica. Lo importante va lejos de los bordes: WhatsApp recorta la
  * tarjeta en miniatura cuadrada y lo de las orillas se pierde.
  */
-export async function tarjetaDeFicha({ etiqueta, titulo, detalle, pie, imagen, precio, precioAntes }: { etiqueta: string; titulo: string; detalle?: string; pie: string; imagen?: string | null; precio?: string | null; precioAntes?: string | null }) {
+export async function tarjetaDeFicha({ etiqueta, titulo, detalle, pie, imagen: imagenPedida, precio, precioAntes }: { etiqueta: string; titulo: string; detalle?: string; pie: string; imagen?: string | null; precio?: string | null; precioAntes?: string | null }) {
+  // La foto se baja aquí, con límite de peso y de tiempo, en vez de dejar que
+  // el dibujante la pida entera: una foto pesada agotaba la memoria del Worker.
+  const imagen = imagenPedida ? await fotoLiviana(imagenPedida, 900 * 1024) : null;
   const conFoto = !!imagen;
   const cuerpo = recortar(titulo || "ContrataCR", conFoto ? 70 : 90);
   const tamanoTitulo = conFoto
@@ -84,6 +87,27 @@ export async function tarjetaDeFicha({ etiqueta, titulo, detalle, pie, imagen, p
 }
 
 /** La foto en JPG y del tamaño de la tarjeta: Satori no lee WebP/AVIF. */
+/**
+ * Baja una foto para dibujarla en una tarjeta de compartir, como data URL, o
+ * null si es más pesada que `maxBytes`, no es JPEG/PNG o tarda más de 4 s.
+ * Bajarlas enteras sin límite agotaba la memoria del Worker (128 MB) y una
+ * descarga lenta lo dejaba colgado (registros de Cloudflare, 5 y 6-oct-2026).
+ */
+export async function fotoLiviana(url: string, maxBytes: number): Promise<string | null> {
+  try {
+    const respuesta = await fetch(url, { signal: AbortSignal.timeout(4000) });
+    if (!respuesta.ok) return null;
+    if (Number(respuesta.headers.get("content-length") || 0) > maxBytes) return null;
+    const tipo = respuesta.headers.get("content-type") || "image/jpeg";
+    if (!/^image\/(jpeg|png)/.test(tipo)) return null;
+    const datos = await respuesta.arrayBuffer();
+    if (datos.byteLength > maxBytes) return null;
+    return `data:${tipo};base64,${Buffer.from(datos).toString("base64")}`;
+  } catch {
+    return null;
+  }
+}
+
 export function fotoParaTarjeta(url?: string | null): string | null {
   if (!url) return null;
   if (/res\.cloudinary\.com\/.+\/upload\//.test(url)) return url.replace("/upload/", "/upload/f_jpg,q_80,w_772,h_1004,c_fill,g_auto/");

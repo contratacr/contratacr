@@ -122,9 +122,15 @@ export async function prepareImageForUpload(file: File, options: PrepareImageOpt
   if (!detectedKind || !IMAGE_KINDS.includes(detectedKind)) {
     throw new ImageUploadPreparationError("unsupported");
   }
-  if (file.size <= targetBytes) return file;
+  // Sin tamaño máximo pedido, lo único que importa es el peso. Con tamaño
+  // máximo (las fotos de perfil piden 1200 px) también hay que mirar las
+  // dimensiones: antes una foto de celular de 3,4 MB y 4000 px pasaba sin
+  // tocar porque pesaba menos del límite, y luego agotaba la memoria del
+  // servidor al dibujar la imagen para compartir el perfil (6-oct-2026).
+  if (file.size <= targetBytes && !options.maxDimension) return file;
 
   if (detectedKind === "gif") {
+    if (file.size <= targetBytes) return file;
     throw new ImageUploadPreparationError("too_large");
   }
 
@@ -132,6 +138,7 @@ export async function prepareImageForUpload(file: File, options: PrepareImageOpt
   try {
     decoded = await decodeImage(file);
     const maxDimension = options.maxDimension ?? 1600;
+    if (file.size <= targetBytes && Math.max(decoded.width, decoded.height) <= maxDimension) return file;
     const attempts = [
       { dimension: maxDimension, quality: 0.86 },
       { dimension: maxDimension, quality: 0.78 },

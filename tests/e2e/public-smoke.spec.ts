@@ -155,6 +155,21 @@ test.describe("@smoke public routes", () => {
     }
   });
 
+  // 6-oct-2026: al abrir el buscador del teléfono, el cursor se ponía en
+  // «Servicio» con reintentos de hasta 140 ms; si la persona tocaba «Ubicación»
+  // antes, el cursor saltaba de vuelta y «Buscar cerca de mí» desaparecía.
+  test("tocar Ubicación justo al abrir el buscador no devuelve el cursor a Servicio", async ({ page }) => {
+    test.skip((page.viewportSize()?.width ?? 1280) >= 640, "El buscador a pantalla completa es del teléfono.");
+    await gotoOK(page, "/");
+    await waitForInteractivePage(page);
+    await page.getByLabel(/Qu[eé] necesitas|What do you need/i).filter({ visible: true }).first().click();
+    const ubicacion = page.locator(".ccr-native-search-panel").getByPlaceholder(/Ubicaci[oó]n|Location/i).filter({ visible: true }).first();
+    await ubicacion.click({ timeout: 2_000 });
+    await page.waitForTimeout(600);
+    await expect(ubicacion).toBeFocused();
+    await expect(page.locator(".ccr-native-search-panel").getByRole("button", { name: /Buscar cerca de m[ií]|Search near me/i }).filter({ visible: true })).toBeVisible();
+  });
+
   test("home near-me search uses proximity params", async ({ page }) => {
     await page.context().setGeolocation({ latitude: 9.9281, longitude: -84.0907 });
     await gotoOK(page, "/");

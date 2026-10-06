@@ -1876,9 +1876,19 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   // intenta tres veces —al montar, en el siguiente cuadro y un pelo después—
   // porque el panel entra animado y el primer intento puede caer antes de que
   // el campo esté en pantalla.
+  //
+  // Los reintentos no pisan una elección de la persona (6-oct-2026): si en ese
+  // intervalo ya tocó «Ubicación», el cursor se quedaba ahí un instante y luego
+  // saltaba de vuelta a «Servicio», y con él desaparecía «Buscar cerca de mí».
   useEffect(() => {
     if (!nativeSearchOpen) return;
-    const enfocar = () => nativeSearchInputRef.current?.focus({ preventScroll: true });
+    const enfocar = () => {
+      const activo = document.activeElement;
+      const servicio = nativeSearchInputRef.current;
+      const yaEligioOtro = activo instanceof HTMLInputElement && activo !== servicio && activo !== puenteTecladoRef.current;
+      if (yaEligioOtro) return;
+      servicio?.focus({ preventScroll: true });
+    };
     enfocar();
     const cuadro = window.requestAnimationFrame(enfocar);
     const tarde = window.setTimeout(enfocar, 140);

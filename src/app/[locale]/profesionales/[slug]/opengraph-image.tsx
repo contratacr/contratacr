@@ -3,6 +3,7 @@ import { LOGO_PALABRA } from "@/lib/og-logos";
 import { getProfessionalBySlug } from "@/lib/queries/professionals";
 import { getCategoryLabel } from "@/lib/data/categories";
 import { proDisplayName } from "@/lib/utils";
+import { fotoLiviana } from "@/lib/seo/tarjeta-de-ficha";
 
 export const size = {
   width: 1200,
@@ -64,20 +65,26 @@ function serviceTypography(services: string[]) {
   return 26;
 }
 
+// La foto del perfil se dibuja a 150 px. Bajarla entera (hay fotos de 3 MB y
+// 4000 px) y decodificarla agotaba la memoria del Worker, y una descarga lenta
+// sin límite lo dejaba colgado (registros de Cloudflare del 5 y 6-oct-2026).
+// Cloudinary la entrega ya reducida; de otro origen, solo si es liviana y llega
+// a tiempo. Si no, la tarjeta sale con las iniciales.
+function fotoReducida(url: string) {
+  const marca = "/image/upload/";
+  const en = url.indexOf(marca);
+  if (!url.startsWith("https://res.cloudinary.com/") || en < 0) return url;
+  const partes = url.slice(en + marca.length).split("/");
+  if (partes.length > 1 && /^[a-z]+_[^/]*$/.test(partes[0]) && !/^v\d+$/.test(partes[0])) partes.shift();
+  return `${url.slice(0, en + marca.length)}c_fill,g_face,w_256,h_256,f_jpg,q_80/${partes.join("/")}`;
+}
+
 async function imageDataUrl(url?: string | null) {
   if (!url) return null;
-  try {
-    const resolved = url.startsWith("/")
-      ? `${process.env.NEXT_PUBLIC_APP_URL || "https://contratacr.com"}${url}`
-      : url;
-    const response = await fetch(resolved);
-    if (!response.ok) return null;
-    const contentType = response.headers.get("content-type") || "image/jpeg";
-    const bytes = Buffer.from(await response.arrayBuffer());
-    return `data:${contentType};base64,${bytes.toString("base64")}`;
-  } catch {
-    return null;
-  }
+  const resolved = url.startsWith("/")
+    ? `${process.env.NEXT_PUBLIC_APP_URL || "https://contratacr.com"}${url}`
+    : fotoReducida(url);
+  return fotoLiviana(resolved, 400 * 1024);
 }
 
 export default async function Image({ params }: { params: Promise<{ locale: string; slug: string }> }) {
