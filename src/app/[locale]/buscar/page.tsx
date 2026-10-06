@@ -1,4 +1,4 @@
-import { imagenSocial } from "@/lib/seo/imagen-social";
+import { imagenDeSeccion } from "@/lib/seo/imagen-social";
 import { prefijoDeIdioma } from "@/lib/prefijo-de-idioma";
 import type { Metadata } from "next";
 import { Suspense } from "react";
@@ -125,13 +125,15 @@ export async function generateMetadata({ searchParams }: { searchParams: Promise
     // Sin servicio: la búsqueda general, con su imagen (sin ella Next ponía
     // /opengraph-image a secas, que no era una imagen).
     const tg = await getTranslations("search");
-    const general = { title: tg("metaTitleGeneral"), description: tg("metaDescGeneral"), ...imagenSocial(locale) };
+    // La tarjeta propia de la sección: esta página se sirve por una
+    // reescritura (/profesionales → /buscar) y Next no le enchufa el archivo.
+    const general = { title: tg("metaTitleGeneral"), description: tg("metaDescGeneral"), ...imagenDeSeccion(locale, "/profesionales") };
     return indexable ? general : { ...general, robots: { index: false, follow: true } };
   }
   const t = await getTranslations("search");
   const title = t("metaTitle", { category: que, place });
   const description = t("metaDesc", { category: que, place });
-  const social = imagenSocial(locale);
+  const social = imagenDeSeccion(locale, "/profesionales");
   const compartir = { title, description, openGraph: { title, description, ...social.openGraph }, twitter: { title, description, ...social.twitter } };
   if (!indexable) return { ...compartir, robots: { index: false, follow: true } };
   // El canónico tiene que apuntar a la dirección REAL de la página del oficio:

@@ -5,14 +5,13 @@ import { prefijoDeIdioma } from "@/lib/prefijo-de-idioma";
 import { getLocale } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { safeGetUser } from "@/lib/supabase/get-user";
-import { imagenSocial } from "@/lib/seo/imagen-social";
 
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   const en = locale === "en";
-  return { title: en ? "Post what you need · ContrataCR" : "Publica lo que necesitas · ContrataCR", description: en ? "Tell us what you need and professionals contact you on WhatsApp. Free." : "Cuenta qué necesitas y los profesionales te contactan por WhatsApp. Gratis.", ...imagenSocial(locale) };
+  return { title: en ? "Post what you need · ContrataCR" : "Publica lo que necesitas · ContrataCR", description: en ? "Tell us what you need and professionals contact you on WhatsApp. Free." : "Cuenta qué necesitas y los profesionales te contactan por WhatsApp. Gratis.", openGraph: {}, twitter: { card: "summary_large_image" as const } };
 }
 
 

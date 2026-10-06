@@ -4439,7 +4439,37 @@
     "proyecto": "Project",
     "promocion": "Promotion",
     "empleo": "Job",
-    "proyectoSinTitulo": "A client is looking for a professional"
+    "proyectoSinTitulo": "A client is looking for a professional",
+    "seccionEmpleos": {
+      "etiqueta": "Jobs",
+      "titulo": "Job openings in Costa Rica",
+      "detalle": "Open the posting and message whoever published it on WhatsApp."
+    },
+    "seccionPromociones": {
+      "etiqueta": "Promotions",
+      "titulo": "Deals from professionals",
+      "detalle": "Special prices from verified professionals."
+    },
+    "seccionProyectos": {
+      "etiqueta": "Projects",
+      "titulo": "Work people need done",
+      "detalle": "If it is your trade, message the requester on WhatsApp."
+    },
+    "seccionProfesionales": {
+      "etiqueta": "Professionals",
+      "titulo": "Verified professionals in Costa Rica",
+      "detalle": "Search by service and place and contact on WhatsApp."
+    },
+    "seccionPublicar": {
+      "etiqueta": "Request a service",
+      "titulo": "Post what you need",
+      "detalle": "Free. Professionals contact you on WhatsApp."
+    },
+    "seccionCotizar": {
+      "etiqueta": "Quotes",
+      "titulo": "Make a quote in minutes",
+      "detalle": "Free, ready to send on WhatsApp."
+    }
   },
   "accountPrivacy": {
     "readReceipts": "Read receipts",
