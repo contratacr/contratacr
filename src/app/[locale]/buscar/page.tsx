@@ -122,7 +122,11 @@ export async function generateMetadata({ searchParams }: { searchParams: Promise
   const lugarEscrito = (params.ubicacion ?? "").trim();
   const place = canton && provincia ? `${canton.name}, ${provincia.name}` : provincia?.name ?? (lugarEscrito || "Costa Rica");
   if (!que) {
-    return indexable ? {} : { robots: { index: false, follow: true } };
+    // Sin servicio: la búsqueda general, con su imagen (sin ella Next ponía
+    // /opengraph-image a secas, que no era una imagen).
+    const tg = await getTranslations("search");
+    const general = { title: tg("metaTitleGeneral"), description: tg("metaDescGeneral"), ...imagenSocial(locale) };
+    return indexable ? general : { ...general, robots: { index: false, follow: true } };
   }
   const t = await getTranslations("search");
   const title = t("metaTitle", { category: que, place });

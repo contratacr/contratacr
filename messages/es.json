@@ -317,7 +317,9 @@
       "texto": "Publica lo que necesitas y los profesionales te contactan por WhatsApp.",
       "boton": "Publicar lo que necesito",
       "pie": "Gratis · Tu número no se publica"
-    }
+    },
+    "metaTitleGeneral": "Profesionales verificados en Costa Rica",
+    "metaDescGeneral": "Busca por servicio y lugar y contacta por WhatsApp."
   },
   "hero": {
     "categoryPlaceholder": "¿Qué servicio necesitas?",

@@ -1,5 +1,6 @@
 import { Link } from "@/i18n/navigation";
 import { LegalDocument, type LegalSection } from "@/components/legal/legal-document";
+import { imagenSocial } from "@/lib/seo/imagen-social";
 
 const ES_SECTIONS: LegalSection[] = [
   {
@@ -220,9 +221,10 @@ const EN_SECTIONS: LegalSection[] = [
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
-  return locale === "en"
+  const base = locale === "en"
     ? { title: "Privacy Policy - ContrataCR", description: "How ContrataCR processes and protects personal data." }
     : { title: "Política de Privacidad - ContrataCR", description: "Cómo ContrataCR trata y protege sus datos personales." };
+  return { ...base, ...imagenSocial(locale) };
 }
 
 export default async function PrivacidadPage({ params }: { params: Promise<{ locale: string }> }) {

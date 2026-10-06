@@ -312,3 +312,28 @@ test.describe("esqueletos", () => {
     expect(conEsqueleto, `volvieron a mostrar esqueleto: ${conEsqueleto.join(", ")}`).toEqual([]);
   });
 });
+
+test.describe("compartir", () => {
+  test("cada página pública declara una imagen para compartir que de verdad es una imagen", async ({ request }) => {
+    test.slow();
+    // Nueve páginas declaraban /opengraph-image a secas (el español ya no lleva
+    // prefijo en la dirección, pero el archivo de la imagen sí), y Facebook y
+    // WhatsApp no mostraban nada al pegar el enlace (6-oct-2026).
+    const dinamicas: string[] = [];
+    for (const [tablero, prefijo] of [["/profesionales", "/profesionales/"], ["/empleos", "/empleos/"], ["/promociones", "/promociones/"], ["/proyectos", "/proyectos/"]] as const) {
+      const html = await (await request.get(tablero)).text();
+      const enlace = [...html.matchAll(new RegExp(`href="(${prefijo}[^"?#/]+)`, "g"))].map((m) => m[1]).find((h) => !/publicar|mis-/.test(h));
+      if (enlace) dinamicas.push(enlace);
+    }
+    const sinImagen: string[] = [];
+    for (const ruta of [...PUBLICAS, "/en", "/en/empleos", "/resena-google", "/eliminar-cuenta", ...dinamicas]) {
+      const html = await (await request.get(ruta, { headers: { "user-agent": "facebookexternalhit/1.1" } })).text();
+      const imagen = /<meta[^>]+property="og:image"[^>]+content="([^"]+)"/.exec(html)?.[1] ?? /<meta[^>]+content="([^"]+)"[^>]+property="og:image"/.exec(html)?.[1];
+      if (!imagen) { sinImagen.push(`${ruta}: sin og:image`); continue; }
+      const r = await request.get(imagen.replace(/^https?:\/\/[^/]+/, ""));
+      const tipo = r.headers()["content-type"] ?? "";
+      if (r.status() !== 200 || !tipo.startsWith("image/")) sinImagen.push(`${ruta}: ${imagen} → ${r.status()} ${tipo}`);
+    }
+    expect(sinImagen, sinImagen.join("\n")).toEqual([]);
+  });
+});

@@ -6,8 +6,15 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { safeGetUser } from "@/lib/supabase/get-user";
 import { paginaDeOrigen } from "@/lib/navigation/pagina-de-origen";
 import { CotizarSinSesion } from "@/components/quotes/cotizar-sin-sesion";
+import { imagenSocial } from "@/lib/seo/imagen-social";
 
 export const dynamic = "force-dynamic";
+
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
+  const en = locale === "en";
+  return { title: en ? "Make a quote · ContrataCR" : "Hacer una cotización · ContrataCR", description: en ? "Build a free quote, ready to send on WhatsApp." : "Arma una cotización gratis, lista para mandar por WhatsApp.", ...imagenSocial(locale) };
+}
 
 /**
  * HACER UNA COTIZACIÓN SIN CUENTA (4-oct-2026). Se llena completa aquí; al

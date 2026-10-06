@@ -5,10 +5,12 @@ import { Navbar } from "@/components/layout/navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { Link } from "@/i18n/navigation";
 import { VerificationCta } from "@/components/professionals/verification-cta";
+import { imagenSocial } from "@/lib/seo/imagen-social";
 
-export async function generateMetadata() {
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
   const t = await getTranslations("proveedoresPage");
-  return { title: t("metaTitle"), description: t("metaDesc") };
+  return { title: t("metaTitle"), description: t("metaDesc"), ...imagenSocial(locale) };
 }
 
 const rich = { strong: (c: React.ReactNode) => <strong>{c}</strong> };

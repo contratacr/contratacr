@@ -17,6 +17,7 @@ import {
   ClipboardList,
 } from "lucide-react";
 import { VerifiedSeal } from "@/components/ui/verified-seal";
+import { rutaImagenSocial } from "@/lib/seo/imagen-social";
 
 type IconComponent = (props: { className?: string }) => ReactNode;
 
@@ -26,7 +27,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   const { locale } = await params;
   const t = await getTranslations("comoFunciona");
   const path = `${prefijoDeIdioma(locale)}/como-funciona`;
-  const imageUrl = `${APP_URL}${prefijoDeIdioma(locale)}/opengraph-image`;
+  const imageUrl = `${APP_URL}${rutaImagenSocial(locale)}`;
 
   return {
     title: t("metaTitle"),

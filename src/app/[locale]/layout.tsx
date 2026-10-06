@@ -32,6 +32,7 @@ import { RouteScrollReset } from "@/components/util/route-scroll-reset";
 import { withPromiseTimeout } from "@/lib/promise-timeout";
 import { AiConcierge } from "@/components/landing/ai-concierge";
 import { FreezeMonitor } from "@/components/perf/freeze-monitor";
+import { rutaImagenSocial } from "@/lib/seo/imagen-social";
 
 type LocaleParams = {
   params: Promise<{ locale: string }>;
@@ -50,7 +51,8 @@ function buildMetadata(locale: string): Metadata {
   const socialDescription = isEn
     ? "Offer and find services in Costa Rica"
     : "Ofrece y encuentra servicios en Costa Rica";
-  const socialImage = `${prefijoDeIdioma(locale)}/opengraph-image`;
+  // Con `prefijoDeIdioma` quedaba /opengraph-image a secas, que no era una imagen.
+  const socialImage = rutaImagenSocial(locale);
 
   return {
     metadataBase: new URL("https://contratacr.com"),

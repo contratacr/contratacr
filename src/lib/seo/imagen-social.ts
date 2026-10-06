@@ -10,9 +10,15 @@
  * que sobre el fondo blanco de la tarjeta no se ve—. Así salían /buscar y las
  * páginas por oficio, justo las que más se comparten.
  */
-export function imagenSocial(locale: string) {
+/** Dónde vive la imagen general: /<idioma>/opengraph-image, TAMBIÉN en español
+ *  (el español no lleva prefijo en las direcciones, pero el archivo sí). */
+export function rutaImagenSocial(locale: string) {
   const IDIOMAS = ["es", "en"];
-  const url = `/${IDIOMAS.includes(locale) ? locale : IDIOMAS[0]}/opengraph-image`;
+  return `/${IDIOMAS.includes(locale) ? locale : IDIOMAS[0]}/opengraph-image`;
+}
+
+export function imagenSocial(locale: string) {
+  const url = rutaImagenSocial(locale);
   return {
     openGraph: { images: [{ url, width: 1200, height: 630, alt: "ContrataCR" }] },
     twitter: { card: "summary_large_image" as const, images: [url] },
