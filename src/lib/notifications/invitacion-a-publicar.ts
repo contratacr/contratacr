@@ -5,14 +5,14 @@ type Admin = ReturnType<typeof createAdminClient>;
 /**
  * «¿NECESITAS A ALGUIEN?» EN LA CAMPANITA (4-oct-2026, decisión de Isaac).
  * Se manda a toda cuenta nueva al crearse y, una vez, a las que ya existían
- * (el recorrido diario de resena-google la reparte). Explica en una línea qué
- * es un proyecto —pedir un servicio, no ofrecerlo— y lleva al formulario.
+ * (el recorrido diario de resena-google la reparte). Una línea y el enlace al
+ * formulario; la aclaración «es para pedir, no para ofrecer» sobraba (6-oct).
  * Una sola vez por cuenta: antes de insertar se comprueba que no la tenga.
  */
 const TITULO = { es: "¿Necesitas a alguien?", en: "Need someone?" };
 const CUERPO = {
-  es: "Publica lo que necesitas y los profesionales te contactan por WhatsApp. Es para pedir un servicio, no para ofrecerlo.",
-  en: "Post what you need and professionals contact you on WhatsApp. It is for requesting a service, not offering one.",
+  es: "Publica lo que necesitas y los profesionales te contactan por WhatsApp.",
+  en: "Post what you need and professionals contact you on WhatsApp.",
 };
 
 export async function invitarAPublicarProyecto(admin: Admin, profileIds: string[], idioma: "es" | "en" = "es") {

@@ -10,6 +10,27 @@ import { pedirTotalSinLeer, suscribirseAAvisos } from "@/lib/notifications-live"
 // recargar) y se vuelve a pedir con cada aviso nuevo o cambio.
 let ultimo: { userId: string; total: number } | null = null;
 
+// En la pantalla de Notificaciones la barra de abajo no está montada, así que
+// su cambio de «todas leídas» no le llegaba: al salir, la barra volvía con el
+// número viejo medio segundo y luego lo quitaba. Este oyente vive aunque la
+// barra no, y deja la memoria en cero (o la olvida) para que vuelva limpia.
+if (typeof window !== "undefined") {
+  window.addEventListener("notificationsChanged", (event) => {
+    const detalle = (event as CustomEvent<{ sinLeer?: number; userId?: string }>).detail;
+    if (typeof detalle?.sinLeer === "number" && detalle.userId) ultimo = { userId: detalle.userId, total: detalle.sinLeer };
+    else ultimo = null;
+  });
+}
+
+/** Lo último que se supo del total sin leer de esta persona, o null. */
+export function avisosRecordados(userId: string | undefined): number | null {
+  return userId && ultimo?.userId === userId ? ultimo.total : null;
+}
+
+export function recordarAvisos(userId: string, total: number) {
+  ultimo = { userId, total };
+}
+
 export function useAvisosPorVer(activo: boolean): number {
   const { user } = useAuth();
   const [total, setTotal] = useState(() => (user && ultimo?.userId === user.id ? ultimo.total : 0));
