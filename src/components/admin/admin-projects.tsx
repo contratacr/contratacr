@@ -96,10 +96,12 @@ function fmtBudget(project: AdminProject) {
   return "A convenir";
 }
 
+// Al cliente no se le pide verificarse: la etiqueta sale solo si hay algo que
+// decir. «Sin verificar» en todos los proyectos parecía una tarea pendiente.
 function identityLabel(status: string | null) {
   if (status === "verified") return "Cliente verificado";
   if (status === "pending") return "Identidad pendiente";
-  return "Sin verificar";
+  return null;
 }
 
 function identityClass(status: string | null) {
@@ -293,9 +295,11 @@ export function AdminProjects() {
                             <span className={cn("shrink-0 rounded-md border px-2 py-1 text-xs font-semibold", meta.className)}>
                               {meta.label}
                             </span>
+                            {identityLabel(project.client_identity_status) && (
                             <span className={cn("shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold", identityClass(project.client_identity_status))}>
                               {identityLabel(project.client_identity_status)}
                             </span>
+                            )}
                           </div>
                           <p className="mt-1 line-clamp-2 text-sm text-[#4b5563]">{project.description || "Sin descripcion."}</p>
                           <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-[#6b7280]">
