@@ -127,7 +127,10 @@ export async function prepareImageForUpload(file: File, options: PrepareImageOpt
   // dimensiones: antes una foto de celular de 3,4 MB y 4000 px pasaba sin
   // tocar porque pesaba menos del límite, y luego agotaba la memoria del
   // servidor al dibujar la imagen para compartir el perfil (6-oct-2026).
-  if (file.size <= targetBytes && !options.maxDimension) return file;
+  // HEIC/HEIF (las fotos del iPhone) siempre se convierten: Chrome y Android
+  // no las muestran, y quedaban rotas para quien no usa iPhone (7-oct-2026).
+  const esHeic = detectedKind === "heic" || detectedKind === "heif";
+  if (file.size <= targetBytes && !options.maxDimension && !esHeic) return file;
 
   if (detectedKind === "gif") {
     if (file.size <= targetBytes) return file;
@@ -138,7 +141,10 @@ export async function prepareImageForUpload(file: File, options: PrepareImageOpt
   try {
     decoded = await decodeImage(file);
     const maxDimension = options.maxDimension ?? 1600;
-    if (file.size <= targetBytes && Math.max(decoded.width, decoded.height) <= maxDimension) return file;
+    // El original solo se queda si ya es liviano y del tamaño pedido. Antes
+    // bastaba con el tamaño en píxeles y entraban fotos de 3 MB a 1500 px.
+    const yaLiviana = file.size <= Math.min(targetBytes, 500 * 1024);
+    if (!esHeic && yaLiviana && Math.max(decoded.width, decoded.height) <= maxDimension) return file;
     const attempts = [
       { dimension: maxDimension, quality: 0.86 },
       { dimension: maxDimension, quality: 0.78 },
@@ -158,7 +164,8 @@ export async function prepareImageForUpload(file: File, options: PrepareImageOpt
       }
     }
   } catch (error) {
-    if (file.size <= targetBytes) return file;
+    // Una HEIC que este navegador no sabe leer no se sube tal cual: no se vería.
+    if (file.size <= targetBytes && !esHeic) return file;
     if (error instanceof ImageUploadPreparationError) {
       // The type is supported, but this browser could not decode a large source
       // (notably HEIC on some iOS versions) enough to fit the hosting body limit.
