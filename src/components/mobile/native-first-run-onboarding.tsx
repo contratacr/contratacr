@@ -79,6 +79,11 @@ export function NativeFirstRunOnboarding() {
         window.localStorage.removeItem(NATIVE_ONBOARDING_PENDING_PATH_KEY);
         document.documentElement.classList.remove("ccr-native-first-run-pending");
         setVisible(false);
+        // Al arrancar, el puente vio «primer arranque» y le dejó el logo a la
+        // bienvenida. Si la bienvenida se salta porque ya hay sesión (reinstalar,
+        // o venir de una versión anterior), el logo hay que quitarlo aquí: si no,
+        // la app se quedaba en el logo hasta cerrarla a la fuerza (6-oct-2026).
+        hideNativeSplashAfterPaint();
         return;
       }
 
