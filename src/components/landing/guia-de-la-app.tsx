@@ -111,19 +111,52 @@ export function GuiaDeLaApp({ pasos }: { pasos: PasoDeLaGuia[] }) {
   const [duraciones, setDuraciones] = useState<number[]>([]);
   const [srcImagen, setSrcImagen] = useState<string | null>(null);
   const blobs = useRef<(Blob | null)[]>([]);
+
+  // LOS VIDEOS SE PIDEN SOLO CUANDO LA GUÍA ESTÁ CERCA (7-oct-2026). Antes se
+  // bajaban los cuatro al abrir la portada, y en el iPhone hasta tres veces
+  // cada uno (el <video>, una lectura de metadatos y la copia en blob): 12,7 MB
+  // en la primera visita aunque la persona nunca bajara hasta aquí. Mientras
+  // tanto se ve la imagen fija de cada paso.
+  const [motor, setMotor] = useState<"imagen" | "video" | null>(null);
+  const [cerca, setCerca] = useState(false);
   useEffect(() => {
     const ua = navigator.userAgent;
     const webkit = /iP(hone|ad|od)/.test(ua) || (/Version\/[\d.]+.*Safari/.test(ua) && !/Chrome|Chromium|Edg|Android/.test(ua));
-    if (!webkit || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const quieto = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    queueMicrotask(() => setMotor(webkit && !quieto ? "imagen" : "video"));
+  }, []);
+  useEffect(() => {
+    const el = caja.current;
+    if (!el || cerca) return;
+    const io = new IntersectionObserver((e) => { if (e.some((x) => x.isIntersecting)) { setCerca(true); io.disconnect(); } }, { rootMargin: "150px 0px" });
+    io.observe(el);
+    return () => io.disconnect();
+  }, [cerca]);
+  // En Safari: cada video se baja UNA vez, de a uno, empezando por el que se
+  // ve. La duración se lee del mismo archivo ya bajado, sin pedirlo otra vez.
+  useEffect(() => {
+    if (motor !== "imagen" || !cerca) return;
     let vivo = true;
-    pasos.forEach((p, i) => {
-      const v = document.createElement("video");
-      v.preload = "metadata"; v.muted = true; v.src = p.video;
-      v.onloadedmetadata = () => { if (vivo) setDuraciones((d) => { const n = [...d]; n[i] = v.duration; return n; }); };
-      fetch(p.video).then((r) => r.blob()).then((b) => { blobs.current[i] = b; if (vivo && i === 0) setComoImagen(true); }).catch(() => {});
-    });
+    const orden = pasos.map((_, i) => (i + activoAnterior.current) % pasos.length);
+    (async () => {
+      for (const i of orden) {
+        if (!vivo) return;
+        if (blobs.current[i]) continue;
+        try {
+          const b = await (await fetch(pasos[i].video)).blob();
+          if (!vivo) return;
+          blobs.current[i] = b;
+          const url = URL.createObjectURL(b);
+          const v = document.createElement("video");
+          v.preload = "metadata"; v.muted = true;
+          v.onloadedmetadata = () => { URL.revokeObjectURL(url); if (vivo) setDuraciones((d) => { const n = [...d]; n[i] = v.duration; return n; }); };
+          v.src = url;
+          if (i === activoAnterior.current) setComoImagen(true);
+        } catch { /* sin red: se queda la imagen fija */ }
+      }
+    })();
     return () => { vivo = false; };
-  }, [pasos]);
+  }, [motor, cerca, pasos]);
   // Solo la duración DEL PASO ACTIVO: si dependiera de la lista entera, cada
   // duración que llega de otro video reiniciaba la animación en curso.
   const duracionActiva = duraciones[activo];
@@ -268,7 +301,7 @@ export function GuiaDeLaApp({ pasos }: { pasos: PasoDeLaGuia[] }) {
                   // eslint-disable-next-line @next/next/no-img-element -- .mp4 animado (ver comoImagen)
                   <img key={srcImagen} src={srcImagen} alt={pasos[activo].alt} onLoad={() => setPintando(activo)} className="ccr-guia-video absolute inset-0 z-[2] h-full w-full object-cover object-top" />
                 )}
-                {!comoImagen && pasos.map((p, i) => (
+                {motor === "video" && cerca && pasos.map((p, i) => (
                   <video
                     key={p.clave}
                     ref={(el) => {
@@ -282,9 +315,9 @@ export function GuiaDeLaApp({ pasos }: { pasos: PasoDeLaGuia[] }) {
                     muted
                     playsInline
                     autoPlay={i === activo}
-                    // Todos se descargan desde el principio (son cortos): al cambiar de paso el
-                    // video ya está listo y arranca al instante.
-                    preload="auto"
+                    // Solo el que se ve se baja entero; los demás, lo mínimo para estar
+                    // listos. Mientras carga, la imagen fija del paso lo tapa.
+                    preload={i === activo ? "auto" : "metadata"}
                     aria-label={i === activo ? p.alt : undefined}
                     aria-hidden={i !== activo || undefined}
                     onPlaying={(e) => { if (i === activo) { setPintando(i); setPrevio(null); setDuracion(e.currentTarget.duration || 0); setCorriendo(true); } }}

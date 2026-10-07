@@ -11,7 +11,11 @@ import { CATEGORY_GROUPS } from "@/lib/data/categories";
 //
 // "v" = verified (reused from the live landing carousel/explore-tabs, known-good).
 // The rest are best-effort matches; broken URLs degrade to the branded fallback via onError.
-const U = (id: string) => `https://images.unsplash.com/photo-${id}?w=1100&auto=format&fit=crop&q=85`;
+//
+// Se piden a Unsplash al tamaño justo (srcSet de 800 y 1100 px) y en el formato
+// que el teléfono mejor lee (AVIF en el iPhone): pesan menos que una copia
+// propia en WebP (7-oct-2026). Las dos que Unsplash ya no tenía se quitaron.
+const U = (id: string) => `https://images.unsplash.com/photo-${id}?w=1100&auto=format&fit=crop&q=80`;
 
 export const CATEGORY_IMAGE: Record<string, string> = {
   electromecanica: U("1649038780045-235e4b6e40b4"), // técnico trabajando un motor eléctrico (1-oct-2026)
@@ -36,7 +40,6 @@ export const CATEGORY_IMAGE: Record<string, string> = {
   // ── Limpieza ──
   limpieza: U("1581578731548-c64695cc6952"),            // v
   limpieza_oficinas: U("1497366216548-37526070297c"),
-  lavado_vehiculos: U("1605164599901-db7f68c4b1a8"),
   // ── Tecnología (verified tech photo reused for related ids) ──
   tecnologia: U("1518770660439-4636190af475"),          // v
   desarrollo_web: U("1547658719-da2b51169166"),
@@ -63,7 +66,6 @@ export const CATEGORY_IMAGE: Record<string, string> = {
   psicologia: U("1758273240403-052b3c99f636"),
   odontologia: U("1606811841689-23dfddce3e95"),
   medicina_domicilio: U("1758691461935-202e2ef6b69f"),
-  pediatria: U("1632053002928-1919f1c9c84e"),
   enfermeria: U("1576765608535-5f04d1e3f289"),
   veterinaria: U("1628009368231-7bb7cfcb0def"),
   cuido_mascotas: U("1450778869180-41d0601e046e"),
@@ -104,7 +106,6 @@ export const CATEGORY_IMAGE: Record<string, string> = {
   mecanica: U("1625047509248-ec889cbff17f"),            // v
   hojalateria: U("1599256621730-535171e28e50"),
   electricidad_automotriz: U("1625047509248-ec889cbff17f"),  // v
-  detailing: U("1605164599901-db7f68c4b1a8"),
   cambio_llantas: U("1486262715619-67b85e0b08d3"),
 };
 
@@ -144,6 +145,13 @@ export function categoryImagePosition(id: string): string {
 
 export function categoryImageUrl(id: string): string | undefined {
   return CATEGORY_IMAGE[id];
+}
+
+/** Los dos tamaños de la foto, para `srcSet`. */
+export function categoryImageSrcSet(id: string): string | undefined {
+  const url = CATEGORY_IMAGE[id];
+  if (!url?.startsWith("https://images.unsplash.com/")) return undefined;
+  return `${url.replace("w=1100", "w=800")} 800w, ${url} 1100w`;
 }
 export function categoryGroupId(id: string): string {
   return ID_TO_GROUP.get(id) ?? "";

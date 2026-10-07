@@ -89,6 +89,7 @@ export function WelcomeAccessScreen({
       <button
         type="button"
         onClick={() => switchLang(english ? "es" : "en")}
+        onPointerDown={switchLang.precargar}
         aria-label={english ? "Cambiar a español" : "Switch to English"}
         className="absolute right-4 top-[max(18px,env(safe-area-inset-top))] z-10 inline-flex h-10 min-w-10 items-center justify-center rounded-full px-3 text-[13px] font-bold text-white/80 transition hover:text-white active:scale-95 motion-reduce:transform-none"
       >

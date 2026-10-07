@@ -120,16 +120,16 @@ export function useSwitchLang() {
   const [, startTransition] = useTransition();
   const otroIdioma = locale === "en" ? "es" : "en";
 
-  // Con la ruta ya precargada el cambio es un intercambio de texto, no una carga.
-  useEffect(() => {
-    router.prefetch(pathname, { locale: otroIdioma });
-  }, [otroIdioma, pathname, router]);
+  // La otra versión se precarga recién cuando el dedo o el ratón llegan al
+  // botón (ver `precargar`). Antes se bajaba en TODAS las páginas, por si
+  // acaso: ~200 KB por pantalla para algo que casi nadie usa (7-oct-2026).
+  const precargar = () => router.prefetch(pathname, { locale: otroIdioma });
 
   useEffect(() => {
     document.documentElement.removeAttribute("data-locale-switch");
   }, [locale]);
 
-  return (lang: string) => {
+  const cambiar = (lang: string) => {
     const currentState =
       typeof window === "undefined" ? "" : `${window.location.search}${window.location.hash}`;
     if (typeof window !== "undefined") {
@@ -151,6 +151,7 @@ export function useSwitchLang() {
       router.replace(`${pathname}${currentState}`, { locale: lang, scroll: false });
     });
   };
+  return Object.assign(cambiar, { precargar });
 }
 
 /* --- Language menu (DESKTOP navbar) --- */
@@ -164,6 +165,8 @@ function LanguageMenu() {
     <button
       type="button"
       onClick={() => switchLang(nextLocale)}
+      onPointerEnter={switchLang.precargar}
+      onFocus={switchLang.precargar}
       aria-label={locale === "en" ? "Cambiar a español" : "Switch to English"}
       className="relative z-[70] inline-flex h-10 min-w-10 shrink-0 items-center justify-center rounded-full px-2 text-[12px] font-bold uppercase tracking-[0.04em] text-[#1A2744] transition-colors hover:bg-gray-50 hover:text-[#009FD9]"
     >
@@ -3277,7 +3280,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                     tocarlo. La forma de pastilla lo separa de los destinos. */}
                 <button
                   type="button"
-                  onPointerDown={(e) => e.stopPropagation()}
+                  onPointerDown={(e) => { e.stopPropagation(); switchLang.precargar(); }}
                   onClick={(e) => {
                     e.stopPropagation();
                     switchLang(alternateLocale);
