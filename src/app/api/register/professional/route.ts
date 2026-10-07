@@ -50,6 +50,25 @@ function hasStoredServices(services: unknown): boolean {
 }
 
 
+// La marca de «profesional» en la sesión (is_provider) la ponía SOLO el
+// navegador, después de esta ruta y «best-effort». Si ese paso fallaba —señal
+// cortada, app cerrada— la persona quedaba con ficha pero el app la trataba
+// como cliente: el «+» no le ofrecía promoción, empleo ni caso de éxito. El
+// 6-oct-2026 había 7 cuentas así. Ahora se pone aquí, junto con la ficha, y se
+// conserva el resto de los datos de la cuenta.
+async function marcarComoProfesional(supabase: ReturnType<typeof createAdminClient>, userId: string) {
+  try {
+    const { data } = await supabase.auth.admin.getUserById(userId);
+    const actual = (data?.user?.user_metadata ?? {}) as Record<string, unknown>;
+    if (actual.is_provider === true && actual.role === "professional") return;
+    await supabase.auth.admin.updateUserById(userId, {
+      user_metadata: { ...actual, role: "professional", is_provider: true, intended_role: null, professional_signup_started: false, onboarding_completed: true },
+    });
+  } catch (e) {
+    console.error("[register/professional] marcar como profesional:", e);
+  }
+}
+
 async function rollbackFreshSignup(supabase: ReturnType<typeof createAdminClient>, userId: string, freshSignup: boolean) {
   if (!freshSignup) return;
   try {
@@ -333,6 +352,7 @@ export async function POST(req: Request) {
         },
       });
 
+      await marcarComoProfesional(supabase, userId);
       return NextResponse.json({ ok: true, slug: existingPro.slug });
     }
 
@@ -429,6 +449,7 @@ export async function POST(req: Request) {
     // Lo que sí sale al crear la cuenta: «¿Necesitas a alguien?» (publicar un proyecto).
     await invitarAPublicarProyecto(supabase, [userId]);
     await avisarCompletarPerfil(supabase, userId);
+    await marcarComoProfesional(supabase, userId);
     return NextResponse.json({ ok: true, slug });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Error interno del servidor";
