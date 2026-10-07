@@ -107,9 +107,13 @@ test.describe("portada y menú (1-oct-2026) @smoke", () => {
 
   test("los videos de la guía están silenciados y corren solos", async ({ page }) => {
     await gotoOK(page, "/");
-    await page.locator("h2", { hasText: /Así funciona ContrataCR|How ContrataCR works/ }).scrollIntoViewIfNeeded();
+    // Los videos se piden al acercarse a la guía (7-oct-2026): se baja hasta el
+    // teléfono, y se repite si la página creció por arriba mientras cargaba.
     const activo = page.locator("video.ccr-guia-video.opacity-100").first();
-    await expect(activo).toBeVisible();
+    await expect(async () => {
+      await page.locator("img[data-guia-poster]").first().scrollIntoViewIfNeeded();
+      await expect(activo).toBeVisible({ timeout: 2_000 });
+    }).toPass({ timeout: 20_000 });
     // Lo que Safari exige para reproducir solo: silenciado y en línea. (El Chromium
     // de Playwright no trae el códec H.264, así que no se mide la reproducción.)
     expect(await activo.evaluate((v: HTMLVideoElement) => v.muted && v.hasAttribute("muted") && v.hasAttribute("playsinline"))).toBe(true);
@@ -119,9 +123,13 @@ test.describe("portada y menú (1-oct-2026) @smoke", () => {
     // WebKit suspende el autoplay de un video que no «se ve»: con opacidad 0
     // hasta que corría, el video no arrancaba hasta centrar el teléfono.
     await gotoOK(page, "/");
-    await page.locator("h2", { hasText: /Así funciona ContrataCR|How ContrataCR works/ }).scrollIntoViewIfNeeded();
+    // Los videos se piden al acercarse a la guía (7-oct-2026): se baja hasta el
+    // teléfono, y se repite si la página creció por arriba mientras cargaba.
     const activo = page.locator("video.ccr-guia-video.opacity-100").first();
-    await expect(activo).toBeVisible();
+    await expect(async () => {
+      await page.locator("img[data-guia-poster]").first().scrollIntoViewIfNeeded();
+      await expect(activo).toBeVisible({ timeout: 2_000 });
+    }).toPass({ timeout: 20_000 });
     expect(await activo.evaluate((v) => Number(getComputedStyle(v).opacity))).toBe(1);
     // Una imagen fija por paso (precargadas); se mira la del paso activo.
     const poster = page.locator("img[data-guia-poster]").first();

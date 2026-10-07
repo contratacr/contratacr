@@ -1,18 +1,22 @@
 "use client";
 
 import { useState } from "react";
-import { categoryImageUrl, categoryImagePosition, categoryGroupId } from "@/lib/data/category-images";
+import { categoryImageUrl, categoryImageSrcSet, categoryImagePosition, categoryGroupId } from "@/lib/data/category-images";
 import { getCategoryGroupVisual } from "@/lib/data/category-group-visuals";
 import { cn } from "@/lib/utils";
 import { ProgressiveImage } from "@/components/ui/progressive-image";
 
 // The service's visual identity: a real catalog photo when available, else a branded
 // gradient + the shared group icon. A small icon badge overlays every card.
-export function ServiceImage({ categoryId, className, badge = true }: { categoryId: string; className?: string; badge?: boolean }) {
+// `sizes`: el ancho de foto que hace falta. La foto es horizontal (3:2) y la
+// tarjeta vertical (4:5), así que el recorte necesita ~1,9 veces el ancho de la
+// tarjeta (media pantalla en el teléfono, ~280 px en computadora).
+// `diferida`: no pide la foto hasta que se la pida la sección.
+export function ServiceImage({ categoryId, className, badge = true, sizes = "(max-width: 1023px) 94vw, 525px", diferida = false }: { categoryId: string; className?: string; badge?: boolean; sizes?: string; diferida?: boolean }) {
   const url = categoryImageUrl(categoryId);
   const [failed, setFailed] = useState(false);
   const { from, to, Icon } = getCategoryGroupVisual(categoryGroupId(categoryId));
-  const showPhoto = !!url && !failed;
+  const showPhoto = !!url && !failed && !diferida;
 
   return (
     <div
@@ -20,7 +24,7 @@ export function ServiceImage({ categoryId, className, badge = true }: { category
       style={showPhoto ? undefined : { backgroundImage: `linear-gradient(135deg, ${from}, ${to})` }}
     >
       {showPhoto ? (
-        <ProgressiveImage src={url} alt="" fit="cover" style={{ objectPosition: categoryImagePosition(categoryId) }} onError={() => setFailed(true)} wrapperClassName="h-full w-full" />
+        <ProgressiveImage src={url} srcSet={categoryImageSrcSet(categoryId)} sizes={sizes} alt="" fit="cover" style={{ objectPosition: categoryImagePosition(categoryId) }} onError={() => setFailed(true)} wrapperClassName="h-full w-full" />
       ) : (
         <div className="flex h-full w-full items-center justify-center">
           <Icon className="h-[34%] w-[34%] text-white/85" strokeWidth={1.5} />
