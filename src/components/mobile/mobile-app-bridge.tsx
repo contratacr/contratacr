@@ -223,6 +223,10 @@ export function MobileAppBridge() {
 
     if (!firstRunPending) {
       hideAfterPaint();
+    } else {
+      // En el primer arranque el logo lo quita la bienvenida al estar lista. Si
+      // por cualquier camino eso no pasa, que nunca se quede para siempre.
+      maxTimer = window.setTimeout(hideSplashNow, 8000);
     }
 
     return () => {
