@@ -64,8 +64,11 @@ function fmtDate(value: string) {
   return new Date(value).toLocaleDateString("es-CR", { day: "numeric", month: "short", year: "numeric" });
 }
 
+// La verificación de identidad es solo de profesionales: a un cliente o a un
+// admin no se le pide, así que «Sin verificar» en ellos se leía como algo
+// pendiente cuando no hay nada que hacer (6-oct-2026).
 function statusLabel(user: ListedUser) {
-  if (user.kind === "admin") return "No aplica";
+  if (user.kind === "admin" || user.kind === "client") return "No aplica";
   if (user.professionalSignupIncomplete) return "Pendiente de completar";
   if (user.verification_status) return verificationLabel(user.verification_status);
   return "Sin verificar";
