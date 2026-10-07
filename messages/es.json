@@ -4018,14 +4018,14 @@
     "createOfferDesc": "Crea tu perfil y recibe clientes",
     "createCase": "Publicar un caso de éxito",
     "createCaseDesc": "Muestra un trabajo que hiciste",
-    "createProjectAsk": "Te contactan por WhatsApp",
-    "tileProject": "Pedir un servicio",
+    "createProjectAsk": "Pide lo que necesitas",
+    "tileProject": "Proyecto",
     "tileDeal": "Promoción",
     "tileJob": "Empleo",
     "createDeal": "Publicar una promoción",
     "createJob": "Publicar un empleo",
     "forPros": "Para profesionales",
-    "tileProjectPost": "Pedir un servicio",
+    "tileProjectPost": "Crear proyecto",
     "tileOffer": "Ofrecer servicios",
     "tileOfferSub": "Recibe clientes",
     "tileCase": "Caso de éxito",
@@ -4033,8 +4033,8 @@
     "tileDealSub": "Ofertas y descuentos",
     "tileJobSub": "Busca personal",
     "messages": "Mensajes",
-    "tileQuote": "Hacer una cotización",
-    "tileQuoteSub": "Gratis, lista para mandar"
+    "tileQuote": "Crear cotización",
+    "tileQuoteSub": "Lista para enviar"
   },
   "serviceLanding": {
     "title": "{category} en {place}",
@@ -4463,7 +4463,7 @@
       "detalle": "Busca por servicio y lugar y contacta por WhatsApp."
     },
     "seccionPublicar": {
-      "etiqueta": "Pedir un servicio",
+      "etiqueta": "Crear proyecto",
       "titulo": "Publica lo que necesitas",
       "detalle": "Gratis. Los profesionales te contactan por WhatsApp."
     },

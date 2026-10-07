@@ -4018,14 +4018,14 @@
     "createOfferDesc": "Create your profile and get clients",
     "createCase": "Post a success story",
     "createCaseDesc": "Show a job you did",
-    "createProjectAsk": "Pros contact you on WhatsApp",
-    "tileProject": "Request a service",
+    "createProjectAsk": "Ask for what you need",
+    "tileProject": "Project",
     "tileDeal": "Promotion",
     "tileJob": "Job",
     "createDeal": "Post a deal",
     "createJob": "Post a job",
     "forPros": "For professionals",
-    "tileProjectPost": "Request a service",
+    "tileProjectPost": "Post a project",
     "tileOffer": "Offer services",
     "tileOfferSub": "Get clients",
     "tileCase": "Success story",
@@ -4033,8 +4033,8 @@
     "tileDealSub": "Deals & discounts",
     "tileJobSub": "Find staff",
     "messages": "Messages",
-    "tileQuote": "Make a quote",
-    "tileQuoteSub": "Free, ready to send"
+    "tileQuote": "Create a quote",
+    "tileQuoteSub": "Ready to send"
   },
   "serviceLanding": {
     "title": "{category} in {place}",
@@ -4463,7 +4463,7 @@
       "detalle": "Search by service and place and contact on WhatsApp."
     },
     "seccionPublicar": {
-      "etiqueta": "Request a service",
+      "etiqueta": "Post a project",
       "titulo": "Post what you need",
       "detalle": "Free. Professionals contact you on WhatsApp."
     },

@@ -399,7 +399,10 @@ export function MobileAppBridge() {
     const sync = () => {
       window.cancelAnimationFrame(frame);
       frame = window.requestAnimationFrame(() => {
-        const open = !!document.querySelector(".app-modal-screen:not(.app-centered-modal-screen)");
+        // Las hojas compactas (el «+», los menús «···», reportar…) no ocupan la
+        // pantalla: la cabecera se queda debajo, difuminada. Esconderla hacía
+        // que el logo desapareciera de golpe al abrir el «+» (6-oct-2026).
+        const open = !!document.querySelector(".app-modal-screen:not(.app-centered-modal-screen):not(.app-sheet-compact-screen)");
         for (const root of roots) root.classList.toggle("ccr-native-fullscreen-layer", open);
       });
     };
