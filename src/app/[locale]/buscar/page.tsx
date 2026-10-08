@@ -3,6 +3,7 @@ import { prefijoDeIdioma } from "@/lib/prefijo-de-idioma";
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { getTranslations, getLocale } from "next-intl/server";
+import { VerifiedSeal } from "@/components/ui/verified-seal";
 import { cookies } from "next/headers";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Link } from "@/i18n/navigation";
@@ -561,6 +562,9 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                 · {subtitle}
                 {/* La salida de los filtros, al lado del conteo (ver MarketplaceClearFilters). */}
                 {hayFiltrosDePastilla && <> · <Link href={sinFiltrosHref} className="font-semibold text-[#007fae] hover:underline">{t("filters.clearAll")}</Link></>}
+                {/* La clave del check azul, una vez arriba de todas las tarjetas:
+                    en cada tarjeta va solo el sello para no alargarlas. */}
+                {allResults.length > 0 && <> · <span data-leyenda-verificada className="inline-flex items-baseline gap-1"><VerifiedSeal className="h-3.5 w-3.5 shrink-0 self-center text-[#009FD9]" />{t("verifiedLegend")}</span></>}
               </p>
             </div>
             {/* LOS FILTROS, EN LA MISMA FILA DEL TÍTULO, como en Empleos,
@@ -584,6 +588,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
             locale={locale}
             numbering={numbering}
             countLabel={subtitle}
+            leyendaVerificada={allResults.length > 0 ? t("verifiedLegend") : undefined}
             limpiar={hayFiltrosDePastilla ? { href: sinFiltrosHref, label: t("filters.clearAll") } : undefined}
             hasActiveFilters={hasActiveFilters}
             mapFocusTarget={mapFocusTarget}
