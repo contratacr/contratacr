@@ -1034,28 +1034,24 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
                         (a la altura del nombre y el sello), al final de la fila. */}
                     <div className="min-w-0 lg:flex lg:items-center lg:justify-between lg:gap-4">
                       <h1 data-testid="professional-profile-name" className="min-w-0 text-[17px] font-bold leading-[1.15] text-[#162543] [overflow-wrap:anywhere] sm:text-2xl sm:leading-tight sm:[overflow-wrap:normal]">
-                        {/* El sello va pegado a la ÚLTIMA palabra del nombre en un
-                            trozo que no se parte: así el nombre puede ocupar dos
-                            renglones si hace falta, pero el sello nunca se queda
-                            solo en un renglón nuevo. */}
-                        {professional.verificationStatus === "verified" ? (
-                          <>
-                            {displayName.primaryDesktop.split(" ").slice(0, -1).join(" ")}
-                            {displayName.primaryDesktop.includes(" ") ? " " : ""}
-                            <span className="whitespace-nowrap">
-                              {displayName.primaryDesktop.split(" ").slice(-1)[0]}
-                              <VerifiedSeal
-                                label={t("identityVerified")}
-                                className="mb-[0.08em] ml-1 inline-block h-4 w-4 shrink-0 align-middle text-[#009FD9] sm:h-5 sm:w-5"
-                              />
-                            </span>
-                          </>
-                        ) : (
-                          displayName.primaryDesktop
-                        )}
+                        {/* Sin sello junto al nombre en la ficha: lo dice la línea
+                            «Cédula verificada» de abajo, con el mismo ícono. En las
+                            listas (búsqueda, tarjetas, mapa) el sello sí sigue,
+                            porque ahí no cabe el texto (8-oct-2026). */}
+                        {displayName.primaryDesktop}
                       </h1>
                       <MenuFicha className="hidden shrink-0 lg:block" opciones={opcionesDeLaFicha} />
                     </div>
+                    {/* «Cédula verificada», justo debajo del nombre y solo si lo
+                        está: sin verificar no sale nada y el bloque sigue
+                        centrado con la foto. Dice qué se revisó; el sello solo
+                        no lo decía (8-oct-2026). */}
+                    {professional.verificationStatus === "verified" && (
+                      <p className="mt-1 flex items-center gap-1.5 text-[12.5px] text-[#4b5b70] sm:mt-1.5 sm:text-[13px]" data-cedula-verificada>
+                        <VerifiedSeal className="h-3.5 w-3.5 shrink-0 text-[#009FD9]" />
+                        {t("cedulaVerificada")}
+                      </p>
+                    )}
                     {/* La ubicación NO va aquí: las zonas de trabajo están en la
                         tarjeta de contacto, completas, y el cantón del perfil
                         repetía una de ellas a medias. */}
@@ -1088,16 +1084,6 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
                         </span>
                       )}
                     </div>
-                  )}
-                  {/* QUÉ SIGNIFICA EL SELLO, DICHO. El check azul junto al nombre solo
-                      decía «Verificado» al pasar el mouse, y 288 de 313 perfiles lo
-                      tienen: sin explicar qué se revisó no distingue a nadie
-                      (8-oct-2026). */}
-                  {professional.verificationStatus === "verified" && (
-                    <p className="mt-1.5 inline-flex items-center gap-1.5 text-[12.5px] text-[#4b5b70] sm:mt-2 sm:text-[13px]" data-cedula-verificada>
-                      <VerifiedSeal className="h-3.5 w-3.5 shrink-0 text-[#009FD9]" />
-                      {t("cedulaVerificada")}
-                    </p>
                   )}
                   </div>
 
