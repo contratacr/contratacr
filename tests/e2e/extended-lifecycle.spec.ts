@@ -152,8 +152,16 @@ test.describe("@seeded extended lifecycle", () => {
       // El panel se desplaza en su propio contenedor (window.scrollY queda en
       // 0) y puede haber una copia oculta de la sección: se va al botón VISIBLE.
       const editarServicio = page.getByRole("button", { name: /Editar informaci/i }).filter({ visible: true }).first();
-      await editarServicio.scrollIntoViewIfNeeded();
-      await expect(editarServicio).toBeInViewport();
+      // Abrir una sección insiste 0,6 s en dejarla arriba (irAlInicio) y solo
+      // cede ante la rueda o el dedo. Este desplazamiento es por código, sin
+      // gesto: dentro de esa ventana lo devolvían arriba. Con la tarjeta de
+      // consejos de una cuenta nueva la página crece y el botón queda abajo;
+      // así fallaba cada madrugada en computadora. Se reintenta hasta que la
+      // apertura termina, que es lo que vive una persona.
+      await expect(async () => {
+        await editarServicio.scrollIntoViewIfNeeded();
+        await expect(editarServicio).toBeInViewport({ timeout: 1_000 });
+      }).toPass({ timeout: 12_000 });
       await editarServicio.click();
       const dialog = page.getByRole("dialog").filter({ has: page.locator("textarea") });
       await expect(dialog).toBeVisible();

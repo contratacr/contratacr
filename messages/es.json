@@ -110,6 +110,8 @@
   },
   "home": {
     "accountDeletion": {
+      "completedTitle": "Tu cuenta fue eliminada",
+      "completedBody": "Cerramos tu sesión y eliminamos los datos relacionados con tu cuenta.",
       "pendingTitle": "La eliminación de tu cuenta fue iniciada",
       "pendingBody": "Tu cuenta ya está oculta y bloqueada. Cualquier limpieza pendiente se completará de forma segura."
     },
