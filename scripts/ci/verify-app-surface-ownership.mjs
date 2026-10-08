@@ -44,7 +44,7 @@ const handlerRules = [
   [/^\/api\/contact(?:\/|$)/, "whatsapp-review-followup.spec.ts"],
   [/^\/api\/(?:upload|media)(?:\/|$)/, "extended-lifecycle.spec.ts"],
   [/^\/api\/(?:register|cedula|cedula-available|add-cedula|verify-identity)(?:\/|$)/, "product-contract.spec.ts"],
-  [/^\/api\/(?:appeals|report|report-client|report-professional|client\/connections)(?:\/|$)/, "interaction-surfaces.spec.ts"],
+  [/^\/api\/(?:appeals|report|client\/connections)(?:\/|$)/, "interaction-surfaces.spec.ts"],
   [/^\/api\/(?:check-availability|professionals|buscar)(?:\/|$)/, "search-results.spec.ts"],
   [/^\/api\/(?:analytics|attribution|translate|client-error)(?:\/|$)/, "product-contract.spec.ts"],
   [/^\/api\/health$/, "health.spec.ts"],

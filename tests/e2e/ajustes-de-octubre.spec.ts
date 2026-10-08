@@ -175,7 +175,9 @@ test.describe("límite de solicitudes", () => {
     const ip = `203.0.113.${Math.floor(Math.random() * 250) + 1}`;
     const estados: number[] = [];
     for (let n = 0; n < 11; n += 1) {
-      const r = await request.post("/api/report-client", {
+      // /api/report («Reportar» de la ficha): 10 por IP; sin datos responde
+      // 400 sin escribir nada, así que se puede golpear sin dejar rastro.
+      const r = await request.post("/api/report", {
         headers: { "cf-connecting-ip": ip, "x-forwarded-for": `10.9.${n}.${Math.floor(Math.random() * 250)}` },
         data: {},
       });
