@@ -2159,13 +2159,10 @@ export default function DashboardPage() {
   function identityBadge() {
     if (clientVerified || pro?.verification_status === "verified") {
       return (
-        <span
-          aria-label={t("identityVerified")}
-          title={t("identityVerified")}
-          className="inline-flex shrink-0 text-[#009FD9]"
-        >
-          <VerifiedSeal className="h-4 w-4 sm:h-5 sm:w-5" />
-        </span>
+        <p data-cedula-verificada className="flex items-center gap-1.5 text-[12.5px] text-[#4b5b70] sm:mt-1 sm:text-[13px]">
+          <VerifiedSeal className="h-3.5 w-3.5 shrink-0 text-[#009FD9]" />
+          {t("identityVerified")}
+        </p>
       );
     }
     // The header badge is a positive trust signal only. Pending, rejected and
@@ -2310,13 +2307,11 @@ export default function DashboardPage() {
                   <h1 data-testid="dashboard-identity-name" className="min-w-0 truncate text-[18px] font-bold leading-[1.15] text-[#162543]" title={displayName}>
                     {mobileHeaderName || displayName}
                   </h1>
-                  <div className="flex shrink-0 items-center">{identityBadge()}</div>
                 </div>
                 <div className="hidden min-w-0 max-w-full flex-nowrap items-center gap-2 sm:flex">
                   <h1 className="min-w-0 shrink truncate whitespace-nowrap text-2xl font-bold leading-tight text-[#162543]" title={displayName}>
                     {compactHeaderName}
                   </h1>
-                  <div className="flex shrink-0 items-center">{identityBadge()}</div>
                   {/* Ver perfil, Compartir y Guías cierran el renglón del nombre,
                       los tres iguales: texto gris que se pinta de celeste al
                       pasar, sin ícono y sin caja. Antes Guías era texto y los
@@ -2353,6 +2348,11 @@ export default function DashboardPage() {
                     </button>
                   </div>
                 </div>
+                {/* «Cédula verificada» en su propia línea bajo el nombre, igual que en
+                    la ficha pública: el profesional ve lo mismo que ven sus
+                    clientes. Si no está verificado no sale nada; el pendiente vive
+                    en «Completa tu perfil». */}
+                {identityBadge()}
                 <div data-testid="dashboard-identity-actions" className="mt-1 flex items-start justify-start gap-3 sm:mt-1 sm:min-h-[22px]">
                   {/* Las reseñas, que es la prueba social que mira un cliente. Los
                       seguidores se retiraron de la app: guardar ya cubre "lo quiero
