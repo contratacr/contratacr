@@ -1,6 +1,5 @@
 import { notFound, redirect } from "next/navigation";
 import { prefijoDeIdioma } from "@/lib/prefijo-de-idioma";
-import { getAllCategories, getCategoryLabel } from "@/lib/data/categories";
 import { getLocale } from "next-intl/server";
 import { JobPostForm } from "@/components/jobs/job-post-form";
 import { safeGetUser } from "@/lib/supabase/get-user";

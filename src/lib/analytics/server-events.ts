@@ -32,15 +32,6 @@ function clean(value: unknown, max = 100): string | number | boolean | null {
   return null;
 }
 
-export async function readPlatform(): Promise<"web" | "native"> {
-  try {
-    const jar = await cookies();
-    return jar.get(PLATFORM_COOKIE)?.value === "native" ? "native" : "web";
-  } catch {
-    return "web";
-  }
-}
-
 export async function recordServerInteraction(event: ServerInteraction): Promise<void> {
   try {
     const jar = await cookies();

@@ -137,7 +137,3 @@ export function formatJobSalary(job: Pick<JobPost, "salary_min" | "salary_max" |
     : SALARY_PERIODS[job.salary_period];
   return `${range} ${period}`;
 }
-
-export function splitJobLines(value: string) {
-  return value.split(/\r?\n/u).map((line) => line.trim()).filter(Boolean).slice(0, 20);
-}

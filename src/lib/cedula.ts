@@ -33,10 +33,6 @@ export function detectIdType(value: string): IdType | null {
   return null;
 }
 
-export function isJuridicalId(value: string): boolean {
-  return detectIdType(value) === "juridica";
-}
-
 export function idTypeLabel(type: IdType): string {
   if (type === "cedula") return "Cédula nacional";
   if (type === "juridica") return "Cédula jurídica";
@@ -63,38 +59,8 @@ export function formatId(value: string): string {
   return d;
 }
 
-/**
- * Privacy mask for display: hides all but the last 4 digits. National IDs keep
- * the `X-XXXX-XXXX` shape (e.g. `X-XXXX-0456`); legal entity/NITE/DIMEX show
- * seamlessly (e.g. `XXXXXX1234`).
- */
-export function maskId(value: string): string {
-  const d = cleanId(value);
-  if (!d) return "";
-  const visible = 4;
-  const masked = d
-    .split("")
-    .map((ch, i) => (i >= d.length - visible ? ch : "X"))
-    .join("");
-  if (d.length <= 9) {
-    const province = masked.slice(0, 1);
-    const tomo = masked.slice(1, 5);
-    const asiento = masked.slice(5, 9);
-    let out = province;
-    if (d.length > 1) out += `-${tomo}`;
-    if (d.length > 5) out += `-${asiento}`;
-    return out;
-  }
-  return masked;
-}
-
-export function normalizeId(value: string): string {
-  return cleanId(value);
-}
-
 /** Format/length validation only. */
 export function isValidId(value: string): boolean {
   return detectIdType(value) !== null;
 }
-
 

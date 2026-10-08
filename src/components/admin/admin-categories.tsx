@@ -201,7 +201,6 @@ export function AdminCategories() {
   const [flagEdits, setFlagEdits] = useState<Record<string, { esSalud: boolean; supportsVideoconsulta: boolean }>>({});
   const [newServiceName, setNewServiceName] = useState("");
   const [newServiceNameEn, setNewServiceNameEn] = useState("");
-  const [newServiceNameEnManual, setNewServiceNameEnManual] = useState(false);
   const [, setNewServiceNameManual] = useState(false);
   const [newServiceGroupId, setNewServiceGroupId] = useState("profesional");
   const [newServiceFlags, setNewServiceFlags] = useState({ esSalud: false, supportsVideoconsulta: false });
@@ -753,7 +752,6 @@ export function AdminCategories() {
       setNewServiceName("");
       setNewServiceNameEn("");
       setNewServiceNameManual(false);
-      setNewServiceNameEnManual(false);
       setNewServiceGroupId(groups[0]?.id || "profesional");
       setNewServiceFlags({ esSalud: false, supportsVideoconsulta: false });
       await loadCatalog();
@@ -1055,7 +1053,6 @@ export function AdminCategories() {
                     const nextLabel = e.target.value;
                     setNewServiceNameManual(true);
                     setNewServiceName(nextLabel);
-                    setNewServiceNameEnManual(false);
                     programarTraduccion("nuevo-servicio", nextLabel, setNewServiceNameEn);
                   }}
                   onBlur={refreshNewServiceEnglish}
@@ -1071,7 +1068,6 @@ export function AdminCategories() {
                 <input
                   value={newServiceNameEn}
                   onChange={(e) => {
-                    setNewServiceNameEnManual(true);
                     setNewServiceNameEn(e.target.value);
                     anotarIngles("nuevo-servicio", newServiceName);
                   }}

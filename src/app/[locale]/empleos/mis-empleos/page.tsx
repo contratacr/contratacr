@@ -1,6 +1,5 @@
 import { redirect } from "next/navigation";
 import { prefijoDeIdioma } from "@/lib/prefijo-de-idioma";
-import { getAllCategories, getCategoryLabel } from "@/lib/data/categories";
 import { getTranslations } from "next-intl/server";
 import { LandingNavbar } from "@/components/landing/landing-navbar";
 import { SectionHeaderTitle } from "@/components/mobile/section-header-title";

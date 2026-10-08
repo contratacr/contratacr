@@ -1760,65 +1760,6 @@ export default function DashboardPage() {
     );
   }
 
-  function navButton(tab: Tab) {
-    const badge = tab === "notifications" ? unreadCount : tab === "soporte" ? supportUnread : tab === "chat" ? chatUnread : 0;
-    const label = panelTabLabel(tab);
-    return (
-      <button
-        key={tab}
-        data-testid={`panel-tab-${tab}`}
-        onClick={() => {
-          requestUnsavedAction(() => openPanelDestination(tab));
-        }}
-        className={cn(
-          "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors text-left",
-          activeTab === tab ? "bg-[#EBF5FB] text-[#009FD9]" : "text-[#374151] hover:bg-[#f3f4f6]"
-        )}
-      >
-        <span className="relative mr-1.5 inline-flex shrink-0">
-          {TAB_ICONS[tab]}
-          {badge > 0 && (
-            <span className="absolute -right-2.5 -top-2 grid h-[17px] min-w-[17px] place-items-center rounded-full bg-[#009FD9] px-1 text-center text-[9px] font-bold leading-none text-white ring-2 ring-white">
-              {badge > 9 ? "9+" : badge}
-            </span>
-          )}
-        </span>
-        {label}
-      </button>
-    );
-  }
-
-  function topNavButton(tab: Tab) {
-    const badge = tab === "notifications" ? unreadCount : tab === "soporte" ? supportUnread : tab === "chat" ? chatUnread : 0;
-    const label = panelTabLabel(tab);
-    return (
-      <button
-        key={tab}
-        type="button"
-        data-testid={`panel-tab-${tab}`}
-        onClick={() => {
-          requestUnsavedAction(() => openPanelDestination(tab));
-        }}
-        className={cn(
-          "relative inline-flex h-10 shrink-0 items-center justify-center gap-1.5 rounded-full px-1.5 text-[12px] font-bold transition min-[1180px]:h-11 min-[1180px]:px-2 min-[1180px]:text-[12.5px] xl:px-2.5 xl:text-[13px]",
-          activeTab === tab
-            ? "text-[#0089bb]"
-            : "text-[#526277] hover:bg-[#EBF5FB] hover:text-[#0089bb]",
-        )}
-      >
-        <span className="relative inline-flex shrink-0">
-          {TAB_ICONS[tab]}
-          {badge > 0 && (
-            <span className="absolute -right-2.5 -top-2 grid h-[17px] min-w-[17px] place-items-center rounded-full bg-[#009FD9] px-1 text-center text-[9px] font-bold leading-none text-white ring-2 ring-white">
-              {badge > 9 ? "9+" : badge}
-            </span>
-          )}
-        </span>
-        <span className="whitespace-nowrap">{label}</span>
-      </button>
-    );
-  }
-
   function desktopSidebarButton(tab: Tab) {
     const badge = tab === "notifications" ? unreadCount : tab === "soporte" ? supportUnread : tab === "chat" ? chatUnread : 0;
     const label = panelTabLabel(tab);
@@ -1950,39 +1891,6 @@ export default function DashboardPage() {
         </span>
         <span className="min-w-0 flex-1 truncate">{label}</span>
         <ChevronRight className="h-4 w-4 shrink-0 text-[#b6c4d4]" />
-      </button>
-    );
-  }
-
-  function mobileUtilityButton({
-    keyName,
-    label,
-    icon,
-    onClick,
-  }: {
-    keyName: string;
-    label: string;
-    icon: React.ReactNode;
-    onClick: () => void;
-  }) {
-    return (
-      <button
-        key={keyName}
-        type="button"
-        onClick={onClick}
-        className={cn(
-          "flex min-h-14 w-full items-center gap-3 rounded-xl px-3.5 py-3 text-left text-[15px] font-semibold transition-colors",
-          "text-[#374151] hover:bg-[#f8fbfd]",
-        )}
-      >
-        <span
-          className={cn(
-            "inline-flex h-8 w-8 shrink-0 items-center justify-center text-[#64748b] [&>svg]:h-5 [&>svg]:w-5",
-          )}
-        >
-          {icon}
-        </span>
-        <span className="min-w-0 flex-1 truncate">{label}</span>
       </button>
     );
   }

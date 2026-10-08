@@ -28,7 +28,7 @@ const reviewed = new Map([
   ["src/app/layout.tsx", { count: 8, reason: "pre-hydration read of the native first-run flag to pre-paint the onboarding screen; presentation only" }],
   ["src/components/mobile/mobile-app-bridge.tsx", { count: 3, reason: "native first-run flag and hardware-back root marker; presentation only" }],
   ["src/components/mobile/native-first-run-onboarding.tsx", { count: 12, reason: "native first-run completed flag, pending-route, post-auth and en-camino handoff markers, plus the access-screen open flag that survives a locale switch; no account-owned records" }],
-  ["src/lib/analytics/attribution.ts", { count: 4, reason: "marketing attribution (utm/referrer) held only until sign-up, then persisted with the account in Supabase" }],
+  ["src/lib/analytics/attribution.ts", { count: 3, reason: "marketing attribution (utm/referrer) held only until sign-up, then persisted with the account in Supabase" }],
   ["src/components/analytics/attribution-capture.tsx", { count: 4, reason: "session marker that the account already claimed its first-touch attribution; the attribution itself persists server-side" }],
   ["src/lib/account-cache.ts", { count: 1, reason: "account-scoped removal of reviewed browser caches during disable/deletion" }],
   ["src/app/[locale]/profesionales/[slug]/profile-client.tsx", { count: 2, reason: "sessionStorage: a dónde vuelve la flecha de la ficha (regreso calculado); no son datos de la cuenta" }],

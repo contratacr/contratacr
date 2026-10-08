@@ -7,11 +7,10 @@ import { soltarFoco } from "@/lib/soltar-foco";
 import {
   X, Menu, ChevronDown, ChevronRight, Search, MapPin, List, Map as MapIcon, ArrowLeft, Share2, ReceiptText,
   Briefcase, Compass, Wrench,
-  UserRound, UserRoundPlus, LogOut, FileText, MessageSquareText, Settings, Bell, MoreHorizontal,
+  UserRound, UserRoundPlus, LogOut, FileText, Settings, MoreHorizontal,
   HelpCircle, ListChecks, Lightbulb, Headset, Globe2, Shield, Mail, ClipboardList, Clock, Bookmark } from "lucide-react";
 import { Link, useRouter, usePathname } from "@/i18n/navigation";
 import { readRecentVisits, clearRecentVisits, leerBusquedasRecientesConFecha, guardarBusquedaReciente, olvidarBusquedaReciente, olvidarBusquedasRecientes, removeRecentVisit, type BusquedaReciente, type RecentVisit } from "@/lib/recent-visits";
-import { useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { signOutToHome } from "@/lib/auth/sign-out";
@@ -82,40 +81,9 @@ export function ContrataCRLogo({ className, tone = "light" }: { className?: stri
   );
 }
 
-function useSlidingWords(words: string[], active: boolean) {
-  const [index, setIndex] = useState(0);
-  const [cycle, setCycle] = useState(0);
-  const [sliding, setSliding] = useState(false);
-
-  useEffect(() => {
-    if (!active || words.length <= 1) {
-      const frame = window.requestAnimationFrame(() => setSliding(false));
-      return () => window.cancelAnimationFrame(frame);
-    }
-    let settleTimer: number | null = null;
-    const id = window.setInterval(() => {
-      setCycle((current) => current + 1);
-      setSliding(true);
-      settleTimer = window.setTimeout(() => {
-        setIndex((current) => (current + 1) % words.length);
-        setSliding(false);
-      }, 520);
-    }, 2200);
-    return () => {
-      window.clearInterval(id);
-      if (settleTimer) window.clearTimeout(settleTimer);
-    };
-  }, [active, words.length]);
-
-  const current = words[index] ?? words[0] ?? "";
-  const next = words[(index + 1) % words.length] ?? current;
-  return { current, next, cycle, sliding };
-}
-
 export function useSwitchLang() {
   const router = useRouter();
   const pathname = usePathname();
-  const currentSearchParams = useParametrosDeBusqueda();
   const locale = useLocale();
   const [, startTransition] = useTransition();
   const otroIdioma = locale === "en" ? "es" : "en";
@@ -717,24 +685,6 @@ export function AccountMenu({
   );
 }
 
-/* --- Navbar ---
-   `mobileInline` (optional): content injected into the MOBILE header row only (<lg),
-   between the logo and the hamburger - used by /buscar to put the search + filters on the
-   SAME single line as the logo + menu. When present, the mobile logo compacts to the mark
-   (the wordmark would crowd the row at ~360px). Desktop + pages that don't pass it are
-   unchanged. */
-function PanelIconLink({ href, label }: { href: string; label: string }) {
-  return (
-    <Link
-      href={href}
-      aria-label={label}
-      className="grid h-10 w-10 place-items-center rounded-xl text-[#1A2744]"
-    >
-      <UserRound className="h-5 w-5" />
-    </Link>
-  );
-}
-
 // Sin sesión, a la derecha de la barra va la CUENTA, no la campana ni un hueco.
 // La campana prometía avisos que un visitante no tiene y chocaba con la
 // pantalla de acceso; el hueco dejaba la barra coja y «Iniciar sesión» a dos
@@ -791,20 +741,6 @@ function GemeloDelBuscador({ pathname }: { pathname: string | null }) {
         </div>
       </div>
     </div>
-  );
-}
-
-// Sin sesión los avisos siguen visibles: llevan a la pantalla de acceso y de
-// ahí a lo que se quiso abrir, en vez de desaparecer del encabezado.
-export function HeaderNotificationsLink({ href, label }: { href: string; label: string }) {
-  return (
-    <Link
-      href={href}
-      aria-label={label}
-      className="relative grid h-10 w-10 place-items-center rounded-xl text-[#1A2744] transition-colors hover:bg-[#f3f4f6] hover:text-[#009FD9]"
-    >
-      <Bell className="h-5 w-5" />
-    </Link>
   );
 }
 
@@ -892,7 +828,6 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [mobileHelpOpen, setMobileHelpOpen] = useState(false);
-  const [nativePendingHref, setNativePendingHref] = useState<string | null>(null);
   const locale = useLocale();
   const pathname = usePathname();
   const currentSearchParams = useParametrosDeBusqueda();
@@ -932,9 +867,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   const puenteTecladoRef = useRef<HTMLInputElement>(null);
   const nativeLocationInputRef = useRef<HTMLInputElement>(null);
   const navLocationInputRef = useRef<HTMLInputElement>(null);
-  const nativePendingTimer = useRef<number | null>(null);
   // Drives a SHORTER search placeholder on small screens so it never clips.
-  const [isSmallScreen, setIsSmallScreen] = useState(true);
   const searchBlurTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const servicesMenuRef = useRef<HTMLDivElement>(null);
   const exploreMenuRef = useRef<HTMLDivElement>(null);
@@ -1073,8 +1006,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   // línea de la barra caía justo encima de ellos y se leía como una raya suelta.
   // Mensajes igual: su buscador va pegado a la barra, como el de Empleos.
   const rutaConFiltrosPegados = (isMarketplaceRoute && !isMarketplaceEditor) || esRutaDeBusqueda(pathname, esServicioDelCatalogo) || enMensajes;
-  const compactEnabled = true;
-  const effectiveCompact = compactEnabled && (forceCompactSearch || !isHomePage || compact);
+  const effectiveCompact = forceCompactSearch || !isHomePage || compact;
   // En escritorio el buscador compacto del navbar aparece en el home al pasar el
   // hero y SIEMPRE en el resto de páginas públicas (perfil, oficios, ayuda…).
   // Se oculta donde no hay nada que buscar: panel, admin, cuenta, mensajes,
@@ -1116,17 +1048,6 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
     window.addEventListener("ccr:search-view-state", updateSearchView as EventListener);
     return () => window.removeEventListener("ccr:search-view-state", updateSearchView as EventListener);
   }, []);
-  const nativeSearchServices = useMemo(
-    () =>
-      locale === "en"
-        ? ["electrician", "plumber", "accountant", "mechanic", "photographer", "lawyer"]
-        : ["electricista", "plomero", "contador", "mecánico", "fotógrafo", "abogado"],
-    [locale],
-  );
-  const mobileSlidingService = useSlidingWords(
-    nativeSearchServices,
-    showMobileNavbarSearch && !nativeSearchOpen && !searchQuery.trim(),
-  );
   const headerCategoryId = currentSearchParams.get("categoria");
   // Una FAMILIA entera ("Todos los servicios de Agro") también es contexto de
   // búsqueda: sin esto la barra se quedaba con su texto de ayuda —"¿Qué
@@ -1139,8 +1060,6 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
     headerCategoryId && headerCategoryId !== "todas"
       ? getCategoryLabel(headerCategoryId, locale)
       : headerGroupLabel || currentSearchParams.get("q")?.trim() || "";
-  const headerServiceLabel =
-    explicitHeaderService || mobileSlidingService.current || nativeSearchServices[0] || (locale === "en" ? "electrician" : "electricista");
   const headerCantonId = currentSearchParams.get("canton");
   const headerProvinceId = currentSearchParams.get("provincia");
   const headerLocationSuggestion = headerCantonId
@@ -1162,10 +1081,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
     [headerLatitude, headerLongitude],
   );
   const searchRouteHasContext = esRutaDeBusqueda(pathname, esServicioDelCatalogo) && Boolean(explicitHeaderService || explicitHeaderLocation);
-  const headerNextServiceLabel = mobileSlidingService.next || headerServiceLabel;
-  const headerServiceShouldSlide = !explicitHeaderService && showMobileNavbarSearch && !nativeSearchOpen && !searchQuery.trim() && nativeSearchServices.length > 1;
   const hasSearchService = searchQuery.trim().length > 0 || !!searchCategoryId;
-  const hasSearchLocation = navLocation.trim().length > 0 || !!navLocationSel || !!navCurrentCoords;
 
   useEffect(() => {
     if (!esRutaDeBusqueda(pathname, esServicioDelCatalogo)) return;
@@ -1274,7 +1190,6 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   const accountDisplayName =
     (hasResolvedAccountCapability ? capacidadVigente?.businessName ?? "" : (accountName ?? "")) ||
     String(user?.user_metadata?.full_name || user?.user_metadata?.name || "").trim();
-  const nativePanelHref = user ? primaryPanelHref : loginHref;
   useEffect(() => {
     let cancelled = false;
     if (!user) {
@@ -1343,7 +1258,6 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
     }, nativeApp ? 0 : 120);
     return () => window.clearTimeout(timeout);
   }, [nativeApp, pathname, primaryPanelHref, router, user]);
-
 
   useEffect(() => {
     if (!nativeApp || !user) return;
@@ -1418,9 +1332,6 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   const mobileDrawerItemClass =
     "ccr-menu-fila flex w-full items-center gap-3 border-b border-[#e5e9ee] py-[18px] text-left text-[18px] font-semibold leading-snug text-[#162543] transition-colors hover:text-[#009FD9]";
   const mobileDrawerTextClass = "min-w-0 flex-1 whitespace-normal break-words";
-  const mobileDrawerStrongItemClass = cn(mobileDrawerItemClass, "font-extrabold");
-  const mobileDrawerSubItemClass =
-    "flex w-full items-center gap-2.5 rounded-xl px-2 py-2.5 text-left text-[14px] font-semibold leading-snug text-[#374151] transition-colors hover:bg-[#f4f7fa] hover:text-[#009FD9]";
 
   // Una sola barra superior: si la pantalla actual publica un título de sección
   // ("ccr:section-header"), la barra muestra "← Título" en lugar del logo y
@@ -1510,25 +1421,6 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
     return () => window.removeEventListener("ccr:open-mobile-menu", handleExternalMenuOpen);
   }, [openMobileMenu]);
 
-  const isNativeTabActive = useCallback(
-    (href: string) => {
-      const baseHref = href.split("?")[0] ?? href;
-      if (nativePendingHref) return nativePendingHref === href;
-      return pathname === baseHref || (baseHref === panelHref && pathname.startsWith(panelHref));
-    },
-    [nativePendingHref, panelHref, pathname],
-  );
-
-  const prepareNativeNavigation = useCallback(
-    (href: string) => {
-      if (nativePendingTimer.current) window.clearTimeout(nativePendingTimer.current);
-      setNativePendingHref(href);
-      // Sin router.prefetch aquí: pedía una precarga parcial que reemplazaba la completa del enlace y la navegación esperaba al servidor.
-      nativePendingTimer.current = window.setTimeout(() => setNativePendingHref(null), 8000);
-    },
-    [nativeApp, router],
-  );
-
   const navigateNativeMarketplace = useCallback(
     (event: React.MouseEvent<HTMLAnchorElement>, href: "/promociones" | "/empleos" | "/proyectos") => {
       if (!nativeApp) return;
@@ -1538,26 +1430,11 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
       event.preventDefault();
       event.stopPropagation();
       cerrarCajon(event);
-      prepareNativeNavigation(href);
       router.push(href);
     },
-    [nativeApp, prepareNativeNavigation, router],
+    [nativeApp, router],
   );
 
-  useEffect(() => {
-    const clearAssistant = () => setNativePendingHref((current) => (current === "assistant" ? null : current));
-    window.addEventListener("contratacr:close-ai", clearAssistant);
-    return () => window.removeEventListener("contratacr:close-ai", clearAssistant);
-  }, []);
-
-  useEffect(() => {
-    const id = window.setTimeout(() => setNativePendingHref(null), 0);
-    if (nativePendingTimer.current) {
-      window.clearTimeout(nativePendingTimer.current);
-      nativePendingTimer.current = null;
-    }
-    return () => window.clearTimeout(id);
-  }, [pathname]);
 
   // Los oficios que se ofrecen cuando no hay nada escrito ni nada reciente.
   // Se filtran contra el catálogo vivo: un servicio que el administrador
@@ -1583,15 +1460,6 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
     return currentLocationSuggestions?.length ? currentLocationSuggestions : provinceSuggestions();
   }, [currentLocationSuggestions, navLocation]);
 
-  // Track small screens so the compact search placeholder can shorten to fit.
-  useEffect(() => {
-    const mq = window.matchMedia("(max-width: 639px)");
-    const update = () => setIsSmallScreen(mq.matches);
-    update();
-    mq.addEventListener("change", update);
-    return () => mq.removeEventListener("change", update);
-  }, []);
-
   // Lock body scroll while the mobile drawer is open (no scrolling behind it).
   useEffect(() => {
     if (!mobileOpen) return;
@@ -1605,12 +1473,6 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
     return () => window.removeEventListener("keydown", alTeclado);
   }, [mobileOpen]);
 
-  useEffect(() => {
-    return () => {
-      if (nativePendingTimer.current) window.clearTimeout(nativePendingTimer.current);
-    };
-  }, []);
-
   async function handleSignOut() {
     // Go STRAIGHT home - `signOutToHome` flags the in-flight sign-out so protected
     // pages (dashboards, etc.) don't bounce the now-absent user to /login mid-logout.
@@ -1618,10 +1480,6 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
   }
 
   useEffect(() => {
-    if (!compactEnabled) {
-      const timeout = window.setTimeout(() => setCompact(false), 0);
-      return () => window.clearTimeout(timeout);
-    }
     if (!isHomePage) return;
 
     let frame: number | null = null;
@@ -1654,7 +1512,7 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
       window.removeEventListener("resize", update);
       if (frame !== null) window.cancelAnimationFrame(frame);
     };
-  }, [compactEnabled, isHomePage]);
+  }, [isHomePage]);
 
   useEffect(() => {
     if (openMenu !== "categorias" && openMenu !== "explorar" && openMenu !== "recursos") return;
@@ -1668,7 +1526,6 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
     document.addEventListener("pointerdown", onPointerDown);
     return () => document.removeEventListener("pointerdown", onPointerDown);
   }, [openMenu]);
-
 
   // Build params from current state and navigate. Runs ONLY on Buscar/Enter.
   // Una ubicación elegida se MUESTRA con la provincia detrás («Atenas,
@@ -2668,8 +2525,6 @@ export function LandingNavbar({ mobileInline, forceCompactSearch = false, mobile
                   <Menu className="h-5 w-5 stroke-[2.5]" />
                 </button>
               </div>
-
-
 
             </div>
           </div>

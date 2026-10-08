@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Clock3, Headset, Info, Loader2, RotateCcw, Send, ShieldCheck, XCircle } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { CedulaInput } from "@/components/ui/cedula-input";
 import { IdentityInfoBlock } from "@/components/ui/identity-info-block";
 import { Link } from "@/i18n/navigation";

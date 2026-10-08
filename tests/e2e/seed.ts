@@ -8,9 +8,6 @@ const regressionPassword = process.env.E2E_TEST_PASSWORD ?? "";
 // inventada: antes eran copia de dos personas reales de producción.
 import ACTORES from "../../scripts/actores-de-regresion.json";
 
-export const ACTOR_CLIENTE = ACTORES.cliente;
-export const ACTOR_PROFESIONAL = ACTORES.profesional;
-
 export const E2E_USERS = {
   client: {
     email: ACTORES.cliente.correo,

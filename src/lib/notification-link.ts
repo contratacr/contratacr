@@ -44,14 +44,6 @@ export function notificationInMode(type: string, mode: "use" | "offer"): boolean
   return true;
 }
 
-export function notificationContextLabel(type: string): string | null {
-  const ctx = notificationContext(type);
-  if (ctx === "professional") return "Como profesional";
-  if (ctx === "client") return "Como cliente";
-  if (ctx === "support") return "Soporte";
-  return null;
-}
-
 function remapClientLink(link: string): string {
   return link
     // Las citas se borraron: un aviso viejo de «Mis citas» abre «Mis proyectos».

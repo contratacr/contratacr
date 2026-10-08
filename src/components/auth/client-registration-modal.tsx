@@ -1,8 +1,6 @@
 "use client";
 
-import Link from "next/link";
 import { prefijoDeIdioma } from "@/lib/prefijo-de-idioma";
-import { useNativeApp } from "@/hooks/use-native-app";
 
 import { useState, useRef, useEffect } from "react";
 import { useTranslations, useLocale } from "next-intl";
@@ -213,7 +211,6 @@ export function ClientRegistrationModal({
   const tRp = useTranslations("resetPassword");
   const tRc = useTranslations("registerClient");
   const locale = useLocale();
-  const nativeApp = useNativeApp();
   const [view, setView] = useState<ModalView>("register");
   const [step, setStep] = useState<RegisterStep>("identity");
 

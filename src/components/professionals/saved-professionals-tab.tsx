@@ -181,7 +181,6 @@ function SavedGenericCard({ item, onRemove }: { item: SavedItem; onRemove: (item
 
 export function SavedProfessionalsTab() {
   const t = useTranslations("savedPros");
-  const locale = useLocale();
   const { user, loading: authLoading } = useAuth();
   const [savedPros, setSavedPros] = useState<SavedPro[]>([]);
   const [savedItems, setSavedItems] = useState<SavedItem[]>([]);
@@ -290,12 +289,6 @@ export function SavedProfessionalsTab() {
     offers: t("offersTab"),
     jobs: t("jobsTab"),
     projects: t("projectsTab"),
-  };
-  const tabCounts = {
-    professionals: savedPros.length,
-    offers: offers.length,
-    jobs: jobs.length,
-    projects: projects.length,
   };
   const selectedEmptyLabel = todoJunto
     ? t("emptyNothingSaved")

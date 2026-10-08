@@ -2,7 +2,6 @@
 
 import { useLocale } from "next-intl";
 import { LANGUAGES, languageLabel } from "@/lib/data/languages";
-import { cn } from "@/lib/utils";
 import { FilaInterruptor } from "@/components/ui/fila-interruptor";
 
 interface Props {

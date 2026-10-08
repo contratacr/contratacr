@@ -6,7 +6,7 @@ import { Link } from "@/i18n/navigation";
 
 import { FooterSoloWeb } from "@/components/landing/footer-solo-web";
 import { useEffect, useState } from "react";
-import { useLocale, useTranslations } from "next-intl";
+import { useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "@/i18n/navigation";
 import { useAuth } from "@/hooks/use-auth";
@@ -20,7 +20,7 @@ import { Button } from "@/components/ui/button";
 import { CasillaDeTerminos } from "@/components/auth/casilla-de-terminos";
 import { PhoneInput, isPhoneComplete } from "@/components/ui/phone-input";
 import { OtpVerification } from "@/components/auth/otp-verification";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { CheckCircle2, Eye, EyeOff } from "lucide-react";
 import { SuccessIcon } from "@/components/ui/success-icon";
 import { cn } from "@/lib/utils";
@@ -33,7 +33,6 @@ import { irAlInicio } from "@/lib/ir-al-inicio";
 export default function RegisterClientPage() {
   const router = useRouter();
   const t = useTranslations("registerClient");
-  const locale = useLocale();
   const searchParams = useSearchParams();
   const { user, loading: authLoading } = useAuth();
   // An already-registered, logged-in user must never be pushed through account
@@ -60,7 +59,7 @@ export default function RegisterClientPage() {
   const panelHref = rutaInternaSegura(searchParams.get("redirect")) ?? "/dashboard/profesional?mode=use";
 
   async function completeSuccess() {
-    const { data } = await createClient().auth.getUser();
+    await createClient().auth.getUser();
     // Same conversion the modal reports, so the "Registro de cliente" custom
     // conversion counts accounts created from this page too.
     trackMetaEvent("CompleteRegistration", { content_name: "client_registration", status: "client" });

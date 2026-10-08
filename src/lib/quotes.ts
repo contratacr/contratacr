@@ -35,25 +35,6 @@ export type Quote = {
   professional_name?: string | null;
 };
 
-/**
- * El enlace público: contratacr.com/c/k7m2xq9a. El código al azar es la llave —
- * sin él nadie puede abrir una cotización ajena, y por eso no se adivina—, así
- * que es lo único que el enlace necesita llevar. La forma larga que se envió
- * antes (…/cotizacion/sg-solutions-0003-k7m2xq9a) sigue abriendo lo mismo.
- *
- * La base es el sitio donde la cotización EXISTE: en test, test.contratacr.com;
- * en producción, contratacr.com. Solo las vistas previas de Vercel se mandan al
- * dominio de verdad, porque esa dirección no se comparte con nadie.
- */
-export function enlaceCotizacion(quote: Pick<Quote, "public_code" | "quote_number">, _proName = "", baseUrl?: string): string {
-  const origen = baseUrl || (typeof window !== "undefined" ? window.location.origin : "") || process.env.NEXT_PUBLIC_APP_URL || "https://contratacr.com";
-  let base = origen.replace(/\/$/, "");
-  if (/\.vercel\.app$/i.test(base.replace(/^https?:\/\//, "").split("/")[0])) base = "https://contratacr.com";
-  // Corto y sin ruido: el código es la llave y lo único que hace falta.
-  // Los enlaces largos que ya se enviaron siguen abriendo la misma cotización.
-  return `${base}/c/${quote.public_code}`;
-}
-
 /** De "sg-solutions-0003-k7m2xq9a" saca "k7m2xq9a": el código es lo último. */
 export function codigoDeEnlace(tramo: string): string {
   const partes = String(tramo || "").toLowerCase().split("-").filter(Boolean);

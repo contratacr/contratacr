@@ -3,7 +3,7 @@ import { createElement, type ComponentProps } from "react";
 import { routing } from "./routing";
 
 const navegacion = createNavigation(routing);
-export const { redirect, usePathname, useRouter, getPathname } = navegacion;
+export const { redirect, usePathname, useRouter } = navegacion;
 
 type PropsDeEnlace = ComponentProps<typeof navegacion.Link>;
 

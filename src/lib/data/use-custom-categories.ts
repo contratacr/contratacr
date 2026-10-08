@@ -140,28 +140,6 @@ export function useCustomCategories() {
   return getCustomCategories();
 }
 
-export function useCategoryCatalogReady() {
-  // The server and the browser must render the same first frame. Module state
-  // can already be warm after a client navigation, but it does not exist in
-  // the server render and previously caused /servicios to hydrate into a
-  // different tree (skeleton on the server, catalog in the browser).
-  const [ready, setReady] = useState(false);
-
-  useEffect(() => {
-    let cancelled = false;
-    void refreshCustomCategories({ force: !lastRefreshAt }).finally(() => {
-      if (!cancelled) setReady(true);
-    });
-    const unsubscribe = subscribeCustomCategories(() => setReady(true));
-    return () => {
-      cancelled = true;
-      unsubscribe();
-    };
-  }, []);
-
-  return ready;
-}
-
 /** Mount once app-wide so the overlay is populated even on pages whose search
  *  surfaces (hero search, /servicios box) read `searchCategories` directly
  *  without rendering a <CategorySearch>. Renders nothing. */

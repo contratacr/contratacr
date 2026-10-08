@@ -11,14 +11,6 @@ export function isWholeNumberInRange(value: number | null, min: number, max: num
   return value == null || (Number.isSafeInteger(value) && value >= min && value <= max);
 }
 
-export function isNumericDatabaseRangeError(message: string) {
-  const normalized = message.toLocaleLowerCase("en-US");
-  return normalized.includes("out of range")
-    || normalized.includes("numeric field overflow")
-    || normalized.includes("smallint")
-    || normalized.includes("integer");
-}
-
 export function formatNumberForMessage(value: number) {
   return agruparMiles(value);
 }

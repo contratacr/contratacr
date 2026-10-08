@@ -39,7 +39,6 @@ export function MenuEmpleo({
   guardar?: { snapshot: Record<string, unknown>; userId: string | null };
 }) {
   const t = useTranslations("menuFicha");
-  const tBloqueo = useTranslations("bloqueo");
   const { avisoNodo, compartir } = useCompartir();
   const [reportando, setReportando] = useState(false);
   const [bloqueando, setBloqueando] = useState(false);
@@ -66,7 +65,7 @@ export function MenuEmpleo({
             onSelect: () => void guardado.alternar(),
           }] : []),
           // Las dos caras se pintan SIEMPRE y elige el CSS, igual que en
-          // `BotonCompartir`: Chrome en macOS trae `navigator.share`, así que
+          // `CaraCompartir`: Chrome en macOS trae `navigator.share`, así que
           // mirándolo el menú decía «Compartir» en la computadora.
           {
             id: "compartir",

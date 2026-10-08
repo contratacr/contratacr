@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useLayoutEffect, useRef, useTransition, type RefObject, type CSSProperties } from "react";
 import { createPortal, preload } from "react-dom";
-import { ArrowRight, Loader2, Search, MapPin } from "lucide-react";
+import { Loader2, Search, MapPin } from "lucide-react";
 import { Link, useRouter } from "@/i18n/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
@@ -385,7 +385,6 @@ export function LandingHero() {
   // Anchor refs for the PORTALED dropdowns — one per field per breakpoint (desktop +
   // mobile both mount; the hidden one has a 0×0 rect, so its dropdown renders nothing).
   const svcDesktopRef = useRef<HTMLDivElement>(null);
-  const svcMobileRef = useRef<HTMLDivElement>(null);
   // Las listas de sugerencias se anclan a TODA la píldora: anclada a un campo,
   // en el teléfono medían media pantalla y cortaban los nombres.
   const pildoraRef = useRef<HTMLDivElement>(null);
@@ -405,7 +404,6 @@ export function LandingHero() {
   const ubicacionInputRef = useRef<HTMLInputElement>(null);
   const ubicacionMobileRef = useRef<HTMLInputElement>(null);
   const locDesktopRef = useRef<HTMLDivElement>(null);
-  const locMobileRef = useRef<HTMLDivElement>(null);
   // Location is a typeable autocomplete over provinces + cantones AND Google Places addresses.
   const [location, setLocation] = useState("");
   useLetraQueCabe(servicioInputRef, service, [foco, esTelefono]);

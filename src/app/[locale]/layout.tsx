@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { prefijoDeIdioma } from "@/lib/prefijo-de-idioma";
 import { Suspense } from "react";
 import { getMessages } from "next-intl/server";
 import { notFound } from "next/navigation";

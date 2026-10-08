@@ -36,7 +36,6 @@ import {
   formatOfferBeforePrice,
   formatOfferPrice,
   offerDiscountPercent,
-  OFFER_TYPES,
   type ProfessionalOffer,
 } from "@/lib/offers";
 import { ScrollRail } from "@/components/ui/scroll-rail";

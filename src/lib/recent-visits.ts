@@ -94,10 +94,6 @@ export function leerBusquedasRecientesConFecha(): BusquedaReciente[] {
   }
 }
 
-export function leerBusquedasRecientes(): string[] {
-  return leerBusquedasRecientesConFecha().map((item) => item.termino);
-}
-
 export function guardarBusquedaReciente(termino: string) {
   if (typeof window === "undefined") return;
   const limpio = termino.trim();

@@ -1,8 +1,6 @@
 // Branded support-ticket email notifications (Brevo). Best-effort: failures are
 // logged and never break the request. Clickable links only — no raw URLs.
 import { EMAIL_LOGO_DARK_MODE_STYLES, emailLogoMarkup, sendBrevoEmail } from "@/lib/email/send";
-
-const SUPPORT_TO = "soporte@contratacr.com";
 const SITE = "https://contratacr.com";
 type SupportLocale = "es" | "en";
 
@@ -34,24 +32,6 @@ function shell(headline: string, bodyHtml: string, cta?: { href: string; label: 
       </td></tr>
     </table>
   </td></tr></table></body>`;
-}
-
-/** New ticket OR a user reply landed → tell the support inbox to check. */
-export async function notifySupportInbox(opts: {
-  subject: string;
-  fromName?: string | null;
-  fromEmail: string;
-  body: string;
-  isReply?: boolean;
-}): Promise<void> {
-  const headline = opts.isReply ? "Respuesta de un usuario en un ticket" : "Nuevo ticket de soporte";
-  const html = shell(
-    headline,
-    `<p style="margin:0 0 12px 0;"><strong>De:</strong> ${escapeHtml(opts.fromName || "Sin nombre")} &lt;${escapeHtml(opts.fromEmail)}&gt;<br/><strong>Asunto:</strong> ${escapeHtml(opts.subject)}</p>
-     <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:14px;white-space:pre-wrap;">${escapeHtml(opts.body)}</div>`,
-    { href: `${SITE}/admin/soporte`, label: "Abrir en el panel" },
-  );
-  await sendEmail(SUPPORT_TO, `[Soporte] ${opts.isReply ? "Re: " : ""}${opts.subject}`, html, opts.fromEmail);
 }
 
 export function supportTicketCreatedAutoMessage(locale: SupportLocale = "es"): string {

@@ -5,7 +5,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Lock, Camera, X, ChevronDown, ChevronLeft, Pencil, Loader2 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Link, useRouter } from "@/i18n/navigation";
+import { Link } from "@/i18n/navigation";
 import { detectIdType } from "@/lib/cedula";
 import { ImagePreviewDialog } from "@/components/ui/image-preview-dialog";
 import { createClient } from "@/lib/supabase/client";
@@ -15,7 +15,6 @@ import { PhoneInput, hasPhoneNumber, isPhoneComplete } from "@/components/ui/pho
 import { UnsavedChangesGuard } from "@/components/dashboard/unsaved-changes-guard";
 import { useReportSaveStatus } from "@/components/dashboard/save-status-context";
 import { NAME_MAX_LENGTH, limitText } from "@/lib/text-limits";
-import { IMAGE_ACCEPT } from "@/lib/upload-validation";
 import { getImageUploadPreparationErrorCode, prepareImageForUpload, uploadPhotoFormDataWithRetry } from "@/lib/client-image-upload";
 import { useAppDialog } from "@/hooks/use-app-dialog";
 
@@ -86,10 +85,8 @@ function ProfileSection({
 // by the unified panel's "Usar servicios" mode. The "Ofrecer servicios" invitation
 // lives in the panel sidebar, so it is not repeated here.
 export function BasicProfileSection({
-  supportTab = "/dashboard/profesional?tab=soporte",
   extraSections = [],
 }: {
-  supportTab?: string;
   extraSections?: ExtraProfileSection[];
 }) {
   const { user } = useAuth();

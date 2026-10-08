@@ -1,4 +1,3 @@
-import { idDesdeDireccion } from "@/lib/data/category-slug";
 import { hasBrokenVisibleText, repairVisibleText } from "@/lib/text/repair-visible-text";
 
 export type CategoryItem = {
@@ -1714,19 +1713,6 @@ export function getCategoryLabel(id: string, locale?: string): string {
  *  usarlas sin arrastrar el catálogo entero al borde. */
 export { categorySlug } from "@/lib/data/category-slug";
 
-/** El identificador a partir de lo que venga en la dirección, ya comprobado
- *  contra el catálogo. Acepta la dirección nueva («aire-acondicionado») y
- *  también la llave tal cual («aire_acondicionado»), porque las direcciones
- *  viejas siguen llegando de Google y de enlaces ya compartidos. Devuelve null
- *  si ese servicio no existe. */
-export function getCategoryIdBySlug(valor: string): string | null {
-  if (!valor) return null;
-  const existe = (id: string) => getAllCategories().some((c) => c.id === id);
-  if (existe(valor)) return valor;
-  const llave = idDesdeDireccion(valor);
-  return existe(llave) ? llave : null;
-}
-
 /* ─── Get category GROUP label from group ID (locale-aware) ─── */
 export function getCategoryGroupLabel(groupId: string, locale?: string): string {
   if (isOtherCategoryGroup(groupId)) return locale === "en" ? "Other categories" : "Otras categorías";
@@ -1759,19 +1745,6 @@ export function isHealthCategory(id?: string | null): boolean {
   if (!id) return false;
   const override = CATEGORY_FEATURE_OVERRIDES.get(id)?.esSalud;
   return typeof override === "boolean" ? override : HEALTH_CATEGORY_IDS.has(id);
-}
-
-/* ─── CARE categories — a SUBSET of health that is CARE of a person (not a clinical
-   consult). Used only to pick natural wording in the booking "¿Para quién?" block:
-   a CARE recipient is "la persona", not "el paciente" (a niñera's child isn't a
-   "patient"). Everything else in HEALTH_CATEGORY_IDS is clinical → "paciente". ─── */
-export const CARE_CATEGORY_IDS = new Set<string>([
-  "cuidado_adultos", "cuidado_discapacidad", "cuidado_infantil",
-]);
-
-/** True if the category is CARE of a person (vs a clinical consult). */
-export function isCareCategory(id?: string | null): boolean {
-  return !!id && CARE_CATEGORY_IDS.has(id);
 }
 
 /** True if ANY of the professional's categories is a health category. */
@@ -1859,13 +1832,6 @@ export function getMatchingCategoryIds(query: string): string[] {
     ...searchCategories(query).map((c) => c.id),
   ])];
 }
-
-/* ─── Legacy flat CATEGORIES array (kept for backwards compat) ─── */
-export const CATEGORIES = ALL_CATEGORIES.map(({ id, keywords }) => ({
-  id,
-  icon: "",
-  keywords,
-}));
 
 /* ── ARRANQUE EN EL NAVEGADOR ────────────────────────────────────────────────
    El documento trae el catálogo operativo en <script id="ccr-catalogo"> (lo pone

@@ -955,7 +955,7 @@ export default function RegisterProfessionalPage() {
         fallo.codigo = typeof proCode === "string" ? proCode : undefined;
         throw fallo;
       }
-      const proResult = await proRes.json().catch(() => ({}));
+      await proRes.json().catch(() => ({}));
 
       // Persist the professional role in auth metadata too, so navigating away
       // and back never reverts to the role-selection screen (and a converted

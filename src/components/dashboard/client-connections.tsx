@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { CalendarCheck, ClipboardList, ExternalLink, MessageSquareText, Repeat2, Search, Users, Wrench } from "lucide-react";
+import { CalendarCheck, ClipboardList, MessageSquareText, Repeat2, Search, Users, Wrench } from "lucide-react";
 import { ResponsiveVerifiedName } from "@/components/professionals/responsive-verified-name";
 import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";

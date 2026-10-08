@@ -40,13 +40,6 @@ export function looksLikeBusinessName(name?: string) {
   return /[&+]/.test(name ?? "");
 }
 
-export function samePublicIdentity(personName?: string, businessName?: string) {
-  const person = normalizeDisplayName(personName);
-  const business = normalizeDisplayName(businessName);
-  if (!person || !business) return false;
-  return person === business || person.includes(business) || business.includes(person);
-}
-
 export function formatPersonDisplayName(name?: string, mode: "desktop" | "mobile" = "desktop") {
   if (looksLikeBusinessName(name)) return (name ?? "").trim();
   const parts = (name ?? "").trim().split(/\s+/).filter(Boolean);
@@ -60,15 +53,11 @@ export function getProfessionalDisplayName(fullName: string, businessName?: stri
   const cleanBusinessName = businessName?.trim() || "";
   const personMobile = formatPersonDisplayName(fullName, "mobile");
   const personDesktop = formatPersonDisplayName(fullName, "desktop");
-  const showPersonSubtitle = false;
 
   return {
     primaryMobile: cleanBusinessName || personMobile,
     primaryDesktop: cleanBusinessName || personDesktop,
     personMobile,
     personDesktop,
-    secondaryMobile: showPersonSubtitle ? personMobile : "",
-    secondaryDesktop: showPersonSubtitle ? personDesktop : "",
-    hasSecondary: showPersonSubtitle,
   };
 }
