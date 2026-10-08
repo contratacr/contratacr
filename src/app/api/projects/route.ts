@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
 import { mensajeDeError } from "@/lib/api-errors";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -15,6 +15,8 @@ import { writeSourceColumns } from "@/lib/security/write-guard";
 import { recordServerInteraction } from "@/lib/analytics/server-interactions";
 import { hasDurablePushOutbox, sendNotificationPush, sendNotificationPushRows } from "@/lib/push/notify";
 import { invitarAResenaAhora } from "@/lib/notifications/invitar-ahora";
+import { avisarPorCorreo } from "@/lib/notifications/aviso-por-correo";
+import { rutaProyecto } from "@/lib/marketplace-url";
 import { pareceFijoDeCostaRica } from "@/lib/telefono-movil";
 
 const PROJECT_TITLE_MAX_LENGTH = 80;
@@ -361,6 +363,21 @@ export async function POST(req: NextRequest) {
             },
           }));
           await admin.from("notifications").insert(rows);
+          // Y por correo, después de responderle al cliente: casi ningún
+          // profesional tiene push (ver lib/notifications/aviso-por-correo.ts).
+          const zona = [...new Set([getCantonById(cantonId ?? "")?.name, getProvinceById(provinciaId ?? "")?.name].filter(Boolean))].join(", ");
+          after(() => avisarPorCorreo({
+            destinatarios: recipients,
+            asunto: `Nuevo proyecto de ${label}${zona ? ` en ${zona}` : ""}`,
+            titular: `Un cliente publicó un proyecto de ${label}${zona ? ` en ${zona}` : ""}: «${finalTitle}».`,
+            parrafos: [
+              cleanDescription.length > 280 ? `${cleanDescription.slice(0, 277).trimEnd()}…` : cleanDescription,
+              "Si te interesa, ábrelo y escríbele por WhatsApp. Responder rápido es lo que más pesa para que te elijan.",
+            ],
+            boton: { texto: "Ver el proyecto", ruta: rutaProyecto({ id: projectId, title: finalTitle }) },
+            porQue: `Te llega porque ofreces ${label} en ContrataCR.`,
+            campana: "aviso-proyecto",
+          }));
           // Con la migración 167 el INSERT de arriba ya cayó en el outbox durable y
           // el push sale de ahí: no hay que llamar N veces a un envío que devuelve
           // sin hacer nada. Solo sin outbox se manda en línea, uno por profesional.
