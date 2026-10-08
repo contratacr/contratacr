@@ -165,6 +165,40 @@ test.describe("@seeded search results", () => {
     await expectNoHorizontalOverflow(page);
   });
 
+  // 8-oct-2026, en producción: tras bajar por «todos» y buscar «nutrición» con
+  // la barra de arriba (sin recargar), las 302 tarjetas que ya se habían
+  // cargado seguían debajo de las 8 de nutrición. La lista que crece al bajar
+  // tiene que empezar de cero con cada búsqueda.
+  test("a new search without reloading drops the cards the previous search had loaded", async ({ page }) => {
+    await gotoOK(page, "/profesionales");
+    await waitForInteractivePage(page);
+    const bajarHastaElFinal = () => page.evaluate(() => {
+      document.querySelectorAll<HTMLElement>("*").forEach((el) => {
+        if (el.scrollHeight > el.clientHeight + 50 && /auto|scroll/.test(getComputedStyle(el).overflowY)) el.scrollTop = el.scrollHeight;
+      });
+      window.scrollTo(0, document.documentElement.scrollHeight);
+    });
+    let cargadas = 0;
+    for (let intento = 0; intento < 8 && cargadas === 0; intento += 1) {
+      await bajarHastaElFinal();
+      await page.waitForTimeout(800);
+      cargadas = await page.locator("[data-result-id]").count();
+    }
+    test.skip(cargadas === 0, "La base no tiene resultados suficientes para que la lista crezca.");
+
+    // Navegación del propio app, sin recargar: como la barra de búsqueda.
+    await page.evaluate(() => (window as unknown as { next: { router: { push: (href: string) => void } } }).next.router.push("/profesionales?q=nutricion"));
+    await expect.poll(() => new URL(page.url()).searchParams.get("q"), { timeout: 20_000 }).toBe("nutricion");
+    await page.waitForLoadState("networkidle");
+    const { total, enPantalla, deMas } = await page.evaluate(() => ({
+      total: Number(document.body.innerText.match(/(\d+) (?:profesionales?|professionals?) (?:en|in) /)?.[1] ?? "-1"),
+      enPantalla: document.querySelectorAll("[data-pro-id]:not([data-result-id] [data-pro-id])").length,
+      deMas: document.querySelectorAll("[data-result-id]").length,
+    }));
+    expect(total, "el conteo de la búsqueda nueva se lee").toBeGreaterThanOrEqual(0);
+    expect(enPantalla + deMas, "nunca más tarjetas que las que la búsqueda encontró").toBeLessThanOrEqual(Math.max(total, 0));
+  });
+
   test("search query can navigate from the header to filtered results", async ({ page }) => {
     await gotoOK(page, "/");
     await waitForInteractivePage(page);

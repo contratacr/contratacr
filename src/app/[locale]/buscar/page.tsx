@@ -648,7 +648,15 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                       </div>
                     ))}
                     {/* From here the list grows on its own as the person scrolls. */}
+                    {/* `key` con la búsqueda: al buscar otra cosa sin recargar (la
+                        barra de arriba navega dentro de la app), React reusaba el
+                        componente y los profesionales que ya había cargado la
+                        búsqueda anterior seguían debajo de los nuevos. En
+                        producción, tras bajar por «todos» y buscar «nutrición»,
+                        quedaban 302 tarjetas de más bajo las 8 de verdad
+                        (8-oct-2026). */}
                     <SearchResultsInfinite
+                      key={infiniteQuery}
                       query={infiniteQuery}
                       initialCount={results.length}
                       total={orderedResults.length}
