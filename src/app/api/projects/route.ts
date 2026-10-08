@@ -166,23 +166,32 @@ export async function POST(req: NextRequest) {
     let officialName: string | null = null;
     let identityProvider: string | null = existingProfile?.client_identity_provider ?? null;
     let identityVerifiedAt: string | null = existingProfile?.client_identity_verified_at ?? null;
+    // LA CÉDULA ES OPCIONAL AL PUBLICAR (8-oct-2026): sirve para que el
+    // proyecto salga con «Cédula verificada», nunca para frenarlo. Si el padrón
+    // no contesta o no la encuentra, el proyecto se publica igual, sin la
+    // insignia y sin guardar un número que nadie confirmó; la respuesta dice
+    // qué pasó para que el formulario lo explique.
+    let cedulaGuardada: string | null = cedula || null;
+    let identidad: "verificada" | "no_encontrada" | "padron_caido" | "en_revision" | null = null;
     if (cedula) {
       const idType = detectIdType(cedula);
       if (idType === "cedula") {
         const result = await getIdentityVerifier().lookup(cedula);
         if (result.unavailable) {
-          return NextResponse.json({ error: mensajeDeError(req, { es: "No pudimos consultar el padrón en este momento. Intenta de nuevo en unos minutos.", en: "We could not reach the civil registry right now. Try again in a few minutes." }) }, { status: 503 });
-        }
-        identityProvider = result.provider;
-        if (result.found) {
+          cedulaGuardada = null;
+          identidad = "padron_caido";
+        } else if (result.found) {
+          identityProvider = result.provider;
           clientIdentityStatus = "verified";
           officialName = result.fullName ?? null;
           identityVerifiedAt = new Date().toISOString();
+          identidad = "verificada";
         } else {
-          clientIdentityStatus = "unverified";
-          identityVerifiedAt = null;
+          cedulaGuardada = null;
+          identidad = "no_encontrada";
         }
       } else {
+        identidad = "en_revision";
         clientIdentityStatus = "pending";
         identityVerifiedAt = null;
       }
@@ -203,7 +212,7 @@ export async function POST(req: NextRequest) {
                  user.email?.split("@")[0] || "",
       role: existingProfile?.role || (user.user_metadata?.role as string) || "client",
       onboarding_completed: true,
-      ...(cedula ? { cedula } : {}),
+      ...(cedulaGuardada ? { cedula: cedulaGuardada } : {}),
       client_identity_status: clientIdentityStatus,
       client_identity_verified_at: clientIdentityStatus === "verified" ? identityVerifiedAt : null,
       client_identity_provider: identityProvider,
@@ -213,7 +222,7 @@ export async function POST(req: NextRequest) {
     // demote a separately verified professional profile on a dual-role account.
     // Synchronize the professional badge only when this request actually
     // revalidated (or rejected) a supplied account identity.
-    if (cedula) {
+    if (cedulaGuardada) {
       await syncProfessionalVerificationFromAccount(admin, uid, clientIdentityStatus, identityProvider);
     }
 
@@ -394,7 +403,7 @@ export async function POST(req: NextRequest) {
     }
 
     await invitarAResenaAhora(uid);
-    return NextResponse.json({ id: projectId, notifiedCount, success: true, clientIdentityStatus });
+    return NextResponse.json({ id: projectId, notifiedCount, success: true, clientIdentityStatus, identidad });
   } catch (err) {
     console.error("[POST /api/projects] Unexpected error:", err);
     return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 });

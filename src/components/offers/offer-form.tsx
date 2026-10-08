@@ -5,6 +5,7 @@ import { flushSync } from "react-dom";
 import { rutaPromocion } from "@/lib/marketplace-url";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { AvisoSinVerificar } from "@/components/ui/aviso-sin-verificar";
 import { PhoneInput } from "@/components/ui/phone-input";
 import { UnsavedChangesGuard } from "@/components/dashboard/unsaved-changes-guard";
 import { cn } from "@/lib/utils";
@@ -683,6 +684,7 @@ export function OfferForm({ professionalId, serviceOptions, backHref = "/promoci
               </div>
             </div>
           </div>
+          <AvisoSinVerificar professionalId={professionalId} que="promocion" />
           {error && <p role="alert" className="mt-5 rounded-lg bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">{error}</p>}
           </div>
           <div className={cn(

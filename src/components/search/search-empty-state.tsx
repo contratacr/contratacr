@@ -32,11 +32,9 @@ export function SearchEmptyState({ title, description, cta, href, pie }: { title
         action={(
           // LA MISMA PASTILLA DE 44 px QUE TODO EL APP. Sin alto, el botón
           // salía aplastado —solo el texto con su relleno lateral— y era el
-          // único así. Dice «Publicar lo que necesito» y no «Publicar
-          // proyecto»: ese es el llamado del cliente en todo el sitio (cabecera,
-          // pie, panel, cómo funciona); «proyecto» solo se usa dentro de las
-          // pantallas de proyectos, donde la palabra ya está en escena. Quien
-          // llega a un vacío de búsqueda no ha visto «proyecto» todavía.
+          // único así. Dice «Publicar proyecto», como en todo el sitio
+          // (cabecera, pie, paneles, cómo funciona): desde el 8-oct-2026 el
+          // llamado usa la palabra de la sección para que se vuelva conocida.
           <div className="flex flex-col items-center gap-2 sm:flex-row sm:justify-center sm:gap-3">
             <Link
               href={href}

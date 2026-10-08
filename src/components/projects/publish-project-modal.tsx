@@ -11,6 +11,9 @@ import { SelectMenu } from "@/components/ui/select-menu";
 import { AlertCircle, ArrowLeft, X } from "lucide-react";
 import { PROVINCES } from "@/lib/data/cr-geography";
 import { PhoneInput, isPhoneComplete } from "@/components/ui/phone-input";
+import { CedulaInput } from "@/components/ui/cedula-input";
+import { CedulaVerificada } from "@/components/ui/cedula-verificada";
+import { isValidId } from "@/lib/cedula";
 import { createClient } from "@/lib/supabase/client";
 import { getCategoryLabel } from "@/lib/data/categories";
 import { useLocale } from "next-intl";
@@ -27,7 +30,7 @@ import { prefijoDeIdioma } from "@/lib/prefijo-de-idioma";
 const PROJECT_DESCRIPTION_MAX_LENGTH = 300;
 const LAST_ZONE_KEY = "ccr:last-request-zone";
 
-type ProjectErrorField = "category" | "description" | "phone";
+type ProjectErrorField = "category" | "description" | "phone" | "cedula";
 
 // En producción, los primeros "proyectos" fueron profesionales ofreciendo sus
 // servicios. Estas señales, de a dos, delatan un anuncio: se avisa y se manda
@@ -87,6 +90,11 @@ export function PublishProjectModal({ onClose, onSuccess, editar }: {
     cantonId: base?.cantonId || searchParams.get("canton") || "",
   });
   const [telefono, setTelefono] = useState("");
+  // LA CÉDULA, OPCIONAL (8-oct-2026): con ella el proyecto sale con «Cédula
+  // verificada». Si la cuenta ya la tiene verificada no se pide: se muestra.
+  const [cedula, setCedula] = useState("");
+  const [cedulaDeLaCuenta, setCedulaDeLaCuenta] = useState(false);
+  const [avisoDeIdentidad, setAvisoDeIdentidad] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [errorField, setErrorField] = useState<ProjectErrorField | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -121,7 +129,9 @@ export function PublishProjectModal({ onClose, onSuccess, editar }: {
       .rpc("get_my_profile")
       .then(({ data }) => {
         if (!vivo) return;
-        const guardado = String((data as { phone?: string | null } | null)?.phone ?? "").trim();
+        const perfil = data as { phone?: string | null; cedula?: string | null; client_identity_status?: string | null } | null;
+        const guardado = String(perfil?.phone ?? "").trim();
+        if (perfil?.client_identity_status === "verified" && perfil.cedula) setCedulaDeLaCuenta(true);
         queueMicrotask(() => {
           if (!vivo) return;
           // El número escrito en el borrador manda sobre el de la cuenta.
@@ -209,6 +219,11 @@ export function PublishProjectModal({ onClose, onSuccess, editar }: {
       setError(t("errPhoneFijo"));
       return;
     }
+    if (!editar && cedula && !cedulaDeLaCuenta && !isValidId(cedula)) {
+      setErrorField("cedula");
+      setError(t("errCedula"));
+      return;
+    }
     // Sin sesión: se guarda todo y se pide entrar. Al volver, esta misma
     // ventana se abre llena y solo falta tocar «Publicar».
     if (!user && !editar) {
@@ -246,6 +261,7 @@ export function PublishProjectModal({ onClose, onSuccess, editar }: {
           provinciaId: form.provinciaId || null,
           cantonId: form.cantonId || null,
           phone: telefono.trim() || null,
+          ...(cedula && !cedulaDeLaCuenta ? { cedula } : {}),
         }),
       });
       const data = await res.json().catch(() => ({}));
@@ -258,6 +274,13 @@ export function PublishProjectModal({ onClose, onSuccess, editar }: {
         window.localStorage.setItem(LAST_ZONE_KEY, JSON.stringify({ provinciaId: form.provinciaId, cantonId: form.cantonId }));
       } catch { /* sin almacenamiento */ }
       onSuccess?.();
+      const avisos: Record<string, string> = {
+        verificada: t("identidadVerificada"),
+        no_encontrada: t("identidadNoEncontrada"),
+        padron_caido: t("identidadPadronCaido"),
+        en_revision: t("identidadEnRevision"),
+      };
+      setAvisoDeIdentidad(typeof data.identidad === "string" ? avisos[data.identidad] ?? null : null);
       setPublished({
         notifiedCount: typeof data.notifiedCount === "number" ? data.notifiedCount : 0,
         service: getCategoryLabel(form.categoryId, locale),
@@ -311,6 +334,7 @@ export function PublishProjectModal({ onClose, onSuccess, editar }: {
                 {t("successNotified", { count: published.notifiedCount, service: published.service })}
               </p>
               <p className="max-w-[22rem] text-sm leading-relaxed text-[#6b7280]">{t("successNext")}</p>
+              {avisoDeIdentidad && <p data-aviso-identidad className="max-w-[22rem] text-sm leading-relaxed text-[#4b5b70]">{avisoDeIdentidad}</p>}
             </PantallaDeExito>
           ) : (
             <div ref={cuerpo} className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain bg-[#f4f7fa] px-4 py-5 sm:max-h-[calc(90vh-145px)] sm:flex-none">
@@ -399,6 +423,26 @@ export function PublishProjectModal({ onClose, onSuccess, editar }: {
                     required
                   />
                 </div>}
+
+                {/* Al final y opcional: primero lo que hace falta para publicar.
+                    Sin sesión no se pide —se entra al tocar «Publicar» y al
+                    volver ya aparece—, para no guardar una cédula en el
+                    borrador del teléfono. */}
+                {!editar && user && (cedulaDeLaCuenta ? (
+                  <div data-cedula-de-la-cuenta>
+                    <CedulaVerificada texto={t("cedulaYaVerificada")} />
+                    <p className="mt-1 text-[13px] leading-snug text-[#68778d]">{t("cedulaYaVerificadaAyuda")}</p>
+                  </div>
+                ) : (
+                  <CedulaInput
+                    id="cedula-del-proyecto"
+                    labelText={t("cedulaLabel")}
+                    value={cedula}
+                    onChange={setCedula}
+                    hint={t("cedulaAyuda")}
+                    error={errorField === "cedula" ? (error ?? undefined) : undefined}
+                  />
+                ))}
               </div>
             </div>
           )}

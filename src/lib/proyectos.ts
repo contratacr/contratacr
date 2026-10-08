@@ -19,6 +19,10 @@ export type ProyectoPublico = {
   client_name: string;
   /** Su foto de cuenta, que muchas veces es la foto de su perfil profesional. */
   client_avatar_url: string | null;
+  /** Quien publica tiene la cédula verificada en el padrón (la de su CUENTA,
+   *  no la del momento de publicar: si se verifica después, sus proyectos
+   *  también lo dicen). Nunca sale el número. */
+  client_verified: boolean;
   allow_direct_contact: boolean;
   /** Quien publicó autorizó que le llamen al mismo número del WhatsApp. */
   allow_phone_contact: boolean;

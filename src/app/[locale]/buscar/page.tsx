@@ -3,7 +3,6 @@ import { prefijoDeIdioma } from "@/lib/prefijo-de-idioma";
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { getTranslations, getLocale } from "next-intl/server";
-import { VerifiedSeal } from "@/components/ui/verified-seal";
 import { cookies } from "next/headers";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Link } from "@/i18n/navigation";
@@ -562,9 +561,6 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                 · {subtitle}
                 {/* La salida de los filtros, al lado del conteo (ver MarketplaceClearFilters). */}
                 {hayFiltrosDePastilla && <> · <Link href={sinFiltrosHref} className="font-semibold text-[#007fae] hover:underline">{t("filters.clearAll")}</Link></>}
-                {/* La clave del check azul, una vez arriba de todas las tarjetas:
-                    en cada tarjeta va solo el sello para no alargarlas. */}
-                {allResults.length > 0 && <> · <span data-leyenda-verificada className="inline-flex items-baseline gap-1"><VerifiedSeal className="h-3.5 w-3.5 shrink-0 self-center text-[#009FD9]" />{t("verifiedLegend")}</span></>}
               </p>
             </div>
             {/* LOS FILTROS, EN LA MISMA FILA DEL TÍTULO, como en Empleos,
@@ -588,7 +584,6 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
             locale={locale}
             numbering={numbering}
             countLabel={subtitle}
-            leyendaVerificada={allResults.length > 0 ? t("verifiedLegend") : undefined}
             limpiar={hayFiltrosDePastilla ? { href: sinFiltrosHref, label: t("filters.clearAll") } : undefined}
             hasActiveFilters={hasActiveFilters}
             mapFocusTarget={mapFocusTarget}
@@ -606,7 +601,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                 // Tres cosas y en este orden: qué pasó, qué hacer, y la salida,
                 // con el MISMO dibujo que el resto del app en su tamaño
                 // compacto. Sobre el mapa el alto es caro: con el mosaico de
-                // 80px que tenía copiado a mano, «Publicar lo que necesito»
+                // 80px que tenía copiado a mano, «Publicar proyecto»
                 // caía bajo el borde de la pantalla.
                 <SearchEmptyState
                   title={t("noResults.title")}
@@ -674,12 +669,11 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                         de la lista: puesta debajo, subía 332 px en computadora cuando
                         la lista —que nace a pantalla completa— se encogía a sus tarjetas. */}
                     {currentPage === totalPages && (
-                      <div className="bg-white px-4 pb-5 pt-1 lg:mt-2 lg:bg-transparent lg:px-0">
+                      <div className="mt-2 lg:mt-4">
                         <TarjetaPublicarProyecto
                           titulo={t("proyectoTarjeta.titulo")}
                           texto={t("proyectoTarjeta.texto")}
                           boton={t("proyectoTarjeta.boton")}
-                          pie={t("proyectoTarjeta.pie")}
                           categoria={selectedCategory}
                           provincia={selectedProvinceId}
                           canton={selectedCantonId}

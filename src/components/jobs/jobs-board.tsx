@@ -4,7 +4,7 @@ import { conFiltroDeFecha } from "@/lib/marketplace/filtros-por-volumen";
 import { rutaConIdioma } from "@/lib/prefijo-de-idioma";
 import { ProgressiveImage } from "@/components/ui/progressive-image";
 import { PanelEmptyState } from "@/components/ui/content-loading";
-import { VerifiedSeal } from "@/components/ui/verified-seal";
+import { CEDULA_COMPACTA, CedulaVerificada } from "@/components/ui/cedula-verificada";
 import { cn } from "@/lib/utils";
 import { useHairlineOnScroll } from "@/components/util/use-hairline-on-scroll";
 
@@ -12,7 +12,7 @@ import { useEffect, useMemo, useState } from "react";
 import { cldThumb } from "@/lib/cloudinary";
 import { useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
-import { ArrowLeft, BriefcaseBusiness, Building2, Menu } from "lucide-react";
+import { ArrowLeft, BriefcaseBusiness, Building2, ChevronRight, Menu } from "lucide-react";
 import { Link, useRouter } from "@/i18n/navigation";
 import { recordRecentVisit } from "@/lib/recent-visits";
 import { ContrataCRMark, HeaderAccountLink, HeaderMessagesLink } from "@/components/landing/landing-navbar";
@@ -587,7 +587,7 @@ function jobSaveSnapshot(job: JobPost, locale: MarketplaceLocale) {
 function JobRow({ job, selected, onSelect }: { job: JobPost; selected: boolean; onSelect: () => void }) {
   const locale = marketplaceLocale(useLocale());
   const copy = JOBS_COPY[locale];
-  const tTarjeta = useTranslations("card");
+  const tPerfil = useTranslations("profile");
   return <article className={`relative min-h-[7.25rem] overflow-hidden border-b lg:min-h-0 border-[#e5e7eb] bg-white px-3 py-3 transition sm:max-lg:last:border-b-0 hover:bg-[#f8fafc] sm:px-4 ${selected ? "lg:bg-[#eef9fd] lg:shadow-[inset_4px_0_0_#162543]" : ""}`}>
     <button type="button" onClick={onSelect} aria-label={`${copy.view} ${job.title}`} className="absolute inset-0 hidden lg:block" />
     <Link href={rutaEmpleo(job)} className="relative z-[1] block w-full text-left lg:pointer-events-none">
@@ -595,9 +595,12 @@ function JobRow({ job, selected, onSelect }: { job: JobPost; selected: boolean; 
         <EmployerAvatar job={job} />
         <div className="min-w-0 flex-1">
           <h2 className="line-clamp-2 text-[15px] font-extrabold leading-tight text-[#005eaa] lg:text-base">{job.title}</h2>
-          <p className="mt-0.5 flex min-w-0 items-center gap-1 text-sm font-semibold text-[#101d35]">
-            <span className="min-w-0 truncate">{job.employer_name || copy.professionalFallback}</span>
-            {job.employer_verified && <VerifiedSeal label={tTarjeta("verifiedTitle")} className="h-3.5 w-3.5 shrink-0 text-[#009FD9]" />}
+          {/* «Cédula verificada» con palabras junto al nombre, como en las
+              tarjetas de profesionales. Si no cabe al lado, baja sola a la
+              línea de abajo: nunca recorta el nombre (8-oct-2026). */}
+          <p className="mt-0.5 flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-sm font-semibold text-[#101d35]">
+            <span className="min-w-0 max-w-full truncate">{job.employer_name || copy.professionalFallback}</span>
+            {job.employer_verified && <CedulaVerificada texto={tPerfil("cedulaVerificada")} className={CEDULA_COMPACTA} />}
           </p>
           {/* TELÉFONO: dónde y cuándo; modalidad y experiencia; salario. */}
           <JobMetaLine job={job} showApplicants={false} className="mt-0.5 truncate text-sm text-[#52627a] lg:hidden" />
@@ -653,8 +656,20 @@ function JobPreview({ job, isOwner, userId, onEdit, mobile = false, hideActions 
             trabajo falsas son una estafa común: quien busca empleo necesita ver
             que el empleador existe (8-oct-2026). */}
         <div className="min-w-0 flex-1">
-          <p className="line-clamp-2 font-semibold text-[#52627a] [overflow-wrap:anywhere]">{job.employer_name}</p>
-          {job.employer_verified && <CedulaVerificada />}
+          {/* Con perfil público, el nombre es la entrada al perfil —azul y con
+              «›», igual que en Promociones—; sin perfil, gris. */}
+          {job.employer_slug ? (
+            <Link
+              href={`/profesionales/${job.employer_slug}?from=${encodeURIComponent(rutaEmpleo(job))}`}
+              className="inline-flex min-w-0 max-w-full items-center gap-1 font-semibold text-[#005eaa] hover:underline"
+            >
+              <span className="line-clamp-2 min-w-0 [overflow-wrap:anywhere]">{job.employer_name}</span>
+              <ChevronRight className="h-4 w-4 shrink-0" />
+            </Link>
+          ) : (
+            <p className="line-clamp-2 font-semibold text-[#52627a] [overflow-wrap:anywhere]">{job.employer_name}</p>
+          )}
+          {job.employer_verified && <CedulaDelEmpleador />}
         </div>
         {/* COMPARTIR VIVE DENTRO DEL «···», no al lado. Probé sacarlo como
             botón visible y quedaba la MISMA acción dos veces a dos centímetros:
@@ -811,14 +826,9 @@ function JobContactActions({ job, isOwner, userId, soloContacto = false, escrito
   );
 }
 
-function CedulaVerificada() {
+function CedulaDelEmpleador() {
   const t = useTranslations("profile");
-  return (
-    <span className="mt-0.5 flex items-center gap-1 text-[13px] font-medium text-[#4b5b70]" data-cedula-verificada>
-      <VerifiedSeal className="h-3.5 w-3.5 shrink-0 text-[#009FD9]" />
-      {t("cedulaVerificada")}
-    </span>
-  );
+  return <CedulaVerificada texto={t("cedulaVerificada")} className="mt-0.5" />;
 }
 
 function EmployerAvatar({ job, size = "default" }: { job: JobPost; size?: "default" | "large" }) {

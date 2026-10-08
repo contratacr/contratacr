@@ -13,7 +13,7 @@ import {
   X, Ban,
 } from "lucide-react";
 import { Modal } from "@/components/ui/modal";
-import { VerifiedSeal } from "@/components/ui/verified-seal";
+import { CedulaVerificada } from "@/components/ui/cedula-verificada";
 import { InstagramIcon, FacebookIcon, TikTokIcon, LinkedInIcon } from "@/components/icons/social-icons";
 import { buildSocialUrl, buildWebsiteUrl } from "@/lib/social";
 import { Link, useRouter } from "@/i18n/navigation";
@@ -1047,10 +1047,7 @@ export default function ProfilePage({ fichaInicial, ofertasIniciales = [], emple
                         centrado con la foto. Dice qué se revisó; el sello solo
                         no lo decía (8-oct-2026). */}
                     {professional.verificationStatus === "verified" && (
-                      <p className="mt-1 flex items-center gap-1.5 text-[12.5px] text-[#4b5b70] sm:mt-1.5 sm:text-[13px]" data-cedula-verificada>
-                        <VerifiedSeal className="h-3.5 w-3.5 shrink-0 text-[#009FD9]" />
-                        {t("cedulaVerificada")}
-                      </p>
+                      <CedulaVerificada texto={t("cedulaVerificada")} className="mt-1 sm:mt-1.5" />
                     )}
                     {/* La ubicación NO va aquí: las zonas de trabajo están en la
                         tarjeta de contacto, completas, y el cantón del perfil

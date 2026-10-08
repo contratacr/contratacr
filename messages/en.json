@@ -139,7 +139,7 @@
     "recent": "Recent",
     "recentClear": "Clear",
     "masBuscados": "Most searched",
-    "publishRequest": "Post what I need",
+    "publishRequest": "Post a project",
     "register": "Sign up",
     "loginOrRegister": "Log in or sign up",
     "signUp": "Sign up",
@@ -229,7 +229,6 @@
     "resultsIn": "{count, plural, one {# professional} other {# professionals}} in {location}",
     "thisArea": "this area",
     "resultsInCR": "{count, plural, one {# professional} other {# professionals}} in Costa Rica",
-    "verifiedLegend": "ID verified",
     "list": "List",
     "map": "Map",
     "viewResults": "View results",
@@ -237,7 +236,7 @@
     "noResults": {
       "title": "No results found",
       "desc": "Try a different category or expand your search area.",
-      "publishCta": "Post what I need"
+      "publishCta": "Post a project"
     },
     "pagination": {
       "label": "Results pagination",
@@ -315,8 +314,8 @@
     "proyectoTarjeta": {
       "titulo": "Can't decide?",
       "tituloVacio": "No one here yet",
-      "texto": "Post what you need and professionals will contact you on WhatsApp.",
-      "boton": "Post what I need",
+      "texto": "Post your project and professionals will message you on WhatsApp.",
+      "boton": "Post a project",
       "pie": "Free · Your number is never published"
     },
     "metaTitleGeneral": "Verified professionals in Costa Rica",
@@ -980,7 +979,7 @@
       "search": "Find services",
       "categories": "Services",
       "howItWorks": "How to use",
-      "publish": "Post what I need",
+      "publish": "Post a project",
       "offers": "Promotions"
     },
     "pros": {
@@ -1274,7 +1273,7 @@
       },
       "projects": {
         "title": "My projects",
-        "publish": "Post what I need",
+        "publish": "Post a project",
         "empty": "You haven't posted any projects yet",
         "emptyHint": "Post what you need and professionals reply.",
         "proposals": "proposal(s)",
@@ -1414,7 +1413,7 @@
       },
       "actions": {
         "publish": {
-          "title": "Post what I need",
+          "title": "Post a project",
           "body": "Say what you need and professionals reply."
         },
         "search": {
@@ -3144,7 +3143,16 @@
     "editSaving": "Saving…",
     "editDone": "Changes saved",
     "destinatarios": "{n, plural, one {# professional in this service will get your project} other {# professionals in this service will get your project}}",
-    "borradorListo": "It was saved. Review it and tap Publish."
+    "borradorListo": "It was saved. Review it and tap Publish.",
+    "cedulaLabel": "Your ID (cédula)",
+    "cedulaAyuda": "If you add it, your project shows «ID verified» and professionals reply with more confidence. The number is never shown.",
+    "cedulaYaVerificada": "ID verified",
+    "cedulaYaVerificadaAyuda": "Your project shows «ID verified». The number is never shown.",
+    "errCedula": "Check the ID number or leave the field empty.",
+    "identidadVerificada": "Your project was posted with «ID verified».",
+    "identidadNoEncontrada": "We couldn't find that ID in the electoral roll, so your project was posted without «ID verified».",
+    "identidadPadronCaido": "We couldn't reach the electoral roll right now: your project was posted without «ID verified». You can add it to your next project.",
+    "identidadEnRevision": "We'll review your ID; meanwhile your project shows without «ID verified»."
   },
   "notifications": {
     "title": "Notifications",
@@ -3460,7 +3468,7 @@
     "publishStep1Body": "Your project goes on the public board and professionals in that service message you on WhatsApp straight from the post.",
     "publishStep2Title": "Accept the best option",
     "publishStep2Body": "Write to whoever suits you, agree on the details and close the project with \"It's solved\".",
-    "publishPathCta": "Post what I need",
+    "publishPathCta": "Post a project",
     "clientsEyebrow": "Benefits for clients",
     "clientsBadge": "Clients",
     "clientsTitle": "Less fuss, more clarity",
@@ -3556,7 +3564,7 @@
     "ctaTitle": "Try it and share it",
     "ctaSubtitle": "If you need help, find professionals. You can also explore jobs and promotions or create your profile to offer services.",
     "ctaSearch": "Find professionals",
-    "ctaPublish": "Post what I need",
+    "ctaPublish": "Post a project",
     "ctaOffer": "Offer my services",
     "helpCta": "See the FAQ"
   },
@@ -4050,7 +4058,7 @@
     "seeAll": "See {count, plural, one {# professional} other {all # professionals}}",
     "publishTitle": "Get up to 3 quotes, no strings attached",
     "publishBody": "Tell us once what you need and {category} professionals reply with a price.",
-    "publishCta": "Post what I need",
+    "publishCta": "Post a project",
     "howTitle": "How it works",
     "how1": "Pick a verified professional.",
     "how2": "Message them on WhatsApp or book a visit.",
@@ -4507,5 +4515,10 @@
     "tambien": "Also block this user",
     "tambienTexto": "You will stop seeing their profile and posts, and you will not be able to message each other.",
     "ok": "Got it"
+  },
+  "avisoSinVerificar": {
+    "empleo": "Your job will be posted without «ID verified». With a verified ID, job seekers trust the offer more.",
+    "promocion": "Your promotion will be posted without «ID verified». With a verified ID, clients trust the offer more.",
+    "accion": "Verify my ID"
   }
 }

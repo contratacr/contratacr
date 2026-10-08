@@ -1217,7 +1217,7 @@ function localAnswer(message: string, locale: Locale): AssistantPayload {
       answer: locale === "en"
         ? "Create a project with what you need, the area and the details. ContrataCR notifies every professional of that service, and whoever is interested messages you on WhatsApp."
         : "Crea un proyecto con lo que necesitas, la zona y los detalles. ContrataCR avisa a todos los profesionales de ese servicio, y quien se interese te escribe por WhatsApp.",
-      ctaLabel: locale === "en" ? "Post what I need" : "Publicar lo que necesito",
+      ctaLabel: locale === "en" ? "Post a project" : "Publicar proyecto",
     };
   }
 
@@ -1420,7 +1420,7 @@ function actionHref(payload: AssistantPayload, originalMessage: string, locale: 
 function defaultCtaLabel(action: AssistantAction | undefined, locale: Locale) {
   const english = locale === "en";
   if (action === "search_professionals") return english ? "See all results" : "Ver todos los resultados";
-  if (action === "publish_request") return english ? "Post what I need" : "Publicar lo que necesito";
+  if (action === "publish_request") return english ? "Post a project" : "Publicar proyecto";
   if (action === "how_it_works") return english ? "See how it works" : "Ver cómo funciona";
   if (action === "support") return english ? "Open support" : "Ir a soporte";
   if (action === "browse_services") return english ? "Browse services" : "Ver servicios";
@@ -1837,7 +1837,7 @@ function normalizePayload(
       answer: locale === "en"
         ? `Done — I added ${serviceLabel} in ${publishPlaceLabel} to your project. Tap "Create project" to complete the details and publish it.`
         : `Listo: agregué ${serviceLabel} en ${publishPlaceLabel} a tu proyecto. Toca "Publicar" para revisarlo y publicarlo.`,
-      ctaLabel: locale === "en" ? "Post what I need" : "Publicar lo que necesito",
+      ctaLabel: locale === "en" ? "Post a project" : "Publicar proyecto",
     };
   }
   if (includesAny(normalized, ["olvide mi contrasena", "olvide la contrasena", "recuperar contrasena", "forgot password", "forgot my password", "reset password"])) {
@@ -2357,7 +2357,7 @@ export async function POST(req: Request) {
         ? actionHref({ ...payload, action: "publish_request" }, rawMessage, locale)
         : singleProfessionalHref ?? searchHref,
       ctaLabel: noResults
-        ? locale === "en" ? "Post what I need" : "Publicar lo que necesito"
+        ? locale === "en" ? "Post a project" : "Publicar proyecto"
         : hasResults ? resultCta : payload.ctaLabel || defaultCtaLabel(payload.action, locale),
       professionals: assistantProfessionals,
       suggestedService,

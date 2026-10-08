@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { ArrowLeft, ChevronRight } from "lucide-react";
-import { VerifiedSeal } from "@/components/ui/verified-seal";
+import { CedulaVerificada } from "@/components/ui/cedula-verificada";
 import { Link } from "@/i18n/navigation";
 import { metadatosDePantalla } from "@/lib/seo/alternates";
 import { tramoFicha } from "@/lib/marketplace-url";
@@ -303,10 +303,7 @@ export default async function OfferDetailPage({ params, searchParams }: { params
               <div className="min-w-0 flex-1">
                 {quienPublica}
                 {offer.professional_verified && (
-                  <span className="mt-0.5 flex items-center gap-1 text-[13px] font-medium text-[#4b5b70]" data-cedula-verificada>
-                    <VerifiedSeal className="h-3.5 w-3.5 shrink-0 text-[#009FD9]" />
-                    {tPerfil("cedulaVerificada")}
-                  </span>
+                  <CedulaVerificada texto={tPerfil("cedulaVerificada")} className="mt-0.5" />
                 )}
               </div>
               <MenuOferta
