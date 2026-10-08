@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { rutasDeCache } from "@/lib/prefijo-de-idioma";
 import { mensajeDeError } from "@/lib/api-errors";
-import { avisarVacanteAProfesionales } from "@/lib/jobs/aviso-de-vacante";
+import { avisarVacanteAProfesionales, destinatariosDeVacante } from "@/lib/jobs/aviso-de-vacante";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { auditUserAction } from "@/lib/audit/user-action";
@@ -23,6 +23,20 @@ function revalidateJobViews(id?: string | null) {
 }
 const cleanList = (value: unknown) => Array.isArray(value) ? value.filter((item): item is string => typeof item === "string").map((item) => item.trim()).filter(Boolean).slice(0, 20) : [];
 const optionalMoney = (value: unknown) => value == null ? null : typeof value === "number" && Number.isInteger(value) && value >= 0 && value <= MAX_MONEY_AMOUNT ? value : undefined;
+
+// GET /api/jobs/posts?destinatarios=<servicio> — a cuántos profesionales les
+// llegaría el aviso de una vacante de ese servicio. El formulario lo muestra al
+// elegir el servicio, antes de publicar (6-oct-2026: una vacante de asistente
+// administrativa salió marcada como «Desarrollo web» y le avisó a 18 devs).
+export async function GET(req: NextRequest) {
+  const servicio = new URL(req.url).searchParams.get("destinatarios") ?? "";
+  if (!/^[a-z0-9_-]{1,60}$/.test(servicio)) return NextResponse.json({ total: 0 });
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+  const destinatarios = await destinatariosDeVacante(servicio, user.id);
+  return NextResponse.json({ total: destinatarios.length });
+}
 
 export async function POST(req: NextRequest) {
   try {

@@ -27,6 +27,7 @@ import {
 } from "@/lib/jobs";
 import { CategorySearch } from "@/components/ui/category-search";
 import { SelectMenu } from "@/components/ui/select-menu";
+import { getCategoryLabel } from "@/lib/data/categories";
 import { FutureDatePicker } from "@/components/ui/future-date-picker";
 import { FilaInterruptor } from "@/components/ui/fila-interruptor";
 import { PROVINCES, getCantonById, getCantonsByProvince, getProvinceById } from "@/lib/data/cr-geography";
@@ -48,7 +49,8 @@ const JOB_POST_COPY = {
   es: {
     optional: "opcional",
     position: "Puesto",
-    service: "¿De qué es el trabajo?",
+    service: "Servicio del empleo",
+    avisaremos: (n: number, servicio: string) => `Se le avisará a ${n} ${n === 1 ? "profesional" : "profesionales"} de ${servicio}.`,
     selectService: "Ej.: plomería, electricista, pintura…",
     searchService: "Buscar servicio",
     noService: "Ningún servicio coincide",
@@ -114,7 +116,8 @@ const JOB_POST_COPY = {
   en: {
     optional: "optional",
     position: "Job title",
-    service: "What is the job about?",
+    service: "Service for this job",
+    avisaremos: (n: number, servicio: string) => `${n} ${n === 1 ? "professional" : "professionals"} in ${servicio} will be notified.`,
     selectService: "E.g. plumbing, electrician, painting…",
     searchService: "Search service",
     noService: "No service matches",
@@ -326,6 +329,20 @@ export function JobPostForm({ professionalId, backHref = "/empleos", initialJob 
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   // El servicio del catálogo: es lo que decide a quién se le avisa.
   const [servicio, setServicio] = useState(initialJob?.service_category_id ?? "");
+  // A cuántos les llega el aviso, visible ANTES de publicar: el 6-oct una vacante
+  // de asistente administrativa salió como «Desarrollo web» y le avisó a 18
+  // desarrolladores. Al editar no se muestra, porque editar no vuelve a avisar.
+  const [destinatarios, setDestinatarios] = useState(0);
+  const creando = !initialJob?.id;
+  useEffect(() => {
+    if (!creando || !servicio) return;
+    let vivo = true;
+    fetch(`/api/jobs/posts?destinatarios=${encodeURIComponent(servicio)}`)
+      .then((r) => r.json())
+      .then((d) => { if (vivo) setDestinatarios(Number(d?.total) || 0); })
+      .catch(() => undefined);
+    return () => { vivo = false; };
+  }, [creando, servicio]);
   // El formulario se referencia para llevar la vista al primer campo señalado,
   // y recuerda si hay algo escrito para avisar antes de salir sin publicar.
   const formRef = useRef<HTMLFormElement>(null);
@@ -513,11 +530,14 @@ export function JobPostForm({ professionalId, backHref = "/empleos", initialJob 
               <div className="mt-1.5">
                 <CategorySearch
                   value={servicio}
-                  onChange={(id) => { setServicio(id); setFieldErrors((actuales) => ({ ...actuales, service: undefined })); setConCambios(true); }}
+                  onChange={(id) => { setServicio(id); setDestinatarios(0); setFieldErrors((actuales) => ({ ...actuales, service: undefined })); setConCambios(true); }}
                   placeholder={copy.selectService}
                   error={fieldErrors.service}
                 />
               </div>
+              {creando && servicio && destinatarios > 0 && (
+                <p className="mt-1 text-xs font-semibold text-[#0f7a4a]" data-destinatarios-vacante>{copy.avisaremos(destinatarios, getCategoryLabel(servicio, locale))}</p>
+              )}
             </label>
             <SelectMenu label={<RequiredLabel>{copy.employmentType}</RequiredLabel>} value={employmentType} onChange={setEmploymentType} options={(Object.keys(EMPLOYMENT_TYPES) as EmploymentType[]).map((value) => ({ value, label: employmentTypeLabel(value, locale) }))} />
             <SelectMenu label={<RequiredLabel>{copy.workplaceType}</RequiredLabel>} value={workplaceType} onChange={setWorkplaceType} options={(Object.keys(WORKPLACE_TYPES) as WorkplaceType[]).map((value) => ({ value, label: workplaceTypeLabel(value, locale) }))} />

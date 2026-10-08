@@ -262,10 +262,13 @@ test.describe("@seeded marketplace editors through the real screens", () => {
     await expectVisibleText(page.locator("body"), /Publicar empleo/);
     await page.locator('input[name="title"]').fill(jobTitle);
     // El empleo dice a qué oficio pertenece: de ahí sale a quién se le avisa.
-    // Mismo buscador que «¿Qué necesitas?» al publicar un proyecto.
+    // Mismo buscador que «Servicio que necesitas» al publicar un proyecto.
     await page.locator("text=/plomería, electricista|plumbing, electrician/").first().click();
     await page.getByPlaceholder(/Buscar servicio|Search service/).fill("Desarrollo web");
     await page.getByRole("button", { name: /^Desarrollo web$/ }).first().click();
+    // Antes de publicar se ve a cuántos les llegará el aviso y de qué servicio:
+    // así un servicio mal elegido salta a la vista (caso del 6-oct-2026).
+    await expect(page.locator("[data-destinatarios-vacante]")).toContainText(/Se le avisar. a \d+ profesional(?:es)? de Desarrollo web/);
     // Employment type and experience keep their defaults; the workplace select
     // shows its current value ("Presencial") as its accessible name.
     await pickSelectMenu(page, /^Presencial$/, /^Remoto$/);
