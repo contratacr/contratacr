@@ -43,7 +43,7 @@ export function useCompartirCotizacion({ quote, proName, proSlug, activo = true 
     }, fecha, proSlug ? enlacePerfil(proSlug) : "").then((b) => { if (vivo) setPdf(b); });
     return () => { vivo = false; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activo, quote.id, quote.status, quote.booking_id, quote.project_id]);
+  }, [activo, quote.id, quote.status, quote.project_id]);
 
   function descargar() {
     if (!pdf) return;
@@ -112,7 +112,7 @@ export function BotonCompartirCotizacion({ quote, proName, proSlug, className }:
  */
 export function QuoteShare({ quote, onChanged }: { quote: Quote; proName?: string; proSlug?: string | null; onChanged?: (q: Quote) => void }) {
   const t = useTranslations("quotes");
-  const enviadaA = quote.booking_id ? t("attachedBooking") : quote.project_id ? t("attachedProject") : null;
+  const enviadaA = quote.project_id ? t("attachedProject") : null;
   if (!enviadaA) return null;
   return (
     <div className="flex items-start gap-2 rounded-2xl bg-[#e9f9ef] px-4 py-3">

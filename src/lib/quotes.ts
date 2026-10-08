@@ -16,7 +16,6 @@ export type Quote = {
   public_code: string;
   /** Consecutivo del profesional (1, 2, 3…): sale en el documento y en el nombre del archivo. */
   quote_number: number | null;
-  booking_id: string | null;
   project_id: string | null;
   proposal_id: string | null;
   title: string | null;

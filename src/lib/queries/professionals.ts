@@ -1101,16 +1101,16 @@ async function getProfessionalBySlugUncached(
       try {
         const { data: rj, error: reviewContextError } = await supabase
           .from("reviews")
-          .select("id, job_title, booking_id, project_id, whatsapp_contact_id, moderation_status")
+          .select("id, job_title, project_id, whatsapp_contact_id, moderation_status")
           .eq("professional_id", proRow.id);
         if (reviewContextError) throw reviewContextError;
         visibleReviewIds = new Set<string>();
-        for (const r of (rj ?? []) as { id: string; job_title?: string | null; booking_id?: string | null; project_id?: string | null; whatsapp_contact_id?: string | null; moderation_status?: string | null }[]) {
+        for (const r of (rj ?? []) as { id: string; job_title?: string | null; project_id?: string | null; whatsapp_contact_id?: string | null; moderation_status?: string | null }[]) {
           if (r.moderation_status !== "published") continue;
           visibleReviewIds.add(r.id);
           reviewContextMap[r.id] = {
             title: r.job_title ?? null,
-            source: r.booking_id || r.project_id ? "verified" : r.whatsapp_contact_id ? "contact" : "direct",
+            source: r.project_id ? "verified" : r.whatsapp_contact_id ? "contact" : "direct",
           };
         }
       } catch { /* column not migrated yet */ }

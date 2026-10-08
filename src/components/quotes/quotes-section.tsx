@@ -7,7 +7,7 @@ import { leerBorrador } from "@/lib/borrador-sin-sesion";
 import { AvisoDeBorrador } from "@/components/ui/aviso-de-borrador";
 import { useCachedResource } from "@/hooks/use-cached-resource";
 import { useLocale, useTranslations } from "next-intl";
-import { CalendarCheck, ChevronRight, Clock3, Handshake, Plus, ReceiptText, X } from "lucide-react";
+import { ChevronRight, Clock3, Handshake, Plus, ReceiptText, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatColones } from "@/lib/pricing";
 import { isQuoteExpired, type Quote } from "@/lib/quotes";
@@ -71,7 +71,7 @@ export function QuotesSection({ proName, proSlug, proId, puedeCrear = true }: { 
   // una cita o un proyecto del app. Una cotización suelta es un documento que se
   // mandó por WhatsApp; ahí no hay respuesta que esperar y el rótulo prometía
   // algo que nunca iba a pasar.
-  const enElApp = (q: Quote) => !!(q.booking_id || q.project_id);
+  const enElApp = (q: Quote) => !!q.project_id;
   const estadoDe = (q: Quote) => {
     if (isQuoteExpired(q)) return "expired";
     if (q.status === "withdrawn") return "withdrawn";
@@ -95,7 +95,7 @@ export function QuotesSection({ proName, proSlug, proId, puedeCrear = true }: { 
     // dice dónde vive la cotización. Un gris plano hacía ver la lista apagada.
     const caja = "ccr-caja-icono-plana";
     const apagada = "bg-[#eef2f6] text-[#68778d]";
-    if (e === "enviada") return { fondo: caja, pastilla: "bg-[#eaf7fc] text-[#0089bb]", icono: q.booking_id ? <CalendarCheck className="h-[18px] w-[18px]" strokeWidth={1.6} /> : <Handshake className="h-[18px] w-[18px]" strokeWidth={1.6} /> };
+    if (e === "enviada") return { fondo: caja, pastilla: "bg-[#eaf7fc] text-[#0089bb]", icono: <Handshake className="h-[18px] w-[18px]" strokeWidth={1.6} /> };
     if (e === "documento") return { fondo: caja, pastilla: "bg-[#eef3f8] text-[#52627a]", icono: <ReceiptText className="h-[18px] w-[18px]" strokeWidth={1.6} /> };
     // Vencida: un reloj (se le pasó el plazo), no una X que parece «error» o «borrar».
     if (e === "expired") return { fondo: apagada, pastilla: "bg-[#f3f4f6] text-[#6b7280]", icono: <Clock3 className="h-[18px] w-[18px]" strokeWidth={1.6} /> };

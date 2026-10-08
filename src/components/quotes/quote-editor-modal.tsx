@@ -36,8 +36,8 @@ export type BorradorDeCotizacion = {
   taxMode: QuoteTaxMode; notes: string; validDays: number;
 };
 
-export function QuoteEditorModal({ open, onClose, bookingId, projectId, defaultTitle, clientName: clienteConocido, onSent, sinSesion = false, inicial = null }: {
-  open: boolean; onClose: () => void; bookingId?: string | null; projectId?: string | null; defaultTitle?: string;
+export function QuoteEditorModal({ open, onClose, projectId, defaultTitle, clientName: clienteConocido, onSent, sinSesion = false, inicial = null }: {
+  open: boolean; onClose: () => void; projectId?: string | null; defaultTitle?: string;
   /** Sin cuenta: al enviar se guarda el borrador y se pide entrar o registrarse. */
   sinSesion?: boolean;
   /** Borrador escrito antes de entrar: el editor se abre lleno. */
@@ -48,7 +48,7 @@ export function QuoteEditorModal({ open, onClose, bookingId, projectId, defaultT
 }) {
   const t = useTranslations("quotes");
   const locale = useLocale();
-  const suelta = !bookingId && !projectId;
+  const suelta = !projectId;
   const [cedula, setCedula] = useState(inicial?.cedula ?? "");
   // "buscando" / "sin registro" se deducen de la cédula y del resultado, en vez
   // de escribirse desde el efecto (que dispara pintadas encadenadas).
@@ -120,7 +120,7 @@ export function QuoteEditorModal({ open, onClose, bookingId, projectId, defaultT
     }
     setSending(true); setError(null);
     try {
-      const res = await fetch("/api/quotes", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ bookingId, projectId, clientName, clientPhone, clientEmail, clientCedula: cleanId(cedula), title, items, taxMode, notes, validDays }) });
+      const res = await fetch("/api/quotes", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ projectId, clientName, clientPhone, clientEmail, clientCedula: cleanId(cedula), title, items, taxMode, notes, validDays }) });
       const d = await res.json().catch(() => ({}));
       if (!res.ok) { setError(res.status === 503 ? t("errorUnavailable") : d.error ?? t("errorTitle")); return; }
       borrarBorrador("cotizacion");

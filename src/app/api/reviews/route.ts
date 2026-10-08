@@ -126,7 +126,7 @@ async function reseñaSinCuenta(
 }
 
 // Authenticated users can review a professional directly from the profile.
-// If the review comes from a real booking/project/WhatsApp follow-up, we keep
+// If the review comes from a real project or WhatsApp follow-up, we keep
 // that context, but a completed item is no longer required.
 export async function POST(req: NextRequest) {
   // Una reseña por minuto de sobra; sin esto no había ningún tope.
@@ -178,7 +178,7 @@ export async function POST(req: NextRequest) {
   let jobTitle: string | null = null;
   let reviewContactId: string | null = null;
   // Las reseñas POR CITA y POR PROYECTO se retiraron con esas funciones: ya
-  // ningún formulario manda `bookingId` ni `projectId`. Queda el contacto de
+  // ningún formulario manda `projectId`. Queda el contacto de
   // WhatsApp, que es el que usa el seguimiento del servicio.
   if (contactId) {
     const { data: contact } = await createAdminClient()
@@ -256,7 +256,7 @@ export async function POST(req: NextRequest) {
   if (
     !reviewContactId &&
     error &&
-    /client_.*snapshot|created_source|created_app|created_supabase|booking_id|project_id|job_title|column|schema cache|PGRST204/i.test(error.message)
+    /client_.*snapshot|created_source|created_app|created_supabase|project_id|job_title|column|schema cache|PGRST204/i.test(error.message)
   ) {
     ({ data: insertedReview, error } = await supabase
       .from("reviews")
@@ -333,7 +333,6 @@ export async function POST(req: NextRequest) {
 
 export async function GET(req: Request) {
   const url = new URL(req.url);
-  const bookingId = url.searchParams.get("bookingId");
   const projectId = url.searchParams.get("projectId");
   const professionalId = url.searchParams.get("professionalId");
   const contactId = url.searchParams.get("contactId");
@@ -346,11 +345,11 @@ export async function GET(req: Request) {
   if (mine) {
     const full = await supabase
       .from("reviews")
-      .select("id, rating, comment, edited_at, professional_id, booking_id, project_id")
+      .select("id, rating, comment, edited_at, professional_id, project_id")
       .eq("client_id", user.id);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let reviews: any[] = full.data ?? [];
-    if (full.error && /booking_id|project_id|column/i.test(full.error.message)) {
+    if (full.error && /project_id|column/i.test(full.error.message)) {
       const legacy = await supabase
         .from("reviews")
         .select("id, rating, comment, professional_id")
@@ -362,7 +361,6 @@ export async function GET(req: Request) {
 
   let q = supabase.from("reviews").select("id, rating, comment, edited_at").eq("client_id", user.id);
   if (contactId) q = q.eq("whatsapp_contact_id", contactId);
-  else if (bookingId) q = q.eq("booking_id", bookingId);
   else if (projectId) q = q.eq("project_id", projectId);
   else if (professionalId) q = q.eq("professional_id", professionalId);
   else return NextResponse.json({ review: null });

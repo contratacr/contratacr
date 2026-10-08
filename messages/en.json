@@ -1943,7 +1943,6 @@
     "viewProfile": "View profile",
     "noResults": "No results",
     "source": {
-      "booking": "Appointment",
       "project": "Project",
       "contact": "Contact"
     },
@@ -3101,7 +3100,6 @@
     "totalPlusTax": "VAT included in the total",
     "totalNoTax": "No VAT",
     "noteLabel": "Note",
-    "attachedBooking": "It's in an appointment: the client sees it there and can download it.",
     "attachedProject": "It's in a project: the client sees it there and can download it.",
     "rowSend": "Send quote",
     "rowSendShort": "Quote",
@@ -3210,7 +3208,6 @@
       "servicio": "Hi, I'm writing about {tema}.",
       "servicioEnLugar": "Hi, I'm writing about {tema} in {lugar}.",
       "proyecto": "Hi, I'm writing about the project “{tema}”.",
-      "cita": "Hi, I'm writing about the {tema} appointment.",
       "promocion": "Hi, I saw your promotion “{tema}” and I'm interested.",
       "empleo": "Hi, I'm writing about the “{tema}” job posting."
     }

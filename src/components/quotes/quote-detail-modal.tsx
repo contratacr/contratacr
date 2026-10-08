@@ -89,8 +89,8 @@ export function QuoteDetailModal({ quote, role, open, onClose, onChanged, proNam
     window.setTimeout(() => URL.revokeObjectURL(a.href), 2000);
   }
 
-  const puedeRetirar = role === "pro" && quote.status === "sent" && !!(quote.booking_id || quote.project_id);
-  const puedeBorrar = role === "pro" && quote.status === "sent" && !quote.booking_id && !quote.project_id;
+  const puedeRetirar = role === "pro" && quote.status === "sent" && !!quote.project_id;
+  const puedeBorrar = role === "pro" && quote.status === "sent" && !quote.project_id;
   const abierta = quote.status === "sent" && !expirada;
   // El título del encabezado en UNA línea: el nombre del trabajo puede ser largo
   // y partido en tres renglones empujaba todo hacia abajo.

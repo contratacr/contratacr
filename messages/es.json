@@ -1943,7 +1943,6 @@
     "viewProfile": "Ver perfil",
     "noResults": "Sin resultados",
     "source": {
-      "booking": "Cita",
       "project": "Proyecto",
       "contact": "Contacto"
     },
@@ -3101,7 +3100,6 @@
     "totalPlusTax": "IVA incluido en el total",
     "totalNoTax": "Sin IVA",
     "noteLabel": "Nota",
-    "attachedBooking": "Está en una cita: el cliente la ve ahí y puede descargarla.",
     "attachedProject": "Está en un proyecto: el cliente la ve ahí y puede descargarla.",
     "rowSend": "Enviar cotización",
     "rowSendShort": "Cotización",
@@ -3210,7 +3208,6 @@
       "servicio": "Hola, te escribo por {tema}.",
       "servicioEnLugar": "Hola, te escribo por {tema} en {lugar}.",
       "proyecto": "Hola, te escribo por el proyecto «{tema}».",
-      "cita": "Hola, te escribo por la cita de {tema}.",
       "promocion": "Hola, vi tu promoción «{tema}» y me interesa.",
       "empleo": "Hola, te escribo por la vacante «{tema}»."
     }

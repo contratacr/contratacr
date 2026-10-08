@@ -20,15 +20,6 @@ type ProfessionalContact = {
 };
 
 type ClientProfile = { full_name?: string | null; phone?: string | null };
-type BookingContactRow = {
-  id: string;
-  client_id?: string | null;
-  client_name?: string | null;
-  client_phone?: string | null;
-  professional_id?: string | null;
-  service_description?: string | null;
-  professionals?: ProfessionalContact | ProfessionalContact[] | null;
-};
 type ProjectContactRow = {
   id: string;
   client_id?: string | null;
@@ -95,7 +86,6 @@ export async function POST(req: NextRequest) {
   if (limitado) return limitado;
   const body = await req.json().catch(() => ({}));
   const professionalId = String(body.professionalId ?? "");
-  const bookingId = String(body.bookingId ?? "");
   const proposalId = String(body.proposalId ?? "");
   const locale = String(body.locale ?? "es") === "en" ? "en" : "es";
   const contextTitle = limitTrimmedText(body.contextTitle, 160);
@@ -114,28 +104,7 @@ export async function POST(req: NextRequest) {
   let targetProfessionalId: string | null = null;
   let isProfessionalContactingClient = false;
 
-  if (bookingId) {
-    const { data: booking, error } = await db
-      .from("bookings")
-      .select("id, client_id, client_name, client_phone, professional_id, service_description, professionals(id, profile_id, whatsapp, business_name, profiles(full_name))")
-      .eq("id", bookingId)
-      .maybeSingle();
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-
-    const bookingRow = booking as BookingContactRow | null;
-    const professional = firstRelated(bookingRow?.professionals);
-    if (!booking || !professional) return NextResponse.json({ error: "Solicitud no encontrada." }, { status: 404 });
-
-    if (userId && userId === professional.profile_id) {
-      isProfessionalContactingClient = true;
-      phone = bookingRow?.client_phone ?? null;
-      recipientName = bookingRow?.client_name ?? null;
-    } else {
-      targetProfessionalId = professional.id;
-      phone = professional.whatsapp ?? null;
-      ({ nombre: recipientName, esNegocio } = profileName(professional));
-    }
-  } else if (proposalId) {
+  if (proposalId) {
     const { data: proposal, error } = await db
       .from("proposals")
       .select("id, professional_id, project_id, professionals(id, profile_id, whatsapp, business_name, profiles(full_name)), projects(id, client_id, title, profiles:client_id(full_name, phone))")

@@ -4,7 +4,6 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { getCategoryLabel } from "@/lib/data/categories";
 import { repairVisibleText } from "@/lib/text/repair-visible-text";
 
-const BOOKING_CONNECTION_STATUSES = ["confirmed", "in_progress", "awaiting_confirmation", "completed"];
 const PROJECT_CONNECTION_STATUSES = ["in_progress", "awaiting_confirmation", "completed"];
 // Conversaciones y clics a WhatsApp: trato real aunque no haya solicitud.
 const CONTACT_EVENT_TYPES = ["whatsapp_click"];
@@ -18,7 +17,7 @@ type Connection = {
   categoryId: string | null;
   categoryLabel: string | null;
   lastInteractionAt: string | null;
-  source: "booking" | "project" | "contact" | "both";
+  source: "project" | "contact" | "both";
   status: string;
   title: string | null;
   count: number;
@@ -30,12 +29,9 @@ export async function GET() {
   if (!user) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
 
   const admin = createAdminClient();
-  const [bookingsResult, projectsResult, chatsResult, whatsappResult] = await Promise.all([
-    admin
-      .from("bookings")
-      .select("id, professional_id, status, service_description, category_id, scheduled_date, created_at, updated_at")
-      .eq("client_id", user.id)
-      .in("status", BOOKING_CONNECTION_STATUSES),
+  // Sin la tabla de citas (borradas el 8-oct-2026): si su consulta fallaba,
+  // toda la lista devolvía 500.
+  const [projectsResult, chatsResult, whatsappResult] = await Promise.all([
     admin
       .from("projects")
       .select("id, accepted_professional_id, status, title, category_id, created_at, updated_at, completed_at, work_done_at")
@@ -53,24 +49,12 @@ export async function GET() {
       .in("event_type", CONTACT_EVENT_TYPES),
   ]);
 
-  if (bookingsResult.error) {
-    console.error("[GET /api/client/connections] bookings:", bookingsResult.error.message);
-    return NextResponse.json({ error: bookingsResult.error.message, connections: [] }, { status: 500 });
-  }
   if (projectsResult.error) {
     console.error("[GET /api/client/connections] projects:", projectsResult.error.message);
     return NextResponse.json({ error: projectsResult.error.message, connections: [] }, { status: 500 });
   }
 
   const rows = [
-    ...((bookingsResult.data ?? []) as Array<Record<string, unknown>>).map((row) => ({
-      professionalId: String(row.professional_id ?? ""),
-      source: "booking" as const,
-      status: String(row.status ?? ""),
-      title: repairVisibleText(String(row.service_description || "")) || null,
-      categoryId: row.category_id ? String(row.category_id) : null,
-      date: String(row.updated_at || row.scheduled_date || row.created_at || ""),
-    })),
     ...((projectsResult.data ?? []) as Array<Record<string, unknown>>).map((row) => ({
       professionalId: String(row.accepted_professional_id ?? ""),
       source: "project" as const,
