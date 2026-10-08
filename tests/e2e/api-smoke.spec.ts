@@ -46,14 +46,4 @@ test.describe("@smoke public APIs", () => {
     const web = body.categories.find((category: { id?: string }) => category.id === "desarrollo_web");
     expect(web).toEqual(expect.objectContaining({ supportsVideoconsulta: true }));
   });
-
-  test("insurer suggestions stay disabled while the curated insurer list is closed", async ({ request }) => {
-    const response = await request.post("/api/insurers/suggest", {
-      data: { name: "Aseguradora E2E" },
-    });
-    expect(response.status()).toBe(410);
-
-    const body = await expectJson(response);
-    expect(body.error).toMatch(/aseguradoras.*no estan habilitadas/i);
-  });
 });

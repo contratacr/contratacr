@@ -18,7 +18,6 @@ const reviewed = new Map([
   ["src/lib/recent-visits.ts", { count: 9, reason: "device-local list of recently opened records and recent searches, offered back by the search screen, each removable one by one; nothing account-owned" }],
   ["src/components/landing/ai-concierge.tsx", { count: 11, reason: "tab-scoped anonymous conversation, post-auth intent handoff and the page a CTA was opened from (to reopen the chat on back); authenticated history persists in Supabase" }],
   ["src/components/status/operational-status-banner.tsx", { count: 2, reason: "dismissed operational notice" }],
-  ["src/app/api/portfolio-like/route.ts", { count: 1, reason: "documentation for anonymous browser guard" }],
   ["src/components/professionals/save-button.tsx", { count: 16, reason: "Supabase-backed favorites cache and login handoff" }],
   ["src/components/professionals/leave-review-modal.tsx", { count: 8, reason: "short-lived profile review draft handoff before login, and a tab-scoped copy of the viewer's own review so the box does not flash empty; submitted reviews persist in Supabase" }],
   ["src/hooks/use-profesional-con-app.ts", { count: 2, reason: "tab-scoped cache of which professionals have the app, to pick chat vs WhatsApp without refetching; the source of truth is the database" }],
