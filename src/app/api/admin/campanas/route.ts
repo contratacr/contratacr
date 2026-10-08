@@ -47,19 +47,49 @@ const POR_TANDA = 60;
  */
 const DESTINATARIO_EXTRA = "isaacsanchezmonge@gmail.com";
 
-async function listClients() {
+/**
+ * A QUIÉN VA (8-oct-2026). Antes toda campaña iba a todas las cuentas. Las de
+ * profesionales necesitan su propio público: «pide tus primeras reseñas» solo a
+ * quien no tiene ninguna (eran 299 de 313) y «pon un precio de referencia» solo
+ * a quien no muestra ninguno (292 de 313).
+ */
+type Audiencia = "todas" | "pros_sin_resenas" | "pros_sin_precio";
+const AUDIENCIAS: Audiencia[] = ["todas", "pros_sin_resenas", "pros_sin_precio"];
+
+function audienciaDe(valor: unknown): Audiencia {
+  return AUDIENCIAS.includes(valor as Audiencia) ? (valor as Audiencia) : "todas";
+}
+
+function tienePrecio(servicios: unknown) {
+  return Array.isArray(servicios) && servicios.some((s) =>
+    s && typeof s === "object" && (s as { active?: unknown }).active !== false
+    && typeof (s as { priceAmount?: unknown }).priceAmount === "number" && (s as { priceAmount: number }).priceAmount > 0
+    && (s as { priceType?: unknown }).priceType !== "a_convenir");
+}
+
+async function listClients(audiencia: Audiencia = "todas") {
   const db = createAdminClient();
-  // TODAS las cuentas, no solo las de rol «cliente»: un profesional también
-  // contrata —necesita un electricista, una niñera, un contador— y dejarlo
-  // fuera era perder a la mitad de la gente registrada justo en el correo que
-  // sirve para que vuelvan.
+  let soloEstas: Set<string> | null = null;
+  if (audiencia !== "todas") {
+    const { data: pros } = await db
+      .from("professionals")
+      .select("profile_id, review_count, services")
+      .eq("is_banned", false)
+      .limit(5000);
+    soloEstas = new Set((pros ?? [])
+      .filter((p) => audiencia === "pros_sin_resenas" ? Number(p.review_count ?? 0) <= 0 : !tienePrecio(p.services))
+      .map((p) => p.profile_id as string)
+      .filter(Boolean));
+  }
   const { data } = await db
     .from("profiles")
     .select("id, email, full_name")
     .eq("is_disabled", false)
     .not("email", "is", null)
     .limit(5000);
-  const cuentas = (data ?? []).filter((p) => typeof p.email === "string" && p.email.includes("@") && !p.email.endsWith("@contratacr.test"));
+  const cuentas = (data ?? []).filter((p) =>
+    typeof p.email === "string" && p.email.includes("@") && !p.email.endsWith("@contratacr.test")
+    && (!soloEstas || soloEstas.has(p.id)));
   if (!cuentas.some((p) => p.email?.toLowerCase() === DESTINATARIO_EXTRA)) {
     cuentas.unshift({ id: "extra", email: DESTINATARIO_EXTRA, full_name: null } as (typeof cuentas)[number]);
   }
@@ -158,7 +188,7 @@ function horasQueFaltan(ultimoEnvio: string | null) {
 export async function GET(request: Request) {
   const admin = await getApiAdmin();
   if (!admin) return NextResponse.json({ error: "No autorizado" }, { status: 403 });
-  const clients = await listClients();
+  const clients = await listClients(audienciaDe(new URL(request.url).searchParams.get("audiencia")));
   // Cuánto queda de ESTA campaña: el panel necesita decir «quedan N» y cuándo
   // se puede mandar la próxima tanda, no solo cuántas cuentas hay.
   const campana = campanaDesdeAsunto(new URL(request.url).searchParams.get("asunto") ?? "");
@@ -182,7 +212,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   const admin = await getApiAdmin();
   if (!admin) return NextResponse.json({ error: "No autorizado" }, { status: 403 });
-  const payload = await request.json().catch(() => ({})) as { subject?: string; body?: string; ctaLabel?: string; ctaPath?: string; mode?: "test" | "all"; confirm?: string };
+  const payload = await request.json().catch(() => ({})) as { subject?: string; body?: string; ctaLabel?: string; ctaPath?: string; mode?: "test" | "all"; confirm?: string; audiencia?: string };
   const subject = String(payload.subject ?? "").trim().slice(0, 120);
   const body = String(payload.body ?? "").trim().slice(0, MAX_BODY);
   if (!subject || !body) return NextResponse.json({ error: "Falta el asunto o el texto." }, { status: 400 });
@@ -207,7 +237,7 @@ export async function POST(request: Request) {
 
   // Envío real: exige escribir ENVIAR para evitar un clic accidental.
   if (payload.confirm !== "ENVIAR") return NextResponse.json({ error: "Confirmación requerida." }, { status: 400 });
-  const clients = await listClients();
+  const clients = await listClients(audienciaDe(payload.audiencia));
   const db = createAdminClient();
   const { correos: yaEnviados, ultimoEnvio } = await estadoDeCampana(campana);
 

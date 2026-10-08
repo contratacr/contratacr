@@ -8,7 +8,8 @@ import { limitTrimmedText } from "@/lib/text-limits";
 import { contactCookieValue, hashContactToken, setContactCookie } from "@/lib/contact-followup";
 import { invitarAResenaAhora } from "@/lib/notifications/invitar-ahora";
 
-const FOLLOW_UP_DELAY_MS = 5 * 24 * 60 * 60 * 1000;
+// A los 3 días (eran 5): ver contact/follow-up/route.ts.
+const FOLLOW_UP_DELAY_MS = 3 * 24 * 60 * 60 * 1000;
 
 type ProfessionalContact = {
   id: string;
@@ -197,7 +198,10 @@ export async function POST(req: NextRequest) {
   const token = contactCookieValue(req);
   let contactId: string | null = null;
 
-  if (targetProfessionalId && !isProfessionalContactingClient) {
+  // Escribirle a quien publicó un EMPLEO es postularse, no contratar: a esa
+  // persona no se le pregunta después si «contrató» al empleador. Eran 277 de
+  // 372 seguimientos (8-oct-2026).
+  if (targetProfessionalId && !isProfessionalContactingClient && !body.jobId) {
     const tokenHash = hashContactToken(token);
     const recentSince = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
     let recentQuery = db

@@ -349,7 +349,7 @@
     "saveLabel": "Guardar",
     "savedLabel": "Guardado",
     "verified": "Verificado",
-    "verifiedTitle": "Verificado por ContrataCR",
+    "verifiedTitle": "Cédula verificada por ContrataCR",
     "unverified": "Sin verificar",
     "unverifiedTitle": "Identidad sin verificar",
     "rate": "Tarifa",
@@ -666,7 +666,7 @@
     "previewUnverifiedTitle": "Aún no verificas tu identidad",
     "previewUnverifiedBody": "Sigues visible y los clientes pueden contactarte. Al verificarte, muestras la insignia “Verificado” y apareces primero en las búsquedas, lo que ayuda a los clientes a elegirte con más confianza.",
     "previewUnverifiedCta": "Verificar mi identidad",
-    "identityVerified": "Verificado",
+    "identityVerified": "Cédula verificada",
     "identityUnverified": "Identidad sin verificar",
     "viewReviewsCount": "Ver {count, plural, one {# reseña} other {# reseñas}}",
     "reviewCountLabel": "{count, plural, one {# reseña} other {# reseñas}}",
@@ -757,7 +757,8 @@
     "noRespondioTitulo": "¿No te respondió?",
     "noRespondioTexto": "Publica lo que necesitas y te escriben varios.",
     "noRespondioBoton": "Publicar",
-    "cerrar": "Cerrar"
+    "cerrar": "Cerrar",
+    "cedulaVerificada": "Cédula verificada por ContrataCR"
   },
   "auth": {
     "login": {
@@ -4433,8 +4434,9 @@
     "pendientes": "1 de {n} confirmaciones pendientes",
     "ayuda": "Tu experiencia puede ayudar a otras personas a elegir.",
     "si": "Sí, dejar una reseña",
-    "aunNo": "Aún no",
-    "no": "No"
+    "aunNo": "Aún no lo decido",
+    "no": "No lo contraté",
+    "sinRespuesta": "No me respondió"
   },
   "tarjetaSocial": {
     "pie": "Ofrece y encuentra servicios en Costa Rica.",

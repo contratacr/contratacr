@@ -51,7 +51,7 @@ export function WhatsAppReviewFollowUp() {
   const lastFollowUpCheckAt = useRef(0);
   const userId = user?.id ?? null;
 
-  const act = useCallback(async (item: FollowUp, action: "hired" | "not_now" | "not_hired") => {
+  const act = useCallback(async (item: FollowUp, action: "hired" | "not_now" | "not_hired" | "no_response") => {
     const response = await fetch("/api/contact/follow-up", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -136,7 +136,7 @@ export function WhatsAppReviewFollowUp() {
     };
   }, [authLoading, checkFollowUp, pantallaTranquila]);
 
-  async function handle(action: "hired" | "not_now" | "not_hired") {
+  async function handle(action: "hired" | "not_now" | "not_hired" | "no_response") {
     if (!followUp || submitting) return;
     setSubmitting(true);
     try {
@@ -256,7 +256,7 @@ export function WhatsAppReviewFollowUp() {
               </p>
             </div>
           </div>
-          <div className="mt-4 grid gap-2 sm:grid-cols-[1fr_auto_auto]">
+          <div className="mt-4 grid gap-2">
             <button
               type="button"
               disabled={submitting}
@@ -266,22 +266,34 @@ export function WhatsAppReviewFollowUp() {
               <Star className="h-4 w-4" />
               {t("si")}
             </button>
+            {/* Dos «no» distintos: no haberlo contratado no dice nada malo del
+                profesional; que no contestara, sí. */}
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                disabled={submitting}
+                onClick={() => void handle("not_hired")}
+                className="min-h-11 rounded-xl border border-[#d7e1ea] px-3 text-sm font-semibold text-[#162543] hover:bg-[#f7fafc] disabled:opacity-60"
+              >
+                {t("no")}
+              </button>
+              <button
+                type="button"
+                disabled={submitting}
+                onClick={() => void handle("no_response")}
+                className="min-h-11 rounded-xl border border-[#d7e1ea] px-3 text-sm font-semibold text-[#162543] hover:bg-[#f7fafc] disabled:opacity-60"
+              >
+                {t("sinRespuesta")}
+              </button>
+            </div>
             <button
               type="button"
               disabled={submitting}
               onClick={() => void handle("not_now")}
-              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-[#d7e1ea] px-3 text-sm font-semibold text-[#162543] hover:bg-[#f7fafc] disabled:opacity-60"
+              className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl px-3 text-sm font-semibold text-[#667085] hover:bg-[#f7fafc] hover:text-[#162543] disabled:opacity-60"
             >
               <Clock3 className="h-4 w-4" />
               {t("aunNo")}
-            </button>
-            <button
-              type="button"
-              disabled={submitting}
-              onClick={() => void handle("not_hired")}
-              className="min-h-11 rounded-xl px-3 text-sm font-semibold text-[#667085] hover:bg-[#f7fafc] hover:text-[#162543] disabled:opacity-60"
-            >
-              {t("no")}
             </button>
           </div>
         </section>
