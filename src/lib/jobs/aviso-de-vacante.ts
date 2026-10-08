@@ -2,6 +2,9 @@ import { sinOcultos } from "@/lib/queries/sin-ocultos";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getCategoryLabel } from "@/lib/data/categories";
 import { hasDurablePushOutbox, sendNotificationPush } from "@/lib/push/notify";
+import { after } from "next/server";
+import { avisarPorCorreo } from "@/lib/notifications/aviso-por-correo";
+import { rutaEmpleo } from "@/lib/marketplace-url";
 
 /**
  * UNA VACANTE NUEVA LE LLEGA A QUIEN HACE ESE OFICIO.
@@ -12,10 +15,9 @@ import { hasDurablePushOutbox, sendNotificationPush } from "@/lib/push/notify";
  * «Mecánico Diésel» le caería también a los mecánicos industriales y un par de
  * avisos equivocados bastan para que la gente apague las notificaciones.
  *
- * Solo campana y push, que son gratis. El correo NO: con el plan actual son 300
- * al día compartidos con recuperar contraseña y responder soporte, y una sola
- * vacante de electricidad son 45 correos. Cuando el plan cambie, el resumen
- * diario es el camino —un correo por persona al día, no uno por publicación—.
+ * Campana, push y correo. El correo se agregó el 7-oct-2026: casi ningún
+ * profesional tiene push, y el volumen cabe en el cupo diario (ver
+ * lib/notifications/aviso-por-correo.ts, donde está el plan si crece).
  *
  * Nunca se avisa al que publica, ni se avisa dos veces por el mismo empleo:
  * editar una vacante no vuelve a sonarle a nadie.
@@ -80,6 +82,16 @@ export async function avisarVacanteAProfesionales({
     data: { link: "/empleos", job_id: jobId, job_title: title, category_id: serviceCategoryId },
   }));
   await db.from("notifications").insert(filas);
+  // Y por correo, cuando la respuesta ya salió (ver lib/notifications/aviso-por-correo.ts).
+  after(() => avisarPorCorreo({
+    destinatarios,
+    asunto: `Nueva vacante de ${oficio}: ${title}`,
+    titular: `Publicaron una vacante de ${oficio}: «${title}».`,
+    parrafos: ["Si te interesa, ábrela y escríbele por WhatsApp a quien la publicó."],
+    boton: { texto: "Ver la vacante", ruta: rutaEmpleo({ id: jobId, title }) },
+    porQue: `Te llega porque ofreces ${oficio} en ContrataCR.`,
+    campana: "aviso-empleo",
+  }));
 
   // Con la migración 167 el INSERT ya quedó en el outbox durable y el push sale
   // de ahí: llamar N veces a un envío que devuelve sin hacer nada no aporta.

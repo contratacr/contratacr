@@ -98,6 +98,12 @@ export async function sendBrevoEmail(opts: {
    * decir de cuál campaña, y no se puede anotar en ninguna fila.
    */
   campana?: string;
+  /**
+   * Lleva la cabecera de baja aunque no sea de nivel `masivo`: los avisos de
+   * proyectos y empleos van en volumen y con enlace de baja, y Gmail pide la
+   * cabecera a todo correo así.
+   */
+  conBaja?: boolean;
 }): Promise<EmailResult> {
   const key = process.env.BREVO_API_KEY;
   if (!key) return { ok: false, status: "skipped", detail: "Brevo not configured (BREVO_API_KEY missing)" };
@@ -132,7 +138,7 @@ export async function sendBrevoEmail(opts: {
     // Solo en los correos de novedades. Los de cuenta y seguridad no la
     // llevan: no son publicidad, y ofrecer darse de baja de «recuperar tu
     // contraseña» dejaría a alguien sin poder entrar.
-    ...(nivel === "masivo"
+    ...(nivel === "masivo" || opts.conBaja
       ? {
           headers: {
             "List-Unsubscribe": `<${enlaceDeBaja(APP_URL, opts.to)}>, <mailto:soporte@contratacr.com?subject=BAJA>`,

@@ -3925,7 +3925,7 @@
   },
   "bajaCorreos": {
     "listoTitulo": "Listo, no te mandamos más novedades",
-    "listoCuerpo": "No vas a recibir más correos de novedades de ContrataCR. Los avisos de tu cuenta y de seguridad —entrar, recuperar la contraseña, soporte— se siguen enviando.",
+    "listoCuerpo": "No vas a recibir más correos de novedades ni de proyectos y vacantes nuevas de ContrataCR (los sigues viendo en la campana del app). Los avisos de tu cuenta y de seguridad —entrar, recuperar la contraseña, soporte— se siguen enviando.",
     "falloTitulo": "No pudimos hacerlo",
     "falloCuerpo": "El enlace puede haber cambiado o ya no ser válido. Escríbenos a soporte@contratacr.com y dejamos de enviarte novedades.",
     "volver": "Ir al inicio"
