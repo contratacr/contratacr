@@ -6,6 +6,7 @@ import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { CategorySearch } from "@/components/ui/category-search";
+import { SugerenciaDeServicio } from "@/components/ui/sugerencia-de-servicio";
 import { SelectMenu } from "@/components/ui/select-menu";
 import { AlertCircle, ArrowLeft, X } from "lucide-react";
 import { PROVINCES } from "@/lib/data/cr-geography";
@@ -321,6 +322,13 @@ export function PublishProjectModal({ onClose, onSuccess, editar }: {
                     onChange={(id) => update("categoryId", id)}
                     placeholder={t("categoryPlaceholder")}
                     error={errorField === "category" ? error ?? undefined : undefined}
+                  />
+                  <SugerenciaDeServicio
+                    texto={form.description}
+                    servicioActual={form.categoryId}
+                    locale={locale}
+                    fuente="descripcion"
+                    onUsar={(id) => update("categoryId", id)}
                   />
                   {destinatarios > 0 && <p className="mt-1 text-xs font-semibold text-[#0f7a4a]">{t("destinatarios", { n: destinatarios })}</p>}
                 </div>
