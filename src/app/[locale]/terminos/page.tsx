@@ -33,7 +33,7 @@ const ES_SECTIONS: LegalSection[] = [
         "Cada Usuario decide con quién contratar y debe evaluar identidad, experiencia, licencias, seguros, precio y condiciones.",
         "ContrataCR no garantiza disponibilidad, calidad, seguridad, legalidad, puntualidad, resultado o finalización de un servicio.",
       ] },
-      { k: "p", text: "Para que cada Usuario elija con información, la Plataforma muestra en los perfiles **datos para comparar**: reseñas de Clientes, casos de éxito, formación y certificaciones, idiomas, años de experiencia, zonas de trabajo, precio de referencia y, cuando corresponde, la insignia Verificado. Esa información la publica cada Profesional —las reseñas, los Clientes— y es responsabilidad de quien la publica. Revisarla, comparar y decidir con quién contratar corresponde a cada Usuario." },
+      { k: "p", text: "Para que cada Usuario elija con información, la Plataforma muestra en los perfiles **datos para comparar**: reseñas de Clientes, casos de éxito, formación y certificaciones, idiomas, años de experiencia, zonas de trabajo, precio de referencia y, cuando corresponde, la insignia de cédula verificada. Esa información la publica cada Profesional —las reseñas, los Clientes— y es responsabilidad de quien la publica. Revisarla, comparar y decidir con quién contratar corresponde a cada Usuario." },
     ],
   },
   {
@@ -66,7 +66,7 @@ const ES_SECTIONS: LegalSection[] = [
         "Cumplir la legislación laboral, tributaria, sanitaria, profesional y de protección al consumidor que corresponda.",
         "Tratar de forma confidencial y lícita los datos recibidos de Clientes.",
       ] },
-      { k: "note", text: "La insignia **Verificado** confirma de manera limitada una coincidencia de identidad. No certifica experiencia, licencias, permisos, calidad ni resultado del servicio." },
+      { k: "note", text: "La insignia de verificación (el check azul junto al nombre, «Cédula verificada») significa una sola cosa: el número de cédula del perfil existe en el **padrón electoral del Tribunal Supremo de Elecciones** y el nombre que se muestra se tomó de ese padrón. Cuando el padrón no cubre el caso (por ejemplo, cédula jurídica, DIMEX o una cédula reciente), una persona del equipo revisa la misma información de forma manual. La insignia **no** comprueba que quien administra la cuenta sea el titular de la cédula y **no** certifica antecedentes, experiencia, licencias, permisos, calidad ni resultado del servicio." },
     ],
   },
   {
@@ -189,7 +189,7 @@ const EN_SECTIONS: LegalSection[] = [
   { id: "intermediary", h: "3. ContrataCR is an intermediary", body: [
     { k: "p", text: "**ContrataCR facilitates contact and coordination between Users.** It does not provide, perform, supervise, or guarantee Professional services." },
     { k: "ul", items: ["ContrataCR is not a party to agreements between Users.", "Professionals are not employees, agents, or representatives of ContrataCR.", "Each User must assess identity, experience, licenses, insurance, price, and terms.", "ContrataCR does not guarantee availability, quality, safety, legality, timeliness, results, or completion."] },
-    { k: "p", text: "So that each User can choose with information, profiles show **data to compare**: Client reviews, success stories, training and certifications, languages, years of experience, work areas, a reference price and, where applicable, the Verified badge. Each Professional publishes that information —reviews come from Clients— and is responsible for it. Reviewing it, comparing and deciding whom to hire is up to each User." },
+    { k: "p", text: "So that each User can choose with information, profiles show **data to compare**: Client reviews, success stories, training and certifications, languages, years of experience, work areas, a reference price and, where applicable, the ID-verified badge. Each Professional publishes that information —reviews come from Clients— and is responsible for it. Reviewing it, comparing and deciding whom to hire is up to each User." },
   ] },
   { id: "listings", h: "4. Projects, promotions, and jobs", body: [
     { k: "ul", items: ["**Projects:** a published project is shown to Professionals in the chosen service so they can write to you. The phone number you provide is not published: it is shared only with the Professional who replies.", "**Promotions:** the price, conditions, validity, and availability of a promotion are set and honored by the Professional who publishes it.", "**Jobs:** ContrataCR is not the employer and does not take part in hiring. Anyone interested contacts the poster directly via WhatsApp or Messages. Be wary of any job asking for payment to apply, and report it."] },
@@ -200,7 +200,7 @@ const EN_SECTIONS: LegalSection[] = [
   ] },
   { id: "professionals", h: "6. Professional obligations", body: [
     { k: "ul", items: ["Publish truthful, current information.", "Maintain licenses, permits, professional registration, insurance, or authorization required for the activity.", "Do not claim qualifications or experience you do not have.", "Comply with applicable labor, tax, health, professional, and consumer law.", "Handle Client data lawfully and confidentially."] },
-    { k: "note", text: "The **Verified** badge only confirms a limited identity match. It does not certify experience, licenses, quality, or results." },
+    { k: "note", text: "The verification badge (the blue check next to the name, «ID verified») means one thing only: the ID (cédula) number on the profile exists in the **electoral roll of Costa Rica's Supreme Electoral Tribunal (TSE)** and the name shown was taken from that roll. When the roll does not cover the case (for example, a corporate ID, DIMEX, or a recently issued ID), a team member reviews the same information manually. The badge does **not** confirm that the person running the account is the ID holder, and does **not** certify background, experience, licenses, permits, quality, or results." },
   ] },
   { id: "conduct", h: "7. Conduct rules", body: [
     { k: "p", text: "Each User is responsible for their account, published information, and activity." },
@@ -260,7 +260,7 @@ export default async function TerminosPage({ params }: { params: Promise<{ local
   return (
     <LegalDocument
       title={en ? "Terms and Conditions" : "Términos y Condiciones"}
-      updated={en ? "September 30, 2026" : "30 de septiembre de 2026"}
+      updated={en ? "October 8, 2026" : "8 de octubre de 2026"}
       intro={en
         ? "These Terms explain the rules for using ContrataCR as a Client or Professional across the website and mobile applications."
         : "Estos Términos explican las reglas para utilizar ContrataCR como Cliente o Profesional en el sitio web y las aplicaciones móviles."}

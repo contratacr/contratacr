@@ -198,7 +198,7 @@
     "trust": {
       "cedula": {
         "title": "Verified ID",
-        "desc": "We verify everyone's identity against Costa Rica's Civil Registry."
+        "desc": "We check that each professional's ID exists in the TSE electoral roll, and their name comes from it."
       },
       "reviews": {
         "title": "Genuine reviews",
@@ -758,7 +758,7 @@
     "noRespondioTexto": "Post what you need and several will message you.",
     "noRespondioBoton": "Post",
     "cerrar": "Close",
-    "cedulaVerificada": "ID verified by ContrataCR"
+    "cedulaVerificada": "ID verified"
   },
   "auth": {
     "login": {
@@ -1076,7 +1076,7 @@
       "addToCalendar": "Add to my calendar"
     },
     "verified": "Verified",
-    "verifiedTitle": "Verified identity",
+    "verifiedTitle": "ID verified",
     "from": "From",
     "youLower": "you",
     "correct": "Correct",
@@ -3446,7 +3446,7 @@
     "clientStep0Title": "Write what you need",
     "clientStep0Body": "Search by service, category, province, canton, or normal phrases like \"I need to clean my house.\"",
     "clientStep1Title": "Compare profiles",
-    "clientStep1Body": "Check verified identity, past work, reviews, reference prices and service areas.",
+    "clientStep1Body": "Check the verified ID, past work, reviews, reference prices and service areas.",
     "clientStep2Title": "Contact the professional",
     "clientStep2Body": "Message them on WhatsApp, call them or write to them inside ContrataCR. Each profile shows the channels the professional left open.",
     "clientPathCta": "View professionals",
@@ -3484,8 +3484,8 @@
     "proStep1Body": "Publish success stories with photos, complete your workplaces, and verify your identity to build more trust.",
     "proStep2Title": "Answer projects and send quotes",
     "proStep2Body": "See the projects clients post, message them on WhatsApp, send quotes and publish jobs or promotions from your dashboard.",
-    "proBenefit0Title": "Verified identity",
-    "proBenefit0Body": "The verification badge helps clients know they are talking to a real, verifiable person.",
+    "proBenefit0Title": "ID verified",
+    "proBenefit0Body": "The badge shows that the ID on your profile exists in the TSE electoral roll and that your name comes from it.",
     "proBenefit1Title": "Success stories",
     "proBenefit1Body": "Showcase photos of your success stories so your profile isn't just text and the client understands your quality.",
     "proBenefit2Title": "Work areas",
@@ -4084,7 +4084,7 @@
     "download": "Download image",
     "preparing": "Preparing the card…",
     "cardFooter": "Scan to see my profile",
-    "cardTrust": "Identity verified",
+    "cardTrust": "ID verified",
     "reviewsHint": "Send it to clients you've already worked with. Reviews are the first thing people look at before hiring.",
     "reviewsMessage": "Hi! I'm now on ContrataCR and it would help me a lot if you left a review of the work I did for you. It's quick — open this link and that's it: {url} Thank you!",
     "sendWhatsApp": "Send on WhatsApp",
@@ -4200,7 +4200,7 @@
     "filterClosed": "Closed",
     "publicMetaTitle": "Quote from {name}",
     "publicFrom": "Quote from",
-    "publicIdentityVerified": "Identity verified",
+    "publicIdentityVerified": "ID verified",
     "publicAccept": "Accept quote",
     "publicDecline": "Not for me",
     "publicAcceptedTitle": "Accepted!",
